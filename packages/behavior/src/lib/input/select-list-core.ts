@@ -239,11 +239,11 @@ export class OgeSelectListCore<TItem> {
 
   /** Re-seeds the state machine after the `items` input changes (array ↔ function). */
   syncItemsSource(): void {
-    this.itemsState.set(
-      typeof this.deps.items() === 'function'
-        ? { status: 'idle' }
-        : { status: 'static' },
-    );
+    const lazy = typeof this.deps.items() === 'function';
+    // a new array is still a static source — re-seeding it would write state
+    // (and re-render a React owner) for every inline `items={[…]}` literal
+    if (!lazy && this.itemsState().status === 'static') return;
+    this.itemsState.set(lazy ? { status: 'idle' } : { status: 'static' });
   }
 
   /** Invokes a lazy items function once; stale resolutions lose to the runId guard. */

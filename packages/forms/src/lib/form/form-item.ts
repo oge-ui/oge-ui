@@ -8,6 +8,7 @@ import {
 import type {
   OgeFormDataType,
   OgeFormEditorOptions,
+  OgeFormCondition,
   OgeFormEditorType,
   OgeValidationRule,
 } from './form-types';
@@ -51,6 +52,12 @@ export class OgeFormItem extends OgeFormNode {
   /** Layout columns the item spans; clamped to the current column count. */
   readonly colSpan = input(1);
   readonly visible = input(true);
+  /** Shows the item only while the condition holds; a hidden item is not validated. */
+  readonly visibleWhen = input<OgeFormCondition | undefined>(undefined);
+  /** Makes the item required only while the condition holds. */
+  readonly requiredWhen = input<OgeFormCondition | undefined>(undefined);
+  /** Disables the editor while the condition holds (`formData` mode); a disabled item is not validated. */
+  readonly disabledWhen = input<OgeFormCondition | undefined>(undefined);
   /** Explicit ordering; items without one keep their declaration order. */
   readonly visibleIndex = input<number | undefined>(undefined);
   /** Adds a `required` rule and shows the required mark. */

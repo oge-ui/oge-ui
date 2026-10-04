@@ -15,6 +15,8 @@ import {
 import { withInputWidth } from './field-extras';
 import {
   buildTreeViewIndex,
+  formatPattern,
+  ogeChipOverflow,
   treeAccessor,
   type OgeTreeCheckBoxesMode,
   type OgeTreeDataStructure,
@@ -47,6 +49,12 @@ export type OgeTreeSelectSelectionMode = 'single' | 'multiple';
 
 /** How a multiple-selection value is rendered in the closed field. */
 export type OgeTreeSelectDisplayMode = 'text' | 'count';
+
+/**
+ * Whether the closed field shows the selection as text (`displayMode`
+ * applies) or as removable chips.
+ */
+export type OgeTreeSelectShowSelectionAs = 'text' | 'chips';
 
 /** Payload of `onSelectionChanged` — the committed value changed via the tree. */
 export interface OgeTreeSelectSelectionChangedEvent {
@@ -100,6 +108,14 @@ export interface OgeTreeSelectProps<
   selectedKeysMode?: OgeTreeSelectedKeysMode;
   /** How a multiple-selection value is rendered in the closed field. */
   displayMode?: OgeTreeSelectDisplayMode;
+  /**
+   * `'chips'` renders the selected nodes as removable chips in the field
+   * (Backspace removes the last one); `'text'` keeps the comma list /
+   * `displayMode`.
+   */
+  showSelectionAs?: OgeTreeSelectShowSelectionAs;
+  /** In chips mode, caps the rendered chips; the rest fold into `+N more`. */
+  maxDisplayedTags?: number;
   /**
    * Which gesture expands a node inside the popup. Defaults to `dblclick`, not
    * the tree's own `click`: in a picker a single click should choose a node,
@@ -222,6 +238,8 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
     selectNodesRecursive = true,
     selectedKeysMode = 'all',
     displayMode = 'text',
+    showSelectionAs = 'text',
+    maxDisplayedTags,
     expandEvent = 'dblclick',
     searchEnabled = false,
     searchMode = 'contains',
@@ -344,6 +362,13 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
       .join(', ');
   })();
 
+  const chipsMode = showSelectionAs === 'chips';
+  const chips = selectedKeys.map((key) => ({
+    key,
+    text: labelByKey.get(key) ?? String(key),
+  }));
+  const overflow = ogeChipOverflow(chips.length, maxDisplayedTags);
+
   // --- panel ----------------------------------------------------------------
 
   const panel = useAnchoredPanel({
@@ -415,9 +440,29 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
     }
   };
 
+  /** Removes one node from the selection (a chip's ✕, or Backspace). */
+  const removeKey = (key: RowKey, event: Event): void => {
+    if (field.effectiveDisabled || readonly) return;
+    const previous = latest.current.selectedKeys;
+    const keys = previous.filter((candidate) => candidate !== key);
+    if (keys.length === previous.length) return;
+    field.commit.commitNow(multiple ? [...keys] : (keys[0] ?? null), event);
+    latest.current.props.onSelectionChanged?.({
+      keys: [...keys],
+      previousKeys: previous,
+    });
+    nativeRef.current?.focus();
+  };
+
   const onKeyDown = (event: ReactKeyboardEvent): void => {
     if (field.effectiveDisabled || readonly) return;
     switch (event.key) {
+      case 'Backspace':
+        if (chipsMode && selectedKeys.length > 0) {
+          event.preventDefault();
+          removeKey(selectedKeys[selectedKeys.length - 1], event.nativeEvent);
+        }
+        return;
       case 'ArrowDown':
       case 'ArrowUp':
         event.preventDefault();
@@ -474,6 +519,7 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
     'oge-input',
     'oge-tree-select',
     opened && 'oge-tree-select-open',
+    chipsMode && 'oge-tree-select-chips',
     field.effectiveDisabled && 'oge-disabled',
     field.focused && 'oge-input-focused',
     field.showError && 'oge-input-invalid',
@@ -491,6 +537,53 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
   ]
     .filter(Boolean)
     .join(' ');
+
+  const fieldInput = (
+    <input
+      {...extraAttrs}
+      ref={nativeRef}
+      className={[
+        'oge-input-native',
+        'oge-select-plain',
+        chipsMode && 'oge-tag-input',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      type="text"
+      role="combobox"
+      aria-haspopup="tree"
+      autoComplete="off"
+      readOnly
+      id={field.ids.inputId}
+      value={chipsMode ? '' : inputText}
+      placeholder={chipsMode && !field.isEmpty ? '' : placeholderText}
+      disabled={field.effectiveDisabled}
+      name={props.name || undefined}
+      title={props.tooltip}
+      tabIndex={props.tabIndex ?? 0}
+      autoFocus={props.autofocus}
+      aria-expanded={opened}
+      aria-controls={opened ? treeId : undefined}
+      aria-label={labelMode === 'hidden' && label ? label : undefined}
+      aria-labelledby={
+        labelMode !== 'hidden' && label ? field.ids.labelId : undefined
+      }
+      aria-describedby={describedBy}
+      aria-invalid={field.showError ? true : undefined}
+      aria-required={props.required ? true : undefined}
+      onClick={() => {
+        if (field.effectiveDisabled || readonly) return;
+        if (!openOnFieldClick) return;
+        toggle();
+      }}
+      onKeyDown={onKeyDown}
+      onFocus={(event) => {
+        if (selectOnFocus) nativeRef.current?.select();
+        field.handleFocus(event);
+      }}
+      onBlur={field.handleBlur}
+    />
+  );
 
   return (
     <span
@@ -534,44 +627,48 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
         prefix={prefix}
         suffix={suffix}
       >
-        <input
-          {...extraAttrs}
-          ref={nativeRef}
-          className="oge-input-native oge-select-plain"
-          type="text"
-          role="combobox"
-          aria-haspopup="tree"
-          autoComplete="off"
-          readOnly
-          id={field.ids.inputId}
-          value={inputText}
-          placeholder={placeholderText}
-          disabled={field.effectiveDisabled}
-          name={props.name || undefined}
-          title={props.tooltip}
-          tabIndex={props.tabIndex ?? 0}
-          autoFocus={props.autofocus}
-          aria-expanded={opened}
-          aria-controls={opened ? treeId : undefined}
-          aria-label={labelMode === 'hidden' && label ? label : undefined}
-          aria-labelledby={
-            labelMode !== 'hidden' && label ? field.ids.labelId : undefined
-          }
-          aria-describedby={describedBy}
-          aria-invalid={field.showError ? true : undefined}
-          aria-required={props.required ? true : undefined}
-          onClick={() => {
-            if (field.effectiveDisabled || readonly) return;
-            if (!openOnFieldClick) return;
-            toggle();
-          }}
-          onKeyDown={onKeyDown}
-          onFocus={(event) => {
-            if (selectOnFocus) nativeRef.current?.select();
-            field.handleFocus(event);
-          }}
-          onBlur={field.handleBlur}
-        />
+        {chipsMode ? (
+          <div className="oge-tag-strip">
+            {chips.slice(0, overflow.shown).map((chip) => (
+              <span key={String(chip.key)} className="oge-tag">
+                <span className="oge-tag-text">{chip.text}</span>
+                {!readonly && !field.effectiveDisabled && (
+                  <button
+                    type="button"
+                    className="oge-tag-remove"
+                    tabIndex={-1}
+                    aria-label={`${field.msg.removeTagButton} ${chip.text}`}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={(event) => removeKey(chip.key, event.nativeEvent)}
+                  >
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="10"
+                      height="10"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m4 4 8 8m0-8-8 8" />
+                    </svg>
+                  </button>
+                )}
+              </span>
+            ))}
+            {overflow.hidden > 0 && (
+              <span className="oge-tag oge-tag-more">
+                {formatPattern(field.msg.moreTags, {
+                  count: String(overflow.hidden),
+                })}
+              </span>
+            )}
+            {fieldInput}
+          </div>
+        ) : (
+          fieldInput
+        )}
       </OgeFieldChrome>
       {opened && (
         <OgePopup

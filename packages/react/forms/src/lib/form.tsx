@@ -13,7 +13,9 @@ import {
 } from 'react';
 import {
   emptyValueForDataType,
+  evaluateOgeFormCondition,
   evaluateOgeValidationRules,
+  isFormItemVisible,
   asyncValidationRules,
   formColumnsCount,
   formColumnsCss,
@@ -164,6 +166,10 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
   const [asyncErrors, setAsyncErrors] = useState<
     Readonly<Record<string, string>>
   >({});
+  /** Server-side errors from `setErrors()` — shown at once, cleared on edit. */
+  const [serverErrors, setServerErrors] = useState<
+    ReadonlyMap<string, readonly string[]>
+  >(new Map());
 
   const latest = useRef({ props, data });
   latest.current = { props, data };
@@ -328,9 +334,14 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
 
   // --- resolved items and validation ----------------------------------------
 
+  // `visibleWhen` hides an item (and drops it from validation) per model
+  const visibleEntries = useMemo(
+    () => entries.filter((entry) => isFormItemVisible(entry.source, data)),
+    [entries, data],
+  );
   const resolvedItems = useMemo<readonly OgeResolvedFormItem[]>(
     () =>
-      entries.map((entry) =>
+      visibleEntries.map((entry) =>
         resolveItem(
           entry.source,
           entry.id,
@@ -339,17 +350,35 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
             readOnly,
             disabled,
           },
+          data,
         ),
       ),
-    [entries, data, readOnly, disabled],
+    [visibleEntries, data, readOnly, disabled],
   );
 
   const fieldErrors = useMemo<
     ReadonlyMap<string, readonly OgeFieldError[]>
   >(() => {
     const map = new Map<string, readonly OgeFieldError[]>();
+    const sources = new Map(visibleEntries.map((e) => [e.id, e.source]));
     for (const item of resolvedItems) {
-      const errors = [
+      const server = serverErrors.get(item.field) ?? [];
+      // a conditionally disabled item is not validated (server errors still show)
+      if (
+        evaluateOgeFormCondition(
+          sources.get(item.id)?.disabledWhen,
+          data,
+          false,
+        )
+      ) {
+        map.set(
+          item.id,
+          server.map((message) => ({ kind: 'server', message })),
+        );
+        continue;
+      }
+      const errors: OgeFieldError[] = [
+        ...server.map((message) => ({ kind: 'server', message })),
         ...evaluateOgeValidationRules(
           readPath(data, item.field),
           data as Record<string, unknown>,
@@ -362,10 +391,12 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
       map.set(item.id, errors);
     }
     return map;
-  }, [resolvedItems, data, asyncErrors]);
+  }, [resolvedItems, visibleEntries, data, asyncErrors, serverErrors]);
 
   const messageFor = useCallback(
     (item: OgeResolvedFormItem, gated: boolean): string | null => {
+      const server = serverErrors.get(item.field);
+      if (server && server.length > 0) return server[0];
       const errors = fieldErrors.get(item.id) ?? [];
       if (errors.length === 0) return null;
       if (gated && !touched.has(item.field) && !submitAttempted) return null;
@@ -374,7 +405,13 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
         messageForFieldError(errors[0], inputsConfig.messages)
       );
     },
-    [fieldErrors, touched, submitAttempted, inputsConfig.messages],
+    [
+      fieldErrors,
+      serverErrors,
+      touched,
+      submitAttempted,
+      inputsConfig.messages,
+    ],
   );
 
   /** One entry per invalid field, in layout order — regardless of gating. */
@@ -447,6 +484,13 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
       const previous = readPath(dataRef.current, field);
       if (Object.is(previous, value)) return;
       setDirty(true);
+      // a server error describes the submitted value — editing retires it
+      setServerErrors((previous) => {
+        if (!previous.has(field)) return previous;
+        const next = new Map(previous);
+        next.delete(field);
+        return next;
+      });
       writeData(writePath(dataRef.current as object, field, value) as T);
       latest.current.props.onFieldChanged?.({
         field,
@@ -456,6 +500,14 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
     },
     [writeData],
   );
+
+  const markTouchedMany = useCallback((fields: Iterable<string>) => {
+    setTouched((previous) => {
+      const next = new Set(previous);
+      for (const field of fields) next.add(field);
+      return next;
+    });
+  }, []);
 
   const markTouched = useCallback((field: string) => {
     setTouched((previous) =>
@@ -682,6 +734,34 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
       itemOption(field: string) {
         return resolvedItems.find((item) => item.field === field);
       },
+      setErrors(errors) {
+        const next = new Map<string, readonly string[]>();
+        for (const [field, value] of Object.entries(errors)) {
+          const messages = normalizeMessages(value);
+          if (messages.length > 0) next.set(field, messages);
+        }
+        setServerErrors(next);
+        markTouchedMany(next.keys());
+      },
+      setFieldErrors(field, messages) {
+        const list = normalizeMessages(messages);
+        setServerErrors((previous) => {
+          const next = new Map(previous);
+          if (list.length > 0) next.set(field, list);
+          else next.delete(field);
+          return next;
+        });
+        if (list.length > 0) markTouchedMany([field]);
+      },
+      clearErrors(field) {
+        setServerErrors((previous) => {
+          if (field === undefined) return new Map();
+          if (!previous.has(field)) return previous;
+          const next = new Map(previous);
+          next.delete(field);
+          return next;
+        });
+      },
       updateData(fieldOrData: string | Partial<T>, value?: unknown) {
         if (typeof fieldOrData === 'string') {
           setFieldValue(fieldOrData, value);
@@ -712,6 +792,7 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
       sectionPathFor,
       setFieldValue,
       writeData,
+      markTouchedMany,
     ],
   );
 
@@ -1009,3 +1090,11 @@ export const OgeForm = forwardRef(OgeFormInner) as <
 >(
   props: OgeFormProps<T> & { ref?: React.Ref<OgeFormHandle<T>> },
 ) => ReactNode;
+
+function normalizeMessages(
+  value: string | readonly string[] | null | undefined,
+): readonly string[] {
+  if (value == null) return [];
+  if (typeof value === 'string') return value.length > 0 ? [value] : [];
+  return value.filter((message) => message.length > 0);
+}

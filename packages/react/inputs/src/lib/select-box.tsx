@@ -16,6 +16,14 @@ import { withInputWidth } from './field-extras';
 import {
   OgeSelectListCore,
   adaptiveListViewportHeight,
+  ogeAllowDropDownClose,
+  ogeAllowDropDownOpen,
+  type OgeDropDownCloseReason,
+  type OgeDropDownClosingEvent,
+  type OgeDropDownOpeningEvent,
+  type OgeListDataSource,
+  type OgeListPageLoadedEvent,
+  type OgePopupCloseReason,
   type OgeAdaptiveMode,
   type OgeVirtualScrollOptions,
   type OgeSelectDisabledExpr,
@@ -46,6 +54,26 @@ import {
 import { useOgeField, type OgeControlProps } from './use-field';
 import { useOgeInputsConfig } from './inputs-config';
 import { SheetSearch, sheetFocusAttr, useAdaptivePopup } from './adaptive';
+import { fillShortList, useRemoteList } from './use-remote-list';
+
+/** Context of `renderHeader` / `renderFooter` — what the popup currently shows. */
+export interface OgeSelectPopupRenderContext<TItem> {
+  /** The items the list currently shows (filtered, loaded so far). */
+  items: readonly TItem[];
+  /** The typed search text (`''` when not searching). */
+  searchText: string;
+  /** A page or the lazy items are loading. */
+  loading: boolean;
+}
+
+/** Maps a panel-initiated close onto the editor's `onClosing` reasons. */
+export function panelCloseReason(
+  reason: OgePopupCloseReason,
+): OgeDropDownCloseReason {
+  return reason === 'outside' || reason === 'escape' || reason === 'tab'
+    ? reason
+    : 'api';
+}
 
 /** Payload of `onSelectionChange` — fires whenever the resolved item changes. */
 export interface OgeSelectBoxSelectionChangedEvent<TItem> {
@@ -76,8 +104,11 @@ export interface OgeSelectBoxHandle {
   blur(): void;
   clear(): void;
   open(): void;
-  close(): void;
+  /** Closes unless `onClosing` vetoes it; returns whether it closed. */
+  close(): boolean;
   toggle(): void;
+  /** Re-requests the current search from `dataSource`, dropping every cached page. */
+  reload(): void;
 }
 
 export interface OgeSelectBoxProps<TItem = unknown>
@@ -137,6 +168,35 @@ export interface OgeSelectBoxProps<TItem = unknown>
     item: TItem,
     context: { index: number; selected: boolean; active: boolean },
   ) => ReactNode;
+  /** Custom group header rendering (`groupBy` lists). */
+  renderGroup?: (label: string) => ReactNode;
+  /**
+   * Custom rendering of the closed field's value. The real input stays
+   * underneath for focus, typing and assistive technology; the content hides
+   * while the user types.
+   */
+  renderField?: (item: TItem | null, context: { text: string }) => ReactNode;
+  /** Content above the popup list. */
+  renderHeader?: (context: OgeSelectPopupRenderContext<TItem>) => ReactNode;
+  /** Content below the popup list. */
+  renderFooter?: (context: OgeSelectPopupRenderContext<TItem>) => ReactNode;
+  /**
+   * Remote, paged data: any `@oge-ui/core` `DataSource` (or an object with
+   * the same `load()`, plus an optional `byKey()`). Replaces `items` while
+   * set — pages of `pageSize` rows load as the list scrolls, the typed text
+   * goes to the server as `searchText` (debounced by `searchTimeout`, gated
+   * by `minSearchLength`), superseded requests are aborted and each search's
+   * pages are cached.
+   */
+  dataSource?: OgeListDataSource<TItem>;
+  /** Rows requested per `dataSource` page; provider default (30) otherwise. */
+  pageSize?: number;
+  /** A `dataSource` page landed (search text, offset, rows, total). */
+  onPageLoaded?: (event: OgeListPageLoadedEvent<TItem>) => void;
+  /** Cancelable pre-open event — set `cancel` to keep the popup closed. */
+  onOpening?: (event: OgeDropDownOpeningEvent) => void;
+  /** Cancelable pre-close event (with its `reason`) — set `cancel` to keep the popup open. */
+  onClosing?: (event: OgeDropDownClosingEvent) => void;
   /** Popup visibility — controlled when provided. */
   opened?: boolean;
   defaultOpened?: boolean;
@@ -275,6 +335,20 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     }
   }, [virtual.active, props.groupBy, wrapItemText]);
 
+  // --- remote paged data (inert without a dataSource) -----------------------
+
+  const remote = useRemoteList<TItem>({
+    dataSource: props.dataSource,
+    pageSize: props.pageSize,
+    searchTimeout: props.searchTimeout,
+    minSearchLength: props.minSearchLength ?? 0,
+    showDataBeforeSearch: props.showDataBeforeSearch ?? false,
+    valueOf: (item) => listRef.current?.itemValue(item),
+    onPageLoaded: props.onPageLoaded,
+  });
+  const remoteRef = useRef(remote);
+  remoteRef.current = remote;
+
   // --- the shared list machine, on a version-bump reactivity adapter --------
 
   const [, bump] = useReducer((n: number) => n + 1, 0);
@@ -285,7 +359,11 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       {
         inputId: () => latest.current.field.ids.inputId,
         opened: () => openedRef.current,
-        items: () => latest.current.props.items ?? [],
+        items: () =>
+          remoteRef.current.active
+            ? remoteRef.current.core.items()
+            : (latest.current.props.items ?? []),
+        serverFiltering: () => remoteRef.current.active,
         displayExpr: () => latest.current.props.displayExpr,
         valueExpr: () => latest.current.props.valueExpr,
         disabledExpr: () => latest.current.props.disabledExpr,
@@ -340,6 +418,10 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       .resolvedItems()
       .find((item) => Object.is(list.itemValue(item), currentValue));
     if (found !== undefined) return found;
+    if (remote.active) {
+      const remembered = remote.core.lookup(currentValue);
+      if (remembered !== undefined) return remembered;
+    }
     return customSelected !== null &&
       Object.is(list.itemValue(customSelected), currentValue)
       ? customSelected
@@ -385,6 +467,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     offset: () => overlayConfig.offset,
     viewportPadding: () => overlayConfig.viewportPadding,
     restoreFocus: () => nativeRef.current?.focus(),
+    beforeClose: (reason) => allowClose(panelCloseReason(reason)),
     onClosed: () => {
       if (openedRef.current) setOpened(false);
     },
@@ -408,6 +491,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       if (announcedOpen.current) return;
       announcedOpen.current = true;
       list.ensureItemsLoaded();
+      remoteRef.current.core.open();
       if (list.activeIndex() < 0) initActiveFromSelection();
       latest.current.props.onDropDownOpened?.();
     } else {
@@ -417,28 +501,60 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       list.activeIndex.set(-1);
       userNavigated.current = false;
       list.resetSearch();
+      remoteRef.current.core.setSearch(null, true);
       virtualRef.current.reset();
       latest.current.props.onDropDownClosed?.();
     }
   }, [opened, panel.isOpen]);
 
+  // --- remote paging follows the view ---------------------------------------
+
+  // a committed value no loaded page holds resolves through `byKey`
+  useEffect(() => {
+    if (remote.active) remote.core.resolve(field.value);
+  }, [remote.active, remote.core, field.value]);
+  // the rendered window (or the keyboard's active option) nearing the loaded
+  // end asks for the next page; a short non-virtual page fills itself
+  useEffect(() => {
+    if (!remote.active || !opened) return;
+    const end = virtual.active ? virtual.window().end : -1;
+    const target = Math.max(end, list.activeIndex());
+    if (target >= 0) remote.core.notifyVisibleEnd(target);
+    if (!virtual.active) {
+      fillShortList(listElRef.current, remote.core);
+    }
+  });
+
   // --- open/close/select ----------------------------------------------------
 
+  const allowClose = (reason: OgeDropDownCloseReason): boolean =>
+    ogeAllowDropDownClose(latest.current.props.onClosing, reason);
+
   const open = (): void => {
-    if (field.effectiveDisabled || readonly) return;
+    if (field.effectiveDisabled || readonly || openedRef.current) return;
+    if (!ogeAllowDropDownOpen(latest.current.props.onOpening)) return;
     setOpened(true);
     if (list.activeIndex() < 0) initActiveFromSelection();
   };
-  const close = (): void => setOpened(false);
-  const toggle = (): void => (openedRef.current ? close() : open());
+  const close = (reason: OgeDropDownCloseReason = 'api'): boolean => {
+    if (!openedRef.current) return true;
+    if (!allowClose(reason)) return false;
+    setOpened(false);
+    return true;
+  };
+  const toggle = (): void => {
+    if (openedRef.current) close();
+    else open();
+  };
 
   const selectItem = (item: TItem, index: number, event: Event): void => {
     if (list.isItemDisabled(item)) return;
     latest.current.props.onItemClick?.({ item, index, event });
     setCustomSelected(null);
+    if (remote.active) remote.core.remember(item);
     field.commit.commitNow(list.itemValue(item), event);
     list.resetSearch();
-    close();
+    close('select');
     nativeRef.current?.focus();
   };
 
@@ -458,7 +574,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     setCustomSelected(item);
     field.commit.commitNow(list.itemValue(item), event);
     list.resetSearch();
-    close();
+    close('select');
   };
 
   /** Returns `true` when the typed text was handled (created or rejected). */
@@ -552,6 +668,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     const text = event.target.value;
     userNavigated.current = false;
     list.setSearch(text);
+    remote.core.setSearch(text);
     props.onInputChange?.({ text, event: event.nativeEvent });
     props.onSearchChange?.({ text });
     if (!openedRef.current) open();
@@ -598,7 +715,10 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       case 'Escape': {
         if (isOpen) {
           event.preventDefault();
-          close();
+          // handled here — the panel's document listener must not run a
+          // second close (and a second `onClosing`) for the same key
+          event.stopPropagation();
+          close('escape');
           return;
         }
         // two-stage Escape: popup already closed → clear the search text
@@ -610,7 +730,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       }
       case 'Tab': {
         // the adaptive sheet traps Tab; only the anchored popup closes
-        if (isOpen && !adaptive.active) close();
+        if (isOpen && !adaptive.active) close('tab');
         return;
       }
       case 'Home':
@@ -663,8 +783,9 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     blur: () => nativeRef.current?.blur(),
     clear: () => field.clear(),
     open,
-    close,
+    close: () => close(),
     toggle,
+    reload: () => remote.core.reload(),
   }));
 
   // --- render ---------------------------------------------------------------
@@ -675,6 +796,14 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
   const itemsStatus = list.itemsStatus();
   const rows = list.rows();
   const activeIndex = list.activeIndex();
+  const fieldTemplateShown = list.searchText() === null;
+  const busy =
+    loading || itemsStatus === 'loading' || remote.core.status() === 'loading';
+  /** `aria-setsize` of a windowed option: the server total, `-1` while unknown. */
+  const setSize = !remote.active
+    ? list.visibleItems().length
+    : (remote.core.totalCount() ??
+      (remote.core.hasMore() ? -1 : list.visibleItems().length));
 
   const describedBy = (() => {
     const parts: string[] = [];
@@ -710,10 +839,17 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     stylingMode === 'underlined' && 'oge-input-underlined',
     labelMode === 'floating' && 'oge-input-label-floating',
     labelMode === 'outside' && 'oge-input-label-outside',
+    props.renderField && fieldTemplateShown && 'oge-select-field-templated',
     className,
   ]
     .filter(Boolean)
     .join(' ');
+
+  const popupContext: OgeSelectPopupRenderContext<TItem> = {
+    items: list.visibleItems(),
+    searchText: list.searchText() ?? '',
+    loading: busy,
+  };
 
   const statusRow = (content: ReactNode) => (
     <div className="oge-select-status" role="presentation">
@@ -746,7 +882,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       aria-selected={item === selectedItem}
       aria-disabled={list.isItemDisabled(item) ? true : undefined}
       aria-posinset={positional ? index + 1 : undefined}
-      aria-setsize={positional ? visibleItems.length : undefined}
+      aria-setsize={positional ? setSize : undefined}
       title={useItemTextAsTitle ? list.displayOf(item) : undefined}
       onMouseDown={(event) => event.preventDefault()}
       onMouseEnter={() => {
@@ -874,10 +1010,16 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
               return;
             }
             list.resetSearch();
-            if (openedRef.current) close();
+            remote.core.setSearch(null, true);
+            if (openedRef.current) close('blur');
             field.handleBlur(event);
           }}
         />
+        {props.renderField && fieldTemplateShown && (
+          <span className="oge-select-field-content" aria-hidden="true">
+            {props.renderField(selectedItem, { text: displayText })}
+          </span>
+        )}
       </OgeFieldChrome>
       {opened && (
         <OgePopup
@@ -900,6 +1042,11 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
             ) : undefined
           }
         >
+          {props.renderHeader && (
+            <div className="oge-select-popup-header">
+              {props.renderHeader(popupContext)}
+            </div>
+          )}
           <div
             ref={listElRef}
             {...(adaptive.active && !searchEnabled
@@ -928,11 +1075,18 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
               labelMode !== 'hidden' && label ? field.ids.labelId : undefined
             }
             aria-label={labelMode === 'hidden' && label ? label : undefined}
-            onScroll={virtual.onScroll}
+            aria-busy={busy || undefined}
+            onScroll={(event) => {
+              virtual.onScroll(event);
+              if (!virtual.active) remote.onScroll(event.currentTarget);
+            }}
           >
-            {loading || itemsStatus === 'loading' ? (
+            {loading ||
+            itemsStatus === 'loading' ||
+            remote.core.loadingFirstPage() ? (
               statusRow(field.msg.dropDownLoading)
-            ) : itemsStatus === 'error' ? (
+            ) : itemsStatus === 'error' ||
+              (remote.core.status() === 'error' && rows.length === 0) ? (
               statusRow(field.msg.dropDownLoadError)
             ) : rows.length === 0 ? (
               statusRow(field.msg.noDataText)
@@ -960,14 +1114,31 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
                     className="oge-select-group"
                     role="presentation"
                   >
-                    {row.label}
+                    {props.renderGroup
+                      ? props.renderGroup(row.label)
+                      : row.label}
                   </div>
                 ) : (
                   optionRow(row.item, row.index, false)
                 ),
               )
             )}
+            {remote.core.loadingMore() ? (
+              <div
+                className="oge-select-status oge-select-loading-more"
+                role="presentation"
+              >
+                {field.msg.dropDownLoading}
+              </div>
+            ) : remote.core.status() === 'error' && rows.length > 0 ? (
+              statusRow(field.msg.dropDownLoadError)
+            ) : null}
           </div>
+          {props.renderFooter && (
+            <div className="oge-select-popup-footer">
+              {props.renderFooter(popupContext)}
+            </div>
+          )}
         </OgePopup>
       )}
     </span>

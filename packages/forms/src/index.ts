@@ -52,6 +52,9 @@ export {
   type OgeResolvedFormItem,
   type OgeValidationContext,
   type OgeValidationRule,
+  type OgeFormCondition,
+  type OgeComparisonType,
+  type OgeFormServerErrors,
 } from './lib/form/form-types';
 export {
   provideOgeFormsConfig,

@@ -16,6 +16,8 @@ import { withInputWidth } from './field-extras';
 import {
   OgeSelectListCore,
   adaptiveListViewportHeight,
+  type OgeListDataSource,
+  type OgeListPageLoadedEvent,
   type OgeVirtualScrollOptions,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
@@ -48,6 +50,7 @@ import {
   type OgeAdaptiveProps,
 } from './adaptive';
 import { useOgeInputsConfig } from './inputs-config';
+import { fillShortList, useRemoteList } from './use-remote-list';
 
 /** Payload of `onSelectionChange` — the picked suggestion (or `null`). */
 export interface OgeAutocompleteSelectionChangedEvent<TItem> {
@@ -70,6 +73,8 @@ export interface OgeAutocompleteHandle {
   open(): void;
   close(): void;
   toggle(): void;
+  /** Re-requests the current search from `dataSource`, dropping every cached page. */
+  reload(): void;
 }
 
 export interface OgeAutocompleteProps<TItem = unknown>
@@ -104,6 +109,15 @@ export interface OgeAutocompleteProps<TItem = unknown>
    * Rows get a fixed size-matched height; `groupBy` is ignored while active.
    */
   virtualScroll?: boolean | OgeVirtualScrollOptions;
+  /**
+   * Remote, paged suggestions — see `OgeSelectBox`'s `dataSource`. The typed
+   * text is the `searchText`; `maxItemCount` does not apply, `pageSize` does.
+   */
+  dataSource?: OgeListDataSource<TItem>;
+  /** Rows requested per `dataSource` page; provider default (30) otherwise. */
+  pageSize?: number;
+  /** A `dataSource` page landed (search text, offset, rows, total). */
+  onPageLoaded?: (event: OgeListPageLoadedEvent<TItem>) => void;
   /** Wraps long suggestion text instead of ellipsizing it. */
   wrapItemText?: boolean;
   useItemTextAsTitle?: boolean;
@@ -247,6 +261,20 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
     }
   }, [virtual.active, props.groupBy, wrapItemText]);
 
+  const remote = useRemoteList<TItem>({
+    dataSource: props.dataSource,
+    pageSize: props.pageSize,
+    searchTimeout: props.searchTimeout,
+    minSearchLength: props.minSearchLength ?? 1,
+    // an open list below the threshold (chevron) shows the unfiltered
+    // suggestions, exactly as the local list does
+    showDataBeforeSearch: true,
+    valueOf: (item) => item,
+    onPageLoaded: props.onPageLoaded,
+  });
+  const remoteRef = useRef(remote);
+  remoteRef.current = remote;
+
   const [, bump] = useReducer((n: number) => n + 1, 0);
   const listRef = useRef<OgeSelectListCore<TItem>>(undefined);
   if (!listRef.current) {
@@ -254,7 +282,11 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
       {
         inputId: () => latest.current.field.ids.inputId,
         opened: () => openedRef.current,
-        items: () => latest.current.props.items ?? [],
+        items: () =>
+          remoteRef.current.active
+            ? remoteRef.current.core.items()
+            : (latest.current.props.items ?? []),
+        serverFiltering: () => remoteRef.current.active,
         displayExpr: () => latest.current.props.displayExpr,
         valueExpr: () => undefined,
         disabledExpr: () => latest.current.props.disabledExpr,
@@ -266,7 +298,10 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
           latest.current.props.searchTimeout ?? config.searchTimeoutMs,
         minSearchLength: () => latest.current.props.minSearchLength ?? 1,
         showDataBeforeSearch: () => true,
-        maxItems: () => latest.current.props.maxItemCount ?? 10,
+        maxItems: () =>
+          remoteRef.current.active
+            ? undefined
+            : (latest.current.props.maxItemCount ?? 10),
         groupBy: () =>
           virtualRef.current.active ? undefined : latest.current.props.groupBy,
         scrollActiveIntoView: (index) => {
@@ -290,6 +325,15 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
     armedItemsRef.current = items;
     list.syncItemsSource();
     if (openedRef.current) list.ensureItemsLoaded();
+  });
+
+  // paging follows the view (rendered window / keyboard position)
+  useEffect(() => {
+    if (!remote.active || !opened) return;
+    const end = virtual.active ? virtual.window().end : -1;
+    const target = Math.max(end, list.activeIndex());
+    if (target >= 0) remote.core.notifyVisibleEnd(target);
+    if (!virtual.active) fillShortList(listElRef.current, remote.core);
   });
 
   // filtering may shrink the list under the active option
@@ -357,6 +401,7 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
       if (announcedOpen.current) return;
       announcedOpen.current = true;
       list.ensureItemsLoaded();
+      remoteRef.current.core.open();
       latest.current.props.onDropDownOpened?.();
     } else {
       if (machine.isOpen) machine.close('api');
@@ -421,6 +466,7 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
   const onTextInput = (event: ChangeEvent<HTMLInputElement>): void => {
     const text = event.target.value;
     list.setSearch(text);
+    remote.core.setSearch(text);
     props.onInputChange?.({ text, event: event.nativeEvent });
     props.onSearchChange?.({ text });
     // typing below the threshold closes the list — but never the adaptive
@@ -496,6 +542,7 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
     open,
     close,
     toggle,
+    reload: () => remote.core.reload(),
   }));
 
   // --- render ----------------------------------------------------------------
@@ -761,11 +808,23 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
               labelMode !== 'hidden' && label ? field.ids.labelId : undefined
             }
             aria-label={labelMode === 'hidden' && label ? label : undefined}
-            onScroll={virtual.onScroll}
+            aria-busy={
+              loading ||
+              itemsStatus === 'loading' ||
+              remote.core.status() === 'loading' ||
+              undefined
+            }
+            onScroll={(event) => {
+              virtual.onScroll(event);
+              if (!virtual.active) remote.onScroll(event.currentTarget);
+            }}
           >
-            {loading || itemsStatus === 'loading' ? (
+            {loading ||
+            itemsStatus === 'loading' ||
+            remote.core.loadingFirstPage() ? (
               statusRow(field.msg.dropDownLoading)
-            ) : itemsStatus === 'error' ? (
+            ) : itemsStatus === 'error' ||
+              (remote.core.status() === 'error' && rows.length === 0) ? (
               statusRow(field.msg.dropDownLoadError)
             ) : rows.length === 0 ? (
               statusRow(field.msg.noDataText)
@@ -799,6 +858,14 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
                   optionRow(row.item, row.index, false)
                 ),
               )
+            )}
+            {remote.core.loadingMore() && (
+              <div
+                className="oge-select-status oge-select-loading-more"
+                role="presentation"
+              >
+                {field.msg.dropDownLoading}
+              </div>
             )}
           </div>
         </OgePopup>

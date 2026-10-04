@@ -10,6 +10,7 @@
 @use '../../../inputs/color-box/src/color-box';
 @use '../../../inputs/calendar/src/calendar';
 @use '../../../inputs/date-box/src/date-box';
+@use '../../../inputs/multi-column-combo-box/src/multi-column-combo-box';
 // NOTE: the tree select's popup is `@oge-ui/react-navigation`'s tree component
 // itself, so its rules ship in *that* package's `styles.css` — exactly as the
 // popup box it sits in ships in `@oge-ui/react-overlay`'s. Inlining them here
