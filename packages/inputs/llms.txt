@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/inputs`
 
-- values: `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeColorBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
-- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
+- values: `OGE_COLOR_PALETTE_PRESETS`, `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeCheckBoxGroup`, `OgeColorBox`, `OgeColorGradient`, `OgeColorPalette`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeMaskedTextBox`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeToggleGroup`, `OgeTreeSelect`, `contrastLevels`, `contrastRatio`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `ogeDateRangePresets`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
+- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeCheckBoxGroupItemClickEvent`, `OgeCheckBoxGroupItemTemplateContext`, `OgeCheckBoxGroupLayout`, `OgeCheckBoxGroupSelectAllEvent`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeColorPalettePreset`, `OgeColorPalettePresetData`, `OgeContrastLevels`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeDateRangeBoxType`, `OgeDateRangePreset`, `OgeDateRangePresetId`, `OgeDateRangePresetOptions`, `OgeDateRangeWeekPresetOptions`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeMaskCompletedEvent`, `OgeMaskRule`, `OgeMaskRules`, `OgeMaskShowMode`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeToggleGroupItemClickEvent`, `OgeToggleGroupItemTemplateContext`, `OgeToggleGroupSelectionChangedEvent`, `OgeToggleGroupSelectionMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
 
 `@oge-ui/inputs/*`
 
@@ -120,6 +120,18 @@ _OgeTextBox_
 | `enterKeyHint` | `string \| undefined` | `—` | Native `enterkeyhint` attribute. |
 | `autocapitalize` | `string \| undefined` | `—` | Native `autocapitalize` attribute. |
 | `spellcheck` | `boolean \| undefined` | `—` | `undefined` omits the attribute (browser default). |
+
+_Mask_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mask` | `string \| undefined` | `—` | Input mask — `0` digit, `9` optional digit, `#` digit/space/sign, `L`/`l` letter (required/optional, any script), `A`/`a` letter or digit, `C`/`c` any character, a backslash escapes a literal; every other character is a literal. Typing overwrites slot by slot and skips literals, Backspace/Delete empty a slot without shifting the rest, paste accepts raw or formatted text, IME composition is applied at `compositionend`. `undefined` = a plain text box. |
+| `maskRules` | `OgeMaskRules` | `—` | Extra or overriding single-character rules — a one-character `RegExp`, a string of allowed characters or a predicate; custom slots are always required. |
+| `maskChar` | `string` | `'_'` | Placeholder character of empty mask slots. |
+| `showMaskMode` | `OgeMaskShowMode` | `'always'` | `'always'` shows the empty mask while blurred too (not under a floating label); `'onFocus'` only while focused or filled, so the `placeholder` shows. |
+| `includeLiterals` | `boolean` | `false` | Commit the formatted text with literals (`(555) 123-4567`) instead of the raw characters — DevExtreme `useMaskedValue`. |
+| `maskInvalidMessage` | `string \| undefined` | `—` | Error shown while required slots are empty (after blur, per `errorDisplay`); falls back to `messages.maskInvalidError`. A reactive control also gets a `{ mask }` validator attached. |
+| `maskValidation` | `boolean` | `true` | The built-in “required slots are filled” check (Kendo `maskValidation`): the field error and the reactive-forms `{ mask }` validator. `false` leaves completeness to your own validators. |
 
 _Common — field chrome (all editors)_
 
@@ -163,6 +175,12 @@ _Common — state & forms (all editors)_
 
 #### Methods
 
+_Mask_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isMaskComplete(): boolean` | `boolean` | `true` unless a mask is set and a required slot of the entered value is empty (an empty field counts as complete — leave that to `required`). |
+
 _Common (all editors)_
 
 | Name | Type | Description |
@@ -173,6 +191,116 @@ _Common (all editors)_
 | `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
 
 #### Events
+
+_Mask_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `maskCompleted` | `OgeMaskCompletedEvent` | The last required mask slot was filled — `{ value, rawValue, maskedValue }`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+### OgeMaskedTextBox — `<oge-masked-text-box>`
+
+#### Properties
+
+_OgeMaskedTextBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<string>` | `''` | Editor value — two-way. The raw characters, or the formatted text with `includeLiterals`. |
+| `mask` | `string (required)` | `—` | Input mask — `0` digit, `9` optional digit, `#` digit/space/sign, `L`/`l` letter (required/optional, any script), `A`/`a` letter or digit, `C`/`c` any character, a backslash escapes a literal; every other character is a literal. Typing overwrites slot by slot and skips literals, Backspace/Delete empty a slot without shifting the rest, paste accepts raw or formatted text, IME composition is applied at `compositionend`. |
+| `maskRules` | `OgeMaskRules` | `—` | Extra or overriding single-character rules — a one-character `RegExp`, a string of allowed characters or a predicate; custom slots are always required. |
+| `maskChar` | `string` | `'_'` | Placeholder character of empty mask slots. |
+| `showMaskMode` | `OgeMaskShowMode` | `'always'` | `'always'` shows the empty mask while blurred too (not under a floating label); `'onFocus'` only while focused or filled, so the `placeholder` shows. |
+| `includeLiterals` | `boolean` | `false` | Commit the formatted text with literals (`(555) 123-4567`) instead of the raw characters — DevExtreme `useMaskedValue`. |
+| `maskInvalidMessage` | `string \| undefined` | `—` | Error shown while required slots are empty (after blur, per `errorDisplay`); falls back to `messages.maskInvalidError`. A reactive control also gets a `{ mask }` validator attached. |
+| `maskValidation` | `boolean` | `true` | The built-in “required slots are filled” check (Kendo `maskValidation`): the field error and the reactive-forms `{ mask }` validator. `false` leaves completeness to your own validators. |
+| `spellcheck` | `boolean \| undefined` | `false` | Off by default — masked values are codes, not words. |
+| `autocomplete` | `string \| undefined` | `'off'` | Off by default; set e.g. `'tel-national'` to let the browser offer phone numbers. |
+| `inputMode` | `string \| undefined` | `—` | Native `inputmode`; unset, a digit-only mask implies `'numeric'`. |
+| `mode` | `OgeTextBoxMode` | `'text'` | Native input type (as on the text box). |
+| `showCopyButton` | `boolean` | `false` | Copy-to-clipboard rail button; copies the value. |
+| `enterKeyHint` | `string \| undefined` | `—` | Native `enterkeyhint` attribute. |
+| `autocapitalize` | `string \| undefined` | `—` | Native `autocapitalize` attribute. |
+
+_Common — field chrome (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string \| undefined` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `{}` | Escape hatch: extra attributes rendered onto the native input (template-owned attributes are ignored). |
+| `messages` | `Partial<OgeInputsMessages> \| undefined` | `—` | Per-instance overrides of user-facing strings. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeMaskedTextBox_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `rawValue(): string` | `string` | The entered characters without literals, whatever `includeLiterals` says. |
+| `maskedValue(): string` | `string` | The formatted text with literals (`''` while empty), whatever `includeLiterals` says. |
+| `isMaskComplete(): boolean` | `boolean` | `true` unless a mask is set and a required slot of the entered value is empty (an empty field counts as complete — leave that to `required`). |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_Mask_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `maskCompleted` | `OgeMaskCompletedEvent` | The last required mask slot was filled — `{ value, rawValue, maskedValue }`. |
 
 _Common (all editors)_
 
@@ -286,7 +414,10 @@ _OgeNumberBox_
 | `max` | `number \| undefined` | `—` | Upper bound — clamped on commit. |
 | `step` | `number` | `1` | Spin/arrow-key increment. Spinning commits immediately. |
 | `showSpinButtons` | `boolean` | `false` | Up/down spin buttons with hold-to-repeat. |
-| `format` | `Intl.NumberFormatOptions \| undefined` | `—` | Display formatting applied while unfocused; focus shows the raw number. `style: 'percent'` formats display only — the model value is not rescaled. |
+| `format` | `Intl.NumberFormatOptions \| undefined` | `—` | Blur-time display format: applied while unfocused (and after the blur clamp); focus swaps in the editable number, so typing never fights a currency sign or a rounding. `style: 'percent'` formats display only — the model value is not rescaled. |
+| `formatWhileTyping` | `boolean` | `false` | Groups thousands live while focused (the locale’s separators — Indian 2-digit groups included), keeping the caret beside the digit just typed. The committed value is the same number either way. |
+| `maxFractionDigits` | `number \| undefined` | `—` | Caps the fraction digits while typing — extra digits are not accepted (`0` refuses the decimal separator). `undefined` = unlimited. |
+| `wheelStep` | `number \| undefined` | `—` | Opt-in mouse-wheel stepping by this amount, only while the field is focused (wheel up adds; clamped to `min`/`max`). Unset or `0` leaves the wheel to the page. |
 | `locale` | `string \| undefined` | `—` | Overrides the application locale (`LOCALE_ID`). |
 | `mode` | `OgeNumberBoxMode` | `'text'` | Native `type` attribute; `inputmode` is always `decimal`. |
 
@@ -1195,7 +1326,12 @@ _OgeDateBox_
 | `displayFormat` | `Intl.DateTimeFormatOptions \| ((d: Date) => string)` | `—` | Display text; `undefined` = per-type Intl defaults. No format strings, no date library. |
 | `min / max / disabledDates` | `as OgeCalendar` | `—` | Out-of-range typed text marks the field invalid — it is never clamped (unlike the number box). |
 | `interval` | `number` | `30` | Time list step in minutes. |
-| `timeView` | `'list' \| 'columns'` | `'list'` | Time picker layout: one interval list, or hour + minute columns. |
+| `timeView` | `'list' \| 'columns'` | `'list'` | Time picker layout: one interval list, or hour + minute columns (plus seconds / AM-PM columns when enabled). Each column is a labelled listbox. |
+| `hour12` | `boolean \| undefined` | `—` | Clock of the display text and the picker. `true` adds an AM/PM column to `timeView: 'columns'` (hours 12, 1 … 11); `false` forces 24-hour; `undefined` follows the locale with the single 24-entry hour column. |
+| `showSeconds` | `boolean` | `false` | Seconds in the display text (`timeStyle: 'medium'`), a seconds column and a seconds segment of the masked entry; typed `HH:MM:SS` parses. Off, picks zero the seconds. |
+| `showTodayButton` | `boolean` | `false` | Footer "Today" button (`date` / `datetime`): picks today through the calendar path — `datetime` keeps the time of day. Disabled when `min`/`max`/`disabledDates` exclude today. |
+| `showNowButton` | `boolean` | `false` | Footer "Now" button (`time` / `datetime`): commits the current time (seconds kept only with `showSeconds`) and closes; with `useButtons` it drafts instead. |
+| `useMaskBehavior` | `boolean` | `false` | Segment entry (DevExtreme `useMaskBehavior`): the field shows the locale’s numeric pattern (`dd.mm.yyyy`, `mm/dd/yyyy`… from `Intl`), digits fill the selected segment and auto-advance, ArrowUp/Down step it with wrap-around, ArrowLeft/Right (mirrored in RTL) and Home/End move between segments, Backspace/Delete clear, a typed separator moves on, `a`/`p` set AM/PM, paste reads a whole date and Alt+ArrowDown opens the picker. Commits on blur/Enter like typed text; impossible dates show the invalid state and revert. `displayFormat` is not used while it is on. |
 | `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects picker changes in a draft when `useButtons`. |
 | `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). |
 | `openOnFieldClick` | `boolean` | `true` | Clicking the field opens the picker. |
@@ -1207,8 +1343,10 @@ _OgeDateRangeBox_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value` | `model<[Date \| null, Date \| null]>` | `[null, null]` | Start–end tuple on one field: two parsed inputs + a two-view range calendar popup. A reversed pair reorders on commit; either end may stay open. |
-| `type` | `'date' \| 'datetime'` | `'date'` | `'datetime'` adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times. |
-| `interval` | `number` | `30` | Time list step in minutes (`type: 'datetime'`). |
+| `type` | `OgeDateRangeBoxType` | `'date'` | `'datetime'` adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times. `'time'` is a time-range picker — no calendar, two time lists and OK. |
+| `presets` | `readonly OgeDateRangePreset[]` | `[]` | Quick ranges listed beside the calendar (a horizontal chip row in the adaptive dialog), each an `aria-pressed` button that reads pressed while the draft matches it. `{ label, range: () => [start, end] }` — `range` is evaluated on render and on pick, never at construction — or the built-in `ogeDateRangePresets.today() / yesterday() / last7Days() / last30Days() / thisWeek() / lastWeek() / thisMonth() / lastMonth() / thisYear() / lastYear()`, labelled from the messages. A `date` box commits and closes on a pick; `time`/`datetime` and the adaptive dialog draft it for OK/Done. |
+| `hour12 / showSeconds` | `boolean \| undefined / boolean` | `—` | Clock and seconds of the display text and the time lists, as on `OgeDateBox`. |
+| `interval` | `number` | `30` | Time list step in minutes (`type: 'time' \| 'datetime'`). |
 | `min / max / disabledDates / firstDayOfWeek / showWeekNumbers / locale / displayFormat / openOnFieldClick / acceptCustomValue` | `as OgeDateBox` | `—` | Shared configuration surface. |
 | `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-screen dialog showing one month, where picking both ends waits for an explicit Done that applies the range on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 
@@ -1298,6 +1436,10 @@ _Date types_
 | --- | --- | --- |
 | `parseDateText(text, locale, kind, reference?)` | `function` | Exported: locale-aware text → local `Date \| null` via Intl part order — never `Date.parse`. |
 | `OgeDateBoxType / OgeDateBoxApplyValueMode / OgeDateBoxDisplayFormat / OgeDateBoxTimeView` | `types` | The string unions and the display-format shape. |
+| `OgeDateRangeBoxType` | `'date' \| 'time' \| 'datetime'` | What the date range box edits. |
+| `OgeDateRangePreset` | `{ label?: string; id?: string; range: () => [Date \| null, Date \| null] }` | One preset entry. `label` wins; built-ins carry an `id` whose message supplies the label. |
+| `ogeDateRangePresets` | `object of factories` | Built-in presets, each `(options?: { label?, now? }) => OgeDateRangePreset` covering whole local days; `thisWeek`/`lastWeek` also take `firstDayOfWeek` / `locale`. `now` overrides the clock (tests, "as of" pages). |
+| `OgeDateRangePresetId / OgeDateRangePresetOptions / OgeDateRangeWeekPresetOptions` | `types` | The built-in ids and the factory option shapes. |
 
 ### OgeColorBox — `<oge-color-box>`
 
@@ -1413,6 +1555,311 @@ _Color types_
 | `Color messages` | `OgeInputsMessages keys` | All popup strings localize through the family config: `colorPickerLabel`, `hueSliderLabel`/`hueValueText`, `alphaSliderLabel`/`alphaValueText`, `colorSurfaceLabel`/`colorSurfaceRoleDescription`/`surfaceValueText`, `paletteLabel`, the hex/R/G/B/A input labels, `eyedropperButton` and `invalidColorError`. |
 | `parseColor / formatColor / normalizeColor / rgbaToHsva / hsvaToRgba / relativeLuminance / contrastForeground / colorsEqual` | `@oge-ui/core` | The DOM-free color kernel (`OgeRgba` / `OgeHsva` / `OgeColorFormat`): CSS color-text parsing, HSV↔RGB conversion, canonical formatting and the WCAG swatch-contrast decision — unit-tested without a DOM, the slider-math precedent. |
 
+### OgeColorGradient — `<oge-color-gradient>`
+
+#### Properties
+
+_OgeColorGradient_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<string \| null>` | `null` | The committed color as a CSS string, normalized to `format` on commit; parseable programmatic values are kept verbatim — two-way. |
+| `label` | `string` | `''` | Accessible name of the `role="group"`; falls back to the `colorGradientLabel` message. |
+| `format` | `OgeColorFormat` | `'hex'` | Committed string shape (`hex` / `rgb` / `rgba` / `hsl`); translucent colors widen to carry alpha. |
+| `editAlphaChannel` | `boolean` | `false` | Renders the alpha slider and the alpha-percent input, and commits alpha-carrying strings. |
+| `keyStep` | `number` | `5` | Arrow-key increment of the surface and sliders (degrees / percent); PageUp/PageDown move 5×. |
+| `showInputs` | `boolean` | `true` | Renders the hex + R/G/B(/A) inputs. They commit on `change` (blur / Enter); unusable text is reverted, never applied. |
+| `showContrast` | `boolean` | `false` | Renders the WCAG contrast readout — a sample, the ratio and AA / AAA pass-fail badges (Kendo’s `contrastTool`). |
+| `contrastBackground` | `string` | `'#ffffff'` | The background (any CSS color) the contrast ratio is measured against — set it to the surface the color will sit on. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+_Contrast & palette helpers_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `contrastRatio` | `(foreground: OgeRgba, background: OgeRgba) => number` | WCAG 2.x contrast ratio (1–21). A translucent foreground is composited over the background first, so the ratio describes the rendered pair. Re-exported from `@oge-ui/behavior`. |
+| `contrastLevels` | `(ratio: number) => OgeContrastLevels` | Classifies a ratio against AA (4.5), AA large (3), AAA (7) and AAA large (4.5). The comparison runs on the unrounded ratio; the displayed `ratio` is truncated, never rounded up into a pass. |
+| `OgeContrastLevels` | `{ ratio; aa; aaLarge; aaa; aaaLarge }` | Result of `contrastLevels`. |
+
+_Color gradient messages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `colorGradientLabel / contrastLabel / contrastRatioText / contrastPass / contrastFail` | `OgeInputsMessages keys` | The gradient’s own strings (`{ratio}` / `{level}` placeholders); the surface, slider and channel-input labels are the color box’s keys. |
+
+### OgeColorPalette — `<oge-color-palette>`
+
+#### Properties
+
+_OgeColorPalette_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<string \| null>` | `null` | The picked swatch string as listed in the palette — two-way. |
+| `palette` | `OgeColorPalettePreset \| readonly string[]` | `'default'` | A preset (`'default' \| 'basic' \| 'office' \| 'material' \| 'monochrome'`) or your own CSS color list; unparseable entries are dropped. |
+| `columns` | `number \| undefined` | `—` | Tiles per row; `undefined` uses the preset’s own count (10 for a custom list). |
+| `tileSize` | `number \| undefined` | `—` | Tile edge in px; `undefined` lets the tiles share the available width. |
+| `label` | `string` | `''` | Accessible name of the grid; falls back to the `paletteLabel` message. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+_Palette types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeColorPalettePreset` | `'default' \| 'basic' \| 'office' \| 'material' \| 'monochrome'` | The built-in swatch sets. |
+| `OGE_COLOR_PALETTE_PRESETS` | `Record<OgeColorPalettePreset, OgeColorPalettePresetData>` | The preset data — `{ colors, columns }` each — for building your own picker around the same sets. |
+| `OgeColorPalettePresetData` | `{ colors: readonly string[]; columns: number }` | One preset. |
+| `Keyboard` | `APG grid` | Arrows move by tile / row (RTL-mirrored; no wrap, no row crossing), Home/End to the row edges, Ctrl+Home/Ctrl+End to the corners, Enter/Space picks. One roving tab stop — the selected tile, else the first. |
+
+### OgeCheckBoxGroup — `<oge-check-box-group>`
+
+#### Properties
+
+_OgeCheckBoxGroup_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<readonly unknown[]>` | `[]` | The checked items’ `valueExpr` results, in items order (not click order); values no item produces are kept — two-way. |
+| `items` | `readonly TItem[]` | `[]` | One check box per item. |
+| `displayExpr / valueExpr / disabledExpr` | `shared with OgeSelectBox` | `—` | Field-name string or function expressions. Disabled items keep their checked state — select all never changes them. |
+| `layout` | `OgeCheckBoxGroupLayout` | `'vertical'` | `'vertical'`, `'horizontal'` (wrapping row) or `'columns'` (a `columns`-column grid). |
+| `columns` | `number` | `2` | Column count of `layout: 'columns'`. |
+| `label` | `string` | `''` | Visible group label and the group’s accessible name (`aria-labelledby`); a required marker follows it. |
+| `hint` | `string \| undefined` | `—` | Helper text under the items (`aria-describedby`), hidden while an error shows. |
+| `showSelectAll` | `boolean` | `false` | A tri-state “select all” box above the items — checked / mixed / unchecked over the enabled items; from mixed it selects all. |
+| `selectAllText` | `string \| undefined` | `—` | Text of the select-all box; `undefined` = the `selectAllText` message. |
+| `itemTemplate` | `TemplateRef<OgeCheckBoxGroupItemTemplateContext>` | `—` | Custom label next to each glyph; context: `$implicit`, `index`, `checked`. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeCheckBoxGroup methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectAll() / unselectAll()` | `() => void` | Checks / unchecks every enabled item (disabled items keep their state); commits immediately. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeCheckBoxGroup events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeCheckBoxGroupItemClickEvent` | One check box was toggled by the user — `{ item, index, checked, event }`. |
+| `selectAllChanged` | `OgeCheckBoxGroupSelectAllEvent` | The select-all box was toggled by the user — `{ checked, event }`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCheckBoxGroupLayout` | `'horizontal' \| 'vertical' \| 'columns'` | Arrangement of the boxes. |
+| `OgeCheckBoxGroupItemClickEvent / OgeCheckBoxGroupSelectAllEvent` | `interfaces` | Payloads of `itemClick` / `selectAllChanged`. |
+| `OgeCheckBoxGroupItemTemplateContext` | `{ $implicit; index; checked }` | Context of `itemTemplate`. |
+| `Validation` | `forms` | Reactive `Validators.required` treats `[]` as empty. Signal Forms' `required()` does not — express “at least one” as `minLength(p.field, 1, { message })`. |
+
+### OgeToggleGroup — `<oge-toggle-group>`
+
+#### Properties
+
+_OgeToggleGroup_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<unknown>` | `null` | The selected item's `valueExpr` result (`single`; `null` = none) or an array of them in items order (`multiple`) — two-way. |
+| `items` | `readonly TItem[]` | `[]` | The segments. |
+| `displayExpr / valueExpr / disabledExpr` | `shared with OgeSelectBox` | `—` | Field-name string or function expressions. |
+| `selectionMode` | `OgeToggleGroupSelectionMode` | `'single'` | `'single'` — the APG radio group (arrows move focus and selection; the selected segment cannot be pressed off). `'multiple'` — `aria-pressed` toggle buttons (arrows move focus only). |
+| `label` | `string` | `''` | Visible caption and the accessible name of the segment track. |
+| `hideLabel` | `boolean` | `false` | Keeps `label` as the accessible name only (`aria-label`), without the caption. |
+| `hint` | `string \| undefined` | `—` | Helper text under the segments, hidden while an error shows. |
+| `fluid` | `boolean` | `false` | Stretches the track to the container width; segments share it equally. |
+| `itemTemplate` | `TemplateRef<OgeToggleGroupItemTemplateContext>` | `—` | Custom segment content (icons, badges); context: `$implicit`, `index`, `selected`. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeToggleGroup events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeToggleGroupItemClickEvent` | A segment was pressed by click or keyboard, before any value change — `{ item, index, event }`. |
+| `selectionChanged` | `OgeToggleGroupSelectionChangedEvent` | The value changed through user interaction — `{ value, addedValues, removedValues }`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeToggleGroupSelectionMode` | `'single' \| 'multiple'` | One value or many. |
+| `OgeToggleGroupItemClickEvent / OgeToggleGroupSelectionChangedEvent` | `interfaces` | Payloads of `itemClick` / `selectionChanged`. |
+| `OgeToggleGroupItemTemplateContext` | `{ $implicit; index; selected }` | Context of `itemTemplate`. |
+| `vs. OgeButtonGroup` | `choice` | `oge-button-group` is an action / segmented control with `selectedKeys`; `oge-toggle-group` is the form editor — label, hint, validation, Signal Forms and reactive forms, scalar single value. Both run the same `@oge-ui/behavior` selection and arrow-key functions. |
+
 ### Shared input types
 
 #### Types
@@ -1431,6 +1878,16 @@ _Unions & contracts_
 | `OgeTextBoxMode` | `'text' \| 'email' \| 'password' \| 'search' \| 'tel' \| 'url'` | Native input type of the text box. |
 | `OgeNumberBoxMode` | `'text' \| 'tel'` | Native input type of the number box. |
 | `OgeFieldError` | `{ kind: string; message?: string }` | Structural mirror of Signal Forms' `ValidationError`. |
+
+_Mask_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeMaskRule` | `RegExp \| string \| ((char: string) => boolean)` | One custom mask rule: a one-character `RegExp`, a string listing the allowed characters, or a predicate. |
+| `OgeMaskRules` | `Readonly<Record<string, OgeMaskRule>>` | Custom rules keyed by a single mask character. |
+| `OgeMaskShowMode` | `'always' \| 'onFocus'` | When the empty mask placeholders are visible. |
+| `OgeMaskCompletedEvent` | `{ value: string; rawValue: string; maskedValue: string }` | Payload of `maskCompleted`. |
+| `ogeMaskComplete(mask, value, { rules?, includeLiterals? })` | `boolean` | From `@oge-ui/behavior`: `true` when `value` fills every required slot (empty counts as complete) — the check a Signal Forms `validate()` or a server runs without an editor. |
 
 _Event payloads_
 
@@ -1492,8 +1949,13 @@ _OgeInputsMessages_
 | `minError / maxError` | `string` | `'Value must be at least {min}' / '…at most {max}'` | Numeric bound errors. |
 | `minLengthError / maxLengthError` | `string` | `'Enter at least {requiredLength} characters' / 'Enter no more than…'` | Length errors. |
 | `patternError` | `string` | `'The value has an invalid format'` | Pattern mismatch. |
+| `maskInvalidError` | `string` | `'Complete the value in the required format'` | Text box / masked text box: required mask slots are empty (also the `mask` Signal Forms error kind). `maskInvalidMessage` overrides it per editor. |
 | `invalidNumberError` | `string` | `'Enter a valid number'` | Number box parse failure (reverts on blur). |
 | `invalidError` | `string` | `'Invalid value'` | Fallback for unknown validation error kinds. |
+| `nowButton` | `string` | `'Now'` | Date box footer button of `showNowButton`. |
+| `presetsLabel / presetToday … presetLastYear` | `string` | `'Quick ranges' / 'Today' … 'Last year'` | Aria label of the date range box preset list, and the labels of the built-in `ogeDateRangePresets` (`presetToday`, `presetYesterday`, `presetLast7Days`, `presetLast30Days`, `presetThisWeek`, `presetLastWeek`, `presetThisMonth`, `presetLastMonth`, `presetThisYear`, `presetLastYear`). |
+| `hourColumnLabel / minuteColumnLabel / secondColumnLabel / dayPeriodColumnLabel` | `string` | `'Hours' / 'Minutes' / 'Seconds' / 'AM/PM'` | Aria labels of the time picker columns (`timeView: 'columns'`). |
+| `segmentDay / segmentMonth / segmentYear / segmentHour / segmentMinute / segmentSecond / segmentDayPeriod` | `string` | `'dd' / 'mm' / 'yyyy' / 'hh' / 'mm' / 'ss' / '--'` | Empty-segment placeholders of the masked date entry (`useMaskBehavior`) — translate them with the UI (`TT.MM.JJJJ`). |
 
 ## Demos
 
@@ -1712,6 +2174,133 @@ export class Demo {
 
 ```ts
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeCheckBoxGroup } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCheckBoxGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One real check box per item (native semantics, its own Tab stop —
+         the APG checkbox group) inside a role="group" named by the label. The
+         value is the ARRAY of checked valueExpr results, in items order however
+         the user clicked. Disabled items keep their state. -->
+    <oge-check-box-group
+      label="Notify me by"
+      hint="We never share your details."
+      [items]="channels"
+      displayExpr="name"
+      valueExpr="id"
+      disabledExpr="locked"
+      [(value)]="notify"
+    />
+  `,
+})
+export class Demo {
+  protected readonly channels = [
+    { id: 'mail', name: 'E-mail' },
+    { id: 'sms', name: 'SMS' },
+    { id: 'push', name: 'Push (always on)', locked: true },
+    { id: 'call', name: 'Phone call' },
+  ];
+  protected readonly notify = signal<readonly unknown[]>(['mail', 'push']);
+}
+```
+
+### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeCheckBoxGroup } from '@oge-ui/inputs';
+import { FormField, form, minLength } from '@angular/forms/signals';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCheckBoxGroup, FormField],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Signal Forms' required() treats [] as a value, so "at least one"
+         is minLength(…, 1) with its own message. Reactive Validators.required
+         treats [] as empty and works as is. -->
+    <oge-check-box-group
+      label="Interests"
+      [items]="interests"
+      [formField]="f.interests"
+    />
+  `,
+})
+export class Demo {
+  protected readonly interests = ['Design', 'Engineering', 'Product', 'Sales'];
+  protected readonly model = signal<{ interests: readonly unknown[] }>({ interests: [] });
+  protected readonly f = form(this.model, (p) => {
+    minLength(p.interests, 1, { message: 'Pick at least one interest' });
+  });
+}
+```
+
+### Layout
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeCheckBoxGroup } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCheckBoxGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- layout: 'vertical' (default) | 'horizontal' (a wrapping row) |
+         'columns' (a CSS grid of [columns] columns). -->
+    <oge-check-box-group label="Days" layout="horizontal" [items]="days" [(value)]="workDays" />
+    <oge-check-box-group
+      label="Toppings"
+      layout="columns"
+      [columns]="3"
+      [items]="toppings"
+      [(value)]="pizza"
+    />
+  `,
+})
+export class Demo {
+  protected readonly days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  protected readonly workDays = signal<readonly unknown[]>(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
+  protected readonly toppings = ['Basil', 'Olives', 'Mushrooms', 'Peppers', 'Onion', 'Ham'];
+  protected readonly pizza = signal<readonly unknown[]>(['Basil']);
+}
+```
+
+### Select all
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeCheckBoxGroup } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCheckBoxGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showSelectAll: a tri-state box over the ENABLED items — checked,
+         mixed or unchecked; from mixed it selects all. selectAll() /
+         unselectAll() do the same from code. -->
+    <oge-check-box-group
+      label="Columns to export"
+      [items]="columns"
+      [showSelectAll]="true"
+      [(value)]="picked"
+    />
+  `,
+})
+export class Demo {
+  protected readonly columns = ['Name', 'E-mail', 'City', 'Country', 'Phone'];
+  protected readonly picked = signal<readonly unknown[]>(['Name', 'City']);
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { OgeColorBox } from '@oge-ui/inputs';
 
 @Component({
@@ -1874,6 +2463,223 @@ export class Demo {
 }
 ```
 
+### Alpha
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorGradient } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorGradient],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- editAlphaChannel adds the alpha slider + percent input. format fixes
+         the committed shape; a translucent color widens it to carry alpha.
+         showInputs=false keeps just the surface and sliders. -->
+    <oge-color-gradient
+      label="Overlay"
+      format="rgba"
+      [editAlphaChannel]="true"
+      [(value)]="overlay"
+    />
+    <oge-color-gradient
+      label="Compact (hsl)"
+      format="hsl"
+      [showInputs]="false"
+      [(value)]="accent"
+    />
+  `,
+})
+export class Demo {
+  protected readonly overlay = signal<string | null>('rgba(58, 160, 255, 0.5)');
+  protected readonly accent = signal<string | null>('hsl(160, 84%, 39%)');
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorGradient } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorGradient],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The color box's picker surfaces, inline and always visible: a 2-axis
+         role="slider" surface (aria-valuetext names both axes), the APG hue
+         slider and hex + R/G/B inputs — each its own Tab stop inside one
+         labelled role="group". Dragging commits live and flushes on release;
+         Escape mid-drag restores the start color. -->
+    <oge-color-gradient label="Brand color" [(value)]="brand" />
+  `,
+})
+export class Demo {
+  protected readonly brand = signal<string | null>('#3aa0ff');
+}
+```
+
+### Contrast
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorGradient, contrastRatio, contrastLevels } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorGradient],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showContrast renders the WCAG readout — the ratio of the current
+         color against contrastBackground (translucent colors are composited over
+         it first) and AA (4.5:1) / AAA (7:1) verdicts. The same math is exported:
+         contrastRatio() + contrastLevels(). -->
+    <oge-color-gradient
+      label="Text color"
+      [showContrast]="true"
+      contrastBackground="#ffffff"
+      [(value)]="text"
+    />
+  `,
+})
+export class Demo {
+  protected readonly text = signal<string | null>('#767676');
+
+  /** The same verdict in code — e.g. to block a save. */
+  protected readonly passesAa = (fg: { r: number; g: number; b: number; a: number }) =>
+    contrastLevels(contrastRatio(fg, { r: 255, g: 255, b: 255, a: 1 })).aa;
+}
+```
+
+### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorGradient } from '@oge-ui/inputs';
+import { FormField, form, required } from '@angular/forms/signals';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorGradient, FormField],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A FormValueControl and a ControlValueAccessor like every editor:
+         [formField], formControl and ngModel all bind it. -->
+    <oge-color-gradient label="Theme color" [formField]="f.theme" />
+  `,
+})
+export class Demo {
+  protected readonly model = signal<{ theme: string | null }>({ theme: '#7c3aed' });
+  protected readonly f = form(this.model, (p) => {
+    required(p.theme);
+  });
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorPalette } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorPalette],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- An APG role="grid" of swatches with ONE roving tab stop (the
+         selected tile, else the first). Arrows move by tile / row (RTL-mirrored,
+         no wrap), Home/End to the row edges, Ctrl+Home/End to the corners,
+         Enter/Space or a click picks. The value is the swatch string as listed. -->
+    <oge-color-palette label="Tag color" [(value)]="tag" />
+  `,
+})
+export class Demo {
+  protected readonly tag = signal<string | null>('#4a86e8');
+}
+```
+
+### Custom
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorPalette } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorPalette],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Your own list (any CSS color text; unparseable entries are
+         dropped), an explicit column count and a fixed tile size in px. -->
+    <oge-color-palette
+      label="Brand swatches"
+      [palette]="brand"
+      [columns]="4"
+      [tileSize]="32"
+      [(value)]="swatch"
+    />
+  `,
+})
+export class Demo {
+  protected readonly brand = [
+    '#0f172a', '#334155', '#64748b', '#cbd5e1',
+    '#4f46e5', '#7c3aed', '#db2777', '#f59e0b',
+  ];
+  protected readonly swatch = signal<string | null>('#7c3aed');
+}
+```
+
+### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColorPalette } from '@oge-ui/inputs';
+import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorPalette, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- FormValueControl + ControlValueAccessor: formControl, ngModel
+         and [formField] all bind it; disabling the control takes every tile out
+         of the Tab sequence. -->
+    <oge-color-palette label="Label color" palette="basic" [formControl]="color" />
+  `,
+})
+export class Demo {
+  protected readonly color = new FormControl<string | null>(null, [
+    Validators.required,
+  ]);
+}
+```
+
+### Presets
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorPalette } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorPalette],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Built-in presets: 'default' | 'basic' | 'office' | 'material' |
+         'monochrome' — each brings its own column count. -->
+    <oge-color-palette label="Office" palette="office" [(value)]="office" />
+    <oge-color-palette label="Material" palette="material" [(value)]="material" />
+  `,
+})
+export class Demo {
+  protected readonly office = signal<string | null>('#4472c4');
+  protected readonly material = signal<string | null>('#009688');
+}
+```
+
 ### Calendar
 
 ```ts
@@ -1903,6 +2709,45 @@ export class Demo {
 
   protected readonly isWeekend = (day: Date): boolean =>
     day.getDay() === 0 || day.getDay() === 6;
+}
+```
+
+### Clock
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDateBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDateBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- hour12: true adds an AM/PM column (hours 12, 1 … 11); showSeconds
+         adds a seconds column and puts the seconds in the display text. -->
+    <oge-date-box
+      label="Departure"
+      type="time"
+      timeView="columns"
+      [hour12]="true"
+      [showSeconds]="true"
+      [showNowButton]="true"
+      [(value)]="departure"
+    />
+
+    <!-- Today / Now footer shortcuts; Today keeps the time of day -->
+    <oge-date-box
+      label="Logged at"
+      type="datetime"
+      [showTodayButton]="true"
+      [showNowButton]="true"
+      [(value)]="loggedAt"
+    />
+  `,
+})
+export class Demo {
+  protected readonly departure = signal<Date | null>(new Date(2026, 7, 15, 18, 45, 0));
+  protected readonly loggedAt = signal<Date | null>(null);
 }
 ```
 
@@ -1958,6 +2803,81 @@ export class Demo {
     { id: 1, shipped: new Date(2026, 2, 11) },
     { id: 2, shipped: new Date(2026, 5, 2) },
   ];
+}
+```
+
+### Mask
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDateBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDateBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Segment entry: the locale's numeric pattern (dd.mm.yyyy in de-DE),
+         digits fill the selected segment and auto-advance, ArrowUp/Down step
+         it, ArrowLeft/Right move, Alt+ArrowDown opens the picker. -->
+    <oge-date-box
+      label="Invoice date"
+      locale="de-DE"
+      [useMaskBehavior]="true"
+      [(value)]="invoiceDate"
+    />
+
+    <oge-date-box
+      label="Check-in"
+      type="datetime"
+      locale="en-US"
+      [useMaskBehavior]="true"
+      [(value)]="checkIn"
+    />
+  `,
+})
+export class Demo {
+  protected readonly invoiceDate = signal<Date | null>(null);
+  protected readonly checkIn = signal<Date | null>(new Date(2026, 7, 15, 14, 0));
+}
+```
+
+### Presets
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDateRangeBox, ogeDateRangePresets } from '@oge-ui/inputs';
+import type { OgeCalendarRange, OgeDateRangePreset } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDateRangeBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Presets list beside the calendar (a chip row in the adaptive
+         dialog). Built-ins take their labels from the messages; a custom
+         preset is { label, range: () => [start, end] }. -->
+    <oge-date-range-box label="Report period" [presets]="presets" [(value)]="report" />
+
+    <!-- type="time": a time-range picker — no calendar, two lists + OK -->
+    <oge-date-range-box label="Opening hours" type="time" [interval]="30" [(value)]="hours" />
+  `,
+})
+export class Demo {
+  protected readonly presets: OgeDateRangePreset[] = [
+    ogeDateRangePresets.today(),
+    ogeDateRangePresets.last7Days(),
+    ogeDateRangePresets.last30Days(),
+    ogeDateRangePresets.thisMonth(),
+    ogeDateRangePresets.lastMonth(),
+    ogeDateRangePresets.thisYear(),
+    { label: 'Q1 2026', range: () => [new Date(2026, 0, 1), new Date(2026, 2, 31)] },
+  ];
+  protected readonly report = signal<OgeCalendarRange>([null, null]);
+  protected readonly hours = signal<OgeCalendarRange>([
+    new Date(2026, 7, 15, 9, 0),
+    new Date(2026, 7, 15, 17, 30),
+  ]);
 }
 ```
 
@@ -2043,6 +2963,212 @@ export class Demo {
 
 ```ts
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeMaskedTextBox } from '@oge-ui/inputs/masked-text-box';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMaskedTextBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- 0 = a required digit; ( ) - and the space are literals the caret
+         skips. The value is the raw digits — no literals, no placeholders. -->
+    <oge-masked-text-box
+      label="Phone"
+      mask="(000) 000-0000"
+      [(value)]="phone"
+      autocomplete="tel-national"
+    />
+    <p>Value: <code>{{ phone() }}</code></p>
+  `,
+})
+export class Demo {
+  protected readonly phone = signal('');
+}
+```
+
+### Display
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeMaskedTextBox } from '@oge-ui/inputs/masked-text-box';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMaskedTextBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- a custom placeholder character -->
+    <oge-masked-text-box label="Date code" mask="00.00.0000" maskChar="•" [(value)]="code" />
+
+    <!-- the mask only appears on focus — the placeholder shows while blurred -->
+    <oge-masked-text-box
+      label="Postal code"
+      mask="00000"
+      showMaskMode="onFocus"
+      placeholder="5 digits"
+      [(value)]="postal"
+    />
+
+    <!-- floating labels keep the empty mask hidden until the field is focused -->
+    <oge-masked-text-box label="PIN" labelMode="floating" mask="0000" [(value)]="pin" />
+  `,
+})
+export class Demo {
+  protected readonly code = signal('');
+  protected readonly postal = signal('');
+  protected readonly pin = signal('');
+}
+```
+
+### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+import { FormField, form, required, validate } from '@angular/forms/signals';
+import { OgeMaskedTextBox } from '@oge-ui/inputs/masked-text-box';
+import { ogeMaskComplete } from '@oge-ui/behavior';
+
+@Component({
+  selector: 'demo-root',
+  imports: [ReactiveFormsModule, FormField, OgeMaskedTextBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Signal Forms: the schema checks the mask with ogeMaskComplete() -->
+    <oge-masked-text-box label="IBAN" mask="LL00 0000 0000 0000 0000 00" [formField]="f.iban" />
+
+    <!-- reactive forms: the editor adds a { mask } validator to the control itself -->
+    <oge-masked-text-box
+      label="Tax number"
+      mask="000-000-0000"
+      maskInvalidMessage="Enter all 10 digits"
+      [formControl]="taxNumber"
+    />
+  `,
+})
+export class Demo {
+  protected readonly model = signal({ iban: '' });
+  protected readonly f = form(this.model, (p) => {
+    required(p.iban);
+    validate(p.iban, ({ value }) =>
+      ogeMaskComplete('LL00 0000 0000 0000 0000 00', value())
+        ? undefined
+        : { kind: 'mask' },
+    );
+  });
+
+  protected readonly taxNumber = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required],
+  });
+}
+```
+
+### Syntax
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeInputPrefix } from '@oge-ui/inputs';
+import { OgeMaskedTextBox } from '@oge-ui/inputs/masked-text-box';
+import type { OgeMaskRules } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeInputPrefix, OgeMaskedTextBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- L = a required letter (any script), 0 = a digit -->
+    <oge-masked-text-box label="Licence plate" mask="00 LLL 000" [(value)]="plate" />
+
+    <!-- a custom rule: H accepts one hex digit (always a required slot) -->
+    <oge-masked-text-box label="Hex color" mask="HHHHHH" [maskRules]="hexRules" [(value)]="hex">
+      <span ogeInputPrefix>#</span>
+    </oge-masked-text-box>
+
+    <!-- 9 = an optional digit; "ext. " has no rule characters, so it is literal -->
+    <oge-masked-text-box label="Extension" mask="ext. 0999" [(value)]="extension" />
+
+    <!-- a backslash makes a rule character literal: "A" here is printed, not typed -->
+    <oge-masked-text-box label="Product code" [mask]="productMask" [(value)]="product" />
+  `,
+})
+export class Demo {
+  protected readonly plate = signal('');
+  protected readonly hex = signal('');
+  protected readonly extension = signal('');
+  protected readonly product = signal('');
+  protected readonly hexRules: OgeMaskRules = { H: /[0-9a-f]/i };
+  protected readonly productMask = '\\A-000-LL';
+}
+```
+
+### Text box
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTextBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTextBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- the same engine on the plain text box: mask is optional there -->
+    <oge-text-box
+      label="Time"
+      mask="00:00"
+      [includeLiterals]="true"
+      [showClearButton]="true"
+      [(value)]="time"
+    />
+  `,
+})
+export class Demo {
+  protected readonly time = signal('');
+}
+```
+
+### Values
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeMaskedTextBox } from '@oge-ui/inputs/masked-text-box';
+import type { OgeMaskCompletedEvent } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMaskedTextBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- raw value (default) vs the formatted text with includeLiterals -->
+    <oge-masked-text-box label="Card (raw)" mask="0000 0000 0000 0000" [(value)]="raw" />
+    <oge-masked-text-box
+      label="Card (with literals)"
+      mask="0000 0000 0000 0000"
+      [includeLiterals]="true"
+      [(value)]="formatted"
+      (maskCompleted)="onCompleted($event)"
+    />
+    <p>raw: <code>{{ raw() }}</code> · formatted: <code>{{ formatted() }}</code></p>
+    <p>{{ status() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly raw = signal('');
+  protected readonly formatted = signal('');
+  protected readonly status = signal('Type all 16 digits');
+
+  // fires once, when the last required slot is filled
+  protected onCompleted(event: OgeMaskCompletedEvent): void {
+    this.status.set(`Complete: ${event.maskedValue}`);
+  }
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { OgeNumberBox, OgeTextArea, OgeTextBox } from '@oge-ui/inputs';
 
 @Component({
@@ -2081,6 +3207,46 @@ import { OgeTextBox } from '@oge-ui/inputs';
   `,
 })
 export class Demo {}
+```
+
+### Number entry
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeNumberBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeNumberBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- formatWhileTyping groups thousands as you type (caret kept in
+         place); maxFractionDigits refuses a third decimal; format is the
+         blur-time display (focus swaps in the editable number). -->
+    <oge-number-box
+      label="Budget"
+      [(value)]="budget"
+      [formatWhileTyping]="true"
+      [maxFractionDigits]="2"
+      [format]="{ style: 'currency', currency: 'EUR' }"
+    />
+
+    <!-- wheelStep opts into mouse-wheel stepping — only while focused, so a
+         page scrolling past the field never changes it. -->
+    <oge-number-box
+      label="Quantity"
+      [(value)]="quantity"
+      [min]="0"
+      [max]="99"
+      [wheelStep]="1"
+      [showSpinButtons]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly budget = signal<number | null>(1234567.5);
+  protected readonly quantity = signal<number | null>(10);
+}
 ```
 
 ### Prefix
@@ -2824,6 +3990,52 @@ export class Demo {
   protected readonly notify = signal(true);
   protected readonly enabled = signal(false);
   protected readonly plain = signal(false);
+}
+```
+
+### Toggle group
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeToggleGroup } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToggleGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A segmented editor with the field contract (label, hint,
+         validation, [formField] / formControl). single = the APG radio group:
+         arrows move focus AND selection, the selected segment cannot be pressed
+         off. multiple = aria-pressed toggle buttons, an array value in items
+         order; arrows only move focus. -->
+    <oge-toggle-group
+      label="Alignment"
+      [items]="aligns"
+      displayExpr="text"
+      valueExpr="id"
+      [(value)]="align"
+    />
+
+    <oge-toggle-group
+      label="Delivery days"
+      selectionMode="multiple"
+      hint="Pick one or more"
+      [items]="days"
+      [(value)]="delivery"
+    />
+  `,
+})
+export class Demo {
+  protected readonly aligns = [
+    { id: 'left', text: 'Left' },
+    { id: 'center', text: 'Center' },
+    { id: 'right', text: 'Right' },
+  ];
+  protected readonly days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+  protected readonly align = signal<unknown>('left');
+  protected readonly delivery = signal<unknown>(['Mon', 'Thu']);
 }
 ```
 

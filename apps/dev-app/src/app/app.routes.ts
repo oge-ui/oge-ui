@@ -671,6 +671,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Input Validation',
       },
       {
+        path: 'masked-text-box',
+        loadComponent: () =>
+          import('./pages/inputs/masked-text-box').then(
+            (m) => m.InputsMaskedTextBoxPage,
+          ),
+        title: 'OGE — Masked Text Box',
+      },
+      {
         path: 'select-box',
         loadComponent: () =>
           import('./pages/inputs/select-box').then(
@@ -703,6 +711,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Toggle Controls',
       },
       {
+        path: 'check-box-group',
+        loadComponent: () =>
+          import('./pages/inputs/check-box-group').then(
+            (m) => m.InputsCheckBoxGroupPage,
+          ),
+        title: 'OGE — Check Box Group',
+      },
+      {
         path: 'slider',
         loadComponent: () =>
           import('./pages/inputs/slider').then((m) => m.InputsSliderPage),
@@ -719,6 +735,22 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/inputs/color-box').then((m) => m.InputsColorBoxPage),
         title: 'OGE — Color Box',
+      },
+      {
+        path: 'color-gradient',
+        loadComponent: () =>
+          import('./pages/inputs/color-gradient').then(
+            (m) => m.InputsColorGradientPage,
+          ),
+        title: 'OGE — Color Gradient',
+      },
+      {
+        path: 'color-palette',
+        loadComponent: () =>
+          import('./pages/inputs/color-palette').then(
+            (m) => m.InputsColorPalettePage,
+          ),
+        title: 'OGE — Color Palette',
       },
       {
         path: 'showcase',

@@ -102,13 +102,17 @@ For code generation, prefer the full reference — it inlines every API table an
 
 - [Inputs](https://ogeui.com/components/inputs): Angular form inputs on one field chrome: TextBox, TextArea, NumberBox and SelectBox with floating labels, validation, Signal Forms and reactive forms support.
 - [Input Validation](https://ogeui.com/components/inputs/validation)
+- [Masked Text Box](https://ogeui.com/components/inputs/masked-text-box): Angular MaskedTextBox and TextBox mask: one shared mask engine — 0/9/#/L/l/A/a/C/c slots, escapes and custom rules, overwrite-style typing that skips literals, Backspace/Delete across literals, raw or formatted paste, IME-safe composition, raw or literal-carrying values, and a mask validator for Signal Forms and reactive forms.
 - [Select Box](https://ogeui.com/components/inputs/select-box): Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading and full keyboard support — signal-based and zoneless.
 - [Tree Select](https://ogeui.com/components/inputs/tree-select)
 - [Autocomplete](https://ogeui.com/components/inputs/autocomplete)
 - [Toggle Controls](https://ogeui.com/components/inputs/toggle-controls)
+- [Check Box Group](https://ogeui.com/components/inputs/check-box-group): Angular CheckBoxGroup: an items-bound list of checkboxes with an array value — horizontal, vertical or column layouts, a tri-state select-all option, required-means-at-least-one validation, Signal Forms and reactive forms.
 - [Slider](https://ogeui.com/components/inputs/slider): Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.
 - [Date Editors](https://ogeui.com/components/inputs/date-box)
 - [Color Box](https://ogeui.com/components/inputs/color-box): Angular ColorBox: a color picker dropdown on the shared field chrome — CSS color string value normalized to hex/rgb/rgba/hsl, saturation/brightness surface with hue/alpha sliders, swatch palette grid, any-CSS-color text parsing incl. named colors, instantly/useButtons commit modes, and composed dialog+slider+grid accessibility (no APG color-picker pattern exists).
+- [Color Gradient](https://ogeui.com/components/inputs/color-gradient): Angular ColorGradient: the color box picker as a standalone inline editor — saturation/brightness surface, hue and alpha sliders, hex/RGBA inputs and a live WCAG contrast-ratio check against a configurable background.
+- [Color Palette](https://ogeui.com/components/inputs/color-palette): Angular ColorPalette: a standalone swatch grid with preset palettes, configurable columns and APG grid keyboard navigation (arrows, Home/End, RTL-aware), bound as a form value.
 - [Input Showcase](https://ogeui.com/components/inputs/showcase)
 - [Inputs API](https://ogeui.com/components/inputs/api)
 

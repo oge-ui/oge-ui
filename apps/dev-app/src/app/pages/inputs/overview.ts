@@ -22,6 +22,7 @@ import { PageToc } from '../../shared/page-toc';
 import {
   BASIC_SNIPPET,
   LABEL_SNIPPET,
+  NUMBER_ENTRY_SNIPPET,
   PREFIX_SNIPPET,
   STYLING_SNIPPET,
 } from './overview-snippets';
@@ -31,6 +32,7 @@ const SECTIONS = [
   'Styling modes & sizes',
   'Label modes',
   'Prefix & suffix slots',
+  'Number entry',
 ] as const;
 
 @Component({
@@ -183,6 +185,39 @@ const SECTIONS = [
           </oge-text-box>
         </div>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['formatWhileTyping', 'maxFractionDigits', 'wheelStep']"
+        heading="Number entry"
+        description="<code>formatWhileTyping</code> groups thousands live with the locale’s separators and keeps the caret beside the digit you typed; <code>maxFractionDigits</code> refuses extra decimals as you type. <code>format</code> is the blur-time display — focus swaps in the editable number, so a currency sign never gets in the way. <code>wheelStep</code> opts into mouse-wheel stepping, only while the field is focused."
+        [code]="numberEntrySnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-4">
+          <oge-number-box
+            label="Budget"
+            data-testid="number-live"
+            [(value)]="budget"
+            [formatWhileTyping]="true"
+            [maxFractionDigits]="2"
+            [format]="{ style: 'currency', currency: 'EUR' }"
+          />
+          <oge-number-box
+            label="Quantity"
+            data-testid="number-wheel"
+            [(value)]="quantity"
+            [min]="0"
+            [max]="99"
+            [wheelStep]="1"
+            [showSpinButtons]="true"
+          />
+        </div>
+        <p class="mt-3 text-sm">
+          Budget: <code data-testid="number-live-value">{{ budget() }}</code> ·
+          Quantity:
+          <code data-testid="number-wheel-value">{{ quantity() }}</code>
+        </p>
+      </app-demo-card>
     }
 
     <h3>Notes</h3>
@@ -210,9 +245,12 @@ export class InputsOverviewPage {
   protected readonly name = signal('');
   protected readonly amount = signal<number | null>(null);
   protected readonly notes = signal('');
+  protected readonly budget = signal<number | null>(1234567.5);
+  protected readonly quantity = signal<number | null>(10);
 
   protected readonly basicSnippet = BASIC_SNIPPET;
   protected readonly stylingSnippet = STYLING_SNIPPET;
   protected readonly labelSnippet = LABEL_SNIPPET;
   protected readonly prefixSnippet = PREFIX_SNIPPET;
+  protected readonly numberEntrySnippet = NUMBER_ENTRY_SNIPPET;
 }

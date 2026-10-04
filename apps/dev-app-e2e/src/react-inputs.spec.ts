@@ -21,6 +21,10 @@ const DEMO_PAGES: readonly (readonly [string, string])[] = [
   ['/components/inputs/tree-select', 'tree select'],
   ['/components/inputs/showcase', 'showcase'],
   ['/components/inputs/validation', 'validation'],
+  ['/components/inputs/masked-text-box', 'masked text box'],
+  ['/components/inputs/check-box-group', 'check box group'],
+  ['/components/inputs/color-gradient', 'color gradient'],
+  ['/components/inputs/color-palette', 'color palette'],
 ];
 
 /** Every covered page, demos plus the API reference. */
@@ -123,9 +127,10 @@ test.describe('React inputs docs', () => {
     await expect(combo).toHaveValue('Reports');
   });
 
-  test('React inputs pages have no axe violations', async ({ page }) => {
-    test.slow();
-    for (const route of COVERED) {
+  // one test per page: a single loop over every page outgrew the slow-test
+  // budget as the family grew
+  for (const route of COVERED) {
+    test(`${route} has no axe violations (React)`, async ({ page }) => {
       await page.goto(`${route}${REACT}`);
       // Wait for the page to actually render before auditing it: an empty
       // page has zero status elements too, so `toHaveCount(0)` alone lets
@@ -140,6 +145,6 @@ test.describe('React inputs docs', () => {
         .disableRules(['color-contrast', 'heading-order'])
         .analyze();
       expect(results.violations, `axe violations on ${route}`).toEqual([]);
-    }
-  });
+    });
+  }
 });
