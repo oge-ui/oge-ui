@@ -493,6 +493,8 @@ const FAMILIES = [
           'React host styling idiom; an Angular host takes `style` natively — the docs size every chart with it.',
         renderlegenditem:
           'Render prop replacing the `*ogeChartLegendTemplate` structural directive, which the Angular page documents in the OgeChart types table (the pie and polar charts query the same directive).',
+        renderlabel:
+          'Render prop replacing the `*ogeChartLabelTemplate` structural directive, which the Angular page documents in the OgeChart types table (the pie and polar charts query the same directive).',
         useogechartsconfig:
           'Hook reading the resolved config; the Angular counterpart is `inject(OGE_CHARTS_CONFIG)`, not a documented member.',
       },

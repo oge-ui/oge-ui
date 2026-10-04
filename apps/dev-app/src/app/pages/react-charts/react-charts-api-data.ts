@@ -8,6 +8,10 @@
 // instead of outputs, a `ref` handle instead of public methods, render props
 // instead of structural directives, a context provider instead of DI.
 import type { ApiSections } from '../../shared/api-reference';
+import {
+  OGE_CHART_SERIES_OPTION_ROWS,
+  chartExportMethodGroups,
+} from '../charts/charts-api-data';
 
 export const OGE_REACT_CHART_API: ApiSections = {
   properties: [
@@ -25,7 +29,7 @@ export const OGE_REACT_CHART_API: ApiSections = {
           type: 'readonly OgeChartSeriesInput[]',
           default: '[]',
           description:
-            'Series definitions: <code>type</code> (16 kinds), field mapping (<code>valueField</code>/<code>argumentField</code> — names, dotted paths or getters), <code>name</code>, <code>color</code>, <code>axis</code> (value-axis index), <code>stack</code> group, <code>dashStyle</code>/<code>width</code>/<code>opacity</code>, <code>showInLegend</code>, rangeArea bounds (<code>value1Field</code>/<code>value2Field</code>) and candlestick OHLC (<code>openField</code>/<code>highField</code>/<code>lowField</code>/<code>closeField</code>), <code>sizeField</code> (bubble area), <code>visible</code> (start hidden; the legend re-shows) and <code>showLabels</code> (SI-formatted value labels on small series). Null/NaN values render as gaps. Inline arrays are fine: structurally equal props never rebuild the chart.',
+            'Series definitions: <code>type</code> (26 kinds — see <code>OgeChartSeriesType</code>), field mapping (<code>valueField</code>/<code>argumentField</code> — names, dotted paths or getters), <code>name</code>, <code>color</code>, <code>axis</code> (value-axis index), <code>stack</code> group, <code>dashStyle</code>/<code>width</code>/<code>opacity</code>, <code>showInLegend</code>, rangeArea bounds (<code>value1Field</code>/<code>value2Field</code>) and candlestick/ohlc OHLC (<code>openField</code>/<code>highField</code>/<code>lowField</code>/<code>closeField</code>), <code>sizeField</code> (bubble area), <code>visible</code> (start hidden; the legend re-shows) and <code>showLabels</code> (shorthand for <code>label.visible</code>). The per-point, label and analytics options are listed under <em>Series options</em>. Null/NaN values render as gaps. Inline arrays are fine: structurally equal props never rebuild the chart.',
         },
         {
           name: 'commonSeries',
@@ -41,6 +45,10 @@ export const OGE_REACT_CHART_API: ApiSections = {
             'Series colors; defaults to the 10-color <code>OGE_CHART_PALETTE</code> (concrete hex values so exported images keep their colors).',
         },
       ],
+    },
+    {
+      title: 'Series options (OgeChartSeriesInput)',
+      entries: OGE_CHART_SERIES_OPTION_ROWS,
     },
     {
       title: 'Axes',
@@ -198,19 +206,17 @@ export const OGE_REACT_CHART_API: ApiSections = {
           description:
             'The live SVG root — what the image exporters serialize.',
         },
-      ],
-    },
-    {
-      title: 'Export entry point (lazy, dependency-free)',
-      entries: [
         {
-          name: 'exportChartToPng(chart, options?) / exportChartToSvg(chart, options?) / serializeChartSvg(svg, options?)',
-          type: '@oge-ui/react-charts/export-image',
+          name: 'print(options?)',
+          type: 'Promise&lt;void&gt;',
           description:
-            'The same functions as <code>@oge-ui/charts/export-image</code> (they live in the shared engine): the live SVG is cloned with computed styles inlined, then downloaded as a standalone <code>.svg</code> or rasterized onto a canvas for <code>.png</code> (<code>pixelRatio</code>, <code>background</code>). Pass any chart’s <code>ref</code> handle; import the entry point dynamically.',
+            'Opens the browser print dialog for the chart alone: the serialized SVG (computed styles inlined) in a hidden frame with a print stylesheet — the title above it, the chart scaled to the page, <code>@page</code> orientation from its aspect. <code>OgeChartPrintOptions</code>: <code>{ title?, orientation?, background? }</code>. Dependency-free.',
         },
       ],
     },
+    // the same functions as `@oge-ui/charts` (they live in the shared engine);
+    // pass any chart's `ref` handle
+    ...chartExportMethodGroups('@oge-ui/react-charts'),
   ],
   events: [
     {
@@ -254,13 +260,19 @@ export const OGE_REACT_CHART_API: ApiSections = {
           name: 'OgeChartSeriesType',
           type: 'string union',
           description:
-            "'line' | 'spline' | 'stepLine' | 'area' | 'splineArea' | 'stepArea' | 'stackedArea' | 'fullStackedArea' | 'bar' | 'stackedBar' | 'fullStackedBar' | 'rangeBar' | 'scatter' | 'bubble' | 'rangeArea' | 'candlestick'.",
+            "'line' | 'spline' | 'stepLine' | 'area' | 'splineArea' | 'stepArea' | 'stackedArea' | 'fullStackedArea' | 'stackedLine' | 'fullStackedLine' | 'stackedSplineArea' | 'fullStackedSplineArea' | 'bar' | 'stackedBar' | 'fullStackedBar' | 'rangeBar' | 'waterfall' | 'pareto' | 'histogram' | 'boxPlot' | 'scatter' | 'bubble' | 'rangeArea' | 'candlestick' | 'ohlc' | 'indicator' — plus <code>'radialBar'</code> on the polar chart.",
         },
         {
           name: 'OgeChartPoint&lt;T&gt;',
           type: 'interface',
           description:
-            'The normalized point: <code>argument</code>, <code>argNumeric</code>, <code>value</code>(s incl. OHLC), <code>source</code>, <code>index</code>.',
+            "The normalized point: <code>argument</code>, <code>argNumeric</code>, <code>value</code>(s incl. OHLC), <code>source</code>, <code>index</code>, plus <code>style</code> (per-point overrides), <code>extra</code> (<code>OgeChartPointExtra</code>: box quartiles, histogram <code>binStart</code>/<code>binEnd</code>, pareto <code>cumulative</code>, indicator <code>upper</code>/<code>lower</code>/<code>signal</code>/<code>histogram</code>, waterfall <code>total</code>), <code>outliers</code> and the waterfall <code>kind</code> (<code>'up' | 'down' | 'intermediate' | 'total'</code>).",
+        },
+        {
+          name: 'OgeChartLabelOptions / OgeChartLabelInfo / OgeChartPointStyle / OgeChartPointInfo',
+          type: 'interfaces',
+          description:
+            'The <code>label</code> options, what <code>label.format</code> receives (<code>{ seriesIndex, seriesName, pointIndex, argument, value, percent, source, text }</code>), what <code>customizePoint</code> returns and receives.',
         },
         {
           name: 'OgeChartAxisType / OgeChartRange',
@@ -272,7 +284,7 @@ export const OGE_REACT_CHART_API: ApiSections = {
           name: 'OgeChartHandle&lt;T&gt;',
           type: 'ref handle',
           description:
-            'Every method above: <code>zoomToRange</code>, <code>resetZoom</code>, <code>hideTooltip</code>, <code>refresh</code>, <code>focus</code>, <code>getExportData</code>, <code>getSvgElement</code>.',
+            'Every method above: <code>zoomToRange</code>, <code>resetZoom</code>, <code>hideTooltip</code>, <code>refresh</code>, <code>focus</code>, <code>getExportData</code>, <code>getSvgElement</code>, <code>print</code>.',
         },
       ],
     },
@@ -295,7 +307,13 @@ export const OGE_REACT_CHART_API: ApiSections = {
           name: 'renderLegendItem',
           type: '(item: OgeChartLegendItem) =&gt; ReactNode',
           description:
-            "Replaces a legend item's content — <code>*ogeChartLegendTemplate</code>; the item is <code>{ name, color, hidden }</code>.",
+            "Replaces a legend item's content — <code>*ogeChartLegendTemplate</code>; the item is <code>{ name, color, hidden, swatch }</code> (<code>swatch</code>: the marker's CSS background, striped when points carry their own colours).",
+        },
+        {
+          name: 'renderLabel',
+          type: '(label: OgeChartRenderLabel) =&gt; ReactNode',
+          description:
+            'Replaces every data label — rendered in a 120 × 22 px <code>foreignObject</code> at the label position (<code>text</code>, <code>value</code>, <code>argument</code>, <code>seriesName</code>, <code>seriesIndex</code>, <code>pointIndex</code>, <code>inside</code>) — <code>*ogeChartLabelTemplate</code>. The pie and polar charts take the same prop.',
         },
       ],
     },
@@ -311,7 +329,7 @@ export const OGE_REACT_POLAR_CHART_API: ApiSections = {
           type: 'readonly T[] / readonly OgeChartSeriesInput[] / Partial',
           default: '[] / [] / {}',
           description:
-            "Same field mapping as the cartesian chart; supported polar types: <code>'line'</code> and <code>'area'</code> (closed radar loops — a null value breaks the loop into a gap), <code>'scatter'</code> (markers) and <code>'bar'</code> (sectors from the center).",
+            "Same field mapping as the cartesian chart; supported polar types: <code>'line'</code> and <code>'area'</code> (closed radar loops — a null value breaks the loop into a gap), <code>'scatter'</code> (markers), <code>'bar'</code> (sectors from the center) and <code>'radialBar'</code> (one concentric ring per category whose arc length is the value against <code>valueAxis.max</code>, on a track; the category labels sit at each ring's start). Series take <code>label</code>, <code>colorField</code> and <code>customizePoint</code> like the cartesian chart.",
         },
         {
           name: 'spider',
@@ -348,10 +366,10 @@ export const OGE_REACT_POLAR_CHART_API: ApiSections = {
             'Shared options — the legend, tooltip, sr data table and keyboard inspection (arrows walk categories and series) work exactly like the cartesian chart.',
         },
         {
-          name: 'renderLegendItem / className / style',
+          name: 'renderLegendItem / renderLabel / className / style',
           type: 'see OgeChart',
           description:
-            'The legend render prop (<code>*ogeChartLegendTemplate</code>) and the host styling props.',
+            'The legend and data-label render props (<code>*ogeChartLegendTemplate</code> / <code>*ogeChartLabelTemplate</code>) and the host styling props.',
         },
       ],
     },
@@ -361,10 +379,10 @@ export const OGE_REACT_POLAR_CHART_API: ApiSections = {
       title: 'OgePolarChartHandle (ref)',
       entries: [
         {
-          name: 'focus() / getSvgElement()',
-          type: 'void / SVGSVGElement',
+          name: 'focus() / getSvgElement() / print(options?)',
+          type: 'void / SVGSVGElement / Promise&lt;void&gt;',
           description:
-            'Focuses the keyboard-inspectable plot / the live SVG root for the image exporters.',
+            'Focuses the keyboard-inspectable plot / the live SVG root for the image and PDF exporters / opens the browser print dialog for the chart alone.',
         },
       ],
     },
@@ -484,7 +502,26 @@ export const OGE_REACT_PIE_CHART_API: ApiSections = {
           type: 'boolean',
           default: 'true',
           description:
-            'Outside labels in two anti-overlap columns with connector lines.',
+            'Outside labels in two anti-overlap columns with connector lines (shorthand for <code>label.visible</code>).',
+        },
+        {
+          name: 'label',
+          type: 'OgeChartLabelOptions | undefined',
+          description:
+            "Data labels: <code>position</code> <code>'outside'</code> (two columns with connectors — <code>connector: false</code> drops the lines), <code>'inside'</code>/<code>'center'</code> (mid-ring, contrast-picked text colour), <code>'insideEnd'</code> (near the rim), <code>'insideBase'</code> (near the hole); <code>format(info)</code> with <code>info.percent</code> = the slice share; <code>showForZero</code>; wedges too thin for text and overlapping inside labels are dropped. Default text: the argument.",
+        },
+        {
+          name: 'colorField / customizePoint',
+          type: 'field / (info: OgeChartPointInfo) => OgeChartPointStyle',
+          description:
+            'Per-slice colour from the data, or per-slice <code>{ color?, label?, description? }</code> overrides; the legend follows, and <code>description</code> is spoken in the tooltip and the sr table.',
+        },
+        {
+          name: 'series',
+          type: 'readonly OgePieSeriesInput[]',
+          default: '[]',
+          description:
+            'Nested doughnut: one ring per entry, inner → outer (<code>{ name?, dataSource?, argumentField?, valueField?, colorField?, customizePoint?, label? }</code> — unset fields fall back to the chart props). Slices of the same argument share a colour and one legend button across rings; the sr table gets a column per ring, the tooltip prefixes the ring name, <code>onSliceClick</code> carries <code>ringIndex</code>/<code>ringName</code>. Small-value grouping does not apply to rings.',
         },
         {
           name: 'selectedSlices / defaultSelectedSlices',
@@ -499,10 +536,10 @@ export const OGE_REACT_PIE_CHART_API: ApiSections = {
           description: 'Shared options with the cartesian chart.',
         },
         {
-          name: 'renderLegendItem / className / style',
+          name: 'renderLegendItem / renderLabel / className / style',
           type: 'see OgeChart',
           description:
-            'The legend render prop (<code>*ogeChartLegendTemplate</code>) and the host styling props.',
+            'The legend and data-label render props (<code>*ogeChartLegendTemplate</code> / <code>*ogeChartLabelTemplate</code>) and the host styling props.',
         },
       ],
     },
@@ -512,10 +549,10 @@ export const OGE_REACT_PIE_CHART_API: ApiSections = {
       title: 'OgePieChartHandle (ref)',
       entries: [
         {
-          name: 'getSvgElement()',
-          type: 'SVGSVGElement',
+          name: 'getSvgElement() / print(options?)',
+          type: 'SVGSVGElement / Promise&lt;void&gt;',
           description:
-            'The live SVG root — what the image exporters serialize.',
+            'The live SVG root — what the image and PDF exporters serialize / opens the browser print dialog for the chart alone.',
         },
       ],
     },
@@ -559,7 +596,7 @@ export const OGE_REACT_CHARTS_CONFIG_API: ApiSections = {
           name: 'messages',
           type: 'OgeChartsMessages',
           description:
-            'Every user-facing string, aria labels included: <code>aria</code> (<code>OgeChartsAriaMessages</code> — chart/pie labels with <code>{title}</code>/<code>{count}</code>, table caption, plot hint, legend label), <code>announcements</code> (<code>OgeChartsAnnouncementMessages</code> — live-region templates with <code>{series}</code>/<code>{argument}</code>/<code>{value}</code>) and <code>noData</code>. Defaults: <code>OGE_DEFAULT_CHARTS_MESSAGES</code>.',
+            'Every user-facing string, aria labels included: <code>aria</code> (<code>OgeChartsAriaMessages</code> — chart/pie labels with <code>{title}</code>/<code>{count}</code>, table caption, plot hint, legend label), <code>announcements</code> (<code>OgeChartsAnnouncementMessages</code> — live-region templates with <code>{series}</code>/<code>{argument}</code>/<code>{value}</code>), <code>values</code> (<code>OgeChartsValueMessages</code> — the words of analytic value texts: box-plot <code>low</code>/<code>q1</code>/<code>median</code>/<code>q3</code>/<code>high</code>/<code>outliers</code>, waterfall <code>increase</code>/<code>decrease</code>/<code>intermediate</code>/<code>total</code>, pareto <code>cumulative</code>, <code>upper</code>/<code>lower</code>/<code>signal</code>/<code>histogram</code>, the trendline suffix <code>trend</code> with <code>{value}</code>/<code>{r2}</code>, the histogram <code>bin</code> and the default indicator names <code>sma</code>/<code>ema</code>/<code>bollinger</code>/<code>macd</code>/<code>rsi</code>) and <code>noData</code>. Defaults: <code>OGE_DEFAULT_CHARTS_MESSAGES</code>.',
         },
         {
           name: 'locale',
