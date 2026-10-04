@@ -32,6 +32,18 @@ describe('@oge-ui/charts-engine barrel', () => {
     'createLinearScale',
     'linePath',
     'downsamplePath',
+    'cartesianTooltipRowText',
+    'cartesianPointEventColor',
+    'pieSrTable',
+    'printOgeChart',
+    'ogeSma',
+    'ogeEma',
+    'ogeBollingerBands',
+    'ogeMacd',
+    'ogeRsi',
+    'ogeTrendline',
+    'ogeBoxStats',
+    'ogeHistogramBins',
   ])('exports %s', (name) => {
     expect((engine as Record<string, unknown>)[name]).toBeDefined();
   });
@@ -40,8 +52,13 @@ describe('@oge-ui/charts-engine barrel', () => {
     expect(typeof exportImage.serializeChartSvg).toBe('function');
     expect(typeof exportImage.exportChartToPng).toBe('function');
     expect(typeof exportImage.exportChartToSvg).toBe('function');
+    expect(typeof exportImage.exportChartToJpeg).toBe('function');
     expect(
       (engine as Record<string, unknown>)['serializeChartSvg'],
+    ).toBeUndefined();
+    // the PDF builder (and its jspdf import) never reaches the main barrel
+    expect(
+      (engine as Record<string, unknown>)['exportChartToPdf'],
     ).toBeUndefined();
   });
 });

@@ -113,4 +113,69 @@ describe('polar model', () => {
       nextPolarSelection([{ seriesIndex: 0, pointIndex: 1 }], 0, 1),
     ).toEqual([]);
   });
+
+  it('per-point colour, marker overrides and data labels', () => {
+    const data = buildPolarData<Skill>({
+      dataSource: DATA,
+      series: [
+        {
+          type: 'scatter',
+          valueField: 'grace',
+          name: 'Grace',
+          label: { visible: true },
+          customizePoint: (info) =>
+            info.value === 9
+              ? { color: '#ff0000', marker: { size: 12 }, description: 'top' }
+              : undefined,
+        },
+        { type: 'bar', valueField: 'grace', colorField: () => '#00ff00' },
+      ],
+      commonSeries: { argumentField: 'skill' },
+    });
+    const s = buildPolarScene({
+      data,
+      spider: false,
+      startAngle: 0,
+      hiddenSeries: new Set(),
+      width: 480,
+      height: 360,
+      locale: 'en-US',
+    });
+    expect(s.renderSeries[0].markers[3]).toMatchObject({
+      color: '#ff0000',
+      r: 6,
+    });
+    expect(s.renderSeries[0].labels.map((label) => label.text)).toContain('9');
+    expect(s.renderSeries[1].sectors[0].color).toBe('#00ff00');
+    expect(s.legendItems[1].swatch).toBe('#00ff00');
+    expect(polarSrRows(s, 10)[3].cells[0]).toBe('9, top');
+    expect(polarTooltip(s, { seriesIndex: 0, pointIndex: 3 })?.color).toBe(
+      '#ff0000',
+    );
+  });
+
+  it('radial bars: concentric category rings, tracks, no grid rings', () => {
+    const data = buildPolarData<Skill>({
+      dataSource: DATA,
+      series: [{ type: 'radialBar', valueField: 'grace', name: 'Grace' }],
+      commonSeries: { argumentField: 'skill' },
+    });
+    const s = buildPolarScene({
+      data,
+      spider: false,
+      startAngle: 0,
+      hiddenSeries: new Set(),
+      width: 480,
+      height: 360,
+      locale: 'en-US',
+    });
+    expect(s.radial).toBe(true);
+    expect(s.rings).toHaveLength(0);
+    expect(s.tracks).toHaveLength(4);
+    expect(s.renderSeries[0].sectors).toHaveLength(4);
+    expect(s.spokes[0]).toMatchObject({ x: s.cx, y: s.cy, anchor: 'end' });
+    // rings grow outward with the category index
+    expect(s.spokes[1].labelY).toBeLessThan(s.spokes[0].labelY);
+    expect(polarTooltip(s, { seriesIndex: 0, pointIndex: 0 })).not.toBeNull();
+  });
 });

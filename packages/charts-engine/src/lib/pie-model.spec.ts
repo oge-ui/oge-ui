@@ -3,6 +3,7 @@ import {
   pieAriaLabel,
   pieLabelText,
   pieSelectedAnnouncement,
+  pieSrTable,
   pieTooltip,
   pieValueText,
   togglePieSlice,
@@ -111,5 +112,92 @@ describe('pie model', () => {
   it('toggles slice selection', () => {
     expect(togglePieSlice([], 1)).toEqual([1]);
     expect(togglePieSlice([1, 2], 1)).toEqual([2]);
+  });
+
+  it('per-slice colour: colorField, customizePoint and the description', () => {
+    const scene = buildPieScene(
+      input({
+        colorField: (item) => (item.browser === 'Edge' ? '#0078d4' : ''),
+        customizePoint: (info) =>
+          info.argument === 'Other'
+            ? { color: '#999999', description: 'misc' }
+            : undefined,
+      }),
+    );
+    expect(scene.slices[2].color).toBe('#0078d4');
+    expect(scene.slices[3].color).toBe('#999999');
+    expect(scene.legendItems[3]).toMatchObject({
+      name: 'Other',
+      color: '#999999',
+    });
+    expect(pieValueText(scene.slices[3], 'en-US')).toBe('5 (5%), misc');
+  });
+
+  it('labels: outside with or without connectors, inside with contrast, format', () => {
+    const outside = buildPieScene(input({ label: { connector: false } }));
+    expect(outside.labelVms).toHaveLength(4);
+    expect(outside.labelVms.every((label) => label.connector === null)).toBe(
+      true,
+    );
+    const inside = buildPieScene(
+      input({
+        label: {
+          visible: true,
+          position: 'inside',
+          format: (info) => `${Math.round((info.percent ?? 0) * 100)}%`,
+        },
+      }),
+    );
+    const first = inside.labelVms.find((label) => label.pointIndex === 0);
+    expect(first?.text).toBe('60%');
+    expect(first?.inside).toBe(true);
+    expect(first?.textColor).toBe('#ffffff');
+    // inside labels leave room: no outside label column
+    expect(inside.geometry.outerR).toBeGreaterThan(outside.geometry.outerR);
+    const hidden = buildPieScene(input({ showLabels: false }));
+    expect(hidden.labelVms).toHaveLength(0);
+  });
+
+  it('nested doughnut: rings share colours per argument; sr table per ring', () => {
+    const scene = buildPieScene(
+      input({
+        type: 'doughnut',
+        series: [
+          { name: '2025', valueField: 'share' },
+          {
+            name: '2026',
+            dataSource: [
+              { browser: 'Safari', share: 30 },
+              { browser: 'Chrome', share: 70 },
+            ],
+          },
+        ],
+      }),
+    );
+    expect(scene.ringed).toBe(true);
+    expect(scene.rings).toHaveLength(2);
+    expect(scene.rings[0].outerR).toBeLessThanOrEqual(scene.rings[1].innerR);
+    expect(scene.slices).toHaveLength(6);
+    const chrome = scene.slices.filter((vm) => vm.label === 'Chrome');
+    expect(chrome.map((vm) => vm.ringIndex)).toEqual([0, 1]);
+    expect(chrome[0].color).toBe(chrome[1].color);
+    expect(chrome[1].payload).toMatchObject({ ringIndex: 1, ringName: '2026' });
+    expect(new Set(scene.slices.map((vm) => vm.key)).size).toBe(6);
+    expect(scene.legendItems.map((item) => item.name)).toEqual([
+      'Chrome',
+      'Safari',
+      'Edge',
+      'Other',
+    ]);
+    const table = pieSrTable(scene, 'en-US');
+    expect(table.headers).toEqual(['2025', '2026']);
+    expect(table.rows[0]).toEqual({
+      argText: 'Chrome',
+      cells: ['60 (60%)', '70 (70%)'],
+    });
+    expect(table.rows[2].cells[1]).toBe('');
+    const tip = pieTooltip(scene, chrome[1].key, 'en-US');
+    expect(tip?.valueText).toBe('2026: 70 (70%)');
+    expect(pieSrTable(buildPieScene(input()), 'en-US').headers).toBeNull();
   });
 });

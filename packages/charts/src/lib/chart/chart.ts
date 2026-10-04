@@ -1,9 +1,10 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
+  PLATFORM_ID,
   ViewEncapsulation,
   afterNextRender,
   computed,
@@ -21,6 +22,24 @@ import {
   OGE_CHART_PALETTE,
   beginChartGesture,
   buildCartesianData,
+  cartesianDragArgDelta,
+  cartesianDataLabelAnchor,
+  cartesianLabelTransform,
+  cartesianPinchRange,
+  cartesianPlotArgPx,
+  cartesianSeriesEnterOrigin,
+  cartesianSeriesPane,
+  cartesianZoomRect,
+  chartAnimationVars,
+  chartPrefersReducedMotion,
+  chartTouchAction,
+  chartTouchGestures,
+  createChartPinchTracker,
+  detectChartRtl,
+  resolveChartAnimation,
+  type ChartGestureHandle,
+  type OgeChartAnimationOptions,
+  type OgeChartPane,
   buildCartesianScene,
   cartesianActivePoints,
   cartesianAriaLabel,
@@ -31,25 +50,30 @@ import {
   cartesianNearestSeries,
   cartesianPanRange,
   cartesianPointAnnouncement,
+  cartesianPointEventColor,
   cartesianSelectionRange,
   cartesianSrRows,
   cartesianTooltip,
+  cartesianTooltipRowText,
   cartesianWheelRange,
   cartesianZoomTo,
   chartArgumentText,
   chartDragMode,
+  chartLabelTemplateBox,
   chartMarkerRadius,
   chartSeriesGroupOpacity,
   chartValueText,
   chartWheelZoomEnabled,
-  chartZoomSelectionRect,
   formatOgeChartMessage,
   isChartPointSelected,
   measureChartElement,
   mergeOgeChartsMessages,
   nextChartSelection,
   observeChartSize,
+  printOgeChart,
   type OgeCartesianHoverState,
+  type OgeChartPrintOptions,
+  type OgeChartRenderLabel,
   type OgeChartAnnotation,
   type OgeChartAxisOptions,
   type OgeChartCrosshairOptions,
@@ -70,6 +94,7 @@ import {
 } from '@oge-ui/charts-engine';
 import {
   OgeChartAnnotationTemplate,
+  OgeChartLabelTemplate,
   OgeChartLegendTemplate,
   OgeChartTooltipTemplate,
 } from './chart-templates';
@@ -91,7 +116,13 @@ export { OGE_CHART_PALETTE };
   styleUrl: './chart.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  host: { class: 'oge-chart' },
+  host: {
+    class: 'oge-chart',
+    '[class.oge-chart-rotated]': 'rotated()',
+    '[class.oge-chart-static]': '!resolvedAnimation().transitions',
+    '[attr.dir]': 'hostDir()',
+    '[style]': 'animationVars()',
+  },
   template: `
     @if (title()) {
       <div class="oge-chart-title">{{ title() }}</div>
@@ -129,13 +160,14 @@ export { OGE_CHART_PALETTE };
                         name: item.name,
                         color: item.color,
                         hidden: item.hidden,
+                        swatch: item.swatch,
                       },
                     }"
                   />
                 } @else {
                   <span
                     class="oge-chart-legend-marker"
-                    [style.background-color]="item.color"
+                    [style.background]="item.swatch"
                   ></span>
                   <span class="oge-chart-legend-text">{{ item.name }}</span>
                 }
@@ -164,6 +196,8 @@ export { OGE_CHART_PALETTE };
           [attr.width]="width()"
           [attr.height]="height()"
           [attr.viewBox]="'0 0 ' + width() + ' ' + height()"
+          [class.oge-chart-touch-pan-x]="touchAction() === 'pan-x'"
+          [class.oge-chart-touch-pan-y]="touchAction() === 'pan-y'"
           (pointermove)="onPointerMove($event)"
           (pointerdown)="onPlotPointerDown($event)"
           (click)="onPlotClick($event)"
@@ -171,168 +205,242 @@ export { OGE_CHART_PALETTE };
         >
           <!-- eslint-enable @angular-eslint/template/click-events-have-key-events -->
           <defs>
-            <clipPath [attr.id]="clipId">
-              <rect
-                x="0"
-                y="0"
-                [attr.width]="plotW()"
-                [attr.height]="plotH()"
-              />
-            </clipPath>
+            @for (pane of paneVms(); track pane.index) {
+              <clipPath [attr.id]="clipId + '-' + pane.index">
+                <rect
+                  [attr.x]="pane.clip.x"
+                  [attr.y]="pane.clip.y"
+                  [attr.width]="pane.clip.w"
+                  [attr.height]="pane.clip.h"
+                />
+              </clipPath>
+            }
           </defs>
           <g [attr.transform]="'translate(' + plotX() + ',' + plotY() + ')'">
-            <!-- strip lines / bands -->
-            @for (strip of stripRects(); track $index) {
-              @if (strip.widthPx > 0) {
+            <!-- strips (bands) -->
+            @for (guide of guides(); track $index) {
+              @if (guide.kind === 'band') {
                 <rect
                   class="oge-chart-strip"
-                  [attr.x]="strip.px"
-                  y="0"
-                  [attr.width]="strip.widthPx"
-                  [attr.height]="plotH()"
-                  [attr.fill]="strip.color ?? null"
+                  [attr.x]="guide.rect.x"
+                  [attr.y]="guide.rect.y"
+                  [attr.width]="guide.rect.w"
+                  [attr.height]="guide.rect.h"
+                  [attr.fill]="guide.color ?? null"
                 />
-              } @else {
-                <line
-                  class="oge-chart-strip-line"
-                  [attr.x1]="strip.px"
-                  [attr.x2]="strip.px"
-                  y1="0"
-                  [attr.y2]="plotH()"
-                  [attr.stroke]="strip.color ?? null"
-                />
-              }
-              @if (strip.label) {
-                <text
-                  class="oge-chart-strip-label"
-                  [attr.x]="strip.px + 4"
-                  y="12"
-                >
-                  {{ strip.label }}
-                </text>
               }
             }
             <!-- grid -->
-            @for (tick of valueTicksVm(); track tick.px) {
+            @for (line of gridLines(); track $index) {
               <line
                 class="oge-chart-grid"
-                x1="0"
-                [attr.x2]="plotW()"
-                [attr.y1]="tick.px"
-                [attr.y2]="tick.px"
+                [class.oge-chart-grid-minor]="line.minor"
+                [attr.x1]="line.x1"
+                [attr.x2]="line.x2"
+                [attr.y1]="line.y1"
+                [attr.y2]="line.y2"
               />
             }
-            @if (argGrid()) {
-              @for (tick of argTicksVm(); track tick.px) {
-                <line
-                  class="oge-chart-grid"
-                  [attr.x1]="tick.px"
-                  [attr.x2]="tick.px"
-                  y1="0"
-                  [attr.y2]="plotH()"
-                />
-              }
-            }
-            <!-- series -->
-            <g [attr.clip-path]="'url(#' + clipId + ')'">
+            <!-- series: logical geometry inside the orientation frame -->
+            <g class="oge-chart-plot-frame" [attr.transform]="frameTransform()">
               @for (rs of renderSeries(); track rs.seriesIndex) {
                 <g
-                  class="oge-chart-series"
-                  [attr.opacity]="seriesGroupOpacity(rs.seriesIndex)"
+                  [attr.clip-path]="
+                    'url(#' + clipId + '-' + paneOf(rs.seriesIndex) + ')'
+                  "
                 >
-                  @if (rs.areaPathD !== null) {
-                    <path
-                      class="oge-chart-area"
-                      [attr.d]="rs.areaPathD"
-                      [attr.fill]="rs.color"
-                      [attr.opacity]="rs.opacity * 0.35"
-                    />
-                  }
-                  @if (rs.linePathD !== null) {
-                    <path
-                      class="oge-chart-line"
-                      [attr.d]="rs.linePathD"
-                      [attr.stroke]="rs.color"
-                      [attr.stroke-width]="rs.strokeWidth"
-                      [attr.stroke-dasharray]="rs.dashArray"
-                      [attr.opacity]="rs.opacity"
-                      fill="none"
-                    />
-                  }
-                  @for (bar of rs.bars; track bar.pointIndex) {
-                    <rect
-                      class="oge-chart-bar"
-                      [class.oge-chart-point-selected]="
-                        isSelected(rs.seriesIndex, bar.pointIndex)
-                      "
-                      [attr.x]="bar.x"
-                      [attr.y]="bar.y"
-                      [attr.width]="bar.w"
-                      [attr.height]="bar.h"
-                      [attr.fill]="rs.color"
-                      [attr.opacity]="rs.opacity"
-                      rx="2"
-                    />
-                  }
-                  @for (candle of rs.candles; track candle.pointIndex) {
-                    <line
-                      class="oge-chart-candle-wick"
-                      [attr.x1]="candle.x"
-                      [attr.x2]="candle.x"
-                      [attr.y1]="candle.wickY1"
-                      [attr.y2]="candle.wickY2"
-                    />
-                    <rect
-                      class="oge-chart-candle"
-                      [class.oge-chart-candle-falling]="!candle.rising"
-                      [attr.x]="candle.x - candle.w / 2"
-                      [attr.y]="candle.bodyY"
-                      [attr.width]="candle.w"
-                      [attr.height]="candle.bodyH"
-                    />
-                  }
-                  @for (marker of rs.markers; track marker.pointIndex) {
-                    <circle
-                      class="oge-chart-marker"
-                      [class.oge-chart-bubble]="rs.type === 'bubble'"
-                      [class.oge-chart-point-selected]="
-                        isSelected(rs.seriesIndex, marker.pointIndex)
-                      "
-                      [attr.cx]="marker.x"
-                      [attr.cy]="marker.y"
-                      [attr.r]="markerRadius(marker, rs.type)"
-                      [attr.fill]="rs.color"
-                    />
-                  }
-                  @for (label of rs.labels; track $index) {
-                    <text
-                      class="oge-chart-point-label"
-                      [attr.x]="label.x"
-                      [attr.y]="label.y"
-                      text-anchor="middle"
-                    >
-                      {{ label.text }}
-                    </text>
-                  }
+                  <g
+                    class="oge-chart-series"
+                    [class.oge-chart-series-enter]="drawingIn()"
+                    [style.transform-origin]="enterOrigin(rs.seriesIndex)"
+                    [attr.opacity]="seriesGroupOpacity(rs.seriesIndex)"
+                  >
+                    @if (rs.areaPathD !== null) {
+                      <path
+                        class="oge-chart-area"
+                        [attr.d]="rs.areaPathD"
+                        [attr.fill]="rs.color"
+                        [attr.opacity]="rs.opacity * 0.35"
+                      />
+                    }
+                    @for (extra of rs.extraPaths; track $index) {
+                      <path
+                        [attr.class]="extra.cls"
+                        [attr.d]="extra.d"
+                        [attr.fill]="extra.fill ?? 'none'"
+                        [attr.stroke]="extra.stroke"
+                        [attr.stroke-width]="extra.strokeWidth"
+                        [attr.stroke-dasharray]="extra.dashArray"
+                        [attr.opacity]="extra.opacity"
+                      />
+                    }
+                    @if (rs.linePathD !== null) {
+                      <path
+                        class="oge-chart-line"
+                        [attr.d]="rs.linePathD"
+                        [attr.stroke]="rs.color"
+                        [attr.stroke-width]="rs.strokeWidth"
+                        [attr.stroke-dasharray]="rs.dashArray"
+                        [attr.opacity]="rs.opacity"
+                        fill="none"
+                      />
+                    }
+                    @for (bar of rs.bars; track $index) {
+                      <rect
+                        class="oge-chart-bar"
+                        [class]="bar.cls ?? ''"
+                        [class.oge-chart-point-selected]="
+                          isSelected(rs.seriesIndex, bar.pointIndex)
+                        "
+                        [attr.x]="bar.x"
+                        [attr.y]="bar.y"
+                        [attr.width]="bar.w"
+                        [attr.height]="bar.h"
+                        [attr.fill]="bar.color ?? rs.color"
+                        [attr.stroke]="bar.stroke ?? null"
+                        [attr.opacity]="rs.opacity"
+                        rx="2"
+                      />
+                    }
+                    @for (candle of rs.candles; track candle.pointIndex) {
+                      <line
+                        class="oge-chart-candle-wick"
+                        [attr.x1]="candle.x"
+                        [attr.x2]="candle.x"
+                        [attr.y1]="candle.wickY1"
+                        [attr.y2]="candle.wickY2"
+                      />
+                      <rect
+                        class="oge-chart-candle"
+                        [class.oge-chart-candle-falling]="!candle.rising"
+                        [attr.x]="candle.x - candle.w / 2"
+                        [attr.y]="candle.bodyY"
+                        [attr.width]="candle.w"
+                        [attr.height]="candle.bodyH"
+                        [style.fill]="candle.color ?? null"
+                      />
+                    }
+                    @for (seg of rs.segments; track $index) {
+                      <line
+                        [attr.class]="seg.cls"
+                        [attr.x1]="seg.x1"
+                        [attr.y1]="seg.y1"
+                        [attr.x2]="seg.x2"
+                        [attr.y2]="seg.y2"
+                        [style.stroke]="seg.color ?? null"
+                      />
+                    }
+                    @for (marker of rs.markers; track marker.pointIndex) {
+                      <circle
+                        class="oge-chart-marker"
+                        [class.oge-chart-bubble]="rs.type === 'bubble'"
+                        [class.oge-chart-point-selected]="
+                          isSelected(rs.seriesIndex, marker.pointIndex)
+                        "
+                        [attr.cx]="marker.x"
+                        [attr.cy]="marker.y"
+                        [attr.r]="markerRadius(marker, rs.type)"
+                        [attr.fill]="marker.color ?? rs.color"
+                      />
+                    }
+                    @for (dot of rs.dots; track $index) {
+                      <circle
+                        class="oge-chart-dot"
+                        [attr.cx]="dot.x"
+                        [attr.cy]="dot.y"
+                        [attr.r]="dot.r"
+                        [attr.fill]="dot.color ?? rs.color"
+                      />
+                    }
+                    @for (label of rs.labels; track $index) {
+                      @if (labelTemplate(); as tpl) {
+                        <foreignObject
+                          class="oge-chart-label-fo"
+                          [attr.x]="labelBox(label).x"
+                          [attr.y]="labelBox(label).y"
+                          [attr.width]="labelBox(label).w"
+                          [attr.height]="labelBox(label).h"
+                          [attr.transform]="labelTransform(label.x, label.y)"
+                        >
+                          <ng-container
+                            [ngTemplateOutlet]="tpl.templateRef"
+                            [ngTemplateOutletContext]="{ $implicit: label }"
+                          />
+                        </foreignObject>
+                      } @else {
+                        <text
+                          class="oge-chart-point-label"
+                          [class.oge-chart-point-label-inside]="label.inside"
+                          [attr.x]="label.x"
+                          [attr.y]="label.y"
+                          [attr.text-anchor]="labelAnchor(label)"
+                          [attr.dominant-baseline]="pointLabelBaseline()"
+                          [attr.transform]="labelTransform(label.x, label.y)"
+                          [style.fill]="label.textColor ?? null"
+                        >
+                          {{ label.text }}
+                        </text>
+                      }
+                    }
+                  </g>
                 </g>
               }
             </g>
+            <!-- constant lines / strip lines -->
+            @for (guide of guides(); track $index) {
+              @if (guide.kind === 'line') {
+                <line
+                  [class.oge-chart-strip-line]="guide.variant === 'strip'"
+                  [class.oge-chart-constant-line]="guide.variant === 'constant'"
+                  [attr.x1]="guide.line.x1"
+                  [attr.x2]="guide.line.x2"
+                  [attr.y1]="guide.line.y1"
+                  [attr.y2]="guide.line.y2"
+                  [attr.stroke]="guide.color ?? null"
+                  [attr.stroke-width]="guide.strokeWidth"
+                  [attr.stroke-dasharray]="guide.dashArray"
+                />
+              }
+            }
+            <!-- axis breaks -->
+            @for (marker of breakMarkers(); track $index) {
+              <path class="oge-chart-break-gap" [attr.d]="marker.fillD" />
+              <path class="oge-chart-break-line" [attr.d]="marker.lineD" />
+            }
+            @for (guide of guides(); track $index) {
+              @if (guide.label; as label) {
+                <text
+                  class="oge-chart-strip-label"
+                  [class.oge-chart-constant-label]="
+                    guide.variant === 'constant'
+                  "
+                  [attr.x]="label.x"
+                  [attr.y]="label.y"
+                  [attr.text-anchor]="label.anchor"
+                  [attr.fill]="
+                    guide.variant === 'constant' ? (guide.color ?? null) : null
+                  "
+                >
+                  {{ label.text }}
+                </text>
+              }
+            }
             <!-- crosshair -->
             @if (crosshairPx(); as cross) {
               <line
                 class="oge-chart-crosshair"
-                [attr.x1]="cross.x"
-                [attr.x2]="cross.x"
-                y1="0"
-                [attr.y2]="plotH()"
+                [attr.x1]="cross.argLine.x1"
+                [attr.x2]="cross.argLine.x2"
+                [attr.y1]="cross.argLine.y1"
+                [attr.y2]="cross.argLine.y2"
               />
-              @if (crosshairHorizontal() && cross.y !== null) {
+              @if (crosshairHorizontal() && cross.valueLine; as valueLine) {
                 <line
                   class="oge-chart-crosshair"
-                  x1="0"
-                  [attr.x2]="plotW()"
-                  [attr.y1]="cross.y"
-                  [attr.y2]="cross.y"
+                  [attr.x1]="valueLine.x1"
+                  [attr.x2]="valueLine.x2"
+                  [attr.y1]="valueLine.y1"
+                  [attr.y2]="valueLine.y2"
                 />
               }
             }
@@ -341,9 +449,9 @@ export { OGE_CHART_PALETTE };
               <rect
                 class="oge-chart-zoom-rect"
                 [attr.x]="sel.x"
-                y="0"
+                [attr.y]="sel.y"
                 [attr.width]="sel.w"
-                [attr.height]="plotH()"
+                [attr.height]="sel.h"
               />
             }
             <!-- annotations -->
@@ -397,65 +505,48 @@ export { OGE_CHART_PALETTE };
                 </text>
               }
             }
-            <!-- axes lines -->
-            <line
-              class="oge-chart-axis-line"
-              x1="0"
-              [attr.x2]="plotW()"
-              [attr.y1]="plotH()"
-              [attr.y2]="plotH()"
-            />
+            <!-- axis lines + minor tick marks -->
+            @for (line of axisLines(); track $index) {
+              <line
+                class="oge-chart-axis-line"
+                [attr.x1]="line.x1"
+                [attr.x2]="line.x2"
+                [attr.y1]="line.y1"
+                [attr.y2]="line.y2"
+              />
+            }
+            @for (mark of tickMarks(); track $index) {
+              <line
+                class="oge-chart-tick-mark"
+                [attr.x1]="mark.x1"
+                [attr.x2]="mark.x2"
+                [attr.y1]="mark.y1"
+                [attr.y2]="mark.y2"
+              />
+            }
           </g>
-          <!-- argument labels -->
-          @for (tick of argTicksVm(); track tick.px) {
+          <!-- axis labels + titles -->
+          @for (label of axisLabels(); track $index) {
             <text
-              class="oge-chart-axis-label oge-chart-arg-label"
-              [attr.x]="plotX() + tick.px"
-              [attr.y]="plotY() + plotH() + 16"
-              [attr.text-anchor]="argRotated() ? 'end' : 'middle'"
-              [attr.transform]="
-                argRotated()
-                  ? 'rotate(-40 ' +
-                    (plotX() + tick.px) +
-                    ' ' +
-                    (plotY() + plotH() + 16) +
-                    ')'
-                  : null
-              "
+              class="oge-chart-axis-label"
+              [class.oge-chart-arg-label]="label.axis === 'argument'"
+              [attr.x]="label.x"
+              [attr.y]="label.y"
+              [attr.text-anchor]="label.anchor"
+              [attr.transform]="label.transform"
             >
-              {{ tick.label }}
+              {{ label.text }}
             </text>
           }
-          <!-- value labels -->
-          @for (axis of valueAxesVm(); track axis.index) {
-            @for (tick of axis.ticks; track tick.px) {
-              <text
-                class="oge-chart-axis-label"
-                [attr.x]="axis.labelX"
-                [attr.y]="plotY() + tick.px + 4"
-                [attr.text-anchor]="axis.anchor"
-              >
-                {{ tick.label }}
-              </text>
-            }
-            @if (axis.title) {
-              <text
-                class="oge-chart-axis-title"
-                [attr.transform]="axis.titleTransform"
-                text-anchor="middle"
-              >
-                {{ axis.title }}
-              </text>
-            }
-          }
-          @if (argAxisTitle()) {
+          @for (axisTitle of axisTitles(); track $index) {
             <text
               class="oge-chart-axis-title"
-              [attr.x]="plotX() + plotW() / 2"
-              [attr.y]="height() - 4"
+              [attr.x]="axisTitle.x"
+              [attr.y]="axisTitle.y"
+              [attr.transform]="axisTitle.transform"
               text-anchor="middle"
             >
-              {{ argAxisTitle() }}
+              {{ axisTitle.text }}
             </text>
           }
           @if (scene().empty) {
@@ -473,6 +564,8 @@ export { OGE_CHART_PALETTE };
         @if (tooltipVm(); as tip) {
           <div
             class="oge-chart-tooltip"
+            [class.oge-chart-tooltip-end-x]="tip.alignX === 'end'"
+            [class.oge-chart-tooltip-end-y]="tip.alignY === 'end'"
             [style.left.px]="tip.x"
             [style.top.px]="tip.y"
             aria-hidden="true"
@@ -488,9 +581,9 @@ export { OGE_CHART_PALETTE };
                 <span class="oge-chart-tooltip-row">
                   <span
                     class="oge-chart-legend-marker"
-                    [style.background-color]="colorOf(point.seriesIndex)"
+                    [style.background-color]="pointColorOf(point)"
                   ></span>
-                  {{ point.seriesName }}: {{ valueText(point.point) }}
+                  {{ tooltipRowText(point) }}
                 </span>
               }
             }
@@ -531,6 +624,8 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   private static nextId = 0;
   private readonly config = inject(OGE_CHARTS_CONFIG);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   protected readonly clipId = `oge-chart-clip-${OgeChart.nextId++}`;
 
   /* ---------------- inputs ---------------- */
@@ -553,7 +648,23 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   readonly panEnabled = input(false);
   readonly selectionMode = input<'point' | 'series' | 'none'>('none');
   readonly palette = input<readonly string[] | undefined>(undefined);
-  readonly animation = input(true);
+  /**
+   * Hover/selection transitions plus the series draw-in on the first render
+   * (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins.
+   */
+  readonly animation = input<boolean | OgeChartAnimationOptions>(true);
+  /**
+   * Swaps the axes: the argument axis runs vertically, the value axis
+   * horizontally — bars become horizontal bars, lines run top-down.
+   */
+  readonly rotated = input(false);
+  /**
+   * Right-to-left layout (mirrored argument axis, value axes, legend,
+   * tooltip and arrow keys); unset follows the `dir` of the page.
+   */
+  readonly rtlEnabled = input<boolean | undefined>(undefined);
+  /** Plot areas stacked over the shared argument axis (price + volume). */
+  readonly panes = input<readonly OgeChartPane[]>([]);
   readonly title = input('');
   readonly subtitle = input('');
   readonly locale = input<string | undefined>(undefined);
@@ -580,6 +691,9 @@ export class OgeChart<T extends object = Record<string, unknown>> {
     OgeChartAnnotationTemplate,
     { descendants: false },
   );
+  protected readonly labelTemplate = contentChild(OgeChartLabelTemplate, {
+    descendants: false,
+  });
   private readonly plotWrapEl =
     viewChild.required<ElementRef<HTMLElement>>('plotWrap');
   private readonly svgEl =
@@ -602,6 +716,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
 
   constructor() {
     afterNextRender(() => {
+      this.autoRtl.set(detectChartRtl(this.hostEl.nativeElement));
       const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>
         this.hostSize.set(size),
       );
@@ -611,7 +726,40 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       this.renderSeries();
       this.drawn.emit();
     });
+    // the draw-in runs once: from the first render with data, for `duration`
+    effect((onCleanup) => {
+      if (!this.isBrowser || !untracked(this.entering)) return;
+      if (this.scene().empty) return;
+      const timer = setTimeout(
+        () => this.entering.set(false),
+        untracked(this.resolvedAnimation).duration + 50,
+      );
+      onCleanup(() => clearTimeout(timer));
+    });
+    this.destroyRef.onDestroy(() => this.pinch.dispose());
   }
+
+  /* ---------------- orientation / animation ---------------- */
+
+  /** The page direction, read after the first render (SSR-safe). */
+  private readonly autoRtl = signal(false);
+  protected readonly rtl = computed(() => this.rtlEnabled() ?? this.autoRtl());
+  protected readonly hostDir = computed(() => {
+    const explicit = this.rtlEnabled();
+    return explicit === undefined ? null : explicit ? 'rtl' : 'ltr';
+  });
+  private readonly reducedMotion = chartPrefersReducedMotion();
+  protected readonly resolvedAnimation = computed(() =>
+    resolveChartAnimation(this.animation(), this.reducedMotion),
+  );
+  protected readonly animationVars = computed(() =>
+    chartAnimationVars(this.resolvedAnimation()),
+  );
+  /** True until the first-render draw-in has played. */
+  private readonly entering = signal(true);
+  protected readonly drawingIn = computed(
+    () => this.entering() && this.resolvedAnimation().drawIn,
+  );
 
   /* ---------------- the engine's view model (ADR 0003) ---------------- */
 
@@ -622,6 +770,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       series: this.series(),
       commonSeries: this.commonSeries(),
       argumentType: this.argumentAxis().type,
+      messages: this.msg(),
     }),
   );
 
@@ -645,6 +794,9 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       height: this.height(),
       locale: this.effectiveLocale(),
       markerThreshold: this.config.markerThreshold,
+      rotated: this.rotated(),
+      rtl: this.rtl(),
+      panes: this.panes(),
     }),
   );
 
@@ -662,12 +814,70 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   protected readonly argTicksVm = computed(() => this.scene().argTicks);
   protected readonly valueTicksVm = computed(() => this.scene().valueGridTicks);
   protected readonly valueAxesVm = computed(() => this.scene().valueAxes);
-  protected readonly stripRects = computed(() => this.scene().stripRects);
   protected readonly annotationVms = computed(() => this.scene().annotations);
   protected readonly legendItems = computed(() => this.scene().legendItems);
+  protected readonly paneVms = computed(() => this.scene().panes);
+  protected readonly guides = computed(() => this.scene().guides);
+  protected readonly gridLines = computed(() => this.scene().gridLines);
+  protected readonly axisLines = computed(() => this.scene().axisLines);
+  protected readonly tickMarks = computed(() => this.scene().tickMarks);
+  protected readonly breakMarkers = computed(() => this.scene().breakMarkers);
+  protected readonly axisLabels = computed(() => this.scene().axisLabels);
+  protected readonly axisTitles = computed(() => this.scene().axisTitles);
+  protected readonly frameTransform = computed(
+    () => this.scene().frame.transform,
+  );
+  protected readonly pointLabelAnchor = computed(
+    () => this.scene().pointLabelAnchor,
+  );
+  protected readonly pointLabelBaseline = computed(
+    () => this.scene().pointLabelBaseline,
+  );
+  protected readonly touchAction = computed(() =>
+    chartTouchAction(this.scene(), this.zoomEnabled(), this.panEnabled()),
+  );
+
+  protected paneOf(seriesIndex: number): number {
+    return cartesianSeriesPane(this.scene(), seriesIndex);
+  }
+
+  protected enterOrigin(seriesIndex: number): string | null {
+    return this.drawingIn()
+      ? cartesianSeriesEnterOrigin(this.scene(), seriesIndex)
+      : null;
+  }
+
+  protected labelTransform(x: number, y: number): string | null {
+    return cartesianLabelTransform(this.scene(), x, y);
+  }
+
+  protected labelAnchor(
+    label: OgeChartRenderLabel,
+  ): 'start' | 'middle' | 'end' {
+    return cartesianDataLabelAnchor(this.scene(), label);
+  }
 
   protected colorOf(seriesIndex: number): string {
     return this.scene().colors[seriesIndex] ?? OGE_CHART_PALETTE[0];
+  }
+
+  /** A tooltip row's marker: the point's own colour, else the series'. */
+  protected pointColorOf(point: OgeChartPointEvent<T>): string {
+    return cartesianPointEventColor(this.scene(), point);
+  }
+
+  /** `{series}: {value}` with the analytic parts and the trend / R². */
+  protected tooltipRowText(point: OgeChartPointEvent<T>): string {
+    return cartesianTooltipRowText(this.scene(), point);
+  }
+
+  protected labelBox(label: OgeChartRenderLabel): {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } {
+    return chartLabelTemplateBox(label);
   }
 
   protected markerRadius(
@@ -808,11 +1018,12 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       this.data().argKind,
       point,
       this.effectiveLocale(),
+      this.msg().values,
     );
   }
 
   protected valueText(point: OgeChartPoint<T>): string {
-    return chartValueText(point, this.effectiveLocale());
+    return chartValueText(point, this.effectiveLocale(), this.msg().values);
   }
 
   /* ---------------- zoom / pan ---------------- */
@@ -822,14 +1033,56 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   );
   protected readonly zoomSelection = computed(() => {
     const drag = this.zoomDrag();
-    return drag === null ? null : chartZoomSelectionRect(drag.startPx, drag.px);
+    return drag === null
+      ? null
+      : cartesianZoomRect(this.scene(), drag.startPx, drag.px);
+  });
+
+  /** The running one-finger / mouse gesture (a second finger cancels it). */
+  private activeGesture: ChartGestureHandle | null = null;
+  private pinchStart: { range: OgeChartRange; rect: DOMRect } | null = null;
+
+  /** Two fingers on the plot: pinch-zoom and two-finger pan. */
+  private readonly pinch = createChartPinchTracker({
+    onPinchStart: () => {
+      this.activeGesture?.cancel();
+      this.activeGesture = null;
+      this.zoomDrag.set(null);
+      this.pinchStart = {
+        range: untracked(this.scene).effectiveRange,
+        rect: this.svgEl().nativeElement.getBoundingClientRect(),
+      };
+    },
+    onPinch: (startA, startB, a, b) => {
+      const start = this.pinchStart;
+      if (start === null) return;
+      const scene = untracked(this.scene);
+      const local = (point: { clientX: number; clientY: number }) => ({
+        x: point.clientX - start.rect.left - scene.plot.x,
+        y: point.clientY - start.rect.top - scene.plot.y,
+      });
+      const next = cartesianPinchRange(
+        scene,
+        start.range,
+        local(startA),
+        local(startB),
+        local(a),
+        local(b),
+      );
+      if (next !== null) this.visualRange.set(next);
+    },
+    onPinchEnd: (cancelled) => {
+      this.pinchStart = null;
+      if (!cancelled) this.announce(this.msg().announcements.zoomed, {});
+    },
   });
 
   protected onWheel(event: WheelEvent): void {
     if (!chartWheelZoomEnabled(this.zoomEnabled())) return;
     const svgRect = this.svgEl().nativeElement.getBoundingClientRect();
     const x = event.clientX - svgRect.left - this.plotX();
-    const next = cartesianWheelRange(untracked(this.scene), x, event.deltaY);
+    const y = event.clientY - svgRect.top - this.plotY();
+    const next = cartesianWheelRange(untracked(this.scene), x, event.deltaY, y);
     if (next === null) return;
     event.preventDefault();
     this.visualRange.set(next);
@@ -837,29 +1090,46 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   }
 
   protected onPlotPointerDown(event: PointerEvent): void {
+    if (
+      event.pointerType === 'touch' &&
+      chartTouchGestures(this.zoomEnabled(), this.panEnabled())
+    ) {
+      // the second finger turns the gesture into a pinch
+      if (this.pinch.pointerDown(event) || this.pinch.active) return;
+    }
     if (event.button !== 0) return;
     const mode = chartDragMode(
       this.zoomEnabled(),
       this.panEnabled(),
       event.shiftKey,
+      event.pointerType,
     );
     if (mode === null) return;
     const svgRect = this.svgEl().nativeElement.getBoundingClientRect();
-    const startPx = event.clientX - svgRect.left - this.plotX();
-    if (startPx < 0 || startPx > this.plotW()) return;
     const startScene = untracked(this.scene);
+    const startPx = cartesianPlotArgPx(
+      startScene,
+      event.clientX - svgRect.left - this.plotX(),
+      event.clientY - svgRect.top - this.plotY(),
+    );
+    if (startPx === null) return;
     const startRange = startScene.effectiveRange;
-    beginChartGesture(event, {
-      onMove: (deltaX) => {
+    this.activeGesture = beginChartGesture(event, {
+      onMove: (deltaX, deltaY) => {
+        const scene = untracked(this.scene);
         if (mode === 'pan') {
           this.visualRange.set(
-            cartesianPanRange(untracked(this.scene), startRange, deltaX),
+            cartesianPanRange(scene, startRange, deltaX, deltaY),
           );
         } else {
-          this.zoomDrag.set({ startPx, px: startPx + deltaX });
+          this.zoomDrag.set({
+            startPx,
+            px: startPx + cartesianDragArgDelta(scene, deltaX, deltaY),
+          });
         }
       },
       onFinish: (commit, cancelled) => {
+        this.activeGesture = null;
         const drag = untracked(this.zoomDrag);
         this.zoomDrag.set(null);
         if (mode === 'pan' || cancelled || !commit || drag === null) return;
@@ -932,6 +1202,8 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       seriesCount: scene.data.seriesList.length,
       isSeriesVisible: (index) => scene.visibility[index] === true,
       zoomed: scene.zoomed,
+      rotated: scene.rotated,
+      rtl: scene.rtl,
     });
     if (command === null) return;
     switch (command.type) {
@@ -1023,6 +1295,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   refresh(): void {
     const size = measureChartElement(this.plotWrapEl().nativeElement);
     if (size !== null) this.hostSize.set(size);
+    this.autoRtl.set(detectChartRtl(this.hostEl.nativeElement));
   }
 
   focus(): void {
@@ -1037,5 +1310,13 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   /** Snapshot for `@oge-ui/charts/export-image`. */
   getExportData(): OgeChartExportData<T> {
     return cartesianExportData(untracked(this.scene), untracked(this.title));
+  }
+
+  /**
+   * Opens the browser's print dialog for the chart alone (title above it,
+   * scaled to the page) — dependency-free, from a hidden frame.
+   */
+  print(options: OgeChartPrintOptions = {}): Promise<void> {
+    return printOgeChart(this, { title: untracked(this.title), ...options });
   }
 }

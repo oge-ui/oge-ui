@@ -17,20 +17,26 @@ import {
   buildPieScene,
   mergeOgeChartsMessages,
   pieAriaLabel,
-  pieLabelText,
   pieSelectedAnnouncement,
+  pieSrTable,
   pieTooltip,
-  pieValueText,
+  printOgeChart,
   togglePieSlice,
   type OgeChartFieldExpr,
+  type OgeChartLabelOptions,
   type OgeChartLegendClickEvent,
   type OgeChartLegendItem,
   type OgeChartLegendOptions,
   type OgeChartPieSliceEvent,
+  type OgeChartPointCustomizer,
+  type OgeChartPrintOptions,
+  type OgeChartRenderLabel,
   type OgeChartSmallValuesGrouping,
   type OgeChartsMessages,
+  type OgePieSeriesInput,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
+import { ChartDataLabel } from './data-label';
 import { cx, useChartSize, useControllable, useStable } from './hooks';
 
 const EMPTY: readonly never[] = [];
@@ -54,6 +60,14 @@ export interface OgePieChartProps<T extends object = Record<string, unknown>> {
   readonly othersLabel?: string;
   /** Outside labels with connectors. Default true. */
   readonly showLabels?: boolean;
+  /** Data labels: position, format, zero handling, connectors, overlap. */
+  readonly label?: OgeChartLabelOptions<T>;
+  /** Per-slice colour read from the data. */
+  readonly colorField?: OgeChartFieldExpr<T>;
+  /** Per-slice colour / label overrides (wins over `colorField`). */
+  readonly customizePoint?: OgeChartPointCustomizer<T>;
+  /** Nested doughnut: one ring per entry (inner → outer). */
+  readonly series?: readonly OgePieSeriesInput<T>[];
   readonly legend?: OgeChartLegendOptions;
   readonly tooltipEnabled?: boolean;
   readonly palette?: readonly string[];
@@ -69,6 +83,8 @@ export interface OgePieChartProps<T extends object = Record<string, unknown>> {
   readonly onLegendClick?: (event: OgeChartLegendClickEvent) => void;
   /** Replaces a legend item's content (`*ogeChartLegendTemplate`). */
   readonly renderLegendItem?: (item: OgeChartLegendItem) => ReactNode;
+  /** Replaces every data label's content (`*ogeChartLabelTemplate`). */
+  readonly renderLabel?: (label: OgeChartRenderLabel) => ReactNode;
   readonly className?: string;
   readonly style?: CSSProperties;
 }
@@ -77,6 +93,8 @@ export interface OgePieChartProps<T extends object = Record<string, unknown>> {
 export interface OgePieChartHandle {
   /** The live SVG root — what the image exporters serialize. */
   getSvgElement(): SVGSVGElement;
+  /** Opens the browser's print dialog for the chart alone. */
+  print(options?: OgeChartPrintOptions): Promise<void>;
 }
 
 function OgePieChartInner<T extends object>(
@@ -94,11 +112,16 @@ function OgePieChartInner<T extends object>(
     showLabels = true,
     tooltipEnabled = true,
     title = '',
+    colorField,
+    customizePoint,
     renderLegendItem,
+    renderLabel,
   } = props;
   const dataSource = props.dataSource ?? EMPTY;
   const smallValuesGrouping = useStable(props.smallValuesGrouping ?? null);
   const legend = useStable<OgeChartLegendOptions>(props.legend ?? NO_OPTIONS);
+  const label = useStable(props.label);
+  const series = useStable(props.series ?? EMPTY);
   const palette = useStable(props.palette);
   const messages = useStable(props.messages);
   const msg = useMemo(
@@ -117,10 +140,11 @@ function OgePieChartInner<T extends object>(
   const plotWrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [size] = useChartSize(plotWrapRef, { width: 400, height: 300 });
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  /** The hovered slice's `key` (ring-aware). */
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
 
-  /* the engine's view model (ADR 0003): slices, labels, geometry */
+  /* the engine's view model (ADR 0003): slices, rings, labels, geometry */
   const scene = useMemo(
     () =>
       buildPieScene<T>({
@@ -133,9 +157,14 @@ function OgePieChartInner<T extends object>(
         smallValuesGrouping,
         othersLabel,
         showLabels,
+        label,
+        colorField,
+        customizePoint,
+        series,
         palette,
         width: size.width,
         height: size.height,
+        locale,
       }),
     [
       dataSource,
@@ -147,21 +176,25 @@ function OgePieChartInner<T extends object>(
       smallValuesGrouping,
       othersLabel,
       showLabels,
+      label,
+      colorField,
+      customizePoint,
+      series,
       palette,
       size.width,
       size.height,
+      locale,
     ],
   );
-  const tooltipVm = tooltipEnabled
-    ? pieTooltip(scene, hoverIndex, locale)
-    : null;
+  const srTable = useMemo(() => pieSrTable(scene, locale), [scene, locale]);
+  const tooltipVm = tooltipEnabled ? pieTooltip(scene, hoverKey, locale) : null;
   const isSelected = (index: number): boolean => selectedSlices.includes(index);
 
   const toggleSelection = (index: number): void => {
-    const vm = scene.slices.find((entry) => entry.slice.index === index);
+    const item = scene.legendItems.find((entry) => entry.index === index);
     const event: OgeChartLegendClickEvent = {
       seriesIndex: index,
-      seriesName: vm?.label ?? '',
+      seriesName: item?.name ?? '',
       willHide: false,
       cancel: false,
     };
@@ -178,8 +211,11 @@ function OgePieChartInner<T extends object>(
         if (svg === null) throw new Error('OgePieChart is not mounted');
         return svg;
       },
+      print(options) {
+        return printOgeChart(this, { title, ...options });
+      },
     }),
-    [],
+    [title],
   );
 
   const legendPosition = legend.position ?? 'bottom';
@@ -199,29 +235,30 @@ function OgePieChartInner<T extends object>(
           legendPosition === 'top' && 'oge-chart-legend-top',
         )}
       >
-        {legend.visible !== false && scene.slices.length > 0 ? (
+        {legend.visible !== false && scene.legendItems.length > 0 ? (
           <ul className="oge-chart-legend" aria-label={msg.aria.legendLabel}>
-            {scene.slices.map((vm) => (
-              <li key={vm.slice.index}>
+            {scene.legendItems.map((item) => (
+              <li key={item.index}>
                 <button
                   type="button"
                   className="oge-chart-legend-btn"
-                  aria-pressed={isSelected(vm.slice.index)}
-                  onClick={() => toggleSelection(vm.slice.index)}
+                  aria-pressed={isSelected(item.index)}
+                  onClick={() => toggleSelection(item.index)}
                 >
                   {renderLegendItem ? (
                     renderLegendItem({
-                      name: vm.label,
-                      color: vm.color,
+                      name: item.name,
+                      color: item.color,
                       hidden: false,
+                      swatch: item.color,
                     })
                   ) : (
                     <>
                       <span
                         className="oge-chart-legend-marker"
-                        style={{ backgroundColor: vm.color }}
+                        style={{ backgroundColor: item.color }}
                       />
-                      <span className="oge-chart-legend-text">{vm.label}</span>
+                      <span className="oge-chart-legend-text">{item.name}</span>
                     </>
                   )}
                 </button>
@@ -241,7 +278,7 @@ function OgePieChartInner<T extends object>(
           >
             {scene.slices.map((vm) => (
               <path
-                key={vm.slice.index}
+                key={vm.key}
                 className={cx(
                   'oge-chart-pie-slice',
                   isSelected(vm.slice.index) && 'oge-chart-point-selected',
@@ -255,28 +292,25 @@ function OgePieChartInner<T extends object>(
                   );
                   setAnnouncement(pieSelectedAnnouncement(msg, vm, locale));
                 }}
-                onMouseEnter={() => setHoverIndex(vm.slice.index)}
-                onMouseLeave={() => setHoverIndex(null)}
+                onMouseEnter={() => setHoverKey(vm.key)}
+                onMouseLeave={() => setHoverKey(null)}
               />
             ))}
-            {showLabels
-              ? scene.labels.map((label) => (
-                  <Fragment key={label.sliceIndex}>
-                    <polyline
-                      className="oge-chart-pie-connector"
-                      points={`${label.arcX},${label.arcY} ${label.labelX},${label.labelY}`}
-                    />
-                    <text
-                      className="oge-chart-axis-label"
-                      x={label.labelX + (label.side === 'end' ? 4 : -4)}
-                      y={label.labelY + 4}
-                      textAnchor={label.side === 'end' ? 'start' : 'end'}
-                    >
-                      {pieLabelText(scene, label.sliceIndex)}
-                    </text>
-                  </Fragment>
-                ))
-              : null}
+            {scene.labelVms.map((labelVm) => (
+              <Fragment key={labelVm.key}>
+                {labelVm.connector !== null ? (
+                  <polyline
+                    className="oge-chart-pie-connector"
+                    points={labelVm.connector}
+                  />
+                ) : null}
+                <ChartDataLabel
+                  label={labelVm}
+                  render={renderLabel}
+                  className="oge-chart-axis-label oge-chart-pie-label"
+                />
+              </Fragment>
+            ))}
             {scene.slices.length === 0 ? (
               <text
                 className="oge-chart-no-data"
@@ -304,11 +338,25 @@ function OgePieChartInner<T extends object>(
       </div>
       <table className="oge-chart-sr-table">
         <caption>{msg.aria.tableCaption}</caption>
+        {srTable.headers !== null ? (
+          <thead>
+            <tr>
+              <th scope="col">{msg.aria.argumentHeader}</th>
+              {srTable.headers.map((header, index) => (
+                <th key={index} scope="col">
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        ) : null}
         <tbody>
-          {scene.slices.map((vm) => (
-            <tr key={vm.slice.index}>
-              <th scope="row">{vm.label}</th>
-              <td>{pieValueText(vm, locale)}</td>
+          {srTable.rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              <th scope="row">{row.argText}</th>
+              {row.cells.map((cell, index) => (
+                <td key={index}>{cell}</td>
+              ))}
             </tr>
           ))}
         </tbody>
@@ -322,8 +370,9 @@ function OgePieChartInner<T extends object>(
 
 /**
  * `<OgePieChart>` — pie/doughnut on the shared engine: slice geometry,
- * outside labels with connectors, small-value grouping, an interactive
- * legend, a hover tooltip and selection with slice explode. Commercial.
+ * nested doughnut rings, data labels (outside with connectors or inside the
+ * ring), per-slice colours, small-value grouping, an interactive legend, a
+ * hover tooltip and selection with slice explode. Commercial.
  *
  * ```tsx
  * <OgePieChart

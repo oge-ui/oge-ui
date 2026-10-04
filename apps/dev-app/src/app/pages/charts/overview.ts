@@ -25,6 +25,11 @@ import {
   REACT_CHARTS_OVERVIEW_SECTIONS,
   ReactChartsOverviewDemos,
 } from '../react-charts/overview';
+import { ReactChartsAnalyticsDemos } from '../react-charts/analytics-demos';
+import {
+  CHARTS_ANALYTICS_SECTIONS,
+  ChartsAnalyticsDemos,
+} from './analytics-demos';
 import {
   ANNOTATIONS_SNIPPET,
   EVENTS_EXPORT_SNIPPET,
@@ -51,11 +56,13 @@ const SECTIONS = [
   'Annotations',
   'Range selector',
   'Selection, i18n & export',
+  ...CHARTS_ANALYTICS_SECTIONS,
 ] as const;
 
 @Component({
   selector: 'app-charts-overview',
   imports: [
+    ChartsAnalyticsDemos,
     DemoCard,
     DocHeader,
     OgeChart,
@@ -63,6 +70,7 @@ const SECTIONS = [
     OgePolarChart,
     OgeRangeSelector,
     PageToc,
+    ReactChartsAnalyticsDemos,
     ReactChartsOverviewDemos,
     RouterLink,
   ],
@@ -146,6 +154,7 @@ const SECTIONS = [
 
     @if (fw.isReact()) {
       <app-react-charts-overview-demos />
+      <app-react-charts-analytics-demos />
     } @else {
       <app-demo-card
         [chips]="['auto axes', 'legend', 'tooltip', 'crosshair']"
@@ -358,6 +367,7 @@ const SECTIONS = [
           style="height: 340px"
         />
       </app-demo-card>
+      <app-charts-analytics-demos />
     }
   `,
 })

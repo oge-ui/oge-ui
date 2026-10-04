@@ -18,22 +18,29 @@ import {
 } from '@angular/core';
 import {
   buildPieScene,
+  chartLabelTemplateBox,
   mergeOgeChartsMessages,
   observeChartSize,
   pieAriaLabel,
-  pieLabelText,
   pieSelectedAnnouncement,
+  pieSrTable,
   pieTooltip,
-  pieValueText,
+  printOgeChart,
   togglePieSlice,
+  type OgeChartLabelOptions,
   type OgeChartLegendClickEvent,
   type OgeChartLegendOptions,
   type OgeChartPieSliceEvent,
+  type OgeChartPointCustomizer,
+  type OgeChartPrintOptions,
+  type OgeChartRenderLabel,
   type OgeChartSmallValuesGrouping,
+  type OgePieSeriesInput,
   type OgePieSliceVm,
 } from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
 import {
+  OgeChartLabelTemplate,
   OgeChartLegendTemplate,
   OgeChartTooltipTemplate,
 } from './chart-templates';
@@ -46,8 +53,9 @@ type SliceVm<T> = OgePieSliceVm<T>;
 
 /**
  * `<oge-pie-chart>` — pie/doughnut on the shared kernel: slice geometry,
- * outside labels with connectors, small-value grouping, interactive
- * legend, hover tooltip, selection with slice explode. Commercial.
+ * nested doughnut rings, data labels (outside with connectors or inside the
+ * ring), per-slice colours, small-value grouping, interactive legend, hover
+ * tooltip, selection with slice explode. Commercial.
  */
 @Component({
   selector: 'oge-pie-chart',
@@ -66,33 +74,34 @@ type SliceVm<T> = OgePieSliceVm<T>;
       [class.oge-chart-legend-end]="legendPosition() === 'end'"
       [class.oge-chart-legend-top]="legendPosition() === 'top'"
     >
-      @if (legendVisible() && slices().length > 0) {
+      @if (legendVisible() && legendItems().length > 0) {
         <ul class="oge-chart-legend" [attr.aria-label]="msg().aria.legendLabel">
-          @for (vm of slices(); track vm.slice.index) {
+          @for (item of legendItems(); track item.index) {
             <li>
               <button
                 type="button"
                 class="oge-chart-legend-btn"
-                [attr.aria-pressed]="isSelected(vm.slice.index)"
-                (click)="toggleSelection(vm.slice.index)"
+                [attr.aria-pressed]="isSelected(item.index)"
+                (click)="toggleSelection(item.index)"
               >
                 @if (legendTemplate(); as tpl) {
                   <ng-container
                     [ngTemplateOutlet]="tpl.templateRef"
                     [ngTemplateOutletContext]="{
                       $implicit: {
-                        name: vm.label,
-                        color: vm.color,
+                        name: item.name,
+                        color: item.color,
                         hidden: false,
+                        swatch: item.color,
                       },
                     }"
                   />
                 } @else {
                   <span
                     class="oge-chart-legend-marker"
-                    [style.background-color]="vm.color"
+                    [style.background-color]="item.color"
                   ></span>
-                  <span class="oge-chart-legend-text">{{ vm.label }}</span>
+                  <span class="oge-chart-legend-text">{{ item.name }}</span>
                 }
               </button>
             </li>
@@ -109,38 +118,47 @@ type SliceVm<T> = OgePieSliceVm<T>;
           [attr.height]="height()"
           [attr.viewBox]="'0 0 ' + width() + ' ' + height()"
         >
-          @for (vm of slices(); track vm.slice.index) {
+          @for (vm of slices(); track vm.key) {
             <path
               class="oge-chart-pie-slice"
               [class.oge-chart-point-selected]="isSelected(vm.slice.index)"
               [attr.d]="isSelected(vm.slice.index) ? vm.explodedPath : vm.path"
               [attr.fill]="vm.color"
               (click)="onSliceClick(vm, $event)"
-              (mouseenter)="hoverIndex.set(vm.slice.index)"
-              (mouseleave)="hoverIndex.set(null)"
+              (mouseenter)="hoverKey.set(vm.key)"
+              (mouseleave)="hoverKey.set(null)"
             />
           }
-          @if (showLabels()) {
-            @for (label of labels(); track label.sliceIndex) {
+          @for (label of labelVms(); track label.key) {
+            @if (label.connector !== null) {
               <polyline
                 class="oge-chart-pie-connector"
-                [attr.points]="
-                  label.arcX +
-                  ',' +
-                  label.arcY +
-                  ' ' +
-                  label.labelX +
-                  ',' +
-                  label.labelY
-                "
+                [attr.points]="label.connector"
               />
-              <text
-                class="oge-chart-axis-label"
-                [attr.x]="label.labelX + (label.side === 'end' ? 4 : -4)"
-                [attr.y]="label.labelY + 4"
-                [attr.text-anchor]="label.side === 'end' ? 'start' : 'end'"
+            }
+            @if (labelTemplate(); as tpl) {
+              <foreignObject
+                class="oge-chart-label-fo"
+                [attr.x]="labelBox(label).x"
+                [attr.y]="labelBox(label).y"
+                [attr.width]="labelBox(label).w"
+                [attr.height]="labelBox(label).h"
               >
-                {{ labelTextOf(label.sliceIndex) }}
+                <ng-container
+                  [ngTemplateOutlet]="tpl.templateRef"
+                  [ngTemplateOutletContext]="{ $implicit: label }"
+                />
+              </foreignObject>
+            } @else {
+              <text
+                class="oge-chart-axis-label oge-chart-pie-label"
+                [class.oge-chart-point-label-inside]="label.inside"
+                [attr.x]="label.x"
+                [attr.y]="label.y"
+                [attr.text-anchor]="label.anchor"
+                [style.fill]="label.textColor ?? null"
+              >
+                {{ label.text }}
               </text>
             }
           }
@@ -174,11 +192,23 @@ type SliceVm<T> = OgePieSliceVm<T>;
           msg().aria.tableCaption
         }}
       </caption>
-      <tbody>
-        @for (vm of slices(); track vm.slice.index) {
+      @if (srTable().headers; as headers) {
+        <thead>
           <tr>
-            <th scope="row">{{ vm.label }}</th>
-            <td>{{ valueTextOf(vm) }}</td>
+            <th scope="col">{{ msg().aria.argumentHeader }}</th>
+            @for (header of headers; track $index) {
+              <th scope="col">{{ header }}</th>
+            }
+          </tr>
+        </thead>
+      }
+      <tbody>
+        @for (row of srTable().rows; track $index) {
+          <tr>
+            <th scope="row">{{ row.argText }}</th>
+            @for (cell of row.cells; track $index) {
+              <td>{{ cell }}</td>
+            }
           </tr>
         }
       </tbody>
@@ -202,6 +232,21 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   );
   readonly othersLabel = input('Others');
   readonly showLabels = input(true);
+  /** Data labels: position, format, zero handling, connectors, overlap. */
+  readonly label = input<OgeChartLabelOptions<T> | undefined>(undefined);
+  /** Per-slice colour read from the data. */
+  readonly colorField = input<string | ((item: T) => unknown) | undefined>(
+    undefined,
+  );
+  /** Per-slice colour / label overrides (wins over `colorField`). */
+  readonly customizePoint = input<OgeChartPointCustomizer<T> | undefined>(
+    undefined,
+  );
+  /**
+   * Nested doughnut: one ring per entry (inner → outer); unset fields fall
+   * back to this chart's own inputs.
+   */
+  readonly series = input<readonly OgePieSeriesInput<T>[]>([]);
   readonly legend = input<OgeChartLegendOptions>({});
   readonly tooltipEnabled = input(true);
   readonly palette = input<readonly string[] | undefined>(undefined);
@@ -219,6 +264,9 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   protected readonly tooltipTemplate = contentChild(OgeChartTooltipTemplate, {
     descendants: false,
   });
+  protected readonly labelTemplate = contentChild(OgeChartLabelTemplate, {
+    descendants: false,
+  });
   private readonly plotWrapEl =
     viewChild.required<ElementRef<HTMLElement>>('plotWrap');
   private readonly svgEl =
@@ -234,7 +282,8 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   private readonly hostSize = signal({ width: 400, height: 300 });
   protected readonly width = computed(() => this.hostSize().width);
   protected readonly height = computed(() => this.hostSize().height);
-  protected readonly hoverIndex = signal<number | null>(null);
+  /** The hovered slice's `key` (ring-aware). */
+  protected readonly hoverKey = signal<string | null>(null);
   protected readonly announcement = signal('');
 
   constructor() {
@@ -254,7 +303,7 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
     () => this.legend().position ?? 'bottom',
   );
 
-  /** The engine's view model (ADR 0003): slices, labels, geometry. */
+  /** The engine's view model (ADR 0003): slices, rings, labels, geometry. */
   private readonly scene = computed(() =>
     buildPieScene<T>({
       dataSource: this.dataSource(),
@@ -266,28 +315,38 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
       smallValuesGrouping: this.smallValuesGrouping(),
       othersLabel: this.othersLabel(),
       showLabels: this.showLabels(),
+      label: this.label(),
+      colorField: this.colorField(),
+      customizePoint: this.customizePoint(),
+      series: this.series(),
       palette: this.palette(),
       width: this.width(),
       height: this.height(),
+      locale: this.effectiveLocale(),
     }),
   );
 
   protected readonly slices = computed<readonly SliceVm<T>[]>(
     () => this.scene().slices,
   );
-  protected readonly labels = computed(() => this.scene().labels);
+  protected readonly labelVms = computed(() => this.scene().labelVms);
+  protected readonly legendItems = computed(() => this.scene().legendItems);
+  protected readonly srTable = computed(() =>
+    pieSrTable(this.scene(), this.effectiveLocale()),
+  );
 
-  protected labelTextOf(sliceIndex: number): string {
-    return pieLabelText(this.scene(), sliceIndex);
-  }
-
-  protected valueTextOf(vm: SliceVm<T>): string {
-    return pieValueText(vm, this.effectiveLocale());
+  protected labelBox(label: OgeChartRenderLabel): {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } {
+    return chartLabelTemplateBox(label);
   }
 
   protected readonly tooltipVm = computed(() =>
     this.tooltipEnabled()
-      ? pieTooltip(this.scene(), this.hoverIndex(), this.effectiveLocale())
+      ? pieTooltip(this.scene(), this.hoverKey(), this.effectiveLocale())
       : null,
   );
 
@@ -296,12 +355,12 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   }
 
   protected toggleSelection(index: number): void {
-    const vm = untracked(this.slices).find(
-      (entry) => entry.slice.index === index,
+    const item = untracked(this.legendItems).find(
+      (entry) => entry.index === index,
     );
     const event: OgeChartLegendClickEvent = {
       seriesIndex: index,
-      seriesName: vm?.label ?? '',
+      seriesName: item?.name ?? '',
       willHide: false,
       cancel: false,
     };
@@ -326,6 +385,11 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   /** The live SVG root — the exporters rasterize/serialize it. */
   getSvgElement(): SVGSVGElement {
     return this.svgEl().nativeElement;
+  }
+
+  /** Opens the browser's print dialog for the chart alone. */
+  print(options: OgeChartPrintOptions = {}): Promise<void> {
+    return printOgeChart(this, { title: untracked(this.title), ...options });
   }
 
   protected readonly rootAriaLabel = computed(() =>

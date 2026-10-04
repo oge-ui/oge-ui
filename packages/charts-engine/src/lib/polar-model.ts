@@ -20,20 +20,44 @@ import {
   type ChartSeriesInput,
 } from './series-model';
 import { numberFormat } from './tick-format';
-import { chartSeriesColor, mergeChartSeriesInputs } from './cartesian-model';
+import {
+  chartLegendSwatch,
+  chartPointColor,
+  chartSeriesColor,
+  chartValueText,
+  mergeChartSeriesInputs,
+} from './cartesian-model';
 import type { OgeChartAxisOptions } from './charts-types';
-import { formatOgeChartMessage, type OgeChartsMessages } from './charts-config';
+import {
+  OGE_DEFAULT_CHARTS_MESSAGES,
+  formatOgeChartMessage,
+  type OgeChartsMessages,
+} from './charts-config';
 import type { OgeChartLegendEntry, OgeChartSrRow } from './cartesian-model';
+import { deriveChartSeries } from './series-derive';
+import {
+  chartContrastText,
+  chartLabelOptions,
+  chartLabelText,
+  chartPointHasLabel,
+  chartPointLabelAnchor,
+  resolveChartLabels,
+  type ChartLabelCandidate,
+  type OgeChartRenderLabel,
+} from './data-labels';
 
 export interface OgePolarDataInput<T> {
   readonly dataSource: readonly T[];
   readonly series: readonly ChartSeriesInput<T>[];
   readonly commonSeries?: Partial<ChartSeriesInput<T>>;
+  /** The resolved messages (value texts). Default: English. */
+  readonly messages?: OgeChartsMessages;
 }
 
 export interface OgePolarData<T> {
   readonly categories: readonly unknown[];
   readonly seriesList: readonly ChartSeries<T>[];
+  readonly messages: OgeChartsMessages;
 }
 
 export function buildPolarData<T>(
@@ -44,11 +68,18 @@ export function buildPolarData<T>(
   const categoryIndex = new Map(
     categories.map((category, index) => [category, index] as const),
   );
+  const messages = input.messages ?? OGE_DEFAULT_CHARTS_MESSAGES;
   return {
     categories,
-    seriesList: merged.map((entry, index) =>
-      buildSeries(input.dataSource, entry, index, 'category', categoryIndex),
-    ),
+    // the derive pass applies `customizePoint` (the polar types need no
+    // other derivation)
+    seriesList: deriveChartSeries(
+      merged.map((entry, index) =>
+        buildSeries(input.dataSource, entry, index, 'category', categoryIndex),
+      ),
+      { dataSource: input.dataSource, messages },
+    ).seriesList,
+    messages,
   };
 }
 
@@ -86,6 +117,17 @@ export interface OgePolarMarkerVm {
   readonly y: number;
   readonly seriesIndex: number;
   readonly pointIndex: number;
+  /** Per-point fill; `null` = the series colour. */
+  readonly color?: string | null;
+  /** Radius (`customizePoint` marker size); default 4. */
+  readonly r?: number;
+}
+
+export interface OgePolarSectorVm {
+  readonly path: string;
+  readonly pointIndex: number;
+  /** Per-point fill; `null` = the series colour. */
+  readonly color?: string | null;
 }
 
 export interface OgePolarSeriesVm {
@@ -94,11 +136,10 @@ export interface OgePolarSeriesVm {
   readonly color: string;
   readonly linePathD: string | null;
   readonly areaPathD: string | null;
-  readonly sectors: readonly {
-    readonly path: string;
-    readonly pointIndex: number;
-  }[];
+  readonly sectors: readonly OgePolarSectorVm[];
   readonly markers: readonly OgePolarMarkerVm[];
+  /** Data labels after overlap resolution. */
+  readonly labels: readonly OgeChartRenderLabel[];
   readonly strokeWidth: number;
   readonly opacity: number;
 }
@@ -113,6 +154,10 @@ export interface OgePolarScene<T> {
   readonly valueMax: number;
   readonly rings: readonly OgePolarRingVm[];
   readonly spokes: readonly OgePolarSpokeVm[];
+  /** Radial-bar background rings (one per category; empty otherwise). */
+  readonly tracks: readonly string[];
+  /** Whether the chart draws radial bars (concentric category rings). */
+  readonly radial: boolean;
   readonly renderSeries: readonly OgePolarSeriesVm[];
   readonly legendItems: readonly OgeChartLegendEntry[];
   readonly colors: readonly string[];
@@ -120,6 +165,27 @@ export interface OgePolarScene<T> {
   /** Nothing to plot: no legend series or no categories. */
   readonly empty: boolean;
 }
+
+/** Radial-bar band of category `index` for series slot `slot` of `slots`. */
+function radialBand(
+  radius: number,
+  count: number,
+  index: number,
+  slot: number,
+  slots: number,
+): { inner: number; outer: number } {
+  const hole = radius * 0.22;
+  const band = (radius - hole) / Math.max(1, count);
+  const inner = hole + band * index + band * 0.12;
+  const usable = band * 0.76;
+  const width = usable / Math.max(1, slots);
+  return {
+    inner: inner + width * slot,
+    outer: inner + width * (slot + 1) - (slots > 1 ? 1 : 0),
+  };
+}
+
+const TAU = Math.PI * 2;
 
 export function buildPolarScene<T>(
   input: OgePolarSceneInput<T>,
@@ -132,6 +198,16 @@ export function buildPolarScene<T>(
   const radius = Math.max(30, Math.min(input.width, input.height) / 2 - 42);
   const count = categories.length;
   const valueAxis = input.valueAxis ?? {};
+  const radial = seriesList.some(
+    (series, index) => series.type === 'radialBar' && !hiddenSeries.has(index),
+  );
+  const radialSlots = seriesList
+    .map((series, index) => ({ series, index }))
+    .filter(
+      ({ series, index }) =>
+        series.type === 'radialBar' && !hiddenSeries.has(index),
+    )
+    .map(({ index }) => index);
 
   const valueMax = ((): number => {
     const override = valueAxis.max;
@@ -148,22 +224,39 @@ export function buildPolarScene<T>(
   const radiusOf = (value: number): number => (value / valueMax) * radius;
 
   const format = valueAxis.labelFormat;
-  const rings = niceTicks(0, valueMax, 4)
-    .filter((tick) => tick > 0)
-    .map((tick) => ({
-      radius: radiusOf(tick),
-      path: radarGridPath(
-        cx,
-        cy,
-        radiusOf(tick),
-        count,
-        input.spider,
-        input.startAngle,
-      ),
-      label: format !== undefined ? format(tick) : numberFormat(tick, locale),
-    }));
+  const rings = radial
+    ? []
+    : niceTicks(0, valueMax, 4)
+        .filter((tick) => tick > 0)
+        .map((tick) => ({
+          radius: radiusOf(tick),
+          path: radarGridPath(
+            cx,
+            cy,
+            radiusOf(tick),
+            count,
+            input.spider,
+            input.startAngle,
+          ),
+          label:
+            format !== undefined ? format(tick) : numberFormat(tick, locale),
+        }));
 
   const spokes = categories.map((category, index): OgePolarSpokeVm => {
+    if (radial) {
+      // radial bars: the category label sits left of each ring's start
+      const band = radialBand(radius, count, index, 0, 1);
+      const mid = (band.inner + band.outer) / 2;
+      return {
+        index,
+        x: cx,
+        y: cy,
+        labelX: cx - 6,
+        labelY: cy - mid + 4,
+        anchor: 'end',
+        label: String(category),
+      };
+    }
     const angle = angleForIndex(index, count, input.startAngle);
     const edge = polarToCartesian(cx, cy, radius, angle);
     const label = polarToCartesian(cx, cy, radius + 14, angle);
@@ -179,14 +272,60 @@ export function buildPolarScene<T>(
     };
   });
 
+  const tracks = radial
+    ? categories.map((_, index) => {
+        const band = radialBand(radius, count, index, 0, 1);
+        return sliceArcPath(cx, cy, band.outer, band.inner, 0, TAU);
+      })
+    : [];
+
   const colors = seriesList.map((series, index) =>
     chartSeriesColor(series as ChartSeries<unknown>, index, input.palette),
   );
 
+  const candidates: ChartLabelCandidate[] = [];
   const renderSeries: OgePolarSeriesVm[] = [];
   seriesList.forEach((series, seriesIndex) => {
     if (hiddenSeries.has(seriesIndex)) return;
     const type = series.type;
+    const color = colors[seriesIndex];
+    const labelOptions = chartLabelOptions(series);
+    const position = labelOptions.position ?? 'outside';
+    const overlap = labelOptions.overlap ?? 'hide';
+    const pointColor = (point: (typeof series.points)[number]): string | null =>
+      chartPointColor(series, point, color);
+    const pushLabel = (
+      pointIndex: number,
+      anchor: { x: number; y: number; inside: boolean },
+    ): void => {
+      const point = series.points[pointIndex];
+      if (!chartPointHasLabel(series, point)) return;
+      candidates.push({
+        overlap,
+        label: {
+          x: anchor.x,
+          y: anchor.y,
+          text: chartLabelText(
+            series,
+            point,
+            seriesIndex,
+            pointIndex,
+            null,
+            locale,
+          ),
+          anchor: 'middle',
+          inside: anchor.inside,
+          textColor: anchor.inside
+            ? chartContrastText(pointColor(point) ?? color)
+            : null,
+          seriesIndex,
+          pointIndex,
+          seriesName: series.name,
+          argument: point.argument,
+          value: point.value,
+        },
+      });
+    };
     const points: (PolarXY | null)[] = series.points.map((point) => {
       if (point.argNumeric === null || point.value === null) return null;
       return polarToCartesian(
@@ -197,44 +336,99 @@ export function buildPolarScene<T>(
       );
     });
     const markers: OgePolarMarkerVm[] = [];
-    points.forEach((point, pointIndex) => {
-      if (point !== null) {
-        markers.push({ x: point.x, y: point.y, seriesIndex, pointIndex });
-      }
-    });
-    const sectors: { path: string; pointIndex: number }[] = [];
-    if (type === 'bar') {
-      const half = Math.PI / Math.max(3, count) / 1.6;
+    const sectors: OgePolarSectorVm[] = [];
+    if (type === 'radialBar') {
+      const slot = radialSlots.indexOf(seriesIndex);
       series.points.forEach((point, pointIndex) => {
         if (point.argNumeric === null || point.value === null) return;
-        const angle = angleForIndex(point.argNumeric, count, input.startAngle);
+        const band = radialBand(
+          radius,
+          count,
+          point.argNumeric,
+          slot,
+          radialSlots.length,
+        );
+        const sweep = Math.min(
+          TAU * 0.9999,
+          (Math.max(0, point.value) / valueMax) * TAU,
+        );
+        if (sweep <= 0) return;
         sectors.push({
           path: sliceArcPath(
             cx,
             cy,
-            radiusOf(Math.max(0, point.value)),
-            0,
-            angle - half,
-            angle + half,
+            band.outer,
+            band.inner,
+            input.startAngle,
+            input.startAngle + sweep,
           ),
           pointIndex,
+          color: pointColor(point),
         });
+        const end = polarToCartesian(
+          cx,
+          cy,
+          (band.inner + band.outer) / 2,
+          input.startAngle + sweep,
+        );
+        pushLabel(pointIndex, { x: end.x + 12, y: end.y + 4, inside: false });
+      });
+    } else if (type === 'bar') {
+      const half = Math.PI / Math.max(3, count) / 1.6;
+      series.points.forEach((point, pointIndex) => {
+        if (point.argNumeric === null || point.value === null) return;
+        const angle = angleForIndex(point.argNumeric, count, input.startAngle);
+        const r = radiusOf(Math.max(0, point.value));
+        sectors.push({
+          path: sliceArcPath(cx, cy, r, 0, angle - half, angle + half),
+          pointIndex,
+          color: pointColor(point),
+        });
+        const inside = position !== 'outside' && r > 28;
+        const at = polarToCartesian(cx, cy, inside ? r * 0.65 : r + 10, angle);
+        pushLabel(pointIndex, { x: at.x, y: at.y + 4, inside });
+      });
+    } else {
+      points.forEach((point, pointIndex) => {
+        if (point === null) return;
+        const style = series.points[pointIndex].style;
+        if (style?.marker?.visible !== false) {
+          markers.push({
+            x: point.x,
+            y: point.y,
+            seriesIndex,
+            pointIndex,
+            color: pointColor(series.points[pointIndex]),
+            ...(style?.marker?.size !== undefined
+              ? { r: style.marker.size / 2 }
+              : {}),
+          });
+        }
+        pushLabel(
+          pointIndex,
+          chartPointLabelAnchor(point.x, point.y, 4, position),
+        );
       });
     }
     const loop = type === 'line' || type === 'area';
     renderSeries.push({
       seriesIndex,
       name: series.name,
-      color: colors[seriesIndex],
+      color,
       linePathD: loop ? radarLoopPath(points, true) || null : null,
       areaPathD:
         type === 'area' ? `${radarLoopPath(points, true)}` || null : null,
       sectors,
-      markers: type === 'bar' ? [] : markers,
+      markers,
+      labels: [],
       strokeWidth: series.input.width ?? 2,
       opacity: series.input.opacity ?? 1,
     });
   });
+  const kept =
+    candidates.length === 0
+      ? []
+      : resolveChartLabels(candidates, input.width, input.height);
 
   const legendItems = seriesList
     .map((series, seriesIndex) => ({
@@ -243,13 +437,23 @@ export function buildPolarScene<T>(
       color: colors[seriesIndex],
       hidden: hiddenSeries.has(seriesIndex),
       inLegend: series.input.showInLegend !== false,
+      swatch: chartLegendSwatch(
+        series.points
+          .slice(0, 500)
+          .map(
+            (point) =>
+              chartPointColor(series, point, colors[seriesIndex]) ??
+              colors[seriesIndex],
+          ),
+      ),
     }))
     .filter((item) => item.inLegend)
-    .map(({ seriesIndex, name, color, hidden }) => ({
+    .map(({ seriesIndex, name, color, hidden, swatch }) => ({
       seriesIndex,
       name,
       color,
       hidden,
+      swatch: swatch === 'transparent' ? color : swatch,
     }));
 
   return {
@@ -262,7 +466,12 @@ export function buildPolarScene<T>(
     valueMax,
     rings,
     spokes,
-    renderSeries,
+    tracks,
+    radial,
+    renderSeries: renderSeries.map((entry) => ({
+      ...entry,
+      labels: kept.filter((label) => label.seriesIndex === entry.seriesIndex),
+    })),
     legendItems,
     colors,
     hiddenSeries,
@@ -292,23 +501,30 @@ export function polarTooltip<T>(
   const series = scene.data.seriesList[hover.seriesIndex];
   const point = series?.points[hover.pointIndex];
   if (point === undefined || point.value === null) return null;
-  const position = polarToCartesian(
-    scene.cx,
-    scene.cy,
-    (point.value / scene.valueMax) * scene.radius,
-    angleForIndex(
-      point.argNumeric ?? 0,
-      scene.data.categories.length,
-      scene.startAngle,
-    ),
-  );
+  const count = scene.data.categories.length;
+  const position =
+    series.type === 'radialBar'
+      ? polarToCartesian(
+          scene.cx,
+          scene.cy,
+          scene.radius * 0.6,
+          scene.startAngle +
+            Math.min(1, Math.max(0, point.value) / scene.valueMax) * TAU,
+        )
+      : polarToCartesian(
+          scene.cx,
+          scene.cy,
+          (point.value / scene.valueMax) * scene.radius,
+          angleForIndex(point.argNumeric ?? 0, count, scene.startAngle),
+        );
+  const seriesColor = scene.colors[hover.seriesIndex];
   return {
     x: position.x + 12,
     y: position.y - 8,
     argument: String(point.argument),
     seriesName: series.name,
-    color: scene.colors[hover.seriesIndex],
-    valueText: numberFormat(point.value, scene.locale),
+    color: chartPointColor(series, point, seriesColor) ?? seriesColor,
+    valueText: chartValueText(point, scene.locale, scene.data.messages.values),
   };
 }
 
@@ -337,7 +553,10 @@ export function polarPointAnnouncement<T>(
   return formatOgeChartMessage(messages.announcements.point, {
     series: series?.name ?? '',
     argument: String(scene.data.categories[argPosition] ?? ''),
-    value: point?.value == null ? '' : numberFormat(point.value, scene.locale),
+    value:
+      point?.value == null
+        ? ''
+        : chartValueText(point, scene.locale, messages.values),
   });
 }
 
@@ -354,7 +573,7 @@ export function polarSrRows<T>(
       );
       return point?.value == null
         ? ''
-        : numberFormat(point.value, scene.locale);
+        : chartValueText(point, scene.locale, scene.data.messages.values);
     }),
   }));
 }

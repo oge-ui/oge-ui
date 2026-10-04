@@ -49,6 +49,8 @@ export default defineConfig(() => ({
         index: 'src/index.ts',
         styles: 'src/styles.ts',
         'export-image': 'src/export-image.ts',
+        // the only module that reaches the optional `jspdf` peer
+        'export-pdf': 'src/export-pdf.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
@@ -63,6 +65,7 @@ export default defineConfig(() => ({
         'react/jsx-runtime',
         '@oge-ui/charts-engine',
         '@oge-ui/charts-engine/export-image',
+        '@oge-ui/charts-engine/export-pdf',
         '@oge-ui/core',
       ],
       output: {

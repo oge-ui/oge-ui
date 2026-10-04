@@ -20,10 +20,12 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { CHARTS_OVERVIEW_DEMOS } from './overview-snippets';
+import { REACT_CHARTS_ANALYTICS_SECTIONS } from './analytics-demos';
 
 /**
- * TOC of the React view — the same eleven sections as the Angular overview
- * (`docs/REACT-PARITY.md`: pages mirror section for section).
+ * TOC of the React view — the same sections as the Angular overview
+ * (`docs/REACT-PARITY.md`: pages mirror section for section); the last five
+ * render from `ReactChartsAnalyticsDemos` (`analytics-demos.ts`).
  */
 export const REACT_CHARTS_OVERVIEW_SECTIONS = [
   'Getting started',
@@ -37,6 +39,7 @@ export const REACT_CHARTS_OVERVIEW_SECTIONS = [
   'Annotations',
   'Range selector',
   'Selection, i18n & export',
+  ...REACT_CHARTS_ANALYTICS_SECTIONS,
 ] as const;
 
 /* ------------------------------------------------------------------ */

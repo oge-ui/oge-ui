@@ -199,3 +199,117 @@ test.describe('React charts docs', () => {
     }
   });
 });
+
+/** The depth sections (G2b) in the React view — mirrors `charts.spec.ts`. */
+test.describe('React charts depth', () => {
+  function section(page: Page, id: string): Locator {
+    return page.locator(`app-demo-card:has(#${id}) app-react-host`);
+  }
+  /** Cartesian charts only (the pie and polar hosts also carry `.oge-chart`). */
+  const CARTESIAN = '.oge-chart:not(.oge-pie-chart):not(.oge-polar-chart)';
+
+  test('data labels, per-point colours, nested doughnut and radial bars', async ({
+    page,
+  }) => {
+    await open(page);
+    const card = section(page, 'data-labels');
+    await card.scrollIntoViewIfNeeded();
+    const bars = card.locator(`${CARTESIAN} .oge-chart-bar`);
+    await expect(bars).toHaveCount(5);
+    await expect(bars.nth(1)).toHaveAttribute('fill', '#ef4444');
+    await expect(
+      card.locator(`${CARTESIAN} .oge-chart-point-label`),
+    ).toHaveCount(5);
+    await expect(
+      card.locator(`${CARTESIAN} .oge-chart-sr-table td`).nth(1),
+    ).toContainText('below target');
+    await expect(
+      card.locator('.oge-pie-chart .oge-chart-pie-slice'),
+    ).toHaveCount(6);
+    await expect(
+      card.locator('.oge-pie-chart .oge-chart-legend-btn'),
+    ).toHaveCount(3);
+    await expect(
+      card.locator('.oge-polar-chart .oge-chart-radial-track'),
+    ).toHaveCount(4);
+  });
+
+  test('indicators, the RSI pane and the trendline R² tooltip', async ({
+    page,
+  }) => {
+    await open(page);
+    const card = section(page, 'trendlines-indicators');
+    await card.scrollIntoViewIfNeeded();
+    const charts = card.locator('.oge-chart');
+    await expect(
+      charts.nth(0).locator('.oge-chart-ohlc').first(),
+    ).toBeAttached();
+    await expect(
+      charts.nth(0).locator('.oge-chart-indicator-band'),
+    ).toHaveCount(1);
+    await expect(
+      charts.nth(0).locator('.oge-chart-indicator-level'),
+    ).toHaveCount(2);
+    const scatter = charts.nth(1);
+    await expect(scatter.locator('.oge-chart-trendline')).toHaveCount(1);
+    const svg = scatter.locator('.oge-chart-svg');
+    await svg.scrollIntoViewIfNeeded();
+    const box = await svg.boundingBox();
+    if (box === null) throw new Error('no svg box');
+    await page.mouse.move(box.x + 120, box.y + box.height / 2);
+    await expect(scatter.locator('.oge-chart-tooltip')).toContainText('R²');
+  });
+
+  test('waterfall kinds and the sorted pareto', async ({ page }) => {
+    await open(page);
+    const card = section(page, 'waterfall-pareto');
+    await card.scrollIntoViewIfNeeded();
+    const waterfall = card.locator('.oge-chart').nth(0);
+    await expect(waterfall.locator('.oge-chart-waterfall-up')).toHaveCount(3);
+    await expect(waterfall.locator('.oge-chart-waterfall-down')).toHaveCount(3);
+    await expect(
+      waterfall.locator('.oge-chart-waterfall-connector'),
+    ).toHaveCount(7);
+    const pareto = card.locator('.oge-chart').nth(1);
+    await expect(pareto.locator('.oge-chart-arg-label').first()).toHaveText(
+      'Scratches',
+    );
+    await expect(pareto.locator('.oge-chart-pareto-line')).toHaveCount(1);
+  });
+
+  test('box plots and histogram bins', async ({ page }) => {
+    await open(page);
+    const card = section(page, 'box-plot-histogram');
+    await card.scrollIntoViewIfNeeded();
+    await expect(card.locator('.oge-chart-box')).toHaveCount(4);
+    await expect(card.locator('.oge-chart-dot').first()).toBeAttached();
+    expect(
+      await card.locator('.oge-chart-histogram-bar').count(),
+    ).toBeGreaterThan(3);
+  });
+
+  test('JPEG and PDF downloads', async ({ page }) => {
+    await open(page);
+    const card = section(page, 'export-print');
+    await card.scrollIntoViewIfNeeded();
+    for (const [label, file] of [
+      ['JPEG', 'energy.jpeg'],
+      ['PDF', 'energy.pdf'],
+    ] as const) {
+      const download = page.waitForEvent('download');
+      await card.getByRole('button', { name: label, exact: true }).click();
+      expect((await download).suggestedFilename()).toBe(file);
+    }
+  });
+
+  test('axe: the depth demos have no violations', async ({ page }) => {
+    test.slow();
+    await open(page);
+    await section(page, 'data-labels').scrollIntoViewIfNeeded();
+    const results = await new AxeBuilder({ page })
+      .include('app-react-charts-analytics-demos')
+      .disableRules(['color-contrast'])
+      .analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+});

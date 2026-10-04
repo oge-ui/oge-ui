@@ -27,7 +27,10 @@ import {
   polarPointIndex,
   polarSrRows,
   polarTooltip,
+  printOgeChart,
   type OgeChartAxisOptions,
+  type OgeChartPrintOptions,
+  type OgeChartRenderLabel,
   type OgeChartLegendClickEvent,
   type OgeChartLegendItem,
   type OgeChartLegendOptions,
@@ -38,6 +41,7 @@ import {
   type OgePolarHover,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
+import { ChartDataLabel } from './data-label';
 import { cx, useChartSize, useControllable, useStable } from './hooks';
 
 const EMPTY: readonly never[] = [];
@@ -48,7 +52,7 @@ export interface OgePolarChartProps<
   T extends object = Record<string, unknown>,
 > {
   readonly dataSource?: readonly T[];
-  /** Supported polar types: `line`, `area`, `scatter`, `bar`. */
+  /** Supported polar types: `line`, `area`, `scatter`, `bar`, `radialBar`. */
   readonly series?: readonly OgeChartSeriesInput<T>[];
   readonly commonSeries?: Partial<OgeChartSeriesInput<T>>;
   /** `max` / `labelFormat` of the radial value axis. */
@@ -75,6 +79,8 @@ export interface OgePolarChartProps<
   readonly onLegendClick?: (event: OgeChartLegendClickEvent) => void;
   /** Replaces a legend item's content (`*ogeChartLegendTemplate`). */
   readonly renderLegendItem?: (item: OgeChartLegendItem) => ReactNode;
+  /** Replaces every data label's content (`*ogeChartLabelTemplate`). */
+  readonly renderLabel?: (label: OgeChartRenderLabel) => ReactNode;
   readonly className?: string;
   readonly style?: CSSProperties;
 }
@@ -85,6 +91,8 @@ export interface OgePolarChartHandle {
   focus(): void;
   /** The live SVG root — what the image exporters serialize. */
   getSvgElement(): SVGSVGElement;
+  /** Opens the browser's print dialog for the chart alone. */
+  print(options?: OgeChartPrintOptions): Promise<void>;
 }
 
 function OgePolarChartInner<T extends object>(
@@ -99,6 +107,7 @@ function OgePolarChartInner<T extends object>(
     selectionMode = 'none',
     title = '',
     renderLegendItem,
+    renderLabel,
   } = props;
   const dataSource = props.dataSource ?? EMPTY;
   const series = useStable(props.series ?? EMPTY);
@@ -135,8 +144,9 @@ function OgePolarChartInner<T extends object>(
 
   /* the engine's view model (ADR 0003) */
   const data = useMemo(
-    () => buildPolarData<T>({ dataSource, series, commonSeries }),
-    [dataSource, series, commonSeries],
+    () =>
+      buildPolarData<T>({ dataSource, series, commonSeries, messages: msg }),
+    [dataSource, series, commonSeries, msg],
   );
   const scene = useMemo(
     () =>
@@ -260,8 +270,11 @@ function OgePolarChartInner<T extends object>(
         if (svg === null) throw new Error('OgePolarChart is not mounted');
         return svg;
       },
+      print(options) {
+        return printOgeChart(this, { title, ...options });
+      },
     }),
-    [],
+    [title],
   );
 
   const legendPosition = legend.position ?? 'bottom';
@@ -299,12 +312,13 @@ function OgePolarChartInner<T extends object>(
                       name: item.name,
                       color: item.color,
                       hidden: item.hidden,
+                      swatch: item.swatch,
                     })
                   ) : (
                     <>
                       <span
                         className="oge-chart-legend-marker"
-                        style={{ backgroundColor: item.color }}
+                        style={{ background: item.swatch }}
                       />
                       <span className="oge-chart-legend-text">{item.name}</span>
                     </>
@@ -332,7 +346,14 @@ function OgePolarChartInner<T extends object>(
             height={size.height}
             viewBox={`0 0 ${size.width} ${size.height}`}
           >
-            {/* grid rings + spokes + tick labels */}
+            {/* radial-bar tracks, grid rings + spokes + tick labels */}
+            {scene.tracks.map((track, index) => (
+              <path
+                key={`t${index}`}
+                className="oge-chart-radial-track"
+                d={track}
+              />
+            ))}
             {scene.rings.map((ring) => (
               <path
                 key={ring.radius}
@@ -400,7 +421,7 @@ function OgePolarChartInner<T extends object>(
                         'oge-chart-point-selected',
                     )}
                     d={sector.path}
-                    fill={vm.color}
+                    fill={sector.color ?? vm.color}
                     opacity={vm.opacity * 0.85}
                     onMouseEnter={() =>
                       setHover({
@@ -421,8 +442,8 @@ function OgePolarChartInner<T extends object>(
                     )}
                     cx={marker.x}
                     cy={marker.y}
-                    r="4"
-                    fill={vm.color}
+                    r={marker.r ?? 4}
+                    fill={marker.color ?? vm.color}
                     onMouseEnter={() =>
                       setHover({
                         seriesIndex: vm.seriesIndex,
@@ -430,6 +451,13 @@ function OgePolarChartInner<T extends object>(
                       })
                     }
                     onMouseLeave={() => setHover(null)}
+                  />
+                ))}
+                {vm.labels.map((label, index) => (
+                  <ChartDataLabel
+                    key={`l${index}`}
+                    label={label}
+                    render={renderLabel}
                   />
                 ))}
               </Fragment>

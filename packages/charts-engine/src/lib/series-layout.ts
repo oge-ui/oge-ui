@@ -92,10 +92,14 @@ export function computeBarSlots<T>(
   padding = 0.2,
 ): readonly (BarSlot | null)[] {
   const slotKeys: string[] = [];
+  // stacked (and range) bars share one slot per stack group; plain bars and
+  // the analytic bar types (waterfall, pareto, boxPlot) get their own
   const keyOf = (series: ChartSeries<T>): string =>
-    series.type === 'bar'
-      ? `bar:${slotKeys.length}`
-      : `stack:${series.input.stack ?? ''}`;
+    series.type === 'stackedBar' ||
+    series.type === 'fullStackedBar' ||
+    series.type === 'rangeBar'
+      ? `stack:${series.input.stack ?? ''}`
+      : `bar:${slotKeys.length}`;
   const assigned = seriesList.map((series) => {
     if (!isBarType(series.type)) return null;
     const key = keyOf(series);

@@ -34,6 +34,11 @@
       "import": "./export-image.js",
       "require": "./export-image.cjs"
     },
+    "./export-pdf": {
+      "types": "./export-pdf.d.ts",
+      "import": "./export-pdf.js",
+      "require": "./export-pdf.cjs"
+    },
     "./styles.css": "./styles.css"
   },
   "sideEffects": [

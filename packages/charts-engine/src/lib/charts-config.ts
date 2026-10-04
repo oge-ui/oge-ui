@@ -38,10 +38,73 @@ export interface OgeChartsAnnouncementMessages {
   readonly selected: string;
 }
 
+/**
+ * The words of value texts (tooltips, announcements, the screen-reader
+ * table) of the analytic series, plus the default indicator names.
+ */
+export interface OgeChartsValueMessages {
+  /** boxPlot parts. */
+  readonly low: string;
+  readonly q1: string;
+  readonly median: string;
+  readonly q3: string;
+  readonly high: string;
+  /** boxPlot outlier count; `{count}`. */
+  readonly outliers: string;
+  /** waterfall point kinds. */
+  readonly increase: string;
+  readonly decrease: string;
+  readonly intermediate: string;
+  readonly total: string;
+  /** pareto running share; `{value}`. */
+  readonly cumulative: string;
+  /** Bollinger / MACD parts. */
+  readonly upper: string;
+  readonly lower: string;
+  readonly signal: string;
+  readonly histogram: string;
+  /** Trendline tooltip suffix; `{value}`, `{r2}`. */
+  readonly trend: string;
+  /** Histogram bin argument; `{start}`, `{end}`. */
+  readonly bin: string;
+  /**
+   * Default indicator series names; `{period}`, `{stdDev}`, `{fast}`,
+   * `{slow}`, `{signal}`.
+   */
+  readonly sma: string;
+  readonly ema: string;
+  readonly bollinger: string;
+  readonly macd: string;
+  readonly rsi: string;
+}
+
+/**
+ * Range-selector period buttons: the visible short text and the
+ * accessible name of each built-in period, plus the group label.
+ */
+export interface OgeChartsPeriodMessages {
+  /** `role="group"` label of the period buttons. */
+  readonly groupLabel: string;
+  readonly month1: string;
+  readonly month3: string;
+  readonly month6: string;
+  readonly yearToDate: string;
+  readonly year1: string;
+  readonly all: string;
+  readonly month1Label: string;
+  readonly month3Label: string;
+  readonly month6Label: string;
+  readonly yearToDateLabel: string;
+  readonly year1Label: string;
+  readonly allLabel: string;
+}
+
 /** Every user-facing string of the charts (house i18n rule). */
 export interface OgeChartsMessages {
   readonly aria: OgeChartsAriaMessages;
   readonly announcements: OgeChartsAnnouncementMessages;
+  readonly values: OgeChartsValueMessages;
+  readonly periods: OgeChartsPeriodMessages;
   readonly noData: string;
 }
 
@@ -64,6 +127,45 @@ export const OGE_DEFAULT_CHARTS_MESSAGES: OgeChartsMessages = {
     zoomed: 'Zoomed',
     zoomReset: 'Zoom reset',
     selected: '{series}, {argument} selected',
+  },
+  values: {
+    low: 'Min',
+    q1: 'Q1',
+    median: 'Median',
+    q3: 'Q3',
+    high: 'Max',
+    outliers: '{count} outliers',
+    increase: 'increase',
+    decrease: 'decrease',
+    intermediate: 'subtotal',
+    total: 'total',
+    cumulative: 'cumulative {value}',
+    upper: 'upper',
+    lower: 'lower',
+    signal: 'signal',
+    histogram: 'histogram',
+    trend: 'trend {value}, R² {r2}',
+    bin: '{start} – {end}',
+    sma: 'SMA ({period})',
+    ema: 'EMA ({period})',
+    bollinger: 'Bollinger ({period}, {stdDev})',
+    macd: 'MACD ({fast}, {slow}, {signal})',
+    rsi: 'RSI ({period})',
+  },
+  periods: {
+    groupLabel: 'Zoom period',
+    month1: '1M',
+    month3: '3M',
+    month6: '6M',
+    yearToDate: 'YTD',
+    year1: '1Y',
+    all: 'All',
+    month1Label: '1 month',
+    month3Label: '3 months',
+    month6Label: '6 months',
+    yearToDateLabel: 'Year to date',
+    year1Label: '1 year',
+    allLabel: 'All data',
   },
   noData: 'No data',
 };
@@ -111,8 +213,8 @@ export function resolveOgeChartsConfig(
 
 /**
  * A component's effective messages: its per-instance override over the
- * configured catalog, merged one level deeper (`aria` and `announcements`
- * key by key).
+ * configured catalog, merged one level deeper (`aria`, `announcements`,
+ * `values` and `periods` key by key).
  */
 export function mergeOgeChartsMessages(
   configured: OgeChartsMessages,
@@ -124,6 +226,8 @@ export function mergeOgeChartsMessages(
     ...local,
     aria: { ...configured.aria, ...local.aria },
     announcements: { ...configured.announcements, ...local.announcements },
+    values: { ...configured.values, ...local.values },
+    periods: { ...configured.periods, ...local.periods },
   };
 }
 
