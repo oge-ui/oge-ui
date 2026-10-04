@@ -77,3 +77,30 @@ export interface OgeSelectBoxCustomItemEvent<TItem> {
   text: string;
   customItem?: TItem | PromiseLike<TItem | null> | null;
 }
+
+/** Template context of a group header row (`[groupTemplate]`). */
+export interface OgeSelectGroupTemplateContext {
+  /** The group label — what `groupBy` returned. */
+  $implicit: string;
+  label: string;
+}
+
+/**
+ * Template context of the closed field's content (`[fieldTemplate]`): the
+ * selected item (`null` when empty) and its display text. The real input
+ * stays underneath for focus, typing and assistive technology.
+ */
+export interface OgeSelectFieldTemplateContext<TItem> {
+  $implicit: TItem | null;
+  text: string;
+}
+
+/** Template context of the popup header / footer (`[headerTemplate]` / `[footerTemplate]`). */
+export interface OgeSelectPopupTemplateContext<TItem> {
+  /** The items the list currently shows (filtered, loaded so far). */
+  $implicit: readonly TItem[];
+  /** The typed search text (`''` when not searching). */
+  searchText: string;
+  /** A page or the lazy items are loading. */
+  loading: boolean;
+}

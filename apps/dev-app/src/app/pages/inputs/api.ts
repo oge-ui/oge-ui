@@ -15,6 +15,7 @@ import {
   OGE_CHECK_BOX_GROUP_API,
   OGE_TOGGLE_GROUP_API,
   OGE_DATE_BOX_API,
+  OGE_MULTI_COLUMN_COMBO_BOX_API,
   OGE_INPUTS_CONFIG_API,
   OGE_INPUTS_TYPES_API,
   OGE_MASKED_TEXT_BOX_API,
@@ -39,6 +40,7 @@ const SECTIONS = [
   'OgeTreeSelect',
   'OgeTagBox',
   'OgeAutocomplete',
+  'OgeMultiColumnComboBox',
   'OgeCheckBox',
   'OgeSwitch',
   'OgeSlider',
@@ -65,6 +67,7 @@ const SECTIONS_REACT = [
   '<OgeTreeSelect>',
   '<OgeTagBox>',
   '<OgeAutocomplete>',
+  '<OgeMultiColumnComboBox>',
   '<OgeCheckBox>',
   '<OgeSlider>',
   '<OgeRangeSlider>',
@@ -172,6 +175,11 @@ const SECTIONS_REACT = [
         title="OgeAutocomplete"
         selector="oge-autocomplete"
         [sections]="autocompleteApi"
+      />
+      <app-api-reference
+        title="OgeMultiColumnComboBox"
+        selector="oge-multi-column-combo-box"
+        [sections]="multiColumnComboBoxApi"
       />
       <app-api-reference
         title="OgeCheckBox"
@@ -290,6 +298,7 @@ export class InputsApiPage {
   protected readonly treeSelectApi = OGE_TREE_SELECT_API;
   protected readonly tagBoxApi = OGE_TAG_BOX_API;
   protected readonly autocompleteApi = OGE_AUTOCOMPLETE_API;
+  protected readonly multiColumnComboBoxApi = OGE_MULTI_COLUMN_COMBO_BOX_API;
   protected readonly checkBoxApi = OGE_CHECK_BOX_API;
   protected readonly switchApi = OGE_SWITCH_API;
   protected readonly sliderApi = OGE_SLIDER_API;

@@ -327,6 +327,32 @@ describe('Escape', () => {
     h.core.destroy();
   });
 
+  it('lets beforeClose veto the closes the machine starts itself', () => {
+    const reasons: string[] = [];
+    let allow = false;
+    const h = harness({
+      beforeClose: (reason) => {
+        reasons.push(reason);
+        return allow;
+      },
+    });
+    h.core.open();
+    escape();
+    document.body.dispatchEvent(
+      new MouseEvent('pointerdown', { bubbles: true }),
+    );
+    expect(h.core.isOpen()).toBe(true);
+    expect(reasons).toEqual(['escape', 'outside']);
+    // an owner-initiated close is not routed through the veto
+    h.core.close('api');
+    expect(h.core.isOpen()).toBe(false);
+    allow = true;
+    h.core.open();
+    escape();
+    expect(h.core.isOpen()).toBe(false);
+    h.core.destroy();
+  });
+
   it('uses the host’s stack token, so consumers can stack-test their wrapper', () => {
     const wrapper = {};
     const h = harness({ stackToken: wrapper });

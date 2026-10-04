@@ -265,4 +265,207 @@ const [due, setDue] = useState<Date | null>(null);`,
 </div>`,
     }),
   },
+  {
+    title: 'Remote data',
+    description:
+      'Bind any @oge-ui/core DataSource to dataSource: pages of pageSize rows load as the list scrolls, the typed text goes to the server as searchText after searchTimeout, superseded requests are aborted and pages are cached per search. byKey() resolves a value no loaded page holds.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: {
+        '@oge-ui/react-inputs': ['OgeSelectBox'],
+        '@oge-ui/core': ['CustomDataSource'],
+      },
+      before: `interface Customer {
+  id: number;
+  name: string;
+}
+
+const CUSTOMERS: Customer[] = Array.from({ length: 5000 }, (_, i) => ({
+  id: i + 1,
+  name: \`Customer \${String(i + 1).padStart(4, '0')}\`,
+}));
+
+/** Any core DataSource works; byKey resolves the initial value. */
+const customers = Object.assign(
+  new CustomDataSource<Customer>({
+    key: 'id',
+    load: async ({ skip = 0, take = 40, searchText }) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const term = (searchText ?? '').toLowerCase();
+      const rows = CUSTOMERS.filter((c) => c.name.toLowerCase().includes(term));
+      return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+    },
+  }),
+  {
+    byKey: async (key: unknown) => CUSTOMERS.find((c) => c.id === key) ?? null,
+  },
+);`,
+      name: 'SelectBoxRemoteDemo',
+      body: `const [customerId, setCustomerId] = useState<unknown>(1234);`,
+      jsx: `<OgeSelectBox<Customer>
+  label="Customer"
+  displayExpr="name"
+  valueExpr="id"
+  dataSource={customers}
+  pageSize={40}
+  searchEnabled
+  searchTimeout={300}
+  virtualScroll
+  showClearButton
+  value={customerId}
+  onValueChange={setCustomerId}
+/>`,
+    }),
+  },
+  {
+    title: 'Templates & cancelable events',
+    description:
+      'renderGroup, renderField (paints the closed field over the real input), renderHeader and renderFooter. onOpening / onClosing are cancelable pre-events — set event.cancel = true; onClosing carries its reason.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeSelectBox'] },
+      before: `interface Status {
+  id: string;
+  name: string;
+  phase: string;
+  color: string;
+}
+
+const statuses: Status[] = [
+  { id: 'todo', name: 'To do', phase: 'Open', color: '#94a3b8' },
+  { id: 'doing', name: 'In progress', phase: 'Open', color: '#6366f1' },
+  { id: 'review', name: 'In review', phase: 'Open', color: '#f59e0b' },
+  { id: 'done', name: 'Done', phase: 'Closed', color: '#10b981' },
+];
+
+const dot = (color: string) => (
+  <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 5, background: color }} />
+);`,
+      name: 'SelectBoxTemplatesDemo',
+      body: `const [statusId, setStatusId] = useState<unknown>('doing');
+const [pinned, setPinned] = useState(false);`,
+      jsx: `<OgeSelectBox<Status>
+  label="Status"
+  items={statuses}
+  displayExpr="name"
+  valueExpr="id"
+  groupBy="phase"
+  renderGroup={(label) => <span>Phase · {label}</span>}
+  renderField={(item, { text }) => (
+    <>
+      {item && dot(item.color)} {text}
+    </>
+  )}
+  renderItem={(item) => (
+    <>
+      {dot(item.color)} <span className="oge-select-option-text">{item.name}</span>
+    </>
+  )}
+  renderHeader={({ items }) => <>{items.length} statuses</>}
+  renderFooter={() => (
+    <label>
+      <input type="checkbox" checked={pinned} onChange={() => setPinned(!pinned)} />{' '}
+      Keep open (cancels closing)
+    </label>
+  )}
+  onClosing={(event) => {
+    if (pinned && event.reason !== 'select') event.cancel = true;
+  }}
+  value={statusId}
+  onValueChange={setStatusId}
+/>`,
+    }),
+  },
+  {
+    title: 'Tag Box — select all, custom tags & limits',
+    description:
+      'The tag box speaks the select box vocabulary — groupBy, renderItem, lazy items, acceptCustomValue + onCustomItemCreating — and adds a tri-state showSelectAll row, maxSelectedItems with a status message, renderTag chips and a "+N more" overflow chip.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeTagBox'] },
+      before: `interface Skill {
+  id: number;
+  name: string;
+  area: string;
+}
+
+const INITIAL: Skill[] = [
+  { id: 1, name: 'Angular', area: 'Frontend' },
+  { id: 2, name: 'Signals', area: 'Frontend' },
+  { id: 3, name: 'SCSS', area: 'Frontend' },
+  { id: 4, name: 'Nx', area: 'Tooling' },
+  { id: 5, name: 'Vitest', area: 'Tooling' },
+  { id: 6, name: 'Playwright', area: 'Tooling' },
+];
+let nextId = 100;`,
+      name: 'TagBoxFeaturesDemo',
+      body: `const [skills, setSkills] = useState(INITIAL);
+const [skillIds, setSkillIds] = useState<readonly unknown[]>([1, 4]);`,
+      jsx: `<OgeTagBox<Skill>
+  label="Skills"
+  items={skills}
+  displayExpr="name"
+  valueExpr="id"
+  groupBy="area"
+  searchEnabled
+  showSelectAll
+  acceptCustomValue
+  maxSelectedItems={5}
+  maxDisplayedTags={3}
+  renderTag={(_item, { text }) => <span className="oge-tag-text">#{text}</span>}
+  hint="Type a new skill and press Enter"
+  onCustomItemCreating={(event) => {
+    const item = { id: nextId++, name: event.text, area: 'Custom' };
+    setSkills((all) => [...all, item]);
+    event.customItem = item;
+  }}
+  value={skillIds}
+  onValueChange={setSkillIds}
+/>`,
+    }),
+  },
+  {
+    title: 'Tag Box — remote data',
+    description:
+      'The same dataSource contract on the tag box: 2,000 cities paged 30 at a time, server-side search, and chips that stay resolved while the list shows another search.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: {
+        '@oge-ui/react-inputs': ['OgeTagBox'],
+        '@oge-ui/core': ['CustomDataSource'],
+      },
+      before: `interface City {
+  id: number;
+  name: string;
+}
+
+const CITIES: City[] = Array.from({ length: 2000 }, (_, i) => ({
+  id: i + 1,
+  name: \`City \${i + 1}\`,
+}));
+
+const cities = new CustomDataSource<City>({
+  key: 'id',
+  load: async ({ skip = 0, take = 30, searchText, signal }) => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    signal?.throwIfAborted(); // a newer search superseded this request
+    const term = (searchText ?? '').toLowerCase();
+    const rows = CITIES.filter((c) => c.name.toLowerCase().includes(term));
+    return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+  },
+});`,
+      name: 'TagBoxRemoteDemo',
+      body: `const [cityIds, setCityIds] = useState<readonly unknown[]>([]);`,
+      jsx: `<OgeTagBox<City>
+  label="Delivery cities"
+  displayExpr="name"
+  valueExpr="id"
+  dataSource={cities}
+  searchEnabled
+  virtualScroll
+  value={cityIds}
+  onValueChange={setCityIds}
+/>`,
+    }),
+  },
 ];

@@ -540,6 +540,11 @@ _OgeSelectBox_
 | `useItemTextAsTitle` | `boolean` | `false` | Mirrors each option's display text into its `title` attribute. |
 | `renderItem` | `(item: TItem, context: { index; selected; active }) => ReactNode` | `—` | Custom option row rendering — the render prop replacing Angular’s `itemTemplate`; the context carries the same fields the template context does. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists (`{ itemHeight, overscan }`). Rows get a fixed size-matched height; `groupBy` and `wrapItemText` are ignored while active. |
+| `dataSource` | `OgeListDataSource<TItem>` | `—` | Remote, paged data: any `@oge-ui/core` `DataSource` (`CustomDataSource`, `ArrayDataSource`, `CursorDataSource`, `ODataDataSource`) or an object with the same `load()`, plus an optional `byKey()`. Replaces `items` while set: pages of `pageSize` rows load as the list scrolls (and as the keyboard reaches the end), the typed text goes to the server as `searchText` (debounced by `searchTimeout`, gated by `minSearchLength`), superseded requests are aborted through the `AbortSignal`, pages are cached per search, and a value no loaded page holds resolves through `byKey` — the same `OgeRemoteListCore` the Angular editors run. |
+| `pageSize` | `number` | `provider: 30` | Rows requested per `dataSource` page (`take`); unset = the provider's `dataPageSize`. |
+| `renderGroup` | `(label: string) => ReactNode` | `—` | Custom group header rendering for `groupBy` lists — the render prop replacing Angular’s `groupTemplate`. |
+| `renderField` | `(item: TItem \| null, context: { text }) => ReactNode` | `—` | Custom rendering of the closed field’s value; the real input stays underneath for focus, typing and assistive technology, and the content hides while the user types (Angular’s `fieldTemplate`). |
+| `renderHeader / renderFooter` | `(context: OgeSelectPopupRenderContext<TItem>) => ReactNode` | `—` | Content above / below the popup list; context `{ items, searchText, loading }` (Angular’s `headerTemplate` / `footerTemplate`). |
 | `opened / defaultOpened` | `boolean` | `false` | Popup visibility — controlled with `opened` + `onOpenedChange`, or uncontrolled from `defaultOpened`. |
 
 _Common — field chrome (all field editors)_
@@ -592,9 +597,10 @@ _OgeSelectBox handle (via ref)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `open()` | `() => void` | Opens the popup (no-op while disabled/readonly). |
-| `close()` | `() => void` | Closes the popup. |
+| `open()` | `() => void` | Opens the popup (no-op while disabled/readonly, or when `onOpening` cancels). |
+| `close()` | `() => boolean` | Closes the popup unless `onClosing` cancels; returns whether it closed. |
 | `toggle()` | `() => void` | Toggles the popup. |
+| `reload()` | `() => void` | Drops every cached `dataSource` page and re-requests the current search. |
 
 _Common — imperative handle (via ref)_
 
@@ -616,6 +622,9 @@ _OgeSelectBox callbacks_
 | `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened` — fires for every open and close. |
 | `onSearchChange` | `(event: { text: string }) => void` | Raw search text on every keystroke — drive server-side filtering from here. |
 | `onCustomItemCreating` | `(payload: OgeSelectBoxCustomItemEvent<TItem>) => void` | Mutable payload (as in the references): assign `customItem` — an item, a promise of one, or `null` to reject the text. Left unset, the raw text becomes the item. |
+| `onOpening` | `(event: OgeDropDownOpeningEvent) => void` | Cancelable pre-open callback — set `event.cancel = true` to keep the popup closed. |
+| `onClosing` | `(event: OgeDropDownClosingEvent) => void` | Cancelable pre-close callback with its `reason` (`'select'`, `'escape'`, `'outside'`, `'tab'`, `'blur'`, `'api'`) — set `cancel` to keep the popup open. |
+| `onPageLoaded` | `(event: OgeListPageLoadedEvent<TItem>) => void` | A `dataSource` page landed — `{ searchText, skip, items, totalCount }`. |
 
 _Common (all field editors)_
 
@@ -635,7 +644,11 @@ _Select box types_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeSelectBoxHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
+| `OgeSelectBoxHandle` | `{ focus(); blur(); clear(); open(); close(): boolean; toggle(); reload() }` | Imperative handle exposed through `ref`. |
+| `OgeSelectPopupRenderContext<TItem>` | `{ items; searchText; loading }` | Context of `renderHeader` / `renderFooter`. |
+| `OgeListDataSource<TItem>` | `{ load(options): Promise<LoadResult>; byKey?(key) }` | Structurally a subset of the grid’s `DataSource`, so every core data source fits as is. |
+| `OgeDropDownOpeningEvent / OgeDropDownClosingEvent` | `{ cancel } / { reason; cancel }` | Payloads of `onOpening` / `onClosing`. |
+| `OgeListPageLoadedEvent<TItem>` | `{ searchText; skip; items; totalCount? }` | Payload of `onPageLoaded`. |
 | `OgeSelectBoxSelectionChangedEvent<TItem>` | `{ item: TItem \| null; previousItem: TItem \| null }` | Payload of `onSelectionChange`. |
 | `OgeSelectBoxItemClickEvent<TItem>` | `{ item; index; event }` | Payload of `onItemClick`. |
 | `OgeSelectBoxCustomItemEvent<TItem>` | `{ text: string; customItem?: TItem \| null \| PromiseLike<TItem \| null> }` | The mutable payload of `onCustomItemCreating`. |
@@ -663,6 +676,8 @@ _Selection_
 | `selectNodesRecursive` | `boolean` | `true` | Cascades selection down to descendants and up to fully-selected parents. |
 | `selectedKeysMode` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` | `'all'` | Projection applied to the committed keys — `leavesOnly` is usually what you want to store from a cascade. |
 | `displayMode` | `'text' \| 'count'` | `'text'` | Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. |
+| `showSelectionAs` | `'text' \| 'chips'` | `'text'` | `'chips'` renders the selected nodes as removable chips in the field (Backspace removes the last one); `'text'` keeps the comma list / `displayMode`. |
+| `maxDisplayedTags` | `number` | `—` | In chips mode, folds chips past the cap into `+N more`. |
 
 _Popup_
 
@@ -709,6 +724,7 @@ _Tree select types_
 | `OgeTreeSelectHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
 | `OgeTreeSelectSelectionMode` | `'single' \| 'multiple'` | How many nodes may be committed. |
 | `OgeTreeSelectDisplayMode` | `'text' \| 'count'` | Closed-field rendering of a multiple selection. |
+| `OgeTreeSelectShowSelectionAs` | `'text' \| 'chips'` | Text or removable chips in the closed field. |
 | `OgeTreeSelectSelectionChangedEvent` | `{ keys: readonly RowKey[]; previousKeys: readonly RowKey[] }` | Payload of `onSelectionChanged`. |
 
 ### <OgeTagBox>
@@ -720,11 +736,23 @@ _OgeTagBox_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value / defaultValue` | `readonly unknown[]` | `[]` | Committed values — the `valueExpr` of every selected item; controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
-| `items / displayExpr / valueExpr / disabledExpr / imageExpr` | `shared with OgeSelectBox` | `—` | The tag box reuses the select box expression vocabulary verbatim. |
+| `items / displayExpr / valueExpr / disabledExpr / imageExpr` | `shared with OgeSelectBox` | `—` | The tag box reuses the select box expression vocabulary verbatim — `items` may be a lazy function. |
 | `searchEnabled / searchMode / searchExpr` | `shared with OgeSelectBox` | `—` | Client-side filtering of the option list. |
+| `searchTimeout` | `number` | `—` | Debounce before typed text filters. Unset filters local items immediately and debounces `dataSource` requests by the provider default (250ms). |
+| `minSearchLength / showDataBeforeSearch` | `number / boolean` | `0 / false` | Characters required before the filter narrows the list, and what shows below that. |
+| `groupBy` | `string \| ((item) => string)` | `—` | Groups flat items under headers (ignored while `virtualScroll` is on). |
+| `renderItem` | `(item, context: { index; selected; active }) => ReactNode` | `—` | Custom option content; the checkbox stays in front of it. |
+| `renderGroup` | `(label: string) => ReactNode` | `—` | Custom group header rendering. |
+| `renderTag` | `(item, context: { index; text }) => ReactNode` | `—` | Custom chip content; the remove button stays (Angular’s `tagTemplate`). |
+| `acceptCustomValue` | `boolean` | `false` | Enter on typed text that matches no item creates a new tag — see `onCustomItemCreating`. |
+| `showSelectAll` | `boolean` | `false` | A tri-state "select all" row above the options (`aria-checked` true / false / mixed; ArrowUp from the first option reaches it) acting on the visible, enabled items and honouring `maxSelectedItems`. |
+| `maxSelectedItems` | `number` | `—` | Caps the selection; at the cap unselected options turn inert and the popup shows `messages.maxSelectedItemsMessage`. |
+| `loading` | `boolean` | `false` | Shows a loading row instead of items. |
+| `dataSource` | `OgeListDataSource<TItem>` | `—` | Remote, paged data: any `@oge-ui/core` `DataSource` (`CustomDataSource`, `ArrayDataSource`, `CursorDataSource`, `ODataDataSource`) or an object with the same `load()`, plus an optional `byKey()`. Replaces `items` while set: pages of `pageSize` rows load as the list scrolls (and as the keyboard reaches the end), the typed text goes to the server as `searchText` (debounced by `searchTimeout`, gated by `minSearchLength`), superseded requests are aborted through the `AbortSignal`, pages are cached per search, and a value no loaded page holds resolves through `byKey` — the same `OgeRemoteListCore` the Angular editors run. |
+| `pageSize` | `number` | `provider: 30` | Rows requested per `dataSource` page (`take`); unset = the provider's `dataPageSize`. |
 | `showSelectionControls` | `boolean` | `true` | Renders checkboxes in front of the options. |
 | `hideSelectedItems` | `boolean` | `false` | Hides already-selected items from the popup list. |
-| `maxDisplayedTags` | `number` | `—` | Caps the rendered chips; the rest collapse into a `+N` chip. |
+| `maxDisplayedTags` | `number` | `—` | Caps the rendered chips; the rest collapse into a `+N more` chip (`messages.moreTags`). |
 | `opened / defaultOpened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick` | `shared with OgeSelectBox` | `—` | Popup configuration and the controlled/uncontrolled visibility pair. |
 | `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `provider: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet (search field when `searchEnabled`, picks keep it open, a Done action closes it) on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from the `<OgeInputsConfigProvider>`. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
@@ -779,7 +807,9 @@ _OgeTagBox handle (via ref)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `open() / close() / toggle()` | `() => void` | Popup control (no-ops while disabled/readonly). |
+| `open() / close() / toggle()` | `() => void` | Popup control (no-ops while disabled/readonly); `close()` returns `false` when `onClosing` cancels. |
+| `selectAll() / unselectAll()` | `() => void` | Selects (up to `maxSelectedItems`) / clears the visible, enabled items. |
+| `reload()` | `() => void` | Drops every cached `dataSource` page and re-requests the current search. |
 
 _Common — imperative handle (via ref)_
 
@@ -799,6 +829,11 @@ _OgeTagBox callbacks_
 | `onItemClick` | `(event: OgeTagBoxItemClickEvent<TItem>) => void` | An option row was toggled — `{ item, index, event }`. |
 | `onDropDownOpened / onDropDownClosed` | `() => void` | Popup visibility changes, from any trigger. |
 | `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened`. |
+| `onSelectAllValueChanged` | `(event: OgeTagBoxSelectAllEvent) => void` | The "select all" row was toggled — `{ selected, event }`. |
+| `onOpening / onClosing` | `(event: OgeDropDownOpeningEvent \| OgeDropDownClosingEvent) => void` | Cancelable pre-events — same contract as the select box. |
+| `onSearchChange` | `(event: { text: string }) => void` | Raw search text on every keystroke. |
+| `onCustomItemCreating` | `(payload: OgeSelectBoxCustomItemEvent<TItem>) => void` | `acceptCustomValue` commit: assign `customItem` (an item, a promise, or `null` to reject). |
+| `onPageLoaded` | `(event: OgeListPageLoadedEvent<TItem>) => void` | A `dataSource` page landed. |
 
 _Common (all field editors)_
 
@@ -816,6 +851,7 @@ _Common (all field editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `OgeTagBoxSelectAllEvent` | `{ selected: boolean; event: Event }` | Payload of `onSelectAllValueChanged`. |
 | `OgeTagBoxHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
 | `OgeTagBoxSelectionChangedEvent<TItem>` | `{ addedItems; removedItems }` | Payload of `onSelectionChange`. |
 
@@ -840,6 +876,8 @@ _OgeAutocomplete_
 | `loading / dropdownPlacement / dropdownWidth / dropdownMaxHeight / wrapItemText / useItemTextAsTitle` | `shared with OgeSelectBox` | `—` | Popup configuration and list rendering. |
 | `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `provider: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet with its own text field at the top on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from the `<OgeInputsConfigProvider>`. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
+| `dataSource` | `OgeListDataSource<TItem>` | `—` | Remote, paged suggestions — the typed text is the `searchText`; `maxItemCount` does not apply, `pageSize` does. |
+| `pageSize` | `number` | `provider: 30` | Rows requested per `dataSource` page. |
 | `opened / defaultOpened` | `boolean` | `false` | Popup visibility — controlled with `onOpenedChange`, or uncontrolled from `defaultOpened`. |
 
 _Common — field chrome (all field editors)_
@@ -893,6 +931,7 @@ _OgeAutocomplete handle (via ref)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `open() / close() / toggle()` | `() => void` | Popup control (no-ops while disabled/readonly). |
+| `reload()` | `() => void` | Drops every cached `dataSource` page and re-requests the current search. |
 
 _Common — imperative handle (via ref)_
 
@@ -913,6 +952,7 @@ _OgeAutocomplete callbacks_
 | `onDropDownOpened / onDropDownClosed` | `() => void` | Popup visibility changes, from any trigger. |
 | `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened`. |
 | `onSearchChange` | `(event: { text: string }) => void` | Raw search text on every keystroke — drive server-side filtering from here. |
+| `onPageLoaded` | `(event: OgeListPageLoadedEvent<TItem>) => void` | A `dataSource` page landed. |
 
 _Common (all field editors)_
 
@@ -935,6 +975,129 @@ _Autocomplete types_
 | `OgeAutocompleteHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
 | `OgeAutocompleteSelectionChangedEvent<TItem>` | `{ item: TItem \| null; event?: Event }` | `null` means the selection was canceled — the same shape as the Angular output. |
 | `OgeVirtualScrollOptions` | `interface` | `{ itemHeight?: number; overscan?: number }`; default heights come from the shared `@oge-ui/behavior` option-height table (28/34/40px for sm/md/lg). |
+
+### <OgeMultiColumnComboBox>
+
+#### Properties
+
+_OgeMultiColumnComboBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `unknown` | `null` | The selected row's `valueExpr` (an array in `multiple` mode) — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items` | `readonly TItem[] \| OgeSelectItemsFn<TItem>` | `[]` | The rows: an array, or a function invoked lazily on first open. |
+| `columns` | `readonly OgeComboBoxColumn<TItem>[]` | `[]` | Popup columns: `field`, `caption`, `width`, `format`, `alignment`, `searchable`, `cssClass` and an optional `renderCell`. |
+| `displayExpr` | `string \| ((item) => string)` | `—` | Row &rarr; field text; omitted, the first column's formatted cell text. |
+| `valueExpr / disabledExpr` | `string \| fn` | `—` | Committed value and per-row disabling. |
+| `selectionMode` | `'single' \| 'multiple'` | `'single'` | `multiple`: array value, removable chips, the popup stays open while picking. |
+| `searchEnabled` | `boolean` | `true` | Typing filters the rows. |
+| `searchMode / searchExpr / searchTimeout / minSearchLength / showDataBeforeSearch` | `shared with OgeSelectBox` | `—` | Without `searchExpr` every searchable column is searched by its formatted cell text. |
+| `showHeader` | `boolean` | `true` | Renders the sticky column header row. |
+| `showDropDownButton / openOnFieldClick / loading` | `boolean` | `—` | Shared with the select box. |
+| `maxDisplayedTags` | `number` | `—` | In `multiple` mode, folds chips past the cap into `+N more`. |
+| `dropdownPlacement / dropdownWidth / dropdownMaxHeight` | `OgePopupPlacement / number \| 'anchor' / number` | `—` | Popup geometry; all-pixel column widths set the grid’s minimum width. |
+| `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed row rendering. |
+| `dataSource` | `OgeListDataSource<TItem>` | `—` | Remote, paged rows — see `OgeSelectBox`. |
+| `pageSize` | `number` | `provider: 30` | Rows requested per `dataSource` page. |
+| `opened / defaultOpened` | `boolean` | `false` | Popup visibility — controlled with `onOpenedChange`. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `provider: 'none' / 600` | `'auto'` presents the grid as a bottom sheet on narrow viewports. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string` | `undefined` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `<OgeInputsConfigProvider>` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeMultiColumnComboBox handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `() => void` | Popup control; `close()` returns `false` when `onClosing` cancels. |
+| `reload()` | `() => void` | Drops every cached `dataSource` page and re-requests the current search. |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_OgeMultiColumnComboBox callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChange` | `(event: OgeMultiColumnComboBoxSelectionChangedEvent<TItem>) => void` | `{ selectedItems, addedItems, removedItems }` on every commit. |
+| `onRowClick` | `(event: OgeMultiColumnComboBoxRowClickEvent<TItem>) => void` | A row was activated — `{ item, index, event }`. |
+| `onDropDownOpened / onDropDownClosed` | `() => void` | Popup visibility changes. |
+| `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened`. |
+| `onOpening / onClosing` | `(event) => void` | Cancelable pre-events. |
+| `onSearchChange` | `(event: { text: string }) => void` | Raw search text on every keystroke. |
+| `onPageLoaded` | `(event: OgeListPageLoadedEvent<TItem>) => void` | A `dataSource` page landed. |
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+_Multi-column combo box types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeComboBoxColumn<TItem>` | `interface` | `{ field; caption?; width?: number \| string; format?; alignment?: 'start' \| 'center' \| 'end'; searchable?; cssClass?; renderCell?(item, { value, text, rowIndex }) }`. |
+| `OgeMultiColumnComboBoxHandle` | `{ focus(); blur(); clear(); open(); close(): boolean; toggle(); reload() }` | Imperative handle exposed through `ref`. |
+| `Keyboard (APG combobox with grid popup)` | `keys` | Down/Up move rows; once in the grid Left/Right/Home/End move between cells (mirrored in RTL); Ctrl+Home/End jump rows; Enter commits; Alt+Up commits and closes; Escape closes, then clears; Backspace removes the last chip. |
 
 ### <OgeCheckBox>
 
@@ -2032,6 +2195,7 @@ _OgeInputsConfig_
 | `copiedResetMs` | `number` | `2000` | How long the copy button shows "copied". |
 | `adaptiveMode` | `'auto' \| 'none'` | `'none'` | Default `adaptiveMode` of every popup editor (select box, tag box, autocomplete, tree select, date / date range / color box). `'none'` keeps existing apps' anchored drop-downs; switch the whole family with `'auto'`. |
 | `adaptiveBreakpoint` | `number` | `600` | Viewport width (px) below which `'auto'` presents popups as bottom sheets / full-screen dialogs. |
+| `dataPageSize` | `number` | `30` | Rows a list editor asks its `dataSource` for per page (select box, tag box, autocomplete, multi-column combo box). |
 | `messages` | `OgeInputsMessages` | `—` | User-facing strings — the same key set the Angular package documents (clear/reveal/copy/spin labels, counter patterns and the validation messages). |
 
 ## Demos
@@ -3258,6 +3422,288 @@ export function TextBoxMaskDemo() {
 }
 ```
 
+### Basic usage
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMultiColumnComboBox } from '@oge-ui/react-inputs';
+import type { OgeComboBoxColumn } from '@oge-ui/react-inputs';
+
+interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+}
+
+const products: Product[] = [
+  { id: 1, sku: 'L-100', name: 'Desk lamp', category: 'Lighting', price: 49, stock: 12 },
+  { id: 2, sku: 'C-200', name: 'Office chair', category: 'Seating', price: 249, stock: 0 },
+  { id: 3, sku: 'M-300', name: 'Monitor arm', category: 'Accessories', price: 89, stock: 31 },
+  { id: 4, sku: 'D-400', name: 'Standing desk', category: 'Desks', price: 699, stock: 4 },
+  { id: 5, sku: 'K-500', name: 'Keyboard tray', category: 'Accessories', price: 39, stock: 57 },
+];
+
+const columns: OgeComboBoxColumn<Product>[] = [
+  { field: 'sku', caption: 'SKU', width: 80 },
+  { field: 'name', width: 160 },
+  { field: 'category', width: 120 },
+  {
+    field: 'price',
+    width: 90,
+    alignment: 'end',
+    format: { style: 'currency', currency: 'EUR' },
+    searchable: false,
+  },
+];
+
+export function MultiColumnComboBoxBasicDemo() {
+  const [productId, setProductId] = useState<unknown>(3);
+  return (
+    <OgeMultiColumnComboBox<Product>
+      label="Product"
+      items={products}
+      columns={columns}
+      valueExpr="id"
+      displayExpr="name"
+      showClearButton
+      value={productId}
+      onValueChange={setProductId}
+    />
+  );
+}
+```
+
+### Cell templates & formats
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMultiColumnComboBox } from '@oge-ui/react-inputs';
+import type { OgeComboBoxColumn } from '@oge-ui/react-inputs';
+
+interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+}
+
+const products: Product[] = [
+  { id: 1, sku: 'L-100', name: 'Desk lamp', category: 'Lighting', price: 49, stock: 12 },
+  { id: 2, sku: 'C-200', name: 'Office chair', category: 'Seating', price: 249, stock: 0 },
+  { id: 3, sku: 'M-300', name: 'Monitor arm', category: 'Accessories', price: 89, stock: 31 },
+  { id: 4, sku: 'D-400', name: 'Standing desk', category: 'Desks', price: 699, stock: 4 },
+  { id: 5, sku: 'K-500', name: 'Keyboard tray', category: 'Accessories', price: 39, stock: 57 },
+];
+
+const stock = products.map((p) => ({ ...p, soldOut: p.stock === 0 }));
+
+const columns: OgeComboBoxColumn<Product>[] = [
+  { field: 'name', width: 160 },
+  {
+    field: 'stock',
+    caption: 'Availability',
+    width: 130,
+    renderCell: (_item, { value }) => (
+      <span style={{ color: value === 0 ? '#dc2626' : undefined }}>
+        {value === 0 ? 'Sold out' : `${String(value)} in stock`}
+      </span>
+    ),
+  },
+  {
+    field: 'price',
+    width: 90,
+    alignment: 'end',
+    format: (value) => `€${Number(value).toFixed(2)}`,
+  },
+];
+
+export function MultiColumnComboBoxTemplatesDemo() {
+  const [productId, setProductId] = useState<unknown>(null);
+  return (
+    <OgeMultiColumnComboBox
+      label="Product"
+      items={stock}
+      columns={columns}
+      valueExpr="id"
+      disabledExpr="soldOut"
+      value={productId}
+      onValueChange={setProductId}
+    />
+  );
+}
+```
+
+### Multiple selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMultiColumnComboBox } from '@oge-ui/react-inputs';
+import type { OgeComboBoxColumn } from '@oge-ui/react-inputs';
+
+interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+}
+
+const products: Product[] = [
+  { id: 1, sku: 'L-100', name: 'Desk lamp', category: 'Lighting', price: 49, stock: 12 },
+  { id: 2, sku: 'C-200', name: 'Office chair', category: 'Seating', price: 249, stock: 0 },
+  { id: 3, sku: 'M-300', name: 'Monitor arm', category: 'Accessories', price: 89, stock: 31 },
+  { id: 4, sku: 'D-400', name: 'Standing desk', category: 'Desks', price: 699, stock: 4 },
+  { id: 5, sku: 'K-500', name: 'Keyboard tray', category: 'Accessories', price: 39, stock: 57 },
+];
+
+const columns: OgeComboBoxColumn<Product>[] = [
+  { field: 'sku', caption: 'SKU', width: 80 },
+  { field: 'name', width: 160 },
+  { field: 'price', width: 90, alignment: 'end', format: { style: 'currency', currency: 'EUR' } },
+];
+
+export function MultiColumnComboBoxMultipleDemo() {
+  const [bundle, setBundle] = useState<unknown>([1, 3]);
+  return (
+    <OgeMultiColumnComboBox<Product>
+      label="Bundle"
+      items={products}
+      columns={columns}
+      valueExpr="id"
+      displayExpr="name"
+      selectionMode="multiple"
+      maxDisplayedTags={2}
+      value={bundle}
+      onValueChange={setBundle}
+    />
+  );
+}
+```
+
+### Remote data
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMultiColumnComboBox } from '@oge-ui/react-inputs';
+import { CustomDataSource } from '@oge-ui/core';
+import type { OgeComboBoxColumn } from '@oge-ui/react-inputs';
+
+interface Account {
+  id: number;
+  code: string;
+  name: string;
+  city: string;
+}
+
+const ACCOUNTS: Account[] = Array.from({ length: 10000 }, (_, i) => ({
+  id: i + 1,
+  code: `AC-${String(i + 1).padStart(5, '0')}`,
+  name: `Account ${i + 1}`,
+  city: ['Ankara', 'Berlin', 'Lisbon', 'Oslo'][i % 4],
+}));
+
+const columns: OgeComboBoxColumn<Account>[] = [
+  { field: 'code', width: 110 },
+  { field: 'name', width: 150 },
+  { field: 'city', width: 100 },
+];
+
+const accounts = new CustomDataSource<Account>({
+  key: 'id',
+  load: async ({ skip = 0, take = 50, searchText }) => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const term = (searchText ?? '').toLowerCase();
+    const rows = ACCOUNTS.filter((a) =>
+      [a.code, a.name, a.city].some((text) => text.toLowerCase().includes(term)),
+    );
+    return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+  },
+});
+
+export function MultiColumnComboBoxRemoteDemo() {
+  const [accountId, setAccountId] = useState<unknown>(null);
+  return (
+    <OgeMultiColumnComboBox<Account>
+      label="Account"
+      dataSource={accounts}
+      columns={columns}
+      valueExpr="id"
+      displayExpr="name"
+      virtualScroll
+      pageSize={50}
+      value={accountId}
+      onValueChange={setAccountId}
+    />
+  );
+}
+```
+
+### Forms
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMultiColumnComboBox } from '@oge-ui/react-inputs';
+import type { OgeComboBoxColumn } from '@oge-ui/react-inputs';
+
+interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+}
+
+const products: Product[] = [
+  { id: 1, sku: 'L-100', name: 'Desk lamp', category: 'Lighting', price: 49, stock: 12 },
+  { id: 2, sku: 'C-200', name: 'Office chair', category: 'Seating', price: 249, stock: 0 },
+  { id: 3, sku: 'M-300', name: 'Monitor arm', category: 'Accessories', price: 89, stock: 31 },
+  { id: 4, sku: 'D-400', name: 'Standing desk', category: 'Desks', price: 699, stock: 4 },
+  { id: 5, sku: 'K-500', name: 'Keyboard tray', category: 'Accessories', price: 39, stock: 57 },
+];
+
+const columns: OgeComboBoxColumn<Product>[] = [
+  { field: 'sku', caption: 'SKU', width: 80 },
+  { field: 'name', width: 160 },
+];
+
+export function MultiColumnComboBoxFormsDemo() {
+  const [productId, setProductId] = useState<unknown>(null);
+  const [touched, setTouched] = useState(false);
+  return (
+    <OgeMultiColumnComboBox<Product>
+      label="Product"
+      items={products}
+      columns={columns}
+      valueExpr="id"
+      displayExpr="name"
+      required
+      touched={touched}
+      errors={productId == null ? [{ kind: 'required' }] : []}
+      onBlur={() => setTouched(true)}
+      value={productId}
+      onValueChange={setProductId}
+    />
+  );
+}
+```
+
 ### The three editors
 
 ```ts
@@ -3425,6 +3871,106 @@ export function SelectBoxMappingDemo() {
       value={assigneeId}
       onValueChange={setAssigneeId}
       onSearchChange={(event) => console.log('searching for', event.text)}
+    />
+  );
+}
+```
+
+### Tag Box — select all, custom tags & limits
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTagBox } from '@oge-ui/react-inputs';
+
+interface Skill {
+  id: number;
+  name: string;
+  area: string;
+}
+
+const INITIAL: Skill[] = [
+  { id: 1, name: 'Angular', area: 'Frontend' },
+  { id: 2, name: 'Signals', area: 'Frontend' },
+  { id: 3, name: 'SCSS', area: 'Frontend' },
+  { id: 4, name: 'Nx', area: 'Tooling' },
+  { id: 5, name: 'Vitest', area: 'Tooling' },
+  { id: 6, name: 'Playwright', area: 'Tooling' },
+];
+let nextId = 100;
+
+export function TagBoxFeaturesDemo() {
+  const [skills, setSkills] = useState(INITIAL);
+  const [skillIds, setSkillIds] = useState<readonly unknown[]>([1, 4]);
+  return (
+    <OgeTagBox<Skill>
+      label="Skills"
+      items={skills}
+      displayExpr="name"
+      valueExpr="id"
+      groupBy="area"
+      searchEnabled
+      showSelectAll
+      acceptCustomValue
+      maxSelectedItems={5}
+      maxDisplayedTags={3}
+      renderTag={(_item, { text }) => <span className="oge-tag-text">#{text}</span>}
+      hint="Type a new skill and press Enter"
+      onCustomItemCreating={(event) => {
+        const item = { id: nextId++, name: event.text, area: 'Custom' };
+        setSkills((all) => [...all, item]);
+        event.customItem = item;
+      }}
+      value={skillIds}
+      onValueChange={setSkillIds}
+    />
+  );
+}
+```
+
+### Tag Box — remote data
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTagBox } from '@oge-ui/react-inputs';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface City {
+  id: number;
+  name: string;
+}
+
+const CITIES: City[] = Array.from({ length: 2000 }, (_, i) => ({
+  id: i + 1,
+  name: `City ${i + 1}`,
+}));
+
+const cities = new CustomDataSource<City>({
+  key: 'id',
+  load: async ({ skip = 0, take = 30, searchText, signal }) => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    signal?.throwIfAborted(); // a newer search superseded this request
+    const term = (searchText ?? '').toLowerCase();
+    const rows = CITIES.filter((c) => c.name.toLowerCase().includes(term));
+    return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+  },
+});
+
+export function TagBoxRemoteDemo() {
+  const [cityIds, setCityIds] = useState<readonly unknown[]>([]);
+  return (
+    <OgeTagBox<City>
+      label="Delivery cities"
+      displayExpr="name"
+      valueExpr="id"
+      dataSource={cities}
+      searchEnabled
+      virtualScroll
+      value={cityIds}
+      onValueChange={setCityIds}
     />
   );
 }
@@ -3661,6 +4207,125 @@ export function SelectBoxAdaptiveDemo() {
         onValueChange={setDue}
       />
     </div>
+  );
+}
+```
+
+### Remote data
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface Customer {
+  id: number;
+  name: string;
+}
+
+const CUSTOMERS: Customer[] = Array.from({ length: 5000 }, (_, i) => ({
+  id: i + 1,
+  name: `Customer ${String(i + 1).padStart(4, '0')}`,
+}));
+
+/** Any core DataSource works; byKey resolves the initial value. */
+const customers = Object.assign(
+  new CustomDataSource<Customer>({
+    key: 'id',
+    load: async ({ skip = 0, take = 40, searchText }) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const term = (searchText ?? '').toLowerCase();
+      const rows = CUSTOMERS.filter((c) => c.name.toLowerCase().includes(term));
+      return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+    },
+  }),
+  {
+    byKey: async (key: unknown) => CUSTOMERS.find((c) => c.id === key) ?? null,
+  },
+);
+
+export function SelectBoxRemoteDemo() {
+  const [customerId, setCustomerId] = useState<unknown>(1234);
+  return (
+    <OgeSelectBox<Customer>
+      label="Customer"
+      displayExpr="name"
+      valueExpr="id"
+      dataSource={customers}
+      pageSize={40}
+      searchEnabled
+      searchTimeout={300}
+      virtualScroll
+      showClearButton
+      value={customerId}
+      onValueChange={setCustomerId}
+    />
+  );
+}
+```
+
+### Templates & cancelable events
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+
+interface Status {
+  id: string;
+  name: string;
+  phase: string;
+  color: string;
+}
+
+const statuses: Status[] = [
+  { id: 'todo', name: 'To do', phase: 'Open', color: '#94a3b8' },
+  { id: 'doing', name: 'In progress', phase: 'Open', color: '#6366f1' },
+  { id: 'review', name: 'In review', phase: 'Open', color: '#f59e0b' },
+  { id: 'done', name: 'Done', phase: 'Closed', color: '#10b981' },
+];
+
+const dot = (color: string) => (
+  <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 5, background: color }} />
+);
+
+export function SelectBoxTemplatesDemo() {
+  const [statusId, setStatusId] = useState<unknown>('doing');
+  const [pinned, setPinned] = useState(false);
+  return (
+    <OgeSelectBox<Status>
+      label="Status"
+      items={statuses}
+      displayExpr="name"
+      valueExpr="id"
+      groupBy="phase"
+      renderGroup={(label) => <span>Phase · {label}</span>}
+      renderField={(item, { text }) => (
+        <>
+          {item && dot(item.color)} {text}
+        </>
+      )}
+      renderItem={(item) => (
+        <>
+          {dot(item.color)} <span className="oge-select-option-text">{item.name}</span>
+        </>
+      )}
+      renderHeader={({ items }) => <>{items.length} statuses</>}
+      renderFooter={() => (
+        <label>
+          <input type="checkbox" checked={pinned} onChange={() => setPinned(!pinned)} />{' '}
+          Keep open (cancels closing)
+        </label>
+      )}
+      onClosing={(event) => {
+        if (pinned && event.reason !== 'select') event.cancel = true;
+      }}
+      value={statusId}
+      onValueChange={setStatusId}
+    />
   );
 }
 ```
@@ -4305,6 +4970,42 @@ export function TreeSelectLazyDemo() {
       loadChildren={loadChildren}
       value={remoteId}
       onValueChange={setRemoteId}
+    />
+  );
+}
+```
+
+### Selection as chips
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeSelect } from '@oge-ui/react-inputs';
+
+const folders = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 5, parentId: 1, name: 'Contracts' },
+  { id: 6, parentId: null, name: 'Photos' },
+  { id: 7, parentId: 6, name: 'Holiday' },
+];
+
+export function TreeSelectChipsDemo() {
+  const [shared, setShared] = useState<unknown>([2, 5, 7]);
+  return (
+    <OgeTreeSelect
+      label="Shared folders"
+      items={folders}
+      displayExpr="name"
+      rootValue={null}
+      selectionMode="multiple"
+      showCheckBoxes="normal"
+      selectNodesRecursive={false}
+      showSelectionAs="chips"
+      maxDisplayedTags={3}
+      value={shared}
+      onValueChange={setShared}
     />
   );
 }

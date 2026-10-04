@@ -4,6 +4,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { createElement, useState, type ReactNode } from 'react';
+import { CustomDataSource } from '@oge-ui/core';
 import { OgeDateBox, OgeSelectBox, OgeTagBox } from '@oge-ui/react-inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
@@ -18,7 +19,11 @@ export const REACT_INPUTS_SELECT_BOX_SECTIONS = [
   'Data mapping & search',
   'Grouping & custom values',
   'Lazy data',
+  'Remote data',
+  'Templates & cancelable events',
   'Tag Box — multi-select',
+  'Tag Box — select all, custom tags & limits',
+  'Tag Box — remote data',
   'Item states & templates',
   'Field chrome',
   'Mobile / adaptive',
@@ -167,6 +172,203 @@ function LazyDemo(): ReactNode {
     items: loadWarehouses,
     value: warehouse,
     onValueChange: setWarehouse,
+  });
+}
+
+interface DemoCustomer {
+  id: number;
+  name: string;
+}
+
+const CUSTOMERS: DemoCustomer[] = Array.from({ length: 5000 }, (_, i) => ({
+  id: i + 1,
+  name: `Customer ${String(i + 1).padStart(4, '0')}`,
+}));
+const DEMO_CITIES: DemoCustomer[] = Array.from({ length: 2000 }, (_, i) => ({
+  id: i + 1,
+  name: `City ${i + 1}`,
+}));
+
+const customers = Object.assign(
+  new CustomDataSource<DemoCustomer>({
+    key: 'id',
+    load: async ({ skip = 0, take = 40, searchText }) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const term = (searchText ?? '').toLowerCase();
+      const rows = CUSTOMERS.filter((c) => c.name.toLowerCase().includes(term));
+      return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+    },
+  }),
+  {
+    byKey: async (key: unknown) => CUSTOMERS.find((c) => c.id === key) ?? null,
+  },
+);
+
+const cityPages = new CustomDataSource<DemoCustomer>({
+  key: 'id',
+  load: async ({ skip = 0, take = 30, searchText }) => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const term = (searchText ?? '').toLowerCase();
+    const rows = DEMO_CITIES.filter((c) => c.name.toLowerCase().includes(term));
+    return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+  },
+});
+
+function RemoteDemo(): ReactNode {
+  const [customerId, setCustomerId] = useState<unknown>(1234);
+  return createElement(
+    'div',
+    { className: 'demo-row demo-row-start', 'data-demo': 'remote' },
+    createElement(OgeSelectBox<DemoCustomer>, {
+      key: 'customer',
+      label: 'Customer',
+      displayExpr: 'name',
+      valueExpr: 'id',
+      dataSource: customers,
+      pageSize: 40,
+      searchEnabled: true,
+      searchTimeout: 300,
+      virtualScroll: true,
+      showClearButton: true,
+      value: customerId,
+      onValueChange: setCustomerId,
+    }),
+    readout('value:', customerId === null ? 'null' : String(customerId)),
+  );
+}
+
+interface DemoStatus {
+  id: string;
+  name: string;
+  phase: string;
+  color: string;
+}
+
+const STATUSES: DemoStatus[] = [
+  { id: 'todo', name: 'To do', phase: 'Open', color: '#94a3b8' },
+  { id: 'doing', name: 'In progress', phase: 'Open', color: '#6366f1' },
+  { id: 'review', name: 'In review', phase: 'Open', color: '#f59e0b' },
+  { id: 'done', name: 'Done', phase: 'Closed', color: '#10b981' },
+];
+
+const dot = (color: string) =>
+  createElement('span', {
+    className: 'inline-block size-2.5 rounded-full',
+    style: { background: color },
+  });
+
+function TemplatesDemo(): ReactNode {
+  const [statusId, setStatusId] = useState<unknown>('doing');
+  const [pinned, setPinned] = useState(false);
+  return createElement(
+    'div',
+    { className: 'demo-row demo-row-start', 'data-demo': 'templates' },
+    createElement(OgeSelectBox<DemoStatus>, {
+      key: 'status',
+      label: 'Status',
+      items: STATUSES,
+      displayExpr: 'name',
+      valueExpr: 'id',
+      groupBy: 'phase',
+      renderGroup: (label) => createElement('span', null, `Phase · ${label}`),
+      renderField: (item, { text }) =>
+        createElement(
+          'span',
+          { className: 'flex items-center gap-1.5' },
+          item ? dot(item.color) : null,
+          text,
+        ),
+      renderItem: (item) =>
+        createElement(
+          'span',
+          { className: 'flex items-center gap-2' },
+          dot(item.color),
+          createElement(
+            'span',
+            { className: 'oge-select-option-text' },
+            item.name,
+          ),
+        ),
+      renderHeader: ({ items }) => `${items.length} statuses`,
+      renderFooter: () =>
+        createElement(
+          'label',
+          { className: 'flex items-center gap-2' },
+          createElement('input', {
+            type: 'checkbox',
+            checked: pinned,
+            onChange: () => setPinned(!pinned),
+          }),
+          'Keep open (cancels closing)',
+        ),
+      onClosing: (event) => {
+        if (pinned && event.reason !== 'select') event.cancel = true;
+      },
+      value: statusId,
+      onValueChange: setStatusId,
+    }),
+  );
+}
+
+interface DemoSkill {
+  id: number;
+  name: string;
+  area: string;
+}
+
+const INITIAL_SKILLS: DemoSkill[] = [
+  { id: 1, name: 'Angular', area: 'Frontend' },
+  { id: 2, name: 'Signals', area: 'Frontend' },
+  { id: 3, name: 'SCSS', area: 'Frontend' },
+  { id: 4, name: 'Nx', area: 'Tooling' },
+  { id: 5, name: 'Vitest', area: 'Tooling' },
+  { id: 6, name: 'Playwright', area: 'Tooling' },
+];
+let nextSkillId = 100;
+
+function TagBoxFeaturesDemo(): ReactNode {
+  const [skills, setSkills] = useState(INITIAL_SKILLS);
+  const [skillIds, setSkillIds] = useState<readonly unknown[]>([1, 4]);
+  return createElement(
+    'div',
+    { className: 'demo-row demo-row-start', 'data-demo': 'tag-features' },
+    createElement(OgeTagBox<DemoSkill>, {
+      key: 'skills',
+      label: 'Skills',
+      items: skills,
+      displayExpr: 'name',
+      valueExpr: 'id',
+      groupBy: 'area',
+      searchEnabled: true,
+      showSelectAll: true,
+      acceptCustomValue: true,
+      maxSelectedItems: 5,
+      maxDisplayedTags: 3,
+      renderTag: (_item, { text }) =>
+        createElement('span', { className: 'oge-tag-text' }, `#${text}`),
+      hint: 'Type a new skill and press Enter',
+      onCustomItemCreating: (event) => {
+        const item = { id: nextSkillId++, name: event.text, area: 'Custom' };
+        setSkills((all) => [...all, item]);
+        event.customItem = item;
+      },
+      value: skillIds,
+      onValueChange: setSkillIds,
+    }),
+  );
+}
+
+function TagBoxRemoteDemo(): ReactNode {
+  const [cityIds, setCityIds] = useState<readonly unknown[]>([]);
+  return createElement(OgeTagBox<DemoCustomer>, {
+    label: 'Delivery cities',
+    displayExpr: 'name',
+    valueExpr: 'id',
+    dataSource: cityPages,
+    searchEnabled: true,
+    virtualScroll: true,
+    value: cityIds,
+    onValueChange: setCityIds,
   });
 }
 
@@ -332,6 +534,26 @@ function AdaptiveDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      heading="Remote data"
+      description="Bind any <code>&#64;oge-ui/core</code> <code>DataSource</code> to <code>dataSource</code>: pages of <code>pageSize</code> rows load as the list scrolls, the typed text goes to the server as <code>searchText</code> after <code>searchTimeout</code>, superseded requests are aborted through their <code>AbortSignal</code> and pages are cached per search. <code>byKey()</code> resolves a value no loaded page holds — here the initial customer #1234 of 5,000."
+      [chips]="['dataSource', 'pageSize', 'byKey', 'AbortSignal']"
+      [code]="demos[8].source"
+      language="tsx"
+    >
+      <app-react-host [render]="remote" />
+    </app-demo-card>
+
+    <app-demo-card
+      heading="Templates & cancelable events"
+      description="<code>renderGroup</code>, <code>renderField</code> (paints the closed field over the real input, which keeps its text for assistive technology), <code>renderHeader</code> and <code>renderFooter</code>. <code>onOpening</code> / <code>onClosing</code> are cancelable pre-events — set <code>event.cancel = true</code>; <code>onClosing</code> carries its <code>reason</code>."
+      [chips]="['renderGroup', 'renderField', 'onClosing', 'cancel']"
+      [code]="demos[9].source"
+      language="tsx"
+    >
+      <app-react-host [render]="templates" />
+    </app-demo-card>
+
+    <app-demo-card
       heading="Tag Box — multi-select"
       description="<code>OgeTagBox</code> is the multi-select sibling: the value is an <em>array</em> of <code>valueExpr</code> results, picks render as removable chips, the popup stays open while selecting (checkbox listbox, <code>aria-multiselectable</code>) and <kbd>Backspace</kbd> removes the last chip. <code>imageExpr</code> puts avatars on chips and options; <code>maxDisplayedTags</code> collapses overflow into a <code>+N</code> chip."
       [chips]="[
@@ -344,6 +566,31 @@ function AdaptiveDemo(): ReactNode {
       language="tsx"
     >
       <app-react-host [render]="tagBox" />
+    </app-demo-card>
+
+    <app-demo-card
+      heading="Tag Box — select all, custom tags & limits"
+      description="The tag box speaks the select box&#39;s whole vocabulary — <code>groupBy</code>, <code>renderItem</code>, lazy <code>items</code>, <code>acceptCustomValue</code> + <code>onCustomItemCreating</code> — and adds a tri-state <code>showSelectAll</code> row (<kbd>&uarr;</kbd> from the first option reaches it), <code>maxSelectedItems</code> with a status message, <code>renderTag</code> chips and a <code>+N more</code> overflow chip."
+      [chips]="[
+        'showSelectAll',
+        'maxSelectedItems',
+        'acceptCustomValue',
+        'renderTag',
+      ]"
+      [code]="demos[10].source"
+      language="tsx"
+    >
+      <app-react-host [render]="tagFeatures" />
+    </app-demo-card>
+
+    <app-demo-card
+      heading="Tag Box — remote data"
+      description="The same <code>dataSource</code> contract on the tag box: 2,000 cities paged 30 at a time, server-side search, and chips that stay resolved while the list shows another search."
+      [chips]="['dataSource', 'virtualScroll']"
+      [code]="demos[11].source"
+      language="tsx"
+    >
+      <app-react-host [render]="tagRemote" />
     </app-demo-card>
 
     <app-demo-card
@@ -388,4 +635,8 @@ export class ReactInputsSelectBoxDemos {
   protected readonly states = () => createElement(StatesDemo);
   protected readonly chrome = () => createElement(ChromeDemo);
   protected readonly adaptive = () => createElement(AdaptiveDemo);
+  protected readonly remote = () => createElement(RemoteDemo);
+  protected readonly templates = () => createElement(TemplatesDemo);
+  protected readonly tagFeatures = () => createElement(TagBoxFeaturesDemo);
+  protected readonly tagRemote = () => createElement(TagBoxRemoteDemo);
 }

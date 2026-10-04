@@ -11,6 +11,7 @@ export {
   formColumnsCss,
   inferDataType,
   isBareEditor,
+  isFormItemVisible,
   orderByVisibleIndex,
   pickEditorType,
   readPath,

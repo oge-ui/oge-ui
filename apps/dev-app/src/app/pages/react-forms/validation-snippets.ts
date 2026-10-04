@@ -48,7 +48,7 @@ const ageRules: OgeValidationRule[] = [{ type: 'numeric', min: 18, max: 120 }];`
   {
     title: 'Custom & cross-field rules',
     description:
-      'A custom rule receives its own value and the whole model, which is how a confirm-password check works without a second engine. There is deliberately no compare rule type — a rule object that names another field loses type safety, and a custom rule reading data does it properly. An async rule is scheduled by the form and reported when it settles.',
+      'A custom rule receives its own value and the whole model; the declarative compare rule covers the common confirm-password case. An async rule is scheduled by the form and reported when it settles.',
     source: reactDemoSource({
       react: ['useState'],
       use: { '@oge-ui/react-forms': ['OgeForm'] },
@@ -138,6 +138,75 @@ const form = useRef<OgeFormHandle<typeof ticket>>(null);`,
     ]}
   />
 </OgeFormsConfigProvider>`,
+    }),
+  },
+  {
+    title: 'Server errors & conditional fields',
+    description:
+      'visibleWhen / requiredWhen / disabledWhen take a predicate over the model or { field, equals }; a hidden item is not validated. setErrors({ email: [...] }) on the handle shows a server message in the field and the summary until the field is edited.',
+    source: reactDemoSource({
+      react: ['useRef', 'useState'],
+      use: {
+        '@oge-ui/react-forms': ['OgeForm'],
+        '@oge-ui/react-buttons': ['OgeButton'],
+      },
+      types: {
+        '@oge-ui/react-forms': ['OgeFormHandle', 'OgeFormItemDefinition'],
+      },
+      before: `interface Registration {
+  kind: string;
+  company: string;
+  email: string;
+  password: string;
+  confirm: string;
+}
+
+const items: OgeFormItemDefinition[] = [
+  {
+    field: 'kind',
+    editorType: 'radioGroup',
+    editorOptions: {
+      items: [{ id: 'person', text: 'Person' }, { id: 'company', text: 'Company' }],
+      valueExpr: 'id',
+      displayExpr: 'text',
+    },
+  },
+  {
+    field: 'company',
+    // shown — and required — only for companies; hidden items are not validated
+    visibleWhen: { field: 'kind', equals: 'company' },
+    requiredWhen: { field: 'kind', equals: 'company' },
+  },
+  { field: 'email', isRequired: true },
+  { field: 'password', isRequired: true },
+  { field: 'confirm', validationRules: [{ type: 'compare', comparisonTarget: 'password' }] },
+];`,
+      name: 'FormServerErrorsDemo',
+      body: `const form = useRef<OgeFormHandle<Registration>>(null);
+const [data, setData] = useState<Registration>({
+  kind: 'person',
+  company: '',
+  email: '',
+  password: '',
+  confirm: '',
+});`,
+      jsx: `<OgeForm
+  ref={form}
+  formData={data}
+  onFormDataChange={setData}
+  items={items}
+  showValidationSummary
+  onSubmitted={async ({ data: submitted }) => {
+    const response = await fetch('/api/register', {
+      method: 'POST',
+      body: JSON.stringify(submitted),
+    });
+    // e.g. { email: ['This email is already registered'] } — shown in the
+    // field and the summary, cleared as soon as the user edits the field
+    if (!response.ok) form.current?.setErrors(await response.json());
+  }}
+  actions={<OgeButton text="Register" stylingMode="contained" useSubmitBehavior />}
+/>`,
     }),
   },
 ];

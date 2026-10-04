@@ -193,7 +193,7 @@ export interface OgeInputsMessages {
   contrastPass: string;
   /** Badge text of a WCAG level the color fails — placeholder `{level}` (AA / AAA). */
   contrastFail: string;
-  /** Label of the check box group's "select all" box. */
+  /** Label of the check box group's "select all" box and the tag box's "select all" row. */
   selectAllText: string;
   /** Aria label of the adaptive sheet / full-screen dialog's close (✕) button. */
   adaptiveClose: string;
@@ -203,6 +203,12 @@ export interface OgeInputsMessages {
   adaptiveSearch: string;
   /** Dialog title of an adaptive popup whose editor has no label. */
   adaptiveTitle: string;
+  /** Overflow chip of `maxDisplayedTags` — placeholder `{count}`. */
+  moreTags: string;
+  /** Status shown once `maxSelectedItems` is reached — placeholder `{max}`. */
+  maxSelectedItemsMessage: string;
+  /** `compare` validation rule failure (forms). */
+  compareError: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -302,6 +308,9 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   adaptiveDone: 'Done',
   adaptiveSearch: 'Search',
   adaptiveTitle: 'Select',
+  moreTags: '+{count} more',
+  maxSelectedItemsMessage: 'You can select up to {max} items',
+  compareError: 'The values do not match',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */
@@ -320,6 +329,11 @@ export interface OgeInputsConfig {
   /** Select box: delay before typed search text filters the list. */
   searchTimeoutMs: number;
   /**
+   * Rows a list editor asks its `dataSource` for per page (`take`) — select
+   * box, tag box, autocomplete and multi-column combo box.
+   */
+  dataPageSize: number;
+  /**
    * Default `adaptiveMode` of every popup editor (select box, tag box,
    * autocomplete, tree select, date / date range / color box). `'none'`
    * keeps the anchored drop-down everywhere; `'auto'` presents it as a bottom
@@ -336,6 +350,7 @@ export const OGE_DEFAULT_INPUTS_CONFIG: OgeInputsConfig = {
   spinRepeatIntervalMs: 80,
   copiedResetMs: 2000,
   searchTimeoutMs: 250,
+  dataPageSize: 30,
   adaptiveMode: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveMode,
   adaptiveBreakpoint: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveBreakpoint,
   messages: OGE_DEFAULT_INPUTS_MESSAGES,

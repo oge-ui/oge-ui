@@ -18,6 +18,7 @@ export type {
   OgeFormSubmittingEvent,
   OgeFormSubmittedEvent,
   OgeFormKeyEvent,
+  OgeFormServerErrors,
 } from './lib/form-types';
 // The shared vocabulary, config, item model and rule evaluator come from
 // `@oge-ui/behavior` — re-exported so consumers import one package.
@@ -50,4 +51,6 @@ export type {
   OgeResolvedFormItem,
   OgeValidationContext,
   OgeValidationRule,
+  OgeFormCondition,
+  OgeComparisonType,
 } from '@oge-ui/behavior';

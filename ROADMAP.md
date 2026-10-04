@@ -872,13 +872,47 @@ Deliberately not copied from DevExtreme: `dropDownOptions` kitchen sink
 properties). Moved to S3: preventable `opening`/`closing` pre-events,
 `groupTemplate`, `fieldAddons`.
 
+**G4b (both layers) — shipped:** cancelable `opening` / `closing { reason }`
+pre-events (panel self-closes vetoed through `OgeAnchoredPanelCore.beforeClose`),
+`groupTemplate`, `fieldTemplate` (now a real value template painted over the
+input, not the deprecated dx editor-replacement), `headerTemplate` /
+`footerTemplate`, and **remote paged data** — `dataSource` (any core
+`DataSource` + optional `byKey`), `pageSize`, `pageLoaded`, `reload()`: load on
+scroll from the virtual window or scroll position, debounced server search,
+`AbortSignal` cancellation, per-search page cache (dx `DataSource` paginate,
+Kendo virtual `pageChange`, PrimeNG `lazy`). Tree select: the tree's own
+`loadChildren` stays its remote mode — page-by-offset loading does not fit a
+hierarchy, so it is Skipped there by design. `fieldAddons` stays Skipped
+(prefix/suffix slots cover it).
+
 ### Phase S3 — `OgeTagBox` (multi-select) — **shipped (core)**
 
 Shipped: `value: T[]`, removable chips + `maxDisplayedTags` overflow chip,
 `showSelectionControls` checkboxes, `hideSelectedItems`, add/remove delta
 events, Backspace-removes-last, `aria-multiselectable` listbox, `imageExpr`.
-Remaining backlog: `tagTemplate`, `multiline`, `selectAllMode`,
-`applyValueMode` (`'instantly' | 'useButtons'`).
+**G4b — shipped:** `tagTemplate`, `itemTemplate`, `groupBy` + `groupTemplate`,
+lazy `items`, `loading`, `searchTimeout`, `minSearchLength` /
+`showDataBeforeSearch`, `acceptCustomValue` + `customItemCreating`,
+`showSelectAll` (tri-state option, `selectAll()` / `unselectAll()`,
+`selectAllValueChanged`), `maxSelectedItems` + `maxSelectedItemsMessage`,
+`+N more` overflow text, `opening` / `closing`, remote `dataSource`.
+`selectAllMode: 'allPages'` is Skipped: "select everything the server has"
+means fetching every page (or a server-side "all" flag the value array cannot
+express) — select all acts on the visible / loaded items, documented.
+Remaining backlog: `multiline`, `applyValueMode` (`'instantly' | 'useButtons'`).
+
+### G4b — `OgeMultiColumnComboBox` — **shipped (both layers)**
+
+`@oge-ui/inputs/multi-column-combo-box` / `<OgeMultiColumnComboBox>`: columns
+(`field`, `caption`, `width`, `format`, `alignment`, `searchable`, `cssClass`,
+`cellTemplate` / `renderCell`), sticky header, APG combobox-with-grid keyboard
+(rows + cells, RTL-mirrored), search across columns, virtual + remote, single /
+multiple (chips), forms, adaptive sheet. References: Kendo
+MultiColumnComboBox (single only — `multiple` is an OGE extra), Syncfusion
+MultiColumn ComboBox, DevExtreme DropDownBox + DataGrid recipe (no dedicated
+widget). Skipped: column resizing/sorting inside the popup (a picker, not a
+grid — use the grid in a DropDownBox-style popup), `acceptCustomValue`
+(a typed string has no column values).
 
 ### Phase S4 — `OgeAutocomplete` + virtualization — **shipped**
 

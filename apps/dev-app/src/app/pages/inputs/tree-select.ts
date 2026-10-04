@@ -15,6 +15,7 @@ import {
 } from '../react-inputs/tree-select';
 import {
   BASIC_SNIPPET,
+  CHIPS_SNIPPET,
   LAZY_SNIPPET,
   MULTIPLE_SNIPPET,
   NESTED_SNIPPET,
@@ -37,6 +38,7 @@ const SECTIONS = [
   'Basic usage',
   'Nested data & search',
   'Multiple selection',
+  'Selection as chips',
   'Lazy load on demand',
 ] as const;
 
@@ -194,6 +196,27 @@ const REMOTE_ROOTS: Folder[] = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['showSelectionAs', 'maxDisplayedTags']"
+        heading="Selection as chips"
+        description='<code>showSelectionAs="chips"</code> renders the selected nodes as removable chips inside the field — each ✕ is labelled with the node it removes, <kbd>Backspace</kbd> removes the last one — and <code>maxDisplayedTags</code> folds the rest into a <code>+N more</code> chip.'
+        [code]="chipsSnippet"
+      >
+        <oge-tree-select
+          label="Shared folders"
+          [items]="folders"
+          displayExpr="name"
+          [rootValue]="null"
+          selectionMode="multiple"
+          showCheckBoxes="normal"
+          [selectNodesRecursive]="false"
+          showSelectionAs="chips"
+          [maxDisplayedTags]="3"
+          [expandedKeys]="[1, 2, 6]"
+          [(value)]="sharedFolders"
+        />
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['loadChildren', 'hasItemsExpr']"
         heading="Lazy load on demand"
         description="Bind only the roots and let <code>loadChildren</code> fetch the rest on first expand; a placeholder row shows while the promise is pending. Fetched nodes join the index, so a cascading selection reaches them too."
@@ -222,6 +245,8 @@ export class InputsTreeSelectPage {
   protected readonly nestedSnippet = NESTED_SNIPPET;
   protected readonly multipleSnippet = MULTIPLE_SNIPPET;
   protected readonly lazySnippet = LAZY_SNIPPET;
+  protected readonly chipsSnippet = CHIPS_SNIPPET;
+  protected readonly sharedFolders = signal<unknown>([2, 5, 7]);
 
   protected readonly folders = FOLDERS;
   protected readonly fileTree = FILE_TREE;

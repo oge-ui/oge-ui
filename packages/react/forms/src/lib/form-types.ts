@@ -166,6 +166,20 @@ export interface OgeFormHandle<T extends object = Record<string, unknown>> {
   itemOption(field: string): OgeResolvedFormItem | undefined;
   /** Merges a partial object, or one field's value, into the bound data. */
   updateData(fieldOrData: string | Partial<T>, value?: unknown): void;
+  /**
+   * Applies server-side validation errors (field path → message or
+   * messages): each shows at once in its field and in the validation
+   * summary, and clears when that field is edited. Replaces every previous
+   * server error; `{}` clears them all.
+   */
+  setErrors(errors: OgeFormServerErrors): void;
+  /** Sets (or, with `null` / `[]`, clears) the server errors of one field. */
+  setFieldErrors(
+    field: string,
+    messages: string | readonly string[] | null,
+  ): void;
+  /** Clears the server errors of one field, or of every field. */
+  clearErrors(field?: string): void;
   /** One entry per invalid field, in layout order. */
   readonly errors: readonly OgeFormErrorEntry[];
   /** Whether every bound field currently validates. */
@@ -175,6 +189,14 @@ export interface OgeFormHandle<T extends object = Record<string, unknown>> {
   /** The bound model, as the form currently holds it. */
   readonly data: T;
 }
+
+/**
+ * Server-side errors handed to `setErrors()`: field path → message(s);
+ * `null` / an empty list clears that field.
+ */
+export type OgeFormServerErrors = Readonly<
+  Record<string, string | readonly string[] | null | undefined>
+>;
 
 /** Appearance props the form forwards to every editor it renders. */
 export interface OgeFormAppearance {

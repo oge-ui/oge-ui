@@ -76,6 +76,7 @@ export function useAnchoredPanel(
       },
       restoreFocus: () => latest.current.restoreFocus?.(),
       onClosed: (reason) => latest.current.onClosed?.(reason),
+      beforeClose: (reason) => latest.current.beforeClose?.(reason) ?? true,
       anchorRect: () => latest.current.anchorRect?.() ?? null,
       get transient() {
         return latest.current.transient;

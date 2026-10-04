@@ -16,12 +16,23 @@ import {
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
-import { adaptiveListViewportHeight } from '@oge-ui/behavior';
+import {
+  adaptiveListViewportHeight,
+  isNearScrollEnd,
+  ogeAllowDropDownClose,
+  ogeAllowDropDownOpen,
+  type OgeDropDownCloseReason,
+  type OgeDropDownClosingEvent,
+  type OgeDropDownOpeningEvent,
+  type OgeListDataSource,
+  type OgeListPageLoadedEvent,
+} from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
   ogeAdaptivePresentation,
   type OgeAdaptiveMode,
+  type OgePopupCloseReason,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeFieldChrome } from '@oge-ui/inputs/field';
@@ -32,6 +43,7 @@ import {
   OGE_SELECT_OPTION_HEIGHT,
   type OgeVirtualScrollOptions,
 } from '@oge-ui/inputs/select-list';
+import { RemoteListModel } from '@oge-ui/inputs/select-list';
 import { SelectListEngine } from '@oge-ui/inputs/select-list';
 import { SelectPanelController } from '@oge-ui/inputs/select-list';
 import type {
@@ -47,7 +59,10 @@ import type {
   OgeSelectBoxSearchMode,
   OgeSelectBoxSelectionChangedEvent,
   OgeSelectBoxValueExpr,
+  OgeSelectFieldTemplateContext,
+  OgeSelectGroupTemplateContext,
   OgeSelectItemTemplateContext,
+  OgeSelectPopupTemplateContext,
 } from './select-box-types';
 
 declare const ngDevMode: boolean | undefined;
@@ -88,6 +103,8 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
   host: {
     class: 'oge-input oge-select-box',
     '[class.oge-select-box-open]': 'opened()',
+    '[class.oge-select-field-templated]':
+      'fieldTemplate() !== undefined && fieldTemplateShown()',
   },
   template: `
     <oge-field-chrome>
@@ -125,6 +142,15 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
         (focus)="handleFocus($event)"
         (blur)="handleBlur($event)"
       />
+      @if (fieldTemplate(); as fieldTpl) {
+        @if (fieldTemplateShown()) {
+          <span class="oge-select-field-content" aria-hidden="true">
+            <ng-container
+              *ngTemplateOutlet="fieldTpl; context: fieldContext()"
+            />
+          </span>
+        }
+      }
       <ng-content select="[ogeInputSuffix]" ngProjectAs="[ogeInputSuffix]" />
     </oge-field-chrome>
     @if (opened()) {
@@ -134,6 +160,16 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
         [adaptiveTitle]="label() || msg().adaptiveTitle"
         [closeLabel]="msg().adaptiveClose"
       >
+        @if (headerTemplate(); as headerTpl) {
+          <div
+            class="oge-select-popup-header"
+            (focusout)="onPopupFocusOut($event)"
+          >
+            <ng-container
+              *ngTemplateOutlet="headerTpl; context: popupContext()"
+            />
+          </div>
+        }
         @if (adaptiveActive() && searchEnabled()) {
           <div ogePopupSheetHeader class="oge-popup-sheet-search">
             <input
@@ -179,13 +215,21 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
           [attr.aria-label]="
             labelMode() === 'hidden' && label() ? label() : null
           "
+          [attr.aria-busy]="busy() ? 'true' : null"
           (scroll)="onListScroll($event)"
         >
-          @if (loading() || itemsStatus() === 'loading') {
+          @if (
+            loading() ||
+            itemsStatus() === 'loading' ||
+            remote.loadingFirstPage()
+          ) {
             <div class="oge-select-status" role="presentation">
               {{ msg().dropDownLoading }}
             </div>
-          } @else if (itemsStatus() === 'error') {
+          } @else if (
+            itemsStatus() === 'error' ||
+            (remote.status() === 'error' && rows().length === 0)
+          ) {
             <div class="oge-select-status" role="presentation">
               {{ msg().dropDownLoadError }}
             </div>
@@ -222,7 +266,7 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
                       isItemDisabled(row.item) ? 'true' : null
                     "
                     [attr.aria-posinset]="row.index + 1"
-                    [attr.aria-setsize]="visibleItems().length"
+                    [attr.aria-setsize]="setSize()"
                     [attr.title]="
                       useItemTextAsTitle() ? displayOf(row.item) : null
                     "
@@ -263,7 +307,16 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
             @for (row of rows(); track $index) {
               @if (row.kind === 'group') {
                 <div class="oge-select-group" role="presentation">
-                  {{ row.label }}
+                  @if (groupTemplate(); as groupTpl) {
+                    <ng-container
+                      *ngTemplateOutlet="
+                        groupTpl;
+                        context: { $implicit: row.label, label: row.label }
+                      "
+                    />
+                  } @else {
+                    {{ row.label }}
+                  }
                 </div>
               } @else {
                 <!--
@@ -320,7 +373,29 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
               }
             }
           }
+          @if (remote.loadingMore()) {
+            <div
+              class="oge-select-status oge-select-loading-more"
+              role="presentation"
+            >
+              {{ msg().dropDownLoading }}
+            </div>
+          } @else if (remote.status() === 'error' && rows().length > 0) {
+            <div class="oge-select-status" role="presentation">
+              {{ msg().dropDownLoadError }}
+            </div>
+          }
         </div>
+        @if (footerTemplate(); as footerTpl) {
+          <div
+            class="oge-select-popup-footer"
+            (focusout)="onPopupFocusOut($event)"
+          >
+            <ng-container
+              *ngTemplateOutlet="footerTpl; context: popupContext()"
+            />
+          </div>
+        }
       </oge-popup>
     }
   `,
@@ -401,6 +476,37 @@ export class OgeSelectBox<TItem = unknown>
    * ignored while active.
    */
   readonly virtualScroll = input<boolean | OgeVirtualScrollOptions>(false);
+  /**
+   * Remote, paged data: any `@oge-ui/core` `DataSource` (or an object with
+   * the same `load()`, plus an optional `byKey()`). Replaces `items` while
+   * set — the list asks for `pageSize` rows at a time as the user scrolls,
+   * sends the typed text as `searchText` (debounced by `searchTimeout`,
+   * gated by `minSearchLength`), cancels superseded requests and caches the
+   * pages of each search.
+   */
+  readonly dataSource = input<OgeListDataSource<TItem> | undefined>(undefined);
+  /** Rows requested per `dataSource` page; `undefined` = config default (30). */
+  readonly pageSize = input<number | undefined>(undefined);
+  /** Custom group header rendering (`groupBy` lists). */
+  readonly groupTemplate = input<
+    TemplateRef<OgeSelectGroupTemplateContext> | undefined
+  >(undefined);
+  /**
+   * Custom rendering of the closed field's value (an icon, a colour swatch, a
+   * two-line label). The real input stays underneath for focus, typing and
+   * assistive technology; the template hides while the user types.
+   */
+  readonly fieldTemplate = input<
+    TemplateRef<OgeSelectFieldTemplateContext<TItem>> | undefined
+  >(undefined);
+  /** Content above the popup list (hints, a column legend, quick filters). */
+  readonly headerTemplate = input<
+    TemplateRef<OgeSelectPopupTemplateContext<TItem>> | undefined
+  >(undefined);
+  /** Content below the popup list (a "create new" action, a result count). */
+  readonly footerTemplate = input<
+    TemplateRef<OgeSelectPopupTemplateContext<TItem>> | undefined
+  >(undefined);
   /** Popup visibility — two-way. */
   readonly opened = model(false);
   /**
@@ -427,6 +533,12 @@ export class OgeSelectBox<TItem = unknown>
    * to map the text to an item — or `null` to reject it.
    */
   readonly customItemCreating = output<OgeSelectBoxCustomItemEvent<TItem>>();
+  /** Cancelable pre-open event — set `cancel` to keep the popup closed. */
+  readonly opening = output<OgeDropDownOpeningEvent>();
+  /** Cancelable pre-close event (with its `reason`) — set `cancel` to keep the popup open. */
+  readonly closing = output<OgeDropDownClosingEvent>();
+  /** A `dataSource` page landed (search text, offset, rows, total). */
+  readonly pageLoaded = output<OgeListPageLoadedEvent<TItem>>();
 
   private readonly native = viewChild<ElementRef<HTMLInputElement>>('native');
   private readonly chromeRef = viewChild(OgeFieldChrome, { read: ElementRef });
@@ -483,11 +595,24 @@ export class OgeSelectBox<TItem = unknown>
       .map((item, offset) => ({ item, index: start + offset }));
   });
 
+  /** Remote paged data — inert until `dataSource` is bound. */
+  protected readonly remote: RemoteListModel<TItem> =
+    new RemoteListModel<TItem>({
+      source: () => this.dataSource(),
+      pageSize: () => this.pageSize() ?? this.config.dataPageSize,
+      searchTimeout: () => this.searchTimeout() ?? this.config.searchTimeoutMs,
+      minSearchLength: () => this.minSearchLength(),
+      showDataBeforeSearch: () => this.showDataBeforeSearch(),
+      valueOf: (item: TItem): unknown => this.list.itemValue(item),
+      onPageLoaded: (event) => this.pageLoaded.emit(event),
+    });
+
   /** Shared dropdown-list model (filtering, active option, lazy items, ids). */
-  private readonly list = new SelectListEngine<TItem>({
+  private readonly list: SelectListEngine<TItem> = new SelectListEngine<TItem>({
     inputId: () => this.inputId,
     opened: () => this.opened(),
-    items: () => this.items(),
+    items: () => (this.remote.active ? this.remote.items() : this.items()),
+    serverFiltering: () => this.remote.active,
     displayExpr: () => this.displayExpr(),
     valueExpr: () => this.valueExpr(),
     disabledExpr: () => this.disabledExpr(),
@@ -519,8 +644,10 @@ export class OgeSelectBox<TItem = unknown>
     opened: this.opened,
     blocked: () => this.effectiveDisabled() || this.readonly(),
     restoreFocus: () => this.focus(),
+    beforeClose: (reason) => this.allowClose(panelCloseReason(reason)),
     onOpened: () => {
       this.list.ensureItemsLoaded();
+      this.remote.open();
       // type-ahead / Home / End may have activated an option before the
       // opened-sync effect ran — only fall back to the selection when
       // nothing is active
@@ -531,6 +658,7 @@ export class OgeSelectBox<TItem = unknown>
       this.list.activeIndex.set(-1);
       this.userNavigated = false;
       this.list.resetSearch();
+      this.remote.setSearch(null, true);
       this.virtualizer.reset();
       this.dropDownClosed.emit();
     },
@@ -553,6 +681,10 @@ export class OgeSelectBox<TItem = unknown>
       .resolvedItems()
       .find((item) => Object.is(this.list.itemValue(item), currentValue));
     if (found !== undefined) return found;
+    if (this.remote.active) {
+      const remembered = this.remote.lookup(currentValue);
+      if (remembered !== undefined) return remembered;
+    }
     const custom = this.customSelected();
     return custom !== null &&
       Object.is(this.list.itemValue(custom), currentValue)
@@ -586,6 +718,40 @@ export class OgeSelectBox<TItem = unknown>
   protected readonly rows = this.list.rows;
   protected readonly activeIndex = this.list.activeIndex;
   protected readonly activeDescendant = this.list.activeDescendant;
+
+  /** Anything is loading — the listbox reports `aria-busy`. */
+  protected readonly busy = computed(
+    () =>
+      this.loading() ||
+      this.itemsStatus() === 'loading' ||
+      this.remote.status() === 'loading',
+  );
+
+  /** `aria-setsize` of a windowed option: the server total, `-1` while unknown. */
+  protected readonly setSize = computed(() => {
+    if (!this.remote.active) return this.visibleItems().length;
+    return (
+      this.remote.totalCount() ??
+      (this.remote.hasMore() ? -1 : this.visibleItems().length)
+    );
+  });
+
+  /** The field template shows unless the user is typing a search. */
+  protected readonly fieldTemplateShown = computed(
+    () => this.list.searchText() === null,
+  );
+
+  protected readonly fieldContext = computed<
+    OgeSelectFieldTemplateContext<TItem>
+  >(() => ({ $implicit: this.selectedItem(), text: this.displayText() }));
+
+  protected readonly popupContext = computed<
+    OgeSelectPopupTemplateContext<TItem>
+  >(() => ({
+    $implicit: this.visibleItems(),
+    searchText: this.list.searchText() ?? '',
+    loading: this.busy(),
+  }));
 
   /** Arrow navigation happened since the last keystroke (custom-value gate). */
   private userNavigated = false;
@@ -630,11 +796,45 @@ export class OgeSelectBox<TItem = unknown>
         if (this.opened()) this.list.ensureItemsLoaded();
       });
     });
-    // Filtering while open re-anchors the active option.
+    // A new data source owns other rows: forget the old pages.
     effect(() => {
-      this.list.visibleItems();
+      this.dataSource();
       untracked(() => {
-        if (this.opened()) this.initActiveFromSelection();
+        this.remote.syncSource();
+        if (this.opened()) this.remote.open();
+      });
+    });
+    // A committed value no loaded page holds resolves through `byKey`.
+    effect(() => {
+      const value = this.value();
+      if (!this.remote.active) return;
+      untracked(() => this.remote.resolve(value));
+    });
+    // Paging follows the view: the rendered window or the keyboard's active
+    // option nearing the loaded end asks for the next page.
+    effect(() => {
+      if (!this.remote.active || !this.opened()) return;
+      const end = this.virtualActive() ? this.virtualizer.window().end : -1;
+      const active = this.list.activeIndex();
+      this.remote.items();
+      untracked(() => {
+        const target = Math.max(end, active);
+        if (target >= 0) this.remote.notifyVisibleEnd(target);
+        if (!this.virtualActive()) this.scheduleFillShortList();
+      });
+    });
+    // Filtering while open re-anchors the active option — except while a
+    // remote page appends rows below the one the user is on.
+    let previousCount = 0;
+    effect(() => {
+      const count = this.list.visibleItems().length;
+      untracked(() => {
+        const appended =
+          this.remote.active &&
+          count > previousCount &&
+          this.list.activeIndex() >= 0;
+        previousCount = count;
+        if (this.opened() && !appended) this.initActiveFromSelection();
       });
     });
     // selectionChanged fires on every resolved-item change, including
@@ -664,18 +864,30 @@ export class OgeSelectBox<TItem = unknown>
 
   // --- public API ------------------------------------------------------------
 
-  /** Opens the popup (same as `opened.set(true)`). */
+  /** Opens the popup unless a cancelable `opening` handler vetoes it. */
   open(): void {
-    if (this.effectiveDisabled() || this.readonly()) return;
+    if (this.effectiveDisabled() || this.readonly() || this.opened()) return;
+    if (!ogeAllowDropDownOpen((event) => this.opening.emit(event))) return;
     this.opened.set(true);
     // initialize the active option synchronously — a keydown arriving before
     // the opened-sync effect flushes must already see a valid activeIndex
     if (this.list.activeIndex() < 0) this.initActiveFromSelection();
   }
 
-  /** Closes the popup. */
-  close(): void {
+  /**
+   * Closes the popup unless a cancelable `closing` handler vetoes it;
+   * returns whether it closed.
+   */
+  close(reason: OgeDropDownCloseReason = 'api'): boolean {
+    if (!this.opened()) return true;
+    if (!this.allowClose(reason)) return false;
     this.opened.set(false);
+    return true;
+  }
+
+  /** Re-requests the current search from `dataSource`, dropping every cached page. */
+  reload(): void {
+    this.remote.reload();
   }
 
   toggle(): void {
@@ -700,6 +912,7 @@ export class OgeSelectBox<TItem = unknown>
     const text = (event.target as HTMLInputElement).value;
     this.userNavigated = false;
     this.list.setSearch(text);
+    this.remote.setSearch(text);
     this.inputChange.emit({ text, event });
     this.searchChanged.emit({ text });
     if (!this.opened()) this.open();
@@ -710,16 +923,41 @@ export class OgeSelectBox<TItem = unknown>
   }
 
   protected onListScroll(event: Event): void {
-    if (this.virtualActive()) this.virtualizer.onScroll(event);
+    if (this.virtualActive()) {
+      this.virtualizer.onScroll(event);
+      return;
+    }
+    if (this.remote.active && isNearScrollEnd(event.target as HTMLElement)) {
+      this.remote.loadMore();
+    }
+  }
+
+  /**
+   * A non-virtual page too short to scroll asks for the next one itself —
+   * measured after the rows render (a list with no scrollbar never scrolls).
+   */
+  private scheduleFillShortList(): void {
+    if (typeof requestAnimationFrame !== 'function') return;
+    requestAnimationFrame(() => {
+      const el = this.listEl()?.nativeElement;
+      if (!el || el.clientHeight === 0 || !this.opened()) return;
+      if (isNearScrollEnd(el)) this.remote.loadMore();
+    });
+  }
+
+  /** Runs the cancelable `closing` pre-event. */
+  private allowClose(reason: OgeDropDownCloseReason): boolean {
+    return ogeAllowDropDownClose((event) => this.closing.emit(event), reason);
   }
 
   protected selectItem(item: TItem, index: number, event: Event): void {
     if (this.isItemDisabled(item)) return;
     this.itemClick.emit({ item, index, event });
     this.customSelected.set(null);
+    if (this.remote.active) this.remote.remember(item);
     this.commitNow(this.list.itemValue(item), event);
     this.list.resetSearch();
-    this.close();
+    this.close('select');
     this.focus();
   }
 
@@ -766,7 +1004,10 @@ export class OgeSelectBox<TItem = unknown>
       case 'Escape': {
         if (open) {
           event.preventDefault();
-          this.close();
+          // handled here — the panel's document listener must not run a
+          // second close (and a second `closing` event) for the same key
+          event.stopPropagation();
+          this.close('escape');
           return;
         }
         // two-stage Escape: popup already closed → clear the search text
@@ -778,7 +1019,7 @@ export class OgeSelectBox<TItem = unknown>
       }
       case 'Tab': {
         // the adaptive sheet traps Tab; only the anchored popup closes
-        if (open && !this.adaptiveActive()) this.close();
+        if (open && !this.adaptiveActive()) this.close('tab');
         return;
       }
       case 'Home':
@@ -839,7 +1080,22 @@ export class OgeSelectBox<TItem = unknown>
    */
   protected override handleBlur(event: FocusEvent): void {
     if (this.opened() && this.adaptiveActive()) return;
+    // focus moving into the popup (a control in the header / footer
+    // template) is not the user leaving the editor
+    if (this.opened() && this.inPopup(event.relatedTarget)) return;
     super.handleBlur(event);
+  }
+
+  /** Focus leaving a header / footer control for somewhere outside the editor. */
+  protected onPopupFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget;
+    if (next === this.nativeElement() || this.inPopup(next)) return;
+    super.handleBlur(event);
+  }
+
+  private inPopup(target: EventTarget | null): boolean {
+    const popup = this.popupRef()?.nativeElement;
+    return !!popup && target instanceof Node && popup.contains(target);
   }
 
   // --- expression resolution (template-visible) ------------------------------
@@ -909,7 +1165,7 @@ export class OgeSelectBox<TItem = unknown>
     this.customSelected.set(item);
     this.commitNow(this.list.itemValue(item), event);
     this.list.resetSearch();
-    this.close();
+    this.close('select');
   }
 
   // --- active-option bookkeeping ---------------------------------------------
@@ -970,7 +1226,7 @@ export class OgeSelectBox<TItem = unknown>
       return;
     }
     this.list.resetSearch();
-    if (this.opened()) this.close();
+    if (this.opened()) this.close('blur');
   }
 
   protected nativeElement(): HTMLInputElement | null {
@@ -984,4 +1240,11 @@ export class OgeSelectBox<TItem = unknown>
   protected valueIsEmpty(value: unknown): boolean {
     return value == null;
   }
+}
+
+/** Maps a panel-initiated close onto the editor's `closing` reasons. */
+function panelCloseReason(reason: OgePopupCloseReason): OgeDropDownCloseReason {
+  return reason === 'outside' || reason === 'escape' || reason === 'tab'
+    ? reason
+    : 'api';
 }

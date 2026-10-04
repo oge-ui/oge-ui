@@ -135,4 +135,35 @@ const loadChildren = (parent: Folder): Promise<Folder[]> =>
 />`,
     }),
   },
+  {
+    title: 'Selection as chips',
+    description:
+      'showSelectionAs="chips" renders the selected nodes as removable chips inside the field (Backspace removes the last one); maxDisplayedTags folds the rest into a "+N more" chip.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeTreeSelect'] },
+      before: `const folders = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 5, parentId: 1, name: 'Contracts' },
+  { id: 6, parentId: null, name: 'Photos' },
+  { id: 7, parentId: 6, name: 'Holiday' },
+];`,
+      name: 'TreeSelectChipsDemo',
+      body: `const [shared, setShared] = useState<unknown>([2, 5, 7]);`,
+      jsx: `<OgeTreeSelect
+  label="Shared folders"
+  items={folders}
+  displayExpr="name"
+  rootValue={null}
+  selectionMode="multiple"
+  showCheckBoxes="normal"
+  selectNodesRecursive={false}
+  showSelectionAs="chips"
+  maxDisplayedTags={3}
+  value={shared}
+  onValueChange={setShared}
+/>`,
+    }),
+  },
 ];

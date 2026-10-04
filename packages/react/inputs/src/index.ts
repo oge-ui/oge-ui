@@ -54,6 +54,7 @@ export {
   type OgeSelectBoxSelectionChangedEvent,
   type OgeSelectBoxItemClickEvent,
   type OgeSelectBoxCustomItemEvent,
+  type OgeSelectPopupRenderContext,
 } from './lib/select-box';
 export {
   OgeTagBox,
@@ -61,7 +62,18 @@ export {
   type OgeTagBoxHandle,
   type OgeTagBoxSelectionChangedEvent,
   type OgeTagBoxItemClickEvent,
+  type OgeTagBoxSelectAllEvent,
 } from './lib/tag-box';
+export {
+  OgeMultiColumnComboBox,
+  type OgeMultiColumnComboBoxProps,
+  type OgeMultiColumnComboBoxHandle,
+  type OgeComboBoxColumn,
+  type OgeComboBoxCellContext,
+  type OgeMultiColumnComboBoxSelectionMode,
+  type OgeMultiColumnComboBoxSelectionChangedEvent,
+  type OgeMultiColumnComboBoxRowClickEvent,
+} from './lib/multi-column-combo-box';
 export {
   OgeAutocomplete,
   type OgeAutocompleteProps,
@@ -177,6 +189,7 @@ export {
   type OgeTreeSelectHandle,
   type OgeTreeSelectSelectionMode,
   type OgeTreeSelectDisplayMode,
+  type OgeTreeSelectShowSelectionAs,
   type OgeTreeSelectSelectionChangedEvent,
 } from './lib/tree-select';
 export {
@@ -196,6 +209,13 @@ export {
   OGE_DEFAULT_INPUTS_MESSAGES,
 } from '@oge-ui/behavior';
 export type {
+  OgeListDataSource,
+  OgeListDataStatus,
+  OgeListPageLoadedEvent,
+  OgeDropDownCloseReason,
+  OgeDropDownOpeningEvent,
+  OgeDropDownClosingEvent,
+  OgeSelectAllState,
   OgeInputsConfig,
   OgeInputsConfigInput,
   OgeInputsMessages,

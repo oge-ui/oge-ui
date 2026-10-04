@@ -96,7 +96,7 @@ describe('<OgeTagBox>', () => {
       );
     }
     render(<Multi />);
-    expect(screen.getByText('+2')).toHaveClass('oge-tag-more');
+    expect(screen.getByText('+2 more')).toHaveClass('oge-tag-more');
     expect(screen.queryByText('Angular')).toBeNull();
   });
 

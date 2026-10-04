@@ -36,6 +36,13 @@ export interface OgeAnchoredPanelCoreOptions {
   /** Notified after every close with its reason. */
   onClosed?: (reason: OgePopupCloseReason) => void;
   /**
+   * Consulted before the machine closes **itself** (outside pointer-down,
+   * Escape); return `false` to keep the panel open. Owner-initiated `close()`
+   * calls are not routed through it — the owner runs its own veto first
+   * (the dropdown editors' cancelable `closing` event).
+   */
+  beforeClose?: (reason: OgePopupCloseReason) => boolean;
+  /**
    * Virtual anchor rectangle (viewport-relative) used for positioning when it
    * returns a rect — e.g. the pointer location of a context menu. Falls back
    * to the `anchor` element's rect when `undefined`/`null`. The `anchor`
@@ -317,7 +324,7 @@ export class OgeAnchoredPanelCore {
         : null;
     const inside = (el: HTMLElement | null): boolean =>
       !!el && (path ? path.includes(el) : el.contains(event.target as Node));
-    if (!inside(anchorEl) && !inside(panelEl)) this.close('outside');
+    if (!inside(anchorEl) && !inside(panelEl)) this.selfClose('outside');
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
@@ -325,8 +332,14 @@ export class OgeAnchoredPanelCore {
     // With stacked overlays (popup inside popup/modal) only the topmost closes.
     if (!isTopOverlay(this.stackHandle)) return;
     event.stopPropagation();
-    this.close('escape');
+    this.selfClose('escape');
   };
+
+  /** A close the machine initiates — the owner's `beforeClose` may veto it. */
+  private selfClose(reason: OgePopupCloseReason): void {
+    if (this.options.beforeClose?.(reason) === false) return;
+    this.close(reason);
+  }
 
   private readonly onReposition = (): void => this.updatePosition();
 

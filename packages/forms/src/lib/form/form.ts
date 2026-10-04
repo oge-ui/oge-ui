@@ -55,6 +55,7 @@ import {
 } from './templates/form-templates';
 import {
   emptyValueForDataType,
+  isFormItemVisible,
   formColumnsCount,
   formColumnsCss,
   orderByVisibleIndex,
@@ -81,6 +82,7 @@ import type {
   OgeFormLabelLocation,
   OgeFormMode,
   OgeFormScreenSize,
+  OgeFormServerErrors,
   OgeFormSubmittedEvent,
   OgeFormSubmittingEvent,
   OgeFormValidatedEvent,
@@ -576,10 +578,25 @@ export class OgeForm<T extends object = Record<string, unknown>> {
     const rules: readonly RuleSource[] = this.itemSources();
     return untracked(() =>
       runInInjectionContext(this.injector, () =>
-        form(this.dataModel, schemaFromRules(rules)),
+        form(
+          this.dataModel,
+          schemaFromRules(
+            rules,
+            (field) => this.serverErrors().get(field) ?? [],
+          ),
+        ),
       ),
     ) as OgeFormFieldTree;
   });
+
+  /**
+   * Server-side errors from `setErrors()` / `setFieldErrors()`, per field.
+   * They show at once (in the field and the summary) and clear as soon as
+   * that field's value changes.
+   */
+  private readonly serverErrors = signal<
+    ReadonlyMap<string, readonly string[]>
+  >(new Map());
 
   /** The tree the form actually binds — the caller's, or the internal one. */
   private readonly activeTree = computed<OgeFormFieldTree | undefined>(
@@ -593,14 +610,17 @@ export class OgeForm<T extends object = Record<string, unknown>> {
         readOnly: this.readOnly(),
         disabled: this.disabled(),
       };
-      return this.layout().entries.map((entry) =>
-        resolveItem(
-          entry.source,
-          entry.id,
-          readPath(data, entry.source.field),
-          inherited,
-        ),
-      );
+      return this.layout()
+        .entries.filter((entry) => isFormItemVisible(entry.source, data))
+        .map((entry) =>
+          resolveItem(
+            entry.source,
+            entry.id,
+            readPath(data, entry.source.field),
+            inherited,
+            data,
+          ),
+        );
     },
   );
 
@@ -952,6 +972,94 @@ export class OgeForm<T extends object = Record<string, unknown>> {
     return this.resolvedItems().find((item) => item.field === field);
   }
 
+  /**
+   * Applies server-side validation errors (field path → message or
+   * messages): each field shows its first message at once — in the field and
+   * in the validation summary — and the error clears as soon as that field is
+   * edited. Replaces every previous server error; `{}` clears them all.
+   *
+   * `formData` mode feeds them through the internal schema; `formGroup` mode
+   * sets them on the controls (`{ server: message }`); `fieldTree` mode hands
+   * them to Signal Forms as submission errors, which Angular clears on edit.
+   */
+  setErrors(errors: OgeFormServerErrors): void {
+    const next = new Map<string, readonly string[]>();
+    for (const [field, value] of Object.entries(errors)) {
+      const messages = normalizeMessages(value);
+      if (messages.length > 0) next.set(field, messages);
+    }
+    this.applyServerErrors(next);
+  }
+
+  /** Sets (or, with `null` / `[]`, clears) the server errors of one field. */
+  setFieldErrors(
+    field: string,
+    messages: string | readonly string[] | null,
+  ): void {
+    const next = new Map(this.serverErrors());
+    const list = normalizeMessages(messages);
+    if (list.length > 0) next.set(field, list);
+    else next.delete(field);
+    this.applyServerErrors(next);
+  }
+
+  /** Clears the server errors of one field, or of every field. */
+  clearErrors(field?: string): void {
+    if (field === undefined) this.applyServerErrors(new Map());
+    else this.setFieldErrors(field, null);
+  }
+
+  private applyServerErrors(
+    next: ReadonlyMap<string, readonly string[]>,
+  ): void {
+    const previous = this.serverErrors();
+    this.serverErrors.set(next);
+    const group = this.formGroup();
+    if (group) {
+      for (const field of new Set([...previous.keys(), ...next.keys()])) {
+        const control = group.get(field);
+        if (!control) continue;
+        const { server: _old, ...rest } = control.errors ?? {};
+        void _old;
+        const message = next.get(field)?.[0];
+        const merged = message ? { ...rest, server: message } : rest;
+        control.setErrors(Object.keys(merged).length > 0 ? merged : null);
+        if (message) control.markAsTouched();
+      }
+      this.controlRevision.update((value) => value + 1);
+      return;
+    }
+    const tree = this.activeTree();
+    if (!tree) return;
+    for (const field of next.keys()) {
+      const item = this.resolvedItems().find((entry) => entry.field === field);
+      const node = item ? this.fieldNodeFor(item) : undefined;
+      node?.().markAsTouched();
+    }
+    if (this.mode() === 'fieldTree' && next.size > 0) {
+      // the caller owns this schema — Signal Forms' own server-error channel
+      // (submission errors, cleared by Angular on the next edit) carries them
+      const entries = [...next].flatMap(([field, messages]) => {
+        const item = this.resolvedItems().find((e) => e.field === field);
+        const node = item ? this.fieldNodeFor(item) : undefined;
+        return node
+          ? messages.map((message) => ({
+              fieldTree: node,
+              kind: 'server',
+              message,
+            }))
+          : [];
+      });
+      void submitField(
+        tree as unknown as FieldTree<T>,
+        {
+          action: async () => entries,
+          ignoreValidators: 'all',
+        } as never,
+      );
+    }
+  }
+
   /** Merges a partial object, or one field's value, into the bound data. */
   updateData(fieldOrData: string | Partial<T>, value?: unknown): void {
     const patch: Record<string, unknown> =
@@ -1080,6 +1188,8 @@ export class OgeForm<T extends object = Record<string, unknown>> {
    * rendered field asks for the gated one.
    */
   private messageFor(item: OgeResolvedFormItem, gated: boolean): string | null {
+    const server = this.serverErrors().get(item.field);
+    if (server && server.length > 0) return server[0];
     const messages = this.inputsConfig.messages;
     const group = this.formGroup();
     if (group) {
@@ -1131,8 +1241,11 @@ export class OgeForm<T extends object = Record<string, unknown>> {
       editorOptions: child.editorOptions(),
       colSpan: child.colSpan(),
       visible: child.visible(),
+      visibleWhen: child.visibleWhen(),
       visibleIndex: child.visibleIndex(),
       isRequired: child.isRequired(),
+      requiredWhen: child.requiredWhen(),
+      disabledWhen: child.disabledWhen(),
       validationRules: child.validationRules(),
       readOnly: child.readOnly(),
       disabled: child.disabled(),
@@ -1206,6 +1319,13 @@ export class OgeForm<T extends object = Record<string, unknown>> {
       const before = readPath(previous, item.field);
       const after = readPath(next, item.field);
       if (Object.is(before, after)) continue;
+      // a server error describes the value that was submitted — editing the
+      // field retires it
+      if (untracked(() => this.serverErrors().has(item.field))) {
+        const cleared = new Map(untracked(() => this.serverErrors()));
+        cleared.delete(item.field);
+        this.serverErrors.set(cleared);
+      }
       this.fieldChanged.emit({
         field: item.field,
         value: after,
@@ -1213,4 +1333,12 @@ export class OgeForm<T extends object = Record<string, unknown>> {
       });
     }
   }
+}
+
+function normalizeMessages(
+  value: string | readonly string[] | null | undefined,
+): readonly string[] {
+  if (value == null) return [];
+  if (typeof value === 'string') return value.length > 0 ? [value] : [];
+  return value.filter((message) => message.length > 0);
 }

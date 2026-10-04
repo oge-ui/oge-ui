@@ -4,10 +4,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { CustomDataSource } from '@oge-ui/core';
 import {
   OgeDateBox,
   OgeSelectBox,
   OgeTagBox,
+  type OgeDropDownClosingEvent,
   type OgeSelectBoxCustomItemEvent,
 } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
@@ -25,8 +27,12 @@ import {
   GROUP_SNIPPET,
   LAZY_SNIPPET,
   MAPPING_SNIPPET,
+  REMOTE_SNIPPET,
   STATES_SNIPPET,
+  TAGBOX_FEATURES_SNIPPET,
+  TAGBOX_REMOTE_SNIPPET,
   TAGBOX_SNIPPET,
+  TEMPLATES_SNIPPET,
 } from './select-box-snippets';
 
 const SECTIONS = [
@@ -34,7 +40,11 @@ const SECTIONS = [
   'Data mapping & search',
   'Grouping & custom values',
   'Lazy data',
+  'Remote data',
+  'Templates & cancelable events',
   'Tag Box — multi-select',
+  'Tag Box — select all, custom tags & limits',
+  'Tag Box — remote data',
   'Item states & templates',
   'Field chrome',
   'Mobile / adaptive',
@@ -46,6 +56,22 @@ interface DemoUser {
   name: string;
   role: string;
 }
+
+interface DemoCustomer {
+  id: number;
+  name: string;
+}
+
+/** 5,000 rows "on the server" — the editor only ever asks for one page. */
+const CUSTOMERS: DemoCustomer[] = Array.from({ length: 5000 }, (_, i) => ({
+  id: i + 1,
+  name: `Customer ${String(i + 1).padStart(4, '0')}`,
+}));
+
+const DEMO_CITIES: DemoCustomer[] = Array.from({ length: 2000 }, (_, i) => ({
+  id: i + 1,
+  name: `City ${i + 1}`,
+}));
 
 interface DemoPlan {
   id: string;
@@ -185,6 +211,90 @@ interface DemoPlan {
       </app-demo-card>
 
       <app-demo-card
+        heading="Remote data"
+        description="Bind any <code>&#64;oge-ui/core</code> <code>DataSource</code> to <code>[dataSource]</code>: the list asks for <code>pageSize</code> rows at a time as it scrolls (the virtual window — or the keyboard — nearing the loaded end), sends the typed text as <code>searchText</code> after <code>searchTimeout</code>, aborts a superseded request through its <code>AbortSignal</code> and caches each search&#39;s pages. <code>byKey()</code> resolves a value no loaded page holds — here the initial customer #1234 of 5,000."
+        [chips]="['dataSource', 'pageSize', 'byKey', 'AbortSignal']"
+        [code]="remoteSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6" data-demo="remote">
+          <oge-select-box
+            label="Customer"
+            displayExpr="name"
+            valueExpr="id"
+            [dataSource]="customers"
+            [pageSize]="40"
+            [searchEnabled]="true"
+            [searchTimeout]="300"
+            [virtualScroll]="true"
+            [showClearButton]="true"
+            [(value)]="customerId"
+          />
+          <div class="pt-2 text-sm text-gray-500 dark:text-gray-400">
+            value: <code>{{ customerId() ?? 'null' }}</code> · requests:
+            <code>{{ requests() }}</code>
+          </div>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Templates & cancelable events"
+        description="<code>groupTemplate</code>, <code>fieldTemplate</code> (paints the closed field over the real input, which keeps its text for assistive technology), <code>headerTemplate</code> and <code>footerTemplate</code>. <code>(opening)</code> / <code>(closing)</code> are cancelable pre-events — set <code>event.cancel = true</code>; <code>closing</code> carries its <code>reason</code>."
+        [chips]="['groupTemplate', 'fieldTemplate', 'closing', 'cancel']"
+        [code]="templatesSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6" data-demo="templates">
+          <oge-select-box
+            label="Status"
+            [items]="statuses"
+            displayExpr="name"
+            valueExpr="id"
+            groupBy="phase"
+            [groupTemplate]="statusGroup"
+            [fieldTemplate]="statusField"
+            [itemTemplate]="statusOption"
+            [headerTemplate]="statusHeader"
+            [footerTemplate]="statusFooter"
+            (closing)="onStatusClosing($event)"
+            [(value)]="statusId"
+          />
+          <ng-template #statusGroup let-label>
+            <span>Phase · {{ label }}</span>
+          </ng-template>
+          <ng-template #statusField let-item let-text="text">
+            @if (item) {
+              <span
+                class="inline-block size-2.5 rounded-full"
+                [style.background]="item.color"
+              ></span>
+            }
+            {{ text }}
+          </ng-template>
+          <ng-template #statusOption let-item>
+            <span
+              class="inline-block size-2.5 rounded-full"
+              [style.background]="item.color"
+            ></span>
+            <span class="oge-select-option-text">{{ item.name }}</span>
+          </ng-template>
+          <ng-template #statusHeader let-items
+            >{{ items.length }} statuses</ng-template
+          >
+          <ng-template #statusFooter>
+            <label class="flex items-center gap-2">
+              <input
+                type="checkbox"
+                [checked]="pinned()"
+                (change)="pinned.set(!pinned())"
+              />
+              Keep open (cancels closing)
+            </label>
+          </ng-template>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         heading="Tag Box — multi-select"
         description="<code>&amp;lt;oge-tag-box&amp;gt;</code> is the multi-select sibling: the value is an <em>array</em> of <code>valueExpr</code> results, picks render as removable chips, the popup stays open while selecting (checkbox listbox, <code>aria-multiselectable</code>) and <kbd>Backspace</kbd> removes the last chip. <code>imageExpr</code> puts avatars on chips and options; <code>maxDisplayedTags</code> collapses overflow into a <code>+N</code> chip."
         [chips]="[
@@ -214,6 +324,59 @@ interface DemoPlan {
             [(value)]="teamIds"
           />
         </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Tag Box — select all, custom tags & limits"
+        description="The tag box speaks the select box&#39;s whole vocabulary — <code>groupBy</code>, <code>itemTemplate</code>, lazy <code>items</code>, <code>acceptCustomValue</code> + <code>customItemCreating</code> — and adds a tri-state <code>showSelectAll</code> row (<kbd>&uarr;</kbd> from the first option reaches it), <code>maxSelectedItems</code> with a status message, <code>tagTemplate</code> chips and a <code>+N more</code> overflow chip."
+        [chips]="[
+          'showSelectAll',
+          'maxSelectedItems',
+          'acceptCustomValue',
+          'tagTemplate',
+        ]"
+        [code]="tagBoxFeaturesSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6" data-demo="tag-features">
+          <oge-tag-box
+            label="Skills"
+            [items]="skillItems()"
+            displayExpr="name"
+            valueExpr="id"
+            groupBy="area"
+            [searchEnabled]="true"
+            [showSelectAll]="true"
+            [acceptCustomValue]="true"
+            [maxSelectedItems]="5"
+            [maxDisplayedTags]="3"
+            [tagTemplate]="skillTag"
+            hint="Type a new skill and press Enter"
+            (customItemCreating)="createSkill($event)"
+            [(value)]="skillIds"
+          />
+          <ng-template #skillTag let-text="text"
+            ><span class="oge-tag-text">#{{ text }}</span></ng-template
+          >
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Tag Box — remote data"
+        description="The same <code>[dataSource]</code> contract on the tag box: 2,000 cities paged 30 at a time, server-side search, and chips that stay resolved while the list shows another search."
+        [chips]="['dataSource', 'virtualScroll']"
+        [code]="tagBoxRemoteSnippet"
+        language="ts"
+      >
+        <oge-tag-box
+          label="Delivery cities"
+          displayExpr="name"
+          valueExpr="id"
+          [dataSource]="cityPages"
+          [searchEnabled]="true"
+          [virtualScroll]="true"
+          [(value)]="cityIds"
+        />
       </app-demo-card>
 
       <app-demo-card
@@ -332,6 +495,83 @@ export class InputsSelectBoxPage {
   protected readonly statesSnippet = STATES_SNIPPET;
   protected readonly chromeSnippet = CHROME_SNIPPET;
   protected readonly adaptiveSnippet = ADAPTIVE_SNIPPET;
+  protected readonly remoteSnippet = REMOTE_SNIPPET;
+  protected readonly templatesSnippet = TEMPLATES_SNIPPET;
+  protected readonly tagBoxFeaturesSnippet = TAGBOX_FEATURES_SNIPPET;
+  protected readonly tagBoxRemoteSnippet = TAGBOX_REMOTE_SNIPPET;
+
+  // --- remote data ---------------------------------------------------------
+  protected readonly customerId = signal<unknown>(1234);
+  protected readonly requests = signal(0);
+  protected readonly customers = Object.assign(
+    new CustomDataSource<DemoCustomer>({
+      key: 'id',
+      load: async ({ skip = 0, take = 40, searchText }) => {
+        this.requests.update((n) => n + 1);
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        const term = (searchText ?? '').toLowerCase();
+        const rows = CUSTOMERS.filter((c) =>
+          c.name.toLowerCase().includes(term),
+        );
+        return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+      },
+    }),
+    {
+      byKey: async (key: unknown) =>
+        CUSTOMERS.find((c) => c.id === key) ?? null,
+    },
+  );
+
+  // --- templates & cancelable events ---------------------------------------
+  protected readonly statuses = [
+    { id: 'todo', name: 'To do', phase: 'Open', color: '#94a3b8' },
+    { id: 'doing', name: 'In progress', phase: 'Open', color: '#6366f1' },
+    { id: 'review', name: 'In review', phase: 'Open', color: '#f59e0b' },
+    { id: 'done', name: 'Done', phase: 'Closed', color: '#10b981' },
+  ];
+  protected readonly statusId = signal<unknown>('doing');
+  protected readonly pinned = signal(false);
+
+  protected onStatusClosing(event: OgeDropDownClosingEvent): void {
+    if (this.pinned() && event.reason !== 'select') event.cancel = true;
+  }
+
+  // --- tag box features ----------------------------------------------------
+  protected readonly skillItems = signal([
+    { id: 1, name: 'Angular', area: 'Frontend' },
+    { id: 2, name: 'Signals', area: 'Frontend' },
+    { id: 3, name: 'SCSS', area: 'Frontend' },
+    { id: 4, name: 'Nx', area: 'Tooling' },
+    { id: 5, name: 'Vitest', area: 'Tooling' },
+    { id: 6, name: 'Playwright', area: 'Tooling' },
+  ]);
+  protected readonly skillIds = signal<readonly unknown[]>([1, 4]);
+  private nextSkillId = 100;
+
+  protected createSkill(
+    event: OgeSelectBoxCustomItemEvent<{
+      id: number;
+      name: string;
+      area: string;
+    }>,
+  ): void {
+    const item = { id: this.nextSkillId++, name: event.text, area: 'Custom' };
+    this.skillItems.update((all) => [...all, item]);
+    event.customItem = item;
+  }
+
+  protected readonly cityIds = signal<readonly unknown[]>([]);
+  protected readonly cityPages = new CustomDataSource<DemoCustomer>({
+    key: 'id',
+    load: async ({ skip = 0, take = 30, searchText }) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const term = (searchText ?? '').toLowerCase();
+      const rows = DEMO_CITIES.filter((c) =>
+        c.name.toLowerCase().includes(term),
+      );
+      return { data: rows.slice(skip, skip + take), totalCount: rows.length };
+    },
+  });
   protected readonly adaptiveCity = signal<unknown>(null);
   protected readonly adaptiveSkills = signal<readonly unknown[]>([]);
   protected readonly adaptiveDue = signal<Date | null>(null);

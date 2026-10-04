@@ -11,24 +11,18 @@
  * there is no semantic to share beyond "the returned message wins".
  */
 import type { OgeFieldError } from '../input/input-types';
-import type { OgeValidationContext, OgeValidationRule } from './form-types';
+import { isEmptyFormValue, readPath } from './form-values';
+
+export { isEmptyFormValue } from './form-values';
+import type {
+  OgeComparisonType,
+  OgeFormCondition,
+  OgeValidationContext,
+  OgeValidationRule,
+} from './form-types';
 
 /** An error carrying the bound the message pattern interpolates. */
 type RuleError = OgeFieldError & Record<string, unknown>;
-
-/**
- * Whether a value counts as "not filled in". Only `required` looks at this —
- * every other rule passes an empty field, so a form does not shout about
- * format before anything has been typed.
- */
-export function isEmptyFormValue(value: unknown): boolean {
-  if (value === null || value === undefined) return true;
-  if (typeof value === 'string') return value.trim().length === 0;
-  if (Array.isArray(value)) {
-    return value.length === 0 || value.every((entry) => entry == null);
-  }
-  return false;
-}
 
 // Deliberately the same shape the inputs package validates an email with.
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,6 +39,17 @@ function evaluateRule(
   }
   // an async rule is scheduled by the render layer, never evaluated here
   if (rule.type === 'async') return null;
+
+  if (rule.type === 'compare') {
+    if (rule.ignoreEmptyValue === true && isEmptyFormValue(value)) return null;
+    const target =
+      typeof rule.comparisonTarget === 'function'
+        ? rule.comparisonTarget(data)
+        : readPath(data, rule.comparisonTarget);
+    return compareValues(value, target, rule.comparisonType ?? '===')
+      ? null
+      : { kind: 'compare', message: rule.message };
+  }
 
   if (rule.type === 'required') {
     return isEmptyFormValue(value)
@@ -115,6 +120,64 @@ function evaluateRule(
     default:
       return null;
   }
+}
+
+/** `Date`s compare by time, empty strings as "no value" — the rest as JavaScript does. */
+function comparable(value: unknown): unknown {
+  if (value instanceof Date) return value.getTime();
+  if (value === undefined || value === '') return null;
+  return value;
+}
+
+function compareValues(
+  value: unknown,
+  target: unknown,
+  type: OgeComparisonType,
+): boolean {
+  const a = comparable(value);
+  const b = comparable(target);
+  switch (type) {
+    case '!==':
+      return !Object.is(a, b);
+    case '==':
+      // deliberate loose equality — the rule exists to offer it
+      // eslint-disable-next-line eqeqeq
+      return a == b;
+    case '!=':
+      // eslint-disable-next-line eqeqeq
+      return a != b;
+    case '<':
+      return a !== null && b !== null && (a as number) < (b as number);
+    case '<=':
+      return a !== null && b !== null && (a as number) <= (b as number);
+    case '>':
+      return a !== null && b !== null && (a as number) > (b as number);
+    case '>=':
+      return a !== null && b !== null && (a as number) >= (b as number);
+    default:
+      return Object.is(a, b);
+  }
+}
+
+/**
+ * Evaluates a `visibleWhen` / `disabledWhen` / `requiredWhen` condition
+ * against the whole model. `undefined` (no condition) reads `fallback`.
+ */
+export function evaluateOgeFormCondition(
+  condition: OgeFormCondition | undefined,
+  data: unknown,
+  fallback = true,
+): boolean {
+  if (condition === undefined) return fallback;
+  const model = (data ?? {}) as Record<string, unknown>;
+  if (typeof condition === 'function') return condition(model) === true;
+  const value = readPath(model, condition.field);
+  if ('equals' in condition) return Object.is(value, condition.equals);
+  if ('notEquals' in condition) return !Object.is(value, condition.notEquals);
+  if (condition.in !== undefined) {
+    return condition.in.some((candidate) => Object.is(candidate, value));
+  }
+  return !isEmptyFormValue(value) && value !== false && value !== 0;
 }
 
 /**

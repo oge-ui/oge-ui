@@ -58,7 +58,17 @@ export type {
   OgeResolvedFormItem,
   OgeValidationContext,
   OgeValidationRule,
+  OgeFormCondition,
+  OgeComparisonType,
 } from '@oge-ui/behavior';
+
+/**
+ * Server-side errors handed to `setErrors()`: field path → message(s);
+ * `null` / an empty list clears that field.
+ */
+export type OgeFormServerErrors = Readonly<
+  Record<string, string | readonly string[] | null | undefined>
+>;
 
 /** Which binding a form resolved to — derived, never configured. */
 export type OgeFormMode = 'fieldTree' | 'formGroup' | 'formData';

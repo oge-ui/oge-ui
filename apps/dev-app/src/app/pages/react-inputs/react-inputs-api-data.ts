@@ -1028,6 +1028,37 @@ export const OGE_REACT_SELECT_BOX_API: ApiSections = {
             'Windowed rendering for large lists (<code>{ itemHeight, overscan }</code>). Rows get a fixed size-matched height; <code>groupBy</code> and <code>wrapItemText</code> are ignored while active.',
         },
         {
+          name: 'dataSource',
+          type: 'OgeListDataSource&lt;TItem&gt;',
+          description:
+            'Remote, paged data: any <code>&#64;oge-ui/core</code> <code>DataSource</code> (<code>CustomDataSource</code>, <code>ArrayDataSource</code>, <code>CursorDataSource</code>, <code>ODataDataSource</code>) or an object with the same <code>load()</code>, plus an optional <code>byKey()</code>. Replaces <code>items</code> while set: pages of <code>pageSize</code> rows load as the list scrolls (and as the keyboard reaches the end), the typed text goes to the server as <code>searchText</code> (debounced by <code>searchTimeout</code>, gated by <code>minSearchLength</code>), superseded requests are aborted through the <code>AbortSignal</code>, pages are cached per search, and a value no loaded page holds resolves through <code>byKey</code> — the same <code>OgeRemoteListCore</code> the Angular editors run.',
+        },
+        {
+          name: 'pageSize',
+          type: 'number',
+          default: 'provider: 30',
+          description:
+            "Rows requested per <code>dataSource</code> page (<code>take</code>); unset = the provider's <code>dataPageSize</code>.",
+        },
+        {
+          name: 'renderGroup',
+          type: '(label: string) =&gt; ReactNode',
+          description:
+            'Custom group header rendering for <code>groupBy</code> lists — the render prop replacing Angular’s <code>groupTemplate</code>.',
+        },
+        {
+          name: 'renderField',
+          type: '(item: TItem | null, context: { text }) =&gt; ReactNode',
+          description:
+            'Custom rendering of the closed field’s value; the real input stays underneath for focus, typing and assistive technology, and the content hides while the user types (Angular’s <code>fieldTemplate</code>).',
+        },
+        {
+          name: 'renderHeader / renderFooter',
+          type: '(context: OgeSelectPopupRenderContext&lt;TItem&gt;) =&gt; ReactNode',
+          description:
+            'Content above / below the popup list; context <code>{ items, searchText, loading }</code> (Angular’s <code>headerTemplate</code> / <code>footerTemplate</code>).',
+        },
+        {
           name: 'opened / defaultOpened',
           type: 'boolean',
           default: 'false',
@@ -1046,17 +1077,25 @@ export const OGE_REACT_SELECT_BOX_API: ApiSections = {
         {
           name: 'open()',
           type: '() =&gt; void',
-          description: 'Opens the popup (no-op while disabled/readonly).',
+          description:
+            'Opens the popup (no-op while disabled/readonly, or when <code>onOpening</code> cancels).',
         },
         {
           name: 'close()',
-          type: '() =&gt; void',
-          description: 'Closes the popup.',
+          type: '() =&gt; boolean',
+          description:
+            'Closes the popup unless <code>onClosing</code> cancels; returns whether it closed.',
         },
         {
           name: 'toggle()',
           type: '() =&gt; void',
           description: 'Toggles the popup.',
+        },
+        {
+          name: 'reload()',
+          type: '() =&gt; void',
+          description:
+            'Drops every cached <code>dataSource</code> page and re-requests the current search.',
         },
       ],
     },
@@ -1101,6 +1140,24 @@ export const OGE_REACT_SELECT_BOX_API: ApiSections = {
           description:
             'Mutable payload (as in the references): assign <code>customItem</code> — an item, a promise of one, or <code>null</code> to reject the text. Left unset, the raw text becomes the item.',
         },
+        {
+          name: 'onOpening',
+          type: '(event: OgeDropDownOpeningEvent) =&gt; void',
+          description:
+            'Cancelable pre-open callback — set <code>event.cancel = true</code> to keep the popup closed.',
+        },
+        {
+          name: 'onClosing',
+          type: '(event: OgeDropDownClosingEvent) =&gt; void',
+          description:
+            "Cancelable pre-close callback with its <code>reason</code> (<code>'select'</code>, <code>'escape'</code>, <code>'outside'</code>, <code>'tab'</code>, <code>'blur'</code>, <code>'api'</code>) — set <code>cancel</code> to keep the popup open.",
+        },
+        {
+          name: 'onPageLoaded',
+          type: '(event: OgeListPageLoadedEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'A <code>dataSource</code> page landed — <code>{ searchText, skip, items, totalCount }</code>.',
+        },
       ],
     },
     FIELD_EVENTS,
@@ -1111,8 +1168,31 @@ export const OGE_REACT_SELECT_BOX_API: ApiSections = {
       entries: [
         {
           name: 'OgeSelectBoxHandle',
-          type: '{ focus(); blur(); clear(); open(); close(); toggle() }',
+          type: '{ focus(); blur(); clear(); open(); close(): boolean; toggle(); reload() }',
           description: 'Imperative handle exposed through <code>ref</code>.',
+        },
+        {
+          name: 'OgeSelectPopupRenderContext&lt;TItem&gt;',
+          type: '{ items; searchText; loading }',
+          description:
+            'Context of <code>renderHeader</code> / <code>renderFooter</code>.',
+        },
+        {
+          name: 'OgeListDataSource&lt;TItem&gt;',
+          type: '{ load(options): Promise&lt;LoadResult&gt;; byKey?(key) }',
+          description:
+            'Structurally a subset of the grid’s <code>DataSource</code>, so every core data source fits as is.',
+        },
+        {
+          name: 'OgeDropDownOpeningEvent / OgeDropDownClosingEvent',
+          type: '{ cancel } / { reason; cancel }',
+          description:
+            'Payloads of <code>onOpening</code> / <code>onClosing</code>.',
+        },
+        {
+          name: 'OgeListPageLoadedEvent&lt;TItem&gt;',
+          type: '{ searchText; skip; items; totalCount? }',
+          description: 'Payload of <code>onPageLoaded</code>.',
         },
         {
           name: 'OgeSelectBoxSelectionChangedEvent&lt;TItem&gt;',
@@ -1217,6 +1297,19 @@ export const OGE_REACT_TREE_SELECT_API: ApiSections = {
           default: "'text'",
           description:
             'Closed-field rendering for a multiple selection: the joined labels, or just how many are picked.',
+        },
+        {
+          name: 'showSelectionAs',
+          type: "'text' | 'chips'",
+          default: "'text'",
+          description:
+            "<code>'chips'</code> renders the selected nodes as removable chips in the field (Backspace removes the last one); <code>'text'</code> keeps the comma list / <code>displayMode</code>.",
+        },
+        {
+          name: 'maxDisplayedTags',
+          type: 'number',
+          description:
+            'In chips mode, folds chips past the cap into <code>+N more</code>.',
         },
       ],
     },
@@ -1363,6 +1456,11 @@ export const OGE_REACT_TREE_SELECT_API: ApiSections = {
           description: 'Closed-field rendering of a multiple selection.',
         },
         {
+          name: 'OgeTreeSelectShowSelectionAs',
+          type: "'text' | 'chips'",
+          description: 'Text or removable chips in the closed field.',
+        },
+        {
           name: 'OgeTreeSelectSelectionChangedEvent',
           type: '{ keys: readonly RowKey[]; previousKeys: readonly RowKey[] }',
           description: 'Payload of <code>onSelectionChanged</code>.',
@@ -1388,13 +1486,89 @@ export const OGE_REACT_TAG_BOX_API: ApiSections = {
           name: 'items / displayExpr / valueExpr / disabledExpr / imageExpr',
           type: 'shared with OgeSelectBox',
           description:
-            'The tag box reuses the select box expression vocabulary verbatim.',
+            'The tag box reuses the select box expression vocabulary verbatim — <code>items</code> may be a lazy function.',
         },
         {
           name: 'searchEnabled / searchMode / searchExpr',
           type: 'shared with OgeSelectBox',
           description: 'Client-side filtering of the option list.',
         },
+        {
+          name: 'searchTimeout',
+          type: 'number',
+          description:
+            'Debounce before typed text filters. Unset filters local items immediately and debounces <code>dataSource</code> requests by the provider default (250ms).',
+        },
+        {
+          name: 'minSearchLength / showDataBeforeSearch',
+          type: 'number / boolean',
+          default: '0 / false',
+          description:
+            'Characters required before the filter narrows the list, and what shows below that.',
+        },
+        {
+          name: 'groupBy',
+          type: 'string | ((item) =&gt; string)',
+          description:
+            'Groups flat items under headers (ignored while <code>virtualScroll</code> is on).',
+        },
+        {
+          name: 'renderItem',
+          type: '(item, context: { index; selected; active }) =&gt; ReactNode',
+          description:
+            'Custom option content; the checkbox stays in front of it.',
+        },
+        {
+          name: 'renderGroup',
+          type: '(label: string) =&gt; ReactNode',
+          description: 'Custom group header rendering.',
+        },
+        {
+          name: 'renderTag',
+          type: '(item, context: { index; text }) =&gt; ReactNode',
+          description:
+            'Custom chip content; the remove button stays (Angular’s <code>tagTemplate</code>).',
+        },
+        {
+          name: 'acceptCustomValue',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Enter on typed text that matches no item creates a new tag — see <code>onCustomItemCreating</code>.',
+        },
+        {
+          name: 'showSelectAll',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A tri-state "select all" row above the options (<code>aria-checked</code> true / false / mixed; ArrowUp from the first option reaches it) acting on the visible, enabled items and honouring <code>maxSelectedItems</code>.',
+        },
+        {
+          name: 'maxSelectedItems',
+          type: 'number',
+          description:
+            'Caps the selection; at the cap unselected options turn inert and the popup shows <code>messages.maxSelectedItemsMessage</code>.',
+        },
+        {
+          name: 'loading',
+          type: 'boolean',
+          default: 'false',
+          description: 'Shows a loading row instead of items.',
+        },
+        {
+          name: 'dataSource',
+          type: 'OgeListDataSource&lt;TItem&gt;',
+          description:
+            'Remote, paged data: any <code>&#64;oge-ui/core</code> <code>DataSource</code> (<code>CustomDataSource</code>, <code>ArrayDataSource</code>, <code>CursorDataSource</code>, <code>ODataDataSource</code>) or an object with the same <code>load()</code>, plus an optional <code>byKey()</code>. Replaces <code>items</code> while set: pages of <code>pageSize</code> rows load as the list scrolls (and as the keyboard reaches the end), the typed text goes to the server as <code>searchText</code> (debounced by <code>searchTimeout</code>, gated by <code>minSearchLength</code>), superseded requests are aborted through the <code>AbortSignal</code>, pages are cached per search, and a value no loaded page holds resolves through <code>byKey</code> — the same <code>OgeRemoteListCore</code> the Angular editors run.',
+        },
+        {
+          name: 'pageSize',
+          type: 'number',
+          default: 'provider: 30',
+          description:
+            "Rows requested per <code>dataSource</code> page (<code>take</code>); unset = the provider's <code>dataPageSize</code>.",
+        },
+
         {
           name: 'showSelectionControls',
           type: 'boolean',
@@ -1411,7 +1585,7 @@ export const OGE_REACT_TAG_BOX_API: ApiSections = {
           name: 'maxDisplayedTags',
           type: 'number',
           description:
-            'Caps the rendered chips; the rest collapse into a <code>+N</code> chip.',
+            'Caps the rendered chips; the rest collapse into a <code>+N more</code> chip (<code>messages.moreTags</code>).',
         },
         {
           name: 'opened / defaultOpened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick',
@@ -1444,7 +1618,20 @@ export const OGE_REACT_TAG_BOX_API: ApiSections = {
         {
           name: 'open() / close() / toggle()',
           type: '() =&gt; void',
-          description: 'Popup control (no-ops while disabled/readonly).',
+          description:
+            'Popup control (no-ops while disabled/readonly); <code>close()</code> returns <code>false</code> when <code>onClosing</code> cancels.',
+        },
+        {
+          name: 'selectAll() / unselectAll()',
+          type: '() =&gt; void',
+          description:
+            'Selects (up to <code>maxSelectedItems</code>) / clears the visible, enabled items.',
+        },
+        {
+          name: 'reload()',
+          type: '() =&gt; void',
+          description:
+            'Drops every cached <code>dataSource</code> page and re-requests the current search.',
         },
       ],
     },
@@ -1476,6 +1663,34 @@ export const OGE_REACT_TAG_BOX_API: ApiSections = {
           type: '(opened: boolean) =&gt; void',
           description: 'The controlled half of <code>opened</code>.',
         },
+        {
+          name: 'onSelectAllValueChanged',
+          type: '(event: OgeTagBoxSelectAllEvent) =&gt; void',
+          description:
+            'The "select all" row was toggled — <code>{ selected, event }</code>.',
+        },
+        {
+          name: 'onOpening / onClosing',
+          type: '(event: OgeDropDownOpeningEvent | OgeDropDownClosingEvent) =&gt; void',
+          description:
+            'Cancelable pre-events — same contract as the select box.',
+        },
+        {
+          name: 'onSearchChange',
+          type: '(event: { text: string }) =&gt; void',
+          description: 'Raw search text on every keystroke.',
+        },
+        {
+          name: 'onCustomItemCreating',
+          type: '(payload: OgeSelectBoxCustomItemEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            '<code>acceptCustomValue</code> commit: assign <code>customItem</code> (an item, a promise, or <code>null</code> to reject).',
+        },
+        {
+          name: 'onPageLoaded',
+          type: '(event: OgeListPageLoadedEvent&lt;TItem&gt;) =&gt; void',
+          description: 'A <code>dataSource</code> page landed.',
+        },
       ],
     },
     FIELD_EVENTS,
@@ -1483,6 +1698,11 @@ export const OGE_REACT_TAG_BOX_API: ApiSections = {
   types: [
     {
       entries: [
+        {
+          name: 'OgeTagBoxSelectAllEvent',
+          type: '{ selected: boolean; event: Event }',
+          description: 'Payload of <code>onSelectAllValueChanged</code>.',
+        },
         {
           name: 'OgeTagBoxHandle',
           type: '{ focus(); blur(); clear(); open(); close(); toggle() }',
@@ -1588,6 +1808,18 @@ export const OGE_REACT_AUTOCOMPLETE_API: ApiSections = {
             'Windowed rendering for large lists — same contract as the select box.',
         },
         {
+          name: 'dataSource',
+          type: 'OgeListDataSource&lt;TItem&gt;',
+          description:
+            'Remote, paged suggestions — the typed text is the <code>searchText</code>; <code>maxItemCount</code> does not apply, <code>pageSize</code> does.',
+        },
+        {
+          name: 'pageSize',
+          type: 'number',
+          default: 'provider: 30',
+          description: 'Rows requested per <code>dataSource</code> page.',
+        },
+        {
           name: 'opened / defaultOpened',
           type: 'boolean',
           default: 'false',
@@ -1607,6 +1839,12 @@ export const OGE_REACT_AUTOCOMPLETE_API: ApiSections = {
           name: 'open() / close() / toggle()',
           type: '() =&gt; void',
           description: 'Popup control (no-ops while disabled/readonly).',
+        },
+        {
+          name: 'reload()',
+          type: '() =&gt; void',
+          description:
+            'Drops every cached <code>dataSource</code> page and re-requests the current search.',
         },
       ],
     },
@@ -1643,6 +1881,11 @@ export const OGE_REACT_AUTOCOMPLETE_API: ApiSections = {
           type: '(event: { text: string }) =&gt; void',
           description:
             'Raw search text on every keystroke — drive server-side filtering from here.',
+        },
+        {
+          name: 'onPageLoaded',
+          type: '(event: OgeListPageLoadedEvent&lt;TItem&gt;) =&gt; void',
+          description: 'A <code>dataSource</code> page landed.',
         },
       ],
     },
@@ -2941,6 +3184,13 @@ export const OGE_REACT_INPUTS_CONFIG_API: ApiSections = {
             "Viewport width (px) below which <code>'auto'</code> presents popups as bottom sheets / full-screen dialogs.",
         },
         {
+          name: 'dataPageSize',
+          type: 'number',
+          default: '30',
+          description:
+            'Rows a list editor asks its <code>dataSource</code> for per page (select box, tag box, autocomplete, multi-column combo box).',
+        },
+        {
           name: 'messages',
           type: 'OgeInputsMessages',
           description:
@@ -3353,6 +3603,212 @@ export const OGE_REACT_TOGGLE_GROUP_API: ApiSections = {
           name: 'OgeToggleGroupHandle',
           type: '{ focus(); blur() }',
           description: '<code>focus()</code> moves to the roving segment.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_MULTI_COLUMN_COMBO_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeMultiColumnComboBox',
+      entries: [
+        {
+          name: 'value / defaultValue',
+          type: 'unknown',
+          default: 'null',
+          description:
+            "The selected row's <code>valueExpr</code> (an array in <code>multiple</code> mode) — controlled with <code>onValueChange</code>, or uncontrolled from <code>defaultValue</code>.",
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[] | OgeSelectItemsFn&lt;TItem&gt;',
+          default: '[]',
+          description:
+            'The rows: an array, or a function invoked lazily on first open.',
+        },
+        {
+          name: 'columns',
+          type: 'readonly OgeComboBoxColumn&lt;TItem&gt;[]',
+          default: '[]',
+          description:
+            'Popup columns: <code>field</code>, <code>caption</code>, <code>width</code>, <code>format</code>, <code>alignment</code>, <code>searchable</code>, <code>cssClass</code> and an optional <code>renderCell</code>.',
+        },
+        {
+          name: 'displayExpr',
+          type: 'string | ((item) =&gt; string)',
+          description:
+            "Row &rarr; field text; omitted, the first column's formatted cell text.",
+        },
+        {
+          name: 'valueExpr / disabledExpr',
+          type: 'string | fn',
+          description: 'Committed value and per-row disabling.',
+        },
+        {
+          name: 'selectionMode',
+          type: "'single' | 'multiple'",
+          default: "'single'",
+          description:
+            '<code>multiple</code>: array value, removable chips, the popup stays open while picking.',
+        },
+        {
+          name: 'searchEnabled',
+          type: 'boolean',
+          default: 'true',
+          description: 'Typing filters the rows.',
+        },
+        {
+          name: 'searchMode / searchExpr / searchTimeout / minSearchLength / showDataBeforeSearch',
+          type: 'shared with OgeSelectBox',
+          description:
+            'Without <code>searchExpr</code> every searchable column is searched by its formatted cell text.',
+        },
+        {
+          name: 'showHeader',
+          type: 'boolean',
+          default: 'true',
+          description: 'Renders the sticky column header row.',
+        },
+        {
+          name: 'showDropDownButton / openOnFieldClick / loading',
+          type: 'boolean',
+          description: 'Shared with the select box.',
+        },
+        {
+          name: 'maxDisplayedTags',
+          type: 'number',
+          description:
+            'In <code>multiple</code> mode, folds chips past the cap into <code>+N more</code>.',
+        },
+        {
+          name: 'dropdownPlacement / dropdownWidth / dropdownMaxHeight',
+          type: "OgePopupPlacement / number | 'anchor' / number",
+          description:
+            'Popup geometry; all-pixel column widths set the grid’s minimum width.',
+        },
+        {
+          name: 'virtualScroll',
+          type: 'boolean | OgeVirtualScrollOptions',
+          default: 'false',
+          description: 'Windowed row rendering.',
+        },
+        {
+          name: 'dataSource',
+          type: 'OgeListDataSource&lt;TItem&gt;',
+          description: 'Remote, paged rows — see <code>OgeSelectBox</code>.',
+        },
+        {
+          name: 'pageSize',
+          type: 'number',
+          default: 'provider: 30',
+          description: 'Rows requested per <code>dataSource</code> page.',
+        },
+        {
+          name: 'opened / defaultOpened',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Popup visibility — controlled with <code>onOpenedChange</code>.',
+        },
+        {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "provider: 'none' / 600",
+          description:
+            "<code>'auto'</code> presents the grid as a bottom sheet on narrow viewports.",
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeMultiColumnComboBox handle (via ref)',
+      entries: [
+        {
+          name: 'open() / close() / toggle()',
+          type: '() =&gt; void',
+          description:
+            'Popup control; <code>close()</code> returns <code>false</code> when <code>onClosing</code> cancels.',
+        },
+        {
+          name: 'reload()',
+          type: '() =&gt; void',
+          description:
+            'Drops every cached <code>dataSource</code> page and re-requests the current search.',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeMultiColumnComboBox callbacks',
+      entries: [
+        {
+          name: 'onSelectionChange',
+          type: '(event: OgeMultiColumnComboBoxSelectionChangedEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            '<code>{ selectedItems, addedItems, removedItems }</code> on every commit.',
+        },
+        {
+          name: 'onRowClick',
+          type: '(event: OgeMultiColumnComboBoxRowClickEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'A row was activated — <code>{ item, index, event }</code>.',
+        },
+        {
+          name: 'onDropDownOpened / onDropDownClosed',
+          type: '() =&gt; void',
+          description: 'Popup visibility changes.',
+        },
+        {
+          name: 'onOpenedChange',
+          type: '(opened: boolean) =&gt; void',
+          description: 'The controlled half of <code>opened</code>.',
+        },
+        {
+          name: 'onOpening / onClosing',
+          type: '(event) =&gt; void',
+          description: 'Cancelable pre-events.',
+        },
+        {
+          name: 'onSearchChange',
+          type: '(event: { text: string }) =&gt; void',
+          description: 'Raw search text on every keystroke.',
+        },
+        {
+          name: 'onPageLoaded',
+          type: '(event: OgeListPageLoadedEvent&lt;TItem&gt;) =&gt; void',
+          description: 'A <code>dataSource</code> page landed.',
+        },
+      ],
+    },
+    FIELD_EVENTS,
+  ],
+  types: [
+    {
+      title: 'Multi-column combo box types',
+      entries: [
+        {
+          name: 'OgeComboBoxColumn&lt;TItem&gt;',
+          type: 'interface',
+          description:
+            "<code>{ field; caption?; width?: number | string; format?; alignment?: 'start' | 'center' | 'end'; searchable?; cssClass?; renderCell?(item, { value, text, rowIndex }) }</code>.",
+        },
+        {
+          name: 'OgeMultiColumnComboBoxHandle',
+          type: '{ focus(); blur(); clear(); open(); close(): boolean; toggle(); reload() }',
+          description: 'Imperative handle exposed through <code>ref</code>.',
+        },
+        {
+          name: 'Keyboard (APG combobox with grid popup)',
+          type: 'keys',
+          description:
+            'Down/Up move rows; once in the grid Left/Right/Home/End move between cells (mirrored in RTL); Ctrl+Home/End jump rows; Enter commits; Alt+Up commits and closes; Escape closes, then clears; Backspace removes the last chip.',
         },
       ],
     },

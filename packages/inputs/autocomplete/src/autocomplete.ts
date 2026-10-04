@@ -16,7 +16,12 @@ import {
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
-import { adaptiveListViewportHeight } from '@oge-ui/behavior';
+import {
+  adaptiveListViewportHeight,
+  isNearScrollEnd,
+  type OgeListDataSource,
+  type OgeListPageLoadedEvent,
+} from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
@@ -32,6 +37,7 @@ import {
   OGE_SELECT_OPTION_HEIGHT,
   type OgeVirtualScrollOptions,
 } from '@oge-ui/inputs/select-list';
+import { RemoteListModel } from '@oge-ui/inputs/select-list';
 import { SelectListEngine } from '@oge-ui/inputs/select-list';
 import { SelectPanelController } from '@oge-ui/inputs/select-list';
 import type {
@@ -169,13 +175,21 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
           [attr.aria-label]="
             labelMode() === 'hidden' && label() ? label() : null
           "
+          [attr.aria-busy]="busy() ? 'true' : null"
           (scroll)="onListScroll($event)"
         >
-          @if (loading() || itemsStatus() === 'loading') {
+          @if (
+            loading() ||
+            itemsStatus() === 'loading' ||
+            remote.loadingFirstPage()
+          ) {
             <div class="oge-select-status" role="presentation">
               {{ msg().dropDownLoading }}
             </div>
-          } @else if (itemsStatus() === 'error') {
+          } @else if (
+            itemsStatus() === 'error' ||
+            (remote.status() === 'error' && rows().length === 0)
+          ) {
             <div class="oge-select-status" role="presentation">
               {{ msg().dropDownLoadError }}
             </div>
@@ -322,6 +336,14 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
               }
             }
           }
+          @if (remote.loadingMore()) {
+            <div
+              class="oge-select-status oge-select-loading-more"
+              role="presentation"
+            >
+              {{ msg().dropDownLoading }}
+            </div>
+          }
         </div>
       </oge-popup>
     }
@@ -395,6 +417,17 @@ export class OgeAutocomplete<TItem = unknown>
    * ignored while active.
    */
   readonly virtualScroll = input<boolean | OgeVirtualScrollOptions>(false);
+  /**
+   * Remote, paged suggestions: any `@oge-ui/core` `DataSource` (or an object
+   * with the same `load()`). Replaces `items` while set — the typed text goes
+   * to the server as `searchText` (debounced by `searchTimeout`, gated by
+   * `minSearchLength`), further pages load as the list scrolls, superseded
+   * requests are aborted and each search's pages are cached. `maxItemCount`
+   * does not apply — `pageSize` does.
+   */
+  readonly dataSource = input<OgeListDataSource<TItem> | undefined>(undefined);
+  /** Rows requested per `dataSource` page; `undefined` = config default (30). */
+  readonly pageSize = input<number | undefined>(undefined);
   /** Popup visibility — two-way. */
   readonly opened = model(false);
   /**
@@ -415,6 +448,8 @@ export class OgeAutocomplete<TItem = unknown>
   readonly dropDownClosed = output<void>();
   /** Raw search text on every keystroke — drive server-side filtering from here. */
   readonly searchChanged = output<OgeSelectBoxSearchChangedEvent>();
+  /** A `dataSource` page landed (search text, offset, rows, total). */
+  readonly pageLoaded = output<OgeListPageLoadedEvent<TItem>>();
 
   private readonly native = viewChild<ElementRef<HTMLInputElement>>('native');
   private readonly chromeRef = viewChild(OgeFieldChrome, { read: ElementRef });
@@ -471,11 +506,26 @@ export class OgeAutocomplete<TItem = unknown>
       .map((item, offset) => ({ item, index: start + offset }));
   });
 
+  /** Remote paged suggestions — inert until `dataSource` is bound. */
+  protected readonly remote: RemoteListModel<TItem> =
+    new RemoteListModel<TItem>({
+      source: () => this.dataSource(),
+      pageSize: () => this.pageSize() ?? this.config.dataPageSize,
+      searchTimeout: () => this.searchTimeout() ?? this.config.searchTimeoutMs,
+      minSearchLength: () => this.minSearchLength(),
+      // an open list below the threshold (chevron) shows the unfiltered
+      // suggestions, exactly as the local list does
+      showDataBeforeSearch: () => true,
+      valueOf: (item: TItem): unknown => item,
+      onPageLoaded: (event) => this.pageLoaded.emit(event),
+    });
+
   /** Shared dropdown-list model (filtering, active option, lazy items, ids). */
-  private readonly list = new SelectListEngine<TItem>({
+  private readonly list: SelectListEngine<TItem> = new SelectListEngine<TItem>({
     inputId: () => this.inputId,
     opened: () => this.opened(),
-    items: () => this.items(),
+    items: () => (this.remote.active ? this.remote.items() : this.items()),
+    serverFiltering: () => this.remote.active,
     displayExpr: () => this.displayExpr(),
     valueExpr: () => undefined,
     disabledExpr: () => this.disabledExpr(),
@@ -488,7 +538,7 @@ export class OgeAutocomplete<TItem = unknown>
     // below-min states close the popup instead (onNativeInput) — an open
     // list (chevron toggle) always shows the unfiltered items
     showDataBeforeSearch: () => true,
-    maxItems: () => this.maxItemCount(),
+    maxItems: () => (this.remote.active ? undefined : this.maxItemCount()),
     groupBy: () => (this.virtualActive() ? undefined : this.groupBy()),
     scrollActiveIntoView: (index) => {
       if (this.virtualActive()) this.virtualizer.scrollToIndex(index);
@@ -512,6 +562,7 @@ export class OgeAutocomplete<TItem = unknown>
     restoreFocus: () => this.focus(),
     onOpened: () => {
       this.list.ensureItemsLoaded();
+      this.remote.open();
       // no auto-activated option — Enter without arrowing commits the text
       this.dropDownOpened.emit();
     },
@@ -544,6 +595,14 @@ export class OgeAutocomplete<TItem = unknown>
   protected readonly rows = this.list.rows;
   protected readonly activeIndex = this.list.activeIndex;
   protected readonly activeDescendant = this.list.activeDescendant;
+
+  /** Anything is loading — the listbox reports `aria-busy`. */
+  protected readonly busy = computed(
+    () =>
+      this.loading() ||
+      this.itemsStatus() === 'loading' ||
+      this.remote.status() === 'loading',
+  );
 
   // --- chevron feature block -------------------------------------------------
 
@@ -580,6 +639,25 @@ export class OgeAutocomplete<TItem = unknown>
         if (this.opened()) this.list.ensureItemsLoaded();
       });
     });
+    // A new data source owns other rows: forget the old pages.
+    effect(() => {
+      this.dataSource();
+      untracked(() => {
+        this.remote.syncSource();
+        if (this.opened()) this.remote.open();
+      });
+    });
+    // Paging follows the view (rendered window / keyboard position).
+    effect(() => {
+      if (!this.remote.active || !this.opened()) return;
+      const end = this.virtualActive() ? this.virtualizer.window().end : -1;
+      const active = this.list.activeIndex();
+      this.remote.items();
+      untracked(() => {
+        const target = Math.max(end, active);
+        if (target >= 0) this.remote.notifyVisibleEnd(target);
+      });
+    });
     // Filtering while open clamps a now-out-of-range active option.
     effect(() => {
       this.list.visibleItems();
@@ -594,6 +672,7 @@ export class OgeAutocomplete<TItem = unknown>
     });
     this.destroyRef.onDestroy(() => {
       this.list.destroy();
+      this.remote.destroy();
       this.panelController.destroy();
     });
   }
@@ -626,6 +705,7 @@ export class OgeAutocomplete<TItem = unknown>
   protected onNativeInput(event: Event): void {
     const text = (event.target as HTMLInputElement).value;
     this.list.setSearch(text);
+    this.remote.setSearch(text);
     this.inputChange.emit({ text, event });
     this.searchChanged.emit({ text });
     // typing below the threshold closes the list (reference behavior) — but
@@ -642,7 +722,18 @@ export class OgeAutocomplete<TItem = unknown>
   }
 
   protected onListScroll(event: Event): void {
-    if (this.virtualActive()) this.virtualizer.onScroll(event);
+    if (this.virtualActive()) {
+      this.virtualizer.onScroll(event);
+      return;
+    }
+    if (this.remote.active && isNearScrollEnd(event.target as HTMLElement)) {
+      this.remote.loadMore();
+    }
+  }
+
+  /** Re-requests the current search from `dataSource`, dropping every cached page. */
+  reload(): void {
+    this.remote.reload();
   }
 
   protected selectItem(item: TItem, index: number, event: Event): void {

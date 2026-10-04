@@ -255,6 +255,24 @@ const FORM_METHOD_GROUPS: readonly ApiGroup[] = [
           'Writes one field. The overload <code>updateData(partial)</code> merges an object into the bound data.',
       },
       {
+        name: 'setErrors(errors: OgeFormServerErrors)',
+        type: 'void',
+        description:
+          "Applies server-side errors — <code>{ email: ['Already registered'] }</code> (a string or a list per field). Each field shows its first message at once, in the field and in the validation summary, and the error clears as soon as that field is edited. Replaces every previous server error; <code>{}</code> clears them.",
+      },
+      {
+        name: 'setFieldErrors(field, messages)',
+        type: 'void',
+        description:
+          'Sets (or, with <code>null</code> / <code>[]</code>, clears) the server errors of one field.',
+      },
+      {
+        name: 'clearErrors(field?)',
+        type: 'void',
+        description:
+          'Clears the server errors of one field, or of every field.',
+      },
+      {
         name: 'errors',
         type: 'readonly OgeFormErrorEntry[]',
         description:
@@ -351,9 +369,26 @@ const FORM_TYPE_GROUPS: readonly ApiGroup[] = [
       },
       {
         name: 'OgeValidationRule',
-        type: "{ type: 'required' | 'email' | 'numeric' | 'stringLength' | 'pattern' | 'range' | 'custom' | 'async'; … }",
+        type: "{ type: 'required' | 'email' | 'numeric' | 'stringLength' | 'pattern' | 'range' | 'compare' | 'custom' | 'async'; … }",
         description:
           'A declarative rule, evaluated by <code>evaluateOgeValidationRules()</code> in <code>&#64;oge-ui/behavior</code> — the same function Angular&#39;s schema calls, so a rule can never be worded differently in the two layers.',
+      },
+      {
+        name: 'compare rule',
+        type: "{ type: 'compare'; comparisonTarget: string | ((data) =&gt; unknown); comparisonType?: OgeComparisonType; ignoreEmptyValue?: boolean; message? }",
+        description:
+          "Compares the value with another field (<code>'password'</code>) or a function of the model — confirm-password, end-after-start. <code>comparisonType</code> is <code>'==='</code> (default), <code>'!=='</code>, <code>'=='</code>, <code>'!='</code>, <code>'&lt;'</code>, <code>'&lt;='</code>, <code>'&gt;'</code> or <code>'&gt;='</code> (dates compare by time); an empty field is checked unless <code>ignoreEmptyValue</code>. Message: <code>compareError</code>.",
+      },
+      {
+        name: 'OgeFormCondition',
+        type: '((data) =&gt; boolean) | { field; equals?; notEquals?; in? }',
+        description:
+          'The dependency of <code>visibleWhen</code> / <code>requiredWhen</code> / <code>disabledWhen</code>, evaluated by <code>evaluateOgeFormCondition()</code> in <code>&#64;oge-ui/behavior</code>.',
+      },
+      {
+        name: 'OgeFormServerErrors',
+        type: 'Record&lt;string, string | readonly string[] | null&gt;',
+        description: 'Argument of <code>setErrors()</code>.',
       },
       {
         name: 'OgeValidationContext',
@@ -676,6 +711,27 @@ export const OGE_REACT_FORM_ITEM_API: ApiSections = {
           default: 'false',
           description:
             'Adds a <code>required</code> rule and shows the required mark.',
+        },
+        {
+          name: 'visibleWhen',
+          type: 'OgeFormCondition | undefined',
+          default: 'undefined',
+          description:
+            'Shows the item only while the condition holds — <code>(data) =&gt; boolean</code> or <code>{ field, equals | notEquals | in }</code> (a bare <code>{ field }</code> tests truthiness), re-evaluated on every model change. A hidden item is not validated and drops out of the summary.',
+        },
+        {
+          name: 'requiredWhen',
+          type: 'OgeFormCondition | undefined',
+          default: 'undefined',
+          description:
+            'Makes the item required (mark and rule) only while the condition holds.',
+        },
+        {
+          name: 'disabledWhen',
+          type: 'OgeFormCondition | undefined',
+          default: 'undefined',
+          description:
+            'Disables the editor while the condition holds; a conditionally disabled item is not validated.',
         },
         {
           name: 'validationRules',

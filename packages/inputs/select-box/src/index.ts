@@ -16,4 +16,7 @@ export {
   type OgeSelectBoxItemsFn,
   type OgeSelectBoxGroupExpr,
   type OgeSelectBoxCustomItemEvent,
+  type OgeSelectGroupTemplateContext,
+  type OgeSelectFieldTemplateContext,
+  type OgeSelectPopupTemplateContext,
 } from './select-box-types';

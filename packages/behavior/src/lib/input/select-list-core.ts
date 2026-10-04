@@ -42,6 +42,12 @@ export interface OgeSelectListCoreDeps<TItem> {
   disabledExpr: () => OgeSelectDisabledExpr<TItem> | undefined;
   imageExpr: () => OgeSelectImageExpr<TItem> | undefined;
   searchExpr: () => OgeSelectSearchExpr<TItem> | undefined;
+  /**
+   * Default search texts when no `searchExpr` is set — the multi-column combo
+   * box searches every searchable column's formatted cell text. Omitted, the
+   * display text is searched.
+   */
+  searchTexts?: (item: TItem) => readonly string[];
   searchEnabled: () => boolean;
   searchMode: () => OgeSelectSearchMode;
   /** Debounce before typed text filters the list; `0` filters synchronously. */
@@ -56,6 +62,12 @@ export interface OgeSelectListCoreDeps<TItem> {
   groupBy?: () => OgeSelectGroupExpr<TItem> | undefined;
   /** Component-specific narrowing applied before the search filter (e.g. hiding selected items). */
   preFilterItems?: (items: readonly TItem[]) => readonly TItem[];
+  /**
+   * The items already arrive filtered by the server (`dataSource` mode): the
+   * typed text is not applied client-side and `minSearchLength` is the
+   * remote machine's call, not this one's.
+   */
+  serverFiltering?: () => boolean;
   /** Overrides how the active option is brought into view (virtual mode uses offset math). */
   scrollActiveIntoView?: (index: number) => void;
 }
@@ -209,6 +221,8 @@ export class OgeSelectListCore<TItem> {
         String((item as Record<string, unknown>)[key] ?? ''),
       );
     }
+    const texts = this.deps.searchTexts?.(item);
+    if (texts) return [...texts];
     return [this.displayOf(item)];
   }
 
@@ -225,11 +239,11 @@ export class OgeSelectListCore<TItem> {
 
   /** Re-seeds the state machine after the `items` input changes (array ↔ function). */
   syncItemsSource(): void {
-    this.itemsState.set(
-      typeof this.deps.items() === 'function'
-        ? { status: 'idle' }
-        : { status: 'static' },
-    );
+    const lazy = typeof this.deps.items() === 'function';
+    // a new array is still a static source — re-seeding it would write state
+    // (and re-render a React owner) for every inline `items={[…]}` literal
+    if (!lazy && this.itemsState().status === 'static') return;
+    this.itemsState.set(lazy ? { status: 'idle' } : { status: 'static' });
   }
 
   /** Invokes a lazy items function once; stale resolutions lose to the runId guard. */
@@ -298,6 +312,7 @@ export class OgeSelectListCore<TItem> {
     const base = this.resolvedItems();
     const items = this.deps.preFilterItems?.(base) ?? base;
     if (!this.deps.searchEnabled()) return items;
+    if (this.deps.serverFiltering?.()) return items;
     const term = this.filterText();
     const typed = (term ?? '').trim();
     const min = this.deps.minSearchLength?.() ?? 0;

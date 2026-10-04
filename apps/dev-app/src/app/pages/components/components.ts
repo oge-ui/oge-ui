@@ -863,7 +863,7 @@ export class ComponentsIndexPage {
       icon: 'text-cursor',
       path: '/components/inputs',
       description:
-        'TextBox, MaskedTextBox, NumberBox, SelectBox, date and color editors and choice groups on one field chrome: floating labels, input masks, live number formatting and a searchable WAI-ARIA combobox.',
+        'TextBox, MaskedTextBox, NumberBox, SelectBox, TagBox, a multi-column combo box, date and color editors and choice groups on one field chrome: floating labels, input masks, live number formatting, remote paged lists and searchable WAI-ARIA comboboxes.',
     },
     {
       key: 'tabs',

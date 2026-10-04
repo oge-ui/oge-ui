@@ -6,4 +6,5 @@ export type {
   OgeTreeSelectDisplayMode,
   OgeTreeSelectSelectionChangedEvent,
   OgeTreeSelectSelectionMode,
+  OgeTreeSelectShowSelectionAs,
 } from './tree-select-types';

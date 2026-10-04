@@ -1,8 +1,11 @@
 import { resource, type Signal } from '@angular/core';
-import { validate, validateAsync } from '@angular/forms/signals';
+import { disabled, validate, validateAsync } from '@angular/forms/signals';
 import {
   asyncValidationRules,
+  evaluateOgeFormCondition,
   evaluateOgeValidationRules,
+  isFormItemVisible,
+  type OgeFormCondition,
 } from '@oge-ui/behavior';
 import type { OgeFormItemData, OgeValidationRule } from './form-types';
 
@@ -14,7 +17,14 @@ export interface RuleSource {
   readonly field: string;
   readonly isRequired?: boolean;
   readonly validationRules?: readonly OgeValidationRule[];
+  readonly visible?: boolean;
+  readonly visibleWhen?: OgeFormCondition;
+  readonly requiredWhen?: OgeFormCondition;
+  readonly disabledWhen?: OgeFormCondition;
 }
+
+/** Server-side messages per field — `setErrors()` feeds it, an edit clears it. */
+export type ServerErrorLookup = (field: string) => readonly string[];
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- the Signal Forms path
    type is keyed on the model shape, which is only known to the caller. Every
@@ -46,6 +56,7 @@ function pathFor(root: any, field: string): any {
  */
 export function schemaFromRules(
   items: readonly RuleSource[],
+  serverErrors?: ServerErrorLookup,
 ): (path: any) => void {
   return (root: any) => {
     for (const item of items) {
@@ -53,15 +64,49 @@ export function schemaFromRules(
       if (path === undefined) continue;
       const rules = item.validationRules ?? [];
       const isRequired = item.isRequired === true;
+      const conditional =
+        item.visibleWhen !== undefined ||
+        item.requiredWhen !== undefined ||
+        item.disabledWhen !== undefined;
+      /** Hidden or conditionally disabled items are not validated. */
+      const skipped = (data: Record<string, unknown>): boolean =>
+        !isFormItemVisible(item, data) ||
+        evaluateOgeFormCondition(item.disabledWhen, data, false);
 
-      if (isRequired || rules.some((rule) => rule.type !== 'async')) {
-        validate(path, (ctx: any) =>
-          evaluateOgeValidationRules(
-            ctx.value(),
-            (ctx.valueOf(root) ?? {}) as Record<string, unknown>,
-            rules,
-            isRequired,
+      if (item.disabledWhen !== undefined) {
+        disabled(path, (ctx: any) =>
+          evaluateOgeFormCondition(
+            item.disabledWhen,
+            ctx.valueOf(root) ?? {},
+            false,
           ),
+        );
+      }
+
+      if (
+        isRequired ||
+        conditional ||
+        rules.some((rule) => rule.type !== 'async')
+      ) {
+        validate(path, (ctx: any) => {
+          const data = (ctx.valueOf(root) ?? {}) as Record<string, unknown>;
+          if (skipped(data)) return [];
+          return evaluateOgeValidationRules(
+            ctx.value(),
+            data,
+            rules,
+            isRequired ||
+              evaluateOgeFormCondition(item.requiredWhen, data, false),
+          );
+        });
+      }
+
+      if (serverErrors) {
+        validate(path, () =>
+          serverErrors(item.field).map((message) => ({
+            kind: 'server',
+            message,
+          })),
         );
       }
 

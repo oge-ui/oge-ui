@@ -287,6 +287,11 @@ const FAMILIES = [
         celltemplate: 'rendercell', // calendar TemplateRef ↔ render prop
         ogecalendarcelltemplate: 'rendercell', // the projected slot form of the same
         calendarcelltemplate: 'rendercalendarcell', // the date box's calendar passthrough
+        grouptemplate: 'rendergroup', // select box / tag box group header slot
+        fieldtemplate: 'renderfield', // select box closed-field slot
+        headertemplate: 'renderheader', // select box popup header slot
+        footertemplate: 'renderfooter', // select box popup footer slot
+        tagtemplate: 'rendertag', // tag box chip slot
         selectionchanged: 'selectionchange', // React callbacks use the imperative-present form
         searchchanged: 'searchchange',
         selectallchanged: 'selectallchange', // check box group — same idiom
@@ -308,6 +313,8 @@ const FAMILIES = [
           'Read-only Angular signal; React hands the resolved item to onSelectionChange instead of exposing derived state as a prop.',
         displaytext:
           'Read-only Angular signal; the React select box renders the display text and derives it from displayExpr in the caller when needed.',
+        selecteditems:
+          'Read-only Angular signal of the multi-column combo box; React hands the selection to onSelectionChange (`selectedItems`) instead of exposing derived state.',
         datepartorder:
           'Locale helper exported for consumers building their own date editors; it stays in @oge-ui/inputs until the shared date kernel moves to @oge-ui/behavior.',
       },
