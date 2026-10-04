@@ -200,6 +200,35 @@
 .oge-pivot-corner {
   z-index: 3;
   inset-inline-start: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 6px var(--oge-cell-padding-x);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--oge-header-color);
+}
+
+// rowHeaderLayout 'outline' / 'tabular': one label column per row field
+// inside the single row-header cell (the keyboard model stays one cell)
+.oge-pivot-rh-segments {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(
+    var(--oge-pivot-rh-columns, 1),
+    minmax(72px, 1fr)
+  );
+  column-gap: 12px;
+  min-inline-size: 0;
+}
+
+.oge-pivot-rh-segment {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:empty::before {
+    content: '\00a0';
+  }
 }
 
 .oge-pivot-col-header {

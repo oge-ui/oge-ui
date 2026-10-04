@@ -379,16 +379,23 @@ export function pivotMatrixTemplate(
   virtual: boolean,
   columnDepth: number,
   columnWidth: number,
+  /** Label columns of the row header (outline / tabular layouts). Default 1. */
+  rowHeaderColumns = 1,
 ): OgePivotMatrixTemplate {
   if (!virtual) {
     return {
       rows: null,
-      columns: `minmax(160px, max-content) repeat(${String(result.columnLeafCount)}, minmax(90px, auto))`,
+      columns: `minmax(${String(160 * Math.min(rowHeaderColumns, 2))}px, max-content) repeat(${String(result.columnLeafCount)}, minmax(90px, auto))`,
     };
   }
+  // each extra label column of a tabular / outline header takes 3/5 of the
+  // compact track, so three fields stay inside a laptop viewport
+  const headerWidth = Math.round(
+    OGE_PIVOT_VIRTUAL_ROW_HEADER_WIDTH * (1 + (rowHeaderColumns - 1) * 0.6),
+  );
   return {
     rows: `repeat(${String(columnDepth)}, ${String(OGE_PIVOT_VIRTUAL_HEADER_HEIGHT)}px) repeat(${String(result.rowLeafCount)}, ${String(OGE_PIVOT_VIRTUAL_ROW_HEIGHT)}px)`,
-    columns: `${String(OGE_PIVOT_VIRTUAL_ROW_HEADER_WIDTH)}px repeat(${String(result.columnLeafCount)}, ${String(columnWidth)}px)`,
+    columns: `${String(headerWidth)}px repeat(${String(result.columnLeafCount)}, ${String(columnWidth)}px)`,
   };
 }
 

@@ -100,6 +100,11 @@ Predictable wrong guesses, and what to write instead.
 | `fieldPanel` | `boolean` | `true` | Collapsible drag & drop field panel. Chips move with a pointer drag (mouse, pen, touch after a ~300 ms long press); dropping on a chip inserts in front of it, Escape cancels. |
 | `fieldChooser` | `OgePivotFieldChooserOptions` | `{}` | Field-chooser dialog behavior. |
 | `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the reference `cellPrepared` equivalent). |
+| `calculatedFields` | `readonly OgePivotCalculatedField[]` | `[]` | Measures computed from the other measures of each cell — `{ name, caption, expression: (values) => number \| null, format, displayMode, runningTotal }`. Evaluated on every cell, subtotals and grand totals included, so a ratio stays a ratio of the totals. `displayMode` takes the measure display modes (percent of row / column / grand total, `absoluteVariation` = difference from the previous column, `percentVariation`); `runningTotal` accumulates along an axis. They follow the regular measures in cells, exports and chart data. |
+| `rowHeaderLayout` | `'compact' \| 'outline' \| 'tabular'` | `'compact'` | `compact` indents every level in one column; `outline` gives each row field its own label column (a label only in its field’s column); `tabular` repeats the ancestors on every line so each reads on its own. The row header stays one `rowheader` cell per line, so the keyboard model does not change; the corner shows the row field captions. |
+| `renderCell` | `(cell: OgePivotCellTemplateContext) => ReactNode` | `—` | Custom content of each value cell (one call per measure) — the prepared cell (`text` after formats, display modes and `customizeCell`, `value`, paths, totals flags) plus `rowIndex` / `columnIndex` / `measureIndex`. Angular’s `*ogePivotCellTemplate`. |
+| `renderRowHeader` | `(line: OgePivotAxisLine, context: { rowIndex; segments }) => ReactNode` | `—` | Custom row-header label; the expander and keyboard behaviour stay the grid’s. Angular’s `*ogePivotRowHeaderTemplate`. |
+| `renderColumnHeader` | `(cell: OgePivotHeaderCell) => ReactNode` | `—` | Custom column-header content. Angular’s `*ogePivotColumnHeaderTemplate`. |
 | `stateKey` | `string \| undefined` | `—` | Persists the field layout + expansion through the nearest `<OgeGridStateStorageProvider>` (localStorage without one). |
 | `stateStorage` | `OgeStateStorage \| undefined` | `—` | Per-grid storage backend for `stateKey`; overrides the provider. |
 | `messages` | `Partial<OgePivotMessages>` | `{}` | Per-instance overrides of the UI strings, over `<OgePivotMessagesProvider>`. |
@@ -112,6 +117,9 @@ _Handle (ref)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `getResult(): PivotResult` | `PivotResult` | The materialized pivot exactly as rendered — for custom export integrations. |
+| `getChartData(options?): OgePivotChartData` | `OgePivotChartData` | The current view as chart data — `{ dataSource, series }` for `<oge-chart>` / `<OgeChart>`: one argument per visible row line (the deepest expanded level), one series per column line × measure. Options: `argumentAxis`, `measures`, `includeTotals`, `includeGrandTotals`, `argumentIndexes` / `seriesIndexes` (a selection), `type`. The pivot does not depend on the charts package — the app binds the two. |
+| `getPreparedCell(rowIndex, columnIndex, measureIndex): OgePivotCellPrepared` | `OgePivotCellPrepared` | A value cell exactly as rendered: text after formats, display modes and `customizeCell`. |
+| `getRowFieldCaptions() / getRowHeaderLayout()` | `readonly string[] / 'compact' \| 'outline' \| 'tabular'` | The row field captions in layout order and the effective row-header layout — what the PDF export writes its row header from. |
 | `drillDown(args: PivotDrillDownArgs): T[]` | `T[]` | Raw rows behind a cell (local data only). |
 | `expandAll(area: 'row' \| 'column') / collapseAll(area)` | `void` | Axis-wide expansion; remote mode expands only what is loaded. |
 | `getFieldLayout(): readonly PivotFieldConfig[]` | `readonly PivotFieldConfig[]` | Declared fields merged with user overrides. |
@@ -125,6 +133,7 @@ _Handle (ref)_
 | --- | --- | --- |
 | `onCellClick / onCellDblClick` | `(event: OgePivotCellClickEvent) => void` | `{ rowPath, columnPath, measureIndex, value, event }`. |
 | `onFieldLayoutChange` | `(fields: readonly PivotFieldConfig[]) => void` | The field layout changed (drag, chooser, menus). |
+| `onResultChange` | `(result: PivotResult) => void` | The materialized view changed (data, layout, expansion, filters, calculated fields) — the hook a linked chart re-reads `getChartData()` from. |
 | `onStateChange` | `(snapshot: PivotGridStateSnapshot) => void` | Debounced — the persistable state changed. |
 
 #### Types
@@ -177,6 +186,14 @@ _Configuration & engine_
 | `OgePivotMessagesProvider` | `({ messages, children }) => JSX.Element` | Subtree-scoped overrides of `OgePivotMessages` (41 keys — areas, menus, chooser, export, field-move menu and announcements…); nested providers merge key by key, and a new `messages` object re-resolves the subtree. The counterpart of `provideOgePivotMessages()`. |
 | `useOgePivotMessages()` | `OgePivotMessages` | The resolved messages for the current subtree. |
 | `PivotFieldConfig / PivotResult / PivotLoadOptions / OgePivotStore…` | `from @oge-ui/core` | The serializable engine contract lives in `@oge-ui/core`; the shared pivot machine in `@oge-ui/pivot-engine`. |
+| `OgePivotCalculatedField / OgePivotCalculatedCell` | `{ name; caption?; expression(values, cell); format?; displayMode?; runningTotal? }` | A calculated measure; `expression` receives the cell’s measure values keyed by measure id (as displayed) and where it is evaluated (`rowPath`, `columnPath`, `isTotal`, `isGrandTotal`). Non-finite results and throws become an empty cell. |
+| `OgePivotChartData / OgePivotChartOptions / OgePivotChartPoint / OgePivotChartSeries` | `interfaces` | What `getChartData()` / `toChartSeries()` return and take; each series is `{ type, name, argumentField: 'argument', valueField, measureId, path }` — assignable to the charts’ series input. |
+| `toChartSeries(result, options?)` | `from @oge-ui/pivot-engine` | The pure adapter behind `getChartData()`, for a `PivotResult` you hold yourself. |
+| `OgePivotLabelFilter / OgePivotValueFilter / OgePivotTopNFilter` | `interfaces` | The member filters of a row or column field. |
+| `OgePivotLabelFilterOperator / OgePivotValueFilterOperator / OgePivotRowHeaderLayout` | `string unions` | The filter operators and the row-header layouts. |
+| `OgePivotCellTemplateContext` | `OgePivotCellPrepared & { rowIndex; columnIndex; measureIndex }` | What a value-cell `renderCell` receives. |
+| `exportPivotToPdf(handle, options?)` | `@oge-ui/react-pivot/export-pdf` | Lazy PDF export (optional `jspdf` + `jspdf-autotable` peers): the multi-level column headers repeated on every page, the grid’s own cell text, its row-header layout and field captions, bold totals, `title`, `pageHeader` / `pageFooter`, `pageNumbers`, `customizeCell`. `buildPivotPdfDocument(result, options)` for custom pipelines. |
+| `OgePivotPdfExportOptions / OgePivotPdfCell / OgePdfPageInfo` | `interfaces` | The PDF helper’s options, the mutable value cell its `customizeCell` receives (`text`, `style`) and what a page callback is told. |
 | `exportPivotToExcel(handle, options?)` | `@oge-ui/react-pivot/export-excel` | Lazy Excel export with merged multi-level headers; `buildPivotWorkbook(result)` for custom pipelines. |
 
 ### OgePivotFieldDef
@@ -214,6 +231,9 @@ _Row/column fields_
 | `filterValues / filterType` | `readonly unknown[] / 'include' \| 'exclude'` | `—` | Field filter. |
 | `showTotals` | `boolean` | `true` | Sub-totals for this field. |
 | `selector / format / customizeText` | `functions` | `—` | Out-of-band value selector, display formatter and text hook. |
+| `labelFilter` | `OgePivotLabelFilter \| undefined` | `—` | Keeps the members whose label matches — `{ operator: 'contains' \| 'notContains' \| 'beginsWith' \| 'endsWith' \| 'equals' \| 'notEquals', value }`, case- and accent-insensitive. |
+| `valueFilter` | `OgePivotValueFilter \| undefined` | `—` | Keeps the members whose total of a measure passes — `{ measure, operator: 'greaterThan' \| 'greaterThanOrEqual' \| 'lessThan' \| 'lessThanOrEqual' \| 'equals' \| 'notEquals' \| 'between' \| 'notBetween', value, value2? }` (`measure` is a data field id). |
+| `topN` | `OgePivotTopNFilter \| undefined` | `—` | Keeps the `count` members with the highest (`direction: 'top'`, default) or lowest total of `measure`. Member filters run before aggregation — totals follow — in area order; value and Top-N filters compare a member’s grand total (local data only). |
 
 ## Demos
 
@@ -307,6 +327,154 @@ export function SalesReport() {
 
       <button type="button" onClick={exportCsv}>CSV</button>
       <button type="button" onClick={exportExcel}>Excel</button>
+    </>
+  );
+}
+```
+
+### Calculated measures
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgePivotGrid } from '@oge-ui/react-pivot';
+import type { OgePivotCalculatedField, OgePivotFieldDef, OgePivotGridHandle } from '@oge-ui/react-pivot';
+
+interface Sale {
+  region: string;
+  country: string;
+  date: string;
+  amount: number;
+  units: number;
+}
+
+declare const sales: Sale[];
+
+const fields: OgePivotFieldDef<Sale>[] = [
+  { dataField: 'region', area: 'row' },
+  { dataField: 'date', caption: 'Year', area: 'column', groupInterval: 'year' },
+  { dataField: 'amount', caption: 'Amount', area: 'data', summaryType: 'sum' },
+  { dataField: 'units', caption: 'Units', area: 'data', summaryType: 'sum' },
+];
+
+const calculated: OgePivotCalculatedField[] = [
+  {
+    name: 'avgPrice', caption: 'Avg price',
+    // evaluated per cell — on totals too, so it stays sum(amount) / sum(units)
+    expression: (v) => (v['units'] ? (v['amount'] ?? 0) / v['units'] : null),
+    format: (value) => `€${Number(value).toFixed(2)}`,
+  },
+  { name: 'share', caption: '% of total', expression: (v) => v['amount'] ?? null, displayMode: 'percentOfGrandTotal' },
+  // difference from the previous column
+  { name: 'delta', caption: 'Δ prev. year', expression: (v) => v['amount'] ?? null, displayMode: 'absoluteVariation' },
+  { name: 'running', caption: 'Running', expression: (v) => v['amount'] ?? null, runningTotal: { direction: 'row' } },
+];
+
+export function CalculatedMeasures() {
+  const pivot = useRef<OgePivotGridHandle<Sale>>(null);
+
+  // the grid's own cell text, headers repeated on every page, page numbers
+  const pdf = async () => {
+    const { exportPivotToPdf } = await import('@oge-ui/react-pivot/export-pdf');
+    if (pivot.current) await exportPivotToPdf(pivot.current, { title: 'Sales', pageNumbers: true });
+  };
+  return (
+    <>
+      <button type="button" onClick={() => void pdf()}>PDF</button>
+      <OgePivotGrid
+        ref={pivot}
+        data={sales}
+        fields={fields}
+        calculatedFields={calculated}
+        renderCell={(cell) => (
+          <span style={{ color: cell.measureId === 'delta' && Number(cell.value) < 0 ? 'crimson' : undefined }}>
+            {cell.text}
+          </span>
+        )}
+      />
+    </>
+  );
+}
+```
+
+### Member filters & row-header layouts
+
+```ts
+'use client';
+
+import { OgePivotGrid } from '@oge-ui/react-pivot';
+import type { OgePivotFieldDef } from '@oge-ui/react-pivot';
+
+interface Sale {
+  region: string;
+  country: string;
+  date: string;
+  amount: number;
+  units: number;
+}
+
+declare const sales: Sale[];
+
+// Top-N, label and value filters run before aggregation, so totals follow
+const fields: OgePivotFieldDef<Sale>[] = [
+  { dataField: 'region', area: 'row' },
+  {
+    dataField: 'country', area: 'row',
+    topN: { count: 3, measure: 'amount' },
+    labelFilter: { operator: 'contains', value: 'a' },
+    // valueFilter: { measure: 'amount', operator: 'greaterThan', value: 1000 },
+  },
+  { dataField: 'date', caption: 'Year', area: 'column', groupInterval: 'year' },
+  { dataField: 'amount', caption: 'Amount', area: 'data', summaryType: 'sum' },
+];
+
+export function FilteredPivot() {
+  return (
+    <OgePivotGrid data={sales} fields={fields} rowHeaderLayout="tabular" />
+  );
+}
+```
+
+### Pivot + chart
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgePivotGrid } from '@oge-ui/react-pivot';
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgePivotChartData, OgePivotFieldDef, OgePivotGridHandle } from '@oge-ui/react-pivot';
+
+interface Sale {
+  region: string;
+  country: string;
+  date: string;
+  amount: number;
+}
+
+declare const sales: Sale[];
+
+const fields: OgePivotFieldDef<Sale>[] = [
+  { dataField: 'region', area: 'row' },
+  { dataField: 'country', area: 'row' },
+  { dataField: 'date', caption: 'Year', area: 'column', groupInterval: 'year' },
+  { dataField: 'amount', caption: 'Amount', area: 'data', summaryType: 'sum' },
+];
+
+export function PivotWithChart() {
+  const pivot = useRef<OgePivotGridHandle<Sale>>(null);
+  const [chart, setChart] = useState<OgePivotChartData<'bar'>>({ dataSource: [], series: [] });
+
+  // the pivot does not depend on the charts package: the app binds the two —
+  // rows × measures of the current view, re-read whenever the view changes
+  const refresh = () => {
+    if (pivot.current) setChart(pivot.current.getChartData({ type: 'bar' }));
+  };
+  return (
+    <>
+      <OgePivotGrid ref={pivot} data={sales} fields={fields} onResultChange={refresh} />
+      <OgeChart dataSource={chart.dataSource} series={chart.series} style={{ height: 320 }} />
     </>
   );
 }

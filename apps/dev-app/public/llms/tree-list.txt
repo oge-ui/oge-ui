@@ -93,7 +93,12 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/tree-list`
 
 - values: `OGE_GRID_CONFIG`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnGroup`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgeTreeList`, `provideOgeGridConfig`
-- types: `OgeCellClickEvent`, `OgeCellTemplateContext`, `OgeColumnLookup`, `OgeDataErrorEvent`, `OgeDataType`, `OgeEditingStartEvent`, `OgeExportingEvent`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeHeaderTemplateContext`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortingOptions`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
+- types: `OgeCellClickEvent`, `OgeCellTemplateContext`, `OgeColumnLookup`, `OgeDataErrorEvent`, `OgeDataType`, `OgeEditingStartEvent`, `OgeExportingEvent`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeHeaderTemplateContext`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortingOptions`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeExportOptions`, `OgeTreeInitNewRowEvent`, `OgeTreeListRemoteOperations`, `OgeTreeListSummary`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`, `OgeTreeSummaryItem`
+
+`@oge-ui/tree-list/export-pdf`
+
+- values: `buildTreePdfDocument`, `exportOgeTreeListToPdf`
+- types: `OgePdfPageInfo`, `OgeTreePdfExportOptions`
 
 `@oge-ui/tree-list/export-excel`
 
@@ -149,6 +154,8 @@ _Filtering & paging_
 | `filterDebounce` | `number \| undefined` | `—` | Debounce for text filter inputs. |
 | `announcements` | `boolean \| undefined` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, row expansion, select-all and blocked-save validation changes through the shared `OgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
 | `paging` | `false \| OgePagingOptions` | `false` | Pages the visible (flattened) rows client-side; paging wins over `virtualScroll`. |
+| `summary` | `OgeTreeListSummary<T> \| undefined` | `—` | Aggregates (`sum` / `avg` / `min` / `max` / `count` / `custom`). `totalItems` render in a footer row over every row the filter leaves visible, at every level (collapsed branches included); `recursiveItems` show each parent its visible descendants’ aggregate beside its own value. Both are part of the Excel / PDF exports (total row, per-parent footer lines). |
+| `remoteOperations` | `OgeTreeListRemoteOperations \| undefined` | `—` | `{ filtering: true }` (full load mode) sends the filter row, header filter, builder filter and search text to the data source and asks `source.distinct(field, { filter })` for header-filter values. **Server contract:** answer with every matching row _plus all of its ancestors_, flat, in the unfiltered shape; the tree renders the answer as-is (no client re-filtering) and opens the branches leading to the matches. Lazy trees keep their own remote match discovery. |
 | `sortable / sorting` | `boolean \| 'single' \| 'multi' / OgeSortingOptions` | `true` | Sibling-scoped, multi-column by default. |
 
 _Layout, editing & misc (grid-shared)_
@@ -196,7 +203,7 @@ _Editing, paging, state & export_
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Load panel independent of data activity. |
 | `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `void` | Reset the view. |
-| `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; Excel entry sets real outline levels.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
+| `getExportData(options?) / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async). `getExportData` takes `OgeTreeExportOptions` (`visibleColumnsOnly`, `selectedRowsOnly`, `summaries`) and returns rows, levels and the summary lines; CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 
 #### Events
 
@@ -227,7 +234,12 @@ _Shared with the grid_
 | `OgeTreeDropPosition` | `'inside' \| 'before' \| 'after'` | Reparent vs sibling ordering. |
 | `OgeTreeExportData<T>` | `OgeExportData<T> & { levels: readonly number[] }` | Zero-based depth per exported row (drives spreadsheet outline levels). |
 | `TreeFilterMode` | `'withAncestors' \| 'fullBranch'` | Visible set under a filter. |
-| `exportOgeTreeListToExcel(treeList, options?)` | `@oge-ui/tree-list/export-excel` | Lazy Excel export with native outline grouping. |
+| `exportOgeTreeListToExcel(treeList, options?)` | `@oge-ui/tree-list/export-excel` | Lazy Excel export with native outline grouping, the total row and per-parent summary rows (values or `SUBTOTAL` formulas), grid widths, freeze panes and the grid exporters’ styles. |
+| `OgeTreeListSummary<T> / OgeTreeSummaryItem` | `{ totalItems?; recursiveItems?; calculateCustomSummary? } / { field; type; name?; showInColumn? }` | The `summary` input: items aggregate `field` with a `SummaryType`; `custom` runs `calculateCustomSummary[name ?? field](rows, field)`; `showInColumn` moves the value under another column. |
+| `OgeTreeListRemoteOperations` | `{ filtering?: boolean }` | What the tree hands to its data source (see `remoteOperations` for the server contract). |
+| `OgeTreeExportOptions` | `{ visibleColumnsOnly?; selectedRowsOnly?; summaries? }` | What `getExportData()` and both export entries include. |
+| `exportOgeTreeListToPdf(treeList, options?)` | `@oge-ui/tree-list/export-pdf` | Lazy PDF export (optional `jspdf` + `jspdf-autotable` peers): hierarchy as first-column indentation, the header repeated on every page, total and per-parent summary rows, grid widths fitted to the page, `title`, `pageHeader` / `pageFooter`, `pageNumbers`. `buildTreePdfDocument(data, options)` for custom pipelines. |
+| `OgeTreeExcelExportOptions<T> / OgeTreePdfExportOptions<T>` | `interfaces` | The tree download helpers’ options — the grid exporters’ options (styles, formats, freeze panes, `summaryFormulas`, page chrome) minus grouping. |
 | `Re-exports` | `from @oge-ui/grid` | `OgeColumn`, templates, config/messages and the shared event payload types are re-exported so tree-only consumers have a single import source. |
 
 ## Demos
@@ -460,6 +472,121 @@ export class Demo {
   ];
 
   protected readonly selectedKeys = signal<RowKey[]>([]);
+}
+```
+
+### Remote
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface PlanTask {
+  id: number;
+  parentId: number | null;
+  task: string;
+  owner: string;
+  hours: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- filter row, header filter and search go to the server -->
+    <oge-tree-list [data]="source" keyExpr="id" parentIdExpr="parentId"
+                   [remoteOperations]="{ filtering: true }"
+                   [filterRow]="true" [headerFilter]="true" [searchPanel]="true">
+      <oge-column field="task" caption="Task" />
+      <oge-column field="owner" caption="Owner" />
+      <oge-column field="hours" caption="Hours" dataType="number" />
+    </oge-tree-list>
+  `,
+})
+export class Demo {
+  // Contract: answer with every match PLUS all of its ancestors, flat —
+  // the tree renders the answer as-is and opens the branches to the matches.
+  protected readonly source = new CustomDataSource<PlanTask>({
+    key: 'id',
+    load: async (options) => {
+      const response = await fetch('/api/plan/tree', {
+        method: 'POST',
+        body: JSON.stringify({ filter: options.filter, search: options.searchText }),
+      });
+      return { data: (await response.json()) as PlanTask[] };
+    },
+    // header-filter values come from the server too
+    distinct: async (field, options) => {
+      const response = await fetch(`/api/plan/distinct/${field}`, {
+        method: 'POST',
+        body: JSON.stringify({ filter: options?.filter ?? null }),
+      });
+      return (await response.json()) as unknown[];
+    },
+  });
+}
+```
+
+### Summaries
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
+import type { OgeTreeListSummary } from '@oge-ui/tree-list';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-list #tree [data]="tasks" keyExpr="id" parentIdExpr="parentId"
+                   [autoExpandAll]="true" [summary]="summary">
+      <oge-column field="task" caption="Task" />
+      <oge-column field="owner" caption="Owner" />
+      <oge-column field="hours" caption="Hours" dataType="number" />
+      <oge-column field="cost" caption="Cost" dataType="number" />
+    </oge-tree-list>
+
+    <button type="button" (click)="excel()">Excel</button>
+    <button type="button" (click)="pdf()">PDF</button>
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, parentId: null, task: 'Build', owner: 'Ada', hours: 4, cost: 400 },
+    { id: 2, parentId: 1, task: 'Design', owner: 'Grace', hours: 6, cost: 570 },
+    { id: 3, parentId: 2, task: 'Sketch', owner: 'Alan', hours: 3, cost: 285 },
+    { id: 4, parentId: 1, task: 'Code', owner: 'Ada', hours: 12, cost: 1140 },
+    { id: 5, parentId: null, task: 'Ship', owner: 'Barbara', hours: 2, cost: 190 },
+  ];
+
+  // totalItems → the footer row; recursiveItems → each parent's subtree aggregate
+  protected readonly summary: OgeTreeListSummary = {
+    totalItems: [
+      { field: 'task', type: 'count' },
+      { field: 'hours', type: 'sum' },
+      { field: 'cost', type: 'avg' },
+    ],
+    recursiveItems: [
+      { field: 'hours', type: 'sum' },
+      { field: 'cost', type: 'max' },
+    ],
+  };
+
+  private readonly tree = viewChild.required(OgeTreeList);
+
+  // both lazy entries carry the summaries: a total row + one footer per parent
+  protected async excel(): Promise<void> {
+    const { exportOgeTreeListToExcel } = await import('@oge-ui/tree-list/export-excel');
+    await exportOgeTreeListToExcel(this.tree(), { filename: 'plan.xlsx', summaryFormulas: true });
+  }
+
+  protected async pdf(): Promise<void> {
+    const { exportOgeTreeListToPdf } = await import('@oge-ui/tree-list/export-pdf');
+    await exportOgeTreeListToPdf(this.tree(), { filename: 'plan.pdf', title: 'Plan', pageNumbers: true });
+  }
 }
 ```
 

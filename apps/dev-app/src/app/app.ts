@@ -197,6 +197,11 @@ export class App {
           icon: 'pages',
         },
         {
+          path: '/components/data-grid/export',
+          label: 'Excel & PDF Export',
+          icon: 'copy',
+        },
+        {
           path: '/components/data-grid/virtual-scroll',
           label: 'Virtual Scroll',
           icon: 'zap',
@@ -254,6 +259,11 @@ export class App {
           icon: 'sort',
         },
         {
+          path: '/components/tree-list/summaries',
+          label: 'Summaries',
+          icon: 'layers',
+        },
+        {
           path: '/components/tree-list/editing',
           label: 'Editing',
           icon: 'pencil',
@@ -274,6 +284,16 @@ export class App {
           path: '/components/pivot-grid/analytics',
           label: 'Analytics & Export',
           icon: 'activity',
+        },
+        {
+          path: '/components/pivot-grid/chart-integration',
+          label: 'Chart Integration',
+          icon: 'gauge',
+        },
+        {
+          path: '/components/pivot-grid/calculated-fields',
+          label: 'Calculated Fields',
+          icon: 'sliders',
         },
         {
           path: '/components/pivot-grid/api',

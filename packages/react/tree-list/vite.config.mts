@@ -43,12 +43,14 @@ export default defineConfig(() => ({
     lib: {
       // Separate entries on purpose: the JS never imports the stylesheet (a
       // consumer rendering on the server is not forced to resolve it), and
-      // `exceljs` is an optional peer that only the `export-excel` entry
-      // pulls in — the same shape as the Angular package's secondary entry.
+      // `exceljs` / `jspdf` are optional peers that only the `export-excel`
+      // / `export-pdf` entries pull in — the same shape as the Angular
+      // package's secondary entries.
       entry: {
         index: 'src/index.ts',
         styles: 'src/styles.ts',
         'export-excel': 'src/export-excel.ts',
+        'export-pdf': 'src/export-pdf.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
@@ -63,8 +65,11 @@ export default defineConfig(() => ({
         'react/jsx-runtime',
         '@oge-ui/behavior',
         '@oge-ui/behavior/export-excel',
+        '@oge-ui/behavior/export-pdf',
         '@oge-ui/core',
         'exceljs',
+        'jspdf',
+        'jspdf-autotable',
         '@oge-ui/react-forms',
         '@oge-ui/react-grid',
         '@oge-ui/react-grid/foundation',

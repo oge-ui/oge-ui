@@ -6,6 +6,7 @@ import {
   ViewEncapsulation,
   afterNextRender,
   computed,
+  contentChild,
   contentChildren,
   effect,
   inject,
@@ -34,14 +35,25 @@ import {
   pivotIsRtl as isRtl,
   pivotKeyboardPointer,
   type OgePivotAxisLine,
+  type OgePivotCalculatedField,
   type OgePivotCellClickEvent,
   type OgePivotCellPrepared,
+  type OgePivotCellTemplateContext,
+  type OgePivotChartData,
+  type OgePivotChartOptions,
   type OgePivotFieldChooserOptions,
   type OgePivotFieldDef,
   type OgePivotHeaderCell,
   type OgePivotMenuItem,
+  type OgePivotRowHeaderLayout,
 } from '@oge-ui/pivot-engine';
+import { NgTemplateOutlet } from '@angular/common';
 import { OGE_PIVOT_MESSAGES, type OgePivotMessages } from './pivot-config';
+import {
+  OgePivotCellTemplate,
+  OgePivotColumnHeaderTemplate,
+  OgePivotRowHeaderTemplate,
+} from './pivot-templates';
 import { OgePivotField } from './pivot-field';
 import { OgePivotStateStore } from './pivot-state.store';
 import { SIGNAL_ADAPTER } from './signal-adapter';
@@ -50,13 +62,27 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
 // (ADR 0003) — re-exported because they are public API of this package.
 export {
   OGE_PIVOT_FIELD_DRAG_TYPE,
+  toChartSeries,
   type OgePivotAxisLine,
+  type OgePivotCalculatedCell,
+  type OgePivotCalculatedField,
   type OgePivotCellClickEvent,
   type OgePivotCellPrepared,
+  type OgePivotCellTemplateContext,
+  type OgePivotChartData,
+  type OgePivotChartOptions,
+  type OgePivotChartPoint,
+  type OgePivotChartSeries,
   type OgePivotFieldChooserOptions,
   type OgePivotFieldDef,
   type OgePivotHeaderCell,
+  type OgePivotLabelFilter,
+  type OgePivotLabelFilterOperator,
   type OgePivotMenuItem,
+  type OgePivotRowHeaderLayout,
+  type OgePivotTopNFilter,
+  type OgePivotValueFilter,
+  type OgePivotValueFilterOperator,
 } from '@oge-ui/pivot-engine';
 
 /** Reads one `<oge-pivot-field>` directive into its data form. */
@@ -83,6 +109,9 @@ function fieldDefOf<T>(directive: OgePivotField<T>): OgePivotFieldDef<T> {
     selector: directive.selector(),
     format: directive.format(),
     customizeText: directive.customizeText(),
+    labelFilter: directive.labelFilter(),
+    valueFilter: directive.valueFilter(),
+    topN: directive.topN(),
   };
 }
 
@@ -112,6 +141,7 @@ function fieldDefOf<T>(directive: OgePivotField<T>): OgePivotFieldDef<T> {
     '(document:click)': 'onDocumentClick($event)',
     '(keydown.escape)': 'closePopups()',
   },
+  imports: [NgTemplateOutlet],
   templateUrl: './pivot-grid.html',
   styleUrl: './pivot-grid.scss',
 })
@@ -137,8 +167,21 @@ export class OgePivotGrid<T = unknown> {
   readonly stateKey = input<string | undefined>(undefined);
   /** Field-chooser dialog behavior. */
   readonly fieldChooser = input<OgePivotFieldChooserOptions>({});
+  /**
+   * Measures computed from the other measures of each cell (totals
+   * included), with their own format and display mode (percent of row /
+   * column / grand total, running total, difference from the previous column).
+   */
+  readonly calculatedFields = input<readonly OgePivotCalculatedField[]>([]);
+  /** Row-header layout: `'compact'` (indented), `'outline'` or `'tabular'`. */
+  readonly rowHeaderLayout = input<OgePivotRowHeaderLayout>('compact');
   /** Debounced notification whenever the persistable state changes. */
   readonly stateChange = output<PivotGridStateSnapshot>();
+  /**
+   * The materialized view changed (data, layout, expansion, filters) — the
+   * hook a linked chart re-reads `getChartData()` from.
+   */
+  readonly resultChange = output<PivotResult>();
 
   readonly cellClick = output<OgePivotCellClickEvent>();
   readonly cellDblClick = output<OgePivotCellClickEvent>();
@@ -172,6 +215,8 @@ export class OgePivotGrid<T = unknown> {
       messages: () => this.msg(),
       customizeCell: () => this.customizeCell(),
       fieldChooser: () => this.fieldChooser(),
+      calculatedFields: () => this.calculatedFields(),
+      rowHeaderLayout: () => this.rowHeaderLayout(),
     },
     fieldLayoutChange: (fields) => this.fieldLayoutChange.emit(fields),
   });
@@ -214,6 +259,16 @@ export class OgePivotGrid<T = unknown> {
   protected readonly chooserDraft = this.core.chooserDraft;
   protected readonly chooserFields = this.core.chooserFields;
   protected readonly chooserAllFields = this.core.chooserAllFields;
+  protected readonly rowHeaderSegments = this.core.rowHeaderSegments;
+  protected readonly rowFieldCaptions = this.core.rowFieldCaptions;
+
+  protected readonly cellTemplate = contentChild(OgePivotCellTemplate);
+  protected readonly rowHeaderTemplate = contentChild(
+    OgePivotRowHeaderTemplate,
+  );
+  protected readonly columnHeaderTemplate = contentChild(
+    OgePivotColumnHeaderTemplate,
+  );
 
   protected readonly viewportRef =
     viewChild<ElementRef<HTMLElement>>('pivotViewport');
@@ -229,6 +284,11 @@ export class OgePivotGrid<T = unknown> {
       apply: (snapshot) => this.applyState(snapshot),
       beforeRestore: () => this.fieldDirectives(),
       onChange: (snapshot) => this.stateChange.emit(snapshot),
+    });
+    // a linked chart (or any consumer) follows the materialized view
+    effect(() => {
+      const result = this.core.result();
+      untracked(() => this.resultChange.emit(result));
     });
     // remote load: layout or expansion changes issue one (abortable) request
     effect(() => {
@@ -264,6 +324,39 @@ export class OgePivotGrid<T = unknown> {
   /** The materialized pivot exactly as rendered — for custom export integrations. */
   getResult(): PivotResult {
     return untracked(() => this.core.getResult());
+  }
+
+  /**
+   * The current view as chart data — `dataSource` + `series` for
+   * `<oge-chart>`: rows × measures, following the expand state; pass
+   * `argumentIndexes` to chart a selection. The pivot does not depend on
+   * the charts package; the app binds the two.
+   */
+  getChartData<TType extends string = 'bar'>(
+    options?: OgePivotChartOptions<TType>,
+  ): OgePivotChartData<TType> {
+    return untracked(() => this.core.getChartData<TType>(options));
+  }
+
+  /** A value cell exactly as rendered: text after formats, display modes and `customizeCell`. */
+  getPreparedCell(
+    rowIndex: number,
+    columnIndex: number,
+    measureIndex: number,
+  ): OgePivotCellPrepared {
+    return untracked(() =>
+      this.core.preparedCell(rowIndex, columnIndex, measureIndex),
+    );
+  }
+
+  /** Captions of the row fields, in layout order (the export headers). */
+  getRowFieldCaptions(): readonly string[] {
+    return untracked(() => this.core.rowFieldCaptions());
+  }
+
+  /** The effective row-header layout. */
+  getRowHeaderLayout(): OgePivotRowHeaderLayout {
+    return untracked(() => this.core.rowHeaderLayout());
   }
 
   /** CSV of exactly what is on screen (multi-level headers flattened). */
@@ -312,6 +405,20 @@ export class OgePivotGrid<T = unknown> {
 
   protected columnSlotIsGrand(): readonly boolean[] {
     return this.core.columnSlotFlags().grand;
+  }
+
+  protected cellContext(
+    rowIndex: number,
+    columnIndex: number,
+    measureIndex: number,
+  ): { $implicit: OgePivotCellTemplateContext } {
+    return {
+      $implicit: this.core.cellTemplateContext(
+        rowIndex,
+        columnIndex,
+        measureIndex,
+      ),
+    };
   }
 
   protected cellText(

@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { OgeStateStorage } from '@oge-ui/behavior';
 import type {
   OgePivotStore,
@@ -9,11 +9,18 @@ import type {
   PivotResult,
 } from '@oge-ui/core';
 import type {
+  OgePivotAxisLine,
+  OgePivotCalculatedField,
   OgePivotCellClickEvent,
   OgePivotCellPrepared,
+  OgePivotCellTemplateContext,
+  OgePivotChartData,
+  OgePivotChartOptions,
   OgePivotFieldChooserOptions,
   OgePivotFieldDef,
+  OgePivotHeaderCell,
   OgePivotMessages,
+  OgePivotRowHeaderLayout,
 } from '@oge-ui/pivot-engine';
 
 /**
@@ -44,6 +51,28 @@ export interface OgePivotGridProps<T = unknown> {
   messages?: Partial<OgePivotMessages>;
   /** Conditional appearance hook: mutate `text` / `cssClass` per cell. */
   customizeCell?: (cell: OgePivotCellPrepared) => void;
+  /**
+   * Measures computed from the other measures of each cell (totals
+   * included), with their own format and display mode (percent of row /
+   * column / grand total, running total, difference from the previous column).
+   */
+  calculatedFields?: readonly OgePivotCalculatedField[];
+  /** Row-header layout: `'compact'` (default, indented), `'outline'` or `'tabular'`. */
+  rowHeaderLayout?: OgePivotRowHeaderLayout;
+  /** Custom content of each value cell (per measure) — Angular's `*ogePivotCellTemplate`. */
+  renderCell?: (cell: OgePivotCellTemplateContext) => ReactNode;
+  /** Custom row-header label — Angular's `*ogePivotRowHeaderTemplate`. */
+  renderRowHeader?: (
+    line: OgePivotAxisLine,
+    context: { rowIndex: number; segments: readonly string[] | null },
+  ) => ReactNode;
+  /** Custom column-header content — Angular's `*ogePivotColumnHeaderTemplate`. */
+  renderColumnHeader?: (cell: OgePivotHeaderCell) => ReactNode;
+  /**
+   * The materialized view changed (data, layout, expansion, filters) — the
+   * hook a linked chart re-reads `getChartData()` from.
+   */
+  onResultChange?: (result: PivotResult) => void;
   /** Persists the field layout + expansion under this key. */
   stateKey?: string;
   /**
@@ -68,6 +97,24 @@ export interface OgePivotGridProps<T = unknown> {
 export interface OgePivotGridHandle<T = unknown> {
   /** The materialized pivot exactly as rendered. */
   getResult(): PivotResult;
+  /**
+   * The current view as chart data — `dataSource` + `series` for
+   * `<OgeChart>`: rows × measures, following the expand state; pass
+   * `argumentIndexes` to chart a selection.
+   */
+  getChartData<TType extends string = 'bar'>(
+    options?: OgePivotChartOptions<TType>,
+  ): OgePivotChartData<TType>;
+  /** A value cell exactly as rendered: text after formats, display modes and `customizeCell`. */
+  getPreparedCell(
+    rowIndex: number,
+    columnIndex: number,
+    measureIndex: number,
+  ): OgePivotCellPrepared;
+  /** Captions of the row fields, in layout order (the export headers). */
+  getRowFieldCaptions(): readonly string[];
+  /** The effective row-header layout. */
+  getRowHeaderLayout(): OgePivotRowHeaderLayout;
   /** Raw rows behind a cell (local data only). */
   drillDown(args: PivotDrillDownArgs): T[];
   /** Axis-wide expansion; remote mode expands only what is loaded. */

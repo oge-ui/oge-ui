@@ -42,12 +42,13 @@ export default defineConfig(() => ({
     reportCompressedSize: true,
     lib: {
       // The stylesheet is its own entry so the JS never imports CSS; the
-      // Excel export is its own entry so only an app that imports it pays
-      // for `exceljs` — the Angular package's secondary-entry shape.
+      // Excel / PDF exports are their own entries so only an app that imports one pays
+      // for `exceljs` / `jspdf` — the Angular package's secondary-entry shape.
       entry: {
         index: 'src/index.ts',
         styles: 'src/styles.ts',
         'export-excel': 'src/export-excel.ts',
+        'export-pdf': 'src/export-pdf.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
@@ -64,8 +65,11 @@ export default defineConfig(() => ({
         '@oge-ui/core',
         '@oge-ui/pivot-engine',
         '@oge-ui/pivot-engine/export-excel',
+        '@oge-ui/pivot-engine/export-pdf',
         '@oge-ui/react-grid',
         'exceljs',
+        'jspdf',
+        'jspdf-autotable',
       ],
       output: {
         // Rollup strips module-level directives when it bundles; re-add

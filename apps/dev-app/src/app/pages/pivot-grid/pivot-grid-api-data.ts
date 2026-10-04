@@ -61,6 +61,20 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
             'Appearance hook: mutate <code>text</code> / <code>cssClass</code> per cell (the reference <code>cellPrepared</code> equivalent).',
         },
         {
+          name: 'calculatedFields',
+          type: 'readonly OgePivotCalculatedField[]',
+          default: '[]',
+          description:
+            'Measures computed from the other measures of each cell — <code>{ name, caption, expression: (values) =&gt; number | null, format, displayMode, runningTotal }</code>. Evaluated on every cell, subtotals and grand totals included, so a ratio stays a ratio of the totals. <code>displayMode</code> takes the measure display modes (percent of row / column / grand total, <code>absoluteVariation</code> = difference from the previous column, <code>percentVariation</code>); <code>runningTotal</code> accumulates along an axis. They follow the regular measures in cells, exports and chart data.',
+        },
+        {
+          name: 'rowHeaderLayout',
+          type: "'compact' | 'outline' | 'tabular'",
+          default: "'compact'",
+          description:
+            '<code>compact</code> indents every level in one column; <code>outline</code> gives each row field its own label column (a label only in its field’s column); <code>tabular</code> repeats the ancestors on every line so each reads on its own. The row header stays one <code>rowheader</code> cell per line, so the keyboard model does not change; the corner shows the row field captions.',
+        },
+        {
           name: 'stateKey',
           type: 'string | undefined',
           description:
@@ -83,6 +97,24 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
           type: 'PivotResult',
           description:
             'The materialized pivot exactly as rendered — for custom export integrations.',
+        },
+        {
+          name: 'getChartData(options?): OgePivotChartData',
+          type: 'OgePivotChartData',
+          description:
+            'The current view as chart data — <code>{ dataSource, series }</code> for <code>&lt;oge-chart&gt;</code> / <code>&lt;OgeChart&gt;</code>: one argument per visible row line (the deepest expanded level), one series per column line × measure. Options: <code>argumentAxis</code>, <code>measures</code>, <code>includeTotals</code>, <code>includeGrandTotals</code>, <code>argumentIndexes</code> / <code>seriesIndexes</code> (a selection), <code>type</code>. The pivot does not depend on the charts package — the app binds the two.',
+        },
+        {
+          name: 'getPreparedCell(rowIndex, columnIndex, measureIndex): OgePivotCellPrepared',
+          type: 'OgePivotCellPrepared',
+          description:
+            'A value cell exactly as rendered: text after formats, display modes and <code>customizeCell</code>.',
+        },
+        {
+          name: 'getRowFieldCaptions() / getRowHeaderLayout()',
+          type: "readonly string[] / 'compact' | 'outline' | 'tabular'",
+          description:
+            'The row field captions in layout order and the effective row-header layout — what the PDF export writes its row header from.',
         },
         {
           name: 'drillDown(args: PivotDrillDownArgs): T[]',
@@ -134,6 +166,12 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
           name: 'fieldLayoutChange',
           type: 'readonly PivotFieldConfig[]',
           description: 'The field layout changed (drag, chooser, menus).',
+        },
+        {
+          name: 'resultChange',
+          type: 'PivotResult',
+          description:
+            'The materialized view changed (data, layout, expansion, filters, calculated fields) — the hook a linked chart re-reads <code>getChartData()</code> from.',
         },
         {
           name: 'stateChange',
@@ -317,6 +355,62 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
             'The serializable engine contract lives in <code>&#64;oge-ui/core</code>, not in this package.',
         },
         {
+          name: 'OgePivotCalculatedField / OgePivotCalculatedCell',
+          type: '{ name; caption?; expression(values, cell); format?; displayMode?; runningTotal? }',
+          description:
+            'A calculated measure; <code>expression</code> receives the cell’s measure values keyed by measure id (as displayed) and where it is evaluated (<code>rowPath</code>, <code>columnPath</code>, <code>isTotal</code>, <code>isGrandTotal</code>). Non-finite results and throws become an empty cell.',
+        },
+        {
+          name: 'OgePivotChartData / OgePivotChartOptions / OgePivotChartPoint / OgePivotChartSeries',
+          type: 'interfaces',
+          description:
+            "What <code>getChartData()</code> / <code>toChartSeries()</code> return and take; each series is <code>{ type, name, argumentField: 'argument', valueField, measureId, path }</code> — assignable to the charts’ series input.",
+        },
+        {
+          name: 'toChartSeries(result, options?)',
+          type: 'from @oge-ui/pivot-engine',
+          description:
+            'The pure adapter behind <code>getChartData()</code>, for a <code>PivotResult</code> you hold yourself.',
+        },
+        {
+          name: 'OgePivotLabelFilter / OgePivotValueFilter / OgePivotTopNFilter',
+          type: 'interfaces',
+          description: 'The member filters of a row or column field.',
+        },
+        {
+          name: 'OgePivotLabelFilterOperator / OgePivotValueFilterOperator / OgePivotRowHeaderLayout',
+          type: 'string unions',
+          description: 'The filter operators and the row-header layouts.',
+        },
+        {
+          name: 'OgePivotCellTemplateContext',
+          type: 'OgePivotCellPrepared &amp; { rowIndex; columnIndex; measureIndex }',
+          description: 'What a value-cell template receives.',
+        },
+        {
+          name: '*ogePivotCellTemplate / *ogePivotRowHeaderTemplate / *ogePivotColumnHeaderTemplate',
+          type: 'OgePivotCellTemplate / OgePivotRowHeaderTemplate / OgePivotColumnHeaderTemplate',
+          description:
+            'Structural template slots placed inside <code>&lt;oge-pivot-grid&gt;</code>: <code>let cell</code> (an <code>OgePivotCellTemplateContext</code>), <code>let line; rowIndex as r; segments as s</code>, <code>let cell</code> (an <code>OgePivotHeaderCell</code>). The expander and the keyboard model stay the grid’s.',
+        },
+        {
+          name: 'OgePivotCellTemplateOutletContext / OgePivotRowHeaderTemplateContext / OgePivotColumnHeaderTemplateContext',
+          type: 'interfaces',
+          description: 'The three template contexts.',
+        },
+        {
+          name: 'exportPivotToPdf(grid, options?)',
+          type: '@oge-ui/pivot/export-pdf',
+          description:
+            'Lazy PDF export (optional <code>jspdf</code> + <code>jspdf-autotable</code> peers): the multi-level column headers repeated on every page, the grid’s own cell text, its row-header layout and field captions, bold totals, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code>, <code>pageNumbers</code>, <code>customizeCell</code>. <code>buildPivotPdfDocument(result, options)</code> for custom pipelines.',
+        },
+        {
+          name: 'OgePivotPdfExportOptions / OgePivotPdfCell / OgePdfPageInfo',
+          type: 'interfaces',
+          description:
+            'The PDF helper’s options, the mutable value cell its <code>customizeCell</code> receives (<code>text</code>, <code>style</code>) and what a page callback is told.',
+        },
+        {
           name: 'exportPivotToExcel(grid, options?)',
           type: '@oge-ui/pivot/export-excel',
           description:
@@ -444,6 +538,24 @@ export const OGE_PIVOT_FIELD_API: ApiSections = {
           type: 'functions',
           description:
             'Out-of-band value selector, display formatter and text hook.',
+        },
+        {
+          name: 'labelFilter',
+          type: 'OgePivotLabelFilter | undefined',
+          description:
+            "Keeps the members whose label matches — <code>{ operator: 'contains' | 'notContains' | 'beginsWith' | 'endsWith' | 'equals' | 'notEquals', value }</code>, case- and accent-insensitive.",
+        },
+        {
+          name: 'valueFilter',
+          type: 'OgePivotValueFilter | undefined',
+          description:
+            "Keeps the members whose total of a measure passes — <code>{ measure, operator: 'greaterThan' | 'greaterThanOrEqual' | 'lessThan' | 'lessThanOrEqual' | 'equals' | 'notEquals' | 'between' | 'notBetween', value, value2? }</code> (<code>measure</code> is a data field id).",
+        },
+        {
+          name: 'topN',
+          type: 'OgePivotTopNFilter | undefined',
+          description:
+            "Keeps the <code>count</code> members with the highest (<code>direction: 'top'</code>, default) or lowest total of <code>measure</code>. Member filters run before aggregation — totals follow — in area order; value and Top-N filters compare a member’s grand total (local data only).",
         },
       ],
     },

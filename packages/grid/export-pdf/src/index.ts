@@ -4,6 +4,7 @@ import type { OgeGrid } from '@oge-ui/grid';
 export {
   buildPdfDocument,
   type OgePdfExportOptions,
+  type OgePdfPageInfo,
 } from '@oge-ui/behavior/export-pdf';
 import { buildPdfDocument } from '@oge-ui/behavior/export-pdf';
 import type { OgePdfExportOptions } from '@oge-ui/behavior/export-pdf';
@@ -21,10 +22,7 @@ export async function exportGridToPdf<T extends object>(
   grid: OgeGrid<T>,
   options: OgePdfExportOptions<T> = {},
 ): Promise<void> {
-  const doc = buildPdfDocument(
-    await grid.getExportData({ scope: options.scope }),
-    options,
-  );
+  const doc = buildPdfDocument(await grid.getExportData(options), options);
   if (typeof document === 'undefined') return;
   doc.save(options.filename ?? 'grid.pdf');
 }
