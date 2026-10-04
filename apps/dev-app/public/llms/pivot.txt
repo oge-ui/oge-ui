@@ -125,6 +125,7 @@ Predictable wrong guesses, and what to write instead.
 | `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the reference `cellPrepared` equivalent). |
 | `calculatedFields` | `readonly OgePivotCalculatedField[]` | `[]` | Measures computed from the other measures of each cell — `{ name, caption, expression: (values) => number \| null, format, displayMode, runningTotal }`. Evaluated on every cell, subtotals and grand totals included, so a ratio stays a ratio of the totals. `displayMode` takes the measure display modes (percent of row / column / grand total, `absoluteVariation` = difference from the previous column, `percentVariation`); `runningTotal` accumulates along an axis. They follow the regular measures in cells, exports and chart data. |
 | `rowHeaderLayout` | `'compact' \| 'outline' \| 'tabular'` | `'compact'` | `compact` indents every level in one column; `outline` gives each row field its own label column (a label only in its field’s column); `tabular` repeats the ancestors on every line so each reads on its own. The row header stays one `rowheader` cell per line, so the keyboard model does not change; the corner shows the row field captions. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: row headers on the right, collapsed expand chevrons pointing left, Left/Right arrow keys and Ctrl+Arrow field-chip moves mirrored, the field menu's move items labelled by screen side, and the context menu and filter popup opening leftwards. Unset follows the page — the computed `direction` or the nearest `dir` attribute, read after the first render and kept current when a `dir` changes; an explicit value also sets `dir` on the host. |
 | `stateKey` | `string \| undefined` | `—` | Persists the field layout + expansion via `OGE_STATE_STORAGE`. |
 | `messages` | `Partial<OgePivotMessages>` | `{}` | Per-instance overrides of the UI strings. |
 
@@ -334,6 +335,37 @@ export class Demo {
     const { exportPivotToExcel } = await import('@oge-ui/pivot/export-excel');
     await exportPivotToExcel(this.pivot(), { filename: 'sales.xlsx' });
   }
+}
+```
+
+### Rtl
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgePivotField, OgePivotGrid } from '@oge-ui/pivot';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePivotField, OgePivotGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rtlEnabled (unset = follow the page's dir) mirrors the pivot: row
+         headers on the right, collapsed chevrons pointing left, ArrowLeft /
+         ArrowRight and Ctrl+Arrow chip moves swapped, menus opening leftwards. -->
+    <oge-pivot-grid [data]="sales" [rtlEnabled]="true">
+      <oge-pivot-field dataField="region" area="row" />
+      <oge-pivot-field dataField="country" area="row" />
+      <oge-pivot-field dataField="date" area="column" groupInterval="year" />
+      <oge-pivot-field dataField="amount" area="data" summaryType="sum" />
+    </oge-pivot-grid>
+  `,
+})
+export class Demo {
+  protected readonly sales = [
+    { region: 'EMEA', country: 'Germany', date: '2026-02-11', amount: 1249 },
+    { region: 'EMEA', country: 'Türkiye', date: '2026-05-02', amount: 890 },
+    { region: 'APAC', country: 'Japan', date: '2025-11-19', amount: 2140 },
+  ];
 }
 ```
 

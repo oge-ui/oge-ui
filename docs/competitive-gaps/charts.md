@@ -7,7 +7,7 @@ Competitors: DevExtreme (dx), Kendo UI for Angular (K), Syncfusion (SF), Highcha
 
 How I checked: I read `charts-api-data.ts`, ROADMAP.md §Charts, `series-model.ts`, `charts-types.ts`, `chart-keyboard.ts`, `chart-gesture.ts`, `polar-model.ts`, `pie-model.ts`, `range-selector-model.ts` and `chart.scss`. Every "Missing" claim was grepped across `packages/charts`, `packages/charts-engine` and `packages/react/charts`, excluding spec files. Competitor coverage comes from the official docs pages I fetched (Kendo series-types, DevExtreme series-types, AG Charts Enterprise) and from documented product feature lists. Where I am less sure about one vendor, the row says so.
 
-Status refresh (2026-10-04, `main` @ bd6b08e): only the pivot chart binding row changed (shipped in G1b, on the pivot side). Every other gap here is the G2 (charts depth) / W8 (new chart components) plan; RTL in the engines is wave W4.
+Status refresh (2026-10-04, `main` @ bd6b08e): only the pivot chart binding row changed (shipped in G1b, on the pivot side). Every other gap here is the G2 (charts depth) / W8 (new chart components) plan; RTL in the engines was wave W4 (D4: charts re-verified in `rtl.spec.ts`; `observeChartRtl` now follows a later `dir` flip).
 
 Status refresh (2026-10-04, G2b — charts depth): per-point colour, full data labels, trendlines and indicators, waterfall / box plot / histogram / pareto / ohlc / stacked line and spline-area types, nested doughnut, radial bar and JPEG / PDF / print export shipped in both layers; see the rows marked G2b.
 

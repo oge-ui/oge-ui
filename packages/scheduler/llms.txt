@@ -131,6 +131,7 @@ _Date & views_
 | `dayStartHour / dayEndHour / cellDuration` | `number` | `0 / 24 / 30` | Visible hour window and slot raster (minutes) of the time grids. |
 | `agendaDuration` | `number` | `7` | Days the agenda view lists from the anchor date. |
 | `scrollTime` | `number \| undefined` | `—` | Initial scroll position of the day/week body in hours (fractions allowed, e.g. `8.5`); re-applied on view/period changes. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: day columns, month cells and the timeline run right-to-left (the first day is the rightmost column), the toolbar chevrons flip, Left/Right (and Ctrl+Left/Right moves) mirror and horizontal drag deltas invert. Unset follows the page — `ogeResolveDirection` reads the computed `direction` or the nearest `dir` attribute after the first render and observes later `dir` changes; an explicit value also sets `dir` on the host. |
 
 _Behavior_
 
@@ -480,6 +481,52 @@ export class Demo {
       startDate: new Date(2026, 7, 6, 18, 0),
       endDate: new Date(2026, 7, 6, 19, 0),
       color: '#dc2626',
+    },
+  ];
+}
+```
+
+### Rtl
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rtlEnabled unset follows the page's dir (and its changes);
+         true/false forces a direction and sets dir on the host. Columns,
+         month cells and the timeline run right-to-left, Left/Right keys and
+         horizontal drags mirror. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="week"
+      [views]="['week', 'month', 'timelineWeek']"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      [rtlEnabled]="true"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'Design review',
+      startDate: new Date(2026, 7, 4, 9, 30),
+      endDate: new Date(2026, 7, 4, 11, 0),
+    },
+    {
+      id: 2,
+      text: 'Sprint planning',
+      startDate: new Date(2026, 7, 6, 10, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
     },
   ];
 }

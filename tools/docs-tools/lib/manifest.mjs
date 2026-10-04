@@ -476,7 +476,7 @@ export const PACKAGES = [
     npm: '@oge-ui/behavior',
     label: 'Behavior',
     summary:
-      'Framework-free interaction and accessibility layer shared by every package: popup positioning, focus trapping, the single overlay Escape stack and ref-counted body scroll locking. Installed automatically — you rarely import it directly.',
+      'Framework-free interaction and accessibility layer shared by every package: popup positioning, focus trapping, the single overlay Escape stack, ref-counted body scroll locking and the one writing-direction helper every component resolves RTL through (`ogeIsRtl`, `ogeResolveDirection`, `observeDirection` — SSR-safe). Installed automatically — you rarely import it directly.',
     docsRoot: null,
     pageDirs: [],
     apiPage: null,

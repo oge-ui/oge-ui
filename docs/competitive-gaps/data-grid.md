@@ -172,6 +172,8 @@ field chooser (instant/onDemand), drill-down, 2-axis virtualization, remote stor
 
 ## 3. Pivot Grid (`@oge-ui/pivot`, `@oge-ui/react-pivot`, commercial)
 
+Status refresh (2026-10-04, W4 D4): **RTL — Have.** `rtlEnabled` (auto from `dir`), mirrored headers, chevrons, Left/Right keys, field-menu move labels and popups; RTL demo on the analytics page and `rtl.spec.ts` in both layers.
+
 | Feature                                                                                                                         | Who has it                                                                                                  | OGE status                                                                                                                                    | Impact | Effort |
 | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
 | Pivot chart binding (chart follows pivot layout / expanded state)                                                               | DX (`bindChart`), SF (pivot chart), K (chart integration), AG (pivot charts), MUI (charts integration)      | **Have** (G1b) — `getChartData()` / `toChartSeries()` (plain data, no charts dependency) + `resultChange`; demo page links pivot and chart    | H      | M      |
