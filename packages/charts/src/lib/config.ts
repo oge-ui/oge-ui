@@ -18,6 +18,7 @@ export {
   type OgeChartsConfig,
   type OgeChartsConfigInput,
   type OgeChartsMessages,
+  type OgeChartsPeriodMessages,
 } from '@oge-ui/charts-engine';
 
 export const OGE_CHARTS_CONFIG = new InjectionToken<OgeChartsConfig>(
