@@ -208,6 +208,28 @@ export const appRoutes: Route[] = [
         title: 'OGE — Data Grid Master-Detail',
       },
       {
+        path: 'range-selection',
+        loadComponent: () =>
+          import('./pages/data-grid/range-selection').then(
+            (m) => m.RangeSelectionPage,
+          ),
+        title: 'OGE — Data Grid Range Selection & Clipboard',
+      },
+      {
+        path: 'conditional-formatting',
+        loadComponent: () =>
+          import('./pages/data-grid/conditional-formatting').then(
+            (m) => m.ConditionalFormattingPage,
+          ),
+        title: 'OGE — Data Grid Conditional Formatting',
+      },
+      {
+        path: 'pinned-rows',
+        loadComponent: () =>
+          import('./pages/data-grid/pinned-rows').then((m) => m.PinnedRowsPage),
+        title: 'OGE — Data Grid Pinned Rows',
+      },
+      {
         path: 'export',
         loadComponent: () =>
           import('./pages/data-grid/export').then((m) => m.GridExportPage),

@@ -322,6 +322,9 @@ test.describe('React data-grid docs', () => {
     '/components/data-grid/editing',
     '/components/data-grid/persistence',
     '/components/data-grid/context-menu',
+    '/components/data-grid/range-selection',
+    '/components/data-grid/conditional-formatting',
+    '/components/data-grid/pinned-rows',
   ]) {
     test(`${path} in React has no axe violations`, async ({ page }) => {
       // the grouping demo renders 500 rows in a 540px viewport without

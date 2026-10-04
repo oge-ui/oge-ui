@@ -27,3 +27,16 @@ protected readonly filter = signal<FilterExpr | null>({
   ],
 });`,
 });
+
+export const MENU_SNIPPET = demoSource({
+  use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
+  dataset: 'employees',
+  template: `<!-- mode 'both': two conditions (And / Or) above the value list;
+     a date column lists its values as a year → month → day tree -->
+<oge-grid [data]="employees" keyField="id"
+          [headerFilter]="{ mode: 'both' }">
+  <oge-column field="firstName" caption="First Name" />
+  <oge-column field="salary" caption="Salary" dataType="number" />
+  <oge-column field="hireDate" caption="Hired" dataType="date" />
+</oge-grid>`,
+});

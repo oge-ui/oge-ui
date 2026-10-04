@@ -1,5 +1,6 @@
 import type { RowNode } from '@oge-ui/core';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
+import type { OgeGridSpanLayout } from './grid-cell-span';
 
 /**
  * Hierarchy hooks that add tree-grid keyboard semantics (expand/collapse on
@@ -26,6 +27,11 @@ export interface OgeGridKeyboardNavDeps<T> {
   pageSize: () => number;
   /** Present on tree hosts; absent on plain grids. */
   tree?: OgeGridKeyboardNavTreeHooks;
+  /**
+   * Row/column spans (`cellSpan`, `mergeCells`): arrows step over the area
+   * a merged cell covers, and a move into a covered cell lands on its owner.
+   */
+  spans?: () => OgeGridSpanLayout;
 }
 
 /** Flat node index + visible column index. */
@@ -169,8 +175,58 @@ export class OgeGridKeyboardNavCore<T = unknown> {
       default:
         return false;
     }
+    const spans = this.deps.spans?.();
+    if (spans && !spans.empty) {
+      ({ row, col } = this.skipSpans(cell, { row, col }, event.key, spans));
+    }
     if (row !== cell.row || col !== cell.col)
       this.focusedCell.set({ row, col });
     return true;
+  }
+
+  /**
+   * Resolves a move against the span layout: a step that stays inside the
+   * current cell's own span keeps stepping in the same direction until it
+   * leaves it; a target another span covers becomes that span's owner.
+   */
+  private skipSpans(
+    from: OgeGridFocusedCell,
+    to: OgeGridFocusedCell,
+    key: string,
+    spans: OgeGridSpanLayout,
+  ): OgeGridFocusedCell {
+    const lastCol = this.deps.columnCount() - 1;
+    const rtl = this.deps.rtl();
+    const step = (c: OgeGridFocusedCell): OgeGridFocusedCell | null => {
+      switch (key) {
+        case 'ArrowDown':
+          return { row: this.moveFocusRow(c.row, 1), col: c.col };
+        case 'ArrowUp':
+          return { row: this.moveFocusRow(c.row, -1), col: c.col };
+        case 'ArrowRight':
+          return {
+            row: c.row,
+            col: rtl ? Math.max(0, c.col - 1) : Math.min(lastCol, c.col + 1),
+          };
+        case 'ArrowLeft':
+          return {
+            row: c.row,
+            col: rtl ? Math.min(lastCol, c.col + 1) : Math.max(0, c.col - 1),
+          };
+        default:
+          return null;
+      }
+    };
+    let target = to;
+    for (let guard = 0; guard < 10_000; guard++) {
+      const owner = spans.ownerOf(target.row, target.col);
+      if (!owner) return target;
+      if (owner.row !== from.row || owner.col !== from.col) return owner;
+      const next = step(target);
+      if (!next || (next.row === target.row && next.col === target.col))
+        return from;
+      target = next;
+    }
+    return from;
   }
 }

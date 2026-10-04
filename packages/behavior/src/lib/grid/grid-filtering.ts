@@ -30,6 +30,7 @@ export function operatorsFor(dataType: OgeDataType): FilterOperator[] {
   switch (dataType) {
     case 'number':
     case 'date':
+    case 'datetime':
       return ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'isnull', 'isnotnull'];
     case 'boolean':
       return ['eq', 'ne'];
@@ -234,5 +235,7 @@ export function filterRowOperatorChoices(
     (op) => op !== 'isnull' && op !== 'isnotnull',
   );
   // a date column's "between" swaps the filter cell to a date-range picker
-  return dataType === 'date' ? [...choices, 'between'] : choices;
+  return dataType === 'date' || dataType === 'datetime'
+    ? [...choices, 'between']
+    : choices;
 }

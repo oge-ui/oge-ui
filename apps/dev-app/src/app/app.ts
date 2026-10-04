@@ -197,6 +197,21 @@ export class App {
           icon: 'pages',
         },
         {
+          path: '/components/data-grid/range-selection',
+          label: 'Range Selection & Clipboard',
+          icon: 'copy',
+        },
+        {
+          path: '/components/data-grid/conditional-formatting',
+          label: 'Conditional Formatting',
+          icon: 'palette',
+        },
+        {
+          path: '/components/data-grid/pinned-rows',
+          label: 'Pinned Rows',
+          icon: 'layers',
+        },
+        {
           path: '/components/data-grid/export',
           label: 'Excel & PDF Export',
           icon: 'copy',

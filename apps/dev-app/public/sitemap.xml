@@ -23,6 +23,9 @@
   <url><loc>https://ogeui.com/components/data-grid/persistence</loc></url>
   <url><loc>https://ogeui.com/components/data-grid/context-menu</loc></url>
   <url><loc>https://ogeui.com/components/data-grid/master-detail</loc></url>
+  <url><loc>https://ogeui.com/components/data-grid/range-selection</loc></url>
+  <url><loc>https://ogeui.com/components/data-grid/conditional-formatting</loc></url>
+  <url><loc>https://ogeui.com/components/data-grid/pinned-rows</loc></url>
   <url><loc>https://ogeui.com/components/data-grid/export</loc></url>
   <url><loc>https://ogeui.com/components/data-grid/api</loc></url>
   <url><loc>https://ogeui.com/components/tree-list</loc><priority>0.9</priority></url>

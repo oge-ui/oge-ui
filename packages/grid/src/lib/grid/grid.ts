@@ -93,7 +93,6 @@ import {
   allHeaderValuesSelected,
   booleanCellLabel,
   filterHeaderValues,
-  groupHeaderValuesByYear,
   headerGroupState,
   headerValueText,
   headerYearLabel,
@@ -101,6 +100,79 @@ import {
   toggleAllHeaderValues as toggleAllHeaderValueSelection,
   toggleHeaderGroup as toggleHeaderGroupSelection,
   toggleHeaderValue as toggleHeaderValueSelection,
+} from '@oge-ui/behavior';
+import {
+  OGE_GRID_HOST_SELECTOR,
+  OGE_NO_SPANS,
+  OGE_TOOLTIP_PANEL_OPTIONS,
+  OgeGridRangeSelectionCore,
+  OgePreparedTracker,
+  OgeTooltipCore,
+  buildOgeRangeTsv,
+  computeOgeGridSpans,
+  emptyHeaderConditionFilter,
+  findOgeRowDragParticipant,
+  flattenHeaderDateTree,
+  groupHeaderValuesByDate,
+  headerConditionExpr,
+  headerConditionNeedsValue,
+  headerConditionOperators,
+  isOgeDateType,
+  isOgeRangeExtendKey,
+  ogeClassList,
+  ogeColumnValueRange,
+  ogeFillSeries,
+  ogeFillTarget,
+  ogeFirstVisibleRow,
+  ogeFormatsNeedRange,
+  ogeGridEditShortcut,
+  ogeGroupValueText,
+  ogeHeaderConditionKey,
+  ogeIsTextTruncated,
+  ogeKeyboardFillPlan,
+  ogeMeasureAutoWidth,
+  ogeOwnedClosest,
+  ogeRangeAnnouncementCounts,
+  ogeRangeBounds,
+  ogeRangeLattice,
+  ogeRowDropPosition,
+  ogeStickyGroupChain,
+  ogeValueFits,
+  parseHeaderConditionExpr,
+  parseOgeCellText,
+  parseOgeTsv,
+  planOgeGridPaste,
+  registerOgeRowDragParticipant,
+  resolveOgeConditionalFormat,
+  tooltipDescribedByTarget,
+  type OgeCellPreparedEvent,
+  type OgeClassValue,
+  type OgeConditionalCellFormat,
+  type OgeConditionalRange,
+  type OgeFillPlan,
+  type OgeGridCellCoord,
+  type OgeGridCellRange,
+  type OgeGridCellSpan,
+  type OgeGridCellValueWrite,
+  type OgeGridColumnInfo,
+  type OgeGridRangeBounds,
+  type OgeGridRangeEdges,
+  type OgeGridSpanExtent,
+  type OgeGridSpanLayout,
+  type OgeHeaderCondition,
+  type OgeHeaderConditionFilter,
+  type OgeHeaderDateNode,
+  type OgeHeaderFilterMode,
+  type OgeRangeSelectionChangedEvent,
+  type OgeRangeSelectionOptions,
+  type OgeRowDragEndEvent,
+  type OgeRowDragOverEvent,
+  type OgeRowDragSource,
+  type OgeRowDragStartEvent,
+  type OgeRowDragTarget,
+  type OgeRowDropEvent,
+  type OgeRowDropPosition,
+  type OgeRowPreparedEvent,
 } from '@oge-ui/behavior';
 import {
   beginPointerDragDrop,
@@ -167,6 +239,7 @@ import { OgeNumberBox } from '@oge-ui/inputs/number-box';
 import { OgeSelectBox } from '@oge-ui/inputs/select-box';
 import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
+  OGE_OVERLAY_CONFIG,
   OgeAnchoredPanel,
   OgeLiveAnnouncer,
   OgeMenuList,
@@ -180,6 +253,8 @@ import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
 import { OgeCellEditor } from '../editing/cell-editor';
 import { OgePager } from '../pager/pager';
 import { GridStateStore } from '../state/grid-state.store';
+import { SIGNAL_ADAPTER } from '../state/signal-adapter';
+import { OgePagerInfoTemplate } from '../templates/pager-info-template';
 import type { OgeSelectionMode } from '../state/selection-slice';
 import type { OgeEditTemplateContext } from '../templates/edit-template';
 import type { OgeCellTemplateContext } from '../templates/cell-template';
@@ -225,6 +300,22 @@ export type {
   OgeSearchPanelOptions,
   OgeSelectionChangedEvent,
   OgeSortingOptions,
+  OgeRangeSelectionOptions,
+  OgeRangeSelectionChangedEvent,
+  OgeGridCellRange,
+  OgeGridCellCoord,
+  OgeRowPreparedEvent,
+  OgeCellPreparedEvent,
+  OgeGridColumnInfo,
+  OgeClassValue,
+  OgeConditionalFormat,
+  OgeGridCellSpan,
+  OgeRowDragStartEvent,
+  OgeRowDragOverEvent,
+  OgeRowDropEvent,
+  OgeRowDragEndEvent,
+  OgeRowDropPosition,
+  OgeHeaderFilterMode,
 } from '@oge-ui/behavior';
 import type {
   OgeContextMenuSource,
@@ -348,6 +439,14 @@ export interface OgeInitNewRowEvent {
 type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
 
 let nextUid = 0;
+
+/** The resolved format of a cell without `conditionalFormats`. */
+const NO_FORMAT: OgeConditionalCellFormat = Object.freeze({
+  classes: [],
+  vars: {},
+  icon: null,
+  iconSet: null,
+}) as OgeConditionalCellFormat;
 
 @Component({
   selector: 'oge-grid',
@@ -787,6 +886,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
+  /** `*ogePagerInfoTemplate`: replaces the pager's info text. */
+  protected readonly pagerInfoTemplate = contentChild(OgePagerInfoTemplate);
   protected readonly rowTemplate = contentChild(OgeRowTemplate<T>);
   protected readonly toolbarItems = contentChildren(OgeGridToolbarItem);
 
@@ -796,6 +897,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.operatorPanel.destroy();
       this.headerFilterPanel.destroy();
       this.chooserPanel.destroy();
+      this.hintCore.destroy();
+      this.hintPanel.destroy();
     });
     // measure real row heights once the DOM for the current window is in place
     afterRenderEffect(() => {
@@ -899,7 +1002,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         if (!field) continue;
         const interval =
           column.groupInterval() ??
-          (column.dataType() === 'date' ? 'day' : undefined);
+          (isOgeDateType(column.dataType()) ? 'day' : undefined);
         if (interval) intervals[field] = interval;
       }
       this.store.grouping.setIntervals(intervals);
@@ -1172,6 +1275,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const target = event.target as HTMLElement;
     this.scrollTop.set(target.scrollTop);
     this.scrollLeft.set(target.scrollLeft);
+    this.updateStickyGroups();
+    if (untracked(this.hintCell)) this.hintCore.hide();
   }
 
   // --- state persistence ----------------------------------------------------
@@ -1629,6 +1734,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   private clipboardText(): string {
+    const range = this.rangeClipboardText();
+    if (range !== null) return range;
     const nodes = untracked(this.flatNodes);
     const columns = this.exportColumns();
     const selected: ReadonlySet<RowKey> = untracked(this.selectionDeferred)
@@ -1877,7 +1984,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Children fetched on demand for groups delivered with `items: null`. */
   private readonly deferredGroupRows = this.deferredLoader.children;
 
+  /** The body rows: every flattened row except the ones pinned by key. */
   protected readonly flatNodes = computed<RowNode<T>[]>(() => {
+    const all = this.allFlatNodes();
+    const pinned = this.pinnedKeys();
+    if (!pinned.size) return all;
+    return all.filter((node) => node.kind !== 'data' || !pinned.has(node.key));
+  });
+
+  private readonly allFlatNodes = computed<RowNode<T>[]>(() => {
     const result = this.adapter.result();
     const toggledGroups = this.store.expansion.collapsedGroups();
     const flattened = result
@@ -2363,7 +2478,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected groupValueText(node: GroupRowNode): string {
     const column = this.columnByField(node.groupField);
     return column
-      ? formatCellValue(node.groupValue, column.dataType, column.format)
+      ? ogeGroupValueText(
+          node.groupValue,
+          column,
+          this.store.grouping.intervals()[node.groupField],
+          this.msg(),
+        )
       : String(node.groupValue ?? '');
   }
 
@@ -2613,6 +2733,18 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     event: PointerEvent,
   ): void {
     if (event.button !== 0) return;
+    const start: OgeRowDragStartEvent<T> = {
+      key: node.key,
+      row: node.data,
+      cancel: false,
+    };
+    this.rowDragStart.emit(start);
+    if (start.cancel) return;
+    const group = this.rowDragGroup();
+    if (group) {
+      this.beginGroupRowDrag(node, event, group);
+      return;
+    }
     const handle = event.currentTarget as HTMLElement;
     const host = this.hostRef.nativeElement;
     beginPointerDragDrop<DataRowNode<T>>(event, {
@@ -2634,7 +2766,70 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       onDrop: (target) => {
         if (target.key !== node.key) this.commitRowMove(node.key, target.key);
       },
-      onEnd: () => this.dropTargetKey.set(null),
+      onEnd: ({ dropped }) => {
+        this.dropTargetKey.set(null);
+        this.rowDragEnd.emit({
+          key: node.key,
+          row: node.data,
+          dropped,
+          targetComponentId: dropped ? this.componentId() : null,
+        });
+      },
+    });
+  }
+
+  /**
+   * A row drag across every component of `rowDragGroup`: the element under
+   * the pointer is matched against the registered participants, and the
+   * drop runs the target's `drop` (this grid's own reorder path included).
+   */
+  private beginGroupRowDrag(
+    node: DataRowNode<T>,
+    event: PointerEvent,
+    group: string,
+  ): void {
+    const handle = event.currentTarget as HTMLElement;
+    const source: OgeRowDragSource = {
+      componentId: this.componentId(),
+      key: node.key,
+      row: node.data,
+    };
+    type Hit = {
+      participant: NonNullable<ReturnType<typeof findOgeRowDragParticipant>>;
+      target: OgeRowDragTarget;
+    };
+    let current: Hit['participant'] | null = null;
+    let lastY = event.clientY;
+    beginPointerDragDrop<Hit>(event, {
+      source: handle,
+      ghost: handle.closest('.oge-row'),
+      longPress: 0,
+      autoScroll: this.viewportRef()?.nativeElement ?? null,
+      autoScrollOptions: { axis: 'y' },
+      resolve: (hit, move) => {
+        lastY = move.clientY;
+        const participant = findOgeRowDragParticipant(hit, group);
+        const target =
+          participant && hit ? participant.resolve(hit, lastY, source) : null;
+        return participant && target ? { participant, target } : null;
+      },
+      onOver: (hit) => {
+        if (current && current !== hit?.participant) current.over(source, null);
+        current = hit?.participant ?? null;
+        current?.over(source, hit?.target ?? null);
+      },
+      onDrop: (hit) => hit.participant.drop(source, hit.target),
+      onEnd: ({ dropped }) => {
+        current?.over(source, null);
+        const targetId = dropped ? (current?.componentId ?? null) : null;
+        current = null;
+        this.rowDragEnd.emit({
+          key: node.key,
+          row: node.data,
+          dropped,
+          targetComponentId: targetId,
+        });
+      },
     });
   }
 
@@ -2977,6 +3172,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     pageSize: computed(() =>
       Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1),
     ),
+    // lazy: the span layout is declared further down the class
+    spans: () => this.spanLayout(),
   });
 
   /** Focused cell: flat node index + visible column index. */
@@ -3033,6 +3230,26 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const noEditorOpen =
       this.store.editing.editCell() === null &&
       this.store.editing.editRowKey() === null;
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === 'a' &&
+      this.cellSelect()
+    ) {
+      // cell mode: Ctrl+A selects every cell
+      if (!noEditorOpen) return;
+      event.preventDefault();
+      const nodes = this.flatNodes();
+      const last = this.resolvedColumns().length - 1;
+      if (nodes.length && last >= 0)
+        this.rangeCore.setRanges([
+          {
+            anchor: { row: 0, col: 0 },
+            focus: { row: nodes.length - 1, col: last },
+          },
+        ]);
+      return;
+    }
+    if (noEditorOpen && this.handleEditShortcut(event)) return;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
       // Ctrl+A selects every (filtered) row in multi-select modes
       const mode = this.selectionMode();
@@ -3057,7 +3274,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
     if (event.key === ' ') {
       const node = this.flatNodes()[cell.row];
-      if (node?.kind === 'data' && this.selectionMode() !== 'none') {
+      if (
+        node?.kind === 'data' &&
+        this.selectionMode() !== 'none' &&
+        !this.cellSelect()
+      ) {
         event.preventDefault();
         if (this.selectionDeferred()) {
           if (this.selectionMode() === 'single')
@@ -3080,7 +3301,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.moveRowByKeyboard(cell.row, rowMove, cell.col);
       return;
     }
-    if (this.keyboard.handleKey(event)) event.preventDefault();
+    if (this.keyboard.handleKey(event)) {
+      event.preventDefault();
+      const next = this.focusedCell();
+      if (this.cellSelect() && next) {
+        if (isOgeRangeExtendKey(event)) this.rangeCore.extendTo(next);
+        else this.rangeCore.selectCell(next);
+      }
+    }
   }
 
   // --- context menu --------------------------------------------------------
@@ -3267,6 +3495,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         action: () => this.store.columns.setPinned(column.id, false),
       });
     }
+    items.push({
+      text: messages.autoFitColumn,
+      action: () => this.fitColumn(column),
+    });
     if (column.source) {
       const source = column.source;
       items.push({
@@ -3636,6 +3868,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     ) {
       return;
     }
+    // range selection owns the single click (spreadsheet style): editing
+    // starts on double-click, F2 or Enter
+    if (this.cellSelect() && event?.type === 'click') return;
     if (!this.store.editing.isCellEditing(node.key, column.field)) {
       if (
         !this.editingModel.notifyEditingStart(node.key, node.data, column.field)
@@ -4275,27 +4510,6 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     },
   );
 
-  /**
-   * Date columns present header-filter values grouped by year. The search box
-   * matches the year label (keeping the whole group) or individual formatted
-   * dates; groups left empty disappear.
-   */
-  protected readonly headerValueGroups = computed<
-    readonly { label: string; values: readonly unknown[] }[] | null
-  >(() => {
-    const field = this.headerFilterField();
-    const column = field ? this.columnByField(field) : undefined;
-    if (column?.dataType !== 'date') return null;
-    const values = this.headerFilterValues();
-    if (!values) return null;
-    return groupHeaderValuesByYear(
-      values,
-      this.headerFilterSearch(),
-      (value) => this.headerValueText(value),
-      (value) => this.headerYearOf(value),
-    );
-  });
-
   private headerYearOf(value: unknown): string {
     return headerYearLabel(value, this.msg().blankValue);
   }
@@ -4347,8 +4561,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.headerFilterField.set(field);
     this.headerFilterValues.set(null);
     this.headerFilterSearch.set('');
+    this.headerDateCollapsed.set(new Set());
+    this.headerConditionDraft.set(
+      parseHeaderConditionExpr(
+        this.store.filter.rowFilterOf(ogeHeaderConditionKey(field)),
+        column.dataType,
+      ),
+    );
     this.headerFilterPanel.open();
     this.headerFilterPanel.updatePosition();
+    if (this.headerFilterMode() === 'conditions') return;
     this.adapter
       .source()
       ?.distinct?.(field)
@@ -4373,12 +4595,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.chooserPanel.close();
     this.contextMenuPanel.close();
     this.operatorPanel.close();
+    this.hintCore.hide();
   }
 
   protected isHeaderFilterActive(column: ResolvedColumn<T>): boolean {
     return (
       column.field != null &&
-      this.store.filter.headerFilterOf(column.field) != null
+      (this.store.filter.headerFilterOf(column.field) != null ||
+        this.store.filter.rowFilterOf(ogeHeaderConditionKey(column.field)) !=
+          null)
     );
   }
 
@@ -4422,6 +4647,1273 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       format: column?.format,
       messages: this.msg(),
     });
+  }
+
+  // ===========================================================================
+  // Interaction depth: cell ranges, clipboard, fill, undo, styling hooks,
+  // conditional formats, pinned / sticky rows, spans, auto-fit, cell hints,
+  // cross-grid row drag. The decisions are `@oge-ui/behavior`'s; this is the
+  // Angular wiring.
+  // ===========================================================================
+
+  /** Options of cell range selection (`selectionMode: 'cell'`). */
+  readonly rangeSelection = input<OgeRangeSelectionOptions | undefined>(
+    undefined,
+  );
+
+  /** Two-way binding of the selected cell ranges (`selectionMode: 'cell'`). */
+  readonly selectedRanges = model<readonly OgeGridCellRange[]>([]);
+
+  /** Fires after the selected cell ranges changed, with their sizes. */
+  readonly rangeSelectionChanged = output<OgeRangeSelectionChangedEvent>();
+
+  /** Cell range mode is on. */
+  protected readonly cellSelect = computed(
+    () => this.selectionMode() === 'cell',
+  );
+
+  private readonly rangeCore = new OgeGridRangeSelectionCore(
+    {
+      isDataRow: (row) => this.flatNodes()[row]?.kind === 'data',
+      multiple: () => this.rangeSelection()?.multipleRanges !== false,
+    },
+    SIGNAL_ADAPTER,
+  );
+
+  /** The fill handle shows (cell mode, editing on, option not off). */
+  protected readonly fillHandleEnabled = computed(
+    () =>
+      this.cellSelect() &&
+      this.rangeSelection()?.fillHandle !== false &&
+      !!this.editMode() &&
+      this.canUpdate(),
+  );
+
+  /** Cells a fill-handle drag would write (dashed preview). */
+  protected readonly fillPreview = signal<OgeGridRangeBounds | null>(null);
+
+  private readonly rangeSyncEffects = (() => {
+    // ranges → model + event + announcement (the initial state is no change)
+    let previous: readonly OgeGridCellRange[] | null = null;
+    effect(() => {
+      const ranges = this.rangeCore.ranges();
+      const before = previous;
+      previous = ranges;
+      if (before === null) return;
+      untracked(() => {
+        if (JSON.stringify(this.selectedRanges()) !== JSON.stringify(ranges))
+          this.selectedRanges.set(ranges);
+        const stats = this.rangeCore.stats();
+        this.rangeSelectionChanged.emit({ ranges, ...stats });
+        const counts = ogeRangeAnnouncementCounts(stats);
+        if (counts)
+          this.announcer.rangeSelected(
+            counts.rows,
+            counts.columns,
+            counts.cells,
+          );
+      });
+    });
+    // model → ranges
+    effect(() => {
+      const bound = this.selectedRanges();
+      untracked(() => {
+        if (JSON.stringify(bound) !== JSON.stringify(this.rangeCore.ranges()))
+          this.rangeCore.setRanges(bound);
+      });
+    });
+    // a new view (sort, filter, page, grouping) invalidates the coordinates
+    let lastLoad: string | undefined;
+    effect(() => {
+      const key = JSON.stringify(this.store.loadOptions());
+      const previousKey = lastLoad;
+      lastLoad = key;
+      if (previousKey !== undefined && previousKey !== key)
+        untracked(() => this.rangeCore.clear());
+    });
+    return true;
+  })();
+
+  protected isCellInRange(row: number, col: number): boolean {
+    return this.cellSelect() && this.rangeCore.isSelected(row, col);
+  }
+
+  protected rangeEdges(row: number, col: number): OgeGridRangeEdges | null {
+    return this.cellSelect() ? this.rangeCore.edgesOf(row, col) : null;
+  }
+
+  protected isFillCorner(row: number, col: number): boolean {
+    return this.fillHandleEnabled() && this.rangeCore.isFillCorner(row, col);
+  }
+
+  protected isInFillPreview(row: number, col: number): boolean {
+    const preview = this.fillPreview();
+    return (
+      preview !== null &&
+      row >= preview.top &&
+      row <= preview.bottom &&
+      col >= preview.left &&
+      col <= preview.right &&
+      this.flatNodes()[row]?.kind === 'data'
+    );
+  }
+
+  /** Selects a rectangular range programmatically (`selectionMode: 'cell'`). */
+  selectRange(range: OgeGridCellRange, add = false): void {
+    this.rangeCore.setRanges(
+      add ? [...untracked(this.rangeCore.ranges), range] : [range],
+    );
+  }
+
+  /** Clears every cell range. */
+  clearRangeSelection(): void {
+    this.rangeCore.clear();
+  }
+
+  /**
+   * The selected cells' values as a rows × columns matrix (the lattice the
+   * copy writes; cells between several ranges are `undefined`).
+   */
+  getSelectedRangeData(): unknown[][] {
+    const lattice = ogeRangeLattice(untracked(this.rangeCore.ranges), (row) =>
+      this.isDataRowAt(row),
+    );
+    const nodes = untracked(this.flatNodes);
+    const columns = untracked(this.resolvedColumns);
+    return lattice.rows.map((row) =>
+      lattice.cols.map((col) => {
+        const node = nodes[row];
+        const column = columns[col];
+        return node?.kind === 'data' && column && lattice.isSelected(row, col)
+          ? untracked(() => this.displayValue(node, column))
+          : undefined;
+      }),
+    );
+  }
+
+  private isDataRowAt(row: number): boolean {
+    return untracked(this.flatNodes)[row]?.kind === 'data';
+  }
+
+  /** The data cell coordinate under a pointer hit, if it is one of ours. */
+  private cellCoordOf(hit: Element | null): OgeGridCellCoord | null {
+    const cell = ogeOwnedClosest(
+      hit,
+      '[data-cell]',
+      this.hostRef.nativeElement,
+      OGE_GRID_HOST_SELECTOR,
+    );
+    const [row, col] = (cell?.dataset['cell'] ?? '').split('-').map(Number);
+    return Number.isInteger(row) && Number.isInteger(col) ? { row, col } : null;
+  }
+
+  /**
+   * Cell mode: click selects a cell, Shift+click extends, Ctrl/Cmd+click adds
+   * a range, and a drag (long press under touch) extends the range under the
+   * pointer — `beginPointerDragDrop` with no ghost.
+   */
+  protected onCellPointerDown(
+    rowIndex: number,
+    column: ResolvedColumn<T>,
+    event: PointerEvent,
+  ): void {
+    if (!this.cellSelect() || event.button !== 0) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest?.('.oge-editor, .oge-fill-handle')) return;
+    const cell = { row: rowIndex, col: column.absIndex };
+    if (event.shiftKey) {
+      // no browser text selection between the anchor and here
+      event.preventDefault();
+      this.rangeCore.extendTo(cell);
+      (event.currentTarget as HTMLElement | null)?.focus({
+        preventScroll: true,
+      });
+      return;
+    }
+    if (event.ctrlKey || event.metaKey) this.rangeCore.addCell(cell);
+    else this.rangeCore.selectCell(cell);
+    beginPointerDragDrop<OgeGridCellCoord>(event, {
+      source: event.currentTarget as Element,
+      ghost: false,
+      autoScroll: this.viewportRef()?.nativeElement ?? null,
+      resolve: (hit) => this.cellCoordOf(hit),
+      onOver: (over) => {
+        if (over) this.rangeCore.extendTo(over);
+      },
+      onDrop: () => undefined,
+    });
+  }
+
+  /**
+   * The fill handle: dragging it down/up/right/left previews the cells a
+   * fill would write and, on drop, copies the range's values or extends its
+   * number / date series into them — through the same apply path a paste
+   * takes (one undoable batch, the regular edit events).
+   */
+  protected onFillHandlePointerDown(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    event.stopPropagation();
+    const active = untracked(this.rangeCore.ranges).at(-1);
+    if (!active) return;
+    const source = ogeRangeBounds(active);
+    beginPointerDragDrop<OgeFillPlan>(event, {
+      source: event.currentTarget as Element,
+      ghost: false,
+      longPress: 0,
+      preventDefault: true,
+      autoScroll: this.viewportRef()?.nativeElement ?? null,
+      resolve: (hit) => {
+        const cell = this.cellCoordOf(hit);
+        return cell ? ogeFillTarget(source, cell) : null;
+      },
+      onOver: (plan) => this.fillPreview.set(plan?.target ?? null),
+      onDrop: (plan) => void this.runFill(source, plan),
+      onEnd: () => this.fillPreview.set(null),
+    });
+  }
+
+  /** Data rows of the flat range `[top, bottom]`, ascending. */
+  private dataRowsIn(top: number, bottom: number): number[] {
+    const nodes = untracked(this.flatNodes);
+    const rows: number[] = [];
+    for (let row = Math.max(0, top); row <= bottom && row < nodes.length; row++)
+      if (nodes[row].kind === 'data') rows.push(row);
+    return rows;
+  }
+
+  private valueAt(row: number, col: number): unknown {
+    const node = untracked(this.flatNodes)[row];
+    const column = untracked(this.resolvedColumns)[col];
+    if (node?.kind !== 'data' || !column) return undefined;
+    return untracked(() => this.displayValue(node, column));
+  }
+
+  /** A write for (row, col), or `null` when the cell takes no value of that shape. */
+  private writeAt(
+    row: number,
+    col: number,
+    value: unknown,
+  ): OgeGridCellValueWrite | null {
+    const node = untracked(this.flatNodes)[row];
+    const column = untracked(this.resolvedColumns)[col];
+    if (node?.kind !== 'data' || !column?.field || !column.editable)
+      return null;
+    if (!ogeValueFits(value, column.dataType)) return null;
+    return { key: node.key, field: column.field, value };
+  }
+
+  private async runFill(
+    source: OgeGridRangeBounds,
+    plan: OgeFillPlan,
+  ): Promise<number> {
+    const writes: OgeGridCellValueWrite[] = [];
+    const { target, direction } = plan;
+    if (direction === 'down' || direction === 'up') {
+      const sourceRows = this.dataRowsIn(source.top, source.bottom);
+      const targetRows = this.dataRowsIn(target.top, target.bottom);
+      if (direction === 'up') targetRows.reverse();
+      for (let col = source.left; col <= source.right; col++) {
+        const values = sourceRows.map((row) => this.valueAt(row, col));
+        const series = ogeFillSeries(
+          values,
+          targetRows.length,
+          direction === 'up',
+        );
+        targetRows.forEach((row, i) => {
+          const write = this.writeAt(row, col, series[i]);
+          if (write) writes.push(write);
+        });
+      }
+    } else {
+      const targetCols: number[] = [];
+      for (let col = target.left; col <= target.right; col++)
+        targetCols.push(col);
+      if (direction === 'left') targetCols.reverse();
+      for (const row of this.dataRowsIn(source.top, source.bottom)) {
+        const values: unknown[] = [];
+        for (let col = source.left; col <= source.right; col++)
+          values.push(this.valueAt(row, col));
+        const series = ogeFillSeries(
+          values,
+          targetCols.length,
+          direction === 'left',
+        );
+        targetCols.forEach((col, i) => {
+          const write = this.writeAt(row, col, series[i]);
+          if (write) writes.push(write);
+        });
+      }
+    }
+    const count = await this.editingModel.applyCellValues(writes, {
+      source: 'fill',
+    });
+    const range = plan.range;
+    this.rangeCore.setRanges([
+      {
+        anchor: { row: range.top, col: range.left },
+        focus: { row: range.bottom, col: range.right },
+      },
+    ]);
+    this.announcer.cellsWritten('fill', count);
+    return count;
+  }
+
+  /**
+   * Ctrl+D: copies the active range's first row into its other rows (a
+   * single row copies the row above it in). Resolves with the cells written.
+   */
+  fillDown(): Promise<number> {
+    return this.keyboardFill('down');
+  }
+
+  /** Ctrl+R: the same, across columns. */
+  fillRight(): Promise<number> {
+    return this.keyboardFill('right');
+  }
+
+  private async keyboardFill(axis: 'down' | 'right'): Promise<number> {
+    if (!untracked(this.fillHandleEnabled)) return 0;
+    const active = untracked(this.rangeCore.ranges).at(-1);
+    if (!active) return 0;
+    const plan = ogeKeyboardFillPlan(ogeRangeBounds(active), axis, (row) => {
+      const above = this.dataRowsIn(0, row - 1);
+      return above.length ? above[above.length - 1] : -1;
+    });
+    if (!plan) return 0;
+    const writes: OgeGridCellValueWrite[] = [];
+    const { source, target } = plan;
+    if (axis === 'down') {
+      const sourceRow = this.dataRowsIn(source.top, source.bottom)[0];
+      if (sourceRow === undefined) return 0;
+      for (const row of this.dataRowsIn(target.top, target.bottom)) {
+        if (row === sourceRow) continue;
+        for (let col = target.left; col <= target.right; col++) {
+          const write = this.writeAt(row, col, this.valueAt(sourceRow, col));
+          if (write) writes.push(write);
+        }
+      }
+    } else {
+      for (const row of this.dataRowsIn(target.top, target.bottom)) {
+        const value = this.valueAt(row, source.left);
+        for (let col = target.left; col <= target.right; col++) {
+          if (col === source.left) continue;
+          const write = this.writeAt(row, col, value);
+          if (write) writes.push(write);
+        }
+      }
+    }
+    const count = await this.editingModel.applyCellValues(writes, {
+      source: 'fill',
+    });
+    this.announcer.cellsWritten('fill', count);
+    return count;
+  }
+
+  /** Copies the selected ranges as TSV (with captions per `copyHeaders`). */
+  private rangeClipboardText(): string | null {
+    const ranges = untracked(this.rangeCore.ranges);
+    if (!untracked(this.cellSelect) || !ranges.length) return null;
+    const nodes = untracked(this.flatNodes);
+    const columns = untracked(this.resolvedColumns);
+    return buildOgeRangeTsv(
+      ogeRangeLattice(ranges, (row) => nodes[row]?.kind === 'data'),
+      (row, col) => {
+        const node = nodes[row];
+        const column = columns[col];
+        return node?.kind === 'data' && column
+          ? untracked(() => this.cellDisplayText(node, column))
+          : '';
+      },
+      (col) => columns[col]?.caption ?? '',
+      { headers: untracked(this.rangeSelection)?.copyHeaders === true },
+    );
+  }
+
+  /** The native `copy` event: the range TSV lands on the clipboard data. */
+  protected onGridCopy(event: ClipboardEvent): void {
+    if (
+      this.store.editing.editCell() !== null ||
+      this.store.editing.editRowKey() !== null
+    )
+      return;
+    const text = this.rangeClipboardText();
+    if (text === null || !event.clipboardData) return;
+    event.clipboardData.setData('text/plain', text);
+    event.preventDefault();
+  }
+
+  /** The native `paste` event outside an editor pastes into the cells. */
+  protected onGridPaste(event: ClipboardEvent): void {
+    if (
+      this.store.editing.editCell() !== null ||
+      this.store.editing.editRowKey() !== null ||
+      !this.editMode() ||
+      !this.canUpdate()
+    )
+      return;
+    const text = event.clipboardData?.getData('text/plain');
+    if (!text) return;
+    event.preventDefault();
+    void this.pasteText(text);
+  }
+
+  /**
+   * Pastes a TSV block (what Excel and the grid's own copy write) into the
+   * editable cells, starting at the focused cell — or filling the selected
+   * range with a single value. Values parse with the column's data type and
+   * lookup, run the validators, and land as one undoable batch through the
+   * regular edit events; lines past the last row become new rows only with
+   * `rangeSelection.pasteAddsRows`. Resolves with the cells written.
+   */
+  async pasteText(text: string): Promise<number> {
+    if (!untracked(this.editMode) || !untracked(this.canUpdate)) return 0;
+    const nodes = untracked(this.flatNodes);
+    const columns = untracked(this.resolvedColumns);
+    const active = untracked(this.cellSelect)
+      ? (untracked(this.rangeCore.ranges).at(-1) ?? null)
+      : null;
+    const start = untracked(this.focusedCell) ?? active?.anchor ?? null;
+    if (!start) return 0;
+    const messages = untracked(this.msg);
+    const matrix = parseOgeTsv(text);
+    const plan = planOgeGridPaste(matrix, start, {
+      rowCount: nodes.length,
+      columnCount: columns.length,
+      isDataRow: (row) => nodes[row]?.kind === 'data',
+      selection: active,
+    });
+    const parse = (raw: string, col: number, node?: DataRowNode<T>) => {
+      const column = columns[col];
+      if (!column?.field || !column.editable) return null;
+      const lookupItems = node
+        ? untracked(() => this.lookupItemsFor(node, column))
+        : column.lookupItems;
+      const parsed = parseOgeCellText(
+        raw,
+        { dataType: column.dataType, lookupItems },
+        messages,
+      );
+      return parsed.ok ? { field: column.field, value: parsed.value } : null;
+    };
+    const writes: OgeGridCellValueWrite[] = [];
+    for (const cell of plan.cells) {
+      const node = nodes[cell.row];
+      if (node?.kind !== 'data') continue;
+      const value = parse(cell.value, cell.col, node);
+      if (value) writes.push({ key: node.key, ...value });
+    }
+    const newRows = untracked(this.rangeSelection)?.pasteAddsRows
+      ? plan.extraRows.map((line) => {
+          const row: Record<string, unknown> = {};
+          for (const cell of line) {
+            const value = parse(cell.value, cell.col);
+            if (value) row[value.field] = value.value;
+          }
+          return row;
+        })
+      : [];
+    const count = await this.editingModel.applyCellValues(writes, {
+      source: 'paste',
+      newRows,
+    });
+    this.announcer.cellsWritten('paste', count);
+    return count;
+  }
+
+  /** Reverts the last edit, paste or fill (Ctrl+Z). */
+  async undo(): Promise<void> {
+    const count = await this.editingModel.undo();
+    this.announcer.cellsWritten('undo', count);
+  }
+
+  /** Re-applies the last undone step (Ctrl+Y / Ctrl+Shift+Z). */
+  async redo(): Promise<void> {
+    const count = await this.editingModel.redo();
+    this.announcer.cellsWritten('redo', count);
+  }
+
+  /** Whether `undo()` has a step to revert. */
+  canUndo(): boolean {
+    return untracked(this.editingModel.history.canUndo);
+  }
+
+  /** Whether `redo()` has a step to re-apply. */
+  canRedo(): boolean {
+    return untracked(this.editingModel.history.canRedo);
+  }
+
+  /** Grid-level edit shortcuts; returns whether the key was handled. */
+  private handleEditShortcut(event: KeyboardEvent): boolean {
+    const shortcut = ogeGridEditShortcut(event);
+    if (!shortcut || !this.editMode()) return false;
+    if (shortcut === 'undo' || shortcut === 'redo') {
+      event.preventDefault();
+      void (shortcut === 'undo' ? this.undo() : this.redo());
+      return true;
+    }
+    if (!this.fillHandleEnabled() || !this.rangeCore.ranges().length)
+      return false;
+    event.preventDefault();
+    void this.keyboardFill(shortcut === 'fillDown' ? 'down' : 'right');
+    return true;
+  }
+
+  /** `aria-keyshortcuts` of a data cell in cell mode. */
+  protected readonly cellKeyShortcuts = computed(() =>
+    this.fillHandleEnabled()
+      ? 'Shift+ArrowUp Shift+ArrowDown Shift+ArrowLeft Shift+ArrowRight Control+C Control+V Control+D Control+R Control+Z Control+Y'
+      : this.cellSelect()
+        ? 'Shift+ArrowUp Shift+ArrowDown Shift+ArrowLeft Shift+ArrowRight Control+C'
+        : null,
+  );
+
+  // --- async validation ------------------------------------------------------
+
+  /** Whether the cell's editor waits for an async validator. */
+  protected editorPending(control: FormControl<unknown> | undefined): boolean {
+    this.editingModel.controlRevision();
+    return !!control?.pending;
+  }
+
+  // --- styling hooks & conditional formats -----------------------------------
+
+  /** Classes for a data row: string, array or `{ class: condition }` record. */
+  readonly rowClass = input<
+    ((row: T, key: RowKey) => OgeClassValue) | undefined
+  >(undefined);
+
+  /** Classes for a data cell, per row and column. */
+  readonly cellClass = input<
+    ((row: T, column: OgeGridColumnInfo) => OgeClassValue) | undefined
+  >(undefined);
+
+  /**
+   * Fires for every data row element that renders a row for the first time
+   * (a scrolled-in or re-keyed row included) — the imperative escape hatch
+   * for decoration the declarative hooks cannot express.
+   */
+  readonly rowPrepared = output<OgeRowPreparedEvent<T>>();
+
+  /** Fires for every data cell of a prepared row. */
+  readonly cellPrepared = output<OgeCellPreparedEvent<T>>();
+
+  private readonly preparedTracker = new OgePreparedTracker();
+
+  private readonly preparedEffect = afterRenderEffect(() => {
+    const nodes = this.viewNodes();
+    const columns = this.resolvedColumns();
+    if (!nodes.length) return;
+    untracked(() => this.emitPrepared(columns));
+  });
+
+  private lastPreparedColumns: readonly unknown[] | null = null;
+
+  private emitPrepared(columns: readonly ResolvedColumn<T>[]): void {
+    const viewport = this.viewportRef()?.nativeElement;
+    if (!viewport) return;
+    if (this.lastPreparedColumns !== columns) {
+      this.lastPreparedColumns = columns;
+      this.preparedTracker.reset();
+    }
+    const flat = this.flatNodes();
+    for (const element of Array.from(
+      viewport.querySelectorAll<HTMLElement>(
+        '.oge-rows > .oge-row[data-rowindex]:not(.oge-edit-form-row)',
+      ),
+    )) {
+      const rowIndex = Number(element.dataset['rowindex']);
+      const node = flat[rowIndex];
+      if (
+        node?.kind !== 'data' ||
+        !this.preparedTracker.isNew(element, node.data)
+      )
+        continue;
+      this.rowPrepared.emit({
+        row: node.data,
+        key: node.key,
+        rowIndex,
+        element,
+      });
+      for (const cell of Array.from(
+        element.querySelectorAll<HTMLElement>('[data-cell]'),
+      )) {
+        const col = Number((cell.dataset['cell'] ?? '').split('-')[1]);
+        const column = columns[col];
+        if (!column) continue;
+        this.cellPrepared.emit({
+          row: node.data,
+          key: node.key,
+          field: column.field,
+          value: column.accessor(node.data),
+          rowIndex,
+          columnIndex: col,
+          element: cell,
+        });
+      }
+    }
+  }
+
+  /** Per-column info handed to `cellClass` / `cellSpan`, stable per layout. */
+  private readonly columnInfos = computed<
+    ReadonlyMap<string, OgeGridColumnInfo>
+  >(
+    () =>
+      new Map(
+        this.resolvedColumns().map((column) => [
+          column.id,
+          {
+            field: column.field,
+            caption: column.caption,
+            dataType: column.dataType,
+            index: column.absIndex,
+          },
+        ]),
+      ),
+  );
+
+  /** Value ranges of the columns whose formats are relative (bars, scales). */
+  private readonly formatRanges = computed<
+    ReadonlyMap<string, OgeConditionalRange | null>
+  >(() => {
+    const map = new Map<string, OgeConditionalRange | null>();
+    const nodes = this.flatNodes();
+    for (const column of this.resolvedColumns()) {
+      const formats = column.source?.conditionalFormats?.();
+      if (ogeFormatsNeedRange(formats))
+        map.set(column.id, ogeColumnValueRange(nodes, column.accessor));
+    }
+    return map;
+  });
+
+  protected rowClassesOf(node: DataRowNode<T>): string[] {
+    const hook = this.rowClass();
+    return hook ? ogeClassList(hook(node.data, node.key)) : [];
+  }
+
+  /** The cell's resolved conditional format (classes, vars, icon). */
+  protected cellFormatOf(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): OgeConditionalCellFormat {
+    const formats = column.source?.conditionalFormats?.();
+    if (!formats?.length) return NO_FORMAT;
+    return resolveOgeConditionalFormat(
+      formats,
+      this.displayValue(node, column),
+      node.data,
+      this.formatRanges().get(column.id) ?? null,
+    );
+  }
+
+  protected cellClassesOf(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): string[] {
+    const hook = this.cellClass();
+    const info = this.columnInfos().get(column.id);
+    const own = hook && info ? ogeClassList(hook(node.data, info)) : [];
+    const format = this.cellFormatOf(node, column);
+    return format.classes.length ? [...own, ...format.classes] : own;
+  }
+
+  /**
+   * The cell's custom properties: a conditional format's `--oge-cf-*` and,
+   * for a row-span owner, `--oge-span-rows`.
+   */
+  protected cellVarsOf(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+    rowIndex?: number,
+  ): Record<string, string> | null {
+    const vars = this.cellFormatOf(node, column).vars;
+    const span =
+      rowIndex === undefined ? null : this.spanOf(rowIndex, column.absIndex);
+    if (span && span.rowSpan > 1)
+      return { ...vars, '--oge-span-rows': String(span.rowSpan) };
+    return Object.keys(vars).length ? vars : null;
+  }
+
+  // --- pinned rows -------------------------------------------------------------
+
+  /**
+   * Rows pinned above the scrolling body: data objects, or keys of loaded
+   * rows (which then leave the body). They stay visible while scrolling,
+   * virtual scrolling included; they are display rows — not editable, not
+   * selectable, not part of the arrow-key navigation.
+   */
+  readonly pinnedTopRows = input<readonly (T | RowKey)[] | undefined>(
+    undefined,
+  );
+
+  /** Rows pinned below the body, above the total row. */
+  readonly pinnedBottomRows = input<readonly (T | RowKey)[] | undefined>(
+    undefined,
+  );
+
+  /** Keys pinned by key — taken out of the body. */
+  private readonly pinnedKeys = computed<ReadonlySet<RowKey>>(() => {
+    const keys = new Set<RowKey>();
+    for (const entry of [
+      ...(this.pinnedTopRows() ?? []),
+      ...(this.pinnedBottomRows() ?? []),
+    ]) {
+      if (typeof entry === 'string' || typeof entry === 'number')
+        keys.add(entry);
+    }
+    return keys;
+  });
+
+  private resolvePinned(
+    entries: readonly (T | RowKey)[] | undefined,
+    side: 'top' | 'bottom',
+  ): DataRowNode<T>[] {
+    if (!entries?.length) return [];
+    const keyOf = this.keySelector();
+    const keyed = this.keyField() !== undefined;
+    const loaded = this.allFlatNodes();
+    return entries.flatMap((entry, index): DataRowNode<T>[] => {
+      if (typeof entry === 'string' || typeof entry === 'number') {
+        const node = loaded.find(
+          (candidate): candidate is DataRowNode<T> =>
+            candidate.kind === 'data' && candidate.key === entry,
+        );
+        return node ? [{ ...node, level: 0 }] : [];
+      }
+      const row = entry as T;
+      return [
+        {
+          kind: 'data',
+          key: keyed ? keyOf(row, -1) : `oge-pinned-${side}-${index}`,
+          data: row,
+          sourceIndex: -1,
+          level: 0,
+        },
+      ];
+    });
+  }
+
+  protected readonly pinnedTopNodes = computed(() =>
+    this.resolvePinned(this.pinnedTopRows(), 'top'),
+  );
+
+  protected readonly pinnedBottomNodes = computed(() =>
+    this.resolvePinned(this.pinnedBottomRows(), 'bottom'),
+  );
+
+  /** `aria-rowindex` offset the pinned top rows add to the body rows. */
+  protected readonly pinnedTopOffset = computed(
+    () => this.pinnedTopNodes().length,
+  );
+
+  // --- sticky group rows ---------------------------------------------------------
+
+  /**
+   * Keeps the group rows enclosing the first visible row on screen under
+   * the header while scrolling (all levels; virtual scrolling included). A
+   * visual aid — the real group rows stay where they are for keyboard and
+   * screen-reader users; clicking a sticky row scrolls to it.
+   */
+  readonly stickyGroupRows = input(false);
+
+  protected readonly stickyGroups = signal<readonly GroupRowNode[]>([]);
+
+  private updateStickyGroups(): void {
+    if (!untracked(this.stickyGroupRows) || !untracked(this.grouped)) {
+      if (untracked(this.stickyGroups).length) this.stickyGroups.set([]);
+      return;
+    }
+    const viewport = this.viewportRef()?.nativeElement;
+    const header = viewport?.querySelector('.oge-header-row');
+    if (!viewport || !header) return;
+    const rows = Array.from(
+      viewport.querySelectorAll<HTMLElement>('.oge-rows > [data-rowindex]'),
+    );
+    const top = header.getBoundingClientRect().bottom;
+    const first = ogeFirstVisibleRow(rows, top, (row) =>
+      Number((row as HTMLElement).dataset['rowindex']),
+    );
+    const chain = ogeStickyGroupChain(untracked(this.flatNodes), first);
+    const current = untracked(this.stickyGroups);
+    if (
+      chain.length !== current.length ||
+      chain.some((node, i) => node.key !== current[i].key)
+    )
+      this.stickyGroups.set(chain);
+  }
+
+  private readonly stickyEffect = afterRenderEffect(() => {
+    this.viewNodes();
+    this.stickyGroupRows();
+    untracked(() => this.updateStickyGroups());
+  });
+
+  protected scrollToGroup(key: RowKey): void {
+    const index = untracked(this.flatNodes).findIndex(
+      (node) => node.key === key,
+    );
+    if (index < 0) return;
+    const viewport = this.viewportRef()?.nativeElement;
+    if (this.virtualized()) this.scrollRowIntoView(index);
+    else
+      viewport
+        ?.querySelector<HTMLElement>(`.oge-rows > [data-rowindex="${index}"]`)
+        ?.scrollIntoView({ block: 'center' });
+    setTimeout(() =>
+      viewport
+        ?.querySelector<HTMLElement>(
+          `.oge-rows > .oge-group-row[data-rowindex="${index}"]`,
+        )
+        ?.focus({ preventScroll: true }),
+    );
+  }
+
+  // --- row / column spans --------------------------------------------------------
+
+  /**
+   * Row / column spans per cell: return `{ rowSpan, colSpan }` (or nothing).
+   * Spans never cross group rows; the owner cell gets `aria-rowspan` /
+   * `aria-colspan` and the keyboard steps over the covered area. Ignored
+   * while virtualized and with column virtualization; row spans assume
+   * uniform row heights (no `wordWrap` / `autoRowHeight`).
+   */
+  readonly cellSpan = input<
+    | ((
+        row: T,
+        column: OgeGridColumnInfo,
+      ) => OgeGridCellSpan | null | undefined)
+    | undefined
+  >(undefined);
+
+  protected readonly spanLayout = computed<OgeGridSpanLayout>(() => {
+    if (this.virtualized() || this.colVirtualized()) return OGE_NO_SPANS;
+    const hook = this.cellSpan();
+    const infos = this.columnInfos();
+    const columns = this.resolvedColumns().map((column) => ({
+      field: column.field,
+      accessor: column.accessor,
+      mergeCells: column.source?.mergeCells?.() ?? false,
+      id: column.id,
+    }));
+    return computeOgeGridSpans({
+      nodes: this.flatNodes(),
+      columns,
+      cellSpan: hook
+        ? (row, column) => {
+            const info = infos.get(column.id);
+            return info ? hook(row, info) : null;
+          }
+        : undefined,
+    });
+  });
+
+  /** How a body cell renders under the span layout. */
+  protected spanKind(
+    row: number,
+    col: number,
+  ): 'plain' | 'owner' | 'hidden' | 'placeholder' {
+    const layout = this.spanLayout();
+    if (layout.empty) return 'plain';
+    const owner = layout.ownerOf(row, col);
+    if (owner) return owner.row === row ? 'hidden' : 'placeholder';
+    return layout.extentOf(row, col) ? 'owner' : 'plain';
+  }
+
+  protected spanOf(row: number, col: number): OgeGridSpanExtent | null {
+    return this.spanLayout().extentOf(row, col);
+  }
+
+  // --- column auto-fit & cell hints ------------------------------------------------
+
+  /**
+   * Sizes every column without a user width to its header and rendered
+   * cells once the first result set rendered (DevExtreme `columnAutoWidth`).
+   */
+  readonly columnAutoWidth = input(false);
+
+  private autoWidthDone: unknown = null;
+
+  private readonly autoWidthEffect = afterRenderEffect(() => {
+    const result = this.adapter.result();
+    if (!this.columnAutoWidth() || !result || result === this.autoWidthDone)
+      return;
+    if (this.autoWidthDone !== null) return;
+    this.autoWidthDone = result;
+    untracked(() => this.autoFitColumns());
+  });
+
+  /**
+   * Sizes a column to its header and its *rendered* cells (a virtualized
+   * grid fits to the visible window) — what a double-click on the resize
+   * handle and the header menu's "Size to fit" run.
+   */
+  autoFitColumn(field: string): void {
+    const column = untracked(this.resolvedColumns).find(
+      (candidate) => candidate.field === field || candidate.id === field,
+    );
+    if (column) this.fitColumn(column);
+  }
+
+  /** `autoFitColumn()` for every visible column. */
+  autoFitColumns(): void {
+    for (const column of untracked(this.resolvedColumns))
+      this.fitColumn(column);
+  }
+
+  private fitColumn(column: ResolvedColumn<T>): void {
+    const viewport = this.viewportRef()?.nativeElement;
+    if (!viewport) return;
+    const header = this.headerCellOf(column.id);
+    const cells = viewport.querySelectorAll(
+      `.oge-rows [data-cell$="-${column.absIndex}"]`,
+    );
+    const width = ogeMeasureAutoWidth(
+      header,
+      cells,
+      header?.querySelector('.oge-header-caption') ?? null,
+    );
+    if (width === null) return;
+    this.resizeColumnTo(column, width, false);
+  }
+
+  protected onResizeHandleDblClick(
+    column: ResolvedColumn<T>,
+    event: MouseEvent,
+  ): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.fitColumn(column);
+  }
+
+  /**
+   * Shows truncated cell text in a tooltip (the overlay tooltip machine) on
+   * hover — and immediately on keyboard focus.
+   */
+  readonly cellHintEnabled = input(false);
+
+  private readonly overlayConfig = inject(OGE_OVERLAY_CONFIG);
+  protected readonly hintCell = signal<HTMLElement | null>(null);
+  protected readonly hintText = signal('');
+  private readonly hintPopupRef = viewChild('cellHint', { read: ElementRef });
+
+  readonly hintPanel = new OgeAnchoredPanel({
+    anchor: () => this.hintCell() ?? this.hostRef.nativeElement,
+    panel: () => this.hintPopupRef()?.nativeElement ?? null,
+    placement: () => 'top',
+    ...OGE_TOOLTIP_PANEL_OPTIONS,
+    onClosed: () => this.hintCore.onPanelClosed(),
+  });
+
+  private readonly hintCore = new OgeTooltipCore({
+    text: () => untracked(this.hintText),
+    showDelay: () => this.overlayConfig.tooltipShowDelayMs,
+    hideDelay: () => this.overlayConfig.tooltipHideDelayMs,
+    isOpen: () => this.hintPanel.isOpen(),
+    open: () => {
+      this.hintPanel.open();
+      setTimeout(() => this.hintPanel.updatePosition());
+    },
+    close: () => this.hintPanel.close(),
+    describedByTarget: () => {
+      const cell = untracked(this.hintCell);
+      return cell ? tooltipDescribedByTarget(cell) : null;
+    },
+    panelId: this.hintPanel.panelId,
+  });
+
+  private hintTargetOf(target: EventTarget | null): HTMLElement | null {
+    if (!untracked(this.cellHintEnabled)) return null;
+    const cell = ogeOwnedClosest(
+      target as Element | null,
+      '.oge-cell[data-cell]',
+      this.hostRef.nativeElement,
+      OGE_GRID_HOST_SELECTOR,
+    );
+    if (!cell || cell.querySelector('.oge-editor')) return null;
+    return ogeIsTextTruncated(cell) ? cell : null;
+  }
+
+  protected onHintOver(event: PointerEvent): void {
+    const cell = this.hintTargetOf(event.target);
+    if (cell === untracked(this.hintCell)) return;
+    if (!cell) {
+      this.hintCore.scheduleHide();
+      return;
+    }
+    this.hintCore.hide();
+    this.hintCell.set(cell);
+    this.hintText.set((cell.textContent ?? '').trim());
+    this.hintCore.scheduleShow();
+  }
+
+  protected onHintLeave(): void {
+    this.hintCore.scheduleHide();
+  }
+
+  protected onHintFocus(event: FocusEvent): void {
+    const cell = this.hintTargetOf(event.target);
+    if (!cell) {
+      if (untracked(this.hintCell)) this.hintCore.hide();
+      return;
+    }
+    this.hintCore.hide();
+    this.hintCell.set(cell);
+    this.hintText.set((cell.textContent ?? '').trim());
+    this.hintCore.show();
+  }
+
+  protected onHintBlur(): void {
+    this.hintCore.hide();
+  }
+
+  // --- cross-grid row drag ---------------------------------------------------------
+
+  /**
+   * Grids (and other components) sharing a group name accept each other's
+   * dragged rows; a drop on another grid fires that grid's `rowDrop` with
+   * the source row — move the data in the handler.
+   */
+  readonly rowDragGroup = input<string | undefined>(undefined);
+
+  /** A drop on the middle of a row means "inside" it (`position: 'inside'`). */
+  readonly allowDropInsideRow = input(false);
+
+  /** Cancelable: a row drag is about to start. */
+  readonly rowDragStart = output<OgeRowDragStartEvent<T>>();
+  /** Cancelable: a dragged row of the group hovers this grid. */
+  readonly rowDragOver = output<OgeRowDragOverEvent>();
+  /** A row was dropped on this grid — its own (reorder) or another component's. */
+  readonly rowDrop = output<OgeRowDropEvent>();
+  /** The source side of a drag ended. */
+  readonly rowDragEnd = output<OgeRowDragEndEvent<T>>();
+
+  /** Drop position indicator of the row under a drag. */
+  protected readonly dropPosition = signal<OgeRowDropPosition | null>(null);
+
+  /** The id events report for this grid: the host `id`, else the internal one. */
+  protected componentId(): string {
+    return this.hostRef.nativeElement.id || this.uid;
+  }
+
+  private readonly dragParticipantEffect = effect((onCleanup) => {
+    const group = this.rowDragGroup();
+    if (!group) return;
+    const off = registerOgeRowDragParticipant({
+      componentId: this.componentId(),
+      group,
+      element: () => this.hostRef.nativeElement,
+      resolve: (hit, clientY, source) =>
+        this.resolveRowDrop(hit, clientY, source),
+      over: (_source, target) => {
+        const key = target?.key ?? null;
+        if (this.dropTargetKey() !== key) this.dropTargetKey.set(key);
+        this.dropPosition.set(target?.position ?? null);
+      },
+      drop: (source, target) => this.acceptRowDrop(source, target),
+    });
+    onCleanup(off);
+  });
+
+  private resolveRowDrop(
+    hit: Element,
+    clientY: number,
+    source: OgeRowDragSource,
+  ): OgeRowDragTarget | null {
+    const host = this.hostRef.nativeElement;
+    const nodes = untracked(this.flatNodes);
+    const dataNodes = nodes.filter(
+      (node): node is DataRowNode<T> => node.kind === 'data',
+    );
+    const rowEl = ogeOwnedClosest(
+      hit,
+      '.oge-row[data-rowindex]',
+      host,
+      OGE_GRID_HOST_SELECTOR,
+    );
+    let target: OgeRowDragTarget | null = null;
+    if (rowEl) {
+      const node = nodes[Number(rowEl.dataset['rowindex'])];
+      if (node?.kind !== 'data') return null;
+      const position = ogeRowDropPosition(
+        rowEl.getBoundingClientRect(),
+        clientY,
+        untracked(this.allowDropInsideRow),
+      );
+      const index = dataNodes.indexOf(node);
+      target = {
+        componentId: this.componentId(),
+        key: node.key,
+        row: node.data,
+        position,
+        index: position === 'after' ? index + 1 : index,
+      };
+    } else if (
+      ogeOwnedClosest(
+        hit,
+        '.oge-body, .oge-no-data',
+        host,
+        OGE_GRID_HOST_SELECTOR,
+      )
+    ) {
+      target = {
+        componentId: this.componentId(),
+        key: null,
+        row: undefined,
+        position: 'after',
+        index: dataNodes.length,
+      };
+    }
+    if (!target) return null;
+    const over: OgeRowDragOverEvent = {
+      sourceComponentId: source.componentId,
+      sourceKey: source.key,
+      sourceRow: source.row,
+      targetKey: target.key,
+      position: target.position,
+      cancel: false,
+    };
+    this.rowDragOver.emit(over);
+    return over.cancel ? null : target;
+  }
+
+  private acceptRowDrop(
+    source: OgeRowDragSource,
+    target: OgeRowDragTarget,
+  ): void {
+    const same = source.componentId === this.componentId();
+    if (
+      same &&
+      target.key !== null &&
+      target.key !== source.key &&
+      target.position !== 'inside'
+    )
+      this.commitRowMove(source.key, target.key);
+    this.rowDrop.emit({
+      sourceComponentId: source.componentId,
+      targetComponentId: this.componentId(),
+      sameComponent: same,
+      sourceKey: source.key,
+      sourceRow: source.row,
+      targetKey: target.key,
+      targetRow: target.row,
+      position: target.position,
+      toIndex: target.index,
+    });
+  }
+
+  // --- header filter: conditions + date tree ---------------------------------------
+
+  protected readonly headerFilterMode = computed<OgeHeaderFilterMode>(() => {
+    const value = this.headerFilter();
+    return (typeof value === 'object' ? value.mode : undefined) ?? 'list';
+  });
+
+  /** The open header filter's column. */
+  protected readonly headerFilterColumn = computed(() => {
+    const field = this.headerFilterField();
+    return field ? this.columnByField(field) : undefined;
+  });
+
+  /** The condition section's draft for the open column. */
+  protected readonly headerConditionDraft =
+    signal<OgeHeaderConditionFilter | null>(null);
+
+  /** Operator choices of the open column, as select-box items. */
+  protected readonly headerConditionItems = computed(() => {
+    const column = this.headerFilterColumn();
+    const messages = this.msg();
+    return column
+      ? headerConditionOperators(column.dataType).map((op) => ({
+          value: op,
+          text: messages.operators[op],
+        }))
+      : [];
+  });
+
+  protected readonly headerBooleanItems = computed(() => [
+    { value: true, text: this.msg().booleanTrueLabel },
+    { value: false, text: this.msg().booleanFalseLabel },
+  ]);
+
+  protected conditionNeedsValue(operator: FilterOperator): boolean {
+    return headerConditionNeedsValue(operator);
+  }
+
+  protected setHeaderCondition(
+    which: 'first' | 'second',
+    patch: Partial<OgeHeaderCondition>,
+  ): void {
+    const draft = this.headerConditionDraft();
+    if (!draft) return;
+    this.headerConditionDraft.set({
+      ...draft,
+      [which]: { ...draft[which], ...patch },
+    });
+  }
+
+  protected setHeaderConditionLogic(logic: 'and' | 'or'): void {
+    const draft = this.headerConditionDraft();
+    if (draft) this.headerConditionDraft.set({ ...draft, logic });
+  }
+
+  protected applyHeaderConditions(): void {
+    const column = this.headerFilterColumn();
+    const draft = this.headerConditionDraft();
+    if (!column?.field || !draft) return;
+    this.store.filter.setRowFilter(
+      ogeHeaderConditionKey(column.field),
+      headerConditionExpr(column.field, column.dataType, draft),
+    );
+  }
+
+  protected clearHeaderConditions(): void {
+    const column = this.headerFilterColumn();
+    if (!column?.field) return;
+    this.store.filter.setRowFilter(ogeHeaderConditionKey(column.field), null);
+    this.headerConditionDraft.set(emptyHeaderConditionFilter(column.dataType));
+  }
+
+  /** Collapsed year / month nodes of the date tree. */
+  protected readonly headerDateCollapsed = signal<ReadonlySet<string>>(
+    new Set(),
+  );
+
+  /** A date column's values as year → month → day rows. */
+  protected readonly headerDateRows = computed<
+    readonly OgeHeaderDateNode[] | null
+  >(() => {
+    const column = this.headerFilterColumn();
+    if (!column || !isOgeDateType(column.dataType)) return null;
+    const values = this.headerFilterValues();
+    if (!values) return null;
+    const tree = groupHeaderValuesByDate(
+      values,
+      this.headerFilterSearch(),
+      this.msg().blankValue,
+      (value) => this.headerValueText(value),
+      // a datetime day node gathers several timestamps: label it by the day
+      column.dataType === 'datetime'
+        ? (date) => formatCellValue(date, 'date', undefined)
+        : undefined,
+    );
+    return flattenHeaderDateTree(
+      tree,
+      this.headerFilterSearch().trim() ? new Set() : this.headerDateCollapsed(),
+    );
+  });
+
+  protected toggleHeaderDateNode(key: string): void {
+    const next = new Set(this.headerDateCollapsed());
+    if (!next.delete(key)) next.add(key);
+    this.headerDateCollapsed.set(next);
+  }
+
+  protected isHeaderDateNodeCollapsed(key: string): boolean {
+    return this.headerDateCollapsed().has(key);
+  }
+
+  protected headerDateNodeState(node: OgeHeaderDateNode): boolean | null {
+    const state = headerGroupState(this.headerSelection(), node.values);
+    return state === 'some' ? null : state === 'all';
   }
 
   protected onPageSizeChange(pageSize: number): void {

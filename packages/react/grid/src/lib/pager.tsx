@@ -6,10 +6,16 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 import {
   OGE_DEFAULT_GRID_MESSAGES,
+  formatPattern,
+  ogePagerInfoContext,
+  ogePagerPages,
+  ogeParsePageInput,
   type OgeGridMessages,
+  type OgePagerInfoContext,
 } from '@oge-ui/behavior';
 
 export interface OgePagerProps {
@@ -24,6 +30,15 @@ export interface OgePagerProps {
   showInfo?: boolean;
   /** 'compact' shows `page / count` instead of page buttons; 'adaptive' switches on narrow hosts. */
   displayMode?: 'full' | 'compact' | 'adaptive';
+  /** Adds first-page / last-page buttons around the page list. */
+  showFirstLast?: boolean;
+  /**
+   * Replaces the page buttons with a "Page [n] of N" input; Enter or blur
+   * navigates (clamped to the valid range).
+   */
+  showPageInput?: boolean;
+  /** Renders the info text instead of `{count} rows`. */
+  renderInfo?: (context: OgePagerInfoContext) => ReactNode;
   messages?: OgeGridMessages;
   onPageChange?: (pageIndex: number) => void;
   /** Emits the new page size; `0` means "all rows" (paging off). */
@@ -32,18 +47,11 @@ export interface OgePagerProps {
   style?: CSSProperties;
 }
 
-/** Windowed page list: first, last, and up to 5 pages around the current one. */
-export function pagerPages(count: number, current: number): number[] {
-  if (count <= 9) return Array.from({ length: count }, (_, i) => i);
-  const around = [
-    current - 2,
-    current - 1,
-    current,
-    current + 1,
-    current + 2,
-  ].filter((p) => p > 0 && p < count - 1);
-  return [...new Set([0, ...around, count - 1])].sort((a, b) => a - b);
-}
+/**
+ * Windowed page list: first, last, and up to 5 pages around the current one
+ * (`@oge-ui/behavior`'s `ogePagerPages`, kept under its historical name).
+ */
+export const pagerPages = ogePagerPages;
 
 const chevron = (path: string) => (
   <svg
@@ -74,6 +82,9 @@ export function OgePager({
   pageSizes = null,
   showInfo = true,
   displayMode = 'full',
+  showFirstLast = false,
+  showPageInput = false,
+  renderInfo,
   messages = OGE_DEFAULT_GRID_MESSAGES,
   onPageChange,
   onPageSizeChange,
@@ -99,6 +110,12 @@ export function OgePager({
   const compact =
     displayMode === 'compact' ||
     (displayMode === 'adaptive' && hostWidth < 480);
+  /** The go-to-page input committed: navigate, or snap back to the page. */
+  const commitPageInput = (field: HTMLInputElement): void => {
+    const page = ogeParsePageInput(field.value, pageCount);
+    field.value = String((page ?? pageIndex) + 1);
+    if (page !== null && page !== pageIndex) onPageChange?.(page);
+  };
   const pages = useMemo(
     () => pagerPages(pageCount, pageIndex),
     [pageCount, pageIndex],
@@ -110,6 +127,17 @@ export function OgePager({
       className={className ? `oge-pager ${className}` : 'oge-pager'}
       style={style}
     >
+      {showFirstLast ? (
+        <button
+          type="button"
+          className="oge-pager-btn oge-pager-first"
+          disabled={pageIndex === 0}
+          onClick={() => onPageChange?.(0)}
+          aria-label={messages.firstPage}
+        >
+          {chevron('M4 3.5v9M11 3.5 6.5 8l4.5 4.5')}
+        </button>
+      ) : null}
       <button
         type="button"
         className="oge-pager-btn"
@@ -119,7 +147,28 @@ export function OgePager({
       >
         {chevron('m10 3.5-4.5 4.5L10 12.5')}
       </button>
-      {compact ? (
+      {showPageInput ? (
+        <label className="oge-pager-input">
+          <span className="oge-pager-input-label">{messages.goToPage}</span>
+          <input
+            key={pageIndex}
+            type="text"
+            inputMode="numeric"
+            className="oge-pager-input-field"
+            defaultValue={String(pageIndex + 1)}
+            aria-label={messages.goToPage}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') commitPageInput(event.currentTarget);
+            }}
+            onBlur={(event) => commitPageInput(event.currentTarget)}
+          />
+          <span className="oge-pager-input-count">
+            {formatPattern(messages.pageOfCount, {
+              count: String(pageCount),
+            })}
+          </span>
+        </label>
+      ) : compact ? (
         <span className="oge-pager-compact">
           {pageIndex + 1} / {pageCount}
         </span>
@@ -149,6 +198,17 @@ export function OgePager({
       >
         {chevron('m6 3.5 4.5 4.5L6 12.5')}
       </button>
+      {showFirstLast ? (
+        <button
+          type="button"
+          className="oge-pager-btn oge-pager-last"
+          disabled={pageIndex >= pageCount - 1}
+          onClick={() => onPageChange?.(pageCount - 1)}
+          aria-label={messages.lastPage}
+        >
+          {chevron('M12 3.5v9M5 3.5 9.5 8 5 12.5')}
+        </button>
+      ) : null}
       {pageSizes ? (
         <label className="oge-pager-sizes">
           <span className="oge-pager-sizes-label">
@@ -172,7 +232,17 @@ export function OgePager({
       ) : null}
       {showInfo ? (
         <span className="oge-pager-info">
-          {totalCount} {messages.rowsSuffix}
+          {renderInfo
+            ? renderInfo(
+                ogePagerInfoContext({
+                  pageIndex,
+                  pageCount,
+                  totalCount,
+                  pageSize,
+                  text: `${totalCount} ${messages.rowsSuffix}`,
+                }),
+              )
+            : `${totalCount} ${messages.rowsSuffix}`}
         </span>
       ) : null}
     </div>

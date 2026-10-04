@@ -219,13 +219,20 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   #viewport
   class="oge-viewport"
   [attr.role]="gridRole()"
-  [attr.aria-rowcount]="totalCount() + 1"
+  [attr.aria-rowcount]="totalCount() + 1 + pinnedTopNodes().length + pinnedBottomNodes().length"
   [attr.aria-colcount]="resolvedColumns().length + leadingCellCount() + (hasCommandColumn() ? 1 : 0)"
   [attr.aria-multiselectable]="
-    selectionMode() === 'multiple' || selectionMode() === 'checkbox' ? true : null
+    selectionMode() === 'multiple' || selectionMode() === 'checkbox' || selectionMode() === 'cell' ? true : null
   "
+  [class.oge-cell-select]="cellSelect()"
   (scroll)="onScroll($event)"
   (keydown)="onGridKeydown($event)"
+  (copy)="onGridCopy($event)"
+  (paste)="onGridPaste($event)"
+  (pointerover)="onHintOver($event)"
+  (pointerleave)="onHintLeave()"
+  (focusin)="onHintFocus($event)"
+  (focusout)="onHintBlur()"
 >
   <div class="oge-header" role="rowgroup">
     @if (bandRow(); as bands) {
@@ -373,6 +380,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           [attr.aria-valuemin]="separatorValue(column).min"
           [attr.aria-valuemax]="separatorValue(column).max"
           (pointerdown)="onResizeStart(column, $event)"
+          (dblclick)="onResizeHandleDblClick(column, $event)"
           (keydown)="onResizeHandleKeydown(column, $event)"
         ></span>
         }
@@ -504,6 +512,47 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       <div class="oge-filter-cell" role="gridcell"></div>
       }
     </div>
+    } @for (node of pinnedTopNodes(); track node.key; let pinIndex = $index) {
+    <ng-container
+      *ngTemplateOutlet="pinnedRow; context: { $implicit: node, rowIndex: pinIndex + 2, side: 'top' }"
+    />
+    } @if (stickyGroups().length) {
+    <!-- a visual aid: the real group rows stay in the grid for keyboard and
+         screen-reader users; a click scrolls to the group -->
+    <div class="oge-sticky-groups" aria-hidden="true">
+      @for (group of stickyGroups(); track group.key) {
+      <div
+        class="oge-group-row oge-sticky-group-row"
+        [style.padding-left.px]="12 + group.level * 20"
+        (click)="scrollToGroup(group.key)"
+      >
+        <div class="oge-group-cell">
+          <span class="oge-group-arrow oge-expanded">
+            <svg
+              viewBox="0 0 16 16"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m6 3.5 4.5 4.5L6 12.5" />
+            </svg>
+          </span>
+          <span class="oge-group-label">
+            {{ groupCaption(group.groupField) + ': ' }}<strong
+              >{{ groupValueText(group) }}</strong
+            >
+            <span class="oge-group-count"
+              >{{ ' (' + group.childCount + ')' }}</span
+            >
+          </span>
+        </div>
+      </div>
+      }
+    </div>
     }
   </div>
   <div class="oge-body" [style.height.px]="bodyHeight()">
@@ -589,17 +638,20 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       <div
         class="oge-row"
         role="row"
+        [class]="rowClassesOf(node)"
         [class.oge-row-alt]="rowAlternation() && (viewStart() + nodeIndex) % 2 === 1"
         [class.oge-row-focused]="focusedRowEnabled() && focusedRowKey() === node.key"
         [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
         [class.oge-row-removed]="store.editing.isRemoved(node.key)"
         [class.oge-row-new]="store.editing.isAdded(node.key)"
         [attr.aria-selected]="ariaSelectedOf(node)"
-        [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+        [attr.aria-rowindex]="viewStart() + nodeIndex + 2 + pinnedTopOffset()"
         [attr.data-rowindex]="viewStart() + nodeIndex"
         [style.height.px]="virtualized() && !autoRowHeight() && !isAdaptiveExpanded(node.key) ? effRowHeight() : null"
         [style.grid-template-columns]="gridTemplateColumns()"
         [class.oge-drop-target]="dropTargetKey() === node.key"
+        [class.oge-drop-after]="dropTargetKey() === node.key && dropPosition() === 'after'"
+        [class.oge-drop-inside]="dropTargetKey() === node.key && dropPosition() === 'inside'"
         [attr.aria-keyshortcuts]="rowDragging() ? 'Control+ArrowUp Control+ArrowDown' : null"
         (click)="onRowClick(node, $event)"
         (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
@@ -698,10 +750,28 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           role="gridcell"
           aria-hidden="true"
         ></div>
-        } @for (column of renderColumns(); track column.id) {
+        } @for (column of renderColumns(); track column.id) { @switch
+        (spanKind(viewStart() + nodeIndex, column.absIndex)) { @case ('hidden')
+        { } @case ('placeholder') {
+        <div class="oge-cell oge-cell-span-covered" aria-hidden="true"></div>
+        } @default {
         <div
           class="oge-cell"
           role="gridcell"
+          [class]="cellClassesOf(node, column)"
+          [style]="cellVarsOf(node, column, viewStart() + nodeIndex)"
+          [class.oge-cell-spanned]="spanOf(viewStart() + nodeIndex, column.absIndex) !== null"
+          [style.grid-column]="spanOf(viewStart() + nodeIndex, column.absIndex) ? 'span ' + spanOf(viewStart() + nodeIndex, column.absIndex)!.colSpan : null"
+          [attr.aria-rowspan]="(spanOf(viewStart() + nodeIndex, column.absIndex)?.rowSpan ?? 1) > 1 ? spanOf(viewStart() + nodeIndex, column.absIndex)!.rowSpan : null"
+          [attr.aria-colspan]="(spanOf(viewStart() + nodeIndex, column.absIndex)?.colSpan ?? 1) > 1 ? spanOf(viewStart() + nodeIndex, column.absIndex)!.colSpan : null"
+          [class.oge-cell-range]="isCellInRange(viewStart() + nodeIndex, column.absIndex)"
+          [class.oge-range-top]="rangeEdges(viewStart() + nodeIndex, column.absIndex)?.top"
+          [class.oge-range-bottom]="rangeEdges(viewStart() + nodeIndex, column.absIndex)?.bottom"
+          [class.oge-range-start]="rangeEdges(viewStart() + nodeIndex, column.absIndex)?.start"
+          [class.oge-range-end]="rangeEdges(viewStart() + nodeIndex, column.absIndex)?.end"
+          [class.oge-cell-fill-preview]="isInFillPreview(viewStart() + nodeIndex, column.absIndex)"
+          [attr.aria-selected]="cellSelect() ? isCellInRange(viewStart() + nodeIndex, column.absIndex) : null"
+          [attr.aria-keyshortcuts]="cellKeyShortcuts()"
           [class.oge-cell-number]="column.dataType === 'number'"
           [class.oge-align-center]="column.alignment === 'center'"
           [class.oge-align-end]="column.alignment === 'end'"
@@ -716,6 +786,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           [attr.aria-colindex]="leadingCellCount() + column.absIndex + 1"
           [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, column.absIndex) ? 0 : -1"
           (focus)="onCellFocus(viewStart() + nodeIndex, column.absIndex)"
+          (pointerdown)="onCellPointerDown(viewStart() + nodeIndex, column, $event)"
           (click)="onCellClickToEdit(node, column, $event)"
           (dblclick)="onCellClickToEdit(node, column, $event)"
           (keydown.f2)="onCellClickToEdit(node, column, $event)"
@@ -736,24 +807,29 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
                               editControl(node, column).touched && editControl(node, column).invalid
                             "
             [errorTitle]="editorErrorText(editControl(node, column))"
+            [pending]="editorPending(editControl(node, column))"
+            [pendingLabel]="msg().validationPending"
             (enterKey)="onEditorEnter()"
             (escapeKey)="cancelActiveEditor()"
             (tabKey)="commitAndNext(node, column, $event)"
             (focusLeft)="onEditorBlur()"
           />
-          } } @else if (column.cellTemplate) {
+          } } @else {
           <ng-container
-            *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
+            *ngTemplateOutlet="cellBody; context: { $implicit: node, column: column }"
           />
-          } @else if (booleanLabelOf(node, column); as booleanLabel) {
-          <span aria-hidden="true">{{ cellDisplayText(node, column) }}</span
-          ><span class="oge-sr-only">{{ booleanLabel }}</span>
-          } @else if (searchHighlightRuns(node, column); as runs) {
-          <!-- prettier-ignore -->
-          <span>@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>
-          } @else { {{ cellDisplayText(node, column) }} }
+          } @if (isFillCorner(viewStart() + nodeIndex, column.absIndex)) {
+          <!-- the fill handle: a pointer affordance; Ctrl+D / Ctrl+R are its
+               keyboard twins (advertised on the cell's aria-keyshortcuts) -->
+          <span
+            class="oge-fill-handle"
+            aria-hidden="true"
+            [attr.title]="msg().fillHandle"
+            (pointerdown)="onFillHandlePointerDown($event)"
+          ></span>
+          }
         </div>
-        } @if (colSpacerRight() > 0) {
+        } } } @if (colSpacerRight() > 0) {
         <div
           class="oge-cell oge-col-spacer"
           role="gridcell"
@@ -1054,45 +1130,53 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       } } }
     </div>
   </div>
-  @if (hasTotalRow()) {
-  <div
-    class="oge-total-row"
-    role="row"
-    [style.grid-template-columns]="gridTemplateColumns()"
-  >
-    @if (rowDragging()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (hasExpander()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (hasCheckboxColumn()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (hasCommandColumn()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (colSpacerLeft() > 0) {
+  @if (hasTotalRow() || pinnedBottomNodes().length) {
+  <div class="oge-footer">
+    @for (node of pinnedBottomNodes(); track node.key; let pinIndex = $index) {
+    <ng-container
+      *ngTemplateOutlet="pinnedRow; context: { $implicit: node, rowIndex: totalCount() + 2 + pinnedTopNodes().length + pinIndex, side: 'bottom' }"
+    />
+    } @if (hasTotalRow()) {
     <div
-      class="oge-total-cell oge-col-spacer"
-      role="gridcell"
-      aria-hidden="true"
-    ></div>
-    } @for (column of renderColumns(); track column.id) {
-    <div
-      class="oge-total-cell"
-      role="gridcell"
-      [class.oge-cell-number]="column.dataType === 'number'"
-      [class.oge-align-center]="column.alignment === 'center'"
-      [class.oge-align-end]="column.alignment === 'end'"
-      [class.oge-pinned]="column.pinned !== false"
-      [style.inset-inline-start.px]="pinnedLeftOf(column)"
-      [style.inset-inline-end.px]="pinnedRightOf(column)"
+      class="oge-total-row"
+      role="row"
+      [style.grid-template-columns]="gridTemplateColumns()"
     >
-      {{ totalSummaryByColumn().get(column.id) ?? '' }}
+      @if (rowDragging()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (hasExpander()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (hasCheckboxColumn()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (hasCommandColumn()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (colSpacerLeft() > 0) {
+      <div
+        class="oge-total-cell oge-col-spacer"
+        role="gridcell"
+        aria-hidden="true"
+      ></div>
+      } @for (column of renderColumns(); track column.id) {
+      <div
+        class="oge-total-cell"
+        role="gridcell"
+        [class.oge-cell-number]="column.dataType === 'number'"
+        [class.oge-align-center]="column.alignment === 'center'"
+        [class.oge-align-end]="column.alignment === 'end'"
+        [class.oge-pinned]="column.pinned !== false"
+        [style.inset-inline-start.px]="pinnedLeftOf(column)"
+        [style.inset-inline-end.px]="pinnedRightOf(column)"
+      >
+        {{ totalSummaryByColumn().get(column.id) ?? '' }}
+      </div>
+      } @if (colSpacerRight() > 0) {
+      <div
+        class="oge-total-cell oge-col-spacer"
+        role="gridcell"
+        aria-hidden="true"
+      ></div>
+      }
     </div>
-    } @if (colSpacerRight() > 0) {
-    <div
-      class="oge-total-cell oge-col-spacer"
-      role="gridcell"
-      aria-hidden="true"
-    ></div>
     }
   </div>
   }
@@ -1119,13 +1203,153 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   [pageSizes]="pagingOpts.pageSizes ?? null"
   [showInfo]="pagingOpts.showInfo !== false"
   [displayMode]="pagingOpts.displayMode ?? 'full'"
+  [showFirstLast]="pagingOpts.showFirstLastButtons === true"
+  [showPageInput]="pagingOpts.showPageInput === true"
+  [infoTemplate]="pagerInfoTemplate()?.templateRef ?? null"
   [messages]="msg()"
   (pageChange)="store.paging.goTo($event)"
   (pageSizeChange)="onPageSizeChange($event)"
 />
 } @if (headerFilterField()) {
 <oge-popup #headerFilterPopup [panel]="headerFilterPanel">
-  <div class="oge-header-filter-popup" role="listbox">
+  <div
+    class="oge-header-filter-popup"
+    [class.oge-header-filter-menu]="headerFilterMode() !== 'list'"
+    [attr.role]="headerFilterMode() === 'list' ? 'listbox' : 'group'"
+    [attr.aria-label]="headerFilterMode() === 'list' ? null : msg().filterValues"
+  >
+    @if (headerFilterMode() !== 'list') { @if (headerConditionDraft(); as draft)
+    { @if (headerFilterColumn(); as hfColumn) {
+    <section
+      class="oge-hf-conditions"
+      [attr.aria-label]="msg().filterByCondition"
+    >
+      <div class="oge-hf-section-title">{{ msg().filterByCondition }}</div>
+      @for (which of ['first', 'second']; track which) { @if (which ===
+      'second') {
+      <div
+        class="oge-hf-logic"
+        role="radiogroup"
+        [attr.aria-label]="msg().filterByCondition"
+      >
+        <label>
+          <input
+            type="radio"
+            [name]="uid + '-hf-logic'"
+            [checked]="draft.logic === 'and'"
+            (change)="setHeaderConditionLogic('and')"
+          />
+          {{ msg().logicAnd }}
+        </label>
+        <label>
+          <input
+            type="radio"
+            [name]="uid + '-hf-logic'"
+            [checked]="draft.logic === 'or'"
+            (change)="setHeaderConditionLogic('or')"
+          />
+          {{ msg().logicOr }}
+        </label>
+      </div>
+      } @let condition = which === 'first' ? draft.first : draft.second; @let
+      label = which === 'first' ? msg().firstCondition : msg().secondCondition;
+      <div class="oge-hf-condition" role="group" [attr.aria-label]="label">
+        <oge-select-box
+          class="oge-hf-condition-op"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="label"
+          [items]="headerConditionItems()"
+          displayExpr="text"
+          valueExpr="value"
+          [value]="condition.operator"
+          (valueCommitted)="setHeaderCondition($any(which), { operator: $any($event.value) })"
+        />
+        @if (conditionNeedsValue(condition.operator)) { @switch
+        (hfColumn.dataType) { @case ('number') {
+        <oge-number-box
+          class="oge-hf-condition-value"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="label + ' ' + msg().filterValuePlaceholder"
+          [value]="$any(condition.value)"
+          (valueCommitted)="setHeaderCondition($any(which), { value: $event.value })"
+        />
+        } @case ('boolean') {
+        <oge-select-box
+          class="oge-hf-condition-value"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="label + ' ' + msg().filterValuePlaceholder"
+          [items]="headerBooleanItems()"
+          displayExpr="text"
+          valueExpr="value"
+          [value]="condition.value"
+          (valueCommitted)="setHeaderCondition($any(which), { value: $event.value })"
+        />
+        } @case ('date') {
+        <oge-date-box
+          class="oge-hf-condition-value"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="label + ' ' + msg().filterValuePlaceholder"
+          [value]="$any(condition.value)"
+          (valueCommitted)="setHeaderCondition($any(which), { value: $event.value })"
+        />
+        } @case ('datetime') {
+        <oge-date-box
+          class="oge-hf-condition-value"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="label + ' ' + msg().filterValuePlaceholder"
+          [value]="$any(condition.value)"
+          (valueCommitted)="setHeaderCondition($any(which), { value: $event.value })"
+        />
+        } @default {
+        <oge-text-box
+          class="oge-hf-condition-value"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="label + ' ' + msg().filterValuePlaceholder"
+          [value]="$any(condition.value) ?? ''"
+          (inputChange)="setHeaderCondition($any(which), { value: $event.text })"
+        />
+        } } }
+      </div>
+      }
+      <div class="oge-hf-actions">
+        <button
+          type="button"
+          class="oge-tool-btn oge-tool-text-btn oge-btn-accent oge-hf-apply"
+          (click)="applyHeaderConditions()"
+        >
+          {{ msg().apply }}
+        </button>
+        <button
+          type="button"
+          class="oge-tool-btn oge-tool-text-btn oge-hf-clear"
+          (click)="clearHeaderConditions()"
+        >
+          {{ msg().clearFilter }}
+        </button>
+      </div>
+    </section>
+    } } } @if (headerFilterMode() !== 'conditions') { @if (headerFilterMode()
+    === 'both') {
+    <div class="oge-hf-section-title">{{ msg().filterByValues }}</div>
+    }
     <input
       class="oge-hf-search"
       type="search"
@@ -1134,7 +1358,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       [value]="headerFilterSearch()"
       (input)="headerFilterSearch.set($any($event.target).value)"
     />
-    @if (headerValueGroups(); as groups) {
+    @if (headerDateRows(); as dateRows) {
     <label class="oge-hf-item oge-hf-all">
       <oge-check-box
         [value]="allHeaderValuesSelected()"
@@ -1142,25 +1366,51 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       />
       <span>{{ msg().selectAllValues }}</span>
     </label>
-    @for (group of groups; track group.label) {
-    <label class="oge-hf-item oge-hf-group">
-      <oge-check-box
-        [value]="
-        isHeaderGroupIndeterminate(group) ? null : isHeaderGroupSelected(group)
-      "
-        (valueCommitted)="toggleHeaderGroup(group)"
-      />
-      <span>{{ group.label }}</span>
-    </label>
-    @for (value of group.values; track $index) {
-    <label class="oge-hf-item oge-hf-leaf">
-      <oge-check-box
-        [value]="isHeaderValueSelected(value)"
-        (valueCommitted)="toggleHeaderValue(value)"
-      />
-      <span>{{ headerValueText(value) }}</span>
-    </label>
-    } } } @else if (visibleHeaderValues(); as values) {
+    @for (dateNode of dateRows; track dateNode.key) {
+    <div
+      class="oge-hf-node"
+      [style.padding-inline-start.px]="dateNode.level * 16"
+    >
+      @if (dateNode.children.length) {
+      <button
+        type="button"
+        class="oge-hf-toggle"
+        [class.oge-expanded]="!isHeaderDateNodeCollapsed(dateNode.key)"
+        [attr.aria-expanded]="!isHeaderDateNodeCollapsed(dateNode.key)"
+        [attr.aria-label]="dateNode.label"
+        (click)="toggleHeaderDateNode(dateNode.key)"
+      >
+        <svg
+          viewBox="0 0 16 16"
+          width="10"
+          height="10"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m6 3.5 4.5 4.5L6 12.5" />
+        </svg>
+      </button>
+      } @else {
+      <span class="oge-hf-toggle-spacer" aria-hidden="true"></span>
+      }
+      <label
+        class="oge-hf-item"
+        [class.oge-hf-group]="dateNode.level === 0 && dateNode.children.length > 0"
+        [class.oge-hf-month]="dateNode.level === 1"
+        [class.oge-hf-leaf]="dateNode.children.length === 0"
+      >
+        <oge-check-box
+          [value]="headerDateNodeState(dateNode)"
+          (valueCommitted)="toggleHeaderGroup(dateNode)"
+        />
+        <span>{{ dateNode.label }}</span>
+      </label>
+    </div>
+    } } @else if (visibleHeaderValues(); as values) {
     <label class="oge-hf-item oge-hf-all">
       <oge-check-box
         [value]="allHeaderValuesSelected()"
@@ -1178,7 +1428,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     </label>
     } } @else {
     <div class="oge-hf-loading">{{ msg().loading }}</div>
-    }
+    } }
   </div>
 </oge-popup>
 } @if (chooserOpen()) {
@@ -1320,3 +1570,110 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   />
   } }
 </ng-template>
+
+<!-- a data cell's display content — shared by the body and the pinned rows -->
+<ng-template #cellBody let-node let-column="column">
+  @if (cellFormatOf(node, column).icon; as icon) {
+  <span
+    class="oge-cf-icon"
+    [attr.data-icon-set]="cellFormatOf(node, column).iconSet"
+    aria-hidden="true"
+  >
+    <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+      @switch (cellFormatOf(node, column).iconSet) { @case ('circles') {
+      <circle cx="8" cy="8" r="5" />
+      } @case ('flags') {
+      <path d="M4 2v12M4 3h8l-2 3 2 3H4" />
+      } @default { @switch (icon) { @case ('high') {
+      <path d="M8 3 13 10H3z" />
+      } @case ('low') {
+      <path d="M8 13 3 6h10z" />
+      } @default {
+      <path d="M3 6.5h7V4l4 4-4 4V9.5H3z" />
+      } } } }
+    </svg>
+  </span>
+  } @if (column.cellTemplate) {
+  <ng-container
+    *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
+  />
+  } @else if (booleanLabelOf(node, column); as booleanLabel) {
+  <span aria-hidden="true">{{ cellDisplayText(node, column) }}</span
+  ><span class="oge-sr-only">{{ booleanLabel }}</span>
+  } @else if (searchHighlightRuns(node, column); as runs) {
+  <!-- prettier-ignore -->
+  <span>@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>
+  } @else { {{ cellDisplayText(node, column) }} }
+</ng-template>
+
+<!-- a pinned row: display only (no editing, selection or roving focus) -->
+<ng-template #pinnedRow let-node let-rowIndex="rowIndex" let-side="side">
+  <div
+    class="oge-row oge-pinned-row"
+    role="row"
+    [class]="rowClassesOf(node)"
+    [class.oge-pinned-row-top]="side === 'top'"
+    [class.oge-pinned-row-bottom]="side === 'bottom'"
+    [attr.aria-rowindex]="rowIndex"
+    [style.grid-template-columns]="gridTemplateColumns()"
+  >
+    @if (rowDragging()) {
+    <div class="oge-cell oge-drag-cell" role="gridcell"></div>
+    } @if (hasExpander()) {
+    <div class="oge-cell oge-expander-cell" role="gridcell"></div>
+    } @if (hasCheckboxColumn()) {
+    <div class="oge-cell oge-checkbox-cell" role="gridcell"></div>
+    } @if (colSpacerLeft() > 0) {
+    <div
+      class="oge-cell oge-col-spacer"
+      role="gridcell"
+      aria-hidden="true"
+    ></div>
+    } @for (column of renderColumns(); track column.id) {
+    <div
+      class="oge-cell"
+      role="gridcell"
+      [class]="cellClassesOf(node, column)"
+      [style]="cellVarsOf(node, column)"
+      [class.oge-cell-number]="column.dataType === 'number'"
+      [class.oge-align-center]="column.alignment === 'center'"
+      [class.oge-align-end]="column.alignment === 'end'"
+      [class.oge-pinned]="column.pinned !== false"
+      [style.inset-inline-start.px]="pinnedLeftOf(column)"
+      [style.inset-inline-end.px]="pinnedRightOf(column)"
+      [attr.aria-colindex]="leadingCellCount() + column.absIndex + 1"
+    >
+      <ng-container
+        *ngTemplateOutlet="cellBody; context: { $implicit: node, column: column }"
+      />
+    </div>
+    } @if (colSpacerRight() > 0) {
+    <div
+      class="oge-cell oge-col-spacer"
+      role="gridcell"
+      aria-hidden="true"
+    ></div>
+    } @if (hasCommandColumn()) {
+    <div class="oge-cell oge-command-cell" role="gridcell"></div>
+    }
+  </div>
+</ng-template>
+
+@if (cellHintEnabled() && hintCell()) {
+<!-- the overflow hint: one tooltip bubble per grid, anchored to the hovered
+     or focused truncated cell -->
+<div
+  #cellHint
+  class="oge-tooltip oge-grid-cell-hint"
+  role="tooltip"
+  [id]="hintPanel.panelId"
+  [style.top.px]="hintPanel.position()?.top ?? 0"
+  [style.left.px]="hintPanel.position()?.left ?? 0"
+  [style.display]="hintPanel.isOpen() ? null : 'none'"
+  [style.opacity]="hintPanel.position() ? null : '0'"
+  [class.oge-tooltip-ready]="hintPanel.position() !== null"
+  [attr.data-placement]="hintPanel.position()?.placement ?? null"
+>
+  {{ hintText() }}
+</div>
+}

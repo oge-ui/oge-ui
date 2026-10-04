@@ -151,6 +151,36 @@ export class OgeGridAnnouncements {
     );
   }
 
+  /**
+   * A cell range grew (`selectionMode: 'cell'`): `{rows} by {columns}`.
+   * A single cell says nothing — the focus move already speaks it.
+   */
+  rangeSelected(rows: number, columns: number, cells: number): void {
+    if (!this.deps.enabled() || cells <= 1) return;
+    this.deps.announce(
+      formatPattern(this.deps.messages().rangeSelectedAnnouncement, {
+        rows: String(rows),
+        columns: String(columns),
+        cells: String(cells),
+      }),
+    );
+  }
+
+  /** A paste, fill, undo or redo wrote `count` cells. */
+  cellsWritten(kind: 'paste' | 'fill' | 'undo' | 'redo', count: number): void {
+    if (!this.deps.enabled() || count <= 0) return;
+    const messages = this.deps.messages();
+    const pattern =
+      kind === 'paste'
+        ? messages.cellsPastedAnnouncement
+        : kind === 'fill'
+          ? messages.cellsFilledAnnouncement
+          : kind === 'undo'
+            ? messages.undoAnnouncement
+            : messages.redoAnnouncement;
+    this.deps.announce(formatPattern(pattern, { count: String(count) }));
+  }
+
   /** A commit was blocked by an invalid editor — spoken assertively. */
   validationFailed(column: string, error: string): void {
     if (!this.deps.enabled()) return;

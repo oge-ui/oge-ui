@@ -188,10 +188,10 @@ export const OGE_REACT_GRID_API: ApiSections = {
       entries: [
         {
           name: 'selectionMode',
-          type: "'none' | 'single' | 'multiple' | 'checkbox'",
+          type: "'none' | 'single' | 'multiple' | 'checkbox' | 'cell'",
           default: "'none'",
           description:
-            'Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header.',
+            "Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header — or <code>'cell'</code>: rectangular cell ranges with TSV copy / paste and the fill handle (editing then starts on double-click, F2 or Enter).",
         },
         {
           name: 'selectedKeys / defaultSelectedKeys',
@@ -392,6 +392,102 @@ export const OGE_REACT_GRID_API: ApiSections = {
           default: 'undefined',
           description:
             'Host class, inline style (give the grid its height here) and the accessible name of the grid.',
+        },
+      ],
+    },
+    {
+      title: 'Cells, ranges & clipboard',
+      entries: [
+        {
+          name: 'rangeSelection',
+          type: 'OgeRangeSelectionOptions',
+          description:
+            '<code>{ copyHeaders, fillHandle, pasteAddsRows, multipleRanges }</code>.',
+        },
+        {
+          name: 'selectedRanges / defaultSelectedRanges',
+          type: 'readonly OgeGridCellRange[]',
+          description:
+            'The selected ranges — controlled with <code>selectedRanges</code> + <code>onSelectedRangesChange</code>, or seeded once. A sort, filter, page or grouping change clears them.',
+        },
+        {
+          name: 'pinnedTopRows',
+          type: 'readonly (T | RowKey)[]',
+          description:
+            'Rows pinned in a sticky section under the header: data objects, or keys of loaded rows (which then leave the body). Display rows; virtual scrolling compatible.',
+        },
+        {
+          name: 'pinnedBottomRows',
+          type: 'readonly (T | RowKey)[]',
+          description: 'Rows pinned in the sticky footer, above the total row.',
+        },
+        {
+          name: 'stickyGroupRows',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Keeps the enclosing group rows under the header while scrolling — a visual aid; a click scrolls to the group.',
+        },
+        {
+          name: 'cellSpan',
+          type: '(row: T, column: OgeGridColumnInfo) =&gt; OgeGridCellSpan | null | undefined',
+          description:
+            'Row / column spans per cell, with <code>aria-rowspan</code> / <code>aria-colspan</code> and span-aware arrows. Ignored while virtualized.',
+        },
+        {
+          name: 'columnAutoWidth',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Sizes every column to its content once the first result set rendered.',
+        },
+        {
+          name: 'cellHintEnabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Shows truncated cell text in the overlay tooltip on hover and on keyboard focus.',
+        },
+      ],
+    },
+    {
+      title: 'Styling & drag groups',
+      entries: [
+        {
+          name: 'rowClass',
+          type: '(row: T, key: RowKey) =&gt; OgeClassValue',
+          description:
+            'Classes for a data row — string, array or <code>{ class: condition }</code> record.',
+        },
+        {
+          name: 'cellClass',
+          type: '(row: T, column: OgeGridColumnInfo) =&gt; OgeClassValue',
+          description: 'Classes for a data cell, per row and column.',
+        },
+        {
+          name: 'rowDragGroup',
+          type: 'string',
+          description:
+            'Grids sharing a group name accept each other’s dragged rows; the target’s <code>onRowDrop</code> carries the source row. The source needs <code>rowDragging</code>.',
+        },
+        {
+          name: 'allowDropInsideRow',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "A drop on the middle half of a row reports <code>position: 'inside'</code>.",
+        },
+        {
+          name: 'renderPagerInfo',
+          type: '(context: OgePagerInfoContext) =&gt; ReactNode',
+          description:
+            'Renders the pager’s info text — the React form of <code>*ogePagerInfoTemplate</code>.',
+        },
+        {
+          name: 'id',
+          type: 'string',
+          description:
+            'Host element id — also the component id the row-drag events report.',
         },
       ],
     },
@@ -614,6 +710,57 @@ export const OGE_REACT_GRID_API: ApiSections = {
         },
       ],
     },
+    {
+      title: 'Ranges, clipboard & undo',
+      entries: [
+        {
+          name: 'selectRange(range, add?)',
+          type: '(range: OgeGridCellRange, add?: boolean) =&gt; void',
+          description:
+            'Selects a rectangular cell range; <code>add</code> keeps the existing ones.',
+        },
+        {
+          name: 'clearRangeSelection()',
+          type: '() =&gt; void',
+          description: 'Clears every cell range.',
+        },
+        {
+          name: 'getSelectedRangeData()',
+          type: '() =&gt; unknown[][]',
+          description:
+            'The selected cells’ values as a rows × columns matrix (the lattice Ctrl+C copies).',
+        },
+        {
+          name: 'pasteText(text)',
+          type: '(text: string) =&gt; Promise&lt;number&gt;',
+          description:
+            'Pastes a TSV block into the editable cells from the focused cell (or fills the selected range with a single value): parsed with the column data type and lookup, validated, written as one undoable batch through the regular edit events. Resolves with the cells written.',
+        },
+        {
+          name: 'fillDown() / fillRight()',
+          type: '() =&gt; Promise&lt;number&gt;',
+          description:
+            'Ctrl+D / Ctrl+R: copies the range’s first row (column) into the rest — a single row copies the row above it.',
+        },
+        {
+          name: 'undo() / redo()',
+          type: '() =&gt; Promise&lt;void&gt;',
+          description:
+            'Ctrl+Z / Ctrl+Y: reverts or re-applies the last committed edit, paste or fill (staged in batch mode, saved otherwise).',
+        },
+        {
+          name: 'canUndo() / canRedo()',
+          type: '() =&gt; boolean',
+          description: 'Whether the history has a step to revert / re-apply.',
+        },
+        {
+          name: 'autoFitColumn(field) / autoFitColumns()',
+          type: '(field: string) =&gt; void',
+          description:
+            'Sizes a column (or every column) to its header and rendered cells — what a double-click on the resize handle and the header menu’s “Size to fit” run.',
+        },
+      ],
+    },
   ],
   events: [
     {
@@ -794,6 +941,50 @@ export const OGE_REACT_GRID_API: ApiSections = {
         },
       ],
     },
+    {
+      title: 'Ranges, preparation & drag',
+      entries: [
+        {
+          name: 'onRangeSelectionChanged',
+          type: '(event: OgeRangeSelectionChangedEvent) =&gt; void',
+          description:
+            'The selected ranges changed: <code>{ ranges, rowCount, columnCount, cellCount }</code>.',
+        },
+        {
+          name: 'onRowPrepared',
+          type: '(event: OgeRowPreparedEvent&lt;T&gt;) =&gt; void',
+          description:
+            'A data row element rendered a row for the first time — <code>{ row, key, rowIndex, element }</code>.',
+        },
+        {
+          name: 'onCellPrepared',
+          type: '(event: OgeCellPreparedEvent&lt;T&gt;) =&gt; void',
+          description: 'Every data cell of a prepared row.',
+        },
+        {
+          name: 'onRowDragStart',
+          type: '(event: OgeRowDragStartEvent&lt;T&gt;) =&gt; void',
+          description: 'Cancelable: a row drag is about to start.',
+        },
+        {
+          name: 'onRowDragOver',
+          type: '(event: OgeRowDragOverEvent) =&gt; void',
+          description:
+            'Cancelable, on the grid under the pointer; set <code>cancel</code> to refuse the spot.',
+        },
+        {
+          name: 'onRowDrop',
+          type: '(event: OgeRowDropEvent) =&gt; void',
+          description:
+            'A row was dropped on this grid — its own or another component’s (<code>sameComponent: false</code>); move the data in the handler.',
+        },
+        {
+          name: 'onRowDragEnd',
+          type: '(event: OgeRowDragEndEvent&lt;T&gt;) =&gt; void',
+          description: 'The source side of a drag ended.',
+        },
+      ],
+    },
   ],
 };
 
@@ -825,10 +1016,10 @@ export const OGE_REACT_GRID_COLUMN_API: ApiSections = {
         },
         {
           name: 'dataType',
-          type: "'string' | 'number' | 'date' | 'boolean'",
+          type: "'string' | 'number' | 'date' | 'datetime' | 'boolean'",
           default: "'string'",
           description:
-            'Drives the default formatting, the filter-row editor, the operator set and the default alignment.',
+            "Drives the default formatting, the filter-row editor, the operator set and the default alignment. <code>'datetime'</code> keeps the time of day.",
         },
         {
           name: 'alignment',
@@ -945,10 +1136,10 @@ export const OGE_REACT_GRID_COLUMN_API: ApiSections = {
         },
         {
           name: 'groupInterval',
-          type: "'day' | 'month' | 'year'",
+          type: "'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year' | number",
           default: 'undefined',
           description:
-            "Date bucket when grouping by this column — <code>'day'</code> by default for <code>dataType: 'date'</code>, so same-day rows share a group whatever their time. Sent as <code>LoadOptions.group[].interval</code>.",
+            "Bucket when grouping by this column — calendar units for dates (<code>'day'</code> by default for <code>date</code> / <code>datetime</code>; <code>'week'</code> starts on the locale’s first day) or a positive width for numbers. Sent as <code>LoadOptions.group[].interval</code>.",
         },
       ],
     },
@@ -1035,6 +1226,24 @@ export const OGE_REACT_GRID_COLUMN_API: ApiSections = {
           default: 'undefined',
           description:
             'Renders the header caption from <code>{ column, caption }</code> — the React form of <code>*ogeHeaderTemplate</code>.',
+        },
+      ],
+    },
+    {
+      title: 'Formatting, merging & async validation',
+      entries: [
+        {
+          name: 'conditionalFormats',
+          type: 'readonly OgeConditionalFormat&lt;T&gt;[]',
+          description:
+            'Declarative formats: rules, data bars, colour scales and icon sets — token classes and CSS custom properties only.',
+        },
+        {
+          name: 'mergeCells',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Merges vertically adjacent equal values into one cell (<code>aria-rowspan</code>).',
         },
       ],
     },
@@ -1181,6 +1390,88 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
           type: 'string',
           description:
             'Live-announcement patterns, <code>{placeholder}</code>-interpolated. Defaults: <code>Sorted by {column}, ascending</code> / <code>descending</code>, <code>Sort cleared</code>, <code>{count} rows</code> / <code>{count} row</code>, <code>Page {n} of {total}</code>, <code>Group {value} expanded</code> / <code>collapsed</code>, <code>{value} expanded</code> / <code>collapsed</code> (tree list), <code>{count} rows selected</code> and <code>{column}: {error}</code> (spoken assertively when a save is blocked by an invalid editor).',
+        },
+      ],
+    },
+    {
+      title: 'Ranges, formats, spans & drag',
+      entries: [
+        {
+          name: 'OgeGridCellRange / OgeGridCellCoord',
+          type: 'interfaces',
+          description:
+            '<code>{ anchor, focus }</code> of <code>{ row, col }</code> — flat row index and visible column index, the keyboard machine’s coordinates.',
+        },
+        {
+          name: 'OgeRangeSelectionOptions',
+          type: 'interface',
+          description:
+            '<code>{ copyHeaders?, fillHandle?, pasteAddsRows?, multipleRanges? }</code>.',
+        },
+        {
+          name: 'OgeRangeSelectionChangedEvent',
+          type: 'interface',
+          description:
+            '<code>{ ranges, rowCount, columnCount, cellCount }</code>.',
+        },
+        {
+          name: 'OgeClassValue',
+          type: 'type',
+          description:
+            'What class hooks return: <code>string | string[] | Record&lt;string, boolean&gt; | null</code>.',
+        },
+        {
+          name: 'OgeGridColumnInfo',
+          type: 'interface',
+          description:
+            '<code>{ field, caption, dataType, index }</code> — what <code>cellClass</code> / <code>cellSpan</code> learn about a column.',
+        },
+        {
+          name: 'OgeConditionalFormat',
+          type: 'type',
+          description:
+            'A rule or a data bar / colour scale / icon set (see <code>conditionalFormats</code>).',
+        },
+        {
+          name: 'OgeGridCellSpan',
+          type: 'interface',
+          description: '<code>{ rowSpan?, colSpan? }</code>.',
+        },
+        {
+          name: 'OgeRowPreparedEvent / OgeCellPreparedEvent',
+          type: 'interfaces',
+          description:
+            'Payloads of <code>rowPrepared</code> / <code>cellPrepared</code>.',
+        },
+        {
+          name: 'OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition',
+          type: 'interfaces',
+          description:
+            "Cross-component row drag payloads; <code>position</code> is <code>'before' | 'after' | 'inside'</code>.",
+        },
+        {
+          name: 'OgeHeaderFilterMode',
+          type: 'type',
+          description:
+            "<code>headerFilter.mode</code>: <code>'list'</code> (default) the value checklist, <code>'conditions'</code> two operator + value conditions joined by And / Or, <code>'both'</code> the Excel-style menu (conditions above the list). Date columns list their values as a year → month → day tree.",
+        },
+        {
+          name: 'OgePagerInfoContext',
+          type: 'interface',
+          description:
+            'What <code>renderPagerInfo</code> / <code>&lt;OgePager renderInfo&gt;</code> receive: <code>{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }</code>. <code>paging.showFirstLastButtons</code> / <code>paging.showPageInput</code> (and the pager’s <code>showFirstLast</code> / <code>showPageInput</code>) add first/last buttons and a go-to-page input.',
+        },
+        {
+          name: 'messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn',
+          type: 'string',
+          description:
+            'Range, paste, fill and undo announcements (<code>{rows} by {columns} cells selected</code>, <code>{count} cells pasted</code>…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item.',
+        },
+        {
+          name: 'messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern',
+          type: 'string',
+          description:
+            'Header filter menu sections and condition names, pager first/last/go-to-page labels (<code>of {count}</code>) and the interval group captions (<code>Week of {date}</code>, <code>Q{quarter} {year}</code>, <code>{from} – {to}</code>).',
         },
       ],
     },

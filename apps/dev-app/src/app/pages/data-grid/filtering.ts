@@ -11,7 +11,8 @@ import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { ReactGridFilteringDemos } from '../react-grid/filtering';
 import { makeEmployees } from '../../shared/demo-data';
-import { SNIPPET } from './filtering-snippets';
+import { MENU_SNIPPET, SNIPPET } from './filtering-snippets';
+import { toLocalDate } from '@oge-ui/core';
 
 @Component({
   selector: 'app-filtering',
@@ -85,6 +86,34 @@ import { SNIPPET } from './filtering-snippets';
         </oge-grid>
       </app-demo-card>
 
+      <h3>Excel-style filter menu</h3>
+      <p>
+        <code>headerFilter.mode</code> picks what the funnel opens:
+        <code>'list'</code> (the default value checklist with search and
+        select-all), <code>'conditions'</code> (two operator + value conditions
+        joined by And / Or) or <code>'both'</code>. Date columns list their
+        values as a collapsible year → month → day tree. The conditions are
+        stored as a filter expression, so they persist with
+        <code>stateKey</code>.
+      </p>
+      <app-demo-card
+        [chips]="['headerFilter.mode', 'date tree']"
+        [code]="menuSnippet"
+        language="ts"
+      >
+        <oge-grid
+          class="demo-filter-menu"
+          [data]="datedEmployees"
+          keyField="id"
+          [headerFilter]="{ mode: 'both' }"
+          [paging]="{ pageSize: 8 }"
+        >
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="salary" caption="Salary" dataType="number" />
+          <oge-column field="hireDate" caption="Hired" dataType="date" />
+        </oge-grid>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -118,6 +147,11 @@ export class FilteringPage {
   protected readonly fw = inject(FrameworkService);
   protected readonly employees = makeEmployees(2000, 5);
   protected readonly snippet = SNIPPET;
+  protected readonly menuSnippet = MENU_SNIPPET;
+  protected readonly datedEmployees = makeEmployees(80, 13).map((row) => ({
+    ...row,
+    hireDate: toLocalDate(row.hireDate),
+  }));
   protected readonly filter = signal<FilterExpr | null>(null);
 
   protected filterJson(): string {

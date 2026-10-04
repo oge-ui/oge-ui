@@ -1,5 +1,18 @@
-import { computed, untracked, type TemplateRef } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
+import {
+  computed,
+  effect,
+  signal,
+  untracked,
+  type TemplateRef,
+} from '@angular/core';
+import {
+  FormControl,
+  Validators,
+  type AbstractControl,
+  type AsyncValidatorFn,
+  type ValidationErrors,
+  type ValidatorFn,
+} from '@angular/forms';
 import type { DataRowNode, DataSource, RowKey, RowNode } from '@oge-ui/core';
 import {
   OgeGridEditingCore,
@@ -116,19 +129,27 @@ export class EditingModel<
         const field = column.field;
         if (!field || !column.editable) continue;
         if (cell && field !== cell.field) continue;
-        const validators = [...(column.source?.validators() ?? [])];
-        if (column.source?.required()) validators.push(Validators.required);
         map.set(
           controlKey(targetKey, field),
           new FormControl<unknown>(
             untracked(() => this.displayValue(node, column)),
-            { validators },
+            {
+              validators: validatorsOf(column.source),
+              asyncValidators: this.trackAsync(column.source),
+            },
           ),
         );
       }
       return map;
     },
   );
+
+  /**
+   * Bumped whenever an open control's status changes — reactive-forms state
+   * is not reactive, and an async validator settles outside any signal, so
+   * template helpers read this to re-run once `pending` flips.
+   */
+  readonly controlRevision = signal(0);
 
   constructor(private readonly ng: EditingModelDeps<T, S>) {
     // The bridge is handed to `super()`, so it cannot close over `this` yet.
@@ -156,6 +177,56 @@ export class EditingModel<
     editors.editorState = (key, field) => this.editorStateOf(key, field);
     editors.markTouched = (key, field) => this.markTouchedAt(key, field);
     editors.rowValues = (key) => this.rowValuesOf(key);
+    editors.whenValidated = (key, field) => {
+      const control = untracked(this.activeControls).get(
+        controlKey(key, field),
+      );
+      return control ? settled(control) : Promise.resolve();
+    };
+    editors.validateValue = (_key, field, value) => {
+      const column = untracked(ng.columns).find(
+        (candidate) => candidate.field === field,
+      );
+      const control = new FormControl<unknown>(value, {
+        validators: validatorsOf(column?.source),
+        asyncValidators: this.trackAsync(column?.source),
+      });
+      return control.pending
+        ? settled(control).then(() => control.valid)
+        : control.valid;
+    };
+    // status changes re-run the template helpers reading control state
+    effect((onCleanup) => {
+      const controls = this.activeControls();
+      const subscriptions = [...controls.values()].map((control) =>
+        control.statusChanges.subscribe(() =>
+          this.controlRevision.update((n) => n + 1),
+        ),
+      );
+      onCleanup(() => subscriptions.forEach((sub) => sub.unsubscribe()));
+    });
+  }
+
+  /**
+   * The column's async validators, wrapped so their settling is observable:
+   * Angular runs the first validation with `emitEvent: false`, so
+   * `statusChanges` alone never reports it.
+   */
+  private trackAsync(source: ColumnSource<T> | undefined): AsyncValidatorFn[] {
+    return [...(source?.asyncValidators?.() ?? [])].map(
+      (validator) => (control: AbstractControl) => {
+        const result = validator(control);
+        const promise = firstResult(result);
+        return promise.then((errors) => {
+          // after Angular applied the result (it subscribes after us)
+          setTimeout(() => {
+            this.controlRevision.update((n) => n + 1);
+            notifySettled(control);
+          });
+          return errors;
+        });
+      },
+    );
   }
 
   private editorStateOf(
@@ -164,7 +235,11 @@ export class EditingModel<
   ): OgeGridEditorState | undefined {
     const control = this.activeControls().get(controlKey(key, field));
     return control
-      ? { value: control.value, invalid: control.invalid }
+      ? {
+          value: control.value,
+          invalid: control.invalid,
+          pending: control.pending,
+        }
       : undefined;
   }
 
@@ -205,4 +280,58 @@ export class EditingModel<
   override discardAllChanges(notify = true): void {
     untracked(() => super.discardAllChanges(notify));
   }
+}
+
+/** The column's sync validators, `required` included. */
+function validatorsOf<T>(source: ColumnSource<T> | undefined): ValidatorFn[] {
+  const validators = [...(source?.validators() ?? [])];
+  if (source?.required()) validators.push(Validators.required);
+  return validators;
+}
+
+const settleWaiters = new WeakMap<AbstractControl, (() => void)[]>();
+
+/** Resolves once the control's async validation finished. */
+function settled(control: AbstractControl): Promise<void> {
+  if (!control.pending) return Promise.resolve();
+  return new Promise((resolve) => {
+    const waiters = settleWaiters.get(control) ?? [];
+    waiters.push(resolve);
+    settleWaiters.set(control, waiters);
+  });
+}
+
+function notifySettled(control: AbstractControl): void {
+  if (control.pending) return;
+  const waiters = settleWaiters.get(control);
+  settleWaiters.delete(control);
+  waiters?.forEach((resolve) => resolve());
+}
+
+/** The first value of an async validator's result (a promise or an observable). */
+function firstResult(
+  result: ReturnType<AsyncValidatorFn>,
+): Promise<ValidationErrors | null> {
+  if (
+    result &&
+    typeof (result as { subscribe?: unknown }).subscribe === 'function'
+  ) {
+    return new Promise((resolve, reject) => {
+      const subscription = (
+        result as {
+          subscribe(observer: {
+            next(value: ValidationErrors | null): void;
+            error(error: unknown): void;
+          }): { unsubscribe(): void };
+        }
+      ).subscribe({
+        next: (value) => {
+          resolve(value);
+          queueMicrotask(() => subscription?.unsubscribe());
+        },
+        error: reject,
+      });
+    });
+  }
+  return Promise.resolve(result as Promise<ValidationErrors | null>);
 }

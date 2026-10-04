@@ -1,5 +1,7 @@
 import type { RowKey, SortDescriptor, SummaryType } from '@oge-ui/core';
 import type { OgeColumnAlignment, OgeDataType } from './grid-columns';
+import type { OgeHeaderFilterMode } from './grid-header-conditions';
+import type { OgeRowDropPosition } from './grid-row-drag-group';
 
 /**
  * The grid's option objects and event payloads that carry no framework
@@ -18,6 +20,12 @@ export interface OgeHeaderFilterOptions {
   visible?: boolean;
   /** Maximum distinct values listed in the popup. */
   valueLimit?: number;
+  /**
+   * What the popup offers: `'list'` (default) the distinct-value checklist,
+   * `'conditions'` up to two operator + value conditions joined by And / Or,
+   * `'both'` the Excel-style menu with conditions above the list.
+   */
+  mode?: OgeHeaderFilterMode;
 }
 
 export interface OgeSearchPanelOptions {
@@ -35,6 +43,30 @@ export interface OgePagingOptions {
   showInfo?: boolean;
   /** 'compact' shows `page / count`; 'adaptive' switches to compact on narrow grids. */
   displayMode?: 'full' | 'compact' | 'adaptive';
+  /** Adds first-page / last-page buttons around the page list. Default false. */
+  showFirstLastButtons?: boolean;
+  /** Adds a "Page [n] of N" go-to-page input. Default false. */
+  showPageInput?: boolean;
+}
+
+/** Options of cell range selection (`selectionMode: 'cell'`). */
+export interface OgeRangeSelectionOptions {
+  /** Ctrl+C prepends the column captions as the first TSV line. Default false. */
+  copyHeaders?: boolean;
+  /**
+   * The drag handle at the range's corner that copies values or extends
+   * number / date series (Ctrl+D / Ctrl+R are its keyboard twins). Default
+   * true; shown only while editing is enabled.
+   */
+  fillHandle?: boolean;
+  /**
+   * Lines of a pasted block that run past the last row become new rows
+   * (staged in batch mode, inserted otherwise). Default false: they are
+   * dropped.
+   */
+  pasteAddsRows?: boolean;
+  /** Ctrl/Cmd+click adds another range. Default true. */
+  multipleRanges?: boolean;
 }
 
 export interface OgeSortingOptions {
@@ -337,4 +369,55 @@ export interface OgeExportOptions<T = unknown> {
   cellStyle?: (
     args: OgeExportCellStyleArgs<T>,
   ) => OgeExportCellStyle | undefined | void;
+}
+
+/** Cancelable: fires when a row drag starts (`rowDragging`). */
+export interface OgeRowDragStartEvent<T = unknown> {
+  key: RowKey;
+  row: T;
+  cancel: boolean;
+}
+
+/**
+ * Cancelable: fires on the grid under the pointer while a row of the same
+ * `rowDragGroup` is dragged over it — set `cancel` to refuse the spot.
+ */
+export interface OgeRowDragOverEvent {
+  /** The dragging component's id (host `id`, else an internal id). */
+  sourceComponentId: string;
+  sourceKey: RowKey;
+  sourceRow: unknown;
+  /** The row under the pointer; `null` past the last row. */
+  targetKey: RowKey | null;
+  position: OgeRowDropPosition;
+  cancel: boolean;
+}
+
+/**
+ * Fires on the grid a row was dropped on — its own row (a reorder, which
+ * also fires `rowReordered`) or one from another component of the same
+ * `rowDragGroup`. Cross-component drops move no data: add the row to this
+ * grid's data and remove it from the source's in the handler.
+ */
+export interface OgeRowDropEvent {
+  sourceComponentId: string;
+  targetComponentId: string;
+  /** Whether the row came from this grid. */
+  sameComponent: boolean;
+  sourceKey: RowKey;
+  sourceRow: unknown;
+  targetKey: RowKey | null;
+  targetRow: unknown;
+  position: OgeRowDropPosition;
+  /** Index among this grid's rendered data rows the row lands at. */
+  toIndex: number;
+}
+
+/** Fires on the source grid when a row drag ended (dropped or cancelled). */
+export interface OgeRowDragEndEvent<T = unknown> {
+  key: RowKey;
+  row: T;
+  dropped: boolean;
+  /** The component the row was dropped on; `null` when cancelled. */
+  targetComponentId: string | null;
 }

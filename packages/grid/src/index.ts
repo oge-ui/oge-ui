@@ -46,9 +46,29 @@ export {
   type OgeExportData,
   type OgeExportItem,
   type OgeExportOptions,
+  type OgeRangeSelectionOptions,
+  type OgeRangeSelectionChangedEvent,
+  type OgeGridCellRange,
+  type OgeGridCellCoord,
+  type OgeRowPreparedEvent,
+  type OgeCellPreparedEvent,
+  type OgeGridColumnInfo,
+  type OgeClassValue,
+  type OgeConditionalFormat,
+  type OgeGridCellSpan,
+  type OgeRowDragStartEvent,
+  type OgeRowDragOverEvent,
+  type OgeRowDropEvent,
+  type OgeRowDragEndEvent,
+  type OgeRowDropPosition,
+  type OgeHeaderFilterMode,
   type OgeExportRowKind,
   type OgeExportSummaryCell,
 } from './lib/grid/grid';
+export {
+  OgePagerInfoTemplate,
+  type OgePagerInfoTemplateContext,
+} from './lib/templates/pager-info-template';
 export { OgeColumnDefCache, ogeColumnFromDef } from './lib/columns/column-def';
 export {
   OgeEditTemplate,

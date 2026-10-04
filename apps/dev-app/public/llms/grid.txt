@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/grid`
 
-- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
-- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellTemplateContext`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagingOptions`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`
+- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgePagerInfoTemplate`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
+- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`
 
 `@oge-ui/grid/export-pdf`
 
@@ -162,7 +162,7 @@ _Selection & focus_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `selectionMode` | `OgeSelectionMode` | `'none'` | Row selection: none \| single \| multiple (ctrl/shift) \| checkbox column. |
+| `selectionMode` | `OgeSelectionMode` | `'none'` | Row selection: none \| single \| multiple (ctrl/shift) \| checkbox column — or `'cell'`: rectangular cell ranges (click, Shift+click, drag, Shift+Arrow, Ctrl+click for more ranges, Ctrl+A for all) with TSV copy / paste, the fill handle and range announcements; editing then starts on double-click, F2 or Enter. |
 | `selectedKeys` | `model<RowKey[]>` | `[]` | Two-way binding of the selected row keys. |
 | `selectAllMode` | `'allPages' \| 'page'` | `'allPages'` | Header select-all scope. |
 | `selectionDeferred` | `boolean` | `false` | Selection tracked as a serializable `selectionFilter` expression — no key set. Requires a string `keyField`. |
@@ -199,6 +199,28 @@ _Appearance & misc_
 | `rowAlternation` | `boolean` | `false` | Zebra striping, stable under virtualization. |
 | `highlightChanges` | `boolean` | `false` | Briefly flashes cells patched by push updates. |
 | `rtlEnabled` | `boolean \| undefined` | `—` | `undefined` auto-detects the inherited CSS `direction`. |
+
+_Cells, ranges & clipboard_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rangeSelection` | `OgeRangeSelectionOptions \| undefined` | `—` | `{ copyHeaders, fillHandle, pasteAddsRows, multipleRanges }`: Ctrl+C prepends the captions; the fill handle (on by default while editing) can be turned off; pasted lines past the last row become new rows; Ctrl+click may add ranges (default true). |
+| `selectedRanges` | `model<readonly OgeGridCellRange[]>` | `[]` | Two-way binding of the selected ranges (`{ anchor, focus }` in flat-row / visible-column coordinates). A sort, filter, page or grouping change clears them. |
+| `pinnedTopRows` | `readonly (T \| RowKey)[] \| undefined` | `—` | Rows pinned in a sticky section under the header: data objects, or keys of loaded rows (which then leave the body). Display rows — not editable, selectable or part of arrow-key navigation; virtual scrolling compatible. |
+| `pinnedBottomRows` | `readonly (T \| RowKey)[] \| undefined` | `—` | Rows pinned in the sticky footer, above the total row. |
+| `stickyGroupRows` | `boolean` | `false` | Keeps the group rows enclosing the first visible row under the header while scrolling (all levels, virtual scrolling included). A visual aid: the real group rows stay focusable; a click on a sticky row scrolls to it. |
+| `cellSpan` | `((row: T, column: OgeGridColumnInfo) => OgeGridCellSpan \| null \| undefined) \| undefined` | `—` | Row / column spans per cell (`{ rowSpan, colSpan }`). Spans never cross group rows; the owner cell gets `aria-rowspan` / `aria-colspan` and the arrows step over the covered area. Ignored while virtualized; row spans assume uniform row heights. |
+| `columnAutoWidth` | `boolean` | `false` | Sizes every column to its header and rendered cells once the first result set rendered. |
+| `cellHintEnabled` | `boolean` | `false` | Shows truncated cell text in the overlay tooltip on hover and immediately on keyboard focus (`aria-describedby` while shown). |
+
+_Styling & drag groups_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rowClass` | `((row: T, key: RowKey) => OgeClassValue) \| undefined` | `—` | Classes for a data row — a string, an array or a `{ class: condition }` record. |
+| `cellClass` | `((row: T, column: OgeGridColumnInfo) => OgeClassValue) \| undefined` | `—` | Classes for a data cell, per row and column (`{ field, caption, dataType, index }`). |
+| `rowDragGroup` | `string \| undefined` | `—` | Grids (and other components) sharing a group name accept each other’s dragged rows; the target fires `rowDrop` with the source row — move the data in the handler. The source needs `rowDragging`. |
+| `allowDropInsideRow` | `boolean` | `false` | A drop on the middle half of a row reports `position: 'inside'` (and moves nothing by itself) instead of before / after. |
 
 #### Methods
 
@@ -268,6 +290,19 @@ _Loading, state & export_
 | `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character `=`, `+`, `-`, `@` or a full-width `＝ ＋ － ＠`, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
 | `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
+_Ranges, clipboard & undo_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectRange(range, add?)` | `(range: OgeGridCellRange, add?: boolean) => void` | Selects a rectangular cell range; `add` keeps the existing ones. |
+| `clearRangeSelection()` | `() => void` | Clears every cell range. |
+| `getSelectedRangeData()` | `() => unknown[][]` | The selected cells’ values as a rows × columns matrix (the lattice Ctrl+C copies). |
+| `pasteText(text)` | `(text: string) => Promise<number>` | Pastes a TSV block into the editable cells from the focused cell (or fills the selected range with a single value): parsed with the column data type and lookup, validated, written as one undoable batch through the regular edit events. Resolves with the cells written. |
+| `fillDown() / fillRight()` | `() => Promise<number>` | Ctrl+D / Ctrl+R: copies the range’s first row (column) into the rest — a single row copies the row above it. |
+| `undo() / redo()` | `() => Promise<void>` | Ctrl+Z / Ctrl+Y: reverts or re-applies the last committed edit, paste or fill (staged in batch mode, saved otherwise). |
+| `canUndo() / canRedo()` | `() => boolean` | Whether the history has a step to revert / re-apply. |
+| `autoFitColumn(field) / autoFitColumns()` | `(field: string) => void` | Sizes a column (or every column) to its header and rendered cells — what a double-click on the resize handle and the header menu’s “Size to fit” run. |
+
 #### Events
 
 _Interaction_
@@ -316,6 +351,18 @@ _Lifecycle & errors_
 | `exporting` | `OgeExportingEvent` | Cancelable, mutable `fileName` — before a CSV export. |
 | `dataErrorOccurred` | `OgeDataErrorEvent` | `{ error }` — a DataSource load or save failed. |
 
+_Ranges, preparation & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `rangeSelectionChanged` | `OgeRangeSelectionChangedEvent` | The selected ranges changed: `{ ranges, rowCount, columnCount, cellCount }`. |
+| `rowPrepared` | `OgeRowPreparedEvent<T>` | A data row element rendered a row for the first time (scrolled in, re-keyed) — `{ row, key, rowIndex, element }`, the imperative escape hatch the declarative hooks cannot cover. |
+| `cellPrepared` | `OgeCellPreparedEvent<T>` | Every data cell of a prepared row: `{ row, key, field, value, rowIndex, columnIndex, element }`. |
+| `rowDragStart` | `OgeRowDragStartEvent<T>` | Cancelable: a row drag is about to start. |
+| `rowDragOver` | `OgeRowDragOverEvent` | Cancelable, on the grid under the pointer: a dragged row of the group hovers it; set `cancel` to refuse the spot. |
+| `rowDrop` | `OgeRowDropEvent` | A row was dropped on this grid — its own (a reorder, which also fires `rowReordered`) or another component’s (`sameComponent: false`): `{ sourceComponentId, targetComponentId, sourceKey, sourceRow, targetKey, targetRow, position, toIndex }`. |
+| `rowDragEnd` | `OgeRowDragEndEvent<T>` | The source side of a drag ended: `{ key, row, dropped, targetComponentId }`. |
+
 ### OgeColumn — `<oge-column>`
 
 #### Properties
@@ -333,7 +380,7 @@ _Basics_
 | --- | --- | --- | --- |
 | `field` | `string \| undefined` | `—` | Data field (dot paths supported via accessors). |
 | `caption` | `string \| undefined` | `—` | Header text; humanized from `field` when omitted. |
-| `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'boolean' — drives editors, filters and the default alignment. |
+| `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'datetime' \| 'boolean' — drives editors, filters and the default alignment. `'datetime'` keeps the time of day (date + time cells and editor; filters by calendar day). |
 | `alignment` | `OgeColumnAlignment \| undefined` | `—` | `'start' \| 'center' \| 'end'` for cells, header and summaries (logical — `'end'` is the right edge in LTR). Unset, numbers align to the end and everything else to the start. |
 | `width / minWidth` | `number \| string / number` | `—` | Track size; `minWidth` guards resizing. |
 | `maxWidth` | `number \| undefined` | `undefined` | Upper bound in px for user resizing — pointer drag and the Alt+←/→ / separator keys; also the separator’s `aria-valuemax`. |
@@ -350,7 +397,7 @@ _Sort, filter & group_
 | `sortable / filterable` | `boolean` | `true` | Per-column opt-outs. |
 | `sortOrder / sortIndex` | `'asc' \| 'desc' / number` | `—` | Initial sort (stateKey/user wins). |
 | `groupIndex` | `number \| undefined` | `—` | Initial grouping position. |
-| `groupInterval` | `'day' \| 'month' \| 'year' \| undefined` | `—` | Date bucket when grouping by this column — `'day'` by default for `dataType="date"`, so same-day rows share a group whatever their time. Sent as `LoadOptions.group[].interval`. |
+| `groupInterval` | `'hour' \| 'day' \| 'week' \| 'month' \| 'quarter' \| 'year' \| number \| undefined` | `—` | Bucket when grouping by this column — calendar units for dates (`'day'` by default for `date` / `datetime`; `'week'` starts on the locale’s first day of week) or a positive width for numbers (`100` → 0–99, 100–199…). Captions read `Week of …`, `Q2 2026`, `100 – 200`. Sent as `LoadOptions.group[].interval`. |
 | `filterOperator` | `FilterOperator \| undefined` | `—` | Initial operator of the filter-row cell. |
 | `calculateCellValue` | `(row: T) => unknown` | `—` | Calculated column value. |
 | `calculateSortValue` | `(row: T) => unknown` | `—` | Custom sort key. |
@@ -365,6 +412,14 @@ _Summaries & editing_
 | `calculateCustomSummary` | `(rows: readonly T[]) => unknown` | `—` | Reducer for `type: 'custom'`. |
 | `editable` | `boolean` | `true` | Per-column editing opt-out. |
 | `required / validators` | `boolean / readonly ValidatorFn[]` | `—` | Editor validation. |
+
+_Formatting, merging & async validation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `conditionalFormats` | `readonly OgeConditionalFormat<T>[] \| undefined` | `—` | Declarative formats: rules `{ when: (value, row) => boolean \| { operator, value }, class?, style?: { tone, background, bold } }`, `{ type: 'dataBar' }`, `{ type: 'colorScale', tones? }` and `{ type: 'iconSet', icons?, thresholds? }`. Token classes and CSS custom properties only — themes and forced colours keep working. |
+| `mergeCells` | `boolean` | `false` | Merges vertically adjacent equal values into one cell (`aria-rowspan`); not applied while virtualized. |
+| `asyncValidators` | `readonly AsyncValidatorFn[] \| undefined` | `—` | Async Angular validators (a server uniqueness check): the editor is `aria-busy` while one runs, a commit waits for it, failures use the usual error wiring; pastes and fills run them too. |
 
 #### Types
 
@@ -448,6 +503,24 @@ _Filter builder_
 | --- | --- | --- |
 | `builderToExpr / exprToBuilder / describeExpr / operatorsFor` | `functions` | Convert between builder trees and `FilterExpr`; humanize expressions. |
 | `OgeBuilderGroup / OgeBuilderCondition / OgeFilterBuilderField` | `interfaces` | Filter-builder data model. |
+
+_Ranges, formats, spans & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridCellRange / OgeGridCellCoord` | `interfaces` | `{ anchor, focus }` of `{ row, col }` — flat row index and visible column index, the keyboard machine’s coordinates. |
+| `OgeRangeSelectionOptions` | `interface` | `{ copyHeaders?, fillHandle?, pasteAddsRows?, multipleRanges? }`. |
+| `OgeRangeSelectionChangedEvent` | `interface` | `{ ranges, rowCount, columnCount, cellCount }`. |
+| `OgeClassValue` | `type` | What class hooks return: `string \| string[] \| Record<string, boolean> \| null`. |
+| `OgeGridColumnInfo` | `interface` | `{ field, caption, dataType, index }` — what `cellClass` / `cellSpan` learn about a column. |
+| `OgeConditionalFormat` | `type` | A rule or a data bar / colour scale / icon set (see `conditionalFormats`). |
+| `OgeGridCellSpan` | `interface` | `{ rowSpan?, colSpan? }`. |
+| `OgeRowPreparedEvent / OgeCellPreparedEvent` | `interfaces` | Payloads of `rowPrepared` / `cellPrepared`. |
+| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. |
+| `OgeHeaderFilterMode` | `type` | `headerFilter.mode`: `'list'` (default) the value checklist, `'conditions'` two operator + value conditions joined by And / Or, `'both'` the Excel-style menu (conditions above the list). Date columns list their values as a year → month → day tree. |
+| `OgePagerInfoTemplate` | `directive` | `*ogePagerInfoTemplate="let info"` replaces the pager’s info text; `info` is `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` add first/last buttons and a go-to-page input. |
+| `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
+| `messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern` | `string` | Header filter menu sections and condition names, pager first/last/go-to-page labels (`of {count}`) and the interval group captions (`Week of {date}`, `Q{quarter} {year}`, `{from} – {to}`). |
 
 ## Demos
 
@@ -545,6 +618,110 @@ export class Demo {
   ];
 
   protected readonly yearly = (row: { salary: number }): number => row.salary * 12;
+}
+```
+
+### Formats
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeCellPreparedEvent, OgeConditionalFormat, OgeGridColumnInfo } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  salary: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [rowClass]="rowClass" [cellClass]="cellClass"
+              (cellPrepared)="onCellPrepared($event)">
+      <oge-column field="firstName" caption="Name" />
+      <oge-column field="department" caption="Department" />
+      <!-- token-only formats: rule classes, a data bar, an icon set -->
+      <oge-column field="salary" caption="Salary" dataType="number"
+                  [conditionalFormats]="salaryFormats" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly rowClass = (row: Employee) => ({
+    'is-engineering': row.department === 'Engineering',
+  });
+
+  protected readonly cellClass = (row: Employee, column: OgeGridColumnInfo) =>
+    column.field === 'firstName' && row.salary > 8500 ? 'is-top-earner' : null;
+
+  protected readonly salaryFormats: OgeConditionalFormat<Employee>[] = [
+    { when: { operator: 'ge', value: 9000 }, style: { tone: 'success', bold: true } },
+    { when: (value) => (value as number) < 6000, style: { background: 'danger' } },
+    { type: 'dataBar' },
+    { type: 'iconSet', icons: 'arrows' },
+  ];
+
+  protected onCellPrepared(event: OgeCellPreparedEvent<Employee>): void {
+    // the imperative escape hatch: decorate the element itself
+    if (event.field === 'salary') event.element.title = String(event.value);
+  }
+}
+```
+
+### Spans
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeGridColumnInfo } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  department: string;
+  city: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- equal adjacent values merge (aria-rowspan); cellSpan spans columns -->
+    <oge-grid [data]="employees" keyField="id" [cellSpan]="cellSpan"
+              [cellHintEnabled]="true">
+      <oge-column field="department" caption="Department" [mergeCells]="true" />
+      <!-- a narrow column: hover or focus a city for the full text,
+           double-click its resize handle to fit it -->
+      <oge-column field="city" caption="City" [width]="64" />
+      <oge-column field="firstName" caption="First name" />
+      <oge-column field="lastName" caption="Last name" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly cellSpan = (row: Employee, column: OgeGridColumnInfo) =>
+    column.field === 'firstName' && row.id === 1 ? { colSpan: 2 } : null;
 }
 ```
 
@@ -897,6 +1074,38 @@ export class Demo {
       },
     });
   }
+}
+```
+
+### Menu
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- mode 'both': two conditions (And / Or) above the value list;
+         a date column lists its values as a year → month → day tree -->
+    <oge-grid [data]="employees" keyField="id"
+              [headerFilter]="{ mode: 'both' }">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+      <oge-column field="hireDate" caption="Hired" dataType="date" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
 }
 ```
 
@@ -1275,6 +1484,219 @@ export class Demo {
     { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
     { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
   ];
+}
+```
+
+### Drag
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeRowDropEvent } from '@oge-ui/grid';
+
+interface Task {
+  id: number;
+  title: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rows of one rowDragGroup move between the grids -->
+    <oge-grid id="todo" [data]="todo()" keyField="id"
+              [rowDragging]="true" rowDragGroup="tasks" (rowDrop)="onDrop($event)">
+      <oge-column field="title" caption="To do" />
+    </oge-grid>
+    <oge-grid id="done" [data]="done()" keyField="id"
+              [rowDragging]="true" rowDragGroup="tasks" (rowDrop)="onDrop($event)">
+      <oge-column field="title" caption="Done" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  protected readonly todo = signal<Task[]>([
+    { id: 1, title: 'Write specs' },
+    { id: 2, title: 'Ship it' },
+  ]);
+  protected readonly done = signal<Task[]>([{ id: 3, title: 'Plan' }]);
+
+  protected onDrop(event: OgeRowDropEvent): void {
+    if (event.sameComponent) return; // a reorder: the grid already moved it
+    const from = event.sourceComponentId === 'todo' ? this.todo : this.done;
+    const to = event.targetComponentId === 'todo' ? this.todo : this.done;
+    const row = event.sourceRow as Task;
+    from.update((rows) => rows.filter((r) => r.id !== row.id));
+    to.update((rows) => {
+      const next = [...rows];
+      next.splice(event.toIndex, 0, row);
+      return next;
+    });
+  }
+}
+```
+
+### Pinned
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid, OgePagerInfoTemplate } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid, OgePagerInfoTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- display rows in the sticky sections; a key of a loaded row
+         ([pinnedTopRows]="[42]") moves that row out of the body instead -->
+    <oge-grid [data]="employees" keyField="id"
+              [pinnedTopRows]="[budget]"
+              [pinnedBottomRows]="[totals]"
+              [paging]="{ pageSize: 3, showFirstLastButtons: true, showPageInput: true }">
+      <oge-column field="firstName" caption="Name" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+      <span *ogePagerInfoTemplate="let info">
+        {{ info.firstRow }}–{{ info.lastRow }} of {{ info.totalCount }}
+      </span>
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly budget = { id: -1, firstName: 'Budget', salary: 1500000 };
+  protected readonly totals = { id: 0, firstName: 'Total', salary: 36900 };
+}
+```
+
+### Sticky
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- the enclosing group rows stay under the header while you scroll -->
+    <oge-grid [data]="employees" keyField="id" style="height: 360px"
+              [virtualScroll]="true" [stickyGroupRows]="true"
+              [groupBy]="['department', 'hireDate']">
+      <oge-column field="department" caption="Department" />
+      <!-- quarter buckets: "Q2 2026"; numeric columns take a width, e.g. [groupInterval]="10000" -->
+      <oge-column field="hireDate" caption="Hired" dataType="date" groupInterval="quarter" />
+      <oge-column field="firstName" caption="Name" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+
+### Async
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { AbstractControl, ValidationErrors } from '@angular/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [editing]="{ mode: 'row', allowUpdating: true }">
+      <!-- the editor is aria-busy while the check runs; Save waits for it -->
+      <oge-column field="lastName" caption="Last name (unique)"
+                  [asyncValidators]="[uniqueName]" />
+      <oge-column field="hireDate" caption="Hired at" dataType="datetime" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  /** Pretends to ask a server whether the name is taken. */
+  protected readonly uniqueName = (
+    control: AbstractControl,
+  ): Promise<ValidationErrors | null> =>
+    new Promise((resolve) =>
+      setTimeout(
+        () => resolve(control.value === 'Taken' ? { taken: true } : null),
+        600,
+      ),
+    );
+}
+```
+
+### Range
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeGridCellRange, OgeRangeSelectionChangedEvent } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- click / Shift+click / drag / Shift+Arrow select ranges; Ctrl+C copies TSV,
+         Ctrl+V pastes from Excel, drag the corner handle (or Ctrl+D / Ctrl+R) to fill,
+         Ctrl+Z / Ctrl+Y undo and redo -->
+    <oge-grid [data]="employees" keyField="id"
+              selectionMode="cell"
+              [rangeSelection]="{ copyHeaders: true, pasteAddsRows: true }"
+              [editing]="{ mode: 'batch', allowUpdating: true }"
+              [(selectedRanges)]="ranges"
+              (rangeSelectionChanged)="onRanges($event)">
+      <oge-column field="firstName" caption="First name" />
+      <oge-column field="department" caption="Department" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+      <oge-column field="hireDate" caption="Hired" dataType="date" />
+      <oge-column field="id" caption="Id" [editable]="false" />
+    </oge-grid>
+    <p>{{ summary() }}</p>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly ranges = signal<readonly OgeGridCellRange[]>([]);
+  protected readonly summary = signal('');
+
+  protected onRanges(event: OgeRangeSelectionChangedEvent): void {
+    this.summary.set(`${event.cellCount} cells in ${event.ranges.length} range(s)`);
+  }
 }
 ```
 

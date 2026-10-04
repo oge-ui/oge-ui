@@ -1,5 +1,6 @@
 import { signal, type TemplateRef } from '@angular/core';
-import type { ValidatorFn } from '@angular/forms';
+import type { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
+import type { OgeConditionalFormat } from '@oge-ui/behavior';
 import type {
   FilterExpr,
   FilterOperator,
@@ -60,6 +61,9 @@ export interface OgeColumnDef<T = unknown> {
   editable?: boolean;
   required?: boolean;
   validators?: readonly ValidatorFn[];
+  asyncValidators?: readonly AsyncValidatorFn[];
+  conditionalFormats?: readonly OgeConditionalFormat<T>[];
+  mergeCells?: boolean;
   cellTemplate?: TemplateRef<unknown>;
   headerTemplate?: TemplateRef<unknown>;
   editTemplate?: TemplateRef<unknown>;
@@ -114,6 +118,9 @@ export function ogeColumnFromDef<T>(def: OgeColumnDef<T>): OgeColumn<T> {
     editable: withDefault('editable', true),
     required: withDefault('required', false),
     validators: value('validators'),
+    asyncValidators: value('asyncValidators'),
+    conditionalFormats: value('conditionalFormats'),
+    mergeCells: withDefault('mergeCells', false),
     cellTemplate: slot(def.cellTemplate),
     headerTemplate: slot(def.headerTemplate),
     editTemplate: slot(def.editTemplate),

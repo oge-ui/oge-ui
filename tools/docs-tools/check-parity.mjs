@@ -635,6 +635,8 @@ const FAMILIES = [
         ogecolumngroup: 'bandcaption',
       },
       angularOnly: {
+        asyncvalidators:
+          'Angular takes `AsyncValidatorFn`s beside its `ValidatorFn`s (Angular forms keep the two lists apart); a React column rule may itself return a promise, so `validators` covers both and there is no second prop.',
         ogegridtoolbaritem:
           'Content-projection directive for the grid toolbar (`ogeToolbar="before|center|after"`, a static attribute). React has no projection; the same three groups are the `toolbarBefore` / `toolbarCenter` / `toolbarAfter` slot props.',
       },
@@ -665,6 +667,9 @@ const FAMILIES = [
           'React host styling idiom; an Angular host takes `style` natively and needs no input.',
         arialabel:
           'React needs a prop to reach the host element; an Angular consumer writes `aria-label` on `<oge-grid>` directly, so there is nothing to document as a grid input.',
+        id: 'React needs a prop to set the host element id (the component id row-drag events report); an Angular consumer writes `id` on `<oge-grid>` directly.',
+        renderpagerinfo:
+          'React form of the `*ogePagerInfoTemplate` structural directive, documented in the Angular types block (ROADMAP exception: TemplateRef ↔ render prop).',
       },
     },
   },

@@ -5,8 +5,25 @@ export interface SortDescriptor {
   readonly dir: SortDirection;
 }
 
-/** Calendar bucket a date group key is truncated to (local time). */
-export type GroupInterval = 'day' | 'month' | 'year';
+/**
+ * Bucket a group key is truncated to: a calendar unit for dates (local time;
+ * `'week'` starts on the locale's first day of week) or, as a positive
+ * number, the bucket width for numbers (`100` groups 0–99, 100–199, …).
+ */
+export type GroupInterval =
+  'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year' | number;
+
+/** Whether a value is a {@link GroupInterval} (validated persisted state). */
+export function isGroupInterval(value: unknown): value is GroupInterval {
+  return typeof value === 'number'
+    ? Number.isFinite(value) && value > 0
+    : value === 'hour' ||
+        value === 'day' ||
+        value === 'week' ||
+        value === 'month' ||
+        value === 'quarter' ||
+        value === 'year';
+}
 
 export interface GroupDescriptor {
   readonly field: string;

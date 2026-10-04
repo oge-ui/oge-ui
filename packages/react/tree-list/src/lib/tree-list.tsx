@@ -2539,11 +2539,25 @@ function OgeTreeListInner<T extends object>(
                 }
               : undefined,
             validationRules: rules.length
-              ? rules.map((rule) => ({
-                  type: 'custom' as const,
-                  validate: (context: { value: unknown }) =>
-                    rule(context.value, node.data),
-                }))
+              ? rules.flatMap((rule) => [
+                  {
+                    type: 'custom' as const,
+                    validate: (context: { value: unknown }) => {
+                      const result = rule(context.value, node.data);
+                      return typeof result === 'string' ? result : null;
+                    },
+                  },
+                  {
+                    // a rule returning a promise runs as the form's async rule
+                    type: 'async' as const,
+                    validate: async (value: unknown) => {
+                      const result = rule(value, node.data);
+                      return result && typeof result === 'object'
+                        ? await result
+                        : null;
+                    },
+                  },
+                ])
               : undefined,
           };
         })}

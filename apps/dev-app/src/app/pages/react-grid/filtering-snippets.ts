@@ -53,4 +53,31 @@ const [filter, setFilter] = useState<FilterExpr | null>(null);`,
 />`,
     }),
   },
+  {
+    title: 'Excel-style filter menu',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-grid': ['OgeGrid'] },
+      name: 'FilterMenuGrid',
+      before: `interface Employee {
+  id: number;
+  firstName: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];`,
+      jsx: `<OgeGrid
+  data={employees}
+  keyField="id"
+  // mode 'both': two conditions (And / Or) above the value list;
+  // a date column lists its values as a year → month → day tree
+  headerFilter={{ mode: 'both' }}
+  columns={[
+    { field: 'firstName', caption: 'First Name' },
+    { field: 'salary', caption: 'Salary', dataType: 'number' },
+    { field: 'hireDate', caption: 'Hired', dataType: 'date' },
+  ]}
+/>`,
+    }),
+  },
 ];

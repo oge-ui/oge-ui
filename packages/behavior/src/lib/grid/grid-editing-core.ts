@@ -7,6 +7,12 @@ import {
 } from '@oge-ui/core';
 import type { OgeReactivityAdapter } from '../reactivity';
 import {
+  OgeGridEditHistory,
+  type OgeGridEditRecord,
+  type OgeGridEditSource,
+} from './grid-edit-history';
+import {
+  isOgeDateType,
   mapLookupItems,
   type LookupItem,
   type OgeGridResolvedColumn,
@@ -92,6 +98,32 @@ export interface OgeGridInvalidEditor {
 export interface OgeGridEditorState {
   value: unknown;
   invalid: boolean;
+  /**
+   * An async validator is still running (Angular `PENDING`, a React rule's
+   * unsettled promise). A commit waits for it instead of saving an unchecked
+   * value; the editor renders `aria-busy` meanwhile.
+   */
+  pending?: boolean;
+}
+
+/** One cell value a paste, fill or undo writes. */
+export interface OgeGridCellValueWrite {
+  readonly key: RowKey;
+  readonly field: string;
+  readonly value: unknown;
+}
+
+/** Options of {@link OgeGridEditingCore.applyCellValues}. */
+export interface OgeGridApplyValuesOptions {
+  /** What wrote the values — recorded with the undo step. Default `'paste'`. */
+  source?: OgeGridEditSource;
+  /** Add the step to the undo history. Default `true`. */
+  record?: boolean;
+  /**
+   * New rows to create after the existing ones (`pasteAddsRows`), as field →
+   * value maps. Staged as added rows in batch mode, inserted otherwise.
+   */
+  newRows?: readonly Readonly<Record<string, unknown>>[];
 }
 
 /**
@@ -110,6 +142,21 @@ export interface OgeGridEditorBridge {
   markTouched(key: RowKey, field: string): void;
   /** Current values of every open editor of one row, by field. */
   rowValues(key: RowKey): ReadonlyMap<string, unknown>;
+  /**
+   * Settles once the editor's async validation finished — what a commit
+   * awaits while {@link OgeGridEditorState.pending} is set.
+   */
+  whenValidated?(key: RowKey, field: string): Promise<void>;
+  /**
+   * Runs the column's validators against a value no editor holds (paste,
+   * fill, undo): `true` accepts it. Sync or async, like the editors' own.
+   */
+  validateValue?(
+    key: RowKey,
+    field: string,
+    value: unknown,
+    row: unknown,
+  ): boolean | Promise<boolean>;
 }
 
 export interface OgeGridEditingCoreDeps<T, TSlot = unknown, S = unknown> {
@@ -171,6 +218,8 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
   readonly canUpdate: () => boolean;
   readonly canDelete: () => boolean;
   readonly canAdd: () => boolean;
+  /** Undo / redo stacks of the values commits, pastes and fills wrote. */
+  readonly history: OgeGridEditHistory;
 
   private newRowCounter = 0;
 
@@ -190,6 +239,7 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     );
     this.canDelete = rx.derived(() => !!this.editingOptions()?.allowDeleting);
     this.canAdd = rx.derived(() => !!this.editingOptions()?.allowAdding);
+    this.history = new OgeGridEditHistory(rx);
   }
 
   /** The flat data node carrying `key`, if it is currently rendered. */
@@ -301,7 +351,7 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
       return Number.isNaN(parsed) ? value : parsed;
     }
     if (
-      column.dataType === 'date' &&
+      isOgeDateType(column.dataType) &&
       (value instanceof Date || value === null)
     ) {
       // the date box edits real Dates — write back in the row's storage shape
@@ -319,6 +369,16 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
       .find((candidate) => candidate.field === cell.field);
     const editor = this.deps.editors.editorState(cell.key, cell.field);
     if (!column || !editor) return;
+    if (editor.pending) {
+      // async validation still running: commit once it settled, if the same
+      // editor is still the open one
+      void this.deps.editors.whenValidated?.(cell.key, cell.field).then(() => {
+        const open = this.deps.state.editCell();
+        if (open && open.key === cell.key && open.field === cell.field)
+          this.commitActiveCell();
+      });
+      return;
+    }
     if (editor.invalid) {
       this.deps.editors.markTouched(cell.key, cell.field);
       this.deps.events.validationFailed?.([
@@ -329,6 +389,19 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     const node = this.dataNodeOf(cell.key);
     const original = node ? column.accessor(node.data) : undefined;
     const value = this.editorValue(editor.value, column, original);
+    if (node && !this.deps.state.isAdded(cell.key)) {
+      this.history.record({
+        source: 'edit',
+        records: [
+          {
+            key: cell.key,
+            field: cell.field,
+            before: this.displayValue(node, column),
+            after: value,
+          },
+        ],
+      });
+    }
     if (this.editMode() === 'batch') {
       if (value !== original || this.deps.state.isAdded(cell.key)) {
         this.deps.state.setChange(cell.key, cell.field, value);
@@ -381,7 +454,7 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     const cell = this.deps.state.editCell();
     if (!cell) return;
     const editor = this.deps.editors.editorState(cell.key, cell.field);
-    if (editor && !editor.invalid) this.commitActiveCell();
+    if (editor && (editor.pending || !editor.invalid)) this.commitActiveCell();
   }
 
   /** Tab inside a cell editor: commit and open the next editable column. */
@@ -426,7 +499,26 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     const data: Record<string, unknown> = this.deps.state.isAdded(rowKey)
       ? { ...this.deps.state.changes().get(rowKey) }
       : {};
+    const pending = this.deps
+      .columns()
+      .filter(
+        (column) =>
+          column.field &&
+          column.editable &&
+          this.deps.editors.editorState(rowKey, column.field)?.pending,
+      );
+    if (pending.length) {
+      void Promise.all(
+        pending.map((column) =>
+          this.deps.editors.whenValidated?.(rowKey, column.field as string),
+        ),
+      ).then(() => {
+        if (this.deps.state.editRowKey() === rowKey) this.commitActiveRow();
+      });
+      return;
+    }
     const invalid: OgeGridInvalidEditor[] = [];
+    const records: OgeGridEditRecord[] = [];
     for (const column of this.deps.columns()) {
       const field = column.field;
       if (!field || !column.editable) continue;
@@ -441,12 +533,15 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
       const value = this.editorValue(editor.value, column, original);
       if (value !== original || this.deps.state.isAdded(rowKey)) {
         data[field] = value;
+        if (!this.deps.state.isAdded(rowKey))
+          records.push({ key: rowKey, field, before: original, after: value });
       }
     }
     if (invalid.length) {
       this.deps.events.validationFailed?.(invalid);
       return;
     }
+    if (records.length) this.history.record({ source: 'edit', records });
     if (!Object.keys(data).length) {
       this.deps.state.stopEditor();
       return;
@@ -526,6 +621,166 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     if (notify && hadPending) this.deps.events.editCanceled?.();
   }
 
+  /**
+   * Writes cell values no editor holds — a paste, a fill, an undo — as **one**
+   * batch: each value is validated with the column's validators (invalid ones
+   * are skipped), then staged as pending changes in batch mode or saved
+   * through the regular `savingChanges` → `rowUpdating`/`rowInserting` →
+   * `savedChanges` pipeline otherwise, exactly as committed cell edits are.
+   * Read-only columns, calculated columns and removed rows are skipped, and
+   * nothing is written while `allowUpdating` is off. Resolves with the
+   * number of cells written.
+   */
+  async applyCellValues(
+    writes: readonly OgeGridCellValueWrite[],
+    options: OgeGridApplyValuesOptions = {},
+  ): Promise<number> {
+    const mode = this.editMode();
+    if (!mode) return 0;
+    const columns = new Map(
+      this.deps
+        .columns()
+        .filter((column) => column.field && column.editable)
+        .map((column) => [column.field as string, column]),
+    );
+    const accepted: {
+      key: RowKey;
+      field: string;
+      value: unknown;
+      before: unknown;
+      original: unknown;
+    }[] = [];
+    if (this.canUpdate()) {
+      const checks = writes.map(async (write) => {
+        const column = columns.get(write.field);
+        const node = this.dataNodeOf(write.key);
+        if (!column || !node || this.deps.state.isRemoved(write.key))
+          return null;
+        const ok = await this.deps.editors.validateValue?.(
+          write.key,
+          write.field,
+          write.value,
+          node.data,
+        );
+        if (ok === false) return null;
+        const original = column.accessor(node.data);
+        const value = this.coerceWrite(write.value, column, original);
+        return {
+          key: write.key,
+          field: write.field,
+          value,
+          before: this.displayValue(node, column),
+          original,
+        };
+      });
+      for (const result of await Promise.all(checks))
+        if (result) accepted.push(result);
+    }
+    const rows = (options.newRows ?? [])
+      .map((values) => {
+        const data: Record<string, unknown> = {};
+        for (const [field, raw] of Object.entries(values)) {
+          const column = columns.get(field);
+          if (column) data[field] = this.coerceWrite(raw, column, undefined);
+        }
+        return data;
+      })
+      .filter((data) => Object.keys(data).length > 0);
+    if (!accepted.length && !rows.length) return 0;
+    if (options.record !== false) {
+      this.history.record({
+        source: options.source ?? 'paste',
+        records: accepted
+          .filter((entry) => !this.deps.state.isAdded(entry.key))
+          .map(({ key, field, before, value }) => ({
+            key,
+            field,
+            before,
+            after: value,
+          })),
+      });
+    }
+    if (mode === 'batch') {
+      for (const entry of accepted) {
+        if (
+          sameCellValue(entry.value, entry.original) &&
+          !this.deps.state.isAdded(entry.key)
+        )
+          this.deps.state.clearChange(entry.key, entry.field);
+        else this.deps.state.setChange(entry.key, entry.field, entry.value);
+      }
+      for (const data of rows) {
+        const key = `oge-new-${++this.newRowCounter}`;
+        this.deps.state.addRow(key);
+        this.deps.state.setRowChanges(key, data);
+      }
+      return accepted.length + rows.length;
+    }
+    const byKey = new Map<RowKey, Record<string, unknown>>();
+    for (const entry of accepted) {
+      if (sameCellValue(entry.value, entry.original)) continue;
+      const data = byKey.get(entry.key) ?? {};
+      data[entry.field] = entry.value;
+      byKey.set(entry.key, data);
+    }
+    const changes: OgeDataChange<T>[] = [...byKey].map(([key, data]) => ({
+      type: 'update' as const,
+      key,
+      data: data as OgeDataChange<T>['data'],
+    }));
+    for (const data of rows) {
+      changes.push({
+        type: 'insert',
+        key: `oge-new-${++this.newRowCounter}`,
+        data: data as OgeDataChange<T>['data'],
+      });
+    }
+    if (changes.length) await this.runSave(changes);
+    return accepted.length + rows.length;
+  }
+
+  /** Reverts the last recorded step (Ctrl+Z); resolves with the cells written. */
+  async undo(): Promise<number> {
+    const batch = this.history.takeUndo();
+    if (!batch) return 0;
+    return this.applyCellValues(
+      batch.records.map(({ key, field, before }) => ({
+        key,
+        field,
+        value: before,
+      })),
+      { record: false, source: 'undo' },
+    );
+  }
+
+  /** Re-applies the last undone step (Ctrl+Y); resolves with the cells written. */
+  async redo(): Promise<number> {
+    const batch = this.history.takeRedo();
+    if (!batch) return 0;
+    return this.applyCellValues(
+      batch.records.map(({ key, field, after }) => ({
+        key,
+        field,
+        value: after,
+      })),
+      { record: false, source: 'redo' },
+    );
+  }
+
+  /** A written value in the row's storage shape (dates keep their form). */
+  private coerceWrite(
+    value: unknown,
+    column: OgeGridResolvedColumn<T, TSlot, S>,
+    original: unknown,
+  ): unknown {
+    if (
+      isOgeDateType(column.dataType) &&
+      (value instanceof Date || value === null)
+    )
+      return serializeLikeOriginal(value as Date | null, original);
+    return value;
+  }
+
   /** Emits the cancelable per-change pre event; `false` when canceled. */
   private notifyChangeApplying(change: OgeDataChange<T>): boolean {
     const values = (change.data ?? {}) as Record<string, unknown>;
@@ -601,4 +856,10 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     }
     if (applied.length) this.deps.events.savedChanges?.({ changes: applied });
   }
+}
+
+function sameCellValue(a: unknown, b: unknown): boolean {
+  if (a instanceof Date && b instanceof Date)
+    return a.getTime() === b.getTime();
+  return Object.is(a, b);
 }

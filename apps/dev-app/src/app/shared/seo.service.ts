@@ -16,6 +16,18 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading and full keyboard support — signal-based and zoneless.',
   ],
   [
+    '/components/data-grid/range-selection',
+    'Angular Data Grid range selection: rectangular cell ranges with Shift+click, drag and Shift+Arrow, TSV copy with a formula guard, paste from Excel into editable cells, a fill handle that extends number and date series, Ctrl+Z undo and async validation.',
+  ],
+  [
+    '/components/data-grid/conditional-formatting',
+    'Angular Data Grid conditional formatting: rowClass / cellClass hooks, declarative rules, data bars, colour scales and icon sets on design tokens, cellPrepared, merged cells with aria-rowspan, column auto-fit and overflow tooltips.',
+  ],
+  [
+    '/components/data-grid/pinned-rows',
+    'Angular Data Grid pinned rows: sticky top and bottom rows that survive virtual scrolling, sticky group headers, drag and drop of rows between grids, and a pager with first/last buttons and a go-to-page input.',
+  ],
+  [
     '/components/data-grid',
     'Angular Data Grid with row and column virtualization, sorting, filtering, grouping with summaries, inline/batch editing, master-detail, remote data and CSV/Excel/PDF export.',
   ],

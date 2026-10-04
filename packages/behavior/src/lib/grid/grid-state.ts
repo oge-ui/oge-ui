@@ -182,6 +182,11 @@ export class OgeGridFilterState {
     this._rowFilters.set(next);
   }
 
+  /** The row-filter expression stored under `field` (or another slot key). */
+  rowFilterOf(field: string): FilterExpr | null {
+    return this._rowFilters().get(field) ?? null;
+  }
+
   /** `null` clears the filter (= all values); an empty array means "none selected". */
   setHeaderFilter(field: string, values: readonly unknown[] | null): void {
     const next = new Map(this._headerFilters());

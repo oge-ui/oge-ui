@@ -1145,6 +1145,16 @@ input.oge-filter-input {
   box-shadow: inset 0 2px 0 var(--oge-accent);
 }
 
+// cross-grid drops: below the row, or onto it (allowDropInsideRow)
+.oge-drop-after .oge-cell {
+  box-shadow: inset 0 -2px 0 var(--oge-accent);
+}
+
+.oge-drop-inside .oge-cell {
+  box-shadow: none;
+  background: var(--oge-accent-soft);
+}
+
 // loading panel overlay (loadPanel)
 .oge-load-panel {
   position: absolute;
@@ -1339,6 +1349,419 @@ input.oge-filter-input {
   border: 0;
 }
 
+// --- cell range selection (selectionMode: 'cell') ------------------------------
+
+.oge-cell-select .oge-cell {
+  // a drag selects cells, not text
+  user-select: none;
+}
+
+.oge-cell-range {
+  background: var(--oge-selected-bg);
+
+  .oge-row:hover & {
+    background: var(--oge-selected-bg);
+  }
+
+  // the outline of the union of the ranges: one inset edge per open side
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 0 solid var(--oge-accent);
+  }
+
+  &.oge-range-top::after {
+    border-block-start-width: 2px;
+  }
+
+  &.oge-range-bottom::after {
+    border-block-end-width: 2px;
+  }
+
+  &.oge-range-start::after {
+    border-inline-start-width: 2px;
+  }
+
+  &.oge-range-end::after {
+    border-inline-end-width: 2px;
+  }
+}
+
+// the fill handle: a square on the range's bottom-end corner
+.oge-fill-handle {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  z-index: 2;
+  width: 8px;
+  height: 8px;
+  background: var(--oge-accent);
+  border: 1px solid var(--oge-bg);
+  cursor: crosshair;
+  // a touch on the handle fills; it never pans the grid
+  touch-action: none;
+  // the cell clips past its edge: grow the 24px target inward
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block-end: -1px;
+    inset-inline-end: -1px;
+    width: 24px;
+    height: 24px;
+  }
+
+  @media (pointer: coarse) {
+    width: 12px;
+    height: 12px;
+
+    &::before {
+      width: 44px;
+      height: 44px;
+    }
+  }
+}
+
+.oge-cell-fill-preview {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px dashed var(--oge-accent);
+  }
+}
+
+// the range outline, fill preview and span overlay anchor on the cell —
+// pinned cells already are (sticky) containing blocks
+.oge-cell-range:not(.oge-pinned),
+.oge-cell-fill-preview:not(.oge-pinned),
+.oge-cell-spanned:not(.oge-pinned),
+.oge-cell:has(> .oge-fill-handle):not(.oge-pinned) {
+  position: relative;
+}
+
+.oge-editor-pending {
+  opacity: 0.85;
+}
+
+// --- row / column spans ---------------------------------------------------------
+
+.oge-cell-spanned {
+  z-index: 1;
+  align-self: start;
+  // a row span covers the next rows (uniform heights + their 1px borders)
+  height: calc(
+    var(--oge-span-rows, 1) * 100% + (var(--oge-span-rows, 1) - 1) * 1px
+  );
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-cell-span-covered {
+  visibility: hidden;
+}
+
+// --- pinned rows, footer, sticky group rows --------------------------------------
+
+.oge-pinned-row {
+  background: var(--oge-header-bg);
+
+  .oge-cell {
+    background: var(--oge-header-bg);
+  }
+}
+
+.oge-pinned-row-top:first-of-type {
+  border-top: 1px solid var(--oge-border-color);
+}
+
+.oge-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  min-width: fit-content;
+
+  .oge-pinned-row {
+    border-top: 1px solid var(--oge-border-color);
+    border-bottom: 0;
+  }
+}
+
+.oge-sticky-groups {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  pointer-events: auto;
+  box-shadow: 0 2px 4px -2px
+    color-mix(in srgb, var(--oge-text-color) 30%, transparent);
+
+  .oge-sticky-group-row {
+    position: static;
+    max-width: none;
+  }
+}
+
+// --- conditional formatting (token classes + custom properties) -----------------
+
+.oge-cf-bold {
+  font-weight: 600;
+}
+
+@each $tone in success, warning, danger {
+  .oge-cf-tone-#{$tone} {
+    color: var(--oge-#{$tone});
+  }
+
+  .oge-row .oge-cf-bg-#{$tone},
+  .oge-pinned-row .oge-cf-bg-#{$tone} {
+    background: var(--oge-#{$tone}-soft);
+  }
+}
+
+.oge-cf-tone-info,
+.oge-cf-tone-accent {
+  color: var(--oge-accent);
+}
+
+.oge-cf-tone-muted {
+  color: var(--oge-muted-color);
+}
+
+.oge-row .oge-cf-bg-info,
+.oge-row .oge-cf-bg-accent,
+.oge-pinned-row .oge-cf-bg-info,
+.oge-pinned-row .oge-cf-bg-accent {
+  background: var(--oge-accent-soft);
+}
+
+.oge-row .oge-cf-bg-muted,
+.oge-pinned-row .oge-cf-bg-muted {
+  background: var(--oge-row-hover-bg);
+}
+
+// data bars: a tone strip sized by --oge-cf-bar from --oge-cf-bar-start
+.oge-cf-databar {
+  --oge-cf-bar-color: var(--oge-accent);
+
+  position: relative;
+  background-image: linear-gradient(
+    to right,
+    transparent calc(var(--oge-cf-bar-start, 0) * 100%),
+    color-mix(in srgb, var(--oge-cf-bar-color) 28%, transparent)
+      calc(var(--oge-cf-bar-start, 0) * 100%),
+    color-mix(in srgb, var(--oge-cf-bar-color) 28%, transparent)
+      calc((var(--oge-cf-bar-start, 0) + var(--oge-cf-bar, 0)) * 100%),
+    transparent calc((var(--oge-cf-bar-start, 0) + var(--oge-cf-bar, 0)) * 100%)
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 60%;
+  background-position: center;
+}
+
+:dir(rtl).oge-cf-databar,
+.oge-rtl .oge-cf-databar {
+  background-image: linear-gradient(
+    to left,
+    transparent calc(var(--oge-cf-bar-start, 0) * 100%),
+    color-mix(in srgb, var(--oge-cf-bar-color) 28%, transparent)
+      calc(var(--oge-cf-bar-start, 0) * 100%),
+    color-mix(in srgb, var(--oge-cf-bar-color) 28%, transparent)
+      calc((var(--oge-cf-bar-start, 0) + var(--oge-cf-bar, 0)) * 100%),
+    transparent calc((var(--oge-cf-bar-start, 0) + var(--oge-cf-bar, 0)) * 100%)
+  );
+}
+
+@each $tone in success, warning, danger {
+  .oge-cf-bar-#{$tone} {
+    --oge-cf-bar-color: var(--oge-#{$tone});
+  }
+}
+
+.oge-cf-bar-info,
+.oge-cf-bar-accent {
+  --oge-cf-bar-color: var(--oge-accent);
+}
+
+.oge-cf-bar-muted {
+  --oge-cf-bar-color: var(--oge-muted-color);
+}
+
+// colour scales: blend from the low tone to the high tone by --oge-cf-scale
+.oge-row .oge-cf-scale,
+.oge-pinned-row .oge-cf-scale {
+  --oge-cf-scale-from-color: var(--oge-danger);
+  --oge-cf-scale-to-color: var(--oge-success);
+
+  background: color-mix(
+    in srgb,
+    color-mix(
+        in srgb,
+        var(--oge-cf-scale-to-color) calc(var(--oge-cf-scale, 0.5) * 100%),
+        var(--oge-cf-scale-from-color)
+      )
+      22%,
+    var(--oge-bg)
+  );
+}
+
+@each $tone in success, warning, danger {
+  .oge-cf-scale-from-#{$tone} {
+    --oge-cf-scale-from-color: var(--oge-#{$tone});
+  }
+
+  .oge-cf-scale-to-#{$tone} {
+    --oge-cf-scale-to-color: var(--oge-#{$tone});
+  }
+}
+
+.oge-cf-scale-from-accent,
+.oge-cf-scale-from-info {
+  --oge-cf-scale-from-color: var(--oge-accent);
+}
+
+.oge-cf-scale-to-accent,
+.oge-cf-scale-to-info {
+  --oge-cf-scale-to-color: var(--oge-accent);
+}
+
+.oge-cf-scale-from-muted {
+  --oge-cf-scale-from-color: var(--oge-muted-color);
+}
+
+.oge-cf-scale-to-muted {
+  --oge-cf-scale-to-color: var(--oge-muted-color);
+}
+
+// icon sets: the glyph sits before the value
+.oge-cf-icon {
+  display: inline-flex;
+  vertical-align: -1px;
+  margin-inline-end: 6px;
+}
+
+.oge-cf-icon-high .oge-cf-icon {
+  color: var(--oge-success);
+}
+
+.oge-cf-icon-mid .oge-cf-icon {
+  color: var(--oge-warning);
+}
+
+.oge-cf-icon-low .oge-cf-icon {
+  color: var(--oge-danger);
+}
+
+.oge-cf-icon-low .oge-cf-icon[data-icon-set='flags'],
+.oge-cf-icon-mid .oge-cf-icon[data-icon-set='flags'] {
+  opacity: 0.85;
+}
+
+// --- header filter menu (conditions + date tree) ---------------------------------
+
+.oge-header-filter-menu {
+  min-width: 260px;
+}
+
+.oge-hf-section-title {
+  padding: 4px 8px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--oge-header-color);
+}
+
+.oge-hf-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 4px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--oge-border-color);
+}
+
+.oge-hf-condition {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+}
+
+.oge-hf-logic {
+  display: flex;
+  gap: 14px;
+  padding: 0 4px;
+  font-size: 13px;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+
+  input {
+    accent-color: var(--oge-accent);
+  }
+}
+
+.oge-hf-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.oge-hf-node {
+  display: flex;
+  align-items: center;
+
+  .oge-hf-item {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .oge-hf-leaf {
+    padding-inline-start: 8px;
+  }
+}
+
+.oge-hf-month {
+  font-weight: 500;
+}
+
+.oge-hf-toggle,
+.oge-hf-toggle-spacer {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.oge-hf-toggle {
+  @include tokens.hit-area;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  transition: transform 120ms ease;
+
+  &.oge-expanded {
+    transform: rotate(90deg);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
 // --- forced colors (Windows High Contrast) ---------------------------------
 // System colours only; state never rides on a background colour alone.
 @include tokens.forced-colors {
@@ -1417,6 +1840,51 @@ input.oge-filter-input {
   .oge-grid-skeleton {
     background: GrayText;
   }
+
+  // a selected range: system highlight plus a real outline
+  .oge-cell-range,
+  .oge-row:hover .oge-cell-range {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+
+    &::after {
+      border-color: CanvasText;
+    }
+  }
+
+  .oge-fill-handle {
+    background: CanvasText;
+    border-color: Canvas;
+    forced-color-adjust: none;
+  }
+
+  .oge-cell-fill-preview::after {
+    border-color: Highlight;
+  }
+
+  .oge-drop-after .oge-cell {
+    border-block-start: 0;
+    border-block-end: 2px solid Highlight;
+  }
+
+  .oge-drop-inside .oge-cell {
+    border-block: 2px solid Highlight;
+  }
+
+  // conditional formats keep their meaning without colour: bold + icons
+  .oge-cf-databar {
+    background-image: none;
+    border-inline-start: 3px solid CanvasText;
+  }
+
+  .oge-cf-icon {
+    color: CanvasText;
+  }
+
+  .oge-sticky-groups {
+    border-bottom: 1px solid CanvasText;
+  }
 }
 
 @include tokens.reduced-motion {
@@ -1431,6 +1899,7 @@ input.oge-filter-input {
   .oge-expander-btn,
   .oge-group-arrow,
   .oge-editor-input,
+  .oge-hf-toggle,
   .oge-loading .oge-viewport {
     transition: none;
   }
