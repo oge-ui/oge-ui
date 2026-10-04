@@ -4,7 +4,7 @@
 > charts are source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
 > No watermark, no runtime license checks. See [LICENSE](LICENSE) and
-> [ogeui.com/license](https://ogeui.com/license).
+> [ogeui.com/license](https://www.ogeui.com/license).
 
 Signal-based Angular charts on a **dependency-free SVG kernel** — no D3,
 no Chart.js, no canvas library, and unlike `@oge-ui/scheduler`/`gantt`
@@ -79,5 +79,5 @@ polite live-region announcements — Enter selects, Escape resets zoom.
 All strings, including every aria label, live in `OgeChartsMessages`
 (`provideOgeChartsConfig`, config-level `locale`).
 
-Docs: [ogeui.com/components/charts](https://ogeui.com/components/charts)
+Docs: [ogeui.com/components/charts](https://www.ogeui.com/components/charts)
 · AI reference: [`llms.txt`](llms.txt)

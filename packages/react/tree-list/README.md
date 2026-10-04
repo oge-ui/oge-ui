@@ -71,7 +71,7 @@ Methods are on the `ref` handle (`OgeTreeListHandle`): `expandAll()`,
 `focusRow(key)`, `addRow(parentKey)`, `getSelectedRowKeys('leavesOnly')`,
 `getCsv()`, …
 
-Docs: <https://ogeui.com/components/tree-list> (switch the header to React).
+Docs: <https://www.ogeui.com/components/tree-list> (switch the header to React).
 
 ## License
 

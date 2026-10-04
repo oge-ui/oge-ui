@@ -4,7 +4,7 @@
 > editor is source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
 > No watermark, no runtime license checks. See [LICENSE](LICENSE) and
-> [ogeui.com/license](https://ogeui.com/license).
+> [ogeui.com/license](https://www.ogeui.com/license).
 
 A from-scratch, Angular-native BPMN 2.0 modeler — not a bpmn-js wrapper. Its
 dependency-free XML + diagram-interchange engine and editor core are pure
@@ -150,5 +150,5 @@ components:
 
 The complete machine-readable API reference ships inside the package at
 `node_modules/@oge-ui/bpmn/llms.txt` — conventions, every documented member and
-copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
-<https://ogeui.com/llms-full.txt> (the whole suite).
+copy-pasteable demos in one file. Online: <https://www.ogeui.com/llms.txt> (index) and
+<https://www.ogeui.com/llms-full.txt> (the whole suite).

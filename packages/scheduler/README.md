@@ -4,7 +4,7 @@
 > scheduler is source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
 > No watermark, no runtime license checks. See [LICENSE](LICENSE) and
-> [ogeui.com/license](https://ogeui.com/license).
+> [ogeui.com/license](https://www.ogeui.com/license).
 
 The only Angular-native scheduler / event calendar: signal-based
 `<oge-scheduler>` with day, week and month views, an all-day strip, a pure
@@ -76,5 +76,5 @@ DateAdapter, no TZ database) — RRULE `…Z` stamps are UTC and convert to the
 matching local instant, while `TZID=` parameters reject the rule; that limit
 is documented rather than half-supported.
 
-Docs: [ogeui.com/components/scheduler](https://ogeui.com/components/scheduler)
+Docs: [ogeui.com/components/scheduler](https://www.ogeui.com/components/scheduler)
 · AI reference: [`llms.txt`](llms.txt)

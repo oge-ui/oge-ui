@@ -33,7 +33,7 @@ export function ogeNgAdd(
       context.logger.info(
         [
           '',
-          `  Docs and live demos: https://ogeui.com`,
+          `  Docs and live demos: https://www.ogeui.com`,
           `  Machine-readable API: node_modules/${packageName}/llms.txt`,
           '',
         ].join('\n'),

@@ -12,7 +12,7 @@ styles. Nothing here wraps Angular.
 > **Commercial.** `@oge-ui/react-gantt` is source-available commercial
 > software — free for evaluation and development, with no watermark and no
 > runtime license checks; production use requires a paid license. See
-> [LICENSE](LICENSE) and <https://ogeui.com/license>.
+> [LICENSE](LICENSE) and <https://www.ogeui.com/license>.
 
 ## What ships
 
@@ -66,5 +66,5 @@ export function Plan() {
 }
 ```
 
-Full docs and live demos: <https://ogeui.com/components/gantt> (pick React in
+Full docs and live demos: <https://www.ogeui.com/components/gantt> (pick React in
 the header switch).

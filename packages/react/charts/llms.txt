@@ -2,11 +2,11 @@
 
 > React charts on a dependency-free SVG kernel: sixteen cartesian series types (line/spline/step/area/stacked/bar/range/scatter/bubble/candlestick), pie and doughnut, radar/polar and a range selector — time and log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection and PNG/SVG export — running the same charts engine and stylesheet as the Angular charts package.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/charts
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/charts
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-charts

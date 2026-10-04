@@ -15,7 +15,7 @@ or `npm install @oge-ui/react-gantt` is the whole setup.
 
 > **Commercial.** Like the Gantt packages themselves, this engine is
 > source-available commercial software — free for evaluation and development,
-> paid for production. See [LICENSE](LICENSE) and <https://ogeui.com/license>.
+> paid for production. See [LICENSE](LICENSE) and <https://www.ogeui.com/license>.
 
 ## What's inside
 

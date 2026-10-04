@@ -91,7 +91,7 @@ export function Demo() {
 
 ## Docs
 
-Live demos and the full API reference: <https://ogeui.com/components/buttons>
+Live demos and the full API reference: <https://www.ogeui.com/components/buttons>
 (pick **React** in the header). Machine-readable docs for coding assistants
 ship inside the package at `node_modules/@oge-ui/react-buttons/llms.txt`.
 

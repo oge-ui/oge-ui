@@ -2,7 +2,7 @@
 
 > Signal-based Angular UI component suite for data-heavy applications: a virtualized Data Grid, Tree List, Pivot Grid, BPMN editor, form editors, buttons, overlay surfaces (modal and toast), tabs and layout containers. Angular 22+, standalone components only, zoneless, zero runtime dependencies. MIT licensed, except @oge-ui/pivot and @oge-ui/bpmn which are commercial.
 
-Version 1.1.1. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://ogeui.com renders. Index: https://ogeui.com/llms.txt
+Version 1.1.1. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://www.ogeui.com renders. Index: https://www.ogeui.com/llms.txt
 
 ## Contents
 
@@ -168,7 +168,7 @@ dialogs, dropdowns and toasts.
 **Full API reference** — read this before guessing at an API:
 
 - `node_modules/@oge-ui/grid/llms.txt`
-- <https://ogeui.com/llms-full.txt>
+- <https://www.ogeui.com/llms-full.txt>
 
 <!-- oge-ui:end -->
 ```
@@ -177,13 +177,13 @@ dialogs, dropdowns and toasts.
 
 ```ts
 # the index: packages, every documentation page, one line each
-curl https://ogeui.com/llms.txt
+curl https://www.ogeui.com/llms.txt
 
 # everything inlined — conventions, every API member, every demo source
-curl https://ogeui.com/llms-full.txt
+curl https://www.ogeui.com/llms-full.txt
 
 # one package only
-curl https://ogeui.com/llms/grid.txt
+curl https://www.ogeui.com/llms/grid.txt
 
 # already on disk after npm install
 cat node_modules/@oge-ui/grid/llms.txt
@@ -655,7 +655,7 @@ export function App() {
 
 Virtualized data grid: 100k+ rows, sorting, filtering, grouping with summaries, inline/batch/form editing, selection, master-detail, state persistence and CSV/Excel/PDF export.
 
-Docs: https://ogeui.com/components/data-grid
+Docs: https://www.ogeui.com/components/data-grid
 
 ### Entry points
 
@@ -2826,7 +2826,7 @@ export class Demo {
 
 The data-grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
 
-Docs: https://ogeui.com/components/tree-list
+Docs: https://www.ogeui.com/components/tree-list
 
 ### Entry points
 
@@ -3366,7 +3366,7 @@ export class Demo {
 
 Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, ColorBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
 
-Docs: https://ogeui.com/components/inputs
+Docs: https://www.ogeui.com/components/inputs
 
 ### Entry points
 
@@ -6398,7 +6398,7 @@ export class Demo {
 
 Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
 
-Docs: https://ogeui.com/components/buttons
+Docs: https://www.ogeui.com/components/buttons
 
 ### Entry points
 
@@ -7075,7 +7075,7 @@ export class Demo {}
 
 Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus, tooltips, context menus, the `oge-modal` dialog with `OgeModalService`, and `OgeToastService` notifications.
 
-Docs: https://ogeui.com/components/overlay
+Docs: https://www.ogeui.com/components/overlay
 
 ### Entry points
 
@@ -8096,7 +8096,7 @@ export class Demo {}
 
 Tab strip and tab panel: declarative or data-driven tabs, deferred rendering with keep-alive, closable and reorderable tabs, router integration.
 
-Docs: https://ogeui.com/components/tabs
+Docs: https://www.ogeui.com/components/tabs
 
 ### Entry points
 
@@ -8613,7 +8613,7 @@ export class Demo {
 
 Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.
 
-Docs: https://ogeui.com/components/accordion
+Docs: https://www.ogeui.com/components/accordion
 
 ### Entry points
 
@@ -10706,7 +10706,7 @@ export class Demo {
 
 Form layout over the editors — responsive columns, fieldset groups, declarative validation rules and a validation summary.
 
-Docs: https://ogeui.com/components/forms
+Docs: https://www.ogeui.com/components/forms
 
 ### Entry points
 
@@ -11733,7 +11733,7 @@ export class Demo {
 
 File uploader — drag & drop with directory and paste support, client-side restrictions, image previews, per-file progress, and chunked resumable transfer with pause, resume and retry.
 
-Docs: https://ogeui.com/components/upload
+Docs: https://www.ogeui.com/components/upload
 
 ### Entry points
 
@@ -12133,7 +12133,7 @@ export class Demo {
 
 Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
 
-Docs: https://ogeui.com/components/tree-view
+Docs: https://www.ogeui.com/components/tree-view
 
 ### Entry points
 
@@ -14176,9 +14176,9 @@ export class Demo {
 
 Cross-tab analytics: rows × columns × measures, grand totals, field chooser, sorting and Excel export.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/pivot-grid
+Docs: https://www.ogeui.com/components/pivot-grid
 
 ### Entry points
 
@@ -14644,9 +14644,9 @@ export class Demo {
 
 From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/bpmn
+Docs: https://www.ogeui.com/components/bpmn
 
 ### Entry points
 
@@ -15180,7 +15180,7 @@ export class Demo {
 
 Framework-free engine of the BPMN editor (ADR 0003): the diagram model, BPMN XML + DI reader/writer, JSON envelope, SVG export, orthogonal routing, snapping, alignment, modeling rules, the snapshot command stack and the editor core both the Angular and the React editor run. Installed automatically by either editor — import it directly for server-side or test pipelines.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
 ### Entry points
 
@@ -15197,9 +15197,9 @@ Framework-free engine of the BPMN editor (ADR 0003): the diagram model, BPMN XML
 
 Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/charts
+Docs: https://www.ogeui.com/components/charts
 
 ### Entry points
 
@@ -15910,7 +15910,7 @@ export class Demo {
 
 Framework-free charts engine shared by the Angular and React charts: scales, series normalization, stacking, path builders with LTTB downsampling, pie and radar geometry, the cartesian/pie/polar/range-selector view models, keyboard maps, the gesture machine, the message catalog and the image exporter. Installed automatically — you rarely import it directly.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
 ### Entry points
 
@@ -15928,9 +15928,9 @@ Framework-free charts engine shared by the Angular and React charts: scales, ser
 
 Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, drag editing with Escape-cancel and snapshot undo/redo.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/gantt
+Docs: https://www.ogeui.com/components/gantt
 
 ### Entry points
 
@@ -16560,9 +16560,9 @@ export class Demo {
 
 Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits with drag previews, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/kanban
+Docs: https://www.ogeui.com/components/kanban
 
 ### Entry points
 
@@ -17067,7 +17067,7 @@ export class Demo {
 
 Framework-free engine both Kanban render layers run: card normalization and write-back, swimlane grouping, search, drag hit-testing and auto-scroll, virtual windows, WIP arithmetic, keyboard and move machines, the edit-dialog model and the message catalog. Installed automatically with @oge-ui/kanban or @oge-ui/react-kanban.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
 ### Entry points
 
@@ -17080,9 +17080,9 @@ Framework-free engine both Kanban render layers run: card normalization and writ
 
 Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/scheduler
+Docs: https://www.ogeui.com/components/scheduler
 
 ### Entry points
 
@@ -17674,7 +17674,7 @@ Framework-free data engine shared by every package: sort/filter/group/aggregate 
 
 React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.
 
-Docs: https://ogeui.com/components/buttons
+Docs: https://www.ogeui.com/components/buttons
 
 ### <OgeButton>
 
@@ -18252,7 +18252,7 @@ export function AutoRepeatDemo() {
 
 React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.
 
-Docs: https://ogeui.com/components/inputs
+Docs: https://www.ogeui.com/components/inputs
 
 ### <OgeTextBox>
 
@@ -21496,7 +21496,7 @@ export function PendingDemo() {
 
 React tab strip and tab panel: the WAI-ARIA APG tabs pattern with declarative or data-driven tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards, drag reordering and lazy panel rendering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.
 
-Docs: https://ogeui.com/components/tabs
+Docs: https://www.ogeui.com/components/tabs
 
 ### <OgeTabPanel>
 
@@ -22134,7 +22134,7 @@ export function AnimationDemo() {
 
 React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, plus the progress bar, load indicator and shimmer skeleton — running the same config defaults, decision functions and stylesheet as the Angular layout package.
 
-Docs: https://ogeui.com/components/accordion
+Docs: https://www.ogeui.com/components/accordion
 
 ### <OgeAccordion>
 
@@ -24540,7 +24540,7 @@ export function ToolbarSlotsDemo() {
 
 React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state and drag reparenting, a drawer with overlay/push/side modes and derived modality, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus and type-ahead, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.
 
-Docs: https://ogeui.com/components/tree-view
+Docs: https://www.ogeui.com/components/tree-view
 
 ### <OgeTreeView>
 
@@ -26671,7 +26671,7 @@ export function StepperConfigDemo() {
 
 React form layout over the editors: a nested layout array of items, groups and tabbed/accordion/wizard sections, responsive container-query columns, declarative validation rules and a validation summary — running the same item model, the same rule evaluator and the same stylesheet as the Angular forms package.
 
-Docs: https://ogeui.com/components/forms
+Docs: https://www.ogeui.com/components/forms
 
 ### <OgeForm>
 
@@ -27692,7 +27692,7 @@ export function FormsConfigDemo() {
 
 React file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews and a lightbox, per-file progress with rate and ETA, chunked resumable transfer with pause, resume and retry, a pluggable transport adapter, external drop zones and triggers — running the same upload engine, list machine and stylesheet as the Angular upload package.
 
-Docs: https://ogeui.com/components/upload
+Docs: https://www.ogeui.com/components/upload
 
 ### <OgeFileUploader>
 
@@ -28067,9 +28067,9 @@ export function CustomRows() {
 
 React Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move callbacks, built-in edit dialog, context menu and toolbar — running the same engine and stylesheet as the Angular Kanban package.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/kanban
+Docs: https://www.ogeui.com/components/kanban
 
 ### <OgeKanban>
 
@@ -28572,9 +28572,9 @@ export function GermanBoard() {
 
 React charts on a dependency-free SVG kernel: sixteen cartesian series types (line/spline/step/area/stacked/bar/range/scatter/bubble/candlestick), pie and doughnut, radar/polar and a range selector — time and log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection and PNG/SVG export — running the same charts engine and stylesheet as the Angular charts package.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/charts
+Docs: https://www.ogeui.com/components/charts
 
 ### <OgeChart>
 
@@ -29259,7 +29259,7 @@ export function SalesOverview() {
 
 React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.
 
-Docs: https://ogeui.com/components/data-grid
+Docs: https://www.ogeui.com/components/data-grid
 
 ### <OgeGrid>
 
@@ -31781,7 +31781,7 @@ export function WrappedNotes() {
 
 React tree list: the data-grid feature set on hierarchical data — flat parentId or nested payloads, lazy per-expansion loading with remote match discovery, ancestor-preserving filtering, recursive tri-state selection, paging over visible rows, virtualization, editing in all five modes and drag & drop reparenting — running the same framework-free tree engine, state slices and stylesheet as the Angular tree-list package.
 
-Docs: https://ogeui.com/components/tree-list
+Docs: https://www.ogeui.com/components/tree-list
 
 ### <OgeTreeList>
 
@@ -32359,9 +32359,9 @@ export function BigTree() {
 
 React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/bpmn
+Docs: https://www.ogeui.com/components/bpmn
 
 ### <OgeBpmnEditor>
 
@@ -32815,7 +32815,7 @@ export function LocalizedModeler() {
 
 React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 
-Docs: https://ogeui.com/components/overlay
+Docs: https://www.ogeui.com/components/overlay
 
 ### <OgeModal>
 
@@ -33855,7 +33855,7 @@ Re-exports every MIT family from a single import path. `npm i oge-ui` then `impo
 
 Framework-free engine behind both scheduler render layers (ADR 0003): view-model builders, the transitive-overlap column layout, lane packing, the RFC 5545 RRULE-subset parser and expander, gesture math, keyboard maps, the editing/recurrence/CRUD core (`OgeSchedulerCore`), default config and message catalog. Installed automatically with `@oge-ui/scheduler` or `@oge-ui/react-scheduler` — you rarely import it directly.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
 ### Entry points
 
@@ -33868,9 +33868,9 @@ Framework-free engine behind both scheduler render layers (ADR 0003): view-model
 
 React scheduler / event calendar: day, work-week, week, month, agenda, timeline and year views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, drag-to-create, recurrence with occurrence-vs-series editing, resource grouping, reminders, an appointment popup and a form editor — running the same scheduler engine and stylesheet as the Angular scheduler package.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/scheduler
+Docs: https://www.ogeui.com/components/scheduler
 
 ### <OgeScheduler>
 
@@ -34421,7 +34421,7 @@ export function GermanScheduler() {
 
 Framework-free pivot grid engine shared by @oge-ui/pivot and @oge-ui/react-pivot (ADR 0003): field layout, header layout and virtualization math, the remote-store adapter, menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Installed automatically — you rarely import it directly.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
 ### Entry points
 
@@ -34444,9 +34444,9 @@ Framework-free pivot grid engine shared by @oge-ui/pivot and @oge-ui/react-pivot
 
 React pivot grid: local rows or a remote pre-aggregated store, four drag & drop field areas, multi-level column headers, expand/collapse on both axes, sub and grand totals, display modes and running totals, header and measure menus, value filters, a field chooser, two-axis virtual scrolling, state persistence and CSV/Excel export — running the same framework-free pivot engine (@oge-ui/pivot-engine) and the same stylesheet as the Angular pivot package.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/pivot-grid
+Docs: https://www.ogeui.com/components/pivot-grid
 
 ### <OgePivotGrid>
 
@@ -34903,7 +34903,7 @@ export function SalesPivot() {
 
 Framework-free engine behind the Angular and React Gantt (ADR 0003): task-tree model and field mapping, calendar-true time scales, auto-scheduling, critical path, dependency routing, the OgeGanttCore controller, message catalogs and the Excel/PDF/PNG export builders. Installed automatically by @oge-ui/gantt and @oge-ui/react-gantt — you rarely import it directly.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
 ### Entry points
 
@@ -34931,9 +34931,9 @@ Framework-free engine behind the Angular and React Gantt (ADR 0003): task-tree m
 
 React Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, auto-scheduling on work calendars, resources and workload, drag editing with Escape-cancel, snapshot undo/redo, built-in context menu and task dialog, Excel/PDF/PNG export — running the same @oge-ui/gantt-engine controller and stylesheet as the Angular Gantt package.
 
-**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.**
 
-Docs: https://ogeui.com/components/gantt
+Docs: https://www.ogeui.com/components/gantt
 
 ### <OgeGantt>
 

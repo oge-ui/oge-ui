@@ -22,7 +22,7 @@ export const PATHS = {
  */
 export const GUIDE_DIRS = ['getting-started', 'ai'];
 
-export const SITE_ORIGIN = 'https://ogeui.com';
+export const SITE_ORIGIN = 'https://www.ogeui.com';
 export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
 
 /**

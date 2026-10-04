@@ -75,7 +75,7 @@ export function Profile() {
 
 ## Docs
 
-Live demos and the full API reference: <https://ogeui.com/components/inputs>
+Live demos and the full API reference: <https://www.ogeui.com/components/inputs>
 (pick **React** in the header switch).
 Machine-readable docs ship inside the package at
 `node_modules/@oge-ui/react-inputs/llms.txt`.

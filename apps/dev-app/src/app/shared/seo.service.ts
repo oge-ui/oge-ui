@@ -4,7 +4,7 @@ import { ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { documentTitle } from './title.strategy';
 
-const ORIGIN = 'https://ogeui.com';
+const ORIGIN = 'https://www.ogeui.com';
 
 const DEFAULT_DESCRIPTION =
   'OGE is a free, signal-based Angular UI component suite: a virtualized Data Grid, Tree List, Pivot Grid, Select Box, Buttons and form Inputs. Zoneless, themeable with CSS tokens, WAI-ARIA accessible.';

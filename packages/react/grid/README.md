@@ -72,7 +72,7 @@ stylesheet.
 
 ## Documentation
 
-Live demos and the full API reference: <https://ogeui.com/components/data-grid>
+Live demos and the full API reference: <https://www.ogeui.com/components/data-grid>
 (switch the header to **React**). The package also ships an `llms.txt` for
 coding assistants.
 

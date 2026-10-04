@@ -2,11 +2,11 @@
 
 > React pivot grid: local rows or a remote pre-aggregated store, four drag & drop field areas, multi-level column headers, expand/collapse on both axes, sub and grand totals, display modes and running totals, header and measure menus, value filters, a field chooser, two-axis virtual scrolling, state persistence and CSV/Excel export — running the same framework-free pivot engine (@oge-ui/pivot-engine) and the same stylesheet as the Angular pivot package.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/pivot-grid
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/pivot-grid
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-pivot

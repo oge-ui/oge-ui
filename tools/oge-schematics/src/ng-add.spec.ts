@@ -67,7 +67,7 @@ describe('ng-add → AGENTS.md', () => {
     expect(content).toContain('<!-- oge-ui:end -->');
     expect(content).toContain('`<oge-grid [data]="rows" keyField="id">`');
     expect(content).toContain('node_modules/@oge-ui/grid/llms.txt');
-    expect(content).toContain('https://ogeui.com/llms-full.txt');
+    expect(content).toContain('https://www.ogeui.com/llms-full.txt');
   });
 
   it('is idempotent — a second run leaves exactly one block', async () => {

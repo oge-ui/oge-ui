@@ -2,10 +2,10 @@
 
 > Framework-free engine both Kanban render layers run: card normalization and write-back, swimlane grouping, search, drag hit-testing and auto-scroll, virtual windows, WIP arithmetic, keyboard and move machines, the edit-dialog model and the message catalog. Installed automatically with @oge-ui/kanban or @oge-ui/react-kanban.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/kanban-engine

@@ -1075,8 +1075,10 @@ and Search Console reported the whole site as "redirected / discovered – not i
   `DOCUMENT` injection; otherwise `typeof document !== 'undefined'`. One unguarded access fails the
   whole `dev-app:build`, and the first error kills the worker so later routes report
   "Terminating worker thread" — read the _first_ `ERROR` line.
-- Canonical host is the apex `https://ogeui.com` everywhere (`SITE_ORIGIN`, `SeoService.ORIGIN`,
-  `robots.txt`, sitemap). The Vercel domain settings must redirect `www.` → apex, never the reverse.
+- Canonical host is **`https://www.ogeui.com`** everywhere (`SITE_ORIGIN`, `SeoService.ORIGIN`,
+  `robots.txt`, sitemap, `llms.txt` links, package `homepage`). Vercel serves `www.` as the primary
+  domain and 308-redirects the apex to it, so the canonical must name `www.` — a canonical that
+  points at a redirecting URL sends Google conflicting signals (2026-10-04: switched from apex).
 - `robots.txt` explicitly allows the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, …) — the
   `llms.txt` pipeline exists for them.
 - **Security headers live in `vercel.json`** — CSP, HSTS, `frame-ancestors`, Permissions-Policy,

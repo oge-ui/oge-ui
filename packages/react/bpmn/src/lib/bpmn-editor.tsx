@@ -1248,7 +1248,7 @@ export const OgeBpmnEditor = forwardRef<
           {showBranding && (
             <a
               className="oge-bpmn-brand-link"
-              href="https://ogeui.com"
+              href="https://www.ogeui.com"
               target="_blank"
               rel="noopener"
               aria-label={msg.brandLabel}
