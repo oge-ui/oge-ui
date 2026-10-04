@@ -78,6 +78,13 @@ export const OGE_REACT_PIVOT_GRID_API: ApiSections = {
             '<code>compact</code> indents every level in one column; <code>outline</code> gives each row field its own label column (a label only in its field’s column); <code>tabular</code> repeats the ancestors on every line so each reads on its own. The row header stays one <code>rowheader</code> cell per line, so the keyboard model does not change; the corner shows the row field captions.',
         },
         {
+          name: 'locale',
+          type: 'string',
+          default: 'undefined',
+          description:
+            'BCP 47 locale of the cell text — percent display modes (<code>33.3%</code>, <code>%33,3</code> in tr-TR, <code>33,3 %</code> in de-DE), dates and declarative field <code>format</code>s. <code>undefined</code> falls back to <code>&lt;OgePivotConfigProvider config={{ locale }}&gt;</code>, then <code>navigator.language</code>.',
+        },
+        {
           name: 'renderCell',
           type: '(cell: OgePivotCellTemplateContext) =&gt; ReactNode',
           description:
@@ -389,6 +396,12 @@ export const OGE_REACT_PIVOT_GRID_API: ApiSections = {
             'The props above, and the <code>ref</code> handle (<code>useRef&lt;OgePivotGridHandle&lt;T&gt;&gt;(null)</code>).',
         },
         {
+          name: 'OgePivotConfigProvider',
+          type: '({ config, children }) =&gt; JSX.Element',
+          description:
+            'Subtree-scoped pivot defaults (<code>OgePivotConfig</code>: <code>{ locale }</code>); nested providers merge, a new <code>config</code> re-renders the subtree. Read with <code>useOgePivotConfig()</code>. The counterpart of <code>provideOgePivotConfig()</code>.',
+        },
+        {
           name: 'OgePivotMessagesProvider',
           type: '({ messages, children }) =&gt; JSX.Element',
           description:
@@ -566,7 +579,7 @@ export const OGE_REACT_PIVOT_FIELD_API: ApiSections = {
           name: 'selector / format / customizeText',
           type: 'functions',
           description:
-            'Out-of-band value selector, display formatter and text hook.',
+            "Out-of-band value selector, display format and text hook. <code>format</code> is a function or a declarative <code>OgeValueFormat</code> (<code>{ type: 'currency', currency: 'EUR' }</code>) rendered in the grid’s <code>locale</code>.",
         },
         {
           name: 'labelFilter',

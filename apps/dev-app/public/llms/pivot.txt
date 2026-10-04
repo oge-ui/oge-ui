@@ -94,8 +94,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/pivot`
 
-- values: `OGE_DEFAULT_PIVOT_MESSAGES`, `OGE_PIVOT_FIELD_DRAG_TYPE`, `OGE_PIVOT_MESSAGES`, `OgePivotCellTemplate`, `OgePivotColumnHeaderTemplate`, `OgePivotField`, `OgePivotGrid`, `OgePivotRowHeaderTemplate`, `OgePivotStateStore`, `provideOgePivotMessages`, `toChartSeries`
-- types: `OgePivotAxisLine`, `OgePivotCalculatedCell`, `OgePivotCalculatedField`, `OgePivotCellClickEvent`, `OgePivotCellPrepared`, `OgePivotCellTemplateContext`, `OgePivotCellTemplateOutletContext`, `OgePivotChartData`, `OgePivotChartOptions`, `OgePivotChartPoint`, `OgePivotChartSeries`, `OgePivotColumnHeaderTemplateContext`, `OgePivotFieldChooserOptions`, `OgePivotFieldDef`, `OgePivotHeaderCell`, `OgePivotLabelFilter`, `OgePivotLabelFilterOperator`, `OgePivotMenuItem`, `OgePivotMessages`, `OgePivotRowHeaderLayout`, `OgePivotRowHeaderTemplateContext`, `OgePivotTopNFilter`, `OgePivotValueFilter`, `OgePivotValueFilterOperator`
+- values: `OGE_DEFAULT_PIVOT_CONFIG`, `OGE_DEFAULT_PIVOT_MESSAGES`, `OGE_PIVOT_CONFIG`, `OGE_PIVOT_FIELD_DRAG_TYPE`, `OGE_PIVOT_MESSAGES`, `OgePivotCellTemplate`, `OgePivotColumnHeaderTemplate`, `OgePivotField`, `OgePivotGrid`, `OgePivotRowHeaderTemplate`, `OgePivotStateStore`, `provideOgePivotConfig`, `provideOgePivotMessages`, `toChartSeries`
+- types: `OgePivotAxisLine`, `OgePivotCalculatedCell`, `OgePivotCalculatedField`, `OgePivotCellClickEvent`, `OgePivotCellPrepared`, `OgePivotCellTemplateContext`, `OgePivotCellTemplateOutletContext`, `OgePivotChartData`, `OgePivotChartOptions`, `OgePivotChartPoint`, `OgePivotChartSeries`, `OgePivotColumnHeaderTemplateContext`, `OgePivotConfig`, `OgePivotConfigInput`, `OgePivotFieldChooserOptions`, `OgePivotFieldDef`, `OgePivotHeaderCell`, `OgePivotLabelFilter`, `OgePivotLabelFilterOperator`, `OgePivotMenuItem`, `OgePivotMessages`, `OgePivotRowHeaderLayout`, `OgePivotRowHeaderTemplateContext`, `OgePivotTopNFilter`, `OgePivotValueFilter`, `OgePivotValueFilterOperator`
 
 `@oge-ui/pivot/export-pdf`
 
@@ -125,6 +125,7 @@ Predictable wrong guesses, and what to write instead.
 | `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the reference `cellPrepared` equivalent). |
 | `calculatedFields` | `readonly OgePivotCalculatedField[]` | `[]` | Measures computed from the other measures of each cell — `{ name, caption, expression: (values) => number \| null, format, displayMode, runningTotal }`. Evaluated on every cell, subtotals and grand totals included, so a ratio stays a ratio of the totals. `displayMode` takes the measure display modes (percent of row / column / grand total, `absoluteVariation` = difference from the previous column, `percentVariation`); `runningTotal` accumulates along an axis. They follow the regular measures in cells, exports and chart data. |
 | `rowHeaderLayout` | `'compact' \| 'outline' \| 'tabular'` | `'compact'` | `compact` indents every level in one column; `outline` gives each row field its own label column (a label only in its field’s column); `tabular` repeats the ancestors on every line so each reads on its own. The row header stays one `rowheader` cell per line, so the keyboard model does not change; the corner shows the row field captions. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the cell text — percent display modes (`33.3%`, `%33,3` in tr-TR, `33,3 %` in de-DE), dates and declarative field `format`s. `undefined` falls back to `provideOgePivotConfig({ locale })`, then Angular’s `LOCALE_ID`. |
 | `stateKey` | `string \| undefined` | `—` | Persists the field layout + expansion via `OGE_STATE_STORAGE`. |
 | `messages` | `Partial<OgePivotMessages>` | `{}` | Per-instance overrides of the UI strings. |
 
@@ -197,6 +198,7 @@ _Configuration & engine_
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `provideOgePivotConfig(config)` | `Provider` | App- or component-scoped pivot defaults (`OgePivotConfig`: `{ locale }`); a function makes it live (`provideOgePivotConfig(() => ({ locale: uiLocale() }))`). Read with `inject(OGE_PIVOT_CONFIG)`. |
 | `provideOgePivotMessages(messages)` | `Provider` | App-scoped overrides of `OgePivotMessages` (41 keys — areas, menus, chooser, export, field-move menu and announcements…). |
 | `PivotFieldConfig / PivotResult / PivotLoadOptions / OgePivotStore…` | `from @oge-ui/core` | The serializable engine contract lives in `@oge-ui/core`, not in this package. |
 | `OgePivotCalculatedField / OgePivotCalculatedCell` | `{ name; caption?; expression(values, cell); format?; displayMode?; runningTotal? }` | A calculated measure; `expression` receives the cell’s measure values keyed by measure id (as displayed) and where it is evaluated (`rowPath`, `columnPath`, `isTotal`, `isGrandTotal`). Non-finite results and throws become an empty cell. |
@@ -251,7 +253,7 @@ _Row/column fields_
 | `sortBySummaryField / sortBySummaryPath` | `string / PivotPath` | `—` | Sort by a summary value at an opposite-axis path. |
 | `filterValues / filterType` | `readonly unknown[] / 'include' \| 'exclude'` | `—` | Field filter. |
 | `showTotals` | `boolean` | `true` | Sub-totals for this field. |
-| `selector / format / customizeText` | `functions` | `—` | Out-of-band value selector, display formatter and text hook. |
+| `selector / format / customizeText` | `functions` | `—` | Out-of-band value selector, display format and text hook. `format` is a function or a declarative `OgeValueFormat` (`{ type: 'currency', currency: 'EUR' }`) rendered in the grid’s `locale`. |
 | `labelFilter` | `OgePivotLabelFilter \| undefined` | `—` | Keeps the members whose label matches — `{ operator: 'contains' \| 'notContains' \| 'beginsWith' \| 'endsWith' \| 'equals' \| 'notEquals', value }`, case- and accent-insensitive. |
 | `valueFilter` | `OgePivotValueFilter \| undefined` | `—` | Keeps the members whose total of a measure passes — `{ measure, operator: 'greaterThan' \| 'greaterThanOrEqual' \| 'lessThan' \| 'lessThanOrEqual' \| 'equals' \| 'notEquals' \| 'between' \| 'notBetween', value, value2? }` (`measure` is a data field id). |
 | `topN` | `OgePivotTopNFilter \| undefined` | `—` | Keeps the `count` members with the highest (`direction: 'top'`, default) or lowest total of `measure`. Member filters run before aggregation — totals follow — in area order; value and Top-N filters compare a member’s grand total (local data only). |

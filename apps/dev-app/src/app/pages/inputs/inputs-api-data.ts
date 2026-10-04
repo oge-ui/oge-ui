@@ -1079,7 +1079,7 @@ export const OGE_INPUTS_CONFIG_API: ApiSections = {
           type: 'string',
           default: "'+{count} more'",
           description:
-            'Overflow chip of <code>maxDisplayedTags</code> (tag box, tree select chips, multi-column combo box).',
+            'Overflow chip of <code>maxDisplayedTags</code> (tag box, tree select chips, multi-column combo box). Rendered by <code>ogeMoreTagsText</code> / <code>ogeFormatMessage</code>, so it may be an ICU plural (<code>{count, plural, one {+# weiteres} other {+# weitere}}</code>).',
         },
         {
           name: 'maxSelectedItemsMessage',

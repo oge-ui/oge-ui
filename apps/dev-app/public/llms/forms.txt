@@ -346,8 +346,8 @@ _OgeFormsMessages_
 | `requiredLabel` | `string` | `'required'` | Screen-reader text beside the required mark. |
 | `optionalLabel` | `string` | `'optional'` | Screen-reader text beside the optional mark. |
 | `labelColon` | `string` | `':'` | Separator drawn when `showColonAfterLabel`. |
-| `validationSummaryTitle` | `string` | `'{count} fields need your attention'` | Summary heading; `{count}` is interpolated. |
-| `validationSummaryTitleOne` | `string` | `'1 field needs your attention'` | Summary heading when exactly one field is invalid. |
+| `validationSummaryTitle` | `string` | `'{count, plural, one {# field needs your attention} other {# fields need your attention}}'` | Summary heading — an ICU plural over the error count, rendered by `ogeFormatMessage` with the locale’s plural rules (write `one` / `few` / `many` / `other` for your language in this one key). A plain `{count}` pattern works too. |
+| `validationSummaryTitleOne` | `string \| undefined` | `undefined` | **Deprecated** — fold the singular into `validationSummaryTitle` as a plural branch. A catalog that still supplies it keeps it for exactly one invalid field (with a dev-mode warning) until the next minor. |
 | `validationSummaryLabel` | `string` | `'Validation summary'` | Accessible label of the summary region. |
 | `invalidError` | `string` | `'This value is invalid'` | Fallback text for an error with no resolvable message. |
 | `submitButton` | `string` | `'Submit'` | Label of the built-in submit button. |

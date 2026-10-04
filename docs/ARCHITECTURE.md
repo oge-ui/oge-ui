@@ -612,6 +612,32 @@ smallest complete example):
   Saturday + Sunday fallbacks). Never hardcode `day === 0 || day === 6` — expose a
   `weekendDays` input defaulting to the locale (scheduler, Gantt). Specs stub `Intl.Locale` with a
   constructible `function`, because host ICU week data differs between Node builds.
+- **Formatters come from the core Intl cache.** Never write `new Intl.NumberFormat` /
+  `DateTimeFormat` / `RelativeTimeFormat` / `PluralRules` in a render path: call
+  `ogeNumberFormat` / `ogeDateTimeFormat` / `ogeRelativeTimeFormat` / `ogePluralRules`
+  (`@oge-ui/core`, `util/intl-cache.ts`) — one instance per locale + options, SSR-safe, an
+  unknown locale degrades to the runtime default instead of throwing. Number text a user types
+  is read with `ogeParseNumber(text, locale)`. A component that formats data takes a `locale`
+  input / prop **and** a config `locale`, resolved instance → config → app locale (Angular
+  `LOCALE_ID`, React `ogeDefaultLocale()` = `navigator.language`). The grid family resolves it
+  once into `OgeGridResolvedColumn.locale` (`resolveOgeGridColumns({ locale })`), so every
+  cell, summary, group caption, header-filter value, filter-row parse, paste and export reads
+  `column.locale` instead of threading the grid's. Declarative formats (`OgeValueFormat`:
+  `{ type: 'currency' | 'percent' | 'number' | 'decimal' | 'date' | 'time' | 'datetime', … }`)
+  are compiled once per locale by `ogeValueFormatter`; the resolved column's `format` stays a
+  plain function, so consumers never branch on the format's shape. Unformatted number columns
+  keep `String(value)` on purpose (ids, years); specs that format without a locale must pin
+  one — this machine runs tr-TR.
+- **Plural messages use `ogeFormatMessage`.** A catalog string with a count is an ICU plural
+  (`'{count, plural, one {# row} other {# rows}}'`) rendered by core's `ogeFormatMessage(template,
+values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selectordinal`,
+  `select`, ICU apostrophe quoting; a malformed template falls back to `{name}` substitution
+  and never throws) — never a `count === 1 ? one : other` pair of keys. Pass the count as a
+  number so `#` gets the locale's digits. When a pair is retired, keep the old key optional and
+  `@deprecated` for one minor: honour it when a catalog still supplies it and call
+  `warnOgeDeprecatedMessage(oldKey, newKey)` (dev-mode, once per key). Plain `{name}` patterns
+  whose values are free text keep using `formatPattern` — ICU quoting would change how a
+  consumer's apostrophes render.
 - Template slots: structural directive per slot, selector `[oge<Slot>Template]`, exported context interface.
   When the same slot directive is legal both at component level and inside a child config component
   (e.g. `[ogeTabContentTemplate]` in `oge-tab-panel` vs inside an `<oge-tab>`), query the component-level
