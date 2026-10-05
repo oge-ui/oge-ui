@@ -3,12 +3,15 @@
 // engine stay unexported.
 
 export { OgeScheduler } from './lib/scheduler/scheduler';
+export { OgeSchedulerDraggable } from './lib/scheduler/scheduler-draggable';
 export {
   OgeAppointmentTemplate,
   OgeDateHeaderTemplate,
+  OgeResourceHeaderTemplate,
   OgeSchedulerCellTemplate,
   type OgeAppointmentTemplateContext,
   type OgeDateHeaderTemplateContext,
+  type OgeResourceHeaderTemplateContext,
   type OgeSchedulerCellTemplateContext,
 } from './lib/scheduler/scheduler-templates';
 export {
@@ -18,16 +21,24 @@ export {
   type OgeSchedulerAppointmentClickEvent,
   type OgeSchedulerAppointmentDeletedEvent,
   type OgeSchedulerAppointmentDeletingEvent,
+  type OgeSchedulerAppointmentDroppedEvent,
   type OgeSchedulerAppointmentUpdatedEvent,
   type OgeSchedulerAppointmentUpdatingEvent,
+  type OgeSchedulerBlockedRange,
   type OgeSchedulerCellClickEvent,
+  type OgeSchedulerConflictCheck,
+  type OgeSchedulerDisabledSlots,
+  type OgeSchedulerDragOutEvent,
   type OgeSchedulerEditorShowingEvent,
+  type OgeSchedulerGroupOrientation,
+  type OgeSchedulerMoreMode,
   type OgeSchedulerRangeSelectedEvent,
   type OgeSchedulerReminderEvent,
   type OgeSchedulerResource,
   type OgeSchedulerResourceItem,
   type OgeSchedulerView,
   type OgeSchedulerViewOptions,
+  type OgeSchedulerWeekNumberRule,
   type OgeSchedulerWorkHours,
 } from './lib/scheduler-types';
 export {
@@ -39,6 +50,7 @@ export {
   type OgeSchedulerConfig,
   type OgeSchedulerConfigInput,
   type OgeSchedulerEditorMessages,
+  type OgeSchedulerExportMessages,
   type OgeSchedulerGridMessages,
   type OgeSchedulerMenuMessages,
   type OgeSchedulerMessages,

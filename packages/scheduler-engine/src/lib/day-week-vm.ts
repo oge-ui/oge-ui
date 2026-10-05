@@ -12,12 +12,18 @@ import {
   proposeResize,
   type AppointmentProposal,
 } from './gesture-math';
-import type { DayWeekColumn, DayWeekGroupLayout } from './grouping';
-import { dayWeekPlacement } from './grouping';
+import { blockedIntervals, isOffWorkHours } from './availability';
+import type {
+  DayWeekColumn,
+  DayWeekGroupLayout,
+  SchedulerGroupLeaf,
+} from './grouping';
+import { dayWeekPlacement, leafWorkHours } from './grouping';
 import { packLanes, type LaneLayout, type LanedItem } from './lanes';
 import { layoutDayColumn, type LayoutedSegment } from './layout';
 import type { SchedulerAppointment } from './scheduler-model';
 import type {
+  OgeSchedulerDisabledSlots,
   OgeSchedulerResource,
   OgeSchedulerResourceItem,
   OgeSchedulerWorkHours,
@@ -841,6 +847,210 @@ export function buildLayoutAllDayStrip<T>(
       leafIndex: column.resIndex,
       values: column.values,
     })),
+  };
+}
+
+/** One rendered grid row of a (possibly block-stacked) time grid. */
+export interface DayWeekGridRow {
+  /** Global row index (the roving-focus row). */
+  readonly index: number;
+  readonly block: number;
+  readonly slot: number;
+  readonly minutes: number;
+}
+
+/** Every grid row: `blockCount` blocks of the grid's slot rows. */
+export function dayWeekGridRows(
+  grid: TimeGridVm,
+  blockCount: number,
+): readonly DayWeekGridRow[] {
+  const slots = grid.slotStartMinutes;
+  const rows: DayWeekGridRow[] = [];
+  for (let block = 0; block < Math.max(1, blockCount); block++) {
+    slots.forEach((minutes, slot) =>
+      rows.push({ index: block * slots.length + slot, block, slot, minutes }),
+    );
+  }
+  return rows;
+}
+
+/** The grouped values of a cell (vertical: its block's leaf; else its column's). */
+export function dayWeekLayoutCellValues(
+  layout: DayWeekGroupLayout,
+  colIndex: number,
+  block: number,
+): Readonly<Record<string, unknown>> {
+  if (layout.leaves.length === 0) return {};
+  return layout.vertical
+    ? (layout.leaves[block]?.values ?? {})
+    : (layout.columns[colIndex]?.values ?? {});
+}
+
+/** The leaf a cell renders (`null` ungrouped). */
+export function dayWeekLayoutCellLeaf(
+  layout: DayWeekGroupLayout,
+  colIndex: number,
+  block: number,
+): SchedulerGroupLeaf | null {
+  if (layout.leaves.length === 0) return null;
+  return (
+    (layout.vertical
+      ? layout.leaves[block]
+      : layout.leaves[layout.columns[colIndex]?.resIndex ?? 0]) ?? null
+  );
+}
+
+/** The key of a cell in {@link dayWeekBlockedCells}' set. */
+export function dayWeekCellKey(block: number, slot: number, col: number): string {
+  return `${block}:${slot}:${col}`;
+}
+
+/**
+ * Every blocked cell of the grid (`disabledSlots`), keyed by
+ * {@link dayWeekCellKey}: a cell is blocked when anything inside its slot
+ * is. Computed once per render of the grid, not per cell binding.
+ */
+export function dayWeekBlockedCells(
+  grid: TimeGridVm,
+  layout: DayWeekGroupLayout,
+  disabled: OgeSchedulerDisabledSlots | null | undefined,
+): ReadonlySet<string> {
+  const blocked = new Set<string>();
+  if (disabled === null || disabled === undefined) return blocked;
+  for (let block = 0; block < layout.blockCount; block++) {
+    for (const column of layout.columns) {
+      const values = dayWeekLayoutCellValues(layout, column.colIndex, block);
+      const dayStart = cellDateAt(column.day, grid.windowStartMinutes);
+      const dayEnd = cellDateAt(column.day, grid.windowEndMinutes);
+      const intervals = blockedIntervals(
+        disabled,
+        dayStart,
+        dayEnd,
+        values,
+        grid.cellDuration,
+      );
+      if (intervals.length === 0) continue;
+      grid.slotStartMinutes.forEach((minutes, slot) => {
+        const start = cellDateAt(column.day, minutes);
+        const end = cellDateAt(column.day, minutes + grid.cellDuration);
+        if (
+          intervals.some(
+            (interval) =>
+              interval.startDate.getTime() < end.getTime() &&
+              interval.endDate.getTime() > start.getTime(),
+          )
+        ) {
+          blocked.add(dayWeekCellKey(block, slot, column.colIndex));
+        }
+      });
+    }
+  }
+  return blocked;
+}
+
+/**
+ * Whether a cell is off its working hours: the cell's leaf's own hours
+ * (per-resource `workHours` / `workDays`) or the scheduler-wide ones.
+ */
+export function dayWeekCellOffHours(
+  layout: DayWeekGroupLayout,
+  colIndex: number,
+  block: number,
+  day: Date,
+  minutes: number,
+  global: OgeSchedulerWorkHours | null,
+): boolean {
+  return isOffWorkHours(
+    leafWorkHours(dayWeekLayoutCellLeaf(layout, colIndex, block), global),
+    day,
+    minutes,
+  );
+}
+
+/** One now-line (and its optional past shade) box, in percent of the rows area. */
+export interface DayWeekNowBox {
+  readonly key: string;
+  readonly top: number;
+  readonly left: number;
+  readonly width: number;
+  /** Top of the block the line sits in (the shade runs from here to `top`). */
+  readonly blockTop: number;
+}
+
+/** The now-lines of every column showing today, in every block. */
+export function dayWeekNowBoxes(
+  grid: TimeGridVm,
+  layout: DayWeekGroupLayout,
+  now: Date,
+  show: boolean,
+): readonly DayWeekNowBox[] {
+  if (!show) return [];
+  const boxes: DayWeekNowBox[] = [];
+  const blocks = Math.max(1, layout.blockCount);
+  for (const column of layout.columns) {
+    const fraction = nowLineFraction(grid, column.dayIndex, now, true);
+    if (fraction === null) continue;
+    for (let block = 0; block < blocks; block++) {
+      boxes.push({
+        key: `${block}:${column.colIndex}`,
+        top: ((block + fraction) / blocks) * 100,
+        blockTop: (block / blocks) * 100,
+        left: (column.colIndex / layout.colCount) * 100,
+        width: (1 / layout.colCount) * 100,
+      });
+    }
+  }
+  return boxes;
+}
+
+/**
+ * The time-grid cell under a viewport point (external drops, drag-in
+ * previews): its column, block, slot start and grouped values, or `null`
+ * outside the rows rect. `rtl` mirrors the column axis.
+ */
+export function dayWeekSlotAt(
+  clientX: number,
+  clientY: number,
+  rect: {
+    readonly left: number;
+    readonly top: number;
+    readonly width: number;
+    readonly height: number;
+  },
+  grid: TimeGridVm,
+  layout: DayWeekGroupLayout,
+  rtl = false,
+): {
+  readonly col: number;
+  readonly block: number;
+  readonly slot: number;
+  readonly date: Date;
+  readonly values: Readonly<Record<string, unknown>>;
+} | null {
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  if (x < 0 || y < 0 || x >= rect.width || y >= rect.height) return null;
+  const rawCol = Math.floor((x / rect.width) * layout.colCount);
+  const col = Math.min(
+    layout.colCount - 1,
+    Math.max(0, rtl ? layout.colCount - 1 - rawCol : rawCol),
+  );
+  const slots = grid.slotStartMinutes.length;
+  const rowIndex = Math.min(
+    slots * layout.blockCount - 1,
+    Math.floor((y / rect.height) * slots * layout.blockCount),
+  );
+  const block = Math.floor(rowIndex / slots);
+  const slot = rowIndex % slots;
+  const column = layout.columns[col];
+  if (column === undefined) return null;
+  return {
+    col,
+    block,
+    slot,
+    date: cellDateAt(column.day, grid.slotStartMinutes[slot]),
+    values: dayWeekLayoutCellValues(layout, col, block),
   };
 }
 

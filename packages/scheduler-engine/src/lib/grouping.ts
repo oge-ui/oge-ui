@@ -121,6 +121,30 @@ export function groupLeafMatcher<T>(
   };
 }
 
+/** Whether two grouped-value records name the same resources. */
+export function sameGroupValues(
+  a: Readonly<Record<string, unknown>>,
+  b: Readonly<Record<string, unknown>>,
+): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const key of keys) if (a[key] !== b[key]) return false;
+  return true;
+}
+
+/** The leaf whose values `values` holds (`-1` ungrouped / unmatched). */
+export function leafIndexOfValues(
+  levels: readonly OgeSchedulerResource[],
+  leaves: readonly SchedulerGroupLeaf[],
+  values: Readonly<Record<string, unknown>>,
+): number {
+  if (levels.length === 0) return -1;
+  return leaves.findIndex((leaf) =>
+    levels.every(
+      (level) => leaf.values[level.fieldExpr] === values[level.fieldExpr],
+    ),
+  );
+}
+
 /** The assigned id of every resource field of an item. */
 export function resourceValuesOfItem<T>(
   item: T,

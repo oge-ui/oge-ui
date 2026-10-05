@@ -179,11 +179,38 @@
 
 .oge-scheduler-header-row {
   display: grid;
-  grid-template-columns: 56px repeat(
-      var(--oge-scheduler-day-count, 7),
+  grid-template-columns: var(--oge-scheduler-lead, 56px) repeat(
+      var(--oge-scheduler-col-count, var(--oge-scheduler-day-count, 7)),
       minmax(0, 1fr)
     );
   border-block-end: 1px solid var(--oge-scheduler-grid-line);
+}
+
+/* header cells span their columns (nested group headers, date-major dates) */
+.oge-scheduler-header-row > .oge-scheduler-gutter-spacer {
+  grid-column: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-block-end: 6px;
+}
+
+.oge-scheduler-week-number {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--oge-muted-color);
+  padding: 1px 4px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-detail-bg);
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-scheduler-month-cell .oge-scheduler-week-number {
+  float: inline-start;
+  margin-inline-end: 4px;
+  margin-block-start: 2px;
 }
 
 .oge-scheduler-date-header {
@@ -219,12 +246,6 @@
 /* ---------- resource sub-header (column grouping) ---------- */
 
 .oge-scheduler-resource-row {
-  display: grid;
-  grid-template-columns: 56px repeat(
-      var(--oge-scheduler-col-count, 7),
-      minmax(0, 1fr)
-    );
-  border-block-end: 1px solid var(--oge-scheduler-grid-line);
   background: var(--oge-header-bg);
 }
 
@@ -238,10 +259,10 @@
   text-overflow: ellipsis;
   border-inline-start: 1px solid var(--oge-scheduler-grid-line);
   min-width: 0;
+}
 
-  &:first-child {
-    border-inline-start: none;
-  }
+.oge-scheduler-header-row > .oge-scheduler-date-header {
+  border-inline-start: 1px solid transparent;
 }
 
 /* stronger separator where a new day group begins */
@@ -253,7 +274,7 @@
 
 .oge-scheduler-allday {
   display: grid;
-  grid-template-columns: 56px 1fr;
+  grid-template-columns: var(--oge-scheduler-lead, 56px) 1fr;
   border-block-end: 1px solid var(--oge-scheduler-grid-line);
   background: var(--oge-scheduler-allday-bg);
   max-height: 96px;
@@ -271,7 +292,7 @@
 .oge-scheduler-allday-lanes {
   display: grid;
   grid-template-columns: repeat(
-    var(--oge-scheduler-day-count, 7),
+    var(--oge-scheduler-allday-cols, var(--oge-scheduler-day-count, 7)),
     minmax(0, 1fr)
   );
   grid-auto-rows: 24px;
@@ -304,6 +325,161 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* vertical grouping: a group label column before the time gutter */
+.oge-scheduler-day-week-vertical {
+  --oge-scheduler-lead: 176px;
+
+  .oge-scheduler-body {
+    grid-template-columns: 120px 56px 1fr;
+  }
+}
+
+.oge-scheduler-group-gutter {
+  border-inline-end: 1px solid var(--oge-scheduler-grid-line);
+  background: var(--oge-header-bg);
+}
+
+.oge-scheduler-group-label {
+  box-sizing: border-box;
+  height: calc(
+    var(--oge-scheduler-slot-height, 28px) * var(--oge-scheduler-block-slots, 1)
+  );
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--oge-header-color);
+  border-block-end: 2px solid var(--oge-border-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* the first slot of every stacked block after the first */
+.oge-scheduler-cell.oge-scheduler-block-start {
+  border-block-start: 2px solid var(--oge-border-color);
+}
+
+/* blocked (non-bookable) slots: hatched, never a colour alone */
+.oge-scheduler-cell-disabled,
+.oge-scheduler-timeline-blocked {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--oge-scheduler-grid-line) 0 1px,
+    transparent 1px 7px
+  );
+  background-color: var(--oge-detail-bg);
+  cursor: not-allowed;
+}
+
+.oge-scheduler-timeline-blocked,
+.oge-scheduler-timeline-offhours {
+  position: absolute;
+  inset-block: 0;
+  pointer-events: none;
+}
+
+.oge-scheduler-timeline-offhours {
+  background: var(--oge-scheduler-off-hours-bg, var(--oge-detail-bg));
+  opacity: 0.6;
+}
+
+/* a refused change (blocked slot, overlap): a short visible notice */
+.oge-scheduler-notice {
+  position: absolute;
+  inset-block-start: 56px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  max-width: min(420px, calc(100% - 32px));
+  padding: 6px 12px;
+  border: 1px solid var(--oge-warning);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-popup);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.oge-scheduler-notice:dir(rtl) {
+  transform: translateX(50%);
+}
+
+/* selected appointments: an accent ring, readable at a glance */
+.oge-scheduler-chip-selected > .oge-scheduler-chip,
+.oge-scheduler-timeline-bar.oge-scheduler-chip-selected {
+  box-shadow:
+    0 0 0 2px var(--oge-bg),
+    0 0 0 4px var(--oge-accent);
+}
+
+.oge-scheduler-drop-preview {
+  border-style: solid;
+}
+
+/* the live recurrence summary of the editor */
+.oge-scheduler-recurrence-summary {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-accent-soft);
+  color: var(--oge-text-color);
+  font-size: 13px;
+}
+
+/* the "+N more" popup list */
+.oge-scheduler-more-popup {
+  min-width: 240px;
+}
+
+.oge-scheduler-more-list {
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
+}
+
+.oge-scheduler-more-item {
+  display: grid;
+  grid-template-columns: 10px auto 1fr;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+/* external draggables (the [ogeSchedulerDraggable] directive / hook) */
+.oge-scheduler-draggable {
+  cursor: grab;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-scheduler-draggable-armed {
+  outline: 2px dashed var(--oge-accent);
+  outline-offset: 2px;
 }
 
 .oge-scheduler-gutter {
@@ -690,7 +866,10 @@
 
 .oge-scheduler-month-grid {
   display: grid;
-  grid-template-rows: repeat(6, minmax(84px, 1fr));
+  grid-template-rows: repeat(
+    var(--oge-scheduler-month-rows, 6),
+    minmax(84px, 1fr)
+  );
   height: 100%;
 }
 
@@ -1160,8 +1339,74 @@
   min-height: calc(8px + var(--oge-scheduler-timeline-lanes, 1) * 26px);
 }
 
+/* rows render at the engine's fixed heights (exact virtualization) */
 .oge-scheduler-timeline-row {
+  box-sizing: border-box;
   border-block-end: 1px solid var(--oge-scheduler-grid-line);
+}
+
+.oge-scheduler-timeline-row > .oge-scheduler-timeline-rowhead {
+  padding-inline-start: calc(
+    10px + var(--oge-scheduler-timeline-level, 0) * 14px
+  );
+}
+
+.oge-scheduler-timeline-group-row {
+  background: var(--oge-header-bg);
+
+  > .oge-scheduler-timeline-rowhead {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--oge-header-color);
+  }
+}
+
+/* sticky axis headers while the rows scroll */
+.oge-scheduler-timeline-header,
+.oge-scheduler-timeline-subheader {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 3;
+  background: var(--oge-bg);
+}
+
+.oge-scheduler-timeline-subheader {
+  inset-block-start: 31px;
+}
+
+.oge-scheduler-timeline-days > .oge-scheduler-timeline-dayhead {
+  position: absolute;
+  inset-block: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.oge-scheduler-timeline-header .oge-scheduler-timeline-days {
+  min-height: 31px;
+}
+
+/* day-scale timelines: a readable minimum width per day */
+.oge-scheduler-timeline-day-scale .oge-scheduler-timeline-inner {
+  min-width: calc(160px + var(--oge-scheduler-timeline-days, 31) * 36px);
+}
+
+.oge-scheduler-timeline-year .oge-scheduler-timeline-inner {
+  min-width: calc(160px + var(--oge-scheduler-timeline-days, 365) * 14px);
+}
+
+.oge-scheduler-timeline-day-scale .oge-scheduler-timeline-dayhead {
+  padding-inline: 2px;
+  font-size: 11px;
+}
+
+.oge-scheduler-timeline-blockhead {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  border-inline-start: 2px solid var(--oge-border-color);
 }
 
 .oge-scheduler-timeline-daycol {
@@ -1293,10 +1538,20 @@
     text-align: center;
   }
 
-  .oge-scheduler-header-row,
-  .oge-scheduler-allday,
+  .oge-scheduler-day-week {
+    --oge-scheduler-lead: 40px;
+  }
+
   .oge-scheduler-body {
     grid-template-columns: 40px 1fr;
+  }
+
+  .oge-scheduler-day-week-vertical {
+    --oge-scheduler-lead: 120px;
+
+    .oge-scheduler-body {
+      grid-template-columns: 80px 40px 1fr;
+    }
   }
 }
 
@@ -1397,5 +1652,40 @@
 
   .oge-scheduler-drag-preview {
     border-color: Highlight;
+  }
+
+  .oge-scheduler-chip-selected > .oge-scheduler-chip,
+  .oge-scheduler-timeline-bar.oge-scheduler-chip-selected {
+    outline: 3px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  .oge-scheduler-cell-disabled,
+  .oge-scheduler-timeline-blocked {
+    background-image: repeating-linear-gradient(
+      135deg,
+      GrayText 0 1px,
+      transparent 1px 7px
+    );
+    forced-color-adjust: none;
+  }
+
+  .oge-scheduler-notice {
+    border-color: CanvasText;
+  }
+
+  .oge-scheduler-more-item:focus-visible,
+  .oge-scheduler-draggable:focus-visible {
+    outline: 2px solid Highlight;
+  }
+
+  .oge-scheduler-draggable-armed {
+    outline-color: Highlight;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-scheduler-more-item {
+    transition: none;
   }
 }

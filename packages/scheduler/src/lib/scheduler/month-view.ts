@@ -14,11 +14,14 @@ import { NgTemplateOutlet } from '@angular/common';
 import { sameDay, sameMonth } from '@oge-ui/core';
 import {
   beginPointerGesture,
+  isOgeSchedulerDragOut,
   buildMonthGrid,
   buildMonthWeekLayouts,
   chipKey,
+  chipSelectKey,
   chipTabIndexOf,
   escapeAttr,
+  monthBlockedDays,
   monthCellKey,
   monthCellSelected,
   monthChipOrder,
@@ -31,35 +34,59 @@ import {
   schedulerChipAriaLabel,
   schedulerDayCellAriaLabel,
   schedulerGridAriaLabel,
+  schedulerMoreAriaLabel,
   schedulerMoreText,
+  schedulerShortcut,
+  schedulerWeekNumber,
+  schedulerWeekNumberTexts,
   weekdayShortText,
+  withSelectedLabel,
+  withUnavailableLabel,
   type AppointmentProposal,
   type LaneLayout,
   type MonthGridVm,
+  type OgeSchedulerDisabledSlots,
+  type OgeSchedulerDropSlot,
+  type OgeSchedulerResolvedMessages,
+  type OgeSchedulerWeekNumberRule,
   type SchedulerAppointment,
   type SchedulerCellEvent,
   type SchedulerChipEvent,
+  type SchedulerPasteTarget,
   type SchedulerProposalEvent,
 } from '@oge-ui/scheduler-engine';
-import type { OgeSchedulerGridMessages } from '../config';
 import { OgeSchedulerAppointmentChip } from './appointment';
+import type {
+  SchedulerDragOutRequest,
+  SchedulerSelectRequest,
+} from './day-week-view';
 import type {
   OgeAppointmentTemplate,
   OgeSchedulerCellTemplate,
 } from './scheduler-templates';
 
+/** A "+N more" press: the day and the button the popup anchors to. */
+export interface SchedulerMoreRequest {
+  readonly date: Date;
+  readonly anchor: HTMLElement;
+}
+
 /**
- * Internal month view: a `role="grid"` of six week rows with roving cell
- * focus (OgeCalendar keys), packed appointment lanes forming the second tab
- * stop and a "+N more" overflow button that asks the shell to drill into
- * the day view (dx parity — no fourth popup surface in v0.1).
+ * Internal month view: a `role="grid"` of week rows (six, or every week of
+ * a multi-month `intervalCount`) with roving cell focus (OgeCalendar keys),
+ * packed appointment lanes forming the second tab stop and "+N more"
+ * buttons — Tab-reachable — that open the day's popup list (or drill into
+ * the day view under `moreMode: 'drill'`).
  */
 @Component({
   selector: 'oge-scheduler-month-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   imports: [NgTemplateOutlet, OgeSchedulerAppointmentChip],
-  host: { class: 'oge-scheduler-view oge-scheduler-month' },
+  host: {
+    class: 'oge-scheduler-view oge-scheduler-month',
+    '[style.--oge-scheduler-month-rows]': 'grid().weeks.length',
+  },
   template: `
     <!-- visual headers; the grid's own columnheader row carries the names -->
     <div class="oge-scheduler-month-weekdays" aria-hidden="true">
@@ -107,18 +134,24 @@ import type {
                 [class.oge-scheduler-cell-weekend]="
                   weekendDays().includes(day.getDay())
                 "
+                [class.oge-scheduler-cell-disabled]="
+                  isBlocked(weekIndex, dayIndex)
+                "
                 [class.oge-scheduler-cell-focused]="
                   isFocusedCell(weekIndex, dayIndex)
                 "
                 [class.oge-scheduler-drop-target]="
-                  isDropTarget(weekIndex, dayIndex)
+                  isDropTarget(weekIndex, dayIndex, day)
+                "
+                [attr.aria-disabled]="
+                  isBlocked(weekIndex, dayIndex) ? 'true' : null
                 "
                 [tabindex]="isFocusedCell(weekIndex, dayIndex) ? 0 : -1"
                 [attr.aria-selected]="isSelectedCell(weekIndex, dayIndex)"
                 [attr.data-focus-target]="
                   isFocusedCell(weekIndex, dayIndex) ? '' : null
                 "
-                [attr.aria-label]="cellAriaLabel(day)"
+                [attr.aria-label]="cellAriaLabel(day, weekIndex, dayIndex)"
                 (click)="onCellClick(weekIndex, dayIndex, $event)"
                 (dblclick)="onCellDblClick(day, $event)"
                 (keydown)="onCellKeydown(weekIndex, dayIndex, $event)"
@@ -130,6 +163,11 @@ import type {
                   })
                 "
               >
+                @if (dayIndex === 0 && weekBadge(week[0]); as badge) {
+                  <span class="oge-scheduler-week-number" aria-hidden="true">{{
+                    badge
+                  }}</span>
+                }
                 <span class="oge-scheduler-month-daynum" aria-hidden="true">{{
                   day.getDate()
                 }}</span>
@@ -157,8 +195,8 @@ import type {
           class="oge-scheduler-month-lane-layer"
           role="presentation"
           [style.--oge-scheduler-month-lanes]="maxLanes()"
-          [style.top.%]="(weekIndex / 6) * 100"
-          [style.height.%]="100 / 6"
+          [style.top.%]="(weekIndex / grid().weeks.length) * 100"
+          [style.height.%]="100 / grid().weeks.length"
         >
           @for (
             item of weekLanes()[weekIndex].visible;
@@ -173,6 +211,7 @@ import type {
               [attr.data-appointment-key]="String(item.appointment.key)"
               [class.oge-scheduler-bar-clipped-start]="item.clippedStart"
               [class.oge-scheduler-bar-clipped-end]="item.clippedEnd"
+              [class.oge-scheduler-chip-selected]="isSelected(item.appointment)"
               [style.grid-column]="
                 item.startDayIndex + 1 + ' / ' + (item.endDayIndex + 2)
               "
@@ -203,10 +242,13 @@ import type {
             <button
               type="button"
               class="oge-scheduler-month-more"
-              tabindex="-1"
+              aria-haspopup="dialog"
+              [attr.aria-label]="
+                moreAriaLabel(overflow.count, week[overflow.dayIndex])
+              "
               [style.grid-column]="overflow.dayIndex + 1"
               [style.grid-row]="maxLanes() + 1"
-              (click)="moreClick.emit(week[overflow.dayIndex])"
+              (click)="onMoreClick(week[overflow.dayIndex], $event)"
             >
               {{ moreText(overflow.count) }}
             </button>
@@ -225,19 +267,29 @@ export class OgeSchedulerMonthView<T = unknown> {
   /** Weekend days (0 = Sunday) the grid shades — the scheduler's resolved list. */
   readonly weekendDays = input<readonly number[]>([0, 6]);
   readonly maxAppointmentsPerCell = input.required<number | 'auto'>();
+  /** Months the grid shows. */
+  readonly intervalCount = input(1);
   readonly locale = input<string | undefined>(undefined);
-  readonly messages = input.required<OgeSchedulerGridMessages>();
+  readonly messages = input.required<OgeSchedulerResolvedMessages['grid']>();
   readonly periodLabel = input('');
   readonly allowDragging = input(true);
   /** `aria-readonly` on the grid — the scheduler cannot change anything. */
   readonly readOnly = input(false);
   /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
   readonly rtl = input(false);
+  readonly showWeekNumbers = input(false);
+  readonly weekNumberRule = input<OgeSchedulerWeekNumberRule>('iso');
+  readonly disabledSlots = input<OgeSchedulerDisabledSlots | null>(null);
+  readonly selection = input<readonly T[]>([]);
+  readonly dropPreview = input<{
+    readonly slot: OgeSchedulerDropSlot;
+    readonly durationMinutes: number;
+  } | null>(null);
   readonly appointmentTemplate = input<OgeAppointmentTemplate<T> | null>(null);
   readonly cellTemplate = input<OgeSchedulerCellTemplate | null>(null);
 
-  /** "+N more" clicked — the shell navigates to the day view on that date. */
-  readonly moreClick = output<Date>();
+  /** "+N more" pressed — the shell opens the day's popup (or drills in). */
+  readonly moreClick = output<SchedulerMoreRequest>();
   readonly cellClicked = output<SchedulerCellEvent>();
   readonly cellDblClicked = output<SchedulerCellEvent>();
   readonly cellActivated = output<SchedulerCellEvent>();
@@ -254,21 +306,25 @@ export class OgeSchedulerMonthView<T = unknown> {
   readonly chipContextMenu = output<SchedulerChipEvent<T>>();
   /** Right-click on an empty cell. */
   readonly cellContextMenu = output<SchedulerCellEvent>();
+  readonly copyRequested = output<SchedulerAppointment<T>>();
+  readonly pasteRequested = output<SchedulerPasteTarget>();
+  readonly selectRequested = output<SchedulerSelectRequest<T>>();
+  readonly dragOut = output<SchedulerDragOutRequest<T>>();
 
   protected onChipContextMenu(
     appointment: SchedulerAppointment<T>,
     event: MouseEvent,
   ): void {
     event.stopPropagation();
-    this.chipContextMenu.emit({
-      appointment,
-      event,
-      rect: (event.currentTarget as HTMLElement).getBoundingClientRect(),
-    });
+    this.chipContextMenu.emit(this.chipEvent(appointment, event));
   }
 
   protected readonly grid = computed<MonthGridVm>(() =>
-    buildMonthGrid(this.anchorDate(), this.firstDayOfWeek()),
+    buildMonthGrid(
+      this.anchorDate(),
+      this.firstDayOfWeek(),
+      this.intervalCount(),
+    ),
   );
 
   protected readonly maxLanes = computed(() =>
@@ -291,6 +347,28 @@ export class OgeSchedulerMonthView<T = unknown> {
   protected readonly chipOrder = computed<readonly SchedulerAppointment<T>[]>(
     () => monthChipOrder(this.weekLanes()),
   );
+
+  private readonly blockedDays = computed(() =>
+    monthBlockedDays(this.grid().weeks, this.disabledSlots()),
+  );
+
+  protected isBlocked(weekIndex: number, dayIndex: number): boolean {
+    return this.blockedDays().has(`${weekIndex}:${dayIndex}`);
+  }
+
+  /** The week-number badge of a row (`W32`), or `null` when off. */
+  protected weekBadge(firstDay: Date): string | null {
+    if (!this.showWeekNumbers()) return null;
+    return schedulerWeekNumberTexts(
+      schedulerWeekNumber(
+        firstDay,
+        this.weekNumberRule(),
+        this.firstDayOfWeek(),
+        this.locale(),
+      ),
+      this.messages(),
+    ).badge;
+  }
 
   /* ---------- roving focus ---------- */
 
@@ -316,6 +394,10 @@ export class OgeSchedulerMonthView<T = unknown> {
 
   protected chipTabIndex(appointment: SchedulerAppointment<T>): number {
     return chipTabIndexOf(this.chipOrder(), this.focusedChipKey(), appointment);
+  }
+
+  protected isSelected(appointment: SchedulerAppointment<T>): boolean {
+    return this.selection().includes(appointment.source);
   }
 
   private queueFocusTarget(): void {
@@ -352,7 +434,22 @@ export class OgeSchedulerMonthView<T = unknown> {
     dayIndex: number,
     event: KeyboardEvent,
   ): void {
-    const action = monthCellKey(event.key, weekIndex, dayIndex, this.rtl());
+    if (schedulerShortcut(event, false) === 'paste') {
+      event.preventDefault();
+      this.pasteRequested.emit({
+        date: this.grid().weeks[weekIndex][dayIndex],
+        allDay: true,
+        values: {},
+      });
+      return;
+    }
+    const action = monthCellKey(
+      event.key,
+      weekIndex,
+      dayIndex,
+      this.rtl(),
+      this.grid().weeks.length,
+    );
     if (action === null) return;
     event.preventDefault();
     if (action.kind === 'activate') {
@@ -367,10 +464,38 @@ export class OgeSchedulerMonthView<T = unknown> {
     this.queueFocusTarget();
   }
 
+  private chipEvent(
+    appointment: SchedulerAppointment<T>,
+    event: MouseEvent | KeyboardEvent,
+    target: EventTarget | null = event.currentTarget,
+  ): SchedulerChipEvent<T> {
+    return {
+      appointment,
+      event,
+      rect: (target as HTMLElement).getBoundingClientRect(),
+      order: this.chipOrder(),
+    };
+  }
+
   protected onChipKeydown(
     appointment: SchedulerAppointment<T>,
     event: KeyboardEvent,
   ): void {
+    if (schedulerShortcut(event, false) === 'copy') {
+      event.preventDefault();
+      this.copyRequested.emit(appointment);
+      return;
+    }
+    const select = chipSelectKey(event);
+    if (select !== null) {
+      event.preventDefault();
+      this.selectRequested.emit({
+        appointment,
+        gesture: select,
+        order: this.chipOrder(),
+      });
+      return;
+    }
     const action = chipKey(
       event.key,
       appointment,
@@ -381,11 +506,9 @@ export class OgeSchedulerMonthView<T = unknown> {
     switch (action.kind) {
       case 'activate':
         event.preventDefault();
-        this.chipActivated.emit({
-          appointment,
-          event,
-          rect: (event.target as HTMLElement).getBoundingClientRect(),
-        });
+        this.chipActivated.emit(
+          this.chipEvent(appointment, event, event.target),
+        );
         return;
       case 'delete':
         event.preventDefault();
@@ -411,11 +534,13 @@ export class OgeSchedulerMonthView<T = unknown> {
     null,
   );
 
-  protected isDropTarget(weekIndex: number, dayIndex: number): boolean {
+  protected isDropTarget(weekIndex: number, dayIndex: number, day: Date): boolean {
     const target = this.dropTarget();
-    return (
-      target !== null && target.week === weekIndex && target.day === dayIndex
-    );
+    if (target !== null) {
+      return target.week === weekIndex && target.day === dayIndex;
+    }
+    const drop = this.dropPreview();
+    return drop !== null && sameDay(drop.slot.startDate, day);
   }
 
   protected onBarPointerDown(
@@ -428,15 +553,22 @@ export class OgeSchedulerMonthView<T = unknown> {
     const gridEl = this.monthGridEl()?.nativeElement;
     if (gridEl === undefined) return;
     const rect = gridEl.getBoundingClientRect();
+    const hostRect = this.host.nativeElement.getBoundingClientRect();
+    const weekCount = this.grid().weeks.length;
     const originIndex = monthOriginIndex(this.grid().weeks, appointment);
     let proposal: AppointmentProposal | null = null;
+    let lastX = event.clientX;
+    let lastY = event.clientY;
     beginPointerGesture(event, {
       onMove: (_deltaX, _deltaY, moveEvent) => {
+        lastX = moveEvent.clientX;
+        lastY = moveEvent.clientY;
         const { week, day } = monthDropCell(
           moveEvent.clientX,
           moveEvent.clientY,
           rect,
           this.rtl(),
+          weekCount,
         );
         this.dropTarget.set({ week, day });
         if (originIndex === -1) return;
@@ -447,6 +579,11 @@ export class OgeSchedulerMonthView<T = unknown> {
       onFinish: (commit, cancelled) => {
         this.draggedKey.set(null);
         this.dropTarget.set(null);
+        const outside = isOgeSchedulerDragOut(hostRect, lastX, lastY);
+        if (commit && outside) {
+          this.dragOut.emit({ appointment, clientX: lastX, clientY: lastY });
+          return;
+        }
         if (commit && proposal !== null) {
           this.moveCommitted.emit({ appointment, proposal });
         } else if (cancelled) {
@@ -454,6 +591,33 @@ export class OgeSchedulerMonthView<T = unknown> {
         }
       },
     });
+  }
+
+  /** The day under a viewport point — the shell's drop-target `resolve`. */
+  dropSlotAt(clientX: number, clientY: number): OgeSchedulerDropSlot | null {
+    const gridEl = this.monthGridEl()?.nativeElement;
+    if (gridEl === undefined) return null;
+    const rect = gridEl.getBoundingClientRect();
+    if (
+      rect.width <= 0 ||
+      clientX < rect.left ||
+      clientX >= rect.right ||
+      clientY < rect.top ||
+      clientY >= rect.bottom
+    ) {
+      return null;
+    }
+    const { week, day } = monthDropCell(
+      clientX,
+      clientY,
+      rect,
+      this.rtl(),
+      this.grid().weeks.length,
+    );
+    const date = this.grid().weeks[week]?.[day];
+    return date === undefined
+      ? null
+      : { startDate: date, allDay: true, resources: {} };
   }
 
   /* ---------- pointer ---------- */
@@ -480,11 +644,7 @@ export class OgeSchedulerMonthView<T = unknown> {
     event: MouseEvent,
   ): void {
     event.stopPropagation();
-    this.chipClicked.emit({
-      appointment,
-      event,
-      rect: (event.currentTarget as HTMLElement).getBoundingClientRect(),
-    });
+    this.chipClicked.emit(this.chipEvent(appointment, event));
   }
 
   protected onChipDblClick(
@@ -492,10 +652,14 @@ export class OgeSchedulerMonthView<T = unknown> {
     event: MouseEvent,
   ): void {
     event.stopPropagation();
-    this.chipDblClicked.emit({
-      appointment,
-      event,
-      rect: (event.currentTarget as HTMLElement).getBoundingClientRect(),
+    this.chipDblClicked.emit(this.chipEvent(appointment, event));
+  }
+
+  protected onMoreClick(date: Date, event: MouseEvent): void {
+    event.stopPropagation();
+    this.moreClick.emit({
+      date,
+      anchor: event.currentTarget as HTMLElement,
     });
   }
 
@@ -505,16 +669,46 @@ export class OgeSchedulerMonthView<T = unknown> {
     return schedulerGridAriaLabel(this.messages(), this.periodLabel());
   }
 
-  protected cellAriaLabel(day: Date): string {
-    return schedulerDayCellAriaLabel(this.messages(), day, this.locale());
+  protected cellAriaLabel(day: Date, weekIndex: number, dayIndex: number): string {
+    let label = schedulerDayCellAriaLabel(this.messages(), day, this.locale());
+    if (dayIndex === 0 && this.showWeekNumbers()) {
+      label = `${label}, ${
+        schedulerWeekNumberTexts(
+          schedulerWeekNumber(
+            day,
+            this.weekNumberRule(),
+            this.firstDayOfWeek(),
+            this.locale(),
+          ),
+          this.messages(),
+        ).label
+      }`;
+    }
+    return withUnavailableLabel(
+      label,
+      this.isBlocked(weekIndex, dayIndex),
+      this.messages(),
+    );
   }
 
   protected chipLabel(appointment: SchedulerAppointment<T>): string {
-    return schedulerChipAriaLabel(this.messages(), appointment, this.locale());
+    return withSelectedLabel(
+      schedulerChipAriaLabel(this.messages(), appointment, this.locale()),
+      this.isSelected(appointment),
+      this.messages(),
+    );
   }
 
   protected isCurrentMonth(day: Date): boolean {
-    return sameMonth(day, this.anchorDate());
+    if (this.intervalCount() <= 1) return sameMonth(day, this.anchorDate());
+    const anchor = this.anchorDate();
+    const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    const end = new Date(
+      anchor.getFullYear(),
+      anchor.getMonth() + this.intervalCount(),
+      1,
+    );
+    return day.getTime() >= start.getTime() && day.getTime() < end.getTime();
   }
 
   protected isToday(day: Date): boolean {
@@ -527,6 +721,10 @@ export class OgeSchedulerMonthView<T = unknown> {
 
   protected moreText(count: number): string {
     return schedulerMoreText(this.messages(), count);
+  }
+
+  protected moreAriaLabel(count: number, day: Date): string {
+    return schedulerMoreAriaLabel(this.messages(), count, day, this.locale());
   }
 
   protected readonly String = String;

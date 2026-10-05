@@ -78,6 +78,32 @@ export function findOgeSchedulerDropTarget(
   return best;
 }
 
+/**
+ * Whether a released pointer lies outside a view's rect — a chip drag
+ * released there is a drag-out, not a move. An unmeasured (zero-size) rect
+ * never counts as outside (SSR, jsdom, a hidden host).
+ */
+export function isOgeSchedulerDragOut(
+  rect: {
+    readonly left: number;
+    readonly top: number;
+    readonly right: number;
+    readonly bottom: number;
+    readonly width: number;
+    readonly height: number;
+  },
+  clientX: number,
+  clientY: number,
+): boolean {
+  if (rect.width <= 0 && rect.height <= 0) return false;
+  return (
+    clientX < rect.left ||
+    clientX > rect.right ||
+    clientY < rect.top ||
+    clientY > rect.bottom
+  );
+}
+
 /* ---------- the keyboard / single-pointer twin ---------- */
 
 let armed: OgeSchedulerDragPayload | null = null;

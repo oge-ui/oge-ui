@@ -24,15 +24,25 @@ import { OgeAnchoredPanel, OgePopup } from '@oge-ui/overlay';
 import {
   OgeSchedulerAdaptiveViewController,
   OgeSchedulerCore,
+  isSchedulerEditingTarget,
+  isTimelineView,
+  printOgeScheduler,
+  registerOgeSchedulerDropTarget,
+  schedulerShortcut,
   scrollOffsetForTime,
   type OgeSchedulerAdaptiveView,
+  type OgeSchedulerExportData,
+  type OgeSchedulerPrintOptions,
+  type ResolvedSchedulerView,
   type SchedulerCellEvent,
   type SchedulerChipEvent,
   type SchedulerEditorResult,
   type SchedulerFieldExpr,
+  type SchedulerPasteTarget,
   type SchedulerProposalEvent,
   type SchedulerRangeEvent,
   type SchedulerScopeAction,
+  type SchedulerTimelineViewType,
 } from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerMessages } from '../config';
 import { OGE_SCHEDULER_CONFIG } from '../config';
@@ -43,27 +53,43 @@ import type {
   OgeSchedulerAppointmentClickEvent,
   OgeSchedulerAppointmentDeletedEvent,
   OgeSchedulerAppointmentDeletingEvent,
+  OgeSchedulerAppointmentDroppedEvent,
   OgeSchedulerAppointmentUpdatedEvent,
   OgeSchedulerAppointmentUpdatingEvent,
   OgeSchedulerCellClickEvent,
+  OgeSchedulerConflictCheck,
+  OgeSchedulerDisabledSlots,
+  OgeSchedulerDragOutEvent,
   OgeSchedulerEditorShowingEvent,
+  OgeSchedulerGroupOrientation,
+  OgeSchedulerMoreMode,
   OgeSchedulerRangeSelectedEvent,
   OgeSchedulerReminderEvent,
   OgeSchedulerResource,
   OgeSchedulerView,
   OgeSchedulerViewOptions,
+  OgeSchedulerWeekNumberRule,
   OgeSchedulerWorkHours,
 } from '../scheduler-types';
 import { OgeSchedulerAppointmentDialog } from './appointment-dialog';
 import { OgeSchedulerAppointmentPopup } from './appointment-popup';
-import { OgeSchedulerDayWeekView } from './day-week-view';
+import {
+  OgeSchedulerDayWeekView,
+  type SchedulerDragOutRequest,
+  type SchedulerSelectRequest,
+} from './day-week-view';
 import { OgeSchedulerAgendaView } from './agenda-view';
+import { OgeSchedulerMorePopup } from './more-popup';
 import { OgeSchedulerTimelineView } from './timeline-view';
 import { OgeSchedulerYearView } from './year-view';
-import { OgeSchedulerMonthView } from './month-view';
+import {
+  OgeSchedulerMonthView,
+  type SchedulerMoreRequest,
+} from './month-view';
 import {
   OgeAppointmentTemplate,
   OgeDateHeaderTemplate,
+  OgeResourceHeaderTemplate,
   OgeSchedulerCellTemplate,
 } from './scheduler-templates';
 import { SIGNAL_ADAPTER } from './signal-adapter';
@@ -96,8 +122,13 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
     OgeSchedulerAppointmentPopup,
     OgeSchedulerDayWeekView,
     OgeSchedulerMonthView,
+    OgeSchedulerMorePopup,
   ],
-  host: { class: 'oge-scheduler', '[attr.dir]': 'hostDir()' },
+  host: {
+    class: 'oge-scheduler',
+    '[attr.dir]': 'hostDir()',
+    '(keydown)': 'onHostKeydown($event)',
+  },
   styleUrl: './scheduler.scss',
   template: `
     <div
@@ -221,13 +252,13 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
         role="group"
         [attr.aria-label]="msg().toolbar.viewSwitcherLabel"
       >
-        @for (entry of resolvedViews(); track entry.type) {
+        @for (entry of resolvedViews(); track entry.index) {
           <button
             type="button"
             class="oge-scheduler-btn oge-scheduler-view-btn"
-            [class.oge-scheduler-view-active]="entry.type === currentView()"
-            [attr.aria-pressed]="entry.type === currentView()"
-            (click)="currentView.set(entry.type)"
+            [class.oge-scheduler-view-active]="isViewActive(entry)"
+            [attr.aria-pressed]="isViewActive(entry)"
+            (click)="setView(entry)"
           >
             {{ entry.name }}
           </button>
@@ -235,7 +266,11 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
       </div>
     </div>
 
-    @switch (currentView()) {
+    @if (notice(); as text) {
+      <div class="oge-scheduler-notice" aria-hidden="true">{{ text }}</div>
+    }
+
+    @switch (viewKind()) {
       @case ('agenda') {
         <oge-scheduler-agenda-view
           [anchorDate]="currentDate()"
@@ -258,52 +293,40 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           (dayPicked)="drillIntoDay($event)"
         />
       }
-      @case ('timelineDay') {
+      @case ('timeline') {
         <oge-scheduler-timeline-view
-          view="timelineDay"
+          [view]="timelineView()"
           [anchorDate]="currentDate()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
           [weekendDays]="resolvedWeekendDays()"
+          [hiddenWeekDays]="hiddenWeekDays()"
           [dayStartHour]="activeView().dayStartHour"
           [dayEndHour]="activeView().dayEndHour"
           [cellDuration]="activeView().cellDuration"
+          [intervalCount]="activeView().intervalCount"
           [locale]="effectiveLocale()"
           [messages]="msg().grid"
-          [groupResource]="groupResource()"
-          [resourceIdOf]="groupResourceIdOf()"
+          [groupLevels]="groupLevels()"
+          [groupLeaves]="groupLeaves()"
+          [groupOrientation]="resolvedGroupOrientation()"
           [allowDragging]="canDrag()"
           [snapDuration]="snapDuration()"
           [rtl]="rtl()"
+          [workHours]="workHours()"
+          [disabledSlots]="disabledSlots()"
+          [selection]="selectedAppointments()"
+          [virtualScrolling]="virtualScrolling()"
+          [dropPreview]="dropPreview()"
+          [resourceHeaderTemplate]="resourceHeaderTemplate() ?? null"
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
           (chipDeleteRequested)="onDeleteRequested($event)"
           (moveCommitted)="onTimelineMoveCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
-        />
-      }
-      @case ('timelineWeek') {
-        <oge-scheduler-timeline-view
-          view="timelineWeek"
-          [anchorDate]="currentDate()"
-          [appointments]="visibleAppointments()"
-          [firstDayOfWeek]="resolvedFirstDayOfWeek()"
-          [weekendDays]="resolvedWeekendDays()"
-          [dayStartHour]="activeView().dayStartHour"
-          [dayEndHour]="activeView().dayEndHour"
-          [cellDuration]="activeView().cellDuration"
-          [locale]="effectiveLocale()"
-          [messages]="msg().grid"
-          [groupResource]="groupResource()"
-          [resourceIdOf]="groupResourceIdOf()"
-          [allowDragging]="canDrag()"
-          [snapDuration]="snapDuration()"
-          [rtl]="rtl()"
-          (chipClicked)="onChipClicked($event)"
-          (chipDblClicked)="onChipDblClicked($event)"
-          (chipDeleteRequested)="onDeleteRequested($event)"
-          (moveCommitted)="onTimelineMoveCommitted($event)"
-          (gestureCancelled)="onGestureCancelled()"
+          (copyRequested)="copyAppointments($event)"
+          (selectRequested)="onSelectRequested($event)"
+          (dragOut)="onDragOut($event)"
         />
       }
       @case ('month') {
@@ -313,12 +336,18 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
           [weekendDays]="resolvedWeekendDays()"
           [maxAppointmentsPerCell]="maxAppointmentsPerCell()"
+          [intervalCount]="activeView().intervalCount"
           [locale]="effectiveLocale()"
           [messages]="msg().grid"
           [periodLabel]="periodTitle()"
+          [showWeekNumbers]="showWeekNumbers()"
+          [weekNumberRule]="weekNumberRule()"
+          [disabledSlots]="disabledSlots()"
+          [selection]="selectedAppointments()"
+          [dropPreview]="dropPreview()"
           [appointmentTemplate]="appointmentTemplate() ?? null"
           [cellTemplate]="cellTemplate() ?? null"
-          (moreClick)="drillIntoDay($event)"
+          (moreClick)="onMoreClick($event)"
           (cellClicked)="onCellClicked($event)"
           (cellDblClicked)="onCellDblClicked($event)"
           (cellActivated)="onCellActivated($event)"
@@ -333,6 +362,10 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           (gestureCancelled)="onGestureCancelled()"
           (chipContextMenu)="onChipContextMenu($event)"
           (cellContextMenu)="onCellContextMenu($event)"
+          (copyRequested)="copyAppointments($event)"
+          (pasteRequested)="pasteAppointments($event)"
+          (selectRequested)="onSelectRequested($event)"
+          (dragOut)="onDragOut($event)"
         />
       }
       @default {
@@ -345,6 +378,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [dayStartHour]="activeView().dayStartHour"
           [dayEndHour]="activeView().dayEndHour"
           [cellDuration]="activeView().cellDuration"
+          [intervalCount]="activeView().intervalCount"
           [showAllDayPanel]="showAllDayPanel()"
           [showCurrentTimeIndicator]="showCurrentTimeIndicator()"
           [minAppointmentMinutes]="minAppointmentMinutes()"
@@ -354,6 +388,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [appointmentTemplate]="appointmentTemplate() ?? null"
           [cellTemplate]="cellTemplate() ?? null"
           [dateHeaderTemplate]="dateHeaderTemplate() ?? null"
+          [resourceHeaderTemplate]="resourceHeaderTemplate() ?? null"
           (cellClicked)="onCellClicked($event)"
           (cellDblClicked)="onCellDblClicked($event)"
           (cellActivated)="onCellActivated($event)"
@@ -369,8 +404,16 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [workHours]="workHours()"
           [shadeUntilCurrentTime]="shadeUntilCurrentTime()"
           [snapDuration]="snapDuration()"
-          [groupResource]="groupResource()"
-          [resourceIdOf]="groupResourceIdOf()"
+          [groupLevels]="groupLevels()"
+          [groupLeaves]="groupLeaves()"
+          [leafOf]="leafOf()"
+          [groupOrientation]="resolvedGroupOrientation()"
+          [groupByDate]="groupByDate()"
+          [showWeekNumbers]="showWeekNumbers()"
+          [weekNumberRule]="weekNumberRule()"
+          [disabledSlots]="disabledSlots()"
+          [selection]="selectedAppointments()"
+          [dropPreview]="dropPreview()"
           [rtl]="rtl()"
           (moveCommitted)="onTimelineMoveCommitted($event)"
           (resizeCommitted)="onResizeCommitted($event)"
@@ -378,9 +421,23 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           (rangeSelected)="onRangeSelected($event)"
           (chipContextMenu)="onChipContextMenu($event)"
           (cellContextMenu)="onCellContextMenu($event)"
+          (copyRequested)="copyAppointments($event)"
+          (pasteRequested)="pasteAppointments($event)"
+          (selectRequested)="onSelectRequested($event)"
+          (dragOut)="onDragOut($event)"
         />
       }
     }
+
+    <oge-scheduler-more-popup
+      [messages]="msg().grid"
+      [locale]="effectiveLocale()"
+      [day]="moreDay()"
+      [appointments]="moreAppointments()"
+      (appointmentPicked)="onMorePicked($event)"
+      (dayRequested)="drillIntoDay($event)"
+      (closed)="core.closeMore()"
+    />
 
     <oge-scheduler-appointment-popup
       [messages]="msg().popup"
@@ -559,8 +616,65 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly agendaDuration = input(7);
   /** Resource kinds appointments can be assigned to. */
   readonly resources = input<readonly OgeSchedulerResource[]>([]);
-  /** Field of the resource that groups the timeline rows (first entry). */
+  /**
+   * Resource fields grouping the views, outermost first (`['roomId',
+   * 'ownerId']` nests owners inside rooms): day/week columns or row blocks,
+   * timeline rows with group header rows.
+   */
   readonly groups = input<readonly string[]>([]);
+  /**
+   * How grouped resources lay out: `'horizontal'` side by side, or
+   * `'vertical'` stacked (day/week row blocks; the timeline default). A
+   * view option's own `groupOrientation` wins; unset = horizontal for
+   * day/week, vertical for the timelines.
+   */
+  readonly groupOrientation = input<OgeSchedulerGroupOrientation | undefined>(
+    undefined,
+  );
+  /**
+   * Horizontal day/week grouping is date-major (`true`, the default — each
+   * day split into its resources) or resource-major (`false` — each
+   * resource's days side by side).
+   */
+  readonly groupByDate = input(true);
+  /** Shows week numbers in the month rows and the day/week header corner. */
+  readonly showWeekNumbers = input(false);
+  /** Week numbering: ISO 8601 or the locale's own (first day + minimal days). */
+  readonly weekNumberRule = input<OgeSchedulerWeekNumberRule>('iso');
+  /**
+   * Non-bookable slots — a predicate `(date, resources) => boolean` or a
+   * list of (optionally recurring, per-resource) ranges: rendered hatched,
+   * refused by create / move / resize / paste / drop and announced.
+   */
+  readonly disabledSlots = input<OgeSchedulerDisabledSlots | null>(null);
+  /**
+   * Clamps timed moves, creates and drops into the target's working hours
+   * (a resource item's own `workHours` / `workDays`, else `workHours`).
+   */
+  readonly snapToWorkHours = input(false);
+  /** `false` refuses a create / move / resize that overlaps another appointment. */
+  readonly allowOverlap = input(true);
+  /**
+   * Decides overlapping changes: `(appointment, conflicts) => boolean`,
+   * `true` lets it land. Wins over `allowOverlap`.
+   */
+  readonly conflictCheck = input<OgeSchedulerConflictCheck<T> | undefined>(
+    undefined,
+  );
+  /**
+   * The selected items (two-way): Ctrl/⌘-click toggles, Shift-click extends,
+   * Ctrl+Space / Shift+Space from the keyboard. Ctrl+C copies the selection.
+   */
+  readonly selectedAppointments = model<readonly T[]>([]);
+  /** Undo steps kept for Ctrl+Z / Ctrl+Y (`0` turns undo off). */
+  readonly undoLimit = input(50);
+  /** What a month "+N more" does: open the day's list, or drill into the day view. */
+  readonly moreMode = input<OgeSchedulerMoreMode>('popup');
+  /**
+   * Timeline row virtualization: `'auto'` (more than 50 rows), `true` or
+   * `false`. Rows render at fixed heights, so the window is exact.
+   */
+  readonly virtualScrolling = input<boolean | 'auto'>('auto');
   readonly reminderExpr = input<SchedulerFieldExpr<T, unknown>>('reminder');
   /** BCP 47 locale for every `Intl` format; defaults to the browser locale. */
   readonly locale = input<string | undefined>(undefined);
@@ -653,6 +767,16 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly cellContextMenu = output<OgeSchedulerCellClickEvent>();
   /** An appointment's reminder lead time was reached (checked ~30s). */
   readonly reminderTriggered = output<OgeSchedulerReminderEvent<T>>();
+  /**
+   * An `[ogeSchedulerDraggable]` item (or another scheduler's appointment)
+   * was dropped in; the built item went through `appointmentAdding`.
+   */
+  readonly appointmentDropped = output<OgeSchedulerAppointmentDroppedEvent<T>>();
+  /**
+   * An appointment was dragged out of the scheduler and released (over
+   * another scheduler or anywhere else) — the app decides whether to remove it.
+   */
+  readonly dragOut = output<OgeSchedulerDragOutEvent<T>>();
 
   protected readonly appointmentTemplate = contentChild(
     OgeAppointmentTemplate<T>,
@@ -664,11 +788,17 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected readonly dateHeaderTemplate = contentChild(OgeDateHeaderTemplate, {
     descendants: false,
   });
+  protected readonly resourceHeaderTemplate = contentChild(
+    OgeResourceHeaderTemplate,
+    { descendants: false },
+  );
 
   private readonly popup = viewChild.required(OgeSchedulerAppointmentPopup<T>);
   private readonly dialog = viewChild.required(OgeSchedulerAppointmentDialog);
+  private readonly morePopup = viewChild.required(OgeSchedulerMorePopup<T>);
   private readonly dayWeekViewRef = viewChild(OgeSchedulerDayWeekView<T>);
   private readonly monthViewRef = viewChild(OgeSchedulerMonthView<T>);
+  private readonly timelineViewRef = viewChild(OgeSchedulerTimelineView<T>);
 
   /**
    * The shell machine (`@oge-ui/scheduler-engine`, shared with the React
@@ -683,6 +813,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     config: () => this.config,
     setCurrentDate: (date) => this.currentDate.set(date),
     setCurrentView: (view) => this.currentView.set(view),
+    setSelectedAppointments: (items) => this.selectedAppointments.set(items),
     events: {
       appointmentAdding: (event) => this.appointmentAdding.emit(event),
       appointmentAdded: (event) => this.appointmentAdded.emit(event),
@@ -700,8 +831,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
         this.appointmentContextMenu.emit(event),
       cellContextMenu: (event) => this.cellContextMenu.emit(event),
       reminderTriggered: (event) => this.reminderTriggered.emit(event),
+      appointmentDropped: (event) => this.appointmentDropped.emit(event),
+      dragOut: (event) => this.dragOut.emit(event),
     },
     surfaces: {
+      hostElement: () => this.hostEl.nativeElement,
       openPopup: (appointment, rect) => this.popup().open(appointment, rect),
       closePopup: () => this.popup().close(),
       editorItems: (editorModel) => this.dialog().defaultItems(editorModel),
@@ -741,6 +875,28 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected readonly announcement = this.core.announcement;
   protected readonly scopePending = this.core.scopePending;
   protected readonly contextMenu = this.core.contextMenu;
+  protected readonly notice = this.core.notice;
+  protected readonly groupLevels = this.core.groupLevels;
+  protected readonly groupLeaves = this.core.groupLeaves;
+  protected readonly leafOf = this.core.leafOf;
+  protected readonly resolvedGroupOrientation = this.core.groupOrientation;
+  protected readonly moreDay = this.core.moreDay;
+  protected readonly moreAppointments = this.core.moreAppointments;
+  protected readonly dropPreview = this.core.dropPreview;
+
+  /** Which view component renders the active view. */
+  protected readonly viewKind = computed<
+    'agenda' | 'year' | 'timeline' | 'month' | 'dayWeek'
+  >(() => {
+    const view = this.currentView();
+    if (view === 'agenda' || view === 'year' || view === 'month') return view;
+    return isTimelineView(view) ? 'timeline' : 'dayWeek';
+  });
+
+  protected readonly timelineView = computed<SchedulerTimelineViewType>(() => {
+    const view = this.currentView();
+    return isTimelineView(view) ? view : 'timelineDay';
+  });
 
   constructor() {
     effect(() => {
@@ -782,6 +938,16 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       );
       this.destroyRef.onDestroy(stopDirection);
       adaptive.update(host.clientWidth);
+      // drag-in target: external draggables and other schedulers drop here
+      const unregister = registerOgeSchedulerDropTarget({
+        element: host,
+        resolve: (clientX, clientY) => this.dropSlotAt(clientX, clientY),
+        over: (slot, payload) =>
+          untracked(() => this.core.onExternalOver(slot, payload)),
+        drop: (payload, slot) =>
+          untracked(() => this.core.onExternalDrop(payload, slot)),
+      });
+      this.destroyRef.onDestroy(unregister);
       if (typeof ResizeObserver === 'undefined') return;
       const observer = new ResizeObserver(() =>
         adaptive.update(host.clientWidth),
@@ -928,6 +1094,138 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   /** Deletes the appointment rendered from `item` (guarded + evented). */
   protected deleteBySource(item: T): void {
     this.core.deleteBySource(item);
+  }
+
+  /* ---------- G3 plumbing ---------- */
+
+  /** Whether a switcher entry is the active view (`aria-pressed`). */
+  protected isViewActive(entry: ResolvedSchedulerView): boolean {
+    return this.core.isViewActive(entry);
+  }
+
+  /** A switcher press: entries sharing a type are told apart by index. */
+  protected setView(entry: ResolvedSchedulerView): void {
+    untracked(() => this.core.setView(entry.type, entry.index));
+  }
+
+  /** Host-level Ctrl/⌘+Z undo and Ctrl/⌘+Y / Ctrl/⌘+Shift+Z redo. */
+  protected onHostKeydown(event: KeyboardEvent): void {
+    const shortcut = schedulerShortcut(
+      event,
+      isSchedulerEditingTarget(event.target),
+    );
+    if (shortcut !== 'undo' && shortcut !== 'redo') return;
+    event.preventDefault();
+    untracked(() => this.core.onShortcut(shortcut));
+  }
+
+  protected onMoreClick(request: SchedulerMoreRequest): void {
+    untracked(() => this.core.onMoreRequested(request.date));
+    if (this.core.moreDay() !== null) this.morePopup().open(request.anchor);
+  }
+
+  protected onMorePicked(event: {
+    appointment: OgeSchedulerAppointment<T>;
+    rect: DOMRect;
+    event: MouseEvent;
+  }): void {
+    this.core.closeMore();
+    this.core.onChipActivated({
+      appointment: event.appointment,
+      event: event.event,
+      rect: event.rect,
+    });
+  }
+
+  protected onSelectRequested(request: SchedulerSelectRequest<T>): void {
+    untracked(() =>
+      this.core.selectAppointment(
+        request.appointment,
+        request.gesture,
+        request.order,
+      ),
+    );
+  }
+
+  protected onDragOut(request: SchedulerDragOutRequest<T>): void {
+    untracked(() =>
+      this.core.onDragOut(request.appointment, request.clientX, request.clientY),
+    );
+  }
+
+  /** The active view's slot under a viewport point (drag-in hit test). */
+  private dropSlotAt(clientX: number, clientY: number) {
+    switch (this.viewKind()) {
+      case 'month':
+        return this.monthViewRef()?.dropSlotAt(clientX, clientY) ?? null;
+      case 'timeline':
+        return this.timelineViewRef()?.dropSlotAt(clientX, clientY) ?? null;
+      case 'dayWeek':
+        return this.dayWeekViewRef()?.dropSlotAt(clientX, clientY) ?? null;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Copies the selection — or `appointment` when it is not part of it — to
+   * the scheduler clipboard (what Ctrl+C on a chip does). Returns the count.
+   */
+  copyAppointments(appointment: OgeSchedulerAppointment<T> | null = null): number {
+    return untracked(() => this.core.copyAppointments(appointment));
+  }
+
+  /**
+   * Pastes the clipboard so its earliest appointment starts at
+   * `target.date` (what Ctrl+V on a cell does), through the guarded insert
+   * pipeline, as one undo step. Returns the count pasted.
+   */
+  pasteAppointments(target: SchedulerPasteTarget): number {
+    return untracked(() => this.core.paste(target));
+  }
+
+  /** Empties `selectedAppointments`. */
+  clearSelection(): void {
+    untracked(() => this.core.clearSelection());
+  }
+
+  /** Reverts the last scheduler edit (Ctrl+Z); `false` when there is none. */
+  undo(): boolean {
+    return untracked(() => this.core.undo());
+  }
+
+  /** Re-applies the last undone edit (Ctrl+Y); `false` when there is none. */
+  redo(): boolean {
+    return untracked(() => this.core.redo());
+  }
+
+  /** Whether `undo()` has a step to revert. */
+  canUndo(): boolean {
+    return this.core.canUndo();
+  }
+
+  /** Whether `redo()` has a step to re-apply. */
+  canRedo(): boolean {
+    return this.core.canRedo();
+  }
+
+  /**
+   * The export model — every appointment (series unexpanded) plus the
+   * expanded rows of `range` (default: the visible period) — what the
+   * `/export-ical`, `/export-pdf` and `/export-excel` entries consume.
+   */
+  getExportData(range?: {
+    readonly startDate: Date;
+    readonly endDate: Date;
+  }): OgeSchedulerExportData<T> {
+    return untracked(() => this.core.getExportData(range));
+  }
+
+  /** Prints the current view (a hidden frame + the browser's print dialog). */
+  print(options: OgeSchedulerPrintOptions = {}): Promise<void> {
+    return printOgeScheduler(this.hostEl.nativeElement, {
+      title: options.title ?? untracked(() => this.periodTitle()),
+    });
   }
 
   /* ---------- imperative API ---------- */

@@ -1,6 +1,45 @@
 import { Directive, TemplateRef, inject } from '@angular/core';
 import type { SchedulerAppointment } from '@oge-ui/scheduler-engine';
-import type { OgeSchedulerView } from '../scheduler-types';
+import type {
+  OgeSchedulerResource,
+  OgeSchedulerResourceItem,
+  OgeSchedulerView,
+} from '../scheduler-types';
+
+export interface OgeResourceHeaderTemplateContext {
+  /** The resource item heading the column / row (`let item`). */
+  $implicit: OgeSchedulerResourceItem;
+  /** The resource kind the item belongs to. */
+  resource: OgeSchedulerResource;
+  /** Nesting level (0 = outermost `groups` entry). */
+  level: number;
+  view: OgeSchedulerView;
+}
+
+/**
+ * Structural directive replacing the grouped resource headers — the day /
+ * week column headers, the timeline row heads and group rows (dx
+ * `resourceCellTemplate` parity):
+ *
+ * ```html
+ * <oge-scheduler [groups]="['roomId']" [resources]="rooms">
+ *   <ng-template ogeResourceHeaderTemplate let-item>
+ *     <img [src]="item.avatar" alt="" /> {{ item.text }}
+ *   </ng-template>
+ * </oge-scheduler>
+ * ```
+ */
+@Directive({ selector: '[ogeResourceHeaderTemplate]' })
+export class OgeResourceHeaderTemplate {
+  readonly templateRef = inject(TemplateRef<OgeResourceHeaderTemplateContext>);
+
+  static ngTemplateContextGuard(
+    _dir: OgeResourceHeaderTemplate,
+    _ctx: unknown,
+  ): _ctx is OgeResourceHeaderTemplateContext {
+    return true;
+  }
+}
 
 export interface OgeAppointmentTemplateContext<T = unknown> {
   /** The normalized appointment (`let appointment`). */

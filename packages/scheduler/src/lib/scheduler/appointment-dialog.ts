@@ -11,7 +11,9 @@ import {
 import { OgeModal, OgeModalFooter } from '@oge-ui/overlay';
 import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
 import {
+  OGE_DEFAULT_SCHEDULER_MESSAGES,
   buildSchedulerEditorItems,
+  schedulerRecurrenceSummary,
   type SchedulerEditorModel,
   type SchedulerEditorResult,
 } from '@oge-ui/scheduler-engine';
@@ -43,6 +45,15 @@ import type { OgeSchedulerResource } from '../scheduler-types';
           [colCount]="2"
           labelLocation="top"
         />
+        @if (summary(); as text) {
+          <p
+            class="oge-scheduler-recurrence-summary"
+            aria-live="polite"
+            [attr.aria-label]="summaryLabel()"
+          >
+            {{ text }}
+          </p>
+        }
       }
       <div *ogeModalFooter class="oge-scheduler-editor-footer">
         <button type="button" class="oge-scheduler-btn" (click)="cancel()">
@@ -93,6 +104,20 @@ export class OgeSchedulerAppointmentDialog {
 
   protected readonly items = computed<readonly OgeFormItemData[]>(
     () => this.customItems() ?? this.defaultItems(),
+  );
+
+  /** The live recurrence summary ("Every 2 weeks on Monday, 10 times"). */
+  protected readonly summary = computed(() => {
+    const model = this.model();
+    return model === null
+      ? ''
+      : schedulerRecurrenceSummary(model, this.messages(), this.locale());
+  });
+
+  protected readonly summaryLabel = computed(
+    () =>
+      this.messages().summaryLabel ??
+      OGE_DEFAULT_SCHEDULER_MESSAGES.editor.summaryLabel,
   );
 
   /** Opens the editor with `model`; `items` replaces the default form. */

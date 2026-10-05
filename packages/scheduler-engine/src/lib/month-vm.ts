@@ -9,7 +9,9 @@ import {
   sameDay,
   startOfDay,
 } from '@oge-ui/core';
+import { isDayBlocked } from './availability';
 import type { OgeSchedulerGridMessages } from './config';
+import type { OgeSchedulerDisabledSlots } from './scheduler-types';
 import type { LaneLayout } from './lanes';
 import { buildMonthWeekLanes } from './month-layout';
 import type { SchedulerAppointment } from './scheduler-model';
@@ -207,6 +209,25 @@ export function appointmentsOnDay<T>(
         Number(b.displayAllDay) - Number(a.displayAllDay) ||
         a.startDate.getTime() - b.startDate.getTime(),
     );
+}
+
+/**
+ * The fully blocked days of a month grid (`disabledSlots`), keyed
+ * `week:day` — rendered hatched, refused for create / drop. Ungrouped, so
+ * a range limited to one resource does not block a month cell.
+ */
+export function monthBlockedDays(
+  weeks: readonly (readonly Date[])[],
+  disabled: OgeSchedulerDisabledSlots | null | undefined,
+): ReadonlySet<string> {
+  const blocked = new Set<string>();
+  if (disabled === null || disabled === undefined) return blocked;
+  weeks.forEach((week, weekIndex) =>
+    week.forEach((day, dayIndex) => {
+      if (isDayBlocked(disabled, day, {})) blocked.add(`${weekIndex}:${dayIndex}`);
+    }),
+  );
+  return blocked;
 }
 
 /**
