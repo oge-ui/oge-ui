@@ -195,7 +195,10 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
             {{ core.msg().grid.baselineNone }}
           </option>
           @for (index of baselineOptions(); track index) {
-            <option [value]="index" [selected]="index === core.activeBaseline()">
+            <option
+              [value]="index"
+              [selected]="index === core.activeBaseline()"
+            >
               {{ baselineLabel(index) }}
             </option>
           }
@@ -660,11 +663,16 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                       "
                       [attr.d]="arrow.path"
                       (click)="core.onArrowClick(arrow.dependency, $event)"
-                      (dblclick)="core.onArrowDblClick(arrow.dependency, $event)"
+                      (dblclick)="
+                        core.onArrowDblClick(arrow.dependency, $event)
+                      "
                     />
                   }
                   @if (core.progressLine(); as line) {
-                    <path class="oge-gantt-progress-line" [attr.d]="line.path" />
+                    <path
+                      class="oge-gantt-progress-line"
+                      [attr.d]="line.path"
+                    />
                   }
                   @if (core.linkPreview(); as preview) {
                     <path
@@ -751,7 +759,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                     <div
                       class="oge-gantt-summary oge-gantt-target"
                       [class.oge-gantt-critical]="bar.critical"
-                      [class.oge-gantt-summary-group]="core.isGroupRow(bar.task)"
+                      [class.oge-gantt-summary-group]="
+                        core.isGroupRow(bar.task)
+                      "
                       [style.inset-inline-start.px]="bar.leftPx"
                       [style.width.px]="bar.widthPx"
                       [style.background-color]="bar.task.color ?? null"
@@ -779,7 +789,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                       [style.inset-inline-start.px]="bar.leftPx"
                       [style.width.px]="bar.widthPx"
                       [style.background-color]="
-                        bar.segments.length > 1 ? null : (bar.task.color ?? null)
+                        bar.segments.length > 1
+                          ? null
+                          : (bar.task.color ?? null)
                       "
                       [style.color]="core.barForeground(bar.task)"
                       [attr.data-task-key]="String(bar.task.key)"
@@ -789,7 +801,10 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                       (mouseleave)="core.tooltipKey.set(null)"
                     >
                       @if (bar.segments.length > 1) {
-                        <div class="oge-gantt-split-link" aria-hidden="true"></div>
+                        <div
+                          class="oge-gantt-split-link"
+                          aria-hidden="true"
+                        ></div>
                         @for (segment of bar.segments; track segment.offsetPx) {
                           <div
                             class="oge-gantt-segment"
@@ -971,9 +986,11 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                     role="img"
                     [attr.aria-label]="row.label"
                   >
-                    <span class="oge-gantt-histogram-label" aria-hidden="true">{{
-                      row.text
-                    }}</span>
+                    <span
+                      class="oge-gantt-histogram-label"
+                      aria-hidden="true"
+                      >{{ row.text }}</span
+                    >
                     <div
                       class="oge-gantt-histogram-capacity"
                       [style.bottom.%]="row.capacityPct"
@@ -1014,7 +1031,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           <span>{{ core.msg().dependencyEditor.typeLabel }}</span>
           <select
             class="oge-gantt-select"
-            (change)="core.dependencyEditorChange({ type: $any($event.target).value })"
+            (change)="
+              core.dependencyEditorChange({ type: $any($event.target).value })
+            "
           >
             @for (type of core.dependencyTypes; track type) {
               <option [value]="type" [selected]="type === editor.type">
@@ -1030,7 +1049,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
             class="oge-gantt-dep-editor-input"
             step="0.5"
             [value]="editor.lag"
-            (input)="core.dependencyEditorChange({ lag: +$any($event.target).value })"
+            (input)="
+              core.dependencyEditorChange({ lag: +$any($event.target).value })
+            "
           />
         </label>
         <label class="oge-gantt-dep-editor-field">
@@ -1198,7 +1219,8 @@ export class OgeGantt<
   readonly dependencyLagUnitExpr = input<GanttFieldExpr<D>>('lagUnit');
 
   /** `true` = auto-scheduling never moves the task (MS Project manual mode). */
-  readonly manuallyScheduledExpr = input<GanttFieldExpr<T>>('manuallyScheduled');
+  readonly manuallyScheduledExpr =
+    input<GanttFieldExpr<T>>('manuallyScheduled');
   /** `'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO'`. */
   readonly constraintTypeExpr = input<GanttFieldExpr<T>>('constraintType');
   readonly constraintDateExpr = input<GanttFieldExpr<T>>('constraintDate');

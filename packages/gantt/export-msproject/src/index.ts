@@ -38,10 +38,7 @@ export {
 export function exportGanttToMsProject<
   T extends object,
   D extends object = Record<string, unknown>,
->(
-  gantt: OgeGantt<T, D>,
-  options: OgeGanttMsProjectExportOptions = {},
-): string {
+>(gantt: OgeGantt<T, D>, options: OgeGanttMsProjectExportOptions = {}): string {
   const xml = buildGanttMsProjectXml(gantt.getExportData(), options);
   if (options.download !== false) {
     downloadMsProjectXml(xml, options.filename ?? 'project.xml');

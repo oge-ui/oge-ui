@@ -23,10 +23,7 @@ import type {
   GanttTask,
 } from './gantt-model';
 import { GANTT_CONSTRAINT_TYPES } from './gantt-model';
-import {
-  workingDaysBetween,
-  type GanttWorkCalendar,
-} from './work-calendar';
+import { workingDaysBetween, type GanttWorkCalendar } from './work-calendar';
 
 /* ---------------- a minimal XML tree ---------------- */
 
@@ -47,18 +44,21 @@ const ENTITIES: Readonly<Record<string, string>> = {
 };
 
 function decodeEntities(text: string): string {
-  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, body: string) => {
-    if (body[0] === '#') {
-      const code =
-        body[1] === 'x' || body[1] === 'X'
-          ? parseInt(body.slice(2), 16)
-          : parseInt(body.slice(1), 10);
-      return Number.isFinite(code) && code > 0 && code <= 0x10ffff
-        ? String.fromCodePoint(code)
-        : '';
-    }
-    return ENTITIES[body] ?? match;
-  });
+  return text.replace(
+    /&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,
+    (match, body: string) => {
+      if (body[0] === '#') {
+        const code =
+          body[1] === 'x' || body[1] === 'X'
+            ? parseInt(body.slice(2), 16)
+            : parseInt(body.slice(1), 10);
+        return Number.isFinite(code) && code > 0 && code <= 0x10ffff
+          ? String.fromCodePoint(code)
+          : '';
+      }
+      return ENTITIES[body] ?? match;
+    },
+  );
 }
 
 function localName(name: string): string {
@@ -139,7 +139,9 @@ export function parseMsXml(xml: string): MsXmlElement {
       const rest = body.slice(nameMatch[0].length);
       let attr: RegExpExecArray | null;
       while ((attr = attrPattern.exec(rest)) !== null) {
-        attributes[localName(attr[1])] = decodeEntities(attr[3] ?? attr[4] ?? '');
+        attributes[localName(attr[1])] = decodeEntities(
+          attr[3] ?? attr[4] ?? '',
+        );
       }
       const element: MsXmlElement = {
         name: localName(nameMatch[1]),
@@ -217,7 +219,12 @@ const atMidnight = (date: Date): boolean =>
 /** A suite start → MS Project start (midnight → 08:00). */
 function exportStart(date: Date): Date {
   return atMidnight(date)
-    ? new Date(date.getFullYear(), date.getMonth(), date.getDate(), WORK_START_HOUR)
+    ? new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        WORK_START_HOUR,
+      )
     : date;
 }
 
@@ -225,7 +232,12 @@ function exportStart(date: Date): Date {
 function exportFinish(start: Date, end: Date): Date {
   if (end.getTime() === start.getTime()) return exportStart(start);
   return atMidnight(end)
-    ? new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1, WORK_END_HOUR)
+    ? new Date(
+        end.getFullYear(),
+        end.getMonth(),
+        end.getDate() - 1,
+        WORK_END_HOUR,
+      )
     : end;
 }
 
@@ -273,7 +285,10 @@ function formatDuration(hours: number): string {
 const LINK_TYPES: readonly GanttDependencyType[] = ['FF', 'FS', 'SF', 'SS'];
 
 /** Lag formats: tenths of a minute per unit, and our unit. */
-function lagFromMs(linkLag: number, format: number | undefined): {
+function lagFromMs(
+  linkLag: number,
+  format: number | undefined,
+): {
   lag: number;
   lagUnit: GanttLagUnit;
 } {
@@ -295,19 +310,21 @@ function lagFromMs(linkLag: number, format: number | undefined): {
 }
 
 function escapeXml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    .split('')
-    // XML 1.0 forbids C0 controls other than tab / LF / CR, even escaped
-    .filter((char) => {
-      const code = char.charCodeAt(0);
-      return code >= 0x20 || code === 0x09 || code === 0x0a || code === 0x0d;
-    })
-    .join('');
+  return (
+    text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;')
+      .split('')
+      // XML 1.0 forbids C0 controls other than tab / LF / CR, even escaped
+      .filter((char) => {
+        const code = char.charCodeAt(0);
+        return code >= 0x20 || code === 0x09 || code === 0x0a || code === 0x0d;
+      })
+      .join('')
+  );
 }
 
 /* ---------------- write ---------------- */
@@ -366,7 +383,9 @@ export function buildMsProjectXml(
         ? workingDaysBetween(task.start, task.end, calendar)
         : Math.max(
             1,
-            Math.round((task.end.getTime() - task.start.getTime()) / 86_400_000),
+            Math.round(
+              (task.end.getTime() - task.start.getTime()) / 86_400_000,
+            ),
           );
     return days * (MINUTES_PER_DAY / 60);
   };
@@ -422,7 +441,11 @@ export function buildMsProjectXml(
     );
   }
   for (const holiday of calendar?.holidays ?? []) {
-    const from = new Date(holiday.getFullYear(), holiday.getMonth(), holiday.getDate());
+    const from = new Date(
+      holiday.getFullYear(),
+      holiday.getMonth(),
+      holiday.getDate(),
+    );
     const to = new Date(
       holiday.getFullYear(),
       holiday.getMonth(),
@@ -457,7 +480,10 @@ export function buildMsProjectXml(
       tag('Milestone', task.isMilestone ? 1 : 0),
       tag('Summary', task.isSummary ? 1 : 0),
       tag('PercentComplete', Math.round(task.progress)),
-      tag('ConstraintType', GANTT_CONSTRAINT_TYPES.indexOf(task.constraintType)),
+      tag(
+        'ConstraintType',
+        GANTT_CONSTRAINT_TYPES.indexOf(task.constraintType),
+      ),
       task.constraintDate !== undefined
         ? tag('ConstraintDate', formatLocal(exportStart(task.constraintDate)))
         : '',
@@ -496,7 +522,10 @@ export function buildMsProjectXml(
         '<Baseline>' +
           tag('Number', number) +
           tag('Start', formatLocal(exportStart(baseline.start))) +
-          tag('Finish', formatLocal(exportFinish(baseline.start, baseline.end))) +
+          tag(
+            'Finish',
+            formatLocal(exportFinish(baseline.start, baseline.end)),
+          ) +
           '</Baseline>',
       );
     });
@@ -686,7 +715,10 @@ export function parseMsProjectXml(xml: string): MsProjectImportResult {
       title: textOf(node, 'Name') ?? '',
       start: itemStart,
       end: itemEnd.getTime() < itemStart.getTime() ? itemStart : itemEnd,
-      progress: Math.min(100, Math.max(0, numberOf(node, 'PercentComplete') ?? 0)),
+      progress: Math.min(
+        100,
+        Math.max(0, numberOf(node, 'PercentComplete') ?? 0),
+      ),
     };
     if (numberOf(node, 'Manual') === 1) item.manuallyScheduled = true;
     const constraint = numberOf(node, 'ConstraintType');
@@ -757,7 +789,9 @@ export function parseMsProjectXml(xml: string): MsProjectImportResult {
 
   const resources: MsProjectResourceItem[] = [];
   const resourceList = child(project, 'Resources');
-  for (const node of resourceList ? childrenNamed(resourceList, 'Resource') : []) {
+  for (const node of resourceList
+    ? childrenNamed(resourceList, 'Resource')
+    : []) {
     const id = numberOf(node, 'UID');
     if (id === undefined || id <= 0) continue;
     if (numberOf(node, 'IsNull') === 1) continue;

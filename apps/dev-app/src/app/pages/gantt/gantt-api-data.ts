@@ -59,6 +59,55 @@ export const OGE_GANTT_API: ApiSections = {
           description:
             "The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape: array stores stay arrays, scalar stores stay scalar while at most one id is assigned.",
         },
+        {
+          name: 'dependencyLagExpr / dependencyLagUnitExpr',
+          type: 'string | ((item: D) =&gt; unknown)',
+          default: "'lag' / 'lagUnit'",
+          description:
+            "Link <strong>lag / lead</strong>: an amount (negative = lead) and its unit, <code>'days'</code> (working days on a <code>workCalendar</code>) or <code>'hours'</code>. Drawn as a <code>+2d</code> badge on the arrow, honoured by auto-scheduling for all four link types, edited in the dependency editor (double-click an arrow, or Enter on a clicked one) and in the <code>predecessors</code> column (<code>3FS+2d</code>).",
+        },
+        {
+          name: 'manuallyScheduledExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'manuallyScheduled'",
+          description:
+            'Per-task scheduling mode \u2014 <code>true</code> pins the task: auto-scheduling never moves it, and a link it breaks is reported as a <code>dependency</code> conflict. Bars draw a hatched pattern.',
+        },
+        {
+          name: 'constraintTypeExpr / constraintDateExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'constraintType' / 'constraintDate'",
+          description:
+            "Task constraint (MS Project vocabulary): <code>'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO'</code> and its date. SNET/FNET set a floor, MSO/MFO pin the task, SNLT/FNLT cap it; links win over SNLT/FNLT/MSO and the violation is reported. ALAP slides the task as late as its successors allow (backward pass). A dated type without a date reads as ASAP.",
+        },
+        {
+          name: 'deadlineExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'deadline'",
+          description:
+            'Target finish: a flag marker on the bar row, an <em>overdue</em> state (and a <code>deadline</code> conflict) when the task ends later.',
+        },
+        {
+          name: 'segmentsExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'segments'",
+          description:
+            "Split tasks: <code>[{ start, end }, \u2026]</code> \u2014 two or more pieces draw as separate bars joined by a dotted line; the task spans its pieces. Moving drags every piece; resizing moves the first piece's start or the last piece's end.",
+        },
+        {
+          name: 'baselinesExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'baselines'",
+          description:
+            'Several baselines: <code>[{ start, end }, \u2026]</code>, index = baseline number \u2212 1. Wins over <code>baselineStartExpr</code>/<code>baselineEndExpr</code> (which remain baseline 1). The toolbar shows a chooser when a task carries more than one.',
+        },
+        {
+          name: 'unitsExpr / effortExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'units' / 'effort'",
+          description:
+            'Assignment <strong>units</strong> in % (a number for every assigned resource, an array aligned with the resource ids, or an id-keyed map; default 100) and work in hours (<code>effortDriven</code>).',
+        },
       ],
     },
     {
@@ -66,7 +115,7 @@ export const OGE_GANTT_API: ApiSections = {
       entries: [
         {
           name: 'scaleType',
-          type: "'hours' | 'days' | 'weeks' | 'months'",
+          type: "'hours' | 'days' | 'weeks' | 'months' | 'quarters' | 'years'",
           default: "'days'",
           description:
             'Timeline scale — calendar-true ticks (real month lengths, DST-safe). Two-way (<code>[(scaleType)]</code>); the toolbar zoom and Ctrl+wheel write it.',
@@ -82,7 +131,7 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'readonly OgeGanttColumn[]',
           default: 'title / start / end / duration',
           description:
-            'Task-list columns: built-in fields (<code>title</code>, <code>start</code>, <code>end</code>, <code>duration</code>, <code>progress</code>) or any data field, with optional <code>header</code>, <code>widthPx</code> and <code>format</code>.',
+            'Task-list columns: built-in fields (<code>title</code>, <code>start</code>, <code>end</code>, <code>duration</code>, <code>progress</code>, <code>wbs</code>, <code>predecessors</code>, <code>totalSlack</code>, <code>freeSlack</code>, <code>constraint</code>, <code>deadline</code>, <code>resources</code>, <code>units</code>, <code>effort</code>) or any data field, with optional <code>header</code>, <code>widthPx</code>, <code>format</code>, <code>editor</code> (<code>false</code> = read-only), <code>allowSorting</code> and <code>frozen</code> (pinned to the start edge, frozen columns lead).',
         },
         {
           name: 'taskListWidth',
@@ -144,13 +193,6 @@ export const OGE_GANTT_API: ApiSections = {
             'Vertical markers: <code>{ start, end?, label?, color? }</code> — a line without <code>end</code>, a shaded range with it (dx parity).',
         },
         {
-          name: 'autoScheduling',
-          type: 'boolean',
-          default: 'false',
-          description:
-            'Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier).',
-        },
-        {
           name: 'locale',
           type: 'string | undefined',
           description:
@@ -176,6 +218,126 @@ export const OGE_GANTT_API: ApiSections = {
           default: 'null',
           description:
             'The selected task. Two-way (<code>[(selectedTaskKey)]</code>).',
+        },
+      ],
+    },
+    {
+      title: 'Scheduling',
+      entries: [
+        {
+          name: 'autoScheduling',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Project-level auto-scheduling: after every edit the engine places each auto-scheduled task at the earliest date its links (with lag) and constraint allow \u2014 <strong>moving tasks earlier as well as later</strong> \u2014 then slides ALAP tasks late (backward pass). Manually scheduled tasks stay put. <code>scheduleProject()</code> runs it on demand.',
+        },
+        {
+          name: 'projectStart',
+          type: 'Date | null',
+          default: 'null',
+          description:
+            'Where unlinked ASAP tasks start while auto-scheduling; <code>null</code> keeps their current start (only links and constraints move a task).',
+        },
+        {
+          name: 'baselineIndex',
+          type: 'number',
+          default: '0',
+          description:
+            'Which baseline renders (0-based); <code>-1</code> hides baselines. Two-way (<code>[(baselineIndex)]</code>); the toolbar chooser writes it.',
+        },
+        {
+          name: 'showProgressLine / statusDate',
+          type: 'boolean / Date | null',
+          default: 'false / null',
+          description:
+            "The progress line: a zig-zag through every visible row from the status date to the point each started task's progress has reached (status date default: today).",
+        },
+        {
+          name: 'showRollups',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Draws every child milestone onto its summary bar (useful when the summary is collapsed).',
+        },
+        {
+          name: 'zoomPresets',
+          type: 'readonly OgeGanttZoomPreset[] | null',
+          default: 'null',
+          description:
+            "The toolbar's scale chooser: <code>{ scaleType, tickWidth?, label? }</code> entries; <code>null</code> lists one per scale (hours \u2026 years).",
+        },
+      ],
+    },
+    {
+      title: 'Task list',
+      entries: [
+        {
+          name: 'inlineEditing',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Edits task-list cells in place: double-click a cell or press <strong>F2</strong> on a row; Enter commits, Escape cancels, Tab / Shift+Tab commit and move along the row. Text, date, number, duration (days) and predecessor (<code>3FS+2d, 5SS</code>) editors; summaries keep their rolled-up dates read-only. Every commit is one undoable update through the cancelable pipeline.',
+        },
+        {
+          name: 'allowSorting',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Header click / Enter sorts (ascending \u2192 descending \u2192 off) \u2014 siblings within each parent, WBS numbers keep the store order. <code>aria-sort</code> on the header.',
+        },
+        {
+          name: 'allowColumnResizing / allowColumnReordering',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Header edge drag or <strong>Alt+Left/Right</strong> (Shift: 1px) resizes a column; header drag or <strong>Ctrl+Shift+Left/Right</strong> moves it. Headers become one roving tab stop (Left/Right between them, Down into the rows).',
+        },
+        {
+          name: 'filterRow / searchPanel',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A filter row under the headers (per column) and a toolbar search box (any column): fold-insensitive \u201ccontains\u201d on the cell text; matches keep their ancestors and open collapsed summaries.',
+        },
+        {
+          name: 'selectionMode',
+          type: "'single' | 'multiple'",
+          default: "'single'",
+          description:
+            "<code>'multiple'</code>: Ctrl/Cmd-click toggles, Shift-click and Shift+Up/Down extend, Ctrl+Space toggles, Ctrl+A selects all; Delete, Alt+Shift+Left/Right and the context menu act on the whole selection as <strong>one undo step</strong>.",
+        },
+        {
+          name: 'selectedTaskKeys',
+          type: 'readonly RowKey[]',
+          default: '[]',
+          description:
+            'Every selected key in multiple mode (the primary row is <code>selectedTaskKey</code>). Two-way (<code>[(selectedTaskKeys)]</code>).',
+        },
+      ],
+    },
+    {
+      title: 'Resources & views',
+      entries: [
+        {
+          name: 'effortDriven / hoursPerDay',
+          type: 'boolean / number',
+          default: 'false / 8',
+          description:
+            "Effort-driven scheduling: changing a task's resources, units or work recomputes its finish as <code>work \u00f7 (hoursPerDay \u00d7 \u03a3 units)</code> in working days.",
+        },
+        {
+          name: 'showResourceHistogram',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Per-resource utilization rows under the chart: one bar per timeline period (units \u00d7 overlap), a dashed capacity line (<code>OgeGanttResource.capacity</code>, default 100%), over-allocated periods in the danger colour; each row's accessible name summarizes the peak and the periods over capacity.",
+        },
+        {
+          name: 'viewMode',
+          type: "'tasks' | 'resources'",
+          default: "'tasks'",
+          description:
+            "<code>'resources'</code> regroups the rows by resource (an <em>Unassigned</em> group last); assignment rows edit the real task. The toolbar toggle (shown when <code>resources</code> exist) writes the two-way model.",
         },
       ],
     },
@@ -215,10 +377,10 @@ export const OGE_GANTT_API: ApiSections = {
             'Programmatic CRUD through the same cancelable pipelines as interactive editing — one undo step each.',
         },
         {
-          name: 'insertDependency(predecessorData, successorData, type?) / deleteDependency(dependencyData)',
+          name: 'insertDependency(predecessorKey, successorKey, type?, options?) / deleteDependency(dependencyData)',
           type: 'void',
           description:
-            'Guarded link CRUD; inserting runs the same cycle check as interactive drawing.',
+            'Guarded link CRUD; inserting runs the same cycle check as interactive drawing and takes an optional <code>{ lag, lagUnit }</code>.',
         },
         {
           name: 'undo() / redo()',
@@ -230,7 +392,7 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'zoomIn() / zoomOut() / zoomToFit()',
           type: 'void',
           description:
-            'Steps the scale (hours ⇄ days ⇄ weeks ⇄ months) / picks the scale that fits the whole plan and scrolls to it.',
+            'Steps the scale (hours ⇄ days ⇄ weeks ⇄ months ⇄ quarters ⇄ years) / picks the scale that fits the whole plan and scrolls to it.',
         },
         {
           name: 'scrollToDate(date)',
@@ -269,6 +431,70 @@ export const OGE_GANTT_API: ApiSections = {
       ],
     },
     {
+      title: 'Scheduling, task list & selection',
+      entries: [
+        {
+          name: 'scheduleProject()',
+          type: 'void',
+          description:
+            'Runs the scheduling engine now \u2014 even with <code>autoScheduling</code> off \u2014 as one undo step.',
+        },
+        {
+          name: 'updateDependency(dependencyData, patch)',
+          type: 'void',
+          description:
+            "Updates a link's fields (type, lag, lag unit\u2026) through the cancelable <code>dependencyUpdating</code> pipeline; auto-scheduling re-runs.",
+        },
+        {
+          name: 'getTaskSlack(key)',
+          type: 'OgeGanttSlack | null',
+          description:
+            'Total and free slack of a leaf task in days (working days on a calendar) \u2014 also the <code>totalSlack</code> / <code>freeSlack</code> columns.',
+        },
+        {
+          name: 'setBaseline(index?)',
+          type: 'void',
+          description:
+            "Saves every leaf task's current dates as baseline <code>index</code> (0-based, default 0) \u2014 MS Project \u201cSet Baseline\u201d, one undo step.",
+        },
+        {
+          name: 'applyZoomPreset(index)',
+          type: 'void',
+          description: 'Applies a zoom preset (scale + tick width) by index.',
+        },
+        {
+          name: 'sortBy(field, direction?) / setFilter(field, text) / setSearchText(text) / clearFilters()',
+          type: 'void',
+          description:
+            'Programmatic sort (<code>null</code> clears), filter-row text and search.',
+        },
+        {
+          name: 'setColumnWidth(field, widthPx) / moveColumn(field, toIndex)',
+          type: 'void',
+          description:
+            'Column width (clamped 40\u2013600px) and order \u2014 the same paths as the header gestures, with their events.',
+        },
+        {
+          name: 'editCell(task, field?)',
+          type: 'boolean',
+          description:
+            'Opens the inline editor on a cell (unset field = the first editable one); <code>false</code> when the cell is read-only.',
+        },
+        {
+          name: 'getSelectedTasks() / selectAll() / clearSelection()',
+          type: 'OgeGanttTask&lt;T&gt;[] / void',
+          description:
+            'The multi-selection in tree order, select every visible task, clear.',
+        },
+        {
+          name: 'deleteTasks(items) / indentTasks(tasks) / outdentTasks(tasks)',
+          type: 'void',
+          description:
+            'Bulk edits \u2014 each one undo step and one plural announcement.',
+        },
+      ],
+    },
+    {
       title: 'Export entry points (lazy, optional peers)',
       entries: [
         {
@@ -288,6 +514,12 @@ export const OGE_GANTT_API: ApiSections = {
           type: '@oge-ui/gantt/export-image',
           description:
             'Lazy PNG export with <strong>no dependencies</strong> — plain canvas drawing of the same chart (configurable width, pixel ratio, background and critical-path outlining).',
+        },
+        {
+          name: 'exportGanttToMsProject(gantt, options?) / importMsProjectXml(xml)',
+          type: '@oge-ui/gantt/export-msproject',
+          description:
+            'MS Project XML (MSPDI) <strong>without dependencies</strong>: the export writes tasks with WBS, outline levels, manual mode, constraints, deadlines and baselines, links with <code>LinkLag</code>, resources with max units, assignments with units and work, and the calendar (working weekdays + holiday exceptions), then downloads (<code>download: false</code> returns the XML only). The import parses with a small DOM-free reader (no Trusted Types sink, no DTD entities) into plain <code>tasks</code> / <code>dependencies</code> / <code>resources</code> / <code>workCalendar</code> in the default field names \u2014 bind them. Midnight-to-midnight dates map to 08:00\u201317:00 and back, so a round trip is lossless.',
         },
       ],
     },
@@ -339,12 +571,41 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'selectionChanged',
           type: 'OgeGanttSelectionChangedEvent&lt;T&gt;',
           description:
-            'Single-row selection changed (task or <code>null</code>).',
+            'Selection changed: <code>task</code> (the primary row, or <code>null</code>) and <code>tasks</code> (every selected task; multiple mode).',
         },
         {
           name: 'scaleTypeChange / selectedTaskKeyChange',
           type: 'OgeGanttScaleType / RowKey | null',
           description: 'The two-way model outputs.',
+        },
+      ],
+    },
+    {
+      title: 'Scheduling & task list',
+      entries: [
+        {
+          name: 'schedulingConflict',
+          type: 'OgeGanttSchedulingConflictEvent&lt;T&gt;',
+          description:
+            "The conflict set changed (also when it empties): <code>conflicts</code> with the task, the <code>kind</code> (<code>'dependency' | 'constraint' | 'deadline'</code>), the violated link / constraint / date and a readable <code>message</code>. Conflicted bars draw a dashed danger outline and a <code>!</code> badge; their row labels name the conflict.",
+        },
+        {
+          name: 'dependencyUpdating / dependencyUpdated',
+          type: 'OgeGanttDependencyUpdat*Event&lt;D&gt;',
+          description:
+            'Cancelable link update (type / lag) and its applied twin.',
+        },
+        {
+          name: 'sortChanged / columnResized / columnReordered',
+          type: 'OgeGanttSortChangedEvent / OgeGanttColumnResizedEvent / OgeGanttColumnReorderedEvent',
+          description:
+            'Task-list state changes: <code>{ field, direction }</code> (<code>null</code> = cleared), <code>{ field, widthPx }</code>, <code>{ field, fromIndex, toIndex }</code>.',
+        },
+        {
+          name: 'selectedTaskKeysChange / baselineIndexChange / viewModeChange',
+          type: 'readonly RowKey[] / number / OgeGanttViewMode',
+          description:
+            'The model halves of the multi-selection, the baseline chooser and the view toggle.',
         },
       ],
     },
@@ -356,13 +617,13 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'OgeGanttTask&lt;T&gt;',
           type: 'interface',
           description:
-            'The normalized task — the payload of events and templates: <code>key</code>, <code>parentKey</code>, <code>source</code> (the original item), <code>title</code>, <code>start</code>/<code>end</code>, <code>progress</code>, <code>color</code>, baseline dates, <code>isSummary</code>/<code>isMilestone</code> and <code>level</code>.',
+            'The normalized task — the payload of events and templates: <code>key</code>, <code>parentKey</code>, <code>source</code> (the original item), <code>title</code>, <code>start</code>/<code>end</code>, <code>progress</code>, <code>color</code>, baseline dates and <code>baselines</code>, <code>isSummary</code>/<code>isMilestone</code>, <code>level</code>, <code>wbs</code>, <code>manuallyScheduled</code>, <code>constraintType</code>/<code>constraintDate</code>, <code>deadline</code>, <code>segments</code>, <code>resourceIds</code> with aligned <code>units</code>, and <code>effort</code>.',
         },
         {
           name: 'OgeGanttDependency&lt;D&gt;',
           type: 'interface',
           description:
-            'The normalized link: <code>key</code>, <code>source</code>, <code>predecessorKey</code>, <code>successorKey</code>, <code>type</code>.',
+            'The normalized link: <code>key</code>, <code>source</code>, <code>predecessorKey</code>, <code>successorKey</code>, <code>type</code>, <code>lag</code> (negative = lead) and <code>lagUnit</code>.',
         },
         {
           name: 'OgeGanttDependencyType',
@@ -372,14 +633,14 @@ export const OGE_GANTT_API: ApiSections = {
         },
         {
           name: 'OgeGanttScaleType',
-          type: "'hours' | 'days' | 'weeks' | 'months'",
+          type: "'hours' | 'days' | 'weeks' | 'months' | 'quarters' | 'years'",
           description: 'The timeline scale units.',
         },
         {
           name: 'OgeGanttColumn',
           type: 'interface',
           description:
-            'A task-list column: <code>{ field, header?, widthPx?, format? }</code>.',
+            'A task-list column: <code>{ field, header?, widthPx?, format?, editor?, allowSorting?, frozen? }</code>.',
         },
         {
           name: 'OgeGanttStripLine',
@@ -397,13 +658,13 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'OgeGanttResource',
           type: 'interface',
           description:
-            '<code>{ id, text, color?, calendar? }</code> — one assignable resource (the <code>resources</code> item type).',
+            "<code>{ id, text, color?, calendar?, capacity? }</code> — one assignable resource (the <code>resources</code> item type); <code>capacity</code> (%, default 100) is the histogram's over-allocation line.",
         },
         {
           name: 'OgeGanttExportData&lt;T&gt; / OgeGanttExportColumn&lt;T&gt;',
           type: 'interface',
           description:
-            'The exporter snapshot: <code>tasks</code>, <code>columns</code> (header + pane-identical <code>text()</code>), <code>rangeStart</code>/<code>rangeEnd</code>, <code>critical</code> keys and <code>resourceText()</code>.',
+            'The exporter snapshot: <code>tasks</code>, <code>columns</code> (header + pane-identical <code>text()</code>), <code>rangeStart</code>/<code>rangeEnd</code>, <code>critical</code> keys, <code>resourceText()</code>, and (optional, for hand-built snapshots) <code>dependencies</code>, <code>resources</code>, <code>workCalendar</code> and <code>slack</code>.',
         },
         {
           name: 'OgeGanttTaskTitlePosition',
@@ -421,6 +682,35 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'structural directive (OgeGanttTooltipTemplate)',
           description:
             "Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context <code>OgeGanttTooltipTemplateContext</code>: <code>{ $implicit: OgeGanttTask&lt;T&gt; }</code>.",
+        },
+        {
+          name: 'OgeGanttConstraintType / OgeGanttLagUnit',
+          type: "'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO' / 'days' | 'hours'",
+          description: 'Constraint types and the lag unit.',
+        },
+        {
+          name: 'OgeGanttSegment / OgeGanttSlack',
+          type: 'interface',
+          description:
+            '<code>{ start, end }</code> (split piece or baseline) / <code>{ totalSlack, freeSlack }</code> in days.',
+        },
+        {
+          name: 'OgeGanttZoomPreset',
+          type: 'interface',
+          description:
+            '<code>{ scaleType, tickWidth?, label? }</code> \u2014 one zoom-chooser entry.',
+        },
+        {
+          name: 'OgeGanttSchedulingConflict&lt;T&gt; / OgeGanttConflictKind',
+          type: 'interface',
+          description:
+            '<code>{ key, task, kind, constraintType?, dependencyKey?, date?, message }</code>.',
+        },
+        {
+          name: 'OgeGanttViewMode / OgeGanttSelectionMode / OgeGanttSortDirection / OgeGanttCellEditorType',
+          type: 'string unions',
+          description:
+            "<code>'tasks' | 'resources'</code>, <code>'single' | 'multiple'</code>, <code>'asc' | 'desc'</code>, <code>'text' | 'number' | 'date' | 'duration' | 'predecessor'</code>.",
         },
       ],
     },
@@ -441,7 +731,7 @@ export const OGE_GANTT_CONFIG_API: ApiSections = {
           name: 'messages',
           type: 'OgeGanttMessages',
           description:
-            'Every user-facing string, aria labels included: <code>toolbar</code> (<code>OgeGanttToolbarMessages</code>), <code>columns</code> (<code>OgeGanttColumnMessages</code>), <code>dialog</code> (<code>OgeGanttDialogMessages</code>), <code>grid</code> (<code>OgeGanttGridMessages</code>, aria templates with <code>{token}</code> placeholders) and <code>announcements</code> (<code>OgeGanttAnnouncementMessages</code>, live-region templates). Defaults: <code>OGE_DEFAULT_GANTT_MESSAGES</code>.',
+            'Every user-facing string, aria labels included: <code>toolbar</code> (<code>OgeGanttToolbarMessages</code>), <code>columns</code> (<code>OgeGanttColumnMessages</code>), <code>dialog</code> (<code>OgeGanttDialogMessages</code>), <code>grid</code> (<code>OgeGanttGridMessages</code>, aria templates with <code>{token}</code> placeholders) and <code>announcements</code> (<code>OgeGanttAnnouncementMessages</code>, live-region templates, ICU plurals for counts), plus the optional <code>scales</code>, <code>scheduling</code> and <code>dependencyEditor</code> blocks — keys added after 1.1 are optional and filled from English (<code>fillGanttMessages</code>). Defaults: <code>OGE_DEFAULT_GANTT_MESSAGES</code>.',
         },
         {
           name: 'locale',

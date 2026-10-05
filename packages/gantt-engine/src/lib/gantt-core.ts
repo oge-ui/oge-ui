@@ -710,9 +710,7 @@ export class OgeGanttCore<
     this.columnWidths = rx.cell<Readonly<Record<string, number>>>({});
     this.headerFocusIndex = rx.cell(0);
     this.editingCell = rx.cell<GanttCellEditState | null>(null);
-    this.dependencyEditor = rx.cell<GanttDependencyEditorState<D> | null>(
-      null,
-    );
+    this.dependencyEditor = rx.cell<GanttDependencyEditorState<D> | null>(null);
     this.tickWidthOverride = rx.cell<number | null>(null);
 
     // deep-filled: keys added after 1.1 are optional in the public catalog
@@ -720,9 +718,7 @@ export class OgeGanttCore<
       fillGanttMessages(inputs.config().messages, inputs.messages()),
     );
     this.viewMode = rx.derived(() => inputs.viewMode?.() ?? 'tasks');
-    this.selectionMode = rx.derived(
-      () => inputs.selectionMode?.() ?? 'single',
-    );
+    this.selectionMode = rx.derived(() => inputs.selectionMode?.() ?? 'single');
     this.rtl = rx.derived(() => inputs.rtlEnabled?.() ?? this.detectedRtl());
     this.rowHeight = rx.derived(() => inputs.config().rowHeight ?? 36);
     this.effectiveLocale = rx.derived(
@@ -866,8 +862,7 @@ export class OgeGanttCore<
             this.resolvedColumns().map((column) => column.field),
             this.filters(),
             this.searchText(),
-            (task, field) =>
-              this.cellText(task, this.columnFor(field)),
+            (task, field) => this.cellText(task, this.columnFor(field)),
           )
         : null;
       return buildGanttTasks(
@@ -1179,7 +1174,9 @@ export class OgeGanttCore<
           ? [...columns]
           : [
               ...order
-                .map((field) => columns.find((column) => column.field === field))
+                .map((field) =>
+                  columns.find((column) => column.field === field),
+                )
                 .filter((column): column is OgeGanttColumn => !!column),
               ...columns.filter((column) => !order.includes(column.field)),
             ];
@@ -1206,7 +1203,8 @@ export class OgeGanttCore<
           editor:
             column.editor === false
               ? null
-              : (column.editor ?? (known !== undefined ? known.editor : 'text')),
+              : (column.editor ??
+                (known !== undefined ? known.editor : 'text')),
           sortable: sortingAllowed && column.allowSorting !== false,
           sortDirection:
             sort !== null && sort.field === column.field
@@ -1307,7 +1305,9 @@ export class OgeGanttCore<
       const scales = this.msg().scales;
       const presets =
         inputs.zoomPresets?.() ??
-        GANTT_SCALE_ORDER.map((scaleType): OgeGanttZoomPreset => ({ scaleType }));
+        GANTT_SCALE_ORDER.map((scaleType): OgeGanttZoomPreset => ({
+          scaleType,
+        }));
       return presets.map((preset, index) => ({
         index,
         preset,
@@ -2043,7 +2043,10 @@ export class OgeGanttCore<
     this.run(() => {
       if (this.selectionMode() !== 'multiple') return;
       const keys = this.visibleRealKeys();
-      this.commitSelection(keys, this.inputs.selectedTaskKey() ?? keys[0] ?? null);
+      this.commitSelection(
+        keys,
+        this.inputs.selectedTaskKey() ?? keys[0] ?? null,
+      );
     });
   }
 
@@ -2278,7 +2281,9 @@ export class OgeGanttCore<
     kind: 'indent' | 'outdent',
   ): void {
     this.run(() => {
-      const wanted = new Set(tasks.map((task) => this.realKeyOf(task) ?? task.key));
+      const wanted = new Set(
+        tasks.map((task) => this.realKeyOf(task) ?? task.key),
+      );
       const keys = this.visibleTasks()
         .map((task) => task.key)
         .filter((key) => wanted.has(key));
@@ -2378,7 +2383,11 @@ export class OgeGanttCore<
         }
         return;
       }
-      if (multiple && event.ctrlKey && (event.key === 'a' || event.key === 'A')) {
+      if (
+        multiple &&
+        event.ctrlKey &&
+        (event.key === 'a' || event.key === 'A')
+      ) {
         event.preventDefault();
         this.selectAll();
         return;
@@ -2714,7 +2723,11 @@ export class OgeGanttCore<
       const landed = this.resolvedColumns().findIndex(
         (column) => column.field === field,
       );
-      this.events.columnReordered?.({ field, fromIndex: from, toIndex: landed });
+      this.events.columnReordered?.({
+        field,
+        fromIndex: from,
+        toIndex: landed,
+      });
       this.announce(this.msg().announcements.columnMoved, {
         column: this.columnHeader(field),
         position: String(landed + 1),
@@ -3095,7 +3108,10 @@ export class OgeGanttCore<
     });
   }
 
-  private applyCellValue(task: GanttTask<T>, cell: GanttCellEditState): boolean {
+  private applyCellValue(
+    task: GanttTask<T>,
+    cell: GanttCellEditState,
+  ): boolean {
     const fields = this.fields();
     const value = cell.value;
     const update = (change: GanttTaskChange): void => {
@@ -3132,7 +3148,10 @@ export class OgeGanttCore<
       }
       case 'end': {
         const date = parseGanttDateInput(value);
-        if (date === null || date.getTime() < startOfDay(task.start).getTime()) {
+        if (
+          date === null ||
+          date.getTime() < startOfDay(task.start).getTime()
+        ) {
           return false;
         }
         const end = new Date(
@@ -3219,9 +3238,14 @@ export class OgeGanttCore<
           if (date === null && value.trim() !== '') return false;
           next = date;
         }
-        this.applyPatch(task, { [cell.field]: next } as Partial<T>, 'taskUpdated', {
-          title: task.title,
-        });
+        this.applyPatch(
+          task,
+          { [cell.field]: next } as Partial<T>,
+          'taskUpdated',
+          {
+            title: task.title,
+          },
+        );
         return true;
       }
     }
@@ -3442,7 +3466,9 @@ export class OgeGanttCore<
         if (
           state.type !== dependency.type &&
           wouldCreateCycle(
-            this.ganttDependencies().filter((dep) => dep.key !== dependency.key),
+            this.ganttDependencies().filter(
+              (dep) => dep.key !== dependency.key,
+            ),
             dependency.predecessorKey,
             dependency.successorKey,
           )

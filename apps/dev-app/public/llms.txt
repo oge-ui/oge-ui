@@ -185,6 +185,10 @@ For code generation, prefer the full reference — it inlines every API table an
 ## Gantt
 
 - [Gantt](https://www.ogeui.com/components/gantt): Angular Gantt chart by OGE UI: task tree and timeline with dependencies, critical path, baselines, drag editing, work calendars, undo/redo and export.
+- [Gantt Scheduling & Constraints](https://www.ogeui.com/components/gantt/scheduling): Angular Gantt scheduling: lag and lead on every link type, constraints, deadlines, manual tasks, slack, conflicts, baselines, split tasks and progress line.
+- [Gantt Resources](https://www.ogeui.com/components/gantt/resources): Angular Gantt resources: assignment units, effort-driven durations, a utilization histogram with over-allocation and a resource-centric view.
+- [Gantt Task List Editing](https://www.ogeui.com/components/gantt/task-list): Angular Gantt task list: inline cell editing, header sorting, filter row and search, column resize, reorder and freeze, multi-select with bulk edits.
+- [Gantt Import / Export](https://www.ogeui.com/components/gantt/import-export): Angular Gantt MS Project XML import and export: tasks, links with lag, constraints, baselines, resources, assignments and calendars, no dependencies.
 - [Gantt API](https://www.ogeui.com/components/gantt/api): Angular Gantt API reference: every input, output, method and type of oge-gantt — task and dependency field mapping, scales, editing and the config provider.
 
 ## Kanban

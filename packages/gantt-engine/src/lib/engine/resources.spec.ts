@@ -82,7 +82,13 @@ describe('resource kernel', () => {
     const tasks = buildGanttTasks<Item>(
       [
         { id: '1', title: 'A', start: d(5), end: d(7), resourceId: 'ann' },
-        { id: '2', title: 'B', start: d(6), end: d(9), resourceId: ['ann', 'bo'] },
+        {
+          id: '2',
+          title: 'B',
+          start: d(6),
+          end: d(9),
+          resourceId: ['ann', 'bo'],
+        },
         { id: '3', title: 'C', start: d(6), end: d(8) },
       ],
       fields,

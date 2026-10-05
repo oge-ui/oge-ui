@@ -180,8 +180,7 @@ export function parseGanttPredecessors(
       );
     if (parsed === null) return null;
     const [, type, sign, amount, unit] = parsed;
-    const value =
-      amount !== undefined ? Number(amount.replace(',', '.')) : 0;
+    const value = amount !== undefined ? Number(amount.replace(',', '.')) : 0;
     result.push({
       key: match.key,
       type: (type?.toUpperCase() as GanttDependencyType | undefined) ?? 'FS',
@@ -289,9 +288,7 @@ export function nextGanttSelection(
     if (from >= 0 && to >= 0) {
       const [lo, hi] = from <= to ? [from, to] : [to, from];
       const range = visible.slice(lo, hi + 1);
-      return modifiers.toggle
-        ? [...new Set([...current, ...range])]
-        : range;
+      return modifiers.toggle ? [...new Set([...current, ...range])] : range;
     }
   }
   if (modifiers.toggle) {

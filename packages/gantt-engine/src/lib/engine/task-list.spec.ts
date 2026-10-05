@@ -38,8 +38,22 @@ const fields = resolveGanttFields<Item>({
 const d = (day: number) => new Date(2026, 0, day);
 const ITEMS: Item[] = [
   { id: 'p', title: 'Phase', start: d(1), end: d(1) },
-  { id: 'b', parentId: 'p', title: 'Build', start: d(6), end: d(9), progress: 10 },
-  { id: 'a', parentId: 'p', title: 'Analyse', start: d(2), end: d(5), progress: 90 },
+  {
+    id: 'b',
+    parentId: 'p',
+    title: 'Build',
+    start: d(6),
+    end: d(9),
+    progress: 10,
+  },
+  {
+    id: 'a',
+    parentId: 'p',
+    title: 'Analyse',
+    start: d(2),
+    end: d(5),
+    progress: 90,
+  },
   { id: 'z', title: 'Zeta', start: d(3), end: d(4) },
 ];
 
@@ -71,7 +85,9 @@ describe('task list kernel', () => {
     expect([...(keys ?? [])].sort()).toEqual(['a', 'p']);
     const column = ganttFilterKeys(all, ['title'], { title: 'zé' }, '', text);
     expect(column).not.toBeNull();
-    expect(ganttFilterKeys(all, ['title'], { title: ' ' }, '', text)).toBeNull();
+    expect(
+      ganttFilterKeys(all, ['title'], { title: ' ' }, '', text),
+    ).toBeNull();
     const visible = buildGanttTasks(ITEMS, fields, new Set(['p']), {
       include: keys,
     });
@@ -126,7 +142,10 @@ describe('task list kernel', () => {
     const none = { toggle: false, range: false };
     expect(nextGanttSelection(['a'], visible, 'a', 'c', none)).toEqual(['c']);
     expect(
-      nextGanttSelection(['a'], visible, 'a', 'c', { toggle: true, range: false }),
+      nextGanttSelection(['a'], visible, 'a', 'c', {
+        toggle: true,
+        range: false,
+      }),
     ).toEqual(['a', 'c']);
     expect(
       nextGanttSelection(['a', 'c'], visible, 'a', 'c', {
@@ -135,10 +154,16 @@ describe('task list kernel', () => {
       }),
     ).toEqual(['a']);
     expect(
-      nextGanttSelection(['b'], visible, 'b', 'd', { toggle: false, range: true }),
+      nextGanttSelection(['b'], visible, 'b', 'd', {
+        toggle: false,
+        range: true,
+      }),
     ).toEqual(['b', 'c', 'd']);
     expect(
-      nextGanttSelection(['a'], visible, 'd', 'b', { toggle: true, range: true }),
+      nextGanttSelection(['a'], visible, 'd', 'b', {
+        toggle: true,
+        range: true,
+      }),
     ).toEqual(['a', 'b', 'c', 'd']);
   });
 });

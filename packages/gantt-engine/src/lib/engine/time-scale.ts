@@ -67,7 +67,11 @@ function unitFloor(
     case 'months':
       return new Date(date.getFullYear(), date.getMonth(), 1);
     case 'quarters':
-      return new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3, 1);
+      return new Date(
+        date.getFullYear(),
+        Math.floor(date.getMonth() / 3) * 3,
+        1,
+      );
     case 'years':
       return new Date(date.getFullYear(), 0, 1);
   }

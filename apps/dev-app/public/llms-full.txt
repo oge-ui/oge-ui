@@ -19298,7 +19298,7 @@ Docs: https://www.ogeui.com/components/gantt
 `@oge-ui/gantt`
 
 - values: `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OGE_GANTT_CONFIG`, `OgeGantt`, `OgeGanttTaskTemplate`, `OgeGanttTooltipTemplate`, `provideOgeGanttConfig`
-- types: `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttMenuMessages`, `OgeGanttMessages`, `OgeGanttResource`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTemplateContext`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttTooltipTemplateContext`, `OgeGanttWorkCalendar`
+- types: `OgeGanttAnnouncementMessages`, `OgeGanttCellEditorType`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttColumnReorderedEvent`, `OgeGanttColumnResizedEvent`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttConflictKind`, `OgeGanttConstraintType`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyEditorMessages`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDependencyUpdatedEvent`, `OgeGanttDependencyUpdatingEvent`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttLagUnit`, `OgeGanttMenuMessages`, `OgeGanttMessages`, `OgeGanttResolvedMessages`, `OgeGanttResource`, `OgeGanttScaleMessages`, `OgeGanttScaleType`, `OgeGanttSchedulingConflict`, `OgeGanttSchedulingConflictEvent`, `OgeGanttSchedulingMessages`, `OgeGanttSegment`, `OgeGanttSelectionChangedEvent`, `OgeGanttSelectionMode`, `OgeGanttSlack`, `OgeGanttSortChangedEvent`, `OgeGanttSortDirection`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTemplateContext`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttTooltipTemplateContext`, `OgeGanttViewMode`, `OgeGanttWorkCalendar`, `OgeGanttZoomPreset`
 
 `@oge-ui/gantt/export-pdf`
 
@@ -19315,6 +19315,11 @@ Docs: https://www.ogeui.com/components/gantt
 - values: `buildGanttCanvas`, `exportGanttToPng`, `ganttImageSize`
 - types: `OgeGanttImageExportOptions`
 
+`@oge-ui/gantt/export-msproject`
+
+- values: `buildGanttMsProjectXml`, `buildMsProjectXml`, `exportGanttToMsProject`, `importMsProjectXml`, `parseMsProjectXml`
+- types: `MsProjectDependencyItem`, `MsProjectExportOptions`, `MsProjectImportResult`, `MsProjectResourceItem`, `MsProjectTaskItem`, `OgeGanttMsProjectExportOptions`
+
 ### OgeGantt — `<oge-gantt>`
 
 #### Properties
@@ -19330,14 +19335,21 @@ _Data_
 | `dependencyKeyExpr / predecessorKeyExpr / successorKeyExpr / dependencyTypeExpr` | `string \| ((item: D) => unknown)` | `'id' / 'predecessorId' / 'successorId' / 'type'` | Dependency field mapping. Types are `'FS' \| 'SS' \| 'FF' \| 'SF'` (dx numeric codes 0–3 also parse); missing type means FS. |
 | `resources` | `readonly OgeGanttResource[]` | `[]` | Resource choices: labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own `calendar` overrides `workCalendar` for its tasks (first assigned resource with a calendar wins). |
 | `resourceIdExpr` | `string \| ((item: T) => unknown)` | `'resourceId'` | The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape: array stores stay arrays, scalar stores stay scalar while at most one id is assigned. |
+| `dependencyLagExpr / dependencyLagUnitExpr` | `string \| ((item: D) => unknown)` | `'lag' / 'lagUnit'` | Link **lag / lead**: an amount (negative = lead) and its unit, `'days'` (working days on a `workCalendar`) or `'hours'`. Drawn as a `+2d` badge on the arrow, honoured by auto-scheduling for all four link types, edited in the dependency editor (double-click an arrow, or Enter on a clicked one) and in the `predecessors` column (`3FS+2d`). |
+| `manuallyScheduledExpr` | `string \| ((item: T) => unknown)` | `'manuallyScheduled'` | Per-task scheduling mode — `true` pins the task: auto-scheduling never moves it, and a link it breaks is reported as a `dependency` conflict. Bars draw a hatched pattern. |
+| `constraintTypeExpr / constraintDateExpr` | `string \| ((item: T) => unknown)` | `'constraintType' / 'constraintDate'` | Task constraint (MS Project vocabulary): `'ASAP' \| 'ALAP' \| 'SNET' \| 'SNLT' \| 'FNET' \| 'FNLT' \| 'MSO' \| 'MFO'` and its date. SNET/FNET set a floor, MSO/MFO pin the task, SNLT/FNLT cap it; links win over SNLT/FNLT/MSO and the violation is reported. ALAP slides the task as late as its successors allow (backward pass). A dated type without a date reads as ASAP. |
+| `deadlineExpr` | `string \| ((item: T) => unknown)` | `'deadline'` | Target finish: a flag marker on the bar row, an _overdue_ state (and a `deadline` conflict) when the task ends later. |
+| `segmentsExpr` | `string \| ((item: T) => unknown)` | `'segments'` | Split tasks: `[{ start, end }, …]` — two or more pieces draw as separate bars joined by a dotted line; the task spans its pieces. Moving drags every piece; resizing moves the first piece's start or the last piece's end. |
+| `baselinesExpr` | `string \| ((item: T) => unknown)` | `'baselines'` | Several baselines: `[{ start, end }, …]`, index = baseline number − 1. Wins over `baselineStartExpr`/`baselineEndExpr` (which remain baseline 1). The toolbar shows a chooser when a task carries more than one. |
+| `unitsExpr / effortExpr` | `string \| ((item: T) => unknown)` | `'units' / 'effort'` | Assignment **units** in % (a number for every assigned resource, an array aligned with the resource ids, or an id-keyed map; default 100) and work in hours (`effortDriven`). |
 
 _Appearance & behavior_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `scaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | `'days'` | Timeline scale — calendar-true ticks (real month lengths, DST-safe). Two-way (`[(scaleType)]`); the toolbar zoom and Ctrl+wheel write it. |
+| `scaleType` | `'hours' \| 'days' \| 'weeks' \| 'months' \| 'quarters' \| 'years'` | `'days'` | Timeline scale — calendar-true ticks (real month lengths, DST-safe). Two-way (`[(scaleType)]`); the toolbar zoom and Ctrl+wheel write it. |
 | `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday) for the weeks scale; `undefined` resolves from the locale. |
-| `columns` | `readonly OgeGanttColumn[]` | `title / start / end / duration` | Task-list columns: built-in fields (`title`, `start`, `end`, `duration`, `progress`) or any data field, with optional `header`, `widthPx` and `format`. |
+| `columns` | `readonly OgeGanttColumn[]` | `title / start / end / duration` | Task-list columns: built-in fields (`title`, `start`, `end`, `duration`, `progress`, `wbs`, `predecessors`, `totalSlack`, `freeSlack`, `constraint`, `deadline`, `resources`, `units`, `effort`) or any data field, with optional `header`, `widthPx`, `format`, `editor` (`false` = read-only), `allowSorting` and `frozen` (pinned to the start edge, frozen columns lead). |
 | `taskListWidth` | `number` | `360` | Initial width (px) of the task pane; the splitter between the panes drags. |
 | `taskTitlePosition` | `'inside' \| 'outside' \| 'none'` | `'inside'` | Where the task title renders relative to its bar. |
 | `showDependencies / showRowLines` | `boolean` | `true` | Dependency arrows / horizontal row guides. |
@@ -19347,11 +19359,40 @@ _Appearance & behavior_
 | `workCalendar` | `OgeGanttWorkCalendar \| null` | `null` | Work-time calendar (`{ workingDays?, holidays? }`, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in _working_ days. The `holidays` input merges in; per-resource `calendar`s override it per task. |
 | `showResourceWorkload` | `boolean` | `false` | Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches (concurrent assignments) in the danger color. |
 | `stripLines` | `readonly OgeGanttStripLine[]` | `[]` | Vertical markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded range with it (dx parity). |
-| `autoScheduling` | `boolean` | `false` | Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
 | `messages` | `Partial<OgeGanttMessages>` | `{}` | Per-instance message overrides, merged over the DI config per top-level block. |
 | `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: the task tree moves to the right, the timeline runs from right to left (dependency arrows, baselines, today line and drag tip included), pointer drags and the splitter invert their direction and the Left/Right keys mirror — Left expands a summary, Alt+Shift+Left indents and Ctrl+Left moves a bar later. Unset follows the page: the computed `direction` or the nearest `dir` attribute, read after the first render and kept current while it changes; an explicit value also sets `dir` on the host. |
 | `selectedTaskKey` | `RowKey \| null` | `null` | The selected task. Two-way (`[(selectedTaskKey)]`). |
+
+_Scheduling_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `autoScheduling` | `boolean` | `false` | Project-level auto-scheduling: after every edit the engine places each auto-scheduled task at the earliest date its links (with lag) and constraint allow — **moving tasks earlier as well as later** — then slides ALAP tasks late (backward pass). Manually scheduled tasks stay put. `scheduleProject()` runs it on demand. |
+| `projectStart` | `Date \| null` | `null` | Where unlinked ASAP tasks start while auto-scheduling; `null` keeps their current start (only links and constraints move a task). |
+| `baselineIndex` | `number` | `0` | Which baseline renders (0-based); `-1` hides baselines. Two-way (`[(baselineIndex)]`); the toolbar chooser writes it. |
+| `showProgressLine / statusDate` | `boolean / Date \| null` | `false / null` | The progress line: a zig-zag through every visible row from the status date to the point each started task's progress has reached (status date default: today). |
+| `showRollups` | `boolean` | `false` | Draws every child milestone onto its summary bar (useful when the summary is collapsed). |
+| `zoomPresets` | `readonly OgeGanttZoomPreset[] \| null` | `null` | The toolbar's scale chooser: `{ scaleType, tickWidth?, label? }` entries; `null` lists one per scale (hours … years). |
+
+_Task list_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `inlineEditing` | `boolean` | `false` | Edits task-list cells in place: double-click a cell or press **F2** on a row; Enter commits, Escape cancels, Tab / Shift+Tab commit and move along the row. Text, date, number, duration (days) and predecessor (`3FS+2d, 5SS`) editors; summaries keep their rolled-up dates read-only. Every commit is one undoable update through the cancelable pipeline. |
+| `allowSorting` | `boolean` | `false` | Header click / Enter sorts (ascending → descending → off) — siblings within each parent, WBS numbers keep the store order. `aria-sort` on the header. |
+| `allowColumnResizing / allowColumnReordering` | `boolean` | `false` | Header edge drag or **Alt+Left/Right** (Shift: 1px) resizes a column; header drag or **Ctrl+Shift+Left/Right** moves it. Headers become one roving tab stop (Left/Right between them, Down into the rows). |
+| `filterRow / searchPanel` | `boolean` | `false` | A filter row under the headers (per column) and a toolbar search box (any column): fold-insensitive “contains” on the cell text; matches keep their ancestors and open collapsed summaries. |
+| `selectionMode` | `'single' \| 'multiple'` | `'single'` | `'multiple'`: Ctrl/Cmd-click toggles, Shift-click and Shift+Up/Down extend, Ctrl+Space toggles, Ctrl+A selects all; Delete, Alt+Shift+Left/Right and the context menu act on the whole selection as **one undo step**. |
+| `selectedTaskKeys` | `readonly RowKey[]` | `[]` | Every selected key in multiple mode (the primary row is `selectedTaskKey`). Two-way (`[(selectedTaskKeys)]`). |
+
+_Resources & views_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `effortDriven / hoursPerDay` | `boolean / number` | `false / 8` | Effort-driven scheduling: changing a task's resources, units or work recomputes its finish as `work ÷ (hoursPerDay × Σ units)` in working days. |
+| `showResourceHistogram` | `boolean` | `false` | Per-resource utilization rows under the chart: one bar per timeline period (units × overlap), a dashed capacity line (`OgeGanttResource.capacity`, default 100%), over-allocated periods in the danger colour; each row's accessible name summarizes the peak and the periods over capacity. |
+| `viewMode` | `'tasks' \| 'resources'` | `'tasks'` | `'resources'` regroups the rows by resource (an _Unassigned_ group last); assignment rows edit the real task. The toolbar toggle (shown when `resources` exist) writes the two-way model. |
 
 _Editing gates_
 
@@ -19366,15 +19407,30 @@ _Editing gates_
 | Name | Type | Description |
 | --- | --- | --- |
 | `insertTask(taskData) / updateTask(taskData, patch) / deleteTask(taskData)` | `void` | Programmatic CRUD through the same cancelable pipelines as interactive editing — one undo step each. |
-| `insertDependency(predecessorData, successorData, type?) / deleteDependency(dependencyData)` | `void` | Guarded link CRUD; inserting runs the same cycle check as interactive drawing. |
+| `insertDependency(predecessorKey, successorKey, type?, options?) / deleteDependency(dependencyData)` | `void` | Guarded link CRUD; inserting runs the same cycle check as interactive drawing and takes an optional `{ lag, lagUnit }`. |
 | `undo() / redo()` | `void` | Snapshot history — every applied edit, drags included, is exactly one step (depth: config `undoLimit`). |
-| `zoomIn() / zoomOut() / zoomToFit()` | `void` | Steps the scale (hours ⇄ days ⇄ weeks ⇄ months) / picks the scale that fits the whole plan and scrolls to it. |
+| `zoomIn() / zoomOut() / zoomToFit()` | `void` | Steps the scale (hours ⇄ days ⇄ weeks ⇄ months ⇄ quarters ⇄ years) / picks the scale that fits the whole plan and scrolls to it. |
 | `scrollToDate(date)` | `void` | Scrolls the chart so `date` is in view. |
 | `expandAll() / collapseAll() / expandAllToLevel(level) / expandToTask(key)` | `void` | Tree expansion control; `expandToTask` also selects and reveals the row. |
 | `showTaskDetailsDialog(taskData?)` | `void` | Opens the task dialog — edit form for the given task, prefilled create form without one. |
 | `indentTask(task) / outdentTask(task)` | `void` | Reparents through the guarded update pipeline: indent makes the task a child of its previous sibling (MS Project parity), outdent lifts it to the grandparent. Also on the built-in context menu and **Alt+Shift+Left/Right** on the focused row. |
 | `focus()` | `void` | Focuses the task tree (roving row). |
 | `getExportData()` | `OgeGanttExportData<T>` | Snapshot for the exporters: every task in tree order (collapse ignored), the resolved columns with pane-identical formatting, the chart range and the critical-path keys. |
+
+_Scheduling, task list & selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `scheduleProject()` | `void` | Runs the scheduling engine now — even with `autoScheduling` off — as one undo step. |
+| `updateDependency(dependencyData, patch)` | `void` | Updates a link's fields (type, lag, lag unit…) through the cancelable `dependencyUpdating` pipeline; auto-scheduling re-runs. |
+| `getTaskSlack(key)` | `OgeGanttSlack \| null` | Total and free slack of a leaf task in days (working days on a calendar) — also the `totalSlack` / `freeSlack` columns. |
+| `setBaseline(index?)` | `void` | Saves every leaf task's current dates as baseline `index` (0-based, default 0) — MS Project “Set Baseline”, one undo step. |
+| `applyZoomPreset(index)` | `void` | Applies a zoom preset (scale + tick width) by index. |
+| `sortBy(field, direction?) / setFilter(field, text) / setSearchText(text) / clearFilters()` | `void` | Programmatic sort (`null` clears), filter-row text and search. |
+| `setColumnWidth(field, widthPx) / moveColumn(field, toIndex)` | `void` | Column width (clamped 40–600px) and order — the same paths as the header gestures, with their events. |
+| `editCell(task, field?)` | `boolean` | Opens the inline editor on a cell (unset field = the first editable one); `false` when the cell is read-only. |
+| `getSelectedTasks() / selectAll() / clearSelection()` | `OgeGanttTask<T>[] / void` | The multi-selection in tree order, select every visible task, clear. |
+| `deleteTasks(items) / indentTasks(tasks) / outdentTasks(tasks)` | `void` | Bulk edits — each one undo step and one plural announcement. |
 
 _Export entry points (lazy, optional peers)_
 
@@ -19383,6 +19439,7 @@ _Export entry points (lazy, optional peers)_
 | `exportGanttToExcel(gantt, options?) / buildGanttExcelWorkbook(data, options?)` | `@oge-ui/gantt/export-excel` | Lazy Excel export (`exceljs` peer): the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. Import the entry point dynamically so exceljs stays out of the initial bundle. |
 | `exportGanttToPdf(gantt, options?) / buildGanttPdfDocument(data, options?)` | `@oge-ui/gantt/export-pdf` | Lazy PDF export (`jspdf` peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. Text outside WinAnsi (Turkish `ğ ş ı İ`, Central European, Greek, Cyrillic) needs a Unicode TrueType `font` — per export, or once for every PDF via `setOgePdfDefaultFont({ family, normal, bold })` from `@oge-ui/behavior`; without one the built-in Helvetica cannot draw it (a dev-mode warning says so). |
 | `exportGanttToPng(gantt, options?) / buildGanttCanvas(data, options?)` | `@oge-ui/gantt/export-image` | Lazy PNG export with **no dependencies** — plain canvas drawing of the same chart (configurable width, pixel ratio, background and critical-path outlining). |
+| `exportGanttToMsProject(gantt, options?) / importMsProjectXml(xml)` | `@oge-ui/gantt/export-msproject` | MS Project XML (MSPDI) **without dependencies**: the export writes tasks with WBS, outline levels, manual mode, constraints, deadlines and baselines, links with `LinkLag`, resources with max units, assignments with units and work, and the calendar (working weekdays + holiday exceptions), then downloads (`download: false` returns the XML only). The import parses with a small DOM-free reader (no Trusted Types sink, no DTD entities) into plain `tasks` / `dependencies` / `resources` / `workCalendar` in the default field names — bind them. Midnight-to-midnight dates map to 08:00–17:00 and back, so a round trip is lossless. |
 
 #### Events
 
@@ -19401,25 +19458,39 @@ _Interaction_
 | Name | Type | Description |
 | --- | --- | --- |
 | `taskClick / taskDblClick / taskContextMenu` | `OgeGanttTaskClickEvent<T>` | Bar/row pointer events with the normalized task and the raw `MouseEvent`. Right-click also opens the **built-in context menu** (edit, new task/subtask, indent/outdent, delete — labels in `messages.menu`); listen to `taskContextMenu` to add your own entries alongside it. |
-| `selectionChanged` | `OgeGanttSelectionChangedEvent<T>` | Single-row selection changed (task or `null`). |
+| `selectionChanged` | `OgeGanttSelectionChangedEvent<T>` | Selection changed: `task` (the primary row, or `null`) and `tasks` (every selected task; multiple mode). |
 | `scaleTypeChange / selectedTaskKeyChange` | `OgeGanttScaleType / RowKey \| null` | The two-way model outputs. |
+
+_Scheduling & task list_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `schedulingConflict` | `OgeGanttSchedulingConflictEvent<T>` | The conflict set changed (also when it empties): `conflicts` with the task, the `kind` (`'dependency' \| 'constraint' \| 'deadline'`), the violated link / constraint / date and a readable `message`. Conflicted bars draw a dashed danger outline and a `!` badge; their row labels name the conflict. |
+| `dependencyUpdating / dependencyUpdated` | `OgeGanttDependencyUpdat*Event<D>` | Cancelable link update (type / lag) and its applied twin. |
+| `sortChanged / columnResized / columnReordered` | `OgeGanttSortChangedEvent / OgeGanttColumnResizedEvent / OgeGanttColumnReorderedEvent` | Task-list state changes: `{ field, direction }` (`null` = cleared), `{ field, widthPx }`, `{ field, fromIndex, toIndex }`. |
+| `selectedTaskKeysChange / baselineIndexChange / viewModeChange` | `readonly RowKey[] / number / OgeGanttViewMode` | The model halves of the multi-selection, the baseline chooser and the view toggle. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeGanttTask<T>` | `interface` | The normalized task — the payload of events and templates: `key`, `parentKey`, `source` (the original item), `title`, `start`/`end`, `progress`, `color`, baseline dates, `isSummary`/`isMilestone` and `level`. |
-| `OgeGanttDependency<D>` | `interface` | The normalized link: `key`, `source`, `predecessorKey`, `successorKey`, `type`. |
+| `OgeGanttTask<T>` | `interface` | The normalized task — the payload of events and templates: `key`, `parentKey`, `source` (the original item), `title`, `start`/`end`, `progress`, `color`, baseline dates and `baselines`, `isSummary`/`isMilestone`, `level`, `wbs`, `manuallyScheduled`, `constraintType`/`constraintDate`, `deadline`, `segments`, `resourceIds` with aligned `units`, and `effort`. |
+| `OgeGanttDependency<D>` | `interface` | The normalized link: `key`, `source`, `predecessorKey`, `successorKey`, `type`, `lag` (negative = lead) and `lagUnit`. |
 | `OgeGanttDependencyType` | `'FS' \| 'SS' \| 'FF' \| 'SF'` | Finish-to-start, start-to-start, finish-to-finish, start-to-finish. |
-| `OgeGanttScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | The timeline scale units. |
-| `OgeGanttColumn` | `interface` | A task-list column: `{ field, header?, widthPx?, format? }`. |
+| `OgeGanttScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months' \| 'quarters' \| 'years'` | The timeline scale units. |
+| `OgeGanttColumn` | `interface` | A task-list column: `{ field, header?, widthPx?, format?, editor?, allowSorting?, frozen? }`. |
 | `OgeGanttStripLine` | `interface` | `{ start, end?, label?, color? }` — a chart marker line or range. |
 | `OgeGanttWorkCalendar` | `interface` | `{ workingDays?, holidays? }` — the work-time calendar (0 = Sunday; default working week Monday-Friday). |
-| `OgeGanttResource` | `interface` | `{ id, text, color?, calendar? }` — one assignable resource (the `resources` item type). |
-| `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys and `resourceText()`. |
+| `OgeGanttResource` | `interface` | `{ id, text, color?, calendar?, capacity? }` — one assignable resource (the `resources` item type); `capacity` (%, default 100) is the histogram's over-allocation line. |
+| `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys, `resourceText()`, and (optional, for hand-built snapshots) `dependencies`, `resources`, `workCalendar` and `slack`. |
 | `OgeGanttTaskTitlePosition` | `'inside' \| 'outside' \| 'none'` | Task title placement relative to the bar. |
 | `[ogeGanttTaskTemplate]` | `structural directive (OgeGanttTaskTemplate)` | Replaces the bar's title content; context `OgeGanttTaskTemplateContext`: `{ $implicit: OgeGanttTask<T> }`. |
 | `[ogeGanttTooltipTemplate]` | `structural directive (OgeGanttTooltipTemplate)` | Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context `OgeGanttTooltipTemplateContext`: `{ $implicit: OgeGanttTask<T> }`. |
+| `OgeGanttConstraintType / OgeGanttLagUnit` | `'ASAP' \| 'ALAP' \| 'SNET' \| 'SNLT' \| 'FNET' \| 'FNLT' \| 'MSO' \| 'MFO' / 'days' \| 'hours'` | Constraint types and the lag unit. |
+| `OgeGanttSegment / OgeGanttSlack` | `interface` | `{ start, end }` (split piece or baseline) / `{ totalSlack, freeSlack }` in days. |
+| `OgeGanttZoomPreset` | `interface` | `{ scaleType, tickWidth?, label? }` — one zoom-chooser entry. |
+| `OgeGanttSchedulingConflict<T> / OgeGanttConflictKind` | `interface` | `{ key, task, kind, constraintType?, dependencyKey?, date?, message }`. |
+| `OgeGanttViewMode / OgeGanttSelectionMode / OgeGanttSortDirection / OgeGanttCellEditorType` | `string unions` | `'tasks' \| 'resources'`, `'single' \| 'multiple'`, `'asc' \| 'desc'`, `'text' \| 'number' \| 'date' \| 'duration' \| 'predecessor'`. |
 
 ### Configuration
 
@@ -19428,7 +19499,7 @@ _Interaction_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `provideOgeGanttConfig(config)` | `Provider` | `—` | Configures every Gantt below the provider (`OgeGanttConfigInput`); shallow merge over `OGE_DEFAULT_GANTT_CONFIG` per top-level key — a partial `messages` replaces whole nested blocks. The token is `OGE_GANTT_CONFIG` (`OgeGanttConfig`). |
-| `messages` | `OgeGanttMessages` | `—` | Every user-facing string, aria labels included: `toolbar` (`OgeGanttToolbarMessages`), `columns` (`OgeGanttColumnMessages`), `dialog` (`OgeGanttDialogMessages`), `grid` (`OgeGanttGridMessages`, aria templates with `{token}` placeholders) and `announcements` (`OgeGanttAnnouncementMessages`, live-region templates). Defaults: `OGE_DEFAULT_GANTT_MESSAGES`. |
+| `messages` | `OgeGanttMessages` | `—` | Every user-facing string, aria labels included: `toolbar` (`OgeGanttToolbarMessages`), `columns` (`OgeGanttColumnMessages`), `dialog` (`OgeGanttDialogMessages`), `grid` (`OgeGanttGridMessages`, aria templates with `{token}` placeholders) and `announcements` (`OgeGanttAnnouncementMessages`, live-region templates, ICU plurals for counts), plus the optional `scales`, `scheduling` and `dependencyEditor` blocks — keys added after 1.1 are optional and filled from English (`fillGanttMessages`). Defaults: `OGE_DEFAULT_GANTT_MESSAGES`. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `[locale]` input wins. |
 | `rowHeight` | `number` | `36` | Fixed row height in px — the invariant behind the row virtualization of both panes. |
 | `undoLimit` | `number` | `50` | Undo history depth. |
@@ -19436,6 +19507,66 @@ _Interaction_
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Msproject
+
+```ts
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttResource, OgeGanttWorkCalendar } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- /export-msproject has no dependencies: MSPDI XML with WBS, outline
+         levels, manual mode, constraints, deadlines, baselines, links with lag,
+         resources, assignments with units and the calendar. The import returns
+         plain data in the default field names — bind it. -->
+    <div class="mb-3 flex flex-wrap gap-2">
+      <button type="button" (click)="exportXml()">Download .xml</button>
+      <input type="file" accept=".xml" (change)="importXml($event)" />
+    </div>
+    <oge-gantt
+      #gantt
+      [tasks]="tasks()"
+      [dependencies]="links()"
+      [resources]="resources()"
+      [workCalendar]="calendar()"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly gantt = viewChild.required<OgeGantt<Record<string, unknown>>>('gantt');
+  protected readonly tasks = signal<Record<string, unknown>[]>([
+    { id: 1, title: 'Pack', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6) },
+    { id: 2, title: 'Move', start: new Date(2026, 7, 7), end: new Date(2026, 7, 8) },
+  ]);
+  protected readonly links = signal<Record<string, unknown>[]>([
+    { id: 'a', predecessorId: 1, successorId: 2, lag: 1 },
+  ]);
+  protected readonly resources = signal<OgeGanttResource[]>([]);
+  protected readonly calendar = signal<OgeGanttWorkCalendar | null>(null);
+
+  protected async exportXml(): Promise<void> {
+    const { exportGanttToMsProject } = await import('@oge-ui/gantt/export-msproject');
+    exportGanttToMsProject(this.gantt(), { filename: 'plan.xml', title: 'Office move' });
+  }
+
+  protected async importXml(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const { importMsProjectXml } = await import('@oge-ui/gantt/export-msproject');
+    const plan = importMsProjectXml(await file.text());
+    this.tasks.set(plan.tasks as unknown as Record<string, unknown>[]);
+    this.links.set(plan.dependencies as unknown as Record<string, unknown>[]);
+    this.resources.set(plan.resources);
+    this.calendar.set(plan.workCalendar);
+  }
+}
+```
 
 #### Baselines
 
@@ -19953,6 +20084,488 @@ export class Demo {
     const { exportGanttToPng } = await import('@oge-ui/gantt/export-image');
     await exportGanttToPng(gantt, { filename: 'plan.png' });
   }
+}
+```
+
+#### Resource view
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttResource, OgeGanttViewMode } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- viewMode 'resources' regroups the rows by resource (the toolbar's
+         Resource view toggle flips it); assignment rows edit the real task. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [resources]="resources"
+      [(viewMode)]="view"
+      style="height: 420px"
+    />
+    <p>View: {{ view() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly view = signal<OgeGanttViewMode>('resources');
+  protected readonly resources: OgeGanttResource[] = [
+    { id: 1, text: 'Ana' },
+    { id: 2, text: 'Bora', capacity: 50 }, // half time
+    { id: 3, text: 'Cem' },
+  ];
+  protected readonly tasks = [
+    { id: 1, title: 'API design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), resourceId: [1], effort: 32 },
+    {
+      id: 2,
+      title: 'Database',
+      start: new Date(2026, 7, 5),
+      end: new Date(2026, 7, 11),
+      resourceId: [1, 2],
+      units: [50, 100], // per assignment, in %
+      effort: 40,
+    },
+    { id: 3, title: 'Monitoring', start: new Date(2026, 7, 6), end: new Date(2026, 7, 10), resourceId: [2], effort: 16 },
+    { id: 4, title: 'Load tests', start: new Date(2026, 7, 11), end: new Date(2026, 7, 14), resourceId: [3], effort: 24 },
+  ];
+}
+```
+
+#### Utilization
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttColumn, OgeGanttResource } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- units (%) per assignment, work in hours and effortDriven: changing
+         a task's people, units or work recomputes its finish. The histogram
+         sums units per period against each resource's capacity line —
+         over-allocated periods turn red. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [resources]="resources"
+      [columns]="columns"
+      [effortDriven]="true"
+      [hoursPerDay]="8"
+      [showResourceHistogram]="true"
+      style="height: 460px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly columns: OgeGanttColumn[] = [
+    { field: 'title' },
+    { field: 'resources' },
+    { field: 'units' },
+    { field: 'effort' },
+  ];
+  protected readonly resources: OgeGanttResource[] = [
+    { id: 1, text: 'Ana' },
+    { id: 2, text: 'Bora', capacity: 50 }, // half time
+    { id: 3, text: 'Cem' },
+  ];
+  protected readonly tasks = [
+    { id: 1, title: 'API design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), resourceId: [1], effort: 32 },
+    {
+      id: 2,
+      title: 'Database',
+      start: new Date(2026, 7, 5),
+      end: new Date(2026, 7, 11),
+      resourceId: [1, 2],
+      units: [50, 100], // per assignment, in %
+      effort: 40,
+    },
+    { id: 3, title: 'Monitoring', start: new Date(2026, 7, 6), end: new Date(2026, 7, 10), resourceId: [2], effort: 16 },
+    { id: 4, title: 'Load tests', start: new Date(2026, 7, 11), end: new Date(2026, 7, 14), resourceId: [3], effort: 24 },
+  ];
+}
+```
+
+#### Constraints
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttColumn, OgeGanttSchedulingConflictEvent } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- constraintType + constraintDate (ASAP, ALAP, SNET, SNLT, FNET,
+         FNLT, MSO, MFO), a deadline marker and manual tasks the engine never
+         moves. Whatever the engine cannot satisfy comes back as a conflict:
+         a dashed outline, a "!" badge, the row label — and this event. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      [columns]="columns"
+      [autoScheduling]="true"
+      style="height: 420px"
+      (schedulingConflict)="onConflicts($event)"
+    />
+    <ul aria-live="polite">
+      @for (message of messages(); track message) {
+        <li>{{ message }}</li>
+      }
+    </ul>
+  `,
+})
+export class Demo {
+  protected readonly messages = signal<string[]>([]);
+  protected readonly columns: OgeGanttColumn[] = [
+    { field: 'title', widthPx: 200 },
+    { field: 'constraint' },
+    { field: 'deadline' },
+  ];
+  protected readonly tasks = [
+    { id: 1, title: 'Backend', start: new Date(2026, 7, 3), end: new Date(2026, 7, 12) },
+    {
+      id: 2,
+      title: 'Security review',
+      start: new Date(2026, 7, 3),
+      end: new Date(2026, 7, 5),
+      constraintType: 'SNET',
+      constraintDate: new Date(2026, 7, 10),
+    },
+    {
+      id: 3,
+      title: 'Frontend',
+      start: new Date(2026, 7, 12),
+      end: new Date(2026, 7, 19),
+      deadline: new Date(2026, 7, 18),
+    },
+    { id: 4, title: 'Translations', start: new Date(2026, 7, 3), end: new Date(2026, 7, 5), constraintType: 'ALAP' },
+    {
+      id: 5,
+      title: 'Vendor install',
+      start: new Date(2026, 7, 10),
+      end: new Date(2026, 7, 12),
+      manuallyScheduled: true,
+    },
+  ];
+  protected readonly links = [
+    { id: 'a', predecessorId: 1, successorId: 3 },
+    { id: 'b', predecessorId: 1, successorId: 5 }, // the manual task breaks this link
+  ];
+
+  protected onConflicts(event: OgeGanttSchedulingConflictEvent<Record<string, unknown>>): void {
+    this.messages.set(event.conflicts.map((conflict) => conflict.message));
+  }
+}
+```
+
+#### Lag
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttColumn, OgeGanttWorkCalendar } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- lag (negative = lead) on any link type, in working days on the
+         calendar or in hours; auto-scheduling pulls tasks earlier as well as
+         pushing them later. Edit a link: double-click its arrow, or type
+         "2FS+2d" into the Predecessors cell. -->
+    <button type="button" (click)="gantt.scheduleProject()">Recalculate</button>
+    <oge-gantt
+      #gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      [columns]="columns"
+      [workCalendar]="calendar"
+      [autoScheduling]="true"
+      [showCriticalPath]="true"
+      [inlineEditing]="true"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly calendar: OgeGanttWorkCalendar = { workingDays: [1, 2, 3, 4, 5] };
+  protected readonly columns: OgeGanttColumn[] = [
+    { field: 'wbs' },
+    { field: 'title' },
+    { field: 'start' },
+    { field: 'predecessors' },
+    { field: 'totalSlack' },
+    { field: 'freeSlack' },
+  ];
+  protected readonly tasks = [
+    { id: 1, title: 'Specs', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7) },
+    { id: 2, title: 'Prototype', start: new Date(2026, 7, 12), end: new Date(2026, 7, 19) },
+    { id: 3, title: 'User tests', start: new Date(2026, 7, 17), end: new Date(2026, 7, 21) },
+    { id: 4, title: 'Release', start: new Date(2026, 7, 28), end: new Date(2026, 7, 28) },
+  ];
+  protected readonly links = [
+    { id: 'a', predecessorId: 1, successorId: 2, lag: 2 }, // FS + 2 working days
+    { id: 'b', predecessorId: 2, successorId: 3, type: 'SS', lag: 3 },
+    { id: 'c', predecessorId: 3, successorId: 4, lag: 4, lagUnit: 'hours' },
+  ];
+}
+```
+
+#### Scales
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttScaleType, OgeGanttZoomPreset } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- quarters and years extend the zoom ladder; zoomPresets fills the
+         toolbar's scale chooser (a scale plus an optional tick width). -->
+    <oge-gantt
+      [tasks]="tasks"
+      [zoomPresets]="presets"
+      [(scaleType)]="scale"
+      style="height: 300px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly scale = signal<OgeGanttScaleType>('quarters');
+  protected readonly presets: OgeGanttZoomPreset[] = [
+    { scaleType: 'weeks', label: 'Sprint view' },
+    { scaleType: 'months', tickWidth: 64, label: 'Compact months' },
+    { scaleType: 'quarters', label: 'Quarters' },
+    { scaleType: 'years', label: 'Roadmap (years)' },
+  ];
+  protected readonly tasks = [
+    { id: 1, title: 'Platform v2', start: new Date(2026, 0, 12), end: new Date(2026, 5, 30) },
+    { id: 2, title: 'Mobile apps', start: new Date(2026, 3, 1), end: new Date(2026, 11, 18) },
+    { id: 3, title: 'EU region', start: new Date(2026, 8, 1), end: new Date(2027, 2, 31) },
+  ];
+}
+```
+
+#### Tracking
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- several baselines (toolbar chooser), a split task, the progress
+         line through the status date and child milestones rolled up onto the
+         summary bar. setBaseline(i) saves the current dates as baseline i. -->
+    <button type="button" (click)="gantt.setBaseline(2)">Save as baseline 3</button>
+    <oge-gantt
+      #gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      [showProgressLine]="true"
+      [statusDate]="statusDate"
+      [showRollups]="true"
+      [(baselineIndex)]="baseline"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly baseline = signal(0);
+  protected readonly statusDate = new Date(2026, 7, 14);
+  protected readonly tasks = [
+    { id: 1, title: 'Migration', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+    {
+      id: 2,
+      parentId: 1,
+      title: 'Inventory',
+      start: new Date(2026, 7, 3),
+      end: new Date(2026, 7, 7),
+      progress: 100,
+      baselines: [
+        { start: new Date(2026, 7, 3), end: new Date(2026, 7, 6) },
+        { start: new Date(2026, 7, 4), end: new Date(2026, 7, 7) },
+      ],
+    },
+    { id: 3, parentId: 1, title: 'Plan approved', start: new Date(2026, 7, 7), end: new Date(2026, 7, 7) },
+    {
+      id: 4,
+      parentId: 1,
+      title: 'Data copy',
+      start: new Date(2026, 7, 10),
+      end: new Date(2026, 7, 19),
+      progress: 50,
+      segments: [
+        { start: new Date(2026, 7, 10), end: new Date(2026, 7, 13) },
+        { start: new Date(2026, 7, 17), end: new Date(2026, 7, 19) },
+      ],
+    },
+  ];
+  protected readonly links = [
+    { id: 'a', predecessorId: 2, successorId: 3 },
+    { id: 'b', predecessorId: 3, successorId: 4, lag: 1 },
+  ];
+}
+```
+
+#### Inline edit
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttColumn } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- inlineEditing: double-click a cell or press F2 on a row; Enter
+         commits, Escape cancels, Tab / Shift+Tab move along the row. Every
+         commit runs the cancelable update pipeline and is one undo step. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      [columns]="columns"
+      [inlineEditing]="true"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly columns: OgeGanttColumn[] = [
+    { field: 'wbs', editor: false },
+    { field: 'title' },
+    { field: 'start' },
+    { field: 'duration' },
+    { field: 'progress' },
+    { field: 'predecessors' },
+    { field: 'owner' }, // a data field: a text editor by default
+  ];
+  protected readonly tasks = [
+    { id: 1, title: 'Discovery', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+    { id: 2, parentId: 1, title: 'Interviews', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), owner: 'Ana' },
+    { id: 3, parentId: 1, title: 'Survey', start: new Date(2026, 7, 4), end: new Date(2026, 7, 8), owner: 'Bora' },
+    { id: 4, title: 'Delivery', start: new Date(2026, 7, 10), end: new Date(2026, 7, 10) },
+    { id: 5, parentId: 4, title: 'Build', start: new Date(2026, 7, 10), end: new Date(2026, 7, 14), owner: 'Cem' },
+    { id: 6, parentId: 4, title: 'Review', start: new Date(2026, 7, 14), end: new Date(2026, 7, 15), owner: 'Ana' },
+  ];
+  protected readonly links = [{ id: 'a', predecessorId: 5, successorId: 6 }];
+}
+```
+
+#### Multi select
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { RowKey } from '@oge-ui/core';
+import type { OgeGanttTask } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- selectionMode 'multiple': Ctrl/Cmd-click toggles, Shift-click and
+         Shift+Up/Down extend, Ctrl+A selects all. Delete, Alt+Shift+Left/Right
+         and the context menu act on the whole selection — one undo step. -->
+    <button type="button" (click)="gantt.indentTasks(gantt.getSelectedTasks())">Indent selected</button>
+    <button type="button" (click)="gantt.deleteTasks(sourcesOf(gantt.getSelectedTasks()))">
+      Delete selected
+    </button>
+    <oge-gantt
+      #gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      selectionMode="multiple"
+      [(selectedTaskKeys)]="selected"
+      style="height: 360px"
+    />
+    <p>{{ selected().length }} selected</p>
+  `,
+})
+export class Demo {
+  protected readonly selected = signal<readonly RowKey[]>([]);
+  protected sourcesOf<T>(tasks: readonly OgeGanttTask<T>[]): T[] {
+    return tasks.map((task) => task.source);
+  }
+  protected readonly tasks = [
+    { id: 1, title: 'Discovery', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+    { id: 2, parentId: 1, title: 'Interviews', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), owner: 'Ana' },
+    { id: 3, parentId: 1, title: 'Survey', start: new Date(2026, 7, 4), end: new Date(2026, 7, 8), owner: 'Bora' },
+    { id: 4, title: 'Delivery', start: new Date(2026, 7, 10), end: new Date(2026, 7, 10) },
+    { id: 5, parentId: 4, title: 'Build', start: new Date(2026, 7, 10), end: new Date(2026, 7, 14), owner: 'Cem' },
+    { id: 6, parentId: 4, title: 'Review', start: new Date(2026, 7, 14), end: new Date(2026, 7, 15), owner: 'Ana' },
+  ];
+  protected readonly links = [{ id: 'a', predecessorId: 5, successorId: 6 }];
+}
+```
+
+#### Sort filter
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttColumn, OgeGanttSortChangedEvent } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- header click / Enter sorts siblings; the filter row and the search
+         box keep the ancestors of matches. Drag a header edge (Alt+Arrow) to
+         resize, drag a header (Ctrl+Shift+Arrow) to move it; frozen columns
+         stay pinned while the pane scrolls sideways. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      [columns]="columns"
+      [allowSorting]="true"
+      [allowColumnResizing]="true"
+      [allowColumnReordering]="true"
+      [filterRow]="true"
+      [searchPanel]="true"
+      style="height: 400px"
+      (sortChanged)="lastSort.set($event)"
+    />
+    <p>Sorted by: {{ lastSort()?.field ?? 'store order' }}</p>
+  `,
+})
+export class Demo {
+  protected readonly lastSort = signal<OgeGanttSortChangedEvent | null>(null);
+  protected readonly columns: OgeGanttColumn[] = [
+    { field: 'wbs', frozen: true, allowSorting: false },
+    { field: 'title', frozen: true },
+    { field: 'owner' },
+    { field: 'start' },
+    { field: 'end' },
+    { field: 'duration' },
+  ];
+  protected readonly tasks = [
+    { id: 1, title: 'Discovery', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+    { id: 2, parentId: 1, title: 'Interviews', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), owner: 'Ana' },
+    { id: 3, parentId: 1, title: 'Survey', start: new Date(2026, 7, 4), end: new Date(2026, 7, 8), owner: 'Bora' },
+    { id: 4, title: 'Delivery', start: new Date(2026, 7, 10), end: new Date(2026, 7, 10) },
+    { id: 5, parentId: 4, title: 'Build', start: new Date(2026, 7, 10), end: new Date(2026, 7, 14), owner: 'Cem' },
+    { id: 6, parentId: 4, title: 'Review', start: new Date(2026, 7, 14), end: new Date(2026, 7, 15), owner: 'Ana' },
+  ];
+  protected readonly links = [{ id: 'a', predecessorId: 5, successorId: 6 }];
 }
 ```
 
@@ -43109,8 +43722,8 @@ Framework-free engine behind the Angular and React Gantt (ADR 0003): task-tree m
 
 `@oge-ui/gantt-engine`
 
-- values: `GANTT_LIST_WIDTH_MAX`, `GANTT_LIST_WIDTH_MIN`, `GANTT_OVERSCAN_ROWS`, `GANTT_SCALE_HEAD_PX`, `GANTT_SCALE_ORDER`, `GANTT_TICK_WIDTH`, `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OgeGanttCore`, `addWorkingDays`, `autoScheduleForward`, `beginGanttGesture`, `buildGanttDependencies`, `buildGanttDialogItems`, `buildGanttScale`, `buildGanttTasks`, `buildResourceWorkload`, `chartPxToDate`, `criticalPathKeys`, `dateToPx`, `dependencyAnchors`, `dependencyPath`, `fitGanttScaleType`, `formatGanttMessage`, `ganttDataRange`, `ganttTaskPatch`, `ganttWindowRange`, `isWorkingDay`, `mirrorGanttKey`, `nextWorkingDay`, `normalizeResourceIds`, `proposeTaskMove`, `proposeTaskProgress`, `proposeTaskResize`, `pxToDate`, `resolveGanttConfig`, `resolveGanttFields`, `routeDependency`, `sameGanttRange`, `snapToUnit`, `stepGanttScale`, `widenGanttRange`, `workingDaysBetween`, `wouldCreateCycle`
-- types: `GanttArrow`, `GanttBar`, `GanttBarGestureKind`, `GanttCalendarInput`, `GanttContextMenuState`, `GanttDependency`, `GanttDependencyExprs`, `GanttDependencyType`, `GanttEditorModel`, `GanttEditorResult`, `GanttFieldExpr`, `GanttGestureCallbacks`, `GanttGestureHandle`, `GanttKeyLike`, `GanttMenuItemState`, `GanttMouseLike`, `GanttPoint`, `GanttPointerLike`, `GanttRange`, `GanttResolvedColumn`, `GanttScale`, `GanttScaleType`, `GanttScheduleChange`, `GanttStripRect`, `GanttTask`, `GanttTaskChange`, `GanttTaskExprs`, `GanttTaskProposal`, `GanttTick`, `GanttWorkCalendar`, `GanttWorkloadRow`, `GanttWorkloadSegment`, `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttCoreEvents`, `OgeGanttCoreHost`, `OgeGanttCoreInputs`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttMenuMessages`, `OgeGanttMessages`, `OgeGanttResource`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttWorkCalendar`, `ResolvedGanttFields`
+- values: `GANTT_COLUMN_WIDTH_MAX`, `GANTT_COLUMN_WIDTH_MIN`, `GANTT_CONSTRAINT_TYPES`, `GANTT_LIST_WIDTH_MAX`, `GANTT_LIST_WIDTH_MIN`, `GANTT_OVERSCAN_ROWS`, `GANTT_RESOURCE_ROW_PREFIX`, `GANTT_SCALE_HEAD_PX`, `GANTT_SCALE_ORDER`, `GANTT_TICK_WIDTH`, `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OgeGanttCore`, `addWorkingDays`, `applyGanttLag`, `autoScheduleForward`, `beginGanttGesture`, `buildGanttDependencies`, `buildGanttDialogItems`, `buildGanttScale`, `buildGanttTasks`, `buildResourceHistogram`, `buildResourceViewRows`, `buildResourceWorkload`, `chartPxToDate`, `clampGanttColumnWidth`, `computeGanttSlack`, `criticalPathKeys`, `dateToPx`, `dependencyAnchors`, `dependencyPath`, `detectGanttConflicts`, `effortDrivenEnd`, `fillGanttMessages`, `fitGanttScaleType`, `formatGanttLag`, `formatGanttMessage`, `formatGanttPredecessors`, `ganttDataRange`, `ganttDateInputValue`, `ganttFilterKeys`, `ganttSortValue`, `ganttSpanDays`, `ganttTaskPatch`, `ganttWindowRange`, `isDatedConstraint`, `isWorkingDay`, `mirrorGanttKey`, `moveGanttColumn`, `nextGanttSelection`, `nextWorkingDay`, `normalizeGanttUnits`, `normalizeResourceIds`, `parseGanttConstraintType`, `parseGanttDateInput`, `parseGanttLag`, `parseGanttPredecessors`, `parseGanttSegments`, `proposeTaskMove`, `proposeTaskProgress`, `proposeTaskResize`, `pxToDate`, `resolveGanttConfig`, `resolveGanttFields`, `routeDependency`, `sameGanttRange`, `scheduleGanttProject`, `snapToUnit`, `sortGanttItems`, `stepGanttScale`, `trimGanttDialogChange`, `widenGanttRange`, `workingDaysBetween`, `wouldCreateCycle`
+- types: `GanttArrow`, `GanttBar`, `GanttBarGestureKind`, `GanttBarSegment`, `GanttBuildOptions`, `GanttCalendarInput`, `GanttCellEditState`, `GanttCellEditorType`, `GanttConflictKind`, `GanttConstraintType`, `GanttContextMenuState`, `GanttDependency`, `GanttDependencyEditorState`, `GanttDependencyExprs`, `GanttDependencyType`, `GanttDialogExtras`, `GanttEditorKeyLike`, `GanttEditorModel`, `GanttEditorResult`, `GanttFieldExpr`, `GanttGestureCallbacks`, `GanttGestureHandle`, `GanttHistogramCell`, `GanttHistogramResource`, `GanttHistogramRow`, `GanttHistogramRowVm`, `GanttKeyLike`, `GanttLagUnit`, `GanttMenuItemState`, `GanttMouseLike`, `GanttPoint`, `GanttPointerLike`, `GanttPredecessorEntry`, `GanttProgressLine`, `GanttRange`, `GanttResolvedColumn`, `GanttResourceViewRow`, `GanttRollup`, `GanttScale`, `GanttScaleType`, `GanttScheduleChange`, `GanttScheduleOptions`, `GanttScheduleResult`, `GanttSchedulingConflict`, `GanttSegment`, `GanttSlack`, `GanttSort`, `GanttSortDirection`, `GanttStripRect`, `GanttTask`, `GanttTaskChange`, `GanttTaskExprs`, `GanttTaskProposal`, `GanttTick`, `GanttWorkCalendar`, `GanttWorkloadRow`, `GanttWorkloadSegment`, `GanttZoomPresetOption`, `OgeGanttAnnouncementMessages`, `OgeGanttCellEditorType`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttColumnReorderedEvent`, `OgeGanttColumnResizedEvent`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttConflictKind`, `OgeGanttConstraintType`, `OgeGanttCoreEvents`, `OgeGanttCoreHost`, `OgeGanttCoreInputs`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyEditorMessages`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDependencyUpdatedEvent`, `OgeGanttDependencyUpdatingEvent`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttLagUnit`, `OgeGanttMenuMessages`, `OgeGanttMessages`, `OgeGanttResolvedMessages`, `OgeGanttResource`, `OgeGanttScaleMessages`, `OgeGanttScaleType`, `OgeGanttSchedulingConflict`, `OgeGanttSchedulingConflictEvent`, `OgeGanttSchedulingMessages`, `OgeGanttSegment`, `OgeGanttSelectionChangedEvent`, `OgeGanttSelectionMode`, `OgeGanttSlack`, `OgeGanttSortChangedEvent`, `OgeGanttSortDirection`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttViewMode`, `OgeGanttWorkCalendar`, `OgeGanttZoomPreset`, `ResolvedGanttFields`
 
 `@oge-ui/gantt-engine/export-pdf`
 
@@ -43126,6 +43739,11 @@ Framework-free engine behind the Angular and React Gantt (ADR 0003): task-tree m
 
 - values: `buildGanttCanvas`, `ganttImageSize`
 - types: `OgeGanttImageExportOptions`
+
+`@oge-ui/gantt-engine/export-msproject`
+
+- values: `buildGanttMsProjectXml`, `buildMsProjectXml`, `downloadMsProjectXml`, `importMsProjectXml`, `parseMsProjectXml`, `parseMsXml`
+- types: `MsProjectDependencyItem`, `MsProjectExportInput`, `MsProjectExportOptions`, `MsProjectImportResult`, `MsProjectResource`, `MsProjectResourceItem`, `MsProjectTaskItem`, `MsXmlElement`, `OgeGanttMsProjectExportOptions`
 
 ## @oge-ui/react-gantt
 
@@ -43150,14 +43768,21 @@ _Data_
 | `dependencyKeyExpr / predecessorKeyExpr / successorKeyExpr / dependencyTypeExpr` | `string \| ((item: D) => unknown)` | `'id' / 'predecessorId' / 'successorId' / 'type'` | Dependency field mapping. Types are `'FS' \| 'SS' \| 'FF' \| 'SF'` (dx numeric codes 0–3 also parse); missing type means FS. |
 | `resources` | `readonly OgeGanttResource[]` | `[]` | Resource choices (`{ id, text, color?, calendar? }`): labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own `calendar` overrides `workCalendar` for its tasks (first assigned resource with a calendar wins). |
 | `resourceIdExpr` | `string \| ((item: T) => unknown)` | `'resourceId'` | The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape. |
+| `dependencyLagExpr / dependencyLagUnitExpr` | `string \| ((item: D) => unknown)` | `'lag' / 'lagUnit'` | Link **lag / lead**: an amount (negative = lead) and its unit, `'days'` (working days on a `workCalendar`) or `'hours'`. Drawn as a `+2d` badge on the arrow, honoured by auto-scheduling for all four link types, edited in the dependency editor (double-click an arrow, or Enter on a clicked one) and in the `predecessors` column (`3FS+2d`). |
+| `manuallyScheduledExpr` | `string \| ((item: T) => unknown)` | `'manuallyScheduled'` | Per-task scheduling mode — `true` pins the task: auto-scheduling never moves it, and a link it breaks is reported as a `dependency` conflict. Bars draw a hatched pattern. |
+| `constraintTypeExpr / constraintDateExpr` | `string \| ((item: T) => unknown)` | `'constraintType' / 'constraintDate'` | Task constraint (MS Project vocabulary): `'ASAP' \| 'ALAP' \| 'SNET' \| 'SNLT' \| 'FNET' \| 'FNLT' \| 'MSO' \| 'MFO'` and its date. SNET/FNET set a floor, MSO/MFO pin the task, SNLT/FNLT cap it; links win over SNLT/FNLT/MSO and the violation is reported. ALAP slides the task as late as its successors allow (backward pass). A dated type without a date reads as ASAP. |
+| `deadlineExpr` | `string \| ((item: T) => unknown)` | `'deadline'` | Target finish: a flag marker on the bar row, an _overdue_ state (and a `deadline` conflict) when the task ends later. |
+| `segmentsExpr` | `string \| ((item: T) => unknown)` | `'segments'` | Split tasks: `[{ start, end }, …]` — two or more pieces draw as separate bars joined by a dotted line; the task spans its pieces. Moving drags every piece; resizing moves the first piece's start or the last piece's end. |
+| `baselinesExpr` | `string \| ((item: T) => unknown)` | `'baselines'` | Several baselines: `[{ start, end }, …]`, index = baseline number − 1. Wins over `baselineStartExpr`/`baselineEndExpr` (which remain baseline 1). The toolbar shows a chooser when a task carries more than one. |
+| `unitsExpr / effortExpr` | `string \| ((item: T) => unknown)` | `'units' / 'effort'` | Assignment **units** in % (a number for every assigned resource, an array aligned with the resource ids, or an id-keyed map; default 100) and work in hours (`effortDriven`). |
 
 _Appearance & behavior_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `scaleType / defaultScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | `'days'` | Timeline scale — calendar-true ticks (real month lengths, DST-safe). Controlled when `scaleType` is set (pair it with `onScaleTypeChange`); `defaultScaleType` seeds the uncontrolled state. The toolbar zoom and zoom-to-fit write it. |
+| `scaleType / defaultScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months' \| 'quarters' \| 'years'` | `'days'` | Timeline scale — calendar-true ticks (real month lengths, DST-safe). Controlled when `scaleType` is set (pair it with `onScaleTypeChange`); `defaultScaleType` seeds the uncontrolled state. The toolbar zoom and zoom-to-fit write it. |
 | `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday) for the weeks scale; `undefined` resolves from the locale. |
-| `columns` | `readonly OgeGanttColumn[]` | `title / start / end / duration` | Task-list columns: built-in fields (`title`, `start`, `end`, `duration`, `progress`) or any data field, with optional `header`, `widthPx` and `format`. |
+| `columns` | `readonly OgeGanttColumn[]` | `title / start / end / duration` | Task-list columns: built-in fields (`title`, `start`, `end`, `duration`, `progress`, `wbs`, `predecessors`, `totalSlack`, `freeSlack`, `constraint`, `deadline`, `resources`, `units`, `effort`) or any data field, with optional `header`, `widthPx`, `format`, `editor` (`false` = read-only), `allowSorting` and `frozen` (pinned to the start edge, frozen columns lead). |
 | `taskListWidth` | `number` | `360` | Width (px) of the task pane; the splitter between the panes drags it, and a new value re-applies. |
 | `taskTitlePosition` | `'inside' \| 'outside' \| 'none'` | `'inside'` | Where the task title renders relative to its bar. |
 | `showDependencies / showRowLines` | `boolean` | `true` | Dependency arrows / horizontal row guides. |
@@ -43167,12 +43792,41 @@ _Appearance & behavior_
 | `workCalendar` | `OgeGanttWorkCalendar \| null` | `null` | Work-time calendar (`{ workingDays?, holidays? }`, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in _working_ days. The `holidays` prop merges in; per-resource `calendar`s override it per task. |
 | `showResourceWorkload` | `boolean` | `false` | Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches in the danger color. |
 | `stripLines` | `readonly OgeGanttStripLine[]` | `[]` | Vertical markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded range with it. |
-| `autoScheduling` | `boolean` | `false` | Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the provider locale, then the browser locale. |
 | `messages` | `Partial<OgeGanttMessages>` | `{}` | Per-instance message overrides, merged over the provider config per top-level block. |
 | `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: the task tree moves to the right, the timeline runs from right to left (dependency arrows, baselines, today line and drag tip included), pointer drags and the splitter invert their direction and the Left/Right keys mirror — Left expands a summary, Alt+Shift+Left indents and Ctrl+Left moves a bar later. Unset follows the page: the computed `direction` or the nearest `dir` attribute, read after the first render and kept current while it changes; an explicit value also sets `dir` on the host. |
 | `selectedTaskKey / defaultSelectedTaskKey` | `RowKey \| null` | `null` | The selected task. Controlled when `selectedTaskKey` is set (pair it with `onSelectedTaskKeyChange`); `defaultSelectedTaskKey` seeds the uncontrolled state and is applied at mount. |
 | `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-gantt` host — give it a height (the body scrolls inside it). |
+
+_Scheduling_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `autoScheduling` | `boolean` | `false` | Project-level auto-scheduling: after every edit the engine places each auto-scheduled task at the earliest date its links (with lag) and constraint allow — **moving tasks earlier as well as later** — then slides ALAP tasks late (backward pass). Manually scheduled tasks stay put. `scheduleProject()` runs it on demand. |
+| `projectStart` | `Date \| null` | `null` | Where unlinked ASAP tasks start while auto-scheduling; `null` keeps their current start (only links and constraints move a task). |
+| `baselineIndex / defaultBaselineIndex` | `number` | `0` | Which baseline renders (0-based); `-1` hides baselines. Controlled when provided; the toolbar chooser calls `onBaselineIndexChange`. |
+| `showProgressLine / statusDate` | `boolean / Date \| null` | `false / null` | The progress line: a zig-zag through every visible row from the status date to the point each started task's progress has reached (status date default: today). |
+| `showRollups` | `boolean` | `false` | Draws every child milestone onto its summary bar (useful when the summary is collapsed). |
+| `zoomPresets` | `readonly OgeGanttZoomPreset[] \| null` | `null` | The toolbar's scale chooser: `{ scaleType, tickWidth?, label? }` entries; `null` lists one per scale (hours … years). |
+
+_Task list_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `inlineEditing` | `boolean` | `false` | Edits task-list cells in place: double-click a cell or press **F2** on a row; Enter commits, Escape cancels, Tab / Shift+Tab commit and move along the row. Text, date, number, duration (days) and predecessor (`3FS+2d, 5SS`) editors; summaries keep their rolled-up dates read-only. Every commit is one undoable update through the cancelable pipeline. |
+| `allowSorting` | `boolean` | `false` | Header click / Enter sorts (ascending → descending → off) — siblings within each parent, WBS numbers keep the store order. `aria-sort` on the header. |
+| `allowColumnResizing / allowColumnReordering` | `boolean` | `false` | Header edge drag or **Alt+Left/Right** (Shift: 1px) resizes a column; header drag or **Ctrl+Shift+Left/Right** moves it. Headers become one roving tab stop (Left/Right between them, Down into the rows). |
+| `filterRow / searchPanel` | `boolean` | `false` | A filter row under the headers (per column) and a toolbar search box (any column): fold-insensitive “contains” on the cell text; matches keep their ancestors and open collapsed summaries. |
+| `selectionMode` | `'single' \| 'multiple'` | `'single'` | `'multiple'`: Ctrl/Cmd-click toggles, Shift-click and Shift+Up/Down extend, Ctrl+Space toggles, Ctrl+A selects all; Delete, Alt+Shift+Left/Right and the context menu act on the whole selection as **one undo step**. |
+| `selectedTaskKeys / defaultSelectedTaskKeys` | `readonly RowKey[]` | `[]` | Every selected key in multiple mode (the primary row is `selectedTaskKey`). Controlled when provided. |
+
+_Resources & views_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `effortDriven / hoursPerDay` | `boolean / number` | `false / 8` | Effort-driven scheduling: changing a task's resources, units or work recomputes its finish as `work ÷ (hoursPerDay × Σ units)` in working days. |
+| `showResourceHistogram` | `boolean` | `false` | Per-resource utilization rows under the chart: one bar per timeline period (units × overlap), a dashed capacity line (`OgeGanttResource.capacity`, default 100%), over-allocated periods in the danger colour; each row's accessible name summarizes the peak and the periods over capacity. |
+| `viewMode / defaultViewMode` | `'tasks' \| 'resources'` | `'tasks'` | `'resources'` regroups the rows by resource (an _Unassigned_ group last); assignment rows edit the real task. The toolbar toggle (shown when `resources` exist) calls `onViewModeChange`. |
 
 _Editing gates_
 
@@ -43196,15 +43850,30 @@ _Handle (ref)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `insertTask(taskData) / updateTask(taskData, patch) / deleteTask(taskData)` | `void` | Programmatic CRUD through the same cancelable pipelines as interactive editing — one undo step each. |
-| `insertDependency(predecessorKey, successorKey, type?) / deleteDependency(dependencyData)` | `void` | Guarded link CRUD; inserting runs the same cycle check as interactive drawing. |
+| `insertDependency(predecessorKey, successorKey, type?, options?) / deleteDependency(dependencyData)` | `void` | Guarded link CRUD; inserting runs the same cycle check as interactive drawing and takes an optional `{ lag, lagUnit }`. |
 | `undo() / redo()` | `void` | Snapshot history — every applied edit, drags included, is exactly one step (depth: config `undoLimit`). |
-| `zoomIn() / zoomOut() / zoomToFit()` | `void` | Steps the scale (hours ⇄ days ⇄ weeks ⇄ months) / picks the finest scale that fits the whole plan. Each reports through `onScaleTypeChange`. |
+| `zoomIn() / zoomOut() / zoomToFit()` | `void` | Steps the scale (hours ⇄ days ⇄ weeks ⇄ months ⇄ quarters ⇄ years) / picks the finest scale that fits the whole plan. Each reports through `onScaleTypeChange`. |
 | `scrollToDate(date)` | `void` | Scrolls the chart so `date` is in view. |
 | `expandAll() / collapseAll() / expandAllToLevel(level) / expandToTask(key)` | `void` | Tree expansion control; `expandToTask` also focuses and reveals the row. |
 | `showTaskDetailsDialog(taskData?)` | `void` | Opens the task dialog — edit form for the given task, prefilled create form without one. |
 | `indentTask(task) / outdentTask(task)` | `void` | Reparents through the guarded update pipeline: indent makes the task a child of its previous sibling, outdent lifts it to the grandparent. Also on the built-in context menu and **Alt+Shift+Left/Right** on the focused row. |
 | `focus()` | `void` | Focuses the task tree (roving row). |
 | `getExportData()` | `OgeGanttExportData<T>` | Snapshot for the exporters: every task in tree order (collapse ignored), the resolved columns with pane-identical formatting, the chart range and the critical-path keys. |
+
+_Scheduling, task list & selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `scheduleProject()` | `void` | Runs the scheduling engine now — even with `autoScheduling` off — as one undo step. |
+| `updateDependency(dependencyData, patch)` | `void` | Updates a link's fields (type, lag, lag unit…) through the cancelable `dependencyUpdating` pipeline; auto-scheduling re-runs. |
+| `getTaskSlack(key)` | `OgeGanttSlack \| null` | Total and free slack of a leaf task in days (working days on a calendar) — also the `totalSlack` / `freeSlack` columns. |
+| `setBaseline(index?)` | `void` | Saves every leaf task's current dates as baseline `index` (0-based, default 0) — MS Project “Set Baseline”, one undo step. |
+| `applyZoomPreset(index)` | `void` | Applies a zoom preset (scale + tick width) by index. |
+| `sortBy(field, direction?) / setFilter(field, text) / setSearchText(text) / clearFilters()` | `void` | Programmatic sort (`null` clears), filter-row text and search. |
+| `setColumnWidth(field, widthPx) / moveColumn(field, toIndex)` | `void` | Column width (clamped 40–600px) and order — the same paths as the header gestures, with their events. |
+| `editCell(task, field?)` | `boolean` | Opens the inline editor on a cell (unset field = the first editable one); `false` when the cell is read-only. |
+| `getSelectedTasks() / selectAll() / clearSelection()` | `OgeGanttTask<T>[] / void` | The multi-selection in tree order, select every visible task, clear. |
+| `deleteTasks(items) / indentTasks(tasks) / outdentTasks(tasks)` | `void` | Bulk edits — each one undo step and one plural announcement. |
 
 _Export entry points (lazy, optional peers)_
 
@@ -43213,6 +43882,7 @@ _Export entry points (lazy, optional peers)_
 | `exportGanttToExcel(handle, options?) / buildGanttExcelWorkbook(data, options?)` | `@oge-ui/react-gantt/export-excel` | Lazy Excel export (`exceljs` peer) from the Gantt's `ref` handle: the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. The builder is the same one the Angular entry re-exports. |
 | `exportGanttToPdf(handle, options?) / buildGanttPdfDocument(data, options?)` | `@oge-ui/react-gantt/export-pdf` | Lazy PDF export (`jspdf` peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. Text outside WinAnsi (Turkish `ğ ş ı İ`, Central European, Greek, Cyrillic) needs a Unicode TrueType `font` — per export, or once for every PDF via `setOgePdfDefaultFont({ family, normal, bold })` from `@oge-ui/behavior`; without one the built-in Helvetica cannot draw it (a dev-mode warning says so). |
 | `exportGanttToPng(handle, options?) / buildGanttCanvas(data, options?)` | `@oge-ui/react-gantt/export-image` | Lazy PNG export with **no dependencies** — plain canvas drawing of the same chart. |
+| `exportGanttToMsProject(handle, options?) / importMsProjectXml(xml)` | `@oge-ui/react-gantt/export-msproject` | MS Project XML (MSPDI) **without dependencies**: the export writes tasks with WBS, outline levels, manual mode, constraints, deadlines and baselines, links with `LinkLag`, resources with max units, assignments with units and work, and the calendar (working weekdays + holiday exceptions), then downloads (`download: false` returns the XML only). The import parses with a small DOM-free reader (no Trusted Types sink, no DTD entities) into plain `tasks` / `dependencies` / `resources` / `workCalendar` in the default field names — bind them. Midnight-to-midnight dates map to 08:00–17:00 and back, so a round trip is lossless. |
 
 #### Events
 
@@ -43231,25 +43901,39 @@ _Interaction_
 | Name | Type | Description |
 | --- | --- | --- |
 | `onTaskClick / onTaskDblClick / onTaskContextMenu` | `(event: OgeGanttTaskClickEvent<T>) => void` | Bar/row pointer events with the normalized task and the native `MouseEvent`. Right-click also opens the **built-in context menu** (labels in `messages.menu`). |
-| `onSelectionChanged` | `(event: OgeGanttSelectionChangedEvent<T>) => void` | Single-row selection changed (task or `null`). |
+| `onSelectionChanged` | `(event: OgeGanttSelectionChangedEvent<T>) => void` | Selection changed: `task` (the primary row, or `null`) and `tasks` (every selected task; multiple mode). |
 | `onScaleTypeChange / onSelectedTaskKeyChange` | `(value: OgeGanttScaleType) / (key: RowKey \| null) => void` | The controlled halves of `scaleType` and `selectedTaskKey`. |
+
+_Scheduling & task list_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSchedulingConflict` | `OgeGanttSchedulingConflictEvent<T>` | The conflict set changed (also when it empties): `conflicts` with the task, the `kind` (`'dependency' \| 'constraint' \| 'deadline'`), the violated link / constraint / date and a readable `message`. Conflicted bars draw a dashed danger outline and a `!` badge; their row labels name the conflict. |
+| `onDependencyUpdating / onDependencyUpdated` | `OgeGanttDependencyUpdat*Event<D>` | Cancelable link update (type / lag) and its applied twin. |
+| `onSortChanged / onColumnResized / onColumnReordered` | `OgeGanttSortChangedEvent / OgeGanttColumnResizedEvent / OgeGanttColumnReorderedEvent` | Task-list state changes: `{ field, direction }` (`null` = cleared), `{ field, widthPx }`, `{ field, fromIndex, toIndex }`. |
+| `onSelectedTaskKeysChange / onBaselineIndexChange / onViewModeChange` | `readonly RowKey[] / number / OgeGanttViewMode` | The controlled halves of `selectedTaskKeys`, `baselineIndex` and `viewMode`. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeGanttHandle<T, D>` | `interface` | The `ref` handle: every method listed above. |
-| `OgeGanttTask<T>` | `interface` | The normalized task — the payload of callbacks and render props: `key`, `parentKey`, `source` (the original item), `title`, `start`/`end`, `progress`, `color`, baseline dates, `isSummary`/`isMilestone` and `level`. |
-| `OgeGanttDependency<D>` | `interface` | The normalized link: `key`, `source`, `predecessorKey`, `successorKey`, `type`. |
+| `OgeGanttTask<T>` | `interface` | The normalized task — the payload of events and templates: `key`, `parentKey`, `source` (the original item), `title`, `start`/`end`, `progress`, `color`, baseline dates and `baselines`, `isSummary`/`isMilestone`, `level`, `wbs`, `manuallyScheduled`, `constraintType`/`constraintDate`, `deadline`, `segments`, `resourceIds` with aligned `units`, and `effort`. |
+| `OgeGanttDependency<D>` | `interface` | The normalized link: `key`, `source`, `predecessorKey`, `successorKey`, `type`, `lag` (negative = lead) and `lagUnit`. |
 | `OgeGanttDependencyType` | `'FS' \| 'SS' \| 'FF' \| 'SF'` | Finish-to-start, start-to-start, finish-to-finish, start-to-finish. |
-| `OgeGanttScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | The timeline scale units. |
-| `OgeGanttColumn` | `interface` | A task-list column: `{ field, header?, widthPx?, format? }`. |
+| `OgeGanttScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months' \| 'quarters' \| 'years'` | The timeline scale units. |
+| `OgeGanttColumn` | `interface` | A task-list column: `{ field, header?, widthPx?, format?, editor?, allowSorting?, frozen? }`. |
 | `OgeGanttStripLine` | `interface` | `{ start, end?, label?, color? }` — a chart marker line or range. |
 | `OgeGanttWorkCalendar` | `interface` | `{ workingDays?, holidays? }` — the work-time calendar (0 = Sunday; default working week Monday-Friday). |
-| `OgeGanttResource` | `interface` | `{ id, text, color?, calendar? }` — one assignable resource. |
-| `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys and `resourceText()`. |
+| `OgeGanttResource` | `interface` | `{ id, text, color?, calendar?, capacity? }` — one assignable resource (the `resources` item type); `capacity` (%, default 100) is the histogram's over-allocation line. |
+| `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys, `resourceText()`, and (optional, for hand-built snapshots) `dependencies`, `resources`, `workCalendar` and `slack`. |
 | `OgeGanttTaskTitlePosition` | `'inside' \| 'outside' \| 'none'` | Task title placement relative to the bar. |
 | `OgeGanttTaskRenderContext<T> / OgeGanttTooltipRenderContext<T>` | `interface` | The render-prop contexts: `{ task: OgeGanttTask<T> }`. |
+| `OgeGanttConstraintType / OgeGanttLagUnit` | `'ASAP' \| 'ALAP' \| 'SNET' \| 'SNLT' \| 'FNET' \| 'FNLT' \| 'MSO' \| 'MFO' / 'days' \| 'hours'` | Constraint types and the lag unit. |
+| `OgeGanttSegment / OgeGanttSlack` | `interface` | `{ start, end }` (split piece or baseline) / `{ totalSlack, freeSlack }` in days. |
+| `OgeGanttZoomPreset` | `interface` | `{ scaleType, tickWidth?, label? }` — one zoom-chooser entry. |
+| `OgeGanttSchedulingConflict<T> / OgeGanttConflictKind` | `interface` | `{ key, task, kind, constraintType?, dependencyKey?, date?, message }`. |
+| `OgeGanttViewMode / OgeGanttSelectionMode / OgeGanttSortDirection / OgeGanttCellEditorType` | `string unions` | `'tasks' \| 'resources'`, `'single' \| 'multiple'`, `'asc' \| 'desc'`, `'text' \| 'number' \| 'date' \| 'duration' \| 'predecessor'`. |
 
 ### Configuration
 
@@ -43259,7 +43943,7 @@ _Interaction_
 | --- | --- | --- | --- |
 | `OgeGanttConfigProvider` | `<OgeGanttConfigProvider config>` | `—` | Configures every Gantt below it (`OgeGanttConfigInput`); shallow merge over the enclosing provider (or `OGE_DEFAULT_GANTT_CONFIG`) per top-level key — a partial `messages` replaces whole nested blocks. A new `config` object re-resolves, so switching the UI language at runtime is a state change. |
 | `useOgeGanttConfig()` | `OgeGanttConfig` | `—` | The resolved Gantt config for the current subtree. |
-| `messages` | `OgeGanttMessages` | `—` | Every user-facing string, aria labels included: `toolbar`, `menu`, `columns`, `dialog`, `grid` (aria templates with `{token}` placeholders) and `announcements` (live-region templates). Defaults: `OGE_DEFAULT_GANTT_MESSAGES` — single-sourced in `@oge-ui/gantt-engine`, identical to the Angular catalog. |
+| `messages` | `OgeGanttMessages` | `—` | Every user-facing string, aria labels included: `toolbar`, `menu`, `columns`, `dialog`, `grid` (aria templates with `{token}` placeholders) and `announcements` (live-region templates, ICU plurals for counts), plus the optional `scales`, `scheduling` and `dependencyEditor` blocks — keys added after 1.1 are optional and filled from English (`fillGanttMessages`). Defaults: `OGE_DEFAULT_GANTT_MESSAGES` — single-sourced in `@oge-ui/gantt-engine`, identical to the Angular catalog. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `locale` prop wins. |
 | `rowHeight` | `number` | `36` | Fixed row height in px — the invariant behind the row virtualization of both panes. |
 | `undoLimit` | `number` | `50` | Undo history depth. |
@@ -43267,6 +43951,68 @@ _Interaction_
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### MS Project XML
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttHandle, OgeGanttResource, OgeGanttWorkCalendar } from '@oge-ui/react-gantt';
+
+// /export-msproject has no dependencies: MSPDI XML with WBS, outline
+// levels, manual mode, constraints, deadlines, baselines, links with lag,
+// resources, assignments with units and the calendar. The import returns
+// plain data in the default field names — set it as props.
+type Item = Record<string, unknown>;
+
+export function ProjectFiles() {
+  const gantt = useRef<OgeGanttHandle<Item, Item>>(null);
+  const [tasks, setTasks] = useState<Item[]>([
+    { id: 1, title: 'Pack', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6) },
+    { id: 2, title: 'Move', start: new Date(2026, 7, 7), end: new Date(2026, 7, 8) },
+  ]);
+  const [links, setLinks] = useState<Item[]>([
+    { id: 'a', predecessorId: 1, successorId: 2, lag: 1 },
+  ]);
+  const [resources, setResources] = useState<OgeGanttResource[]>([]);
+  const [calendar, setCalendar] = useState<OgeGanttWorkCalendar | null>(null);
+
+  const exportXml = async () => {
+    const { exportGanttToMsProject } = await import('@oge-ui/react-gantt/export-msproject');
+    if (gantt.current) {
+      exportGanttToMsProject(gantt.current, { filename: 'plan.xml', title: 'Office move' });
+    }
+  };
+
+  const importXml = async (file: File | undefined) => {
+    if (!file) return;
+    const { importMsProjectXml } = await import('@oge-ui/react-gantt/export-msproject');
+    const plan = importMsProjectXml(await file.text());
+    setTasks(plan.tasks as unknown as Item[]);
+    setLinks(plan.dependencies as unknown as Item[]);
+    setResources(plan.resources);
+    setCalendar(plan.workCalendar);
+  };
+  return (
+    <>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <button type="button" onClick={exportXml}>Download .xml</button>
+        <input type="file" accept=".xml" onChange={(event) => importXml(event.target.files?.[0])} />
+      </div>
+      <OgeGantt
+        ref={gantt}
+        tasks={tasks}
+        dependencies={links}
+        resources={resources}
+        workCalendar={calendar}
+        style={{ height: 420 }}
+      />
+    </>
+  );
+}
+```
 
 #### Getting started
 
@@ -43750,6 +44496,504 @@ export function RtlPlan() {
           Left expands a summary, Alt+Shift+Left indents, Ctrl+Left moves a
           bar later. */}
       <OgeGantt tasks={tasks} dependencies={links} rtlEnabled style={{ height: 300 }} />
+    </>
+  );
+}
+```
+
+#### Units, work & utilization
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttColumn, OgeGanttResource } from '@oge-ui/react-gantt';
+
+// units (%) per assignment, work in hours and effortDriven: changing a
+// task's people, units or work recomputes its finish. The histogram sums
+// units per period against each resource's capacity line — over-allocated
+// periods turn red.
+const columns: OgeGanttColumn[] = [
+  { field: 'title' },
+  { field: 'resources' },
+  { field: 'units' },
+  { field: 'effort' },
+];
+const resources: OgeGanttResource[] = [
+  { id: 1, text: 'Ana' },
+  { id: 2, text: 'Bora', capacity: 50 }, // half time
+  { id: 3, text: 'Cem' },
+];
+const tasks = [
+  { id: 1, title: 'API design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), resourceId: [1], effort: 32 },
+  {
+    id: 2,
+    title: 'Database',
+    start: new Date(2026, 7, 5),
+    end: new Date(2026, 7, 11),
+    resourceId: [1, 2],
+    units: [50, 100], // per assignment, in %
+    effort: 40,
+  },
+  { id: 3, title: 'Monitoring', start: new Date(2026, 7, 6), end: new Date(2026, 7, 10), resourceId: [2], effort: 16 },
+  { id: 4, title: 'Load tests', start: new Date(2026, 7, 11), end: new Date(2026, 7, 14), resourceId: [3], effort: 24 },
+];
+
+export function Utilization() {
+  return (
+    <OgeGantt
+      tasks={tasks}
+      resources={resources}
+      columns={columns}
+      effortDriven
+      hoursPerDay={8}
+      showResourceHistogram
+      style={{ height: 460 }}
+    />
+  );
+}
+```
+
+#### Resource view
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttResource, OgeGanttViewMode } from '@oge-ui/react-gantt';
+
+// viewMode 'resources' regroups the rows by resource (the toolbar's
+// Resource view toggle flips it); assignment rows edit the real task.
+const resources: OgeGanttResource[] = [
+  { id: 1, text: 'Ana' },
+  { id: 2, text: 'Bora', capacity: 50 }, // half time
+  { id: 3, text: 'Cem' },
+];
+const tasks = [
+  { id: 1, title: 'API design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), resourceId: [1], effort: 32 },
+  {
+    id: 2,
+    title: 'Database',
+    start: new Date(2026, 7, 5),
+    end: new Date(2026, 7, 11),
+    resourceId: [1, 2],
+    units: [50, 100], // per assignment, in %
+    effort: 40,
+  },
+  { id: 3, title: 'Monitoring', start: new Date(2026, 7, 6), end: new Date(2026, 7, 10), resourceId: [2], effort: 16 },
+  { id: 4, title: 'Load tests', start: new Date(2026, 7, 11), end: new Date(2026, 7, 14), resourceId: [3], effort: 24 },
+];
+
+export function ByPerson() {
+  const [view, setView] = useState<OgeGanttViewMode>('resources');
+  return (
+    <>
+      <OgeGantt
+        tasks={tasks}
+        resources={resources}
+        viewMode={view}
+        onViewModeChange={setView}
+        style={{ height: 420 }}
+      />
+      <p>View: {view}</p>
+    </>
+  );
+}
+```
+
+#### Lag, lead & slack
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttColumn, OgeGanttHandle, OgeGanttWorkCalendar } from '@oge-ui/react-gantt';
+
+// lag (negative = lead) on any link type, in working days on the
+// calendar or in hours; auto-scheduling pulls tasks earlier as well as
+// pushing them later. Edit a link: double-click its arrow, or type "2FS+2d"
+// into the Predecessors cell.
+type Task = Record<string, unknown>;
+
+const calendar: OgeGanttWorkCalendar = { workingDays: [1, 2, 3, 4, 5] };
+const columns: OgeGanttColumn[] = [
+  { field: 'wbs' },
+  { field: 'title' },
+  { field: 'start' },
+  { field: 'predecessors' },
+  { field: 'totalSlack' },
+  { field: 'freeSlack' },
+];
+const tasks: Task[] = [
+  { id: 1, title: 'Specs', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7) },
+  { id: 2, title: 'Prototype', start: new Date(2026, 7, 12), end: new Date(2026, 7, 19) },
+  { id: 3, title: 'User tests', start: new Date(2026, 7, 17), end: new Date(2026, 7, 21) },
+  { id: 4, title: 'Release', start: new Date(2026, 7, 28), end: new Date(2026, 7, 28) },
+];
+const links = [
+  { id: 'a', predecessorId: 1, successorId: 2, lag: 2 }, // FS + 2 working days
+  { id: 'b', predecessorId: 2, successorId: 3, type: 'SS', lag: 3 },
+  { id: 'c', predecessorId: 3, successorId: 4, lag: 4, lagUnit: 'hours' },
+];
+
+export function LaggedPlan() {
+  const gantt = useRef<OgeGanttHandle<Task>>(null);
+  return (
+    <>
+      <button type="button" onClick={() => gantt.current?.scheduleProject()}>
+        Recalculate
+      </button>
+      <OgeGantt
+        ref={gantt}
+        tasks={tasks}
+        dependencies={links}
+        columns={columns}
+        workCalendar={calendar}
+        autoScheduling
+        showCriticalPath
+        inlineEditing
+        style={{ height: 420 }}
+      />
+    </>
+  );
+}
+```
+
+#### Constraints, deadlines & conflicts
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttColumn } from '@oge-ui/react-gantt';
+
+// constraintType + constraintDate (ASAP, ALAP, SNET, SNLT, FNET, FNLT,
+// MSO, MFO), a deadline marker and manual tasks the engine never moves.
+// Whatever cannot be satisfied comes back as a conflict: a dashed outline,
+// a "!" badge, the row label — and onSchedulingConflict.
+const columns: OgeGanttColumn[] = [
+  { field: 'title', widthPx: 200 },
+  { field: 'constraint' },
+  { field: 'deadline' },
+];
+const tasks = [
+  { id: 1, title: 'Backend', start: new Date(2026, 7, 3), end: new Date(2026, 7, 12) },
+  {
+    id: 2,
+    title: 'Security review',
+    start: new Date(2026, 7, 3),
+    end: new Date(2026, 7, 5),
+    constraintType: 'SNET',
+    constraintDate: new Date(2026, 7, 10),
+  },
+  {
+    id: 3,
+    title: 'Frontend',
+    start: new Date(2026, 7, 12),
+    end: new Date(2026, 7, 19),
+    deadline: new Date(2026, 7, 18),
+  },
+  { id: 4, title: 'Translations', start: new Date(2026, 7, 3), end: new Date(2026, 7, 5), constraintType: 'ALAP' },
+  {
+    id: 5,
+    title: 'Vendor install',
+    start: new Date(2026, 7, 10),
+    end: new Date(2026, 7, 12),
+    manuallyScheduled: true,
+  },
+];
+const links = [
+  { id: 'a', predecessorId: 1, successorId: 3 },
+  { id: 'b', predecessorId: 1, successorId: 5 }, // the manual task breaks this link
+];
+
+export function ConstrainedPlan() {
+  const [messages, setMessages] = useState<string[]>([]);
+  return (
+    <>
+      <OgeGantt
+        tasks={tasks}
+        dependencies={links}
+        columns={columns}
+        autoScheduling
+        style={{ height: 420 }}
+        onSchedulingConflict={(event) =>
+          setMessages(event.conflicts.map((conflict) => conflict.message))
+        }
+      />
+      <ul aria-live="polite">
+        {messages.map((message) => (
+          <li key={message}>{message}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+```
+
+#### Baselines, split tasks & progress line
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttHandle } from '@oge-ui/react-gantt';
+
+// several baselines (toolbar chooser), a split task, the progress line
+// through the status date and child milestones rolled up onto the summary
+// bar. setBaseline(i) saves the current dates as baseline i.
+type Task = Record<string, unknown>;
+
+const statusDate = new Date(2026, 7, 14);
+const tasks: Task[] = [
+  { id: 1, title: 'Migration', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+  {
+    id: 2,
+    parentId: 1,
+    title: 'Inventory',
+    start: new Date(2026, 7, 3),
+    end: new Date(2026, 7, 7),
+    progress: 100,
+    baselines: [
+      { start: new Date(2026, 7, 3), end: new Date(2026, 7, 6) },
+      { start: new Date(2026, 7, 4), end: new Date(2026, 7, 7) },
+    ],
+  },
+  { id: 3, parentId: 1, title: 'Plan approved', start: new Date(2026, 7, 7), end: new Date(2026, 7, 7) },
+  {
+    id: 4,
+    parentId: 1,
+    title: 'Data copy',
+    start: new Date(2026, 7, 10),
+    end: new Date(2026, 7, 19),
+    progress: 50,
+    segments: [
+      { start: new Date(2026, 7, 10), end: new Date(2026, 7, 13) },
+      { start: new Date(2026, 7, 17), end: new Date(2026, 7, 19) },
+    ],
+  },
+];
+const links = [
+  { id: 'a', predecessorId: 2, successorId: 3 },
+  { id: 'b', predecessorId: 3, successorId: 4, lag: 1 },
+];
+
+export function TrackedPlan() {
+  const gantt = useRef<OgeGanttHandle<Task>>(null);
+  const [baseline, setBaseline] = useState(0);
+  return (
+    <>
+      <button type="button" onClick={() => gantt.current?.setBaseline(2)}>
+        Save as baseline 3
+      </button>
+      <OgeGantt
+        ref={gantt}
+        tasks={tasks}
+        dependencies={links}
+        showProgressLine
+        statusDate={statusDate}
+        showRollups
+        baselineIndex={baseline}
+        onBaselineIndexChange={setBaseline}
+        style={{ height: 360 }}
+      />
+    </>
+  );
+}
+```
+
+#### Quarter & year scales
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttScaleType, OgeGanttZoomPreset } from '@oge-ui/react-gantt';
+
+// quarters and years extend the zoom ladder; zoomPresets fills the
+// toolbar's scale chooser (a scale plus an optional tick width).
+const presets: OgeGanttZoomPreset[] = [
+  { scaleType: 'weeks', label: 'Sprint view' },
+  { scaleType: 'months', tickWidth: 64, label: 'Compact months' },
+  { scaleType: 'quarters', label: 'Quarters' },
+  { scaleType: 'years', label: 'Roadmap (years)' },
+];
+const tasks = [
+  { id: 1, title: 'Platform v2', start: new Date(2026, 0, 12), end: new Date(2026, 5, 30) },
+  { id: 2, title: 'Mobile apps', start: new Date(2026, 3, 1), end: new Date(2026, 11, 18) },
+  { id: 3, title: 'EU region', start: new Date(2026, 8, 1), end: new Date(2027, 2, 31) },
+];
+
+export function Roadmap() {
+  const [scale, setScale] = useState<OgeGanttScaleType>('quarters');
+  return (
+    <OgeGantt
+      tasks={tasks}
+      zoomPresets={presets}
+      scaleType={scale}
+      onScaleTypeChange={setScale}
+      style={{ height: 300 }}
+    />
+  );
+}
+```
+
+#### Inline editing
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttColumn } from '@oge-ui/react-gantt';
+
+// inlineEditing: double-click a cell or press F2 on a row; Enter
+// commits, Escape cancels, Tab / Shift+Tab move along the row. Every commit
+// runs the cancelable update pipeline and is one undo step.
+type Task = Record<string, unknown>;
+
+const columns: OgeGanttColumn[] = [
+  { field: 'wbs', editor: false },
+  { field: 'title' },
+  { field: 'start' },
+  { field: 'duration' },
+  { field: 'progress' },
+  { field: 'predecessors' },
+  { field: 'owner' }, // a data field: a text editor by default
+];
+const tasks: Task[] = [
+  { id: 1, title: 'Discovery', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+  { id: 2, parentId: 1, title: 'Interviews', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), owner: 'Ana' },
+  { id: 3, parentId: 1, title: 'Survey', start: new Date(2026, 7, 4), end: new Date(2026, 7, 8), owner: 'Bora' },
+  { id: 4, title: 'Delivery', start: new Date(2026, 7, 10), end: new Date(2026, 7, 10) },
+  { id: 5, parentId: 4, title: 'Build', start: new Date(2026, 7, 10), end: new Date(2026, 7, 14), owner: 'Cem' },
+  { id: 6, parentId: 4, title: 'Review', start: new Date(2026, 7, 14), end: new Date(2026, 7, 15), owner: 'Ana' },
+];
+const links = [{ id: 'a', predecessorId: 5, successorId: 6 }];
+
+export function EditableList() {
+  return (
+    <OgeGantt
+      tasks={tasks}
+      dependencies={links}
+      columns={columns}
+      inlineEditing
+      style={{ height: 360 }}
+    />
+  );
+}
+```
+
+#### Sort, filter & columns
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttColumn, OgeGanttSortChangedEvent } from '@oge-ui/react-gantt';
+
+// header click / Enter sorts siblings; the filter row and the search box
+// keep the ancestors of matches. Drag a header edge (Alt+Arrow) to resize,
+// drag a header (Ctrl+Shift+Arrow) to move it; frozen columns stay pinned
+// while the pane scrolls sideways.
+type Task = Record<string, unknown>;
+
+const columns: OgeGanttColumn[] = [
+  { field: 'wbs', frozen: true, allowSorting: false },
+  { field: 'title', frozen: true },
+  { field: 'owner' },
+  { field: 'start' },
+  { field: 'end' },
+  { field: 'duration' },
+];
+const tasks: Task[] = [
+  { id: 1, title: 'Discovery', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+  { id: 2, parentId: 1, title: 'Interviews', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), owner: 'Ana' },
+  { id: 3, parentId: 1, title: 'Survey', start: new Date(2026, 7, 4), end: new Date(2026, 7, 8), owner: 'Bora' },
+  { id: 4, title: 'Delivery', start: new Date(2026, 7, 10), end: new Date(2026, 7, 10) },
+  { id: 5, parentId: 4, title: 'Build', start: new Date(2026, 7, 10), end: new Date(2026, 7, 14), owner: 'Cem' },
+  { id: 6, parentId: 4, title: 'Review', start: new Date(2026, 7, 14), end: new Date(2026, 7, 15), owner: 'Ana' },
+];
+const links = [{ id: 'a', predecessorId: 5, successorId: 6 }];
+
+export function SortableList() {
+  const [lastSort, setLastSort] = useState<OgeGanttSortChangedEvent | null>(null);
+  return (
+    <>
+      <OgeGantt
+        tasks={tasks}
+        dependencies={links}
+        columns={columns}
+        allowSorting
+        allowColumnResizing
+        allowColumnReordering
+        filterRow
+        searchPanel
+        style={{ height: 400 }}
+        onSortChanged={setLastSort}
+      />
+      <p>Sorted by: {lastSort?.field ?? 'store order'}</p>
+    </>
+  );
+}
+```
+
+#### Multi-select & bulk edits
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { RowKey } from '@oge-ui/core';
+import type { OgeGanttHandle } from '@oge-ui/react-gantt';
+
+// selectionMode 'multiple': Ctrl/Cmd-click toggles, Shift-click and
+// Shift+Up/Down extend, Ctrl+A selects all. Delete, Alt+Shift+Left/Right and
+// the context menu act on the whole selection — one undo step.
+type Task = Record<string, unknown>;
+
+const tasks: Task[] = [
+  { id: 1, title: 'Discovery', start: new Date(2026, 7, 3), end: new Date(2026, 7, 3) },
+  { id: 2, parentId: 1, title: 'Interviews', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), owner: 'Ana' },
+  { id: 3, parentId: 1, title: 'Survey', start: new Date(2026, 7, 4), end: new Date(2026, 7, 8), owner: 'Bora' },
+  { id: 4, title: 'Delivery', start: new Date(2026, 7, 10), end: new Date(2026, 7, 10) },
+  { id: 5, parentId: 4, title: 'Build', start: new Date(2026, 7, 10), end: new Date(2026, 7, 14), owner: 'Cem' },
+  { id: 6, parentId: 4, title: 'Review', start: new Date(2026, 7, 14), end: new Date(2026, 7, 15), owner: 'Ana' },
+];
+const links = [{ id: 'a', predecessorId: 5, successorId: 6 }];
+
+export function BulkEdits() {
+  const gantt = useRef<OgeGanttHandle<Task>>(null);
+  const [selected, setSelected] = useState<readonly RowKey[]>([]);
+
+  const indent = () => {
+    const handle = gantt.current;
+    if (handle) handle.indentTasks(handle.getSelectedTasks());
+  };
+  const remove = () => {
+    const handle = gantt.current;
+    if (handle) handle.deleteTasks(handle.getSelectedTasks().map((task) => task.source));
+  };
+  return (
+    <>
+      <button type="button" onClick={indent}>Indent selected</button>
+      <button type="button" onClick={remove}>Delete selected</button>
+      <OgeGantt
+        ref={gantt}
+        tasks={tasks}
+        dependencies={links}
+        selectionMode="multiple"
+        selectedTaskKeys={selected}
+        onSelectedTaskKeysChange={setSelected}
+        style={{ height: 360 }}
+      />
+      <p>{selected.length} selected</p>
     </>
   );
 }

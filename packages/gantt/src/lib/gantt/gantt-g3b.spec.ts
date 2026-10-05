@@ -112,24 +112,38 @@ describe('OgeGantt — G3b', () => {
   const rows = () => [...el.querySelectorAll<HTMLElement>('.oge-gantt-row')];
 
   it('renders WBS, frozen columns, lag labels, the deadline and split pieces', () => {
-    expect(rows().map((row) => row.querySelector('.oge-gantt-cell-text')?.textContent?.trim())).toEqual(['1', '2', '3']);
-    const frozen = el.querySelector<HTMLElement>('.oge-gantt-pane-headcell.oge-gantt-frozen');
+    expect(
+      rows().map((row) =>
+        row.querySelector('.oge-gantt-cell-text')?.textContent?.trim(),
+      ),
+    ).toEqual(['1', '2', '3']);
+    const frozen = el.querySelector<HTMLElement>(
+      '.oge-gantt-pane-headcell.oge-gantt-frozen',
+    );
     expect(frozen?.textContent).toContain('WBS');
-    expect(el.querySelector('.oge-gantt-arrow-label')?.textContent?.trim()).toBe('+1d');
+    expect(
+      el.querySelector('.oge-gantt-arrow-label')?.textContent?.trim(),
+    ).toBe('+1d');
     expect(el.querySelectorAll('.oge-gantt-segment')).toHaveLength(2);
     // auto-scheduling: Build starts a day after Design (FS+1) and overshoots
     // its deadline → overdue bar, missed marker, conflict event
     expect(el.querySelector('.oge-gantt-deadline-missed')).not.toBeNull();
-    expect(host.conflicts.at(-1)?.conflicts.map((c) => c.kind)).toContain('deadline');
+    expect(host.conflicts.at(-1)?.conflicts.map((c) => c.kind)).toContain(
+      'deadline',
+    );
   });
 
   it('sorts from the header and filters from the filter row', async () => {
-    const title = el.querySelectorAll<HTMLElement>('.oge-gantt-pane-headcell')[1];
+    const title = el.querySelectorAll<HTMLElement>(
+      '.oge-gantt-pane-headcell',
+    )[1];
     title.click();
     await settle(fixture);
     expect(title.getAttribute('aria-sort')).toBe('ascending');
     expect(host.sorts).toEqual([{ field: 'title', direction: 'asc' }]);
-    const input = el.querySelectorAll<HTMLInputElement>('.oge-gantt-filter-input')[1];
+    const input = el.querySelectorAll<HTMLInputElement>(
+      '.oge-gantt-filter-input',
+    )[1];
     expect(input.getAttribute('aria-label')).toBe('Filter Task');
     input.value = 'spl';
     input.dispatchEvent(new Event('input'));
@@ -141,7 +155,9 @@ describe('OgeGantt — G3b', () => {
 
   it('edits a cell inline from F2 and commits with Enter', async () => {
     const row = rows()[0];
-    row.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2', bubbles: true }));
+    row.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'F2', bubbles: true }),
+    );
     await settle(fixture);
     await flush();
     const editor = el.querySelector<HTMLInputElement>('.oge-gantt-cell-editor');
@@ -149,7 +165,9 @@ describe('OgeGantt — G3b', () => {
     expect(editor?.getAttribute('aria-label')).toBe('Task of Design');
     editor!.value = 'Design 2';
     editor!.dispatchEvent(new Event('input'));
-    editor!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    editor!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    );
     await settle(fixture);
     expect(el.querySelector('.oge-gantt-cell-editor')).toBeNull();
     expect(host.gantt().getExportData().tasks[0].title).toBe('Design 2');
@@ -157,16 +175,26 @@ describe('OgeGantt — G3b', () => {
 
   it('multi-selects with Ctrl-click into the two-way keys', async () => {
     rows()[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    rows()[2].dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));
+    rows()[2].dispatchEvent(
+      new MouseEvent('click', { bubbles: true, ctrlKey: true }),
+    );
     await settle(fixture);
     expect(host.selectedKeys()).toEqual(['a', 's']);
-    expect(el.querySelector('[role="treegrid"]')?.getAttribute('aria-multiselectable')).toBe('true');
-    expect(rows().filter((row) => row.getAttribute('aria-selected') === 'true')).toHaveLength(2);
+    expect(
+      el
+        .querySelector('[role="treegrid"]')
+        ?.getAttribute('aria-multiselectable'),
+    ).toBe('true');
+    expect(
+      rows().filter((row) => row.getAttribute('aria-selected') === 'true'),
+    ).toHaveLength(2);
   });
 
   it('toggles the resource view and renders the histogram', async () => {
     expect(el.querySelectorAll('.oge-gantt-histogram-row')).toHaveLength(1);
-    expect(el.querySelector('.oge-gantt-histogram-row')?.getAttribute('aria-label')).toContain('Ann');
+    expect(
+      el.querySelector('.oge-gantt-histogram-row')?.getAttribute('aria-label'),
+    ).toContain('Ann');
     const toggle = el.querySelector<HTMLButtonElement>('.oge-gantt-btn-toggle');
     toggle?.click();
     await settle(fixture);
@@ -178,10 +206,14 @@ describe('OgeGantt — G3b', () => {
   it('offers the zoom presets in the toolbar', async () => {
     const select = el.querySelector<HTMLSelectElement>('.oge-gantt-select');
     expect(select?.getAttribute('aria-label')).toBe('Timeline scale');
-    expect([...(select?.options ?? [])].map((o) => o.text.trim())).toContain('Quarters');
+    expect([...(select?.options ?? [])].map((o) => o.text.trim())).toContain(
+      'Quarters',
+    );
     select!.value = '4';
     select!.dispatchEvent(new Event('change'));
     await settle(fixture);
-    expect(el.querySelector('.oge-gantt-scale-minor')?.textContent).toContain('Q1');
+    expect(el.querySelector('.oge-gantt-scale-minor')?.textContent).toContain(
+      'Q1',
+    );
   });
 });

@@ -109,8 +109,9 @@ export interface OgeGanttZoomPreset {
 }
 
 /** One scheduling violation, resolved for display. */
-export interface OgeGanttSchedulingConflict<T = unknown>
-  extends GanttSchedulingConflict {
+export interface OgeGanttSchedulingConflict<
+  T = unknown,
+> extends GanttSchedulingConflict {
   readonly task: OgeGanttTask<T>;
   /** Readable description from the messages catalog. */
   readonly message: string;

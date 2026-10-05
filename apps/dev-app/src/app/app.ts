@@ -362,6 +362,26 @@ export class App {
       items: [
         { path: '/components/gantt', label: 'Overview', icon: 'list' },
         {
+          path: '/components/gantt/scheduling',
+          label: 'Scheduling & constraints',
+          icon: 'calendar',
+        },
+        {
+          path: '/components/gantt/resources',
+          label: 'Resources',
+          icon: 'layers',
+        },
+        {
+          path: '/components/gantt/task-list',
+          label: 'Task list editing',
+          icon: 'pencil',
+        },
+        {
+          path: '/components/gantt/import-export',
+          label: 'Import / export',
+          icon: 'upload',
+        },
+        {
           path: '/components/gantt/api',
           label: 'API Reference',
           icon: 'code',

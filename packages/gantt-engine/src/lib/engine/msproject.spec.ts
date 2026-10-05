@@ -26,7 +26,14 @@ const fields = resolveGanttFields<MsProjectTaskItem>({
 const d = (day: number, hour = 0) => new Date(2026, 0, day, hour);
 
 const ITEMS: MsProjectTaskItem[] = [
-  { id: 1, parentId: null, title: 'Phase <A> & "B"', start: d(5), end: d(5), progress: 0 },
+  {
+    id: 1,
+    parentId: null,
+    title: 'Phase <A> & "B"',
+    start: d(5),
+    end: d(5),
+    progress: 0,
+  },
   {
     id: 2,
     parentId: 1,
@@ -51,11 +58,32 @@ const ITEMS: MsProjectTaskItem[] = [
     progress: 0,
     manuallyScheduled: true,
   },
-  { id: 4, parentId: null, title: 'Go live', start: d(14), end: d(14), progress: 0 },
+  {
+    id: 4,
+    parentId: null,
+    title: 'Go live',
+    start: d(14),
+    end: d(14),
+    progress: 0,
+  },
 ];
 const LINKS: MsProjectDependencyItem[] = [
-  { id: '2-3', predecessorId: 2, successorId: 3, type: 'FS', lag: 1, lagUnit: 'days' },
-  { id: '3-4', predecessorId: 3, successorId: 4, type: 'SS', lag: -4, lagUnit: 'hours' },
+  {
+    id: '2-3',
+    predecessorId: 2,
+    successorId: 3,
+    type: 'FS',
+    lag: 1,
+    lagUnit: 'days',
+  },
+  {
+    id: '3-4',
+    predecessorId: 3,
+    successorId: 4,
+    type: 'SS',
+    lag: -4,
+    lagUnit: 'hours',
+  },
 ];
 
 function exportSample(): string {
@@ -84,7 +112,9 @@ function exportSample(): string {
 describe('MS Project XML', () => {
   it('writes the MSPDI structure with escaped names, links and assignments', () => {
     const xml = exportSample();
-    expect(xml).toContain('<Project xmlns="http://schemas.microsoft.com/project">');
+    expect(xml).toContain(
+      '<Project xmlns="http://schemas.microsoft.com/project">',
+    );
     expect(xml).toContain('<Name>Phase &lt;A&gt; &amp; &quot;B&quot;</Name>');
     expect(xml).toContain('<OutlineLevel>2</OutlineLevel>');
     expect(xml).toContain('<Start>2026-01-05T08:00:00</Start>');
@@ -124,8 +154,22 @@ describe('MS Project XML', () => {
     expect(result.tasks[3].start).toEqual(d(14));
     expect(result.tasks[3].end).toEqual(d(14));
     expect(result.dependencies).toEqual([
-      { id: '2-3', predecessorId: 2, successorId: 3, type: 'FS', lag: 1, lagUnit: 'days' },
-      { id: '3-4', predecessorId: 3, successorId: 4, type: 'SS', lag: -4, lagUnit: 'hours' },
+      {
+        id: '2-3',
+        predecessorId: 2,
+        successorId: 3,
+        type: 'FS',
+        lag: 1,
+        lagUnit: 'days',
+      },
+      {
+        id: '3-4',
+        predecessorId: 3,
+        successorId: 4,
+        type: 'SS',
+        lag: -4,
+        lagUnit: 'hours',
+      },
     ]);
     expect(result.resources).toEqual([{ id: 1, text: 'Ana', capacity: 80 }]);
     expect(result.workCalendar).toEqual({

@@ -89,8 +89,8 @@ export function buildResourceHistogram(
         const index = task.resourceIds.indexOf(resource.id);
         return index < 0 ? null : { task, units: task.units[index] ?? 100 };
       })
-      .filter((entry): entry is { task: GanttTask; units: number } =>
-        entry !== null,
+      .filter(
+        (entry): entry is { task: GanttTask; units: number } => entry !== null,
       );
     const cells: GanttHistogramCell[] = [];
     let peak = 0;

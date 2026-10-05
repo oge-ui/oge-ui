@@ -432,6 +432,22 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Gantt chart by OGE UI: task tree and timeline with dependencies, critical path, baselines, drag editing, work calendars, undo/redo and export.',
   ],
   [
+    '/components/gantt/scheduling',
+    'Angular Gantt scheduling: lag and lead on every link type, constraints, deadlines, manual tasks, slack, conflicts, baselines, split tasks and progress line.',
+  ],
+  [
+    '/components/gantt/resources',
+    'Angular Gantt resources: assignment units, effort-driven durations, a utilization histogram with over-allocation and a resource-centric view.',
+  ],
+  [
+    '/components/gantt/task-list',
+    'Angular Gantt task list: inline cell editing, header sorting, filter row and search, column resize, reorder and freeze, multi-select with bulk edits.',
+  ],
+  [
+    '/components/gantt/import-export',
+    'Angular Gantt MS Project XML import and export: tasks, links with lag, constraints, baselines, resources, assignments and calendars, no dependencies.',
+  ],
+  [
     '/components/gantt/api',
     'Angular Gantt API reference: every input, output, method and type of oge-gantt — task and dependency field mapping, scales, editing and the config provider.',
   ],

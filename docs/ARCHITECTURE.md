@@ -1147,6 +1147,46 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   renders the visible window (`virtualScrolling: 'auto'` above 50 rows). Month/year timelines
   run at day scale (`TimelineGridVm.scale === 'day'`), one bar per day span.
 
+### Gantt depth: scheduling engine, task list, resources and MS Project
+
+- **One scheduling engine, pure.** `gantt-engine/engine/schedule.ts` owns every date decision:
+  `scheduleGanttProject` (topological forward pass — lag/lead on all four link types via
+  `applyGanttLag`, working days on a calendar, constraint floors/pins/caps — then an ALAP
+  backward pass), `detectGanttConflicts` (link, constraint and deadline violations of the
+  _current_ dates) and `computeGanttSlack` (total/free slack; `criticalPathKeys` is its zero set).
+  Links touching a summary are drawn but never scheduled; manually scheduled tasks are inputs,
+  never outputs. Unlinked ASAP tasks keep their start unless `projectStart` is set — so turning
+  `autoScheduling` on never collapses a plan to one date. `autoScheduleForward` (push-only) stays
+  exported for 1.x callers; the core no longer uses it.
+- **Conflicts are derived, the event is host-scheduled.** `core.conflicts()` re-derives from the
+  store; hosts call `core.syncConflicts()` from an effect (Angular) or after each render (React),
+  which emits `schedulingConflict` only when the conflict signature changes — including when it
+  empties.
+- **Bulk edits are one undo step.** `core.batch()` takes one snapshot and defers auto-scheduling to
+  the end; bulk delete/indent/outdent, predecessor-cell diffs and `setBaseline()` run through it.
+  New multi-item mutations must too.
+- **The task list is a view over the store.** Sort reorders siblings via `buildGanttTasks`'
+  `order`, filters pass `include` (matches + ancestors, collapse ignored while filtering); WBS
+  numbers always follow the store order. Column order/width are core cells, not inputs (events
+  report them). Headers become one roving tab stop only when sorting/resizing/reordering is on;
+  the resize grip is an `aria-hidden` span with Alt+Arrow as its keyboard twin, reordering's twin
+  is Ctrl+Shift+Arrow (house `grid-keyboard-moves` scheme). The pane head is pinned to the chart
+  scale's height (49px) so rows and lanes stay aligned with or without the filter row.
+- **Inline editing commits on Enter / Tab / blur, never per keystroke.** The editor value lives in
+  `core.editingCell`; the React editor is an uncontrolled input synced in a layout effect. The
+  editor's keydown stops propagation — the row map would otherwise delete the task on Backspace.
+- **Resource view rows are synthetic.** `buildResourceViewRows` emits group rows (key prefix
+  `GANTT_RESOURCE_ROW_PREFIX`, `source: null`) and assignment copies under composite keys whose
+  `source` is the real item; `core.realKeyOf()` maps a row back for selection, critical path and
+  conflicts. Every mutation path guards `source == null`; arrows are hidden in that view.
+- **Message keys added in G3b are optional**, deep-filled from English by `fillGanttMessages` into
+  `OgeGanttResolvedMessages` (what `core.msg()` returns) — the scheduler's rule.
+- **MS Project XML has its own tokenizer.** `engine/msproject.ts` parses MSPDI without `DOMParser`
+  (no new Trusted Types sink, DTDs skipped, only predefined/numeric entities), maps midnight dates
+  to 08:00–17:00 and back so a round trip is lossless, and returns plain data in the default field
+  names. Resource ids come back as MSPDI UIDs. `/export-msproject` is a lazy entry in all three
+  packages although it has no peer.
+
 ## Component completeness standard
 
 Every component (new and existing) ships with a **complete, reference-parity-checked

@@ -312,7 +312,8 @@ function OgeGanttInner<
       clearFilters: () => core.clearFilters(),
       setColumnWidth: (field, width) => core.setColumnWidth(field, width),
       moveColumn: (field, toIndex) => core.moveColumn(field, toIndex),
-      editCell: (task, field) => core.beginCellEdit(task as GanttTask<T>, field),
+      editCell: (task, field) =>
+        core.beginCellEdit(task as GanttTask<T>, field),
       getSelectedTasks: () => core.getSelectedTasks(),
       selectAll: () => core.selectAll(),
       clearSelection: () => core.clearSelection(),
@@ -1090,7 +1091,9 @@ function OgeGanttInner<
                       key={String(task.key)}
                       className={[
                         'oge-gantt-bar-box',
-                        core.isSelected(task) ? 'oge-gantt-bar-box-selected' : '',
+                        core.isSelected(task)
+                          ? 'oge-gantt-bar-box-selected'
+                          : '',
                         bar.conflict ? 'oge-gantt-bar-box-conflict' : '',
                         bar.overdue ? 'oge-gantt-bar-box-overdue' : '',
                       ]
@@ -1208,7 +1211,9 @@ function OgeGanttInner<
                               insetInlineStart: bar.leftPx,
                               width: bar.widthPx,
                               backgroundColor:
-                                bar.segments.length > 1 ? undefined : task.color,
+                                bar.segments.length > 1
+                                  ? undefined
+                                  : task.color,
                               color: core.barForeground(task) ?? undefined,
                             }}
                             data-task-key={String(task.key)}

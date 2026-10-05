@@ -7,6 +7,41 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Gantt scheduling depth (G3b) — `@oge-ui/gantt`, `@oge-ui/react-gantt`, `@oge-ui/gantt-engine`
+
+- **Lag / lead** on every link type (`dependencyLagExpr` / `dependencyLagUnitExpr`,
+  working days on a calendar or hours): a `+2d` badge on the arrow, a dependency
+  editor (double-click an arrow, or Enter on a clicked one), `updateDependency()`
+  with cancelable `dependencyUpdating` / `dependencyUpdated`.
+- **Constraints, deadlines, manual mode**: `constraintTypeExpr` / `constraintDateExpr`
+  (ASAP, ALAP, SNET, SNLT, FNET, FNLT, MSO, MFO), `deadlineExpr` (marker + overdue),
+  `manuallyScheduledExpr`; violations are drawn and reported through
+  `schedulingConflict`.
+- **A real scheduling engine** (`scheduleGanttProject`): forward pass that pulls tasks
+  earlier as well as pushing them later, ALAP backward pass, `projectStart`,
+  `scheduleProject()`; `getTaskSlack()` plus `totalSlack` / `freeSlack` columns.
+- **Task list**: `inlineEditing` (F2 / double-click; text, date, number, duration and
+  predecessor `3FS+2d` editors), `allowSorting`, `filterRow`, `searchPanel`,
+  `allowColumnResizing` / `allowColumnReordering` (pointer + Alt / Ctrl+Shift+Arrow),
+  `frozen` columns, `selectionMode: 'multiple'` with `[(selectedTaskKeys)]` and bulk
+  `deleteTasks` / `indentTasks` / `outdentTasks` (one undo step each).
+- **Scales & tracking**: `quarters` and `years` scales, `zoomPresets` chooser, `wbs`
+  column, split tasks (`segmentsExpr`), several baselines (`baselinesExpr`,
+  `[(baselineIndex)]`, `setBaseline(i)`), progress line (`showProgressLine`,
+  `statusDate`), child-milestone roll-ups (`showRollups`).
+- **Resources**: assignment `unitsExpr`, `effortExpr` + `effortDriven` / `hoursPerDay`,
+  `showResourceHistogram` (capacity line, over-allocation), `[(viewMode)]` resource view.
+- **MS Project XML**: new lazy entry `/export-msproject` in all three packages
+  (`exportGanttToMsProject`, `importMsProjectXml`), dependency-free.
+- **Behaviour changes**: with `autoScheduling` on, successors now move _earlier_ when
+  their predecessors allow it (1.x only pushed later; `autoScheduleForward` keeps that
+  behaviour for direct callers); the zoom ladder ends at `years` instead of `months`;
+  the toolbar gains a scale chooser (and a resource-view toggle when `resources` exist);
+  `OgeGanttSelectionChangedEvent` gains `tasks`; the task dialog adds units with
+  resources and the scheduling fields with `autoScheduling`; `OgeGanttTask` /
+  `OgeGanttDependency` carry the new fields. New message keys are optional and fall
+  back to English.
+
 ### Ready-made translations — `@oge-ui/locales` (new, MIT)
 
 - **Ten languages for every catalog**: German, French, Spanish, Italian,

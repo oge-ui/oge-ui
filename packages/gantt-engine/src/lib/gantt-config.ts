@@ -94,7 +94,10 @@ export interface OgeGanttDialogMessages {
 /** Scheduling vocabulary: constraint names, conflicts, lag suffixes. */
 export interface OgeGanttSchedulingMessages {
   readonly constraintTypes: Readonly<
-    Record<'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO', string>
+    Record<
+      'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO',
+      string
+    >
   >;
   /** Dependency type names (`FS` …). */
   readonly dependencyTypes: Readonly<Record<'FS' | 'SS' | 'FF' | 'SF', string>>;

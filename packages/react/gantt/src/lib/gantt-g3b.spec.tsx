@@ -64,7 +64,9 @@ describe('<OgeGantt> — G3b', () => {
       </StrictMode>,
     );
     expect(
-      rows().map((row) => row.querySelector('.oge-gantt-cell-text')?.textContent),
+      rows().map(
+        (row) => row.querySelector('.oge-gantt-cell-text')?.textContent,
+      ),
     ).toEqual(['1', '2', '3']);
     expect(document.querySelector('.oge-gantt-arrow-label')?.textContent).toBe(
       '+1d',
@@ -110,7 +112,10 @@ describe('<OgeGantt> — G3b', () => {
     expect(keys.at(-1)).toEqual(['a', 'b', 'c']);
     act(() => {
       ref.current?.deleteTasks(
-        ref.current.getSelectedTasks().slice(1).map((task) => task.source),
+        ref.current
+          .getSelectedTasks()
+          .slice(1)
+          .map((task) => task.source),
       );
     });
     expect(rows()).toHaveLength(1);
@@ -167,7 +172,14 @@ describe('<OgeGantt> — G3b', () => {
     });
     fireEvent.click(dialog.querySelector('.oge-gantt-btn-primary')!);
     expect(updated).toEqual([
-      { id: 'l1', predecessorId: 'a', successorId: 'b', type: 'SS', lag: -2, lagUnit: 'days' },
+      {
+        id: 'l1',
+        predecessorId: 'a',
+        successorId: 'b',
+        type: 'SS',
+        lag: -2,
+        lagUnit: 'days',
+      },
     ]);
     expect(document.querySelector('.oge-gantt-dep-editor')).toBeNull();
   });

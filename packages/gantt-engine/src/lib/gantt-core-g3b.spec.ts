@@ -58,7 +58,14 @@ const d = (day: number) => new Date(2026, 0, day);
 
 const TASKS: Task[] = [
   { id: 'p', title: 'Phase', start: d(5), end: d(5) },
-  { id: 'a', parentId: 'p', title: 'Design', start: d(5), end: d(9), progress: 50 },
+  {
+    id: 'a',
+    parentId: 'p',
+    title: 'Design',
+    start: d(5),
+    end: d(9),
+    progress: 50,
+  },
   { id: 'b', parentId: 'p', title: 'Build', start: d(12), end: d(16) },
   { id: 'm', parentId: 'p', title: 'Release', start: d(16), end: d(16) },
   { id: 'z', title: 'Zebra docs', start: d(6), end: d(8), owner: 'Ana' },
@@ -223,7 +230,9 @@ describe('OgeGanttCore — scheduling depth (G3b)', () => {
   it('auto-schedules with lag and pulls successors earlier', () => {
     const h = setup({ autoScheduling: true });
     // Build starts on the 12th although Design ends on the 9th
-    h.core.updateTask(task(h, 'a').source, { title: 'Design!' } as Partial<Task>);
+    h.core.updateTask(task(h, 'a').source, {
+      title: 'Design!',
+    } as Partial<Task>);
     expect(task(h, 'b').start).toEqual(d(9));
     // FS+2 days pushes it to the 11th; one undo step reverts both
     h.core.updateDependency(h.core.ganttDependencies()[0].source, {
@@ -281,7 +290,11 @@ describe('OgeGanttCore — scheduling depth (G3b)', () => {
 
   it('exposes total / free slack per task and as columns', () => {
     const h = setup({
-      columns: [{ field: 'title' }, { field: 'totalSlack' }, { field: 'freeSlack' }],
+      columns: [
+        { field: 'title' },
+        { field: 'totalSlack' },
+        { field: 'freeSlack' },
+      ],
     });
     expect(h.core.getTaskSlack('a')).toEqual({ totalSlack: 3, freeSlack: 3 });
     expect(h.core.getTaskSlack('z')).toEqual({ totalSlack: 8, freeSlack: 8 });
@@ -290,7 +303,9 @@ describe('OgeGanttCore — scheduling depth (G3b)', () => {
   });
 
   it('runs scheduleProject on demand as one undo step', () => {
-    const h = setup({ tasks: [...TASKS.slice(0, 2), { ...TASKS[2], start: d(6) }] });
+    const h = setup({
+      tasks: [...TASKS.slice(0, 2), { ...TASKS[2], start: d(6) }],
+    });
     h.core.scheduleProject();
     expect(task(h, 'b').start).toEqual(d(9));
     expect(h.core.announcement()).toBe('Schedule recalculated');
@@ -343,7 +358,10 @@ describe('OgeGanttCore — task list (G3b)', () => {
     const h = setup({ inlineEditing: true });
     const design = task(h, 'a');
     expect(h.core.beginCellEdit(design)).toBe(true);
-    expect(h.core.editingCell()).toMatchObject({ field: 'title', value: 'Design' });
+    expect(h.core.editingCell()).toMatchObject({
+      field: 'title',
+      value: 'Design',
+    });
     h.core.cellEditInput('Design v2');
     h.core.onCellEditorKeydown(key('Tab'));
     expect(task(h, 'a').title).toBe('Design v2');
@@ -383,10 +401,12 @@ describe('OgeGanttCore — task list (G3b)', () => {
     const links = h.core
       .ganttDependencies()
       .filter((dep) => dep.successorKey === 'm');
-    expect(links.map((dep) => [dep.predecessorKey, dep.type, dep.lag])).toEqual([
-      ['b', 'FS', 0],
-      ['z', 'SS', 1],
-    ]);
+    expect(links.map((dep) => [dep.predecessorKey, dep.type, dep.lag])).toEqual(
+      [
+        ['b', 'FS', 0],
+        ['z', 'SS', 1],
+      ],
+    );
     h.core.undo();
     expect(
       h.core.ganttDependencies().filter((dep) => dep.successorKey === 'm'),
@@ -428,7 +448,10 @@ describe('OgeGanttCore — task list (G3b)', () => {
     });
     h.core.onRowClick(task(h, 'y'), click());
     h.core.onRowClick(task(h, 'w'), click({ shiftKey: true }));
-    h.core.onRowKeydown(task(h, 'y'), key('ArrowRight', { altKey: true, shiftKey: true }));
+    h.core.onRowKeydown(
+      task(h, 'y'),
+      key('ArrowRight', { altKey: true, shiftKey: true }),
+    );
     expect(h.tasks().map((t) => t.parentId ?? null)).toEqual([null, 'x', 'x']);
     expect(h.core.announcement()).toBe('2 tasks indented');
     h.core.undo();
@@ -449,15 +472,22 @@ describe('OgeGanttCore — task list (G3b)', () => {
         { field: 'wbs', frozen: true, widthPx: 50 },
       ],
     });
-    expect(h.core.resolvedColumns().map((c) => [c.field, c.frozenOffsetPx])).toEqual([
+    expect(
+      h.core.resolvedColumns().map((c) => [c.field, c.frozenOffsetPx]),
+    ).toEqual([
       ['wbs', 0],
       ['title', 50],
       ['start', 50],
     ]);
     h.core.onHeaderKeydown(1, key('ArrowRight', { altKey: true }));
     expect(h.core.resolvedColumns()[1].widthPx).toBe(190);
-    expect(h.calls['columnResized']).toEqual([{ field: 'title', widthPx: 190 }]);
-    h.core.onHeaderKeydown(1, key('ArrowRight', { ctrlKey: true, shiftKey: true }));
+    expect(h.calls['columnResized']).toEqual([
+      { field: 'title', widthPx: 190 },
+    ]);
+    h.core.onHeaderKeydown(
+      1,
+      key('ArrowRight', { ctrlKey: true, shiftKey: true }),
+    );
     expect(h.core.resolvedColumns().map((c) => c.field)).toEqual([
       'wbs',
       'start',
@@ -670,7 +700,10 @@ describe('OgeGanttCore — dependency editor, dialog, messages (G3b)', () => {
   });
 
   it('adds scheduling fields to the dialog and trims unchanged extras', () => {
-    const h = setup({ autoScheduling: true, resources: [{ id: 'ann', text: 'Ann' }] });
+    const h = setup({
+      autoScheduling: true,
+      resources: [{ id: 'ann', text: 'Ann' }],
+    });
     h.core.onRowKeydown(task(h, 'a'), key('Enter'));
     const fields = h.dialogs[0].items.map((item) => item.field);
     expect(fields).toContain('constraintType');
@@ -684,7 +717,11 @@ describe('OgeGanttCore — dependency editor, dialog, messages (G3b)', () => {
       trimGanttDialogChange(h.dialogs[0].model, task(h, 'a')),
     ).not.toHaveProperty('units');
     h.core.onDialogSaved({
-      model: { ...h.dialogs[0].model, constraintType: 'SNET', constraintDate: d(6) },
+      model: {
+        ...h.dialogs[0].model,
+        constraintType: 'SNET',
+        constraintDate: d(6),
+      },
       isNew: false,
     });
     const saved = h.tasks().find((t) => t.id === 'a');

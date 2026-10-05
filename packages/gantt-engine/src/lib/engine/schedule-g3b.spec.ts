@@ -73,10 +73,8 @@ const constrained = (
   date: Date,
 ): Partial<GanttTask> => ({ constraintType: type, constraintDate: date });
 
-const moved = (
-  result: ReturnType<typeof scheduleGanttProject>,
-  key: string,
-) => result.changes.find((change) => change.key === key);
+const moved = (result: ReturnType<typeof scheduleGanttProject>, key: string) =>
+  result.changes.find((change) => change.key === key);
 
 describe('applyGanttLag', () => {
   it('adds calendar days, hours and fractions without a calendar', () => {
@@ -194,7 +192,10 @@ describe('scheduleGanttProject', () => {
     });
     // an unlinked ALAP task finishes with the project
     const lone = scheduleGanttProject(
-      [task('x', d(5), d(6), { constraintType: 'ALAP' }), task('y', d(5), d(9))],
+      [
+        task('x', d(5), d(6), { constraintType: 'ALAP' }),
+        task('y', d(5), d(9)),
+      ],
       [],
     );
     expect(moved(lone, 'x')?.end).toEqual(d(9));

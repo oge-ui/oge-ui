@@ -96,8 +96,7 @@ function spanOf(
 ): Span {
   return {
     ms: end.getTime() - start.getTime(),
-    days:
-      calendar !== undefined ? workingDaysBetween(start, end, calendar) : 0,
+    days: calendar !== undefined ? workingDaysBetween(start, end, calendar) : 0,
   };
 }
 
@@ -317,8 +316,7 @@ export function scheduleGanttProject(
       es = es === null ? bound : Math.max(es, bound);
     }
     if (es !== null) earliest.set(key, es);
-    const base =
-      es ?? options.projectStart?.getTime() ?? task.start.getTime();
+    const base = es ?? options.projectStart?.getTime() ?? task.start.getTime();
     const date = task.constraintDate?.getTime();
     let start: number;
     switch (task.constraintType) {
@@ -341,10 +339,7 @@ export function scheduleGanttProject(
         start = date as number;
         break;
       case 'MFO':
-        dates.set(
-          key,
-          placeEndingAt(new Date(date as number), span, calendar),
-        );
+        dates.set(key, placeEndingAt(new Date(date as number), span, calendar));
         continue;
       default:
         start = base;

@@ -912,6 +912,32 @@ export const appRoutes: Route[] = [
         title: 'OGE — Gantt',
       },
       {
+        path: 'scheduling',
+        loadComponent: () =>
+          import('./pages/gantt/scheduling').then((m) => m.GanttSchedulingPage),
+        title: 'OGE — Gantt Scheduling & Constraints',
+      },
+      {
+        path: 'resources',
+        loadComponent: () =>
+          import('./pages/gantt/resources').then((m) => m.GanttResourcesPage),
+        title: 'OGE — Gantt Resources',
+      },
+      {
+        path: 'task-list',
+        loadComponent: () =>
+          import('./pages/gantt/task-list').then((m) => m.GanttTaskListPage),
+        title: 'OGE — Gantt Task List Editing',
+      },
+      {
+        path: 'import-export',
+        loadComponent: () =>
+          import('./pages/gantt/import-export').then(
+            (m) => m.GanttImportExportPage,
+          ),
+        title: 'OGE — Gantt Import / Export',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/gantt/api').then((m) => m.GanttApiPage),

@@ -193,6 +193,8 @@
 
 .oge-gantt-pane-head-filter .oge-gantt-pane-header {
   flex: 0 0 24px;
+  min-block-size: 0;
+  overflow: hidden;
 
   .oge-gantt-pane-headcell {
     padding-block: 4px;
@@ -309,6 +311,8 @@
 .oge-gantt-filter-row {
   display: flex;
   flex: 0 0 24px;
+  min-block-size: 0;
+  box-sizing: border-box;
   border-block-start: 1px solid var(--oge-gantt-grid-line);
 }
 

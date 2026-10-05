@@ -434,8 +434,7 @@ export function buildGanttTasks<T>(
         typeof colorRaw === 'string' && colorRaw !== '' ? colorRaw : undefined,
       baselineStart: baselines[0]?.start,
       baselineEnd: baselines[0]?.end,
-      isMilestone:
-        !isSummary && dates.start.getTime() === dates.end.getTime(),
+      isMilestone: !isSummary && dates.start.getTime() === dates.end.getTime(),
       isSummary,
       expanded: node.expanded === true,
       hasChildren: isSummary,
