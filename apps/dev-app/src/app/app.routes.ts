@@ -964,6 +964,38 @@ export const appRoutes: Route[] = [
           import('./pages/scheduler/api').then((m) => m.SchedulerApiPage),
         title: 'OGE — Scheduler API',
       },
+      {
+        path: 'views-grouping',
+        loadComponent: () =>
+          import('./pages/scheduler/views-grouping').then(
+            (m) => m.SchedulerViewsGroupingPage,
+          ),
+        title: 'OGE — Scheduler Views & Grouping',
+      },
+      {
+        path: 'resources-availability',
+        loadComponent: () =>
+          import('./pages/scheduler/resources-availability').then(
+            (m) => m.SchedulerResourcesAvailabilityPage,
+          ),
+        title: 'OGE — Scheduler Resources & Availability',
+      },
+      {
+        path: 'recurrence-editor',
+        loadComponent: () =>
+          import('./pages/scheduler/recurrence-editor').then(
+            (m) => m.SchedulerRecurrenceEditorPage,
+          ),
+        title: 'OGE — Scheduler Recurrence Editor',
+      },
+      {
+        path: 'import-export',
+        loadComponent: () =>
+          import('./pages/scheduler/import-export').then(
+            (m) => m.SchedulerImportExportPage,
+          ),
+        title: 'OGE — Scheduler Import / Export',
+      },
     ],
   },
   {

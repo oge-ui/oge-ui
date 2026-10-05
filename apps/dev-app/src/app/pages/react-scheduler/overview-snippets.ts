@@ -286,7 +286,7 @@ const appointments = [
 ];`,
       jsx: `// views takes plain names or per-view option objects: a compact
 // 'Office hours' day view with 15-minute slots next to the stock week and
-// month views. The month '+N more' overflow drills into the day view.
+// month views. The month '+N more' overflow opens a day list (moreMode).
 <OgeScheduler
   dataSource={appointments}
   defaultCurrentDate={new Date(2026, 7, 6)}

@@ -1070,6 +1070,49 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   `y` — which grows columns up and rotated bars sideways alike. The timer only runs in the
   browser.
 
+### Scheduler depth: grouping, availability, history and exports
+
+- **Grouping is a leaf list, not a field.** `scheduler-engine/grouping.ts` resolves `groups`
+  (outermost first) into levels and their cartesian leaves; every grouped column, row block and
+  timeline row is one leaf carrying the values of _all_ levels. Day/week placement goes through
+  `buildDayWeekGroupLayout` (date-major for `groupByDate`, resource-major otherwise, row blocks
+  for `groupOrientation: 'vertical'`), so a view never computes a column index itself — hit
+  tests (`dayWeekSlotAt`), drag deltas and keyboard moves all ask the layout. Header rows come
+  from `buildColumnHeaderRows` / `buildRowHeaderBlocks` with spans, and the resource-header
+  template / render prop receives `{ item, resource, level, view }` for every one of them.
+- **Every write passes one guard.** `OgeSchedulerCore`'s insert/update path checks blocked
+  slots (`availability.ts`: predicate or ranges with RRULE + resource scope) and conflicts
+  (`conflicts.ts`: series expanded, a look-back for occurrences starting earlier, same leaf
+  when grouped) _before_ the cancelable `-ing` events. A refusal sets the core's `notice` cell
+  (rendered as a visible status for 4 s) and announces it; it never throws. New mutating paths
+  — paste, drop, undo replay — must go through `insertItem` / `updateItem` with `guarded`.
+- **History records applied store changes.** `history.ts` keeps operations (`insert`,
+  `update` with before/after items, `remove`), grouped by `transaction()` so a paste or a
+  detached occurrence is one step; undo replays the inverses through the normal cancelable
+  pipelines, so the `-ing` / `-ed` events fire for an undo exactly as for the original edit. The clipboard (`clipboard.ts`) stores item copies with keys
+  dropped and pastes relative to the earliest copy. Shortcuts are decided by `schedulerShortcut`
+  and ignored inside editing targets (`isSchedulerEditingTarget`).
+- **External drag is a registry, with a keyboard twin.** Mounted schedulers register their host
+  in `external-drag.ts`; `beginOgeSchedulerExternalDrag` runs the shared `beginPointerDragDrop`
+  and hit-tests the innermost registered host — no HTML5 drag and drop. Picking up from the
+  keyboard (`ogeSchedulerDraggableKey`) arms a module-level payload that the next Enter / click
+  on any scheduler cell takes. A chip released outside its own rect (`isOgeSchedulerDragOut`,
+  which ignores unmeasured rects so jsdom specs stay moves) is a drag-out.
+- **Message keys added after 1.1 are optional.** The catalog interfaces mark them `?`, and
+  `fillSchedulerMessages()` deep-fills from the English defaults into
+  `OgeSchedulerResolvedMessages`, which is what the core and both layers read. A locale pack
+  that predates a key keeps type-checking and falls back to English; plural strings are ICU
+  messages formatted with `ogeFormatMessage`.
+- **Exports are lazy entries over one model.** `getExportData(range?)` returns appointments
+  (series unexpanded) plus expanded, chronological rows; `scheduler-engine/export-ical|pdf|excel`
+  are pure builders and each layer's `/export-*` entry only adapts its scheduler type and
+  downloads. The PDF builder takes the shared `setOgePdfDefaultFont` font. iCalendar uses
+  floating local time; `TZID` values are read as wall time until time zones land.
+- **Timeline rows are fixed-height and virtualized.** `timelineRowHeight` derives each row's
+  height from its lane count, the rows feed core's `OffsetTree` and `timelineVirtualWindow`
+  renders the visible window (`virtualScrolling: 'auto'` above 50 rows). Month/year timelines
+  run at day scale (`TimelineGridVm.scale === 'day'`), one bar per day span.
+
 ## Component completeness standard
 
 Every component (new and existing) ships with a **complete, reference-parity-checked

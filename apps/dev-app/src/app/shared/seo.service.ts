@@ -455,6 +455,22 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     '/components/scheduler/api',
     'Angular Scheduler API reference: every input, output, method and type of oge-scheduler — appointment field mapping, views, editing and the config provider.',
   ],
+  [
+    '/components/scheduler/views-grouping',
+    'Angular Scheduler views and grouping: N-day and N-week views, month and year timelines, week numbers, nested resource groups, vertical layout, +N more.',
+  ],
+  [
+    '/components/scheduler/resources-availability',
+    'Angular Scheduler availability: hatched disabled slots, per-resource work hours, conflict checks, external drag-in, multi-select, copy, paste, undo.',
+  ],
+  [
+    '/components/scheduler/recurrence-editor',
+    'Angular Scheduler recurrence editor: nth and last weekday rules, several month days, yearly patterns, count or until, skipped dates, live summary.',
+  ],
+  [
+    '/components/scheduler/import-export',
+    'Angular Scheduler import and export: iCalendar .ics export and import with series and overrides, PDF and Excel list exports and print of the current view.',
+  ],
 ];
 
 /** The meta description for `path` (no query or fragment). */

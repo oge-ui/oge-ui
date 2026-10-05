@@ -713,8 +713,20 @@ const FAMILIES = [
         // DI provider ↔ context provider (both documented in the
         // Configuration block)
         provideogeschedulerconfig: 'ogeschedulerconfigprovider',
+        // an attribute directive's inputs carry its selector prefix; the
+        // hook takes the same three values as plain option fields
+        ogeschedulerdraggable: 'data',
+        ogeschedulerdraggableduration: 'duration',
+        ogeschedulerdraggabletext: 'text',
+      },
+      blockPairs: {
+        // the external drag source: a directive in Angular, a hook in React
+        // — every member is still compared
+        ogeschedulerdraggable: 'useogeschedulerdraggable',
       },
       reactOnly: {
+        renderresourceheader:
+          'React form of `[ogeResourceHeaderTemplate]` — same types-table split as `renderAppointment`.',
         renderappointment:
           'React form of the `*ogeAppointmentTemplate` structural directive, which the Angular page documents in its types table rather than as an input (ROADMAP exception: TemplateRef ↔ render prop).',
         rendercell:
