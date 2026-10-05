@@ -161,7 +161,8 @@
   flex: none;
   inline-size: 15px;
   block-size: 15px;
-  border: 1px solid var(--oge-border-color);
+  // unchecked, the glyph is its border alone: muted, as the check box's
+  border: 1px solid var(--oge-muted-color);
   border-radius: 3px;
   background: var(--oge-bg);
 
