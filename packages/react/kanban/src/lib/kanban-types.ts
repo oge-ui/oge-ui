@@ -18,8 +18,16 @@ import type {
   OgeKanbanColumnAddingEvent,
   OgeKanbanColumnReorderedEvent,
   OgeKanbanEditDialogShowingEventBase,
+  OgeKanbanCardTransferredEvent,
+  OgeKanbanCardTransferringEvent,
+  OgeKanbanColumnSort,
+  OgeKanbanExportData,
+  OgeKanbanExportOptions,
   OgeKanbanFieldExpr,
+  OgeKanbanFilter,
+  OgeKanbanFilterExpression,
   OgeKanbanMessages,
+  OgeKanbanSelectionMode,
 } from '@oge-ui/kanban-engine';
 import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
 
@@ -77,6 +85,45 @@ export interface OgeKanbanHandle<T = Record<string, unknown>> {
   collapseAllColumns(): void;
   /** Expands every column (the toolbar button). */
   expandAllColumns(): void;
+  /** Reverts the last change by replaying its inverse through the pipelines. */
+  undo(): void;
+  /** Re-applies the last undone change. */
+  redo(): void;
+  /** Whether `undo()` has a step to revert. */
+  canUndo(): boolean;
+  /** Whether `redo()` has a step to re-apply. */
+  canRedo(): boolean;
+  /** Selects the given card keys (board order is applied). */
+  selectCards(keys: readonly unknown[]): void;
+  /** Clears the selection. */
+  clearSelection(): void;
+  /** Moves several cards into one cell as one undoable step. */
+  moveCards(
+    keys: readonly unknown[],
+    toColumn: string,
+    toIndex?: number,
+    toSwimlane?: string | null,
+  ): void;
+  /** Deletes several items as one undoable step. */
+  deleteCards(items: readonly T[]): void;
+  /** Sends cards to another board of the same `dragGroup`; `true` = accepted. */
+  transferCards(
+    keys: readonly unknown[],
+    toBoard: string,
+    toColumn?: string,
+    toIndex?: number,
+    toSwimlane?: string | null,
+  ): boolean;
+  /** Toggles checklist entry `index` of a card through `onCardUpdating`. */
+  toggleChecklistItem(key: unknown, index: number): void;
+  /** Starts inline title editing on a card (also F2). */
+  startTitleEdit(key: unknown): void;
+  /** Clears the filter chip bar. */
+  clearFilters(): void;
+  /** The cards as export rows in board order. */
+  getExportData(options?: OgeKanbanExportOptions): OgeKanbanExportData;
+  /** Builds the formula-guarded CSV, downloads it and returns the text. */
+  exportToCsv(fileName?: string, options?: OgeKanbanExportOptions): string;
 }
 
 /** Props of `<OgeKanban>` — Angular's inputs, models and outputs. */
@@ -175,6 +222,52 @@ export interface OgeKanbanProps<T extends object = Record<string, unknown>> {
   rtlEnabled?: boolean;
   /** Replaces the edit dialog's default form wholesale (`<OgeForm>` items). */
   dialogItems?: readonly OgeFormItemDefinition[];
+
+  // ---------------- filtering, sorting, selection, transfers ----------------
+  /** Checklist / sub-task field: `{ text, done }` items (progress badge on the card). */
+  checklistExpr?: OgeKanbanFieldExpr<T>;
+  /** Programmatic card filter (predicate or expression), ANDed with chips and search. */
+  filter?: OgeKanbanFilter<T>;
+  /** The filter chip bar's state — controlled when provided. */
+  filterValue?: OgeKanbanFilterExpression;
+  /** Uncontrolled initial chip state. */
+  defaultFilterValue?: OgeKanbanFilterExpression;
+  /** The controlled half of `filterValue`. */
+  onFilterValueChange?: (value: OgeKanbanFilterExpression) => void;
+  /** Shows the filter chip bar (tags, assignees, priorities). Default `false`. */
+  showFilterBar?: boolean;
+  /** Per-column card sort — controlled when provided (`'*'` = every column). */
+  columnSort?: OgeKanbanColumnSort<T>;
+  /** Uncontrolled initial column sort. */
+  defaultColumnSort?: OgeKanbanColumnSort<T>;
+  /** The controlled half of `columnSort` (the column menu writes it). */
+  onColumnSortChange?: (sort: OgeKanbanColumnSort<T>) => void;
+  /** Priority ranking for sorting by priority (highest first). */
+  priorityOrder?: readonly string[];
+  /** `'multiple'` adds Ctrl/Shift-click, Ctrl+A and multi-card drag. Default `'multiple'`. */
+  selectionMode?: OgeKanbanSelectionMode;
+  /** Every selected card key — controlled when provided. */
+  selectedCardKeys?: readonly unknown[];
+  /** Uncontrolled initial selection set. */
+  defaultSelectedCardKeys?: readonly unknown[];
+  /** The controlled half of `selectedCardKeys`. */
+  onSelectedCardKeysChange?: (keys: readonly unknown[]) => void;
+  /** Boards sharing a `dragGroup` exchange cards by drag and "Move to …". */
+  dragGroup?: string;
+  /** Names this board in transfer events and the other boards' menus. */
+  boardId?: string;
+  /** Per-lane total WIP limits, keyed by swimlane value. */
+  swimlaneWipLimits?: Readonly<Record<string, number>>;
+  /** The column footer's add button opens an inline title composer. Default `false`. */
+  quickAdd?: boolean;
+  /** Double-clicking a card title edits it inline (F2 always does). Default `false`. */
+  inlineTitleEditing?: boolean;
+  /** Undo/redo depth (Ctrl+Z / Ctrl+Y, toolbar buttons); `0` disables. Default `50`. */
+  undoLimit?: number;
+  /** Cancelable, on the target board: cards from another board are about to land. */
+  onCardTransferring?: (event: OgeKanbanCardTransferringEvent<T>) => void;
+  /** On both boards: a cross-board transfer landed. */
+  onCardTransferred?: (event: OgeKanbanCardTransferredEvent<T>) => void;
 
   // ---------------- callbacks (Angular outputs) ----------------
   /** A card was clicked (also selects it). */

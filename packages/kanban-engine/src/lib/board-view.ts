@@ -277,7 +277,9 @@ export function kanbanCardShortcuts(caps: KanbanCapabilities): string | null {
   if (caps.canDelete) parts.push('Delete');
   if (caps.canDrag) parts.push('Control+ArrowLeft Control+ArrowRight');
   if (caps.canUpdate && caps.canEditTitle) parts.push('F2');
-  if (caps.multiSelect) parts.push('Control+A Control+Space');
+  if (caps.multiSelect && (caps.canDrag || caps.canDelete)) {
+    parts.push('Control+A Control+Space');
+  }
   return parts.length > 0 ? parts.join(' ') : null;
 }
 

@@ -45,7 +45,13 @@ export default defineConfig(() => ({
       // consumer that renders on the server (or bundles without a CSS loader)
       // is not forced to resolve it. `styles.css` is imported once by the app,
       // which is what the docs tell people to do.
-      entry: { index: 'src/index.ts', styles: 'src/styles.ts' },
+      // `export-excel` is separate so only an app importing it pays for the
+      // optional `exceljs` peer.
+      entry: {
+        index: 'src/index.ts',
+        styles: 'src/styles.ts',
+        'export-excel': 'src/export-excel.ts',
+      },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
       formats: ['es', 'cjs'],
@@ -59,6 +65,8 @@ export default defineConfig(() => ({
         'react/jsx-runtime',
         '@oge-ui/behavior',
         '@oge-ui/kanban-engine',
+        '@oge-ui/kanban-engine/export-excel',
+        'exceljs',
         '@oge-ui/react-forms',
         '@oge-ui/react-overlay',
       ],
