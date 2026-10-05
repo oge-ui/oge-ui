@@ -5,8 +5,9 @@
  */
 import { addDays, addMonths, startOfDay, startOfWeek } from '@oge-ui/core';
 
-/** Zoomable scale units (dx `scaleType` parity). */
-export type GanttScaleType = 'hours' | 'days' | 'weeks' | 'months';
+/** Zoomable scale units (dx `scaleType` parity, plus quarters and years). */
+export type GanttScaleType =
+  'hours' | 'days' | 'weeks' | 'months' | 'quarters' | 'years';
 
 /** One rendered tick (minor cell or major header segment). */
 export interface GanttTick {
@@ -32,6 +33,8 @@ const MS_PER_UNIT: Record<GanttScaleType, number> = {
   days: 86_400_000,
   weeks: 7 * 86_400_000,
   months: 30 * 86_400_000, // months tick per calendar month; px math via ms
+  quarters: 91 * 86_400_000,
+  years: 365 * 86_400_000,
 };
 
 /** Default minor tick width per scale (px) — tuned for readability. */
@@ -40,6 +43,8 @@ export const GANTT_TICK_WIDTH: Record<GanttScaleType, number> = {
   days: 40,
   weeks: 80,
   months: 96,
+  quarters: 96,
+  years: 120,
 };
 
 function unitFloor(
@@ -61,6 +66,10 @@ function unitFloor(
       return startOfWeek(date, firstDayOfWeek);
     case 'months':
       return new Date(date.getFullYear(), date.getMonth(), 1);
+    case 'quarters':
+      return new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3, 1);
+    case 'years':
+      return new Date(date.getFullYear(), 0, 1);
   }
 }
 
@@ -79,6 +88,10 @@ function unitNext(date: Date, type: GanttScaleType): Date {
       return addDays(date, 7);
     case 'months':
       return addMonths(date, 1);
+    case 'quarters':
+      return addMonths(date, 3);
+    case 'years':
+      return addMonths(date, 12);
   }
 }
 
@@ -95,6 +108,11 @@ function majorFloor(
     case 'weeks':
     case 'months':
       return new Date(date.getFullYear(), date.getMonth(), 1);
+    case 'quarters':
+      return new Date(date.getFullYear(), 0, 1);
+    case 'years':
+      // decades
+      return new Date(Math.floor(date.getFullYear() / 10) * 10, 0, 1);
   }
 }
 
@@ -107,6 +125,10 @@ function majorNext(date: Date, type: GanttScaleType): Date {
     case 'weeks':
     case 'months':
       return addMonths(date, 1);
+    case 'quarters':
+      return addMonths(date, 12);
+    case 'years':
+      return addMonths(date, 120);
   }
 }
 
@@ -116,6 +138,8 @@ export const GANTT_SCALE_ORDER: readonly GanttScaleType[] = [
   'days',
   'weeks',
   'months',
+  'quarters',
+  'years',
 ];
 
 /**
@@ -204,6 +228,10 @@ export function buildGanttScale(
         return addDays(date, -7);
       case 'months':
         return addMonths(date, -1);
+      case 'quarters':
+        return addMonths(date, -3);
+      case 'years':
+        return addMonths(date, -12);
     }
   }
 }

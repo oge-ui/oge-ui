@@ -51,6 +51,11 @@
       "types": "./export-image.d.ts",
       "import": "./export-image.esm.js",
       "require": "./export-image.cjs.js"
+    },
+    "./export-msproject": {
+      "types": "./export-msproject.d.ts",
+      "import": "./export-msproject.esm.js",
+      "require": "./export-msproject.cjs.js"
     }
   },
   "peerDependencies": {

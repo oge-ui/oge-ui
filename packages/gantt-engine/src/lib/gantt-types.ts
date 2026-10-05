@@ -6,18 +6,54 @@
 import type { RowKey } from '@oge-ui/core';
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
 import type {
+  GanttConstraintType,
   GanttDependency,
   GanttDependencyType,
+  GanttLagUnit,
+  GanttSegment,
   GanttTask,
 } from './engine/gantt-model';
+import type {
+  GanttConflictKind,
+  GanttSchedulingConflict,
+  GanttSlack,
+} from './engine/schedule';
+import type { GanttCellEditorType } from './engine/task-list';
 import type { GanttScaleType } from './engine/time-scale';
 import type { GanttWorkCalendar } from './engine/work-calendar';
 
 /** Work-time calendar: working weekdays (0 = Sunday) + holiday dates. */
 export type OgeGanttWorkCalendar = GanttWorkCalendar;
 
-/** The timeline scale units: `'hours' | 'days' | 'weeks' | 'months'`. */
+/** The timeline scale units: `'hours' | 'days' | 'weeks' | 'months' | 'quarters' | 'years'`. */
 export type OgeGanttScaleType = GanttScaleType;
+
+/** Task constraint types: `'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO'`. */
+export type OgeGanttConstraintType = GanttConstraintType;
+
+/** Dependency lag unit: `'days'` (working days on a calendar) or `'hours'`. */
+export type OgeGanttLagUnit = GanttLagUnit;
+
+/** A dated piece — a split-task segment or a baseline: `{ start, end }`. */
+export type OgeGanttSegment = GanttSegment;
+
+/** Total / free slack of a task, in days. */
+export type OgeGanttSlack = GanttSlack;
+
+/** Editor of a task-list cell. */
+export type OgeGanttCellEditorType = GanttCellEditorType;
+
+/** What a scheduling conflict breaks: `'dependency' | 'constraint' | 'deadline'`. */
+export type OgeGanttConflictKind = GanttConflictKind;
+
+/** Task-list (`'tasks'`) or resource-centric rows (`'resources'`). */
+export type OgeGanttViewMode = 'tasks' | 'resources';
+
+/** Row selection: one row, or Ctrl/Shift multi-select with bulk actions. */
+export type OgeGanttSelectionMode = 'single' | 'multiple';
+
+/** Column sort direction. */
+export type OgeGanttSortDirection = 'asc' | 'desc';
 
 /** A normalized task row — the payload of events and templates. */
 export type OgeGanttTask<T = unknown> = GanttTask<T>;
@@ -38,6 +74,8 @@ export interface OgeGanttResource {
   readonly text: string;
   readonly color?: string;
   readonly calendar?: OgeGanttWorkCalendar;
+  /** Capacity in % for the utilization histogram (default 100). */
+  readonly capacity?: number;
 }
 
 /** One task-list column. */
@@ -49,6 +87,67 @@ export interface OgeGanttColumn {
   readonly widthPx?: number;
   /** Custom cell text; wins over the built-in formatting. */
   readonly format?: (task: OgeGanttTask) => string;
+  /**
+   * Inline editor (with `inlineEditing`): built-in fields pick theirs
+   * (`wbs` / slack columns are read-only); a data field defaults to `'text'`.
+   * `false` makes the column read-only.
+   */
+  readonly editor?: OgeGanttCellEditorType | false;
+  /** Header click sorting (with `allowSorting`); default `true`. */
+  readonly allowSorting?: boolean;
+  /** Pins the column to the pane's start edge while it scrolls sideways. */
+  readonly frozen?: boolean;
+}
+
+/** One entry of the toolbar's zoom-preset chooser. */
+export interface OgeGanttZoomPreset {
+  readonly scaleType: OgeGanttScaleType;
+  /** Minor tick width in px; unset = the scale's default. */
+  readonly tickWidth?: number;
+  /** Option text; unset = the scale's messages name. */
+  readonly label?: string;
+}
+
+/** One scheduling violation, resolved for display. */
+export interface OgeGanttSchedulingConflict<T = unknown>
+  extends GanttSchedulingConflict {
+  readonly task: OgeGanttTask<T>;
+  /** Readable description from the messages catalog. */
+  readonly message: string;
+}
+
+/** The set of scheduling conflicts changed (also fired when it empties). */
+export interface OgeGanttSchedulingConflictEvent<T = unknown> {
+  readonly conflicts: readonly OgeGanttSchedulingConflict<T>[];
+}
+
+/** Cancelable: before a dependency's type / lag change reaches the store. */
+export interface OgeGanttDependencyUpdatingEvent<D = unknown> {
+  readonly oldData: D;
+  readonly newData: Partial<D>;
+  cancel: boolean;
+}
+export interface OgeGanttDependencyUpdatedEvent<D = unknown> {
+  readonly dependencyData: D;
+}
+
+/** The column sort changed; `field: null` = cleared. */
+export interface OgeGanttSortChangedEvent {
+  readonly field: string | null;
+  readonly direction: OgeGanttSortDirection | null;
+}
+
+/** A task-list column was resized (pointer or Alt+Arrow). */
+export interface OgeGanttColumnResizedEvent {
+  readonly field: string;
+  readonly widthPx: number;
+}
+
+/** A task-list column moved (drag or Ctrl+Shift+Arrow). */
+export interface OgeGanttColumnReorderedEvent {
+  readonly field: string;
+  readonly fromIndex: number;
+  readonly toIndex: number;
 }
 
 /** A vertical marker or shaded range on the chart (dx stripLines parity). */
@@ -128,6 +227,16 @@ export interface OgeGanttExportData<T = unknown> {
   readonly critical: ReadonlySet<RowKey>;
   /** Joined resource names of a task, or `null`. */
   readonly resourceText: (task: OgeGanttTask<T>) => string | null;
+  /**
+   * Every normalized link (lag included) — the MS Project export reads it.
+   * Optional so hand-built snapshots from 1.1 keep type-checking.
+   */
+  readonly dependencies?: readonly OgeGanttDependency[];
+  readonly resources?: readonly OgeGanttResource[];
+  /** The effective work calendar (`workCalendar` + `holidays`), or `null`. */
+  readonly workCalendar?: OgeGanttWorkCalendar | null;
+  /** Total / free slack per leaf task. */
+  readonly slack?: ReadonlyMap<RowKey, OgeGanttSlack>;
 }
 
 /** Task click / double-click / context menu. */
@@ -136,9 +245,11 @@ export interface OgeGanttTaskClickEvent<T = unknown> {
   readonly event: MouseEvent;
 }
 
-/** Selection change (single-row selection). */
+/** Selection change: the primary (last clicked) row and, multi-select, all. */
 export interface OgeGanttSelectionChangedEvent<T = unknown> {
   readonly task: OgeGanttTask<T> | null;
+  /** Every selected task (one entry, or none, in single mode). */
+  readonly tasks: readonly OgeGanttTask<T>[];
 }
 
 /**

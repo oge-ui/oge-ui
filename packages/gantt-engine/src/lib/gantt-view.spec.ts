@@ -54,10 +54,11 @@ describe('gantt view helpers', () => {
   it('steps and fits the scale', () => {
     expect(stepGanttScale('days', 1)).toBe('weeks');
     expect(stepGanttScale('hours', -1)).toBeNull();
-    expect(stepGanttScale('months', 1)).toBeNull();
+    expect(stepGanttScale('months', 1)).toBe('quarters');
+    expect(stepGanttScale('years', 1)).toBeNull();
     const range = { min: d(1), max: d(10) };
     expect(fitGanttScaleType(range, 100_000, 1)).toBe('hours');
-    expect(fitGanttScaleType(range, 1, 1)).toBe('months');
+    expect(fitGanttScaleType(range, 1, 1)).toBe('years');
   });
 
   it('formats message templates', () => {
@@ -84,7 +85,34 @@ describe('gantt view helpers', () => {
       OGE_DEFAULT_GANTT_MESSAGES.dialog,
       [{ id: 'ada', text: 'Ada' }],
     );
-    expect(withPeople.at(-1)?.field).toBe('resourceIds');
-    expect(withPeople.at(-1)?.editorType).toBe('tagBox');
+    const tags = withPeople.find((item) => item.field === 'resourceIds');
+    expect(tags?.editorType).toBe('tagBox');
+    // resources also bring the assignment units
+    expect(withPeople.at(-1)?.field).toBe('units');
+  });
+
+  it('adds the work and scheduling fields on request', () => {
+    const items = buildGanttDialogItems(OGE_DEFAULT_GANTT_MESSAGES.dialog, [], {
+      effort: true,
+      scheduling: OGE_DEFAULT_GANTT_MESSAGES.scheduling,
+    });
+    expect(items.map((item) => item.field).slice(5)).toEqual([
+      'effort',
+      'constraintType',
+      'constraintDate',
+      'deadline',
+      'manuallyScheduled',
+    ]);
+    const options = items[6].editorOptions as { items: { id: string }[] };
+    expect(options.items.map((option) => option.id)).toEqual([
+      'ASAP',
+      'ALAP',
+      'MSO',
+      'MFO',
+      'SNET',
+      'SNLT',
+      'FNET',
+      'FNLT',
+    ]);
   });
 });

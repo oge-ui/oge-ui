@@ -12,6 +12,8 @@ module.exports = withNx(
       'packages/gantt-engine/src/export-excel.ts',
       'packages/gantt-engine/src/export-pdf.ts',
       'packages/gantt-engine/src/export-image.ts',
+      // no peer: separate only so the MS Project reader/writer stays lazy
+      'packages/gantt-engine/src/export-msproject.ts',
     ],
     outputPath: '../../dist/packages/gantt-engine',
     tsConfig: './tsconfig.lib.json',

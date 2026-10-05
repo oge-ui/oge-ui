@@ -47,6 +47,9 @@
       "@oge-ui/gantt-engine/export-image": [
         "./packages/gantt-engine/src/export-image.ts"
       ],
+      "@oge-ui/gantt-engine/export-msproject": [
+        "./packages/gantt-engine/src/export-msproject.ts"
+      ],
       "@oge-ui/gantt-engine/export-pdf": [
         "./packages/gantt-engine/src/export-pdf.ts"
       ],
@@ -55,6 +58,9 @@
       ],
       "@oge-ui/gantt/export-image": [
         "./packages/gantt/export-image/src/index.ts"
+      ],
+      "@oge-ui/gantt/export-msproject": [
+        "./packages/gantt/export-msproject/src/index.ts"
       ],
       "@oge-ui/gantt/export-pdf": ["./packages/gantt/export-pdf/src/index.ts"],
       "@oge-ui/grid": ["./packages/grid/src/index.ts"],
@@ -111,6 +117,9 @@
       ],
       "@oge-ui/react-gantt/export-image": [
         "./packages/react/gantt/src/export-image.ts"
+      ],
+      "@oge-ui/react-gantt/export-msproject": [
+        "./packages/react/gantt/src/export-msproject.ts"
       ],
       "@oge-ui/react-gantt/export-pdf": [
         "./packages/react/gantt/src/export-pdf.ts"

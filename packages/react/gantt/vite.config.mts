@@ -53,6 +53,7 @@ export default defineConfig(() => ({
         'export-excel': 'src/export-excel.ts',
         'export-pdf': 'src/export-pdf.ts',
         'export-image': 'src/export-image.ts',
+        'export-msproject': 'src/export-msproject.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
@@ -71,6 +72,7 @@ export default defineConfig(() => ({
         '@oge-ui/gantt-engine/export-excel',
         '@oge-ui/gantt-engine/export-pdf',
         '@oge-ui/gantt-engine/export-image',
+        '@oge-ui/gantt-engine/export-msproject',
         'exceljs',
         'jspdf',
         '@oge-ui/react-forms',

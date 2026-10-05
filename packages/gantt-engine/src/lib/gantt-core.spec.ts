@@ -427,7 +427,9 @@ describe('OgeGanttCore', () => {
     expect(scale()).toBe('hours');
     expect(core.canZoom(-1)).toBe(false);
     core.zoomToFit();
-    expect(['hours', 'days', 'weeks', 'months']).toContain(scale());
+    expect(['hours', 'days', 'weeks', 'months', 'quarters', 'years']).toContain(
+      scale(),
+    );
   });
 
   it('builds the export snapshot with pane-identical column text', () => {
