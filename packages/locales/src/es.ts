@@ -500,6 +500,19 @@ export const es: OgeLocalePack = {
     fieldRemovedPattern: '{0} quitado del diseño',
   },
   scheduler: {
+    export: {
+      subject: 'Asunto',
+      start: 'Inicio',
+      end: 'Fin',
+      allDay: 'Todo el día',
+      location: 'Ubicación',
+      description: 'Descripción',
+      recurring: 'Periódica',
+      yes: 'Sí',
+      no: 'No',
+      sheetName: 'Citas',
+      noData: 'No hay citas en este período',
+    },
     toolbar: {
       label: 'Barra de herramientas del programador',
       today: 'Hoy',
@@ -509,6 +522,9 @@ export const es: OgeLocalePack = {
       dateNavigatorLabel: 'Elegir una fecha',
       newAppointment: 'Nueva',
       viewNames: {
+        timelineWorkWeek: 'Escala de tiempo (semana laboral)',
+        timelineMonth: 'Escala de tiempo (mes)',
+        timelineYear: 'Escala de tiempo (año)',
         day: 'Día',
         week: 'Semana',
         workWeek: 'Semana laboral',
@@ -525,6 +541,44 @@ export const es: OgeLocalePack = {
       close: 'Cerrar',
     },
     editor: {
+      repeatByLabel: 'Repetir por',
+      repeatByOptions: { day: 'Día del mes', weekday: 'Día de la semana' },
+      monthDaysLabel: 'Los días',
+      lastDayOfMonth: 'Último día',
+      setPosLabel: 'El',
+      ordinals: {
+        first: 'primer',
+        second: 'segundo',
+        third: 'tercer',
+        fourth: 'cuarto',
+        last: 'último',
+      },
+      weekdayKindLabel: 'Día',
+      dayKinds: {
+        day: 'día',
+        weekday: 'día laborable',
+        weekendDay: 'día de fin de semana',
+      },
+      yearMonthLabel: 'Mes',
+      exceptionsLabel: 'Repeticiones omitidas',
+      summaryLabel: 'Resumen de la repetición',
+      summary: {
+        daily: '{interval, plural, one {Todos los días} other {Cada # días}}',
+        weekly:
+          '{interval, plural, one {Todas las semanas} other {Cada # semanas}}',
+        weeklyOn:
+          '{interval, plural, one {Todas las semanas} other {Cada # semanas}} los {days}',
+        monthlyDay:
+          '{interval, plural, one {Todos los meses} other {Cada # meses}} el día {days}',
+        monthlyWeekday:
+          '{interval, plural, one {Todos los meses} other {Cada # meses}} el {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, one {Todos los años} other {Cada # años}} el {days} de {month}',
+        yearlyWeekday:
+          '{interval, plural, one {Todos los años} other {Cada # años}} el {ordinal} {day} de {month}',
+        count: '{summary}, {count, plural, one {una vez} other {# veces}}',
+        until: '{summary}, hasta el {date}',
+      },
       titleNew: 'Nueva cita',
       titleEdit: 'Editar cita',
       subjectLabel: 'Asunto',
@@ -579,6 +633,15 @@ export const es: OgeLocalePack = {
       deleteAppointment: 'Eliminar',
     },
     grid: {
+      weekNumber: 'S{week}',
+      weekNumberLabel: 'Semana {week}',
+      unavailableLabel: 'no disponible',
+      selectedLabel: 'seleccionada',
+      moreAppointmentsLabel:
+        '{count, plural, one {# cita más} other {# citas más}} el {date}',
+      morePopupLabel: 'Citas del {date}',
+      goToDay: 'Ir al día',
+      closeLabel: 'Cerrar',
       gridLabel: 'Programador, {period}',
       allDayLabel: 'Todo el día',
       cellLabel: '{date}, {time}',
@@ -590,6 +653,17 @@ export const es: OgeLocalePack = {
       unassignedLabel: 'Sin asignar',
     },
     announcements: {
+      slotUnavailable: 'Esa hora no está disponible',
+      conflict: '{text} se superpone con otra cita',
+      copied: '{count, plural, one {# cita copiada} other {# citas copiadas}}',
+      pasted: '{count, plural, one {# cita pegada} other {# citas pegadas}}',
+      selected:
+        '{count, plural, =0 {Selección borrada} one {# cita seleccionada} other {# citas seleccionadas}}',
+      undone: 'Deshecho',
+      redone: 'Rehecho',
+      dropped: '{text} agregada',
+      pickedUp:
+        'Se recogió {text}. Enfoque una celda del programador y presione Entrar para colocarla, o Escape para cancelar.',
       created: '{text} creada',
       updated: '{text} actualizada',
       deleted: '{text} eliminada',

@@ -498,6 +498,19 @@ export const he: OgeLocalePack = {
     fieldRemovedPattern: '{0} הוסר מהפריסה',
   },
   scheduler: {
+    export: {
+      subject: 'נושא',
+      start: 'התחלה',
+      end: 'סיום',
+      allDay: 'כל היום',
+      location: 'מיקום',
+      description: 'תיאור',
+      recurring: 'חוזר',
+      yes: 'כן',
+      no: 'לא',
+      sheetName: 'פגישות',
+      noData: 'אין פגישות בתקופה זו',
+    },
     toolbar: {
       label: 'סרגל הכלים של לוח הזמנים',
       today: 'היום',
@@ -507,6 +520,9 @@ export const he: OgeLocalePack = {
       dateNavigatorLabel: 'בחירת תאריך',
       newAppointment: 'חדש',
       viewNames: {
+        timelineWorkWeek: 'ציר זמן של שבוע עבודה',
+        timelineMonth: 'ציר זמן חודשי',
+        timelineYear: 'ציר זמן שנתי',
         day: 'יום',
         week: 'שבוע',
         workWeek: 'שבוע עבודה',
@@ -523,6 +539,42 @@ export const he: OgeLocalePack = {
       close: 'סגירה',
     },
     editor: {
+      repeatByLabel: 'חזרה לפי',
+      repeatByOptions: { day: 'יום בחודש', weekday: 'יום בשבוע' },
+      monthDaysLabel: 'בימים',
+      lastDayOfMonth: 'היום האחרון',
+      setPosLabel: 'בכל',
+      ordinals: {
+        first: 'הראשון',
+        second: 'השני',
+        third: 'השלישי',
+        fourth: 'הרביעי',
+        last: 'האחרון',
+      },
+      weekdayKindLabel: 'יום',
+      dayKinds: { day: 'יום', weekday: 'יום חול', weekendDay: 'יום סוף שבוע' },
+      yearMonthLabel: 'חודש',
+      exceptionsLabel: 'מופעים שדולגו',
+      summaryLabel: 'סיכום החזרה',
+      summary: {
+        daily:
+          '{interval, plural, one {כל יום} two {כל יומיים} other {כל # ימים}}',
+        weekly:
+          '{interval, plural, one {כל שבוע} two {כל שבועיים} other {כל # שבועות}}',
+        weeklyOn:
+          '{interval, plural, one {כל שבוע} two {כל שבועיים} other {כל # שבועות}} בימים {days}',
+        monthlyDay:
+          '{interval, plural, one {כל חודש} two {כל חודשיים} other {כל # חודשים}} ביום {days}',
+        monthlyWeekday:
+          '{interval, plural, one {כל חודש} two {כל חודשיים} other {כל # חודשים}} ב-{day} {ordinal}',
+        yearlyDay:
+          '{interval, plural, one {כל שנה} two {כל שנתיים} other {כל # שנים}} ב-{days} {month}',
+        yearlyWeekday:
+          '{interval, plural, one {כל שנה} two {כל שנתיים} other {כל # שנים}} ב-{day} {ordinal} של {month}',
+        count:
+          '{summary}, {count, plural, one {פעם אחת} two {פעמיים} other {# פעמים}}',
+        until: '{summary}, עד {date}',
+      },
       titleNew: 'פגישה חדשה',
       titleEdit: 'עריכת פגישה',
       subjectLabel: 'נושא',
@@ -577,6 +629,15 @@ export const he: OgeLocalePack = {
       deleteAppointment: 'מחיקה',
     },
     grid: {
+      weekNumber: 'ש{week}',
+      weekNumberLabel: 'שבוע {week}',
+      unavailableLabel: 'לא זמין',
+      selectedLabel: 'נבחר',
+      moreAppointmentsLabel:
+        '{count, plural, one {פגישה נוספת אחת} two {שתי פגישות נוספות} other {# פגישות נוספות}} ב-{date}',
+      morePopupLabel: 'פגישות ב-{date}',
+      goToDay: 'מעבר ליום',
+      closeLabel: 'סגירה',
       gridLabel: 'לוח זמנים, {period}',
       allDayLabel: 'כל היום',
       cellLabel: '{date}, {time}',
@@ -588,6 +649,19 @@ export const he: OgeLocalePack = {
       unassignedLabel: 'לא משויך',
     },
     announcements: {
+      slotUnavailable: 'הזמן הזה אינו זמין',
+      conflict: '{text} חופף לפגישה אחרת',
+      copied:
+        '{count, plural, one {הועתקה פגישה אחת} two {הועתקו שתי פגישות} other {הועתקו # פגישות}}',
+      pasted:
+        '{count, plural, one {הודבקה פגישה אחת} two {הודבקו שתי פגישות} other {הודבקו # פגישות}}',
+      selected:
+        '{count, plural, =0 {הבחירה נוקתה} one {נבחרה פגישה אחת} two {נבחרו שתי פגישות} other {נבחרו # פגישות}}',
+      undone: 'הפעולה בוטלה',
+      redone: 'הפעולה בוצעה שוב',
+      dropped: '{text} נוסף',
+      pickedUp:
+        'הפריט {text} נתפס. יש להעביר מיקוד לתא בלוח הזמנים וללחוץ Enter כדי למקם אותו, או Escape כדי לבטל.',
       created: '{text} נוצר',
       updated: '{text} עודכן',
       deleted: '{text} נמחק',

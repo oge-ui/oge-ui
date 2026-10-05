@@ -499,6 +499,19 @@ export const ptBR: OgeLocalePack = {
     fieldRemovedPattern: '{0} removido do layout',
   },
   scheduler: {
+    export: {
+      subject: 'Assunto',
+      start: 'Início',
+      end: 'Fim',
+      allDay: 'Dia inteiro',
+      location: 'Local',
+      description: 'Descrição',
+      recurring: 'Recorrente',
+      yes: 'Sim',
+      no: 'Não',
+      sheetName: 'Compromissos',
+      noData: 'Nenhum compromisso neste período',
+    },
     toolbar: {
       label: 'Barra de ferramentas do agendador',
       today: 'Hoje',
@@ -508,6 +521,9 @@ export const ptBR: OgeLocalePack = {
       dateNavigatorLabel: 'Escolha uma data',
       newAppointment: 'Novo',
       viewNames: {
+        timelineWorkWeek: 'Linha do tempo (semana de trabalho)',
+        timelineMonth: 'Linha do tempo (mês)',
+        timelineYear: 'Linha do tempo (ano)',
         day: 'Dia',
         week: 'Semana',
         workWeek: 'Semana de trabalho',
@@ -524,6 +540,44 @@ export const ptBR: OgeLocalePack = {
       close: 'Fechar',
     },
     editor: {
+      repeatByLabel: 'Repetir por',
+      repeatByOptions: { day: 'Dia do mês', weekday: 'Dia da semana' },
+      monthDaysLabel: 'Nos dias',
+      lastDayOfMonth: 'Último dia',
+      setPosLabel: 'No',
+      ordinals: {
+        first: 'primeiro',
+        second: 'segundo',
+        third: 'terceiro',
+        fourth: 'quarto',
+        last: 'último',
+      },
+      weekdayKindLabel: 'Dia',
+      dayKinds: {
+        day: 'dia',
+        weekday: 'dia útil',
+        weekendDay: 'dia de fim de semana',
+      },
+      yearMonthLabel: 'Mês',
+      exceptionsLabel: 'Ocorrências ignoradas',
+      summaryLabel: 'Resumo da recorrência',
+      summary: {
+        daily: '{interval, plural, one {Todos os dias} other {A cada # dias}}',
+        weekly:
+          '{interval, plural, one {Toda semana} other {A cada # semanas}}',
+        weeklyOn:
+          '{interval, plural, one {Toda semana} other {A cada # semanas}} em {days}',
+        monthlyDay:
+          '{interval, plural, one {Todo mês} other {A cada # meses}} no dia {days}',
+        monthlyWeekday:
+          '{interval, plural, one {Todo mês} other {A cada # meses}} no {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, one {Todo ano} other {A cada # anos}} em {days} de {month}',
+        yearlyWeekday:
+          '{interval, plural, one {Todo ano} other {A cada # anos}} no {ordinal} {day} de {month}',
+        count: '{summary}, {count, plural, one {uma vez} other {# vezes}}',
+        until: '{summary}, até {date}',
+      },
       titleNew: 'Novo compromisso',
       titleEdit: 'Editar compromisso',
       subjectLabel: 'Assunto',
@@ -578,6 +632,15 @@ export const ptBR: OgeLocalePack = {
       deleteAppointment: 'Excluir',
     },
     grid: {
+      weekNumber: 'S{week}',
+      weekNumberLabel: 'Semana {week}',
+      unavailableLabel: 'indisponível',
+      selectedLabel: 'selecionado',
+      moreAppointmentsLabel:
+        '{count, plural, one {# compromisso a mais} other {# compromissos a mais}} em {date}',
+      morePopupLabel: 'Compromissos em {date}',
+      goToDay: 'Ir para o dia',
+      closeLabel: 'Fechar',
       gridLabel: 'Agendador, {period}',
       allDayLabel: 'Dia inteiro',
       cellLabel: '{date}, {time}',
@@ -589,6 +652,19 @@ export const ptBR: OgeLocalePack = {
       unassignedLabel: 'Não atribuído',
     },
     announcements: {
+      slotUnavailable: 'Este horário não está disponível',
+      conflict: '{text} se sobrepõe a outro compromisso',
+      copied:
+        '{count, plural, one {# compromisso copiado} other {# compromissos copiados}}',
+      pasted:
+        '{count, plural, one {# compromisso colado} other {# compromissos colados}}',
+      selected:
+        '{count, plural, =0 {Seleção limpa} one {# compromisso selecionado} other {# compromissos selecionados}}',
+      undone: 'Desfeito',
+      redone: 'Refeito',
+      dropped: '{text} adicionado',
+      pickedUp:
+        '{text} foi pego. Foque uma célula do agendador e pressione Enter para posicioná-lo, ou Esc para cancelar.',
       created: '{text} criado',
       updated: '{text} atualizado',
       deleted: '{text} excluído',

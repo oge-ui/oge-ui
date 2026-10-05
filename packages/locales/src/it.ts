@@ -500,6 +500,19 @@ export const it: OgeLocalePack = {
     fieldRemovedPattern: '{0} rimosso dal layout',
   },
   scheduler: {
+    export: {
+      subject: 'Oggetto',
+      start: 'Inizio',
+      end: 'Fine',
+      allDay: 'Tutto il giorno',
+      location: 'Luogo',
+      description: 'Descrizione',
+      recurring: 'Ricorrente',
+      yes: 'Sì',
+      no: 'No',
+      sheetName: 'Appuntamenti',
+      noData: 'Nessun appuntamento in questo periodo',
+    },
     toolbar: {
       label: 'Barra degli strumenti dell’agenda',
       today: 'Oggi',
@@ -509,6 +522,9 @@ export const it: OgeLocalePack = {
       dateNavigatorLabel: 'Scegli una data',
       newAppointment: 'Nuovo',
       viewNames: {
+        timelineWorkWeek: 'Sequenza settimana lavorativa',
+        timelineMonth: 'Sequenza mensile',
+        timelineYear: 'Sequenza annuale',
         day: 'Giorno',
         week: 'Settimana',
         workWeek: 'Settimana lavorativa',
@@ -525,6 +541,47 @@ export const it: OgeLocalePack = {
       close: 'Chiudi',
     },
     editor: {
+      repeatByLabel: 'Ripeti per',
+      repeatByOptions: {
+        day: 'Giorno del mese',
+        weekday: 'Giorno della settimana',
+      },
+      monthDaysLabel: 'Nei giorni',
+      lastDayOfMonth: 'Ultimo giorno',
+      setPosLabel: 'Il',
+      ordinals: {
+        first: 'primo',
+        second: 'secondo',
+        third: 'terzo',
+        fourth: 'quarto',
+        last: 'ultimo',
+      },
+      weekdayKindLabel: 'Giorno',
+      dayKinds: {
+        day: 'giorno',
+        weekday: 'giorno feriale',
+        weekendDay: 'giorno del fine settimana',
+      },
+      yearMonthLabel: 'Mese',
+      exceptionsLabel: 'Occorrenze saltate',
+      summaryLabel: 'Riepilogo della ricorrenza',
+      summary: {
+        daily: '{interval, plural, one {Ogni giorno} other {Ogni # giorni}}',
+        weekly:
+          '{interval, plural, one {Ogni settimana} other {Ogni # settimane}}',
+        weeklyOn:
+          '{interval, plural, one {Ogni settimana} other {Ogni # settimane}} il {days}',
+        monthlyDay:
+          '{interval, plural, one {Ogni mese} other {Ogni # mesi}} il giorno {days}',
+        monthlyWeekday:
+          '{interval, plural, one {Ogni mese} other {Ogni # mesi}} il {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, one {Ogni anno} other {Ogni # anni}} il {days} {month}',
+        yearlyWeekday:
+          '{interval, plural, one {Ogni anno} other {Ogni # anni}} il {ordinal} {day} di {month}',
+        count: '{summary}, {count, plural, one {una volta} other {# volte}}',
+        until: '{summary}, fino al {date}',
+      },
       titleNew: 'Nuovo appuntamento',
       titleEdit: 'Modifica appuntamento',
       subjectLabel: 'Oggetto',
@@ -580,6 +637,15 @@ export const it: OgeLocalePack = {
       deleteAppointment: 'Elimina',
     },
     grid: {
+      weekNumber: 'S{week}',
+      weekNumberLabel: 'Settimana {week}',
+      unavailableLabel: 'non disponibile',
+      selectedLabel: 'selezionato',
+      moreAppointmentsLabel:
+        '{count, plural, one {# altro appuntamento} other {# altri appuntamenti}} il {date}',
+      morePopupLabel: 'Appuntamenti del {date}',
+      goToDay: 'Vai al giorno',
+      closeLabel: 'Chiudi',
       gridLabel: 'Agenda, {period}',
       allDayLabel: 'Tutto il giorno',
       cellLabel: '{date}, {time}',
@@ -591,6 +657,19 @@ export const it: OgeLocalePack = {
       unassignedLabel: 'Non assegnato',
     },
     announcements: {
+      slotUnavailable: 'Questo orario non è disponibile',
+      conflict: '{text} si sovrappone a un altro appuntamento',
+      copied:
+        '{count, plural, one {# appuntamento copiato} other {# appuntamenti copiati}}',
+      pasted:
+        '{count, plural, one {# appuntamento incollato} other {# appuntamenti incollati}}',
+      selected:
+        '{count, plural, =0 {Selezione annullata} one {# appuntamento selezionato} other {# appuntamenti selezionati}}',
+      undone: 'Operazione annullata',
+      redone: 'Operazione ripristinata',
+      dropped: '{text} aggiunto',
+      pickedUp:
+        'Prelevato {text}. Spostare lo stato attivo su una cella dell’agenda e premere Invio per collocarlo, oppure Esc per annullare.',
       created: '{text} creato',
       updated: '{text} aggiornato',
       deleted: '{text} eliminato',

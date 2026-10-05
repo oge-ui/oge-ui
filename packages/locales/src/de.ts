@@ -500,6 +500,19 @@ export const de: OgeLocalePack = {
     fieldRemovedPattern: '{0} aus dem Layout entfernt',
   },
   scheduler: {
+    export: {
+      subject: 'Betreff',
+      start: 'Beginn',
+      end: 'Ende',
+      allDay: 'Ganztägig',
+      location: 'Ort',
+      description: 'Beschreibung',
+      recurring: 'Serientermin',
+      yes: 'Ja',
+      no: 'Nein',
+      sheetName: 'Termine',
+      noData: 'Keine Termine in diesem Zeitraum',
+    },
     toolbar: {
       label: 'Terminplaner-Symbolleiste',
       today: 'Heute',
@@ -509,6 +522,9 @@ export const de: OgeLocalePack = {
       dateNavigatorLabel: 'Datum auswählen',
       newAppointment: 'Neu',
       viewNames: {
+        timelineWorkWeek: 'Zeitachse Arbeitswoche',
+        timelineMonth: 'Zeitachse Monat',
+        timelineYear: 'Zeitachse Jahr',
         day: 'Tag',
         week: 'Woche',
         workWeek: 'Arbeitswoche',
@@ -525,6 +541,39 @@ export const de: OgeLocalePack = {
       close: 'Schließen',
     },
     editor: {
+      repeatByLabel: 'Wiederholen nach',
+      repeatByOptions: { day: 'Tag des Monats', weekday: 'Wochentag' },
+      monthDaysLabel: 'An Tagen',
+      lastDayOfMonth: 'Letzter Tag',
+      setPosLabel: 'Am',
+      ordinals: {
+        first: 'ersten',
+        second: 'zweiten',
+        third: 'dritten',
+        fourth: 'vierten',
+        last: 'letzten',
+      },
+      weekdayKindLabel: 'Tag',
+      dayKinds: { day: 'Tag', weekday: 'Werktag', weekendDay: 'Wochenendtag' },
+      yearMonthLabel: 'Monat',
+      exceptionsLabel: 'Übersprungene Termine',
+      summaryLabel: 'Zusammenfassung der Wiederholung',
+      summary: {
+        daily: '{interval, plural, one {Jeden Tag} other {Alle # Tage}}',
+        weekly: '{interval, plural, one {Jede Woche} other {Alle # Wochen}}',
+        weeklyOn:
+          '{interval, plural, one {Jede Woche} other {Alle # Wochen}} am {days}',
+        monthlyDay:
+          '{interval, plural, one {Jeden Monat} other {Alle # Monate}} am Tag {days}',
+        monthlyWeekday:
+          '{interval, plural, one {Jeden Monat} other {Alle # Monate}} am {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, one {Jedes Jahr} other {Alle # Jahre}} am {days}. {month}',
+        yearlyWeekday:
+          '{interval, plural, one {Jedes Jahr} other {Alle # Jahre}} am {ordinal} {day} im {month}',
+        count: '{summary}, {count, plural, one {einmal} other {# Mal}}',
+        until: '{summary}, bis {date}',
+      },
       titleNew: 'Neuer Termin',
       titleEdit: 'Termin bearbeiten',
       subjectLabel: 'Betreff',
@@ -579,6 +628,15 @@ export const de: OgeLocalePack = {
       deleteAppointment: 'Löschen',
     },
     grid: {
+      weekNumber: 'KW{week}',
+      weekNumberLabel: 'Kalenderwoche {week}',
+      unavailableLabel: 'nicht verfügbar',
+      selectedLabel: 'ausgewählt',
+      moreAppointmentsLabel:
+        '{count, plural, one {# weiterer Termin} other {# weitere Termine}} am {date}',
+      morePopupLabel: 'Termine am {date}',
+      goToDay: 'Zum Tag wechseln',
+      closeLabel: 'Schließen',
       gridLabel: 'Terminplaner, {period}',
       allDayLabel: 'Ganztägig',
       cellLabel: '{date}, {time}',
@@ -591,6 +649,19 @@ export const de: OgeLocalePack = {
       unassignedLabel: 'Nicht zugewiesen',
     },
     announcements: {
+      slotUnavailable: 'Dieser Zeitpunkt ist nicht verfügbar',
+      conflict: '{text} überschneidet sich mit einem anderen Termin',
+      copied:
+        '{count, plural, one {# Termin kopiert} other {# Termine kopiert}}',
+      pasted:
+        '{count, plural, one {# Termin eingefügt} other {# Termine eingefügt}}',
+      selected:
+        '{count, plural, =0 {Auswahl aufgehoben} one {# Termin ausgewählt} other {# Termine ausgewählt}}',
+      undone: 'Rückgängig gemacht',
+      redone: 'Wiederhergestellt',
+      dropped: '{text} hinzugefügt',
+      pickedUp:
+        '{text} aufgenommen. Fokussieren Sie eine Zelle des Terminplaners und drücken Sie die Eingabetaste, um ihn abzulegen, oder Esc zum Abbrechen.',
       created: '{text} erstellt',
       updated: '{text} aktualisiert',
       deleted: '{text} gelöscht',

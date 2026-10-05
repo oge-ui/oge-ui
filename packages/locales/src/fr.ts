@@ -503,6 +503,19 @@ export const fr: OgeLocalePack = {
     fieldRemovedPattern: '{0} retiré de la disposition',
   },
   scheduler: {
+    export: {
+      subject: 'Objet',
+      start: 'Début',
+      end: 'Fin',
+      allDay: 'Toute la journée',
+      location: 'Lieu',
+      description: 'Description',
+      recurring: 'Récurrent',
+      yes: 'Oui',
+      no: 'Non',
+      sheetName: 'Rendez-vous',
+      noData: 'Aucun rendez-vous sur cette période',
+    },
     toolbar: {
       label: 'Barre d’outils du planificateur',
       today: 'Aujourd’hui',
@@ -512,6 +525,9 @@ export const fr: OgeLocalePack = {
       dateNavigatorLabel: 'Choisir une date',
       newAppointment: 'Nouveau',
       viewNames: {
+        timelineWorkWeek: 'Chronologie (semaine de travail)',
+        timelineMonth: 'Chronologie (mois)',
+        timelineYear: 'Chronologie (année)',
         day: 'Jour',
         week: 'Semaine',
         workWeek: 'Semaine de travail',
@@ -528,6 +544,45 @@ export const fr: OgeLocalePack = {
       close: 'Fermer',
     },
     editor: {
+      repeatByLabel: 'Répéter par',
+      repeatByOptions: { day: 'Jour du mois', weekday: 'Jour de la semaine' },
+      monthDaysLabel: 'Les jours',
+      lastDayOfMonth: 'Dernier jour',
+      setPosLabel: 'Le',
+      ordinals: {
+        first: 'premier',
+        second: 'deuxième',
+        third: 'troisième',
+        fourth: 'quatrième',
+        last: 'dernier',
+      },
+      weekdayKindLabel: 'Jour',
+      dayKinds: {
+        day: 'jour',
+        weekday: 'jour de semaine',
+        weekendDay: 'jour de week-end',
+      },
+      yearMonthLabel: 'Mois',
+      exceptionsLabel: 'Occurrences ignorées',
+      summaryLabel: 'Résumé de la récurrence',
+      summary: {
+        daily:
+          '{interval, plural, one {Tous les jours} other {Tous les # jours}}',
+        weekly:
+          '{interval, plural, one {Toutes les semaines} other {Toutes les # semaines}}',
+        weeklyOn:
+          '{interval, plural, one {Toutes les semaines} other {Toutes les # semaines}} le {days}',
+        monthlyDay:
+          '{interval, plural, one {Tous les mois} other {Tous les # mois}} le jour {days}',
+        monthlyWeekday:
+          '{interval, plural, one {Tous les mois} other {Tous les # mois}} le {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, one {Tous les ans} other {Tous les # ans}} le {days} {month}',
+        yearlyWeekday:
+          '{interval, plural, one {Tous les ans} other {Tous les # ans}} le {ordinal} {day} de {month}',
+        count: '{summary}, {count, plural, one {une fois} other {# fois}}',
+        until: '{summary}, jusqu’au {date}',
+      },
       titleNew: 'Nouveau rendez-vous',
       titleEdit: 'Modifier le rendez-vous',
       subjectLabel: 'Objet',
@@ -582,6 +637,15 @@ export const fr: OgeLocalePack = {
       deleteAppointment: 'Supprimer',
     },
     grid: {
+      weekNumber: 'S{week}',
+      weekNumberLabel: 'Semaine {week}',
+      unavailableLabel: 'indisponible',
+      selectedLabel: 'sélectionné',
+      moreAppointmentsLabel:
+        '{count, plural, one {# autre rendez-vous} other {# autres rendez-vous}} le {date}',
+      morePopupLabel: 'Rendez-vous du {date}',
+      goToDay: 'Aller au jour',
+      closeLabel: 'Fermer',
       gridLabel: 'Planificateur, {period}',
       allDayLabel: 'Toute la journée',
       cellLabel: '{date}, {time}',
@@ -593,6 +657,19 @@ export const fr: OgeLocalePack = {
       unassignedLabel: 'Non attribué',
     },
     announcements: {
+      slotUnavailable: 'Ce créneau n’est pas disponible',
+      conflict: '{text} chevauche un autre rendez-vous',
+      copied:
+        '{count, plural, one {# rendez-vous copié} other {# rendez-vous copiés}}',
+      pasted:
+        '{count, plural, one {# rendez-vous collé} other {# rendez-vous collés}}',
+      selected:
+        '{count, plural, =0 {Sélection effacée} one {# rendez-vous sélectionné} other {# rendez-vous sélectionnés}}',
+      undone: 'Action annulée',
+      redone: 'Action rétablie',
+      dropped: '{text} ajouté',
+      pickedUp:
+        '{text} saisi. Placez le focus sur une cellule du planificateur et appuyez sur Entrée pour le déposer, ou sur Échap pour annuler.',
       created: '{text} créé',
       updated: '{text} mis à jour',
       deleted: '{text} supprimé',

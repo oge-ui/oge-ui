@@ -498,6 +498,19 @@ export const ar: OgeLocalePack = {
     fieldRemovedPattern: 'أُزيل {0} من التخطيط',
   },
   scheduler: {
+    export: {
+      subject: 'الموضوع',
+      start: 'البداية',
+      end: 'النهاية',
+      allDay: 'طوال اليوم',
+      location: 'الموقع',
+      description: 'الوصف',
+      recurring: 'متكرر',
+      yes: 'نعم',
+      no: 'لا',
+      sheetName: 'المواعيد',
+      noData: 'لا توجد مواعيد في هذه الفترة',
+    },
     toolbar: {
       label: 'شريط أدوات المجدول',
       today: 'اليوم',
@@ -507,6 +520,9 @@ export const ar: OgeLocalePack = {
       dateNavigatorLabel: 'اختيار تاريخ',
       newAppointment: 'جديد',
       viewNames: {
+        timelineWorkWeek: 'مخطط زمني لأسبوع العمل',
+        timelineMonth: 'مخطط زمني لشهر',
+        timelineYear: 'مخطط زمني لسنة',
         day: 'يوم',
         week: 'أسبوع',
         workWeek: 'أسبوع العمل',
@@ -523,6 +539,46 @@ export const ar: OgeLocalePack = {
       close: 'إغلاق',
     },
     editor: {
+      repeatByLabel: 'التكرار حسب',
+      repeatByOptions: { day: 'يوم من الشهر', weekday: 'يوم من الأسبوع' },
+      monthDaysLabel: 'في الأيام',
+      lastDayOfMonth: 'اليوم الأخير',
+      setPosLabel: 'في',
+      ordinals: {
+        first: 'الأول',
+        second: 'الثاني',
+        third: 'الثالث',
+        fourth: 'الرابع',
+        last: 'الأخير',
+      },
+      weekdayKindLabel: 'اليوم',
+      dayKinds: {
+        day: 'يوم',
+        weekday: 'يوم عمل',
+        weekendDay: 'يوم عطلة نهاية الأسبوع',
+      },
+      yearMonthLabel: 'الشهر',
+      exceptionsLabel: 'التكرارات المتخطاة',
+      summaryLabel: 'ملخص التكرار',
+      summary: {
+        daily:
+          '{interval, plural, one {كل يوم} two {كل يومين} few {كل # أيام} many {كل # يومًا} other {كل # يوم}}',
+        weekly:
+          '{interval, plural, one {كل أسبوع} two {كل أسبوعين} few {كل # أسابيع} many {كل # أسبوعًا} other {كل # أسبوع}}',
+        weeklyOn:
+          '{interval, plural, one {كل أسبوع} two {كل أسبوعين} few {كل # أسابيع} many {كل # أسبوعًا} other {كل # أسبوع}} في {days}',
+        monthlyDay:
+          '{interval, plural, one {كل شهر} two {كل شهرين} few {كل # أشهر} many {كل # شهرًا} other {كل # شهر}} في اليوم {days}',
+        monthlyWeekday:
+          '{interval, plural, one {كل شهر} two {كل شهرين} few {كل # أشهر} many {كل # شهرًا} other {كل # شهر}} في {day} {ordinal}',
+        yearlyDay:
+          '{interval, plural, one {كل سنة} two {كل سنتين} few {كل # سنوات} many {كل # سنة} other {كل # سنة}} في {days} {month}',
+        yearlyWeekday:
+          '{interval, plural, one {كل سنة} two {كل سنتين} few {كل # سنوات} many {كل # سنة} other {كل # سنة}} في {day} {ordinal} من {month}',
+        count:
+          '{summary}، {count, plural, one {مرة واحدة} two {مرتين} few {# مرات} many {# مرة} other {# مرة}}',
+        until: '{summary}، حتى {date}',
+      },
       titleNew: 'موعد جديد',
       titleEdit: 'تحرير الموعد',
       subjectLabel: 'الموضوع',
@@ -577,6 +633,15 @@ export const ar: OgeLocalePack = {
       deleteAppointment: 'حذف',
     },
     grid: {
+      weekNumber: 'أ{week}',
+      weekNumberLabel: 'الأسبوع {week}',
+      unavailableLabel: 'غير متاح',
+      selectedLabel: 'محدد',
+      moreAppointmentsLabel:
+        '{count, plural, one {موعد آخر} two {موعدان آخران} few {# مواعيد أخرى} many {# موعدًا آخر} other {# موعد آخر}} في {date}',
+      morePopupLabel: 'المواعيد في {date}',
+      goToDay: 'الانتقال إلى اليوم',
+      closeLabel: 'إغلاق',
       gridLabel: 'المجدول، {period}',
       allDayLabel: 'طوال اليوم',
       cellLabel: '{date}، {time}',
@@ -588,6 +653,19 @@ export const ar: OgeLocalePack = {
       unassignedLabel: 'غير معيّن',
     },
     announcements: {
+      slotUnavailable: 'هذا الوقت غير متاح',
+      conflict: '{text} يتعارض مع موعد آخر',
+      copied:
+        '{count, plural, one {تم نسخ موعد واحد} two {تم نسخ موعدين} few {تم نسخ # مواعيد} many {تم نسخ # موعدًا} other {تم نسخ # موعد}}',
+      pasted:
+        '{count, plural, one {تم لصق موعد واحد} two {تم لصق موعدين} few {تم لصق # مواعيد} many {تم لصق # موعدًا} other {تم لصق # موعد}}',
+      selected:
+        '{count, plural, =0 {تم مسح التحديد} one {تم تحديد موعد واحد} two {تم تحديد موعدين} few {تم تحديد # مواعيد} many {تم تحديد # موعدًا} other {تم تحديد # موعد}}',
+      undone: 'تم التراجع',
+      redone: 'تمت الإعادة',
+      dropped: 'تمت إضافة {text}',
+      pickedUp:
+        'تم التقاط {text}. ركّز على خلية في المجدول واضغط Enter لوضعه، أو Escape للإلغاء.',
       created: 'تم إنشاء {text}',
       updated: 'تم تحديث {text}',
       deleted: 'تم حذف {text}',
