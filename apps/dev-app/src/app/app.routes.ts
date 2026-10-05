@@ -649,7 +649,7 @@ export const appRoutes: Route[] = [
         path: 'api',
         loadComponent: () =>
           import('./pages/navigation/api').then((m) => m.NavigationApiPage),
-        title: 'OGE — Tree View API',
+        title: 'OGE — Navigation API',
       },
     ],
   },

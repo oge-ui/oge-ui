@@ -37,6 +37,11 @@ interface NavItem {
    * trying (and failing) to match it.
    */
   file?: boolean;
+  /**
+   * Section anchor on a shared page — the navigation family documents all
+   * six components on one API page, so each family links to its own part.
+   */
+  fragment?: string;
 }
 
 interface NavSection {
@@ -531,6 +536,7 @@ export class App {
         { path: '/components/stepper', label: 'Overview', icon: 'stepper' },
         {
           path: '/components/tree-view/api',
+          fragment: 'ogestepper',
           label: 'API Reference',
           icon: 'code',
         },
@@ -543,6 +549,7 @@ export class App {
         { path: '/components/drawer', label: 'Overview', icon: 'drawer' },
         {
           path: '/components/tree-view/api',
+          fragment: 'ogedrawer',
           label: 'API Reference',
           icon: 'code',
         },
@@ -564,6 +571,7 @@ export class App {
         },
         {
           path: '/components/tree-view/api',
+          fragment: 'ogebreadcrumb',
           label: 'API Reference',
           icon: 'code',
         },
@@ -588,6 +596,7 @@ export class App {
         { path: '/components/pagination', label: 'Overview', icon: 'pages' },
         {
           path: '/components/tree-view/api',
+          fragment: 'ogepagination',
           label: 'API Reference',
           icon: 'code',
         },
@@ -605,6 +614,7 @@ export class App {
         },
         {
           path: '/components/tree-view/api',
+          fragment: 'ogemenubar',
           label: 'API Reference',
           icon: 'code',
         },
@@ -617,6 +627,7 @@ export class App {
         { path: '/components/tree-view', label: 'Overview', icon: 'tree' },
         {
           path: '/components/tree-view/api',
+          fragment: 'ogetreeview',
           label: 'API Reference',
           icon: 'code',
         },

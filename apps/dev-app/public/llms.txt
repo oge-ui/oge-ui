@@ -159,7 +159,7 @@ For code generation, prefer the full reference — it inlines every API table an
 ## Navigation
 
 - [Tree View](https://www.ogeui.com/components/tree-view): Angular Tree View by OGE UI: flat or nested data, tri-state checkboxes with cascade, search, lazy loading, virtual scrolling and drag and drop reparenting.
-- [Tree View API](https://www.ogeui.com/components/tree-view/api): Angular navigation API reference: inputs, outputs and types of oge-tree-view, oge-drawer, oge-stepper, oge-menubar, oge-breadcrumb and oge-pagination.
+- [Navigation API](https://www.ogeui.com/components/tree-view/api): Angular navigation API reference: inputs, outputs and types of oge-tree-view, oge-drawer, oge-stepper, oge-menubar, oge-breadcrumb and oge-pagination.
 
 ## Pivot Grid
 

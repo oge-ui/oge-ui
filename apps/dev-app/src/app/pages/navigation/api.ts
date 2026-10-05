@@ -49,7 +49,7 @@ const SECTIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
-      title="Tree View API"
+      title="Navigation API"
       category="Navigation"
       [chips]="['Properties', 'Methods', 'Events', 'Types']"
     >
@@ -66,9 +66,12 @@ const SECTIONS = [
         </p>
       } @else {
         <p>
-          Full surface of <code>&#64;oge-ui/navigation</code>: the
-          <code>oge-tree-view</code> component, its three template slots, the
-          WAI-ARIA APG keyboard map and the config provider.
+          Full surface of <code>&#64;oge-ui/navigation</code> on one page:
+          <code>oge-tree-view</code>, <code>oge-drawer</code>,
+          <code>oge-stepper</code>, <code>oge-menubar</code>,
+          <code>oge-breadcrumb</code> and <code>oge-pagination</code> — their
+          inputs, outputs, methods, template slots, WAI-ARIA APG keyboard maps
+          and config providers. Use the contents list to jump to a component.
         </p>
       }
     </app-doc-header>

@@ -225,7 +225,17 @@
             } @else {
             <a
               [routerLink]="item.path"
-              [routerLinkActiveOptions]="{ exact: true }"
+              [fragment]="item.fragment"
+              [routerLinkActiveOptions]="
+                item.fragment
+                  ? {
+                      paths: 'exact',
+                      queryParams: 'ignored',
+                      matrixParams: 'ignored',
+                      fragment: 'exact',
+                    }
+                  : { exact: true }
+              "
               routerLinkActive="bg-indigo-50 font-medium text-indigo-700 hover:bg-indigo-50 hover:text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
               class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13.5px] text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
             >
