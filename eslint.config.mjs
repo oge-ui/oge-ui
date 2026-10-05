@@ -34,6 +34,8 @@ export default [
             '@oge-ui/react-gantt',
             '@oge-ui/scheduler',
             '@oge-ui/react-scheduler',
+            '@oge-ui/kanban',
+            '@oge-ui/react-kanban',
           ],
           depConstraints: [
             // ---------------------------------------------------------------
