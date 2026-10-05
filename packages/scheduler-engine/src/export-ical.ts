@@ -63,7 +63,9 @@ export function schedulerICalEvents<T>(
 ): OgeICalEvent[] {
   return data.appointments.map((appointment) => {
     const allDay = appointment.allDay;
-    const start = allDay ? startOfDayOf(appointment.startDate) : appointment.startDate;
+    const start = allDay
+      ? startOfDayOf(appointment.startDate)
+      : appointment.startDate;
     let end = appointment.endDate;
     if (allDay) {
       const endDay = startOfDayOf(end);
@@ -92,12 +94,16 @@ export function schedulerICalEvents<T>(
       }
     }
     if (recurrenceRule !== undefined && appointment.recurrenceException) {
-      exDates.push(...parseRecurrenceException(appointment.recurrenceException));
+      exDates.push(
+        ...parseRecurrenceException(appointment.recurrenceException),
+      );
     }
     return {
       uid: `${String(appointment.key)}@oge-ui`,
       summary: appointment.text,
-      ...(appointment.description ? { description: appointment.description } : {}),
+      ...(appointment.description
+        ? { description: appointment.description }
+        : {}),
       ...(appointment.location ? { location: appointment.location } : {}),
       startDate: start,
       endDate: end,

@@ -235,7 +235,9 @@ export class SchedulerResourcesAvailabilityPage {
     conflicts: readonly OgeSchedulerAppointment<DepthAppt>[],
   ): boolean => conflicts.every((c) => c.source['tentative'] === true);
 
-  protected dropped(event: OgeSchedulerAppointmentDroppedEvent<DepthAppt>): void {
+  protected dropped(
+    event: OgeSchedulerAppointmentDroppedEvent<DepthAppt>,
+  ): void {
     if (!event.added) return;
     const task = event.itemData as DepthTask;
     this.tasks.update((list) => list.filter((t) => t.id !== task.id));

@@ -26,11 +26,7 @@ import type {
   OgeSchedulerView,
   OgeSchedulerViewOptions,
 } from './scheduler-types';
-import {
-  navigateDate,
-  normalizeIntervalCount,
-  viewRange,
-} from './view-model';
+import { navigateDate, normalizeIntervalCount, viewRange } from './view-model';
 
 /** A resolved view-switcher entry. */
 export interface ResolvedSchedulerView {
@@ -102,8 +98,7 @@ export function resolveActiveSchedulerView(
   defaults: SchedulerViewDefaults,
   selectedIndex: number | null = null,
 ): ResolvedSchedulerView {
-  const selected =
-    selectedIndex === null ? undefined : resolved[selectedIndex];
+  const selected = selectedIndex === null ? undefined : resolved[selectedIndex];
   if (selected !== undefined && selected.type === view) return selected;
   return (
     resolved.find((entry) => entry.type === view) ?? {
@@ -283,7 +278,11 @@ export function schedulerPeriodTitle(
     );
   }
   const { start, end } = viewRange(
-    view === 'agenda' ? 'agenda' : view === 'day' || view === 'timelineDay' ? 'day' : 'week',
+    view === 'agenda'
+      ? 'agenda'
+      : view === 'day' || view === 'timelineDay'
+        ? 'day'
+        : 'week',
     date,
     firstDayOfWeek,
     agendaDuration,

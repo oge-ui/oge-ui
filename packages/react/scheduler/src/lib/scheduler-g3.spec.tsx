@@ -110,9 +110,9 @@ const chip = (host: Element, label: string) =>
   );
 const cellAt = (host: Element, hour: number) =>
   must(
-    qa(host, '.oge-scheduler-rows .oge-scheduler-row')[hour - 8].querySelector<HTMLElement>(
-      '.oge-scheduler-cell',
-    ),
+    qa(host, '.oge-scheduler-rows .oge-scheduler-row')[
+      hour - 8
+    ].querySelector<HTMLElement>('.oge-scheduler-cell'),
   );
 const flush = () =>
   act(async () => {
@@ -138,7 +138,9 @@ describe('<OgeScheduler> G3 — views', () => {
     fireEvent.click(buttons[1]);
     expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
     expect(buttons[1].getAttribute('aria-pressed')).toBe('true');
-    expect(must(host.querySelector('.oge-scheduler-row')).children).toHaveLength(3);
+    expect(
+      must(host.querySelector('.oge-scheduler-row')).children,
+    ).toHaveLength(3);
   });
 
   it('shows week numbers in the header corner and the month rows', () => {
@@ -148,7 +150,9 @@ describe('<OgeScheduler> G3 — views', () => {
     });
     void rerender;
     void ref;
-    expect(host.querySelector('.oge-scheduler-week-number')?.textContent).toBe('W32');
+    expect(host.querySelector('.oge-scheduler-week-number')?.textContent).toBe(
+      'W32',
+    );
     fireEvent.click(qa(host, '.oge-scheduler-view-btn')[3]);
     expect(
       qa(host, '.oge-scheduler-month-cell .oge-scheduler-week-number'),
@@ -170,7 +174,9 @@ describe('<OgeScheduler> G3 — views', () => {
 describe('<OgeScheduler> G3 — grouping', () => {
   it('nests two levels of column headers', () => {
     const { host } = renderScheduler({ groups: ['room', 'owner'] });
-    expect(must(host.querySelector('.oge-scheduler-row')).children).toHaveLength(4);
+    expect(
+      must(host.querySelector('.oge-scheduler-row')).children,
+    ).toHaveLength(4);
     const groupRows = qa(host, '.oge-scheduler-resource-row');
     expect(groupRows).toHaveLength(2);
     expect(
@@ -178,7 +184,9 @@ describe('<OgeScheduler> G3 — grouping', () => {
         el.textContent?.trim(),
       ),
     ).toEqual(['Atlas', 'Borealis']);
-    expect(parseFloat(chip(host, 'Pairing').style.insetInlineStart)).toBeCloseTo(75, 1);
+    expect(
+      parseFloat(chip(host, 'Pairing').style.insetInlineStart),
+    ).toBeCloseTo(75, 1);
   });
 
   it('stacks row blocks under vertical orientation, with render props', () => {
@@ -211,14 +219,11 @@ describe('<OgeScheduler> G3 — grouping', () => {
       defaultCurrentView: 'timelineWorkWeek',
     });
     expect(qa(host, '.oge-scheduler-timeline-group-row')).toHaveLength(2);
-    expect(qa(host, '.oge-scheduler-timeline-rowhead').map((el) => el.textContent?.trim())).toEqual([
-      'Atlas',
-      'Ada',
-      'Grace',
-      'Borealis',
-      'Ada',
-      'Grace',
-    ]);
+    expect(
+      qa(host, '.oge-scheduler-timeline-rowhead').map((el) =>
+        el.textContent?.trim(),
+      ),
+    ).toEqual(['Atlas', 'Ada', 'Grace', 'Borealis', 'Ada', 'Grace']);
   });
 
   it('virtualizes many timeline rows', () => {
@@ -239,7 +244,10 @@ describe('<OgeScheduler> G3 — grouping', () => {
     });
     expect(qa(host, '.oge-scheduler-timeline-row')).toHaveLength(40);
     expect(
-      parseFloat(must(host.querySelector<HTMLElement>('.oge-scheduler-timeline-spacer')).style.height),
+      parseFloat(
+        must(host.querySelector<HTMLElement>('.oge-scheduler-timeline-spacer'))
+          .style.height,
+      ),
     ).toBe(80 * 35);
   });
 });
@@ -248,7 +256,10 @@ describe('<OgeScheduler> G3 — editing', () => {
   it('hatches blocked slots and refuses to create there', () => {
     const { host } = renderScheduler({
       disabledSlots: [
-        { startDate: new Date(2026, 7, 6, 12), endDate: new Date(2026, 7, 6, 13) },
+        {
+          startDate: new Date(2026, 7, 6, 12),
+          endDate: new Date(2026, 7, 6, 13),
+        },
       ],
     });
     const lunch = cellAt(host, 12);
@@ -264,13 +275,18 @@ describe('<OgeScheduler> G3 — editing', () => {
   it('refuses an overlapping keyboard move with allowOverlap false', () => {
     const { host, ref } = renderScheduler({ allowOverlap: false });
     for (let step = 0; step < 3; step++) {
-      fireEvent.keyDown(chip(host, 'Review'), { key: 'ArrowDown', ctrlKey: true });
+      fireEvent.keyDown(chip(host, 'Review'), {
+        key: 'ArrowDown',
+        ctrlKey: true,
+      });
     }
     const moved = must(ref.current)
       .getExportData()
       .appointments.find((entry) => entry.text === 'Review');
     expect(moved?.startDate).toEqual(new Date(2026, 7, 6, 12));
-    expect(host.querySelector('.oge-scheduler-live')?.textContent).toContain('overlaps');
+    expect(host.querySelector('.oge-scheduler-live')?.textContent).toContain(
+      'overlaps',
+    );
   });
 
   it('selects with Ctrl-click (controlled) and Ctrl+Space', () => {
@@ -298,8 +314,13 @@ describe('<OgeScheduler> G3 — editing', () => {
     const { container: host } = render(<Controlled />);
     fireEvent.click(chip(host, 'Review'));
     fireEvent.click(chip(host, 'Pairing'), { ctrlKey: true });
-    expect(changes.at(-1)?.map((item) => item.text)).toEqual(['Review', 'Pairing']);
-    expect(chip(host, 'Pairing').classList.contains('oge-scheduler-chip-selected')).toBe(true);
+    expect(changes.at(-1)?.map((item) => item.text)).toEqual([
+      'Review',
+      'Pairing',
+    ]);
+    expect(
+      chip(host, 'Pairing').classList.contains('oge-scheduler-chip-selected'),
+    ).toBe(true);
     fireEvent.keyDown(chip(host, 'Pairing'), { key: ' ', ctrlKey: true });
     expect(changes.at(-1)?.map((item) => item.text)).toEqual(['Review']);
   });
@@ -353,7 +374,9 @@ describe('<OgeScheduler> G3 — editing', () => {
         />
       </>,
     );
-    const draggable = must(container.querySelector<HTMLElement>('.oge-scheduler-draggable'));
+    const draggable = must(
+      container.querySelector<HTMLElement>('.oge-scheduler-draggable'),
+    );
     fireEvent.keyDown(draggable, { key: 'Enter' });
     expect(draggable.getAttribute('aria-pressed')).toBe('true');
     fireEvent.keyDown(cellAt(container, 16), { key: 'Enter' });
@@ -370,7 +393,9 @@ describe('<OgeScheduler> G3 — editing', () => {
 describe('<OgeScheduler> G3 — "+N more", recurrence editor, export', () => {
   it('"+N more" opens the day list; an entry opens the appointment popup', async () => {
     const { host } = renderScheduler({ defaultCurrentView: 'month' });
-    const more = must(host.querySelector<HTMLButtonElement>('.oge-scheduler-month-more'));
+    const more = must(
+      host.querySelector<HTMLButtonElement>('.oge-scheduler-month-more'),
+    );
     expect(more.tabIndex).toBe(0);
     expect(more.getAttribute('aria-label')).toBe(
       '1 more appointment on Thursday, August 6, 2026',
@@ -386,9 +411,9 @@ describe('<OgeScheduler> G3 — "+N more", recurrence editor, export', () => {
     fireEvent.click(items[1]);
     await flush();
     expect(document.querySelector('.oge-scheduler-more-popup')).toBeNull();
-    expect(document.querySelector('.oge-scheduler-popup-title')?.textContent).toBe(
-      'Pairing',
-    );
+    expect(
+      document.querySelector('.oge-scheduler-popup-title')?.textContent,
+    ).toBe('Pairing');
   });
 
   it('moreMode drill keeps the old drill-into-day behaviour', () => {
@@ -418,7 +443,9 @@ describe('<OgeScheduler> G3 — "+N more", recurrence editor, export', () => {
     fireEvent.doubleClick(must(host.querySelector('.oge-scheduler-month-bar')));
     await flush();
     expect(
-      document.querySelector('.oge-scheduler-recurrence-summary')?.textContent?.trim(),
+      document
+        .querySelector('.oge-scheduler-recurrence-summary')
+        ?.textContent?.trim(),
     ).toBe('Every month on the second Tuesday, 6 times');
   });
 

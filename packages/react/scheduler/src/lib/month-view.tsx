@@ -132,7 +132,11 @@ function MonthViewInner<T>(
 
   const grid = useMemo(
     () =>
-      buildMonthGrid(props.anchorDate, props.firstDayOfWeek, props.intervalCount),
+      buildMonthGrid(
+        props.anchorDate,
+        props.firstDayOfWeek,
+        props.intervalCount,
+      ),
     [props.anchorDate, props.firstDayOfWeek, props.intervalCount],
   );
   const weekCount = grid.weeks.length;
@@ -194,7 +198,13 @@ function MonthViewInner<T>(
     ) {
       return null;
     }
-    const { week, day } = monthDropCell(clientX, clientY, rect, props.rtl, weekCount);
+    const { week, day } = monthDropCell(
+      clientX,
+      clientY,
+      rect,
+      props.rtl,
+      weekCount,
+    );
     const date = grid.weeks[week]?.[day];
     return date === undefined
       ? null
@@ -223,12 +233,21 @@ function MonthViewInner<T>(
         ).badge
       : null;
 
-  const cellLabel = (day: Date, weekIndex: number, dayIndex: number): string => {
+  const cellLabel = (
+    day: Date,
+    weekIndex: number,
+    dayIndex: number,
+  ): string => {
     let label = schedulerDayCellAriaLabel(messages, day, locale);
     if (dayIndex === 0 && props.showWeekNumbers) {
       label = `${label}, ${
         schedulerWeekNumberTexts(
-          schedulerWeekNumber(day, props.weekNumberRule, props.firstDayOfWeek, locale),
+          schedulerWeekNumber(
+            day,
+            props.weekNumberRule,
+            props.firstDayOfWeek,
+            locale,
+          ),
           messages,
         ).label
       }`;
@@ -301,7 +320,11 @@ function MonthViewInner<T>(
     const select = chipSelectKey(event);
     if (select !== null) {
       event.preventDefault();
-      props.onSelectRequested({ appointment, gesture: select, order: chipOrder });
+      props.onSelectRequested({
+        appointment,
+        gesture: select,
+        order: chipOrder,
+      });
       return;
     }
     const action = chipKey(event.key, appointment, chipOrder, props.rtl);
@@ -429,7 +452,8 @@ function MonthViewInner<T>(
                   focusedCell.day === dayIndex;
                 const isDrop =
                   dropTarget !== null
-                    ? dropTarget.week === weekIndex && dropTarget.day === dayIndex
+                    ? dropTarget.week === weekIndex &&
+                      dropTarget.day === dayIndex
                     : drop !== null && sameDay(drop.slot.startDate, day);
                 const blocked = blockedDays.has(`${weekIndex}:${dayIndex}`);
                 const badge = dayIndex === 0 ? weekBadge(week[0]) : null;
@@ -549,20 +573,32 @@ function MonthViewInner<T>(
                 onClick={(event: ReactMouseEvent<HTMLElement>) => {
                   event.stopPropagation();
                   props.onChipClicked(
-                    chipEvent(item.appointment, event.nativeEvent, event.currentTarget),
+                    chipEvent(
+                      item.appointment,
+                      event.nativeEvent,
+                      event.currentTarget,
+                    ),
                   );
                 }}
                 onDoubleClick={(event) => {
                   event.stopPropagation();
                   props.onChipDblClicked(
-                    chipEvent(item.appointment, event.nativeEvent, event.currentTarget),
+                    chipEvent(
+                      item.appointment,
+                      event.nativeEvent,
+                      event.currentTarget,
+                    ),
                   );
                 }}
                 onKeyDown={(event) => onChipKeyDown(item.appointment, event)}
                 onContextMenu={(event) => {
                   event.stopPropagation();
                   props.onChipContextMenu(
-                    chipEvent(item.appointment, event.nativeEvent, event.currentTarget),
+                    chipEvent(
+                      item.appointment,
+                      event.nativeEvent,
+                      event.currentTarget,
+                    ),
                   );
                 }}
                 onFocus={() => setFocusedChipKey(item.appointment.key)}
@@ -597,7 +633,10 @@ function MonthViewInner<T>(
                 }}
                 onClick={(event) => {
                   event.stopPropagation();
-                  props.onMoreClick(week[overflow.dayIndex], event.currentTarget);
+                  props.onMoreClick(
+                    week[overflow.dayIndex],
+                    event.currentTarget,
+                  );
                 }}
               >
                 {schedulerMoreText(messages, overflow.count)}

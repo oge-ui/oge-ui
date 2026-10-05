@@ -86,14 +86,11 @@ import type {
     class: 'oge-scheduler-view oge-scheduler-timeline',
     '[class.oge-scheduler-timeline-day-scale]': "grid().scale === 'day'",
     '[class.oge-scheduler-timeline-year]': "view() === 'timelineYear'",
-    '[style.--oge-scheduler-timeline-days]': 'grid().days.length * blockCount()',
+    '[style.--oge-scheduler-timeline-days]':
+      'grid().days.length * blockCount()',
   },
   template: `
-    <div
-      #scrollEl
-      class="oge-scheduler-timeline-scroll"
-      (scroll)="onScroll()"
-    >
+    <div #scrollEl class="oge-scheduler-timeline-scroll" (scroll)="onScroll()">
       <div class="oge-scheduler-timeline-inner">
         @if (horizontal()) {
           <div class="oge-scheduler-timeline-header" role="presentation">
@@ -473,7 +470,9 @@ export class OgeSchedulerTimelineView<T = unknown> {
       : null;
   }
 
-  protected headerContext(row: TimelineRow<T>): OgeResourceHeaderTemplateContext {
+  protected headerContext(
+    row: TimelineRow<T>,
+  ): OgeResourceHeaderTemplateContext {
     return {
       $implicit: row.item as OgeSchedulerResourceItem,
       resource: row.resource as OgeSchedulerResource,
@@ -584,7 +583,8 @@ export class OgeSchedulerTimelineView<T = unknown> {
     }
     const rowIndex = this.rows().findIndex(
       (row) =>
-        row.kind !== 'group' && sameGroupValues(row.values ?? {}, drop.slot.resources),
+        row.kind !== 'group' &&
+        sameGroupValues(row.values ?? {}, drop.slot.resources),
     );
     return { rowIndex: Math.max(0, rowIndex), leftPct: start, widthPct: width };
   });
@@ -689,7 +689,11 @@ export class OgeSchedulerTimelineView<T = unknown> {
             const originBlock = Math.floor(
               (bar.leftPct / 100) * this.blockCount(),
             );
-            if (block !== undefined && targetBlock !== originBlock && block.id !== null) {
+            if (
+              block !== undefined &&
+              targetBlock !== originBlock &&
+              block.id !== null
+            ) {
               values = block.values;
             }
           } else if (targetRow !== rowIndex) {
@@ -698,7 +702,9 @@ export class OgeSchedulerTimelineView<T = unknown> {
               values = row.values;
             }
           }
-          this.moveCommitted.emit(this.moveEvent(appointment, proposal, values));
+          this.moveCommitted.emit(
+            this.moveEvent(appointment, proposal, values),
+          );
         } else if (cancelled) {
           this.gestureCancelled.emit();
         }
@@ -770,7 +776,9 @@ export class OgeSchedulerTimelineView<T = unknown> {
       appointment,
       event,
       rect: (event.currentTarget as HTMLElement).getBoundingClientRect(),
-      order: this.rows().flatMap((row) => row.bars.map((bar) => bar.appointment)),
+      order: this.rows().flatMap((row) =>
+        row.bars.map((bar) => bar.appointment),
+      ),
     };
   }
 
@@ -804,7 +812,9 @@ export class OgeSchedulerTimelineView<T = unknown> {
       this.selectRequested.emit({
         appointment,
         gesture: select,
-        order: this.rows().flatMap((row) => row.bars.map((bar) => bar.appointment)),
+        order: this.rows().flatMap((row) =>
+          row.bars.map((bar) => bar.appointment),
+        ),
       });
       return;
     }
@@ -822,8 +832,9 @@ export class OgeSchedulerTimelineView<T = unknown> {
         event.preventDefault();
         const values =
           ctrl.commit.resourceId !== undefined
-            ? this.resourceRows().find((row) => row.id === ctrl.commit?.resourceId)
-                ?.values
+            ? this.resourceRows().find(
+                (row) => row.id === ctrl.commit?.resourceId,
+              )?.values
             : undefined;
         this.moveCommitted.emit(
           this.moveEvent(appointment, ctrl.commit.proposal, values),
@@ -839,4 +850,3 @@ export class OgeSchedulerTimelineView<T = unknown> {
 
   protected readonly String = String;
 }
-

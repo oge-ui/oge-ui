@@ -104,7 +104,9 @@ export interface TimelineHeaderCell {
 }
 
 /** The timeline view a type is laid out like. */
-export function timelineScaleOf(view: SchedulerTimelineViewType): TimelineScale {
+export function timelineScaleOf(
+  view: SchedulerTimelineViewType,
+): TimelineScale {
   return view === 'timelineMonth' || view === 'timelineYear' ? 'day' : 'hour';
 }
 
@@ -139,7 +141,11 @@ export function buildTimelineGrid(
       resolveHiddenWeekDays(view, options.hiddenWeekDays, options.weekendDays),
     );
     const days: Date[] = [];
-    for (let day = first; day.getTime() < end.getTime(); day = addDays(day, 1)) {
+    for (
+      let day = first;
+      day.getTime() < end.getTime();
+      day = addDays(day, 1)
+    ) {
       if (!hidden.has(day.getDay())) days.push(day);
     }
     return {
@@ -231,7 +237,8 @@ export function layoutTimelineBars<T>(
       dayIndex: first,
       startMinutes: first * windowSpan,
       endMinutes: (last + 1) * windowSpan,
-      clippedStart: startOfDay(appointment.startDate).getTime() <
+      clippedStart:
+        startOfDay(appointment.startDate).getTime() <
         grid.days[first].getTime(),
       clippedEnd: startOfDay(lastMoment).getTime() > grid.days[last].getTime(),
     });
@@ -478,7 +485,10 @@ export function timelineRowIdReader<T>(
 export function buildHorizontalTimelineRow<T>(
   rows: readonly TimelineRow<T>[],
   unassignedLabel: string,
-): { readonly row: TimelineRow<T>; readonly blocks: readonly TimelineRow<T>[] } {
+): {
+  readonly row: TimelineRow<T>;
+  readonly blocks: readonly TimelineRow<T>[];
+} {
   const blocks = rows.filter((row) => row.kind !== 'group');
   const count = Math.max(1, blocks.length);
   const bars: TimelineBar<T>[] = [];
@@ -522,7 +532,8 @@ export function timelineHourLabels(
   const totalSpan = windowSpan * grid.days.length;
   if (totalSpan <= 0) return [];
   const format = ogeDateTimeFormat(locale, { hour: 'numeric' });
-  const stepMinutes = view === 'timelineDay' && grid.days.length === 1 ? 60 : 360;
+  const stepMinutes =
+    view === 'timelineDay' && grid.days.length === 1 ? 60 : 360;
   const labels: TimelineHourLabel[] = [];
   for (let dayIndex = 0; dayIndex < grid.days.length; dayIndex++) {
     for (
@@ -702,7 +713,13 @@ export function timelineBlockedBoxes(
     values,
     Math.max(1, stepMinutes),
   ).flatMap((interval, index) =>
-    axisBoxes(grid, interval.startDate, interval.endDate, `b${index}-`, interval.text),
+    axisBoxes(
+      grid,
+      interval.startDate,
+      interval.endDate,
+      `b${index}-`,
+      interval.text,
+    ),
   );
 }
 
@@ -724,15 +741,22 @@ export function timelineOffHoursBoxes(
       : grid.scale === 'day'
         ? []
         : [
-            [grid.windowStartMinutes, Math.min(grid.windowEndMinutes, workHours.start * 60)],
-            [Math.max(grid.windowStartMinutes, workHours.end * 60), grid.windowEndMinutes],
+            [
+              grid.windowStartMinutes,
+              Math.min(grid.windowEndMinutes, workHours.start * 60),
+            ],
+            [
+              Math.max(grid.windowStartMinutes, workHours.end * 60),
+              grid.windowEndMinutes,
+            ],
           ];
     for (const [from, to] of pieces) {
       if (to <= from) continue;
       boxes.push({
         key: `o${index}-${from}`,
         leftPct:
-          ((index * windowSpan + (from - grid.windowStartMinutes)) / totalSpan) *
+          ((index * windowSpan + (from - grid.windowStartMinutes)) /
+            totalSpan) *
           100,
         widthPct: ((to - from) / totalSpan) * 100,
       });
@@ -790,9 +814,15 @@ export function timelineBlockDragMove<T>(
   const dx = rtl ? -deltaX : deltaX;
   const blockWidth = trackWidth / blocks;
   const startPx = (startLeftPct / 100) * trackWidth;
-  const originBlock = Math.min(blocks - 1, Math.max(0, Math.floor(startPx / blockWidth)));
+  const originBlock = Math.min(
+    blocks - 1,
+    Math.max(0, Math.floor(startPx / blockWidth)),
+  );
   const newStart = startPx + dx;
-  const block = Math.min(blocks - 1, Math.max(0, Math.floor(newStart / blockWidth)));
+  const block = Math.min(
+    blocks - 1,
+    Math.max(0, Math.floor(newStart / blockWidth)),
+  );
   const withinOld = startPx - originBlock * blockWidth;
   const withinNew = newStart - block * blockWidth;
   const inner = timelineDragMove(

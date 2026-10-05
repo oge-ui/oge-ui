@@ -82,10 +82,7 @@ import { OgeSchedulerAgendaView } from './agenda-view';
 import { OgeSchedulerMorePopup } from './more-popup';
 import { OgeSchedulerTimelineView } from './timeline-view';
 import { OgeSchedulerYearView } from './year-view';
-import {
-  OgeSchedulerMonthView,
-  type SchedulerMoreRequest,
-} from './month-view';
+import { OgeSchedulerMonthView, type SchedulerMoreRequest } from './month-view';
 import {
   OgeAppointmentTemplate,
   OgeDateHeaderTemplate,
@@ -771,7 +768,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
    * An `[ogeSchedulerDraggable]` item (or another scheduler's appointment)
    * was dropped in; the built item went through `appointmentAdding`.
    */
-  readonly appointmentDropped = output<OgeSchedulerAppointmentDroppedEvent<T>>();
+  readonly appointmentDropped =
+    output<OgeSchedulerAppointmentDroppedEvent<T>>();
   /**
    * An appointment was dragged out of the scheduler and released (over
    * another scheduler or anywhere else) — the app decides whether to remove it.
@@ -1149,7 +1147,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   protected onDragOut(request: SchedulerDragOutRequest<T>): void {
     untracked(() =>
-      this.core.onDragOut(request.appointment, request.clientX, request.clientY),
+      this.core.onDragOut(
+        request.appointment,
+        request.clientX,
+        request.clientY,
+      ),
     );
   }
 
@@ -1171,7 +1173,9 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
    * Copies the selection — or `appointment` when it is not part of it — to
    * the scheduler clipboard (what Ctrl+C on a chip does). Returns the count.
    */
-  copyAppointments(appointment: OgeSchedulerAppointment<T> | null = null): number {
+  copyAppointments(
+    appointment: OgeSchedulerAppointment<T> | null = null,
+  ): number {
     return untracked(() => this.core.copyAppointments(appointment));
   }
 

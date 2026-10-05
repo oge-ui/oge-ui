@@ -535,7 +535,11 @@ export class OgeSchedulerMonthView<T = unknown> {
     null,
   );
 
-  protected isDropTarget(weekIndex: number, dayIndex: number, day: Date): boolean {
+  protected isDropTarget(
+    weekIndex: number,
+    dayIndex: number,
+    day: Date,
+  ): boolean {
     const target = this.dropTarget();
     if (target !== null) {
       return target.week === weekIndex && target.day === dayIndex;
@@ -670,7 +674,11 @@ export class OgeSchedulerMonthView<T = unknown> {
     return schedulerGridAriaLabel(this.messages(), this.periodLabel());
   }
 
-  protected cellAriaLabel(day: Date, weekIndex: number, dayIndex: number): string {
+  protected cellAriaLabel(
+    day: Date,
+    weekIndex: number,
+    dayIndex: number,
+  ): string {
     let label = schedulerDayCellAriaLabel(this.messages(), day, this.locale());
     if (dayIndex === 0 && this.showWeekNumbers()) {
       label = `${label}, ${

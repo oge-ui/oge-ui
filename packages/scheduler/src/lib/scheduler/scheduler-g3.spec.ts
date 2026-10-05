@@ -3,7 +3,10 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgeScheduler } from './scheduler';
 import { OgeSchedulerDraggable } from './scheduler-draggable';
 import { OgeResourceHeaderTemplate } from './scheduler-templates';
-import { exportToICalendar, importICalendar } from '../../../export-ical/src/index';
+import {
+  exportToICalendar,
+  importICalendar,
+} from '../../../export-ical/src/index';
 import type {
   OgeSchedulerAppointmentAddedEvent,
   OgeSchedulerAppointmentDroppedEvent,
@@ -109,7 +112,9 @@ class Host {
   ]);
   readonly date = signal(new Date(2026, 7, 6));
   readonly view = signal<OgeSchedulerView>('day');
-  readonly views = signal<readonly (OgeSchedulerView | OgeSchedulerViewOptions)[]>([
+  readonly views = signal<
+    readonly (OgeSchedulerView | OgeSchedulerViewOptions)[]
+  >([
     'day',
     { type: 'day', intervalCount: 3, name: '3 days' },
     'week',
@@ -120,7 +125,9 @@ class Host {
   ]);
   readonly resources = RESOURCES;
   readonly groups = signal<readonly string[]>([]);
-  readonly orientation = signal<OgeSchedulerGroupOrientation | undefined>(undefined);
+  readonly orientation = signal<OgeSchedulerGroupOrientation | undefined>(
+    undefined,
+  );
   readonly groupByDate = signal(true);
   readonly weekNumbers = signal(false);
   readonly disabled = signal<OgeSchedulerDisabledSlots | null>(null);
@@ -192,27 +199,39 @@ describe('<oge-scheduler> G3 — views', () => {
     expect(host.querySelector('.oge-scheduler-week-number')?.textContent).toBe(
       'W32',
     );
-    expect(host.querySelector('.oge-scheduler-grid')?.getAttribute('aria-label')).toContain(
-      'Week 32',
-    );
+    expect(
+      host.querySelector('.oge-scheduler-grid')?.getAttribute('aria-label'),
+    ).toContain('Week 32');
     fixture.componentInstance.view.set('month');
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-scheduler-month-cell .oge-scheduler-week-number')).toHaveLength(6);
+    expect(
+      host.querySelectorAll(
+        '.oge-scheduler-month-cell .oge-scheduler-week-number',
+      ),
+    ).toHaveLength(6);
   });
 
   it('renders the work-week, month and year timelines', async () => {
     fixture.componentInstance.view.set('timelineWorkWeek');
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-scheduler-timeline-dayhead')).toHaveLength(5);
+    expect(
+      host.querySelectorAll('.oge-scheduler-timeline-dayhead'),
+    ).toHaveLength(5);
     fixture.componentInstance.view.set('timelineMonth');
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-scheduler-timeline-dayhead')).toHaveLength(31);
-    expect(host.querySelector('.oge-scheduler-timeline-day-scale')).toBeTruthy();
+    expect(
+      host.querySelectorAll('.oge-scheduler-timeline-dayhead'),
+    ).toHaveLength(31);
+    expect(
+      host.querySelector('.oge-scheduler-timeline-day-scale'),
+    ).toBeTruthy();
     const bar = host.querySelector<HTMLElement>('.oge-scheduler-timeline-bar');
     expect(parseFloat(bar?.style.width ?? '0')).toBeCloseTo(100 / 31, 3);
     fixture.componentInstance.view.set('timelineYear');
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-scheduler-timeline-dayhead')).toHaveLength(12);
+    expect(
+      host.querySelectorAll('.oge-scheduler-timeline-dayhead'),
+    ).toHaveLength(12);
   });
 });
 
@@ -240,17 +259,22 @@ describe('<oge-scheduler> G3 — grouping', () => {
     const groupRows = host.querySelectorAll('.oge-scheduler-resource-row');
     expect(groupRows).toHaveLength(2);
     expect(
-      Array.from(groupRows[0].querySelectorAll('.oge-scheduler-resource-head')).map(
-        (el) => el.textContent?.trim(),
-      ),
+      Array.from(
+        groupRows[0].querySelectorAll('.oge-scheduler-resource-head'),
+      ).map((el) => el.textContent?.trim()),
     ).toEqual(['Atlas', 'Borealis']);
-    expect(groupRows[1].querySelectorAll('.oge-scheduler-resource-head')).toHaveLength(4);
+    expect(
+      groupRows[1].querySelectorAll('.oge-scheduler-resource-head'),
+    ).toHaveLength(4);
     // Pairing is Borealis · Grace → the last column
     const chips = host.querySelectorAll<HTMLElement>('.oge-scheduler-chip-box');
     const pairing = Array.from(chips).find((chip) =>
       chip.textContent?.includes('Pairing'),
     );
-    expect(parseFloat(pairing?.style.insetInlineStart ?? '0')).toBeCloseTo(75, 1);
+    expect(parseFloat(pairing?.style.insetInlineStart ?? '0')).toBeCloseTo(
+      75,
+      1,
+    );
   });
 
   it('stacks the leaves as row blocks under vertical orientation', async () => {
@@ -258,13 +282,20 @@ describe('<oge-scheduler> G3 — grouping', () => {
     await settle(fixture);
     expect(host.querySelector('.oge-scheduler-day-week-vertical')).toBeTruthy();
     expect(host.querySelectorAll('.oge-scheduler-group-label')).toHaveLength(4);
-    expect(host.querySelectorAll('.oge-scheduler-rows .oge-scheduler-row')).toHaveLength(40);
+    expect(
+      host.querySelectorAll('.oge-scheduler-rows .oge-scheduler-row'),
+    ).toHaveLength(40);
     const pairing = Array.from(
       host.querySelectorAll<HTMLElement>('.oge-scheduler-chip-box'),
     ).find((chip) => chip.textContent?.includes('Pairing'));
     // block 3 of 4, 13:00 is 50% into the 8–18 window
-    expect(parseFloat(pairing?.style.top ?? '0')).toBeCloseTo(((3 + 0.5) / 4) * 100, 1);
-    const cell = host.querySelectorAll('.oge-scheduler-rows .oge-scheduler-cell')[35];
+    expect(parseFloat(pairing?.style.top ?? '0')).toBeCloseTo(
+      ((3 + 0.5) / 4) * 100,
+      1,
+    );
+    const cell = host.querySelectorAll(
+      '.oge-scheduler-rows .oge-scheduler-cell',
+    )[35];
     expect(cell.getAttribute('aria-label')).toContain('Borealis, Grace');
   });
 
@@ -272,19 +303,34 @@ describe('<oge-scheduler> G3 — grouping', () => {
     fixture.componentInstance.headerTemplate.set(true);
     fixture.componentInstance.view.set('timelineWorkWeek');
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-scheduler-timeline-group-row')).toHaveLength(2);
+    expect(
+      host.querySelectorAll('.oge-scheduler-timeline-group-row'),
+    ).toHaveLength(2);
     const heads = Array.from(host.querySelectorAll('.custom-head')).map(
       (el) => el.textContent,
     );
-    expect(heads).toEqual(['0:Atlas', '1:Ada', '1:Grace', '0:Borealis', '1:Ada', '1:Grace']);
+    expect(heads).toEqual([
+      '0:Atlas',
+      '1:Ada',
+      '1:Grace',
+      '0:Borealis',
+      '1:Ada',
+      '1:Grace',
+    ]);
   });
 
   it('per-resource working hours shade the leaf columns', () => {
     // Atlas works 9–12; 08:00 of an Atlas column is off-hours, Borealis is not
-    const firstRow = host.querySelector('.oge-scheduler-rows .oge-scheduler-row');
+    const firstRow = host.querySelector(
+      '.oge-scheduler-rows .oge-scheduler-row',
+    );
     const cells = firstRow?.querySelectorAll('.oge-scheduler-cell') ?? [];
-    expect(cells[0].classList.contains('oge-scheduler-cell-off-hours')).toBe(true);
-    expect(cells[2].classList.contains('oge-scheduler-cell-off-hours')).toBe(false);
+    expect(cells[0].classList.contains('oge-scheduler-cell-off-hours')).toBe(
+      true,
+    );
+    expect(cells[2].classList.contains('oge-scheduler-cell-off-hours')).toBe(
+      false,
+    );
   });
 });
 
@@ -307,13 +353,15 @@ describe('<oge-scheduler> G3 — editing', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   const chip = (text: string) =>
-    Array.from(host.querySelectorAll<HTMLElement>('.oge-scheduler-chip-box')).find(
-      (el) => el.textContent?.includes(text),
-    ) as HTMLElement;
+    Array.from(
+      host.querySelectorAll<HTMLElement>('.oge-scheduler-chip-box'),
+    ).find((el) => el.textContent?.includes(text)) as HTMLElement;
   const cellAt = (hour: number) =>
-    host.querySelectorAll<HTMLElement>('.oge-scheduler-rows .oge-scheduler-row')[
-      hour - 8
-    ].querySelector<HTMLElement>('.oge-scheduler-cell') as HTMLElement;
+    host
+      .querySelectorAll<HTMLElement>('.oge-scheduler-rows .oge-scheduler-row')
+      [hour - 8].querySelector<HTMLElement>(
+        '.oge-scheduler-cell',
+      ) as HTMLElement;
 
   it('hatches blocked slots and refuses to create there', async () => {
     fixture.componentInstance.disabled.set([
@@ -362,17 +410,18 @@ describe('<oge-scheduler> G3 — editing', () => {
       new MouseEvent('click', { bubbles: true, ctrlKey: true }),
     );
     await settle(fixture);
-    expect(fixture.componentInstance.selection.map((item) => item.text)).toEqual([
-      'Review',
-      'Pairing',
-    ]);
-    expect(chip('Pairing').classList.contains('oge-scheduler-chip-selected')).toBe(true);
+    expect(
+      fixture.componentInstance.selection.map((item) => item.text),
+    ).toEqual(['Review', 'Pairing']);
+    expect(
+      chip('Pairing').classList.contains('oge-scheduler-chip-selected'),
+    ).toBe(true);
     expect(chip('Pairing').getAttribute('aria-label')).toContain('selected');
     key(chip('Pairing'), { key: ' ', ctrlKey: true });
     await settle(fixture);
-    expect(fixture.componentInstance.selection.map((item) => item.text)).toEqual([
-      'Review',
-    ]);
+    expect(
+      fixture.componentInstance.selection.map((item) => item.text),
+    ).toEqual(['Review']);
   });
 
   it('copies with Ctrl+C, pastes with Ctrl+V and undoes with Ctrl+Z', async () => {
@@ -388,7 +437,10 @@ describe('<oge-scheduler> G3 — editing', () => {
     expect(host.querySelectorAll('.oge-scheduler-chip-box')).toHaveLength(3);
     const scheduler = schedulerOf(fixture);
     expect(scheduler.canUndo()).toBe(true);
-    key(host.querySelector('.oge-scheduler') as Element, { key: 'z', ctrlKey: true });
+    key(host.querySelector('.oge-scheduler') as Element, {
+      key: 'z',
+      ctrlKey: true,
+    });
     await settle(fixture);
     expect(host.querySelectorAll('.oge-scheduler-chip-box')).toHaveLength(2);
     expect(scheduler.redo()).toBe(true);
@@ -397,7 +449,9 @@ describe('<oge-scheduler> G3 — editing', () => {
   });
 
   it('the draggable’s keyboard twin drops onto the activated cell', async () => {
-    const draggable = host.querySelector<HTMLElement>('.oge-scheduler-draggable');
+    const draggable = host.querySelector<HTMLElement>(
+      '.oge-scheduler-draggable',
+    );
     expect(draggable?.getAttribute('role')).toBe('button');
     key(draggable as HTMLElement, { key: 'Enter' });
     await settle(fixture);
@@ -470,12 +524,18 @@ describe('<oge-scheduler> G3 — timeline virtualization', () => {
     await settle(fixture);
     const host = fixture.nativeElement as HTMLElement;
     // jsdom has no layout: the unmeasured window renders the first 40 rows
-    expect(host.querySelectorAll('.oge-scheduler-timeline-row')).toHaveLength(40);
-    const spacer = host.querySelector<HTMLElement>('.oge-scheduler-timeline-spacer');
+    expect(host.querySelectorAll('.oge-scheduler-timeline-row')).toHaveLength(
+      40,
+    );
+    const spacer = host.querySelector<HTMLElement>(
+      '.oge-scheduler-timeline-spacer',
+    );
     expect(parseFloat(spacer?.style.height ?? '0')).toBe(80 * 35);
     fixture.componentInstance.virtual.set(false);
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-scheduler-timeline-row')).toHaveLength(120);
+    expect(host.querySelectorAll('.oge-scheduler-timeline-row')).toHaveLength(
+      120,
+    );
   });
 });
 
@@ -499,7 +559,9 @@ describe('<oge-scheduler> G3 — "+N more", recurrence editor, export', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('"+N more" opens the day list; an entry opens the appointment popup', async () => {
-    const more = host.querySelector<HTMLButtonElement>('.oge-scheduler-month-more');
+    const more = host.querySelector<HTMLButtonElement>(
+      '.oge-scheduler-month-more',
+    );
     expect(more?.tabIndex).toBe(0);
     expect(more?.getAttribute('aria-label')).toBe(
       '1 more appointment on Thursday, August 6, 2026',
@@ -510,7 +572,9 @@ describe('<oge-scheduler> G3 — "+N more", recurrence editor, export', () => {
     expect(popup?.getAttribute('aria-label')).toBe(
       'Appointments on Thursday, August 6, 2026',
     );
-    const items = popup?.querySelectorAll<HTMLButtonElement>('.oge-scheduler-more-item');
+    const items = popup?.querySelectorAll<HTMLButtonElement>(
+      '.oge-scheduler-more-item',
+    );
     expect(items).toHaveLength(2);
     expect(document.activeElement).toBe(items?.[0]);
     key(items?.[0] as HTMLElement, { key: 'ArrowDown' });
@@ -518,7 +582,9 @@ describe('<oge-scheduler> G3 — "+N more", recurrence editor, export', () => {
     items?.[1].click();
     await settle(fixture);
     expect(host.querySelector('.oge-scheduler-more-popup')).toBeNull();
-    expect(host.querySelector('.oge-scheduler-popup-title')?.textContent).toBe('Pairing');
+    expect(host.querySelector('.oge-scheduler-popup-title')?.textContent).toBe(
+      'Pairing',
+    );
   });
 
   it('moreMode drill keeps the old drill-into-day behaviour', async () => {
@@ -543,9 +609,11 @@ describe('<oge-scheduler> G3 — "+N more", recurrence editor, export', () => {
     const bar = host.querySelector<HTMLElement>('.oge-scheduler-month-bar');
     bar?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     await settle(fixture);
-    expect(host.querySelector('.oge-scheduler-recurrence-summary')?.textContent?.trim()).toBe(
-      'Every month on the second Tuesday, 6 times',
-    );
+    expect(
+      host
+        .querySelector('.oge-scheduler-recurrence-summary')
+        ?.textContent?.trim(),
+    ).toBe('Every month on the second Tuesday, 6 times');
   });
 
   it('exports and imports iCalendar through the entry functions', async () => {

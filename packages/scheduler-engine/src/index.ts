@@ -124,10 +124,7 @@ export {
   type OgeSchedulerExportData,
   type OgeSchedulerExportRow,
 } from './lib/export-data';
-export {
-  printOgeScheduler,
-  type OgeSchedulerPrintOptions,
-} from './lib/print';
+export { printOgeScheduler, type OgeSchedulerPrintOptions } from './lib/print';
 export {
   appointmentPatch,
   expandAppointment,

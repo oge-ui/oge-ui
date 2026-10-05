@@ -289,7 +289,9 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
   /** An appointment's reminder lead time was reached (checked ~30s). */
   onReminderTriggered?: (event: OgeSchedulerReminderEvent<T>) => void;
   /** A `useOgeSchedulerDraggable` item (or another scheduler's appointment) was dropped in. */
-  onAppointmentDropped?: (event: OgeSchedulerAppointmentDroppedEvent<T>) => void;
+  onAppointmentDropped?: (
+    event: OgeSchedulerAppointmentDroppedEvent<T>,
+  ) => void;
   /** An appointment was dragged out of the scheduler and released. */
   onDragOut?: (event: OgeSchedulerDragOutEvent<T>) => void;
 

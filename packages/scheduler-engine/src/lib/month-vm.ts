@@ -195,7 +195,11 @@ export function appointmentsOnDay<T>(
   day: Date,
 ): SchedulerAppointment<T>[] {
   const start = startOfDay(day);
-  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+  const end = new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate() + 1,
+  );
   return appointments
     .filter((appointment) =>
       appointment.startDate.getTime() === appointment.endDate.getTime()
@@ -242,7 +246,8 @@ export function monthBlockedDays(
   if (disabled === null || disabled === undefined) return blocked;
   weeks.forEach((week, weekIndex) =>
     week.forEach((day, dayIndex) => {
-      if (isDayBlocked(disabled, day, {})) blocked.add(`${weekIndex}:${dayIndex}`);
+      if (isDayBlocked(disabled, day, {}))
+        blocked.add(`${weekIndex}:${dayIndex}`);
     }),
   );
   return blocked;

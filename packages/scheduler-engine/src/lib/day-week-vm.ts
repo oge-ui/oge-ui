@@ -901,7 +901,11 @@ export function dayWeekLayoutCellLeaf(
 }
 
 /** The key of a cell in {@link dayWeekBlockedCells}' set. */
-export function dayWeekCellKey(block: number, slot: number, col: number): string {
+export function dayWeekCellKey(
+  block: number,
+  slot: number,
+  col: number,
+): string {
   return `${block}:${slot}:${col}`;
 }
 

@@ -12,10 +12,7 @@ import {
   EXCEPTIONS_SNIPPET,
   RULES_SNIPPET,
 } from './recurrence-editor-snippets';
-import {
-  DEPTH_DATE,
-  recurringAppointments,
-} from './scheduler-depth-data';
+import { DEPTH_DATE, recurringAppointments } from './scheduler-depth-data';
 
 const SECTIONS = ['Rule patterns', 'Exceptions'] as const;
 
@@ -34,7 +31,13 @@ const SECTIONS = ['Rule patterns', 'Exceptions'] as const;
       title="Recurrence editor"
       category="Scheduler"
       categoryLink="/components/scheduler"
-      [chips]="['BYSETPOS', 'BYMONTHDAY', 'COUNT / UNTIL', 'exceptions', 'live summary']"
+      [chips]="[
+        'BYSETPOS',
+        'BYMONTHDAY',
+        'COUNT / UNTIL',
+        'exceptions',
+        'live summary',
+      ]"
     >
       <p>
         The appointment editor covers the recurrence patterns people actually
@@ -53,7 +56,7 @@ const SECTIONS = ['Rule patterns', 'Exceptions'] as const;
       <app-demo-card
         [chips]="['nth weekday', 'last workday', '1st & 15th', 'COUNT']"
         heading="Rule patterns"
-        description="Double-click any chip, choose &quot;The entire series&quot; and look at the Repeat section: &quot;on the second Tuesday&quot;, &quot;on the last weekday&quot;, &quot;on days 1 and 15&quot; and &quot;ends after 6 occurrences&quot; are all form fields, and the summary line under them (&quot;Every month on the second Tuesday&quot;) updates as you change them."
+        description='Double-click any chip, choose "The entire series" and look at the Repeat section: "on the second Tuesday", "on the last weekday", "on days 1 and 15" and "ends after 6 occurrences" are all form fields, and the summary line under them ("Every month on the second Tuesday") updates as you change them.'
         [code]="rulesSnippet"
         language="ts"
       >
@@ -69,7 +72,7 @@ const SECTIONS = ['Rule patterns', 'Exceptions'] as const;
       <app-demo-card
         [chips]="['recurrenceException', 'EXDATE', 'UNTIL']"
         heading="Exceptions"
-        description="The standup skips Wednesday the 12th. Open the series in the editor: the skipped date is a removable chip under &quot;Skipped occurrences&quot;, the date picker next to it adds more, and deleting a single occurrence from the popup adds an exception for you."
+        description='The standup skips Wednesday the 12th. Open the series in the editor: the skipped date is a removable chip under "Skipped occurrences", the date picker next to it adds more, and deleting a single occurrence from the popup adds an exception for you.'
         [code]="exceptionsSnippet"
         language="ts"
       >

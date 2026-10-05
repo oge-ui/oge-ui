@@ -79,7 +79,9 @@ const ITEMS: Item[] = [
   },
 ];
 
-function exportData(range = { start: new Date(2026, 7, 3), end: new Date(2026, 7, 10) }) {
+function exportData(
+  range = { start: new Date(2026, 7, 3), end: new Date(2026, 7, 10) },
+) {
   return buildSchedulerExportData({
     appointments: ITEMS.map(appt),
     rangeStart: range.start,

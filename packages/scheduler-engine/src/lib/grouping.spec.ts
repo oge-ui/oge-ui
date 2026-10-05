@@ -59,7 +59,12 @@ const RESOURCES: OgeSchedulerResource[] = [
     fieldExpr: 'room',
     label: 'Room',
     items: [
-      { id: 'a', text: 'Room A', color: '#111111', workHours: { start: 7, end: 15 } },
+      {
+        id: 'a',
+        text: 'Room A',
+        color: '#111111',
+        workHours: { start: 7, end: 15 },
+      },
       { id: 'b', text: 'Room B' },
     ],
   },
@@ -74,7 +79,12 @@ const RESOURCES: OgeSchedulerResource[] = [
   { fieldExpr: 'empty', items: [] },
 ];
 
-const levels = resolveGroupLevels(RESOURCES, ['room', 'owner', 'empty', 'room']);
+const levels = resolveGroupLevels(RESOURCES, [
+  'room',
+  'owner',
+  'empty',
+  'room',
+]);
 const leaves = buildGroupLeaves(levels);
 const days = [new Date(2026, 7, 3), new Date(2026, 7, 4)];
 const grid = buildTimeGrid({
@@ -129,13 +139,18 @@ describe('grouping levels and leaves', () => {
 
 describe('day/week group layouts', () => {
   it('resource-major columns (groupByDate: false)', () => {
-    const layout = buildDayWeekGroupLayout(days, leaves, { groupByDate: false });
+    const layout = buildDayWeekGroupLayout(days, leaves, {
+      groupByDate: false,
+    });
     expect(layout.colCount).toBe(8);
-    expect(layout.columns.map((col) => `${col.resIndex}/${col.dayIndex}`)).toEqual([
-      '0/0', '0/1', '1/0', '1/1', '2/0', '2/1', '3/0', '3/1',
-    ]);
+    expect(
+      layout.columns.map((col) => `${col.resIndex}/${col.dayIndex}`),
+    ).toEqual(['0/0', '0/1', '1/0', '1/1', '2/0', '2/1', '3/0', '3/1']);
     expect(dayWeekPlacement(layout, 1, 2)).toEqual({ col: 5, block: 0 });
-    expect(dayWeekCellValues(layout, 5, 0)).toEqual({ room: 'b', owner: 'ada' });
+    expect(dayWeekCellValues(layout, 5, 0)).toEqual({
+      room: 'b',
+      owner: 'ada',
+    });
   });
 
   it('date-major columns (the default)', () => {
@@ -151,7 +166,10 @@ describe('day/week group layouts', () => {
     expect(layout.blockCount).toBe(4);
     expect(dayWeekPlacement(layout, 1, 3)).toEqual({ col: 1, block: 3 });
     expect(dayWeekCellLeaf(layout, 1, 3)).toBe(3);
-    expect(dayWeekCellValues(layout, 0, 2)).toEqual({ room: 'b', owner: 'ada' });
+    expect(dayWeekCellValues(layout, 0, 2)).toEqual({
+      room: 'b',
+      owner: 'ada',
+    });
   });
 
   it('ungrouped', () => {
@@ -163,17 +181,26 @@ describe('day/week group layouts', () => {
 
   it('nested header rows, resource-major and date-major', () => {
     const text = (day: Date) => String(day.getDate());
-    const resourceMajor = buildColumnHeaderRows(days, levels, leaves, false, text);
-    expect(resourceMajor.map((row) => row.map((cell) => `${cell.text}@${cell.start}+${cell.span}`))).toEqual([
+    const resourceMajor = buildColumnHeaderRows(
+      days,
+      levels,
+      leaves,
+      false,
+      text,
+    );
+    expect(
+      resourceMajor.map((row) =>
+        row.map((cell) => `${cell.text}@${cell.start}+${cell.span}`),
+      ),
+    ).toEqual([
       ['Room A@0+4', 'Room B@4+4'],
       ['Ada@0+2', 'Grace@2+2', 'Ada@4+2', 'Grace@6+2'],
       ['3@0+1', '4@1+1', '3@2+1', '4@3+1', '3@4+1', '4@5+1', '3@6+1', '4@7+1'],
     ]);
     const dateMajor = buildColumnHeaderRows(days, levels, leaves, true, text);
-    expect(dateMajor[0].map((cell) => `${cell.text}@${cell.start}+${cell.span}`)).toEqual([
-      '3@0+4',
-      '4@4+4',
-    ]);
+    expect(
+      dateMajor[0].map((cell) => `${cell.text}@${cell.start}+${cell.span}`),
+    ).toEqual(['3@0+4', '4@4+4']);
     expect(dateMajor[1].map((cell) => cell.span)).toEqual([2, 2, 2, 2]);
     expect(dateMajor[2]).toHaveLength(8);
     expect(buildColumnHeaderRows(days, [], [], true, text)).toHaveLength(1);
@@ -189,7 +216,9 @@ describe('day/week group layouts', () => {
   });
 
   it('places segments, previews and drags by the layout', () => {
-    const layout = buildDayWeekGroupLayout(grid.days, leaves, { vertical: true });
+    const layout = buildDayWeekGroupLayout(grid.days, leaves, {
+      vertical: true,
+    });
     const item = appt({
       id: 1,
       text: 'Sync',
@@ -199,7 +228,13 @@ describe('day/week group layouts', () => {
       owner: 'grace',
     });
     const leafOf = groupLeafMatcher<Item>(levels, leaves);
-    const [segment] = layoutGroupedDayWeekSegments([item], grid, layout, leafOf, 15);
+    const [segment] = layoutGroupedDayWeekSegments(
+      [item],
+      grid,
+      layout,
+      leafOf,
+      15,
+    );
     expect(segment.colIndex).toBe(1);
     expect(segment.block).toBe(3);
     // 09:00 is 10% into the 8–18 window, in block 3 of 4
@@ -240,7 +275,9 @@ describe('day/week group layouts', () => {
   });
 
   it('packs the all-day strip per leaf for resource-major columns', () => {
-    const layout = buildDayWeekGroupLayout(grid.days, leaves, { groupByDate: false });
+    const layout = buildDayWeekGroupLayout(grid.days, leaves, {
+      groupByDate: false,
+    });
     const leafOf = groupLeafMatcher<Item>(levels, leaves);
     const strip = buildLayoutAllDayStrip(
       [

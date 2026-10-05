@@ -62,7 +62,7 @@ export const OGE_REACT_SCHEDULER_API: ApiSections = {
           type: 'readonly string[]',
           default: '[]',
           description:
-            'Resource fields grouping the views, outermost first — <code>[\'roomId\', \'ownerId\']</code> nests owners inside rooms (<strong>multi-level</strong>, nested headers): day/week columns or row blocks, timeline rows with group header rows. Grouped cells prefill every level on create, and drags across columns / rows / blocks reassign them.',
+            "Resource fields grouping the views, outermost first — <code>['roomId', 'ownerId']</code> nests owners inside rooms (<strong>multi-level</strong>, nested headers): day/week columns or row blocks, timeline rows with group header rows. Grouped cells prefill every level on create, and drags across columns / rows / blocks reassign them.",
         },
         {
           name: 'groupOrientation',
@@ -126,7 +126,7 @@ export const OGE_REACT_SCHEDULER_API: ApiSections = {
           type: 'readonly (OgeSchedulerView | OgeSchedulerViewOptions)[]',
           default: "['day', 'week', 'month']",
           description:
-            'View-switcher entries; option objects override <code>name</code>, <code>dayStartHour</code>, <code>dayEndHour</code>, <code>cellDuration</code> and <code>groupOrientation</code> per view, and <code>intervalCount</code> makes <strong>custom N-day / N-week / N-month views</strong> (<code>{ type: \'day\', intervalCount: 3, name: \'3 days\' }</code>); navigation steps by the whole interval. Entries sharing a type are told apart by the switcher.',
+            "View-switcher entries; option objects override <code>name</code>, <code>dayStartHour</code>, <code>dayEndHour</code>, <code>cellDuration</code> and <code>groupOrientation</code> per view, and <code>intervalCount</code> makes <strong>custom N-day / N-week / N-month views</strong> (<code>{ type: 'day', intervalCount: 3, name: '3 days' }</code>); navigation steps by the whole interval. Entries sharing a type are told apart by the switcher.",
         },
         {
           name: 'showWeekNumbers',
@@ -154,7 +154,7 @@ export const OGE_REACT_SCHEDULER_API: ApiSections = {
           type: "boolean | 'auto'",
           default: "'auto'",
           description:
-            'Timeline <strong>row virtualization</strong> for many resources — rows render at fixed heights on core’s offset tree, so the window is exact; <code>\'auto\'</code> turns it on above 50 rows. The axis headers stay sticky.',
+            "Timeline <strong>row virtualization</strong> for many resources — rows render at fixed heights on core’s offset tree, so the window is exact; <code>'auto'</code> turns it on above 50 rows. The axis headers stay sticky.",
         },
         {
           name: 'adaptiveView',

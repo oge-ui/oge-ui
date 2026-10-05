@@ -105,7 +105,10 @@ describe('edit history', () => {
       after: 1,
     });
     expect(
-      restorePatch({ a: 2, extra: 'x' }, { a: 1 } as { a: number; extra?: string }),
+      restorePatch({ a: 2, extra: 'x' }, { a: 1 } as {
+        a: number;
+        extra?: string;
+      }),
     ).toEqual({ a: 1, extra: undefined });
   });
 });
@@ -139,7 +142,10 @@ describe('clipboard', () => {
 
   it('keeps relative offsets, drops keys and series rules', () => {
     const entries = schedulerClipboardEntries([review, occurrence]);
-    expect(entries.map((entry) => entry.source.text)).toEqual(['Standup', 'Review']);
+    expect(entries.map((entry) => entry.source.text)).toEqual([
+      'Standup',
+      'Review',
+    ]);
     const pasted = planSchedulerPaste(
       entries,
       { date: new Date(2026, 7, 12, 14), allDay: false, values: { room: 'b' } },
@@ -167,50 +173,64 @@ describe('clipboard', () => {
     );
     expect(pasted[0].startDate).toEqual(new Date(2026, 7, 20, 9));
     expect(pasted[0].id).toBe(1); // no key field to drop
-    expect(calendarDayDiff(new Date(2026, 2, 28, 23), new Date(2026, 2, 30, 1))).toBe(2);
+    expect(
+      calendarDayDiff(new Date(2026, 2, 28, 23), new Date(2026, 2, 30, 1)),
+    ).toBe(2);
   });
 });
 
 describe('selection and shortcuts', () => {
-  const items = ['a', 'b', 'c', 'd'].map(
-    (text, index) =>
-      appt(
-        {
-          text,
-          startDate: new Date(2026, 7, 3, 9 + index),
-          endDate: new Date(2026, 7, 3, 10 + index),
-        },
-        index,
-      ),
+  const items = ['a', 'b', 'c', 'd'].map((text, index) =>
+    appt(
+      {
+        text,
+        startDate: new Date(2026, 7, 3, 9 + index),
+        endDate: new Date(2026, 7, 3, 10 + index),
+      },
+      index,
+    ),
   );
 
   it('replaces, toggles and extends ranges over the chip order', () => {
     const source = (index: number) => items[index].source;
-    expect(nextSchedulerSelection([], items[1], 'replace', items, null)).toEqual([
-      source(1),
-    ]);
-    const toggled = nextSchedulerSelection([source(1)], items[3], 'toggle', items, null);
+    expect(
+      nextSchedulerSelection([], items[1], 'replace', items, null),
+    ).toEqual([source(1)]);
+    const toggled = nextSchedulerSelection(
+      [source(1)],
+      items[3],
+      'toggle',
+      items,
+      null,
+    );
     expect(toggled).toEqual([source(1), source(3)]);
-    expect(nextSchedulerSelection(toggled, items[3], 'toggle', items, null)).toEqual([
-      source(1),
-    ]);
+    expect(
+      nextSchedulerSelection(toggled, items[3], 'toggle', items, null),
+    ).toEqual([source(1)]);
     expect(
       nextSchedulerSelection([source(0)], items[2], 'range', items, source(0)),
     ).toEqual([source(0), source(1), source(2)]);
-    expect(pruneSchedulerSelection([source(0), source(1)], [source(1)])).toEqual([
-      source(1),
-    ]);
+    expect(
+      pruneSchedulerSelection([source(0), source(1)], [source(1)]),
+    ).toEqual([source(1)]);
   });
 
   it('maps keys and gestures', () => {
-    const key = (k: string, mods: Partial<Record<'ctrlKey' | 'shiftKey' | 'metaKey' | 'altKey', boolean>> = {}) => ({
+    const key = (
+      k: string,
+      mods: Partial<
+        Record<'ctrlKey' | 'shiftKey' | 'metaKey' | 'altKey', boolean>
+      > = {},
+    ) => ({
       key: k,
       ctrlKey: false,
       shiftKey: false,
       ...mods,
     });
     expect(schedulerShortcut(key('z', { ctrlKey: true }), false)).toBe('undo');
-    expect(schedulerShortcut(key('Z', { ctrlKey: true, shiftKey: true }), false)).toBe('redo');
+    expect(
+      schedulerShortcut(key('Z', { ctrlKey: true, shiftKey: true }), false),
+    ).toBe('redo');
     expect(schedulerShortcut(key('y', { metaKey: true }), false)).toBe('redo');
     expect(schedulerShortcut(key('c', { ctrlKey: true }), false)).toBe('copy');
     expect(schedulerShortcut(key('v', { ctrlKey: true }), false)).toBe('paste');
@@ -219,8 +239,16 @@ describe('selection and shortcuts', () => {
     expect(chipSelectKey(key(' ', { ctrlKey: true }))).toBe('toggle');
     expect(chipSelectKey(key(' ', { shiftKey: true }))).toBe('range');
     expect(chipSelectKey(key(' '))).toBeNull();
-    expect(schedulerSelectGesture({ ctrlKey: false, shiftKey: true })).toBe('range');
-    expect(schedulerSelectGesture({ ctrlKey: false, metaKey: true, shiftKey: false })).toBe('toggle');
+    expect(schedulerSelectGesture({ ctrlKey: false, shiftKey: true })).toBe(
+      'range',
+    );
+    expect(
+      schedulerSelectGesture({
+        ctrlKey: false,
+        metaKey: true,
+        shiftKey: false,
+      }),
+    ).toBe('toggle');
   });
 
   it('recognises editing targets', () => {

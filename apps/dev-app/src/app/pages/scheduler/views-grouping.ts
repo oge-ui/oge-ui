@@ -116,7 +116,7 @@ const SECTIONS = [
       <app-demo-card
         [chips]="['groupOrientation', 'row blocks']"
         heading="Vertical grouping"
-        description="<code>groupOrientation=&quot;vertical&quot;</code> stacks a full time grid per resource under a group label column. Arrow keys move between blocks, and dragging a chip into another block reassigns its owner."
+        description='<code>groupOrientation="vertical"</code> stacks a full time grid per resource under a group label column. Arrow keys move between blocks, and dragging a chip into another block reassigns its owner.'
         [code]="verticalSnippet"
         language="ts"
       >
@@ -137,8 +137,8 @@ const SECTIONS = [
 
       <app-demo-card
         [chips]="['moreMode', 'maxAppointmentsPerCell', 'keyboard list']"
-        heading="&quot;+N more&quot; popup"
-        description="Wednesday holds five appointments but the cell shows two: the &quot;+N more&quot; button opens the day's list — focus moves in, Up/Down/Home/End walk it, Enter opens an entry, Escape returns to the button and &quot;Go to day&quot; drills in. <code>moreMode=&quot;drill&quot;</code> keeps the old jump-to-day behavior."
+        heading='"+N more" popup'
+        description='Wednesday holds five appointments but the cell shows two: the "+N more" button opens the day&apos;s list — focus moves in, Up/Down/Home/End walk it, Enter opens an entry, Escape returns to the button and "Go to day" drills in. <code>moreMode="drill"</code> keeps the old jump-to-day behavior.'
         [code]="morePopupSnippet"
         language="ts"
       >

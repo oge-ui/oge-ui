@@ -76,7 +76,8 @@ function setup(
   const editors: { isNew: boolean; model: unknown }[] = [];
   const popups: SchedulerAppointment<Appt>[] = [];
   const host = document.createElement('div');
-  const log = (name: string) => (event: unknown) => events.push({ name, event });
+  const log = (name: string) => (event: unknown) =>
+    events.push({ name, event });
   const inputs: OgeSchedulerCoreInputs<Appt> = {
     dataSource: () => data,
     keyExpr: () => undefined,
@@ -220,7 +221,12 @@ describe('OgeSchedulerCore — selection, clipboard, undo', () => {
     const standup = visible(core, 'Standup');
     const order = [standup, review];
     const click = (init: MouseEventInit) => new MouseEvent('click', init);
-    core.onChipClicked({ appointment: review, event: click({}), rect: new DOMRect(), order });
+    core.onChipClicked({
+      appointment: review,
+      event: click({}),
+      rect: new DOMRect(),
+      order,
+    });
     expect(selection()).toEqual([review.source]);
     expect(popups).toHaveLength(1);
     core.onChipClicked({
@@ -345,9 +351,14 @@ describe('OgeSchedulerCore — availability and conflicts', () => {
     // Review is in room a, Standup in room b: overlap counts ungrouped
     blocked.core.onMoveCommitted({ appointment: review, proposal: onto });
     expect(blocked.core.store()[0].startDate).toEqual(new Date(2026, 7, 6, 10));
-    expect(blocked.core.announcement()).toBe('Review overlaps another appointment');
+    expect(blocked.core.announcement()).toBe(
+      'Review overlaps another appointment',
+    );
     // grouped by room, the rooms differ → no conflict
-    const grouped = setup({ allowOverlap: () => false, groups: () => ['room'] });
+    const grouped = setup({
+      allowOverlap: () => false,
+      groups: () => ['room'],
+    });
     grouped.core.onMoveCommitted({
       appointment: visible(grouped.core, 'Review'),
       proposal: onto,
@@ -387,8 +398,14 @@ describe('OgeSchedulerCore — availability and conflicts', () => {
       groups: () => ['room'],
       workHours: () => ({ start: 8, end: 12 }),
     });
-    expect(grouped.core.workHoursFor({ room: 'a' })).toEqual({ start: 9, end: 17 });
-    expect(grouped.core.workHoursFor({ room: 'b' })).toEqual({ start: 8, end: 12 });
+    expect(grouped.core.workHoursFor({ room: 'a' })).toEqual({
+      start: 9,
+      end: 17,
+    });
+    expect(grouped.core.workHoursFor({ room: 'b' })).toEqual({
+      start: 8,
+      end: 12,
+    });
   });
 });
 

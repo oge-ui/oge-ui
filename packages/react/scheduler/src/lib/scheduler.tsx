@@ -51,7 +51,10 @@ import { SchedulerMorePopup, type MorePopupHandle } from './more-popup';
 import { createSchedulerRxAdapter } from './rx-adapter';
 import { useOgeSchedulerConfig } from './scheduler-config';
 import type { OgeSchedulerHandle, OgeSchedulerProps } from './scheduler-types';
-import { SchedulerTimelineView, type TimelineViewHandle } from './timeline-view';
+import {
+  SchedulerTimelineView,
+  type TimelineViewHandle,
+} from './timeline-view';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect';
 
 const DEFAULT_VIEWS: readonly (OgeSchedulerView | OgeSchedulerViewOptions)[] = [
@@ -404,7 +407,8 @@ function OgeSchedulerInner<T extends object>(
     getDataSource: () => latest.current.dataSource ?? null,
     goToday: () => core.goToday(),
     navigate: (direction) => core.navigate(direction),
-    copyAppointments: (appointment = null) => core.copyAppointments(appointment),
+    copyAppointments: (appointment = null) =>
+      core.copyAppointments(appointment),
     pasteAppointments: (target) => core.paste(target),
     clearSelection: () => core.clearSelection(),
     undo: () => core.undo(),
@@ -472,7 +476,11 @@ function OgeSchedulerInner<T extends object>(
     dropPreview,
     onCopyRequested: (appointment) => core.copyAppointments(appointment),
     onSelectRequested: (request) =>
-      core.selectAppointment(request.appointment, request.gesture, request.order),
+      core.selectAppointment(
+        request.appointment,
+        request.gesture,
+        request.order,
+      ),
     onDragOut: (appointment, clientX, clientY) =>
       core.onDragOut(appointment, clientX, clientY),
   };

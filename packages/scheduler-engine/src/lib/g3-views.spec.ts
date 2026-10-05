@@ -125,7 +125,9 @@ describe('interval counts (custom N-day / N-week / N-month views)', () => {
     expect(quarter.rangeStart).toEqual(new Date(2026, 6, 27));
     expect(quarter.weeks.every((week) => week.length === 7)).toBe(true);
     const last = quarter.weeks[quarter.weeks.length - 1];
-    expect(last[0].getTime()).toBeLessThanOrEqual(new Date(2026, 9, 31).getTime());
+    expect(last[0].getTime()).toBeLessThanOrEqual(
+      new Date(2026, 9, 31).getTime(),
+    );
     expect(last[6].getTime()).toBeGreaterThanOrEqual(
       new Date(2026, 9, 31).getTime(),
     );
@@ -139,12 +141,19 @@ describe('interval counts (custom N-day / N-week / N-month views)', () => {
       toolbar,
       defaults,
     );
-    expect(views[1]).toMatchObject({ intervalCount: 3, index: 1, name: '3 days' });
+    expect(views[1]).toMatchObject({
+      intervalCount: 3,
+      index: 1,
+      name: '3 days',
+    });
     // currentView alone → the first entry of the type
-    expect(resolveActiveSchedulerView('day', views, toolbar, defaults).index).toBe(0);
+    expect(
+      resolveActiveSchedulerView('day', views, toolbar, defaults).index,
+    ).toBe(0);
     // the switcher's pick wins while the type matches
     expect(
-      resolveActiveSchedulerView('day', views, toolbar, defaults, 1).intervalCount,
+      resolveActiveSchedulerView('day', views, toolbar, defaults, 1)
+        .intervalCount,
     ).toBe(3);
     expect(
       resolveActiveSchedulerView('week', views, toolbar, defaults, 1).index,
@@ -156,16 +165,38 @@ describe('interval counts (custom N-day / N-week / N-month views)', () => {
     const plain = (text: string) => text.replace(/\s/g, ' ');
     expect(
       plain(
-        schedulerPeriodTitle('day', new Date(2026, 7, 6), 'en-US', 1, 7, undefined, 3),
+        schedulerPeriodTitle(
+          'day',
+          new Date(2026, 7, 6),
+          'en-US',
+          1,
+          7,
+          undefined,
+          3,
+        ),
       ),
     ).toBe('Aug 6 – 8, 2026');
     expect(
       plain(
-        schedulerPeriodTitle('month', new Date(2026, 7, 6), 'en-US', 1, 7, undefined, 3),
+        schedulerPeriodTitle(
+          'month',
+          new Date(2026, 7, 6),
+          'en-US',
+          1,
+          7,
+          undefined,
+          3,
+        ),
       ),
     ).toBe('August – October 2026');
     expect(
-      schedulerPeriodTitle('timelineMonth', new Date(2026, 7, 6), 'en-US', 1, 7),
+      schedulerPeriodTitle(
+        'timelineMonth',
+        new Date(2026, 7, 6),
+        'en-US',
+        1,
+        7,
+      ),
     ).toBe('August 2026');
     expect(
       schedulerPeriodTitle('timelineYear', new Date(2026, 7, 6), 'en-US', 1, 7),
@@ -180,11 +211,25 @@ describe('timeline month / year / work week', () => {
   });
 
   it('builds day-scale grids for the month and year timelines', () => {
-    const month = buildTimelineGrid('timelineMonth', new Date(2026, 1, 10), 1, 8, 18, 30);
+    const month = buildTimelineGrid(
+      'timelineMonth',
+      new Date(2026, 1, 10),
+      1,
+      8,
+      18,
+      30,
+    );
     expect(month.scale).toBe('day');
     expect(month.days).toHaveLength(28); // February 2026
     expect(month.windowEndMinutes - month.windowStartMinutes).toBe(1440);
-    const year = buildTimelineGrid('timelineYear', new Date(2026, 5, 1), 1, 8, 18, 30);
+    const year = buildTimelineGrid(
+      'timelineYear',
+      new Date(2026, 5, 1),
+      1,
+      8,
+      18,
+      30,
+    );
     expect(year.days).toHaveLength(365);
     expect(viewRange('timelineYear', new Date(2026, 5, 1), 1)).toEqual({
       start: new Date(2026, 0, 1),
@@ -210,7 +255,14 @@ describe('timeline month / year / work week', () => {
   });
 
   it('day-scale bars cover whole days and get one key per bar', () => {
-    const grid = buildTimelineGrid('timelineMonth', new Date(2026, 7, 1), 1, 8, 18, 30);
+    const grid = buildTimelineGrid(
+      'timelineMonth',
+      new Date(2026, 7, 1),
+      1,
+      8,
+      18,
+      30,
+    );
     const { bars } = layoutTimelineBars(
       [
         appt({
@@ -231,21 +283,53 @@ describe('timeline month / year / work week', () => {
   });
 
   it('year header cells are months; month sub-labels are weekday initials', () => {
-    const year = buildTimelineGrid('timelineYear', new Date(2026, 0, 1), 1, 0, 24, 30);
+    const year = buildTimelineGrid(
+      'timelineYear',
+      new Date(2026, 0, 1),
+      1,
+      0,
+      24,
+      30,
+    );
     const cells = timelineHeaderCells(year, 'timelineYear', 'en-US');
     expect(cells).toHaveLength(12);
     expect(cells[0].text).toBe('Jan');
     expect(cells[1].widthPct).toBeCloseTo((28 / 365) * 100, 5);
     const ticks = timelineHourLabels(year, 'timelineYear', 'en-US');
-    expect(ticks.map((tick) => tick.text).slice(0, 4)).toEqual(['1', '8', '15', '22']);
-    const month = buildTimelineGrid('timelineMonth', new Date(2026, 7, 1), 1, 0, 24, 30);
-    expect(timelineHourLabels(month, 'timelineMonth', 'en-US')[0].text).toBe('S');
-    expect(timelineHeaderCells(month, 'timelineMonth', 'en-US')[2].text).toBe('3');
+    expect(ticks.map((tick) => tick.text).slice(0, 4)).toEqual([
+      '1',
+      '8',
+      '15',
+      '22',
+    ]);
+    const month = buildTimelineGrid(
+      'timelineMonth',
+      new Date(2026, 7, 1),
+      1,
+      0,
+      24,
+      30,
+    );
+    expect(timelineHourLabels(month, 'timelineMonth', 'en-US')[0].text).toBe(
+      'S',
+    );
+    expect(timelineHeaderCells(month, 'timelineMonth', 'en-US')[2].text).toBe(
+      '3',
+    );
   });
 
   it('maps pointer x to a slot start and shades off hours / blocked ranges', () => {
-    const grid = buildTimelineGrid('timelineDay', new Date(2026, 7, 6), 1, 8, 18, 60);
-    expect(timelineDateAt(grid, 250, 1000, 60)).toEqual(new Date(2026, 7, 6, 10));
+    const grid = buildTimelineGrid(
+      'timelineDay',
+      new Date(2026, 7, 6),
+      1,
+      8,
+      18,
+      60,
+    );
+    expect(timelineDateAt(grid, 250, 1000, 60)).toEqual(
+      new Date(2026, 7, 6, 10),
+    );
     expect(timelineDateAt(grid, 250, 1000, 60, true)).toEqual(
       new Date(2026, 7, 6, 15),
     );
@@ -256,12 +340,22 @@ describe('timeline month / year / work week', () => {
     ]);
     const blocked = timelineBlockedBoxes(
       grid,
-      [{ startDate: new Date(2026, 7, 6, 12), endDate: new Date(2026, 7, 6, 13), text: 'Lunch' }],
+      [
+        {
+          startDate: new Date(2026, 7, 6, 12),
+          endDate: new Date(2026, 7, 6, 13),
+          text: 'Lunch',
+        },
+      ],
       {},
       60,
     );
     expect(blocked).toHaveLength(1);
-    expect(blocked[0]).toMatchObject({ leftPct: 40, widthPct: 10, text: 'Lunch' });
+    expect(blocked[0]).toMatchObject({
+      leftPct: 40,
+      widthPct: 10,
+      text: 'Lunch',
+    });
   });
 });
 
@@ -284,7 +378,14 @@ describe('grouped timeline rows', () => {
   ];
   const levels = resolveGroupLevels(resources, ['room', 'owner']);
   const leaves = buildGroupLeaves(levels);
-  const grid = buildTimelineGrid('timelineDay', new Date(2026, 7, 6), 1, 8, 18, 30);
+  const grid = buildTimelineGrid(
+    'timelineDay',
+    new Date(2026, 7, 6),
+    1,
+    8,
+    18,
+    30,
+  );
   const items = [
     appt({
       id: 1,
@@ -303,7 +404,14 @@ describe('grouped timeline rows', () => {
   ];
 
   it('heads each outer level with a group row, then one row per leaf', () => {
-    const rows = buildGroupedTimelineRows(items, grid, 30, levels, leaves, 'Unassigned');
+    const rows = buildGroupedTimelineRows(
+      items,
+      grid,
+      30,
+      levels,
+      leaves,
+      'Unassigned',
+    );
     expect(rows.map((row) => `${row.kind}:${row.text}`)).toEqual([
       'group:Room A',
       'resource:Ada',
@@ -370,7 +478,9 @@ describe('grouped timeline rows', () => {
       bars: [],
       laneCount: index % 3 === 0 ? 2 : 1,
     }));
-    expect(timelineRowHeight(many[0])).toBe(9 + 2 * OGE_SCHEDULER_TIMELINE_LANE_PX);
+    expect(timelineRowHeight(many[0])).toBe(
+      9 + 2 * OGE_SCHEDULER_TIMELINE_LANE_PX,
+    );
     expect(timelineRowHeight({ ...many[1], kind: 'group' })).toBe(29);
     const window = timelineVirtualWindow(many, 3500, 400, 2);
     expect(window.start).toBeGreaterThan(50);
@@ -389,7 +499,9 @@ describe('week numbers', () => {
     expect(weekNumberOf(new Date(2026, 0, 1), 1, 4)).toBe(1); // Thu
     expect(weekNumberOf(new Date(2021, 0, 3), 1, 4)).toBe(53); // Sun, 2020-W53
     expect(weekNumberOf(new Date(2026, 7, 6), 1, 4)).toBe(32);
-    expect(schedulerWeekNumber(new Date(2026, 7, 6), 'iso', 0, 'en-US')).toBe(32);
+    expect(schedulerWeekNumber(new Date(2026, 7, 6), 'iso', 0, 'en-US')).toBe(
+      32,
+    );
   });
 
   it('numbers US weeks (Sunday-first, week 1 holds January 1st)', () => {

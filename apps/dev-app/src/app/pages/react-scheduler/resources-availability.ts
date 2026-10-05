@@ -112,7 +112,11 @@ function DragInDemo(): ReactNode {
       { className: 'mb-3 flex flex-wrap gap-2' },
       tasks.length
         ? tasks.map((task) => createElement(TaskChip, { key: task.id, task }))
-        : createElement('li', { className: 'text-sm opacity-70' }, 'Backlog empty.'),
+        : createElement(
+            'li',
+            { className: 'text-sm opacity-70' },
+            'Backlog empty.',
+          ),
     ),
     createElement(OgeScheduler<DepthAppt>, {
       dataSource: appointments,
@@ -231,7 +235,11 @@ function SelectionDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
-      [chips]="['useOgeSchedulerDraggable', 'onAppointmentDropped', 'onDragOut']"
+      [chips]="[
+        'useOgeSchedulerDraggable',
+        'onAppointmentDropped',
+        'onDragOut',
+      ]"
       heading="Drag in from outside"
       description="Drag a backlog task onto the week — or focus it, press Enter and press Enter again on a cell. The drop previews the slot, builds the appointment through <code>onAppointmentAdding</code> and reports it in <code>onAppointmentDropped</code>; dragging a chip out of the scheduler fires <code>onDragOut</code>."
       [code]="demos[2].source"

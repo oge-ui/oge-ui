@@ -5,7 +5,10 @@
  * grouped. Half-open ranges, so back-to-back appointments never conflict.
  */
 import { rangesOverlap } from '@oge-ui/core';
-import { expandAppointment, type SchedulerAppointment } from './scheduler-model';
+import {
+  expandAppointment,
+  type SchedulerAppointment,
+} from './scheduler-model';
 import type { OgeSchedulerResource } from './scheduler-types';
 
 /** The proposed extent of an appointment being created or changed. */
@@ -37,7 +40,10 @@ export function findSchedulerConflicts<T>(
       : new Date(start.getTime() + 1);
   const conflicts: SchedulerAppointment<T>[] = [];
   for (const appointment of appointments) {
-    if (candidate.source !== undefined && appointment.source === candidate.source) {
+    if (
+      candidate.source !== undefined &&
+      appointment.source === candidate.source
+    ) {
       continue;
     }
     if (

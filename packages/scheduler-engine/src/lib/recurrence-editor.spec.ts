@@ -66,7 +66,12 @@ describe('recurrence editor — authoring', () => {
 
   it('monthly on the second Tuesday (ordinal BYDAY)', () => {
     const rule = editorRuleString(
-      modelWith({ repeat: 'monthly', repeatBy: 'weekday', setPos: 2, weekdayKind: 2 }),
+      modelWith({
+        repeat: 'monthly',
+        repeatBy: 'weekday',
+        setPos: 2,
+        weekdayKind: 2,
+      }),
     );
     expect(rule).toBe('FREQ=MONTHLY;BYDAY=2TU');
     expect(editorRuleFields(rule, START)).toMatchObject({
@@ -79,13 +84,18 @@ describe('recurrence editor — authoring', () => {
 
   it('monthly on the last weekday (BYDAY + BYSETPOS)', () => {
     const rule = editorRuleString(
-      modelWith({ repeat: 'monthly', repeatBy: 'weekday', setPos: -1, weekdayKind: 'weekday' }),
+      modelWith({
+        repeat: 'monthly',
+        repeatBy: 'weekday',
+        setPos: -1,
+        weekdayKind: 'weekday',
+      }),
     );
     expect(rule).toBe('FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1');
     const parsed = parseRecurrenceRule(rule as string);
     expect(
-      expandRecurrence(parsed!, START, START, new Date(2026, 10, 1)).map((date) =>
-        date.getDate(),
+      expandRecurrence(parsed!, START, START, new Date(2026, 10, 1)).map(
+        (date) => date.getDate(),
       ),
     ).toEqual([31, 30, 30]); // Aug 31 (Mon), Sep 30 (Wed), Oct 30 (Fri)
     expect(editorRuleFields(rule, START)).toMatchObject({
@@ -97,7 +107,11 @@ describe('recurrence editor — authoring', () => {
 
   it('several days of the month, the last one included', () => {
     const rule = editorRuleString(
-      modelWith({ repeat: 'monthly', repeatBy: 'day', monthDays: [-1, 15, 1, 15] }),
+      modelWith({
+        repeat: 'monthly',
+        repeatBy: 'day',
+        monthDays: [-1, 15, 1, 15],
+      }),
     );
     expect(rule).toBe('FREQ=MONTHLY;BYMONTHDAY=1,15,-1');
     expect(editorRuleFields(rule, START).monthDays).toEqual([1, 15, -1]);
@@ -126,11 +140,18 @@ describe('recurrence editor — authoring', () => {
         until: new Date(2030, 0, 1),
       }),
     );
-    expect(until).toBe('FREQ=YEARLY;UNTIL=20300101T235959;BYMONTHDAY=24,31;BYMONTH=12');
+    expect(until).toBe(
+      'FREQ=YEARLY;UNTIL=20300101T235959;BYMONTHDAY=24,31;BYMONTH=12',
+    );
     const parsed = parseRecurrenceRule(until as string)!;
     // multiple BYMONTHDAY values expand in yearly rules too
     expect(
-      expandRecurrence(parsed, new Date(2026, 11, 24, 10), new Date(2026, 11, 1), new Date(2027, 0, 1)),
+      expandRecurrence(
+        parsed,
+        new Date(2026, 11, 24, 10),
+        new Date(2026, 11, 1),
+        new Date(2027, 0, 1),
+      ),
     ).toHaveLength(2);
   });
 
@@ -170,9 +191,9 @@ describe('recurrence editor — exceptions', () => {
       ...model,
       exceptions: [...model.exceptions, new Date(2026, 7, 6, 9).getTime()],
     };
-    expect(buildPatchFromEditor(item, skipped, fields, []).recurrenceException).toBe(
-      '20260805T090000,20260806T090000',
-    );
+    expect(
+      buildPatchFromEditor(item, skipped, fields, []).recurrenceException,
+    ).toBe('20260805T090000,20260806T090000');
     expect(formatExceptionStamps([])).toBe('');
   });
 
@@ -184,10 +205,21 @@ describe('recurrence editor — exceptions', () => {
       'en-US',
     );
     expect(series.some((entry) => entry.field === 'exceptions')).toBe(true);
-    const fresh = buildSchedulerEditorItems(messages, [], modelWith({}), 'en-US');
+    const fresh = buildSchedulerEditorItems(
+      messages,
+      [],
+      modelWith({}),
+      'en-US',
+    );
     expect(fresh.some((entry) => entry.field === 'exceptions')).toBe(false);
     expect(fresh.map((entry) => entry.field)).toEqual(
-      expect.arrayContaining(['repeatBy', 'monthDays', 'setPos', 'weekdayKind', 'yearMonth']),
+      expect.arrayContaining([
+        'repeatBy',
+        'monthDays',
+        'setPos',
+        'weekdayKind',
+        'yearMonth',
+      ]),
     );
   });
 
@@ -211,16 +243,32 @@ describe('recurrence summary', () => {
     expect(summary({ repeat: 'daily' })).toBe('Every day');
     expect(summary({ repeat: 'daily', interval: 3 })).toBe('Every 3 days');
     expect(
-      summary({ repeat: 'weekly', interval: 2, byDays: [4, 1], endMode: 'count', count: 10 }),
+      summary({
+        repeat: 'weekly',
+        interval: 2,
+        byDays: [4, 1],
+        endMode: 'count',
+        count: 10,
+      }),
     ).toBe('Every 2 weeks on Monday, Thursday, 10 times');
     expect(summary({ repeat: 'weekly', endMode: 'count', count: 1 })).toBe(
       'Every week on Tuesday, once',
     );
     expect(
-      summary({ repeat: 'monthly', repeatBy: 'weekday', setPos: 2, weekdayKind: 2 }),
+      summary({
+        repeat: 'monthly',
+        repeatBy: 'weekday',
+        setPos: 2,
+        weekdayKind: 2,
+      }),
     ).toBe('Every month on the second Tuesday');
     expect(
-      summary({ repeat: 'monthly', repeatBy: 'weekday', setPos: -1, weekdayKind: 'weekday' }),
+      summary({
+        repeat: 'monthly',
+        repeatBy: 'weekday',
+        setPos: -1,
+        weekdayKind: 'weekday',
+      }),
     ).toBe('Every month on the last weekday');
     expect(summary({ repeat: 'monthly', monthDays: [1, -1] })).toBe(
       'Every month on day 1, Last day',
@@ -235,7 +283,13 @@ describe('recurrence summary', () => {
       }),
     ).toBe('Every year on March 15, until Dec 31, 2027');
     expect(
-      summary({ repeat: 'yearly', yearMonth: 11, repeatBy: 'weekday', setPos: 4, weekdayKind: 4 }),
+      summary({
+        repeat: 'yearly',
+        yearMonth: 11,
+        repeatBy: 'weekday',
+        setPos: 4,
+        weekdayKind: 4,
+      }),
     ).toBe('Every year on the fourth Thursday of November');
   });
 });

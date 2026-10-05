@@ -162,7 +162,12 @@ function MorePopupInner<T>(
                   aria-hidden="true"
                 />
                 <span className="oge-scheduler-agenda-time">
-                  {agendaTimeText(appointment, day, locale, messages.allDayLabel)}
+                  {agendaTimeText(
+                    appointment,
+                    day,
+                    locale,
+                    messages.allDayLabel,
+                  )}
                 </span>
                 <span className="oge-scheduler-agenda-text">
                   {appointment.text}

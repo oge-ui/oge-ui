@@ -1,4 +1,12 @@
-import { DestroyRef, Directive, ElementRef, computed, inject, input, signal } from '@angular/core';
+import {
+  DestroyRef,
+  Directive,
+  ElementRef,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import {
   armedOgeSchedulerPayload,
   beginOgeSchedulerExternalDrag,
@@ -96,7 +104,9 @@ export class OgeSchedulerDraggable {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    if (ogeSchedulerDraggableKey(event.key, this.payload(), this.announcement())) {
+    if (
+      ogeSchedulerDraggableKey(event.key, this.payload(), this.announcement())
+    ) {
       event.preventDefault();
     }
   }

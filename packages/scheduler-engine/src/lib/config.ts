@@ -115,7 +115,9 @@ export interface OgeSchedulerEditorMessages {
   /** Label of the weekday picker of the nth-weekday mode. */
   readonly weekdayKindLabel?: string;
   /** The day kinds besides a single weekday ("last weekday"). */
-  readonly dayKinds?: Readonly<Record<'day' | 'weekday' | 'weekendDay', string>>;
+  readonly dayKinds?: Readonly<
+    Record<'day' | 'weekday' | 'weekendDay', string>
+  >;
   /** Label of the month picker of the yearly rule. */
   readonly yearMonthLabel?: string;
   /** Label of the skipped-occurrences (EXDATE) picker of a series. */

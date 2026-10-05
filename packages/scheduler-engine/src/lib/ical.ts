@@ -136,7 +136,8 @@ export function buildOgeICalendar(
     lines.push(`DTSTART${valueParam}:${date(event.startDate)}`);
     lines.push(`DTEND${valueParam}:${date(event.endDate)}`);
     lines.push(`SUMMARY:${escapeICalText(event.summary)}`);
-    if (event.location) lines.push(`LOCATION:${escapeICalText(event.location)}`);
+    if (event.location)
+      lines.push(`LOCATION:${escapeICalText(event.location)}`);
     if (event.description) {
       lines.push(`DESCRIPTION:${escapeICalText(event.description)}`);
     }
@@ -293,7 +294,10 @@ export function parseOgeICalendar(text: string): OgeICalEvent[] {
   return events;
 }
 
-function buildEvent(lines: readonly ContentLine[], index: number): OgeICalEvent | null {
+function buildEvent(
+  lines: readonly ContentLine[],
+  index: number,
+): OgeICalEvent | null {
   const first = (name: string): ContentLine | undefined =>
     lines.find((line) => line.name === name);
   const start = first('DTSTART');
@@ -338,7 +342,9 @@ function buildEvent(lines: readonly ContentLine[], index: number): OgeICalEvent 
   return {
     uid: text('UID') ?? `oge-import-${index}`,
     summary: text('SUMMARY') ?? '',
-    ...(text('DESCRIPTION') !== undefined ? { description: text('DESCRIPTION') } : {}),
+    ...(text('DESCRIPTION') !== undefined
+      ? { description: text('DESCRIPTION') }
+      : {}),
     ...(text('LOCATION') !== undefined ? { location: text('LOCATION') } : {}),
     startDate: parsedStart.date,
     endDate,
@@ -363,8 +369,12 @@ export function resolveICalOverrides(
   if (overrides.length === 0) return [...events];
   return events.map((event) => {
     if (event.recurrenceId !== undefined) {
-      const standalone: { -readonly [K in keyof OgeICalEvent]?: OgeICalEvent[K] } =
-        { ...event, uid: `${event.uid}-${formatICalDateTime(event.recurrenceId)}` };
+      const standalone: {
+        -readonly [K in keyof OgeICalEvent]?: OgeICalEvent[K];
+      } = {
+        ...event,
+        uid: `${event.uid}-${formatICalDateTime(event.recurrenceId)}`,
+      };
       delete standalone.recurrenceId;
       delete standalone.recurrenceRule;
       return standalone as OgeICalEvent;

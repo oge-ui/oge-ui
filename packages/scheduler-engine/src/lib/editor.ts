@@ -241,7 +241,8 @@ function nthWeekdayRuleParts(
   if (typeof kind === 'number') {
     return { byDay: [{ ordinal, weekday: ((kind % 7) + 7) % 7 }] };
   }
-  const days = kind === 'day' ? ALL_DAYS : kind === 'weekday' ? WEEKDAYS : WEEKEND;
+  const days =
+    kind === 'day' ? ALL_DAYS : kind === 'weekday' ? WEEKDAYS : WEEKEND;
   return {
     byDay: days.map((weekday): RecurrenceByDay => ({ ordinal: null, weekday })),
     bySetPos: [ordinal],
@@ -366,7 +367,9 @@ export function editorModelFrom<T>(
     reminder: appointment.reminderMinutes ?? null,
     resourceValues: resourceValuesOf(appointment.source, resources),
     exceptions,
-    ...(withRecurrence ? { sourceExceptionsKey: exceptionsKey(exceptions) } : {}),
+    ...(withRecurrence
+      ? { sourceExceptionsKey: exceptionsKey(exceptions) }
+      : {}),
     ...editorRuleFields(
       withRecurrence ? appointment.recurrenceRule : undefined,
       appointment.startDate,

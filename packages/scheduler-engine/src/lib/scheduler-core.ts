@@ -50,7 +50,10 @@ import type {
   OgeSchedulerResolvedMessages,
 } from './config';
 import { findSchedulerConflicts } from './conflicts';
-import { buildSchedulerExportData, type OgeSchedulerExportData } from './export-data';
+import {
+  buildSchedulerExportData,
+  type OgeSchedulerExportData,
+} from './export-data';
 import {
   findOgeSchedulerDropTarget,
   takeArmedOgeSchedulerPayload,
@@ -852,7 +855,10 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       });
     }
     // Ctrl/⌘-click toggles and Shift-click extends without the popup
-    if (pointer !== null && (pointer.ctrlKey || pointer.metaKey || pointer.shiftKey)) {
+    if (
+      pointer !== null &&
+      (pointer.ctrlKey || pointer.metaKey || pointer.shiftKey)
+    ) {
       this.selectAppointment(
         event.appointment,
         pointer.shiftKey ? 'range' : 'toggle',
@@ -958,8 +964,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   paste(target: SchedulerPasteTarget): number {
     if (!this.canAdd() || this.clipboard.length === 0) return 0;
     const keyExpr = this.inputs.keyExpr();
-    const keyField =
-      typeof keyExpr === 'function' ? null : (keyExpr ?? 'id');
+    const keyField = typeof keyExpr === 'function' ? null : (keyExpr ?? 'id');
     const items = planSchedulerPaste(
       this.clipboard,
       target,
@@ -1025,8 +1030,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     const keyOf =
       typeof keyExpr === 'function'
         ? keyExpr
-        : (entry: T) =>
-            (entry as Record<string, unknown>)[keyExpr ?? 'id'];
+        : (entry: T) => (entry as Record<string, unknown>)[keyExpr ?? 'id'];
     const key = keyOf(item);
     if (key === undefined || key === null) return undefined;
     return store.find((entry) => keyOf(entry) === key);
@@ -1839,7 +1843,10 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
           ? { [resource.fieldExpr]: event.resourceId }
           : {};
     const values = {
-      ...resourceValuesOfItem(event.appointment.source, this.inputs.resources()),
+      ...resourceValuesOfItem(
+        event.appointment.source,
+        this.inputs.resources(),
+      ),
       ...target,
     };
     const proposal = this.snapped(event.proposal, values);

@@ -276,7 +276,14 @@ function DayWeekViewInner<T>(
         props.groupByDate,
         (day) => weekdayShortText(day, locale),
       ),
-    [grid, layout.vertical, props.groupLevels, props.groupLeaves, props.groupByDate, locale],
+    [
+      grid,
+      layout.vertical,
+      props.groupLevels,
+      props.groupLeaves,
+      props.groupByDate,
+      locale,
+    ],
   );
   const blockedCells = useMemo(
     () => dayWeekBlockedCells(grid, layout, props.disabledSlots),
@@ -298,7 +305,8 @@ function DayWeekViewInner<T>(
     [partitioned, grid, layout, props.leafOf, props.minAppointmentMinutes],
   );
   const allDayStrip = useMemo(
-    () => buildLayoutAllDayStrip(partitioned.allDay, grid, layout, props.leafOf),
+    () =>
+      buildLayoutAllDayStrip(partitioned.allDay, grid, layout, props.leafOf),
     [partitioned, grid, layout, props.leafOf],
   );
   const allDayLaneCount = Math.max(1, allDayStrip.laneCount);
@@ -320,7 +328,13 @@ function DayWeekViewInner<T>(
             locale,
           )
         : [],
-    [grid, props.showWeekNumbers, props.weekNumberRule, props.firstDayOfWeek, locale],
+    [
+      grid,
+      props.showWeekNumbers,
+      props.weekNumberRule,
+      props.firstDayOfWeek,
+      locale,
+    ],
   );
   const weekBadge =
     weekNumbers.length === 0
@@ -393,7 +407,9 @@ function DayWeekViewInner<T>(
         clientY >= rect.top &&
         clientY < rect.bottom
       ) {
-        const raw = Math.floor(((clientX - rect.left) / rect.width) * cells.length);
+        const raw = Math.floor(
+          ((clientX - rect.left) / rect.width) * cells.length,
+        );
         const cell = cells[props.rtl ? cells.length - 1 - raw : raw];
         if (cell !== undefined) {
           return { startDate: cell.day, allDay: true, resources: cell.values };
@@ -498,7 +514,11 @@ function DayWeekViewInner<T>(
     const select = chipSelectKey(event);
     if (select !== null) {
       event.preventDefault();
-      props.onSelectRequested({ appointment, gesture: select, order: chipOrder });
+      props.onSelectRequested({
+        appointment,
+        gesture: select,
+        order: chipOrder,
+      });
       return;
     }
     const ctrl = timeGridChipCtrlKey(
@@ -640,7 +660,9 @@ function DayWeekViewInner<T>(
         }
         if (commit && proposal !== null) {
           const changed = layout.leaves.length > 0 && leafIndex !== originLeaf;
-          const values = changed ? props.groupLeaves[leafIndex]?.values : undefined;
+          const values = changed
+            ? props.groupLeaves[leafIndex]?.values
+            : undefined;
           const firstLevel = props.groupLevels[0];
           props.onMoveCommitted({
             appointment,
@@ -808,7 +830,11 @@ function DayWeekViewInner<T>(
           },
           Math.max(
             0,
-            leafIndexOfValues(props.groupLevels, props.groupLeaves, drop.slot.resources),
+            leafIndexOfValues(
+              props.groupLevels,
+              props.groupLeaves,
+              drop.slot.resources,
+            ),
           ),
           grid,
           props.minAppointmentMinutes,
@@ -817,7 +843,12 @@ function DayWeekViewInner<T>(
   const selectionBox =
     selection === null
       ? null
-      : dayWeekSelectionBox(selection, grid, layout.colCount, layout.blockCount);
+      : dayWeekSelectionBox(
+          selection,
+          grid,
+          layout.colCount,
+          layout.blockCount,
+        );
   const nowBoxes = dayWeekNowBoxes(
     grid,
     layout,
@@ -1065,7 +1096,11 @@ function DayWeekViewInner<T>(
                   const blocked = blockedCells.has(
                     dayWeekCellKey(row.block, row.slot, col.colIndex),
                   );
-                  const leaf = dayWeekLayoutCellLeaf(layout, col.colIndex, row.block);
+                  const leaf = dayWeekLayoutCellLeaf(
+                    layout,
+                    col.colIndex,
+                    row.block,
+                  );
                   return (
                     <div
                       key={col.colIndex}
@@ -1116,7 +1151,9 @@ function DayWeekViewInner<T>(
                       )}
                       onClick={(event) => {
                         setFocusedCell({ day: col.colIndex, slot: row.index });
-                        props.onCellClicked(cellEvent(col, row, event.nativeEvent));
+                        props.onCellClicked(
+                          cellEvent(col, row, event.nativeEvent),
+                        );
                       }}
                       onDoubleClick={(event) =>
                         props.onCellDblClicked(

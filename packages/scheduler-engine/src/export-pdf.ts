@@ -95,8 +95,14 @@ export function buildSchedulerPdfDocument<T>(
   const usable = pageW - MARGIN * 2;
   const columns = [
     { header: data.messages.start, width: usable * 0.24 },
-    { header: data.messages.subject, width: usable * (withResources ? 0.36 : 0.5) },
-    { header: data.messages.location, width: usable * (withResources ? 0.2 : 0.26) },
+    {
+      header: data.messages.subject,
+      width: usable * (withResources ? 0.36 : 0.5),
+    },
+    {
+      header: data.messages.location,
+      width: usable * (withResources ? 0.2 : 0.26),
+    },
     ...(withResources
       ? [{ header: data.resources[0]?.label ?? '', width: usable * 0.2 }]
       : []),

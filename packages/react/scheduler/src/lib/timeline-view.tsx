@@ -178,7 +178,8 @@ function TimelineViewInner<T>(
   const horizontal =
     props.groupOrientation === 'horizontal' && props.groupLevels.length > 0;
   const horizontalRow = useMemo(
-    () => buildHorizontalTimelineRow(groupedRows, props.messages.unassignedLabel),
+    () =>
+      buildHorizontalTimelineRow(groupedRows, props.messages.unassignedLabel),
     [groupedRows, props.messages.unassignedLabel],
   );
   const rows = horizontal ? [horizontalRow.row] : groupedRows;
@@ -237,7 +238,11 @@ function TimelineViewInner<T>(
     if (!shouldVirtualizeTimeline(props.virtualScrolling, rows.length)) {
       return { rows: all, padStart: 0, padEnd: 0 };
     }
-    const window = timelineVirtualWindow(rows, scrollState.top, scrollState.height);
+    const window = timelineVirtualWindow(
+      rows,
+      scrollState.top,
+      scrollState.height,
+    );
     return {
       rows: all.slice(window.start, window.end),
       padStart: window.padStart,
@@ -275,7 +280,9 @@ function TimelineViewInner<T>(
 
   const isSelected = (appointment: SchedulerAppointment<T>): boolean =>
     props.selection.includes(appointment.source);
-  const chipOrder = rows.flatMap((row) => row.bars.map((bar) => bar.appointment));
+  const chipOrder = rows.flatMap((row) =>
+    row.bars.map((bar) => bar.appointment),
+  );
 
   const drop = props.dropPreview;
   const dropBar = (() => {
@@ -293,7 +300,11 @@ function TimelineViewInner<T>(
           sameGroupValues(entry.values ?? {}, drop.slot.resources),
         ),
       );
-      return { rowIndex: 0, leftPct: blockPct(block, start), widthPct: width / blockCount };
+      return {
+        rowIndex: 0,
+        leftPct: blockPct(block, start),
+        widthPct: width / blockCount,
+      };
     }
     const rowIndex = rows.findIndex(
       (row) =>
@@ -447,7 +458,11 @@ function TimelineViewInner<T>(
           if (horizontal) {
             const block = blocks[targetBlock];
             const originBlock = Math.floor((bar.leftPct / 100) * blockCount);
-            if (block !== undefined && targetBlock !== originBlock && block.id !== null) {
+            if (
+              block !== undefined &&
+              targetBlock !== originBlock &&
+              block.id !== null
+            ) {
               values = block.values;
             }
           } else if (targetRow !== rowIndex) {
@@ -486,7 +501,11 @@ function TimelineViewInner<T>(
     const select = chipSelectKey(event);
     if (select !== null) {
       event.preventDefault();
-      props.onSelectRequested({ appointment, gesture: select, order: chipOrder });
+      props.onSelectRequested({
+        appointment,
+        gesture: select,
+        order: chipOrder,
+      });
       return;
     }
     const ctrl = timelineBarCtrlKey(
@@ -595,7 +614,10 @@ function TimelineViewInner<T>(
             </div>
           </div>
           {hourLabels.length > 0 && (
-            <div className="oge-scheduler-timeline-subheader" role="presentation">
+            <div
+              className="oge-scheduler-timeline-subheader"
+              role="presentation"
+            >
               <div className="oge-scheduler-timeline-corner" />
               <div className="oge-scheduler-timeline-days">
                 {blockIndexes.map((block) =>
@@ -603,7 +625,9 @@ function TimelineViewInner<T>(
                     <span
                       key={`${block}:${label.pct}`}
                       className="oge-scheduler-timeline-hour"
-                      style={{ insetInlineStart: `${blockPct(block, label.pct)}%` }}
+                      style={{
+                        insetInlineStart: `${blockPct(block, label.pct)}%`,
+                      }}
                     >
                       {label.text}
                     </span>
@@ -704,7 +728,11 @@ function TimelineViewInner<T>(
                         key={bar.key}
                         type="button"
                         aria-label={withSelectedLabel(
-                          schedulerChipAriaLabel(props.messages, bar.appointment, locale),
+                          schedulerChipAriaLabel(
+                            props.messages,
+                            bar.appointment,
+                            locale,
+                          ),
                           isSelected(bar.appointment),
                           props.messages,
                         )}
@@ -730,10 +758,16 @@ function TimelineViewInner<T>(
                           props.onChipClicked(chipEvent(bar.appointment, event))
                         }
                         onDoubleClick={(event) =>
-                          props.onChipDblClicked(chipEvent(bar.appointment, event))
+                          props.onChipDblClicked(
+                            chipEvent(bar.appointment, event),
+                          )
                         }
-                        onKeyDown={(event) => onBarKeyDown(bar.appointment, event)}
-                        onPointerDown={(event) => onBarPointerDown(bar, index, event)}
+                        onKeyDown={(event) =>
+                          onBarKeyDown(bar.appointment, event)
+                        }
+                        onPointerDown={(event) =>
+                          onBarPointerDown(bar, index, event)
+                        }
                       >
                         {bar.appointment.text}
                       </button>

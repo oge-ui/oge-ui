@@ -14,10 +14,7 @@ import {
   REACT_SCHEDULER_IMPORT_EXPORT_SECTIONS,
   ReactSchedulerImportExportDemos,
 } from '../react-scheduler/import-export';
-import {
-  ICAL_SNIPPET,
-  LIST_EXPORT_SNIPPET,
-} from './import-export-snippets';
+import { ICAL_SNIPPET, LIST_EXPORT_SNIPPET } from './import-export-snippets';
 import {
   DEPTH_DATE,
   SAMPLE_ICS,
@@ -53,9 +50,9 @@ const BUTTON = 'rounded border px-3 py-1 text-sm';
         <code>/export-pdf</code> (the <code>jspdf</code> peer, with the same
         Unicode font registry as every other OGE PDF export) and
         <code>/export-excel</code> (the <code>exceljs</code> peer). Each reads
-        the scheduler's <code>getExportData()</code> model, so a custom
-        pipeline can start from the same rows. <code>print()</code> prints the
-        current view itself.
+        the scheduler's <code>getExportData()</code> model, so a custom pipeline
+        can start from the same rows. <code>print()</code> prints the current
+        view itself.
       </p>
     </app-doc-header>
     <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
@@ -92,8 +89,7 @@ const BUTTON = 'rounded border px-3 py-1 text-sm';
         @if (icsText()) {
           <pre
             class="mt-3 max-h-64 overflow-auto rounded bg-slate-100 p-3 text-xs dark:bg-slate-800"
-            >{{ icsText() }}</pre
-          >
+            >{{ icsText() }}</pre>
         }
         <p class="mt-2 text-sm" aria-live="polite">{{ status() }}</p>
       </app-demo-card>
@@ -179,14 +175,14 @@ export class SchedulerImportExportPage {
   }
 
   protected async exportPdf(): Promise<void> {
-    const { exportSchedulerToPdf } = await import('@oge-ui/scheduler/export-pdf');
+    const { exportSchedulerToPdf } =
+      await import('@oge-ui/scheduler/export-pdf');
     await exportSchedulerToPdf(this.listScheduler(), { filename: 'week.pdf' });
   }
 
   protected async exportExcel(): Promise<void> {
-    const { exportSchedulerToExcel } = await import(
-      '@oge-ui/scheduler/export-excel'
-    );
+    const { exportSchedulerToExcel } =
+      await import('@oge-ui/scheduler/export-excel');
     await exportSchedulerToExcel(this.listScheduler(), {
       filename: 'week.xlsx',
     });

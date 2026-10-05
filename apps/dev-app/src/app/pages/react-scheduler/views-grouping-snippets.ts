@@ -55,7 +55,10 @@ export const SCHEDULER_VIEWS_GROUPING_DEMOS: readonly ReactDemo[] = [
     source: reactDemoSource({
       use: { '@oge-ui/react-scheduler': ['OgeScheduler'] },
       types: {
-        '@oge-ui/react-scheduler': ['OgeSchedulerView', 'OgeSchedulerViewOptions'],
+        '@oge-ui/react-scheduler': [
+          'OgeSchedulerView',
+          'OgeSchedulerViewOptions',
+        ],
       },
       name: 'IntervalViews',
       before: `// intervalCount turns any view into an N-period view: a 3-day view, a

@@ -10,10 +10,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {
-  OgeScheduler,
-  type OgeSchedulerHandle,
-} from '@oge-ui/react-scheduler';
+import { OgeScheduler, type OgeSchedulerHandle } from '@oge-ui/react-scheduler';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import {
@@ -46,8 +43,7 @@ function ICalDemo(): ReactNode {
   const [icsText, setIcsText] = useState('');
   const [status, setStatus] = useState('');
   const withScheduler =
-    (run: (handle: OgeSchedulerHandle<DepthAppt>) => Promise<void>) =>
-    () => {
+    (run: (handle: OgeSchedulerHandle<DepthAppt>) => Promise<void>) => () => {
       if (scheduler.current) void run(scheduler.current);
     };
   return createElement(
@@ -59,9 +55,8 @@ function ICalDemo(): ReactNode {
       button(
         'Download .ics',
         withScheduler(async (handle) => {
-          const { exportToICalendar } = await import(
-            '@oge-ui/react-scheduler/export-ical'
-          );
+          const { exportToICalendar } =
+            await import('@oge-ui/react-scheduler/export-ical');
           exportToICalendar(handle, {
             filename: 'team.ics',
             calendarName: 'Team',
@@ -71,9 +66,8 @@ function ICalDemo(): ReactNode {
       button(
         'Show .ics text',
         withScheduler(async (handle) => {
-          const { exportToICalendar } = await import(
-            '@oge-ui/react-scheduler/export-ical'
-          );
+          const { exportToICalendar } =
+            await import('@oge-ui/react-scheduler/export-ical');
           setIcsText(
             exportToICalendar(handle, {
               calendarName: 'Team',
@@ -85,10 +79,11 @@ function ICalDemo(): ReactNode {
       button(
         'Import sample .ics',
         withScheduler(async (handle) => {
-          const { importICalendar } = await import(
-            '@oge-ui/react-scheduler/export-ical'
-          );
-          const items = importICalendar(handle, SAMPLE_ICS, { uidField: 'uid' });
+          const { importICalendar } =
+            await import('@oge-ui/react-scheduler/export-ical');
+          const items = importICalendar(handle, SAMPLE_ICS, {
+            uidField: 'uid',
+          });
           setStatus('Imported ' + items.length + ' appointments.');
         }),
       ),

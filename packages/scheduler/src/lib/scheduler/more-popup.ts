@@ -9,11 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import {
-  OgeAnchoredPanel,
-  OgePopup,
-  type OgeRect,
-} from '@oge-ui/overlay';
+import { OgeAnchoredPanel, OgePopup, type OgeRect } from '@oge-ui/overlay';
 import {
   agendaTimeText,
   morePopupKey,
@@ -162,9 +158,7 @@ export class OgeSchedulerMorePopup<T = unknown> {
 
   private focusItem(index: number): void {
     this.panelEl()
-      ?.nativeElement.querySelector<HTMLElement>(
-        `[data-more-index="${index}"]`,
-      )
+      ?.nativeElement.querySelector<HTMLElement>(`[data-more-index="${index}"]`)
       ?.focus();
   }
 
@@ -184,7 +178,10 @@ export class OgeSchedulerMorePopup<T = unknown> {
     );
   }
 
-  protected pick(appointment: SchedulerAppointment<T>, event: MouseEvent): void {
+  protected pick(
+    appointment: SchedulerAppointment<T>,
+    event: MouseEvent,
+  ): void {
     const rect =
       this.anchor?.getBoundingClientRect() ??
       (event.currentTarget as HTMLElement).getBoundingClientRect();

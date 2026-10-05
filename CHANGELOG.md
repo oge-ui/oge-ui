@@ -12,7 +12,7 @@ are versioned independently, which is the case here.
 - **Views:** `timelineWorkWeek`, `timelineMonth` and `timelineYear` (day
   scale); `intervalCount` on view options for N-day / N-week / N-month and
   scaled timeline views; `showWeekNumbers` with `weekNumberRule: 'iso' |
-  'locale'`.
+'locale'`.
 - **Grouping:** every `groups` level is honoured (nested headers, drags
   reassign all levels); `groupOrientation` (`'vertical'` = day/week row
   blocks) and `groupByDate`; resource header template

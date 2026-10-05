@@ -66,8 +66,8 @@ export function useOgeSchedulerDraggable(
   // the payload this hook armed last: inline `data` objects change identity
   // every render, so "is it me?" compares the payload, not the data
   const own = useRef<OgeSchedulerDragPayload | null>(null);
-  const [armed, setArmed] = useState<OgeSchedulerDragPayload | null>(
-    () => armedOgeSchedulerPayload(),
+  const [armed, setArmed] = useState<OgeSchedulerDragPayload | null>(() =>
+    armedOgeSchedulerPayload(),
   );
 
   useEffect(() => {

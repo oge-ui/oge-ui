@@ -83,31 +83,70 @@ describe('blocked slots', () => {
         30,
       ),
     ).toEqual([
-      { startDate: new Date(2026, 7, 3, 12), endDate: new Date(2026, 7, 3, 13) },
+      {
+        startDate: new Date(2026, 7, 3, 12),
+        endDate: new Date(2026, 7, 3, 13),
+      },
     ]);
     expect(
-      isRangeBlocked(predicate, new Date(2026, 7, 3, 11), new Date(2026, 7, 3, 12), {}, 30),
+      isRangeBlocked(
+        predicate,
+        new Date(2026, 7, 3, 11),
+        new Date(2026, 7, 3, 12),
+        {},
+        30,
+      ),
     ).toBe(false);
     expect(
-      isRangeBlocked(predicate, new Date(2026, 7, 3, 11, 45), new Date(2026, 7, 3, 12, 15), {}, 30),
+      isRangeBlocked(
+        predicate,
+        new Date(2026, 7, 3, 11, 45),
+        new Date(2026, 7, 3, 12, 15),
+        {},
+        30,
+      ),
     ).toBe(true);
     // a zero-length range tests its instant
     expect(
-      isRangeBlocked(predicate, new Date(2026, 7, 3, 12, 10), new Date(2026, 7, 3, 12, 10), {}, 30),
+      isRangeBlocked(
+        predicate,
+        new Date(2026, 7, 3, 12, 10),
+        new Date(2026, 7, 3, 12, 10),
+        {},
+        30,
+      ),
     ).toBe(true);
   });
 
   it('tests ranges, days and resources', () => {
     expect(
-      isRangeBlocked([LUNCH], new Date(2026, 7, 4, 12, 30), new Date(2026, 7, 4, 14), {}, 30),
+      isRangeBlocked(
+        [LUNCH],
+        new Date(2026, 7, 4, 12, 30),
+        new Date(2026, 7, 4, 14),
+        {},
+        30,
+      ),
     ).toBe(true);
     expect(
-      isRangeBlocked([LUNCH], new Date(2026, 7, 8, 12, 30), new Date(2026, 7, 8, 14), {}, 30),
+      isRangeBlocked(
+        [LUNCH],
+        new Date(2026, 7, 8, 12, 30),
+        new Date(2026, 7, 8, 14),
+        {},
+        30,
+      ),
     ).toBe(false); // Saturday
-    expect(isDayBlocked([MAINTENANCE], new Date(2026, 7, 6), { room: 'c' })).toBe(true);
-    expect(isDayBlocked([MAINTENANCE], new Date(2026, 7, 6), { room: 'a' })).toBe(false);
+    expect(
+      isDayBlocked([MAINTENANCE], new Date(2026, 7, 6), { room: 'c' }),
+    ).toBe(true);
+    expect(
+      isDayBlocked([MAINTENANCE], new Date(2026, 7, 6), { room: 'a' }),
+    ).toBe(false);
     expect(isDayBlocked([LUNCH], new Date(2026, 7, 4), {})).toBe(false);
-    expect(isDayBlocked((date) => date.getDay() === 0, new Date(2026, 7, 9), {})).toBe(true);
+    expect(
+      isDayBlocked((date) => date.getDay() === 0, new Date(2026, 7, 9), {}),
+    ).toBe(true);
     expect(isRangeBlocked(null, new Date(), new Date(), {}, 30)).toBe(false);
   });
 });
@@ -204,10 +243,18 @@ describe('conflicts', () => {
       endDate: new Date(2026, 7, 3, 11, 30),
     };
     expect(
-      findSchedulerConflicts({ ...candidate, values: { room: 'b' } }, store, level),
+      findSchedulerConflicts(
+        { ...candidate, values: { room: 'b' } },
+        store,
+        level,
+      ),
     ).toEqual([]);
     expect(
-      findSchedulerConflicts({ ...candidate, values: { room: 'a' } }, store, level),
+      findSchedulerConflicts(
+        { ...candidate, values: { room: 'a' } },
+        store,
+        level,
+      ),
     ).toHaveLength(1);
     expect(
       findSchedulerConflicts(

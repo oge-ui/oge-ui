@@ -56,7 +56,8 @@ export function buildSchedulerExcelWorkbook<T>(
   const dateFormat = options.dateFormat ?? 'yyyy-mm-dd hh:mm';
   for (const row of data.rows) {
     const resources = resourceLabels.map(
-      (label) => row.resources.find((entry) => entry.label === label)?.text ?? '',
+      (label) =>
+        row.resources.find((entry) => entry.label === label)?.text ?? '',
     );
     const added = sheet.addRow([
       row.text,

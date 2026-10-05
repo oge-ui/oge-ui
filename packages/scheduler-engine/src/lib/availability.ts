@@ -54,7 +54,13 @@ function rangeIntervals(
       : parseRecurrenceRule(range.recurrenceRule);
   if (rule === null) {
     return rangesOverlap(range.startDate, range.endDate, start, end)
-      ? [{ startDate: range.startDate, endDate: range.endDate, text: range.text }]
+      ? [
+          {
+            startDate: range.startDate,
+            endDate: range.endDate,
+            text: range.text,
+          },
+        ]
       : [];
   }
   // look back one occurrence length so a block started earlier still counts
@@ -163,7 +169,11 @@ export function isDayBlocked(
 ): boolean {
   if (disabled === null || disabled === undefined) return false;
   const start = startOfDay(day);
-  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+  const end = new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate() + 1,
+  );
   if (typeof disabled === 'function') return disabled(start, values);
   return blockedIntervals(disabled, start, end, values, 30).some(
     (interval) =>
@@ -210,7 +220,8 @@ export function snapProposalToWorkHours(
     return { ...proposal, startDate: windowStart, endDate: windowEnd };
   }
   if (start < windowStart.getTime()) start = windowStart.getTime();
-  if (start + length > windowEnd.getTime()) start = windowEnd.getTime() - length;
+  if (start + length > windowEnd.getTime())
+    start = windowEnd.getTime() - length;
   if (start === proposal.startDate.getTime()) return proposal;
   return {
     ...proposal,

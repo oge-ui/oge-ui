@@ -25,7 +25,10 @@ export interface OgeSchedulerExportRow<T = unknown> {
   readonly description: string | undefined;
   readonly recurring: boolean;
   /** Assigned resources: the resource label and the item text, per kind. */
-  readonly resources: readonly { readonly label: string; readonly text: string }[];
+  readonly resources: readonly {
+    readonly label: string;
+    readonly text: string;
+  }[];
 }
 
 /** Everything a scheduler export needs. */
@@ -81,10 +84,17 @@ export function buildSchedulerExportData<T>(options: {
 }): OgeSchedulerExportData<T> {
   const { rangeStart, rangeEnd } = options;
   const rows = options.appointments
-    .flatMap((appointment) => expandAppointment(appointment, rangeStart, rangeEnd))
+    .flatMap((appointment) =>
+      expandAppointment(appointment, rangeStart, rangeEnd),
+    )
     .filter(
       (appointment) =>
-        rangesOverlap(appointment.startDate, appointment.endDate, rangeStart, rangeEnd) ||
+        rangesOverlap(
+          appointment.startDate,
+          appointment.endDate,
+          rangeStart,
+          rangeEnd,
+        ) ||
         (appointment.startDate.getTime() === appointment.endDate.getTime() &&
           appointment.startDate.getTime() >= rangeStart.getTime() &&
           appointment.startDate.getTime() < rangeEnd.getTime()),

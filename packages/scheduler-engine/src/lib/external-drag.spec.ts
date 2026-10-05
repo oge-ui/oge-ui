@@ -93,9 +93,13 @@ describe('scheduler drop targets', () => {
 describe('the keyboard / single-pointer twin', () => {
   it('arms, toggles, cancels and takes a payload', () => {
     const seen: unknown[] = [];
-    const stop = onArmedOgeSchedulerPayload((payload) => seen.push(payload?.data ?? null));
+    const stop = onArmedOgeSchedulerPayload((payload) =>
+      seen.push(payload?.data ?? null),
+    );
     const payload = { data: 'x', text: 'X' };
-    expect(ogeSchedulerDraggableKey('Enter', payload, 'Picked up X')).toBe(true);
+    expect(ogeSchedulerDraggableKey('Enter', payload, 'Picked up X')).toBe(
+      true,
+    );
     expect(armedOgeSchedulerPayload()).toBe(payload);
     // the same key on the same item puts it down again
     expect(ogeSchedulerDraggableKey(' ', payload, 'Picked up X')).toBe(true);

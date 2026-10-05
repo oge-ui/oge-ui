@@ -327,7 +327,9 @@ export interface SchedulerSelectRequest<T> {
                   (dblclick)="onCellDblClick(col, row, $event)"
                   (keydown)="onCellKeydown(col, row, $event)"
                   (pointerdown)="onCellPointerDown(col, row, $event)"
-                  (contextmenu)="cellContextMenu.emit(cellEvent(col, row, $event))"
+                  (contextmenu)="
+                    cellContextMenu.emit(cellEvent(col, row, $event))
+                  "
                 >
                   @if (cellTemplate(); as tpl) {
                     <ng-container
@@ -684,9 +686,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     const weeks = this.weekNumbers();
     if (weeks.length === 0) return null;
     const first = schedulerWeekNumberTexts(weeks[0], this.messages()).badge;
-    return weeks.length === 1
-      ? first
-      : `${first}–${weeks[weeks.length - 1]}`;
+    return weeks.length === 1 ? first : `${first}–${weeks[weeks.length - 1]}`;
   });
 
   /* ---------- roving cell focus (OgeCalendar pattern) ---------- */
@@ -1229,7 +1229,9 @@ export class OgeSchedulerDayWeekView<T = unknown> {
         clientY >= rect.top &&
         clientY < rect.bottom
       ) {
-        const raw = Math.floor(((clientX - rect.left) / rect.width) * cells.length);
+        const raw = Math.floor(
+          ((clientX - rect.left) / rect.width) * cells.length,
+        );
         const cell = cells[this.rtl() ? cells.length - 1 - raw : raw];
         if (cell !== undefined) {
           return { startDate: cell.day, allDay: true, resources: cell.values };
@@ -1263,7 +1265,12 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     values: Readonly<Record<string, unknown>>,
     event: MouseEvent,
   ): void {
-    this.cellClicked.emit({ cellDate: day, allDay: true, event, resources: values });
+    this.cellClicked.emit({
+      cellDate: day,
+      allDay: true,
+      event,
+      resources: values,
+    });
   }
 
   protected onAllDayCellDblClick(
@@ -1303,7 +1310,9 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       weeks.length === 0
         ? this.periodLabel()
         : `${this.periodLabel()}, ${weeks
-            .map((week) => schedulerWeekNumberTexts(week, this.messages()).label)
+            .map(
+              (week) => schedulerWeekNumberTexts(week, this.messages()).label,
+            )
             .join(', ')}`;
     return schedulerGridAriaLabel(this.messages(), period);
   }

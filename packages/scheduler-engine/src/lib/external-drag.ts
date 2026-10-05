@@ -46,9 +46,16 @@ export interface OgeSchedulerDropTarget {
   /** The scheduler host element. */
   readonly element: Element;
   /** The slot at a viewport point (`hit` = the element under it), or `null`. */
-  resolve(clientX: number, clientY: number, hit: Element | null): OgeSchedulerDropSlot | null;
+  resolve(
+    clientX: number,
+    clientY: number,
+    hit: Element | null,
+  ): OgeSchedulerDropSlot | null;
   /** Drives the drop preview (`null` clears it). */
-  over(slot: OgeSchedulerDropSlot | null, payload: OgeSchedulerDragPayload | null): void;
+  over(
+    slot: OgeSchedulerDropSlot | null,
+    payload: OgeSchedulerDragPayload | null,
+  ): void;
   /** A committed drop; returns whether the item was added. */
   drop(payload: OgeSchedulerDragPayload, slot: OgeSchedulerDropSlot): boolean;
 }
@@ -107,7 +114,9 @@ export function isOgeSchedulerDragOut(
 /* ---------- the keyboard / single-pointer twin ---------- */
 
 let armed: OgeSchedulerDragPayload | null = null;
-const armedListeners = new Set<(payload: OgeSchedulerDragPayload | null) => void>();
+const armedListeners = new Set<
+  (payload: OgeSchedulerDragPayload | null) => void
+>();
 
 /** The payload picked up from the keyboard (or a click), if any. */
 export function armedOgeSchedulerPayload(): OgeSchedulerDragPayload | null {
@@ -156,7 +165,10 @@ export interface OgeSchedulerExternalDragOptions {
   /** Called once the drag started (past the threshold). */
   onStart?(): void;
   /** Called last; `dropped` when a scheduler accepted the item. */
-  onEnd?(result: { readonly dropped: boolean; readonly cancelled: boolean }): void;
+  onEnd?(result: {
+    readonly dropped: boolean;
+    readonly cancelled: boolean;
+  }): void;
 }
 
 interface Hit {
@@ -185,7 +197,9 @@ export function beginOgeSchedulerExternalDrag(
     resolve: (hit, pointer) => {
       const target = findOgeSchedulerDropTarget(hit);
       const slot =
-        target === null ? null : target.resolve(pointer.clientX, pointer.clientY, hit);
+        target === null
+          ? null
+          : target.resolve(pointer.clientX, pointer.clientY, hit);
       return target !== null && slot !== null ? { target, slot } : null;
     },
     onStart: () => options.onStart?.(),
@@ -202,7 +216,10 @@ export function beginOgeSchedulerExternalDrag(
     },
     onEnd: (result) => {
       clear();
-      options.onEnd?.({ dropped: dropped && result.dropped, cancelled: result.cancelled });
+      options.onEnd?.({
+        dropped: dropped && result.dropped,
+        cancelled: result.cancelled,
+      });
     },
   });
 }
