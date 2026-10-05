@@ -13,6 +13,7 @@ import { SNIPPET } from './virtual-scroll-snippets';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tree List"
       title="Virtual Scrolling"
       [chips]="['virtualScroll', '100k nodes']"
     >

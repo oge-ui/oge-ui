@@ -12,6 +12,7 @@ import {
   type OgeCalendarRange,
   type OgeDateRangePreset,
 } from '@oge-ui/inputs';
+import { CodeBlock } from '../../shared/code-block';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
@@ -50,6 +51,7 @@ const SECTIONS = [
     OgeCalendar,
     OgeDateBox,
     OgeDateRangeBox,
+    CodeBlock,
     DemoCard,
     DocHeader,
     ReactInputsDateBoxDemos,
@@ -169,6 +171,7 @@ const SECTIONS = [
             <oge-date-range-box
               label="Maintenance window"
               type="datetime"
+              width="min(100%, 360px)"
               [interval]="30"
               [showClearButton]="true"
               [(value)]="maintenance"
@@ -311,7 +314,7 @@ const SECTIONS = [
       <code>Date</code>, <code>yyyy-MM-dd</code>
       strings round-trip as strings.
     </p>
-    <pre><code>{{ gridSnippet }}</code></pre>
+    <app-code-block [code]="gridSnippet" language="ts" />
 
     <h3 id="keyboard-accessibility" class="scroll-mt-20">
       Keyboard &amp; accessibility

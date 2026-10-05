@@ -115,6 +115,7 @@ const [maintenance, setMaintenance] = useState<OgeCalendarRange>([
     <OgeDateRangeBox
       label="Maintenance window"
       type="datetime"
+      width="min(100%, 360px)"
       interval={30}
       showClearButton
       value={maintenance}

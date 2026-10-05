@@ -21,13 +21,14 @@
       On doc pages the brand lives at the top of the full-height sidebar, so
       the header carries it only on the landing page — and on small screens,
       where the sidebar collapses into the flow and no longer leads the page.
+      On phones only the mark fits beside the framework switch and the icons.
     -->
     <a
       routerLink="/"
       [class]="
         isHome()
           ? 'group flex items-center gap-2.5 pr-3'
-          : 'group flex items-center gap-2.5 pr-3 md:hidden'
+          : 'group flex items-center gap-2.5 pr-3 md:hidden max-sm:[&>span]:hidden'
       "
     >
       <img src="favicon-192.png" alt="OGE logo" class="h-8 w-8" />
@@ -53,7 +54,7 @@
         >Components</a
       >
     </nav>
-    <div class="flex items-center gap-2 max-md:ml-auto">
+    <div class="flex items-center gap-2 max-md:ml-auto max-sm:gap-1">
       <!-- docs version: this site is the latest release; archives are their own sites -->
       <app-version-menu class="max-sm:hidden" />
       @if (!isHome()) {

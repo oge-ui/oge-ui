@@ -19,6 +19,7 @@ import { SNIPPET } from './overview-snippets';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tree List"
       title="Tree List"
       [chips]="['keyExpr', 'parentIdExpr', 'autoExpandAll', 'expandedRowKeys']"
     >
