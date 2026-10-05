@@ -165,9 +165,9 @@ describe('<oge-kanban> filtering, sorting, selection, history, transfers', () =>
     ).toContain('3');
     fixture.componentInstance.filter.set((c) => c.key === 3);
     await settle(fixture);
-    expect(left.querySelector('.oge-kanban-empty-title')?.textContent).toContain(
-      'No cards match the filters',
-    );
+    expect(
+      left.querySelector('.oge-kanban-empty-title')?.textContent,
+    ).toContain('No cards match the filters');
     left.querySelector<HTMLButtonElement>('.oge-kanban-filters-clear')!.click();
     await settle(fixture);
     expect(titles('todo')).toEqual(['Cherry']);

@@ -448,6 +448,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Kanban board by OGE UI: columns, swimlanes and WIP limits, virtualized cards, drag and drop with Escape-cancel, keyboard moving and an edit dialog.',
   ],
   [
+    '/components/kanban/filtering',
+    'Angular Kanban filtering and sorting by OGE UI: tag, assignee and priority filter chips, predicate filters, per-column sort menus and CSV or Excel card export.',
+  ],
+  [
+    '/components/kanban/multi-select',
+    'Angular Kanban multi-select by OGE UI: Ctrl and Shift selection, multi-card drag, drag between boards, swimlane WIP limits, quick add, checklists and undo.',
+  ],
+  [
     '/components/kanban/api',
     'Angular Kanban API reference: every input, output, method and type of oge-kanban — card field mapping, columns, swimlanes, templates and config provider.',
   ],

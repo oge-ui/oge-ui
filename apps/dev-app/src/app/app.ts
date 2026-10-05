@@ -386,6 +386,16 @@ export class App {
       items: [
         { path: '/components/kanban', label: 'Overview', icon: 'columns' },
         {
+          path: '/components/kanban/filtering',
+          label: 'Filtering & sorting',
+          icon: 'filter',
+        },
+        {
+          path: '/components/kanban/multi-select',
+          label: 'Multi-select & cross-board',
+          icon: 'layers',
+        },
+        {
           path: '/components/kanban/api',
           label: 'API Reference',
           icon: 'code',

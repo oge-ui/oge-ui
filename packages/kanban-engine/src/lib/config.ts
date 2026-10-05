@@ -315,8 +315,8 @@ export const OGE_DEFAULT_KANBAN_MESSAGES: OgeKanbanMessages = {
   },
 };
 
-const DEFAULT_EXPORT_MESSAGES = OGE_DEFAULT_KANBAN_MESSAGES
-  .export as OgeKanbanExportMessages;
+const DEFAULT_EXPORT_MESSAGES =
+  OGE_DEFAULT_KANBAN_MESSAGES.export as OgeKanbanExportMessages;
 
 function stripUndefined<T extends object>(value: T | undefined): Partial<T> {
   const result: Partial<T> = {};

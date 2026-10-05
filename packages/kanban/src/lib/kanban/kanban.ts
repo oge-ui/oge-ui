@@ -722,7 +722,8 @@ interface KanbanMenuState {
                               : null
                           "
                           aria-hidden="true"
-                          >{{ cw.count }}<span class="oge-kanban-count-limit"
+                          >{{ cw.count
+                          }}<span class="oge-kanban-count-limit"
                             >/{{ cw.limit }}</span
                           ></span
                         >
@@ -1698,7 +1699,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     const choices = this.filterChoices();
     const toolbar = this.msg().toolbar;
     return [
-      { kind: 'tags' as const, label: toolbar.tagsFilter, values: choices.tags },
+      {
+        kind: 'tags' as const,
+        label: toolbar.tagsFilter,
+        values: choices.tags,
+      },
       {
         kind: 'assignees' as const,
         label: toolbar.assigneesFilter,
@@ -1716,7 +1721,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     () => !isKanbanFilterEmpty(this.filterValue()),
   );
 
-  protected isChipActive(kind: OgeKanbanFilterChipKind, value: string): boolean {
+  protected isChipActive(
+    kind: OgeKanbanFilterChipKind,
+    value: string,
+  ): boolean {
     return isKanbanFilterChipActive(this.filterValue(), kind, value);
   }
 
@@ -2687,7 +2695,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   /** The header's column-menu button: the same menu, anchored under it. */
-  protected onColumnMenuButton(event: MouseEvent, column: KanbanColumnDef): void {
+  protected onColumnMenuButton(
+    event: MouseEvent,
+    column: KanbanColumnDef,
+  ): void {
     const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
     const hostRect = this.hostEl.nativeElement.getBoundingClientRect();
@@ -2740,7 +2751,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   /** The column menu's sort entries write `columnSort` (two-way). */
-  protected menuSort(field: OgeKanbanSortField | null, direction?: 'asc' | 'desc'): void {
+  protected menuSort(
+    field: OgeKanbanSortField | null,
+    direction?: 'asc' | 'desc',
+  ): void {
     const state = untracked(this.menu);
     this.closeMenu();
     const column = state?.column;
@@ -2749,7 +2763,12 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     const nextField = field ?? active.field ?? 'order';
     const nextDirection = direction ?? active.direction;
     this.columnSort.set(
-      setKanbanColumnSort(this.columnSort(), column.key, nextField, nextDirection),
+      setKanbanColumnSort(
+        this.columnSort(),
+        column.key,
+        nextField,
+        nextDirection,
+      ),
     );
     this.announce(this.msg().announcements.sorted, {
       column: this.columnTitle(column),
@@ -2764,7 +2783,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     if (column == null) return;
     const keys: unknown[] = [];
     for (const lane of this.lanes()) {
-      const cell = lane.columns.find((entry) => entry.column.key === column.key);
+      const cell = lane.columns.find(
+        (entry) => entry.column.key === column.key,
+      );
       for (const card of cell?.cards ?? []) keys.push(card.key);
     }
     this.selectCards(keys);
@@ -2787,7 +2808,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       peer,
       carried.map((entry) => entry.key),
       null,
-      { lane: card.swimlane, column: column.key, index: Number.MAX_SAFE_INTEGER },
+      {
+        lane: card.swimlane,
+        column: column.key,
+        index: Number.MAX_SAFE_INTEGER,
+      },
     );
   }
 
@@ -3063,13 +3088,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
             break;
           }
           case 'move':
-            this.moveOne(
-              op.key,
-              op.to.column,
-              op.to.index,
-              op.to.swimlane,
-              { announce: false, focus: true, force: true },
-            );
+            this.moveOne(op.key, op.to.column, op.to.index, op.to.swimlane, {
+              announce: false,
+              focus: true,
+              force: true,
+            });
             break;
         }
       }
@@ -3110,10 +3133,17 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     if (event.cancel) return;
     const store = [...this.store()];
     const at =
-      index === undefined ? store.length : Math.min(Math.max(index, 0), store.length);
+      index === undefined
+        ? store.length
+        : Math.min(Math.max(index, 0), store.length);
     store.splice(at, 0, item);
     this.store.set(store);
-    this.record({ kind: 'insert', key: this.fields().key(item), item, index: at });
+    this.record({
+      kind: 'insert',
+      key: this.fields().key(item),
+      item,
+      index: at,
+    });
     this.cardAdded.emit({ card: item, column, swimlane });
     this.announce(this.msg().announcements.cardCreated, {
       title: String(this.fields().title(item) ?? ''),
@@ -3164,7 +3194,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.bumpHistory();
     if (deleted > 1) {
       this.announcement.set(
-        this.countText(this.msg().announcements.cardsDeleted, { count: deleted }),
+        this.countText(this.msg().announcements.cardsDeleted, {
+          count: deleted,
+        }),
       );
     }
   }
@@ -3245,7 +3277,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
           .find((entry) => entry.key === lane)
           ?.columns.find((entry) => entry.column.key === toColumn);
         const index =
-          cell === undefined ? undefined : kanbanAnchorIndex(cell.cards, anchorFor(lane), key);
+          cell === undefined
+            ? undefined
+            : kanbanAnchorIndex(cell.cards, anchorFor(lane), key);
         if (
           this.moveOne(key, toColumn, index, lane, {
             announce: false,
@@ -3258,7 +3292,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       }
     });
     this.bumpHistory();
-    const column = this.visibleColumns().find((entry) => entry.key === toColumn);
+    const column = this.visibleColumns().find(
+      (entry) => entry.key === toColumn,
+    );
     if (moved > 0) {
       this.announcement.set(
         this.countText(this.msg().announcements.cardsMoved, {
@@ -3378,7 +3414,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     const peer = this.peerBoards().find((entry) => entry.id === toBoard);
     if (peer === undefined) return false;
     const column =
-      toColumn ?? peer.columns().find((entry) => entry.allowDrop !== false)?.key;
+      toColumn ??
+      peer.columns().find((entry) => entry.allowDrop !== false)?.key;
     if (column === undefined) return false;
     return this.transferTo(peer, keys, null, {
       lane: toSwimlane ?? null,
@@ -3497,13 +3534,16 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.incomingGeometry = null;
     if (this.readOnly()) return null;
     const target = transfer.target;
-    const column = this.visibleColumns().find((entry) => entry.key === target.column);
+    const column = this.visibleColumns().find(
+      (entry) => entry.key === target.column,
+    );
     if (column === undefined || column.allowDrop === false) return null;
     const lane = this.hasSwimlanes() ? target.lane : null;
     const cellCards =
       this.lanes()
         .find((entry) => entry.key === lane)
-        ?.columns.find((entry) => entry.column.key === target.column)?.cards ?? [];
+        ?.columns.find((entry) => entry.column.key === target.column)?.cards ??
+      [];
     const toIndex = Math.min(target.index, cellCards.length);
     const event: OgeKanbanCardTransferringEvent<T> = {
       cards: transfer.items,
@@ -3522,7 +3562,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     const names = fields.fieldNames;
     const landed = transfer.items.map((item) => {
       let next = item;
-      if (names.column !== null) next = withFieldValue(next, names.column, target.column);
+      if (names.column !== null)
+        next = withFieldValue(next, names.column, target.column);
       if (lane !== null && names.swimlane !== null) {
         next = withFieldValue(next, names.swimlane, lane);
       }
@@ -3541,7 +3582,13 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
           ?.columns.find((entry) => entry.column.key === target.column);
         if (cell === undefined) continue;
         const index = kanbanAnchorIndex(cell.cards, anchor, key);
-        const plan = planKanbanMove(this.lanes(), key, target.column, index, lane);
+        const plan = planKanbanMove(
+          this.lanes(),
+          key,
+          target.column,
+          index,
+          lane,
+        );
         if (plan === null) continue;
         this.store.set(
           commitKanbanMove(this.store(), plan, fields, {
@@ -3678,7 +3725,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     });
   }
 
-  protected onTitleEditKeydown(event: KeyboardEvent, card: KanbanCard<T>): void {
+  protected onTitleEditKeydown(
+    event: KeyboardEvent,
+    card: KanbanCard<T>,
+  ): void {
     event.stopPropagation();
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -3715,8 +3765,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
         : this.lanes()[position.laneIndex].columns[position.columnIndex].cards[
             position.cardIndex
           ];
-    const card =
-      item ?? this.allCards().find((entry) => entry.key === key);
+    const card = item ?? this.allCards().find((entry) => entry.key === key);
     if (card === undefined) return;
     const updated = kanbanChecklistToggle(card, index, this.fields());
     if (updated !== null) this.updateItem(card.source, updated);
@@ -3732,7 +3781,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     const lanes = options.visibleOnly
       ? this.lanes()
       : sortKanbanLanes(
-          groupBoard(this.allCards(), this.visibleColumns(), this.hasSwimlanes()),
+          groupBoard(
+            this.allCards(),
+            this.visibleColumns(),
+            this.hasSwimlanes(),
+          ),
           this.columnSort(),
           this.effectiveLocale(),
           this.priorityOrder(),

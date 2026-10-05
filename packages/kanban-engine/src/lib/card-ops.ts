@@ -16,7 +16,9 @@ import type { OgeKanbanBoardMessages } from './config';
 import { newKanbanItemBase } from './editor';
 
 /** Whether inline title editing can write the title back. */
-export function canEditKanbanTitle<T>(fields: ResolvedKanbanFields<T>): boolean {
+export function canEditKanbanTitle<T>(
+  fields: ResolvedKanbanFields<T>,
+): boolean {
   return fields.fieldNames.title !== null;
 }
 

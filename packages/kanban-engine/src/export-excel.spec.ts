@@ -53,7 +53,8 @@ describe('buildKanbanExcelWorkbook', () => {
       { ...data, hasSwimlanes: true },
       { sheetName: 'Board' },
     );
-    const header = workbook.getWorksheet('Board')?.getRow(1).values as unknown[];
+    const header = workbook.getWorksheet('Board')?.getRow(1)
+      .values as unknown[];
     expect(header).toContain('Swimlane');
   });
 });

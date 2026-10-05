@@ -55,7 +55,9 @@ export function buildKanbanExportRows<T>(
   const rows: OgeKanbanExportRow[] = [];
   for (const column of columns) {
     for (const lane of lanes) {
-      const cell = lane.columns.find((entry) => entry.column.key === column.key);
+      const cell = lane.columns.find(
+        (entry) => entry.column.key === column.key,
+      );
       for (const card of cell?.cards ?? []) {
         rows.push(toRow(card, column));
       }
@@ -64,7 +66,10 @@ export function buildKanbanExportRows<T>(
   return rows;
 }
 
-function toRow<T>(card: KanbanCard<T>, column: KanbanColumnDef): OgeKanbanExportRow {
+function toRow<T>(
+  card: KanbanCard<T>,
+  column: KanbanColumnDef,
+): OgeKanbanExportRow {
   const progress = kanbanChecklistProgress(card.checklist);
   return {
     key: card.key,

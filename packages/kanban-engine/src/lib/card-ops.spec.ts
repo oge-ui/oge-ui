@@ -78,13 +78,16 @@ describe('kanban checklists', () => {
       ],
       fields,
     );
-    expect(kanbanChecklistProgress(card.checklist)).toEqual({ done: 1, total: 2 });
+    expect(kanbanChecklistProgress(card.checklist)).toEqual({
+      done: 1,
+      total: 2,
+    });
     expect(kanbanChecklistLabel(messages.board, card.checklist, 'en')).toBe(
       '1 of 2 checklist items done',
     );
-    expect(kanbanChecklistLabel(messages.board, [{ text: 'a', done: false }], 'en')).toBe(
-      '0 of 1 checklist item done',
-    );
+    expect(
+      kanbanChecklistLabel(messages.board, [{ text: 'a', done: false }], 'en'),
+    ).toBe('0 of 1 checklist item done');
   });
 
   it('toggles an entry keeping its shape', () => {
@@ -133,20 +136,28 @@ describe('kanban inline edits', () => {
   });
 
   it('builds a quick-add item into the column and lane', () => {
-    expect(kanbanQuickAddItem<Task>(' Hi ', 'doing', 'Web', fields, 3)).toEqual({
-      id: 'oge-card-3',
-      title: 'Hi',
-      status: 'doing',
-      lane: 'Web',
-    });
+    expect(kanbanQuickAddItem<Task>(' Hi ', 'doing', 'Web', fields, 3)).toEqual(
+      {
+        id: 'oge-card-3',
+        title: 'Hi',
+        status: 'doing',
+        lane: 'Web',
+      },
+    );
     expect(kanbanQuickAddItem<Task>(' ', 'doing', null, fields, 4)).toBeNull();
   });
 
   it('formats ICU counts', () => {
-    expect(formatKanbanCount(messages.announcements.cardsMoved, { count: 3, column: 'Done' }, 'en')).toBe(
-      '3 cards moved to Done',
-    );
-    expect(formatKanbanCount(messages.board.dragCount, { count: 1 }, 'en')).toBe('1 card');
+    expect(
+      formatKanbanCount(
+        messages.announcements.cardsMoved,
+        { count: 3, column: 'Done' },
+        'en',
+      ),
+    ).toBe('3 cards moved to Done');
+    expect(
+      formatKanbanCount(messages.board.dragCount, { count: 1 }, 'en'),
+    ).toBe('1 card');
   });
 });
 

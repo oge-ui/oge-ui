@@ -15,9 +15,9 @@ const update = (n: number): KanbanHistoryOp<{ v: number }> => ({
 
 describe('kanban history', () => {
   it('inverts every operation kind', () => {
-    expect(invertKanbanOp({ kind: 'insert', key: 1, item: 'x', index: 2 })).toEqual(
-      { kind: 'remove', key: 1, item: 'x', index: 2 },
-    );
+    expect(
+      invertKanbanOp({ kind: 'insert', key: 1, item: 'x', index: 2 }),
+    ).toEqual({ kind: 'remove', key: 1, item: 'x', index: 2 });
     expect(invertKanbanOp(update(1))).toEqual({
       kind: 'update',
       key: 1,
@@ -86,9 +86,9 @@ describe('kanban history', () => {
       ...mods,
     });
     expect(kanbanHistoryShortcut(key('z', { ctrlKey: true }))).toBe('undo');
-    expect(kanbanHistoryShortcut(key('Z', { ctrlKey: true, shiftKey: true }))).toBe(
-      'redo',
-    );
+    expect(
+      kanbanHistoryShortcut(key('Z', { ctrlKey: true, shiftKey: true })),
+    ).toBe('redo');
     expect(kanbanHistoryShortcut(key('y', { metaKey: true }))).toBe('redo');
     expect(kanbanHistoryShortcut(key('z'))).toBeNull();
   });
@@ -99,7 +99,9 @@ describe('kanban history', () => {
     checkbox.type = 'checkbox';
     expect(isKanbanEditingTarget(input)).toBe(true);
     expect(isKanbanEditingTarget(checkbox)).toBe(false);
-    expect(isKanbanEditingTarget(document.createElement('textarea'))).toBe(true);
+    expect(isKanbanEditingTarget(document.createElement('textarea'))).toBe(
+      true,
+    );
     expect(isKanbanEditingTarget(document.createElement('div'))).toBe(false);
     expect(isKanbanEditingTarget(null)).toBe(false);
   });

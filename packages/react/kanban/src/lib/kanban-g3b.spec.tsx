@@ -175,7 +175,9 @@ describe('<OgeKanban> filtering, sorting, selection, history, transfers', () => 
       board('left').querySelector('.oge-kanban-empty-title')?.textContent,
     ).toBe('No cards match the filters');
     fireEvent.click(
-      board('left').querySelector<HTMLButtonElement>('.oge-kanban-filters-clear')!,
+      board('left').querySelector<HTMLButtonElement>(
+        '.oge-kanban-filters-clear',
+      )!,
     );
     expect(titles('todo')).toEqual(['Cherry']);
   });
@@ -247,7 +249,9 @@ describe('<OgeKanban> filtering, sorting, selection, history, transfers', () => 
       board('left').querySelector('.oge-kanban-quick-add-input')!,
       { key: 'Escape' },
     );
-    expect(board('left').querySelector('.oge-kanban-quick-add-input')).toBeNull();
+    expect(
+      board('left').querySelector('.oge-kanban-quick-add-input'),
+    ).toBeNull();
 
     fireEvent.keyDown(card(3), { key: 'F2' });
     const title = board('left').querySelector<HTMLInputElement>(

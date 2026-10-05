@@ -1,8 +1,4 @@
-import {
-  groupBoard,
-  normalizeCards,
-  resolveKanbanFields,
-} from './board-model';
+import { groupBoard, normalizeCards, resolveKanbanFields } from './board-model';
 import {
   kanbanAnchorIndex,
   kanbanBoardOrder,
@@ -58,7 +54,13 @@ describe('kanban selection', () => {
       anchor: 3,
     });
     expect(
-      kanbanSelectCard(lanes, start, 3, { toggle: true, range: false }, 'single'),
+      kanbanSelectCard(
+        lanes,
+        start,
+        3,
+        { toggle: true, range: false },
+        'single',
+      ),
     ).toEqual({ keys: [3], anchor: 3 });
   });
 
@@ -136,17 +138,23 @@ describe('kanban selection', () => {
       altKey: false,
       ...mods,
     });
-    expect(kanbanSelectionShortcut(key('a', { ctrlKey: true }), 'multiple', 1)).toBe(
-      'select-cell',
-    );
-    expect(kanbanSelectionShortcut(key(' ', { ctrlKey: true }), 'multiple', 1)).toBe(
-      'toggle',
-    );
     expect(
-      kanbanSelectionShortcut(key('ArrowDown', { shiftKey: true }), 'multiple', 1),
+      kanbanSelectionShortcut(key('a', { ctrlKey: true }), 'multiple', 1),
+    ).toBe('select-cell');
+    expect(
+      kanbanSelectionShortcut(key(' ', { ctrlKey: true }), 'multiple', 1),
+    ).toBe('toggle');
+    expect(
+      kanbanSelectionShortcut(
+        key('ArrowDown', { shiftKey: true }),
+        'multiple',
+        1,
+      ),
     ).toBe('extend-down');
     expect(kanbanSelectionShortcut(key('Escape'), 'multiple', 2)).toBe('clear');
     expect(kanbanSelectionShortcut(key('Escape'), 'multiple', 1)).toBeNull();
-    expect(kanbanSelectionShortcut(key('a', { ctrlKey: true }), 'single', 1)).toBeNull();
+    expect(
+      kanbanSelectionShortcut(key('a', { ctrlKey: true }), 'single', 1),
+    ).toBeNull();
   });
 });

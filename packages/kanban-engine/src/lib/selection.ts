@@ -72,8 +72,7 @@ export function kanbanSelectCard<T>(
       anchorPos.laneIndex === keyPos.laneIndex &&
       anchorPos.columnIndex === keyPos.columnIndex
     ) {
-      const cards =
-        lanes[keyPos.laneIndex].columns[keyPos.columnIndex].cards;
+      const cards = lanes[keyPos.laneIndex].columns[keyPos.columnIndex].cards;
       const from = Math.min(anchorPos.cardIndex, keyPos.cardIndex);
       const to = Math.max(anchorPos.cardIndex, keyPos.cardIndex);
       const range = cards.slice(from, to + 1).map((card) => card.key);
@@ -100,8 +99,7 @@ export function kanbanSelectCell<T>(
 ): KanbanSelection | null {
   const position = findKanbanCard(lanes, key);
   if (position === null) return null;
-  const cards =
-    lanes[position.laneIndex].columns[position.columnIndex].cards;
+  const cards = lanes[position.laneIndex].columns[position.columnIndex].cards;
   return { keys: cards.map((card) => card.key), anchor: key };
 }
 
@@ -162,11 +160,7 @@ export function kanbanAnchorIndex<T>(
 
 /** Keyboard selection shortcuts a focused card understands. */
 export type KanbanSelectionShortcut =
-  | 'select-cell'
-  | 'toggle'
-  | 'extend-up'
-  | 'extend-down'
-  | 'clear';
+  'select-cell' | 'toggle' | 'extend-up' | 'extend-down' | 'clear';
 
 /** Decides a selection shortcut from a card keydown, or `null`. */
 export function kanbanSelectionShortcut(

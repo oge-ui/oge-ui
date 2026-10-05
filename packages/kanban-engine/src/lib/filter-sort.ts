@@ -32,8 +32,7 @@ export interface OgeKanbanFilterExpression {
 
 /** The board's programmatic filter: a card predicate or an expression. */
 export type OgeKanbanFilter<T = unknown> =
-  | ((card: KanbanCard<T>) => boolean)
-  | OgeKanbanFilterExpression;
+  ((card: KanbanCard<T>) => boolean) | OgeKanbanFilterExpression;
 
 /** The chip groups of the filter bar. */
 export type OgeKanbanFilterChipKind = 'tags' | 'assignees' | 'priorities';
@@ -249,7 +248,8 @@ export function kanbanSortComparer<T>(
   switch (spec.field) {
     case 'title':
       return (a, b) =>
-        sign * a.title.localeCompare(b.title, locale, { sensitivity: 'base' }) ||
+        sign *
+          a.title.localeCompare(b.title, locale, { sensitivity: 'base' }) ||
         compareOrder(a, b);
     case 'priority':
       return (a, b) => {

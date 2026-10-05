@@ -19969,7 +19969,12 @@ Docs: https://www.ogeui.com/components/kanban
 `@oge-ui/kanban`
 
 - values: `OGE_DEFAULT_KANBAN_CONFIG`, `OGE_DEFAULT_KANBAN_MESSAGES`, `OGE_KANBAN_CONFIG`, `OgeKanban`, `OgeKanbanCardTemplate`, `OgeKanbanColumnHeaderTemplate`, `provideOgeKanbanConfig`
-- types: `OgeKanbanAnnouncementMessages`, `OgeKanbanBoardMessages`, `OgeKanbanCard`, `OgeKanbanCardAddedEvent`, `OgeKanbanCardAddingEvent`, `OgeKanbanCardDeletedEvent`, `OgeKanbanCardDeletingEvent`, `OgeKanbanCardEvent`, `OgeKanbanCardMovedEvent`, `OgeKanbanCardMovingEvent`, `OgeKanbanCardTemplateContext`, `OgeKanbanCardUpdatedEvent`, `OgeKanbanCardUpdatingEvent`, `OgeKanbanColumn`, `OgeKanbanColumnAddedEvent`, `OgeKanbanColumnAddingEvent`, `OgeKanbanColumnHeaderTemplateContext`, `OgeKanbanColumnReorderedEvent`, `OgeKanbanConfig`, `OgeKanbanConfigInput`, `OgeKanbanDialogMessages`, `OgeKanbanEditDialogShowingEvent`, `OgeKanbanEditorModel`, `OgeKanbanFieldExpr`, `OgeKanbanMenuMessages`, `OgeKanbanMessages`, `OgeKanbanToolbarMessages`
+- types: `OgeKanbanAnnouncementMessages`, `OgeKanbanBoardMessages`, `OgeKanbanCard`, `OgeKanbanCardAddedEvent`, `OgeKanbanCardAddingEvent`, `OgeKanbanCardDeletedEvent`, `OgeKanbanCardDeletingEvent`, `OgeKanbanCardEvent`, `OgeKanbanCardMovedEvent`, `OgeKanbanCardMovingEvent`, `OgeKanbanCardTemplateContext`, `OgeKanbanCardTransferredEvent`, `OgeKanbanCardTransferringEvent`, `OgeKanbanCardUpdatedEvent`, `OgeKanbanCardUpdatingEvent`, `OgeKanbanColumn`, `OgeKanbanColumnAddedEvent`, `OgeKanbanColumnAddingEvent`, `OgeKanbanColumnHeaderTemplateContext`, `OgeKanbanColumnReorderedEvent`, `OgeKanbanColumnSort`, `OgeKanbanColumnSortSpec`, `OgeKanbanConfig`, `OgeKanbanConfigInput`, `OgeKanbanDialogMessages`, `OgeKanbanEditDialogShowingEvent`, `OgeKanbanEditorModel`, `OgeKanbanExportData`, `OgeKanbanExportMessages`, `OgeKanbanExportOptions`, `OgeKanbanExportRow`, `OgeKanbanFieldExpr`, `OgeKanbanFilter`, `OgeKanbanFilterExpression`, `OgeKanbanMenuMessages`, `OgeKanbanMessages`, `OgeKanbanSelectionMode`, `OgeKanbanSortField`, `OgeKanbanToolbarMessages`
+
+`@oge-ui/kanban/export-excel`
+
+- values: `buildKanbanExcelWorkbook`, `exportKanbanToExcel`
+- types: `OgeKanbanExcelExportOptions`
 
 ### OgeKanban — `<oge-kanban>`
 
@@ -19994,7 +19999,24 @@ _State (two-way)_
 | --- | --- | --- | --- |
 | `collapsedColumns / collapsedSwimlanes` | `model<readonly string[]>` | `[]` | Collapsed column keys (slim vertical pills) and collapsed swimlane keys. |
 | `columnOrder` | `model<readonly string[]>` | `[]` | Persisted column key order (empty = declared order); written by header drags when `allowColumnReordering` is on. |
-| `selectedCardKey` | `model<unknown>` | `null` | The selected card's key — single selection. |
+| `selectedCardKey` | `model<unknown>` | `null` | The primary (focused / anchor) selected card's key. With `selectionMode: 'multiple'` the full set is `selectedCardKeys`. |
+| `selectedCardKeys` | `model<readonly unknown[]>` | `[]` | Every selected card key, in board order. Ctrl/⌘-click toggles, Shift-click selects the range in the anchor's column, Ctrl+A on a card selects its column (cell), Ctrl+Space toggles, Shift+↑/↓ extends and Escape collapses to the focused card. Selected cards travel together in a drag (the ghost shows the count), Ctrl+←/→ and Delete. |
+| `filterValue` | `model<OgeKanbanFilterExpression>` | `{}` | The filter chip bar's state — active `tags` / `assignees` / `priorities`. Bind it two-way to persist or preset the chips; it ANDs with `filter` and the toolbar search. |
+| `columnSort` | `model<OgeKanbanColumnSort<T>>` | `{}` | Per-column card sort: a column key (or `'*'` for every column) mapped to `{ field: 'order' \| 'title' \| 'priority' \| 'dueDate', direction? }` or a comparator over normalized cards. The column menu (the header's sort button or a right-click) writes it. Unset columns keep `orderExpr` / array order; a drop into a sorted column lands where the sort puts it. |
+
+_Filtering, selection & transfers_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `filter` | `OgeKanbanFilter<T> \| undefined` | `undefined` | Programmatic card filter: a predicate over the normalized card, or an `OgeKanbanFilterExpression` (`{ tags?, assignees?, priorities?, columns?, swimlanes?, text?, overdue? }` — values inside a field are alternatives, fields combine with AND). Filters only what is shown: WIP counts, exports (unless `visibleOnly`) and the chips stay on the full data. |
+| `showFilterBar` | `boolean` | `false` | Shows the filter chip bar under the toolbar: one toggle chip (`aria-pressed`) per distinct tag, assignee and priority, plus a reset button. |
+| `priorityOrder` | `readonly string[] \| undefined` | `undefined` | Priority ranking for `columnSort` by priority, most important first (case-insensitive). Unset: `urgent, critical, highest, high, medium, normal, low, lowest`; numeric priorities compare as numbers. |
+| `selectionMode` | `'single' \| 'multiple'` | `'multiple'` | `'multiple'` adds Ctrl/Shift-click, the selection shortcuts and multi-card drag; `'single'` keeps one selected card. |
+| `dragGroup / boardId` | `string \| undefined` | `undefined` | Boards sharing a `dragGroup` exchange cards: drag a card (or a selection) onto the other board, or use the card menu's “Move to …” entries — the keyboard and single-pointer twin. `boardId` names the board in the transfer events and the other boards' menus (a generated id otherwise). |
+| `swimlaneWipLimits` | `Readonly<Record<string, number>> \| undefined` | `undefined` | Per-lane total WIP limits keyed by swimlane value — the lane header's count turns danger when exceeded. Per-cell limits are `OgeKanbanColumn.swimlaneWipLimit` (the column inside each lane). |
+| `checklistExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Checklist / sub-task field: an array of `{ text, done }` (`title` / `checked` / `completed` and plain strings are read too). Cards show a progress badge with an ICU-plural screen-reader text; `toggleChecklistItem()` writes back in the entry's own shape. |
+| `quickAdd / inlineTitleEditing` | `boolean` | `false / false` | `quickAdd`: the column footer's add button opens an inline title composer (Enter adds and keeps it open, Escape closes) instead of the dialog. `inlineTitleEditing`: double-clicking a card title edits it in place; F2 on a card always does (both through `cardAdding` / `cardUpdating`). |
+| `undoLimit` | `number` | `50` | Undo/redo depth — Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) and the toolbar buttons. Undo replays the inverse through the cancelable pipelines, so the `-ing` / `-ed` events fire as for the original edit; a multi-card move or bulk delete is one step. Cross-board transfers are not recorded (they span two boards). `0` disables history and hides the buttons. |
 
 _Behavior_
 
@@ -20024,6 +20046,15 @@ _Methods_
 | `editCard(card) / openNewCard(column, swimlane)` | `(…) => void` | Opens the built-in dialog for an existing card / prefilled for a new card, through the `cardEditDialogShowing` hook. |
 | `closeDialog()` | `() => void` | Closes the edit dialog without saving; fires `cardEditDialogHidden`. |
 | `collapseAllColumns() / expandAllColumns()` | `() => void` | The toolbar buttons, callable from code. |
+| `undo() / redo() / canUndo() / canRedo()` | `() => void / () => boolean` | History: revert / re-apply the last step through the cancelable pipelines, and whether a step exists. |
+| `selectCards(keys) / clearSelection()` | `(keys: readonly unknown[]) => void / () => void` | Programmatic selection (board order applied; writes `selectedCardKeys`). |
+| `moveCards(keys, toColumn, toIndex?, toSwimlane?)` | `(keys: readonly unknown[], toColumn: string, toIndex?: number, toSwimlane?: string \| null) => void` | Moves several cards into one cell as one undoable step, inserted consecutively (board order kept) before the card at `toIndex`; without `toSwimlane` every card stays in its own lane. Each card runs `cardMoving` / `cardMoved`. |
+| `deleteCards(items)` | `(items: readonly T[]) => void` | Bulk delete as one undoable step, each item through `cardDeleting`; announced with an ICU plural. |
+| `transferCards(keys, toBoard, toColumn?, toIndex?, toSwimlane?)` | `(…) => boolean` | Sends cards to another mounted board of the same `dragGroup` (default: its first droppable column, appended). Returns whether the target's `cardTransferring` accepted them. |
+| `toggleChecklistItem(key, index)` | `(key: unknown, index: number) => void` | Toggles one checklist entry through `cardUpdating` (needs a field-name `checklistExpr`). |
+| `startTitleEdit(key)` | `(key: unknown) => void` | Opens the inline title editor on a card (what F2 does); Enter or blur commits through `cardUpdating`, Escape cancels. |
+| `clearFilters()` | `() => void` | Resets the chip bar (`filterValue`); the programmatic `filter` input is untouched. |
+| `getExportData(options?) / exportToCsv(fileName?, options?)` | `(options?: OgeKanbanExportOptions) => OgeKanbanExportData / (fileName?: string, options?: OgeKanbanExportOptions) => string` | The cards as export rows in board order (column → lane → cell; `visibleOnly` keeps only what the filters show), and a CSV download built on core's formula-guarded `buildCsv` (returns the text). Excel is the lazy `@oge-ui/kanban/export-excel` entry. |
 
 #### Events
 
@@ -20038,6 +20069,8 @@ _Events_
 | `cardEditDialogHidden` | `void` | The edit dialog closed — saved, cancelled, deleted or `closeDialog()` (Syncfusion `dialogClose` parity). |
 | `columnReordered` | `OgeKanbanColumnReorderedEvent` | A header drag committed a new order: `{ column, fromIndex, toIndex, columnOrder }`. |
 | `columnAdding / columnAdded` | `OgeKanbanColumnAddingEvent / OgeKanbanColumnAddedEvent` | The "+ Add column" composer's cancelable pre-event and its past-tense commit. |
+| `cardTransferring` | `OgeKanbanCardTransferringEvent<T>` | Cancelable, fired by the **target** board before cards from another board of the `dragGroup` land: `{ cards, fromBoard, toBoard, fromColumn, toColumn, fromSwimlane, toSwimlane, toIndex, cancel }`. |
+| `cardTransferred` | `OgeKanbanCardTransferredEvent<T>` | Fired by **both** boards after a transfer landed: the source host removes `sourceCards` from its data, the target host adds `cards` (column / swimlane already written). |
 
 #### Types
 
@@ -20056,11 +20089,445 @@ _Configuration_
 | `OgeKanbanMessages` | `interface` | Every user-facing string: `toolbar`, `menu`, `dialog`, `board` (aria label templates with `{title}`/`{count}`/`{limit}` tokens) and `announcements` (live-region templates). |
 | `OgeKanbanBoardMessages` | `interface` | The `board` block: `boardLabel`, `columnLabel` / `columnLabelWip` (the column list's name), `cardLabel` (`{title}`, `{column}`), `cardRoleDescription` (default `card` — every card's `aria-roledescription`), `editCardAction` / `deleteCardAction` (the quick-action buttons, `{title}`), `boardHint`, `wipExceeded`, `overdue`, the empty-state and add-card/column strings. |
 | `OgeKanbanColumn` | `interface` | `{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }` — the declared column shape. `wipLimit`/`minCount` drive the danger/warning badges; `allowDrag`/`allowDrop`/`transitionColumns` gate interactive moves (programmatic `moveCard` is deliberately not gated). |
-| `OgeKanbanCard<T>` | `interface` | The normalized card handed to templates and events: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`. |
+| `OgeKanbanCard<T>` | `interface` | The normalized card handed to templates and events: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`, `checklist` (`{ text, done }[]`). |
+
+_Filtering, sorting & selection types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeKanbanFilter<T>` | `type` | `((card: OgeKanbanCard<T>) => boolean) \| OgeKanbanFilterExpression` — the `filter` input's shape. |
+| `OgeKanbanFilterExpression` | `interface` | `{ tags?, assignees?, priorities?, columns?, swimlanes?, text?, overdue? }` — any-of inside a field, all-of across fields; also the chip bar's `filterValue`. |
+| `OgeKanbanColumnSort<T>` | `type` | `Readonly<Record<string, OgeKanbanColumnSortSpec<T>>>` keyed by column (`'*'` = every column). |
+| `OgeKanbanColumnSortSpec<T>` | `type` | `{ field: OgeKanbanSortField; direction?: 'asc' \| 'desc' }` or a card comparator (ties fall back to the board order). |
+| `OgeKanbanSortField` | `'order' \| 'title' \| 'priority' \| 'dueDate'` | Sort fields; ascending priority puts the most important first, empty due dates sort last in both directions. |
+| `OgeKanbanSelectionMode` | `'single' \| 'multiple'` | The `selectionMode` union. |
+| `OgeKanbanCardTransferringEvent<T> / OgeKanbanCardTransferredEvent<T>` | `interface` | Cross-board transfer payloads: board ids, from/to column and lane, insertion index; the past-tense one carries both `cards` (as landed) and `sourceCards`. |
+
+_Export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeKanbanExportData` | `interface` | `{ rows, messages, locale, hasSwimlanes }` — what `getExportData()` returns and both exporters read. |
+| `OgeKanbanExportRow` | `interface` | `{ key, title, column, columnKey, swimlane, description, tags, assignees, priority, dueDate, checklistDone, checklistTotal }`. |
+| `OgeKanbanExportOptions` | `interface` | `{ visibleOnly? }` — only the cards the filters and search show. |
+| `OgeKanbanExportMessages` | `interface` | The optional `export` messages block: `sheetName` and every column header (English fallback when a catalog omits it). |
+| `exportKanbanToExcel(board, options?)` | `(board, options?: OgeKanbanExcelExportOptions) => Promise<void>` | The lazy `/export-excel` entry (optional `exceljs` peer): one row per card, due dates as real dates, tags/assignees joined with `;`. Pass the board instance (Angular) or its ref handle (React). |
+| `buildKanbanExcelWorkbook(data, options?)` | `(data: OgeKanbanExportData, options?) => Workbook` | The pure builder behind it, shared by both layers through `@oge-ui/kanban-engine/export-excel`. |
+| `OgeKanbanExcelExportOptions` | `interface` | `{ filename?, sheetName?, visibleOnly? }` (defaults `kanban.xlsx` / the `export.sheetName` message). |
 
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Chips
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+import type { OgeKanbanFilterExpression } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showFilterBar renders one toggle chip per distinct tag, assignee
+         and priority. Inside a group the chips are alternatives (any of),
+         groups combine with AND, and the toolbar search narrows further.
+         [(filterValue)] is the chip state — bind it to persist or preset.
+         WIP counts keep counting the real data. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      tagsExpr="labels"
+      assigneeExpr="owner"
+      priorityExpr="priority"
+      [columns]="columns"
+      [showFilterBar]="true"
+      [(filterValue)]="chips"
+      style="height: 460px"
+    />
+    <p>Active chips: {{ describe(chips()) }}</p>
+  `,
+})
+export class Demo {
+  protected readonly chips = signal<OgeKanbanFilterExpression>({
+    priorities: ['high'],
+  });
+
+  protected readonly columns = [
+    { key: 'todo', title: 'To do' },
+    { key: 'doing', title: 'In progress', wipLimit: 3 },
+    { key: 'done', title: 'Done' },
+  ];
+
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Checkout revamp', labels: ['feature'], owner: 'Ada Lovelace', priority: 'high' },
+    { id: 2, status: 'todo', title: 'Wallet UI polish', labels: ['design'], owner: 'Grace Hopper', priority: 'medium' },
+    { id: 3, status: 'doing', title: 'Fix login crash', labels: ['bug'], owner: 'Ada Lovelace', priority: 'high' },
+    { id: 4, status: 'doing', title: 'Upgrade CI runners', labels: ['infra'], owner: 'Alan Turing', priority: 'low' },
+    { id: 5, status: 'done', title: 'Search relevance', labels: ['feature'], owner: 'Grace Hopper', priority: 'medium' },
+  ];
+
+  protected describe(value: OgeKanbanFilterExpression): string {
+    const parts = [
+      ...(value.tags ?? []),
+      ...(value.assignees ?? []),
+      ...(value.priorities ?? []),
+    ];
+    return parts.length > 0 ? parts.join(', ') : 'none';
+  }
+}
+```
+
+#### Export
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- exportToCsv() downloads a formula-guarded CSV (core's buildCsv) in
+         board order and returns the text; the lazy @oge-ui/kanban/export-excel
+         entry builds an .xlsx through the optional exceljs peer. Pass
+         { visibleOnly: true } to export only what the filters show. -->
+    <button type="button" (click)="board.exportToCsv('cards.csv')">Export CSV</button>
+    <button type="button" (click)="exportExcel(board)">Export Excel</button>
+    <oge-kanban
+      #board
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      tagsExpr="labels"
+      checklistExpr="todo"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Release notes', labels: ['docs'], todo: [{ text: 'Draft', done: true }, { text: 'Review', done: false }] },
+    { id: 2, status: 'doing', title: '=SUM(A1) is exported as text', labels: ['security'] },
+    { id: 3, status: 'done', title: 'Changelog', labels: ['docs'] },
+  ];
+
+  protected async exportExcel<T extends object>(board: OgeKanban<T>): Promise<void> {
+    const { exportKanbanToExcel } = await import('@oge-ui/kanban/export-excel');
+    await exportKanbanToExcel(board, { filename: 'cards.xlsx' });
+  }
+}
+```
+
+#### Predicate
+
+```ts
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+import type { OgeKanbanFilter } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- filter takes a predicate over the normalized card (its source is
+         your item) or a declarative expression ({ tags, assignees, priorities,
+         columns, swimlanes, text, overdue }). It ANDs with the chips and the
+         search. -->
+    <label>
+      <input type="checkbox" [checked]="onlyMine()" (change)="onlyMine.set(!onlyMine())" />
+      Only my cards
+    </label>
+    <label>
+      <input type="checkbox" [checked]="onlyOverdue()" (change)="onlyOverdue.set(!onlyOverdue())" />
+      Only overdue
+    </label>
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      assigneeExpr="owner"
+      dueDateExpr="due"
+      [filter]="filter()"
+      style="height: 400px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly onlyMine = signal(false);
+  protected readonly onlyOverdue = signal(false);
+
+  protected readonly filter = computed<OgeKanbanFilter | undefined>(() => {
+    if (this.onlyOverdue()) return { overdue: true };
+    if (this.onlyMine()) return (card) => card.assignees.includes('Ada Lovelace');
+    return undefined;
+  });
+
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Quarterly report', owner: 'Ada Lovelace', due: new Date(2020, 0, 10) },
+    { id: 2, status: 'todo', title: 'Vendor review', owner: 'Grace Hopper', due: new Date(2099, 5, 1) },
+    { id: 3, status: 'doing', title: 'Hiring plan', owner: 'Ada Lovelace' },
+    { id: 4, status: 'done', title: 'Offsite booking', owner: 'Alan Turing', due: new Date(2020, 3, 2) },
+  ];
+}
+```
+
+#### Sort
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+import type { OgeKanbanColumnSort } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- columnSort sorts each column independently: { field, direction } per
+         column key ('*' = every column) or a comparator. The header's sort
+         button (or a right-click on the header) opens the column menu —
+         Manual order / Title / Priority / Due date and the direction — which
+         writes [(columnSort)]. priorityOrder ranks custom priority values. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      priorityExpr="priority"
+      dueDateExpr="due"
+      [(columnSort)]="sort"
+      [priorityOrder]="['blocker', 'high', 'medium', 'low']"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly sort = signal<OgeKanbanColumnSort>({
+    todo: { field: 'priority' },
+    done: { field: 'dueDate', direction: 'desc' },
+  });
+
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Polish onboarding', priority: 'low', due: new Date(2026, 9, 20) },
+    { id: 2, status: 'todo', title: 'Payment outage', priority: 'blocker', due: new Date(2026, 9, 6) },
+    { id: 3, status: 'todo', title: 'Audit log export', priority: 'medium', due: new Date(2026, 9, 12) },
+    { id: 4, status: 'done', title: 'Sprint 41 review', priority: 'medium', due: new Date(2026, 8, 18) },
+    { id: 5, status: 'done', title: 'Sprint 42 review', priority: 'medium', due: new Date(2026, 9, 2) },
+  ];
+}
+```
+
+#### Cross board
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+import type { OgeKanbanCardTransferredEvent } from '@oge-ui/kanban';
+
+interface Task {
+  id: number;
+  status: string;
+  title: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Boards sharing a dragGroup exchange cards: drag a card (or a
+         selection) onto the other board, or use the card menu's "Move to …"
+         entry — the keyboard and single-pointer twin. The target board fires
+         the cancelable cardTransferring; both fire cardTransferred, so each
+         host updates its own array. -->
+    <div style="display: grid; gap: 12px; grid-template-columns: 1fr 1fr">
+      <oge-kanban
+        [dataSource]="backlog()"
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        dragGroup="planning"
+        boardId="Backlog"
+        [columns]="[{ key: 'todo', title: 'Ideas' }]"
+        (cardTransferred)="onTransferred($event)"
+        style="height: 360px"
+      />
+      <oge-kanban
+        [dataSource]="sprint()"
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        dragGroup="planning"
+        boardId="Sprint"
+        [columns]="[{ key: 'todo', title: 'To do' }, { key: 'doing', title: 'In progress' }]"
+        (cardTransferred)="onTransferred($event)"
+        style="height: 360px"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly backlog = signal<Task[]>([
+    { id: 1, status: 'todo', title: 'Dark mode' },
+    { id: 2, status: 'todo', title: 'CSV import' },
+    { id: 3, status: 'todo', title: 'Audit log' },
+  ]);
+  protected readonly sprint = signal<Task[]>([
+    { id: 10, status: 'todo', title: 'Login rate limits' },
+  ]);
+
+  // both boards report the transfer; each side updates its own array once
+  protected onTransferred(event: OgeKanbanCardTransferredEvent<Task>): void {
+    const moved = new Set(event.sourceCards.map((task) => task.id));
+    const from = event.fromBoard === 'Backlog' ? this.backlog : this.sprint;
+    const to = event.toBoard === 'Backlog' ? this.backlog : this.sprint;
+    if (from().some((task) => moved.has(task.id))) {
+      from.set(from().filter((task) => !moved.has(task.id)));
+      to.set([...to(), ...event.cards]);
+    }
+  }
+}
+```
+
+#### Multi select
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Ctrl/⌘-click toggles, Shift-click selects a range in the column,
+         Ctrl+A on a card selects its column, Ctrl+Space toggles, Shift+↑/↓
+         extends, Escape collapses. Dragging a selected card carries the whole
+         selection (the ghost shows the count); Ctrl+←/→ moves it from the
+         keyboard and Delete removes it — each one undoable step (Ctrl+Z). -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      [(selectedCardKeys)]="selected"
+      style="height: 420px"
+    />
+    <p>Selected: {{ selected().length }}</p>
+  `,
+})
+export class Demo {
+  protected readonly selected = signal<readonly unknown[]>([]);
+
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Ctrl-click me' },
+    { id: 2, status: 'todo', title: '…and me' },
+    { id: 3, status: 'todo', title: 'Shift-click for a range' },
+    { id: 4, status: 'doing', title: 'Drag a selected card' },
+    { id: 5, status: 'done', title: 'Ctrl+Z undoes the last step' },
+  ];
+}
+```
+
+#### Quick add
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- quickAdd turns the column footer's "New card" into an inline
+         composer: type a title, Enter adds it (and keeps the composer open),
+         Escape closes. F2 on a card — or a double-click on its title with
+         inlineTitleEditing — edits the title in place. checklistExpr maps
+         { text, done } sub-tasks to a progress badge; toggleChecklistItem()
+         writes back through cardUpdating. -->
+    <oge-kanban
+      #board
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      checklistExpr="todo"
+      [quickAdd]="true"
+      [inlineTitleEditing]="true"
+      style="height: 420px"
+    />
+    <button type="button" (click)="board.toggleChecklistItem(1, 1)">
+      Tick “Write tests” on the first card
+    </button>
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    {
+      id: 1,
+      status: 'doing',
+      title: 'Payments API',
+      todo: [
+        { text: 'Design endpoints', done: true },
+        { text: 'Write tests', done: false },
+        { text: 'Roll out', done: false },
+      ],
+    },
+    { id: 2, status: 'todo', title: 'Press F2 to rename me' },
+  ];
+}
+```
+
+#### Swimlane wip
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- swimlaneWipLimit caps a column inside every lane (the cell badge
+         turns danger on overflow); swimlaneWipLimits caps a lane's total, keyed
+         by lane value (the lane header's count). Both count real data. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      swimlaneExpr="team"
+      [columns]="[
+        { key: 'todo', title: 'To do' },
+        { key: 'doing', title: 'In progress', swimlaneWipLimit: 1 },
+        { key: 'done', title: 'Done' },
+      ]"
+      [swimlaneWipLimits]="{ Mobile: 2 }"
+      style="height: 520px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, team: 'Web', status: 'doing', title: 'Token migration' },
+    { id: 2, team: 'Web', status: 'todo', title: 'Navigation audit' },
+    { id: 3, team: 'Mobile', status: 'doing', title: 'Push opt-in' },
+    { id: 4, team: 'Mobile', status: 'doing', title: 'Biometric login — over the cell limit' },
+    { id: 5, team: 'Mobile', status: 'todo', title: 'Offline mode — over the lane limit' },
+  ];
+}
+```
 
 #### Config
 
@@ -20517,8 +20984,13 @@ Framework-free engine both Kanban render layers run: card normalization and writ
 
 `@oge-ui/kanban-engine`
 
-- values: `KANBAN_CARD_GAP`, `KANBAN_COLLAPSED_TRACK`, `KANBAN_DEFAULT_CARD_HEIGHT`, `KANBAN_DEFAULT_CELL_HEIGHT`, `KANBAN_EMPTY_EDITOR_CHOICES`, `OGE_DEFAULT_KANBAN_CONFIG`, `OGE_DEFAULT_KANBAN_MESSAGES`, `applyMoveToItem`, `beginKanbanGesture`, `buildKanbanEditorChoices`, `buildKanbanEditorItems`, `buildKanbanItem`, `columnReorderIndex`, `commitKanbanMove`, `computeColumnWindow`, `deriveColumns`, `edgeScrollVelocity`, `filterCards`, `findKanbanCard`, `focusFirstKanbanMenuItem`, `focusKanbanCard`, `focusOwningKanbanCard`, `formatKanbanDue`, `formatKanbanMessage`, `groupBoard`, `hitTestCell`, `insertionIndexAt`, `isKanbanCardContentTarget`, `isKanbanCardShifted`, `isKanbanLegalTarget`, `isKanbanMenuAvailable`, `isKanbanOverdue`, `kanbanAutoScrollStep`, `kanbanCardActionLabel`, `kanbanCardKeyRoute`, `kanbanCardLabel`, `kanbanCardShortcuts`, `kanbanCellKey`, `kanbanCellLabel`, `kanbanCellWindow`, `kanbanColumnCounts`, `kanbanColumnOrderPreview`, `kanbanColumnTitle`, `kanbanColumnWip`, `kanbanCssEscape`, `kanbanDropIndex`, `kanbanEditorModelFrom`, `kanbanFocusableKeys`, `kanbanGridTemplate`, `kanbanHeaderCenters`, `kanbanInitials`, `kanbanKeyboardMove`, `kanbanLogicalKey`, `kanbanMoveTargets`, `kanbanNavigationTarget`, `kanbanNewColumn`, `kanbanScrollIntoViewTop`, `kanbanToolbarAddColumn`, `measureKanbanCells`, `measureKanbanDragGeometry`, `mergeOgeKanbanMessages`, `newKanbanEditorModel`, `newKanbanItemBase`, `normalizeCard`, `normalizeCards`, `orderBetween`, `orderColumns`, `planKanbanMove`, `prepareKanbanTouchDrag`, `previewCount`, `renumberPatches`, `resolveKanbanColumns`, `resolveKanbanDragTarget`, `resolveKanbanFields`, `resolveOgeKanbanConfig`, `scrollKanbanCell`, `startKanbanFrameLoop`, `stepKanbanMenuFocus`, `syncKanbanCardTabStops`, `toKanbanAccessor`, `toggleKanbanKey`, `watchKanbanDirection`, `wipState`, `withFieldValue`
-- types: `KanbanCapabilities`, `KanbanCard`, `KanbanCardKeyInput`, `KanbanCardPosition`, `KanbanCellRect`, `KanbanCellScroll`, `KanbanColumnDef`, `KanbanColumnGroup`, `KanbanColumnWindow`, `KanbanColumnsInput`, `KanbanColumnsResult`, `KanbanDragGeometry`, `KanbanDragOrigin`, `KanbanDragState`, `KanbanDragTarget`, `KanbanEditorChoices`, `KanbanEditorModel`, `KanbanEditorResult`, `KanbanFieldExpr`, `KanbanFieldExprs`, `KanbanFieldKey`, `KanbanGestureCallbacks`, `KanbanKeyboardMove`, `KanbanMappedFields`, `KanbanMoveCommit`, `KanbanMovePlan`, `KanbanMoveTarget`, `KanbanSwimlane`, `KanbanWipState`, `OgeKanbanAnnouncementMessages`, `OgeKanbanBoardMessages`, `OgeKanbanCard`, `OgeKanbanCardAddedEvent`, `OgeKanbanCardAddingEvent`, `OgeKanbanCardColorMode`, `OgeKanbanCardDeletedEvent`, `OgeKanbanCardDeletingEvent`, `OgeKanbanCardEvent`, `OgeKanbanCardMovedEvent`, `OgeKanbanCardMovingEvent`, `OgeKanbanCardUpdatedEvent`, `OgeKanbanCardUpdatingEvent`, `OgeKanbanColumn`, `OgeKanbanColumnAddedEvent`, `OgeKanbanColumnAddingEvent`, `OgeKanbanColumnReorderedEvent`, `OgeKanbanConfig`, `OgeKanbanConfigInput`, `OgeKanbanDialogMessages`, `OgeKanbanEditDialogShowingEventBase`, `OgeKanbanFieldExpr`, `OgeKanbanMenuMessages`, `OgeKanbanMessages`, `OgeKanbanToolbarMessages`, `RectLike`, `ResolvedKanbanFields`
+- values: `KANBAN_CARD_GAP`, `KANBAN_COLLAPSED_TRACK`, `KANBAN_DEFAULT_CARD_HEIGHT`, `KANBAN_DEFAULT_CELL_HEIGHT`, `KANBAN_DEFAULT_PRIORITY_ORDER`, `KANBAN_DEFAULT_UNDO_LIMIT`, `KANBAN_EMPTY_EDITOR_CHOICES`, `KanbanHistory`, `OGE_DEFAULT_KANBAN_CONFIG`, `OGE_DEFAULT_KANBAN_MESSAGES`, `applyKanbanFilters`, `applyMoveToItem`, `beginKanbanGesture`, `buildKanbanCsv`, `buildKanbanEditorChoices`, `buildKanbanEditorItems`, `buildKanbanExportRows`, `buildKanbanItem`, `canEditKanbanTitle`, `columnReorderIndex`, `commitKanbanMove`, `compileKanbanFilter`, `computeColumnWindow`, `deriveColumns`, `downloadKanbanText`, `edgeScrollVelocity`, `fillKanbanMessages`, `filterCards`, `findKanbanCard`, `focusFirstKanbanMenuItem`, `focusKanbanCard`, `focusOwningKanbanCard`, `formatKanbanCount`, `formatKanbanDue`, `formatKanbanMessage`, `groupBoard`, `hitTestCell`, `insertionIndexAt`, `invertKanbanOp`, `isInsideKanbanHost`, `isKanbanCardContentTarget`, `isKanbanCardShifted`, `isKanbanEditingTarget`, `isKanbanFilterChipActive`, `isKanbanFilterEmpty`, `isKanbanLegalTarget`, `isKanbanMenuAvailable`, `isKanbanOverdue`, `kanbanActiveSort`, `kanbanAnchorIndex`, `kanbanAutoScrollStep`, `kanbanBoardOrder`, `kanbanBoardPeers`, `kanbanCardActionLabel`, `kanbanCardKeyRoute`, `kanbanCardLabel`, `kanbanCardShortcuts`, `kanbanCarriedCards`, `kanbanCellCounts`, `kanbanCellKey`, `kanbanCellLabel`, `kanbanCellWindow`, `kanbanCellWip`, `kanbanChecklistCell`, `kanbanChecklistLabel`, `kanbanChecklistProgress`, `kanbanChecklistToggle`, `kanbanColumnCounts`, `kanbanColumnOrderPreview`, `kanbanColumnSortSpec`, `kanbanColumnTitle`, `kanbanColumnWip`, `kanbanCssEscape`, `kanbanDropIndex`, `kanbanEditorModelFrom`, `kanbanFilterChoices`, `kanbanFocusableKeys`, `kanbanGridTemplate`, `kanbanHeaderCenters`, `kanbanHistoryShortcut`, `kanbanInitials`, `kanbanKeyboardMove`, `kanbanLaneCounts`, `kanbanLaneWip`, `kanbanLogicalKey`, `kanbanMoveTargets`, `kanbanMultiMoveAnchor`, `kanbanNavigationTarget`, `kanbanNewColumn`, `kanbanOrderKeys`, `kanbanPeerAt`, `kanbanPriorityRank`, `kanbanQuickAddItem`, `kanbanScrollIntoViewTop`, `kanbanSelectCard`, `kanbanSelectCell`, `kanbanSelectionShortcut`, `kanbanSortComparer`, `kanbanTitleUpdate`, `kanbanToolbarAddColumn`, `measureKanbanCells`, `measureKanbanDragGeometry`, `mergeOgeKanbanMessages`, `newKanbanEditorModel`, `newKanbanItemBase`, `nextKanbanBoardId`, `normalizeCard`, `normalizeCards`, `normalizeKanbanChecklist`, `orderBetween`, `orderColumns`, `planKanbanMove`, `prepareKanbanTouchDrag`, `previewCount`, `registerKanbanBoard`, `renumberPatches`, `resolveKanbanColumns`, `resolveKanbanDragTarget`, `resolveKanbanFields`, `resolveOgeKanbanConfig`, `scrollKanbanCell`, `setKanbanColumnSort`, `sortKanbanLanes`, `startKanbanFrameLoop`, `stepKanbanMenuFocus`, `syncKanbanCardTabStops`, `toKanbanAccessor`, `toggleKanbanFilterChip`, `toggleKanbanKey`, `watchKanbanDirection`, `wipState`, `withFieldValue`
+- types: `KanbanBoardPeer`, `KanbanCapabilities`, `KanbanCard`, `KanbanCardKeyInput`, `KanbanCardPosition`, `KanbanCellRect`, `KanbanCellScroll`, `KanbanChecklistItem`, `KanbanColumnDef`, `KanbanColumnGroup`, `KanbanColumnWindow`, `KanbanColumnsInput`, `KanbanColumnsResult`, `KanbanDragGeometry`, `KanbanDragOrigin`, `KanbanDragState`, `KanbanDragTarget`, `KanbanEditorChoices`, `KanbanEditorModel`, `KanbanEditorResult`, `KanbanFieldExpr`, `KanbanFieldExprs`, `KanbanFieldKey`, `KanbanFilterChoices`, `KanbanGestureCallbacks`, `KanbanHistoryOp`, `KanbanHistoryPlace`, `KanbanKeyboardMove`, `KanbanMappedFields`, `KanbanMoveCommit`, `KanbanMovePlan`, `KanbanMoveTarget`, `KanbanSelectModifiers`, `KanbanSelection`, `KanbanSelectionShortcut`, `KanbanSwimlane`, `KanbanTransfer`, `KanbanTransferResult`, `KanbanWipState`, `OgeKanbanAnnouncementMessages`, `OgeKanbanBoardMessages`, `OgeKanbanCard`, `OgeKanbanCardAddedEvent`, `OgeKanbanCardAddingEvent`, `OgeKanbanCardColorMode`, `OgeKanbanCardDeletedEvent`, `OgeKanbanCardDeletingEvent`, `OgeKanbanCardEvent`, `OgeKanbanCardMovedEvent`, `OgeKanbanCardMovingEvent`, `OgeKanbanCardTransferredEvent`, `OgeKanbanCardTransferringEvent`, `OgeKanbanCardUpdatedEvent`, `OgeKanbanCardUpdatingEvent`, `OgeKanbanColumn`, `OgeKanbanColumnAddedEvent`, `OgeKanbanColumnAddingEvent`, `OgeKanbanColumnReorderedEvent`, `OgeKanbanColumnSort`, `OgeKanbanColumnSortSpec`, `OgeKanbanConfig`, `OgeKanbanConfigInput`, `OgeKanbanCsvOptions`, `OgeKanbanDialogMessages`, `OgeKanbanEditDialogShowingEventBase`, `OgeKanbanExportData`, `OgeKanbanExportMessages`, `OgeKanbanExportOptions`, `OgeKanbanExportRow`, `OgeKanbanFieldExpr`, `OgeKanbanFilter`, `OgeKanbanFilterChipKind`, `OgeKanbanFilterExpression`, `OgeKanbanMenuMessages`, `OgeKanbanMessages`, `OgeKanbanResolvedMessages`, `OgeKanbanSelectionMode`, `OgeKanbanSortField`, `OgeKanbanToolbarMessages`, `RectLike`, `ResolvedKanbanFields`
+
+`@oge-ui/kanban-engine/export-excel`
+
+- values: `buildKanbanExcelWorkbook`, `downloadKanbanWorkbook`
+- types: `OgeKanbanExcelExportOptions`
 
 ## @oge-ui/scheduler
 
@@ -34499,7 +34971,25 @@ _State (controlled / uncontrolled)_
 | `collapsedColumns / collapsedSwimlanes` | `readonly string[]` | `uncontrolled, []` | Collapsed column keys (slim vertical pills) and collapsed swimlane keys. Controlled when provided; `defaultCollapsedColumns` / `defaultCollapsedSwimlanes` seed the uncontrolled state at mount. |
 | `columnOrder` | `readonly string[]` | `uncontrolled, []` | Persisted column key order (empty = declared order); written by header drags when `allowColumnReordering` is on. `defaultColumnOrder` seeds it uncontrolled. |
 | `selectedCardKey` | `unknown` | `uncontrolled, null` | The selected card's key — single selection. `defaultSelectedCardKey` seeds it uncontrolled. |
+| `selectedCardKeys` | `readonly unknown[]` | `uncontrolled, []` | Every selected card key, in board order (`defaultSelectedCardKeys` seeds it uncontrolled). Ctrl/⌘-click toggles, Shift-click selects the range in the anchor's column, Ctrl+A on a card selects its column (cell), Ctrl+Space toggles, Shift+↑/↓ extends and Escape collapses to the focused card. Selected cards travel together in a drag (the ghost shows the count), Ctrl+←/→ and Delete. |
+| `filterValue` | `OgeKanbanFilterExpression` | `uncontrolled, {}` | The filter chip bar's state — active `tags` / `assignees` / `priorities` (`defaultFilterValue` seeds it uncontrolled); ANDs with `filter` and the toolbar search. |
+| `columnSort` | `OgeKanbanColumnSort<T>` | `uncontrolled, {}` | Per-column card sort: a column key (or `'*'`) mapped to `{ field: 'order' \| 'title' \| 'priority' \| 'dueDate', direction? }` or a comparator (`defaultColumnSort` seeds it uncontrolled). The column menu writes it through `onColumnSortChange`; a drop into a sorted column lands where the sort puts it. |
+| `onSelectedCardKeysChange / onFilterValueChange / onColumnSortChange` | `(value) => void` | `—` | The controlled halves of the three G3b state props — Angular's `[(…)]` models are both halves at once. |
 | `onCollapsedColumnsChange / onCollapsedSwimlanesChange / onColumnOrderChange / onSelectedCardKeyChange` | `(value) => void` | `—` | The controlled halves of the four state props — Angular's `[(…)]` models are both halves at once. |
+
+_Filtering, selection & transfers_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `filter` | `OgeKanbanFilter<T> \| undefined` | `undefined` | Programmatic card filter: a predicate over the normalized card, or an `OgeKanbanFilterExpression` (`{ tags?, assignees?, priorities?, columns?, swimlanes?, text?, overdue? }` — values inside a field are alternatives, fields combine with AND). Filters only what is shown: WIP counts, exports (unless `visibleOnly`) and the chips stay on the full data. |
+| `showFilterBar` | `boolean` | `false` | Shows the filter chip bar under the toolbar: one toggle chip (`aria-pressed`) per distinct tag, assignee and priority, plus a reset button. |
+| `priorityOrder` | `readonly string[] \| undefined` | `undefined` | Priority ranking for `columnSort` by priority, most important first (case-insensitive). Unset: `urgent, critical, highest, high, medium, normal, low, lowest`; numeric priorities compare as numbers. |
+| `selectionMode` | `'single' \| 'multiple'` | `'multiple'` | `'multiple'` adds Ctrl/Shift-click, the selection shortcuts and multi-card drag; `'single'` keeps one selected card. |
+| `dragGroup / boardId` | `string \| undefined` | `undefined` | Boards sharing a `dragGroup` exchange cards: drag a card (or a selection) onto the other board, or use the card menu's “Move to …” entries — the keyboard and single-pointer twin. `boardId` names the board in the transfer callbacks and the other boards' menus (a generated id otherwise). |
+| `swimlaneWipLimits` | `Readonly<Record<string, number>> \| undefined` | `undefined` | Per-lane total WIP limits keyed by swimlane value — the lane header's count turns danger when exceeded. Per-cell limits are `OgeKanbanColumn.swimlaneWipLimit` (the column inside each lane). |
+| `checklistExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Checklist / sub-task field: an array of `{ text, done }` (`title` / `checked` / `completed` and plain strings are read too). Cards show a progress badge with an ICU-plural screen-reader text; `toggleChecklistItem()` writes back in the entry's own shape. |
+| `quickAdd / inlineTitleEditing` | `boolean` | `false / false` | `quickAdd`: the column footer's add button opens an inline title composer (Enter adds and keeps it open, Escape closes) instead of the dialog. `inlineTitleEditing`: double-clicking a card title edits it in place; F2 on a card always does (both through `onCardAdding` / `onCardUpdating`). |
+| `undoLimit` | `number` | `50` | Undo/redo depth — Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) and the toolbar buttons. Undo replays the inverse through the cancelable pipelines, so the `-ing` / `-ed` events fire as for the original edit; a multi-card move or bulk delete is one step. Cross-board transfers are not recorded (they span two boards). `0` disables history and hides the buttons. |
 
 _Behavior_
 
@@ -34537,6 +35027,15 @@ _Handle (ref)_
 | `editCard(card) / openNewCard(column, swimlane)` | `(…) => void` | Opens the built-in dialog for an existing card / prefilled for a new card, through the `onCardEditDialogShowing` hook. |
 | `closeDialog()` | `() => void` | Closes the edit dialog without saving; fires `onCardEditDialogHidden`. |
 | `collapseAllColumns() / expandAllColumns()` | `() => void` | The toolbar buttons, callable from code. |
+| `undo() / redo() / canUndo() / canRedo()` | `() => void / () => boolean` | History: revert / re-apply the last step through the cancelable pipelines, and whether a step exists. |
+| `selectCards(keys) / clearSelection()` | `(keys: readonly unknown[]) => void / () => void` | Programmatic selection (board order applied; writes `selectedCardKeys` / `onSelectedCardKeysChange`). |
+| `moveCards(keys, toColumn, toIndex?, toSwimlane?)` | `(keys: readonly unknown[], toColumn: string, toIndex?: number, toSwimlane?: string \| null) => void` | Moves several cards into one cell as one undoable step, inserted consecutively (board order kept) before the card at `toIndex`; without `toSwimlane` every card stays in its own lane. Each card runs `onCardMoving` / `onCardMoved`. |
+| `deleteCards(items)` | `(items: readonly T[]) => void` | Bulk delete as one undoable step, each item through `onCardDeleting`; announced with an ICU plural. |
+| `transferCards(keys, toBoard, toColumn?, toIndex?, toSwimlane?)` | `(…) => boolean` | Sends cards to another mounted board of the same `dragGroup` (default: its first droppable column, appended). Returns whether the target's `onCardTransferring` accepted them. |
+| `toggleChecklistItem(key, index)` | `(key: unknown, index: number) => void` | Toggles one checklist entry through `onCardUpdating` (needs a field-name `checklistExpr`). |
+| `startTitleEdit(key)` | `(key: unknown) => void` | Opens the inline title editor on a card (what F2 does); Enter or blur commits through `onCardUpdating`, Escape cancels. |
+| `clearFilters()` | `() => void` | Resets the chip bar (`filterValue` / `onFilterValueChange`); the programmatic `filter` input is untouched. |
+| `getExportData(options?) / exportToCsv(fileName?, options?)` | `(options?: OgeKanbanExportOptions) => OgeKanbanExportData / (fileName?: string, options?: OgeKanbanExportOptions) => string` | The cards as export rows in board order (column → lane → cell; `visibleOnly` keeps only what the filters show), and a CSV download built on core's formula-guarded `buildCsv` (returns the text). Excel is the lazy `@oge-ui/react-kanban/export-excel` entry. |
 
 #### Events
 
@@ -34551,6 +35050,8 @@ _Callbacks_
 | `onCardEditDialogHidden` | `() => void` | The edit dialog closed — saved, cancelled, deleted or `closeDialog()` (Syncfusion `dialogClose` parity). |
 | `onColumnReordered` | `(event: OgeKanbanColumnReorderedEvent) => void` | A header drag committed a new order: `{ column, fromIndex, toIndex, columnOrder }`. |
 | `onColumnAdding / onColumnAdded` | `(event: OgeKanbanColumnAddingEvent / OgeKanbanColumnAddedEvent) => void` | The "+ Add column" composer's cancelable pre-event and its past-tense commit. |
+| `onCardTransferring` | `(event: OgeKanbanCardTransferringEvent<T>) => void` | Cancelable, called on the **target** board before cards from another board of the `dragGroup` land: `{ cards, fromBoard, toBoard, fromColumn, toColumn, fromSwimlane, toSwimlane, toIndex, cancel }`. |
+| `onCardTransferred` | `(event: OgeKanbanCardTransferredEvent<T>) => void` | Called on **both** boards after a transfer landed: the source host removes `sourceCards` from its data, the target host adds `cards` (column / swimlane already written). |
 
 #### Types
 
@@ -34570,11 +35071,459 @@ _Configuration_
 | `OgeKanbanMessages` | `interface` | Every user-facing string: `toolbar`, `menu`, `dialog`, `board` (aria label templates with `{title}`/`{count}`/`{limit}` tokens) and `announcements` (live-region templates). Single-sourced in `@oge-ui/kanban-engine` with the Angular package. |
 | `OgeKanbanBoardMessages` | `interface` | The `board` block: `boardLabel`, `columnLabel` / `columnLabelWip` (the column list's name), `cardLabel` (`{title}`, `{column}`), `cardRoleDescription` (default `card` — every card's `aria-roledescription`), `editCardAction` / `deleteCardAction` (the quick-action buttons, `{title}`), `boardHint`, `wipExceeded`, `overdue`, the empty-state and add-card/column strings. |
 | `OgeKanbanColumn` | `interface` | `{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }` — the declared column shape. `wipLimit`/`minCount` drive the danger/warning badges; `allowDrag`/`allowDrop`/`transitionColumns` gate interactive moves (programmatic `moveCard` is deliberately not gated). |
-| `OgeKanbanCard<T>` | `interface` | The normalized card handed to render props and callbacks: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`. |
+| `OgeKanbanCard<T>` | `interface` | The normalized card handed to render props and callbacks: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`, `checklist` (`{ text, done }[]`). |
+
+_Filtering, sorting & selection types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeKanbanFilter<T>` | `type` | `((card: OgeKanbanCard<T>) => boolean) \| OgeKanbanFilterExpression` — the `filter` input's shape. |
+| `OgeKanbanFilterExpression` | `interface` | `{ tags?, assignees?, priorities?, columns?, swimlanes?, text?, overdue? }` — any-of inside a field, all-of across fields; also the chip bar's `filterValue`. |
+| `OgeKanbanColumnSort<T>` | `type` | `Readonly<Record<string, OgeKanbanColumnSortSpec<T>>>` keyed by column (`'*'` = every column). |
+| `OgeKanbanColumnSortSpec<T>` | `type` | `{ field: OgeKanbanSortField; direction?: 'asc' \| 'desc' }` or a card comparator (ties fall back to the board order). |
+| `OgeKanbanSortField` | `'order' \| 'title' \| 'priority' \| 'dueDate'` | Sort fields; ascending priority puts the most important first, empty due dates sort last in both directions. |
+| `OgeKanbanSelectionMode` | `'single' \| 'multiple'` | The `selectionMode` union. |
+| `OgeKanbanCardTransferringEvent<T> / OgeKanbanCardTransferredEvent<T>` | `interface` | Cross-board transfer payloads: board ids, from/to column and lane, insertion index; the past-tense one carries both `cards` (as landed) and `sourceCards`. |
+
+_Export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeKanbanExportData` | `interface` | `{ rows, messages, locale, hasSwimlanes }` — what `getExportData()` returns and both exporters read. |
+| `OgeKanbanExportRow` | `interface` | `{ key, title, column, columnKey, swimlane, description, tags, assignees, priority, dueDate, checklistDone, checklistTotal }`. |
+| `OgeKanbanExportOptions` | `interface` | `{ visibleOnly? }` — only the cards the filters and search show. |
+| `OgeKanbanExportMessages` | `interface` | The optional `export` messages block: `sheetName` and every column header (English fallback when a catalog omits it). |
+| `exportKanbanToExcel(board, options?)` | `(board, options?: OgeKanbanExcelExportOptions) => Promise<void>` | The lazy `/export-excel` entry (optional `exceljs` peer): one row per card, due dates as real dates, tags/assignees joined with `;`. Pass the board instance (Angular) or its ref handle (React). |
+| `buildKanbanExcelWorkbook(data, options?)` | `(data: OgeKanbanExportData, options?) => Workbook` | The pure builder behind it, shared by both layers through `@oge-ui/kanban-engine/export-excel`. |
+| `OgeKanbanExcelExportOptions` | `interface` | `{ filename?, sheetName?, visibleOnly? }` (defaults `kanban.xlsx` / the `export.sheetName` message). |
 
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Filter chips & search
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanFilterExpression } from '@oge-ui/react-kanban';
+
+const columns = [
+  { key: 'todo', title: 'To do' },
+  { key: 'doing', title: 'In progress', wipLimit: 3 },
+  { key: 'done', title: 'Done' },
+];
+
+const tasks = [
+  { id: 1, status: 'todo', title: 'Checkout revamp', labels: ['feature'], owner: 'Ada Lovelace', priority: 'high' },
+  { id: 2, status: 'todo', title: 'Wallet UI polish', labels: ['design'], owner: 'Grace Hopper', priority: 'medium' },
+  { id: 3, status: 'doing', title: 'Fix login crash', labels: ['bug'], owner: 'Ada Lovelace', priority: 'high' },
+  { id: 4, status: 'doing', title: 'Upgrade CI runners', labels: ['infra'], owner: 'Alan Turing', priority: 'low' },
+  { id: 5, status: 'done', title: 'Search relevance', labels: ['feature'], owner: 'Grace Hopper', priority: 'medium' },
+];
+
+export function ChipBoard() {
+  const [chips, setChips] = useState<OgeKanbanFilterExpression>({
+    priorities: ['high'],
+  });
+  const active = [
+    ...(chips.tags ?? []),
+    ...(chips.assignees ?? []),
+    ...(chips.priorities ?? []),
+  ];
+  return (
+    <>
+      {/* showFilterBar renders one toggle chip per distinct tag, assignee and
+          priority; chips in a group are alternatives, groups combine with AND,
+          and the toolbar search narrows further. filterValue +
+          onFilterValueChange is the controlled chip state. WIP counts keep
+          counting the real data. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        tagsExpr="labels"
+        assigneeExpr="owner"
+        priorityExpr="priority"
+        columns={columns}
+        showFilterBar
+        filterValue={chips}
+        onFilterValueChange={setChips}
+        style={{ height: 460 }}
+      />
+      <p>Active chips: {active.length > 0 ? active.join(', ') : 'none'}</p>
+    </>
+  );
+}
+```
+
+#### Programmatic filter
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanFilter } from '@oge-ui/react-kanban';
+
+interface Task {
+  id: number;
+  status: string;
+  title: string;
+  owner: string;
+  due?: Date;
+}
+
+const tasks: Task[] = [
+  { id: 1, status: 'todo', title: 'Quarterly report', owner: 'Ada Lovelace', due: new Date(2020, 0, 10) },
+  { id: 2, status: 'todo', title: 'Vendor review', owner: 'Grace Hopper', due: new Date(2099, 5, 1) },
+  { id: 3, status: 'doing', title: 'Hiring plan', owner: 'Ada Lovelace' },
+  { id: 4, status: 'done', title: 'Offsite booking', owner: 'Alan Turing', due: new Date(2020, 3, 2) },
+];
+
+export function FilteredBoard() {
+  const [onlyMine, setOnlyMine] = useState(false);
+  const [onlyOverdue, setOnlyOverdue] = useState(false);
+  const filter: OgeKanbanFilter<Task> | undefined = onlyOverdue
+    ? { overdue: true }
+    : onlyMine
+      ? (card) => card.assignees.includes('Ada Lovelace')
+      : undefined;
+  return (
+    <>
+      {/* filter takes a predicate over the normalized card (its source is your
+          item) or a declarative expression ({ tags, assignees, priorities,
+          columns, swimlanes, text, overdue }); it ANDs with chips and search. */}
+      <label>
+        <input type="checkbox" checked={onlyMine} onChange={() => setOnlyMine(!onlyMine)} />
+        Only my cards
+      </label>
+      <label>
+        <input type="checkbox" checked={onlyOverdue} onChange={() => setOnlyOverdue(!onlyOverdue)} />
+        Only overdue
+      </label>
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        assigneeExpr="owner"
+        dueDateExpr="due"
+        filter={filter}
+        style={{ height: 400 }}
+      />
+    </>
+  );
+}
+```
+
+#### Column sort
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanColumnSort } from '@oge-ui/react-kanban';
+
+interface Task {
+  id: number;
+  status: string;
+  title: string;
+  priority: string;
+  due: Date;
+}
+
+const tasks: Task[] = [
+  { id: 1, status: 'todo', title: 'Polish onboarding', priority: 'low', due: new Date(2026, 9, 20) },
+  { id: 2, status: 'todo', title: 'Payment outage', priority: 'blocker', due: new Date(2026, 9, 6) },
+  { id: 3, status: 'todo', title: 'Audit log export', priority: 'medium', due: new Date(2026, 9, 12) },
+  { id: 4, status: 'done', title: 'Sprint 41 review', priority: 'medium', due: new Date(2026, 8, 18) },
+  { id: 5, status: 'done', title: 'Sprint 42 review', priority: 'medium', due: new Date(2026, 9, 2) },
+];
+
+export function SortedBoard() {
+  const [sort, setSort] = useState<OgeKanbanColumnSort<Task>>({
+    todo: { field: 'priority' },
+    done: { field: 'dueDate', direction: 'desc' },
+  });
+  return (
+    <>
+      {/* columnSort sorts each column on its own ('*' = every column). The
+          header's sort button (or a right-click on the header) opens the column
+          menu — Manual order / Title / Priority / Due date and the direction —
+          which calls onColumnSortChange. priorityOrder ranks custom values. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        priorityExpr="priority"
+        dueDateExpr="due"
+        columnSort={sort}
+        onColumnSortChange={setSort}
+        priorityOrder={['blocker', 'high', 'medium', 'low']}
+        style={{ height: 420 }}
+      />
+    </>
+  );
+}
+```
+
+#### Export
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanHandle } from '@oge-ui/react-kanban';
+
+interface Task {
+  id: number;
+  status: string;
+  title: string;
+  labels: string[];
+  todo?: { text: string; done: boolean }[];
+}
+
+const tasks: Task[] = [
+  { id: 1, status: 'todo', title: 'Release notes', labels: ['docs'], todo: [{ text: 'Draft', done: true }, { text: 'Review', done: false }] },
+  { id: 2, status: 'doing', title: '=SUM(A1) is exported as text', labels: ['security'] },
+  { id: 3, status: 'done', title: 'Changelog', labels: ['docs'] },
+];
+
+export function ExportBoard() {
+  const board = useRef<OgeKanbanHandle<Task>>(null);
+  const exportExcel = async () => {
+    const { exportKanbanToExcel } = await import('@oge-ui/react-kanban/export-excel');
+    if (board.current) await exportKanbanToExcel(board.current, { filename: 'cards.xlsx' });
+  };
+  return (
+    <>
+      {/* exportToCsv() downloads a formula-guarded CSV (core's buildCsv) in
+          board order and returns the text; the lazy export-excel entry builds an
+          .xlsx through the optional exceljs peer. { visibleOnly: true } exports
+          only what the filters show. */}
+      <button type="button" onClick={() => board.current?.exportToCsv('cards.csv')}>Export CSV</button>
+      <button type="button" onClick={exportExcel}>Export Excel</button>
+      <OgeKanban
+        ref={board}
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        tagsExpr="labels"
+        checklistExpr="todo"
+        style={{ height: 360 }}
+      />
+    </>
+  );
+}
+```
+
+#### Multi-select & undo
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+
+const tasks = [
+  { id: 1, status: 'todo', title: 'Ctrl-click me' },
+  { id: 2, status: 'todo', title: '…and me' },
+  { id: 3, status: 'todo', title: 'Shift-click for a range' },
+  { id: 4, status: 'doing', title: 'Drag a selected card' },
+  { id: 5, status: 'done', title: 'Ctrl+Z undoes the last step' },
+];
+
+export function MultiSelectBoard() {
+  const [selected, setSelected] = useState<readonly unknown[]>([]);
+  return (
+    <>
+      {/* Ctrl/⌘-click toggles, Shift-click selects a range in the column,
+          Ctrl+A on a card selects its column, Ctrl+Space toggles, Shift+↑/↓
+          extends, Escape collapses. A drag of a selected card carries the
+          selection (the ghost shows the count); Ctrl+←/→ and Delete act on all
+          of it — each one undoable step (Ctrl+Z). */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        selectedCardKeys={selected}
+        onSelectedCardKeysChange={setSelected}
+        style={{ height: 420 }}
+      />
+      <p>Selected: {selected.length}</p>
+    </>
+  );
+}
+```
+
+#### Cross-board drag
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanCardTransferredEvent } from '@oge-ui/react-kanban';
+
+interface Task {
+  id: number;
+  status: string;
+  title: string;
+}
+
+export function PlanningBoards() {
+  const [backlog, setBacklog] = useState<Task[]>([
+    { id: 1, status: 'todo', title: 'Dark mode' },
+    { id: 2, status: 'todo', title: 'CSV import' },
+    { id: 3, status: 'todo', title: 'Audit log' },
+  ]);
+  const [sprint, setSprint] = useState<Task[]>([
+    { id: 10, status: 'todo', title: 'Login rate limits' },
+  ]);
+  // both boards report the transfer — idempotent updates make that harmless
+  const onTransferred = (event: OgeKanbanCardTransferredEvent<Task>) => {
+    const moved = new Set(event.sourceCards.map((task) => task.id));
+    const [setFrom, setTo] =
+      event.fromBoard === 'Backlog' ? [setBacklog, setSprint] : [setSprint, setBacklog];
+    setFrom((list) => list.filter((task) => !moved.has(task.id)));
+    setTo((list) => [...list.filter((task) => !moved.has(task.id)), ...event.cards]);
+  };
+  return (
+    <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+      {/* Boards sharing a dragGroup exchange cards by drag or the card menu's
+          "Move to …" entry (the keyboard twin). The target calls the cancelable
+          onCardTransferring; both boards call onCardTransferred. */}
+      <OgeKanban
+        dataSource={backlog}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        dragGroup="planning"
+        boardId="Backlog"
+        columns={[{ key: 'todo', title: 'Ideas' }]}
+        onCardTransferred={onTransferred}
+        style={{ height: 360 }}
+      />
+      <OgeKanban
+        dataSource={sprint}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        dragGroup="planning"
+        boardId="Sprint"
+        columns={[{ key: 'todo', title: 'To do' }, { key: 'doing', title: 'In progress' }]}
+        onCardTransferred={onTransferred}
+        style={{ height: 360 }}
+      />
+    </div>
+  );
+}
+```
+
+#### Swimlane WIP limits
+
+```ts
+'use client';
+
+import { OgeKanban } from '@oge-ui/react-kanban';
+
+const tasks = [
+  { id: 1, team: 'Web', status: 'doing', title: 'Token migration' },
+  { id: 2, team: 'Web', status: 'todo', title: 'Navigation audit' },
+  { id: 3, team: 'Mobile', status: 'doing', title: 'Push opt-in' },
+  { id: 4, team: 'Mobile', status: 'doing', title: 'Biometric login — over the cell limit' },
+  { id: 5, team: 'Mobile', status: 'todo', title: 'Offline mode — over the lane limit' },
+];
+
+export function LaneWipBoard() {
+  return (
+    <>
+      {/* swimlaneWipLimit caps a column inside every lane; swimlaneWipLimits
+          caps a lane's total, keyed by lane value. Both count real data. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        swimlaneExpr="team"
+        columns={[
+          { key: 'todo', title: 'To do' },
+          { key: 'doing', title: 'In progress', swimlaneWipLimit: 1 },
+          { key: 'done', title: 'Done' },
+        ]}
+        swimlaneWipLimits={{ Mobile: 2 }}
+        style={{ height: 520 }}
+      />
+    </>
+  );
+}
+```
+
+#### Quick add, inline titles & checklists
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanHandle } from '@oge-ui/react-kanban';
+
+interface Task {
+  id: number;
+  status: string;
+  title: string;
+  todo?: { text: string; done: boolean }[];
+}
+
+const tasks: Task[] = [
+  {
+    id: 1,
+    status: 'doing',
+    title: 'Payments API',
+    todo: [
+      { text: 'Design endpoints', done: true },
+      { text: 'Write tests', done: false },
+      { text: 'Roll out', done: false },
+    ],
+  },
+  { id: 2, status: 'todo', title: 'Press F2 to rename me' },
+];
+
+export function ChecklistBoard() {
+  const board = useRef<OgeKanbanHandle<Task>>(null);
+  return (
+    <>
+      {/* quickAdd turns the column footer into an inline composer (Enter adds
+          and stays open, Escape closes); F2 — or a title double-click with
+          inlineTitleEditing — renames in place; checklistExpr maps { text, done }
+          sub-tasks to a progress badge. */}
+      <OgeKanban
+        ref={board}
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        checklistExpr="todo"
+        quickAdd
+        inlineTitleEditing
+        style={{ height: 420 }}
+      />
+      <button type="button" onClick={() => board.current?.toggleChecklistItem(1, 1)}>
+        Tick “Write tests” on the first card
+      </button>
+    </>
+  );
+}
+```
 
 #### Getting started
 

@@ -642,384 +642,397 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
                 view.laneCounts,
               );
               return (
-              <section
-                key={lane.key ?? ''}
-                className={
-                  view.hasSwimlanes
-                    ? 'oge-kanban-lane'
-                    : 'oge-kanban-lane oge-kanban-lane-single'
-                }
-              >
-                {view.hasSwimlanes && (
-                  <button
-                    type="button"
-                    className={
-                      laneLimit?.exceeded
-                        ? 'oge-kanban-lane-header oge-kanban-lane-wip-exceeded'
-                        : 'oge-kanban-lane-header'
-                    }
-                    onClick={() => ctl.toggleSwimlane(lane.key)}
-                    aria-expanded={!ctl.isSwimlaneCollapsed(lane.key)}
-                    title={
-                      laneLimit?.exceeded
-                        ? formatKanbanMessage(msg.board.laneWipExceeded, {
-                            count: String(laneLimit.count),
-                            limit: String(laneLimit.limit),
-                          })
-                        : undefined
-                    }
-                  >
-                    <svg
-                      className={
-                        ctl.isSwimlaneCollapsed(lane.key)
-                          ? 'oge-kanban-lane-chevron oge-kanban-lane-chevron-collapsed'
-                          : 'oge-kanban-lane-chevron'
-                      }
-                      viewBox="0 0 16 16"
-                      width="14"
-                      height="14"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M5 6.5 8 9.5l3-3"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span className="oge-kanban-lane-title">
-                      {lane.key ?? ''}
-                    </span>
-                    <span
+                <section
+                  key={lane.key ?? ''}
+                  className={
+                    view.hasSwimlanes
+                      ? 'oge-kanban-lane'
+                      : 'oge-kanban-lane oge-kanban-lane-single'
+                  }
+                >
+                  {view.hasSwimlanes && (
+                    <button
+                      type="button"
                       className={
                         laneLimit?.exceeded
-                          ? 'oge-kanban-count oge-kanban-count-danger'
-                          : 'oge-kanban-count'
+                          ? 'oge-kanban-lane-header oge-kanban-lane-wip-exceeded'
+                          : 'oge-kanban-lane-header'
+                      }
+                      onClick={() => ctl.toggleSwimlane(lane.key)}
+                      aria-expanded={!ctl.isSwimlaneCollapsed(lane.key)}
+                      title={
+                        laneLimit?.exceeded
+                          ? formatKanbanMessage(msg.board.laneWipExceeded, {
+                              count: String(laneLimit.count),
+                              limit: String(laneLimit.limit),
+                            })
+                          : undefined
                       }
                     >
-                      {laneLimit ? laneLimit.count : lane.count}
-                      {laneLimit && (
-                        <span className="oge-kanban-count-limit">
-                          /{laneLimit.limit}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                )}
-                {!ctl.isSwimlaneCollapsed(lane.key) && (
-                  <div
-                    className="oge-kanban-lane-cells"
-                    style={{ gridTemplateColumns: gridTemplate }}
-                  >
-                    {lane.columns.map((cell) => {
-                      if (ctl.isColumnCollapsed(cell.column.key)) {
+                      <svg
+                        className={
+                          ctl.isSwimlaneCollapsed(lane.key)
+                            ? 'oge-kanban-lane-chevron oge-kanban-lane-chevron-collapsed'
+                            : 'oge-kanban-lane-chevron'
+                        }
+                        viewBox="0 0 16 16"
+                        width="14"
+                        height="14"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M5 6.5 8 9.5l3-3"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span className="oge-kanban-lane-title">
+                        {lane.key ?? ''}
+                      </span>
+                      <span
+                        className={
+                          laneLimit?.exceeded
+                            ? 'oge-kanban-count oge-kanban-count-danger'
+                            : 'oge-kanban-count'
+                        }
+                      >
+                        {laneLimit ? laneLimit.count : lane.count}
+                        {laneLimit && (
+                          <span className="oge-kanban-count-limit">
+                            /{laneLimit.limit}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  )}
+                  {!ctl.isSwimlaneCollapsed(lane.key) && (
+                    <div
+                      className="oge-kanban-lane-cells"
+                      style={{ gridTemplateColumns: gridTemplate }}
+                    >
+                      {lane.columns.map((cell) => {
+                        if (ctl.isColumnCollapsed(cell.column.key)) {
+                          return (
+                            <div
+                              key={cell.column.key}
+                              className="oge-kanban-cell-collapsed"
+                              aria-hidden="true"
+                            ></div>
+                          );
+                        }
+                        const count = cell.cards.length;
+                        const win = kanbanCellWindow(
+                          st.cellState.get(
+                            kanbanCellKey(lane.key, cell.column.key),
+                          ),
+                          count,
+                          view.cardHeight,
+                          virtualScrolling,
+                        );
+                        const dropIndex = dropIndexFor(
+                          lane.key,
+                          cell.column.key,
+                        );
+                        const cellLimit = kanbanCellWip(
+                          cell.column,
+                          lane.key,
+                          view.cellCounts,
+                          view.hasSwimlanes,
+                        );
                         return (
                           <div
                             key={cell.column.key}
-                            className="oge-kanban-cell-collapsed"
-                            aria-hidden="true"
-                          ></div>
-                        );
-                      }
-                      const count = cell.cards.length;
-                      const win = kanbanCellWindow(
-                        st.cellState.get(
-                          kanbanCellKey(lane.key, cell.column.key),
-                        ),
-                        count,
-                        view.cardHeight,
-                        virtualScrolling,
-                      );
-                      const dropIndex = dropIndexFor(lane.key, cell.column.key);
-                      const cellLimit = kanbanCellWip(
-                        cell.column,
-                        lane.key,
-                        view.cellCounts,
-                        view.hasSwimlanes,
-                      );
-                      return (
-                        <div
-                          key={cell.column.key}
-                          className="oge-kanban-cell"
-                          onDoubleClick={(event) =>
-                            ctl.onCellDblClick(event, cell.column, lane.key)
-                          }
-                        >
-                          {cellLimit && (
-                            <span
-                              className={
-                                cellLimit.exceeded
-                                  ? 'oge-kanban-count oge-kanban-cell-wip oge-kanban-count-danger'
-                                  : 'oge-kanban-count oge-kanban-cell-wip'
-                              }
-                              title={
-                                cellLimit.exceeded
-                                  ? formatKanbanMessage(
-                                      msg.board.cellWipExceeded,
-                                      {
-                                        count: String(cellLimit.count),
-                                        limit: String(cellLimit.limit),
-                                      },
-                                    )
-                                  : undefined
-                              }
-                              aria-hidden="true"
-                            >
-                              {cellLimit.count}
-                              <span className="oge-kanban-count-limit">
-                                /{cellLimit.limit}
-                              </span>
-                            </span>
-                          )}
-                          <div
-                            className="oge-kanban-cards"
-                            role="list"
-                            aria-label={kanbanCellLabel(
-                              msg.board,
-                              cell.column,
-                              count,
-                              cellLimit ??
-                                kanbanColumnWip(cell.column, view.counts),
-                            )}
-                            data-lane={lane.key ?? ''}
-                            data-col={cell.column.key}
-                            onScroll={(event) =>
-                              ctl.onCellScroll(event, lane.key, cell.column.key)
+                            className="oge-kanban-cell"
+                            onDoubleClick={(event) =>
+                              ctl.onCellDblClick(event, cell.column, lane.key)
                             }
                           >
-                            {count === 0 ? (
-                              // decorative: the list label already carries the zero count
-                              <div
-                                className="oge-kanban-cell-empty"
-                                aria-hidden="true"
-                              >
-                                {msg.board.emptyColumn}
-                              </div>
-                            ) : (
-                              <div
-                                className="oge-kanban-cards-inner"
-                                style={
-                                  virtualScrolling
-                                    ? { height: `${win.totalHeight}px` }
+                            {cellLimit && (
+                              <span
+                                className={
+                                  cellLimit.exceeded
+                                    ? 'oge-kanban-count oge-kanban-cell-wip oge-kanban-count-danger'
+                                    : 'oge-kanban-count oge-kanban-cell-wip'
+                                }
+                                title={
+                                  cellLimit.exceeded
+                                    ? formatKanbanMessage(
+                                        msg.board.cellWipExceeded,
+                                        {
+                                          count: String(cellLimit.count),
+                                          limit: String(cellLimit.limit),
+                                        },
+                                      )
                                     : undefined
                                 }
+                                aria-hidden="true"
                               >
-                                {dropIndex !== null && (
-                                  <div
-                                    className="oge-kanban-placeholder"
-                                    style={{
-                                      top: `${dropIndex * slot}px`,
-                                      height: `${view.cardHeight}px`,
-                                    }}
-                                    aria-hidden="true"
-                                  ></div>
-                                )}
+                                {cellLimit.count}
+                                <span className="oge-kanban-count-limit">
+                                  /{cellLimit.limit}
+                                </span>
+                              </span>
+                            )}
+                            <div
+                              className="oge-kanban-cards"
+                              role="list"
+                              aria-label={kanbanCellLabel(
+                                msg.board,
+                                cell.column,
+                                count,
+                                cellLimit ??
+                                  kanbanColumnWip(cell.column, view.counts),
+                              )}
+                              data-lane={lane.key ?? ''}
+                              data-col={cell.column.key}
+                              onScroll={(event) =>
+                                ctl.onCellScroll(
+                                  event,
+                                  lane.key,
+                                  cell.column.key,
+                                )
+                              }
+                            >
+                              {count === 0 ? (
+                                // decorative: the list label already carries the zero count
                                 <div
-                                  className="oge-kanban-cards-block"
+                                  className="oge-kanban-cell-empty"
+                                  aria-hidden="true"
+                                >
+                                  {msg.board.emptyColumn}
+                                </div>
+                              ) : (
+                                <div
+                                  className="oge-kanban-cards-inner"
                                   style={
                                     virtualScrolling
-                                      ? {
-                                          transform: `translateY(${win.offsetY}px)`,
-                                        }
+                                      ? { height: `${win.totalHeight}px` }
                                       : undefined
                                   }
                                 >
-                                  {cell.cards
-                                    .slice(win.start, win.end)
-                                    .map((card, offset) => {
-                                      const selected = view.selectedSet.has(
-                                        card.key,
-                                      );
-                                      const editing = Object.is(
-                                        st.editingTitleKey,
-                                        card.key,
-                                      );
-                                      const shifted = shiftedFor(
-                                        lane.key,
-                                        cell.column.key,
-                                        win.start + offset,
-                                        card,
-                                      );
-                                      const tinted =
-                                        cardColorMode === 'surface' &&
-                                        !!card.color;
-                                      const className = [
-                                        'oge-kanban-card',
-                                        selected
-                                          ? 'oge-kanban-card-selected'
-                                          : '',
-                                        selected && multi
-                                          ? 'oge-kanban-card-multi'
-                                          : '',
-                                        drag !== null &&
-                                        drag.card.key !== card.key &&
-                                        carriedSet.has(card.key)
-                                          ? 'oge-kanban-card-carried'
-                                          : '',
-                                        editing
-                                          ? 'oge-kanban-card-editing'
-                                          : '',
-                                        drag?.card.key === card.key
-                                          ? 'oge-kanban-card-hidden'
-                                          : '',
-                                        shifted
-                                          ? 'oge-kanban-card-shifted'
-                                          : '',
-                                        tinted ? 'oge-kanban-card-tinted' : '',
-                                      ]
-                                        .filter(Boolean)
-                                        .join(' ');
-                                      const style: CssVars = {
-                                        '--oge-kanban-card-tint':
-                                          card.color ?? undefined,
-                                        height: virtualScrolling
-                                          ? `${view.cardHeight}px`
-                                          : undefined,
-                                      };
-                                      return (
-                                        <div
-                                          key={String(card.key)}
-                                          className="oge-kanban-card-item"
-                                          role="listitem"
-                                        >
+                                  {dropIndex !== null && (
+                                    <div
+                                      className="oge-kanban-placeholder"
+                                      style={{
+                                        top: `${dropIndex * slot}px`,
+                                        height: `${view.cardHeight}px`,
+                                      }}
+                                      aria-hidden="true"
+                                    ></div>
+                                  )}
+                                  <div
+                                    className="oge-kanban-cards-block"
+                                    style={
+                                      virtualScrolling
+                                        ? {
+                                            transform: `translateY(${win.offsetY}px)`,
+                                          }
+                                        : undefined
+                                    }
+                                  >
+                                    {cell.cards
+                                      .slice(win.start, win.end)
+                                      .map((card, offset) => {
+                                        const selected = view.selectedSet.has(
+                                          card.key,
+                                        );
+                                        const editing = Object.is(
+                                          st.editingTitleKey,
+                                          card.key,
+                                        );
+                                        const shifted = shiftedFor(
+                                          lane.key,
+                                          cell.column.key,
+                                          win.start + offset,
+                                          card,
+                                        );
+                                        const tinted =
+                                          cardColorMode === 'surface' &&
+                                          !!card.color;
+                                        const className = [
+                                          'oge-kanban-card',
+                                          selected
+                                            ? 'oge-kanban-card-selected'
+                                            : '',
+                                          selected && multi
+                                            ? 'oge-kanban-card-multi'
+                                            : '',
+                                          drag !== null &&
+                                          drag.card.key !== card.key &&
+                                          carriedSet.has(card.key)
+                                            ? 'oge-kanban-card-carried'
+                                            : '',
+                                          editing
+                                            ? 'oge-kanban-card-editing'
+                                            : '',
+                                          drag?.card.key === card.key
+                                            ? 'oge-kanban-card-hidden'
+                                            : '',
+                                          shifted
+                                            ? 'oge-kanban-card-shifted'
+                                            : '',
+                                          tinted
+                                            ? 'oge-kanban-card-tinted'
+                                            : '',
+                                        ]
+                                          .filter(Boolean)
+                                          .join(' ');
+                                        const style: CssVars = {
+                                          '--oge-kanban-card-tint':
+                                            card.color ?? undefined,
+                                          height: virtualScrolling
+                                            ? `${view.cardHeight}px`
+                                            : undefined,
+                                        };
+                                        return (
                                           <div
-                                            className={className}
-                                            role="group"
-                                            aria-roledescription={
-                                              msg.board.cardRoleDescription
-                                            }
-                                            tabIndex={
-                                              view.focusable.has(card.key)
-                                                ? 0
-                                                : -1
-                                            }
-                                            data-key={String(card.key)}
-                                            aria-current={
-                                              view.selectedCardKey === card.key
-                                                ? 'true'
-                                                : undefined
-                                            }
-                                            aria-keyshortcuts={
-                                              shortcuts ?? undefined
-                                            }
-                                            style={style}
-                                            aria-label={kanbanCardLabel(
-                                              msg.board,
-                                              card,
-                                              view.columns,
-                                              selected,
-                                            )}
-                                            onClick={(event) =>
-                                              ctl.onCardClick(card, event)
-                                            }
-                                            onDoubleClick={(event) =>
-                                              ctl.onCardDblClick(card, event)
-                                            }
-                                            onContextMenu={(event) =>
-                                              ctl.onCardContextMenu(card, event)
-                                            }
-                                            onKeyDown={(event) =>
-                                              ctl.onCardKeydown(event, card)
-                                            }
-                                            onPointerDown={(event) =>
-                                              ctl.onCardPointerDown(
-                                                event,
+                                            key={String(card.key)}
+                                            className="oge-kanban-card-item"
+                                            role="listitem"
+                                          >
+                                            <div
+                                              className={className}
+                                              role="group"
+                                              aria-roledescription={
+                                                msg.board.cardRoleDescription
+                                              }
+                                              tabIndex={
+                                                view.focusable.has(card.key)
+                                                  ? 0
+                                                  : -1
+                                              }
+                                              data-key={String(card.key)}
+                                              aria-current={
+                                                view.selectedCardKey ===
+                                                card.key
+                                                  ? 'true'
+                                                  : undefined
+                                              }
+                                              aria-keyshortcuts={
+                                                shortcuts ?? undefined
+                                              }
+                                              style={style}
+                                              aria-label={kanbanCardLabel(
+                                                msg.board,
+                                                card,
+                                                view.columns,
+                                                selected,
+                                              )}
+                                              onClick={(event) =>
+                                                ctl.onCardClick(card, event)
+                                              }
+                                              onDoubleClick={(event) =>
+                                                ctl.onCardDblClick(card, event)
+                                              }
+                                              onContextMenu={(event) =>
+                                                ctl.onCardContextMenu(
+                                                  card,
+                                                  event,
+                                                )
+                                              }
+                                              onKeyDown={(event) =>
+                                                ctl.onCardKeydown(event, card)
+                                              }
+                                              onPointerDown={(event) =>
+                                                ctl.onCardPointerDown(
+                                                  event,
+                                                  card,
+                                                  cell.column,
+                                                  lane.key,
+                                                )
+                                              }
+                                            >
+                                              {editing && (
+                                                <input
+                                                  className="oge-kanban-card-title-input"
+                                                  type="text"
+                                                  defaultValue={card.title}
+                                                  aria-label={formatKanbanMessage(
+                                                    msg.board.editTitleLabel,
+                                                    { title: card.title },
+                                                  )}
+                                                  onKeyDown={(event) =>
+                                                    ctl.onTitleEditKeydown(
+                                                      event,
+                                                      card,
+                                                    )
+                                                  }
+                                                  onBlur={(event) =>
+                                                    ctl.onTitleEditBlur(
+                                                      event,
+                                                      card,
+                                                    )
+                                                  }
+                                                />
+                                              )}
+                                              {cardBody(
                                                 card,
                                                 cell.column,
                                                 lane.key,
-                                              )
-                                            }
-                                          >
-                                            {editing && (
-                                              <input
-                                                className="oge-kanban-card-title-input"
-                                                type="text"
-                                                defaultValue={card.title}
-                                                aria-label={formatKanbanMessage(
-                                                  msg.board.editTitleLabel,
-                                                  { title: card.title },
-                                                )}
-                                                onKeyDown={(event) =>
-                                                  ctl.onTitleEditKeydown(
-                                                    event,
-                                                    card,
-                                                  )
-                                                }
-                                                onBlur={(event) =>
-                                                  ctl.onTitleEditBlur(
-                                                    event,
-                                                    card,
-                                                  )
-                                                }
-                                              />
-                                            )}
-                                            {cardBody(
-                                              card,
-                                              cell.column,
-                                              lane.key,
-                                            )}
+                                              )}
+                                            </div>
                                           </div>
-                                        </div>
-                                      );
-                                    })}
+                                        );
+                                      })}
+                                  </div>
                                 </div>
+                              )}
+                            </div>
+                            {ctl.isQuickAddOpen(lane.key, cell.column.key) ? (
+                              <div className="oge-kanban-quick-add">
+                                <input
+                                  className="oge-kanban-quick-add-input"
+                                  type="text"
+                                  value={st.quickAddText}
+                                  aria-label={formatKanbanMessage(
+                                    msg.board.quickAddLabel,
+                                    { title: kanbanColumnTitle(cell.column) },
+                                  )}
+                                  placeholder={msg.board.quickAddPlaceholder}
+                                  onChange={(event) =>
+                                    ctl.onQuickAddInput(event.target.value)
+                                  }
+                                  onKeyDown={(event) =>
+                                    ctl.onQuickAddKeydown(
+                                      event,
+                                      cell.column,
+                                      lane.key,
+                                    )
+                                  }
+                                  onBlur={() =>
+                                    ctl.onQuickAddBlur(cell.column, lane.key)
+                                  }
+                                />
                               </div>
+                            ) : (
+                              ctl.canAddTo(cell.column, view) && (
+                                <button
+                                  type="button"
+                                  className="oge-kanban-add-card"
+                                  onClick={() =>
+                                    ctl.onFooterAdd(cell.column, lane.key)
+                                  }
+                                >
+                                  <PlusIcon size={13} />
+                                  {msg.menu.addCard}
+                                </button>
+                              )
                             )}
                           </div>
-                          {ctl.isQuickAddOpen(lane.key, cell.column.key) ? (
-                            <div className="oge-kanban-quick-add">
-                              <input
-                                className="oge-kanban-quick-add-input"
-                                type="text"
-                                value={st.quickAddText}
-                                aria-label={formatKanbanMessage(
-                                  msg.board.quickAddLabel,
-                                  { title: kanbanColumnTitle(cell.column) },
-                                )}
-                                placeholder={msg.board.quickAddPlaceholder}
-                                onChange={(event) =>
-                                  ctl.onQuickAddInput(event.target.value)
-                                }
-                                onKeyDown={(event) =>
-                                  ctl.onQuickAddKeydown(
-                                    event,
-                                    cell.column,
-                                    lane.key,
-                                  )
-                                }
-                                onBlur={() =>
-                                  ctl.onQuickAddBlur(cell.column, lane.key)
-                                }
-                              />
-                            </div>
-                          ) : (
-                            ctl.canAddTo(cell.column, view) && (
-                              <button
-                                type="button"
-                                className="oge-kanban-add-card"
-                                onClick={() =>
-                                  ctl.onFooterAdd(cell.column, lane.key)
-                                }
-                              >
-                                <PlusIcon size={13} />
-                                {msg.menu.addCard}
-                              </button>
-                            )
-                          )}
-                        </div>
-                      );
-                    })}
-                    {view.canAddColumn && (
-                      <div
-                        className="oge-kanban-cell-ghost"
-                        aria-hidden="true"
-                      ></div>
-                    )}
-                  </div>
-                )}
-              </section>
+                        );
+                      })}
+                      {view.canAddColumn && (
+                        <div
+                          className="oge-kanban-cell-ghost"
+                          aria-hidden="true"
+                        ></div>
+                      )}
+                    </div>
+                  )}
+                </section>
               );
             })}
           </>
@@ -1268,7 +1281,13 @@ function ChecklistBadge({
   );
 }
 
-const CheckIcon = ({ className, size }: { className: string; size: number }) => (
+const CheckIcon = ({
+  className,
+  size,
+}: {
+  className: string;
+  size: number;
+}) => (
   <svg
     className={className}
     viewBox="0 0 16 16"

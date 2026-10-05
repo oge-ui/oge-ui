@@ -97,13 +97,21 @@ describe('kanban filter', () => {
 
   it('matches priorities, columns, swimlanes and text', () => {
     expect(
-      keys(applyKanbanFilters(cards, [compileKanbanFilter({ priorities: ['high'] })])),
+      keys(
+        applyKanbanFilters(cards, [
+          compileKanbanFilter({ priorities: ['high'] }),
+        ]),
+      ),
     ).toEqual([2]);
     expect(
-      keys(applyKanbanFilters(cards, [compileKanbanFilter({ columns: ['done'] })])),
+      keys(
+        applyKanbanFilters(cards, [compileKanbanFilter({ columns: ['done'] })]),
+      ),
     ).toEqual([4]);
     expect(
-      keys(applyKanbanFilters(cards, [compileKanbanFilter({ swimlanes: ['A'] })])),
+      keys(
+        applyKanbanFilters(cards, [compileKanbanFilter({ swimlanes: ['A'] })]),
+      ),
     ).toEqual([1, 3]);
     expect(
       keys(applyKanbanFilters(cards, [compileKanbanFilter({ text: 'GRACE' })])),
@@ -161,9 +169,9 @@ describe('kanban column sort', () => {
   });
 
   it('sorts by priority rank (most important first ascending)', () => {
-    expect(todo(sortKanbanLanes(lanes, { '*': { field: 'priority' } }))).toEqual(
-      [2, 3, 1],
-    );
+    expect(
+      todo(sortKanbanLanes(lanes, { '*': { field: 'priority' } })),
+    ).toEqual([2, 3, 1]);
     expect(kanbanPriorityRank('HIGH')).toBeLessThan(kanbanPriorityRank('low'));
     expect(kanbanPriorityRank('5')).toBeLessThan(kanbanPriorityRank('2'));
     expect(kanbanPriorityRank(null)).toBe(Number.POSITIVE_INFINITY);

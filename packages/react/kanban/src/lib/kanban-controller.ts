@@ -574,7 +574,9 @@ export class KanbanController<T extends object> {
       filterChoices,
       filterValue,
       filtering:
-        st.searchQuery.trim() !== '' || filterTest !== null || chipTest !== null,
+        st.searchQuery.trim() !== '' ||
+        filterTest !== null ||
+        chipTest !== null,
       columnSort,
       cellCounts,
       laneCounts,
@@ -1008,7 +1010,10 @@ export class KanbanController<T extends object> {
     }
   }
 
-  isCardSelected(card: KanbanCard<T>, view: KanbanView<T> = this.view()): boolean {
+  isCardSelected(
+    card: KanbanCard<T>,
+    view: KanbanView<T> = this.view(),
+  ): boolean {
     return view.selectedSet.has(card.key);
   }
 
@@ -1396,7 +1401,12 @@ export class KanbanController<T extends object> {
     const nextField = field ?? active.field ?? 'order';
     const nextDirection = direction ?? active.direction;
     this.setColumnSort(
-      setKanbanColumnSort(this.columnSort, column.key, nextField, nextDirection),
+      setKanbanColumnSort(
+        this.columnSort,
+        column.key,
+        nextField,
+        nextDirection,
+      ),
     );
     this.announce(this.view().msg.announcements.sorted, {
       column: kanbanColumnTitle(column),
@@ -1411,7 +1421,9 @@ export class KanbanController<T extends object> {
     if (column == null) return;
     const keys: unknown[] = [];
     for (const lane of this.view().lanes) {
-      const cell = lane.columns.find((entry) => entry.column.key === column.key);
+      const cell = lane.columns.find(
+        (entry) => entry.column.key === column.key,
+      );
       for (const card of cell?.cards ?? []) keys.push(card.key);
     }
     this.selectCards(keys);
@@ -1759,7 +1771,12 @@ export class KanbanController<T extends object> {
         ? items.length
         : Math.min(Math.max(index, 0), items.length);
     items.splice(at, 0, item);
-    this.record({ kind: 'insert', key: view.fields.key(item), item, index: at });
+    this.record({
+      kind: 'insert',
+      key: view.fields.key(item),
+      item,
+      index: at,
+    });
     this.set({ items });
     this.props.onCardAdded?.({ card: item, column, swimlane });
     this.announce(view.msg.announcements.cardCreated, {
@@ -2241,7 +2258,10 @@ export class KanbanController<T extends object> {
       this.openNewCard(column.key, lane);
       return;
     }
-    this.set({ quickAddText: '', quickAddCell: kanbanCellKey(lane, column.key) });
+    this.set({
+      quickAddText: '',
+      quickAddCell: kanbanCellKey(lane, column.key),
+    });
     setTimeout(() =>
       this.host
         ?.querySelector<HTMLInputElement>('.oge-kanban-quick-add-input')
@@ -2405,7 +2425,10 @@ export class KanbanController<T extends object> {
       : formatKanbanMessage(
           template,
           Object.fromEntries(
-            Object.entries(tokens).map(([name, value]) => [name, String(value)]),
+            Object.entries(tokens).map(([name, value]) => [
+              name,
+              String(value),
+            ]),
           ),
         );
     this.set({ announcement: text });
