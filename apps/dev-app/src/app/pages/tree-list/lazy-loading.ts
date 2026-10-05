@@ -13,6 +13,7 @@ import { SNIPPET } from './lazy-loading-snippets';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tree List"
       title="Lazy Loading"
       [chips]="['hasItemsExpr', 'DataSource', 'loadMode']"
     >

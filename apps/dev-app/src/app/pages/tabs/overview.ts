@@ -75,6 +75,7 @@ class CreatedAt {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tabs"
       title="Tabs"
       [chips]="[
         '[(selectedIndex)] / [(selectedKey)]',

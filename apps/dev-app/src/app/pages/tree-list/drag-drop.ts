@@ -22,6 +22,7 @@ import { SNIPPET } from './drag-drop-snippets';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tree List"
       title="Drag & Drop"
       [chips]="['rowDragging', 'rowReparented']"
     >

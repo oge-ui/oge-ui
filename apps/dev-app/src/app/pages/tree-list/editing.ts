@@ -19,6 +19,7 @@ import { SNIPPET } from './editing-snippets';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tree List"
       title="Editing"
       [chips]="['editing.mode', 'formItems', 'addRow(parentKey)', 'initNewRow']"
     >

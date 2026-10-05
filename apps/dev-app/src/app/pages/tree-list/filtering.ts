@@ -25,6 +25,7 @@ import { SNIPPET } from './filtering-snippets';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tree List"
       title="Filtering & Search"
       [chips]="['filterRow', 'searchPanel', 'filterMode']"
     >

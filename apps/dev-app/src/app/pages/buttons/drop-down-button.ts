@@ -45,6 +45,7 @@ const SECTIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Buttons"
       title="Drop Down Button"
       [chips]="[
         'items',

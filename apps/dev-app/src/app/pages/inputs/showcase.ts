@@ -41,6 +41,7 @@ const SECTIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Inputs"
       title="Input Showcase"
       [chips]="[
         'showCounter',

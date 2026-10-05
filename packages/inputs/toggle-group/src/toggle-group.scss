@@ -61,7 +61,9 @@
   border: 1px solid transparent;
   border-radius: calc(var(--oge-radius) - 2px);
   background: transparent;
-  color: var(--oge-muted-color);
+  // readable secondary text: an unpressed segment must not read as a
+  // disabled one (those keep the muted look via opacity below)
+  color: var(--oge-input-muted);
   font: inherit;
   font-weight: 500;
   white-space: nowrap;

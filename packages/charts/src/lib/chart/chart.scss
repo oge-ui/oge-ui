@@ -593,6 +593,13 @@
   border: 0;
 }
 
+// An auto-layout table never shrinks below its content, so the 1px box above
+// would still be as wide as the data and widen the page (a horizontal scroll
+// on phones). Fixed layout lets the table honour the 1px width.
+.oge-chart-sr-table {
+  table-layout: fixed;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .oge-chart-bar,
   .oge-chart-marker,

@@ -39,6 +39,7 @@ const SECTIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Buttons"
       title="Button Interactions"
       [chips]="[
         'action',

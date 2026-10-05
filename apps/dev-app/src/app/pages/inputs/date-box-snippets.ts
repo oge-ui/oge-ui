@@ -69,8 +69,9 @@ export const RANGE_SNIPPET = demoSource({
 <!-- start–end on one field; typed or picked, reversed pairs reorder -->
 <oge-date-range-box label="Period" [(value)]="period" />
 
-<!-- datetime range: start/end time lists + OK, commits as a draft -->
-<oge-date-range-box type="datetime" [interval]="30" [(value)]="window" />`,
+<!-- datetime range: start/end time lists + OK, commits as a draft; two
+     date-times need a wider field than the 240px default -->
+<oge-date-range-box type="datetime" [interval]="30" width="min(100%, 360px)" [(value)]="window" />`,
   body: `protected readonly range = signal<OgeCalendarRange>([null, null]);
 protected readonly period = signal<OgeCalendarRange>([null, null]);
 protected readonly window = signal<OgeCalendarRange>([null, null]);`,

@@ -9,7 +9,9 @@
   width: $size;
   height: $size;
   flex: none;
-  border: 1px solid var(--oge-border-color);
+  // the unchecked box is drawn by its border alone, so it takes the muted
+  // token (the hairline border colour all but vanishes on the surface)
+  border: 1px solid var(--oge-muted-color);
   border-radius: 4px;
   background: var(--oge-bg);
   color: var(--oge-severity-contrast);

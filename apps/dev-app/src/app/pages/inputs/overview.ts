@@ -51,6 +51,7 @@ const SECTIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Inputs"
       title="Inputs"
       [chips]="[
         'labelMode',

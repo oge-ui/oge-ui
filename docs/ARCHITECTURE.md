@@ -735,6 +735,15 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   `overflow: hidden` parent grow the hit area inward instead (the grid column resize handle). Hover-only
   affordances also show on `:focus-within`, on the selected item and under `@media (hover: none)`.
 - Icons are inline SVG with `aria-hidden="true"` — there is no icon font or icon package.
+- **State colours: idle is not disabled.** `--oge-border-color` is a hairline for frames and
+  dividers; a control whose *off* state is drawn by its outline alone (unchecked check box, radio
+  ring, switch track, tree-view check) outlines it in `--oge-muted-color`, or it all but vanishes.
+  Idle-but-enabled text a user acts on (unselected tab, unpressed toggle-group segment, switch
+  track text) uses the readable `--oge-input-muted`; `--oge-muted-color` plus opacity is what
+  disabled looks like. A rule that rotates the dropdown glyph on open is scoped to chevrons — the
+  date editors share `.oge-select-box-open` but draw a calendar / clock (`visual-states.spec.ts`).
+- **Visually hidden tables use `table-layout: fixed`.** An auto-layout table never shrinks below
+  its content, so a 1px sr-only `<table>` (the charts' data table) still widened the page on phones.
 - **Viewport units: never a bare `vh` limit.** On mobile `100vh` is the _largest_ viewport (toolbar
   collapsed), so a `max-height: calc(100vh - …)` dialog runs under the browser chrome and the
   on-screen keyboard. Write the `vh` line as the old-engine fallback and follow it with `dvh` (tracks
@@ -1253,6 +1262,18 @@ rules — change both together.
   grid under the high-contrast theme with it on. `forced-colors.spec.ts` / `reduced-motion.spec.ts`
   use `page.emulateMedia({ forcedColors | reducedMotion })` to guard the focus ring, system-colour
   selection and zeroed transitions.
+- **Visual states are guarded by computed styles, not screenshots.** `visual-states.spec.ts`
+  compares the painted colours of on/off/selected/idle/disabled states (toggle controls, date box
+  closed/open, buttons, tabs, open select box; light and dark) with the token each must resolve
+  to, read through a probe inside the component, plus a 390px no-sideways-scroll check. Pixel
+  baselines were rejected: Windows and the Linux CI runners rasterise text differently, so
+  `toHaveScreenshot` would need per-platform baselines and still flake on sub-pixel text, while
+  the regressions it must catch are a state losing its colour.
+- **Docs chrome vs. component CSS.** The components' styles are unlayered, so they beat any
+  Tailwind utility on the same element: never hide or resize an `oge-*` host with a utility
+  (`max-sm:hidden` on `<oge-select-box>` did nothing and widened every page on phones) — use a
+  wrapper or a rule in `apps/dev-app/src/styles.css`. Tailwind v4 paints a bare `border` in
+  `currentColor`; `tailwind.css` restores a neutral default for the docs' own boxes.
 - **Vitest workers are capped, on purpose.** Nx runs projects concurrently
   (`parallel: 3` in `nx.json`) and each vitest would otherwise size its own pool to the whole
   machine — 3 × cores threads on cores cores. That oversubscription is what used to make heavy

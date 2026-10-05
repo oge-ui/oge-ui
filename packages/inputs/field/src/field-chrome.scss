@@ -487,7 +487,12 @@
   transition: transform 120ms ease;
 }
 
-.oge-select-box-open .oge-input-dropdown svg {
+// Only the chevron flips while open. The date box and the date range box
+// share the open class but draw a calendar / clock glyph, which must stay
+// upright (rotated, the calendar reads as a different icon).
+.oge-select-box-open:not(.oge-date-box, .oge-date-range-box)
+  .oge-input-dropdown
+  svg {
   transform: rotate(180deg);
 }
 

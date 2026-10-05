@@ -30,6 +30,15 @@
 .app-theme-select.oge-input {
   width: 7.5rem;
 }
+/* `max-sm:hidden` on the host loses to the component's own unlayered
+   `.oge-input { display }`, so the select stayed on phones, overlapped the
+   dark-mode button and widened every page. Hide it here (Tailwind's sm
+   breakpoint, 40rem). */
+@media (max-width: 39.99rem) {
+  .app-theme-select.oge-input {
+    display: none;
+  }
+}
 .app-theme-select .oge-input-subscript {
   display: none;
 }

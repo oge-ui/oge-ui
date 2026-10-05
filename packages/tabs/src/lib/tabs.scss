@@ -137,7 +137,9 @@
   border: none;
   border-block-end: 2px solid transparent;
   background: transparent;
-  color: var(--oge-muted-color);
+  // readable secondary text (WCAG AA); the muted token is reserved for the
+  // disabled tab, so an idle tab never reads as a disabled one
+  color: var(--oge-input-muted);
   font: inherit;
   white-space: nowrap;
   cursor: pointer;

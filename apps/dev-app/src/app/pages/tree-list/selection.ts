@@ -25,6 +25,7 @@ import { SNIPPET } from './selection-snippets';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Tree List"
       title="Selection"
       [chips]="['selectionMode', 'selectionRecursive', 'selectedKeys']"
     >

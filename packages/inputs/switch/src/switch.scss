@@ -48,7 +48,9 @@
   min-width: 42px;
   height: 22px;
   padding-inline: 24px 9px;
-  border: 1px solid var(--oge-border-color);
+  // the off track is outlined in the muted token so "off" is still visibly
+  // a control (the hairline border colour all but vanishes on the surface)
+  border: 1px solid var(--oge-muted-color);
   border-radius: 999px;
   background: var(--oge-header-bg, var(--oge-bg));
   transition:
@@ -58,7 +60,7 @@
 }
 
 .oge-switch-button:hover:not(:disabled) .oge-switch-track {
-  border-color: var(--oge-muted-color);
+  border-color: var(--oge-input-muted);
 }
 
 .oge-switch-thumb {
@@ -88,7 +90,7 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   line-height: 1;
-  color: var(--oge-muted-color);
+  color: var(--oge-input-muted);
   user-select: none;
   white-space: nowrap;
   transition: color 160ms ease;

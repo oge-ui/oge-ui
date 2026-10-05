@@ -138,6 +138,7 @@ function RangeDemo(): ReactNode {
         key: 'maintenance',
         label: 'Maintenance window',
         type: 'datetime',
+        width: 'min(100%, 360px)',
         interval: 30,
         showClearButton: true,
         value: maintenance,

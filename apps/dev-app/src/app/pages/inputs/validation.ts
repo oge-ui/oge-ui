@@ -53,6 +53,7 @@ const SECTIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
+      category="Inputs"
       title="Input Validation"
       [chips]="fw.isReact() ? reactChips : chips"
     >

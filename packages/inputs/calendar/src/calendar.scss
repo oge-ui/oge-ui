@@ -5,6 +5,10 @@
 
   display: inline-flex;
   flex-direction: column;
+  box-sizing: border-box;
+  // never wider than the container: a multi-month calendar wraps its months
+  // (`.oge-calendar-views`) instead of running out of a narrow card
+  max-width: 100%;
   gap: 4px;
   padding: 8px;
   border: 1px solid var(--oge-border-color);
@@ -74,6 +78,8 @@
 
 .oge-calendar-views {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
 }
 
