@@ -92,6 +92,7 @@
   --oge-scheduler-grid-line: var(--oge-border-color);
   --oge-scheduler-allday-bg: var(--oge-header-bg);
   --oge-scheduler-hour-fg: var(--oge-muted-color);
+  --oge-scheduler-off-hours-bg: var(--oge-detail-bg);
   --oge-gantt-bar-bg: var(--oge-accent);
   --oge-gantt-grid-line: var(--oge-border-color);
   --oge-kanban-card-bg: var(--oge-bg);
@@ -180,6 +181,7 @@
     --oge-scheduler-grid-line: var(--oge-border-color);
     --oge-scheduler-allday-bg: var(--oge-header-bg);
     --oge-scheduler-hour-fg: var(--oge-muted-color);
+    --oge-scheduler-off-hours-bg: var(--oge-detail-bg);
     --oge-gantt-bar-bg: var(--oge-accent);
     --oge-gantt-grid-line: var(--oge-border-color);
     --oge-kanban-card-bg: var(--oge-bg);
