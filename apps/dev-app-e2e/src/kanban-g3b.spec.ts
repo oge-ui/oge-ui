@@ -159,7 +159,9 @@ for (const layer of LAYERS) {
       await page.keyboard.press('F2');
       const title = host.locator('.oge-kanban-card-title-input');
       await title.fill('Renamed inline');
-      await title.press('Enter');
+      // React re-renders the editor on input: press Enter on the focused
+      // element, not on a locator the re-render may have replaced
+      await page.keyboard.press('Enter');
       await expect(
         host.locator('.oge-kanban-card-title', { hasText: 'Renamed inline' }),
       ).toBeVisible();

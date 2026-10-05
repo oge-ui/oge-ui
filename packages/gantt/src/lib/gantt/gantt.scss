@@ -179,7 +179,7 @@
   z-index: 3;
   display: flex;
   flex-direction: column;
-  min-block-size: calc(var(--oge-gantt-scale-head, 48px) + 1px);
+  min-block-size: calc(var(--oge-gantt-scale-head) + 1px);
   box-sizing: border-box;
   background: var(--oge-header-bg);
   border-block-end: 1px solid var(--oge-border-color);
