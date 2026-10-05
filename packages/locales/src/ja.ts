@@ -498,6 +498,19 @@ export const ja: OgeLocalePack = {
     fieldRemovedPattern: '{0} をレイアウトから削除しました',
   },
   scheduler: {
+    export: {
+      subject: '件名',
+      start: '開始',
+      end: '終了',
+      allDay: '終日',
+      location: '場所',
+      description: '説明',
+      recurring: '定期的な予定',
+      yes: 'はい',
+      no: 'いいえ',
+      sheetName: '予定',
+      noData: 'この期間に予定はありません',
+    },
     toolbar: {
       label: 'スケジューラー ツールバー',
       today: '今日',
@@ -507,6 +520,9 @@ export const ja: OgeLocalePack = {
       dateNavigatorLabel: '日付を選択',
       newAppointment: '新規',
       viewNames: {
+        timelineWorkWeek: 'タイムライン (稼働日)',
+        timelineMonth: 'タイムライン (月)',
+        timelineYear: 'タイムライン (年)',
         day: '日',
         week: '週',
         workWeek: '稼働日',
@@ -523,6 +539,38 @@ export const ja: OgeLocalePack = {
       close: '閉じる',
     },
     editor: {
+      repeatByLabel: '繰り返しの基準',
+      repeatByOptions: { day: '月の日付', weekday: '曜日' },
+      monthDaysLabel: '日付',
+      lastDayOfMonth: '月末日',
+      setPosLabel: '週の指定',
+      ordinals: {
+        first: '第1',
+        second: '第2',
+        third: '第3',
+        fourth: '第4',
+        last: '最終',
+      },
+      weekdayKindLabel: '日の種類',
+      dayKinds: { day: '日', weekday: '平日', weekendDay: '週末' },
+      yearMonthLabel: '月',
+      exceptionsLabel: 'スキップした予定',
+      summaryLabel: '繰り返しの概要',
+      summary: {
+        daily: '{interval, plural, =1 {毎日} other {# 日ごと}}',
+        weekly: '{interval, plural, =1 {毎週} other {# 週間ごと}}',
+        weeklyOn: '{interval, plural, =1 {毎週} other {# 週間ごと}} {days}',
+        monthlyDay:
+          '{interval, plural, =1 {毎月} other {# か月ごと}} {days} 日',
+        monthlyWeekday:
+          '{interval, plural, =1 {毎月} other {# か月ごと}} {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, =1 {毎年} other {# 年ごと}} {month} {days} 日',
+        yearlyWeekday:
+          '{interval, plural, =1 {毎年} other {# 年ごと}} {month} {ordinal} {day}',
+        count: '{summary}、{count, plural, =1 {1 回} other {# 回}}',
+        until: '{summary}、{date} まで',
+      },
       titleNew: '新しい予定',
       titleEdit: '予定の編集',
       subjectLabel: '件名',
@@ -577,6 +625,15 @@ export const ja: OgeLocalePack = {
       deleteAppointment: '削除',
     },
     grid: {
+      weekNumber: 'W{week}',
+      weekNumberLabel: '第 {week} 週',
+      unavailableLabel: '利用不可',
+      selectedLabel: '選択中',
+      moreAppointmentsLabel:
+        '{date} にあと {count, plural, other {# 件}}の予定',
+      morePopupLabel: '{date} の予定',
+      goToDay: '日付へ移動',
+      closeLabel: '閉じる',
       gridLabel: 'スケジューラー、{period}',
       allDayLabel: '終日',
       cellLabel: '{date}、{time}',
@@ -589,6 +646,17 @@ export const ja: OgeLocalePack = {
       unassignedLabel: '未割り当て',
     },
     announcements: {
+      slotUnavailable: 'この時間は利用できません',
+      conflict: '{text} は他の予定と重複しています',
+      copied: '{count, plural, other {# 件の予定をコピーしました}}',
+      pasted: '{count, plural, other {# 件の予定を貼り付けました}}',
+      selected:
+        '{count, plural, =0 {選択を解除しました} other {# 件の予定を選択しました}}',
+      undone: '元に戻しました',
+      redone: 'やり直しました',
+      dropped: '{text} を追加しました',
+      pickedUp:
+        '{text} を持ち上げました。スケジューラーのセルにフォーカスして Enter キーで配置、Esc キーでキャンセルします。',
       created: '{text} を作成しました',
       updated: '{text} を更新しました',
       deleted: '{text} を削除しました',

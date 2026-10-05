@@ -492,6 +492,19 @@ export const tr: OgeLocalePack = {
     fieldRemovedPattern: '{0} düzenden kaldırıldı',
   },
   scheduler: {
+    export: {
+      subject: 'Konu',
+      start: 'Başlangıç',
+      end: 'Bitiş',
+      allDay: 'Tüm gün',
+      location: 'Konum',
+      description: 'Açıklama',
+      recurring: 'Tekrarlayan',
+      yes: 'Evet',
+      no: 'Hayır',
+      sheetName: 'Randevular',
+      noData: 'Bu dönemde randevu yok',
+    },
     toolbar: {
       label: 'Zamanlayıcı araç çubuğu',
       today: 'Bugün',
@@ -501,6 +514,9 @@ export const tr: OgeLocalePack = {
       dateNavigatorLabel: 'Bir tarih seçin',
       newAppointment: 'Yeni',
       viewNames: {
+        timelineWorkWeek: 'Zaman Çizelgesi İş Haftası',
+        timelineMonth: 'Zaman Çizelgesi Ay',
+        timelineYear: 'Zaman Çizelgesi Yıl',
         day: 'Gün',
         week: 'Hafta',
         workWeek: 'İş Haftası',
@@ -517,6 +533,43 @@ export const tr: OgeLocalePack = {
       close: 'Kapat',
     },
     editor: {
+      repeatByLabel: 'Tekrar ölçütü',
+      repeatByOptions: { day: 'Ayın günü', weekday: 'Haftanın günü' },
+      monthDaysLabel: 'Günler',
+      lastDayOfMonth: 'Son gün',
+      setPosLabel: 'Sıra',
+      ordinals: {
+        first: 'birinci',
+        second: 'ikinci',
+        third: 'üçüncü',
+        fourth: 'dördüncü',
+        last: 'son',
+      },
+      weekdayKindLabel: 'Gün',
+      dayKinds: {
+        day: 'gün',
+        weekday: 'hafta içi günü',
+        weekendDay: 'hafta sonu günü',
+      },
+      yearMonthLabel: 'Ay',
+      exceptionsLabel: 'Atlanan tekrarlar',
+      summaryLabel: 'Tekrar özeti',
+      summary: {
+        daily: '{interval, plural, =1 {Her gün} other {# günde bir}}',
+        weekly: '{interval, plural, =1 {Her hafta} other {# haftada bir}}',
+        weeklyOn:
+          '{interval, plural, =1 {Her hafta} other {# haftada bir}} {days}',
+        monthlyDay:
+          '{interval, plural, =1 {Her ay} other {# ayda bir}}, ayın {days}. günü',
+        monthlyWeekday:
+          '{interval, plural, =1 {Her ay} other {# ayda bir}}, ayın {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, =1 {Her yıl} other {# yılda bir}}, {month} {days}',
+        yearlyWeekday:
+          '{interval, plural, =1 {Her yıl} other {# yılda bir}}, {month} ayının {ordinal} {day}',
+        count: '{summary}, {count, plural, =1 {bir kez} other {# kez}}',
+        until: '{summary}, {date} tarihine kadar',
+      },
       titleNew: 'Yeni randevu',
       titleEdit: 'Randevuyu düzenle',
       subjectLabel: 'Konu',
@@ -571,6 +624,15 @@ export const tr: OgeLocalePack = {
       deleteAppointment: 'Sil',
     },
     grid: {
+      weekNumber: 'H{week}',
+      weekNumberLabel: '{week}. hafta',
+      unavailableLabel: 'kullanılamaz',
+      selectedLabel: 'seçili',
+      moreAppointmentsLabel:
+        '{date} tarihinde {count, plural, other {# randevu daha}}',
+      morePopupLabel: '{date} tarihindeki randevular',
+      goToDay: 'Güne git',
+      closeLabel: 'Kapat',
       gridLabel: 'Zamanlayıcı, {period}',
       allDayLabel: 'Tüm gün',
       cellLabel: '{date}, {time}',
@@ -582,6 +644,17 @@ export const tr: OgeLocalePack = {
       unassignedLabel: 'Atanmamış',
     },
     announcements: {
+      slotUnavailable: 'Bu zaman dilimi kullanılamıyor',
+      conflict: '{text} başka bir randevuyla çakışıyor',
+      copied: '{count, plural, other {# randevu kopyalandı}}',
+      pasted: '{count, plural, other {# randevu yapıştırıldı}}',
+      selected:
+        '{count, plural, =0 {Seçim temizlendi} other {# randevu seçildi}}',
+      undone: 'Geri alındı',
+      redone: 'Yeniden yapıldı',
+      dropped: '{text} eklendi',
+      pickedUp:
+        '{text} alındı. Yerleştirmek için bir zamanlayıcı hücresine odaklanıp Enter tuşuna, iptal etmek için Escape tuşuna basın.',
       created: '{text} oluşturuldu',
       updated: '{text} güncellendi',
       deleted: '{text} silindi',

@@ -124,7 +124,11 @@ const at = (obj, dotted) =>
 /** `{name}` / `{name, plural, …}` argument names of an English string. */
 function argNames(template) {
   const names = new Set();
-  for (const m of template.matchAll(/\{\s*(\w+)\s*(?=[,}])/g)) names.add(m[1]);
+  // `one {once}` is a plural branch holding literal text, not an argument
+  for (const m of template.matchAll(
+    /(?<!(?:=\d+|zero|one|two|few|many|other)\s*)\{\s*(\w+)\s*(?=[,}])/g,
+  ))
+    names.add(m[1]);
   return names;
 }
 function pluralArgs(template) {
