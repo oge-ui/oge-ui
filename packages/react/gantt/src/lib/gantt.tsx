@@ -10,6 +10,7 @@ import {
   useState,
   type CSSProperties,
   type ForwardedRef,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactElement,
   type Ref,
 } from 'react';
@@ -17,11 +18,13 @@ import type { RowKey } from '@oge-ui/core';
 import {
   OgeGanttCore,
   type GanttEditorModel,
+  type GanttTask,
   type OgeGanttColumn,
   type OgeGanttMessages,
   type OgeGanttResource,
   type OgeGanttScaleType,
   type OgeGanttStripLine,
+  type OgeGanttViewMode,
 } from '@oge-ui/gantt-engine';
 import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
 import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
@@ -43,6 +46,7 @@ const NO_DATES: readonly Date[] = [];
 const NO_RESOURCES: readonly OgeGanttResource[] = [];
 const NO_STRIPS: readonly OgeGanttStripLine[] = [];
 const NO_MESSAGES: Partial<OgeGanttMessages> = {};
+const NO_KEYS: readonly RowKey[] = [];
 const DEFAULT_COLUMNS: readonly OgeGanttColumn[] = [
   { field: 'title' },
   { field: 'start' },
@@ -73,6 +77,13 @@ function OgeGanttInner<
   );
   const selectedState = useRef<RowKey | null>(
     props.defaultSelectedTaskKey ?? null,
+  );
+  const selectedKeysState = useRef<readonly RowKey[]>(
+    props.defaultSelectedTaskKeys ?? NO_KEYS,
+  );
+  const baselineState = useRef<number>(props.defaultBaselineIndex ?? 0);
+  const viewModeState = useRef<OgeGanttViewMode>(
+    props.defaultViewMode ?? 'tasks',
   );
 
   const [dialog, setDialog] = useState<GanttDialogState | null>(null);
@@ -130,6 +141,36 @@ function OgeGanttInner<
               : selectedState.current,
           rtlEnabled: () => p().rtlEnabled,
           config: () => configRef.current,
+          manuallyScheduledExpr: () =>
+            p().manuallyScheduledExpr ?? 'manuallyScheduled',
+          constraintTypeExpr: () => p().constraintTypeExpr ?? 'constraintType',
+          constraintDateExpr: () => p().constraintDateExpr ?? 'constraintDate',
+          deadlineExpr: () => p().deadlineExpr ?? 'deadline',
+          segmentsExpr: () => p().segmentsExpr ?? 'segments',
+          baselinesExpr: () => p().baselinesExpr ?? 'baselines',
+          unitsExpr: () => p().unitsExpr ?? 'units',
+          effortExpr: () => p().effortExpr ?? 'effort',
+          dependencyLagExpr: () => p().dependencyLagExpr ?? 'lag',
+          dependencyLagUnitExpr: () => p().dependencyLagUnitExpr ?? 'lagUnit',
+          projectStart: () => p().projectStart ?? null,
+          statusDate: () => p().statusDate ?? null,
+          showProgressLine: () => p().showProgressLine ?? false,
+          showRollups: () => p().showRollups ?? false,
+          baselineIndex: () => p().baselineIndex ?? baselineState.current,
+          zoomPresets: () => p().zoomPresets ?? null,
+          effortDriven: () => p().effortDriven ?? false,
+          hoursPerDay: () => p().hoursPerDay ?? 8,
+          showResourceHistogram: () => p().showResourceHistogram ?? false,
+          viewMode: () => p().viewMode ?? viewModeState.current,
+          selectionMode: () => p().selectionMode ?? 'single',
+          selectedTaskKeys: () =>
+            p().selectedTaskKeys ?? selectedKeysState.current,
+          inlineEditing: () => p().inlineEditing ?? false,
+          allowSorting: () => p().allowSorting ?? false,
+          allowColumnResizing: () => p().allowColumnResizing ?? false,
+          allowColumnReordering: () => p().allowColumnReordering ?? false,
+          filterRow: () => p().filterRow ?? false,
+          searchPanel: () => p().searchPanel ?? false,
         },
         events: {
           taskInserting: (event) => p().onTaskInserting?.(event),
@@ -164,6 +205,30 @@ function OgeGanttInner<
             rerender();
             p().onSelectedTaskKeyChange?.(key);
           },
+          selectedTaskKeysChange: (keys) => {
+            selectedKeysState.current = keys;
+            rx.invalidate();
+            rerender();
+            p().onSelectedTaskKeysChange?.(keys);
+          },
+          baselineIndexChange: (index) => {
+            baselineState.current = index;
+            rx.invalidate();
+            rerender();
+            p().onBaselineIndexChange?.(index);
+          },
+          viewModeChange: (mode) => {
+            viewModeState.current = mode;
+            rx.invalidate();
+            rerender();
+            p().onViewModeChange?.(mode);
+          },
+          schedulingConflict: (event) => p().onSchedulingConflict?.(event),
+          dependencyUpdating: (event) => p().onDependencyUpdating?.(event),
+          dependencyUpdated: (event) => p().onDependencyUpdated?.(event),
+          sortChanged: (event) => p().onSortChanged?.(event),
+          columnResized: (event) => p().onColumnResized?.(event),
+          columnReordered: (event) => p().onColumnReordered?.(event),
         },
         openDialog: (editorModel, isNew, items) => {
           setDialog({
@@ -205,6 +270,10 @@ function OgeGanttInner<
   useIsomorphicLayoutEffect(() => {
     core.syncRenderedRange();
   });
+  // `onSchedulingConflict` fires when the conflict set changes
+  useEffect(() => {
+    core.syncConflicts();
+  });
 
   // the core's announcements go through the document's shared live region
   const liveAnnouncer = useOgeLiveAnnouncer();
@@ -229,8 +298,28 @@ function OgeGanttInner<
       insertTask: (taskData) => core.insertTask(taskData),
       updateTask: (taskData, patch) => core.updateTask(taskData, patch),
       deleteTask: (taskData) => core.deleteTask(taskData),
-      insertDependency: (predecessorKey, successorKey, type) =>
-        core.insertDependency(predecessorKey, successorKey, type),
+      insertDependency: (predecessorKey, successorKey, type, options) =>
+        core.insertDependency(predecessorKey, successorKey, type, options),
+      updateDependency: (dependencyData, patch) =>
+        core.updateDependency(dependencyData, patch),
+      scheduleProject: () => core.scheduleProject(),
+      getTaskSlack: (key) => core.getTaskSlack(key),
+      setBaseline: (index) => core.setBaseline(index),
+      applyZoomPreset: (index) => core.applyZoomPreset(index),
+      sortBy: (field, direction) => core.sortBy(field, direction),
+      setFilter: (field, text) => core.setFilter(field, text),
+      setSearchText: (text) => core.setSearchText(text),
+      clearFilters: () => core.clearFilters(),
+      setColumnWidth: (field, width) => core.setColumnWidth(field, width),
+      moveColumn: (field, toIndex) => core.moveColumn(field, toIndex),
+      editCell: (task, field) =>
+        core.beginCellEdit(task as GanttTask<T>, field),
+      getSelectedTasks: () => core.getSelectedTasks(),
+      selectAll: () => core.selectAll(),
+      clearSelection: () => core.clearSelection(),
+      deleteTasks: (items) => core.deleteTasks(items),
+      indentTasks: (tasks) => core.indentTasks(tasks),
+      outdentTasks: (tasks) => core.outdentTasks(tasks),
       deleteDependency: (dependencyData) =>
         core.deleteDependency(dependencyData),
       undo: () => core.undo(),
@@ -258,20 +347,36 @@ function OgeGanttInner<
   const allowTaskUpdating = props.allowTaskUpdating ?? true;
   const allowTaskDeleting = props.allowTaskDeleting ?? true;
   const allowDependencyAdding = props.allowDependencyAdding ?? true;
+  const allowDependencyDeleting = props.allowDependencyDeleting ?? true;
   const showRowLines = props.showRowLines ?? true;
   const titlePosition = props.taskTitlePosition ?? 'inside';
+  const filterRow = props.filterRow ?? false;
+  const allowColumnResizing = props.allowColumnResizing ?? false;
   const rowHeight = core.rowHeight();
-  const selectedTaskKey =
-    props.selectedTaskKey !== undefined
-      ? (props.selectedTaskKey ?? null)
-      : selectedState.current;
   const scale = core.scale();
+  const headerInteractive = core.headerInteractive();
+  const editingCell = core.editingCell();
+  const depEditor = core.dependencyEditor();
+  const progressLine = core.progressLine();
+  const histogramRows = core.histogramRows();
+  const zoomOptions = core.zoomOptions();
+  const activeZoom = core.activeZoomIndex();
+  const baselineCount = core.baselineCount();
+  const activeBaseline = core.activeBaseline();
+  const frozenStyle = (column: {
+    frozen: boolean;
+    frozenOffsetPx: number;
+    widthPx: number;
+  }): CSSProperties => ({
+    width: column.widthPx,
+    insetInlineStart: column.frozen ? column.frozenOffsetPx : undefined,
+  });
   const visible = core.visibleTasks();
   const windowTasks = core.windowTasks();
   const columns = core.resolvedColumns();
   const rovingKey = core.rovingKey();
   const hoverKey = core.hoverKey();
-  const totalHeight = (props.tasks ?? NO_ITEMS).length * rowHeight;
+  const totalHeight = core.rowCount() * rowHeight;
   const todayPx = core.todayPx();
   const linkPreview = core.linkPreview();
   const drawPreview = core.drawPreview();
@@ -393,6 +498,60 @@ function OgeGanttInner<
             {msg.toolbar.today}
           </button>
         </div>
+        <select
+          className="oge-gantt-select"
+          aria-label={msg.toolbar.scale}
+          value={activeZoom}
+          onChange={(event) => core.applyZoomPreset(Number(event.target.value))}
+        >
+          {activeZoom < 0 ? (
+            <option value={-1} disabled>
+              —
+            </option>
+          ) : null}
+          {zoomOptions.map((option) => (
+            <option key={option.index} value={option.index}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {baselineCount > 1 ? (
+          <select
+            className="oge-gantt-select"
+            aria-label={msg.toolbar.baseline}
+            value={activeBaseline < 0 ? -1 : activeBaseline}
+            onChange={(event) =>
+              core.setBaselineIndex(Number(event.target.value))
+            }
+          >
+            <option value={-1}>{msg.grid.baselineNone}</option>
+            {Array.from({ length: baselineCount }, (_, index) => (
+              <option key={index} value={index}>
+                {msg.grid.baselineOption.replace('{index}', String(index + 1))}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        {(props.resources ?? NO_RESOURCES).length > 0 ? (
+          <button
+            type="button"
+            className="oge-gantt-btn oge-gantt-btn-toggle"
+            aria-pressed={core.viewMode() === 'resources'}
+            onClick={() => core.toggleViewMode()}
+          >
+            {msg.toolbar.resourceView}
+          </button>
+        ) : null}
+        {props.searchPanel ? (
+          <input
+            type="search"
+            className="oge-gantt-search"
+            aria-label={msg.toolbar.search}
+            placeholder={msg.toolbar.search}
+            value={core.searchText()}
+            onChange={(event) => core.setSearchText(event.target.value)}
+          />
+        ) : null}
         <div className="oge-gantt-toolbar-group">
           <button
             type="button"
@@ -498,24 +657,124 @@ function OgeGanttInner<
             className="oge-gantt-pane"
             role="treegrid"
             aria-label={core.paneAriaLabel()}
-            aria-rowcount={(props.tasks ?? NO_ITEMS).length}
+            aria-rowcount={core.rowCount()}
+            aria-multiselectable={
+              core.selectionMode() === 'multiple' ? true : undefined
+            }
             onKeyDown={(event) => core.onPaneKeydown(event)}
           >
-            <div className="oge-gantt-pane-header" role="row">
-              {columns.map((column) => (
-                <div
-                  key={column.field}
-                  className="oge-gantt-pane-headcell"
-                  role="columnheader"
-                  style={{ width: column.widthPx }}
-                >
-                  {column.header}
+            <div
+              className={
+                filterRow
+                  ? 'oge-gantt-pane-head oge-gantt-pane-head-filter'
+                  : 'oge-gantt-pane-head'
+              }
+            >
+              <div className="oge-gantt-pane-header" role="row">
+                {columns.map((column, colIndex) =>
+                  headerInteractive ? (
+                    <div
+                      key={column.field}
+                      className={[
+                        'oge-gantt-pane-headcell oge-gantt-headcell-interactive',
+                        column.frozen ? 'oge-gantt-frozen' : '',
+                        column.sortable ? 'oge-gantt-sortable' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      role="columnheader"
+                      style={frozenStyle(column)}
+                      aria-sort={column.sortDirection ?? undefined}
+                      aria-keyshortcuts={core.headerShortcuts() ?? undefined}
+                      data-col-index={colIndex}
+                      tabIndex={colIndex === core.headerFocusIndex() ? 0 : -1}
+                      onClick={() => core.onHeaderClick(column, colIndex)}
+                      onKeyDown={(event) =>
+                        core.onHeaderKeydown(colIndex, event)
+                      }
+                      onPointerDown={(event) =>
+                        core.onHeaderPointerDown(column, event)
+                      }
+                    >
+                      <span className="oge-gantt-headcell-text">
+                        {column.header}
+                      </span>
+                      {column.sortDirection ? (
+                        <svg
+                          className={
+                            column.sortDirection === 'descending'
+                              ? 'oge-gantt-sort-icon oge-gantt-sort-desc'
+                              : 'oge-gantt-sort-icon'
+                          }
+                          viewBox="0 0 16 16"
+                          width="11"
+                          height="11"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M8 12.5v-9M4.5 7 8 3.5 11.5 7" />
+                        </svg>
+                      ) : null}
+                      {allowColumnResizing ? (
+                        <span
+                          className="oge-gantt-col-resize"
+                          aria-hidden="true"
+                          onPointerDown={(event) =>
+                            core.onColumnResizePointerDown(column, event)
+                          }
+                        />
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div
+                      key={column.field}
+                      className={
+                        column.frozen
+                          ? 'oge-gantt-pane-headcell oge-gantt-frozen'
+                          : 'oge-gantt-pane-headcell'
+                      }
+                      role="columnheader"
+                      style={frozenStyle(column)}
+                    >
+                      {column.header}
+                    </div>
+                  ),
+                )}
+              </div>
+              {filterRow ? (
+                <div className="oge-gantt-filter-row" role="row">
+                  {columns.map((column) => (
+                    <div
+                      key={column.field}
+                      className={
+                        column.frozen
+                          ? 'oge-gantt-filter-cell oge-gantt-frozen'
+                          : 'oge-gantt-filter-cell'
+                      }
+                      role="gridcell"
+                      style={frozenStyle(column)}
+                    >
+                      <input
+                        type="text"
+                        className="oge-gantt-filter-input"
+                        aria-label={core.filterLabel(column)}
+                        value={core.filters()[column.field] ?? ''}
+                        onChange={(event) =>
+                          core.setFilter(column.field, event.target.value)
+                        }
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : null}
             </div>
             <div style={{ height: core.windowTopPx() }} aria-hidden="true" />
             {windowTasks.map((task) => {
-              const selected = task.key === selectedTaskKey;
+              const selected = core.isSelected(task);
               const roving = task.key === rovingKey;
               return (
                 <div
@@ -523,6 +782,7 @@ function OgeGanttInner<
                   className={[
                     'oge-gantt-row',
                     selected ? 'oge-gantt-row-selected' : '',
+                    core.isGroupRow(task) ? 'oge-gantt-row-group' : '',
                     task.key === hoverKey ? 'oge-gantt-row-hover' : '',
                   ]
                     .filter(Boolean)
@@ -549,9 +809,22 @@ function OgeGanttInner<
                   {columns.map((column, colIndex) => (
                     <div
                       key={column.field}
-                      className="oge-gantt-pane-cell"
+                      className={[
+                        'oge-gantt-pane-cell',
+                        column.frozen ? 'oge-gantt-frozen' : '',
+                        editingCell !== null &&
+                        editingCell.key === task.key &&
+                        editingCell.field === column.field
+                          ? 'oge-gantt-cell-editing'
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                       role="gridcell"
-                      style={{ width: column.widthPx }}
+                      style={frozenStyle(column)}
+                      onDoubleClick={(event) =>
+                        core.onCellDblClick(task, column.field, event)
+                      }
                     >
                       {colIndex === 0 ? (
                         <>
@@ -593,9 +866,24 @@ function OgeGanttInner<
                           )}
                         </>
                       ) : null}
-                      <span className="oge-gantt-cell-text">
-                        {core.cellText(task, column)}
-                      </span>
+                      {editingCell !== null &&
+                      editingCell.key === task.key &&
+                      editingCell.field === column.field ? (
+                        <NativeCellEditor
+                          type={core.editorInputType(editingCell.editor)}
+                          value={editingCell.value}
+                          label={core.cellEditorLabel(task, column)}
+                          onInput={(value) => core.cellEditInput(value)}
+                          onKeyDown={(event) => core.onCellEditorKeydown(event)}
+                          onBlur={() =>
+                            core.onCellEditorBlur(task.key, column.field)
+                          }
+                        />
+                      ) : (
+                        <span className="oge-gantt-cell-text">
+                          {core.cellText(task, column)}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -712,9 +1000,7 @@ function OgeGanttInner<
                     key={String(task.key)}
                     className={[
                       'oge-gantt-lane',
-                      task.key === selectedTaskKey
-                        ? 'oge-gantt-row-selected'
-                        : '',
+                      core.isSelected(task) ? 'oge-gantt-row-selected' : '',
                       task.key === hoverKey ? 'oge-gantt-row-hover' : '',
                     ]
                       .filter(Boolean)
@@ -751,8 +1037,17 @@ function OgeGanttInner<
                         onClick={(event) =>
                           core.onArrowClick(arrow.dependency, event)
                         }
+                        onDoubleClick={(event) =>
+                          core.onArrowDblClick(arrow.dependency, event)
+                        }
                       />
                     ))}
+                    {progressLine !== null ? (
+                      <path
+                        className="oge-gantt-progress-line"
+                        d={progressLine.path}
+                      />
+                    ) : null}
                     {linkPreview !== null ? (
                       <path
                         className={
@@ -765,19 +1060,75 @@ function OgeGanttInner<
                     ) : null}
                   </g>
                 </svg>
+                {core.windowArrows().map((arrow) =>
+                  arrow.label !== null ? (
+                    <span
+                      key={String(arrow.dependency.key)}
+                      className="oge-gantt-arrow-label"
+                      style={{
+                        insetInlineStart: arrow.labelX,
+                        top: arrow.labelY,
+                      }}
+                      aria-hidden="true"
+                    >
+                      {arrow.label}
+                    </span>
+                  ) : null,
+                )}
+                {progressLine !== null ? (
+                  <div
+                    className="oge-gantt-status-date"
+                    style={{ insetInlineStart: progressLine.statusPx }}
+                    title={msg.scheduling.statusDate}
+                    aria-hidden="true"
+                  />
+                ) : null}
                 {core.windowBars().map((bar) => {
                   const task = bar.task;
                   const resource = core.resourceText(task);
                   return (
                     <div
                       key={String(task.key)}
-                      className={
-                        task.key === selectedTaskKey
-                          ? 'oge-gantt-bar-box oge-gantt-bar-box-selected'
-                          : 'oge-gantt-bar-box'
-                      }
+                      className={[
+                        'oge-gantt-bar-box',
+                        core.isSelected(task)
+                          ? 'oge-gantt-bar-box-selected'
+                          : '',
+                        bar.conflict ? 'oge-gantt-bar-box-conflict' : '',
+                        bar.overdue ? 'oge-gantt-bar-box-overdue' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                       style={{ top: bar.index * rowHeight, height: rowHeight }}
                     >
+                      {bar.deadlinePx !== null ? (
+                        <div
+                          className={
+                            bar.overdue
+                              ? 'oge-gantt-deadline oge-gantt-deadline-missed'
+                              : 'oge-gantt-deadline'
+                          }
+                          style={{ insetInlineStart: bar.deadlinePx }}
+                          title={core.deadlineTitle(task)}
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      {bar.constraintPx !== null ? (
+                        <div
+                          className="oge-gantt-constraint"
+                          style={{ insetInlineStart: bar.constraintPx }}
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      {bar.conflict ? (
+                        <span
+                          className="oge-gantt-conflict-mark"
+                          style={{ insetInlineStart: bar.leftPx - 18 }}
+                          aria-hidden="true"
+                        >
+                          !
+                        </span>
+                      ) : null}
                       {bar.baselineLeftPx !== null ? (
                         <div
                           className="oge-gantt-baseline"
@@ -810,27 +1161,46 @@ function OgeGanttInner<
                           onMouseLeave={() => core.tooltipKey.set(null)}
                         />
                       ) : task.isSummary ? (
-                        <div
-                          className={
-                            bar.critical
-                              ? 'oge-gantt-summary oge-gantt-target oge-gantt-critical'
-                              : 'oge-gantt-summary oge-gantt-target'
-                          }
-                          style={{
-                            insetInlineStart: bar.leftPx,
-                            width: bar.widthPx,
-                            backgroundColor: task.color,
-                          }}
-                          data-task-key={String(task.key)}
-                          onMouseEnter={() => core.tooltipKey.set(task.key)}
-                          onMouseLeave={() => core.tooltipKey.set(null)}
-                        />
+                        <>
+                          <div
+                            className={[
+                              'oge-gantt-summary oge-gantt-target',
+                              bar.critical ? 'oge-gantt-critical' : '',
+                              core.isGroupRow(task)
+                                ? 'oge-gantt-summary-group'
+                                : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                            style={{
+                              insetInlineStart: bar.leftPx,
+                              width: bar.widthPx,
+                              backgroundColor: task.color,
+                            }}
+                            data-task-key={String(task.key)}
+                            onMouseEnter={() => core.tooltipKey.set(task.key)}
+                            onMouseLeave={() => core.tooltipKey.set(null)}
+                          />
+                          {bar.rollups.map((rollup) => (
+                            <div
+                              key={String(rollup.key)}
+                              className="oge-gantt-rollup"
+                              style={{ insetInlineStart: rollup.px - 5 }}
+                              title={rollup.title}
+                              aria-hidden="true"
+                            />
+                          ))}
+                        </>
                       ) : (
                         <>
                           <div
                             className={[
                               'oge-gantt-bar oge-gantt-target',
                               bar.critical ? 'oge-gantt-critical' : '',
+                              bar.segments.length > 1
+                                ? 'oge-gantt-bar-split'
+                                : '',
+                              bar.manual ? 'oge-gantt-bar-manual' : '',
                               core.dragKey() === task.key
                                 ? 'oge-gantt-dragging'
                                 : '',
@@ -840,7 +1210,10 @@ function OgeGanttInner<
                             style={{
                               insetInlineStart: bar.leftPx,
                               width: bar.widthPx,
-                              backgroundColor: task.color,
+                              backgroundColor:
+                                bar.segments.length > 1
+                                  ? undefined
+                                  : task.color,
                               color: core.barForeground(task) ?? undefined,
                             }}
                             data-task-key={String(task.key)}
@@ -853,11 +1226,37 @@ function OgeGanttInner<
                             onMouseEnter={() => core.tooltipKey.set(task.key)}
                             onMouseLeave={() => core.tooltipKey.set(null)}
                           >
-                            <div
-                              className="oge-gantt-progress"
-                              style={{ width: `${task.progress}%` }}
-                              aria-hidden="true"
-                            />
+                            {bar.segments.length > 1 ? (
+                              <>
+                                <div
+                                  className="oge-gantt-split-link"
+                                  aria-hidden="true"
+                                />
+                                {bar.segments.map((segment) => (
+                                  <div
+                                    key={segment.offsetPx}
+                                    className="oge-gantt-segment"
+                                    style={{
+                                      insetInlineStart: segment.offsetPx,
+                                      width: segment.widthPx,
+                                      backgroundColor: task.color,
+                                    }}
+                                    aria-hidden="true"
+                                  >
+                                    <div
+                                      className="oge-gantt-segment-fill"
+                                      style={{ width: segment.fillPx }}
+                                    />
+                                  </div>
+                                ))}
+                              </>
+                            ) : (
+                              <div
+                                className="oge-gantt-progress"
+                                style={{ width: `${task.progress}%` }}
+                                aria-hidden="true"
+                              />
+                            )}
                             {editing && allowTaskUpdating ? (
                               <>
                                 <div
@@ -1042,10 +1441,139 @@ function OgeGanttInner<
                   ))}
                 </div>
               ) : null}
+              {histogramRows.length > 0 ? (
+                <div
+                  className="oge-gantt-histogram"
+                  role="group"
+                  aria-label={msg.grid.histogramLabel}
+                >
+                  {histogramRows.map((row) => (
+                    <div
+                      key={String(row.id)}
+                      className="oge-gantt-histogram-row"
+                      role="img"
+                      aria-label={row.label}
+                    >
+                      <span
+                        className="oge-gantt-histogram-label"
+                        aria-hidden="true"
+                      >
+                        {row.text}
+                      </span>
+                      <div
+                        className="oge-gantt-histogram-capacity"
+                        style={{ bottom: `${row.capacityPct}%` }}
+                        aria-hidden="true"
+                      />
+                      {row.cells.map((cell) => (
+                        <div
+                          key={cell.px}
+                          className={
+                            cell.over
+                              ? 'oge-gantt-histogram-bar oge-gantt-histogram-over'
+                              : 'oge-gantt-histogram-bar'
+                          }
+                          style={{
+                            insetInlineStart: cell.px + 2,
+                            width: cell.widthPx - 4,
+                            height: `${cell.heightPct}%`,
+                          }}
+                          aria-hidden="true"
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
       </div>
+
+      {depEditor !== null ? (
+        <div
+          className="oge-gantt-dep-editor"
+          role="dialog"
+          aria-label={msg.dependencyEditor.title}
+          style={{ left: depEditor.x, top: depEditor.y }}
+          onKeyDown={(event) => core.onDependencyEditorKeydown(event)}
+        >
+          <div className="oge-gantt-dep-editor-title" aria-hidden="true">
+            {msg.dependencyEditor.title}
+          </div>
+          <label className="oge-gantt-dep-editor-field">
+            <span>{msg.dependencyEditor.typeLabel}</span>
+            <select
+              className="oge-gantt-select"
+              value={depEditor.type}
+              onChange={(event) =>
+                core.dependencyEditorChange({
+                  type: event.target.value as typeof depEditor.type,
+                })
+              }
+            >
+              {core.dependencyTypes.map((type) => (
+                <option key={type} value={type}>
+                  {msg.scheduling.dependencyTypes[type]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="oge-gantt-dep-editor-field">
+            <span>{msg.dependencyEditor.lagLabel}</span>
+            <input
+              type="number"
+              className="oge-gantt-dep-editor-input"
+              step="0.5"
+              value={depEditor.lag}
+              onChange={(event) =>
+                core.dependencyEditorChange({ lag: Number(event.target.value) })
+              }
+            />
+          </label>
+          <label className="oge-gantt-dep-editor-field">
+            <span>{msg.dependencyEditor.unitLabel}</span>
+            <select
+              className="oge-gantt-select"
+              value={depEditor.lagUnit}
+              onChange={(event) =>
+                core.dependencyEditorChange({
+                  lagUnit: event.target.value === 'hours' ? 'hours' : 'days',
+                })
+              }
+            >
+              <option value="days">{msg.dependencyEditor.days}</option>
+              <option value="hours">{msg.dependencyEditor.hours}</option>
+            </select>
+          </label>
+          <div className="oge-gantt-dep-editor-actions">
+            {allowDependencyDeleting ? (
+              <button
+                type="button"
+                className="oge-gantt-btn oge-gantt-btn-danger"
+                onClick={() => core.deleteFromDependencyEditor()}
+              >
+                {msg.dependencyEditor.delete}
+              </button>
+            ) : null}
+            <span className="oge-gantt-dialog-spacer" />
+            <button
+              type="button"
+              className="oge-gantt-btn"
+              onClick={() => core.closeDependencyEditor()}
+            >
+              {msg.dependencyEditor.cancel}
+            </button>
+            <button
+              type="button"
+              className="oge-gantt-btn oge-gantt-btn-primary"
+              onClick={() => core.saveDependencyEditor()}
+            >
+              {msg.dependencyEditor.save}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <GanttTaskDialog
         state={dialog}
@@ -1156,6 +1684,43 @@ function OgeGanttInner<
         </>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The inline cell editor: uncontrolled, synced from the model in a layout
+ * effect, with native `input` listening through React's `onChange` (live
+ * text) — Enter / Tab / Escape / blur decide the commit, so one edit is one
+ * undoable update (ARCHITECTURE, "Native `change` commits stay native").
+ */
+function NativeCellEditor(props: {
+  type: 'text' | 'number' | 'date';
+  value: string;
+  label: string;
+  onInput: (value: string) => void;
+  onKeyDown: (event: ReactKeyboardEvent<HTMLInputElement>) => void;
+  onBlur: () => void;
+}): ReactElement {
+  const ref = useRef<HTMLInputElement>(null);
+  useIsomorphicLayoutEffect(() => {
+    const input = ref.current;
+    if (input !== null && input.value !== props.value) {
+      input.value = props.value;
+    }
+  }, [props.value]);
+  return (
+    <input
+      ref={ref}
+      className="oge-gantt-cell-editor"
+      type={props.type}
+      defaultValue={props.value}
+      aria-label={props.label}
+      onChange={(event) => props.onInput(event.target.value)}
+      onKeyDown={props.onKeyDown}
+      onBlur={props.onBlur}
+      onClick={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+    />
   );
 }
 

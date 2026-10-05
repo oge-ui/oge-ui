@@ -432,6 +432,22 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Gantt chart by OGE UI: task tree and timeline with dependencies, critical path, baselines, drag editing, work calendars, undo/redo and export.',
   ],
   [
+    '/components/gantt/scheduling',
+    'Angular Gantt scheduling: lag and lead on every link type, constraints, deadlines, manual tasks, slack, conflicts, baselines, split tasks and progress line.',
+  ],
+  [
+    '/components/gantt/resources',
+    'Angular Gantt resources: assignment units, effort-driven durations, a utilization histogram with over-allocation and a resource-centric view.',
+  ],
+  [
+    '/components/gantt/task-list',
+    'Angular Gantt task list: inline cell editing, header sorting, filter row and search, column resize, reorder and freeze, multi-select with bulk edits.',
+  ],
+  [
+    '/components/gantt/import-export',
+    'Angular Gantt MS Project XML import and export: tasks, links with lag, constraints, baselines, resources, assignments and calendars, no dependencies.',
+  ],
+  [
     '/components/gantt/api',
     'Angular Gantt API reference: every input, output, method and type of oge-gantt — task and dependency field mapping, scales, editing and the config provider.',
   ],
@@ -446,6 +462,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/components/kanban',
     'Angular Kanban board by OGE UI: columns, swimlanes and WIP limits, virtualized cards, drag and drop with Escape-cancel, keyboard moving and an edit dialog.',
+  ],
+  [
+    '/components/kanban/filtering',
+    'Angular Kanban filtering and sorting by OGE UI: tag, assignee and priority filter chips, predicate filters, per-column sort menus and CSV or Excel card export.',
+  ],
+  [
+    '/components/kanban/multi-select',
+    'Angular Kanban multi-select by OGE UI: Ctrl and Shift selection, multi-card drag, drag between boards, swimlane WIP limits, quick add, checklists and undo.',
   ],
   [
     '/components/kanban/api',

@@ -362,6 +362,26 @@ export class App {
       items: [
         { path: '/components/gantt', label: 'Overview', icon: 'list' },
         {
+          path: '/components/gantt/scheduling',
+          label: 'Scheduling & constraints',
+          icon: 'calendar',
+        },
+        {
+          path: '/components/gantt/resources',
+          label: 'Resources',
+          icon: 'layers',
+        },
+        {
+          path: '/components/gantt/task-list',
+          label: 'Task list editing',
+          icon: 'pencil',
+        },
+        {
+          path: '/components/gantt/import-export',
+          label: 'Import / export',
+          icon: 'upload',
+        },
+        {
           path: '/components/gantt/api',
           label: 'API Reference',
           icon: 'code',
@@ -385,6 +405,16 @@ export class App {
       group: COMPONENTS_GROUP,
       items: [
         { path: '/components/kanban', label: 'Overview', icon: 'columns' },
+        {
+          path: '/components/kanban/filtering',
+          label: 'Filtering & sorting',
+          icon: 'filter',
+        },
+        {
+          path: '/components/kanban/multi-select',
+          label: 'Multi-select & cross-board',
+          icon: 'layers',
+        },
         {
           path: '/components/kanban/api',
           label: 'API Reference',

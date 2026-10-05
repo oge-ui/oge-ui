@@ -17,10 +17,14 @@ export {
   type OgeGanttColumnMessages,
   type OgeGanttConfig,
   type OgeGanttConfigInput,
+  type OgeGanttDependencyEditorMessages,
   type OgeGanttDialogMessages,
   type OgeGanttGridMessages,
   type OgeGanttMenuMessages,
   type OgeGanttMessages,
+  type OgeGanttResolvedMessages,
+  type OgeGanttScaleMessages,
+  type OgeGanttSchedulingMessages,
   type OgeGanttToolbarMessages,
 } from '@oge-ui/gantt-engine';
 

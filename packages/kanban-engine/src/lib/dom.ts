@@ -131,11 +131,13 @@ export function resolveKanbanDragTarget<T>(
   geometry: KanbanDragGeometry,
   clientX: number,
   clientY: number,
-  origin: KanbanDragOrigin<T>,
+  origin: KanbanDragOrigin<T> | null,
   lanes: readonly KanbanSwimlane<T>[],
   columns: readonly KanbanColumnDef[],
   slot: number,
 ): KanbanDragTarget | null {
+  // `origin === null`: cards arriving from another board (only the target
+  // column's own `allowDrop` applies, and no cell excludes a dragged card)
   const scrollDX = (geometry.body?.scrollLeft ?? 0) - geometry.startScrollLeft;
   const scrollDY = (geometry.body?.scrollTop ?? 0) - geometry.startScrollTop;
   const x = clientX + scrollDX;
@@ -143,7 +145,10 @@ export function resolveKanbanDragTarget<T>(
   const cellIndex = hitTestCell(x, y, geometry.cells);
   if (cellIndex < 0) return null;
   const cell = geometry.cells[cellIndex];
-  if (!isKanbanLegalTarget(columns, origin.card.column, cell.column)) {
+  if (origin === null) {
+    const column = columns.find((entry) => entry.key === cell.column);
+    if (column === undefined || column.allowDrop === false) return null;
+  } else if (!isKanbanLegalTarget(columns, origin.card.column, cell.column)) {
     return null;
   }
   const el = geometry.cellEls[cellIndex];
@@ -152,7 +157,9 @@ export function resolveKanbanDragTarget<T>(
     lane?.columns.find((entry) => entry.column.key === cell.column)?.cards ??
     [];
   const sameCell =
-    cell.swimlane === origin.fromLane && cell.column === origin.card.column;
+    origin !== null &&
+    cell.swimlane === origin.fromLane &&
+    cell.column === origin.card.column;
   const index = insertionIndexAt(
     y,
     cell,

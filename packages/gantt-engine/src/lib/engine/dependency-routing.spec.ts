@@ -70,6 +70,15 @@ describe('gantt-gesture-math', () => {
     expanded: true,
     hasChildren: false,
     resourceIds: [],
+    wbs: '',
+    manuallyScheduled: false,
+    constraintType: 'ASAP',
+    constraintDate: undefined,
+    deadline: undefined,
+    segments: [],
+    baselines: [],
+    units: [],
+    effort: undefined,
   };
 
   it('proposeTaskMove shifts snapped whole units preserving duration', () => {

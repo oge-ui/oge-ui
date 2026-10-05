@@ -103,7 +103,7 @@ describe('<OgeKanban>', () => {
     // first paint already carries the roving stops (derived, not an effect)
     expect(cards.map((card) => card.tabIndex)).toEqual([0, -1, 0, 0]);
     expect(cards[0].getAttribute('aria-keyshortcuts')).toBe(
-      'Enter Delete Control+ArrowLeft Control+ArrowRight',
+      'Enter Delete Control+ArrowLeft Control+ArrowRight F2 Control+A Control+Space',
     );
   });
 

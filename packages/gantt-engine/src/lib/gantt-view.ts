@@ -5,7 +5,12 @@
  * the task dialog's default form.
  */
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
-import type { OgeGanttDialogMessages } from './gantt-config';
+import type {
+  OgeGanttDialogMessages,
+  OgeGanttSchedulingMessages,
+} from './gantt-config';
+import { GANTT_CONSTRAINT_TYPES } from './engine/gantt-model';
+import type { GanttConstraintType } from './engine/gantt-model';
 import type { OgeGanttResource } from './gantt-types';
 import type { GanttTask } from './engine/gantt-model';
 import {
@@ -42,6 +47,10 @@ export function ganttDataRange(
   for (const task of tasks) {
     if (task.start.getTime() < min.getTime()) min = task.start;
     if (task.end.getTime() > max.getTime()) max = task.end;
+    for (const baseline of task.baselines ?? []) {
+      if (baseline.start.getTime() < min.getTime()) min = baseline.start;
+      if (baseline.end.getTime() > max.getTime()) max = baseline.end;
+    }
     if (
       task.baselineStart !== undefined &&
       task.baselineStart.getTime() < min.getTime()
@@ -156,6 +165,23 @@ export interface GanttEditorModel {
   color?: string;
   /** Present only when resources are configured — enables the tag editor. */
   resourceIds?: readonly unknown[];
+  /** Units (%) applied to every assigned resource (resources configured). */
+  units?: number;
+  /** Work in hours (`effortDriven`). */
+  effort?: number;
+  /** Scheduling fields (`autoScheduling`). */
+  manuallyScheduled?: boolean;
+  constraintType?: GanttConstraintType;
+  constraintDate?: Date | null;
+  deadline?: Date | null;
+}
+
+/** Optional dialog sections. */
+export interface GanttDialogExtras {
+  /** Adds manual mode, constraint type + date and deadline. */
+  readonly scheduling?: OgeGanttSchedulingMessages;
+  /** Adds the work (hours) field. */
+  readonly effort?: boolean;
 }
 
 /** What the dialog hands back on save. */
@@ -173,8 +199,10 @@ export interface GanttEditorResult {
 export function buildGanttDialogItems(
   messages: OgeGanttDialogMessages,
   resources: readonly OgeGanttResource[],
+  extras: GanttDialogExtras = {},
 ): OgeFormItemDataBase[] {
-  return [
+  const scheduling = extras.scheduling;
+  const items: OgeFormItemDataBase[] = [
     {
       field: 'title',
       label: messages.titleLabel,
@@ -231,7 +259,56 @@ export function buildGanttDialogItems(
             },
             colSpan: 2,
           } satisfies OgeFormItemDataBase,
+          {
+            field: 'units',
+            label: messages.unitsLabel ?? 'Units (%)',
+            editorType: 'numberBox',
+            editorOptions: { min: 0, max: 1000, step: 10 },
+          } satisfies OgeFormItemDataBase,
         ]
       : []),
   ];
+  if (extras.effort) {
+    items.push({
+      field: 'effort',
+      label: messages.effortLabel ?? 'Work (hours)',
+      editorType: 'numberBox',
+      editorOptions: { min: 0, step: 1 },
+    });
+  }
+  if (scheduling !== undefined) {
+    items.push(
+      {
+        field: 'constraintType',
+        label: messages.constraintTypeLabel ?? 'Constraint',
+        editorType: 'selectBox',
+        editorOptions: {
+          items: GANTT_CONSTRAINT_TYPES.map((type) => ({
+            id: type,
+            text: scheduling.constraintTypes[type],
+          })),
+          valueExpr: 'id',
+          displayExpr: 'text',
+        },
+      },
+      {
+        field: 'constraintDate',
+        label: messages.constraintDateLabel ?? 'Constraint date',
+        editorType: 'dateBox',
+        editorOptions: { type: 'date' },
+      },
+      {
+        field: 'deadline',
+        label: messages.deadlineLabel ?? 'Deadline',
+        editorType: 'dateBox',
+        editorOptions: { type: 'date' },
+      },
+      {
+        field: 'manuallyScheduled',
+        label: messages.manualLabel ?? 'Manually scheduled',
+        editorType: 'switch',
+      },
+    );
+  }
+  return items;
 }

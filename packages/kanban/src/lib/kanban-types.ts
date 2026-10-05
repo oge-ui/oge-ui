@@ -22,7 +22,18 @@ export type {
   OgeKanbanColumnAddedEvent,
   OgeKanbanColumnAddingEvent,
   OgeKanbanColumnReorderedEvent,
+  OgeKanbanCardTransferredEvent,
+  OgeKanbanCardTransferringEvent,
+  OgeKanbanColumnSort,
+  OgeKanbanColumnSortSpec,
+  OgeKanbanExportData,
+  OgeKanbanExportOptions,
+  OgeKanbanExportRow,
   OgeKanbanFieldExpr,
+  OgeKanbanFilter,
+  OgeKanbanFilterExpression,
+  OgeKanbanSelectionMode,
+  OgeKanbanSortField,
 } from '@oge-ui/kanban-engine';
 
 /**

@@ -47,6 +47,9 @@
       "@oge-ui/gantt-engine/export-image": [
         "./packages/gantt-engine/src/export-image.ts"
       ],
+      "@oge-ui/gantt-engine/export-msproject": [
+        "./packages/gantt-engine/src/export-msproject.ts"
+      ],
       "@oge-ui/gantt-engine/export-pdf": [
         "./packages/gantt-engine/src/export-pdf.ts"
       ],
@@ -55,6 +58,9 @@
       ],
       "@oge-ui/gantt/export-image": [
         "./packages/gantt/export-image/src/index.ts"
+      ],
+      "@oge-ui/gantt/export-msproject": [
+        "./packages/gantt/export-msproject/src/index.ts"
       ],
       "@oge-ui/gantt/export-pdf": ["./packages/gantt/export-pdf/src/index.ts"],
       "@oge-ui/grid": ["./packages/grid/src/index.ts"],
@@ -78,6 +84,12 @@
       "@oge-ui/inputs/*": ["./packages/inputs/*/src/index.ts"],
       "@oge-ui/kanban": ["./packages/kanban/src/index.ts"],
       "@oge-ui/kanban-engine": ["./packages/kanban-engine/src/index.ts"],
+      "@oge-ui/kanban-engine/export-excel": [
+        "./packages/kanban-engine/src/export-excel.ts"
+      ],
+      "@oge-ui/kanban/export-excel": [
+        "./packages/kanban/export-excel/src/index.ts"
+      ],
       "@oge-ui/layout": ["./packages/layout/src/index.ts"],
       "@oge-ui/layout/*": ["./packages/layout/*/src/index.ts"],
       "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],
@@ -112,6 +124,9 @@
       "@oge-ui/react-gantt/export-image": [
         "./packages/react/gantt/src/export-image.ts"
       ],
+      "@oge-ui/react-gantt/export-msproject": [
+        "./packages/react/gantt/src/export-msproject.ts"
+      ],
       "@oge-ui/react-gantt/export-pdf": [
         "./packages/react/gantt/src/export-pdf.ts"
       ],
@@ -127,6 +142,9 @@
       ],
       "@oge-ui/react-inputs": ["./packages/react/inputs/src/index.ts"],
       "@oge-ui/react-kanban": ["./packages/react/kanban/src/index.ts"],
+      "@oge-ui/react-kanban/export-excel": [
+        "./packages/react/kanban/src/export-excel.ts"
+      ],
       "@oge-ui/react-layout": ["./packages/react/layout/src/index.ts"],
       "@oge-ui/react-navigation": ["./packages/react/navigation/src/index.ts"],
       "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],

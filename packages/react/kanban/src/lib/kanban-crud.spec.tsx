@@ -82,7 +82,9 @@ describe('<OgeKanban> CRUD + interactions', () => {
       'New card',
     );
     expect(
-      toolbar?.querySelectorAll('.oge-kanban-toolbar-group button'),
+      toolbar?.querySelectorAll(
+        '.oge-kanban-toolbar-group button:not(.oge-kanban-btn-undo):not(.oge-kanban-btn-redo)',
+      ),
     ).toHaveLength(2);
     expect(
       root

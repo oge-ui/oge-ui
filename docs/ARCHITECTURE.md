@@ -1147,6 +1147,93 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   renders the visible window (`virtualScrolling: 'auto'` above 50 rows). Month/year timelines
   run at day scale (`TimelineGridVm.scale === 'day'`), one bar per day span.
 
+### Gantt depth: scheduling engine, task list, resources and MS Project
+
+- **One scheduling engine, pure.** `gantt-engine/engine/schedule.ts` owns every date decision:
+  `scheduleGanttProject` (topological forward pass — lag/lead on all four link types via
+  `applyGanttLag`, working days on a calendar, constraint floors/pins/caps — then an ALAP
+  backward pass), `detectGanttConflicts` (link, constraint and deadline violations of the
+  _current_ dates) and `computeGanttSlack` (total/free slack; `criticalPathKeys` is its zero set).
+  Links touching a summary are drawn but never scheduled; manually scheduled tasks are inputs,
+  never outputs. Unlinked ASAP tasks keep their start unless `projectStart` is set — so turning
+  `autoScheduling` on never collapses a plan to one date. `autoScheduleForward` (push-only) stays
+  exported for 1.x callers; the core no longer uses it.
+- **Conflicts are derived, the event is host-scheduled.** `core.conflicts()` re-derives from the
+  store; hosts call `core.syncConflicts()` from an effect (Angular) or after each render (React),
+  which emits `schedulingConflict` only when the conflict signature changes — including when it
+  empties.
+- **Bulk edits are one undo step.** `core.batch()` takes one snapshot and defers auto-scheduling to
+  the end; bulk delete/indent/outdent, predecessor-cell diffs and `setBaseline()` run through it.
+  New multi-item mutations must too.
+- **The task list is a view over the store.** Sort reorders siblings via `buildGanttTasks`'
+  `order`, filters pass `include` (matches + ancestors, collapse ignored while filtering); WBS
+  numbers always follow the store order. Column order/width are core cells, not inputs (events
+  report them). Headers become one roving tab stop only when sorting/resizing/reordering is on;
+  the resize grip is an `aria-hidden` span with Alt+Arrow as its keyboard twin, reordering's twin
+  is Ctrl+Shift+Arrow (house `grid-keyboard-moves` scheme). The pane head is pinned to the chart
+  scale's height (49px) so rows and lanes stay aligned with or without the filter row.
+- **Inline editing commits on Enter / Tab / blur, never per keystroke.** The editor value lives in
+  `core.editingCell`; the React editor is an uncontrolled input synced in a layout effect. The
+  editor's keydown stops propagation — the row map would otherwise delete the task on Backspace.
+- **Resource view rows are synthetic.** `buildResourceViewRows` emits group rows (key prefix
+  `GANTT_RESOURCE_ROW_PREFIX`, `source: null`) and assignment copies under composite keys whose
+  `source` is the real item; `core.realKeyOf()` maps a row back for selection, critical path and
+  conflicts. Every mutation path guards `source == null`; arrows are hidden in that view.
+- **Message keys added in G3b are optional**, deep-filled from English by `fillGanttMessages` into
+  `OgeGanttResolvedMessages` (what `core.msg()` returns) — the scheduler's rule.
+- **MS Project XML has its own tokenizer.** `engine/msproject.ts` parses MSPDI without `DOMParser`
+  (no new Trusted Types sink, DTDs skipped, only predefined/numeric entities), maps midnight dates
+  to 08:00–17:00 and back so a round trip is lossless, and returns plain data in the default field
+  names. Resource ids come back as MSPDI UIDs. `/export-msproject` is a lazy entry in all three
+  packages although it has no peer.
+
+### Kanban depth: filters, selection, transfers and history
+
+- **The visible board is one pipeline.** Both layers derive it the same way:
+  normalize → toolbar search (`filterCards`) → `applyKanbanFilters` over the
+  compiled `filter` input/prop and the chip bar's `filterValue`
+  (`compileKanbanFilter`: a predicate or an expression — any-of inside a field,
+  all-of across fields) → `groupBoard` → `sortKanbanLanes(columnSort)`. Counts
+  (column WIP, `kanbanCellCounts` / `kanbanLaneCounts` for the per-swimlane
+  limits), the chip choices and `getExportData()` read the **unfiltered**
+  cards — WIP is a data fact. `sortKanbanLanes` returns untouched lanes by
+  identity, so memoized views and drag geometry stay stable when nothing sorts.
+- **Selection is a key list plus an anchor.** `kanbanSelectCard` decides
+  Ctrl / Shift / plain clicks (Shift ranges stay inside the anchor's cell),
+  `kanbanSelectionShortcut` the keys (Ctrl+A cell, Ctrl+Space, Shift+↑/↓,
+  Escape). `selectedCardKey` stays the primary card for backward
+  compatibility; `selectedCardKeys` is the set. A plain pointer-down on an
+  already-selected card must **not** reset the selection, or a multi-card
+  drag could never start — the click decides instead.
+- **Multi-card moves insert before one anchor.** `kanbanMultiMoveAnchor` picks
+  the first non-moving card at the drop index (counted without the dragged
+  card, like the hit-test), and each carried card is moved through the
+  ordinary `cardMoving` pipeline before that anchor (`kanbanAnchorIndex`), in
+  board order — so `orderExpr` midpoints, array reordering and the per-card
+  events all stay the single-card code path.
+- **Cross-board drag is a registry, not HTML5 DnD.** Mounted boards register
+  a `KanbanBoardPeer` (`board-registry.ts`); a drag that leaves its own host
+  hit-tests the peers of its `dragGroup` (`kanbanPeerAt`, unmeasured hosts
+  never match so jsdom stays local), the peer measures itself and previews the
+  placeholder, and the drop calls `peer.receive()` — the target's cancelable
+  `cardTransferring`, then `cardTransferred` on **both** boards (source removes
+  `sourceCards`, target adds `cards`). The card menu's "Move to {board}" is the
+  keyboard and single-pointer twin. Transfers are deliberately outside the
+  undo history: a step that spans two boards cannot be undone by one of them.
+- **History records what the pipelines applied** (`KanbanHistory`: insert /
+  remove with the store index, update before/after, move from/to places),
+  grouped by `transaction()` for multi-card moves and bulk deletes. Undo
+  replays the inverses through the same pipelines (capability gates bypassed
+  only for the replay), locating items **by key**, so hosts that re-bind
+  `dataSource` from the events keep a working history. The board's host
+  keydown handles Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z outside editing targets.
+- **Message keys added in G3b are optional** and resolved with
+  `fillKanbanMessages()` into `OgeKanbanResolvedMessages` (same rule as the
+  scheduler); counts use ICU plurals through `formatKanbanCount`
+  (`ogeFormatMessage`). Exports: `buildKanbanExportRows` → `buildKanbanCsv`
+  (core's guarded `buildCsv`) and the lazy `@oge-ui/kanban-engine/export-excel`
+  builder that both `/export-excel` entries wrap.
+
 ## Component completeness standard
 
 Every component (new and existing) ships with a **complete, reference-parity-checked

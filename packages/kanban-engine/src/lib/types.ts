@@ -125,5 +125,43 @@ export interface OgeKanbanColumnReorderedEvent {
   readonly columnOrder: readonly string[];
 }
 
+/**
+ * Cancelable `cardTransferring` payload — fired by the **target** board when
+ * cards dragged from another board of the same `dragGroup` (or sent with the
+ * menu's "Move to …") are about to land on it.
+ */
+export interface OgeKanbanCardTransferringEvent<T = unknown> {
+  /** The source items, in board order (not yet re-columned). */
+  readonly cards: readonly T[];
+  readonly fromBoard: string;
+  readonly toBoard: string;
+  readonly fromColumn: string;
+  readonly toColumn: string;
+  readonly fromSwimlane: string | null;
+  readonly toSwimlane: string | null;
+  /** Insertion index in the target cell. */
+  readonly toIndex: number;
+  cancel: boolean;
+}
+
+/**
+ * `cardTransferred` payload — fired by **both** boards after a transfer
+ * landed: the source host removes `sourceCards` from its data, the target
+ * host adds `cards` (column / swimlane already written).
+ */
+export interface OgeKanbanCardTransferredEvent<T = unknown> {
+  /** The items as they landed on the target board. */
+  readonly cards: readonly T[];
+  /** The items as they left the source board. */
+  readonly sourceCards: readonly T[];
+  readonly fromBoard: string;
+  readonly toBoard: string;
+  readonly fromColumn: string;
+  readonly toColumn: string;
+  readonly fromSwimlane: string | null;
+  readonly toSwimlane: string | null;
+  readonly toIndex: number;
+}
+
 /** How `colorExpr` renders on a card. */
 export type OgeKanbanCardColorMode = 'stripe' | 'surface';

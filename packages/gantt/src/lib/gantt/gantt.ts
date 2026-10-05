@@ -22,12 +22,24 @@ import type { RowKey } from '@oge-ui/core';
 import {
   OgeGanttCore,
   type GanttFieldExpr,
+  type GanttLagUnit,
+  type GanttTask,
   type OgeGanttCoreEvents,
 } from '@oge-ui/gantt-engine';
 import type { OgeGanttMessages } from '../config';
 import { OGE_GANTT_CONFIG } from '../config';
 import type {
   OgeGanttColumn,
+  OgeGanttColumnReorderedEvent,
+  OgeGanttColumnResizedEvent,
+  OgeGanttDependencyUpdatedEvent,
+  OgeGanttDependencyUpdatingEvent,
+  OgeGanttSchedulingConflictEvent,
+  OgeGanttSelectionMode,
+  OgeGanttSlack,
+  OgeGanttSortChangedEvent,
+  OgeGanttViewMode,
+  OgeGanttZoomPreset,
   OgeGanttDependencyDeletedEvent,
   OgeGanttDependencyDeletingEvent,
   OgeGanttDependencyInsertedEvent,
@@ -156,6 +168,62 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           {{ core.msg().toolbar.today }}
         </button>
       </div>
+      <select
+        class="oge-gantt-select"
+        [attr.aria-label]="core.msg().toolbar.scale"
+        (change)="core.applyZoomPreset(+$any($event.target).value)"
+      >
+        @if (core.activeZoomIndex() < 0) {
+          <option value="-1" selected disabled>—</option>
+        }
+        @for (option of core.zoomOptions(); track option.index) {
+          <option
+            [value]="option.index"
+            [selected]="option.index === core.activeZoomIndex()"
+          >
+            {{ option.label }}
+          </option>
+        }
+      </select>
+      @if (core.baselineCount() > 1) {
+        <select
+          class="oge-gantt-select"
+          [attr.aria-label]="core.msg().toolbar.baseline"
+          (change)="core.setBaselineIndex(+$any($event.target).value)"
+        >
+          <option value="-1" [selected]="core.activeBaseline() < 0">
+            {{ core.msg().grid.baselineNone }}
+          </option>
+          @for (index of baselineOptions(); track index) {
+            <option
+              [value]="index"
+              [selected]="index === core.activeBaseline()"
+            >
+              {{ baselineLabel(index) }}
+            </option>
+          }
+        </select>
+      }
+      @if (resources().length > 0) {
+        <button
+          type="button"
+          class="oge-gantt-btn oge-gantt-btn-toggle"
+          [attr.aria-pressed]="core.viewMode() === 'resources'"
+          (click)="core.toggleViewMode()"
+        >
+          {{ core.msg().toolbar.resourceView }}
+        </button>
+      }
+      @if (searchPanel()) {
+        <input
+          type="search"
+          class="oge-gantt-search"
+          [attr.aria-label]="core.msg().toolbar.search"
+          [placeholder]="core.msg().toolbar.search"
+          [value]="core.searchText()"
+          (input)="core.setSearchText($any($event.target).value)"
+        />
+      }
       <div class="oge-gantt-toolbar-group">
         <button type="button" class="oge-gantt-btn" (click)="expandAll()">
           {{ core.msg().toolbar.expandAll }}
@@ -256,17 +324,110 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           class="oge-gantt-pane"
           role="treegrid"
           [attr.aria-label]="core.paneAriaLabel()"
-          [attr.aria-rowcount]="tasks().length"
+          [attr.aria-rowcount]="core.rowCount()"
+          [attr.aria-multiselectable]="
+            core.selectionMode() === 'multiple' ? true : null
+          "
           (keydown)="core.onPaneKeydown($event)"
         >
-          <div class="oge-gantt-pane-header" role="row">
-            @for (column of core.resolvedColumns(); track column.field) {
-              <div
-                class="oge-gantt-pane-headcell"
-                role="columnheader"
-                [style.width.px]="column.widthPx"
-              >
-                {{ column.header }}
+          <div
+            class="oge-gantt-pane-head"
+            [class.oge-gantt-pane-head-filter]="filterRow()"
+          >
+            <div class="oge-gantt-pane-header" role="row">
+              @for (
+                column of core.resolvedColumns();
+                track column.field;
+                let colIndex = $index
+              ) {
+                @if (core.headerInteractive()) {
+                  <div
+                    class="oge-gantt-pane-headcell oge-gantt-headcell-interactive"
+                    role="columnheader"
+                    [class.oge-gantt-frozen]="column.frozen"
+                    [class.oge-gantt-sortable]="column.sortable"
+                    [style.width.px]="column.widthPx"
+                    [style.inset-inline-start.px]="
+                      column.frozen ? column.frozenOffsetPx : null
+                    "
+                    [attr.aria-sort]="column.sortDirection"
+                    [attr.aria-keyshortcuts]="core.headerShortcuts()"
+                    [attr.data-col-index]="colIndex"
+                    [tabindex]="colIndex === core.headerFocusIndex() ? 0 : -1"
+                    (click)="core.onHeaderClick(column, colIndex)"
+                    (keydown)="core.onHeaderKeydown(colIndex, $event)"
+                    (pointerdown)="core.onHeaderPointerDown(column, $event)"
+                  >
+                    <span class="oge-gantt-headcell-text">{{
+                      column.header
+                    }}</span>
+                    @if (column.sortDirection) {
+                      <svg
+                        class="oge-gantt-sort-icon"
+                        [class.oge-gantt-sort-desc]="
+                          column.sortDirection === 'descending'
+                        "
+                        viewBox="0 0 16 16"
+                        width="11"
+                        height="11"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M8 12.5v-9M4.5 7 8 3.5 11.5 7" />
+                      </svg>
+                    }
+                    @if (allowColumnResizing()) {
+                      <span
+                        class="oge-gantt-col-resize"
+                        aria-hidden="true"
+                        (pointerdown)="
+                          core.onColumnResizePointerDown(column, $event)
+                        "
+                      ></span>
+                    }
+                  </div>
+                } @else {
+                  <div
+                    class="oge-gantt-pane-headcell"
+                    role="columnheader"
+                    [class.oge-gantt-frozen]="column.frozen"
+                    [style.width.px]="column.widthPx"
+                    [style.inset-inline-start.px]="
+                      column.frozen ? column.frozenOffsetPx : null
+                    "
+                  >
+                    {{ column.header }}
+                  </div>
+                }
+              }
+            </div>
+            @if (filterRow()) {
+              <div class="oge-gantt-filter-row" role="row">
+                @for (column of core.resolvedColumns(); track column.field) {
+                  <div
+                    class="oge-gantt-filter-cell"
+                    role="gridcell"
+                    [class.oge-gantt-frozen]="column.frozen"
+                    [style.width.px]="column.widthPx"
+                    [style.inset-inline-start.px]="
+                      column.frozen ? column.frozenOffsetPx : null
+                    "
+                  >
+                    <input
+                      type="text"
+                      class="oge-gantt-filter-input"
+                      [attr.aria-label]="core.filterLabel(column)"
+                      [value]="core.filters()[column.field] ?? ''"
+                      (input)="
+                        core.setFilter(column.field, $any($event.target).value)
+                      "
+                    />
+                  </div>
+                }
               </div>
             }
           </div>
@@ -277,10 +438,11 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
               role="row"
               [attr.aria-level]="task.level + 1"
               [attr.aria-expanded]="task.hasChildren ? task.expanded : null"
-              [attr.aria-selected]="task.key === selectedTaskKey()"
+              [attr.aria-selected]="core.isSelected(task)"
               [attr.aria-rowindex]="core.rowIndexOf(task) + 1"
               [attr.aria-label]="core.taskAriaLabel(task)"
-              [class.oge-gantt-row-selected]="task.key === selectedTaskKey()"
+              [class.oge-gantt-row-selected]="core.isSelected(task)"
+              [class.oge-gantt-row-group]="core.isGroupRow(task)"
               [class.oge-gantt-row-hover]="task.key === core.hoverKey()"
               [tabindex]="task.key === core.rovingKey() ? 0 : -1"
               [attr.data-focus-target]="
@@ -298,10 +460,19 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                 track column.field;
                 let colIndex = $index
               ) {
+                <!-- double-click edits inline; F2 on the row is the keyboard twin -->
                 <div
                   class="oge-gantt-pane-cell"
                   role="gridcell"
+                  [class.oge-gantt-frozen]="column.frozen"
+                  [class.oge-gantt-cell-editing]="
+                    core.isEditingCell(task, column.field)
+                  "
                   [style.width.px]="column.widthPx"
+                  [style.inset-inline-start.px]="
+                    column.frozen ? column.frozenOffsetPx : null
+                  "
+                  (dblclick)="core.onCellDblClick(task, column.field, $event)"
                 >
                   @if (colIndex === 0) {
                     <span
@@ -336,9 +507,29 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                       ></span>
                     }
                   }
-                  <span class="oge-gantt-cell-text">{{
-                    core.cellText(task, column)
-                  }}</span>
+                  @if (core.editingCell(); as cell) {
+                    @if (cell.key === task.key && cell.field === column.field) {
+                      <input
+                        class="oge-gantt-cell-editor"
+                        [type]="core.editorInputType(cell.editor)"
+                        [value]="cell.value"
+                        [attr.aria-label]="core.cellEditorLabel(task, column)"
+                        (input)="core.cellEditInput($any($event.target).value)"
+                        (keydown)="core.onCellEditorKeydown($event)"
+                        (blur)="core.onCellEditorBlur(task.key, column.field)"
+                        (click)="$event.stopPropagation()"
+                        (dblclick)="$event.stopPropagation()"
+                      />
+                    } @else {
+                      <span class="oge-gantt-cell-text">{{
+                        core.cellText(task, column)
+                      }}</span>
+                    }
+                  } @else {
+                    <span class="oge-gantt-cell-text">{{
+                      core.cellText(task, column)
+                    }}</span>
+                  }
                 </div>
               }
             </div>
@@ -395,7 +586,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
             <div
               class="oge-gantt-canvas"
               #canvasEl
-              [style.height.px]="tasks().length * core.rowHeight()"
+              [style.height.px]="core.rowCount() * core.rowHeight()"
               (dblclick)="core.onCanvasDblClick($event)"
               (pointerdown)="core.onCanvasPointerDown($event)"
               (contextmenu)="core.onCanvasContextMenu($event)"
@@ -444,9 +635,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
               @for (task of core.windowTasks(); track task.key) {
                 <div
                   class="oge-gantt-lane"
-                  [class.oge-gantt-row-selected]="
-                    task.key === selectedTaskKey()
-                  "
+                  [class.oge-gantt-row-selected]="core.isSelected(task)"
                   [class.oge-gantt-row-hover]="task.key === core.hoverKey()"
                   [style.top.px]="core.rowIndexOf(task) * core.rowHeight()"
                   [style.height.px]="core.rowHeight()"
@@ -456,7 +645,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
               }
               <svg
                 class="oge-gantt-arrows"
-                [attr.height]="tasks().length * core.rowHeight()"
+                [attr.height]="core.rowCount() * core.rowHeight()"
                 [attr.width]="core.scale().totalPx"
                 aria-hidden="true"
               >
@@ -474,6 +663,15 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                       "
                       [attr.d]="arrow.path"
                       (click)="core.onArrowClick(arrow.dependency, $event)"
+                      (dblclick)="
+                        core.onArrowDblClick(arrow.dependency, $event)
+                      "
+                    />
+                  }
+                  @if (core.progressLine(); as line) {
+                    <path
+                      class="oge-gantt-progress-line"
+                      [attr.d]="line.path"
                     />
                   }
                   @if (core.linkPreview(); as preview) {
@@ -485,15 +683,58 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                   }
                 </g>
               </svg>
+              @for (arrow of core.windowArrows(); track arrow.dependency.key) {
+                @if (arrow.label) {
+                  <span
+                    class="oge-gantt-arrow-label"
+                    [style.inset-inline-start.px]="arrow.labelX"
+                    [style.top.px]="arrow.labelY"
+                    aria-hidden="true"
+                    >{{ arrow.label }}</span
+                  >
+                }
+              }
+              @if (core.progressLine(); as line) {
+                <div
+                  class="oge-gantt-status-date"
+                  [style.inset-inline-start.px]="line.statusPx"
+                  [title]="core.msg().scheduling.statusDate"
+                  aria-hidden="true"
+                ></div>
+              }
               @for (bar of core.windowBars(); track bar.task.key) {
                 <div
                   class="oge-gantt-bar-box"
-                  [class.oge-gantt-bar-box-selected]="
-                    bar.task.key === selectedTaskKey()
-                  "
+                  [class.oge-gantt-bar-box-selected]="core.isSelected(bar.task)"
+                  [class.oge-gantt-bar-box-conflict]="bar.conflict"
+                  [class.oge-gantt-bar-box-overdue]="bar.overdue"
                   [style.top.px]="bar.index * core.rowHeight()"
                   [style.height.px]="core.rowHeight()"
                 >
+                  @if (bar.deadlinePx !== null) {
+                    <div
+                      class="oge-gantt-deadline"
+                      [class.oge-gantt-deadline-missed]="bar.overdue"
+                      [style.inset-inline-start.px]="bar.deadlinePx"
+                      [title]="core.deadlineTitle(bar.task)"
+                      aria-hidden="true"
+                    ></div>
+                  }
+                  @if (bar.constraintPx !== null) {
+                    <div
+                      class="oge-gantt-constraint"
+                      [style.inset-inline-start.px]="bar.constraintPx"
+                      aria-hidden="true"
+                    ></div>
+                  }
+                  @if (bar.conflict) {
+                    <span
+                      class="oge-gantt-conflict-mark"
+                      [style.inset-inline-start.px]="bar.leftPx - 18"
+                      aria-hidden="true"
+                      >!</span
+                    >
+                  }
                   @if (bar.baselineLeftPx !== null) {
                     <div
                       class="oge-gantt-baseline"
@@ -518,6 +759,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                     <div
                       class="oge-gantt-summary oge-gantt-target"
                       [class.oge-gantt-critical]="bar.critical"
+                      [class.oge-gantt-summary-group]="
+                        core.isGroupRow(bar.task)
+                      "
                       [style.inset-inline-start.px]="bar.leftPx"
                       [style.width.px]="bar.widthPx"
                       [style.background-color]="bar.task.color ?? null"
@@ -525,16 +769,30 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                       (mouseenter)="core.tooltipKey.set(bar.task.key)"
                       (mouseleave)="core.tooltipKey.set(null)"
                     ></div>
+                    @for (rollup of bar.rollups; track rollup.key) {
+                      <div
+                        class="oge-gantt-rollup"
+                        [style.inset-inline-start.px]="rollup.px - 5"
+                        [title]="rollup.title"
+                        aria-hidden="true"
+                      ></div>
+                    }
                   } @else {
                     <div
                       class="oge-gantt-bar oge-gantt-target"
                       [class.oge-gantt-critical]="bar.critical"
+                      [class.oge-gantt-bar-split]="bar.segments.length > 1"
+                      [class.oge-gantt-bar-manual]="bar.manual"
                       [class.oge-gantt-dragging]="
                         core.dragKey() === bar.task.key
                       "
                       [style.inset-inline-start.px]="bar.leftPx"
                       [style.width.px]="bar.widthPx"
-                      [style.background-color]="bar.task.color ?? null"
+                      [style.background-color]="
+                        bar.segments.length > 1
+                          ? null
+                          : (bar.task.color ?? null)
+                      "
                       [style.color]="core.barForeground(bar.task)"
                       [attr.data-task-key]="String(bar.task.key)"
                       (pointerdown)="core.onBarPointerDown(bar, 'move', $event)"
@@ -542,11 +800,32 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                       (mouseenter)="core.tooltipKey.set(bar.task.key)"
                       (mouseleave)="core.tooltipKey.set(null)"
                     >
-                      <div
-                        class="oge-gantt-progress"
-                        [style.width.%]="bar.task.progress"
-                        aria-hidden="true"
-                      ></div>
+                      @if (bar.segments.length > 1) {
+                        <div
+                          class="oge-gantt-split-link"
+                          aria-hidden="true"
+                        ></div>
+                        @for (segment of bar.segments; track segment.offsetPx) {
+                          <div
+                            class="oge-gantt-segment"
+                            [style.inset-inline-start.px]="segment.offsetPx"
+                            [style.width.px]="segment.widthPx"
+                            [style.background-color]="bar.task.color ?? null"
+                            aria-hidden="true"
+                          >
+                            <div
+                              class="oge-gantt-segment-fill"
+                              [style.width.px]="segment.fillPx"
+                            ></div>
+                          </div>
+                        }
+                      } @else {
+                        <div
+                          class="oge-gantt-progress"
+                          [style.width.%]="bar.task.progress"
+                          aria-hidden="true"
+                        ></div>
+                      }
                       @if (core.effectiveEditing() && allowTaskUpdating()) {
                         <div
                           class="oge-gantt-handle oge-gantt-handle-start"
@@ -695,10 +974,128 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                 }
               </div>
             }
+            @if (core.histogramRows().length > 0) {
+              <div
+                class="oge-gantt-histogram"
+                role="group"
+                [attr.aria-label]="core.msg().grid.histogramLabel"
+              >
+                @for (row of core.histogramRows(); track row.id) {
+                  <div
+                    class="oge-gantt-histogram-row"
+                    role="img"
+                    [attr.aria-label]="row.label"
+                  >
+                    <span
+                      class="oge-gantt-histogram-label"
+                      aria-hidden="true"
+                      >{{ row.text }}</span
+                    >
+                    <div
+                      class="oge-gantt-histogram-capacity"
+                      [style.bottom.%]="row.capacityPct"
+                      aria-hidden="true"
+                    ></div>
+                    @for (cell of row.cells; track cell.px) {
+                      <div
+                        class="oge-gantt-histogram-bar"
+                        [class.oge-gantt-histogram-over]="cell.over"
+                        [style.inset-inline-start.px]="cell.px + 2"
+                        [style.width.px]="cell.widthPx - 4"
+                        [style.height.%]="cell.heightPct"
+                        aria-hidden="true"
+                      ></div>
+                    }
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
       </div>
     </div>
+
+    @if (core.dependencyEditor(); as editor) {
+      <div
+        class="oge-gantt-dep-editor"
+        role="dialog"
+        [attr.aria-label]="core.msg().dependencyEditor.title"
+        [style.left.px]="editor.x"
+        [style.top.px]="editor.y"
+        (keydown)="core.onDependencyEditorKeydown($event)"
+      >
+        <div class="oge-gantt-dep-editor-title" aria-hidden="true">
+          {{ core.msg().dependencyEditor.title }}
+        </div>
+        <label class="oge-gantt-dep-editor-field">
+          <span>{{ core.msg().dependencyEditor.typeLabel }}</span>
+          <select
+            class="oge-gantt-select"
+            (change)="
+              core.dependencyEditorChange({ type: $any($event.target).value })
+            "
+          >
+            @for (type of core.dependencyTypes; track type) {
+              <option [value]="type" [selected]="type === editor.type">
+                {{ core.msg().scheduling.dependencyTypes[type] }}
+              </option>
+            }
+          </select>
+        </label>
+        <label class="oge-gantt-dep-editor-field">
+          <span>{{ core.msg().dependencyEditor.lagLabel }}</span>
+          <input
+            type="number"
+            class="oge-gantt-dep-editor-input"
+            step="0.5"
+            [value]="editor.lag"
+            (input)="
+              core.dependencyEditorChange({ lag: +$any($event.target).value })
+            "
+          />
+        </label>
+        <label class="oge-gantt-dep-editor-field">
+          <span>{{ core.msg().dependencyEditor.unitLabel }}</span>
+          <select
+            class="oge-gantt-select"
+            (change)="setLagUnit($any($event.target).value)"
+          >
+            <option value="days" [selected]="editor.lagUnit === 'days'">
+              {{ core.msg().dependencyEditor.days }}
+            </option>
+            <option value="hours" [selected]="editor.lagUnit === 'hours'">
+              {{ core.msg().dependencyEditor.hours }}
+            </option>
+          </select>
+        </label>
+        <div class="oge-gantt-dep-editor-actions">
+          @if (allowDependencyDeleting()) {
+            <button
+              type="button"
+              class="oge-gantt-btn oge-gantt-btn-danger"
+              (click)="core.deleteFromDependencyEditor()"
+            >
+              {{ core.msg().dependencyEditor.delete }}
+            </button>
+          }
+          <span class="oge-gantt-dialog-spacer"></span>
+          <button
+            type="button"
+            class="oge-gantt-btn"
+            (click)="core.closeDependencyEditor()"
+          >
+            {{ core.msg().dependencyEditor.cancel }}
+          </button>
+          <button
+            type="button"
+            class="oge-gantt-btn oge-gantt-btn-primary"
+            (click)="core.saveDependencyEditor()"
+          >
+            {{ core.msg().dependencyEditor.save }}
+          </button>
+        </div>
+      </div>
+    }
 
     <oge-gantt-task-dialog
       [messages]="core.msg().dialog"
@@ -816,6 +1213,27 @@ export class OgeGantt<
   readonly predecessorKeyExpr = input<GanttFieldExpr<D>>('predecessorId');
   readonly successorKeyExpr = input<GanttFieldExpr<D>>('successorId');
   readonly dependencyTypeExpr = input<GanttFieldExpr<D>>('type');
+  /** Link lag amount (negative = lead), in `dependencyLagUnitExpr` units. */
+  readonly dependencyLagExpr = input<GanttFieldExpr<D>>('lag');
+  /** Link lag unit: `'days'` (working days on a calendar) or `'hours'`. */
+  readonly dependencyLagUnitExpr = input<GanttFieldExpr<D>>('lagUnit');
+
+  /** `true` = auto-scheduling never moves the task (MS Project manual mode). */
+  readonly manuallyScheduledExpr =
+    input<GanttFieldExpr<T>>('manuallyScheduled');
+  /** `'ASAP' | 'ALAP' | 'SNET' | 'SNLT' | 'FNET' | 'FNLT' | 'MSO' | 'MFO'`. */
+  readonly constraintTypeExpr = input<GanttFieldExpr<T>>('constraintType');
+  readonly constraintDateExpr = input<GanttFieldExpr<T>>('constraintDate');
+  /** Target finish: a marker, an overdue state and a `deadline` conflict. */
+  readonly deadlineExpr = input<GanttFieldExpr<T>>('deadline');
+  /** Split-task pieces `[{ start, end }, …]` (two or more split the bar). */
+  readonly segmentsExpr = input<GanttFieldExpr<T>>('segments');
+  /** Baseline sets `[{ start, end }, …]` — wins over `baselineStartExpr`. */
+  readonly baselinesExpr = input<GanttFieldExpr<T>>('baselines');
+  /** Assignment units in %: a number, an array per resource or an id map. */
+  readonly unitsExpr = input<GanttFieldExpr<T>>('units');
+  /** Work in hours (`effortDriven`). */
+  readonly effortExpr = input<GanttFieldExpr<T>>('effort');
 
   /**
    * Resource choices shown next to bars and in the dialog. A resource's
@@ -857,8 +1275,50 @@ export class OgeGantt<
   readonly workCalendar = input<OgeGanttWorkCalendar | null>(null);
   /** Renders the per-resource workload band under the chart. */
   readonly showResourceWorkload = input(false);
+  /** Per-period utilization rows (units vs capacity, over-allocation red). */
+  readonly showResourceHistogram = input(false);
   readonly stripLines = input<readonly OgeGanttStripLine[]>([]);
+  /**
+   * Project-level auto-scheduling: after every edit the engine moves tasks
+   * earlier or later to honour links (with lag), constraints and ALAP;
+   * manually scheduled tasks stay put. `scheduleProject()` runs it on demand.
+   */
   readonly autoScheduling = input(false);
+  /** Where unlinked ASAP tasks start when auto-scheduling; `null` keeps them. */
+  readonly projectStart = input<Date | null>(null);
+  /** Effort-driven: assignment / units / work changes recompute the finish. */
+  readonly effortDriven = input(false);
+  /** Working hours per day for effort-driven durations. */
+  readonly hoursPerDay = input(8);
+  /** Draws the progress line through the status date. */
+  readonly showProgressLine = input(false);
+  /** Status date of the progress line; `null` = today. */
+  readonly statusDate = input<Date | null>(null);
+  /** Draws child milestones onto their summary bars. */
+  readonly showRollups = input(false);
+  /** Which baseline renders (0-based); `-1` hides baselines. */
+  readonly baselineIndex = model(0);
+  /** The toolbar's zoom-preset chooser; `null` = one entry per scale. */
+  readonly zoomPresets = input<readonly OgeGanttZoomPreset[] | null>(null);
+  /** `'tasks'` or the resource-centric `'resources'` view. */
+  readonly viewMode = model<OgeGanttViewMode>('tasks');
+
+  /* ---------------- task list ---------------- */
+
+  /** Double-click / F2 edits task-list cells in place. */
+  readonly inlineEditing = input(false);
+  /** Header click / Enter sorts (siblings within each parent). */
+  readonly allowSorting = input(false);
+  /** Header edge drag / Alt+Arrow resizes columns. */
+  readonly allowColumnResizing = input(false);
+  /** Header drag / Ctrl+Shift+Arrow reorders columns. */
+  readonly allowColumnReordering = input(false);
+  /** A filter row under the headers (matches keep their ancestors). */
+  readonly filterRow = input(false);
+  /** A search box in the toolbar (any column). */
+  readonly searchPanel = input(false);
+  /** `'multiple'`: Ctrl/Shift-click, Shift+Arrow, Ctrl+A and bulk actions. */
+  readonly selectionMode = input<OgeGanttSelectionMode>('single');
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input<Partial<OgeGanttMessages>>({});
   /**
@@ -880,6 +1340,8 @@ export class OgeGantt<
   readonly readOnly = input(false);
 
   readonly selectedTaskKey = model<RowKey | null>(null);
+  /** Every selected key (`selectionMode: 'multiple'`). */
+  readonly selectedTaskKeys = model<readonly RowKey[]>([]);
 
   /* ---------------- events ---------------- */
 
@@ -898,6 +1360,14 @@ export class OgeGantt<
   readonly taskContextMenu = output<OgeGanttTaskClickEvent<T>>();
   readonly selectionChanged = output<OgeGanttSelectionChangedEvent<T>>();
   readonly taskEditDialogShowing = output<OgeGanttDialogShowingEvent<T>>();
+  /** The scheduling-conflict set changed (link, constraint, deadline). */
+  readonly schedulingConflict = output<OgeGanttSchedulingConflictEvent<T>>();
+  /** Cancelable: before a link's type / lag change reaches the store. */
+  readonly dependencyUpdating = output<OgeGanttDependencyUpdatingEvent<D>>();
+  readonly dependencyUpdated = output<OgeGanttDependencyUpdatedEvent<D>>();
+  readonly sortChanged = output<OgeGanttSortChangedEvent>();
+  readonly columnResized = output<OgeGanttColumnResizedEvent>();
+  readonly columnReordered = output<OgeGanttColumnReorderedEvent>();
 
   protected readonly taskTemplate = contentChild(OgeGanttTaskTemplate, {
     descendants: false,
@@ -966,6 +1436,34 @@ export class OgeGantt<
         selectedTaskKey: () => this.selectedTaskKey(),
         rtlEnabled: () => this.rtlEnabled(),
         config: () => this.config,
+        manuallyScheduledExpr: () => this.manuallyScheduledExpr(),
+        constraintTypeExpr: () => this.constraintTypeExpr(),
+        constraintDateExpr: () => this.constraintDateExpr(),
+        deadlineExpr: () => this.deadlineExpr(),
+        segmentsExpr: () => this.segmentsExpr(),
+        baselinesExpr: () => this.baselinesExpr(),
+        unitsExpr: () => this.unitsExpr(),
+        effortExpr: () => this.effortExpr(),
+        dependencyLagExpr: () => this.dependencyLagExpr(),
+        dependencyLagUnitExpr: () => this.dependencyLagUnitExpr(),
+        projectStart: () => this.projectStart(),
+        statusDate: () => this.statusDate(),
+        showProgressLine: () => this.showProgressLine(),
+        showRollups: () => this.showRollups(),
+        baselineIndex: () => this.baselineIndex(),
+        zoomPresets: () => this.zoomPresets(),
+        effortDriven: () => this.effortDriven(),
+        hoursPerDay: () => this.hoursPerDay(),
+        showResourceHistogram: () => this.showResourceHistogram(),
+        viewMode: () => this.viewMode(),
+        selectionMode: () => this.selectionMode(),
+        selectedTaskKeys: () => this.selectedTaskKeys(),
+        inlineEditing: () => this.inlineEditing(),
+        allowSorting: () => this.allowSorting(),
+        allowColumnResizing: () => this.allowColumnResizing(),
+        allowColumnReordering: () => this.allowColumnReordering(),
+        filterRow: () => this.filterRow(),
+        searchPanel: () => this.searchPanel(),
       },
       events: this.coreEvents(),
       openDialog: (model, isNew, items) =>
@@ -985,10 +1483,29 @@ export class OgeGantt<
     return rtl === undefined ? null : rtl ? 'rtl' : 'ltr';
   });
 
+  /** Baseline chooser entries (0-based). */
+  protected readonly baselineOptions = computed(() =>
+    Array.from({ length: this.core.baselineCount() }, (_, i) => i),
+  );
+
+  protected baselineLabel(index: number): string {
+    return this.core
+      .msg()
+      .grid.baselineOption.replace('{index}', String(index + 1));
+  }
+
+  protected setLagUnit(unit: string): void {
+    this.core.dependencyEditorChange({
+      lagUnit: (unit === 'hours' ? 'hours' : 'days') as GanttLagUnit,
+    });
+  }
+
   constructor() {
     // direction is read in the browser only, after the first render
     afterNextRender(() => this.core.connectDirection());
     effect(() => this.core.syncRenderedRange());
+    // `schedulingConflict` fires when the conflict set changes
+    effect(() => this.core.syncConflicts());
     // the core's announcements go through the document's shared live region
     effect(() => {
       const text = this.core.announcement();
@@ -1032,8 +1549,17 @@ export class OgeGantt<
         this.taskEditDialogShowing.emit(
           event as OgeGanttDialogShowingEvent<T, OgeFormItemData>,
         ),
+      schedulingConflict: (event) => this.schedulingConflict.emit(event),
+      dependencyUpdating: (event) => this.dependencyUpdating.emit(event),
+      dependencyUpdated: (event) => this.dependencyUpdated.emit(event),
+      sortChanged: (event) => this.sortChanged.emit(event),
+      columnResized: (event) => this.columnResized.emit(event),
+      columnReordered: (event) => this.columnReordered.emit(event),
       scaleTypeChange: (type) => this.scaleType.set(type),
       selectedTaskKeyChange: (key) => this.selectedTaskKey.set(key),
+      selectedTaskKeysChange: (keys) => this.selectedTaskKeys.set(keys),
+      baselineIndexChange: (index) => this.baselineIndex.set(index),
+      viewModeChange: (mode) => this.viewMode.set(mode),
     };
   }
 
@@ -1129,13 +1655,104 @@ export class OgeGantt<
     this.core.deleteTask(taskData);
   }
 
-  /** Inserts a dependency link (cycle-checked, cancelable). */
+  /** Inserts a dependency link (cycle-checked, cancelable), optionally with a lag. */
   insertDependency(
     predecessorKey: RowKey,
     successorKey: RowKey,
     type: OgeGanttDependencyType = 'FS',
+    options: { readonly lag?: number; readonly lagUnit?: GanttLagUnit } = {},
   ): void {
-    this.core.insertDependency(predecessorKey, successorKey, type);
+    this.core.insertDependency(predecessorKey, successorKey, type, options);
+  }
+
+  /** Updates a link's fields (type, lag, lag unit…) through the pipeline. */
+  updateDependency(dependencyData: D, patch: Partial<D>): void {
+    this.core.updateDependency(dependencyData, patch);
+  }
+
+  /** Runs the scheduling engine now (one undo step), even with `autoScheduling` off. */
+  scheduleProject(): void {
+    this.core.scheduleProject();
+  }
+
+  /** Total and free slack of a leaf task (days), or `null`. */
+  getTaskSlack(key: RowKey): OgeGanttSlack | null {
+    return this.core.getTaskSlack(key);
+  }
+
+  /** Saves every leaf task's dates as baseline `index` (0-based; one undo step). */
+  setBaseline(index = 0): void {
+    this.core.setBaseline(index);
+  }
+
+  /** Applies a zoom preset (index into `zoomPresets`, or the built-in scales). */
+  applyZoomPreset(index: number): void {
+    this.core.applyZoomPreset(index);
+  }
+
+  /** Sorts the task list by a column; `null` clears the sort. */
+  sortBy(field: string | null, direction: 'asc' | 'desc' = 'asc'): void {
+    this.core.sortBy(field, direction);
+  }
+
+  /** Sets one filter-row text (fold-insensitive "contains"). */
+  setFilter(field: string, text: string): void {
+    this.core.setFilter(field, text);
+  }
+
+  /** Sets the search text (matches any column). */
+  setSearchText(text: string): void {
+    this.core.setSearchText(text);
+  }
+
+  /** Clears every filter and the search. */
+  clearFilters(): void {
+    this.core.clearFilters();
+  }
+
+  /** Sets a task-list column's width (clamped 40–600px). */
+  setColumnWidth(field: string, widthPx: number): void {
+    this.core.setColumnWidth(field, widthPx);
+  }
+
+  /** Moves a task-list column to `toIndex` (frozen columns stay first). */
+  moveColumn(field: string, toIndex: number): void {
+    this.core.moveColumn(field, toIndex);
+  }
+
+  /** Opens the inline editor on a cell (`field` unset = the first editable one). */
+  editCell(task: OgeGanttTask<T>, field?: string): boolean {
+    return this.core.beginCellEdit(task as GanttTask<T>, field);
+  }
+
+  /** Every selected task, in tree order. */
+  getSelectedTasks(): OgeGanttTask<T>[] {
+    return this.core.getSelectedTasks();
+  }
+
+  /** Selects every visible task (`selectionMode: 'multiple'`). */
+  selectAll(): void {
+    this.core.selectAll();
+  }
+
+  /** Clears the selection. */
+  clearSelection(): void {
+    this.core.clearSelection();
+  }
+
+  /** Deletes several tasks (and their links) — one undo step. */
+  deleteTasks(items: readonly T[]): void {
+    this.core.deleteTasks(items);
+  }
+
+  /** Indents several tasks in tree order — one undo step. */
+  indentTasks(tasks: readonly OgeGanttTask<T>[]): void {
+    this.core.indentTasks(tasks);
+  }
+
+  /** Outdents several tasks — one undo step. */
+  outdentTasks(tasks: readonly OgeGanttTask<T>[]): void {
+    this.core.outdentTasks(tasks);
   }
 
   /** Deletes a dependency link through the pipeline. */

@@ -19,6 +19,15 @@ function task(key: number, start: Date, end: Date): OgeGanttTask {
     expanded: true,
     hasChildren: false,
     resourceIds: [],
+    wbs: '',
+    manuallyScheduled: false,
+    constraintType: 'ASAP',
+    constraintDate: undefined,
+    deadline: undefined,
+    segments: [],
+    baselines: [],
+    units: [],
+    effort: undefined,
   };
 }
 

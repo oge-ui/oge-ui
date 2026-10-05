@@ -912,6 +912,32 @@ export const appRoutes: Route[] = [
         title: 'OGE — Gantt',
       },
       {
+        path: 'scheduling',
+        loadComponent: () =>
+          import('./pages/gantt/scheduling').then((m) => m.GanttSchedulingPage),
+        title: 'OGE — Gantt Scheduling & Constraints',
+      },
+      {
+        path: 'resources',
+        loadComponent: () =>
+          import('./pages/gantt/resources').then((m) => m.GanttResourcesPage),
+        title: 'OGE — Gantt Resources',
+      },
+      {
+        path: 'task-list',
+        loadComponent: () =>
+          import('./pages/gantt/task-list').then((m) => m.GanttTaskListPage),
+        title: 'OGE — Gantt Task List Editing',
+      },
+      {
+        path: 'import-export',
+        loadComponent: () =>
+          import('./pages/gantt/import-export').then(
+            (m) => m.GanttImportExportPage,
+          ),
+        title: 'OGE — Gantt Import / Export',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/gantt/api').then((m) => m.GanttApiPage),
@@ -944,6 +970,20 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/kanban/overview').then((m) => m.KanbanOverviewPage),
         title: 'OGE — Kanban',
+      },
+      {
+        path: 'filtering',
+        loadComponent: () =>
+          import('./pages/kanban/filtering').then((m) => m.KanbanFilteringPage),
+        title: 'OGE — Kanban Filtering & Sorting',
+      },
+      {
+        path: 'multi-select',
+        loadComponent: () =>
+          import('./pages/kanban/multi-select').then(
+            (m) => m.KanbanMultiSelectPage,
+          ),
+        title: 'OGE — Kanban Multi-select & Cross-board',
       },
       {
         path: 'api',

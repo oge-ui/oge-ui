@@ -25,6 +25,15 @@ function task(
     expanded: true,
     hasChildren: isSummary,
     resourceIds,
+    wbs: '',
+    manuallyScheduled: false,
+    constraintType: 'ASAP',
+    constraintDate: undefined,
+    deadline: undefined,
+    segments: [],
+    baselines: [],
+    units: [],
+    effort: undefined,
   };
 }
 

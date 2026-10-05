@@ -27,6 +27,11 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.js",
+      "require": "./export-excel.cjs"
+    },
     "./styles.css": "./styles.css"
   },
   "sideEffects": [

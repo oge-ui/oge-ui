@@ -7,6 +7,82 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Gantt scheduling depth (G3b) — `@oge-ui/gantt`, `@oge-ui/react-gantt`, `@oge-ui/gantt-engine`
+
+- **Lag / lead** on every link type (`dependencyLagExpr` / `dependencyLagUnitExpr`,
+  working days on a calendar or hours): a `+2d` badge on the arrow, a dependency
+  editor (double-click an arrow, or Enter on a clicked one), `updateDependency()`
+  with cancelable `dependencyUpdating` / `dependencyUpdated`.
+- **Constraints, deadlines, manual mode**: `constraintTypeExpr` / `constraintDateExpr`
+  (ASAP, ALAP, SNET, SNLT, FNET, FNLT, MSO, MFO), `deadlineExpr` (marker + overdue),
+  `manuallyScheduledExpr`; violations are drawn and reported through
+  `schedulingConflict`.
+- **A real scheduling engine** (`scheduleGanttProject`): forward pass that pulls tasks
+  earlier as well as pushing them later, ALAP backward pass, `projectStart`,
+  `scheduleProject()`; `getTaskSlack()` plus `totalSlack` / `freeSlack` columns.
+- **Task list**: `inlineEditing` (F2 / double-click; text, date, number, duration and
+  predecessor `3FS+2d` editors), `allowSorting`, `filterRow`, `searchPanel`,
+  `allowColumnResizing` / `allowColumnReordering` (pointer + Alt / Ctrl+Shift+Arrow),
+  `frozen` columns, `selectionMode: 'multiple'` with `[(selectedTaskKeys)]` and bulk
+  `deleteTasks` / `indentTasks` / `outdentTasks` (one undo step each).
+- **Scales & tracking**: `quarters` and `years` scales, `zoomPresets` chooser, `wbs`
+  column, split tasks (`segmentsExpr`), several baselines (`baselinesExpr`,
+  `[(baselineIndex)]`, `setBaseline(i)`), progress line (`showProgressLine`,
+  `statusDate`), child-milestone roll-ups (`showRollups`).
+- **Resources**: assignment `unitsExpr`, `effortExpr` + `effortDriven` / `hoursPerDay`,
+  `showResourceHistogram` (capacity line, over-allocation), `[(viewMode)]` resource view.
+- **MS Project XML**: new lazy entry `/export-msproject` in all three packages
+  (`exportGanttToMsProject`, `importMsProjectXml`), dependency-free.
+- **Behaviour changes**: with `autoScheduling` on, successors now move _earlier_ when
+  their predecessors allow it (1.x only pushed later; `autoScheduleForward` keeps that
+  behaviour for direct callers); the zoom ladder ends at `years` instead of `months`;
+  the toolbar gains a scale chooser (and a resource-view toggle when `resources` exist);
+  `OgeGanttSelectionChangedEvent` gains `tasks`; the task dialog adds units with
+  resources and the scheduling fields with `autoScheduling`; `OgeGanttTask` /
+  `OgeGanttDependency` carry the new fields. New message keys are optional and fall
+  back to English.
+
+### Kanban depth (G3b) — `@oge-ui/kanban`, `@oge-ui/react-kanban`, `@oge-ui/kanban-engine`
+
+- **Filtering**: a programmatic `filter` (a card predicate or an
+  `OgeKanbanFilterExpression` — tags, assignees, priorities, columns,
+  swimlanes, text, overdue) and an opt-in chip bar (`showFilterBar`, two-way
+  `filterValue`) for tags, assignees and priorities, ANDed with the toolbar
+  search. WIP counts stay unfiltered.
+- **Per-column sort**: two-way `columnSort` (`{ field: 'order' | 'title' |
+'priority' | 'dueDate', direction }` or a comparator, `'*'` for every column)
+  and `priorityOrder`; a new header button opens the column menu with sort
+  entries (`menuitemradio`) and "Select all in column".
+- **Multi-select** (`selectionMode: 'multiple'`, the default; two-way
+  `selectedCardKeys`): Ctrl/Shift-click, Ctrl+A in a column, Ctrl+Space,
+  Shift+↑/↓, Escape. A drag of a selected card carries the selection (the
+  ghost shows an ICU-plural count); Ctrl+←/→ and Delete act on it;
+  `moveCards()`, `deleteCards()`, `selectCards()`, `clearSelection()`.
+- **Cross-board drag**: boards sharing a `dragGroup` exchange cards by drag
+  or the card menu's "Move to {board}" entry; `boardId`, cancelable
+  `cardTransferring` on the target, `cardTransferred` on both boards,
+  `transferCards()`.
+- **Swimlane WIP limits**: `OgeKanbanColumn.swimlaneWipLimit` (per cell badge)
+  and `swimlaneWipLimits` (per-lane totals on the lane header).
+- **Quick add + inline titles**: `quickAdd` turns the column footer into an
+  inline composer; F2 (and a title double-click with `inlineTitleEditing`)
+  renames a card in place; `startTitleEdit()`.
+- **Checklists**: `checklistExpr` (`{ text, done }` items) with a progress
+  badge and `toggleChecklistItem()`.
+- **Undo/redo**: `undoLimit` (default 50), Ctrl+Z / Ctrl+Y and toolbar
+  buttons, `undo()` / `redo()` / `canUndo()` / `canRedo()` — replayed through
+  the cancelable pipelines.
+- **Export**: `getExportData()` / `exportToCsv()` (formula-guarded) and new
+  lazy `/export-excel` entries in both layers over
+  `@oge-ui/kanban-engine/export-excel` (optional `exceljs` peer).
+- Behaviour changes: the toolbar shows Undo / Redo buttons while
+  `undoLimit > 0`; Ctrl/Shift-click no longer just re-selects one card; the
+  column header gains a column-menu button; the empty-result heading reads
+  "No cards match the filters" when filters (not the search) empty the board.
+  New message keys are optional (`fillKanbanMessages()` fills English).
+- Docs: "Filtering & sorting" and "Multi-select & cross-board" pages in both
+  layers.
+
 ### Ready-made translations — `@oge-ui/locales` (new, MIT)
 
 - **Ten languages for every catalog**: German, French, Spanish, Italian,
