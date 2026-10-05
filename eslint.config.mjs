@@ -32,6 +32,8 @@ export default [
             '@oge-ui/charts',
             '@oge-ui/react-charts',
             '@oge-ui/react-gantt',
+            '@oge-ui/scheduler',
+            '@oge-ui/react-scheduler',
           ],
           depConstraints: [
             // ---------------------------------------------------------------

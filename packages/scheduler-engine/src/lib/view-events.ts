@@ -11,6 +11,8 @@ export interface SchedulerChipEvent<T> {
   readonly appointment: SchedulerAppointment<T>;
   readonly event: MouseEvent | KeyboardEvent;
   readonly rect: DOMRect;
+  /** The view's chronological chip order (the Shift-click range axis). */
+  readonly order?: readonly SchedulerAppointment<T>[];
 }
 
 /** A cell interaction surfaced to the shell. */
@@ -20,6 +22,8 @@ export interface SchedulerCellEvent {
   readonly event: MouseEvent | KeyboardEvent;
   /** The cell's resource id when the view is column-grouped. */
   readonly resourceId?: unknown;
+  /** Every grouped level's id of the cell (`fieldExpr → id`). */
+  readonly resources?: Readonly<Record<string, unknown>>;
 }
 
 /** A committed move/resize surfaced to the shell. */
@@ -28,6 +32,8 @@ export interface SchedulerProposalEvent<T> {
   readonly proposal: AppointmentProposal;
   /** Set when a grouped drag landed on a different resource column/row. */
   readonly resourceId?: unknown;
+  /** Every grouped level's id of the target (multi-level grouping). */
+  readonly resources?: Readonly<Record<string, unknown>>;
 }
 
 /** A drag-to-create range, with the grouped column's resource. */
@@ -35,4 +41,6 @@ export interface SchedulerRangeEvent {
   readonly startDate: Date;
   readonly endDate: Date;
   readonly resourceId?: unknown;
+  /** Every grouped level's id of the column. */
+  readonly resources?: Readonly<Record<string, unknown>>;
 }

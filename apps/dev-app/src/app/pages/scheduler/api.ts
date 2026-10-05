@@ -8,12 +8,21 @@ import { ReactSchedulerApiSections } from '../react-scheduler/api';
 import {
   OGE_SCHEDULER_API,
   OGE_SCHEDULER_CONFIG_API,
+  OGE_SCHEDULER_DRAGGABLE_API,
 } from './scheduler-api-data';
 
-const SECTIONS = ['OgeScheduler', 'Configuration'] as const;
+const SECTIONS = [
+  'OgeScheduler',
+  'OgeSchedulerDraggable',
+  'Configuration',
+] as const;
 
 /** TOC of the React view — must mirror `ReactSchedulerApiSections`' titles. */
-const SECTIONS_REACT = ['<OgeScheduler>', 'Configuration'] as const;
+const SECTIONS_REACT = [
+  '<OgeScheduler>',
+  'useOgeSchedulerDraggable',
+  'Configuration',
+] as const;
 
 @Component({
   selector: 'app-scheduler-api',
@@ -74,6 +83,11 @@ const SECTIONS_REACT = ['<OgeScheduler>', 'Configuration'] as const;
         selector="oge-scheduler"
         [sections]="schedulerApi"
       />
+      <app-api-reference
+        title="OgeSchedulerDraggable"
+        selector="[ogeSchedulerDraggable]"
+        [sections]="draggableApi"
+      />
       <app-api-reference title="Configuration" [sections]="configApi" />
     }
 
@@ -131,5 +145,6 @@ export class SchedulerApiPage {
   protected readonly sections = SECTIONS;
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly schedulerApi = OGE_SCHEDULER_API;
+  protected readonly draggableApi = OGE_SCHEDULER_DRAGGABLE_API;
   protected readonly configApi = OGE_SCHEDULER_CONFIG_API;
 }

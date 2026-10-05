@@ -40,6 +40,43 @@ are versioned independently, which is the case here.
 - `@oge-ui/react` now treats `@oge-ui/react-upload` as external like every
   other family instead of bundling a second copy of it.
 
+### Scheduler depth (G3a) — `@oge-ui/scheduler`, `@oge-ui/react-scheduler`, `@oge-ui/scheduler-engine`
+
+- **Views:** `timelineWorkWeek`, `timelineMonth` and `timelineYear` (day
+  scale); `intervalCount` on view options for N-day / N-week / N-month and
+  scaled timeline views; `showWeekNumbers` with `weekNumberRule: 'iso' |
+'locale'`.
+- **Grouping:** every `groups` level is honoured (nested headers, drags
+  reassign all levels); `groupOrientation` (`'vertical'` = day/week row
+  blocks) and `groupByDate`; resource header template
+  (`ogeResourceHeaderTemplate` / `renderResourceHeader`).
+- **Availability and editing:** `disabledSlots` (predicate or ranges with
+  RRULE and resource scope — hatched, refused, announced); per-resource
+  `workHours` / `workDays` and `snapToWorkHours`; `allowOverlap` +
+  `conflictCheck`; multi-select (`selectedAppointments`), Ctrl+C / Ctrl+V
+  copy and paste, Ctrl+Z / Ctrl+Y undo and redo (`undoLimit`, `undo()`,
+  `redo()`, `canUndo()`, `canRedo()`).
+- **Drag in and out:** `[ogeSchedulerDraggable]` / `useOgeSchedulerDraggable`
+  make any element an appointment source (pointer, touch and a keyboard
+  twin), with `appointmentDropped` and `dragOut` events and drops between
+  schedulers.
+- **Recurrence editor:** nth / last weekday (BYSETPOS), several days of the
+  month, yearly month + day or weekday, count / until, skipped occurrences,
+  and a live ICU summary; rules the form cannot express are kept verbatim.
+- **"+N more" popup:** `moreMode: 'popup' | 'drill'` — the default is now a
+  keyboard-accessible day list with a "Go to day" action.
+- **Import / export:** lazy `/export-ical` (RFC 5545 export and import, no
+  dependencies), `/export-pdf` (jspdf peer, `setOgePdfDefaultFont`) and
+  `/export-excel` (exceljs peer) entries, `getExportData()` and `print()`.
+- **Timeline row virtualization** (`virtualScrolling`, auto above 50 rows).
+- New message keys (week numbers, the recurrence editor and summary, the
+  "+N more" popup, availability and clipboard announcements, export headers)
+  are optional — catalogs without them fall back to English.
+- **Behaviour change:** the month view's "+N more" opens the day list instead
+  of drilling into the day view; set `moreMode="drill"` for the 1.1 behaviour.
+- Docs: new Scheduler pages "Views & grouping", "Resources & availability",
+  "Recurrence editor" and "Import / export".
+
 ## 1.1.2 — 2026-10-04
 
 Everything below is on `main` and ships together as **1.1.2**. It is the

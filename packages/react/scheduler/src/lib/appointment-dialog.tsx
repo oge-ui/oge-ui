@@ -7,10 +7,12 @@ import {
   type OgeFormItemDefinition,
 } from '@oge-ui/react-forms';
 import { OgeModal } from '@oge-ui/react-overlay';
-import type {
-  OgeSchedulerEditorMessages,
-  SchedulerEditorModel,
-  SchedulerEditorResult,
+import {
+  OGE_DEFAULT_SCHEDULER_MESSAGES,
+  schedulerRecurrenceSummary,
+  type OgeSchedulerEditorMessages,
+  type SchedulerEditorModel,
+  type SchedulerEditorResult,
 } from '@oge-ui/scheduler-engine';
 
 /** The open editor's state, owned by the shell. */
@@ -24,6 +26,7 @@ export interface SchedulerEditorState {
 export interface AppointmentDialogProps {
   readonly state: SchedulerEditorState;
   readonly messages: OgeSchedulerEditorMessages;
+  readonly locale?: string;
   readonly onModelChange: (model: SchedulerEditorModel) => void;
   readonly onOpenedChange: (opened: boolean) => void;
   readonly onSaved: (result: SchedulerEditorResult) => void;
@@ -39,11 +42,17 @@ export interface AppointmentDialogProps {
 export function SchedulerAppointmentDialog({
   state,
   messages,
+  locale,
   onModelChange,
   onOpenedChange,
   onSaved,
 }: AppointmentDialogProps) {
   const formRef = useRef<OgeFormHandle<SchedulerEditorModel>>(null);
+  // the live recurrence summary ("Every 2 weeks on Monday, 10 times")
+  const summary =
+    state.model === null
+      ? ''
+      : schedulerRecurrenceSummary(state.model, messages, locale);
 
   const save = (): void => {
     const model = state.model;
@@ -92,6 +101,18 @@ export function SchedulerAppointmentDialog({
           colCount={2}
           labelLocation="top"
         />
+      )}
+      {state.model !== null && summary !== '' && (
+        <p
+          className="oge-scheduler-recurrence-summary"
+          aria-live="polite"
+          aria-label={
+            messages.summaryLabel ??
+            OGE_DEFAULT_SCHEDULER_MESSAGES.editor.summaryLabel
+          }
+        >
+          {summary}
+        </p>
       )}
     </OgeModal>
   );

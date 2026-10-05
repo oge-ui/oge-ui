@@ -124,9 +124,19 @@ describe('scheduler editor mapping', () => {
   it('builds the default form items with recurrence visibility from the model', () => {
     const plain = buildSchedulerEditorItems(messages, rooms, null, 'en-US');
     expect(plain.map((item) => item.field)).toContain('resourceValues.roomId');
-    expect(plain.find((item) => item.field === 'interval')?.visible).toBe(
-      false,
-    );
+    // visibility is live: `visibleWhen` re-evaluates on every model change
+    const shown = (
+      items: ReturnType<typeof buildSchedulerEditorItems>,
+      field: string,
+      data: Record<string, unknown>,
+    ): boolean => {
+      const condition = items.find((item) => item.field === field)?.visibleWhen;
+      if (condition === undefined) return true;
+      return typeof condition === 'function'
+        ? condition(data)
+        : data[condition.field] === condition.equals;
+    };
+    expect(shown(plain, 'interval', { repeat: 'never' })).toBe(false);
     const weekly = buildSchedulerEditorItems(
       messages,
       [],
@@ -137,9 +147,10 @@ describe('scheduler editor mapping', () => {
       },
       'en-US',
     );
-    expect(weekly.find((item) => item.field === 'byDays')?.visible).toBe(true);
-    expect(weekly.find((item) => item.field === 'until')?.visible).toBe(true);
-    expect(weekly.find((item) => item.field === 'count')?.visible).toBe(false);
+    const weeklyData = { repeat: 'weekly', endMode: 'until' };
+    expect(shown(weekly, 'byDays', weeklyData)).toBe(true);
+    expect(shown(weekly, 'until', weeklyData)).toBe(true);
+    expect(shown(weekly, 'count', weeklyData)).toBe(false);
     expect(
       weekly.find((item) => item.field === 'startDate')?.editorOptions,
     ).toEqual({ type: 'date' });

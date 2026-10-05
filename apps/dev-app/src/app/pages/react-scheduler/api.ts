@@ -3,6 +3,7 @@ import { ApiReference } from '../../shared/api-reference';
 import {
   OGE_REACT_SCHEDULER_API,
   OGE_REACT_SCHEDULER_CONFIG_API,
+  OGE_REACT_SCHEDULER_DRAGGABLE_API,
 } from './react-scheduler-api-data';
 
 /**
@@ -25,10 +26,15 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-api-reference title="&lt;OgeScheduler&gt;" [sections]="schedulerApi" />
+    <app-api-reference
+      title="useOgeSchedulerDraggable"
+      [sections]="draggableApi"
+    />
     <app-api-reference title="Configuration" [sections]="configApi" />
   `,
 })
 export class ReactSchedulerApiSections {
   protected readonly schedulerApi = OGE_REACT_SCHEDULER_API;
+  protected readonly draggableApi = OGE_REACT_SCHEDULER_DRAGGABLE_API;
   protected readonly configApi = OGE_REACT_SCHEDULER_CONFIG_API;
 }

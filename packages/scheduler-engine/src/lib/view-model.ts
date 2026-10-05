@@ -25,7 +25,38 @@ export type SchedulerViewType =
   | 'agenda'
   | 'timelineDay'
   | 'timelineWeek'
+  | 'timelineWorkWeek'
+  | 'timelineMonth'
+  | 'timelineYear'
   | 'year';
+
+/** The timeline views (a horizontal time axis, one row per resource). */
+export type SchedulerTimelineViewType =
+  | 'timelineDay'
+  | 'timelineWeek'
+  | 'timelineWorkWeek'
+  | 'timelineMonth'
+  | 'timelineYear';
+
+/** Whether `view` is one of the timeline views. */
+export function isTimelineView(
+  view: SchedulerViewType,
+): view is SchedulerTimelineViewType {
+  return (
+    view === 'timelineDay' ||
+    view === 'timelineWeek' ||
+    view === 'timelineWorkWeek' ||
+    view === 'timelineMonth' ||
+    view === 'timelineYear'
+  );
+}
+
+/** A positive whole interval count (`intervalCount`); anything else is 1. */
+export function normalizeIntervalCount(value: number | undefined): number {
+  return value !== undefined && Number.isFinite(value) && value >= 1
+    ? Math.floor(value)
+    : 1;
+}
 
 /** Configuration of a day/week time grid. */
 export interface TimeGridConfig {
@@ -39,6 +70,12 @@ export interface TimeGridConfig {
   readonly hiddenWeekDays?: readonly number[];
   /** The weekend `workWeek` drops (0 = Sunday); defaults to `[0, 6]`. */
   readonly weekendDays?: readonly number[];
+  /**
+   * Periods the grid shows (the view option `intervalCount`): `3` on a day
+   * view renders three consecutive days from the anchor, `2` on a week view
+   * a fortnight. Default `1`.
+   */
+  readonly intervalCount?: number;
 }
 
 /**
@@ -51,7 +88,7 @@ export function resolveHiddenWeekDays(
   weekendDays: readonly number[] = [0, 6],
 ): readonly number[] {
   const hidden =
-    view === 'workWeek'
+    view === 'workWeek' || view === 'timelineWorkWeek'
       ? [...weekendDays, ...(hiddenWeekDays ?? [])]
       : (hiddenWeekDays ?? []);
   // a grid needs at least one visible day — ignore a config hiding all seven
@@ -60,7 +97,7 @@ export function resolveHiddenWeekDays(
 
 /** The built day/week grid: rendered days, slot rows and the data window. */
 export interface TimeGridVm {
-  /** Rendered day columns — 1 (day view) or 7 (week view, week-aligned). */
+  /** Rendered day columns — the day view's days, or whole weeks. */
   readonly days: readonly Date[];
   /** Start minute-of-day of every rendered slot row. */
   readonly slotStartMinutes: readonly number[];
@@ -73,11 +110,12 @@ export interface TimeGridVm {
 }
 
 export function buildTimeGrid(config: TimeGridConfig): TimeGridVm {
+  const intervals = normalizeIntervalCount(config.intervalCount);
   const first =
     config.view === 'day'
       ? startOfDay(config.anchorDate)
       : startOfWeek(config.anchorDate, config.firstDayOfWeek);
-  const dayCount = config.view === 'day' ? 1 : 7;
+  const dayCount = config.view === 'day' ? intervals : 7 * intervals;
   const hidden = new Set(
     config.view === 'day'
       ? []
@@ -110,29 +148,54 @@ export function buildTimeGrid(config: TimeGridConfig): TimeGridVm {
   };
 }
 
-/** The built month grid: 6 week rows of 7 days plus the data window. */
+/** The built month grid: whole week rows of 7 days plus the data window. */
 export interface MonthGridVm {
   readonly weeks: readonly (readonly Date[])[];
   readonly rangeStart: Date;
   readonly rangeEnd: Date;
 }
 
+/**
+ * The month matrix: six week rows for a single month (the fixed layout the
+ * month view always had), or every week touching the `intervalCount`
+ * months from the anchor's month for a multi-month view.
+ */
 export function buildMonthGrid(
   anchorDate: Date,
   firstDayOfWeek: number,
+  intervalCount = 1,
 ): MonthGridVm {
-  const days = monthMatrix(
-    anchorDate.getFullYear(),
-    anchorDate.getMonth(),
-    firstDayOfWeek,
-  );
-  const weeks = Array.from({ length: 6 }, (_, week) =>
-    days.slice(week * 7, week * 7 + 7),
-  );
+  const intervals = normalizeIntervalCount(intervalCount);
+  if (intervals === 1) {
+    const days = monthMatrix(
+      anchorDate.getFullYear(),
+      anchorDate.getMonth(),
+      firstDayOfWeek,
+    );
+    const weeks = Array.from({ length: 6 }, (_, week) =>
+      days.slice(week * 7, week * 7 + 7),
+    );
+    return {
+      weeks,
+      rangeStart: days[0],
+      rangeEnd: addDays(days[41], 1),
+    };
+  }
+  const monthStart = startOfMonth(anchorDate);
+  const lastDay = addDays(addMonths(monthStart, intervals), -1);
+  const first = startOfWeek(monthStart, firstDayOfWeek);
+  const weeks: Date[][] = [];
+  for (
+    let cursor = first;
+    cursor.getTime() <= lastDay.getTime();
+    cursor = addDays(cursor, 7)
+  ) {
+    weeks.push(Array.from({ length: 7 }, (_, day) => addDays(cursor, day)));
+  }
   return {
     weeks,
-    rangeStart: days[0],
-    rangeEnd: addDays(days[41], 1),
+    rangeStart: first,
+    rangeEnd: addDays(first, weeks.length * 7),
   };
 }
 
@@ -142,47 +205,68 @@ export function viewRange(
   anchorDate: Date,
   firstDayOfWeek: number,
   agendaDuration = 7,
+  intervalCount = 1,
 ): { start: Date; end: Date } {
+  const intervals = normalizeIntervalCount(intervalCount);
   if (view === 'day' || view === 'timelineDay') {
     const start = startOfDay(anchorDate);
-    return { start, end: addDays(start, 1) };
+    return { start, end: addDays(start, intervals) };
   }
   if (view === 'agenda') {
     const start = startOfDay(anchorDate);
     return { start, end: addDays(start, Math.max(1, agendaDuration)) };
   }
-  if (view === 'week' || view === 'workWeek' || view === 'timelineWeek') {
+  if (
+    view === 'week' ||
+    view === 'workWeek' ||
+    view === 'timelineWeek' ||
+    view === 'timelineWorkWeek'
+  ) {
     const start = startOfWeek(anchorDate, firstDayOfWeek);
-    return { start, end: addDays(start, 7) };
+    return { start, end: addDays(start, 7 * intervals) };
   }
-  if (view === 'year') {
+  if (view === 'timelineMonth') {
+    const start = startOfMonth(anchorDate);
+    return { start, end: addMonths(start, intervals) };
+  }
+  if (view === 'year' || view === 'timelineYear') {
     const start = new Date(anchorDate.getFullYear(), 0, 1);
-    return { start, end: new Date(anchorDate.getFullYear() + 1, 0, 1) };
+    return {
+      start,
+      end: new Date(anchorDate.getFullYear() + intervals, 0, 1),
+    };
   }
-  const grid = buildMonthGrid(anchorDate, firstDayOfWeek);
+  const grid = buildMonthGrid(anchorDate, firstDayOfWeek, intervals);
   return { start: grid.rangeStart, end: grid.rangeEnd };
 }
 
-/** Steps the anchor date one period backwards or forwards. */
+/** Steps the anchor date one period (`intervalCount` units) back or forth. */
 export function navigateDate(
   view: SchedulerViewType,
   anchorDate: Date,
   direction: -1 | 1,
   agendaDuration = 7,
+  intervalCount = 1,
 ): Date {
+  const intervals = normalizeIntervalCount(intervalCount);
   if (view === 'day' || view === 'timelineDay') {
-    return addDays(anchorDate, direction);
+    return addDays(anchorDate, direction * intervals);
   }
   if (view === 'agenda') {
     return addDays(anchorDate, direction * Math.max(1, agendaDuration));
   }
-  if (view === 'week' || view === 'workWeek' || view === 'timelineWeek') {
-    return addDays(anchorDate, direction * 7);
+  if (
+    view === 'week' ||
+    view === 'workWeek' ||
+    view === 'timelineWeek' ||
+    view === 'timelineWorkWeek'
+  ) {
+    return addDays(anchorDate, direction * 7 * intervals);
   }
-  if (view === 'year') {
-    return new Date(anchorDate.getFullYear() + direction, 0, 1);
+  if (view === 'year' || view === 'timelineYear') {
+    return new Date(anchorDate.getFullYear() + direction * intervals, 0, 1);
   }
-  return startOfMonth(addMonths(anchorDate, direction));
+  return startOfMonth(addMonths(anchorDate, direction * intervals));
 }
 
 /** One per-day piece of a timed appointment, clipped to the visible window. */

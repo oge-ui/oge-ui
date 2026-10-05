@@ -31,5 +31,39 @@
     "directory": "packages/scheduler-engine"
   },
   "bugs": "https://github.com/oge-ui/oge-ui/issues",
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.esm.js",
+      "require": "./index.cjs.js"
+    },
+    "./export-ical": {
+      "types": "./export-ical.d.ts",
+      "import": "./export-ical.esm.js",
+      "require": "./export-ical.cjs.js"
+    },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.esm.js",
+      "require": "./export-excel.cjs.js"
+    },
+    "./export-pdf": {
+      "types": "./export-pdf.d.ts",
+      "import": "./export-pdf.esm.js",
+      "require": "./export-pdf.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "exceljs": "^4.4.0",
+    "jspdf": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "exceljs": {
+      "optional": true
+    },
+    "jspdf": {
+      "optional": true
+    }
+  }
 }
