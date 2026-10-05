@@ -432,7 +432,9 @@
   }
 }
 
-.oge-kanban-column-add + .oge-kanban-column-collapse {
+.oge-kanban-column-add + .oge-kanban-column-collapse,
+.oge-kanban-column-add + .oge-kanban-column-menu-btn,
+.oge-kanban-column-menu-btn + .oge-kanban-column-collapse {
   margin-inline-start: 0;
 }
 
@@ -1055,5 +1057,318 @@
   .oge-kanban-add-column,
   .oge-kanban-card-shifted {
     transition: none;
+  }
+}
+
+/* ---------- filter chips ---------- */
+
+.oge-kanban-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 6px 12px;
+  border-block-end: 1px solid var(--oge-border-color);
+  background: var(--oge-bg);
+}
+
+.oge-kanban-filter-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.oge-kanban-filter-caption {
+  margin-inline-end: 2px;
+  color: var(--oge-input-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.oge-kanban-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border: 1px solid var(--oge-muted-color);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--oge-input-muted);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+    font-weight: 600;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-kanban-chip-check {
+  display: none;
+
+  [aria-pressed='true'] > & {
+    display: inline;
+  }
+}
+
+.oge-kanban-filters-clear {
+  margin-inline-start: auto;
+}
+
+/* ---------- column menu button + sort indicator ---------- */
+
+.oge-kanban-column-menu-btn {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-input-muted);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--oge-border-color) 50%, transparent);
+    color: var(--oge-text-color);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-kanban-column-sorted .oge-kanban-column-menu-btn {
+  color: var(--oge-accent);
+}
+
+.oge-kanban-menu-item[aria-checked='true'] {
+  color: var(--oge-accent);
+  font-weight: 600;
+}
+
+.oge-kanban-menu-check {
+  width: 14px;
+  flex: none;
+  visibility: hidden;
+
+  [aria-checked='true'] > & {
+    visibility: visible;
+  }
+}
+
+/* ---------- multi-select + multi-card drag ---------- */
+
+.oge-kanban-card-multi {
+  box-shadow:
+    var(--oge-kanban-card-shadow),
+    inset 0 0 0 1.5px var(--oge-accent),
+    inset 0 0 0 999px
+      color-mix(in srgb, var(--oge-accent-soft) 45%, transparent);
+}
+
+/* the other selected cards ride along with the drag */
+.oge-kanban-card-carried {
+  opacity: 0.45;
+}
+
+.oge-kanban-drag-count {
+  position: absolute;
+  inset-block-start: -8px;
+  inset-inline-end: -8px;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  box-shadow: var(--oge-kanban-card-shadow);
+  z-index: 1;
+}
+
+.oge-kanban-drag-stack {
+  position: absolute;
+  inset: 0;
+  translate: 6px 6px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-kanban-card-bg);
+  box-shadow:
+    var(--oge-kanban-card-shadow),
+    inset 0 0 0 1px var(--oge-kanban-card-ring);
+  rotate: 2.5deg;
+  z-index: -1;
+}
+
+/* ---------- swimlane WIP ---------- */
+
+.oge-kanban-cell-wip {
+  align-self: flex-end;
+  margin-block-end: -2px;
+}
+
+.oge-kanban-lane-wip-exceeded .oge-kanban-lane-title {
+  color: var(--oge-danger);
+}
+
+/* ---------- quick add + inline title editing ---------- */
+
+.oge-kanban-quick-add {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oge-kanban-quick-add-input,
+.oge-kanban-card-title-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--oge-accent);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: 13px;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+}
+
+.oge-kanban-card-title-input {
+  position: absolute;
+  inset-inline: 8px;
+  inset-block-start: 8px;
+  width: auto;
+  z-index: 1;
+  font-weight: 600;
+}
+
+.oge-kanban-card-editing {
+  position: relative;
+}
+
+/* ---------- checklist badge ---------- */
+
+.oge-kanban-checklist {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--oge-border-color) 45%, transparent);
+  color: var(--oge-header-color);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.oge-kanban-checklist-bar {
+  position: relative;
+  width: 28px;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--oge-muted-color) 35%, transparent);
+  overflow: hidden;
+
+  > span {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: inherit;
+    background: var(--oge-accent);
+  }
+}
+
+.oge-kanban-checklist-done {
+  background: var(--oge-success-soft);
+  color: var(--oge-success);
+
+  .oge-kanban-checklist-bar > span {
+    background: var(--oge-success);
+  }
+}
+
+.oge-kanban-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@include tokens.reduced-motion {
+  .oge-kanban-chip,
+  .oge-kanban-column-menu-btn {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-kanban-chip {
+    border-color: ButtonText;
+    color: ButtonText;
+
+    &[aria-pressed='true'] {
+      border: 2px solid Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+
+  .oge-kanban-card-multi {
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .oge-kanban-drag-count {
+    border: 1px solid CanvasText;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-kanban-checklist-bar {
+    border: 1px solid CanvasText;
+
+    > span {
+      background: CanvasText;
+    }
+  }
+
+  .oge-kanban-menu-item[aria-checked='true'] {
+    color: Highlight;
   }
 }

@@ -142,7 +142,12 @@ export function downloadKanbanText(
   if (typeof URL.createObjectURL !== 'function') return;
   // `buildCsv` already leads with the BOM Excel needs to read UTF-8
   const blob = new Blob([text], { type });
-  const url = URL.createObjectURL(blob);
+  let url: string;
+  try {
+    url = URL.createObjectURL(blob);
+  } catch {
+    return; // environments without object URLs (jsdom) only build the text
+  }
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = fileName;

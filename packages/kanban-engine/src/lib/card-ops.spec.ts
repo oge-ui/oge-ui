@@ -209,7 +209,7 @@ describe('kanban export', () => {
       locale: 'en-US',
       hasSwimlanes: true,
     });
-    const lines = csv.replace(/^﻿/, '').split(/\r?\n/);
+    const lines = csv.replace(new RegExp('^\\uFEFF'), '').split(/\r?\n/);
     expect(lines[0]).toBe(
       'Key,Title,Column,Swimlane,Description,Tags,Assignees,Priority,Due date,Checklist',
     );

@@ -35,10 +35,14 @@ describe('kanban config', () => {
   });
 
   it('fills keys a pre-1.2 catalog omits from English', () => {
-    const { undo: _undo, ...oldToolbar } = OGE_DEFAULT_KANBAN_MESSAGES.toolbar;
+    const oldToolbar: Record<string, string | undefined> = {
+      ...OGE_DEFAULT_KANBAN_MESSAGES.toolbar,
+      addCard: 'Neue Karte',
+    };
+    delete oldToolbar['undo'];
     const filled = fillKanbanMessages({
       ...OGE_DEFAULT_KANBAN_MESSAGES,
-      toolbar: { ...oldToolbar, addCard: 'Neue Karte' },
+      toolbar: oldToolbar as typeof OGE_DEFAULT_KANBAN_MESSAGES.toolbar,
       export: undefined,
     });
     expect(filled.toolbar.addCard).toBe('Neue Karte');
