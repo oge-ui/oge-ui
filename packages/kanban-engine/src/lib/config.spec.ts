@@ -1,6 +1,7 @@
 import {
   OGE_DEFAULT_KANBAN_CONFIG,
   OGE_DEFAULT_KANBAN_MESSAGES,
+  fillKanbanMessages,
   mergeOgeKanbanMessages,
   resolveOgeKanbanConfig,
 } from './config';
@@ -31,6 +32,19 @@ describe('kanban config', () => {
     const inner = resolveOgeKanbanConfig({ cardHeight: 80 }, outer);
     expect(inner.locale).toBe('tr-TR');
     expect(inner.cardHeight).toBe(80);
+  });
+
+  it('fills keys a pre-1.2 catalog omits from English', () => {
+    const { undo: _undo, ...oldToolbar } = OGE_DEFAULT_KANBAN_MESSAGES.toolbar;
+    const filled = fillKanbanMessages({
+      ...OGE_DEFAULT_KANBAN_MESSAGES,
+      toolbar: { ...oldToolbar, addCard: 'Neue Karte' },
+      export: undefined,
+    });
+    expect(filled.toolbar.addCard).toBe('Neue Karte');
+    expect(filled.toolbar.undo).toBe('Undo');
+    expect(filled.export.sheetName).toBe('Cards');
+    expect(filled.board.quickAddLabel).toBe('New card title in {title}');
   });
 
   it('overlays per-instance messages block by block', () => {

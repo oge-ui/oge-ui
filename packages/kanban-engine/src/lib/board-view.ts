@@ -212,9 +212,14 @@ export function kanbanCardLabel<T>(
   messages: OgeKanbanBoardMessages,
   card: KanbanCard<T>,
   columns: readonly KanbanColumnDef[],
+  selected = false,
 ): string {
   const column = columns.find((entry) => entry.key === card.column);
-  return formatKanbanMessage(messages.cardLabel, {
+  const template =
+    selected && messages.cardLabelSelected !== undefined
+      ? messages.cardLabelSelected
+      : messages.cardLabel;
+  return formatKanbanMessage(template, {
     title: card.title,
     column: column !== undefined ? kanbanColumnTitle(column) : card.column,
   });
@@ -259,6 +264,10 @@ export interface KanbanCapabilities {
   readonly canUpdate: boolean;
   readonly canDelete: boolean;
   readonly canDrag: boolean;
+  /** F2 inline title editing is available (title is a field name). */
+  readonly canEditTitle?: boolean;
+  /** `selectionMode: 'multiple'` (Ctrl+A / Ctrl+Space). */
+  readonly multiSelect?: boolean;
 }
 
 /** A card's `aria-keyshortcuts` (`null` when no shortcut applies). */
@@ -267,6 +276,8 @@ export function kanbanCardShortcuts(caps: KanbanCapabilities): string | null {
   if (caps.canUpdate) parts.push('Enter');
   if (caps.canDelete) parts.push('Delete');
   if (caps.canDrag) parts.push('Control+ArrowLeft Control+ArrowRight');
+  if (caps.canUpdate && caps.canEditTitle) parts.push('F2');
+  if (caps.multiSelect) parts.push('Control+A Control+Space');
   return parts.length > 0 ? parts.join(' ') : null;
 }
 
@@ -351,4 +362,59 @@ export function kanbanScrollIntoViewTop(
   if (cardTop < top) top = cardTop;
   else if (cardBottom > top + state.height) top = cardBottom - state.height;
   return top !== state.top ? top : null;
+}
+
+/** Card counts per `lane column` cell (unfiltered — WIP is a data fact). */
+export function kanbanCellCounts<T>(
+  cards: readonly KanbanCard<T>[],
+  hasSwimlanes: boolean,
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>();
+  for (const card of cards) {
+    const key = kanbanCellKey(hasSwimlanes ? card.swimlane : null, card.column);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/** Card counts per swimlane key (unfiltered). */
+export function kanbanLaneCounts<T>(
+  cards: readonly KanbanCard<T>[],
+): ReadonlyMap<string | null, number> {
+  const counts = new Map<string | null, number>();
+  for (const card of cards) {
+    counts.set(card.swimlane, (counts.get(card.swimlane) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * A cell's per-swimlane WIP (`column.swimlaneWipLimit` inside one lane), or
+ * `null` when the column sets no lane limit or the board has no swimlanes.
+ */
+export function kanbanCellWip(
+  column: KanbanColumnDef,
+  lane: string | null,
+  cellCounts: ReadonlyMap<string, number>,
+  hasSwimlanes: boolean,
+): KanbanWipState | null {
+  if (!hasSwimlanes || column.swimlaneWipLimit === undefined) return null;
+  const state = wipState(
+    cellCounts.get(kanbanCellKey(lane, column.key)) ?? 0,
+    column.swimlaneWipLimit,
+  );
+  return state.limit === null ? null : state;
+}
+
+/** A lane's total WIP against `swimlaneWipLimits[lane]`, or `null`. */
+export function kanbanLaneWip(
+  lane: string | null,
+  limits: Readonly<Record<string, number>> | undefined,
+  laneCounts: ReadonlyMap<string | null, number>,
+): KanbanWipState | null {
+  if (lane === null || limits === undefined) return null;
+  const limit = limits[lane];
+  if (limit === undefined) return null;
+  const state = wipState(laneCounts.get(lane) ?? 0, limit);
+  return state.limit === null ? null : state;
 }

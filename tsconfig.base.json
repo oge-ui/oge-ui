@@ -78,6 +78,12 @@
       "@oge-ui/inputs/*": ["./packages/inputs/*/src/index.ts"],
       "@oge-ui/kanban": ["./packages/kanban/src/index.ts"],
       "@oge-ui/kanban-engine": ["./packages/kanban-engine/src/index.ts"],
+      "@oge-ui/kanban-engine/export-excel": [
+        "./packages/kanban-engine/src/export-excel.ts"
+      ],
+      "@oge-ui/kanban/export-excel": [
+        "./packages/kanban/export-excel/src/index.ts"
+      ],
       "@oge-ui/layout": ["./packages/layout/src/index.ts"],
       "@oge-ui/layout/*": ["./packages/layout/*/src/index.ts"],
       "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],
@@ -127,6 +133,9 @@
       ],
       "@oge-ui/react-inputs": ["./packages/react/inputs/src/index.ts"],
       "@oge-ui/react-kanban": ["./packages/react/kanban/src/index.ts"],
+      "@oge-ui/react-kanban/export-excel": [
+        "./packages/react/kanban/src/export-excel.ts"
+      ],
       "@oge-ui/react-layout": ["./packages/react/layout/src/index.ts"],
       "@oge-ui/react-navigation": ["./packages/react/navigation/src/index.ts"],
       "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],
