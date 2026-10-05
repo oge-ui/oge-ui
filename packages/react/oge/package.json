@@ -34,15 +34,16 @@
   },
   "dependencies": {
     "@oge-ui/behavior": "1.1.2",
+    "@oge-ui/locales": "1.1.2",
     "@oge-ui/react-buttons": "1.1.2",
     "@oge-ui/react-forms": "1.1.2",
     "@oge-ui/react-grid": "1.1.2",
-    "@oge-ui/react-tree-list": "1.1.2",
     "@oge-ui/react-inputs": "1.1.2",
     "@oge-ui/react-layout": "1.1.2",
     "@oge-ui/react-navigation": "1.1.2",
     "@oge-ui/react-overlay": "1.1.2",
     "@oge-ui/react-tabs": "1.1.2",
+    "@oge-ui/react-tree-list": "1.1.2",
     "@oge-ui/react-upload": "1.1.2"
   },
   "homepage": "https://www.ogeui.com",

@@ -126,6 +126,11 @@ export class App {
           label: 'Localization',
           icon: 'globe',
         },
+        {
+          path: '/getting-started/localization/api',
+          label: 'Localization API',
+          icon: 'code',
+        },
       ],
     },
     {

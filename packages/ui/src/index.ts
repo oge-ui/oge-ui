@@ -45,3 +45,17 @@ export {
   type OgeTreeRowToggleEvent,
   type OgeTreeRowTogglingEvent,
 } from '@oge-ui/tree-list';
+// ready-made translations (@oge-ui/locales, MIT): the one-call wiring for
+// every family above, plus the pack vocabulary. The packs themselves are
+// imported from their own entry points (`@oge-ui/locales/tr`).
+export { provideOgeLocale } from './lib/locale';
+export {
+  OGE_LOCALE_NAMES,
+  ogeLocalePacks,
+  ogeMergeMessages,
+  type OgeDeepPartial,
+  type OgeLocaleCode,
+  type OgeLocaleLayoutMessages,
+  type OgeLocaleNavigationMessages,
+  type OgeLocalePack,
+} from '@oge-ui/locales';

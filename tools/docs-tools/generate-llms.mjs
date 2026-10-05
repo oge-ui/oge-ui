@@ -48,6 +48,7 @@ import {
   MISTAKES,
   MISTAKES_REACT,
   SUMMARY,
+  USAGE_NOTES,
   readSiteVersion,
   buildSiteVersionFile,
 } from './lib/prose.mjs';
@@ -247,7 +248,11 @@ function buildPackageDoc({ pkg, blocks, entries, demos }) {
   // it instructs an assistant to write `imports: [OgeButton]` into a `.tsx`
   // file (ADR 0001).
   const isReact = pkg.platform === 'react';
-  if (pkg.platform === 'agnostic') {
+  if (pkg.usage) {
+    // a framework-free package that is not an engine carries its own prose
+    out.push(USAGE_NOTES[pkg.usage]);
+    out.push('');
+  } else if (pkg.platform === 'agnostic') {
     // a framework-free engine (ADR 0003): neither layer's rules apply
     out.push(CONVENTIONS_AGNOSTIC);
     out.push('');

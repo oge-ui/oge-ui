@@ -13,7 +13,9 @@
     "@oge-ui/layout",
     "@oge-ui/navigation",
     "@oge-ui/forms",
-    "@oge-ui/upload"
+    "@oge-ui/upload",
+    "@oge-ui/behavior",
+    "@oge-ui/locales"
   ],
   "assets": ["llms.txt"],
   "lib": {

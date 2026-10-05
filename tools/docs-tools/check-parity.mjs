@@ -785,6 +785,27 @@ const FAMILIES = [
       },
     },
   },
+  {
+    // @oge-ui/locales: the packs are framework-free data; only the one-call
+    // wiring differs per layer (oge-ui's provideOgeLocale ↔ @oge-ui/react's
+    // <OgeLocaleProvider>)
+    family: 'locales',
+    angularApiPage: 'apps/dev-app/src/app/pages/locales/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/locales/react-api.ts',
+    exceptions: {
+      blocksAngularOnly: {
+        localepacks:
+          'The packs block documents framework-free @oge-ui/locales data — identical in both layers, so the page renders it once, outside the framework switch, instead of a React copy.',
+      },
+      pairs: {
+        provideogelocale: 'ogelocaleprovider', // DI provider ↔ context provider
+      },
+      reactOnly: {
+        children:
+          'The localized subtree of the context provider; an Angular provider function scopes by injector instead and takes no children.',
+      },
+    },
+  },
 ];
 
 /** `'<OgeButton>'` / `'OgeButton'` → `'ogebutton'`. Angle brackets go first —

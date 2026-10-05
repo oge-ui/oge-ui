@@ -27,6 +27,14 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "locales-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/docs-tools/check-locales.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "csp-check": {
       "executor": "nx:run-commands",
       "options": {
@@ -52,7 +60,7 @@
       "dependsOn": ["react-buttons:build"]
     },
     "lint": {
-      "dependsOn": ["control-chars"]
+      "dependsOn": ["control-chars", "locales-check"]
     }
   }
 }
