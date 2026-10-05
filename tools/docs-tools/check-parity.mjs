@@ -529,6 +529,12 @@ const FAMILIES = [
           'The controlled half of `columnOrder`; Angular’s [(columnOrder)] model is both halves at once.',
         selectedcardkeychange:
           'The controlled half of `selectedCardKey`; Angular’s [(selectedCardKey)] model is both halves at once.',
+        selectedcardkeyschange:
+          'The controlled half of `selectedCardKeys`; Angular’s [(selectedCardKeys)] model is both halves at once.',
+        filtervaluechange:
+          'The controlled half of `filterValue`; Angular’s [(filterValue)] model is both halves at once.',
+        columnsortchange:
+          'The controlled half of `columnSort`; Angular’s [(columnSort)] model is both halves at once.',
         rendercard:
           'Render prop replacing the `*ogeKanbanCardTemplate` structural directive, which the Angular page documents in its Templates types block (ROADMAP exception: TemplateRef ↔ render prop).',
         rendercolumnheader:

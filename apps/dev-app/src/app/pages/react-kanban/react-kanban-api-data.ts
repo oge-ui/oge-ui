@@ -8,6 +8,7 @@
 // instead of outputs, a `ref` handle instead of public methods, render props
 // instead of structural directives, a context provider instead of DI.
 import type { ApiSections } from '../../shared/api-reference';
+import { KANBAN_G3B_TYPE_BLOCKS } from '../kanban/kanban-api-data';
 
 export const OGE_REACT_KANBAN_API: ApiSections = {
   properties: [
@@ -97,10 +98,105 @@ export const OGE_REACT_KANBAN_API: ApiSections = {
             'The selected card&#39;s key — single selection. <code>defaultSelectedCardKey</code> seeds it uncontrolled.',
         },
         {
+          name: 'selectedCardKeys',
+          type: 'readonly unknown[]',
+          default: 'uncontrolled, []',
+          description:
+            'Every selected card key, in board order (<code>defaultSelectedCardKeys</code> seeds it uncontrolled). Ctrl/⌘-click toggles, Shift-click selects the range in the anchor&#39;s column, <kbd>Ctrl</kbd>+<kbd>A</kbd> on a card selects its column (cell), <kbd>Ctrl</kbd>+<kbd>Space</kbd> toggles, <kbd>Shift</kbd>+<kbd>↑/↓</kbd> extends and <kbd>Escape</kbd> collapses to the focused card. Selected cards travel together in a drag (the ghost shows the count), <kbd>Ctrl</kbd>+<kbd>←/→</kbd> and <kbd>Delete</kbd>.',
+        },
+        {
+          name: 'filterValue',
+          type: 'OgeKanbanFilterExpression',
+          default: 'uncontrolled, {}',
+          description:
+            'The filter chip bar&#39;s state — active <code>tags</code> / <code>assignees</code> / <code>priorities</code> (<code>defaultFilterValue</code> seeds it uncontrolled); ANDs with <code>filter</code> and the toolbar search.',
+        },
+        {
+          name: 'columnSort',
+          type: 'OgeKanbanColumnSort&lt;T&gt;',
+          default: 'uncontrolled, {}',
+          description:
+            "Per-column card sort: a column key (or <code>'*'</code>) mapped to <code>{ field: 'order' | 'title' | 'priority' | 'dueDate', direction? }</code> or a comparator (<code>defaultColumnSort</code> seeds it uncontrolled). The column menu writes it through <code>onColumnSortChange</code>; a drop into a sorted column lands where the sort puts it.",
+        },
+        {
+          name: 'onSelectedCardKeysChange / onFilterValueChange / onColumnSortChange',
+          type: '(value) =&gt; void',
+          description:
+            'The controlled halves of the three G3b state props — Angular&#39;s <code>[(…)]</code> models are both halves at once.',
+        },
+        {
           name: 'onCollapsedColumnsChange / onCollapsedSwimlanesChange / onColumnOrderChange / onSelectedCardKeyChange',
           type: '(value) =&gt; void',
           description:
             'The controlled halves of the four state props — Angular&#39;s <code>[(…)]</code> models are both halves at once.',
+        },
+      ],
+    },
+    {
+      title: 'Filtering, selection & transfers',
+      entries: [
+        {
+          name: 'filter',
+          type: 'OgeKanbanFilter&lt;T&gt; | undefined',
+          default: 'undefined',
+          description:
+            'Programmatic card filter: a predicate over the normalized card, or an <code>OgeKanbanFilterExpression</code> (<code>{ tags?, assignees?, priorities?, columns?, swimlanes?, text?, overdue? }</code> — values inside a field are alternatives, fields combine with AND). Filters only what is shown: WIP counts, exports (unless <code>visibleOnly</code>) and the chips stay on the full data.',
+        },
+        {
+          name: 'showFilterBar',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Shows the filter chip bar under the toolbar: one toggle chip (<code>aria-pressed</code>) per distinct tag, assignee and priority, plus a reset button.',
+        },
+        {
+          name: 'priorityOrder',
+          type: 'readonly string[] | undefined',
+          default: 'undefined',
+          description:
+            'Priority ranking for <code>columnSort</code> by priority, most important first (case-insensitive). Unset: <code>urgent, critical, highest, high, medium, normal, low, lowest</code>; numeric priorities compare as numbers.',
+        },
+        {
+          name: 'selectionMode',
+          type: "'single' | 'multiple'",
+          default: "'multiple'",
+          description:
+            "<code>'multiple'</code> adds Ctrl/Shift-click, the selection shortcuts and multi-card drag; <code>'single'</code> keeps one selected card.",
+        },
+        {
+          name: 'dragGroup / boardId',
+          type: 'string | undefined',
+          default: 'undefined',
+          description:
+            'Boards sharing a <code>dragGroup</code> exchange cards: drag a card (or a selection) onto the other board, or use the card menu&#39;s “Move to …” entries — the keyboard and single-pointer twin. <code>boardId</code> names the board in the transfer callbacks and the other boards&#39; menus (a generated id otherwise).',
+        },
+        {
+          name: 'swimlaneWipLimits',
+          type: 'Readonly&lt;Record&lt;string, number&gt;&gt; | undefined',
+          default: 'undefined',
+          description:
+            'Per-lane total WIP limits keyed by swimlane value — the lane header&#39;s count turns danger when exceeded. Per-cell limits are <code>OgeKanbanColumn.swimlaneWipLimit</code> (the column inside each lane).',
+        },
+        {
+          name: 'checklistExpr',
+          type: 'string | ((item: T) =&gt; unknown) | undefined',
+          default: 'undefined',
+          description:
+            'Checklist / sub-task field: an array of <code>{ text, done }</code> (<code>title</code> / <code>checked</code> / <code>completed</code> and plain strings are read too). Cards show a progress badge with an ICU-plural screen-reader text; <code>toggleChecklistItem()</code> writes back in the entry&#39;s own shape.',
+        },
+        {
+          name: 'quickAdd / inlineTitleEditing',
+          type: 'boolean',
+          default: 'false / false',
+          description:
+            '<code>quickAdd</code>: the column footer&#39;s add button opens an inline title composer (Enter adds and keeps it open, Escape closes) instead of the dialog. <code>inlineTitleEditing</code>: double-clicking a card title edits it in place; <kbd>F2</kbd> on a card always does (both through <code>onCardAdding</code> / <code>onCardUpdating</code>).',
+        },
+        {
+          name: 'undoLimit',
+          type: 'number',
+          default: '50',
+          description:
+            'Undo/redo depth — <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>) and the toolbar buttons. Undo replays the inverse through the cancelable pipelines, so the <code>-ing</code> / <code>-ed</code> events fire as for the original edit; a multi-card move or bulk delete is one step. Cross-board transfers are not recorded (they span two boards). <code>0</code> disables history and hides the buttons.',
         },
       ],
     },
@@ -248,6 +344,60 @@ export const OGE_REACT_KANBAN_API: ApiSections = {
           type: '() =&gt; void',
           description: 'The toolbar buttons, callable from code.',
         },
+        {
+          name: 'undo() / redo() / canUndo() / canRedo()',
+          type: '() =&gt; void / () =&gt; boolean',
+          description:
+            'History: revert / re-apply the last step through the cancelable pipelines, and whether a step exists.',
+        },
+        {
+          name: 'selectCards(keys) / clearSelection()',
+          type: '(keys: readonly unknown[]) =&gt; void / () =&gt; void',
+          description:
+            'Programmatic selection (board order applied; writes <code>selectedCardKeys</code> / <code>onSelectedCardKeysChange</code>).',
+        },
+        {
+          name: 'moveCards(keys, toColumn, toIndex?, toSwimlane?)',
+          type: '(keys: readonly unknown[], toColumn: string, toIndex?: number, toSwimlane?: string | null) =&gt; void',
+          description:
+            'Moves several cards into one cell as one undoable step, inserted consecutively (board order kept) before the card at <code>toIndex</code>; without <code>toSwimlane</code> every card stays in its own lane. Each card runs <code>onCardMoving</code> / <code>onCardMoved</code>.',
+        },
+        {
+          name: 'deleteCards(items)',
+          type: '(items: readonly T[]) =&gt; void',
+          description:
+            'Bulk delete as one undoable step, each item through <code>onCardDeleting</code>; announced with an ICU plural.',
+        },
+        {
+          name: 'transferCards(keys, toBoard, toColumn?, toIndex?, toSwimlane?)',
+          type: '(…) =&gt; boolean',
+          description:
+            'Sends cards to another mounted board of the same <code>dragGroup</code> (default: its first droppable column, appended). Returns whether the target&#39;s <code>onCardTransferring</code> accepted them.',
+        },
+        {
+          name: 'toggleChecklistItem(key, index)',
+          type: '(key: unknown, index: number) =&gt; void',
+          description:
+            'Toggles one checklist entry through <code>onCardUpdating</code> (needs a field-name <code>checklistExpr</code>).',
+        },
+        {
+          name: 'startTitleEdit(key)',
+          type: '(key: unknown) =&gt; void',
+          description:
+            'Opens the inline title editor on a card (what <kbd>F2</kbd> does); Enter or blur commits through <code>onCardUpdating</code>, Escape cancels.',
+        },
+        {
+          name: 'clearFilters()',
+          type: '() =&gt; void',
+          description:
+            'Resets the chip bar (<code>filterValue</code> / <code>onFilterValueChange</code>); the programmatic <code>filter</code> input is untouched.',
+        },
+        {
+          name: 'getExportData(options?) / exportToCsv(fileName?, options?)',
+          type: '(options?: OgeKanbanExportOptions) =&gt; OgeKanbanExportData / (fileName?: string, options?: OgeKanbanExportOptions) =&gt; string',
+          description:
+            'The cards as export rows in board order (column → lane → cell; <code>visibleOnly</code> keeps only what the filters show), and a CSV download built on core&#39;s formula-guarded <code>buildCsv</code> (returns the text). Excel is the lazy <code>@oge-ui/react-kanban/export-excel</code> entry.',
+        },
       ],
     },
   ],
@@ -296,6 +446,18 @@ export const OGE_REACT_KANBAN_API: ApiSections = {
           type: '(event: OgeKanbanColumnAddingEvent / OgeKanbanColumnAddedEvent) =&gt; void',
           description:
             'The "+ Add column" composer&#39;s cancelable pre-event and its past-tense commit.',
+        },
+        {
+          name: 'onCardTransferring',
+          type: '(event: OgeKanbanCardTransferringEvent&lt;T&gt;) =&gt; void',
+          description:
+            'Cancelable, called on the <strong>target</strong> board before cards from another board of the <code>dragGroup</code> land: <code>{ cards, fromBoard, toBoard, fromColumn, toColumn, fromSwimlane, toSwimlane, toIndex, cancel }</code>.',
+        },
+        {
+          name: 'onCardTransferred',
+          type: '(event: OgeKanbanCardTransferredEvent&lt;T&gt;) =&gt; void',
+          description:
+            'Called on <strong>both</strong> boards after a transfer landed: the source host removes <code>sourceCards</code> from its data, the target host adds <code>cards</code> (column / swimlane already written).',
         },
       ],
     },
@@ -355,9 +517,10 @@ export const OGE_REACT_KANBAN_API: ApiSections = {
           name: 'OgeKanbanCard&lt;T&gt;',
           type: 'interface',
           description:
-            'The normalized card handed to render props and callbacks: <code>key</code>, <code>source</code> (your item, unchanged), <code>column</code>, <code>title</code>, <code>description</code>, <code>color</code>, <code>order</code>, <code>swimlane</code>, <code>tags</code>, <code>assignees</code>, <code>dueDate</code>, <code>priority</code>.',
+            'The normalized card handed to render props and callbacks: <code>key</code>, <code>source</code> (your item, unchanged), <code>column</code>, <code>title</code>, <code>description</code>, <code>color</code>, <code>order</code>, <code>swimlane</code>, <code>tags</code>, <code>assignees</code>, <code>dueDate</code>, <code>priority</code>, <code>checklist</code> (<code>{ text, done }[]</code>).',
         },
       ],
     },
+    ...KANBAN_G3B_TYPE_BLOCKS,
   ],
 };

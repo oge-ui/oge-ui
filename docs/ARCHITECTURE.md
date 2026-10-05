@@ -1187,6 +1187,53 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   names. Resource ids come back as MSPDI UIDs. `/export-msproject` is a lazy entry in all three
   packages although it has no peer.
 
+### Kanban depth: filters, selection, transfers and history
+
+- **The visible board is one pipeline.** Both layers derive it the same way:
+  normalize → toolbar search (`filterCards`) → `applyKanbanFilters` over the
+  compiled `filter` input/prop and the chip bar's `filterValue`
+  (`compileKanbanFilter`: a predicate or an expression — any-of inside a field,
+  all-of across fields) → `groupBoard` → `sortKanbanLanes(columnSort)`. Counts
+  (column WIP, `kanbanCellCounts` / `kanbanLaneCounts` for the per-swimlane
+  limits), the chip choices and `getExportData()` read the **unfiltered**
+  cards — WIP is a data fact. `sortKanbanLanes` returns untouched lanes by
+  identity, so memoized views and drag geometry stay stable when nothing sorts.
+- **Selection is a key list plus an anchor.** `kanbanSelectCard` decides
+  Ctrl / Shift / plain clicks (Shift ranges stay inside the anchor's cell),
+  `kanbanSelectionShortcut` the keys (Ctrl+A cell, Ctrl+Space, Shift+↑/↓,
+  Escape). `selectedCardKey` stays the primary card for backward
+  compatibility; `selectedCardKeys` is the set. A plain pointer-down on an
+  already-selected card must **not** reset the selection, or a multi-card
+  drag could never start — the click decides instead.
+- **Multi-card moves insert before one anchor.** `kanbanMultiMoveAnchor` picks
+  the first non-moving card at the drop index (counted without the dragged
+  card, like the hit-test), and each carried card is moved through the
+  ordinary `cardMoving` pipeline before that anchor (`kanbanAnchorIndex`), in
+  board order — so `orderExpr` midpoints, array reordering and the per-card
+  events all stay the single-card code path.
+- **Cross-board drag is a registry, not HTML5 DnD.** Mounted boards register
+  a `KanbanBoardPeer` (`board-registry.ts`); a drag that leaves its own host
+  hit-tests the peers of its `dragGroup` (`kanbanPeerAt`, unmeasured hosts
+  never match so jsdom stays local), the peer measures itself and previews the
+  placeholder, and the drop calls `peer.receive()` — the target's cancelable
+  `cardTransferring`, then `cardTransferred` on **both** boards (source removes
+  `sourceCards`, target adds `cards`). The card menu's "Move to {board}" is the
+  keyboard and single-pointer twin. Transfers are deliberately outside the
+  undo history: a step that spans two boards cannot be undone by one of them.
+- **History records what the pipelines applied** (`KanbanHistory`: insert /
+  remove with the store index, update before/after, move from/to places),
+  grouped by `transaction()` for multi-card moves and bulk deletes. Undo
+  replays the inverses through the same pipelines (capability gates bypassed
+  only for the replay), locating items **by key**, so hosts that re-bind
+  `dataSource` from the events keep a working history. The board's host
+  keydown handles Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z outside editing targets.
+- **Message keys added in G3b are optional** and resolved with
+  `fillKanbanMessages()` into `OgeKanbanResolvedMessages` (same rule as the
+  scheduler); counts use ICU plurals through `formatKanbanCount`
+  (`ogeFormatMessage`). Exports: `buildKanbanExportRows` → `buildKanbanCsv`
+  (core's guarded `buildCsv`) and the lazy `@oge-ui/kanban-engine/export-excel`
+  builder that both `/export-excel` entries wrap.
+
 ## Component completeness standard
 
 Every component (new and existing) ships with a **complete, reference-parity-checked

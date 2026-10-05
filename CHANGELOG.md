@@ -42,6 +42,47 @@ are versioned independently, which is the case here.
   `OgeGanttDependency` carry the new fields. New message keys are optional and fall
   back to English.
 
+### Kanban depth (G3b) — `@oge-ui/kanban`, `@oge-ui/react-kanban`, `@oge-ui/kanban-engine`
+
+- **Filtering**: a programmatic `filter` (a card predicate or an
+  `OgeKanbanFilterExpression` — tags, assignees, priorities, columns,
+  swimlanes, text, overdue) and an opt-in chip bar (`showFilterBar`, two-way
+  `filterValue`) for tags, assignees and priorities, ANDed with the toolbar
+  search. WIP counts stay unfiltered.
+- **Per-column sort**: two-way `columnSort` (`{ field: 'order' | 'title' |
+'priority' | 'dueDate', direction }` or a comparator, `'*'` for every column)
+  and `priorityOrder`; a new header button opens the column menu with sort
+  entries (`menuitemradio`) and "Select all in column".
+- **Multi-select** (`selectionMode: 'multiple'`, the default; two-way
+  `selectedCardKeys`): Ctrl/Shift-click, Ctrl+A in a column, Ctrl+Space,
+  Shift+↑/↓, Escape. A drag of a selected card carries the selection (the
+  ghost shows an ICU-plural count); Ctrl+←/→ and Delete act on it;
+  `moveCards()`, `deleteCards()`, `selectCards()`, `clearSelection()`.
+- **Cross-board drag**: boards sharing a `dragGroup` exchange cards by drag
+  or the card menu's "Move to {board}" entry; `boardId`, cancelable
+  `cardTransferring` on the target, `cardTransferred` on both boards,
+  `transferCards()`.
+- **Swimlane WIP limits**: `OgeKanbanColumn.swimlaneWipLimit` (per cell badge)
+  and `swimlaneWipLimits` (per-lane totals on the lane header).
+- **Quick add + inline titles**: `quickAdd` turns the column footer into an
+  inline composer; F2 (and a title double-click with `inlineTitleEditing`)
+  renames a card in place; `startTitleEdit()`.
+- **Checklists**: `checklistExpr` (`{ text, done }` items) with a progress
+  badge and `toggleChecklistItem()`.
+- **Undo/redo**: `undoLimit` (default 50), Ctrl+Z / Ctrl+Y and toolbar
+  buttons, `undo()` / `redo()` / `canUndo()` / `canRedo()` — replayed through
+  the cancelable pipelines.
+- **Export**: `getExportData()` / `exportToCsv()` (formula-guarded) and new
+  lazy `/export-excel` entries in both layers over
+  `@oge-ui/kanban-engine/export-excel` (optional `exceljs` peer).
+- Behaviour changes: the toolbar shows Undo / Redo buttons while
+  `undoLimit > 0`; Ctrl/Shift-click no longer just re-selects one card; the
+  column header gains a column-menu button; the empty-result heading reads
+  "No cards match the filters" when filters (not the search) empty the board.
+  New message keys are optional (`fillKanbanMessages()` fills English).
+- Docs: "Filtering & sorting" and "Multi-select & cross-board" pages in both
+  layers.
+
 ### Ready-made translations — `@oge-ui/locales` (new, MIT)
 
 - **Ten languages for every catalog**: German, French, Spanish, Italian,

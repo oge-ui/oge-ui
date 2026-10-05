@@ -18,6 +18,7 @@ export {
   type OgeKanbanConfig,
   type OgeKanbanConfigInput,
   type OgeKanbanDialogMessages,
+  type OgeKanbanExportMessages,
   type OgeKanbanMenuMessages,
   type OgeKanbanMessages,
   type OgeKanbanToolbarMessages,

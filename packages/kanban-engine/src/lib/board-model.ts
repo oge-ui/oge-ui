@@ -28,6 +28,11 @@ export interface KanbanFieldExprs<T> {
   readonly assigneeExpr: KanbanFieldExpr<T, unknown> | undefined;
   readonly dueDateExpr: KanbanFieldExpr<T, unknown> | undefined;
   readonly priorityExpr: KanbanFieldExpr<T, unknown> | undefined;
+  /**
+   * Checklist / sub-task list field: an array of `{ text, done }` items
+   * (`title` / `checked` / `completed` are read too). Optional.
+   */
+  readonly checklistExpr?: KanbanFieldExpr<T, unknown> | undefined;
 }
 
 export type KanbanFieldKey =
@@ -41,7 +46,8 @@ export type KanbanFieldKey =
   | 'tags'
   | 'assignee'
   | 'dueDate'
-  | 'priority';
+  | 'priority'
+  | 'checklist';
 
 /** Resolved accessor set (see `resolveKanbanFields`). */
 export interface ResolvedKanbanFields<T> {
@@ -56,6 +62,7 @@ export interface ResolvedKanbanFields<T> {
   readonly assignee: ValueAccessor<T> | undefined;
   readonly dueDate: ValueAccessor<T> | undefined;
   readonly priority: ValueAccessor<T> | undefined;
+  readonly checklist: ValueAccessor<T> | undefined;
   /** Field names for write-back; `null` when the expr is a function or unset. */
   readonly fieldNames: Readonly<Record<KanbanFieldKey, string | null>>;
 }
@@ -80,6 +87,14 @@ export interface KanbanCard<T = unknown> {
   readonly assignees: readonly string[];
   readonly dueDate: Date | null;
   readonly priority: string | null;
+  /** Checklist / sub-task items (`[]` without a `checklistExpr`). */
+  readonly checklist: readonly KanbanChecklistItem[];
+}
+
+/** One checklist / sub-task entry of a card. */
+export interface KanbanChecklistItem {
+  readonly text: string;
+  readonly done: boolean;
 }
 
 /** A column definition; board-level input or derived from the data. */
@@ -91,6 +106,11 @@ export interface KanbanColumnDef {
   readonly wipLimit?: number;
   /** Soft lower bound; the badge turns to the warning tone when underfilled. */
   readonly minCount?: number;
+  /**
+   * Per-swimlane WIP limit: the most cards this column should hold inside
+   * each lane (the cell badge turns danger when exceeded). Needs swimlanes.
+   */
+  readonly swimlaneWipLimit?: number;
   readonly collapsed?: boolean;
   /** Per-column override of the board's `allowAdding`. */
   readonly allowAdding?: boolean;
@@ -150,6 +170,7 @@ export function resolveKanbanFields<T>(
     assignee: optional(exprs.assigneeExpr),
     dueDate: optional(exprs.dueDateExpr),
     priority: optional(exprs.priorityExpr),
+    checklist: optional(exprs.checklistExpr),
     fieldNames: {
       key: name(exprs.keyExpr),
       column: name(exprs.columnExpr),
@@ -162,6 +183,7 @@ export function resolveKanbanFields<T>(
       assignee: name(exprs.assigneeExpr),
       dueDate: name(exprs.dueDateExpr),
       priority: name(exprs.priorityExpr),
+      checklist: name(exprs.checklistExpr),
     },
   };
 }
@@ -177,6 +199,30 @@ function asStringList(value: unknown): readonly string[] {
   return list
     .map((entry) => (entry == null ? '' : String(entry)))
     .filter((entry) => entry !== '');
+}
+
+/**
+ * Reads a checklist value: an array of `{ text, done }` (or `title` /
+ * `checked` / `completed`) objects or plain strings (not done). Anything
+ * else yields `[]`.
+ */
+export function normalizeKanbanChecklist(
+  value: unknown,
+): KanbanChecklistItem[] {
+  if (!Array.isArray(value)) return [];
+  const items: KanbanChecklistItem[] = [];
+  for (const entry of value) {
+    if (typeof entry === 'string') {
+      items.push({ text: entry, done: false });
+      continue;
+    }
+    if (typeof entry !== 'object' || entry === null) continue;
+    const record = entry as Record<string, unknown>;
+    const text = record['text'] ?? record['title'] ?? '';
+    const done = record['done'] ?? record['checked'] ?? record['completed'];
+    items.push({ text: String(text), done: done === true });
+  }
+  return items;
 }
 
 /**
@@ -212,6 +258,9 @@ export function normalizeCard<T>(
     dueDate: fields.dueDate ? toLocalDate(fields.dueDate(item)) : null,
     priority:
       priorityRaw == null || priorityRaw === '' ? null : String(priorityRaw),
+    checklist: fields.checklist
+      ? normalizeKanbanChecklist(fields.checklist(item))
+      : [],
   };
 }
 

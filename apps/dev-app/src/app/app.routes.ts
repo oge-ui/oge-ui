@@ -972,6 +972,20 @@ export const appRoutes: Route[] = [
         title: 'OGE — Kanban',
       },
       {
+        path: 'filtering',
+        loadComponent: () =>
+          import('./pages/kanban/filtering').then((m) => m.KanbanFilteringPage),
+        title: 'OGE — Kanban Filtering & Sorting',
+      },
+      {
+        path: 'multi-select',
+        loadComponent: () =>
+          import('./pages/kanban/multi-select').then(
+            (m) => m.KanbanMultiSelectPage,
+          ),
+        title: 'OGE — Kanban Multi-select & Cross-board',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/kanban/api').then((m) => m.KanbanApiPage),

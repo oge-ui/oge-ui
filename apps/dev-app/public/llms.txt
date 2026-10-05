@@ -194,6 +194,8 @@ For code generation, prefer the full reference — it inlines every API table an
 ## Kanban
 
 - [Kanban](https://www.ogeui.com/components/kanban): Angular Kanban board by OGE UI: columns, swimlanes and WIP limits, virtualized cards, drag and drop with Escape-cancel, keyboard moving and an edit dialog.
+- [Kanban Filtering & Sorting](https://www.ogeui.com/components/kanban/filtering): Angular Kanban filtering and sorting by OGE UI: tag, assignee and priority filter chips, predicate filters, per-column sort menus and CSV or Excel card export.
+- [Kanban Multi-select & Cross-board](https://www.ogeui.com/components/kanban/multi-select): Angular Kanban multi-select by OGE UI: Ctrl and Shift selection, multi-card drag, drag between boards, swimlane WIP limits, quick add, checklists and undo.
 - [Kanban API](https://www.ogeui.com/components/kanban/api): Angular Kanban API reference: every input, output, method and type of oge-kanban — card field mapping, columns, swimlanes, templates and config provider.
 
 ## Scheduler

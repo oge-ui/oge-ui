@@ -96,6 +96,63 @@ import {
   type KanbanSwimlane,
   type KanbanWipState,
   type OgeKanbanMessages,
+  KanbanHistory,
+  kanbanCssEscape,
+  KANBAN_DEFAULT_UNDO_LIMIT,
+  applyKanbanFilters,
+  buildKanbanCsv,
+  buildKanbanExportRows,
+  canEditKanbanTitle,
+  compileKanbanFilter,
+  downloadKanbanText,
+  fillKanbanMessages,
+  formatKanbanCount,
+  isInsideKanbanHost,
+  isKanbanEditingTarget,
+  isKanbanFilterChipActive,
+  isKanbanFilterEmpty,
+  kanbanActiveSort,
+  kanbanAnchorIndex,
+  kanbanBoardPeers,
+  kanbanCarriedCards,
+  kanbanCellCounts,
+  kanbanCellWip,
+  kanbanChecklistLabel,
+  kanbanChecklistProgress,
+  kanbanChecklistToggle,
+  kanbanColumnSortSpec,
+  kanbanFilterChoices,
+  kanbanHistoryShortcut,
+  kanbanLaneCounts,
+  kanbanLaneWip,
+  kanbanMultiMoveAnchor,
+  kanbanOrderKeys,
+  kanbanPeerAt,
+  kanbanQuickAddItem,
+  kanbanSelectCard,
+  kanbanSelectCell,
+  kanbanSelectionShortcut,
+  kanbanTitleUpdate,
+  nextKanbanBoardId,
+  registerKanbanBoard,
+  setKanbanColumnSort,
+  sortKanbanLanes,
+  toggleKanbanFilterChip,
+  withFieldValue,
+  type KanbanBoardPeer,
+  type KanbanChecklistItem,
+  type KanbanHistoryOp,
+  type KanbanTransfer,
+  type KanbanTransferResult,
+  type OgeKanbanColumnSort,
+  type OgeKanbanExportData,
+  type OgeKanbanExportOptions,
+  type OgeKanbanFilter,
+  type OgeKanbanFilterChipKind,
+  type OgeKanbanFilterExpression,
+  type OgeKanbanResolvedMessages,
+  type OgeKanbanSelectionMode,
+  type OgeKanbanSortField,
 } from '@oge-ui/kanban-engine';
 import { OGE_KANBAN_CONFIG } from '../config';
 import type {
@@ -112,6 +169,8 @@ import type {
   OgeKanbanColumnAddedEvent,
   OgeKanbanColumnAddingEvent,
   OgeKanbanColumnReorderedEvent,
+  OgeKanbanCardTransferredEvent,
+  OgeKanbanCardTransferringEvent,
   OgeKanbanEditDialogShowingEvent,
   OgeKanbanFieldExpr,
 } from '../kanban-types';
@@ -159,6 +218,7 @@ interface KanbanMenuState {
     role: 'group',
     '[attr.aria-label]': 'msg().board.boardLabel',
     '[class.oge-kanban-dragging]': 'drag() !== null',
+    '(keydown)': 'onHostKeydown($event)',
     '[style.--oge-kanban-slot.px]': 'cardHeightPx() + 8',
     '[attr.dir]':
       "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
@@ -205,6 +265,28 @@ interface KanbanMenuState {
             {{ msg().toolbar.expandAll }}
           </button>
         </div>
+        @if (undoLimit() > 0) {
+          <div class="oge-kanban-toolbar-group">
+            <button
+              type="button"
+              class="oge-kanban-btn oge-kanban-btn-undo"
+              [disabled]="!canUndo()"
+              aria-keyshortcuts="Control+Z"
+              (click)="undo()"
+            >
+              {{ msg().toolbar.undo }}
+            </button>
+            <button
+              type="button"
+              class="oge-kanban-btn oge-kanban-btn-redo"
+              [disabled]="!canRedo()"
+              aria-keyshortcuts="Control+Y"
+              (click)="redo()"
+            >
+              {{ msg().toolbar.redo }}
+            </button>
+          </div>
+        }
         <span class="oge-kanban-toolbar-spacer"></span>
         <div class="oge-kanban-search">
           <svg
@@ -262,6 +344,63 @@ interface KanbanMenuState {
         </div>
       </div>
     }
+    @if (showFilterBar()) {
+      <div
+        class="oge-kanban-filters"
+        role="group"
+        [attr.aria-label]="msg().toolbar.filterLabel"
+      >
+        @for (group of chipGroups(); track group.kind) {
+          @if (group.values.length > 0) {
+            <div
+              class="oge-kanban-filter-group"
+              role="group"
+              [attr.aria-label]="group.label"
+            >
+              <span class="oge-kanban-filter-caption" aria-hidden="true">{{
+                group.label
+              }}</span>
+              @for (value of group.values; track value) {
+                <button
+                  type="button"
+                  class="oge-kanban-chip"
+                  [attr.data-kind]="group.kind"
+                  [attr.aria-pressed]="isChipActive(group.kind, value)"
+                  (click)="toggleChip(group.kind, value)"
+                >
+                  <svg
+                    class="oge-kanban-chip-check"
+                    viewBox="0 0 16 16"
+                    width="11"
+                    height="11"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="m3.5 8.5 3 3 6-7"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  {{ value }}
+                </button>
+              }
+            </div>
+          }
+        }
+        @if (hasActiveChips()) {
+          <button
+            type="button"
+            class="oge-kanban-btn oge-kanban-filters-clear"
+            (click)="clearFilters()"
+          >
+            {{ msg().toolbar.clearFilters }}
+          </button>
+        }
+      </div>
+    }
     <div class="oge-kanban-body">
       @if (totalCount() === 0) {
         <div class="oge-kanban-empty">
@@ -291,7 +430,7 @@ interface KanbanMenuState {
       } @else if (noSearchResults()) {
         <div class="oge-kanban-empty">
           <div class="oge-kanban-empty-title">
-            {{ msg().board.noSearchResults }}
+            {{ noResultsText() }}
           </div>
         </div>
       } @else {
@@ -328,6 +467,7 @@ interface KanbanMenuState {
                 [class.oge-kanban-column-header-draggable]="
                   allowColumnReordering() && !readOnly()
                 "
+                [class.oge-kanban-column-sorted]="isColumnSorted(column.key)"
                 (contextmenu)="onColumnContextMenu($event, column)"
                 (pointerdown)="onColumnHeaderPointerDown($event, column)"
               >
@@ -402,6 +542,38 @@ interface KanbanMenuState {
                 }
                 <button
                   type="button"
+                  class="oge-kanban-column-menu-btn"
+                  aria-haspopup="menu"
+                  [attr.aria-label]="
+                    format(msg().menu.sortColumn, {
+                      title: columnTitle(column),
+                    })
+                  "
+                  [attr.title]="
+                    format(msg().menu.sortColumn, {
+                      title: columnTitle(column),
+                    })
+                  "
+                  (click)="onColumnMenuButton($event, column)"
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M5 3v10m0 0-2-2m2 2 2-2M11 13V3m0 0-2 2m2-2 2 2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  type="button"
                   class="oge-kanban-column-collapse"
                   (click)="toggleColumn(column.key)"
                   [attr.aria-label]="
@@ -473,11 +645,21 @@ interface KanbanMenuState {
             [class.oge-kanban-lane-single]="!hasSwimlanes()"
           >
             @if (hasSwimlanes()) {
+              @let laneLimit = laneWip(lane.key);
               <button
                 type="button"
                 class="oge-kanban-lane-header"
+                [class.oge-kanban-lane-wip-exceeded]="!!laneLimit?.exceeded"
                 (click)="toggleSwimlane(lane.key)"
                 [attr.aria-expanded]="!isSwimlaneCollapsed(lane.key)"
+                [attr.title]="
+                  laneLimit?.exceeded
+                    ? format(msg().board.laneWipExceeded, {
+                        count: '' + laneLimit!.count,
+                        limit: '' + laneLimit!.limit,
+                      })
+                    : null
+                "
               >
                 <svg
                   class="oge-kanban-lane-chevron"
@@ -499,7 +681,16 @@ interface KanbanMenuState {
                   />
                 </svg>
                 <span class="oge-kanban-lane-title">{{ lane.key ?? '' }}</span>
-                <span class="oge-kanban-count">{{ lane.count }}</span>
+                <span
+                  class="oge-kanban-count"
+                  [class.oge-kanban-count-danger]="!!laneLimit?.exceeded"
+                  >{{ laneLimit ? laneLimit.count : lane.count }}
+                  @if (laneLimit) {
+                    <span class="oge-kanban-count-limit"
+                      >/{{ laneLimit.limit }}</span
+                    >
+                  }
+                </span>
               </button>
             }
             @if (!isSwimlaneCollapsed(lane.key)) {
@@ -518,11 +709,30 @@ interface KanbanMenuState {
                       class="oge-kanban-cell"
                       (dblclick)="onCellDblClick($event, cell.column, lane.key)"
                     >
+                      @if (cellWip(cell.column, lane.key); as cw) {
+                        <span
+                          class="oge-kanban-count oge-kanban-cell-wip"
+                          [class.oge-kanban-count-danger]="cw.exceeded"
+                          [attr.title]="
+                            cw.exceeded
+                              ? format(msg().board.cellWipExceeded, {
+                                  count: '' + cw.count,
+                                  limit: '' + cw.limit,
+                                })
+                              : null
+                          "
+                          aria-hidden="true"
+                          >{{ cw.count
+                          }}<span class="oge-kanban-count-limit"
+                            >/{{ cw.limit }}</span
+                          ></span
+                        >
+                      }
                       <div
                         class="oge-kanban-cards"
                         role="list"
                         [attr.aria-label]="
-                          cellLabel(cell.column, cell.cards.length)
+                          cellLabel(cell.column, cell.cards.length, lane.key)
                         "
                         [attr.data-lane]="lane.key ?? ''"
                         [attr.data-col]="cell.column.key"
@@ -591,7 +801,16 @@ interface KanbanMenuState {
                                     "
                                     [attr.aria-keyshortcuts]="cardShortcuts()"
                                     [class.oge-kanban-card-selected]="
-                                      selectedCardKey() === card.key
+                                      isCardSelected(card)
+                                    "
+                                    [class.oge-kanban-card-multi]="
+                                      isCardMulti(card)
+                                    "
+                                    [class.oge-kanban-card-carried]="
+                                      isCarriedCard(card)
+                                    "
+                                    [class.oge-kanban-card-editing]="
+                                      editingTitleKey() === card.key
                                     "
                                     [class.oge-kanban-card-hidden]="
                                       isDraggedCard(card)
@@ -630,6 +849,22 @@ interface KanbanMenuState {
                                       )
                                     "
                                   >
+                                    @if (editingTitleKey() === card.key) {
+                                      <input
+                                        class="oge-kanban-card-title-input"
+                                        type="text"
+                                        [value]="card.title"
+                                        [attr.aria-label]="
+                                          format(msg().board.editTitleLabel, {
+                                            title: card.title,
+                                          })
+                                        "
+                                        (keydown)="
+                                          onTitleEditKeydown($event, card)
+                                        "
+                                        (blur)="onTitleEditBlur($event, card)"
+                                      />
+                                    }
                                     <ng-container
                                       [ngTemplateOutlet]="cardBody"
                                       [ngTemplateOutletContext]="{
@@ -645,11 +880,30 @@ interface KanbanMenuState {
                           </div>
                         }
                       </div>
-                      @if (canAddTo(cell.column)) {
+                      @if (isQuickAddOpen(lane.key, cell.column.key)) {
+                        <div class="oge-kanban-quick-add">
+                          <input
+                            class="oge-kanban-quick-add-input"
+                            type="text"
+                            [value]="quickAddText()"
+                            [attr.aria-label]="
+                              format(msg().board.quickAddLabel, {
+                                title: columnTitle(cell.column),
+                              })
+                            "
+                            [attr.placeholder]="msg().board.quickAddPlaceholder"
+                            (input)="onQuickAddInput($event)"
+                            (keydown)="
+                              onQuickAddKeydown($event, cell.column, lane.key)
+                            "
+                            (blur)="onQuickAddBlur(cell.column, lane.key)"
+                          />
+                        </div>
+                      } @else if (canAddTo(cell.column)) {
                         <button
                           type="button"
                           class="oge-kanban-add-card"
-                          (click)="openNewCard(cell.column.key, lane.key)"
+                          (click)="onFooterAdd(cell.column, lane.key)"
                         >
                           <svg
                             viewBox="0 0 16 16"
@@ -758,6 +1012,28 @@ interface KanbanMenuState {
                 {{ formatDue(due) }}
               </span>
             }
+            @if (card.checklist.length > 0) {
+              @let progress = checklistProgress(card.checklist);
+              <span
+                class="oge-kanban-checklist"
+                [class.oge-kanban-checklist-done]="
+                  progress.done === progress.total
+                "
+                [attr.title]="checklistText(card.checklist)"
+              >
+                <span class="oge-kanban-checklist-bar" aria-hidden="true"
+                  ><span
+                    [style.width.%]="(progress.done / progress.total) * 100"
+                  ></span
+                ></span>
+                <span aria-hidden="true"
+                  >{{ progress.done }}/{{ progress.total }}</span
+                >
+                <span class="oge-kanban-sr-only">{{
+                  checklistText(card.checklist)
+                }}</span>
+              </span>
+            }
             <span class="oge-kanban-meta-spacer"></span>
             @if (card.assignees.length > 0) {
               <span class="oge-kanban-avatars">
@@ -835,6 +1111,12 @@ interface KanbanMenuState {
         aria-hidden="true"
         inert
       >
+        @if (dragCarried().length > 1) {
+          <span class="oge-kanban-drag-stack"></span>
+          <span class="oge-kanban-drag-count">{{
+            countText(msg().board.dragCount, { count: dragCarried().length })
+          }}</span>
+        }
         <div
           class="oge-kanban-card oge-kanban-card-lifted"
           [class.oge-kanban-card-tinted]="
@@ -904,6 +1186,19 @@ interface KanbanMenuState {
               </button>
             }
           }
+          @if (canDrag() && peerBoards().length > 0) {
+            <div class="oge-kanban-menu-sep" role="separator"></div>
+            @for (peer of peerBoards(); track peer.id) {
+              <button
+                type="button"
+                role="menuitem"
+                class="oge-kanban-menu-item oge-kanban-menu-item-board"
+                (click)="menuMoveToBoard(peer)"
+              >
+                {{ format(msg().menu.moveToBoard, { board: peer.id }) }}
+              </button>
+            }
+          }
           <div class="oge-kanban-menu-sep" role="separator"></div>
           <button
             type="button"
@@ -936,6 +1231,82 @@ interface KanbanMenuState {
                 : msg().menu.collapseColumn
             }}
           </button>
+          @if (selectionMode() === 'multiple') {
+            <button
+              type="button"
+              role="menuitem"
+              class="oge-kanban-menu-item oge-kanban-menu-item-select-all"
+              (click)="menuSelectAll()"
+            >
+              {{ msg().menu.selectAll }}
+            </button>
+          }
+          <div class="oge-kanban-menu-sep" role="separator"></div>
+          <div class="oge-kanban-menu-label" aria-hidden="true">
+            {{ msg().menu.sortBy }}
+          </div>
+          @let sort = activeSort(m.column);
+          @for (field of sortFields; track field) {
+            <button
+              type="button"
+              role="menuitemradio"
+              class="oge-kanban-menu-item oge-kanban-menu-item-sort"
+              [attr.data-field]="field"
+              [attr.aria-checked]="sort.field === field"
+              (click)="menuSort(field)"
+            >
+              <svg
+                class="oge-kanban-menu-check"
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                aria-hidden="true"
+              >
+                <path
+                  d="m3.5 8.5 3 3 6-7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              {{ sortFieldLabel(field) }}
+            </button>
+          }
+          <div class="oge-kanban-menu-sep" role="separator"></div>
+          @for (direction of sortDirections; track direction) {
+            <button
+              type="button"
+              role="menuitemradio"
+              class="oge-kanban-menu-item oge-kanban-menu-item-direction"
+              [attr.data-direction]="direction"
+              [attr.aria-checked]="sort.direction === direction"
+              (click)="menuSort(null, direction)"
+            >
+              <svg
+                class="oge-kanban-menu-check"
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                aria-hidden="true"
+              >
+                <path
+                  d="m3.5 8.5 3 3 6-7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              {{
+                direction === 'asc'
+                  ? msg().menu.sortAscending
+                  : msg().menu.sortDescending
+              }}
+            </button>
+          }
         }
       </div>
     }
@@ -1056,6 +1427,50 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     undefined,
   );
 
+  // ---------------- G3b: filtering, sorting, selection, transfers ----------------
+
+  /** Checklist / sub-task field: `{ text, done }` items (progress badge on the card). */
+  readonly checklistExpr = input<OgeKanbanFieldExpr<T> | undefined>(undefined);
+  /**
+   * Programmatic card filter — a predicate over the normalized card or a
+   * declarative `OgeKanbanFilterExpression`; ANDed with the chip bar and the
+   * toolbar search. WIP counts stay unfiltered.
+   */
+  readonly filter = input<OgeKanbanFilter<T> | undefined>(undefined);
+  /** The filter chip bar's state (two-way): active tags / assignees / priorities. */
+  readonly filterValue = model<OgeKanbanFilterExpression>({});
+  /** Shows the filter chip bar (tags, assignees, priorities) under the toolbar. */
+  readonly showFilterBar = input<boolean>(false);
+  /**
+   * Per-column card sort (two-way; the column menu writes it): a column
+   * key — or `'*'` for every column — mapped to `{ field, direction }` or a
+   * comparator. Unset columns keep `orderExpr` / array order.
+   */
+  readonly columnSort = model<OgeKanbanColumnSort<T>>({});
+  /** Priority ranking for `columnSort` by priority (highest first); unset = the built-in list. */
+  readonly priorityOrder = input<readonly string[] | undefined>(undefined);
+  /** `'multiple'` adds Ctrl/Shift-click, Ctrl+A / Ctrl+Space and multi-card drag. */
+  readonly selectionMode = input<OgeKanbanSelectionMode>('multiple');
+  /** Every selected card key (two-way), in board order. */
+  readonly selectedCardKeys = model<readonly unknown[]>([]);
+  /**
+   * Boards sharing a `dragGroup` exchange cards by drag and through the
+   * card menu's "Move to …" entries (`cardTransferring` / `cardTransferred`).
+   */
+  readonly dragGroup = input<string | undefined>(undefined);
+  /** Names this board in transfer events and the other boards' menus. */
+  readonly boardId = input<string | undefined>(undefined);
+  /** Per-lane total WIP limits, keyed by swimlane value. */
+  readonly swimlaneWipLimits = input<
+    Readonly<Record<string, number>> | undefined
+  >(undefined);
+  /** The column footer's add button opens an inline title composer instead of the dialog. */
+  readonly quickAdd = input<boolean>(false);
+  /** Double-clicking a card title edits it inline (F2 always does). */
+  readonly inlineTitleEditing = input<boolean>(false);
+  /** Undo/redo depth (Ctrl+Z / Ctrl+Y, toolbar buttons); `0` disables history. */
+  readonly undoLimit = input<number>(KANBAN_DEFAULT_UNDO_LIMIT);
+
   // ---------------- outputs ----------------
 
   /** A card was clicked (also selects it). */
@@ -1090,6 +1505,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   readonly columnAdding = output<OgeKanbanColumnAddingEvent>();
   /** A column was added at runtime. */
   readonly columnAdded = output<OgeKanbanColumnAddedEvent>();
+  /** Cancelable, on the target board: cards from another board are about to land. */
+  readonly cardTransferring = output<OgeKanbanCardTransferringEvent<T>>();
+  /** On both boards: a cross-board transfer landed (the source removes, the target adds). */
+  readonly cardTransferred = output<OgeKanbanCardTransferredEvent<T>>();
 
   // ---------------- content ----------------
 
@@ -1106,8 +1525,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   // ---------------- derived state ----------------
 
   /** Merged messages: DI config overlaid by the `messages` input. */
-  protected readonly msg = computed<OgeKanbanMessages>(() =>
-    mergeOgeKanbanMessages(this.config, this.messages()),
+  protected readonly msg = computed<OgeKanbanResolvedMessages>(() =>
+    fillKanbanMessages(mergeOgeKanbanMessages(this.config, this.messages())),
   );
 
   /** Per-instance locale, falling back to the DI config, then the browser. */
@@ -1142,6 +1561,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       canUpdate: this.canUpdate(),
       canDelete: this.canDelete(),
       canDrag: this.canDrag(),
+      canEditTitle: canEditKanbanTitle(this.fields()),
+      multiSelect: this.selectionMode() === 'multiple',
     });
   }
 
@@ -1158,6 +1579,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       assigneeExpr: this.assigneeExpr(),
       dueDateExpr: this.dueDateExpr(),
       priorityExpr: this.priorityExpr(),
+      checklistExpr: this.checklistExpr(),
     };
     return resolveKanbanFields(exprs);
   });
@@ -1193,6 +1615,13 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
         this.detectedRtl.set(rtl),
       );
       destroyRef.onDestroy(stop);
+      // cross-board drag: the other boards of a dragGroup find this one here
+      destroyRef.onDestroy(registerKanbanBoard(this.createPeer()));
+    });
+    effect(() => {
+      const limit = this.undoLimit();
+      this.history.setLimit(limit);
+      untracked(() => this.bumpHistory());
     });
     afterRenderEffect(() => {
       this.lanes(); // re-measure when the board reshapes
@@ -1226,20 +1655,89 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.searchExprs()?.map((expr) => toKanbanAccessor(expr)),
   );
 
+  private readonly filterPredicate = computed(() =>
+    compileKanbanFilter(this.filter()),
+  );
+  private readonly chipPredicate = computed(() =>
+    compileKanbanFilter<T>(this.filterValue()),
+  );
+
   private readonly visibleCards = computed(() =>
-    filterCards(
-      this.allCards(),
-      this.searchQuery(),
-      this.extraSearchAccessors(),
+    applyKanbanFilters(
+      filterCards(
+        this.allCards(),
+        this.searchQuery(),
+        this.extraSearchAccessors(),
+      ),
+      [this.filterPredicate(), this.chipPredicate()],
     ),
   );
 
   protected readonly noSearchResults = computed(
     () =>
-      this.searchQuery().trim() !== '' &&
+      (this.searchQuery().trim() !== '' ||
+        this.filterPredicate() !== null ||
+        this.chipPredicate() !== null) &&
       this.visibleCards().length === 0 &&
       this.totalCount() > 0,
   );
+
+  /** The empty-result heading: search wording when a query is typed. */
+  protected readonly noResultsText = computed(() =>
+    this.searchQuery().trim() !== ''
+      ? this.msg().board.noSearchResults
+      : this.msg().board.noFilterResults,
+  );
+
+  /** The chip bar's choices (unfiltered data, so chips never vanish). */
+  protected readonly filterChoices = computed(() =>
+    kanbanFilterChoices(this.allCards()),
+  );
+
+  /** The chip bar's groups, in display order. */
+  protected readonly chipGroups = computed(() => {
+    const choices = this.filterChoices();
+    const toolbar = this.msg().toolbar;
+    return [
+      {
+        kind: 'tags' as const,
+        label: toolbar.tagsFilter,
+        values: choices.tags,
+      },
+      {
+        kind: 'assignees' as const,
+        label: toolbar.assigneesFilter,
+        values: choices.assignees,
+      },
+      {
+        kind: 'priorities' as const,
+        label: toolbar.priorityFilter,
+        values: choices.priorities,
+      },
+    ];
+  });
+
+  protected readonly hasActiveChips = computed(
+    () => !isKanbanFilterEmpty(this.filterValue()),
+  );
+
+  protected isChipActive(
+    kind: OgeKanbanFilterChipKind,
+    value: string,
+  ): boolean {
+    return isKanbanFilterChipActive(this.filterValue(), kind, value);
+  }
+
+  protected toggleChip(kind: OgeKanbanFilterChipKind, value: string): void {
+    this.filterValue.set(
+      toggleKanbanFilterChip(this.filterValue(), kind, value),
+    );
+  }
+
+  /** Clears the chip bar (the programmatic `filter` input is untouched). */
+  clearFilters(): void {
+    this.filterValue.set({});
+  }
 
   protected readonly hasSwimlanes = computed(
     () => this.swimlaneExpr() !== undefined,
@@ -1325,8 +1823,40 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   protected readonly lanes = computed<readonly KanbanSwimlane<T>[]>(() =>
-    groupBoard(this.visibleCards(), this.visibleColumns(), this.hasSwimlanes()),
+    sortKanbanLanes(
+      groupBoard(
+        this.visibleCards(),
+        this.visibleColumns(),
+        this.hasSwimlanes(),
+      ),
+      this.columnSort(),
+      this.effectiveLocale(),
+      this.priorityOrder(),
+    ),
   );
+
+  /** Per-cell counts (unfiltered) for the per-swimlane WIP badges. */
+  private readonly cellCounts = computed(() =>
+    kanbanCellCounts(this.allCards(), this.hasSwimlanes()),
+  );
+  private readonly laneCounts = computed(() =>
+    kanbanLaneCounts(this.allCards()),
+  );
+
+  protected cellWip(
+    column: KanbanColumnDef,
+    lane: string | null,
+  ): KanbanWipState | null {
+    return kanbanCellWip(column, lane, this.cellCounts(), this.hasSwimlanes());
+  }
+
+  protected laneWip(lane: string | null): KanbanWipState | null {
+    return kanbanLaneWip(lane, this.swimlaneWipLimits(), this.laneCounts());
+  }
+
+  protected isColumnSorted(key: string): boolean {
+    return kanbanColumnSortSpec(this.columnSort(), key) !== undefined;
+  }
 
   /** Card counts per column across all lanes (unfiltered — WIP is a data fact). */
   private readonly columnCounts = computed(() =>
@@ -1451,17 +1981,48 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     return isKanbanLegalTarget(this.visibleColumns(), fromKey, toKey);
   }
 
-  protected cellLabel(column: KanbanColumnDef, count: number): string {
+  protected cellLabel(
+    column: KanbanColumnDef,
+    count: number,
+    lane: string | null = null,
+  ): string {
     return kanbanCellLabel(
       this.msg().board,
       column,
       count,
-      this.columnWip(column),
+      this.cellWip(column, lane) ?? this.columnWip(column),
     );
   }
 
   protected cardLabel(card: KanbanCard<T>): string {
-    return kanbanCardLabel(this.msg().board, card, this.visibleColumns());
+    return kanbanCardLabel(
+      this.msg().board,
+      card,
+      this.visibleColumns(),
+      this.isCardSelected(card),
+    );
+  }
+
+  protected checklistText(checklist: readonly KanbanChecklistItem[]): string {
+    return kanbanChecklistLabel(
+      this.msg().board,
+      checklist,
+      this.effectiveLocale(),
+    );
+  }
+
+  protected checklistProgress(checklist: readonly KanbanChecklistItem[]): {
+    readonly done: number;
+    readonly total: number;
+  } {
+    return kanbanChecklistProgress(checklist);
+  }
+
+  protected countText(
+    template: string,
+    values: Readonly<Record<string, string | number>>,
+  ): string {
+    return formatKanbanCount(template, values, this.effectiveLocale());
   }
 
   protected cardActionLabel(
@@ -1514,7 +2075,23 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     const action = (event.target as HTMLElement).closest(
       '.oge-kanban-card-action',
     );
-    this.selectedCardKey.set(card.key);
+    if (action === null) {
+      this.applySelection(
+        kanbanSelectCard(
+          this.lanes(),
+          this.selection(),
+          card.key,
+          {
+            toggle: event.ctrlKey || event.metaKey,
+            range: event.shiftKey,
+          },
+          this.selectionMode(),
+        ),
+        card.key,
+      );
+    } else {
+      this.applySelection({ keys: [card.key], anchor: card.key }, card.key);
+    }
     this.focusedCardKey.set(card.key);
     this.cardClick.emit({ card, event });
     if (action !== null) {
@@ -1534,6 +2111,13 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       return;
     }
     this.cardDblClick.emit({ card, event });
+    if (
+      this.inlineTitleEditing() &&
+      (event.target as HTMLElement).closest('.oge-kanban-card-title') !== null
+    ) {
+      this.startTitleEdit(card.key);
+      return;
+    }
     if (this.canUpdate()) this.editCard(card);
   }
 
@@ -1561,6 +2145,16 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       return;
     }
     if (route === 'content') return;
+    const shortcut = kanbanSelectionShortcut(
+      event,
+      this.selectionMode(),
+      this.selectedKeys().length,
+    );
+    if (shortcut !== null) {
+      event.preventDefault();
+      this.onSelectionShortcut(shortcut, card);
+      return;
+    }
     if (event.ctrlKey && !event.metaKey && !event.altKey) {
       this.onCardCtrlArrow(event, card);
       return;
@@ -1573,10 +2167,22 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       }
       return;
     }
+    if (event.key === 'F2') {
+      if (this.canUpdate() && canEditKanbanTitle(this.fields())) {
+        event.preventDefault();
+        this.startTitleEdit(card.key);
+      }
+      return;
+    }
     if (event.key === 'Delete') {
       if (this.canDelete()) {
         event.preventDefault();
-        this.deleteItem(card.source);
+        const carried = this.carried(card);
+        if (carried.length > 1) {
+          this.deleteCards(carried.map((entry) => entry.source));
+        } else {
+          this.deleteItem(card.source);
+        }
       }
       return;
     }
@@ -1619,14 +2225,153 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     );
     if (move === null) return;
     event.preventDefault();
+    const carried = this.carried(card);
+    // a horizontal move carries the whole selection; up/down reorders one
+    if (carried.length > 1 && move.toColumn !== card.column) {
+      this.moveCards(
+        carried.map((entry) => entry.key),
+        move.toColumn,
+        move.toIndex,
+      );
+      return;
+    }
     this.moveCard(card.key, move.toColumn, move.toIndex);
   }
 
-  private focusCard(card: KanbanCard<T>): void {
+  private focusCard(card: KanbanCard<T>, keepSelection = false): void {
     this.focusedCardKey.set(card.key);
-    this.selectedCardKey.set(card.key);
+    if (!keepSelection) {
+      this.applySelection({ keys: [card.key], anchor: card.key }, card.key);
+    }
     this.scrollCardIntoView(card);
     this.pendingFocusKey.set(this.keyOf(card));
+  }
+
+  // ---------------- multi-select ----------------
+
+  /** The anchor of Shift ranges (the last plainly or Ctrl-selected card). */
+  private selectionAnchor: unknown = null;
+
+  /** Effective selection: `selectedCardKeys`, else the single `selectedCardKey`. */
+  private readonly selectedKeys = computed<readonly unknown[]>(() => {
+    const keys = this.selectedCardKeys();
+    if (keys.length > 0) return keys;
+    const key = this.selectedCardKey();
+    return key === null || key === undefined ? [] : [key];
+  });
+
+  private readonly selectedSet = computed(() => new Set(this.selectedKeys()));
+
+  private selection(): { keys: readonly unknown[]; anchor: unknown } {
+    return {
+      keys: untracked(this.selectedKeys),
+      anchor: this.selectionAnchor ?? untracked(this.selectedCardKey),
+    };
+  }
+
+  private applySelection(
+    next: { keys: readonly unknown[]; anchor: unknown },
+    primary: unknown,
+  ): void {
+    this.selectionAnchor = next.anchor;
+    const before = untracked(this.selectedCardKeys);
+    const same =
+      before.length === next.keys.length &&
+      before.every((key, index) => key === next.keys[index]);
+    if (!same) this.selectedCardKeys.set(next.keys);
+    this.selectedCardKey.set(
+      next.keys.includes(primary) ? primary : (next.keys[0] ?? null),
+    );
+    if (next.keys.length > 1 && !same) {
+      this.announcement.set(
+        this.countText(this.msg().announcements.selection, {
+          count: next.keys.length,
+        }),
+      );
+    }
+  }
+
+  protected isCardSelected(card: KanbanCard<T>): boolean {
+    return this.selectedSet().has(card.key);
+  }
+
+  /** Multi-selected (two or more) — the accent-tinted state. */
+  protected isCardMulti(card: KanbanCard<T>): boolean {
+    return this.selectedKeys().length > 1 && this.selectedSet().has(card.key);
+  }
+
+  /** The cards a drag / Ctrl+Arrow / Delete of `card` acts on. */
+  private carried(card: KanbanCard<T>): KanbanCard<T>[] {
+    if (this.selectionMode() !== 'multiple') return [card];
+    return kanbanCarriedCards(this.lanes(), card, untracked(this.selectedKeys));
+  }
+
+  /** Selects the given card keys (programmatic; board order is applied). */
+  selectCards(keys: readonly unknown[]): void {
+    const ordered = kanbanOrderKeys(this.lanes(), keys);
+    this.applySelection(
+      { keys: ordered, anchor: ordered[0] ?? null },
+      ordered[0] ?? null,
+    );
+  }
+
+  /** Clears the selection. */
+  clearSelection(): void {
+    this.applySelection({ keys: [], anchor: null }, null);
+  }
+
+  private onSelectionShortcut(
+    shortcut: NonNullable<ReturnType<typeof kanbanSelectionShortcut>>,
+    card: KanbanCard<T>,
+  ): void {
+    const lanes = this.lanes();
+    switch (shortcut) {
+      case 'select-cell': {
+        const next = kanbanSelectCell(lanes, card.key);
+        if (next !== null) this.applySelection(next, card.key);
+        return;
+      }
+      case 'toggle':
+        this.applySelection(
+          kanbanSelectCard(
+            lanes,
+            this.selection(),
+            card.key,
+            { toggle: true, range: false },
+            'multiple',
+          ),
+          card.key,
+        );
+        return;
+      case 'clear':
+        this.applySelection({ keys: [card.key], anchor: card.key }, card.key);
+        return;
+      case 'extend-up':
+      case 'extend-down': {
+        const position = findKanbanCard(lanes, card.key);
+        if (position === null) return;
+        const target = kanbanNavigationTarget(
+          lanes,
+          position,
+          shortcut === 'extend-up' ? 'ArrowUp' : 'ArrowDown',
+          this.isCollapsedFn,
+        );
+        if (target === undefined) return;
+        const current = this.selection();
+        this.applySelection(
+          kanbanSelectCard(
+            lanes,
+            { keys: current.keys, anchor: current.anchor ?? card.key },
+            target.key,
+            { toggle: false, range: true },
+            'multiple',
+          ),
+          target.key,
+        );
+        this.focusCard(target, true);
+        return;
+      }
+    }
   }
 
   /** Adjusts the cell's scrollTop so a virtualized target renders and shows. */
@@ -1668,6 +2413,12 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   /** The placeholder slot for a cell, or `null` when it is not the target. */
   protected dropIndexFor(lane: string | null, column: string): number | null {
+    const incoming = this.incomingTarget();
+    if (incoming !== null) {
+      return incoming.lane === lane && incoming.column === column
+        ? incoming.index
+        : null;
+    }
     return kanbanDropIndex(this.drag(), lane, column);
   }
 
@@ -1678,6 +2429,14 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     absoluteIndex: number,
     card: KanbanCard<T>,
   ): boolean {
+    const incoming = this.incomingTarget();
+    if (incoming !== null) {
+      return (
+        incoming.lane === lane &&
+        incoming.column === columnKey &&
+        absoluteIndex >= incoming.index
+      );
+    }
     return isKanbanCardShifted(
       this.drag(),
       lane,
@@ -1702,7 +2461,13 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     if (position === null) return;
     const rect = cardEl.getBoundingClientRect();
     this.dragGeometry = measureKanbanDragGeometry(this.hostEl.nativeElement);
-    this.selectedCardKey.set(card.key);
+    // a modifier press is a selection click (decided on `click`); a plain
+    // press on an unselected card selects it, on a selected one keeps the
+    // multi-selection so the drag carries it
+    const modified = event.ctrlKey || event.metaKey || event.shiftKey;
+    if (!modified && !this.isCardSelected(card)) {
+      this.applySelection({ keys: [card.key], anchor: card.key }, card.key);
+    }
     this.focusedCardKey.set(card.key);
     // the gesture's preventDefault suppresses native focus-on-click
     cardEl.focus({ preventScroll: true });
@@ -1725,51 +2490,106 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       onMove: (_dx, _dy, moveEvent) => {
         const current = this.drag();
         if (current === null) {
-          this.drag.set({
-            ...pending,
-            x: moveEvent.clientX,
-            y: moveEvent.clientY,
-            target:
-              this.resolveDragTarget(
-                moveEvent.clientX,
-                moveEvent.clientY,
-                pending,
-              ) ?? pending.target,
-          });
-          this.startAutoScroll();
-          return;
+          // the lift: the selection rides along when the card is in it
+          const carried = modified ? [card] : this.carried(card);
+          this.dragCarried.set(carried.map((entry) => entry.key));
         }
-        this.drag.set({
-          ...current,
-          x: moveEvent.clientX,
-          y: moveEvent.clientY,
-          target:
-            this.resolveDragTarget(
-              moveEvent.clientX,
-              moveEvent.clientY,
-              current,
-            ) ?? current.target,
-        });
+        const base = current ?? pending;
+        const x = moveEvent.clientX;
+        const y = moveEvent.clientY;
+        const target = this.dragTargetAt(x, y, base);
+        this.drag.set({ ...base, x, y, target });
+        if (current === null) this.startAutoScroll();
       },
       onFinish: (commit, cancelled) => {
         this.stopAutoScroll();
         const state = this.drag();
+        const carried = this.dragCarried();
+        const external = this.externalDrop;
+        this.externalDrop = null;
+        external?.peer.preview(null);
         this.drag.set(null);
+        this.dragCarried.set([]);
         if (state === null) return;
         if (cancelled) {
           this.announcement.set(this.msg().announcements.cancelled);
           return;
         }
-        if (commit && state.target !== null) {
-          this.moveCard(
-            state.card.key,
+        if (!commit) return;
+        if (external !== null && external.target !== null) {
+          this.transferTo(external.peer, carried, state, external.target);
+          return;
+        }
+        if (state.target === null) return;
+        if (carried.length > 1) {
+          this.moveCards(
+            carried,
             state.target.column,
             state.target.index,
             state.target.lane,
+            state.card.key,
           );
+          return;
         }
+        this.moveCard(
+          state.card.key,
+          state.target.column,
+          state.target.index,
+          state.target.lane,
+        );
       },
     });
+  }
+
+  /** Keys the drag in flight carries (the dragged card first in board order). */
+  protected readonly dragCarried = signal<readonly unknown[]>([]);
+  private readonly dragCarriedSet = computed(() => new Set(this.dragCarried()));
+
+  /** Another selected card riding along with the drag (dimmed in place). */
+  protected isCarriedCard(card: KanbanCard<T>): boolean {
+    const drag = this.drag();
+    return (
+      drag !== null &&
+      drag.card.key !== card.key &&
+      this.dragCarriedSet().has(card.key)
+    );
+  }
+
+  /** The peer board a drag currently hovers, with its incoming target. */
+  private externalDrop: {
+    peer: KanbanBoardPeer;
+    target: KanbanDragTarget | null;
+  } | null = null;
+
+  /**
+   * The drop target at a pointer position: inside this board the usual
+   * hit-test; outside it, the hovered board of the same `dragGroup` (its
+   * placeholder previews there and this board shows none).
+   */
+  private dragTargetAt(
+    x: number,
+    y: number,
+    origin: KanbanDragState<T>,
+  ): KanbanDragTarget | null {
+    const host = this.hostEl.nativeElement;
+    const group = this.dragGroup();
+    if (group !== undefined && !isInsideKanbanHost(host, x, y)) {
+      const peer = kanbanPeerAt(group, this.resolvedBoardId(), x, y);
+      if (this.externalDrop !== null && this.externalDrop.peer !== peer) {
+        this.externalDrop.peer.preview(null);
+        this.externalDrop = null;
+      }
+      if (peer !== null) {
+        const target = peer.targetAt(x, y);
+        peer.preview(target);
+        this.externalDrop = { peer, target };
+        return null;
+      }
+    } else if (this.externalDrop !== null) {
+      this.externalDrop.peer.preview(null);
+      this.externalDrop = null;
+    }
+    return this.resolveDragTarget(x, y, origin) ?? origin.target;
   }
 
   /** Pointer → (lane, column, insertion index), in start-frame coordinates. */
@@ -1867,9 +2687,133 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   protected onCardContextMenu(card: KanbanCard<T>, event: MouseEvent): void {
     this.cardContextMenu.emit({ card, event });
-    this.selectedCardKey.set(card.key);
+    if (!this.isCardSelected(card)) {
+      this.applySelection({ keys: [card.key], anchor: card.key }, card.key);
+    }
     this.focusedCardKey.set(card.key);
     this.openMenu(event, card, null);
+  }
+
+  /** The header's column-menu button: the same menu, anchored under it. */
+  protected onColumnMenuButton(
+    event: MouseEvent,
+    column: KanbanColumnDef,
+  ): void {
+    const button = event.currentTarget as HTMLElement;
+    const rect = button.getBoundingClientRect();
+    const hostRect = this.hostEl.nativeElement.getBoundingClientRect();
+    event.stopPropagation();
+    this.menu.set({
+      x: rect.left - hostRect.left,
+      y: rect.bottom - hostRect.top + 4,
+      card: null,
+      column,
+      swimlane: null,
+    });
+    this.menuReturnFocus = button;
+    setTimeout(() => focusFirstKanbanMenuItem(this.hostEl.nativeElement));
+  }
+
+  /** Where focus returns when a menu opened from a button closes. */
+  private menuReturnFocus: HTMLElement | null = null;
+
+  protected readonly sortDirections: readonly ('asc' | 'desc')[] = [
+    'asc',
+    'desc',
+  ];
+
+  protected readonly sortFields: readonly OgeKanbanSortField[] = [
+    'order',
+    'title',
+    'priority',
+    'dueDate',
+  ];
+
+  protected sortFieldLabel(field: OgeKanbanSortField): string {
+    const m = this.msg().menu;
+    switch (field) {
+      case 'title':
+        return m.sortTitle;
+      case 'priority':
+        return m.sortPriority;
+      case 'dueDate':
+        return m.sortDueDate;
+      default:
+        return m.sortManual;
+    }
+  }
+
+  protected activeSort(column: KanbanColumnDef): {
+    field: OgeKanbanSortField | null;
+    direction: 'asc' | 'desc';
+  } {
+    return kanbanActiveSort(this.columnSort(), column.key);
+  }
+
+  /** The column menu's sort entries write `columnSort` (two-way). */
+  protected menuSort(
+    field: OgeKanbanSortField | null,
+    direction?: 'asc' | 'desc',
+  ): void {
+    const state = untracked(this.menu);
+    this.closeMenu();
+    const column = state?.column;
+    if (column == null) return;
+    const active = kanbanActiveSort(this.columnSort(), column.key);
+    const nextField = field ?? active.field ?? 'order';
+    const nextDirection = direction ?? active.direction;
+    this.columnSort.set(
+      setKanbanColumnSort(
+        this.columnSort(),
+        column.key,
+        nextField,
+        nextDirection,
+      ),
+    );
+    this.announce(this.msg().announcements.sorted, {
+      column: this.columnTitle(column),
+      field: this.sortFieldLabel(nextField),
+    });
+  }
+
+  protected menuSelectAll(): void {
+    const state = untracked(this.menu);
+    this.closeMenu();
+    const column = state?.column;
+    if (column == null) return;
+    const keys: unknown[] = [];
+    for (const lane of this.lanes()) {
+      const cell = lane.columns.find(
+        (entry) => entry.column.key === column.key,
+      );
+      for (const card of cell?.cards ?? []) keys.push(card.key);
+    }
+    this.selectCards(keys);
+  }
+
+  /** Other boards of this board's `dragGroup` (the menu's "Move to …"). */
+  protected peerBoards(): KanbanBoardPeer[] {
+    return kanbanBoardPeers(this.dragGroup(), this.resolvedBoardId());
+  }
+
+  protected menuMoveToBoard(peer: KanbanBoardPeer): void {
+    const state = untracked(this.menu);
+    this.closeMenu();
+    const card = state?.card as KanbanCard<T> | null | undefined;
+    if (card == null) return;
+    const column = peer.columns().find((entry) => entry.allowDrop !== false);
+    if (column === undefined) return;
+    const carried = this.carried(card);
+    this.transferTo(
+      peer,
+      carried.map((entry) => entry.key),
+      null,
+      {
+        lane: card.swimlane,
+        column: column.key,
+        index: Number.MAX_SAFE_INTEGER,
+      },
+    );
   }
 
   protected onColumnContextMenu(
@@ -1905,6 +2849,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   protected closeMenu(): void {
     this.menu.set(null);
+    const back = this.menuReturnFocus;
+    this.menuReturnFocus = null;
+    if (back !== null && back.isConnected) back.focus();
   }
 
   protected onMenuKeydown(event: KeyboardEvent): void {
@@ -2068,6 +3015,96 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   /* ---------------- CRUD executor ---------------- */
 
+  /** Undo/redo stacks (plain, non-reactive — `historyVersion` drives the UI). */
+  private readonly history = new KanbanHistory<T>(KANBAN_DEFAULT_UNDO_LIMIT);
+  private readonly historyVersion = signal(0);
+
+  /** Whether `undo()` has a step to revert. */
+  canUndo(): boolean {
+    this.historyVersion();
+    return this.history.canUndo;
+  }
+
+  /** Whether `redo()` has a step to re-apply. */
+  canRedo(): boolean {
+    this.historyVersion();
+    return this.history.canRedo;
+  }
+
+  /**
+   * Reverts the last change (an edit, move, add, delete or a multi-card
+   * step) by replaying its inverse through the cancelable pipelines, so the
+   * `-ing` / `-ed` events fire for the undo as for the original.
+   */
+  undo(): void {
+    const ops = this.history.undo();
+    if (ops === null) return;
+    this.replayOps(ops);
+    this.announcement.set(this.msg().announcements.undone);
+  }
+
+  /** Re-applies the last undone change. */
+  redo(): void {
+    const ops = this.history.redo();
+    if (ops === null) return;
+    this.replayOps(ops);
+    this.announcement.set(this.msg().announcements.redone);
+  }
+
+  private bumpHistory(): void {
+    this.historyVersion.update((value) => value + 1);
+  }
+
+  private record(op: KanbanHistoryOp<T>): void {
+    this.history.record(op);
+    this.bumpHistory();
+  }
+
+  private replayOps(ops: readonly KanbanHistoryOp<T>[]): void {
+    this.history.replay(() => {
+      for (const op of ops) {
+        switch (op.kind) {
+          case 'insert': {
+            const fields = this.fields();
+            this.insertItem(
+              op.item,
+              String(fields.column(op.item) ?? ''),
+              fields.swimlane
+                ? ((fields.swimlane(op.item) as string | undefined) ?? null)
+                : null,
+              op.index,
+              true,
+            );
+            break;
+          }
+          case 'remove': {
+            const item = this.itemByKey(op.key);
+            if (item !== undefined) this.deleteItem(item, true);
+            break;
+          }
+          case 'update': {
+            const item = this.itemByKey(op.key);
+            if (item !== undefined) this.updateItem(item, op.after, true);
+            break;
+          }
+          case 'move':
+            this.moveOne(op.key, op.to.column, op.to.index, op.to.swimlane, {
+              announce: false,
+              focus: true,
+              force: true,
+            });
+            break;
+        }
+      }
+    });
+    this.bumpHistory();
+  }
+
+  private itemByKey(key: unknown): T | undefined {
+    const fields = this.fields();
+    return untracked(this.store).find((item) => fields.key(item) === key);
+  }
+
   /** Programmatic insert through the cancelable pipeline. */
   addCard(item: T): void {
     const fields = this.fields();
@@ -2078,8 +3115,14 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.insertItem(item, column, swimlane);
   }
 
-  private insertItem(item: T, column: string, swimlane: string | null): void {
-    if (!this.canAdd()) return;
+  private insertItem(
+    item: T,
+    column: string,
+    swimlane: string | null,
+    index?: number,
+    force = false,
+  ): void {
+    if (!force && !this.canAdd()) return;
     const event: OgeKanbanCardAddingEvent<T> = {
       card: item,
       column,
@@ -2088,7 +3131,19 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     };
     this.cardAdding.emit(event);
     if (event.cancel) return;
-    this.store.set([...this.store(), item]);
+    const store = [...this.store()];
+    const at =
+      index === undefined
+        ? store.length
+        : Math.min(Math.max(index, 0), store.length);
+    store.splice(at, 0, item);
+    this.store.set(store);
+    this.record({
+      kind: 'insert',
+      key: this.fields().key(item),
+      item,
+      index: at,
+    });
     this.cardAdded.emit({ card: item, column, swimlane });
     this.announce(this.msg().announcements.cardCreated, {
       title: String(this.fields().title(item) ?? ''),
@@ -2100,8 +3155,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.updateItem(original, updated);
   }
 
-  private updateItem(original: T, updated: T): void {
-    if (!this.canUpdate()) return;
+  private updateItem(original: T, updated: T, force = false): void {
+    if (!force && !this.canUpdate()) return;
     const event: OgeKanbanCardUpdatingEvent<T> = {
       oldData: original,
       newData: updated,
@@ -2112,6 +3167,12 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.store.set(
       this.store().map((entry) => (entry === original ? updated : entry)),
     );
+    this.record({
+      kind: 'update',
+      key: this.fields().key(updated),
+      before: original,
+      after: updated,
+    });
     this.cardUpdated.emit({ oldData: original, newData: updated });
     this.announce(this.msg().announcements.cardUpdated, {
       title: String(this.fields().title(updated) ?? ''),
@@ -2123,16 +3184,36 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.deleteItem(item);
   }
 
-  private deleteItem(item: T): void {
+  /** Deletes several items as one undoable step (each through `cardDeleting`). */
+  deleteCards(items: readonly T[]): void {
     if (!this.canDelete()) return;
+    let deleted = 0;
+    this.history.transaction(() => {
+      for (const item of items) if (this.deleteItem(item)) deleted++;
+    });
+    this.bumpHistory();
+    if (deleted > 1) {
+      this.announcement.set(
+        this.countText(this.msg().announcements.cardsDeleted, {
+          count: deleted,
+        }),
+      );
+    }
+  }
+
+  private deleteItem(item: T, force = false): boolean {
+    if (!force && !this.canDelete()) return false;
     const event: OgeKanbanCardDeletingEvent<T> = { card: item, cancel: false };
     this.cardDeleting.emit(event);
-    if (event.cancel) return;
+    if (event.cancel) return false;
+    const index = this.store().indexOf(item);
     this.store.set(this.store().filter((entry) => entry !== item));
+    this.record({ kind: 'remove', key: this.fields().key(item), item, index });
     this.cardDeleted.emit({ card: item });
     this.announce(this.msg().announcements.cardDeleted, {
       title: String(this.fields().title(item) ?? ''),
     });
+    return true;
   }
 
   /**
@@ -2146,7 +3227,104 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     toIndex?: number,
     toSwimlane?: string | null,
   ): void {
+    this.moveOne(key, toColumn, toIndex, toSwimlane, {
+      announce: true,
+      focus: true,
+      force: false,
+    });
+  }
+
+  /**
+   * Moves several cards (board order kept) into one cell as one undoable
+   * step: inserted consecutively before the card now at `toIndex` (append
+   * when unset). Without `toSwimlane` every card stays in its own lane.
+   * Each card goes through `cardMoving` / `cardMoved`.
+   */
+  moveCards(
+    keys: readonly unknown[],
+    toColumn: string,
+    toIndex?: number,
+    toSwimlane?: string | null,
+    /** Internal: the dragged card, which the drop index does not count. */
+    excludeKey?: unknown,
+  ): void {
     if (!this.canUpdate() && !this.canDrag()) return;
+    const ordered = kanbanOrderKeys(this.lanes(), keys);
+    if (ordered.length === 0) return;
+    const anchors = new Map<string | null, unknown>();
+    const anchorFor = (lane: string | null): unknown => {
+      if (!anchors.has(lane)) {
+        const cell = this.lanes()
+          .find((entry) => entry.key === lane)
+          ?.columns.find((entry) => entry.column.key === toColumn);
+        anchors.set(
+          lane,
+          toIndex === undefined || cell === undefined
+            ? null
+            : kanbanMultiMoveAnchor(cell.cards, toIndex, ordered, excludeKey),
+        );
+      }
+      return anchors.get(lane);
+    };
+    let moved = 0;
+    this.history.transaction(() => {
+      for (const key of ordered) {
+        const position = findKanbanCard(this.lanes(), key);
+        if (position === null) continue;
+        const ownLane = this.lanes()[position.laneIndex].key;
+        const lane = toSwimlane !== undefined ? toSwimlane : ownLane;
+        const cell = this.lanes()
+          .find((entry) => entry.key === lane)
+          ?.columns.find((entry) => entry.column.key === toColumn);
+        const index =
+          cell === undefined
+            ? undefined
+            : kanbanAnchorIndex(cell.cards, anchorFor(lane), key);
+        if (
+          this.moveOne(key, toColumn, index, lane, {
+            announce: false,
+            focus: false,
+            force: false,
+          })
+        ) {
+          moved++;
+        }
+      }
+    });
+    this.bumpHistory();
+    const column = this.visibleColumns().find(
+      (entry) => entry.key === toColumn,
+    );
+    if (moved > 0) {
+      this.announcement.set(
+        this.countText(this.msg().announcements.cardsMoved, {
+          count: moved,
+          column: column !== undefined ? this.columnTitle(column) : toColumn,
+        }),
+      );
+    }
+    const primary = ordered.includes(excludeKey) ? excludeKey : ordered[0];
+    const position = findKanbanCard(this.lanes(), primary);
+    if (position !== null) {
+      const card =
+        this.lanes()[position.laneIndex].columns[position.columnIndex].cards[
+          position.cardIndex
+        ];
+      this.focusedCardKey.set(card.key);
+      this.scrollCardIntoView(card);
+      this.pendingFocusKey.set(this.keyOf(card));
+    }
+  }
+
+  /** One move through the pipeline; returns whether it was applied. */
+  private moveOne(
+    key: unknown,
+    toColumn: string,
+    toIndex: number | undefined,
+    toSwimlane: string | null | undefined,
+    options: { announce: boolean; focus: boolean; force: boolean },
+  ): boolean {
+    if (!options.force && !this.canUpdate() && !this.canDrag()) return false;
     const plan = planKanbanMove(
       this.lanes(),
       key,
@@ -2154,7 +3332,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       toIndex,
       toSwimlane,
     );
-    if (plan === null) return;
+    if (plan === null) return false;
     const { card } = plan;
     const event: OgeKanbanCardMovingEvent<T> = {
       card: card.source,
@@ -2167,7 +3345,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       cancel: false,
     };
     this.cardMoving.emit(event);
-    if (event.cancel) return;
+    if (event.cancel) return false;
+    const fromLane = this.hasSwimlanes() ? card.swimlane : null;
     const { store, moved } = commitKanbanMove(
       this.store(),
       plan,
@@ -2178,6 +3357,12 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       },
     );
     this.store.set(store);
+    this.record({
+      kind: 'move',
+      key,
+      from: { column: card.column, index: plan.fromIndex, swimlane: fromLane },
+      to: { column: toColumn, index: plan.toIndex, swimlane: plan.toSwimlane },
+    });
     this.cardMoved.emit({
       card: moved,
       fromColumn: card.column,
@@ -2187,18 +3372,452 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       fromSwimlane: card.swimlane,
       toSwimlane: plan.toSwimlane,
     });
-    const column = this.visibleColumns().find(
-      (entry) => entry.key === toColumn,
-    );
-    this.announce(this.msg().announcements.cardMoved, {
-      title: card.title,
-      column: column !== undefined ? this.columnTitle(column) : toColumn,
-      position: String(plan.toIndex + 1),
-      count: String(plan.cellCards.length + 1),
-    });
-    this.focusCard({ ...card, column: toColumn });
+    if (options.announce) {
+      const column = this.visibleColumns().find(
+        (entry) => entry.key === toColumn,
+      );
+      this.announce(this.msg().announcements.cardMoved, {
+        title: card.title,
+        column: column !== undefined ? this.columnTitle(column) : toColumn,
+        position: String(plan.toIndex + 1),
+        count: String(plan.cellCards.length + 1),
+      });
+    }
+    if (options.focus) this.focusCard({ ...card, column: toColumn });
+    return true;
   }
 
+  /* ---------------- cross-board transfer ---------------- */
+
+  private fallbackBoardId: string | null = null;
+
+  /** `boardId`, else a stable per-instance fallback. */
+  protected resolvedBoardId(): string {
+    const id = this.boardId();
+    if (id !== undefined) return id;
+    this.fallbackBoardId ??= nextKanbanBoardId();
+    return this.fallbackBoardId;
+  }
+
+  /**
+   * Sends cards to another mounted board of the same `dragGroup` (append
+   * to `toColumn`, default its first droppable column). Returns whether the
+   * target accepted them.
+   */
+  transferCards(
+    keys: readonly unknown[],
+    toBoard: string,
+    toColumn?: string,
+    toIndex?: number,
+    toSwimlane?: string | null,
+  ): boolean {
+    const peer = this.peerBoards().find((entry) => entry.id === toBoard);
+    if (peer === undefined) return false;
+    const column =
+      toColumn ??
+      peer.columns().find((entry) => entry.allowDrop !== false)?.key;
+    if (column === undefined) return false;
+    return this.transferTo(peer, keys, null, {
+      lane: toSwimlane ?? null,
+      column,
+      index: toIndex ?? Number.MAX_SAFE_INTEGER,
+    });
+  }
+
+  private transferTo(
+    peer: KanbanBoardPeer,
+    keys: readonly unknown[],
+    drag: KanbanDragState<T> | null,
+    target: KanbanDragTarget,
+  ): boolean {
+    if (!this.canDrag() && !this.canUpdate()) return false;
+    const ordered = kanbanOrderKeys(this.lanes(), keys);
+    const cards: KanbanCard<T>[] = [];
+    for (const key of ordered) {
+      const position = findKanbanCard(this.lanes(), key);
+      if (position === null) continue;
+      cards.push(
+        this.lanes()[position.laneIndex].columns[position.columnIndex].cards[
+          position.cardIndex
+        ],
+      );
+    }
+    if (cards.length === 0) return false;
+    const lead = drag?.card ?? cards[0];
+    const transfer: KanbanTransfer<T> = {
+      items: cards.map((card) => card.source),
+      cards,
+      fromBoard: this.resolvedBoardId(),
+      fromColumn: lead.column,
+      fromSwimlane: lead.swimlane,
+      target,
+    };
+    const result = peer.receive(transfer as KanbanTransfer<unknown>);
+    if (result === null) return false;
+    const sources = new Set<T>(transfer.items);
+    this.store.set(this.store().filter((entry) => !sources.has(entry)));
+    this.clearSelection();
+    this.cardTransferred.emit(this.transferEvent(transfer, result));
+    this.announcement.set(
+      this.countText(this.msg().announcements.cardsTransferred, {
+        count: cards.length,
+        board: result.toBoard,
+        column: result.toColumn,
+      }),
+    );
+    return true;
+  }
+
+  private transferEvent(
+    transfer: KanbanTransfer<T>,
+    result: KanbanTransferResult,
+  ): OgeKanbanCardTransferredEvent<T> {
+    return {
+      cards: result.items as readonly T[],
+      sourceCards: transfer.items,
+      fromBoard: transfer.fromBoard,
+      toBoard: result.toBoard,
+      fromColumn: transfer.fromColumn,
+      toColumn: result.toColumn,
+      fromSwimlane: transfer.fromSwimlane,
+      toSwimlane: result.toSwimlane,
+      toIndex: result.toIndex,
+    };
+  }
+
+  /** The incoming placeholder while a peer's drag hovers this board. */
+  private readonly incomingTarget = signal<KanbanDragTarget | null>(null);
+  private incomingGeometry: KanbanDragGeometry | null = null;
+
+  /** This board as the other boards of its `dragGroup` see it. */
+  private createPeer(): KanbanBoardPeer {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const board = this;
+    return {
+      get id() {
+        return board.resolvedBoardId();
+      },
+      get group() {
+        return board.dragGroup() ?? '';
+      },
+      host: this.hostEl.nativeElement,
+      targetAt: (x, y) => this.incomingTargetAt(x, y),
+      preview: (target) => {
+        if (target === null) this.incomingGeometry = null;
+        this.incomingTarget.set(target);
+      },
+      receive: (transfer) =>
+        this.receiveTransfer(transfer as KanbanTransfer<T>),
+      columns: () => this.visibleColumns(),
+    };
+  }
+
+  private incomingTargetAt(x: number, y: number): KanbanDragTarget | null {
+    this.incomingGeometry ??= measureKanbanDragGeometry(
+      this.hostEl.nativeElement,
+    );
+    return resolveKanbanDragTarget(
+      this.incomingGeometry,
+      x,
+      y,
+      null,
+      this.lanes(),
+      this.visibleColumns(),
+      this.cardHeightPx() + KANBAN_CARD_GAP,
+    );
+  }
+
+  private receiveTransfer(
+    transfer: KanbanTransfer<T>,
+  ): KanbanTransferResult | null {
+    this.incomingTarget.set(null);
+    this.incomingGeometry = null;
+    if (this.readOnly()) return null;
+    const target = transfer.target;
+    const column = this.visibleColumns().find(
+      (entry) => entry.key === target.column,
+    );
+    if (column === undefined || column.allowDrop === false) return null;
+    const lane = this.hasSwimlanes() ? target.lane : null;
+    const cellCards =
+      this.lanes()
+        .find((entry) => entry.key === lane)
+        ?.columns.find((entry) => entry.column.key === target.column)?.cards ??
+      [];
+    const toIndex = Math.min(target.index, cellCards.length);
+    const event: OgeKanbanCardTransferringEvent<T> = {
+      cards: transfer.items,
+      fromBoard: transfer.fromBoard,
+      toBoard: this.resolvedBoardId(),
+      fromColumn: transfer.fromColumn,
+      toColumn: target.column,
+      fromSwimlane: transfer.fromSwimlane,
+      toSwimlane: lane,
+      toIndex,
+      cancel: false,
+    };
+    this.cardTransferring.emit(event);
+    if (event.cancel) return null;
+    const fields = this.fields();
+    const names = fields.fieldNames;
+    const landed = transfer.items.map((item) => {
+      let next = item;
+      if (names.column !== null)
+        next = withFieldValue(next, names.column, target.column);
+      if (lane !== null && names.swimlane !== null) {
+        next = withFieldValue(next, names.swimlane, lane);
+      }
+      return next;
+    });
+    const anchor = cellCards[toIndex]?.key ?? null;
+    this.store.set([...this.store(), ...landed]);
+    // position each card before the anchor, silently (one transfer, no
+    // per-card move events) and outside the history — a transfer spans two
+    // boards, so neither can undo it alone
+    this.history.replay(() => {
+      for (const item of landed) {
+        const key = fields.key(item);
+        const cell = this.lanes()
+          .find((entry) => entry.key === lane)
+          ?.columns.find((entry) => entry.column.key === target.column);
+        if (cell === undefined) continue;
+        const index = kanbanAnchorIndex(cell.cards, anchor, key);
+        const plan = planKanbanMove(
+          this.lanes(),
+          key,
+          target.column,
+          index,
+          lane,
+        );
+        if (plan === null) continue;
+        this.store.set(
+          commitKanbanMove(this.store(), plan, fields, {
+            hasSwimlanes: this.hasSwimlanes(),
+            hasOrder: this.orderExpr() !== undefined,
+          }).store,
+        );
+      }
+    });
+    const landedKeys = landed.map((item) => fields.key(item));
+    const items = landedKeys
+      .map((key) => this.itemByKey(key))
+      .filter((item): item is T => item !== undefined);
+    const result: KanbanTransferResult = {
+      items,
+      toBoard: this.resolvedBoardId(),
+      toColumn: target.column,
+      toSwimlane: lane,
+      toIndex,
+    };
+    this.selectCards(landedKeys);
+    this.cardTransferred.emit(this.transferEvent(transfer, result));
+    this.announcement.set(
+      this.countText(this.msg().announcements.cardsTransferred, {
+        count: items.length,
+        board: result.toBoard,
+        column: this.columnTitle(column),
+      }),
+    );
+    return result;
+  }
+
+  /* ---------------- quick add + inline title + checklist ---------------- */
+
+  /** The open quick-add composer's cell key (`lane column`), or `null`. */
+  protected readonly quickAddCell = signal<string | null>(null);
+  protected readonly quickAddText = signal('');
+
+  protected isQuickAddOpen(lane: string | null, column: string): boolean {
+    return this.quickAddCell() === kanbanCellKey(lane, column);
+  }
+
+  /** The column footer's add button: the composer, or the dialog without `quickAdd`. */
+  protected onFooterAdd(column: KanbanColumnDef, lane: string | null): void {
+    if (!this.quickAdd()) {
+      this.openNewCard(column.key, lane);
+      return;
+    }
+    this.quickAddText.set('');
+    this.quickAddCell.set(kanbanCellKey(lane, column.key));
+    setTimeout(() =>
+      this.hostEl.nativeElement
+        .querySelector<HTMLInputElement>('.oge-kanban-quick-add-input')
+        ?.focus(),
+    );
+  }
+
+  protected onQuickAddInput(event: Event): void {
+    this.quickAddText.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onQuickAddKeydown(
+    event: KeyboardEvent,
+    column: KanbanColumnDef,
+    lane: string | null,
+  ): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.commitQuickAdd(column, lane, true);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeQuickAdd(column, lane);
+    }
+  }
+
+  protected onQuickAddBlur(column: KanbanColumnDef, lane: string | null): void {
+    if (!this.isQuickAddOpen(lane, column.key)) return;
+    this.commitQuickAdd(column, lane, false);
+  }
+
+  private commitQuickAdd(
+    column: KanbanColumnDef,
+    lane: string | null,
+    keepOpen: boolean,
+  ): void {
+    const item = kanbanQuickAddItem<T>(
+      this.quickAddText(),
+      column.key,
+      this.hasSwimlanes() ? lane : null,
+      this.fields(),
+      ++this.newKeyCounter,
+    );
+    if (item !== null) {
+      this.insertItem(item, column.key, this.hasSwimlanes() ? lane : null);
+    }
+    this.quickAddText.set('');
+    if (!keepOpen || item === null) this.quickAddCell.set(null);
+    else {
+      setTimeout(() =>
+        this.hostEl.nativeElement
+          .querySelector<HTMLInputElement>('.oge-kanban-quick-add-input')
+          ?.focus(),
+      );
+    }
+  }
+
+  private closeQuickAdd(column: KanbanColumnDef, lane: string | null): void {
+    this.quickAddCell.set(null);
+    this.quickAddText.set('');
+    setTimeout(() =>
+      this.hostEl.nativeElement
+        .querySelector<HTMLElement>(
+          `.oge-kanban-cards[data-lane="${kanbanCssEscape(lane ?? '')}"][data-col="${kanbanCssEscape(column.key)}"] ~ .oge-kanban-add-card`,
+        )
+        ?.focus(),
+    );
+  }
+
+  /** The card whose title is being edited inline, or `null`. */
+  protected readonly editingTitleKey = signal<unknown>(null);
+
+  /** Starts inline title editing on a card (F2; double-click with `inlineTitleEditing`). */
+  startTitleEdit(key: unknown): void {
+    if (!this.canUpdate() || !canEditKanbanTitle(this.fields())) return;
+    if (findKanbanCard(this.lanes(), key) === null) return;
+    this.editingTitleKey.set(key);
+    setTimeout(() => {
+      const input = this.hostEl.nativeElement.querySelector<HTMLInputElement>(
+        '.oge-kanban-card-title-input',
+      );
+      input?.focus();
+      input?.select();
+    });
+  }
+
+  protected onTitleEditKeydown(
+    event: KeyboardEvent,
+    card: KanbanCard<T>,
+  ): void {
+    event.stopPropagation();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.commitTitleEdit(card, (event.target as HTMLInputElement).value);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.editingTitleKey.set(null);
+      this.pendingFocusKey.set(this.keyOf(card));
+    }
+  }
+
+  protected onTitleEditBlur(event: FocusEvent, card: KanbanCard<T>): void {
+    if (this.editingTitleKey() !== card.key) return;
+    this.commitTitleEdit(card, (event.target as HTMLInputElement).value, false);
+  }
+
+  private commitTitleEdit(
+    card: KanbanCard<T>,
+    value: string,
+    refocus = true,
+  ): void {
+    this.editingTitleKey.set(null);
+    const updated = kanbanTitleUpdate(card, value, this.fields());
+    if (updated !== null) this.updateItem(card.source, updated);
+    if (refocus) this.pendingFocusKey.set(this.keyOf(card));
+  }
+
+  /** Toggles checklist entry `index` of a card through `cardUpdating`. */
+  toggleChecklistItem(key: unknown, index: number): void {
+    const position = findKanbanCard(this.lanes(), key);
+    const item =
+      position === null
+        ? undefined
+        : this.lanes()[position.laneIndex].columns[position.columnIndex].cards[
+            position.cardIndex
+          ];
+    const card = item ?? this.allCards().find((entry) => entry.key === key);
+    if (card === undefined) return;
+    const updated = kanbanChecklistToggle(card, index, this.fields());
+    if (updated !== null) this.updateItem(card.source, updated);
+  }
+
+  /* ---------------- export ---------------- */
+
+  /**
+   * The cards as export rows in board order (`visibleOnly`: only what the
+   * filters and search show) — what `/export-excel` and `exportToCsv` read.
+   */
+  getExportData(options: OgeKanbanExportOptions = {}): OgeKanbanExportData {
+    const lanes = options.visibleOnly
+      ? this.lanes()
+      : sortKanbanLanes(
+          groupBoard(
+            this.allCards(),
+            this.visibleColumns(),
+            this.hasSwimlanes(),
+          ),
+          this.columnSort(),
+          this.effectiveLocale(),
+          this.priorityOrder(),
+        );
+    return {
+      rows: buildKanbanExportRows(lanes, this.visibleColumns()),
+      messages: this.msg().export,
+      locale: this.effectiveLocale(),
+      hasSwimlanes: this.hasSwimlanes(),
+    };
+  }
+
+  /** Builds the CSV (formula-guarded) and downloads it; returns the text. */
+  exportToCsv(
+    fileName = 'kanban.csv',
+    options: OgeKanbanExportOptions = {},
+  ): string {
+    const csv = buildKanbanCsv(this.getExportData(options));
+    downloadKanbanText(csv, fileName);
+    return csv;
+  }
+
+  /* ---------------- board keys (history) ---------------- */
+
+  protected onHostKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented || isKanbanEditingTarget(event.target)) return;
+    const shortcut = kanbanHistoryShortcut(event);
+    if (shortcut === null || this.undoLimit() === 0) return;
+    event.preventDefault();
+    if (shortcut === 'undo') this.undo();
+    else this.redo();
+  }
   protected onEditorCancelled(): void {
     this.editedSource = null;
     this.cardEditDialogHidden.emit();
