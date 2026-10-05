@@ -28,6 +28,7 @@ For code generation, prefer the full reference — it inlines every API table an
 - [@oge-ui/kanban-engine](https://www.npmjs.com/package/@oge-ui/kanban-engine): Framework-free engine both Kanban render layers run: card normalization and write-back, swimlane grouping, search, drag hit-testing and auto-scroll, virtual windows, WIP arithmetic, keyboard and move machines, the edit-dialog model and the message catalog. Installed automatically with @oge-ui/kanban or @oge-ui/react-kanban. **Commercial licence.**
 - [@oge-ui/scheduler](https://www.ogeui.com/components/scheduler): Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing. **Commercial licence.**
 - [@oge-ui/core](https://www.npmjs.com/package/@oge-ui/core): Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
+- [@oge-ui/locales](https://www.ogeui.com/getting-started/localization): Ready-made translations of every message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic and Hebrew — as framework-free data, one entry point per language (`import { tr } from '@oge-ui/locales/tr'`). Applied with `provideOgeLocale(tr)` from `oge-ui` or `<OgeLocaleProvider pack={tr}>` from `@oge-ui/react`; commercial families take `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)` through their own provider.
 - [@oge-ui/react-buttons](https://www.ogeui.com/components/buttons): React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.
 - [@oge-ui/react-inputs](https://www.ogeui.com/components/inputs): React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.
 - [@oge-ui/react-tabs](https://www.ogeui.com/components/tabs): React tab strip and tab panel: the WAI-ARIA APG tabs pattern with declarative or data-driven tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards, drag reordering and lazy panel rendering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.
@@ -57,6 +58,7 @@ For code generation, prefer the full reference — it inlines every API table an
 - [Set up your project](https://www.ogeui.com/getting-started/setup): Set up an Angular project for OGE UI: version requirements, npm install or ng add, optional export dependencies, application providers and a quick check.
 - [Style the app](https://www.ogeui.com/getting-started/styling): Theme OGE UI with CSS design tokens: scoped overrides, Tailwind and Bootstrap bridge themes, dark mode, high contrast, reduced motion and component colors.
 - [Localization](https://www.ogeui.com/getting-started/localization): Localize OGE UI: global and per-component message overrides, switching language at runtime, validation messages and Intl number and date locales.
+- [Localization API](https://www.ogeui.com/getting-started/localization/api): Localization API of OGE UI: provideOgeLocale, OgeLocaleProvider and the @oge-ui/locales packs for ten languages, lazy loaders and the message merge helper.
 
 ## AI
 
@@ -194,6 +196,10 @@ For code generation, prefer the full reference — it inlines every API table an
 
 - [Scheduler](https://www.ogeui.com/components/scheduler): Angular Scheduler by OGE UI: day, week, month, year, agenda and timeline views with drag and resize, recurrence, teams, appointment popups and form editing.
 - [Scheduler API](https://www.ogeui.com/components/scheduler/api): Angular Scheduler API reference: every input, output, method and type of oge-scheduler — appointment field mapping, views, editing and the config provider.
+- [Scheduler Views & Grouping](https://www.ogeui.com/components/scheduler/views-grouping): Angular Scheduler views and grouping: N-day and N-week views, month and year timelines, week numbers, nested resource groups, vertical layout, +N more.
+- [Scheduler Resources & Availability](https://www.ogeui.com/components/scheduler/resources-availability): Angular Scheduler availability: hatched disabled slots, per-resource work hours, conflict checks, external drag-in, multi-select, copy, paste, undo.
+- [Scheduler Recurrence Editor](https://www.ogeui.com/components/scheduler/recurrence-editor): Angular Scheduler recurrence editor: nth and last weekday rules, several month days, yearly patterns, count or until, skipped dates, live summary.
+- [Scheduler Import / Export](https://www.ogeui.com/components/scheduler/import-export): Angular Scheduler import and export: iCalendar .ics export and import with series and overrides, PDF and Excel list exports and print of the current view.
 
 ## Other pages
 

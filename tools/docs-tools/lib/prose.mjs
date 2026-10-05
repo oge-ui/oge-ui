@@ -259,3 +259,33 @@ directly.
    Angular, a versioned store in React; a new layer supplies its own.
 4. **Licensing follows the family.** A commercial family's engine carries the
    same commercial license as its render packages.`;
+
+/**
+ * Per-package "Using this package" prose for framework-free packages that are
+ * not an engine (manifest `usage` key) — the engine prose above would tell a
+ * reader of `@oge-ui/locales` never to import it, which is exactly wrong.
+ */
+export const USAGE_NOTES = {
+  locales: `## Using this package
+
+These are **translation packs** — plain data, imported directly by apps.
+
+1. **Import one language from its own entry point**:
+   \`import { tr } from '@oge-ui/locales/tr'\` (\`de fr es it pt-BR tr ja zh-CN ar he\`;
+   the export is the code, \`pt-BR\` → \`ptBR\`, \`zh-CN\` → \`zhCN\`). The primary entry
+   \`@oge-ui/locales\` carries no translations — only types, \`ogeMergeMessages\`,
+   \`OGE_LOCALE_NAMES\`, the \`en\` baseline and the lazy \`ogeLocalePacks\` map.
+2. **Angular**: \`provideOgeLocale(tr)\` from \`oge-ui\` configures every MIT family
+   (strings + \`locale\`). **React**: \`<OgeLocaleProvider pack={tr}>\` from
+   \`@oge-ui/react\`. Never spread a pack into one family's config by hand —
+   use \`ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)\`, because the family
+   resolvers replace nested blocks (\`operators\`, \`toolbar\`, …) whole.
+3. **Runtime switching**: the live form \`provideOgeLocale(() => pack())\` with
+   \`pack.set(await ogeLocalePacks[code]())\`; in React, pass a new \`pack\`.
+4. **Commercial families** (pivot, scheduler, Gantt, Kanban, BPMN, charts) are
+   not wired by the MIT umbrellas: pass
+   \`ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler)\` (and so on) to
+   their own provider.
+5. **The app owns \`LOCALE_ID\` and the page's \`dir\`** — set them from
+   \`pack.locale\` / \`pack.dir\` (\`ar\` and \`he\` are \`'rtl'\`).`,
+};

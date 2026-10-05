@@ -8,8 +8,21 @@ import type { OgeFormItemDataBase } from '@oge-ui/behavior';
 import type { SchedulerAppointment } from './scheduler-model';
 import type { SchedulerViewType } from './view-model';
 
-/** The scheduler's view types: `'day' | 'week' | 'workWeek' | 'month'`. */
+/**
+ * The scheduler's view types: `'day' | 'week' | 'workWeek' | 'month' |
+ * 'agenda' | 'year'` and the timelines `'timelineDay' | 'timelineWeek' |
+ * 'timelineWorkWeek' | 'timelineMonth' | 'timelineYear'`.
+ */
 export type OgeSchedulerView = SchedulerViewType;
+
+/** How grouped resources lay out: side by side, or stacked as row blocks. */
+export type OgeSchedulerGroupOrientation = 'horizontal' | 'vertical';
+
+/** Week numbering: ISO 8601 (Monday-first, 4-day rule) or the locale's own. */
+export type OgeSchedulerWeekNumberRule = 'iso' | 'locale';
+
+/** What a month view's "+N more" button does. */
+export type OgeSchedulerMoreMode = 'popup' | 'drill';
 
 /** Emphasized working hours; cells outside get the off-hours shading. */
 export interface OgeSchedulerWorkHours {
@@ -26,6 +39,77 @@ export interface OgeSchedulerResourceItem {
   readonly id: unknown;
   readonly text: string;
   readonly color?: string;
+  /**
+   * The resource's own working hours — shades its grouped columns / rows
+   * and bounds `snapToWorkHours`; the innermost grouped level that sets
+   * them wins over the scheduler-wide `workHours`.
+   */
+  readonly workHours?: Pick<OgeSchedulerWorkHours, 'start' | 'end'>;
+  /** The resource's working weekdays (0 = Sunday). */
+  readonly workDays?: readonly number[];
+}
+
+/**
+ * A non-bookable range (lunch, a holiday, a room under maintenance):
+ * rendered hatched, refused by create / move / resize / drop and announced.
+ */
+export interface OgeSchedulerBlockedRange {
+  readonly startDate: Date;
+  readonly endDate: Date;
+  /**
+   * Limits the block to resources: `{ roomId: 'r1' }`, or a list of ids per
+   * field. Omitted = every resource.
+   */
+  readonly resources?: Readonly<Record<string, unknown>>;
+  /** Repeats the block (RRULE subset, e.g. `FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR`). */
+  readonly recurrenceRule?: string;
+  /** A label for the hatched area (tooltip / screen-reader text). */
+  readonly text?: string;
+}
+
+/**
+ * Blocked slots: a predicate over a slot's start and its resources (the
+ * grouped field values, `{}` ungrouped), or a list of blocked ranges.
+ */
+export type OgeSchedulerDisabledSlots =
+  | ((date: Date, resources: Readonly<Record<string, unknown>>) => boolean)
+  | readonly OgeSchedulerBlockedRange[];
+
+/**
+ * Decides whether a change that overlaps other appointments may land:
+ * called with the proposed item and the appointments it would overlap;
+ * return `true` to allow it, `false` to refuse it (announced).
+ */
+export type OgeSchedulerConflictCheck<T = unknown> = (
+  appointment: T,
+  conflicts: readonly OgeSchedulerAppointment<T>[],
+) => boolean;
+
+/** Fires after an external item (or another scheduler's appointment) was dropped in. */
+export interface OgeSchedulerAppointmentDroppedEvent<T = unknown> {
+  /** What the draggable carried (`[ogeSchedulerDraggable]` data). */
+  readonly itemData: unknown;
+  /** The appointment item built from it (fields mapped through the `*Expr`s). */
+  readonly appointmentData: T;
+  readonly startDate: Date;
+  readonly endDate: Date;
+  readonly allDay: boolean;
+  /** The grouped resource values of the drop slot (`{}` ungrouped). */
+  readonly resources: Readonly<Record<string, unknown>>;
+  /** Whether the item reached the store (`appointmentAdding` may veto). */
+  readonly added: boolean;
+}
+
+/** Fires when an appointment was dragged out of the scheduler and released. */
+export interface OgeSchedulerDragOutEvent<T = unknown> {
+  readonly appointment: OgeSchedulerAppointment<T>;
+  readonly appointmentData: T;
+  readonly clientX: number;
+  readonly clientY: number;
+  /** The element under the pointer on release. */
+  readonly target: Element | null;
+  /** Whether another scheduler accepted the drop (it emits `appointmentDropped`). */
+  readonly droppedOnScheduler: boolean;
 }
 
 /** A resource kind appointments can be assigned to (dx `resources` parity). */
@@ -49,6 +133,8 @@ export interface OgeSchedulerReminderEvent<T = unknown> {
 export interface OgeSchedulerRangeSelectedEvent {
   readonly startDate: Date;
   readonly endDate: Date;
+  /** The grouped resource values of the column (`{}` ungrouped). */
+  readonly resources?: Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -60,11 +146,24 @@ export type OgeSchedulerAppointment<T = unknown> = SchedulerAppointment<T>;
 /** Per-view options: override the time window or slot raster for one view. */
 export interface OgeSchedulerViewOptions {
   readonly type: OgeSchedulerView;
-  /** Display name in the view switcher (defaults to the messages entry). */
+  /**
+   * Display name in the view switcher (defaults to the messages entry).
+   * Entries sharing a `type` (a `day` and a 3-day `day`) are told apart by
+   * the switcher; `currentView` alone selects the first of them.
+   */
   readonly name?: string;
   readonly dayStartHour?: number;
   readonly dayEndHour?: number;
   readonly cellDuration?: number;
+  /**
+   * Periods one view shows (dx `intervalCount`): `{ type: 'day',
+   * intervalCount: 3 }` is a 3-day view, `{ type: 'week', intervalCount: 2 }`
+   * a fortnight, `{ type: 'month', intervalCount: 3 }` a quarter, and the
+   * timelines scale the same way. Navigation steps by the whole interval.
+   */
+  readonly intervalCount?: number;
+  /** Overrides the scheduler's `groupOrientation` for this view. */
+  readonly groupOrientation?: OgeSchedulerGroupOrientation;
 }
 
 /** Cancelable: fires before a new appointment reaches the store. */
@@ -121,6 +220,8 @@ export interface OgeSchedulerCellClickEvent {
   readonly allDay: boolean;
   /** The raw DOM event. */
   readonly event: MouseEvent;
+  /** The grouped resource values of the cell (`{}` / absent ungrouped). */
+  readonly resources?: Readonly<Record<string, unknown>>;
 }
 
 /**

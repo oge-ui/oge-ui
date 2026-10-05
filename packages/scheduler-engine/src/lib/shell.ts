@@ -7,9 +7,12 @@
  * layers run this one copy (ADR 0003).
  */
 import { ogeDateTimeFormat, rangesOverlap, startOfDay } from '@oge-ui/core';
-import type {
-  OgeSchedulerMessages,
-  OgeSchedulerToolbarMessages,
+import {
+  OGE_DEFAULT_SCHEDULER_MESSAGES,
+  fillSchedulerMessages,
+  type OgeSchedulerMessages,
+  type OgeSchedulerResolvedMessages,
+  type OgeSchedulerToolbarMessages,
 } from './config';
 import {
   expandAppointment,
@@ -18,11 +21,12 @@ import {
   type SchedulerAppointment,
 } from './scheduler-model';
 import type {
+  OgeSchedulerGroupOrientation,
   OgeSchedulerResource,
   OgeSchedulerView,
   OgeSchedulerViewOptions,
 } from './scheduler-types';
-import { navigateDate, viewRange } from './view-model';
+import { navigateDate, normalizeIntervalCount, viewRange } from './view-model';
 
 /** A resolved view-switcher entry. */
 export interface ResolvedSchedulerView {
@@ -31,6 +35,12 @@ export interface ResolvedSchedulerView {
   readonly dayStartHour: number;
   readonly dayEndHour: number;
   readonly cellDuration: number;
+  /** Periods the view shows (`1` unless the options set `intervalCount`). */
+  readonly intervalCount: number;
+  /** The view's own group orientation, if its options set one. */
+  readonly groupOrientation?: OgeSchedulerGroupOrientation;
+  /** Position in the switcher (`-1` for a `currentView` not in it). */
+  readonly index: number;
 }
 
 /** The scheduler-wide time window every view falls back to. */
@@ -40,42 +50,65 @@ export interface SchedulerViewDefaults {
   readonly cellDuration: number;
 }
 
+/** A view's display name: the catalog's, falling back to the English default. */
+function viewName(
+  toolbar: OgeSchedulerToolbarMessages,
+  view: OgeSchedulerView,
+): string {
+  return (
+    (toolbar.viewNames as Partial<Record<OgeSchedulerView, string>>)[view] ??
+    OGE_DEFAULT_SCHEDULER_MESSAGES.toolbar.viewNames[view]
+  );
+}
+
 /** Resolves the `views` input into switcher entries with per-view overrides. */
 export function resolveSchedulerViews(
   views: readonly (OgeSchedulerView | OgeSchedulerViewOptions)[],
   toolbar: OgeSchedulerToolbarMessages,
   defaults: SchedulerViewDefaults,
 ): readonly ResolvedSchedulerView[] {
-  return views.map((entry) => {
+  return views.map((entry, index) => {
     const options: OgeSchedulerViewOptions =
       typeof entry === 'string' ? { type: entry } : entry;
     return {
       type: options.type,
-      name: options.name ?? toolbar.viewNames[options.type],
+      name: options.name ?? viewName(toolbar, options.type),
       dayStartHour: options.dayStartHour ?? defaults.dayStartHour,
       dayEndHour: options.dayEndHour ?? defaults.dayEndHour,
       cellDuration: options.cellDuration ?? defaults.cellDuration,
+      intervalCount: normalizeIntervalCount(options.intervalCount),
+      ...(options.groupOrientation !== undefined
+        ? { groupOrientation: options.groupOrientation }
+        : {}),
+      index,
     };
   });
 }
 
 /**
  * The active view's entry; a `currentView` missing from the switcher still
- * resolves (with the scheduler-wide window).
+ * resolves (with the scheduler-wide window). Entries sharing a type are
+ * told apart by `selectedIndex` (the switcher button last pressed); a
+ * `currentView` set from outside selects the first entry of its type.
  */
 export function resolveActiveSchedulerView(
   view: OgeSchedulerView,
   resolved: readonly ResolvedSchedulerView[],
   toolbar: OgeSchedulerToolbarMessages,
   defaults: SchedulerViewDefaults,
+  selectedIndex: number | null = null,
 ): ResolvedSchedulerView {
+  const selected = selectedIndex === null ? undefined : resolved[selectedIndex];
+  if (selected !== undefined && selected.type === view) return selected;
   return (
     resolved.find((entry) => entry.type === view) ?? {
       type: view,
-      name: toolbar.viewNames[view],
+      name: viewName(toolbar, view),
       dayStartHour: defaults.dayStartHour,
       dayEndHour: defaults.dayEndHour,
       cellDuration: defaults.cellDuration,
+      intervalCount: 1,
+      index: -1,
     }
   );
 }
@@ -89,12 +122,15 @@ export function dayWeekViewOf(
     : 'week';
 }
 
-/** Per-instance messages merged over the configured ones (per block). */
+/**
+ * Per-instance messages merged over the configured ones (per block), with
+ * every optional key a catalog may omit filled from the English defaults.
+ */
 export function mergeSchedulerMessages(
   config: OgeSchedulerMessages,
   overrides: Partial<OgeSchedulerMessages> | undefined,
-): OgeSchedulerMessages {
-  return { ...config, ...overrides };
+): OgeSchedulerResolvedMessages {
+  return fillSchedulerMessages({ ...config, ...overrides });
 }
 
 /** The resource that colors uncolored appointments, if any. */
@@ -179,12 +215,14 @@ export function visibleSchedulerAppointments<T>(
   anchorDate: Date,
   firstDayOfWeek: number,
   agendaDuration: number,
+  intervalCount = 1,
 ): readonly SchedulerAppointment<T>[] {
   const { start, end } = viewRange(
     view,
     anchorDate,
     firstDayOfWeek,
     agendaDuration,
+    intervalCount,
   );
   return appointments
     .flatMap((appointment) => expandAppointment(appointment, start, end))
@@ -205,28 +243,50 @@ export function schedulerPeriodTitle(
   firstDayOfWeek: number,
   agendaDuration: number,
   custom?: (start: Date, end: Date, view: OgeSchedulerView) => string,
+  intervalCount = 1,
 ): string {
+  const intervals = normalizeIntervalCount(intervalCount);
   if (custom !== undefined) {
-    const range = viewRange(view, date, firstDayOfWeek, agendaDuration);
+    const range = viewRange(
+      view,
+      date,
+      firstDayOfWeek,
+      agendaDuration,
+      intervals,
+    );
     return custom(range.start, new Date(range.end.getTime() - 1), view);
   }
-  if (view === 'day') {
+  if ((view === 'day' || view === 'timelineDay') && intervals === 1) {
     return ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(date);
   }
-  if (view === 'month') {
-    return ogeDateTimeFormat(locale, {
+  if (view === 'month' || view === 'timelineMonth') {
+    const format = ogeDateTimeFormat(locale, {
       month: 'long',
       year: 'numeric',
-    }).format(date);
+    });
+    if (intervals === 1) return format.format(date);
+    const first = new Date(date.getFullYear(), date.getMonth(), 1);
+    const last = new Date(date.getFullYear(), date.getMonth() + intervals, 0);
+    return format.formatRange(first, last);
   }
-  if (view === 'year') {
-    return ogeDateTimeFormat(locale, { year: 'numeric' }).format(date);
+  if (view === 'year' || view === 'timelineYear') {
+    const format = ogeDateTimeFormat(locale, { year: 'numeric' });
+    if (intervals === 1) return format.format(date);
+    return format.formatRange(
+      new Date(date.getFullYear(), 0, 1),
+      new Date(date.getFullYear() + intervals - 1, 0, 1),
+    );
   }
   const { start, end } = viewRange(
-    view === 'agenda' ? 'agenda' : 'week',
+    view === 'agenda'
+      ? 'agenda'
+      : view === 'day' || view === 'timelineDay'
+        ? 'day'
+        : 'week',
     date,
     firstDayOfWeek,
     agendaDuration,
+    intervals,
   );
   const last = new Date(end.getTime() - 1);
   return ogeDateTimeFormat(locale, {
@@ -243,8 +303,15 @@ export function isTodayInSchedulerView(
   firstDayOfWeek: number,
   agendaDuration: number,
   now: number = Date.now(),
+  intervalCount = 1,
 ): boolean {
-  const { start, end } = viewRange(view, date, firstDayOfWeek, agendaDuration);
+  const { start, end } = viewRange(
+    view,
+    date,
+    firstDayOfWeek,
+    agendaDuration,
+    intervalCount,
+  );
   return now >= start.getTime() && now < end.getTime();
 }
 
@@ -257,9 +324,22 @@ export function canNavigateScheduler(
   agendaDuration: number,
   min: Date | undefined,
   max: Date | undefined,
+  intervalCount = 1,
 ): boolean {
-  const candidate = navigateDate(view, date, direction, agendaDuration);
-  const { start, end } = viewRange(view, candidate, firstDayOfWeek);
+  const candidate = navigateDate(
+    view,
+    date,
+    direction,
+    agendaDuration,
+    intervalCount,
+  );
+  const { start, end } = viewRange(
+    view,
+    candidate,
+    firstDayOfWeek,
+    agendaDuration,
+    intervalCount,
+  );
   if (min !== undefined && end.getTime() <= startOfDay(min).getTime()) {
     return false;
   }

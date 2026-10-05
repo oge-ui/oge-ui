@@ -195,6 +195,12 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<div [ogeUploadDropZone]="\'attachments\'">` with `<oge-file-uploader dropZone="attachments" />` — dx `dropZone`, Kendo `zoneId`, Syncfusion `dropArea`',
     },
   ],
+  '@oge-ui/locales': [
+    {
+      need: 'translate the UI (German, French, Spanish, Italian, pt-BR, Turkish, Japanese, zh-CN, Arabic, Hebrew)',
+      use: "`import { tr } from '@oge-ui/locales/tr'` + `provideOgeLocale(tr)` from `oge-ui` (live: `provideOgeLocale(() => pack())` with `ogeLocalePacks[code]()`); commercial families: `messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler)` in their own provider; set `LOCALE_ID` and `<html dir>` from `pack.locale` / `pack.dir` yourself",
+    },
+  ],
 };
 
 /** Every package whose usage rows are worth listing, in a stable order. */
@@ -215,6 +221,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/navigation',
   '@oge-ui/forms',
   '@oge-ui/upload',
+  '@oge-ui/locales',
 ];
 
 /** The umbrella package re-exports every MIT family from one import path. */

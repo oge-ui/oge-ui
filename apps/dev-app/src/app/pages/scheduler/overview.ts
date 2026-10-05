@@ -236,7 +236,7 @@ type DemoAppt = Record<string, unknown>;
       <app-demo-card
         [chips]="['views options', 'per-view hours', 'maxAppointmentsPerCell']"
         heading="Views"
-        description='<code>views</code> takes plain names or option objects with per-view hour windows and slot rasters. The month view packs appointments into lanes and folds the overflow into a "+N more" button that drills into the day view.'
+        description="<code>views</code> takes plain names or option objects with per-view hour windows and slot rasters. The month view packs appointments into lanes and folds the overflow into a &quot;+N more&quot; button that opens a keyboard-accessible list of the day (<code>moreMode</code> 'drill' jumps to the day view instead)."
         [code]="viewsSnippet"
         language="ts"
       >

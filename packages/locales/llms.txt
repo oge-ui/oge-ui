@@ -1,0 +1,147 @@
+# @oge-ui/locales
+
+> Ready-made translations of every message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic and Hebrew — as framework-free data, one entry point per language (`import { tr } from '@oge-ui/locales/tr'`). Applied with `provideOgeLocale(tr)` from `oge-ui` or `<OgeLocaleProvider pack={tr}>` from `@oge-ui/react`; commercial families take `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)` through their own provider.
+
+Part of OGE UI v1.1.2.
+Docs and live demos: https://www.ogeui.com/getting-started/localization
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/locales
+```
+
+## Using this package
+
+These are **translation packs** — plain data, imported directly by apps.
+
+1. **Import one language from its own entry point**:
+   `import { tr } from '@oge-ui/locales/tr'` (`de fr es it pt-BR tr ja zh-CN ar he`;
+   the export is the code, `pt-BR` → `ptBR`, `zh-CN` → `zhCN`). The primary entry
+   `@oge-ui/locales` carries no translations — only types, `ogeMergeMessages`,
+   `OGE_LOCALE_NAMES`, the `en` baseline and the lazy `ogeLocalePacks` map.
+2. **Angular**: `provideOgeLocale(tr)` from `oge-ui` configures every MIT family
+   (strings + `locale`). **React**: `<OgeLocaleProvider pack={tr}>` from
+   `@oge-ui/react`. Never spread a pack into one family's config by hand —
+   use `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)`, because the family
+   resolvers replace nested blocks (`operators`, `toolbar`, …) whole.
+3. **Runtime switching**: the live form `provideOgeLocale(() => pack())` with
+   `pack.set(await ogeLocalePacks[code]())`; in React, pass a new `pack`.
+4. **Commercial families** (pivot, scheduler, Gantt, Kanban, BPMN, charts) are
+   not wired by the MIT umbrellas: pass
+   `ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler)` (and so on) to
+   their own provider.
+5. **The app owns `LOCALE_ID` and the page's `dir`** — set them from
+   `pack.locale` / `pack.dir` (`ar` and `he` are `'rtl'`).
+
+## Entry points
+
+`@oge-ui/locales`
+
+- values: `OGE_LOCALE_NAMES`, `en`, `ogeLocalePacks`, `ogeMergeMessages`
+- types: `OgeDeepPartial`, `OgeLocaleCode`, `OgeLocaleLayoutMessages`, `OgeLocaleNavigationMessages`, `OgeLocalePack`
+
+`@oge-ui/locales/ar`
+
+- values: `ar`
+
+`@oge-ui/locales/de`
+
+- values: `de`
+
+`@oge-ui/locales/es`
+
+- values: `es`
+
+`@oge-ui/locales/fr`
+
+- values: `fr`
+
+`@oge-ui/locales/he`
+
+- values: `he`
+
+`@oge-ui/locales/it`
+
+- values: `it`
+
+`@oge-ui/locales/ja`
+
+- values: `ja`
+
+`@oge-ui/locales/tr`
+
+- values: `tr`
+
+`@oge-ui/locales/pt-BR`
+
+- values: `ptBR`
+
+`@oge-ui/locales/zh-CN`
+
+- values: `zhCN`
+
+## API reference
+
+### Locale wiring
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeLocale(pack)` | `(pack: OgeLocalePack \| (() => OgeLocalePack)) => Provider[]` | From `oge-ui`. Provides every MIT family’s config — grid / tree list, inputs, buttons, overlay, tabs, forms, upload, the layout and navigation components — with the pack’s slice merged over the English catalog, plus the pack’s `locale` for the grid and the editors. A function makes it live: the language follows the signals it reads. It owns those config tokens — provide a family’s own config after it to change other options. `LOCALE_ID` and the page’s `dir` stay the app’s job; commercial families take their slice through their own providers. |
+| `pack` | `OgeLocalePack \| (() => OgeLocalePack)` | The pack to apply — a static pack, or a function reading a signal for runtime switching (`provideOgeLocale(() => pack())`). |
+
+### Locale packs
+
+#### Properties
+
+_Language packs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `de` | `OgeLocalePack` | German — every catalog, MIT and commercial. `import { de } from '@oge-ui/locales/de'`. |
+| `fr` | `OgeLocalePack` | French — every catalog, MIT and commercial. `import { fr } from '@oge-ui/locales/fr'`. |
+| `es` | `OgeLocalePack` | Spanish — every catalog, MIT and commercial. `import { es } from '@oge-ui/locales/es'`. |
+| `it` | `OgeLocalePack` | Italian — every catalog, MIT and commercial. `import { it } from '@oge-ui/locales/it'`. |
+| `ptBR` | `OgeLocalePack` | Brazilian Portuguese — every catalog, MIT and commercial. `import { ptBR } from '@oge-ui/locales/pt-BR'`. |
+| `tr` | `OgeLocalePack` | Turkish — every catalog, MIT and commercial. `import { tr } from '@oge-ui/locales/tr'`. |
+| `ja` | `OgeLocalePack` | Japanese — every catalog, MIT and commercial. `import { ja } from '@oge-ui/locales/ja'`. |
+| `zhCN` | `OgeLocalePack` | Simplified Chinese — every catalog, MIT and commercial. `import { zhCN } from '@oge-ui/locales/zh-CN'`. |
+| `ar` | `OgeLocalePack` | Arabic (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { ar } from '@oge-ui/locales/ar'`. |
+| `he` | `OgeLocalePack` | Hebrew (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { he } from '@oge-ui/locales/he'`. |
+
+_Primary entry (@oge-ui/locales)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `en` | `OgeLocalePack` | The English baseline — `{ locale: 'en', dir: 'ltr' }` with no slices, so every catalog keeps its built-in strings. Switch back to it like to any other pack. |
+| `ogeLocalePacks` | `Readonly<Record<OgeLocaleCode, () => Promise<OgeLocalePack>>>` | Lazy loaders, one dynamic `import()` per language entry — a language switcher downloads only the packs a user picks. |
+| `OGE_LOCALE_NAMES` | `Readonly<Record<OgeLocaleCode, string>>` | Each language’s own name (`Deutsch`, `日本語`, `العربية`…) — the labels of a switcher. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeMergeMessages(defaults, slice)` | `<T extends object>(defaults: T, slice: OgeDeepPartial<T> \| undefined) => T` | Lays a pack slice over a complete catalog, nested blocks key by key — every key the slice lacks keeps the English string. Use it to hand a slice to a family provider yourself (commercial families, or a family whose other options you also set): `messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler)`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLocalePack` | `{ locale; dir: 'ltr' \| 'rtl'; grid?; inputs?; buttons?; overlay?; tabs?; forms?; upload?; layout?; navigation?; pivot?; scheduler?; gantt?; kanban?; bpmn?; charts? }` | One language: the BCP 47 `locale` for `Intl` formats, the writing direction and a deep-partial slice per message catalog. The tree list reads the grid’s catalog, so `grid` covers both. The commercial slices are typed with `import type` from the engines — erased by the build, so the MIT package has no runtime dependency on them. |
+| `OgeLocaleLayoutMessages` | `{ accordion?; progressBar?; loadIndicator?; splitter?; toolbar? }` | The layout family’s catalogs, one per component. |
+| `OgeLocaleNavigationMessages` | `{ breadcrumb?; drawer?; menubar?; pagination?; stepper?; treeView? }` | The navigation family’s catalogs, one per component. |
+| `OgeDeepPartial<T>` | `mapped type` | Every key optional, nested blocks included — a key a newer release adds is simply missing from an older pack and falls back to English. |
+| `OgeLocaleCode` | `'en' \| 'de' \| 'fr' \| 'es' \| 'it' \| 'pt-BR' \| 'tr' \| 'ja' \| 'zh-CN' \| 'ar' \| 'he'` | The languages this package ships, plus the English baseline. |
+
+### Locale wiring
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLocaleProvider` | `(props: OgeLocaleProviderProps) => JSX.Element` | From `@oge-ui/react`. Wraps the subtree in every MIT family’s config provider, each with the pack’s slice merged over the English catalog, plus the pack’s `locale` for the grid and the editors. Family providers nested inside still apply on top. The page’s `dir` stays the app’s job; commercial families take their slice through their own providers. |
+| `pack` | `OgeLocalePack` | The pack to apply. Pass a different pack (from state) to switch language at runtime — context re-renders every component beneath. |
+| `children` | `ReactNode` | The localized subtree. |
+
+

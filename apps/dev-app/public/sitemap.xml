@@ -5,7 +5,8 @@
   <url><loc>https://www.ogeui.com/getting-started/setup</loc><lastmod>2026-10-03</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/styling</loc><lastmod>2026-10-03</lastmod></url>
   <url><loc>https://www.ogeui.com/ai</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
-  <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-10-05</lastmod><priority>0.9</priority></url>
+  <url><loc>https://www.ogeui.com/getting-started/localization/api</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/data-grid</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/data-grid/playground</loc><lastmod>2026-10-01</lastmod></url>
@@ -107,5 +108,9 @@
   <url><loc>https://www.ogeui.com/components/kanban/api</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/scheduler</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/scheduler/api</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/scheduler/views-grouping</loc></url>
+  <url><loc>https://www.ogeui.com/components/scheduler/resources-availability</loc></url>
+  <url><loc>https://www.ogeui.com/components/scheduler/recurrence-editor</loc></url>
+  <url><loc>https://www.ogeui.com/components/scheduler/import-export</loc></url>
   <url><loc>https://www.ogeui.com/license</loc><lastmod>2026-08-11</lastmod><priority>0.9</priority></url>
 </urlset>

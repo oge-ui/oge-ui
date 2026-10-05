@@ -20,8 +20,14 @@ import {
   OgeSchedulerAdaptiveViewController,
   OgeSchedulerCore,
   buildSchedulerEditorItems,
+  isSchedulerEditingTarget,
+  isTimelineView,
+  printOgeScheduler,
+  registerOgeSchedulerDropTarget,
+  schedulerShortcut,
   scrollOffsetForTime,
   type OgeSchedulerCoreInputs,
+  type OgeSchedulerDropSlot,
   type OgeSchedulerView,
   type OgeSchedulerViewOptions,
   type SchedulerEditorModel,
@@ -34,13 +40,21 @@ import {
   SchedulerAppointmentPopup,
   type AppointmentPopupHandle,
 } from './appointment-popup';
-import { SchedulerDayWeekView, type DayWeekViewHandle } from './day-week-view';
+import {
+  SchedulerDayWeekView,
+  type DayWeekViewHandle,
+  type SchedulerViewG3Props,
+} from './day-week-view';
 import { SchedulerAgendaView, SchedulerYearView } from './list-views';
 import { SchedulerMonthView, type MonthViewHandle } from './month-view';
+import { SchedulerMorePopup, type MorePopupHandle } from './more-popup';
 import { createSchedulerRxAdapter } from './rx-adapter';
 import { useOgeSchedulerConfig } from './scheduler-config';
 import type { OgeSchedulerHandle, OgeSchedulerProps } from './scheduler-types';
-import { SchedulerTimelineView } from './timeline-view';
+import {
+  SchedulerTimelineView,
+  type TimelineViewHandle,
+} from './timeline-view';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect';
 
 const DEFAULT_VIEWS: readonly (OgeSchedulerView | OgeSchedulerViewOptions)[] = [
@@ -76,7 +90,9 @@ function OgeSchedulerInner<T extends object>(
   const navigatorRef = useRef<HTMLDivElement>(null);
   const dayWeekRef = useRef<DayWeekViewHandle>(null);
   const monthRef = useRef<MonthViewHandle>(null);
+  const timelineRef = useRef<TimelineViewHandle>(null);
   const popupRef = useRef<AppointmentPopupHandle<T>>(null);
+  const moreRef = useRef<MorePopupHandle>(null);
 
   // `currentDate` / `currentView`: controlled when the prop is given,
   // otherwise owned here — seeded at mount, like Angular's model default
@@ -86,10 +102,14 @@ function OgeSchedulerInner<T extends object>(
   const [innerView, setInnerView] = useState<OgeSchedulerView>(
     () => props.defaultCurrentView ?? 'week',
   );
+  const [innerSelection, setInnerSelection] = useState<readonly T[]>(
+    () => props.defaultSelectedAppointments ?? EMPTY,
+  );
   const currentDate = props.currentDate ?? innerDate;
   const currentView = props.currentView ?? innerView;
-  const modelRef = useRef({ date: currentDate, view: currentView });
-  modelRef.current = { date: currentDate, view: currentView };
+  const selection = props.selectedAppointments ?? innerSelection;
+  const modelRef = useRef({ date: currentDate, view: currentView, selection });
+  modelRef.current = { date: currentDate, view: currentView, selection };
 
   const [editor, setEditor] = useState<SchedulerEditorState>(CLOSED_EDITOR);
 
@@ -137,6 +157,16 @@ function OgeSchedulerInner<T extends object>(
       min: () => p().min,
       max: () => p().max,
       dateNavigatorText: () => p().dateNavigatorText,
+      groupOrientation: () => p().groupOrientation,
+      groupByDate: () => p().groupByDate ?? true,
+      disabledSlots: () => p().disabledSlots ?? null,
+      workHours: () => p().workHours ?? null,
+      snapToWorkHours: () => p().snapToWorkHours ?? false,
+      allowOverlap: () => p().allowOverlap ?? true,
+      conflictCheck: () => p().conflictCheck,
+      selectedAppointments: () => modelRef.current.selection,
+      undoLimit: () => p().undoLimit ?? 50,
+      moreMode: () => p().moreMode ?? 'popup',
     };
     /** Writes the two-way `currentView` (core pipelines + adaptive switch). */
     const writeView = (view: OgeSchedulerView): void => {
@@ -163,6 +193,12 @@ function OgeSchedulerInner<T extends object>(
           p().onCurrentDateChange?.(date);
         },
         setCurrentView: (view) => writeView(view),
+        setSelectedAppointments: (items) => {
+          modelRef.current = { ...modelRef.current, selection: items };
+          rx.invalidate();
+          if (p().selectedAppointments === undefined) setInnerSelection(items);
+          p().onSelectedAppointmentsChange?.(items);
+        },
         events: {
           appointmentAdding: (event) => p().onAppointmentAdding?.(event),
           appointmentAdded: (event) => p().onAppointmentAdded?.(event),
@@ -180,8 +216,11 @@ function OgeSchedulerInner<T extends object>(
             p().onAppointmentContextMenu?.(event),
           cellContextMenu: (event) => p().onCellContextMenu?.(event),
           reminderTriggered: (event) => p().onReminderTriggered?.(event),
+          appointmentDropped: (event) => p().onAppointmentDropped?.(event),
+          dragOut: (event) => p().onDragOut?.(event),
         },
         surfaces: {
+          hostElement: () => hostRef.current,
           openPopup: (appointment, rect) =>
             popupRef.current?.open(appointment, rect),
           closePopup: () => popupRef.current?.close(),
@@ -277,6 +316,40 @@ function OgeSchedulerInner<T extends object>(
     return () => clearInterval(timer);
   }, [core]);
 
+  // the active view's slot under a viewport point (the drag-in hit test)
+  const viewKindRef = useRef<'dayWeek' | 'month' | 'timeline' | 'other'>(
+    'dayWeek',
+  );
+  const dropSlotAt = (
+    clientX: number,
+    clientY: number,
+  ): OgeSchedulerDropSlot | null => {
+    switch (viewKindRef.current) {
+      case 'dayWeek':
+        return dayWeekRef.current?.dropSlotAt(clientX, clientY) ?? null;
+      case 'month':
+        return monthRef.current?.dropSlotAt(clientX, clientY) ?? null;
+      case 'timeline':
+        return timelineRef.current?.dropSlotAt(clientX, clientY) ?? null;
+      default:
+        return null;
+    }
+  };
+  const dropSlotRef = useRef(dropSlotAt);
+  dropSlotRef.current = dropSlotAt;
+
+  // drag-in target: external draggables and other schedulers drop here
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host === null) return;
+    return registerOgeSchedulerDropTarget({
+      element: host,
+      resolve: (clientX, clientY) => dropSlotRef.current(clientX, clientY),
+      over: (slot, payload) => core.onExternalOver(slot, payload),
+      drop: (payload, slot) => core.onExternalDrop(payload, slot),
+    });
+  }, [core]);
+
   const navigatorPanel = useAnchoredPanel({
     anchor: () => titleRef.current,
     panel: () => navigatorRef.current,
@@ -334,6 +407,23 @@ function OgeSchedulerInner<T extends object>(
     getDataSource: () => latest.current.dataSource ?? null,
     goToday: () => core.goToday(),
     navigate: (direction) => core.navigate(direction),
+    copyAppointments: (appointment = null) =>
+      core.copyAppointments(appointment),
+    pasteAppointments: (target) => core.paste(target),
+    clearSelection: () => core.clearSelection(),
+    undo: () => core.undo(),
+    redo: () => core.redo(),
+    canUndo: () => core.canUndo(),
+    canRedo: () => core.canRedo(),
+    getExportData: (range) => core.getExportData(range),
+    print: (options = {}) => {
+      const host = hostRef.current;
+      return host === null
+        ? Promise.resolve()
+        : printOgeScheduler(host, {
+            title: options.title ?? core.periodTitle(),
+          });
+    },
   }));
 
   const msg = core.msg();
@@ -346,8 +436,10 @@ function OgeSchedulerInner<T extends object>(
   const activeView = core.activeView();
   const visible = core.visibleAppointments();
   const periodTitle = core.periodTitle();
-  const groupResource = core.groupResource();
-  const groupResourceIdOf = core.groupResourceIdOf();
+  const groupLevels = core.groupLevels();
+  const groupLeaves = core.groupLeaves();
+  const leafOf = core.leafOf();
+  const groupOrientation = core.groupOrientation();
   const canAdd = core.canAdd();
   const canUpdate = core.canUpdate();
   const canDelete = core.canDelete();
@@ -355,17 +447,79 @@ function OgeSchedulerInner<T extends object>(
   const gridReadOnly = core.gridReadOnly();
   const scopePending = core.scopePending();
   const contextMenu = core.contextMenu();
+  const notice = core.notice();
+  const dropPreview = core.dropPreview();
   const showAddButton = props.showAddButton ?? true;
   const agendaDuration = props.agendaDuration ?? 7;
-  const { renderAppointment, renderCell, renderDateHeader } = props;
+  const {
+    renderAppointment,
+    renderCell,
+    renderDateHeader,
+    renderResourceHeader,
+  } = props;
+  viewKindRef.current =
+    currentView === 'month'
+      ? 'month'
+      : isTimelineView(currentView)
+        ? 'timeline'
+        : currentView === 'agenda' || currentView === 'year'
+          ? 'other'
+          : 'dayWeek';
 
   const chipHandlers = {
     onChipClicked: core.onChipClicked.bind(core),
     onChipDblClicked: core.onChipDblClicked.bind(core),
     onChipDeleteRequested: core.onDeleteRequested.bind(core),
   };
+  const g3: SchedulerViewG3Props<T> = {
+    selection,
+    dropPreview,
+    onCopyRequested: (appointment) => core.copyAppointments(appointment),
+    onSelectRequested: (request) =>
+      core.selectAppointment(
+        request.appointment,
+        request.gesture,
+        request.order,
+      ),
+    onDragOut: (appointment, clientX, clientY) =>
+      core.onDragOut(appointment, clientX, clientY),
+  };
 
   const renderView = (): ReactElement => {
+    if (isTimelineView(currentView)) {
+      return (
+        <SchedulerTimelineView<T>
+          ref={timelineRef}
+          key={currentView}
+          rtl={rtl}
+          view={currentView}
+          anchorDate={currentDate}
+          appointments={visible}
+          firstDayOfWeek={firstDayOfWeek}
+          weekendDays={weekendDays}
+          hiddenWeekDays={props.hiddenWeekDays}
+          dayStartHour={activeView.dayStartHour}
+          dayEndHour={activeView.dayEndHour}
+          cellDuration={activeView.cellDuration}
+          intervalCount={activeView.intervalCount}
+          locale={locale}
+          messages={msg.grid}
+          groupLevels={groupLevels}
+          groupLeaves={groupLeaves}
+          groupOrientation={groupOrientation}
+          allowDragging={canDrag}
+          snapDuration={props.snapDuration}
+          workHours={props.workHours ?? null}
+          disabledSlots={props.disabledSlots ?? null}
+          virtualScrolling={props.virtualScrolling ?? 'auto'}
+          renderResourceHeader={renderResourceHeader}
+          {...chipHandlers}
+          {...g3}
+          onMoveCommitted={(event) => core.onGroupedMoveCommitted(event)}
+          onGestureCancelled={() => core.onGestureCancelled()}
+        />
+      );
+    }
     switch (currentView) {
       case 'agenda':
         return (
@@ -388,31 +542,6 @@ function OgeSchedulerInner<T extends object>(
             onDayPicked={(date) => core.drillIntoDay(date)}
           />
         );
-      case 'timelineDay':
-      case 'timelineWeek':
-        return (
-          <SchedulerTimelineView<T>
-            key={currentView}
-            rtl={rtl}
-            view={currentView}
-            anchorDate={currentDate}
-            appointments={visible}
-            firstDayOfWeek={firstDayOfWeek}
-            weekendDays={weekendDays}
-            dayStartHour={activeView.dayStartHour}
-            dayEndHour={activeView.dayEndHour}
-            cellDuration={activeView.cellDuration}
-            locale={locale}
-            messages={msg.grid}
-            groupResource={groupResource}
-            resourceIdOf={groupResourceIdOf}
-            allowDragging={canDrag}
-            snapDuration={props.snapDuration}
-            {...chipHandlers}
-            onMoveCommitted={(event) => core.onGroupedMoveCommitted(event)}
-            onGestureCancelled={() => core.onGestureCancelled()}
-          />
-        );
       case 'month':
         return (
           <SchedulerMonthView<T>
@@ -423,23 +552,32 @@ function OgeSchedulerInner<T extends object>(
             firstDayOfWeek={firstDayOfWeek}
             weekendDays={weekendDays}
             maxAppointmentsPerCell={props.maxAppointmentsPerCell ?? 'auto'}
+            intervalCount={activeView.intervalCount}
             locale={locale}
             messages={msg.grid}
             periodLabel={periodTitle}
             allowDragging={canDrag}
             readOnly={gridReadOnly}
+            showWeekNumbers={props.showWeekNumbers ?? false}
+            weekNumberRule={props.weekNumberRule ?? 'iso'}
+            disabledSlots={props.disabledSlots ?? null}
             renderAppointment={renderAppointment}
             renderCell={renderCell}
-            onMoreClick={(date) => core.drillIntoDay(date)}
+            onMoreClick={(date, anchor) => {
+              core.onMoreRequested(date);
+              if (core.moreDay() !== null) moreRef.current?.open(anchor);
+            }}
             onCellClicked={(event) => core.onCellClicked(event)}
             onCellDblClicked={(event) => core.onCellDblClicked(event)}
             onCellActivated={(event) => core.onCellActivated(event)}
             onChipActivated={(event) => core.onChipActivated(event)}
             {...chipHandlers}
+            {...g3}
             onMoveCommitted={(event) => core.onMoveCommitted(event)}
             onGestureCancelled={() => core.onGestureCancelled()}
             onChipContextMenu={(event) => core.onChipContextMenu(event)}
             onCellContextMenu={(event) => core.onCellContextMenu(event)}
+            onPasteRequested={(target) => core.paste(target)}
           />
         );
       default:
@@ -455,6 +593,7 @@ function OgeSchedulerInner<T extends object>(
             dayStartHour={activeView.dayStartHour}
             dayEndHour={activeView.dayEndHour}
             cellDuration={activeView.cellDuration}
+            intervalCount={activeView.intervalCount}
             showAllDayPanel={props.showAllDayPanel ?? true}
             showCurrentTimeIndicator={props.showCurrentTimeIndicator ?? true}
             minAppointmentMinutes={core.minAppointmentMinutes()}
@@ -469,22 +608,31 @@ function OgeSchedulerInner<T extends object>(
             workHours={props.workHours ?? null}
             shadeUntilCurrentTime={props.shadeUntilCurrentTime ?? false}
             snapDuration={props.snapDuration}
-            groupResource={groupResource}
-            resourceIdOf={groupResourceIdOf}
+            groupLevels={groupLevels}
+            groupLeaves={groupLeaves}
+            leafOf={leafOf}
+            groupOrientation={groupOrientation}
+            groupByDate={props.groupByDate ?? true}
+            showWeekNumbers={props.showWeekNumbers ?? false}
+            weekNumberRule={props.weekNumberRule ?? 'iso'}
+            disabledSlots={props.disabledSlots ?? null}
             renderAppointment={renderAppointment}
             renderCell={renderCell}
             renderDateHeader={renderDateHeader}
+            renderResourceHeader={renderResourceHeader}
             onCellClicked={(event) => core.onCellClicked(event)}
             onCellDblClicked={(event) => core.onCellDblClicked(event)}
             onCellActivated={(event) => core.onCellActivated(event)}
             onChipActivated={(event) => core.onChipActivated(event)}
             {...chipHandlers}
+            {...g3}
             onMoveCommitted={(event) => core.onGroupedMoveCommitted(event)}
             onResizeCommitted={(event) => core.onResizeCommitted(event)}
             onGestureCancelled={() => core.onGestureCancelled()}
             onRangeSelected={(event) => core.onRangeSelected(event)}
             onChipContextMenu={(event) => core.onChipContextMenu(event)}
             onCellContextMenu={(event) => core.onCellContextMenu(event)}
+            onPasteRequested={(target) => core.paste(target)}
           />
         );
     }
@@ -498,6 +646,15 @@ function OgeSchedulerInner<T extends object>(
       }
       dir={hostDir}
       style={props.style}
+      onKeyDown={(event) => {
+        const shortcut = schedulerShortcut(
+          event,
+          isSchedulerEditingTarget(event.target),
+        );
+        if (shortcut !== 'undo' && shortcut !== 'redo') return;
+        event.preventDefault();
+        core.onShortcut(shortcut);
+      }}
     >
       <div
         className="oge-scheduler-toolbar"
@@ -626,15 +783,15 @@ function OgeSchedulerInner<T extends object>(
         >
           {core.resolvedViews().map((entry) => (
             <button
-              key={entry.type}
+              key={entry.index}
               type="button"
               className={
-                entry.type === currentView
+                core.isViewActive(entry)
                   ? 'oge-scheduler-btn oge-scheduler-view-btn oge-scheduler-view-active'
                   : 'oge-scheduler-btn oge-scheduler-view-btn'
               }
-              aria-pressed={entry.type === currentView}
-              onClick={() => core.setView(entry.type)}
+              aria-pressed={core.isViewActive(entry)}
+              onClick={() => core.setView(entry.type, entry.index)}
             >
               {entry.name}
             </button>
@@ -642,8 +799,27 @@ function OgeSchedulerInner<T extends object>(
         </div>
       </div>
 
+      {notice !== '' && (
+        <div className="oge-scheduler-notice" aria-hidden="true">
+          {notice}
+        </div>
+      )}
+
       {renderView()}
 
+      <SchedulerMorePopup<T>
+        ref={moreRef}
+        messages={msg.grid}
+        locale={locale}
+        day={core.moreDay()}
+        appointments={core.moreAppointments()}
+        onAppointmentPicked={(appointment, rect, event) => {
+          core.closeMore();
+          core.onChipActivated({ appointment, event, rect });
+        }}
+        onDayRequested={(day) => core.drillIntoDay(day)}
+        onClosed={() => core.closeMore()}
+      />
       <SchedulerAppointmentPopup<T>
         ref={popupRef}
         messages={msg.popup}
@@ -656,6 +832,7 @@ function OgeSchedulerInner<T extends object>(
       <SchedulerAppointmentDialog
         state={editor}
         messages={msg.editor}
+        locale={locale}
         onModelChange={(next: SchedulerEditorModel) =>
           setEditor((state) => ({ ...state, model: next }))
         }

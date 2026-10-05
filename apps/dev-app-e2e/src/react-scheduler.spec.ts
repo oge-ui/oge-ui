@@ -115,7 +115,7 @@ test.describe('React scheduler docs', () => {
     await expect(page.locator('.oge-scheduler-editor-form')).toHaveCount(0);
   });
 
-  test('switches views and drills from "+N more" into the day view', async ({
+  test('"+N more" opens the day list and "Go to day" drills into the day view', async ({
     page,
   }) => {
     await page.goto(`/components/scheduler${REACT}`);
@@ -125,6 +125,11 @@ test.describe('React scheduler docs', () => {
     await host.scrollIntoViewIfNeeded();
     await expect(host.locator('.oge-scheduler-month-week')).toHaveCount(6);
     await host.locator('.oge-scheduler-month-more').first().click();
+    const popup = page.locator('.oge-scheduler-more-popup');
+    await expect(popup).toBeVisible();
+    await expect(popup.locator('.oge-scheduler-more-item')).toHaveCount(3);
+    await popup.getByRole('button', { name: 'Go to day' }).click();
+    await expect(popup).toHaveCount(0);
     await expect(
       host.locator('.oge-scheduler-view-btn', { hasText: 'Office hours' }),
     ).toHaveAttribute('aria-pressed', 'true');

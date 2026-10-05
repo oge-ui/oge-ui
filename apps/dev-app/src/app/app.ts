@@ -126,6 +126,11 @@ export class App {
           label: 'Localization',
           icon: 'globe',
         },
+        {
+          path: '/getting-started/localization/api',
+          label: 'Localization API',
+          icon: 'code',
+        },
       ],
     },
     {
@@ -392,6 +397,26 @@ export class App {
       group: COMPONENTS_GROUP,
       items: [
         { path: '/components/scheduler', label: 'Overview', icon: 'calendar' },
+        {
+          path: '/components/scheduler/views-grouping',
+          label: 'Views & grouping',
+          icon: 'columns',
+        },
+        {
+          path: '/components/scheduler/resources-availability',
+          label: 'Resources & availability',
+          icon: 'layers',
+        },
+        {
+          path: '/components/scheduler/recurrence-editor',
+          label: 'Recurrence editor',
+          icon: 'infinity',
+        },
+        {
+          path: '/components/scheduler/import-export',
+          label: 'Import / export',
+          icon: 'upload',
+        },
         {
           path: '/components/scheduler/api',
           label: 'API Reference',

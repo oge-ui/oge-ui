@@ -26,6 +26,7 @@ Version 1.1.2. Generated from the OGE UI source tree: the API tables and demo so
 - `@oge-ui/kanban-engine` — Kanban engine
 - `@oge-ui/scheduler` — Scheduler
 - `@oge-ui/core` — Core
+- `@oge-ui/locales` — Locales
 - `@oge-ui/react-buttons` — Buttons (React)
 - `@oge-ui/react-inputs` — Inputs (React)
 - `@oge-ui/react-tabs` — Tabs (React)
@@ -548,6 +549,229 @@ provideOgeFormsConfig({
 // the same formatter is public — use it for your own strings
 ogeFormatMessage('{n, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}', { n: 5 }, 'pl');
 // → '5 plików'
+```
+
+### Localization — Ready made angular
+
+```ts
+// app.config.ts
+import { provideOgeLocale } from 'oge-ui';
+import { tr } from '@oge-ui/locales/tr'; // only this language is bundled
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    { provide: LOCALE_ID, useValue: 'tr' }, // Angular's own pipes — the app's job
+    provideOgeLocale(tr), // grid + tree list, inputs, buttons, overlay, tabs,
+                          // forms, upload, layout and navigation — strings and locale
+  ],
+};
+// right-to-left packs (ar, he) carry dir: 'rtl' — set <html dir> from pack.dir
+```
+
+### Localization — Ready made commercial
+
+```ts
+// The MIT umbrella never depends on the commercial packages, so their slices
+// are passed to their own providers — merged over the English catalog, so a
+// key a newer release adds stays English instead of going blank:
+import { ogeMergeMessages } from '@oge-ui/locales';
+import { tr } from '@oge-ui/locales/tr';
+import { OGE_DEFAULT_SCHEDULER_MESSAGES, provideOgeSchedulerConfig } from '@oge-ui/scheduler';
+import { OGE_DEFAULT_GANTT_MESSAGES, provideOgeGanttConfig } from '@oge-ui/gantt';
+
+providers: [
+  provideOgeLocale(tr),
+  provideOgeSchedulerConfig({
+    locale: tr.locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler),
+  }),
+  provideOgeGanttConfig({
+    locale: tr.locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_GANTT_MESSAGES, tr.gantt),
+  }),
+  // pivot: provideOgePivotMessages(ogeMergeMessages(OGE_DEFAULT_PIVOT_MESSAGES, tr.pivot))
+  // kanban / bpmn / charts: the same shape with tr.kanban / tr.bpmn / tr.charts
+]
+
+// React: <OgeSchedulerConfigProvider config={{ locale: tr.locale,
+//   messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler) }}>
+```
+
+### Localization — Ready made demo
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGrid, OgeColumn } from '@oge-ui/grid';
+import { OgeDateBox, OgeSelectBox } from '@oge-ui/inputs';
+import { OGE_LOCALE_NAMES, en, ogeLocalePacks } from '@oge-ui/locales';
+import { provideOgeLocale } from 'oge-ui';
+import type { ApplicationConfig } from '@angular/core';
+import type { OgeLocaleCode, OgeLocalePack } from '@oge-ui/locales';
+
+// the app's language state — provideOgeLocale (below) reads it live
+const uiPack = signal<OgeLocalePack>(en);
+
+const ORDERS = [
+  { id: 1, customer: 'Anadolu Ltd.', placed: new Date(2026, 0, 5), amount: 1234.5 },
+  { id: 2, customer: 'Berlin GmbH', placed: new Date(2026, 2, 17), amount: 89.9 },
+  { id: 3, customer: 'Paris SARL', placed: new Date(2026, 5, 30), amount: 15600 },
+  { id: 4, customer: 'Tokyo KK', placed: new Date(2026, 8, 2), amount: 420 },
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGrid, OgeColumn, OgeDateBox, OgeSelectBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div role="group" aria-label="Language">
+      @for (code of codes; track code) {
+        <button type="button" [attr.aria-pressed]="pack().locale === code" (click)="pick(code)">
+          {{ names[code] }}
+        </button>
+      }
+    </div>
+
+    <!-- ar and he are right-to-left: components follow the nearest dir -->
+    <div [attr.dir]="pack().dir" [attr.lang]="pack().locale">
+      <oge-date-box label="Delivery" [(value)]="day" />
+      <oge-select-box label="City" [items]="cities" [(value)]="city" [searchEnabled]="true" [showClearButton]="true" />
+      <oge-grid [data]="orders" keyField="id" [filterRow]="true" [paging]="{ pageSize: 3 }">
+        <oge-column field="customer" caption="Customer" />
+        <oge-column field="placed" caption="Placed" dataType="date" />
+        <oge-column field="amount" caption="Amount" dataType="number" [format]="{ type: 'currency', currency: 'EUR' }" />
+      </oge-grid>
+    </div>
+  `,
+})
+export class Demo {
+  readonly codes = Object.keys(OGE_LOCALE_NAMES) as OgeLocaleCode[];
+  readonly names = OGE_LOCALE_NAMES;
+  readonly pack = uiPack;
+  readonly orders = ORDERS;
+  readonly cities = ['İstanbul', 'Berlin', 'Paris', 'Tokyo', 'Cairo', 'Tel Aviv'];
+  readonly city = signal<unknown>(null);
+  readonly day = signal<Date | null>(new Date(2026, 9, 5));
+
+  async pick(code: OgeLocaleCode): Promise<void> {
+    // every language is its own chunk, downloaded on first use
+    uiPack.set(await ogeLocalePacks[code]());
+  }
+}
+
+// app.config.ts — the live form: the strings follow uiPack
+export const appConfig: ApplicationConfig = {
+  providers: [provideOgeLocale(() => uiPack())],
+};
+```
+
+### Localization — Ready made install
+
+```ts
+npm install @oge-ui/locales
+```
+
+### Localization — Ready made react
+
+```ts
+import { OgeLocaleProvider } from '@oge-ui/react';
+import { de } from '@oge-ui/locales/de';
+
+export function Root() {
+  return (
+    <OgeLocaleProvider pack={de}>
+      <App />
+    </OgeLocaleProvider>
+  );
+}
+```
+
+### Localization — Ready made react demo
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeLocaleProvider, OgeGrid, OgeDateBox, OgeSelectBox } from '@oge-ui/react';
+import { OGE_LOCALE_NAMES, en, ogeLocalePacks } from '@oge-ui/locales';
+import type { OgeGridColumnProps } from '@oge-ui/react';
+import type { OgeLocaleCode, OgeLocalePack } from '@oge-ui/locales';
+
+interface Order {
+  id: number;
+  customer: string;
+  placed: Date;
+  amount: number;
+}
+
+const ORDERS: Order[] = [
+  { id: 1, customer: 'Anadolu Ltd.', placed: new Date(2026, 0, 5), amount: 1234.5 },
+  { id: 2, customer: 'Berlin GmbH', placed: new Date(2026, 2, 17), amount: 89.9 },
+  { id: 3, customer: 'Paris SARL', placed: new Date(2026, 5, 30), amount: 15600 },
+  { id: 4, customer: 'Tokyo KK', placed: new Date(2026, 8, 2), amount: 420 },
+];
+
+const columns: OgeGridColumnProps<Order>[] = [
+  { field: 'customer', caption: 'Customer' },
+  { field: 'placed', caption: 'Placed', dataType: 'date' },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: { type: 'currency', currency: 'EUR' } },
+];
+
+const CODES = Object.keys(OGE_LOCALE_NAMES) as OgeLocaleCode[];
+const CITIES = ['İstanbul', 'Berlin', 'Paris', 'Tokyo', 'Cairo', 'Tel Aviv'];
+
+export function LanguageSwitcher() {
+  const [pack, setPack] = useState<OgeLocalePack>(en);
+  const [day, setDay] = useState<Date | null>(new Date(2026, 9, 5));
+  const [city, setCity] = useState<unknown>(null);
+  // every language is its own chunk, downloaded on first use
+  const pick = async (code: OgeLocaleCode) => setPack(await ogeLocalePacks[code]());
+  return (
+    <OgeLocaleProvider pack={pack}>
+      <div role="group" aria-label="Language">
+        {CODES.map((code) => (
+          <button key={code} type="button" aria-pressed={pack.locale === code} onClick={() => void pick(code)}>
+            {OGE_LOCALE_NAMES[code]}
+          </button>
+        ))}
+      </div>
+      {/* ar and he are right-to-left: components follow the nearest dir */}
+      <div dir={pack.dir} lang={pack.locale}>
+        <OgeDateBox label="Delivery" value={day} onValueChange={setDay} />
+        <OgeSelectBox label="City" items={CITIES} value={city} onValueChange={setCity} searchEnabled showClearButton />
+        <OgeGrid data={ORDERS} keyField="id" columns={columns} filterRow paging={{ pageSize: 3 }} />
+      </div>
+    </OgeLocaleProvider>
+  );
+}
+```
+
+### Localization — Ready made runtime
+
+```ts
+import { signal } from '@angular/core';
+import { provideOgeLocale } from 'oge-ui';
+import { en, ogeLocalePacks, type OgeLocaleCode, type OgeLocalePack } from '@oge-ui/locales';
+
+export const uiPack = signal<OgeLocalePack>(en);
+
+// each language is its own chunk — only the packs a user picks are downloaded
+export async function useLanguage(code: OgeLocaleCode): Promise<void> {
+  const pack = await ogeLocalePacks[code]();
+  uiPack.set(pack);
+  document.documentElement.lang = pack.locale;
+  document.documentElement.dir = pack.dir;
+}
+
+providers: [
+  // a function: every OGE component re-renders when uiPack changes
+  provideOgeLocale(() => uiPack()),
+  // a family whose other options you also set: provide it after, merge yourself
+  provideOgeGridConfig(() => ({
+    rowHeight: 32,
+    locale: uiPack().locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_GRID_MESSAGES, uiPack().grid),
+  })),
+]
 ```
 
 ### Localization — Rtl
@@ -20308,8 +20532,23 @@ Docs: https://www.ogeui.com/components/scheduler
 
 `@oge-ui/scheduler`
 
-- values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OGE_SCHEDULER_CONFIG`, `OgeAppointmentTemplate`, `OgeDateHeaderTemplate`, `OgeScheduler`, `OgeSchedulerCellTemplate`, `provideOgeSchedulerConfig`
-- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerGridMessages`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWorkHours`
+- values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OGE_SCHEDULER_CONFIG`, `OgeAppointmentTemplate`, `OgeDateHeaderTemplate`, `OgeResourceHeaderTemplate`, `OgeScheduler`, `OgeSchedulerCellTemplate`, `OgeSchedulerDraggable`, `provideOgeSchedulerConfig`
+- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeResourceHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentDroppedEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerBlockedRange`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerConflictCheck`, `OgeSchedulerDisabledSlots`, `OgeSchedulerDragOutEvent`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerExportMessages`, `OgeSchedulerGridMessages`, `OgeSchedulerGroupOrientation`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerMoreMode`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWeekNumberRule`, `OgeSchedulerWorkHours`
+
+`@oge-ui/scheduler/export-pdf`
+
+- values: `buildSchedulerPdfDocument`, `exportSchedulerToPdf`
+- types: `OgeSchedulerPdfExportOptions`
+
+`@oge-ui/scheduler/export-ical`
+
+- values: `buildSchedulerICalendar`, `exportToICalendar`, `importICalendar`, `parseOgeICalendar`, `schedulerItemsFromICalendar`
+- types: `OgeICalEvent`, `OgeSchedulerICalendarExportOptions`, `OgeSchedulerICalendarImportOptions`
+
+`@oge-ui/scheduler/export-excel`
+
+- values: `buildSchedulerExcelWorkbook`, `exportSchedulerToExcel`
+- types: `OgeSchedulerExcelExportOptions`
 
 ### OgeScheduler — `<oge-scheduler>`
 
@@ -20325,7 +20564,10 @@ _Data_
 | `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Recurrence fields: rules in the documented RFC 5545 subset expand into occurrence instances in every view; exceptions are comma-separated EXDATE stamps. |
 | `reminderExpr` | `string \| ((item: T) => unknown)` | `'reminder'` | Minutes before the start a reminder fires (see `reminderTriggered`) — **OGE extra** (Outlook parity). |
 | `resources` | `readonly OgeSchedulerResource[]` | `[]` | Resource kinds (`{ fieldExpr, items, label?, useColorAsDefault? }`): editor select fields, default appointment colors and timeline rows. |
-| `groups` | `readonly string[]` | `[]` | Resource field grouping the views (first entry): timeline rows, and day/week columns split per resource — grouped cells prefill the resource on create, and drags across subcolumns/rows reassign it. |
+| `groups` | `readonly string[]` | `[]` | Resource fields grouping the views, outermost first — `['roomId', 'ownerId']` nests owners inside rooms (**multi-level**, nested headers): day/week columns or row blocks, timeline rows with group header rows. Grouped cells prefill every level on create, and drags across columns / rows / blocks reassign them. |
+| `groupOrientation` | `'horizontal' \| 'vertical' \| undefined` | `undefined` | How grouped resources lay out: side by side, or stacked — day/week **row blocks** (a group label column, every block a full time grid) and the timeline rows. Unset = horizontal for day/week, vertical for the timelines; a view option’s own `groupOrientation` wins. Horizontal timelines lay the leaves out as blocks of one track. |
+| `groupByDate` | `boolean` | `true` | Horizontal day/week grouping is date-major (each day split into its resources — the 1.x layout) or, with `false`, resource-major (each resource’s days side by side, the all-day strip packed per resource). |
+| `disabledSlots` | `OgeSchedulerDisabledSlots \| null` | `null` | Non-bookable slots — a predicate `(date, resources) => boolean` or a list of `{ startDate, endDate, resources?, recurrenceRule?, text? }` ranges (lunch every weekday, a room under maintenance). Rendered **hatched** with `aria-disabled` and an "unavailable" suffix; create, move, resize, paste and drop are refused there and announced. |
 | `recurrenceEditMode` | `'dialog' \| 'occurrence' \| 'series'` | `'dialog'` | How edits to a recurring occurrence apply: ask per action, always detach the occurrence (EXDATE + standalone copy), or always change the series. |
 
 _Date & views_
@@ -20333,8 +20575,12 @@ _Date & views_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `currentDate` | `Date` | `new Date()` | Anchor date of the visible period. Two-way (`[(currentDate)]`); writes clamp into `[min, max]`. |
-| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek' \| 'year'` | `'week'` | The active view. Two-way (`[(currentView)]`). |
-| `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour` and `cellDuration` per view. |
+| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek' \| 'timelineWorkWeek' \| 'timelineMonth' \| 'timelineYear' \| 'year'` | `'week'` | The active view. Two-way (`[(currentView)]`). The month and year timelines run at day scale (one column per day, bars snap to days). |
+| `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour`, `cellDuration` and `groupOrientation` per view, and `intervalCount` makes **custom N-day / N-week / N-month views** (`{ type: 'day', intervalCount: 3, name: '3 days' }`); navigation steps by the whole interval. Entries sharing a type are told apart by the switcher. |
+| `showWeekNumbers` | `boolean` | `false` | Week numbers in the month rows and the day/week header corner (`W32`, `W32–33` for a fortnight); the grid label carries the spoken text. |
+| `weekNumberRule` | `'iso' \| 'locale'` | `'iso'` | ISO 8601 (Monday-first, 4-day rule) or the locale’s own numbering — the first day of week and `Intl.Locale` minimal days (US: Sunday-first, the week holding January 1st is week 1). |
+| `moreMode` | `'popup' \| 'drill'` | `'popup'` | What a month "+N more" does: open a keyboard-accessible **popup list** of the day (Tab-reachable button, focus moves in, Up/Down/Home/End, Enter opens an entry, Escape returns, a "Go to day" action) or drill into the day view. |
+| `virtualScrolling` | `boolean \| 'auto'` | `'auto'` | Timeline **row virtualization** for many resources — rows render at fixed heights on core’s offset tree, so the window is exact; `'auto'` turns it on above 50 rows. The axis headers stay sticky. |
 | `adaptiveView` | `boolean \| { breakpoint?: number; view?: OgeSchedulerView }` | `false` | Switches the visible view to `view` (agenda) when the scheduler's **own** width — a `ResizeObserver`, never the window — drops below `breakpoint` (600px), and back to the previous view when it grows again. The switch writes `currentView` like a user pick, on crossings only, so the switcher keeps working at any width and a view picked while narrow wins. |
 | `min / max` | `Date \| undefined` | `—` | Navigable date bounds: navigation buttons disable at the edges and every date write clamps. |
 | `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday); `undefined` resolves from the locale via `Intl.Locale.weekInfo`. |
@@ -20352,12 +20598,17 @@ _Behavior_
 | `allowAdding / allowUpdating / allowDeleting / allowDragging / allowResizing` | `boolean` | `true` | Per-capability editing gates. |
 | `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. The day/week and month grids then carry `aria-readonly="true"` (also when every `allow*` flag is off). |
 | `snapDuration` | `number \| undefined` | `—` | Drag/resize snap raster in minutes; defaults to `cellDuration`. |
-| `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. |
+| `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. A resource item’s own `workHours` / `workDays` win for its grouped columns, rows and blocks (the innermost level that sets them). |
+| `snapToWorkHours` | `boolean` | `false` | Clamps timed moves, drag-to-create ranges and drops into the target’s working hours (keeping the length when it fits). |
+| `allowOverlap` | `boolean` | `true` | `false` refuses a create / move / resize / paste / drop that overlaps another appointment — on the same resource when grouped, recurring series expanded; the change is cancelled with a visible notice and an announcement. |
+| `conflictCheck` | `(appointment: T, conflicts: readonly OgeSchedulerAppointment<T>[]) => boolean` | `—` | Decides overlapping changes: return `true` to let one land. Wins over `allowOverlap`. |
+| `selectedAppointments` | `readonly T[]` | `[]` | The selected items, two-way (`[(selectedAppointments)]`): Ctrl/⌘-click toggles, Shift-click extends over the chip order, a plain click replaces; Ctrl+Space / Shift+Space from the keyboard. Selected chips get an accent ring and a "selected" suffix; Ctrl+C copies the selection. |
+| `undoLimit` | `number` | `50` | Undo steps kept for Ctrl/⌘+Z and Ctrl/⌘+Y (Ctrl/⌘+Shift+Z). One user action — a move, a paste, a detached occurrence — is one step; an undo replays through the normal cancelable pipelines. `0` turns undo off. |
 | `showAddButton` | `boolean` | `true` | Shows the toolbar "new appointment" button (Outlook parity) — creation without double-click; hidden while `readOnly` or `allowAdding=false`. |
 | `showAllDayPanel` | `boolean` | `true` | Shows the all-day strip in the day/week views. |
 | `showCurrentTimeIndicator` | `boolean` | `true` | The accent now-line in today's column. |
 | `shadeUntilCurrentTime` | `boolean` | `false` | Dims today's column above the now-line. |
-| `maxAppointmentsPerCell` | `number \| 'auto'` | `'auto'` | Month-view lane budget per cell; the overflow folds into a "+N more" button that drills into the day view. |
+| `maxAppointmentsPerCell` | `number \| 'auto'` | `'auto'` | Month-view lane budget per cell; the overflow folds into a "+N more" button (see `moreMode`). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the browser locale. |
 | `messages` | `Partial<OgeSchedulerMessages>` | `{}` | Per-instance message overrides, merged over the DI config per top-level block. |
 | `dateNavigatorText` | `(start: Date, end: Date, view: OgeSchedulerView) => string` | `—` | Custom period-title formatter for the toolbar. |
@@ -20377,6 +20628,20 @@ _Behavior_
 | `getDataSource()` | `readonly T[] \| DataSource<T> \| null` | The bound data source, as given. |
 | `focus()` | `void` | Focuses the active view's grid (roving cell). |
 | `goToday() / navigate(direction)` | `void` | Toolbar equivalents: jump to today / step one period (respects `min`/`max`). |
+| `copyAppointments(appointment?) / pasteAppointments(target)` | `number` | The clipboard (what Ctrl+C on a chip and Ctrl+V on a cell do): copies the selection — or `appointment` when it is not part of it — and pastes so the earliest copy starts at `target.date` (`{ date, allDay, values }`), keys dropped, a grouped target’s resources applied, each copy through the guarded insert pipeline, all as one undo step. Return the count. |
+| `clearSelection()` | `void` | Empties `selectedAppointments`. |
+| `undo() / redo()` | `boolean` | Reverts / re-applies the last scheduler edit (the Ctrl+Z / Ctrl+Y keys); `false` when there is none. |
+| `canUndo() / canRedo()` | `boolean` | Whether a step is available (reactive). |
+| `getExportData(range?)` | `OgeSchedulerExportData<T>` | The export model the `/export-*` entries read: every appointment (series unexpanded) plus the expanded, chronological rows of `range` — the visible period by default. |
+| `print(options?)` | `Promise<void>` | Prints the current view: the scheduler cloned with the page’s stylesheets into a hidden frame (scroll areas expanded), then the browser’s print dialog. |
+
+_Import / export (lazy secondary entries)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `exportToICalendar(scheduler, options?) / importICalendar(scheduler, text, options?)` | `@oge-ui/scheduler/export-ical` | **No dependencies** — RFC 5545 `.ics` export (downloads unless `download: false`, returns the text): one `VEVENT` per appointment with `UID`, `DTSTAMP`, `DTSTART`/`DTEND` (`VALUE=DATE` + exclusive end for all-day), `RRULE`, `RDATE`, `EXDATE`, TEXT escaping and 75-octet folding. The import reads `DURATION`, UTC values, `RECURRENCE-ID` overrides (folded into the series as EXDATE + a standalone item) and maps every event through the `*Expr` field names into `addAppointment`. Floating local time — time zones are a later release. |
+| `exportSchedulerToPdf(scheduler, options?) / buildSchedulerPdfDocument(data, options?)` | `@oge-ui/scheduler/export-pdf` | Lazy PDF list export (`jspdf` peer): the period’s appointments grouped by day (time, subject, location, resources), paginated with the header repeated. Text outside WinAnsi needs a Unicode TrueType `font` — per export, or once via `setOgePdfDefaultFont()` from `@oge-ui/behavior`. |
+| `exportSchedulerToExcel(scheduler, options?) / buildSchedulerExcelWorkbook(data, options?)` | `@oge-ui/scheduler/export-excel` | Lazy Excel list export (`exceljs` peer): one row per appointment / occurrence with typed Date cells, all-day and recurring columns and one column per resource kind. |
 
 #### Events
 
@@ -20402,18 +20667,42 @@ _Interaction_
 | `cellClick / cellDblClick` | `OgeSchedulerCellClickEvent` | Empty-cell clicks; double click also opens the prefilled create editor. |
 | `appointmentContextMenu / cellContextMenu` | `OgeSchedulerAppointmentClickEvent<T> / OgeSchedulerCellClickEvent` | Right-clicks with full payloads. A **built-in context menu** also opens (chip: edit/delete through the guarded pipelines incl. recurrence scope; cell: new appointment prefilled at that slot — labels in `messages.menu`); listen to these events to add your own entries alongside it. |
 | `rangeSelected` | `OgeSchedulerRangeSelectedEvent` | A drag-to-create cell-range selection landed; the prefilled create editor opens next. |
-| `currentDateChange / currentViewChange` | `Date / OgeSchedulerView` | The two-way model outputs. |
+| `appointmentDropped` | `OgeSchedulerAppointmentDroppedEvent<T>` | An `[ogeSchedulerDraggable]` item — or another scheduler’s appointment — was dropped in (pointer, touch, or the keyboard twin); the built item went through `appointmentAdding`. Payload: `itemData`, `appointmentData`, `startDate`/`endDate`/`allDay`, the slot’s `resources` and `added`. |
+| `dragOut` | `OgeSchedulerDragOutEvent<T>` | An appointment was dragged out of the scheduler and released: `appointment`, `appointmentData`, the pointer, the `target` under it and `droppedOnScheduler` (another scheduler added a copy) — the app decides whether to remove it here. |
+| `currentDateChange / currentViewChange / selectedAppointmentsChange` | `Date / OgeSchedulerView / readonly T[]` | The two-way model outputs. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeSchedulerAppointment<T>` | `interface` | The normalized appointment: `key`, `source` (the original item), `text`, `startDate`/`endDate`, `allDay`, `color`, `description`, recurrence fields and `disabled`. |
-| `OgeSchedulerViewOptions` | `interface` | Per-view overrides: `type`, `name`, `dayStartHour`, `dayEndHour`, `cellDuration`. |
+| `OgeSchedulerViewOptions` | `interface` | Per-view overrides: `type`, `name`, `dayStartHour`, `dayEndHour`, `cellDuration`, `intervalCount`, `groupOrientation`. |
 | `OgeSchedulerWorkHours` | `interface` | `{ start, end, days? }` — the emphasized working hours. |
+| `OgeSchedulerResourceItem` | `interface` | `{ id, text, color?, workHours?, workDays? }` — one assignable resource; its own working hours shade its grouped columns / rows. |
+| `OgeSchedulerDisabledSlots / OgeSchedulerBlockedRange` | `type / interface` | A predicate `(date, resources) => boolean` or a list of `{ startDate, endDate, resources?, recurrenceRule?, text? }` — `resources` limits a range to `{ field: id \| id[] }`. |
+| `OgeSchedulerConflictCheck<T>` | `type` | `(appointment, conflicts) => boolean` — `true` lets an overlapping change land. |
+| `OgeSchedulerAppointmentDroppedEvent<T> / OgeSchedulerDragOutEvent<T>` | `interface` | The drag-in / drag-out payloads (see the events). |
+| `OgeSchedulerExportData<T>` | `interface` | `{ title, rangeStart, rangeEnd, locale, rows, appointments, fields, resources, messages }` — what `getExportData()` returns and the export builders read. |
+| `OgeResourceHeaderTemplate` | `structural directive [ogeResourceHeaderTemplate]` | Replaces the grouped resource headers (day/week column headers, vertical group labels, timeline row heads and group rows — dx `resourceCellTemplate` parity); context `{ $implicit: OgeSchedulerResourceItem, resource, level, view }`. |
 | `[ogeAppointmentTemplate]` | `structural directive` | Replaces the chip content; context `{ $implicit: OgeSchedulerAppointment<T>, view }`. |
 | `OgeSchedulerCellTemplate` | `structural directive [ogeCellTemplate]` | **OGE extra** — custom empty-cell content; context `{ $implicit: Date, view, allDay }`. |
 | `OgeDateHeaderTemplate` | `structural directive [ogeDateHeaderTemplate]` | **OGE extra** — custom date-header content; context `{ $implicit: Date, view }`. |
+
+### OgeSchedulerDraggable — `<[ogeSchedulerDraggable]>`
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeSchedulerDraggable` | `unknown` | The item a drop turns into an appointment — its fields are kept and start / end / all-day plus the slot’s resources are written through the target scheduler’s `*Expr` field names. The host becomes a `role="button"` tab stop. |
+| `ogeSchedulerDraggableDuration` | `number \| undefined` | Appointment length in minutes; omitted = the target’s cell duration (whole days on day-scale targets). |
+| `ogeSchedulerDraggableText` | `string \| undefined` | The label announced on pick-up; defaults to the element’s text. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Gestures` | `pointer · touch · keyboard` | Pointer and touch run the shared drag-drop gesture (ghost preview, 300 ms touch hold, Escape cancels) with a live drop preview in the target; the **keyboard / single-pointer twin**: Enter, Space or a click picks the item up (`aria-pressed`, announced) and Enter or a click on any scheduler cell places it — Escape puts it down. |
 
 ### Configuration
 
@@ -20422,12 +20711,128 @@ _Interaction_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `provideOgeSchedulerConfig(config)` | `Provider` | `—` | Configures every scheduler below the provider; shallow merge per top-level key (a partial `messages` replaces whole nested blocks). |
-| `messages` | `OgeSchedulerMessages` | `—` | Every user-facing string, aria labels included: `toolbar` (labels, view names, date-navigator), `popup`, `editor` (titles, field labels, validation), `grid` (aria templates with `{token}` placeholders, "+{count} more") and `announcements` (live-region templates). |
+| `messages` | `OgeSchedulerMessages` | `—` | Every user-facing string, aria labels included: `toolbar` (labels, view names, date-navigator), `popup`, `editor` (titles, field labels, validation, the recurrence editor and its ICU `summary` templates), `grid` (aria templates with `{token}` placeholders, "+{count} more", week numbers, the "+N more" popup), `announcements` (live-region templates — plural ones such as `copied` / `pasted` are ICU messages rendered with `ogeFormatMessage`) and `export` (list-export headers). Keys added after 1.1 are optional — a catalog without them falls back to English. |
 | `minAppointmentMinutes` | `number` | `15` | Minimum rendered chip height in minutes — zero-length reminders stay clickable. |
 
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Ical
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- /export-ical has no dependencies: series stay series (RRULE, RDATE,
+         EXDATE), all-day events use VALUE=DATE, and the import folds moved
+         occurrences (RECURRENCE-ID) back into their series. -->
+    <div class="mb-3 flex flex-wrap gap-2">
+      <button type="button" (click)="exportIcs()">Download .ics</button>
+      <button type="button" (click)="importIcs()">Import sample .ics</button>
+    </div>
+    <oge-scheduler
+      #cal
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="month"
+      [views]="['week', 'month', 'agenda']"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly scheduler = viewChild.required<OgeScheduler<Record<string, unknown>>>('cal');
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly appointments: Record<string, unknown>[] = [
+    {
+      id: 1,
+      text: 'Weekly sync',
+      startDate: new Date(2026, 7, 3, 10, 0),
+      endDate: new Date(2026, 7, 3, 11, 0),
+      recurrenceRule: 'FREQ=WEEKLY;BYDAY=MO',
+    },
+  ];
+
+  protected async exportIcs(): Promise<void> {
+    const { exportToICalendar } = await import('@oge-ui/scheduler/export-ical');
+    exportToICalendar(this.scheduler(), { filename: 'team.ics', calendarName: 'Team' });
+  }
+
+  protected async importIcs(): Promise<void> {
+    const { importICalendar } = await import('@oge-ui/scheduler/export-ical');
+    // a file input would pass await file.text() here
+    const text = await fetch('/team.ics').then((response) => response.text());
+    importICalendar(this.scheduler(), text, { uidField: 'uid' });
+  }
+}
+```
+
+#### List export
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- PDF and Excel are lazy entries (jspdf / exceljs peers) exporting the
+         visible period as a chronological list; print() prints the view itself. -->
+    <div class="mb-3 flex flex-wrap gap-2">
+      <button type="button" (click)="exportPdf()">PDF</button>
+      <button type="button" (click)="exportExcel()">Excel</button>
+      <button type="button" (click)="scheduler().print({ title: 'Team week' })">Print</button>
+    </div>
+    <oge-scheduler
+      #cal
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="week"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly scheduler = viewChild.required<OgeScheduler<Record<string, unknown>>>('cal');
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly appointments: Record<string, unknown>[] = [
+    {
+      id: 1,
+      text: 'Design pairing',
+      startDate: new Date(2026, 7, 6, 10, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
+    },
+    {
+      id: 2,
+      text: 'Customer visit',
+      startDate: new Date(2026, 7, 4),
+      endDate: new Date(2026, 7, 6),
+      allDay: true,
+    },
+  ];
+
+  protected async exportPdf(): Promise<void> {
+    const { exportSchedulerToPdf } = await import('@oge-ui/scheduler/export-pdf');
+    // text outside WinAnsi needs a Unicode font: setOgePdfDefaultFont() from @oge-ui/behavior
+    await exportSchedulerToPdf(this.scheduler(), { filename: 'week.pdf' });
+  }
+
+  protected async exportExcel(): Promise<void> {
+    const { exportSchedulerToExcel } = await import('@oge-ui/scheduler/export-excel');
+    await exportSchedulerToExcel(this.scheduler(), { filename: 'week.xlsx' });
+  }
+}
+```
 
 #### Config
 
@@ -20876,7 +21281,7 @@ import { OgeScheduler } from '@oge-ui/scheduler';
   template: `
     <!-- views takes plain names or per-view option objects: a compact
          'Office hours' day view with 15-minute slots next to the stock week and
-         month views. The month '+N more' overflow drills into the day view. -->
+         month views. The month '+N more' overflow opens a day list (moreMode). -->
     <oge-scheduler
       [dataSource]="appointments"
       [currentDate]="date"
@@ -20926,6 +21331,643 @@ export class Demo {
 }
 ```
 
+#### Exceptions
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- recurrenceException lists skipped occurrences (EXDATE stamps). The
+         editor shows them as removable chips and adds new ones from a date
+         picker; deleting a single occurrence from the popup adds one too. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="week"
+      [dayStartHour]="8"
+      [dayEndHour]="12"
+      recurrenceEditMode="dialog"
+      style="height: 480px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 12);
+  protected readonly appointments = [
+    {
+      id: 'standup',
+      text: 'Standup (skips the 12th)',
+      startDate: new Date(2026, 7, 3, 9, 0),
+      endDate: new Date(2026, 7, 3, 9, 15),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR;UNTIL=20260828T235959',
+      recurrenceException: '20260812T090000',
+    },
+  ];
+}
+```
+
+#### Rules
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The editor reads and writes these RRULEs in full: the nth / last
+         weekday (BYSETPOS), several days of the month, a yearly month + weekday,
+         COUNT or UNTIL. Rules it cannot express are kept verbatim; a live summary
+         ("Monthly on the second Tuesday") reads the rule back. Double-click a
+         chip to open the editor. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="month"
+      [views]="['week', 'month', 'agenda']"
+      style="height: 640px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly appointments = [
+    {
+      id: 'second-tuesday',
+      text: 'Patch Tuesday (2nd Tue)',
+      startDate: new Date(2026, 7, 11, 10, 0),
+      endDate: new Date(2026, 7, 11, 11, 0),
+      recurrenceRule: 'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2',
+    },
+    {
+      id: 'payroll',
+      text: 'Payroll run',
+      startDate: new Date(2026, 7, 1, 9, 0),
+      endDate: new Date(2026, 7, 1, 9, 30),
+      recurrenceRule: 'FREQ=MONTHLY;BYMONTHDAY=1,15',
+    },
+    {
+      id: 'last-workday',
+      text: 'Month close (last workday)',
+      startDate: new Date(2026, 7, 31, 16, 0),
+      endDate: new Date(2026, 7, 31, 17, 0),
+      recurrenceRule: 'FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1',
+    },
+    {
+      id: 'course',
+      text: 'Onboarding course',
+      startDate: new Date(2026, 7, 3, 14, 0),
+      endDate: new Date(2026, 7, 3, 15, 0),
+      recurrenceRule: 'FREQ=WEEKLY;BYDAY=MO,WE;COUNT=6',
+    },
+  ];
+}
+```
+
+#### Availability
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- disabledSlots hatches non-bookable time: lunch every weekday and a
+         training day for one resource. Creating, moving, resizing, pasting or
+         dropping there is refused and announced. Each resource's own workHours
+         shade its column, and snapToWorkHours clamps moves into them. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="workWeek"
+      [views]="['day', 'workWeek', 'timelineWeek']"
+      [resources]="staff"
+      [groups]="['ownerId']"
+      [disabledSlots]="blocked"
+      [snapToWorkHours]="true"
+      [dayStartHour]="7"
+      [dayEndHour]="19"
+      [cellDuration]="60"
+      style="height: 640px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly staff = [
+    {
+      fieldExpr: 'ownerId',
+      label: 'Owner',
+      useColorAsDefault: true,
+      items: [
+        { id: 'ada', text: 'Ada (8–14)', color: '#7c3aed', workHours: { start: 8, end: 14 } },
+        {
+          id: 'grace',
+          text: 'Grace (12–18)',
+          color: '#0891b2',
+          workHours: { start: 12, end: 18 },
+          workDays: [1, 2, 3, 4],
+        },
+      ],
+    },
+  ];
+  protected readonly blocked = [
+    {
+      startDate: new Date(2026, 7, 3, 12, 0),
+      endDate: new Date(2026, 7, 3, 13, 0),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      text: 'Lunch',
+    },
+    {
+      startDate: new Date(2026, 7, 7, 8, 0),
+      endDate: new Date(2026, 7, 7, 18, 0),
+      resources: { ownerId: 'ada' },
+      text: 'Ada — training day',
+    },
+  ];
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'Ward round',
+      startDate: new Date(2026, 7, 6, 9, 0),
+      endDate: new Date(2026, 7, 6, 10, 30),
+      ownerId: 'ada',
+    },
+    {
+      id: 2,
+      text: 'Clinic',
+      startDate: new Date(2026, 7, 5, 14, 0),
+      endDate: new Date(2026, 7, 5, 16, 0),
+      ownerId: 'grace',
+    },
+  ];
+}
+```
+
+#### Conflicts
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+import type { OgeSchedulerAppointment } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- allowOverlap=false refuses overlapping changes with a notice and an
+         announcement; conflictCheck decides case by case and wins — here a
+         change may overlap tentative holds, never a confirmed appointment. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="day"
+      [allowOverlap]="false"
+      [conflictCheck]="onlyTentative"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly appointments: Record<string, unknown>[] = [
+    {
+      id: 1,
+      text: 'Surgery block',
+      startDate: new Date(2026, 7, 6, 9, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
+      color: '#dc2626',
+    },
+    {
+      id: 2,
+      text: 'Hold — maybe lunch',
+      startDate: new Date(2026, 7, 6, 12, 0),
+      endDate: new Date(2026, 7, 6, 13, 30),
+      color: '#94a3b8',
+      tentative: true,
+    },
+  ];
+
+  protected readonly onlyTentative = (
+    _appointment: Record<string, unknown>,
+    conflicts: readonly OgeSchedulerAppointment<Record<string, unknown>>[],
+  ): boolean => conflicts.every((c) => c.source['tentative'] === true);
+}
+```
+
+#### Drag in
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeScheduler, OgeSchedulerDraggable } from '@oge-ui/scheduler';
+import type { OgeSchedulerAppointmentDroppedEvent, OgeSchedulerDragOutEvent } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler, OgeSchedulerDraggable],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [ogeSchedulerDraggable] turns any element into an appointment
+         source: drag it onto a slot, or press Enter / click to pick it up and
+         Enter / click a cell to place it (the keyboard and single-pointer twin).
+         appointmentDropped reports the built item; dragOut fires when a chip is
+         dragged out and released elsewhere. -->
+    <ul class="mb-3 flex flex-wrap gap-2">
+      @for (task of tasks(); track task.id) {
+        <li
+          [ogeSchedulerDraggable]="task"
+          [ogeSchedulerDraggableDuration]="task.minutes"
+          class="rounded border px-3 py-1 text-sm"
+        >
+          {{ task.text }} · {{ task.minutes }} min
+        </li>
+      }
+    </ul>
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="week"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      (appointmentDropped)="dropped($event)"
+      (dragOut)="draggedOut($event)"
+      style="height: 560px"
+    />
+    <p class="mt-2 text-sm" aria-live="polite">{{ lastAction() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly tasks = signal([
+    { id: 't1', text: 'Write release notes', minutes: 60 },
+    { id: 't2', text: 'Review pull requests', minutes: 90 },
+    { id: 't3', text: 'Prepare demo', minutes: 120 },
+  ]);
+  protected readonly lastAction = signal('');
+  protected readonly appointments: Record<string, unknown>[] = [];
+
+  protected dropped(event: OgeSchedulerAppointmentDroppedEvent<Record<string, unknown>>): void {
+    if (!event.added) return;
+    const task = event.itemData as { id: string; text: string };
+    this.tasks.update((list) => list.filter((t) => t.id !== task.id));
+    this.lastAction.set('Scheduled ' + task.text);
+  }
+
+  protected draggedOut(event: OgeSchedulerDragOutEvent<Record<string, unknown>>): void {
+    this.lastAction.set('Dragged out: ' + event.appointment.text);
+  }
+}
+```
+
+#### Selection
+
+```ts
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Ctrl/⌘-click toggles chips into the selection, Shift-click extends it;
+         Ctrl+C copies, Ctrl+V on a focused cell pastes, Ctrl+Z / Ctrl+Y undo and
+         redo every edit. The same actions are methods on the component. -->
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <button type="button" (click)="scheduler().undo()" [disabled]="!scheduler().canUndo()">Undo</button>
+      <button type="button" (click)="scheduler().redo()" [disabled]="!scheduler().canRedo()">Redo</button>
+      <button type="button" (click)="scheduler().clearSelection()">Clear selection</button>
+      <span class="text-sm">{{ selected().length }} selected</span>
+    </div>
+    <oge-scheduler
+      #cal
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="week"
+      [(selectedAppointments)]="selected"
+      [undoLimit]="100"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly scheduler = viewChild.required<OgeScheduler<Record<string, unknown>>>('cal');
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly selected = signal<readonly Record<string, unknown>[]>([]);
+  protected readonly appointments: Record<string, unknown>[] = [
+    {
+      id: 1,
+      text: 'Design pairing',
+      startDate: new Date(2026, 7, 6, 10, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
+    },
+    {
+      id: 2,
+      text: 'Release prep',
+      startDate: new Date(2026, 7, 6, 13, 0),
+      endDate: new Date(2026, 7, 6, 15, 30),
+      color: '#16a34a',
+    },
+    {
+      id: 3,
+      text: 'Interviews',
+      startDate: new Date(2026, 7, 7, 14, 0),
+      endDate: new Date(2026, 7, 7, 16, 0),
+      color: '#d97706',
+    },
+  ];
+}
+```
+
+#### Intervals
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- intervalCount turns any view into an N-period view: a 3-day view,
+         a fortnight, and the month / year timelines at day scale. Navigation
+         steps by the whole interval; week numbers follow ISO 8601 by default
+         (weekNumberRule="locale" uses the locale's own numbering). -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="timelineMonth"
+      [views]="views"
+      [resources]="people"
+      [groups]="['ownerId']"
+      [showWeekNumbers]="true"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly views = [
+    { type: 'day', intervalCount: 3, name: '3 days' },
+    { type: 'week', intervalCount: 2, name: 'Fortnight' },
+    'month',
+    'timelineWorkWeek',
+    'timelineMonth',
+    'timelineYear',
+  ] as const;
+  protected readonly people = [
+    {
+      fieldExpr: 'ownerId',
+      label: 'Owner',
+      useColorAsDefault: true,
+      items: [
+        { id: 'ada', text: 'Ada', color: '#7c3aed' },
+        { id: 'grace', text: 'Grace', color: '#0891b2' },
+        { id: 'linus', text: 'Linus', color: '#16a34a' },
+      ],
+    },
+  ];
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'Daily standup',
+      startDate: new Date(2026, 7, 3, 9, 0),
+      endDate: new Date(2026, 7, 3, 9, 15),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      ownerId: 'ada',
+      roomId: 'north',
+    },
+    {
+      id: 2,
+      text: 'Design pairing',
+      startDate: new Date(2026, 7, 6, 10, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
+      ownerId: 'grace',
+      roomId: 'north',
+    },
+    {
+      id: 3,
+      text: 'Release prep',
+      startDate: new Date(2026, 7, 6, 13, 0),
+      endDate: new Date(2026, 7, 6, 15, 30),
+      ownerId: 'linus',
+      roomId: 'south',
+    },
+  ];
+}
+```
+
+#### More popup
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A full day folds into "+N more": a Tab-reachable button that opens
+         the day's list (Up/Down, Enter opens an entry, Escape returns) with a
+         "Go to day" action. moreMode="drill" jumps to the day view instead. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="month"
+      [views]="['day', 'month']"
+      [maxAppointmentsPerCell]="2"
+      moreMode="popup"
+      style="height: 640px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly appointments = [
+    { id: 1, text: 'Inbox zero', startDate: new Date(2026, 7, 5, 8, 0), endDate: new Date(2026, 7, 5, 9, 0) },
+    { id: 2, text: 'Board prep', startDate: new Date(2026, 7, 5, 9, 0), endDate: new Date(2026, 7, 5, 10, 0) },
+    { id: 3, text: 'Vendor call', startDate: new Date(2026, 7, 5, 10, 0), endDate: new Date(2026, 7, 5, 11, 0) },
+    { id: 4, text: 'Roadmap', startDate: new Date(2026, 7, 5, 13, 0), endDate: new Date(2026, 7, 5, 14, 0) },
+    { id: 5, text: 'Budget review', startDate: new Date(2026, 7, 5, 15, 0), endDate: new Date(2026, 7, 5, 16, 0) },
+  ];
+}
+```
+
+#### Multi level
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler, OgeResourceHeaderTemplate } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler, OgeResourceHeaderTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- groups nests the levels, outermost first: owners inside rooms.
+         groupByDate=false lays each resource's days side by side (resource-major);
+         the header template replaces every grouped header, level 0 = rooms. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="day"
+      [views]="['day', 'week', 'timelineDay']"
+      [resources]="resources"
+      [groups]="['roomId', 'ownerId']"
+      [groupByDate]="false"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      style="height: 600px"
+    >
+      <ng-template ogeResourceHeaderTemplate let-item let-level="level">
+        <span [class.font-semibold]="level === 0">{{ item.text }}</span>
+      </ng-template>
+    </oge-scheduler>
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly resources = [
+    {
+      fieldExpr: 'roomId',
+      label: 'Room',
+      items: [
+        { id: 'north', text: 'North room' },
+        { id: 'south', text: 'South room' },
+      ],
+    },
+    {
+      fieldExpr: 'ownerId',
+      label: 'Owner',
+      useColorAsDefault: true,
+      items: [
+        { id: 'ada', text: 'Ada', color: '#7c3aed' },
+        { id: 'grace', text: 'Grace', color: '#0891b2' },
+        { id: 'linus', text: 'Linus', color: '#16a34a' },
+      ],
+    },
+  ];
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'Daily standup',
+      startDate: new Date(2026, 7, 3, 9, 0),
+      endDate: new Date(2026, 7, 3, 9, 15),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      ownerId: 'ada',
+      roomId: 'north',
+    },
+    {
+      id: 2,
+      text: 'Design pairing',
+      startDate: new Date(2026, 7, 6, 10, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
+      ownerId: 'grace',
+      roomId: 'north',
+    },
+    {
+      id: 3,
+      text: 'Release prep',
+      startDate: new Date(2026, 7, 6, 13, 0),
+      endDate: new Date(2026, 7, 6, 15, 30),
+      ownerId: 'linus',
+      roomId: 'south',
+    },
+  ];
+}
+```
+
+#### Vertical
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- groupOrientation="vertical" stacks one full time grid per resource
+         under a group label column; drags across blocks reassign the owner. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="workWeek"
+      [views]="['day', 'workWeek']"
+      [resources]="people"
+      [groups]="['ownerId']"
+      groupOrientation="vertical"
+      [dayStartHour]="9"
+      [dayEndHour]="17"
+      [cellDuration]="60"
+      style="height: 640px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly people = [
+    {
+      fieldExpr: 'ownerId',
+      label: 'Owner',
+      useColorAsDefault: true,
+      items: [
+        { id: 'ada', text: 'Ada', color: '#7c3aed' },
+        { id: 'grace', text: 'Grace', color: '#0891b2' },
+        { id: 'linus', text: 'Linus', color: '#16a34a' },
+      ],
+    },
+  ];
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'Daily standup',
+      startDate: new Date(2026, 7, 3, 9, 0),
+      endDate: new Date(2026, 7, 3, 9, 15),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      ownerId: 'ada',
+      roomId: 'north',
+    },
+    {
+      id: 2,
+      text: 'Design pairing',
+      startDate: new Date(2026, 7, 6, 10, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
+      ownerId: 'grace',
+      roomId: 'north',
+    },
+    {
+      id: 3,
+      text: 'Release prep',
+      startDate: new Date(2026, 7, 6, 13, 0),
+      endDate: new Date(2026, 7, 6, 15, 30),
+      ownerId: 'linus',
+      roomId: 'south',
+    },
+  ];
+}
+```
+
 ## @oge-ui/core
 
 Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
@@ -20936,6 +21978,121 @@ Framework-free data engine shared by every package: sort/filter/group/aggregate 
 
 - values: `ArrayDataSource`, `CursorDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_PAGE_ELLIPSIS`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMinutes`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildSearchHighlightSegments`, `buildTreeIndex`, `clampDate`, `clampValue`, `clearOgeIntlCache`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupKeyFilter`, `groupKeyOf`, `groupNodeKey`, `groupRows`, `guardCsvFormula`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `isGroupInterval`, `isOgeDateFormatType`, `isOgeIcuMessage`, `isUnsafeStateKey`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `ogeDateTimeFormat`, `ogeDefaultLocale`, `ogeFormatMessage`, `ogeFormatValue`, `ogeIntlCacheSize`, `ogeLiveConfig`, `ogeNumberFormat`, `ogeParseNumber`, `ogePluralRules`, `ogeRelativeTimeFormat`, `ogeToDate`, `ogeValueFormatter`, `parseColor`, `parseStateJson`, `pathKey`, `pathToFilterExpr`, `rangesOverlap`, `ratioToValue`, `relativeLuminance`, `resizeSplitAt`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `resolveWeekendDays`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `sanitizeGridStateSnapshot`, `sanitizePivotGridStateSnapshot`, `sanitizeTreeListStateSnapshot`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `startOfMonth`, `startOfWeek`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `warnOgeDeprecatedMessage`, `weekNumber`
 - types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CursorDataSourceOptions`, `CursorPage`, `CursorPageRequest`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupInterval`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeColorFormat`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeHsva`, `OgeLocaleInput`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMessageValue`, `OgeMessageValues`, `OgeNavDirection`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePivotStore`, `OgeRangeThumb`, `OgeRgba`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `OgeValueFormat`, `OgeValueFormatType`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SearchHighlightSegment`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
+
+## @oge-ui/locales
+
+Ready-made translations of every message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic and Hebrew — as framework-free data, one entry point per language (`import { tr } from '@oge-ui/locales/tr'`). Applied with `provideOgeLocale(tr)` from `oge-ui` or `<OgeLocaleProvider pack={tr}>` from `@oge-ui/react`; commercial families take `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)` through their own provider.
+
+Docs: https://www.ogeui.com/getting-started/localization
+
+### Entry points
+
+`@oge-ui/locales`
+
+- values: `OGE_LOCALE_NAMES`, `en`, `ogeLocalePacks`, `ogeMergeMessages`
+- types: `OgeDeepPartial`, `OgeLocaleCode`, `OgeLocaleLayoutMessages`, `OgeLocaleNavigationMessages`, `OgeLocalePack`
+
+`@oge-ui/locales/ar`
+
+- values: `ar`
+
+`@oge-ui/locales/de`
+
+- values: `de`
+
+`@oge-ui/locales/es`
+
+- values: `es`
+
+`@oge-ui/locales/fr`
+
+- values: `fr`
+
+`@oge-ui/locales/he`
+
+- values: `he`
+
+`@oge-ui/locales/it`
+
+- values: `it`
+
+`@oge-ui/locales/ja`
+
+- values: `ja`
+
+`@oge-ui/locales/tr`
+
+- values: `tr`
+
+`@oge-ui/locales/pt-BR`
+
+- values: `ptBR`
+
+`@oge-ui/locales/zh-CN`
+
+- values: `zhCN`
+
+### Locale wiring
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeLocale(pack)` | `(pack: OgeLocalePack \| (() => OgeLocalePack)) => Provider[]` | From `oge-ui`. Provides every MIT family’s config — grid / tree list, inputs, buttons, overlay, tabs, forms, upload, the layout and navigation components — with the pack’s slice merged over the English catalog, plus the pack’s `locale` for the grid and the editors. A function makes it live: the language follows the signals it reads. It owns those config tokens — provide a family’s own config after it to change other options. `LOCALE_ID` and the page’s `dir` stay the app’s job; commercial families take their slice through their own providers. |
+| `pack` | `OgeLocalePack \| (() => OgeLocalePack)` | The pack to apply — a static pack, or a function reading a signal for runtime switching (`provideOgeLocale(() => pack())`). |
+
+### Locale packs
+
+#### Properties
+
+_Language packs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `de` | `OgeLocalePack` | German — every catalog, MIT and commercial. `import { de } from '@oge-ui/locales/de'`. |
+| `fr` | `OgeLocalePack` | French — every catalog, MIT and commercial. `import { fr } from '@oge-ui/locales/fr'`. |
+| `es` | `OgeLocalePack` | Spanish — every catalog, MIT and commercial. `import { es } from '@oge-ui/locales/es'`. |
+| `it` | `OgeLocalePack` | Italian — every catalog, MIT and commercial. `import { it } from '@oge-ui/locales/it'`. |
+| `ptBR` | `OgeLocalePack` | Brazilian Portuguese — every catalog, MIT and commercial. `import { ptBR } from '@oge-ui/locales/pt-BR'`. |
+| `tr` | `OgeLocalePack` | Turkish — every catalog, MIT and commercial. `import { tr } from '@oge-ui/locales/tr'`. |
+| `ja` | `OgeLocalePack` | Japanese — every catalog, MIT and commercial. `import { ja } from '@oge-ui/locales/ja'`. |
+| `zhCN` | `OgeLocalePack` | Simplified Chinese — every catalog, MIT and commercial. `import { zhCN } from '@oge-ui/locales/zh-CN'`. |
+| `ar` | `OgeLocalePack` | Arabic (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { ar } from '@oge-ui/locales/ar'`. |
+| `he` | `OgeLocalePack` | Hebrew (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { he } from '@oge-ui/locales/he'`. |
+
+_Primary entry (@oge-ui/locales)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `en` | `OgeLocalePack` | The English baseline — `{ locale: 'en', dir: 'ltr' }` with no slices, so every catalog keeps its built-in strings. Switch back to it like to any other pack. |
+| `ogeLocalePacks` | `Readonly<Record<OgeLocaleCode, () => Promise<OgeLocalePack>>>` | Lazy loaders, one dynamic `import()` per language entry — a language switcher downloads only the packs a user picks. |
+| `OGE_LOCALE_NAMES` | `Readonly<Record<OgeLocaleCode, string>>` | Each language’s own name (`Deutsch`, `日本語`, `العربية`…) — the labels of a switcher. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeMergeMessages(defaults, slice)` | `<T extends object>(defaults: T, slice: OgeDeepPartial<T> \| undefined) => T` | Lays a pack slice over a complete catalog, nested blocks key by key — every key the slice lacks keeps the English string. Use it to hand a slice to a family provider yourself (commercial families, or a family whose other options you also set): `messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler)`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLocalePack` | `{ locale; dir: 'ltr' \| 'rtl'; grid?; inputs?; buttons?; overlay?; tabs?; forms?; upload?; layout?; navigation?; pivot?; scheduler?; gantt?; kanban?; bpmn?; charts? }` | One language: the BCP 47 `locale` for `Intl` formats, the writing direction and a deep-partial slice per message catalog. The tree list reads the grid’s catalog, so `grid` covers both. The commercial slices are typed with `import type` from the engines — erased by the build, so the MIT package has no runtime dependency on them. |
+| `OgeLocaleLayoutMessages` | `{ accordion?; progressBar?; loadIndicator?; splitter?; toolbar? }` | The layout family’s catalogs, one per component. |
+| `OgeLocaleNavigationMessages` | `{ breadcrumb?; drawer?; menubar?; pagination?; stepper?; treeView? }` | The navigation family’s catalogs, one per component. |
+| `OgeDeepPartial<T>` | `mapped type` | Every key optional, nested blocks included — a key a newer release adds is simply missing from an older pack and falls back to English. |
+| `OgeLocaleCode` | `'en' \| 'de' \| 'fr' \| 'es' \| 'it' \| 'pt-BR' \| 'tr' \| 'ja' \| 'zh-CN' \| 'ar' \| 'he'` | The languages this package ships, plus the English baseline. |
+
+### Locale wiring
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLocaleProvider` | `(props: OgeLocaleProviderProps) => JSX.Element` | From `@oge-ui/react`. Wraps the subtree in every MIT family’s config provider, each with the pack’s slice merged over the English catalog, plus the pack’s `locale` for the grid and the editors. Family providers nested inside still apply on top. The page’s `dir` stays the app’s job; commercial families take their slice through their own providers. |
+| `pack` | `OgeLocalePack` | The pack to apply. Pass a different pack (from state) to switch language at runtime — context re-renders every component beneath. |
+| `children` | `ReactNode` | The localized subtree. |
 
 ## @oge-ui/react-buttons
 
@@ -39982,8 +41139,8 @@ Re-exports every MIT family from a single import path. `npm i oge-ui` then `impo
 
 `oge-ui`
 
-- values: `OgeToolbarItem`, `OgeTreeList`
-- types: `OgeMenuItem`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
+- values: `OGE_LOCALE_NAMES`, `OgeToolbarItem`, `OgeTreeList`, `ogeLocalePacks`, `ogeMergeMessages`, `provideOgeLocale`
+- types: `OgeDeepPartial`, `OgeLocaleCode`, `OgeLocaleLayoutMessages`, `OgeLocaleNavigationMessages`, `OgeLocalePack`, `OgeMenuItem`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
 
 ## @oge-ui/scheduler-engine
 
@@ -39995,8 +41152,23 @@ Framework-free engine behind both scheduler render layers (ADR 0003): view-model
 
 `@oge-ui/scheduler-engine`
 
-- values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OGE_SCHEDULER_ADAPTIVE_BREAKPOINT`, `OgeSchedulerAdaptiveViewController`, `OgeSchedulerCore`, `agendaDayText`, `agendaTimeText`, `allDayDragProposal`, `appendException`, `appointmentPatch`, `beginPointerGesture`, `buildAgendaDays`, `buildAllDayLayout`, `buildDayWeekColumns`, `buildGutterSlots`, `buildItemFromEditor`, `buildMonthGrid`, `buildMonthWeekLanes`, `buildMonthWeekLayouts`, `buildPatchFromEditor`, `buildSchedulerEditorItems`, `buildTimeGrid`, `buildTimelineGrid`, `buildTimelineRows`, `buildYearMonths`, `canNavigateScheduler`, `cellDateAt`, `chipForeground`, `chipKey`, `chipLeftPercent`, `chipTabIndexOf`, `chipTimeText`, `chipWidthPercent`, `clampMinutesToWindow`, `countAppointmentsByDay`, `dayWeekCellDate`, `dayWeekCellSelected`, `dayWeekChipOrder`, `dayWeekColumnHeaderText`, `dayWeekDragMove`, `dayWeekGroupItems`, `dayWeekPreviewBox`, `dayWeekResizeProposal`, `dayWeekSelectionBox`, `dayWeekViewOf`, `draftEditorModel`, `dragSelectionRange`, `dueSchedulerReminders`, `durationMinutes`, `editorModelFrom`, `editorRuleFields`, `editorRuleString`, `escapeAttr`, `expandAppointment`, `expandRecurrence`, `fillSchedulerTemplate`, `fractionForMinutes`, `groupResourceIdReader`, `isOffHoursCell`, `isTodayInSchedulerView`, `isWeekendDay`, `layoutDayColumn`, `layoutDayWeekSegments`, `layoutTimelineBars`, `mergeSchedulerMessages`, `minutesOfDay`, `monthCellKey`, `monthCellSelected`, `monthChipOrder`, `monthColumnHeaderText`, `monthDropCell`, `monthMaxLanes`, `monthOriginIndex`, `monthOverflowEntries`, `navigateDate`, `normalizeAppointment`, `normalizeSchedulerStore`, `nowLineFraction`, `originDayIndex`, `packLanes`, `parseRecurrenceException`, `parseRecurrenceRule`, `partitionAllDay`, `pointToGridPosition`, `popupTimeText`, `proposeMove`, `proposeResize`, `resolveActiveSchedulerView`, `resolveColorResource`, `resolveGroupResource`, `resolveHiddenWeekDays`, `resolveOgeSchedulerConfig`, `resolveSchedulerAdaptiveView`, `resolveSchedulerFields`, `resolveSchedulerViews`, `resourceColorOf`, `resourceIndexOf`, `resourceValuesOf`, `schedulerCellAriaLabel`, `schedulerChipAriaLabel`, `schedulerDayCellAriaLabel`, `schedulerGridAriaLabel`, `schedulerGridReadOnly`, `schedulerKeyReader`, `schedulerLogicalKey`, `schedulerMoreText`, `schedulerPeriodTitle`, `schedulerReminderItems`, `schedulerWeekdayItems`, `scrollOffsetForTime`, `segmentKey`, `segmentTimedAppointments`, `serializeRecurrenceRule`, `setMinutesOfDay`, `slotCount`, `snapToSlot`, `timeGridCellKey`, `timeGridChipCtrlKey`, `timelineBarCtrlKey`, `timelineDayText`, `timelineDragMove`, `timelineHourLabels`, `timelineRowAt`, `viewRange`, `visibleSchedulerAppointments`, `weekdayShortText`, `yearCellLabel`, `yearWeekdayText`
-- types: `AgendaDay`, `AllDayBar`, `AppointmentProposal`, `AppointmentSegment`, `DayWeekColumn`, `DayWeekSegment`, `DayWeekSelection`, `LaneInput`, `LaneLayout`, `LanedItem`, `LayoutedSegment`, `MonthGridVm`, `MonthOverflowEntry`, `OgeSchedulerAdaptiveView`, `OgeSchedulerAdaptiveViewControllerOptions`, `OgeSchedulerAdaptiveViewOptions`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerCellClickEvent`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerCoreEvents`, `OgeSchedulerCoreInputs`, `OgeSchedulerCoreOptions`, `OgeSchedulerCoreSurfaces`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerGridMessages`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWorkHours`, `RecurrenceByDay`, `RecurrenceFrequency`, `RecurrenceRule`, `ResolvedSchedulerFields`, `ResolvedSchedulerView`, `SchedulerAppointment`, `SchedulerAppointmentChange`, `SchedulerCellEvent`, `SchedulerCellKeyAction`, `SchedulerChipEvent`, `SchedulerChipKeyAction`, `SchedulerContextMenuState`, `SchedulerCtrlCommit`, `SchedulerCtrlKeyResult`, `SchedulerEditorModel`, `SchedulerEditorResult`, `SchedulerEditorRuleFields`, `SchedulerFieldExpr`, `SchedulerFieldExprs`, `SchedulerFieldKey`, `SchedulerGestureCallbacks`, `SchedulerGutterSlot`, `SchedulerKeyInput`, `SchedulerOverlayBox`, `SchedulerProposalEvent`, `SchedulerRangeEvent`, `SchedulerScopeAction`, `SchedulerScopePending`, `SchedulerViewDefaults`, `SchedulerViewType`, `TimeGridConfig`, `TimeGridVm`, `TimelineBar`, `TimelineHourLabel`, `TimelineMoveEvent`, `TimelineRow`, `YearCell`, `YearMonth`
+- values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OGE_SCHEDULER_ADAPTIVE_BREAKPOINT`, `OGE_SCHEDULER_TIMELINE_GROUP_ROW_PX`, `OGE_SCHEDULER_TIMELINE_LANE_PX`, `OgeSchedulerAdaptiveViewController`, `OgeSchedulerCore`, `SchedulerEditHistory`, `agendaDayText`, `agendaTimeText`, `allDayDragProposal`, `appendException`, `appointmentPatch`, `appointmentsOnDay`, `armOgeSchedulerPayload`, `armedOgeSchedulerPayload`, `beginOgeSchedulerExternalDrag`, `beginPointerGesture`, `blockedIntervals`, `buildAgendaDays`, `buildAllDayLayout`, `buildColumnHeaderRows`, `buildDayWeekColumns`, `buildDayWeekGroupLayout`, `buildGroupLeaves`, `buildGroupedTimelineRows`, `buildGutterSlots`, `buildHorizontalTimelineRow`, `buildItemFromEditor`, `buildLayoutAllDayStrip`, `buildMonthGrid`, `buildMonthWeekLanes`, `buildMonthWeekLayouts`, `buildPatchFromEditor`, `buildRowHeaderBlocks`, `buildSchedulerEditorItems`, `buildSchedulerExportData`, `buildTimeGrid`, `buildTimelineGrid`, `buildTimelineRows`, `buildYearMonths`, `calendarDayDiff`, `canNavigateScheduler`, `cellDateAt`, `chipForeground`, `chipHeightPercent`, `chipKey`, `chipLeftPercent`, `chipSelectKey`, `chipTabIndexOf`, `chipTimeText`, `chipTopPercent`, `chipWidthPercent`, `clampMinutesToWindow`, `countAppointmentsByDay`, `dayWeekBlockedCells`, `dayWeekCellDate`, `dayWeekCellKey`, `dayWeekCellLeaf`, `dayWeekCellOffHours`, `dayWeekCellSelected`, `dayWeekCellValues`, `dayWeekChipOrder`, `dayWeekColumnHeaderText`, `dayWeekDragMove`, `dayWeekGridRows`, `dayWeekGroupItems`, `dayWeekLayoutCellLeaf`, `dayWeekLayoutCellValues`, `dayWeekLayoutDragMove`, `dayWeekLayoutPreviewBox`, `dayWeekNowBoxes`, `dayWeekPlacement`, `dayWeekPreviewBox`, `dayWeekResizeProposal`, `dayWeekSelectionBox`, `dayWeekSlotAt`, `dayWeekViewOf`, `draftEditorModel`, `dragSelectionRange`, `dueSchedulerReminders`, `durationMinutes`, `editorModelFrom`, `editorRuleFields`, `editorRuleString`, `escapeAttr`, `expandAppointment`, `expandRecurrence`, `exportResourcesOf`, `fillSchedulerMessages`, `fillSchedulerTemplate`, `findOgeSchedulerDropTarget`, `findSchedulerConflicts`, `formatExceptionStamps`, `fractionForMinutes`, `groupLeafMatcher`, `groupResourceIdReader`, `invertHistoryOp`, `isDayBlocked`, `isMonthViewDay`, `isOffHoursCell`, `isOffWorkHours`, `isOgeSchedulerDragOut`, `isRangeBlocked`, `isSchedulerEditingTarget`, `isTimelineView`, `isTodayInSchedulerView`, `isWeekendDay`, `layoutDayColumn`, `layoutDayWeekSegments`, `layoutGroupedDayWeekSegments`, `layoutTimelineBars`, `leafIndexOfValues`, `leafWorkHours`, `mergeSchedulerMessages`, `minutesOfDay`, `monthBlockedDays`, `monthCellKey`, `monthCellSelected`, `monthChipOrder`, `monthColumnHeaderText`, `monthDropCell`, `monthMaxLanes`, `monthOriginIndex`, `monthOverflowEntries`, `morePopupKey`, `navigateDate`, `nextSchedulerSelection`, `normalizeAppointment`, `normalizeIntervalCount`, `normalizeSchedulerStore`, `nowLineFraction`, `ogeSchedulerDraggableKey`, `onArmedOgeSchedulerPayload`, `originDayIndex`, `packLanes`, `parseRecurrenceException`, `parseRecurrenceRule`, `partitionAllDay`, `planSchedulerPaste`, `pointToGridPosition`, `popupTimeText`, `printOgeScheduler`, `proposeMove`, `proposeResize`, `pruneSchedulerSelection`, `registerOgeSchedulerDropTarget`, `resolveActiveSchedulerView`, `resolveColorResource`, `resolveGroupLevels`, `resolveGroupResource`, `resolveHiddenWeekDays`, `resolveMinimalDays`, `resolveOgeSchedulerConfig`, `resolveSchedulerAdaptiveView`, `resolveSchedulerFields`, `resolveSchedulerViews`, `resourceColorOf`, `resourceIndexOf`, `resourceValuesOf`, `resourceValuesOfItem`, `restorePatch`, `sameGroupValues`, `schedulerCellAriaLabel`, `schedulerChipAriaLabel`, `schedulerClipboardEntries`, `schedulerDayCellAriaLabel`, `schedulerExceptionItems`, `schedulerGridAriaLabel`, `schedulerGridReadOnly`, `schedulerKeyReader`, `schedulerLogicalKey`, `schedulerMonthDayItems`, `schedulerMonthItems`, `schedulerMoreAriaLabel`, `schedulerMorePopupTitle`, `schedulerMoreText`, `schedulerOrdinalItems`, `schedulerPeriodTitle`, `schedulerRecurrenceSummary`, `schedulerReminderItems`, `schedulerSelectGesture`, `schedulerShortcut`, `schedulerWeekNumber`, `schedulerWeekNumberTexts`, `schedulerWeekdayItems`, `schedulerWeekdayKindItems`, `scrollOffsetForTime`, `segmentKey`, `segmentTimedAppointments`, `serializeRecurrenceRule`, `setMinutesOfDay`, `shouldVirtualizeTimeline`, `slotCount`, `snapProposalToWorkHours`, `snapToSlot`, `takeArmedOgeSchedulerPayload`, `timeGridCellKey`, `timeGridChipCtrlKey`, `timelineAxisPct`, `timelineBarCtrlKey`, `timelineBlockDragMove`, `timelineBlockedBoxes`, `timelineDateAt`, `timelineDayText`, `timelineDragMove`, `timelineHeaderCells`, `timelineHourLabels`, `timelineOffHoursBoxes`, `timelineRowAt`, `timelineRowHeight`, `timelineRowIdReader`, `timelineScaleOf`, `timelineVirtualWindow`, `viewRange`, `visibleSchedulerAppointments`, `weekNumberOf`, `weekNumbersOfDays`, `weekdayShortText`, `withSelectedLabel`, `withUnavailableLabel`, `yearCellLabel`, `yearWeekdayText`
+- types: `AgendaDay`, `AllDayBar`, `AllDayPlacedBar`, `AllDayStripCell`, `AppointmentProposal`, `AppointmentSegment`, `DayWeekColumn`, `DayWeekGridRow`, `DayWeekGroupLayout`, `DayWeekNowBox`, `DayWeekSegment`, `DayWeekSelection`, `LaneInput`, `LaneLayout`, `LanedItem`, `LayoutedSegment`, `MonthGridVm`, `MonthOverflowEntry`, `OgeSchedulerAdaptiveView`, `OgeSchedulerAdaptiveViewControllerOptions`, `OgeSchedulerAdaptiveViewOptions`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentDroppedEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerBlockedRange`, `OgeSchedulerCellClickEvent`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerConflictCheck`, `OgeSchedulerCoreEvents`, `OgeSchedulerCoreInputs`, `OgeSchedulerCoreOptions`, `OgeSchedulerCoreSurfaces`, `OgeSchedulerDisabledSlots`, `OgeSchedulerDragOutEvent`, `OgeSchedulerDragPayload`, `OgeSchedulerDropSlot`, `OgeSchedulerDropTarget`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerExportData`, `OgeSchedulerExportMessages`, `OgeSchedulerExportRow`, `OgeSchedulerExternalDragOptions`, `OgeSchedulerGridMessages`, `OgeSchedulerGroupOrientation`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerMoreMode`, `OgeSchedulerPopupMessages`, `OgeSchedulerPrintOptions`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResolvedMessages`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWeekNumberRule`, `OgeSchedulerWorkHours`, `RecurrenceByDay`, `RecurrenceFrequency`, `RecurrenceRule`, `ResolvedSchedulerFields`, `ResolvedSchedulerView`, `SchedulerAppointment`, `SchedulerAppointmentChange`, `SchedulerBlockedInterval`, `SchedulerCellEvent`, `SchedulerCellKeyAction`, `SchedulerChipEvent`, `SchedulerChipKeyAction`, `SchedulerClipboardEntry`, `SchedulerConflictCandidate`, `SchedulerContextMenuState`, `SchedulerCtrlCommit`, `SchedulerCtrlKeyResult`, `SchedulerEditorModel`, `SchedulerEditorResult`, `SchedulerEditorRuleFields`, `SchedulerFieldExpr`, `SchedulerFieldExprs`, `SchedulerFieldKey`, `SchedulerGestureCallbacks`, `SchedulerGroupLeaf`, `SchedulerGutterSlot`, `SchedulerHeaderCell`, `SchedulerHistoryEntry`, `SchedulerHistoryOp`, `SchedulerKeyInput`, `SchedulerOverlayBox`, `SchedulerPasteTarget`, `SchedulerProposalEvent`, `SchedulerRangeEvent`, `SchedulerScopeAction`, `SchedulerScopePending`, `SchedulerSelectGesture`, `SchedulerShortcut`, `SchedulerShortcutInput`, `SchedulerTimelineViewType`, `SchedulerViewDefaults`, `SchedulerViewType`, `SchedulerWeekdayKind`, `TimeGridConfig`, `TimeGridVm`, `TimelineBar`, `TimelineGridOptions`, `TimelineGridVm`, `TimelineHeaderCell`, `TimelineHourLabel`, `TimelineMoveEvent`, `TimelineRow`, `TimelineScale`, `TimelineShadeBox`, `TimelineVirtualWindow`, `YearCell`, `YearMonth`
+
+`@oge-ui/scheduler-engine/export-pdf`
+
+- values: `buildSchedulerPdfDocument`
+- types: `OgeSchedulerPdfExportOptions`
+
+`@oge-ui/scheduler-engine/export-ical`
+
+- values: `buildOgeICalendar`, `buildSchedulerICalendar`, `escapeICalText`, `foldICalLine`, `formatICalDate`, `formatICalDateTime`, `formatICalUtc`, `parseICalDuration`, `parseOgeICalendar`, `resolveICalOverrides`, `schedulerICalEvents`, `schedulerItemsFromICalendar`, `unescapeICalText`
+- types: `OgeICalEvent`, `OgeICalendarOptions`, `OgeSchedulerICalendarExportOptions`, `OgeSchedulerICalendarImportOptions`
+
+`@oge-ui/scheduler-engine/export-excel`
+
+- values: `buildSchedulerExcelWorkbook`
+- types: `OgeSchedulerExcelExportOptions`
 
 ## @oge-ui/react-scheduler
 
@@ -40020,7 +41192,10 @@ _Data_
 | `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Recurrence fields: rules in the documented RFC 5545 subset expand into occurrence instances in every view; exceptions are comma-separated EXDATE stamps. |
 | `reminderExpr` | `string \| ((item: T) => unknown)` | `'reminder'` | Minutes before the start a reminder fires (see `onReminderTriggered`) — **OGE extra** (Outlook parity). |
 | `resources` | `readonly OgeSchedulerResource[]` | `[]` | Resource kinds (`{ fieldExpr, items, label?, useColorAsDefault? }`): editor select fields, default appointment colors and timeline rows. |
-| `groups` | `readonly string[]` | `[]` | Resource field grouping the views (first entry): timeline rows, and day/week columns split per resource — grouped cells prefill the resource on create, and drags across subcolumns/rows reassign it. |
+| `groups` | `readonly string[]` | `[]` | Resource fields grouping the views, outermost first — `['roomId', 'ownerId']` nests owners inside rooms (**multi-level**, nested headers): day/week columns or row blocks, timeline rows with group header rows. Grouped cells prefill every level on create, and drags across columns / rows / blocks reassign them. |
+| `groupOrientation` | `'horizontal' \| 'vertical' \| undefined` | `undefined` | How grouped resources lay out: side by side, or stacked — day/week **row blocks** (a group label column, every block a full time grid) and the timeline rows. Unset = horizontal for day/week, vertical for the timelines; a view option’s own `groupOrientation` wins. Horizontal timelines lay the leaves out as blocks of one track. |
+| `groupByDate` | `boolean` | `true` | Horizontal day/week grouping is date-major (each day split into its resources — the 1.x layout) or, with `false`, resource-major (each resource’s days side by side, the all-day strip packed per resource). |
+| `disabledSlots` | `OgeSchedulerDisabledSlots \| null` | `null` | Non-bookable slots — a predicate `(date, resources) => boolean` or a list of `{ startDate, endDate, resources?, recurrenceRule?, text? }` ranges (lunch every weekday, a room under maintenance). Rendered **hatched** with `aria-disabled` and an "unavailable" suffix; create, move, resize, paste and drop are refused there and announced. |
 | `recurrenceEditMode` | `'dialog' \| 'occurrence' \| 'series'` | `'dialog'` | How edits to a recurring occurrence apply: ask per action, always detach the occurrence (EXDATE + standalone copy), or always change the series. |
 
 _Date & views_
@@ -40029,9 +41204,13 @@ _Date & views_
 | --- | --- | --- | --- |
 | `currentDate` | `Date` | `—` | Anchor date of the visible period — controlled when given, with `onCurrentDateChange`; `defaultCurrentDate` (today when omitted) seeds the uncontrolled state at mount. Writes clamp into `[min, max]`. |
 | `defaultCurrentDate` | `Date` | `new Date()` | Uncontrolled initial anchor date. |
-| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek' \| 'year'` | `—` | The active view — controlled when given, with `onCurrentViewChange`. |
+| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek' \| 'timelineWorkWeek' \| 'timelineMonth' \| 'timelineYear' \| 'year'` | `—` | The active view — controlled when given, with `onCurrentViewChange`. The month and year timelines run at day scale (one column per day, bars snap to days). |
 | `defaultCurrentView` | `OgeSchedulerView` | `'week'` | Uncontrolled initial view. |
-| `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour` and `cellDuration` per view. |
+| `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour`, `cellDuration` and `groupOrientation` per view, and `intervalCount` makes **custom N-day / N-week / N-month views** (`{ type: 'day', intervalCount: 3, name: '3 days' }`); navigation steps by the whole interval. Entries sharing a type are told apart by the switcher. |
+| `showWeekNumbers` | `boolean` | `false` | Week numbers in the month rows and the day/week header corner (`W32`, `W32–33` for a fortnight); the grid label carries the spoken text. |
+| `weekNumberRule` | `'iso' \| 'locale'` | `'iso'` | ISO 8601 (Monday-first, 4-day rule) or the locale’s own numbering — the first day of week and `Intl.Locale` minimal days (US: Sunday-first, the week holding January 1st is week 1). |
+| `moreMode` | `'popup' \| 'drill'` | `'popup'` | What a month "+N more" does: open a keyboard-accessible **popup list** of the day (Tab-reachable button, focus moves in, Up/Down/Home/End, Enter opens an entry, Escape returns, a "Go to day" action) or drill into the day view. |
+| `virtualScrolling` | `boolean \| 'auto'` | `'auto'` | Timeline **row virtualization** for many resources — rows render at fixed heights on core’s offset tree, so the window is exact; `'auto'` turns it on above 50 rows. The axis headers stay sticky. |
 | `adaptiveView` | `boolean \| { breakpoint?: number; view?: OgeSchedulerView }` | `false` | Switches the visible view to `view` (agenda) when the scheduler's **own** width — a `ResizeObserver`, never the window — drops below `breakpoint` (600px), and back to the previous view when it grows again. The switch writes `currentView` like a user pick, on crossings only, so the switcher keeps working at any width and a view picked while narrow wins. |
 | `min / max` | `Date \| undefined` | `—` | Navigable date bounds: navigation buttons disable at the edges and every date write clamps. |
 | `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday); `undefined` resolves from the locale via `Intl.Locale.weekInfo`. |
@@ -40049,18 +41228,25 @@ _Behavior_
 | `allowAdding / allowUpdating / allowDeleting / allowDragging / allowResizing` | `boolean` | `true` | Per-capability editing gates. |
 | `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. The day/week and month grids then carry `aria-readonly="true"` (also when every `allow*` flag is off). |
 | `snapDuration` | `number \| undefined` | `—` | Drag/resize snap raster in minutes; defaults to `cellDuration`. |
-| `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. |
+| `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. A resource item’s own `workHours` / `workDays` win for its grouped columns, rows and blocks (the innermost level that sets them). |
+| `snapToWorkHours` | `boolean` | `false` | Clamps timed moves, drag-to-create ranges and drops into the target’s working hours (keeping the length when it fits). |
+| `allowOverlap` | `boolean` | `true` | `false` refuses a create / move / resize / paste / drop that overlaps another appointment — on the same resource when grouped, recurring series expanded; the change is cancelled with a visible notice and an announcement. |
+| `conflictCheck` | `(appointment: T, conflicts: readonly OgeSchedulerAppointment<T>[]) => boolean` | `—` | Decides overlapping changes: return `true` to let one land. Wins over `allowOverlap`. |
+| `selectedAppointments` | `readonly T[]` | `—` | The selected items — controlled when given, with `onSelectedAppointmentsChange`: Ctrl/⌘-click toggles, Shift-click extends over the chip order, a plain click replaces; Ctrl+Space / Shift+Space from the keyboard. Selected chips get an accent ring and a "selected" suffix; Ctrl+C copies the selection. |
+| `defaultSelectedAppointments` | `readonly T[]` | `[]` | Uncontrolled initial selection. |
+| `undoLimit` | `number` | `50` | Undo steps kept for Ctrl/⌘+Z and Ctrl/⌘+Y (Ctrl/⌘+Shift+Z). One user action — a move, a paste, a detached occurrence — is one step; an undo replays through the normal cancelable pipelines. `0` turns undo off. |
 | `showAddButton` | `boolean` | `true` | Shows the toolbar "new appointment" button (Outlook parity) — creation without double-click; hidden while `readOnly` or `allowAdding={false}`. |
 | `showAllDayPanel` | `boolean` | `true` | Shows the all-day strip in the day/week views. |
 | `showCurrentTimeIndicator` | `boolean` | `true` | The accent now-line in today's column. |
 | `shadeUntilCurrentTime` | `boolean` | `false` | Dims today's column above the now-line. |
-| `maxAppointmentsPerCell` | `number \| 'auto'` | `'auto'` | Month-view lane budget per cell; the overflow folds into a "+N more" button that drills into the day view. |
+| `maxAppointmentsPerCell` | `number \| 'auto'` | `'auto'` | Month-view lane budget per cell; the overflow folds into a "+N more" button (see `moreMode`). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the browser locale. |
 | `messages` | `Partial<OgeSchedulerMessages>` | `—` | Per-instance message overrides, merged over `<OgeSchedulerConfigProvider>` per top-level block. |
 | `dateNavigatorText` | `(start: Date, end: Date, view: OgeSchedulerView) => string` | `—` | Custom period-title formatter for the toolbar. |
 | `renderAppointment` | `(context: OgeAppointmentRenderContext<T>) => ReactNode` | `—` | Replaces the chip content — the React face of `*ogeAppointmentTemplate`. Context: `appointment` and `view`; the colored surface, gestures and keyboard semantics stay with the component. |
 | `renderCell` | `(context: OgeSchedulerCellRenderContext) => ReactNode` | `—` | **OGE extra** — rendered inside every empty grid cell; the React face of `ogeCellTemplate`. Context: `date`, `view`, `allDay`. |
 | `renderDateHeader` | `(context: OgeDateHeaderRenderContext) => ReactNode` | `—` | **OGE extra** — replaces the day/week date headers; the React face of `ogeDateHeaderTemplate`. Context: `date`, `view`. |
+| `renderResourceHeader` | `(context: OgeResourceHeaderRenderContext) => ReactNode` | `—` | Replaces the grouped resource headers (day/week column headers, vertical group labels, timeline row heads and group rows); the React face of `ogeResourceHeaderTemplate`. Context: `item`, `resource`, `level`, `view`. |
 | `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-scheduler` host. |
 
 #### Methods
@@ -40080,6 +41266,20 @@ _Imperative handle (ref)_
 | `getDataSource()` | `readonly T[] \| DataSource<T> \| null` | The bound data source, as given. |
 | `focus()` | `void` | Focuses the active view's grid (roving cell). |
 | `goToday() / navigate(direction)` | `void` | Toolbar equivalents: jump to today / step one period (respects `min`/`max`). |
+| `copyAppointments(appointment?) / pasteAppointments(target)` | `number` | The clipboard (what Ctrl+C on a chip and Ctrl+V on a cell do): copies the selection — or `appointment` when it is not part of it — and pastes so the earliest copy starts at `target.date` (`{ date, allDay, values }`), keys dropped, a grouped target’s resources applied, each copy through the guarded insert pipeline, all as one undo step. Return the count. |
+| `clearSelection()` | `void` | Empties the selection. |
+| `undo() / redo()` | `boolean` | Reverts / re-applies the last scheduler edit (the Ctrl+Z / Ctrl+Y keys); `false` when there is none. |
+| `canUndo() / canRedo()` | `boolean` | Whether a step is available (as of the last render). |
+| `getExportData(range?)` | `OgeSchedulerExportData<T>` | The export model the `/export-*` entries read: every appointment (series unexpanded) plus the expanded, chronological rows of `range` — the visible period by default. |
+| `print(options?)` | `Promise<void>` | Prints the current view: the scheduler cloned with the page’s stylesheets into a hidden frame (scroll areas expanded), then the browser’s print dialog. |
+
+_Import / export (lazy secondary entries)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `exportToICalendar(scheduler, options?) / importICalendar(scheduler, text, options?)` | `@oge-ui/react-scheduler/export-ical` | **No dependencies** — RFC 5545 `.ics` export from the ref handle (downloads unless `download: false`, returns the text): one `VEVENT` per appointment with `UID`, `DTSTAMP`, `DTSTART`/`DTEND` (`VALUE=DATE` + exclusive end for all-day), `RRULE`, `RDATE`, `EXDATE`, TEXT escaping and 75-octet folding. The import reads `DURATION`, UTC values, `RECURRENCE-ID` overrides (folded into the series as EXDATE + a standalone item) and maps every event through the `*Expr` field names into `addAppointment`. Floating local time — time zones are a later release. |
+| `exportSchedulerToPdf(scheduler, options?) / buildSchedulerPdfDocument(data, options?)` | `@oge-ui/react-scheduler/export-pdf` | Lazy PDF list export (`jspdf` peer): the period’s appointments grouped by day (time, subject, location, resources), paginated with the header repeated. Text outside WinAnsi needs a Unicode TrueType `font` — per export, or once via `setOgePdfDefaultFont()` from `@oge-ui/behavior`. |
+| `exportSchedulerToExcel(scheduler, options?) / buildSchedulerExcelWorkbook(data, options?)` | `@oge-ui/react-scheduler/export-excel` | Lazy Excel list export (`exceljs` peer): one row per appointment / occurrence with typed Date cells, all-day and recurring columns and one column per resource kind. |
 
 #### Events
 
@@ -40105,19 +41305,43 @@ _Interaction_
 | `onCellClick / onCellDblClick` | `(event: OgeSchedulerCellClickEvent) => void` | Empty-cell clicks; double click also opens the prefilled create editor. |
 | `onAppointmentContextMenu / onCellContextMenu` | `(event: OgeSchedulerAppointmentClickEvent<T> \| OgeSchedulerCellClickEvent) => void` | Right-clicks with full payloads. A **built-in context menu** also opens (chip: edit/delete through the guarded pipelines incl. recurrence scope; cell: new appointment prefilled at that slot — labels in `messages.menu`); listen to these to add your own entries alongside it. |
 | `onRangeSelected` | `(event: OgeSchedulerRangeSelectedEvent) => void` | A drag-to-create cell-range selection landed; the prefilled create editor opens next. |
-| `onCurrentDateChange / onCurrentViewChange` | `(value: Date) => void / (value: OgeSchedulerView) => void` | The controlled halves of `currentDate` / `currentView`; they also report uncontrolled changes. |
+| `onAppointmentDropped` | `(event: OgeSchedulerAppointmentDroppedEvent<T>) => void` | A `useOgeSchedulerDraggable` item — or another scheduler’s appointment — was dropped in (pointer, touch, or the keyboard twin); the built item went through `onAppointmentAdding`. Payload: `itemData`, `appointmentData`, `startDate`/`endDate`/`allDay`, the slot’s `resources` and `added`. |
+| `onDragOut` | `(event: OgeSchedulerDragOutEvent<T>) => void` | An appointment was dragged out of the scheduler and released: `appointment`, `appointmentData`, the pointer, the `target` under it and `droppedOnScheduler` (another scheduler added a copy) — the app decides whether to remove it here. |
+| `onCurrentDateChange / onCurrentViewChange / onSelectedAppointmentsChange` | `(value: Date) => void / (value: OgeSchedulerView) => void / (items: readonly T[]) => void` | The controlled halves of `currentDate` / `currentView` / `selectedAppointments`; they also report uncontrolled changes. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeSchedulerAppointment<T>` | `interface` | The normalized appointment: `key`, `source` (the original item), `text`, `startDate`/`endDate`, `allDay`, `color`, `description`, recurrence fields and `disabled`. |
-| `OgeSchedulerViewOptions` | `interface` | Per-view overrides: `type`, `name`, `dayStartHour`, `dayEndHour`, `cellDuration`. |
+| `OgeSchedulerViewOptions` | `interface` | Per-view overrides: `type`, `name`, `dayStartHour`, `dayEndHour`, `cellDuration`, `intervalCount`, `groupOrientation`. |
 | `OgeSchedulerWorkHours` | `interface` | `{ start, end, days? }` — the emphasized working hours. |
+| `OgeSchedulerResourceItem` | `interface` | `{ id, text, color?, workHours?, workDays? }` — one assignable resource; its own working hours shade its grouped columns / rows. |
+| `OgeSchedulerDisabledSlots / OgeSchedulerBlockedRange` | `type / interface` | A predicate `(date, resources) => boolean` or a list of `{ startDate, endDate, resources?, recurrenceRule?, text? }` — `resources` limits a range to `{ field: id \| id[] }`. |
+| `OgeSchedulerConflictCheck<T>` | `type` | `(appointment, conflicts) => boolean` — `true` lets an overlapping change land. |
+| `OgeSchedulerAppointmentDroppedEvent<T> / OgeSchedulerDragOutEvent<T>` | `interface` | The drag-in / drag-out payloads (see the events). |
+| `OgeSchedulerExportData<T>` | `interface` | `{ title, rangeStart, rangeEnd, locale, rows, appointments, fields, resources, messages }` — what `getExportData()` returns and the export builders read. |
+| `OgeResourceHeaderRenderContext` | `interface` | `{ item, resource, level, view }` — what `renderResourceHeader` receives. |
 | `OgeAppointmentRenderContext<T>` | `interface` | `{ appointment, view }` — what `renderAppointment` receives. |
 | `OgeSchedulerCellRenderContext` | `interface` | `{ date, view, allDay }` — what `renderCell` receives. |
 | `OgeDateHeaderRenderContext` | `interface` | `{ date, view }` — what `renderDateHeader` receives. |
 | `OgeSchedulerHandle<T>` | `interface` | The `ref` surface — every method in the table above. |
+
+### useOgeSchedulerDraggable
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `data` | `unknown` | The item a drop turns into an appointment — its fields are kept and start / end / all-day plus the slot’s resources are written through the target scheduler’s `*Expr` field names. Spread the returned props on the element: it becomes a `role="button"` tab stop. |
+| `duration` | `number \| undefined` | Appointment length in minutes; omitted = the target’s cell duration (whole days on day-scale targets). |
+| `text` | `string \| undefined` | The label announced on pick-up; defaults to the element’s text. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Gestures` | `pointer · touch · keyboard` | Pointer and touch run the shared drag-drop gesture (ghost preview, 300 ms touch hold, Escape cancels) with a live drop preview in the target; the **keyboard / single-pointer twin**: Enter, Space or a click picks the item up (`aria-pressed`, announced) and Enter or a click on any scheduler cell places it — Escape puts it down. |
 
 ### Configuration
 
@@ -40133,6 +41357,130 @@ _Interaction_
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### iCalendar
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerHandle } from '@oge-ui/react-scheduler';
+
+// /export-ical has no dependencies: series stay series (RRULE, RDATE,
+// EXDATE), all-day events use VALUE=DATE, and the import folds moved
+// occurrences (RECURRENCE-ID) back into their series.
+type Appt = Record<string, unknown>;
+
+const appointments: Appt[] = [
+  {
+    id: 1,
+    text: 'Weekly sync',
+    startDate: new Date(2026, 7, 3, 10, 0),
+    endDate: new Date(2026, 7, 3, 11, 0),
+    recurrenceRule: 'FREQ=WEEKLY;BYDAY=MO',
+  },
+];
+
+export function CalendarFiles() {
+  const scheduler = useRef<OgeSchedulerHandle<Appt>>(null);
+
+  const exportIcs = async () => {
+    const { exportToICalendar } = await import('@oge-ui/react-scheduler/export-ical');
+    if (scheduler.current) {
+      exportToICalendar(scheduler.current, { filename: 'team.ics', calendarName: 'Team' });
+    }
+  };
+
+  const importIcs = async () => {
+    const { importICalendar } = await import('@oge-ui/react-scheduler/export-ical');
+    // a file input would pass await file.text() here
+    const text = await fetch('/team.ics').then((response) => response.text());
+    if (scheduler.current) importICalendar(scheduler.current, text, { uidField: 'uid' });
+  };
+  return (
+    <>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <button type="button" onClick={exportIcs}>Download .ics</button>
+        <button type="button" onClick={importIcs}>Import sample .ics</button>
+      </div>
+      <OgeScheduler
+        ref={scheduler}
+        dataSource={appointments}
+        defaultCurrentDate={new Date(2026, 7, 6)}
+        defaultCurrentView="month"
+        views={['week', 'month', 'agenda']}
+        style={{ height: 560 }}
+      />
+    </>
+  );
+}
+```
+
+#### PDF, Excel & print
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerHandle } from '@oge-ui/react-scheduler';
+
+// PDF and Excel are lazy entries (jspdf / exceljs peers) exporting the
+// visible period as a chronological list; print() prints the view itself.
+type Appt = Record<string, unknown>;
+
+const appointments: Appt[] = [
+  {
+    id: 1,
+    text: 'Design pairing',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+  },
+  {
+    id: 2,
+    text: 'Customer visit',
+    startDate: new Date(2026, 7, 4),
+    endDate: new Date(2026, 7, 6),
+    allDay: true,
+  },
+];
+
+export function ListExports() {
+  const scheduler = useRef<OgeSchedulerHandle<Appt>>(null);
+
+  const exportPdf = async () => {
+    const { exportSchedulerToPdf } = await import('@oge-ui/react-scheduler/export-pdf');
+    // text outside WinAnsi needs a Unicode font: setOgePdfDefaultFont() from @oge-ui/behavior
+    if (scheduler.current) await exportSchedulerToPdf(scheduler.current, { filename: 'week.pdf' });
+  };
+
+  const exportExcel = async () => {
+    const { exportSchedulerToExcel } = await import('@oge-ui/react-scheduler/export-excel');
+    if (scheduler.current) await exportSchedulerToExcel(scheduler.current, { filename: 'week.xlsx' });
+  };
+  return (
+    <>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <button type="button" onClick={exportPdf}>PDF</button>
+        <button type="button" onClick={exportExcel}>Excel</button>
+        <button type="button" onClick={() => scheduler.current?.print({ title: 'Team week' })}>
+          Print
+        </button>
+      </div>
+      <OgeScheduler
+        ref={scheduler}
+        dataSource={appointments}
+        defaultCurrentDate={new Date(2026, 7, 6)}
+        defaultCurrentView="week"
+        dayStartHour={8}
+        dayEndHour={18}
+        style={{ height: 560 }}
+      />
+    </>
+  );
+}
+```
 
 #### Getting started
 
@@ -40443,7 +41791,7 @@ export function MonthOverview() {
   return (
     // views takes plain names or per-view option objects: a compact
     // 'Office hours' day view with 15-minute slots next to the stock week and
-    // month views. The month '+N more' overflow drills into the day view.
+    // month views. The month '+N more' overflow opens a day list (moreMode).
     <OgeScheduler
       dataSource={appointments}
       defaultCurrentDate={new Date(2026, 7, 6)}
@@ -40589,6 +41937,639 @@ export function GermanScheduler() {
         style={{ height: 480 }}
       />
     </OgeSchedulerConfigProvider>
+  );
+}
+```
+
+#### Rule patterns
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+// The editor reads and writes these RRULEs in full: the nth / last
+// weekday (BYSETPOS), several days of the month, a yearly month + weekday,
+// COUNT or UNTIL. Rules it cannot express are kept verbatim; a live summary
+// ("Every month on the second Tuesday") reads the rule back. Double-click a
+// chip to open the editor.
+const appointments = [
+  {
+    id: 'second-tuesday',
+    text: 'Patch Tuesday (2nd Tue)',
+    startDate: new Date(2026, 7, 11, 10, 0),
+    endDate: new Date(2026, 7, 11, 11, 0),
+    recurrenceRule: 'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2',
+  },
+  {
+    id: 'payroll',
+    text: 'Payroll run',
+    startDate: new Date(2026, 7, 1, 9, 0),
+    endDate: new Date(2026, 7, 1, 9, 30),
+    recurrenceRule: 'FREQ=MONTHLY;BYMONTHDAY=1,15',
+  },
+  {
+    id: 'last-workday',
+    text: 'Month close (last workday)',
+    startDate: new Date(2026, 7, 31, 16, 0),
+    endDate: new Date(2026, 7, 31, 17, 0),
+    recurrenceRule: 'FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1',
+  },
+  {
+    id: 'course',
+    text: 'Onboarding course',
+    startDate: new Date(2026, 7, 3, 14, 0),
+    endDate: new Date(2026, 7, 3, 15, 0),
+    recurrenceRule: 'FREQ=WEEKLY;BYDAY=MO,WE;COUNT=6',
+  },
+];
+
+export function RecurringPatterns() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="month"
+      views={['week', 'month', 'agenda']}
+      style={{ height: 640 }}
+    />
+  );
+}
+```
+
+#### Exceptions
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+// recurrenceException lists skipped occurrences (EXDATE stamps). The
+// editor shows them as removable chips and adds new ones from a date picker;
+// deleting a single occurrence from the popup adds one too.
+const appointments = [
+  {
+    id: 'standup',
+    text: 'Standup (skips the 12th)',
+    startDate: new Date(2026, 7, 3, 9, 0),
+    endDate: new Date(2026, 7, 3, 9, 15),
+    recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR;UNTIL=20260828T235959',
+    recurrenceException: '20260812T090000',
+  },
+];
+
+export function SkippedOccurrences() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 12)}
+      defaultCurrentView="week"
+      dayStartHour={8}
+      dayEndHour={12}
+      recurrenceEditMode="dialog"
+      style={{ height: 480 }}
+    />
+  );
+}
+```
+
+#### Disabled slots & work hours
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+// disabledSlots hatches non-bookable time: lunch every weekday and a
+// training day for one resource. Creating, moving, resizing, pasting or
+// dropping there is refused and announced. Each resource's own workHours
+// shade its column, and snapToWorkHours clamps moves into them.
+const staff = [
+  {
+    fieldExpr: 'ownerId',
+    label: 'Owner',
+    useColorAsDefault: true,
+    items: [
+      { id: 'ada', text: 'Ada (8–14)', color: '#7c3aed', workHours: { start: 8, end: 14 } },
+      {
+        id: 'grace',
+        text: 'Grace (12–18)',
+        color: '#0891b2',
+        workHours: { start: 12, end: 18 },
+        workDays: [1, 2, 3, 4],
+      },
+    ],
+  },
+];
+const blocked = [
+  {
+    startDate: new Date(2026, 7, 3, 12, 0),
+    endDate: new Date(2026, 7, 3, 13, 0),
+    recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+    text: 'Lunch',
+  },
+  {
+    startDate: new Date(2026, 7, 7, 8, 0),
+    endDate: new Date(2026, 7, 7, 18, 0),
+    resources: { ownerId: 'ada' },
+    text: 'Ada — training day',
+  },
+];
+const appointments = [
+  {
+    id: 1,
+    text: 'Ward round',
+    startDate: new Date(2026, 7, 6, 9, 0),
+    endDate: new Date(2026, 7, 6, 10, 30),
+    ownerId: 'ada',
+  },
+  {
+    id: 2,
+    text: 'Clinic',
+    startDate: new Date(2026, 7, 5, 14, 0),
+    endDate: new Date(2026, 7, 5, 16, 0),
+    ownerId: 'grace',
+  },
+];
+
+export function StaffRota() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="workWeek"
+      views={['day', 'workWeek', 'timelineWeek']}
+      resources={staff}
+      groups={['ownerId']}
+      disabledSlots={blocked}
+      snapToWorkHours
+      dayStartHour={7}
+      dayEndHour={19}
+      cellDuration={60}
+      style={{ height: 640 }}
+    />
+  );
+}
+```
+
+#### Conflicts
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerAppointment } from '@oge-ui/react-scheduler';
+
+// allowOverlap={false} refuses overlapping changes with a notice and an
+// announcement; conflictCheck decides case by case and wins — here a change
+// may overlap tentative holds, never a confirmed appointment.
+type Appt = Record<string, unknown>;
+
+const appointments: Appt[] = [
+  {
+    id: 1,
+    text: 'Surgery block',
+    startDate: new Date(2026, 7, 6, 9, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+    color: '#dc2626',
+  },
+  {
+    id: 2,
+    text: 'Hold — maybe lunch',
+    startDate: new Date(2026, 7, 6, 12, 0),
+    endDate: new Date(2026, 7, 6, 13, 30),
+    color: '#94a3b8',
+    tentative: true,
+  },
+];
+
+const onlyTentative = (
+  _appointment: Appt,
+  conflicts: readonly OgeSchedulerAppointment<Appt>[],
+): boolean => conflicts.every((c) => c.source['tentative'] === true);
+
+export function OperatingRoom() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="day"
+      allowOverlap={false}
+      conflictCheck={onlyTentative}
+      dayStartHour={8}
+      dayEndHour={18}
+      style={{ height: 560 }}
+    />
+  );
+}
+```
+
+#### Drag in from outside
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeScheduler, useOgeSchedulerDraggable } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerAppointmentDroppedEvent } from '@oge-ui/react-scheduler';
+
+// useOgeSchedulerDraggable turns any element into an appointment source:
+// drag it onto a slot, or press Enter / click to pick it up and Enter / click
+// a cell to place it (the keyboard and single-pointer twin).
+// onAppointmentDropped reports the built item; onDragOut fires when a chip
+// is dragged out and released elsewhere.
+interface Task {
+  id: string;
+  text: string;
+  minutes: number;
+}
+
+const backlog: Task[] = [
+  { id: 't1', text: 'Write release notes', minutes: 60 },
+  { id: 't2', text: 'Review pull requests', minutes: 90 },
+  { id: 't3', text: 'Prepare demo', minutes: 120 },
+];
+
+function TaskChip({ task }: { task: Task }) {
+  const drag = useOgeSchedulerDraggable({ data: task, duration: task.minutes });
+  return (
+    <li {...drag} className={drag.className + ' rounded border px-3 py-1 text-sm'}>
+      {task.text} · {task.minutes} min
+    </li>
+  );
+}
+
+export function Backlog() {
+  const [tasks, setTasks] = useState(backlog);
+  const [lastAction, setLastAction] = useState('');
+  const [appointments] = useState<Record<string, unknown>[]>([]);
+
+  const dropped = (event: OgeSchedulerAppointmentDroppedEvent<Record<string, unknown>>) => {
+    if (!event.added) return;
+    const task = event.itemData as Task;
+    setTasks((list) => list.filter((t) => t.id !== task.id));
+    setLastAction('Scheduled ' + task.text);
+  };
+  return (
+    <>
+      <ul className="mb-3 flex flex-wrap gap-2">
+        {tasks.map((task) => (
+          <TaskChip key={task.id} task={task} />
+        ))}
+      </ul>
+      <OgeScheduler
+        dataSource={appointments}
+        defaultCurrentDate={new Date(2026, 7, 6)}
+        defaultCurrentView="week"
+        dayStartHour={8}
+        dayEndHour={18}
+        onAppointmentDropped={dropped}
+        onDragOut={(event) => setLastAction('Dragged out: ' + event.appointment.text)}
+        style={{ height: 560 }}
+      />
+      <p className="mt-2 text-sm" aria-live="polite">{lastAction}</p>
+    </>
+  );
+}
+```
+
+#### Selection, clipboard & undo
+
+```ts
+'use client';
+
+import { useReducer, useRef, useState } from 'react';
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerHandle } from '@oge-ui/react-scheduler';
+
+// Ctrl/⌘-click toggles chips into the selection, Shift-click extends it;
+// Ctrl+C copies, Ctrl+V on a focused cell pastes, Ctrl+Z / Ctrl+Y undo and
+// redo every edit. The same actions are methods on the ref handle.
+type Appt = Record<string, unknown>;
+
+const appointments: Appt[] = [
+  {
+    id: 1,
+    text: 'Design pairing',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+  },
+  {
+    id: 2,
+    text: 'Release prep',
+    startDate: new Date(2026, 7, 6, 13, 0),
+    endDate: new Date(2026, 7, 6, 15, 30),
+    color: '#16a34a',
+  },
+  {
+    id: 3,
+    text: 'Interviews',
+    startDate: new Date(2026, 7, 7, 14, 0),
+    endDate: new Date(2026, 7, 7, 16, 0),
+    color: '#d97706',
+  },
+];
+
+export function SelectAndUndo() {
+  const scheduler = useRef<OgeSchedulerHandle<Appt>>(null);
+  const [selected, setSelected] = useState<readonly Appt[]>([]);
+  // canUndo() / canRedo() read the history as of the last render
+  const [, refresh] = useReducer((n: number) => n + 1, 0);
+  return (
+    <>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => { scheduler.current?.undo(); refresh(); }}
+          disabled={!scheduler.current?.canUndo()}
+        >
+          Undo
+        </button>
+        <button
+          type="button"
+          onClick={() => { scheduler.current?.redo(); refresh(); }}
+          disabled={!scheduler.current?.canRedo()}
+        >
+          Redo
+        </button>
+        <button type="button" onClick={() => scheduler.current?.clearSelection()}>
+          Clear selection
+        </button>
+        <span className="text-sm">{selected.length} selected</span>
+      </div>
+      <OgeScheduler
+        ref={scheduler}
+        dataSource={appointments}
+        defaultCurrentDate={new Date(2026, 7, 6)}
+        defaultCurrentView="week"
+        selectedAppointments={selected}
+        onSelectedAppointmentsChange={setSelected}
+        onAppointmentAdded={refresh}
+        onAppointmentUpdated={refresh}
+        onAppointmentDeleted={refresh}
+        undoLimit={100}
+        dayStartHour={8}
+        dayEndHour={18}
+        style={{ height: 560 }}
+      />
+    </>
+  );
+}
+```
+
+#### Timelines & custom intervals
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerView, OgeSchedulerViewOptions } from '@oge-ui/react-scheduler';
+
+// intervalCount turns any view into an N-period view: a 3-day view, a
+// fortnight, and the month / year timelines at day scale. Navigation steps
+// by the whole interval; week numbers follow ISO 8601 by default.
+const views: (OgeSchedulerView | OgeSchedulerViewOptions)[] = [
+  { type: 'day', intervalCount: 3, name: '3 days' },
+  { type: 'week', intervalCount: 2, name: 'Fortnight' },
+  'month',
+  'timelineWorkWeek',
+  'timelineMonth',
+  'timelineYear',
+];
+const people = [
+  {
+    fieldExpr: 'ownerId',
+    label: 'Owner',
+    useColorAsDefault: true,
+    items: [
+      { id: 'ada', text: 'Ada', color: '#7c3aed' },
+      { id: 'grace', text: 'Grace', color: '#0891b2' },
+      { id: 'linus', text: 'Linus', color: '#16a34a' },
+    ],
+  },
+];
+const appointments = [
+  {
+    id: 1,
+    text: 'Daily standup',
+    startDate: new Date(2026, 7, 3, 9, 0),
+    endDate: new Date(2026, 7, 3, 9, 15),
+    recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+    ownerId: 'ada',
+    roomId: 'north',
+  },
+  {
+    id: 2,
+    text: 'Design pairing',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+    ownerId: 'grace',
+    roomId: 'north',
+  },
+  {
+    id: 3,
+    text: 'Release prep',
+    startDate: new Date(2026, 7, 6, 13, 0),
+    endDate: new Date(2026, 7, 6, 15, 30),
+    ownerId: 'linus',
+    roomId: 'south',
+  },
+];
+
+export function IntervalViews() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="timelineMonth"
+      views={views}
+      resources={people}
+      groups={['ownerId']}
+      showWeekNumbers
+      dayStartHour={8}
+      dayEndHour={18}
+      style={{ height: 560 }}
+    />
+  );
+}
+```
+
+#### Multi-level groups
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+// groups nests the levels, outermost first: owners inside rooms.
+// groupByDate={false} lays each resource's days side by side; the render
+// prop replaces every grouped header (level 0 = rooms).
+const resources = [
+  {
+    fieldExpr: 'roomId',
+    label: 'Room',
+    items: [
+      { id: 'north', text: 'North room' },
+      { id: 'south', text: 'South room' },
+    ],
+  },
+  {
+    fieldExpr: 'ownerId',
+    label: 'Owner',
+    useColorAsDefault: true,
+    items: [
+      { id: 'ada', text: 'Ada', color: '#7c3aed' },
+      { id: 'grace', text: 'Grace', color: '#0891b2' },
+      { id: 'linus', text: 'Linus', color: '#16a34a' },
+    ],
+  },
+];
+const appointments = [
+  {
+    id: 1,
+    text: 'Daily standup',
+    startDate: new Date(2026, 7, 3, 9, 0),
+    endDate: new Date(2026, 7, 3, 9, 15),
+    recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+    ownerId: 'ada',
+    roomId: 'north',
+  },
+  {
+    id: 2,
+    text: 'Design pairing',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+    ownerId: 'grace',
+    roomId: 'north',
+  },
+  {
+    id: 3,
+    text: 'Release prep',
+    startDate: new Date(2026, 7, 6, 13, 0),
+    endDate: new Date(2026, 7, 6, 15, 30),
+    ownerId: 'linus',
+    roomId: 'south',
+  },
+];
+
+export function RoomsAndOwners() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="day"
+      views={['day', 'week', 'timelineDay']}
+      resources={resources}
+      groups={['roomId', 'ownerId']}
+      groupByDate={false}
+      dayStartHour={8}
+      dayEndHour={18}
+      renderResourceHeader={({ item, level }) => (
+        <span className={level === 0 ? 'font-semibold' : undefined}>{item.text}</span>
+      )}
+      style={{ height: 600 }}
+    />
+  );
+}
+```
+
+#### Vertical grouping
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+// groupOrientation="vertical" stacks one full time grid per resource
+// under a group label column; drags across blocks reassign the owner.
+const people = [
+  {
+    fieldExpr: 'ownerId',
+    label: 'Owner',
+    useColorAsDefault: true,
+    items: [
+      { id: 'ada', text: 'Ada', color: '#7c3aed' },
+      { id: 'grace', text: 'Grace', color: '#0891b2' },
+      { id: 'linus', text: 'Linus', color: '#16a34a' },
+    ],
+  },
+];
+const appointments = [
+  {
+    id: 1,
+    text: 'Daily standup',
+    startDate: new Date(2026, 7, 3, 9, 0),
+    endDate: new Date(2026, 7, 3, 9, 15),
+    recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+    ownerId: 'ada',
+    roomId: 'north',
+  },
+  {
+    id: 2,
+    text: 'Design pairing',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+    ownerId: 'grace',
+    roomId: 'north',
+  },
+  {
+    id: 3,
+    text: 'Release prep',
+    startDate: new Date(2026, 7, 6, 13, 0),
+    endDate: new Date(2026, 7, 6, 15, 30),
+    ownerId: 'linus',
+    roomId: 'south',
+  },
+];
+
+export function StackedOwners() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="workWeek"
+      views={['day', 'workWeek']}
+      resources={people}
+      groups={['ownerId']}
+      groupOrientation="vertical"
+      dayStartHour={9}
+      dayEndHour={17}
+      cellDuration={60}
+      style={{ height: 640 }}
+    />
+  );
+}
+```
+
+#### "+N more" popup
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+// A full day folds into "+N more": a Tab-reachable button that opens the
+// day's list (Up/Down, Enter opens an entry, Escape returns) with a
+// "Go to day" action. moreMode="drill" jumps to the day view instead.
+const appointments = [
+  { id: 1, text: 'Inbox zero', startDate: new Date(2026, 7, 5, 8, 0), endDate: new Date(2026, 7, 5, 9, 0) },
+  { id: 2, text: 'Board prep', startDate: new Date(2026, 7, 5, 9, 0), endDate: new Date(2026, 7, 5, 10, 0) },
+  { id: 3, text: 'Vendor call', startDate: new Date(2026, 7, 5, 10, 0), endDate: new Date(2026, 7, 5, 11, 0) },
+  { id: 4, text: 'Roadmap', startDate: new Date(2026, 7, 5, 13, 0), endDate: new Date(2026, 7, 5, 14, 0) },
+  { id: 5, text: 'Budget review', startDate: new Date(2026, 7, 5, 15, 0), endDate: new Date(2026, 7, 5, 16, 0) },
+];
+
+export function BusyMonth() {
+  return (
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="month"
+      views={['day', 'month']}
+      maxAppointmentsPerCell={2}
+      moreMode="popup"
+      style={{ height: 640 }}
+    />
   );
 }
 ```

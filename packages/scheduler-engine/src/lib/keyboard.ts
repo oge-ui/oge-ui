@@ -88,14 +88,97 @@ export function timeGridCellKey(
   }
 }
 
-/** Month cell keys: the same map over the fixed 7 × 6 grid (col = day). */
+/** Month cell keys: the same map over the 7-column grid (col = day). */
 export function monthCellKey(
   key: string,
   week: number,
   day: number,
   rtl = false,
+  weekCount = 6,
 ): SchedulerCellKeyAction | null {
-  return timeGridCellKey(key, day, week, 7, 6, rtl);
+  return timeGridCellKey(key, day, week, 7, weekCount, rtl);
+}
+
+/** The modifier-key facts a scheduler shortcut decision reads. */
+export interface SchedulerShortcutInput {
+  readonly key: string;
+  readonly ctrlKey: boolean;
+  readonly metaKey?: boolean;
+  readonly shiftKey: boolean;
+  readonly altKey?: boolean;
+}
+
+/** The scheduler-wide editing shortcuts. */
+export type SchedulerShortcut = 'undo' | 'redo' | 'copy' | 'paste';
+
+/**
+ * Ctrl/⌘+Z undo, Ctrl/⌘+Y or Ctrl/⌘+Shift+Z redo, Ctrl/⌘+C copy, Ctrl/⌘+V
+ * paste. `inEditor` (focus is in a text field or the editor dialog) keeps
+ * the keys with the field, so typing never undoes a scheduler edit.
+ */
+export function schedulerShortcut(
+  input: SchedulerShortcutInput,
+  inEditor: boolean,
+): SchedulerShortcut | null {
+  if (inEditor || input.altKey) return null;
+  if (!(input.ctrlKey || input.metaKey)) return null;
+  switch (input.key.toLowerCase()) {
+    case 'z':
+      return input.shiftKey ? 'redo' : 'undo';
+    case 'y':
+      return input.shiftKey ? null : 'redo';
+    case 'c':
+      return input.shiftKey ? null : 'copy';
+    case 'v':
+      return input.shiftKey ? null : 'paste';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Whether a keydown target is a text-editing surface the scheduler's
+ * shortcuts must leave alone: form fields, content-editables and anything
+ * inside a dialog (the appointment editor, the scope prompt).
+ */
+export function isSchedulerEditingTarget(target: EventTarget | null): boolean {
+  const element = target as {
+    closest?: (selector: string) => unknown;
+  } | null;
+  if (element === null || typeof element.closest !== 'function') return false;
+  return (
+    element.closest(
+      'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="dialog"], .oge-modal',
+    ) !== null
+  );
+}
+
+/** How a chip click changes the selection. */
+export type SchedulerSelectGesture = 'replace' | 'toggle' | 'range';
+
+/**
+ * The keyboard twin of Ctrl/Shift-click on a focused chip: Ctrl+Space
+ * toggles it in the selection, Shift+Space extends the selection to it.
+ * `null` = not a selection key (plain Space still opens the popup).
+ */
+export function chipSelectKey(
+  input: SchedulerShortcutInput,
+): SchedulerSelectGesture | null {
+  if (input.key !== ' ' && input.key !== 'Spacebar') return null;
+  if (input.shiftKey) return 'range';
+  if (input.ctrlKey || input.metaKey) return 'toggle';
+  return null;
+}
+
+/** Ctrl/⌘-click toggles, Shift-click extends a range, a plain click replaces. */
+export function schedulerSelectGesture(input: {
+  readonly ctrlKey: boolean;
+  readonly metaKey?: boolean;
+  readonly shiftKey: boolean;
+}): SchedulerSelectGesture {
+  if (input.shiftKey) return 'range';
+  if (input.ctrlKey || input.metaKey) return 'toggle';
+  return 'replace';
 }
 
 /** A chip-layer decision. */

@@ -44,6 +44,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Localize OGE UI: global and per-component message overrides, switching language at runtime, validation messages and Intl number and date locales.',
   ],
   [
+    '/getting-started/localization/api',
+    'Localization API of OGE UI: provideOgeLocale, OgeLocaleProvider and the @oge-ui/locales packs for ten languages, lazy loaders and the message merge helper.',
+  ],
+  [
     '/ai',
     'Use OGE UI with AI coding assistants: llms.txt and llms-full.txt references, the ng add AGENTS.md block, the rules that matter and the mistakes models make.',
   ],
@@ -454,6 +458,22 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/components/scheduler/api',
     'Angular Scheduler API reference: every input, output, method and type of oge-scheduler — appointment field mapping, views, editing and the config provider.',
+  ],
+  [
+    '/components/scheduler/views-grouping',
+    'Angular Scheduler views and grouping: N-day and N-week views, month and year timelines, week numbers, nested resource groups, vertical layout, +N more.',
+  ],
+  [
+    '/components/scheduler/resources-availability',
+    'Angular Scheduler availability: hatched disabled slots, per-resource work hours, conflict checks, external drag-in, multi-select, copy, paste, undo.',
+  ],
+  [
+    '/components/scheduler/recurrence-editor',
+    'Angular Scheduler recurrence editor: nth and last weekday rules, several month days, yearly patterns, count or until, skipped dates, live summary.',
+  ],
+  [
+    '/components/scheduler/import-export',
+    'Angular Scheduler import and export: iCalendar .ics export and import with series and overrides, PDF and Excel list exports and print of the current view.',
   ],
 ];
 

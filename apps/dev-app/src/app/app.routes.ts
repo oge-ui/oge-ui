@@ -84,6 +84,12 @@ export const appRoutes: Route[] = [
     title: 'OGE — Localization',
   },
   {
+    path: 'getting-started/localization/api',
+    loadComponent: () =>
+      import('./pages/locales/api').then((m) => m.LocalesApiPage),
+    title: 'OGE — Localization API',
+  },
+  {
     path: 'components',
     pathMatch: 'full',
     loadComponent: () =>
@@ -963,6 +969,38 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/scheduler/api').then((m) => m.SchedulerApiPage),
         title: 'OGE — Scheduler API',
+      },
+      {
+        path: 'views-grouping',
+        loadComponent: () =>
+          import('./pages/scheduler/views-grouping').then(
+            (m) => m.SchedulerViewsGroupingPage,
+          ),
+        title: 'OGE — Scheduler Views & Grouping',
+      },
+      {
+        path: 'resources-availability',
+        loadComponent: () =>
+          import('./pages/scheduler/resources-availability').then(
+            (m) => m.SchedulerResourcesAvailabilityPage,
+          ),
+        title: 'OGE — Scheduler Resources & Availability',
+      },
+      {
+        path: 'recurrence-editor',
+        loadComponent: () =>
+          import('./pages/scheduler/recurrence-editor').then(
+            (m) => m.SchedulerRecurrenceEditorPage,
+          ),
+        title: 'OGE — Scheduler Recurrence Editor',
+      },
+      {
+        path: 'import-export',
+        loadComponent: () =>
+          import('./pages/scheduler/import-export').then(
+            (m) => m.SchedulerImportExportPage,
+          ),
+        title: 'OGE — Scheduler Import / Export',
       },
     ],
   },

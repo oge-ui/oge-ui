@@ -17,6 +17,7 @@ export {
   type OgeSchedulerConfig,
   type OgeSchedulerConfigInput,
   type OgeSchedulerEditorMessages,
+  type OgeSchedulerExportMessages,
   type OgeSchedulerGridMessages,
   type OgeSchedulerMenuMessages,
   type OgeSchedulerMessages,

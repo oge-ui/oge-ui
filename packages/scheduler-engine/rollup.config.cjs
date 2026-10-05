@@ -3,6 +3,15 @@ const { withNx } = require('@nx/rollup/with-nx');
 module.exports = withNx(
   {
     main: './src/index.ts',
+    // Secondary entry points: the dependency-free iCalendar codec and the
+    // optional-peer `.xlsx` / `.pdf` list builders, so `exceljs` and `jspdf`
+    // load only in an app that imports one of them. Workspace-relative; each
+    // file name becomes the entry name.
+    additionalEntryPoints: [
+      'packages/scheduler-engine/src/export-ical.ts',
+      'packages/scheduler-engine/src/export-excel.ts',
+      'packages/scheduler-engine/src/export-pdf.ts',
+    ],
     outputPath: '../../dist/packages/scheduler-engine',
     tsConfig: './tsconfig.lib.json',
     compiler: 'swc',

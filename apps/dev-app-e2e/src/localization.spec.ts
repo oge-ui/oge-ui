@@ -89,3 +89,71 @@ for (const [layer, query] of [
     });
   });
 }
+
+/**
+ * "Ready-made translations": one live `provideOgeLocale` (Angular) or
+ * `<OgeLocaleProvider>` (React) around a grid, a date box and a select box;
+ * every pack is a lazy chunk from `@oge-ui/locales`.
+ */
+function readyMade(page: Page) {
+  return page.locator('.app-ready-made').first();
+}
+
+async function language(page: Page, name: string): Promise<void> {
+  const button = page
+    .getByRole('group', { name: 'Language' })
+    .getByRole('button', { name, exact: true });
+  await button.click();
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+}
+
+for (const [layer, query] of [
+  ['Angular', ''],
+  ['React', '?framework=react'],
+] as const) {
+  test.describe(`ready-made translations (${layer})`, () => {
+    test('switches the grid strings, plurals and direction at runtime', async ({
+      page,
+    }) => {
+      await page.goto(`${PATH}${query}`);
+      const demo = readyMade(page);
+      await expect(
+        demo.getByRole('button', { name: 'Next page', exact: true }),
+      ).toBeVisible();
+      await expect(demo).toHaveAttribute('dir', 'ltr');
+
+      await language(page, 'Deutsch');
+      await expect(
+        demo.getByRole('button', { name: 'Nächste Seite', exact: true }),
+      ).toBeVisible();
+      // the plural-aware pager text comes from the German pack
+      await expect(demo.getByText('4 Zeilen')).toBeVisible();
+      await expect(demo).toHaveAttribute('lang', 'de');
+
+      await language(page, 'العربية');
+      await expect(demo).toHaveAttribute('dir', 'rtl');
+      await expect(
+        demo.getByRole('button', { name: 'الصفحة التالية', exact: true }),
+      ).toBeVisible();
+
+      await language(page, 'English');
+      await expect(
+        demo.getByRole('button', { name: 'Next page', exact: true }),
+      ).toBeVisible();
+      await expect(demo).toHaveAttribute('dir', 'ltr');
+    });
+
+    test('the translated demo is axe-clean in a right-to-left pack', async ({
+      page,
+    }) => {
+      await page.goto(`${PATH}${query}`);
+      await language(page, 'עברית');
+      await expect(readyMade(page)).toHaveAttribute('dir', 'rtl');
+      const results = await new AxeBuilder({ page })
+        .include('.app-ready-made')
+        .disableRules(['color-contrast'])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    });
+  });
+}

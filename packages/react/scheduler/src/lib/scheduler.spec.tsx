@@ -613,6 +613,7 @@ describe('<OgeScheduler> keyboard & gestures', () => {
       startDate: new Date(2026, 7, 3, 9),
       endDate: new Date(2026, 7, 3, 10, 30),
       resourceId: undefined,
+      resources: {},
     });
     expect(onEditorShowing).toHaveBeenCalledTimes(1);
   });

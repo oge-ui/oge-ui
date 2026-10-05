@@ -20,7 +20,11 @@ export interface OgeSchedulerToolbarMessages {
   readonly dateNavigatorLabel: string;
   /** The "new appointment" toolbar button. */
   readonly newAppointment: string;
-  /** Display names of the built-in views. */
+  /**
+   * Display names of the built-in views. The three newer timeline views
+   * are optional so a catalog written before them still type-checks; a
+   * missing name falls back to the English default.
+   */
   readonly viewNames: Readonly<
     Record<
       | 'day'
@@ -33,7 +37,12 @@ export interface OgeSchedulerToolbarMessages {
       | 'year',
       string
     >
-  >;
+  > &
+    Readonly<
+      Partial<
+        Record<'timelineWorkWeek' | 'timelineMonth' | 'timelineYear', string>
+      >
+    >;
 }
 
 /** Labels of the appointment popup (click on a chip). */
@@ -85,6 +94,54 @@ export interface OgeSchedulerEditorMessages {
   readonly reminderAtStart: string;
   /** `{minutes}` is replaced with the lead time. */
   readonly reminderBefore: string;
+  /*
+   * Recurrence editor depth (optional — a catalog written before them still
+   * type-checks; every missing key falls back to the English default).
+   */
+  /** Label of the monthly/yearly "repeat by" choice. */
+  readonly repeatByLabel?: string;
+  /** The two monthly/yearly modes: a day of the month, or an nth weekday. */
+  readonly repeatByOptions?: Readonly<Record<'day' | 'weekday', string>>;
+  /** Label of the day-of-month picker (several days allowed). */
+  readonly monthDaysLabel?: string;
+  /** The "last day of the month" choice of the day-of-month picker. */
+  readonly lastDayOfMonth?: string;
+  /** Label of the ordinal ("second", "last") picker. */
+  readonly setPosLabel?: string;
+  /** Ordinal words for the nth-weekday mode. */
+  readonly ordinals?: Readonly<
+    Record<'first' | 'second' | 'third' | 'fourth' | 'last', string>
+  >;
+  /** Label of the weekday picker of the nth-weekday mode. */
+  readonly weekdayKindLabel?: string;
+  /** The day kinds besides a single weekday ("last weekday"). */
+  readonly dayKinds?: Readonly<
+    Record<'day' | 'weekday' | 'weekendDay', string>
+  >;
+  /** Label of the month picker of the yearly rule. */
+  readonly yearMonthLabel?: string;
+  /** Label of the skipped-occurrences (EXDATE) picker of a series. */
+  readonly exceptionsLabel?: string;
+  /** Accessible name of the live recurrence summary line. */
+  readonly summaryLabel?: string;
+  /**
+   * The live recurrence summary ("Every 2 weeks on Monday, 10 times"). ICU
+   * plurals rendered with `ogeFormatMessage`: `{interval}` and `{count}` are
+   * numbers, `{days}`, `{ordinal}`, `{day}`, `{month}` and `{date}` text.
+   */
+  readonly summary?: Readonly<{
+    daily: string;
+    weekly: string;
+    weeklyOn: string;
+    monthlyDay: string;
+    monthlyWeekday: string;
+    yearlyDay: string;
+    yearlyWeekday: string;
+    /** `{summary}` is the rule part, `{count}` the occurrence count. */
+    count: string;
+    /** `{summary}` is the rule part, `{date}` the formatted end date. */
+    until: string;
+  }>;
 }
 
 /** Strings of the occurrence-vs-series scope dialog. */
@@ -133,6 +190,29 @@ export interface OgeSchedulerGridMessages {
   readonly agendaNoData: string;
   /** Timeline row label for appointments without a resource. */
   readonly unassignedLabel: string;
+  /*
+   * G3 additions (optional — a missing key falls back to the English
+   * default, so a catalog written before them still type-checks).
+   */
+  /** Visual week-number badge; `{week}` is the number (`W32`). */
+  readonly weekNumber?: string;
+  /** Accessible week-number text; `{week}` is the number. */
+  readonly weekNumberLabel?: string;
+  /** Appended to the label of a blocked (non-bookable) cell. */
+  readonly unavailableLabel?: string;
+  /** Appended to the label of a selected appointment chip. */
+  readonly selectedLabel?: string;
+  /**
+   * Accessible name of a month "+N more" button — an ICU plural over
+   * `{count}`, `{date}` is the full date.
+   */
+  readonly moreAppointmentsLabel?: string;
+  /** Accessible name of the "+N more" popup; `{date}` is the full date. */
+  readonly morePopupLabel?: string;
+  /** The "+N more" popup's drill-into-day action. */
+  readonly goToDay?: string;
+  /** Close button of the "+N more" popup. */
+  readonly closeLabel?: string;
 }
 
 /** Templates written to the polite live region after actions. */
@@ -149,6 +229,48 @@ export interface OgeSchedulerAnnouncementMessages {
   readonly resized: string;
   /** After a gesture is cancelled with Escape. */
   readonly cancelled: string;
+  /*
+   * G3 additions (optional — a missing key falls back to the English
+   * default). Plural keys are ICU messages rendered with `ogeFormatMessage`.
+   */
+  /** A create/move/resize/drop hit a blocked slot and was refused. */
+  readonly slotUnavailable?: string;
+  /** A change was refused for overlapping another appointment; `{text}`. */
+  readonly conflict?: string;
+  /** ICU plural over `{count}`: appointments put on the clipboard. */
+  readonly copied?: string;
+  /** ICU plural over `{count}`: appointments pasted. */
+  readonly pasted?: string;
+  /** ICU plural over `{count}`: the selection size after a change. */
+  readonly selected?: string;
+  /** After Ctrl+Z. */
+  readonly undone?: string;
+  /** After Ctrl+Y / Ctrl+Shift+Z. */
+  readonly redone?: string;
+  /** An external item was dropped in; `{text}` is the subject. */
+  readonly dropped?: string;
+  /**
+   * An external item was picked up from the keyboard (or a click) — the
+   * single-pointer / keyboard twin of drag-in; `{text}` is its label.
+   */
+  readonly pickedUp?: string;
+}
+
+/** Column headers and words of the PDF / Excel list exports. */
+export interface OgeSchedulerExportMessages {
+  readonly subject: string;
+  readonly start: string;
+  readonly end: string;
+  readonly allDay: string;
+  readonly location: string;
+  readonly description: string;
+  readonly recurring: string;
+  readonly yes: string;
+  readonly no: string;
+  /** Worksheet name of the Excel export. */
+  readonly sheetName: string;
+  /** Shown by the PDF export when the period holds no appointment. */
+  readonly noData: string;
 }
 
 /** Every user-facing string of the scheduler (house i18n rule). */
@@ -160,9 +282,43 @@ export interface OgeSchedulerMessages {
   readonly grid: OgeSchedulerGridMessages;
   readonly menu: OgeSchedulerMenuMessages;
   readonly announcements: OgeSchedulerAnnouncementMessages;
+  /** Export headers (optional; English defaults fill a missing block). */
+  readonly export?: OgeSchedulerExportMessages;
 }
 
-export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
+/**
+ * The messages as the components read them: every block present and every
+ * optional key filled from the English defaults (`mergeSchedulerMessages`).
+ */
+export interface OgeSchedulerResolvedMessages {
+  readonly toolbar: OgeSchedulerToolbarMessages & {
+    readonly viewNames: Readonly<
+      Record<
+        | 'day'
+        | 'week'
+        | 'workWeek'
+        | 'month'
+        | 'agenda'
+        | 'timelineDay'
+        | 'timelineWeek'
+        | 'timelineWorkWeek'
+        | 'timelineMonth'
+        | 'timelineYear'
+        | 'year',
+        string
+      >
+    >;
+  };
+  readonly popup: OgeSchedulerPopupMessages;
+  readonly editor: Required<OgeSchedulerEditorMessages>;
+  readonly recurrenceScope: OgeSchedulerRecurrenceScopeMessages;
+  readonly grid: Required<OgeSchedulerGridMessages>;
+  readonly menu: OgeSchedulerMenuMessages;
+  readonly announcements: Required<OgeSchedulerAnnouncementMessages>;
+  readonly export: OgeSchedulerExportMessages;
+}
+
+export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerResolvedMessages = {
   toolbar: {
     label: 'Scheduler toolbar',
     today: 'Today',
@@ -179,6 +335,9 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
       agenda: 'Agenda',
       timelineDay: 'Timeline Day',
       timelineWeek: 'Timeline Week',
+      timelineWorkWeek: 'Timeline Work Week',
+      timelineMonth: 'Timeline Month',
+      timelineYear: 'Timeline Year',
       year: 'Year',
     },
   },
@@ -221,6 +380,39 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     reminderNone: 'None',
     reminderAtStart: 'At start',
     reminderBefore: '{minutes} minutes before',
+    repeatByLabel: 'Repeat by',
+    repeatByOptions: { day: 'Day of the month', weekday: 'Day of the week' },
+    monthDaysLabel: 'On days',
+    lastDayOfMonth: 'Last day',
+    setPosLabel: 'On the',
+    ordinals: {
+      first: 'first',
+      second: 'second',
+      third: 'third',
+      fourth: 'fourth',
+      last: 'last',
+    },
+    weekdayKindLabel: 'Day',
+    dayKinds: { day: 'day', weekday: 'weekday', weekendDay: 'weekend day' },
+    yearMonthLabel: 'Month',
+    exceptionsLabel: 'Skipped occurrences',
+    summaryLabel: 'Recurrence summary',
+    summary: {
+      daily: '{interval, plural, one {Every day} other {Every # days}}',
+      weekly: '{interval, plural, one {Every week} other {Every # weeks}}',
+      weeklyOn:
+        '{interval, plural, one {Every week} other {Every # weeks}} on {days}',
+      monthlyDay:
+        '{interval, plural, one {Every month} other {Every # months}} on day {days}',
+      monthlyWeekday:
+        '{interval, plural, one {Every month} other {Every # months}} on the {ordinal} {day}',
+      yearlyDay:
+        '{interval, plural, one {Every year} other {Every # years}} on {month} {days}',
+      yearlyWeekday:
+        '{interval, plural, one {Every year} other {Every # years}} on the {ordinal} {day} of {month}',
+      count: '{summary}, {count, plural, one {once} other {# times}}',
+      until: '{summary}, until {date}',
+    },
   },
   recurrenceScope: {
     title: 'Recurring appointment',
@@ -247,6 +439,15 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     gridHint: 'Press Escape then Tab to leave the scheduler',
     agendaNoData: 'No appointments in this period',
     unassignedLabel: 'Unassigned',
+    weekNumber: 'W{week}',
+    weekNumberLabel: 'Week {week}',
+    unavailableLabel: 'unavailable',
+    selectedLabel: 'selected',
+    moreAppointmentsLabel:
+      '{count, plural, one {# more appointment} other {# more appointments}} on {date}',
+    morePopupLabel: 'Appointments on {date}',
+    goToDay: 'Go to day',
+    closeLabel: 'Close',
   },
   announcements: {
     created: '{text} created',
@@ -255,8 +456,81 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     moved: '{text} moved to {start}',
     resized: '{text} now lasts from {start} to {end}',
     cancelled: 'Cancelled',
+    slotUnavailable: 'That time is unavailable',
+    conflict: '{text} overlaps another appointment',
+    copied:
+      '{count, plural, one {# appointment copied} other {# appointments copied}}',
+    pasted:
+      '{count, plural, one {# appointment pasted} other {# appointments pasted}}',
+    selected:
+      '{count, plural, =0 {Selection cleared} one {# appointment selected} other {# appointments selected}}',
+    undone: 'Undone',
+    redone: 'Redone',
+    dropped: '{text} added',
+    pickedUp:
+      'Picked up {text}. Focus a scheduler cell and press Enter to place it, or Escape to cancel.',
+  },
+  export: {
+    subject: 'Subject',
+    start: 'Start',
+    end: 'End',
+    allDay: 'All day',
+    location: 'Location',
+    description: 'Description',
+    recurring: 'Recurring',
+    yes: 'Yes',
+    no: 'No',
+    sheetName: 'Appointments',
+    noData: 'No appointments in this period',
   },
 };
+
+/**
+ * Fills every optional key a catalog may omit from the English defaults —
+ * the newer view names, the recurrence-editor strings, the G3 grid and
+ * announcement keys and the export block — so the components can read
+ * `messages.grid.unavailableLabel` without a fallback at each use. Blocks a
+ * catalog supplies keep its own strings; only the gaps are filled.
+ */
+export function fillSchedulerMessages(
+  messages: OgeSchedulerMessages,
+): OgeSchedulerResolvedMessages {
+  const defaults = OGE_DEFAULT_SCHEDULER_MESSAGES;
+  return {
+    toolbar: {
+      ...defaults.toolbar,
+      ...messages.toolbar,
+      viewNames: {
+        ...defaults.toolbar.viewNames,
+        ...messages.toolbar.viewNames,
+      },
+    },
+    popup: messages.popup,
+    editor: {
+      ...defaults.editor,
+      ...stripUndefined(messages.editor),
+    } as Required<OgeSchedulerEditorMessages>,
+    recurrenceScope: messages.recurrenceScope,
+    grid: {
+      ...defaults.grid,
+      ...stripUndefined(messages.grid),
+    } as Required<OgeSchedulerGridMessages>,
+    menu: messages.menu,
+    announcements: {
+      ...defaults.announcements,
+      ...stripUndefined(messages.announcements),
+    } as Required<OgeSchedulerAnnouncementMessages>,
+    export: { ...defaults.export, ...stripUndefined(messages.export ?? {}) },
+  };
+}
+
+function stripUndefined<T extends object>(value: T): Partial<T> {
+  const result: Partial<T> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (entry !== undefined) (result as Record<string, unknown>)[key] = entry;
+  }
+  return result;
+}
 
 /** DI-level configuration of every scheduler in the injector's scope. */
 export interface OgeSchedulerConfig {

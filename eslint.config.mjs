@@ -32,6 +32,8 @@ export default [
             '@oge-ui/charts',
             '@oge-ui/react-charts',
             '@oge-ui/react-gantt',
+            '@oge-ui/scheduler',
+            '@oge-ui/react-scheduler',
           ],
           depConstraints: [
             // ---------------------------------------------------------------
@@ -105,6 +107,28 @@ export default [
               // that needs a component is not a behaviour (ADR 0001).
               sourceTag: 'scope:behavior',
               onlyDependOnLibsWithTags: ['scope:behavior', 'scope:core'],
+            },
+            {
+              // ready-made translations (MIT). The packs are typed against
+              // every catalog, so this scope reaches the commercial engines —
+              // but ONLY through `import type` (the engines' message
+              // interfaces), which the build erases: the published package has
+              // no runtime dependency on any of them (optional peers, types
+              // only). The one sanctioned MIT → commercial edge, and a
+              // type-level one; never import a value from an engine here.
+              // `scope:core` is for the specs (`ogeFormatMessage`).
+              sourceTag: 'scope:locales',
+              onlyDependOnLibsWithTags: [
+                'scope:locales',
+                'scope:behavior',
+                'scope:core',
+                'scope:pivot-engine',
+                'scope:scheduler-engine',
+                'scope:gantt-engine',
+                'scope:kanban-engine',
+                'scope:bpmn-engine',
+                'scope:charts-engine',
+              ],
             },
             {
               // the charts family's commercial, framework-free engine
@@ -196,6 +220,8 @@ export default [
                 'scope:react-grid',
                 'scope:react-tree-list',
                 'scope:react-overlay',
+                // <OgeLocaleProvider> composes the family providers
+                'scope:locales',
                 'scope:behavior',
                 'scope:core',
               ],
@@ -625,6 +651,11 @@ export default [
                 'scope:navigation',
                 'scope:forms',
                 'scope:upload',
+                // provideOgeLocale(): the MIT translation packs (their
+                // type-only references to commercial engines are erased) and
+                // the default catalogs a pack is merged over
+                'scope:locales',
+                'scope:behavior',
                 'scope:core',
               ],
             },
@@ -674,6 +705,9 @@ export default [
                 'scope:navigation',
                 'scope:forms',
                 'scope:upload',
+                'scope:locales',
+                // the localization page's demo runs provideOgeLocale itself
+                'scope:ui',
                 'scope:core',
               ],
             },

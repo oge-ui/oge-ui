@@ -713,8 +713,20 @@ const FAMILIES = [
         // DI provider ↔ context provider (both documented in the
         // Configuration block)
         provideogeschedulerconfig: 'ogeschedulerconfigprovider',
+        // an attribute directive's inputs carry its selector prefix; the
+        // hook takes the same three values as plain option fields
+        ogeschedulerdraggable: 'data',
+        ogeschedulerdraggableduration: 'duration',
+        ogeschedulerdraggabletext: 'text',
+      },
+      blockPairs: {
+        // the external drag source: a directive in Angular, a hook in React
+        // — every member is still compared
+        ogeschedulerdraggable: 'useogeschedulerdraggable',
       },
       reactOnly: {
+        renderresourceheader:
+          'React form of `[ogeResourceHeaderTemplate]` — same types-table split as `renderAppointment`.',
         renderappointment:
           'React form of the `*ogeAppointmentTemplate` structural directive, which the Angular page documents in its types table rather than as an input (ROADMAP exception: TemplateRef ↔ render prop).',
         rendercell:
@@ -782,6 +794,27 @@ const FAMILIES = [
           'React host styling idiom; an Angular host takes `style` natively and needs no input.',
         useogeganttconfig:
           'Hook reading the resolved config; the Angular counterpart is `inject(OGE_GANTT_CONFIG)`, documented inside the provider row rather than as a member.',
+      },
+    },
+  },
+  {
+    // @oge-ui/locales: the packs are framework-free data; only the one-call
+    // wiring differs per layer (oge-ui's provideOgeLocale ↔ @oge-ui/react's
+    // <OgeLocaleProvider>)
+    family: 'locales',
+    angularApiPage: 'apps/dev-app/src/app/pages/locales/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/locales/react-api.ts',
+    exceptions: {
+      blocksAngularOnly: {
+        localepacks:
+          'The packs block documents framework-free @oge-ui/locales data — identical in both layers, so the page renders it once, outside the framework switch, instead of a React copy.',
+      },
+      pairs: {
+        provideogelocale: 'ogelocaleprovider', // DI provider ↔ context provider
+      },
+      reactOnly: {
+        children:
+          'The localized subtree of the context provider; an Angular provider function scopes by injector instead and takes no children.',
       },
     },
   },

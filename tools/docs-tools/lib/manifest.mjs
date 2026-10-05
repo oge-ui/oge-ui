@@ -41,6 +41,8 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  *   code" rules and which "Common mistakes" table the package's `llms.txt`
  *   carries — an engine gets neither pair, only a framework-free note. Getting this wrong ships actively misleading instructions to every
  *   coding assistant, so it is explicit rather than inferred from the name.
+ * - `usage` — optional key into `USAGE_NOTES` (`lib/prose.mjs`): a framework-free
+ *   package that is not an engine (`@oge-ui/locales`) carries that prose instead.
  */
 export const PACKAGES = [
   {
@@ -279,6 +281,26 @@ export const PACKAGES = [
     pageDirs: [],
     apiPage: null,
     tier: 'mit',
+  },
+  {
+    dir: 'locales',
+    npm: '@oge-ui/locales',
+    label: 'Locales',
+    summary:
+      "Ready-made translations of every message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic and Hebrew — as framework-free data, one entry point per language (`import { tr } from '@oge-ui/locales/tr'`). Applied with `provideOgeLocale(tr)` from `oge-ui` or `<OgeLocaleProvider pack={tr}>` from `@oge-ui/react`; commercial families take `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)` through their own provider.",
+    docsRoot: '/getting-started/localization',
+    pageDirs: ['locales'],
+    // the Angular page carries the Angular wiring, the React half the
+    // <OgeLocaleProvider>; the packs block is shared — this package serves
+    // both layers, so its reference documents both
+    apiPage: [
+      'apps/dev-app/src/app/pages/locales/api.ts',
+      'apps/dev-app/src/app/pages/locales/react-api.ts',
+    ],
+    tier: 'mit',
+    platform: 'agnostic',
+    // not an engine: its own "Using this package" prose (lib/prose.mjs)
+    usage: 'locales',
   },
   {
     dir: 'react/buttons',
