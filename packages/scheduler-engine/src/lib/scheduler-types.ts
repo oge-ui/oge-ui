@@ -133,6 +133,8 @@ export interface OgeSchedulerReminderEvent<T = unknown> {
 export interface OgeSchedulerRangeSelectedEvent {
   readonly startDate: Date;
   readonly endDate: Date;
+  /** The grouped resource values of the column (`{}` ungrouped). */
+  readonly resources?: Readonly<Record<string, unknown>>;
 }
 
 /**

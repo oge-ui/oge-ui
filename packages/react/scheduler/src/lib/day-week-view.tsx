@@ -20,55 +20,82 @@ import { sameDay } from '@oge-ui/core';
 import {
   allDayDragProposal,
   beginPointerGesture,
-  buildAllDayLayout,
-  buildDayWeekColumns,
+  buildColumnHeaderRows,
+  buildDayWeekGroupLayout,
   buildGutterSlots,
+  buildLayoutAllDayStrip,
   buildTimeGrid,
+  cellDateAt,
+  chipHeightPercent,
   chipKey,
   chipLeftPercent,
+  chipSelectKey,
   chipTabIndexOf,
+  chipTopPercent,
   chipWidthPercent,
-  dayWeekCellDate,
+  dayWeekBlockedCells,
+  dayWeekCellKey,
+  dayWeekCellOffHours,
   dayWeekCellSelected,
   dayWeekChipOrder,
   dayWeekColumnHeaderText,
-  dayWeekDragMove,
-  dayWeekGroupItems,
-  dayWeekPreviewBox,
+  dayWeekGridRows,
+  dayWeekLayoutCellLeaf,
+  dayWeekLayoutCellValues,
+  dayWeekLayoutDragMove,
+  dayWeekLayoutPreviewBox,
+  dayWeekNowBoxes,
   dayWeekResizeProposal,
   dayWeekSelectionBox,
+  dayWeekSlotAt,
   dragSelectionRange,
   escapeAttr,
-  isOffHoursCell,
+  isOgeSchedulerDragOut,
   isWeekendDay,
-  layoutDayWeekSegments,
-  nowLineFraction,
-  originDayIndex,
+  layoutGroupedDayWeekSegments,
+  leafIndexOfValues,
   partitionAllDay,
-  resourceIndexOf,
   schedulerCellAriaLabel,
   schedulerChipAriaLabel,
   schedulerGridAriaLabel,
+  schedulerShortcut,
+  schedulerWeekNumberTexts,
   segmentKey,
   timeGridCellKey,
   timeGridChipCtrlKey,
+  weekNumbersOfDays,
   weekdayShortText,
+  withSelectedLabel,
+  withUnavailableLabel,
+  type AllDayPlacedBar,
   type AppointmentProposal,
+  type DayWeekColumn,
+  type DayWeekGridRow,
+  type DayWeekSegment,
   type DayWeekSelection,
-  type OgeSchedulerGridMessages,
+  type OgeSchedulerDisabledSlots,
+  type OgeSchedulerDropSlot,
+  type OgeSchedulerGroupOrientation,
+  type OgeSchedulerResolvedMessages,
   type OgeSchedulerResource,
+  type OgeSchedulerWeekNumberRule,
   type OgeSchedulerWorkHours,
   type SchedulerAppointment,
   type SchedulerCellEvent,
   type SchedulerChipEvent,
+  type SchedulerGroupLeaf,
+  type SchedulerHeaderCell,
+  type SchedulerPasteTarget,
   type SchedulerProposalEvent,
   type SchedulerRangeEvent,
+  type SchedulerSelectGesture,
   type TimeGridVm,
 } from '@oge-ui/scheduler-engine';
 import { SchedulerAppointmentChip } from './appointment-chip';
 import type {
   OgeAppointmentRenderContext,
   OgeDateHeaderRenderContext,
+  OgeResourceHeaderRenderContext,
   OgeSchedulerCellRenderContext,
 } from './scheduler-types';
 
@@ -76,9 +103,34 @@ import type {
 export interface DayWeekViewHandle {
   focusGrid(): void;
   readonly grid: TimeGridVm;
+  /** The slot under a viewport point (the drag-in hit test). */
+  dropSlotAt(clientX: number, clientY: number): OgeSchedulerDropSlot | null;
 }
 
-export interface DayWeekViewProps<T> {
+/** A selection gesture from the keyboard (Ctrl/Shift+Space). */
+export interface SchedulerSelectRequest<T> {
+  readonly appointment: SchedulerAppointment<T>;
+  readonly gesture: SchedulerSelectGesture;
+  readonly order: readonly SchedulerAppointment<T>[];
+}
+
+/** The G3 props every grid view shares. */
+export interface SchedulerViewG3Props<T> {
+  readonly selection: readonly T[];
+  readonly onCopyRequested: (appointment: SchedulerAppointment<T>) => void;
+  readonly onSelectRequested: (request: SchedulerSelectRequest<T>) => void;
+  readonly onDragOut: (
+    appointment: SchedulerAppointment<T>,
+    clientX: number,
+    clientY: number,
+  ) => void;
+  readonly dropPreview: {
+    readonly slot: OgeSchedulerDropSlot;
+    readonly durationMinutes: number;
+  } | null;
+}
+
+export interface DayWeekViewProps<T> extends SchedulerViewG3Props<T> {
   readonly view: 'day' | 'week' | 'workWeek';
   readonly anchorDate: Date;
   readonly appointments: readonly SchedulerAppointment<T>[];
@@ -88,11 +140,12 @@ export interface DayWeekViewProps<T> {
   readonly dayStartHour: number;
   readonly dayEndHour: number;
   readonly cellDuration: number;
+  readonly intervalCount: number;
   readonly showAllDayPanel: boolean;
   readonly showCurrentTimeIndicator: boolean;
   readonly minAppointmentMinutes: number;
   readonly locale: string | undefined;
-  readonly messages: OgeSchedulerGridMessages;
+  readonly messages: OgeSchedulerResolvedMessages['grid'];
   readonly periodLabel: string;
   readonly allowDragging: boolean;
   readonly allowResizing: boolean;
@@ -105,14 +158,22 @@ export interface DayWeekViewProps<T> {
   readonly snapDuration: number | undefined;
   /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
   readonly rtl?: boolean;
-  readonly groupResource: OgeSchedulerResource | null;
-  readonly resourceIdOf: (item: T) => unknown;
+  readonly groupLevels: readonly OgeSchedulerResource[];
+  readonly groupLeaves: readonly SchedulerGroupLeaf[];
+  readonly leafOf: (item: T) => number;
+  readonly groupOrientation: OgeSchedulerGroupOrientation;
+  readonly groupByDate: boolean;
+  readonly showWeekNumbers: boolean;
+  readonly weekNumberRule: OgeSchedulerWeekNumberRule;
+  readonly disabledSlots: OgeSchedulerDisabledSlots | null;
   readonly renderAppointment:
     ((context: OgeAppointmentRenderContext<T>) => ReactNode) | undefined;
   readonly renderCell:
     ((context: OgeSchedulerCellRenderContext) => ReactNode) | undefined;
   readonly renderDateHeader:
     ((context: OgeDateHeaderRenderContext) => ReactNode) | undefined;
+  readonly renderResourceHeader:
+    ((context: OgeResourceHeaderRenderContext) => ReactNode) | undefined;
   readonly onCellClicked: (event: SchedulerCellEvent) => void;
   readonly onCellDblClicked: (event: SchedulerCellEvent) => void;
   readonly onCellActivated: (event: SchedulerCellEvent) => void;
@@ -128,12 +189,13 @@ export interface DayWeekViewProps<T> {
   readonly onRangeSelected: (event: SchedulerRangeEvent) => void;
   readonly onChipContextMenu: (event: SchedulerChipEvent<T>) => void;
   readonly onCellContextMenu: (event: SchedulerCellEvent) => void;
+  readonly onPasteRequested: (target: SchedulerPasteTarget) => void;
 }
 
 interface Preview {
   readonly key: unknown;
   readonly proposal: AppointmentProposal;
-  readonly resIndex?: number;
+  readonly leafIndex: number;
 }
 
 const rectOf = (target: EventTarget | null): DOMRect =>
@@ -142,8 +204,9 @@ const rectOf = (target: EventTarget | null): DOMRect =>
 const pct = (value: number): string => `${value}%`;
 
 /**
- * Internal day/week view: date headers, the all-day strip, the scrollable
- * slot grid (`role="grid"`, row-major, roving tabindex) and one absolutely
+ * Internal day/week view: the (nested) date and resource headers, the
+ * all-day strip, the scrollable slot grid (`role="grid"`, row-major, roving
+ * tabindex; stacked row blocks under vertical grouping) and one absolutely
  * positioned chip layer forming the second tab stop — the markup of the
  * Angular `<oge-scheduler-day-week-view>`, rendered from the same engine
  * functions.
@@ -154,6 +217,7 @@ function DayWeekViewInner<T>(
 ): ReactElement {
   const hostRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<HTMLDivElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
   const {
     view,
     locale,
@@ -161,6 +225,7 @@ function DayWeekViewInner<T>(
     renderAppointment,
     renderCell,
     renderDateHeader,
+    renderResourceHeader,
   } = props;
 
   const grid = useMemo(
@@ -174,6 +239,7 @@ function DayWeekViewInner<T>(
         cellDuration: props.cellDuration,
         hiddenWeekDays: props.hiddenWeekDays,
         weekendDays: props.weekendDays,
+        intervalCount: props.intervalCount,
       }),
     [
       props.anchorDate,
@@ -184,18 +250,37 @@ function DayWeekViewInner<T>(
       props.cellDuration,
       props.hiddenWeekDays,
       props.weekendDays,
+      props.intervalCount,
     ],
   );
   const snapMinutes = props.snapDuration ?? grid.cellDuration;
-  const groupItems = useMemo(
-    () => dayWeekGroupItems(props.groupResource),
-    [props.groupResource],
+  const layout = useMemo(
+    () =>
+      buildDayWeekGroupLayout(grid.days, props.groupLeaves, {
+        vertical: props.groupOrientation === 'vertical',
+        groupByDate: props.groupByDate,
+      }),
+    [grid, props.groupLeaves, props.groupOrientation, props.groupByDate],
   );
-  const resCount = groupItems?.length ?? 1;
-  const colCount = grid.days.length * resCount;
-  const columns = useMemo(
-    () => buildDayWeekColumns(grid.days, groupItems),
-    [grid, groupItems],
+  const columns = layout.columns;
+  const gridRows = useMemo(
+    () => dayWeekGridRows(grid, layout.blockCount),
+    [grid, layout.blockCount],
+  );
+  const headerRows = useMemo(
+    () =>
+      buildColumnHeaderRows(
+        grid.days,
+        layout.vertical ? [] : props.groupLevels,
+        layout.vertical ? [] : props.groupLeaves,
+        props.groupByDate,
+        (day) => weekdayShortText(day, locale),
+      ),
+    [grid, layout.vertical, props.groupLevels, props.groupLeaves, props.groupByDate, locale],
+  );
+  const blockedCells = useMemo(
+    () => dayWeekBlockedCells(grid, layout, props.disabledSlots),
+    [grid, layout, props.disabledSlots],
   );
   const partitioned = useMemo(
     () => partitionAllDay(props.appointments),
@@ -203,35 +288,48 @@ function DayWeekViewInner<T>(
   );
   const layouted = useMemo(
     () =>
-      layoutDayWeekSegments(
+      layoutGroupedDayWeekSegments(
         partitioned.timed,
         grid,
-        groupItems,
-        props.resourceIdOf,
+        layout,
+        props.leafOf,
         props.minAppointmentMinutes,
       ),
-    [
-      partitioned,
-      grid,
-      groupItems,
-      props.resourceIdOf,
-      props.minAppointmentMinutes,
-    ],
+    [partitioned, grid, layout, props.leafOf, props.minAppointmentMinutes],
   );
-  const allDayLayout = useMemo(
-    () => buildAllDayLayout(partitioned.allDay, grid),
-    [partitioned, grid],
+  const allDayStrip = useMemo(
+    () => buildLayoutAllDayStrip(partitioned.allDay, grid, layout, props.leafOf),
+    [partitioned, grid, layout, props.leafOf],
   );
-  const allDayBars = allDayLayout.visible;
-  const allDayLaneCount = Math.max(1, allDayLayout.laneCount);
+  const allDayLaneCount = Math.max(1, allDayStrip.laneCount);
   const chipOrder = useMemo(
-    () => dayWeekChipOrder(allDayBars, layouted),
-    [allDayBars, layouted],
+    () => dayWeekChipOrder(allDayStrip.bars, layouted),
+    [allDayStrip, layouted],
   );
   const gutterSlots = useMemo(
     () => buildGutterSlots(grid, locale),
     [grid, locale],
   );
+  const weekNumbers = useMemo(
+    () =>
+      props.showWeekNumbers
+        ? weekNumbersOfDays(
+            grid.days,
+            props.weekNumberRule,
+            props.firstDayOfWeek,
+            locale,
+          )
+        : [],
+    [grid, props.showWeekNumbers, props.weekNumberRule, props.firstDayOfWeek, locale],
+  );
+  const weekBadge =
+    weekNumbers.length === 0
+      ? null
+      : weekNumbers.length === 1
+        ? schedulerWeekNumberTexts(weekNumbers[0], messages).badge
+        : `${schedulerWeekNumberTexts(weekNumbers[0], messages).badge}–${
+            weekNumbers[weekNumbers.length - 1]
+          }`;
 
   /* ---------- roving focus ---------- */
 
@@ -266,55 +364,143 @@ function DayWeekViewInner<T>(
     });
   };
 
+  const dropSlotAt = (
+    clientX: number,
+    clientY: number,
+  ): OgeSchedulerDropSlot | null => {
+    const rows = rowsRef.current;
+    if (rows !== null) {
+      const hit = dayWeekSlotAt(
+        clientX,
+        clientY,
+        rows.getBoundingClientRect(),
+        grid,
+        layout,
+        props.rtl,
+      );
+      if (hit !== null) {
+        return { startDate: hit.date, allDay: false, resources: hit.values };
+      }
+    }
+    const strip = stripRef.current;
+    if (strip !== null) {
+      const rect = strip.getBoundingClientRect();
+      const cells = allDayStrip.cells;
+      if (
+        rect.width > 0 &&
+        clientX >= rect.left &&
+        clientX < rect.right &&
+        clientY >= rect.top &&
+        clientY < rect.bottom
+      ) {
+        const raw = Math.floor(((clientX - rect.left) / rect.width) * cells.length);
+        const cell = cells[props.rtl ? cells.length - 1 - raw : raw];
+        if (cell !== undefined) {
+          return { startDate: cell.day, allDay: true, resources: cell.values };
+        }
+      }
+    }
+    return null;
+  };
+
   useImperativeHandle(
     ref,
-    () => ({
-      focusGrid: queueFocusTarget,
-      grid,
-    }),
-    [grid],
+    () => ({ focusGrid: queueFocusTarget, grid, dropSlotAt }),
+    [grid, layout, allDayStrip, props.rtl],
   );
 
-  const cellDate = (colIndex: number, minutes: number): Date =>
-    dayWeekCellDate(columns, grid.days, resCount, colIndex, minutes);
+  const cellValues = (
+    col: DayWeekColumn,
+    block: number,
+  ): Readonly<Record<string, unknown>> =>
+    dayWeekLayoutCellValues(layout, col.colIndex, block);
 
-  const isFocusedCell = (dayIndex: number, slotIndex: number): boolean =>
-    focusedCell.day === dayIndex && focusedCell.slot === slotIndex;
+  const cellEvent = (
+    col: DayWeekColumn,
+    row: DayWeekGridRow,
+    event: MouseEvent | KeyboardEvent,
+  ): SchedulerCellEvent => {
+    const values = cellValues(col, row.block);
+    const firstLevel = props.groupLevels[0];
+    return {
+      cellDate: cellDateAt(col.day, row.minutes),
+      allDay: false,
+      event,
+      resourceId:
+        firstLevel === undefined ? undefined : values[firstLevel.fieldExpr],
+      resources: values,
+    };
+  };
+
+  const isFocusedCell = (colIndex: number, rowIndex: number): boolean =>
+    focusedCell.day === colIndex && focusedCell.slot === rowIndex;
+  const isSelected = (appointment: SchedulerAppointment<T>): boolean =>
+    props.selection.includes(appointment.source);
+  const leafIndexOf = (appointment: SchedulerAppointment<T>): number =>
+    layout.leaves.length === 0
+      ? 0
+      : Math.max(0, props.leafOf(appointment.source));
 
   /* ---------- keyboard ---------- */
 
   const onCellKeyDown = (
-    dayIndex: number,
-    slotIndex: number,
+    col: DayWeekColumn,
+    row: DayWeekGridRow,
     event: ReactKeyboardEvent<HTMLElement>,
   ): void => {
+    if (schedulerShortcut(event, false) === 'paste') {
+      event.preventDefault();
+      props.onPasteRequested({
+        date: cellDateAt(col.day, row.minutes),
+        allDay: false,
+        values: cellValues(col, row.block),
+      });
+      return;
+    }
     const action = timeGridCellKey(
       event.key,
-      dayIndex,
-      slotIndex,
-      colCount,
-      grid.slotStartMinutes.length,
+      col.colIndex,
+      row.index,
+      layout.colCount,
+      gridRows.length,
       props.rtl,
     );
     if (action === null) return;
     event.preventDefault();
     if (action.kind === 'activate') {
-      props.onCellActivated({
-        cellDate: cellDate(dayIndex, grid.slotStartMinutes[slotIndex]),
-        allDay: false,
-        event: event.nativeEvent,
-        resourceId: columns[dayIndex]?.resourceId,
-      });
+      props.onCellActivated(cellEvent(col, row, event.nativeEvent));
       return;
     }
     setFocusedCell({ day: action.col, slot: action.row });
     queueFocusTarget();
   };
 
+  const chipEvent = (
+    appointment: SchedulerAppointment<T>,
+    event: MouseEvent | KeyboardEvent,
+    target: EventTarget | null,
+  ): SchedulerChipEvent<T> => ({
+    appointment,
+    event,
+    rect: rectOf(target),
+    order: chipOrder,
+  });
+
   const onChipKeyDown = (
     appointment: SchedulerAppointment<T>,
     event: ReactKeyboardEvent<HTMLElement>,
   ): void => {
+    if (schedulerShortcut(event, false) === 'copy') {
+      event.preventDefault();
+      props.onCopyRequested(appointment);
+      return;
+    }
+    const select = chipSelectKey(event);
+    if (select !== null) {
+      event.preventDefault();
+      props.onSelectRequested({ appointment, gesture: select, order: chipOrder });
+      return;
+    }
     const ctrl = timeGridChipCtrlKey(
       appointment,
       event,
@@ -337,11 +523,9 @@ function DayWeekViewInner<T>(
     switch (action.kind) {
       case 'activate':
         event.preventDefault();
-        props.onChipActivated({
-          appointment,
-          event: event.nativeEvent,
-          rect: rectOf(event.target),
-        });
+        props.onChipActivated(
+          chipEvent(appointment, event.nativeEvent, event.target),
+        );
         return;
       case 'delete':
         event.preventDefault();
@@ -359,35 +543,42 @@ function DayWeekViewInner<T>(
   /* ---------- pointer gestures ---------- */
 
   const onCellPointerDown = (
-    dayIndex: number,
-    slotIndex: number,
+    col: DayWeekColumn,
+    row: DayWeekGridRow,
     event: ReactPointerEvent<HTMLElement>,
   ): void => {
     if (!props.allowAdding || event.button !== 0) return;
     const rows = rowsRef.current;
     if (rows === null) return;
     const rect = rows.getBoundingClientRect();
-    const anchorMinutes = grid.slotStartMinutes[slotIndex];
+    const blockHeight = rect.height / layout.blockCount;
+    const blockTop = rect.top + row.block * blockHeight;
     let range: { startMinutes: number; endMinutes: number } | null = null;
     beginPointerGesture(event.nativeEvent, {
       onMove: (_deltaX, _deltaY, moveEvent) => {
         range = dragSelectionRange(
           moveEvent.clientY,
-          rect.top,
-          rect.height,
+          blockTop,
+          blockHeight,
           grid,
-          anchorMinutes,
+          row.minutes,
           snapMinutes,
         );
-        setSelection({ dayIndex, ...range });
+        setSelection({ dayIndex: col.colIndex, block: row.block, ...range });
       },
       onFinish: (commit, cancelled) => {
         setSelection(null);
         if (commit && range !== null) {
+          const values = cellValues(col, row.block);
+          const firstLevel = props.groupLevels[0];
           props.onRangeSelected({
-            startDate: cellDate(dayIndex, range.startMinutes),
-            endDate: cellDate(dayIndex, range.endMinutes),
-            resourceId: columns[dayIndex]?.resourceId,
+            startDate: cellDateAt(col.day, range.startMinutes),
+            endDate: cellDateAt(col.day, range.endMinutes),
+            resourceId:
+              firstLevel === undefined
+                ? undefined
+                : values[firstLevel.fieldExpr],
+            resources: values,
           });
         } else if (cancelled) {
           props.onGestureCancelled();
@@ -397,9 +588,10 @@ function DayWeekViewInner<T>(
   };
 
   const onChipPointerDown = (
-    appointment: SchedulerAppointment<T>,
+    segment: DayWeekSegment<T>,
     event: ReactPointerEvent<HTMLElement>,
   ): void => {
+    const appointment = segment.appointment;
     if (
       !props.allowDragging ||
       appointment.disabled ||
@@ -409,45 +601,57 @@ function DayWeekViewInner<T>(
       return;
     }
     const rows = rowsRef.current;
-    if (rows === null) return;
+    const host = hostRef.current;
+    if (rows === null || host === null) return;
     const rect = rows.getBoundingClientRect();
-    const originRes = resourceIndexOf(
-      appointment,
-      groupItems,
-      props.resourceIdOf,
-    );
-    const originDay = originDayIndex(grid, appointment);
+    const hostRect = host.getBoundingClientRect();
+    const originLeaf = leafIndexOf(appointment);
     let proposal: AppointmentProposal | null = null;
-    let targetRes = originRes;
+    let leafIndex = originLeaf;
+    let lastX = event.clientX;
+    let lastY = event.clientY;
     beginPointerGesture(event.nativeEvent, {
-      onMove: (deltaX, deltaY) => {
-        const move = dayWeekDragMove(
+      onMove: (deltaX, deltaY, moveEvent) => {
+        lastX = moveEvent.clientX;
+        lastY = moveEvent.clientY;
+        const move = dayWeekLayoutDragMove(
           appointment,
           deltaX,
           deltaY,
           rect.width,
           rect.height,
           grid,
-          colCount,
-          resCount,
-          originDay,
-          originRes,
+          layout,
+          segment.colIndex,
+          segment.block ?? 0,
+          segment.startMinutes,
           snapMinutes,
           props.rtl,
         );
         proposal = move.proposal;
-        targetRes = move.targetRes;
-        setPreview({ key: appointment.key, proposal, resIndex: targetRes });
+        leafIndex = move.leafIndex;
+        setPreview({ key: appointment.key, proposal, leafIndex });
       },
       onFinish: (commit, cancelled) => {
         setPreview(null);
+        if (commit && isOgeSchedulerDragOut(hostRect, lastX, lastY)) {
+          props.onDragOut(appointment, lastX, lastY);
+          return;
+        }
         if (commit && proposal !== null) {
-          const changedRes = groupItems !== null && targetRes !== originRes;
+          const changed = layout.leaves.length > 0 && leafIndex !== originLeaf;
+          const values = changed ? props.groupLeaves[leafIndex]?.values : undefined;
+          const firstLevel = props.groupLevels[0];
           props.onMoveCommitted({
             appointment,
             proposal,
-            ...(changedRes && groupItems
-              ? { resourceId: groupItems[targetRes].id }
+            ...(values !== undefined
+              ? {
+                  resources: values,
+                  ...(firstLevel !== undefined
+                    ? { resourceId: values[firstLevel.fieldExpr] }
+                    : {}),
+                }
               : {}),
           });
         } else if (cancelled) {
@@ -469,6 +673,8 @@ function DayWeekViewInner<T>(
     const rows = rowsRef.current;
     if (rows === null) return;
     const rect = rows.getBoundingClientRect();
+    const blockHeight = rect.height / layout.blockCount;
+    const leafIndex = leafIndexOf(appointment);
     let proposal: AppointmentProposal | null = null;
     beginPointerGesture(event.nativeEvent, {
       onMove: (_deltaX, deltaY) => {
@@ -476,11 +682,11 @@ function DayWeekViewInner<T>(
           appointment,
           edge,
           deltaY,
-          rect.height,
+          blockHeight,
           grid,
           snapMinutes,
         );
-        setPreview({ key: appointment.key, proposal });
+        setPreview({ key: appointment.key, proposal, leafIndex });
       },
       onFinish: (commit, cancelled) => {
         setPreview(null);
@@ -494,30 +700,42 @@ function DayWeekViewInner<T>(
   };
 
   const onAllDayBarPointerDown = (
-    appointment: SchedulerAppointment<T>,
+    bar: AllDayPlacedBar<T>,
     event: ReactPointerEvent<HTMLElement>,
   ): void => {
+    const appointment = bar.appointment;
     if (!props.allowDragging || appointment.disabled || event.button !== 0) {
       return;
     }
     const rows = rowsRef.current;
-    if (rows === null) return;
+    const host = hostRef.current;
+    if (rows === null || host === null) return;
     const rect = rows.getBoundingClientRect();
+    const hostRect = host.getBoundingClientRect();
+    const leafIndex = leafIndexOf(appointment);
     let proposal: AppointmentProposal | null = null;
+    let lastX = event.clientX;
+    let lastY = event.clientY;
     beginPointerGesture(event.nativeEvent, {
-      onMove: (deltaX) => {
+      onMove: (deltaX, _deltaY, moveEvent) => {
+        lastX = moveEvent.clientX;
+        lastY = moveEvent.clientY;
         proposal = allDayDragProposal(
           appointment,
           deltaX,
           rect.width,
-          grid.days.length,
+          allDayStrip.columnCount,
           snapMinutes,
           props.rtl,
         );
-        setPreview({ key: appointment.key, proposal });
+        setPreview({ key: appointment.key, proposal, leafIndex });
       },
       onFinish: (commit, cancelled) => {
         setPreview(null);
+        if (commit && isOgeSchedulerDragOut(hostRect, lastX, lastY)) {
+          props.onDragOut(appointment, lastX, lastY);
+          return;
+        }
         if (commit && proposal !== null) {
           props.onMoveCommitted({ appointment, proposal });
         } else if (cancelled) {
@@ -529,21 +747,14 @@ function DayWeekViewInner<T>(
 
   /* ---------- pointer events ---------- */
 
-  const chipEvent = (
-    appointment: SchedulerAppointment<T>,
-    event: ReactMouseEvent<HTMLElement>,
-  ): SchedulerChipEvent<T> => ({
-    appointment,
-    event: event.nativeEvent,
-    rect: rectOf(event.currentTarget),
-  });
-
   const onChipClick = (
     appointment: SchedulerAppointment<T>,
     event: ReactMouseEvent<HTMLElement>,
   ): void => {
     event.stopPropagation();
-    props.onChipClicked(chipEvent(appointment, event));
+    props.onChipClicked(
+      chipEvent(appointment, event.nativeEvent, event.currentTarget),
+    );
   };
 
   const onChipDblClick = (
@@ -551,7 +762,9 @@ function DayWeekViewInner<T>(
     event: ReactMouseEvent<HTMLElement>,
   ): void => {
     event.stopPropagation();
-    props.onChipDblClicked(chipEvent(appointment, event));
+    props.onChipDblClicked(
+      chipEvent(appointment, event.nativeEvent, event.currentTarget),
+    );
   };
 
   const onChipContextMenu = (
@@ -559,74 +772,152 @@ function DayWeekViewInner<T>(
     event: ReactMouseEvent<HTMLElement>,
   ): void => {
     event.stopPropagation();
-    props.onChipContextMenu(chipEvent(appointment, event));
+    props.onChipContextMenu(
+      chipEvent(appointment, event.nativeEvent, event.currentTarget),
+    );
   };
 
   const chipLabel = (appointment: SchedulerAppointment<T>): string =>
-    schedulerChipAriaLabel(messages, appointment, locale);
+    withSelectedLabel(
+      schedulerChipAriaLabel(messages, appointment, locale),
+      isSelected(appointment),
+      messages,
+    );
 
   const previewBox =
-    preview === null
+    preview === null || preview.proposal.allDay
       ? null
-      : dayWeekPreviewBox(
+      : dayWeekLayoutPreviewBox(
           preview.proposal,
-          preview.resIndex,
+          preview.leafIndex,
           grid,
           props.minAppointmentMinutes,
-          colCount,
-          resCount,
+          layout,
+        );
+  const drop = props.dropPreview;
+  const dropBox =
+    drop === null || drop.slot.allDay
+      ? null
+      : dayWeekLayoutPreviewBox(
+          {
+            startDate: drop.slot.startDate,
+            endDate: new Date(
+              drop.slot.startDate.getTime() + drop.durationMinutes * 60_000,
+            ),
+            allDay: false,
+          },
+          Math.max(
+            0,
+            leafIndexOfValues(props.groupLevels, props.groupLeaves, drop.slot.resources),
+          ),
+          grid,
+          props.minAppointmentMinutes,
+          layout,
         );
   const selectionBox =
-    selection === null ? null : dayWeekSelectionBox(selection, grid, colCount);
+    selection === null
+      ? null
+      : dayWeekSelectionBox(selection, grid, layout.colCount, layout.blockCount);
+  const nowBoxes = dayWeekNowBoxes(
+    grid,
+    layout,
+    now,
+    props.showCurrentTimeIndicator,
+  );
+
+  const gridLabel = schedulerGridAriaLabel(
+    messages,
+    weekNumbers.length === 0
+      ? props.periodLabel
+      : `${props.periodLabel}, ${weekNumbers
+          .map((week) => schedulerWeekNumberTexts(week, messages).label)
+          .join(', ')}`,
+  );
 
   const hostStyle = {
     '--oge-scheduler-day-count': grid.days.length,
-    '--oge-scheduler-col-count': colCount,
+    '--oge-scheduler-col-count': layout.colCount,
+    '--oge-scheduler-allday-cols': allDayStrip.columnCount,
+    '--oge-scheduler-block-slots': grid.slotStartMinutes.length,
   } as CSSProperties;
+
+  const isBreak = (col: DayWeekColumn): boolean => {
+    if (col.colIndex === 0 || layout.leaves.length === 0 || layout.vertical) {
+      return false;
+    }
+    return layout.groupByDate ? col.resIndex === 0 : col.dayIndex === 0;
+  };
+
+  const headerCell = (cell: SchedulerHeaderCell): ReactNode => {
+    const style = { gridColumn: `${cell.start + 2} / span ${cell.span}` };
+    if (cell.kind === 'date' && cell.date !== undefined) {
+      const date = cell.date;
+      return (
+        <div key={cell.key} className="oge-scheduler-date-header" style={style}>
+          {renderDateHeader ? (
+            renderDateHeader({ date, view })
+          ) : (
+            <>
+              <span className="oge-scheduler-date-weekday">
+                {weekdayShortText(date, locale)}
+              </span>
+              <span
+                className={
+                  sameDay(date, now)
+                    ? 'oge-scheduler-date-num oge-scheduler-date-today'
+                    : 'oge-scheduler-date-num'
+                }
+              >
+                {date.getDate()}
+              </span>
+            </>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div key={cell.key} className="oge-scheduler-resource-head" style={style}>
+        {renderResourceHeader && cell.item && cell.resource
+          ? renderResourceHeader({
+              item: cell.item,
+              resource: cell.resource,
+              level: cell.level ?? 0,
+              view,
+            })
+          : cell.text}
+      </div>
+    );
+  };
 
   return (
     <div
       ref={hostRef}
-      className="oge-scheduler-view oge-scheduler-day-week"
+      className={
+        layout.vertical
+          ? 'oge-scheduler-view oge-scheduler-day-week oge-scheduler-day-week-vertical'
+          : 'oge-scheduler-view oge-scheduler-day-week'
+      }
       style={hostStyle}
     >
       {/* visual headers; the grid's own columnheader row carries the names */}
-      <div className="oge-scheduler-header-row" aria-hidden="true">
-        <div className="oge-scheduler-gutter-spacer" />
-        {grid.days.map((day) => (
-          <div key={day.getTime()} className="oge-scheduler-date-header">
-            {renderDateHeader ? (
-              renderDateHeader({ date: day, view })
-            ) : (
-              <>
-                <span className="oge-scheduler-date-weekday">
-                  {weekdayShortText(day, locale)}
-                </span>
-                <span
-                  className={
-                    sameDay(day, now)
-                      ? 'oge-scheduler-date-num oge-scheduler-date-today'
-                      : 'oge-scheduler-date-num'
-                  }
-                >
-                  {day.getDate()}
-                </span>
-              </>
+      {headerRows.map((row, index) => (
+        <div
+          key={index}
+          className={
+            row[0]?.kind === 'group'
+              ? 'oge-scheduler-header-row oge-scheduler-resource-row'
+              : 'oge-scheduler-header-row'
+          }
+          aria-hidden="true"
+        >
+          <div className="oge-scheduler-gutter-spacer">
+            {index === 0 && weekBadge !== null && (
+              <span className="oge-scheduler-week-number">{weekBadge}</span>
             )}
           </div>
-        ))}
-      </div>
-
-      {groupItems && (
-        <div className="oge-scheduler-resource-row" aria-hidden="true">
-          <div className="oge-scheduler-gutter-spacer" />
-          {columns.map((col) => (
-            <div key={col.colIndex} className="oge-scheduler-resource-head">
-              {col.resourceText}
-            </div>
-          ))}
+          {row.map(headerCell)}
         </div>
-      )}
+      ))}
 
       {props.showAllDayPanel && (
         <div className="oge-scheduler-allday" role="presentation">
@@ -634,6 +925,7 @@ function DayWeekViewInner<T>(
             {messages.allDayLabel}
           </div>
           <div
+            ref={stripRef}
             className="oge-scheduler-allday-lanes"
             style={
               {
@@ -641,34 +933,37 @@ function DayWeekViewInner<T>(
               } as CSSProperties
             }
           >
-            {grid.days.map((day) => (
+            {allDayStrip.cells.map((cell) => (
               // pointer affordance only; keyboard creation goes through the grid cells
               <div
-                key={day.getTime()}
+                key={cell.key}
                 className="oge-scheduler-allday-cell"
                 onClick={(event) =>
                   props.onCellClicked({
-                    cellDate: day,
+                    cellDate: cell.day,
                     allDay: true,
                     event: event.nativeEvent,
+                    resources: cell.values,
                   })
                 }
                 onDoubleClick={(event) =>
                   props.onCellDblClicked({
-                    cellDate: day,
+                    cellDate: cell.day,
                     allDay: true,
                     event: event.nativeEvent,
+                    resources: cell.values,
                   })
                 }
               />
             ))}
-            {allDayBars.map((bar) => (
+            {allDayStrip.bars.map((bar) => (
               <div
                 key={String(bar.appointment.key)}
                 className={[
                   'oge-scheduler-allday-bar oge-scheduler-chip-stop',
                   bar.clippedStart && 'oge-scheduler-bar-clipped-start',
                   bar.clippedEnd && 'oge-scheduler-bar-clipped-end',
+                  isSelected(bar.appointment) && 'oge-scheduler-chip-selected',
                   preview?.key === bar.appointment.key &&
                     'oge-scheduler-dragging',
                 ]
@@ -684,7 +979,7 @@ function DayWeekViewInner<T>(
                 )}
                 data-appointment-key={String(bar.appointment.key)}
                 style={{
-                  gridColumn: `${bar.startDayIndex + 1} / ${bar.endDayIndex + 2}`,
+                  gridColumn: `${bar.colStart} / ${bar.colEnd}`,
                   gridRow: bar.lane + 1,
                 }}
                 onClick={(event) => onChipClick(bar.appointment, event)}
@@ -693,9 +988,7 @@ function DayWeekViewInner<T>(
                 }
                 onKeyDown={(event) => onChipKeyDown(bar.appointment, event)}
                 onFocus={() => setFocusedChipKey(bar.appointment.key)}
-                onPointerDown={(event) =>
-                  onAllDayBarPointerDown(bar.appointment, event)
-                }
+                onPointerDown={(event) => onAllDayBarPointerDown(bar, event)}
               >
                 <SchedulerAppointmentChip
                   appointment={bar.appointment}
@@ -711,12 +1004,37 @@ function DayWeekViewInner<T>(
       )}
 
       <div className="oge-scheduler-body">
+        {layout.vertical && (
+          <div className="oge-scheduler-group-gutter" aria-hidden="true">
+            {layout.leaves.map((leaf) => {
+              const resource = props.groupLevels[props.groupLevels.length - 1];
+              const item = leaf.path[leaf.path.length - 1];
+              return (
+                <div key={leaf.index} className="oge-scheduler-group-label">
+                  {renderResourceHeader && resource !== undefined
+                    ? renderResourceHeader({
+                        item,
+                        resource,
+                        level: props.groupLevels.length - 1,
+                        view,
+                      })
+                    : leaf.label}
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="oge-scheduler-gutter" aria-hidden="true">
-          {gutterSlots.map((slot) => (
-            <div key={slot.minutes} className="oge-scheduler-gutter-slot">
-              <span className="oge-scheduler-gutter-text">{slot.text}</span>
-            </div>
-          ))}
+          {Array.from({ length: layout.blockCount }, (_, block) =>
+            gutterSlots.map((slot) => (
+              <div
+                key={`${block}:${slot.minutes}`}
+                className="oge-scheduler-gutter-slot"
+              >
+                <span className="oge-scheduler-gutter-text">{slot.text}</span>
+              </div>
+            )),
+          )}
         </div>
         {/* the wrapper carries the overlay layers so the grid element owns
             ONLY rows (aria-required-children) */}
@@ -725,7 +1043,7 @@ function DayWeekViewInner<T>(
           <div
             className="oge-scheduler-grid"
             role="grid"
-            aria-label={schedulerGridAriaLabel(messages, props.periodLabel)}
+            aria-label={gridLabel}
             aria-readonly={props.readOnly ? true : undefined}
           >
             <div className="oge-scheduler-sr-header-row" role="row">
@@ -739,75 +1057,80 @@ function DayWeekViewInner<T>(
                 </div>
               ))}
             </div>
-            {grid.slotStartMinutes.map((minutes, slotIndex) => (
-              <div key={minutes} className="oge-scheduler-row" role="row">
+            {gridRows.map((row) => (
+              <div key={row.index} className="oge-scheduler-row" role="row">
                 {columns.map((col) => {
-                  const focused = isFocusedCell(col.colIndex, slotIndex);
-                  const date = cellDate(col.colIndex, minutes);
+                  const focused = isFocusedCell(col.colIndex, row.index);
+                  const date = cellDateAt(col.day, row.minutes);
+                  const blocked = blockedCells.has(
+                    dayWeekCellKey(row.block, row.slot, col.colIndex),
+                  );
+                  const leaf = dayWeekLayoutCellLeaf(layout, col.colIndex, row.block);
                   return (
                     <div
                       key={col.colIndex}
                       className={[
                         'oge-scheduler-cell',
-                        minutes % 60 === 0 && 'oge-scheduler-cell-hour',
+                        row.minutes % 60 === 0 && 'oge-scheduler-cell-hour',
+                        row.slot === 0 &&
+                          row.block > 0 &&
+                          'oge-scheduler-block-start',
                         sameDay(col.day, now) && 'oge-scheduler-day-today',
                         isWeekendDay(col.day, props.weekendDays) &&
                           'oge-scheduler-cell-weekend',
-                        col.resIndex === 0 &&
-                          col.colIndex !== 0 &&
-                          'oge-scheduler-cell-daybreak',
-                        isOffHoursCell(props.workHours, col.day, minutes) &&
-                          'oge-scheduler-cell-off-hours',
+                        isBreak(col) && 'oge-scheduler-cell-daybreak',
+                        dayWeekCellOffHours(
+                          layout,
+                          col.colIndex,
+                          row.block,
+                          col.day,
+                          row.minutes,
+                          props.workHours,
+                        ) && 'oge-scheduler-cell-off-hours',
+                        blocked && 'oge-scheduler-cell-disabled',
                         focused && 'oge-scheduler-cell-focused',
                       ]
                         .filter(Boolean)
                         .join(' ')}
                       role="gridcell"
+                      aria-disabled={blocked ? true : undefined}
                       tabIndex={focused ? 0 : -1}
                       aria-selected={dayWeekCellSelected(
                         col.colIndex,
-                        slotIndex,
-                        minutes,
+                        row.index,
+                        row.minutes,
                         focusedCell,
                         selection,
+                        row.block,
                       )}
                       data-focus-target={focused ? '' : undefined}
-                      aria-label={schedulerCellAriaLabel(
+                      aria-label={withUnavailableLabel(
+                        schedulerCellAriaLabel(
+                          messages,
+                          date,
+                          locale,
+                          leaf?.label ?? col.resourceText,
+                        ),
+                        blocked,
                         messages,
-                        date,
-                        locale,
-                        col.resourceText,
                       )}
                       onClick={(event) => {
-                        setFocusedCell({ day: col.colIndex, slot: slotIndex });
-                        props.onCellClicked({
-                          cellDate: date,
-                          allDay: false,
-                          event: event.nativeEvent,
-                          resourceId: col.resourceId,
-                        });
+                        setFocusedCell({ day: col.colIndex, slot: row.index });
+                        props.onCellClicked(cellEvent(col, row, event.nativeEvent));
                       }}
                       onDoubleClick={(event) =>
-                        props.onCellDblClicked({
-                          cellDate: date,
-                          allDay: false,
-                          event: event.nativeEvent,
-                          resourceId: col.resourceId,
-                        })
+                        props.onCellDblClicked(
+                          cellEvent(col, row, event.nativeEvent),
+                        )
                       }
-                      onKeyDown={(event) =>
-                        onCellKeyDown(col.colIndex, slotIndex, event)
-                      }
+                      onKeyDown={(event) => onCellKeyDown(col, row, event)}
                       onPointerDown={(event) =>
-                        onCellPointerDown(col.colIndex, slotIndex, event)
+                        onCellPointerDown(col, row, event)
                       }
                       onContextMenu={(event) =>
-                        props.onCellContextMenu({
-                          cellDate: date,
-                          allDay: false,
-                          event: event.nativeEvent,
-                          resourceId: col.resourceId,
-                        })
+                        props.onCellContextMenu(
+                          cellEvent(col, row, event.nativeEvent),
+                        )
                       }
                     >
                       {renderCell?.({ date, view, allDay: false })}
@@ -820,11 +1143,13 @@ function DayWeekViewInner<T>(
           <div className="oge-scheduler-chip-layer" role="presentation">
             {layouted.map((segment) => (
               <div
-                key={segmentKey(segment)}
+                key={`${segmentKey(segment)}:${segment.block ?? 0}`}
                 className={[
                   'oge-scheduler-chip-box oge-scheduler-chip-stop',
                   segment.clippedStart && 'oge-scheduler-chip-clipped-start',
                   segment.clippedEnd && 'oge-scheduler-chip-clipped-end',
+                  isSelected(segment.appointment) &&
+                    'oge-scheduler-chip-selected',
                   preview?.key === segment.appointment.key &&
                     'oge-scheduler-dragging',
                 ]
@@ -840,10 +1165,12 @@ function DayWeekViewInner<T>(
                 )}
                 data-appointment-key={String(segment.appointment.key)}
                 style={{
-                  top: pct(segment.topFraction * 100),
-                  height: pct(segment.heightFraction * 100),
-                  insetInlineStart: pct(chipLeftPercent(segment, colCount)),
-                  width: pct(chipWidthPercent(segment, colCount)),
+                  top: pct(chipTopPercent(segment, layout.blockCount)),
+                  height: pct(chipHeightPercent(segment, layout.blockCount)),
+                  insetInlineStart: pct(
+                    chipLeftPercent(segment, layout.colCount),
+                  ),
+                  width: pct(chipWidthPercent(segment, layout.colCount)),
                 }}
                 onClick={(event) => onChipClick(segment.appointment, event)}
                 onDoubleClick={(event) =>
@@ -854,9 +1181,7 @@ function DayWeekViewInner<T>(
                 }
                 onKeyDown={(event) => onChipKeyDown(segment.appointment, event)}
                 onFocus={() => setFocusedChipKey(segment.appointment.key)}
-                onPointerDown={(event) =>
-                  onChipPointerDown(segment.appointment, event)
-                }
+                onPointerDown={(event) => onChipPointerDown(segment, event)}
               >
                 <SchedulerAppointmentChip
                   appointment={segment.appointment}
@@ -896,6 +1221,18 @@ function DayWeekViewInner<T>(
                 }}
               />
             )}
+            {dropBox && (
+              <div
+                className="oge-scheduler-drag-preview oge-scheduler-drop-preview"
+                aria-hidden="true"
+                style={{
+                  top: pct(dropBox.top),
+                  height: pct(dropBox.height),
+                  insetInlineStart: pct(dropBox.left),
+                  width: pct(dropBox.width),
+                }}
+              />
+            )}
           </div>
           {selectionBox && (
             <div
@@ -909,37 +1246,31 @@ function DayWeekViewInner<T>(
               }}
             />
           )}
-          {grid.days.map((day, dayIndex) => {
-            const fraction = nowLineFraction(
-              grid,
-              dayIndex,
-              now,
-              props.showCurrentTimeIndicator,
-            );
-            if (!fraction) return null;
-            const insetInlineStart = pct((dayIndex / grid.days.length) * 100);
-            const width = pct((1 / grid.days.length) * 100);
-            return (
-              <Fragment key={day.getTime()}>
-                {props.shadeUntilCurrentTime && (
-                  <div
-                    className="oge-scheduler-shade"
-                    style={{
-                      height: pct(fraction * 100),
-                      insetInlineStart,
-                      width,
-                    }}
-                    aria-hidden="true"
-                  />
-                )}
+          {nowBoxes.map((line) => (
+            <Fragment key={line.key}>
+              {props.shadeUntilCurrentTime && (
                 <div
-                  className="oge-scheduler-now"
-                  style={{ top: pct(fraction * 100), insetInlineStart, width }}
+                  className="oge-scheduler-shade"
+                  style={{
+                    top: pct(line.blockTop),
+                    height: pct(line.top - line.blockTop),
+                    insetInlineStart: pct(line.left),
+                    width: pct(line.width),
+                  }}
                   aria-hidden="true"
                 />
-              </Fragment>
-            );
-          })}
+              )}
+              <div
+                className="oge-scheduler-now"
+                style={{
+                  top: pct(line.top),
+                  insetInlineStart: pct(line.left),
+                  width: pct(line.width),
+                }}
+                aria-hidden="true"
+              />
+            </Fragment>
+          ))}
         </div>
       </div>
     </div>

@@ -44,7 +44,16 @@ export default defineConfig(() => ({
       // Two entries on purpose: the JS never imports the stylesheet, so a
       // consumer that renders on the server (or bundles without a CSS loader)
       // is not forced to resolve it. `styles.css` is imported once by the app.
-      entry: { index: 'src/index.ts', styles: 'src/styles.ts' },
+      // The three export entries are separate on purpose: `exceljs` /
+      // `jspdf` are optional peers of the engine, so only an app that imports
+      // one pays for it — the shape of the Angular package's secondary entries.
+      entry: {
+        index: 'src/index.ts',
+        styles: 'src/styles.ts',
+        'export-ical': 'src/export-ical.ts',
+        'export-excel': 'src/export-excel.ts',
+        'export-pdf': 'src/export-pdf.ts',
+      },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
       formats: ['es', 'cjs'],
@@ -62,6 +71,11 @@ export default defineConfig(() => ({
         '@oge-ui/react-inputs',
         '@oge-ui/react-overlay',
         '@oge-ui/scheduler-engine',
+        '@oge-ui/scheduler-engine/export-ical',
+        '@oge-ui/scheduler-engine/export-excel',
+        '@oge-ui/scheduler-engine/export-pdf',
+        'exceljs',
+        'jspdf',
       ],
       output: {
         // Rollup strips module-level directives when it bundles, so the

@@ -216,9 +216,10 @@ export function ogeSchedulerDraggableKey(
   key: string,
   payload: OgeSchedulerDragPayload,
   announcement: string,
+  isArmed: boolean = armed !== null && armed.data === payload.data,
 ): boolean {
   if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
-    armOgeSchedulerPayload(armed?.data === payload.data ? null : payload, announcement);
+    armOgeSchedulerPayload(isArmed ? null : payload, announcement);
     return true;
   }
   if (key === 'Escape' && armed !== null) {

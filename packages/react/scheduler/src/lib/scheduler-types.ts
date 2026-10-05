@@ -9,18 +9,29 @@ import type {
   OgeSchedulerAppointmentClickEvent,
   OgeSchedulerAppointmentDeletedEvent,
   OgeSchedulerAppointmentDeletingEvent,
+  OgeSchedulerAppointmentDroppedEvent,
   OgeSchedulerAppointmentUpdatedEvent,
   OgeSchedulerAppointmentUpdatingEvent,
   OgeSchedulerCellClickEvent,
+  OgeSchedulerConflictCheck,
+  OgeSchedulerDisabledSlots,
+  OgeSchedulerDragOutEvent,
   OgeSchedulerEditorShowingEvent as EditorShowingEventBase,
+  OgeSchedulerExportData,
+  OgeSchedulerGroupOrientation,
   OgeSchedulerMessages,
+  OgeSchedulerMoreMode,
+  OgeSchedulerPrintOptions,
   OgeSchedulerRangeSelectedEvent,
   OgeSchedulerReminderEvent,
   OgeSchedulerResource,
+  OgeSchedulerResourceItem,
   OgeSchedulerView,
   OgeSchedulerViewOptions,
+  OgeSchedulerWeekNumberRule,
   OgeSchedulerWorkHours,
   SchedulerFieldExpr,
+  SchedulerPasteTarget,
 } from '@oge-ui/scheduler-engine';
 
 /**
@@ -60,6 +71,17 @@ export interface OgeSchedulerCellRenderContext {
 export interface OgeDateHeaderRenderContext {
   /** The column's date. */
   readonly date: Date;
+  readonly view: OgeSchedulerView;
+}
+
+/** What `renderResourceHeader` is handed — Angular's `ogeResourceHeaderTemplate` context. */
+export interface OgeResourceHeaderRenderContext {
+  /** The resource item heading the column / row. */
+  readonly item: OgeSchedulerResourceItem;
+  /** The resource kind the item belongs to. */
+  readonly resource: OgeSchedulerResource;
+  /** Nesting level (0 = outermost `groups` entry). */
+  readonly level: number;
   readonly view: OgeSchedulerView;
 }
 
@@ -125,8 +147,51 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
   agendaDuration?: number;
   /** Resource kinds appointments can be assigned to. */
   resources?: readonly OgeSchedulerResource[];
-  /** Field of the resource that groups the views (first entry). */
+  /**
+   * Resource fields grouping the views, outermost first (`['roomId',
+   * 'ownerId']` nests owners inside rooms): day/week columns or row blocks,
+   * timeline rows with group header rows.
+   */
   groups?: readonly string[];
+  /**
+   * How grouped resources lay out: `'horizontal'` side by side, or
+   * `'vertical'` stacked (day/week row blocks; the timeline default). A
+   * view option's own `groupOrientation` wins.
+   */
+  groupOrientation?: OgeSchedulerGroupOrientation;
+  /**
+   * Horizontal day/week grouping is date-major (`true`, the default) or
+   * resource-major (`false`).
+   */
+  groupByDate?: boolean;
+  /** Shows week numbers in the month rows and the day/week header corner. */
+  showWeekNumbers?: boolean;
+  /** Week numbering: ISO 8601 (default) or the locale's own. */
+  weekNumberRule?: OgeSchedulerWeekNumberRule;
+  /**
+   * Non-bookable slots — a predicate `(date, resources) => boolean` or a
+   * list of (optionally recurring, per-resource) ranges: rendered hatched,
+   * refused by create / move / resize / paste / drop and announced.
+   */
+  disabledSlots?: OgeSchedulerDisabledSlots | null;
+  /** Clamps timed moves, creates and drops into the target's working hours. */
+  snapToWorkHours?: boolean;
+  /** `false` refuses a create / move / resize that overlaps another appointment. */
+  allowOverlap?: boolean;
+  /** Decides overlapping changes; `true` lets one land. Wins over `allowOverlap`. */
+  conflictCheck?: OgeSchedulerConflictCheck<T>;
+  /** The selected items — controlled when provided. */
+  selectedAppointments?: readonly T[];
+  /** Uncontrolled initial selection. */
+  defaultSelectedAppointments?: readonly T[];
+  /** The controlled half of `selectedAppointments`. */
+  onSelectedAppointmentsChange?: (items: readonly T[]) => void;
+  /** Undo steps kept for Ctrl+Z / Ctrl+Y (`0` turns undo off). Default 50. */
+  undoLimit?: number;
+  /** What a month "+N more" does. Default `'popup'`. */
+  moreMode?: OgeSchedulerMoreMode;
+  /** Timeline row virtualization: `'auto'` (more than 50 rows), `true` or `false`. */
+  virtualScrolling?: boolean | 'auto';
   /** BCP 47 locale for every `Intl` format; defaults to the browser locale. */
   locale?: string;
   /** Per-instance overrides of the context-configured messages. */
@@ -177,6 +242,11 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
   renderCell?: (context: OgeSchedulerCellRenderContext) => ReactNode;
   /** Replaces the day/week date headers — the React face of `ogeDateHeaderTemplate`. */
   renderDateHeader?: (context: OgeDateHeaderRenderContext) => ReactNode;
+  /**
+   * Replaces the grouped resource headers (day/week columns, timeline row
+   * heads and group rows) — the React face of `ogeResourceHeaderTemplate`.
+   */
+  renderResourceHeader?: (context: OgeResourceHeaderRenderContext) => ReactNode;
 
   /** Cancelable: before a new appointment reaches the store. */
   onAppointmentAdding?: (event: OgeSchedulerAppointmentAddingEvent<T>) => void;
@@ -218,6 +288,10 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
   onCellContextMenu?: (event: OgeSchedulerCellClickEvent) => void;
   /** An appointment's reminder lead time was reached (checked ~30s). */
   onReminderTriggered?: (event: OgeSchedulerReminderEvent<T>) => void;
+  /** A `useOgeSchedulerDraggable` item (or another scheduler's appointment) was dropped in. */
+  onAppointmentDropped?: (event: OgeSchedulerAppointmentDroppedEvent<T>) => void;
+  /** An appointment was dragged out of the scheduler and released. */
+  onDragOut?: (event: OgeSchedulerDragOutEvent<T>) => void;
 
   className?: string;
   style?: CSSProperties;
@@ -256,4 +330,25 @@ export interface OgeSchedulerHandle<
   goToday(): void;
   /** Steps the visible period backwards (`-1`) or forwards (`1`). */
   navigate(direction: -1 | 1): void;
+  /** Copies the selection (or `appointment`) to the scheduler clipboard. */
+  copyAppointments(appointment?: OgeSchedulerAppointment<T> | null): number;
+  /** Pastes the clipboard at `target`, as one undo step. */
+  pasteAppointments(target: SchedulerPasteTarget): number;
+  /** Empties the selection. */
+  clearSelection(): void;
+  /** Reverts the last scheduler edit (Ctrl+Z). */
+  undo(): boolean;
+  /** Re-applies the last undone edit (Ctrl+Y). */
+  redo(): boolean;
+  /** Whether `undo()` has a step to revert. */
+  canUndo(): boolean;
+  /** Whether `redo()` has a step to re-apply. */
+  canRedo(): boolean;
+  /** The export model the `/export-*` entries consume. */
+  getExportData(range?: {
+    readonly startDate: Date;
+    readonly endDate: Date;
+  }): OgeSchedulerExportData<T>;
+  /** Prints the current view. */
+  print(options?: OgeSchedulerPrintOptions): Promise<void>;
 }

@@ -28,6 +28,21 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./export-ical": {
+      "types": "./export-ical.d.ts",
+      "import": "./export-ical.js",
+      "require": "./export-ical.cjs"
+    },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.js",
+      "require": "./export-excel.cjs"
+    },
+    "./export-pdf": {
+      "types": "./export-pdf.d.ts",
+      "import": "./export-pdf.js",
+      "require": "./export-pdf.cjs"
+    },
     "./styles.css": "./styles.css"
   },
   "sideEffects": [

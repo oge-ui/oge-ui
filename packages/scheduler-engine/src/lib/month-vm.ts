@@ -212,6 +212,24 @@ export function appointmentsOnDay<T>(
 }
 
 /**
+ * Whether a month-grid day belongs to the displayed month(s) — the others
+ * render dimmed. A multi-month view counts every month of its interval.
+ */
+export function isMonthViewDay(
+  day: Date,
+  anchorDate: Date,
+  intervalCount = 1,
+): boolean {
+  const start = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1);
+  const end = new Date(
+    anchorDate.getFullYear(),
+    anchorDate.getMonth() + Math.max(1, Math.floor(intervalCount)),
+    1,
+  );
+  return day.getTime() >= start.getTime() && day.getTime() < end.getTime();
+}
+
+/**
  * The fully blocked days of a month grid (`disabledSlots`), keyed
  * `week:day` — rendered hatched, refused for create / drop. Ungrouped, so
  * a range limited to one resource does not block a month cell.

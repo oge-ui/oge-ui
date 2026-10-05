@@ -11,9 +11,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { sameDay, sameMonth } from '@oge-ui/core';
+import { sameDay } from '@oge-ui/core';
 import {
   beginPointerGesture,
+  isMonthViewDay,
   isOgeSchedulerDragOut,
   buildMonthGrid,
   buildMonthWeekLayouts,
@@ -700,15 +701,7 @@ export class OgeSchedulerMonthView<T = unknown> {
   }
 
   protected isCurrentMonth(day: Date): boolean {
-    if (this.intervalCount() <= 1) return sameMonth(day, this.anchorDate());
-    const anchor = this.anchorDate();
-    const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
-    const end = new Date(
-      anchor.getFullYear(),
-      anchor.getMonth() + this.intervalCount(),
-      1,
-    );
-    return day.getTime() >= start.getTime() && day.getTime() < end.getTime();
+    return isMonthViewDay(day, this.anchorDate(), this.intervalCount());
   }
 
   protected isToday(day: Date): boolean {

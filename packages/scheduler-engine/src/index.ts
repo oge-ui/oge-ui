@@ -333,6 +333,7 @@ export {
 export {
   appointmentsOnDay,
   buildMonthWeekLayouts,
+  isMonthViewDay,
   monthCellSelected,
   monthChipOrder,
   monthColumnHeaderText,
