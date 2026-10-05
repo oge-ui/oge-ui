@@ -58,6 +58,17 @@
       ],
       "@oge-ui/gantt/export-pdf": ["./packages/gantt/export-pdf/src/index.ts"],
       "@oge-ui/grid": ["./packages/grid/src/index.ts"],
+      "@oge-ui/locales": ["./packages/locales/src/index.ts"],
+      "@oge-ui/locales/ar": ["./packages/locales/src/ar.ts"],
+      "@oge-ui/locales/de": ["./packages/locales/src/de.ts"],
+      "@oge-ui/locales/es": ["./packages/locales/src/es.ts"],
+      "@oge-ui/locales/fr": ["./packages/locales/src/fr.ts"],
+      "@oge-ui/locales/he": ["./packages/locales/src/he.ts"],
+      "@oge-ui/locales/it": ["./packages/locales/src/it.ts"],
+      "@oge-ui/locales/ja": ["./packages/locales/src/ja.ts"],
+      "@oge-ui/locales/pt-BR": ["./packages/locales/src/pt-BR.ts"],
+      "@oge-ui/locales/tr": ["./packages/locales/src/tr.ts"],
+      "@oge-ui/locales/zh-CN": ["./packages/locales/src/zh-CN.ts"],
       "@oge-ui/grid/export-excel": [
         "./packages/grid/export-excel/src/index.ts"
       ],
