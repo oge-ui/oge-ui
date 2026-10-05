@@ -12,6 +12,8 @@ import {
   proposeResize,
   type AppointmentProposal,
 } from './gesture-math';
+import type { DayWeekColumn, DayWeekGroupLayout } from './grouping';
+import { dayWeekPlacement } from './grouping';
 import { packLanes, type LaneLayout, type LanedItem } from './lanes';
 import { layoutDayColumn, type LayoutedSegment } from './layout';
 import type { SchedulerAppointment } from './scheduler-model';
@@ -27,18 +29,14 @@ import {
   type TimeGridVm,
 } from './view-model';
 
-/** One rendered time-grid column: a day, split per grouping resource. */
-export interface DayWeekColumn {
-  readonly day: Date;
-  readonly dayIndex: number;
-  readonly resIndex: number;
-  readonly colIndex: number;
-  readonly resourceId: unknown;
-  readonly resourceText: string;
-}
+export type { DayWeekColumn } from './grouping';
 
 /** A layouted timed segment with its rendered column index. */
-export type DayWeekSegment<T> = LayoutedSegment<T> & { colIndex: number };
+export type DayWeekSegment<T> = LayoutedSegment<T> & {
+  colIndex: number;
+  /** The stacked block (vertical grouping); absent = 0. */
+  block?: number;
+};
 
 /** One rendered all-day bar with its grid placement. */
 export type AllDayBar<T> = LanedItem<T>;
@@ -83,6 +81,7 @@ export function buildDayWeekColumns(
       colIndex: dayIndex * resCount + resIndex,
       resourceId: groupItems?.[resIndex]?.id,
       resourceText: groupItems?.[resIndex]?.text ?? '',
+      values: {},
     })),
   );
 }
@@ -289,9 +288,12 @@ export function dayWeekPreviewBox(
 
 /** A live drag-to-create selection in one column. */
 export interface DayWeekSelection {
+  /** The rendered column index. */
   readonly dayIndex: number;
   readonly startMinutes: number;
   readonly endMinutes: number;
+  /** The stacked block (vertical grouping); absent = 0. */
+  readonly block?: number;
 }
 
 /** Geometry of the drag-to-create selection box. */
@@ -299,12 +301,19 @@ export function dayWeekSelectionBox(
   selection: DayWeekSelection,
   grid: TimeGridVm,
   colCount: number,
+  blockCount = 1,
 ): SchedulerOverlayBox | null {
   const span = grid.windowEndMinutes - grid.windowStartMinutes;
   if (span <= 0) return null;
+  const blocks = Math.max(1, blockCount);
+  const block = selection.block ?? 0;
   return {
-    top: ((selection.startMinutes - grid.windowStartMinutes) / span) * 100,
-    height: ((selection.endMinutes - selection.startMinutes) / span) * 100,
+    top:
+      ((block + (selection.startMinutes - grid.windowStartMinutes) / span) /
+        blocks) *
+      100,
+    height:
+      ((selection.endMinutes - selection.startMinutes) / span / blocks) * 100,
     left: (selection.dayIndex / colCount) * 100,
     width: (1 / colCount) * 100,
   };
@@ -445,10 +454,12 @@ export function dayWeekCellSelected(
   slotStartMinutes: number,
   focused: { readonly day: number; readonly slot: number },
   selection: DayWeekSelection | null,
+  block = 0,
 ): boolean {
   if (selection !== null) {
     return (
       colIndex === selection.dayIndex &&
+      block === (selection.block ?? 0) &&
       slotStartMinutes >= selection.startMinutes &&
       slotStartMinutes < selection.endMinutes
     );
@@ -588,4 +599,269 @@ export function allDayDragProposal<T>(
     (rtl ? -deltaX : deltaX) / (rectWidth / dayCount),
   );
   return proposeMove(appointment, deltaDays, 0, snap);
+}
+
+/* ---------- grouped layouts (multi-level, orientation, groupByDate) ---------- */
+
+/**
+ * Layouted timed segments placed by a {@link DayWeekGroupLayout}: each
+ * (day, leaf) bucket runs the column layout once, and its segments carry
+ * the rendered column and block. `leafOf` maps an item to its leaf
+ * (`-1` / unmatched renders in leaf 0, as the single-level grid always did).
+ */
+export function layoutGroupedDayWeekSegments<T>(
+  timed: readonly SchedulerAppointment<T>[],
+  grid: TimeGridVm,
+  layout: DayWeekGroupLayout,
+  leafOf: (item: T) => number,
+  minAppointmentMinutes: number,
+): readonly DayWeekSegment<T>[] {
+  const segments = segmentTimedAppointments(timed, grid);
+  const buckets = new Map<string, AppointmentSegment<T>[]>();
+  const placements = new Map<string, { col: number; block: number }>();
+  for (const segment of segments) {
+    const leaf =
+      layout.leaves.length === 0
+        ? 0
+        : Math.max(0, leafOf(segment.appointment.source));
+    const placement = dayWeekPlacement(layout, segment.dayIndex, leaf);
+    const key = `${placement.col}:${placement.block}`;
+    placements.set(key, placement);
+    const bucket = buckets.get(key);
+    if (bucket) bucket.push(segment);
+    else buckets.set(key, [segment]);
+  }
+  const result: DayWeekSegment<T>[] = [];
+  for (const [key, bucket] of buckets) {
+    const placement = placements.get(key) ?? { col: 0, block: 0 };
+    for (const item of layoutDayColumn<T>(
+      bucket,
+      grid.windowStartMinutes,
+      grid.windowEndMinutes,
+      minAppointmentMinutes,
+    )) {
+      result.push({ ...item, colIndex: placement.col, block: placement.block });
+    }
+  }
+  return result;
+}
+
+/** Chip `top` in percent of the rows area (stacked blocks included). */
+export function chipTopPercent<T>(
+  segment: DayWeekSegment<T>,
+  blockCount: number,
+): number {
+  return (
+    (((segment.block ?? 0) + segment.topFraction) / Math.max(1, blockCount)) *
+    100
+  );
+}
+
+/** Chip `height` in percent of the rows area. */
+export function chipHeightPercent<T>(
+  segment: DayWeekSegment<T>,
+  blockCount: number,
+): number {
+  return (segment.heightFraction / Math.max(1, blockCount)) * 100;
+}
+
+/** Geometry of the live drag/resize preview box in a grouped layout. */
+export function dayWeekLayoutPreviewBox(
+  proposal: AppointmentProposal,
+  leafIndex: number,
+  grid: TimeGridVm,
+  minAppointmentMinutes: number,
+  layout: DayWeekGroupLayout,
+): SchedulerOverlayBox | null {
+  const dayIndex = grid.days.findIndex((day) =>
+    sameDay(day, proposal.startDate),
+  );
+  if (dayIndex === -1) return null;
+  const span = grid.windowEndMinutes - grid.windowStartMinutes;
+  if (span <= 0) return null;
+  const startMinutes = Math.max(
+    minutesOfDay(proposal.startDate),
+    grid.windowStartMinutes,
+  );
+  const length = Math.max(
+    durationMinutes(proposal.startDate, proposal.endDate),
+    minAppointmentMinutes,
+  );
+  const endMinutes = Math.min(startMinutes + length, grid.windowEndMinutes);
+  const { col, block } = dayWeekPlacement(layout, dayIndex, leafIndex);
+  const blocks = Math.max(1, layout.blockCount);
+  return {
+    top:
+      ((block + (startMinutes - grid.windowStartMinutes) / span) / blocks) *
+      100,
+    height: ((endMinutes - startMinutes) / span / blocks) * 100,
+    left: (col / layout.colCount) * 100,
+    width: (1 / layout.colCount) * 100,
+  };
+}
+
+/**
+ * A chip drag in a grouped layout: the horizontal delta picks the target
+ * column (day × leaf when side by side), the vertical one the time — and,
+ * with stacked blocks, the block under the moved chip's top edge, which
+ * becomes the new leaf. `rtl` inverts the horizontal delta.
+ */
+export function dayWeekLayoutDragMove<T>(
+  appointment: SchedulerAppointment<T>,
+  deltaX: number,
+  deltaY: number,
+  rectWidth: number,
+  rectHeight: number,
+  grid: TimeGridVm,
+  layout: DayWeekGroupLayout,
+  originCol: number,
+  originBlock: number,
+  originStartMinutes: number,
+  snap: number,
+  rtl = false,
+): { proposal: AppointmentProposal; leafIndex: number } {
+  const span = grid.windowEndMinutes - grid.windowStartMinutes;
+  const colWidth = rectWidth / layout.colCount;
+  const colDelta = Math.round((rtl ? -deltaX : deltaX) / colWidth);
+  const newCol = Math.min(
+    layout.colCount - 1,
+    Math.max(0, originCol + colDelta),
+  );
+  const originDay = layout.columns[originCol]?.dayIndex ?? 0;
+  const targetDay = layout.columns[newCol]?.dayIndex ?? originDay;
+  const blocks = Math.max(1, layout.blockCount);
+  const blockHeight = rectHeight / blocks;
+  let deltaMinutes: number;
+  let block = originBlock;
+  if (blocks === 1) {
+    deltaMinutes = (deltaY / blockHeight) * span;
+  } else {
+    const originTop =
+      originBlock * blockHeight +
+      ((originStartMinutes - grid.windowStartMinutes) / span) * blockHeight;
+    const newTop = originTop + deltaY;
+    block = Math.min(blocks - 1, Math.max(0, Math.floor(newTop / blockHeight)));
+    const minutes =
+      grid.windowStartMinutes +
+      ((newTop - block * blockHeight) / blockHeight) * span;
+    deltaMinutes = minutes - originStartMinutes;
+  }
+  const leafIndex = layout.vertical
+    ? block
+    : (layout.columns[newCol]?.resIndex ?? 0);
+  return {
+    proposal: proposeMove(
+      appointment,
+      originDayIndex(grid, appointment) === -1 ? 0 : targetDay - originDay,
+      deltaMinutes,
+      snap,
+    ),
+    leafIndex,
+  };
+}
+
+/** One all-day bar placed on the strip's columns (1-based grid lines). */
+export interface AllDayPlacedBar<T> extends LanedItem<T> {
+  readonly colStart: number;
+  readonly colEnd: number;
+}
+
+/** One clickable all-day strip cell. */
+export interface AllDayStripCell {
+  readonly key: string;
+  readonly day: Date;
+  /** The leaf the cell creates for (`-1` ungrouped / per-day strip). */
+  readonly leafIndex: number;
+  readonly values: Readonly<Record<string, unknown>>;
+}
+
+/**
+ * The all-day strip of a grouped layout. Resource-major columns pack each
+ * leaf's bars into its own block of day columns (so a bar sits above its
+ * resource); date-major and stacked layouts keep one strip column per day,
+ * as the single-level grid always did.
+ */
+export function buildLayoutAllDayStrip<T>(
+  allDay: readonly SchedulerAppointment<T>[],
+  grid: TimeGridVm,
+  layout: DayWeekGroupLayout,
+  leafOf: (item: T) => number,
+): {
+  readonly bars: readonly AllDayPlacedBar<T>[];
+  readonly laneCount: number;
+  readonly columnCount: number;
+  readonly cells: readonly AllDayStripCell[];
+} {
+  const perLeaf =
+    layout.leaves.length > 0 && !layout.vertical && !layout.groupByDate;
+  if (!perLeaf) {
+    const lanes = buildAllDayLayout(allDay, grid);
+    return {
+      bars: lanes.visible.map((bar) => ({
+        ...bar,
+        colStart: bar.startDayIndex + 1,
+        colEnd: bar.endDayIndex + 2,
+      })),
+      laneCount: lanes.laneCount,
+      columnCount: grid.days.length,
+      cells: grid.days.map((day, index) => ({
+        key: `d${index}`,
+        day,
+        leafIndex: -1,
+        values: {},
+      })),
+    };
+  }
+  const bars: AllDayPlacedBar<T>[] = [];
+  let laneCount = 0;
+  layout.leaves.forEach((_leaf, leafIndex) => {
+    const lanes = buildAllDayLayout(
+      allDay.filter(
+        (appointment) => Math.max(0, leafOf(appointment.source)) === leafIndex,
+      ),
+      grid,
+    );
+    laneCount = Math.max(laneCount, lanes.laneCount);
+    const offset = leafIndex * layout.dayCount;
+    for (const bar of lanes.visible) {
+      bars.push({
+        ...bar,
+        colStart: offset + bar.startDayIndex + 1,
+        colEnd: offset + bar.endDayIndex + 2,
+      });
+    }
+  });
+  return {
+    bars,
+    laneCount,
+    columnCount: layout.colCount,
+    cells: layout.columns.map((column) => ({
+      key: `c${column.colIndex}`,
+      day: column.day,
+      leafIndex: column.resIndex,
+      values: column.values,
+    })),
+  };
+}
+
+/** A cell label with the "unavailable" suffix when the slot is blocked. */
+export function withUnavailableLabel(
+  label: string,
+  blocked: boolean,
+  messages: { readonly unavailableLabel?: string },
+): string {
+  return blocked && messages.unavailableLabel
+    ? `${label}, ${messages.unavailableLabel}`
+    : label;
+}
+
+/** A chip label with the "selected" suffix when the appointment is selected. */
+export function withSelectedLabel(
+  label: string,
+  selected: boolean,
+  messages: { readonly selectedLabel?: string },
+): string {
+  return selected && messages.selectedLabel
+    ? `${label}, ${messages.selectedLabel}`
+    : label;
 }

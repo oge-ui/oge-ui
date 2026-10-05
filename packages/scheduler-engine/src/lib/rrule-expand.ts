@@ -100,8 +100,40 @@ function periodCandidates(
   seriesStart: Date,
 ): Date[] {
   switch (rule.freq) {
-    case 'daily':
+    case 'daily': {
+      // BYDAY / BYMONTHDAY / BYMONTH limit a DAILY rule (RFC 5545 §3.3.10):
+      // `FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR` is every weekday
+      if (
+        rule.byDay !== undefined &&
+        rule.byDay.length > 0 &&
+        !rule.byDay.some((entry) => entry.weekday === periodAnchor.getDay())
+      ) {
+        return [];
+      }
+      if (rule.byMonthDay !== undefined && rule.byMonthDay.length > 0) {
+        const lastDay = new Date(
+          periodAnchor.getFullYear(),
+          periodAnchor.getMonth() + 1,
+          0,
+        ).getDate();
+        const day = periodAnchor.getDate();
+        if (
+          !rule.byMonthDay.some(
+            (entry) => (entry === -1 ? lastDay : entry) === day,
+          )
+        ) {
+          return [];
+        }
+      }
+      if (
+        rule.byMonth !== undefined &&
+        rule.byMonth.length > 0 &&
+        !rule.byMonth.includes(periodAnchor.getMonth() + 1)
+      ) {
+        return [];
+      }
       return [periodAnchor];
+    }
     case 'weekly': {
       const weekdays =
         rule.byDay !== undefined && rule.byDay.length > 0
@@ -152,16 +184,18 @@ function periodCandidates(
           }
           continue;
         }
-        const dayOfMonth =
+        const daysOfMonth =
           rule.byMonthDay !== undefined && rule.byMonthDay.length > 0
-            ? rule.byMonthDay[0]
-            : seriesStart.getDate();
+            ? rule.byMonthDay
+            : [seriesStart.getDate()];
         const lastDay = new Date(year, month + 1, 0).getDate();
-        const resolved = dayOfMonth === -1 ? lastDay : dayOfMonth;
-        if (resolved >= 1 && resolved <= lastDay) {
-          candidates.push(
-            withTime(new Date(year, month, resolved), seriesStart),
-          );
+        for (const dayOfMonth of daysOfMonth) {
+          const resolved = dayOfMonth === -1 ? lastDay : dayOfMonth;
+          if (resolved >= 1 && resolved <= lastDay) {
+            candidates.push(
+              withTime(new Date(year, month, resolved), seriesStart),
+            );
+          }
         }
       }
       return candidates;

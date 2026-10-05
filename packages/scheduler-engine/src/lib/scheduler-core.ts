@@ -14,19 +14,65 @@
  * the adapter's `derived`, so Angular gets `computed()` signals and React a
  * per-render memo, and every state it holds is an adapter `cell`.
  */
-import type { OgeReactiveCell, OgeReactivityAdapter } from '@oge-ui/behavior';
+import {
+  ogeElementAtPoint,
+  type OgeReactiveCell,
+  type OgeReactivityAdapter,
+} from '@oge-ui/behavior';
 import {
   ogeDateTimeFormat,
+  ogeFormatMessage,
+  addDays,
   addMinutes,
   clampDate,
   nextDay,
   resolveFirstDayOfWeek,
   resolveWeekendDays,
+  serializeLikeOriginal,
   startOfDay,
   type DataSource,
   type RowKey,
 } from '@oge-ui/core';
-import type { OgeSchedulerConfig, OgeSchedulerMessages } from './config';
+import {
+  isDayBlocked,
+  isRangeBlocked,
+  snapProposalToWorkHours,
+} from './availability';
+import {
+  planSchedulerPaste,
+  schedulerClipboardEntries,
+  type SchedulerClipboardEntry,
+  type SchedulerPasteTarget,
+} from './clipboard';
+import type {
+  OgeSchedulerConfig,
+  OgeSchedulerMessages,
+  OgeSchedulerResolvedMessages,
+} from './config';
+import { findSchedulerConflicts } from './conflicts';
+import { buildSchedulerExportData, type OgeSchedulerExportData } from './export-data';
+import {
+  findOgeSchedulerDropTarget,
+  takeArmedOgeSchedulerPayload,
+  type OgeSchedulerDragPayload,
+  type OgeSchedulerDropSlot,
+} from './external-drag';
+import {
+  buildGroupLeaves,
+  groupLeafMatcher,
+  leafWorkHours,
+  resolveGroupLevels,
+  resourceValuesOfItem,
+  type SchedulerGroupLeaf,
+} from './grouping';
+import {
+  SchedulerEditHistory,
+  restorePatch,
+  type SchedulerHistoryOp,
+} from './history';
+import type { SchedulerSelectGesture } from './keyboard';
+import { appointmentsOnDay } from './month-vm';
+import { nextSchedulerSelection } from './selection';
 import {
   buildItemFromEditor,
   buildPatchFromEditor,
@@ -40,6 +86,7 @@ import { schedulerGridReadOnly } from './day-week-vm';
 import { appendException } from './rrule-expand';
 import {
   appointmentPatch,
+  normalizeAppointment,
   resolveSchedulerFields,
   type ResolvedSchedulerFields,
   type SchedulerAppointment,
@@ -51,15 +98,22 @@ import type {
   OgeSchedulerAppointmentClickEvent,
   OgeSchedulerAppointmentDeletedEvent,
   OgeSchedulerAppointmentDeletingEvent,
+  OgeSchedulerAppointmentDroppedEvent,
   OgeSchedulerAppointmentUpdatedEvent,
   OgeSchedulerAppointmentUpdatingEvent,
   OgeSchedulerCellClickEvent,
+  OgeSchedulerConflictCheck,
+  OgeSchedulerDisabledSlots,
+  OgeSchedulerDragOutEvent,
   OgeSchedulerEditorShowingEvent,
+  OgeSchedulerGroupOrientation,
+  OgeSchedulerMoreMode,
   OgeSchedulerRangeSelectedEvent,
   OgeSchedulerReminderEvent,
   OgeSchedulerResource,
   OgeSchedulerView,
   OgeSchedulerViewOptions,
+  OgeSchedulerWorkHours,
 } from './scheduler-types';
 import {
   canNavigateScheduler,
@@ -85,7 +139,7 @@ import type {
   SchedulerProposalEvent,
   SchedulerRangeEvent,
 } from './view-events';
-import { navigateDate, viewRange } from './view-model';
+import { isTimelineView, navigateDate, viewRange } from './view-model';
 
 /** Every scheduler input, read live (Angular passes its input signals). */
 export interface OgeSchedulerCoreInputs<T> {
@@ -127,6 +181,30 @@ export interface OgeSchedulerCoreInputs<T> {
   max(): Date | undefined;
   dateNavigatorText():
     ((start: Date, end: Date, view: OgeSchedulerView) => string) | undefined;
+  /*
+   * G3 inputs — optional so an older host still type-checks; each falls
+   * back to the documented default.
+   */
+  /** Grouped layout: side by side or stacked (default per view family). */
+  groupOrientation?(): OgeSchedulerGroupOrientation | undefined;
+  /** Horizontal grouping puts the leaves inside each day (default `true`). */
+  groupByDate?(): boolean;
+  /** Blocked slots (predicate or ranges). */
+  disabledSlots?(): OgeSchedulerDisabledSlots | null | undefined;
+  /** The scheduler-wide working hours (`workHours`). */
+  workHours?(): OgeSchedulerWorkHours | null;
+  /** Clamps timed moves / creates into the target's working hours. */
+  snapToWorkHours?(): boolean;
+  /** `false` refuses changes overlapping another appointment. */
+  allowOverlap?(): boolean;
+  /** Decides overlapping changes (wins over `allowOverlap`). */
+  conflictCheck?(): OgeSchedulerConflictCheck<T> | undefined;
+  /** The selected items (two-way `selectedAppointments`). */
+  selectedAppointments?(): readonly T[];
+  /** Undo steps kept (`0` turns undo off; default 50). */
+  undoLimit?(): number;
+  /** What a month "+N more" does (default `'popup'`). */
+  moreMode?(): OgeSchedulerMoreMode;
 }
 
 /** The scheduler's public events, as plain emitters. */
@@ -146,6 +224,10 @@ export interface OgeSchedulerCoreEvents<T, TItem> {
   appointmentContextMenu(event: OgeSchedulerAppointmentClickEvent<T>): void;
   cellContextMenu(event: OgeSchedulerCellClickEvent): void;
   reminderTriggered(event: OgeSchedulerReminderEvent<T>): void;
+  /** An external item (or another scheduler's appointment) was dropped in. */
+  appointmentDropped?(event: OgeSchedulerAppointmentDroppedEvent<T>): void;
+  /** An appointment was dragged out of the scheduler and released. */
+  dragOut?(event: OgeSchedulerDragOutEvent<T>): void;
 }
 
 /** The UI surfaces the core drives but does not render. */
@@ -162,6 +244,8 @@ export interface OgeSchedulerCoreSurfaces<T, TItem> {
   hostRect(): { readonly left: number; readonly top: number } | null;
   /** Focuses the first enabled context-menu item once it has rendered. */
   focusMenu(): void;
+  /** The scheduler host element (drag-out hit-testing excludes it). */
+  hostElement?(): Element | null;
 }
 
 /** Everything `OgeSchedulerCore` is constructed with. */
@@ -174,6 +258,8 @@ export interface OgeSchedulerCoreOptions<T, TItem> {
   setCurrentDate(date: Date): void;
   /** Writes the two-way `currentView` model. */
   setCurrentView(view: OgeSchedulerView): void;
+  /** Writes the two-way `selectedAppointments` model. */
+  setSelectedAppointments?(items: readonly T[]): void;
   readonly events: OgeSchedulerCoreEvents<T, TItem>;
   readonly surfaces: OgeSchedulerCoreSurfaces<T, TItem>;
 }
@@ -197,6 +283,7 @@ export interface SchedulerContextMenuState<T> {
     readonly cellDate: Date;
     readonly allDay: boolean;
     readonly resourceId?: unknown;
+    readonly resources?: Readonly<Record<string, unknown>>;
   } | null;
 }
 
@@ -218,6 +305,29 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   readonly contextMenu: OgeReactiveCell<SchedulerContextMenuState<T> | null>;
   /** The polite live-region text. */
   readonly announcement: OgeReactiveCell<string>;
+  /**
+   * A short visible notice for refused changes (blocked slot, conflict) —
+   * `aria-hidden`, the announcement speaks the same text. Clears itself.
+   */
+  readonly notice: OgeReactiveCell<string>;
+  /** The switcher entry last pressed (entries sharing a type), or `null`. */
+  readonly selectedViewIndex: OgeReactiveCell<number | null>;
+  /** The day whose "+N more" popup is open, or `null`. */
+  readonly moreDay: OgeReactiveCell<Date | null>;
+  /** The live external-drop preview (the slot under the pointer). */
+  readonly dropPreview: OgeReactiveCell<{
+    readonly slot: OgeSchedulerDropSlot;
+    readonly durationMinutes: number;
+  } | null>;
+  /** Bumped on every history change, so `canUndo()` / `canRedo()` re-render. */
+  readonly historyVersion: OgeReactiveCell<number>;
+
+  private readonly history: SchedulerEditHistory<T>;
+  private clipboard: readonly SchedulerClipboardEntry<T>[] = [];
+  private selectionAnchor: T | null = null;
+  private noticeTimer: ReturnType<typeof setTimeout> | null = null;
+  /** True while undo / redo replays (no guards, no selection churn). */
+  private replaying = false;
 
   private loadEpoch = 0;
   private boundSource: readonly T[] | DataSource<T> | null | undefined =
@@ -229,8 +339,8 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
 
   /* ---------- derived ---------- */
 
-  /** Per-instance messages merged over the configured ones. */
-  readonly msg: () => OgeSchedulerMessages;
+  /** Per-instance messages merged over the configured ones (gaps filled). */
+  readonly msg: () => OgeSchedulerResolvedMessages;
   /** Minimum rendered chip height, in minutes. */
   readonly minAppointmentMinutes: () => number;
   /** Per-instance locale, falling back to the config, then the browser. */
@@ -264,6 +374,22 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   /** Appointments overlapping the visible period (occurrences expanded). */
   readonly visibleAppointments: () => readonly SchedulerAppointment<T>[];
   readonly periodTitle: () => string;
+  /** The active view's `intervalCount`. */
+  readonly intervalCount: () => number;
+  /** The grouping levels (every `groups` field naming a resource). */
+  readonly groupLevels: () => readonly OgeSchedulerResource[];
+  /** The leaves of the grouping levels (`[]` ungrouped). */
+  readonly groupLeaves: () => readonly SchedulerGroupLeaf[];
+  /** Maps an item to its leaf index (`-1` unmatched; `0` ungrouped). */
+  readonly leafOf: () => (item: T) => number;
+  /** The active view's resolved group orientation. */
+  readonly groupOrientation: () => OgeSchedulerGroupOrientation;
+  /** Whether horizontal day/week grouping is date-major. */
+  readonly groupByDate: () => boolean;
+  /** The selected items (the two-way `selectedAppointments`). */
+  readonly selection: () => readonly T[];
+  /** The appointments of the open "+N more" popup's day. */
+  readonly moreAppointments: () => readonly SchedulerAppointment<T>[];
 
   constructor(private readonly options: OgeSchedulerCoreOptions<T, TItem>) {
     const { rx, inputs } = options;
@@ -272,6 +398,17 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.scopePending = rx.cell<SchedulerScopePending<T> | null>(null);
     this.contextMenu = rx.cell<SchedulerContextMenuState<T> | null>(null);
     this.announcement = rx.cell('');
+    this.notice = rx.cell('');
+    this.selectedViewIndex = rx.cell<number | null>(null);
+    this.moreDay = rx.cell<Date | null>(null);
+    this.dropPreview = rx.cell<{
+      readonly slot: OgeSchedulerDropSlot;
+      readonly durationMinutes: number;
+    } | null>(null);
+    this.historyVersion = rx.cell(0);
+    this.history = new SchedulerEditHistory<T>(
+      () => inputs.undoLimit?.() ?? 50,
+    );
 
     this.msg = rx.derived(() =>
       mergeSchedulerMessages(options.config().messages, inputs.messages()),
@@ -305,8 +442,10 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
           dayEndHour: inputs.dayEndHour(),
           cellDuration: inputs.cellDuration(),
         },
+        this.selectedViewIndex(),
       ),
     );
+    this.intervalCount = rx.derived(() => this.activeView().intervalCount);
     this.dayWeekView = rx.derived(() => dayWeekViewOf(inputs.currentView()));
     this.canAdd = rx.derived(() => inputs.allowAdding() && !inputs.readOnly());
     this.canUpdate = rx.derived(
@@ -354,6 +493,21 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.groupResourceIdOf = rx.derived(() =>
       groupResourceIdReader<T>(this.groupResource()),
     );
+    this.groupLevels = rx.derived(() =>
+      resolveGroupLevels(inputs.resources(), inputs.groups()),
+    );
+    this.groupLeaves = rx.derived(() => buildGroupLeaves(this.groupLevels()));
+    this.leafOf = rx.derived(() =>
+      groupLeafMatcher<T>(this.groupLevels(), this.groupLeaves()),
+    );
+    this.groupOrientation = rx.derived(
+      () =>
+        this.activeView().groupOrientation ??
+        inputs.groupOrientation?.() ??
+        (isTimelineView(inputs.currentView()) ? 'vertical' : 'horizontal'),
+    );
+    this.groupByDate = rx.derived(() => inputs.groupByDate?.() ?? true);
+    this.selection = rx.derived(() => inputs.selectedAppointments?.() ?? []);
     this.keyOf = rx.derived(() => schedulerKeyReader<T>(inputs.keyExpr()));
     this.appointments = rx.derived(() =>
       normalizeSchedulerStore(
@@ -370,6 +524,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         inputs.currentDate(),
         this.resolvedFirstDayOfWeek(),
         inputs.agendaDuration(),
+        this.intervalCount(),
       ),
     );
     this.periodTitle = rx.derived(() =>
@@ -380,8 +535,15 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         this.resolvedFirstDayOfWeek(),
         inputs.agendaDuration(),
         inputs.dateNavigatorText(),
+        this.intervalCount(),
       ),
     );
+    this.moreAppointments = rx.derived(() => {
+      const day = this.moreDay();
+      return day === null
+        ? []
+        : appointmentsOnDay(this.visibleAppointments(), day);
+    });
   }
 
   /* ---------- data loading ---------- */
@@ -395,6 +557,9 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     if (source === this.boundSource) return;
     this.boundSource = source;
     this.loadEpoch++;
+    // the undo log refers to the old working set
+    this.history.clear();
+    this.bumpHistory();
     if (source === null) {
       this.store.set([]);
       return;
@@ -411,6 +576,8 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.loadEpoch++;
     // the next bind (a StrictMode remount, a revived host) loads again
     this.boundSource = undefined;
+    if (this.noticeTimer !== null) clearTimeout(this.noticeTimer);
+    this.noticeTimer = null;
   }
 
   private reload(source: DataSource<T>): void {
@@ -461,6 +628,27 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.announcement.set(fillSchedulerTemplate(template, tokens));
   }
 
+  /** Speaks an ICU message (plural counts) through the live region. */
+  private announceIcu(
+    template: string,
+    values: Readonly<Record<string, string | number>>,
+  ): void {
+    this.announcement.set(
+      ogeFormatMessage(template, values, this.effectiveLocale()),
+    );
+  }
+
+  /** A refused change: announced, and shown as a short visible notice. */
+  private refuse(text: string): void {
+    this.announcement.set(text);
+    this.notice.set(text);
+    if (this.noticeTimer !== null) clearTimeout(this.noticeTimer);
+    this.noticeTimer = setTimeout(() => {
+      this.noticeTimer = null;
+      this.notice.set('');
+    }, 4000);
+  }
+
   /* ---------- navigation ---------- */
 
   /** Writes `currentDate`, clamped into `[min, max]`. */
@@ -477,6 +665,8 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       this.inputs.currentDate(),
       this.resolvedFirstDayOfWeek(),
       this.inputs.agendaDuration(),
+      Date.now(),
+      this.intervalCount(),
     );
   }
 
@@ -490,6 +680,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       this.inputs.agendaDuration(),
       this.inputs.min(),
       this.inputs.max(),
+      this.intervalCount(),
     );
   }
 
@@ -507,19 +698,55 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         this.inputs.currentDate(),
         direction,
         this.inputs.agendaDuration(),
+        this.intervalCount(),
       ),
     );
   }
 
-  /** Switches the active view (the toolbar's view switcher). */
-  setView(view: OgeSchedulerView): void {
+  /**
+   * Switches the active view (the toolbar's view switcher). `index` names
+   * the switcher entry when several share a type (a day and a 3-day view).
+   */
+  setView(view: OgeSchedulerView, index?: number): void {
+    this.selectedViewIndex.set(index ?? null);
+    this.moreDay.set(null);
     this.options.setCurrentView(view);
+  }
+
+  /** Whether a switcher entry is the active view (`aria-pressed`). */
+  isViewActive(entry: ResolvedSchedulerView): boolean {
+    return this.activeView().index === entry.index;
   }
 
   /** Navigates to `date` in the day view ("+N more", year cells). */
   drillIntoDay(date: Date): void {
+    this.moreDay.set(null);
     this.setDate(date);
+    // prefer a single-day entry over a multi-day one sharing the type
+    const single = this.resolvedViews().find(
+      (entry) => entry.type === 'day' && entry.intervalCount === 1,
+    );
+    this.selectedViewIndex.set(single?.index ?? null);
     this.options.setCurrentView('day');
+  }
+
+  /* ---------- "+N more" ---------- */
+
+  /**
+   * A month "+N more" was pressed: opens the day's popup list
+   * (`moreMode: 'popup'`, the default) or drills into the day view.
+   */
+  onMoreRequested(date: Date): void {
+    if ((this.inputs.moreMode?.() ?? 'popup') === 'drill') {
+      this.drillIntoDay(date);
+      return;
+    }
+    this.moreDay.set(startOfDay(date));
+  }
+
+  /** Closes the "+N more" popup. */
+  closeMore(): void {
+    this.moreDay.set(null);
   }
 
   /** The date navigator picked a day. */
@@ -543,10 +770,32 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       this.inputs.currentDate(),
       this.resolvedFirstDayOfWeek(),
       this.inputs.agendaDuration(),
+      this.intervalCount(),
     );
   }
 
   /* ---------- interaction plumbing ---------- */
+
+  /** The grouped values of a cell event (`resources`, else the single id). */
+  private cellValues(event: {
+    readonly resourceId?: unknown;
+    readonly resources?: Readonly<Record<string, unknown>>;
+  }): Readonly<Record<string, unknown>> {
+    if (event.resources !== undefined) return event.resources;
+    const resource = this.groupResource();
+    return resource !== null && event.resourceId !== undefined
+      ? { [resource.fieldExpr]: event.resourceId }
+      : {};
+  }
+
+  /** The drop slot a cell event describes. */
+  private cellSlot(event: SchedulerCellEvent): OgeSchedulerDropSlot {
+    return {
+      startDate: event.cellDate,
+      allDay: event.allDay,
+      resources: this.cellValues(event),
+    };
+  }
 
   onCellClicked(event: SchedulerCellEvent): void {
     if (event.event instanceof MouseEvent) {
@@ -554,7 +803,11 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         cellDate: event.cellDate,
         allDay: event.allDay,
         event: event.event,
+        resources: this.cellValues(event),
       });
+      // the single-pointer twin of drag-in: a picked-up item lands here
+      const armed = takeArmedOgeSchedulerPayload();
+      if (armed !== null) this.onExternalDrop(armed, this.cellSlot(event));
     }
   }
 
@@ -564,23 +817,548 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         cellDate: event.cellDate,
         allDay: event.allDay,
         event: event.event,
+        resources: this.cellValues(event),
       });
     }
-    this.openCreateEditor(event.cellDate, event.allDay, event.resourceId);
+    this.openCreateEditor(
+      event.cellDate,
+      event.allDay,
+      event.resourceId,
+      this.cellValues(event),
+    );
   }
 
   onCellActivated(event: SchedulerCellEvent): void {
-    this.openCreateEditor(event.cellDate, event.allDay, event.resourceId);
+    // the keyboard twin of drag-in: Enter places a picked-up item
+    const armed = takeArmedOgeSchedulerPayload();
+    if (armed !== null) {
+      this.onExternalDrop(armed, this.cellSlot(event));
+      return;
+    }
+    this.openCreateEditor(
+      event.cellDate,
+      event.allDay,
+      event.resourceId,
+      this.cellValues(event),
+    );
   }
 
   onChipClicked(event: SchedulerChipEvent<T>): void {
-    if (event.event instanceof MouseEvent) {
+    const pointer = event.event instanceof MouseEvent ? event.event : null;
+    if (pointer !== null) {
       this.options.events.appointmentClick({
         appointment: event.appointment,
-        event: event.event,
+        event: pointer,
       });
     }
+    // Ctrl/⌘-click toggles and Shift-click extends without the popup
+    if (pointer !== null && (pointer.ctrlKey || pointer.metaKey || pointer.shiftKey)) {
+      this.selectAppointment(
+        event.appointment,
+        pointer.shiftKey ? 'range' : 'toggle',
+        event.order ?? [],
+      );
+      return;
+    }
+    this.selectAppointment(event.appointment, 'replace', event.order ?? []);
     this.options.surfaces.openPopup(event.appointment, event.rect);
+  }
+
+  /* ---------- selection ---------- */
+
+  /** Whether an appointment's item is selected (every occurrence of a series). */
+  isSelected(appointment: SchedulerAppointment<T>): boolean {
+    return this.selection().includes(appointment.source);
+  }
+
+  /**
+   * Applies a selection gesture: `'replace'` (a plain click), `'toggle'`
+   * (Ctrl/⌘-click, Ctrl+Space) or `'range'` (Shift-click, Shift+Space over
+   * `order`, the view's chip order). Writes `selectedAppointments`.
+   */
+  selectAppointment(
+    appointment: SchedulerAppointment<T>,
+    gesture: SchedulerSelectGesture,
+    order: readonly SchedulerAppointment<T>[],
+  ): void {
+    const next = nextSchedulerSelection(
+      this.selection(),
+      appointment,
+      gesture,
+      order,
+      this.selectionAnchor,
+    );
+    if (gesture !== 'range') this.selectionAnchor = appointment.source;
+    this.writeSelection(next);
+    if (gesture !== 'replace') {
+      this.announceIcu(this.msg().announcements.selected, {
+        count: next.length,
+      });
+    }
+  }
+
+  /** Empties the selection. */
+  clearSelection(): void {
+    this.selectionAnchor = null;
+    this.writeSelection([]);
+  }
+
+  private writeSelection(items: readonly T[]): void {
+    const current = this.selection();
+    if (
+      items.length === current.length &&
+      items.every((item, index) => item === current[index])
+    ) {
+      return;
+    }
+    this.options.setSelectedAppointments?.(items);
+  }
+
+  /* ---------- clipboard ---------- */
+
+  /**
+   * Ctrl+C: copies the selection — or `focused` when it is not part of it —
+   * at the extents rendered now (an occurrence copies as itself).
+   * `visible` is the view's appointments, to find each selected item's
+   * occurrence on screen.
+   */
+  copyAppointments(focused: SchedulerAppointment<T> | null): number {
+    const selection = this.selection();
+    const visible = this.visibleAppointments();
+    const picked: SchedulerAppointment<T>[] = [];
+    if (focused !== null && !selection.includes(focused.source)) {
+      picked.push(focused);
+    } else {
+      for (const source of selection) {
+        const shown =
+          focused !== null && focused.source === source
+            ? focused
+            : visible.find((appointment) => appointment.source === source);
+        if (shown !== undefined) picked.push(shown);
+      }
+    }
+    if (picked.length === 0) return 0;
+    this.clipboard = schedulerClipboardEntries(picked);
+    this.announceIcu(this.msg().announcements.copied, {
+      count: picked.length,
+    });
+    return picked.length;
+  }
+
+  /** Whether a paste has anything to insert. */
+  canPaste(): boolean {
+    return this.clipboard.length > 0;
+  }
+
+  /**
+   * Ctrl+V into the focused slot: the copies keep their relative offsets,
+   * the earliest lands on `target`, a grouped target assigns its resources;
+   * each copy runs the guarded insert pipeline, all as one undo step.
+   */
+  paste(target: SchedulerPasteTarget): number {
+    if (!this.canAdd() || this.clipboard.length === 0) return 0;
+    const keyExpr = this.inputs.keyExpr();
+    const keyField =
+      typeof keyExpr === 'function' ? null : (keyExpr ?? 'id');
+    const items = planSchedulerPaste(
+      this.clipboard,
+      target,
+      this.fields(),
+      keyField,
+    );
+    let pasted = 0;
+    this.history.transaction(() => {
+      for (const item of items) {
+        if (this.insertItem(item, true, false)) pasted++;
+      }
+    });
+    this.bumpHistory();
+    if (pasted > 0) {
+      this.announceIcu(this.msg().announcements.pasted, { count: pasted });
+    }
+    return pasted;
+  }
+
+  /* ---------- undo / redo ---------- */
+
+  private bumpHistory(): void {
+    this.historyVersion.set(this.historyVersion() + 1);
+  }
+
+  /** Whether an undo step is available. */
+  canUndo(): boolean {
+    this.historyVersion();
+    return this.history.canUndo();
+  }
+
+  /** Whether a redo step is available. */
+  canRedo(): boolean {
+    this.historyVersion();
+    return this.history.canRedo();
+  }
+
+  /**
+   * Reverts the last scheduler edit (one user action — a move, a paste, a
+   * detached occurrence — is one step) through the normal CRUD pipelines,
+   * so the `-ing` / `-ed` events fire and a handler may still veto.
+   */
+  undo(): boolean {
+    const done = this.history.undo((ops) => this.replayInverse(ops));
+    this.bumpHistory();
+    if (done) this.announcement.set(this.msg().announcements.undone);
+    return done;
+  }
+
+  /** Re-applies the last undone edit. */
+  redo(): boolean {
+    const done = this.history.redo((ops) => this.replayInverse(ops));
+    this.bumpHistory();
+    if (done) this.announcement.set(this.msg().announcements.redone);
+    return done;
+  }
+
+  /** The store's current copy of a recorded item (identity, then key). */
+  private findStored(item: T): T | undefined {
+    const store = this.store();
+    if (store.includes(item)) return item;
+    const keyExpr = this.inputs.keyExpr();
+    const keyOf =
+      typeof keyExpr === 'function'
+        ? keyExpr
+        : (entry: T) =>
+            (entry as Record<string, unknown>)[keyExpr ?? 'id'];
+    const key = keyOf(item);
+    if (key === undefined || key === null) return undefined;
+    return store.find((entry) => keyOf(entry) === key);
+  }
+
+  private replayInverse(ops: readonly SchedulerHistoryOp<T>[]): void {
+    this.replaying = true;
+    try {
+      for (const op of ops) {
+        switch (op.kind) {
+          case 'insert': {
+            const stored = this.findStored(op.item);
+            if (stored !== undefined) this.deleteBySource(stored);
+            break;
+          }
+          case 'remove':
+            this.insertItem(op.item, false, false);
+            break;
+          case 'update': {
+            const stored = this.findStored(op.after);
+            if (stored !== undefined) {
+              this.updateItem(stored, restorePatch(stored, op.before), false);
+            }
+            break;
+          }
+        }
+      }
+    } finally {
+      this.replaying = false;
+    }
+  }
+
+  /** Host-level keys: Ctrl/⌘+Z undo, Ctrl/⌘+Y / Ctrl/⌘+Shift+Z redo. */
+  onShortcut(shortcut: 'undo' | 'redo'): boolean {
+    return shortcut === 'undo' ? this.undo() : this.redo();
+  }
+
+  /* ---------- availability & conflicts ---------- */
+
+  /** The leaf whose values `values` holds (`null` ungrouped / unmatched). */
+  private leafForValues(
+    values: Readonly<Record<string, unknown>>,
+  ): SchedulerGroupLeaf | null {
+    const levels = this.groupLevels();
+    if (levels.length === 0) return null;
+    return (
+      this.groupLeaves().find((leaf) =>
+        levels.every(
+          (level) => leaf.values[level.fieldExpr] === values[level.fieldExpr],
+        ),
+      ) ?? null
+    );
+  }
+
+  /**
+   * The working hours bounding a slot with these resource values: its
+   * grouped leaf's, else (ungrouped) those of the assigned resource items,
+   * else the scheduler-wide `workHours`.
+   */
+  workHoursFor(
+    values: Readonly<Record<string, unknown>>,
+  ): OgeSchedulerWorkHours | null {
+    const global = this.inputs.workHours?.() ?? null;
+    const leaf = this.leafForValues(values);
+    if (leaf !== null) return leafWorkHours(leaf, global);
+    const path = this.inputs
+      .resources()
+      .map((resource) =>
+        resource.items.find((item) => item.id === values[resource.fieldExpr]),
+      )
+      .filter((item): item is NonNullable<typeof item> => item !== undefined);
+    if (path.length === 0) return global;
+    return leafWorkHours(
+      { index: -1, values, path, text: '', label: '', color: undefined },
+      global,
+    );
+  }
+
+  /** Applies `snapToWorkHours` to a proposal landing on `values`. */
+  private snapped(
+    proposal: AppointmentProposal,
+    values: Readonly<Record<string, unknown>>,
+  ): AppointmentProposal {
+    return this.inputs.snapToWorkHours?.() === true
+      ? snapProposalToWorkHours(proposal, this.workHoursFor(values))
+      : proposal;
+  }
+
+  /** Whether a slot / range with these resource values is blocked. */
+  isBlocked(
+    start: Date,
+    end: Date,
+    allDay: boolean,
+    values: Readonly<Record<string, unknown>>,
+  ): boolean {
+    const disabled = this.inputs.disabledSlots?.();
+    if (disabled === null || disabled === undefined) return false;
+    if (allDay) {
+      // all-day items are refused only by a fully blocked day
+      for (
+        let day = startOfDay(start);
+        day.getTime() < Math.max(end.getTime(), start.getTime() + 1);
+        day = addDays(day, 1)
+      ) {
+        if (isDayBlocked(disabled, day, values)) return true;
+      }
+      return false;
+    }
+    return isRangeBlocked(
+      disabled,
+      start,
+      end,
+      values,
+      this.activeView().cellDuration,
+    );
+  }
+
+  /**
+   * The guard every interactive change runs before its pipeline: a blocked
+   * slot or a refused overlap cancels the change (announced + noticed).
+   * `source` is the item being changed (excluded from its own conflicts).
+   */
+  private guard(proposed: T, source: T | undefined): boolean {
+    if (this.replaying) return true;
+    const appointment = normalizeAppointment(proposed, null, this.fields());
+    if (appointment === null) return true;
+    const values = resourceValuesOfItem(proposed, this.inputs.resources());
+    const messages = this.msg().announcements;
+    if (
+      this.isBlocked(
+        appointment.startDate,
+        appointment.endDate,
+        appointment.displayAllDay,
+        values,
+      )
+    ) {
+      this.refuse(messages.slotUnavailable);
+      return false;
+    }
+    const check = this.inputs.conflictCheck?.();
+    const allowOverlap = this.inputs.allowOverlap?.() ?? true;
+    if (check === undefined && allowOverlap) return true;
+    const conflicts = findSchedulerConflicts(
+      {
+        startDate: appointment.startDate,
+        endDate: appointment.endDate,
+        source,
+        values,
+      },
+      this.appointments(),
+      this.groupLevels(),
+    );
+    if (conflicts.length === 0) return true;
+    const allowed =
+      check !== undefined ? check(proposed, conflicts) : allowOverlap;
+    if (!allowed) {
+      this.refuse(
+        fillSchedulerTemplate(messages.conflict, { text: appointment.text }),
+      );
+    }
+    return allowed;
+  }
+
+  /* ---------- external drops & drag out ---------- */
+
+  /**
+   * Builds and inserts an appointment for something dropped in (an
+   * `[ogeSchedulerDraggable]` item, or another scheduler's appointment):
+   * the item's own fields are kept, start / end / all-day and the slot's
+   * resources are written through the `*Expr` field names. Emits
+   * `appointmentDropped`; returns whether the item reached the store.
+   */
+  onExternalDrop(
+    payload: OgeSchedulerDragPayload,
+    slot: OgeSchedulerDropSlot,
+  ): boolean {
+    this.dropPreview.set(null);
+    if (!this.canAdd()) return false;
+    const minutes = Math.max(
+      1,
+      payload.durationMinutes ?? this.activeView().cellDuration,
+    );
+    const start = slot.allDay ? startOfDay(slot.startDate) : slot.startDate;
+    const proposal = this.snapped(
+      {
+        startDate: start,
+        endDate: slot.allDay
+          ? addDays(start, Math.max(1, Math.round(minutes / 1440)))
+          : addMinutes(start, minutes),
+        allDay: slot.allDay,
+      },
+      slot.resources,
+    );
+    const item = this.buildDroppedItem(payload, proposal, slot.resources);
+    const added = this.insertItem(item, true);
+    const text = String(this.fields().text(item) ?? payload.text ?? '');
+    this.options.events.appointmentDropped?.({
+      itemData: payload.data,
+      appointmentData: item,
+      startDate: proposal.startDate,
+      endDate: proposal.endDate,
+      allDay: proposal.allDay,
+      resources: slot.resources,
+      added,
+    });
+    if (added) this.announce(this.msg().announcements.dropped, { text });
+    return added;
+  }
+
+  private buildDroppedItem(
+    payload: OgeSchedulerDragPayload,
+    proposal: AppointmentProposal,
+    resources: Readonly<Record<string, unknown>>,
+  ): T {
+    const fields = this.fields();
+    const names = fields.fieldNames;
+    const base: Record<string, unknown> =
+      payload.data !== null && typeof payload.data === 'object'
+        ? { ...(payload.data as Record<string, unknown>) }
+        : {};
+    if (
+      (payload.data === null || typeof payload.data !== 'object') &&
+      names.text !== null
+    ) {
+      base[names.text] = String(payload.data ?? payload.text ?? '');
+    }
+    const source = base as T;
+    if (names.startDate !== null) {
+      base[names.startDate] = serializeLikeOriginal(
+        proposal.startDate,
+        fields.startDate(source),
+      );
+    }
+    if (names.endDate !== null) {
+      base[names.endDate] = serializeLikeOriginal(
+        proposal.endDate,
+        fields.endDate(source),
+      );
+    }
+    if (names.allDay !== null) {
+      if (proposal.allDay) base[names.allDay] = true;
+      else if (names.allDay in base) base[names.allDay] = false;
+    }
+    for (const [field, value] of Object.entries(resources)) {
+      base[field] = value;
+    }
+    return base as T;
+  }
+
+  /** Drives the drop preview of an external drag hovering this scheduler. */
+  onExternalOver(
+    slot: OgeSchedulerDropSlot | null,
+    payload: OgeSchedulerDragPayload | null,
+  ): void {
+    this.dropPreview.set(
+      slot === null || payload === null || !this.canAdd()
+        ? null
+        : {
+            slot,
+            durationMinutes:
+              payload.durationMinutes ?? this.activeView().cellDuration,
+          },
+    );
+  }
+
+  /**
+   * A chip drag ended outside the view: hands the appointment to another
+   * scheduler under the pointer (it emits `appointmentDropped`) and emits
+   * `dragOut` either way — the app decides whether the source keeps it.
+   */
+  onDragOut(
+    appointment: SchedulerAppointment<T>,
+    clientX: number,
+    clientY: number,
+  ): void {
+    const hit = ogeElementAtPoint(clientX, clientY);
+    const own = this.options.surfaces.hostElement?.() ?? null;
+    const target = findOgeSchedulerDropTarget(hit);
+    let dropped = false;
+    if (target !== null && target.element !== own) {
+      const slot = target.resolve(clientX, clientY, hit);
+      if (slot !== null) {
+        dropped = target.drop(
+          {
+            data: appointment.source,
+            durationMinutes: Math.max(
+              1,
+              Math.round(
+                (appointment.endDate.getTime() -
+                  appointment.startDate.getTime()) /
+                  60_000,
+              ),
+            ),
+            text: appointment.text,
+            sourceHost: own,
+          },
+          slot,
+        );
+      }
+    }
+    this.options.events.dragOut?.({
+      appointment,
+      appointmentData: appointment.source,
+      clientX,
+      clientY,
+      target: hit,
+      droppedOnScheduler: dropped,
+    });
+  }
+
+  /* ---------- export ---------- */
+
+  /**
+   * The export model: every appointment (series unexpanded, for iCalendar)
+   * plus the expanded rows of `[startDate, endDate)` — the visible period
+   * by default — for the PDF / Excel lists.
+   */
+  getExportData(range?: {
+    readonly startDate: Date;
+    readonly endDate: Date;
+  }): OgeSchedulerExportData<T> {
+    const visible = this.visibleRange();
+    return buildSchedulerExportData({
+      appointments: this.appointments(),
+      rangeStart: range?.startDate ?? visible.start,
+      rangeEnd: range?.endDate ?? visible.end,
+      title: this.periodTitle(),
+      locale: this.effectiveLocale(),
+      fields: this.fields(),
+      resources: this.inputs.resources(),
+      messages: this.msg().export,
+    });
   }
 
   onChipDblClicked(event: SchedulerChipEvent<T>): void {
@@ -668,29 +1446,38 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     );
   }
 
-  /** Detaches an occurrence: EXDATE on the series + a standalone copy. */
+  /**
+   * Detaches an occurrence: EXDATE on the series + a standalone copy, as
+   * one undo step. A copy that hits a blocked slot or a refused overlap
+   * leaves the series untouched.
+   */
   private detachOccurrence(
     occurrence: SchedulerAppointment<T>,
     replacement: SchedulerEditorModel | null,
   ): void {
     const fields = this.fields();
     const source = occurrence.source;
+    const copy = replacement === null ? null : this.buildItem(replacement);
+    if (copy !== null && !this.guard(copy, source)) return;
     const exceptionField = fields.fieldNames.recurrenceException;
-    if (exceptionField !== null) {
-      this.updateItem(source, {
-        [exceptionField]: appendException(
-          occurrence.recurrenceException,
-          occurrence.startDate,
-        ),
-      } as Partial<T>);
-    }
-    if (replacement !== null) {
-      this.insertItem(this.buildItem(replacement));
-    } else {
-      this.announce(this.msg().announcements.deleted, {
-        text: occurrence.text,
-      });
-    }
+    this.history.transaction(() => {
+      if (exceptionField !== null) {
+        this.updateItem(source, {
+          [exceptionField]: appendException(
+            occurrence.recurrenceException,
+            occurrence.startDate,
+          ),
+        } as Partial<T>);
+      }
+      if (copy !== null) {
+        this.insertItem(copy);
+      } else {
+        this.announce(this.msg().announcements.deleted, {
+          text: occurrence.text,
+        });
+      }
+    });
+    this.bumpHistory();
   }
 
   private performDelete(
@@ -794,22 +1581,31 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.deleteBySource(appointment.source);
   }
 
-  /** Opens the prefilled create editor at a cell. */
+  /**
+   * Opens the prefilled create editor at a cell; a blocked cell refuses
+   * (announced) instead. `resources` carries every grouped level's id.
+   */
   openCreateEditor(
     cellDate: Date,
     allDay: boolean,
     resourceId?: unknown,
+    resources?: Readonly<Record<string, unknown>>,
   ): void {
     if (!this.canAdd()) return;
+    const values = resources ?? this.cellValues({ resourceId });
     const startDate = allDay ? startOfDay(cellDate) : cellDate;
     const endDate = allDay
       ? nextDay(startDate)
       : addMinutes(startDate, this.activeView().cellDuration);
+    if (this.isBlocked(startDate, endDate, allDay, values)) {
+      this.refuse(this.msg().announcements.slotUnavailable);
+      return;
+    }
     const model = draftEditorModel(
       startDate,
       endDate,
       allDay,
-      this.prefillResources(resourceId),
+      this.prefillResources(resourceId, values),
     );
     this.openEditor(model, this.buildItem(model), true);
   }
@@ -834,7 +1630,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   /** The editor dialog saved. */
   onEditorSaved(result: SchedulerEditorResult): void {
     if (result.isNew) {
-      this.insertItem(this.buildItem(result.model));
+      this.insertItem(this.buildItem(result.model), true);
     } else if (this.editingOccurrence !== null) {
       this.detachOccurrence(this.editingOccurrence, result.model);
     } else if (this.editedSource !== null) {
@@ -846,6 +1642,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
           this.fields(),
           this.inputs.resources(),
         ),
+        true,
       );
     }
     this.editedSource = null;
@@ -860,8 +1657,14 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     );
   }
 
-  /** Resource prefill of grouped create flows. */
-  private prefillResources(resourceId: unknown): Record<string, unknown> {
+  /** Resource prefill of grouped create flows (every grouped level). */
+  private prefillResources(
+    resourceId: unknown,
+    values?: Readonly<Record<string, unknown>>,
+  ): Record<string, unknown> {
+    if (values !== undefined && Object.keys(values).length > 0) {
+      return { ...values };
+    }
     const resource = this.groupResource();
     return resource !== null && resourceId !== undefined
       ? { [resource.fieldExpr]: resourceId }
@@ -870,60 +1673,85 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
 
   /* ---------- CRUD executor ---------- */
 
-  private insertItem(item: T): void {
-    if (!this.canAdd()) return;
+  /**
+   * The insert pipeline: the availability / overlap guard (interactive
+   * paths only), the cancelable `appointmentAdding`, the store or the
+   * source's `insert`, then `appointmentAdded`, the announcement and the
+   * undo record. Returns whether the item went in (a source write counts
+   * once requested).
+   */
+  private insertItem(item: T, guarded = false, announce = true): boolean {
+    if (!this.canAdd()) return false;
+    if (guarded && !this.guard(item, undefined)) return false;
     const event: OgeSchedulerAppointmentAddingEvent<T> = {
       appointmentData: item,
       cancel: false,
     };
     this.options.events.appointmentAdding(event);
-    if (event.cancel) return;
+    if (event.cancel) return false;
     const source = this.dataSourceOf();
     if (source?.insert) {
       void source.insert(item).then(() => {
         this.reload(source);
-        this.finishAdd(item);
+        this.finishAdd(item, announce);
       });
-      return;
+      return true;
     }
     this.store.set([...this.store(), item]);
-    this.finishAdd(item);
+    this.finishAdd(item, announce);
+    return true;
   }
 
-  private finishAdd(item: T): void {
+  private finishAdd(item: T, announce = true): void {
+    this.history.record({ kind: 'insert', item });
+    this.bumpHistory();
     this.options.events.appointmentAdded({ appointmentData: item });
-    this.announce(this.msg().announcements.created, {
-      text: String(this.fields().text(item) ?? ''),
-    });
+    if (announce) {
+      this.announce(this.msg().announcements.created, {
+        text: String(this.fields().text(item) ?? ''),
+      });
+    }
   }
 
-  private updateItem(original: T, patch: Partial<T>): void {
-    if (!this.canUpdate()) return;
+  private updateItem(original: T, patch: Partial<T>, guarded = false): boolean {
+    if (!this.canUpdate()) return false;
+    const updated = { ...original, ...patch };
+    if (guarded && !this.guard(updated, original)) return false;
     const event: OgeSchedulerAppointmentUpdatingEvent<T> = {
       oldData: original,
       newData: patch,
       cancel: false,
     };
     this.options.events.appointmentUpdating(event);
-    if (event.cancel) return;
-    const updated = { ...original, ...patch };
+    if (event.cancel) return false;
     const source = this.dataSourceOf();
     if (source?.update) {
       const index = this.store().indexOf(original);
       const key = this.keyOf()(original, index) as RowKey;
       void source.update(key, patch).then(() => {
         this.reload(source);
-        this.finishUpdate(updated);
+        this.finishUpdate(original, updated);
       });
-      return;
+      return true;
     }
     this.store.set(
       this.store().map((entry) => (entry === original ? updated : entry)),
     );
-    this.finishUpdate(updated);
+    this.finishUpdate(original, updated);
+    return true;
   }
 
-  private finishUpdate(updated: T): void {
+  private finishUpdate(original: T, updated: T): void {
+    this.history.record({ kind: 'update', before: original, after: updated });
+    this.bumpHistory();
+    // the selection follows the item to its new object
+    const selection = this.selection();
+    if (selection.includes(original)) {
+      this.writeSelection(
+        selection.map((entry) => (entry === original ? updated : entry)),
+      );
+    }
+    if (this.selectionAnchor === original) this.selectionAnchor = updated;
     this.options.events.appointmentUpdated({ appointmentData: updated });
     this.announce(this.msg().announcements.updated, {
       text: String(this.fields().text(updated) ?? ''),
@@ -954,6 +1782,12 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   }
 
   private finishDelete(item: T): void {
+    this.history.record({ kind: 'remove', item });
+    this.bumpHistory();
+    const selection = this.selection();
+    if (selection.includes(item)) {
+      this.writeSelection(selection.filter((entry) => entry !== item));
+    }
     this.options.events.appointmentDeleted({ appointmentData: item });
     this.announce(this.msg().announcements.deleted, {
       text: String(this.fields().text(item) ?? ''),
@@ -987,9 +1821,9 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
 
   /**
    * Time-grid / timeline drag commit: the time shift runs the normal
-   * (recurrence-aware) move pipeline; a resource change patches the grouping
-   * field — for plain appointments and series scope only (an occurrence
-   * keeps its row).
+   * (recurrence-aware) move pipeline; a resource change patches the
+   * grouping fields — every level of a multi-level target — for plain
+   * appointments and series scope only (an occurrence keeps its row).
    */
   onGroupedMoveCommitted(event: SchedulerProposalEvent<T>): void {
     const resource = this.groupResource();
@@ -998,29 +1832,48 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       return;
     }
     if (!this.canUpdate()) return;
+    const target: Record<string, unknown> =
+      event.resources !== undefined
+        ? { ...event.resources }
+        : event.resourceId !== undefined && resource !== null
+          ? { [resource.fieldExpr]: event.resourceId }
+          : {};
+    const values = {
+      ...resourceValuesOfItem(event.appointment.source, this.inputs.resources()),
+      ...target,
+    };
+    const proposal = this.snapped(event.proposal, values);
     const patch: Record<string, unknown> = {
       ...(appointmentPatch(
         event.appointment.source,
-        event.proposal,
+        proposal,
         this.fields(),
       ) as Record<string, unknown>),
+      ...target,
     };
-    if (event.resourceId !== undefined && resource !== null) {
-      patch[resource.fieldExpr] = event.resourceId;
+    if (this.updateItem(event.appointment.source, patch as Partial<T>, true)) {
+      this.announceProposal('moved', { ...event, proposal });
     }
-    this.updateItem(event.appointment.source, patch as Partial<T>);
-    this.announceProposal('moved', event);
   }
 
   /** A drag-to-create range landed: emits, then opens the create editor. */
   onRangeSelected(range: SchedulerRangeEvent): void {
     this.options.events.rangeSelected(range);
     if (!this.canAdd()) return;
+    const values = range.resources ?? this.cellValues(range);
+    const proposal = this.snapped(
+      { startDate: range.startDate, endDate: range.endDate, allDay: false },
+      values,
+    );
+    if (this.isBlocked(proposal.startDate, proposal.endDate, false, values)) {
+      this.refuse(this.msg().announcements.slotUnavailable);
+      return;
+    }
     const model = draftEditorModel(
-      range.startDate,
-      range.endDate,
+      proposal.startDate,
+      proposal.endDate,
       false,
-      this.prefillResources(range.resourceId),
+      this.prefillResources(range.resourceId, values),
     );
     this.openEditor(model, this.buildItem(model), true);
   }
@@ -1030,13 +1883,20 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     kind: 'moved' | 'resized',
   ): void {
     if (!this.canUpdate()) return;
+    const values = resourceValuesOfItem(
+      event.appointment.source,
+      this.inputs.resources(),
+    );
+    const proposal =
+      kind === 'moved' ? this.snapped(event.proposal, values) : event.proposal;
     const patch = appointmentPatch(
       event.appointment.source,
-      event.proposal,
+      proposal,
       this.fields(),
     );
-    this.updateItem(event.appointment.source, patch);
-    this.announceProposal(kind, event);
+    if (this.updateItem(event.appointment.source, patch, true)) {
+      this.announceProposal(kind, { ...event, proposal });
+    }
   }
 
   private announceProposal(
@@ -1072,11 +1932,13 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         cellDate: event.cellDate,
         allDay: event.allDay,
         event: event.event,
+        resources: this.cellValues(event),
       });
       this.openMenu(event.event, null, {
         cellDate: event.cellDate,
         allDay: event.allDay,
         resourceId: event.resourceId,
+        resources: this.cellValues(event),
       });
     }
   }
@@ -1127,6 +1989,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         menu.cell.cellDate,
         menu.cell.allDay,
         menu.cell.resourceId,
+        menu.cell.resources,
       );
     }
   }

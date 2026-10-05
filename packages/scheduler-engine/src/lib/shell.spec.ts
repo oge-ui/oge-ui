@@ -59,6 +59,8 @@ describe('scheduler shell derivations', () => {
       dayStartHour: 8,
       dayEndHour: 18,
       cellDuration: 30,
+      intervalCount: 1,
+      index: 0,
     });
     expect(views[1]).toMatchObject({ name: 'Office', dayStartHour: 9 });
     expect(
@@ -73,7 +75,7 @@ describe('scheduler shell derivations', () => {
       popup: { edit: 'E', deleteAppointment: 'D', close: 'C' },
     });
     expect(merged.popup.edit).toBe('E');
-    expect(merged.toolbar).toBe(OGE_DEFAULT_SCHEDULER_MESSAGES.toolbar);
+    expect(merged.toolbar).toEqual(OGE_DEFAULT_SCHEDULER_MESSAGES.toolbar);
   });
 
   it('picks the color and grouping resources', () => {

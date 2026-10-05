@@ -3,7 +3,12 @@
  * rows, the "+N more" overflow entries, the chip keyboard order, the
  * pointer-drop cell and the labels.
  */
-import { ogeDateTimeFormat, sameDay, startOfDay } from '@oge-ui/core';
+import {
+  ogeDateTimeFormat,
+  ogeFormatMessage,
+  sameDay,
+  startOfDay,
+} from '@oge-ui/core';
 import type { OgeSchedulerGridMessages } from './config';
 import type { LaneLayout } from './lanes';
 import { buildMonthWeekLanes } from './month-layout';
@@ -70,10 +75,12 @@ export function monthDropCell(
     readonly height: number;
   },
   rtl = false,
+  weekCount = 6,
 ): { week: number; day: number } {
+  const rows = Math.max(1, weekCount);
   const week = Math.min(
-    5,
-    Math.max(0, Math.floor(((clientY - rect.top) / rect.height) * 6)),
+    rows - 1,
+    Math.max(0, Math.floor(((clientY - rect.top) / rect.height) * rows)),
   );
   const day = Math.min(
     6,
@@ -131,4 +138,97 @@ export function schedulerMoreText(
   count: number,
 ): string {
   return messages.moreLabel.replace('{count}', String(count));
+}
+
+/**
+ * The "+N more" button's accessible name — "2 more appointments on Monday,
+ * August 3, 2026" (an ICU plural through `ogeFormatMessage`).
+ */
+export function schedulerMoreAriaLabel(
+  messages: OgeSchedulerGridMessages,
+  count: number,
+  day: Date,
+  locale: string | undefined,
+): string {
+  const template =
+    messages.moreAppointmentsLabel ??
+    '{count, plural, one {# more appointment} other {# more appointments}} on {date}';
+  return ogeFormatMessage(
+    template,
+    {
+      count,
+      date: ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(day),
+    },
+    locale,
+  );
+}
+
+/** The "+N more" popup's accessible name and heading text. */
+export function schedulerMorePopupTitle(
+  messages: OgeSchedulerGridMessages,
+  day: Date,
+  locale: string | undefined,
+): { readonly label: string; readonly heading: string } {
+  const full = ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(day);
+  return {
+    label: (messages.morePopupLabel ?? 'Appointments on {date}').replace(
+      '{date}',
+      full,
+    ),
+    heading: ogeDateTimeFormat(locale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).format(day),
+  };
+}
+
+/**
+ * Every appointment touching `day`, all-day ones first, then by start —
+ * the "+N more" popup's list (the whole day, not only the hidden ones, so
+ * the list reads in order).
+ */
+export function appointmentsOnDay<T>(
+  appointments: readonly SchedulerAppointment<T>[],
+  day: Date,
+): SchedulerAppointment<T>[] {
+  const start = startOfDay(day);
+  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+  return appointments
+    .filter((appointment) =>
+      appointment.startDate.getTime() === appointment.endDate.getTime()
+        ? appointment.startDate.getTime() >= start.getTime() &&
+          appointment.startDate.getTime() < end.getTime()
+        : appointment.startDate.getTime() < end.getTime() &&
+          appointment.endDate.getTime() > start.getTime(),
+    )
+    .sort(
+      (a, b) =>
+        Number(b.displayAllDay) - Number(a.displayAllDay) ||
+        a.startDate.getTime() - b.startDate.getTime(),
+    );
+}
+
+/**
+ * The "+N more" popup's arrow keys: Up/Down move between the list's items
+ * (clamped), Home/End jump to the ends. `null` = not a list key.
+ */
+export function morePopupKey(
+  key: string,
+  index: number,
+  count: number,
+): number | null {
+  if (count === 0) return null;
+  switch (key) {
+    case 'ArrowDown':
+      return Math.min(count - 1, index + 1);
+    case 'ArrowUp':
+      return Math.max(0, index - 1);
+    case 'Home':
+      return 0;
+    case 'End':
+      return count - 1;
+    default:
+      return null;
+  }
 }
