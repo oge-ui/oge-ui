@@ -113,3 +113,20 @@ export type {
   OgePopupPlacement,
   OgeResolvedPopupPosition,
 } from '@oge-ui/behavior';
+// ready-made translations (@oge-ui/locales, MIT): the one-provider wiring for
+// every family above, plus the pack vocabulary. The packs themselves are
+// imported from their own entry points (`@oge-ui/locales/tr`).
+export {
+  OgeLocaleProvider,
+  type OgeLocaleProviderProps,
+} from './lib/locale-provider';
+export {
+  OGE_LOCALE_NAMES,
+  ogeLocalePacks,
+  ogeMergeMessages,
+  type OgeDeepPartial,
+  type OgeLocaleCode,
+  type OgeLocaleLayoutMessages,
+  type OgeLocaleNavigationMessages,
+  type OgeLocalePack,
+} from '@oge-ui/locales';

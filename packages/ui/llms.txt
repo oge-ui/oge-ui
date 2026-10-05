@@ -91,7 +91,7 @@ Predictable wrong guesses, and what to write instead.
 
 `oge-ui`
 
-- values: `OgeToolbarItem`, `OgeTreeList`
-- types: `OgeMenuItem`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
+- values: `OGE_LOCALE_NAMES`, `OgeToolbarItem`, `OgeTreeList`, `ogeLocalePacks`, `ogeMergeMessages`, `provideOgeLocale`
+- types: `OgeDeepPartial`, `OgeLocaleCode`, `OgeLocaleLayoutMessages`, `OgeLocaleNavigationMessages`, `OgeLocalePack`, `OgeMenuItem`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
 
 

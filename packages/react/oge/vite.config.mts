@@ -64,6 +64,7 @@ export default defineConfig(() => ({
         'react-dom',
         'react/jsx-runtime',
         '@oge-ui/behavior',
+        '@oge-ui/locales',
         '@oge-ui/react-buttons',
         '@oge-ui/react-forms',
         '@oge-ui/react-grid',
@@ -73,6 +74,7 @@ export default defineConfig(() => ({
         '@oge-ui/react-navigation',
         '@oge-ui/react-overlay',
         '@oge-ui/react-tabs',
+        '@oge-ui/react-upload',
       ],
       output: {
         // Rollup strips module-level directives when it bundles, so the
