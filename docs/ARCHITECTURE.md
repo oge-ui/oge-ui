@@ -736,7 +736,7 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   affordances also show on `:focus-within`, on the selected item and under `@media (hover: none)`.
 - Icons are inline SVG with `aria-hidden="true"` — there is no icon font or icon package.
 - **State colours: idle is not disabled.** `--oge-border-color` is a hairline for frames and
-  dividers; a control whose *off* state is drawn by its outline alone (unchecked check box, radio
+  dividers; a control whose _off_ state is drawn by its outline alone (unchecked check box, radio
   ring, switch track, tree-view check) outlines it in `--oge-muted-color`, or it all but vanishes.
   Idle-but-enabled text a user acts on (unselected tab, unpressed toggle-group segment, switch
   track text) uses the readable `--oge-input-muted`; `--oge-muted-color` plus opacity is what

@@ -161,9 +161,15 @@ for (const theme of THEMES) {
       await expect(box).toHaveClass(/oge-select-box-open/);
       // the chevron rule flips only chevrons — the calendar stays upright
       expect(await css(toggle.locator('svg'), 'transform')).toBe('none');
-      expect(await css(container, 'border-top-color')).toBe(
-        await token(box, 'border-color', 'var(--oge-accent)'),
+      // the border transitions into the accent: poll until it settles
+      const accentBorder = await token(
+        box,
+        'border-color',
+        'var(--oge-accent)',
       );
+      await expect
+        .poll(() => css(container, 'border-top-color'))
+        .toBe(accentBorder);
 
       const popup = page
         .locator('.oge-popup')
