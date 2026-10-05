@@ -7,6 +7,23 @@ import type { OgeFormItemData } from '@oge-ui/forms';
 import type { OgeGanttDialogShowingEvent as EngineDialogShowingEvent } from '@oge-ui/gantt-engine';
 
 export type {
+  OgeGanttCellEditorType,
+  OgeGanttColumnReorderedEvent,
+  OgeGanttColumnResizedEvent,
+  OgeGanttConflictKind,
+  OgeGanttConstraintType,
+  OgeGanttDependencyUpdatedEvent,
+  OgeGanttDependencyUpdatingEvent,
+  OgeGanttLagUnit,
+  OgeGanttSchedulingConflict,
+  OgeGanttSchedulingConflictEvent,
+  OgeGanttSegment,
+  OgeGanttSelectionMode,
+  OgeGanttSlack,
+  OgeGanttSortChangedEvent,
+  OgeGanttSortDirection,
+  OgeGanttViewMode,
+  OgeGanttZoomPreset,
   OgeGanttColumn,
   OgeGanttDependency,
   OgeGanttDependencyDeletedEvent,

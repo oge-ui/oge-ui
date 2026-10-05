@@ -2,8 +2,8 @@
 // Explicit named exports only (house rule). The engine is
 // `@oge-ui/gantt-engine` (ADR 0003) — the same one the Angular `@oge-ui/gantt`
 // runs; its public types are re-exported here so React consumers import one
-// package. The export entries are `/export-excel`, `/export-pdf` and
-// `/export-image`.
+// package. The export entries are `/export-excel`, `/export-pdf`,
+// `/export-image` and `/export-msproject`.
 
 export { OgeGantt } from './lib/gantt';
 export type {
@@ -20,25 +20,44 @@ export {
 } from '@oge-ui/gantt-engine';
 export type {
   OgeGanttAnnouncementMessages,
+  OgeGanttCellEditorType,
   OgeGanttColumn,
   OgeGanttColumnMessages,
+  OgeGanttColumnReorderedEvent,
+  OgeGanttColumnResizedEvent,
   OgeGanttConfig,
   OgeGanttConfigInput,
+  OgeGanttConflictKind,
+  OgeGanttConstraintType,
   OgeGanttDependency,
   OgeGanttDependencyDeletedEvent,
   OgeGanttDependencyDeletingEvent,
+  OgeGanttDependencyEditorMessages,
   OgeGanttDependencyInsertedEvent,
   OgeGanttDependencyInsertingEvent,
   OgeGanttDependencyType,
+  OgeGanttDependencyUpdatedEvent,
+  OgeGanttDependencyUpdatingEvent,
   OgeGanttDialogMessages,
   OgeGanttExportColumn,
   OgeGanttExportData,
   OgeGanttGridMessages,
+  OgeGanttLagUnit,
   OgeGanttMenuMessages,
   OgeGanttMessages,
+  OgeGanttResolvedMessages,
   OgeGanttResource,
+  OgeGanttScaleMessages,
   OgeGanttScaleType,
+  OgeGanttSchedulingConflict,
+  OgeGanttSchedulingConflictEvent,
+  OgeGanttSchedulingMessages,
+  OgeGanttSegment,
   OgeGanttSelectionChangedEvent,
+  OgeGanttSelectionMode,
+  OgeGanttSlack,
+  OgeGanttSortChangedEvent,
+  OgeGanttSortDirection,
   OgeGanttStripLine,
   OgeGanttTask,
   OgeGanttTaskClickEvent,
@@ -50,5 +69,7 @@ export type {
   OgeGanttTaskUpdatedEvent,
   OgeGanttTaskUpdatingEvent,
   OgeGanttToolbarMessages,
+  OgeGanttViewMode,
   OgeGanttWorkCalendar,
+  OgeGanttZoomPreset,
 } from '@oge-ui/gantt-engine';

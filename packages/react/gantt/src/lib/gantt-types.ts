@@ -2,7 +2,18 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { RowKey } from '@oge-ui/core';
 import type {
   GanttFieldExpr,
+  GanttLagUnit,
   OgeGanttColumn,
+  OgeGanttColumnReorderedEvent,
+  OgeGanttColumnResizedEvent,
+  OgeGanttDependencyUpdatedEvent,
+  OgeGanttDependencyUpdatingEvent,
+  OgeGanttSchedulingConflictEvent,
+  OgeGanttSelectionMode,
+  OgeGanttSlack,
+  OgeGanttSortChangedEvent,
+  OgeGanttViewMode,
+  OgeGanttZoomPreset,
   OgeGanttDependencyDeletedEvent,
   OgeGanttDependencyDeletingEvent,
   OgeGanttDependencyInsertedEvent,
@@ -73,6 +84,25 @@ export interface OgeGanttProps<
   predecessorKeyExpr?: GanttFieldExpr<D>;
   successorKeyExpr?: GanttFieldExpr<D>;
   dependencyTypeExpr?: GanttFieldExpr<D>;
+  /** Link lag amount (negative = lead). Default `'lag'`. */
+  dependencyLagExpr?: GanttFieldExpr<D>;
+  /** Link lag unit `'days' | 'hours'`. Default `'lagUnit'`. */
+  dependencyLagUnitExpr?: GanttFieldExpr<D>;
+  /** `true` = auto-scheduling never moves the task. Default `'manuallyScheduled'`. */
+  manuallyScheduledExpr?: GanttFieldExpr<T>;
+  /** Constraint type. Default `'constraintType'`. */
+  constraintTypeExpr?: GanttFieldExpr<T>;
+  constraintDateExpr?: GanttFieldExpr<T>;
+  /** Target finish. Default `'deadline'`. */
+  deadlineExpr?: GanttFieldExpr<T>;
+  /** Split-task pieces `[{ start, end }, …]`. Default `'segments'`. */
+  segmentsExpr?: GanttFieldExpr<T>;
+  /** Baseline sets `[{ start, end }, …]`. Default `'baselines'`. */
+  baselinesExpr?: GanttFieldExpr<T>;
+  /** Assignment units in %. Default `'units'`. */
+  unitsExpr?: GanttFieldExpr<T>;
+  /** Work in hours. Default `'effort'`. */
+  effortExpr?: GanttFieldExpr<T>;
   /** Resource choices: bar labels, dialog tag editor, workload band rows. */
   resources?: readonly OgeGanttResource[];
   resourceIdExpr?: GanttFieldExpr<T>;
@@ -103,8 +133,46 @@ export interface OgeGanttProps<
   holidays?: readonly Date[];
   workCalendar?: OgeGanttWorkCalendar | null;
   showResourceWorkload?: boolean;
+  /** Per-period utilization rows (units vs capacity). */
+  showResourceHistogram?: boolean;
   stripLines?: readonly OgeGanttStripLine[];
+  /**
+   * Project-level auto-scheduling: links with lag, constraints and ALAP move
+   * tasks earlier or later after every edit; manual tasks stay put.
+   */
   autoScheduling?: boolean;
+  /** Where unlinked ASAP tasks start when auto-scheduling. */
+  projectStart?: Date | null;
+  /** Assignment / units / work changes recompute the finish. */
+  effortDriven?: boolean;
+  /** Working hours per day for effort-driven durations. Default 8. */
+  hoursPerDay?: number;
+  showProgressLine?: boolean;
+  /** Status date of the progress line; unset = today. */
+  statusDate?: Date | null;
+  /** Child milestones drawn onto their summary bars. */
+  showRollups?: boolean;
+  /** Which baseline renders (0-based, `-1` hides) — controlled when provided. */
+  baselineIndex?: number;
+  /** Uncontrolled initial baseline. Default 0. */
+  defaultBaselineIndex?: number;
+  onBaselineIndexChange?: (index: number) => void;
+  /** The toolbar's zoom-preset chooser; unset = one entry per scale. */
+  zoomPresets?: readonly OgeGanttZoomPreset[] | null;
+  /** `'tasks'` or `'resources'` — controlled when provided. */
+  viewMode?: OgeGanttViewMode;
+  /** Uncontrolled initial view. Default `'tasks'`. */
+  defaultViewMode?: OgeGanttViewMode;
+  onViewModeChange?: (mode: OgeGanttViewMode) => void;
+  /** Double-click / F2 edits task-list cells in place. */
+  inlineEditing?: boolean;
+  allowSorting?: boolean;
+  allowColumnResizing?: boolean;
+  allowColumnReordering?: boolean;
+  filterRow?: boolean;
+  searchPanel?: boolean;
+  /** `'multiple'`: Ctrl/Shift-click, Shift+Arrow, Ctrl+A and bulk actions. */
+  selectionMode?: OgeGanttSelectionMode;
   locale?: string;
   /** Per-instance overrides, merged over the provider's messages per block. */
   messages?: Partial<OgeGanttMessages>;
@@ -131,6 +199,11 @@ export interface OgeGanttProps<
   defaultSelectedTaskKey?: RowKey | null;
   /** The controlled half of `selectedTaskKey`. */
   onSelectedTaskKeyChange?: (key: RowKey | null) => void;
+  /** Every selected key (`selectionMode: 'multiple'`) — controlled when provided. */
+  selectedTaskKeys?: readonly RowKey[];
+  /** Uncontrolled initial multi-selection. */
+  defaultSelectedTaskKeys?: readonly RowKey[];
+  onSelectedTaskKeysChange?: (keys: readonly RowKey[]) => void;
 
   /* ---------------- callbacks ---------------- */
   onTaskInserting?: (event: OgeGanttTaskInsertingEvent<T>) => void;
@@ -148,6 +221,12 @@ export interface OgeGanttProps<
   onTaskContextMenu?: (event: OgeGanttTaskClickEvent<T>) => void;
   onSelectionChanged?: (event: OgeGanttSelectionChangedEvent<T>) => void;
   onTaskEditDialogShowing?: (event: OgeGanttDialogShowingEvent<T>) => void;
+  onSchedulingConflict?: (event: OgeGanttSchedulingConflictEvent<T>) => void;
+  onDependencyUpdating?: (event: OgeGanttDependencyUpdatingEvent<D>) => void;
+  onDependencyUpdated?: (event: OgeGanttDependencyUpdatedEvent<D>) => void;
+  onSortChanged?: (event: OgeGanttSortChangedEvent) => void;
+  onColumnResized?: (event: OgeGanttColumnResizedEvent) => void;
+  onColumnReordered?: (event: OgeGanttColumnReorderedEvent) => void;
 
   /* ---------------- render props ---------------- */
   /** Replaces the bar's title content (`*ogeGanttTaskTemplate`). */
@@ -170,12 +249,38 @@ export interface OgeGanttHandle<
   updateTask(taskData: T, patch: Partial<T>): void;
   /** Deletes a task (and its dependency links) through the pipeline. */
   deleteTask(taskData: T): void;
-  /** Inserts a dependency link (cycle-checked, cancelable). */
+  /** Inserts a dependency link (cycle-checked, cancelable), optionally with a lag. */
   insertDependency(
     predecessorKey: RowKey,
     successorKey: RowKey,
     type?: OgeGanttDependencyType,
+    options?: { readonly lag?: number; readonly lagUnit?: GanttLagUnit },
   ): void;
+  /** Updates a link's fields (type, lag, lag unit…) through the pipeline. */
+  updateDependency(dependencyData: D, patch: Partial<D>): void;
+  /** Runs the scheduling engine now (one undo step). */
+  scheduleProject(): void;
+  /** Total and free slack of a leaf task (days), or `null`. */
+  getTaskSlack(key: RowKey): OgeGanttSlack | null;
+  /** Saves every leaf task's dates as baseline `index` (0-based). */
+  setBaseline(index?: number): void;
+  /** Applies a zoom preset by index. */
+  applyZoomPreset(index: number): void;
+  /** Sorts the task list by a column; `null` clears the sort. */
+  sortBy(field: string | null, direction?: 'asc' | 'desc'): void;
+  setFilter(field: string, text: string): void;
+  setSearchText(text: string): void;
+  clearFilters(): void;
+  setColumnWidth(field: string, widthPx: number): void;
+  moveColumn(field: string, toIndex: number): void;
+  /** Opens the inline editor on a cell. */
+  editCell(task: OgeGanttTask<T>, field?: string): boolean;
+  getSelectedTasks(): OgeGanttTask<T>[];
+  selectAll(): void;
+  clearSelection(): void;
+  deleteTasks(items: readonly T[]): void;
+  indentTasks(tasks: readonly OgeGanttTask<T>[]): void;
+  outdentTasks(tasks: readonly OgeGanttTask<T>[]): void;
   /** Deletes a dependency link through the pipeline. */
   deleteDependency(dependencyData: D): void;
   /** Reverts the last committed change. */

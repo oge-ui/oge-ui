@@ -500,6 +500,13 @@ export class OgeGanttCore<
 > {
   /** Sticky scale header height (two 24px tick rows). */
   readonly scaleHeadH = GANTT_SCALE_HEAD_PX;
+  /** The link types, in the dependency editor's order. */
+  readonly dependencyTypes: readonly OgeGanttDependencyType[] = [
+    'FS',
+    'SS',
+    'FF',
+    'SF',
+  ];
 
   private readonly inputs: OgeGanttCoreInputs<T, D>;
   private readonly events: OgeGanttCoreEvents<T, D>;
@@ -2868,6 +2875,59 @@ export class OgeGanttCore<
   }
 
   /* ---------------- inline cell editing ---------------- */
+
+  /** Headers take focus (sorting, resizing or reordering is on). */
+  headerInteractive(): boolean {
+    return (
+      (this.inputs.allowSorting?.() ?? false) ||
+      (this.inputs.allowColumnResizing?.() ?? false) ||
+      (this.inputs.allowColumnReordering?.() ?? false)
+    );
+  }
+
+  /** `aria-keyshortcuts` of an interactive header. */
+  headerShortcuts(): string | null {
+    if (!this.headerInteractive()) return null;
+    const keys: string[] = [];
+    if (this.inputs.allowSorting?.() ?? false) keys.push('Enter');
+    if (this.inputs.allowColumnResizing?.() ?? false) {
+      keys.push('Alt+ArrowLeft', 'Alt+ArrowRight');
+    }
+    if (this.inputs.allowColumnReordering?.() ?? false) {
+      keys.push('Control+Shift+ArrowLeft', 'Control+Shift+ArrowRight');
+    }
+    return keys.join(' ');
+  }
+
+  /** The `<input type>` of a cell editor. */
+  editorInputType(editor: GanttCellEditorType): 'text' | 'number' | 'date' {
+    return editor === 'date'
+      ? 'date'
+      : editor === 'number' || editor === 'duration'
+        ? 'number'
+        : 'text';
+  }
+
+  /** Accessible name of the open cell editor. */
+  cellEditorLabel(task: GanttTask<T>, column: { header: string }): string {
+    return formatGanttMessage(this.msg().grid.cellEditorLabel, {
+      column: column.header,
+      title: task.title,
+    });
+  }
+
+  /** Whether `task` / `field` is the cell being edited. */
+  isEditingCell(task: GanttTask<T>, field: string): boolean {
+    const cell = this.editingCell();
+    return cell !== null && cell.key === task.key && cell.field === field;
+  }
+
+  /** Accessible name of a filter-row input. */
+  filterLabel(column: { header: string }): string {
+    return formatGanttMessage(this.msg().grid.filterLabel, {
+      column: column.header,
+    });
+  }
 
   /** Inline editing is on and the Gantt is editable. */
   inlineEditingEnabled(): boolean {

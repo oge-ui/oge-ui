@@ -349,7 +349,7 @@ describe('<OgeGantt>', () => {
 
   it('scaleType is a controlled/uncontrolled pair', () => {
     function Controlled() {
-      const [scale, setScale] = useState<OgeGanttScaleType>('weeks');
+      const [scale, setScale] = useState<OgeGanttScaleType>('quarters');
       return (
         <>
           <output data-testid="scale">{scale}</output>
@@ -359,7 +359,7 @@ describe('<OgeGantt>', () => {
     }
     render(<Controlled />);
     fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
-    expect(screen.getByTestId('scale').textContent).toBe('months');
+    expect(screen.getByTestId('scale').textContent).toBe('years');
     expect(
       (screen.getByRole('button', { name: 'Zoom out' }) as HTMLButtonElement)
         .disabled,
