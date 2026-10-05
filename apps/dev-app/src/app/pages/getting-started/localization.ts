@@ -8,10 +8,25 @@ import {
 import { createElement, useState, type ReactNode } from 'react';
 import { ogeFormatMessage, type OgeValueFormat } from '@oge-ui/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeDateBox, OgeSelectBox } from '@oge-ui/inputs';
+import {
+  OGE_LOCALE_NAMES,
+  en,
+  ogeLocalePacks,
+  type OgeLocaleCode,
+  type OgeLocalePack,
+} from '@oge-ui/locales';
+import { OgeLocaleProvider } from '@oge-ui/react';
 import {
   OgeGrid as ReactOgeGrid,
   type OgeGridColumnProps,
 } from '@oge-ui/react-grid';
+import {
+  OgeDateBox as ReactOgeDateBox,
+  OgeSelectBox as ReactOgeSelectBox,
+} from '@oge-ui/react-inputs';
+import { provideOgeLocale } from 'oge-ui';
+import { RouterLink } from '@angular/router';
 import { CodeBlock } from '../../shared/code-block';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -27,6 +42,13 @@ import {
   NUMBER_LOCALE,
   PER_COMPONENT,
   PLURAL_MESSAGES,
+  READY_MADE_ANGULAR,
+  READY_MADE_COMMERCIAL,
+  READY_MADE_DEMO,
+  READY_MADE_INSTALL,
+  READY_MADE_REACT,
+  READY_MADE_REACT_DEMO,
+  READY_MADE_RUNTIME,
   RTL,
   RUNTIME,
   VALIDATION,
@@ -126,8 +148,184 @@ function ReactLocaleDemo(): ReactNode {
   );
 }
 
+// --- "Ready-made translations" ---------------------------------------------
+
+interface Delivery {
+  id: number;
+  customer: string;
+  placed: Date;
+  amount: number;
+}
+
+const DELIVERIES: Delivery[] = [
+  {
+    id: 1,
+    customer: 'Anadolu Ltd.',
+    placed: new Date(2026, 0, 5),
+    amount: 1234.5,
+  },
+  {
+    id: 2,
+    customer: 'Berlin GmbH',
+    placed: new Date(2026, 2, 17),
+    amount: 89.9,
+  },
+  {
+    id: 3,
+    customer: 'Paris SARL',
+    placed: new Date(2026, 5, 30),
+    amount: 15600,
+  },
+  { id: 4, customer: 'Tokyo KK', placed: new Date(2026, 8, 2), amount: 420 },
+];
+const DELIVERY_COLUMNS: OgeGridColumnProps<Delivery>[] = [
+  { field: 'customer', caption: 'Customer' },
+  { field: 'placed', caption: 'Placed', dataType: 'date' },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: MONEY },
+];
+const CITIES = ['İstanbul', 'Berlin', 'Paris', 'Tokyo', 'Cairo', 'Tel Aviv'];
+const PACK_CODES = Object.keys(OGE_LOCALE_NAMES) as OgeLocaleCode[];
+
+/** The Angular demo's language — the live `provideOgeLocale` below reads it. */
+const demoPack = signal<OgeLocalePack>(en);
+
+/**
+ * The live language switcher: its own `provideOgeLocale(() => demoPack())`
+ * scopes the pack to this subtree, so the rest of the docs stay English.
+ */
+@Component({
+  selector: 'app-ready-made-demo',
+  imports: [OgeColumn, OgeDateBox, OgeGrid, OgeSelectBox],
+  providers: [provideOgeLocale(() => demoPack())],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div role="group" aria-label="Language" class="app-locale-switch">
+      @for (code of codes; track code) {
+        <button
+          type="button"
+          [attr.aria-pressed]="pack().locale === code"
+          [attr.data-locale]="code"
+          (click)="pick(code)"
+        >
+          {{ names[code] }}
+        </button>
+      }
+    </div>
+    <div
+      class="app-ready-made"
+      [attr.dir]="pack().dir"
+      [attr.lang]="pack().locale"
+    >
+      <div class="app-ready-made-editors">
+        <oge-date-box label="Delivery" [(value)]="day" />
+        <oge-select-box
+          label="City"
+          [items]="cities"
+          [(value)]="city"
+          [searchEnabled]="true"
+          [showClearButton]="true"
+        />
+      </div>
+      <oge-grid
+        [data]="deliveries"
+        keyField="id"
+        [filterRow]="true"
+        [paging]="{ pageSize: 3 }"
+      >
+        <oge-column field="customer" caption="Customer" />
+        <oge-column field="placed" caption="Placed" dataType="date" />
+        <oge-column
+          field="amount"
+          caption="Amount"
+          dataType="number"
+          [format]="money"
+        />
+      </oge-grid>
+    </div>
+  `,
+})
+export class ReadyMadeDemo {
+  protected readonly codes = PACK_CODES;
+  protected readonly names = OGE_LOCALE_NAMES;
+  protected readonly pack = demoPack;
+  protected readonly deliveries = DELIVERIES;
+  protected readonly cities = CITIES;
+  protected readonly money = MONEY;
+  protected readonly city = signal<unknown>(null);
+  protected readonly day = signal<Date | null>(new Date(2026, 9, 5));
+
+  protected async pick(code: OgeLocaleCode): Promise<void> {
+    // every language is its own chunk, downloaded on first use
+    demoPack.set(await ogeLocalePacks[code]());
+  }
+}
+
+/** The React twin: one `<OgeLocaleProvider>` around the same three components. */
+function ReactReadyMadeDemo(): ReactNode {
+  const [pack, setPack] = useState<OgeLocalePack>(en);
+  const [day, setDay] = useState<Date | null>(new Date(2026, 9, 5));
+  const [city, setCity] = useState<unknown>(null);
+  const pick = async (code: OgeLocaleCode) =>
+    setPack(await ogeLocalePacks[code]());
+  return createElement(
+    OgeLocaleProvider,
+    { pack },
+    createElement(
+      'div',
+      {
+        role: 'group',
+        'aria-label': 'Language',
+        className: 'app-locale-switch',
+      },
+      ...PACK_CODES.map((code) =>
+        createElement(
+          'button',
+          {
+            key: code,
+            type: 'button',
+            'aria-pressed': pack.locale === code,
+            'data-locale': code,
+            onClick: () => void pick(code),
+          },
+          OGE_LOCALE_NAMES[code],
+        ),
+      ),
+    ),
+    createElement(
+      'div',
+      { className: 'app-ready-made', dir: pack.dir, lang: pack.locale },
+      createElement(
+        'div',
+        { className: 'app-ready-made-editors' },
+        createElement(ReactOgeDateBox, {
+          label: 'Delivery',
+          value: day,
+          onValueChange: setDay,
+        }),
+        createElement(ReactOgeSelectBox, {
+          label: 'City',
+          items: CITIES,
+          value: city,
+          onValueChange: setCity,
+          searchEnabled: true,
+          showClearButton: true,
+        }),
+      ),
+      createElement(ReactOgeGrid<Delivery>, {
+        data: DELIVERIES,
+        keyField: 'id',
+        columns: DELIVERY_COLUMNS,
+        filterRow: true,
+        paging: { pageSize: 3 },
+        ariaLabel: 'Deliveries',
+      }),
+    ),
+  );
+}
+
 const SECTIONS = [
   'How it works',
+  'Ready-made translations',
   'Global configuration',
   'Switching language at runtime',
   'Per-component overrides',
@@ -148,6 +346,8 @@ const SECTIONS = [
     OgeGrid,
     PageToc,
     ReactHost,
+    ReadyMadeDemo,
+    RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -184,6 +384,73 @@ const SECTIONS = [
       <code>&lt;Oge…ConfigProvider&gt;</code> — the same object, handed over the
       way each framework expects.
     </p>
+
+    <h2 id="ready-made-translations" class="scroll-mt-20">
+      Ready-made translations
+    </h2>
+    <p>
+      <code>&#64;oge-ui/locales</code> (MIT) translates every catalog of the
+      suite — MIT and commercial families alike — into German, French, Spanish,
+      Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese,
+      Arabic and Hebrew, with each language's plural forms in the count-bearing
+      keys. Each language is its own entry point
+      (<code>&#64;oge-ui/locales/tr</code>), so an app bundles only the pack it
+      imports. A pack is plain data — a typed <code>OgeLocalePack</code> with
+      the <code>locale</code> for <code>Intl</code> formats, the writing
+      <code>dir</code> and one slice per catalog — and every key it does not
+      carry yet stays English. A CI check keeps each pack's keys, placeholders
+      and plurals in step with the English source.
+    </p>
+    <app-code-block [code]="readyMadeInstall" language="bash" />
+    @if (fw.isReact()) {
+      <p>
+        Wrap the app in <code>&lt;OgeLocaleProvider&gt;</code> from
+        <code>&#64;oge-ui/react</code>: it composes every MIT family's config
+        provider with the pack's slice and <code>locale</code>. Family providers
+        nested inside still apply on top.
+      </p>
+      <app-code-block [code]="readyMadeReact" language="tsx" />
+    } @else {
+      <p>
+        <code>provideOgeLocale(pack)</code> from <code>oge-ui</code> provides
+        every MIT family's config — grid and tree list, inputs, buttons,
+        overlay, tabs, forms, upload, layout and navigation — with the pack's
+        slice and, where a family formats data, its <code>locale</code>.
+        <code>LOCALE_ID</code> (Angular's own pipes) and the page's
+        <code>dir</code> remain the app's job.
+      </p>
+      <app-code-block [code]="readyMadeAngular" language="ts" />
+    }
+    <app-demo-card
+      title="Language switcher"
+      description="Pick a language: the date box (open its calendar), the select box (search it, clear it) and the grid's filter row, pager and empty texts switch at once; Arabic and Hebrew mirror the layout. Each pack is downloaded the first time it is picked."
+      [chips]="['@oge-ui/locales', 'provideOgeLocale', 'OgeLocaleProvider']"
+      [code]="fw.isReact() ? readyMadeReactDemo.source : readyMadeDemo"
+      [language]="fw.isReact() ? 'tsx' : 'ts'"
+    >
+      @if (fw.isReact()) {
+        <app-react-host [render]="renderReadyMade" />
+      } @else {
+        <app-ready-made-demo />
+      }
+    </app-demo-card>
+    <p>
+      Switch at runtime with the lazy <code>ogeLocalePacks</code> map and the
+      live form (<code>provideOgeLocale(() =&gt; pack())</code>; in React, pass
+      a new <code>pack</code>). <code>provideOgeLocale</code> owns the family
+      config tokens it sets, so a family whose other options you also tune is
+      provided after it, with the slice merged in through
+      <code>ogeMergeMessages</code>:
+    </p>
+    <app-code-block [code]="readyMadeRuntime" language="ts" />
+    <p>
+      The commercial families (pivot, scheduler, Gantt, Kanban, BPMN, charts)
+      are translated in the same packs, but the MIT umbrellas never depend on
+      them — hand their slice to their own provider. The full key-by-key
+      reference is the
+      <a routerLink="/getting-started/localization/api">Localization API</a>.
+    </p>
+    <app-code-block [code]="readyMadeCommercial" language="ts" />
 
     <h2 id="global-configuration" class="scroll-mt-20">Global configuration</h2>
     <app-code-block [code]="global" language="ts" />
@@ -377,4 +644,13 @@ export class GettingStartedLocalizationPage {
   protected readonly numberLocale = NUMBER_LOCALE;
   protected readonly behavior = BEHAVIOR;
   protected readonly rtl = RTL;
+  protected readonly readyMadeInstall = READY_MADE_INSTALL;
+  protected readonly readyMadeAngular = READY_MADE_ANGULAR;
+  protected readonly readyMadeReact = READY_MADE_REACT;
+  protected readonly readyMadeRuntime = READY_MADE_RUNTIME;
+  protected readonly readyMadeCommercial = READY_MADE_COMMERCIAL;
+  protected readonly readyMadeDemo = READY_MADE_DEMO;
+  protected readonly readyMadeReactDemo = READY_MADE_REACT_DEMO;
+  protected readonly renderReadyMade = (): ReactNode =>
+    createElement(ReactReadyMadeDemo);
 }

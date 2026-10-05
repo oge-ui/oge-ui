@@ -84,6 +84,12 @@ export const appRoutes: Route[] = [
     title: 'OGE — Localization',
   },
   {
+    path: 'getting-started/localization/api',
+    loadComponent: () =>
+      import('./pages/locales/api').then((m) => m.LocalesApiPage),
+    title: 'OGE — Localization API',
+  },
+  {
     path: 'components',
     pathMatch: 'full',
     loadComponent: () =>

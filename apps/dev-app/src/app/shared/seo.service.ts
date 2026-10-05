@@ -44,6 +44,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Localize OGE UI: global and per-component message overrides, switching language at runtime, validation messages and Intl number and date locales.',
   ],
   [
+    '/getting-started/localization/api',
+    'Localization API of OGE UI: provideOgeLocale, OgeLocaleProvider and the @oge-ui/locales packs for ten languages, lazy loaders and the message merge helper.',
+  ],
+  [
     '/ai',
     'Use OGE UI with AI coding assistants: llms.txt and llms-full.txt references, the ng add AGENTS.md block, the rules that matter and the mistakes models make.',
   ],

@@ -26,6 +26,7 @@
         "layout:build",
         "navigation:build",
         "upload:build",
+        "locales:build",
         "ui:build"
       ],
       "outputs": ["{workspaceRoot}/dist/packages/*/schematics"],

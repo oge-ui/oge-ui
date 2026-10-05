@@ -26,6 +26,7 @@ Version 1.1.2. Generated from the OGE UI source tree: the API tables and demo so
 - `@oge-ui/kanban-engine` — Kanban engine
 - `@oge-ui/scheduler` — Scheduler
 - `@oge-ui/core` — Core
+- `@oge-ui/locales` — Locales
 - `@oge-ui/react-buttons` — Buttons (React)
 - `@oge-ui/react-inputs` — Inputs (React)
 - `@oge-ui/react-tabs` — Tabs (React)
@@ -548,6 +549,229 @@ provideOgeFormsConfig({
 // the same formatter is public — use it for your own strings
 ogeFormatMessage('{n, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}', { n: 5 }, 'pl');
 // → '5 plików'
+```
+
+### Localization — Ready made angular
+
+```ts
+// app.config.ts
+import { provideOgeLocale } from 'oge-ui';
+import { tr } from '@oge-ui/locales/tr'; // only this language is bundled
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    { provide: LOCALE_ID, useValue: 'tr' }, // Angular's own pipes — the app's job
+    provideOgeLocale(tr), // grid + tree list, inputs, buttons, overlay, tabs,
+                          // forms, upload, layout and navigation — strings and locale
+  ],
+};
+// right-to-left packs (ar, he) carry dir: 'rtl' — set <html dir> from pack.dir
+```
+
+### Localization — Ready made commercial
+
+```ts
+// The MIT umbrella never depends on the commercial packages, so their slices
+// are passed to their own providers — merged over the English catalog, so a
+// key a newer release adds stays English instead of going blank:
+import { ogeMergeMessages } from '@oge-ui/locales';
+import { tr } from '@oge-ui/locales/tr';
+import { OGE_DEFAULT_SCHEDULER_MESSAGES, provideOgeSchedulerConfig } from '@oge-ui/scheduler';
+import { OGE_DEFAULT_GANTT_MESSAGES, provideOgeGanttConfig } from '@oge-ui/gantt';
+
+providers: [
+  provideOgeLocale(tr),
+  provideOgeSchedulerConfig({
+    locale: tr.locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler),
+  }),
+  provideOgeGanttConfig({
+    locale: tr.locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_GANTT_MESSAGES, tr.gantt),
+  }),
+  // pivot: provideOgePivotMessages(ogeMergeMessages(OGE_DEFAULT_PIVOT_MESSAGES, tr.pivot))
+  // kanban / bpmn / charts: the same shape with tr.kanban / tr.bpmn / tr.charts
+]
+
+// React: <OgeSchedulerConfigProvider config={{ locale: tr.locale,
+//   messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler) }}>
+```
+
+### Localization — Ready made demo
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGrid, OgeColumn } from '@oge-ui/grid';
+import { OgeDateBox, OgeSelectBox } from '@oge-ui/inputs';
+import { OGE_LOCALE_NAMES, en, ogeLocalePacks } from '@oge-ui/locales';
+import { provideOgeLocale } from 'oge-ui';
+import type { ApplicationConfig } from '@angular/core';
+import type { OgeLocaleCode, OgeLocalePack } from '@oge-ui/locales';
+
+// the app's language state — provideOgeLocale (below) reads it live
+const uiPack = signal<OgeLocalePack>(en);
+
+const ORDERS = [
+  { id: 1, customer: 'Anadolu Ltd.', placed: new Date(2026, 0, 5), amount: 1234.5 },
+  { id: 2, customer: 'Berlin GmbH', placed: new Date(2026, 2, 17), amount: 89.9 },
+  { id: 3, customer: 'Paris SARL', placed: new Date(2026, 5, 30), amount: 15600 },
+  { id: 4, customer: 'Tokyo KK', placed: new Date(2026, 8, 2), amount: 420 },
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGrid, OgeColumn, OgeDateBox, OgeSelectBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div role="group" aria-label="Language">
+      @for (code of codes; track code) {
+        <button type="button" [attr.aria-pressed]="pack().locale === code" (click)="pick(code)">
+          {{ names[code] }}
+        </button>
+      }
+    </div>
+
+    <!-- ar and he are right-to-left: components follow the nearest dir -->
+    <div [attr.dir]="pack().dir" [attr.lang]="pack().locale">
+      <oge-date-box label="Delivery" [(value)]="day" />
+      <oge-select-box label="City" [items]="cities" [(value)]="city" [searchEnabled]="true" [showClearButton]="true" />
+      <oge-grid [data]="orders" keyField="id" [filterRow]="true" [paging]="{ pageSize: 3 }">
+        <oge-column field="customer" caption="Customer" />
+        <oge-column field="placed" caption="Placed" dataType="date" />
+        <oge-column field="amount" caption="Amount" dataType="number" [format]="{ type: 'currency', currency: 'EUR' }" />
+      </oge-grid>
+    </div>
+  `,
+})
+export class Demo {
+  readonly codes = Object.keys(OGE_LOCALE_NAMES) as OgeLocaleCode[];
+  readonly names = OGE_LOCALE_NAMES;
+  readonly pack = uiPack;
+  readonly orders = ORDERS;
+  readonly cities = ['İstanbul', 'Berlin', 'Paris', 'Tokyo', 'Cairo', 'Tel Aviv'];
+  readonly city = signal<unknown>(null);
+  readonly day = signal<Date | null>(new Date(2026, 9, 5));
+
+  async pick(code: OgeLocaleCode): Promise<void> {
+    // every language is its own chunk, downloaded on first use
+    uiPack.set(await ogeLocalePacks[code]());
+  }
+}
+
+// app.config.ts — the live form: the strings follow uiPack
+export const appConfig: ApplicationConfig = {
+  providers: [provideOgeLocale(() => uiPack())],
+};
+```
+
+### Localization — Ready made install
+
+```ts
+npm install @oge-ui/locales
+```
+
+### Localization — Ready made react
+
+```ts
+import { OgeLocaleProvider } from '@oge-ui/react';
+import { de } from '@oge-ui/locales/de';
+
+export function Root() {
+  return (
+    <OgeLocaleProvider pack={de}>
+      <App />
+    </OgeLocaleProvider>
+  );
+}
+```
+
+### Localization — Ready made react demo
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeLocaleProvider, OgeGrid, OgeDateBox, OgeSelectBox } from '@oge-ui/react';
+import { OGE_LOCALE_NAMES, en, ogeLocalePacks } from '@oge-ui/locales';
+import type { OgeGridColumnProps } from '@oge-ui/react';
+import type { OgeLocaleCode, OgeLocalePack } from '@oge-ui/locales';
+
+interface Order {
+  id: number;
+  customer: string;
+  placed: Date;
+  amount: number;
+}
+
+const ORDERS: Order[] = [
+  { id: 1, customer: 'Anadolu Ltd.', placed: new Date(2026, 0, 5), amount: 1234.5 },
+  { id: 2, customer: 'Berlin GmbH', placed: new Date(2026, 2, 17), amount: 89.9 },
+  { id: 3, customer: 'Paris SARL', placed: new Date(2026, 5, 30), amount: 15600 },
+  { id: 4, customer: 'Tokyo KK', placed: new Date(2026, 8, 2), amount: 420 },
+];
+
+const columns: OgeGridColumnProps<Order>[] = [
+  { field: 'customer', caption: 'Customer' },
+  { field: 'placed', caption: 'Placed', dataType: 'date' },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: { type: 'currency', currency: 'EUR' } },
+];
+
+const CODES = Object.keys(OGE_LOCALE_NAMES) as OgeLocaleCode[];
+const CITIES = ['İstanbul', 'Berlin', 'Paris', 'Tokyo', 'Cairo', 'Tel Aviv'];
+
+export function LanguageSwitcher() {
+  const [pack, setPack] = useState<OgeLocalePack>(en);
+  const [day, setDay] = useState<Date | null>(new Date(2026, 9, 5));
+  const [city, setCity] = useState<unknown>(null);
+  // every language is its own chunk, downloaded on first use
+  const pick = async (code: OgeLocaleCode) => setPack(await ogeLocalePacks[code]());
+  return (
+    <OgeLocaleProvider pack={pack}>
+      <div role="group" aria-label="Language">
+        {CODES.map((code) => (
+          <button key={code} type="button" aria-pressed={pack.locale === code} onClick={() => void pick(code)}>
+            {OGE_LOCALE_NAMES[code]}
+          </button>
+        ))}
+      </div>
+      {/* ar and he are right-to-left: components follow the nearest dir */}
+      <div dir={pack.dir} lang={pack.locale}>
+        <OgeDateBox label="Delivery" value={day} onValueChange={setDay} />
+        <OgeSelectBox label="City" items={CITIES} value={city} onValueChange={setCity} searchEnabled showClearButton />
+        <OgeGrid data={ORDERS} keyField="id" columns={columns} filterRow paging={{ pageSize: 3 }} />
+      </div>
+    </OgeLocaleProvider>
+  );
+}
+```
+
+### Localization — Ready made runtime
+
+```ts
+import { signal } from '@angular/core';
+import { provideOgeLocale } from 'oge-ui';
+import { en, ogeLocalePacks, type OgeLocaleCode, type OgeLocalePack } from '@oge-ui/locales';
+
+export const uiPack = signal<OgeLocalePack>(en);
+
+// each language is its own chunk — only the packs a user picks are downloaded
+export async function useLanguage(code: OgeLocaleCode): Promise<void> {
+  const pack = await ogeLocalePacks[code]();
+  uiPack.set(pack);
+  document.documentElement.lang = pack.locale;
+  document.documentElement.dir = pack.dir;
+}
+
+providers: [
+  // a function: every OGE component re-renders when uiPack changes
+  provideOgeLocale(() => uiPack()),
+  // a family whose other options you also set: provide it after, merge yourself
+  provideOgeGridConfig(() => ({
+    rowHeight: 32,
+    locale: uiPack().locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_GRID_MESSAGES, uiPack().grid),
+  })),
+]
 ```
 
 ### Localization — Rtl
@@ -20936,6 +21160,121 @@ Framework-free data engine shared by every package: sort/filter/group/aggregate 
 - values: `ArrayDataSource`, `CursorDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_PAGE_ELLIPSIS`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMinutes`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildSearchHighlightSegments`, `buildTreeIndex`, `clampDate`, `clampValue`, `clearOgeIntlCache`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupKeyFilter`, `groupKeyOf`, `groupNodeKey`, `groupRows`, `guardCsvFormula`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `isGroupInterval`, `isOgeDateFormatType`, `isOgeIcuMessage`, `isUnsafeStateKey`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `ogeDateTimeFormat`, `ogeDefaultLocale`, `ogeFormatMessage`, `ogeFormatValue`, `ogeIntlCacheSize`, `ogeLiveConfig`, `ogeNumberFormat`, `ogeParseNumber`, `ogePluralRules`, `ogeRelativeTimeFormat`, `ogeToDate`, `ogeValueFormatter`, `parseColor`, `parseStateJson`, `pathKey`, `pathToFilterExpr`, `rangesOverlap`, `ratioToValue`, `relativeLuminance`, `resizeSplitAt`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `resolveWeekendDays`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `sanitizeGridStateSnapshot`, `sanitizePivotGridStateSnapshot`, `sanitizeTreeListStateSnapshot`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `startOfMonth`, `startOfWeek`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `warnOgeDeprecatedMessage`, `weekNumber`
 - types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CursorDataSourceOptions`, `CursorPage`, `CursorPageRequest`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupInterval`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeColorFormat`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeHsva`, `OgeLocaleInput`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMessageValue`, `OgeMessageValues`, `OgeNavDirection`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePivotStore`, `OgeRangeThumb`, `OgeRgba`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `OgeValueFormat`, `OgeValueFormatType`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SearchHighlightSegment`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
 
+## @oge-ui/locales
+
+Ready-made translations of every message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic and Hebrew — as framework-free data, one entry point per language (`import { tr } from '@oge-ui/locales/tr'`). Applied with `provideOgeLocale(tr)` from `oge-ui` or `<OgeLocaleProvider pack={tr}>` from `@oge-ui/react`; commercial families take `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)` through their own provider.
+
+Docs: https://www.ogeui.com/getting-started/localization
+
+### Entry points
+
+`@oge-ui/locales`
+
+- values: `OGE_LOCALE_NAMES`, `en`, `ogeLocalePacks`, `ogeMergeMessages`
+- types: `OgeDeepPartial`, `OgeLocaleCode`, `OgeLocaleLayoutMessages`, `OgeLocaleNavigationMessages`, `OgeLocalePack`
+
+`@oge-ui/locales/ar`
+
+- values: `ar`
+
+`@oge-ui/locales/de`
+
+- values: `de`
+
+`@oge-ui/locales/es`
+
+- values: `es`
+
+`@oge-ui/locales/fr`
+
+- values: `fr`
+
+`@oge-ui/locales/he`
+
+- values: `he`
+
+`@oge-ui/locales/it`
+
+- values: `it`
+
+`@oge-ui/locales/ja`
+
+- values: `ja`
+
+`@oge-ui/locales/tr`
+
+- values: `tr`
+
+`@oge-ui/locales/pt-BR`
+
+- values: `ptBR`
+
+`@oge-ui/locales/zh-CN`
+
+- values: `zhCN`
+
+### Locale wiring
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeLocale(pack)` | `(pack: OgeLocalePack \| (() => OgeLocalePack)) => Provider[]` | From `oge-ui`. Provides every MIT family’s config — grid / tree list, inputs, buttons, overlay, tabs, forms, upload, the layout and navigation components — with the pack’s slice merged over the English catalog, plus the pack’s `locale` for the grid and the editors. A function makes it live: the language follows the signals it reads. It owns those config tokens — provide a family’s own config after it to change other options. `LOCALE_ID` and the page’s `dir` stay the app’s job; commercial families take their slice through their own providers. |
+| `pack` | `OgeLocalePack \| (() => OgeLocalePack)` | The pack to apply — a static pack, or a function reading a signal for runtime switching (`provideOgeLocale(() => pack())`). |
+
+### Locale packs
+
+#### Properties
+
+_Language packs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `de` | `OgeLocalePack` | German — every catalog, MIT and commercial. `import { de } from '@oge-ui/locales/de'`. |
+| `fr` | `OgeLocalePack` | French — every catalog, MIT and commercial. `import { fr } from '@oge-ui/locales/fr'`. |
+| `es` | `OgeLocalePack` | Spanish — every catalog, MIT and commercial. `import { es } from '@oge-ui/locales/es'`. |
+| `it` | `OgeLocalePack` | Italian — every catalog, MIT and commercial. `import { it } from '@oge-ui/locales/it'`. |
+| `ptBR` | `OgeLocalePack` | Brazilian Portuguese — every catalog, MIT and commercial. `import { ptBR } from '@oge-ui/locales/pt-BR'`. |
+| `tr` | `OgeLocalePack` | Turkish — every catalog, MIT and commercial. `import { tr } from '@oge-ui/locales/tr'`. |
+| `ja` | `OgeLocalePack` | Japanese — every catalog, MIT and commercial. `import { ja } from '@oge-ui/locales/ja'`. |
+| `zhCN` | `OgeLocalePack` | Simplified Chinese — every catalog, MIT and commercial. `import { zhCN } from '@oge-ui/locales/zh-CN'`. |
+| `ar` | `OgeLocalePack` | Arabic (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { ar } from '@oge-ui/locales/ar'`. |
+| `he` | `OgeLocalePack` | Hebrew (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { he } from '@oge-ui/locales/he'`. |
+
+_Primary entry (@oge-ui/locales)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `en` | `OgeLocalePack` | The English baseline — `{ locale: 'en', dir: 'ltr' }` with no slices, so every catalog keeps its built-in strings. Switch back to it like to any other pack. |
+| `ogeLocalePacks` | `Readonly<Record<OgeLocaleCode, () => Promise<OgeLocalePack>>>` | Lazy loaders, one dynamic `import()` per language entry — a language switcher downloads only the packs a user picks. |
+| `OGE_LOCALE_NAMES` | `Readonly<Record<OgeLocaleCode, string>>` | Each language’s own name (`Deutsch`, `日本語`, `العربية`…) — the labels of a switcher. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeMergeMessages(defaults, slice)` | `<T extends object>(defaults: T, slice: OgeDeepPartial<T> \| undefined) => T` | Lays a pack slice over a complete catalog, nested blocks key by key — every key the slice lacks keeps the English string. Use it to hand a slice to a family provider yourself (commercial families, or a family whose other options you also set): `messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler)`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLocalePack` | `{ locale; dir: 'ltr' \| 'rtl'; grid?; inputs?; buttons?; overlay?; tabs?; forms?; upload?; layout?; navigation?; pivot?; scheduler?; gantt?; kanban?; bpmn?; charts? }` | One language: the BCP 47 `locale` for `Intl` formats, the writing direction and a deep-partial slice per message catalog. The tree list reads the grid’s catalog, so `grid` covers both. The commercial slices are typed with `import type` from the engines — erased by the build, so the MIT package has no runtime dependency on them. |
+| `OgeLocaleLayoutMessages` | `{ accordion?; progressBar?; loadIndicator?; splitter?; toolbar? }` | The layout family’s catalogs, one per component. |
+| `OgeLocaleNavigationMessages` | `{ breadcrumb?; drawer?; menubar?; pagination?; stepper?; treeView? }` | The navigation family’s catalogs, one per component. |
+| `OgeDeepPartial<T>` | `mapped type` | Every key optional, nested blocks included — a key a newer release adds is simply missing from an older pack and falls back to English. |
+| `OgeLocaleCode` | `'en' \| 'de' \| 'fr' \| 'es' \| 'it' \| 'pt-BR' \| 'tr' \| 'ja' \| 'zh-CN' \| 'ar' \| 'he'` | The languages this package ships, plus the English baseline. |
+
+### Locale wiring
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLocaleProvider` | `(props: OgeLocaleProviderProps) => JSX.Element` | From `@oge-ui/react`. Wraps the subtree in every MIT family’s config provider, each with the pack’s slice merged over the English catalog, plus the pack’s `locale` for the grid and the editors. Family providers nested inside still apply on top. The page’s `dir` stays the app’s job; commercial families take their slice through their own providers. |
+| `pack` | `OgeLocalePack` | The pack to apply. Pass a different pack (from state) to switch language at runtime — context re-renders every component beneath. |
+| `children` | `ReactNode` | The localized subtree. |
+
 ## @oge-ui/react-buttons
 
 React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.
@@ -39980,8 +40319,8 @@ Re-exports every MIT family from a single import path. `npm i oge-ui` then `impo
 
 `oge-ui`
 
-- values: `OgeToolbarItem`, `OgeTreeList`
-- types: `OgeMenuItem`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
+- values: `OGE_LOCALE_NAMES`, `OgeToolbarItem`, `OgeTreeList`, `ogeLocalePacks`, `ogeMergeMessages`, `provideOgeLocale`
+- types: `OgeDeepPartial`, `OgeLocaleCode`, `OgeLocaleLayoutMessages`, `OgeLocaleNavigationMessages`, `OgeLocalePack`, `OgeMenuItem`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
 
 ## @oge-ui/scheduler-engine
 

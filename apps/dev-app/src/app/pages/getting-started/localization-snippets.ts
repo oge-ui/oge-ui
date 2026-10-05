@@ -261,3 +261,212 @@ const rtl = ogeIsRtl(hostElement); // computed direction, then the nearest dir
 const stop = observeDirection(hostElement, (direction) => {
   // 'ltr' | 'rtl' — mirror your arrow keys / drag maths here
 });`;
+
+/** Install line of the ready-made translations. */
+export const READY_MADE_INSTALL = `npm install @oge-ui/locales`;
+
+/** Angular: one provider, one pack, every MIT family. */
+export const READY_MADE_ANGULAR = `// app.config.ts
+import { provideOgeLocale } from 'oge-ui';
+import { tr } from '@oge-ui/locales/tr'; // only this language is bundled
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    { provide: LOCALE_ID, useValue: 'tr' }, // Angular's own pipes — the app's job
+    provideOgeLocale(tr), // grid + tree list, inputs, buttons, overlay, tabs,
+                          // forms, upload, layout and navigation — strings and locale
+  ],
+};
+// right-to-left packs (ar, he) carry dir: 'rtl' — set <html dir> from pack.dir`;
+
+/** React: one provider component around the app. */
+export const READY_MADE_REACT = `import { OgeLocaleProvider } from '@oge-ui/react';
+import { de } from '@oge-ui/locales/de';
+
+export function Root() {
+  return (
+    <OgeLocaleProvider pack={de}>
+      <App />
+    </OgeLocaleProvider>
+  );
+}`;
+
+/** Commercial families: the slice goes through their own provider. */
+export const READY_MADE_COMMERCIAL = `// The MIT umbrella never depends on the commercial packages, so their slices
+// are passed to their own providers — merged over the English catalog, so a
+// key a newer release adds stays English instead of going blank:
+import { ogeMergeMessages } from '@oge-ui/locales';
+import { tr } from '@oge-ui/locales/tr';
+import { OGE_DEFAULT_SCHEDULER_MESSAGES, provideOgeSchedulerConfig } from '@oge-ui/scheduler';
+import { OGE_DEFAULT_GANTT_MESSAGES, provideOgeGanttConfig } from '@oge-ui/gantt';
+
+providers: [
+  provideOgeLocale(tr),
+  provideOgeSchedulerConfig({
+    locale: tr.locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler),
+  }),
+  provideOgeGanttConfig({
+    locale: tr.locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_GANTT_MESSAGES, tr.gantt),
+  }),
+  // pivot: provideOgePivotMessages(ogeMergeMessages(OGE_DEFAULT_PIVOT_MESSAGES, tr.pivot))
+  // kanban / bpmn / charts: the same shape with tr.kanban / tr.bpmn / tr.charts
+]
+
+// React: <OgeSchedulerConfigProvider config={{ locale: tr.locale,
+//   messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler) }}>`;
+
+/** Runtime switching: lazy packs + the live provider form. */
+export const READY_MADE_RUNTIME = `import { signal } from '@angular/core';
+import { provideOgeLocale } from 'oge-ui';
+import { en, ogeLocalePacks, type OgeLocaleCode, type OgeLocalePack } from '@oge-ui/locales';
+
+export const uiPack = signal<OgeLocalePack>(en);
+
+// each language is its own chunk — only the packs a user picks are downloaded
+export async function useLanguage(code: OgeLocaleCode): Promise<void> {
+  const pack = await ogeLocalePacks[code]();
+  uiPack.set(pack);
+  document.documentElement.lang = pack.locale;
+  document.documentElement.dir = pack.dir;
+}
+
+providers: [
+  // a function: every OGE component re-renders when uiPack changes
+  provideOgeLocale(() => uiPack()),
+  // a family whose other options you also set: provide it after, merge yourself
+  provideOgeGridConfig(() => ({
+    rowHeight: 32,
+    locale: uiPack().locale,
+    messages: ogeMergeMessages(OGE_DEFAULT_GRID_MESSAGES, uiPack().grid),
+  })),
+]`;
+
+/**
+ * The live language switcher: a grid, a date box and a select box under one
+ * live `provideOgeLocale`, packs loaded on demand.
+ */
+export const READY_MADE_DEMO = demoSource({
+  use: {
+    '@oge-ui/grid': ['OgeGrid', 'OgeColumn'],
+    '@oge-ui/inputs': ['OgeDateBox', 'OgeSelectBox'],
+  },
+  helpers: {
+    '@oge-ui/locales': ['OGE_LOCALE_NAMES', 'en', 'ogeLocalePacks'],
+    'oge-ui': ['provideOgeLocale'],
+  },
+  types: {
+    '@angular/core': ['ApplicationConfig'],
+    '@oge-ui/locales': ['OgeLocaleCode', 'OgeLocalePack'],
+  },
+  before: `// the app's language state — provideOgeLocale (below) reads it live
+const uiPack = signal<OgeLocalePack>(en);
+
+const ORDERS = [
+  { id: 1, customer: 'Anadolu Ltd.', placed: new Date(2026, 0, 5), amount: 1234.5 },
+  { id: 2, customer: 'Berlin GmbH', placed: new Date(2026, 2, 17), amount: 89.9 },
+  { id: 3, customer: 'Paris SARL', placed: new Date(2026, 5, 30), amount: 15600 },
+  { id: 4, customer: 'Tokyo KK', placed: new Date(2026, 8, 2), amount: 420 },
+];`,
+  body: `readonly codes = Object.keys(OGE_LOCALE_NAMES) as OgeLocaleCode[];
+readonly names = OGE_LOCALE_NAMES;
+readonly pack = uiPack;
+readonly orders = ORDERS;
+readonly cities = ['İstanbul', 'Berlin', 'Paris', 'Tokyo', 'Cairo', 'Tel Aviv'];
+readonly city = signal<unknown>(null);
+readonly day = signal<Date | null>(new Date(2026, 9, 5));
+
+async pick(code: OgeLocaleCode): Promise<void> {
+  // every language is its own chunk, downloaded on first use
+  uiPack.set(await ogeLocalePacks[code]());
+}`,
+  template: `<div role="group" aria-label="Language">
+  @for (code of codes; track code) {
+    <button type="button" [attr.aria-pressed]="pack().locale === code" (click)="pick(code)">
+      {{ names[code] }}
+    </button>
+  }
+</div>
+
+<!-- ar and he are right-to-left: components follow the nearest dir -->
+<div [attr.dir]="pack().dir" [attr.lang]="pack().locale">
+  <oge-date-box label="Delivery" [(value)]="day" />
+  <oge-select-box label="City" [items]="cities" [(value)]="city" [searchEnabled]="true" [showClearButton]="true" />
+  <oge-grid [data]="orders" keyField="id" [filterRow]="true" [paging]="{ pageSize: 3 }">
+    <oge-column field="customer" caption="Customer" />
+    <oge-column field="placed" caption="Placed" dataType="date" />
+    <oge-column field="amount" caption="Amount" dataType="number" [format]="{ type: 'currency', currency: 'EUR' }" />
+  </oge-grid>
+</div>`,
+  after: `// app.config.ts — the live form: the strings follow uiPack
+export const appConfig: ApplicationConfig = {
+  providers: [provideOgeLocale(() => uiPack())],
+};`,
+});
+
+/** The React twin of {@link READY_MADE_DEMO}. */
+export const READY_MADE_REACT_DEMO: ReactDemo = {
+  title: 'Ready-made translations (React)',
+  description:
+    'One <code>&lt;OgeLocaleProvider&gt;</code> around a grid, a date box and a select box; packs load on demand.',
+  source: reactDemoSource({
+    react: ['useState'],
+    use: {
+      '@oge-ui/react': [
+        'OgeLocaleProvider',
+        'OgeGrid',
+        'OgeDateBox',
+        'OgeSelectBox',
+      ],
+      '@oge-ui/locales': ['OGE_LOCALE_NAMES', 'en', 'ogeLocalePacks'],
+    },
+    types: {
+      '@oge-ui/react': ['OgeGridColumnProps'],
+      '@oge-ui/locales': ['OgeLocaleCode', 'OgeLocalePack'],
+    },
+    name: 'LanguageSwitcher',
+    before: `interface Order {
+  id: number;
+  customer: string;
+  placed: Date;
+  amount: number;
+}
+
+const ORDERS: Order[] = [
+  { id: 1, customer: 'Anadolu Ltd.', placed: new Date(2026, 0, 5), amount: 1234.5 },
+  { id: 2, customer: 'Berlin GmbH', placed: new Date(2026, 2, 17), amount: 89.9 },
+  { id: 3, customer: 'Paris SARL', placed: new Date(2026, 5, 30), amount: 15600 },
+  { id: 4, customer: 'Tokyo KK', placed: new Date(2026, 8, 2), amount: 420 },
+];
+
+const columns: OgeGridColumnProps<Order>[] = [
+  { field: 'customer', caption: 'Customer' },
+  { field: 'placed', caption: 'Placed', dataType: 'date' },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: { type: 'currency', currency: 'EUR' } },
+];
+
+const CODES = Object.keys(OGE_LOCALE_NAMES) as OgeLocaleCode[];
+const CITIES = ['İstanbul', 'Berlin', 'Paris', 'Tokyo', 'Cairo', 'Tel Aviv'];`,
+    body: `const [pack, setPack] = useState<OgeLocalePack>(en);
+const [day, setDay] = useState<Date | null>(new Date(2026, 9, 5));
+const [city, setCity] = useState<unknown>(null);
+// every language is its own chunk, downloaded on first use
+const pick = async (code: OgeLocaleCode) => setPack(await ogeLocalePacks[code]());`,
+    jsx: `<OgeLocaleProvider pack={pack}>
+  <div role="group" aria-label="Language">
+    {CODES.map((code) => (
+      <button key={code} type="button" aria-pressed={pack.locale === code} onClick={() => void pick(code)}>
+        {OGE_LOCALE_NAMES[code]}
+      </button>
+    ))}
+  </div>
+  {/* ar and he are right-to-left: components follow the nearest dir */}
+  <div dir={pack.dir} lang={pack.locale}>
+    <OgeDateBox label="Delivery" value={day} onValueChange={setDay} />
+    <OgeSelectBox label="City" items={CITIES} value={city} onValueChange={setCity} searchEnabled showClearButton />
+    <OgeGrid data={ORDERS} keyField="id" columns={columns} filterRow paging={{ pageSize: 3 }} />
+  </div>
+</OgeLocaleProvider>`,
+  }),
+};

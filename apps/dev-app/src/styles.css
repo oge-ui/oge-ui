@@ -215,6 +215,14 @@ html.dark[data-framework='javascript'] {
   font-weight: 600;
 }
 
+/* "Ready-made translations": the two editors above the grid. */
+.app-ready-made-editors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin-block-end: 0.75rem;
+}
+
 .app-locale-summary {
   margin-block-start: 0.6rem;
   font-size: 0.9rem;
