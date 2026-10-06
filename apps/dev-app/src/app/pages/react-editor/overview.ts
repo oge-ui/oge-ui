@@ -260,7 +260,7 @@ function ConfigDemo(): ReactNode {
   selector: 'app-react-editor-toolbar-styles',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  styleUrls: ['../../../../../../packages/react/layout/src/styles.scss'],
+  styleUrls: ['../../../../../../packages/layout/toolbar/src/toolbar.scss'],
   template: '',
 })
 export class ReactEditorToolbarStyles {}
