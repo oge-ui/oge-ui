@@ -555,6 +555,9 @@ export const he: OgeLocalePack = {
       dayKinds: { day: 'יום', weekday: 'יום חול', weekendDay: 'יום סוף שבוע' },
       yearMonthLabel: 'חודש',
       exceptionsLabel: 'מופעים שדולגו',
+      startTimeZoneLabel: 'אזור זמן התחלה',
+      endTimeZoneLabel: 'אזור זמן סיום',
+      timeZonePlaceholder: 'אזור הזמן של היומן ({zone})',
       summaryLabel: 'סיכום החזרה',
       summary: {
         daily:
@@ -638,6 +641,8 @@ export const he: OgeLocalePack = {
       morePopupLabel: 'פגישות ב-{date}',
       goToDay: 'מעבר ליום',
       closeLabel: 'סגירה',
+      loadingLabel: 'הפגישות נטענות…',
+      loadErrorLabel: 'לא ניתן היה לטעון את הפגישות',
       gridLabel: 'לוח זמנים, {period}',
       allDayLabel: 'כל היום',
       cellLabel: '{date}, {time}',

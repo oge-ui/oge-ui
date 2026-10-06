@@ -448,6 +448,16 @@ export class App {
           icon: 'upload',
         },
         {
+          path: '/components/scheduler/time-zones',
+          label: 'Time zones',
+          icon: 'globe',
+        },
+        {
+          path: '/components/scheduler/remote-data',
+          label: 'Remote data',
+          icon: 'loader',
+        },
+        {
           path: '/components/scheduler/api',
           label: 'API Reference',
           icon: 'code',

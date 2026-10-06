@@ -122,6 +122,15 @@ export interface OgeSchedulerEditorMessages {
   readonly yearMonthLabel?: string;
   /** Label of the skipped-occurrences (EXDATE) picker of a series. */
   readonly exceptionsLabel?: string;
+  /** Label of the start time-zone picker (`showTimeZoneEditor`). */
+  readonly startTimeZoneLabel?: string;
+  /** Label of the end time-zone picker (`showTimeZoneEditor`). */
+  readonly endTimeZoneLabel?: string;
+  /**
+   * Placeholder of an empty time-zone picker — the appointment follows the
+   * scheduler's zone; `{zone}` is that zone's label.
+   */
+  readonly timeZonePlaceholder?: string;
   /** Accessible name of the live recurrence summary line. */
   readonly summaryLabel?: string;
   /**
@@ -213,6 +222,10 @@ export interface OgeSchedulerGridMessages {
   readonly goToDay?: string;
   /** Close button of the "+N more" popup. */
   readonly closeLabel?: string;
+  /** Status text while a remote `dataSource` loads the visible range. */
+  readonly loadingLabel?: string;
+  /** Status text when a remote range load failed. */
+  readonly loadErrorLabel?: string;
 }
 
 /** Templates written to the polite live region after actions. */
@@ -396,6 +409,9 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerResolvedMessages = {
     dayKinds: { day: 'day', weekday: 'weekday', weekendDay: 'weekend day' },
     yearMonthLabel: 'Month',
     exceptionsLabel: 'Skipped occurrences',
+    startTimeZoneLabel: 'Start time zone',
+    endTimeZoneLabel: 'End time zone',
+    timeZonePlaceholder: 'Scheduler time zone ({zone})',
     summaryLabel: 'Recurrence summary',
     summary: {
       daily: '{interval, plural, one {Every day} other {Every # days}}',
@@ -448,6 +464,8 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerResolvedMessages = {
     morePopupLabel: 'Appointments on {date}',
     goToDay: 'Go to day',
     closeLabel: 'Close',
+    loadingLabel: 'Loading appointments…',
+    loadErrorLabel: 'Appointments could not be loaded',
   },
   announcements: {
     created: '{text} created',

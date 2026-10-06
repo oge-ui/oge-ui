@@ -63,8 +63,9 @@ import {
   segmentKey,
   timeGridCellKey,
   timeGridChipCtrlKey,
-  weekNumbersOfDays,
+  toSchedulerView,
   weekdayShortText,
+  weekNumbersOfDays,
   withSelectedLabel,
   withUnavailableLabel,
   type AllDayPlacedBar,
@@ -145,6 +146,8 @@ export interface DayWeekViewProps<T> extends SchedulerViewG3Props<T> {
   readonly showCurrentTimeIndicator: boolean;
   readonly minAppointmentMinutes: number;
   readonly locale: string | undefined;
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone?: string;
   readonly messages: OgeSchedulerResolvedMessages['grid'];
   readonly periodLabel: string;
   readonly allowDragging: boolean;
@@ -351,7 +354,8 @@ function DayWeekViewInner<T>(
   const [focusedChipKey, setFocusedChipKey] = useState<unknown>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [selection, setSelection] = useState<DayWeekSelection | null>(null);
-  const [now, setNow] = useState(() => new Date());
+  const [tick, setNow] = useState(() => new Date());
+  const now = toSchedulerView(tick, props.timeZone);
 
   // ticks every 30s so the now-indicator drifts
   useEffect(() => {

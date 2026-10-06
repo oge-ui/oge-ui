@@ -499,6 +499,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     '/components/scheduler/import-export',
     'Angular Scheduler import and export: iCalendar .ics export and import with series and overrides, PDF and Excel list exports and print of the current view.',
   ],
+  [
+    '/components/scheduler/time-zones',
+    'Angular Scheduler time zones: display timeZone, per-appointment start and end zones, DST-exact 23- and 25-hour days, TZID recurrence and zone pickers.',
+  ],
+  [
+    '/components/scheduler/remote-data',
+    'Angular Scheduler remote data: load appointments per visible range with prefetch, debounce, AbortSignal, a range cache, CRUD write-back and reload().',
+  ],
 ];
 
 /** The meta description for `path` (no query or fragment). */

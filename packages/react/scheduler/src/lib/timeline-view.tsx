@@ -42,6 +42,7 @@ import {
   timelineRowIdReader,
   timelineScaleOf,
   timelineVirtualWindow,
+  toSchedulerView,
   withSelectedLabel,
   type AppointmentProposal,
   type OgeSchedulerDisabledSlots,
@@ -81,6 +82,8 @@ export interface TimelineViewProps<T> extends SchedulerViewG3Props<T> {
   readonly cellDuration: number;
   readonly intervalCount: number;
   readonly locale: string | undefined;
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone?: string;
   readonly messages: OgeSchedulerResolvedMessages['grid'];
   readonly groupLevels: readonly OgeSchedulerResource[];
   readonly groupLeaves: readonly SchedulerGroupLeaf[];
@@ -191,8 +194,14 @@ function TimelineViewInner<T>(
   const trackDays =
     blockCount === 1 ? grid.days : blockIndexes.flatMap(() => grid.days);
   const headerCells = useMemo(
-    () => timelineHeaderCells(grid, view, locale),
-    [grid, view, locale],
+    () =>
+      timelineHeaderCells(
+        grid,
+        view,
+        locale,
+        toSchedulerView(new Date(), props.timeZone),
+      ),
+    [grid, view, locale, props.timeZone],
   );
   const hourLabels = useMemo(
     () => timelineHourLabels(grid, view, locale),

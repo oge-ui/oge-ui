@@ -192,6 +192,13 @@ export const OGE_REACT_GANTT_API: ApiSections = {
             'Vertical markers: <code>{ start, end?, label?, color? }</code> — a line without <code>end</code>, a shaded range with it.',
         },
         {
+          name: 'timeZone',
+          type: 'string | undefined',
+          default: 'undefined',
+          description:
+            "The display zone (IANA, e.g. <code>'America/New_York'</code>); unset = the browser’s. Stored dates stay <strong>instants</strong>: the bars, the scale, the today marker, the progress line, strip lines and the work calendar’s working days follow this zone’s clocks (core’s <code>Intl</code> offset math — DST-exact, no time-zone database), and every edit, drag and dialog save writes the instant back.",
+        },
+        {
           name: 'locale',
           type: 'string | undefined',
           description:

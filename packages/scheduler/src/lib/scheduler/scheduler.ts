@@ -17,7 +17,6 @@ import {
   viewChild,
 } from '@angular/core';
 import { observeDirection, ogeIsRtl } from '@oge-ui/behavior';
-import type { DataSource } from '@oge-ui/core';
 import type { OgeFormItemData } from '@oge-ui/forms';
 import { OgeCalendar } from '@oge-ui/inputs/calendar';
 import { OgeAnchoredPanel, OgePopup } from '@oge-ui/overlay';
@@ -30,7 +29,9 @@ import {
   registerOgeSchedulerDropTarget,
   schedulerShortcut,
   scrollOffsetForTime,
+  toSchedulerView,
   type OgeSchedulerAdaptiveView,
+  type OgeSchedulerDataSourceInput,
   type OgeSchedulerExportData,
   type OgeSchedulerPrintOptions,
   type ResolvedSchedulerView,
@@ -124,6 +125,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
   host: {
     class: 'oge-scheduler',
     '[attr.dir]': 'hostDir()',
+    '[attr.aria-busy]': 'core.loading() || null',
     '(keydown)': 'onHostKeydown($event)',
   },
   styleUrl: './scheduler.scss',
@@ -234,11 +236,11 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
         <oge-popup [panel]="navigatorPanel">
           <div class="oge-scheduler-navigator" #navigatorEl>
             <oge-calendar
-              [value]="currentDate()"
+              [value]="viewDate()"
               (valueChange)="onNavigatorPicked($event)"
               [firstDayOfWeek]="firstDayOfWeek()"
-              [min]="min()"
-              [max]="max()"
+              [min]="core.viewMin()"
+              [max]="core.viewMax()"
               [locale]="effectiveLocale()"
             />
           </div>
@@ -266,11 +268,20 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
     @if (notice(); as text) {
       <div class="oge-scheduler-notice" aria-hidden="true">{{ text }}</div>
     }
+    <div
+      class="oge-scheduler-load-status"
+      role="status"
+      [class.oge-scheduler-load-status-active]="loadStatus() !== ''"
+      [class.oge-scheduler-load-status-error]="core.loadError()"
+    >
+      {{ loadStatus() }}
+    </div>
 
     @switch (viewKind()) {
       @case ('agenda') {
         <oge-scheduler-agenda-view
-          [anchorDate]="currentDate()"
+          [anchorDate]="viewDate()"
+          [timeZone]="viewTimeZone()"
           [agendaDuration]="agendaDuration()"
           [appointments]="visibleAppointments()"
           [locale]="effectiveLocale()"
@@ -282,7 +293,8 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
       }
       @case ('year') {
         <oge-scheduler-year-view
-          [anchorDate]="currentDate()"
+          [anchorDate]="viewDate()"
+          [timeZone]="viewTimeZone()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
           [locale]="effectiveLocale()"
@@ -293,7 +305,8 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
       @case ('timeline') {
         <oge-scheduler-timeline-view
           [view]="timelineView()"
-          [anchorDate]="currentDate()"
+          [anchorDate]="viewDate()"
+          [timeZone]="viewTimeZone()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
           [weekendDays]="resolvedWeekendDays()"
@@ -311,7 +324,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [snapDuration]="snapDuration()"
           [rtl]="rtl()"
           [workHours]="workHours()"
-          [disabledSlots]="disabledSlots()"
+          [disabledSlots]="viewDisabledSlots()"
           [selection]="selectedAppointments()"
           [virtualScrolling]="virtualScrolling()"
           [dropPreview]="dropPreview()"
@@ -328,7 +341,8 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
       }
       @case ('month') {
         <oge-scheduler-month-view
-          [anchorDate]="currentDate()"
+          [anchorDate]="viewDate()"
+          [timeZone]="viewTimeZone()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
           [weekendDays]="resolvedWeekendDays()"
@@ -339,7 +353,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [periodLabel]="periodTitle()"
           [showWeekNumbers]="showWeekNumbers()"
           [weekNumberRule]="weekNumberRule()"
-          [disabledSlots]="disabledSlots()"
+          [disabledSlots]="viewDisabledSlots()"
           [selection]="selectedAppointments()"
           [dropPreview]="dropPreview()"
           [appointmentTemplate]="appointmentTemplate() ?? null"
@@ -368,7 +382,8 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
       @default {
         <oge-scheduler-day-week-view
           [view]="dayWeekView()"
-          [anchorDate]="currentDate()"
+          [anchorDate]="viewDate()"
+          [timeZone]="viewTimeZone()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
           [weekendDays]="resolvedWeekendDays()"
@@ -408,7 +423,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [groupByDate]="groupByDate()"
           [showWeekNumbers]="showWeekNumbers()"
           [weekNumberRule]="weekNumberRule()"
-          [disabledSlots]="disabledSlots()"
+          [disabledSlots]="viewDisabledSlots()"
           [selection]="selectedAppointments()"
           [dropPreview]="dropPreview()"
           [rtl]="rtl()"
@@ -550,8 +565,19 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   private readonly destroyRef = inject(DestroyRef);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  /** Appointment items: a plain array or any `@oge-ui/core` `DataSource`. */
-  readonly dataSource = input<readonly T[] | DataSource<T> | null>(null);
+  /**
+   * Appointment items: a plain array, any `@oge-ui/core` `DataSource`
+   * (loaded once — or per visible range with `remoteFiltering`), or an
+   * `OgeSchedulerDataSource` whose `load({ startDate, endDate, resources,
+   * signal })` runs per visible range (neighbours prefetched, navigation
+   * debounced, ranges cached, stale requests aborted).
+   */
+  readonly dataSource = input<OgeSchedulerDataSourceInput<T>>(null);
+  /**
+   * Loads a filtering core `DataSource` per visible range: the scheduler
+   * sends a range filter on the date fields (plus every recurring series).
+   */
+  readonly remoteFiltering = input(false);
   /** Key field or selector; defaults to `id`, falling back to the item index. */
   readonly keyExpr = input<string | ((item: T) => unknown) | undefined>(
     undefined,
@@ -571,6 +597,20 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     'recurrenceException',
   );
   readonly disabledExpr = input<SchedulerFieldExpr<T, unknown>>('disabled');
+  /** The item field / getter holding an appointment's start zone (IANA). */
+  readonly startTimeZoneExpr =
+    input<SchedulerFieldExpr<T, unknown>>('startTimeZone');
+  /** The item field / getter holding an appointment's end zone (IANA). */
+  readonly endTimeZoneExpr =
+    input<SchedulerFieldExpr<T, unknown>>('endTimeZone');
+  /**
+   * The display zone (IANA, e.g. `'Europe/Istanbul'`); unset = the
+   * browser's. Stored dates stay instants — slots, day boundaries (23- and
+   * 25-hour days), drags and recurrence follow this zone's clocks.
+   */
+  readonly timeZone = input<string | undefined>(undefined);
+  /** Shows start / end time-zone pickers in the appointment editor. */
+  readonly showTimeZoneEditor = input(false);
 
   /** The anchor date of the visible period (two-way). */
   readonly currentDate = model<Date>(new Date());
@@ -881,6 +921,10 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected readonly moreDay = this.core.moreDay;
   protected readonly moreAppointments = this.core.moreAppointments;
   protected readonly dropPreview = this.core.dropPreview;
+  protected readonly viewDate = this.core.viewDate;
+  protected readonly viewTimeZone = this.core.viewTimeZone;
+  protected readonly viewDisabledSlots = this.core.viewDisabledSlots;
+  protected readonly loadStatus = this.core.loadStatus;
 
   /** Which view component renders the active view. */
   protected readonly viewKind = computed<
@@ -902,6 +946,16 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       untracked(() => this.core.bindSource(source));
     });
     this.destroyRef.onDestroy(() => this.core.destroy());
+    // a range-loading source follows the visible period
+    effect(() => {
+      this.currentView();
+      this.viewDate();
+      this.agendaDuration();
+      this.core.intervalCount();
+      this.core.resolvedFirstDayOfWeek();
+      this.core.groupLevels();
+      untracked(() => this.core.syncRange());
+    });
     // initial scroll position of the time grid (FC scrollTime parity);
     // re-applied when the view or period changes
     effect(() => {
@@ -1305,13 +1359,22 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   }
 
   /** The bound data source, as given. */
-  getDataSource(): readonly T[] | DataSource<T> | null {
+  getDataSource(): OgeSchedulerDataSourceInput<T> {
     return this.dataSource();
+  }
+
+  /**
+   * Reloads the data source: a load-once `DataSource` loads again, a range
+   * source drops its cache and reloads the visible range.
+   */
+  reload(): void {
+    untracked(() => this.core.reload());
   }
 
   /** Navigates to `date` and scrolls the time grid to its time of day. */
   scrollTo(date: Date): void {
-    this.core.setDate(date);
-    this.scrollToTime(date.getHours(), date.getMinutes());
+    const wall = toSchedulerView(date, untracked(this.viewTimeZone));
+    this.core.setDate(wall);
+    this.scrollToTime(wall.getHours(), wall.getMinutes());
   }
 }

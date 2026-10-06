@@ -10,6 +10,7 @@ import { sameDay } from '@oge-ui/core';
 import {
   buildYearMonths,
   countAppointmentsByDay,
+  toSchedulerView,
   yearCellLabel,
   yearWeekdayText,
   type SchedulerAppointment,
@@ -73,6 +74,8 @@ export class OgeSchedulerYearView<T = unknown> {
   readonly appointments = input.required<readonly SchedulerAppointment<T>[]>();
   readonly firstDayOfWeek = input.required<number>();
   readonly locale = input<string | undefined>(undefined);
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerGridMessages>();
 
   /** A day was clicked — the shell drills into the day view. */
@@ -93,7 +96,7 @@ export class OgeSchedulerYearView<T = unknown> {
   );
 
   protected isToday(day: Date): boolean {
-    return sameDay(day, new Date());
+    return sameDay(day, toSchedulerView(new Date(), this.timeZone()));
   }
 
   protected weekdayText(day: Date): string {

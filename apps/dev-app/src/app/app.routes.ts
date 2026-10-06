@@ -1042,6 +1042,22 @@ export const appRoutes: Route[] = [
           ),
         title: 'OGE — Scheduler Import / Export',
       },
+      {
+        path: 'time-zones',
+        loadComponent: () =>
+          import('./pages/scheduler/time-zones').then(
+            (m) => m.SchedulerTimeZonesPage,
+          ),
+        title: 'OGE — Scheduler Time Zones',
+      },
+      {
+        path: 'remote-data',
+        loadComponent: () =>
+          import('./pages/scheduler/remote-data').then(
+            (m) => m.SchedulerRemoteDataPage,
+          ),
+        title: 'OGE — Scheduler Remote Data',
+      },
     ],
   },
   {

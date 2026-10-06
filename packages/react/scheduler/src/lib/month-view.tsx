@@ -44,6 +44,7 @@ import {
   schedulerShortcut,
   schedulerWeekNumber,
   schedulerWeekNumberTexts,
+  toSchedulerView,
   weekdayShortText,
   withSelectedLabel,
   withUnavailableLabel,
@@ -81,6 +82,8 @@ export interface MonthViewProps<T> extends SchedulerViewG3Props<T> {
   readonly maxAppointmentsPerCell: number | 'auto';
   readonly intervalCount: number;
   readonly locale: string | undefined;
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone?: string;
   readonly messages: OgeSchedulerResolvedMessages['grid'];
   readonly periodLabel: string;
   readonly allowDragging: boolean;
@@ -398,7 +401,7 @@ function MonthViewInner<T>(
     });
   };
 
-  const now = new Date();
+  const now = toSchedulerView(new Date(), props.timeZone);
   const lanesStyle = {
     '--oge-scheduler-month-lanes': maxLanes,
   } as CSSProperties;

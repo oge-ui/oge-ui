@@ -12,12 +12,17 @@ import {
 } from './lib/ical';
 import { formatExceptionStamps } from './lib/editor';
 import type { OgeSchedulerExportData } from './lib/export-data';
+import { ogeFromWallClock } from '@oge-ui/core';
 import {
   parseRecurrenceException,
   parseRecurrenceRule,
   serializeRecurrenceRule,
 } from './lib/rrule';
-import type { ResolvedSchedulerFields } from './lib/scheduler-model';
+import {
+  fromSchedulerView,
+  schedulerRecurrenceZone,
+  type ResolvedSchedulerFields,
+} from './lib/scheduler-model';
 
 export {
   buildOgeICalendar,
@@ -56,17 +61,27 @@ const startOfDayOf = (date: Date): Date =>
 /**
  * The events of a scheduler export: one per appointment, series kept as
  * series (`RRULE`, `RDATE`, `EXDATE` from the rule block and the exception
- * field). An all-day appointment ends on the day after its last day.
+ * field). An all-day appointment ends on the day after its last day. Timed
+ * events carry their zone — the series' recurrence zone (`TZID`, else the
+ * appointment's start zone), else the display zone — so the `.ics` writes
+ * `TZID=` values; without any zone they stay floating local time.
  */
 export function schedulerICalEvents<T>(
   data: OgeSchedulerExportData<T>,
 ): OgeICalEvent[] {
   return data.appointments.map((appointment) => {
     const allDay = appointment.allDay;
+    const view = appointment.viewTimeZone;
+    const zone = allDay ? undefined : schedulerRecurrenceZone(appointment);
+    // recurrence values are wall clocks of the series zone → instants
+    const ruleInstant = (date: Date): Date =>
+      allDay ? date : ogeFromWallClock(date, zone);
     const start = allDay
       ? startOfDayOf(appointment.startDate)
-      : appointment.startDate;
-    let end = appointment.endDate;
+      : fromSchedulerView(appointment.startDate, view);
+    let end = allDay
+      ? appointment.endDate
+      : fromSchedulerView(appointment.endDate, view);
     if (allDay) {
       const endDay = startOfDayOf(end);
       end =
@@ -78,16 +93,19 @@ export function schedulerICalEvents<T>(
     let rDates: Date[] = [];
     let exDates: Date[] = [];
     if (appointment.recurrenceRule !== undefined) {
-      const rule = parseRecurrenceRule(appointment.recurrenceRule);
+      const rule = parseRecurrenceRule(appointment.recurrenceRule, {
+        timeZone: zone,
+      });
       if (rule !== null) {
         recurrenceRule = serializeRecurrenceRule({
           ...rule,
           dtStart: undefined,
+          timeZone: undefined,
           rDates: undefined,
           exDates: undefined,
         });
-        rDates = [...(rule.rDates ?? [])];
-        exDates = [...(rule.exDates ?? [])];
+        rDates = (rule.rDates ?? []).map(ruleInstant);
+        exDates = (rule.exDates ?? []).map(ruleInstant);
       } else if (/^FREQ=/i.test(appointment.recurrenceRule.trim())) {
         // a rule outside the expander's subset still travels verbatim
         recurrenceRule = appointment.recurrenceRule.trim();
@@ -95,7 +113,9 @@ export function schedulerICalEvents<T>(
     }
     if (recurrenceRule !== undefined && appointment.recurrenceException) {
       exDates.push(
-        ...parseRecurrenceException(appointment.recurrenceException),
+        ...parseRecurrenceException(appointment.recurrenceException, {
+          timeZone: zone,
+        }).map(ruleInstant),
       );
     }
     return {
@@ -112,6 +132,7 @@ export function schedulerICalEvents<T>(
       ...(rDates.length > 0 ? { rDates } : {}),
       ...(exDates.length > 0 ? { exDates } : {}),
       ...(appointment.color ? { color: appointment.color } : {}),
+      ...(zone !== undefined ? { timeZone: zone } : {}),
     };
   });
 }
@@ -128,7 +149,9 @@ export function buildSchedulerICalendar<T>(
  * Items in the scheduler's field shape from an iCalendar document — every
  * `VEVENT` mapped through the string `*Expr` field names (function exprs
  * have nowhere to write and are skipped), overrides folded in
- * (`RECURRENCE-ID` → series `EXDATE` + a standalone item).
+ * (`RECURRENCE-ID` → series `EXDATE` + a standalone item). A `TZID` event
+ * keeps its zone in the start / end zone fields, and its `RDATE` / `EXDATE`
+ * stamps are written in the zone the series will recur in.
  */
 export function schedulerItemsFromICalendar<T>(
   text: string,
@@ -148,19 +171,27 @@ export function schedulerItemsFromICalendar<T>(
     set(names.location, event.location);
     set(names.description, event.description);
     set(names.color, event.color);
+    const zone = event.allDay ? undefined : event.timeZone;
+    if (zone !== undefined) {
+      set(names.startTimeZone, zone);
+      set(names.endTimeZone, zone);
+    }
+    // the series recurs in its own zone, else the scheduler's display zone
+    const ruleZone = event.allDay ? undefined : (zone ?? fields.timeZone);
+    const stamps = (dates: readonly Date[]): string =>
+      formatExceptionStamps(
+        dates.map((date) => date.getTime()),
+        undefined,
+        ruleZone,
+      );
     if (event.recurrenceRule !== undefined) {
       const rdates =
         event.rDates && event.rDates.length > 0
-          ? `\nRDATE:${event.rDates
-              .map((date) => formatExceptionStamps([date.getTime()]))
-              .join(',')}`
+          ? `\nRDATE:${event.rDates.map((date) => stamps([date])).join(',')}`
           : '';
       set(names.recurrenceRule, `${event.recurrenceRule}${rdates}`);
       if (event.exDates && event.exDates.length > 0) {
-        set(
-          names.recurrenceException,
-          formatExceptionStamps(event.exDates.map((date) => date.getTime())),
-        );
+        set(names.recurrenceException, stamps(event.exDates));
       }
     }
     if (options.uidField !== undefined) item[options.uidField] = event.uid;

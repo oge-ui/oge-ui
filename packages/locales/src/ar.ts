@@ -559,6 +559,9 @@ export const ar: OgeLocalePack = {
       },
       yearMonthLabel: 'الشهر',
       exceptionsLabel: 'التكرارات المتخطاة',
+      startTimeZoneLabel: 'المنطقة الزمنية للبدء',
+      endTimeZoneLabel: 'المنطقة الزمنية للانتهاء',
+      timeZonePlaceholder: 'المنطقة الزمنية للجدول ({zone})',
       summaryLabel: 'ملخص التكرار',
       summary: {
         daily:
@@ -642,6 +645,8 @@ export const ar: OgeLocalePack = {
       morePopupLabel: 'المواعيد في {date}',
       goToDay: 'الانتقال إلى اليوم',
       closeLabel: 'إغلاق',
+      loadingLabel: 'جارٍ تحميل المواعيد…',
+      loadErrorLabel: 'تعذّر تحميل المواعيد',
       gridLabel: 'المجدول، {period}',
       allDayLabel: 'طوال اليوم',
       cellLabel: '{date}، {time}',

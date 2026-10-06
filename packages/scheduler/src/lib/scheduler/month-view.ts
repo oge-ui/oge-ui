@@ -14,14 +14,14 @@ import { NgTemplateOutlet } from '@angular/common';
 import { sameDay } from '@oge-ui/core';
 import {
   beginPointerGesture,
-  isMonthViewDay,
-  isOgeSchedulerDragOut,
   buildMonthGrid,
   buildMonthWeekLayouts,
   chipKey,
   chipSelectKey,
   chipTabIndexOf,
   escapeAttr,
+  isMonthViewDay,
+  isOgeSchedulerDragOut,
   monthBlockedDays,
   monthCellKey,
   monthCellSelected,
@@ -40,6 +40,7 @@ import {
   schedulerShortcut,
   schedulerWeekNumber,
   schedulerWeekNumberTexts,
+  toSchedulerView,
   weekdayShortText,
   withSelectedLabel,
   withUnavailableLabel,
@@ -271,6 +272,8 @@ export class OgeSchedulerMonthView<T = unknown> {
   /** Months the grid shows. */
   readonly intervalCount = input(1);
   readonly locale = input<string | undefined>(undefined);
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerResolvedMessages['grid']>();
   readonly periodLabel = input('');
   readonly allowDragging = input(true);
@@ -713,7 +716,7 @@ export class OgeSchedulerMonthView<T = unknown> {
   }
 
   protected isToday(day: Date): boolean {
-    return sameDay(day, new Date());
+    return sameDay(day, toSchedulerView(new Date(), this.timeZone()));
   }
 
   protected weekdayText(day: Date): string {

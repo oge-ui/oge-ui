@@ -1140,12 +1140,55 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
 - **Exports are lazy entries over one model.** `getExportData(range?)` returns appointments
   (series unexpanded) plus expanded, chronological rows; `scheduler-engine/export-ical|pdf|excel`
   are pure builders and each layer's `/export-*` entry only adapts its scheduler type and
-  downloads. The PDF builder takes the shared `setOgePdfDefaultFont` font. iCalendar uses
-  floating local time; `TZID` values are read as wall time until time zones land.
+  downloads. The PDF builder takes the shared `setOgePdfDefaultFont` font. iCalendar writes
+  `TZID=<IANA zone>` values (the series zone, else the display zone; floating local time
+  without either) and reads `TZID` through core's `ogeFromZoned`; no `VTIMEZONE` is
+  emitted, an unknown (Windows) zone name reads as floating time.
+- **Remote range loading is a machine of its own.** `range-loader.ts`
+  (`SchedulerRangeLoader`) owns one request per visible range (instants), the prefetched
+  neighbour periods, the navigation debounce (the first load is immediate), the
+  `AbortController` per range (a range neither current nor a neighbour is aborted; an
+  aborted answer never writes), an LRU range cache and the loading / error cells. The core
+  binds it for an `OgeSchedulerDataSource` (a `load` without `capabilities`) or a filtering
+  core `DataSource` with `remoteFiltering` (`schedulerRangeFilter`: overlap **or** any
+  recurring series — a server cannot expand RRULEs). Hosts call `core.syncRange()` from an
+  effect over the view inputs (Angular) or after every render (React; a no-op for an
+  unchanged range). A write through the source's `insert` / `update` / `remove` reloads the
+  range; a local write updates the cached range (`replaceCurrent`).
 - **Timeline rows are fixed-height and virtualized.** `timelineRowHeight` derives each row's
   height from its lane count, the rows feed core's `OffsetTree` and `timelineVirtualWindow`
   renders the visible window (`virtualScrolling: 'auto'` above 50 rows). Month/year timelines
   run at day scale (`TimelineGridVm.scale === 'day'`), one bar per day span.
+
+### Time zones: zoned date math lives in core
+
+- **One helper set, `Intl`-only.** `@oge-ui/core` `util/time-zone.ts` derives a zone's
+  offset from `Intl.DateTimeFormat({ timeZone })` (through the shared formatter cache):
+  `ogeTzOffset`, `ogeZonedParts`, `ogeFromZoned` (Temporal's `compatible` / `earlier` /
+  `later` disambiguation — skipped wall times move forward, repeated ones take the earlier
+  side), `ogeZonedStartOfDay`, `ogeZonedDayMinutes`, `ogeTimeZones`, `ogeTimeZoneLabel`.
+  Never compute an offset with `getTimezoneOffset()` or ship a zone table; specs pin
+  New York, Istanbul (historic DST), Lord Howe (half-hour DST) and Kathmandu (+5:45).
+- **Engines compute in a wall-clock frame.** The scheduler and the Gantt were written in
+  local wall time; with a display `timeZone` their model dates are **wall clocks** of that
+  zone (`ogeToWallClock`: a `Date` whose local fields read as the zone's clocks) and every
+  write converts back (`ogeFromWallClock`). So slot generation, day boundaries (23- and
+  25-hour days are still midnight → midnight), drag snapping, work hours and calendars need
+  no zone code; only the edges do — normalization (`normalizeAppointment`,
+  `buildGanttTasks`), serialization (`serializeSchedulerDate`, `ganttTaskPatch`), the core's
+  inputs (`viewDate()`, `viewMin/Max()`, `viewDisabledSlots()`, "now") and the public
+  events (`cellDate`, `rangeSelected`, `getStartViewDate()` are instants). New date paths
+  must go through those edges. All-day values are calendar days and never shift. The frame's
+  one limit: a wall time the _runtime's_ own zone skips cannot be held by a local `Date`.
+- **Recurrence runs on the series' own clocks.** The zone is `DTSTART;TZID=` in the rule,
+  else the appointment's `startTimeZone`, else the display zone (`schedulerRecurrenceZone`).
+  A different zone expands there (window padded a day) and converts each occurrence back;
+  `parseRecurrenceRule(text, { timeZone })` converts `Z` / `TZID` stamps into the frame and
+  EXDATE stamps of a detached occurrence are written in the series zone
+  (`occurrenceSeriesStart`).
+- **The editor has its own frame.** With `showTimeZoneEditor` the editor model carries
+  `timeZoneFrame`: its dates are wall clocks of the item's start / end zones and the pickers
+  edit those zones; `editorZones()` names the frames on save.
 
 ### Gantt depth: scheduling engine, task list, resources and MS Project
 

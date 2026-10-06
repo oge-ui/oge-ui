@@ -150,6 +150,12 @@ export interface OgeGanttProps<
   showProgressLine?: boolean;
   /** Status date of the progress line; unset = today. */
   statusDate?: Date | null;
+  /**
+   * The display zone (IANA, e.g. `'Europe/Istanbul'`); unset = the
+   * browser's. Stored dates stay instants — the scale, today, working days
+   * and drags follow this zone's clocks.
+   */
+  timeZone?: string;
   /** Child milestones drawn onto their summary bars. */
   showRollups?: boolean;
   /** Which baseline renders (0-based, `-1` hides) — controlled when provided. */

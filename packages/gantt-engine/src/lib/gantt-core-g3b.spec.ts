@@ -742,3 +742,51 @@ describe('OgeGanttCore — dependency editor, dialog, messages (G3b)', () => {
     expect(filled.scheduling.constraintTypes.MFO).toBe('Must finish on');
   });
 });
+
+describe('OgeGanttCore — time zones (W7)', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  const utc = (day: number, hour = 0) => new Date(Date.UTC(2026, 2, day, hour));
+  const zoned: Task[] = [
+    // midnight in New York on Monday 9 March (EDT, -4)
+    { id: 'n', title: 'NY task', start: utc(9, 4), end: utc(11, 4) },
+  ];
+
+  it('shows stored instants on the display zone clocks', () => {
+    const h = setup({ tasks: zoned, timeZone: 'America/New_York' });
+    const shown = task(h, 'n');
+    expect([shown.start.getDate(), shown.start.getHours()]).toEqual([9, 0]);
+    // the same instant read in Istanbul is 07:00
+    const ist = setup({ tasks: zoned, timeZone: 'Europe/Istanbul' });
+    expect(task(ist, 'n').start.getHours()).toBe(7);
+  });
+
+  it('edits in wall time and stores the instant', () => {
+    const h = setup({
+      tasks: zoned,
+      timeZone: 'America/New_York',
+      inlineEditing: true,
+      columns: [{ field: 'title' }, { field: 'start' }],
+    });
+    expect(h.core.beginCellEdit(task(h, 'n'), 'start')).toBe(true);
+    expect(h.core.editingCell()).toMatchObject({ value: '2026-03-09' });
+    // across the spring-forward night: midnight EST on the 7th
+    h.core.cellEditInput('2026-03-07');
+    h.core.onCellEditorKeydown(key('Enter'));
+    const stored = h.tasks()[0];
+    expect(stored.start.toISOString()).toBe('2026-03-07T05:00:00.000Z');
+  });
+
+  it('puts today on the zone calendar', () => {
+    const h = setup({ tasks: zoned, timeZone: 'Pacific/Kiritimati' });
+    const now = h.core.now();
+    // Kiritimati is UTC+14 all year
+    const expected = new Date(Date.now() + 14 * 3_600_000);
+    expect([now.getDate(), now.getHours()]).toEqual([
+      expected.getUTCDate(),
+      expected.getUTCHours(),
+    ]);
+  });
+});

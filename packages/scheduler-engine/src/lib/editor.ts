@@ -13,8 +13,21 @@
  * occurrences of a series (EXDATE). A rule the section cannot author
  * (BYHOUR, several months, …) round-trips verbatim while its fields stay
  * untouched.
+ *
+ * Time zones: the model's dates are wall clocks of the display zone, or —
+ * with `timeZoneFrame` (the scheduler's `showTimeZoneEditor`) — of the
+ * appointment's own start / end zones, which the editor then offers as
+ * pickers. Saving converts back to instants (`editorZones`); all-day dates
+ * are calendar days and never shift.
  */
-import { ogeDateTimeFormat, ogeFormatMessage } from '@oge-ui/core';
+import {
+  ogeConvertWallClock,
+  ogeDateTimeFormat,
+  ogeFormatMessage,
+  ogeFromWallClock,
+  ogeTimeZoneLabel,
+  ogeTimeZones,
+} from '@oge-ui/core';
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
 import {
   OGE_DEFAULT_SCHEDULER_MESSAGES,
@@ -23,6 +36,7 @@ import {
 import {
   parseRecurrenceException,
   parseRecurrenceRule,
+  recurrenceRuleTimeZone,
   serializeRecurrenceRule,
   type RecurrenceByDay,
   type RecurrenceRule,
@@ -30,6 +44,7 @@ import {
 import { expandRecurrence } from './rrule-expand';
 import {
   appointmentPatch,
+  schedulerRecurrenceZone,
   type ResolvedSchedulerFields,
   type SchedulerAppointment,
 } from './scheduler-model';
@@ -80,6 +95,54 @@ export interface SchedulerEditorModel {
   reminder: number | null;
   /** Assigned resource ids, keyed by the resource `fieldExpr`. */
   resourceValues: Record<string, unknown>;
+  /** The appointment's start zone (`null` = it follows the scheduler's). */
+  startTimeZone?: string | null;
+  /** The appointment's end zone (`null` = its start zone). */
+  endTimeZone?: string | null;
+  /**
+   * `true` when the dates are wall clocks of `startTimeZone` /
+   * `endTimeZone` and the editor shows the zone pickers
+   * (`showTimeZoneEditor`); otherwise they are display-zone wall clocks.
+   */
+  timeZoneFrame?: boolean;
+  /** The scheduler's display zone (placeholder of the zone pickers). */
+  viewTimeZone?: string;
+}
+
+/** The zones an editor model's dates and recurrence are expressed in. */
+export interface SchedulerEditorZones {
+  /** The frame of `startDate`. */
+  readonly start: string | undefined;
+  /** The frame of `endDate`. */
+  readonly end: string | undefined;
+  /** The zone the saved rule recurs in (its EXDATE stamps' frame). */
+  readonly rule: string | undefined;
+}
+
+/**
+ * The frames of an editor model: its own zones under `timeZoneFrame`, the
+ * display zone otherwise; the rule zone follows the saved rule's `TZID`,
+ * else the start zone.
+ */
+export function editorZones(
+  model: Pick<
+    SchedulerEditorModel,
+    'startTimeZone' | 'endTimeZone' | 'timeZoneFrame'
+  >,
+  viewZone: string | undefined,
+  rule?: string,
+): SchedulerEditorZones {
+  const own = model.startTimeZone ?? undefined;
+  const start = model.timeZoneFrame === true ? (own ?? viewZone) : viewZone;
+  const end =
+    model.timeZoneFrame === true
+      ? (model.endTimeZone ?? own ?? viewZone)
+      : viewZone;
+  const ruleZone =
+    (rule === undefined ? undefined : recurrenceRuleTimeZone(rule)) ??
+    own ??
+    viewZone;
+  return { start, end, rule: ruleZone };
 }
 
 /** The dialog's save payload. */
@@ -328,12 +391,19 @@ export function resourceValuesOf<T>(
 const exceptionsKey = (values: readonly number[]): string =>
   [...values].sort((a, b) => a - b).join(',');
 
-/** Formats epoch-ms exception starts as an EXDATE stamp list. */
-export function formatExceptionStamps(values: readonly number[]): string {
+/**
+ * Formats epoch-ms exception starts as an EXDATE stamp list. `from` / `to`
+ * re-express the values from the editor's start frame in the rule zone.
+ */
+export function formatExceptionStamps(
+  values: readonly number[],
+  from?: string,
+  to?: string,
+): string {
   return [...values]
     .sort((a, b) => a - b)
     .map((value) => {
-      const date = new Date(value);
+      const date = ogeConvertWallClock(new Date(value), from, to);
       const pad = (part: number): string => String(part).padStart(2, '0');
       return (
         `${String(date.getFullYear()).padStart(4, '0')}${pad(date.getMonth() + 1)}` +
@@ -344,23 +414,56 @@ export function formatExceptionStamps(values: readonly number[]): string {
     .join(',');
 }
 
+/** Options of {@link editorModelFrom} / {@link draftEditorModel}. */
+export interface SchedulerEditorModelOptions {
+  /** Express the dates in the appointment's own zones (zone pickers shown). */
+  readonly timeZoneEditor?: boolean;
+  /** The display zone (drafts; an appointment carries its own). */
+  readonly viewTimeZone?: string;
+}
+
 /** Editor model of an appointment; `withRecurrence` maps its rule too. */
 export function editorModelFrom<T>(
   appointment: SchedulerAppointment<T>,
   withRecurrence: boolean,
   resources: readonly OgeSchedulerResource[],
+  options: SchedulerEditorModelOptions = {},
 ): SchedulerEditorModel {
+  const view = appointment.viewTimeZone ?? options.viewTimeZone;
+  const zoneFields = {
+    startTimeZone: appointment.startTimeZone ?? null,
+    endTimeZone: appointment.endTimeZone ?? null,
+    timeZoneFrame: options.timeZoneEditor === true,
+  };
+  const zones = editorZones(
+    zoneFields,
+    view,
+    withRecurrence ? appointment.recurrenceRule : undefined,
+  );
+  const timed = !appointment.allDay;
+  const startDate = timed
+    ? ogeConvertWallClock(appointment.startDate, view, zones.start)
+    : appointment.startDate;
+  const endDate = timed
+    ? ogeConvertWallClock(appointment.endDate, view, zones.end)
+    : appointment.endDate;
+  const ruleZone = timed ? schedulerRecurrenceZone(appointment) : view;
   const exceptions =
     withRecurrence && appointment.recurrenceException !== undefined
-      ? parseRecurrenceException(appointment.recurrenceException).map((date) =>
-          date.getTime(),
+      ? parseRecurrenceException(appointment.recurrenceException, {
+          timeZone: ruleZone,
+        }).map((date) =>
+          (timed
+            ? ogeConvertWallClock(date, ruleZone, zones.start)
+            : date
+          ).getTime(),
         )
       : [];
   return {
     text: appointment.text,
     allDay: appointment.allDay,
-    startDate: appointment.startDate,
-    endDate: appointment.endDate,
+    startDate,
+    endDate,
     color: appointment.color,
     location: appointment.location,
     description: appointment.description,
@@ -370,9 +473,11 @@ export function editorModelFrom<T>(
     ...(withRecurrence
       ? { sourceExceptionsKey: exceptionsKey(exceptions) }
       : {}),
+    ...zoneFields,
+    ...(view !== undefined ? { viewTimeZone: view } : {}),
     ...editorRuleFields(
       withRecurrence ? appointment.recurrenceRule : undefined,
-      appointment.startDate,
+      startDate,
     ),
   };
 }
@@ -383,7 +488,9 @@ export function draftEditorModel(
   endDate: Date,
   allDay: boolean,
   resourceValues: Record<string, unknown>,
+  options: SchedulerEditorModelOptions = {},
 ): SchedulerEditorModel {
+  const view = options.viewTimeZone;
   return {
     text: '',
     allDay,
@@ -392,7 +499,26 @@ export function draftEditorModel(
     reminder: null,
     resourceValues,
     exceptions: [],
+    startTimeZone: null,
+    endTimeZone: null,
+    // a draft has no zones yet: its frame is the display zone either way
+    timeZoneFrame: options.timeZoneEditor === true,
+    ...(view !== undefined ? { viewTimeZone: view } : {}),
     ...editorRuleFields(undefined, startDate),
+  };
+}
+
+/** The model's dates as instants (all-day dates stay calendar days). */
+export function editorModelInstants(
+  model: SchedulerEditorModel,
+  viewZone: string | undefined,
+): { startDate: Date; endDate: Date } {
+  if (model.allDay)
+    return { startDate: model.startDate, endDate: model.endDate };
+  const zones = editorZones(model, viewZone);
+  return {
+    startDate: ogeFromWallClock(model.startDate, zones.start),
+    endDate: ogeFromWallClock(model.endDate, zones.end),
   };
 }
 
@@ -406,19 +532,29 @@ export function buildItemFromEditor<T>(
   const set = (field: string | null, value: unknown): void => {
     if (field !== null && value !== undefined) item[field] = value;
   };
+  const instants = editorModelInstants(editorModel, fields.timeZone);
   set(fields.fieldNames.text, editorModel.text);
-  set(fields.fieldNames.startDate, editorModel.startDate);
-  set(fields.fieldNames.endDate, editorModel.endDate);
+  set(fields.fieldNames.startDate, instants.startDate);
+  set(fields.fieldNames.endDate, instants.endDate);
   if (editorModel.allDay) set(fields.fieldNames.allDay, true);
   set(fields.fieldNames.color, editorModel.color);
   set(fields.fieldNames.location, editorModel.location);
   set(fields.fieldNames.description, editorModel.description);
+  set(fields.fieldNames.startTimeZone, editorModel.startTimeZone ?? undefined);
+  set(fields.fieldNames.endTimeZone, editorModel.endTimeZone ?? undefined);
   const rule = editorRuleString(editorModel);
   set(fields.fieldNames.recurrenceRule, rule);
   if (rule !== undefined && (editorModel.exceptions ?? []).length > 0) {
+    const zones = editorZones(editorModel, fields.timeZone, rule);
     set(
       fields.fieldNames.recurrenceException,
-      formatExceptionStamps(editorModel.exceptions),
+      editorModel.allDay
+        ? formatExceptionStamps(editorModel.exceptions)
+        : formatExceptionStamps(
+            editorModel.exceptions,
+            zones.start,
+            zones.rule,
+          ),
     );
   }
   set(fields.fieldNames.reminder, editorModel.reminder ?? undefined);
@@ -435,15 +571,46 @@ export function buildPatchFromEditor<T>(
   fields: ResolvedSchedulerFields<T>,
   resources: readonly OgeSchedulerResource[],
 ): Partial<T> {
+  const zones = editorZones(editorModel, fields.timeZone);
+  const view = fields.timeZone;
+  const change = editorModel.allDay
+    ? editorModel
+    : {
+        ...editorModel,
+        startDate: ogeConvertWallClock(
+          editorModel.startDate,
+          zones.start,
+          view,
+        ),
+        endDate: ogeConvertWallClock(editorModel.endDate, zones.end, view),
+      };
   const patch: Record<string, unknown> = {
-    ...(appointmentPatch(original, editorModel, fields) as Record<
-      string,
-      unknown
-    >),
+    ...(appointmentPatch(original, change, fields) as Record<string, unknown>),
   };
   const set = (field: string | null, value: unknown): void => {
     if (field !== null && value !== undefined) patch[field] = value;
   };
+  if (editorModel.timeZoneFrame === true) {
+    // a cleared picker removes a zone the item had; absent stays absent
+    const zoneValue = (
+      field: string | null,
+      value: string | null | undefined,
+      accessor: (item: T) => unknown,
+    ): void => {
+      if (value) set(field, value);
+      else if (accessor(original) != null) set(field, null);
+    };
+    zoneValue(
+      fields.fieldNames.startTimeZone,
+      editorModel.startTimeZone,
+      fields.startTimeZone,
+    );
+    zoneValue(
+      fields.fieldNames.endTimeZone,
+      editorModel.endTimeZone,
+      fields.endTimeZone,
+    );
+  }
   set(fields.fieldNames.text, editorModel.text);
   set(fields.fieldNames.allDay, editorModel.allDay);
   set(fields.fieldNames.color, editorModel.color);
@@ -458,9 +625,16 @@ export function buildPatchFromEditor<T>(
     exceptionsKey(editorModel.exceptions ?? []) !==
       editorModel.sourceExceptionsKey
   ) {
+    const ruleZones = editorZones(editorModel, fields.timeZone, ruleString);
     set(
       fields.fieldNames.recurrenceException,
-      formatExceptionStamps(editorModel.exceptions ?? []),
+      editorModel.allDay
+        ? formatExceptionStamps(editorModel.exceptions ?? [])
+        : formatExceptionStamps(
+            editorModel.exceptions ?? [],
+            ruleZones.start,
+            ruleZones.rule,
+          ),
     );
   }
   set(fields.fieldNames.reminder, editorModel.reminder);
@@ -573,7 +747,13 @@ export function schedulerExceptionItems(
   model: Pick<
     SchedulerEditorModel,
     'sourceRule' | 'startDate' | 'exceptions' | 'allDay'
-  >,
+  > &
+    Partial<
+      Pick<
+        SchedulerEditorModel,
+        'startTimeZone' | 'endTimeZone' | 'timeZoneFrame' | 'viewTimeZone'
+      >
+    >,
   locale: string | undefined,
   limit = 60,
 ): { value: number; text: string }[] {
@@ -582,20 +762,30 @@ export function schedulerExceptionItems(
     timeStyle: model.allDay ? undefined : 'short',
   });
   const values = new Set<number>(model.exceptions ?? []);
+  // the series recurs on its rule zone's clocks; the choices are shown in
+  // the editor's start frame
+  const zones = model.allDay
+    ? { start: undefined, rule: undefined }
+    : editorZones(model, model.viewTimeZone, model.sourceRule);
   const rule =
     model.sourceRule === undefined
       ? null
-      : parseRecurrenceRule(model.sourceRule);
+      : parseRecurrenceRule(model.sourceRule, { timeZone: zones.rule });
   if (rule !== null) {
-    const horizon = new Date(model.startDate.getTime());
+    const seriesStart = ogeConvertWallClock(
+      model.startDate,
+      zones.start,
+      zones.rule,
+    );
+    const horizon = new Date(seriesStart.getTime());
     horizon.setFullYear(horizon.getFullYear() + 3);
     for (const date of expandRecurrence(
       { ...rule, exDates: undefined },
-      model.startDate,
-      model.startDate,
+      seriesStart,
+      seriesStart,
       horizon,
     ).slice(0, limit)) {
-      values.add(date.getTime());
+      values.add(ogeConvertWallClock(date, zones.rule, zones.start).getTime());
     }
   }
   return [...values]
@@ -611,8 +801,22 @@ const recurrenceOf = (data: Record<string, unknown>): RecurrenceData =>
   data as unknown as RecurrenceData;
 
 /**
+ * The time-zone picker choices: every runtime zone as
+ * `(UTC+03:00) Europe/Istanbul`, offsets taken at `at`.
+ */
+export function schedulerTimeZoneItems(
+  at: Date | number = Date.now(),
+): { value: string; text: string }[] {
+  return ogeTimeZones().map((zone) => ({
+    value: zone,
+    text: ogeTimeZoneLabel(zone, at),
+  }));
+}
+
+/**
  * The default editor form: subject, location, start/end (with the
- * end-after-start rule), all-day, color, one select per resource, reminder,
+ * end-after-start rule), the start / end time-zone pickers (a model with
+ * `timeZoneFrame`), all-day, color, one select per resource, reminder,
  * the recurrence section (shown live through `visibleWhen`, so switching
  * "Repeat" reveals its fields without reopening) and the description.
  */
@@ -670,6 +874,7 @@ export function buildSchedulerEditorItems(
         },
       ],
     },
+    ...(model?.timeZoneFrame === true ? timeZoneEditorItems(m, model) : []),
     {
       field: 'allDay',
       label: m.allDayLabel,
@@ -849,6 +1054,36 @@ export function buildSchedulerEditorItems(
       editorOptions: { rows: 3, autoResize: true },
       colSpan: 2,
     },
+  ];
+}
+
+/** The start / end zone pickers of a `timeZoneFrame` model. */
+function timeZoneEditorItems(
+  m: Required<OgeSchedulerEditorMessages>,
+  model: SchedulerEditorModel,
+): OgeFormItemDataBase[] {
+  const items = schedulerTimeZoneItems(model.startDate);
+  const placeholder = m.timeZonePlaceholder.replace(
+    '{zone}',
+    model.viewTimeZone ?? ogeDateTimeFormat().resolvedOptions().timeZone,
+  );
+  const picker = (field: string, label: string): OgeFormItemDataBase => ({
+    field,
+    label,
+    placeholder,
+    editorType: 'selectBox',
+    editorOptions: {
+      items,
+      valueExpr: 'value',
+      displayExpr: 'text',
+      searchEnabled: true,
+      showClearButton: true,
+    },
+    visibleWhen: (data) => (data as { allDay?: boolean }).allDay !== true,
+  });
+  return [
+    picker('startTimeZone', m.startTimeZoneLabel),
+    picker('endTimeZone', m.endTimeZoneLabel),
   ];
 }
 

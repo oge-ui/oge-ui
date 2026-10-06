@@ -9,10 +9,17 @@ export const OGE_SCHEDULER_API: ApiSections = {
       entries: [
         {
           name: 'dataSource',
-          type: 'readonly T[] | DataSource&lt;T&gt; | null',
+          type: 'readonly T[] | DataSource&lt;T&gt; | OgeSchedulerDataSource&lt;T&gt; | null',
           default: 'null',
           description:
-            'Appointment items: a plain array (copied into an internal working set — the input is never mutated) or any <code>&#64;oge-ui/core</code> <code>DataSource</code>, whose <code>insert</code>/<code>update</code>/<code>remove</code> are used for CRUD when present.',
+            "Appointment items: a plain array (copied into an internal working set — the input is never mutated), any <code>&#64;oge-ui/core</code> <code>DataSource</code> (loaded once; with <code>remoteFiltering</code> per visible range) or an <code>OgeSchedulerDataSource</code> loaded <strong>per visible range</strong>: <code>load({ startDate, endDate, resources?, signal })</code> runs for the period on screen, the previous and next periods are prefetched, navigation is debounced (<code>debounce</code>, 150 ms), stale requests are aborted through <code>signal</code> and every range is cached (<code>cacheSize</code>, 12). A visible status line and <code>aria-busy</code> show the load. CRUD goes through the source's <code>insert</code>/<code>update</code>/<code>remove</code> when present (the range reloads afterwards).",
+        },
+        {
+          name: 'remoteFiltering',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Loads a filtering <code>&#64;oge-ui/core</code> <code>DataSource</code> per visible range: <code>load()</code> receives a <code>filter</code> on the date fields (appointments overlapping the range, or any recurring series) and the <code>signal</code> of the range.',
         },
         {
           name: 'keyExpr',
@@ -41,6 +48,13 @@ export const OGE_SCHEDULER_API: ApiSections = {
           default: "'reminder'",
           description:
             'Minutes before the start a reminder fires (see <code>reminderTriggered</code>) — <strong>OGE extra</strong> (Outlook parity).',
+        },
+        {
+          name: 'startTimeZoneExpr / endTimeZoneExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'startTimeZone' / 'endTimeZone'",
+          description:
+            'An appointment’s own IANA zones. A series recurs on its start zone’s clocks (a <code>DTSTART;TZID=</code> in the rule wins), so “09:00 New York” stays 09:00 there across DST while the display shifts; the editor shows and saves the dates in these zones with <code>showTimeZoneEditor</code>. Unknown names are ignored.',
         },
         {
           name: 'resources',
@@ -95,6 +109,20 @@ export const OGE_SCHEDULER_API: ApiSections = {
           default: 'new Date()',
           description:
             'Anchor date of the visible period. Two-way (<code>[(currentDate)]</code>); writes clamp into <code>[min, max]</code>.',
+        },
+        {
+          name: 'timeZone',
+          type: 'string | undefined',
+          default: 'undefined',
+          description:
+            "The display zone (IANA, e.g. <code>'Europe/Istanbul'</code>); unset = the browser’s. Stored dates stay <strong>instants</strong>: every slot, day boundary (23- and 25-hour DST days, skipped and repeated hours), drag snap, “today” line and recurrence expansion follows this zone’s clocks, computed with <code>Intl.DateTimeFormat</code> offsets (core’s <code>ogeZonedParts</code> / <code>ogeFromZoned</code>) — no time-zone database. Events, <code>currentDate</code> writes and item patches carry instants; all-day appointments stay on their calendar days.",
+        },
+        {
+          name: 'showTimeZoneEditor',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Adds start / end <strong>time-zone pickers</strong> to the appointment editor: the date boxes then show the appointment’s own zones (an empty picker follows the scheduler’s zone), and the typed time is saved in the picked zone.',
         },
         {
           name: 'currentView',
@@ -357,12 +385,19 @@ export const OGE_SCHEDULER_API: ApiSections = {
         {
           name: 'getStartViewDate() / getEndViewDate()',
           type: 'Date',
-          description: 'First moment / exclusive end of the visible period.',
+          description:
+            'First moment / exclusive end of the visible period, as instants (with <code>timeZone</code>, the zone’s midnights — a DST day is 23 or 25 hours long).',
         },
         {
           name: 'getDataSource()',
-          type: 'readonly T[] | DataSource&lt;T&gt; | null',
+          type: 'readonly T[] | DataSource&lt;T&gt; | OgeSchedulerDataSource&lt;T&gt; | null',
           description: 'The bound data source, as given.',
+        },
+        {
+          name: 'reload()',
+          type: 'void',
+          description:
+            'Reloads the data source: a load-once <code>DataSource</code> loads again, a range source drops its cache and reloads the visible range.',
         },
         {
           name: 'focus()',
@@ -560,6 +595,18 @@ export const OGE_SCHEDULER_API: ApiSections = {
           name: 'OgeSchedulerAppointmentDroppedEvent&lt;T&gt; / OgeSchedulerDragOutEvent&lt;T&gt;',
           type: 'interface',
           description: 'The drag-in / drag-out payloads (see the events).',
+        },
+        {
+          name: 'OgeSchedulerDataSource&lt;T&gt; / OgeSchedulerLoadOptions',
+          type: 'interface',
+          description:
+            '<code>{ load(options), insert?, update?, remove?, debounce?, prefetch?, cacheSize? }</code> — the range source; <code>load</code> receives <code>{ startDate, endDate, resources?, signal }</code> (instants, <code>resources</code> = the grouped ids on screen) and resolves to the items overlapping the range (series included).',
+        },
+        {
+          name: 'ogeZonedParts / ogeFromZoned / ogeTzOffset / ogeToWallClock / ogeFromWallClock',
+          type: 'function (&#64;oge-ui/core)',
+          description:
+            'The zoned date math the scheduler and the Gantt share: an instant’s fields on a zone’s clocks, the instant of a wall time (skipped times move forward, repeated ones take the earlier side unless <code>disambiguation</code> says otherwise), the offset in minutes, and the wall-clock frame conversions — all <code>Intl</code>, DST-exact.',
         },
         {
           name: 'OgeSchedulerExportData&lt;T&gt;',

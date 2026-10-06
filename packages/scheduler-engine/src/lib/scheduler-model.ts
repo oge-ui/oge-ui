@@ -4,15 +4,30 @@
  * scheduler engine. Dates normalize through `@oge-ui/core`'s `toLocalDate`
  * and write back through `serializeLikeOriginal`, so string-dated stores
  * round-trip without silently changing their storage shape.
+ *
+ * Time zones: stored values are instants. With a display `timeZone` the
+ * model holds **wall clocks** of that zone (core's `ogeToWallClock`) — every
+ * view, gesture and layout computes in local wall time and never sees a
+ * zone — and each write converts back (`ogeFromWallClock`). Recurrence runs
+ * on the clocks of the series' own zone (`TZID`, else `startTimeZone`, else
+ * the display zone).
  */
 import {
   createFieldAccessor,
+  ogeConvertWallClock,
+  ogeFromWallClock,
+  ogeIsTimeZone,
+  ogeToWallClock,
   serializeLikeOriginal,
   toLocalDate,
   type ValueAccessor,
 } from '@oge-ui/core';
-import { addMinutes } from '@oge-ui/core';
-import { parseRecurrenceException, parseRecurrenceRule } from './rrule';
+import { addDays, addMinutes } from '@oge-ui/core';
+import {
+  parseRecurrenceException,
+  parseRecurrenceRule,
+  recurrenceRuleTimeZone,
+} from './rrule';
 import { expandRecurrence } from './rrule-expand';
 import { durationMinutes } from './time-math';
 
@@ -32,6 +47,15 @@ export interface SchedulerFieldExprs<T> {
   readonly recurrenceRuleExpr: SchedulerFieldExpr<T, unknown>;
   readonly recurrenceExceptionExpr: SchedulerFieldExpr<T, unknown>;
   readonly disabledExpr: SchedulerFieldExpr<T, unknown>;
+  /** The IANA zone the appointment starts in (editor, recurrence). */
+  readonly startTimeZoneExpr?: SchedulerFieldExpr<T, unknown>;
+  /** The IANA zone the appointment ends in (editor). */
+  readonly endTimeZoneExpr?: SchedulerFieldExpr<T, unknown>;
+  /**
+   * The display zone: model dates are wall clocks of this IANA zone.
+   * `undefined` = the runtime's local zone (no conversion).
+   */
+  readonly timeZone?: string;
 }
 
 /** Resolved accessor set (see `resolveSchedulerFields`). */
@@ -47,6 +71,10 @@ export interface ResolvedSchedulerFields<T> {
   readonly recurrenceRule: ValueAccessor<T>;
   readonly recurrenceException: ValueAccessor<T>;
   readonly disabled: ValueAccessor<T>;
+  readonly startTimeZone: ValueAccessor<T>;
+  readonly endTimeZone: ValueAccessor<T>;
+  /** The display zone (validated; `undefined` = runtime zone). */
+  readonly timeZone: string | undefined;
   /** Field names for write-back; `null` when the expr is a function. */
   readonly fieldNames: Readonly<Record<SchedulerFieldKey, string | null>>;
 }
@@ -62,7 +90,9 @@ export type SchedulerFieldKey =
   | 'reminder'
   | 'recurrenceRule'
   | 'recurrenceException'
-  | 'disabled';
+  | 'disabled'
+  | 'startTimeZone'
+  | 'endTimeZone';
 
 /**
  * A user item normalized into the engine's shape. `source` keeps the original
@@ -90,6 +120,15 @@ export interface SchedulerAppointment<T = unknown> {
   /** Comma-separated exception dates (reserved in v0.1). */
   readonly recurrenceException: string | undefined;
   readonly disabled: boolean;
+  /** The appointment's own start zone (`startTimeZoneExpr`), if valid. */
+  readonly startTimeZone?: string;
+  /** The appointment's own end zone (`endTimeZoneExpr`), if valid. */
+  readonly endTimeZone?: string;
+  /**
+   * The display zone `startDate` / `endDate` are wall clocks of
+   * (`undefined` = the runtime zone).
+   */
+  readonly viewTimeZone?: string;
   /**
    * Set on expanded occurrence instances: the series appointment's key.
    * `null` for plain appointments and the series template itself.
@@ -121,6 +160,9 @@ export function resolveSchedulerFields<T>(
     recurrenceRule: toAccessor(exprs.recurrenceRuleExpr),
     recurrenceException: toAccessor(exprs.recurrenceExceptionExpr),
     disabled: toAccessor(exprs.disabledExpr),
+    startTimeZone: toAccessor(exprs.startTimeZoneExpr ?? 'startTimeZone'),
+    endTimeZone: toAccessor(exprs.endTimeZoneExpr ?? 'endTimeZone'),
+    timeZone: ogeIsTimeZone(exprs.timeZone) ? exprs.timeZone : undefined,
     fieldNames: {
       text: name(exprs.textExpr),
       startDate: name(exprs.startDateExpr),
@@ -133,12 +175,71 @@ export function resolveSchedulerFields<T>(
       recurrenceRule: name(exprs.recurrenceRuleExpr),
       recurrenceException: name(exprs.recurrenceExceptionExpr),
       disabled: name(exprs.disabledExpr),
+      startTimeZone: name(exprs.startTimeZoneExpr ?? 'startTimeZone'),
+      endTimeZone: name(exprs.endTimeZoneExpr ?? 'endTimeZone'),
     },
   };
 }
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value !== '' ? value : undefined;
+}
+
+function asZone(value: unknown): string | undefined {
+  return ogeIsTimeZone(value) ? value : undefined;
+}
+
+/** A stored instant → the display zone's wall clock (identity without one). */
+export function toSchedulerView(
+  instant: Date,
+  timeZone: string | undefined,
+): Date {
+  return timeZone === undefined ? instant : ogeToWallClock(instant, timeZone);
+}
+
+/** A display-zone wall clock → the instant it stands for. */
+export function fromSchedulerView(
+  wall: Date,
+  timeZone: string | undefined,
+): Date {
+  return timeZone === undefined ? wall : ogeFromWallClock(wall, timeZone);
+}
+
+/**
+ * The zone a series recurs in: the rule's `DTSTART;TZID=`, else the
+ * appointment's `startTimeZone`, else the display zone.
+ */
+export function schedulerRecurrenceZone(
+  appointment: Pick<
+    SchedulerAppointment,
+    'recurrenceRule' | 'startTimeZone' | 'viewTimeZone'
+  >,
+): string | undefined {
+  return (
+    (appointment.recurrenceRule === undefined
+      ? undefined
+      : recurrenceRuleTimeZone(appointment.recurrenceRule)) ??
+    appointment.startTimeZone ??
+    appointment.viewTimeZone
+  );
+}
+
+/**
+ * An occurrence start (display wall clock) as the series' recurrence-zone
+ * wall clock — the frame EXDATE stamps of that series are written in.
+ */
+export function occurrenceSeriesStart(
+  appointment: Pick<
+    SchedulerAppointment,
+    'recurrenceRule' | 'startTimeZone' | 'viewTimeZone' | 'allDay'
+  >,
+  occurrenceStart: Date,
+): Date {
+  if (appointment.allDay) return occurrenceStart;
+  const zone = schedulerRecurrenceZone(appointment);
+  return zone === appointment.viewTimeZone
+    ? occurrenceStart
+    : ogeConvertWallClock(occurrenceStart, appointment.viewTimeZone, zone);
 }
 
 /**
@@ -152,14 +253,20 @@ export function normalizeAppointment<T>(
   key: unknown,
   fields: ResolvedSchedulerFields<T>,
 ): SchedulerAppointment<T> | null {
-  const startDate = toLocalDate(fields.startDate(item));
-  if (startDate === null) return null;
+  const startInstant = toLocalDate(fields.startDate(item));
+  if (startInstant === null) return null;
   const endRaw = toLocalDate(fields.endDate(item));
-  const endDate =
-    endRaw !== null && endRaw.getTime() >= startDate.getTime()
+  const endInstant =
+    endRaw !== null && endRaw.getTime() >= startInstant.getTime()
       ? endRaw
-      : startDate;
+      : startInstant;
   const allDay = fields.allDay(item) === true;
+  const zone = fields.timeZone;
+  // all-day values are calendar days, never shifted between zones
+  const startDate = allDay ? startInstant : toSchedulerView(startInstant, zone);
+  const endDate = allDay ? endInstant : toSchedulerView(endInstant, zone);
+  const startTimeZone = asZone(fields.startTimeZone(item));
+  const endTimeZone = asZone(fields.endTimeZone(item));
   return {
     key,
     source: item,
@@ -180,6 +287,9 @@ export function normalizeAppointment<T>(
     recurrenceRule: asString(fields.recurrenceRule(item)),
     recurrenceException: asString(fields.recurrenceException(item)),
     disabled: fields.disabled(item) === true,
+    ...(startTimeZone !== undefined ? { startTimeZone } : {}),
+    ...(endTimeZone !== undefined ? { endTimeZone } : {}),
+    ...(zone !== undefined ? { viewTimeZone: zone } : {}),
     seriesKey: null,
   };
 }
@@ -197,26 +307,60 @@ export function expandAppointment<T>(
   rangeEnd: Date,
 ): SchedulerAppointment<T>[] {
   if (appointment.recurrenceRule === undefined) return [appointment];
-  const rule = parseRecurrenceRule(appointment.recurrenceRule);
+  const view = appointment.viewTimeZone;
+  // all-day series recur on calendar days: the display frame is theirs
+  const zone = appointment.allDay ? view : schedulerRecurrenceZone(appointment);
+  const rule = parseRecurrenceRule(appointment.recurrenceRule, {
+    timeZone: zone,
+  });
   if (rule === null) return [appointment];
   const exceptions =
     appointment.recurrenceException === undefined
       ? []
-      : parseRecurrenceException(appointment.recurrenceException);
-  const length = durationMinutes(appointment.startDate, appointment.endDate);
-  return expandRecurrence(
-    rule,
-    appointment.startDate,
-    rangeStart,
-    rangeEnd,
-    exceptions,
-  ).map((start) => ({
+      : parseRecurrenceException(appointment.recurrenceException, {
+          timeZone: zone,
+        });
+  const occurrence = (start: Date, endDate: Date): SchedulerAppointment<T> => ({
     ...appointment,
     key: `${String(appointment.key)}::${start.getTime()}`,
     startDate: start,
-    endDate: addMinutes(start, length),
+    endDate,
     seriesKey: appointment.key,
-  }));
+  });
+  if (zone === view) {
+    const length = durationMinutes(appointment.startDate, appointment.endDate);
+    return expandRecurrence(
+      rule,
+      appointment.startDate,
+      rangeStart,
+      rangeEnd,
+      exceptions,
+    ).map((start) => occurrence(start, addMinutes(start, length)));
+  }
+  // the series recurs on another zone's clocks: expand there (the window
+  // padded by a day each side), convert each start back to the display
+  const toZone = (wall: Date): Date => ogeConvertWallClock(wall, view, zone);
+  const toView = (wall: Date): Date => ogeConvertWallClock(wall, zone, view);
+  const seriesStart = toZone(appointment.startDate);
+  const length = durationMinutes(seriesStart, toZone(appointment.endDate));
+  const result: SchedulerAppointment<T>[] = [];
+  for (const start of expandRecurrence(
+    rule,
+    seriesStart,
+    addDays(toZone(rangeStart), -1),
+    addDays(toZone(rangeEnd), 1),
+    exceptions,
+  )) {
+    const viewStart = toView(start);
+    if (
+      viewStart.getTime() < rangeStart.getTime() ||
+      viewStart.getTime() >= rangeEnd.getTime()
+    ) {
+      continue;
+    }
+    result.push(occurrence(viewStart, toView(addMinutes(start, length))));
+  }
+  return result;
 }
 
 /** A date/flag change produced by editing, dragging or resizing. */
@@ -224,6 +368,22 @@ export interface SchedulerAppointmentChange {
   readonly startDate: Date;
   readonly endDate: Date;
   readonly allDay?: boolean;
+}
+
+/**
+ * Serializes a display-zone wall clock in `original`'s storage shape: the
+ * instant for timed values, the calendar day itself for all-day ones.
+ */
+export function serializeSchedulerDate<T>(
+  wall: Date,
+  original: unknown,
+  fields: Pick<ResolvedSchedulerFields<T>, 'timeZone'>,
+  allDay: boolean,
+): unknown {
+  return serializeLikeOriginal(
+    allDay ? wall : fromSchedulerView(wall, fields.timeZone),
+    original,
+  );
 }
 
 /**
@@ -238,18 +398,23 @@ export function appointmentPatch<T>(
   fields: ResolvedSchedulerFields<T>,
 ): Partial<T> {
   const patch: Record<string, unknown> = {};
+  const allDay = change.allDay ?? fields.allDay(original) === true;
   const startField = fields.fieldNames.startDate;
   if (startField !== null) {
-    patch[startField] = serializeLikeOriginal(
+    patch[startField] = serializeSchedulerDate(
       change.startDate,
       fields.startDate(original),
+      fields,
+      allDay,
     );
   }
   const endField = fields.fieldNames.endDate;
   if (endField !== null) {
-    patch[endField] = serializeLikeOriginal(
+    patch[endField] = serializeSchedulerDate(
       change.endDate,
       fields.endDate(original),
+      fields,
+      allDay,
     );
   }
   const allDayField = fields.fieldNames.allDay;

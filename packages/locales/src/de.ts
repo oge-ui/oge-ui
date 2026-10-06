@@ -557,6 +557,9 @@ export const de: OgeLocalePack = {
       dayKinds: { day: 'Tag', weekday: 'Werktag', weekendDay: 'Wochenendtag' },
       yearMonthLabel: 'Monat',
       exceptionsLabel: 'Übersprungene Termine',
+      startTimeZoneLabel: 'Zeitzone Beginn',
+      endTimeZoneLabel: 'Zeitzone Ende',
+      timeZonePlaceholder: 'Zeitzone des Kalenders ({zone})',
       summaryLabel: 'Zusammenfassung der Wiederholung',
       summary: {
         daily: '{interval, plural, one {Jeden Tag} other {Alle # Tage}}',
@@ -637,6 +640,8 @@ export const de: OgeLocalePack = {
       morePopupLabel: 'Termine am {date}',
       goToDay: 'Zum Tag wechseln',
       closeLabel: 'Schließen',
+      loadingLabel: 'Termine werden geladen…',
+      loadErrorLabel: 'Termine konnten nicht geladen werden',
       gridLabel: 'Terminplaner, {period}',
       allDayLabel: 'Ganztägig',
       cellLabel: '{date}, {time}',

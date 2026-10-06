@@ -12,6 +12,7 @@ import {
   buildAgendaDays,
   buildYearMonths,
   countAppointmentsByDay,
+  toSchedulerView,
   yearCellLabel,
   yearWeekdayText,
   type OgeSchedulerGridMessages,
@@ -24,6 +25,8 @@ export interface AgendaViewProps<T> {
   readonly agendaDuration: number;
   readonly appointments: readonly SchedulerAppointment<T>[];
   readonly locale: string | undefined;
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone?: string;
   readonly messages: OgeSchedulerGridMessages;
   readonly onChipClicked: (event: SchedulerChipEvent<T>) => void;
   readonly onChipDblClicked: (event: SchedulerChipEvent<T>) => void;
@@ -49,7 +52,7 @@ export function SchedulerAgendaView<T>(props: AgendaViewProps<T>) {
       ),
     [props.anchorDate, props.agendaDuration, props.appointments],
   );
-  const now = new Date();
+  const now = toSchedulerView(new Date(), props.timeZone);
 
   const chipEvent = (
     appointment: SchedulerAppointment<T>,
@@ -153,6 +156,8 @@ export interface YearViewProps<T> {
   readonly appointments: readonly SchedulerAppointment<T>[];
   readonly firstDayOfWeek: number;
   readonly locale: string | undefined;
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone?: string;
   readonly onDayPicked: (date: Date) => void;
 }
 
@@ -172,7 +177,7 @@ export function SchedulerYearView<T>(props: YearViewProps<T>) {
     () => buildYearMonths(year, props.firstDayOfWeek, counts, locale),
     [year, props.firstDayOfWeek, counts, locale],
   );
-  const now = new Date();
+  const now = toSchedulerView(new Date(), props.timeZone);
   return (
     <div className="oge-scheduler-view oge-scheduler-year">
       <div className="oge-scheduler-year-grid">

@@ -154,6 +154,7 @@ function OgeGanttInner<
           dependencyLagUnitExpr: () => p().dependencyLagUnitExpr ?? 'lagUnit',
           projectStart: () => p().projectStart ?? null,
           statusDate: () => p().statusDate ?? null,
+          timeZone: () => p().timeZone,
           showProgressLine: () => p().showProgressLine ?? false,
           showRollups: () => p().showRollups ?? false,
           baselineIndex: () => p().baselineIndex ?? baselineState.current,

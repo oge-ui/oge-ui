@@ -78,10 +78,10 @@ describe('rrule', () => {
     });
 
     it('rejects blocks it cannot fully honor', () => {
-      // TZID needs a TZ database the suite does not ship
+      // an unknown zone name cannot be converted
       expect(
         parseRecurrenceRule(
-          'DTSTART;TZID=Europe/Istanbul:20260803T093000\r\nRRULE:FREQ=DAILY',
+          'DTSTART;TZID=Mars/Olympus:20260803T093000\r\nRRULE:FREQ=DAILY',
         ),
       ).toBeNull();
       expect(

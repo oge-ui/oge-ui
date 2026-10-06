@@ -15,11 +15,11 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import {
   beginPointerGesture,
-  isOgeSchedulerDragOut,
   buildGroupedTimelineRows,
   buildHorizontalTimelineRow,
   buildTimelineGrid,
   chipSelectKey,
+  isOgeSchedulerDragOut,
   isWeekendDay,
   leafWorkHours,
   sameGroupValues,
@@ -40,6 +40,7 @@ import {
   timelineRowIdReader,
   timelineScaleOf,
   timelineVirtualWindow,
+  toSchedulerView,
   withSelectedLabel,
   type AppointmentProposal,
   type OgeSchedulerDisabledSlots,
@@ -300,6 +301,8 @@ export class OgeSchedulerTimelineView<T = unknown> {
   readonly cellDuration = input.required<number>();
   readonly intervalCount = input(1);
   readonly locale = input<string | undefined>(undefined);
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerResolvedMessages['grid']>();
   readonly groupLevels = input<readonly OgeSchedulerResource[]>([]);
   readonly groupLeaves = input<readonly SchedulerGroupLeaf[]>([]);
@@ -410,7 +413,12 @@ export class OgeSchedulerTimelineView<T = unknown> {
   });
 
   protected readonly headerCells = computed(() =>
-    timelineHeaderCells(this.grid(), this.view(), this.locale()),
+    timelineHeaderCells(
+      this.grid(),
+      this.view(),
+      this.locale(),
+      toSchedulerView(new Date(), this.timeZone()),
+    ),
   );
 
   protected readonly hourLabels = computed(() =>

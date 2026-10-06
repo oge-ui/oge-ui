@@ -555,6 +555,9 @@ export const ja: OgeLocalePack = {
       dayKinds: { day: '日', weekday: '平日', weekendDay: '週末' },
       yearMonthLabel: '月',
       exceptionsLabel: 'スキップした予定',
+      startTimeZoneLabel: '開始タイムゾーン',
+      endTimeZoneLabel: '終了タイムゾーン',
+      timeZonePlaceholder: 'スケジューラーのタイムゾーン ({zone})',
       summaryLabel: '繰り返しの概要',
       summary: {
         daily: '{interval, plural, =1 {毎日} other {# 日ごと}}',
@@ -634,6 +637,8 @@ export const ja: OgeLocalePack = {
       morePopupLabel: '{date} の予定',
       goToDay: '日付へ移動',
       closeLabel: '閉じる',
+      loadingLabel: '予定を読み込んでいます…',
+      loadErrorLabel: '予定を読み込めませんでした',
       gridLabel: 'スケジューラー、{period}',
       allDayLabel: '終日',
       cellLabel: '{date}、{time}',

@@ -13,6 +13,11 @@
  * The machine is not reactive itself. Every value it derives goes through
  * the adapter's `derived`, so Angular gets `computed()` signals and React a
  * per-render memo, and every state it holds is an adapter `cell`.
+ *
+ * Time zones live at the edges: with a `timeZone` input every date the
+ * core hands to a view (`viewDate()`, the appointments, the blocked ranges)
+ * is a wall clock of that zone, and every date it writes back (items,
+ * `currentDate`, the public events) is an instant again.
  */
 import {
   ogeElementAtPoint,
@@ -22,13 +27,13 @@ import {
 import {
   ogeDateTimeFormat,
   ogeFormatMessage,
+  ogeIsTimeZone,
   addDays,
   addMinutes,
   clampDate,
   nextDay,
   resolveFirstDayOfWeek,
   resolveWeekendDays,
-  serializeLikeOriginal,
   startOfDay,
   type DataSource,
   type RowKey,
@@ -88,9 +93,21 @@ import type { AppointmentProposal } from './gesture-math';
 import { schedulerGridReadOnly } from './day-week-vm';
 import { appendException } from './rrule-expand';
 import {
+  coreDataSourceRangeLoad,
+  isOgeSchedulerRangeSource,
+  schedulerLoadData,
+  schedulerRangeFilter,
+  SchedulerRangeLoader,
+  type SchedulerLoadRange,
+} from './range-loader';
+import {
   appointmentPatch,
+  fromSchedulerView,
   normalizeAppointment,
+  occurrenceSeriesStart,
   resolveSchedulerFields,
+  serializeSchedulerDate,
+  toSchedulerView,
   type ResolvedSchedulerFields,
   type SchedulerAppointment,
   type SchedulerFieldExpr,
@@ -106,6 +123,7 @@ import type {
   OgeSchedulerAppointmentUpdatingEvent,
   OgeSchedulerCellClickEvent,
   OgeSchedulerConflictCheck,
+  OgeSchedulerDataSource,
   OgeSchedulerDisabledSlots,
   OgeSchedulerDragOutEvent,
   OgeSchedulerEditorShowingEvent,
@@ -144,9 +162,13 @@ import type {
 } from './view-events';
 import { isTimelineView, navigateDate, viewRange } from './view-model';
 
+/** What the scheduler's `dataSource` input accepts. */
+export type OgeSchedulerDataSourceInput<T> =
+  readonly T[] | DataSource<T> | OgeSchedulerDataSource<T> | null;
+
 /** Every scheduler input, read live (Angular passes its input signals). */
 export interface OgeSchedulerCoreInputs<T> {
-  dataSource(): readonly T[] | DataSource<T> | null;
+  dataSource(): OgeSchedulerDataSourceInput<T>;
   keyExpr(): string | ((item: T) => unknown) | undefined;
   textExpr(): SchedulerFieldExpr<T, unknown>;
   startDateExpr(): SchedulerFieldExpr<T, unknown>;
@@ -208,6 +230,22 @@ export interface OgeSchedulerCoreInputs<T> {
   undoLimit?(): number;
   /** What a month "+N more" does (default `'popup'`). */
   moreMode?(): OgeSchedulerMoreMode;
+  /*
+   * W7 inputs — optional, defaults documented.
+   */
+  /** The display zone (IANA); `undefined` = the runtime's local zone. */
+  timeZone?(): string | undefined;
+  /** Shows the start / end zone pickers in the editor (default `false`). */
+  showTimeZoneEditor?(): boolean;
+  /** The item field / getter of an appointment's start zone. */
+  startTimeZoneExpr?(): SchedulerFieldExpr<T, unknown>;
+  /** The item field / getter of an appointment's end zone. */
+  endTimeZoneExpr?(): SchedulerFieldExpr<T, unknown>;
+  /**
+   * A filtering core `DataSource` loads per visible range (a range filter
+   * on the date fields) instead of loading everything once.
+   */
+  remoteFiltering?(): boolean;
 }
 
 /** The scheduler's public events, as plain emitters. */
@@ -324,6 +362,10 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   } | null>;
   /** Bumped on every history change, so `canUndo()` / `canRedo()` re-render. */
   readonly historyVersion: OgeReactiveCell<number>;
+  /** A data-source load of the visible range is running. */
+  readonly loading: OgeReactiveCell<boolean>;
+  /** The last data-source load failed (cleared by the next success). */
+  readonly loadError: OgeReactiveCell<boolean>;
 
   private readonly history: SchedulerEditHistory<T>;
   private clipboard: readonly SchedulerClipboardEntry<T>[] = [];
@@ -333,8 +375,9 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   private replaying = false;
 
   private loadEpoch = 0;
-  private boundSource: readonly T[] | DataSource<T> | null | undefined =
-    undefined;
+  private boundSource: OgeSchedulerDataSourceInput<T> | undefined = undefined;
+  /** The range machine of a remote (range-loading) source. */
+  private rangeLoader: SchedulerRangeLoader<T> | null = null;
   private editedSource: T | null = null;
   /** The occurrence being detached by an occurrence-scope edit. */
   private editingOccurrence: SchedulerAppointment<T> | null = null;
@@ -393,6 +436,18 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   readonly selection: () => readonly T[];
   /** The appointments of the open "+N more" popup's day. */
   readonly moreAppointments: () => readonly SchedulerAppointment<T>[];
+  /** The validated display zone (`undefined` = the runtime zone). */
+  readonly viewTimeZone: () => string | undefined;
+  /** `currentDate` as a display-zone wall clock — what views anchor on. */
+  readonly viewDate: () => Date;
+  /** `min` as a display-zone wall clock. */
+  readonly viewMin: () => Date | undefined;
+  /** `max` as a display-zone wall clock. */
+  readonly viewMax: () => Date | undefined;
+  /** `disabledSlots` with its ranges as display-zone wall clocks. */
+  readonly viewDisabledSlots: () => OgeSchedulerDisabledSlots | null;
+  /** The status line of a remote source (loading / failed), or `''`. */
+  readonly loadStatus: () => string;
 
   constructor(private readonly options: OgeSchedulerCoreOptions<T, TItem>) {
     const { rx, inputs } = options;
@@ -409,6 +464,8 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       readonly durationMinutes: number;
     } | null>(null);
     this.historyVersion = rx.cell(0);
+    this.loading = rx.cell(false);
+    this.loadError = rx.cell(false);
     this.history = new SchedulerEditHistory<T>(
       () => inputs.undoLimit?.() ?? 50,
     );
@@ -472,6 +529,50 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         canResize: this.canResize(),
       }),
     );
+    this.viewTimeZone = rx.derived(() => {
+      const zone = inputs.timeZone?.();
+      return ogeIsTimeZone(zone) ? zone : undefined;
+    });
+    this.viewDate = rx.derived(() =>
+      toSchedulerView(inputs.currentDate(), this.viewTimeZone()),
+    );
+    this.viewMin = rx.derived(() => {
+      const min = inputs.min();
+      return min === undefined
+        ? undefined
+        : toSchedulerView(min, this.viewTimeZone());
+    });
+    this.viewMax = rx.derived(() => {
+      const max = inputs.max();
+      return max === undefined
+        ? undefined
+        : toSchedulerView(max, this.viewTimeZone());
+    });
+    this.viewDisabledSlots = rx.derived(() => {
+      const slots = inputs.disabledSlots?.() ?? null;
+      const zone = this.viewTimeZone();
+      if (slots === null || zone === undefined || typeof slots === 'function') {
+        if (typeof slots === 'function' && zone !== undefined) {
+          // the predicate is asked about instants, like every public API
+          return (date, resources) =>
+            slots(fromSchedulerView(date, zone), resources);
+        }
+        return slots;
+      }
+      return slots.map((range) => ({
+        ...range,
+        startDate: toSchedulerView(range.startDate, zone),
+        endDate: toSchedulerView(range.endDate, zone),
+      }));
+    });
+    this.loadStatus = rx.derived(() => {
+      const grid = this.msg().grid;
+      return this.loading()
+        ? grid.loadingLabel
+        : this.loadError()
+          ? grid.loadErrorLabel
+          : '';
+    });
     this.fields = rx.derived(() =>
       resolveSchedulerFields<T>({
         textExpr: inputs.textExpr(),
@@ -485,6 +586,9 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         recurrenceRuleExpr: inputs.recurrenceRuleExpr(),
         recurrenceExceptionExpr: inputs.recurrenceExceptionExpr(),
         disabledExpr: inputs.disabledExpr(),
+        startTimeZoneExpr: inputs.startTimeZoneExpr?.(),
+        endTimeZoneExpr: inputs.endTimeZoneExpr?.(),
+        timeZone: this.viewTimeZone(),
       }),
     );
     this.colorResource = rx.derived(() =>
@@ -524,7 +628,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       visibleSchedulerAppointments(
         this.appointments(),
         inputs.currentView(),
-        inputs.currentDate(),
+        this.viewDate(),
         this.resolvedFirstDayOfWeek(),
         inputs.agendaDuration(),
         this.intervalCount(),
@@ -533,7 +637,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.periodTitle = rx.derived(() =>
       schedulerPeriodTitle(
         inputs.currentView(),
-        inputs.currentDate(),
+        this.viewDate(),
         this.effectiveLocale(),
         this.resolvedFirstDayOfWeek(),
         inputs.agendaDuration(),
@@ -553,13 +657,20 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
 
   /**
    * Binds the `dataSource` input: `null` empties the store, an array is
-   * copied, a `DataSource` loads. Re-binding the same source is a no-op, so
-   * a host may call this on every change notification.
+   * copied, a `DataSource` loads once, and a range source (or a filtering
+   * `DataSource` with `remoteFiltering`) loads per visible range — the host
+   * then calls {@link syncRange} whenever the period may have changed.
+   * Re-binding the same source is a no-op, so a host may call this on every
+   * change notification.
    */
-  bindSource(source: readonly T[] | DataSource<T> | null): void {
+  bindSource(source: OgeSchedulerDataSourceInput<T>): void {
     if (source === this.boundSource) return;
     this.boundSource = source;
     this.loadEpoch++;
+    this.rangeLoader?.dispose();
+    this.rangeLoader = null;
+    this.loading.set(false);
+    this.loadError.set(false);
     // the undo log refers to the old working set
     this.history.clear();
     this.bumpHistory();
@@ -571,34 +682,175 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       this.store.set([...(source as readonly T[])]);
       return;
     }
-    this.reload(source as DataSource<T>);
+    const range = this.rangeLoadOf(source);
+    if (range !== null) {
+      this.rangeLoader = new SchedulerRangeLoader<T>({
+        load: range.load,
+        data: (items) => this.store.set(items),
+        loading: (active) => this.loading.set(active),
+        error: (error) => this.loadError.set(error !== null),
+        debounce: () => range.debounce,
+        prefetch: () => range.prefetch,
+        cacheSize: () => range.cacheSize,
+      });
+      this.store.set([]);
+      this.syncRange();
+      return;
+    }
+    this.loadAll(source as DataSource<T>);
+  }
+
+  /** The range `load` of a remote source, or `null` for a load-once one. */
+  private rangeLoadOf(source: Exclude<OgeSchedulerDataSourceInput<T>, null>): {
+    load: (
+      options: Parameters<OgeSchedulerDataSource<T>['load']>[0],
+    ) => Promise<readonly T[]>;
+    debounce: number;
+    prefetch: boolean;
+    cacheSize: number;
+  } | null {
+    if (isOgeSchedulerRangeSource<T>(source)) {
+      return {
+        load: (options) => source.load(options).then(schedulerLoadData),
+        debounce: source.debounce ?? 150,
+        prefetch: source.prefetch ?? true,
+        cacheSize: source.cacheSize ?? 12,
+      };
+    }
+    const core = source as DataSource<T>;
+    if (this.inputs.remoteFiltering?.() !== true || !core.capabilities.filter) {
+      return null;
+    }
+    return {
+      load: coreDataSourceRangeLoad(core, (range) =>
+        schedulerRangeFilter(this.fields().fieldNames, range),
+      ),
+      debounce: 150,
+      prefetch: true,
+      cacheSize: 12,
+    };
+  }
+
+  /**
+   * Requests the visible range from a range-loading source (a no-op for
+   * every other source, and for a range already current). Hosts call it
+   * from an effect over the view inputs; the neighbouring periods are
+   * prefetched once the visible one has loaded.
+   */
+  syncRange(): void {
+    const loader = this.rangeLoader;
+    if (loader === null) return;
+    const view = this.inputs.currentView();
+    const agenda = this.inputs.agendaDuration();
+    const count = this.intervalCount();
+    const firstDay = this.resolvedFirstDayOfWeek();
+    const resources = this.loadResources();
+    const rangeAt = (anchor: Date): SchedulerLoadRange => {
+      const { start, end } = viewRange(view, anchor, firstDay, agenda, count);
+      return {
+        startDate: fromSchedulerView(start, this.viewTimeZone()),
+        endDate: fromSchedulerView(end, this.viewTimeZone()),
+        ...(resources !== undefined ? { resources } : {}),
+      };
+    };
+    const anchor = this.viewDate();
+    loader.request(rangeAt(anchor), [
+      rangeAt(navigateDate(view, anchor, -1, agenda, count)),
+      rangeAt(navigateDate(view, anchor, 1, agenda, count)),
+    ]);
+  }
+
+  /** The grouped resource ids a range load names (`undefined` ungrouped). */
+  private loadResources():
+    Readonly<Record<string, readonly unknown[]>> | undefined {
+    const levels = this.groupLevels();
+    if (levels.length === 0) return undefined;
+    const resources: Record<string, readonly unknown[]> = {};
+    for (const level of levels) {
+      resources[level.fieldExpr] = level.items.map((item) => item.id);
+    }
+    return resources;
+  }
+
+  /**
+   * Reloads the data: a load-once `DataSource` loads again, a range source
+   * drops its cache and reloads the visible range. Arrays have nothing to
+   * reload.
+   */
+  reload(): void {
+    if (this.rangeLoader !== null) {
+      this.rangeLoader.reload();
+      return;
+    }
+    const source = this.dataSourceOf();
+    if (source !== null) this.loadAll(source);
   }
 
   /** Cancels in-flight loads (host destroy / effect cleanup). */
   destroy(): void {
     this.loadEpoch++;
+    this.rangeLoader?.dispose();
+    this.rangeLoader = null;
     // the next bind (a StrictMode remount, a revived host) loads again
     this.boundSource = undefined;
     if (this.noticeTimer !== null) clearTimeout(this.noticeTimer);
     this.noticeTimer = null;
   }
 
-  private reload(source: DataSource<T>): void {
+  private loadAll(source: DataSource<T>): void {
     const epoch = ++this.loadEpoch;
+    this.loading.set(true);
     void source
       .load({})
       .then((result) => {
         if (epoch !== this.loadEpoch) return;
+        this.loading.set(false);
+        this.loadError.set(false);
         this.store.set(result.data as readonly T[]);
       })
       .catch(() => {
-        if (epoch === this.loadEpoch) this.store.set([]);
+        if (epoch !== this.loadEpoch) return;
+        this.loading.set(false);
+        this.loadError.set(true);
+        this.store.set([]);
       });
+  }
+
+  /** After a source write: reload what the store shows. */
+  private reloadAfterWrite(): void {
+    if (this.rangeLoader !== null) {
+      this.rangeLoader.reload();
+      return;
+    }
+    const source = this.dataSourceOf();
+    if (source !== null) this.loadAll(source);
+  }
+
+  /** A local store write: keeps a range cache in step with the store. */
+  private writeStore(items: readonly T[]): void {
+    this.store.set(items);
+    this.rangeLoader?.replaceCurrent(items);
+  }
+
+  /** The bound source's CRUD methods (`null` for arrays). */
+  private writableSourceOf(): Pick<
+    OgeSchedulerDataSource<T>,
+    'insert' | 'update' | 'remove'
+  > | null {
+    const source = this.inputs.dataSource();
+    return source !== null && !Array.isArray(source)
+      ? (source as Pick<
+          OgeSchedulerDataSource<T>,
+          'insert' | 'update' | 'remove'
+        >)
+      : null;
   }
 
   private dataSourceOf(): DataSource<T> | null {
     const source = this.inputs.dataSource();
-    return source !== null && !Array.isArray(source)
+    return source !== null &&
+      !Array.isArray(source) &&
+      !isOgeSchedulerRangeSource(source)
       ? (source as DataSource<T>)
       : null;
   }
@@ -612,7 +864,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   checkReminders(now: Date = new Date()): void {
     for (const appointment of dueSchedulerReminders(
       this.appointments(),
-      now,
+      toSchedulerView(now, this.viewTimeZone()),
       this.firedReminders,
     )) {
       this.options.events.reminderTriggered({
@@ -654,21 +906,33 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
 
   /* ---------- navigation ---------- */
 
-  /** Writes `currentDate`, clamped into `[min, max]`. */
+  /**
+   * Writes `currentDate`, clamped into `[min, max]`. `date` is a display
+   * wall clock (what views and the navigator hand in); the model receives
+   * the instant.
+   */
   setDate(date: Date): void {
     this.options.setCurrentDate(
-      clampDate(date, this.inputs.min(), this.inputs.max()),
+      fromSchedulerView(
+        clampDate(date, this.viewMin(), this.viewMax()),
+        this.viewTimeZone(),
+      ),
     );
+  }
+
+  /** "Now" as a display-zone wall clock. */
+  now(): Date {
+    return toSchedulerView(new Date(), this.viewTimeZone());
   }
 
   /** Whether today falls inside the visible period (disables "Today"). */
   isTodayVisible(): boolean {
     return isTodayInSchedulerView(
       this.inputs.currentView(),
-      this.inputs.currentDate(),
+      this.viewDate(),
       this.resolvedFirstDayOfWeek(),
       this.inputs.agendaDuration(),
-      Date.now(),
+      this.now().getTime(),
       this.intervalCount(),
     );
   }
@@ -677,19 +941,19 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   canNavigate(direction: -1 | 1): boolean {
     return canNavigateScheduler(
       this.inputs.currentView(),
-      this.inputs.currentDate(),
+      this.viewDate(),
       direction,
       this.resolvedFirstDayOfWeek(),
       this.inputs.agendaDuration(),
-      this.inputs.min(),
-      this.inputs.max(),
+      this.viewMin(),
+      this.viewMax(),
       this.intervalCount(),
     );
   }
 
   /** Moves the visible period to today. */
   goToday(): void {
-    this.setDate(new Date());
+    this.setDate(this.now());
   }
 
   /** Steps the visible period backwards (`-1`) or forwards (`1`). */
@@ -698,7 +962,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.setDate(
       navigateDate(
         this.inputs.currentView(),
-        this.inputs.currentDate(),
+        this.viewDate(),
         direction,
         this.inputs.agendaDuration(),
         this.intervalCount(),
@@ -757,20 +1021,25 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     if (date !== null) this.setDate(date);
   }
 
-  /** First moment of the visible period. */
+  /** First moment of the visible period (an instant). */
   getStartViewDate(): Date {
-    return this.visibleRange().start;
+    return fromSchedulerView(this.visibleRange().start, this.viewTimeZone());
   }
 
-  /** Exclusive end of the visible period. */
+  /** Exclusive end of the visible period (an instant). */
   getEndViewDate(): Date {
-    return this.visibleRange().end;
+    return fromSchedulerView(this.visibleRange().end, this.viewTimeZone());
+  }
+
+  /** A view cell date → the instant public events carry. */
+  private eventDate(date: Date, allDay: boolean): Date {
+    return allDay ? date : fromSchedulerView(date, this.viewTimeZone());
   }
 
   private visibleRange(): { start: Date; end: Date } {
     return viewRange(
       this.inputs.currentView(),
-      this.inputs.currentDate(),
+      this.viewDate(),
       this.resolvedFirstDayOfWeek(),
       this.inputs.agendaDuration(),
       this.intervalCount(),
@@ -803,7 +1072,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   onCellClicked(event: SchedulerCellEvent): void {
     if (event.event instanceof MouseEvent) {
       this.options.events.cellClick({
-        cellDate: event.cellDate,
+        cellDate: this.eventDate(event.cellDate, event.allDay),
         allDay: event.allDay,
         event: event.event,
         resources: this.cellValues(event),
@@ -817,7 +1086,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   onCellDblClicked(event: SchedulerCellEvent): void {
     if (event.event instanceof MouseEvent) {
       this.options.events.cellDblClick({
-        cellDate: event.cellDate,
+        cellDate: this.eventDate(event.cellDate, event.allDay),
         allDay: event.allDay,
         event: event.event,
         resources: this.cellValues(event),
@@ -1126,7 +1395,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     allDay: boolean,
     values: Readonly<Record<string, unknown>>,
   ): boolean {
-    const disabled = this.inputs.disabledSlots?.();
+    const disabled = this.viewDisabledSlots();
     if (disabled === null || disabled === undefined) return false;
     if (allDay) {
       // all-day items are refused only by a fully blocked day
@@ -1230,8 +1499,8 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.options.events.appointmentDropped?.({
       itemData: payload.data,
       appointmentData: item,
-      startDate: proposal.startDate,
-      endDate: proposal.endDate,
+      startDate: this.eventDate(proposal.startDate, proposal.allDay),
+      endDate: this.eventDate(proposal.endDate, proposal.allDay),
       allDay: proposal.allDay,
       resources: slot.resources,
       added,
@@ -1259,15 +1528,19 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     }
     const source = base as T;
     if (names.startDate !== null) {
-      base[names.startDate] = serializeLikeOriginal(
+      base[names.startDate] = serializeSchedulerDate(
         proposal.startDate,
         fields.startDate(source),
+        fields,
+        proposal.allDay,
       );
     }
     if (names.endDate !== null) {
-      base[names.endDate] = serializeLikeOriginal(
+      base[names.endDate] = serializeSchedulerDate(
         proposal.endDate,
         fields.endDate(source),
+        fields,
+        proposal.allDay,
       );
     }
     if (names.allDay !== null) {
@@ -1353,10 +1626,17 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     readonly endDate: Date;
   }): OgeSchedulerExportData<T> {
     const visible = this.visibleRange();
+    const zone = this.viewTimeZone();
     return buildSchedulerExportData({
       appointments: this.appointments(),
-      rangeStart: range?.startDate ?? visible.start,
-      rangeEnd: range?.endDate ?? visible.end,
+      rangeStart:
+        range === undefined
+          ? visible.start
+          : toSchedulerView(range.startDate, zone),
+      rangeEnd:
+        range === undefined
+          ? visible.end
+          : toSchedulerView(range.endDate, zone),
       title: this.periodTitle(),
       locale: this.effectiveLocale(),
       fields: this.fields(),
@@ -1469,7 +1749,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
         this.updateItem(source, {
           [exceptionField]: appendException(
             occurrence.recurrenceException,
-            occurrence.startDate,
+            occurrenceSeriesStart(occurrence, occurrence.startDate),
           ),
         } as Partial<T>);
       }
@@ -1503,7 +1783,12 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     if (scope === 'occurrence') {
       this.editingOccurrence = appointment;
       this.openEditor(
-        editorModelFrom(appointment, false, this.inputs.resources()),
+        editorModelFrom(
+          appointment,
+          false,
+          this.inputs.resources(),
+          this.editorOptions(),
+        ),
         appointment.source,
         false,
       );
@@ -1512,7 +1797,12 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     const series = this.seriesOf(appointment) ?? appointment;
     this.editingOccurrence = null;
     this.openEditor(
-      editorModelFrom(series, true, this.inputs.resources()),
+      editorModelFrom(
+        series,
+        true,
+        this.inputs.resources(),
+        this.editorOptions(),
+      ),
       series.source,
       false,
     );
@@ -1526,6 +1816,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   ): void {
     if (!this.canUpdate()) return;
     if (scope === 'occurrence') {
+      // the proposal is in display wall clocks: build the copy in that frame
       const model = editorModelFrom(
         appointment,
         false,
@@ -1533,6 +1824,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       );
       this.detachOccurrence(appointment, {
         ...model,
+        timeZoneFrame: false,
         startDate: proposal.startDate,
         endDate: proposal.endDate,
         allDay: proposal.allDay,
@@ -1569,10 +1861,26 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     }
     this.editingOccurrence = null;
     this.openEditor(
-      editorModelFrom(appointment, true, this.inputs.resources()),
+      editorModelFrom(
+        appointment,
+        true,
+        this.inputs.resources(),
+        this.editorOptions(),
+      ),
       appointment.source,
       false,
     );
+  }
+
+  /** The editor-model options of the time-zone inputs. */
+  private editorOptions(): {
+    timeZoneEditor: boolean;
+    viewTimeZone: string | undefined;
+  } {
+    return {
+      timeZoneEditor: this.inputs.showTimeZoneEditor?.() === true,
+      viewTimeZone: this.viewTimeZone(),
+    };
   }
 
   /** Deletes an appointment, routing recurring occurrences by scope. */
@@ -1610,6 +1918,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       endDate,
       allDay,
       this.prefillResources(resourceId, values),
+      this.editorOptions(),
     );
     this.openEditor(model, this.buildItem(model), true);
   }
@@ -1693,15 +2002,15 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     };
     this.options.events.appointmentAdding(event);
     if (event.cancel) return false;
-    const source = this.dataSourceOf();
+    const source = this.writableSourceOf();
     if (source?.insert) {
       void source.insert(item).then(() => {
-        this.reload(source);
+        this.reloadAfterWrite();
         this.finishAdd(item, announce);
       });
       return true;
     }
-    this.store.set([...this.store(), item]);
+    this.writeStore([...this.store(), item]);
     this.finishAdd(item, announce);
     return true;
   }
@@ -1728,17 +2037,17 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     };
     this.options.events.appointmentUpdating(event);
     if (event.cancel) return false;
-    const source = this.dataSourceOf();
+    const source = this.writableSourceOf();
     if (source?.update) {
       const index = this.store().indexOf(original);
       const key = this.keyOf()(original, index) as RowKey;
       void source.update(key, patch).then(() => {
-        this.reload(source);
+        this.reloadAfterWrite();
         this.finishUpdate(original, updated);
       });
       return true;
     }
-    this.store.set(
+    this.writeStore(
       this.store().map((entry) => (entry === original ? updated : entry)),
     );
     this.finishUpdate(original, updated);
@@ -1771,17 +2080,17 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     };
     this.options.events.appointmentDeleting(event);
     if (event.cancel) return;
-    const source = this.dataSourceOf();
+    const source = this.writableSourceOf();
     if (source?.remove) {
       const index = this.store().indexOf(item);
       const key = this.keyOf()(item, index) as RowKey;
       void source.remove(key).then(() => {
-        this.reload(source);
+        this.reloadAfterWrite();
         this.finishDelete(item);
       });
       return;
     }
-    this.store.set(this.store().filter((entry) => entry !== item));
+    this.writeStore(this.store().filter((entry) => entry !== item));
     this.finishDelete(item);
   }
 
@@ -1865,7 +2174,11 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
 
   /** A drag-to-create range landed: emits, then opens the create editor. */
   onRangeSelected(range: SchedulerRangeEvent): void {
-    this.options.events.rangeSelected(range);
+    this.options.events.rangeSelected({
+      ...range,
+      startDate: this.eventDate(range.startDate, false),
+      endDate: this.eventDate(range.endDate, false),
+    });
     if (!this.canAdd()) return;
     const values = range.resources ?? this.cellValues(range);
     const proposal = this.snapped(
@@ -1881,6 +2194,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
       proposal.endDate,
       false,
       this.prefillResources(range.resourceId, values),
+      this.editorOptions(),
     );
     this.openEditor(model, this.buildItem(model), true);
   }
@@ -1936,7 +2250,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   onCellContextMenu(event: SchedulerCellEvent): void {
     if (event.event instanceof MouseEvent) {
       this.options.events.cellContextMenu({
-        cellDate: event.cellDate,
+        cellDate: this.eventDate(event.cellDate, event.allDay),
         allDay: event.allDay,
         event: event.event,
         resources: this.cellValues(event),
@@ -2010,7 +2324,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
    */
   showAppointmentPopup(appointmentData?: Partial<T>, createNew = false): void {
     if (createNew || appointmentData === undefined) {
-      const base = this.inputs.currentDate();
+      const base = this.viewDate();
       this.openCreateEditor(
         new Date(
           base.getFullYear(),

@@ -1294,6 +1294,12 @@ export class OgeGantt<
   readonly showProgressLine = input(false);
   /** Status date of the progress line; `null` = today. */
   readonly statusDate = input<Date | null>(null);
+  /**
+   * The display zone (IANA, e.g. `'Europe/Istanbul'`); unset = the
+   * browser's. Stored dates stay instants — the scale, today, working days
+   * and drags follow this zone's clocks.
+   */
+  readonly timeZone = input<string | undefined>(undefined);
   /** Draws child milestones onto their summary bars. */
   readonly showRollups = input(false);
   /** Which baseline renders (0-based); `-1` hides baselines. */
@@ -1448,6 +1454,7 @@ export class OgeGantt<
         dependencyLagUnitExpr: () => this.dependencyLagUnitExpr(),
         projectStart: () => this.projectStart(),
         statusDate: () => this.statusDate(),
+        timeZone: () => this.timeZone(),
         showProgressLine: () => this.showProgressLine(),
         showRollups: () => this.showRollups(),
         baselineIndex: () => this.baselineIndex(),

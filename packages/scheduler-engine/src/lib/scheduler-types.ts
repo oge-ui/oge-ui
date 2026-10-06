@@ -5,6 +5,7 @@
  * content slots), so it is generic over the item type here.
  */
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
+import type { RowKey } from '@oge-ui/core';
 import type { SchedulerAppointment } from './scheduler-model';
 import type { SchedulerViewType } from './view-model';
 
@@ -239,4 +240,44 @@ export interface OgeSchedulerEditorShowingEvent<
   formItems: TItem[];
   /** Set `true` to keep the editor closed. */
   cancel: boolean;
+}
+
+/**
+ * One range request of a remote scheduler `dataSource`: the visible period
+ * (or a prefetched neighbour) as instants, `[startDate, endDate)`.
+ */
+export interface OgeSchedulerLoadOptions {
+  readonly startDate: Date;
+  readonly endDate: Date;
+  /**
+   * The grouped resources on screen, `{ fieldExpr: ids }` per `groups`
+   * level — omitted when ungrouped.
+   */
+  readonly resources?: Readonly<Record<string, readonly unknown[]>>;
+  /** Aborted once the range is no longer wanted (the user navigated on). */
+  readonly signal: AbortSignal;
+}
+
+/**
+ * A remote appointment source loaded per visible range — the scheduler
+ * calls `load` for each period it shows (plus the neighbouring periods,
+ * prefetched), debounced while the user navigates, and caches each range.
+ * The result holds every appointment overlapping the range, **recurring
+ * series whose occurrences fall inside it included**. CRUD goes through
+ * `insert` / `update` / `remove` when present (the cache is dropped and the
+ * range reloaded afterwards); without them edits stay local.
+ */
+export interface OgeSchedulerDataSource<T = unknown> {
+  load(
+    options: OgeSchedulerLoadOptions,
+  ): Promise<readonly T[] | { readonly data: readonly T[] }>;
+  insert?(item: T): Promise<unknown>;
+  update?(key: RowKey, patch: Partial<T>): Promise<unknown>;
+  remove?(key: RowKey): Promise<unknown>;
+  /** Navigation debounce in ms (default `150`; the first load is immediate). */
+  readonly debounce?: number;
+  /** Prefetch the previous and next periods (default `true`). */
+  readonly prefetch?: boolean;
+  /** Ranges kept in the cache (default `12`). */
+  readonly cacheSize?: number;
 }

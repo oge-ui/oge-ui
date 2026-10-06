@@ -7,6 +7,38 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Time zones and remote range loading (W7) — `@oge-ui/core`, `@oge-ui/scheduler`, `@oge-ui/react-scheduler`, `@oge-ui/scheduler-engine`, `@oge-ui/gantt`, `@oge-ui/react-gantt`, `@oge-ui/gantt-engine`
+
+- **Zoned date math in core**: `ogeTzOffset`, `ogeZonedParts`, `ogeFromZoned`
+  (`compatible` / `earlier` / `later` for skipped and repeated wall times),
+  `ogeToWallClock` / `ogeFromWallClock` / `ogeConvertWallClock`,
+  `ogeZonedStartOfDay`, `ogeZonedDayMinutes`, `ogeTimeZones`, `ogeTimeZoneLabel` —
+  `Intl.DateTimeFormat` offsets only, no time-zone database.
+- **Scheduler time zones**: `timeZone` (IANA) for display — slots, day boundaries
+  (23- and 25-hour DST days), the now-line, drag / resize snapping and recurrence
+  follow the zone's clocks while stored dates stay instants;
+  `startTimeZoneExpr` / `endTimeZoneExpr` per appointment (a series recurs on its
+  own zone's clocks); `showTimeZoneEditor` adds start / end zone pickers to the
+  editor; RRULE blocks honour `DTSTART;TZID=` / `RDATE;TZID=` / `EXDATE;TZID=`;
+  the iCalendar export writes `TZID=` values and the import reads them.
+- **Scheduler remote data**: `dataSource` accepts an `OgeSchedulerDataSource`
+  whose `load({ startDate, endDate, resources, signal })` runs per visible range,
+  with the neighbouring periods prefetched, navigation debounced, stale ranges
+  aborted, a range cache, a loading status line (`aria-busy`) and `reload()`;
+  CRUD goes through its `insert` / `update` / `remove`. `remoteFiltering` gives a
+  filtering core `DataSource` the same per-range loading.
+- **Gantt time zones**: `timeZone` for the bars, the scale, today, the progress
+  line, strip lines and the work calendar's working days.
+- **New message keys** (optional, filled from English, translated in all ten locale
+  packs): editor `startTimeZoneLabel`, `endTimeZoneLabel`, `timeZonePlaceholder`;
+  grid `loadingLabel`, `loadErrorLabel`.
+- **Behaviour changes**: an RRULE block with `TZID=` used to be rejected — it is now
+  expanded in that zone (an unknown zone name is still rejected); iCalendar `TZID`
+  values used to be read as local wall time and are now converted from their zone,
+  and imported events keep the zone in `startTimeZone` / `endTimeZone`;
+  `rangeSelected`, `cellClick` and `getStartViewDate()` carry instants (identical to
+  1.x without a `timeZone`).
+
 ### Gantt scheduling depth (G3b) — `@oge-ui/gantt`, `@oge-ui/react-gantt`, `@oge-ui/gantt-engine`
 
 - **Lag / lead** on every link type (`dependencyLagExpr` / `dependencyLagUnitExpr`,

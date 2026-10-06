@@ -4,11 +4,19 @@
  * + `flattenTreeData` — the same kernel behind the tree list), dates
  * normalize via `toLocalDate` and write back via `serializeLikeOriginal`,
  * so string-dated stores round-trip without changing shape.
+ *
+ * Time zones: with a display `timeZone` every normalized date is a wall
+ * clock of that zone (core's `ogeToWallClock`) — the scale, the calendar's
+ * working days and every gesture compute on its clocks — and every patch
+ * converts back to the instant (`ogeFromWallClock`).
  */
 import {
   buildTreeIndex,
   createFieldAccessor,
   flattenTreeData,
+  ogeFromWallClock,
+  ogeIsTimeZone,
+  ogeToWallClock,
   serializeLikeOriginal,
   toLocalDate,
   type RowKey,
@@ -43,6 +51,8 @@ export interface GanttTaskExprs<T> {
   readonly unitsExpr?: GanttFieldExpr<T>;
   /** Work in hours (effort-driven scheduling). */
   readonly effortExpr?: GanttFieldExpr<T>;
+  /** The display zone (IANA); `undefined` = the runtime's local zone. */
+  readonly timeZone?: string;
 }
 
 /** The task constraint types (MS Project vocabulary). */
@@ -111,7 +121,33 @@ export interface ResolvedGanttFields<T> {
   readonly baselines: ValueAccessor<T>;
   readonly units: ValueAccessor<T>;
   readonly effort: ValueAccessor<T>;
+  /** The validated display zone (`undefined` = the runtime zone). */
+  readonly timeZone?: string;
   readonly fieldNames: Readonly<Record<GanttFieldName, string | null>>;
+}
+
+/** A stored value → a display-zone wall clock (`null` when unparseable). */
+export function ganttViewDate(
+  value: unknown,
+  timeZone: string | undefined,
+): Date | null {
+  const date = toLocalDate(value);
+  return date === null || timeZone === undefined
+    ? date
+    : ogeToWallClock(date, timeZone);
+}
+
+/** A display-zone wall clock → the instant it stands for. */
+export function ganttInstant(wall: Date, timeZone: string | undefined): Date {
+  return timeZone === undefined ? wall : ogeFromWallClock(wall, timeZone);
+}
+
+/** An instant → the display-zone wall clock (identity without a zone). */
+export function ganttWallClock(
+  instant: Date,
+  timeZone: string | undefined,
+): Date {
+  return timeZone === undefined ? instant : ogeToWallClock(instant, timeZone);
 }
 
 /** A normalized task row (already flattened in visible tree order). */
@@ -162,15 +198,21 @@ export function normalizeResourceIds(raw: unknown): readonly unknown[] {
   return Array.isArray(raw) ? raw : [raw];
 }
 
-/** Parses `[{ start, end }, …]` (Date or local ISO strings); bad pieces drop. */
-export function parseGanttSegments(raw: unknown): GanttSegment[] {
+/**
+ * Parses `[{ start, end }, …]` (Date or local ISO strings); bad pieces drop.
+ * With a `timeZone` the pieces become wall clocks of that zone.
+ */
+export function parseGanttSegments(
+  raw: unknown,
+  timeZone?: string,
+): GanttSegment[] {
   if (!Array.isArray(raw)) return [];
   const result: GanttSegment[] = [];
   for (const entry of raw) {
     if (entry === null || typeof entry !== 'object') continue;
     const record = entry as Record<string, unknown>;
-    const start = toLocalDate(record['start']);
-    const end = toLocalDate(record['end']);
+    const start = ganttViewDate(record['start'], timeZone);
+    const end = ganttViewDate(record['end'], timeZone);
     if (start === null || end === null) continue;
     result.push(
       end.getTime() >= start.getTime() ? { start, end } : { start, end: start },
@@ -245,6 +287,7 @@ export function resolveGanttFields<T>(
     baselines: toAccessor(baselines),
     units: toAccessor(units),
     effort: toAccessor(effort),
+    ...(ogeIsTimeZone(exprs.timeZone) ? { timeZone: exprs.timeZone } : {}),
     fieldNames: {
       parentKey: name(exprs.parentKeyExpr),
       title: name(exprs.titleExpr),
@@ -296,6 +339,7 @@ export function buildGanttTasks<T>(
 ): GanttTask<T>[] {
   const keyOf = (item: T): RowKey => fields.key(item) as RowKey;
   const include = options.include ?? null;
+  const zone = fields.timeZone;
   const index = buildTreeIndex(options.order ?? items, {
     keyOf,
     parentIdOf: (item) => fields.parentKey(item),
@@ -313,9 +357,9 @@ export function buildGanttTasks<T>(
   const segmentsOf = new Map<RowKey, GanttSegment[]>();
   // store order (not view order): it drives the WBS numbers below
   for (const item of items) {
-    const segments = parseGanttSegments(fields.segments(item));
-    let start = toLocalDate(fields.start(item));
-    let endRaw = toLocalDate(fields.end(item));
+    const segments = parseGanttSegments(fields.segments(item), zone);
+    let start = ganttViewDate(fields.start(item), zone);
+    let endRaw = ganttViewDate(fields.end(item), zone);
     if (segments.length > 1) {
       segments.sort((a, b) => a.start.getTime() - b.start.getTime());
       start = segments[0].start;
@@ -404,9 +448,9 @@ export function buildGanttTasks<T>(
     if (dates === undefined) continue;
     const item = node.data;
     const colorRaw = fields.color(item);
-    const legacyStart = toLocalDate(fields.baselineStart(item));
-    const legacyEnd = toLocalDate(fields.baselineEnd(item));
-    const parsedBaselines = parseGanttSegments(fields.baselines(item));
+    const legacyStart = ganttViewDate(fields.baselineStart(item), zone);
+    const legacyEnd = ganttViewDate(fields.baselineEnd(item), zone);
+    const parsedBaselines = parseGanttSegments(fields.baselines(item), zone);
     const baselines =
       parsedBaselines.length > 0
         ? parsedBaselines
@@ -414,7 +458,7 @@ export function buildGanttTasks<T>(
           ? [{ start: legacyStart, end: legacyEnd }]
           : [];
     const resourceIds = normalizeResourceIds(fields.resourceId(item));
-    const constraintDate = toLocalDate(fields.constraintDate(item));
+    const constraintDate = ganttViewDate(fields.constraintDate(item), zone);
     let constraintType = parseGanttConstraintType(fields.constraintType(item));
     if (isDatedConstraint(constraintType) && constraintDate === null) {
       constraintType = 'ASAP';
@@ -443,7 +487,7 @@ export function buildGanttTasks<T>(
       manuallyScheduled: fields.manuallyScheduled(item) === true,
       constraintType,
       constraintDate: constraintDate ?? undefined,
-      deadline: toLocalDate(fields.deadline(item)) ?? undefined,
+      deadline: ganttViewDate(fields.deadline(item), zone) ?? undefined,
       segments: isSummary ? [] : (segmentsOf.get(node.key) ?? []),
       baselines,
       units: normalizeGanttUnits(fields.units(item), resourceIds),
@@ -479,10 +523,11 @@ export interface GanttTaskChange {
 function serializeSegments(
   segments: readonly GanttSegment[],
   sample: unknown,
+  timeZone: string | undefined,
 ): { start: unknown; end: unknown }[] {
   return segments.map((segment) => ({
-    start: serializeLikeOriginal(segment.start, sample),
-    end: serializeLikeOriginal(segment.end, sample),
+    start: serializeLikeOriginal(ganttInstant(segment.start, timeZone), sample),
+    end: serializeLikeOriginal(ganttInstant(segment.end, timeZone), sample),
   }));
 }
 
@@ -502,12 +547,20 @@ export function ganttTaskPatch<T>(
 ): Partial<T> {
   const patch: Record<string, unknown> = {};
   const names = fields.fieldNames;
+  const zone = fields.timeZone;
+  const instant = (date: Date): Date => ganttInstant(date, zone);
   const startSample = fields.start(original);
   if (change.start !== undefined && names.start !== null) {
-    patch[names.start] = serializeLikeOriginal(change.start, startSample);
+    patch[names.start] = serializeLikeOriginal(
+      instant(change.start),
+      startSample,
+    );
   }
   if (change.end !== undefined && names.end !== null) {
-    patch[names.end] = serializeLikeOriginal(change.end, fields.end(original));
+    patch[names.end] = serializeLikeOriginal(
+      instant(change.end),
+      fields.end(original),
+    );
   }
   if (change.progress !== undefined && names.progress !== null) {
     patch[names.progress] = Math.min(100, Math.max(0, change.progress));
@@ -532,6 +585,7 @@ export function ganttTaskPatch<T>(
     patch[names.segments] = serializeSegments(
       change.segments,
       segmentSample(raw, startSample),
+      zone,
     );
   }
   if (change.baselines !== undefined && names.baselines !== null) {
@@ -539,6 +593,7 @@ export function ganttTaskPatch<T>(
     patch[names.baselines] = serializeSegments(
       change.baselines,
       segmentSample(raw, startSample),
+      zone,
     );
   }
   if (change.units !== undefined && names.units !== null) {
@@ -559,13 +614,13 @@ export function ganttTaskPatch<T>(
   }
   if (change.constraintDate !== undefined && names.constraintDate !== null) {
     patch[names.constraintDate] = serializeLikeOriginal(
-      change.constraintDate,
+      change.constraintDate === null ? null : instant(change.constraintDate),
       fields.constraintDate(original) ?? startSample,
     );
   }
   if (change.deadline !== undefined && names.deadline !== null) {
     patch[names.deadline] = serializeLikeOriginal(
-      change.deadline,
+      change.deadline === null ? null : instant(change.deadline),
       fields.deadline(original) ?? startSample,
     );
   }

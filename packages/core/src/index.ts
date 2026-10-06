@@ -39,6 +39,7 @@ export * from './lib/util/text-fold';
 export * from './lib/util/value-accessor';
 export * from './lib/util/live-config';
 export * from './lib/util/intl-cache';
+export * from './lib/util/time-zone';
 export * from './lib/util/value-format';
 export * from './lib/util/format-message';
 export * from './lib/util/date-utils';
