@@ -1141,6 +1141,18 @@ export function pasteCommand(clip: BpmnClipboard, offset: Point): BpmnCommand {
       for (const node of clip.nodes) {
         const newId = idMap.get(node.id) as string;
         let cloned: BpmnNode = { ...node, id: newId };
+        if (
+          cloned.type !== 'textAnnotation' &&
+          cloned.eventDetails?.id !== undefined
+        ) {
+          // the definition id must stay unique: the copy derives `{id}_def`
+          const { id: _definitionId, ...details } = cloned.eventDetails;
+          const { eventDetails: _old, ...withoutDetails } = cloned;
+          cloned =
+            Object.keys(details).length > 0
+              ? { ...withoutDetails, eventDetails: details }
+              : withoutDetails;
+        }
         if (cloned.parentId !== undefined) {
           const mappedParent = idMap.get(cloned.parentId);
           const { parentId: _oldParent, ...restParent } = cloned;
@@ -1427,7 +1439,11 @@ export function morphNodeCommand(
         (!isBpmnEventType(newType) ||
           !VALID_EVENT_DEFINITIONS[newType].includes(updated.eventDefinition))
       ) {
-        const { eventDefinition: _dropped, ...rest } = updated;
+        const {
+          eventDefinition: _dropped,
+          eventDetails: _droppedDetails,
+          ...rest
+        } = updated;
         updated = rest;
       }
       // `calledElement` is meaningful on call activities only.
@@ -1470,7 +1486,13 @@ export function setEventDefinitionCommand(
       ) {
         return model;
       }
-      const { eventDefinition: _previous, ...rest } = node;
+      // A new kind starts with an empty payload (a timer expression means
+      // nothing to a message definition).
+      const {
+        eventDefinition: _previous,
+        eventDetails: _previousDetails,
+        ...rest
+      } = node;
       const updated =
         kind === undefined ? rest : { ...rest, eventDefinition: kind };
       return { ...model, nodes: { ...model.nodes, [id]: updated } };

@@ -565,6 +565,10 @@ const FAMILIES = [
     angularApiPage: 'apps/dev-app/src/app/pages/bpmn/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-bpmn/api.ts',
     exceptions: {
+      pairs: {
+        // structural directive ↔ render prop (custom properties entries, G5b)
+        ogebpmnpropertiesentrytemplate: 'renderpropertiesentry',
+      },
       reactOnly: {
         modechange:
           'The controlled half of `mode`; Angular’s `[(mode)]` model is both halves at once (its `modeChange` output is implied by the model and documented on the `mode` row).',

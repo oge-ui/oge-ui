@@ -1181,6 +1181,103 @@ export const fr: OgeLocalePack = {
       removeLane: 'Supprimer le couloir {name}',
       laneName: 'Nom du couloir {name}',
     },
+    lint: {
+      panelLabel: 'Problèmes',
+      empty: 'Aucun problème trouvé',
+      summary:
+        '{errors} erreur(s), {warnings} avertissement(s), {infos} info(s)',
+      severityNames: {
+        error: 'Erreur',
+        warning: 'Avertissement',
+        info: 'Info',
+      },
+      item: '{severity} : {message} ({name})',
+      shapeProblems: '{count} problème(s) : {messages}',
+      rules: {
+        startEventRequired: 'Le processus n’a pas d’événement de début',
+        endEventRequired: 'Le processus n’a pas d’événement de fin',
+        disconnected: 'L’élément n’est relié à aucun flux de séquence',
+        superfluousGateway: 'La passerelle ne divise ni ne fusionne de flux',
+        conditionMissing:
+          'Un flux sortant d’une passerelle exclusive doit avoir une condition ou être le flux par défaut',
+        defaultFlowCondition:
+          'Le flux par défaut ne doit pas avoir de condition',
+        implicitSplit:
+          'L’élément divise le flux implicitement ; utilisez une passerelle',
+        implicitJoin:
+          'L’élément fusionne des flux implicitement ; utilisez une passerelle',
+        labelRequired: 'L’élément n’a pas de libellé',
+        duplicateId: 'L’identifiant « {id} » est utilisé plusieurs fois',
+        subProcessStart: 'Le sous-processus n’a pas d’événement de début',
+        subProcessBlankStart:
+          'L’événement de début d’un sous-processus ne doit pas avoir de définition d’événement',
+        messageFlowPools:
+          'Un flux de messages doit relier deux pools différents',
+        boundaryAttached:
+          'L’événement de bordure n’est attaché à aucune activité',
+        boundaryOutgoing: 'L’événement de bordure n’a pas de flux sortant',
+        unreachable:
+          'Aucun chemin depuis un événement de début n’atteint l’élément',
+      },
+    },
+    extensions: {
+      documentation: 'Documentation',
+      moveTo: 'Déplacer vers',
+      processTarget: 'Processus',
+      laneTarget: '{pool} / {lane}',
+      unnamed: '(sans nom)',
+      movedTo: '{name} déplacé vers {target}',
+      eventDetailsHeading: 'Détails de l’événement',
+      timerType: 'Type de minuterie',
+      timerKinds: {
+        timeDate: 'Date',
+        timeDuration: 'Durée',
+        timeCycle: 'Cycle',
+      },
+      timerExpression: 'Expression de minuterie',
+      rootRef: {
+        message: 'Message',
+        signal: 'Signal',
+        error: 'Erreur',
+        escalation: 'Escalade',
+      },
+      newRoot: {
+        message: 'Nouveau message',
+        signal: 'Nouveau signal',
+        error: 'Nouvelle erreur',
+        escalation: 'Nouvelle escalade',
+      },
+      rootName: 'Nom : {type}',
+      errorCode: 'Code d’erreur',
+      escalationCode: 'Code d’escalade',
+      condition: 'Condition',
+      linkName: 'Nom du lien',
+      addItem: 'Ajouter',
+      removeItem: 'Supprimer {label}',
+      itemField: '{field} {index}',
+      template: 'Modèle',
+      noTemplate: 'Aucun',
+    },
+    camunda: {
+      taskDefinitionHeading: 'Définition de tâche',
+      jobType: 'Type de job',
+      retries: 'Tentatives',
+      inputsHeading: 'Mappages d’entrée',
+      outputsHeading: 'Mappages de sortie',
+      mappingSource: 'Source',
+      mappingTarget: 'Cible',
+      headersHeading: 'En-têtes de tâche',
+      headerKey: 'Clé',
+      headerValue: 'Valeur',
+      assignmentHeading: 'Attribution utilisateur',
+      assignee: 'Responsable',
+      candidateGroups: 'Groupes candidats',
+      formKey: 'Clé de formulaire',
+      inputParameters: 'Paramètres d’entrée',
+      outputParameters: 'Paramètres de sortie',
+      parameterName: 'Nom',
+      parameterValue: 'Valeur',
+    },
   },
   charts: {
     aria: {

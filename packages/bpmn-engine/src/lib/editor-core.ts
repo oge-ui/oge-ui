@@ -29,8 +29,52 @@ import type {
   BpmnPaletteItemType,
   OgeBpmnConfig,
   OgeBpmnMessages,
+  OgeBpmnResolvedMessages,
 } from './config';
-import { OGE_DEFAULT_BPMN_COLOR_PRESETS } from './config';
+import { OGE_DEFAULT_BPMN_COLOR_PRESETS, fillBpmnMessages } from './config';
+import type {
+  OgeBpmnContextPadEntry,
+  OgeBpmnContextPadProvider,
+  OgeBpmnEditorApi,
+  OgeBpmnPaletteEntry,
+  OgeBpmnPaletteProvider,
+  OgeBpmnRenderers,
+} from './editor-extensions';
+import { bpmnCustomGlyph, bpmnHotkey } from './editor-extensions';
+import type { OgeBpmnElementTemplate } from './element-templates';
+import {
+  applyElementTemplateCommand,
+  bpmnTemplateApplies,
+} from './element-templates';
+import type {
+  OgeBpmnLintChangedEvent,
+  OgeBpmnLintIssue,
+  OgeBpmnLintRulesInput,
+  OgeBpmnLintSeverity,
+} from './lint';
+import {
+  bpmnLintSummary,
+  bpmnWorstSeverity,
+  lintBpmnDiagram,
+  resolveBpmnLintRules,
+} from './lint';
+import type { BpmnContainerRef } from './modeling';
+import {
+  bpmnContainerAt,
+  bpmnContainerOf,
+  canReparent,
+  reparentElementsCommand,
+} from './modeling';
+import type {
+  OgeBpmnPropertiesGroup,
+  OgeBpmnPropertiesProvider,
+} from './properties-providers';
+import {
+  buildBpmnPropertiesGroups,
+  resolveBpmnPropertiesProviders,
+} from './properties-providers';
+import type { OgeBpmnSvgNode } from './svg-node';
+import { sanitizeBpmnSvg } from './svg-node';
 import type { BpmnDiagram, BpmnEdgeType, BpmnNodeType } from './bpmn-model';
 import {
   DEFAULT_SIZES,
@@ -67,6 +111,7 @@ import {
   deleteElementsCommand,
   distributeElementsCommand,
   estimateLabelBounds,
+  expandMoveSet,
   extractClipboard,
   makeSpaceCommand,
   moveElementsCommand,
@@ -121,7 +166,12 @@ export type OgeBpmnEditorMode = 'edit' | 'view';
  */
 export type BpmnTool =
   | { readonly kind: 'select' }
-  | { readonly kind: 'place'; readonly nodeType: BpmnPaletteItemType }
+  | {
+      readonly kind: 'place';
+      readonly nodeType: BpmnPaletteItemType;
+      /** Element template applied to the placed element (custom palette entries). */
+      readonly template?: OgeBpmnElementTemplate;
+    }
   | { readonly kind: 'connect'; readonly sourceId: string }
   | { readonly kind: 'hand' }
   | { readonly kind: 'lasso' }
@@ -147,6 +197,32 @@ export interface BpmnDragState {
 export interface BpmnLabelLine {
   readonly text: string;
   readonly y: number;
+}
+
+/** The validation badge of one element (G5b). */
+export interface BpmnLintBadge {
+  /** The element's worst severity. */
+  readonly severity: OgeBpmnLintSeverity;
+  /** Number of problems of the element. */
+  readonly count: number;
+  /** Badge center — shape-local for nodes, diagram space for pools and edges. */
+  readonly x: number;
+  readonly y: number;
+}
+
+/** One row of the problems panel. */
+export interface BpmnProblemView {
+  readonly issue: OgeBpmnLintIssue;
+  /** The row text (`Error: … (Task A)`). */
+  readonly text: string;
+}
+
+/** A custom palette or context-pad entry, icon sanitized (G5b). */
+export interface BpmnCustomEntryView<E> {
+  readonly entry: E;
+  readonly icon: readonly OgeBpmnSvgNode[];
+  /** Normalized hotkey (`aria-keyshortcuts`), or null. */
+  readonly hotkey: string | null;
 }
 
 /** Everything the template draws for one flow node / annotation. */
@@ -192,6 +268,10 @@ export interface BpmnNodeView {
   readonly ariaLabel: string;
   readonly fill: string | null;
   readonly stroke: string | null;
+  /** A `renderers` override's sanitized shape (replaces the built-in glyph), or null. */
+  readonly custom: readonly OgeBpmnSvgNode[] | null;
+  /** The validation badge (live linting only), or null. */
+  readonly lint: BpmnLintBadge | null;
 }
 
 /** One lane band of a pool. */
@@ -223,6 +303,8 @@ export interface BpmnPoolView {
   readonly ariaLabel: string;
   readonly fill: string | null;
   readonly stroke: string | null;
+  /** The validation badge (live linting only), or null. */
+  readonly lint: BpmnLintBadge | null;
 }
 
 /** One connection. */
@@ -247,6 +329,8 @@ export interface BpmnEdgeView {
   readonly selected: boolean;
   readonly ariaLabel: string;
   readonly stroke: string | null;
+  /** The validation badge (live linting only), or null. */
+  readonly lint: BpmnLintBadge | null;
 }
 
 /** The four corner handles of the resize gesture. */
@@ -382,6 +466,8 @@ export interface OgeBpmnEditorEmitter {
   importCompleted(event: OgeBpmnImportEvent): void;
   dirtyChanged(dirty: boolean): void;
   diagramChanged(event: OgeBpmnDiagramChangedEvent): void;
+  /** The live validation result changed (only while `lint` is on). */
+  lintChanged?(event: OgeBpmnLintChangedEvent): void;
 }
 
 /**
@@ -408,6 +494,18 @@ export interface OgeBpmnEditorHost {
   searchInput(): HTMLInputElement | null;
   minimapSvg(): SVGSVGElement | null;
   readonly emit: OgeBpmnEditorEmitter;
+  /** Live validation (`lint` input / prop). Default false. */
+  lint?(): boolean;
+  /** Rule additions, replacements and overrides (`lintRules`). */
+  lintRules?(): OgeBpmnLintRulesInput | undefined;
+  /** Extra / replacing properties providers (`propertiesProviders`). */
+  propertiesProviders?(): readonly OgeBpmnPropertiesProvider[] | undefined;
+  /** Custom palette entries (`paletteProvider`). */
+  paletteProvider?(): OgeBpmnPaletteProvider | undefined;
+  /** Custom context-pad actions (`contextPadProvider`). */
+  contextPadProvider?(): OgeBpmnContextPadProvider | undefined;
+  /** Per-type shape overrides (`renderers`). */
+  renderers?(): OgeBpmnRenderers | undefined;
 }
 
 const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
@@ -578,11 +676,38 @@ export class OgeBpmnEditorCore {
   >;
   /** Bumped when undo/redo availability may have changed. */
   private readonly historyRevision: OgeBpmnReactiveCell<number>;
+  /** Whether the problems panel is open (live linting only). */
+  readonly problemsOpen: OgeBpmnReactiveCell<boolean>;
+  /** The container an in-flight move drag would drop into (re-parent preview). */
+  readonly dropContainerId: OgeBpmnReactiveCell<string | null>;
 
   // --- derived ---------------------------------------------------------------
 
   /** Config-merged messages, overlaid by the per-instance overrides. */
-  readonly msg: () => OgeBpmnMessages;
+  readonly msg: () => OgeBpmnResolvedMessages;
+  /** Whether live validation is on. */
+  readonly lintEnabled: () => boolean;
+  /** The live validation result (empty while `lint` is off). */
+  readonly lintIssues: () => readonly OgeBpmnLintIssue[];
+  /** The problems panel rows and summary line. */
+  readonly problemsView: () => {
+    readonly rows: readonly BpmnProblemView[];
+    readonly summary: string;
+    readonly count: number;
+  };
+  /** Provider groups of the properties panel for the current selection. */
+  readonly propertiesGroups: () => readonly OgeBpmnPropertiesGroup[];
+  /** Custom palette entries (icons sanitized). */
+  readonly paletteEntries: () => readonly BpmnCustomEntryView<OgeBpmnPaletteEntry>[];
+  /** Custom context-pad entries of the single selected element. */
+  readonly padEntries: () => readonly BpmnCustomEntryView<OgeBpmnContextPadEntry>[];
+  /** What palette / context-pad actions may do (see {@link OgeBpmnEditorApi}). */
+  readonly api: OgeBpmnEditorApi;
+  private readonly lintByElement: () => ReadonlyMap<
+    string,
+    readonly OgeBpmnLintIssue[]
+  >;
+  private lastLintKey = '';
   /** The effective lock — `readOnly` or the `'view'` mode. */
   readonly locked: () => boolean;
   /** The badge image source resolved through the config chain. */
@@ -686,11 +811,118 @@ export class OgeBpmnEditorCore {
       readonly { readonly id: string; readonly def: OgeBpmnOverlay }[]
     >([]);
     this.historyRevision = rx.cell(0);
+    this.problemsOpen = rx.cell(false);
+    this.dropContainerId = rx.cell<string | null>(null);
 
-    this.msg = rx.derived(() => ({
-      ...host.config().messages,
-      ...host.messages(),
-    }));
+    this.msg = rx.derived(() =>
+      fillBpmnMessages({
+        ...host.config().messages,
+        ...host.messages(),
+      } as OgeBpmnMessages),
+    );
+    this.lintEnabled = rx.derived(() => host.lint?.() ?? false);
+    this.lintIssues = rx.derived(() =>
+      this.lintEnabled()
+        ? lintBpmnDiagram(
+            this.diagram(),
+            resolveBpmnLintRules(host.lintRules?.()),
+            this.msg(),
+          )
+        : [],
+    );
+    this.lintByElement = rx.derived(() => {
+      const map = new Map<string, OgeBpmnLintIssue[]>();
+      for (const issue of this.lintIssues()) {
+        const list = map.get(issue.elementId);
+        if (list === undefined) map.set(issue.elementId, [issue]);
+        else list.push(issue);
+      }
+      return map;
+    });
+    this.problemsView = rx.derived(() => {
+      const lint = this.msg().lint;
+      const issues = this.lintIssues();
+      const summary = bpmnLintSummary(issues);
+      return {
+        rows: issues.map((issue) => ({
+          issue,
+          text: fillTemplate(lint.item, {
+            severity: lint.severityNames[issue.severity],
+            message: issue.message,
+            name: this.displayName(issue.elementId),
+          }),
+        })),
+        summary: fillTemplate(lint.summary, {
+          errors: summary.errors,
+          warnings: summary.warnings,
+          infos: summary.infos,
+        }),
+        count: issues.length,
+      };
+    });
+    this.propertiesGroups = rx.derived(() =>
+      buildBpmnPropertiesGroups(
+        this.diagram(),
+        this.selection(),
+        this.msg(),
+        resolveBpmnPropertiesProviders(host.propertiesProviders?.()),
+      ),
+    );
+    this.paletteEntries = rx.derived(() => {
+      const provider = host.paletteProvider?.();
+      if (provider === undefined) return [];
+      let entries: readonly OgeBpmnPaletteEntry[] = [];
+      try {
+        entries = provider({ diagram: this.diagram() });
+      } catch {
+        entries = [];
+      }
+      return entries.map((entry) => ({
+        entry,
+        icon: sanitizeBpmnSvg(entry.icon),
+        hotkey: bpmnHotkey(entry.hotkey),
+      }));
+    });
+    this.padEntries = rx.derived(() => {
+      const provider = host.contextPadProvider?.();
+      const sel = this.selection();
+      if (provider === undefined || sel.length !== 1 || this.locked()) {
+        return [];
+      }
+      const m = this.diagram();
+      if (!m.nodes[sel[0]] && !m.edges[sel[0]] && !m.pools[sel[0]]) return [];
+      let entries: readonly OgeBpmnContextPadEntry[] = [];
+      try {
+        entries = provider({ diagram: m, elementId: sel[0] });
+      } catch {
+        entries = [];
+      }
+      return entries.map((entry) => ({
+        entry,
+        icon: sanitizeBpmnSvg(entry.icon),
+        hotkey: bpmnHotkey(entry.hotkey),
+      }));
+    });
+    this.api = {
+      getDiagram: () => this.diagram(),
+      getSelection: () => this.selection(),
+      select: (ids) => this.select(ids),
+      execute: (command) => this.onPanelCommand(command),
+      armPlace: (type, options) => {
+        if (this.locked()) return;
+        this.tool.set({
+          kind: 'place',
+          nodeType: type,
+          ...(options?.template !== undefined
+            ? { template: options.template }
+            : {}),
+        });
+      },
+      appendElement: (sourceId, type, options) =>
+        this.appendFrom(sourceId, type, options?.template),
+      announce: (text) => this.announcement.set(text),
+      focus: () => this.focus(),
+    };
     this.locked = rx.derived(() => host.readOnly() || host.mode() === 'view');
     this.brandLogoSrc = rx.derived(
       () => host.brandLogoUrl() ?? host.config().brandLogoUrl,
@@ -998,10 +1230,85 @@ export class OgeBpmnEditorCore {
 
   /**
    * Renders the current diagram as a self-contained static SVG string
-   * (neutral hardcoded colors, no grid or selection) via `renderDiagramSvg`.
+   * (neutral hardcoded colors, no grid or selection) via `renderDiagramSvg`,
+   * with the `renderers` overrides applied.
    */
-  exportSvg(): string {
-    return renderDiagramSvg(this.diagram());
+  exportSvg(options: { readonly padding?: number } = {}): string {
+    return renderDiagramSvg(this.diagram(), {
+      ...options,
+      renderers: this.host.renderers?.(),
+    });
+  }
+
+  /**
+   * Validates the current diagram against the effective rules (built-ins
+   * plus `lintRules`) and returns every issue — whether or not live linting
+   * is on. With live linting on, the problems panel opens.
+   */
+  validate(): readonly OgeBpmnLintIssue[] {
+    const issues = lintBpmnDiagram(
+      this.diagram(),
+      resolveBpmnLintRules(this.host.lintRules?.()),
+      this.msg(),
+    );
+    if (this.lintEnabled()) this.problemsOpen.set(true);
+    return issues;
+  }
+
+  /**
+   * Emits `lintChanged` when the live issue list differs from the last
+   * emission. The render layer calls it from an effect after each change.
+   */
+  syncLint(): void {
+    const issues = this.lintIssues();
+    const key = this.lintEnabled()
+      ? issues.map((i) => `${i.key}|${i.message}`).join('\n')
+      : '';
+    if (key === this.lastLintKey) return;
+    this.lastLintKey = key;
+    if (!this.lintEnabled()) return;
+    this.host.emit.lintChanged?.(bpmnLintSummary(issues));
+  }
+
+  /** Opens / closes the problems panel. */
+  toggleProblems(): void {
+    this.problemsOpen.set(!this.problemsOpen());
+  }
+
+  /**
+   * A problems-panel row was activated (click / Enter): selects the
+   * offending element and pans it into view; a process-level problem clears
+   * the selection.
+   */
+  onProblemPick(issue: OgeBpmnLintIssue): void {
+    const m = this.diagram();
+    const id = issue.elementId;
+    if (m.nodes[id] || m.edges[id] || m.pools[id]) {
+      this.setSelection([id], true);
+      this.centerOn(id);
+    } else {
+      this.setSelection([], false);
+    }
+  }
+
+  /** A custom palette entry was picked. */
+  onPaletteEntry(entry: OgeBpmnPaletteEntry): void {
+    if (this.locked()) return;
+    try {
+      entry.action(this.api);
+    } catch {
+      /* a broken extension action never takes the editor down */
+    }
+  }
+
+  /** A custom context-pad entry was picked for `elementId`. */
+  onPadEntry(entry: OgeBpmnContextPadEntry, elementId: string): void {
+    if (this.locked()) return;
+    try {
+      entry.action(this.api, elementId);
+    } catch {
+      /* a broken extension action never takes the editor down */
+    }
   }
 
   /** Replaces the diagram with an empty one and resets history and viewport. */
@@ -1680,6 +1987,21 @@ export class OgeBpmnEditorCore {
       }
       return;
     }
+    const hotkey = key.length === 1 ? key.toLowerCase() : null;
+    if (hotkey !== null) {
+      const pad = this.padEntries().find((e) => e.hotkey === hotkey);
+      if (pad !== undefined) {
+        event.preventDefault();
+        this.onPadEntry(pad.entry, this.selection()[0]);
+        return;
+      }
+      const palette = this.paletteEntries().find((e) => e.hotkey === hotkey);
+      if (palette !== undefined) {
+        event.preventDefault();
+        this.onPaletteEntry(palette.entry);
+        return;
+      }
+    }
     if (key === 'h' || key === 'H') {
       event.preventDefault();
       this.onStripTool('hand');
@@ -2349,7 +2671,7 @@ export class OgeBpmnEditorCore {
     if (t.kind !== 'place') {
       return;
     }
-    this.placeItem(t.nodeType, pt);
+    this.placeItem(t.nodeType, pt, t.template);
   }
 
   /**
@@ -2358,7 +2680,11 @@ export class OgeBpmnEditorCore {
    * events go through the border-attach validation, pools through
    * `addPoolCommand`; everything else joins the pool band under the point.
    */
-  private placeItem(type: BpmnPaletteItemType, pt: Point): void {
+  private placeItem(
+    type: BpmnPaletteItemType,
+    pt: Point,
+    template?: OgeBpmnElementTemplate,
+  ): void {
     if (type === 'boundaryEvent') {
       this.placeBoundaryAt(pt);
       return;
@@ -2375,15 +2701,33 @@ export class OgeBpmnEditorCore {
       this.tool.set({ kind: 'select' });
       return;
     }
-    // A node dropped inside a pool band joins that pool's process.
-    const poolId = poolAtPoint(before, pt);
+    // A node dropped inside a pool band joins that pool's process; inside
+    // an expanded sub-process it becomes the sub-process's child.
+    const container = bpmnContainerAt(before, pt);
+    const poolId =
+      container?.kind === 'subProcess'
+        ? before.nodes[container.id]?.poolId
+        : poolAtPoint(before, pt);
+    const parentId =
+      container?.kind === 'subProcess' ? container.id : undefined;
+    const add = addNodeCommand(type, pt, undefined, {
+      ...(poolId !== undefined ? { poolId } : {}),
+      ...(parentId !== undefined ? { parentId } : {}),
+    });
     this.exec(
-      addNodeCommand(
-        type,
-        pt,
-        undefined,
-        poolId !== undefined ? { poolId } : undefined,
-      ),
+      template === undefined
+        ? add
+        : {
+            label: add.label,
+            apply: (current) => {
+              const next = add.apply(current);
+              const newId = next.order[next.order.length - 1];
+              return next === current ||
+                !bpmnTemplateApplies(next, newId, template)
+                ? next
+                : applyElementTemplateCommand(newId, template).apply(next);
+            },
+          },
     );
     const after = this.diagram();
     if (after !== before) {
@@ -2459,15 +2803,19 @@ export class OgeBpmnEditorCore {
     }
   }
 
-  private appendFrom(sourceId: string, type: BpmnNodeType): void {
+  private appendFrom(
+    sourceId: string,
+    type: BpmnNodeType,
+    template?: OgeBpmnElementTemplate,
+  ): string | null {
     if (this.locked()) {
-      return;
+      return null;
     }
     const m = this.diagram();
     const source = m.nodes[sourceId];
     const di = m.shapeDi[sourceId];
     if (!source || !di || source.type === 'endEvent') {
-      return;
+      return null;
     }
     const size = DEFAULT_SIZES[type];
     const b = di.bounds;
@@ -2509,13 +2857,18 @@ export class OgeBpmnEditorCore {
     const poolId = source.poolId;
     const command: BpmnCommand = {
       label: 'Append element',
-      apply: (current) =>
-        connectCommand(kind, sourceId, newId, edgeId).apply(
+      apply: (current) => {
+        const next = connectCommand(kind, sourceId, newId, edgeId).apply(
           addNodeCommand(type, at, newId, {
             ...(parentId !== undefined ? { parentId } : {}),
             ...(poolId !== undefined ? { poolId } : {}),
           }).apply(current),
-        ),
+        );
+        return template !== undefined &&
+          bpmnTemplateApplies(next, newId, template)
+          ? applyElementTemplateCommand(newId, template).apply(next)
+          : next;
+      },
     };
     const before = this.diagram();
     this.exec(command);
@@ -2524,7 +2877,9 @@ export class OgeBpmnEditorCore {
       this.announce(this.msg().announcements.created, {
         type: this.msg().elementNames[type],
       });
+      return newId;
     }
+    return null;
   }
 
   // ----------------------------------------------------- clipboard & marquee
@@ -2925,6 +3280,10 @@ export class OgeBpmnEditorCore {
       }
       return;
     }
+    if (command.label === 'Move to container') {
+      this.announceReparent(before, after);
+      return;
+    }
     if (command.label === 'Toggle sub-process collapse') {
       for (const [id, node] of Object.entries(after.nodes)) {
         const previous = before.nodes[id];
@@ -2984,20 +3343,51 @@ export class OgeBpmnEditorCore {
     const startY = event.clientY;
     this.dragState.set({ ids, dx: 0, dy: 0, moved: false, guides: [] });
     capturePointer(event);
+    const movedSet = expandMoveSet(m, ids);
+    const reparentable = ids.every((id) => m.pools[id] === undefined);
+    const dropTarget = (dx: number, dy: number): BpmnContainerRef | null => {
+      if (!reparentable) return null;
+      const center = {
+        x: startBounds.x + startBounds.width / 2 + dx,
+        y: startBounds.y + startBounds.height / 2 + dy,
+      };
+      const target = bpmnContainerAt(this.diagram(), center, movedSet);
+      if (target === null) return null;
+      const current = bpmnContainerOf(this.diagram(), ids[0]);
+      const same =
+        target.kind === current.kind &&
+        (target.kind === 'process' ||
+          (current.kind !== 'process' && target.id === current.id));
+      return same || !canReparent(this.diagram(), ids, target) ? null : target;
+    };
     const finish = (cancelled: boolean): void => {
       cleanup();
       const state = this.dragState();
       this.dragState.set(null);
+      this.dropContainerId.set(null);
       if (cancelled || state === null || !state.moved) {
         return;
       }
       if (state.dx === 0 && state.dy === 0) {
         return;
       }
-      this.exec(moveElementsCommand(state.ids, state.dx, state.dy));
-      this.announce(this.msg().announcements.moved, {
-        name: this.displayName(state.ids[0]),
+      const target = dropTarget(state.dx, state.dy);
+      const move = moveElementsCommand(state.ids, state.dx, state.dy);
+      if (target === null) {
+        this.exec(move);
+        this.announce(this.msg().announcements.moved, {
+          name: this.displayName(state.ids[0]),
+        });
+        return;
+      }
+      // The pointer drop runs the keyboard command's re-parent: one undo step.
+      const before = this.diagram();
+      this.exec({
+        label: 'Move to container',
+        apply: (current) =>
+          reparentElementsCommand(state.ids, target).apply(move.apply(current)),
       });
+      this.announceReparent(before, this.diagram());
     };
     const cleanup = this.startGesture({
       move: (e) => {
@@ -3024,6 +3414,16 @@ export class OgeBpmnEditorCore {
           guides = snap.guides;
         }
         this.dragState.set({ ids, dx, dy, moved, guides });
+        if (moved) {
+          const target = dropTarget(dx, dy);
+          const next =
+            target === null
+              ? null
+              : target.kind === 'process'
+                ? this.diagram().processId
+                : target.id;
+          if (next !== this.dropContainerId()) this.dropContainerId.set(next);
+        }
       },
       up: () => finish(false),
       cancel: () => finish(true),
@@ -3168,6 +3568,52 @@ export class OgeBpmnEditorCore {
     return id;
   }
 
+  /** Announces a re-parent: the first element whose container changed. */
+  private announceReparent(before: BpmnDiagram, after: BpmnDiagram): void {
+    if (after === before) return;
+    for (const [id, node] of Object.entries(after.nodes)) {
+      const previous = before.nodes[id];
+      if (
+        previous === undefined ||
+        (previous.parentId === node.parentId && previous.poolId === node.poolId)
+      ) {
+        continue;
+      }
+      const container = bpmnContainerOf(after, id);
+      this.announce(this.msg().extensions.movedTo, {
+        name: this.displayName(id),
+        target:
+          container.kind === 'process'
+            ? this.msg().extensions.processTarget
+            : this.displayName(container.id),
+      });
+      return;
+    }
+    this.announce(this.msg().announcements.moved, {
+      name: this.displayName(this.selection()[0] ?? ''),
+    });
+  }
+
+  /** The badge of an element and its accessible-name suffix, or nulls. */
+  private lintOf(
+    id: string,
+    x: number,
+    y: number,
+  ): { readonly badge: BpmnLintBadge | null; readonly suffix: string } {
+    const issues = this.lintByElement().get(id);
+    const severity = issues === undefined ? null : bpmnWorstSeverity(issues);
+    if (issues === undefined || severity === null) {
+      return { badge: null, suffix: '' };
+    }
+    return {
+      badge: { severity, count: issues.length, x, y },
+      suffix: `, ${fillTemplate(this.msg().lint.shapeProblems, {
+        count: issues.length,
+        messages: issues.map((i) => i.message).join('; '),
+      })}`,
+    };
+  }
+
   private announce(
     template: string,
     params: Readonly<Record<string, string | number>>,
@@ -3221,6 +3667,7 @@ export class OgeBpmnEditorCore {
 
   private buildNodeViews(): readonly BpmnNodeView[] {
     const m = this.diagram();
+    const renderers = this.host.renderers?.();
     const hidden = this.hiddenNodes();
     const selected = new Set(this.selection());
     const names = this.msg().elementNames;
@@ -3283,6 +3730,14 @@ export class OgeBpmnEditorCore {
         node.type !== 'textAnnotation' && isBpmnActivityType(type)
           ? (node.markers ?? [])
           : [];
+      const lint = this.lintOf(id, b.width - 2, 2);
+      const custom = bpmnCustomGlyph(renderers, {
+        node,
+        width: b.width,
+        height: b.height,
+        fill: di.fill ?? null,
+        stroke: di.stroke ?? null,
+      });
       views.push({
         id,
         type,
@@ -3344,11 +3799,13 @@ export class OgeBpmnEditorCore {
         externalLabel: below,
         selected: selected.has(id),
         ariaLabel:
-          node.type === 'textAnnotation'
+          (node.type === 'textAnnotation'
             ? names[type]
-            : (node.name ?? names[type]),
+            : (node.name ?? names[type])) + lint.suffix,
         fill: di.fill ?? null,
         stroke: di.stroke ?? null,
+        custom,
+        lint: lint.badge,
       });
     }
     return views;
@@ -3402,6 +3859,7 @@ export class OgeBpmnEditorCore {
         edge.type === 'sequenceFlow' || edge.type === 'messageFlow'
           ? (edge.name ?? '')
           : '';
+      const lint = this.lintOf(id, anchor.x + 10, anchor.y + 10);
       views.push({
         id,
         points: di.waypoints.map((p) => `${p.x},${p.y}`).join(' '),
@@ -3422,10 +3880,11 @@ export class OgeBpmnEditorCore {
         defaultMark,
         selected: selected.has(id),
         ariaLabel:
-          edge.type === 'sequenceFlow' || edge.type === 'messageFlow'
+          (edge.type === 'sequenceFlow' || edge.type === 'messageFlow'
             ? (edge.name ?? names[edge.type])
-            : names[edge.type],
+            : names[edge.type]) + lint.suffix,
         stroke: di.stroke ?? null,
+        lint: lint.badge,
       });
     }
     return views;
@@ -3465,6 +3924,7 @@ export class OgeBpmnEditorCore {
           nameTransform: `rotate(-90 ${laneNameX} ${laneNameY})`,
         });
       }
+      const lint = this.lintOf(pool.id, b.x + POOL_HEADER_WIDTH + 10, b.y + 10);
       views.push({
         id: pool.id,
         x: b.x,
@@ -3477,9 +3937,10 @@ export class OgeBpmnEditorCore {
         nameTransform: `rotate(-90 ${nameX} ${nameY})`,
         lanes,
         selected: selected.has(pool.id),
-        ariaLabel: pool.name ?? names['pool'],
+        ariaLabel: (pool.name ?? names['pool']) + lint.suffix,
         fill: di.fill ?? null,
         stroke: di.stroke ?? null,
+        lint: lint.badge,
       });
     }
     return views;
@@ -3926,4 +4387,14 @@ function capturePointer(event: BpmnPointerInput): void {
       /* jsdom / detached elements — capture is a progressive enhancement */
     }
   }
+}
+
+/** `{token}` substitution shared by the G5b view models. */
+function fillTemplate(
+  template: string,
+  params: Readonly<Record<string, string | number>>,
+): string {
+  return template.replace(/\{(\w+)\}/g, (match, token: string) =>
+    token in params ? String(params[token]) : match,
+  );
 }

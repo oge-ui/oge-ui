@@ -1,6 +1,7 @@
 import { readBpmnXml } from './bpmn-xml-reader';
 import { writeBpmnXml } from './bpmn-xml-writer';
 import {
+  CAMUNDA_FIXTURE_XML,
   CDATA_FIXTURE_XML,
   COLLABORATION_FIXTURE_XML,
   COLORED_FIXTURE_XML,
@@ -22,6 +23,7 @@ const FIXTURES: readonly (readonly [string, string])[] = [
   ['bioc-colored fixture', COLORED_FIXTURE_XML],
   ['v0.4 collaboration fixture', V04_FIXTURE_XML],
   ['v0.5 attribute-preservation fixture', PRESERVE_FIXTURE_XML],
+  ['G5b Camunda / Zeebe fixture', CAMUNDA_FIXTURE_XML],
 ];
 
 describe('bpmn-xml round trip', () => {

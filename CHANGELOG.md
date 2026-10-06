@@ -7,6 +7,54 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### BPMN editor depth (G5b) — `@oge-ui/bpmn`, `@oge-ui/react-bpmn`, `@oge-ui/bpmn-engine`, `@oge-ui/locales`
+
+- **Validation**: a bpmnlint-style rule engine in the engine (`OgeBpmnLintRule
+{ id, severity, check(model, context) }`, `OGE_BPMN_DEFAULT_LINT_RULES`:
+  start / end events, disconnected and unreachable nodes, superfluous gateways,
+  exclusive-gateway conditions and default flows, implicit splits and joins,
+  labels, duplicate ids, sub-process start events, message flows between pools,
+  attached boundary events), `lintBpmnDiagram()` for headless checks. Editor:
+  `lint` (live badges whose text joins the element's accessible name, a header
+  problems toggle and a problems panel — click / Enter selects and centers),
+  `lintRules` (add / replace / re-grade / `'off'`), `validate()` and
+  `lintChanged` / `onLintChanged`.
+- **Extensibility**: `propertiesProviders` (groups of `text` / `textarea` /
+  `select` / `checkbox` / `expression` / `list` / `custom` entries whose
+  `set(value)` returns an undoable command; custom entries through
+  `ng-template[ogeBpmnPropertiesEntry]` / `renderPropertiesEntry`),
+  `paletteProvider` and `contextPadProvider` (icon, label, hotkey, action over
+  an `OgeBpmnEditorApi`), `renderers` per node type built with the safe
+  `bpmnSvg` builders (sanitized, no markup path; applied to the SVG / PNG
+  export too) and Camunda-style element templates
+  (`bpmnElementTemplatesProvider`, `applyElementTemplateCommand`).
+- **Camunda / Zeebe**: `<bpmn:extensionElements>` is read into an editable
+  `BpmnXmlElement` tree and written back deterministically; the opt-in
+  `OGE_BPMN_CAMUNDA_PROVIDERS` preset edits `zeebe:taskDefinition`,
+  `zeebe:ioMapping`, `zeebe:taskHeaders`, `camunda:assignee` /
+  `candidateGroups` / `formKey` and `camunda:inputOutput`, declaring
+  `xmlns:zeebe` / `xmlns:camunda` when needed; typed helpers
+  (`bpmnZeebeTaskDefinition`, `setZeebeIoMappingCommand`, …) for scripts.
+- **Event definitions keep their payloads**: timer date / duration / cycle,
+  message / signal / error / escalation references with the definitions-level
+  root elements (`BpmnDiagram.rootElements`, "New message" in the panel),
+  conditional conditions and link names — imported, editable and exported.
+- **Modeling**: a documentation field on every element and the process;
+  drag re-parenting into and out of pools, lanes and expanded sub-processes
+  (target highlight, one undo step) with the keyboard "Move to…" select as its
+  twin (`moveToContainerCommand`); `exportPng()` rasterizes the SVG export.
+- **New message keys** (optional blocks `lint`, `extensions`, `camunda`,
+  filled from English by `fillBpmnMessages`, translated in all ten locale packs).
+- **Behaviour changes**: `<bpmn:documentation>` and attribute-less
+  `<bpmn:extensionElements>` are no longer kept in `foreignChildren` — they are
+  the `documentation` / `extensionElements` fields; definitions-level
+  messages, signals, errors and escalations moved from
+  `foreignDefinitionsChildren` to `rootElements`; an imported event-definition
+  id is kept instead of being rewritten to `{eventId}_def`; process-level
+  documentation and extension elements of the default process are imported
+  instead of being dropped with a warning; a node placed inside an expanded
+  sub-process becomes its child.
+
 ### Time zones and remote range loading (W7) — `@oge-ui/core`, `@oge-ui/scheduler`, `@oge-ui/react-scheduler`, `@oge-ui/scheduler-engine`, `@oge-ui/gantt`, `@oge-ui/react-gantt`, `@oge-ui/gantt-engine`
 
 - **Zoned date math in core**: `ogeTzOffset`, `ogeZonedParts`, `ogeFromZoned`

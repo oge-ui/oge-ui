@@ -6,12 +6,18 @@ import type {
   BpmnEdge,
   BpmnEdgeDi,
   BpmnEventDefinitionKind,
+  BpmnEventDetails,
   BpmnFlowNode,
   BpmnLane,
   BpmnNode,
   BpmnPool,
+  BpmnRootElement,
+  BpmnRootElementType,
   BpmnShapeDi,
+  BpmnTimerKind,
 } from './bpmn-model';
+import type { BpmnXmlElement } from './bpmn-xml-element';
+import { readBpmnXmlElement } from './bpmn-xml-element';
 import {
   hiddenByCollapsed,
   isBpmnSubProcessType,
@@ -140,7 +146,9 @@ export function readBpmnXml(xml: string): BpmnImportResult {
   }
 
   const definitionsAttrs = readDefinitionsAttrs(definitions);
+  declaredNamespaces = outputNamespaces(definitionsAttrs);
   const foreignDefinitionsChildren: string[] = [];
+  const rootElements: BpmnRootElement[] = [];
   for (const child of elementChildren(definitions)) {
     if (
       child.localName === 'process' ||
@@ -148,6 +156,11 @@ export function readBpmnXml(xml: string): BpmnImportResult {
       child.localName === 'category' ||
       child.localName === 'BPMNDiagram'
     ) {
+      continue;
+    }
+    const root = readRootElement(child);
+    if (root !== null) {
+      rootElements.push(root);
       continue;
     }
     foreignDefinitionsChildren.push(serialize(child));
@@ -263,6 +276,12 @@ export function readBpmnXml(xml: string): BpmnImportResult {
     ...(defaultInfo?.foreignAttributes !== undefined
       ? { processForeignAttributes: defaultInfo.foreignAttributes }
       : {}),
+    ...(defaultInfo?.documentation !== undefined
+      ? { processDocumentation: defaultInfo.documentation }
+      : {}),
+    ...(defaultInfo?.extensionElements !== undefined
+      ? { processExtensionElements: defaultInfo.extensionElements }
+      : {}),
     ...(collab !== null ? { collaborationId: collab.id } : {}),
     ...(collab?.foreignAttributes !== undefined
       ? { collaborationForeignAttributes: collab.foreignAttributes }
@@ -275,6 +294,7 @@ export function readBpmnXml(xml: string): BpmnImportResult {
     edgeDi,
     definitionsAttrs,
     foreignDefinitionsChildren,
+    ...(rootElements.length > 0 ? { rootElements } : {}),
   };
   const hidden = hiddenByCollapsed(base);
 
@@ -427,12 +447,14 @@ function readCollaboration(
         'name',
         'processRef',
       ]);
-      const foreignChildren = elementChildren(child).map(serialize);
+      const { documentation, rest } = splitDocumentation(child);
+      const foreignChildren = rest.map(serialize);
       const name = child.getAttribute('name');
       const processRef = child.getAttribute('processRef');
       pools.push({
         id: child.getAttribute('id') ?? `Participant_${pools.length + 1}`,
         ...(name !== null ? { name } : {}),
+        ...(documentation !== undefined ? { documentation } : {}),
         ...(processRef !== null ? { processRef } : {}),
         lanes: [],
         ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
@@ -447,7 +469,8 @@ function readCollaboration(
         'sourceRef',
         'targetRef',
       ]);
-      const foreignChildren = elementChildren(child).map(serialize);
+      const { documentation, rest } = splitDocumentation(child);
+      const foreignChildren = rest.map(serialize);
       const name = child.getAttribute('name');
       messageFlows.push({
         id:
@@ -456,6 +479,7 @@ function readCollaboration(
         sourceRef: child.getAttribute('sourceRef') ?? '',
         targetRef: child.getAttribute('targetRef') ?? '',
         ...(name !== null ? { name } : {}),
+        ...(documentation !== undefined ? { documentation } : {}),
         ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
         ...(foreignAttributes !== undefined ? { foreignAttributes } : {}),
       });
@@ -565,6 +589,8 @@ interface ParsedProcessInfo {
   readonly isExecutable: boolean;
   readonly lanes: readonly BpmnLane[];
   readonly foreignAttributes?: Readonly<Record<string, string>>;
+  readonly documentation?: string;
+  readonly extensionElements?: readonly BpmnXmlElement[];
 }
 
 function readProcessInto(
@@ -588,6 +614,8 @@ function readProcessInto(
     return `_anonymous_${acc.anonymousCounter}`;
   };
 
+  let processDocumentation: string | undefined;
+  let processExtensions: readonly BpmnXmlElement[] | undefined;
   const lanes: BpmnLane[] = [];
   const readLanes = (laneSet: Element): void => {
     for (const lane of elementChildren(laneSet)) {
@@ -732,11 +760,13 @@ function readProcessInto(
         const valueRef = child.getAttribute('categoryValueRef');
         const name =
           valueRef !== null ? acc.categoryValues.get(valueRef) : undefined;
-        const foreignChildren = elementChildren(child).map(serialize);
+        const { documentation, rest } = splitDocumentation(child);
+        const foreignChildren = rest.map(serialize);
         acc.nodes[id] = {
           id,
           type: 'group',
           ...(name !== undefined ? { name } : {}),
+          ...(documentation !== undefined ? { documentation } : {}),
           ...(parentId !== undefined ? { parentId } : {}),
           ...(poolId !== undefined ? { poolId } : {}),
           ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
@@ -747,6 +777,18 @@ function readProcessInto(
         if (parentId === undefined) {
           readLanes(child);
         }
+      } else if (
+        parentId === undefined &&
+        localName === 'documentation' &&
+        processDocumentation === undefined
+      ) {
+        processDocumentation = child.textContent ?? '';
+      } else if (
+        parentId === undefined &&
+        processExtensions === undefined &&
+        isPlainExtensionElements(child)
+      ) {
+        processExtensions = readExtensionElements(child);
       } else if (parentId === undefined) {
         // Inside a sub-process the non-flow children were already consumed by
         // `readFlowNode` (foreign children, markers, event definitions).
@@ -770,6 +812,12 @@ function readProcessInto(
     lanes,
     ...(processForeign !== undefined
       ? { foreignAttributes: processForeign }
+      : {}),
+    ...(processDocumentation !== undefined
+      ? { documentation: processDocumentation }
+      : {}),
+    ...(processExtensions !== undefined && processExtensions.length > 0
+      ? { extensionElements: processExtensions }
       : {}),
   };
 }
@@ -805,12 +853,14 @@ function readDataElement(
   consumed: readonly string[],
 ): BpmnNode {
   const foreignAttributes = foreignAttributesOf(element, consumed);
-  const foreignChildren = elementChildren(element).map(serialize);
+  const { documentation, rest } = splitDocumentation(element);
+  const foreignChildren = rest.map(serialize);
   const name = element.getAttribute('name');
   return {
     id,
     type,
     ...(name !== null ? { name } : {}),
+    ...(documentation !== undefined ? { documentation } : {}),
     ...(parentId !== undefined ? { parentId } : {}),
     ...(poolId !== undefined ? { poolId } : {}),
     ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
@@ -841,6 +891,7 @@ function readActivityDataAssociations(
     }
     const id = idOf(child);
     let ref: string | null = null;
+    let documentation: string | undefined;
     const foreignChildren: string[] = [];
     for (const grand of elementChildren(child)) {
       if (
@@ -848,6 +899,11 @@ function readActivityDataAssociations(
         (isOutput && grand.localName === 'targetRef')
       ) {
         ref = grand.textContent?.trim() ?? '';
+      } else if (
+        grand.localName === 'documentation' &&
+        documentation === undefined
+      ) {
+        documentation = grand.textContent ?? '';
       } else {
         foreignChildren.push(serialize(grand));
       }
@@ -866,6 +922,7 @@ function readActivityDataAssociations(
       type: 'dataAssociation',
       sourceRef: isInput ? ref : activityId,
       targetRef: isInput ? activityId : ref,
+      ...(documentation !== undefined ? { documentation } : {}),
       ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
     };
     acc.order.push(id);
@@ -1002,11 +1059,22 @@ function readFlowNode(
 
   const foreignChildren: string[] = [];
   let eventDefinition: BpmnEventDefinitionKind | undefined;
+  let eventDetails: BpmnEventDetails | undefined;
+  let documentation: string | undefined;
+  let extensionElements: readonly BpmnXmlElement[] | undefined;
   const markerSet = new Set<BpmnActivityMarker>();
   for (const child of elementChildren(element)) {
     const localName = child.localName;
     if (localName === 'incoming' || localName === 'outgoing') {
       continue; // Derived from the sequence flows; regenerated on export.
+    }
+    if (localName === 'documentation' && documentation === undefined) {
+      documentation = child.textContent ?? '';
+      continue;
+    }
+    if (extensionElements === undefined && isPlainExtensionElements(child)) {
+      extensionElements = readExtensionElements(child);
+      continue;
     }
     if (
       isActivity &&
@@ -1047,7 +1115,7 @@ function readFlowNode(
         });
       } else {
         eventDefinition = kind;
-        warnDroppedGrandchildren(child, id, warnings);
+        eventDetails = readEventDetails(child, kind, id);
       }
       continue;
     }
@@ -1089,6 +1157,11 @@ function readFlowNode(
     ...(parentId !== undefined ? { parentId } : {}),
     ...(poolId !== undefined ? { poolId } : {}),
     ...(eventDefinition !== undefined ? { eventDefinition } : {}),
+    ...(eventDetails !== undefined ? { eventDetails } : {}),
+    ...(documentation !== undefined ? { documentation } : {}),
+    ...(extensionElements !== undefined && extensionElements.length > 0
+      ? { extensionElements }
+      : {}),
     ...(attachedToRef !== null ? { attachedToRef } : {}),
     ...(calledElement !== null ? { calledElement } : {}),
     ...(nonInterrupting ? { cancelActivity: false } : {}),
@@ -1131,12 +1204,24 @@ function readSequenceFlow(element: Element, id: string): BpmnEdge {
   ]);
   const foreignChildren: string[] = [];
   let conditionExpression: string | undefined;
+  let documentation: string | undefined;
+  let extensionElements: readonly BpmnXmlElement[] | undefined;
   for (const child of elementChildren(element)) {
     if (
       child.localName === 'conditionExpression' &&
       conditionExpression === undefined
     ) {
       conditionExpression = child.textContent ?? '';
+    } else if (
+      child.localName === 'documentation' &&
+      documentation === undefined
+    ) {
+      documentation = child.textContent ?? '';
+    } else if (
+      extensionElements === undefined &&
+      isPlainExtensionElements(child)
+    ) {
+      extensionElements = readExtensionElements(child);
     } else {
       foreignChildren.push(serialize(child));
     }
@@ -1149,6 +1234,10 @@ function readSequenceFlow(element: Element, id: string): BpmnEdge {
     targetRef: element.getAttribute('targetRef') ?? '',
     ...(name !== null ? { name } : {}),
     ...(conditionExpression !== undefined ? { conditionExpression } : {}),
+    ...(documentation !== undefined ? { documentation } : {}),
+    ...(extensionElements !== undefined && extensionElements.length > 0
+      ? { extensionElements }
+      : {}),
     ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
     ...(foreignAttributes !== undefined ? { foreignAttributes } : {}),
   };
@@ -1160,15 +1249,14 @@ function readAssociation(element: Element, id: string): BpmnEdge {
     'sourceRef',
     'targetRef',
   ]);
-  const foreignChildren: string[] = [];
-  for (const child of elementChildren(element)) {
-    foreignChildren.push(serialize(child));
-  }
+  const { documentation, rest } = splitDocumentation(element);
+  const foreignChildren = rest.map(serialize);
   return {
     id,
     type: 'association',
     sourceRef: element.getAttribute('sourceRef') ?? '',
     targetRef: element.getAttribute('targetRef') ?? '',
+    ...(documentation !== undefined ? { documentation } : {}),
     ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
     ...(foreignAttributes !== undefined ? { foreignAttributes } : {}),
   };
@@ -1184,10 +1272,16 @@ function readTextAnnotation(
   const foreignChildren: string[] = [];
   let text = '';
   let textSeen = false;
+  let documentation: string | undefined;
   for (const child of elementChildren(element)) {
     if (child.localName === 'text' && !textSeen) {
       text = child.textContent ?? '';
       textSeen = true;
+    } else if (
+      child.localName === 'documentation' &&
+      documentation === undefined
+    ) {
+      documentation = child.textContent ?? '';
     } else {
       foreignChildren.push(serialize(child));
     }
@@ -1196,6 +1290,7 @@ function readTextAnnotation(
     id,
     type: 'textAnnotation',
     text,
+    ...(documentation !== undefined ? { documentation } : {}),
     ...(parentId !== undefined ? { parentId } : {}),
     ...(poolId !== undefined ? { poolId } : {}),
     ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
@@ -1316,4 +1411,167 @@ function readLabelBounds(element: Element): Rect | null {
 function readNumber(element: Element, name: string): number {
   const value = Number.parseFloat(element.getAttribute(name) ?? '');
   return Number.isFinite(value) ? value : 0;
+}
+
+// ------------------------------------------------------- G5b payload readers
+
+/**
+ * The namespaces the written document declares: the writer's fixed prefixes
+ * plus every `xmlns:*` the import preserves on `<definitions>`. Extension
+ * trees declare any other prefix they use on their own element. Set once per
+ * `readBpmnXml` call before any extension tree is read.
+ */
+let declaredNamespaces: ReadonlyMap<string, string> = new Map();
+
+function outputNamespaces(
+  definitionsAttrs: Readonly<Record<string, string>>,
+): ReadonlyMap<string, string> {
+  const map = new Map<string, string>([
+    ['bpmn', 'http://www.omg.org/spec/BPMN/20100524/MODEL'],
+    ['bpmndi', 'http://www.omg.org/spec/BPMN/20100524/DI'],
+    ['dc', 'http://www.omg.org/spec/DD/20100524/DC'],
+    ['di', 'http://www.omg.org/spec/DD/20100524/DI'],
+    ['xsi', 'http://www.w3.org/2001/XMLSchema-instance'],
+    ['bioc', 'http://bpmn.io/schema/bpmn/biocolor/1.0'],
+  ]);
+  for (const [name, value] of Object.entries(definitionsAttrs)) {
+    if (name.startsWith('xmlns:')) {
+      map.set(name.slice('xmlns:'.length), value);
+    }
+  }
+  return map;
+}
+
+/**
+ * True for an `<extensionElements>` without attributes — the only form read
+ * into an editable tree; one carrying an id (or anything else) stays a
+ * verbatim fragment so nothing is lost.
+ */
+function isPlainExtensionElements(element: Element): boolean {
+  return (
+    element.localName === 'extensionElements' &&
+    Array.from(element.attributes).every(
+      (attr) => attr.name === 'xmlns' || attr.name.startsWith('xmlns:'),
+    )
+  );
+}
+
+function readExtensionElements(element: Element): readonly BpmnXmlElement[] {
+  return elementChildren(element).map((child) =>
+    readBpmnXmlElement(child, declaredNamespaces),
+  );
+}
+
+/** Splits off the first `<documentation>` child; every other child is returned. */
+function splitDocumentation(element: Element): {
+  documentation: string | undefined;
+  rest: Element[];
+} {
+  let documentation: string | undefined;
+  const rest: Element[] = [];
+  for (const child of elementChildren(element)) {
+    if (child.localName === 'documentation' && documentation === undefined) {
+      documentation = child.textContent ?? '';
+    } else {
+      rest.push(child);
+    }
+  }
+  return { documentation, rest };
+}
+
+const TIMER_KINDS: readonly BpmnTimerKind[] = [
+  'timeDate',
+  'timeDuration',
+  'timeCycle',
+];
+
+/** Reads the payload of a supported event definition element. */
+function readEventDetails(
+  element: Element,
+  kind: BpmnEventDefinitionKind,
+  eventId: string,
+): BpmnEventDetails | undefined {
+  const consumed = ['id'];
+  const refAttr =
+    kind === 'message' ||
+    kind === 'signal' ||
+    kind === 'error' ||
+    kind === 'escalation'
+      ? `${kind}Ref`
+      : null;
+  if (refAttr !== null) consumed.push(refAttr);
+  if (kind === 'link') consumed.push('name');
+  const foreignAttributes = foreignAttributesOf(element, consumed);
+  const foreignChildren: string[] = [];
+  let timer: BpmnEventDetails['timer'];
+  let condition: string | undefined;
+  for (const child of elementChildren(element)) {
+    const timerKind = TIMER_KINDS.find((k) => k === child.localName);
+    if (kind === 'timer' && timerKind !== undefined && timer === undefined) {
+      timer = { kind: timerKind, expression: child.textContent ?? '' };
+      continue;
+    }
+    if (
+      kind === 'conditional' &&
+      child.localName === 'condition' &&
+      condition === undefined
+    ) {
+      condition = child.textContent ?? '';
+      continue;
+    }
+    foreignChildren.push(serialize(child));
+  }
+  const id = element.getAttribute('id');
+  const ref = refAttr !== null ? element.getAttribute(refAttr) : null;
+  const linkName = kind === 'link' ? element.getAttribute('name') : null;
+  const details: BpmnEventDetails = {
+    ...(id !== null && id !== `${eventId}_def` ? { id } : {}),
+    ...(timer !== undefined ? { timer } : {}),
+    ...(ref !== null ? { ref } : {}),
+    ...(condition !== undefined ? { condition } : {}),
+    ...(linkName !== null ? { linkName } : {}),
+    ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
+    ...(foreignAttributes !== undefined ? { foreignAttributes } : {}),
+  };
+  return Object.keys(details).length > 0 ? details : undefined;
+}
+
+const ROOT_ELEMENT_TYPES: ReadonlySet<string> = new Set([
+  'message',
+  'signal',
+  'error',
+  'escalation',
+]);
+
+/** Reads a definitions-level message / signal / error / escalation, else null. */
+function readRootElement(element: Element): BpmnRootElement | null {
+  if (
+    !ROOT_ELEMENT_TYPES.has(element.localName) ||
+    element.namespaceURI !== 'http://www.omg.org/spec/BPMN/20100524/MODEL' ||
+    element.getAttribute('id') === null
+  ) {
+    return null;
+  }
+  const type = element.localName as BpmnRootElementType;
+  const codeAttr =
+    type === 'error'
+      ? 'errorCode'
+      : type === 'escalation'
+        ? 'escalationCode'
+        : null;
+  const foreignAttributes = foreignAttributesOf(
+    element,
+    codeAttr !== null ? ['id', 'name', codeAttr] : ['id', 'name'],
+  );
+  const foreignChildren = elementChildren(element).map(serialize);
+  const name = element.getAttribute('name');
+  const code = codeAttr !== null ? element.getAttribute(codeAttr) : null;
+  return {
+    id: element.getAttribute('id') as string,
+    type,
+    ...(name !== null ? { name } : {}),
+    ...(code !== null ? { code } : {}),
+    ...(foreignChildren.length > 0 ? { foreignChildren } : {}),
+    ...(foreignAttributes !== undefined ? { foreignAttributes } : {}),
+  };
 }

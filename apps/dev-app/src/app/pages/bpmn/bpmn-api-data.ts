@@ -104,6 +104,54 @@ export const OGE_BPMN_API: ApiSections = {
           description:
             'Two-way zoom factor (<code>[(zoom)]</code>); wheel zooming writes it back. Clamped to the configured <code>zoomMin</code>/<code>zoomMax</code>.',
         },
+        {
+          name: 'lint',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Live validation: every model change re-runs the rules, offending shapes, pools and flows get a severity badge (the problem text is appended to their accessible name, the badge itself is <code>aria-hidden</code>), the header shows a problems toggle with the count and the problems panel lists every issue — click or Enter selects the element and pans it into view. <code>validate()</code> works with it off.',
+        },
+        {
+          name: 'lintRules',
+          type: 'OgeBpmnLintRulesInput',
+          description:
+            'Rules merged with <code>OGE_BPMN_DEFAULT_LINT_RULES</code>: a full rule (<code>{ id, severity, check(model, context) }</code>) is added, or replaces the built-in with the same id; an override re-grades one (<code>{ id: &#39;no-implicit-split&#39;, severity: &#39;info&#39; }</code>) or disables it (<code>severity: &#39;off&#39;</code>).',
+        },
+        {
+          name: 'propertiesProviders',
+          type: 'readonly OgeBpmnPropertiesProvider[]',
+          description:
+            'Pluggable properties panel: each provider returns groups of typed entries (<code>text</code>, <code>textarea</code>, <code>select</code>, <code>checkbox</code>, <code>expression</code>, <code>list</code>, <code>custom</code>) for the selected element (or the process), and every entry&#39;s <code>set(value)</code> returns the undoable command to run. Merged with <code>OGE_BPMN_DEFAULT_PROPERTIES_PROVIDERS</code> by id — reuse an id to replace a built-in. Pass <code>OGE_BPMN_CAMUNDA_PROVIDERS</code> for the Camunda 7 / Zeebe fields or <code>bpmnElementTemplatesProvider(templates)</code> for element templates.',
+        },
+        {
+          name: 'paletteProvider',
+          type: 'OgeBpmnPaletteProvider',
+          description:
+            'Custom palette entries after the built-ins: <code>{ id, label, icon, hotkey?, action(api) }</code>. Icons are <code>bpmnSvg</code> trees (sanitized — no markup path); the entries join the palette&#39;s roving tabindex; a single-character <code>hotkey</code> works on the canvas (keys the canvas already uses are ignored); <code>api.armPlace(type, { template })</code> arms click-then-place.',
+        },
+        {
+          name: 'contextPadProvider',
+          type: 'OgeBpmnContextPadProvider',
+          description:
+            'Custom context-pad actions of the single selected element: <code>({ diagram, elementId }) =&gt; OgeBpmnContextPadEntry[]</code>, each <code>{ id, label, icon, hotkey?, action(api, elementId) }</code> — real buttons with <code>aria-keyshortcuts</code>; <code>api.execute(command)</code> keeps every change undoable.',
+        },
+        {
+          name: 'renderers',
+          type: 'OgeBpmnRenderers',
+          description:
+            'Per-type shape overrides: <code>{ serviceTask: ({ node, width, height, fill, stroke }) =&gt; bpmnSvg nodes | null }</code>. The returned tree replaces the built-in glyph (labels, markers, selection and badges are still drawn) in the canvas and in <code>exportSvg()</code> / <code>exportPng()</code>; <code>null</code> or a throwing renderer falls back to the built-in shape.',
+        },
+      ],
+    },
+    {
+      title: 'Custom properties entries',
+      entries: [
+        {
+          name: 'OgeBpmnPropertiesEntryTemplate ([ogeBpmnPropertiesEntry])',
+          type: 'ng-template directive',
+          description:
+            'Draws a provider entry of type <code>custom</code> whose id matches: <code>&lt;ng-template ogeBpmnPropertiesEntry="sla" let-entry let-commit="commit" let-id="inputId"&gt;</code>. The context (<code>OgeBpmnPropertiesEntryContext</code>) carries the entry, <code>commit(value)</code> (one undoable command through the entry&#39;s <code>set</code>) and the id the entry&#39;s label carries for <code>aria-labelledby</code>.',
+        },
       ],
     },
     {
@@ -153,10 +201,27 @@ export const OGE_BPMN_API: ApiSections = {
             'Renders the current diagram as a self-contained static SVG string (neutral hardcoded colors, no grid or selection, <code>viewBox</code> fitted to the content) via <code>renderDiagramSvg</code> — writable to a file or embeddable as-is.',
         },
         {
+          name: 'exportPng(options?: OgeBpmnPngExportOptions)',
+          type: 'Promise&lt;Blob | null&gt;',
+          description:
+            'Rasterizes the SVG export onto a canvas and resolves a PNG blob (<code>pixelRatio</code> default 2, <code>background</code> default white, <code>padding</code>) — no library, nothing leaves the page. Resolves <code>null</code> where there is no canvas (server rendering, jsdom).',
+        },
+        {
           name: 'newDiagram()',
           type: 'void',
           description:
             'Replaces the diagram with an empty one and resets history and viewport.',
+        },
+      ],
+    },
+    {
+      title: 'Validation',
+      entries: [
+        {
+          name: 'validate()',
+          type: 'readonly OgeBpmnLintIssue[]',
+          description:
+            'Runs the effective rules (built-ins plus <code>lintRules</code>) over the current diagram and returns every issue, errors first — whether or not <code>lint</code> is on; with it on, the problems panel opens too.',
         },
       ],
     },
@@ -276,6 +341,12 @@ export const OGE_BPMN_API: ApiSections = {
           type: 'boolean',
           description:
             'The dirty state flipped — the model diverged from, or returned to, the save point.',
+        },
+        {
+          name: 'lintChanged',
+          type: 'OgeBpmnLintChangedEvent',
+          description:
+            'The live validation result changed (only while <code>lint</code> is on): <code>{ issues, errors, warnings, infos }</code>. Emitted once after an import and after every edit that changes the issue list.',
         },
       ],
     },
@@ -514,6 +585,216 @@ export const OGE_BPMN_API: ApiSections = {
         },
       ],
     },
+    {
+      title: 'Validation',
+      entries: [
+        {
+          name: 'OgeBpmnLintRule',
+          type: '{ id: string; severity: OgeBpmnLintSeverity; check(model, context): OgeBpmnLintReport[] }',
+          description:
+            'A validation rule — pure data plus a pure <code>check</code> over the immutable model (runs on a server or in CI too). <code>context.messages</code> carries the localized lint strings and <code>context.displayName(id)</code> an element&#39;s display name; a throwing rule is skipped.',
+        },
+        {
+          name: 'OgeBpmnLintRuleOverride',
+          type: "{ id: string; severity: OgeBpmnLintSeverity | 'off' }",
+          description:
+            'Re-grades or disables a rule inside <code>lintRules</code>.',
+        },
+        {
+          name: 'OgeBpmnLintRulesInput',
+          type: 'readonly (OgeBpmnLintRule | OgeBpmnLintRuleOverride)[]',
+          description: 'The <code>lintRules</code> input type.',
+        },
+        {
+          name: 'OgeBpmnLintIssue',
+          type: '{ key; ruleId; severity; elementId; message }',
+          description:
+            'One problem — listed in the problems panel, counted in <code>lintChanged</code>, returned by <code>validate()</code>.',
+        },
+        {
+          name: 'OgeBpmnLintChangedEvent',
+          type: '{ issues; errors; warnings; infos }',
+          description: 'Payload of <code>lintChanged</code>.',
+        },
+        {
+          name: 'OgeBpmnLintSeverity',
+          type: "'error' | 'warning' | 'info'",
+          description: 'Severity of a rule and its issues.',
+        },
+        {
+          name: 'OGE_BPMN_DEFAULT_LINT_RULES',
+          type: 'readonly OgeBpmnLintRule[]',
+          description:
+            'The bpmnlint-like built-ins: <code>start-event-required</code>, <code>end-event-required</code>, <code>no-disconnected</code>, <code>superfluous-gateway</code> (a gateway must fork or join), <code>conditional-flows</code> (exclusive-gateway conditions and default flow), <code>no-implicit-split</code>, <code>no-implicit-join</code>, <code>label-required</code>, <code>no-duplicate-ids</code>, <code>sub-process-start-event</code>, <code>message-flow-pools</code>, <code>boundary-event-attached</code> and <code>no-unreachable</code>.',
+        },
+        {
+          name: 'lintBpmnDiagram(model, rules?, messages?)',
+          type: 'readonly OgeBpmnLintIssue[]',
+          description:
+            'The engine function behind <code>validate()</code> — usable without an editor (<code>lintBpmnDiagram(readBpmnXml(xml).model)</code>). <code>resolveBpmnLintRules(input)</code> applies a <code>lintRules</code> list to the defaults.',
+        },
+      ],
+    },
+    {
+      title: 'Extensibility',
+      entries: [
+        {
+          name: 'OgeBpmnPropertiesProvider',
+          type: '{ id: string; getGroups(context: OgeBpmnPropertiesContext): OgeBpmnPropertiesGroup[] }',
+          description:
+            'A source of panel groups. <code>context.target</code> is the process (nothing selected) or the selected node, edge or pool; <code>context.messages</code> the resolved catalog. A provider that throws contributes nothing.',
+        },
+        {
+          name: 'OgeBpmnPropertiesGroup',
+          type: '{ id: string; label: string; entries: OgeBpmnPropertiesEntry[] }',
+          description:
+            'A titled group (an empty label renders the entries without a heading; a labelled group is a <code>role="group"</code> named by its heading).',
+        },
+        {
+          name: 'OgeBpmnPropertiesEntry',
+          type: '{ id; label; type; value; options?; columns?; description?; placeholder?; disabled?; data?; set?(value) }',
+          description:
+            'One field. <code>value</code> is a string, a boolean (<code>checkbox</code>) or rows (<code>list</code>, with <code>columns</code>); <code>set(value)</code> returns the command a commit runs (Enter / blur / pick — one undo step), or null. <code>description</code> is wired with <code>aria-describedby</code>; list cells are named <code>{entry} {column} {row}</code>.',
+        },
+        {
+          name: 'OgeBpmnPropertiesEntryContext',
+          type: '{ $implicit: entry; entry; commit(value); inputId }',
+          description:
+            'Template context of <code>[ogeBpmnPropertiesEntry]</code>.',
+        },
+        {
+          name: 'OGE_BPMN_DEFAULT_PROPERTIES_PROVIDERS',
+          type: 'readonly OgeBpmnPropertiesProvider[]',
+          description:
+            'The built-in G5b fields as providers: event-definition details (<code>oge-event-details</code>) and "Move to…" + documentation (<code>oge-general</code>).',
+        },
+        {
+          name: 'OgeBpmnPaletteEntry / OgeBpmnPaletteProvider',
+          type: '{ id; label; icon: OgeBpmnSvgNode[]; hotkey?; action(api) }',
+          description: 'A custom palette entry and its provider.',
+        },
+        {
+          name: 'OgeBpmnContextPadEntry / OgeBpmnContextPadProvider',
+          type: '{ id; label; icon: OgeBpmnSvgNode[]; hotkey?; action(api, elementId) }',
+          description: 'A custom context-pad action and its provider.',
+        },
+        {
+          name: 'OgeBpmnEditorApi',
+          type: '{ getDiagram; getSelection; select; execute; armPlace; appendElement; announce; focus }',
+          description:
+            'What palette and context-pad actions may do — <code>execute(command)</code> runs any engine command as one undo step; <code>armPlace(type, { template })</code> / <code>appendElement(sourceId, type, { template })</code> create (templated) elements.',
+        },
+        {
+          name: 'OgeBpmnRenderers / OgeBpmnElementRenderer / OgeBpmnRenderContext',
+          type: '(context: { node; width; height; fill; stroke }) =&gt; OgeBpmnSvgNode[] | null',
+          description: 'The <code>renderers</code> input types.',
+        },
+        {
+          name: 'bpmnSvg',
+          type: '{ g, path, rect, circle, ellipse, line, polyline, polygon, text }',
+          description:
+            'The safe SVG builders every icon and renderer uses (<code>bpmnSvg.circle(12, 12, 8, { &#39;stroke-width&#39;: 2 })</code>). Trees pass <code>sanitizeBpmnSvg</code> before they render: unknown tags and attributes, <code>on*</code> handlers, <code>href</code>, <code>style</code> and external <code>url(…)</code> are dropped; text is a text node.',
+        },
+        {
+          name: 'OgeBpmnSvgNode',
+          type: '{ tag; attrs?; children?; text? }',
+          description: 'One element of a safe SVG tree.',
+        },
+        {
+          name: 'OgeBpmnElementTemplate / OgeBpmnTemplateProperty',
+          type: '{ id; name; version?; appliesTo; elementType?; icon?; properties }',
+          description:
+            'Element templates modeled on Camunda Modeler&#39;s: each property (<code>String</code>, <code>Text</code>, <code>Boolean</code>, <code>Dropdown</code>, <code>Hidden</code>) is bound to <code>name</code> / <code>calledElement</code> / a vendor attribute, the documentation, <code>zeebe:taskDefinition</code>, <code>zeebe:input</code> / <code>zeebe:output</code>, <code>zeebe:taskHeader</code> or <code>camunda:inputParameter</code> / <code>camunda:outputParameter</code>.',
+        },
+        {
+          name: 'applyElementTemplateCommand(id, template)',
+          type: 'BpmnCommand',
+          description:
+            'Applies a template programmatically (what the provider&#39;s select runs): morph, defaults, template id — one undo step. Run it with <code>api.execute()</code> from a palette / pad action or after <code>importXml()</code>.',
+        },
+        {
+          name: 'setForeignAttributeCommand(id, name, value, namespaces?)',
+          type: 'BpmnCommand',
+          description:
+            'Sets (or, with <code>&#39;&#39;</code>, removes) a qualified vendor attribute (<code>oge:dueWithin</code>, <code>camunda:asyncBefore</code>) on a node, edge, pool or the process, declaring <code>namespaces</code> on <code>&lt;definitions&gt;</code>. <code>bpmnForeignAttribute(model, id, name)</code> reads one back — the pair custom providers store their values with.',
+        },
+        {
+          name: 'bpmnForeignAttribute(model, id, name)',
+          type: 'string',
+          description:
+            'A vendor attribute of an element, or <code>&#39;&#39;</code>.',
+        },
+        {
+          name: 'setElementColorsCommand(ids, patch)',
+          type: 'BpmnCommand',
+          description:
+            'Sets or clears (<code>null</code>) the DI fill / stroke of elements — the command behind the panel&#39;s appearance section, handy in context-pad actions.',
+        },
+        {
+          name: 'bpmnElementTemplatesProvider(templates)',
+          type: 'OgeBpmnPropertiesProvider',
+          description:
+            'A "Template" select on every element a template applies to and, once applied, the template&#39;s visible properties as typed fields. <code>applyElementTemplateCommand(id, template)</code> morphs to <code>elementType</code>, writes every default and records <code>zeebe:modelerTemplate</code> (or <code>camunda:modelerTemplate</code>) — one undo step.',
+        },
+      ],
+    },
+    {
+      title: 'Camunda / Zeebe',
+      entries: [
+        {
+          name: 'OGE_BPMN_CAMUNDA_PROVIDERS',
+          type: 'readonly OgeBpmnPropertiesProvider[]',
+          description:
+            'The opt-in <code>camundaProviders</code> preset: <code>OGE_BPMN_ZEEBE_PROVIDER</code> (task definition job type + retries and task headers on service / script tasks, input / output mappings on activities and non-start events) and <code>OGE_BPMN_CAMUNDA7_PROVIDER</code> (<code>camunda:assignee</code> / <code>candidateGroups</code> / <code>formKey</code> on user tasks, <code>camunda:inputOutput</code> text parameters on activities). Edits write the extension tree and declare <code>xmlns:zeebe</code> / <code>xmlns:camunda</code> when needed; complex parameters (<code>camunda:list</code>, <code>map</code>, <code>script</code>) are kept untouched.',
+        },
+        {
+          name: 'OgeBpmnPropertyBinding',
+          type: "{ type: 'property' | 'documentation' | 'zeebe:taskDefinition' | 'zeebe:input' | 'zeebe:output' | 'zeebe:taskHeader' | 'camunda:inputParameter' | 'camunda:outputParameter'; … }",
+          description:
+            'Where a value lives; read with <code>bpmnBindingValue(model, id, binding)</code>, written with <code>setBpmnBindingCommand(id, binding, value)</code>.',
+        },
+        {
+          name: 'BpmnXmlElement',
+          type: '{ name; attributes?; children?; text? }',
+          description:
+            'The editable tree of <code>&lt;bpmn:extensionElements&gt;</code> (qualified names, <code>#text</code> / <code>#comment</code> for mixed content), written back deterministically. Unknown vendor elements stay in the tree untouched.',
+        },
+      ],
+    },
+    {
+      title: 'Engine — G5b modeling & payloads',
+      entries: [
+        {
+          name: 'BpmnEventDetails',
+          type: '{ id?; timer?: { kind: BpmnTimerKind; expression }; ref?; condition?; linkName? }',
+          description:
+            'The event-definition payload: timer <code>timeDate</code> / <code>timeDuration</code> / <code>timeCycle</code>, the <code>messageRef</code> / <code>signalRef</code> / <code>errorRef</code> / <code>escalationRef</code>, the conditional condition and the link name — imported, editable in the panel and exported (no more dropped-payload warning).',
+        },
+        {
+          name: 'BpmnRootElement',
+          type: "{ id; type: 'message' | 'signal' | 'error' | 'escalation'; name?; code? }",
+          description:
+            'Definitions-level root elements (<code>BpmnDiagram.rootElements</code>); the panel&#39;s reference select offers the existing ones and a "New …" option (<code>addRootElementCommand</code>).',
+        },
+        {
+          name: 'setDocumentationCommand(id, text)',
+          type: 'BpmnCommand',
+          description:
+            'Sets or clears <code>&lt;bpmn:documentation&gt;</code> on any node, edge or pool, or the process (<code>BPMN_PROCESS_TARGET</code>).',
+        },
+        {
+          name: 'moveToContainerCommand(id, targetId)',
+          type: 'BpmnCommand',
+          description:
+            'Re-parenting — the keyboard twin of the drag drop ("Move to…" in the panel): moves the element inside a pool, lane or expanded sub-process and re-parents it in one undo step; sequence flows that would cross pools or scopes are removed. <code>reparentElementsCommand(ids, target)</code> is the drop&#39;s half.',
+        },
+        {
+          name: 'OgeBpmnPngExportOptions',
+          type: '{ pixelRatio?: number; background?: string; padding?: number }',
+          description: 'Options of <code>exportPng()</code>.',
+        },
+      ],
+    },
   ],
 };
 
@@ -629,6 +910,12 @@ export const OGE_BPMN_CONFIG_API: ApiSections = {
           type: 'Readonly&lt;Record&lt;BpmnElementNameKey, string&gt;&gt;',
           description:
             'Fallback display name per element type — node/edge types plus pools and lanes — used when an element has no name.',
+        },
+        {
+          name: 'lint / extensions / camunda',
+          type: 'OgeBpmnLintMessages / OgeBpmnExtensionMessages / OgeBpmnCamundaMessages',
+          description:
+            'The G5b strings — badges, problems panel and rule messages; documentation, "Move to", event details, list fields and templates; the Camunda / Zeebe fields. Optional blocks: a catalog without them (or with a partial block) is filled key by key from English (<code>fillBpmnMessages</code>).',
         },
         {
           name: 'properties',

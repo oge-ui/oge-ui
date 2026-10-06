@@ -1374,6 +1374,67 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   `<body>` would mute the shared live regions its own message goes to. A React component that
   calls `createPortal` declares `react-dom` as a peer (`@oge-ui/react-layout`).
 
+### BPMN depth: validation, extension points and Camunda (G5b)
+
+- **Rules are data plus a pure check over the immutable model** (`lint.ts`:
+  `OgeBpmnLintRule { id, severity, check(model, context) }`). The same
+  `lintBpmnDiagram()` runs live in the editor core (`lintIssues` derived, the
+  host's effect calls `syncLint()` so `lintChanged` emits only on a real
+  change), behind `validate()` and headless on a server. `lintRules` merges by
+  id — a full rule adds or replaces, `{ id, severity }` re-grades, `'off'`
+  removes — and a throwing rule is skipped, never fatal. Badges are
+  `aria-hidden`; the problem text is appended to the element's accessible
+  name (WCAG: the information is not in the badge only). The problems panel is
+  a `role="region"` of real buttons: click / Enter selects and centers.
+- **Every extension point is data plus callbacks.** The properties panel is a
+  list of providers (`OgeBpmnPropertiesProvider.getGroups(context)`) whose
+  entries carry a `set(value)` returning an engine command, so every field —
+  built-in or custom — commits one undoable step through `onPanelCommand`.
+  The G5b built-ins (event details, "Move to…", documentation) are themselves
+  providers (`OGE_BPMN_DEFAULT_PROPERTIES_PROVIDERS`), merged with the input
+  by id. Custom entries are an Angular `ng-template[ogeBpmnPropertiesEntry]`
+  and a React `renderPropertiesEntry` render prop — recorded as a parity pair.
+  Palette / context-pad entries and `renderers` take icons and shapes as
+  `OgeBpmnSvgNode` trees (`bpmnSvg` builders, `sanitizeBpmnSvg` allowlist:
+  presentational tags and attributes only, no `href`, `on*`, `style` or
+  external `url()`); Angular draws them through `<svg:*>` templates with an
+  attribute directive, React through `createElement` with the engine's
+  attribute → prop map. There is no markup-string path — keep it that way.
+  Custom hotkeys never shadow the canvas's built-in keys (`bpmnHotkey`).
+- **Extension elements are an editable tree, not a string.** The reader turns
+  an attribute-less `<bpmn:extensionElements>` into `BpmnXmlElement[]`
+  (qualified names, `#text` / `#comment` for mixed content, `xmlns:*` added on
+  the element when the prefix is not declared on `<definitions>`), and the
+  writer serializes it deterministically — Camunda files still round-trip
+  byte-identically after the first write. Edits declare `xmlns:zeebe` /
+  `xmlns:camunda` on `<definitions>` (`declareBpmnNamespace`). The writer
+  drops element and attribute names that are not QNames, so a hostile JSON
+  envelope cannot break out of a tag. `documentation`, event-definition
+  payloads (`BpmnEventDetails`) and the definitions-level messages / signals /
+  errors / escalations (`rootElements`) are first-class model fields; the
+  derived `{eventId}_def` id is not stored, an imported one is (and stripped
+  from pasted copies so ids stay unique).
+- **Camunda / Zeebe and element templates share one binding vocabulary**
+  (`OgeBpmnPropertyBinding`, `bpmnBindingValue` / `setBpmnBindingCommand`).
+  The Camunda preset (`OGE_BPMN_CAMUNDA_PROVIDERS`) is opt-in — the default
+  panel stays vendor-neutral. List edits keep empty rows (a just-added row
+  must survive until it is filled) and leave complex Camunda 7 parameters
+  (`camunda:list` / `map` / `script`) untouched.
+- **Re-parenting: the pointer drop runs the keyboard command's half.**
+  `bpmnContainerAt` resolves the innermost expanded sub-process, else the
+  pool, under the dragged element's center (the move set excluded); the drop
+  composes `moveElementsCommand` + `reparentElementsCommand` into one undo
+  step, and the panel's "Move to…" select is `moveToContainerCommand`
+  (position inside the target, then re-parent). Sequence flows that would
+  cross pools or scopes are removed; lanes stay geometric. Pools never
+  re-parent, a drop outside every pool keeps the current container.
+- **PNG export rasterizes in the render packages** (`bpmn-png.ts` in both
+  layers, a canvas and an `Image` of the SVG export) — the engine stays
+  DOM-free and dependency-free; jsdom / SSR resolve `null`.
+- **New strings are optional blocks** (`lint`, `extensions`, `camunda`)
+  filled key by key from English by `fillBpmnMessages()`; the core's `msg()`
+  is the resolved catalog.
+
 ## Component completeness standard
 
 Every component (new and existing) ships with a **complete, reference-parity-checked

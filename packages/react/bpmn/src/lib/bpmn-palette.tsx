@@ -3,9 +3,12 @@
 import { useRef, useState, type ReactNode } from 'react';
 import {
   bpmnPaletteNavIndex,
+  type BpmnCustomEntryView,
   type BpmnPaletteDragStart,
   type BpmnPaletteItemType,
+  type OgeBpmnPaletteEntry,
 } from '@oge-ui/bpmn-engine';
+import { BpmnSvgNodes } from './bpmn-svg';
 
 /** Props of the internal {@link BpmnPalette}. */
 export interface BpmnPaletteProps {
@@ -16,6 +19,9 @@ export interface BpmnPaletteProps {
   disabled?: boolean;
   onToolPicked: (type: BpmnPaletteItemType) => void;
   onDragStarted: (start: BpmnPaletteDragStart) => void;
+  /** Custom entries (`paletteProvider`), rendered after the built-ins. */
+  customEntries?: readonly BpmnCustomEntryView<OgeBpmnPaletteEntry>[];
+  onEntryPicked?: (entry: OgeBpmnPaletteEntry) => void;
 }
 
 /** The glyph of one palette entry — the same SVG the Angular palette draws. */
@@ -193,9 +199,12 @@ export function BpmnPalette({
   disabled = false,
   onToolPicked,
   onDragStarted,
+  customEntries = [],
+  onEntryPicked,
 }: BpmnPaletteProps): ReactNode {
   const [focusIndex, setFocusIndex] = useState(0);
   const hostRef = useRef<HTMLDivElement>(null);
+  const total = items.length + customEntries.length;
   return (
     <div
       ref={hostRef}
@@ -228,7 +237,7 @@ export function BpmnPalette({
             });
           }}
           onKeyDown={(event) => {
-            const next = bpmnPaletteNavIndex(event.key, i, items.length);
+            const next = bpmnPaletteNavIndex(event.key, i, total);
             if (next === null) return;
             event.preventDefault();
             setFocusIndex(next);
@@ -243,6 +252,40 @@ export function BpmnPalette({
           </svg>
         </button>
       ))}
+      {customEntries.map((custom, c) => {
+        const index = items.length + c;
+        const hotkey = custom.hotkey?.toUpperCase();
+        return (
+          <button
+            key={custom.entry.id}
+            type="button"
+            className="oge-bpmn-palette-btn oge-bpmn-palette-custom"
+            data-entry={custom.entry.id}
+            tabIndex={index === focusIndex ? 0 : -1}
+            disabled={disabled}
+            aria-label={custom.entry.label}
+            aria-keyshortcuts={hotkey}
+            title={
+              hotkey ? `${custom.entry.label} (${hotkey})` : custom.entry.label
+            }
+            onClick={() => onEntryPicked?.(custom.entry)}
+            onKeyDown={(event) => {
+              const next = bpmnPaletteNavIndex(event.key, index, total);
+              if (next === null) return;
+              event.preventDefault();
+              setFocusIndex(next);
+              hostRef.current
+                ?.querySelectorAll<HTMLButtonElement>('.oge-bpmn-palette-btn')
+                [next]?.focus();
+            }}
+            onFocus={() => setFocusIndex(index)}
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <BpmnSvgNodes nodes={custom.icon} />
+            </svg>
+          </button>
+        );
+      })}
     </div>
   );
 }

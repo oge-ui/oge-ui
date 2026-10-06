@@ -10,6 +10,8 @@ import type {
   BpmnEdgeType,
   BpmnEventDefinitionKind,
   BpmnNodeType,
+  BpmnRootElementType,
+  BpmnTimerKind,
 } from './bpmn-model';
 
 /**
@@ -242,6 +244,153 @@ export interface OgeBpmnHeaderMessages {
   fullscreenExit: string;
 }
 
+/** Messages of the built-in validation rules (G5b). */
+export interface OgeBpmnLintRuleMessages {
+  /** A process (or pool) with content has no start event. */
+  readonly startEventRequired: string;
+  /** A process (or pool) with content has no end event. */
+  readonly endEventRequired: string;
+  /** A flow node has neither incoming nor outgoing sequence flows. */
+  readonly disconnected: string;
+  /** A gateway neither forks nor joins. */
+  readonly superfluousGateway: string;
+  /** An exclusive gateway's outgoing flow has no condition and is not the default. */
+  readonly conditionMissing: string;
+  /** An exclusive gateway's default flow carries a condition. */
+  readonly defaultFlowCondition: string;
+  /** A non-gateway splits the flow implicitly. */
+  readonly implicitSplit: string;
+  /** A non-gateway joins flows implicitly. */
+  readonly implicitJoin: string;
+  /** An activity, event, forking gateway or pool has no label. */
+  readonly labelRequired: string;
+  /** An id is used more than once; `{id}` is the id. */
+  readonly duplicateId: string;
+  /** A sub-process has content but no start event. */
+  readonly subProcessStart: string;
+  /** A plain sub-process's start event carries an event definition. */
+  readonly subProcessBlankStart: string;
+  /** A message flow does not connect two different pools. */
+  readonly messageFlowPools: string;
+  /** A boundary event is not attached to an activity. */
+  readonly boundaryAttached: string;
+  /** A boundary event has no outgoing flow. */
+  readonly boundaryOutgoing: string;
+  /** No path from a start event reaches the element. */
+  readonly unreachable: string;
+}
+
+/** Strings of the validation surfaces: badges, the problems panel and its toggle. */
+export interface OgeBpmnLintMessages {
+  /** Accessible name of the problems panel and its header toggle. */
+  readonly panelLabel: string;
+  /** Shown in the problems panel when the diagram passes every rule. */
+  readonly empty: string;
+  /** Summary line; `{errors}`, `{warnings}`, `{infos}` are the counts. */
+  readonly summary: string;
+  /** Display name per severity. */
+  readonly severityNames: Readonly<
+    Record<'error' | 'warning' | 'info', string>
+  >;
+  /** One panel entry; `{severity}`, `{message}`, `{name}` are substituted. */
+  readonly item: string;
+  /**
+   * Appended to a shape's accessible name; `{count}` is the number of
+   * problems, `{messages}` their texts joined.
+   */
+  readonly shapeProblems: string;
+  /** The built-in rules' messages. */
+  readonly rules: OgeBpmnLintRuleMessages;
+}
+
+/** Strings of the G5b editor extensions (documentation, re-parenting, event payloads, list fields, templates). */
+export interface OgeBpmnExtensionMessages {
+  /** Label of the documentation textarea (every element and the process). */
+  readonly documentation: string;
+  /** Label of the "Move to…" select (keyboard re-parenting). */
+  readonly moveTo: string;
+  /** "Move to" option of the process root (diagrams without pools). */
+  readonly processTarget: string;
+  /** "Move to" option of a lane; `{pool}` / `{lane}` are names. */
+  readonly laneTarget: string;
+  /** Fallback name of an unnamed container in the "Move to" list. */
+  readonly unnamed: string;
+  /** Announced after a re-parent; `{name}` / `{target}` are display names. */
+  readonly movedTo: string;
+  /** Heading of the event-definition payload group. */
+  readonly eventDetailsHeading: string;
+  /** Label of the timer type select. */
+  readonly timerType: string;
+  /** Display name per timer kind. */
+  readonly timerKinds: Readonly<Record<BpmnTimerKind, string>>;
+  /** Label of the timer expression field. */
+  readonly timerExpression: string;
+  /** Label of the reference select per root element type. */
+  readonly rootRef: Readonly<Record<BpmnRootElementType, string>>;
+  /** "Create new" option of the reference select per root element type. */
+  readonly newRoot: Readonly<Record<BpmnRootElementType, string>>;
+  /** Label of the referenced root element's name field; `{type}` is its type name. */
+  readonly rootName: string;
+  /** Label of an error's code field. */
+  readonly errorCode: string;
+  /** Label of an escalation's code field. */
+  readonly escalationCode: string;
+  /** Label of a conditional event's condition field. */
+  readonly condition: string;
+  /** Label of a link event's name field. */
+  readonly linkName: string;
+  /** "Add" button of a list field. */
+  readonly addItem: string;
+  /** Remove button of a list row; `{label}` is the row's label. */
+  readonly removeItem: string;
+  /** Accessible name of a list cell; `{field}` is the column, `{index}` the 1-based row. */
+  readonly itemField: string;
+  /** Label of the element template select. */
+  readonly template: string;
+  /** "No template" option of the template select. */
+  readonly noTemplate: string;
+}
+
+/** Strings of the opt-in Camunda 7 / Camunda 8 (Zeebe) properties providers. */
+export interface OgeBpmnCamundaMessages {
+  /** Heading of the Zeebe task definition group. */
+  readonly taskDefinitionHeading: string;
+  /** Label of `zeebe:taskDefinition type`. */
+  readonly jobType: string;
+  /** Label of `zeebe:taskDefinition retries`. */
+  readonly retries: string;
+  /** Heading of the Zeebe input mappings list. */
+  readonly inputsHeading: string;
+  /** Heading of the Zeebe output mappings list. */
+  readonly outputsHeading: string;
+  /** Column label of a mapping's source expression. */
+  readonly mappingSource: string;
+  /** Column label of a mapping's target variable. */
+  readonly mappingTarget: string;
+  /** Heading of the Zeebe task headers list. */
+  readonly headersHeading: string;
+  /** Column label of a header key. */
+  readonly headerKey: string;
+  /** Column label of a header value. */
+  readonly headerValue: string;
+  /** Heading of the Camunda 7 user assignment group. */
+  readonly assignmentHeading: string;
+  /** Label of `camunda:assignee`. */
+  readonly assignee: string;
+  /** Label of `camunda:candidateGroups`. */
+  readonly candidateGroups: string;
+  /** Label of `camunda:formKey`. */
+  readonly formKey: string;
+  /** Heading of the Camunda 7 input parameters list. */
+  readonly inputParameters: string;
+  /** Heading of the Camunda 7 output parameters list. */
+  readonly outputParameters: string;
+  /** Column label of a parameter name. */
+  readonly parameterName: string;
+  /** Column label of a parameter value. */
+  readonly parameterValue: string;
+}
+
 /** Every user-facing string the BPMN editor renders, including aria labels. */
 export interface OgeBpmnMessages {
   /** Accessible name of the diagram canvas (`role="application"`). */
@@ -278,6 +427,150 @@ export interface OgeBpmnMessages {
   elementNames: Readonly<Record<BpmnElementNameKey, string>>;
   /** Labels of the properties panel. */
   properties: OgeBpmnPropertiesMessages;
+  /** Validation strings (added in G5b — optional, English fallback). */
+  lint?: OgeBpmnLintMessages;
+  /** Editor-extension strings (added in G5b — optional, English fallback). */
+  extensions?: OgeBpmnExtensionMessages;
+  /** Camunda / Zeebe provider strings (added in G5b — optional, English fallback). */
+  camunda?: OgeBpmnCamundaMessages;
+}
+
+/** The catalog with every optional block filled from English (what the editor reads). */
+export type OgeBpmnResolvedMessages = OgeBpmnMessages & {
+  lint: OgeBpmnLintMessages;
+  extensions: OgeBpmnExtensionMessages;
+  camunda: OgeBpmnCamundaMessages;
+};
+
+/** English validation strings. */
+export const OGE_DEFAULT_BPMN_LINT_MESSAGES: OgeBpmnLintMessages = {
+  panelLabel: 'Problems',
+  empty: 'No problems found',
+  summary: '{errors} error(s), {warnings} warning(s), {infos} info(s)',
+  severityNames: { error: 'Error', warning: 'Warning', info: 'Info' },
+  item: '{severity}: {message} ({name})',
+  shapeProblems: '{count} problem(s): {messages}',
+  rules: {
+    startEventRequired: 'The process has no start event',
+    endEventRequired: 'The process has no end event',
+    disconnected: 'The element is not connected to any sequence flow',
+    superfluousGateway: 'The gateway neither forks nor joins flows',
+    conditionMissing:
+      'A flow leaving an exclusive gateway needs a condition or must be the default flow',
+    defaultFlowCondition: 'The default flow must not have a condition',
+    implicitSplit: 'The element splits the flow implicitly; use a gateway',
+    implicitJoin: 'The element joins flows implicitly; use a gateway',
+    labelRequired: 'The element has no label',
+    duplicateId: 'The id "{id}" is used more than once',
+    subProcessStart: 'The sub-process has no start event',
+    subProcessBlankStart:
+      'The start event of a sub-process must not have an event definition',
+    messageFlowPools: 'A message flow must connect two different pools',
+    boundaryAttached: 'The boundary event is not attached to an activity',
+    boundaryOutgoing: 'The boundary event has no outgoing flow',
+    unreachable: 'No path from a start event reaches the element',
+  },
+};
+
+/** English editor-extension strings. */
+export const OGE_DEFAULT_BPMN_EXTENSION_MESSAGES: OgeBpmnExtensionMessages = {
+  documentation: 'Documentation',
+  moveTo: 'Move to',
+  processTarget: 'Process',
+  laneTarget: '{pool} / {lane}',
+  unnamed: '(unnamed)',
+  movedTo: '{name} moved to {target}',
+  eventDetailsHeading: 'Event details',
+  timerType: 'Timer type',
+  timerKinds: {
+    timeDate: 'Date',
+    timeDuration: 'Duration',
+    timeCycle: 'Cycle',
+  },
+  timerExpression: 'Timer expression',
+  rootRef: {
+    message: 'Message',
+    signal: 'Signal',
+    error: 'Error',
+    escalation: 'Escalation',
+  },
+  newRoot: {
+    message: 'New message',
+    signal: 'New signal',
+    error: 'New error',
+    escalation: 'New escalation',
+  },
+  rootName: '{type} name',
+  errorCode: 'Error code',
+  escalationCode: 'Escalation code',
+  condition: 'Condition',
+  linkName: 'Link name',
+  addItem: 'Add',
+  removeItem: 'Remove {label}',
+  itemField: '{field} {index}',
+  template: 'Template',
+  noTemplate: 'None',
+};
+
+/** English Camunda / Zeebe provider strings. */
+export const OGE_DEFAULT_BPMN_CAMUNDA_MESSAGES: OgeBpmnCamundaMessages = {
+  taskDefinitionHeading: 'Task definition',
+  jobType: 'Job type',
+  retries: 'Retries',
+  inputsHeading: 'Input mappings',
+  outputsHeading: 'Output mappings',
+  mappingSource: 'Source',
+  mappingTarget: 'Target',
+  headersHeading: 'Task headers',
+  headerKey: 'Key',
+  headerValue: 'Value',
+  assignmentHeading: 'User assignment',
+  assignee: 'Assignee',
+  candidateGroups: 'Candidate groups',
+  formKey: 'Form key',
+  inputParameters: 'Input parameters',
+  outputParameters: 'Output parameters',
+  parameterName: 'Name',
+  parameterValue: 'Value',
+};
+
+/**
+ * Fills the optional G5b blocks of a catalog from English, key by key (a
+ * pre-G5b catalog, or a partial `lint` override, keeps working).
+ */
+export function fillBpmnMessages(
+  messages: OgeBpmnMessages,
+): OgeBpmnResolvedMessages {
+  const lint = messages.lint;
+  return {
+    ...messages,
+    lint: {
+      ...OGE_DEFAULT_BPMN_LINT_MESSAGES,
+      ...lint,
+      severityNames: {
+        ...OGE_DEFAULT_BPMN_LINT_MESSAGES.severityNames,
+        ...lint?.severityNames,
+      },
+      rules: { ...OGE_DEFAULT_BPMN_LINT_MESSAGES.rules, ...lint?.rules },
+    },
+    extensions: {
+      ...OGE_DEFAULT_BPMN_EXTENSION_MESSAGES,
+      ...messages.extensions,
+      timerKinds: {
+        ...OGE_DEFAULT_BPMN_EXTENSION_MESSAGES.timerKinds,
+        ...messages.extensions?.timerKinds,
+      },
+      rootRef: {
+        ...OGE_DEFAULT_BPMN_EXTENSION_MESSAGES.rootRef,
+        ...messages.extensions?.rootRef,
+      },
+      newRoot: {
+        ...OGE_DEFAULT_BPMN_EXTENSION_MESSAGES.newRoot,
+        ...messages.extensions?.newRoot,
+      },
+    },
+    camunda: { ...OGE_DEFAULT_BPMN_CAMUNDA_MESSAGES, ...messages.camunda },
+  };
 }
 
 export const OGE_DEFAULT_BPMN_MESSAGES: OgeBpmnMessages = {
@@ -462,6 +755,9 @@ export const OGE_DEFAULT_BPMN_MESSAGES: OgeBpmnMessages = {
     removeLane: 'Remove lane {name}',
     laneName: 'Lane {name} name',
   },
+  lint: OGE_DEFAULT_BPMN_LINT_MESSAGES,
+  extensions: OGE_DEFAULT_BPMN_EXTENSION_MESSAGES,
+  camunda: OGE_DEFAULT_BPMN_CAMUNDA_MESSAGES,
 };
 
 /**

@@ -1,11 +1,14 @@
 import type {
   BpmnDiagram,
   BpmnEdge,
+  BpmnFlowNode,
   BpmnLane,
   BpmnNode,
   BpmnPool,
 } from './bpmn-model';
 import { isBpmnDataNodeType, isBpmnSubProcessType } from './bpmn-model';
+import type { BpmnXmlElement } from './bpmn-xml-element';
+import { writeBpmnXmlElement } from './bpmn-xml-element';
 import type { Rect } from './geometry';
 
 const XMLNS: readonly (readonly [string, string])[] = [
@@ -129,6 +132,8 @@ export function writeBpmnXml(model: BpmnDiagram): string {
         ...foreignPairs(model.processForeignAttributes),
       ])}>`,
     );
+    pushDocumentation(lines, '    ', model.processDocumentation);
+    pushExtensions(lines, '    ', model.processExtensionElements);
     if (defaultPool !== undefined) {
       writeLaneSet(lines, model.processId, defaultPool.lanes, 2);
     }
@@ -158,6 +163,7 @@ export function writeBpmnXml(model: BpmnDiagram): string {
   }
 
   writeCategories(lines, model);
+  writeRootElements(lines, model);
 
   for (const fragment of model.foreignDefinitionsChildren) {
     lines.push(`  ${fragment}`);
@@ -187,9 +193,11 @@ function writeCollaboration(
       ['processRef', pool.processRef],
       ...foreignPairs(pool.foreignAttributes),
     ];
-    const children = (pool.foreignChildren ?? []).map(
-      (fragment) => `      ${fragment}`,
-    );
+    const children: string[] = [];
+    pushDocumentation(children, '      ', pool.documentation);
+    for (const fragment of pool.foreignChildren ?? []) {
+      children.push(`      ${fragment}`);
+    }
     const open = `    <bpmn:participant${formatAttrs(attrs)}`;
     if (children.length === 0) {
       lines.push(`${open} />`);
@@ -211,9 +219,11 @@ function writeCollaboration(
       ['targetRef', edge.targetRef],
       ...foreignPairs(edge.foreignAttributes),
     ];
-    const children = (edge.foreignChildren ?? []).map(
-      (fragment) => `      ${fragment}`,
-    );
+    const children: string[] = [];
+    pushDocumentation(children, '      ', edge.documentation);
+    for (const fragment of edge.foreignChildren ?? []) {
+      children.push(`      ${fragment}`);
+    }
     const open = `    <bpmn:messageFlow${formatAttrs(attrs)}`;
     if (children.length === 0) {
       lines.push(`${open} />`);
@@ -369,6 +379,7 @@ function writeNode(
   const inner = `${indent}  `;
   if (node.type === 'textAnnotation') {
     const children: string[] = [];
+    pushDocumentation(children, inner, node.documentation);
     for (const fragment of node.foreignChildren ?? []) {
       children.push(`${inner}${fragment}`);
     }
@@ -392,9 +403,7 @@ function writeNode(
     lines.push(
       `${indent}<bpmn:dataObject id="${escapeXmlAttribute(node.id)}_ref" />`,
     );
-    const children = (node.foreignChildren ?? []).map(
-      (fragment) => `${inner}${fragment}`,
-    );
+    const children = withDocumentation(node, inner);
     writeElement(
       lines,
       'dataObjectReference',
@@ -410,9 +419,7 @@ function writeNode(
     return;
   }
   if (node.type === 'dataStore') {
-    const children = (node.foreignChildren ?? []).map(
-      (fragment) => `${inner}${fragment}`,
-    );
+    const children = withDocumentation(node, inner);
     writeElement(
       lines,
       'dataStoreReference',
@@ -427,9 +434,7 @@ function writeNode(
     return;
   }
   if (node.type === 'group') {
-    const children = (node.foreignChildren ?? []).map(
-      (fragment) => `${inner}${fragment}`,
-    );
+    const children = withDocumentation(node, inner);
     writeElement(
       lines,
       'group',
@@ -447,14 +452,13 @@ function writeNode(
     return;
   }
   const children: string[] = [];
+  pushDocumentation(children, inner, node.documentation);
+  pushExtensions(children, inner, node.extensionElements);
   for (const fragment of node.foreignChildren ?? []) {
     children.push(`${inner}${fragment}`);
   }
   if (node.eventDefinition !== undefined) {
-    // The definition id is derived deterministically from the event id.
-    children.push(
-      `${inner}<bpmn:${node.eventDefinition}EventDefinition id="${escapeXmlAttribute(node.id)}_def" />`,
-    );
+    writeEventDefinition(children, node, inner);
   }
   const markers = node.markers ?? [];
   if (markers.includes('loop')) {
@@ -546,6 +550,7 @@ function writeDataAssociations(
       children.push(
         `${inner}<bpmn:dataInputAssociation id="${escapeXmlAttribute(edge.id)}">`,
       );
+      pushDocumentation(children, `${inner}  `, edge.documentation);
       for (const fragment of edge.foreignChildren ?? []) {
         children.push(`${inner}  ${fragment}`);
       }
@@ -557,6 +562,7 @@ function writeDataAssociations(
       children.push(
         `${inner}<bpmn:dataOutputAssociation id="${escapeXmlAttribute(edge.id)}">`,
       );
+      pushDocumentation(children, `${inner}  `, edge.documentation);
       for (const fragment of edge.foreignChildren ?? []) {
         children.push(`${inner}  ${fragment}`);
       }
@@ -583,6 +589,10 @@ function writeEdge(lines: string[], edge: BpmnEdge, depth: number): void {
   const indent = '  '.repeat(depth);
   const inner = `${indent}  `;
   const children: string[] = [];
+  pushDocumentation(children, inner, edge.documentation);
+  if (edge.type === 'sequenceFlow') {
+    pushExtensions(children, inner, edge.extensionElements);
+  }
   for (const fragment of edge.foreignChildren ?? []) {
     children.push(`${inner}${fragment}`);
   }
@@ -753,4 +763,135 @@ function writeDi(
   }
   lines.push('    </bpmndi:BPMNPlane>');
   lines.push('  </bpmndi:BPMNDiagram>');
+}
+
+// ------------------------------------------------------- G5b payload writers
+
+/** Appends `<bpmn:documentation>` when the element has documentation text. */
+function pushDocumentation(
+  lines: string[],
+  indent: string,
+  text: string | undefined,
+): void {
+  if (text === undefined) return;
+  lines.push(
+    `${indent}<bpmn:documentation>${escapeXmlText(text)}</bpmn:documentation>`,
+  );
+}
+
+/** Appends `<bpmn:extensionElements>` with the element tree, when non-empty. */
+function pushExtensions(
+  lines: string[],
+  indent: string,
+  elements: readonly BpmnXmlElement[] | undefined,
+): void {
+  if (elements === undefined || elements.length === 0) return;
+  lines.push(`${indent}<bpmn:extensionElements>`);
+  for (const element of elements) {
+    writeBpmnXmlElement(element, `${indent}  `, lines);
+  }
+  lines.push(`${indent}</bpmn:extensionElements>`);
+}
+
+/** The documentation line plus the verbatim fragments of a data node or group. */
+function withDocumentation(
+  node: {
+    readonly documentation?: string;
+    readonly foreignChildren?: readonly string[];
+  },
+  inner: string,
+): string[] {
+  const children: string[] = [];
+  pushDocumentation(children, inner, node.documentation);
+  for (const fragment of node.foreignChildren ?? []) {
+    children.push(`${inner}${fragment}`);
+  }
+  return children;
+}
+
+/**
+ * Writes an event's definition with its payload: the timer expression, the
+ * root-element reference, the condition or the link name. The definition id
+ * is the imported one when it was not the derived `{eventId}_def`.
+ */
+function writeEventDefinition(
+  children: string[],
+  node: BpmnFlowNode,
+  inner: string,
+): void {
+  const kind = node.eventDefinition;
+  if (kind === undefined) return;
+  const details = node.eventDetails;
+  const attrs: AttrPair[] = [
+    ['id', details?.id ?? `${node.id}_def`],
+    ...foreignPairs(details?.foreignAttributes),
+  ];
+  if (
+    details?.ref !== undefined &&
+    (kind === 'message' ||
+      kind === 'signal' ||
+      kind === 'error' ||
+      kind === 'escalation')
+  ) {
+    attrs.push([`${kind}Ref`, details.ref]);
+  }
+  if (kind === 'link' && details?.linkName !== undefined) {
+    attrs.push(['name', details.linkName]);
+  }
+  const body: string[] = [];
+  if (
+    kind === 'timer' &&
+    details?.timer !== undefined &&
+    TIMER_TAGS.has(details.timer.kind)
+  ) {
+    body.push(
+      `${inner}  <bpmn:${details.timer.kind} xsi:type="bpmn:tFormalExpression">` +
+        `${escapeXmlText(details.timer.expression)}</bpmn:${details.timer.kind}>`,
+    );
+  }
+  if (kind === 'conditional' && details?.condition !== undefined) {
+    body.push(
+      `${inner}  <bpmn:condition xsi:type="bpmn:tFormalExpression">` +
+        `${escapeXmlText(details.condition)}</bpmn:condition>`,
+    );
+  }
+  for (const fragment of details?.foreignChildren ?? []) {
+    body.push(`${inner}  ${fragment}`);
+  }
+  writeElement(children, `${kind}EventDefinition`, attrs, body, inner);
+}
+
+const TIMER_TAGS: ReadonlySet<string> = new Set([
+  'timeDate',
+  'timeDuration',
+  'timeCycle',
+]);
+
+const ROOT_TAGS: ReadonlySet<string> = new Set([
+  'message',
+  'signal',
+  'error',
+  'escalation',
+]);
+
+/** Emits the definitions-level messages, signals, errors and escalations. */
+function writeRootElements(lines: string[], model: BpmnDiagram): void {
+  for (const root of model.rootElements ?? []) {
+    if (!ROOT_TAGS.has(root.type)) continue;
+    const attrs: AttrPair[] = [
+      ['id', root.id],
+      ['name', root.name],
+      ...foreignPairs(root.foreignAttributes),
+    ];
+    if (root.code !== undefined && root.type === 'error') {
+      attrs.push(['errorCode', root.code]);
+    }
+    if (root.code !== undefined && root.type === 'escalation') {
+      attrs.push(['escalationCode', root.code]);
+    }
+    const children = (root.foreignChildren ?? []).map(
+      (fragment) => `    ${fragment}`,
+    );
+    writeElement(lines, root.type, attrs, children, '  ');
+  }
 }

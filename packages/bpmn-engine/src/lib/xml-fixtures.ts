@@ -555,3 +555,79 @@ export const V04_FIXTURE_XML = `<?xml version="1.0" encoding="UTF-8"?>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
 `;
+
+/** A Camunda 8 / Camunda 7 flavoured document exercising every G5b payload. */
+export const CAMUNDA_FIXTURE_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Defs_g5b" targetNamespace="http://example.com/g5b">
+  <bpmn:process id="Process_g5b" isExecutable="true">
+    <bpmn:documentation>Order handling</bpmn:documentation>
+    <bpmn:extensionElements>
+      <zeebe:versionTag value="1.2" />
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="Start_t" name="Every hour">
+      <bpmn:documentation>Cron start</bpmn:documentation>
+      <bpmn:timerEventDefinition id="TimerDef_1">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT1H</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_z" name="Charge card" camunda:asyncBefore="true">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="payment" retries="5" />
+        <zeebe:ioMapping>
+          <zeebe:input source="=order.total" target="amount" />
+          <zeebe:output source="=receipt" target="paymentReceipt" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="currency" value="EUR" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_u" name="Approve" camunda:assignee="demo" camunda:candidateGroups="sales">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="limit">\${order.limit}</camunda:inputParameter>
+          <camunda:inputParameter name="list"><camunda:list><camunda:value>a</camunda:value></camunda:list></camunda:inputParameter>
+          <camunda:outputParameter name="approved">\${true}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+    </bpmn:userTask>
+    <bpmn:intermediateCatchEvent id="Catch_m" name="Paid">
+      <bpmn:messageEventDefinition id="Catch_m_def" messageRef="Message_paid" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Catch_c" name="Stock ok">
+      <bpmn:conditionalEventDefinition id="CondDef_1">
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">=stock &gt; 0</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateThrowEvent id="Throw_l" name="Go">
+      <bpmn:linkEventDefinition id="LinkDef_1" name="toEnd" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="End_e" name="Failed">
+      <bpmn:errorEventDefinition id="ErrDef_1" errorRef="Error_pay" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_t" targetRef="Task_z">
+      <bpmn:documentation>Kick-off</bpmn:documentation>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:message id="Message_paid" name="paid">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=orderId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:error id="Error_pay" name="Payment failed" errorCode="PAY-1" />
+  <bpmn:signal id="Signal_x" name="stop" />
+  <bpmn:escalation id="Esc_x" name="late" escalationCode="E1" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_g5b">
+      <bpmndi:BPMNShape id="Start_t_di" bpmnElement="Start_t"><dc:Bounds x="100" y="100" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_z_di" bpmnElement="Task_z"><dc:Bounds x="200" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_u_di" bpmnElement="Task_u"><dc:Bounds x="360" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catch_m_di" bpmnElement="Catch_m"><dc:Bounds x="520" y="100" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catch_c_di" bpmnElement="Catch_c"><dc:Bounds x="600" y="100" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Throw_l_di" bpmnElement="Throw_l"><dc:Bounds x="680" y="100" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_e_di" bpmnElement="End_e"><dc:Bounds x="760" y="100" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1"><di:waypoint x="136" y="118" /><di:waypoint x="200" y="120" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+`;

@@ -31,6 +31,21 @@ describe('@oge-ui/bpmn-engine barrel', () => {
     'distributeElements',
     'VALID_EVENT_DEFINITIONS',
     'BpmnCommandStack',
+    'lintBpmnDiagram',
+    'OGE_BPMN_DEFAULT_LINT_RULES',
+    'resolveBpmnLintRules',
+    'OGE_BPMN_DEFAULT_PROPERTIES_PROVIDERS',
+    'OGE_BPMN_CAMUNDA_PROVIDERS',
+    'buildBpmnPropertiesGroups',
+    'bpmnElementTemplatesProvider',
+    'applyElementTemplateCommand',
+    'bpmnSvg',
+    'sanitizeBpmnSvg',
+    'moveToContainerCommand',
+    'reparentElementsCommand',
+    'setDocumentationCommand',
+    'setEventDetailsCommand',
+    'fillBpmnMessages',
   ])('exports %s', (name) => {
     expect((engine as Record<string, unknown>)[name]).toBeDefined();
   });

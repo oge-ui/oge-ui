@@ -185,7 +185,7 @@ export const PACKAGES = [
     npm: '@oge-ui/bpmn',
     label: 'BPMN Editor',
     summary:
-      'From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark.',
+      'From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, bpmnlint-style validation with a problems panel, pluggable properties providers, custom palette / context-pad entries and renderers, element templates, editable Camunda / Zeebe extensions and event payloads, a keyboard-accessible SVG canvas and no watermark.',
     docsRoot: '/components/bpmn',
     pageDirs: ['bpmn'],
     apiPage: 'apps/dev-app/src/app/pages/bpmn/api.ts',
@@ -196,7 +196,7 @@ export const PACKAGES = [
     npm: '@oge-ui/bpmn-engine',
     label: 'BPMN Engine',
     summary:
-      'Framework-free engine of the BPMN editor (ADR 0003): the diagram model, BPMN XML + DI reader/writer, JSON envelope, SVG export, orthogonal routing, snapping, alignment, modeling rules, the snapshot command stack and the editor core both the Angular and the React editor run. Installed automatically by either editor — import it directly for server-side or test pipelines.',
+      'Framework-free engine of the BPMN editor (ADR 0003): the diagram model, BPMN XML + DI reader/writer, JSON envelope, SVG export, orthogonal routing, snapping, alignment, modeling rules, the snapshot command stack, the validation rules (`lintBpmnDiagram`), the properties-provider / element-template / Camunda + Zeebe helpers and the editor core both the Angular and the React editor run. Installed automatically by either editor — import it directly for server-side or test pipelines.',
     docsRoot: null,
     pageDirs: [],
     apiPage: null,
@@ -472,7 +472,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-bpmn',
     label: 'BPMN Editor (React)',
     summary:
-      'React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark.',
+      'React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG + PNG export, live validation, properties providers, custom palette / context-pad entries and renderers, element templates and Camunda / Zeebe editing, and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark.',
     // The React content renders inside the single BPMN routes (ADR 0002).
     docsRoot: '/components/bpmn',
     pageDirs: ['react-bpmn'],

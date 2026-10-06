@@ -10,8 +10,11 @@ import {
 } from '@angular/core';
 import {
   bpmnPaletteNavIndex,
+  type BpmnCustomEntryView,
   type BpmnPaletteItemType,
+  type OgeBpmnPaletteEntry,
 } from '@oge-ui/bpmn-engine';
+import { OgeBpmnSvgNodes } from './bpmn-svg';
 
 /**
  * Internal elements palette of the BPMN editor: a vertical toolbar of real
@@ -22,6 +25,7 @@ import {
   selector: 'oge-bpmn-palette',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  imports: [OgeBpmnSvgNodes],
   host: {
     class: 'oge-bpmn-palette',
     role: 'toolbar',
@@ -222,10 +226,40 @@ import {
         </svg>
       </button>
     }
+    @for (custom of customEntries(); track custom.entry.id; let c = $index) {
+      <button
+        type="button"
+        class="oge-bpmn-palette-btn oge-bpmn-palette-custom"
+        [attr.data-entry]="custom.entry.id"
+        [tabindex]="items().length + c === focusIndex() ? 0 : -1"
+        [disabled]="disabled()"
+        [attr.aria-label]="custom.entry.label"
+        [attr.aria-keyshortcuts]="custom.hotkey?.toUpperCase() ?? null"
+        [title]="
+          custom.hotkey
+            ? custom.entry.label + ' (' + custom.hotkey.toUpperCase() + ')'
+            : custom.entry.label
+        "
+        (click)="entryPicked.emit(custom.entry)"
+        (keydown)="onKeydown($event, items().length + c)"
+        (focus)="focusIndex.set(items().length + c)"
+      >
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+          <svg:g ogeBpmnSvgNodes [nodes]="custom.icon" />
+        </svg>
+      </button>
+    }
   `,
 })
 export class OgeBpmnPalette {
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Custom entries (`paletteProvider`), rendered after the built-ins. */
+  readonly customEntries = input<
+    readonly BpmnCustomEntryView<OgeBpmnPaletteEntry>[]
+  >([]);
+  /** A custom entry was picked. */
+  readonly entryPicked = output<OgeBpmnPaletteEntry>();
 
   /** Accessible name of the palette toolbar. */
   readonly label = input.required<string>();
@@ -271,7 +305,11 @@ export class OgeBpmnPalette {
 
   protected onKeydown(event: KeyboardEvent, index: number): void {
     // the roving-tabindex key map is shared with the React palette
-    const next = bpmnPaletteNavIndex(event.key, index, this.items().length);
+    const next = bpmnPaletteNavIndex(
+      event.key,
+      index,
+      this.items().length + this.customEntries().length,
+    );
     if (next === null) {
       return;
     }

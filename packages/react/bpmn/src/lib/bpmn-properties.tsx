@@ -1,8 +1,14 @@
 'use client';
 
-import { useMemo, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, useMemo, type CSSProperties, type ReactNode } from 'react';
 import {
   addLaneCommand,
+  bpmnListCellLabel,
+  bpmnListRemoveLabel,
+  bpmnListWithCell,
+  bpmnListWithRow,
+  bpmnListWithout,
+  fillBpmnMessages,
   bpmnClearColorsCommand,
   bpmnColorInputValue,
   bpmnCompensationCommand,
@@ -28,7 +34,11 @@ import {
   type BpmnDiagram,
   type BpmnEventDefinitionKind,
   type BpmnFlowNodeType,
+  type OgeBpmnListRow,
   type OgeBpmnMessages,
+  type OgeBpmnPropertiesEntry,
+  type OgeBpmnPropertiesGroup,
+  type OgeBpmnPropertiesValue,
 } from '@oge-ui/bpmn-engine';
 import {
   NativeCheckbox,
@@ -37,8 +47,23 @@ import {
   NativeTextField,
 } from './native-field';
 
+/** What a `renderPropertiesEntry` render prop receives besides the entry. */
+export interface OgeBpmnPropertiesEntryRenderContext {
+  /** Commits a value through the entry's `set` (one undoable command). */
+  commit: (value: OgeBpmnPropertiesValue) => void;
+  /** The DOM id the entry's label carries (point `aria-labelledby` at it). */
+  inputId: string;
+}
+
 /** Props of the internal {@link BpmnProperties}. */
 export interface BpmnPropertiesProps {
+  /** Provider groups for the selection (built-in G5b fields included). */
+  groups?: readonly OgeBpmnPropertiesGroup[];
+  /** Draws `custom` entries. */
+  renderEntry?: (
+    entry: OgeBpmnPropertiesEntry,
+    context: OgeBpmnPropertiesEntryRenderContext,
+  ) => ReactNode;
   /** Unique per-instance prefix for field ids. */
   uid: string;
   diagram: BpmnDiagram;
@@ -63,6 +88,8 @@ export function BpmnProperties({
   messages,
   colorPresets,
   style,
+  groups = [],
+  renderEntry,
   onCommandRequested: emit,
 }: BpmnPropertiesProps): ReactNode {
   const p = useMemo(
@@ -387,6 +414,193 @@ export function BpmnProperties({
       break;
   }
 
+  const resolved = fillBpmnMessages(messages);
+  const commitEntry = (
+    entry: OgeBpmnPropertiesEntry,
+    value: OgeBpmnPropertiesValue,
+  ): void => {
+    const command = entry.set?.(value) ?? null;
+    if (command !== null) emit(command);
+  };
+  const text = (entry: OgeBpmnPropertiesEntry): string =>
+    typeof entry.value === 'string' ? entry.value : '';
+  const rows = (entry: OgeBpmnPropertiesEntry): readonly OgeBpmnListRow[] =>
+    Array.isArray(entry.value)
+      ? (entry.value as readonly OgeBpmnListRow[])
+      : [];
+  const renderGroupEntry = (entry: OgeBpmnPropertiesEntry): ReactNode => {
+    const inputId = `${uid}-x-${entry.id}`;
+    const describedBy = entry.description ? `${uid}-d-${entry.id}` : undefined;
+    const disabled = entry.disabled === true || !entry.set;
+    let field: ReactNode;
+    switch (entry.type) {
+      case 'checkbox':
+        field = (
+          <label className="oge-bpmn-props-check" data-entry={entry.id}>
+            <NativeCheckbox
+              id={inputId}
+              checked={entry.value === true}
+              disabled={disabled}
+              describedBy={describedBy}
+              onCommit={(checked) => commitEntry(entry, checked)}
+            />
+            {entry.label}
+          </label>
+        );
+        break;
+      case 'select':
+        field = (
+          <div className="oge-bpmn-props-field" data-entry={entry.id}>
+            <label className="oge-bpmn-props-label" htmlFor={inputId}>
+              {entry.label}
+            </label>
+            <NativeSelect
+              id={inputId}
+              className="oge-bpmn-props-input oge-bpmn-props-select"
+              value={text(entry)}
+              disabled={disabled}
+              describedBy={describedBy}
+              onCommit={(next) => commitEntry(entry, next)}
+            >
+              {(entry.options ?? []).map((option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                  disabled={option.disabled === true}
+                >
+                  {option.label}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+        );
+        break;
+      case 'list':
+        field = (
+          <div
+            className="oge-bpmn-props-field oge-bpmn-props-list"
+            data-entry={entry.id}
+            role="group"
+            aria-labelledby={inputId}
+          >
+            <span className="oge-bpmn-props-label" id={inputId}>
+              {entry.label}
+            </span>
+            {rows(entry).map((row, i) => (
+              <div className="oge-bpmn-props-list-row" key={i}>
+                {(entry.columns ?? []).map((column) => (
+                  <NativeTextField
+                    key={column.key}
+                    className="oge-bpmn-props-input oge-bpmn-props-list-cell"
+                    value={row[column.key] ?? ''}
+                    placeholder={column.label}
+                    disabled={disabled}
+                    ariaLabel={bpmnListCellLabel(resolved, entry, column, i)}
+                    onCommit={(next) =>
+                      commitEntry(
+                        entry,
+                        bpmnListWithCell(rows(entry), i, column.key, next),
+                      )
+                    }
+                  />
+                ))}
+                <button
+                  type="button"
+                  className="oge-bpmn-props-list-remove"
+                  disabled={disabled}
+                  aria-label={bpmnListRemoveLabel(resolved, entry, i)}
+                  title={bpmnListRemoveLabel(resolved, entry, i)}
+                  onClick={() =>
+                    commitEntry(entry, bpmnListWithout(rows(entry), i))
+                  }
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="oge-bpmn-props-list-add"
+              disabled={disabled}
+              onClick={() =>
+                commitEntry(
+                  entry,
+                  bpmnListWithRow(rows(entry), entry.columns ?? []),
+                )
+              }
+            >
+              {resolved.extensions.addItem}
+            </button>
+          </div>
+        );
+        break;
+      case 'custom':
+        field = (
+          <div className="oge-bpmn-props-field" data-entry={entry.id}>
+            <span className="oge-bpmn-props-label" id={inputId}>
+              {entry.label}
+            </span>
+            {renderEntry?.(entry, {
+              commit: (value) => commitEntry(entry, value),
+              inputId,
+            })}
+          </div>
+        );
+        break;
+      default:
+        field = (
+          <div className="oge-bpmn-props-field" data-entry={entry.id}>
+            <label className="oge-bpmn-props-label" htmlFor={inputId}>
+              {entry.label}
+            </label>
+            <NativeTextField
+              id={inputId}
+              className={
+                entry.type === 'expression'
+                  ? 'oge-bpmn-props-input oge-bpmn-props-textarea oge-bpmn-props-expression'
+                  : entry.type === 'textarea'
+                    ? 'oge-bpmn-props-input oge-bpmn-props-textarea'
+                    : 'oge-bpmn-props-input'
+              }
+              multiline={entry.type !== 'text'}
+              spellCheck={entry.type === 'expression' ? false : undefined}
+              value={text(entry)}
+              placeholder={entry.placeholder ?? ''}
+              disabled={disabled}
+              describedBy={describedBy}
+              onCommit={(next) => commitEntry(entry, next)}
+            />
+          </div>
+        );
+    }
+    return (
+      <Fragment key={entry.id}>
+        {field}
+        {entry.description && (
+          <p className="oge-bpmn-props-description" id={describedBy}>
+            {entry.description}
+          </p>
+        )}
+      </Fragment>
+    );
+  };
+  const groupBlocks = groups.map((group) => (
+    <div
+      key={group.id}
+      className="oge-bpmn-props-group"
+      data-group={group.id}
+      role={group.label ? 'group' : undefined}
+      aria-labelledby={group.label ? `${uid}-g-${group.id}` : undefined}
+    >
+      {group.label && (
+        <h3 className="oge-bpmn-props-heading" id={`${uid}-g-${group.id}`}>
+          {group.label}
+        </h3>
+      )}
+      {group.entries.map(renderGroupEntry)}
+    </div>
+  ));
+
   const ap = p.appearance;
   return (
     // Composite name keeps sibling editors' panels distinguishable (axe
@@ -400,6 +614,7 @@ export function BpmnProperties({
       style={style}
     >
       {body}
+      {groupBlocks}
       {ap && (
         <>
           <h3 className="oge-bpmn-props-heading">{msg.appearanceHeading}</h3>

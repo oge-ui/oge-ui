@@ -1,14 +1,24 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  Directive,
+  TemplateRef,
   ViewEncapsulation,
   computed,
+  inject,
   input,
   output,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   OGE_DEFAULT_BPMN_COLOR_PRESETS,
   addLaneCommand,
+  bpmnListCellLabel,
+  bpmnListRemoveLabel,
+  bpmnListWithCell,
+  bpmnListWithRow,
+  bpmnListWithout,
+  fillBpmnMessages,
   bpmnClearColorsCommand,
   bpmnColorInputValue,
   bpmnCompensationCommand,
@@ -38,12 +48,54 @@ import {
   type BpmnLoopMarker,
   type BpmnPropertiesView,
   type BpmnSequenceFlow,
+  type OgeBpmnListColumn,
+  type OgeBpmnListRow,
   type OgeBpmnMessages,
+  type OgeBpmnPropertiesEntry,
+  type OgeBpmnPropertiesGroup,
+  type OgeBpmnPropertiesValue,
 } from '@oge-ui/bpmn-engine';
 
 type PropertiesView = BpmnPropertiesView;
 
 let nextUid = 0;
+
+/** Template context of a custom properties entry (`[ogeBpmnPropertiesEntry]`). */
+export interface OgeBpmnPropertiesEntryContext {
+  /** The entry the provider returned. */
+  readonly $implicit: OgeBpmnPropertiesEntry;
+  readonly entry: OgeBpmnPropertiesEntry;
+  /** Commits a value through the entry's `set` (one undoable command). */
+  readonly commit: (value: OgeBpmnPropertiesValue) => void;
+  /** The DOM id the entry's label points at. */
+  readonly inputId: string;
+}
+
+/**
+ * Draws a `custom` properties entry whose id matches:
+ *
+ * ```html
+ * <oge-bpmn-editor [propertiesProviders]="providers">
+ *   <ng-template ogeBpmnPropertiesEntry="sla" let-entry let-commit="commit">
+ *     <input type="range" [value]="entry.value" (change)="commit($any($event.target).value)" />
+ *   </ng-template>
+ * </oge-bpmn-editor>
+ * ```
+ */
+@Directive({ selector: 'ng-template[ogeBpmnPropertiesEntry]' })
+export class OgeBpmnPropertiesEntryTemplate {
+  /** The id of the custom entry this template draws. */
+  readonly ogeBpmnPropertiesEntry = input.required<string>();
+  readonly template =
+    inject<TemplateRef<OgeBpmnPropertiesEntryContext>>(TemplateRef);
+
+  static ngTemplateContextGuard(
+    _dir: OgeBpmnPropertiesEntryTemplate,
+    _ctx: unknown,
+  ): _ctx is OgeBpmnPropertiesEntryContext {
+    return true;
+  }
+}
 
 /**
  * Internal, dependency-free properties panel rendered by `OgeBpmnEditor` as a
@@ -57,6 +109,7 @@ let nextUid = 0;
   selector: 'oge-bpmn-properties',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  imports: [NgTemplateOutlet],
   styleUrl: './bpmn-properties.scss',
   host: {
     class: 'oge-bpmn-properties',
@@ -367,6 +420,183 @@ let nextUid = 0;
         </div>
       }
     }
+    @for (group of groups(); track group.id) {
+      <div
+        class="oge-bpmn-props-group"
+        [attr.data-group]="group.id"
+        [attr.role]="group.label ? 'group' : null"
+        [attr.aria-labelledby]="group.label ? uid + '-g-' + group.id : null"
+      >
+        @if (group.label) {
+          <h3 class="oge-bpmn-props-heading" [id]="uid + '-g-' + group.id">
+            {{ group.label }}
+          </h3>
+        }
+        @for (entry of group.entries; track entry.id) {
+          @switch (entry.type) {
+            @case ('checkbox') {
+              <label class="oge-bpmn-props-check" [attr.data-entry]="entry.id">
+                <input
+                  type="checkbox"
+                  [id]="uid + '-x-' + entry.id"
+                  [checked]="entry.value === true"
+                  [disabled]="entry.disabled === true || !entry.set"
+                  [attr.aria-describedby]="
+                    entry.description ? uid + '-d-' + entry.id : null
+                  "
+                  (change)="onEntryChecked(entry, $event)"
+                />
+                {{ entry.label }}
+              </label>
+            }
+            @case ('select') {
+              <div class="oge-bpmn-props-field" [attr.data-entry]="entry.id">
+                <label
+                  class="oge-bpmn-props-label"
+                  [for]="uid + '-x-' + entry.id"
+                >
+                  {{ entry.label }}
+                </label>
+                <select
+                  [id]="uid + '-x-' + entry.id"
+                  class="oge-bpmn-props-input oge-bpmn-props-select"
+                  [disabled]="entry.disabled === true || !entry.set"
+                  [attr.aria-describedby]="
+                    entry.description ? uid + '-d-' + entry.id : null
+                  "
+                  (change)="onEntryText(entry, $event)"
+                >
+                  @for (option of entry.options ?? []; track option.value) {
+                    <option
+                      [value]="option.value"
+                      [selected]="option.value === entryText(entry)"
+                      [disabled]="option.disabled === true"
+                    >
+                      {{ option.label }}
+                    </option>
+                  }
+                </select>
+              </div>
+            }
+            @case ('list') {
+              <div
+                class="oge-bpmn-props-field oge-bpmn-props-list"
+                [attr.data-entry]="entry.id"
+                role="group"
+                [attr.aria-labelledby]="uid + '-x-' + entry.id"
+              >
+                <span
+                  class="oge-bpmn-props-label"
+                  [id]="uid + '-x-' + entry.id"
+                >
+                  {{ entry.label }}
+                </span>
+                @for (row of entryRows(entry); track $index; let i = $index) {
+                  <div class="oge-bpmn-props-list-row">
+                    @for (column of entry.columns ?? []; track column.key) {
+                      <input
+                        class="oge-bpmn-props-input oge-bpmn-props-list-cell"
+                        type="text"
+                        [value]="row[column.key] ?? ''"
+                        [placeholder]="column.label"
+                        [disabled]="entry.disabled === true || !entry.set"
+                        [attr.aria-label]="cellLabel(entry, column, i)"
+                        (change)="onListCell(entry, i, column.key, $event)"
+                        (keydown)="
+                          onFieldKeydown($event, row[column.key] ?? '')
+                        "
+                      />
+                    }
+                    <button
+                      type="button"
+                      class="oge-bpmn-props-list-remove"
+                      [disabled]="entry.disabled === true || !entry.set"
+                      [attr.aria-label]="removeRowLabel(entry, i)"
+                      [title]="removeRowLabel(entry, i)"
+                      (click)="onListRemove(entry, i)"
+                    >
+                      ×
+                    </button>
+                  </div>
+                }
+                <button
+                  type="button"
+                  class="oge-bpmn-props-list-add"
+                  [disabled]="entry.disabled === true || !entry.set"
+                  (click)="onListAdd(entry)"
+                >
+                  {{ extensions().addItem }}
+                </button>
+              </div>
+            }
+            @case ('custom') {
+              <div class="oge-bpmn-props-field" [attr.data-entry]="entry.id">
+                <span
+                  class="oge-bpmn-props-label"
+                  [id]="uid + '-x-' + entry.id"
+                >
+                  {{ entry.label }}
+                </span>
+                @if (entryTemplates().get(entry.id); as template) {
+                  <ng-container
+                    *ngTemplateOutlet="template; context: customContext(entry)"
+                  />
+                }
+              </div>
+            }
+            @default {
+              <div class="oge-bpmn-props-field" [attr.data-entry]="entry.id">
+                <label
+                  class="oge-bpmn-props-label"
+                  [for]="uid + '-x-' + entry.id"
+                >
+                  {{ entry.label }}
+                </label>
+                @if (entry.type === 'text') {
+                  <input
+                    [id]="uid + '-x-' + entry.id"
+                    class="oge-bpmn-props-input"
+                    type="text"
+                    [value]="entryText(entry)"
+                    [placeholder]="entry.placeholder ?? ''"
+                    [disabled]="entry.disabled === true || !entry.set"
+                    [attr.aria-describedby]="
+                      entry.description ? uid + '-d-' + entry.id : null
+                    "
+                    (change)="onEntryText(entry, $event)"
+                    (keydown)="onFieldKeydown($event, entryText(entry))"
+                  />
+                } @else {
+                  <textarea
+                    [id]="uid + '-x-' + entry.id"
+                    class="oge-bpmn-props-input oge-bpmn-props-textarea"
+                    [class.oge-bpmn-props-expression]="
+                      entry.type === 'expression'
+                    "
+                    [value]="entryText(entry)"
+                    [placeholder]="entry.placeholder ?? ''"
+                    [disabled]="entry.disabled === true || !entry.set"
+                    [attr.spellcheck]="
+                      entry.type === 'expression' ? 'false' : null
+                    "
+                    [attr.aria-describedby]="
+                      entry.description ? uid + '-d-' + entry.id : null
+                    "
+                    (change)="onEntryText(entry, $event)"
+                    (keydown)="onFieldKeydown($event, entryText(entry))"
+                  ></textarea>
+                }
+              </div>
+            }
+          }
+          @if (entry.description) {
+            <p class="oge-bpmn-props-description" [id]="uid + '-d-' + entry.id">
+              {{ entry.description }}
+            </p>
+          }
+        }
+      </div>
+    }
     @if (appearance(); as ap) {
       <h3 class="oge-bpmn-props-heading">{{ msg().appearanceHeading }}</h3>
       <div
@@ -434,8 +664,20 @@ export class OgeBpmnProperties {
     OGE_DEFAULT_BPMN_COLOR_PRESETS,
   );
 
+  /** Provider groups for the selection (built-in G5b fields included). */
+  readonly groups = input<readonly OgeBpmnPropertiesGroup[]>([]);
+  /** Templates of `custom` entries, by entry id. */
+  readonly entryTemplates = input<
+    ReadonlyMap<string, TemplateRef<OgeBpmnPropertiesEntryContext>>
+  >(new Map());
+
   /** An engine command a field commit wants executed (each one undoable). */
   readonly commandRequested = output<BpmnCommand>();
+
+  /** The G5b extension strings (English-filled). */
+  protected readonly extensions = computed(
+    () => fillBpmnMessages(this.messages()).extensions,
+  );
 
   /** The properties messages block. */
   protected readonly msg = computed(() => this.messages().properties);
@@ -656,6 +898,94 @@ export class OgeBpmnProperties {
     this.commandRequested.emit(
       bpmnCompensationCommand(view, (event.target as HTMLInputElement).checked),
     );
+  }
+
+  // ------------------------------------------------------ provider entries
+
+  /** An entry's value as field text. */
+  protected entryText(entry: OgeBpmnPropertiesEntry): string {
+    return typeof entry.value === 'string' ? entry.value : '';
+  }
+
+  /** A `list` entry's rows. */
+  protected entryRows(
+    entry: OgeBpmnPropertiesEntry,
+  ): readonly OgeBpmnListRow[] {
+    return Array.isArray(entry.value)
+      ? (entry.value as readonly OgeBpmnListRow[])
+      : [];
+  }
+
+  protected cellLabel(
+    entry: OgeBpmnPropertiesEntry,
+    column: OgeBpmnListColumn,
+    index: number,
+  ): string {
+    return bpmnListCellLabel(
+      fillBpmnMessages(this.messages()),
+      entry,
+      column,
+      index,
+    );
+  }
+
+  protected removeRowLabel(
+    entry: OgeBpmnPropertiesEntry,
+    index: number,
+  ): string {
+    return bpmnListRemoveLabel(fillBpmnMessages(this.messages()), entry, index);
+  }
+
+  /** Commits a value through the entry's `set`. */
+  protected commitEntry(
+    entry: OgeBpmnPropertiesEntry,
+    value: OgeBpmnPropertiesValue,
+  ): void {
+    const command = entry.set?.(value) ?? null;
+    if (command !== null) this.commandRequested.emit(command);
+  }
+
+  protected onEntryText(entry: OgeBpmnPropertiesEntry, event: Event): void {
+    this.commitEntry(entry, this.valueOf(event));
+  }
+
+  protected onEntryChecked(entry: OgeBpmnPropertiesEntry, event: Event): void {
+    this.commitEntry(entry, (event.target as HTMLInputElement).checked);
+  }
+
+  protected onListCell(
+    entry: OgeBpmnPropertiesEntry,
+    index: number,
+    key: string,
+    event: Event,
+  ): void {
+    this.commitEntry(
+      entry,
+      bpmnListWithCell(this.entryRows(entry), index, key, this.valueOf(event)),
+    );
+  }
+
+  protected onListRemove(entry: OgeBpmnPropertiesEntry, index: number): void {
+    this.commitEntry(entry, bpmnListWithout(this.entryRows(entry), index));
+  }
+
+  protected onListAdd(entry: OgeBpmnPropertiesEntry): void {
+    this.commitEntry(
+      entry,
+      bpmnListWithRow(this.entryRows(entry), entry.columns ?? []),
+    );
+  }
+
+  /** The context handed to a custom entry's template. */
+  protected customContext(
+    entry: OgeBpmnPropertiesEntry,
+  ): OgeBpmnPropertiesEntryContext {
+    return {
+      $implicit: entry,
+      entry,
+      commit: (value) => this.commitEntry(entry, value),
+      inputId: `${this.uid}-x-${entry.id}`,
+    };
   }
 
   /** Enter commits text inputs immediately; Escape reverts to the model value. */

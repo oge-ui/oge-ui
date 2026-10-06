@@ -369,7 +369,7 @@ function ConfigDemo(): ReactNode {
     <app-demo-card
       [chips]="['importXml', 'exportXml', 'fidelity warnings']"
       heading="Import & export"
-      description="The engine reads prefix-agnostic BPMN 2.0 (<code>bpmn:</code>, <code>bpmn2:</code> or no prefix) and writes byte-deterministic XML with normalized prefixes — camunda-flavored files round-trip byte-identically, and bpmn.io <code>bioc</code> element colors are read and written both ways. The few remaining unsupported constructs (nested lane sets, extra event definitions on one event, timer/error payload children) are dropped with an explicit warning in <code>onImportCompleted</code> — never silently. Edit the XML below, import it, move things around, then export it back."
+      description="The engine reads prefix-agnostic BPMN 2.0 (<code>bpmn:</code>, <code>bpmn2:</code> or no prefix) and writes byte-deterministic XML with normalized prefixes — camunda-flavored files round-trip byte-identically, and bpmn.io <code>bioc</code> element colors are read and written both ways. Timer expressions, message / signal / error / escalation references, documentation and Camunda / Zeebe extension elements are read into editable fields; the few remaining unsupported constructs (nested lane sets, extra event definitions on one event) are dropped with an explicit warning in <code>onImportCompleted</code> — never silently. Edit the XML below, import it, move things around, then export it back."
       [code]="demos[1].source"
       language="tsx"
     >

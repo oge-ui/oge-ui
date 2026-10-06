@@ -7,6 +7,7 @@ import {
   afterNextRender,
   afterRenderEffect,
   computed,
+  contentChildren,
   effect,
   inject,
   input,
@@ -23,6 +24,14 @@ import {
   type BpmnDiagramJson,
   type BpmnImportResult,
   type BpmnPaletteItemType,
+  type OgeBpmnContextPadProvider,
+  type OgeBpmnLintChangedEvent,
+  type OgeBpmnLintIssue,
+  type OgeBpmnLintRulesInput,
+  type OgeBpmnPaletteProvider,
+  type OgeBpmnPngExportOptions,
+  type OgeBpmnPropertiesProvider,
+  type OgeBpmnRenderers,
   type OgeBpmnDiagramChangedEvent,
   type OgeBpmnElementsChangedEvent,
   type OgeBpmnImportEvent,
@@ -34,7 +43,12 @@ import {
 } from '@oge-ui/bpmn-engine';
 import { OGE_BPMN_CONFIG } from '../config';
 import { OgeBpmnPalette } from './bpmn-palette';
-import { OgeBpmnProperties } from './bpmn-properties';
+import { rasterizeBpmnSvg } from './bpmn-png';
+import {
+  OgeBpmnProperties,
+  OgeBpmnPropertiesEntryTemplate,
+} from './bpmn-properties';
+import { OgeBpmnSvgNodes } from './bpmn-svg';
 
 /**
  * Angular's reactivity in the shape the engine's editor core consumes
@@ -68,7 +82,7 @@ let nextUid = 0;
   selector: 'oge-bpmn-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [OgeBpmnPalette, OgeBpmnProperties],
+  imports: [OgeBpmnPalette, OgeBpmnProperties, OgeBpmnSvgNodes],
   styleUrl: './bpmn-editor.scss',
   host: {
     class: 'oge-bpmn-editor',
@@ -183,6 +197,33 @@ let nextUid = 0;
             </svg>
           </button>
         }
+        @if (lint()) {
+          <button
+            type="button"
+            class="oge-bpmn-header-btn oge-bpmn-header-problems"
+            [class.oge-bpmn-header-problems-found]="
+              core.problemsView().count > 0
+            "
+            [attr.aria-expanded]="core.problemsOpen()"
+            [attr.aria-controls]="core.uid + '-problems'"
+            [attr.aria-label]="
+              core.msg().lint.panelLabel +
+              ' (' +
+              core.problemsView().count +
+              ')'
+            "
+            [title]="core.msg().lint.panelLabel"
+            (click)="core.toggleProblems()"
+          >
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+              <path d="M10 3 18 17H2Z" />
+              <path d="M10 8v4M10 14.5v.5" />
+            </svg>
+            <span class="oge-bpmn-problems-count" aria-hidden="true">{{
+              core.problemsView().count
+            }}</span>
+          </button>
+        }
         @if (showPropertiesPanel() && !core.locked()) {
           <button
             type="button"
@@ -234,6 +275,8 @@ let nextUid = 0;
             [labels]="core.msg().paletteLabels"
             [activeType]="core.paletteActive()"
             [label]="core.msg().paletteLabel"
+            [customEntries]="core.paletteEntries()"
+            (entryPicked)="core.onPaletteEntry($event)"
             (toolPicked)="core.onToolPicked($event)"
             (dragStarted)="core.onPaletteDragStart($event)"
           />
@@ -421,8 +464,9 @@ let nextUid = 0;
                   [class.oge-bpmn-dimmed]="core.dimmedIds().has(p.id)"
                   [class.oge-bpmn-selected]="p.selected"
                   [class.oge-bpmn-drop-ok]="
-                    core.connectHover()?.id === p.id &&
-                    core.connectHover()?.allowed === true
+                    (core.connectHover()?.id === p.id &&
+                      core.connectHover()?.allowed === true) ||
+                    core.dropContainerId() === p.id
                   "
                   [class.oge-bpmn-drop-deny]="
                     core.connectHover()?.id === p.id &&
@@ -487,6 +531,23 @@ let nextUid = 0;
                       {{ p.name }}
                     </text>
                   }
+                  @if (p.lint; as badge) {
+                    <g
+                      class="oge-bpmn-lint-badge"
+                      [class.oge-bpmn-lint-error]="badge.severity === 'error'"
+                      [class.oge-bpmn-lint-warning]="
+                        badge.severity === 'warning'
+                      "
+                      [class.oge-bpmn-lint-info]="badge.severity === 'info'"
+                      aria-hidden="true"
+                      [attr.transform]="
+                        'translate(' + badge.x + ' ' + badge.y + ')'
+                      "
+                    >
+                      <circle r="8" />
+                      <text y="4" text-anchor="middle">{{ badge.count }}</text>
+                    </g>
+                  }
                 </g>
               }
             </g>
@@ -547,6 +608,23 @@ let nextUid = 0;
                       {{ e.label }}
                     </text>
                   }
+                  @if (e.lint; as badge) {
+                    <g
+                      class="oge-bpmn-lint-badge"
+                      [class.oge-bpmn-lint-error]="badge.severity === 'error'"
+                      [class.oge-bpmn-lint-warning]="
+                        badge.severity === 'warning'
+                      "
+                      [class.oge-bpmn-lint-info]="badge.severity === 'info'"
+                      aria-hidden="true"
+                      [attr.transform]="
+                        'translate(' + badge.x + ' ' + badge.y + ')'
+                      "
+                    >
+                      <circle r="8" />
+                      <text y="4" text-anchor="middle">{{ badge.count }}</text>
+                    </g>
+                  }
                 </g>
               }
             </g>
@@ -559,7 +637,8 @@ let nextUid = 0;
                   [class.oge-bpmn-drop-ok]="
                     (core.connectHover()?.id === n.id &&
                       core.connectHover()?.allowed === true) ||
-                    core.attachHover() === n.id
+                    core.attachHover() === n.id ||
+                    core.dropContainerId() === n.id
                   "
                   [class.oge-bpmn-drop-deny]="
                     core.connectHover()?.id === n.id &&
@@ -572,144 +651,154 @@ let nextUid = 0;
                   (pointerdown)="core.onShapePointerDown(n.id, $event)"
                   (dblclick)="core.startLabelEdit(n.id)"
                 >
-                  @switch (n.glyph) {
-                    @case ('event') {
-                      <circle
-                        class="oge-bpmn-node oge-bpmn-event"
-                        [class.oge-bpmn-event-end]="n.thick"
-                        [class.oge-bpmn-event-dashed]="n.dashed"
-                        [style.fill]="n.fill"
-                        [style.stroke]="n.stroke"
-                        [attr.cx]="n.width / 2"
-                        [attr.cy]="n.height / 2"
-                        [attr.r]="n.width / 2"
-                      />
-                      @if (n.double) {
+                  @if (n.custom; as custom) {
+                    <svg:g
+                      class="oge-bpmn-custom-glyph"
+                      ogeBpmnSvgNodes
+                      [nodes]="custom"
+                    />
+                  } @else {
+                    @switch (n.glyph) {
+                      @case ('event') {
                         <circle
                           class="oge-bpmn-node oge-bpmn-event"
+                          [class.oge-bpmn-event-end]="n.thick"
                           [class.oge-bpmn-event-dashed]="n.dashed"
-                          [style.fill]="'none'"
+                          [style.fill]="n.fill"
                           [style.stroke]="n.stroke"
                           [attr.cx]="n.width / 2"
                           [attr.cy]="n.height / 2"
-                          [attr.r]="n.width / 2 - 4"
+                          [attr.r]="n.width / 2"
                         />
+                        @if (n.double) {
+                          <circle
+                            class="oge-bpmn-node oge-bpmn-event"
+                            [class.oge-bpmn-event-dashed]="n.dashed"
+                            [style.fill]="'none'"
+                            [style.stroke]="n.stroke"
+                            [attr.cx]="n.width / 2"
+                            [attr.cy]="n.height / 2"
+                            [attr.r]="n.width / 2 - 4"
+                          />
+                        }
+                        @if (n.throwDot) {
+                          <circle
+                            class="oge-bpmn-event-dot"
+                            [style.fill]="n.stroke"
+                            [attr.cx]="n.width / 2"
+                            [attr.cy]="n.height / 2"
+                            r="4"
+                          />
+                        }
+                        @if (n.eventDefPath; as defPath) {
+                          <path
+                            class="oge-bpmn-event-def"
+                            [class.oge-bpmn-event-def-filled]="n.eventDefFilled"
+                            [style.stroke]="n.stroke"
+                            [style.fill]="n.eventDefFilled ? n.stroke : null"
+                            [attr.d]="defPath"
+                          />
+                        }
                       }
-                      @if (n.throwDot) {
-                        <circle
-                          class="oge-bpmn-event-dot"
-                          [style.fill]="n.stroke"
-                          [attr.cx]="n.width / 2"
-                          [attr.cy]="n.height / 2"
-                          r="4"
+                      @case ('subprocess') {
+                        <rect
+                          class="oge-bpmn-node oge-bpmn-task oge-bpmn-subprocess"
+                          [class.oge-bpmn-subprocess-event]="n.dotted"
+                          [style.fill]="n.fill"
+                          [style.stroke]="n.stroke"
+                          [attr.width]="n.width"
+                          [attr.height]="n.height"
+                          rx="10"
                         />
+                        @if (n.transactionInner) {
+                          <rect
+                            class="oge-bpmn-node oge-bpmn-task"
+                            x="3"
+                            y="3"
+                            [style.fill]="'none'"
+                            [style.stroke]="n.stroke"
+                            [attr.width]="n.width - 6"
+                            [attr.height]="n.height - 6"
+                            rx="7"
+                          />
+                        }
+                        @if (n.collapsedPath; as plusPath) {
+                          <path
+                            class="oge-bpmn-marker"
+                            [style.stroke]="n.stroke"
+                            [attr.d]="plusPath"
+                          />
+                        }
                       }
-                      @if (n.eventDefPath; as defPath) {
+                      @case ('data') {
                         <path
-                          class="oge-bpmn-event-def"
-                          [class.oge-bpmn-event-def-filled]="n.eventDefFilled"
+                          class="oge-bpmn-node oge-bpmn-data"
+                          [style.fill]="n.fill"
                           [style.stroke]="n.stroke"
-                          [style.fill]="n.eventDefFilled ? n.stroke : null"
-                          [attr.d]="defPath"
+                          [attr.d]="n.dataPath"
                         />
                       }
-                    }
-                    @case ('subprocess') {
-                      <rect
-                        class="oge-bpmn-node oge-bpmn-task oge-bpmn-subprocess"
-                        [class.oge-bpmn-subprocess-event]="n.dotted"
-                        [style.fill]="n.fill"
-                        [style.stroke]="n.stroke"
-                        [attr.width]="n.width"
-                        [attr.height]="n.height"
-                        rx="10"
-                      />
-                      @if (n.transactionInner) {
+                      @case ('group') {
+                        <rect
+                          class="oge-bpmn-node oge-bpmn-group"
+                          [style.stroke]="n.stroke"
+                          [attr.width]="n.width"
+                          [attr.height]="n.height"
+                          rx="10"
+                        />
+                      }
+                      @case ('task') {
                         <rect
                           class="oge-bpmn-node oge-bpmn-task"
-                          x="3"
-                          y="3"
-                          [style.fill]="'none'"
+                          [class.oge-bpmn-call-activity]="n.callActivity"
+                          [style.fill]="n.fill"
                           [style.stroke]="n.stroke"
-                          [attr.width]="n.width - 6"
-                          [attr.height]="n.height - 6"
-                          rx="7"
+                          [attr.width]="n.width"
+                          [attr.height]="n.height"
+                          rx="10"
                         />
+                        @switch (n.taskIcon) {
+                          @case ('user') {
+                            <g class="oge-bpmn-task-icon">
+                              <circle cx="14" cy="12" r="3" />
+                              <path d="M9 21c0-2.8 2.2-4.6 5-4.6s5 1.8 5 4.6" />
+                            </g>
+                          }
+                          @case ('service') {
+                            <g class="oge-bpmn-task-icon">
+                              <circle cx="14" cy="14" r="4" />
+                              <path
+                                d="M14 7.5v3M14 17.5v3M7.5 14h3M17.5 14h3"
+                              />
+                            </g>
+                          }
+                          @case ('script') {
+                            <g class="oge-bpmn-task-icon">
+                              <path d="M8 9h10M8 13h10M8 17h6" />
+                            </g>
+                          }
+                        }
                       }
-                      @if (n.collapsedPath; as plusPath) {
+                      @case ('gateway') {
                         <path
-                          class="oge-bpmn-marker"
+                          class="oge-bpmn-node oge-bpmn-gateway"
+                          [style.fill]="n.fill"
                           [style.stroke]="n.stroke"
-                          [attr.d]="plusPath"
+                          [attr.d]="n.gatewayPath"
+                        />
+                        <path
+                          class="oge-bpmn-gateway-mark"
+                          [style.stroke]="n.stroke"
+                          [attr.d]="n.gatewayMark"
                         />
                       }
-                    }
-                    @case ('data') {
-                      <path
-                        class="oge-bpmn-node oge-bpmn-data"
-                        [style.fill]="n.fill"
-                        [style.stroke]="n.stroke"
-                        [attr.d]="n.dataPath"
-                      />
-                    }
-                    @case ('group') {
-                      <rect
-                        class="oge-bpmn-node oge-bpmn-group"
-                        [style.stroke]="n.stroke"
-                        [attr.width]="n.width"
-                        [attr.height]="n.height"
-                        rx="10"
-                      />
-                    }
-                    @case ('task') {
-                      <rect
-                        class="oge-bpmn-node oge-bpmn-task"
-                        [class.oge-bpmn-call-activity]="n.callActivity"
-                        [style.fill]="n.fill"
-                        [style.stroke]="n.stroke"
-                        [attr.width]="n.width"
-                        [attr.height]="n.height"
-                        rx="10"
-                      />
-                      @switch (n.taskIcon) {
-                        @case ('user') {
-                          <g class="oge-bpmn-task-icon">
-                            <circle cx="14" cy="12" r="3" />
-                            <path d="M9 21c0-2.8 2.2-4.6 5-4.6s5 1.8 5 4.6" />
-                          </g>
-                        }
-                        @case ('service') {
-                          <g class="oge-bpmn-task-icon">
-                            <circle cx="14" cy="14" r="4" />
-                            <path d="M14 7.5v3M14 17.5v3M7.5 14h3M17.5 14h3" />
-                          </g>
-                        }
-                        @case ('script') {
-                          <g class="oge-bpmn-task-icon">
-                            <path d="M8 9h10M8 13h10M8 17h6" />
-                          </g>
-                        }
+                      @case ('annotation') {
+                        <path
+                          class="oge-bpmn-node oge-bpmn-annotation"
+                          [style.stroke]="n.stroke"
+                          [attr.d]="n.annotationPath"
+                        />
                       }
-                    }
-                    @case ('gateway') {
-                      <path
-                        class="oge-bpmn-node oge-bpmn-gateway"
-                        [style.fill]="n.fill"
-                        [style.stroke]="n.stroke"
-                        [attr.d]="n.gatewayPath"
-                      />
-                      <path
-                        class="oge-bpmn-gateway-mark"
-                        [style.stroke]="n.stroke"
-                        [attr.d]="n.gatewayMark"
-                      />
-                    }
-                    @case ('annotation') {
-                      <path
-                        class="oge-bpmn-node oge-bpmn-annotation"
-                        [style.stroke]="n.stroke"
-                        [attr.d]="n.annotationPath"
-                      />
                     }
                   }
                   @for (markerPath of n.markerPaths; track $index) {
@@ -737,6 +826,23 @@ let nextUid = 0;
                     >
                       {{ line.text }}
                     </text>
+                  }
+                  @if (n.lint; as badge) {
+                    <g
+                      class="oge-bpmn-lint-badge"
+                      [class.oge-bpmn-lint-error]="badge.severity === 'error'"
+                      [class.oge-bpmn-lint-warning]="
+                        badge.severity === 'warning'
+                      "
+                      [class.oge-bpmn-lint-info]="badge.severity === 'info'"
+                      aria-hidden="true"
+                      [attr.transform]="
+                        'translate(' + badge.x + ' ' + badge.y + ')'
+                      "
+                    >
+                      <circle r="8" />
+                      <text y="4" text-anchor="middle">{{ badge.count }}</text>
+                    </g>
                   }
                   @if (!core.locked()) {
                     <rect
@@ -982,6 +1088,26 @@ let nextUid = 0;
                   aria-hidden="true"
                 >
                   <path d="M2 12 14 4M5 12l4-8" />
+                </svg>
+              </button>
+            }
+            @for (custom of core.padEntries(); track custom.entry.id) {
+              <button
+                type="button"
+                class="oge-bpmn-pad-btn oge-bpmn-pad-custom"
+                [attr.data-entry]="custom.entry.id"
+                [attr.aria-label]="custom.entry.label"
+                [attr.aria-keyshortcuts]="custom.hotkey?.toUpperCase() ?? null"
+                [title]="custom.entry.label"
+                (click)="core.onPadEntry(custom.entry, pad.id)"
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  width="16"
+                  height="16"
+                  aria-hidden="true"
+                >
+                  <svg:g ogeBpmnSvgNodes [nodes]="custom.icon" />
                 </svg>
               </button>
             }
@@ -1381,11 +1507,53 @@ let nextUid = 0;
           [selection]="core.selection()"
           [messages]="core.msg()"
           [colorPresets]="core.colorPresets()"
+          [groups]="core.propertiesGroups()"
+          [entryTemplates]="entryTemplateMap()"
           [style.inline-size.px]="core.propertiesWidth()"
           (commandRequested)="core.onPanelCommand($event)"
         />
       }
     </div>
+    @if (lint() && core.problemsOpen()) {
+      <section
+        class="oge-bpmn-problems"
+        role="region"
+        tabindex="-1"
+        [id]="core.uid + '-problems'"
+        [attr.aria-label]="
+          core.msg().canvasLabel + ' — ' + core.msg().lint.panelLabel
+        "
+      >
+        <p class="oge-bpmn-problems-summary">
+          {{ core.problemsView().summary }}
+        </p>
+        @if (core.problemsView().rows.length === 0) {
+          <p class="oge-bpmn-problems-empty">{{ core.msg().lint.empty }}</p>
+        } @else {
+          <ul class="oge-bpmn-problems-list">
+            @for (row of core.problemsView().rows; track row.issue.key) {
+              <li>
+                <button
+                  type="button"
+                  class="oge-bpmn-problem"
+                  [class.oge-bpmn-problem-error]="
+                    row.issue.severity === 'error'
+                  "
+                  [class.oge-bpmn-problem-warning]="
+                    row.issue.severity === 'warning'
+                  "
+                  [class.oge-bpmn-problem-info]="row.issue.severity === 'info'"
+                  [attr.data-element]="row.issue.elementId"
+                  (click)="core.onProblemPick(row.issue)"
+                >
+                  {{ row.text }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
   `,
 })
 export class OgeBpmnEditor {
@@ -1428,6 +1596,34 @@ export class OgeBpmnEditor {
   readonly messages = input<Partial<OgeBpmnMessages>>({});
   /** Two-way zoom factor; wheel zooming writes it back. */
   readonly zoom = model(1);
+  /**
+   * Live validation: badges on offending shapes (with the problem text in
+   * their accessible name), a header toggle with the problem count, the
+   * problems panel and `lintChanged`. `validate()` works either way.
+   */
+  readonly lint = input(false);
+  /**
+   * Validation rules added to, replacing or re-grading the built-ins —
+   * `{ id: 'label-required', severity: 'off' }` disables one.
+   */
+  readonly lintRules = input<OgeBpmnLintRulesInput | undefined>(undefined);
+  /**
+   * Properties providers merged with the built-in ones by `id` (pass
+   * `OGE_BPMN_CAMUNDA_PROVIDERS` for the Camunda / Zeebe fields).
+   */
+  readonly propertiesProviders = input<
+    readonly OgeBpmnPropertiesProvider[] | undefined
+  >(undefined);
+  /** Custom palette entries (icon, label, hotkey, action). */
+  readonly paletteProvider = input<OgeBpmnPaletteProvider | undefined>(
+    undefined,
+  );
+  /** Custom context-pad actions of the selected element. */
+  readonly contextPadProvider = input<OgeBpmnContextPadProvider | undefined>(
+    undefined,
+  );
+  /** Per-type shape overrides drawn with the safe `bpmnSvg` builders. */
+  readonly renderers = input<OgeBpmnRenderers | undefined>(undefined);
 
   /** The selection changed (user interaction or `select()`). */
   readonly selectionChanged = output<OgeBpmnSelectionEvent>();
@@ -1447,6 +1643,22 @@ export class OgeBpmnEditor {
    * cancelled on destroy.
    */
   readonly diagramChanged = output<OgeBpmnDiagramChangedEvent>();
+  /** The live validation result changed (only while `lint` is on). */
+  readonly lintChanged = output<OgeBpmnLintChangedEvent>();
+
+  /** `<ng-template ogeBpmnPropertiesEntry="id">` templates of custom entries. */
+  private readonly entryTemplates = contentChildren(
+    OgeBpmnPropertiesEntryTemplate,
+  );
+  /** The custom-entry templates by entry id. */
+  protected readonly entryTemplateMap = computed(
+    () =>
+      new Map(
+        this.entryTemplates().map(
+          (t) => [t.ogeBpmnPropertiesEntry(), t.template] as const,
+        ),
+      ),
+  );
 
   private readonly wrapEl = viewChild<ElementRef<HTMLDivElement>>('wrap');
   private readonly labelEditEl =
@@ -1481,7 +1693,14 @@ export class OgeBpmnEditor {
       importCompleted: (event) => this.importCompleted.emit(event),
       dirtyChanged: (dirty) => this.dirtyChanged.emit(dirty),
       diagramChanged: (event) => this.diagramChanged.emit(event),
+      lintChanged: (event) => this.lintChanged.emit(event),
     },
+    lint: () => this.lint(),
+    lintRules: () => this.lintRules(),
+    propertiesProviders: () => this.propertiesProviders(),
+    paletteProvider: () => this.paletteProvider(),
+    contextPadProvider: () => this.contextPadProvider(),
+    renderers: () => this.renderers(),
   });
 
   /** Host binding: the effective lock (`readOnly` or `'view'` mode). */
@@ -1499,6 +1718,11 @@ export class OgeBpmnEditor {
     effect(() => {
       const z = this.zoom();
       untracked(() => this.core.applyZoom(z));
+    });
+    // live validation → lintChanged (the core emits only on a real change)
+    effect(() => {
+      this.core.lintIssues();
+      untracked(() => this.core.syncLint());
     });
     // viewport → zoom model.
     effect(() => {
@@ -1563,6 +1787,27 @@ export class OgeBpmnEditor {
    */
   exportSvg(): string {
     return this.core.exportSvg();
+  }
+
+  /**
+   * Rasterizes the SVG export to a PNG blob (canvas, no library). Resolves
+   * null where there is no canvas (server rendering, tests).
+   */
+  exportPng(options: OgeBpmnPngExportOptions = {}): Promise<Blob | null> {
+    return rasterizeBpmnSvg(
+      this.core.exportSvg(
+        options.padding !== undefined ? { padding: options.padding } : {},
+      ),
+      options,
+    );
+  }
+
+  /**
+   * Validates the diagram against the effective rules and returns every
+   * issue (whether or not `lint` is on; with it on, the problems panel opens).
+   */
+  validate(): readonly OgeBpmnLintIssue[] {
+    return this.core.validate();
   }
 
   /** Replaces the diagram with an empty one and resets history and viewport. */

@@ -6,6 +6,7 @@
 // files. Published as a secondary entry so an app's own tests can use real
 // documents without shipping them in the main bundle.
 export {
+  CAMUNDA_FIXTURE_XML,
   COLLABORATION_FIXTURE_XML,
   COLORED_FIXTURE_XML,
   CDATA_FIXTURE_XML,

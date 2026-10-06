@@ -1,3 +1,4 @@
+import type { BpmnXmlElement } from './bpmn-xml-element';
 import type { Point, Rect } from './geometry';
 
 /** Event element kinds, including activity-border boundary events (v0.3). */
@@ -34,6 +35,58 @@ export type BpmnEventDefinitionKind =
   | 'link'
   | 'compensate'
   | 'terminate';
+
+/** The three expression kinds of a timer event definition. */
+export type BpmnTimerKind = 'timeDate' | 'timeDuration' | 'timeCycle';
+
+/**
+ * The payload of an event's event definition (G5b): timer expression,
+ * message / signal / error / escalation reference, conditional condition or
+ * link name. Unknown attributes and children of the definition element are
+ * preserved verbatim.
+ */
+export interface BpmnEventDetails {
+  /**
+   * Id of the definition element when it differs from the derived
+   * `{eventId}_def` the writer would emit (kept for round-trip fidelity).
+   */
+  readonly id?: string;
+  /** Timer definitions: the expression and which of the three kinds it is. */
+  readonly timer?: {
+    readonly kind: BpmnTimerKind;
+    readonly expression: string;
+  };
+  /**
+   * Message, signal, error and escalation definitions: the id of the
+   * referenced root element (`messageRef`, `signalRef`, `errorRef`,
+   * `escalationRef` on the wire).
+   */
+  readonly ref?: string;
+  /** Conditional definitions: the condition expression. */
+  readonly condition?: string;
+  /** Link definitions: the link name pairing a throw with a catch. */
+  readonly linkName?: string;
+  /** Serialized child fragments of the definition preserved verbatim. */
+  readonly foreignChildren?: readonly string[];
+  /** Unknown attributes of the definition preserved verbatim by qualified name. */
+  readonly foreignAttributes?: Readonly<Record<string, string>>;
+}
+
+/** The definitions-level root elements an event definition can reference. */
+export type BpmnRootElementType = 'message' | 'signal' | 'error' | 'escalation';
+
+/** A `<bpmn:message>` / `<bpmn:signal>` / `<bpmn:error>` / `<bpmn:escalation>`. */
+export interface BpmnRootElement {
+  readonly id: string;
+  readonly type: BpmnRootElementType;
+  readonly name?: string;
+  /** Errors: `errorCode`; escalations: `escalationCode`. */
+  readonly code?: string;
+  /** Serialized child fragments preserved verbatim (e.g. `zeebe:subscription`). */
+  readonly foreignChildren?: readonly string[];
+  /** Unknown attributes preserved verbatim by qualified name. */
+  readonly foreignAttributes?: Readonly<Record<string, string>>;
+}
 
 /** Loop/multi-instance/compensation markers rendered at an activity's bottom center. */
 export type BpmnActivityMarker =
@@ -85,6 +138,15 @@ export interface BpmnFlowNode {
   readonly calledElement?: string;
   /** The event's single event definition kind (multiple definitions are not modeled). */
   readonly eventDefinition?: BpmnEventDefinitionKind;
+  /** Payload of the event definition (timer, reference, condition, link name). */
+  readonly eventDetails?: BpmnEventDetails;
+  /** `<bpmn:documentation>` text. */
+  readonly documentation?: string;
+  /**
+   * Content of `<bpmn:extensionElements>` as an editable element tree
+   * (`zeebe:taskDefinition`, `camunda:inputOutput`, …).
+   */
+  readonly extensionElements?: readonly BpmnXmlElement[];
   /** Boundary events only: id of the host activity this event is attached to. */
   readonly attachedToRef?: string;
   /** Boundary events only: false = non-interrupting (dashed rendering). Default true. */
@@ -104,6 +166,8 @@ export interface BpmnTextAnnotation {
   readonly id: string;
   readonly type: 'textAnnotation';
   readonly text: string;
+  /** `<bpmn:documentation>` text. */
+  readonly documentation?: string;
   /** Id of the containing sub-process; undefined = direct child of the process. */
   readonly parentId?: string;
   /** Id of the pool (participant) whose process this annotation belongs to. */
@@ -125,6 +189,10 @@ export interface BpmnSequenceFlow {
   readonly targetRef: string;
   readonly name?: string;
   readonly conditionExpression?: string;
+  /** `<bpmn:documentation>` text. */
+  readonly documentation?: string;
+  /** Content of `<bpmn:extensionElements>` as an editable element tree. */
+  readonly extensionElements?: readonly BpmnXmlElement[];
   /** Serialized child fragments preserved verbatim for round-trip fidelity. */
   readonly foreignChildren?: readonly string[];
   /** Unknown attributes preserved verbatim by qualified name. */
@@ -137,6 +205,8 @@ export interface BpmnAssociation {
   readonly type: 'association';
   readonly sourceRef: string;
   readonly targetRef: string;
+  /** `<bpmn:documentation>` text. */
+  readonly documentation?: string;
   /** Serialized child fragments preserved verbatim for round-trip fidelity. */
   readonly foreignChildren?: readonly string[];
   /** Unknown attributes preserved verbatim by qualified name. */
@@ -154,6 +224,8 @@ export interface BpmnMessageFlow {
   readonly sourceRef: string;
   readonly targetRef: string;
   readonly name?: string;
+  /** `<bpmn:documentation>` text. */
+  readonly documentation?: string;
   /** Serialized child fragments preserved verbatim for round-trip fidelity. */
   readonly foreignChildren?: readonly string[];
   /** Unknown attributes preserved verbatim by qualified name. */
@@ -171,6 +243,8 @@ export interface BpmnDataAssociation {
   readonly type: 'dataAssociation';
   readonly sourceRef: string;
   readonly targetRef: string;
+  /** `<bpmn:documentation>` text. */
+  readonly documentation?: string;
   /** Serialized child fragments preserved verbatim for round-trip fidelity. */
   readonly foreignChildren?: readonly string[];
   /** Unknown attributes preserved verbatim by qualified name. */
@@ -199,6 +273,8 @@ export interface BpmnLane {
 export interface BpmnPool {
   readonly id: string;
   readonly name?: string;
+  /** `<bpmn:documentation>` text of the participant. */
+  readonly documentation?: string;
   /** Id of the participant's process; undefined = black-box pool. */
   readonly processRef?: string;
   /** The pool's lanes, top to bottom. Empty when the pool has no lane set. */
@@ -259,6 +335,10 @@ export interface BpmnDiagram {
   readonly processId: string;
   readonly processName?: string;
   readonly isExecutable: boolean;
+  /** `<bpmn:documentation>` text of the default process. */
+  readonly processDocumentation?: string;
+  /** `<bpmn:extensionElements>` content of the default process. */
+  readonly processExtensionElements?: readonly BpmnXmlElement[];
   /** Unknown attributes of the default `<bpmn:process>`, preserved verbatim. */
   readonly processForeignAttributes?: Readonly<Record<string, string>>;
   /** Unknown attributes of the `<bpmn:collaboration>`, preserved verbatim. */
@@ -282,6 +362,11 @@ export interface BpmnDiagram {
   readonly definitionsAttrs: Readonly<Record<string, string>>;
   /** Serialized definitions-level child fragments preserved verbatim for round-trip fidelity. */
   readonly foreignDefinitionsChildren: readonly string[];
+  /**
+   * Messages, signals, errors and escalations declared on `<definitions>`, in
+   * document order — what event definitions reference by id.
+   */
+  readonly rootElements?: readonly BpmnRootElement[];
 }
 
 /** Default shape sizes per node type, matching bpmn-js conventions. */

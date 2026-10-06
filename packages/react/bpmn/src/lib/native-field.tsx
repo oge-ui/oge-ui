@@ -56,6 +56,10 @@ export function NativeTextField({
   value,
   multiline = false,
   ariaLabel,
+  placeholder,
+  disabled,
+  describedBy,
+  spellCheck,
   onCommit,
 }: {
   id?: string;
@@ -63,6 +67,10 @@ export function NativeTextField({
   value: string;
   multiline?: boolean;
   ariaLabel?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  describedBy?: string;
+  spellCheck?: boolean;
   onCommit: (value: string) => void;
 }): ReactNode {
   const ref = useNativeChange<HTMLInputElement | HTMLTextAreaElement>((el) =>
@@ -76,6 +84,10 @@ export function NativeTextField({
     className,
     defaultValue: value,
     'aria-label': ariaLabel,
+    'aria-describedby': describedBy,
+    placeholder,
+    disabled,
+    spellCheck,
     onKeyDown: (
       event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => fieldKeydown(event, value),
@@ -89,12 +101,18 @@ export function NativeTextField({
 
 /** A checkbox committing on the native `change` event. */
 export function NativeCheckbox({
+  id,
   className,
   checked,
+  disabled,
+  describedBy,
   onCommit,
 }: {
+  id?: string;
   className?: string;
   checked: boolean;
+  disabled?: boolean;
+  describedBy?: string;
   onCommit: (checked: boolean) => void;
 }): ReactNode {
   const ref = useNativeChange<HTMLInputElement>((el) => onCommit(el.checked));
@@ -104,9 +122,12 @@ export function NativeCheckbox({
   return (
     <input
       ref={ref}
+      id={id}
       type="checkbox"
       className={className}
       defaultChecked={checked}
+      disabled={disabled}
+      aria-describedby={describedBy}
     />
   );
 }
@@ -116,12 +137,16 @@ export function NativeSelect({
   id,
   className,
   value,
+  disabled,
+  describedBy,
   onCommit,
   children,
 }: {
   id: string;
   className: string;
   value: string;
+  disabled?: boolean;
+  describedBy?: string;
   onCommit: (value: string) => void;
   children: ReactNode;
 }): ReactNode {
@@ -130,7 +155,14 @@ export function NativeSelect({
     if (ref.current) ref.current.value = value;
   }, [value]);
   return (
-    <select ref={ref} id={id} className={className} defaultValue={value}>
+    <select
+      ref={ref}
+      id={id}
+      className={className}
+      defaultValue={value}
+      disabled={disabled}
+      aria-describedby={describedBy}
+    >
       {children}
     </select>
   );

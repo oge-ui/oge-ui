@@ -890,6 +890,24 @@ export const appRoutes: Route[] = [
         title: 'OGE — BPMN Editor',
       },
       {
+        path: 'validation',
+        loadComponent: () =>
+          import('./pages/bpmn/validation').then((m) => m.BpmnValidationPage),
+        title: 'OGE — BPMN Validation',
+      },
+      {
+        path: 'extending',
+        loadComponent: () =>
+          import('./pages/bpmn/extending').then((m) => m.BpmnExtendingPage),
+        title: 'OGE — Extending the BPMN Editor',
+      },
+      {
+        path: 'camunda',
+        loadComponent: () =>
+          import('./pages/bpmn/camunda').then((m) => m.BpmnCamundaPage),
+        title: 'OGE — BPMN Camunda / Zeebe',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/bpmn/api').then((m) => m.BpmnApiPage),

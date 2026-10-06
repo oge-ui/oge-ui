@@ -333,6 +333,21 @@ export class App {
       items: [
         { path: '/components/bpmn', label: 'Overview', icon: 'workflow' },
         {
+          path: '/components/bpmn/validation',
+          label: 'Validation',
+          icon: 'check-square',
+        },
+        {
+          path: '/components/bpmn/extending',
+          label: 'Extending the editor',
+          icon: 'package',
+        },
+        {
+          path: '/components/bpmn/camunda',
+          label: 'Camunda / Zeebe',
+          icon: 'sliders',
+        },
+        {
           path: '/components/bpmn/api',
           label: 'API Reference',
           icon: 'code',

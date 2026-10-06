@@ -17,7 +17,17 @@ import {
   OgeBpmnEditorCore,
   type BpmnDiagramJson,
   type BpmnImportResult,
+  type BpmnLintBadge,
   type BpmnPaletteItemType,
+  type OgeBpmnContextPadProvider,
+  type OgeBpmnLintChangedEvent,
+  type OgeBpmnLintIssue,
+  type OgeBpmnLintRulesInput,
+  type OgeBpmnPaletteProvider,
+  type OgeBpmnPngExportOptions,
+  type OgeBpmnPropertiesEntry,
+  type OgeBpmnPropertiesProvider,
+  type OgeBpmnRenderers,
   type OgeBpmnDiagramChangedEvent,
   type OgeBpmnEditorMode,
   type OgeBpmnElementsChangedEvent,
@@ -28,7 +38,12 @@ import {
 } from '@oge-ui/bpmn-engine';
 import { useOgeBpmnConfig } from './bpmn-config';
 import { BpmnPalette } from './bpmn-palette';
-import { BpmnProperties } from './bpmn-properties';
+import { rasterizeBpmnSvg } from './bpmn-png';
+import {
+  BpmnProperties,
+  type OgeBpmnPropertiesEntryRenderContext,
+} from './bpmn-properties';
+import { BpmnSvgNodes } from './bpmn-svg';
 import { BpmnOverlayContent } from './overlay-content';
 import { createBpmnRxAdapter } from './rx-adapter';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect';
@@ -90,6 +105,35 @@ export interface OgeBpmnEditorProps {
    * `import` and `new` included — filter on `source`.
    */
   onDiagramChanged?: (event: OgeBpmnDiagramChangedEvent) => void;
+  /**
+   * Live validation: badges on offending shapes (with the problem text in
+   * their accessible name), a header toggle with the problem count, the
+   * problems panel and `onLintChanged`. `validate()` works either way.
+   */
+  lint?: boolean;
+  /**
+   * Validation rules added to, replacing or re-grading the built-ins —
+   * `{ id: 'label-required', severity: 'off' }` disables one.
+   */
+  lintRules?: OgeBpmnLintRulesInput;
+  /** The live validation result changed (only while `lint` is on). */
+  onLintChanged?: (event: OgeBpmnLintChangedEvent) => void;
+  /**
+   * Properties providers merged with the built-in ones by `id` (pass
+   * `OGE_BPMN_CAMUNDA_PROVIDERS` for the Camunda / Zeebe fields).
+   */
+  propertiesProviders?: readonly OgeBpmnPropertiesProvider[];
+  /** Draws `custom` properties entries (the Angular `[ogeBpmnPropertiesEntry]` template). */
+  renderPropertiesEntry?: (
+    entry: OgeBpmnPropertiesEntry,
+    context: OgeBpmnPropertiesEntryRenderContext,
+  ) => ReactNode;
+  /** Custom palette entries (icon, label, hotkey, action). */
+  paletteProvider?: OgeBpmnPaletteProvider;
+  /** Custom context-pad actions of the selected element. */
+  contextPadProvider?: OgeBpmnContextPadProvider;
+  /** Per-type shape overrides drawn with the safe `bpmnSvg` builders. */
+  renderers?: OgeBpmnRenderers;
   /** Extra class on the host element. */
   className?: string;
   /** Inline style on the host element (give the editor its height here). */
@@ -108,6 +152,10 @@ export interface OgeBpmnEditorHandle {
   importJson(value: unknown): { error?: string };
   /** Renders the current diagram as a self-contained static SVG string. */
   exportSvg(): string;
+  /** Rasterizes the SVG export to a PNG blob (null without a canvas). */
+  exportPng(options?: OgeBpmnPngExportOptions): Promise<Blob | null>;
+  /** Validates the diagram and returns every issue (live linting or not). */
+  validate(): readonly OgeBpmnLintIssue[];
   /** Replaces the diagram with an empty one and resets history and viewport. */
   newDiagram(): void;
   /** Fits and centers the whole diagram in the canvas. */
@@ -231,7 +279,14 @@ export const OgeBpmnEditor = forwardRef<
         importCompleted: emit('onImportCompleted'),
         dirtyChanged: emit('onDirtyChanged'),
         diagramChanged: emit('onDiagramChanged'),
+        lintChanged: emit('onLintChanged'),
       },
+      lint: () => latest.current.props.lint ?? false,
+      lintRules: () => latest.current.props.lintRules,
+      propertiesProviders: () => latest.current.props.propertiesProviders,
+      paletteProvider: () => latest.current.props.paletteProvider,
+      contextPadProvider: () => latest.current.props.contextPadProvider,
+      renderers: () => latest.current.props.renderers,
     });
   }
   const core = coreRef.current;
@@ -277,6 +332,11 @@ export const OgeBpmnEditor = forwardRef<
     return () => svg.removeEventListener('wheel', onWheel);
   }, [core]);
 
+  // live validation → onLintChanged (the core emits only on a real change)
+  useEffect(() => {
+    core.syncLint();
+  });
+
   useImperativeHandle(
     ref,
     () => ({
@@ -285,6 +345,14 @@ export const OgeBpmnEditor = forwardRef<
       exportJson: () => core.exportJson(),
       importJson: (value) => core.importJson(value),
       exportSvg: () => core.exportSvg(),
+      exportPng: (options = {}) =>
+        rasterizeBpmnSvg(
+          core.exportSvg(
+            options.padding !== undefined ? { padding: options.padding } : {},
+          ),
+          options,
+        ),
+      validate: () => core.validate(),
       newDiagram: () => core.newDiagram(),
       zoomToFit: () => core.zoomToFit(),
       centerOn: (id) => core.centerOn(id),
@@ -327,6 +395,10 @@ export const OgeBpmnEditor = forwardRef<
   const searchQuery = core.searchQuery();
   const gridSize = core.gridSize();
   const selection = core.selection();
+  const lint = props.lint ?? false;
+  const problems = core.problemsView();
+  const problemsOpen = core.problemsOpen();
+  const dropContainerId = core.dropContainerId();
 
   const header = showHeader && (
     <div
@@ -422,6 +494,28 @@ export const OgeBpmnEditor = forwardRef<
               <path d="m13 3 4 4L7 17l-4.5 1L4 13.5 13 3Z" />
             )}
           </svg>
+        </button>
+      )}
+      {lint && (
+        <button
+          type="button"
+          className={cx(
+            'oge-bpmn-header-btn oge-bpmn-header-problems',
+            problems.count > 0 && 'oge-bpmn-header-problems-found',
+          )}
+          aria-expanded={problemsOpen}
+          aria-controls={`${uid}-problems`}
+          aria-label={`${msg.lint.panelLabel} (${problems.count})`}
+          title={msg.lint.panelLabel}
+          onClick={() => core.toggleProblems()}
+        >
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+            <path d="M10 3 18 17H2Z" />
+            <path d="M10 8v4M10 14.5v.5" />
+          </svg>
+          <span className="oge-bpmn-problems-count" aria-hidden="true">
+            {problems.count}
+          </span>
         </button>
       )}
       {showPropertiesPanel && !locked && (
@@ -521,6 +615,8 @@ export const OgeBpmnEditor = forwardRef<
               label={msg.paletteLabel}
               onToolPicked={(type) => core.onToolPicked(type)}
               onDragStarted={(start) => core.onPaletteDragStart(start)}
+              customEntries={core.paletteEntries()}
+              onEntryPicked={(entry) => core.onPaletteEntry(entry)}
             />
           )}
           <div
@@ -693,7 +789,8 @@ export const OgeBpmnEditor = forwardRef<
                         'oge-bpmn-pool',
                         dimmed.has(p.id) && 'oge-bpmn-dimmed',
                         p.selected && 'oge-bpmn-selected',
-                        drop.ok && 'oge-bpmn-drop-ok',
+                        (drop.ok || dropContainerId === p.id) &&
+                          'oge-bpmn-drop-ok',
                         drop.deny && 'oge-bpmn-drop-deny',
                       )}
                       id={`${uid}-el-${p.id}`}
@@ -741,6 +838,7 @@ export const OgeBpmnEditor = forwardRef<
                           {p.name}
                         </text>
                       )}
+                      <LintBadge badge={p.lint} />
                     </g>
                   );
                 })}
@@ -807,6 +905,7 @@ export const OgeBpmnEditor = forwardRef<
                         {e.label}
                       </text>
                     )}
+                    <LintBadge badge={e.lint} />
                   </g>
                 ))}
               </g>
@@ -820,7 +919,10 @@ export const OgeBpmnEditor = forwardRef<
                         'oge-bpmn-shape',
                         dimmed.has(n.id) && 'oge-bpmn-dimmed',
                         n.selected && 'oge-bpmn-selected',
-                        (drop.ok || attachHover === n.id) && 'oge-bpmn-drop-ok',
+                        (drop.ok ||
+                          attachHover === n.id ||
+                          dropContainerId === n.id) &&
+                          'oge-bpmn-drop-ok',
                         drop.deny && 'oge-bpmn-drop-deny',
                       )}
                       id={`${uid}-el-${n.id}`}
@@ -830,7 +932,13 @@ export const OgeBpmnEditor = forwardRef<
                       onPointerDown={(e) => core.onShapePointerDown(n.id, e)}
                       onDoubleClick={() => core.startLabelEdit(n.id)}
                     >
-                      <NodeGlyph node={n} />
+                      {n.custom ? (
+                        <g className="oge-bpmn-custom-glyph">
+                          <BpmnSvgNodes nodes={n.custom} />
+                        </g>
+                      ) : (
+                        <NodeGlyph node={n} />
+                      )}
                       {n.markerPaths.map((markerPath, i) => (
                         <path
                           key={i}
@@ -861,6 +969,7 @@ export const OgeBpmnEditor = forwardRef<
                           {line.text}
                         </text>
                       ))}
+                      <LintBadge badge={n.lint} />
                       {!locked && (
                         <rect
                           className="oge-bpmn-shape-ring"
@@ -1034,6 +1143,27 @@ export const OgeBpmnEditor = forwardRef<
                   <path d="M2 12 14 4M5 12l4-8" />
                 </PadButton>
               )}
+              {core.padEntries().map((custom) => (
+                <button
+                  key={custom.entry.id}
+                  type="button"
+                  className="oge-bpmn-pad-btn oge-bpmn-pad-custom"
+                  data-entry={custom.entry.id}
+                  aria-label={custom.entry.label}
+                  aria-keyshortcuts={custom.hotkey?.toUpperCase()}
+                  title={custom.entry.label}
+                  onClick={() => core.onPadEntry(custom.entry, pad.id)}
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                  >
+                    <BpmnSvgNodes nodes={custom.icon} />
+                  </svg>
+                </button>
+              ))}
               <PadButton
                 label={msg.contextPad.deleteElement}
                 shortcut="Delete"
@@ -1331,15 +1461,66 @@ export const OgeBpmnEditor = forwardRef<
               selection={selection}
               messages={msg}
               colorPresets={core.colorPresets()}
+              groups={core.propertiesGroups()}
+              renderEntry={props.renderPropertiesEntry}
               style={{ inlineSize: `${core.propertiesWidth()}px` }}
               onCommandRequested={(command) => core.onPanelCommand(command)}
             />
           </>
         )}
       </div>
+      {lint && problemsOpen && (
+        <section
+          className="oge-bpmn-problems"
+          role="region"
+          tabIndex={-1}
+          id={`${uid}-problems`}
+          aria-label={`${msg.canvasLabel} — ${msg.lint.panelLabel}`}
+        >
+          <p className="oge-bpmn-problems-summary">{problems.summary}</p>
+          {problems.rows.length === 0 ? (
+            <p className="oge-bpmn-problems-empty">{msg.lint.empty}</p>
+          ) : (
+            <ul className="oge-bpmn-problems-list">
+              {problems.rows.map((row) => (
+                <li key={row.issue.key}>
+                  <button
+                    type="button"
+                    className={cx(
+                      'oge-bpmn-problem',
+                      `oge-bpmn-problem-${row.issue.severity}`,
+                    )}
+                    data-element={row.issue.elementId}
+                    onClick={() => core.onProblemPick(row.issue)}
+                  >
+                    {row.text}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   );
 });
+
+/** The validation badge of a shape, pool or edge (aria-hidden; the text is in the accessible name). */
+function LintBadge({ badge }: { badge: BpmnLintBadge | null }): ReactNode {
+  if (badge === null) return null;
+  return (
+    <g
+      className={`oge-bpmn-lint-badge oge-bpmn-lint-${badge.severity}`}
+      aria-hidden="true"
+      transform={`translate(${badge.x} ${badge.y})`}
+    >
+      <circle r="8" />
+      <text y="4" textAnchor="middle">
+        {badge.count}
+      </text>
+    </g>
+  );
+}
 
 /** The header's diagram-name field: commits on the native `change` (blur / Enter). */
 function HeaderName({

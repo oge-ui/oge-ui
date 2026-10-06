@@ -1,6 +1,6 @@
 # @oge-ui/react-bpmn
 
-> React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark.
+> React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG + PNG export, live validation, properties providers, custom palette / context-pad entries and renderers, element templates and Camunda / Zeebe editing, and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark.
 >
 > This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
@@ -110,8 +110,20 @@ Predictable wrong guesses, and what to write instead.
 | `zoom` | `number` | `—` | Zoom factor (controlled); wheel zooming, the header buttons, `F`/`+`/`-` and imports report through `onZoomChange`. Clamped to the configured `zoomMin`/`zoomMax`; applied at mount. |
 | `defaultZoom` | `number` | `1` | Initial zoom when `zoom` is uncontrolled. |
 | `onZoomChange` | `(zoom: number) => void` | `—` | The zoom changed — the controlled half of `zoom`. |
+| `lint` | `boolean` | `false` | Live validation: every model change re-runs the rules, offending shapes, pools and flows get a severity badge (the problem text is appended to their accessible name, the badge itself is `aria-hidden`), the header shows a problems toggle with the count and the problems panel lists every issue — click or Enter selects the element and pans it into view. `validate()` works with it off. |
+| `lintRules` | `OgeBpmnLintRulesInput` | `—` | Rules merged with `OGE_BPMN_DEFAULT_LINT_RULES`: a full rule (`{ id, severity, check(model, context) }`) is added, or replaces the built-in with the same id; an override re-grades one (`{ id: 'no-implicit-split', severity: 'info' }`) or disables it (`severity: 'off'`). |
+| `propertiesProviders` | `readonly OgeBpmnPropertiesProvider[]` | `—` | Pluggable properties panel: each provider returns groups of typed entries (`text`, `textarea`, `select`, `checkbox`, `expression`, `list`, `custom`) for the selected element (or the process), and every entry's `set(value)` returns the undoable command to run. Merged with `OGE_BPMN_DEFAULT_PROPERTIES_PROVIDERS` by id — reuse an id to replace a built-in. Pass `OGE_BPMN_CAMUNDA_PROVIDERS` for the Camunda 7 / Zeebe fields or `bpmnElementTemplatesProvider(templates)` for element templates. |
+| `paletteProvider` | `OgeBpmnPaletteProvider` | `—` | Custom palette entries after the built-ins: `{ id, label, icon, hotkey?, action(api) }`. Icons are `bpmnSvg` trees (sanitized — no markup path); the entries join the palette's roving tabindex; a single-character `hotkey` works on the canvas (keys the canvas already uses are ignored); `api.armPlace(type, { template })` arms click-then-place. |
+| `contextPadProvider` | `OgeBpmnContextPadProvider` | `—` | Custom context-pad actions of the single selected element: `({ diagram, elementId }) => OgeBpmnContextPadEntry[]`, each `{ id, label, icon, hotkey?, action(api, elementId) }` — real buttons with `aria-keyshortcuts`; `api.execute(command)` keeps every change undoable. |
+| `renderers` | `OgeBpmnRenderers` | `—` | Per-type shape overrides: `{ serviceTask: ({ node, width, height, fill, stroke }) => bpmnSvg nodes \| null }`. The returned tree replaces the built-in glyph (labels, markers, selection and badges are still drawn) in the canvas and in `exportSvg()` / `exportPng()`; `null` or a throwing renderer falls back to the built-in shape. |
 | `className` | `string` | `—` | Extra class on the `.oge-bpmn-editor` host. |
 | `style` | `CSSProperties` | `—` | Inline style on the host — give the editor its height here (`style={{ height: 480 }}`). |
+
+_Custom properties entries_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderPropertiesEntry` | `(entry: OgeBpmnPropertiesEntry, context: OgeBpmnPropertiesEntryRenderContext) => ReactNode` | Draws provider entries of type `custom` — the React counterpart of the Angular `[ogeBpmnPropertiesEntry]` template. `context.commit(value)` runs one undoable command through the entry's `set`; `context.inputId` is the id the entry's label carries for `aria-labelledby`. |
 
 _Canvas keyboard_
 
@@ -130,7 +142,14 @@ _Import & export (on the ref handle, OgeBpmnEditorHandle)_
 | `exportJson()` | `BpmnDiagramJson` | Wraps the current diagram in the versioned JSON persistence envelope — the shape to store in an application database and the payload of the `diagramChanged` autosave stream. |
 | `importJson(value: unknown)` | `{ error?: string }` | Validates a JSON persistence envelope (see `fromBpmnJson`) and loads it, resetting undo history and fitting the viewport exactly like `importXml`. On a validation error the current diagram is left untouched and the error message is returned. |
 | `exportSvg()` | `string` | Renders the current diagram as a self-contained static SVG string (neutral hardcoded colors, no grid or selection, `viewBox` fitted to the content) via `renderDiagramSvg` — writable to a file or embeddable as-is. |
+| `exportPng(options?: OgeBpmnPngExportOptions)` | `Promise<Blob \| null>` | Rasterizes the SVG export onto a canvas and resolves a PNG blob (`pixelRatio` default 2, `background` default white, `padding`) — no library, nothing leaves the page. Resolves `null` where there is no canvas (server rendering, jsdom). |
 | `newDiagram()` | `void` | Replaces the diagram with an empty one and resets history and viewport. |
+
+_Validation_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `validate()` | `readonly OgeBpmnLintIssue[]` | Runs the effective rules (built-ins plus `lintRules`) over the current diagram and returns every issue, errors first — whether or not `lint` is on; with it on, the problems panel opens too. |
 
 _Selection, history & navigation_
 
@@ -164,6 +183,7 @@ _Overlays_
 | `onDiagramChanged` | `(event: OgeBpmnDiagramChangedEvent) => void` | Debounced autosave stream: after model changes settle for `autoSaveDebounceMs` (default 500ms; `0` emits synchronously) the diagram is serialized once to both JSON and XML and emitted together with the change source. Emitted for every source including `import` and `new` — filter on `source` to persist only user edits. No serialization happens mid-drag (gestures commit one command on release); a pending emission is cancelled on destroy. |
 | `onImportCompleted` | `(event: OgeBpmnImportEvent) => void` | An `importXml()` call finished parsing; carries the fidelity warnings (`{ warnings }`) — emitted on fatal errors too. |
 | `onDirtyChanged` | `(event: boolean) => void` | The dirty state flipped — the model diverged from, or returned to, the save point. |
+| `onLintChanged` | `(event: OgeBpmnLintChangedEvent) => void` | The live validation result changed (only while `lint` is on): `{ issues, errors, warnings, infos }`. Emitted once after an import and after every edit that changes the issue list. |
 
 #### Types
 
@@ -174,6 +194,7 @@ _Event payloads & overlays_
 | `OgeBpmnEditorHandle` | `interface` | The `ref` handle: every public method of the Angular editor — import/export, history, selection, navigation and overlays. |
 | `OgeBpmnEditorProps` | `interface` | Every prop and callback in the table above. |
 | `OgeBpmnEditorMode` | `'edit' \| 'view'` | The editor mode union. |
+| `OgeBpmnPropertiesEntryRenderContext` | `{ commit(value): void; inputId: string }` | Second argument of `renderPropertiesEntry`. |
 | `OgeBpmnSelectionEvent` | `{ ids: readonly string[]; elements: readonly OgeBpmnElementInfo[] }` | Payload of `selectionChanged`. |
 | `OgeBpmnElementInfo` | `{ id: string; type: BpmnNodeType \| BpmnEdgeType \| 'pool'; name?: string }` | Summary of one diagram element carried in editor event payloads. |
 | `OgeBpmnElementsChangedEvent` | `{ source: OgeBpmnChangeSource; label: string }` | Payload of `elementsChanged`: what changed the model and the command label. |
@@ -226,6 +247,59 @@ _Engine — model_
 | `BpmnClipboard` | `interface` | A deep-cloned diagram subgraph held by the editor's internal clipboard: the copied nodes plus every edge whose both endpoints were copied, with their DI. Ids still refer to the source diagram; pasting remaps them. |
 | `Point / Rect` | `{ x, y } · { x, y, width, height }` | Geometry primitives used by DI bounds and waypoints. |
 
+_Validation_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBpmnLintRule` | `{ id: string; severity: OgeBpmnLintSeverity; check(model, context): OgeBpmnLintReport[] }` | A validation rule — pure data plus a pure `check` over the immutable model (runs on a server or in CI too). `context.messages` carries the localized lint strings and `context.displayName(id)` an element's display name; a throwing rule is skipped. |
+| `OgeBpmnLintRuleOverride` | `{ id: string; severity: OgeBpmnLintSeverity \| 'off' }` | Re-grades or disables a rule inside `lintRules`. |
+| `OgeBpmnLintRulesInput` | `readonly (OgeBpmnLintRule \| OgeBpmnLintRuleOverride)[]` | The `lintRules` input type. |
+| `OgeBpmnLintIssue` | `{ key; ruleId; severity; elementId; message }` | One problem — listed in the problems panel, counted in `lintChanged`, returned by `validate()`. |
+| `OgeBpmnLintChangedEvent` | `{ issues; errors; warnings; infos }` | Payload of `lintChanged`. |
+| `OgeBpmnLintSeverity` | `'error' \| 'warning' \| 'info'` | Severity of a rule and its issues. |
+| `OGE_BPMN_DEFAULT_LINT_RULES` | `readonly OgeBpmnLintRule[]` | The bpmnlint-like built-ins: `start-event-required`, `end-event-required`, `no-disconnected`, `superfluous-gateway` (a gateway must fork or join), `conditional-flows` (exclusive-gateway conditions and default flow), `no-implicit-split`, `no-implicit-join`, `label-required`, `no-duplicate-ids`, `sub-process-start-event`, `message-flow-pools`, `boundary-event-attached` and `no-unreachable`. |
+| `lintBpmnDiagram(model, rules?, messages?)` | `readonly OgeBpmnLintIssue[]` | The engine function behind `validate()` — usable without an editor (`lintBpmnDiagram(readBpmnXml(xml).model)`). `resolveBpmnLintRules(input)` applies a `lintRules` list to the defaults. |
+
+_Extensibility_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBpmnPropertiesProvider` | `{ id: string; getGroups(context: OgeBpmnPropertiesContext): OgeBpmnPropertiesGroup[] }` | A source of panel groups. `context.target` is the process (nothing selected) or the selected node, edge or pool; `context.messages` the resolved catalog. A provider that throws contributes nothing. |
+| `OgeBpmnPropertiesGroup` | `{ id: string; label: string; entries: OgeBpmnPropertiesEntry[] }` | A titled group (an empty label renders the entries without a heading; a labelled group is a `role="group"` named by its heading). |
+| `OgeBpmnPropertiesEntry` | `{ id; label; type; value; options?; columns?; description?; placeholder?; disabled?; data?; set?(value) }` | One field. `value` is a string, a boolean (`checkbox`) or rows (`list`, with `columns`); `set(value)` returns the command a commit runs (Enter / blur / pick — one undo step), or null. `description` is wired with `aria-describedby`; list cells are named `{entry} {column} {row}`. |
+| `OgeBpmnPropertiesEntryContext` | `{ $implicit: entry; entry; commit(value); inputId }` | Template context of `[ogeBpmnPropertiesEntry]`. |
+| `OGE_BPMN_DEFAULT_PROPERTIES_PROVIDERS` | `readonly OgeBpmnPropertiesProvider[]` | The built-in G5b fields as providers: event-definition details (`oge-event-details`) and "Move to…" + documentation (`oge-general`). |
+| `OgeBpmnPaletteEntry / OgeBpmnPaletteProvider` | `{ id; label; icon: OgeBpmnSvgNode[]; hotkey?; action(api) }` | A custom palette entry and its provider. |
+| `OgeBpmnContextPadEntry / OgeBpmnContextPadProvider` | `{ id; label; icon: OgeBpmnSvgNode[]; hotkey?; action(api, elementId) }` | A custom context-pad action and its provider. |
+| `OgeBpmnEditorApi` | `{ getDiagram; getSelection; select; execute; armPlace; appendElement; announce; focus }` | What palette and context-pad actions may do — `execute(command)` runs any engine command as one undo step; `armPlace(type, { template })` / `appendElement(sourceId, type, { template })` create (templated) elements. |
+| `OgeBpmnRenderers / OgeBpmnElementRenderer / OgeBpmnRenderContext` | `(context: { node; width; height; fill; stroke }) => OgeBpmnSvgNode[] \| null` | The `renderers` input types. |
+| `bpmnSvg` | `{ g, path, rect, circle, ellipse, line, polyline, polygon, text }` | The safe SVG builders every icon and renderer uses (`bpmnSvg.circle(12, 12, 8, { 'stroke-width': 2 })`). Trees pass `sanitizeBpmnSvg` before they render: unknown tags and attributes, `on*` handlers, `href`, `style` and external `url(…)` are dropped; text is a text node. |
+| `OgeBpmnSvgNode` | `{ tag; attrs?; children?; text? }` | One element of a safe SVG tree. |
+| `OgeBpmnElementTemplate / OgeBpmnTemplateProperty` | `{ id; name; version?; appliesTo; elementType?; icon?; properties }` | Element templates modeled on Camunda Modeler's: each property (`String`, `Text`, `Boolean`, `Dropdown`, `Hidden`) is bound to `name` / `calledElement` / a vendor attribute, the documentation, `zeebe:taskDefinition`, `zeebe:input` / `zeebe:output`, `zeebe:taskHeader` or `camunda:inputParameter` / `camunda:outputParameter`. |
+| `applyElementTemplateCommand(id, template)` | `BpmnCommand` | Applies a template programmatically (what the provider's select runs): morph, defaults, template id — one undo step. Run it with `api.execute()` from a palette / pad action or after `importXml()`. |
+| `setForeignAttributeCommand(id, name, value, namespaces?)` | `BpmnCommand` | Sets (or, with `''`, removes) a qualified vendor attribute (`oge:dueWithin`, `camunda:asyncBefore`) on a node, edge, pool or the process, declaring `namespaces` on `<definitions>`. `bpmnForeignAttribute(model, id, name)` reads one back — the pair custom providers store their values with. |
+| `bpmnForeignAttribute(model, id, name)` | `string` | A vendor attribute of an element, or `''`. |
+| `setElementColorsCommand(ids, patch)` | `BpmnCommand` | Sets or clears (`null`) the DI fill / stroke of elements — the command behind the panel's appearance section, handy in context-pad actions. |
+| `bpmnElementTemplatesProvider(templates)` | `OgeBpmnPropertiesProvider` | A "Template" select on every element a template applies to and, once applied, the template's visible properties as typed fields. `applyElementTemplateCommand(id, template)` morphs to `elementType`, writes every default and records `zeebe:modelerTemplate` (or `camunda:modelerTemplate`) — one undo step. |
+
+_Camunda / Zeebe_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OGE_BPMN_CAMUNDA_PROVIDERS` | `readonly OgeBpmnPropertiesProvider[]` | The opt-in `camundaProviders` preset: `OGE_BPMN_ZEEBE_PROVIDER` (task definition job type + retries and task headers on service / script tasks, input / output mappings on activities and non-start events) and `OGE_BPMN_CAMUNDA7_PROVIDER` (`camunda:assignee` / `candidateGroups` / `formKey` on user tasks, `camunda:inputOutput` text parameters on activities). Edits write the extension tree and declare `xmlns:zeebe` / `xmlns:camunda` when needed; complex parameters (`camunda:list`, `map`, `script`) are kept untouched. |
+| `OgeBpmnPropertyBinding` | `{ type: 'property' \| 'documentation' \| 'zeebe:taskDefinition' \| 'zeebe:input' \| 'zeebe:output' \| 'zeebe:taskHeader' \| 'camunda:inputParameter' \| 'camunda:outputParameter'; … }` | Where a value lives; read with `bpmnBindingValue(model, id, binding)`, written with `setBpmnBindingCommand(id, binding, value)`. |
+| `BpmnXmlElement` | `{ name; attributes?; children?; text? }` | The editable tree of `<bpmn:extensionElements>` (qualified names, `#text` / `#comment` for mixed content), written back deterministically. Unknown vendor elements stay in the tree untouched. |
+
+_Engine — G5b modeling & payloads_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `BpmnEventDetails` | `{ id?; timer?: { kind: BpmnTimerKind; expression }; ref?; condition?; linkName? }` | The event-definition payload: timer `timeDate` / `timeDuration` / `timeCycle`, the `messageRef` / `signalRef` / `errorRef` / `escalationRef`, the conditional condition and the link name — imported, editable in the panel and exported (no more dropped-payload warning). |
+| `BpmnRootElement` | `{ id; type: 'message' \| 'signal' \| 'error' \| 'escalation'; name?; code? }` | Definitions-level root elements (`BpmnDiagram.rootElements`); the panel's reference select offers the existing ones and a "New …" option (`addRootElementCommand`). |
+| `setDocumentationCommand(id, text)` | `BpmnCommand` | Sets or clears `<bpmn:documentation>` on any node, edge or pool, or the process (`BPMN_PROCESS_TARGET`). |
+| `moveToContainerCommand(id, targetId)` | `BpmnCommand` | Re-parenting — the keyboard twin of the drag drop ("Move to…" in the panel): moves the element inside a pool, lane or expanded sub-process and re-parents it in one undo step; sequence flows that would cross pools or scopes are removed. `reparentElementsCommand(ids, target)` is the drop's half. |
+| `OgeBpmnPngExportOptions` | `{ pixelRatio?: number; background?: string; padding?: number }` | Options of `exportPng()`. |
+
 ### Configuration
 
 #### Properties
@@ -256,6 +330,7 @@ _OgeBpmnMessages_
 | `contextPad` | `OgeBpmnContextPadMessages` | Aria labels and titles of the context-pad actions: `connect`, `appendTask`, `appendGateway`, `appendEndEvent`, `editLabel`, `toggleDefault`, `deleteElement`. |
 | `announcements` | `OgeBpmnAnnouncementMessages` | Live-region announcement templates; `{token}` placeholders are substituted. |
 | `elementNames` | `Readonly<Record<BpmnElementNameKey, string>>` | Fallback display name per element type — node/edge types plus pools and lanes — used when an element has no name. |
+| `lint / extensions / camunda` | `OgeBpmnLintMessages / OgeBpmnExtensionMessages / OgeBpmnCamundaMessages` | The G5b strings — badges, problems panel and rule messages; documentation, "Move to", event details, list fields and templates; the Camunda / Zeebe fields. Optional blocks: a catalog without them (or with a partial block) is filled key by key from English (`fillBpmnMessages`). |
 | `properties` | `OgeBpmnPropertiesMessages` | Labels of the properties panel: headings, field labels and templates. |
 
 _OgeBpmnPropertiesMessages_
@@ -300,6 +375,313 @@ _OgeBpmnAnnouncementMessages_
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Camunda / Zeebe properties
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OGE_BPMN_CAMUNDA_PROVIDERS, OgeBpmnEditor } from '@oge-ui/react-bpmn';
+import type { OgeBpmnEditorHandle } from '@oge-ui/react-bpmn';
+
+export function CamundaEditor() {
+  const editor = useRef<OgeBpmnEditorHandle>(null);
+  const [xml, setXml] = useState('');
+  return (
+    <>
+      {/* the opt-in Camunda preset: Zeebe (Camunda 8) task definition, io
+          mappings and headers; Camunda 7 assignment and input/output */}
+      <OgeBpmnEditor
+        ref={editor}
+        style={{ height: 480 }}
+        propertiesProviders={OGE_BPMN_CAMUNDA_PROVIDERS}
+      />
+      <button type="button" onClick={() => setXml(editor.current?.exportXml() ?? '')}>
+        Export XML
+      </button>
+      <pre>{xml}</pre>
+    </>
+  );
+}
+```
+
+### Typed helpers
+
+```ts
+'use client';
+
+import { bpmnZeebeIoMapping, readBpmnXml, setZeebeTaskDefinitionCommand, writeBpmnXml } from '@oge-ui/bpmn-engine';
+
+/**
+ * The same typed helpers the panel uses, server-side: read a mapping, set a
+ * job type, write the XML back (xmlns:zeebe is declared when needed).
+ */
+export function retarget(xml: string): string {
+  const model = readBpmnXml(xml).model;
+  if (model === null) return xml;
+  console.log(bpmnZeebeIoMapping(model, 'Task_charge').inputs);
+  return writeBpmnXml(
+    setZeebeTaskDefinitionCommand('Task_charge', { type: 'payment-v2' }).apply(model),
+  );
+}
+
+export function Retarget() {
+  return (
+    <p>A headless helper — no canvas needed.</p>
+  );
+}
+```
+
+### Event payloads, documentation & re-parenting
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeBpmnEditor } from '@oge-ui/react-bpmn';
+import type { OgeBpmnEditorHandle } from '@oge-ui/react-bpmn';
+
+export function PayloadsEditor() {
+  const editor = useRef<OgeBpmnEditorHandle>(null);
+
+  const downloadPng = async () => {
+    // the SVG export rasterized on a canvas — no library
+    const blob = await editor.current?.exportPng({ pixelRatio: 2 });
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'diagram.png';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <>
+      {/* select the timer start or the message catch: timer type and
+          expression, message reference (or "New message") and documentation
+          are panel fields. Drag a task into "Fulfilment" — or pick it in
+          "Move to" — to re-parent it; one undo step either way. */}
+      <OgeBpmnEditor ref={editor} style={{ height: 480 }} />
+      <button type="button" onClick={() => void downloadPng()}>
+        Export PNG
+      </button>
+    </>
+  );
+}
+```
+
+### Properties providers
+
+```ts
+'use client';
+
+import { OgeBpmnEditor, bpmnForeignAttribute, setForeignAttributeCommand } from '@oge-ui/react-bpmn';
+import type { OgeBpmnPropertiesProvider } from '@oge-ui/react-bpmn';
+
+const NS = { oge: 'https://ogeui.com/schema/bpmn/demo' };
+
+/** A "Service level" group on user tasks, stored as oge:* attributes. */
+const slaProvider: OgeBpmnPropertiesProvider = {
+  id: 'demo-sla',
+  getGroups: ({ diagram, target }) => {
+    if (target.kind !== 'node' || target.node.type !== 'userTask') return [];
+    const id = target.id;
+    const read = (name: string) => bpmnForeignAttribute(diagram, id, name);
+    const write = (name: string, value: string) =>
+      setForeignAttributeCommand(id, name, value, NS);
+    return [
+      {
+        id: 'sla',
+        label: 'Service level',
+        entries: [
+          {
+            id: 'sla-due',
+            label: 'Due within',
+            type: 'select',
+            value: read('oge:dueWithin'),
+            options: [
+              { value: '', label: 'No deadline' },
+              { value: 'P1D', label: '1 day' },
+              { value: 'P1W', label: '1 week' },
+            ],
+            set: (value) => write('oge:dueWithin', String(value)),
+          },
+          {
+            id: 'sla-escalate',
+            label: 'Escalate when late',
+            type: 'checkbox',
+            value: read('oge:escalate') === 'true',
+            set: (value) => write('oge:escalate', value === true ? 'true' : ''),
+          },
+          {
+            id: 'sla-effort',
+            label: 'Effort (hours)',
+            type: 'custom',
+            value: read('oge:effort') || '4',
+            set: (value) => write('oge:effort', String(value)),
+          },
+        ],
+      },
+    ];
+  },
+};
+
+const providers = [slaProvider];
+
+export function ProvidersEditor() {
+  return (
+    <OgeBpmnEditor
+      style={{ height: 480 }}
+      propertiesProviders={providers}
+      // draws the 'custom' entries; commit() is one undo step
+      renderPropertiesEntry={(entry, { commit, inputId }) => (
+        <input
+          type="range"
+          min={1}
+          max={40}
+          aria-labelledby={inputId}
+          defaultValue={String(entry.value)}
+          onChange={(event) => commit(event.currentTarget.value)}
+        />
+      )}
+    />
+  );
+}
+```
+
+### Palette & context pad
+
+```ts
+'use client';
+
+import { OgeBpmnEditor, bpmnSvg, setElementColorsCommand } from '@oge-ui/react-bpmn';
+import type { OgeBpmnContextPadProvider, OgeBpmnPaletteProvider } from '@oge-ui/react-bpmn';
+
+// icons are bpmnSvg trees — sanitized, never markup strings
+const palette: OgeBpmnPaletteProvider = () => [
+  {
+    id: 'mail-task',
+    label: 'Mail task',
+    icon: [
+      bpmnSvg.rect(4, 6, 16, 12, { rx: 2 }),
+      bpmnSvg.polyline('4,7 12,13 20,7'),
+    ],
+    hotkey: 'm', // canvas shortcut; built-in keys are never shadowed
+    action: (api) => api.armPlace('serviceTask'),
+  },
+];
+
+const pad: OgeBpmnContextPadProvider = ({ diagram, elementId }) =>
+  diagram.nodes[elementId] === undefined
+    ? []
+    : [
+        {
+          id: 'mark-reviewed',
+          label: 'Mark reviewed',
+          icon: [bpmnSvg.polyline('3,8 7,12 13,4')],
+          hotkey: 'r',
+          action: (api, id) => {
+            // execute() keeps every change undoable
+            api.execute(setElementColorsCommand([id], { fill: '#dcfce7' }));
+            api.announce('Marked reviewed');
+          },
+        },
+      ];
+
+export function CustomPalette() {
+  return (
+    <OgeBpmnEditor
+      style={{ height: 460 }}
+      paletteProvider={palette}
+      contextPadProvider={pad}
+    />
+  );
+}
+```
+
+### Renderers
+
+```ts
+'use client';
+
+import { OgeBpmnEditor, bpmnSvg } from '@oge-ui/react-bpmn';
+import type { OgeBpmnRenderers } from '@oge-ui/react-bpmn';
+
+// draws in shape-local coordinates; null falls back to the built-in glyph.
+// Labels, markers, selection and badges are still drawn by the editor, and
+// exportSvg() / exportPng() use the same renderer.
+const renderers: OgeBpmnRenderers = {
+  serviceTask: ({ width, height, fill }) => [
+    bpmnSvg.rect(0, 0, width, height, {
+      rx: 18,
+      fill: fill ?? '#eef2ff',
+      stroke: '#4f46e5',
+      'stroke-width': 2,
+    }),
+    bpmnSvg.circle(16, 16, 6, { fill: 'none', stroke: '#4f46e5' }),
+    bpmnSvg.path('M16 7v3M16 22v3M7 16h3M22 16h3', { stroke: '#4f46e5' }),
+  ],
+};
+
+export function CustomRenderer() {
+  return (
+    <OgeBpmnEditor style={{ height: 420 }} renderers={renderers} />
+  );
+}
+```
+
+### Element templates
+
+```ts
+'use client';
+
+import { OgeBpmnEditor, bpmnElementTemplatesProvider } from '@oge-ui/react-bpmn';
+import type { OgeBpmnElementTemplate } from '@oge-ui/react-bpmn';
+
+/** Modeled on Camunda Modeler element templates (Zeebe bindings). */
+const mailTemplate: OgeBpmnElementTemplate = {
+  id: 'io.ogeui.mail',
+  name: 'Send mail',
+  version: 1,
+  appliesTo: ['task', 'serviceTask'],
+  elementType: 'serviceTask',
+  properties: [
+    {
+      type: 'Hidden',
+      value: 'io.ogeui:mail:1',
+      binding: { type: 'zeebe:taskDefinition', property: 'type' },
+    },
+    {
+      label: 'Recipient',
+      type: 'String',
+      value: '=customer.email',
+      binding: { type: 'zeebe:input', name: 'to' },
+    },
+    {
+      label: 'Priority',
+      type: 'Dropdown',
+      value: 'normal',
+      choices: [
+        { name: 'Normal', value: 'normal' },
+        { name: 'High', value: 'high' },
+      ],
+      binding: { type: 'zeebe:taskHeader', key: 'priority' },
+    },
+  ],
+};
+
+const providers = [bpmnElementTemplatesProvider([mailTemplate])];
+
+export function TemplatedEditor() {
+  return (
+    <>
+      {/* select a task: the "Template" select applies "Send mail" */}
+      <OgeBpmnEditor style={{ height: 460 }} propertiesProviders={providers} />
+    </>
+  );
+}
+```
 
 ### Getting started
 
@@ -530,6 +912,120 @@ export function LocalizedModeler() {
     >
       <OgeBpmnEditor style={{ height: 420 }} messages={turkish} />
     </OgeBpmnConfigProvider>
+  );
+}
+```
+
+### Live validation
+
+```ts
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { OgeBpmnEditor } from '@oge-ui/react-bpmn';
+import type { OgeBpmnEditorHandle, OgeBpmnLintChangedEvent } from '@oge-ui/react-bpmn';
+
+declare const PROCESS_XML: string; // e.g. fetched from your API
+
+export function LintedEditor() {
+  const editor = useRef<OgeBpmnEditorHandle>(null);
+  const [summary, setSummary] = useState('');
+
+  useEffect(() => {
+    void editor.current?.importXml(PROCESS_XML);
+  }, []);
+
+  const onLint = (event: OgeBpmnLintChangedEvent) =>
+    setSummary(`${event.errors} errors, ${event.warnings} warnings`);
+  return (
+    <>
+      {/* lint validates on every change: badges on offending shapes (the
+          problem text joins their accessible name), a Problems toggle in the
+          header and a problems panel — Enter on a row selects the element. */}
+      <OgeBpmnEditor
+        ref={editor}
+        style={{ height: 460 }}
+        lint
+        onLintChanged={onLint}
+      />
+      <p>{summary}</p>
+    </>
+  );
+}
+```
+
+### Custom rules & overrides
+
+```ts
+'use client';
+
+import { OgeBpmnEditor } from '@oge-ui/react-bpmn';
+import type { OgeBpmnLintRulesInput } from '@oge-ui/react-bpmn';
+
+// a full rule is added (or replaces the built-in with the same id);
+// { id, severity } re-grades a built-in, severity: 'off' disables it
+const rules: OgeBpmnLintRulesInput = [
+  {
+    id: 'task-needs-documentation',
+    severity: 'info',
+    check: (model) =>
+      Object.values(model.nodes)
+        .filter(
+          (node) =>
+            (node.type === 'userTask' || node.type === 'serviceTask') &&
+            (node.documentation ?? '').trim() === '',
+        )
+        .map((node) => ({
+          elementId: node.id,
+          message: 'Document what this task does',
+        })),
+  },
+  { id: 'label-required', severity: 'info' },
+];
+
+export function CustomRules() {
+  return (
+    <OgeBpmnEditor style={{ height: 460 }} lint lintRules={rules} />
+  );
+}
+```
+
+### validate() & headless checks
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeBpmnEditor, lintBpmnDiagram, readBpmnXml } from '@oge-ui/react-bpmn';
+import type { OgeBpmnEditorHandle, OgeBpmnLintIssue } from '@oge-ui/react-bpmn';
+
+/** The same rules without an editor — a CI gate over stored diagrams. */
+export function countErrors(xml: string): number {
+  const model = readBpmnXml(xml).model;
+  return model === null
+    ? 0
+    : lintBpmnDiagram(model).filter((i) => i.severity === 'error').length;
+}
+
+export function OnDemandValidation() {
+  const editor = useRef<OgeBpmnEditorHandle>(null);
+  const [issues, setIssues] = useState<readonly OgeBpmnLintIssue[]>([]);
+  return (
+    <>
+      {/* validate() runs the rules on demand — no live linting needed */}
+      <OgeBpmnEditor ref={editor} style={{ height: 420 }} />
+      <button
+        type="button"
+        onClick={() => setIssues(editor.current?.validate() ?? [])}
+      >
+        Validate
+      </button>
+      {issues.map((issue) => (
+        <p key={issue.key}>
+          {issue.severity}: {issue.message} ({issue.elementId})
+        </p>
+      ))}
+    </>
   );
 }
 ```

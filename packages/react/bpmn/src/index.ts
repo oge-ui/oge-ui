@@ -4,6 +4,7 @@ export {
   type OgeBpmnEditorHandle,
   type OgeBpmnEditorProps,
 } from './lib/bpmn-editor';
+export type { OgeBpmnPropertiesEntryRenderContext } from './lib/bpmn-properties';
 
 // Config — the React counterpart of `provideOgeBpmnConfig()`
 export {
@@ -71,4 +72,46 @@ export {
   type OgeBpmnSelectionEvent,
   type Point,
   type Rect,
+} from '@oge-ui/bpmn-engine';
+
+// G5b — validation, extensibility, Camunda / Zeebe (engine surface)
+export {
+  OGE_BPMN_CAMUNDA7_PROVIDER,
+  OGE_BPMN_CAMUNDA_PROVIDERS,
+  OGE_BPMN_DEFAULT_LINT_RULES,
+  OGE_BPMN_ZEEBE_PROVIDER,
+  applyElementTemplateCommand,
+  bpmnElementTemplatesProvider,
+  bpmnForeignAttribute,
+  bpmnSvg,
+  lintBpmnDiagram,
+  setDocumentationCommand,
+  setElementColorsCommand,
+  setForeignAttributeCommand,
+  type OgeBpmnCamundaMessages,
+  type OgeBpmnContextPadEntry,
+  type OgeBpmnContextPadProvider,
+  type OgeBpmnEditorApi,
+  type OgeBpmnElementRenderer,
+  type OgeBpmnElementTemplate,
+  type OgeBpmnExtensionMessages,
+  type OgeBpmnLintChangedEvent,
+  type OgeBpmnLintIssue,
+  type OgeBpmnLintMessages,
+  type OgeBpmnLintRule,
+  type OgeBpmnLintRuleMessages,
+  type OgeBpmnLintRuleOverride,
+  type OgeBpmnLintRulesInput,
+  type OgeBpmnLintSeverity,
+  type OgeBpmnPaletteEntry,
+  type OgeBpmnPaletteProvider,
+  type OgeBpmnPngExportOptions,
+  type OgeBpmnPropertiesEntry,
+  type OgeBpmnPropertiesGroup,
+  type OgeBpmnPropertiesProvider,
+  type OgeBpmnPropertiesValue,
+  type OgeBpmnRenderContext,
+  type OgeBpmnRenderers,
+  type OgeBpmnSvgNode,
+  type OgeBpmnTemplateProperty,
 } from '@oge-ui/bpmn-engine';

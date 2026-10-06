@@ -424,6 +424,18 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular BPMN Editor by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no watermark. React too.',
   ],
   [
+    '/components/bpmn/validation',
+    'Angular BPMN Editor validation: bpmnlint-style rules, live badges, a problems panel, custom rules and severity overrides, and validate() for headless CI checks.',
+  ],
+  [
+    '/components/bpmn/extending',
+    'Extending the Angular BPMN Editor: pluggable properties providers, custom palette and context-pad entries, safe SVG renderers and Camunda element templates.',
+  ],
+  [
+    '/components/bpmn/camunda',
+    'Angular BPMN Editor for Camunda and Zeebe: editable task definitions, io mappings, headers and assignments, timer and message payloads, and PNG export.',
+  ],
+  [
     '/components/bpmn/api',
     'BPMN Editor API reference: every input, output, method and type of oge-bpmn-editor and the dependency-free BPMN XML and diagram-interchange engine.',
   ],

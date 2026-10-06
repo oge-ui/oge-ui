@@ -1057,3 +1057,167 @@
     transition: none;
   }
 }
+
+// --- G5b: validation badges, problems panel, custom glyphs ------------------
+
+.oge-bpmn-lint-badge {
+  pointer-events: none;
+
+  circle {
+    fill: var(--oge-bg);
+    stroke-width: 1.5;
+  }
+
+  text {
+    font-size: 10px;
+    font-weight: 700;
+    font-family: inherit;
+    user-select: none;
+  }
+
+  &.oge-bpmn-lint-error {
+    circle {
+      stroke: var(--oge-danger);
+      fill: var(--oge-danger-soft);
+    }
+
+    text {
+      fill: var(--oge-danger);
+    }
+  }
+
+  &.oge-bpmn-lint-warning {
+    circle {
+      stroke: var(--oge-warning);
+      fill: var(--oge-warning-soft);
+    }
+
+    text {
+      fill: var(--oge-warning);
+    }
+  }
+
+  &.oge-bpmn-lint-info {
+    circle {
+      stroke: var(--oge-accent);
+      fill: var(--oge-accent-soft);
+    }
+
+    text {
+      fill: var(--oge-accent);
+    }
+  }
+}
+
+.oge-bpmn-custom-glyph {
+  fill: var(--oge-bg);
+  stroke: var(--oge-text-color);
+  stroke-width: 1.5;
+}
+
+.oge-bpmn-header-problems {
+  gap: 4px;
+
+  &.oge-bpmn-header-problems-found {
+    color: var(--oge-danger);
+  }
+}
+
+.oge-bpmn-problems-count {
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-bpmn-problems {
+  flex: none;
+  max-block-size: 160px;
+  overflow-y: auto;
+  padding: 6px 10px;
+  border-block-start: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  @include tokens.scrollbar;
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+}
+
+.oge-bpmn-problems-summary,
+.oge-bpmn-problems-empty {
+  margin: 0 0 4px;
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-bpmn-problems-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-bpmn-problem {
+  display: block;
+  inline-size: 100%;
+  padding: 4px 6px 4px 22px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 7px;
+    inset-block-start: calc(50% - 4px);
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 50%;
+    background: var(--oge-accent);
+  }
+
+  &.oge-bpmn-problem-error::before {
+    background: var(--oge-danger);
+  }
+
+  &.oge-bpmn-problem-warning::before {
+    background: var(--oge-warning);
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-bpmn-palette-custom svg,
+.oge-bpmn-pad-custom svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+@include tokens.forced-colors {
+  .oge-bpmn-lint-badge circle {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .oge-bpmn-lint-badge text {
+    fill: CanvasText;
+  }
+
+  .oge-bpmn-problem::before {
+    background: CanvasText;
+  }
+
+  .oge-bpmn-problem:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

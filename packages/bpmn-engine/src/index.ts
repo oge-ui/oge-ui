@@ -36,6 +36,7 @@ export {
   type BpmnEdgeDi,
   type BpmnEdgeType,
   type BpmnEventDefinitionKind,
+  type BpmnEventDetails,
   type BpmnEventType,
   type BpmnFlowNode,
   type BpmnFlowNodeType,
@@ -45,11 +46,25 @@ export {
   type BpmnNode,
   type BpmnNodeType,
   type BpmnPool,
+  type BpmnRootElement,
+  type BpmnRootElementType,
   type BpmnSequenceFlow,
   type BpmnShapeDi,
   type BpmnSubProcessType,
   type BpmnTextAnnotation,
+  type BpmnTimerKind,
 } from './lib/bpmn-model';
+export {
+  BPMN_CAMUNDA_NAMESPACE,
+  BPMN_MODEL_NAMESPACE,
+  BPMN_ZEEBE_NAMESPACE,
+  bpmnXmlChild,
+  bpmnXmlChildren,
+  bpmnXmlFind,
+  bpmnXmlReplace,
+  bpmnXmlWithAttribute,
+  type BpmnXmlElement,
+} from './lib/bpmn-xml-element';
 
 // --- geometry, routing, snapping, viewport ----------------------------------
 export {
@@ -155,6 +170,121 @@ export {
   type BpmnClipboard,
   type BpmnColorPatch,
 } from './lib/commands';
+export {
+  BPMN_PROCESS_TARGET,
+  addRootElementCommand,
+  bpmnRootElements,
+  declareBpmnNamespace,
+  newBpmnRootElementId,
+  setDocumentationCommand,
+  setEventDetailsCommand,
+  setExtensionElementsCommand,
+  setForeignAttributeCommand,
+  updateRootElementCommand,
+  type BpmnEventDetailsPatch,
+} from './lib/commands-extensions';
+export {
+  bpmnContainerAt,
+  bpmnContainerOf,
+  bpmnMoveTargets,
+  canReparent,
+  moveToContainerCommand,
+  reparentElementsCommand,
+  type BpmnContainerRef,
+  type BpmnMoveTarget,
+} from './lib/modeling';
+
+// --- validation (G5b) --------------------------------------------------------
+export {
+  OGE_BPMN_DEFAULT_LINT_RULES,
+  bpmnLintSummary,
+  bpmnWorstSeverity,
+  lintBpmnDiagram,
+  resolveBpmnLintRules,
+  type OgeBpmnLintChangedEvent,
+  type OgeBpmnLintContext,
+  type OgeBpmnLintIssue,
+  type OgeBpmnLintReport,
+  type OgeBpmnLintRule,
+  type OgeBpmnLintRuleOverride,
+  type OgeBpmnLintRulesInput,
+  type OgeBpmnLintSeverity,
+} from './lib/lint';
+
+// --- extensibility (G5b) -----------------------------------------------------
+export {
+  OGE_BPMN_DEFAULT_PROPERTIES_PROVIDERS,
+  bpmnListCellLabel,
+  bpmnListRemoveLabel,
+  bpmnListWithCell,
+  bpmnListWithRow,
+  bpmnListWithout,
+  bpmnPropertiesTarget,
+  buildBpmnPropertiesGroups,
+  resolveBpmnPropertiesProviders,
+  type OgeBpmnListColumn,
+  type OgeBpmnListRow,
+  type OgeBpmnPropertiesContext,
+  type OgeBpmnPropertiesEntry,
+  type OgeBpmnPropertiesFieldType,
+  type OgeBpmnPropertiesGroup,
+  type OgeBpmnPropertiesOption,
+  type OgeBpmnPropertiesProvider,
+  type OgeBpmnPropertiesTarget,
+  type OgeBpmnPropertiesValue,
+} from './lib/properties-providers';
+export {
+  OGE_BPMN_CAMUNDA7_PROVIDER,
+  OGE_BPMN_CAMUNDA_PROVIDERS,
+  OGE_BPMN_ZEEBE_PROVIDER,
+  bpmnBindingValue,
+  bpmnCamundaInputOutput,
+  bpmnForeignAttribute,
+  bpmnZeebeIoMapping,
+  bpmnZeebeTaskDefinition,
+  bpmnZeebeTaskHeaders,
+  setBpmnBindingCommand,
+  setCamundaAttributeCommand,
+  setCamundaInputOutputCommand,
+  setZeebeIoMappingCommand,
+  setZeebeTaskDefinitionCommand,
+  setZeebeTaskHeadersCommand,
+  type BpmnCamundaParameter,
+  type BpmnZeebeHeader,
+  type BpmnZeebeMapping,
+  type OgeBpmnPropertyBinding,
+} from './lib/camunda';
+export {
+  applyElementTemplateCommand,
+  bpmnAppliedTemplateId,
+  bpmnElementTemplatesProvider,
+  bpmnTemplateApplies,
+  removeElementTemplateCommand,
+  type OgeBpmnElementTemplate,
+  type OgeBpmnTemplateProperty,
+} from './lib/element-templates';
+export {
+  BPMN_RESERVED_HOTKEYS,
+  bpmnCustomGlyph,
+  bpmnHotkey,
+  type OgeBpmnContextPadEntry,
+  type OgeBpmnContextPadProvider,
+  type OgeBpmnEditorApi,
+  type OgeBpmnElementRenderer,
+  type OgeBpmnPaletteEntry,
+  type OgeBpmnPaletteProvider,
+  type OgeBpmnRenderContext,
+  type OgeBpmnRenderers,
+} from './lib/editor-extensions';
+export {
+  BPMN_SVG_ALLOWED_ATTRIBUTES,
+  BPMN_SVG_ALLOWED_TAGS,
+  bpmnSvg,
+  bpmnSvgToString,
+  sanitizeBpmnSvg,
+  type OgeBpmnSvgNode,
+  type OgeBpmnSvgTag,
+} from './lib/svg-node';
 
 // --- persistence -------------------------------------------------------------
 export {
@@ -170,24 +300,38 @@ export {
   type BpmnDiagramJson,
   type BpmnJsonParseResult,
 } from './lib/bpmn-json';
-export { renderDiagramSvg, type BpmnSvgExportOptions } from './lib/svg-export';
+export {
+  bpmnSvgSize,
+  renderDiagramSvg,
+  type BpmnSvgExportOptions,
+  type OgeBpmnPngExportOptions,
+} from './lib/svg-export';
 
 // --- editor configuration, messages and event payloads ----------------------
 export {
   OGE_DEFAULT_BPMN_COLOR_PRESETS,
   OGE_DEFAULT_BPMN_CONFIG,
+  OGE_DEFAULT_BPMN_CAMUNDA_MESSAGES,
+  OGE_DEFAULT_BPMN_EXTENSION_MESSAGES,
+  OGE_DEFAULT_BPMN_LINT_MESSAGES,
   OGE_DEFAULT_BPMN_MESSAGES,
+  fillBpmnMessages,
   resolveOgeBpmnConfig,
   type BpmnElementNameKey,
   type BpmnPaletteItemType,
   type OgeBpmnAlignMessages,
   type OgeBpmnAnnouncementMessages,
+  type OgeBpmnCamundaMessages,
   type OgeBpmnConfig,
   type OgeBpmnConfigInput,
   type OgeBpmnContextPadMessages,
+  type OgeBpmnExtensionMessages,
   type OgeBpmnHeaderMessages,
+  type OgeBpmnLintMessages,
+  type OgeBpmnLintRuleMessages,
   type OgeBpmnMessages,
   type OgeBpmnPropertiesMessages,
+  type OgeBpmnResolvedMessages,
   type OgeBpmnSearchMessages,
   type OgeBpmnToolsMessages,
 } from './lib/config';
@@ -212,6 +356,7 @@ export {
   BPMN_CANVAS_KEY_SHORTCUTS,
   OgeBpmnEditorCore,
   wrapBpmnLabel,
+  type BpmnCustomEntryView,
   type BpmnDragState,
   type BpmnEdgeView,
   type BpmnGuideLine,
@@ -220,6 +365,7 @@ export {
   type BpmnLabelEditView,
   type BpmnLabelLine,
   type BpmnLaneView,
+  type BpmnLintBadge,
   type BpmnMinimapView,
   type BpmnMouseInput,
   type BpmnMultiPadView,
@@ -230,6 +376,7 @@ export {
   type BpmnPanel,
   type BpmnPointerInput,
   type BpmnPoolView,
+  type BpmnProblemView,
   type BpmnResizeCorner,
   type BpmnSearchResult,
   type BpmnStripTool,

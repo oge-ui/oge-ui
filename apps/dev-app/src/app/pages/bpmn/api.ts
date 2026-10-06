@@ -91,11 +91,13 @@ const SECTIONS_REACT = ['<OgeBpmnEditor>', 'Configuration'] as const;
       }
       <li>
         Import never fails silently: the few constructs the model cannot
-        represent (nested lane sets, extra event definitions on one event,
-        timer/error definition payloads) are dropped with an explicit
-        <code>BpmnImportWarning</code>, while <code>extensionElements</code>,
-        <code>documentation</code> and unknown attributes are preserved verbatim
-        and written back on export — camunda-flavored files round-trip
+        represent (nested lane sets, extra event definitions on one event) are
+        dropped with an explicit <code>BpmnImportWarning</code>.
+        Event-definition payloads (timers, message / signal / error / escalation
+        references, conditions, link names), <code>documentation</code> and
+        <code>extensionElements</code> are read into editable fields, and
+        unknown attributes and vendor elements are preserved verbatim and
+        written back on export — Camunda / Zeebe files round-trip
         byte-identically.
       </li>
       <li>

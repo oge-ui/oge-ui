@@ -117,7 +117,16 @@ export const OGE_REACT_BPMN_API: ApiSections = {
         },
       ],
     },
-    ...(OGE_BPMN_API.properties ?? []).slice(1),
+    ...patchGroups((OGE_BPMN_API.properties ?? []).slice(1), {
+      'OgeBpmnPropertiesEntryTemplate ([ogeBpmnPropertiesEntry])': [
+        {
+          name: 'renderPropertiesEntry',
+          type: '(entry: OgeBpmnPropertiesEntry, context: OgeBpmnPropertiesEntryRenderContext) =&gt; ReactNode',
+          description:
+            'Draws provider entries of type <code>custom</code> — the React counterpart of the Angular <code>[ogeBpmnPropertiesEntry]</code> template. <code>context.commit(value)</code> runs one undoable command through the entry&#39;s <code>set</code>; <code>context.inputId</code> is the id the entry&#39;s label carries for <code>aria-labelledby</code>.',
+        },
+      ],
+    }),
   ],
   methods: patchGroups(OGE_BPMN_API.methods, {
     'addOverlay(overlay: OgeBpmnOverlay)': [
@@ -170,6 +179,11 @@ export const OGE_REACT_BPMN_API: ApiSections = {
           name: 'OgeBpmnEditorMode',
           type: "'edit' | 'view'",
           description: 'The editor mode union.',
+        },
+        {
+          name: 'OgeBpmnPropertiesEntryRenderContext',
+          type: '{ commit(value): void; inputId: string }',
+          description: 'Second argument of <code>renderPropertiesEntry</code>.',
         },
         ...group.entries,
       ],

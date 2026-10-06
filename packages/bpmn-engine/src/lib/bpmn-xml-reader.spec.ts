@@ -61,14 +61,18 @@ describe('bpmn-xml-reader', () => {
   });
 
   describe('fidelity preservation', () => {
-    it('preserves documentation and extensionElements as foreign children', () => {
+    it('reads documentation and extensionElements into editable fields (G5b)', () => {
       const result = readBpmnXml(FOREIGN_FIXTURE_XML);
       const task = result.model?.nodes['Task_f'];
-      expect(task?.foreignChildren).toHaveLength(2);
-      expect(task?.foreignChildren?.[0]).toContain('documentation');
-      expect(task?.foreignChildren?.[0]).toContain('Sends the invoice.');
-      expect(task?.foreignChildren?.[1]).toContain('extensionElements');
-      expect(task?.foreignChildren?.[1]).toContain('camunda:property');
+      expect(task?.foreignChildren).toBeUndefined();
+      expect(task?.type !== 'textAnnotation' && task?.documentation).toBe(
+        'Sends the invoice.',
+      );
+      expect(
+        task?.type !== 'textAnnotation' && task?.extensionElements,
+      ).toEqual([
+        { name: 'camunda:property', attributes: { name: 'k', value: 'v' } },
+      ]);
     });
 
     it('preserves unknown vendor attributes verbatim (v0.5)', () => {
@@ -89,6 +93,7 @@ describe('bpmn-xml-reader', () => {
         id: 'Start_f',
         type: 'startEvent',
         eventDefinition: 'message',
+        eventDetails: { id: 'MsgDef_1' },
       });
     });
 

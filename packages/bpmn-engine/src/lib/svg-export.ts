@@ -16,11 +16,19 @@ import { edgeLabelAnchor } from './edge-routing';
 import type { Rect } from './geometry';
 import { boundsOfRects } from './geometry';
 import { escapeXmlAttribute, escapeXmlText } from './bpmn-xml-writer';
+import type { OgeBpmnRenderers } from './editor-extensions';
+import { bpmnCustomGlyph } from './editor-extensions';
+import { bpmnSvgToString } from './svg-node';
 
 /** Options of {@link renderDiagramSvg}. */
 export interface BpmnSvgExportOptions {
   /** Padding in diagram units added around the content bounds. Default 20. */
   readonly padding?: number;
+  /**
+   * Per-type shape overrides (the editor's `renderers`): a renderer's
+   * sanitized tree replaces the built-in shape; the label is still drawn.
+   */
+  readonly renderers?: OgeBpmnRenderers;
 }
 
 // The exported artifact leaves the token system, so neutral colors are
@@ -130,6 +138,21 @@ export function renderDiagramSvg(
     const node = model.nodes[id];
     const di = model.shapeDi[id];
     if (!node || !di || hidden.has(id)) {
+      continue;
+    }
+    const custom = bpmnCustomGlyph(options?.renderers, {
+      node,
+      width: di.bounds.width,
+      height: di.bounds.height,
+      fill: di.fill ?? null,
+      stroke: di.stroke ?? null,
+    });
+    if (custom !== null) {
+      const b = di.bounds;
+      lines.push(
+        `  <g transform="translate(${b.x} ${b.y})">${bpmnSvgToString(custom)}</g>`,
+      );
+      label(lines, node, b.x + b.width / 2, b.y + b.height / 2 + 4, 'middle');
       continue;
     }
     renderNode(
@@ -347,4 +370,27 @@ function label(
     `  <text x="${x}" y="${y}" text-anchor="${escapeXmlAttribute(anchor)}" ` +
       `font-size="12" fill="${STROKE}">${escapeXmlText(text)}</text>`,
   );
+}
+
+/** Options of the render layers' `exportPng()`. */
+export interface OgeBpmnPngExportOptions {
+  /** Device-pixel multiplier of the raster. Default 2. */
+  readonly pixelRatio?: number;
+  /** Canvas fill behind the diagram (PNG keeps alpha otherwise). Default `#ffffff`. */
+  readonly background?: string;
+  /** Padding in diagram units around the content. Default 20. */
+  readonly padding?: number;
+}
+
+/** The pixel size an exported SVG string declares (`width` / `height`). */
+export function bpmnSvgSize(svg: string): {
+  readonly width: number;
+  readonly height: number;
+} {
+  const width = /<svg[^>]*\swidth="(\d+(?:\.\d+)?)"/.exec(svg);
+  const height = /<svg[^>]*\sheight="(\d+(?:\.\d+)?)"/.exec(svg);
+  return {
+    width: width === null ? 300 : Number(width[1]),
+    height: height === null ? 150 : Number(height[1]),
+  };
 }

@@ -188,3 +188,62 @@
 .oge-bpmn-props-add-lane {
   align-self: flex-start;
 }
+
+// --- G5b: provider groups, list fields, descriptions -------------------------
+
+.oge-bpmn-props-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.oge-bpmn-props-expression {
+  font-family: var(--oge-font-mono);
+  min-block-size: 40px;
+}
+
+.oge-bpmn-props-description {
+  margin: -8px 0 0;
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-bpmn-props-list-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.oge-bpmn-props-list-cell {
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+.oge-bpmn-props-list-remove,
+.oge-bpmn-props-list-add {
+  padding: 4px 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-family: inherit;
+  font-size: calc(var(--oge-font-size) - 1px);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-bpmn-props-list-add {
+  align-self: flex-start;
+}
