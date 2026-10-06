@@ -2,12 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
   input,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
-import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { highlight } from './highlight';
 
 export interface CodeFile {
@@ -277,8 +275,6 @@ const LANGUAGE_LABELS: Record<string, string> = {
   `,
 })
 export class CodeBlock {
-  private readonly sanitizer = inject(DomSanitizer);
-
   /** Single-snippet shorthand. */
   readonly code = input<string | undefined>(undefined);
   readonly language = input('html');
@@ -336,11 +332,16 @@ export class CodeBlock {
     return Array.from({ length: count }, (_, i) => i + 1);
   });
 
-  protected readonly highlighted = computed<SafeHtml>(() => {
+  /**
+   * Bound through Angular's sanitizing `[innerHTML]` — the highlighter emits
+   * only escaped text and `<span class>` tokens, which survive it — rather
+   * than `bypassSecurityTrustHtml`: a bypass needs the
+   * `angular#unsafe-bypass` Trusted Types policy, which the strict-CSP e2e
+   * (and SECURITY.md's recommended policy) does not allow.
+   */
+  protected readonly highlighted = computed(() => {
     const file = this.activeFile();
-    return this.sanitizer.bypassSecurityTrustHtml(
-      file ? highlight(file.code, file.language) : '',
-    );
+    return file ? highlight(file.code, file.language) : '';
   });
 
   protected copy(): void {

@@ -36,4 +36,32 @@ describe('bpmn chrome direction (local twin of behavior ogeIsRtl)', () => {
     await Promise.resolve();
     expect(seen).toHaveBeenCalledTimes(1);
   });
+
+  it('does not observe an element of a windowless (server) document', () => {
+    const inert = document.implementation.createHTMLDocument('server');
+    const el = inert.createElement('div');
+    inert.body.append(el);
+    const created = vi.fn();
+    vi.stubGlobal(
+      'MutationObserver',
+      class {
+        constructor() {
+          created();
+        }
+        observe(): void {
+          /* the global observer must not be reached for */
+        }
+        disconnect(): void {
+          /* nothing observed */
+        }
+      },
+    );
+    try {
+      const stop = observeBpmnDirection(el, vi.fn());
+      expect(created).not.toHaveBeenCalled();
+      expect(() => stop()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

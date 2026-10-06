@@ -51,6 +51,9 @@ jobs:
       # checked against what the build actually emits
       - run: npx nx run dev-app:build
       - run: npx nx run docs-tools:csp-check
+      # Rollup strips module directives; the React dists must still lead with
+      # 'use client' or an RSC import crashes at runtime
+      - run: npx nx run @oge/source:use-client-check
 
   # The docs site is the integration surface of every package, so e2e always
   # runs in full (not `affected`), sharded to keep the wall clock short.
@@ -86,6 +89,45 @@ jobs:
             apps/dev-app-e2e/playwright-report
             apps/dev-app-e2e/test-results.xml
             apps/dev-app-e2e/test-output
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # The SSR / hydration proof runs against the prerendered build the docs
+  # host serves (not the dev server above): every route must hydrate under
+  # the production CSP, and representative pages must run clean under a
+  # strict nonce + Trusted Types policy (docs/ARCHITECTURE.md → "SSR and
+  # hydration"). One page per test, so it shards like the main e2e.
+  e2e-ssr:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx nx run dev-app-e2e:e2e-ssr -- --shard=${{ matrix.shard }}/2
+
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-ssr-report-${{ matrix.shard }}
+          path: |
+            apps/dev-app-e2e/test-results-ssr.xml
+            apps/dev-app-e2e/test-output-ssr
           retention-days: 14
           if-no-files-found: ignore
 

@@ -58365,7 +58365,7 @@ _Handle members_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `panelId` | `string` | Unique id applied to the panel element (`oge-popup-N`) — wire to `aria-controls`. |
+| `panelId` | `string` | Unique id applied to the panel element — wire to `aria-controls`. Derived from `useId()` (`oge-popup-<id>`), so a server render and its hydration agree. |
 | `isOpen` | `boolean` | Open state — re-renders the owner when it changes (Angular exposes a `Signal`). |
 | `position` | `OgeResolvedPopupPosition \| null` | `null` until the first measure after open; hide the panel while `null`. |
 

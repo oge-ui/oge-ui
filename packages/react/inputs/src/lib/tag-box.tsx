@@ -12,6 +12,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
+import { itemImageSrc } from './image-src';
 import { withInputWidth } from './field-extras';
 import {
   OgeSelectListCore,
@@ -38,7 +39,6 @@ import {
   type OgeSelectSearchExpr,
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
-  sanitizeResourceUrl,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -885,7 +885,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
           {list.imageOf(item) && (
             <img
               className="oge-select-option-img"
-              src={sanitizeResourceUrl(list.imageOf(item)) || undefined}
+              src={itemImageSrc(list.imageOf(item))}
               alt=""
               loading="lazy"
             />
@@ -996,10 +996,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
                   {list.imageOf(chip.item) && (
                     <img
                       className="oge-tag-img"
-                      src={
-                        sanitizeResourceUrl(list.imageOf(chip.item)) ||
-                        undefined
-                      }
+                      src={itemImageSrc(list.imageOf(chip.item))}
                       alt=""
                     />
                   )}

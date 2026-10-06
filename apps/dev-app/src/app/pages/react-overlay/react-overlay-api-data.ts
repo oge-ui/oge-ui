@@ -1369,7 +1369,7 @@ export const OGE_REACT_ANCHORED_PANEL_API: ApiSections = {
           name: 'panelId',
           type: 'string',
           description:
-            'Unique id applied to the panel element (<code>oge-popup-N</code>) — wire to <code>aria-controls</code>.',
+            'Unique id applied to the panel element — wire to <code>aria-controls</code>. Derived from <code>useId()</code> (<code>oge-popup-&lt;id&gt;</code>), so a server render and its hydration agree.',
         },
         {
           name: 'isOpen',

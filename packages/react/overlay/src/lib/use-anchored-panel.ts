@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import {
   OgeAnchoredPanelCore,
   type OgeAnchoredPanelCoreOptions,
@@ -11,12 +11,15 @@ import {
 /** Everything the machine takes except the state sinks, which the hook owns. */
 export type UseAnchoredPanelOptions = Omit<
   OgeAnchoredPanelCoreOptions,
-  'onOpenChange' | 'onPositionChange'
+  'onOpenChange' | 'onPositionChange' | 'id'
 >;
 
 /** What `useAnchoredPanel` returns — the React face of the panel machine. */
 export interface OgeAnchoredPanelHandle {
-  /** Unique id applied to the panel element — wire to `aria-controls`. */
+  /**
+   * Unique id applied to the panel element — wire to `aria-controls`.
+   * Derived from `useId()`, so a server render and its hydration agree.
+   */
   readonly panelId: string;
   /** Current open state (re-renders the owner when it changes). */
   readonly isOpen: boolean;
@@ -59,9 +62,15 @@ export function useAnchoredPanel(
   const latest = useRef(options);
   latest.current = options;
 
+  // `aria-controls` targets are server-rendered (a drop-down button's, the
+  // scheduler's date navigator's), so the id must not come from the core's
+  // module counter (ARCHITECTURE → SSR-safe ids)
+  const reactId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+
   const coreRef = useRef<OgeAnchoredPanelCore>(undefined);
   if (!coreRef.current) {
     coreRef.current = new OgeAnchoredPanelCore({
+      id: `oge-popup-${reactId}`,
       anchor: () => latest.current.anchor(),
       panel: () => latest.current.panel(),
       placement: () => latest.current.placement?.() ?? 'bottom-start',

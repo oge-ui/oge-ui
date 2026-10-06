@@ -85,4 +85,34 @@ describe('writing direction', () => {
   it('is a no-op without an element', () => {
     expect(observeDirection(null, () => undefined)).toBeTypeOf('function');
   });
+
+  it("uses the element's own window, so a windowless (server) DOM is not observed", () => {
+    // a document with no window — what a server DOM looks like — whose node
+    // the global (jsdom) MutationObserver would reject with a TypeError
+    const inert = document.implementation.createHTMLDocument('server');
+    const el = inert.createElement('div');
+    inert.body.append(el);
+    const created = vi.fn();
+    vi.stubGlobal(
+      'MutationObserver',
+      class {
+        constructor() {
+          created();
+        }
+        observe(): void {
+          /* the global observer must not be reached for */
+        }
+        disconnect(): void {
+          /* nothing observed */
+        }
+      },
+    );
+    try {
+      const stop = observeDirection(el, vi.fn());
+      expect(created).not.toHaveBeenCalled();
+      expect(() => stop()).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

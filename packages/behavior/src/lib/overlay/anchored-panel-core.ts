@@ -79,6 +79,15 @@ export interface OgeAnchoredPanelCoreOptions {
    * stack-test against the object they hold.
    */
   stackToken?: object;
+
+  /**
+   * The panel element's id ({@link OgeAnchoredPanelCore.panelId}). Defaults
+   * to `oge-popup-<n>` from a module counter, which is fine where only one
+   * side renders it (Angular re-binds every id on hydration). A layer that
+   * server-renders an `aria-controls` pointing at the panel must pass an id
+   * both sides compute alike — the React seam derives it from `useId()`.
+   */
+  id?: string;
 }
 
 let nextPanelId = 0;
@@ -109,7 +118,7 @@ const MAX_MEASURE_RETRIES = 60;
  */
 export class OgeAnchoredPanelCore {
   /** Unique id applied to the panel element — wire to `aria-controls`. */
-  readonly panelId = `oge-popup-${nextPanelId++}`;
+  readonly panelId: string;
 
   private open_ = false;
   private position_: OgeResolvedPopupPosition | null = null;
@@ -125,6 +134,7 @@ export class OgeAnchoredPanelCore {
   private readonly stackHandle: object;
 
   constructor(private readonly options: OgeAnchoredPanelCoreOptions) {
+    this.panelId = options.id ?? `oge-popup-${nextPanelId++}`;
     this.stackHandle = options.stackToken ?? this;
   }
 

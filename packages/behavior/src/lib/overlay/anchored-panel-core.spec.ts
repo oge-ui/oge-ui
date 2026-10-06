@@ -74,6 +74,12 @@ describe('open / close state', () => {
     b.core.destroy();
   });
 
+  it('takes the id from the host when one is given (SSR-safe React ids)', () => {
+    const h = harness({ id: 'oge-popup-r1' });
+    expect(h.core.panelId).toBe('oge-popup-r1');
+    h.core.destroy();
+  });
+
   it('pushes the open state out once per transition, not per call', () => {
     const h = harness();
     h.core.open();

@@ -64,28 +64,27 @@ export function ogeResolveDirection(
 /**
  * Calls `callback` whenever the resolved direction of `element` changes
  * because a `dir` attribute changed on it or on any ancestor (the closest
- * `[dir]`, `<html dir>`). Returns the disconnect function. SSR-safe: without
- * a `MutationObserver` it returns a no-op.
+ * `[dir]`, `<html dir>`). Returns the disconnect function. SSR-safe: when the
+ * element's document has no window (a server DOM) or that window no
+ * `MutationObserver`, it returns a no-op.
  */
 export function observeDirection(
   element: Element | null | undefined,
   callback: (direction: OgeDirection) => void,
 ): () => void {
-  if (
-    element === null ||
-    element === undefined ||
-    typeof MutationObserver === 'undefined'
-  ) {
-    return () => undefined;
-  }
-  const root = element.ownerDocument?.documentElement;
-  if (!root) return () => undefined;
+  if (element === null || element === undefined) return () => undefined;
+  // The observer of the element's own window, not the global one: a server
+  // DOM has no window (so nothing is observed), and a process that holds a
+  // second DOM implementation beside it — a server render next to jsdom —
+  // must not hand one realm's node to the other's observer, which throws.
+  const doc = element.ownerDocument;
+  const Observer = doc?.defaultView?.MutationObserver;
+  const root = doc?.documentElement;
+  if (Observer === undefined || !root) return () => undefined;
   let current = ogeResolveDirection(element);
-  const observer = new MutationObserver((records) => {
+  const observer = new Observer((records) => {
     const relevant = records.some(
-      (record) =>
-        record.target === element ||
-        (record.target instanceof Node && record.target.contains(element)),
+      (record) => record.target === element || record.target.contains(element),
     );
     if (!relevant) return;
     const next = ogeResolveDirection(element);

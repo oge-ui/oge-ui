@@ -4,5 +4,16 @@
   "projectType": "application",
   "sourceRoot": "apps/dev-app-e2e/src",
   "tags": ["scope:app", "platform:docs"],
-  "implicitDependencies": ["dev-app"]
+  "implicitDependencies": ["dev-app"],
+  "targets": {
+    "e2e-ssr": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "npx playwright test -c apps/dev-app-e2e/playwright.ssr.config.mts",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": ["dev-app:build"]
+    }
+  }
 }

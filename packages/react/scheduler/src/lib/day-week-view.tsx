@@ -93,6 +93,7 @@ import {
   type TimeGridVm,
 } from '@oge-ui/scheduler-engine';
 import { SchedulerAppointmentChip } from './appointment-chip';
+import { useClientClock } from './use-client-clock';
 import type {
   OgeAppointmentRenderContext,
   OgeDateHeaderRenderContext,
@@ -354,6 +355,7 @@ function DayWeekViewInner<T>(
   const [focusedChipKey, setFocusedChipKey] = useState<unknown>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [selection, setSelection] = useState<DayWeekSelection | null>(null);
+  const clientClock = useClientClock();
   const [tick, setNow] = useState(() => new Date());
   const now = toSchedulerView(tick, props.timeZone);
 
@@ -853,12 +855,11 @@ function DayWeekViewInner<T>(
           layout.colCount,
           layout.blockCount,
         );
-  const nowBoxes = dayWeekNowBoxes(
-    grid,
-    layout,
-    now,
-    props.showCurrentTimeIndicator,
-  );
+  // the now-line sits at a clock-dependent pixel, so it stays out of the
+  // hydration render (use-client-clock.ts)
+  const nowBoxes = clientClock
+    ? dayWeekNowBoxes(grid, layout, now, props.showCurrentTimeIndicator)
+    : [];
 
   const gridLabel = schedulerGridAriaLabel(
     messages,

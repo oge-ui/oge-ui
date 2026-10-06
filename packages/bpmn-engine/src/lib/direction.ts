@@ -25,28 +25,24 @@ export function bpmnIsRtl(element: Element | null | undefined): boolean {
 
 /**
  * Calls `callback` when a `dir` attribute on `element` or an ancestor changes
- * its direction. Returns the disconnect function (a no-op without a
- * `MutationObserver`, e.g. during server rendering).
+ * its direction. Returns the disconnect function (a no-op when the
+ * element's document has no window, e.g. during server rendering).
  */
 export function observeBpmnDirection(
   element: Element | null | undefined,
   callback: (rtl: boolean) => void,
 ): () => void {
-  if (
-    element === null ||
-    element === undefined ||
-    typeof MutationObserver === 'undefined'
-  ) {
-    return () => undefined;
-  }
-  const root = element.ownerDocument?.documentElement;
-  if (!root) return () => undefined;
+  if (element === null || element === undefined) return () => undefined;
+  // the element's own window's observer (none on a server DOM) — see the
+  // twin in @oge-ui/behavior for why not the global one
+  const doc = element.ownerDocument;
+  const Observer = doc?.defaultView?.MutationObserver;
+  const root = doc?.documentElement;
+  if (Observer === undefined || !root) return () => undefined;
   let current = bpmnIsRtl(element);
-  const observer = new MutationObserver((records) => {
+  const observer = new Observer((records) => {
     if (
-      !records.some(
-        (r) => r.target === element || (r.target as Node).contains(element),
-      )
+      !records.some((r) => r.target === element || r.target.contains(element))
     ) {
       return;
     }

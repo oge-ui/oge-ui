@@ -171,6 +171,14 @@ Angular apps also list Angular's own `angular` policy, which its sanitizing
 suite never calls a `bypassSecurityTrust*` API, so `angular#unsafe-bypass` is
 not needed.
 
+This is tested, not just stated: the end-to-end suite serves the docs site
+under a strict policy — nonce-only `script-src` with `'strict-dynamic'`,
+nonce-only `<style>` elements, `require-trusted-types-for 'script'` and a
+`trusted-types` list of Angular's policies plus the `oge-ui#…` names on this
+page — and fails on any violation while it imports BPMN XML, renders an HTML
+overlay badge, opens modals in both render layers and exports grids and
+charts.
+
 ## Dependencies
 
 Nothing in this workspace's `dependencies` or `devDependencies` is shipped to

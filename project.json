@@ -9,6 +9,15 @@
         "config": ".verdaccio/config.yml",
         "storage": "tmp/local-registry/storage"
       }
+    },
+    "use-client-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/check-use-client.mjs",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": [{ "projects": ["tag:platform:react"], "target": "build" }]
     }
   }
 }

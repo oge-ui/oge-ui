@@ -152,7 +152,8 @@ consumers:
   spec is mandatory.
 - **`'use client'` must survive the build.** Rollup strips module-level
   directives; the Vite config re-adds it via `output.banner`. Check the dist,
-  not the sources.
+  not the sources — `npx nx run @oge/source:use-client-check` does, in CI
+  (see "SSR and hydration").
 - **The dist must be publishable.** `@nx/vite` generates `package.json`; the
   config's `publishAssets` plugin copies `README.md`, `LICENSE` and `llms.txt`.
   Peers are exactly what the code imports (`react` — not `react-dom` unless it
@@ -160,7 +161,9 @@ consumers:
 - **SSR-safe by default.** `useIsomorphicLayoutEffect` instead of bare
   `useLayoutEffect` (client components still server-render), and first-paint
   attribute parity where the DOM-order effect can be approximated (see the
-  group's `initialTabIndex`).
+  group's `initialTabIndex`). Proven per family by
+  `apps/ssr-smoke/src/react-hydration.spec.tsx` (Node render → StrictMode
+  hydration); wall-clock output is gated on `useClientClock()`.
 - **SSR-safe ids: React ids come from `useId()`.** Every DOM id a React
   component renders (ARIA `aria-controls` / `aria-labelledby` targets, panel
   and input ids) is derived from `useId()`, stripped to `[a-zA-Z0-9_-]` so it
@@ -169,7 +172,9 @@ consumers:
   client compute different values, so hydration mismatches and the ARIA
   references point at nothing — and a counter shared across requests leaks
   render order between users. Keys of internal maps that never reach the DOM
-  are exempt.
+  are exempt. A shared core that mints an id takes it as an option
+  (`OgeAnchoredPanelCoreOptions.id`) so the React seam can pass a `useId()`
+  one; the hydration spec catches a counter that reaches the markup.
 - **Dev warnings in effects, off by default.** Warn from `useEffect`, never the
   render body; `isDevMode()` returns `false` when no `NODE_ENV` signal exists,
   so unshimmed production toolchains do not warn forever.
@@ -1825,6 +1830,9 @@ rules — change both together.
   (`behavior`'s `editor-trusted-types.ts`, policy `oge-ui#editor`) — both
   parse into an inert document that is only walked. A new sink reuses a documented
   policy or adds one to `SECURITY.md` → "Trusted Types" in the same change.
+  `apps/dev-app-e2e/ssr/strict-csp.spec.ts` serves the site with
+  `require-trusted-types-for 'script'` and a `trusted-types` list read from
+  `SECURITY.md`, so an undocumented policy or an unwrapped sink fails it.
 - **No raw control characters in source.** Write `\0`, `\u0000`, `\x1f` as
   escapes; a literal NUL makes grep treat the file as binary and hides it from
   every search. `node tools/docs-tools/check-control-chars.mjs` (run by
@@ -2059,7 +2067,13 @@ and Search Console reported the whole site as "redirected / discovered – not i
   (Angular's server DOM also lacks `dataset`; use `setAttribute`). Prefer `afterNextRender` /
   `DOCUMENT` injection; otherwise `typeof document !== 'undefined'`. One unguarded access fails the
   whole `dev-app:build`, and the first error kills the worker so later routes report
-  "Terminating worker thread" — read the _first_ `ERROR` line.
+  "Terminating worker thread" — read the _first_ `ERROR` line. `apps/ssr-smoke` renders every
+  family in plain Node, so a library-side leak fails there first (see "SSR and hydration").
+- **The site hydrates** (`provideClientHydration(withEventReplay())` in `app.config.ts`, production
+  builds); the
+  hydration crawl (`apps/dev-app-e2e/ssr/hydration.spec.ts`) opens every prerendered route
+  and fails on any NG05xx. `app.config.server.ts` post-processes the event-replay script (an
+  upstream ordering bug and the CSP hash — see "SSR and hydration").
 - Canonical host is **`https://www.ogeui.com`** everywhere (`SITE_ORIGIN`, `SeoService.ORIGIN`,
   `robots.txt`, sitemap, `llms.txt` links, package `homepage`). Vercel serves `www.` as the primary
   domain and 308-redirects the apex to it, so the canonical must name `www.` — a canonical that
@@ -2074,7 +2088,10 @@ and Search Console reported the whole site as "redirected / discovered – not i
   (`'unsafe-hashes'` is only needed if the build goes back to an `onload=` handler attribute.) That hash is tied to a string Angular
   generates, so `docs-tools:csp-check` (CI, after `dev-app:build`) re-derives it from the built HTML
   and fails when the policy stops covering it — otherwise an Angular upgrade would silently ship an
-  unstyled site. New inline script? Hash it and add it there, or move it into a bundled file.
+  unstyled site. New inline script? Hash it and add it there, or move it into a bundled file. The
+  event-replay contract is the second hashed script: `event-replay-script.ts` makes it identical
+  on every page (a new event type in a demo changes it — add the type to `REPLAYED_EVENTS`). The
+  hydration crawl is served with these headers, so a blocked script fails it too.
 
 ### Versioned docs
 
@@ -2096,6 +2113,82 @@ Archiving a version, once per line:
    the same path on that origin.
 
 Archive branches take no feature work; only a fix that keeps the old site building is allowed.
+
+## SSR and hydration
+
+Every SSR claim in this document and on the docs site is backed by a test. When you add a
+claim, add (or point at) its proof here; when you add a family, add it to the suites below.
+
+| Claim                                                                                    | Proven by                                                                                                                                                                                                              |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every Angular family renders on a server with no browser globals                         | `apps/ssr-smoke/src/server-render.spec.ts` — `renderApplication` per family in **plain Node** (no `window`/`document`/`ResizeObserver`), hydration annotations on, silent console                                      |
+| Angular components hydrate the server DOM instead of re-rendering it                     | `apps/ssr-smoke/src/hydration.spec.ts` — per family: server render → `provideClientHydration()` in jsdom; every `ngh` consumed, the server's element objects survive, no NG05xx                                        |
+| React components render in Node and hydrate with zero warnings under `<StrictMode>`      | `apps/ssr-smoke/src/react-hydration.spec.tsx` — per family: `renderToString` in Node, then a jsdom window, fresh module instances and `hydrateRoot`; the client hydrates seven minutes "later" than the server renders |
+| React ids are SSR-safe (`useId()`)                                                       | the same spec (any id drift is an attribute mismatch) plus `packages/react/{navigation,tabs}/src/lib/*ssr-ids.spec.tsx`                                                                                                |
+| `'use client'` survives the React build                                                  | `tools/check-use-client.mjs` → `npx nx run @oge/source:use-client-check` (CI verify): every JS file of every React dist leads with the directive                                                                       |
+| The docs site hydrates every prerendered page (Angular and `?framework=react`)           | `apps/dev-app-e2e/ssr/hydration.spec.ts` — crawls the routes in the built `sitemap.xml`; fails on NG05xx, React hydration errors, CSP reports or uncaught errors, and on leftover `ngh`                                |
+| The production CSP (`vercel.json`) admits everything the build emits                     | `docs-tools:csp-check` (hashes) and the crawl above, which is served **with** those headers                                                                                                                            |
+| The suite runs under a strict nonce CSP with Trusted Types (`angular` + `oge-ui#…` only) | `apps/dev-app-e2e/ssr/strict-csp.spec.ts` — grid (CSV/Excel export), BPMN (XML import, HTML badge), overlay modal in both layers, chart JPEG/PDF export; any `securitypolicyviolation` fails                           |
+
+Running them: `npx nx run ssr-smoke:test` (part of `affected -t test`), and
+`npx nx run dev-app-e2e:e2e-ssr` (builds the site, then serves `dist/apps/dev-app/browser`
+through `tools/docs-tools/serve-prerendered.mjs` on port 4323 — the `vercel.json` redirects,
+rewrites and headers, or a strict per-request nonce policy for requests sending
+`x-oge-csp: strict`). CI runs the latter as the sharded `e2e-ssr` job.
+
+Hydration is on in **production builds only** (`isDevMode()` in `app.config.ts`). The dev
+server backs the interaction e2e suite, whose specs type right after `goto`; hydration re-applies
+`[value]` bindings and discards text typed into the server DOM before it finished, so those specs
+would race it. The hydration behaviour itself is proven against the production build above.
+
+Why `apps/ssr-smoke` is one project rather than a spec per package: the packages run vitest
+under jsdom with a TestBed setup file, where `window` and `document` exist and an unguarded
+global passes. The smoke project's environment is plain Node — what a prerender worker or an
+SSR server sees — and only the round-trip specs install a DOM, deliberately, after the server
+half.
+
+Rules the suites enforce (and the fixes they produced):
+
+- **No module counters in server-rendered ids — including in shared cores.** The anchored-panel
+  machine's `oge-popup-<n>` counter reached a server-rendered `aria-controls` (drop-down button,
+  scheduler navigator); the React seam now passes a `useId()`-derived `id`. Angular is unaffected
+  (hydration re-binds every attribute from the client's values), which is why the counter stays
+  the core's default.
+- **Wall-clock output stays out of the hydration render (React).** A now-line or today marker
+  positioned from `new Date()` lands on another pixel when the page hydrates minutes after it was
+  rendered. Gate it on the package's `useClientClock()` (`useSyncExternalStore`: `false` while
+  hydrating, `true` from a client-only mount's first render).
+- **React SSR apps pass `locale`.** A React family without one follows `navigator.language` in the
+  browser and the runtime default on the server — a mismatch for every reader whose locale differs
+  from the server's. Angular reads `LOCALE_ID`, the same on both sides.
+- **Browser observers come from the element's own window** (`el.ownerDocument.defaultView`), not
+  the global: a server DOM has no window, and a process holding a second DOM (a server render next
+  to jsdom) must not pass one realm's node to the other's observer.
+- **An `<img>` never gets `about:blank`.** `sanitizeResourceUrl` answers an unsafe URL with
+  `about:blank` (right for an `href`); an image would load it and trip a strict `img-src`. Drop
+  the `src` instead (`itemImageSrc` in `@oge-ui/react-inputs`, the signature pad's check).
+- **Bind `[attr.selected]` beside `[selected]` on `<option>`.** The server DOM (domino) has no
+  `selected` property, so a property-only binding leaves the prerendered `<select>` on its first
+  option; dev-mode SSR also logs NG0303 for it, which `SERVER_DOM_GAPS` in
+  `apps/ssr-smoke/src/render.ts` allowlists as an emulation gap.
+- **Event replay needs the docs' fold until Angular fixes its ordering.** Angular 22.2 inserts the
+  replay bootstrap `<script>` after computing the hydration annotations, so body-relative paths —
+  used for content projected into a component and rendered outside its host (`<oge-tab>` inside
+  `<oge-tab-panel>`, `<oge-step>` inside `<oge-stepper>`) — are one sibling off and the client fails
+  with NG0509, leaving the view unhydrated. `app.config.server.ts` folds the call into the contract
+  script (`event-replay-script.ts`, which also normalises the call so the static CSP needs one hash
+  for every page); `hydration.spec.ts` pins the upstream bug and fails once it is fixed.
+
+Known gaps (not mismatches — the hydration matches — but worth closing):
+
+- The **React grid and tree list** set their data source in an effect, so their server markup is
+  the headers and the empty state; rows appear after hydration. The Angular grid server-renders
+  its first page. Closing it needs a synchronous first load for in-memory arrays.
+- The **rich-text editor** (both layers) server-renders its label, toolbar and counter but an
+  empty editing surface: the document is built into the DOM on the client. `ssr-smoke` asserts
+  only the shell until the surface is server-rendered from the model.
+- Local-date layouts (scheduler today cells, Gantt ranges that include today) assume the server
+  and the browser share a time zone; pass `timeZone` where they may not.
 
 ## `ng add` (`tools/oge-schematics`)
 

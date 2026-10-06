@@ -186,6 +186,7 @@ export class OgeBpmnPropertiesEntryTemplate {
                 <option
                   [value]="option.type"
                   [selected]="option.type === mv.current"
+                  [attr.selected]="option.type === mv.current ? '' : null"
                   [disabled]="option.disabled"
                   [attr.title]="option.reason"
                 >
@@ -205,11 +206,19 @@ export class OgeBpmnPropertiesEntryTemplate {
               class="oge-bpmn-props-input oge-bpmn-props-select oge-bpmn-props-eventdef"
               (change)="onEventDefinition(ev.id, $event)"
             >
-              <option value="" [selected]="ev.current === null">
+              <option
+                value=""
+                [selected]="ev.current === null"
+                [attr.selected]="ev.current === null ? '' : null"
+              >
                 {{ msg().noneOption }}
               </option>
               @for (kind of ev.kinds; track kind) {
-                <option [value]="kind" [selected]="kind === ev.current">
+                <option
+                  [value]="kind"
+                  [selected]="kind === ev.current"
+                  [attr.selected]="kind === ev.current ? '' : null"
+                >
                   {{ msg().eventDefinitionNames[kind] }}
                 </option>
               }
@@ -263,11 +272,19 @@ export class OgeBpmnPropertiesEntryTemplate {
               class="oge-bpmn-props-input oge-bpmn-props-select oge-bpmn-props-marker"
               (change)="onMarker(mk, $event)"
             >
-              <option value="" [selected]="mk.loopMarker === null">
+              <option
+                value=""
+                [selected]="mk.loopMarker === null"
+                [attr.selected]="mk.loopMarker === null ? '' : null"
+              >
                 {{ msg().noneOption }}
               </option>
               @for (marker of mk.loopKinds; track marker) {
-                <option [value]="marker" [selected]="marker === mk.loopMarker">
+                <option
+                  [value]="marker"
+                  [selected]="marker === mk.loopMarker"
+                  [attr.selected]="marker === mk.loopMarker ? '' : null"
+                >
                   {{ msg().markerNames[marker] }}
                 </option>
               }
@@ -470,6 +487,9 @@ export class OgeBpmnPropertiesEntryTemplate {
                     <option
                       [value]="option.value"
                       [selected]="option.value === entryText(entry)"
+                      [attr.selected]="
+                        option.value === entryText(entry) ? '' : null
+                      "
                       [disabled]="option.disabled === true"
                     >
                       {{ option.label }}

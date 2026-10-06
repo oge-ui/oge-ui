@@ -3,6 +3,12 @@ import { inject as injectVercelAnalytics } from '@vercel/analytics';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 
-injectVercelAnalytics();
+// Only where Vercel serves the site (the script lives on that host): a local
+// build — the SSR/CSP end-to-end specs serve one — has no `/_vercel/insights`,
+// and under a Trusted Types policy the injected `<script src>` would throw
+// before the app bootstraps.
+if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+  injectVercelAnalytics();
+}
 
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));

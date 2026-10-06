@@ -36,6 +36,7 @@ import type {
   OgeGanttProps,
 } from './gantt-types';
 import { createGanttRxAdapter } from './rx-adapter';
+import { useClientClock } from './use-client-clock';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect';
 
 // Stable defaults: the core resets its working set when the `tasks` /
@@ -378,7 +379,9 @@ function OgeGanttInner<
   const rovingKey = core.rovingKey();
   const hoverKey = core.hoverKey();
   const totalHeight = core.rowCount() * rowHeight;
-  const todayPx = core.todayPx();
+  // clock-dependent: kept out of the hydration render (use-client-clock.ts)
+  const clientClock = useClientClock();
+  const todayPx = clientClock ? core.todayPx() : null;
   const linkPreview = core.linkPreview();
   const drawPreview = core.drawPreview();
   const dragTip = core.dragTip();

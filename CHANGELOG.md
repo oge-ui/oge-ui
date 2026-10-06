@@ -82,6 +82,62 @@ markup:
   files. The React demos load only their component's stylesheet, keeping every
   demo inside the `anyComponentStyle` budget.
 
+### SSR and hydration proof (W5a) — `@oge-ui/behavior`, `@oge-ui/bpmn-engine`, `@oge-ui/bpmn`, `@oge-ui/gantt`, `@oge-ui/react-overlay`, `@oge-ui/react-gantt`, `@oge-ui/react-scheduler`, `@oge-ui/react-inputs`
+
+Every SSR / hydration claim in the docs is now backed by a test, and the
+tests surfaced six library fixes:
+
+- **React popup ids are SSR-safe.** `useAnchoredPanel` derives `panelId`
+  from `useId()` instead of the panel machine's module counter
+  (`OgeAnchoredPanelCoreOptions.id`, new). The drop-down button's and the
+  scheduler date navigator's `aria-controls` are server-rendered, so the
+  counter made every SSR page with one hydrate with a mismatched attribute
+  (and pointed `aria-controls` at nothing).
+- **Clock-dependent decoration waits for hydration (React).** The Gantt today
+  marker and the scheduler's now-line are positioned from the wall clock; a
+  page hydrated minutes after it was rendered put them at a different pixel
+  and React reported a mismatch. They now render from the first post-hydration
+  frame (`useSyncExternalStore`); a client-only mount still paints them in its
+  first frame.
+- **`<select>` options carry their selection in server HTML.** The Gantt
+  toolbar / dependency editor and the BPMN properties panel bind
+  `[attr.selected]` beside `[selected]`: the server DOM has no `selected`
+  property, so the prerendered markup showed the first option until
+  hydration.
+- **Direction observers use the element's own window.** `observeDirection`
+  (`@oge-ui/behavior`) and its BPMN twin look up `MutationObserver` on the
+  element's `defaultView`: a server DOM has none (nothing observed), and a
+  process that holds a server DOM beside jsdom no longer hands one realm's
+  node to the other's observer — the BPMN editor's constructor threw there.
+- **Unsafe item images render no `src` (React inputs).** The select box,
+  autocomplete and tag box passed an image URL `sanitizeResourceUrl` rejects
+  (an SVG `data:` URL, say) through as `about:blank`, which an `<img>` then
+  loads — a violation under any strict `img-src`. They now omit `src`, as
+  the signature pad already did.
+- **Docs site hydrates** (`provideClientHydration(withEventReplay())`) — all
+  146 prerendered routes, Angular and `?framework=react`, with a silent
+  console under the production CSP.
+
+Known issue (Angular 22.2, upstream): with `withEventReplay()`, Angular
+inserts the replay bootstrap `<script>` into `<body>` after computing the
+hydration annotations, so nodes it locates by a path from `<body>` — content
+projected into `<oge-tab>` / `<oge-step>` and rendered by `<oge-tab-panel>` /
+`<oge-stepper>` — are one sibling off and the client fails with NG0509. The
+docs fold the call into the contract script from a `BEFORE_APP_SERIALIZED`
+hook (`apps/dev-app/src/app/event-replay-script.ts`); an SSR app using those
+components with event replay needs the same hook, or the template form
+(`ogeTabContentTemplate`). `apps/ssr-smoke` pins the bug so the workaround is
+dropped once Angular fixes the ordering.
+
+The proof (ARCHITECTURE → "SSR and hydration"): `apps/ssr-smoke` — a
+`renderApplication` smoke render per Angular family in plain Node, an Angular
+hydration round trip per family, and a React `renderToString` (Node) →
+`hydrateRoot` (StrictMode) spec per React family; `apps/dev-app-e2e/ssr` —
+the hydration crawl over every prerendered route and a strict-CSP + Trusted
+Types run (`npx nx run dev-app-e2e:e2e-ssr`, new `e2e-ssr` CI job);
+`tools/check-use-client.mjs` (`npx nx run @oge/source:use-client-check`,
+CI verify) — every React dist file leads with `'use client'`.
+
 ### Layout and feedback components (W8a) — `@oge-ui/layout`, `@oge-ui/buttons`, `@oge-ui/react-layout`, `@oge-ui/react-buttons`, `@oge-ui/behavior`, `@oge-ui/locales`
 
 Seven new components in both render layers, each a secondary entry with its

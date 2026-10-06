@@ -180,6 +180,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           <option
             [value]="option.index"
             [selected]="option.index === core.activeZoomIndex()"
+            [attr.selected]="
+              option.index === core.activeZoomIndex() ? '' : null
+            "
           >
             {{ option.label }}
           </option>
@@ -191,13 +194,18 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [attr.aria-label]="core.msg().toolbar.baseline"
           (change)="core.setBaselineIndex(+$any($event.target).value)"
         >
-          <option value="-1" [selected]="core.activeBaseline() < 0">
+          <option
+            value="-1"
+            [selected]="core.activeBaseline() < 0"
+            [attr.selected]="core.activeBaseline() < 0 ? '' : null"
+          >
             {{ core.msg().grid.baselineNone }}
           </option>
           @for (index of baselineOptions(); track index) {
             <option
               [value]="index"
               [selected]="index === core.activeBaseline()"
+              [attr.selected]="index === core.activeBaseline() ? '' : null"
             >
               {{ baselineLabel(index) }}
             </option>
@@ -1036,7 +1044,11 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
             "
           >
             @for (type of core.dependencyTypes; track type) {
-              <option [value]="type" [selected]="type === editor.type">
+              <option
+                [value]="type"
+                [selected]="type === editor.type"
+                [attr.selected]="type === editor.type ? '' : null"
+              >
                 {{ core.msg().scheduling.dependencyTypes[type] }}
               </option>
             }
@@ -1060,10 +1072,18 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
             class="oge-gantt-select"
             (change)="setLagUnit($any($event.target).value)"
           >
-            <option value="days" [selected]="editor.lagUnit === 'days'">
+            <option
+              value="days"
+              [selected]="editor.lagUnit === 'days'"
+              [attr.selected]="editor.lagUnit === 'days' ? '' : null"
+            >
               {{ core.msg().dependencyEditor.days }}
             </option>
-            <option value="hours" [selected]="editor.lagUnit === 'hours'">
+            <option
+              value="hours"
+              [selected]="editor.lagUnit === 'hours'"
+              [attr.selected]="editor.lagUnit === 'hours' ? '' : null"
+            >
               {{ core.msg().dependencyEditor.hours }}
             </option>
           </select>

@@ -837,6 +837,46 @@ export class SeoService {
       this.document.head.appendChild(script);
     }
     // `<` escaped so no string can close the script element early
-    script.textContent = JSON.stringify(data).replace(/</g, '\\u003c');
+    const json = JSON.stringify(data).replace(/</g, '\\u003c');
+    script.textContent = jsonLdScript(json) as string;
   }
+}
+
+/** Name of the docs app's own Trusted Types policy (JSON-LD only). */
+export const DOCS_JSON_LD_POLICY = 'oge-docs#json-ld';
+
+interface ScriptPolicyLike {
+  createScript(input: string): unknown;
+}
+let jsonLdPolicy: ScriptPolicyLike | null | undefined;
+
+/**
+ * `script.textContent` is a Trusted Types sink even for a data block, so
+ * under `require-trusted-types-for 'script'` the breadcrumb JSON-LD goes
+ * through a docs-only policy (the strict-CSP e2e allows it by name). The
+ * input is `JSON.stringify` output with `<` escaped — data, never code.
+ * Without `trustedTypes` (the prerender, older browsers) it is the string.
+ */
+function jsonLdScript(json: string): unknown {
+  if (jsonLdPolicy === undefined) {
+    const factory = (
+      globalThis as {
+        trustedTypes?: {
+          createPolicy(
+            name: string,
+            rules: { createScript: (input: string) => string },
+          ): ScriptPolicyLike;
+        };
+      }
+    ).trustedTypes;
+    try {
+      jsonLdPolicy =
+        factory?.createPolicy(DOCS_JSON_LD_POLICY, {
+          createScript: (input) => input,
+        }) ?? null;
+    } catch {
+      jsonLdPolicy = null;
+    }
+  }
+  return jsonLdPolicy ? jsonLdPolicy.createScript(json) : json;
 }
