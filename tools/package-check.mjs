@@ -50,20 +50,42 @@ const PROFILE_IGNORES = {
 
 const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
 
-function run(argv, cwd) {
+function run(argv, cwd, env = process.env) {
   return new Promise((resolve) => {
     // fixed tool specs and dist paths from nx.json — no external input — so
     // the shell (needed on Windows to find npx.cmd) is safe here
     const child = spawn(['npx', '--yes', ...argv].join(' '), {
       cwd,
       shell: true,
+      env,
     });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (d) => (stdout += d));
     child.stderr.on('data', (d) => (stderr += d));
-    child.on('close', (code) => resolve({ code, stdout, stderr }));
+    child.on('close', (code, signal) =>
+      resolve({ code, signal, stdout, stderr }),
+    );
   });
+}
+
+// attw holds a whole packed package in memory; the largest APF packages
+// (inputs, layout) outgrow Node's default heap on CI runners and die without
+// a word, so attw gets a bigger heap and one retry.
+const ATTW_ENV = {
+  ...process.env,
+  NODE_OPTIONS:
+    `${process.env.NODE_OPTIONS ?? ''} --max-old-space-size=4096`.trim(),
+};
+
+function parseReport(stdout) {
+  const start = stdout.indexOf('{');
+  if (start < 0) return null;
+  try {
+    return JSON.parse(stdout.slice(start));
+  } catch {
+    return null;
+  }
 }
 
 function allowed(tool, pkg, message) {
@@ -112,13 +134,16 @@ async function attw(pkg) {
   const exclude = attwEntrypoints(pkg);
   const argv = [ATTW, '--pack', JSON.stringify(pkg.dist), '--format', 'json'];
   if (exclude.length) argv.push('--exclude-entrypoints', ...exclude);
-  const { stdout, stderr } = await run(argv, ROOT);
-  let report;
-  try {
-    report = JSON.parse(stdout.slice(stdout.indexOf('{')));
-  } catch {
+  let result = await run(argv, ROOT, ATTW_ENV);
+  let report = parseReport(result.stdout);
+  if (report === null) {
+    result = await run(argv, ROOT, ATTW_ENV);
+    report = parseReport(result.stdout);
+  }
+  if (report === null) {
+    const { code, signal, stderr } = result;
     return [
-      `error: attw produced no report: ${stripAnsi(stderr).trim().slice(-500)}`,
+      `error: attw produced no report (exit ${code}, signal ${signal}): ${stripAnsi(stderr).trim().slice(-500)}`,
     ];
   }
   const ignores = PROFILE_IGNORES[profile];

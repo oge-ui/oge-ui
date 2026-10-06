@@ -237,18 +237,18 @@ for (const theme of THEMES) {
       await open(page, '/components/tabs', theme);
       const strip = page.locator('.oge-tab-strip').first();
       const selected = strip.locator('.oge-tab.oge-tab-selected');
-      expect(await css(selected, 'color')).toBe(
-        await token(strip, 'color', 'var(--oge-accent)'),
-      );
-      expect(await css(selected, 'border-bottom-color')).toBe(
-        await token(strip, 'border-color', 'var(--oge-accent)'),
-      );
+      // colours transition after the theme switch — poll until they settle
+      const accent = await token(strip, 'color', 'var(--oge-accent)');
+      await expect.poll(() => css(selected, 'color')).toBe(accent);
+      await expect
+        .poll(() => css(selected, 'border-bottom-color'))
+        .toBe(await token(strip, 'border-color', 'var(--oge-accent)'));
       const idle = strip
         .locator('.oge-tab:not(.oge-tab-selected):not(.oge-tab-disabled)')
         .first();
-      expect(await css(idle, 'color')).toBe(
-        await token(strip, 'color', 'var(--oge-input-muted)'),
-      );
+      await expect
+        .poll(() => css(idle, 'color'))
+        .toBe(await token(strip, 'color', 'var(--oge-input-muted)'));
       const disabled = strip.locator('.oge-tab.oge-tab-disabled').first();
       expect(Number(await css(disabled, 'opacity'))).toBeLessThan(1);
     });
