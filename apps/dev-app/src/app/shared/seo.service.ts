@@ -409,11 +409,11 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/inputs/rating',
-    'Angular Rating: stars or custom icons with half and fractional precision, hover preview, clear on re-click, read-only display, RTL and APG slider or radio-group keyboard semantics as a form value.',
+    'Angular Rating: stars or custom icons with half and fractional precision, hover preview, clear on re-click, read-only mode, RTL and slider or radio-group keys.',
   ],
   [
     '/components/inputs/otp-input',
-    'Angular OTP input: one-time-code cells with numeric or alphanumeric filtering, paste distribution, Backspace and arrow navigation, masked mode, one-time-code autofill and a completion event.',
+    'Angular OTP input: one-time-code cells with numeric or alphanumeric filtering, paste and SMS autofill, arrow and Backspace keys, masking and a completion event.',
   ],
   [
     '/components/inputs/signature-pad',
@@ -425,11 +425,11 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/inputs/transfer-list',
-    'Angular TransferList: a dual list box that moves selected or all items between two lists by buttons, drag and drop or keyboard shortcuts, with search and live announcements.',
+    'Angular TransferList: a dual list box moving selected or all items by buttons, drag and drop or keyboard shortcuts, with per-list search and live announcements.',
   ],
   [
     '/components/inputs/mention',
-    'Angular Mention: @ and # triggers inside a text area with a caret-anchored WAI-ARIA combobox popup, custom suggestion templates and the mentioned items as an output.',
+    'Angular Mention: @ and # triggers in a text area with a caret-anchored suggestion popup, async sources, custom item templates and the mentioned items as output.',
   ],
   [
     '/components/inputs/showcase',
