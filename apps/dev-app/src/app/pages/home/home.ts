@@ -1908,6 +1908,7 @@ export class HomePage {
     '@oge-ui/scheduler',
     '@oge-ui/gantt',
     '@oge-ui/upload',
+    '@oge-ui/editor',
     '@oge-ui/kanban',
     '@oge-ui/charts',
     '@oge-ui/buttons',
@@ -1927,6 +1928,7 @@ export class HomePage {
     '@oge-ui/react-layout',
     '@oge-ui/react-navigation',
     '@oge-ui/react-upload',
+    '@oge-ui/react-editor',
     '@oge-ui/react-pivot',
     '@oge-ui/react-bpmn',
     '@oge-ui/react-scheduler',
@@ -2030,6 +2032,12 @@ export class HomePage {
       name: 'Upload',
       desc: 'Drag & drop, restrictions with reasons, previews, chunked resumable transfer.',
       path: '/components/upload',
+    },
+    {
+      icon: 'type',
+      name: 'Rich Text Editor',
+      desc: 'Headings, lists, links and images, markdown shortcuts, sanitized HTML out.',
+      path: '/components/editor',
     },
     {
       icon: 'columns',

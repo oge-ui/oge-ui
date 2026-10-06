@@ -75,6 +75,7 @@ export default defineConfig(() => ({
         '@oge-ui/react-overlay',
         '@oge-ui/react-tabs',
         '@oge-ui/react-upload',
+        '@oge-ui/react-editor',
       ],
       output: {
         // Rollup strips module-level directives when it bundles, so the

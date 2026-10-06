@@ -1,0 +1,447 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The rich-text editor (W8e). The toolbar reuses the layout package's
+// `.oge-toolbar` / `.oge-toolbar-btn` styling; this sheet adds the field
+// frame, the editing surface and the typography of the content itself —
+// which is also the stylesheet an application can reuse to display the
+// editor's HTML (`.oge-editor-content` on any container).
+
+.oge-editor {
+  @include tokens.core-tokens;
+  --oge-editor-pad-x: 14px;
+  --oge-editor-pad-y: 10px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  inline-size: 100%;
+  min-inline-size: 0;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-editor-label {
+  align-self: flex-start;
+  color: var(--oge-text-color);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: default;
+}
+
+.oge-editor-required {
+  margin-inline-start: 2px;
+  color: var(--oge-danger);
+}
+
+.oge-editor-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-editor-bg);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    border-color: var(--oge-muted-color);
+  }
+}
+
+// The frame carries the field's focus ring (the editing surface itself has
+// no outline of its own — a ring around the text area inside the frame
+// would read as a second field).
+.oge-editor-focused .oge-editor-frame {
+  border-color: var(--oge-accent);
+  @include tokens.focus-ring($color: var(--oge-focus-ring), $width: 3px);
+  outline-offset: 0;
+}
+
+.oge-editor-invalid .oge-editor-frame {
+  border-color: var(--oge-danger);
+}
+
+.oge-editor-invalid.oge-editor-focused .oge-editor-frame {
+  box-shadow: 0 0 0 3px var(--oge-danger-soft);
+}
+
+.oge-editor-disabled {
+  .oge-editor-frame {
+    border-color: var(--oge-border-color);
+    background: var(--oge-input-filled-bg);
+  }
+
+  .oge-editor-content,
+  .oge-editor-label {
+    color: var(--oge-muted-color);
+  }
+}
+
+.oge-editor-toolbar.oge-toolbar {
+  border: 0;
+  border-block-end: 1px solid var(--oge-border-color);
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  background: var(--oge-editor-toolbar-bg);
+  padding: 4px 6px;
+}
+
+.oge-editor-tool {
+  position: relative;
+  justify-content: center;
+  min-inline-size: 30px;
+  min-block-size: 30px;
+
+  &.oge-editor-tool-text {
+    gap: 4px;
+    padding-inline: 8px;
+  }
+
+  .oge-toolbar-icon {
+    flex: none;
+  }
+}
+
+.oge-editor-tool-value {
+  max-inline-size: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oge-editor-tool-chevron {
+  flex: none;
+  color: var(--oge-input-muted);
+}
+
+// Directional icons (lists, indent, alignment, undo) mirror in RTL.
+.oge-editor:dir(rtl) .oge-editor-tool-mirror svg,
+[dir='rtl'] .oge-editor-tool-mirror svg {
+  transform: scaleX(-1);
+}
+
+// The current colour of a colour tool, as a bar under the glyph.
+.oge-editor-tool-swatch {
+  position: absolute;
+  inset-inline: 7px;
+  inset-block-end: 4px;
+  block-size: 3px;
+  border-radius: 2px;
+  background: var(--oge-text-color);
+
+  &.oge-editor-tool-swatch-none {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--oge-muted-color);
+  }
+}
+
+.oge-editor-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+}
+
+// The editing surface. Its own content rules live under
+// `.oge-editor-content` so the same class styles read-only HTML elsewhere.
+.oge-editor-content {
+  @include tokens.scrollbar;
+  box-sizing: border-box;
+  block-size: var(--oge-editor-height, auto);
+  min-block-size: var(--oge-editor-min-height, 160px);
+  max-block-size: var(--oge-editor-max-height, none);
+  padding: var(--oge-editor-pad-y) var(--oge-editor-pad-x);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--oge-text-color);
+  font: inherit;
+  line-height: 1.55;
+  cursor: text;
+  caret-color: var(--oge-accent);
+  border-end-start-radius: inherit;
+  border-end-end-radius: inherit;
+
+  // the frame draws the ring; a UA outline here would double it
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid transparent;
+  }
+
+  > :first-child {
+    margin-block-start: 0;
+  }
+
+  > :last-child {
+    margin-block-end: 0;
+  }
+
+  p {
+    margin-block: 0 0.6em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-block: 0.9em 0.4em;
+    color: var(--oge-text-color);
+    font-weight: 650;
+    line-height: 1.25;
+  }
+
+  h1 {
+    font-size: 1.75em;
+  }
+
+  h2 {
+    font-size: 1.45em;
+  }
+
+  h3 {
+    font-size: 1.22em;
+  }
+
+  h4 {
+    font-size: 1.08em;
+  }
+
+  h5,
+  h6 {
+    font-size: 1em;
+  }
+
+  h6 {
+    color: var(--oge-input-muted);
+  }
+
+  ul,
+  ol {
+    margin-block: 0 0.6em;
+    padding-inline-start: 1.6em;
+  }
+
+  li {
+    margin-block: 0.15em;
+  }
+
+  li > ul,
+  li > ol {
+    margin-block: 0.15em 0;
+  }
+
+  blockquote {
+    margin-block: 0 0.6em;
+    margin-inline: 0;
+    padding-block: 0.15em;
+    padding-inline: 0.9em 0;
+    border-inline-start: 3px solid var(--oge-editor-quote-border);
+    color: var(--oge-input-muted);
+
+    p:last-child {
+      margin-block-end: 0;
+    }
+  }
+
+  pre {
+    margin-block: 0 0.6em;
+    padding: 10px 12px;
+    border-radius: var(--oge-radius);
+    background: var(--oge-editor-code-bg);
+    font-family: var(--oge-font-mono);
+    font-size: 0.92em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    tab-size: 2;
+  }
+
+  code {
+    font-family: var(--oge-font-mono);
+    font-size: 0.92em;
+  }
+
+  :not(pre) > code {
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--oge-editor-code-bg);
+  }
+
+  a {
+    color: var(--oge-editor-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  hr {
+    margin-block: 1em;
+    border: 0;
+    border-block-start: 1px solid var(--oge-border-color);
+  }
+
+  img {
+    max-inline-size: 100%;
+    block-size: auto;
+    vertical-align: middle;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--oge-accent-25);
+  }
+}
+
+.oge-editor-resizable .oge-editor-content {
+  resize: vertical;
+}
+
+.oge-editor-readonly .oge-editor-content {
+  cursor: default;
+  caret-color: transparent;
+}
+
+.oge-editor-placeholder {
+  position: absolute;
+  inset-block-start: var(--oge-editor-pad-y);
+  inset-inline: var(--oge-editor-pad-x);
+  color: var(--oge-input-muted);
+  line-height: 1.55;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.oge-editor-subscript {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  min-block-size: 18px;
+  color: var(--oge-input-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.oge-editor-error {
+  color: var(--oge-danger);
+}
+
+.oge-editor-counter {
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  &.oge-editor-counter-over {
+    color: var(--oge-danger);
+    font-weight: 600;
+  }
+}
+
+.oge-editor-color-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.oge-editor-color-none {
+  align-self: stretch;
+  padding: 6px 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-text-color);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+// No iOS focus zoom: text surfaces reach 16px on touch screens only.
+@media (pointer: coarse) {
+  .oge-editor-content {
+    font-size: max(16px, 1em);
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-editor-frame,
+  .oge-editor-color-none {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-editor-frame {
+    border-color: CanvasText;
+  }
+
+  .oge-editor-focused .oge-editor-frame {
+    outline: 2px solid Highlight;
+    outline-offset: 0;
+  }
+
+  .oge-editor-invalid .oge-editor-frame {
+    border-style: dashed;
+  }
+
+  .oge-editor-tool[aria-pressed='true'] {
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .oge-editor-tool:disabled {
+    color: GrayText;
+  }
+
+  .oge-editor-tool-swatch {
+    forced-color-adjust: none;
+    box-shadow: 0 0 0 1px CanvasText;
+  }
+
+  .oge-editor-content {
+    a {
+      color: LinkText;
+    }
+
+    blockquote {
+      border-inline-start-color: CanvasText;
+    }
+
+    pre,
+    :not(pre) > code {
+      border: 1px solid CanvasText;
+    }
+
+    ::selection {
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+
+  .oge-editor-disabled .oge-editor-content {
+    color: GrayText;
+  }
+
+  .oge-editor-placeholder {
+    color: GrayText;
+  }
+}

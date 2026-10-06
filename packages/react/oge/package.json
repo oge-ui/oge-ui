@@ -36,6 +36,7 @@
     "@oge-ui/behavior": "1.1.2",
     "@oge-ui/locales": "1.1.2",
     "@oge-ui/react-buttons": "1.1.2",
+    "@oge-ui/react-editor": "1.1.2",
     "@oge-ui/react-forms": "1.1.2",
     "@oge-ui/react-grid": "1.1.2",
     "@oge-ui/react-inputs": "1.1.2",

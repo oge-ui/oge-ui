@@ -596,6 +596,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Upload API reference: every input, output, method and type of oge-file-uploader, the upload adapter and transport contract and the config provider.',
   ],
   [
+    '/components/editor',
+    'Angular rich text editor by OGE UI: headings, lists, links, images, colors and undo on its own document model, markdown shortcuts and sanitized HTML output.',
+  ],
+  [
+    '/components/editor/api',
+    'Angular Rich Text Editor API reference: every input, output and method of oge-editor, the toolbar tools, the command vocabulary, the sanitizer and config.',
+  ],
+  [
     '/components/kanban',
     'Angular Kanban board by OGE UI: columns, swimlanes and WIP limits, virtualized cards, drag and drop with Escape-cancel, keyboard moving and an edit dialog.',
   ],

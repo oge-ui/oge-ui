@@ -59,3 +59,25 @@ test('selection grid has no axe violations', async ({ page }) => {
   await expect(page.locator('.oge-row').first()).toBeVisible();
   await scanGrid(page);
 });
+
+test('rich-text editor page has no axe violations, with a toolbar popup open', async ({
+  page,
+}) => {
+  await page.goto('/components/editor');
+  const demo = page.locator('app-demo-card:has(#getting-started)');
+  await expect(demo.locator('.oge-editor-content')).toBeVisible();
+  // the block-format menu renders inside the card
+  await demo.locator('[data-oge-editor-tool="blockFormat"]').click();
+  await expect(
+    page.getByRole('menuitemradio', { name: 'Heading 2' }),
+  ).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .include('app-demo-card')
+    .disableRules(['color-contrast', 'heading-order'])
+    .analyze();
+  expect(
+    results.violations.map(
+      (v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`,
+    ),
+  ).toEqual([]);
+});

@@ -93,6 +93,7 @@ type FamilyKey =
   | 'scheduler'
   | 'gantt'
   | 'upload'
+  | 'editor'
   | 'kanban'
   | 'charts'
   | 'overlay';
@@ -486,6 +487,74 @@ interface OrgNode {
                       transform="rotate(45 241 97)"
                       fill="currentColor"
                       opacity="0.4"
+                      stroke="none"
+                    />
+                  </svg>
+                }
+                @case ('editor') {
+                  <!-- illustrative sketch; the live editor renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="editor"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <rect x="10" y="8" width="260" height="104" rx="10" />
+                    <path d="M10 34h260" />
+                    <path
+                      d="M24 16v10h5a2.5 2.5 0 0 0 0-5h-5m5 0a2.5 2.5 0 0 0 0-5h-5"
+                    />
+                    <path d="M44 16h6m-4 10h-4m4-10-3 10" />
+                    <path d="M60 16v6a3 3 0 0 0 6 0v-6M58 28h10" />
+                    <path d="M84 14v16M100 18h12M100 22h8M100 26h12" />
+                    <rect
+                      x="24"
+                      y="46"
+                      width="120"
+                      height="9"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.45"
+                      stroke="none"
+                    />
+                    <rect
+                      x="24"
+                      y="64"
+                      width="220"
+                      height="7"
+                      rx="3.5"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <rect
+                      x="24"
+                      y="78"
+                      width="190"
+                      height="7"
+                      rx="3.5"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <circle
+                      cx="28"
+                      cy="98"
+                      r="2.5"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                    <rect
+                      x="36"
+                      y="95"
+                      width="120"
+                      height="7"
+                      rx="3.5"
+                      fill="currentColor"
+                      opacity="0.25"
                       stroke="none"
                     />
                   </svg>
@@ -1452,6 +1521,14 @@ export class ComponentsIndexPage {
       path: '/components/upload',
       description:
         'File uploader: drag & drop with directory and paste, restrictions that stay on the row with their reason, previews, and chunked resumable transfer with pause, resume and retry.',
+    },
+    {
+      key: 'editor',
+      name: 'Rich Text Editor',
+      icon: 'type',
+      path: '/components/editor',
+      description:
+        'Rich-text editing on its own document model: headings, nested lists, links, images and colours, undo history, markdown shortcuts and Word paste cleanup — the HTML value is sanitized by a strict allowlist.',
     },
     {
       key: 'kanban',

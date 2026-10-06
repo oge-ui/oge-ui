@@ -12,6 +12,7 @@ import {
   OGE_DEFAULT_CHIP_MESSAGES,
   OGE_DEFAULT_DATA_VIEW_MESSAGES,
   OGE_DEFAULT_DRAWER_MESSAGES,
+  OGE_DEFAULT_EDITOR_MESSAGES,
   OGE_DEFAULT_FAB_MESSAGES,
   OGE_DEFAULT_FORMS_MESSAGES,
   OGE_DEFAULT_GRID_MESSAGES,
@@ -35,6 +36,7 @@ import {
   OgeButtonsConfigProvider,
   OgeFabConfigProvider,
 } from '@oge-ui/react-buttons';
+import { OgeEditorConfigProvider } from '@oge-ui/react-editor';
 import { OgeFormsConfigProvider } from '@oge-ui/react-forms';
 import { OgeGridConfigProvider } from '@oge-ui/react-grid';
 import { OgeInputsConfigProvider } from '@oge-ui/react-inputs';
@@ -119,6 +121,10 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
       },
       upload: {
         messages: ogeMergeMessages(OGE_DEFAULT_UPLOAD_MESSAGES, pack.upload),
+      },
+      editor: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(OGE_DEFAULT_EDITOR_MESSAGES, pack.editor),
       },
       accordion: {
         messages: ogeMergeMessages(
@@ -291,7 +297,8 @@ type ConfigOf<P extends (props: never) => unknown> = NonNullable<
 
 /**
  * The layout and feedback families added in W8a (avatar, badge, chip, alert,
- * timeline, FAB) — split out so the provider nesting above stays readable.
+ * timeline, FAB) and the W8e rich-text editor — split out so the provider
+ * nesting above stays readable.
  */
 function W8aProviders({
   c,
@@ -308,6 +315,7 @@ function W8aProviders({
     dataView: ConfigOf<typeof OgeDataViewConfigProvider>;
     listView: ConfigOf<typeof OgeListViewConfigProvider>;
     carousel: ConfigOf<typeof OgeCarouselConfigProvider>;
+    editor: ConfigOf<typeof OgeEditorConfigProvider>;
   };
   children?: ReactNode;
 }) {
@@ -322,7 +330,9 @@ function W8aProviders({
                   <OgeDataViewConfigProvider config={c.dataView}>
                     <OgeListViewConfigProvider config={c.listView}>
                       <OgeCarouselConfigProvider config={c.carousel}>
-                        {children}
+                        <OgeEditorConfigProvider config={c.editor}>
+                          {children}
+                        </OgeEditorConfigProvider>
                       </OgeCarouselConfigProvider>
                     </OgeListViewConfigProvider>
                   </OgeDataViewConfigProvider>

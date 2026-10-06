@@ -10,6 +10,7 @@ import {
   OGE_DEFAULT_BUTTONS_MESSAGES,
   OGE_DEFAULT_CHIP_MESSAGES,
   OGE_DEFAULT_DRAWER_MESSAGES,
+  OGE_DEFAULT_EDITOR_MESSAGES,
   OGE_DEFAULT_FAB_MESSAGES,
   OGE_DEFAULT_FORMS_MESSAGES,
   OGE_DEFAULT_GRID_MESSAGES,
@@ -29,6 +30,7 @@ import {
   OGE_DEFAULT_UPLOAD_MESSAGES,
 } from '@oge-ui/behavior';
 import { provideOgeButtonsConfig } from '@oge-ui/buttons';
+import { provideOgeEditorConfig } from '@oge-ui/editor';
 import { provideOgeFabConfig } from '@oge-ui/buttons/fab';
 import { provideOgeFormsConfig } from '@oge-ui/forms';
 import { provideOgeGridConfig } from '@oge-ui/grid';
@@ -67,7 +69,7 @@ type PackSource = OgeLocalePack | (() => OgeLocalePack);
  * family's `provideOge…Config()` receives the pack's slice merged over the
  * English catalog (nested blocks key by key, so a key the pack lacks stays
  * English), plus the pack's `locale` for the families that format data
- * (grid and tree list, editors).
+ * (grid and tree list, editors, the rich-text editor's counter).
  *
  * Pass a function to make it live — the language then follows the signals it
  * reads, exactly like the live form of the family providers:
@@ -131,6 +133,12 @@ export function provideOgeLocale(pack: PackSource): Provider[] {
     provideOgeUploadConfig(
       config((p) => ({
         messages: ogeMergeMessages(OGE_DEFAULT_UPLOAD_MESSAGES, p.upload),
+      })),
+    ),
+    provideOgeEditorConfig(
+      config((p) => ({
+        locale: p.locale,
+        messages: ogeMergeMessages(OGE_DEFAULT_EDITOR_MESSAGES, p.editor),
       })),
     ),
     provideOgeAccordionConfig(

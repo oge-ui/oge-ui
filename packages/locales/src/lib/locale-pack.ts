@@ -19,6 +19,7 @@ import type {
   OgeButtonsMessages,
   OgeChipMessages,
   OgeDrawerMessages,
+  OgeEditorMessages,
   OgeFabMessages,
   OgeFormsMessages,
   OgeGridMessages,
@@ -115,6 +116,8 @@ export interface OgeLocalePack {
   readonly forms?: OgeDeepPartial<OgeFormsMessages>;
   /** File uploader (`provideOgeUploadConfig`). */
   readonly upload?: OgeDeepPartial<OgeUploadMessages>;
+  /** Rich-text editor (`provideOgeEditorConfig`). */
+  readonly editor?: OgeDeepPartial<OgeEditorMessages>;
   /** Accordion, progress bar, load indicator, splitter, toolbar, avatar, badge, chip, alert. */
   readonly layout?: OgeLocaleLayoutMessages;
   /** Breadcrumb, drawer, menubar, pagination, stepper, tree view. */

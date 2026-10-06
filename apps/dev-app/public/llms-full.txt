@@ -15,6 +15,7 @@ Version 1.1.2. Generated from the OGE UI source tree: the API tables and demo so
 - `@oge-ui/layout` — Layout
 - `@oge-ui/forms` — Forms
 - `@oge-ui/upload` — Upload
+- `@oge-ui/editor` — Rich Text Editor
 - `@oge-ui/navigation` — Navigation
 - `@oge-ui/pivot` — Pivot Grid
 - `@oge-ui/bpmn` — BPMN Editor
@@ -34,6 +35,7 @@ Version 1.1.2. Generated from the OGE UI source tree: the API tables and demo so
 - `@oge-ui/react-navigation` — Navigation (React)
 - `@oge-ui/react-forms` — Forms (React)
 - `@oge-ui/react-upload` — Upload (React)
+- `@oge-ui/react-editor` — Rich Text Editor (React)
 - `@oge-ui/react-kanban` — Kanban (React)
 - `@oge-ui/react-charts` — Charts (React)
 - `@oge-ui/react-grid` — Data Grid (React)
@@ -20896,6 +20898,408 @@ export class Demo {
   protected onFailed(name: string, message: string): void {
     console.warn('failed', name, message);
   }
+}
+```
+
+## @oge-ui/editor
+
+Rich-text editor — a dependency-free contenteditable editor over its own document model (no execCommand): headings, lists, quotes, code, links, images, colours, alignment, undo history, markdown shortcuts, Word / Google Docs paste cleanup and a strict allowlist HTML sanitizer.
+
+Docs: https://www.ogeui.com/components/editor
+
+### Entry points
+
+`@oge-ui/editor`
+
+- values: `OGE_DEFAULT_EDITOR_CONFIG`, `OGE_DEFAULT_EDITOR_MESSAGES`, `OGE_DEFAULT_EDITOR_TOOLBAR`, `OGE_EDITOR_CONFIG`, `OGE_EDITOR_TRUSTED_TYPES_POLICY`, `OgeEditor`, `ogeEditorCommandFromName`, `ogeEditorHtmlLength`, `ogeEditorMaxLength`, `ogeSanitizeEditorHtml`, `provideOgeEditorConfig`
+- types: `OgeEditorActiveState`, `OgeEditorAlign`, `OgeEditorAnnouncementMessages`, `OgeEditorBlockFormatValue`, `OgeEditorBlockMessages`, `OgeEditorColorMessages`, `OgeEditorCommand`, `OgeEditorCommandExecutedEvent`, `OgeEditorCommandName`, `OgeEditorConfig`, `OgeEditorConfigInput`, `OgeEditorCounterMessages`, `OgeEditorCounterMode`, `OgeEditorCustomTool`, `OgeEditorDialogKind`, `OgeEditorDialogMessages`, `OgeEditorDialogOpeningEvent`, `OgeEditorDirection`, `OgeEditorFocusEvent`, `OgeEditorHeadingLevel`, `OgeEditorKeyMessages`, `OgeEditorLink`, `OgeEditorListKind`, `OgeEditorMarkName`, `OgeEditorMessages`, `OgeEditorMessagesInput`, `OgeEditorParseOptions`, `OgeEditorPasteMode`, `OgeEditorPastingEvent`, `OgeEditorSelectionChangedEvent`, `OgeEditorToolClickEvent`, `OgeEditorToolContext`, `OgeEditorToolMessages`, `OgeEditorToolName`, `OgeEditorToolbarEntry`, `OgeEditorValidationMessages`, `OgeEditorValueCommittedEvent`
+
+### OgeEditor — `<oge-editor>`
+
+#### Properties
+
+_Value and forms_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | `''` | The sanitized HTML value — two-way (`[(value)]`). The empty string when the document is empty. An external value is parsed through the editor’s allowlist; the editor ignores its own echo, so the caret and the history survive two-way binding. |
+| `disabled` | `boolean` | `false` | Not editable and out of the Tab order (`aria-disabled`). Reactive forms’ `disable()` sets it too. |
+| `readonly` | `boolean` | `false` | Focusable and selectable, but not editable (`aria-readonly`); every tool is disabled. |
+| `required` | `boolean` | `false` | Sets `aria-required` and the asterisk. Validation itself comes from the form (`Validators.required`, Signal Forms `required()`). |
+| `name` | `string` | `''` | Written as `data-name` on the editing surface. |
+| `invalid` | `boolean` | `false` | External invalid override, combined with the forms state. |
+| `touched / dirty` | `boolean` | `false` | Signal Forms contract inputs; errors show once the field is touched. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (bound by `[formField]`). |
+| `maxLength` | `number \| undefined` | `undefined` | Most characters (grapheme clusters) of _text_ the document may hold. Typing and pasting stop there (announced), the counter shows the budget, and a longer external value shows the error. |
+
+_Chrome_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Visible label above the editor; also its accessible name (`aria-labelledby`). |
+| `ariaLabel` | `string \| undefined` | `undefined` | Accessible name when there is no visible label; falls back to `messages.editorLabel`. |
+| `placeholder` | `string` | `''` | Shown while the document is empty; also `aria-placeholder`. |
+| `hint` | `string \| undefined` | `undefined` | Helper text under the editor, hidden while an error shows; part of `aria-describedby`. |
+| `errorText` | `string \| undefined` | `undefined` | Explicit error message — always wins over the resolved messages. |
+| `counter` | `'none' \| 'characters' \| 'words' \| 'both'` | `'none'` | Character / word counter under the editor (ICU plurals from `messages.counter`). With `maxLength` the character count reads `12 / 200`. |
+| `toolbar` | `readonly OgeEditorToolbarEntry[] \| false \| undefined` | `undefined` | Toolbar entries: built-in tool names, `'separator'` and `OgeEditorCustomTool` objects. `undefined` is the full default toolbar, `false` hides it. |
+| `toolbarOverflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | `'menu'` | What the toolbar does with tools that do not fit (the layout toolbar’s `overflow`). |
+| `height / minHeight / maxHeight` | `number \| string \| undefined` | `undefined` | Size of the editing area — a number is px, a string any CSS length. Without them the area starts at 160px and grows with its content. |
+| `resizable` | `boolean` | `false` | Adds a vertical resize handle to the editing area. |
+| `spellcheck` | `boolean` | `true` | The browser’s spell checking on the editing surface. |
+| `tabIndex` | `number` | `0` | Tab index of the editing surface. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `id` | `string \| undefined` | `undefined` | Base of the generated element ids (content, label, hint, error, counter). |
+
+_Behaviour (undefined = config)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `markdownShortcuts` | `boolean \| undefined` | `true` | `#`…`######`, `-`, `1.`, `>`, ````` at the start of a paragraph and `---` + Enter turn into formats. One undo brings the typed characters back. |
+| `pasteMode` | `'html' \| 'text' \| undefined` | `'html'` | `'html'` keeps (sanitized) formatting from the clipboard; `'text'` inserts text only. |
+| `headingLevels` | `readonly OgeEditorHeadingLevel[] \| undefined` | `[1, 2, 3, 4]` | Heading levels the block-format menu offers. |
+| `textColors / backgroundColors` | `OgeColorPalettePreset \| readonly string[] \| undefined` | `'default'` | Palettes of the two colour popups — an `@oge-ui/inputs` palette preset or your own colour list. Colours are validated (no `url()`, `var()` or expressions). |
+| `allowedSchemes` | `readonly string[] \| undefined` | `[]` | Extra link schemes on top of `sanitizeUrl`’s allowlist (`http`, `https`, `mailto`, `tel`, `ftp`, `sms`). Script schemes can never be allowed. |
+| `allowDataImages` | `boolean \| undefined` | `false` | Keep `data:image/*` sources (PNG, JPEG, GIF, WebP, AVIF, BMP — never SVG). `blob:` and `file:` images are always dropped. |
+| `messages` | `OgeEditorMessagesInput \| undefined` | `undefined` | Per-instance overrides of the user-facing strings, merged group by group over the config. |
+
+_Read-only state_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `activeState` | `Signal<OgeEditorActiveState>` | The formats under the selection — what the toolbar shows (marks, block format, list, alignment, link, colours). |
+| `characterCount / wordCount` | `Signal<number>` | Grapheme clusters and words (`Intl.Segmenter`) of the text. |
+| `canUndo / canRedo` | `Signal<boolean>` | Whether the history has a step back / forward. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Moves focus into the editing area and restores the caret. |
+| `blur()` | `void` | Removes keyboard focus. |
+| `exec(command)` | `(command: OgeEditorCommandName \| OgeEditorCommand) => boolean` | Runs a command — a name (`'bold'`, `'heading2'`, `'bulletList'`…) or a command object (`{ type: 'color', color: '#c00' }`). Returns `true` when it changed something. |
+| `undo() / redo()` | `() => boolean` | Steps through the editor’s own history. |
+| `insertText(text)` | `(text: string) => void` | Inserts plain text at the selection (newlines become paragraphs). |
+| `insertHtml(html)` | `(html: string) => void` | Inserts HTML at the selection — parsed through the editor’s allowlist first, like a paste. |
+| `insertLink(href, text?, newTab?)` | `(href: string, text?: string, newTab?: boolean) => boolean` | Links the selection, or inserts `text` (default: the address) as a link. Unsafe addresses are refused (`false`); new-tab links get `rel="noopener noreferrer"`. |
+| `removeLink()` | `() => boolean` | Removes the link under the selection or around the caret. |
+| `insertImage(src, alt?)` | `(src: string, alt?: string) => boolean` | Inserts an image by URL; unsafe sources are refused. |
+| `selectAll()` | `void` | Selects the whole document. |
+| `getHtml() / getText()` | `() => string` | The current value, or its text with blocks separated by newlines. |
+| `clear()` | `void` | Empties the editor as one undoable change. |
+| `reset(value?)` | `(value?: string) => void` | Loads `value` (default: empty), clears the history and the touched / dirty state; on a reactive-forms binding it resets the control. |
+| `openLinkDialog() / openImageDialog()` | `() => Promise<void>` | Opens the link or image prompt for the selection (also Ctrl+K and the toolbar tools), subject to `dialogOpening`. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeEditorValueCommittedEvent` | Every committed change: `{ value, previousValue, event }`. |
+| `focused / blurred` | `OgeEditorFocusEvent` | Focus entered or left the editor (popups included). |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — once per blur. |
+| `selectionChanged` | `OgeEditorSelectionChangedEvent` | The selection moved or its formats changed: `{ active }`. |
+| `commandExecuted` | `OgeEditorCommandExecutedEvent` | A command ran (keyboard, toolbar or `exec`): `{ command, event }`. |
+| `toolClick` | `OgeEditorToolClickEvent` | A toolbar tool was activated: `{ key, inMenu, event }`. |
+| `pasting` | `OgeEditorPastingEvent` | Cancelable: a paste or drop is about to be inserted. Set `cancel`, or rewrite `html` / `text`. |
+| `dialogOpening` | `OgeEditorDialogOpeningEvent` | Cancelable: the link or image dialog is about to open (`{ kind, link, cancel }`). Cancel it to show your own dialog, then call `insertLink()` / `insertImage()`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeEditorToolName` | `'undo' \| 'redo' \| 'blockFormat' \| 'bold' \| 'italic' \| 'underline' \| 'strike' \| 'code' \| 'subscript' \| 'superscript' \| 'textColor' \| 'backgroundColor' \| 'link' \| 'unlink' \| 'image' \| 'bulletList' \| 'orderedList' \| 'indent' \| 'outdent' \| 'blockquote' \| 'codeBlock' \| 'horizontalRule' \| 'alignStart' \| 'alignCenter' \| 'alignEnd' \| 'alignJustify' \| 'directionLtr' \| 'directionRtl' \| 'clearFormatting'` | Built-in toolbar tools. `OGE_DEFAULT_EDITOR_TOOLBAR` is the default arrangement. |
+| `OgeEditorToolbarEntry` | `OgeEditorToolName \| 'separator' \| OgeEditorCustomTool` | One toolbar entry. Leading, trailing and doubled separators are dropped. |
+| `OgeEditorCustomTool` | `{ key; text; icon?; hint?; shortcut?; isActive?(active); isDisabled?(active); run(context: OgeEditorToolContext) }` | A tool of your own. `isActive` makes it a toggle (`aria-pressed`); `run` receives `exec`, `insertHtml`, `insertText`, `getHtml` and the active state. |
+| `OgeEditorCommandName` | `'bold' \| 'italic' \| … \| 'heading1'…'heading6' \| 'blockquote' \| 'codeBlock' \| 'bulletList' \| 'orderedList' \| 'indent' \| 'outdent' \| 'alignStart' \| 'alignCenter' \| 'alignEnd' \| 'alignJustify' \| 'horizontalRule' \| 'clearFormatting' \| 'unlink' \| 'undo' \| 'redo' \| 'selectAll'` | Parameterless commands by name, for `exec()`. |
+| `OgeEditorCommand` | `{ type: 'toggleMark'; mark } \| { type: 'blockFormat'; format; level? } \| { type: 'list'; list } \| { type: 'align'; align } \| { type: 'color' \| 'background'; color } \| { type: 'link'; href; text?; newTab? } \| { type: 'image'; src; alt? } \| …` | A command object — the same vocabulary the toolbar and the keyboard map issue. |
+| `OgeEditorActiveState` | `{ marks; blockFormat; list; align; dir; link; color; background; canIndent; canOutdent; collapsed }` | What the selection currently is. |
+| `OgeEditorMessages` | `interface` | Every user-facing string: tool names, block names, dialogs, colours, counter (ICU plurals), announcements, validation and key names. Translated in all ten `@oge-ui/locales` packs. |
+| `provideOgeEditorConfig(config)` | `(config: OgeEditorConfigInput \| (() => OgeEditorConfigInput)) => Provider` | App- or route-wide defaults and strings; a function makes them live. |
+| `ogeEditorMaxLength(max)` | `(max: number, options?: OgeEditorParseOptions) => ValidatorFn` | Reactive-forms validator that counts the _text_ of the HTML value — `Validators.maxLength` would count the markup. Reports `{ ogeEditorMaxLength: { max, actual } }`. |
+| `ogeSanitizeEditorHtml(html, options?)` | `(html: string \| null \| undefined, options?: OgeEditorParseOptions) => string` | The editor’s allowlist as a function — for values that did not come through the editor. Only the editor’s own tags and attributes come out. |
+| `ogeEditorHtmlLength(html)` | `(html: string \| null \| undefined, options?: OgeEditorParseOptions) => number` | Characters of an HTML value’s text — the measure `maxLength` applies. |
+| `ogeEditorCommandFromName(name)` | `(name: OgeEditorCommandName) => OgeEditorCommand` | Expands a command name into its command object. |
+| `OGE_EDITOR_TRUSTED_TYPES_POLICY` | `'oge-ui#editor'` | Name of the Trusted Types policy behind the editor’s one `DOMParser` call. List it in a `trusted-types` CSP directive. |
+| `OGE_EDITOR_CONFIG / OGE_DEFAULT_EDITOR_CONFIG / OGE_DEFAULT_EDITOR_MESSAGES` | `InjectionToken<OgeEditorConfig> / OgeEditorConfig / OgeEditorMessages` | The config token every editor reads, and the shipped defaults. |
+| `OGE_DEFAULT_EDITOR_TOOLBAR` | `readonly OgeEditorToolbarEntry[]` | The default toolbar arrangement — spread it to extend the default instead of replacing it. |
+
+### Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Config
+
+```ts
+// app.config.ts — app-wide defaults; a function makes them live
+import { provideOgeEditorConfig } from '@oge-ui/editor';
+
+export const appConfig = {
+  providers: [
+    provideOgeEditorConfig({
+      headingLevels: [2, 3],
+      pasteMode: 'html',
+      markdownShortcuts: true,
+      textColors: 'office',
+      messages: { tools: { bold: 'Kalın', italic: 'İtalik' } },
+    }),
+  ],
+};
+
+// A page with require-trusted-types-for 'script' lists the editor's policy:
+// Content-Security-Policy: require-trusted-types-for 'script'; trusted-types angular oge-ui#editor
+```
+
+#### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeEditor, ogeEditorMaxLength } from '@oge-ui/editor';
+import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeEditor, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- maxLength stops typing and pasting at 200 characters of text and the
+         counter shows the budget. ogeEditorMaxLength() is the matching validator:
+         Validators.maxLength would count the HTML markup. Signal Forms binds the
+         same component through [formField], and [(value)] needs no forms at all. -->
+    <oge-editor
+      label="Summary"
+      [formControl]="summary"
+      [required]="true"
+      [maxLength]="200"
+      counter="characters"
+    />
+
+    <p>valid: {{ summary.valid }}</p>
+  `,
+})
+export class Demo {
+  protected readonly summary = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required, ogeEditorMaxLength(200)],
+  });
+}
+```
+
+#### Getting started
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeEditor } from '@oge-ui/editor';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The value is sanitized HTML ('' when empty). Every edit is a command on
+         the editor's own document model — no document.execCommand — so every
+         browser produces the same markup, and undo is the editor's own history. -->
+    <oge-editor
+      label="Description"
+      placeholder="Write something…"
+      hint="Try Ctrl+B, Ctrl+K, or type “# ” at the start of a line."
+      [(value)]="html"
+    />
+
+    <pre>{{ html() }}</pre>
+  `,
+})
+export class Demo {
+  protected readonly html = signal('<p>Hello <strong>world</strong></p>');
+}
+```
+
+#### Keyboard
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeEditor } from '@oge-ui/editor';
+import type { OgeEditorHeadingLevel } from '@oge-ui/editor';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Markdown shortcuts: "# " … "###### ", "- ", "1. ", "> ", "\`\`\` " at the
+         start of a paragraph, and "---" + Enter for a horizontal line. One undo
+         brings the typed characters back. Tab / Shift+Tab nest list items; Tab
+         anywhere else leaves the editor, so the keyboard is never trapped. -->
+    <oge-editor
+      label="Meeting notes"
+      [markdownShortcuts]="true"
+      [headingLevels]="levels"
+      [(value)]="notes"
+    />
+  `,
+})
+export class Demo {
+  protected readonly levels: readonly OgeEditorHeadingLevel[] = [1, 2, 3];
+  protected readonly notes = signal('');
+}
+```
+
+#### Links
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeEditor } from '@oge-ui/editor';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The link and image tools open the overlay's prompt dialog; the methods
+         below do the same from code. Every address goes through the URL
+         allowlist — a javascript: link is refused, and "ogeui.com" typed into
+         the dialog becomes https://ogeui.com instead of a relative link. -->
+    <oge-editor #editor label="Article" [allowedSchemes]="['web+app']" [(value)]="article" />
+
+    <button type="button" (click)="editor.insertLink('https://www.ogeui.com', 'OGE UI')">
+      Insert a link
+    </button>
+    <button type="button" (click)="editor.insertImage('/favicon.ico', 'OGE logo')">
+      Insert an image
+    </button>
+    <button type="button" (click)="editor.openLinkDialog()">Open the link dialog</button>
+  `,
+})
+export class Demo {
+  protected readonly article = signal('<p>Read the docs.</p>');
+}
+```
+
+#### Modes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeEditor } from '@oge-ui/editor';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- readonly keeps the text focusable and selectable; disabled takes the
+         editor out of the Tab order. height / minHeight / maxHeight take px or any
+         CSS length; resizable adds a vertical resize handle. -->
+    <label><input type="checkbox" [checked]="readonly()" (change)="readonly.set(!readonly())" /> Read-only</label>
+    <label><input type="checkbox" [checked]="disabled()" (change)="disabled.set(!disabled())" /> Disabled</label>
+
+    <oge-editor
+      label="Terms"
+      [readonly]="readonly()"
+      [disabled]="disabled()"
+      [minHeight]="120"
+      [maxHeight]="260"
+      [resizable]="true"
+      counter="both"
+      [(value)]="terms"
+    />
+  `,
+})
+export class Demo {
+  protected readonly readonly = signal(false);
+  protected readonly disabled = signal(false);
+  protected readonly terms = signal(
+    '<h3>Terms</h3><p>By using this service you agree to <em>everything</em>.</p>',
+  );
+}
+```
+
+#### Paste
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeEditor, ogeSanitizeEditorHtml } from '@oge-ui/editor';
+import type { OgeEditorPastingEvent } from '@oge-ui/editor';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One allowlist parser handles the bound value, pastes (Word and Google
+         Docs markup is cleaned up) and insertHtml(). (pasting) is cancelable and
+         may rewrite the payload; pasteMode="text" keeps text only. -->
+    <oge-editor
+      label="Paste here"
+      pasteMode="html"
+      (pasting)="onPasting($event)"
+      [(value)]="pasted"
+    />
+
+    <p>Sanitized on the server side too:</p>
+    <pre>{{ clean }}</pre>
+  `,
+})
+export class Demo {
+  protected readonly pasted = signal('');
+
+  /** The same sanitizer, for HTML that did not come through the editor. */
+  protected readonly clean = ogeSanitizeEditorHtml(
+    '<p>Hi <a href="javascript:alert(1)">there</a><img src=x onerror=alert(1)></p><script>alert(1)</script>',
+  );
+
+  protected onPasting(event: OgeEditorPastingEvent): void {
+    // refuse pastes that carry tracking pixels, keep everything else
+    event.cancel = event.html.includes('1x1.gif');
+  }
+}
+```
+
+#### Toolbar
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeEditor } from '@oge-ui/editor';
+import type { OgeEditorCustomTool, OgeEditorToolbarEntry } from '@oge-ui/editor';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Built-in tool names, 'separator' and your own tools, in any order.
+         The toolbar is the APG toolbar from @oge-ui/layout: one Tab stop, arrow
+         keys between tools, and what does not fit moves into an overflow menu. -->
+    <oge-editor
+      label="Release notes"
+      [toolbar]="tools"
+      [(value)]="notes"
+    />
+  `,
+})
+export class Demo {
+  /** A custom tool: a label, an optional 16×16 stroke icon, and what it does. */
+  private readonly stamp: OgeEditorCustomTool = {
+    key: 'stamp',
+    text: 'Insert today’s date',
+    icon: 'M3 4.5h10v9H3zM3 7.5h10M6 2.5v3M10 2.5v3',
+    run: (editor) => editor.insertText(new Date().toLocaleDateString('en-GB')),
+  };
+
+  protected readonly tools: readonly OgeEditorToolbarEntry[] = [
+    'undo',
+    'redo',
+    'separator',
+    'blockFormat',
+    'bold',
+    'italic',
+    'separator',
+    'bulletList',
+    'orderedList',
+    'separator',
+    'link',
+    this.stamp,
+  ];
+
+  protected readonly notes = signal('<h3>1.2.0</h3><ul><li>New rich-text editor</li></ul>');
 }
 ```
 
@@ -49545,6 +49949,372 @@ export function CustomRows() {
 }
 ```
 
+## @oge-ui/react-editor
+
+React rich-text editor: a dependency-free contenteditable editor over its own document model (no execCommand) with headings, lists, quotes, code, links, images, colours and alignment, its own undo history, markdown shortcuts, Word / Google Docs paste cleanup, a strict allowlist HTML sanitizer and an APG toolbar — running the same editor machine and stylesheet as the Angular editor package.
+
+Docs: https://www.ogeui.com/components/editor
+
+### <OgeEditor>
+
+#### Properties
+
+_Value and forms_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | `undefined` | The sanitized HTML value — controlled when provided (pair it with `onValueChange`), `defaultValue` for uncontrolled use. The empty string when the document is empty. The editor ignores its own echo, so the caret and the history survive a controlled round trip. |
+| `defaultValue` | `string` | `''` | Uncontrolled initial value. |
+| `onValueChange` | `(value: string) => void` | `—` | Every change of the value — the controlled half of `value`. |
+| `disabled` | `boolean` | `false` | Not editable and out of the Tab order (`aria-disabled`). |
+| `readonly` | `boolean` | `false` | Focusable and selectable, but not editable (`aria-readonly`); every tool is disabled. |
+| `required` | `boolean` | `false` | Sets `aria-required` and the asterisk; validation is the form library’s. |
+| `name` | `string` | `''` | Written as `data-name` on the editing surface. |
+| `invalid` | `boolean` | `false` | External invalid state (from your form library). |
+| `touched / dirty` | `boolean` | `false` | External touched / dirty state; errors show once the field is touched. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors to show (the first one’s message, or the matching catalog string). |
+| `maxLength` | `number \| undefined` | `undefined` | Most characters (grapheme clusters) of _text_ the document may hold. Typing and pasting stop there (announced), the counter shows the budget, and a longer external value shows the error. |
+
+_Chrome_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Visible label above the editor; also its accessible name (`aria-labelledby`). |
+| `ariaLabel` | `string \| undefined` | `undefined` | Accessible name when there is no visible label; falls back to `messages.editorLabel`. |
+| `placeholder` | `string` | `''` | Shown while the document is empty; also `aria-placeholder`. |
+| `hint` | `string \| undefined` | `undefined` | Helper text under the editor, hidden while an error shows; part of `aria-describedby`. |
+| `errorText` | `string \| undefined` | `undefined` | Explicit error message — always wins over the resolved messages. |
+| `counter` | `'none' \| 'characters' \| 'words' \| 'both'` | `'none'` | Character / word counter under the editor (ICU plurals from `messages.counter`). With `maxLength` the character count reads `12 / 200`. |
+| `toolbar` | `readonly OgeEditorToolbarEntry[] \| false \| undefined` | `undefined` | Toolbar entries: built-in tool names, `'separator'` and `OgeEditorCustomTool` objects. `undefined` is the full default toolbar, `false` hides it. |
+| `toolbarOverflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | `'menu'` | What the toolbar does with tools that do not fit (the layout toolbar’s `overflow`). |
+| `height / minHeight / maxHeight` | `number \| string \| undefined` | `undefined` | Size of the editing area — a number is px, a string any CSS length. Without them the area starts at 160px and grows with its content. |
+| `resizable` | `boolean` | `false` | Adds a vertical resize handle to the editing area. |
+| `spellcheck` | `boolean` | `true` | The browser’s spell checking on the editing surface. |
+| `tabIndex` | `number` | `0` | Tab index of the editing surface. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after it mounts. |
+| `id` | `string \| undefined` | `undefined` | Base of the generated element ids; defaults to one derived from `useId()` (SSR-safe). |
+| `className / style` | `string / CSSProperties` | `undefined` | Classes and inline style of the host element. |
+
+_Behaviour (undefined = config)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `markdownShortcuts` | `boolean \| undefined` | `true` | `#`…`######`, `-`, `1.`, `>`, ````` at the start of a paragraph and `---` + Enter turn into formats. One undo brings the typed characters back. |
+| `pasteMode` | `'html' \| 'text' \| undefined` | `'html'` | `'html'` keeps (sanitized) formatting from the clipboard; `'text'` inserts text only. |
+| `headingLevels` | `readonly OgeEditorHeadingLevel[] \| undefined` | `[1, 2, 3, 4]` | Heading levels the block-format menu offers. |
+| `textColors / backgroundColors` | `OgeColorPalettePreset \| readonly string[] \| undefined` | `'default'` | Palettes of the two colour popups — an `@oge-ui/react-inputs` palette preset or your own colour list. Colours are validated (no `url()`, `var()` or expressions). |
+| `allowedSchemes` | `readonly string[] \| undefined` | `[]` | Extra link schemes on top of `sanitizeUrl`’s allowlist (`http`, `https`, `mailto`, `tel`, `ftp`, `sms`). Script schemes can never be allowed. |
+| `allowDataImages` | `boolean \| undefined` | `false` | Keep `data:image/*` sources (PNG, JPEG, GIF, WebP, AVIF, BMP — never SVG). `blob:` and `file:` images are always dropped. |
+| `messages` | `OgeEditorMessagesInput \| undefined` | `undefined` | Per-instance overrides of the user-facing strings, merged group by group over the `<OgeEditorConfigProvider>` values. |
+
+_Read-only state_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `activeState` | `OgeEditorActiveState` | Handle getter: the formats under the selection — what the toolbar shows. |
+| `characterCount / wordCount` | `number` | Handle getters: grapheme clusters and words (`Intl.Segmenter`) of the text. |
+| `canUndo / canRedo` | `boolean` | Handle getters: whether the history has a step back / forward. |
+
+#### Methods
+
+_Ref handle (OgeEditorHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Moves focus into the editing area and restores the caret. |
+| `blur()` | `void` | Removes keyboard focus. |
+| `exec(command)` | `(command: OgeEditorCommandName \| OgeEditorCommand) => boolean` | Runs a command — a name (`'bold'`, `'heading2'`, `'bulletList'`…) or a command object (`{ type: 'color', color: '#c00' }`). Returns `true` when it changed something. |
+| `undo() / redo()` | `() => boolean` | Steps through the editor’s own history. |
+| `insertText(text)` | `(text: string) => void` | Inserts plain text at the selection (newlines become paragraphs). |
+| `insertHtml(html)` | `(html: string) => void` | Inserts HTML at the selection — parsed through the editor’s allowlist first, like a paste. |
+| `insertLink(href, text?, newTab?)` | `(href: string, text?: string, newTab?: boolean) => boolean` | Links the selection, or inserts `text` (default: the address) as a link. Unsafe addresses are refused (`false`); new-tab links get `rel="noopener noreferrer"`. |
+| `removeLink()` | `() => boolean` | Removes the link under the selection or around the caret. |
+| `insertImage(src, alt?)` | `(src: string, alt?: string) => boolean` | Inserts an image by URL; unsafe sources are refused. |
+| `selectAll()` | `void` | Selects the whole document. |
+| `getHtml() / getText()` | `() => string` | The current value, or its text with blocks separated by newlines. |
+| `clear()` | `void` | Empties the editor as one undoable change. |
+| `reset(value?)` | `(value?: string) => void` | Loads `value` (default: empty), clears the history and the touched / dirty state, and reports the change. |
+| `openLinkDialog() / openImageDialog()` | `() => Promise<void>` | Opens the link or image prompt for the selection (also Ctrl+K and the toolbar tools), subject to `onDialogOpening`. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueCommitted` | `(event: OgeEditorValueCommittedEvent) => void` | Every committed change: `{ value, previousValue, event }`. |
+| `onFocus / onBlur` | `(event: FocusEvent) => void` | Focus entered or left the editor (popups included). |
+| `onSelectionChange` | `(event: OgeEditorSelectionChangedEvent) => void` | The selection moved or its formats changed: `{ active }`. |
+| `onCommandExecuted` | `(event: OgeEditorCommandExecutedEvent) => void` | A command ran (keyboard, toolbar or `exec`): `{ command, event }`. |
+| `onToolClick` | `(event: OgeEditorToolClickEvent) => void` | A toolbar tool was activated: `{ key, inMenu, event }`. |
+| `onPasting` | `(event: OgeEditorPastingEvent) => void` | Cancelable: a paste or drop is about to be inserted. Set `cancel`, or rewrite `html` / `text`. |
+| `onDialogOpening` | `(event: OgeEditorDialogOpeningEvent) => void` | Cancelable: the link or image dialog is about to open (`{ kind, link, cancel }`). Cancel it to show your own dialog, then call `insertLink()` / `insertImage()` on the handle. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeEditorToolName` | `'undo' \| 'redo' \| 'blockFormat' \| 'bold' \| 'italic' \| 'underline' \| 'strike' \| 'code' \| 'subscript' \| 'superscript' \| 'textColor' \| 'backgroundColor' \| 'link' \| 'unlink' \| 'image' \| 'bulletList' \| 'orderedList' \| 'indent' \| 'outdent' \| 'blockquote' \| 'codeBlock' \| 'horizontalRule' \| 'alignStart' \| 'alignCenter' \| 'alignEnd' \| 'alignJustify' \| 'directionLtr' \| 'directionRtl' \| 'clearFormatting'` | Built-in toolbar tools. `OGE_DEFAULT_EDITOR_TOOLBAR` is the default arrangement. |
+| `OgeEditorToolbarEntry` | `OgeEditorToolName \| 'separator' \| OgeEditorCustomTool` | One toolbar entry. Leading, trailing and doubled separators are dropped. |
+| `OgeEditorCustomTool` | `{ key; text; icon?; hint?; shortcut?; isActive?(active); isDisabled?(active); run(context: OgeEditorToolContext) }` | A tool of your own. `isActive` makes it a toggle (`aria-pressed`); `run` receives `exec`, `insertHtml`, `insertText`, `getHtml` and the active state. |
+| `OgeEditorCommandName` | `'bold' \| 'italic' \| … \| 'heading1'…'heading6' \| 'blockquote' \| 'codeBlock' \| 'bulletList' \| 'orderedList' \| 'indent' \| 'outdent' \| 'alignStart' \| 'alignCenter' \| 'alignEnd' \| 'alignJustify' \| 'horizontalRule' \| 'clearFormatting' \| 'unlink' \| 'undo' \| 'redo' \| 'selectAll'` | Parameterless commands by name, for `exec()`. |
+| `OgeEditorCommand` | `{ type: 'toggleMark'; mark } \| { type: 'blockFormat'; format; level? } \| { type: 'list'; list } \| { type: 'align'; align } \| { type: 'color' \| 'background'; color } \| { type: 'link'; href; text?; newTab? } \| { type: 'image'; src; alt? } \| …` | A command object — the same vocabulary the toolbar and the keyboard map issue. |
+| `OgeEditorActiveState` | `{ marks; blockFormat; list; align; dir; link; color; background; canIndent; canOutdent; collapsed }` | What the selection currently is. |
+| `OgeEditorMessages` | `interface` | Every user-facing string: tool names, block names, dialogs, colours, counter (ICU plurals), announcements, validation and key names. Translated in all ten `@oge-ui/locales` packs (`<OgeLocaleProvider>` wires them). |
+| `OgeEditorConfigProvider` | `({ config?: OgeEditorConfigInput; children }) => ReactNode` | Subtree-wide defaults and strings; nested providers merge over the outer one. |
+| `ogeSanitizeEditorHtml(html, options?)` | `(html: string \| null \| undefined, options?: OgeEditorParseOptions) => string` | The editor’s allowlist as a function — for values that did not come through the editor. Only the editor’s own tags and attributes come out. |
+| `ogeEditorHtmlLength(html)` | `(html: string \| null \| undefined, options?: OgeEditorParseOptions) => number` | Characters of an HTML value’s text — the measure `maxLength` applies; use it in your form library’s validator. |
+| `ogeEditorCommandFromName(name)` | `(name: OgeEditorCommandName) => OgeEditorCommand` | Expands a command name into its command object. |
+| `OGE_EDITOR_TRUSTED_TYPES_POLICY` | `'oge-ui#editor'` | Name of the Trusted Types policy behind the editor’s one `DOMParser` call. List it in a `trusted-types` CSP directive. |
+| `useOgeEditorConfig() / OGE_DEFAULT_EDITOR_CONFIG / OGE_DEFAULT_EDITOR_MESSAGES` | `() => OgeEditorConfig / OgeEditorConfig / OgeEditorMessages` | The resolved config of the subtree, and the shipped defaults. |
+| `OGE_DEFAULT_EDITOR_TOOLBAR` | `readonly OgeEditorToolbarEntry[]` | The default toolbar arrangement — spread it to extend the default instead of replacing it. |
+
+### Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+
+export function DescriptionEditor() {
+  // The value is sanitized HTML ('' when empty). Every edit is a command on
+  // the editor's own document model — no document.execCommand — so every
+  // browser produces the same markup, and undo is the editor's own history.
+  const [html, setHtml] = useState('<p>Hello <strong>world</strong></p>');
+  return (
+    <>
+      <OgeEditor
+        label="Description"
+        placeholder="Write something…"
+        hint="Try Ctrl+B, Ctrl+K, or type “# ” at the start of a line."
+        value={html}
+        onValueChange={setHtml}
+      />
+      <pre>{html}</pre>
+    </>
+  );
+}
+```
+
+#### Toolbar and custom tools
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+import type { OgeEditorCustomTool, OgeEditorToolbarEntry } from '@oge-ui/react-editor';
+
+// A custom tool: a label, an optional 16×16 stroke icon, and what it does.
+const stamp: OgeEditorCustomTool = {
+  key: 'stamp',
+  text: 'Insert today’s date',
+  icon: 'M3 4.5h10v9H3zM3 7.5h10M6 2.5v3M10 2.5v3',
+  run: (editor) => editor.insertText(new Date().toLocaleDateString('en-GB')),
+};
+
+// Built-in tool names, 'separator' and your own tools, in any order.
+const tools: readonly OgeEditorToolbarEntry[] = [
+  'undo', 'redo', 'separator', 'blockFormat', 'bold', 'italic', 'separator',
+  'bulletList', 'orderedList', 'separator', 'link', stamp,
+];
+
+export function ReleaseNotes() {
+  const [notes, setNotes] = useState('<h3>1.2.0</h3><ul><li>New rich-text editor</li></ul>');
+  return (
+    <OgeEditor label="Release notes" toolbar={tools} value={notes} onValueChange={setNotes} />
+  );
+}
+```
+
+#### Keyboard and markdown
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+
+export function MeetingNotes() {
+  // Markdown shortcuts: "# " … "###### ", "- ", "1. ", "> ", "``` " at the start
+  // of a paragraph, and "---" + Enter for a horizontal line. One undo brings the
+  // typed characters back. Tab / Shift+Tab nest list items; Tab anywhere else
+  // leaves the editor, so the keyboard is never trapped.
+  const [notes, setNotes] = useState('');
+  return (
+    <OgeEditor
+      label="Meeting notes"
+      markdownShortcuts
+      headingLevels={[1, 2, 3]}
+      value={notes}
+      onValueChange={setNotes}
+    />
+  );
+}
+```
+
+#### Links and images
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+import type { OgeEditorHandle } from '@oge-ui/react-editor';
+
+export function ArticleEditor() {
+  // The link and image tools open the overlay's prompt dialog; the handle does
+  // the same from code. A javascript: link is refused, and "ogeui.com" typed
+  // into the dialog becomes https://ogeui.com instead of a relative link.
+  const editor = useRef<OgeEditorHandle>(null);
+  return (
+    <>
+      <OgeEditor ref={editor} label="Article" defaultValue="<p>Read the docs.</p>" />
+      <button type="button" onClick={() => editor.current?.insertLink('https://www.ogeui.com', 'OGE UI')}>
+        Insert a link
+      </button>
+      <button type="button" onClick={() => editor.current?.insertImage('/favicon.ico', 'OGE logo')}>
+        Insert an image
+      </button>
+      <button type="button" onClick={() => void editor.current?.openLinkDialog()}>
+        Open the link dialog
+      </button>
+    </>
+  );
+}
+```
+
+#### Paste and sanitizing
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor, ogeSanitizeEditorHtml } from '@oge-ui/react-editor';
+import type { OgeEditorPastingEvent } from '@oge-ui/react-editor';
+
+// The same sanitizer, for HTML that did not come through the editor.
+const clean = ogeSanitizeEditorHtml(
+  '<p>Hi <a href="javascript:alert(1)">there</a><img src=x onerror=alert(1)></p><script>alert(1)</script>',
+);
+
+// onPasting is cancelable and may rewrite the payload.
+const onPasting = (event: OgeEditorPastingEvent) => {
+  event.cancel = event.html.includes('1x1.gif');
+};
+
+export function PasteTarget() {
+  const [pasted, setPasted] = useState('');
+  return (
+    <>
+      <OgeEditor label="Paste here" pasteMode="html" onPasting={onPasting} value={pasted} onValueChange={setPasted} />
+      <pre>{clean}</pre>
+    </>
+  );
+}
+```
+
+#### Controlled value and validation
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor, ogeEditorHtmlLength } from '@oge-ui/react-editor';
+
+export function SummaryField() {
+  // maxLength stops typing and pasting at 200 characters of text and the
+  // counter shows the budget. In your form library, validate with
+  // ogeEditorHtmlLength() — the string length would count the HTML markup.
+  const [summary, setSummary] = useState('');
+  const [touched, setTouched] = useState(false);
+  const valid = summary !== '' && ogeEditorHtmlLength(summary) <= 200;
+  return (
+    <>
+      <OgeEditor
+        label="Summary"
+        required
+        maxLength={200}
+        counter="characters"
+        value={summary}
+        onValueChange={setSummary}
+        onBlur={() => setTouched(true)}
+        touched={touched}
+        invalid={!valid}
+      />
+      <p>valid: {String(valid)}</p>
+    </>
+  );
+}
+```
+
+#### Read-only, sizing and counter
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+
+export function TermsEditor() {
+  // readonly keeps the text focusable and selectable; disabled takes the
+  // editor out of the Tab order. height / minHeight / maxHeight take px or
+  // any CSS length; resizable adds a vertical resize handle.
+  const [readonly, setReadonly] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  return (
+    <>
+      <label>
+        <input type="checkbox" checked={readonly} onChange={() => setReadonly(!readonly)} /> Read-only
+      </label>
+      <label>
+        <input type="checkbox" checked={disabled} onChange={() => setDisabled(!disabled)} /> Disabled
+      </label>
+      <OgeEditor
+        label="Terms"
+        readonly={readonly}
+        disabled={disabled}
+        minHeight={120}
+        maxHeight={260}
+        resizable
+        counter="both"
+        defaultValue="<h3>Terms</h3><p>By using this service you agree to <em>everything</em>.</p>"
+      />
+    </>
+  );
+}
+```
+
+#### Configuration
+
+```ts
+'use client';
+
+import { OgeEditor, OgeEditorConfigProvider } from '@oge-ui/react-editor';
+
+export function ConfiguredEditors() {
+  // Subtree-wide defaults and strings (<OgeLocaleProvider> covers the strings
+  // too). A page with require-trusted-types-for 'script' lists the editor's
+  // policy: trusted-types oge-ui#editor
+  return (
+    <OgeEditorConfigProvider
+      config={{
+        headingLevels: [2, 3],
+        pasteMode: 'html',
+        markdownShortcuts: true,
+        textColors: 'office',
+        messages: { tools: { bold: 'Kalın', italic: 'İtalik' } },
+      }}
+    >
+      <OgeEditor label="Notes" />
+    </OgeEditorConfigProvider>
+  );
+}
+```
+
 ## @oge-ui/react-kanban
 
 React Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move callbacks, built-in edit dialog, context menu and toolbar — running the same engine and stylesheet as the Angular Kanban package.
@@ -58994,8 +59764,8 @@ Framework-free interaction and accessibility layer shared by every package: popu
 
 `@oge-ui/behavior`
 
-- values: `DragDepthCounter`, `OGE_ACTION_SHEET_FOCUS_ATTR`, `OGE_ALERT_DISMISS_PATH`, `OGE_ALERT_ICON_PATHS`, `OGE_AUTO_FIT_SLACK`, `OGE_AUTO_SCROLL_EDGE`, `OGE_AUTO_SCROLL_MAX_SPEED`, `OGE_AVATAR_ICON_PATH`, `OGE_BADGE_DEFAULT_MAX`, `OGE_BREADCRUMB_ELLIPSIS_FALLBACK`, `OGE_CAROUSEL_DEFAULT_INTERVAL`, `OGE_CAROUSEL_DRAGGING_CLASS`, `OGE_CAROUSEL_MIN_INTERVAL`, `OGE_CAROUSEL_SWIPE_DISTANCE`, `OGE_CAROUSEL_SWIPE_RATIO`, `OGE_CHIP_REMOVE_SHORTCUTS`, `OGE_COLOR_PALETTE_PRESETS`, `OGE_COLUMN_RESIZE_FINE_STEP`, `OGE_COLUMN_RESIZE_FLOOR`, `OGE_COLUMN_RESIZE_STEP`, `OGE_DATA_VIEW_DEFAULT_MIN_ITEM_WIDTH`, `OGE_DATA_VIEW_PAGER_BUTTONS`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_ADAPTIVE_CONFIG`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_FAB_CONFIG`, `OGE_DEFAULT_FAB_MESSAGES`, `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_GRID_MESSAGES`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_MASK_RULES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_DEFAULT_OVERLAY_TIMINGS`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOAST_DEFAULTS`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DEFAULT_UPLOAD_CONFIG`, `OGE_DEFAULT_UPLOAD_MESSAGES`, `OGE_DIALOG_DEFAULT_WIDTH`, `OGE_DIALOG_ICONS`, `OGE_DIALOG_TRIANGLE_PATH`, `OGE_DRAWER_SWIPE_EDGE`, `OGE_DRAWER_SWIPE_VELOCITY`, `OGE_FAB_PLUS_PATH`, `OGE_GESTURE_THRESHOLD`, `OGE_GRID_HOST_SELECTOR`, `OGE_GRID_WINDOW_BLOCK_SIZE`, `OGE_LIST_VIEW_FALLBACK_HEIGHT`, `OGE_LIST_VIEW_GROUP_HEIGHT`, `OGE_LIST_VIEW_ITEM_HEIGHT`, `OGE_LIST_VIEW_LOAD_THRESHOLD`, `OGE_LIST_VIEW_OVERSCAN`, `OGE_LIVE_ANNOUNCER_ATTR`, `OGE_LIVE_ANNOUNCER_CLASS`, `OGE_LOAD_PANEL_TARGET_CLASS`, `OGE_LONG_PRESS_DELAY`, `OGE_MENUBAR_HOVER_DELAY`, `OGE_MENUBAR_MORE_KEY`, `OGE_MODAL_MIN_RESIZE`, `OGE_MODAL_PLACEMENTS`, `OGE_NO_SPANS`, `OGE_PAGE_ELLIPSIS`, `OGE_PAGINATION_DEFAULT_COMPACT_BELOW`, `OGE_PAGINATION_DEFAULT_MAX_BUTTONS`, `OGE_POPUP_ARROW_SIZE`, `OGE_POPUP_AVAILABLE_HEIGHT_VAR`, `OGE_PROGRESS_RING_DEFAULT_SIZE`, `OGE_PROGRESS_RING_DEFAULT_THICKNESS`, `OGE_PROGRESS_RING_INDETERMINATE_RATIO`, `OGE_RATING_ICON_PATHS`, `OGE_RATING_MIN_PRECISION`, `OGE_SELECT_OPTION_HEIGHT`, `OGE_SHEET_FOCUS_ATTR`, `OGE_SHEET_SWIPE_DISMISS`, `OGE_SLIDER_MAX_TICKS`, `OGE_SPLITTER_FULL_TRAVEL`, `OGE_SPLITTER_GRIP_SIDES`, `OGE_TAB_DRAG_THRESHOLD`, `OGE_TILE_LAYOUT_DEFAULTS`, `OGE_TIMELINE_DEFAULT_DATE_FORMAT`, `OGE_TOAST_ANNOUNCE_DELAY_MS`, `OGE_TOAST_EXIT_MS`, `OGE_TOAST_POSITIONS`, `OGE_TOOLBAR_STOP_SELECTOR`, `OGE_TOOLTIP_PANEL_OPTIONS`, `OGE_TREE_DEFAULT_ITEM_HEIGHT`, `OGE_TREE_DRAG_HOVER_EXPAND_MS`, `OGE_TREE_DRAG_THRESHOLD`, `OGE_TREE_LOAD_MORE_PREFIX`, `OGE_TREE_TRANSFER_SHORTCUTS`, `OGE_WINDOW_GUTTER`, `OGE_WINDOW_KEY_SHORTCUTS`, `OGE_WINDOW_KEY_STEP`, `OGE_WINDOW_MIN_SIZE`, `OGE_WINDOW_RESIZE_EDGES`, `OGE_WINDOW_TITLE_REACH`, `ObjectUrlRegistry`, `OgeActionSheetCore`, `OgeAdaptiveSheetCore`, `OgeAnchoredPanelCore`, `OgeButtonPress`, `OgeCarouselAutoplay`, `OgeContextMenuEcho`, `OgeDateSegmentCore`, `OgeDialogCore`, `OgeFileUploaderCore`, `OgeGridAnnouncements`, `OgeGridColumnLayoutCore`, `OgeGridColumnsState`, `OgeGridDataCore`, `OgeGridDeferredChildrenCore`, `OgeGridEditHistory`, `OgeGridEditingCore`, `OgeGridEditingState`, `OgeGridExpansionState`, `OgeGridFilterState`, `OgeGridGroupingState`, `OgeGridKeyboardNavCore`, `OgeGridPagingState`, `OgeGridRangeSelectionCore`, `OgeGridRowVirtualizerCore`, `OgeGridSelectionState`, `OgeGridSortState`, `OgeGridStateCore`, `OgeGridStatePersistenceCore`, `OgeInputCommit`, `OgeListBoxCore`, `OgeListVirtualizerCore`, `OgeLiveAnnouncerCore`, `OgeLoadPanelCore`, `OgeMaskCore`, `OgeMentionCore`, `OgeMenuTypeAhead`, `OgePopoverCore`, `OgePreparedTracker`, `OgeRemoteListCore`, `OgeSelectListCore`, `OgeSignatureCore`, `OgeToastCore`, `OgeToastRef`, `OgeTooltipCore`, `OgeTreeListCore`, `OgeWindowCore`, `UploadQueue`, `accordionAriaDisabled`, `accordionItemDescriptor`, `accordionNavIntent`, `accordionPageDirection`, `accordionTypeAheadStart`, `adaptiveHiddenColumnIds`, `adaptiveListViewportHeight`, `adaptiveMediaQuery`, `addDays`, `addMonths`, `addYears`, `allHeaderValuesSelected`, `allRowsSelected`, `ancestorsOf`, `applyButtonGroupSelection`, `applyButtonToggle`, `applyColorChannelText`, `applyMenuItemCheck`, `applySelectAll`, `applyTabOrder`, `applyToggleGroupPress`, `applyToolbarOverride`, `asyncValidationRules`, `beginOgeActionSheetSwipe`, `beginOgeCarouselSwipe`, `beginOgeDrawerSwipe`, `beginOgeTreeDrag`, `beginPointerDragDrop`, `beginPointerGesture`, `booleanCellLabel`, `breadcrumbDataDescriptors`, `breadcrumbMenuItems`, `bringOgeWindowToFront`, `buildOgeDrawerItems`, `buildOgeExportItems`, `buildOgeRangeTsv`, `buildOgeSignatureSvg`, `buildRowFilterExpr`, `buildTreeViewIndex`, `buildTreeViewModel`, `buildTreeViewNodes`, `builderToExpr`, `buttonGroupNavIndex`, `buttonGroupRole`, `canCollapseAccordionPanel`, `canResizeSplitterAt`, `canSelectTab`, `captionize`, `choiceIncludes`, `chunkedLoaded`, `clampColumnWidth`, `clampModalDrag`, `clampModalResize`, `clampNumber`, `clampOgeWindowPosition`, `clampOtpFocus`, `clampPaginationIndex`, `clampValue`, `colorPaletteNavIndex`, `colorsEqual`, `compositeColorOver`, `computeOgeGridSpans`, `constrainRangeValue`, `contrastForeground`, `contrastLevels`, `contrastRatio`, `createAutoScroller`, `createDragGhost`, `createNumberFormatter`, `createNumberTypingGrouper`, `createTreeSearchPredicate`, `createTypeAheadBuffer`, `createXhrUploadAdapter`, `dataTransferHasFiles`, `dateFilterExpr`, `datePartOrder`, `dateRangeFilterExpr`, `dateRangePresetActive`, `dateRangePresetLabel`, `dateSegmentPlaceholders`, `dateSegmentTemplate`, `dayPeriodColumnOptions`, `dayPeriodLabels`, `decadeCells`, `defaultAlignmentFor`, `defaultOperatorFor`, `deferredToggleExpr`, `describeExpr`, `drawOgeSignatureStroke`, `dropEffectFor`, `edgeEnabledIndex`, `effectiveFilterOperator`, `emptyHeaderConditionFilter`, `emptyValueForDataType`, `evaluateOgeFormCondition`, `evaluateOgeValidationRules`, `exceedsTreeDragThreshold`, `expandedIdsAfterCollapse`, `expandedIdsAfterExpand`, `exprToBuilder`, `fileExtension`, `fillTreeViewMessages`, `filterHeaderValues`, `filterOperatorSymbol`, `filterRowOperatorChoices`, `findMenubarItemPath`, `findOgeRowDragParticipant`, `fitBreadcrumbDescriptors`, `fitToolbarDescriptors`, `fitToolbarItems`, `flattenHeaderDateTree`, `flattenOgePanelBarItems`, `formColumnsCount`, `formColumnsCss`, `formatCellValue`, `formatColor`, `formatFileSize`, `formatNumberWhileTyping`, `formatPaginationMessage`, `formatPattern`, `formatUploadMessage`, `getOgeLiveAnnouncer`, `getOgePdfDefaultFont`, `getTabbableElements`, `graphemeCount`, `groupHeaderValuesByDate`, `groupHeaderValuesByYear`, `headerConditionExpr`, `headerConditionNeedsValue`, `headerConditionOperators`, `headerGroupState`, `headerValueText`, `headerYearLabel`, `hourColumnOptions`, `hsvaToRgba`, `humanize`, `inertModalBackground`, `inferDataType`, `isAccordionTypeAheadKey`, `isBareEditor`, `isDataSource`, `isDayDisabled`, `isEmptyFormValue`, `isFormItemVisible`, `isHeaderValueSelected`, `isMenuHeader`, `isMenuItemNavigable`, `isMenubarCompact`, `isModalFocusOrphaned`, `isNearScrollEnd`, `isOgeContextMenuKey`, `isOgeDateType`, `isOgeDragExcludedTarget`, `isOgeFrontWindow`, `isOgePanelBarSingle`, `isOgePdfWinAnsi`, `isOgeRangeExtendKey`, `isPreviewable`, `isSplitterPaneCollapsed`, `isSplitterPaneCollapsible`, `isStepReachable`, `isTimePartSelected`, `isToolbarStopDisabled`, `isToolbarTextEntry`, `isTopOverlay`, `isTreeEditKey`, `keyEqualsExpr`, `loadOptionsEqual`, `loadSplitterPanes`, `loadToolbarItems`, `lockBodyScroll`, `lookupTextOf`, `mapLookupItems`, `matchAccordionTitle`, `matchByPrefix`, `matchesAccept`, `matchesAdaptiveViewport`, `menuEdgeIndex`, `menuEnabledIndexes`, `menuItemAriaChecked`, `menuItemIndicator`, `menuItemKeepsOpen`, `menuItemNextChecked`, `menuItemRole`, `menuItemSegments`, `menuMoveIndex`, `menuRetainedActiveIndex`, `menubarBarEntries`, `menubarBarKeys`, `menubarClosedReason`, `menubarDataDescriptors`, `menubarEntryHidden`, `menubarEventBase`, `menubarItemDomId`, `menubarItemPath`, `menubarMoreActive`, `menubarOverflowItems`, `menubarPanelItems`, `menubarPanelLabel`, `menubarPanelPlacement`, `menubarPopupCloseReason`, `menubarStopDisabled`, `mergeOgeExportStyles`, `mergeUploadMessages`, `messageForFieldError`, `minuteColumnOptions`, `modalCssSize`, `modalPlacementClass`, `monthCells`, `monthMatrix`, `motionScrollBehavior`, `navigate`, `nextTabbableAfter`, `nextTreeChildPage`, `nextTreeExpansion`, `nextTreeSelection`, `normalizeOtpLength`, `normalizeOtpValue`, `normalizeRatingMax`, `normalizeRatingPrecision`, `normalizeSplitTracks`, `nowForType`, `numberWheelDirection`, `observeDirection`, `offsetByStep`, `ogeAcquireLoadPanelTarget`, `ogeActionSheetDividerIndex`, `ogeActionSheetKeyIntent`, `ogeActionSheetOrder`, `ogeActionSheetSwipeDismisses`, `ogeActionSheetTabStop`, `ogeAddDescribedBy`, `ogeAdjacentDataRow`, `ogeAlertFocusAfterClose`, `ogeAlertRole`, `ogeAlertSeverityLabel`, `ogeAllowDropDownClose`, `ogeAllowDropDownOpen`, `ogeAppBarAcceptsLabel`, `ogeAppBarRole`, `ogeAvatarGroupWindow`, `ogeAvatarInitials`, `ogeAvatarLabel`, `ogeAvatarOverflowLabel`, `ogeAvatarOverflowText`, `ogeAvatarStatusLabel`, `ogeBadgeAriaTarget`, `ogeBadgeDescription`, `ogeBadgeText`, `ogeBadgeVisible`, `ogeCanSelectMore`, `ogeCaretRect`, `ogeCarouselClampIndex`, `ogeCarouselIndexFromOffset`, `ogeCarouselLive`, `ogeCarouselMaxIndex`, `ogeCarouselMeasureStep`, `ogeCarouselPerView`, `ogeCarouselPickerKey`, `ogeCarouselPickerLabel`, `ogeCarouselPickerMode`, `ogeCarouselPickerTarget`, `ogeCarouselPositions`, `ogeCarouselScrollOffset`, `ogeCarouselScrollTo`, `ogeCarouselSlideLabel`, `ogeCarouselSlideVisible`, `ogeCarouselStep`, `ogeCarouselSwipeTarget`, `ogeChipFocusAfterRemove`, `ogeChipGridStops`, `ogeChipIsRemovable`, `ogeChipKeyIntent`, `ogeChipListRole`, `ogeChipNavIndex`, `ogeChipOverflow`, `ogeChipRemoveLabel`, `ogeChipTabStop`, `ogeChipToggleSelection`, `ogeChooserMoveDirection`, `ogeClassList`, `ogeColumnMoveTarget`, `ogeColumnSeparatorKeyCommand`, `ogeColumnSummaryText`, `ogeColumnValueRange`, `ogeColumnWidthBounds`, `ogeComboCellText`, `ogeComboCellValue`, `ogeComboColumnCaption`, `ogeComboColumnTarget`, `ogeComboFixedWidth`, `ogeComboGridTemplate`, `ogeComboSearchStrings`, `ogeCompileColumnFormat`, `ogeConfirmResult`, `ogeContextMenuApiTarget`, `ogeContextMenuKeyTarget`, `ogeContextMenuPoint`, `ogeContextMenuTarget`, `ogeDataViewClampPage`, `ogeDataViewCollator`, `ogeDataViewCompare`, `ogeDataViewDisplayText`, `ogeDataViewField`, `ogeDataViewFormat`, `ogeDataViewInfoText`, `ogeDataViewIsEllipsis`, `ogeDataViewKey`, `ogeDataViewKeyIntent`, `ogeDataViewMatches`, `ogeDataViewMeasureColumns`, `ogeDataViewPageCount`, `ogeDataViewPageItems`, `ogeDataViewPagerWindow`, `ogeDataViewProcess`, `ogeDataViewRole`, `ogeDataViewSearchText`, `ogeDataViewStyleVars`, `ogeDataViewTabStop`, `ogeDataViewToggleSelection`, `ogeDateRangePresets`, `ogeDialogAutoFocusSelector`, `ogeDialogEnterIsPrimary`, `ogeDialogOptions`, `ogeDrawerItemKey`, `ogeDrawerItemNavIndex`, `ogeDrawerPhysicalEdge`, `ogeDrawerRailTooltipPlacement`, `ogeDrawerSwipeAlong`, `ogeDrawerSwipeDistance`, `ogeDrawerSwipeOutcome`, `ogeDrawerSwipeStarts`, `ogeEdgeScrollVelocity`, `ogeElementAtPoint`, `ogeExpansionShowsToggle`, `ogeExportCellStyle`, `ogeExportCellText`, `ogeExportColumnOf`, `ogeExportColumnsOf`, `ogeExportHeaderCells`, `ogeExportItemsOf`, `ogeExportScope`, `ogeFillSeries`, `ogeFillTarget`, `ogeFindMentionQuery`, `ogeFirstVisibleRow`, `ogeFormatsNeedRange`, `ogeGridBandRow`, `ogeGridEditShortcut`, `ogeGridExportItems`, `ogeGridExportLoadOptions`, `ogeGridHeaderKeyCommand`, `ogeGridHeaderKeyShortcuts`, `ogeGroupChipKeyCommand`, `ogeGroupValueText`, `ogeHeaderConditionKey`, `ogeInsertMention`, `ogeIsRtl`, `ogeIsTextTruncated`, `ogeKeyboardFillPlan`, `ogeListBoxSections`, `ogeListMoveTarget`, `ogeListViewActionForKey`, `ogeListViewActionFromTarget`, `ogeListViewActionShortcuts`, `ogeListViewActionsText`, `ogeListViewBuildRows`, `ogeListViewClick`, `ogeListViewExprValue`, `ogeListViewFilter`, `ogeListViewFirstEnabled`, `ogeListViewIndexFromTarget`, `ogeListViewInitialActive`, `ogeListViewItemId`, `ogeListViewKeyDown`, `ogeListViewKeyOf`, `ogeListViewMatchesShortcut`, `ogeListViewOffsetTree`, `ogeListViewRange`, `ogeListViewRole`, `ogeListViewSameKeys`, `ogeListViewScrollTarget`, `ogeListViewSegments`, `ogeListViewSelectionDiff`, `ogeListViewShouldLoadMore`, `ogeListViewSwipeAxis`, `ogeListViewSwipeOpens`, `ogeListViewSwipeReveal`, `ogeListViewSwipeTranslate`, `ogeListViewTextOf`, `ogeListViewToggle`, `ogeListViewVirtualSettings`, `ogeListViewWindow`, `ogeLiveConfig`, `ogeLoadPanelBusyTarget`, `ogeLoadPanelNeedsPositioning`, `ogeMaskComplete`, `ogeMaskInputMode`, `ogeMeasureAutoWidth`, `ogeMentionKeyCommand`, `ogeMoreTagsText`, `ogeMoveGroupingTo`, `ogeOpenWindowCount`, `ogeOverlayMessage`, `ogeOwnedClosest`, `ogePagerInfoContext`, `ogePagerInfoText`, `ogePagerPages`, `ogePanelBarExpansionAfter`, `ogePanelBarIndex`, `ogePanelBarInitialExpanded`, `ogePanelBarKeyAction`, `ogePanelBarKeyIntent`, `ogePanelBarVisibleIds`, `ogeParsePageInput`, `ogeProgressAriaNow`, `ogeProgressLabel`, `ogeProgressRatio`, `ogeProgressRingGeometry`, `ogePromptResult`, `ogeRangeAnnouncementCounts`, `ogeRangeBounds`, `ogeRangeContains`, `ogeRangeLattice`, `ogeRemoveDescribedBy`, `ogeResolveAvatarContent`, `ogeResolveContextMenuOpen`, `ogeResolveDirection`, `ogeResolveLoadPanelTarget`, `ogeRowDragParticipantCount`, `ogeRowDropPosition`, `ogeRowMoveDirection`, `ogeSelectAllState`, `ogeSeparatorTargetWidth`, `ogeShiftMentions`, `ogeSignatureFontSize`, `ogeSignatureGeometry`, `ogeSignaturePointFrom`, `ogeSignatureWidths`, `ogeSpeedDialAwayKey`, `ogeSpeedDialDirection`, `ogeSpeedDialItemKey`, `ogeSpeedDialNavIndex`, `ogeSpeedDialToggleKey`, `ogeSpeedDialTowardKey`, `ogeSpeedDialVertical`, `ogeStickyGroupChain`, `ogeSummaryText`, `ogeSvgDataUrl`, `ogeTileLayoutAutoRows`, `ogeTileLayoutClampResize`, `ogeTileLayoutClampSpan`, `ogeTileLayoutDropIndex`, `ogeTileLayoutKeyIntent`, `ogeTileLayoutMoveState`, `ogeTileLayoutMovedText`, `ogeTileLayoutResizeSpan`, `ogeTileLayoutResizeState`, `ogeTileLayoutResizedText`, `ogeTileLayoutResolve`, `ogeTileLayoutShortcuts`, `ogeTileLayoutStep`, `ogeTileLayoutTabStop`, `ogeTileLayoutTemplateColumns`, `ogeTileLayoutTileLabel`, `ogeTileLayoutToState`, `ogeTileLayoutUnchangedText`, `ogeTimelineDateTimeAttr`, `ogeTimelineHasOpposite`, `ogeTimelineItemSide`, `ogeTimelineTime`, `ogeToggleAllValues`, `ogeTransferAnnouncement`, `ogeTransferCountText`, `ogeTransferDropSide`, `ogeTransferKeyCommand`, `ogeTransferKeyShortcuts`, `ogeTransferMovableValues`, `ogeTransferMove`, `ogeTransferOpposite`, `ogeTransferSplit`, `ogeTreeCancelCut`, `ogeTreeCommitMove`, `ogeTreeCsv`, `ogeTreeCut`, `ogeTreeCutKey`, `ogeTreeDataSource`, `ogeTreeDragGroupOf`, `ogeTreeDragPeerAt`, `ogeTreeDragPeerCount`, `ogeTreeDragSourceOf`, `ogeTreeDropPosition`, `ogeTreeHasCut`, `ogeTreeHeaderValueGroups`, `ogeTreeHeaderValueText`, `ogeTreeLocateDrop`, `ogeTreePaste`, `ogeTreeRowKeyMove`, `ogeValueFits`, `ogeVisibleViewport`, `ogeWindowKeyCommand`, `ogeWindowLayer`, `ogeWindowStateStep`, `ogeWindowZIndex`, `operatorsFor`, `orderByVisibleIndex`, `orderToolbarDescriptors`, `otpAcceptsChar`, `otpBackspace`, `otpCellLabel`, `otpCells`, `otpDelete`, `otpInputMode`, `otpInsert`, `otpNavigationTarget`, `otpSeparatorAfter`, `otpTypedText`, `overlayStackSize`, `paginationHasNextPage`, `paginationInfoText`, `paginationIsCompact`, `paginationPageCount`, `parseColor`, `parseDateText`, `parseHeaderConditionExpr`, `parseLocaleNumber`, `parseMask`, `parseOgeCellText`, `parseOgeSignatureSvg`, `parseOgeTsv`, `parseSplitterSize`, `pickEditorType`, `planChunks`, `planOgeGridPaste`, `planTreeEditKey`, `planTreeTransferKey`, `planTreeViewKey`, `popoverPanelAria`, `popoverTriggerAria`, `popupArrowInset`, `popupAvailableHeight`, `prefersReducedMotion`, `prepareTouchDrag`, `pruneHiddenMenubarItems`, `pushOverlay`, `ratingItemStates`, `ratingKeyboardTarget`, `ratingPointerRatio`, `ratingPressValue`, `ratingRadioKeyTarget`, `ratingValueFromPointer`, `ratingValueText`, `ratioToValue`, `readClipboardFiles`, `readDataTransferFiles`, `readPath`, `readToolbarStyleMetrics`, `registerOgePdfFont`, `registerOgeRowDragParticipant`, `registerOgeTreeDragPeer`, `registerOgeWindow`, `removeOverlay`, `renderOgeSignature`, `reorderTabIds`, `resetGraphemeSegmenter`, `resetScrollLockForTests`, `resizeOgeWindowRect`, `resizeSplitAt`, `resizedColumnWidth`, `resolveAccordionIndex`, `resolveAdaptivePresentation`, `resolveAutoRepeat`, `resolveButtonSelectionState`, `resolveClickGuard`, `resolveDisabled`, `resolveDisplay`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveGridConfig`, `resolveHoldToConfirm`, `resolveHour12`, `resolveItem`, `resolveLookupItems`, `resolveMenubarCompact`, `resolveMenubarOverflow`, `resolveModalInitialFocus`, `resolveOgeAccordionConfig`, `resolveOgeAlertConfig`, `resolveOgeAppBarConfig`, `resolveOgeAttributeTarget`, `resolveOgeAvatarConfig`, `resolveOgeBadgeConfig`, `resolveOgeBreadcrumbConfig`, `resolveOgeButtonsConfig`, `resolveOgeCardConfig`, `resolveOgeCarouselConfig`, `resolveOgeChipConfig`, `resolveOgeConditionalFormat`, `resolveOgeDataViewConfig`, `resolveOgeDialog`, `resolveOgeDrawerConfig`, `resolveOgeFabConfig`, `resolveOgeFormsConfig`, `resolveOgeGridAdaptiveHiddenColumns`, `resolveOgeGridColumns`, `resolveOgeHeaderDropTarget`, `resolveOgeInputsConfig`, `resolveOgeListViewConfig`, `resolveOgeLoadIndicatorConfig`, `resolveOgeMenubarConfig`, `resolveOgePaginationConfig`, `resolveOgePdfFont`, `resolveOgeProgressBarConfig`, `resolveOgeRowDropIndex`, `resolveOgeSkeletonConfig`, `resolveOgeSplitterConfig`, `resolveOgeStepperConfig`, `resolveOgeTabsConfig`, `resolveOgeTileLayoutConfig`, `resolveOgeTimelineConfig`, `resolveOgeToolbarConfig`, `resolveOgeTreeViewConfig`, `resolveOgeWindowInitialFocus`, `resolveOgeWindowPlacement`, `resolveOverlayConfig`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolvePopoverInitialFocus`, `resolvePopupArrow`, `resolvePopupPosition`, `resolveRatingSemantics`, `resolveSelectedKeys`, `resolveSplitterIndex`, `resolveStepIndex`, `resolveTabIndex`, `resolveTreeChildPageSize`, `resolveTreeDropPosition`, `resolveTreeItemHeight`, `resolveTreeSelectByClick`, `resolveUploadConfig`, `resolveValue`, `rgbaToHsva`, `roundSplitterValue`, `rowClickSelectionIntent`, `rowCountText`, `rowFilterExpr`, `runAsyncGuard`, `runOgeDrawerItemClick`, `runOgeExpansionToggle`, `runTreeEditCommit`, `runTreeEditStart`, `sameAccordionIds`, `sameAccordionKeys`, `sameDay`, `sameMonth`, `sameSplitterSizes`, `sanitizeOgeTileLayoutState`, `sanitizeOtpText`, `sanitizeResourceUrl`, `sanitizeUrl`, `selectAllState`, `setOgePdfDefaultFont`, `shouldRenderAccordionPanel`, `sliderKeyboardTarget`, `sliderPercent`, `sliderTicks`, `sliderValueFromPointer`, `snapRatingValue`, `snapToStep`, `someRowsSelected`, `sortChangeText`, `splitSeparatorRange`, `splitTrackPx`, `splitterBoundInTrackUnit`, `splitterBounds`, `splitterCollapseSideInDirection`, `splitterDragDelta`, `splitterFlexiblePx`, `splitterGridTemplate`, `splitterGripPath`, `splitterGripTitle`, `splitterKeyAction`, `splitterKeyShortcuts`, `splitterPaneDescriptor`, `splitterPaneOf`, `splitterSeparatorLabel`, `splitterSeparatorRanges`, `splitterSizesWithRestored`, `splitterTrackCss`, `splitterTracks`, `splitterTracksToSizes`, `startOfDay`, `startSliderDrag`, `startSplitterDrag`, `stepBlockReason`, `stepEnabledIndex`, `stepItemDescriptor`, `stepState`, `stepperArrowKeys`, `stepperKeyTarget`, `stepsCompleteBefore`, `subscribeOgeWindows`, `supportsAriaExpanded`, `syncOgeBadgeHostAria`, `syncOgeEditorErrorAria`, `syncPopoverTriggerAria`, `tabItemDescriptor`, `timeDisplayOptions`, `toLocalDate`, `toggleAllHeaderValues`, `toggleChoiceValue`, `toggleGroupSelectedIndices`, `toggleHeaderGroup`, `toggleHeaderValue`, `toolbarCollapses`, `toolbarDataDescriptors`, `toolbarIconVisible`, `toolbarItemId`, `toolbarItemWidth`, `toolbarMenuItems`, `toolbarOverflowEvent`, `toolbarScrollState`, `toolbarTextVisible`, `tooltipDescribedByTarget`, `trackPointerGesture`, `trapTabKey`, `treeAccessor`, `treeAnchorIndex`, `treeAriaChecked`, `treeAriaSelected`, `treeCanDrop`, `treeCanEditNode`, `treeCheckStates`, `treeChildPageLimit`, `treeChildrenLoadNeeded`, `treeEdgeIndex`, `treeEffectiveExpanded`, `treeExpandableKeys`, `treeFilterExpandedKeys`, `treeHasChildrenHint`, `treeLoadMoreKey`, `treeLoadMoreText`, `treeLoadingAny`, `treeNodeDisabled`, `treeNodeIndent`, `treeParentIndex`, `treeRangeSelection`, `treeSearchAccessors`, `treeSelectAllState`, `treeSiblingExpansion`, `treeStepIndex`, `treeTypeAheadIndex`, `treeVisibleKeys`, `unlockBodyScroll`, `unregisterOgeWindow`, `validateFile`, `validateOgePromptValue`, `validateSelection`, `validationSummaryTitle`, `valueToRatio`, `viewLabel`, `warnOgePdfUnicode`, `watchAdaptiveViewport`, `weekNumber`, `weekdayNames`, `withTimePart`, `withToolbarIndexes`, `writePath`, `yearCells`
-- types: `CalendarCell`, `CheckState`, `DateParseKind`, `LookupItem`, `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionDescriptorCore`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionLoadState`, `OgeAccordionMessages`, `OgeAccordionNavIntent`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionTogglePosition`, `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetCoreOptions`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetKeyIntent`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeActionSheetSwipeOptions`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAdaptiveSheetCoreOptions`, `OgeAlertBaseOptions`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAnchoredPanelCoreOptions`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAsyncGuard`, `OgeAutoRepeatOptions`, `OgeAutoScrollOptions`, `OgeAutoScroller`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarContentInput`, `OgeAvatarContentType`, `OgeAvatarGroupWindow`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarLabelInput`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeTextInput`, `OgeBadgeValue`, `OgeBadgeVisibilityInput`, `OgeBooleanCellMessages`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbDescriptorCore`, `OgeBreadcrumbFitRequest`, `OgeBreadcrumbFitResult`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbMessages`, `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeButtonGroupSelectionChange`, `OgeButtonGroupSelectionMode`, `OgeButtonGuardTiming`, `OgeButtonHoldState`, `OgeButtonHoldTiming`, `OgeButtonIconPosition`, `OgeButtonPressOptions`, `OgeButtonRepeatTiming`, `OgeButtonSelectionRequest`, `OgeButtonSelectionState`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonToggleChange`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeCalendarCellClickEvent`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselAutoplayOptions`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselHoldReason`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerIntent`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSwipeOptions`, `OgeCellPreparedEvent`, `OgeCellTextColumn`, `OgeCellTextMessages`, `OgeCellTextParse`, `OgeCheckBoxGroupLayout`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipGridStop`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipKeyIntent`, `OgeChipListRole`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeClassValue`, `OgeClickGuardOptions`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeColorChannel`, `OgeColorFormat`, `OgeColorPalettePreset`, `OgeColorPalettePresetData`, `OgeColorScaleFormat`, `OgeColumnAlignment`, `OgeColumnFormat`, `OgeColumnLookup`, `OgeColumnMoveTarget`, `OgeColumnSeparatorKeyCommand`, `OgeColumnWidthBounds`, `OgeComboBoxColumnBase`, `OgeComparisonType`, `OgeConditionalCellFormat`, `OgeConditionalCondition`, `OgeConditionalFormat`, `OgeConditionalIcon`, `OgeConditionalRange`, `OgeConditionalRule`, `OgeConditionalStyle`, `OgeConditionalTone`, `OgeConfirmBaseOptions`, `OgeContextMenuKeyTarget`, `OgeContextMenuOpenRequest`, `OgeContextMenuOpenResult`, `OgeContextMenuOpeningEvent`, `OgeContextMenuPoint`, `OgeContextMenuSource`, `OgeContrastLevels`, `OgeDataBarFormat`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewItemClickEvent`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewKeyInput`, `OgeDataViewKeyIntent`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewPagerEntry`, `OgeDataViewProcessOptions`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeDateRangeBoxType`, `OgeDateRangePreset`, `OgeDateRangePresetId`, `OgeDateRangePresetOptions`, `OgeDateRangeWeekPresetOptions`, `OgeDateSegment`, `OgeDateSegmentKey`, `OgeDateSegmentKind`, `OgeDateSegmentOptions`, `OgeDateSegmentPlaceholders`, `OgeDateSegmentState`, `OgeDeferredBaseOptions`, `OgeDialogBaseOptions`, `OgeDialogCoreOptions`, `OgeDialogIcon`, `OgeDialogInitialFocus`, `OgeDialogKeyInput`, `OgeDialogKind`, `OgeDialogOutcome`, `OgeDialogSeverity`, `OgeDirection`, `OgeDirectionInput`, `OgeDragGhost`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerItem`, `OgeDrawerItemClickEvent`, `OgeDrawerItemView`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeDrawerOpeningEvent`, `OgeDrawerPhysicalEdge`, `OgeDrawerPosition`, `OgeDrawerSelectionChangedEvent`, `OgeDrawerSwipeOptions`, `OgeDropDownCloseReason`, `OgeDropDownClosingEvent`, `OgeDropDownOpeningEvent`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingCell`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeExpansionToggleRequest`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportColumnSource`, `OgeExportData`, `OgeExportGroupInfo`, `OgeExportGroupLevel`, `OgeExportHeaderCell`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportStructureOptions`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFabClickEvent`, `OgeFabConfig`, `OgeFabConfigInput`, `OgeFabMessages`, `OgeFabPosition`, `OgeFabPositionMode`, `OgeFabSeverity`, `OgeFabSize`, `OgeFieldError`, `OgeFileUploaderCoreOptions`, `OgeFileUploaderEventName`, `OgeFileUploaderEvents`, `OgeFileUploaderProps`, `OgeFillDirection`, `OgeFillPlan`, `OgeFilterBuilderField`, `OgeFilterDescribeMessages`, `OgeFilterRowColumn`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeFormColCount`, `OgeFormCondition`, `OgeFormDataType`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormGroupData`, `OgeFormItemDataBase`, `OgeFormLabelLocation`, `OgeFormScreenSize`, `OgeFormValidatedEvent`, `OgeFormatFileSizeOptions`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeGridAdaptiveHidingInput`, `OgeGridAnnounceSink`, `OgeGridAnnouncementSnapshot`, `OgeGridAnnouncementsDeps`, `OgeGridApplyValuesOptions`, `OgeGridBandCell`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridCellValueWrite`, `OgeGridCellWrite`, `OgeGridColumnDef`, `OgeGridColumnHidingMode`, `OgeGridColumnInfo`, `OgeGridColumnLayoutDeps`, `OgeGridColumnRange`, `OgeGridColumnResolveInput`, `OgeGridColumnSpec`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridDataCoreDeps`, `OgeGridDeferredChildrenDeps`, `OgeGridEditBatch`, `OgeGridEditRecord`, `OgeGridEditShortcut`, `OgeGridEditSource`, `OgeGridEditingCoreDeps`, `OgeGridEditorBridge`, `OgeGridEditorState`, `OgeGridExportFieldInfo`, `OgeGridExportMessages`, `OgeGridExportStructureInput`, `OgeGridFilterStateSnapshot`, `OgeGridFocusedCell`, `OgeGridHeaderDropTarget`, `OgeGridHeaderKeyCommand`, `OgeGridInvalidEditor`, `OgeGridKeyboardNavDeps`, `OgeGridKeyboardNavTreeHooks`, `OgeGridLayoutColumn`, `OgeGridMessages`, `OgeGridPasteContext`, `OgeGridPastePlan`, `OgeGridRangeBounds`, `OgeGridRangeEdges`, `OgeGridRangeLattice`, `OgeGridRangeSelectionDeps`, `OgeGridResolvedColumn`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridRowVirtualizerDeps`, `OgeGridRowWindowAdapter`, `OgeGridSelectAllState`, `OgeGridSelectionIntent`, `OgeGridSelectionMode`, `OgeGridSelectionModifiers`, `OgeGridSpanColumn`, `OgeGridSpanExtent`, `OgeGridSpanInput`, `OgeGridSpanLayout`, `OgeGridStatePersistenceOptions`, `OgeGridToggleKind`, `OgeGroupChipKeyCommand`, `OgeGroupIntervalMessages`, `OgeGroupingOptions`, `OgeGuardHandlers`, `OgeHeaderCondition`, `OgeHeaderConditionFilter`, `OgeHeaderDateNode`, `OgeHeaderFilterMessages`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderFilterSelection`, `OgeHeaderValueGroup`, `OgeHeaderValueTextOptions`, `OgeHoldToConfirmOptions`, `OgeHsva`, `OgeIconSetFormat`, `OgeInputCommitOptions`, `OgeInputCounterMode`, `OgeInputErrorDisplay`, `OgeInputLabelMode`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeKeyInput`, `OgeListBoxClickInput`, `OgeListBoxCoreDeps`, `OgeListBoxKeyInput`, `OgeListBoxKeyResult`, `OgeListBoxSection`, `OgeListBoxSelectionMode`, `OgeListDataSource`, `OgeListDataStatus`, `OgeListPageLoadedEvent`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewClickInput`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewExpr`, `OgeListViewGroupRow`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemRow`, `OgeListViewKey`, `OgeListViewKeyInput`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewNavResult`, `OgeListViewNavState`, `OgeListViewPageLoadMode`, `OgeListViewRow`, `OgeListViewRows`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSegment`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeListViewVirtualSettings`, `OgeListViewWindow`, `OgeListVirtualizerDeps`, `OgeLiveAnnounceOptions`, `OgeLiveAnnouncerOptions`, `OgeLivePoliteness`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadPanelClock`, `OgeLoadPanelCoreHost`, `OgeLoadPanelPosition`, `OgeLoadPanelTargetElement`, `OgeLoadPanelTimings`, `OgeMaskCompletedEvent`, `OgeMaskEdit`, `OgeMaskOptions`, `OgeMaskRule`, `OgeMaskRules`, `OgeMaskShowMode`, `OgeMaskSlot`, `OgeMentionCoreDeps`, `OgeMentionInsertion`, `OgeMentionItemContext`, `OgeMentionItemsSource`, `OgeMentionKeyCommand`, `OgeMentionQuery`, `OgeMentionQueryOptions`, `OgeMentionSearchChangedEvent`, `OgeMentionSelectedEvent`, `OgeMentionToken`, `OgeMentionTrigger`, `OgeMenuActivationTrigger`, `OgeMenuCloseReason`, `OgeMenuItem`, `OgeMenuItemRole`, `OgeMenuItemSeverity`, `OgeMenuItemType`, `OgeMenuSegment`, `OgeMenubarBarKeys`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarDescriptorCore`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemOverflow`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarOverflowMode`, `OgeMenubarOverflowRequest`, `OgeMenubarPanelSource`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalDragRequest`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalResizeRequest`, `OgeModalRole`, `OgeMovableColumn`, `OgeNumberFormatter`, `OgeNumberTypingOptions`, `OgeNumberTypingResult`, `OgeOtpEdit`, `OgeOtpInputCase`, `OgeOtpInputType`, `OgeOtpOptions`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgeOverlayTimings`, `OgePageChangedEvent`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePagerInfoContext`, `OgePagerInfoMessages`, `OgePaginationCompactRequest`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgePagingOptions`, `OgePanelBarExpandMode`, `OgePanelBarExpansionChange`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemLike`, `OgePanelBarItemToggleEvent`, `OgePanelBarKeyAction`, `OgePanelBarKeyIntent`, `OgePanelBarNode`, `OgePanelBarSelectionChangedEvent`, `OgePdfFont`, `OgePdfFontData`, `OgePdfFontTarget`, `OgePendingChildRequest`, `OgePinOverride`, `OgePointerDragDropOptions`, `OgePointerGestureHandle`, `OgePointerGestureInput`, `OgePointerGestureOptions`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverCoreOptions`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverPanelAria`, `OgePopoverShowOn`, `OgePopoverTriggerAria`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupAvailableHeightRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeProgressRingGeometry`, `OgePromptBaseOptions`, `OgePromptInputType`, `OgePromptValidator`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRangeThumb`, `OgeRangeTsvOptions`, `OgeRatingIcon`, `OgeRatingItemState`, `OgeRatingKeyOptions`, `OgeRatingSelection`, `OgeRatingSemantics`, `OgeReactiveCell`, `OgeReactivityAdapter`, `OgeRect`, `OgeRemoteListCoreDeps`, `OgeResolvedChunkOptions`, `OgeResolvedDialog`, `OgeResolvedFormItem`, `OgeResolvedPopupPosition`, `OgeResolvedRetryOptions`, `OgeResolvedToastOptions`, `OgeRgba`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragParticipant`, `OgeRowDragSource`, `OgeRowDragStartEvent`, `OgeRowDragTarget`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSanitizeUrlOptions`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectAllState`, `OgeSelectDisabledExpr`, `OgeSelectDisplayExpr`, `OgeSelectGroupExpr`, `OgeSelectImageExpr`, `OgeSelectItemsFn`, `OgeSelectListCoreDeps`, `OgeSelectListRow`, `OgeSelectSearchExpr`, `OgeSelectSearchMode`, `OgeSelectValueExpr`, `OgeSelectionChangedEvent`, `OgeSignatureCanvasContext`, `OgeSignatureData`, `OgeSignatureFormat`, `OgeSignatureMode`, `OgeSignaturePen`, `OgeSignaturePoint`, `OgeSignatureRenderOptions`, `OgeSignatureSegment`, `OgeSignatureSize`, `OgeSignatureStroke`, `OgeSignatureStrokeEvent`, `OgeSignatureStrokeGeometry`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSliderAxis`, `OgeSliderDragHandlers`, `OgeSliderScale`, `OgeSliderTrackRect`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeSpeedDialDirection`, `OgeSpeedDialItem`, `OgeSpeedDialItemClickEvent`, `OgeSpeedDialKeyIntent`, `OgeSpeedDialLabelMode`, `OgeSpeedDialOpenMode`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterDataSourceLike`, `OgeSplitterDescriptorCore`, `OgeSplitterDragHandlers`, `OgeSplitterGripSide`, `OgeSplitterKeyAction`, `OgeSplitterKeyInput`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeSplitterView`, `OgeStateStorage`, `OgeStepBlockReason`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepDescriptorCore`, `OgeStepGuard`, `OgeStepReachRequest`, `OgeStepState`, `OgeStepperArrowKeys`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperKeyRequest`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabDescriptorCore`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutDirection`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutKeyInput`, `OgeTileLayoutKeyIntent`, `OgeTileLayoutMessages`, `OgeTileLayoutRect`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizeInput`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutResolveOptions`, `OgeTileLayoutResolvedTile`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTileState`, `OgeTimeColumnOption`, `OgeTimePart`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeTimelineTime`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastBaseOptions`, `OgeToastBasePatch`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastCoreOptions`, `OgeToastDefaults`, `OgeToastEntry`, `OgeToastPosition`, `OgeToastProgressStyle`, `OgeToastPromiseBaseOptions`, `OgeToastRegion`, `OgeToastSeverity`, `OgeToggleGroupChange`, `OgeToggleGroupSelectionMode`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDataSourceLike`, `OgeToolbarDescriptorCore`, `OgeToolbarDisplayDefaults`, `OgeToolbarDisplayMode`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitRequest`, `OgeToolbarFitResult`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemOverride`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContextCore`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarOverflowPolicy`, `OgeToolbarScrollState`, `OgeToolbarSize`, `OgeToolbarStyleMetrics`, `OgeToolbarStylingMode`, `OgeTooltipCoreOptions`, `OgeTooltipShowMode`, `OgeTransferListKeyInput`, `OgeTransferListMoveCause`, `OgeTransferListMoveCommand`, `OgeTransferListSide`, `OgeTransferListSplit`, `OgeTreeAllowEditing`, `OgeTreeBooleanMessages`, `OgeTreeCheckBoxesMode`, `OgeTreeChildPageEvent`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDragOptions`, `OgeTreeDragPeer`, `OgeTreeDragRowInfo`, `OgeTreeDragSource`, `OgeTreeDragTarget`, `OgeTreeDropPosition`, `OgeTreeEditCommitInput`, `OgeTreeEditCommitResult`, `OgeTreeEditKeyAction`, `OgeTreeEditStartingEvent`, `OgeTreeEditValidator`, `OgeTreeEditedEvent`, `OgeTreeEditingEvent`, `OgeTreeExpandEvent`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExportBuildOptions`, `OgeTreeExportData`, `OgeTreeExportOptions`, `OgeTreeExportSourceColumn`, `OgeTreeExpr`, `OgeTreeIndexInput`, `OgeTreeInitNewRowEvent`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeKeyAction`, `OgeTreeKeyInput`, `OgeTreeKeyPlan`, `OgeTreeListCoreDeps`, `OgeTreeListRemoteOperations`, `OgeTreeListStateSlices`, `OgeTreeListSummary`, `OgeTreeLoadChildren`, `OgeTreeLoadMode`, `OgeTreeLoadMoreInfo`, `OgeTreeLoadState`, `OgeTreeMoveSource`, `OgeTreeNodesInput`, `OgeTreeOrphanPolicy`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeRowKeyMove`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`, `OgeTreeSearchColumn`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeSummaryItem`, `OgeTreeToggleNotifier`, `OgeTreeTransferKeyAction`, `OgeTreeTransferredEvent`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeViewModel`, `OgeTreeViewModelInput`, `OgeTreeViewNode`, `OgeTreeViewResolvedMessages`, `OgeTreeVirtualScrollOptions`, `OgeTypeAheadBuffer`, `OgeUploadAbortReason`, `OgeUploadAbortedEvent`, `OgeUploadActionsLayout`, `OgeUploadAdapter`, `OgeUploadAllUploadedEvent`, `OgeUploadAnnouncementMessages`, `OgeUploadButtonMessages`, `OgeUploadCallbacks`, `OgeUploadCancelableEvent`, `OgeUploadCandidate`, `OgeUploadChunk`, `OgeUploadChunkFailedEvent`, `OgeUploadChunkMetadata`, `OgeUploadChunkOptions`, `OgeUploadChunkUploadedEvent`, `OgeUploadChunkUploadingEvent`, `OgeUploadClearedEvent`, `OgeUploadClearingEvent`, `OgeUploadConfig`, `OgeUploadConfigInput`, `OgeUploadDisplayMode`, `OgeUploadDropEffect`, `OgeUploadDropZoneEvent`, `OgeUploadDropZoneMessages`, `OgeUploadErrorKind`, `OgeUploadFailedEvent`, `OgeUploadFieldError`, `OgeUploadFile`, `OgeUploadFileDownloadingEvent`, `OgeUploadFileError`, `OgeUploadFileListOptions`, `OgeUploadFileRejectedEvent`, `OgeUploadFileRemovedEvent`, `OgeUploadFileRemovingEvent`, `OgeUploadFileStatus`, `OgeUploadFilesDroppedEvent`, `OgeUploadFilesSelectedEvent`, `OgeUploadFilesSelectingEvent`, `OgeUploadHandle`, `OgeUploadListType`, `OgeUploadMessages`, `OgeUploadMessagesInput`, `OgeUploadMode`, `OgeUploadPart`, `OgeUploadPausedEvent`, `OgeUploadPausingEvent`, `OgeUploadPreloadedFile`, `OgeUploadPreviewHiddenEvent`, `OgeUploadPreviewShowingEvent`, `OgeUploadProgressEvent`, `OgeUploadQueueEvent`, `OgeUploadQueueOptions`, `OgeUploadRequest`, `OgeUploadRestrictions`, `OgeUploadResumedEvent`, `OgeUploadResumingEvent`, `OgeUploadRetryOptions`, `OgeUploadSelectionSource`, `OgeUploadStartedEvent`, `OgeUploadStatusMessages`, `OgeUploadTask`, `OgeUploadThumbnailFailedEvent`, `OgeUploadTimers`, `OgeUploadUploadedEvent`, `OgeUploadUploadingEvent`, `OgeUploadValidationMessages`, `OgeUploadValidationResult`, `OgeValidationContext`, `OgeValidationRule`, `OgeVirtualScrollOptions`, `OgeWindowAutoFocus`, `OgeWindowBox`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowCoreOptions`, `OgeWindowCoreProps`, `OgeWindowKeyCommand`, `OgeWindowKeyInput`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPointerInput`, `OgeWindowPosition`, `OgeWindowRect`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowSizeLimits`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`, `RowKey`, `SearchHighlightSegment`, `TreeFilterMode`, `TreeIndex`, `WeekNumberRule`
+- values: `DragDepthCounter`, `OGE_ACTION_SHEET_FOCUS_ATTR`, `OGE_ALERT_DISMISS_PATH`, `OGE_ALERT_ICON_PATHS`, `OGE_AUTO_FIT_SLACK`, `OGE_AUTO_SCROLL_EDGE`, `OGE_AUTO_SCROLL_MAX_SPEED`, `OGE_AVATAR_ICON_PATH`, `OGE_BADGE_DEFAULT_MAX`, `OGE_BREADCRUMB_ELLIPSIS_FALLBACK`, `OGE_CAROUSEL_DEFAULT_INTERVAL`, `OGE_CAROUSEL_DRAGGING_CLASS`, `OGE_CAROUSEL_MIN_INTERVAL`, `OGE_CAROUSEL_SWIPE_DISTANCE`, `OGE_CAROUSEL_SWIPE_RATIO`, `OGE_CHIP_REMOVE_SHORTCUTS`, `OGE_COLOR_PALETTE_PRESETS`, `OGE_COLUMN_RESIZE_FINE_STEP`, `OGE_COLUMN_RESIZE_FLOOR`, `OGE_COLUMN_RESIZE_STEP`, `OGE_DATA_VIEW_DEFAULT_MIN_ITEM_WIDTH`, `OGE_DATA_VIEW_PAGER_BUTTONS`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_ADAPTIVE_CONFIG`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_EDITOR_CONFIG`, `OGE_DEFAULT_EDITOR_MESSAGES`, `OGE_DEFAULT_EDITOR_TOOLBAR`, `OGE_DEFAULT_FAB_CONFIG`, `OGE_DEFAULT_FAB_MESSAGES`, `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_GRID_MESSAGES`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_MASK_RULES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_DEFAULT_OVERLAY_TIMINGS`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOAST_DEFAULTS`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DEFAULT_UPLOAD_CONFIG`, `OGE_DEFAULT_UPLOAD_MESSAGES`, `OGE_DIALOG_DEFAULT_WIDTH`, `OGE_DIALOG_ICONS`, `OGE_DIALOG_TRIANGLE_PATH`, `OGE_DRAWER_SWIPE_EDGE`, `OGE_DRAWER_SWIPE_VELOCITY`, `OGE_EDITOR_BLOCK_ATTR`, `OGE_EDITOR_MAX_INDENT`, `OGE_EDITOR_PLACEHOLDER_ATTR`, `OGE_EDITOR_TOOLS`, `OGE_EDITOR_TRUSTED_TYPES_POLICY`, `OGE_FAB_PLUS_PATH`, `OGE_GESTURE_THRESHOLD`, `OGE_GRID_HOST_SELECTOR`, `OGE_GRID_WINDOW_BLOCK_SIZE`, `OGE_LIST_VIEW_FALLBACK_HEIGHT`, `OGE_LIST_VIEW_GROUP_HEIGHT`, `OGE_LIST_VIEW_ITEM_HEIGHT`, `OGE_LIST_VIEW_LOAD_THRESHOLD`, `OGE_LIST_VIEW_OVERSCAN`, `OGE_LIVE_ANNOUNCER_ATTR`, `OGE_LIVE_ANNOUNCER_CLASS`, `OGE_LOAD_PANEL_TARGET_CLASS`, `OGE_LONG_PRESS_DELAY`, `OGE_MENUBAR_HOVER_DELAY`, `OGE_MENUBAR_MORE_KEY`, `OGE_MODAL_MIN_RESIZE`, `OGE_MODAL_PLACEMENTS`, `OGE_NO_SPANS`, `OGE_PAGE_ELLIPSIS`, `OGE_PAGINATION_DEFAULT_COMPACT_BELOW`, `OGE_PAGINATION_DEFAULT_MAX_BUTTONS`, `OGE_POPUP_ARROW_SIZE`, `OGE_POPUP_AVAILABLE_HEIGHT_VAR`, `OGE_PROGRESS_RING_DEFAULT_SIZE`, `OGE_PROGRESS_RING_DEFAULT_THICKNESS`, `OGE_PROGRESS_RING_INDETERMINATE_RATIO`, `OGE_RATING_ICON_PATHS`, `OGE_RATING_MIN_PRECISION`, `OGE_SELECT_OPTION_HEIGHT`, `OGE_SHEET_FOCUS_ATTR`, `OGE_SHEET_SWIPE_DISMISS`, `OGE_SLIDER_MAX_TICKS`, `OGE_SPLITTER_FULL_TRAVEL`, `OGE_SPLITTER_GRIP_SIDES`, `OGE_TAB_DRAG_THRESHOLD`, `OGE_TILE_LAYOUT_DEFAULTS`, `OGE_TIMELINE_DEFAULT_DATE_FORMAT`, `OGE_TOAST_ANNOUNCE_DELAY_MS`, `OGE_TOAST_EXIT_MS`, `OGE_TOAST_POSITIONS`, `OGE_TOOLBAR_STOP_SELECTOR`, `OGE_TOOLTIP_PANEL_OPTIONS`, `OGE_TREE_DEFAULT_ITEM_HEIGHT`, `OGE_TREE_DRAG_HOVER_EXPAND_MS`, `OGE_TREE_DRAG_THRESHOLD`, `OGE_TREE_LOAD_MORE_PREFIX`, `OGE_TREE_TRANSFER_SHORTCUTS`, `OGE_WINDOW_GUTTER`, `OGE_WINDOW_KEY_SHORTCUTS`, `OGE_WINDOW_KEY_STEP`, `OGE_WINDOW_MIN_SIZE`, `OGE_WINDOW_RESIZE_EDGES`, `OGE_WINDOW_TITLE_REACH`, `ObjectUrlRegistry`, `OgeActionSheetCore`, `OgeAdaptiveSheetCore`, `OgeAnchoredPanelCore`, `OgeButtonPress`, `OgeCarouselAutoplay`, `OgeContextMenuEcho`, `OgeDateSegmentCore`, `OgeDialogCore`, `OgeEditorCore`, `OgeEditorHistory`, `OgeFileUploaderCore`, `OgeGridAnnouncements`, `OgeGridColumnLayoutCore`, `OgeGridColumnsState`, `OgeGridDataCore`, `OgeGridDeferredChildrenCore`, `OgeGridEditHistory`, `OgeGridEditingCore`, `OgeGridEditingState`, `OgeGridExpansionState`, `OgeGridFilterState`, `OgeGridGroupingState`, `OgeGridKeyboardNavCore`, `OgeGridPagingState`, `OgeGridRangeSelectionCore`, `OgeGridRowVirtualizerCore`, `OgeGridSelectionState`, `OgeGridSortState`, `OgeGridStateCore`, `OgeGridStatePersistenceCore`, `OgeInputCommit`, `OgeListBoxCore`, `OgeListVirtualizerCore`, `OgeLiveAnnouncerCore`, `OgeLoadPanelCore`, `OgeMaskCore`, `OgeMentionCore`, `OgeMenuTypeAhead`, `OgePopoverCore`, `OgePreparedTracker`, `OgeRemoteListCore`, `OgeSelectListCore`, `OgeSignatureCore`, `OgeToastCore`, `OgeToastRef`, `OgeTooltipCore`, `OgeTreeListCore`, `OgeWindowCore`, `UploadQueue`, `accordionAriaDisabled`, `accordionItemDescriptor`, `accordionNavIntent`, `accordionPageDirection`, `accordionTypeAheadStart`, `adaptiveHiddenColumnIds`, `adaptiveListViewportHeight`, `adaptiveMediaQuery`, `addDays`, `addMonths`, `addYears`, `allHeaderValuesSelected`, `allRowsSelected`, `ancestorsOf`, `applyButtonGroupSelection`, `applyButtonToggle`, `applyColorChannelText`, `applyMenuItemCheck`, `applySelectAll`, `applyTabOrder`, `applyToggleGroupPress`, `applyToolbarOverride`, `asyncValidationRules`, `beginOgeActionSheetSwipe`, `beginOgeCarouselSwipe`, `beginOgeDrawerSwipe`, `beginOgeTreeDrag`, `beginPointerDragDrop`, `beginPointerGesture`, `booleanCellLabel`, `breadcrumbDataDescriptors`, `breadcrumbMenuItems`, `bringOgeWindowToFront`, `buildOgeDrawerItems`, `buildOgeEditorToolbar`, `buildOgeExportItems`, `buildOgeRangeTsv`, `buildOgeSignatureSvg`, `buildRowFilterExpr`, `buildTreeViewIndex`, `buildTreeViewModel`, `buildTreeViewNodes`, `builderToExpr`, `buttonGroupNavIndex`, `buttonGroupRole`, `canCollapseAccordionPanel`, `canResizeSplitterAt`, `canSelectTab`, `captionize`, `choiceIncludes`, `chunkedLoaded`, `clampColumnWidth`, `clampModalDrag`, `clampModalResize`, `clampNumber`, `clampOgeWindowPosition`, `clampOtpFocus`, `clampPaginationIndex`, `clampValue`, `colorPaletteNavIndex`, `colorsEqual`, `compositeColorOver`, `computeOgeGridSpans`, `constrainRangeValue`, `contrastForeground`, `contrastLevels`, `contrastRatio`, `createAutoScroller`, `createDragGhost`, `createNumberFormatter`, `createNumberTypingGrouper`, `createTreeSearchPredicate`, `createTypeAheadBuffer`, `createXhrUploadAdapter`, `dataTransferHasFiles`, `dateFilterExpr`, `datePartOrder`, `dateRangeFilterExpr`, `dateRangePresetActive`, `dateRangePresetLabel`, `dateSegmentPlaceholders`, `dateSegmentTemplate`, `dayPeriodColumnOptions`, `dayPeriodLabels`, `decadeCells`, `defaultAlignmentFor`, `defaultOperatorFor`, `deferredToggleExpr`, `describeExpr`, `drawOgeSignatureStroke`, `dropEffectFor`, `edgeEnabledIndex`, `effectiveFilterOperator`, `emptyHeaderConditionFilter`, `emptyValueForDataType`, `evaluateOgeFormCondition`, `evaluateOgeValidationRules`, `exceedsTreeDragThreshold`, `expandedIdsAfterCollapse`, `expandedIdsAfterExpand`, `exprToBuilder`, `fileExtension`, `fillTreeViewMessages`, `filterHeaderValues`, `filterOperatorSymbol`, `filterRowOperatorChoices`, `findMenubarItemPath`, `findOgeRowDragParticipant`, `fitBreadcrumbDescriptors`, `fitToolbarDescriptors`, `fitToolbarItems`, `flattenHeaderDateTree`, `flattenOgePanelBarItems`, `formColumnsCount`, `formColumnsCss`, `formatCellValue`, `formatColor`, `formatFileSize`, `formatNumberWhileTyping`, `formatPaginationMessage`, `formatPattern`, `formatUploadMessage`, `getOgeLiveAnnouncer`, `getOgePdfDefaultFont`, `getTabbableElements`, `graphemeCount`, `groupHeaderValuesByDate`, `groupHeaderValuesByYear`, `headerConditionExpr`, `headerConditionNeedsValue`, `headerConditionOperators`, `headerGroupState`, `headerValueText`, `headerYearLabel`, `hourColumnOptions`, `hsvaToRgba`, `humanize`, `inertModalBackground`, `inferDataType`, `isAccordionTypeAheadKey`, `isBareEditor`, `isDataSource`, `isDayDisabled`, `isEmptyFormValue`, `isFormItemVisible`, `isHeaderValueSelected`, `isMenuHeader`, `isMenuItemNavigable`, `isMenubarCompact`, `isModalFocusOrphaned`, `isNearScrollEnd`, `isOgeContextMenuKey`, `isOgeDateType`, `isOgeDragExcludedTarget`, `isOgeFrontWindow`, `isOgePanelBarSingle`, `isOgePdfWinAnsi`, `isOgeRangeExtendKey`, `isPreviewable`, `isSplitterPaneCollapsed`, `isSplitterPaneCollapsible`, `isStepReachable`, `isTimePartSelected`, `isToolbarStopDisabled`, `isToolbarTextEntry`, `isTopOverlay`, `isTreeEditKey`, `keyEqualsExpr`, `loadOptionsEqual`, `loadSplitterPanes`, `loadToolbarItems`, `lockBodyScroll`, `lookupTextOf`, `mapLookupItems`, `matchAccordionTitle`, `matchByPrefix`, `matchesAccept`, `matchesAdaptiveViewport`, `menuEdgeIndex`, `menuEnabledIndexes`, `menuItemAriaChecked`, `menuItemIndicator`, `menuItemKeepsOpen`, `menuItemNextChecked`, `menuItemRole`, `menuItemSegments`, `menuMoveIndex`, `menuRetainedActiveIndex`, `menubarBarEntries`, `menubarBarKeys`, `menubarClosedReason`, `menubarDataDescriptors`, `menubarEntryHidden`, `menubarEventBase`, `menubarItemDomId`, `menubarItemPath`, `menubarMoreActive`, `menubarOverflowItems`, `menubarPanelItems`, `menubarPanelLabel`, `menubarPanelPlacement`, `menubarPopupCloseReason`, `menubarStopDisabled`, `mergeOgeEditorMessages`, `mergeOgeExportStyles`, `mergeUploadMessages`, `messageForFieldError`, `minuteColumnOptions`, `modalCssSize`, `modalPlacementClass`, `monthCells`, `monthMatrix`, `motionScrollBehavior`, `navigate`, `nextTabbableAfter`, `nextTreeChildPage`, `nextTreeExpansion`, `nextTreeSelection`, `normalizeOtpLength`, `normalizeOtpValue`, `normalizeRatingMax`, `normalizeRatingPrecision`, `normalizeSplitTracks`, `nowForType`, `numberWheelDirection`, `observeDirection`, `offsetByStep`, `ogeAcquireLoadPanelTarget`, `ogeActionSheetDividerIndex`, `ogeActionSheetKeyIntent`, `ogeActionSheetOrder`, `ogeActionSheetSwipeDismisses`, `ogeActionSheetTabStop`, `ogeAddDescribedBy`, `ogeAdjacentDataRow`, `ogeAlertFocusAfterClose`, `ogeAlertRole`, `ogeAlertSeverityLabel`, `ogeAllowDropDownClose`, `ogeAllowDropDownOpen`, `ogeAppBarAcceptsLabel`, `ogeAppBarRole`, `ogeAvatarGroupWindow`, `ogeAvatarInitials`, `ogeAvatarLabel`, `ogeAvatarOverflowLabel`, `ogeAvatarOverflowText`, `ogeAvatarStatusLabel`, `ogeBadgeAriaTarget`, `ogeBadgeDescription`, `ogeBadgeText`, `ogeBadgeVisible`, `ogeCanSelectMore`, `ogeCaretRect`, `ogeCarouselClampIndex`, `ogeCarouselIndexFromOffset`, `ogeCarouselLive`, `ogeCarouselMaxIndex`, `ogeCarouselMeasureStep`, `ogeCarouselPerView`, `ogeCarouselPickerKey`, `ogeCarouselPickerLabel`, `ogeCarouselPickerMode`, `ogeCarouselPickerTarget`, `ogeCarouselPositions`, `ogeCarouselScrollOffset`, `ogeCarouselScrollTo`, `ogeCarouselSlideLabel`, `ogeCarouselSlideVisible`, `ogeCarouselStep`, `ogeCarouselSwipeTarget`, `ogeChipFocusAfterRemove`, `ogeChipGridStops`, `ogeChipIsRemovable`, `ogeChipKeyIntent`, `ogeChipListRole`, `ogeChipNavIndex`, `ogeChipOverflow`, `ogeChipRemoveLabel`, `ogeChipTabStop`, `ogeChipToggleSelection`, `ogeChooserMoveDirection`, `ogeClassList`, `ogeColumnMoveTarget`, `ogeColumnSeparatorKeyCommand`, `ogeColumnSummaryText`, `ogeColumnValueRange`, `ogeColumnWidthBounds`, `ogeComboCellText`, `ogeComboCellValue`, `ogeComboColumnCaption`, `ogeComboColumnTarget`, `ogeComboFixedWidth`, `ogeComboGridTemplate`, `ogeComboSearchStrings`, `ogeCompileColumnFormat`, `ogeConfirmResult`, `ogeContextMenuApiTarget`, `ogeContextMenuKeyTarget`, `ogeContextMenuPoint`, `ogeContextMenuTarget`, `ogeDataViewClampPage`, `ogeDataViewCollator`, `ogeDataViewCompare`, `ogeDataViewDisplayText`, `ogeDataViewField`, `ogeDataViewFormat`, `ogeDataViewInfoText`, `ogeDataViewIsEllipsis`, `ogeDataViewKey`, `ogeDataViewKeyIntent`, `ogeDataViewMatches`, `ogeDataViewMeasureColumns`, `ogeDataViewPageCount`, `ogeDataViewPageItems`, `ogeDataViewPagerWindow`, `ogeDataViewProcess`, `ogeDataViewRole`, `ogeDataViewSearchText`, `ogeDataViewStyleVars`, `ogeDataViewTabStop`, `ogeDataViewToggleSelection`, `ogeDateRangePresets`, `ogeDialogAutoFocusSelector`, `ogeDialogEnterIsPrimary`, `ogeDialogOptions`, `ogeDrawerItemKey`, `ogeDrawerItemNavIndex`, `ogeDrawerPhysicalEdge`, `ogeDrawerRailTooltipPlacement`, `ogeDrawerSwipeAlong`, `ogeDrawerSwipeDistance`, `ogeDrawerSwipeOutcome`, `ogeDrawerSwipeStarts`, `ogeEdgeScrollVelocity`, `ogeEditorActiveState`, `ogeEditorApply`, `ogeEditorAriaShortcut`, `ogeEditorBlockFormatCommand`, `ogeEditorBlockFormatLabel`, `ogeEditorBlockFormatMenu`, `ogeEditorBlockLength`, `ogeEditorBlockText`, `ogeEditorCaret`, `ogeEditorCharacterCount`, `ogeEditorClearFormatting`, `ogeEditorCommandFromName`, `ogeEditorCounterText`, `ogeEditorCssLength`, `ogeEditorDeleteBackward`, `ogeEditorDeleteForward`, `ogeEditorDeleteRange`, `ogeEditorDeleteSelection`, `ogeEditorDescribedBy`, `ogeEditorDocIsEmpty`, `ogeEditorDocText`, `ogeEditorEmptyDoc`, `ogeEditorErrorText`, `ogeEditorEscape`, `ogeEditorFromHtml`, `ogeEditorFromText`, `ogeEditorHtmlLength`, `ogeEditorImagePrompts`, `ogeEditorIndent`, `ogeEditorInlineLength`, `ogeEditorInsertBreak`, `ogeEditorInsertFragment`, `ogeEditorInsertImage`, `ogeEditorInsertPlainText`, `ogeEditorInsertRule`, `ogeEditorInsertText`, `ogeEditorIsMac`, `ogeEditorKeyAction`, `ogeEditorLinkCommand`, `ogeEditorLinkPrompt`, `ogeEditorMarkdownOnEnter`, `ogeEditorMarkdownOnSpace`, `ogeEditorMarksEqual`, `ogeEditorNoMarks`, `ogeEditorNormalizeInlines`, `ogeEditorNormalizeLinkInput`, `ogeEditorOutdent`, `ogeEditorParagraph`, `ogeEditorPointFromDom`, `ogeEditorPointToDom`, `ogeEditorReadDom`, `ogeEditorReadSelection`, `ogeEditorRenderGroups`, `ogeEditorSafeColor`, `ogeEditorSafeHref`, `ogeEditorSafeImageSrc`, `ogeEditorSelectAll`, `ogeEditorSelectedFragment`, `ogeEditorSelectionIsCollapsed`, `ogeEditorSelectionRange`, `ogeEditorSerializeNodes`, `ogeEditorSetAlign`, `ogeEditorSetBlockFormat`, `ogeEditorSetColor`, `ogeEditorSetDirection`, `ogeEditorSetLink`, `ogeEditorShortcutLabel`, `ogeEditorSplitBlock`, `ogeEditorState`, `ogeEditorText`, `ogeEditorToHtml`, `ogeEditorToggleList`, `ogeEditorToggleMark`, `ogeEditorToolAction`, `ogeEditorToolCommand`, `ogeEditorToolbarItems`, `ogeEditorTruncateDoc`, `ogeEditorTruncateGraphemes`, `ogeEditorWordCount`, `ogeEditorWriteSelection`, `ogeElementAtPoint`, `ogeExpansionShowsToggle`, `ogeExportCellStyle`, `ogeExportCellText`, `ogeExportColumnOf`, `ogeExportColumnsOf`, `ogeExportHeaderCells`, `ogeExportItemsOf`, `ogeExportScope`, `ogeFillSeries`, `ogeFillTarget`, `ogeFindMentionQuery`, `ogeFirstVisibleRow`, `ogeFormatsNeedRange`, `ogeGridBandRow`, `ogeGridEditShortcut`, `ogeGridExportItems`, `ogeGridExportLoadOptions`, `ogeGridHeaderKeyCommand`, `ogeGridHeaderKeyShortcuts`, `ogeGroupChipKeyCommand`, `ogeGroupValueText`, `ogeHeaderConditionKey`, `ogeInsertMention`, `ogeIsRtl`, `ogeIsTextTruncated`, `ogeKeyboardFillPlan`, `ogeListBoxSections`, `ogeListMoveTarget`, `ogeListViewActionForKey`, `ogeListViewActionFromTarget`, `ogeListViewActionShortcuts`, `ogeListViewActionsText`, `ogeListViewBuildRows`, `ogeListViewClick`, `ogeListViewExprValue`, `ogeListViewFilter`, `ogeListViewFirstEnabled`, `ogeListViewIndexFromTarget`, `ogeListViewInitialActive`, `ogeListViewItemId`, `ogeListViewKeyDown`, `ogeListViewKeyOf`, `ogeListViewMatchesShortcut`, `ogeListViewOffsetTree`, `ogeListViewRange`, `ogeListViewRole`, `ogeListViewSameKeys`, `ogeListViewScrollTarget`, `ogeListViewSegments`, `ogeListViewSelectionDiff`, `ogeListViewShouldLoadMore`, `ogeListViewSwipeAxis`, `ogeListViewSwipeOpens`, `ogeListViewSwipeReveal`, `ogeListViewSwipeTranslate`, `ogeListViewTextOf`, `ogeListViewToggle`, `ogeListViewVirtualSettings`, `ogeListViewWindow`, `ogeLiveConfig`, `ogeLoadPanelBusyTarget`, `ogeLoadPanelNeedsPositioning`, `ogeMaskComplete`, `ogeMaskInputMode`, `ogeMeasureAutoWidth`, `ogeMentionKeyCommand`, `ogeMoreTagsText`, `ogeMoveGroupingTo`, `ogeOpenWindowCount`, `ogeOverlayMessage`, `ogeOwnedClosest`, `ogePagerInfoContext`, `ogePagerInfoText`, `ogePagerPages`, `ogePanelBarExpansionAfter`, `ogePanelBarIndex`, `ogePanelBarInitialExpanded`, `ogePanelBarKeyAction`, `ogePanelBarKeyIntent`, `ogePanelBarVisibleIds`, `ogeParsePageInput`, `ogeProgressAriaNow`, `ogeProgressLabel`, `ogeProgressRatio`, `ogeProgressRingGeometry`, `ogePromptResult`, `ogeRangeAnnouncementCounts`, `ogeRangeBounds`, `ogeRangeContains`, `ogeRangeLattice`, `ogeRemoveDescribedBy`, `ogeResolveAvatarContent`, `ogeResolveContextMenuOpen`, `ogeResolveDirection`, `ogeResolveLoadPanelTarget`, `ogeRowDragParticipantCount`, `ogeRowDropPosition`, `ogeRowMoveDirection`, `ogeSanitizeEditorHtml`, `ogeSelectAllState`, `ogeSeparatorTargetWidth`, `ogeShiftMentions`, `ogeSignatureFontSize`, `ogeSignatureGeometry`, `ogeSignaturePointFrom`, `ogeSignatureWidths`, `ogeSpeedDialAwayKey`, `ogeSpeedDialDirection`, `ogeSpeedDialItemKey`, `ogeSpeedDialNavIndex`, `ogeSpeedDialToggleKey`, `ogeSpeedDialTowardKey`, `ogeSpeedDialVertical`, `ogeStickyGroupChain`, `ogeSummaryText`, `ogeSvgDataUrl`, `ogeTileLayoutAutoRows`, `ogeTileLayoutClampResize`, `ogeTileLayoutClampSpan`, `ogeTileLayoutDropIndex`, `ogeTileLayoutKeyIntent`, `ogeTileLayoutMoveState`, `ogeTileLayoutMovedText`, `ogeTileLayoutResizeSpan`, `ogeTileLayoutResizeState`, `ogeTileLayoutResizedText`, `ogeTileLayoutResolve`, `ogeTileLayoutShortcuts`, `ogeTileLayoutStep`, `ogeTileLayoutTabStop`, `ogeTileLayoutTemplateColumns`, `ogeTileLayoutTileLabel`, `ogeTileLayoutToState`, `ogeTileLayoutUnchangedText`, `ogeTimelineDateTimeAttr`, `ogeTimelineHasOpposite`, `ogeTimelineItemSide`, `ogeTimelineTime`, `ogeToggleAllValues`, `ogeTransferAnnouncement`, `ogeTransferCountText`, `ogeTransferDropSide`, `ogeTransferKeyCommand`, `ogeTransferKeyShortcuts`, `ogeTransferMovableValues`, `ogeTransferMove`, `ogeTransferOpposite`, `ogeTransferSplit`, `ogeTreeCancelCut`, `ogeTreeCommitMove`, `ogeTreeCsv`, `ogeTreeCut`, `ogeTreeCutKey`, `ogeTreeDataSource`, `ogeTreeDragGroupOf`, `ogeTreeDragPeerAt`, `ogeTreeDragPeerCount`, `ogeTreeDragSourceOf`, `ogeTreeDropPosition`, `ogeTreeHasCut`, `ogeTreeHeaderValueGroups`, `ogeTreeHeaderValueText`, `ogeTreeLocateDrop`, `ogeTreePaste`, `ogeTreeRowKeyMove`, `ogeValueFits`, `ogeVisibleViewport`, `ogeWindowKeyCommand`, `ogeWindowLayer`, `ogeWindowStateStep`, `ogeWindowZIndex`, `operatorsFor`, `orderByVisibleIndex`, `orderToolbarDescriptors`, `otpAcceptsChar`, `otpBackspace`, `otpCellLabel`, `otpCells`, `otpDelete`, `otpInputMode`, `otpInsert`, `otpNavigationTarget`, `otpSeparatorAfter`, `otpTypedText`, `overlayStackSize`, `paginationHasNextPage`, `paginationInfoText`, `paginationIsCompact`, `paginationPageCount`, `parseColor`, `parseDateText`, `parseHeaderConditionExpr`, `parseLocaleNumber`, `parseMask`, `parseOgeCellText`, `parseOgeSignatureSvg`, `parseOgeTsv`, `parseSplitterSize`, `pickEditorType`, `planChunks`, `planOgeGridPaste`, `planTreeEditKey`, `planTreeTransferKey`, `planTreeViewKey`, `popoverPanelAria`, `popoverTriggerAria`, `popupArrowInset`, `popupAvailableHeight`, `prefersReducedMotion`, `prepareTouchDrag`, `pruneHiddenMenubarItems`, `pushOverlay`, `ratingItemStates`, `ratingKeyboardTarget`, `ratingPointerRatio`, `ratingPressValue`, `ratingRadioKeyTarget`, `ratingValueFromPointer`, `ratingValueText`, `ratioToValue`, `readClipboardFiles`, `readDataTransferFiles`, `readPath`, `readToolbarStyleMetrics`, `registerOgePdfFont`, `registerOgeRowDragParticipant`, `registerOgeTreeDragPeer`, `registerOgeWindow`, `removeOverlay`, `renderOgeEditorDom`, `renderOgeSignature`, `reorderTabIds`, `resetGraphemeSegmenter`, `resetOgeEditorTrustedTypesPolicyForTests`, `resetScrollLockForTests`, `resizeOgeWindowRect`, `resizeSplitAt`, `resizedColumnWidth`, `resolveAccordionIndex`, `resolveAdaptivePresentation`, `resolveAutoRepeat`, `resolveButtonSelectionState`, `resolveClickGuard`, `resolveDisabled`, `resolveDisplay`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveGridConfig`, `resolveHoldToConfirm`, `resolveHour12`, `resolveItem`, `resolveLookupItems`, `resolveMenubarCompact`, `resolveMenubarOverflow`, `resolveModalInitialFocus`, `resolveOgeAccordionConfig`, `resolveOgeAlertConfig`, `resolveOgeAppBarConfig`, `resolveOgeAttributeTarget`, `resolveOgeAvatarConfig`, `resolveOgeBadgeConfig`, `resolveOgeBreadcrumbConfig`, `resolveOgeButtonsConfig`, `resolveOgeCardConfig`, `resolveOgeCarouselConfig`, `resolveOgeChipConfig`, `resolveOgeConditionalFormat`, `resolveOgeDataViewConfig`, `resolveOgeDialog`, `resolveOgeDrawerConfig`, `resolveOgeEditorConfig`, `resolveOgeFabConfig`, `resolveOgeFormsConfig`, `resolveOgeGridAdaptiveHiddenColumns`, `resolveOgeGridColumns`, `resolveOgeHeaderDropTarget`, `resolveOgeInputsConfig`, `resolveOgeListViewConfig`, `resolveOgeLoadIndicatorConfig`, `resolveOgeMenubarConfig`, `resolveOgePaginationConfig`, `resolveOgePdfFont`, `resolveOgeProgressBarConfig`, `resolveOgeRowDropIndex`, `resolveOgeSkeletonConfig`, `resolveOgeSplitterConfig`, `resolveOgeStepperConfig`, `resolveOgeTabsConfig`, `resolveOgeTileLayoutConfig`, `resolveOgeTimelineConfig`, `resolveOgeToolbarConfig`, `resolveOgeTreeViewConfig`, `resolveOgeWindowInitialFocus`, `resolveOgeWindowPlacement`, `resolveOverlayConfig`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolvePopoverInitialFocus`, `resolvePopupArrow`, `resolvePopupPosition`, `resolveRatingSemantics`, `resolveSelectedKeys`, `resolveSplitterIndex`, `resolveStepIndex`, `resolveTabIndex`, `resolveTreeChildPageSize`, `resolveTreeDropPosition`, `resolveTreeItemHeight`, `resolveTreeSelectByClick`, `resolveUploadConfig`, `resolveValue`, `rgbaToHsva`, `roundSplitterValue`, `rowClickSelectionIntent`, `rowCountText`, `rowFilterExpr`, `runAsyncGuard`, `runOgeDrawerItemClick`, `runOgeExpansionToggle`, `runTreeEditCommit`, `runTreeEditStart`, `sameAccordionIds`, `sameAccordionKeys`, `sameDay`, `sameMonth`, `sameSplitterSizes`, `sanitizeOgeTileLayoutState`, `sanitizeOtpText`, `sanitizeResourceUrl`, `sanitizeUrl`, `selectAllState`, `setOgePdfDefaultFont`, `shouldRenderAccordionPanel`, `sliderKeyboardTarget`, `sliderPercent`, `sliderTicks`, `sliderValueFromPointer`, `snapRatingValue`, `snapToStep`, `someRowsSelected`, `sortChangeText`, `splitSeparatorRange`, `splitTrackPx`, `splitterBoundInTrackUnit`, `splitterBounds`, `splitterCollapseSideInDirection`, `splitterDragDelta`, `splitterFlexiblePx`, `splitterGridTemplate`, `splitterGripPath`, `splitterGripTitle`, `splitterKeyAction`, `splitterKeyShortcuts`, `splitterPaneDescriptor`, `splitterPaneOf`, `splitterSeparatorLabel`, `splitterSeparatorRanges`, `splitterSizesWithRestored`, `splitterTrackCss`, `splitterTracks`, `splitterTracksToSizes`, `startOfDay`, `startSliderDrag`, `startSplitterDrag`, `stepBlockReason`, `stepEnabledIndex`, `stepItemDescriptor`, `stepState`, `stepperArrowKeys`, `stepperKeyTarget`, `stepsCompleteBefore`, `subscribeOgeWindows`, `supportsAriaExpanded`, `syncOgeBadgeHostAria`, `syncOgeEditorErrorAria`, `syncPopoverTriggerAria`, `tabItemDescriptor`, `timeDisplayOptions`, `toLocalDate`, `toggleAllHeaderValues`, `toggleChoiceValue`, `toggleGroupSelectedIndices`, `toggleHeaderGroup`, `toggleHeaderValue`, `toolbarCollapses`, `toolbarDataDescriptors`, `toolbarIconVisible`, `toolbarItemId`, `toolbarItemWidth`, `toolbarMenuItems`, `toolbarOverflowEvent`, `toolbarScrollState`, `toolbarTextVisible`, `tooltipDescribedByTarget`, `trackPointerGesture`, `trapTabKey`, `treeAccessor`, `treeAnchorIndex`, `treeAriaChecked`, `treeAriaSelected`, `treeCanDrop`, `treeCanEditNode`, `treeCheckStates`, `treeChildPageLimit`, `treeChildrenLoadNeeded`, `treeEdgeIndex`, `treeEffectiveExpanded`, `treeExpandableKeys`, `treeFilterExpandedKeys`, `treeHasChildrenHint`, `treeLoadMoreKey`, `treeLoadMoreText`, `treeLoadingAny`, `treeNodeDisabled`, `treeNodeIndent`, `treeParentIndex`, `treeRangeSelection`, `treeSearchAccessors`, `treeSelectAllState`, `treeSiblingExpansion`, `treeStepIndex`, `treeTypeAheadIndex`, `treeVisibleKeys`, `unlockBodyScroll`, `unregisterOgeWindow`, `validateFile`, `validateOgePromptValue`, `validateSelection`, `validationSummaryTitle`, `valueToRatio`, `viewLabel`, `warnOgePdfUnicode`, `watchAdaptiveViewport`, `weekNumber`, `weekdayNames`, `withTimePart`, `withToolbarIndexes`, `writePath`, `yearCells`
+- types: `CalendarCell`, `CheckState`, `DateParseKind`, `LookupItem`, `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionDescriptorCore`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionLoadState`, `OgeAccordionMessages`, `OgeAccordionNavIntent`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionTogglePosition`, `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetCoreOptions`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetKeyIntent`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeActionSheetSwipeOptions`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAdaptiveSheetCoreOptions`, `OgeAlertBaseOptions`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAnchoredPanelCoreOptions`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAsyncGuard`, `OgeAutoRepeatOptions`, `OgeAutoScrollOptions`, `OgeAutoScroller`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarContentInput`, `OgeAvatarContentType`, `OgeAvatarGroupWindow`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarLabelInput`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeTextInput`, `OgeBadgeValue`, `OgeBadgeVisibilityInput`, `OgeBooleanCellMessages`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbDescriptorCore`, `OgeBreadcrumbFitRequest`, `OgeBreadcrumbFitResult`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbMessages`, `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeButtonGroupSelectionChange`, `OgeButtonGroupSelectionMode`, `OgeButtonGuardTiming`, `OgeButtonHoldState`, `OgeButtonHoldTiming`, `OgeButtonIconPosition`, `OgeButtonPressOptions`, `OgeButtonRepeatTiming`, `OgeButtonSelectionRequest`, `OgeButtonSelectionState`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonToggleChange`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeCalendarCellClickEvent`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselAutoplayOptions`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselHoldReason`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerIntent`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSwipeOptions`, `OgeCellPreparedEvent`, `OgeCellTextColumn`, `OgeCellTextMessages`, `OgeCellTextParse`, `OgeCheckBoxGroupLayout`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipGridStop`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipKeyIntent`, `OgeChipListRole`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeClassValue`, `OgeClickGuardOptions`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeColorChannel`, `OgeColorFormat`, `OgeColorPalettePreset`, `OgeColorPalettePresetData`, `OgeColorScaleFormat`, `OgeColumnAlignment`, `OgeColumnFormat`, `OgeColumnLookup`, `OgeColumnMoveTarget`, `OgeColumnSeparatorKeyCommand`, `OgeColumnWidthBounds`, `OgeComboBoxColumnBase`, `OgeComparisonType`, `OgeConditionalCellFormat`, `OgeConditionalCondition`, `OgeConditionalFormat`, `OgeConditionalIcon`, `OgeConditionalRange`, `OgeConditionalRule`, `OgeConditionalStyle`, `OgeConditionalTone`, `OgeConfirmBaseOptions`, `OgeContextMenuKeyTarget`, `OgeContextMenuOpenRequest`, `OgeContextMenuOpenResult`, `OgeContextMenuOpeningEvent`, `OgeContextMenuPoint`, `OgeContextMenuSource`, `OgeContrastLevels`, `OgeDataBarFormat`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewItemClickEvent`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewKeyInput`, `OgeDataViewKeyIntent`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewPagerEntry`, `OgeDataViewProcessOptions`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeDateRangeBoxType`, `OgeDateRangePreset`, `OgeDateRangePresetId`, `OgeDateRangePresetOptions`, `OgeDateRangeWeekPresetOptions`, `OgeDateSegment`, `OgeDateSegmentKey`, `OgeDateSegmentKind`, `OgeDateSegmentOptions`, `OgeDateSegmentPlaceholders`, `OgeDateSegmentState`, `OgeDeferredBaseOptions`, `OgeDialogBaseOptions`, `OgeDialogCoreOptions`, `OgeDialogIcon`, `OgeDialogInitialFocus`, `OgeDialogKeyInput`, `OgeDialogKind`, `OgeDialogOutcome`, `OgeDialogSeverity`, `OgeDirection`, `OgeDirectionInput`, `OgeDragGhost`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerItem`, `OgeDrawerItemClickEvent`, `OgeDrawerItemView`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeDrawerOpeningEvent`, `OgeDrawerPhysicalEdge`, `OgeDrawerPosition`, `OgeDrawerSelectionChangedEvent`, `OgeDrawerSwipeOptions`, `OgeDropDownCloseReason`, `OgeDropDownClosingEvent`, `OgeDropDownOpeningEvent`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingCell`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeEditorActiveState`, `OgeEditorAlign`, `OgeEditorAnnouncementMessages`, `OgeEditorApplyOptions`, `OgeEditorBlock`, `OgeEditorBlockFormat`, `OgeEditorBlockFormatValue`, `OgeEditorBlockMessages`, `OgeEditorBlockType`, `OgeEditorBreak`, `OgeEditorChangeKind`, `OgeEditorColorMessages`, `OgeEditorCommand`, `OgeEditorCommandExecutedEvent`, `OgeEditorCommandName`, `OgeEditorConfig`, `OgeEditorConfigInput`, `OgeEditorCoreHost`, `OgeEditorCoreOptions`, `OgeEditorCounterMessages`, `OgeEditorCounterMode`, `OgeEditorCustomTool`, `OgeEditorDeleteUnit`, `OgeEditorDialogKind`, `OgeEditorDialogMessages`, `OgeEditorDialogOpeningEvent`, `OgeEditorDirection`, `OgeEditorDoc`, `OgeEditorFocusEvent`, `OgeEditorHeadingLevel`, `OgeEditorHistoryEntry`, `OgeEditorHistoryOptions`, `OgeEditorImage`, `OgeEditorInline`, `OgeEditorKeyAction`, `OgeEditorKeyContext`, `OgeEditorKeyInput`, `OgeEditorKeyMessages`, `OgeEditorLink`, `OgeEditorListKind`, `OgeEditorMarkName`, `OgeEditorMarks`, `OgeEditorMessages`, `OgeEditorMessagesInput`, `OgeEditorParseOptions`, `OgeEditorParseSource`, `OgeEditorPasteMode`, `OgeEditorPastingEvent`, `OgeEditorPoint`, `OgeEditorPopupKind`, `OgeEditorRenderElement`, `OgeEditorRenderGroup`, `OgeEditorRenderNode`, `OgeEditorRenderOptions`, `OgeEditorRenderText`, `OgeEditorSelection`, `OgeEditorSelectionChangedEvent`, `OgeEditorShortcut`, `OgeEditorState`, `OgeEditorText`, `OgeEditorToggleMark`, `OgeEditorToolAction`, `OgeEditorToolClickEvent`, `OgeEditorToolContext`, `OgeEditorToolKind`, `OgeEditorToolMessages`, `OgeEditorToolName`, `OgeEditorToolView`, `OgeEditorToolbarContext`, `OgeEditorToolbarEntry`, `OgeEditorUrlOptions`, `OgeEditorValidationMessages`, `OgeEditorValueCommittedEvent`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeExpansionToggleRequest`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportColumnSource`, `OgeExportData`, `OgeExportGroupInfo`, `OgeExportGroupLevel`, `OgeExportHeaderCell`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportStructureOptions`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFabClickEvent`, `OgeFabConfig`, `OgeFabConfigInput`, `OgeFabMessages`, `OgeFabPosition`, `OgeFabPositionMode`, `OgeFabSeverity`, `OgeFabSize`, `OgeFieldError`, `OgeFileUploaderCoreOptions`, `OgeFileUploaderEventName`, `OgeFileUploaderEvents`, `OgeFileUploaderProps`, `OgeFillDirection`, `OgeFillPlan`, `OgeFilterBuilderField`, `OgeFilterDescribeMessages`, `OgeFilterRowColumn`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeFormColCount`, `OgeFormCondition`, `OgeFormDataType`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormGroupData`, `OgeFormItemDataBase`, `OgeFormLabelLocation`, `OgeFormScreenSize`, `OgeFormValidatedEvent`, `OgeFormatFileSizeOptions`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeGridAdaptiveHidingInput`, `OgeGridAnnounceSink`, `OgeGridAnnouncementSnapshot`, `OgeGridAnnouncementsDeps`, `OgeGridApplyValuesOptions`, `OgeGridBandCell`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridCellValueWrite`, `OgeGridCellWrite`, `OgeGridColumnDef`, `OgeGridColumnHidingMode`, `OgeGridColumnInfo`, `OgeGridColumnLayoutDeps`, `OgeGridColumnRange`, `OgeGridColumnResolveInput`, `OgeGridColumnSpec`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridDataCoreDeps`, `OgeGridDeferredChildrenDeps`, `OgeGridEditBatch`, `OgeGridEditRecord`, `OgeGridEditShortcut`, `OgeGridEditSource`, `OgeGridEditingCoreDeps`, `OgeGridEditorBridge`, `OgeGridEditorState`, `OgeGridExportFieldInfo`, `OgeGridExportMessages`, `OgeGridExportStructureInput`, `OgeGridFilterStateSnapshot`, `OgeGridFocusedCell`, `OgeGridHeaderDropTarget`, `OgeGridHeaderKeyCommand`, `OgeGridInvalidEditor`, `OgeGridKeyboardNavDeps`, `OgeGridKeyboardNavTreeHooks`, `OgeGridLayoutColumn`, `OgeGridMessages`, `OgeGridPasteContext`, `OgeGridPastePlan`, `OgeGridRangeBounds`, `OgeGridRangeEdges`, `OgeGridRangeLattice`, `OgeGridRangeSelectionDeps`, `OgeGridResolvedColumn`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridRowVirtualizerDeps`, `OgeGridRowWindowAdapter`, `OgeGridSelectAllState`, `OgeGridSelectionIntent`, `OgeGridSelectionMode`, `OgeGridSelectionModifiers`, `OgeGridSpanColumn`, `OgeGridSpanExtent`, `OgeGridSpanInput`, `OgeGridSpanLayout`, `OgeGridStatePersistenceOptions`, `OgeGridToggleKind`, `OgeGroupChipKeyCommand`, `OgeGroupIntervalMessages`, `OgeGroupingOptions`, `OgeGuardHandlers`, `OgeHeaderCondition`, `OgeHeaderConditionFilter`, `OgeHeaderDateNode`, `OgeHeaderFilterMessages`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderFilterSelection`, `OgeHeaderValueGroup`, `OgeHeaderValueTextOptions`, `OgeHoldToConfirmOptions`, `OgeHsva`, `OgeIconSetFormat`, `OgeInputCommitOptions`, `OgeInputCounterMode`, `OgeInputErrorDisplay`, `OgeInputLabelMode`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeKeyInput`, `OgeListBoxClickInput`, `OgeListBoxCoreDeps`, `OgeListBoxKeyInput`, `OgeListBoxKeyResult`, `OgeListBoxSection`, `OgeListBoxSelectionMode`, `OgeListDataSource`, `OgeListDataStatus`, `OgeListPageLoadedEvent`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewClickInput`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewExpr`, `OgeListViewGroupRow`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemRow`, `OgeListViewKey`, `OgeListViewKeyInput`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewNavResult`, `OgeListViewNavState`, `OgeListViewPageLoadMode`, `OgeListViewRow`, `OgeListViewRows`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSegment`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeListViewVirtualSettings`, `OgeListViewWindow`, `OgeListVirtualizerDeps`, `OgeLiveAnnounceOptions`, `OgeLiveAnnouncerOptions`, `OgeLivePoliteness`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadPanelClock`, `OgeLoadPanelCoreHost`, `OgeLoadPanelPosition`, `OgeLoadPanelTargetElement`, `OgeLoadPanelTimings`, `OgeMaskCompletedEvent`, `OgeMaskEdit`, `OgeMaskOptions`, `OgeMaskRule`, `OgeMaskRules`, `OgeMaskShowMode`, `OgeMaskSlot`, `OgeMentionCoreDeps`, `OgeMentionInsertion`, `OgeMentionItemContext`, `OgeMentionItemsSource`, `OgeMentionKeyCommand`, `OgeMentionQuery`, `OgeMentionQueryOptions`, `OgeMentionSearchChangedEvent`, `OgeMentionSelectedEvent`, `OgeMentionToken`, `OgeMentionTrigger`, `OgeMenuActivationTrigger`, `OgeMenuCloseReason`, `OgeMenuItem`, `OgeMenuItemRole`, `OgeMenuItemSeverity`, `OgeMenuItemType`, `OgeMenuSegment`, `OgeMenubarBarKeys`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarDescriptorCore`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemOverflow`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarOverflowMode`, `OgeMenubarOverflowRequest`, `OgeMenubarPanelSource`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalDragRequest`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalResizeRequest`, `OgeModalRole`, `OgeMovableColumn`, `OgeNumberFormatter`, `OgeNumberTypingOptions`, `OgeNumberTypingResult`, `OgeOtpEdit`, `OgeOtpInputCase`, `OgeOtpInputType`, `OgeOtpOptions`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgeOverlayTimings`, `OgePageChangedEvent`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePagerInfoContext`, `OgePagerInfoMessages`, `OgePaginationCompactRequest`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgePagingOptions`, `OgePanelBarExpandMode`, `OgePanelBarExpansionChange`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemLike`, `OgePanelBarItemToggleEvent`, `OgePanelBarKeyAction`, `OgePanelBarKeyIntent`, `OgePanelBarNode`, `OgePanelBarSelectionChangedEvent`, `OgePdfFont`, `OgePdfFontData`, `OgePdfFontTarget`, `OgePendingChildRequest`, `OgePinOverride`, `OgePointerDragDropOptions`, `OgePointerGestureHandle`, `OgePointerGestureInput`, `OgePointerGestureOptions`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverCoreOptions`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverPanelAria`, `OgePopoverShowOn`, `OgePopoverTriggerAria`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupAvailableHeightRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeProgressRingGeometry`, `OgePromptBaseOptions`, `OgePromptInputType`, `OgePromptValidator`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRangeThumb`, `OgeRangeTsvOptions`, `OgeRatingIcon`, `OgeRatingItemState`, `OgeRatingKeyOptions`, `OgeRatingSelection`, `OgeRatingSemantics`, `OgeReactiveCell`, `OgeReactivityAdapter`, `OgeRect`, `OgeRemoteListCoreDeps`, `OgeResolvedChunkOptions`, `OgeResolvedDialog`, `OgeResolvedFormItem`, `OgeResolvedPopupPosition`, `OgeResolvedRetryOptions`, `OgeResolvedToastOptions`, `OgeRgba`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragParticipant`, `OgeRowDragSource`, `OgeRowDragStartEvent`, `OgeRowDragTarget`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSanitizeUrlOptions`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectAllState`, `OgeSelectDisabledExpr`, `OgeSelectDisplayExpr`, `OgeSelectGroupExpr`, `OgeSelectImageExpr`, `OgeSelectItemsFn`, `OgeSelectListCoreDeps`, `OgeSelectListRow`, `OgeSelectSearchExpr`, `OgeSelectSearchMode`, `OgeSelectValueExpr`, `OgeSelectionChangedEvent`, `OgeSignatureCanvasContext`, `OgeSignatureData`, `OgeSignatureFormat`, `OgeSignatureMode`, `OgeSignaturePen`, `OgeSignaturePoint`, `OgeSignatureRenderOptions`, `OgeSignatureSegment`, `OgeSignatureSize`, `OgeSignatureStroke`, `OgeSignatureStrokeEvent`, `OgeSignatureStrokeGeometry`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSliderAxis`, `OgeSliderDragHandlers`, `OgeSliderScale`, `OgeSliderTrackRect`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeSpeedDialDirection`, `OgeSpeedDialItem`, `OgeSpeedDialItemClickEvent`, `OgeSpeedDialKeyIntent`, `OgeSpeedDialLabelMode`, `OgeSpeedDialOpenMode`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterDataSourceLike`, `OgeSplitterDescriptorCore`, `OgeSplitterDragHandlers`, `OgeSplitterGripSide`, `OgeSplitterKeyAction`, `OgeSplitterKeyInput`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeSplitterView`, `OgeStateStorage`, `OgeStepBlockReason`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepDescriptorCore`, `OgeStepGuard`, `OgeStepReachRequest`, `OgeStepState`, `OgeStepperArrowKeys`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperKeyRequest`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabDescriptorCore`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutDirection`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutKeyInput`, `OgeTileLayoutKeyIntent`, `OgeTileLayoutMessages`, `OgeTileLayoutRect`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizeInput`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutResolveOptions`, `OgeTileLayoutResolvedTile`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTileState`, `OgeTimeColumnOption`, `OgeTimePart`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeTimelineTime`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastBaseOptions`, `OgeToastBasePatch`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastCoreOptions`, `OgeToastDefaults`, `OgeToastEntry`, `OgeToastPosition`, `OgeToastProgressStyle`, `OgeToastPromiseBaseOptions`, `OgeToastRegion`, `OgeToastSeverity`, `OgeToggleGroupChange`, `OgeToggleGroupSelectionMode`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDataSourceLike`, `OgeToolbarDescriptorCore`, `OgeToolbarDisplayDefaults`, `OgeToolbarDisplayMode`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitRequest`, `OgeToolbarFitResult`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemOverride`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContextCore`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarOverflowPolicy`, `OgeToolbarScrollState`, `OgeToolbarSize`, `OgeToolbarStyleMetrics`, `OgeToolbarStylingMode`, `OgeTooltipCoreOptions`, `OgeTooltipShowMode`, `OgeTransferListKeyInput`, `OgeTransferListMoveCause`, `OgeTransferListMoveCommand`, `OgeTransferListSide`, `OgeTransferListSplit`, `OgeTreeAllowEditing`, `OgeTreeBooleanMessages`, `OgeTreeCheckBoxesMode`, `OgeTreeChildPageEvent`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDragOptions`, `OgeTreeDragPeer`, `OgeTreeDragRowInfo`, `OgeTreeDragSource`, `OgeTreeDragTarget`, `OgeTreeDropPosition`, `OgeTreeEditCommitInput`, `OgeTreeEditCommitResult`, `OgeTreeEditKeyAction`, `OgeTreeEditStartingEvent`, `OgeTreeEditValidator`, `OgeTreeEditedEvent`, `OgeTreeEditingEvent`, `OgeTreeExpandEvent`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExportBuildOptions`, `OgeTreeExportData`, `OgeTreeExportOptions`, `OgeTreeExportSourceColumn`, `OgeTreeExpr`, `OgeTreeIndexInput`, `OgeTreeInitNewRowEvent`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeKeyAction`, `OgeTreeKeyInput`, `OgeTreeKeyPlan`, `OgeTreeListCoreDeps`, `OgeTreeListRemoteOperations`, `OgeTreeListStateSlices`, `OgeTreeListSummary`, `OgeTreeLoadChildren`, `OgeTreeLoadMode`, `OgeTreeLoadMoreInfo`, `OgeTreeLoadState`, `OgeTreeMoveSource`, `OgeTreeNodesInput`, `OgeTreeOrphanPolicy`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeRowKeyMove`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`, `OgeTreeSearchColumn`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeSummaryItem`, `OgeTreeToggleNotifier`, `OgeTreeTransferKeyAction`, `OgeTreeTransferredEvent`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeViewModel`, `OgeTreeViewModelInput`, `OgeTreeViewNode`, `OgeTreeViewResolvedMessages`, `OgeTreeVirtualScrollOptions`, `OgeTypeAheadBuffer`, `OgeUploadAbortReason`, `OgeUploadAbortedEvent`, `OgeUploadActionsLayout`, `OgeUploadAdapter`, `OgeUploadAllUploadedEvent`, `OgeUploadAnnouncementMessages`, `OgeUploadButtonMessages`, `OgeUploadCallbacks`, `OgeUploadCancelableEvent`, `OgeUploadCandidate`, `OgeUploadChunk`, `OgeUploadChunkFailedEvent`, `OgeUploadChunkMetadata`, `OgeUploadChunkOptions`, `OgeUploadChunkUploadedEvent`, `OgeUploadChunkUploadingEvent`, `OgeUploadClearedEvent`, `OgeUploadClearingEvent`, `OgeUploadConfig`, `OgeUploadConfigInput`, `OgeUploadDisplayMode`, `OgeUploadDropEffect`, `OgeUploadDropZoneEvent`, `OgeUploadDropZoneMessages`, `OgeUploadErrorKind`, `OgeUploadFailedEvent`, `OgeUploadFieldError`, `OgeUploadFile`, `OgeUploadFileDownloadingEvent`, `OgeUploadFileError`, `OgeUploadFileListOptions`, `OgeUploadFileRejectedEvent`, `OgeUploadFileRemovedEvent`, `OgeUploadFileRemovingEvent`, `OgeUploadFileStatus`, `OgeUploadFilesDroppedEvent`, `OgeUploadFilesSelectedEvent`, `OgeUploadFilesSelectingEvent`, `OgeUploadHandle`, `OgeUploadListType`, `OgeUploadMessages`, `OgeUploadMessagesInput`, `OgeUploadMode`, `OgeUploadPart`, `OgeUploadPausedEvent`, `OgeUploadPausingEvent`, `OgeUploadPreloadedFile`, `OgeUploadPreviewHiddenEvent`, `OgeUploadPreviewShowingEvent`, `OgeUploadProgressEvent`, `OgeUploadQueueEvent`, `OgeUploadQueueOptions`, `OgeUploadRequest`, `OgeUploadRestrictions`, `OgeUploadResumedEvent`, `OgeUploadResumingEvent`, `OgeUploadRetryOptions`, `OgeUploadSelectionSource`, `OgeUploadStartedEvent`, `OgeUploadStatusMessages`, `OgeUploadTask`, `OgeUploadThumbnailFailedEvent`, `OgeUploadTimers`, `OgeUploadUploadedEvent`, `OgeUploadUploadingEvent`, `OgeUploadValidationMessages`, `OgeUploadValidationResult`, `OgeValidationContext`, `OgeValidationRule`, `OgeVirtualScrollOptions`, `OgeWindowAutoFocus`, `OgeWindowBox`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowCoreOptions`, `OgeWindowCoreProps`, `OgeWindowKeyCommand`, `OgeWindowKeyInput`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPointerInput`, `OgeWindowPosition`, `OgeWindowRect`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowSizeLimits`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`, `RowKey`, `SearchHighlightSegment`, `TreeFilterMode`, `TreeIndex`, `WeekNumberRule`
 
 `@oge-ui/behavior/export-pdf`
 

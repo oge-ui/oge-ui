@@ -426,6 +426,18 @@ export class App {
       ],
     },
     {
+      title: 'Rich Text Editor',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/editor', label: 'Overview', icon: 'type' },
+        {
+          path: '/components/editor/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Kanban',
       group: COMPONENTS_GROUP,
       items: [

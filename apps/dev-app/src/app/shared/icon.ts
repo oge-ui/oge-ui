@@ -58,7 +58,8 @@ export type IconName =
   | 'data-view'
   | 'dashboard'
   | 'carousel'
-  | 'plus';
+  | 'plus'
+  | 'type';
 
 /** Lucide-style inline SVG icons — no emoji, no icon-font dependency. */
 @Component({
@@ -310,6 +311,11 @@ export type IconName =
           <circle cx="12" cy="12" r="10" />
           <path d="M12 8v8" />
           <path d="M8 12h8" />
+        }
+        @case ('type') {
+          <path d="M4 7V4h16v3" />
+          <path d="M9 20h6" />
+          <path d="M12 4v16" />
         }
         @case ('workflow') {
           <circle cx="5" cy="7" r="2.5" />

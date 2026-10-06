@@ -61,6 +61,7 @@
       "react-navigation",
       "react-forms",
       "react-upload",
+      "react-editor",
       "react-grid",
       "react-kanban",
       "react-tree-list",
@@ -92,6 +93,7 @@
       "navigation",
       "forms",
       "upload",
+      "editor",
       "ui"
     ],
     "projectsRelationship": "independent",

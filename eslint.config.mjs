@@ -219,6 +219,7 @@ export default [
                 'scope:react-navigation',
                 'scope:react-forms',
                 'scope:react-upload',
+                'scope:react-editor',
                 'scope:react-grid',
                 'scope:react-tree-list',
                 'scope:react-overlay',
@@ -291,6 +292,21 @@ export default [
               sourceTag: 'scope:react-upload',
               onlyDependOnLibsWithTags: [
                 'scope:react-upload',
+                'scope:react-layout',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React rich-text editor mirrors the Angular package's
+              // edges: the toolbar (react-layout), the popups and the link /
+              // image prompts (react-overlay), the colour palette
+              // (react-inputs); the editor machine itself lives in behavior
+              sourceTag: 'scope:react-editor',
+              onlyDependOnLibsWithTags: [
+                'scope:react-editor',
+                'scope:react-inputs',
                 'scope:react-layout',
                 'scope:react-overlay',
                 'scope:behavior',
@@ -622,6 +638,21 @@ export default [
               ],
             },
             {
+              // the rich-text editor: the editor machine and the sanitizer
+              // live in behavior (shared with the React editor); layout lends
+              // the APG toolbar, overlay the popups and the link / image
+              // prompts, inputs the colour palette. Nothing depends on it.
+              sourceTag: 'scope:editor',
+              onlyDependOnLibsWithTags: [
+                'scope:editor',
+                'scope:inputs',
+                'scope:layout',
+                'scope:overlay',
+                'scope:core',
+                'scope:behavior',
+              ],
+            },
+            {
               sourceTag: 'scope:forms',
               onlyDependOnLibsWithTags: [
                 'scope:forms',
@@ -653,6 +684,7 @@ export default [
                 'scope:navigation',
                 'scope:forms',
                 'scope:upload',
+                'scope:editor',
                 // provideOgeLocale(): the MIT translation packs (their
                 // type-only references to commercial engines are erased) and
                 // the default catalogs a pack is merged over
@@ -674,6 +706,7 @@ export default [
                 'scope:react-navigation',
                 'scope:react-forms',
                 'scope:react-upload',
+                'scope:react-editor',
                 'scope:react-grid',
                 'scope:react-kanban',
                 'scope:react-tree-list',
@@ -707,6 +740,7 @@ export default [
                 'scope:navigation',
                 'scope:forms',
                 'scope:upload',
+                'scope:editor',
                 'scope:locales',
                 // the localization page's demo runs provideOgeLocale itself
                 'scope:ui',

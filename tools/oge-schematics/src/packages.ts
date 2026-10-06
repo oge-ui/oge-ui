@@ -195,6 +195,24 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<div [ogeUploadDropZone]="\'attachments\'">` with `<oge-file-uploader dropZone="attachments" />` — dx `dropZone`, Kendo `zoneId`, Syncfusion `dropArea`',
     },
   ],
+  '@oge-ui/editor': [
+    {
+      need: 'rich text / WYSIWYG / HTML editor',
+      use: "`<oge-editor label=\"Body\" [(value)]=\"html\" />` — the value is sanitized HTML (`''` when empty); works with `[formControl]`, `ngModel` and `[formField]`. No `execCommand`: commands run on the editor's own model (`editor.exec('bold')`)",
+    },
+    {
+      need: 'limit the editor toolbar / add a custom tool',
+      use: "`[toolbar]=\"['bold', 'italic', 'link', 'separator', 'bulletList', myTool]\"` where `myTool: OgeEditorCustomTool = { key, text, icon, run: (ctx) => ctx.insertText('…') }`; `[toolbar]=\"false\"` hides it",
+    },
+    {
+      need: 'character limit on rich text',
+      use: '`[maxLength]="500" counter="characters"` stops typing and pasting at 500 characters of *text*; for reactive forms add `ogeEditorMaxLength(500)` — `Validators.maxLength` would count the HTML markup',
+    },
+    {
+      need: 'sanitize HTML from the editor on the server or before rendering it',
+      use: '`ogeSanitizeEditorHtml(html)` — the same allowlist the editor applies to values and pastes (Trusted Types policy `oge-ui#editor`)',
+    },
+  ],
   '@oge-ui/locales': [
     {
       need: 'translate the UI (German, French, Spanish, Italian, pt-BR, Turkish, Japanese, zh-CN, Arabic, Hebrew)',
@@ -221,6 +239,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/navigation',
   '@oge-ui/forms',
   '@oge-ui/upload',
+  '@oge-ui/editor',
   '@oge-ui/locales',
 ];
 
@@ -239,4 +258,5 @@ export const UMBRELLA_FAMILIES: readonly string[] = [
   '@oge-ui/navigation',
   '@oge-ui/forms',
   '@oge-ui/upload',
+  '@oge-ui/editor',
 ];

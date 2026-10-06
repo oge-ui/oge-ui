@@ -26,6 +26,7 @@
         "layout:build",
         "navigation:build",
         "upload:build",
+        "editor:build",
         "locales:build",
         "ui:build"
       ],

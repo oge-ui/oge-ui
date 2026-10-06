@@ -33,6 +33,7 @@ export * from '@oge-ui/react-layout';
 export * from '@oge-ui/react-navigation';
 export * from '@oge-ui/react-forms';
 export * from '@oge-ui/react-upload';
+export * from '@oge-ui/react-editor';
 export * from '@oge-ui/react-grid';
 export * from '@oge-ui/react-tree-list';
 export {

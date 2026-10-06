@@ -35,6 +35,7 @@ const PACKAGES = [
   { dir: 'navigation', npm: '@oge-ui/navigation' },
   { dir: 'forms', npm: '@oge-ui/forms' },
   { dir: 'upload', npm: '@oge-ui/upload' },
+  { dir: 'editor', npm: '@oge-ui/editor' },
   { dir: 'locales', npm: '@oge-ui/locales' },
   { dir: 'ui', npm: 'oge-ui' },
 ];

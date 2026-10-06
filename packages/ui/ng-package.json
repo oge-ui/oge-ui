@@ -14,6 +14,7 @@
     "@oge-ui/navigation",
     "@oge-ui/forms",
     "@oge-ui/upload",
+    "@oge-ui/editor",
     "@oge-ui/behavior",
     "@oge-ui/locales"
   ],

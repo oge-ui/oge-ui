@@ -180,6 +180,7 @@
         "./packages/react/tree-list/src/export-pdf.ts"
       ],
       "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
+      "@oge-ui/react-editor": ["./packages/react/editor/src/index.ts"],
       "@oge-ui/scheduler": ["./packages/scheduler/src/index.ts"],
       "@oge-ui/scheduler-engine": ["./packages/scheduler-engine/src/index.ts"],
       "@oge-ui/scheduler-engine/export-excel": [
@@ -209,6 +210,7 @@
         "./packages/tree-list/export-pdf/src/index.ts"
       ],
       "@oge-ui/upload": ["./packages/upload/src/index.ts"],
+      "@oge-ui/editor": ["./packages/editor/src/index.ts"],
       "oge-ui": ["./packages/ui/src/index.ts"]
     }
   },

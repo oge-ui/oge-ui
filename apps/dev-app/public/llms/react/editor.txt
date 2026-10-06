@@ -1,0 +1,446 @@
+# @oge-ui/react-editor
+
+> React rich-text editor: a dependency-free contenteditable editor over its own document model (no execCommand) with headings, lists, quotes, code, links, images, colours and alignment, its own undo history, markdown shortcuts, Word / Google Docs paste cleanup, a strict allowlist HTML sanitizer and an APG toolbar — running the same editor machine and stylesheet as the Angular editor package.
+
+Part of OGE UI v1.1.2.
+Docs and live demos: https://www.ogeui.com/components/editor
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-editor
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages and ship in
+`@oge-ui/core` (installed with every package; add it directly under pnpm):
+`@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
+`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
+`prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeEditor>
+
+#### Properties
+
+_Value and forms_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | `undefined` | The sanitized HTML value — controlled when provided (pair it with `onValueChange`), `defaultValue` for uncontrolled use. The empty string when the document is empty. The editor ignores its own echo, so the caret and the history survive a controlled round trip. |
+| `defaultValue` | `string` | `''` | Uncontrolled initial value. |
+| `onValueChange` | `(value: string) => void` | `—` | Every change of the value — the controlled half of `value`. |
+| `disabled` | `boolean` | `false` | Not editable and out of the Tab order (`aria-disabled`). |
+| `readonly` | `boolean` | `false` | Focusable and selectable, but not editable (`aria-readonly`); every tool is disabled. |
+| `required` | `boolean` | `false` | Sets `aria-required` and the asterisk; validation is the form library’s. |
+| `name` | `string` | `''` | Written as `data-name` on the editing surface. |
+| `invalid` | `boolean` | `false` | External invalid state (from your form library). |
+| `touched / dirty` | `boolean` | `false` | External touched / dirty state; errors show once the field is touched. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors to show (the first one’s message, or the matching catalog string). |
+| `maxLength` | `number \| undefined` | `undefined` | Most characters (grapheme clusters) of _text_ the document may hold. Typing and pasting stop there (announced), the counter shows the budget, and a longer external value shows the error. |
+
+_Chrome_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Visible label above the editor; also its accessible name (`aria-labelledby`). |
+| `ariaLabel` | `string \| undefined` | `undefined` | Accessible name when there is no visible label; falls back to `messages.editorLabel`. |
+| `placeholder` | `string` | `''` | Shown while the document is empty; also `aria-placeholder`. |
+| `hint` | `string \| undefined` | `undefined` | Helper text under the editor, hidden while an error shows; part of `aria-describedby`. |
+| `errorText` | `string \| undefined` | `undefined` | Explicit error message — always wins over the resolved messages. |
+| `counter` | `'none' \| 'characters' \| 'words' \| 'both'` | `'none'` | Character / word counter under the editor (ICU plurals from `messages.counter`). With `maxLength` the character count reads `12 / 200`. |
+| `toolbar` | `readonly OgeEditorToolbarEntry[] \| false \| undefined` | `undefined` | Toolbar entries: built-in tool names, `'separator'` and `OgeEditorCustomTool` objects. `undefined` is the full default toolbar, `false` hides it. |
+| `toolbarOverflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | `'menu'` | What the toolbar does with tools that do not fit (the layout toolbar’s `overflow`). |
+| `height / minHeight / maxHeight` | `number \| string \| undefined` | `undefined` | Size of the editing area — a number is px, a string any CSS length. Without them the area starts at 160px and grows with its content. |
+| `resizable` | `boolean` | `false` | Adds a vertical resize handle to the editing area. |
+| `spellcheck` | `boolean` | `true` | The browser’s spell checking on the editing surface. |
+| `tabIndex` | `number` | `0` | Tab index of the editing surface. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after it mounts. |
+| `id` | `string \| undefined` | `undefined` | Base of the generated element ids; defaults to one derived from `useId()` (SSR-safe). |
+| `className / style` | `string / CSSProperties` | `undefined` | Classes and inline style of the host element. |
+
+_Behaviour (undefined = config)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `markdownShortcuts` | `boolean \| undefined` | `true` | `#`…`######`, `-`, `1.`, `>`, ````` at the start of a paragraph and `---` + Enter turn into formats. One undo brings the typed characters back. |
+| `pasteMode` | `'html' \| 'text' \| undefined` | `'html'` | `'html'` keeps (sanitized) formatting from the clipboard; `'text'` inserts text only. |
+| `headingLevels` | `readonly OgeEditorHeadingLevel[] \| undefined` | `[1, 2, 3, 4]` | Heading levels the block-format menu offers. |
+| `textColors / backgroundColors` | `OgeColorPalettePreset \| readonly string[] \| undefined` | `'default'` | Palettes of the two colour popups — an `@oge-ui/react-inputs` palette preset or your own colour list. Colours are validated (no `url()`, `var()` or expressions). |
+| `allowedSchemes` | `readonly string[] \| undefined` | `[]` | Extra link schemes on top of `sanitizeUrl`’s allowlist (`http`, `https`, `mailto`, `tel`, `ftp`, `sms`). Script schemes can never be allowed. |
+| `allowDataImages` | `boolean \| undefined` | `false` | Keep `data:image/*` sources (PNG, JPEG, GIF, WebP, AVIF, BMP — never SVG). `blob:` and `file:` images are always dropped. |
+| `messages` | `OgeEditorMessagesInput \| undefined` | `undefined` | Per-instance overrides of the user-facing strings, merged group by group over the `<OgeEditorConfigProvider>` values. |
+
+_Read-only state_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `activeState` | `OgeEditorActiveState` | Handle getter: the formats under the selection — what the toolbar shows. |
+| `characterCount / wordCount` | `number` | Handle getters: grapheme clusters and words (`Intl.Segmenter`) of the text. |
+| `canUndo / canRedo` | `boolean` | Handle getters: whether the history has a step back / forward. |
+
+#### Methods
+
+_Ref handle (OgeEditorHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Moves focus into the editing area and restores the caret. |
+| `blur()` | `void` | Removes keyboard focus. |
+| `exec(command)` | `(command: OgeEditorCommandName \| OgeEditorCommand) => boolean` | Runs a command — a name (`'bold'`, `'heading2'`, `'bulletList'`…) or a command object (`{ type: 'color', color: '#c00' }`). Returns `true` when it changed something. |
+| `undo() / redo()` | `() => boolean` | Steps through the editor’s own history. |
+| `insertText(text)` | `(text: string) => void` | Inserts plain text at the selection (newlines become paragraphs). |
+| `insertHtml(html)` | `(html: string) => void` | Inserts HTML at the selection — parsed through the editor’s allowlist first, like a paste. |
+| `insertLink(href, text?, newTab?)` | `(href: string, text?: string, newTab?: boolean) => boolean` | Links the selection, or inserts `text` (default: the address) as a link. Unsafe addresses are refused (`false`); new-tab links get `rel="noopener noreferrer"`. |
+| `removeLink()` | `() => boolean` | Removes the link under the selection or around the caret. |
+| `insertImage(src, alt?)` | `(src: string, alt?: string) => boolean` | Inserts an image by URL; unsafe sources are refused. |
+| `selectAll()` | `void` | Selects the whole document. |
+| `getHtml() / getText()` | `() => string` | The current value, or its text with blocks separated by newlines. |
+| `clear()` | `void` | Empties the editor as one undoable change. |
+| `reset(value?)` | `(value?: string) => void` | Loads `value` (default: empty), clears the history and the touched / dirty state, and reports the change. |
+| `openLinkDialog() / openImageDialog()` | `() => Promise<void>` | Opens the link or image prompt for the selection (also Ctrl+K and the toolbar tools), subject to `onDialogOpening`. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueCommitted` | `(event: OgeEditorValueCommittedEvent) => void` | Every committed change: `{ value, previousValue, event }`. |
+| `onFocus / onBlur` | `(event: FocusEvent) => void` | Focus entered or left the editor (popups included). |
+| `onSelectionChange` | `(event: OgeEditorSelectionChangedEvent) => void` | The selection moved or its formats changed: `{ active }`. |
+| `onCommandExecuted` | `(event: OgeEditorCommandExecutedEvent) => void` | A command ran (keyboard, toolbar or `exec`): `{ command, event }`. |
+| `onToolClick` | `(event: OgeEditorToolClickEvent) => void` | A toolbar tool was activated: `{ key, inMenu, event }`. |
+| `onPasting` | `(event: OgeEditorPastingEvent) => void` | Cancelable: a paste or drop is about to be inserted. Set `cancel`, or rewrite `html` / `text`. |
+| `onDialogOpening` | `(event: OgeEditorDialogOpeningEvent) => void` | Cancelable: the link or image dialog is about to open (`{ kind, link, cancel }`). Cancel it to show your own dialog, then call `insertLink()` / `insertImage()` on the handle. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeEditorToolName` | `'undo' \| 'redo' \| 'blockFormat' \| 'bold' \| 'italic' \| 'underline' \| 'strike' \| 'code' \| 'subscript' \| 'superscript' \| 'textColor' \| 'backgroundColor' \| 'link' \| 'unlink' \| 'image' \| 'bulletList' \| 'orderedList' \| 'indent' \| 'outdent' \| 'blockquote' \| 'codeBlock' \| 'horizontalRule' \| 'alignStart' \| 'alignCenter' \| 'alignEnd' \| 'alignJustify' \| 'directionLtr' \| 'directionRtl' \| 'clearFormatting'` | Built-in toolbar tools. `OGE_DEFAULT_EDITOR_TOOLBAR` is the default arrangement. |
+| `OgeEditorToolbarEntry` | `OgeEditorToolName \| 'separator' \| OgeEditorCustomTool` | One toolbar entry. Leading, trailing and doubled separators are dropped. |
+| `OgeEditorCustomTool` | `{ key; text; icon?; hint?; shortcut?; isActive?(active); isDisabled?(active); run(context: OgeEditorToolContext) }` | A tool of your own. `isActive` makes it a toggle (`aria-pressed`); `run` receives `exec`, `insertHtml`, `insertText`, `getHtml` and the active state. |
+| `OgeEditorCommandName` | `'bold' \| 'italic' \| … \| 'heading1'…'heading6' \| 'blockquote' \| 'codeBlock' \| 'bulletList' \| 'orderedList' \| 'indent' \| 'outdent' \| 'alignStart' \| 'alignCenter' \| 'alignEnd' \| 'alignJustify' \| 'horizontalRule' \| 'clearFormatting' \| 'unlink' \| 'undo' \| 'redo' \| 'selectAll'` | Parameterless commands by name, for `exec()`. |
+| `OgeEditorCommand` | `{ type: 'toggleMark'; mark } \| { type: 'blockFormat'; format; level? } \| { type: 'list'; list } \| { type: 'align'; align } \| { type: 'color' \| 'background'; color } \| { type: 'link'; href; text?; newTab? } \| { type: 'image'; src; alt? } \| …` | A command object — the same vocabulary the toolbar and the keyboard map issue. |
+| `OgeEditorActiveState` | `{ marks; blockFormat; list; align; dir; link; color; background; canIndent; canOutdent; collapsed }` | What the selection currently is. |
+| `OgeEditorMessages` | `interface` | Every user-facing string: tool names, block names, dialogs, colours, counter (ICU plurals), announcements, validation and key names. Translated in all ten `@oge-ui/locales` packs (`<OgeLocaleProvider>` wires them). |
+| `OgeEditorConfigProvider` | `({ config?: OgeEditorConfigInput; children }) => ReactNode` | Subtree-wide defaults and strings; nested providers merge over the outer one. |
+| `ogeSanitizeEditorHtml(html, options?)` | `(html: string \| null \| undefined, options?: OgeEditorParseOptions) => string` | The editor’s allowlist as a function — for values that did not come through the editor. Only the editor’s own tags and attributes come out. |
+| `ogeEditorHtmlLength(html)` | `(html: string \| null \| undefined, options?: OgeEditorParseOptions) => number` | Characters of an HTML value’s text — the measure `maxLength` applies; use it in your form library’s validator. |
+| `ogeEditorCommandFromName(name)` | `(name: OgeEditorCommandName) => OgeEditorCommand` | Expands a command name into its command object. |
+| `OGE_EDITOR_TRUSTED_TYPES_POLICY` | `'oge-ui#editor'` | Name of the Trusted Types policy behind the editor’s one `DOMParser` call. List it in a `trusted-types` CSP directive. |
+| `useOgeEditorConfig() / OGE_DEFAULT_EDITOR_CONFIG / OGE_DEFAULT_EDITOR_MESSAGES` | `() => OgeEditorConfig / OgeEditorConfig / OgeEditorMessages` | The resolved config of the subtree, and the shipped defaults. |
+| `OGE_DEFAULT_EDITOR_TOOLBAR` | `readonly OgeEditorToolbarEntry[]` | The default toolbar arrangement — spread it to extend the default instead of replacing it. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+
+export function DescriptionEditor() {
+  // The value is sanitized HTML ('' when empty). Every edit is a command on
+  // the editor's own document model — no document.execCommand — so every
+  // browser produces the same markup, and undo is the editor's own history.
+  const [html, setHtml] = useState('<p>Hello <strong>world</strong></p>');
+  return (
+    <>
+      <OgeEditor
+        label="Description"
+        placeholder="Write something…"
+        hint="Try Ctrl+B, Ctrl+K, or type “# ” at the start of a line."
+        value={html}
+        onValueChange={setHtml}
+      />
+      <pre>{html}</pre>
+    </>
+  );
+}
+```
+
+### Toolbar and custom tools
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+import type { OgeEditorCustomTool, OgeEditorToolbarEntry } from '@oge-ui/react-editor';
+
+// A custom tool: a label, an optional 16×16 stroke icon, and what it does.
+const stamp: OgeEditorCustomTool = {
+  key: 'stamp',
+  text: 'Insert today’s date',
+  icon: 'M3 4.5h10v9H3zM3 7.5h10M6 2.5v3M10 2.5v3',
+  run: (editor) => editor.insertText(new Date().toLocaleDateString('en-GB')),
+};
+
+// Built-in tool names, 'separator' and your own tools, in any order.
+const tools: readonly OgeEditorToolbarEntry[] = [
+  'undo', 'redo', 'separator', 'blockFormat', 'bold', 'italic', 'separator',
+  'bulletList', 'orderedList', 'separator', 'link', stamp,
+];
+
+export function ReleaseNotes() {
+  const [notes, setNotes] = useState('<h3>1.2.0</h3><ul><li>New rich-text editor</li></ul>');
+  return (
+    <OgeEditor label="Release notes" toolbar={tools} value={notes} onValueChange={setNotes} />
+  );
+}
+```
+
+### Keyboard and markdown
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+
+export function MeetingNotes() {
+  // Markdown shortcuts: "# " … "###### ", "- ", "1. ", "> ", "``` " at the start
+  // of a paragraph, and "---" + Enter for a horizontal line. One undo brings the
+  // typed characters back. Tab / Shift+Tab nest list items; Tab anywhere else
+  // leaves the editor, so the keyboard is never trapped.
+  const [notes, setNotes] = useState('');
+  return (
+    <OgeEditor
+      label="Meeting notes"
+      markdownShortcuts
+      headingLevels={[1, 2, 3]}
+      value={notes}
+      onValueChange={setNotes}
+    />
+  );
+}
+```
+
+### Links and images
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+import type { OgeEditorHandle } from '@oge-ui/react-editor';
+
+export function ArticleEditor() {
+  // The link and image tools open the overlay's prompt dialog; the handle does
+  // the same from code. A javascript: link is refused, and "ogeui.com" typed
+  // into the dialog becomes https://ogeui.com instead of a relative link.
+  const editor = useRef<OgeEditorHandle>(null);
+  return (
+    <>
+      <OgeEditor ref={editor} label="Article" defaultValue="<p>Read the docs.</p>" />
+      <button type="button" onClick={() => editor.current?.insertLink('https://www.ogeui.com', 'OGE UI')}>
+        Insert a link
+      </button>
+      <button type="button" onClick={() => editor.current?.insertImage('/favicon.ico', 'OGE logo')}>
+        Insert an image
+      </button>
+      <button type="button" onClick={() => void editor.current?.openLinkDialog()}>
+        Open the link dialog
+      </button>
+    </>
+  );
+}
+```
+
+### Paste and sanitizing
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor, ogeSanitizeEditorHtml } from '@oge-ui/react-editor';
+import type { OgeEditorPastingEvent } from '@oge-ui/react-editor';
+
+// The same sanitizer, for HTML that did not come through the editor.
+const clean = ogeSanitizeEditorHtml(
+  '<p>Hi <a href="javascript:alert(1)">there</a><img src=x onerror=alert(1)></p><script>alert(1)</script>',
+);
+
+// onPasting is cancelable and may rewrite the payload.
+const onPasting = (event: OgeEditorPastingEvent) => {
+  event.cancel = event.html.includes('1x1.gif');
+};
+
+export function PasteTarget() {
+  const [pasted, setPasted] = useState('');
+  return (
+    <>
+      <OgeEditor label="Paste here" pasteMode="html" onPasting={onPasting} value={pasted} onValueChange={setPasted} />
+      <pre>{clean}</pre>
+    </>
+  );
+}
+```
+
+### Controlled value and validation
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor, ogeEditorHtmlLength } from '@oge-ui/react-editor';
+
+export function SummaryField() {
+  // maxLength stops typing and pasting at 200 characters of text and the
+  // counter shows the budget. In your form library, validate with
+  // ogeEditorHtmlLength() — the string length would count the HTML markup.
+  const [summary, setSummary] = useState('');
+  const [touched, setTouched] = useState(false);
+  const valid = summary !== '' && ogeEditorHtmlLength(summary) <= 200;
+  return (
+    <>
+      <OgeEditor
+        label="Summary"
+        required
+        maxLength={200}
+        counter="characters"
+        value={summary}
+        onValueChange={setSummary}
+        onBlur={() => setTouched(true)}
+        touched={touched}
+        invalid={!valid}
+      />
+      <p>valid: {String(valid)}</p>
+    </>
+  );
+}
+```
+
+### Read-only, sizing and counter
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeEditor } from '@oge-ui/react-editor';
+
+export function TermsEditor() {
+  // readonly keeps the text focusable and selectable; disabled takes the
+  // editor out of the Tab order. height / minHeight / maxHeight take px or
+  // any CSS length; resizable adds a vertical resize handle.
+  const [readonly, setReadonly] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  return (
+    <>
+      <label>
+        <input type="checkbox" checked={readonly} onChange={() => setReadonly(!readonly)} /> Read-only
+      </label>
+      <label>
+        <input type="checkbox" checked={disabled} onChange={() => setDisabled(!disabled)} /> Disabled
+      </label>
+      <OgeEditor
+        label="Terms"
+        readonly={readonly}
+        disabled={disabled}
+        minHeight={120}
+        maxHeight={260}
+        resizable
+        counter="both"
+        defaultValue="<h3>Terms</h3><p>By using this service you agree to <em>everything</em>.</p>"
+      />
+    </>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeEditor, OgeEditorConfigProvider } from '@oge-ui/react-editor';
+
+export function ConfiguredEditors() {
+  // Subtree-wide defaults and strings (<OgeLocaleProvider> covers the strings
+  // too). A page with require-trusted-types-for 'script' lists the editor's
+  // policy: trusted-types oge-ui#editor
+  return (
+    <OgeEditorConfigProvider
+      config={{
+        headingLevels: [2, 3],
+        pasteMode: 'html',
+        markdownShortcuts: true,
+        textColors: 'office',
+        messages: { tools: { bold: 'Kalın', italic: 'İtalik' } },
+      }}
+    >
+      <OgeEditor label="Notes" />
+    </OgeEditorConfigProvider>
+  );
+}
+```
+

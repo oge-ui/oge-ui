@@ -1,0 +1,40 @@
+{
+  "name": "@oge-ui/editor",
+  "version": "1.1.2",
+  "description": "Signal-based Angular rich-text editor: a dependency-free contenteditable editor over its own document model (no execCommand) with headings, lists, quotes, code, links, images, colours and alignment, its own undo history, markdown shortcuts, Word / Google Docs paste cleanup, a strict allowlist HTML sanitizer that is Trusted Types and CSP friendly, an APG toolbar, and ControlValueAccessor + Signal Forms integration.",
+  "keywords": [
+    "angular",
+    "rich-text-editor",
+    "wysiwyg",
+    "html-editor",
+    "contenteditable",
+    "sanitizer",
+    "trusted-types",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/core": ">=22.0.0 <24.0.0",
+    "@angular/forms": ">=22.0.0 <24.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "1.1.2",
+    "@oge-ui/inputs": "1.1.2",
+    "@oge-ui/layout": "1.1.2",
+    "@oge-ui/overlay": "1.1.2"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://www.ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/editor"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

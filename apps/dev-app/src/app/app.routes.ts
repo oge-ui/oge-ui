@@ -1238,6 +1238,23 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/editor',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/editor/overview').then((m) => m.EditorOverviewPage),
+        title: 'OGE — Rich Text Editor',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/editor/api').then((m) => m.EditorApiPage),
+        title: 'OGE — Rich Text Editor API',
+      },
+    ],
+  },
+  {
     path: 'components/kanban',
     children: [
       {

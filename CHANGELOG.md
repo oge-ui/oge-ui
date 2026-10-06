@@ -251,6 +251,77 @@ packs.
   `/components/charts/specialized`, in both layers, plus ten API blocks per
   layer.
 
+### Rich-text editor (W8e) — `@oge-ui/editor`, `@oge-ui/react-editor` (new, MIT), `@oge-ui/behavior`, `@oge-ui/locales`, `oge-ui`, `@oge-ui/react`
+
+Two new packages: `<oge-editor>` and `<OgeEditor>`, both thin render layers
+over one editor machine in `@oge-ui/behavior` (`OgeEditorCore`).
+
+- **Licence tier: MIT.** ADR 0003 and the open-core rule reserve the
+  commercial tier for the heavy analytical products (pivot, scheduler, Gantt,
+  Kanban, BPMN, charts); a rich-text editor is a form editor that every
+  reference suite's free tier competes on (PrimeNG ships one), so it joins the
+  MIT families — its engine lives in MIT `behavior`, it is part of the `oge-ui`
+  and `@oge-ui/react` umbrellas, and `provideOgeLocale()` /
+  `<OgeLocaleProvider>` cover it.
+- **No `document.execCommand`.** The document is an immutable model (a flat
+  list of blocks holding inline runs with marks); every keystroke, toolbar
+  click and paste is a pure command on it, and the `contenteditable` DOM is
+  re-rendered from the model (unchanged blocks keep their elements, so
+  spell-check and IME sessions survive). IME compositions, the one edit a
+  browser cannot be stopped from making, are read back from the DOM when they
+  end; any `input` no handler intercepted triggers a full read-back.
+- **Formatting:** bold, italic, underline, strikethrough, inline code,
+  sub/superscript, text and highlight colours (the inputs colour palette),
+  paragraph / headings / quote / code block, bulleted and numbered lists with
+  nesting (Tab / Shift+Tab), links, images by URL, horizontal rules,
+  alignment (logical start / center / end / justify), per-block `dir`, clear
+  formatting — and the editor's own undo/redo history, typing coalesced into
+  words.
+- **Keyboard:** Ctrl/⌘ + B / I / U / K / Z / Y (and Shift+Z), Shift+X strike,
+  E inline code, Alt+0…6 block formats, Shift+7 / 8 / 9 lists and quote,
+  Shift+L / E / R / J alignment, `\` clear formatting, Shift+Enter line break;
+  digits are read by physical key so the shortcuts work on every layout.
+  Markdown shortcuts (`# `…`###### `, `- `, `1. `, `> `, ` ``` `,
+  `---` + Enter); one undo restores the typed marker.
+- **Toolbar:** the layout package's APG toolbar (roving focus, overflow menu
+  that keeps toggle check marks), tooltips and `aria-keyshortcuts` with the
+  platform's shortcut spelling, `aria-pressed` toggles, a block-format radio
+  menu, colour popups and link / image dialogs on the overlay's `prompt()`.
+  Configurable entries: built-in tool names, separators and
+  `OgeEditorCustomTool` objects.
+- **Sanitized HTML in and out.** One allowlist parser reads the bound value,
+  pastes and `insertHtml()`: allow-listed tags and styles become model data,
+  everything else is unwrapped or dropped with its content; links go through
+  `sanitizeUrl`, images through `sanitizeResourceUrl` (`blob:` / `file:` and
+  SVG never, `data:image/*` only with `allowDataImages`), colours are
+  validated, `target` is only `_blank` and always gets `rel="noopener
+noreferrer"`. The value is re-serialized from the model, which defeats
+  mutation XSS. Word (list paragraphs, `mso-list:Ignore` markers, Office
+  namespace tags, local images) and Google Docs (the `font-weight:normal`
+  wrapper, styled spans) pastes are cleaned up; default black / white colours
+  are dropped from pastes so dark themes keep working.
+  `ogeSanitizeEditorHtml()` exposes the same allowlist.
+- **Trusted Types and CSP:** the one `DOMParser` call runs behind the new
+  `oge-ui#editor` policy; the live DOM is built with `createElement` and
+  styles go through the CSSOM — no `innerHTML`, no
+  `dangerouslySetInnerHTML`.
+- **Forms:** standalone `[(value)]`, reactive forms (ControlValueAccessor,
+  with `ogeEditorMaxLength()` counting text rather than markup) and Signal
+  Forms (`FormValueControl`); React is controlled or uncontrolled with a ref
+  handle (`exec`, `insertHtml`, `insertLink`, `undo`, `reset`, …).
+  `maxLength` stops typing and pasting at the limit, `counter` shows
+  characters and / or words (ICU plurals).
+- **Accessibility:** `role="textbox"` + `aria-multiline`, label / hint /
+  error / counter wired through `aria-labelledby` / `aria-describedby`,
+  formatting toggles announced politely, forced-colours and reduced-motion
+  blocks, RTL-mirrored directional icons, 16px text on coarse pointers,
+  read-only (focusable) and disabled modes, placeholder, min / max height
+  and a vertical resize handle.
+- New tokens: `--oge-editor-bg`, `--oge-editor-toolbar-bg`,
+  `--oge-editor-link`, `--oge-editor-code-bg`, `--oge-editor-quote-border`
+  (derived, in every theme).
+- `OgeEditorMessages` is translated in all ten locale packs (`editor` slice).
+
 ### BPMN editor depth (G5b) — `@oge-ui/bpmn`, `@oge-ui/react-bpmn`, `@oge-ui/bpmn-engine`, `@oge-ui/locales`
 
 - **Validation**: a bpmnlint-style rule engine in the engine (`OgeBpmnLintRule

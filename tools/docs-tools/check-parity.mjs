@@ -727,6 +727,33 @@ const FAMILIES = [
     },
   },
   {
+    // W8e: both editors are thin layers over behavior's OgeEditorCore
+    family: 'editor',
+    angularApiPage: 'apps/dev-app/src/app/pages/editor/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-editor/api.ts',
+    exceptions: {
+      pairs: {
+        focused: 'focus', // (focused)/(blurred) ↔ onFocus/onBlur, as in the inputs family
+        blurred: 'blur',
+        selectionchanged: 'selectionchange', // React callbacks use the imperative-present form
+        provideogeeditorconfig: 'ogeeditorconfigprovider', // DI provider ↔ context provider
+        ogeeditorconfig: 'useogeeditorconfig', // DI token ↔ hook reading the resolved config
+      },
+      angularOnly: {
+        touch:
+          'Signal Forms `FormValueControl` contract output; React reports the same moment through onBlur.',
+        ogeeditormaxlength:
+          'Reactive-forms `ValidatorFn`; React has no forms binding — its table documents `ogeEditorHtmlLength()`, the measure such a validator is built on (present in both tables).',
+      },
+      reactOnly: {
+        valuechange:
+          'The controlled half of `value`; Angular’s `[(value)]` model is both halves at once.',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+      },
+    },
+  },
+  {
     family: 'kanban',
     angularApiPage: 'apps/dev-app/src/app/pages/kanban/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-kanban/api.ts',

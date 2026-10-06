@@ -1,0 +1,52 @@
+{
+  "name": "@oge-ui/react-editor",
+  "version": "1.1.2",
+  "description": "React rich-text editor from the OGE UI suite: a dependency-free contenteditable editor over its own document model (no execCommand) with headings, lists, quotes, code, links, images, colours and alignment, its own undo history, markdown shortcuts, Word / Google Docs paste cleanup, a strict allowlist HTML sanitizer that is Trusted Types and CSP friendly, and an APG toolbar — running the same editor machine and stylesheet as the Angular editor package.",
+  "keywords": [
+    "react",
+    "rich-text-editor",
+    "wysiwyg",
+    "html-editor",
+    "contenteditable",
+    "sanitizer",
+    "accessibility",
+    "design-system",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "1.1.2",
+    "@oge-ui/react-inputs": "1.1.2",
+    "@oge-ui/react-layout": "1.1.2",
+    "@oge-ui/react-overlay": "1.1.2"
+  },
+  "homepage": "https://www.ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/editor"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

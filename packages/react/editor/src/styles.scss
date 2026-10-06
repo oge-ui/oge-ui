@@ -1,0 +1,7 @@
+// The React editor renders the exact `.oge-editor-*` markup the Angular
+// package styles — so its stylesheet IS the Angular package's SCSS, compiled
+// here into this package's own `styles.css`. No second stylesheet, no drift
+// (ADR 0001). The toolbar, the popups and the colour palette come from the
+// layout, overlay and inputs packages' own stylesheets, which the app imports
+// alongside.
+@use '../../../editor/src/lib/editor/editor';

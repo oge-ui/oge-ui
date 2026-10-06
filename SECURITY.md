@@ -63,6 +63,21 @@ Two APIs deliberately accept markup, and say so at the call site:
 - Angular templates you supply for cells, items and columns are your code and
   are compiled as such.
 
+The rich-text editor (`@oge-ui/editor`, `@oge-ui/react-editor`) is the one
+component whose _value_ is markup. It never trusts it: the bound value, every
+paste and drop, and `insertHtml()` go through one allowlist parser that turns
+the markup into the editor's document model — allow-listed tags, `href`
+(`sanitizeUrl`), `src` (`sanitizeResourceUrl`; no `blob:`, `file:` or SVG,
+`data:image/*` only with `allowDataImages`), `alt`, `title`, `dir`, validated
+`color` / `background-color` and `text-align` — and drops everything else,
+`script`, `style`, `svg`, `iframe` and event handlers included. The value it
+emits is re-serialized from that model with every text node and attribute
+escaped, so a payload that only turns dangerous when the browser re-parses it
+(mutation XSS) has nothing left to mutate. The editing surface is built with
+`createElement` and the CSSOM — no `innerHTML`, no `dangerouslySetInnerHTML`.
+`ogeSanitizeEditorHtml()` applies the same allowlist to HTML you render
+elsewhere; still sanitize on the server, as you would any user-written HTML.
+
 ### URLs are sanitized in both render layers
 
 Data-driven `url` fields (menu items, breadcrumbs, menubar items) can carry a
@@ -136,8 +151,11 @@ The packages ship no inline scripts and evaluate no strings — no `eval`, no
 
 ### Trusted Types
 
-Under `require-trusted-types-for 'script'` the only Trusted Types sink in the
-suite is `DOMParser.parseFromString` in `@oge-ui/bpmn-engine` — it parses BPMN
+Under `require-trusted-types-for 'script'` the suite has two Trusted Types
+sinks, both `DOMParser.parseFromString` into an inert document that is only
+walked, never inserted. The rich-text editor (`@oge-ui/behavior`, used by
+`@oge-ui/editor` and `@oge-ui/react-editor`) parses a value or a clipboard
+payload behind a policy named **`oge-ui#editor`**. `@oge-ui/bpmn-engine` parses BPMN
 XML on import and overlay badge markup for the React layer. Both documents are
 inert (nothing in them runs or loads) and are only read, the overlay tree being
 re-sanitized against the allowlist above. When `trustedTypes` exists the engine
@@ -145,7 +163,7 @@ creates, once and lazily, a policy named **`oge-ui#bpmn`** whose `createHTML`
 passes its input through unchanged; list it in your policy directive:
 
 ```
-Content-Security-Policy: require-trusted-types-for 'script'; trusted-types oge-ui#bpmn
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types oge-ui#bpmn oge-ui#editor
 ```
 
 Angular apps also list Angular's own `angular` policy, which its sanitizing

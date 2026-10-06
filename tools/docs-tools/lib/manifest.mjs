@@ -168,6 +168,17 @@ export const PACKAGES = [
     tier: 'mit',
   },
   {
+    dir: 'editor',
+    npm: '@oge-ui/editor',
+    label: 'Rich Text Editor',
+    summary:
+      'Rich-text editor — a dependency-free contenteditable editor over its own document model (no execCommand): headings, lists, quotes, code, links, images, colours, alignment, undo history, markdown shortcuts, Word / Google Docs paste cleanup and a strict allowlist HTML sanitizer.',
+    docsRoot: '/components/editor',
+    pageDirs: ['editor'],
+    apiPage: 'apps/dev-app/src/app/pages/editor/api.ts',
+    tier: 'mit',
+  },
+  {
     dir: 'navigation',
     npm: '@oge-ui/navigation',
     label: 'Navigation',
@@ -430,6 +441,19 @@ export const PACKAGES = [
     docsRoot: '/components/upload',
     pageDirs: ['react-upload'],
     apiPage: 'apps/dev-app/src/app/pages/react-upload/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/editor',
+    npm: '@oge-ui/react-editor',
+    label: 'Rich Text Editor (React)',
+    summary:
+      'React rich-text editor: a dependency-free contenteditable editor over its own document model (no execCommand) with headings, lists, quotes, code, links, images, colours and alignment, its own undo history, markdown shortcuts, Word / Google Docs paste cleanup, a strict allowlist HTML sanitizer and an APG toolbar — running the same editor machine and stylesheet as the Angular editor package.',
+    // The React content renders inside the single Editor routes (ADR 0002).
+    docsRoot: '/components/editor',
+    pageDirs: ['react-editor'],
+    apiPage: 'apps/dev-app/src/app/pages/react-editor/api.ts',
     tier: 'mit',
     platform: 'react',
   },

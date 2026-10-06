@@ -122,4 +122,14 @@
     var(--oge-bg)
   );
   --oge-chart-link: var(--oge-muted-color);
+  /* rich-text editor (W8e) */
+  --oge-editor-bg: var(--oge-bg);
+  --oge-editor-toolbar-bg: var(--oge-bg);
+  --oge-editor-link: var(--oge-accent);
+  --oge-editor-code-bg: color-mix(
+    in srgb,
+    var(--oge-text-color) 12%,
+    transparent
+  );
+  --oge-editor-quote-border: var(--oge-text-color);
 }
