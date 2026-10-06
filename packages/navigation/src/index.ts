@@ -48,6 +48,14 @@ export type {
   OgeDrawerOpeningEvent,
   OgeDrawerPosition,
 } from './lib/drawer/drawer-types';
+// G5a drawer depth: built-in navigation items
+export { OgeDrawerItemTemplate } from './lib/drawer/drawer-item-template';
+export type {
+  OgeDrawerItem,
+  OgeDrawerItemClickEvent,
+  OgeDrawerSelectionChangedEvent,
+  OgeDrawerItemTemplateContext,
+} from './lib/drawer/drawer-types';
 export { OgeBreadcrumb } from './lib/breadcrumb/breadcrumb';
 export { OgeBreadcrumbItem } from './lib/breadcrumb/breadcrumb-item';
 export {
@@ -90,6 +98,8 @@ export type {
   OgeMenubarItemTemplateContext,
   OgeMenubarOpenMode,
   OgeMenubarOrientation,
+  OgeMenubarOverflowMode,
+  OgeMenubarItemOverflow,
   OgeMenubarSubmenuClosedEvent,
   OgeMenubarSubmenuClosingEvent,
   OgeMenubarSubmenuOpenedEvent,
@@ -156,4 +166,15 @@ export type {
   OgeTreeSelectionMode,
   OgeTreeSize,
   OgeTreeVirtualScrollOptions,
+} from './lib/tree-view/tree-view-types';
+// G5a tree view depth: cross-tree moves, label editing, "Load more" paging
+export type {
+  OgeTreeTransferredEvent,
+  OgeTreeMoveSource,
+  OgeTreeChildPageEvent,
+  OgeTreeAllowEditing,
+  OgeTreeEditValidator,
+  OgeTreeEditStartingEvent,
+  OgeTreeEditingEvent,
+  OgeTreeEditedEvent,
 } from './lib/tree-view/tree-view-types';

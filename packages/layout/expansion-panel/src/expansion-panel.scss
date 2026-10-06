@@ -1,0 +1,278 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// One stand-alone disclosure panel: the accordion item's look, without the
+// group. The host is the frame, so it carries the tokens.
+.oge-expansion-panel {
+  @include tokens.core-tokens;
+
+  --oge-expansion-panel-pad-x: 14px;
+  --oge-expansion-panel-pad-y: 12px;
+  --oge-expansion-panel-transition: 200ms;
+
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  transition: box-shadow 120ms ease;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  &[data-size='sm'] {
+    --oge-expansion-panel-pad-x: 10px;
+    --oge-expansion-panel-pad-y: 8px;
+  }
+
+  &[data-size='lg'] {
+    --oge-expansion-panel-pad-x: 18px;
+    --oge-expansion-panel-pad-y: 16px;
+  }
+
+  &[data-styling-mode='filled'] {
+    border-color: transparent;
+    background: var(--oge-header-bg);
+  }
+
+  &[data-styling-mode='flat'] {
+    border-color: transparent;
+    border-block-end-color: var(--oge-border-color);
+    border-radius: 0;
+    background: transparent;
+  }
+}
+
+// open: a raised card with an accent rail — reads at a glance
+.oge-expansion-panel-expanded:not([data-styling-mode='flat']) {
+  box-shadow: var(--oge-shadow-card);
+}
+
+.oge-expansion-panel-header {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.oge-expansion-panel-heading {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  font: inherit;
+}
+
+.oge-expansion-panel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  padding: var(--oge-expansion-panel-pad-y) var(--oge-expansion-panel-pad-x);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    @include tokens.focus-ring($inset: true, $color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+}
+
+.oge-expansion-panel-expanded .oge-expansion-panel-toggle {
+  background: var(--oge-accent-soft);
+}
+
+.oge-expansion-panel-disabled .oge-expansion-panel-toggle {
+  color: var(--oge-muted-color);
+  opacity: 0.6;
+}
+
+.oge-expansion-panel-pending .oge-expansion-panel-toggle {
+  pointer-events: none;
+}
+
+.oge-expansion-panel-toggle[data-toggle-position='end']
+  .oge-expansion-panel-chevron {
+  order: 10;
+  margin-inline-start: auto;
+}
+
+.oge-expansion-panel-chevron {
+  display: inline-flex;
+  flex: none;
+  color: var(--oge-input-muted);
+  transition: transform var(--oge-expansion-panel-transition) ease;
+}
+
+.oge-expansion-panel-expanded .oge-expansion-panel-chevron {
+  transform: rotate(180deg);
+  color: var(--oge-accent);
+}
+
+.oge-expansion-panel-icon {
+  flex: none;
+  color: var(--oge-input-muted);
+}
+
+.oge-expansion-panel-expanded .oge-expansion-panel-icon {
+  color: var(--oge-accent);
+}
+
+.oge-expansion-panel-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.oge-expansion-panel-title {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-expansion-panel-subtitle {
+  overflow: hidden;
+  color: var(--oge-input-muted);
+  font-size: 0.85em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-expansion-panel-spinner {
+  flex: none;
+  inline-size: 14px;
+  block-size: 14px;
+  border: 2px solid var(--oge-accent-25);
+  border-block-start-color: var(--oge-accent);
+  border-radius: 50%;
+  animation: oge-expansion-panel-spin 700ms linear infinite;
+}
+
+@keyframes oge-expansion-panel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Real, focusable buttons beside the toggle — never inside it.
+.oge-expansion-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding-inline-end: var(--oge-expansion-panel-pad-x);
+
+  &:empty {
+    display: none;
+  }
+}
+
+// Height animation via grid-template-rows: no JS measuring, and it keeps
+// working when the content resizes while open.
+.oge-expansion-panel-region {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.oge-expansion-panel-region-animated {
+  opacity: 0;
+  transition:
+    grid-template-rows var(--oge-expansion-panel-transition) ease,
+    opacity var(--oge-expansion-panel-transition) ease;
+}
+
+.oge-expansion-panel-region-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.oge-expansion-panel-inner {
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.oge-expansion-panel-body {
+  padding: var(--oge-expansion-panel-pad-y) var(--oge-expansion-panel-pad-x);
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+.oge-expansion-panel-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@include tokens.reduced-motion {
+  .oge-expansion-panel,
+  .oge-expansion-panel-toggle,
+  .oge-expansion-panel-chevron,
+  .oge-expansion-panel-region-animated {
+    transition: none;
+  }
+
+  // slowed, not stopped — a frozen spinner reads as finished
+  .oge-expansion-panel-spinner {
+    animation-duration: 1400ms;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+@include tokens.forced-colors {
+  .oge-expansion-panel {
+    border-color: CanvasText;
+  }
+
+  .oge-expansion-panel-toggle {
+    color: ButtonText;
+  }
+
+  // the tinted open header is lost — mark it with a real edge instead
+  .oge-expansion-panel-expanded .oge-expansion-panel-toggle {
+    border-inline-start: 3px solid Highlight;
+  }
+
+  .oge-expansion-panel-expanded .oge-expansion-panel-chevron,
+  .oge-expansion-panel-expanded .oge-expansion-panel-icon {
+    color: Highlight;
+  }
+
+  .oge-expansion-panel-disabled .oge-expansion-panel-toggle {
+    color: GrayText;
+    opacity: 1;
+  }
+
+  .oge-expansion-panel-body {
+    border-block-start-color: CanvasText;
+  }
+}

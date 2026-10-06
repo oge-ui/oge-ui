@@ -91,7 +91,7 @@ export const PACKAGES = [
     npm: '@oge-ui/buttons',
     label: 'Buttons',
     summary:
-      'Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.',
+      'Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, stand-alone toggle buttons with `aria-pressed`, button groups and drop-down/split buttons.',
     docsRoot: '/components/buttons',
     pageDirs: ['buttons'],
     apiPage: 'apps/dev-app/src/app/pages/buttons/api.ts',
@@ -102,7 +102,7 @@ export const PACKAGES = [
     npm: '@oge-ui/overlay',
     label: 'Overlay',
     summary:
-      'Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus, tooltips, context menus, the `oge-modal` dialog with `OgeModalService`, and `OgeToastService` notifications.',
+      'Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, and `OgeToastService` notifications.',
     docsRoot: '/components/overlay',
     pageDirs: ['overlay'],
     apiPage: 'apps/dev-app/src/app/pages/overlay/api.ts',
@@ -124,7 +124,7 @@ export const PACKAGES = [
     npm: '@oge-ui/layout',
     label: 'Layout',
     summary:
-      'Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.',
+      'Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right.',
     docsRoot: '/components/accordion',
     pageDirs: ['layout'],
     apiPage: [
@@ -163,7 +163,7 @@ export const PACKAGES = [
     npm: '@oge-ui/navigation',
     label: 'Navigation',
     summary:
-      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.',
+      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling, load-more paging, F2 label editing and drag & drop within and between trees, a drawer with built-in navigation items and touch swipe whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus, checkbox/radio rows and a More-item or container-width hamburger overflow, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.',
     docsRoot: '/components/tree-view',
     pageDirs: ['navigation'],
     apiPage: 'apps/dev-app/src/app/pages/navigation/api.ts',
@@ -307,7 +307,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-buttons',
     label: 'Buttons (React)',
     summary:
-      'React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.',
+      'React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm, auto-repeat and stand-alone toggle buttons — running the same press machine and the same stylesheet as the Angular package.',
     // The React content renders inside the single Buttons route (ADR 0002:
     // routes stay single, the header switch picks the layer) — there is no
     // /components/react-buttons route to link to.
@@ -350,7 +350,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-layout',
     label: 'Layout (React)',
     summary:
-      'React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, plus the progress bar, load indicator and shimmer skeleton — running the same config defaults, decision functions and stylesheet as the Angular layout package.',
+      'React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel — running the same config defaults, decision functions and stylesheet as the Angular layout package.',
     // The React content renders inside the single layout routes (ADR 0002:
     // routes stay single, the header switch picks the layer). The docs pages
     // branch when the family's docs parity lands.
@@ -371,7 +371,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-navigation',
     label: 'Navigation (React)',
     summary:
-      'React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state and drag reparenting, a drawer with overlay/push/side modes and derived modality, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus and type-ahead, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.',
+      'React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state, load-more paging, label editing and drag & drop between trees, a drawer with overlay/push/side modes, derived modality, navigation items and touch swipe, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus, type-ahead, checkbox/radio rows and More overflow, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.',
     // The React content renders inside the single navigation routes (ADR 0002:
     // routes stay single, the header switch picks the layer).
     docsRoot: '/components/tree-view',
@@ -485,7 +485,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-overlay',
     label: 'Overlay (React)',
     summary:
-      'React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.',
+      'React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.',
     // The React content renders inside the single Overlay routes (ADR 0002).
     docsRoot: '/components/overlay',
     pageDirs: ['react-overlay'],

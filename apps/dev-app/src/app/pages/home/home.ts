@@ -2058,7 +2058,7 @@ export class HomePage {
     {
       icon: 'layers',
       name: 'Overlay',
-      desc: 'Modals, toasts, anchored panels, menus, tooltips and context menus.',
+      desc: 'Modals with confirm/prompt helpers, windows, popovers, toasts, menus, tooltips and context menus.',
       path: '/components/overlay',
     },
     {
@@ -2112,7 +2112,7 @@ export class HomePage {
     {
       icon: 'loader',
       name: 'Progress & Loading',
-      desc: 'Bar, ring and skeleton as one trio — role="progressbar" with the aria rules done right.',
+      desc: 'Linear and circular bars, spinner, skeleton and a load panel — role="progressbar" done right.',
       path: '/components/progress',
     },
     {
@@ -2124,7 +2124,7 @@ export class HomePage {
     {
       icon: 'menubar',
       name: 'Menubar',
-      desc: 'APG menubar with nested submenus and a container-width hamburger collapse.',
+      desc: 'APG menubar with nested submenus, radio/checkbox rows and a More or hamburger overflow.',
       path: '/components/menubar',
     },
     {

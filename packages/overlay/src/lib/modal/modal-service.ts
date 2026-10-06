@@ -5,7 +5,6 @@ import {
   Component,
   EnvironmentInjector,
   Injectable,
-  InjectionToken,
   Injector,
   TemplateRef,
   ViewEncapsulation,
@@ -16,20 +15,39 @@ import {
   viewChild,
   type Type,
 } from '@angular/core';
-import type { OgeOverlayMessages } from '../config';
+import {
+  OgeDialogCore,
+  ogeConfirmResult,
+  ogeDialogAutoFocusSelector,
+  ogeDialogOptions,
+  ogePromptResult,
+  resolveOgeDialog,
+  type OgeDialogKind,
+  type OgeDialogOutcome,
+  type OgePromptBaseOptions,
+} from '@oge-ui/behavior';
+import { OGE_OVERLAY_CONFIG, type OgeOverlayMessages } from '../config';
+import { OgeLiveAnnouncer } from '../live-announcer/live-announcer';
+import { SIGNAL_ADAPTER } from '../signal-adapter';
+import { OgeDialogContent, type OgeDialogContentData } from './dialog-content';
+import type {
+  OgeAlertOptions,
+  OgeConfirmOptions,
+  OgePromptOptions,
+} from './dialog-types';
 import { OgeModal } from './modal';
+import { OGE_MODAL_DATA } from './modal-tokens';
 import type {
   OgeModalAutoFocus,
   OgeModalClosedEvent,
   OgeModalPlacement,
+  OgeModalRole,
   OgeModalSlotContext,
 } from './modal-types';
 
-/**
- * Data passed via `OgeModalService.open(component, { data })`; inject it in
- * the content component: `readonly data = inject(OGE_MODAL_DATA)`.
- */
-export const OGE_MODAL_DATA = new InjectionToken<unknown>('OGE_MODAL_DATA');
+export { OGE_MODAL_DATA } from './modal-tokens';
+
+let nextDialogId = 0;
 
 /** Configuration of a service-opened modal — the declarative inputs, minus slots. */
 export interface OgeModalOpenConfig<D = unknown> {
@@ -42,6 +60,10 @@ export interface OgeModalOpenConfig<D = unknown> {
   maxWidth?: number | string;
   maxHeight?: number | string;
   placement?: OgeModalPlacement;
+  /** ARIA role of the panel. Default `'dialog'`. */
+  dialogRole?: OgeModalRole;
+  /** Id(s) of the element(s) describing the dialog (`aria-describedby`). */
+  ariaDescribedBy?: string;
   shading?: boolean;
   fullScreen?: boolean;
   showCloseButton?: boolean;
@@ -106,6 +128,8 @@ export class OgeModalRef<R = unknown> {
       [maxWidth]="config().maxWidth"
       [maxHeight]="config().maxHeight"
       [placement]="config().placement ?? 'center'"
+      [dialogRole]="config().dialogRole ?? 'dialog'"
+      [ariaDescribedBy]="config().ariaDescribedBy"
       [shading]="config().shading ?? true"
       [fullScreen]="config().fullScreen ?? false"
       [showCloseButton]="config().showCloseButton ?? true"
@@ -171,6 +195,82 @@ export class OgeModalService {
   private readonly appRef = inject(ApplicationRef);
   private readonly envInjector = inject(EnvironmentInjector);
   private readonly injector = inject(Injector);
+  private readonly overlayConfig = inject(OGE_OVERLAY_CONFIG);
+  private readonly announcer = inject(OgeLiveAnnouncer);
+
+  /**
+   * Asks a yes/no question in an APG alert dialog; resolves `true` for the
+   * primary button, `false` for Cancel and Escape. `danger` styles the
+   * primary button as destructive and puts initial focus on Cancel.
+   *
+   * ```ts
+   * if (await this.modals.confirm({ title: 'Delete file?', message: 'This cannot be undone.', danger: true })) { … }
+   * ```
+   */
+  confirm(options: string | OgeConfirmOptions): Promise<boolean> {
+    return this.openDialog('confirm', options).then(({ outcome }) =>
+      ogeConfirmResult(outcome),
+    );
+  }
+
+  /** Shows a message with a single OK button (APG alert dialog); Escape also acknowledges it. */
+  alert(options: string | OgeAlertOptions): Promise<void> {
+    return this.openDialog('alert', options).then(() => undefined);
+  }
+
+  /**
+   * Asks for a line of text; resolves the submitted value, or `null` for
+   * Cancel and Escape. `required` and `validate` (sync or async) block the
+   * submit and render the error beside the field (`aria-invalid` +
+   * `aria-describedby`).
+   */
+  prompt(options: string | OgePromptOptions): Promise<string | null> {
+    return this.openDialog('prompt', options).then(({ outcome, value }) =>
+      ogePromptResult(outcome, value),
+    );
+  }
+
+  private openDialog(
+    kind: OgeDialogKind,
+    input: string | OgePromptBaseOptions<TemplateRef<unknown>>,
+  ): Promise<{ outcome: OgeDialogOutcome | undefined; value: string }> {
+    const options =
+      ogeDialogOptions<OgePromptBaseOptions<TemplateRef<unknown>>>(input);
+    const messages = this.overlayConfig.messages;
+    const dialog = resolveOgeDialog(kind, options, messages);
+    const id = `oge-dialog-${nextDialogId++}`;
+    let ref: OgeModalRef<OgeDialogOutcome> | null = null;
+    const core = new OgeDialogCore({
+      adapter: SIGNAL_ADAPTER,
+      dialog,
+      validate: options.validate,
+      messages,
+      settle: (outcome) => ref?.close(outcome),
+      announce: (message) => this.announcer.announce(message),
+    });
+    const data: OgeDialogContentData = {
+      dialog,
+      core,
+      id,
+      icon: options.icon instanceof TemplateRef ? options.icon : null,
+    };
+    ref = this.open<OgeDialogOutcome, OgeDialogContentData>(OgeDialogContent, {
+      title: dialog.title,
+      width: dialog.width,
+      dialogRole: dialog.role,
+      ariaDescribedBy: dialog.message ? `${id}-message` : undefined,
+      autoFocus: ogeDialogAutoFocusSelector(dialog.initialFocus),
+      showCloseButton: false,
+      closeOnBackdropClick: false,
+      padding: false,
+      data,
+    });
+    // Escape closes the modal without a result, which the mappers read as Cancel
+    return ref.closed.then(({ result }) => ({
+      outcome: result,
+      value: core.value(),
+    }));
+  }
 
   /** Opens `content` (component or template) in a body-appended modal. */
   open<R = unknown, D = unknown>(

@@ -34,6 +34,13 @@ export {
   type OgeButtonHoldState,
 } from './lib/button/button-press';
 export {
+  resolveButtonSelectionState,
+  applyButtonToggle,
+  type OgeButtonSelectionRequest,
+  type OgeButtonSelectionState,
+  type OgeButtonToggleChange,
+} from './lib/button/button-toggle';
+export {
   type OgeInputLabelMode,
   type OgeInputStylingMode,
   type OgeInputSize,
@@ -710,6 +717,60 @@ export {
   type OgeSkeletonConfigInput,
 } from './lib/layout/layout-core';
 export {
+  OGE_PROGRESS_RING_DEFAULT_SIZE,
+  OGE_PROGRESS_RING_DEFAULT_THICKNESS,
+  OGE_PROGRESS_RING_INDETERMINATE_RATIO,
+  ogeProgressAriaNow,
+  ogeProgressLabel,
+  ogeProgressRatio,
+  ogeProgressRingGeometry,
+  type OgeProgressBarType,
+  type OgeProgressRingGeometry,
+} from './lib/layout/progress-ring';
+export {
+  OGE_LOAD_PANEL_TARGET_CLASS,
+  OgeLoadPanelCore,
+  ogeAcquireLoadPanelTarget,
+  ogeLoadPanelBusyTarget,
+  ogeLoadPanelNeedsPositioning,
+  ogeResolveLoadPanelTarget,
+  type OgeLoadPanelClock,
+  type OgeLoadPanelCoreHost,
+  type OgeLoadPanelPosition,
+  type OgeLoadPanelTargetElement,
+  type OgeLoadPanelTimings,
+} from './lib/layout/load-panel-core';
+export {
+  ogeExpansionShowsToggle,
+  runOgeExpansionToggle,
+  type OgeExpansionPanelCollapsingEvent,
+  type OgeExpansionPanelExpandingEvent,
+  type OgeExpansionPanelToggleEvent,
+  type OgeExpansionToggleRequest,
+} from './lib/layout/expansion-panel-core';
+export {
+  flattenOgePanelBarItems,
+  isOgePanelBarSingle,
+  ogePanelBarExpansionAfter,
+  ogePanelBarIndex,
+  ogePanelBarInitialExpanded,
+  ogePanelBarKeyAction,
+  ogePanelBarKeyIntent,
+  ogePanelBarVisibleIds,
+  type OgePanelBarExpandMode,
+  type OgePanelBarExpansionChange,
+  type OgePanelBarItem,
+  type OgePanelBarItemClickEvent,
+  type OgePanelBarItemCollapsingEvent,
+  type OgePanelBarItemExpandingEvent,
+  type OgePanelBarItemLike,
+  type OgePanelBarItemToggleEvent,
+  type OgePanelBarKeyAction,
+  type OgePanelBarKeyIntent,
+  type OgePanelBarNode,
+  type OgePanelBarSelectionChangedEvent,
+} from './lib/layout/panel-bar-core';
+export {
   edgeEnabledIndex,
   stepEnabledIndex,
   OGE_DEFAULT_TABS_MESSAGES,
@@ -747,6 +808,7 @@ export {
 export {
   type OgeMenuItem,
   type OgeMenuItemSeverity,
+  type OgeMenuItemType,
   type OgeMenuCloseReason,
 } from './lib/menu/menu-types';
 export {
@@ -755,6 +817,21 @@ export {
   menuEdgeIndex,
   OgeMenuTypeAhead,
 } from './lib/menu/menu-nav';
+export {
+  isMenuHeader,
+  isMenuItemNavigable,
+  menuItemRole,
+  menuItemAriaChecked,
+  menuItemIndicator,
+  menuItemNextChecked,
+  menuItemKeepsOpen,
+  applyMenuItemCheck,
+  menuItemSegments,
+  menuRetainedActiveIndex,
+  type OgeMenuItemRole,
+  type OgeMenuActivationTrigger,
+  type OgeMenuSegment,
+} from './lib/menu/menu-item-state';
 export {
   OGE_DEFAULT_OVERLAY_TIMINGS,
   type OgeOverlayTimings,
@@ -812,7 +889,45 @@ export {
   OgeTooltipCore,
   tooltipDescribedByTarget,
   type OgeTooltipCoreOptions,
+  type OgeTooltipShowMode,
 } from './lib/overlay/tooltip-core';
+export {
+  OGE_POPUP_ARROW_SIZE,
+  resolvePopupArrow,
+  popupArrowInset,
+  type OgePopupArrow,
+  type OgePopupArrowRequest,
+} from './lib/overlay/arrow';
+export {
+  OgePopoverCore,
+  popoverTriggerAria,
+  popoverPanelAria,
+  syncPopoverTriggerAria,
+  supportsAriaExpanded,
+  resolvePopoverInitialFocus,
+  nextTabbableAfter,
+  type OgePopoverCoreOptions,
+  type OgePopoverShowOn,
+  type OgePopoverOpenReason,
+  type OgePopoverCloseReason,
+  type OgePopoverInitialFocus,
+  type OgePopoverOpeningEvent,
+  type OgePopoverOpenedEvent,
+  type OgePopoverClosingEvent,
+  type OgePopoverClosedEvent,
+  type OgePopoverTriggerAria,
+  type OgePopoverPanelAria,
+} from './lib/overlay/popover-core';
+export {
+  ogeContextMenuApiTarget,
+  ogeContextMenuPoint,
+  ogeContextMenuTarget,
+  ogeResolveContextMenuOpen,
+  type OgeContextMenuOpeningEvent,
+  type OgeContextMenuPoint,
+  type OgeContextMenuOpenRequest,
+  type OgeContextMenuOpenResult,
+} from './lib/overlay/context-menu-core';
 export {
   OGE_MODAL_MIN_RESIZE,
   modalCssSize,
@@ -832,6 +947,89 @@ export {
   type OgeModalDragRequest,
   type OgeModalResizeRequest,
 } from './lib/overlay/modal-core';
+export {
+  OGE_MODAL_PLACEMENTS,
+  modalPlacementClass,
+  type OgeModalRole,
+} from './lib/overlay/modal-core';
+export { overlayStackSize } from './lib/overlay/overlay-stack';
+export { ogeOverlayMessage } from './lib/overlay/overlay-config';
+// --- dialog helpers (confirm / alert / prompt) -------------------------------
+export {
+  OGE_DIALOG_DEFAULT_WIDTH,
+  OGE_DIALOG_ICONS,
+  OGE_DIALOG_TRIANGLE_PATH,
+  OgeDialogCore,
+  ogeConfirmResult,
+  ogeDialogAutoFocusSelector,
+  ogeDialogEnterIsPrimary,
+  ogeDialogOptions,
+  ogePromptResult,
+  resolveOgeDialog,
+  validateOgePromptValue,
+  type OgeAlertBaseOptions,
+  type OgeConfirmBaseOptions,
+  type OgeDialogBaseOptions,
+  type OgeDialogCoreOptions,
+  type OgeDialogIcon,
+  type OgeDialogInitialFocus,
+  type OgeDialogKeyInput,
+  type OgeDialogKind,
+  type OgeDialogOutcome,
+  type OgeDialogSeverity,
+  type OgePromptBaseOptions,
+  type OgePromptInputType,
+  type OgePromptValidator,
+  type OgeResolvedDialog,
+} from './lib/overlay/dialog-helpers';
+// --- non-modal window ----------------------------------------------------------
+export {
+  bringOgeWindowToFront,
+  isOgeFrontWindow,
+  ogeOpenWindowCount,
+  ogeWindowLayer,
+  registerOgeWindow,
+  subscribeOgeWindows,
+  unregisterOgeWindow,
+} from './lib/overlay/window-stack';
+export {
+  OGE_WINDOW_GUTTER,
+  OGE_WINDOW_KEY_SHORTCUTS,
+  OGE_WINDOW_KEY_STEP,
+  OGE_WINDOW_MIN_SIZE,
+  OGE_WINDOW_RESIZE_EDGES,
+  OGE_WINDOW_TITLE_REACH,
+  OgeWindowCore,
+  clampOgeWindowPosition,
+  ogeWindowKeyCommand,
+  ogeWindowStateStep,
+  ogeWindowZIndex,
+  resizeOgeWindowRect,
+  resolveOgeWindowPlacement,
+  resolveOgeWindowInitialFocus,
+  type OgeWindowAutoFocus,
+  type OgeWindowBox,
+  type OgeWindowChangeSource,
+  type OgeWindowCloseReason,
+  type OgeWindowClosedEvent,
+  type OgeWindowClosingEvent,
+  type OgeWindowCoreOptions,
+  type OgeWindowCoreProps,
+  type OgeWindowKeyCommand,
+  type OgeWindowKeyInput,
+  type OgeWindowMovedEvent,
+  type OgeWindowOpeningEvent,
+  type OgeWindowPlacement,
+  type OgeWindowPointerInput,
+  type OgeWindowPosition,
+  type OgeWindowRect,
+  type OgeWindowResizeEdge,
+  type OgeWindowResizedEvent,
+  type OgeWindowSizeLimits,
+  type OgeWindowState,
+  type OgeWindowStateChangedEvent,
+  type OgeWindowStateChangingEvent,
+} from './lib/overlay/window-core';
 // --- live announcements ------------------------------------------------------
 export {
   OgeLiveAnnouncerCore,
@@ -1242,6 +1440,83 @@ export {
   type OgeTreeKeyPlan,
   type OgeTreeKeyInput,
 } from './lib/navigation/tree-view-model';
+// G5a tree view depth: cross-tree moves, label editing, "Load more" paging
+export {
+  fillTreeViewMessages,
+  OGE_TREE_LOAD_MORE_PREFIX,
+  treeLoadMoreKey,
+  treeLoadMoreText,
+  treeChildPageLimit,
+  nextTreeChildPage,
+  resolveTreeChildPageSize,
+  type OgeTreeViewResolvedMessages,
+  type OgeTreeTransferredEvent,
+  type OgeTreeMoveSource,
+  type OgeTreeChildPageEvent,
+  type OgeTreeLoadMoreInfo,
+} from './lib/navigation/tree-view-core';
+export {
+  ogeTreeDragGroupOf,
+  registerOgeTreeDragPeer,
+  ogeTreeDragPeerCount,
+  ogeTreeDragPeerAt,
+  ogeTreeLocateDrop,
+  ogeTreeDragSourceOf,
+  ogeTreeCommitMove,
+  planTreeTransferKey,
+  OGE_TREE_TRANSFER_SHORTCUTS,
+  ogeTreeCutKey,
+  ogeTreeHasCut,
+  ogeTreeCut,
+  ogeTreeCancelCut,
+  ogeTreePaste,
+  beginOgeTreeDrag,
+  type OgeTreeDragSource,
+  type OgeTreeDragTarget,
+  type OgeTreeDragRowInfo,
+  type OgeTreeDragPeer,
+  type OgeTreeTransferKeyAction,
+  type OgeTreeDragOptions,
+} from './lib/navigation/tree-view-transfer';
+export {
+  treeCanEditNode,
+  runTreeEditStart,
+  planTreeEditKey,
+  isTreeEditKey,
+  runTreeEditCommit,
+  type OgeTreeAllowEditing,
+  type OgeTreeEditValidator,
+  type OgeTreeEditStartingEvent,
+  type OgeTreeEditingEvent,
+  type OgeTreeEditedEvent,
+  type OgeTreeEditKeyAction,
+  type OgeTreeEditCommitResult,
+  type OgeTreeEditCommitInput,
+} from './lib/navigation/tree-view-editing';
+// G5a drawer depth: built-in navigation items, touch swipe
+export {
+  ogeDrawerItemKey,
+  buildOgeDrawerItems,
+  ogeDrawerItemNavIndex,
+  runOgeDrawerItemClick,
+  type OgeDrawerItem,
+  type OgeDrawerItemView,
+  type OgeDrawerItemClickEvent,
+  type OgeDrawerSelectionChangedEvent,
+} from './lib/navigation/drawer-core';
+export {
+  OGE_DRAWER_SWIPE_EDGE,
+  OGE_DRAWER_SWIPE_VELOCITY,
+  ogeDrawerPhysicalEdge,
+  ogeDrawerRailTooltipPlacement,
+  ogeDrawerSwipeDistance,
+  ogeDrawerSwipeAlong,
+  ogeDrawerSwipeStarts,
+  ogeDrawerSwipeOutcome,
+  beginOgeDrawerSwipe,
+  type OgeDrawerPhysicalEdge,
+  type OgeDrawerSwipeOptions,
+} from './lib/navigation/drawer-swipe';
 export {
   OGE_DEFAULT_DRAWER_MESSAGES,
   OGE_DEFAULT_DRAWER_CONFIG,
@@ -1379,6 +1654,16 @@ export {
   type OgeMenubarMessages,
   type OgeMenubarConfig,
   type OgeMenubarConfigInput,
+  OGE_MENUBAR_MORE_KEY,
+  resolveMenubarOverflow,
+  menubarOverflowItems,
+  menubarBarEntries,
+  menubarEntryHidden,
+  menubarMoreActive,
+  menubarItemPath,
+  type OgeMenubarOverflowMode,
+  type OgeMenubarItemOverflow,
+  type OgeMenubarOverflowRequest,
 } from './lib/navigation/menubar-core';
 
 // --- forms -----------------------------------------------------------------

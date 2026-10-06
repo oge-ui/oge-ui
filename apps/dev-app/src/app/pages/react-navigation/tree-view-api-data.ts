@@ -256,6 +256,43 @@ export const OGE_REACT_TREE_VIEW_API: ApiSections = {
           description:
             'Allows dropping *into* a node (reparenting), not just between siblings.',
         },
+        {
+          name: 'dragGroup',
+          type: 'string | undefined',
+          description:
+            "Trees sharing a group accept each other's nodes — by pointer drag and by the Ctrl+X / Ctrl+V keyboard twin. Both trees need <code>allowDragging</code>. The target fires <code>onItemReordering</code> / <code>onItemReordered</code> (with <code>sourceTreeId</code> / <code>targetTreeId</code>), the source <code>onItemTransferred</code>; neither moves data.",
+        },
+        {
+          name: 'childPageSize',
+          type: 'number | undefined',
+          description:
+            'Children rendered per parent (roots included) before a "Load more" row — Kendo\'s node page size. <code>aria-setsize</code> keeps reporting the real total. <code>0</code> / unset renders every child. Paging pauses while searching.',
+        },
+      ],
+    },
+    {
+      title: 'Label editing',
+      entries: [
+        {
+          name: 'allowEditing',
+          type: 'boolean | ((item: T) => boolean)',
+          default: 'false',
+          description:
+            'Lets users rename nodes in place: F2 (or a double-click with <code>editOnDblClick</code>) turns the label into a text field; Enter or blur commits, Escape cancels. The tree does not write the label — apply <code>onItemEdited</code> to your data.',
+        },
+        {
+          name: 'editOnDblClick',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A double-click opens the label editor instead of toggling the node.',
+        },
+        {
+          name: 'validateEdit',
+          type: '(value: string, item: T) => boolean | string | null | undefined',
+          description:
+            "Validates an edited label: <code>true</code> / <code>null</code> accepts, <code>false</code> rejects with the catalog's <code>editInvalid</code>, a string rejects with that message. A rejected label keeps the editor open.",
+        },
       ],
     },
     {
@@ -368,6 +405,35 @@ export const OGE_REACT_TREE_VIEW_API: ApiSections = {
           description:
             'Scrolls a node into view, using offset math when virtualized.',
         },
+        {
+          name: 'editItem(key)',
+          type: '(key: RowKey) => boolean',
+          description:
+            'Opens the label editor on a node (what F2 does). Returns <code>false</code> when editing is off for it or <code>onItemEditStarting</code> vetoed.',
+        },
+        {
+          name: 'cancelEdit()',
+          type: '() => void',
+          description: 'Closes an open label editor without committing.',
+        },
+        {
+          name: 'showMoreChildren(parentKey)',
+          type: '(parentKey: RowKey | null) => void',
+          description:
+            'Reveals the next <code>childPageSize</code> children of a paged parent (<code>null</code> for the root level) — what activating its "Load more" row does.',
+        },
+        {
+          name: 'cutItem(key)',
+          type: '(key: RowKey) => boolean',
+          description:
+            'Marks a node for a keyboard move (what Ctrl+X does); <code>pasteItem</code> on any tree of the same <code>dragGroup</code> moves it. Wire both to buttons or a context menu for a single-pointer path. Requires <code>allowDragging</code>.',
+        },
+        {
+          name: 'pasteItem(targetKey, position?)',
+          type: "(targetKey: RowKey, position?: 'inside' | 'before' | 'after') => boolean",
+          description:
+            "Moves the cut node of this tree's group onto <code>targetKey</code> through the same pipeline as a drop (<code>onItemReordering</code> → <code>onItemReordered</code> → <code>onItemTransferred</code>). <code>position</code> defaults to <code>inside</code> (<code>after</code> when <code>allowDropInside</code> is off).",
+        },
       ],
     },
   ],
@@ -422,7 +488,31 @@ export const OGE_REACT_TREE_VIEW_API: ApiSections = {
           name: 'onItemReordering / onItemReordered',
           type: '(event: OgeTreeReorderingEvent&lt;T&gt;) => void / (event: OgeTreeReorderedEvent&lt;T&gt;) => void',
           description:
-            "Cancelable pre-event and result of a drag & drop reparent, carrying <code>position: 'inside' | 'before' | 'after'</code>. The tree does not mutate your data.",
+            "Cancelable pre-event and result of a move onto this tree, carrying <code>position: 'inside' | 'before' | 'after'</code>, <code>sourceTreeId</code> / <code>targetTreeId</code> (different for a drop from another tree of the <code>dragGroup</code>) and <code>trigger: 'pointer' | 'keyboard' | 'api'</code>. The tree does not mutate your data.",
+        },
+        {
+          name: 'onItemTransferred',
+          type: '(event: OgeTreeTransferredEvent&lt;T&gt;) => void',
+          description:
+            "Fired by the source tree after one of its nodes moved to another tree of the same <code>dragGroup</code> — remove it from this tree's data.",
+        },
+        {
+          name: 'onItemEditStarting',
+          type: '(event: OgeTreeEditStartingEvent&lt;T&gt;) => void',
+          description:
+            'Cancelable pre-event of the label editor opening, with the current <code>value</code>.',
+        },
+        {
+          name: 'onItemEditing / onItemEdited',
+          type: '(event: OgeTreeEditingEvent&lt;T&gt;) => void / (event: OgeTreeEditedEvent&lt;T&gt;) => void',
+          description:
+            'Cancelable pre-event and result of a label edit, carrying <code>previousValue</code> and <code>value</code>. Runs after <code>validateEdit</code>; an unchanged or blank label closes the editor without either.',
+        },
+        {
+          name: 'onChildPageShown',
+          type: '(event: OgeTreeChildPageEvent&lt;T&gt;) => void',
+          description:
+            'Fired after a "Load more" row revealed the next page, with <code>parentKey</code> (<code>null</code> for the roots), <code>shown</code> and <code>total</code>.',
         },
       ],
     },
@@ -505,6 +595,18 @@ export const OGE_REACT_TREE_VIEW_API: ApiSections = {
           description:
             'Select all, extend by one, and range-select to the start/end — the APG "recommended" model, so plain navigation needs no modifier.',
         },
+        {
+          name: 'F2',
+          type: 'editing',
+          description:
+            'Opens the label editor (<code>allowEditing</code>); inside it Enter commits, Escape cancels and the focus returns to the node. Advertised with <code>aria-keyshortcuts</code>.',
+        },
+        {
+          name: 'Ctrl+X, Ctrl+V, Ctrl+Shift+V',
+          type: 'move',
+          description:
+            'The keyboard twin of drag & drop (<code>allowDragging</code>): cut the focused node, then paste it into (or, with Shift, after) the focused target — in this tree or another of the <code>dragGroup</code>. Escape abandons the cut; each step is announced through the live region.',
+        },
       ],
     },
   ],
@@ -562,6 +664,57 @@ export const OGE_REACT_TREE_VIEW_CONFIG_API: ApiSections = {
           type: 'string',
           default: "'No matching items'",
           description: 'Shown when a search matched nothing.',
+        },
+        {
+          name: 'loadMore',
+          type: 'string',
+          default:
+            "'Show {count, plural, one {# more item} other {# more items}}'",
+          description:
+            'Label of the "Load more" row under a paged parent (<code>childPageSize</code>); an ICU plural over <code>count</code>, the children still hidden.',
+        },
+        {
+          name: 'editLabel',
+          type: 'string',
+          default: "'Item name'",
+          description: 'Accessible name of the in-place label editor.',
+        },
+        {
+          name: 'editInvalid',
+          type: 'string',
+          default: "'Enter a valid name.'",
+          description:
+            'Shown when <code>validateEdit</code> rejects a value without its own message.',
+        },
+        {
+          name: 'cutAnnouncement',
+          type: 'string',
+          default:
+            "'{item} cut. Move to the target item and press Control+V to move it there, or Escape to cancel.'",
+          description:
+            'Announced after Ctrl+X marked a node for a keyboard move.',
+        },
+        {
+          name: 'movedAnnouncement',
+          type: 'string',
+          default:
+            "'{position, select, inside {{item} moved into {target}.} before {{item} moved before {target}.} other {{item} moved after {target}.}}'",
+          description:
+            'Announced after a move committed; an ICU <code>select</code> over <code>position</code>.',
+        },
+        {
+          name: 'moveCancelledAnnouncement',
+          type: 'string',
+          default: "'Move cancelled.'",
+          description:
+            'Announced when Escape abandons a pending keyboard move.',
+        },
+        {
+          name: 'moveRejectedAnnouncement',
+          type: 'string',
+          default: "'{item} cannot be moved here.'",
+          description:
+            'Announced when the focused node cannot take the cut node (its own subtree).',
         },
       ],
     },

@@ -39,6 +39,89 @@ are versioned independently, which is the case here.
   `rangeSelected`, `cellClick` and `getStartViewDate()` carry instants (identical to
   1.x without a `timeZone`).
 
+### Overlay, navigation, layout and buttons depth (G5a) — `@oge-ui/overlay`, `@oge-ui/navigation`, `@oge-ui/layout`, `@oge-ui/buttons`, `@oge-ui/behavior` and their React twins
+
+- **Popover**: `oge-popover` + `[ogePopover]` / `<OgePopover>`. It has a title, footer
+  actions, a close button and a callout arrow. Triggers are click, hover (with a grace period
+  into the panel), focus and manual. A `modal` popover traps focus; a non-modal one follows
+  the APG disclosure, and Tab leaves it as if it were inline. Cancelable `opening` /
+  `closing` carry reasons; open state is two-way `[(visible)]` (React: `open` /
+  `defaultOpen` / `onOpenChange`); `open()` / `close()` / `toggle()`.
+- **Tooltip**: template or render-prop content (`ogeTooltip` accepts a `TemplateRef` plus
+  `tooltipContext`; React `content`), a callout arrow (`tooltipArrow` / `arrow`), `showMode`
+  `'hover' | 'focus' | 'click' | 'manual'`, `maxWidth`, and imperative `open()` /
+  `close()` / `toggle()` (`exportAs: 'ogeTooltip'`, React ref handle).
+- **Context menu**: CSS-selector target delegation (`contextMenuTarget` / `target`), a
+  cancelable `opening` event that carries the target element and may rebuild `items` per
+  target, and imperative `open(x, y)` / `open(event)` (`exportAs: 'ogeContextMenu'`, React
+  handle).
+- Behavior: `OgePopoverCore`, `resolvePopupArrow` (also the anchored panel's `arrow`
+  option), tooltip show modes, the context-menu open pipeline, and the
+  `popoverShowDelayMs` / `popoverHideDelayMs` timings.
+- **Dialog helpers**: `confirm()` / `alert()` / `prompt()` on `OgeModalService` and on
+  React `useOgeModals()`. They return promises (`boolean` / `void` / `string | null`) and
+  render as APG alert dialogs with severity icons, localized OK / Cancel, a `danger`
+  style whose initial focus is on Cancel, Enter = OK and Escape = Cancel, and sync or
+  async prompt validation (`aria-invalid` / `aria-describedby`). The modal also gains
+  `dialogRole` and `ariaDescribedBy`.
+- **Non-modal window**: `oge-window` / `<OgeWindow>`. Several windows can be open at
+  once. A shared z-order brings the pressed or focused window to the front. It drags by
+  the title bar and resizes from 8 handles, with a keyboard twin (arrows move,
+  Ctrl+arrows resize, Shift for 1px steps). It has minimize / maximize / restore with
+  a cancelable `stateChanging`, `keepInViewport`, `position`, nine placements, and the
+  `moved` / `resized` / `activated` events.
+- **Modal placements**: `placement` gains `bottom`, `start`, `end` and the four corners
+  (`top-start` … `bottom-end`), all logical and RTL-aware.
+- **Load panel**: `oge-load-panel` / `<OgeLoadPanel>` (`@oge-ui/layout/load-panel`).
+  It is a shading overlay over its parent, a `target` or the full screen, with a
+  message and indicator, `showDelay` and `minDisplayTime`. The target gets a
+  ref-counted `aria-busy`, and the message is announced through the shared live
+  announcer. `@oge-ui/react-layout` now peers on `react-dom`.
+- **Circular progress**: `type="circular"` on `oge-progress-bar` / `<OgeProgressBar>`.
+  It is an SVG ring with `size` and `thickness`, a centred label and an indeterminate
+  spin.
+- **Panel bar**: `oge-panel-bar` / `<OgePanelBar>` (`@oge-ui/layout/panel-bar`). It
+  takes nested groups and content items, `expandMode` `'single' | 'multiple' | 'full'`,
+  and `[(selectedKey)]` / `[(expandedKeys)]`. It follows the APG disclosure pattern,
+  with arrow-key navigation as an extra.
+- **Expansion panel**: `oge-expansion-panel` / `<OgeExpansionPanel>`
+  (`@oge-ui/layout/expansion-panel`). A single APG disclosure with `[(expanded)]`,
+  cancelable `expanding` / `collapsing`, `expandGuard`, header actions and lazy
+  content.
+- **Toggle button**: `oge-button` / `<OgeButton>` gain `toggle` with a two-way
+  `selected` (React: `selected` / `defaultSelected` / `onSelectedChange`). It renders
+  `aria-pressed`, fires `selectedChanged { selected, previousValue, event }`, and
+  pressed and unpressed toggles are styled in every styling mode, forced colours
+  included.
+- **Menu rows**: `OgeMenuItem` gains `type: 'checkbox' | 'radio' | 'header'`, `group` and
+  `keepOpen`. Rows render as `menuitemcheckbox` / `menuitemradio` with `aria-checked`.
+  Header rows label a `role="group"` and are skipped by the keyboard. Space toggles
+  without closing (APG). Item-click events report the next `checked` state, and
+  `applyMenuItemCheck()` applies it. Rows that set only `checked` are unchanged.
+- **Menubar "More" overflow**: `overflowMode: 'hamburger' | 'more' | 'none'`. In
+  `'more'` mode, top-level items that do not fit collapse into a trailing More item
+  (`messages.more`; per item `overflow: 'auto' | 'always' | 'never'`) instead of the
+  all-or-nothing hamburger.
+- **Tree view**:
+  - Drag & drop between trees that share a `dragGroup` (`itemTransferred`;
+    `itemReordering` / `itemReordered` gain `sourceTreeId`, `targetTreeId` and
+    `trigger`), with a Ctrl+X / Ctrl+V keyboard twin, `cutItem()` / `pasteItem()` and
+    live announcements. Node drags now run on the shared pointer machine (touch long
+    press, ghost, auto-scroll).
+  - In-place label editing: `allowEditing`, `editOnDblClick`, `validateEdit`,
+    `itemEditStarting` / `itemEditing` / `itemEdited`, `editItem()` / `cancelEdit()`.
+  - "Load more" paging: `childPageSize`, `childPageShown`, `showMoreChildren()`.
+- **Drawer**: built-in navigation `items` with `[(selectedKey)]`, `itemClick`,
+  `selectionChanged` and `[ogeDrawerItemTemplate]` / `renderItem`, and mini-rail icons
+  with tooltips. `swipeEnabled` adds a touch swipe that opens and closes the drawer
+  (new close reason `'swipe'`).
+- Behavior: `beginPointerGesture` gains a `touchLock` option. New token
+  `--oge-z-window`.
+- New message keys, translated in all ten `@oge-ui/locales` packs:
+  - overlay: `popoverClose`, `dialog*`, `window*`
+  - layout: `loadIndicator.loadPanelMessage`
+  - navigation: `menubar.more`, and `treeView.loadMore` / `edit*` / `*Announcement`
+
 ### Gantt scheduling depth (G3b) — `@oge-ui/gantt`, `@oge-ui/react-gantt`, `@oge-ui/gantt-engine`
 
 - **Lag / lead** on every link type (`dependencyLagExpr` / `dependencyLagUnitExpr`,

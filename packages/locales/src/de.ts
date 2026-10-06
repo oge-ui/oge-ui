@@ -268,6 +268,16 @@ export const de: OgeLocalePack = {
     toastClose: 'Schließen',
     toastRegionLabel: 'Benachrichtigungen',
     toastCountBadge: '×{count}',
+    dialogOk: 'OK',
+    dialogCancel: 'Abbrechen',
+    dialogConfirmTitle: 'Bestätigen',
+    dialogAlertTitle: 'Hinweis',
+    dialogPromptTitle: 'Wert eingeben',
+    dialogRequired: 'Dieses Feld ist erforderlich.',
+    windowMinimize: 'Minimieren',
+    windowMoved: 'Fenster nach {x}, {y} verschoben',
+    windowResized: 'Fenstergröße auf {width} × {height} geändert',
+    popoverClose: 'Schließen',
   },
   tabs: {
     closeTab: 'Registerkarte schließen',
@@ -377,6 +387,7 @@ export const de: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'Wird geladen',
+      loadPanelMessage: 'Wird geladen…',
     },
     splitter: {
       separator: 'Größe der Bereiche {{first}} und {{second}} ändern',
@@ -406,6 +417,7 @@ export const de: OgeLocalePack = {
     menubar: {
       menubar: 'Menüleiste',
       hamburger: 'Menü',
+      more: 'Mehr',
     },
     pagination: {
       paginationLabel: 'Seitennavigation',
@@ -439,6 +451,16 @@ export const de: OgeLocalePack = {
       childrenLoadFailed: 'Diese Elemente konnten nicht geladen werden.',
       noData: 'Keine Elemente vorhanden',
       noSearchResults: 'Keine passenden Elemente',
+      loadMore:
+        '{count, plural, one {# weiteres Element anzeigen} other {# weitere Elemente anzeigen}}',
+      editLabel: 'Elementname',
+      editInvalid: 'Geben Sie einen gültigen Namen ein.',
+      cutAnnouncement:
+        '{item} ausgeschnitten. Wechseln Sie zum Zielelement und drücken Sie Strg+V, um es dorthin zu verschieben, oder Escape zum Abbrechen.',
+      movedAnnouncement:
+        '{position, select, inside {{item} in {target} verschoben.} before {{item} vor {target} verschoben.} other {{item} hinter {target} verschoben.}}',
+      moveCancelledAnnouncement: 'Verschieben abgebrochen.',
+      moveRejectedAnnouncement: '{item} kann nicht hierher verschoben werden.',
     },
   },
   pivot: {

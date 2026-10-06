@@ -1,0 +1,212 @@
+@use '../../../../grid/src/lib/styles/tokens';
+@use '../popup/callout-arrow';
+
+// The `<oge-popover>` element is only the declaration point; the panel is
+// moved to `document.body` while open.
+.oge-popover-host {
+  display: contents;
+}
+
+// --- surface ---------------------------------------------------------------
+// The positioned element. No overflow clipping here, so the callout arrow can
+// reach out of the edge; the content box below scrolls instead.
+.oge-popover {
+  @include tokens.core-tokens;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  position: fixed;
+  z-index: var(--oge-z-popup);
+  display: block;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  line-height: 1.5;
+  box-shadow: var(--oge-shadow-popup);
+
+  /* entrance: fades/scales in from the anchored edge once measured */
+  transform: scale(0.97);
+  transform-origin: center top;
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+
+  &[data-placement^='top'] {
+    transform-origin: center bottom;
+  }
+
+  &[data-placement^='left'] {
+    transform-origin: right center;
+  }
+
+  &[data-placement^='right'] {
+    transform-origin: left center;
+  }
+
+  &.oge-popover-ready {
+    transform: none;
+  }
+
+  // the panel itself takes focus only for `initialFocus: 'panel'` or an
+  // empty modal popover — a soft ring, the strong one for the keyboard
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+// Sized and scrolled box inside the surface: `width` / `maxWidth` land here,
+// and the anchored panel's room-left height (written on the surface, read
+// through inheritance) caps it above the on-screen keyboard.
+.oge-popover-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: max(120px, var(--oge-popup-available-height, 100dvh));
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+// --- header ----------------------------------------------------------------
+.oge-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 10px 0;
+  padding-inline: 14px 8px;
+}
+
+.oge-popover-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.oge-popover-close {
+  @include tokens.hit-area;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  margin-inline-start: auto;
+  padding: 0;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  /* idle is not disabled: a readable muted tone, not --oge-muted-color */
+  color: var(--oge-input-muted);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:active {
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (hover: none) {
+    &:hover {
+      background: transparent;
+      color: var(--oge-input-muted);
+    }
+  }
+}
+
+// --- body / footer ---------------------------------------------------------
+.oge-popover-body {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 14px 12px;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  @include tokens.scrollbar;
+
+  > :first-child {
+    margin-block-start: 0;
+  }
+
+  > :last-child {
+    margin-block-end: 0;
+  }
+}
+
+.oge-popover-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 14px 12px;
+}
+
+// --- callout arrow -----------------------------------------------------------
+.oge-popover-arrow {
+  @include callout-arrow.arrow(var(--oge-popup-bg), var(--oge-border-color));
+}
+
+// --- reduced motion ----------------------------------------------------------
+@include tokens.reduced-motion {
+  .oge-popover {
+    transform: none;
+    transition: none;
+  }
+
+  .oge-popover-close {
+    transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only: the frame and the ✕ are real borders/glyphs, the hover
+// state a Highlight swap, so nothing rides on a tint or a shadow.
+@include tokens.forced-colors {
+  .oge-popover {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-popover-close {
+    color: ButtonText;
+
+    &:hover {
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+
+  .oge-popover-arrow {
+    @include callout-arrow.arrow-forced-colors;
+  }
+}

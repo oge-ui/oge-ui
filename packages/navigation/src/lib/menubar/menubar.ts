@@ -24,20 +24,26 @@ import {
   edgeEnabledIndex,
   isMenubarCompact,
   matchByPrefix,
+  menubarBarEntries,
   menubarBarKeys,
   menubarClosedReason,
   menubarDataDescriptors,
+  menubarEntryHidden,
   menubarEventBase,
   menubarItemDomId,
+  menubarItemPath,
+  menubarMoreActive,
   menubarPanelItems,
   menubarPanelLabel,
   menubarPanelPlacement,
   menubarPopupCloseReason,
   menubarStopDisabled,
-  findMenubarItemPath,
+  resolveMenubarOverflow,
   stepEnabledIndex,
   OGE_MENUBAR_HOVER_DELAY,
+  OGE_MENUBAR_MORE_KEY,
   type OgeMenubarDescriptorCore,
+  type OgeMenubarOverflowMode,
   ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
@@ -99,7 +105,13 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
  * `role="menubar"` is for application-style command menus.
  *
  * Below `compactBelow` **container** pixels the whole bar collapses into a
- * hamburger button opening the full item tree as one nested menu.
+ * hamburger button opening the full item tree as one nested menu. With
+ * `overflowMode="more"` only the items that do not fit move into a trailing
+ * "More" item instead (horizontal bars):
+ *
+ * ```html
+ * <oge-menubar [items]="menu" overflowMode="more" />
+ * ```
  */
 @Component({
   selector: 'oge-menubar',
@@ -110,6 +122,7 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
     class: 'oge-menubar',
     '[class.oge-menubar-vertical]': "resolvedOrientation() === 'vertical'",
     '[class.oge-menubar-compact]': 'compact()',
+    '[class.oge-menubar-overflow-more]': 'overflowActive()',
     '[class.oge-menubar-disabled]': 'disabled()',
     '(keydown)': 'onHostKeydown($event)',
   },
@@ -145,6 +158,7 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
       </button>
     } @else {
       <div
+        #bar
         class="oge-menubar-bar"
         role="menubar"
         [attr.aria-label]="msg().menubar"
@@ -152,10 +166,11 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
           resolvedOrientation() === 'vertical' ? 'vertical' : null
         "
       >
-        @for (d of descriptors(); track d.id; let i = $index) {
+        @for (d of barEntries(); track d.id; let i = $index) {
           @if (d.item.separator) {
             <span
               class="oge-menubar-separator"
+              [class.oge-menubar-item-overflowed]="isHidden(i)"
               role="separator"
               [attr.aria-orientation]="
                 resolvedOrientation() === 'vertical' ? 'horizontal' : 'vertical'
@@ -165,6 +180,7 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
             <a
               class="oge-menubar-item"
               role="menuitem"
+              [class.oge-menubar-item-overflowed]="isHidden(i)"
               [id]="itemDomId(i)"
               [href]="d.item.url"
               [class.oge-menubar-item-active]="isActive(d)"
@@ -189,6 +205,8 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
               type="button"
               class="oge-menubar-item"
               role="menuitem"
+              [class.oge-menubar-item-overflowed]="isHidden(i)"
+              [class.oge-menubar-more]="d.id === moreKey"
               [id]="itemDomId(i)"
               [class.oge-menubar-item-active]="isActive(d)"
               [attr.aria-current]="isActive(d) ? 'page' : null"
@@ -224,7 +242,22 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
       </div>
     }
     <ng-template #barItemContent let-d="d" let-i="i">
-      @if (itemTemplateDir(); as tpl) {
+      @if (d.id === moreKey) {
+        <span class="oge-menubar-item-icon">
+          <svg
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <circle cx="3" cy="8" r="1.5" />
+            <circle cx="8" cy="8" r="1.5" />
+            <circle cx="13" cy="8" r="1.5" />
+          </svg>
+        </span>
+        <span class="oge-menubar-item-text">{{ d.item.text }}</span>
+      } @else if (itemTemplateDir(); as tpl) {
         <ng-container
           *ngTemplateOutlet="
             tpl.templateRef;
@@ -304,6 +337,13 @@ export class OgeMenubar {
    * Measured against the menubar's own box, never the window.
    */
   readonly compactBelow = input<number | undefined>(undefined);
+  /**
+   * What happens when the top-level items stop fitting: `'hamburger'`
+   * (default) — the `compactBelow` collapse; `'more'` — items that do not fit
+   * move into a trailing "More" item (horizontal bars; `compactBelow` still
+   * applies below it); `'none'` — nothing collapses, `compactBelow` included.
+   */
+  readonly overflowMode = input<OgeMenubarOverflowMode | undefined>(undefined);
   /** The item `key` rendered with `aria-current="page"` (router-driven). */
   readonly activeKey = input<string | undefined>(undefined);
   /** Disables the whole bar: items go inert and leave the Tab sequence. */
@@ -335,6 +375,7 @@ export class OgeMenubar {
   });
   protected readonly itemTemplateDir = contentChild(OgeMenubarItemTemplate);
   private readonly menuList = viewChild(OgeMenuList);
+  private readonly barRef = viewChild<ElementRef<HTMLElement>>('bar');
   private readonly popupRef = viewChild(OgePopup, { read: ElementRef });
   private readonly hamburgerBtn =
     viewChild<ElementRef<HTMLElement>>('hamburgerBtn');
@@ -368,10 +409,36 @@ export class OgeMenubar {
     },
   );
 
+  protected readonly moreKey = OGE_MENUBAR_MORE_KEY;
+  private readonly resolvedOverflowMode = computed<OgeMenubarOverflowMode>(
+    () => this.overflowMode() ?? this.config.overflowMode ?? 'hamburger',
+  );
+  /** `'more'` overflow is a horizontal-bar behaviour. */
+  protected readonly overflowActive = computed(
+    () =>
+      this.resolvedOverflowMode() === 'more' &&
+      this.resolvedOrientation() !== 'vertical',
+  );
+  /** Indexes of the top-level entries currently living in the More menu. */
+  private readonly overflowed = signal<readonly number[]>([]);
+  /**
+   * Every bar entry: the descriptors, plus the synthetic "More" item in
+   * `'more'` mode (always rendered so it can be measured; hidden while
+   * nothing overflows). All bar navigation runs over this list.
+   */
+  protected readonly barEntries = computed<readonly MenubarDescriptor[]>(() =>
+    menubarBarEntries(
+      this.descriptors(),
+      this.overflowActive() ? 'more' : 'hamburger',
+      this.overflowed(),
+      this.msg().more,
+    ),
+  );
+
   /** Roving-tabindex anchor among the top-level items. */
   protected readonly focusIndex = signal(0);
   protected readonly focusTarget = computed(() => {
-    const ds = this.descriptors();
+    const ds = this.barEntries();
     const index = this.focusIndex();
     if (index >= 0 && index < ds.length && !this.stopDisabled(index)) {
       return index;
@@ -389,15 +456,16 @@ export class OgeMenubar {
     isMenubarCompact(
       this.containerSize(),
       this.compactBelow() ?? this.config.compactBelow,
+      this.resolvedOverflowMode(),
     ),
   );
 
   protected readonly panelItems = computed<readonly OgeMenubarItemData[]>(() =>
-    menubarPanelItems(this.descriptors(), this.openSource(), this.openIndex()),
+    menubarPanelItems(this.barEntries(), this.openSource(), this.openIndex()),
   );
   protected readonly panelLabel = computed(() =>
     menubarPanelLabel(
-      this.descriptors(),
+      this.barEntries(),
       this.openSource(),
       this.openIndex(),
       this.msg().hamburger,
@@ -460,6 +528,42 @@ export class OgeMenubar {
         this.compactChanged.emit({ compact });
       });
     });
+    // Content, label or mode changes can change what fits: re-measure after
+    // the DOM has them. The overflowed set itself is not read here, so the
+    // write below never re-triggers this effect.
+    afterRenderEffect(() => {
+      this.barEntries();
+      this.overflowActive();
+      this.compact();
+      untracked(() => this.measureOverflow());
+    });
+    // An item that just moved into More cannot keep its own submenu open or
+    // hold focus — hand both to the More item.
+    effect(() => {
+      const overflowed = this.overflowed();
+      untracked(() => {
+        const open = this.openIndex();
+        if (
+          this.openSource() === 'bar' &&
+          open >= 0 &&
+          overflowed.includes(open)
+        ) {
+          this.panel.close('api');
+        }
+        // the prerender worker has no document (and nothing can hold focus)
+        if (typeof document === 'undefined' || overflowed.length === 0) return;
+        const active = document.activeElement;
+        const moreIndex = this.descriptors().length;
+        if (
+          overflowed.some(
+            (index) =>
+              document.getElementById(this.itemDomId(index)) === active,
+          )
+        ) {
+          this.focusItem(moreIndex);
+        }
+      });
+    });
     afterNextRender(() => {
       if (typeof ResizeObserver !== 'undefined') {
         const observer = new ResizeObserver(() => this.measure());
@@ -479,7 +583,7 @@ export class OgeMenubar {
     const index =
       typeof target === 'number'
         ? target
-        : this.descriptors().findIndex((d) => d.item.key === target);
+        : this.barEntries().findIndex((d) => d.item.key === target);
     if (index >= 0) this.openSubmenu(index, null);
   }
 
@@ -504,11 +608,24 @@ export class OgeMenubar {
 
   protected isActive(d: MenubarDescriptor): boolean {
     const key = this.activeKey();
+    if (d.id === OGE_MENUBAR_MORE_KEY) {
+      return menubarMoreActive(this.descriptors(), this.overflowed(), key);
+    }
     return key !== undefined && d.item.key === key;
   }
 
+  /** Rendered for measurement only — overflowed, or an empty More item. */
+  protected isHidden(index: number): boolean {
+    return menubarEntryHidden(
+      index,
+      this.descriptors().length,
+      this.overflowActive() ? 'more' : 'hamburger',
+      this.overflowed(),
+    );
+  }
+
   protected onBarItemClick(index: number, event: MouseEvent): void {
-    const d = this.descriptors()[index];
+    const d = this.barEntries()[index];
     if (!d || d.item.disabled || this.disabled()) {
       event.preventDefault();
       return;
@@ -537,7 +654,7 @@ export class OgeMenubar {
   }
 
   protected onBarItemEnter(index: number): void {
-    const d = this.descriptors()[index];
+    const d = this.barEntries()[index];
     if (!d || d.item.disabled || d.item.separator || this.disabled()) return;
     this.clearRootHoverTimer();
     const childful = !!d.item.items?.length;
@@ -558,7 +675,7 @@ export class OgeMenubar {
 
   protected onBarKeydown(event: KeyboardEvent, index: number): void {
     const key = event.key;
-    const d = this.descriptors()[index];
+    const d = this.barEntries()[index];
     const {
       next: nextKey,
       prev: prevKey,
@@ -575,7 +692,7 @@ export class OgeMenubar {
     if (key === 'Home' || key === 'End') {
       event.preventDefault();
       event.stopPropagation();
-      const ds = this.descriptors();
+      const ds = this.barEntries();
       const target = edgeEnabledIndex(ds.length, key === 'Home' ? 1 : -1, (i) =>
         this.stopDisabled(i),
       );
@@ -609,7 +726,7 @@ export class OgeMenubar {
       return;
     }
     if (key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      const ds = this.descriptors();
+      const ds = this.barEntries();
       const match = matchByPrefix(
         ds.map((desc) => desc.item.text),
         this.typeAheadBuffer.push(key),
@@ -687,14 +804,20 @@ export class OgeMenubar {
 
   protected onMenuItemClick(event: OgeMenuListItemClickEvent): void {
     const item = event.item as OgeMenubarItemData;
-    const base = this.openSource() === 'bar' ? [this.openIndex()] : [];
-    const inTree = findMenubarItemPath(this.panelItems(), item);
-    const path = inTree ? [...base, ...inTree] : [...base, event.index];
+    const path = menubarItemPath(
+      this.descriptors(),
+      this.panelItems(),
+      this.openSource(),
+      this.openIndex(),
+      item,
+      event.index,
+    );
     this.itemClick.emit({
       item,
       key: item.key,
       index: path[path.length - 1],
       path,
+      checked: event.checked,
       event: event.event,
     });
   }
@@ -729,7 +852,10 @@ export class OgeMenubar {
   }
 
   private stopDisabled(index: number): boolean {
-    return menubarStopDisabled(this.descriptors(), index, this.disabled());
+    return (
+      menubarStopDisabled(this.barEntries(), index, this.disabled()) ||
+      this.isHidden(index)
+    );
   }
 
   private focusItem(index: number): void {
@@ -738,7 +864,7 @@ export class OgeMenubar {
   }
 
   private moveBarFocus(from: number, direction: 1 | -1): void {
-    const ds = this.descriptors();
+    const ds = this.barEntries();
     const next = stepEnabledIndex(ds.length, from, direction, (i) =>
       this.stopDisabled(i),
     );
@@ -751,13 +877,13 @@ export class OgeMenubar {
 
   /** A menu was showing: the newly focused bar item shows its own (APG). */
   private followFocusWhileOpen(index: number): void {
-    const d = this.descriptors()[index];
+    const d = this.barEntries()[index];
     if (d?.item.items?.length) this.openSubmenu(index, null);
     else this.closeSubmenu('navigation');
   }
 
   private hopBarSibling(direction: 1 | -1): void {
-    const ds = this.descriptors();
+    const ds = this.barEntries();
     const next = stepEnabledIndex(ds.length, this.openIndex(), direction, (i) =>
       this.stopDisabled(i),
     );
@@ -780,7 +906,7 @@ export class OgeMenubar {
     focus: 'first' | 'last' | null,
     event?: Event,
   ): void {
-    const d = this.descriptors()[index];
+    const d = this.barEntries()[index];
     if (!d || d.item.disabled || !d.item.items?.length || this.disabled()) {
       return;
     }
@@ -876,7 +1002,7 @@ export class OgeMenubar {
     path: readonly number[];
   } {
     return menubarEventBase(
-      this.descriptors(),
+      this.barEntries(),
       this.openSource(),
       this.openIndex(),
     );
@@ -893,5 +1019,40 @@ export class OgeMenubar {
 
   private measure(): void {
     this.containerSize.set(this.host.nativeElement.clientWidth);
+    this.measureOverflow();
+  }
+
+  /**
+   * `'more'` mode: measures every bar entry (overflowed ones stay rendered,
+   * absolutely positioned and invisible, so their natural width is still
+   * readable) and lets the shared fit decide what moves into More.
+   */
+  private measureOverflow(): void {
+    const bar = this.barRef()?.nativeElement;
+    const count = this.descriptors().length;
+    let next: readonly number[] = [];
+    if (this.overflowActive() && !this.compact() && bar) {
+      const entries = Array.from(bar.children) as HTMLElement[];
+      const style = getComputedStyle(bar);
+      const padding =
+        (parseFloat(style.paddingInlineStart) || 0) +
+        (parseFloat(style.paddingInlineEnd) || 0) +
+        (parseFloat(style.borderInlineStartWidth) || 0) +
+        (parseFloat(style.borderInlineEndWidth) || 0);
+      next = resolveMenubarOverflow({
+        containerSize: bar.clientWidth > 0 ? bar.offsetWidth - padding : 0,
+        descriptors: this.descriptors(),
+        sizes: entries.slice(0, count).map((el) => el.offsetWidth),
+        moreSize: entries[count]?.offsetWidth ?? 0,
+        gap: parseFloat(style.columnGap) || 0,
+      });
+    }
+    const current = this.overflowed();
+    if (
+      next.length !== current.length ||
+      next.some((index, i) => index !== current[i])
+    ) {
+      this.overflowed.set(next);
+    }
   }
 }

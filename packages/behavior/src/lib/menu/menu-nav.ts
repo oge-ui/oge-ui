@@ -1,3 +1,4 @@
+import { isMenuItemNavigable } from './menu-item-state';
 import type { OgeMenuItem } from './menu-types';
 
 /**
@@ -8,11 +9,14 @@ import type { OgeMenuItem } from './menu-types';
  * here is index math over the `items` array, separators included.
  */
 
-/** Indexes of items an active row may land on: enabled, not a separator. */
+/**
+ * Indexes of items an active row may land on: enabled, not a separator, not
+ * a group header.
+ */
 export function menuEnabledIndexes(items: readonly OgeMenuItem[]): number[] {
   const indexes: number[] = [];
   items.forEach((item, index) => {
-    if (!item.disabled && !item.separator) indexes.push(index);
+    if (isMenuItemNavigable(item)) indexes.push(index);
   });
   return indexes;
 }
@@ -91,7 +95,7 @@ export class OgeMenuTypeAhead {
     for (let step = startOffset; step <= count; step++) {
       const index = (activeIndex + step + count) % count;
       const item = items[index];
-      if (!item || item.disabled || item.separator) continue;
+      if (!isMenuItemNavigable(item)) continue;
       if (item.text.toLowerCase().startsWith(needle)) return index;
     }
     return -1;

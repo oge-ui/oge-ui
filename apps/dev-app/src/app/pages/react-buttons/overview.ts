@@ -3,14 +3,19 @@ import {
   Component,
   ViewEncapsulation,
 } from '@angular/core';
-import { createElement, type CSSProperties, type ReactNode } from 'react';
+import {
+  createElement,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { OgeButton } from '@oge-ui/react-buttons';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { BUTTON_DEMOS } from './react-buttons-snippets';
 
 /**
- * TOC of the React view — the same five sections as the Angular overview
+ * TOC of the React view — the same six sections as the Angular overview
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_BUTTONS_SECTIONS = [
@@ -19,6 +24,7 @@ export const REACT_BUTTONS_SECTIONS = [
   'Icons',
   'Custom colors',
   'Badges',
+  'Toggle button',
 ] as const;
 
 const row = (...children: ReactNode[]) =>
@@ -66,8 +72,65 @@ const settingsIcon = () =>
     16,
   );
 
+function ToggleDemo(): ReactNode {
+  const [bold, setBold] = useState(true);
+  const [italic, setItalic] = useState(false);
+  const [pinned, setPinned] = useState(true);
+  return createElement(
+    'div',
+    null,
+    createElement(
+      'div',
+      {
+        className: 'flex flex-wrap items-center gap-4',
+        'data-testid': 'toggle-demo',
+      },
+      createElement(OgeButton, {
+        key: 'b',
+        text: 'Bold',
+        toggle: true,
+        selected: bold,
+        onSelectedChange: (event) => setBold(event.selected),
+      }),
+      createElement(OgeButton, {
+        key: 'i',
+        text: 'Italic',
+        stylingMode: 'outlined',
+        toggle: true,
+        selected: italic,
+        onSelectedChange: (event) => setItalic(event.selected),
+      }),
+      createElement(OgeButton, {
+        key: 'p',
+        text: 'Pinned',
+        stylingMode: 'text',
+        toggle: true,
+        selected: pinned,
+        onSelectedChange: (event) => setPinned(event.selected),
+      }),
+      createElement(OgeButton, {
+        key: 'l',
+        text: 'Locked',
+        toggle: true,
+        selected: true,
+        disabled: true,
+      }),
+    ),
+    createElement(
+      'p',
+      { className: 'mt-3 text-sm', 'data-testid': 'toggle-state' },
+      'Bold ',
+      createElement('code', null, String(bold)),
+      ' · Italic ',
+      createElement('code', null, String(italic)),
+      ' · Pinned ',
+      createElement('code', null, String(pinned)),
+    ),
+  );
+}
+
 /**
- * The React half of the buttons overview — the same five demo sections as the
+ * The React half of the buttons overview — the same six demo sections as the
  * Angular page, with the same example content, rendered as real React trees
  * inside `/components/buttons` when the reader has chosen React (ADR 0002).
  */
@@ -129,10 +192,22 @@ const settingsIcon = () =>
     >
       <app-react-host [render]="badges" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['toggle', 'selected', 'aria-pressed', 'onSelectedChange']"
+      heading="Toggle button"
+      description='<code>toggle</code> turns a standalone button into a WAI-ARIA toggle button: every accepted click flips <code>selected</code> (controlled with <code>onSelectedChange</code>, or uncontrolled with <code>defaultSelected</code>) and the native button announces <code>aria-pressed</code>. Pressed reads at a glance in every styling mode — accent tint, solid edge and an underline indicator (a system-colour fill under forced colours) — while an unpressed toggle keeps a readable label, never the disabled look. Inside a <code>single</code>/<code>multiple</code> button group the group keeps owning the selection; a plain toolbar group (<code>selectionMode="none"</code>) lets each button toggle itself.'
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="toggles" />
+    </app-demo-card>
   `,
 })
 export class ReactButtonsDemos {
   protected readonly demos = BUTTON_DEMOS;
+
+  protected readonly toggles = () => createElement(ToggleDemo);
 
   protected readonly severities = () =>
     row(

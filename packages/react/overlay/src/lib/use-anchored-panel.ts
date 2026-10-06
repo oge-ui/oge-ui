@@ -78,6 +78,7 @@ export function useAnchoredPanel(
       onClosed: (reason) => latest.current.onClosed?.(reason),
       beforeClose: (reason) => latest.current.beforeClose?.(reason) ?? true,
       anchorRect: () => latest.current.anchorRect?.() ?? null,
+      arrow: () => latest.current.arrow?.(),
       get transient() {
         return latest.current.transient;
       },

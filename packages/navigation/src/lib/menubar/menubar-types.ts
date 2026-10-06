@@ -17,6 +17,8 @@ export type {
   OgeMenubarSubmenuClosingEvent,
   OgeMenubarSubmenuClosedEvent,
   OgeMenubarCompactChangedEvent,
+  OgeMenubarOverflowMode,
+  OgeMenubarItemOverflow,
 } from '@oge-ui/behavior';
 
 /** Template context of `[ogeMenubarItemTemplate]` (top-level bar items). */

@@ -202,6 +202,37 @@
   }
 }
 
+// --- "More" overflow (overflowMode="more") ----------------------------------
+// The bar keeps every entry rendered so each can be measured; the ones living
+// in the More menu are taken out of the flow and out of sight (visibility
+// also removes them from the accessibility tree and the tab order).
+.oge-menubar-overflow-more {
+  min-width: 0;
+
+  .oge-menubar-bar {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .oge-menubar-item,
+  .oge-menubar-separator {
+    flex-shrink: 0;
+  }
+
+  // the focus ring is drawn inside so the clipped bar does not cut it
+  .oge-menubar-item:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+}
+
+.oge-menubar-bar .oge-menubar-item-overflowed {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .oge-menubar-disabled .oge-menubar-bar {
   opacity: 0.6;
 }

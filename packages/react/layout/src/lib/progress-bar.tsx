@@ -1,17 +1,35 @@
 'use client';
 
 import { useEffect, useRef, type CSSProperties } from 'react';
-import type {
-  OgeProgressBarCompletedEvent,
-  OgeProgressBarSeverity,
+import {
+  OGE_PROGRESS_RING_INDETERMINATE_RATIO,
+  ogeProgressAriaNow,
+  ogeProgressLabel,
+  ogeProgressRatio,
+  ogeProgressRingGeometry,
+  type OgeProgressBarCompletedEvent,
+  type OgeProgressBarSeverity,
+  type OgeProgressBarType,
 } from '@oge-ui/behavior';
 import { useOgeProgressBarConfig } from './layout-config';
 
 export interface OgeProgressBarProps {
   /** Current value; `null` renders the indeterminate sliding bar. */
   value?: number | null;
+  /** Lower bound of the scale. */
   min?: number;
+  /** Upper bound of the scale. */
   max?: number;
+  /**
+   * `linear` (default) is the track; `circular` draws an SVG ring with the
+   * label centred inside — same aria contract, indeterminate spin included.
+   * `bufferValue` and `chunkCount` apply to the linear bar only.
+   */
+  type?: OgeProgressBarType;
+  /** Ring diameter in px (`type="circular"` only). Default 48. */
+  size?: number;
+  /** Ring stroke width in px (`type="circular"` only). Default 4. */
+  thickness?: number;
   /** Material's buffer layer — media pre-loading behind the primary fill. */
   bufferValue?: number;
   /** Renders the bar as N discrete segments (Kendo's chunk progress bar). */
@@ -36,8 +54,9 @@ export interface OgeProgressBarProps {
 /**
  * Determinate or indeterminate progress bar — the React render of the
  * Angular `<oge-progress-bar>`: `value: null` is the indeterminate slide, a
- * `bufferValue` draws Material's pre-load layer, and `chunkCount` renders the
- * bar as discrete segments.
+ * `bufferValue` draws Material's pre-load layer, `chunkCount` renders the
+ * bar as discrete segments, and `type="circular"` draws the same contract as
+ * an SVG ring (Kendo's CircularProgressBar) with the label centred inside.
  *
  * Not a meter: a current measurement within a known range (battery, disk
  * usage) is `role="meter"`, which this deliberately is not — the APG's own
@@ -46,6 +65,7 @@ export interface OgeProgressBarProps {
  * ```tsx
  * <OgeProgressBar value={upload} showLabel />
  * <OgeProgressBar value={null} ariaLabel="Loading" />
+ * <OgeProgressBar type="circular" value={72} showLabel />
  * ```
  */
 export function OgeProgressBar(props: OgeProgressBarProps) {
@@ -57,17 +77,14 @@ export function OgeProgressBar(props: OgeProgressBarProps) {
     bufferValue,
     chunkCount,
     formatLabel,
+    type = 'linear',
   } = props;
 
   const severity = props.severity ?? config.severity ?? 'accent';
   const showLabel = props.showLabel ?? config.showLabel ?? false;
 
-  const ratioOf = (candidate: number): number => {
-    if (max <= min) return 0;
-    return Math.min(Math.max((candidate - min) / (max - min), 0), 1);
-  };
-  const ratio = value === null ? 0 : ratioOf(value);
-  const bufferRatio = bufferValue === undefined ? 0 : ratioOf(bufferValue);
+  const ratio = ogeProgressRatio(value, min, max);
+  const bufferRatio = ogeProgressRatio(bufferValue, min, max);
 
   const chunkList =
     chunkCount && chunkCount > 0
@@ -75,12 +92,7 @@ export function OgeProgressBar(props: OgeProgressBarProps) {
       : [];
   const filledChunks = Math.round(ratio * chunkList.length);
 
-  const label =
-    value === null
-      ? ''
-      : formatLabel
-        ? formatLabel(value, ratio)
-        : `${Math.round(ratio * 100)}%`;
+  const label = ogeProgressLabel(value, ratio, formatLabel);
   /** `aria-valuetext` only exists when the number alone is not the meaning. */
   const valueText = formatLabel && value !== null ? label : undefined;
 
@@ -104,6 +116,7 @@ export function OgeProgressBar(props: OgeProgressBarProps) {
   const className = [
     'oge-progress-bar',
     value === null && 'oge-progress-bar-indeterminate',
+    type === 'circular' && 'oge-progress-bar-circular',
     severity === 'success' && 'oge-progress-bar-success',
     severity === 'warning' && 'oge-progress-bar-warning',
     severity === 'danger' && 'oge-progress-bar-danger',
@@ -121,44 +134,106 @@ export function OgeProgressBar(props: OgeProgressBarProps) {
       aria-valuemax={max}
       // Indeterminate omits aria-valuenow entirely — never a sentinel value.
       // Determinate clamps into [min, max] — a now beyond max is invalid ARIA.
-      aria-valuenow={
-        value === null ? undefined : Math.min(Math.max(value, min), max)
-      }
+      aria-valuenow={ogeProgressAriaNow(value, min, max) ?? undefined}
       aria-valuetext={valueText}
       aria-label={props.ariaLabel ?? config.messages.progress}
     >
-      <div className="oge-progress-bar-track">
-        {chunkList.length > 0 ? (
-          chunkList.map((chunk) => (
-            <span
-              key={chunk}
-              className={[
-                'oge-progress-bar-chunk',
-                chunk < filledChunks && 'oge-progress-bar-chunk-filled',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            ></span>
-          ))
-        ) : (
-          <>
-            {bufferValue !== undefined && value !== null && (
-              <div
-                className="oge-progress-bar-buffer"
-                style={{ transform: `scaleX(${bufferRatio})` }}
-              ></div>
+      {type === 'circular' ? (
+        <ProgressRing
+          ratio={value === null ? OGE_PROGRESS_RING_INDETERMINATE_RATIO : ratio}
+          size={props.size}
+          thickness={props.thickness}
+          label={showLabel && value !== null ? label : undefined}
+        />
+      ) : (
+        <>
+          <div className="oge-progress-bar-track">
+            {chunkList.length > 0 ? (
+              chunkList.map((chunk) => (
+                <span
+                  key={chunk}
+                  className={[
+                    'oge-progress-bar-chunk',
+                    chunk < filledChunks && 'oge-progress-bar-chunk-filled',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                ></span>
+              ))
+            ) : (
+              <>
+                {bufferValue !== undefined && value !== null && (
+                  <div
+                    className="oge-progress-bar-buffer"
+                    style={{ transform: `scaleX(${bufferRatio})` }}
+                  ></div>
+                )}
+                <div
+                  className="oge-progress-bar-fill"
+                  style={
+                    value === null
+                      ? undefined
+                      : { transform: `scaleX(${ratio})` }
+                  }
+                ></div>
+              </>
             )}
-            <div
-              className="oge-progress-bar-fill"
-              style={
-                value === null ? undefined : { transform: `scaleX(${ratio})` }
-              }
-            ></div>
-          </>
-        )}
-      </div>
-      {showLabel && value !== null && (
-        <span className="oge-progress-bar-label">{label}</span>
+          </div>
+          {showLabel && value !== null && (
+            <span className="oge-progress-bar-label">{label}</span>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** The circular variant's SVG — geometry from `ogeProgressRingGeometry`. */
+function ProgressRing(props: {
+  ratio: number;
+  size?: number;
+  thickness?: number;
+  label?: string;
+}) {
+  const ring = ogeProgressRingGeometry({
+    ratio: props.ratio,
+    size: props.size,
+    thickness: props.thickness,
+  });
+  return (
+    <div
+      className="oge-progress-ring"
+      style={{ width: ring.size, height: ring.size }}
+    >
+      <svg
+        className="oge-progress-ring-svg"
+        viewBox={ring.viewBox}
+        width={ring.size}
+        height={ring.size}
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle
+          className="oge-progress-ring-track"
+          cx={ring.center}
+          cy={ring.center}
+          r={ring.radius}
+          strokeWidth={ring.thickness}
+        />
+        <circle
+          className="oge-progress-ring-value"
+          cx={ring.center}
+          cy={ring.center}
+          r={ring.radius}
+          strokeWidth={ring.thickness}
+          strokeDasharray={ring.dashArray}
+          strokeDashoffset={ring.dashOffset}
+        />
+      </svg>
+      {props.label !== undefined && (
+        <span className="oge-progress-bar-label oge-progress-ring-label">
+          {props.label}
+        </span>
       )}
     </div>
   );

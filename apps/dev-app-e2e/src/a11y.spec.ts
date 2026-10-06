@@ -37,6 +37,23 @@ test('grouped grid with summaries has no axe violations', async ({ page }) => {
   await scanGrid(page);
 });
 
+test('load panel page has no axe violations while panels are shown', async ({
+  page,
+}) => {
+  await page.goto('/components/progress/load-panel');
+  await expect(page.locator('.oge-load-panel-shown').first()).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .include('app-demo-card')
+    // heading-order (h1 → demo-card h3) is the site-wide demo-card pattern
+    .disableRules(['color-contrast', 'heading-order'])
+    .analyze();
+  expect(
+    results.violations.map(
+      (v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`,
+    ),
+  ).toEqual([]);
+});
+
 test('selection grid has no axe violations', async ({ page }) => {
   await page.goto('/components/data-grid/selection');
   await expect(page.locator('.oge-row').first()).toBeVisible();

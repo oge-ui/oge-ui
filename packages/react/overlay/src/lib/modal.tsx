@@ -23,6 +23,7 @@ import {
   isTopOverlay,
   lockBodyScroll,
   modalCssSize,
+  modalPlacementClass,
   pushOverlay,
   removeOverlay,
   resolveModalInitialFocus,
@@ -37,6 +38,7 @@ import {
   type OgeModalOpeningEvent,
   type OgeModalPlacement,
   type OgeModalResizeEvent,
+  type OgeModalRole,
   type OgeOverlayMessages,
 } from '@oge-ui/behavior';
 import { useOgeOverlayConfig } from './overlay-config';
@@ -99,8 +101,16 @@ export interface OgeModalProps<R = unknown> {
   maxWidth?: number | string;
   /** Max panel height — number = px, string passed through. Default: layer height. */
   maxHeight?: number | string;
-  /** Where the panel sits: viewport center or pinned near the top. Default `'center'`. */
+  /**
+   * Where the panel sits: the viewport centre, an edge (`top`, `bottom`,
+   * logical `start` / `end`) or a corner (`top-start` … `bottom-end`).
+   * RTL-aware. Default `'center'`.
+   */
   placement?: OgeModalPlacement;
+  /** ARIA role of the panel; `'alertdialog'` for urgent confirmations (APG alert dialog). Default `'dialog'`. */
+  dialogRole?: OgeModalRole;
+  /** Id(s) of the element(s) describing the dialog — wired to `aria-describedby`. */
+  ariaDescribedBy?: string;
   /** Dims the page behind the modal. `false` keeps the backdrop transparent (still modal). Default `true`. */
   shading?: boolean;
   /** Shows the header ✕ button. Default `true`. */
@@ -558,7 +568,7 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
       className={[
         'oge-modal-layer',
         ready && 'oge-modal-layer-ready',
-        placement === 'top' && !fullScreen && 'oge-modal-layer-top',
+        modalPlacementClass(placement, fullScreen),
         !shading && 'oge-modal-layer-unshaded',
         fullScreen && 'oge-modal-layer-fullscreen',
         className,
@@ -575,10 +585,11 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
         className={['oge-modal', fullScreen && 'oge-modal-fullscreen']
           .filter(Boolean)
           .join(' ')}
-        role="dialog"
+        role={props.dialogRole ?? 'dialog'}
         aria-modal="true"
         tabIndex={-1}
         aria-labelledby={labelledBy}
+        aria-describedby={props.ariaDescribedBy}
         aria-label={ariaLabelAttr}
         aria-busy={busy || undefined}
         style={panelStyle}

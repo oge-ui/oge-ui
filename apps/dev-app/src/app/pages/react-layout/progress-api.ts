@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ApiReference } from '../../shared/api-reference';
 import {
   OGE_REACT_LOAD_INDICATOR_API,
+  OGE_REACT_LOAD_PANEL_API,
   OGE_REACT_PROGRESS_BAR_API,
   OGE_REACT_PROGRESS_CONFIG_API,
   OGE_REACT_SKELETON_API,
@@ -30,6 +31,7 @@ import {
       title="&lt;OgeLoadIndicator&gt;"
       [sections]="loadIndicatorApi"
     />
+    <app-api-reference title="&lt;OgeLoadPanel&gt;" [sections]="loadPanelApi" />
     <app-api-reference title="&lt;OgeSkeleton&gt;" [sections]="skeletonApi" />
     <app-api-reference title="Configuration" [sections]="configApi" />
   `,
@@ -37,6 +39,7 @@ import {
 export class ReactLayoutProgressApiSections {
   protected readonly progressBarApi = OGE_REACT_PROGRESS_BAR_API;
   protected readonly loadIndicatorApi = OGE_REACT_LOAD_INDICATOR_API;
+  protected readonly loadPanelApi = OGE_REACT_LOAD_PANEL_API;
   protected readonly skeletonApi = OGE_REACT_SKELETON_API;
   protected readonly configApi = OGE_REACT_PROGRESS_CONFIG_API;
 }

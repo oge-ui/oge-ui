@@ -20,13 +20,14 @@ import { ReactHost } from '../../shared/react-host';
 import { LAYOUT_PROGRESS_DEMOS } from './progress-snippets';
 
 /**
- * TOC of the React view — the same six sections as the Angular progress page
+ * TOC of the React view — the same seven sections as the Angular progress page
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_LAYOUT_PROGRESS_SECTIONS = [
   'Determinate bar',
   'Indeterminate & buffer',
   'Chunks & severity',
+  'Circular progress',
   'Load indicator',
   'Skeleton',
   'A real async flow',
@@ -36,6 +37,7 @@ const row = (...children: ReactNode[]) =>
   createElement('div', { className: 'demo-row demo-row-start' }, ...children);
 
 const asMegabytes = (value: number): string => `${value} MB`;
+const asSteps = (value: number): string => `${value}/5`;
 
 /** The determinate bars driven by one slider — real state, real React. */
 function DeterminateDemo(): ReactNode {
@@ -193,6 +195,16 @@ function AsyncFlowDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['type: circular', 'size', 'thickness', 'centred label']"
+      heading="Circular progress"
+      description='<code>type="circular"</code> draws the same <code>role="progressbar"</code> contract as an SVG ring — Kendo&apos;s CircularProgressBar: the dash offset follows the value between <code>min</code> and <code>max</code>, the label sits centred inside, and <code>formatLabel</code> still feeds <code>aria-valuetext</code>. <code>value: null</code> spins (slower under reduced motion) and omits <code>aria-valuenow</code>; <code>size</code> and <code>thickness</code> are px.'
+      [code]="demos[6].source"
+      language="tsx"
+    >
+      <app-react-host [render]="circular" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['size', 'inheritSize', 'slows, never stops']"
       heading="Load indicator"
       description="The suite's canonical ring — deliberately indeterminate-only: a circle filling toward completion is the progress bar's job. Under <code>prefers-reduced-motion</code> the spin slows rather than stops, because a frozen ring reads as finished."
@@ -243,6 +255,35 @@ export class ReactLayoutProgressDemos {
           ariaLabel: 'Playback',
         }),
       ),
+    );
+
+  protected readonly circular = () =>
+    row(
+      createElement(OgeProgressBar, {
+        key: 'upload',
+        type: 'circular',
+        value: 40,
+        showLabel: true,
+        ariaLabel: 'Upload',
+      }),
+      createElement(OgeProgressBar, {
+        key: 'steps',
+        type: 'circular',
+        value: 3,
+        max: 5,
+        size: 64,
+        thickness: 6,
+        showLabel: true,
+        formatLabel: asSteps,
+        severity: 'success',
+        ariaLabel: 'Steps',
+      }),
+      createElement(OgeProgressBar, {
+        key: 'sync',
+        type: 'circular',
+        size: 32,
+        ariaLabel: 'Syncing',
+      }),
     );
 
   protected readonly chunks = () =>

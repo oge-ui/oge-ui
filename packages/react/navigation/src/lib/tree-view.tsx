@@ -17,28 +17,53 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  beginOgeTreeDrag,
   buildTreeViewModel,
   createTypeAheadBuffer,
-  exceedsTreeDragThreshold,
+  fillTreeViewMessages,
+  isTreeEditKey,
+  nextTreeChildPage,
   nextTreeExpansion,
   nextTreeSelection,
+  ogeTreeCancelCut,
+  ogeTreeCut,
+  ogeTreeDragGroupOf,
+  ogeTreeHasCut,
+  ogeTreePaste,
+  planTreeEditKey,
+  planTreeTransferKey,
   planTreeViewKey,
+  registerOgeTreeDragPeer,
   resolveSelectedKeys,
-  resolveTreeDropPosition,
+  resolveTreeChildPageSize,
   resolveTreeItemHeight,
   resolveTreeSelectByClick,
+  runTreeEditCommit,
+  runTreeEditStart,
   treeAriaChecked,
   treeAriaSelected,
   treeCanDrop,
   treeCheckStates,
+  treeChildPageLimit,
   treeChildrenLoadNeeded,
   treeEdgeIndex,
   treeEffectiveExpanded,
+  treeLoadMoreText,
   treeNodeIndent,
   treeRangeSelection,
   treeSelectAllState,
-  OGE_TREE_DRAG_HOVER_EXPAND_MS,
+  OGE_TREE_TRANSFER_SHORTCUTS,
   type CheckState,
+  type OgePointerGestureHandle,
+  type OgeTreeAllowEditing,
+  type OgeTreeChildPageEvent,
+  type OgeTreeDragPeer,
+  type OgeTreeEditedEvent,
+  type OgeTreeEditingEvent,
+  type OgeTreeEditStartingEvent,
+  type OgeTreeEditValidator,
+  type OgeTreeTransferredEvent,
+  type OgeTreeViewResolvedMessages,
   type OgeTreeChildrenFailedEvent,
   type OgeTreeChildrenLoadedEvent,
   type OgeTreeCheckBoxesMode,
@@ -70,6 +95,7 @@ import {
   type SearchHighlightSegment,
   type TreeFilterMode,
 } from '@oge-ui/behavior';
+import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
 import { useOgeTreeViewConfig } from './navigation-config';
 import { useTreeVirtualizer } from './use-tree-virtualizer';
 
@@ -133,6 +159,31 @@ export interface OgeTreeViewHandle {
   focus(key?: RowKey): void;
   /** Scrolls a node into view, virtualized or not. */
   scrollToItem(key: RowKey): void;
+  /**
+   * Opens the label editor on a node (what F2 does). Returns `false` when
+   * editing is off for it or `onItemEditStarting` vetoed.
+   */
+  editItem(key: RowKey): boolean;
+  /** Closes an open label editor without committing. */
+  cancelEdit(): void;
+  /**
+   * Reveals the next `childPageSize` children of a paged parent (`null` for
+   * the root level) — what activating its "Load more" row does.
+   */
+  showMoreChildren(parentKey: RowKey | null): void;
+  /**
+   * Marks a node for a keyboard move (what Ctrl+X does); `pasteItem` on any
+   * tree of the same `dragGroup` moves it. Wire both to buttons or a context
+   * menu for a single-pointer path. Requires `allowDragging`.
+   */
+  cutItem(key: RowKey): boolean;
+  /**
+   * Moves the cut node of this tree's group onto `targetKey` through the
+   * same pipeline as a drop (`onItemReordering` → `onItemReordered` →
+   * `onItemTransferred`). `position` defaults to `inside` (`after` when
+   * `allowDropInside` is off).
+   */
+  pasteItem(targetKey: RowKey, position?: OgeTreeDropPosition): boolean;
 }
 
 export interface OgeTreeViewProps<T extends object = Record<string, unknown>> {
@@ -224,6 +275,36 @@ export interface OgeTreeViewProps<T extends object = Record<string, unknown>> {
   allowDragging?: boolean;
   /** Allows dropping *into* a node (reparenting), not just between siblings. */
   allowDropInside?: boolean;
+  /**
+   * Trees sharing a group accept each other's nodes — by pointer drag and by
+   * the Ctrl+X / Ctrl+V keyboard twin. Both trees need `allowDragging`. The
+   * target fires `onItemReordering` / `onItemReordered` (with `sourceTreeId`
+   * / `targetTreeId`), the source `onItemTransferred`; neither moves data.
+   */
+  dragGroup?: string;
+
+  /**
+   * Lets users rename nodes in place: F2 (or a double-click with
+   * `editOnDblClick`) turns the label into a text field; Enter or blur
+   * commits, Escape cancels. `true`, `false`, or a per-item predicate. The
+   * tree does not write the label — apply `onItemEdited` to your data.
+   */
+  allowEditing?: OgeTreeAllowEditing<T>;
+  /** A double-click opens the label editor instead of toggling the node. */
+  editOnDblClick?: boolean;
+  /**
+   * Validates an edited label: `true` / `null` accepts, `false` rejects with
+   * the catalog's `editInvalid`, a string rejects with that message. A
+   * rejected label keeps the editor open.
+   */
+  validateEdit?: OgeTreeEditValidator<T>;
+
+  /**
+   * Children rendered per parent (roots included) before a "Load more" row —
+   * Kendo's node page size. `aria-setsize` keeps reporting the real total.
+   * `0` / unset renders every child. Paging pauses while searching.
+   */
+  childPageSize?: number;
 
   /** Disables the whole component. */
   disabled?: boolean;
@@ -268,6 +349,19 @@ export interface OgeTreeViewProps<T extends object = Record<string, unknown>> {
   onItemReordering?: (event: OgeTreeReorderingEvent<T>) => void;
   /** Fires after a drop passed `onItemReordering`; apply it to your own data. */
   onItemReordered?: (event: OgeTreeReorderedEvent<T>) => void;
+  /**
+   * Fires on the source tree after one of its nodes moved to another tree of
+   * the same `dragGroup` — remove it from this tree's data.
+   */
+  onItemTransferred?: (event: OgeTreeTransferredEvent<T>) => void;
+  /** Cancelable pre-event of the label editor opening. */
+  onItemEditStarting?: (event: OgeTreeEditStartingEvent<T>) => void;
+  /** Cancelable pre-event of an edited label committing. */
+  onItemEditing?: (event: OgeTreeEditingEvent<T>) => void;
+  /** Fires after a label edit committed; write `value` into your data. */
+  onItemEdited?: (event: OgeTreeEditedEvent<T>) => void;
+  /** Fires after a "Load more" row revealed the next page of children. */
+  onChildPageShown?: (event: OgeTreeChildPageEvent<T>) => void;
 
   /** Replaces a node's label — the React face of `ogeTreeItemTemplate`. */
   renderItem?: (context: OgeTreeItemRenderContext<T>) => ReactNode;
@@ -337,6 +431,10 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     height,
     allowDragging = false,
     allowDropInside = true,
+    dragGroup,
+    allowEditing = false,
+    editOnDblClick = false,
+    childPageSize,
     disabled = false,
     size = 'md',
     treeId,
@@ -352,10 +450,11 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
   const uid = `oge-tree-view-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`;
   const resolvedTreeId = treeId ?? `${uid}-tree`;
 
-  const messages = useMemo<OgeTreeViewMessages>(
-    () => ({ ...config.messages, ...props.messages }),
+  const messages = useMemo<OgeTreeViewResolvedMessages>(
+    () => fillTreeViewMessages({ ...config.messages, ...props.messages }),
     [config.messages, props.messages],
   );
+  const announcer = useOgeLiveAnnouncer();
 
   const scrollElRef = useRef<HTMLDivElement>(null);
   const listElRef = useRef<HTMLDivElement>(null);
@@ -404,6 +503,12 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     ReadonlyMap<RowKey, OgeTreeLoadState>
   >(() => new Map());
   const [debouncedSearch, setDebouncedSearch] = useState(searchValue);
+  /** Children revealed so far per parent (`null` = roots) — "Load more". */
+  const [pageLimits, setPageLimits] = useState<
+    ReadonlyMap<RowKey | null, number>
+  >(() => new Map());
+  const pageLimitsRef = useRef(pageLimits);
+  pageLimitsRef.current = pageLimits;
 
   // Mutable mirrors of the committed state: the interaction pipeline runs
   // several steps inside one handler (expand → load → select) and must read
@@ -452,6 +557,8 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
         selectNodesRecursive,
         showCheckBoxes: checkBoxesMode,
         lazy: !!loadChildren,
+        childPageSize,
+        pageLimits,
       }),
     [
       items,
@@ -477,6 +584,8 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
       selectNodesRecursive,
       checkBoxesMode,
       loadChildren,
+      childPageSize,
+      pageLimits,
     ],
   );
 
@@ -517,6 +626,10 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     allowExpandAll,
     selectOnRowClick,
     expandEvent,
+    messages,
+    model,
+    resolvedTreeId,
+    allowDragging,
   });
   latest.current = {
     props,
@@ -535,6 +648,10 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     allowExpandAll,
     selectOnRowClick,
     expandEvent,
+    messages,
+    model,
+    resolvedTreeId,
+    allowDragging,
   };
 
   const virtual = useTreeVirtualizer({
@@ -749,6 +866,9 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     return loadChildrenFor(key, item, loader);
   };
 
+  const requestExpandRef = useRef(requestExpand);
+  requestExpandRef.current = requestExpand;
+
   const requestCollapse = (key: RowKey): Promise<boolean> => {
     const view = latest.current;
     const item = view.index.byKey.get(key);
@@ -826,7 +946,12 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
   ): void => {
     const view = latest.current;
     if (node.filler || view.disabled) return;
+    if (isEditTarget(event.target)) return;
     setFocusedKey(node.key);
+    if (node.more) {
+      revealNextPage(node.more.parentKey, event.nativeEvent, true);
+      return;
+    }
     if (isCheckTarget(event.target)) {
       if (!node.disabled) toggleSelection(node, event.nativeEvent);
       return;
@@ -854,12 +979,16 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     event: ReactMouseEvent,
   ): void => {
     const view = latest.current;
-    if (node.filler || node.disabled || view.disabled) return;
+    if (node.filler || node.more || node.disabled || view.disabled) return;
+    if (isEditTarget(event.target)) return;
     view.props.onItemDblClick?.({
       key: node.key,
       item: node.item,
       event: event.nativeEvent,
     });
+    if (view.props.editOnDblClick && startEdit(node, event.nativeEvent)) {
+      return;
+    }
     if (view.expandEvent === 'dblclick' && node.hasChildren) {
       void toggleKey(node.key);
     }
@@ -918,6 +1047,34 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     );
     if (current === -1) return;
     const native = event.nativeEvent;
+    const node = list[current];
+
+    // F2 renames (the desktop-tree convention; APG leaves it to the author)
+    if (isTreeEditKey(event)) {
+      if (startEdit(node, native)) event.preventDefault();
+      return;
+    }
+    // the keyboard twin of drag & drop: Ctrl+X here, Ctrl+V on the target
+    if (view.allowDragging && !node.more) {
+      const transfer = planTreeTransferKey(event);
+      if (transfer === 'cut') {
+        event.preventDefault();
+        ogeTreeCut(peer, node.key);
+        return;
+      }
+      if (transfer !== null) {
+        event.preventDefault();
+        const position =
+          transfer === 'paste' && view.allowDropInside ? 'inside' : 'after';
+        ogeTreePaste(peer, node.key, position, native);
+        return;
+      }
+    }
+    if (event.key === 'Escape' && ogeTreeHasCut(peer)) {
+      event.preventDefault();
+      ogeTreeCancelCut(peer);
+      return;
+    }
 
     // The APG key map itself lives in `@oge-ui/behavior`; this only executes
     // the actions it resolves, so the tree select's popup gets the same map.
@@ -972,9 +1129,166 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
         case 'set-expanded':
           setExpanded(action.expanded);
           break;
+        case 'load-more':
+          if (action.node.more) {
+            revealNextPage(action.node.more.parentKey, native, true);
+          }
+          break;
       }
     }
   };
+
+  // --- "Load more" paging --------------------------------------------------
+
+  const pendingFocusKey = useRef<RowKey | null>(null);
+
+  /**
+   * One more page under `parentKey`, then `onChildPageShown`. With `focus`
+   * (the row was activated) the first newly shown child takes the focus, so
+   * the user carries on where the list grew.
+   */
+  const revealNextPage = (
+    parentKey: RowKey | null,
+    event: Event | undefined,
+    focus: boolean,
+  ): void => {
+    const view = latest.current;
+    const pageSize = resolveTreeChildPageSize(view.props.childPageSize);
+    if (pageSize === 0) return;
+    const siblings =
+      parentKey === null
+        ? view.index.roots
+        : (view.index.childrenOf.get(parentKey) ?? []);
+    const total = siblings.length;
+    const shown = treeChildPageLimit(
+      pageLimitsRef.current,
+      parentKey,
+      pageSize,
+    );
+    if (shown >= total) return;
+    const next = nextTreeChildPage(
+      pageLimitsRef.current,
+      parentKey,
+      pageSize,
+      total,
+    );
+    pageLimitsRef.current = next;
+    setPageLimits(next);
+    view.props.onChildPageShown?.({
+      parentKey,
+      parentItem:
+        parentKey === null ? undefined : view.index.byKey.get(parentKey),
+      shown: treeChildPageLimit(next, parentKey, pageSize),
+      total,
+      event,
+    });
+    if (!focus) return;
+    const firstNew = view.keyOf(siblings[shown]);
+    setFocusedKey(firstNew);
+    pendingFocusKey.current = firstNew;
+  };
+
+  // focus the first newly revealed child once it rendered
+  useEffect(() => {
+    const target = pendingFocusKey.current;
+    if (target === null) return;
+    const rowIndex = nodes.findIndex((n) => !n.filler && n.key === target);
+    if (rowIndex === -1) return;
+    pendingFocusKey.current = null;
+    moveFocus(rowIndex);
+  });
+
+  // --- label editing ----------------------------------------------------------
+
+  const [editingKey, setEditingKeyState] = useState<RowKey | null>(null);
+  const editingKeyRef = useRef<RowKey | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const editInputRef = useRef<HTMLInputElement | null>(null);
+
+  const setEditingKey = (key: RowKey | null): void => {
+    editingKeyRef.current = key;
+    setEditingKeyState(key);
+  };
+
+  const startEdit = (node: OgeTreeViewNode<T>, event?: Event): boolean => {
+    if (editingKeyRef.current === node.key) return true;
+    const view = latest.current;
+    const open = runTreeEditStart<T>({
+      node,
+      allow: view.props.allowEditing ?? false,
+      treeDisabled: view.disabled,
+      event,
+      emitStarting: (starting) => view.props.onItemEditStarting?.(starting),
+    });
+    if (!open) return false;
+    setEditError(null);
+    setEditingKey(node.key);
+    return true;
+  };
+
+  /** Closes the editor; with `refocus` the row takes the focus back. */
+  const closeEditor = (key: RowKey, refocus: boolean): void => {
+    // cleared first, so the blur the refocus causes is not a second commit
+    setEditingKey(null);
+    setEditError(null);
+    if (refocus) elementForKey(key)?.focus();
+  };
+
+  const commitEdit = (
+    node: OgeTreeViewNode<T>,
+    event: Event,
+    refocus: boolean,
+  ): void => {
+    const view = latest.current;
+    const field = editInputRef.current;
+    const result = runTreeEditCommit<T>({
+      key: node.key,
+      item: node.item,
+      previousValue: node.text,
+      value: field?.value ?? node.text,
+      event,
+      validate: view.props.validateEdit,
+      invalidMessage: view.messages.editInvalid,
+      emitEditing: (editing) => view.props.onItemEditing?.(editing),
+      emitEdited: (edited) => view.props.onItemEdited?.(edited),
+    });
+    if (result.status === 'invalid') {
+      const error = result.error ?? view.messages.editInvalid;
+      setEditError(error);
+      announcer.announce(error);
+      if (refocus) field?.focus();
+      return;
+    }
+    closeEditor(node.key, refocus);
+  };
+
+  const onEditKeyDown = (
+    node: OgeTreeViewNode<T>,
+    event: ReactKeyboardEvent<HTMLInputElement>,
+  ): void => {
+    // the field owns its keys: arrows move the caret, Space types a space,
+    // and Escape must not reach a drawer or dialog around the tree
+    event.stopPropagation();
+    event.nativeEvent.stopPropagation();
+    const action = planTreeEditKey(event.key);
+    if (action === null) return;
+    event.preventDefault();
+    if (action === 'cancel') closeEditor(node.key, true);
+    else commitEdit(node, event.nativeEvent, true);
+  };
+
+  const isEditTarget = (target: EventTarget | null): boolean =>
+    target instanceof Element &&
+    target.closest('.oge-tree-view-edit-input') !== null;
+
+  // the editor takes focus with its text selected as soon as it renders
+  const editFieldRef = useCallback((field: HTMLInputElement | null) => {
+    editInputRef.current = field;
+    if (field) {
+      field.focus();
+      field.select();
+    }
+  }, []);
 
   // --- drag & drop ----------------------------------------------------------
 
@@ -983,170 +1297,124 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
   const [dropPosition, setDropPosition] = useState<OgeTreeDropPosition | null>(
     null,
   );
-  const dragKeyRef = useRef<RowKey | null>(null);
-  const dropTargetRef = useRef<RowKey | null>(null);
-  const dropPositionRef = useRef<OgeTreeDropPosition | null>(null);
-  const dragOrigin = useRef<{ x: number; y: number } | null>(null);
-  const dragCandidate = useRef<RowKey | null>(null);
-  const hoverExpandTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const hoverExpandKey = useRef<RowKey | null>(null);
+  const [cutKey, setCutKey] = useState<RowKey | null>(null);
+  const dragHandle = useRef<OgePointerGestureHandle | null>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * This tree as a participant in moves — its own reorders and its
+   * `dragGroup`'s cross-tree drops share one commit path in
+   * `@oge-ui/behavior` (`tree-view-transfer`). Stable for the component's
+   * life; everything it reads comes through `latest`.
+   */
+  const peerRef = useRef<OgeTreeDragPeer | null>(null);
+  peerRef.current ??= {
+    treeId: () => latest.current.resolvedTreeId,
+    group: () =>
+      ogeTreeDragGroupOf(
+        latest.current.props.dragGroup,
+        latest.current.resolvedTreeId,
+      ),
+    element: () => hostRef.current,
+    rows: () =>
+      Array.from(
+        listElRef.current?.querySelectorAll<HTMLElement>(
+          '.oge-tree-view-item',
+        ) ?? [],
+      ),
+    rowInfo: (dataKey) => {
+      const node = latest.current.nodes.find(
+        (n) => !n.filler && !n.more && String(n.key) === dataKey,
+      );
+      return node
+        ? {
+            key: node.key,
+            hasChildren: node.hasChildren,
+            expanded: node.expanded,
+          }
+        : null;
+    },
+    itemOf: (key) => latest.current.index.byKey.get(key),
+    textOf: (key) => {
+      const item = latest.current.index.byKey.get(key);
+      return item === undefined
+        ? String(key)
+        : latest.current.model.displayOf(item);
+    },
+    canDrop: (source, dropKey) => {
+      const view = latest.current;
+      if (view.disabled || !view.index.byKey.has(dropKey)) return false;
+      return source.treeId !== view.resolvedTreeId
+        ? true
+        : treeCanDrop(view.index, source.key, dropKey);
+    },
+    allowDropInside: () => latest.current.allowDropInside,
+    preview: (target) => {
+      setDropTargetKey(target?.key ?? null);
+      setDropPosition(target?.position ?? null);
+    },
+    expand: (key) => void requestExpandRef.current(key),
+    setCut: (key) => setCutKey(key),
+    announce: (text) => announcer.announce(text),
+    messages: () => latest.current.messages,
+    emitReordering: (event) =>
+      latest.current.props.onItemReordering?.(
+        event as OgeTreeReorderingEvent<T>,
+      ),
+    emitReordered: (event) =>
+      latest.current.props.onItemReordered?.(event as OgeTreeReorderedEvent<T>),
+    emitTransferred: (event) =>
+      latest.current.props.onItemTransferred?.(
+        event as OgeTreeTransferredEvent<T>,
+      ),
+  };
+  const peer = peerRef.current;
+
+  // a tree that drags takes part in its group's moves while it is mounted
+  useEffect(() => {
+    if (!allowDragging) return;
+    const unregister = registerOgeTreeDragPeer(peer);
+    return () => {
+      unregister();
+      setCutKey(null);
+    };
+  }, [allowDragging, dragGroup, resolvedTreeId, peer]);
 
   useEffect(
     () => () => {
-      if (hoverExpandTimer.current) clearTimeout(hoverExpandTimer.current);
+      dragHandle.current?.cancel();
     },
     [],
   );
 
-  const resetDrag = (): void => {
-    if (hoverExpandTimer.current) clearTimeout(hoverExpandTimer.current);
-    hoverExpandKey.current = null;
-    dragCandidate.current = null;
-    dragOrigin.current = null;
-    dragKeyRef.current = null;
-    dropTargetRef.current = null;
-    dropPositionRef.current = null;
-    setDragKey(null);
-    setDropTargetKey(null);
-    setDropPosition(null);
-  };
-
-  const clearDropTarget = (): void => {
-    dropTargetRef.current = null;
-    dropPositionRef.current = null;
-    setDropTargetKey(null);
-    setDropPosition(null);
-  };
-
-  /** Hovering a collapsed parent long enough opens it, so you can drop inside. */
-  const scheduleHoverExpand = (
-    node: OgeTreeViewNode<T>,
-    position: OgeTreeDropPosition,
-  ): void => {
-    const shouldArm =
-      position === 'inside' && node.hasChildren && !node.expanded;
-    if (!shouldArm) {
-      if (hoverExpandKey.current !== null) {
-        if (hoverExpandTimer.current) clearTimeout(hoverExpandTimer.current);
-        hoverExpandKey.current = null;
-      }
-      return;
-    }
-    if (hoverExpandKey.current === node.key) return;
-    if (hoverExpandTimer.current) clearTimeout(hoverExpandTimer.current);
-    hoverExpandKey.current = node.key;
-    hoverExpandTimer.current = setTimeout(() => {
-      if (dragKeyRef.current !== null) void requestExpand(node.key);
-    }, OGE_TREE_DRAG_HOVER_EXPAND_MS);
-  };
-
-  const updateDropTarget = (event: ReactPointerEvent): void => {
-    const dragged = dragKeyRef.current;
-    if (dragged === null) return;
-    const rows = Array.from(
-      listElRef.current?.querySelectorAll<HTMLElement>('.oge-tree-view-item') ??
-        [],
-    );
-    const row = rows.find((element) => {
-      const rect = element.getBoundingClientRect();
-      return event.clientY >= rect.top && event.clientY <= rect.bottom;
-    });
-    const key = row?.getAttribute('data-key');
-    if (!row || key === null || key === undefined) {
-      clearDropTarget();
-      return;
-    }
-    const node = latest.current.nodes.find(
-      (candidate) => String(candidate.key) === key && !candidate.filler,
-    );
-    if (!node || !treeCanDrop(latest.current.index, dragged, node.key)) {
-      clearDropTarget();
-      return;
-    }
-    const position = resolveTreeDropPosition(
-      event.clientY,
-      row.getBoundingClientRect(),
-      latest.current.allowDropInside,
-    );
-    dropTargetRef.current = node.key;
-    dropPositionRef.current = position;
-    setDropTargetKey(node.key);
-    setDropPosition(position);
-    scheduleHoverExpand(node, position);
-  };
-
+  /**
+   * Pointer drags run on `@oge-ui/behavior`'s `beginOgeTreeDrag`
+   * (`beginPointerDragDrop` underneath): threshold, touch long press, ghost,
+   * auto-scroll, capture-phase Escape, hover-to-expand and the cross-tree
+   * hit-test over the `dragGroup` registry. The drop runs the same commit
+   * as Ctrl+V.
+   */
   const onPointerDown = (
     node: OgeTreeViewNode<T>,
-    event: ReactPointerEvent,
+    event: ReactPointerEvent<HTMLDivElement>,
   ): void => {
     const view = latest.current;
-    if (!allowDragging || view.disabled || node.filler) return;
+    if (!allowDragging || view.disabled || node.filler || node.more) return;
     if (event.button !== 0 || isCheckTarget(event.target)) return;
-    dragCandidate.current = node.key;
-    dragOrigin.current = { x: event.clientX, y: event.clientY };
-  };
-
-  const onPointerMove = (event: ReactPointerEvent): void => {
-    if (dragCandidate.current === null || !dragOrigin.current) return;
-    const point = { x: event.clientX, y: event.clientY };
-    if (
-      dragKeyRef.current === null &&
-      !exceedsTreeDragThreshold(dragOrigin.current, point)
-    ) {
-      return;
-    }
-    if (dragKeyRef.current === null) {
-      dragKeyRef.current = dragCandidate.current;
-      setDragKey(dragCandidate.current);
-      const target = event.target;
-      if (target instanceof Element && 'setPointerCapture' in target) {
-        try {
-          (
-            target as Element & { setPointerCapture(id: number): void }
-          ).setPointerCapture(event.pointerId);
-        } catch {
-          // capture is best-effort
-        }
-      }
-    }
-    updateDropTarget(event);
-  };
-
-  const onPointerUp = (): void => {
-    const dragged = dragKeyRef.current;
-    const dropKey = dropTargetRef.current;
-    const position = dropPositionRef.current;
-    resetDrag();
-    if (dragged === null || dropKey === null || position === null) return;
-    const view = latest.current;
-    const dragItem = view.index.byKey.get(dragged);
-    const dropItem = view.index.byKey.get(dropKey);
-    if (!dragItem || !dropItem) return;
-    const reordering: OgeTreeReorderingEvent<T> = {
-      dragKey: dragged,
-      dragItem,
-      dropKey,
-      dropItem,
-      position,
-      cancel: false,
-    };
-    view.props.onItemReordering?.(reordering);
-    if (reordering.cancel) return;
-    view.props.onItemReordered?.({
-      dragKey: dragged,
-      dragItem,
-      dropKey,
-      dropItem,
-      position,
+    if (isEditTarget(event.target)) return;
+    dragHandle.current?.cancel();
+    const key = node.key;
+    dragHandle.current = beginOgeTreeDrag(event, {
+      peer,
+      key,
+      row: event.currentTarget,
+      autoScroll: scrollElRef.current,
+      onStart: () => setDragKey(key),
+      onEnd: () => {
+        setDragKey(null);
+        dragHandle.current = null;
+      },
     });
-  };
-
-  /** Escape cancels an in-flight drag, matching the tab strip. */
-  const onHostKeyDown = (event: ReactKeyboardEvent): void => {
-    if (event.key === 'Escape' && dragKeyRef.current !== null) {
-      event.preventDefault();
-      resetDrag();
-    }
   };
 
   // --- imperative handle ----------------------------------------------------
@@ -1191,6 +1459,34 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
       }
       elementForKey(key)?.scrollIntoView({ block: 'nearest' });
     },
+    editItem: (key) => {
+      const node = latest.current.nodes.find(
+        (candidate) => candidate.key === key && !candidate.filler,
+      );
+      return node ? startEdit(node) : false;
+    },
+    cancelEdit: () => {
+      const key = editingKeyRef.current;
+      if (key !== null) closeEditor(key, false);
+    },
+    showMoreChildren: (parentKey) =>
+      revealNextPage(parentKey, undefined, false),
+    cutItem: (key) => {
+      if (!latest.current.allowDragging || latest.current.disabled) {
+        return false;
+      }
+      return ogeTreeCut(peer, key);
+    },
+    pasteItem: (targetKey, position) => {
+      if (!latest.current.allowDragging || latest.current.disabled) {
+        return false;
+      }
+      return ogeTreePaste(
+        peer,
+        targetKey,
+        position ?? (latest.current.allowDropInside ? 'inside' : 'after'),
+      );
+    },
   }));
 
   // --- render ---------------------------------------------------------------
@@ -1218,18 +1514,26 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
   );
   const tabStopKey = focusedKey ?? seedFocusedKey;
 
+  /** `aria-keyshortcuts` of a row: F2 when renamable, the move keys when dragging. */
+  const keyShortcuts = (node: OgeTreeViewNode<T>): string | undefined => {
+    if (node.filler || node.more) return undefined;
+    const keys: string[] = [];
+    if (allowEditing !== false) keys.push('F2');
+    if (allowDragging) keys.push(OGE_TREE_TRANSFER_SHORTCUTS);
+    return keys.length ? keys.join(' ') : undefined;
+  };
+
+  /** Label of a "Load more" row: the ICU plural over the hidden children. */
+  const loadMoreText = (node: OgeTreeViewNode<T>): string =>
+    node.more ? treeLoadMoreText(messages.loadMore, node.more) : '';
+
   const rovingTabIndex = (node: OgeTreeViewNode<T>): number => {
     if (node.filler || node.disabled) return -1;
     return node.key === tabStopKey ? 0 : -1;
   };
 
   return (
-    <div
-      className={hostClasses}
-      data-size={size}
-      style={style}
-      onKeyDown={onHostKeyDown}
-    >
+    <div ref={hostRef} className={hostClasses} data-size={size} style={style}>
       {searchEnabled && (
         <div className="oge-tree-view-search">
           <input
@@ -1345,6 +1649,9 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
                       dropTargetKey === node.key &&
                         dropPosition === 'inside' &&
                         'oge-tree-view-item-drop-inside',
+                      cutKey === node.key && 'oge-tree-view-item-cut',
+                      node.more && 'oge-tree-view-item-more',
+                      editingKey === node.key && 'oge-tree-view-item-editing',
                     ]
                       .filter(Boolean)
                       .join(' ')}
@@ -1352,8 +1659,13 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
                     data-key={node.filler ? undefined : String(node.key)}
                     id={`${uid}-node-${node.id}`}
                     aria-level={node.level + 1}
-                    aria-posinset={node.filler ? undefined : node.posInSet}
-                    aria-setsize={node.filler ? undefined : node.setSize}
+                    aria-posinset={
+                      node.filler || node.more ? undefined : node.posInSet
+                    }
+                    aria-setsize={
+                      node.filler || node.more ? undefined : node.setSize
+                    }
+                    aria-keyshortcuts={keyShortcuts(node)}
                     aria-expanded={
                       node.filler || !node.hasChildren
                         ? undefined
@@ -1373,8 +1685,6 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
                       if (!node.filler) setFocusedKey(node.key);
                     }}
                     onPointerDown={(event) => onPointerDown(node, event)}
-                    onPointerMove={onPointerMove}
-                    onPointerUp={onPointerUp}
                   >
                     {node.filler ? (
                       <>
@@ -1386,6 +1696,27 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
                           {node.failed
                             ? messages.childrenLoadFailed
                             : messages.loadingChildren}
+                        </span>
+                      </>
+                    ) : node.more ? (
+                      <>
+                        <span
+                          className="oge-tree-view-more-icon"
+                          aria-hidden="true"
+                        >
+                          <svg viewBox="0 0 24 24" width="14" height="14">
+                            <path
+                              d="M6 9l6 6 6-6"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <span className="oge-tree-view-text oge-tree-view-more-text">
+                          {loadMoreText(node)}
                         </span>
                       </>
                     ) : (
@@ -1452,7 +1783,39 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
                             />
                           </svg>
                         )}
-                        {renderItem ? (
+                        {editingKey === node.key ? (
+                          // A transient text field inside the treeitem:
+                          // treeitem does not make its children
+                          // presentational, so axe's nested-interactive does
+                          // not apply. Uncontrolled — the value is read on
+                          // commit, never per keystroke.
+                          <>
+                            <input
+                              ref={editFieldRef}
+                              type="text"
+                              className="oge-tree-view-edit-input"
+                              defaultValue={node.text}
+                              aria-label={messages.editLabel}
+                              aria-invalid={editError ? true : undefined}
+                              aria-describedby={
+                                editError ? `${uid}-edit-error` : undefined
+                              }
+                              onKeyDown={(event) => onEditKeyDown(node, event)}
+                              onBlur={(event) => {
+                                if (editingKeyRef.current !== node.key) return;
+                                commitEdit(node, event.nativeEvent, false);
+                              }}
+                            />
+                            {editError && (
+                              <span
+                                className="oge-tree-view-edit-error"
+                                id={`${uid}-edit-error`}
+                              >
+                                {editError}
+                              </span>
+                            )}
+                          </>
+                        ) : renderItem ? (
                           renderItem({
                             item: node.item,
                             key: node.key,

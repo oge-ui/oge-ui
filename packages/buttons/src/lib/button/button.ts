@@ -16,7 +16,9 @@ import {
 } from '@angular/core';
 import {
   OgeButtonPress,
+  applyButtonToggle,
   resolveAutoRepeat,
+  resolveButtonSelectionState,
   resolveClickGuard,
   resolveHoldToConfirm,
 } from '@oge-ui/behavior';
@@ -28,6 +30,7 @@ import type {
   OgeButtonActionFailedEvent,
   OgeButtonClickEvent,
   OgeButtonIconPosition,
+  OgeButtonSelectedChangedEvent,
   OgeButtonSeverity,
   OgeButtonSize,
   OgeButtonStylingMode,
@@ -48,6 +51,13 @@ declare const ngDevMode: boolean | undefined;
  *
  * Inside an `<oge-button-group>` the button inherits the group's
  * `stylingMode`, `severity`, `size` and `disabled` unless set locally.
+ *
+ * `toggle` makes a standalone WAI-ARIA toggle button (`aria-pressed`) with a
+ * two-way `selected` state:
+ *
+ * ```html
+ * <oge-button text="Bold" [toggle]="true" [(selected)]="bold" />
+ * ```
  */
 @Component({
   selector: 'oge-button',
@@ -59,7 +69,8 @@ declare const ngDevMode: boolean | undefined;
     '[class.oge-button-loading]': 'loading()',
     '[class.oge-button-holding]': 'holding()',
     '[class.oge-button-hold-ready]': 'holdReady()',
-    '[class.oge-button-selected]': 'selected()',
+    '[class.oge-button-selected]': 'selection().selected',
+    '[class.oge-button-toggle]': 'selection().standaloneToggle',
     '[class.oge-button-colored]':
       "effectiveSeverity() !== 'normal' || !!color()",
     '[style.--oge-btn-main]': 'color() ?? null',
@@ -88,9 +99,9 @@ declare const ngDevMode: boolean | undefined;
       [attr.title]="hintText() ?? null"
       [attr.accesskey]="accessKey() ?? null"
       [attr.aria-busy]="loading() ? 'true' : null"
-      [attr.role]="nativeRole()"
-      [attr.aria-checked]="ariaChecked()"
-      [attr.aria-pressed]="ariaPressed()"
+      [attr.role]="selection().role"
+      [attr.aria-checked]="selection().ariaChecked"
+      [attr.aria-pressed]="selection().ariaPressed"
       [attr.aria-haspopup]="ariaHasPopup() ?? null"
       [attr.aria-expanded]="ariaExpandedAttr()"
       [attr.aria-controls]="ariaControls() ?? null"
@@ -180,6 +191,17 @@ export class OgeButton {
   readonly ariaLabel = input<string | undefined>(undefined);
   /** Selection key inside an `<oge-button-group>`; unused standalone. */
   readonly value = input<string | undefined>(undefined);
+  /**
+   * Makes the button a toggle button: each accepted click flips `selected`
+   * and the native button renders `aria-pressed`. Ignored inside a
+   * `single`/`multiple` `<oge-button-group>`, which owns the selection.
+   */
+  readonly toggle = input(false);
+  /**
+   * Pressed state of a `toggle` button — two-way (`[(selected)]`). Unused
+   * without `toggle` and inside a selection group.
+   */
+  readonly selected = model(false);
   /** `aria-haspopup` of the native button — for popup triggers (drop-down). */
   readonly ariaHasPopup = input<string | undefined>(undefined);
   /** `aria-expanded` of the native button; `undefined` omits the attribute. */
@@ -229,6 +251,11 @@ export class OgeButton {
   readonly actionDone = output<OgeButtonActionDoneEvent>();
   /** Fires when the `action` callback throws or rejects. */
   readonly actionFailed = output<OgeButtonActionFailedEvent>();
+  /**
+   * A click flipped a `toggle` button's `selected` state — fires after the
+   * model updates and before `clicked`.
+   */
+  readonly selectedChanged = output<OgeButtonSelectedChangedEvent>();
 
   protected readonly msg = computed<OgeButtonsMessages>(() => ({
     ...this.config.messages,
@@ -252,17 +279,18 @@ export class OgeButton {
   protected readonly effectiveTabIndex = computed(() =>
     this.group ? this.group.tabIndexFor(this) : this.tabIndex(),
   );
-  protected readonly selected = computed(() =>
-    this.group ? this.group.isSelected(this.value()) : false,
-  );
-  protected readonly nativeRole = computed(() =>
-    this.group?.selectionMode() === 'single' ? 'radio' : null,
-  );
-  protected readonly ariaChecked = computed(() =>
-    this.group?.selectionMode() === 'single' ? String(this.selected()) : null,
-  );
-  protected readonly ariaPressed = computed(() =>
-    this.group?.selectionMode() === 'multiple' ? String(this.selected()) : null,
+  /**
+   * Who owns the selected state and which ARIA it renders — a selection
+   * group, the button's own `toggle`, or nobody. Shared with the React
+   * button through `@oge-ui/behavior`.
+   */
+  protected readonly selection = computed(() =>
+    resolveButtonSelectionState({
+      groupMode: this.group?.selectionMode() ?? null,
+      groupSelected: this.group ? this.group.isSelected(this.value()) : false,
+      toggle: this.toggle(),
+      selected: this.selected(),
+    }),
   );
   protected readonly ariaExpandedAttr = computed(() => {
     const expanded = this.ariaExpanded();
@@ -328,6 +356,11 @@ export class OgeButton {
     action: () => this.action(),
     captureTarget: () => this.nativeButton().nativeElement,
     onClick: (event) => {
+      const change = applyButtonToggle(untracked(() => this.selection()));
+      if (change) {
+        this.selected.set(change.selected);
+        this.selectedChanged.emit({ ...change, event });
+      }
       this.clicked.emit({ event });
       this.group?.notifyClick(this.value(), event, this);
     },

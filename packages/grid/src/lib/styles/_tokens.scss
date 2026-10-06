@@ -81,6 +81,9 @@
   --oge-scrollbar-track: transparent;
   /* stacking layer of anchored popups/menus */
   --oge-z-popup: 1000;
+  /* non-modal floating windows: below anchored popups (a select opened in a
+     window shows above it) and modals; each window adds its stacking layer */
+  --oge-z-window: 900;
   /* modal layer (above anchored popups; legacy grid dialogs sit at 1090/1100) */
   --oge-z-modal: 1100;
   /* drawer panel; shares the modal layer, ordering comes from the shared stack */

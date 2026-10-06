@@ -75,6 +75,24 @@ export type {
   OgeTreeViewConfig,
   OgeTreeViewConfigInput,
 } from '@oge-ui/behavior';
+// G5a tree view depth: cross-tree moves, label editing, "Load more" paging
+export type {
+  OgeTreeTransferredEvent,
+  OgeTreeMoveSource,
+  OgeTreeChildPageEvent,
+  OgeTreeAllowEditing,
+  OgeTreeEditValidator,
+  OgeTreeEditStartingEvent,
+  OgeTreeEditingEvent,
+  OgeTreeEditedEvent,
+} from '@oge-ui/behavior';
+// G5a drawer depth: built-in navigation items
+export type {
+  OgeDrawerItem,
+  OgeDrawerItemClickEvent,
+  OgeDrawerSelectionChangedEvent,
+} from '@oge-ui/behavior';
+export type { OgeDrawerItemRenderContext } from './lib/drawer';
 export {
   OgeDrawerConfigProvider,
   useOgeDrawerConfig,
@@ -135,6 +153,8 @@ export type {
   OgeMenubarSubmenuClosingEvent,
   OgeMenubarSubmenuClosedEvent,
   OgeMenubarCompactChangedEvent,
+  OgeMenubarOverflowMode,
+  OgeMenubarItemOverflow,
   OgeMenubarMessages,
   OgeMenubarConfig,
   OgeMenubarConfigInput,

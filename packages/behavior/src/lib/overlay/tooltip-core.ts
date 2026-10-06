@@ -16,9 +16,24 @@ export const OGE_TOOLTIP_PANEL_OPTIONS = {
   closeOnOutsidePointerDown: false,
 } as const;
 
+/**
+ * What shows a tooltip: `'hover'` (pointer dwell **and** keyboard focus — the
+ * APG default), `'focus'` (keyboard/programmatic focus only), `'click'`
+ * (activating the trigger toggles it; blur and Escape hide it) or
+ * `'manual'` (only the imperative `open()` / `close()`).
+ */
+export type OgeTooltipShowMode = 'hover' | 'focus' | 'click' | 'manual';
+
 export interface OgeTooltipCoreOptions {
-  /** Current tooltip text; blank disables the tooltip. */
+  /** Current tooltip text; blank disables the tooltip (unless `hasContent`). */
   text: () => string;
+  /**
+   * Whether rich content (a template / render prop) is present; when it
+   * returns `true` the tooltip may show even with blank `text`.
+   */
+  hasContent?: () => boolean;
+  /** Which trigger interactions show the tooltip. Default `'hover'`. */
+  showMode?: () => OgeTooltipShowMode;
   /** Suppresses showing without detaching the trigger. */
   disabled?: () => boolean;
   /** Hover dwell before showing, in ms (focus shows immediately). */
@@ -51,12 +66,63 @@ export class OgeTooltipCore {
 
   constructor(private readonly options: OgeTooltipCoreOptions) {}
 
-  /** Whether the tooltip may show right now (enabled and non-blank text). */
+  /** Whether the tooltip may show right now (enabled, with content). */
   canShow(): boolean {
     return (
       !(this.options.disabled?.() ?? false) &&
-      this.options.text().trim().length > 0
+      ((this.options.hasContent?.() ?? false) ||
+        this.options.text().trim().length > 0)
     );
+  }
+
+  /** The resolved show mode. */
+  showMode(): OgeTooltipShowMode {
+    return this.options.showMode?.() ?? 'hover';
+  }
+
+  // --- trigger interactions, routed by the show mode ------------------------
+
+  /** Trigger `pointerenter`: dwell, in `'hover'` mode only. */
+  pointerEnter(): void {
+    if (this.showMode() === 'hover') this.scheduleShow();
+  }
+
+  /** Trigger `pointerleave`: grace period, in `'hover'` mode only. */
+  pointerLeave(): void {
+    if (this.showMode() === 'hover') this.scheduleHide();
+  }
+
+  /** Trigger `focusin`: shows at once in `'hover'` and `'focus'` modes. */
+  focusIn(): void {
+    const mode = this.showMode();
+    if (mode === 'hover' || mode === 'focus') this.show();
+  }
+
+  /**
+   * Trigger `focusout`: hides in every mode but `'manual'` — a click-mode
+   * tooltip also leaves when the user clicks elsewhere, which blurs the
+   * trigger.
+   */
+  focusOut(): void {
+    if (this.showMode() !== 'manual') this.hide();
+  }
+
+  /** Trigger `click`: toggles in `'click'` mode only. */
+  click(): void {
+    if (this.showMode() !== 'click') return;
+    if (this.options.isOpen()) this.hide();
+    else this.show();
+  }
+
+  /** Trigger `keydown`: Escape hides in every mode (WCAG 1.4.13). */
+  keyDown(key: string): void {
+    if (key === 'Escape') this.hide();
+  }
+
+  /** Imperative toggle — the `toggle()` the render layers expose. */
+  toggle(): void {
+    if (this.options.isOpen()) this.hide();
+    else this.show();
   }
 
   /** Pointer path: shows after the hover dwell. */

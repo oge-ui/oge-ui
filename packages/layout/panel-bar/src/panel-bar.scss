@@ -1,0 +1,272 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A navigation stack: root headers are section rows divided by hairlines,
+// nested headers indent by level (`--oge-panel-bar-level`, written per
+// header by the component) and the selected leaf carries an accent tint
+// plus an inline-start indicator bar.
+.oge-panel-bar {
+  @include tokens.core-tokens;
+
+  --oge-panel-bar-pad-x: 14px;
+  --oge-panel-bar-pad-y: 10px;
+  --oge-panel-bar-indent: 16px;
+  --oge-panel-bar-transition: 200ms;
+
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  &.oge-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+.oge-panel-bar-empty {
+  padding: var(--oge-panel-bar-pad-y) var(--oge-panel-bar-pad-x);
+  color: var(--oge-muted-color);
+}
+
+.oge-panel-bar-group {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-panel-bar-root > .oge-panel-bar-item + .oge-panel-bar-item {
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+.oge-panel-bar-header {
+  --oge-panel-bar-level: 1;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  padding-block: var(--oge-panel-bar-pad-y);
+  padding-inline: calc(
+      var(--oge-panel-bar-pad-x) + (var(--oge-panel-bar-level) - 1) *
+        var(--oge-panel-bar-indent)
+    )
+    var(--oge-panel-bar-pad-x);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    @include tokens.focus-ring($inset: true, $color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+
+  &[aria-disabled='true'] {
+    color: var(--oge-muted-color);
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+}
+
+// root headers read as section titles
+.oge-panel-bar-root > .oge-panel-bar-item > .oge-panel-bar-header {
+  font-weight: 500;
+}
+
+.oge-panel-bar-root > .oge-panel-bar-item-expanded > .oge-panel-bar-header {
+  background: var(--oge-header-bg);
+}
+
+// the selected item: accent tint, accent text and an indicator bar
+.oge-panel-bar-item-selected > .oge-panel-bar-header {
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-weight: 600;
+
+  &::before {
+    position: absolute;
+    inset-block: 6px;
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: 999px;
+    background: var(--oge-accent);
+    content: '';
+  }
+}
+
+.oge-panel-bar-icon {
+  flex: none;
+  color: var(--oge-input-muted);
+}
+
+.oge-panel-bar-item-selected > .oge-panel-bar-header .oge-panel-bar-icon {
+  color: var(--oge-accent);
+}
+
+.oge-panel-bar-titles {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.oge-panel-bar-title,
+.oge-panel-bar-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-panel-bar-description {
+  color: var(--oge-input-muted);
+  font-size: 0.85em;
+  font-weight: 400;
+}
+
+.oge-panel-bar-badge {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--oge-badge-bg);
+  color: var(--oge-badge-color);
+  font-size: 0.75em;
+  line-height: 1.6;
+}
+
+.oge-panel-bar-chevron {
+  display: inline-flex;
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--oge-input-muted);
+  transition: transform var(--oge-panel-bar-transition) ease;
+}
+
+.oge-panel-bar-item-expanded > .oge-panel-bar-header .oge-panel-bar-chevron {
+  transform: rotate(180deg);
+}
+
+// Height animation via grid-template-rows (the accordion recipe).
+.oge-panel-bar-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.oge-panel-bar-panel-animated {
+  opacity: 0;
+  transition:
+    grid-template-rows var(--oge-panel-bar-transition) ease,
+    opacity var(--oge-panel-bar-transition) ease;
+}
+
+.oge-panel-bar-panel-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.oge-panel-bar-panel-inner {
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.oge-panel-bar-content {
+  padding: var(--oge-panel-bar-pad-y) var(--oge-panel-bar-pad-x);
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+// full: the open root group fills the host's height and scrolls inside
+.oge-panel-bar-full {
+  display: flex;
+  flex-direction: column;
+
+  > .oge-panel-bar-root {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-block-size: 0;
+  }
+
+  > .oge-panel-bar-root > .oge-panel-bar-item-expanded {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-block-size: 0;
+
+    > .oge-panel-bar-panel {
+      flex: 1 1 auto;
+      min-block-size: 0;
+    }
+
+    > .oge-panel-bar-panel > .oge-panel-bar-panel-inner {
+      overflow: auto;
+      @include tokens.scrollbar;
+    }
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-panel-bar-header,
+  .oge-panel-bar-chevron,
+  .oge-panel-bar-panel-animated {
+    transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+@include tokens.forced-colors {
+  .oge-panel-bar {
+    border-color: CanvasText;
+  }
+
+  .oge-panel-bar-header {
+    color: ButtonText;
+  }
+
+  .oge-panel-bar-item-selected > .oge-panel-bar-header {
+    background: Highlight;
+    color: HighlightText;
+
+    &::before {
+      background: HighlightText;
+    }
+
+    .oge-panel-bar-icon {
+      color: HighlightText;
+    }
+  }
+
+  .oge-panel-bar-header[aria-disabled='true'] {
+    color: GrayText;
+    opacity: 1;
+  }
+
+  .oge-panel-bar-root > .oge-panel-bar-item + .oge-panel-bar-item,
+  .oge-panel-bar-content {
+    border-color: CanvasText;
+  }
+}

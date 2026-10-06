@@ -111,6 +111,44 @@ const nextIcon = (
 </div>`,
     }),
   },
+  {
+    title: 'Toggle button',
+    description:
+      'toggle turns a standalone button into a WAI-ARIA toggle button: every accepted click flips selected (controlled with onSelectedChange, or uncontrolled with defaultSelected) and the native button announces aria-pressed. Pressed reads at a glance in every styling mode, while an unpressed toggle keeps a readable label. Inside a single/multiple button group the group keeps owning the selection.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-buttons': ['OgeButton'] },
+      types: { '@oge-ui/react-buttons': ['OgeButtonSelectedChangeEvent'] },
+      name: 'ToggleButtonDemo',
+      body: `// toggle = a WAI-ARIA toggle button: aria-pressed="true|false", and every
+// accepted click reports the next state through onSelectedChange.
+const [bold, setBold] = useState(true);
+const [italic, setItalic] = useState(false);
+
+const onItalic = (event: OgeButtonSelectedChangeEvent) => {
+  console.log(event.previousValue, '→', event.selected);
+  setItalic(event.selected);
+};`,
+      jsx: `<div className="demo-row">
+  <OgeButton
+    text="Bold"
+    toggle
+    selected={bold}
+    onSelectedChange={(event) => setBold(event.selected)}
+  />
+  <OgeButton
+    text="Italic"
+    stylingMode="outlined"
+    toggle
+    selected={italic}
+    onSelectedChange={onItalic}
+  />
+  {/* uncontrolled: defaultSelected seeds it, the button keeps the state */}
+  <OgeButton text="Pinned" stylingMode="text" toggle defaultSelected />
+  <OgeButton text="Locked" toggle selected disabled />
+</div>`,
+    }),
+  },
 ];
 
 // ── Interactions (mirrors buttons/interactions.ts) ─────────────────────────

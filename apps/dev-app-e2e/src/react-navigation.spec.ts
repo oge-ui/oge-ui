@@ -82,6 +82,38 @@ test.describe('React navigation docs', () => {
     await expect(dialog).toHaveAttribute('aria-hidden', 'true');
   });
 
+  test('the React drawer renders its items as links / buttons with aria-current', async ({
+    page,
+  }) => {
+    await page.goto(`/components/drawer${REACT}`);
+    const card = page.locator('app-demo-card', { hasText: 'Navigation items' });
+    const list = card.locator('app-react-host .oge-drawer-items');
+    await expect(list).toBeVisible();
+    // a plain list of real controls, not a composite widget: every entry
+    // is tabbable and none carries a roving tabindex
+    await expect(list.locator('[tabindex="-1"]')).toHaveCount(0);
+    await expect(list.locator('[aria-current="page"]')).toHaveCount(1);
+    await list.getByRole('button', { name: /^Starred/ }).click();
+    await expect(
+      list.getByRole('button', { name: /^Starred/ }),
+    ).toHaveAttribute('aria-current', 'page');
+    await page.keyboard.press('ArrowUp');
+    await expect(list.getByRole('button', { name: /^Sent/ })).toBeFocused();
+  });
+
+  test('the React tree view pages children behind Load more', async ({
+    page,
+  }) => {
+    await page.goto(`/components/tree-view${REACT}`);
+    const tree = page
+      .locator('app-demo-card', { hasText: 'Load more paging' })
+      .locator('app-react-host [role="tree"]');
+    const more = tree.locator('.oge-tree-view-item-more').first();
+    await expect(more).toHaveText('Show 18 more items');
+    await more.click();
+    await expect(more).toHaveText('Show 13 more items');
+  });
+
   test('the React stepper marks the active step without claiming a tablist', async ({
     page,
   }) => {

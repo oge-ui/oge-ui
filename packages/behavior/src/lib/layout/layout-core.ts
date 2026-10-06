@@ -108,14 +108,25 @@ export function resolveOgeProgressBarConfig(
 
 // --- load indicator --------------------------------------------------------
 
-/** Every user-facing string the load indicator renders (aria labels). */
+/**
+ * Every user-facing string the load indicator renders (aria labels) — and
+ * the load panel, which draws the indicator over a container and shares
+ * this catalog (`layout.loadIndicator` in the locale packs).
+ */
 export interface OgeLoadIndicatorMessages {
   /** Accessible name when the application supplies none. */
   loading: string;
+  /**
+   * Default message of the load panel — shown under its indicator and
+   * announced when the panel appears. Optional so existing catalogs keep
+   * type-checking; the config merge fills it from English.
+   */
+  loadPanelMessage?: string;
 }
 
 export const OGE_DEFAULT_LOAD_INDICATOR_MESSAGES: OgeLoadIndicatorMessages = {
   loading: 'Loading',
+  loadPanelMessage: 'Loading…',
 };
 
 export interface OgeLoadIndicatorConfig {

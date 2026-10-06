@@ -74,12 +74,67 @@ test.describe('React layout docs', () => {
     await expect(bar).toHaveAttribute('aria-valuemax', '100');
   });
 
+  test('the React circular progress draws the ring with the ARIA contract', async ({
+    page,
+  }) => {
+    await page.goto(`/components/progress${REACT}`);
+    const card = page.locator('app-demo-card:has(#circular-progress)');
+    const steps = card.locator('.oge-progress-bar-circular').nth(1);
+    await steps.scrollIntoViewIfNeeded();
+    await expect(steps).toHaveAttribute('aria-valuenow', '3');
+    await expect(steps).toHaveAttribute('aria-valuetext', '3/5');
+    await expect(steps.locator('.oge-progress-ring-label')).toHaveText('3/5');
+    const spinner = card.locator('.oge-progress-bar-circular').nth(2);
+    await expect(spinner).not.toHaveAttribute('aria-valuenow', /.*/);
+  });
+
+  test('the React panel bar expands, selects and walks by keyboard', async ({
+    page,
+  }) => {
+    await page.goto(`/components/accordion${REACT}`);
+    const card = page.locator('app-demo-card:has(#panel-bar-nested)');
+    const header = (id: string) => card.locator(`[data-node-id="${id}"]`);
+    await card.scrollIntoViewIfNeeded();
+    await expect(header('mail')).toHaveAttribute('aria-expanded', 'true');
+    await expect(header('archive')).toHaveCount(0);
+    await header('projects').click();
+    await expect(header('archive')).toBeVisible();
+    await header('sent').click();
+    await expect(header('sent')).toHaveAttribute('aria-current', 'true');
+    await expect(card.locator('[data-testid="panel-bar-selected"]')).toHaveText(
+      'Selected: sent',
+    );
+    await header('projects').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(header('active')).toBeFocused();
+    await page.keyboard.press('ArrowLeft');
+    await expect(header('projects')).toBeFocused();
+  });
+
+  test('the React expansion panel toggles and keeps actions outside the toggle', async ({
+    page,
+  }) => {
+    await page.goto(`/components/accordion${REACT}`);
+    const card = page.locator('app-demo-card:has(#expansion-panel)');
+    const shipping = card.getByRole('button', { name: /Shipping address/ });
+    await shipping.scrollIntoViewIfNeeded();
+    await expect(shipping).toHaveAttribute('aria-expanded', 'true');
+    await shipping.click();
+    await expect(shipping).toHaveAttribute('aria-expanded', 'false');
+    await expect(
+      card.locator('[data-testid="expansion-panel-log"]'),
+    ).toHaveText('expanded: false · last event: closed');
+    await card.getByRole('button', { name: 'Edit' }).click();
+    await expect(shipping).toHaveAttribute('aria-expanded', 'false');
+  });
+
   test('React layout pages have no axe violations', async ({ page }) => {
     test.slow();
     for (const family of FAMILIES) {
       for (const route of [
         `/components/${family}`,
         `/components/${family}/api`,
+        ...(family === 'progress' ? ['/components/progress/load-panel'] : []),
       ]) {
         await page.goto(`${route}${REACT}`);
         // Wait for the page to actually render before auditing it: an empty

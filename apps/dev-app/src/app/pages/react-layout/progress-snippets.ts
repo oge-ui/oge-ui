@@ -186,4 +186,32 @@ const start = () => {
 </>`,
     }),
   },
+  {
+    title: 'Circular progress',
+    description:
+      'type="circular" draws the same role="progressbar" contract as an SVG ring — Kendo\'s CircularProgressBar: the dash offset follows the value between min and max, the label sits centred inside, and formatLabel still feeds aria-valuetext. value: null spins (slower under reduced motion) and omits aria-valuenow; size and thickness are px.',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-layout': ['OgeProgressBar'] },
+      name: 'ProgressCircularDemo',
+      before: `const asSteps = (value: number): string => \`\${value}/5\`;`,
+      jsx: `<>
+  <OgeProgressBar type="circular" value={40} showLabel ariaLabel="Upload" />
+
+  <OgeProgressBar
+    type="circular"
+    value={3}
+    max={5}
+    size={64}
+    thickness={6}
+    showLabel
+    formatLabel={asSteps}
+    severity="success"
+    ariaLabel="Steps"
+  />
+
+  {/* value omitted: the ring spins and aria-valuenow is omitted */}
+  <OgeProgressBar type="circular" size={32} ariaLabel="Syncing" />
+</>`,
+    }),
+  },
 ];

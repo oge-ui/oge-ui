@@ -28,6 +28,7 @@ import {
   isTopOverlay,
   lockBodyScroll,
   modalCssSize,
+  modalPlacementClass,
   pushOverlay,
   removeOverlay,
   resolveModalInitialFocus,
@@ -49,6 +50,7 @@ import type {
   OgeModalOpeningEvent,
   OgeModalPlacement,
   OgeModalResizeEvent,
+  OgeModalRole,
   OgeModalSlotContext,
 } from './modal-types';
 import type { OgeOverlayMessages } from '../config';
@@ -91,7 +93,7 @@ let nextModalId = 0;
         #layer
         class="oge-modal-layer"
         [class.oge-modal-layer-ready]="ready()"
-        [class.oge-modal-layer-top]="placement() === 'top' && !fullScreen()"
+        [class]="placementClass()"
         [class.oge-modal-layer-unshaded]="!shading()"
         [class.oge-modal-layer-fullscreen]="fullScreen()"
         (pointerdown)="onLayerPointerDown($event)"
@@ -101,11 +103,12 @@ let nextModalId = 0;
         <div
           #panel
           class="oge-modal"
-          role="dialog"
           aria-modal="true"
           tabindex="-1"
+          [attr.role]="dialogRole()"
           [class.oge-modal-fullscreen]="fullScreen()"
           [attr.aria-labelledby]="labelledBy()"
+          [attr.aria-describedby]="ariaDescribedBy() ?? null"
           [attr.aria-label]="ariaLabelAttr()"
           [attr.aria-busy]="busy() || null"
           [style.width]="cssWidth()"
@@ -271,8 +274,16 @@ export class OgeModal<R = unknown> {
   readonly minHeight = input<number | string>();
   /** Max panel width — number = px, string passed through. Default: layer width. */
   readonly maxWidth = input<number | string>();
-  /** Where the panel sits: viewport center or pinned near the top. Default `'center'`. */
+  /**
+   * Where the panel sits: the viewport centre, an edge (`top`, `bottom`,
+   * logical `start` / `end`) or a corner (`top-start` … `bottom-end`).
+   * RTL-aware. Default `'center'`.
+   */
   readonly placement = input<OgeModalPlacement>('center');
+  /** ARIA role of the panel; `'alertdialog'` for urgent confirmations (APG alert dialog). Default `'dialog'`. */
+  readonly dialogRole = input<OgeModalRole>('dialog');
+  /** Id(s) of the element(s) describing the dialog — wired to `aria-describedby`. */
+  readonly ariaDescribedBy = input<string>();
   /** Dims the page behind the modal. `false` keeps the backdrop transparent (still modal). Default `true`. */
   readonly shading = input(true);
   /** Shows the header ✕ button. Default `true`. */
@@ -353,6 +364,9 @@ export class OgeModal<R = unknown> {
   );
   protected readonly ariaLabelAttr = computed(() =>
     this.labelledBy() ? null : (this.ariaLabel() ?? this.title() ?? null),
+  );
+  protected readonly placementClass = computed(() =>
+    modalPlacementClass(this.placement(), this.fullScreen()),
   );
   protected readonly mergedMessages = computed(() => ({
     ...this.config.messages,

@@ -379,4 +379,115 @@ const [flat, setFlat] = useState(false);`,
 </>`,
     }),
   },
+  {
+    title: 'Panel bar (nested)',
+    description:
+      "Kendo's PanelBar: headers expand into nested groups (rendered on first expand) or free content, leaves are selectable and announced with aria-current. Built on the APG disclosure pattern rather than treeview — a tree may own nothing but tree items, and a panel bar group may hold any content. Every header is a real button; Up/Down/Home/End walk them, Right/Left expand-or-enter and collapse-or-climb. expandMode is multiple, single (siblings close) or full (the open root group fills the height).",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-layout': ['OgePanelBar'] },
+      types: {
+        '@oge-ui/react-layout': [
+          'OgePanelBarExpandMode',
+          'OgePanelBarItemDefinition',
+        ],
+      },
+      name: 'PanelBarDemo',
+      before: `const nav: OgePanelBarItemDefinition[] = [
+  {
+    key: 'mail',
+    title: 'Mail',
+    expanded: true,
+    children: [
+      { key: 'inbox', title: 'Inbox', badge: 12 },
+      { key: 'sent', title: 'Sent' },
+      { key: 'spam', title: 'Spam', disabled: true },
+    ],
+  },
+  {
+    key: 'projects',
+    title: 'Projects',
+    children: [
+      { key: 'active', title: 'Active' },
+      {
+        key: 'archive',
+        title: 'Archive',
+        children: [
+          { key: 'y2025', title: '2025' },
+          { key: 'y2024', title: '2024' },
+        ],
+      },
+    ],
+  },
+  {
+    key: 'about',
+    title: 'About',
+    content: <p>A content item expands into any React node instead of child items.</p>,
+  },
+];`,
+      body: `const [mode, setMode] = useState<OgePanelBarExpandMode>('multiple');
+const [selected, setSelected] = useState<string | undefined>('inbox');`,
+      jsx: `<>
+  <div className="demo-row demo-row-start">
+    {(['multiple', 'single', 'full'] as const).map((m) => (
+      <label key={m}>
+        <input type="radio" name="mode" checked={mode === m} onChange={() => setMode(m)} /> {m}
+      </label>
+    ))}
+  </div>
+  {/* full mode fills the height it is given */}
+  <div style={{ maxWidth: 340, height: mode === 'full' ? 300 : undefined }}>
+    <OgePanelBar
+      items={nav}
+      expandMode={mode}
+      selectedKey={selected}
+      onSelectedKeyChange={setSelected}
+      ariaLabel="Mailbox"
+      style={mode === 'full' ? { height: '100%' } : undefined}
+    />
+  </div>
+  <p>Selected: {selected ?? 'none'}</p>
+</>`,
+    }),
+  },
+  {
+    title: 'Expansion panel',
+    description:
+      "One stand-alone disclosure panel — Kendo's ExpansionPanel, Material's expansion panel outside an accordion. The title is a <button aria-expanded aria-controls> inside a heading; expanded / onExpandedChange is the controlled pair, a click runs the cancelable onExpanding / onCollapsing (and an optional expandGuard) before onOpened / onClosed. headerActions sit beside the toggle, and children render on first expand.",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-layout': ['OgeExpansionPanel'] },
+      name: 'ExpansionPanelDemo',
+      body: `const [open, setOpen] = useState(true);
+const [last, setLast] = useState('none');`,
+      jsx: `<>
+  <OgeExpansionPanel
+    title="Shipping address"
+    subtitle="Home · 2 saved"
+    expanded={open}
+    onExpandedChange={setOpen}
+    onOpened={() => setLast('opened')}
+    onClosed={() => setLast('closed')}
+    headerActions={
+      <button type="button" onClick={() => setLast('edit clicked')}>
+        Edit
+      </button>
+    }
+  >
+    <p>221B Baker Street, London</p>
+  </OgeExpansionPanel>
+
+  {/* deferRendering (default): children mount on first expand, then stay */}
+  <OgeExpansionPanel title="Order history" subtitle="Loads on first expand">
+    <p>12 orders in the last year.</p>
+  </OgeExpansionPanel>
+
+  <OgeExpansionPanel title="Archived addresses" disabled />
+
+  <p>
+    expanded: {String(open)} · last event: {last}
+  </p>
+</>`,
+    }),
+  },
 ];

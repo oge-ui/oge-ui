@@ -9,10 +9,12 @@ import {
   OGE_REACT_MODAL_SERVICE_API,
   OGE_REACT_OVERLAY_CONFIG_API,
   OGE_REACT_OVERLAY_PRIMITIVES_API,
+  OGE_REACT_POPOVER_API,
   OGE_REACT_POPUP_API,
   OGE_REACT_RESOLVE_POPUP_POSITION_API,
   OGE_REACT_TOAST_API,
   OGE_REACT_TOOLTIP_API,
+  OGE_REACT_WINDOW_API,
 } from './react-overlay-api-data';
 
 /**
@@ -39,6 +41,7 @@ import {
       title="OgeModalService (useOgeModals)"
       [sections]="modalServiceApi"
     />
+    <app-api-reference title="&lt;OgeWindow&gt;" [sections]="windowApi" />
     <app-api-reference
       title="OgeToastService (useOgeToasts)"
       [sections]="toastApi"
@@ -47,6 +50,7 @@ import {
       title="OgeLiveAnnouncer (useOgeLiveAnnouncer)"
       [sections]="liveAnnouncerApi"
     />
+    <app-api-reference title="&lt;OgePopover&gt;" [sections]="popoverApi" />
     <app-api-reference title="&lt;OgeTooltip&gt;" [sections]="tooltipApi" />
     <app-api-reference
       title="&lt;OgeContextMenu&gt;"
@@ -66,8 +70,10 @@ import {
 export class ReactOverlayApiSections {
   protected readonly modalApi = OGE_REACT_MODAL_API;
   protected readonly modalServiceApi = OGE_REACT_MODAL_SERVICE_API;
+  protected readonly windowApi = OGE_REACT_WINDOW_API;
   protected readonly toastApi = OGE_REACT_TOAST_API;
   protected readonly liveAnnouncerApi = OGE_REACT_LIVE_ANNOUNCER_API;
+  protected readonly popoverApi = OGE_REACT_POPOVER_API;
   protected readonly tooltipApi = OGE_REACT_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_REACT_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_REACT_MENU_LIST_API;

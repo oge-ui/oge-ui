@@ -213,4 +213,64 @@ const onClosed = (event: OgeModalClosedEvent<string>) => {
 </OgeModal>`,
     }),
   },
+  {
+    title: 'Dialog helpers',
+    source: reactDemoSource({
+      use: {
+        '@oge-ui/react-buttons': ['OgeButton'],
+        '@oge-ui/react-overlay': ['useOgeModals'],
+      },
+      name: 'DialogHelpers',
+      body: `// needs an <OgeModalProvider> above (once, near the app root)
+const modals = useOgeModals();
+
+// confirm → Promise<boolean>; danger = destructive OK + focus on Cancel
+const remove = async () => {
+  const ok = await modals.confirm({
+    title: 'Delete file?',
+    message: 'report.xlsx will be removed permanently.',
+    severity: 'danger',
+    okText: 'Delete',
+  });
+  if (ok) console.log('deleted');
+};
+
+// prompt → Promise<string | null>; validation blocks Enter / OK
+const rename = async () => {
+  const name = await modals.prompt({
+    title: 'Rename file',
+    label: 'File name',
+    defaultValue: 'report.xlsx',
+    required: true,
+    validate: (value) => (value.endsWith('.xlsx') ? null : 'Keep the .xlsx extension.'),
+  });
+  if (name !== null) console.log('renamed to', name);
+};
+
+// alert → Promise<void>; Escape acknowledges it too
+const notice = () => modals.alert({ message: 'Export finished.', severity: 'success' });`,
+      jsx: `<>
+  <OgeButton text="Delete…" severity="danger" onClick={remove} />
+  <OgeButton text="Rename…" onClick={rename} />
+  <OgeButton text="Show notice" onClick={notice} />
+</>`,
+    }),
+  },
+  {
+    title: 'Placements',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-overlay': ['OgeModal'] },
+      types: { '@oge-ui/react-overlay': ['OgeModalPlacement'] },
+      name: 'PlacedModal',
+      body: `const [opened, setOpened] = useState(false);
+// 'center' | 'top' | 'bottom' | 'start' | 'end'
+// | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end'
+const [placement] = useState<OgeModalPlacement>('bottom-end');`,
+      jsx: `<>
+  {/* edges and corners; start/end are logical and mirror in RTL */}
+  <OgeModal title="Filters" opened={opened} onOpenedChange={setOpened} placement={placement} width={320} />
+</>`,
+    }),
+  },
 ];

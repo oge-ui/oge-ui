@@ -146,3 +146,53 @@ private remove(): void {
   console.log('deleted');
 }`,
 });
+
+export const DIALOG_HELPERS_SNIPPET = demoSource({
+  use: { '@oge-ui/buttons': ['OgeButton'] },
+  helpers: { '@oge-ui/overlay': ['OgeModalService'] },
+  template: `<oge-button text="Delete…" severity="danger" (clicked)="remove()" />
+<oge-button text="Rename…" (clicked)="rename()" />
+<oge-button text="Show notice" (clicked)="notice()" />`,
+  body: `private readonly modals = inject(OgeModalService);
+
+// confirm → Promise<boolean>; danger = destructive OK + focus on Cancel
+protected async remove(): Promise<void> {
+  const ok = await this.modals.confirm({
+    title: 'Delete file?',
+    message: 'report.xlsx will be removed permanently.',
+    severity: 'danger',
+    okText: 'Delete',
+  });
+  if (ok) console.log('deleted');
+}
+
+// prompt → Promise<string | null>; validation blocks Enter / OK
+protected async rename(): Promise<void> {
+  const name = await this.modals.prompt({
+    title: 'Rename file',
+    label: 'File name',
+    defaultValue: 'report.xlsx',
+    required: true,
+    validate: (value) =>
+      value.endsWith('.xlsx') ? null : 'Keep the .xlsx extension.',
+  });
+  if (name !== null) console.log('renamed to', name);
+}
+
+// alert → Promise<void>; Escape acknowledges it too
+protected async notice(): Promise<void> {
+  await this.modals.alert({ message: 'Export finished.', severity: 'success' });
+}`,
+});
+
+export const PLACEMENT_SNIPPET = demoSource({
+  use: { '@oge-ui/overlay': ['OgeModal'] },
+  types: { '@oge-ui/overlay': ['OgeModalPlacement'] },
+  template: `<!-- edges and corners; start/end are logical and mirror in RTL -->
+<oge-modal title="Filters" [(opened)]="opened" [placement]="placement()"
+           [width]="320" />`,
+  body: `protected readonly opened = signal(false);
+protected readonly placement = signal<OgeModalPlacement>('bottom-end');
+// 'center' | 'top' | 'bottom' | 'start' | 'end'
+// | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end'`,
+});

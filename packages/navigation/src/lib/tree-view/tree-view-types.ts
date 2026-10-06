@@ -32,6 +32,14 @@ export type {
   OgeTreeSelectAllChangedEvent,
   OgeTreeReorderingEvent,
   OgeTreeReorderedEvent,
+  OgeTreeTransferredEvent,
+  OgeTreeMoveSource,
+  OgeTreeChildPageEvent,
+  OgeTreeAllowEditing,
+  OgeTreeEditValidator,
+  OgeTreeEditStartingEvent,
+  OgeTreeEditingEvent,
+  OgeTreeEditedEvent,
 } from '@oge-ui/behavior';
 import type { SearchHighlightSegment } from '@oge-ui/behavior';
 

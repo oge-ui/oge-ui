@@ -12,7 +12,11 @@ import {
 } from 'react';
 import {
   OgeAccordion,
+  OgeExpansionPanel,
+  OgePanelBar,
   type OgeAccordionExpandedEvent,
+  type OgePanelBarExpandMode,
+  type OgePanelBarItemDefinition,
   type OgeAccordionHandle,
   type OgeAccordionItemDefinition,
   type OgeAccordionTogglePosition,
@@ -22,7 +26,7 @@ import { ReactHost } from '../../shared/react-host';
 import { LAYOUT_OVERVIEW_DEMOS } from './overview-snippets';
 
 /**
- * TOC of the React view — the same ten sections as the Angular accordion
+ * TOC of the React view — the same twelve sections as the Angular accordion
  * overview (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_LAYOUT_OVERVIEW_SECTIONS = [
@@ -36,6 +40,8 @@ export const REACT_LAYOUT_OVERVIEW_SECTIONS = [
   'Header actions',
   'Panel-level control',
   'Toggle position & styling',
+  'Panel bar (nested)',
+  'Expansion panel',
 ] as const;
 
 const row = (...children: ReactNode[]) =>
@@ -389,8 +395,162 @@ function StylingDemo(): ReactNode {
   );
 }
 
+/** Same mailbox tree as the Angular panel-bar demo. */
+const navItems: OgePanelBarItemDefinition[] = [
+  {
+    key: 'mail',
+    title: 'Mail',
+    icon: 'M4 6h16v12H4z M4 7l8 6 8-6',
+    expanded: true,
+    children: [
+      { key: 'inbox', title: 'Inbox', badge: 12 },
+      { key: 'sent', title: 'Sent' },
+      { key: 'spam', title: 'Spam', disabled: true },
+    ],
+  },
+  {
+    key: 'projects',
+    title: 'Projects',
+    icon: 'M3 7h6l2 2h10v10H3z',
+    children: [
+      { key: 'active', title: 'Active' },
+      {
+        key: 'archive',
+        title: 'Archive',
+        children: [
+          { key: 'y2025', title: '2025' },
+          { key: 'y2024', title: '2024' },
+        ],
+      },
+    ],
+  },
+  {
+    key: 'about',
+    title: 'About',
+    icon: 'M12 8h.01M11 12h1v4h1 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',
+    content:
+      'A content item expands into text or a template instead of child items.',
+  },
+];
+
+const PANEL_BAR_MODES: readonly OgePanelBarExpandMode[] = [
+  'multiple',
+  'single',
+  'full',
+];
+
+function PanelBarDemo(): ReactNode {
+  const [mode, setMode] = useState<OgePanelBarExpandMode>('multiple');
+  const [selected, setSelected] = useState<string | undefined>('inbox');
+  return createElement(
+    Fragment,
+    null,
+    createElement(
+      'div',
+      {
+        key: 'modes',
+        className: 'mb-2 flex gap-4 text-sm',
+        role: 'radiogroup',
+        'aria-label': 'expandMode',
+      },
+      ...PANEL_BAR_MODES.map((m) =>
+        createElement(
+          'label',
+          { key: m, className: 'flex items-center gap-2' },
+          createElement('input', {
+            type: 'radio',
+            name: 'react-panel-bar-mode',
+            checked: mode === m,
+            onChange: () => setMode(m),
+          }),
+          m,
+        ),
+      ),
+    ),
+    createElement(
+      'div',
+      {
+        key: 'frame',
+        style: { maxWidth: 340, height: mode === 'full' ? 300 : undefined },
+      },
+      createElement(OgePanelBar, {
+        items: navItems,
+        expandMode: mode,
+        selectedKey: selected,
+        onSelectedKeyChange: setSelected,
+        ariaLabel: 'Mailbox',
+        style: mode === 'full' ? { height: '100%' } : undefined,
+      }),
+    ),
+    createElement(
+      'p',
+      {
+        key: 'selected',
+        className: 'mt-2 text-sm',
+        'data-testid': 'panel-bar-selected',
+      },
+      `Selected: ${selected ?? 'none'}`,
+    ),
+  );
+}
+
+const HOME_ICON = 'M3 11l9-7 9 7v9H3z M9 20v-6h6v6';
+
+function ExpansionPanelDemo(): ReactNode {
+  const [open, setOpen] = useState(true);
+  const [last, setLast] = useState('none');
+  return createElement(
+    Fragment,
+    null,
+    createElement(
+      'div',
+      { key: 'panels', className: 'flex flex-col gap-3' },
+      createElement(
+        OgeExpansionPanel,
+        {
+          key: 'shipping',
+          title: 'Shipping address',
+          subtitle: 'Home · 2 saved',
+          icon: HOME_ICON,
+          expanded: open,
+          onExpandedChange: setOpen,
+          onOpened: () => setLast('opened'),
+          onClosed: () => setLast('closed'),
+          headerActions: smallButton('edit', 'Edit', () =>
+            setLast('edit clicked'),
+          ),
+        },
+        createElement('p', null, '221B Baker Street, London'),
+      ),
+      createElement(
+        OgeExpansionPanel,
+        {
+          key: 'history',
+          title: 'Order history',
+          subtitle: 'Loads on first expand',
+        },
+        createElement('p', null, '12 orders in the last year.'),
+      ),
+      createElement(OgeExpansionPanel, {
+        key: 'archived',
+        title: 'Archived addresses',
+        disabled: true,
+      }),
+    ),
+    createElement(
+      'p',
+      {
+        key: 'log',
+        className: 'mt-2 text-sm',
+        'data-testid': 'expansion-panel-log',
+      },
+      `expanded: ${open} · last event: ${last}`,
+    ),
+  );
+}
+
 /**
- * The React half of the accordion overview — the same ten demo sections as the
+ * The React half of the accordion overview — the same twelve demo sections as the
  * Angular page, with the same example content, rendered as real React trees
  * inside `/components/accordion` when the reader has chosen React (ADR 0002).
  */
@@ -507,6 +667,36 @@ function StylingDemo(): ReactNode {
     >
       <app-react-host [render]="styling" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="[
+        '&lt;OgePanelBar&gt;',
+        'expandMode',
+        'selectedKey',
+        'APG disclosure',
+      ]"
+      heading="Panel bar (nested)"
+      description="Kendo's PanelBar: headers expand into nested groups (rendered on first expand) or free content, leaves are selectable and announced with <code>aria-current</code>. Built on the APG <strong>disclosure</strong> pattern rather than treeview — a tree may own nothing but tree items, and a panel bar group may hold any content. Every header is a real button; Up/Down/Home/End walk them, Right/Left expand-or-enter and collapse-or-climb. <code>expandMode</code> is <code>multiple</code>, <code>single</code> (siblings close) or <code>full</code> (the open root group fills the height)."
+      [code]="demos[10].source"
+      language="tsx"
+    >
+      <app-react-host [render]="panelBar" />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="[
+        '&lt;OgeExpansionPanel&gt;',
+        'expanded',
+        'onExpanding',
+        'headerActions',
+      ]"
+      heading="Expansion panel"
+      description="One stand-alone disclosure panel — Kendo's ExpansionPanel, Material's expansion panel outside an accordion. The title is a <code>&amp;lt;button aria-expanded aria-controls&amp;gt;</code> inside a heading; <code>expanded</code> / <code>onExpandedChange</code> is the controlled pair, a click runs the cancelable <code>onExpanding</code> / <code>onCollapsing</code> (and an optional <code>expandGuard</code>) before <code>onOpened</code> / <code>onClosed</code>. <code>headerActions</code> sit beside the toggle, and children render on first expand."
+      [code]="demos[11].source"
+      language="tsx"
+    >
+      <app-react-host [render]="expansionPanel" />
+    </app-demo-card>
   `,
 })
 export class ReactLayoutOverviewDemos {
@@ -529,4 +719,6 @@ export class ReactLayoutOverviewDemos {
   protected readonly actions = () => createElement(ActionsDemo);
   protected readonly panelControl = () => createElement(PanelControlDemo);
   protected readonly styling = () => createElement(StylingDemo);
+  protected readonly panelBar = () => createElement(PanelBarDemo);
+  protected readonly expansionPanel = () => createElement(ExpansionPanelDemo);
 }

@@ -9,6 +9,15 @@ import {
   output,
   untracked,
 } from '@angular/core';
+import {
+  OGE_PROGRESS_RING_INDETERMINATE_RATIO,
+  ogeProgressAriaNow,
+  ogeProgressLabel,
+  ogeProgressRatio,
+  ogeProgressRingGeometry,
+  type OgeProgressBarType,
+  type OgeProgressRingGeometry,
+} from '@oge-ui/behavior';
 import { OGE_PROGRESS_BAR_CONFIG, type OgeProgressBarMessages } from './config';
 import type {
   OgeProgressBarCompletedEvent,
@@ -26,7 +35,13 @@ import type {
  * `value: null` (the default) renders the **indeterminate** sliding bar, and
  * — per the ARIA guidance — `aria-valuenow` is then omitted entirely rather
  * than pinned to a sentinel. `bufferValue` adds Material's second layer
- * (media buffering), `chunkCount` renders Kendo's segmented variant.
+ * (media buffering), `chunkCount` renders Kendo's segmented variant, and
+ * `type="circular"` draws the same contract as an SVG ring (Kendo's
+ * CircularProgressBar) with the label centred inside:
+ *
+ * ```html
+ * <oge-progress-bar type="circular" [value]="72" [showLabel]="true" />
+ * ```
  *
  * Not a meter: a current measurement within a known range (battery, disk
  * usage) is `role="meter"`, which this deliberately is not — the APG's own
@@ -40,6 +55,7 @@ import type {
     class: 'oge-progress-bar',
     role: 'progressbar',
     '[class.oge-progress-bar-indeterminate]': 'value() === null',
+    '[class.oge-progress-bar-circular]': "type() === 'circular'",
     '[class.oge-progress-bar-success]': "resolvedSeverity() === 'success'",
     '[class.oge-progress-bar-warning]': "resolvedSeverity() === 'warning'",
     '[class.oge-progress-bar-danger]': "resolvedSeverity() === 'danger'",
@@ -52,31 +68,70 @@ import type {
     '[attr.aria-label]': 'ariaLabel() ?? msg().progress',
   },
   template: `
-    <div class="oge-progress-bar-track">
-      @if (chunkCount(); as chunks) {
-        @for (chunk of chunkList(); track $index) {
-          <span
-            class="oge-progress-bar-chunk"
-            [class.oge-progress-bar-chunk-filled]="$index < filledChunks()"
-          ></span>
+    @if (type() === 'circular') {
+      <div
+        class="oge-progress-ring"
+        [style.width.px]="ring().size"
+        [style.height.px]="ring().size"
+      >
+        <svg
+          class="oge-progress-ring-svg"
+          [attr.viewBox]="ring().viewBox"
+          [attr.width]="ring().size"
+          [attr.height]="ring().size"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <circle
+            class="oge-progress-ring-track"
+            [attr.cx]="ring().center"
+            [attr.cy]="ring().center"
+            [attr.r]="ring().radius"
+            [attr.stroke-width]="ring().thickness"
+          />
+          <circle
+            class="oge-progress-ring-value"
+            [attr.cx]="ring().center"
+            [attr.cy]="ring().center"
+            [attr.r]="ring().radius"
+            [attr.stroke-width]="ring().thickness"
+            [attr.stroke-dasharray]="ring().dashArray"
+            [attr.stroke-dashoffset]="ring().dashOffset"
+          />
+        </svg>
+        @if (resolvedShowLabel() && value() !== null) {
+          <span class="oge-progress-bar-label oge-progress-ring-label">{{
+            label()
+          }}</span>
         }
-      } @else {
-        @if (bufferValue() !== undefined && value() !== null) {
+      </div>
+    } @else {
+      <div class="oge-progress-bar-track">
+        @if (chunkCount(); as chunks) {
+          @for (chunk of chunkList(); track $index) {
+            <span
+              class="oge-progress-bar-chunk"
+              [class.oge-progress-bar-chunk-filled]="$index < filledChunks()"
+            ></span>
+          }
+        } @else {
+          @if (bufferValue() !== undefined && value() !== null) {
+            <div
+              class="oge-progress-bar-buffer"
+              [style.transform]="'scaleX(' + bufferRatio() + ')'"
+            ></div>
+          }
           <div
-            class="oge-progress-bar-buffer"
-            [style.transform]="'scaleX(' + bufferRatio() + ')'"
+            class="oge-progress-bar-fill"
+            [style.transform]="
+              value() === null ? null : 'scaleX(' + ratio() + ')'
+            "
           ></div>
         }
-        <div
-          class="oge-progress-bar-fill"
-          [style.transform]="
-            value() === null ? null : 'scaleX(' + ratio() + ')'
-          "
-        ></div>
+      </div>
+      @if (resolvedShowLabel() && value() !== null) {
+        <span class="oge-progress-bar-label">{{ label() }}</span>
       }
-    </div>
-    @if (resolvedShowLabel() && value() !== null) {
-      <span class="oge-progress-bar-label">{{ label() }}</span>
     }
   `,
   styleUrl: './progress-bar.scss',
@@ -86,8 +141,20 @@ export class OgeProgressBar {
 
   /** Current value; `null` renders the indeterminate sliding bar. */
   readonly value = input<number | null>(null);
+  /** Lower bound of the scale. */
   readonly min = input(0);
+  /** Upper bound of the scale. */
   readonly max = input(100);
+  /**
+   * `linear` (default) is the track; `circular` draws an SVG ring with the
+   * label centred inside — same aria contract, indeterminate spin included.
+   * `bufferValue` and `chunkCount` apply to the linear bar only.
+   */
+  readonly type = input<OgeProgressBarType>('linear');
+  /** Ring diameter in px (`type="circular"` only). Default 48. */
+  readonly size = input<number | undefined>(undefined);
+  /** Ring stroke width in px (`type="circular"` only). Default 4. */
+  readonly thickness = input<number | undefined>(undefined);
   /** Material's buffer layer — media pre-loading behind the primary fill. */
   readonly bufferValue = input<number | undefined>(undefined);
   /** Renders the bar as N discrete segments (Kendo's chunk progress bar). */
@@ -119,28 +186,28 @@ export class OgeProgressBar {
     () => this.showLabel() ?? this.config.showLabel ?? false,
   );
 
-  protected readonly ariaNow = computed<number | null>(() => {
-    const value = this.value();
-    if (value === null) return null;
-    return Math.min(Math.max(value, this.min()), this.max());
-  });
+  protected readonly ariaNow = computed<number | null>(() =>
+    ogeProgressAriaNow(this.value(), this.min(), this.max()),
+  );
 
-  protected readonly ratio = computed(() => {
-    const value = this.value();
-    if (value === null) return 0;
-    const min = this.min();
-    const max = this.max();
-    if (max <= min) return 0;
-    return Math.min(Math.max((value - min) / (max - min), 0), 1);
-  });
-  protected readonly bufferRatio = computed(() => {
-    const buffer = this.bufferValue();
-    if (buffer === undefined) return 0;
-    const min = this.min();
-    const max = this.max();
-    if (max <= min) return 0;
-    return Math.min(Math.max((buffer - min) / (max - min), 0), 1);
-  });
+  protected readonly ratio = computed(() =>
+    ogeProgressRatio(this.value(), this.min(), this.max()),
+  );
+  protected readonly bufferRatio = computed(() =>
+    ogeProgressRatio(this.bufferValue(), this.min(), this.max()),
+  );
+
+  /** SVG numbers of the circular variant; indeterminate draws a fixed arc. */
+  protected readonly ring = computed<OgeProgressRingGeometry>(() =>
+    ogeProgressRingGeometry({
+      ratio:
+        this.value() === null
+          ? OGE_PROGRESS_RING_INDETERMINATE_RATIO
+          : this.ratio(),
+      size: this.size(),
+      thickness: this.thickness(),
+    }),
+  );
 
   protected readonly chunkList = computed<readonly number[]>(() => {
     const count = this.chunkCount();
@@ -151,12 +218,9 @@ export class OgeProgressBar {
     Math.round(this.ratio() * this.chunkList().length),
   );
 
-  protected readonly label = computed(() => {
-    const value = this.value();
-    if (value === null) return '';
-    const fn = this.formatLabel();
-    return fn ? fn(value, this.ratio()) : `${Math.round(this.ratio() * 100)}%`;
-  });
+  protected readonly label = computed(() =>
+    ogeProgressLabel(this.value(), this.ratio(), this.formatLabel()),
+  );
   /** `aria-valuetext` only exists when the number alone is not the meaning. */
   protected readonly valueText = computed(() =>
     this.formatLabel() && this.value() !== null ? this.label() : null,

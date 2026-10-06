@@ -13,6 +13,7 @@ import {
   useOgeModalRef,
   useOgeModals,
   type OgeModalClosedEvent,
+  type OgeModalPlacement,
   type OgeModalSlotContext,
 } from '@oge-ui/react-overlay';
 import { DemoCard } from '../../shared/demo-card';
@@ -20,7 +21,7 @@ import { ReactHost } from '../../shared/react-host';
 import { OVERLAY_MODAL_DEMOS } from './modal-snippets';
 
 /**
- * TOC of the React view — the same seven sections as the Angular modal page
+ * TOC of the React view — the same nine sections as the Angular modal page
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_OVERLAY_MODAL_SECTIONS = [
@@ -31,7 +32,22 @@ export const REACT_OVERLAY_MODAL_SECTIONS = [
   'Async close guard',
   'Busy state',
   'Typed result',
+  'Dialog helpers',
+  'Placements',
 ] as const;
+
+/** Every modal placement, in the order the Placements demo lists them. */
+const PLACEMENTS: readonly OgeModalPlacement[] = [
+  'top-start',
+  'top',
+  'top-end',
+  'start',
+  'center',
+  'end',
+  'bottom-start',
+  'bottom',
+  'bottom-end',
+];
 
 const p = (...children: ReactNode[]) =>
   createElement('p', { className: 'm-0' }, ...children);
@@ -405,8 +421,101 @@ function ResultDemo(): ReactNode {
   );
 }
 
+function DialogHelpersDemo(): ReactNode {
+  const modals = useOgeModals();
+  const [result, setResult] = useState('—');
+  const confirmDelete = async (): Promise<void> => {
+    const ok = await modals.confirm({
+      title: 'Delete file?',
+      message: 'report.xlsx will be removed permanently.',
+      severity: 'danger',
+      okText: 'Delete',
+    });
+    setResult(`confirm → ${ok}`);
+  };
+  const confirmArchive = async (): Promise<void> => {
+    const ok = await modals.confirm({
+      message: 'Archive the 3 selected rows?',
+      severity: 'info',
+    });
+    setResult(`confirm → ${ok}`);
+  };
+  const promptRename = async (): Promise<void> => {
+    const name = await modals.prompt({
+      title: 'Rename file',
+      label: 'File name',
+      defaultValue: 'report.xlsx',
+      required: true,
+      validate: (value) =>
+        value.endsWith('.xlsx') ? null : 'Keep the .xlsx extension.',
+    });
+    setResult(`prompt → ${name === null ? 'null' : name}`);
+  };
+  const showNotice = async (): Promise<void> => {
+    await modals.alert({ message: 'Export finished.', severity: 'success' });
+    setResult('alert → acknowledged');
+  };
+  return row(
+    createElement(OgeButton, {
+      key: 'delete',
+      text: 'Delete file…',
+      severity: 'danger',
+      stylingMode: 'outlined',
+      onClick: () => void confirmDelete(),
+    }),
+    outlined('archive', 'Archive rows', () => void confirmArchive()),
+    outlined('rename', 'Rename…', () => void promptRename()),
+    outlined('notice', 'Show notice', () => void showNotice()),
+    createElement(
+      'span',
+      {
+        key: 'result',
+        className: 'text-sm opacity-70',
+        'data-testid': 'dialog-result',
+      },
+      `result: ${result}`,
+    ),
+  );
+}
+
+function PlacementsDemo(): ReactNode {
+  const [opened, setOpened] = useState(false);
+  const [placement, setPlacement] = useState<OgeModalPlacement>('center');
+  return createElement(
+    'div',
+    null,
+    createElement(
+      'div',
+      { className: 'flex flex-wrap items-center gap-2' },
+      ...PLACEMENTS.map((p) =>
+        createElement(OgeButton, {
+          key: p,
+          text: p,
+          size: 'sm',
+          stylingMode: 'outlined',
+          onClick: () => {
+            setPlacement(p);
+            setOpened(true);
+          },
+        }),
+      ),
+    ),
+    createElement(
+      OgeModal,
+      {
+        title: 'Placed dialog',
+        opened,
+        onOpenedChange: setOpened,
+        placement,
+        width: 320,
+      },
+      p('This dialog sits at ', createElement('code', null, placement), '.'),
+    ),
+  );
+}
+
 /**
- * The React half of the modal page — the same seven demo sections as the
+ * The React half of the modal page — the same nine demo sections as the
  * Angular page, with the same example content, rendered as real React trees
  * inside `/components/overlay/modal` when the reader has chosen React
  * (ADR 0002).
@@ -491,6 +600,26 @@ function ResultDemo(): ReactNode {
     >
       <app-react-host [render]="result" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['confirm()', 'alert()', 'prompt()', 'danger', 'validate']"
+      heading="Dialog helpers"
+      description='<code>useOgeModals().confirm()</code>, <code>alert()</code> and <code>prompt()</code> return promises — <code>boolean</code>, <code>void</code> and <code>string | null</code> — under an <code>&amp;lt;OgeModalProvider&amp;gt;</code>. Confirm and alert are APG alert dialogs (<code>role="alertdialog"</code>, described by the message); <code>severity</code> picks a built-in icon (<code>icon: false</code> hides it, any React node replaces it) and <code>danger</code> makes the primary button destructive and moves the initial focus to Cancel. <kbd>Enter</kbd> runs the primary action — in the prompt field too, unless it is invalid — and <kbd>Escape</kbd> cancels (an alert counts it as OK). Prompt validation (<code>required</code>, sync or async <code>validate</code>) renders the error beside the field with <code>aria-invalid</code> and <code>aria-describedby</code>. Button labels default to the localized <code>dialogOk</code> / <code>dialogCancel</code> messages.'
+      [code]="demos[7].source"
+      language="tsx"
+    >
+      <app-react-host [render]="helpers" />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['placement', 'start / end', 'corners', 'RTL']"
+      heading="Placements"
+      description='<code>placement</code> pins the panel to the centre, an edge — <code>top</code>, <code>bottom</code>, <code>start</code>, <code>end</code> — or a corner (<code>top-start</code> … <code>bottom-end</code>). <code>start</code> and <code>end</code> are logical: they follow the reading direction, so a <code>dir="rtl"</code> page mirrors them without extra configuration. <code>useOgeModals().open()</code> and the dialog helpers take the same option.'
+      [code]="demos[8].source"
+      language="tsx"
+    >
+      <app-react-host [render]="placements" />
+    </app-demo-card>
   `,
 })
 export class ReactOverlayModalDemos {
@@ -504,4 +633,8 @@ export class ReactOverlayModalDemos {
   protected readonly guard = () => createElement(GuardDemo);
   protected readonly busy = () => createElement(BusyDemo);
   protected readonly result = () => createElement(ResultDemo);
+  /** The helpers need the provider above them — their own React root. */
+  protected readonly helpers = () =>
+    createElement(OgeModalProvider, null, createElement(DialogHelpersDemo));
+  protected readonly placements = () => createElement(PlacementsDemo);
 }

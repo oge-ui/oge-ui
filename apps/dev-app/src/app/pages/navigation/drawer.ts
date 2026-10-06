@@ -7,6 +7,8 @@ import {
 import {
   OgeDrawer,
   OgeTreeView,
+  type OgeDrawerCloseReason,
+  type OgeDrawerItem,
   type OgeDrawerMode,
   type OgeDrawerModeChangedEvent,
   type OgeDrawerPosition,
@@ -30,10 +32,12 @@ import {
   COMPACT_SNIPPET,
   CONFIG_SNIPPET,
   GUARD_SNIPPET,
+  ITEMS_SNIPPET,
   MODAL_SNIPPET,
   MODES_SNIPPET,
   POSITION_SNIPPET,
   RAIL_SNIPPET,
+  SWIPE_SNIPPET,
 } from './drawer-snippets';
 
 const SECTIONS = [
@@ -44,8 +48,27 @@ const SECTIONS = [
   'Responsive downgrade',
   'Close guard',
   'App shell',
+  'Navigation items',
+  'Swipe gestures',
   'Configuration',
 ] as const;
+
+const ICON = {
+  inbox: 'M4 13h4l2 3h4l2-3h4M4 13l2-8h12l2 8v6H4z',
+  send: 'M4 12l16-8-6 16-2-6-8-2z',
+  star: 'M12 4l2.5 5 5.5.8-4 3.9.9 5.5L12 16.6 7.1 19.2 8 13.7 4 9.8 9.5 9z',
+  trash: 'M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12',
+  settings: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 12h2M18 12h2M12 4v2M12 18v2',
+};
+
+const ITEMS: OgeDrawerItem[] = [
+  { key: 'inbox', text: 'Inbox', icon: ICON.inbox, badge: 4 },
+  { key: 'sent', text: 'Sent', icon: ICON.send },
+  { key: 'starred', text: 'Starred', icon: ICON.star },
+  { separator: true },
+  { key: 'trash', text: 'Trash', icon: ICON.trash, disabled: true },
+  { key: 'settings', text: 'Settings', icon: ICON.settings },
+];
 
 const MODES: readonly OgeDrawerMode[] = ['overlay', 'push', 'side'];
 const POSITIONS: readonly OgeDrawerPosition[] = [
@@ -409,6 +432,84 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['items', '[(selectedKey)]', 'aria-current', 'mini rail']"
+        heading="Navigation items"
+        description="<code>items</code> renders the panel's navigation list for you: buttons, or links for entries with a <code>url</code>, with icons, badges, separators and disabled entries. Each entry stays in the Tab order (the APG disclosure-navigation shape, not a composite widget), the arrows / Home / End move between them, and the active one is <code>aria-current=&quot;page&quot;</code>. Closed with a <code>minSize</code> the drawer becomes an icon rail whose labels stay the accessible name and show as tooltips. <code>[ogeDrawerItemTemplate]</code> replaces an entry's content."
+        [code]="itemsSnippet"
+        language="ts"
+      >
+        <div class="h-64 overflow-hidden rounded border">
+          <oge-drawer
+            class="h-full"
+            [(opened)]="itemsOpen"
+            mode="side"
+            ariaLabel="Mail folders"
+            [size]="200"
+            [minSize]="56"
+            [items]="items"
+            [(selectedKey)]="page"
+            (itemClick)="lastItem.set($event.key)"
+          >
+            <div class="p-3 text-sm">
+              <button
+                type="button"
+                class="rounded border px-2 py-1"
+                [attr.aria-expanded]="itemsOpen()"
+                (click)="itemsOpen.set(!itemsOpen())"
+              >
+                {{ itemsOpen() ? 'Collapse to rail' : 'Expand' }}
+              </button>
+              <p class="mt-2 opacity-70" data-testid="drawer-items-page">
+                Showing: {{ page() }}
+              </p>
+            </div>
+          </oge-drawer>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['swipeEnabled', 'touch', 'RTL', 'reason: swipe']"
+        heading="Swipe gestures"
+        description="With <code>swipeEnabled</code> a touch swipe from the drawer's edge opens it and a swipe toward the edge closes it — by distance or by a flick, touch pointers only, mirrored in RTL. A swipe that turns out to be a vertical scroll lets go of the page at once. Closing goes through <code>closing</code> and <code>closeGuard</code> with reason <code>'swipe'</code>. Off by default, so existing apps keep their behaviour. Try it on a touch screen."
+        [code]="swipeSnippet"
+        language="ts"
+      >
+        <div class="h-48 overflow-hidden rounded border">
+          <oge-drawer
+            class="h-full"
+            [(opened)]="swipeOpen"
+            mode="overlay"
+            ariaLabel="Swipe menu"
+            [size]="200"
+            [swipeEnabled]="true"
+            (closing)="lastClose.set($event.reason)"
+          >
+            <div ogeDrawerPanel class="p-3 text-sm">
+              <button type="button" class="rounded border px-2 py-1">
+                Reports
+              </button>
+            </div>
+            <div class="p-3 text-sm" data-testid="drawer-swipe-content">
+              <button
+                type="button"
+                class="rounded border px-2 py-1"
+                [attr.aria-expanded]="swipeOpen()"
+                (click)="swipeOpen.set(true)"
+              >
+                Open menu
+              </button>
+              <p class="mt-2 opacity-70">
+                Or swipe in from the start edge.
+                @if (lastClose(); as reason) {
+                  Last close: {{ reason }}.
+                }
+              </p>
+            </div>
+          </oge-drawer>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['provideOgeDrawerConfig']"
         heading="Configuration"
         description="Every user-facing string, including the panel's accessible name, lives in the messages interface — overridable application-wide or per instance with <code>[messages]</code>."
@@ -433,6 +534,15 @@ export class NavigationDrawerPage {
   protected readonly guardSnippet = GUARD_SNIPPET;
   protected readonly appShellSnippet = APP_SHELL_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
+  protected readonly itemsSnippet = ITEMS_SNIPPET;
+  protected readonly swipeSnippet = SWIPE_SNIPPET;
+
+  protected readonly items = ITEMS;
+  protected readonly itemsOpen = signal(true);
+  protected readonly page = signal<string | undefined>('inbox');
+  protected readonly lastItem = signal<string | null>(null);
+  protected readonly swipeOpen = signal(false);
+  protected readonly lastClose = signal<OgeDrawerCloseReason | null>(null);
 
   protected readonly mode = signal<OgeDrawerMode>('side');
   protected readonly position = signal<OgeDrawerPosition>('start');

@@ -261,6 +261,16 @@ export const zhCN: OgeLocalePack = {
     toastClose: '关闭',
     toastRegionLabel: '通知',
     toastCountBadge: '×{count}',
+    dialogOk: '确定',
+    dialogCancel: '取消',
+    dialogConfirmTitle: '确认',
+    dialogAlertTitle: '提示',
+    dialogPromptTitle: '请输入值',
+    dialogRequired: '此字段为必填项。',
+    windowMinimize: '最小化',
+    windowMoved: '窗口已移动到 {x}, {y}',
+    windowResized: '窗口大小已调整为 {width} × {height}',
+    popoverClose: '关闭',
   },
   tabs: {
     closeTab: '关闭选项卡',
@@ -366,6 +376,7 @@ export const zhCN: OgeLocalePack = {
     },
     loadIndicator: {
       loading: '正在加载',
+      loadPanelMessage: '正在加载…',
     },
     splitter: {
       separator: '调整窗格 {{first}} 和 {{second}} 的大小',
@@ -395,6 +406,7 @@ export const zhCN: OgeLocalePack = {
     menubar: {
       menubar: '菜单栏',
       hamburger: '菜单',
+      more: '更多',
     },
     pagination: {
       paginationLabel: '分页',
@@ -428,6 +440,15 @@ export const zhCN: OgeLocalePack = {
       childrenLoadFailed: '无法加载这些项目。',
       noData: '无可显示的项目',
       noSearchResults: '无匹配的项目',
+      loadMore: '{count, plural, other {再显示 # 项}}',
+      editLabel: '项目名称',
+      editInvalid: '请输入有效的名称。',
+      cutAnnouncement:
+        '已剪切 {item}。移动到目标项目并按 Ctrl+V 将其移到该处，或按 Esc 取消。',
+      movedAnnouncement:
+        '{position, select, inside {已将 {item} 移入 {target}。} before {已将 {item} 移到 {target} 之前。} other {已将 {item} 移到 {target} 之后。}}',
+      moveCancelledAnnouncement: '已取消移动。',
+      moveRejectedAnnouncement: '无法将 {item} 移到此处。',
     },
   },
   pivot: {

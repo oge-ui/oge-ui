@@ -269,6 +269,16 @@ export const ptBR: OgeLocalePack = {
     toastClose: 'Fechar',
     toastRegionLabel: 'Notificações',
     toastCountBadge: '×{count}',
+    dialogOk: 'OK',
+    dialogCancel: 'Cancelar',
+    dialogConfirmTitle: 'Confirmar',
+    dialogAlertTitle: 'Aviso',
+    dialogPromptTitle: 'Digite um valor',
+    dialogRequired: 'Este campo é obrigatório.',
+    windowMinimize: 'Minimizar',
+    windowMoved: 'Janela movida para {x}, {y}',
+    windowResized: 'Janela redimensionada para {width} × {height}',
+    popoverClose: 'Fechar',
   },
   tabs: {
     closeTab: 'Fechar guia',
@@ -376,6 +386,7 @@ export const ptBR: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'Carregando',
+      loadPanelMessage: 'Carregando…',
     },
     splitter: {
       separator: 'Redimensionar os painéis {{first}} e {{second}}',
@@ -405,6 +416,7 @@ export const ptBR: OgeLocalePack = {
     menubar: {
       menubar: 'Barra de menus',
       hamburger: 'Menu',
+      more: 'Mais',
     },
     pagination: {
       paginationLabel: 'Paginação',
@@ -438,6 +450,16 @@ export const ptBR: OgeLocalePack = {
       childrenLoadFailed: 'Não foi possível carregar estes itens.',
       noData: 'Nenhum item para exibir',
       noSearchResults: 'Nenhum item correspondente',
+      loadMore:
+        '{count, plural, one {Mostrar mais # item} other {Mostrar mais # itens}}',
+      editLabel: 'Nome do item',
+      editInvalid: 'Digite um nome válido.',
+      cutAnnouncement:
+        '{item} recortado. Vá até o item de destino e pressione Ctrl+V para movê-lo para lá, ou Esc para cancelar.',
+      movedAnnouncement:
+        '{position, select, inside {{item} movido para dentro de {target}.} before {{item} movido para antes de {target}.} other {{item} movido para depois de {target}.}}',
+      moveCancelledAnnouncement: 'Movimentação cancelada.',
+      moveRejectedAnnouncement: '{item} não pode ser movido para cá.',
     },
   },
   pivot: {

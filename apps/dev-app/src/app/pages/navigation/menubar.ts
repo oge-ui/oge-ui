@@ -1,9 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
+import { applyMenuItemCheck } from '@oge-ui/overlay';
 import {
   OgeMenubar,
   OgeMenubarItem,
@@ -22,20 +24,24 @@ import {
 } from '../react-navigation/menubar';
 import {
   BASIC_SNIPPET,
+  CHECK_ITEMS_SNIPPET,
   COMPACT_SNIPPET,
   CONFIG_SNIPPET,
   DECLARATIVE_SNIPPET,
   EVENTS_SNIPPET,
   OPEN_MODE_SNIPPET,
+  OVERFLOW_SNIPPET,
   VERTICAL_SNIPPET,
 } from './menubar-snippets';
 
 const SECTIONS = [
   'Getting started',
   'Declarative items',
+  'Radio & checkbox items',
   'Open mode',
   'Vertical menubar',
   'Adaptive hamburger',
+  'Overflow into More',
   'Cancelable events',
   'Configuration',
 ] as const;
@@ -66,6 +72,45 @@ const FILE_MENU: readonly OgeMenubarItemData[] = [
   },
   { text: 'Help', key: 'help' },
 ];
+
+/** The "Radio & checkbox items" demo's tree — the application owns `checked`. */
+const VIEW_MENU: readonly OgeMenubarItemData[] = [
+  {
+    text: 'View',
+    items: [
+      { text: 'Layout', type: 'header' },
+      { text: 'Grid', type: 'radio', group: 'layout', checked: true },
+      { text: 'List', type: 'radio', group: 'layout' },
+      { text: 'Details', type: 'radio', group: 'layout' },
+      { separator: true, text: '' },
+      { text: 'Show', type: 'header' },
+      { text: 'Status bar', key: 'status', type: 'checkbox', checked: true },
+      { text: 'Hidden files', key: 'hidden', type: 'checkbox' },
+      { text: 'Word wrap', key: 'wrap', type: 'checkbox', keepOpen: true },
+    ],
+  },
+  { text: 'Help', key: 'help' },
+];
+
+/** The "Overflow into More" demo's bar — wide enough to overflow. */
+const WIDE_MENU: readonly OgeMenubarItemData[] = [
+  { text: 'File', items: [{ text: 'New' }, { text: 'Open…' }] },
+  { text: 'Edit', items: [{ text: 'Undo' }, { text: 'Redo' }] },
+  { text: 'View', items: [{ text: 'Zoom in' }, { text: 'Zoom out' }] },
+  { text: 'Insert', items: [{ text: 'Image' }, { text: 'Table' }] },
+  { text: 'Tools', items: [{ text: 'Options' }] },
+  { text: 'Help', key: 'help', overflow: 'never' },
+];
+
+/** One line summarising a radio/checkbox menu's state, for the demo log. */
+function describeViewState(items: readonly OgeMenubarItemData[]): string {
+  const rows = items[0]?.items ?? [];
+  const layout = rows.find((r) => r.type === 'radio' && r.checked)?.text;
+  const shown = rows
+    .filter((r) => r.type === 'checkbox' && r.checked)
+    .map((r) => r.text);
+  return `${layout ?? '—'} · ${shown.length ? shown.join(', ') : 'nothing shown'}`;
+}
 
 @Component({
   selector: 'app-navigation-menubar',
@@ -167,6 +212,19 @@ const FILE_MENU: readonly OgeMenubarItemData[] = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['type', 'group', 'header', 'keepOpen']"
+        heading="Radio & checkbox items"
+        description="Submenu rows take a <code>type</code>: <code>'radio'</code> renders <code>menuitemradio</code> (one per <code>group</code>), <code>'checkbox'</code> renders <code>menuitemcheckbox</code>, both with <code>aria-checked</code> and an accent glyph; a <code>'header'</code> row is a non-focusable caption that labels the rows after it as a <code>role=&quot;group&quot;</code> and is skipped by the arrow keys and type-ahead. The menubar never mutates <code>checked</code> — <code>itemClick</code> reports the next state and <code>applyMenuItemCheck</code> applies it. Space toggles without closing the menu (APG); <em>Word wrap</em> sets <code>keepOpen</code> and stays open on a click too."
+        [code]="checkItemsSnippet"
+        language="ts"
+      >
+        <oge-menubar [items]="viewMenu()" (itemClick)="onViewItem($event)" />
+        <p class="mt-3 text-sm" data-testid="menubar-check-state">
+          State: <code>{{ viewState() }}</code>
+        </p>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['openMode', 'hoverDelay']"
         heading="Open mode"
         description="<code>openMode</code> governs the <strong>top level only</strong>: <code>click</code> (default, the desktop convention) or <code>hover</code> after <code>hoverDelay</code>. Nested levels always open on hover and ArrowRight — DevExtreme's <code>showFirstSubmenuMode</code>/<code>showSubmenuMode</code> split collapsed into behavior. With a menu open, hovering siblings switches in either mode."
@@ -206,6 +264,34 @@ const FILE_MENU: readonly OgeMenubarItemData[] = [
         </label>
         <div class="rounded border p-2" [style.width.px]="compactWidth()">
           <oge-menubar [items]="fileMenu" [compactBelow]="420" />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['overflowMode', 'more', 'overflow']"
+        heading="Overflow into More"
+        description="<code>overflowMode=&quot;more&quot;</code> keeps the bar and moves only the top-level items that do not fit into a trailing <em>More</em> item whose submenu holds them, their own submenus included — DevExtreme's adaptive menu and PrimeNG's overflow bar instead of an all-or-nothing hamburger. The last <code>'auto'</code> item yields first; <code>overflow: 'never'</code> pins <em>Help</em> to the bar and <code>'always'</code> would park an item in More. More takes part in the roving tabindex, reads as current when the active item moved into it, and <code>itemClick</code> still reports each item's real <code>path</code>. Drag the range to squeeze it."
+        [code]="overflowSnippet"
+        language="ts"
+      >
+        <label class="mb-2 flex items-center gap-2 text-sm">
+          Container width
+          <input
+            type="range"
+            min="200"
+            max="720"
+            [value]="overflowWidth()"
+            (input)="overflowWidth.set(+$any($event.target).value)"
+          />
+          <code>{{ overflowWidth() }}px</code>
+        </label>
+        <div
+          class="rounded border p-2"
+          data-testid="menubar-overflow-frame"
+          [style.width.px]="overflowWidth()"
+          [style.max-width.%]="100"
+        >
+          <oge-menubar [items]="wideMenu" overflowMode="more" />
         </div>
       </app-demo-card>
 
@@ -257,8 +343,17 @@ export class NavigationMenubarPage {
   protected readonly compactSnippet = COMPACT_SNIPPET;
   protected readonly eventsSnippet = EVENTS_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
+  protected readonly checkItemsSnippet = CHECK_ITEMS_SNIPPET;
+  protected readonly overflowSnippet = OVERFLOW_SNIPPET;
 
   protected readonly fileMenu = FILE_MENU;
+  protected readonly wideMenu = WIDE_MENU;
+  protected readonly viewMenu =
+    signal<readonly OgeMenubarItemData[]>(VIEW_MENU);
+  protected readonly viewState = computed(() =>
+    describeViewState(this.viewMenu()),
+  );
+  protected readonly overflowWidth = signal(360);
   protected readonly verticalMenu: readonly OgeMenubarItemData[] = [
     { text: 'Dashboard', key: 'dashboard' },
     {
@@ -279,6 +374,11 @@ export class NavigationMenubarPage {
     this.lastClick.set(
       `${event.key ?? event.item.text} [${event.path.join(', ')}]`,
     );
+  }
+
+  protected onViewItem(event: OgeMenubarItemClickEvent): void {
+    if (event.checked === undefined) return;
+    this.viewMenu.update((items) => applyMenuItemCheck(items, event.item));
   }
 
   protected onOpening(event: OgeMenubarSubmenuOpeningEvent): void {

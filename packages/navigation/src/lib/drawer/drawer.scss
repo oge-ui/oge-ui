@@ -363,13 +363,257 @@
   }
 }
 
+// --- built-in navigation items (`items`) ------------------------------------
+
+.oge-drawer-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+}
+
+.oge-drawer-item-wrap {
+  display: block;
+}
+
+.oge-drawer-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  inline-size: 100%;
+  min-block-size: 40px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--oge-radius-lg);
+  background: none;
+  color: var(--oge-input-muted);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus {
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+}
+
+// The active entry: accent tint plus an indicator bar on the edge facing the
+// rail — readable at a glance, and the bar survives forced colours.
+.oge-drawer-item-active {
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-weight: 600;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 8px;
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: 3px;
+    background: currentColor;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+}
+
+.oge-drawer-item-disabled,
+.oge-drawer-item:disabled {
+  color: var(--oge-muted-color);
+  opacity: 0.55;
+  cursor: default;
+}
+
+.oge-drawer-item-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.oge-drawer-item-text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oge-drawer-item-badge {
+  flex: none;
+  min-inline-size: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--oge-badge-bg);
+  color: var(--oge-badge-color);
+  font-size: 0.75em;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.oge-drawer-separator {
+  block-size: 1px;
+  margin: 6px 4px;
+  background: var(--oge-border-color);
+}
+
+// Mini rail (closed `side` drawer with a `minSize`): icons only. The label
+// stays in the DOM, visually hidden, as the entry's accessible name; the
+// tooltip shows it to sighted users.
+.oge-drawer-rail {
+  .oge-drawer-items {
+    padding-inline: 4px;
+  }
+
+  .oge-drawer-item {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+
+  .oge-drawer-item-text {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .oge-drawer-item-badge {
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-end: 2px;
+    min-inline-size: 16px;
+    padding: 0 4px;
+    font-size: 0.65em;
+  }
+}
+
+// --- touch swipe (`swipeEnabled`) ----------------------------------------------
+// The browser decides about panning at touchstart, so the allowed pan is
+// declared up front: a side drawer lets vertical scrolling through and keeps
+// horizontal movement for the swipe; top/bottom drawers the other way round.
+.oge-drawer-swipe[data-position='start'],
+.oge-drawer-swipe[data-position='end'] {
+  .oge-drawer-panel,
+  .oge-drawer-backdrop,
+  .oge-drawer-swipe-zone {
+    touch-action: pan-y;
+  }
+}
+
+.oge-drawer-swipe[data-position='top'],
+.oge-drawer-swipe[data-position='bottom'] {
+  .oge-drawer-panel,
+  .oge-drawer-backdrop,
+  .oge-drawer-swipe-zone {
+    touch-action: pan-x;
+  }
+}
+
+// The strip an opening swipe starts in. Touch screens only: on a mouse
+// desktop it would swallow clicks on the content's edge for nothing.
+.oge-drawer-swipe-zone {
+  display: none;
+  position: absolute;
+  z-index: var(--oge-z-drawer);
+}
+
+@media (pointer: coarse) {
+  .oge-drawer-swipe-zone {
+    display: block;
+  }
+}
+
+.oge-drawer[data-position='start'] .oge-drawer-swipe-zone,
+.oge-drawer[data-position='end'] .oge-drawer-swipe-zone {
+  inset-block: 0;
+  inline-size: 24px;
+}
+
+.oge-drawer[data-position='start'] .oge-drawer-swipe-zone {
+  inset-inline-start: 0;
+}
+
+.oge-drawer[data-position='end'] .oge-drawer-swipe-zone {
+  inset-inline-end: 0;
+}
+
+.oge-drawer[data-position='top'] .oge-drawer-swipe-zone,
+.oge-drawer[data-position='bottom'] .oge-drawer-swipe-zone {
+  inset-inline: 0;
+  block-size: 24px;
+}
+
+.oge-drawer[data-position='top'] .oge-drawer-swipe-zone {
+  inset-block-start: 0;
+}
+
+.oge-drawer[data-position='bottom'] .oge-drawer-swipe-zone {
+  inset-block-end: 0;
+}
+
+// --- forced colors ---------------------------------------------------------------
+@include tokens.forced-colors {
+  .oge-drawer-item {
+    color: LinkText;
+  }
+
+  .oge-drawer-item-active {
+    background: Highlight;
+    color: HighlightText;
+
+    &::before {
+      background: HighlightText;
+    }
+  }
+
+  .oge-drawer-item-disabled,
+  .oge-drawer-item:disabled {
+    color: GrayText;
+  }
+
+  .oge-drawer-item-badge {
+    border: 1px solid CanvasText;
+  }
+
+  .oge-drawer-separator {
+    background: CanvasText;
+  }
+}
+
 // --- reduced motion -----------------------------------------------------------
 // The reduction is CSS-only, which is why `afterOpened` fires on a render hook
 // rather than on `transitionend` — otherwise it would never arrive here.
 @media (prefers-reduced-motion: reduce) {
   .oge-drawer-panel,
   .oge-drawer-content,
-  .oge-drawer-close {
+  .oge-drawer-close,
+  .oge-drawer-item {
     transition: none;
   }
 

@@ -141,3 +141,55 @@ test('an open submenu passes axe too', async ({ page }) => {
     .analyze();
   expect(results.violations).toEqual([]);
 });
+
+for (const layer of [
+  { name: 'Angular', query: '' },
+  { name: 'React', query: '?framework=react' },
+] as const) {
+  test(`overflowMode "more" collapses what does not fit into More (${layer.name})`, async ({
+    page,
+  }) => {
+    await page.goto(`/components/menubar${layer.query}`);
+    const demo = page.locator('app-demo-card:has(#overflow-into-more)');
+    await demo.scrollIntoViewIfNeeded();
+    const bar = demo.locator('[role="menubar"]');
+    await expect(bar).toBeVisible();
+    const range = demo.locator('input[type="range"]');
+
+    // narrow: the trailing items move into More, the pinned Help stays
+    await range.fill('300');
+    const more = bar.locator('.oge-menubar-more');
+    await expect(more).toBeVisible();
+    await expect(more).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(bar.getByRole('menuitem', { name: 'Help' })).toBeVisible();
+    // hidden items leave the accessibility tree
+    await expect(bar.getByRole('menuitem', { name: 'Tools' })).toHaveCount(0);
+
+    // More is part of the roving tabindex: End lands on it, ArrowDown opens it
+    await bar.getByRole('menuitem').first().focus();
+    await page.keyboard.press('End');
+    await expect(more).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    const menu = page.locator('.oge-menu-list').first();
+    await expect(menu).toBeFocused();
+    await expect(menu).toHaveAttribute('aria-label', 'More');
+    // an overflowed item keeps its own submenu
+    await expect(menu.getByRole('menuitem', { name: 'Tools' })).toHaveAttribute(
+      'aria-haspopup',
+      'menu',
+    );
+    const results = await new AxeBuilder({ page })
+      .include('.oge-popup')
+      .include('[data-testid="menubar-overflow-frame"]')
+      .disableRules(['color-contrast'])
+      .analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(more).toBeFocused();
+
+    // wide: everything fits again and More disappears
+    await range.fill('720');
+    await expect(bar.getByRole('menuitem', { name: 'Tools' })).toBeVisible();
+    await expect(more).toBeHidden();
+  });
+}

@@ -8,6 +8,7 @@ export {
   type OgeButtonClickEvent,
   type OgeButtonActionDoneEvent,
   type OgeButtonActionFailedEvent,
+  type OgeButtonSelectedChangedEvent,
   type OgeClickGuardOptions,
   type OgeHoldToConfirmOptions,
   type OgeAutoRepeatOptions,

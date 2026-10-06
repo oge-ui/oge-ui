@@ -39,6 +39,18 @@
     display: none;
   }
 }
+/* the deferred header selects reserve their width until they load */
+.app-theme-placeholder,
+.app-version-placeholder {
+  display: inline-block;
+  height: 2rem;
+}
+.app-theme-placeholder {
+  width: 7.5rem;
+}
+.app-version-placeholder {
+  width: 8.5rem;
+}
 .app-theme-select .oge-input-subscript {
   display: none;
 }

@@ -72,6 +72,33 @@ export {
   type OgeLoadIndicatorConfigInput,
   type OgeLoadIndicatorMessages,
 } from '@oge-ui/layout/load-indicator';
+export { OgeLoadPanel } from '@oge-ui/layout/load-panel';
+export type { OgeLoadPanelPosition } from '@oge-ui/layout/load-panel';
+export {
+  OgeExpansionPanel,
+  OgeExpansionPanelContent,
+} from '@oge-ui/layout/expansion-panel';
+export type {
+  OgeExpansionPanelCollapsingEvent,
+  OgeExpansionPanelExpandingEvent,
+  OgeExpansionPanelToggleEvent,
+} from '@oge-ui/layout/expansion-panel';
+export {
+  OgePanelBar,
+  OgePanelBarContentTemplate,
+  OgePanelBarHeaderTemplate,
+} from '@oge-ui/layout/panel-bar';
+export type {
+  OgePanelBarContentTemplateContext,
+  OgePanelBarExpandMode,
+  OgePanelBarHeaderTemplateContext,
+  OgePanelBarItem,
+  OgePanelBarItemClickEvent,
+  OgePanelBarItemCollapsingEvent,
+  OgePanelBarItemExpandingEvent,
+  OgePanelBarItemToggleEvent,
+  OgePanelBarSelectionChangedEvent,
+} from '@oge-ui/layout/panel-bar';
 export { OgeProgressBar } from '@oge-ui/layout/progress-bar';
 export {
   OGE_DEFAULT_PROGRESS_BAR_CONFIG,
@@ -85,6 +112,7 @@ export {
 export type {
   OgeProgressBarCompletedEvent,
   OgeProgressBarSeverity,
+  OgeProgressBarType,
 } from '@oge-ui/layout/progress-bar';
 export { OgeSkeleton } from '@oge-ui/layout/skeleton';
 export {

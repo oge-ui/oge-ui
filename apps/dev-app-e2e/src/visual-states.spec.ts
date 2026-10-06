@@ -286,6 +286,328 @@ for (const theme of THEMES) {
         await token(popup, 'color', 'var(--oge-text-color)'),
       );
     });
+
+    test('toggle button: pressed, unpressed and disabled read differently', async ({
+      page,
+    }) => {
+      await open(page, '/components/buttons', theme);
+      const demo = page.locator('[data-testid="toggle-demo"]');
+      await demo.scrollIntoViewIfNeeded();
+
+      // pressed: accent edge, accent text on the soft accent tint, plus the
+      // underline indicator
+      const pressed = demo
+        .locator('.oge-button-toggle.oge-button-selected:not(.oge-disabled)')
+        .first();
+      const pressedNative = pressed.locator('.oge-button-native');
+      await expect(pressedNative).toHaveAttribute('aria-pressed', 'true');
+      const accentBorder = await token(
+        pressed,
+        'border-color',
+        'var(--oge-accent)',
+      );
+      await expect
+        .poll(() => css(pressedNative, 'border-top-color'))
+        .toBe(accentBorder);
+      expect(await css(pressedNative, 'color')).toBe(
+        await token(pressed, 'color', 'var(--oge-accent)'),
+      );
+      expect(await css(pressedNative, 'background-color')).toBe(
+        await token(pressed, 'background-color', 'var(--oge-accent-soft)'),
+      );
+      expect(
+        await pressedNative.evaluate(
+          (el) => getComputedStyle(el, '::after').content,
+        ),
+      ).not.toBe('none');
+
+      // unpressed: readable secondary text at full opacity — not the
+      // disabled grey
+      const idle = demo
+        .locator(
+          '.oge-button-toggle:not(.oge-button-selected):not(.oge-disabled)',
+        )
+        .first();
+      const idleNative = idle.locator('.oge-button-native');
+      await expect(idleNative).toHaveAttribute('aria-pressed', 'false');
+      expect(await css(idleNative, 'color')).toBe(
+        await token(idle, 'color', 'var(--oge-input-muted)'),
+      );
+      expect(await css(idleNative, 'color')).not.toBe(
+        await token(idle, 'color', 'var(--oge-muted-color)'),
+      );
+      expect(Number(await css(idleNative, 'opacity'))).toBe(1);
+
+      // disabled: dimmed, whatever its pressed state
+      const disabled = demo.locator('.oge-button-toggle.oge-disabled').first();
+      expect(
+        Number(await css(disabled.locator('.oge-button-native'), 'opacity')),
+      ).toBeLessThan(1);
+    });
+
+    test('menu items: checked radio and checkbox glyphs carry the accent', async ({
+      page,
+    }) => {
+      await open(page, '/components/menubar', theme);
+      const demo = page.locator('app-demo-card:has(#radio-checkbox-items)');
+      await demo.scrollIntoViewIfNeeded();
+      await demo.locator('[role="menuitem"]', { hasText: 'View' }).click();
+      const menu = page.locator('.oge-menu-list').first();
+      await expect(menu).toBeVisible();
+
+      const radio = menu.locator('[role="menuitemradio"][aria-checked="true"]');
+      expect(await css(radio.locator('.oge-menu-item-check'), 'color')).toBe(
+        await token(menu, 'color', 'var(--oge-accent)'),
+      );
+      await expect(radio.locator('.oge-menu-item-radio svg')).toBeVisible();
+      const check = menu
+        .locator('[role="menuitemcheckbox"][aria-checked="true"]')
+        .first();
+      expect(await css(check.locator('.oge-menu-item-check'), 'color')).toBe(
+        await token(menu, 'color', 'var(--oge-accent)'),
+      );
+      // unchecked rows draw no glyph and keep the plain text colour
+      const off = menu
+        .locator('[role="menuitemradio"][aria-checked="false"]')
+        .first();
+      await expect(off.locator('svg')).toHaveCount(0);
+      expect(await css(off, 'color')).toBe(
+        await token(menu, 'color', 'var(--oge-text-color)'),
+      );
+      // the section caption is readable secondary text
+      expect(await css(menu.locator('.oge-menu-header').first(), 'color')).toBe(
+        await token(menu, 'color', 'var(--oge-input-muted)'),
+      );
+      await page.keyboard.press('Escape');
+    });
+
+    test('window: the active title bar carries the text colour + accent bar, the inactive one is muted', async ({
+      page,
+    }) => {
+      await open(page, '/components/overlay/window', theme);
+      const card = page
+        .locator('app-demo-card')
+        .filter({ hasText: 'Multiple windows & stacking' });
+      await card.getByRole('button', { name: 'Open three windows' }).click();
+      const inspector = page.getByRole('dialog', { name: 'Inspector' });
+      const layers = page.getByRole('dialog', { name: 'Layers' });
+      await expect(inspector).toBeVisible();
+      await inspector.locator('.oge-window-title').click();
+      await expect(inspector).toHaveClass(/oge-window-active/);
+      // the header colours ease over 120ms after activation: poll
+      const activeHeader = inspector.locator('.oge-window-header');
+      const text = await token(inspector, 'color', 'var(--oge-text-color)');
+      await expect.poll(() => css(activeHeader, 'color')).toBe(text);
+      const accent = await token(inspector, 'color', 'var(--oge-accent)');
+      await expect
+        .poll(() => css(activeHeader, 'box-shadow'))
+        .toContain(accent);
+      const idleHeader = layers.locator('.oge-window-header');
+      await expect(layers).not.toHaveClass(/oge-window-active/);
+      const muted = await token(layers, 'color', 'var(--oge-input-muted)');
+      await expect.poll(() => css(idleHeader, 'color')).toBe(muted);
+      await expect.poll(() => css(idleHeader, 'box-shadow')).toBe('none');
+    });
+
+    test('dialog helpers: the danger confirm paints a destructive primary button', async ({
+      page,
+    }) => {
+      await open(page, '/components/overlay/modal', theme);
+      const card = page
+        .locator('app-demo-card')
+        .filter({ hasText: 'Dialog helpers' });
+      await card.getByRole('button', { name: 'Delete file…' }).click();
+      const dialog = page.getByRole('alertdialog', { name: 'Delete file?' });
+      await expect(dialog).toBeVisible();
+      const ok = dialog.getByRole('button', { name: 'Delete' });
+      expect(await css(ok, 'background-color')).toBe(
+        await token(dialog, 'background-color', 'var(--oge-danger)'),
+      );
+      expect(await css(ok, 'color')).toBe(
+        await token(dialog, 'color', 'var(--oge-severity-contrast)'),
+      );
+      // the safe button stays a plain, readable outline button
+      const cancel = dialog.getByRole('button', { name: 'Cancel' });
+      expect(await css(cancel, 'color')).toBe(
+        await token(dialog, 'color', 'var(--oge-text-color)'),
+      );
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+    });
+
+    test('drawer items: active, idle and disabled entries read differently', async ({
+      page,
+    }) => {
+      await open(page, '/components/drawer', theme);
+      const list = page
+        .locator('app-demo-card')
+        .filter({ hasText: 'Navigation items' })
+        .locator('.oge-drawer-items');
+      await list.scrollIntoViewIfNeeded();
+      const active = list.locator('.oge-drawer-item-active');
+      expect(await css(active, 'color')).toBe(
+        await token(list, 'color', 'var(--oge-accent)'),
+      );
+      expect(await css(active, 'background-color')).toBe(
+        await token(list, 'background-color', 'var(--oge-accent-soft)'),
+      );
+      // idle entries are readable muted text, not the disabled grey
+      const idle = list
+        .locator('.oge-drawer-item:not(.oge-drawer-item-active):not(:disabled)')
+        .first();
+      expect(await css(idle, 'color')).toBe(
+        await token(list, 'color', 'var(--oge-input-muted)'),
+      );
+      const disabled = list.locator('.oge-drawer-item:disabled').first();
+      expect(Number(await css(disabled, 'opacity'))).toBeLessThan(1);
+      expect(await css(disabled, 'color')).toBe(
+        await token(list, 'color', 'var(--oge-muted-color)'),
+      );
+    });
+
+    test('tree view: the "Load more" row reads as an accent action', async ({
+      page,
+    }) => {
+      await open(page, '/components/tree-view', theme);
+      const tree = page
+        .locator('app-demo-card')
+        .filter({ hasText: 'Load more paging' })
+        .locator('.oge-tree-view');
+      const more = tree.locator('.oge-tree-view-item-more').first();
+      await more.scrollIntoViewIfNeeded();
+      expect(await css(more, 'color')).toBe(
+        await token(tree, 'color', 'var(--oge-accent)'),
+      );
+      const row = tree
+        .locator('.oge-tree-view-item:not(.oge-tree-view-item-more)')
+        .first();
+      expect(await css(row, 'color')).toBe(
+        await token(tree, 'color', 'var(--oge-text-color)'),
+      );
+    });
+
+    test('expansion panel: expanded, idle and disabled headers read differently', async ({
+      page,
+    }) => {
+      await open(page, '/components/accordion', theme);
+      const card = page.locator('app-demo-card:has(#expansion-panel)');
+      await card.scrollIntoViewIfNeeded();
+      const expanded = card
+        .locator('.oge-expansion-panel-expanded .oge-expansion-panel-toggle')
+        .first();
+      expect(await css(expanded, 'background-color')).toBe(
+        await token(card, 'background-color', 'var(--oge-accent-soft)'),
+      );
+      expect(
+        await css(
+          card.locator(
+            '.oge-expansion-panel-expanded .oge-expansion-panel-chevron',
+          ),
+          'color',
+        ),
+      ).toBe(await token(card, 'color', 'var(--oge-accent)'));
+      const idle = card
+        .locator(
+          '.oge-expansion-panel:not(.oge-expansion-panel-expanded):not(.oge-expansion-panel-disabled) .oge-expansion-panel-toggle',
+        )
+        .first();
+      expect(await css(idle, 'background-color')).toBe('rgba(0, 0, 0, 0)');
+      // the idle subtitle stays readable, not the disabled grey
+      expect(
+        await css(
+          card
+            .locator(
+              '.oge-expansion-panel:not(.oge-expansion-panel-disabled) .oge-expansion-panel-subtitle',
+            )
+            .first(),
+          'color',
+        ),
+      ).toBe(await token(card, 'color', 'var(--oge-input-muted)'));
+      const disabled = card.locator(
+        '.oge-expansion-panel-disabled .oge-expansion-panel-toggle',
+      );
+      expect(Number(await css(disabled, 'opacity'))).toBeLessThan(1);
+    });
+
+    test('circular progress: the value arc and the track differ', async ({
+      page,
+    }) => {
+      await open(page, '/components/progress', theme);
+      const card = page.locator('app-demo-card:has(#circular-progress)');
+      await card.scrollIntoViewIfNeeded();
+      const ring = card.locator('.oge-progress-bar-circular').first();
+      const track = ring.locator('.oge-progress-ring-track');
+      const value = ring.locator('.oge-progress-ring-value');
+      expect(await css(track, 'stroke')).toBe(
+        await token(ring, 'color', 'var(--oge-border-color)'),
+      );
+      expect(await css(value, 'stroke')).toBe(
+        await token(ring, 'color', 'var(--oge-accent)'),
+      );
+      expect(await css(value, 'stroke')).not.toBe(await css(track, 'stroke'));
+    });
+
+    test('popover: surface, arrow and close button idle vs hover', async ({
+      page,
+    }) => {
+      await open(page, '/components/overlay/popover', theme);
+      const trigger = page
+        .getByTestId('popover-basics')
+        .getByRole('button', { name: 'Share' });
+      await trigger.scrollIntoViewIfNeeded();
+      await trigger.click();
+      const panel = page.getByRole('dialog', { name: 'Share report' });
+      await expect(panel).toBeVisible();
+      expect(await css(panel, 'background-color')).toBe(
+        await token(panel, 'background-color', 'var(--oge-popup-bg)'),
+      );
+      expect(await css(panel, 'border-top-color')).toBe(
+        await token(panel, 'border-color', 'var(--oge-border-color)'),
+      );
+      // the arrow is part of the surface: same fill, the frame's edge
+      const arrow = panel.locator('.oge-popover-arrow');
+      await expect(arrow).toBeVisible();
+      expect(await css(arrow, 'background-color')).toBe(
+        await token(panel, 'background-color', 'var(--oge-popup-bg)'),
+      );
+      // idle is not disabled: the ✕ reads in the muted input tone, and the
+      // hover state is a soft layer with full-strength text
+      const close = panel.locator('.oge-popover-close');
+      await page.mouse.move(0, 0);
+      await expect
+        .poll(() => css(close, 'color'))
+        .toBe(await token(panel, 'color', 'var(--oge-input-muted)'));
+      await close.hover();
+      await expect
+        .poll(() => css(close, 'background-color'))
+        .toBe(
+          await token(panel, 'background-color', 'var(--oge-row-hover-bg)'),
+        );
+      await expect
+        .poll(() => css(close, 'color'))
+        .toBe(await token(panel, 'color', 'var(--oge-text-color)'));
+    });
+
+    test('tooltip: the callout arrow carries the bubble fill', async ({
+      page,
+    }) => {
+      await open(page, '/components/overlay/tooltip-context-menu', theme);
+      const trigger = page
+        .getByTestId('tooltip-templates')
+        .getByRole('button', { name: 'Ada Lovelace' });
+      await trigger.scrollIntoViewIfNeeded();
+      await trigger.focus();
+      const bubble = page.locator('.oge-tooltip', { hasText: 'Engineer' });
+      await expect(bubble).toBeVisible();
+      const arrow = bubble.locator('.oge-tooltip-arrow');
+      await expect(arrow).toBeVisible();
+      expect(await css(arrow, 'background-color')).toBe(
+        await css(bubble, 'background-color'),
+      );
+      expect(await css(bubble, 'background-color')).toBe(
+        await token(bubble, 'background-color', 'var(--oge-tooltip-bg)'),
+      );
+    });
   });
 }
 

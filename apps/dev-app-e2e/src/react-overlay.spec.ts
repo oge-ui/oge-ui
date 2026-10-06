@@ -23,7 +23,13 @@ async function rightClick(page: Page, locator: Locator): Promise<void> {
  */
 const REACT = '?framework=react';
 
-const PAGES = ['', 'tooltip-context-menu', 'modal', 'toast'] as const;
+const PAGES = [
+  '',
+  'tooltip-context-menu',
+  'popover',
+  'modal',
+  'toast',
+] as const;
 
 test.describe('React overlay docs', () => {
   for (const page of PAGES) {

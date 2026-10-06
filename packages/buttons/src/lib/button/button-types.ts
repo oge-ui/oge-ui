@@ -31,3 +31,15 @@ export interface OgeButtonActionDoneEvent {
 export interface OgeButtonActionFailedEvent {
   error: unknown;
 }
+
+/**
+ * Emitted when a click flips a `toggle` button. `event` is the click (or the
+ * Space/Enter keyboard event of a gesture) that did it.
+ */
+export interface OgeButtonSelectedChangedEvent {
+  /** The new pressed state. */
+  selected: boolean;
+  /** The pressed state before the click. */
+  previousValue: boolean;
+  event: MouseEvent | KeyboardEvent;
+}

@@ -42,7 +42,7 @@ const COVERAGE: Readonly<
     // overview and its API page.
     accordion: ['', 'api'],
     card: ['', 'api'],
-    progress: ['', 'api'],
+    progress: ['', 'api', 'load-panel'],
     splitter: ['', 'api'],
     toolbar: ['', 'api'],
     // the API page is mirrored; only `routed` is Angular-router-driven, so
@@ -51,7 +51,7 @@ const COVERAGE: Readonly<
     inputs: '*',
     // overview, layout, validation and api all branch (R5)
     forms: '*',
-    // overview, tooltip-context-menu, modal, toast and api all branch
+    // overview, tooltip-context-menu, popover, modal, toast and api all branch
     overlay: '*',
     // overview and api both branch
     upload: '*',

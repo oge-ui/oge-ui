@@ -10,7 +10,12 @@ import {
   OgeAccordionContentTemplate,
   OgeAccordionHeaderActionsTemplate,
   OgeAccordionItem,
+  OgeExpansionPanel,
+  OgeExpansionPanelContent,
+  OgePanelBar,
   type OgeAccordionExpandedEvent,
+  type OgePanelBarExpandMode,
+  type OgePanelBarItem,
   type OgeAccordionItemData,
   type OgeAccordionTogglePosition,
 } from '@oge-ui/layout';
@@ -25,12 +30,14 @@ import {
 import {
   ACTIONS_SNIPPET,
   BASIC_SNIPPET,
+  EXPANSION_PANEL_SNIPPET,
   GUARD_SNIPPET,
   INVALID_SNIPPET,
   ITEMS_SNIPPET,
   LAZY_SNIPPET,
   LOADER_SNIPPET,
   MODE_SNIPPET,
+  PANEL_BAR_SNIPPET,
   PANEL_SNIPPET,
   STYLING_SNIPPET,
 } from './overview-snippets';
@@ -46,6 +53,8 @@ const SECTIONS = [
   'Header actions',
   'Panel-level control',
   'Toggle position & styling',
+  'Panel bar (nested)',
+  'Expansion panel',
 ] as const;
 
 @Component({
@@ -65,6 +74,9 @@ class CreatedAt {
     OgeAccordionActionRow,
     OgeAccordionContentTemplate,
     OgeAccordionHeaderActionsTemplate,
+    OgeExpansionPanel,
+    OgeExpansionPanelContent,
+    OgePanelBar,
     CreatedAt,
     DemoCard,
     DocHeader,
@@ -435,6 +447,99 @@ class CreatedAt {
           </ng-template>
         </oge-accordion>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'oge-panel-bar',
+          'expandMode',
+          'selectedKey',
+          'APG disclosure',
+        ]"
+        heading="Panel bar (nested)"
+        description="Kendo's PanelBar: headers expand into nested groups (rendered on first expand) or free content, leaves are selectable and announced with <code>aria-current</code>. Built on the APG <strong>disclosure</strong> pattern rather than treeview — a tree may own nothing but tree items, and a panel bar group may hold any content. Every header is a real button; Up/Down/Home/End walk them, Right/Left expand-or-enter and collapse-or-climb. <code>expandMode</code> is <code>multiple</code>, <code>single</code> (siblings close) or <code>full</code> (the open root group fills the height)."
+        [code]="panelBarSnippet"
+        language="ts"
+      >
+        <div
+          class="mb-2 flex gap-4 text-sm"
+          role="radiogroup"
+          aria-label="expandMode"
+        >
+          @for (mode of panelBarModes; track mode) {
+            <label class="flex items-center gap-2">
+              <input
+                type="radio"
+                name="panel-bar-mode"
+                [checked]="panelBarMode() === mode"
+                (change)="panelBarMode.set(mode)"
+              />
+              {{ mode }}
+            </label>
+          }
+        </div>
+        <!-- full mode needs a height to fill; the frame gives it one -->
+        <div
+          style="max-width: 340px"
+          [style.height.px]="panelBarMode() === 'full' ? 300 : null"
+        >
+          <oge-panel-bar
+            [items]="navItems"
+            [expandMode]="panelBarMode()"
+            [(selectedKey)]="navSelected"
+            [style.height]="panelBarMode() === 'full' ? '100%' : null"
+            ariaLabel="Mailbox"
+          />
+        </div>
+        <p class="mt-2 text-sm" data-testid="panel-bar-selected">
+          Selected: {{ navSelected() ?? 'none' }}
+        </p>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'oge-expansion-panel',
+          '[(expanded)]',
+          'expanding',
+          'header actions',
+        ]"
+        heading="Expansion panel"
+        description="One stand-alone disclosure panel — Kendo's ExpansionPanel, Material's expansion panel outside an accordion. The title is a <code>&amp;lt;button aria-expanded aria-controls&amp;gt;</code> inside a heading; <code>[(expanded)]</code> is two-way, a click runs the cancelable <code>expanding</code> / <code>collapsing</code> (and an optional <code>expandGuard</code>) before <code>opened</code> / <code>closed</code>. Projected <code>ogeExpansionPanelActions</code> buttons sit beside the toggle, and an <code>ogeExpansionPanelContent</code> template renders on first expand."
+        [code]="expansionPanelSnippet"
+        language="ts"
+      >
+        <div class="flex flex-col gap-3">
+          <oge-expansion-panel
+            title="Shipping address"
+            subtitle="Home · 2 saved"
+            [icon]="homeIcon"
+            [(expanded)]="shippingOpen"
+            (opened)="panelLog.set('opened')"
+            (closed)="panelLog.set('closed')"
+          >
+            <button
+              ogeExpansionPanelActions
+              type="button"
+              class="rounded border px-2 py-1 text-sm"
+              (click)="panelLog.set('edit clicked')"
+            >
+              Edit
+            </button>
+            <p>221B Baker Street, London</p>
+          </oge-expansion-panel>
+          <oge-expansion-panel
+            title="Order history"
+            subtitle="Loads on first expand"
+          >
+            <ng-template ogeExpansionPanelContent>
+              <p>12 orders in the last year.</p>
+            </ng-template>
+          </oge-expansion-panel>
+          <oge-expansion-panel title="Archived addresses" [disabled]="true" />
+        </div>
+        <p class="mt-2 text-sm" data-testid="expansion-panel-log">
+          expanded: {{ shippingOpen() }} · last event: {{ panelLog() }}
+        </p>
+      </app-demo-card>
     }
   `,
 })
@@ -452,6 +557,55 @@ export class LayoutOverviewPage {
   protected readonly actionsSnippet = ACTIONS_SNIPPET;
   protected readonly panelSnippet = PANEL_SNIPPET;
   protected readonly stylingSnippet = STYLING_SNIPPET;
+  protected readonly panelBarSnippet = PANEL_BAR_SNIPPET;
+  protected readonly expansionPanelSnippet = EXPANSION_PANEL_SNIPPET;
+
+  protected readonly panelBarModes: readonly OgePanelBarExpandMode[] = [
+    'multiple',
+    'single',
+    'full',
+  ];
+  protected readonly panelBarMode = signal<OgePanelBarExpandMode>('multiple');
+  protected readonly navSelected = signal<string | undefined>('inbox');
+  protected readonly navItems: OgePanelBarItem[] = [
+    {
+      key: 'mail',
+      title: 'Mail',
+      icon: 'M4 6h16v12H4z M4 7l8 6 8-6',
+      expanded: true,
+      children: [
+        { key: 'inbox', title: 'Inbox', badge: 12 },
+        { key: 'sent', title: 'Sent' },
+        { key: 'spam', title: 'Spam', disabled: true },
+      ],
+    },
+    {
+      key: 'projects',
+      title: 'Projects',
+      icon: 'M3 7h6l2 2h10v10H3z',
+      children: [
+        { key: 'active', title: 'Active' },
+        {
+          key: 'archive',
+          title: 'Archive',
+          children: [
+            { key: 'y2025', title: '2025' },
+            { key: 'y2024', title: '2024' },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'about',
+      title: 'About',
+      icon: 'M12 8h.01M11 12h1v4h1 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',
+      content:
+        'A content item expands into text or a template instead of child items.',
+    },
+  ];
+  protected readonly homeIcon = 'M3 11l9-7 9 7v9H3z M9 20v-6h6v6';
+  protected readonly shippingOpen = signal(true);
+  protected readonly panelLog = signal('none');
 
   protected readonly basicIndex = signal(-1);
   protected readonly lastExpanded = signal<OgeAccordionExpandedEvent | null>(

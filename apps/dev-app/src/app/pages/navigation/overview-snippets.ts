@@ -171,3 +171,116 @@ export const TEMPLATE_SNIPPET = demoSource({
      focusable controls — that would be a nested-interactive violation -->`,
   body: FOLDERS,
 });
+
+export const BETWEEN_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeTreeView'] },
+  types: {
+    '@oge-ui/navigation': ['OgeTreeReorderedEvent', 'OgeTreeTransferredEvent'],
+  },
+  before: `${FOLDER}
+
+type List = 'projects' | 'archive';`,
+  template: `<!-- trees sharing a dragGroup accept each other's nodes;
+     Ctrl+X on a node and Ctrl+V on a target is the keyboard twin -->
+<oge-tree-view
+  treeId="projects"
+  [items]="lists.projects()"
+  displayExpr="name"
+  [allowDragging]="true"
+  dragGroup="files"
+  ariaLabel="Projects"
+  (itemReordered)="received('projects', $event)"
+  (itemTransferred)="removed('projects', $event)"
+/>
+<oge-tree-view
+  treeId="archive"
+  [items]="lists.archive()"
+  displayExpr="name"
+  [allowDragging]="true"
+  dragGroup="files"
+  ariaLabel="Archive"
+  (itemReordered)="received('archive', $event)"
+  (itemTransferred)="removed('archive', $event)"
+/>`,
+  body: `protected readonly lists = {
+  projects: signal<Folder[]>([
+    { id: 1, parentId: null, name: 'Website' },
+    { id: 2, parentId: 1, name: 'Landing page' },
+    { id: 3, parentId: null, name: 'Mobile app' },
+  ]),
+  archive: signal<Folder[]>([{ id: 11, parentId: null, name: '2024' }]),
+};
+
+// the trees never move data: the target adds, the source removes
+protected received(list: List, e: OgeTreeReorderedEvent<Folder>): void {
+  const parentId =
+    e.position === 'inside' ? (e.dropKey as number) : e.dropItem.parentId;
+  this.lists[list].update((rows) => [
+    ...rows.filter((row) => row.id !== e.dragKey),
+    { ...e.dragItem, parentId },
+  ]);
+}
+
+protected removed(list: List, e: OgeTreeTransferredEvent<Folder>): void {
+  this.lists[list].update((rows) => rows.filter((row) => row.id !== e.dragKey));
+}`,
+});
+
+export const EDITING_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeTreeView'] },
+  types: { '@oge-ui/navigation': ['OgeTreeEditedEvent'] },
+  before: FOLDER,
+  template: `<!-- F2 (or a double-click here) renames; Enter / blur commits,
+     Escape cancels and the focus returns to the node -->
+<oge-tree-view
+  [items]="folders()"
+  displayExpr="name"
+  [allowEditing]="true"
+  [editOnDblClick]="true"
+  [validateEdit]="validate"
+  (itemEdited)="rename($event)"
+/>`,
+  body: `protected readonly folders = signal<Folder[]>([
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+]);
+
+protected readonly validate = (value: string) =>
+  value.length > 40 ? 'Keep names under 40 characters.' : null;
+
+// the tree does not write the label: apply it to your data
+protected rename(e: OgeTreeEditedEvent<Folder>): void {
+  this.folders.update((rows) =>
+    rows.map((row) => (row.id === e.key ? { ...row, name: e.value } : row)),
+  );
+}`,
+});
+
+export const PAGING_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeTreeView'] },
+  types: { '@oge-ui/navigation': ['OgeTreeChildPageEvent'] },
+  before: FOLDER,
+  template: `<!-- five children per parent, then a "Show N more items" row;
+     aria-setsize keeps reporting the real total -->
+<oge-tree-view
+  [items]="mail"
+  displayExpr="name"
+  [childPageSize]="5"
+  [expandedKeys]="[1]"
+  (childPageShown)="pageShown($event)"
+/>
+<p>{{ progress() }}</p>`,
+  body: `protected readonly progress = signal('');
+protected readonly mail: Folder[] = [
+  { id: 1, parentId: null, name: 'Inbox' },
+  ...Array.from({ length: 23 }, (_, i) => ({
+    id: 100 + i,
+    parentId: 1,
+    name: \`Message \${i + 1}\`,
+  })),
+];
+
+protected pageShown(e: OgeTreeChildPageEvent<Folder>): void {
+  this.progress.set(\`\${e.shown} of \${e.total} shown\`);
+}`,
+});

@@ -6,6 +6,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -17,21 +18,26 @@ import {
 import {
   createTypeAheadBuffer,
   edgeEnabledIndex,
-  findMenubarItemPath,
   isMenubarCompact,
   matchByPrefix,
+  menubarBarEntries,
   menubarBarKeys,
   menubarClosedReason,
   menubarDataDescriptors,
+  menubarEntryHidden,
   menubarEventBase,
   menubarItemDomId,
+  menubarItemPath,
+  menubarMoreActive,
   menubarPanelItems,
   menubarPanelLabel,
   menubarPanelPlacement,
   menubarPopupCloseReason,
   menubarStopDisabled,
+  resolveMenubarOverflow,
   stepEnabledIndex,
   OGE_MENUBAR_HOVER_DELAY,
+  OGE_MENUBAR_MORE_KEY,
   type OgeMenubarCloseReason,
   type OgeMenubarCompactChangedEvent,
   type OgeMenubarItemClickEvent,
@@ -39,6 +45,7 @@ import {
   type OgeMenubarMessages,
   type OgeMenubarOpenMode,
   type OgeMenubarOrientation,
+  type OgeMenubarOverflowMode,
   type OgeMenubarPanelSource,
   type OgeMenubarSubmenuClosedEvent,
   type OgeMenubarSubmenuClosingEvent,
@@ -59,6 +66,10 @@ import {
   type OgePopupCloseReason,
 } from '@oge-ui/react-overlay';
 import { useOgeMenubarConfig } from './navigation-config';
+
+/** `useLayoutEffect` in the browser, `useEffect` on the server (SSR-safe). */
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /** Imperative handle — mirrors the Angular component's public methods. */
 export interface OgeMenubarHandle {
@@ -84,6 +95,13 @@ export interface OgeMenubarProps {
    * Measured against the menubar's own box, never the window.
    */
   compactBelow?: number;
+  /**
+   * What happens when the top-level items stop fitting: `'hamburger'`
+   * (default) — the `compactBelow` collapse; `'more'` — items that do not fit
+   * move into a trailing "More" item (horizontal bars; `compactBelow` still
+   * applies below it); `'none'` — nothing collapses, `compactBelow` included.
+   */
+  overflowMode?: OgeMenubarOverflowMode;
   /** The item `key` rendered with `aria-current="page"` (router-driven). */
   activeKey?: string;
   /** Disables the whole bar: items go inert and leave the Tab sequence. */
@@ -130,7 +148,13 @@ export interface OgeMenubarProps {
  * `role="menubar"` is for application-style command menus.
  *
  * Below `compactBelow` **container** pixels the whole bar collapses into a
- * hamburger button opening the full item tree as one nested menu.
+ * hamburger button opening the full item tree as one nested menu. With
+ * `overflowMode="more"` only the items that do not fit move into a trailing
+ * "More" item instead (horizontal bars):
+ *
+ * ```tsx
+ * <OgeMenubar items={menu} overflowMode="more" />
+ * ```
  */
 export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
   function OgeMenubar(props, ref) {
@@ -158,6 +182,11 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
     const hoverDelay =
       props.hoverDelay ?? config.hoverDelay ?? OGE_MENUBAR_HOVER_DELAY;
     const compactBelow = props.compactBelow ?? config.compactBelow;
+    const overflowMode: OgeMenubarOverflowMode =
+      props.overflowMode ?? config.overflowMode ?? 'hamburger';
+    /** `'more'` overflow is a horizontal-bar behaviour. */
+    const overflowActive =
+      overflowMode === 'more' && orientation !== 'vertical';
 
     const reactId = useId();
     const idPrefix = `oge-menubar-${reactId.replace(/:/g, '')}`;
@@ -167,6 +196,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
     );
 
     const hostRef = useRef<HTMLDivElement>(null);
+    const barRef = useRef<HTMLDivElement>(null);
     const hamburgerRef = useRef<HTMLButtonElement>(null);
     const popupRef = useRef<HTMLDivElement>(null);
     const menuListRef = useRef<OgeMenuListHandle>(null);
@@ -181,6 +211,8 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
       null,
     );
     const [containerSize, setContainerSize] = useState(0);
+    /** Indexes of the top-level entries currently living in the More menu. */
+    const [overflowed, setOverflowed] = useState<readonly number[]>([]);
 
     /**
      * Angular's signals settle synchronously, React state does not — a single
@@ -206,11 +238,45 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
     const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const previousCompact = useRef<boolean | null>(null);
 
-    const descriptors = useMemo(() => menubarDataDescriptors(items), [items]);
+    const dataDescriptors = useMemo(
+      () => menubarDataDescriptors(items),
+      [items],
+    );
+    /**
+     * Every bar entry: the descriptors, plus the synthetic "More" item in
+     * `'more'` mode (always rendered so it can be measured; hidden while
+     * nothing overflows). All bar navigation runs over this list.
+     */
+    const descriptors = useMemo(
+      () =>
+        menubarBarEntries(
+          dataDescriptors,
+          overflowActive ? 'more' : 'hamburger',
+          overflowed,
+          messages.more,
+        ),
+      [dataDescriptors, overflowActive, overflowed, messages.more],
+    );
     const descriptorsRef = useRef(descriptors);
     descriptorsRef.current = descriptors;
+    const dataDescriptorsRef = useRef(dataDescriptors);
+    dataDescriptorsRef.current = dataDescriptors;
+    const hiddenRef = useRef({ overflowActive, overflowed });
+    hiddenRef.current = { overflowActive, overflowed };
 
-    const compact = isMenubarCompact(containerSize, compactBelow);
+    /** Rendered for measurement only — overflowed, or an empty More item. */
+    const isHidden = useCallback(
+      (index: number) =>
+        menubarEntryHidden(
+          index,
+          dataDescriptorsRef.current.length,
+          hiddenRef.current.overflowActive ? 'more' : 'hamburger',
+          hiddenRef.current.overflowed,
+        ),
+      [],
+    );
+
+    const compact = isMenubarCompact(containerSize, compactBelow, overflowMode);
 
     const panelItems = useMemo(
       () => menubarPanelItems(descriptors, openSource, openIndex),
@@ -232,23 +298,28 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
           descriptorsRef.current,
           index,
           latest.current.disabled,
-        ),
-      [],
+        ) || isHidden(index),
+      [isHidden],
     );
 
+    const renderHidden = (index: number): boolean =>
+      menubarEntryHidden(
+        index,
+        dataDescriptors.length,
+        overflowActive ? 'more' : 'hamburger',
+        overflowed,
+      );
     const focusTarget = ((): number => {
+      const blocked = (i: number) =>
+        menubarStopDisabled(descriptors, i, disabled) || renderHidden(i);
       if (
         focusIndex >= 0 &&
         focusIndex < descriptors.length &&
-        !menubarStopDisabled(descriptors, focusIndex, disabled)
+        !blocked(focusIndex)
       ) {
         return focusIndex;
       }
-      return (
-        edgeEnabledIndex(descriptors.length, 1, (i) =>
-          menubarStopDisabled(descriptors, i, disabled),
-        ) ?? -1
-      );
+      return edgeEnabledIndex(descriptors.length, 1, blocked) ?? -1;
     })();
 
     const isRtl = (): boolean => !!hostRef.current && ogeIsRtl(hostRef.current);
@@ -444,10 +515,74 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
 
     // --- measurement ---------------------------------------------------------
 
+    /**
+     * `'more'` mode: measures every bar entry (overflowed ones stay rendered,
+     * absolutely positioned and invisible, so their natural width is still
+     * readable) and lets the shared fit decide what moves into More.
+     */
+    const measureOverflow = useCallback(() => {
+      const bar = barRef.current;
+      const data = dataDescriptorsRef.current;
+      let next: readonly number[] = [];
+      if (hiddenRef.current.overflowActive && bar) {
+        const entries = Array.from(bar.children) as HTMLElement[];
+        const style = getComputedStyle(bar);
+        const padding =
+          (parseFloat(style.paddingInlineStart) || 0) +
+          (parseFloat(style.paddingInlineEnd) || 0) +
+          (parseFloat(style.borderInlineStartWidth) || 0) +
+          (parseFloat(style.borderInlineEndWidth) || 0);
+        next = resolveMenubarOverflow({
+          containerSize: bar.clientWidth > 0 ? bar.offsetWidth - padding : 0,
+          descriptors: data,
+          sizes: entries.slice(0, data.length).map((el) => el.offsetWidth),
+          moreSize: entries[data.length]?.offsetWidth ?? 0,
+          gap: parseFloat(style.columnGap) || 0,
+        });
+      }
+      setOverflowed((current) =>
+        next.length === current.length &&
+        next.every((index, i) => index === current[i])
+          ? current
+          : next,
+      );
+    }, []);
+
     const measure = useCallback(() => {
       const el = hostRef.current;
       if (el) setContainerSize(el.clientWidth);
-    }, []);
+      measureOverflow();
+    }, [measureOverflow]);
+
+    // Content, label or mode changes can change what fits: re-measure once
+    // the DOM has them, before paint. `overflowed` is not a dependency, so the
+    // update it makes never re-triggers the pass.
+    useIsomorphicLayoutEffect(() => {
+      measureOverflow();
+    }, [
+      dataDescriptors,
+      overflowActive,
+      compact,
+      messages.more,
+      measureOverflow,
+    ]);
+
+    // An item that just moved into More cannot keep its own submenu open or
+    // hold focus — hand both to the More item.
+    useEffect(() => {
+      const { source, index } = openStateRef.current;
+      if (source === 'bar' && index >= 0 && overflowed.includes(index)) {
+        if (panelOpenRef.current) panelRef.current.close('api');
+      }
+      const active = document.activeElement;
+      if (
+        overflowed.some((i) => document.getElementById(itemDomId(i)) === active)
+      ) {
+        const moreIndex = dataDescriptorsRef.current.length;
+        setFocusIndex(moreIndex);
+        document.getElementById(itemDomId(moreIndex))?.focus();
+      }
+    }, [overflowed, itemDomId]);
 
     useEffect(() => {
       measure();
@@ -482,7 +617,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
       },
       close: () => closeSubmenu('api'),
       focus: () => {
-        if (isMenubarCompact(containerSize, compactBelow)) {
+        if (compact) {
           hamburgerRef.current?.focus();
           return;
         }
@@ -736,14 +871,20 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
     const onMenuItemClick = (event: OgeMenuListItemClickEvent): void => {
       const item = event.item as OgeMenubarItemData;
       const { source, index: openAt } = openStateRef.current;
-      const base = source === 'bar' ? [openAt] : [];
-      const inTree = findMenubarItemPath(panelItems, item);
-      const path = inTree ? [...base, ...inTree] : [...base, event.index];
+      const path = menubarItemPath(
+        dataDescriptors,
+        panelItems,
+        source,
+        openAt,
+        item,
+        event.index,
+      );
       props.onItemClick?.({
         item,
         key: item.key,
         index: path[path.length - 1],
         path,
+        checked: event.checked,
         event: event.event,
       });
     };
@@ -768,14 +909,33 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
     // --- render --------------------------------------------------------------
 
     const isActive = (item: OgeMenubarItemData): boolean =>
-      activeKey !== undefined && item.key === activeKey;
+      item.key === OGE_MENUBAR_MORE_KEY
+        ? menubarMoreActive(dataDescriptors, overflowed, activeKey)
+        : activeKey !== undefined && item.key === activeKey;
 
     const barItemContent = (
       item: OgeMenubarItemData,
       index: number,
     ): ReactNode => (
       <>
-        {renderItem ? (
+        {item.key === OGE_MENUBAR_MORE_KEY ? (
+          <>
+            <span className="oge-menubar-item-icon">
+              <svg
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <circle cx="3" cy="8" r="1.5" />
+                <circle cx="8" cy="8" r="1.5" />
+                <circle cx="13" cy="8" r="1.5" />
+              </svg>
+            </span>
+            <span className="oge-menubar-item-text">{item.text}</span>
+          </>
+        ) : renderItem ? (
           renderItem(item, index)
         ) : (
           <>
@@ -825,6 +985,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
       'oge-menubar',
       orientation === 'vertical' && 'oge-menubar-vertical',
       compact && 'oge-menubar-compact',
+      overflowActive && 'oge-menubar-overflow-more',
       disabled && 'oge-menubar-disabled',
       className,
     ]
@@ -868,6 +1029,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
           </button>
         ) : (
           <div
+            ref={barRef}
             className="oge-menubar-bar"
             role="menubar"
             aria-label={messages.menubar}
@@ -879,7 +1041,11 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
               d.item.separator ? (
                 <span
                   key={d.id}
-                  className="oge-menubar-separator"
+                  className={
+                    renderHidden(i)
+                      ? 'oge-menubar-separator oge-menubar-item-overflowed'
+                      : 'oge-menubar-separator'
+                  }
                   role="separator"
                   aria-orientation={
                     orientation === 'vertical' ? 'horizontal' : 'vertical'
@@ -891,6 +1057,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
                   className={[
                     'oge-menubar-item',
                     isActive(d.item) && 'oge-menubar-item-active',
+                    renderHidden(i) && 'oge-menubar-item-overflowed',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -918,6 +1085,8 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
                   className={[
                     'oge-menubar-item',
                     isActive(d.item) && 'oge-menubar-item-active',
+                    renderHidden(i) && 'oge-menubar-item-overflowed',
+                    d.id === OGE_MENUBAR_MORE_KEY && 'oge-menubar-more',
                   ]
                     .filter(Boolean)
                     .join(' ')}

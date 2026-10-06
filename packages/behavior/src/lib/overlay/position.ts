@@ -1,3 +1,5 @@
+import type { OgePopupArrow } from './arrow';
+
 /** Side of the anchor the panel prefers. */
 export type OgePopupSide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -51,6 +53,11 @@ export interface OgeResolvedPopupPosition {
   placement: OgePopupPlacement;
   /** Panel width when the caller requested anchor-width matching or a fixed width. */
   width?: number;
+  /**
+   * Callout-arrow geometry, present when the anchored panel was asked for an
+   * arrow (`OgeAnchoredPanelCoreOptions.arrow`) — see `resolvePopupArrow`.
+   */
+  arrow?: OgePopupArrow;
 }
 
 function oppositeSide(side: OgePopupSide): OgePopupSide {

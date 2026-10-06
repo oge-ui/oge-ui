@@ -145,6 +145,63 @@ protected readonly nav = [
 ];`,
 });
 
+export const ITEMS_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeDrawer'] },
+  types: { '@oge-ui/navigation': ['OgeDrawerItem'] },
+  before: `const ICON = {
+  inbox: 'M4 13h4l2 3h4l2-3h4M4 13l2-8h12l2 8v6H4z',
+  send: 'M4 12l16-8-6 16-2-6-8-2z',
+  star: 'M12 4l2.5 5 5.5.8-4 3.9.9 5.5L12 16.6 7.1 19.2 8 13.7 4 9.8 9.5 9z',
+  trash: 'M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12',
+  settings: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 12h2M18 12h2M12 4v2M12 18v2',
+};`,
+  template: `<!-- a list of real buttons / links, each in the Tab order; the active
+     entry is aria-current="page". Closed with a minSize it is an icon rail
+     whose labels become the accessible name and a tooltip. -->
+<oge-drawer
+  [(opened)]="opened"
+  mode="side"
+  [size]="220"
+  [minSize]="56"
+  ariaLabel="Mail"
+  [items]="items"
+  [(selectedKey)]="page"
+>
+  <main>{{ page() }}</main>
+</oge-drawer>`,
+  body: `protected readonly opened = signal(true);
+protected readonly page = signal<string | undefined>('inbox');
+protected readonly items: OgeDrawerItem[] = [
+  { key: 'inbox', text: 'Inbox', icon: ICON.inbox, badge: 4 },
+  { key: 'sent', text: 'Sent', icon: ICON.send },
+  { separator: true },
+  { key: 'trash', text: 'Trash', icon: ICON.trash, disabled: true },
+  { key: 'help', text: 'Help', url: '/help' },
+];`,
+});
+
+export const SWIPE_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeDrawer'] },
+  types: { '@oge-ui/navigation': ['OgeDrawerClosingEvent'] },
+  template: `<!-- touch only: an edge swipe opens, a swipe toward the edge closes
+     (reason 'swipe', through closing and closeGuard). Off by default. -->
+<oge-drawer
+  [(opened)]="opened"
+  mode="overlay"
+  [swipeEnabled]="true"
+  ariaLabel="Menu"
+  (closing)="onClosing($event)"
+>
+  <div ogeDrawerPanel>Menu</div>
+  <main>Swipe in from the start edge</main>
+</oge-drawer>`,
+  body: `protected readonly opened = signal(false);
+
+protected onClosing(event: OgeDrawerClosingEvent): void {
+  console.log('closing because of', event.reason);
+}`,
+});
+
 export const CONFIG_SNIPPET = `import { provideOgeDrawerConfig } from '@oge-ui/navigation';
 
 bootstrapApplication(App, {

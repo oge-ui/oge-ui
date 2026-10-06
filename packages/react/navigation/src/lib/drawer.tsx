@@ -9,9 +9,24 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
 import {
+  beginOgeDrawerSwipe,
+  buildOgeDrawerItems,
+  ogeDrawerItemNavIndex,
+  ogeDrawerPhysicalEdge,
+  ogeDrawerRailTooltipPlacement,
+  ogeResolveDirection,
+  runOgeDrawerItemClick,
+  type OgeDirection,
+  type OgeDrawerItem,
+  type OgeDrawerItemClickEvent,
+  type OgeDrawerItemView,
+  type OgeDrawerSelectionChangedEvent,
+  type OgePointerGestureHandle,
   getTabbableElements,
   isTopOverlay,
   lockBodyScroll,
@@ -32,7 +47,22 @@ import {
   type OgeDrawerOpeningEvent,
   type OgeDrawerPosition,
 } from '@oge-ui/behavior';
+import { OgeTooltip } from '@oge-ui/react-overlay';
 import { useOgeDrawerConfig } from './navigation-config';
+
+/** Context handed to `renderItem` — the React face of `ogeDrawerItemTemplate`. */
+export interface OgeDrawerItemRenderContext {
+  /** The entry. */
+  item: OgeDrawerItem;
+  /** Its selection key. */
+  key: string;
+  /** Whether it is the `selectedKey` entry. */
+  active: boolean;
+  /** Whether the drawer is a collapsed mini rail (icons only) right now. */
+  rail: boolean;
+  /** Position in `items`. */
+  index: number;
+}
 
 /** `number` → px, everything else verbatim. */
 function toCssSize(value: number | string | undefined): string | undefined {
@@ -138,6 +168,34 @@ export interface OgeDrawerProps {
   onModeChanged?: (event: OgeDrawerModeChangedEvent) => void;
   /** Fires whenever the async `closeGuard` starts or settles. */
   onClosePendingChange?: (pending: boolean) => void;
+  /**
+   * Built-in navigation entries rendered at the top of the panel, before
+   * `panel`: links (`url`) or buttons, icons, badges and separators. In the
+   * mini rail (`minSize`, closed) only the icons show and the label becomes
+   * the accessible name and a tooltip.
+   */
+  items?: readonly OgeDrawerItem[];
+  /** Key of the active entry (`aria-current="page"`) — controlled when provided. */
+  selectedKey?: string;
+  /** Uncontrolled initial active entry. */
+  defaultSelectedKey?: string;
+  onSelectedKeyChange?: (key: string) => void;
+  /** An entry of `items` was activated (click, Enter or Space). */
+  onItemClick?: (event: OgeDrawerItemClickEvent) => void;
+  /** The active entry changed through the item list. */
+  onSelectionChanged?: (event: OgeDrawerSelectionChangedEvent) => void;
+  /**
+   * Replaces the content of a built-in entry — the React face of
+   * `ogeDrawerItemTemplate`. The drawer keeps the `<a>` / `<button>` around
+   * it, so return no focusable control.
+   */
+  renderItem?: (context: OgeDrawerItemRenderContext) => ReactNode;
+  /**
+   * Touch gestures: an edge swipe opens the drawer, a swipe toward the edge
+   * closes it (reason `'swipe'`, through `onClosing` and `closeGuard`). Touch
+   * pointers only; off by default so existing apps keep their behaviour.
+   */
+  swipeEnabled?: boolean;
   className?: string;
   style?: CSSProperties;
 }
@@ -224,8 +282,22 @@ export const OgeDrawer = forwardRef<OgeDrawerHandle, OgeDrawerProps>(
     });
     const isModal = resolved.mode !== 'side';
 
-    const latest = useRef({ props, opened, isModal, requestedMode });
-    latest.current = { props, opened, isModal, requestedMode };
+    const [uncontrolledSelected, setUncontrolledSelected] = useState(
+      props.defaultSelectedKey,
+    );
+    const selectedKey =
+      props.selectedKey !== undefined
+        ? props.selectedKey
+        : uncontrolledSelected;
+
+    const latest = useRef({
+      props,
+      opened,
+      isModal,
+      requestedMode,
+      selectedKey,
+    });
+    latest.current = { props, opened, isModal, requestedMode, selectedKey };
 
     /** Mirrors the DOM-side open state (listeners, stack, scroll lock). */
     const shown = useRef(false);
@@ -442,6 +514,96 @@ export const OgeDrawer = forwardRef<OgeDrawerHandle, OgeDrawerProps>(
       if (resolved.compact && latest.current.opened) requestClose('compact');
     }, [resolved.mode, resolved.compact]);
 
+    // --- built-in items ------------------------------------------------------
+
+    const itemViews = buildOgeDrawerItems(props.items, selectedKey);
+    const rail = !opened && resolved.mode === 'side' && minSize !== undefined;
+    const [direction, setDirection] = useState<OgeDirection>('ltr');
+    useEffect(() => {
+      if (hostRef.current) setDirection(ogeResolveDirection(hostRef.current));
+    }, []);
+    const tooltipPlacement = ogeDrawerRailTooltipPlacement(
+      ogeDrawerPhysicalEdge(resolvedPosition, direction),
+    );
+
+    const onItemClick = (
+      view: OgeDrawerItemView,
+      event: ReactMouseEvent,
+    ): void => {
+      runOgeDrawerItemClick({
+        view,
+        selectedKey: latest.current.selectedKey,
+        event: event.nativeEvent,
+        emitItemClick: (click) => latest.current.props.onItemClick?.(click),
+        commit: (key) => {
+          latest.current.selectedKey = key;
+          if (latest.current.props.selectedKey === undefined) {
+            setUncontrolledSelected(key);
+          }
+          latest.current.props.onSelectedKeyChange?.(key);
+        },
+        emitSelectionChanged: (changed) =>
+          latest.current.props.onSelectionChanged?.(changed),
+      });
+    };
+
+    const onItemsKeyDown = (event: ReactKeyboardEvent<HTMLUListElement>) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const target =
+        event.target instanceof Element
+          ? event.target.closest('[data-drawer-item]')
+          : null;
+      if (!target) return;
+      const current = Number(target.getAttribute('data-drawer-item'));
+      const next = ogeDrawerItemNavIndex(itemViews, current, event.key);
+      if (next === null) return;
+      event.preventDefault();
+      panelRef.current
+        ?.querySelector<HTMLElement>(`[data-drawer-item="${next}"]`)
+        ?.focus();
+    };
+
+    // --- touch swipe (`swipeEnabled`) ------------------------------------------
+
+    const swipe = useRef<OgePointerGestureHandle | null>(null);
+    useEffect(
+      () => () => {
+        swipe.current?.cancel();
+      },
+      [],
+    );
+
+    /** Touch edge swipe — the decisions are `beginOgeDrawerSwipe`'s. */
+    const onHostPointerDown = (
+      event: ReactPointerEvent<HTMLDivElement>,
+    ): void => {
+      const current = latest.current.props;
+      if (!(current.swipeEnabled ?? false) || (current.disabled ?? false)) {
+        return;
+      }
+      const host = hostRef.current;
+      const panelEl = panelRef.current;
+      if (!host || !panelEl) return;
+      const vertical =
+        resolvedPosition === 'top' || resolvedPosition === 'bottom';
+      const panelSize =
+        typeof size === 'number'
+          ? size
+          : (vertical ? panelEl.offsetHeight : panelEl.offsetWidth) || 260;
+      swipe.current?.cancel();
+      swipe.current = beginOgeDrawerSwipe(event, {
+        edge: ogeDrawerPhysicalEdge(
+          resolvedPosition,
+          ogeResolveDirection(host),
+        ),
+        opened: latest.current.opened,
+        rect: host.getBoundingClientRect(),
+        panelSize,
+        onOpen: () => setOpened(true),
+        onClose: () => requestClose('swipe'),
+      });
+    };
+
     // --- imperative surface --------------------------------------------------
 
     const open = (): void => setOpened(true);
@@ -485,6 +647,8 @@ export const OgeDrawer = forwardRef<OgeDrawerHandle, OgeDrawerProps>(
     const hostClassName = [
       'oge-drawer',
       opened && 'oge-drawer-opened',
+      rail && 'oge-drawer-rail',
+      props.swipeEnabled && 'oge-drawer-swipe',
       isModal && 'oge-drawer-modal',
       resolved.compact && 'oge-drawer-compact',
       animationEnabled && 'oge-drawer-animated',
@@ -521,6 +685,7 @@ export const OgeDrawer = forwardRef<OgeDrawerHandle, OgeDrawerProps>(
         style={hostStyle}
         data-mode={resolved.mode}
         data-position={resolvedPosition}
+        onPointerDown={onHostPointerDown}
       >
         {isModal && shading && opened && (
           /*
@@ -581,8 +746,107 @@ export const OgeDrawer = forwardRef<OgeDrawerHandle, OgeDrawerProps>(
               </svg>
             </button>
           )}
+          {itemViews.length > 0 && (
+            // A navigation list of real links / buttons, each in the Tab
+            // order (the APG disclosure-navigation shape, not a composite
+            // widget); the active entry is aria-current="page". Arrow / Home
+            // / End are a convenience on top. Separators are hidden from AT.
+            <ul className="oge-drawer-items" onKeyDown={onItemsKeyDown}>
+              {itemViews.map((view) => {
+                if (view.separator) {
+                  return (
+                    <li
+                      key={view.key}
+                      className="oge-drawer-separator"
+                      aria-hidden="true"
+                    />
+                  );
+                }
+                const body = props.renderItem ? (
+                  props.renderItem({
+                    item: view.item,
+                    key: view.key,
+                    active: view.active,
+                    rail,
+                    index: view.index,
+                  })
+                ) : (
+                  <>
+                    <span className="oge-drawer-item-icon" aria-hidden="true">
+                      {view.item.icon && (
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                          <path
+                            d={view.item.icon}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="oge-drawer-item-text">{view.text}</span>
+                    {view.item.badge !== undefined &&
+                      view.item.badge !== '' && (
+                        <span className="oge-drawer-item-badge">
+                          {view.item.badge}
+                        </span>
+                      )}
+                  </>
+                );
+                const className = [
+                  'oge-drawer-item',
+                  view.active && 'oge-drawer-item-active',
+                  view.disabled && 'oge-drawer-item-disabled',
+                ]
+                  .filter(Boolean)
+                  .join(' ');
+                const entry =
+                  view.item.url !== undefined && !view.disabled ? (
+                    <a
+                      className={className}
+                      href={view.item.url}
+                      target={view.item.target}
+                      aria-current={view.active ? 'page' : undefined}
+                      data-drawer-item={view.index}
+                      onClick={(event) => onItemClick(view, event)}
+                    >
+                      {body}
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      className={className}
+                      disabled={view.disabled}
+                      aria-current={view.active ? 'page' : undefined}
+                      data-drawer-item={view.index}
+                      onClick={(event) => onItemClick(view, event)}
+                    >
+                      {body}
+                    </button>
+                  );
+                return (
+                  <li key={view.key} className="oge-drawer-item-wrap">
+                    <OgeTooltip
+                      text={view.text}
+                      disabled={!rail}
+                      placement={tooltipPlacement}
+                    >
+                      {entry}
+                    </OgeTooltip>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           {panel}
         </div>
+
+        {props.swipeEnabled && !opened && (
+          // the touch strip an opening edge swipe starts in (pointer: coarse only)
+          <div className="oge-drawer-swipe-zone" aria-hidden="true" />
+        )}
 
         {/*
           Deliberately scoped to the content, not to the page: a drawer is a

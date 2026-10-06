@@ -229,19 +229,23 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/accordion',
-    'Angular Accordion by OGE UI: WAI-ARIA expansion panels with single or multiple expansion, lazy content, async expand guards, header actions and invalid jumps.',
+    'Angular Accordion by OGE UI: WAI-ARIA panels with single or multiple expansion, lazy content, async guards, a nested panel bar and a standalone expansion panel.',
   ],
   [
     '/components/accordion/api',
-    'Angular Accordion API reference: every input, output and type of oge-accordion and oge-accordion-item, including expansion modes and the config provider.',
+    'Angular Accordion API reference: oge-accordion, oge-accordion-item, oge-panel-bar and oge-expansion-panel — every input, output, type and the config provider.',
   ],
   [
     '/components/progress',
-    'Angular progress bar, load indicator and skeleton: determinate, buffer and chunked bars, an indeterminate ring and shimmer placeholders with correct ARIA.',
+    'Angular progress bar, circular ring, load indicator and skeleton: determinate, buffer, chunked and circular bars, spinners and placeholders with correct ARIA.',
   ],
   [
     '/components/progress/api',
-    'Angular Progress & Loading API reference: every input, output and type of oge-progress-bar, oge-load-indicator and oge-skeleton, with config providers.',
+    'Angular Progress & Loading API reference: every input, output and type of oge-progress-bar, oge-load-indicator, oge-load-panel and oge-skeleton, with configs.',
+  ],
+  [
+    '/components/progress/load-panel',
+    'Angular Load Panel by OGE UI: a shading overlay over a container or the page, with show delay, minimum display time, aria-busy and a screen-reader message.',
   ],
   [
     '/components/card',
@@ -376,12 +380,20 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Tooltip and Context Menu directives: placement, show and hide delays, right-click menus on any element with nested items and typed menu events.',
   ],
   [
+    '/components/overlay/popover',
+    'Angular Popover by OGE UI: anchored dialogs with title, actions and a callout arrow; click, hover, focus or manual triggers, modal focus trap, typed events.',
+  ],
+  [
     '/components/overlay/modal',
-    'Angular Modal dialog: form content, stacked popups, full screen and sizing, window mode, a modal service, async close guards, busy state and typed results.',
+    'Angular Modal dialog: confirm, alert and prompt helpers, nine placements, full screen, drag and resize, a modal service, async close guards and typed results.',
   ],
   [
     '/components/overlay/toast',
     'Angular Toast notifications: severities, positions and stacking, sticky toasts with actions and undo, promise toasts, coalescing, progress and announcements.',
+  ],
+  [
+    '/components/overlay/window',
+    'Angular Window by OGE UI: non-modal floating windows with shared z-order, title-bar drag, 8-way resize, keyboard move, minimize, maximize and placements.',
   ],
   [
     '/components/overlay/api',

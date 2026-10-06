@@ -170,6 +170,30 @@ export const OGE_DRAWER_API: ApiSections = {
         },
       ],
     },
+    {
+      title: 'Navigation items & gestures',
+      entries: [
+        {
+          name: 'items',
+          type: 'readonly OgeDrawerItem[] | undefined',
+          description:
+            'Built-in navigation entries rendered at the top of the panel, before the panel content: links (<code>url</code>) or buttons, icons, badges and separators. Each entry stays in the Tab order and Arrow / Home / End move between them. In the mini rail (<code>minSize</code>, closed) only the icons show and the label becomes the accessible name and a tooltip.',
+        },
+        {
+          name: 'selectedKey',
+          type: 'string | undefined (two-way)',
+          description:
+            'Key of the active entry (<code>aria-current="page"</code>). Two-way: <code>[(selectedKey)]</code>.',
+        },
+        {
+          name: 'swipeEnabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Touch gestures: an edge swipe opens the drawer, a swipe toward the edge closes it (reason <code>'swipe'</code>, through <code>closing</code> and <code>closeGuard</code>). Touch pointers only, RTL-aware; off by default so existing apps keep their behaviour.",
+        },
+      ],
+    },
   ],
   methods: [
     {
@@ -239,6 +263,18 @@ export const OGE_DRAWER_API: ApiSections = {
           description:
             'The resolved layout mode changed, carrying the requested mode and whether <code>compactBelow</code> forced it.',
         },
+        {
+          name: 'itemClick',
+          type: 'OgeDrawerItemClickEvent',
+          description:
+            'An entry of <code>items</code> was activated (click, Enter or Space), with <code>item</code>, <code>key</code>, <code>index</code> and the DOM <code>event</code>.',
+        },
+        {
+          name: 'selectionChanged',
+          type: 'OgeDrawerSelectionChangedEvent',
+          description:
+            '<code>selectedKey</code> changed through the item list, with <code>key</code> and <code>previousKey</code>.',
+        },
       ],
     },
   ],
@@ -251,6 +287,12 @@ export const OGE_DRAWER_API: ApiSections = {
           type: 'attribute',
           description:
             'Marks the element that becomes the drawer panel. Everything else projected into <code>&lt;oge-drawer&gt;</code> is the content.',
+        },
+        {
+          name: '[ogeDrawerItemTemplate]',
+          type: '{ $implicit: OgeDrawerItem; key; active; rail; index }',
+          description:
+            'Replaces the content of a built-in entry. The drawer keeps the <code>&lt;a&gt;</code> / <code>&lt;button&gt;</code> around it — with <code>aria-current</code>, the disabled state and the rail tooltip — so the template must not add a focusable control.',
         },
       ],
     },
@@ -279,7 +321,7 @@ export const OGE_DRAWER_API: ApiSections = {
         },
         {
           name: 'OgeDrawerCloseReason',
-          type: "'api' | 'escape' | 'backdrop' | 'outside' | 'compact'",
+          type: "'api' | 'escape' | 'backdrop' | 'outside' | 'compact' | 'swipe'",
           description: 'Why the drawer closed.',
         },
         {
@@ -301,6 +343,22 @@ export const OGE_DRAWER_API: ApiSections = {
           name: 'OgeDrawerModeChangedEvent',
           type: '{ mode; requestedMode; compact: boolean }',
           description: 'Payload of <code>modeChanged</code>.',
+        },
+        {
+          name: 'OgeDrawerItem',
+          type: '{ key?; text?; icon?; url?; target?; disabled?; separator?; badge? }',
+          description:
+            'One built-in entry. <code>icon</code> is SVG path data (<code>d</code>) for a 24×24 stroke icon; <code>key</code> defaults to <code>text</code>; <code>separator: true</code> renders a divider.',
+        },
+        {
+          name: 'OgeDrawerItemClickEvent',
+          type: '{ item; key; index; event }',
+          description: 'Payload of the item click.',
+        },
+        {
+          name: 'OgeDrawerSelectionChangedEvent',
+          type: '{ key; previousKey; item; event? }',
+          description: 'Payload of the selection change.',
         },
         {
           name: 'resolveDrawerMode()',

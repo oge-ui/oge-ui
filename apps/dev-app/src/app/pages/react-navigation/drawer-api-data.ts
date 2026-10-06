@@ -186,6 +186,30 @@ export const OGE_REACT_DRAWER_API: ApiSections = {
         },
       ],
     },
+    {
+      title: 'Navigation items & gestures',
+      entries: [
+        {
+          name: 'items',
+          type: 'readonly OgeDrawerItem[] | undefined',
+          description:
+            'Built-in navigation entries rendered at the top of the panel, before the panel content: links (<code>url</code>) or buttons, icons, badges and separators. Each entry stays in the Tab order and Arrow / Home / End move between them. In the mini rail (<code>minSize</code>, closed) only the icons show and the label becomes the accessible name and a tooltip.',
+        },
+        {
+          name: 'selectedKey / defaultSelectedKey / onSelectedKeyChange',
+          type: 'string | undefined',
+          description:
+            'Key of the active entry (<code>aria-current="page"</code>) — controlled when provided; <code>defaultSelectedKey</code> is the uncontrolled start.',
+        },
+        {
+          name: 'swipeEnabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Touch gestures: an edge swipe opens the drawer, a swipe toward the edge closes it (reason <code>'swipe'</code>, through <code>onClosing</code> and <code>closeGuard</code>). Touch pointers only, RTL-aware; off by default so existing apps keep their behaviour.",
+        },
+      ],
+    },
   ],
   methods: [
     {
@@ -257,6 +281,18 @@ export const OGE_REACT_DRAWER_API: ApiSections = {
             'The resolved layout mode changed, carrying the requested mode and whether <code>compactBelow</code> forced it.',
         },
         {
+          name: 'onItemClick',
+          type: '(event: OgeDrawerItemClickEvent) =&gt; void',
+          description:
+            'An entry of <code>items</code> was activated (click, Enter or Space), with <code>item</code>, <code>key</code>, <code>index</code> and the DOM <code>event</code>.',
+        },
+        {
+          name: 'onSelectionChanged',
+          type: '(event: OgeDrawerSelectionChangedEvent) =&gt; void',
+          description:
+            'The active entry changed through the item list, with <code>key</code> and <code>previousKey</code>.',
+        },
+        {
           name: 'onClosePendingChange',
           type: '(pending: boolean) =&gt; void',
           description:
@@ -280,6 +316,12 @@ export const OGE_REACT_DRAWER_API: ApiSections = {
           type: 'ReactNode',
           description:
             'Everything the drawer sits next to: the content <code>overlay</code> covers, <code>push</code> shifts and <code>side</code> shrinks.',
+        },
+        {
+          name: 'renderItem',
+          type: '(context: OgeDrawerItemRenderContext) =&gt; ReactNode',
+          description:
+            'Replaces the content of a built-in entry, with <code>item</code>, <code>key</code>, <code>active</code>, <code>rail</code> and <code>index</code>. The drawer keeps the <code>&lt;a&gt;</code> / <code>&lt;button&gt;</code> around it, so return no focusable control.',
         },
       ],
     },
@@ -308,7 +350,7 @@ export const OGE_REACT_DRAWER_API: ApiSections = {
         },
         {
           name: 'OgeDrawerCloseReason',
-          type: "'api' | 'escape' | 'backdrop' | 'outside' | 'compact'",
+          type: "'api' | 'escape' | 'backdrop' | 'outside' | 'compact' | 'swipe'",
           description: 'Why the drawer closed.',
         },
         {
@@ -330,6 +372,22 @@ export const OGE_REACT_DRAWER_API: ApiSections = {
           name: 'OgeDrawerModeChangedEvent',
           type: '{ mode; requestedMode; compact: boolean }',
           description: 'Payload of <code>onModeChanged</code>.',
+        },
+        {
+          name: 'OgeDrawerItem',
+          type: '{ key?; text?; icon?; url?; target?; disabled?; separator?; badge? }',
+          description:
+            'One built-in entry. <code>icon</code> is SVG path data (<code>d</code>) for a 24×24 stroke icon; <code>key</code> defaults to <code>text</code>; <code>separator: true</code> renders a divider.',
+        },
+        {
+          name: 'OgeDrawerItemClickEvent',
+          type: '{ item; key; index; event }',
+          description: 'Payload of the item click.',
+        },
+        {
+          name: 'OgeDrawerSelectionChangedEvent',
+          type: '{ key; previousKey; item; event? }',
+          description: 'Payload of the selection change.',
         },
         {
           name: 'OgeDrawerProps / OgeDrawerHandle',

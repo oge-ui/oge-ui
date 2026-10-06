@@ -461,6 +461,14 @@ export const appRoutes: Route[] = [
           ),
         title: 'OGE — Progress & Loading API',
       },
+      {
+        path: 'load-panel',
+        loadComponent: () =>
+          import('./pages/layout/load-panel').then(
+            (m) => m.LayoutLoadPanelPage,
+          ),
+        title: 'OGE — Load Panel',
+      },
     ],
   },
   {
@@ -798,6 +806,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Tooltip & Context Menu',
       },
       {
+        path: 'popover',
+        loadComponent: () =>
+          import('./pages/overlay/popover').then((m) => m.OverlayPopoverPage),
+        title: 'OGE — Popover',
+      },
+      {
         path: 'modal',
         loadComponent: () =>
           import('./pages/overlay/modal').then((m) => m.OverlayModalPage),
@@ -808,6 +822,12 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/overlay/toast').then((m) => m.OverlayToastPage),
         title: 'OGE — Toast',
+      },
+      {
+        path: 'window',
+        loadComponent: () =>
+          import('./pages/overlay/window').then((m) => m.OverlayWindowPage),
+        title: 'OGE — Window',
       },
       {
         path: 'api',

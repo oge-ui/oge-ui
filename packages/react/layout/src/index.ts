@@ -35,6 +35,7 @@ export type {
   OgeCardConfig,
   OgeCardConfigInput,
   OgeProgressBarSeverity,
+  OgeProgressBarType,
   OgeProgressBarCompletedEvent,
   OgeProgressBarMessages,
   OgeProgressBarConfig,
@@ -153,4 +154,37 @@ export type {
   OgeSplitterConfig,
   OgeSplitterConfigInput,
   OgeSplitterDataSourceLike,
+} from '@oge-ui/behavior';
+export {
+  OgeLoadPanel,
+  type OgeLoadPanelProps,
+  type OgeLoadPanelTarget,
+} from './lib/load-panel';
+export type { OgeLoadPanelPosition } from '@oge-ui/behavior';
+export {
+  OgeExpansionPanel,
+  type OgeExpansionPanelProps,
+  type OgeExpansionPanelHandle,
+} from './lib/expansion-panel';
+export type {
+  OgeExpansionPanelExpandingEvent,
+  OgeExpansionPanelCollapsingEvent,
+  OgeExpansionPanelToggleEvent,
+} from '@oge-ui/behavior';
+export {
+  OgePanelBar,
+  type OgePanelBarProps,
+  type OgePanelBarHandle,
+  type OgePanelBarItemDefinition,
+  type OgePanelBarHeaderContext,
+  type OgePanelBarContentContext,
+} from './lib/panel-bar';
+export type {
+  OgePanelBarExpandMode,
+  OgePanelBarItem,
+  OgePanelBarItemClickEvent,
+  OgePanelBarItemExpandingEvent,
+  OgePanelBarItemCollapsingEvent,
+  OgePanelBarItemToggleEvent,
+  OgePanelBarSelectionChangedEvent,
 } from '@oge-ui/behavior';

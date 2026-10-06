@@ -98,3 +98,28 @@ export const ASYNC_SNIPPET = demoSource({
 protected readonly received = signal(0);
 protected readonly done = signal(false);`,
 });
+
+export const CIRCULAR_SNIPPET = demoSource({
+  use: { '@oge-ui/layout': ['OgeProgressBar'] },
+  template: `<!-- type="circular" draws the same role="progressbar" contract as an
+     SVG ring (Kendo's CircularProgressBar): stroke-dasharray from the value
+     between min and max, the label centred inside and formatLabel feeding
+     aria-valuetext. value: null spins — and still omits aria-valuenow. -->
+<oge-progress-bar type="circular" [value]="done()" [showLabel]="true" ariaLabel="Upload" />
+
+<oge-progress-bar
+  type="circular"
+  [value]="3"
+  [max]="5"
+  [size]="64"
+  [thickness]="6"
+  [showLabel]="true"
+  [formatLabel]="asSteps"
+  severity="success"
+  ariaLabel="Steps"
+/>
+
+<oge-progress-bar type="circular" [size]="32" ariaLabel="Syncing" />`,
+  body: `protected readonly done = signal(72);
+protected readonly asSteps = (value: number): string => \`\${value}/5\`;`,
+});

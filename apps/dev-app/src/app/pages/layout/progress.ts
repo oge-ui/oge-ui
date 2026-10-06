@@ -17,6 +17,7 @@ import {
 import {
   ASYNC_SNIPPET,
   CHUNK_SNIPPET,
+  CIRCULAR_SNIPPET,
   DETERMINATE_SNIPPET,
   INDETERMINATE_SNIPPET,
   LOAD_INDICATOR_SNIPPET,
@@ -27,6 +28,7 @@ const SECTIONS = [
   'Determinate bar',
   'Indeterminate & buffer',
   'Chunks & severity',
+  'Circular progress',
   'Load indicator',
   'Skeleton',
   'A real async flow',
@@ -164,6 +166,35 @@ const SECTIONS = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['type: circular', 'size', 'thickness', 'centred label']"
+        heading="Circular progress"
+        description='<code>type="circular"</code> draws the same <code>role="progressbar"</code> contract as an SVG ring — Kendo&apos;s CircularProgressBar: the dash offset follows the value between <code>min</code> and <code>max</code>, the label sits centred inside, and <code>formatLabel</code> still feeds <code>aria-valuetext</code>. <code>value: null</code> spins (slower under reduced motion) and omits <code>aria-valuenow</code>; <code>size</code> and <code>thickness</code> are px.'
+        [code]="circularSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-center gap-6">
+          <oge-progress-bar
+            type="circular"
+            [value]="uploaded() / 2"
+            [showLabel]="true"
+            ariaLabel="Upload"
+          />
+          <oge-progress-bar
+            type="circular"
+            [value]="3"
+            [max]="5"
+            [size]="64"
+            [thickness]="6"
+            [showLabel]="true"
+            [formatLabel]="asSteps"
+            severity="success"
+            ariaLabel="Steps"
+          />
+          <oge-progress-bar type="circular" [size]="32" ariaLabel="Syncing" />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['size', 'inheritSize', 'slows, never stops']"
         heading="Load indicator"
         description="The suite's canonical ring — deliberately indeterminate-only: a circle filling toward completion is the progress bar's job. Under <code>prefers-reduced-motion</code> the spin slows rather than stops, because a frozen ring reads as finished."
@@ -251,6 +282,7 @@ export class LayoutProgressPage {
   protected readonly determinateSnippet = DETERMINATE_SNIPPET;
   protected readonly indeterminateSnippet = INDETERMINATE_SNIPPET;
   protected readonly chunkSnippet = CHUNK_SNIPPET;
+  protected readonly circularSnippet = CIRCULAR_SNIPPET;
   protected readonly loadIndicatorSnippet = LOAD_INDICATOR_SNIPPET;
   protected readonly skeletonSnippet = SKELETON_SNIPPET;
   protected readonly asyncSnippet = ASYNC_SNIPPET;
@@ -262,6 +294,7 @@ export class LayoutProgressPage {
   private downloadTimer: ReturnType<typeof setInterval> | null = null;
 
   protected readonly asMegabytes = (value: number): string => `${value} MB`;
+  protected readonly asSteps = (value: number): string => `${value}/5`;
 
   constructor() {
     this.destroyRef.onDestroy(() => {

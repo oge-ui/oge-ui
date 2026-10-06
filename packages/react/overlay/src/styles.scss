@@ -4,7 +4,11 @@
 // into this package's own `styles.css`. No second stylesheet, no drift
 // (ADR 0001).
 @use '../../../overlay/src/lib/popup/popup';
+@use '../../../overlay/src/lib/popup/callout-arrow';
 @use '../../../overlay/src/lib/menu/menu-list';
 @use '../../../overlay/src/lib/tooltip/tooltip';
+@use '../../../overlay/src/lib/popover/popover';
 @use '../../../overlay/src/lib/modal/modal';
+@use '../../../overlay/src/lib/modal/dialog';
+@use '../../../overlay/src/lib/window/window';
 @use '../../../overlay/src/lib/toast/toast';

@@ -152,3 +152,62 @@ export const MENUBAR_PROVIDERS = [
   }),
 ];`,
 });
+
+export const CHECK_ITEMS_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeMenubar'] },
+  helpers: { '@oge-ui/overlay': ['applyMenuItemCheck'] },
+  types: {
+    '@oge-ui/navigation': ['OgeMenubarItemData', 'OgeMenubarItemClickEvent'],
+  },
+  template: `<!-- type: 'radio' rows render menuitemradio, 'checkbox' rows
+     menuitemcheckbox, both with aria-checked. A 'header' row is a
+     non-focusable caption that labels the rows after it as a role="group".
+     The menubar never mutates checked: itemClick reports the next state and
+     applyMenuItemCheck applies it (a radio unchecks its group). Space
+     toggles without closing the menu (APG); keepOpen stays open on click. -->
+<oge-menubar [items]="menu()" (itemClick)="onItem($event)" />`,
+  body: `protected readonly menu = signal<readonly OgeMenubarItemData[]>([
+  {
+    text: 'View',
+    items: [
+      { text: 'Layout', type: 'header' },
+      { text: 'Grid', type: 'radio', group: 'layout', checked: true },
+      { text: 'List', type: 'radio', group: 'layout' },
+      { text: 'Details', type: 'radio', group: 'layout' },
+      { separator: true, text: '' },
+      { text: 'Show', type: 'header' },
+      { text: 'Status bar', key: 'status', type: 'checkbox', checked: true },
+      { text: 'Hidden files', key: 'hidden', type: 'checkbox' },
+      { text: 'Word wrap', key: 'wrap', type: 'checkbox', keepOpen: true },
+    ],
+  },
+  { text: 'Help', key: 'help' },
+]);
+
+protected onItem(event: OgeMenubarItemClickEvent): void {
+  if (event.checked === undefined) return; // a plain command
+  this.menu.update((items) => applyMenuItemCheck(items, event.item));
+}`,
+});
+
+export const OVERFLOW_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeMenubar'] },
+  types: { '@oge-ui/navigation': ['OgeMenubarItemData'] },
+  template: `<!-- overflowMode="more" moves only the top-level items that do not
+     fit into a trailing "More" item (its label lives in messages.more); the
+     rest of the bar stays put. The fit is measured against the menubar's own
+     container, the last 'auto' item yields first, overflow: 'never' pins an
+     item and 'always' parks it in More. More is part of the roving tabindex
+     like any other bar item. -->
+<div style="width: 360px">
+  <oge-menubar [items]="menu" overflowMode="more" />
+</div>`,
+  body: `protected readonly menu: OgeMenubarItemData[] = [
+  { text: 'File', items: [{ text: 'New' }, { text: 'Open…' }] },
+  { text: 'Edit', items: [{ text: 'Undo' }, { text: 'Redo' }] },
+  { text: 'View', items: [{ text: 'Zoom in' }, { text: 'Zoom out' }] },
+  { text: 'Insert', items: [{ text: 'Image' }, { text: 'Table' }] },
+  { text: 'Tools', items: [{ text: 'Options' }] },
+  { text: 'Help', key: 'help', overflow: 'never' },
+];`,
+});

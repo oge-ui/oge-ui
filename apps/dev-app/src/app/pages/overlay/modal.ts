@@ -14,6 +14,7 @@ import {
   OgeModalRef,
   OgeModalService,
   type OgeModalClosedEvent,
+  type OgeModalPlacement,
 } from '@oge-ui/overlay';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -26,7 +27,9 @@ import {
 import {
   BASIC_SNIPPET,
   BUSY_SNIPPET,
+  DIALOG_HELPERS_SNIPPET,
   FORM_SNIPPET,
+  PLACEMENT_SNIPPET,
   GUARD_SNIPPET,
   RESULT_SNIPPET,
   SIZING_SNIPPET,
@@ -61,7 +64,22 @@ const SECTIONS = [
   'Async close guard',
   'Busy state',
   'Typed result',
+  'Dialog helpers',
+  'Placements',
 ] as const;
+
+/** Every modal placement, in the order the Placements demo lists them. */
+export const MODAL_PLACEMENTS: readonly OgeModalPlacement[] = [
+  'top-start',
+  'top',
+  'top-end',
+  'start',
+  'center',
+  'end',
+  'bottom-start',
+  'bottom',
+  'bottom-end',
+];
 
 @Component({
   selector: 'app-overlay-modal',
@@ -366,6 +384,71 @@ const SECTIONS = [
           </div>
         </oge-modal>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['confirm()', 'alert()', 'prompt()', 'danger', 'validate']"
+        heading="Dialog helpers"
+        description='<code>OgeModalService.confirm()</code>, <code>alert()</code> and <code>prompt()</code> return promises — <code>boolean</code>, <code>void</code> and <code>string | null</code>. Confirm and alert are APG alert dialogs (<code>role="alertdialog"</code>, described by the message); <code>severity</code> picks a built-in icon (<code>icon: false</code> hides it, a <code>TemplateRef</code> replaces it) and <code>danger</code> makes the primary button destructive and moves the initial focus to Cancel. <kbd>Enter</kbd> runs the primary action — in the prompt field too, unless it is invalid — and <kbd>Escape</kbd> cancels (an alert counts it as OK). Prompt validation (<code>required</code>, sync or async <code>validate</code>) renders the error beside the field with <code>aria-invalid</code> and <code>aria-describedby</code>. Button labels default to the localized <code>dialogOk</code> / <code>dialogCancel</code> messages.'
+        [code]="dialogHelpersSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-center gap-3">
+          <oge-button
+            text="Delete file…"
+            severity="danger"
+            stylingMode="outlined"
+            (clicked)="confirmDelete()"
+          />
+          <oge-button
+            text="Archive rows"
+            stylingMode="outlined"
+            (clicked)="confirmArchive()"
+          />
+          <oge-button
+            text="Rename…"
+            stylingMode="outlined"
+            (clicked)="promptRename()"
+          />
+          <oge-button
+            text="Show notice"
+            stylingMode="outlined"
+            (clicked)="showNotice()"
+          />
+          <span class="text-sm opacity-70" data-testid="dialog-result"
+            >result: {{ dialogResult() }}</span
+          >
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['placement', 'start / end', 'corners', 'RTL']"
+        heading="Placements"
+        description='<code>placement</code> pins the panel to the centre, an edge — <code>top</code>, <code>bottom</code>, <code>start</code>, <code>end</code> — or a corner (<code>top-start</code> … <code>bottom-end</code>). <code>start</code> and <code>end</code> are logical: they follow the reading direction, so a <code>dir="rtl"</code> page mirrors them without extra configuration. The service and the dialog helpers take the same option.'
+        [code]="placementSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-center gap-2">
+          @for (p of placements; track p) {
+            <oge-button
+              [text]="p"
+              size="sm"
+              stylingMode="outlined"
+              (clicked)="openAt(p)"
+            />
+          }
+        </div>
+        <oge-modal
+          title="Placed dialog"
+          [(opened)]="placedOpen"
+          [placement]="placed()"
+          [width]="320"
+        >
+          <p class="m-0">
+            This dialog sits at <code>{{ placed() }}</code
+            >.
+          </p>
+        </oge-modal>
+      </app-demo-card>
     }
 
     <h3>Notes</h3>
@@ -437,6 +520,10 @@ export class OverlayModalPage {
   protected readonly guardOpen = signal(false);
   protected readonly busyOpen = signal(false);
   protected readonly confirmOpen = signal(false);
+  protected readonly placedOpen = signal(false);
+  protected readonly placed = signal<OgeModalPlacement>('center');
+  protected readonly placements = MODAL_PLACEMENTS;
+  protected readonly dialogResult = signal('—');
 
   protected readonly statuses = ['Open', 'In progress', 'Done'];
   protected readonly assignees = ['Ada', 'Grace', 'Linus', 'Margaret'];
@@ -469,6 +556,49 @@ export class OverlayModalPage {
     this.serviceResult.set(result ?? `dismissed (${reason})`);
   }
 
+  protected openAt(placement: OgeModalPlacement): void {
+    this.placed.set(placement);
+    this.placedOpen.set(true);
+  }
+
+  protected async confirmDelete(): Promise<void> {
+    const ok = await this.modals.confirm({
+      title: 'Delete file?',
+      message: 'report.xlsx will be removed permanently.',
+      severity: 'danger',
+      okText: 'Delete',
+    });
+    this.dialogResult.set(`confirm → ${ok}`);
+  }
+
+  protected async confirmArchive(): Promise<void> {
+    const ok = await this.modals.confirm({
+      message: 'Archive the 3 selected rows?',
+      severity: 'info',
+    });
+    this.dialogResult.set(`confirm → ${ok}`);
+  }
+
+  protected async promptRename(): Promise<void> {
+    const name = await this.modals.prompt({
+      title: 'Rename file',
+      label: 'File name',
+      defaultValue: 'report.xlsx',
+      required: true,
+      validate: (value) =>
+        value.endsWith('.xlsx') ? null : 'Keep the .xlsx extension.',
+    });
+    this.dialogResult.set(`prompt → ${name === null ? 'null' : name}`);
+  }
+
+  protected async showNotice(): Promise<void> {
+    await this.modals.alert({
+      message: 'Export finished.',
+      severity: 'success',
+    });
+    this.dialogResult.set('alert → acknowledged');
+  }
+
   protected onConfirmClosed(event: OgeModalClosedEvent): void {
     this.outcome.set(
       event.result === 'delete' ? 'deleted' : `kept (${event.reason})`,
@@ -482,4 +612,6 @@ export class OverlayModalPage {
   protected readonly guardSnippet = GUARD_SNIPPET;
   protected readonly busySnippet = BUSY_SNIPPET;
   protected readonly resultSnippet = RESULT_SNIPPET;
+  protected readonly dialogHelpersSnippet = DIALOG_HELPERS_SNIPPET;
+  protected readonly placementSnippet = PLACEMENT_SNIPPET;
 }

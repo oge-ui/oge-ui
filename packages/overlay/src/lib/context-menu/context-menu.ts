@@ -17,6 +17,15 @@ import {
   viewChild,
   type ComponentRef,
 } from '@angular/core';
+import {
+  isOgeContextMenuKey,
+  ogeContextMenuApiTarget,
+  ogeContextMenuPoint,
+  ogeResolveContextMenuOpen,
+  type OgeContextMenuOpeningEvent,
+  type OgeContextMenuPoint,
+  type OgeRect,
+} from '@oge-ui/behavior';
 import { OgeMenuList } from '../menu/menu-list';
 import type {
   OgeMenuCloseRequestEvent,
@@ -25,7 +34,9 @@ import type {
 } from '../menu/menu-types';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
 import { OgePopup } from '../popup/popup';
-import type { OgeRect } from '@oge-ui/behavior';
+
+// The opening payload is framework-free and shared with the React layer.
+export type { OgeContextMenuOpeningEvent } from '@oge-ui/behavior';
 
 /**
  * Panel rendered by the `OgeContextMenu` directive: an anchored popup hosting
@@ -66,14 +77,28 @@ export class OgeContextMenuPanel {
  *
  * ```html
  * <div [ogeContextMenu]="rowMenu" (contextMenuItemClick)="onAction($event)">…</div>
+ *
+ * <!-- one menu for many rows: selector delegation + per-target items -->
+ * <ul [ogeContextMenu]="[]" contextMenuTarget="li"
+ *     (contextMenuOpening)="$event.items = menuFor($event.target)">…</ul>
+ *
+ * <!-- imperative -->
+ * <div [ogeContextMenu]="rowMenu" #menu="ogeContextMenu">…</div>
+ * <button type="button" (click)="menu.open($event)">More</button>
  * ```
  *
  * The menu opens at the pointer location (or anchored to the element for
  * keyboard invocations), takes focus with full menu keyboard support, closes
- * on outside click, Escape or activation, and restores focus to the host.
+ * on outside click, Escape or activation, and restores focus to the target.
+ * With `contextMenuTarget` one menu serves every element inside the host
+ * matching the selector (`closest()`), and the cancelable
+ * `contextMenuOpening` event lets the handler build the items per target.
+ * The target resolution and the opening pipeline are `@oge-ui/behavior`'s
+ * `ogeResolveContextMenuOpen`, shared with the React `<OgeContextMenu>`.
  */
 @Directive({
   selector: '[ogeContextMenu]',
+  exportAs: 'ogeContextMenu',
   host: {
     '(contextmenu)': 'onContextMenu($event)',
     '(keydown)': 'onKeydown($event)',
@@ -84,27 +109,50 @@ export class OgeContextMenu {
   private readonly appRef = inject(ApplicationRef);
   private readonly envInjector = inject(EnvironmentInjector);
 
-  /** Menu items. An empty array disables the menu. */
+  /**
+   * Menu items. An empty array leaves the browser menu in charge — unless a
+   * `contextMenuOpening` handler builds the items per target.
+   */
   readonly ogeContextMenu = input.required<readonly OgeMenuItem[]>();
   /** Accessible name of the menu. */
   readonly contextMenuAriaLabel = input<string | undefined>(undefined);
   /** Disables the menu without detaching the directive. */
   readonly contextMenuDisabled = input(false);
+  /**
+   * CSS selector delegating the menu to matching elements inside the host
+   * (`closest()` from the clicked / focused element): requests outside every
+   * match keep the browser menu, and the matched element becomes the
+   * menu's anchor, `contextMenuOpening`'s `target` and the focus-return
+   * point. Unset: the host itself is the target.
+   */
+  readonly contextMenuTarget = input<string | undefined>(undefined);
 
+  /**
+   * Cancelable, before every open (pointer, keyboard, `open()`): carries the
+   * `target` element, the originating `event` and a writable `items` — assign
+   * a new array to build the menu for this target; set `cancel` to keep it
+   * closed.
+   */
+  readonly contextMenuOpening = output<OgeContextMenuOpeningEvent>();
   /** An enabled item was activated (click, Enter or Space). */
   readonly contextMenuItemClick = output<OgeMenuListItemClickEvent>();
-  /** The menu opened (pointer or keyboard). */
+  /** The menu opened (pointer, keyboard or `open()`). */
   readonly contextMenuOpened = output<void>();
   /** The menu closed for any reason. */
   readonly contextMenuClosed = output<void>();
 
   private componentRef: ComponentRef<OgeContextMenuPanel> | null = null;
-  /** Pointer location of the last right-click; `null` for keyboard opens. */
-  private readonly point = signal<{ x: number; y: number } | null>(null);
+  /** Pointer location of the open request; `null` anchors to the target. */
+  private readonly point = signal<OgeContextMenuPoint | null>(null);
+  /** The element the open menu is for (host, or the delegated match). */
+  private activeTarget: Element | null = null;
+  /** Items of the open menu (possibly built by `contextMenuOpening`). */
+  private readonly activeItems = signal<readonly OgeMenuItem[]>([]);
   private pendingMenuFocus = false;
 
   private readonly panel = new OgeAnchoredPanel({
-    anchor: () => this.host.nativeElement,
+    anchor: () =>
+      (this.activeTarget as HTMLElement | null) ?? this.host.nativeElement,
     panel: () =>
       this.componentRef?.location.nativeElement.querySelector('.oge-popup') ??
       null,
@@ -115,7 +163,7 @@ export class OgeContextMenu {
         ? { top: point.y, left: point.x, width: 0, height: 0 }
         : null;
     },
-    restoreFocus: () => this.host.nativeElement.focus(),
+    restoreFocus: () => this.focusTarget(),
     onClosed: () => {
       this.pendingMenuFocus = false;
       this.contextMenuClosed.emit();
@@ -142,9 +190,15 @@ export class OgeContextMenu {
         this.componentRef?.instance.menuList()?.focus('first');
       });
     });
-    // Keep items/label live on the detached panel while it exists.
+    // Keep items/label live on the detached panel while it exists. A live
+    // `ogeContextMenu` change replaces the open menu's items, like before
+    // per-target items existed.
     effect(() => {
       const items = this.ogeContextMenu();
+      untracked(() => this.activeItems.set(items));
+    });
+    effect(() => {
+      const items = this.activeItems();
       const label = this.contextMenuAriaLabel();
       untracked(() => {
         this.componentRef?.setInput('items', items);
@@ -155,37 +209,77 @@ export class OgeContextMenu {
 
   /** Opens at the pointer location, replacing the browser's native menu. */
   protected onContextMenu(event: MouseEvent): void {
-    if (this.contextMenuDisabled() || this.ogeContextMenu().length === 0) {
-      return;
+    if (this.request(event.target, ogeContextMenuPoint(event), event)) {
+      event.preventDefault();
+      event.stopPropagation();
     }
-    event.preventDefault();
-    event.stopPropagation();
-    // detail === 0 → keyboard-synthesized contextmenu (Menu key on some
-    // platforms): anchor to the element instead of a stale pointer position.
-    this.point.set(
-      event.detail === 0 || (event.clientX === 0 && event.clientY === 0)
-        ? null
-        : { x: event.clientX, y: event.clientY },
-    );
-    this.openMenu();
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    const menuKey =
-      (event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu';
-    if (!menuKey) return;
-    if (this.contextMenuDisabled() || this.ogeContextMenu().length === 0) {
+    if (!isOgeContextMenuKey(event)) return;
+    if (this.request(event.target, null, event)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  /**
+   * Opens the menu programmatically — at a viewport point (`open(x, y)`) or
+   * at a pointer event's location (`open(event)`; a keyboard-synthesized
+   * event anchors to the target). With `contextMenuTarget`, the target is the
+   * match under the event / point. Runs `contextMenuOpening` like a
+   * right-click.
+   */
+  open(x: number, y: number): void;
+  open(event: MouseEvent): void;
+  open(xOrEvent: number | MouseEvent, y = 0): void {
+    const host = this.host.nativeElement;
+    if (typeof xOrEvent === 'number') {
+      const point = { x: xOrEvent, y };
+      this.request(ogeContextMenuApiTarget(host, null, point), point, null);
       return;
     }
-    event.preventDefault();
-    event.stopPropagation();
-    this.point.set(null);
-    this.openMenu();
+    const point = ogeContextMenuPoint(xOrEvent);
+    this.request(
+      ogeContextMenuApiTarget(host, xOrEvent.target, point),
+      point,
+      xOrEvent,
+    );
   }
 
   /** Closes the menu programmatically. */
   close(): void {
     this.panel.close();
+  }
+
+  /** Runs an open request; `true` when the browser menu must stay closed. */
+  private request(
+    eventTarget: EventTarget | null,
+    point: OgeContextMenuPoint | null,
+    event: Event | null,
+  ): boolean {
+    const result = ogeResolveContextMenuOpen({
+      host: this.host.nativeElement,
+      eventTarget,
+      selector: this.contextMenuTarget(),
+      items: this.ogeContextMenu(),
+      disabled: this.contextMenuDisabled(),
+      event,
+      emitOpening: (opening) => this.contextMenuOpening.emit(opening),
+    });
+    if (result.kind === 'ignored') return false;
+    if (result.kind === 'cancelled') return true;
+    this.activeTarget = result.target;
+    this.activeItems.set(result.items);
+    this.point.set(point);
+    this.openMenu();
+    return true;
+  }
+
+  private focusTarget(): void {
+    const target = this.activeTarget as HTMLElement | null;
+    if (target && typeof target.focus === 'function') target.focus();
+    else this.host.nativeElement.focus();
   }
 
   private openMenu(): void {
@@ -206,7 +300,7 @@ export class OgeContextMenu {
       environmentInjector: this.envInjector,
     });
     this.componentRef.setInput('panel', this.panel);
-    this.componentRef.setInput('items', this.ogeContextMenu());
+    this.componentRef.setInput('items', this.activeItems());
     this.componentRef.setInput('ariaLabel', this.contextMenuAriaLabel());
     this.componentRef.instance.itemClick.subscribe((clickEvent) =>
       this.contextMenuItemClick.emit(clickEvent),

@@ -11,6 +11,7 @@ import {
   flattenTreeData,
   foldText,
   matchByPrefix,
+  ogeFormatMessage,
   resolveSelectedKeys,
   stepEnabledIndex,
   toggleTreeSelection,
@@ -168,13 +169,26 @@ export interface OgeTreeSelectAllChangedEvent {
   readonly state: CheckState;
 }
 
-/** Cancelable pre-event of a drag & drop reparent. */
+/**
+ * Cancelable pre-event of a drag & drop reparent — fired by the tree the node
+ * is dropped **on**. For a drop from another tree of the same `dragGroup`,
+ * `sourceTreeId !== targetTreeId` and `dragItem` belongs to the source tree's
+ * data.
+ */
 export interface OgeTreeReorderingEvent<T = unknown> {
   readonly dragKey: RowKey;
   readonly dragItem: T;
   readonly dropKey: RowKey;
   readonly dropItem: T;
   readonly position: OgeTreeDropPosition;
+  /** Id of the tree the node was dragged from (its `role="tree"` id). */
+  readonly sourceTreeId: string;
+  /** Id of the tree the node is dropped on (its `role="tree"` id). */
+  readonly targetTreeId: string;
+  /** How the move was made: a pointer drag or the Ctrl+X / Ctrl+V twin. */
+  readonly trigger: OgeTreeMoveSource;
+  /** The originating DOM event, when there is one. */
+  readonly event?: Event;
   /** Set to `true` to block the drop. */
   cancel: boolean;
 }
@@ -182,7 +196,9 @@ export interface OgeTreeReorderingEvent<T = unknown> {
 /**
  * Emitted after a drop passed the cancelable pre-event. The tree does not
  * mutate the data — apply the move to your own array, exactly like
- * tree-list's `rowReparented`.
+ * tree-list's `rowReparented`. A cross-tree drop fires this on the target
+ * tree and `itemTransferred` on the source tree: move the item out of one
+ * array and into the other.
  */
 export interface OgeTreeReorderedEvent<T = unknown> {
   readonly dragKey: RowKey;
@@ -190,6 +206,37 @@ export interface OgeTreeReorderedEvent<T = unknown> {
   readonly dropKey: RowKey;
   readonly dropItem: T;
   readonly position: OgeTreeDropPosition;
+  /** Id of the tree the node was dragged from (its `role="tree"` id). */
+  readonly sourceTreeId: string;
+  /** Id of the tree the node was dropped on (its `role="tree"` id). */
+  readonly targetTreeId: string;
+  /** How the move was made: a pointer drag or the Ctrl+X / Ctrl+V twin. */
+  readonly trigger: OgeTreeMoveSource;
+  /** The originating DOM event, when there is one. */
+  readonly event?: Event;
+}
+
+/**
+ * Emitted by the **source** tree after one of its nodes was dropped on
+ * another tree of the same `dragGroup` (and that tree's `itemReordering`
+ * did not cancel it). Same payload as the target's `itemReordered`.
+ */
+export type OgeTreeTransferredEvent<T = unknown> = OgeTreeReorderedEvent<T>;
+
+/** How a tree move was made. */
+export type OgeTreeMoveSource = 'pointer' | 'keyboard' | 'api';
+
+/** Emitted after a "Load more" row revealed the next page of children. */
+export interface OgeTreeChildPageEvent<T = unknown> {
+  /** Parent whose children grew — `null` for the root level. */
+  readonly parentKey: RowKey | null;
+  /** The parent row, absent for the root level. */
+  readonly parentItem?: T;
+  /** Children now shown under the parent. */
+  readonly shown: number;
+  /** Children the parent has in total. */
+  readonly total: number;
+  readonly event?: Event;
 }
 
 // --- config ----------------------------------------------------------------
@@ -215,7 +262,30 @@ export interface OgeTreeViewMessages {
   noData: string;
   /** Shown when a search matched nothing. */
   noSearchResults: string;
+  /**
+   * Label of the "Load more" row under a paged parent (`childPageSize`); an
+   * ICU plural over `count`, the children still hidden.
+   */
+  loadMore?: string;
+  /** Accessible name of the in-place label editor. */
+  editLabel?: string;
+  /** Shown when `validateEdit` rejects a value without its own message. */
+  editInvalid?: string;
+  /** Announced after Ctrl+X marked a node for a keyboard move; `{item}`. */
+  cutAnnouncement?: string;
+  /**
+   * Announced after a move committed; `{item}`, `{target}` and an ICU
+   * `select` over `{position}` (`inside` / `before` / `after`).
+   */
+  movedAnnouncement?: string;
+  /** Announced when Escape abandons a pending keyboard move. */
+  moveCancelledAnnouncement?: string;
+  /** Announced when the focused node cannot take the cut node; `{item}`. */
+  moveRejectedAnnouncement?: string;
 }
+
+/** {@link OgeTreeViewMessages} with every optional key filled from English. */
+export type OgeTreeViewResolvedMessages = Required<OgeTreeViewMessages>;
 
 export const OGE_DEFAULT_TREE_VIEW_MESSAGES: OgeTreeViewMessages = {
   selectAll: 'Select all',
@@ -226,7 +296,30 @@ export const OGE_DEFAULT_TREE_VIEW_MESSAGES: OgeTreeViewMessages = {
   childrenLoadFailed: 'Could not load these items.',
   noData: 'No items to display',
   noSearchResults: 'No matching items',
+  loadMore: 'Show {count, plural, one {# more item} other {# more items}}',
+  editLabel: 'Item name',
+  editInvalid: 'Enter a valid name.',
+  cutAnnouncement:
+    '{item} cut. Move to the target item and press Control+V to move it there, or Escape to cancel.',
+  movedAnnouncement:
+    '{position, select, inside {{item} moved into {target}.} before {{item} moved before {target}.} other {{item} moved after {target}.}}',
+  moveCancelledAnnouncement: 'Move cancelled.',
+  moveRejectedAnnouncement: '{item} cannot be moved here.',
 };
+
+/**
+ * Fills the optional keys a catalog may lack (an older locale pack, a partial
+ * `messages` override) from English — what both render layers read.
+ */
+export function fillTreeViewMessages(
+  messages: Partial<OgeTreeViewMessages> | undefined,
+): OgeTreeViewResolvedMessages {
+  const out = { ...OGE_DEFAULT_TREE_VIEW_MESSAGES } as Record<string, string>;
+  for (const [key, value] of Object.entries(messages ?? {})) {
+    if (typeof value === 'string') out[key] = value;
+  }
+  return out as unknown as OgeTreeViewResolvedMessages;
+}
 
 /** Application-wide defaults for the tree view. */
 export interface OgeTreeViewConfig {
@@ -367,6 +460,78 @@ export interface OgeTreeViewNode<T> {
    * `buildSearchHighlightSegments`.
    */
   readonly highlighted: readonly SearchHighlightSegment[] | null;
+  /**
+   * Set on the "Load more" pseudo row a paged parent (`childPageSize`) shows
+   * after its last visible child. It is focusable and activates with Enter,
+   * Space or a click; it carries no data (`item` is `undefined`).
+   */
+  readonly more?: OgeTreeLoadMoreInfo;
+}
+
+/** What a "Load more" row stands for. */
+export interface OgeTreeLoadMoreInfo {
+  /** Parent whose children are paged — `null` for the root level. */
+  readonly parentKey: RowKey | null;
+  /** Children currently shown under that parent. */
+  readonly shown: number;
+  /** Children the parent has in total. */
+  readonly total: number;
+}
+
+/**
+ * Prefix of a "Load more" row's key — reserved: data keys must not start
+ * with it. Printable on purpose, so the key survives `data-key` attributes
+ * and `CSS.escape`.
+ */
+export const OGE_TREE_LOAD_MORE_PREFIX = '__oge-more__:';
+
+/** The key of the "Load more" row under this parent. */
+export function treeLoadMoreKey(parentKey: RowKey | null): string {
+  return `${OGE_TREE_LOAD_MORE_PREFIX}${parentKey === null ? '' : typeof parentKey}:${String(parentKey ?? '')}`;
+}
+
+/**
+ * The label of a "Load more" row: the catalog's ICU plural over the children
+ * still hidden.
+ */
+export function treeLoadMoreText(
+  template: string,
+  more: OgeTreeLoadMoreInfo,
+  locale?: string,
+): string {
+  return ogeFormatMessage(template, { count: more.total - more.shown }, locale);
+}
+
+/** Children shown under a paged parent before its first "Load more". */
+export function treeChildPageLimit(
+  limits: ReadonlyMap<RowKey | null, number> | undefined,
+  parentKey: RowKey | null,
+  pageSize: number,
+): number {
+  return limits?.get(parentKey) ?? pageSize;
+}
+
+/**
+ * The page limits after a "Load more" under `parentKey`: one more page, never
+ * beyond `total`.
+ */
+export function nextTreeChildPage(
+  limits: ReadonlyMap<RowKey | null, number>,
+  parentKey: RowKey | null,
+  pageSize: number,
+  total: number,
+): ReadonlyMap<RowKey | null, number> {
+  const next = new Map(limits);
+  const current = treeChildPageLimit(limits, parentKey, pageSize);
+  next.set(parentKey, Math.min(total, current + pageSize));
+  return next;
+}
+
+/** A positive integer page size, or `0` when paging is off. */
+export function resolveTreeChildPageSize(value: number | undefined): number {
+  return value !== undefined && Number.isFinite(value) && value >= 1
+    ? Math.floor(value)
+    : 0;
 }
 
 /** State of one node's lazy child load. */
@@ -581,6 +746,13 @@ export interface OgeTreeNodesInput<T> {
   hasChildren?: (row: T) => boolean | undefined;
   /** Search text to wrap in `<mark>`; `''` disables highlighting. */
   highlight?: string;
+  /**
+   * Children shown per parent before a "Load more" row; `0` / unset shows
+   * every child. Ignored while searching, so every match stays reachable.
+   */
+  childPageSize?: number;
+  /** Children revealed so far per parent (`null` = roots) — grown by Load more. */
+  pageLimits?: ReadonlyMap<RowKey | null, number>;
 }
 
 /** The flat, visible node list — the single render source of both layers. */
@@ -597,7 +769,29 @@ export function buildTreeViewNodes<T>(
     visibleKeys: input.visibleKeys,
   });
   const out: OgeTreeViewNode<T>[] = [];
+  const pageSize = input.visibleKeys
+    ? 0
+    : resolveTreeChildPageSize(input.childPageSize);
+  // depth of a hidden (paged-out) node whose subtree is being skipped
+  let skipBelow: number | null = null;
   for (const node of flat) {
+    if (skipBelow !== null) {
+      if (node.kind !== 'data' || node.level > skipBelow) continue;
+      skipBelow = null;
+    }
+    if (pageSize > 0 && node.kind === 'data') {
+      const parentKey = node.parentKey ?? null;
+      const limit = treeChildPageLimit(input.pageLimits, parentKey, pageSize);
+      const pos = node.posInSet ?? 1;
+      const total = node.setSize ?? 1;
+      if (pos > limit) {
+        if (pos === limit + 1) {
+          out.push(loadMoreNode<T>(parentKey, node.level, limit, total));
+        }
+        skipBelow = node.level;
+        continue;
+      }
+    }
     if (node.kind === 'filler') {
       const parentKey = String(node.key).replace(/:loading$/, '');
       const state =
@@ -648,6 +842,34 @@ export function buildTreeViewNodes<T>(
     });
   }
   return out;
+}
+
+function loadMoreNode<T>(
+  parentKey: RowKey | null,
+  level: number,
+  shown: number,
+  total: number,
+): OgeTreeViewNode<T> {
+  const key = treeLoadMoreKey(parentKey);
+  return {
+    id: key.replace(/[^a-zA-Z0-9_-]/g, '_'),
+    key,
+    filler: false,
+    failed: false,
+    item: undefined as unknown as T,
+    text: '',
+    level,
+    posInSet: shown + 1,
+    setSize: total,
+    hasChildren: false,
+    expanded: false,
+    disabled: false,
+    selected: false,
+    loading: false,
+    checkState: 'unchecked',
+    highlighted: null,
+    more: { parentKey, shown, total },
+  };
 }
 
 /** Tri-state of the "select all" row, folded up from the root states. */
@@ -708,7 +930,7 @@ export function treeAriaSelected<T>(
   checkBoxesMode: OgeTreeCheckBoxesMode,
   selectionMode: OgeTreeSelectionMode,
 ): boolean | null {
-  if (node.filler || checkBoxesMode !== 'none') return null;
+  if (node.filler || node.more || checkBoxesMode !== 'none') return null;
   if (selectionMode === 'none') return null;
   return node.selected;
 }
@@ -718,7 +940,7 @@ export function treeAriaChecked<T>(
   node: OgeTreeViewNode<T>,
   checkBoxesMode: OgeTreeCheckBoxesMode,
 ): 'true' | 'false' | 'mixed' | null {
-  if (node.filler || checkBoxesMode === 'none') return null;
+  if (node.filler || node.more || checkBoxesMode === 'none') return null;
   if (node.checkState === 'indeterminate') return 'mixed';
   return node.checkState === 'checked' ? 'true' : 'false';
 }
@@ -848,7 +1070,9 @@ export function treeRangeSelection<T>(
   const next = new Set(selected);
   for (let i = start; i <= end; i++) {
     const node = nodes[i];
-    if (node && !node.filler && !node.disabled) next.add(node.key);
+    if (node && !node.filler && !node.more && !node.disabled) {
+      next.add(node.key);
+    }
   }
   return next;
 }
@@ -858,7 +1082,9 @@ export function treeAnchorIndex<T>(
   nodes: readonly OgeTreeViewNode<T>[],
   current: number,
 ): number {
-  const first = nodes.findIndex((node) => !node.filler && node.selected);
+  const first = nodes.findIndex(
+    (node) => !node.filler && !node.more && node.selected,
+  );
   return first === -1 ? current : first;
 }
 

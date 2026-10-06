@@ -14,4 +14,5 @@ export {
 export type {
   OgeProgressBarCompletedEvent,
   OgeProgressBarSeverity,
+  OgeProgressBarType,
 } from './progress-bar-types';

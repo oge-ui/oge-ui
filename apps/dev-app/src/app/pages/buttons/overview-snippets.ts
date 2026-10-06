@@ -64,3 +64,26 @@ export const BADGE_SNIPPET = demoSource({
 <oge-button text="Alerts" [badge]="120" severity="accent" stylingMode="outlined" />
 <oge-button text="Live" [badge]="true" stylingMode="text" />`,
 });
+
+export const TOGGLE_SNIPPET = demoSource({
+  use: { '@oge-ui/buttons': ['OgeButton'] },
+  types: { '@oge-ui/buttons': ['OgeButtonSelectedChangedEvent'] },
+  template: `<!-- toggle + [(selected)] = a WAI-ARIA toggle button: the native button
+     renders aria-pressed="true|false" and every accepted click flips it. -->
+<oge-button text="Bold" [toggle]="true" [(selected)]="bold" />
+<oge-button
+  text="Italic"
+  stylingMode="outlined"
+  [toggle]="true"
+  [(selected)]="italic"
+  (selectedChanged)="log($event)"
+/>
+<oge-button text="Pinned" stylingMode="text" [toggle]="true" [selected]="true" />
+<oge-button text="Locked" [toggle]="true" [selected]="true" [disabled]="true" />`,
+  body: `protected readonly bold = signal(true);
+protected readonly italic = signal(false);
+
+protected log(event: OgeButtonSelectedChangedEvent): void {
+  console.log(event.previousValue, '→', event.selected);
+}`,
+});

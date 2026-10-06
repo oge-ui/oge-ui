@@ -52,8 +52,55 @@ export interface OgeModalClosedEvent<R = unknown> {
  */
 export type OgeModalAutoFocus = 'first-tabbable' | 'panel' | (string & {});
 
-/** Where the panel sits in the viewport. */
-export type OgeModalPlacement = 'center' | 'top';
+/**
+ * Where the panel sits in the viewport. `start` / `end` are logical — the
+ * inline-start edge is the left one in LTR and the right one in RTL — so a
+ * placement mirrors with the page direction. The corner values combine a
+ * block edge with an inline edge (`'bottom-end'` is the classic corner).
+ */
+export type OgeModalPlacement =
+  | 'center'
+  | 'top'
+  | 'bottom'
+  | 'start'
+  | 'end'
+  | 'top-start'
+  | 'top-end'
+  | 'bottom-start'
+  | 'bottom-end';
+
+/**
+ * ARIA role of the panel: `dialog` (default) or `alertdialog` — the APG alert
+ * dialog for urgent confirmations, which the `confirm()` / `alert()` helpers use.
+ */
+export type OgeModalRole = 'dialog' | 'alertdialog';
+
+/** Every {@link OgeModalPlacement}, in documentation order. */
+export const OGE_MODAL_PLACEMENTS: readonly OgeModalPlacement[] = [
+  'center',
+  'top',
+  'bottom',
+  'start',
+  'end',
+  'top-start',
+  'top-end',
+  'bottom-start',
+  'bottom-end',
+];
+
+/**
+ * Layer class for a placement — `null` for `'center'` and while full screen
+ * (the full-screen layer has its own class). The stylesheet aligns the panel
+ * with grid `place-items`, which is logical, so `start`/`end` mirror in RTL
+ * without script.
+ */
+export function modalPlacementClass(
+  placement: OgeModalPlacement | undefined,
+  fullScreen: boolean,
+): string | null {
+  if (fullScreen || !placement || placement === 'center') return null;
+  return `oge-modal-layer-${placement}`;
+}
 
 /** Smallest size a resize gesture can shrink the panel to. */
 export const OGE_MODAL_MIN_RESIZE = { width: 160, height: 120 } as const;

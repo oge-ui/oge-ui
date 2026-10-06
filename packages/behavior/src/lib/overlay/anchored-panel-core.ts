@@ -1,4 +1,5 @@
 import { ogeIsRtl } from '../a11y/direction';
+import { resolvePopupArrow } from './arrow';
 import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
 import {
   ogeVisibleViewport,
@@ -55,6 +56,12 @@ export interface OgeAnchoredPanelCoreOptions {
    * never swallows the Escape meant for the popup underneath. Default `false`.
    */
   transient?: boolean;
+  /**
+   * When it returns `true`, every measure also resolves the callout-arrow
+   * geometry into `position().arrow` (`resolvePopupArrow`) — the popover and
+   * the tooltip render their arrow from it. Default: no arrow.
+   */
+  arrow?: () => boolean | undefined;
 
   /**
    * State sinks — how the host's reactivity learns about the machine. The
@@ -301,6 +308,19 @@ export class OgeAnchoredPanelCore {
       top: resolved.top + visible.top,
       left: resolved.left + visible.left,
     };
+    if (this.options.arrow?.()) {
+      position.arrow = resolvePopupArrow({
+        anchor,
+        panel: {
+          top: resolved.top,
+          left: resolved.left,
+          width: panelEl.offsetWidth,
+          height: panelEl.offsetHeight,
+        },
+        placement: resolved.placement,
+        rtl: ogeIsRtl(anchorEl),
+      });
+    }
     this.setPosition(
       resolvedWidth !== undefined
         ? { ...position, width: resolvedWidth }

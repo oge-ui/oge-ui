@@ -303,6 +303,61 @@
   border-color: currentColor;
 }
 
+// --- standalone toggle button (aria-pressed) --------------------------------
+// Idle is not disabled: an unpressed toggle keeps a readable label (the
+// toggle-group segment colour), never the muted + opacity disabled look.
+
+.oge-button-toggle:not(.oge-button-selected):not(.oge-button-colored)
+  .oge-button-native:not(:disabled) {
+  color: var(--oge-input-muted);
+}
+
+// Pressed: accent tint (or the severity's own soft tint) + a solid edge and an
+// underline indicator, so the state reads at a glance in every styling mode.
+.oge-button-toggle.oge-button-selected:not(.oge-button-colored) {
+  --oge-btn-main: var(--oge-accent);
+  --oge-btn-soft: var(--oge-accent-soft);
+}
+
+.oge-button-toggle.oge-button-selected .oge-button-native {
+  border-color: var(--oge-btn-main);
+  background: var(--oge-btn-soft);
+  color: var(--oge-btn-main);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--oge-btn-main) 22%, transparent);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 30%;
+    inset-block-end: 3px;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    pointer-events: none;
+  }
+}
+
+.oge-button-toggle.oge-button-selected.oge-button-text-mode .oge-button-native {
+  border-color: transparent;
+}
+
+// Contained severity/custom colour: the fill stays, just darker.
+.oge-button-toggle.oge-button-selected.oge-button-colored:not(
+    .oge-button-outlined
+  ):not(.oge-button-text-mode)
+  .oge-button-native {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--oge-btn-main) 78%, #000 22%);
+  color: var(--oge-btn-contrast);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--oge-btn-main) 72%, #000 28%);
+  }
+}
+
 // --- a11y helper ------------------------------------------------------------
 
 .oge-button-sr {
@@ -355,5 +410,30 @@
 
   .oge-button-hold-bar {
     background: Highlight;
+  }
+
+  // a pressed toggle keeps a system-colour fill, edge and indicator
+  .oge-button-toggle.oge-button-selected .oge-button-native,
+  .oge-button-toggle.oge-button-selected.oge-button-colored:not(
+      .oge-button-outlined
+    ):not(.oge-button-text-mode)
+    .oge-button-native {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+
+    &::after {
+      background: HighlightText;
+    }
+
+    &:disabled {
+      border-color: GrayText;
+      background: Canvas;
+      color: GrayText;
+
+      &::after {
+        background: GrayText;
+      }
+    }
   }
 }

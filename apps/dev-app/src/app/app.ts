@@ -648,6 +648,11 @@ export class App {
       items: [
         { path: '/components/progress', label: 'Overview', icon: 'loader' },
         {
+          path: '/components/progress/load-panel',
+          label: 'Load Panel',
+          icon: 'layers',
+        },
+        {
           path: '/components/progress/api',
           label: 'API Reference',
           icon: 'code',
@@ -791,6 +796,11 @@ export class App {
           icon: 'pointer',
         },
         {
+          path: '/components/overlay/popover',
+          label: 'Popover',
+          icon: 'layers',
+        },
+        {
           path: '/components/overlay/modal',
           label: 'Modal',
           icon: 'layout',
@@ -799,6 +809,11 @@ export class App {
           path: '/components/overlay/toast',
           label: 'Toast',
           icon: 'zap',
+        },
+        {
+          path: '/components/overlay/window',
+          label: 'Window',
+          icon: 'copy',
         },
         {
           path: '/components/overlay/api',

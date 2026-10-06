@@ -74,3 +74,56 @@ protected log(phase: string): void {
   console.log(phase);
 }`,
 });
+
+export const TOOLTIP_TEMPLATES_SNIPPET = demoSource({
+  use: {
+    '@oge-ui/buttons': ['OgeButton'],
+    '@oge-ui/overlay': ['OgeTooltip'],
+  },
+  template: `<!-- rich content: a template + context, with a callout arrow -->
+<oge-button text="Ada Lovelace" [ogeTooltip]="person" [tooltipContext]="ada"
+            [tooltipArrow]="true" tooltipPlacement="bottom" [tooltipMaxWidth]="240" />
+<ng-template #person let-p>
+  <strong>{{ p.name }}</strong> · {{ p.role }}<br />Last seen {{ p.seen }}
+</ng-template>
+
+<!-- show modes: hover (default), focus, click, manual -->
+<oge-button text="Click me" ogeTooltip="Toggled by clicking" tooltipShowMode="click" />
+<oge-button text="Copy" ogeTooltip="Copied!" tooltipShowMode="manual"
+            #copied="ogeTooltip" (clicked)="copied.open()" />`,
+  body: `protected readonly ada = { name: 'Ada Lovelace', role: 'Engineer', seen: '5 min ago' };`,
+});
+
+export const CONTEXT_DELEGATION_SNIPPET = demoSource({
+  use: { '@oge-ui/overlay': ['OgeContextMenu'] },
+  types: { '@oge-ui/overlay': ['OgeContextMenuOpeningEvent', 'OgeMenuItem'] },
+  template: `<!-- one menu serves every row: contextMenuTarget delegates by selector -->
+<ul [ogeContextMenu]="[]" contextMenuTarget="li" contextMenuAriaLabel="File actions"
+    (contextMenuOpening)="build($event)" #menu="ogeContextMenu">
+  @for (file of files; track file.name) {
+    <li tabindex="0" [attr.data-name]="file.name">{{ file.name }}</li>
+  }
+</ul>
+
+<!-- imperative: open at a viewport point (or menu.open($event)) -->
+<button type="button" (click)="menu.open(240, 160)">Open at (240, 160)</button>`,
+  body: `protected readonly files = [
+  { name: 'report.xlsx', locked: false },
+  { name: 'budget.xlsx', locked: true },
+];
+
+// cancelable; build the items for the row that was right-clicked
+protected build(event: OgeContextMenuOpeningEvent): void {
+  const name = event.target.getAttribute('data-name');
+  const file = this.files.find((f) => f.name === name);
+  if (!file) {
+    event.cancel = true;
+    return;
+  }
+  const items: OgeMenuItem[] = [
+    { text: 'Open ' + file.name, value: 'open' },
+    { text: 'Delete', value: 'delete', severity: 'danger', disabled: file.locked },
+  ];
+  event.items = items;
+}`,
+});

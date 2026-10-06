@@ -14,7 +14,9 @@ import {
 } from 'react';
 import {
   OgeButtonPress,
+  applyButtonToggle,
   resolveAutoRepeat,
+  resolveButtonSelectionState,
   resolveClickGuard,
   resolveHoldToConfirm,
   type OgeAutoRepeatOptions,
@@ -29,6 +31,16 @@ import {
 import { isDevMode } from './dev';
 import { useOgeButtonsConfig } from './buttons-config';
 import { useOgeButtonGroup } from './button-group-context';
+
+/** Payload of `onSelectedChange` — a click flipped a `toggle` button. */
+export interface OgeButtonSelectedChangeEvent {
+  /** The new pressed state. */
+  selected: boolean;
+  /** The pressed state before the click. */
+  previousValue: boolean;
+  /** The click (or Space/Enter keyboard event of a gesture) that did it. */
+  event: MouseEvent | KeyboardEvent;
+}
 
 export interface OgeButtonProps {
   /** Label text; alternative (or addition) to `children`. */
@@ -63,6 +75,24 @@ export interface OgeButtonProps {
   ariaLabel?: string;
   /** Selection key inside an `<OgeButtonGroup>`; unused standalone. */
   value?: string;
+  /**
+   * Makes the button a toggle button: each accepted click flips `selected`
+   * and the native button renders `aria-pressed`. Ignored inside a
+   * `single`/`multiple` `<OgeButtonGroup>`, which owns the selection.
+   */
+  toggle?: boolean;
+  /**
+   * Pressed state of a `toggle` button (controlled). Pair with
+   * `onSelectedChange`; use `defaultSelected` for an uncontrolled button.
+   */
+  selected?: boolean;
+  /** Initial pressed state of an uncontrolled `toggle` button. */
+  defaultSelected?: boolean;
+  /**
+   * A click flipped a `toggle` button's state — the controlled half of
+   * `selected`. Fires before `onClick`.
+   */
+  onSelectedChange?: (event: OgeButtonSelectedChangeEvent) => void;
   /**
    * `aria-haspopup` of the native button — for popup triggers. Typed to the
    * ARIA vocabulary rather than `string`, which is what React's own DOM
@@ -140,6 +170,12 @@ export interface OgeButtonHandle {
  * Inside an `<OgeButtonGroup>` the button inherits the group's `stylingMode`,
  * `severity`, `size` and `disabled` unless set locally.
  *
+ * `toggle` makes a standalone WAI-ARIA toggle button (`aria-pressed`):
+ *
+ * ```tsx
+ * <OgeButton text="Bold" toggle selected={bold} onSelectedChange={(e) => setBold(e.selected)} />
+ * ```
+ *
  * The press pipeline is `@oge-ui/behavior`'s `OgeButtonPress` — the same
  * machine the Angular button runs, not a re-implementation of it.
  */
@@ -161,6 +197,10 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       buttonType = 'button',
       ariaLabel,
       value,
+      toggle = false,
+      selected: selectedProp,
+      defaultSelected = false,
+      onSelectedChange,
       ariaHasPopup,
       ariaExpanded,
       ariaControls,
@@ -199,7 +239,17 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
     const effectiveSize = size ?? group?.size ?? 'md';
     const isDisabled = disabled || loading || (group?.disabled ?? false);
 
-    const selected = group ? group.isSelected(value) : false;
+    const [uncontrolledSelected, setUncontrolledSelected] =
+      useState(defaultSelected);
+    // Who owns the selected state and which ARIA it renders — shared with the
+    // Angular button through `@oge-ui/behavior`.
+    const selection = resolveButtonSelectionState({
+      groupMode: group?.selectionMode ?? null,
+      groupSelected: group ? group.isSelected(value) : false,
+      toggle,
+      selected: selectedProp ?? uncontrolledSelected,
+    });
+    const selected = selection.selected;
 
     const holdOpts = resolveHoldToConfirm(
       holdToConfirm,
@@ -226,6 +276,9 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       value,
       group,
       loadingControlled: loadingProp !== undefined,
+      selection,
+      onSelectedChange,
+      selectedControlled: selectedProp !== undefined,
     });
     latest.current = {
       holdOpts,
@@ -240,6 +293,9 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       value,
       group,
       loadingControlled: loadingProp !== undefined,
+      selection,
+      onSelectedChange,
+      selectedControlled: selectedProp !== undefined,
     };
 
     const pressRef = useRef<OgeButtonPress>(undefined);
@@ -252,6 +308,13 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
         action: () => latest.current.action,
         captureTarget: () => nativeRef.current,
         onClick: (event) => {
+          const change = applyButtonToggle(latest.current.selection);
+          if (change) {
+            if (!latest.current.selectedControlled) {
+              setUncontrolledSelected(change.selected);
+            }
+            latest.current.onSelectedChange?.({ ...change, event });
+          }
           latest.current.onClick?.(event);
           latest.current.group?.notifyClick(latest.current.value, event);
         },
@@ -338,6 +401,7 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       hold.holding && 'oge-button-holding',
       hold.ready && 'oge-button-hold-ready',
       selected && 'oge-button-selected',
+      selection.standaloneToggle && 'oge-button-toggle',
       (effectiveSeverity !== 'normal' || !!color) && 'oge-button-colored',
       effectiveStylingMode === 'outlined' && 'oge-button-outlined',
       effectiveStylingMode === 'text' && 'oge-button-text-mode',
@@ -383,13 +447,9 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
           title={hintText}
           accessKey={accessKey}
           aria-busy={loading ? true : undefined}
-          role={group?.selectionMode === 'single' ? 'radio' : undefined}
-          aria-checked={
-            group?.selectionMode === 'single' ? selected : undefined
-          }
-          aria-pressed={
-            group?.selectionMode === 'multiple' ? selected : undefined
-          }
+          role={selection.role ?? undefined}
+          aria-checked={selection.ariaChecked ?? undefined}
+          aria-pressed={selection.ariaPressed ?? undefined}
           aria-haspopup={ariaHasPopup}
           aria-expanded={ariaExpanded}
           aria-controls={ariaControls}

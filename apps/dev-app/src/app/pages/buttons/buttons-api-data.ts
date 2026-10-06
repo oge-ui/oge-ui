@@ -126,6 +126,20 @@ export const OGE_BUTTON_API: ApiSections = {
             'Selection key inside an <code>&lt;oge-button-group&gt;</code>; unused standalone.',
         },
         {
+          name: 'toggle',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Makes the button a toggle button: each accepted click flips <code>selected</code> and the native button renders <code>aria-pressed</code>. Ignored inside a <code>single</code>/<code>multiple</code> <code>&lt;oge-button-group&gt;</code>, which owns the selection.',
+        },
+        {
+          name: 'selected',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description:
+            'Pressed state of a <code>toggle</code> button — two-way (<code>[(selected)]</code>). Unused without <code>toggle</code> and inside a selection group.',
+        },
+        {
           name: 'tabIndex',
           type: 'number',
           default: '0',
@@ -215,12 +229,29 @@ export const OGE_BUTTON_API: ApiSections = {
           type: 'boolean',
           description: 'Implicit output of the <code>loading</code> model.',
         },
+        {
+          name: 'selectedChanged',
+          type: 'OgeButtonSelectedChangedEvent',
+          description:
+            'A click flipped a <code>toggle</code> button’s <code>selected</code> state — fires after the model updates and before <code>clicked</code>.',
+        },
+        {
+          name: 'selectedChange',
+          type: 'boolean',
+          description: 'Implicit output of the <code>selected</code> model.',
+        },
       ],
     },
   ],
   types: [
     {
       entries: [
+        {
+          name: 'OgeButtonSelectedChangedEvent',
+          type: '{ selected: boolean; previousValue: boolean; event: MouseEvent | KeyboardEvent }',
+          description:
+            'Payload of <code>selectedChanged</code>: the new and the previous pressed state, and the click (or Space/Enter of a gesture) that did it.',
+        },
         {
           name: 'OgeButtonStylingMode',
           type: "'contained' | 'outlined' | 'text'",
@@ -641,9 +672,9 @@ export const OGE_DROP_DOWN_BUTTON_API: ApiSections = {
         },
         {
           name: 'OgeDropDownButtonItemClickEvent',
-          type: '{ item: OgeMenuItem; index: number; event: MouseEvent | KeyboardEvent }',
+          type: '{ item: OgeMenuItem; index: number; checked?: boolean; event: MouseEvent | KeyboardEvent }',
           description:
-            'Index within the resolved items list (separators included).',
+            'Index within the resolved items list (separators included); <code>checked</code> is the next state of a checkbox/radio row (<code>OgeMenuItem.type</code>), <code>undefined</code> for plain rows.',
         },
         {
           name: 'OgeDropDownSelectionChangedEvent',

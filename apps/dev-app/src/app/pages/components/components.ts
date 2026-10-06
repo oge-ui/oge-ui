@@ -968,7 +968,7 @@ export class ComponentsIndexPage {
       icon: 'pointer',
       path: '/components/buttons',
       description:
-        'Async actions with automatic loading, click guards, hold-to-confirm, badges, radio-pattern groups and drop-down/split buttons.',
+        'Async actions with automatic loading, click guards, hold-to-confirm, badges, stand-alone toggle buttons, radio-pattern groups and drop-down/split buttons.',
     },
     {
       key: 'inputs',
@@ -1000,7 +1000,7 @@ export class ComponentsIndexPage {
       icon: 'accordion',
       path: '/components/accordion',
       description:
-        'Single or multiple expansion following the WAI-ARIA pattern: lazy content, async expand guards, header actions and invalid-section jumping.',
+        'Single or multiple expansion following the WAI-ARIA pattern: lazy content, async expand guards, header actions, a nested panel bar and a stand-alone expansion panel.',
     },
     {
       key: 'card',
@@ -1016,7 +1016,7 @@ export class ComponentsIndexPage {
       icon: 'loader',
       path: '/components/progress',
       description:
-        'The linear bar, the ring and the shimmer placeholder as one canonical trio — role="progressbar" done right: indeterminate omits aria-valuenow, reduced motion slows the ring instead of freezing it.',
+        'Linear and circular bars, the spinner, the shimmer placeholder and a load panel that shades a busy container — role="progressbar" done right: indeterminate omits aria-valuenow, reduced motion slows motion instead of freezing it.',
     },
     {
       key: 'splitter',
@@ -1048,7 +1048,7 @@ export class ComponentsIndexPage {
       icon: 'drawer',
       path: '/components/drawer',
       description:
-        'A side panel that floats above, pushes or shrinks its content — and whose modality follows that choice: a dialog with a focus trap when it covers, a landmark when it shares the row. None of the reference drawers gets that split right.',
+        'A side panel that floats above, pushes or shrinks its content — and whose modality follows that choice: a dialog with a focus trap when it covers, a landmark when it shares the row. Built-in navigation items, a mini rail and touch swipe.',
     },
     {
       key: 'menubar',
@@ -1056,7 +1056,7 @@ export class ComponentsIndexPage {
       icon: 'menubar',
       path: '/components/menubar',
       description:
-        'A persistent APG menubar with nested submenus on the suite’s shared menu machinery, a container-width hamburger collapse and cancelable open/close pairs. Material has no menubar at all — only the CDK offers the directives.',
+        'A persistent APG menubar with nested submenus on the suite’s shared menu machinery, radio and checkbox rows, a More overflow item or a container-width hamburger collapse, and cancelable open/close pairs.',
     },
     {
       key: 'breadcrumb',
@@ -1080,7 +1080,7 @@ export class ComponentsIndexPage {
       icon: 'tree',
       path: '/components/tree-view',
       description:
-        'Flat or nested data with tri-state checkboxes, ancestor-preserving search, load-on-demand children, virtual scrolling and drag & drop reparenting.',
+        'Flat or nested data with tri-state checkboxes, ancestor-preserving search, load-on-demand and load-more children, virtual scrolling, F2 label editing and drag & drop between trees.',
     },
     {
       key: 'pivot',
@@ -1144,7 +1144,7 @@ export class ComponentsIndexPage {
       icon: 'layers',
       path: '/components/overlay',
       description:
-        'The positioning engine behind every popup: anchored panels, WAI-ARIA menus, plus ready-made tooltip and context-menu directives.',
+        'The positioning engine behind every popup: anchored panels, popovers, WAI-ARIA menus, rich tooltips, delegated context menus, confirm/alert/prompt dialogs and non-modal windows.',
     },
   ];
 

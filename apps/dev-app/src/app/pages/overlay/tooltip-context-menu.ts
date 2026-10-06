@@ -8,6 +8,7 @@ import { OgeButton } from '@oge-ui/buttons';
 import {
   OgeContextMenu,
   OgeTooltip,
+  type OgeContextMenuOpeningEvent,
   type OgeMenuItem,
   type OgeMenuListItemClickEvent,
 } from '@oge-ui/overlay';
@@ -20,18 +21,28 @@ import {
   ReactOverlayTooltipContextMenuDemos,
 } from '../react-overlay/tooltip-context-menu';
 import {
+  CONTEXT_DELEGATION_SNIPPET,
   CONTEXT_EVENTS_SNIPPET,
   CONTEXT_SNIPPET,
   TOOLTIP_OPTIONS_SNIPPET,
   TOOLTIP_SNIPPET,
+  TOOLTIP_TEMPLATES_SNIPPET,
 } from './tooltip-context-menu-snippets';
 
 const SECTIONS = [
   'Tooltip basics',
   'Tooltip placement & delays',
+  'Tooltip templates',
   'Context menu',
   'Context menu events',
+  'Context menu delegation',
 ] as const;
+
+/** A file row of the delegation demo. */
+interface DemoFile {
+  readonly name: string;
+  readonly locked: boolean;
+}
 
 @Component({
   selector: 'app-overlay-tooltip-context-menu',
@@ -147,6 +158,54 @@ const SECTIONS = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="[
+          'TemplateRef',
+          'tooltipContext',
+          'tooltipArrow',
+          'tooltipShowMode',
+          'tooltipMaxWidth',
+        ]"
+        heading="Tooltip templates"
+        description='<code>ogeTooltip</code> also takes a template, with <code>tooltipContext</code> as its <code>$implicit</code> — formatting, icons, a second line — and stays a non-interactive tooltip (never put focusable controls in it; reach for a popover then). <code>tooltipArrow</code> draws a callout pointer, <code>tooltipMaxWidth</code> widens or narrows the bubble, and <code>tooltipShowMode</code> switches from hover-and-focus to <code>focus</code>, <code>click</code> (toggles) or <code>manual</code> — driven through <code>#tip="ogeTooltip"</code> → <code>open()</code> / <code>close()</code> / <code>toggle()</code>.'
+        [code]="tooltipTemplatesSnippet"
+        language="ts"
+      >
+        <div
+          class="flex flex-wrap items-center gap-3"
+          data-testid="tooltip-templates"
+        >
+          <oge-button
+            text="Ada Lovelace"
+            stylingMode="outlined"
+            [ogeTooltip]="person"
+            [tooltipContext]="ada"
+            [tooltipArrow]="true"
+            tooltipPlacement="bottom"
+            [tooltipMaxWidth]="240"
+          />
+          <ng-template #person let-p>
+            <strong>{{ p.name }}</strong> · {{ p.role }}<br />Last seen
+            {{ p.seen }}
+          </ng-template>
+          <oge-button
+            text="Click me"
+            stylingMode="outlined"
+            ogeTooltip="Toggled by clicking"
+            tooltipShowMode="click"
+            [tooltipArrow]="true"
+          />
+          <oge-button
+            text="Copy"
+            ogeTooltip="Copied!"
+            tooltipShowMode="manual"
+            #copied="ogeTooltip"
+            (clicked)="copied.open()"
+            (focusout)="copied.close()"
+          />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['[ogeContextMenu]', 'Shift+F10', 'OgeMenuItem']"
         heading="Context menu"
         description="Bind an <code>OgeMenuItem</code> array to <code>[ogeContextMenu]</code> and right-click opens it at the pointer, replacing the browser menu. <kbd>Shift+F10</kbd> (or the menu key) opens it anchored to the element for keyboard users. The menu takes focus with full arrow-key, Home/End and type-ahead support; Escape and outside clicks close it and focus returns to the target."
@@ -189,6 +248,54 @@ const SECTIONS = [
           <span class="text-sm opacity-70"
             >last action: {{ lastAction() }}</span
           >
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'contextMenuTarget',
+          'contextMenuOpening',
+          'open(x, y)',
+          'exportAs',
+        ]"
+        heading="Context menu delegation"
+        description='One menu serves many rows: <code>contextMenuTarget</code> is a CSS selector matched with <code>closest()</code> inside the host, so a right-click (or <kbd>Shift+F10</kbd> on a focused row) targets that row — anchor, focus return and all — and anywhere else keeps the browser menu. The cancelable <code>contextMenuOpening</code> event carries <code>{ target, items, cancel, event }</code>: assign <code>items</code> to build the menu per row. <code>#menu="ogeContextMenu"</code> exposes <code>open(x, y)</code>, <code>open(event)</code> and <code>close()</code>.'
+        [code]="contextDelegationSnippet"
+        language="ts"
+      >
+        <div
+          class="flex flex-wrap items-start gap-4"
+          data-testid="context-delegation"
+        >
+          <ul
+            class="m-0 w-64 list-none divide-y divide-gray-200 rounded-lg border border-gray-200 p-0 text-sm dark:divide-gray-800 dark:border-gray-800"
+            [ogeContextMenu]="[]"
+            contextMenuTarget="li"
+            contextMenuAriaLabel="File actions"
+            (contextMenuOpening)="buildFileMenu($event)"
+            (contextMenuItemClick)="delegatedAction.set($event.item.text)"
+            #filesMenu="ogeContextMenu"
+          >
+            @for (file of files; track file.name) {
+              <li
+                class="px-3 py-2 outline-none focus-visible:bg-indigo-50 dark:focus-visible:bg-indigo-950"
+                tabindex="0"
+                [attr.data-name]="file.name"
+              >
+                {{ file.name }}{{ file.locked ? ' (locked)' : '' }}
+              </li>
+            }
+          </ul>
+          <div class="flex flex-col items-start gap-2">
+            <oge-button
+              text="Open menu at the first row"
+              stylingMode="outlined"
+              (clicked)="openFirstRow(filesMenu)"
+            />
+            <span class="text-sm opacity-70" data-testid="delegation-last"
+              >last action: {{ delegatedAction() }}</span
+            >
+          </div>
         </div>
       </app-demo-card>
     }
@@ -259,8 +366,56 @@ export class OverlayTooltipContextMenuPage {
     this.lastAction.set(event.item.text);
   }
 
+  protected readonly delegatedAction = signal('—');
+
+  protected readonly ada = {
+    name: 'Ada Lovelace',
+    role: 'Engineer',
+    seen: '5 min ago',
+  };
+
+  protected readonly files: readonly DemoFile[] = [
+    { name: 'report.xlsx', locked: false },
+    { name: 'budget.xlsx', locked: true },
+    { name: 'notes.md', locked: false },
+  ];
+
+  /** Builds the delegated menu for the row that was right-clicked. */
+  protected buildFileMenu(event: OgeContextMenuOpeningEvent): void {
+    const name = event.target.getAttribute('data-name');
+    const file = this.files.find((f) => f.name === name);
+    if (!file) {
+      event.cancel = true;
+      return;
+    }
+    event.items = [
+      { text: `Open ${file.name}`, value: 'open' },
+      { text: 'Rename', value: 'rename', disabled: file.locked },
+      { separator: true, text: '' },
+      {
+        text: 'Delete',
+        value: 'delete',
+        severity: 'danger',
+        disabled: file.locked,
+        hint: file.locked ? 'The file is locked' : undefined,
+      },
+    ];
+  }
+
+  /** Imperative open at the first row, through the same pipeline. */
+  protected openFirstRow(menu: OgeContextMenu): void {
+    const row = document.querySelector<HTMLElement>(
+      '[data-testid="context-delegation"] li',
+    );
+    if (!row) return;
+    const rect = row.getBoundingClientRect();
+    menu.open(rect.left + 8, rect.top + rect.height / 2);
+  }
+
   protected readonly tooltipSnippet = TOOLTIP_SNIPPET;
   protected readonly tooltipOptionsSnippet = TOOLTIP_OPTIONS_SNIPPET;
   protected readonly contextSnippet = CONTEXT_SNIPPET;
   protected readonly contextEventsSnippet = CONTEXT_EVENTS_SNIPPET;
+  protected readonly tooltipTemplatesSnippet = TOOLTIP_TEMPLATES_SNIPPET;
+  protected readonly contextDelegationSnippet = CONTEXT_DELEGATION_SNIPPET;
 }

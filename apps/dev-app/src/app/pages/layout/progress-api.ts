@@ -6,6 +6,7 @@ import { PageToc } from '../../shared/page-toc';
 import { ReactLayoutProgressApiSections } from '../react-layout/progress-api';
 import {
   OGE_LOAD_INDICATOR_API,
+  OGE_LOAD_PANEL_API,
   OGE_PROGRESS_BAR_API,
   OGE_PROGRESS_CONFIG_API,
   OGE_SKELETON_API,
@@ -14,6 +15,7 @@ import {
 const SECTIONS = [
   'OgeProgressBar',
   'OgeLoadIndicator',
+  'OgeLoadPanel',
   'OgeSkeleton',
   'Configuration',
 ] as const;
@@ -25,6 +27,7 @@ const SECTIONS = [
 const SECTIONS_REACT = [
   '<OgeProgressBar>',
   '<OgeLoadIndicator>',
+  '<OgeLoadPanel>',
   '<OgeSkeleton>',
   'Configuration',
 ] as const;
@@ -46,6 +49,7 @@ const SECTIONS_REACT = [
           <code>&#64;oge-ui/react-layout</code>: the linear
           <code>&lt;OgeProgressBar&gt;</code>, the ring
           <code>&lt;OgeLoadIndicator&gt;</code>, the
+          <code>&lt;OgeLoadPanel&gt;</code> overlay, the
           <code>&lt;OgeSkeleton&gt;</code> placeholder and their context
           providers.
         </p>
@@ -53,7 +57,8 @@ const SECTIONS_REACT = [
         <p>
           Full surface of the loading trio: the linear
           <code>oge-progress-bar</code>, the ring
-          <code>oge-load-indicator</code>, the <code>oge-skeleton</code>
+          <code>oge-load-indicator</code>, the
+          <code>oge-load-panel</code> overlay, the <code>oge-skeleton</code>
           placeholder and their config providers.
         </p>
       }
@@ -74,6 +79,11 @@ const SECTIONS_REACT = [
         [sections]="loadIndicatorApi"
       />
       <app-api-reference
+        title="OgeLoadPanel"
+        selector="oge-load-panel"
+        [sections]="loadPanelApi"
+      />
+      <app-api-reference
         title="OgeSkeleton"
         selector="oge-skeleton"
         [sections]="skeletonApi"
@@ -88,6 +98,7 @@ export class LayoutProgressApiPage {
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly progressBarApi = OGE_PROGRESS_BAR_API;
   protected readonly loadIndicatorApi = OGE_LOAD_INDICATOR_API;
+  protected readonly loadPanelApi = OGE_LOAD_PANEL_API;
   protected readonly skeletonApi = OGE_SKELETON_API;
   protected readonly configApi = OGE_PROGRESS_CONFIG_API;
 }

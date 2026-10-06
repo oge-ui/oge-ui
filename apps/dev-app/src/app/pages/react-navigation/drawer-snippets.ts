@@ -251,6 +251,69 @@ const commands: readonly OgeToolbarItemData[] = [
     }),
   },
   {
+    title: 'Navigation items',
+    description:
+      'items renders the panel’s navigation list for you: buttons, or links for entries with a url, with icons, badges, separators and disabled entries. Each entry stays in the Tab order, the arrows / Home / End move between them, and the active one is aria-current="page". Closed with a minSize the drawer becomes an icon rail whose labels stay the accessible name and show as tooltips; renderItem replaces an entry’s content.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-navigation': ['OgeDrawer'] },
+      types: { '@oge-ui/react-navigation': ['OgeDrawerItem'] },
+      name: 'DrawerItemsDemo',
+      before: `const ICON = {
+  inbox: 'M4 13h4l2 3h4l2-3h4M4 13l2-8h12l2 8v6H4z',
+  send: 'M4 12l16-8-6 16-2-6-8-2z',
+  star: 'M12 4l2.5 5 5.5.8-4 3.9.9 5.5L12 16.6 7.1 19.2 8 13.7 4 9.8 9.5 9z',
+  trash: 'M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12',
+  settings: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 12h2M18 12h2M12 4v2M12 18v2',
+};
+
+const items: OgeDrawerItem[] = [
+  { key: 'inbox', text: 'Inbox', icon: ICON.inbox, badge: 4 },
+  { key: 'sent', text: 'Sent', icon: ICON.send },
+  { separator: true },
+  { key: 'trash', text: 'Trash', icon: ICON.trash, disabled: true },
+  { key: 'help', text: 'Help', url: '/help' },
+];`,
+      body: `const [opened, setOpened] = useState(true);
+const [page, setPage] = useState('inbox');`,
+      jsx: `<OgeDrawer
+  opened={opened}
+  onOpenedChange={setOpened}
+  mode="side"
+  size={220}
+  minSize={56}
+  ariaLabel="Mail"
+  items={items}
+  selectedKey={page}
+  onSelectedKeyChange={setPage}
+>
+  <main>{page}</main>
+</OgeDrawer>`,
+    }),
+  },
+  {
+    title: 'Swipe gestures',
+    description:
+      'With swipeEnabled a touch swipe from the drawer’s edge opens it and a swipe toward the edge closes it — by distance or by a flick, touch pointers only, mirrored in RTL. A swipe that turns out to be a vertical scroll lets go of the page at once. Closing goes through onClosing and closeGuard with reason "swipe". Off by default.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-navigation': ['OgeDrawer'] },
+      name: 'DrawerSwipeDemo',
+      body: `const [opened, setOpened] = useState(false);`,
+      jsx: `<OgeDrawer
+  opened={opened}
+  onOpenedChange={setOpened}
+  mode="overlay"
+  swipeEnabled
+  ariaLabel="Menu"
+  onClosing={(event) => console.log('closing because of', event.reason)}
+  panel={<div>Menu</div>}
+>
+  <main>Swipe in from the start edge</main>
+</OgeDrawer>`,
+    }),
+  },
+  {
     title: 'Configuration',
     description:
       'Every user-facing string, including the panel’s accessible name, lives in the messages interface — overridable app-wide with <OgeDrawerConfigProvider> or per instance with the messages prop.',

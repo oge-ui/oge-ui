@@ -76,6 +76,10 @@ export interface OgeTreeViewModelInput<T> {
   showCheckBoxes?: OgeTreeCheckBoxesMode;
   /** Whether a `loadChildren` is wired — enables the `hasItemsExpr` hint. */
   lazy?: boolean;
+  /** Children per parent before a "Load more" row; `0` / unset pages nothing. */
+  childPageSize?: number;
+  /** Children revealed so far per parent (`null` = roots). */
+  pageLimits?: ReadonlyMap<RowKey | null, number>;
 }
 
 /** The derived state a tree render needs, in one pass. */
@@ -179,6 +183,8 @@ export function buildTreeViewModel<T>(
     visibleKeys,
     hasChildren,
     highlight: (input.highlightSearchResults ?? true) ? search : '',
+    childPageSize: input.childPageSize,
+    pageLimits: input.pageLimits,
   });
 
   return {
@@ -267,7 +273,9 @@ export type OgeTreeKeyAction<T> =
   /** Report the row as clicked — Enter is a click in the APG map. */
   | { readonly kind: 'item-click'; readonly node: OgeTreeViewNode<T> }
   /** Replace the expansion set outright (the `*` shortcut). */
-  | { readonly kind: 'set-expanded'; readonly expanded: ReadonlySet<RowKey> };
+  | { readonly kind: 'set-expanded'; readonly expanded: ReadonlySet<RowKey> }
+  /** Reveal the next page under a "Load more" row (`childPageSize`). */
+  | { readonly kind: 'load-more'; readonly node: OgeTreeViewNode<T> };
 
 /** What a key press means, and whether the browser default must be stopped. */
 export interface OgeTreeKeyPlan<T> {
@@ -311,6 +319,9 @@ export function planTreeViewKey<T>(
   const node = list[current];
   if (!node) return null;
   const multiple = input.selectionMode === 'multiple';
+  if (node.more && (input.key === 'Enter' || input.key === ' ')) {
+    return { preventDefault: true, actions: [{ kind: 'load-more', node }] };
+  }
   const step = (direction: 1 | -1): OgeTreeKeyAction<T>[] => {
     const target = treeStepIndex(list, current, direction);
     if (target === null) return [];

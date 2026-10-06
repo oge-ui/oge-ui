@@ -218,6 +218,131 @@ const reparent = (e: OgeTreeReorderedEvent<Folder>): void => {
     }),
   },
   {
+    title: 'Drag between trees',
+    description:
+      "Trees that share a dragGroup accept each other's nodes. The target fires the cancelable onItemReordering and onItemReordered with sourceTreeId / targetTreeId, the source fires onItemTransferred; neither tree moves data. Ctrl+X on a node and Ctrl+V on the target is the keyboard twin, and cutItem() / pasteItem() on the handle wire it to buttons.",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-navigation': ['OgeTreeView'] },
+      types: {
+        '@oge-ui/react-navigation': [
+          'OgeTreeReorderedEvent',
+          'OgeTreeTransferredEvent',
+        ],
+      },
+      name: 'TreeViewBetweenDemo',
+      before: `${FOLDER}`,
+      body: `const [projects, setProjects] = useState<Folder[]>([
+  { id: 1, parentId: null, name: 'Website' },
+  { id: 2, parentId: 1, name: 'Landing page' },
+  { id: 3, parentId: null, name: 'Mobile app' },
+]);
+const [archive, setArchive] = useState<Folder[]>([
+  { id: 11, parentId: null, name: '2024' },
+]);
+
+// the trees never move data: the target adds, the source removes
+const received =
+  (set: typeof setProjects) => (e: OgeTreeReorderedEvent<Folder>) => {
+    const parentId =
+      e.position === 'inside' ? (e.dropKey as number) : e.dropItem.parentId;
+    set((rows) => [
+      ...rows.filter((row) => row.id !== e.dragKey),
+      { ...e.dragItem, parentId },
+    ]);
+  };
+const removed =
+  (set: typeof setProjects) => (e: OgeTreeTransferredEvent<Folder>) =>
+    set((rows) => rows.filter((row) => row.id !== e.dragKey));`,
+      jsx: `<>
+  <OgeTreeView
+    treeId="projects"
+    items={projects}
+    displayExpr="name"
+    allowDragging
+    dragGroup="files"
+    ariaLabel="Projects"
+    onItemReordered={received(setProjects)}
+    onItemTransferred={removed(setProjects)}
+  />
+  <OgeTreeView
+    treeId="archive"
+    items={archive}
+    displayExpr="name"
+    allowDragging
+    dragGroup="files"
+    ariaLabel="Archive"
+    onItemReordered={received(setArchive)}
+    onItemTransferred={removed(setArchive)}
+  />
+</>`,
+    }),
+  },
+  {
+    title: 'Label editing (F2)',
+    description:
+      'F2 — or a double-click with editOnDblClick — turns the label into a text field. Enter or blur commits, Escape cancels, and the focus returns to the node. onItemEditStarting and onItemEditing are cancelable, validateEdit keeps the field open with its message, and onItemEdited carries previousValue / value — the tree leaves the data change to you.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-navigation': ['OgeTreeView'] },
+      types: { '@oge-ui/react-navigation': ['OgeTreeEditedEvent'] },
+      name: 'TreeViewEditingDemo',
+      before: `${FOLDER}`,
+      body: `const [folders, setFolders] = useState<Folder[]>([
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+]);
+
+// the tree does not write the label: apply it to your data
+const rename = (e: OgeTreeEditedEvent<Folder>): void =>
+  setFolders((rows) =>
+    rows.map((row) => (row.id === e.key ? { ...row, name: e.value } : row)),
+  );`,
+      jsx: `<OgeTreeView
+  items={folders}
+  displayExpr="name"
+  allowEditing
+  editOnDblClick
+  validateEdit={(value) =>
+    value.length > 40 ? 'Keep names under 40 characters.' : null
+  }
+  onItemEdited={rename}
+/>`,
+    }),
+  },
+  {
+    title: 'Load more paging',
+    description:
+      'With childPageSize a parent renders its first page of children and a “Show N more items” row, which Enter, Space or a click expands by one more page — the focus lands on the first new child. The row is in the arrow-key order, aria-setsize keeps reporting the real total, and paging pauses while searching. Works with virtualScroll too.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-navigation': ['OgeTreeView'] },
+      name: 'TreeViewPagingDemo',
+      before: `${FOLDER}
+
+const mail: Folder[] = [
+  { id: 1, parentId: null, name: 'Inbox' },
+  ...Array.from({ length: 23 }, (_, i) => ({
+    id: 100 + i,
+    parentId: 1,
+    name: \`Message \${i + 1}\`,
+  })),
+];`,
+      body: `const [progress, setProgress] = useState('');`,
+      jsx: `<>
+  {/* five children per parent, then a "Show N more items" row */}
+  <OgeTreeView
+    items={mail}
+    displayExpr="name"
+    childPageSize={5}
+    defaultExpandedKeys={[1]}
+    onChildPageShown={(e) => setProgress(\`\${e.shown} of \${e.total} shown\`)}
+  />
+  <p>{progress}</p>
+</>`,
+    }),
+  },
+  {
     title: 'Custom node template',
     description:
       'The renderItem prop replaces the built-in label. It renders inside the role="treeitem" row, so it must stay free of focusable controls.',

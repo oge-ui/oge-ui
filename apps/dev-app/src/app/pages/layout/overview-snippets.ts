@@ -199,3 +199,100 @@ export const STYLING_SNIPPET = demoSource({
   { key: 'b', title: 'Second' },
 ];`,
 });
+
+export const PANEL_BAR_SNIPPET = demoSource({
+  use: { '@oge-ui/layout': ['OgePanelBar'] },
+  types: { '@oge-ui/layout': ['OgePanelBarExpandMode', 'OgePanelBarItem'] },
+  template: `<!-- Kendo's PanelBar on the APG disclosure pattern: every header is a
+     real <button> (aria-expanded + aria-controls on groups), leaves are
+     selectable and announced with aria-current. Child groups render on
+     first expand. Up/Down/Home/End walk the headers, Right/Left expand or
+     enter / collapse or climb (mirrored in RTL). expandMode="full" lets the
+     open root group fill the host's height. -->
+<oge-panel-bar
+  [items]="nav"
+  [expandMode]="mode()"
+  [(selectedKey)]="selected"
+  ariaLabel="Mailbox"
+/>
+<p>Selected: {{ selected() ?? 'none' }}</p>`,
+  body: `protected readonly mode = signal<OgePanelBarExpandMode>('multiple');
+protected readonly selected = signal<string | undefined>('inbox');
+protected readonly nav: OgePanelBarItem[] = [
+  {
+    key: 'mail',
+    title: 'Mail',
+    expanded: true,
+    children: [
+      { key: 'inbox', title: 'Inbox', badge: 12 },
+      { key: 'sent', title: 'Sent' },
+      { key: 'spam', title: 'Spam', disabled: true },
+    ],
+  },
+  {
+    key: 'projects',
+    title: 'Projects',
+    children: [
+      { key: 'active', title: 'Active' },
+      {
+        key: 'archive',
+        title: 'Archive',
+        children: [
+          { key: 'y2025', title: '2025' },
+          { key: 'y2024', title: '2024' },
+        ],
+      },
+    ],
+  },
+  {
+    key: 'about',
+    title: 'About',
+    content: 'A content item expands into text or a template instead of child items.',
+  },
+];`,
+});
+
+export const EXPANSION_PANEL_SNIPPET = demoSource({
+  use: {
+    '@oge-ui/layout': ['OgeExpansionPanel', 'OgeExpansionPanelContent'],
+  },
+  types: { '@oge-ui/layout': ['OgeExpansionPanelExpandingEvent'] },
+  template: `<!-- One stand-alone disclosure panel: the title is a <button
+     aria-expanded aria-controls> inside a heading. [(expanded)] is two-way;
+     a click runs the cancelable (expanding) / (collapsing) first, then
+     (opened) / (closed). Header actions are real buttons beside the
+     toggle — never inside it. -->
+<oge-expansion-panel
+  title="Shipping address"
+  subtitle="Home · 2 saved"
+  [(expanded)]="shippingOpen"
+  (opened)="log('opened')"
+  (closed)="log('closed')"
+>
+  <button ogeExpansionPanelActions type="button" (click)="log('edit')">Edit</button>
+  <p>221B Baker Street, London</p>
+</oge-expansion-panel>
+
+<!-- ogeExpansionPanelContent: instantiated on first expand, kept after -->
+<oge-expansion-panel
+  title="Order history"
+  subtitle="Loads on first expand"
+  (expanding)="confirm($event)"
+>
+  <ng-template ogeExpansionPanelContent>
+    <p>12 orders in the last year.</p>
+  </ng-template>
+</oge-expansion-panel>
+
+<oge-expansion-panel title="Archived addresses" [disabled]="true" />`,
+  body: `protected readonly shippingOpen = signal(true);
+
+protected log(what: string): void {
+  console.log(what);
+}
+
+protected confirm(event: OgeExpansionPanelExpandingEvent): void {
+  // set event.cancel = true to keep the panel closed
+  console.log('expanding', event.cancel);
+}`,
+});

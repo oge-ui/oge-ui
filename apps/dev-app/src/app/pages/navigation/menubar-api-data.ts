@@ -60,6 +60,13 @@ export const OGE_MENUBAR_API: ApiSections = {
             "Below this <strong>container</strong> inline size the whole bar collapses into a hamburger button opening the full tree as one nested menu. Measured against the menubar's own box, never the window.",
         },
         {
+          name: 'overflowMode',
+          type: "'hamburger' | 'more' | 'none'",
+          default: "'hamburger'",
+          description:
+            "What happens when the top-level items stop fitting. <code>'hamburger'</code> — the <code>compactBelow</code> collapse, unchanged; <code>'more'</code> — only the items that do not fit move into a trailing <em>More</em> item (label <code>messages.more</code>) whose submenu holds them, own submenus included; the last <code>'auto'</code> item yields first (see the item's <code>overflow</code>), More joins the roving tabindex and reads as current when the <code>activeKey</code> item moved into it, and item-click paths stay the items' real paths. Horizontal bars only; <code>compactBelow</code> still applies below it. <code>'none'</code> — nothing collapses, <code>compactBelow</code> included.",
+        },
+        {
           name: 'disabled',
           type: 'boolean',
           default: 'false',
@@ -146,7 +153,7 @@ export const OGE_MENUBAR_API: ApiSections = {
           name: 'OgeMenubarItemData<T>',
           type: 'interface',
           description:
-            'The canonical overlay <code>OgeMenuItem</code> narrowed recursively — <code>badge</code> and <code>shortcut</code> included — plus <code>key</code> (identity for <code>activeKey</code>/<code>open()</code>/events), <code>url</code> (renders the item as a real <code>&lt;a href&gt;</code> at the bar <strong>and</strong> at any submenu depth; <code>itemClick</code> fires first so <code>preventDefault()</code> hands navigation to a router) and <code>visible</code>. Submenus come from <code>items</code>.',
+            "The canonical overlay <code>OgeMenuItem</code> narrowed recursively — <code>badge</code> and <code>shortcut</code> included — plus <code>key</code> (identity for <code>activeKey</code>/<code>open()</code>/events), <code>url</code> (renders the item as a real <code>&lt;a href&gt;</code> at the bar <strong>and</strong> at any submenu depth; <code>itemClick</code> fires first so <code>preventDefault()</code> hands navigation to a router), <code>visible</code> and <code>overflow</code> (top-level placement under <code>overflowMode: 'more'</code>). Submenu rows take the menu item's <code>type</code> / <code>checked</code> / <code>group</code> / <code>keepOpen</code> (checkbox, radio and header rows). Submenus come from <code>items</code>.",
         },
         {
           name: 'OgeMenubarCloseReason',
@@ -156,9 +163,9 @@ export const OGE_MENUBAR_API: ApiSections = {
         },
         {
           name: 'OgeMenubarItemClickEvent',
-          type: '{ item; key?; index; path; event }',
+          type: '{ item; key?; index; path; checked?; event }',
           description:
-            '<code>path</code> is the hierarchical index chain from the bar down to the item; <code>index</code> is its last entry.',
+            '<code>path</code> is the hierarchical index chain from the bar down to the item (items reached through the More overflow report their real top-level index); <code>index</code> is its last entry. <code>checked</code> is the state the activation moves a checkbox/radio row to.',
         },
         {
           name: 'OgeMenubarItemTemplate',
@@ -242,6 +249,37 @@ export const OGE_MENUBAR_ITEM_API: ApiSections = {
           description:
             'Renders a divider (<code>role="separator"</code>); every other input is ignored.',
         },
+        {
+          name: 'type',
+          type: 'OgeMenuItemType | undefined',
+          description:
+            "Submenu rows: <code>'checkbox'</code> / <code>'radio'</code> render <code>menuitemcheckbox</code> / <code>menuitemradio</code> with <code>aria-checked</code>; <code>'header'</code> renders a non-focusable caption labelling the rows after it as a <code>role=\"group\"</code>, skipped by the keyboard.",
+        },
+        {
+          name: 'checked',
+          type: 'boolean | undefined',
+          description:
+            'Checked state of a checkbox/radio row — owned by the application: the item-click event reports the next state in <code>checked</code>, apply it with <code>applyMenuItemCheck</code>.',
+        },
+        {
+          name: 'group',
+          type: 'string | undefined',
+          description:
+            'Radio group of a <code>radio</code> row; checking one unchecks the others of the group on the same level.',
+        },
+        {
+          name: 'keepOpen',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Keeps the submenu open after the row is activated. Without it checkbox/radio rows stay open on Space only (APG).',
+        },
+        {
+          name: 'overflow',
+          type: "'auto' | 'always' | 'never' | undefined",
+          description:
+            "Top-level items with <code>overflowMode: 'more'</code>: <code>'auto'</code> (default) moves into More when it stops fitting, <code>'always'</code> lives there, <code>'never'</code> never leaves the bar.",
+        },
       ],
     },
   ],
@@ -256,7 +294,7 @@ export const OGE_MENUBAR_CONFIG_API: ApiSections = {
           name: 'messages',
           type: 'OgeMenubarMessages',
           description:
-            'Every user-facing string: <code>menubar</code> (accessible name of the bar, default <code>Menu bar</code>) and <code>hamburger</code> (aria label of the compact button, default <code>Menu</code>).',
+            'Every user-facing string: <code>menubar</code> (accessible name of the bar, default <code>Menu bar</code>), <code>hamburger</code> (aria label of the compact button, default <code>Menu</code>) and <code>more</code> (label of the overflow item, default <code>More</code>).',
         },
         {
           name: 'openMode',
@@ -277,6 +315,11 @@ export const OGE_MENUBAR_CONFIG_API: ApiSections = {
           name: 'compactBelow',
           type: 'number | undefined',
           description: 'Default for the <code>compactBelow</code> input.',
+        },
+        {
+          name: 'overflowMode',
+          type: "'hamburger' | 'more' | 'none' | undefined",
+          description: 'Default for the <code>overflowMode</code> input.',
         },
       ],
     },

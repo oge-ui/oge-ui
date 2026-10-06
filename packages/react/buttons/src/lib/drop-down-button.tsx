@@ -48,6 +48,12 @@ export interface OgeDropDownButtonItemClickEvent {
   item: OgeMenuItem;
   /** Index within the resolved items list (separators included). */
   index: number;
+  /**
+   * The checked state the activation moves a checkbox/radio row to
+   * (`OgeMenuItem.type`); `undefined` for plain rows. The button does not
+   * mutate the item — update your items (`applyMenuItemCheck`).
+   */
+  checked?: boolean;
   event: MouseEvent | KeyboardEvent;
 }
 
@@ -438,6 +444,7 @@ export const OgeDropDownButton = forwardRef<
     latest.current.onItemClick?.({
       item: event.item,
       index: event.index,
+      checked: event.checked,
       event: event.event,
     });
     if (rememberActive && !event.item.disabled && !event.item.separator) {

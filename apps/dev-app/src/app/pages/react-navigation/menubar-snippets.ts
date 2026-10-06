@@ -8,7 +8,7 @@ import {
  * `llms.txt` generator and the compile gate load this module in plain Node.
  *
  * Section-for-section mirror of `../navigation/menubar.ts`, per the parity
- * standard (`docs/REACT-PARITY.md`): the same seven sections, in the same
+ * standard (`docs/REACT-PARITY.md`): the same nine sections, in the same
  * order, with the same example menu, translated to React idiom. The one real
  * difference is the second section: React reserves the `key` prop, so a
  * `<OgeMenubarItem>` child could not carry item identity — the React layer has
@@ -86,6 +86,55 @@ const menu: OgeMenubarItemData[] = [
   { text: 'Help', key: 'help' },
 ];`,
       jsx: `<OgeMenubar items={menu} />`,
+    }),
+  },
+  {
+    title: 'Radio & checkbox items',
+    description:
+      "Submenu rows take a type: 'radio' renders menuitemradio (one per group), 'checkbox' renders menuitemcheckbox, both with aria-checked; a 'header' row is a non-focusable caption that labels the rows after it as a role=\"group\" and is skipped by the keyboard. The menubar never mutates checked — onItemClick reports the next state and applyMenuItemCheck applies it. Space toggles without closing the menu (APG); keepOpen stays open on a click too.",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: {
+        '@oge-ui/react-navigation': ['OgeMenubar'],
+        '@oge-ui/react-overlay': ['applyMenuItemCheck'],
+      },
+      types: {
+        '@oge-ui/react-navigation': [
+          'OgeMenubarItemData',
+          'OgeMenubarItemClickEvent',
+        ],
+      },
+      name: 'MenubarCheckItemsDemo',
+      before: `// type: 'radio' rows render menuitemradio, 'checkbox' rows
+// menuitemcheckbox, both with aria-checked. A 'header' row is a
+// non-focusable caption that labels the rows after it as a role="group".
+// Space toggles without closing the menu (APG); keepOpen stays open on click.
+const initialMenu: readonly OgeMenubarItemData[] = [
+  {
+    text: 'View',
+    items: [
+      { text: 'Layout', type: 'header' },
+      { text: 'Grid', type: 'radio', group: 'layout', checked: true },
+      { text: 'List', type: 'radio', group: 'layout' },
+      { text: 'Details', type: 'radio', group: 'layout' },
+      { separator: true, text: '' },
+      { text: 'Show', type: 'header' },
+      { text: 'Status bar', key: 'status', type: 'checkbox', checked: true },
+      { text: 'Hidden files', key: 'hidden', type: 'checkbox' },
+      { text: 'Word wrap', key: 'wrap', type: 'checkbox', keepOpen: true },
+    ],
+  },
+  { text: 'Help', key: 'help' },
+];`,
+      body: `const [menu, setMenu] = useState(initialMenu);
+
+// The menubar never mutates checked: onItemClick reports the next state and
+// applyMenuItemCheck applies it (a radio unchecks the rest of its group).
+const onItem = (event: OgeMenubarItemClickEvent) => {
+  if (event.checked === undefined) return; // a plain command
+  setMenu((items) => applyMenuItemCheck(items, event.item));
+};`,
+      jsx: `<OgeMenubar items={menu} onItemClick={onItem} />`,
     }),
   },
   {
@@ -175,6 +224,31 @@ const onCompact = (event: OgeMenubarCompactChangedEvent) => {
     />
   </div>
 </>`,
+    }),
+  },
+  {
+    title: 'Overflow into More',
+    description:
+      "overflowMode=\"more\" keeps the bar and moves only the top-level items that do not fit into a trailing More item whose submenu holds them, their own submenus included. The last 'auto' item yields first; overflow: 'never' pins an item and 'always' parks it in More. More takes part in the roving tabindex and onItemClick still reports each item's real path.",
+    source: reactDemoSource({
+      use: { '@oge-ui/react-navigation': ['OgeMenubar'] },
+      types: { '@oge-ui/react-navigation': ['OgeMenubarItemData'] },
+      name: 'MenubarOverflowDemo',
+      before: `// overflowMode="more" moves only the top-level items that do not fit
+// into a trailing "More" item (its label lives in messages.more). The fit is
+// measured against the menubar's own container, the last 'auto' item yields
+// first, overflow: 'never' pins an item and 'always' parks it in More.
+const menu: OgeMenubarItemData[] = [
+  { text: 'File', items: [{ text: 'New' }, { text: 'Open…' }] },
+  { text: 'Edit', items: [{ text: 'Undo' }, { text: 'Redo' }] },
+  { text: 'View', items: [{ text: 'Zoom in' }, { text: 'Zoom out' }] },
+  { text: 'Insert', items: [{ text: 'Image' }, { text: 'Table' }] },
+  { text: 'Tools', items: [{ text: 'Options' }] },
+  { text: 'Help', key: 'help', overflow: 'never' },
+];`,
+      jsx: `<div style={{ width: 360 }}>
+  <OgeMenubar items={menu} overflowMode="more" />
+</div>`,
     }),
   },
   {

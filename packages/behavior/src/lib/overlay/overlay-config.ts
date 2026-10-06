@@ -23,6 +23,30 @@ export interface OgeOverlayMessages {
   toastRegionLabel: string;
   /** Coalesced-duplicate badge; `{count}` is replaced with the count. */
   toastCountBadge: string;
+  /** Primary button of the `confirm()` / `alert()` / `prompt()` dialog helpers. */
+  dialogOk?: string;
+  /** Cancel button of the `confirm()` / `prompt()` dialog helpers. */
+  dialogCancel?: string;
+  /** Default title of a `confirm()` dialog opened without one. */
+  dialogConfirmTitle?: string;
+  /** Default title of an `alert()` dialog opened without one. */
+  dialogAlertTitle?: string;
+  /** Default title of a `prompt()` dialog opened without one. */
+  dialogPromptTitle?: string;
+  /** Error shown when a `required` prompt is submitted empty. */
+  dialogRequired?: string;
+  /** Aria label of a window's minimize button. */
+  windowMinimize?: string;
+  /** Announced after a keyboard move; `{x}` / `{y}` are the new position in px. */
+  windowMoved?: string;
+  /** Announced after a keyboard resize; `{width}` / `{height}` are the new size in px. */
+  windowResized?: string;
+  /**
+   * Aria label of a popover's close (✕) button. Optional so catalogs written
+   * before the popover still type-check; `resolveOverlayConfig` fills it
+   * from English.
+   */
+  popoverClose?: string;
 }
 
 export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
@@ -32,7 +56,28 @@ export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
   toastClose: 'Close',
   toastRegionLabel: 'Notifications',
   toastCountBadge: '×{count}',
+  dialogOk: 'OK',
+  dialogCancel: 'Cancel',
+  dialogConfirmTitle: 'Confirm',
+  dialogAlertTitle: 'Notice',
+  dialogPromptTitle: 'Enter a value',
+  dialogRequired: 'This field is required.',
+  windowMinimize: 'Minimize',
+  windowMoved: 'Window moved to {x}, {y}',
+  windowResized: 'Window resized to {width} by {height}',
+  popoverClose: 'Close',
 };
+
+/**
+ * Reads an optional message key, falling back to the English default — the
+ * keys added after 1.1 are optional so existing catalogs keep type-checking.
+ */
+export function ogeOverlayMessage(
+  messages: Partial<OgeOverlayMessages> | undefined,
+  key: keyof OgeOverlayMessages,
+): string {
+  return messages?.[key] ?? OGE_DEFAULT_OVERLAY_MESSAGES[key] ?? '';
+}
 
 /**
  * Behavioral defaults of every overlay surface, shared by both render layers

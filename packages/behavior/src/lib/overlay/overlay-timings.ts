@@ -19,6 +19,13 @@ export interface OgeOverlayTimings {
   tooltipShowDelayMs: number;
   /** Grace period before a tooltip hides after the pointer leaves. */
   tooltipHideDelayMs: number;
+  /** Hover dwell before a hover-mode popover opens (focus opens at once). */
+  popoverShowDelayMs: number;
+  /**
+   * Grace period before a hover-mode popover closes after the pointer left
+   * trigger and panel — long enough to travel across the gap into the panel.
+   */
+  popoverHideDelayMs: number;
 }
 
 export const OGE_DEFAULT_OVERLAY_TIMINGS: OgeOverlayTimings = {
@@ -29,4 +36,6 @@ export const OGE_DEFAULT_OVERLAY_TIMINGS: OgeOverlayTimings = {
   menuHideDelayMs: 300,
   tooltipShowDelayMs: 400,
   tooltipHideDelayMs: 100,
+  popoverShowDelayMs: 150,
+  popoverHideDelayMs: 300,
 };

@@ -26,6 +26,7 @@ import {
   OgeNumberBox,
   OgePagination,
   OgePopup,
+  OgePopover,
   OgeProgressBar,
   OgeRadioGroup,
   OgeRangeSlider,
@@ -103,6 +104,7 @@ describe('@oge-ui/react umbrella barrel', () => {
       OgeValidationSummary,
       // overlay
       OgePopup,
+      OgePopover,
       OgeMenuList,
       useAnchoredPanel,
       useOgeLiveAnnouncer,

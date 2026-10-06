@@ -1,0 +1,84 @@
+// Callout arrow shared by the popover and the tooltip: a rotated square on
+// the panel edge facing the anchor, drawn in the panel's own background so
+// it reads as part of the surface. Its position along the edge comes from
+// `resolvePopupArrow` (`@oge-ui/behavior`) as an inline `left` / `top` in
+// px; that geometry is physical (measured rects), so this partial uses
+// physical sides on purpose — RTL is already resolved in the numbers.
+//
+// The square is 10px: rotated, its tip reaches ~7px out of the edge, which
+// is `OGE_POPUP_ARROW_SIZE` — the extra offset the hosts add while an arrow
+// is shown. Emits nothing on its own; include the mixins.
+
+@mixin arrow($background, $border: null) {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: $background;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(45deg);
+
+  @if $border {
+    border: 1px solid $border;
+  }
+
+  // only the two edges that form the outward chevron stay visible
+  &[data-side='top'] {
+    top: 0;
+    @if $border {
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+    }
+  }
+
+  &[data-side='bottom'] {
+    top: 100%;
+    @if $border {
+      border-top-color: transparent;
+      border-left-color: transparent;
+    }
+  }
+
+  &[data-side='left'] {
+    left: 0;
+    @if $border {
+      border-top-color: transparent;
+      border-right-color: transparent;
+    }
+  }
+
+  &[data-side='right'] {
+    left: 100%;
+    @if $border {
+      border-bottom-color: transparent;
+      border-left-color: transparent;
+    }
+  }
+}
+
+// Forced colors repaint transparent borders, which would draw the whole
+// square; the arrow opts out and paints its chevron in system colours.
+@mixin arrow-forced-colors {
+  forced-color-adjust: none;
+  background: Canvas;
+  border: 1px solid CanvasText;
+
+  &[data-side='top'] {
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+  }
+
+  &[data-side='bottom'] {
+    border-top-color: transparent;
+    border-left-color: transparent;
+  }
+
+  &[data-side='left'] {
+    border-top-color: transparent;
+    border-right-color: transparent;
+  }
+
+  &[data-side='right'] {
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+  }
+}

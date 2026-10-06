@@ -1,0 +1,282 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// Non-modal floating window. Geometry (left/top/size/z-index) is written
+// inline by the shared OgeWindowCore; everything visual lives here.
+
+.oge-window {
+  @include tokens.core-tokens;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--oge-z-window);
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100vw - 32px));
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-card);
+  font-size: var(--oge-font-size);
+  /* hidden for the one frame before the core measured and placed it */
+  visibility: hidden;
+  transition:
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+
+  &.oge-window-placed {
+    visibility: visible;
+  }
+
+  &.oge-window-active {
+    border-color: var(--oge-accent-25);
+    box-shadow: var(--oge-shadow-popup);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &.oge-window-minimized {
+    height: auto;
+  }
+
+  &.oge-window-maximized {
+    inset: 0;
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    /* the frame stays clear of notches and the home indicator */
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+      env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  }
+
+  &.oge-window-moving,
+  &.oge-window-resizing {
+    user-select: none;
+  }
+}
+
+.oge-window-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-block: 6px;
+  padding-inline: 16px 8px;
+  border-bottom: 1px solid var(--oge-border-color);
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+  background: var(--oge-header-bg);
+  color: var(--oge-input-muted);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  .oge-window-active > & {
+    background: var(--oge-popup-bg);
+    color: var(--oge-text-color);
+    /* the active window's title bar carries an accent indicator */
+    box-shadow: inset 0 2px 0 var(--oge-accent);
+  }
+
+  .oge-window-minimized > & {
+    border-bottom-color: transparent;
+    border-radius: inherit;
+  }
+
+  &.oge-window-header-draggable {
+    cursor: move;
+    touch-action: none;
+    user-select: none;
+  }
+}
+
+.oge-window-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-window-controls {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.oge-window-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-accent-soft);
+  }
+
+  &.oge-window-close:hover {
+    background: var(--oge-danger-soft);
+    color: var(--oge-danger);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-window-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  @include tokens.scrollbar;
+
+  &.oge-window-body-flush {
+    padding: 0;
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+// --- resize handles (pointer; the keyboard twin is Ctrl+arrows) -------------
+.oge-window-resize {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+
+  &.oge-window-resize-n,
+  &.oge-window-resize-s {
+    left: 10px;
+    right: 10px;
+    height: 8px;
+    cursor: ns-resize;
+  }
+
+  &.oge-window-resize-e,
+  &.oge-window-resize-w {
+    top: 10px;
+    bottom: 10px;
+    width: 8px;
+    cursor: ew-resize;
+  }
+
+  &.oge-window-resize-n {
+    top: -4px;
+  }
+
+  &.oge-window-resize-s {
+    bottom: -4px;
+  }
+
+  &.oge-window-resize-e {
+    right: -4px;
+  }
+
+  &.oge-window-resize-w {
+    left: -4px;
+  }
+
+  &.oge-window-resize-ne,
+  &.oge-window-resize-nw,
+  &.oge-window-resize-se,
+  &.oge-window-resize-sw {
+    width: 14px;
+    height: 14px;
+  }
+
+  &.oge-window-resize-ne {
+    top: -5px;
+    right: -5px;
+    cursor: nesw-resize;
+  }
+
+  &.oge-window-resize-sw {
+    bottom: -5px;
+    left: -5px;
+    cursor: nesw-resize;
+  }
+
+  &.oge-window-resize-nw {
+    top: -5px;
+    left: -5px;
+    cursor: nwse-resize;
+  }
+
+  &.oge-window-resize-se {
+    right: -5px;
+    bottom: -5px;
+    cursor: nwse-resize;
+  }
+
+  @media (pointer: coarse) {
+    &.oge-window-resize-ne,
+    &.oge-window-resize-nw,
+    &.oge-window-resize-se,
+    &.oge-window-resize-sw {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+@include tokens.forced-colors {
+  .oge-window {
+    border: 1px solid CanvasText;
+
+    &.oge-window-active {
+      border: 2px solid Highlight;
+    }
+  }
+
+  .oge-window-header {
+    border-bottom-color: CanvasText;
+
+    .oge-window-active > & {
+      /* the inset accent bar is a shadow, which forced colours drop */
+      border-top: 3px solid Highlight;
+    }
+  }
+
+  .oge-window-button {
+    color: ButtonText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-window,
+  .oge-window-header,
+  .oge-window-button {
+    transition: none;
+  }
+}

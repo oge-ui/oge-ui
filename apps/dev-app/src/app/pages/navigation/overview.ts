@@ -7,8 +7,11 @@ import {
 import {
   OgeTreeItemTemplate,
   OgeTreeView,
+  type OgeTreeChildPageEvent,
+  type OgeTreeEditedEvent,
   type OgeTreeReorderedEvent,
   type OgeTreeSelectionChangedEvent,
+  type OgeTreeTransferredEvent,
 } from '@oge-ui/navigation';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -19,8 +22,11 @@ import {
   ReactNavigationTreeViewDemos,
 } from '../react-navigation/overview';
 import {
+  BETWEEN_SNIPPET,
   CHECK_SNIPPET,
   DND_SNIPPET,
+  EDITING_SNIPPET,
+  PAGING_SNIPPET,
   FLAT_SNIPPET,
   LAZY_SNIPPET,
   NESTED_SNIPPET,
@@ -51,8 +57,57 @@ const SECTIONS = [
   'Lazy load on demand',
   'Virtual scrolling',
   'Drag & drop reparenting',
+  'Drag between trees',
+  'Label editing (F2)',
+  'Load more paging',
   'Custom node template',
 ] as const;
+
+type TransferList = 'projects' | 'archive';
+
+const PROJECTS: Folder[] = [
+  { id: 101, parentId: null, name: 'Website' },
+  { id: 102, parentId: 101, name: 'Landing page' },
+  { id: 103, parentId: 101, name: 'Pricing page' },
+  { id: 104, parentId: null, name: 'Mobile app' },
+  { id: 105, parentId: 104, name: 'Onboarding' },
+];
+
+const ARCHIVE: Folder[] = [
+  { id: 201, parentId: null, name: '2024' },
+  { id: 202, parentId: null, name: '2023' },
+];
+
+const MAIL: Folder[] = [
+  { id: 1, parentId: null, name: 'Inbox' },
+  ...Array.from({ length: 23 }, (_, i) => ({
+    id: 100 + i,
+    parentId: 1,
+    name: `Message ${i + 1}`,
+  })),
+  { id: 2, parentId: null, name: 'Sent' },
+  ...Array.from({ length: 4 }, (_, i) => ({
+    id: 200 + i,
+    parentId: 2,
+    name: `Reply ${i + 1}`,
+  })),
+];
+
+/** A node plus every descendant, in `rows` order. */
+function subtreeOf(rows: readonly Folder[], id: number): Folder[] {
+  const ids = new Set<number>([id]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const row of rows) {
+      if (row.parentId !== null && ids.has(row.parentId) && !ids.has(row.id)) {
+        ids.add(row.id);
+        grew = true;
+      }
+    }
+  }
+  return rows.filter((row) => ids.has(row.id));
+}
 
 const FOLDERS: Folder[] = [
   { id: 1, parentId: null, name: 'Documents' },
@@ -292,6 +347,104 @@ const MANY: Folder[] = Array.from({ length: 10000 }, (_, i) => ({
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['dragGroup', 'itemTransferred', 'Ctrl+X / Ctrl+V']"
+        heading="Drag between trees"
+        description="Trees that share a <code>dragGroup</code> accept each other's nodes. The target previews the drop zone and fires the cancelable <code>itemReordering</code> and <code>itemReordered</code> with <code>sourceTreeId</code> / <code>targetTreeId</code>; the source fires <code>itemTransferred</code>. Neither tree moves data. The keyboard twin is Ctrl+X on a node and Ctrl+V on the target (Ctrl+Shift+V places it after), announced through the live region; <code>cutItem()</code> / <code>pasteItem()</code> wire the same move to buttons."
+        [code]="betweenSnippet"
+        language="ts"
+      >
+        <div class="grid gap-3 sm:grid-cols-2">
+          <oge-tree-view
+            treeId="docs-tree-projects"
+            [items]="transfer.projects()"
+            displayExpr="name"
+            [rootValue]="null"
+            [allowDragging]="true"
+            dragGroup="docs-files"
+            ariaLabel="Projects"
+            [expandedKeys]="[101, 104]"
+            (itemReordered)="received('projects', $event)"
+            (itemTransferred)="removed('projects', $event)"
+            height="220px"
+          />
+          <oge-tree-view
+            treeId="docs-tree-archive"
+            [items]="transfer.archive()"
+            displayExpr="name"
+            [rootValue]="null"
+            [allowDragging]="true"
+            dragGroup="docs-files"
+            ariaLabel="Archive"
+            (itemReordered)="received('archive', $event)"
+            (itemTransferred)="removed('archive', $event)"
+            height="220px"
+          />
+        </div>
+        <div class="mt-2 flex items-center gap-3">
+          <button
+            type="button"
+            class="rounded border px-2 py-1 text-sm"
+            (click)="resetTransfer()"
+          >
+            Reset
+          </button>
+          @if (lastTransfer(); as move) {
+            <span class="text-sm opacity-70" data-testid="tree-transfer-log">{{
+              move
+            }}</span>
+          }
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['allowEditing', 'F2', 'validateEdit', 'itemEdited']"
+        heading="Label editing (F2)"
+        description="F2 — or a double-click with <code>editOnDblClick</code> — turns the label into a text field. Enter or blur commits, Escape cancels, and the focus returns to the node. <code>itemEditStarting</code> and <code>itemEditing</code> are cancelable, <code>validateEdit</code> keeps the field open with its message, and <code>itemEdited</code> carries <code>previousValue</code> / <code>value</code> — the tree leaves the data change to you."
+        [code]="editingSnippet"
+        language="ts"
+      >
+        <oge-tree-view
+          [items]="editable()"
+          displayExpr="name"
+          [rootValue]="null"
+          [allowEditing]="true"
+          [editOnDblClick]="true"
+          [validateEdit]="validateName"
+          [expandedKeys]="[1]"
+          ariaLabel="Renamable folders"
+          (itemEdited)="rename($event)"
+          height="220px"
+        />
+        @if (lastEdit(); as edit) {
+          <p class="mt-2 text-sm opacity-70" data-testid="tree-edit-log">
+            {{ edit }}
+          </p>
+        }
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['childPageSize', 'Load more', 'aria-setsize']"
+        heading="Load more paging"
+        description="With <code>childPageSize</code> a parent renders its first page of children and a “Show N more items” row, which Enter, Space or a click expands by one more page — the focus lands on the first new child. The row is in the arrow-key order, <code>aria-setsize</code> keeps reporting the real total, and paging pauses while searching. Works with <code>virtualScroll</code> too."
+        [code]="pagingSnippet"
+        language="ts"
+      >
+        <oge-tree-view
+          [items]="mail"
+          displayExpr="name"
+          [rootValue]="null"
+          [childPageSize]="5"
+          [expandedKeys]="[1]"
+          ariaLabel="Mail folders"
+          (childPageShown)="pageShown($event)"
+          height="260px"
+        />
+        @if (lastPage(); as page) {
+          <p class="mt-2 text-sm opacity-70">{{ page }}</p>
+        }
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['ogeTreeItemTemplate']"
         heading="Custom node template"
         description='The item template replaces the built-in label. It renders inside the <code>role="treeitem"</code> row, so it must stay free of focusable controls.'
@@ -331,6 +484,9 @@ export class NavigationOverviewPage {
   protected readonly virtualSnippet = VIRTUAL_SNIPPET;
   protected readonly dndSnippet = DND_SNIPPET;
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
+  protected readonly betweenSnippet = BETWEEN_SNIPPET;
+  protected readonly editingSnippet = EDITING_SNIPPET;
+  protected readonly pagingSnippet = PAGING_SNIPPET;
 
   protected readonly folders = FOLDERS;
   protected readonly nested = NESTED_TREE;
@@ -344,6 +500,18 @@ export class NavigationOverviewPage {
     signal<OgeTreeSelectionChangedEvent<Folder> | null>(null);
   protected readonly draggable = signal<readonly Folder[]>(FOLDERS);
   protected readonly lastMove = signal<string | null>(null);
+
+  protected readonly transfer = {
+    projects: signal<readonly Folder[]>(PROJECTS),
+    archive: signal<readonly Folder[]>(ARCHIVE),
+  };
+  protected readonly lastTransfer = signal<string | null>(null);
+  protected readonly editable = signal<readonly Folder[]>(FOLDERS);
+  protected readonly lastEdit = signal<string | null>(null);
+  protected readonly mail = MAIL;
+  protected readonly lastPage = signal<string | null>(null);
+  protected readonly validateName = (value: string): string | null =>
+    value.length > 40 ? 'Keep names under 40 characters.' : null;
 
   protected readonly loadChildren = (parent: Folder) =>
     new Promise<Folder[]>((resolve) =>
@@ -383,5 +551,69 @@ export class NavigationOverviewPage {
   protected resetDraggable(): void {
     this.draggable.set(FOLDERS);
     this.lastMove.set(null);
+  }
+
+  /** The target tree's side of a move: (re)insert the node and its subtree. */
+  protected received(
+    list: TransferList,
+    event: OgeTreeReorderedEvent<Folder>,
+  ): void {
+    const parentId =
+      event.position === 'inside'
+        ? (event.dropKey as number)
+        : event.dropItem.parentId;
+    const moved =
+      event.sourceTreeId === event.targetTreeId
+        ? subtreeOf(this.transfer[list](), event.dragKey as number)
+        : subtreeOf(
+            this.transfer[list === 'projects' ? 'archive' : 'projects'](),
+            event.dragKey as number,
+          );
+    const movedIds = new Set(moved.map((row) => row.id));
+    this.transfer[list].update((rows) => [
+      ...rows.filter((row) => !movedIds.has(row.id)),
+      ...moved.map((row) =>
+        row.id === event.dragKey ? { ...row, parentId } : row,
+      ),
+    ]);
+    this.lastTransfer.set(
+      `${event.dragItem.name} → ${event.position} ${event.dropItem.name} (${event.trigger})`,
+    );
+  }
+
+  /** The source tree's side of a cross-tree move: drop the subtree. */
+  protected removed(
+    list: TransferList,
+    event: OgeTreeTransferredEvent<Folder>,
+  ): void {
+    const ids = new Set(
+      subtreeOf(this.transfer[list](), event.dragKey as number).map(
+        (row) => row.id,
+      ),
+    );
+    this.transfer[list].update((rows) =>
+      rows.filter((row) => !ids.has(row.id)),
+    );
+  }
+
+  protected resetTransfer(): void {
+    this.transfer.projects.set(PROJECTS);
+    this.transfer.archive.set(ARCHIVE);
+    this.lastTransfer.set(null);
+  }
+
+  protected rename(event: OgeTreeEditedEvent<Folder>): void {
+    this.editable.update((rows) =>
+      rows.map((row) =>
+        row.id === event.key ? { ...row, name: event.value } : row,
+      ),
+    );
+    this.lastEdit.set(`“${event.previousValue}” → “${event.value}”`);
+  }
+
+  protected pageShown(event: OgeTreeChildPageEvent<Folder>): void {
+    this.lastPage.set(
+      `${event.parentItem?.name ?? 'Root'}: ${event.shown} of ${event.total} shown`,
+    );
   }
 }

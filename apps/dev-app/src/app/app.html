@@ -55,9 +55,21 @@
       >
     </nav>
     <div class="flex items-center gap-2 max-md:ml-auto max-sm:gap-1">
-      <!-- docs version: this site is the latest release; archives are their own sites -->
+      <!--
+        docs version: this site is the latest release; archives are their own
+        sites. Both header selects are deferred: they are the shell's only
+        route into the overlay / inputs / behavior barrels, which do not
+        tree-shake in this source-mapped build, so rendering them eagerly put
+        those whole barrels into the initial bundle (1 MB budget).
+      -->
+      @defer (on idle) {
       <app-version-menu class="max-sm:hidden" />
-      @if (!isHome()) {
+      } @placeholder {
+      <span
+        class="app-version-placeholder max-sm:hidden"
+        aria-hidden="true"
+      ></span>
+      } @if (!isHome()) {
       <!--
         Framework lives in the header, beside the theme: it is a site-wide
         preference, picked once and honoured on every page — the same place
@@ -70,6 +82,7 @@
         dogfooding the components it documents — with each option led by the
         mark of the library its theme bridges to.
       -->
+      @defer (on idle) {
       <oge-select-box
         class="app-theme-select max-sm:hidden"
         [items]="themes"
@@ -82,6 +95,12 @@
         label="Theme"
         labelMode="hidden"
       />
+      } @placeholder {
+      <span
+        class="app-theme-placeholder max-sm:hidden"
+        aria-hidden="true"
+      ></span>
+      }
       <ng-template #themeOption let-theme>
         <span class="flex items-center gap-2">
           <app-theme-logo [name]="theme.value" [size]="14" />

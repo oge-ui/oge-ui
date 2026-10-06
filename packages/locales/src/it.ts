@@ -270,6 +270,16 @@ export const it: OgeLocalePack = {
     toastClose: 'Chiudi',
     toastRegionLabel: 'Notifiche',
     toastCountBadge: '×{count}',
+    dialogOk: 'OK',
+    dialogCancel: 'Annulla',
+    dialogConfirmTitle: 'Conferma',
+    dialogAlertTitle: 'Avviso',
+    dialogPromptTitle: 'Inserisci un valore',
+    dialogRequired: 'Questo campo è obbligatorio.',
+    windowMinimize: 'Riduci a icona',
+    windowMoved: 'Finestra spostata in {x}, {y}',
+    windowResized: 'Finestra ridimensionata a {width} × {height}',
+    popoverClose: 'Chiudi',
   },
   tabs: {
     closeTab: 'Chiudi scheda',
@@ -377,6 +387,7 @@ export const it: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'Caricamento',
+      loadPanelMessage: 'Caricamento…',
     },
     splitter: {
       separator: 'Ridimensiona i riquadri {{first}} e {{second}}',
@@ -406,6 +417,7 @@ export const it: OgeLocalePack = {
     menubar: {
       menubar: 'Barra dei menu',
       hamburger: 'Menu',
+      more: 'Altro',
     },
     pagination: {
       paginationLabel: 'Paginazione',
@@ -439,6 +451,16 @@ export const it: OgeLocalePack = {
       childrenLoadFailed: 'Impossibile caricare questi elementi.',
       noData: 'Nessun elemento da visualizzare',
       noSearchResults: 'Nessun elemento corrispondente',
+      loadMore:
+        '{count, plural, one {Mostra # altro elemento} other {Mostra altri # elementi}}',
+      editLabel: 'Nome dell’elemento',
+      editInvalid: 'Inserisci un nome valido.',
+      cutAnnouncement:
+        '{item} tagliato. Spostati sull’elemento di destinazione e premi Ctrl+V per spostarlo lì, oppure Esc per annullare.',
+      movedAnnouncement:
+        '{position, select, inside {{item} spostato in {target}.} before {{item} spostato prima di {target}.} other {{item} spostato dopo {target}.}}',
+      moveCancelledAnnouncement: 'Spostamento annullato.',
+      moveRejectedAnnouncement: '{item} non può essere spostato qui.',
     },
   },
   pivot: {

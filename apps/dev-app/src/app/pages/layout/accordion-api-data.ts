@@ -605,3 +605,424 @@ export const OGE_ACCORDION_CONFIG_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_PANEL_BAR_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'items',
+          type: 'readonly OgePanelBarItem[] | undefined',
+          description:
+            'The item tree. An entry with <code>children</code> is an expandable group; one with <code>content</code> (and no children) expands into free content; the rest are selectable leaves. <code>content</code> is plain text — the <code>[ogePanelBarContentTemplate]</code> slot renders anything richer.',
+        },
+        {
+          name: 'expandMode',
+          type: "'single' | 'multiple' | 'full'",
+          default: "'multiple'",
+          description:
+            "Kendo's three modes: <code>multiple</code> lets groups open independently, <code>single</code> collapses a group's open siblings, <code>full</code> is single with the open root group filling the host's height (give the host one).",
+        },
+        {
+          name: 'selectedKey',
+          type: 'string | undefined',
+          description:
+            'The selected item — two-way (<code>[(selectedKey)]</code>): its <code>key</code>, or its position id (<code>p0-1</code>) when it has none. Announced as <code>aria-current</code>.',
+        },
+        {
+          name: 'expandedKeys',
+          type: 'readonly string[] | undefined',
+          description:
+            "Ids (<code>key</code> or position id) of the expanded groups — two-way. The items' own <code>expanded</code> flags seed it once; a consumer write replaces the state.",
+        },
+        {
+          name: 'disabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Disables the whole panel bar; a disabled item disables its subtree and leaves the Tab sequence.',
+        },
+        {
+          name: 'deferRendering',
+          type: 'boolean',
+          default: 'true',
+          description:
+            "Render a group's children or content only from its first expand on (kept afterwards); <code>false</code> renders every level up front.",
+        },
+        {
+          name: 'animation',
+          type: 'boolean | number',
+          default: 'true',
+          description:
+            'Height animation: <code>true</code> uses the default duration, a number overrides it in milliseconds, <code>false</code> disables it. Suppressed under <code>prefers-reduced-motion</code>.',
+        },
+        {
+          name: 'keyboardNavigation',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Enables Up/Down/Home/End and Right/Left header navigation.',
+        },
+        {
+          name: 'ariaLabel',
+          type: 'string | undefined',
+          description: 'Accessible name of the root list.',
+        },
+      ],
+    },
+    {
+      title: 'Keyboard & accessibility',
+      entries: [
+        {
+          name: 'APG disclosure, not treeview',
+          type: '—',
+          description:
+            'Kendo renders its PanelBar as <code>role="tree"</code>, but a tree may own nothing but tree items — and panel bar groups may hold free content. So every header is a real <code>&lt;button&gt;</code> in the Tab sequence (<code>aria-expanded</code> + <code>aria-controls</code> on groups, <code>aria-current</code> on the selected leaf), collapsed groups are <code>inert</code>, and Up/Down/Home/End plus Right/Left (expand-or-enter / collapse-or-parent, mirrored in RTL) are layered on top. Collapsing a group that holds focus hands focus to its header.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'isExpanded(id)',
+          type: '(id: string) => boolean',
+          description:
+            'Whether the group with this id (<code>key</code> or position id) is expanded.',
+        },
+        {
+          name: 'expand(id)',
+          type: '(id: string) => Promise<boolean>',
+          description:
+            'Runs the expand pipeline (cancelable pre-event, then commit); resolves whether the group ended up expanded.',
+        },
+        {
+          name: 'collapse(id)',
+          type: '(id: string) => Promise<boolean>',
+          description:
+            'Runs the collapse pipeline; resolves whether the group ended up collapsed.',
+        },
+        {
+          name: 'toggle(id)',
+          type: '(id: string) => Promise<boolean>',
+          description: 'Expands a collapsed group, collapses an expanded one.',
+        },
+        {
+          name: 'expandAll()',
+          type: '() => void',
+          description:
+            'Expands every enabled group. <code>multiple</code> mode only — otherwise a dev-mode warning and a no-op.',
+        },
+        {
+          name: 'collapseAll()',
+          type: '() => void',
+          description: 'Collapses every expanded group.',
+        },
+        {
+          name: 'focus(id?)',
+          type: '(id?: string) => void',
+          description: 'Focuses a header by id, or the first enabled one.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'itemClick',
+          type: 'OgePanelBarItemClickEvent',
+          description: 'A header was activated — before it toggles or selects.',
+        },
+        {
+          name: 'itemExpanding',
+          type: 'OgePanelBarItemExpandingEvent',
+          description:
+            'Cancelable pre-event of a group expanding — set <code>cancel = true</code> to keep it closed.',
+        },
+        {
+          name: 'itemCollapsing',
+          type: 'OgePanelBarItemCollapsingEvent',
+          description: 'Cancelable pre-event of a group collapsing.',
+        },
+        {
+          name: 'itemExpanded',
+          type: 'OgePanelBarItemToggleEvent',
+          description: 'A group expanded.',
+        },
+        {
+          name: 'itemCollapsed',
+          type: 'OgePanelBarItemToggleEvent',
+          description:
+            'A group collapsed — also each sibling a <code>single</code> / <code>full</code> expand closed.',
+        },
+        {
+          name: 'selectionChanged',
+          type: 'OgePanelBarSelectionChangedEvent',
+          description:
+            'The selected item changed through a user click (<code>previousKey</code> included).',
+        },
+        {
+          name: 'selectedKeyChange',
+          type: 'string | undefined',
+          description: 'The banana half of <code>[(selectedKey)]</code>.',
+        },
+        {
+          name: 'expandedKeysChange',
+          type: 'readonly string[] | undefined',
+          description: 'The banana half of <code>[(expandedKeys)]</code>.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Types',
+      entries: [
+        {
+          name: 'OgePanelBarItem',
+          type: 'interface',
+          description:
+            '<code>key</code>, <code>title</code>, <code>description</code>, <code>icon</code> (SVG path data), <code>badge</code>, <code>hint</code>, <code>disabled</code>, <code>visible</code>, <code>expanded</code>, <code>selectable</code> (default: leaves only), <code>content</code> and <code>children</code>.',
+        },
+        {
+          name: 'OgePanelBarExpandMode',
+          type: "'single' | 'multiple' | 'full'",
+          description: 'Expansion vocabulary.',
+        },
+        {
+          name: 'OgePanelBarItemClickEvent / OgePanelBarItemExpandingEvent / OgePanelBarItemCollapsingEvent / OgePanelBarItemToggleEvent / OgePanelBarSelectionChangedEvent',
+          type: 'interfaces',
+          description:
+            'Payloads: <code>item</code>, <code>key</code>, <code>level</code> and the originating <code>event</code>; the <code>-ing</code> ones carry a mutable <code>cancel</code>, the selection one <code>previousKey</code>.',
+        },
+        {
+          name: '[ogePanelBarHeaderTemplate]',
+          type: 'OgePanelBarHeaderTemplateContext',
+          description:
+            'Replaces the header layout inside each button (<code>$implicit</code> item, <code>level</code>, <code>expanded</code>, <code>selected</code>) — no focusable controls.',
+        },
+        {
+          name: '[ogePanelBarContentTemplate]',
+          type: 'OgePanelBarContentTemplateContext',
+          description:
+            'Renders the body of every content item (<code>$implicit</code> item, <code>level</code>), instantiated on first expand.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_EXPANSION_PANEL_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'title',
+          type: 'string',
+          default: "''",
+          description: 'Header title.',
+        },
+        {
+          name: 'subtitle',
+          type: 'string | undefined',
+          description: 'Secondary line under the title.',
+        },
+        {
+          name: 'icon',
+          type: 'string | undefined',
+          description:
+            'SVG path data (<code>d</code>) rendered as a 24×24 aria-hidden icon before the title.',
+        },
+        {
+          name: 'hint',
+          type: 'string | undefined',
+          description:
+            'Native <code>title</code> tooltip of the header button.',
+        },
+        {
+          name: 'expanded',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Whether the body is shown — two-way. A consumer write applies directly; user and method toggles run <code>expanding</code> / <code>collapsing</code> and the guard first.',
+        },
+        {
+          name: 'disabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Blocks toggling; the header stays visible (<code>aria-disabled</code>) but leaves the Tab sequence.',
+        },
+        {
+          name: 'expandGuard',
+          type: '() => boolean | Promise<boolean>',
+          description:
+            "Veto run before every toggle — the accordion's <code>expandGuard</code>: <code>false</code>, a throw or a rejection blocks; while a promise is pending the header shows a spinner and ignores clicks.",
+        },
+        {
+          name: 'togglePosition',
+          type: "'start' | 'end'",
+          default: "'end'",
+          description:
+            'Side of the header the chevron sits on — logical, so RTL mirrors it.',
+        },
+        {
+          name: 'hideToggle',
+          type: 'boolean | undefined',
+          description:
+            "Hides the chevron; falls back to the accordion config's <code>hideToggle</code>.",
+        },
+        {
+          name: 'headingLevel',
+          type: 'number',
+          default: '3',
+          description:
+            '<code>aria-level</code> of the heading wrapping the header button (native h1–h6 where it can).',
+        },
+        {
+          name: 'useRegionRole',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Gives the body <code>role="region"</code> (APG-optional).',
+        },
+        {
+          name: 'animation',
+          type: 'boolean | number',
+          default: 'true',
+          description:
+            'Height animation: <code>true</code> uses the default duration, a number overrides it in milliseconds, <code>false</code> disables it. Suppressed under reduced motion.',
+        },
+        {
+          name: 'deferRendering',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Instantiate an <code>ogeExpansionPanelContent</code> template only on first expand (kept afterwards). Plain projected content is always instantiated.',
+        },
+        {
+          name: 'stylingMode',
+          type: "'outlined' | 'filled' | 'flat'",
+          default: "'outlined'",
+          description: "Visual variant — the accordion's.",
+        },
+        {
+          name: 'size',
+          type: "'sm' | 'md' | 'lg'",
+          default: "'md'",
+          description: "Density of the header row — the accordion's.",
+        },
+      ],
+    },
+    {
+      title: 'Keyboard & accessibility',
+      entries: [
+        {
+          name: 'APG disclosure',
+          type: '—',
+          description:
+            'The title is a <code>&lt;button aria-expanded aria-controls&gt;</code> inside a heading; Enter / Space toggle it natively, the body is <code>role="region"</code> labelled by the header and <code>inert</code> while collapsed. Collapsing a panel that holds focus hands focus back to the header. The pipeline is <code>runOgeExpansionToggle</code> in <code>&#64;oge-ui/behavior</code>, shared with the panel bar.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'isExpanded()',
+          type: '() => boolean',
+          description:
+            'Whether the panel is expanded — the <code>expanded</code> model&rsquo;s current value.',
+        },
+        {
+          name: 'expand()',
+          type: '() => Promise<boolean>',
+          description:
+            'Runs the expand pipeline; resolves whether the panel ended up expanded.',
+        },
+        {
+          name: 'collapse()',
+          type: '() => Promise<boolean>',
+          description:
+            'Runs the collapse pipeline; resolves whether the panel ended up collapsed.',
+        },
+        {
+          name: 'toggle()',
+          type: '() => Promise<boolean>',
+          description: 'Expands a collapsed panel, collapses an expanded one.',
+        },
+        {
+          name: 'focus()',
+          type: '() => void',
+          description: 'Focuses the header button.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'expanding',
+          type: 'OgeExpansionPanelExpandingEvent',
+          description:
+            'Cancelable pre-event of an expand — set <code>cancel = true</code> to keep the panel collapsed.',
+        },
+        {
+          name: 'collapsing',
+          type: 'OgeExpansionPanelCollapsingEvent',
+          description: 'Cancelable pre-event of a collapse.',
+        },
+        {
+          name: 'opened',
+          type: 'OgeExpansionPanelToggleEvent',
+          description:
+            "The panel expanded through a user or method toggle — Material's <code>opened</code>, named so it cannot clash with the <code>expanded</code> model. Not fired for a <code>[(expanded)]</code> write.",
+        },
+        {
+          name: 'closed',
+          type: 'OgeExpansionPanelToggleEvent',
+          description:
+            "The panel collapsed through a user or method toggle — Material's <code>closed</code>.",
+        },
+        {
+          name: 'expandedChange',
+          type: 'boolean',
+          description: 'The banana half of <code>[(expanded)]</code>.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Types',
+      entries: [
+        {
+          name: 'OgeExpansionPanelExpandingEvent / OgeExpansionPanelCollapsingEvent',
+          type: '{ event?: Event; cancel: boolean }',
+          description: 'Cancelable pre-event payloads.',
+        },
+        {
+          name: 'OgeExpansionPanelToggleEvent',
+          type: '{ event?: Event }',
+          description: 'Payload of the past-tense events.',
+        },
+        {
+          name: '[ogeExpansionPanelActions]',
+          type: 'attribute',
+          description:
+            'Marks projected elements as header actions — real buttons rendered beside the toggle.',
+        },
+        {
+          name: '[ogeExpansionPanelContent]',
+          type: 'OgeExpansionPanelContent',
+          description:
+            'Structural directive marking the body as lazily instantiated (first expand, kept afterwards).',
+        },
+      ],
+    },
+  ],
+};

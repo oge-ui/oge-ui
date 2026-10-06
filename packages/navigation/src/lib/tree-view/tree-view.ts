@@ -4,7 +4,9 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  Injector,
   ViewEncapsulation,
+  afterNextRender,
   computed,
   contentChild,
   effect,
@@ -23,31 +25,57 @@ import {
 // shared verbatim with `<OgeTreeView>` in `@oge-ui/react-navigation` (ADR
 // 0001). What is left here is the Angular render shell and its signal wiring.
 import {
+  beginOgeTreeDrag,
   buildTreeViewModel,
   createTypeAheadBuffer,
+  fillTreeViewMessages,
+  isTreeEditKey,
+  nextTreeChildPage,
   nextTreeExpansion,
   nextTreeSelection,
+  ogeTreeCancelCut,
+  ogeTreeCut,
+  ogeTreeDragGroupOf,
+  ogeTreeHasCut,
+  ogeTreePaste,
+  planTreeEditKey,
+  planTreeTransferKey,
   planTreeViewKey,
+  registerOgeTreeDragPeer,
   resolveSelectedKeys,
+  resolveTreeChildPageSize,
   resolveTreeItemHeight,
   resolveTreeSelectByClick,
-  resolveTreeDropPosition,
-  exceedsTreeDragThreshold,
+  runTreeEditCommit,
+  runTreeEditStart,
   treeAriaChecked,
   treeAriaSelected,
   treeCanDrop,
+  treeChildPageLimit,
   treeChildrenLoadNeeded,
   treeEdgeIndex,
+  treeLoadMoreText,
   treeNodeIndent,
   treeRangeSelection,
-  OGE_TREE_DRAG_HOVER_EXPAND_MS,
+  OGE_TREE_TRANSFER_SHORTCUTS,
   type CheckState,
+  type OgePointerGestureHandle,
+  type OgeTreeAllowEditing,
+  type OgeTreeChildPageEvent,
+  type OgeTreeDragPeer,
+  type OgeTreeEditedEvent,
+  type OgeTreeEditingEvent,
+  type OgeTreeEditStartingEvent,
+  type OgeTreeEditValidator,
   type OgeTreeKeyAction,
   type OgeTreeLoadState,
+  type OgeTreeTransferredEvent,
   type OgeTreeViewModel,
+  type OgeTreeViewResolvedMessages,
   type RowKey,
   type TreeIndex,
 } from '@oge-ui/behavior';
+import { OgeLiveAnnouncer } from '@oge-ui/overlay';
 import { OGE_TREE_VIEW_CONFIG, type OgeTreeViewMessages } from './config';
 import {
   OgeTreeExpandIconTemplate,
@@ -118,7 +146,6 @@ let nextComponentId = 0;
     class: 'oge-tree-view',
     '[class.oge-disabled]': 'disabled()',
     '[attr.data-size]': 'size()',
-    '(keydown)': 'onHostKeydown($event)',
   },
   template: `
     @if (searchEnabled()) {
@@ -216,12 +243,20 @@ let nextComponentId = 0;
                 [class.oge-tree-view-item-drop-inside]="
                   dropTargetKey() === node.key && dropPosition() === 'inside'
                 "
+                [class.oge-tree-view-item-cut]="cutKey() === node.key"
+                [class.oge-tree-view-item-more]="!!node.more"
+                [class.oge-tree-view-item-editing]="editingKey() === node.key"
                 [attr.role]="node.filler ? null : 'treeitem'"
                 [attr.data-key]="node.filler ? null : node.key"
                 [id]="uid + '-node-' + node.id"
                 [attr.aria-level]="node.level + 1"
-                [attr.aria-posinset]="node.filler ? null : node.posInSet"
-                [attr.aria-setsize]="node.filler ? null : node.setSize"
+                [attr.aria-posinset]="
+                  node.filler || node.more ? null : node.posInSet
+                "
+                [attr.aria-setsize]="
+                  node.filler || node.more ? null : node.setSize
+                "
+                [attr.aria-keyshortcuts]="keyShortcuts(node)"
                 [attr.aria-expanded]="
                   node.filler || !node.hasChildren ? null : node.expanded
                 "
@@ -235,8 +270,6 @@ let nextComponentId = 0;
                 (dblclick)="onRowDblClick(node, $event)"
                 (focus)="onRowFocus(node)"
                 (pointerdown)="onPointerDown(node, $event)"
-                (pointermove)="onPointerMove($event)"
-                (pointerup)="onPointerUp($event)"
               >
                 @if (node.filler) {
                   <span class="oge-tree-view-spinner" aria-hidden="true"></span>
@@ -244,6 +277,22 @@ let nextComponentId = 0;
                     node.failed
                       ? mergedMessages().childrenLoadFailed
                       : mergedMessages().loadingChildren
+                  }}</span>
+                } @else if (node.more) {
+                  <span class="oge-tree-view-more-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="14" height="14">
+                      <path
+                        d="M6 9l6 6 6-6"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <span class="oge-tree-view-text oge-tree-view-more-text">{{
+                    loadMoreText(node)
                   }}</span>
                 } @else {
                   <span
@@ -306,7 +355,34 @@ let nextComponentId = 0;
                       />
                     </svg>
                   }
-                  @if (itemTemplate(); as tpl) {
+                  @if (editingKey() === node.key) {
+                    <!--
+                      A transient text field inside the treeitem: treeitem
+                      does not make its children presentational, so axe's
+                      nested-interactive does not apply. Its keys stop at the
+                      field; focus returns to the row on Enter / Escape.
+                    -->
+                    <input
+                      #editInput
+                      type="text"
+                      class="oge-tree-view-edit-input"
+                      [value]="node.text"
+                      [attr.aria-label]="mergedMessages().editLabel"
+                      [attr.aria-invalid]="editError() ? 'true' : null"
+                      [attr.aria-describedby]="
+                        editError() ? uid + '-edit-error' : null
+                      "
+                      (keydown)="onEditKeydown(node, $event)"
+                      (blur)="onEditBlur(node, $event)"
+                    />
+                    @if (editError(); as error) {
+                      <span
+                        class="oge-tree-view-edit-error"
+                        [id]="uid + '-edit-error'"
+                        >{{ error }}</span
+                      >
+                    }
+                  } @else if (itemTemplate(); as tpl) {
                     <ng-container
                       *ngTemplateOutlet="
                         tpl.templateRef;
@@ -330,6 +406,9 @@ let nextComponentId = 0;
 })
 export class OgeTreeView<T extends object = Record<string, unknown>> {
   private readonly config = inject(OGE_TREE_VIEW_CONFIG);
+  private readonly announcer = inject(OgeLiveAnnouncer);
+  private readonly injector = inject(Injector);
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Unique DOM id prefix of this component instance. */
   protected readonly uid = `oge-tree-view-${nextComponentId++}`;
@@ -420,6 +499,36 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   readonly allowDragging = input(false);
   /** Allows dropping *into* a node (reparenting), not just between siblings. */
   readonly allowDropInside = input(true);
+  /**
+   * Trees sharing a group accept each other's nodes — by pointer drag and by
+   * the Ctrl+X / Ctrl+V keyboard twin. Both trees need `allowDragging`. The
+   * target fires `itemReordering` / `itemReordered` (with `sourceTreeId` /
+   * `targetTreeId`), the source `itemTransferred`; neither moves data.
+   */
+  readonly dragGroup = input<string | undefined>(undefined);
+
+  /**
+   * Lets users rename nodes in place: F2 (or a double-click with
+   * `editOnDblClick`) turns the label into a text field; Enter or blur
+   * commits, Escape cancels. `true`, `false`, or a per-item predicate. The
+   * tree does not write the label — apply `itemEdited` to your data.
+   */
+  readonly allowEditing = input<OgeTreeAllowEditing<T>>(false);
+  /** A double-click opens the label editor instead of toggling the node. */
+  readonly editOnDblClick = input(false);
+  /**
+   * Validates an edited label: `true` / `null` accepts, `false` rejects with
+   * the catalog's `editInvalid`, a string rejects with that message. A
+   * rejected label keeps the editor open.
+   */
+  readonly validateEdit = input<OgeTreeEditValidator<T> | undefined>(undefined);
+
+  /**
+   * Children rendered per parent (roots included) before a "Load more" row —
+   * Kendo's node page size. `aria-setsize` keeps reporting the real total.
+   * `0` / unset renders every child. Paging pauses while searching.
+   */
+  readonly childPageSize = input<number | undefined>(undefined);
 
   /** Disables the whole component. */
   readonly disabled = input(false);
@@ -466,6 +575,19 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   readonly itemReordering = output<OgeTreeReorderingEvent<T>>();
   /** Emitted after a drop passed `itemReordering`; apply it to your own data. */
   readonly itemReordered = output<OgeTreeReorderedEvent<T>>();
+  /**
+   * Emitted by the source tree after one of its nodes moved to another tree
+   * of the same `dragGroup` — remove it from this tree's data.
+   */
+  readonly itemTransferred = output<OgeTreeTransferredEvent<T>>();
+  /** Cancelable pre-event of the label editor opening. */
+  readonly itemEditStarting = output<OgeTreeEditStartingEvent<T>>();
+  /** Cancelable pre-event of an edited label committing. */
+  readonly itemEditing = output<OgeTreeEditingEvent<T>>();
+  /** Emitted after a label edit committed; write `value` into your data. */
+  readonly itemEdited = output<OgeTreeEditedEvent<T>>();
+  /** Emitted after a "Load more" row revealed the next page of children. */
+  readonly childPageShown = output<OgeTreeChildPageEvent<T>>();
 
   protected readonly itemTemplate = contentChild(OgeTreeItemTemplate);
   protected readonly expandIconTemplate = contentChild(
@@ -475,6 +597,8 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
 
   private readonly rowElements = viewChildren<ElementRef<HTMLElement>>('rowEl');
   private readonly scrollEl = viewChild<ElementRef<HTMLElement>>('scrollEl');
+  private readonly editInput =
+    viewChild<ElementRef<HTMLInputElement>>('editInput');
 
   private readonly typeAheadBuffer = createTypeAheadBuffer();
 
@@ -501,16 +625,76 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   protected readonly dragKey = this._dragKey.asReadonly();
   protected readonly dropTargetKey = this._dropTargetKey.asReadonly();
   protected readonly dropPosition = this._dropPosition.asReadonly();
-  private dragOrigin: { x: number; y: number } | null = null;
-  private dragCandidate: RowKey | null = null;
-  private hoverExpandTimer: ReturnType<typeof setTimeout> | undefined;
-  private hoverExpandKey: RowKey | null = null;
+  private dragHandle: OgePointerGestureHandle | null = null;
+  private readonly _cutKey = signal<RowKey | null>(null);
+  /** The node a pending Ctrl+X holds (drawn dashed until pasted). */
+  protected readonly cutKey = this._cutKey.asReadonly();
+
+  // label editing
+  private readonly _editingKey = signal<RowKey | null>(null);
+  private readonly _editError = signal<string | null>(null);
+  protected readonly editingKey = this._editingKey.asReadonly();
+  protected readonly editError = this._editError.asReadonly();
+
+  /** Children revealed so far per parent (`null` = roots) — "Load more". */
+  private readonly pageLimits = signal<ReadonlyMap<RowKey | null, number>>(
+    new Map(),
+  );
 
   /** Effective messages: config defaults overlaid with `[messages]`. */
-  protected readonly mergedMessages = computed<OgeTreeViewMessages>(() => ({
-    ...this.config.messages,
-    ...this.messages(),
-  }));
+  protected readonly mergedMessages = computed<OgeTreeViewResolvedMessages>(
+    () => fillTreeViewMessages({ ...this.config.messages, ...this.messages() }),
+  );
+
+  /**
+   * This tree as a participant in moves — its own reorders and its
+   * `dragGroup`'s cross-tree drops share one commit path in
+   * `@oge-ui/behavior` (`tree-view-transfer`).
+   */
+  private readonly peer: OgeTreeDragPeer = {
+    treeId: () => this.resolvedTreeId(),
+    group: () => ogeTreeDragGroupOf(this.dragGroup(), this.resolvedTreeId()),
+    element: () => this.hostEl.nativeElement,
+    rows: () => this.rowElements().map((ref) => ref.nativeElement),
+    rowInfo: (dataKey) => {
+      const node = this.nodes().find(
+        (n) => !n.filler && !n.more && String(n.key) === dataKey,
+      );
+      return node
+        ? {
+            key: node.key,
+            hasChildren: node.hasChildren,
+            expanded: node.expanded,
+          }
+        : null;
+    },
+    itemOf: (key) => this.treeIndex().byKey.get(key),
+    textOf: (key) => {
+      const item = this.treeIndex().byKey.get(key);
+      return item === undefined ? String(key) : this.model().displayOf(item);
+    },
+    canDrop: (source, dropKey) => {
+      if (this.disabled() || !this.treeIndex().byKey.has(dropKey)) return false;
+      return source.treeId !== this.resolvedTreeId()
+        ? true
+        : treeCanDrop(this.treeIndex(), source.key, dropKey);
+    },
+    allowDropInside: () => this.allowDropInside(),
+    preview: (target) => {
+      this._dropTargetKey.set(target?.key ?? null);
+      this._dropPosition.set(target?.position ?? null);
+    },
+    expand: (key) => void this.expand(key),
+    setCut: (key) => this._cutKey.set(key),
+    announce: (text) => this.announcer.announce(text),
+    messages: () => this.mergedMessages(),
+    emitReordering: (event) =>
+      this.itemReordering.emit(event as OgeTreeReorderingEvent<T>),
+    emitReordered: (event) =>
+      this.itemReordered.emit(event as OgeTreeReorderedEvent<T>),
+    emitTransferred: (event) =>
+      this.itemTransferred.emit(event as OgeTreeTransferredEvent<T>),
+  };
 
   // ---- derived pipeline ----------------------------------------------------
 
@@ -551,6 +735,8 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       selectNodesRecursive: this.selectNodesRecursive(),
       showCheckBoxes: this.checkBoxesMode(),
       lazy: !!this.loadChildren(),
+      childPageSize: this.childPageSize(),
+      pageLimits: this.pageLimits(),
     }),
   );
 
@@ -680,9 +866,31 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       this.focusedKey.set(nodes.find((n) => !n.disabled)?.key);
     });
 
+    // a tree that drags takes part in its group's moves while it is mounted
+    effect((onCleanup) => {
+      if (!this.allowDragging()) return;
+      this.dragGroup();
+      this.resolvedTreeId();
+      const unregister = untracked(() => registerOgeTreeDragPeer(this.peer));
+      onCleanup(() => {
+        unregister();
+        this._cutKey.set(null);
+      });
+    });
+
+    // the label editor takes focus with its text selected as soon as it renders
+    effect(() => {
+      const field = this.editInput()?.nativeElement;
+      if (!field) return;
+      untracked(() => {
+        field.focus();
+        field.select();
+      });
+    });
+
     inject(DestroyRef).onDestroy(() => {
       clearTimeout(this.searchTimer);
-      clearTimeout(this.hoverExpandTimer);
+      this.dragHandle?.cancel();
     });
   }
 
@@ -780,7 +988,72 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     this.elementForKey(key)?.scrollIntoView({ block: 'nearest' });
   }
 
+  /**
+   * Opens the label editor on a node (what F2 does). Returns `false` when
+   * editing is off for it or `itemEditStarting` vetoed.
+   */
+  editItem(key: RowKey): boolean {
+    const node = this.nodes().find((n) => n.key === key && !n.filler);
+    if (!node) return false;
+    return this.startEdit(node);
+  }
+
+  /** Closes an open label editor without committing. */
+  cancelEdit(): void {
+    const key = this._editingKey();
+    if (key !== null) this.closeEditor(key, false);
+  }
+
+  /**
+   * Reveals the next `childPageSize` children of a paged parent (`null` for
+   * the root level) — what activating its "Load more" row does.
+   */
+  showMoreChildren(parentKey: RowKey | null): void {
+    this.revealNextPage(parentKey, undefined, false);
+  }
+
+  /**
+   * Marks a node for a keyboard move (what Ctrl+X does); `pasteItem` on any
+   * tree of the same `dragGroup` moves it. Wire both to buttons or a context
+   * menu for a single-pointer path. Requires `allowDragging`.
+   */
+  cutItem(key: RowKey): boolean {
+    if (!this.allowDragging() || this.disabled()) return false;
+    return ogeTreeCut(this.peer, key);
+  }
+
+  /**
+   * Moves the cut node of this tree's group onto `targetKey` through the
+   * same pipeline as a drop (`itemReordering` → `itemReordered` →
+   * `itemTransferred`). `position` defaults to `inside` (`after` when
+   * `allowDropInside` is off).
+   */
+  pasteItem(targetKey: RowKey, position?: OgeTreeDropPosition): boolean {
+    if (!this.allowDragging() || this.disabled()) return false;
+    return ogeTreePaste(
+      this.peer,
+      targetKey,
+      position ?? (this.allowDropInside() ? 'inside' : 'after'),
+    );
+  }
+
   // ---- template helpers ----------------------------------------------------
+
+  /** `aria-keyshortcuts` of a row: F2 when renamable, the move keys when dragging. */
+  protected keyShortcuts(node: OgeTreeNode<T>): string | null {
+    if (node.filler || node.more) return null;
+    const keys: string[] = [];
+    if (this.allowEditing() !== false) keys.push('F2');
+    if (this.allowDragging()) keys.push(OGE_TREE_TRANSFER_SHORTCUTS);
+    return keys.length ? keys.join(' ') : null;
+  }
+
+  /** Label of a "Load more" row: the ICU plural over the hidden children. */
+  protected loadMoreText(node: OgeTreeNode<T>): string {
+    return node.more
+      ? treeLoadMoreText(this.mergedMessages().loadMore, node.more)
+      : '';
+  }
 
   protected indentOf(node: OgeTreeNode<T>): number {
     return treeNodeIndent(node.level);
@@ -836,7 +1109,12 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
 
   protected onRowClick(node: OgeTreeNode<T>, event: MouseEvent): void {
     if (node.filler || this.disabled()) return;
+    if (this.isEditTarget(event.target)) return;
     this.focusedKey.set(node.key);
+    if (node.more) {
+      this.revealNextPage(node.more.parentKey, event, true);
+      return;
+    }
     if (this.isCheckTarget(event.target)) {
       if (!node.disabled) this.toggleSelection(node, event);
       return;
@@ -856,8 +1134,10 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   }
 
   protected onRowDblClick(node: OgeTreeNode<T>, event: MouseEvent): void {
-    if (node.filler || node.disabled || this.disabled()) return;
+    if (node.filler || node.more || node.disabled || this.disabled()) return;
+    if (this.isEditTarget(event.target)) return;
     this.itemDblClick.emit({ key: node.key, item: node.item, event });
+    if (this.editOnDblClick() && this.startEdit(node, event)) return;
     if (this.expandEvent() === 'dblclick' && node.hasChildren) {
       void this.toggle(node.key);
     }
@@ -890,6 +1170,34 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       (n) => !n.filler && n.key === this.focusedKey(),
     );
     if (current === -1) return;
+    const node = nodes[current];
+
+    // F2 renames (the desktop-tree convention; APG leaves it to the author)
+    if (isTreeEditKey(event)) {
+      if (this.startEdit(node, event)) event.preventDefault();
+      return;
+    }
+    // the keyboard twin of drag & drop: Ctrl+X here, Ctrl+V on the target
+    if (this.allowDragging() && !node.more) {
+      const transfer = planTreeTransferKey(event);
+      if (transfer === 'cut') {
+        event.preventDefault();
+        ogeTreeCut(this.peer, node.key);
+        return;
+      }
+      if (transfer !== null) {
+        event.preventDefault();
+        const position =
+          transfer === 'paste' && this.allowDropInside() ? 'inside' : 'after';
+        ogeTreePaste(this.peer, node.key, position, event);
+        return;
+      }
+    }
+    if (event.key === 'Escape' && ogeTreeHasCut(this.peer)) {
+      event.preventDefault();
+      ogeTreeCancelCut(this.peer);
+      return;
+    }
 
     // The APG key map itself lives in `@oge-ui/behavior`; this only executes
     // the actions it resolves, so the React tree view gets the same map.
@@ -951,6 +1259,11 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
         break;
       case 'set-expanded':
         this.expandedSet.set(action.expanded);
+        break;
+      case 'load-more':
+        if (action.node.more) {
+          this.revealNextPage(action.node.more.parentKey, event, true);
+        }
         break;
     }
   }
@@ -1171,138 +1484,159 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     );
   }
 
+  // ---- "Load more" paging --------------------------------------------------
+
+  /**
+   * One more page under `parentKey`, then `childPageShown`. With `focus`
+   * (the row was activated) the first newly shown child takes the focus, so
+   * the user carries on where the list grew.
+   */
+  private revealNextPage(
+    parentKey: RowKey | null,
+    event: Event | undefined,
+    focus: boolean,
+  ): void {
+    const pageSize = resolveTreeChildPageSize(this.childPageSize());
+    if (pageSize === 0) return;
+    const index = this.treeIndex();
+    const siblings =
+      parentKey === null
+        ? index.roots
+        : (index.childrenOf.get(parentKey) ?? []);
+    const total = siblings.length;
+    const shown = treeChildPageLimit(this.pageLimits(), parentKey, pageSize);
+    if (shown >= total) return;
+    const next = nextTreeChildPage(
+      this.pageLimits(),
+      parentKey,
+      pageSize,
+      total,
+    );
+    this.pageLimits.set(next);
+    this.childPageShown.emit({
+      parentKey,
+      parentItem: parentKey === null ? undefined : index.byKey.get(parentKey),
+      shown: treeChildPageLimit(next, parentKey, pageSize),
+      total,
+      event,
+    });
+    if (!focus) return;
+    const firstNew = this.keyOf()(siblings[shown]);
+    this.focusedKey.set(firstNew);
+    afterNextRender(
+      () => {
+        const rowIndex = this.nodes().findIndex(
+          (n) => !n.filler && n.key === firstNew,
+        );
+        if (rowIndex !== -1) this.moveFocus(rowIndex);
+      },
+      { injector: this.injector },
+    );
+  }
+
+  // ---- label editing -------------------------------------------------------
+
+  private startEdit(node: OgeTreeNode<T>, event?: Event): boolean {
+    if (this._editingKey() === node.key) return true;
+    const open = runTreeEditStart<T>({
+      node,
+      allow: this.allowEditing(),
+      treeDisabled: this.disabled(),
+      event,
+      emitStarting: (starting) => this.itemEditStarting.emit(starting),
+    });
+    if (!open) return false;
+    this._editError.set(null);
+    this._editingKey.set(node.key);
+    return true;
+  }
+
+  protected onEditKeydown(node: OgeTreeNode<T>, event: KeyboardEvent): void {
+    // the field owns its keys: arrows move the caret, Space types a space,
+    // and Escape must not reach a drawer or dialog around the tree
+    event.stopPropagation();
+    const action = planTreeEditKey(event.key);
+    if (action === null) return;
+    event.preventDefault();
+    if (action === 'cancel') this.closeEditor(node.key, true);
+    else this.commitEdit(node, event, true);
+  }
+
+  protected onEditBlur(node: OgeTreeNode<T>, event: FocusEvent): void {
+    if (this._editingKey() !== node.key) return;
+    this.commitEdit(node, event, false);
+  }
+
+  private commitEdit(
+    node: OgeTreeNode<T>,
+    event: Event,
+    refocus: boolean,
+  ): void {
+    const field = this.editInput()?.nativeElement;
+    const result = runTreeEditCommit<T>({
+      key: node.key,
+      item: node.item,
+      previousValue: node.text,
+      value: field?.value ?? node.text,
+      event,
+      validate: this.validateEdit(),
+      invalidMessage: this.mergedMessages().editInvalid,
+      emitEditing: (editing) => this.itemEditing.emit(editing),
+      emitEdited: (edited) => this.itemEdited.emit(edited),
+    });
+    if (result.status === 'invalid') {
+      const error = result.error ?? this.mergedMessages().editInvalid;
+      this._editError.set(error);
+      this.announcer.announce(error);
+      if (refocus) field?.focus();
+      return;
+    }
+    this.closeEditor(node.key, refocus);
+  }
+
+  /** Closes the editor; with `refocus` the row takes the focus back. */
+  private closeEditor(key: RowKey, refocus: boolean): void {
+    // cleared first, so the blur the refocus causes is not a second commit
+    this._editingKey.set(null);
+    this._editError.set(null);
+    if (refocus) this.elementForKey(key)?.focus();
+  }
+
+  private isEditTarget(target: EventTarget | null): boolean {
+    return (
+      target instanceof Element &&
+      target.closest('.oge-tree-view-edit-input') !== null
+    );
+  }
+
   // ---- drag & drop ---------------------------------------------------------
 
+  /**
+   * Pointer drags run on `@oge-ui/behavior`'s `beginOgeTreeDrag`
+   * (`beginPointerDragDrop` underneath): threshold, touch long press, ghost,
+   * auto-scroll, capture-phase Escape, hover-to-expand and the cross-tree
+   * hit-test over the `dragGroup` registry. The drop runs the same commit
+   * as Ctrl+V.
+   */
   protected onPointerDown(node: OgeTreeNode<T>, event: PointerEvent): void {
-    if (!this.allowDragging() || this.disabled() || node.filler) return;
+    if (!this.allowDragging() || this.disabled() || node.filler || node.more) {
+      return;
+    }
     if (event.button !== 0 || this.isCheckTarget(event.target)) return;
-    this.dragCandidate = node.key;
-    this.dragOrigin = { x: event.clientX, y: event.clientY };
-  }
-
-  protected onPointerMove(event: PointerEvent): void {
-    if (this.dragCandidate === null || !this.dragOrigin) return;
-    const point = { x: event.clientX, y: event.clientY };
-    if (
-      this._dragKey() === null &&
-      !exceedsTreeDragThreshold(this.dragOrigin, point)
-    ) {
-      return;
-    }
-    if (this._dragKey() === null) {
-      this._dragKey.set(this.dragCandidate);
-      const target = event.target;
-      if (target instanceof Element && 'setPointerCapture' in target) {
-        try {
-          (
-            target as Element & { setPointerCapture(id: number): void }
-          ).setPointerCapture(event.pointerId);
-        } catch {
-          // capture is best-effort
-        }
-      }
-    }
-    this.updateDropTarget(event);
-  }
-
-  protected onPointerUp(event: PointerEvent): void {
-    const dragKey = this._dragKey();
-    const dropKey = this._dropTargetKey();
-    const position = this._dropPosition();
-    this.resetDrag();
-    if (dragKey === null || dropKey === null || position === null) return;
-    const index = this.treeIndex();
-    const dragItem = index.byKey.get(dragKey);
-    const dropItem = index.byKey.get(dropKey);
-    if (!dragItem || !dropItem) return;
-    const reordering: OgeTreeReorderingEvent<T> = {
-      dragKey,
-      dragItem,
-      dropKey,
-      dropItem,
-      position,
-      cancel: false,
-    };
-    this.itemReordering.emit(reordering);
-    if (reordering.cancel) return;
-    this.itemReordered.emit({
-      dragKey,
-      dragItem,
-      dropKey,
-      dropItem,
-      position,
+    if (this.isEditTarget(event.target)) return;
+    this.dragHandle?.cancel();
+    const key = node.key;
+    this.dragHandle = beginOgeTreeDrag(event, {
+      peer: this.peer,
+      key,
+      row: event.currentTarget as Element | null,
+      autoScroll: this.scrollEl()?.nativeElement ?? null,
+      onStart: () => this._dragKey.set(key),
+      onEnd: () => {
+        this._dragKey.set(null);
+        this.dragHandle = null;
+      },
     });
-    void event;
-  }
-
-  private updateDropTarget(event: PointerEvent): void {
-    const dragKey = this._dragKey();
-    if (dragKey === null) return;
-    const row = this.rowElements().find((ref) => {
-      const rect = ref.nativeElement.getBoundingClientRect();
-      return event.clientY >= rect.top && event.clientY <= rect.bottom;
-    });
-    const key = row?.nativeElement.getAttribute('data-key');
-    if (!row || key === null || key === undefined) {
-      this._dropTargetKey.set(null);
-      this._dropPosition.set(null);
-      return;
-    }
-    const node = this.nodes().find((n) => String(n.key) === key && !n.filler);
-    if (!node || !treeCanDrop(this.treeIndex(), dragKey, node.key)) {
-      this._dropTargetKey.set(null);
-      this._dropPosition.set(null);
-      return;
-    }
-    const rect = row.nativeElement.getBoundingClientRect();
-    const position = resolveTreeDropPosition(
-      event.clientY,
-      rect,
-      this.allowDropInside(),
-    );
-    this._dropTargetKey.set(node.key);
-    this._dropPosition.set(position);
-    this.scheduleHoverExpand(node, position);
-  }
-
-  /** Hovering a collapsed parent long enough opens it, so you can drop inside. */
-  private scheduleHoverExpand(
-    node: OgeTreeNode<T>,
-    position: OgeTreeDropPosition,
-  ): void {
-    const shouldArm =
-      position === 'inside' && node.hasChildren && !node.expanded;
-    if (!shouldArm) {
-      if (this.hoverExpandKey !== null) {
-        clearTimeout(this.hoverExpandTimer);
-        this.hoverExpandKey = null;
-      }
-      return;
-    }
-    if (this.hoverExpandKey === node.key) return;
-    clearTimeout(this.hoverExpandTimer);
-    this.hoverExpandKey = node.key;
-    this.hoverExpandTimer = setTimeout(() => {
-      if (this._dragKey() !== null) void this.expand(node.key);
-    }, OGE_TREE_DRAG_HOVER_EXPAND_MS);
-  }
-
-  private resetDrag(): void {
-    clearTimeout(this.hoverExpandTimer);
-    this.hoverExpandKey = null;
-    this.dragCandidate = null;
-    this.dragOrigin = null;
-    this._dragKey.set(null);
-    this._dropTargetKey.set(null);
-    this._dropPosition.set(null);
-  }
-
-  /** Escape cancels an in-flight drag, matching the tab strip. */
-  protected onHostKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && this._dragKey() !== null) {
-      event.preventDefault();
-      this.resetDrag();
-    }
   }
 }
 

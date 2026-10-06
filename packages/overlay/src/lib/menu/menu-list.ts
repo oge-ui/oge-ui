@@ -17,9 +17,19 @@ import {
 } from '@angular/core';
 import {
   OgeMenuTypeAhead,
+  isMenuHeader,
+  isMenuItemNavigable,
   menuEdgeIndex,
+  menuItemAriaChecked,
+  menuItemIndicator,
+  menuItemKeepsOpen,
+  menuItemNextChecked,
+  menuItemRole,
+  menuItemSegments,
   menuMoveIndex,
+  menuRetainedActiveIndex,
   ogeIsRtl,
+  type OgeMenuActivationTrigger,
 } from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG } from '../config';
 import {
@@ -47,6 +57,14 @@ let nextMenuId = 0;
  * <oge-menu-list [items]="items" (itemClick)="onItem($event)" (closeRequest)="close($event.reason)" />
  * ```
  *
+ * Rows may be `type: 'checkbox' | 'radio'` (`menuitemcheckbox` /
+ * `menuitemradio` with `aria-checked`; radios of one `group` render inside a
+ * `role="group"`) or `type: 'header'` captions that label the following rows
+ * as a group and are skipped by the keyboard. The list never mutates
+ * `checked`: `itemClick` carries the next state and the owner updates its
+ * items (`applyMenuItemCheck`). Space toggles check/radio rows without
+ * closing the menu (APG); `keepOpen` keeps it open on any activation.
+ *
  * Items with `items` children are submenu parents: activation or ArrowRight
  * opens a nested `oge-menu-list` in an anchored panel of its own. The nested
  * level's `'escape'`/`'back'` close requests are absorbed here (the level
@@ -70,7 +88,45 @@ let nextMenuId = 0;
   },
   styleUrl: './menu-list.scss',
   template: `
-    @for (item of items(); track $index) {
+    @for (segment of segments(); track $index) {
+      @if (segment.group) {
+        <div
+          class="oge-menu-group"
+          role="group"
+          [attr.aria-labelledby]="
+            segment.headerIndex >= 0 ? itemId(segment.headerIndex) : null
+          "
+        >
+          @if (segment.headerIndex >= 0) {
+            <div
+              class="oge-menu-header"
+              role="presentation"
+              [id]="itemId(segment.headerIndex)"
+            >
+              {{ items()[segment.headerIndex].text }}
+            </div>
+          }
+          @for (index of segment.indexes; track index) {
+            <ng-container
+              *ngTemplateOutlet="
+                row;
+                context: { $implicit: items()[index], index: index }
+              "
+            />
+          }
+        </div>
+      } @else {
+        @for (index of segment.indexes; track index) {
+          <ng-container
+            *ngTemplateOutlet="
+              row;
+              context: { $implicit: items()[index], index: index }
+            "
+          />
+        }
+      }
+    }
+    <ng-template #row let-item let-index="index">
       @if (item.separator) {
         <hr class="oge-menu-separator" role="separator" />
       } @else if (item.url && !item.items?.length) {
@@ -78,21 +134,21 @@ let nextMenuId = 0;
           class="oge-menu-item"
           role="menuitem"
           tabindex="-1"
-          [id]="itemId($index)"
+          [id]="itemId(index)"
           [href]="item.url"
-          [class.oge-menu-item-active]="$index === activeIndex()"
+          [class.oge-menu-item-active]="index === activeIndex()"
           [class.oge-menu-item-danger]="item.severity === 'danger'"
           [class.oge-menu-item-disabled]="item.disabled ?? false"
           [attr.aria-disabled]="item.disabled ? 'true' : null"
           [attr.aria-keyshortcuts]="item.shortcut ?? null"
           [attr.title]="item.hint ?? null"
-          (click)="activate(item, $index, $event)"
-          (pointerenter)="onItemHover(item, $index)"
+          (click)="activate(item, index, $event)"
+          (pointerenter)="onItemHover(item, index)"
         >
           <ng-container
             *ngTemplateOutlet="
               rowContent;
-              context: { $implicit: item, index: $index }
+              context: { $implicit: item, index: index }
             "
           />
         </a>
@@ -101,20 +157,17 @@ let nextMenuId = 0;
           type="button"
           class="oge-menu-item"
           tabindex="-1"
-          [id]="itemId($index)"
-          [class.oge-menu-item-active]="$index === activeIndex()"
+          [id]="itemId(index)"
+          [class.oge-menu-item-active]="index === activeIndex()"
           [class.oge-menu-item-danger]="item.severity === 'danger'"
-          [attr.role]="
-            item.checked !== undefined && !item.items?.length
-              ? 'menuitemcheckbox'
-              : 'menuitem'
-          "
-          [attr.aria-checked]="item.items?.length ? null : ariaChecked(item)"
+          [class.oge-menu-item-checked]="ariaChecked(item) === 'true'"
+          [attr.role]="role(item)"
+          [attr.aria-checked]="ariaChecked(item)"
           [attr.aria-disabled]="item.disabled ? 'true' : null"
           [attr.aria-haspopup]="item.items?.length ? 'menu' : null"
           [attr.aria-expanded]="
             item.items?.length
-              ? $index === openChildIndex()
+              ? index === openChildIndex()
                 ? 'true'
                 : 'false'
               : null
@@ -122,18 +175,18 @@ let nextMenuId = 0;
           [attr.aria-keyshortcuts]="item.shortcut ?? null"
           [attr.title]="item.hint ?? null"
           [disabled]="item.disabled ?? false"
-          (click)="activate(item, $index, $event)"
-          (pointerenter)="onItemHover(item, $index)"
+          (click)="activate(item, index, $event)"
+          (pointerenter)="onItemHover(item, index)"
         >
           <ng-container
             *ngTemplateOutlet="
               rowContent;
-              context: { $implicit: item, index: $index }
+              context: { $implicit: item, index: index }
             "
           />
         </button>
       }
-    }
+    </ng-template>
     <ng-template #rowContent let-item let-index="index">
       @if (itemTemplate(); as customTemplate) {
         <ng-container
@@ -143,24 +196,41 @@ let nextMenuId = 0;
           "
         />
       } @else {
-        @if (item.checked !== undefined && !item.items?.length) {
-          <span class="oge-menu-item-check">
-            @if (item.checked) {
-              <svg
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m3 8.5 3.5 3.5L13 4.5" />
-              </svg>
-            }
-          </span>
+        @switch (indicator(item)) {
+          @case ('check') {
+            <span class="oge-menu-item-check">
+              @if (item.checked) {
+                <svg
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m3 8.5 3.5 3.5L13 4.5" />
+                </svg>
+              }
+            </span>
+          }
+          @case ('radio') {
+            <span class="oge-menu-item-check oge-menu-item-radio">
+              @if (item.checked) {
+                <svg
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <circle cx="8" cy="8" r="3.5" />
+                </svg>
+              }
+            </span>
+          }
         }
         @if (hasIcons()) {
           <span class="oge-menu-item-icon">
@@ -242,7 +312,10 @@ export class OgeMenuList {
    */
   readonly nested = input(false);
 
-  /** Fires when an enabled item is activated (click, Enter or Space). */
+  /**
+   * Fires when an enabled item is activated (click, Enter or Space). For
+   * checkbox/radio rows `checked` is the state the activation moves to.
+   */
   readonly itemClick = output<OgeMenuListItemClickEvent>();
   /** The menu asks its owner to close it; the owner handles focus. */
   readonly closeRequest = output<OgeMenuCloseRequestEvent>();
@@ -256,14 +329,26 @@ export class OgeMenuList {
    */
   protected readonly hasIcons = computed(() =>
     this.items().some(
-      (item) => !item.separator && (item.icon || item.iconClass),
+      (item) =>
+        !item.separator && !isMenuHeader(item) && (item.icon || item.iconClass),
     ),
   );
-  /** Resets whenever the items themselves change (async reloads etc.). */
-  protected readonly activeIndex = linkedSignal({
-    source: this.items,
-    computation: () => -1,
-  });
+  /** Header-labelled sections and radio sets, each rendered as a group. */
+  protected readonly segments = computed(() => menuItemSegments(this.items()));
+  /**
+   * Resets whenever the items themselves change (async reloads etc.) — but
+   * survives a same-rows re-render, which is what a kept-open checkbox or
+   * radio toggle hands back.
+   */
+  protected readonly activeIndex = linkedSignal<readonly OgeMenuItem[], number>(
+    {
+      source: this.items,
+      computation: (items, previous) =>
+        previous
+          ? menuRetainedActiveIndex(previous.source, items, previous.value)
+          : -1,
+    },
+  );
   protected readonly activeItemId = computed(() => {
     const index = this.activeIndex();
     return index >= 0 ? this.itemId(index) : null;
@@ -337,12 +422,19 @@ export class OgeMenuList {
   }
 
   protected ariaChecked(item: OgeMenuItem): 'true' | 'false' | null {
-    if (item.checked === undefined) return null;
-    return item.checked ? 'true' : 'false';
+    return menuItemAriaChecked(item);
+  }
+
+  protected role(item: OgeMenuItem): string {
+    return menuItemRole(item);
+  }
+
+  protected indicator(item: OgeMenuItem): 'check' | 'radio' | null {
+    return menuItemIndicator(item);
   }
 
   protected onItemHover(item: OgeMenuItem, index: number): void {
-    if (item.disabled) return;
+    if (!isMenuItemNavigable(item)) return;
     this.activeIndex.set(index);
     this.clearHoverTimers();
     const open = this.openChildIndex();
@@ -365,8 +457,9 @@ export class OgeMenuList {
     item: OgeMenuItem,
     index: number,
     event: MouseEvent | KeyboardEvent,
+    trigger: OgeMenuActivationTrigger = 'pointer',
   ): void {
-    if (item.disabled || item.separator) {
+    if (!isMenuItemNavigable(item)) {
       if (item.url) event.preventDefault(); // a disabled link must not navigate
       return;
     }
@@ -379,8 +472,14 @@ export class OgeMenuList {
       this.openChild(index, keyboard);
       return;
     }
-    this.itemClick.emit({ item, index, event });
+    this.itemClick.emit({
+      item,
+      index,
+      event,
+      checked: menuItemNextChecked(item),
+    });
     item.action?.();
+    if (menuItemKeepsOpen(item, trigger)) return;
     this.closeRequest.emit({ reason: 'select', event });
   }
 
@@ -465,7 +564,7 @@ export class OgeMenuList {
         document.getElementById(this.itemId(index))?.click();
         return;
       }
-      this.activate(item, index, event);
+      this.activate(item, index, event, key === ' ' ? 'space' : 'enter');
       return;
     }
     if (key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {

@@ -1,6 +1,6 @@
 # @oge-ui/react-buttons
 
-> React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.
+> React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm, auto-repeat and stand-alone toggle buttons — running the same press machine and the same stylesheet as the Angular package.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/buttons
@@ -109,6 +109,9 @@ _Behavior_
 | --- | --- | --- | --- |
 | `disabled` | `boolean` | `false` | Disables the button. |
 | `value` | `string` | `—` | Selection key within an enclosing `<OgeButtonGroup>`; also stamped as `data-oge-value` so the group resolves clicks and arrow-selection off the DOM. |
+| `toggle` | `boolean` | `false` | Makes the button a toggle button: each accepted click flips `selected` and the native button renders `aria-pressed`. Ignored inside a `single`/`multiple` `<OgeButtonGroup>`, which owns the selection. |
+| `selected` | `boolean` | `—` | Pressed state of a `toggle` button (controlled). Pair with `onSelectedChange`; use `defaultSelected` for an uncontrolled button. |
+| `defaultSelected` | `boolean` | `false` | Initial pressed state of an uncontrolled `toggle` button. |
 | `loading` | `boolean` | `—` | Busy state. Omit it to let the component own the flag while an `action` is pending; pass it to control the flag yourself. |
 | `action` | `() => unknown` | `—` | Async click handler. Turns `loading` on while the returned promise is pending and ignores further clicks until it settles (single-flight). |
 | `clickGuard` | `boolean \| OgeClickGuardOptions` | `false` | Rate-limits `onClick`. `true` throttles with `config.clickGuardMs`. |
@@ -143,11 +146,13 @@ _Accessibility_
 | `onActionDone` | `(result: unknown) => void` | The `action` settled successfully. |
 | `onActionFailed` | `(error: unknown) => void` | The `action` threw or rejected. |
 | `onLoadingChange` | `(loading: boolean) => void` | The busy state changed — the controlled half of `loading`. |
+| `onSelectedChange` | `(event: OgeButtonSelectedChangeEvent) => void` | A click flipped a `toggle` button’s state — the controlled half of `selected`. Fires before `onClick`. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `OgeButtonSelectedChangeEvent` | `{ selected: boolean; previousValue: boolean; event: MouseEvent \| KeyboardEvent }` | Payload of `onSelectedChange`: the new and the previous pressed state, and the click (or Space/Enter of a gesture) that did it. |
 | `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text'` | Shared with the Angular package via @oge-ui/behavior. |
 | `OgeButtonSeverity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Shared with the Angular package via @oge-ui/behavior. |
 | `OgeButtonSize` | `'sm' \| 'md' \| 'lg'` | Shared with the Angular package via @oge-ui/behavior. |
@@ -257,7 +262,7 @@ _Imperative handle (via ref)_
 | --- | --- | --- |
 | `OgeMenuItem` | `interface` | The canonical menu item (text, value, checked, severity, icon, url, badge, shortcut, separator, action, nested items) — shared with the Angular overlay via `@oge-ui/behavior`. |
 | `OgeDropDownItemsFn` | `() => readonly OgeMenuItem[] \| Promise<readonly OgeMenuItem[]>` | Lazy items source — see `items`. |
-| `OgeDropDownButtonItemClickEvent` | `{ item; index; event }` | Payload of `onItemClick`. |
+| `OgeDropDownButtonItemClickEvent` | `{ item; index; checked?; event }` | Payload of `onItemClick`; `checked` is the next state of a checkbox/radio row (`OgeMenuItem.type`), `undefined` for plain rows. |
 | `OgeDropDownSelectionChangedEvent` | `{ item; previousItem }` | Payload of `onSelectionChange`. |
 
 ## Demos
@@ -376,6 +381,48 @@ export function BadgesDemo() {
       <OgeButton text="Inbox" badge={7} />
       <OgeButton text="Alerts" badge={120} severity="accent" stylingMode="outlined" />
       <OgeButton text="Live" badge stylingMode="text" />
+    </div>
+  );
+}
+```
+
+### Toggle button
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import type { OgeButtonSelectedChangeEvent } from '@oge-ui/react-buttons';
+
+export function ToggleButtonDemo() {
+  // toggle = a WAI-ARIA toggle button: aria-pressed="true|false", and every
+  // accepted click reports the next state through onSelectedChange.
+  const [bold, setBold] = useState(true);
+  const [italic, setItalic] = useState(false);
+
+  const onItalic = (event: OgeButtonSelectedChangeEvent) => {
+    console.log(event.previousValue, '→', event.selected);
+    setItalic(event.selected);
+  };
+  return (
+    <div className="demo-row">
+      <OgeButton
+        text="Bold"
+        toggle
+        selected={bold}
+        onSelectedChange={(event) => setBold(event.selected)}
+      />
+      <OgeButton
+        text="Italic"
+        stylingMode="outlined"
+        toggle
+        selected={italic}
+        onSelectedChange={onItalic}
+      />
+      {/* uncontrolled: defaultSelected seeds it, the button keeps the state */}
+      <OgeButton text="Pinned" stylingMode="text" toggle defaultSelected />
+      <OgeButton text="Locked" toggle selected disabled />
     </div>
   );
 }

@@ -6,7 +6,9 @@ import {
   Directive,
   ElementRef,
   EnvironmentInjector,
+  TemplateRef,
   ViewEncapsulation,
+  computed,
   createComponent,
   effect,
   inject,
@@ -14,14 +16,28 @@ import {
   untracked,
   type ComponentRef,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import {
+  OGE_POPUP_ARROW_SIZE,
   OGE_TOOLTIP_PANEL_OPTIONS,
   OgeTooltipCore,
+  modalCssSize,
+  popupArrowInset,
   tooltipDescribedByTarget,
   type OgePopupPlacement,
+  type OgeTooltipShowMode,
 } from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG } from '../config';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
+
+/**
+ * Context of a tooltip template (`[ogeTooltip]="tpl"`): `$implicit` is the
+ * directive's `tooltipContext` value.
+ */
+export interface OgeTooltipTemplateContext<C = unknown> {
+  /** The `tooltipContext` value. */
+  $implicit: C;
+}
 
 /**
  * Presentational tooltip bubble — created by the `OgeTooltip` directive and
@@ -32,6 +48,7 @@ import { OgeAnchoredPanel } from '../panel/anchored-panel';
   selector: 'oge-tooltip-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  imports: [NgTemplateOutlet],
   host: {
     class: 'oge-tooltip',
     role: 'tooltip',
@@ -40,15 +57,44 @@ import { OgeAnchoredPanel } from '../panel/anchored-panel';
     '[style.left.px]': 'panel().position()?.left ?? 0',
     '[style.display]': "panel().isOpen() ? null : 'none'",
     '[style.opacity]': "panel().position() ? null : '0'",
+    '[style.max-width]': 'maxWidth()',
     '[class.oge-tooltip-ready]': 'panel().position() !== null',
     '[attr.data-placement]': 'panel().position()?.placement ?? null',
   },
   styleUrl: './tooltip.scss',
-  template: `{{ text() }}`,
+  template: `
+    @if (template(); as tpl) {
+      <ng-container
+        [ngTemplateOutlet]="tpl"
+        [ngTemplateOutletContext]="{ $implicit: context() }"
+      />
+    } @else {
+      {{ text() }}
+    }
+    @if (arrow()) {
+      @if (panel().position()?.arrow; as a) {
+        <span
+          class="oge-tooltip-arrow"
+          aria-hidden="true"
+          [attr.data-side]="a.side"
+          [style.left.px]="arrowInset(a).left"
+          [style.top.px]="arrowInset(a).top"
+        ></span>
+      }
+    }
+  `,
 })
 export class OgeTooltipPanel {
   readonly panel = input.required<OgeAnchoredPanel>();
   readonly text = input('');
+  readonly template = input<TemplateRef<OgeTooltipTemplateContext> | null>(
+    null,
+  );
+  readonly context = input<unknown>(undefined);
+  readonly arrow = input(false);
+  readonly maxWidth = input<string | null>(null);
+
+  protected readonly arrowInset = popupArrowInset;
 }
 
 /**
@@ -57,14 +103,24 @@ export class OgeTooltipPanel {
  * ```html
  * <button ogeTooltip="Save your changes">Save</button>
  * <oge-button text="Delete" ogeTooltip="Removes the record permanently"
- *             tooltipPlacement="bottom" />
+ *             tooltipPlacement="bottom" [tooltipArrow]="true" />
+ *
+ * <!-- rich content: a template, with an optional context -->
+ * <button type="button" [ogeTooltip]="userTip" [tooltipContext]="user">Ada</button>
+ * <ng-template #userTip let-user><strong>{{ user.name }}</strong> · {{ user.role }}</ng-template>
+ *
+ * <!-- imperative: exportAs + manual mode -->
+ * <button type="button" ogeTooltip="Copied!" tooltipShowMode="manual"
+ *         #tip="ogeTooltip" (click)="tip.open()">Copy</button>
  * ```
  *
  * Shows after a hover dwell (configurable, `provideOgeOverlayConfig`) or
- * immediately on keyboard focus; hides on leave, blur or Escape. While
+ * immediately on keyboard focus; hides on leave, blur or Escape —
+ * `tooltipShowMode` switches to focus-only, click-to-toggle or manual. While
  * visible the trigger's `aria-describedby` includes the tooltip id — any
  * existing value is preserved. The bubble is viewport-aware (flips and
- * clamps) and never receives pointer events.
+ * clamps), optionally draws a callout arrow, and never receives pointer
+ * events: rich content stays non-interactive (APG tooltip).
  *
  * The timing machine and the `aria-describedby` bookkeeping are
  * `@oge-ui/behavior`'s `OgeTooltipCore`, shared verbatim with the React
@@ -72,12 +128,14 @@ export class OgeTooltipPanel {
  */
 @Directive({
   selector: '[ogeTooltip]',
+  exportAs: 'ogeTooltip',
   host: {
-    '(pointerenter)': 'scheduleShow()',
-    '(pointerleave)': 'scheduleHide()',
-    '(focusin)': 'show()',
-    '(focusout)': 'hide()',
-    '(keydown.escape)': 'hide()',
+    '(pointerenter)': 'core.pointerEnter()',
+    '(pointerleave)': 'core.pointerLeave()',
+    '(focusin)': 'core.focusIn()',
+    '(focusout)': 'core.focusOut()',
+    '(click)': 'core.click()',
+    '(keydown)': 'core.keyDown($event.key)',
   },
 })
 export class OgeTooltip {
@@ -86,29 +144,65 @@ export class OgeTooltip {
   private readonly envInjector = inject(EnvironmentInjector);
   private readonly config = inject(OGE_OVERLAY_CONFIG);
 
-  /** Tooltip text. An empty string disables the tooltip. */
-  readonly ogeTooltip = input.required<string>();
+  /**
+   * Tooltip content: text, or a template for rich content (formatting,
+   * icons — never focusable controls: a tooltip is not interactive). An
+   * empty string disables the tooltip.
+   */
+  readonly ogeTooltip = input.required<
+    string | TemplateRef<OgeTooltipTemplateContext>
+  >();
+  /** Value handed to a template `ogeTooltip` as `$implicit`. */
+  readonly tooltipContext = input<unknown>(undefined);
   /** Preferred side; flips when there is no room. Default `'top'` (centered). */
   readonly tooltipPlacement = input<OgePopupPlacement>('top');
+  /**
+   * What shows the tooltip: `'hover'` (dwell + keyboard focus, the default),
+   * `'focus'`, `'click'` (activation toggles) or `'manual'` (only
+   * `open()` / `close()` / `toggle()`).
+   */
+  readonly tooltipShowMode = input<OgeTooltipShowMode>('hover');
   /** Hover dwell before showing; falls back to the overlay config. */
   readonly tooltipShowDelay = input<number | undefined>(undefined);
   /** Grace period before hiding; falls back to the overlay config. */
   readonly tooltipHideDelay = input<number | undefined>(undefined);
+  /** Draws a callout arrow pointing at the trigger. Default `false`. */
+  readonly tooltipArrow = input(false);
+  /** Maximum bubble width (px number or any CSS length); CSS default 280px. */
+  readonly tooltipMaxWidth = input<number | string | undefined>(undefined);
   /** Disables showing without detaching the directive. */
   readonly tooltipDisabled = input(false);
 
   private componentRef: ComponentRef<OgeTooltipPanel> | null = null;
 
+  private readonly template = computed(() => {
+    const content = this.ogeTooltip();
+    return content instanceof TemplateRef ? content : null;
+  });
+  private readonly text = computed(() => {
+    const content = this.ogeTooltip();
+    return typeof content === 'string' ? content : '';
+  });
+  private readonly maxWidth = computed(() =>
+    modalCssSize(this.tooltipMaxWidth()),
+  );
+
   private readonly panel = new OgeAnchoredPanel({
     anchor: () => this.host.nativeElement,
     panel: () => this.componentRef?.location.nativeElement ?? null,
     placement: () => this.tooltipPlacement(),
+    offset: () =>
+      this.config.offset + (this.tooltipArrow() ? OGE_POPUP_ARROW_SIZE : 0),
+    arrow: () => this.tooltipArrow(),
     ...OGE_TOOLTIP_PANEL_OPTIONS,
     onClosed: () => this.core.onPanelClosed(),
   });
 
-  private readonly core = new OgeTooltipCore({
-    text: () => this.ogeTooltip(),
+  /** The shared timing machine — the host listeners route into it. */
+  protected readonly core = new OgeTooltipCore({
+    text: () => this.text(),
+    hasContent: () => this.template() !== null,
+    showMode: () => this.tooltipShowMode(),
     disabled: () => this.tooltipDisabled(),
     showDelay: () => this.tooltipShowDelay() ?? this.config.tooltipShowDelayMs,
     hideDelay: () => this.tooltipHideDelay() ?? this.config.tooltipHideDelayMs,
@@ -134,35 +228,54 @@ export class OgeTooltip {
         this.componentRef = null;
       }
     });
-    // Live updates: re-render the bubble text (and hide when it empties or
-    // the tooltip is disabled) while visible.
+    // Live updates: re-render the bubble content (and hide when it empties
+    // or the tooltip is disabled) while visible.
     effect(() => {
-      const text = this.ogeTooltip();
+      this.ogeTooltip();
+      this.tooltipContext();
+      this.tooltipArrow();
+      this.maxWidth();
       this.tooltipDisabled();
       untracked(() => {
-        this.componentRef?.setInput('text', text);
+        this.syncBubbleInputs();
         this.core.sync();
       });
     });
   }
 
-  /** Shows after the hover dwell (pointer path). */
-  protected scheduleShow(): void {
-    this.core.scheduleShow();
+  /** Shows the tooltip now, whatever the show mode (no dwell). */
+  open(): void {
+    this.core.show();
   }
 
-  /** Hides after the grace period (pointer path). */
-  protected scheduleHide(): void {
-    this.core.scheduleHide();
+  /** Hides the tooltip now. */
+  close(): void {
+    this.core.hide();
   }
 
-  /** Shows immediately (keyboard focus path). */
+  /** Shows a hidden tooltip, hides a visible one. */
+  toggle(): void {
+    this.core.toggle();
+  }
+
+  /** Shows immediately; the pre-`open()` name, kept for existing callers. */
   show(): void {
     this.core.show();
   }
 
+  /** Hides immediately; the pre-`close()` name, kept for existing callers. */
   hide(): void {
     this.core.hide();
+  }
+
+  private syncBubbleInputs(): void {
+    const ref = this.componentRef;
+    if (!ref) return;
+    ref.setInput('text', this.text());
+    ref.setInput('template', this.template());
+    ref.setInput('context', this.tooltipContext());
+    ref.setInput('arrow', this.tooltipArrow());
+    ref.setInput('maxWidth', this.maxWidth());
   }
 
   private ensureBubble(): void {
@@ -171,7 +284,7 @@ export class OgeTooltip {
       environmentInjector: this.envInjector,
     });
     this.componentRef.setInput('panel', this.panel);
-    this.componentRef.setInput('text', this.ogeTooltip());
+    this.syncBubbleInputs();
     this.appRef.attachView(this.componentRef.hostView);
     document.body.appendChild(this.componentRef.location.nativeElement);
   }

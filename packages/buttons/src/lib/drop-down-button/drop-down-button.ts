@@ -473,6 +473,7 @@ export class OgeDropDownButton {
     this.itemClick.emit({
       item: event.item,
       index: event.index,
+      checked: event.checked,
       event: event.event,
     });
     if (

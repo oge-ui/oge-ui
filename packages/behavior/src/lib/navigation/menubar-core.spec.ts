@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   OGE_DEFAULT_MENUBAR_MESSAGES,
+  OGE_MENUBAR_MORE_KEY,
   findMenubarItemPath,
+  menubarBarEntries,
+  menubarEntryHidden,
+  menubarItemPath,
+  menubarMoreActive,
+  menubarOverflowItems,
+  resolveMenubarOverflow,
   isMenubarCompact,
   menubarBarKeys,
   menubarClosedReason,
@@ -230,5 +237,86 @@ describe('isMenubarCompact', () => {
   it('never collapses without a breakpoint, or before the first measure', () => {
     expect(isMenubarCompact(100, undefined)).toBe(false);
     expect(isMenubarCompact(0, 600)).toBe(false);
+  });
+});
+
+describe('"More" overflow', () => {
+  const bar: OgeMenubarDescriptorCore[] = [
+    { id: 'a', item: { text: 'File', key: 'file' } },
+    { id: 'b', item: { text: 'Edit', key: 'edit', overflow: 'never' } },
+    { id: 's', item: { text: '', separator: true } },
+    { id: 'c', item: { text: 'View', key: 'view' } },
+    { id: 'd', item: { text: 'Help', key: 'help', items: [deepItem] } },
+  ];
+  const sizes = [60, 60, 1, 60, 60];
+  const fit = (containerSize: number) =>
+    resolveMenubarOverflow({
+      containerSize,
+      descriptors: bar,
+      sizes,
+      moreSize: 50,
+    });
+
+  it('moves nothing when everything fits or before the first measure', () => {
+    expect(fit(400)).toEqual([]);
+    expect(fit(0)).toEqual([]);
+  });
+
+  it('yields trailing auto items first and drags a trailing separator along', () => {
+    // 60 + 60 + 1 + 50 (More) = 171 fits; View and Help overflow, and the
+    // separator, which would trail the bar, moves with them.
+    expect(fit(175)).toEqual([2, 3, 4]);
+  });
+
+  it('never moves a "never" item', () => {
+    expect(fit(10)).not.toContain(1);
+  });
+
+  it('builds the More entry from the overflowed items, separators trimmed', () => {
+    const entries = menubarBarEntries(bar, 'more', [2, 3, 4], 'Daha');
+    expect(entries).toHaveLength(bar.length + 1);
+    const more = entries[bar.length];
+    expect(more.item.key).toBe(OGE_MENUBAR_MORE_KEY);
+    expect(more.item.text).toBe('Daha');
+    expect(more.item.items?.map((i) => i.text)).toEqual(['View', 'Help']);
+    expect(menubarBarEntries(bar, 'hamburger', [2], 'x')).toBe(bar);
+    expect(menubarOverflowItems(bar, [2])).toHaveLength(0);
+  });
+
+  it('hides overflowed entries and an empty More item', () => {
+    expect(menubarEntryHidden(3, bar.length, 'more', [3, 4])).toBe(true);
+    expect(menubarEntryHidden(0, bar.length, 'more', [3, 4])).toBe(false);
+    expect(menubarEntryHidden(bar.length, bar.length, 'more', [])).toBe(true);
+    expect(menubarEntryHidden(bar.length, bar.length, 'more', [4])).toBe(false);
+    expect(menubarEntryHidden(3, bar.length, 'hamburger', [3])).toBe(false);
+  });
+
+  it('marks More current when the active item moved into it', () => {
+    expect(menubarMoreActive(bar, [3, 4], 'view')).toBe(true);
+    expect(menubarMoreActive(bar, [3, 4], 'file')).toBe(false);
+    expect(menubarMoreActive(bar, [3, 4], undefined)).toBe(false);
+  });
+
+  it('reports real paths for items reached through More', () => {
+    const entries = menubarBarEntries(bar, 'more', [3, 4], undefined);
+    const panel = menubarPanelItems(entries, 'bar', bar.length);
+    expect(menubarItemPath(bar, panel, 'bar', bar.length, deepItem, 0)).toEqual(
+      [4, 0],
+    );
+    expect(menubarItemPath(bar, [deepItem], 'bar', 4, deepItem, 0)).toEqual([
+      4, 0,
+    ]);
+    expect(
+      menubarItemPath(bar, [deepItem], 'hamburger', -1, deepItem, 0),
+    ).toEqual([0]);
+  });
+
+  it('"none" disables the hamburger as well', () => {
+    expect(isMenubarCompact(100, 600, 'none')).toBe(false);
+    expect(isMenubarCompact(100, 600, 'more')).toBe(true);
+  });
+
+  it('ships an English More label', () => {
+    expect(OGE_DEFAULT_MENUBAR_MESSAGES.more).toBe('More');
   });
 });

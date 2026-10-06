@@ -122,6 +122,39 @@
   }
 }
 
+// Checkbox / radio rows: the state glyph takes the accent so a checked row
+// reads at a glance; the radio dot shares the check column.
+.oge-menu-item-checked:not(:disabled) .oge-menu-item-check {
+  color: var(--oge-accent);
+}
+
+// Header-labelled sections and radio sets render as role="group" wrappers;
+// they lay out exactly like loose rows.
+.oge-menu-group {
+  display: block;
+}
+
+.oge-menu-group + .oge-menu-group,
+.oge-menu-group + .oge-menu-item,
+.oge-menu-item + .oge-menu-group {
+  margin-block-start: 2px;
+}
+
+// Non-focusable section caption (`type: 'header'`).
+.oge-menu-header {
+  padding: 8px 10px 4px;
+  color: var(--oge-input-muted);
+  font-size: 0.78em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  user-select: none;
+}
+
 .oge-menu-item-text {
   flex: 1 1 auto;
   white-space: nowrap;
@@ -157,6 +190,15 @@
   .oge-menu-separator {
     background: CanvasText;
     border-color: CanvasText;
+  }
+
+  // the glyph is the checked cue; it follows the row's own system colour
+  .oge-menu-item-checked:not(:disabled) .oge-menu-item-check {
+    color: inherit;
+  }
+
+  .oge-menu-header {
+    color: CanvasText;
   }
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   forwardRef,
   type ForwardRefExoticComponent,
   type RefAttributes,
@@ -16,8 +17,18 @@ import {
 } from 'react';
 import {
   OgeMenuTypeAhead,
+  isMenuHeader,
+  isMenuItemNavigable,
   menuEdgeIndex,
+  menuItemAriaChecked,
+  menuItemIndicator,
+  menuItemKeepsOpen,
+  menuItemNextChecked,
+  menuItemRole,
+  menuItemSegments,
   menuMoveIndex,
+  menuRetainedActiveIndex,
+  type OgeMenuActivationTrigger,
   type OgeMenuCloseReason,
   type OgeMenuItem,
   sanitizeUrl,
@@ -32,6 +43,13 @@ export interface OgeMenuListItemClickEvent {
   item: OgeMenuItem;
   /** Index within the `items` prop (separators included). */
   index: number;
+  /**
+   * The checked state the activation moves a checkbox/radio row to (a
+   * checkbox toggles, a radio becomes checked); `undefined` for plain rows.
+   * The menu does not mutate the item — apply it to your items, e.g. with
+   * `applyMenuItemCheck`.
+   */
+  checked?: boolean;
   event: MouseEvent | KeyboardEvent;
 }
 
@@ -64,7 +82,10 @@ export interface OgeMenuListProps {
    * level (`'back'`) instead of bubbling to the owner.
    */
   nested?: boolean;
-  /** Fires when an enabled item is activated (click, Enter or Space). */
+  /**
+   * Fires when an enabled item is activated (click, Enter or Space). For
+   * checkbox/radio rows `checked` is the state the activation moves to.
+   */
   onItemClick?: (event: OgeMenuListItemClickEvent) => void;
   /** The menu asks its owner to close it; the owner handles focus. */
   onCloseRequest?: (event: OgeMenuCloseRequestEvent) => void;
@@ -79,6 +100,14 @@ export interface OgeMenuListProps {
  * disabled items/separators, Home/End jump, printable keys type-ahead,
  * Enter/Space activate. Closing is delegated to the owner via
  * `onCloseRequest` so focus handling stays in one place.
+ *
+ * Rows may be `type: 'checkbox' | 'radio'` (`menuitemcheckbox` /
+ * `menuitemradio` with `aria-checked`; radios of one `group` render inside a
+ * `role="group"`) or `type: 'header'` captions that label the following rows
+ * as a group and are skipped by the keyboard. The list never mutates
+ * `checked`: `onItemClick` carries the next state and the owner updates its
+ * items (`applyMenuItemCheck`). Space toggles check/radio rows without
+ * closing the menu (APG); `keepOpen` keeps it open on any activation.
  *
  * Items with `items` children are submenu parents: activation or ArrowRight
  * opens a nested `<OgeMenuList>` in an anchored panel of its own. The nested
@@ -122,11 +151,17 @@ export const OgeMenuList: ForwardRefExoticComponent<
     const [activeIndex, setActiveIndexState] = useState(-1);
     const [openChildIndex, setOpenChildIndex] = useState(-1);
 
-    /** Resets whenever the items themselves change (async reloads etc.). */
+    /**
+     * Resets whenever the items themselves change (async reloads etc.) — but
+     * survives a same-rows re-render, which is what a kept-open checkbox or
+     * radio toggle hands back.
+     */
     const [prevItems, setPrevItems] = useState(items);
     if (prevItems !== items) {
       setPrevItems(items);
-      setActiveIndexState(-1);
+      setActiveIndexState(
+        menuRetainedActiveIndex(prevItems, items, activeIndex),
+      );
     }
 
     const latest = useRef({ items, config, onItemClick, onCloseRequest });
@@ -257,10 +292,11 @@ export const OgeMenuList: ForwardRefExoticComponent<
         item: OgeMenuItem,
         index: number,
         event: ReactMouseEvent | KeyboardEvent,
+        trigger: OgeMenuActivationTrigger = 'pointer',
       ) => {
         const nativeEvent =
           'nativeEvent' in event ? (event.nativeEvent as MouseEvent) : event;
-        if (item.disabled || item.separator) {
+        if (!isMenuItemNavigable(item)) {
           if (item.url && 'preventDefault' in event) event.preventDefault();
           return;
         }
@@ -274,8 +310,14 @@ export const OgeMenuList: ForwardRefExoticComponent<
           openChild(index, keyboard);
           return;
         }
-        latest.current.onItemClick?.({ item, index, event: nativeEvent });
+        latest.current.onItemClick?.({
+          item,
+          index,
+          event: nativeEvent,
+          checked: menuItemNextChecked(item),
+        });
         item.action?.();
+        if (menuItemKeepsOpen(item, trigger)) return;
         latest.current.onCloseRequest?.({
           reason: 'select',
           event: nativeEvent,
@@ -300,7 +342,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
 
     const onItemHover = useCallback(
       (item: OgeMenuItem, index: number) => {
-        if (item.disabled) return;
+        if (!isMenuItemNavigable(item)) return;
         setActiveIndexState(index);
         clearHoverTimers();
         const open = openChildIndexRef.current;
@@ -392,7 +434,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
           document.getElementById(itemId(index))?.click();
           return;
         }
-        activate(item, index, native);
+        activate(item, index, native, key === ' ' ? 'space' : 'enter');
         return;
       }
       if (
@@ -418,7 +460,8 @@ export const OgeMenuList: ForwardRefExoticComponent<
      * a single left edge instead of stepping in and out down the menu.
      */
     const hasIcons = items.some(
-      (item) => !item.separator && (item.icon || item.iconClass),
+      (item) =>
+        !item.separator && !isMenuHeader(item) && (item.icon || item.iconClass),
     );
 
     const rowContent = (item: OgeMenuItem, index: number) => (
@@ -427,7 +470,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
           renderItem(item, index)
         ) : (
           <>
-            {item.checked !== undefined && !item.items?.length && (
+            {menuItemIndicator(item) === 'check' && (
               <span className="oge-menu-item-check">
                 {item.checked && (
                   <svg
@@ -442,6 +485,21 @@ export const OgeMenuList: ForwardRefExoticComponent<
                     aria-hidden="true"
                   >
                     <path d="m3 8.5 3.5 3.5L13 4.5" />
+                  </svg>
+                )}
+              </span>
+            )}
+            {menuItemIndicator(item) === 'radio' && (
+              <span className="oge-menu-item-check oge-menu-item-radio">
+                {item.checked && (
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="12"
+                    height="12"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <circle cx="8" cy="8" r="3.5" />
                   </svg>
                 )}
               </span>
@@ -495,8 +553,62 @@ export const OgeMenuList: ForwardRefExoticComponent<
       </>
     );
 
-    const ariaChecked = (item: OgeMenuItem): boolean | undefined =>
-      item.checked === undefined ? undefined : item.checked;
+    const renderRow = (item: OgeMenuItem, index: number): ReactNode =>
+      item.separator ? (
+        <hr key={index} className="oge-menu-separator" role="separator" />
+      ) : item.url && !item.items?.length ? (
+        <a
+          key={index}
+          className={[
+            'oge-menu-item',
+            index === activeIndex && 'oge-menu-item-active',
+            item.severity === 'danger' && 'oge-menu-item-danger',
+            (item.disabled ?? false) && 'oge-menu-item-disabled',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          role="menuitem"
+          tabIndex={-1}
+          id={itemId(index)}
+          href={sanitizeUrl(item.url)}
+          aria-disabled={item.disabled ? 'true' : undefined}
+          aria-keyshortcuts={item.shortcut}
+          title={item.hint}
+          onClick={(event) => activate(item, index, event)}
+          onPointerEnter={() => onItemHover(item, index)}
+        >
+          {rowContent(item, index)}
+        </a>
+      ) : (
+        <button
+          key={index}
+          type="button"
+          className={[
+            'oge-menu-item',
+            index === activeIndex && 'oge-menu-item-active',
+            item.severity === 'danger' && 'oge-menu-item-danger',
+            menuItemAriaChecked(item) === 'true' && 'oge-menu-item-checked',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          tabIndex={-1}
+          id={itemId(index)}
+          role={menuItemRole(item)}
+          aria-checked={menuItemAriaChecked(item) ?? undefined}
+          aria-disabled={item.disabled ? 'true' : undefined}
+          aria-haspopup={item.items?.length ? 'menu' : undefined}
+          aria-expanded={
+            item.items?.length ? index === openChildIndex : undefined
+          }
+          aria-keyshortcuts={item.shortcut}
+          title={item.hint}
+          disabled={item.disabled ?? false}
+          onClick={(event) => activate(item, index, event)}
+          onPointerEnter={() => onItemHover(item, index)}
+        >
+          {rowContent(item, index)}
+        </button>
+      );
 
     const childItems: readonly OgeMenuItem[] =
       openChildIndex >= 0 ? (items[openChildIndex]?.items ?? []) : [];
@@ -517,64 +629,33 @@ export const OgeMenuList: ForwardRefExoticComponent<
         }
         onKeyDown={onKeyDown}
       >
-        {items.map((item, index) =>
-          item.separator ? (
-            <hr key={index} className="oge-menu-separator" role="separator" />
-          ) : item.url && !item.items?.length ? (
-            <a
-              key={index}
-              className={[
-                'oge-menu-item',
-                index === activeIndex && 'oge-menu-item-active',
-                item.severity === 'danger' && 'oge-menu-item-danger',
-                (item.disabled ?? false) && 'oge-menu-item-disabled',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              role="menuitem"
-              tabIndex={-1}
-              id={itemId(index)}
-              href={sanitizeUrl(item.url)}
-              aria-disabled={item.disabled ? 'true' : undefined}
-              aria-keyshortcuts={item.shortcut}
-              title={item.hint}
-              onClick={(event) => activate(item, index, event)}
-              onPointerEnter={() => onItemHover(item, index)}
+        {menuItemSegments(items).map((segment, segmentIndex) =>
+          segment.group ? (
+            <div
+              key={`g${segmentIndex}`}
+              className="oge-menu-group"
+              role="group"
+              aria-labelledby={
+                segment.headerIndex >= 0
+                  ? itemId(segment.headerIndex)
+                  : undefined
+              }
             >
-              {rowContent(item, index)}
-            </a>
+              {segment.headerIndex >= 0 && (
+                <div
+                  className="oge-menu-header"
+                  role="presentation"
+                  id={itemId(segment.headerIndex)}
+                >
+                  {items[segment.headerIndex].text}
+                </div>
+              )}
+              {segment.indexes.map((index) => renderRow(items[index], index))}
+            </div>
           ) : (
-            <button
-              key={index}
-              type="button"
-              className={[
-                'oge-menu-item',
-                index === activeIndex && 'oge-menu-item-active',
-                item.severity === 'danger' && 'oge-menu-item-danger',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              tabIndex={-1}
-              id={itemId(index)}
-              role={
-                item.checked !== undefined && !item.items?.length
-                  ? 'menuitemcheckbox'
-                  : 'menuitem'
-              }
-              aria-checked={item.items?.length ? undefined : ariaChecked(item)}
-              aria-disabled={item.disabled ? 'true' : undefined}
-              aria-haspopup={item.items?.length ? 'menu' : undefined}
-              aria-expanded={
-                item.items?.length ? index === openChildIndex : undefined
-              }
-              aria-keyshortcuts={item.shortcut}
-              title={item.hint}
-              disabled={item.disabled ?? false}
-              onClick={(event) => activate(item, index, event)}
-              onPointerEnter={() => onItemHover(item, index)}
-            >
-              {rowContent(item, index)}
-            </button>
+            <Fragment key={`s${segmentIndex}`}>
+              {segment.indexes.map((index) => renderRow(items[index], index))}
+            </Fragment>
           ),
         )}
         {childItems.length > 0 && (

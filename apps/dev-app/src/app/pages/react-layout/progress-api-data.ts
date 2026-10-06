@@ -27,6 +27,27 @@ export const OGE_REACT_PROGRESS_BAR_API: ApiSections = {
           description: 'Scale bounds; the fill ratio clamps into them.',
         },
         {
+          name: 'type',
+          type: "'linear' | 'circular'",
+          default: "'linear'",
+          description:
+            "<code>circular</code> draws the same aria contract as an SVG ring (Kendo's CircularProgressBar) with the label centred inside; <code>value: null</code> spins. <code>bufferValue</code> and <code>chunkCount</code> apply to the linear bar only. The ring geometry is <code>ogeProgressRingGeometry</code> in <code>&#64;oge-ui/behavior</code>.",
+        },
+        {
+          name: 'size',
+          type: 'number | undefined',
+          default: '48',
+          description:
+            'Ring diameter in px (<code>type="circular"</code> only); the centred label scales with it.',
+        },
+        {
+          name: 'thickness',
+          type: 'number | undefined',
+          default: '4',
+          description:
+            'Ring stroke width in px (<code>type="circular"</code> only), clamped to half the size.',
+        },
+        {
           name: 'bufferValue',
           type: 'number | undefined',
           description:
@@ -92,6 +113,11 @@ export const OGE_REACT_PROGRESS_BAR_API: ApiSections = {
           name: 'OgeProgressBarSeverity',
           type: "'accent' | 'success' | 'warning' | 'danger'",
           description: 'Fill color vocabulary.',
+        },
+        {
+          name: 'OgeProgressBarType',
+          type: "'linear' | 'circular'",
+          description: 'Shape vocabulary of the <code>type</code> input.',
         },
         {
           name: 'OgeProgressBarCompletedEvent',
@@ -169,6 +195,139 @@ export const OGE_REACT_LOAD_INDICATOR_API: ApiSections = {
           name: 'OgeLoadIndicatorProps',
           type: 'interface',
           description: 'Props of <code>&lt;OgeLoadIndicator&gt;</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_LOAD_PANEL_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'visible',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Shows the panel (controlled). The panel paints after <code>showDelay</code> and stays at least <code>minDisplayTime</code> — the timing machine is <code>OgeLoadPanelCore</code> in <code>&#64;oge-ui/behavior</code>.',
+        },
+        {
+          name: 'target',
+          type: 'Element | RefObject&lt;Element | null&gt; | string | undefined',
+          description:
+            'The container to cover: an element, a ref or a CSS selector. <code>undefined</code> covers the panel&rsquo;s own parent. A target that is not the parent receives the panel through a portal while shown.',
+        },
+        {
+          name: 'fullScreen',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Covers the viewport instead (<code>position: fixed</code>). Without an explicit <code>target</code> nothing is marked <code>aria-busy</code> — on the body it would also mute the live region the message goes to.',
+        },
+        {
+          name: 'message',
+          type: 'string | undefined',
+          description:
+            'Text under the indicator; the localized <code>loadPanelMessage</code> of the load-indicator messages is the fallback (default <code>Loading…</code>).',
+        },
+        {
+          name: 'showIndicator',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Renders the load indicator. Without it the message is the readable text (no <code>aria-hidden</code>).',
+        },
+        {
+          name: 'showPane',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Draws the raised card behind the indicator and message.',
+        },
+        {
+          name: 'shading',
+          type: 'boolean',
+          default: 'true',
+          description: 'Dims the covered area behind the pane.',
+        },
+        {
+          name: 'position',
+          type: "'center' | 'top' | 'bottom'",
+          default: "'center'",
+          description: 'Where the pane sits inside the covered area.',
+        },
+        {
+          name: 'showDelay',
+          type: 'number',
+          default: '0',
+          description:
+            'Milliseconds <code>visible</code> must stay true before the panel appears — a load that finishes sooner never flashes a panel.',
+        },
+        {
+          name: 'minDisplayTime',
+          type: 'number',
+          default: '0',
+          description:
+            'Once shown, the panel stays at least this many milliseconds.',
+        },
+        {
+          name: 'ariaLabel',
+          type: 'string | undefined',
+          description:
+            'Accessible name of the indicator; defaults to the message.',
+        },
+        {
+          name: 'className / style',
+          type: 'string | CSSProperties',
+          description:
+            'Merged onto the panel (the shade); the Angular host takes <code>class</code>/<code>style</code> natively.',
+        },
+      ],
+    },
+    {
+      title: 'Accessibility contract',
+      entries: [
+        {
+          name: 'aria-busy on the target, one announcement, no focus trap',
+          type: '—',
+          description:
+            'While shown the covered container is <code>aria-busy="true"</code> (ref-counted; its previous value is restored), the message is announced once through the shared live announcer (never a local live region), and the shade swallows pointer input. Focus is never taken or trapped, and the container is not made <code>inert</code> — that would blur a focused field and drop focus to the page.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'onShown',
+          type: '() =&gt; void',
+          description:
+            'The panel appeared (after <code>showDelay</code>) — the callback half of Angular&rsquo;s <code>(shown)</code>.',
+        },
+        {
+          name: 'onHidden',
+          type: '() =&gt; void',
+          description:
+            'The panel disappeared (after <code>minDisplayTime</code>). A load that ended inside the delay fires neither.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeLoadPanelPosition',
+          type: "'center' | 'top' | 'bottom'",
+          description: 'Pane placement vocabulary.',
+        },
+        {
+          name: 'OgeLoadPanelProps / OgeLoadPanelTarget',
+          type: 'interface / union',
+          description:
+            'Props of <code>&lt;OgeLoadPanel&gt;</code> and what <code>target</code> accepts.',
         },
       ],
     },
@@ -269,7 +428,7 @@ export const OGE_REACT_PROGRESS_CONFIG_API: ApiSections = {
           name: 'messages',
           type: 'OgeLoadIndicatorMessages',
           description:
-            'Every user-facing string: <code>loading</code> — the accessible name fallback (default <code>Loading</code>). <code>useOgeLoadIndicatorConfig()</code> reads the resolved value.',
+            'Every user-facing string: <code>loading</code> — the accessible name fallback (default <code>Loading</code>) — and <code>loadPanelMessage</code>, the load panel&rsquo;s default message (default <code>Loading…</code>; <code>&lt;OgeLoadPanel&gt;</code> reads this provider too). <code>useOgeLoadIndicatorConfig()</code> reads the resolved value.',
         },
       ],
     },

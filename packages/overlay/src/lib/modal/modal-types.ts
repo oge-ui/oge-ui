@@ -9,6 +9,7 @@ export type {
   OgeModalClosedEvent,
   OgeModalAutoFocus,
   OgeModalPlacement,
+  OgeModalRole,
 } from '@oge-ui/behavior';
 
 /** Context of the `*ogeModalTitle` / `*ogeModalFooter` slots. */

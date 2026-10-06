@@ -12,6 +12,8 @@ import {
 import {
   OgeDrawer,
   OgeTreeView,
+  type OgeDrawerCloseReason,
+  type OgeDrawerItem,
   type OgeDrawerMode,
   type OgeDrawerModeChangedEvent,
   type OgeDrawerPosition,
@@ -38,6 +40,8 @@ export const REACT_NAVIGATION_DRAWER_SECTIONS = [
   'Responsive downgrade',
   'Close guard',
   'App shell',
+  'Navigation items',
+  'Swipe gestures',
   'Configuration',
 ] as const;
 
@@ -202,6 +206,105 @@ function ModalDemo(): ReactNode {
           'p',
           { className: 'mt-2 opacity-70' },
           'Escape, or a click on the backdrop, closes it and returns focus here.',
+        ),
+      ),
+    ),
+  );
+}
+
+const ICON = {
+  inbox: 'M4 13h4l2 3h4l2-3h4M4 13l2-8h12l2 8v6H4z',
+  send: 'M4 12l16-8-6 16-2-6-8-2z',
+  star: 'M12 4l2.5 5 5.5.8-4 3.9.9 5.5L12 16.6 7.1 19.2 8 13.7 4 9.8 9.5 9z',
+  trash: 'M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12',
+  settings: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 12h2M18 12h2M12 4v2M12 18v2',
+};
+
+const ITEMS: OgeDrawerItem[] = [
+  { key: 'inbox', text: 'Inbox', icon: ICON.inbox, badge: 4 },
+  { key: 'sent', text: 'Sent', icon: ICON.send },
+  { key: 'starred', text: 'Starred', icon: ICON.star },
+  { separator: true },
+  { key: 'trash', text: 'Trash', icon: ICON.trash, disabled: true },
+  { key: 'settings', text: 'Settings', icon: ICON.settings },
+];
+
+function ItemsDemo(): ReactNode {
+  const [opened, setOpened] = useState(true);
+  const [page, setPage] = useState('inbox');
+  return createElement(
+    'div',
+    { className: 'h-64 overflow-hidden rounded border' },
+    createElement(
+      OgeDrawer,
+      {
+        className: 'h-full',
+        opened,
+        onOpenedChange: setOpened,
+        mode: 'side',
+        ariaLabel: 'Mail folders',
+        size: 200,
+        minSize: 56,
+        items: ITEMS,
+        selectedKey: page,
+        onSelectedKeyChange: setPage,
+      },
+      createElement(
+        'div',
+        { className: 'p-3 text-sm' },
+        demoButton(
+          'toggle',
+          opened ? 'Collapse to rail' : 'Expand',
+          () => setOpened(!opened),
+          { 'aria-expanded': opened },
+        ),
+        createElement(
+          'p',
+          {
+            className: 'mt-2 opacity-70',
+            'data-testid': 'drawer-items-page',
+          },
+          `Showing: ${page}`,
+        ),
+      ),
+    ),
+  );
+}
+
+function SwipeDemo(): ReactNode {
+  const [opened, setOpened] = useState(false);
+  const [lastClose, setLastClose] = useState<OgeDrawerCloseReason | null>(null);
+  return createElement(
+    'div',
+    { className: 'h-48 overflow-hidden rounded border' },
+    createElement(
+      OgeDrawer,
+      {
+        className: 'h-full',
+        opened,
+        onOpenedChange: setOpened,
+        mode: 'overlay',
+        ariaLabel: 'Swipe menu',
+        size: 200,
+        swipeEnabled: true,
+        onClosing: (event) => setLastClose(event.reason),
+        panel: createElement(
+          'div',
+          { className: 'p-3 text-sm' },
+          demoButton('reports', 'Reports'),
+        ),
+      },
+      createElement(
+        'div',
+        { className: 'p-3 text-sm', 'data-testid': 'drawer-swipe-content' },
+        demoButton('open', 'Open menu', () => setOpened(true), {
+          'aria-expanded': opened,
+        }),
+        createElement(
+          'p',
+          { className: 'mt-2 opacity-70' },
+          'Or swipe in from the start edge.',
+          lastClose ? ` Last close: ${lastClose}.` : '',
         ),
       ),
     ),
@@ -495,10 +598,30 @@ function AppShellDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['items', 'selectedKey', 'aria-current', 'mini rail']"
+      heading="Navigation items"
+      description="<code>items</code> renders the panel's navigation list for you: buttons, or links for entries with a <code>url</code>, with icons, badges, separators and disabled entries. Each entry stays in the Tab order (the APG disclosure-navigation shape, not a composite widget), the arrows / Home / End move between them, and the active one is <code>aria-current=&quot;page&quot;</code>. Closed with a <code>minSize</code> the drawer becomes an icon rail whose labels stay the accessible name and show as tooltips. <code>renderItem</code> replaces an entry's content."
+      [code]="demos[7].source"
+      language="tsx"
+    >
+      <app-react-host [render]="itemsDemo" />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['swipeEnabled', 'touch', 'RTL', 'reason: swipe']"
+      heading="Swipe gestures"
+      description="With <code>swipeEnabled</code> a touch swipe from the drawer's edge opens it and a swipe toward the edge closes it — by distance or by a flick, touch pointers only, mirrored in RTL. A swipe that turns out to be a vertical scroll lets go of the page at once. Closing goes through <code>onClosing</code> and <code>closeGuard</code> with reason <code>'swipe'</code>. Off by default, so existing apps keep their behaviour. Try it on a touch screen."
+      [code]="demos[8].source"
+      language="tsx"
+    >
+      <app-react-host [render]="swipe" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['OgeDrawerConfigProvider']"
       heading="Configuration"
       description="Every user-facing string, including the panel's accessible name, lives in the messages interface — overridable for a subtree with <code>&lt;OgeDrawerConfigProvider&gt;</code> or per instance with the <code>messages</code> prop."
-      [code]="demos[7].source"
+      [code]="demos[9].source"
       language="tsx"
     />
   `,
@@ -513,4 +636,6 @@ export class ReactNavigationDrawerDemos {
   protected readonly compact = () => createElement(CompactDemo);
   protected readonly guard = () => createElement(GuardDemo);
   protected readonly appShell = () => createElement(AppShellDemo);
+  protected readonly itemsDemo = () => createElement(ItemsDemo);
+  protected readonly swipe = () => createElement(SwipeDemo);
 }

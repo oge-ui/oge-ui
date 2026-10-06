@@ -116,11 +116,101 @@
   background: var(--oge-danger);
 }
 
+// --- circular (type="circular") --------------------------------------------
+// An SVG ring: the value circle is one dash as long as the circumference,
+// offset by the unfilled share (behavior's ogeProgressRingGeometry). The SVG
+// is turned −90° so the arc starts at 12 o'clock; RTL mirrors the sweep.
+.oge-progress-bar-circular {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.oge-progress-ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  // the centred label scales with the ring (cqi = 1% of its inline size)
+  container-type: inline-size;
+}
+
+.oge-progress-ring-svg {
+  display: block;
+  overflow: visible;
+  transform: rotate(-90deg);
+
+  [dir='rtl'] & {
+    transform: scaleX(-1) rotate(-90deg);
+  }
+}
+
+.oge-progress-ring-track,
+.oge-progress-ring-value {
+  fill: none;
+}
+
+.oge-progress-ring-track {
+  stroke: var(--oge-border-color);
+}
+
+.oge-progress-ring-value {
+  stroke: var(--oge-accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 160ms ease;
+}
+
+.oge-progress-ring-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  color: var(--oge-text-color);
+  font-size: max(10px, 24cqi);
+  font-weight: 600;
+  text-align: center;
+}
+
+@keyframes oge-progress-ring-spin {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+.oge-progress-bar-indeterminate .oge-progress-ring-svg {
+  animation: oge-progress-ring-spin 900ms linear infinite;
+}
+
+.oge-progress-bar-indeterminate .oge-progress-ring-value {
+  transition: none;
+}
+
+.oge-progress-bar-success .oge-progress-ring-value {
+  stroke: var(--oge-success);
+}
+
+.oge-progress-bar-warning .oge-progress-ring-value {
+  stroke: var(--oge-warning);
+}
+
+.oge-progress-bar-danger .oge-progress-ring-value {
+  stroke: var(--oge-danger);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .oge-progress-bar-fill,
   .oge-progress-bar-buffer,
-  .oge-progress-bar-chunk {
+  .oge-progress-bar-chunk,
+  .oge-progress-ring-value {
     transition: none;
+  }
+
+  // the ring spins slower too — a frozen arc reads as a value
+  .oge-progress-bar-indeterminate .oge-progress-ring-svg {
+    animation-duration: 1800ms;
   }
 
   // Indeterminate slows rather than stops — a frozen bar reads as finished
@@ -157,5 +247,22 @@
   .oge-progress-bar-chunk {
     outline: 1px solid CanvasText;
     background: Canvas;
+  }
+
+  // the ring: CanvasText frame, Highlight value — no colour-only state
+  .oge-progress-ring-track {
+    stroke: CanvasText;
+    stroke-opacity: 0.35;
+  }
+
+  .oge-progress-ring-value,
+  .oge-progress-bar-success .oge-progress-ring-value,
+  .oge-progress-bar-warning .oge-progress-ring-value,
+  .oge-progress-bar-danger .oge-progress-ring-value {
+    stroke: Highlight;
+  }
+
+  .oge-progress-ring-label {
+    color: CanvasText;
   }
 }

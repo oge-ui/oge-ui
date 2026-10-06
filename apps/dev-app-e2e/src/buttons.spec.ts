@@ -254,3 +254,42 @@ test.describe('drop down button', () => {
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });
+
+for (const layer of [
+  { name: 'Angular', query: '' },
+  { name: 'React', query: '?framework=react' },
+] as const) {
+  test(`toggle button: aria-pressed flips on click and keyboard (${layer.name})`, async ({
+    page,
+  }) => {
+    await page.goto(`/components/buttons${layer.query}`);
+    const demo = page.locator('[data-testid="toggle-demo"]');
+    await demo.scrollIntoViewIfNeeded();
+    const bold = demo.getByRole('button', { name: 'Bold' });
+    const italic = demo.getByRole('button', { name: 'Italic' });
+    const locked = demo.getByRole('button', { name: 'Locked' });
+    const state = page.locator('[data-testid="toggle-state"]');
+
+    await expect(bold).toHaveAttribute('aria-pressed', 'true');
+    await expect(italic).toHaveAttribute('aria-pressed', 'false');
+    await expect(locked).toHaveAttribute('aria-pressed', 'true');
+    await expect(locked).toBeDisabled();
+
+    await italic.click();
+    await expect(italic).toHaveAttribute('aria-pressed', 'true');
+    await expect(state).toContainText('Italic true');
+
+    // Space and Enter toggle like a click (native button activation)
+    await bold.focus();
+    await page.keyboard.press('Space');
+    await expect(bold).toHaveAttribute('aria-pressed', 'false');
+    await page.keyboard.press('Enter');
+    await expect(bold).toHaveAttribute('aria-pressed', 'true');
+
+    const results = await new AxeBuilder({ page })
+      .include('[data-testid="toggle-demo"]')
+      .disableRules(['color-contrast'])
+      .analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+}

@@ -1,6 +1,6 @@
 # @oge-ui/buttons
 
-> Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
+> Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, stand-alone toggle buttons with `aria-pressed`, button groups and drop-down/split buttons.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/buttons
@@ -93,7 +93,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/buttons`
 
 - values: `OGE_BUTTONS_CONFIG`, `OGE_BUTTON_GROUP`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OgeButton`, `OgeButtonGroup`, `OgeButtonIcon`, `OgeDropDownButton`, `OgeDropDownContent`, `provideOgeButtonsConfig`
-- types: `OgeAutoRepeatOptions`, `OgeButtonActionDoneEvent`, `OgeButtonActionFailedEvent`, `OgeButtonClickEvent`, `OgeButtonGroupContext`, `OgeButtonGroupItem`, `OgeButtonGroupItemClickEvent`, `OgeButtonGroupSelectionChangedEvent`, `OgeButtonGroupSelectionMode`, `OgeButtonIconPosition`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeClickGuardOptions`, `OgeDropDownButtonItemClickEvent`, `OgeDropDownContentContext`, `OgeDropDownItemsFn`, `OgeDropDownSelectionChangedEvent`, `OgeHoldToConfirmOptions`
+- types: `OgeAutoRepeatOptions`, `OgeButtonActionDoneEvent`, `OgeButtonActionFailedEvent`, `OgeButtonClickEvent`, `OgeButtonGroupContext`, `OgeButtonGroupItem`, `OgeButtonGroupItemClickEvent`, `OgeButtonGroupSelectionChangedEvent`, `OgeButtonGroupSelectionMode`, `OgeButtonIconPosition`, `OgeButtonSelectedChangedEvent`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeClickGuardOptions`, `OgeDropDownButtonItemClickEvent`, `OgeDropDownContentContext`, `OgeDropDownItemsFn`, `OgeDropDownSelectionChangedEvent`, `OgeHoldToConfirmOptions`
 
 ## API reference
 
@@ -127,6 +127,8 @@ _Behavior_
 | `useSubmitBehavior` | `boolean` | `false` | Renders `type="submit"` so the button submits the enclosing form. |
 | `buttonType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type; `useSubmitBehavior` is sugar for `submit`. |
 | `value` | `string \| undefined` | `—` | Selection key inside an `<oge-button-group>`; unused standalone. |
+| `toggle` | `boolean` | `false` | Makes the button a toggle button: each accepted click flips `selected` and the native button renders `aria-pressed`. Ignored inside a `single`/`multiple` `<oge-button-group>`, which owns the selection. |
+| `selected` | `model<boolean>` | `false` | Pressed state of a `toggle` button — two-way (`[(selected)]`). Unused without `toggle` and inside a selection group. |
 | `tabIndex` | `number` | `0` | Tab order of the native button. |
 | `accessKey` | `string \| undefined` | `—` | Native `accesskey` of the inner button. |
 | `messages` | `Partial<OgeButtonsMessages> \| undefined` | `—` | Per-instance overrides of user-facing strings. |
@@ -155,11 +157,14 @@ _Accessibility_
 | `actionDone` | `OgeButtonActionDoneEvent` | The `action` callback settled successfully. |
 | `actionFailed` | `OgeButtonActionFailedEvent` | The `action` callback threw or rejected. |
 | `loadingChange` | `boolean` | Implicit output of the `loading` model. |
+| `selectedChanged` | `OgeButtonSelectedChangedEvent` | A click flipped a `toggle` button’s `selected` state — fires after the model updates and before `clicked`. |
+| `selectedChange` | `boolean` | Implicit output of the `selected` model. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `OgeButtonSelectedChangedEvent` | `{ selected: boolean; previousValue: boolean; event: MouseEvent \| KeyboardEvent }` | Payload of `selectedChanged`: the new and the previous pressed state, and the click (or Space/Enter of a gesture) that did it. |
 | `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text'` | Fill style. |
 | `OgeButtonSeverity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Semantic color mapped to the severity tokens. |
 | `OgeButtonSize` | `'sm' \| 'md' \| 'lg'` | Height/padding preset. |
@@ -273,7 +278,7 @@ _Drop-down panel_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeDropDownItemsFn` | `() => readonly OgeMenuItem[] \| Promise<readonly OgeMenuItem[]>` | Lazy items factory — invoked on first open. |
-| `OgeDropDownButtonItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the resolved items list (separators included). |
+| `OgeDropDownButtonItemClickEvent` | `{ item: OgeMenuItem; index: number; checked?: boolean; event: MouseEvent \| KeyboardEvent }` | Index within the resolved items list (separators included); `checked` is the next state of a checkbox/radio row (`OgeMenuItem.type`), `undefined` for plain rows. |
 | `OgeDropDownSelectionChangedEvent` | `{ item: OgeMenuItem; previousItem: OgeMenuItem \| null }` | Remembered-item change in `rememberLastAction` mode. |
 | `OgeDropDownContent` | `directive — [ogeDropDownContent]` | Replaces the item menu with arbitrary panel content; context `{ $implicit: () => void }` closes the panel and restores focus. |
 
@@ -737,6 +742,42 @@ import { OgeButton } from '@oge-ui/buttons';
   `,
 })
 export class Demo {}
+```
+
+### Toggle
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+import type { OgeButtonSelectedChangedEvent } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- toggle + [(selected)] = a WAI-ARIA toggle button: the native button
+         renders aria-pressed="true|false" and every accepted click flips it. -->
+    <oge-button text="Bold" [toggle]="true" [(selected)]="bold" />
+    <oge-button
+      text="Italic"
+      stylingMode="outlined"
+      [toggle]="true"
+      [(selected)]="italic"
+      (selectedChanged)="log($event)"
+    />
+    <oge-button text="Pinned" stylingMode="text" [toggle]="true" [selected]="true" />
+    <oge-button text="Locked" [toggle]="true" [selected]="true" [disabled]="true" />
+  `,
+})
+export class Demo {
+  protected readonly bold = signal(true);
+  protected readonly italic = signal(false);
+
+  protected log(event: OgeButtonSelectedChangedEvent): void {
+    console.log(event.previousValue, '→', event.selected);
+  }
+}
 ```
 
 ### Variants

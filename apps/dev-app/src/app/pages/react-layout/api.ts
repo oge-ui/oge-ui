@@ -4,6 +4,8 @@ import {
   OGE_REACT_ACCORDION_API,
   OGE_REACT_ACCORDION_CONFIG_API,
   OGE_REACT_ACCORDION_ITEM_API,
+  OGE_REACT_EXPANSION_PANEL_API,
+  OGE_REACT_PANEL_BAR_API,
 } from './react-layout-api-data';
 
 /**
@@ -35,11 +37,18 @@ import {
       title="OgeAccordionItem (OgeAccordionItemDefinition)"
       [sections]="accordionItemApi"
     />
+    <app-api-reference title="&lt;OgePanelBar&gt;" [sections]="panelBarApi" />
+    <app-api-reference
+      title="&lt;OgeExpansionPanel&gt;"
+      [sections]="expansionPanelApi"
+    />
     <app-api-reference title="Accordion configuration" [sections]="configApi" />
   `,
 })
 export class ReactLayoutApiSections {
   protected readonly accordionApi = OGE_REACT_ACCORDION_API;
   protected readonly accordionItemApi = OGE_REACT_ACCORDION_ITEM_API;
+  protected readonly panelBarApi = OGE_REACT_PANEL_BAR_API;
+  protected readonly expansionPanelApi = OGE_REACT_EXPANSION_PANEL_API;
   protected readonly configApi = OGE_REACT_ACCORDION_CONFIG_API;
 }

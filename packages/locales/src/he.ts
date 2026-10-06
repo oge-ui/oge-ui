@@ -268,6 +268,16 @@ export const he: OgeLocalePack = {
     toastClose: 'סגירה',
     toastRegionLabel: 'התראות',
     toastCountBadge: '×{count}',
+    dialogOk: 'אישור',
+    dialogCancel: 'ביטול',
+    dialogConfirmTitle: 'אישור פעולה',
+    dialogAlertTitle: 'הודעה',
+    dialogPromptTitle: 'הזינו ערך',
+    dialogRequired: 'שדה זה הוא חובה.',
+    windowMinimize: 'מזעור',
+    windowMoved: 'החלון הועבר אל {x}, {y}',
+    windowResized: 'גודל החלון שונה ל-{width} × {height}',
+    popoverClose: 'סגירה',
   },
   tabs: {
     closeTab: 'סגירת הכרטיסייה',
@@ -375,6 +385,7 @@ export const he: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'טוען',
+      loadPanelMessage: 'טוען…',
     },
     splitter: {
       separator: 'שינוי גודל החלוניות {{first}} ו-{{second}}',
@@ -404,6 +415,7 @@ export const he: OgeLocalePack = {
     menubar: {
       menubar: 'סרגל תפריטים',
       hamburger: 'תפריט',
+      more: 'עוד',
     },
     pagination: {
       paginationLabel: 'עימוד',
@@ -437,6 +449,16 @@ export const he: OgeLocalePack = {
       childrenLoadFailed: 'לא ניתן לטעון פריטים אלה.',
       noData: 'אין פריטים להצגה',
       noSearchResults: 'אין פריטים תואמים',
+      loadMore:
+        '{count, plural, one {הצגת פריט נוסף} two {הצגת שני פריטים נוספים} other {הצגת # פריטים נוספים}}',
+      editLabel: 'שם הפריט',
+      editInvalid: 'הזינו שם תקין.',
+      cutAnnouncement:
+        '{item} נגזר. עברו לפריט היעד והקישו Ctrl+V כדי להעביר אותו לשם, או Escape לביטול.',
+      movedAnnouncement:
+        '{position, select, inside {{item} הועבר אל תוך {target}.} before {{item} הועבר לפני {target}.} other {{item} הועבר אחרי {target}.}}',
+      moveCancelledAnnouncement: 'ההעברה בוטלה.',
+      moveRejectedAnnouncement: 'לא ניתן להעביר את {item} לכאן.',
     },
   },
   pivot: {

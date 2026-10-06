@@ -15,16 +15,20 @@ import {
   OGE_TOAST_API,
   OGE_OVERLAY_CONFIG_API,
   OVERLAY_PRIMITIVES_API,
+  OGE_POPOVER_API,
   OGE_POPUP_API,
   OGE_TOOLTIP_API,
+  OGE_WINDOW_API,
   RESOLVE_POPUP_POSITION_API,
 } from './overlay-api-data';
 
 const SECTIONS = [
   'OgeModal',
   'OgeModalService',
+  'OgeWindow',
   'OgeToastService',
   'OgeLiveAnnouncer',
+  'OgePopover',
   'OgeTooltip',
   'OgeContextMenu',
   'OgeMenuList',
@@ -39,8 +43,10 @@ const SECTIONS = [
 const SECTIONS_REACT = [
   '<OgeModal>',
   'OgeModalService (useOgeModals)',
+  '<OgeWindow>',
   'OgeToastService (useOgeToasts)',
   'OgeLiveAnnouncer (useOgeLiveAnnouncer)',
+  '<OgePopover>',
   '<OgeTooltip>',
   '<OgeContextMenu>',
   '<OgeMenuList>',
@@ -70,8 +76,8 @@ const SECTIONS_REACT = [
       @if (fw.isReact()) {
         <p>
           Complete API reference for <code>&#64;oge-ui/react-overlay</code>: the
-          modal, toast, tooltip, context menu and menu list components, the
-          <code>useAnchoredPanel</code> and
+          modal, toast, popover, tooltip, context menu and menu list components,
+          the <code>useAnchoredPanel</code> and
           <code>useOgeLiveAnnouncer</code> hooks, the popup chrome, the pure
           placement function, the config provider and the shared primitives.
           Services become providers + hooks, structural directives become render
@@ -109,10 +115,20 @@ const SECTIONS_REACT = [
         [sections]="modalApi"
       />
       <app-api-reference title="OgeModalService" [sections]="modalServiceApi" />
+      <app-api-reference
+        title="OgeWindow"
+        selector="oge-window"
+        [sections]="windowApi"
+      />
       <app-api-reference title="OgeToastService" [sections]="toastApi" />
       <app-api-reference
         title="OgeLiveAnnouncer"
         [sections]="liveAnnouncerApi"
+      />
+      <app-api-reference
+        title="OgePopover"
+        selector="oge-popover"
+        [sections]="popoverApi"
       />
       <app-api-reference
         title="OgeTooltip"
@@ -170,8 +186,10 @@ export class OverlayApiPage {
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly modalApi = OGE_MODAL_API;
   protected readonly modalServiceApi = OGE_MODAL_SERVICE_API;
+  protected readonly windowApi = OGE_WINDOW_API;
   protected readonly toastApi = OGE_TOAST_API;
   protected readonly liveAnnouncerApi = OGE_LIVE_ANNOUNCER_API;
+  protected readonly popoverApi = OGE_POPOVER_API;
   protected readonly tooltipApi = OGE_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_MENU_LIST_API;

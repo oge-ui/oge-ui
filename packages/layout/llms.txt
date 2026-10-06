@@ -1,6 +1,6 @@
 # @oge-ui/layout
 
-> Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.
+> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_CARD_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeLoadIndicator`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeCardConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeToolbarConfig`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_CARD_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeCardConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeToolbarConfig`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 `@oge-ui/layout/*`
 
@@ -231,6 +231,124 @@ _Template slots_
 | `[ogeAccordionHeaderActionsTemplate]` | `{ $implicit, index, expanded }` | Per-panel actions rendered _beside_ the toggle button, never inside it — real focusable controls without a `nested-interactive` violation. |
 | `[ogeAccordionActionRow]` | `directive` | Marks a row of buttons at the end of a panel body as its action bar (divider above, actions at the inline end) — the references' action-row slot. Inside the panel, so only reachable while expanded. |
 
+### OgePanelBar — `<oge-panel-bar>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgePanelBarItem[] \| undefined` | `—` | The item tree. An entry with `children` is an expandable group; one with `content` (and no children) expands into free content; the rest are selectable leaves. `content` is plain text — the `[ogePanelBarContentTemplate]` slot renders anything richer. |
+| `expandMode` | `'single' \| 'multiple' \| 'full'` | `'multiple'` | Kendo's three modes: `multiple` lets groups open independently, `single` collapses a group's open siblings, `full` is single with the open root group filling the host's height (give the host one). |
+| `selectedKey` | `string \| undefined` | `—` | The selected item — two-way (`[(selectedKey)]`): its `key`, or its position id (`p0-1`) when it has none. Announced as `aria-current`. |
+| `expandedKeys` | `readonly string[] \| undefined` | `—` | Ids (`key` or position id) of the expanded groups — two-way. The items' own `expanded` flags seed it once; a consumer write replaces the state. |
+| `disabled` | `boolean` | `false` | Disables the whole panel bar; a disabled item disables its subtree and leaves the Tab sequence. |
+| `deferRendering` | `boolean` | `true` | Render a group's children or content only from its first expand on (kept afterwards); `false` renders every level up front. |
+| `animation` | `boolean \| number` | `true` | Height animation: `true` uses the default duration, a number overrides it in milliseconds, `false` disables it. Suppressed under `prefers-reduced-motion`. |
+| `keyboardNavigation` | `boolean` | `true` | Enables Up/Down/Home/End and Right/Left header navigation. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the root list. |
+
+_Keyboard & accessibility_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `APG disclosure, not treeview` | `—` | Kendo renders its PanelBar as `role="tree"`, but a tree may own nothing but tree items — and panel bar groups may hold free content. So every header is a real `<button>` in the Tab sequence (`aria-expanded` + `aria-controls` on groups, `aria-current` on the selected leaf), collapsed groups are `inert`, and Up/Down/Home/End plus Right/Left (expand-or-enter / collapse-or-parent, mirrored in RTL) are layered on top. Collapsing a group that holds focus hands focus to its header. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isExpanded(id)` | `(id: string) => boolean` | Whether the group with this id (`key` or position id) is expanded. |
+| `expand(id)` | `(id: string) => Promise<boolean>` | Runs the expand pipeline (cancelable pre-event, then commit); resolves whether the group ended up expanded. |
+| `collapse(id)` | `(id: string) => Promise<boolean>` | Runs the collapse pipeline; resolves whether the group ended up collapsed. |
+| `toggle(id)` | `(id: string) => Promise<boolean>` | Expands a collapsed group, collapses an expanded one. |
+| `expandAll()` | `() => void` | Expands every enabled group. `multiple` mode only — otherwise a dev-mode warning and a no-op. |
+| `collapseAll()` | `() => void` | Collapses every expanded group. |
+| `focus(id?)` | `(id?: string) => void` | Focuses a header by id, or the first enabled one. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgePanelBarItemClickEvent` | A header was activated — before it toggles or selects. |
+| `itemExpanding` | `OgePanelBarItemExpandingEvent` | Cancelable pre-event of a group expanding — set `cancel = true` to keep it closed. |
+| `itemCollapsing` | `OgePanelBarItemCollapsingEvent` | Cancelable pre-event of a group collapsing. |
+| `itemExpanded` | `OgePanelBarItemToggleEvent` | A group expanded. |
+| `itemCollapsed` | `OgePanelBarItemToggleEvent` | A group collapsed — also each sibling a `single` / `full` expand closed. |
+| `selectionChanged` | `OgePanelBarSelectionChangedEvent` | The selected item changed through a user click (`previousKey` included). |
+| `selectedKeyChange` | `string \| undefined` | The banana half of `[(selectedKey)]`. |
+| `expandedKeysChange` | `readonly string[] \| undefined` | The banana half of `[(expandedKeys)]`. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePanelBarItem` | `interface` | `key`, `title`, `description`, `icon` (SVG path data), `badge`, `hint`, `disabled`, `visible`, `expanded`, `selectable` (default: leaves only), `content` and `children`. |
+| `OgePanelBarExpandMode` | `'single' \| 'multiple' \| 'full'` | Expansion vocabulary. |
+| `OgePanelBarItemClickEvent / OgePanelBarItemExpandingEvent / OgePanelBarItemCollapsingEvent / OgePanelBarItemToggleEvent / OgePanelBarSelectionChangedEvent` | `interfaces` | Payloads: `item`, `key`, `level` and the originating `event`; the `-ing` ones carry a mutable `cancel`, the selection one `previousKey`. |
+| `[ogePanelBarHeaderTemplate]` | `OgePanelBarHeaderTemplateContext` | Replaces the header layout inside each button (`$implicit` item, `level`, `expanded`, `selected`) — no focusable controls. |
+| `[ogePanelBarContentTemplate]` | `OgePanelBarContentTemplateContext` | Renders the body of every content item (`$implicit` item, `level`), instantiated on first expand. |
+
+### OgeExpansionPanel — `<oge-expansion-panel>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | `string` | `''` | Header title. |
+| `subtitle` | `string \| undefined` | `—` | Secondary line under the title. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`) rendered as a 24×24 aria-hidden icon before the title. |
+| `hint` | `string \| undefined` | `—` | Native `title` tooltip of the header button. |
+| `expanded` | `boolean` | `false` | Whether the body is shown — two-way. A consumer write applies directly; user and method toggles run `expanding` / `collapsing` and the guard first. |
+| `disabled` | `boolean` | `false` | Blocks toggling; the header stays visible (`aria-disabled`) but leaves the Tab sequence. |
+| `expandGuard` | `() => boolean \| Promise<boolean>` | `—` | Veto run before every toggle — the accordion's `expandGuard`: `false`, a throw or a rejection blocks; while a promise is pending the header shows a spinner and ignores clicks. |
+| `togglePosition` | `'start' \| 'end'` | `'end'` | Side of the header the chevron sits on — logical, so RTL mirrors it. |
+| `hideToggle` | `boolean \| undefined` | `—` | Hides the chevron; falls back to the accordion config's `hideToggle`. |
+| `headingLevel` | `number` | `3` | `aria-level` of the heading wrapping the header button (native h1–h6 where it can). |
+| `useRegionRole` | `boolean` | `true` | Gives the body `role="region"` (APG-optional). |
+| `animation` | `boolean \| number` | `true` | Height animation: `true` uses the default duration, a number overrides it in milliseconds, `false` disables it. Suppressed under reduced motion. |
+| `deferRendering` | `boolean` | `true` | Instantiate an `ogeExpansionPanelContent` template only on first expand (kept afterwards). Plain projected content is always instantiated. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'flat'` | `'outlined'` | Visual variant — the accordion's. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the header row — the accordion's. |
+
+_Keyboard & accessibility_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `APG disclosure` | `—` | The title is a `<button aria-expanded aria-controls>` inside a heading; Enter / Space toggle it natively, the body is `role="region"` labelled by the header and `inert` while collapsed. Collapsing a panel that holds focus hands focus back to the header. The pipeline is `runOgeExpansionToggle` in `@oge-ui/behavior`, shared with the panel bar. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isExpanded()` | `() => boolean` | Whether the panel is expanded — the `expanded` model&rsquo;s current value. |
+| `expand()` | `() => Promise<boolean>` | Runs the expand pipeline; resolves whether the panel ended up expanded. |
+| `collapse()` | `() => Promise<boolean>` | Runs the collapse pipeline; resolves whether the panel ended up collapsed. |
+| `toggle()` | `() => Promise<boolean>` | Expands a collapsed panel, collapses an expanded one. |
+| `focus()` | `() => void` | Focuses the header button. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `expanding` | `OgeExpansionPanelExpandingEvent` | Cancelable pre-event of an expand — set `cancel = true` to keep the panel collapsed. |
+| `collapsing` | `OgeExpansionPanelCollapsingEvent` | Cancelable pre-event of a collapse. |
+| `opened` | `OgeExpansionPanelToggleEvent` | The panel expanded through a user or method toggle — Material's `opened`, named so it cannot clash with the `expanded` model. Not fired for a `[(expanded)]` write. |
+| `closed` | `OgeExpansionPanelToggleEvent` | The panel collapsed through a user or method toggle — Material's `closed`. |
+| `expandedChange` | `boolean` | The banana half of `[(expanded)]`. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeExpansionPanelExpandingEvent / OgeExpansionPanelCollapsingEvent` | `{ event?: Event; cancel: boolean }` | Cancelable pre-event payloads. |
+| `OgeExpansionPanelToggleEvent` | `{ event?: Event }` | Payload of the past-tense events. |
+| `[ogeExpansionPanelActions]` | `attribute` | Marks projected elements as header actions — real buttons rendered beside the toggle. |
+| `[ogeExpansionPanelContent]` | `OgeExpansionPanelContent` | Structural directive marking the body as lazily instantiated (first expand, kept afterwards). |
+
 ### Accordion configuration
 
 #### Properties
@@ -323,6 +441,9 @@ _Accessibility contract_
 | --- | --- | --- | --- |
 | `value` | `number \| null` | `null` | Current value; `null` renders the **indeterminate** sliding bar — and `aria-valuenow` is then omitted entirely (the ARIA rule), never pinned to a sentinel. |
 | `min / max` | `number` | `0 / 100` | Scale bounds; the fill ratio clamps into them. |
+| `type` | `'linear' \| 'circular'` | `'linear'` | `circular` draws the same aria contract as an SVG ring (Kendo's CircularProgressBar) with the label centred inside; `value: null` spins. `bufferValue` and `chunkCount` apply to the linear bar only. The ring geometry is `ogeProgressRingGeometry` in `@oge-ui/behavior`. |
+| `size` | `number \| undefined` | `48` | Ring diameter in px (`type="circular"` only); the centred label scales with it. |
+| `thickness` | `number \| undefined` | `4` | Ring stroke width in px (`type="circular"` only), clamped to half the size. |
 | `bufferValue` | `number \| undefined` | `—` | Material's buffer layer — a soft second fill behind the primary one (media pre-loading behind the play position). |
 | `chunkCount` | `number \| undefined` | `—` | Renders the bar as N discrete segments (Kendo's chunk progress bar); the filled count is the rounded ratio. |
 | `severity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill color — the card/toast severity vocabulary; recolors the fill only. |
@@ -341,6 +462,7 @@ _Accessibility contract_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeProgressBarSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Fill color vocabulary. |
+| `OgeProgressBarType` | `'linear' \| 'circular'` | Shape vocabulary of the `type` input. |
 | `OgeProgressBarCompletedEvent` | `{ value: number }` | Payload of `completed`. |
 
 ### OgeLoadIndicator — `<oge-load-indicator>`
@@ -359,6 +481,49 @@ _Accessibility contract_
 | Name | Type | Description |
 | --- | --- | --- |
 | `role="progressbar", no aria-valuenow` | `—` | Deliberately indeterminate-only (dx, Kendo and PrimeNG all are — a circle filling toward completion is the progress bar&rsquo;s job), announced without `aria-valuenow` per the ARIA rule. Under `prefers-reduced-motion` the spin **slows rather than stops**: a frozen ring reads as finished. |
+
+### OgeLoadPanel — `<oge-load-panel>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `visible` | `boolean` | `false` | Shows the panel — two-way (`[(visible)]`). The panel paints after `showDelay` and stays at least `minDisplayTime` — the timing machine is `OgeLoadPanelCore` in `@oge-ui/behavior`. |
+| `target` | `Element \| string \| undefined` | `—` | The container to cover: an element or a CSS selector. `undefined` covers the panel&rsquo;s own parent. A target that is not the parent receives the panel as its last child while shown. |
+| `fullScreen` | `boolean` | `false` | Covers the viewport instead (`position: fixed`). Without an explicit `target` nothing is marked `aria-busy` — on the body it would also mute the live region the message goes to. |
+| `message` | `string \| undefined` | `—` | Text under the indicator; the localized `loadPanelMessage` of the load-indicator messages is the fallback (default `Loading…`). |
+| `showIndicator` | `boolean` | `true` | Renders the load indicator. Without it the message is the readable text (no `aria-hidden`). |
+| `showPane` | `boolean` | `true` | Draws the raised card behind the indicator and message. |
+| `shading` | `boolean` | `true` | Dims the covered area behind the pane. |
+| `position` | `'center' \| 'top' \| 'bottom'` | `'center'` | Where the pane sits inside the covered area. |
+| `showDelay` | `number` | `0` | Milliseconds `visible` must stay true before the panel appears — a load that finishes sooner never flashes a panel. |
+| `minDisplayTime` | `number` | `0` | Once shown, the panel stays at least this many milliseconds. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the indicator; defaults to the message. |
+
+_Accessibility contract_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `aria-busy on the target, one announcement, no focus trap` | `—` | While shown the covered container is `aria-busy="true"` (ref-counted; its previous value is restored), the message is announced once through the shared live announcer (never a local live region), and the shade swallows pointer input. Focus is never taken or trapped, and the container is not made `inert` — that would blur a focused field and drop focus to the page. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isShown()` | `boolean` | Whether the panel is currently painted — not the same as `visible` while a delay or minimum time runs. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `shown` | `void` | The panel appeared (after `showDelay`). |
+| `hidden` | `void` | The panel disappeared (after `minDisplayTime`). A load that ended inside the delay fires neither. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLoadPanelPosition` | `'center' \| 'top' \| 'bottom'` | Pane placement vocabulary. |
 
 ### OgeSkeleton — `<oge-skeleton>`
 
@@ -392,7 +557,7 @@ _provideOgeLoadIndicatorConfig()_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `messages` | `OgeLoadIndicatorMessages` | Every user-facing string: `loading` — the accessible name fallback (default `Loading`). |
+| `messages` | `OgeLoadIndicatorMessages` | Every user-facing string: `loading` — the accessible name fallback (default `Loading`) — and `loadPanelMessage`, the load panel&rsquo;s default message (default `Loading…`; the load panel reads this catalog too). |
 
 _provideOgeSkeletonConfig()_
 
@@ -1009,6 +1174,134 @@ export class Demo {
 }
 ```
 
+### Appearance
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeLoadPanel } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeLoadPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showPane drops the raised card, shading the dim layer, position
+         moves the pane; showIndicator: false leaves only the message (which is
+         then the readable text). The default message is the localized
+         loadPanelMessage of the load-indicator config. -->
+    <oge-load-panel
+      [visible]="true"
+      [showPane]="false"
+      [shading]="false"
+      position="top"
+      message="Refreshing…"
+    />
+
+    <oge-load-panel [visible]="true" [showIndicator]="false" message="Waiting for the server…" />
+  `,
+})
+export class Demo {}
+```
+
+### Container
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeLoadPanel } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeLoadPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The panel covers its own parent by default. While shown the parent
+         is aria-busy="true" (its previous value comes back after), the message
+         is announced once through the shared live announcer, and the shade
+         swallows pointer input. Focus is never taken or trapped. -->
+    <section class="orders">
+      <oge-load-panel [visible]="loading()" />
+      <h3>Orders</h3>
+      <button type="button" (click)="reload()">Reload</button>
+    </section>
+  `,
+})
+export class Demo {
+  protected readonly loading = signal(false);
+
+  protected reload(): void {
+    this.loading.set(true);
+    setTimeout(() => this.loading.set(false), 2000);
+  }
+}
+```
+
+### Target
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeLoadPanel } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeLoadPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- target: an element or a selector anywhere on the page. fullScreen
+         covers the viewport instead; without a target it marks nothing busy
+         (aria-busy on <body> would mute the live regions too). -->
+    <div id="report-chart">…</div>
+    <oge-load-panel target="#report-chart" [visible]="chartLoading()" message="Rendering chart…" />
+
+    <oge-load-panel [fullScreen]="true" [visible]="saving()" message="Saving the report…" />
+  `,
+})
+export class Demo {
+  protected readonly chartLoading = signal(false);
+  protected readonly saving = signal(false);
+}
+```
+
+### Timing
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeLoadPanel } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeLoadPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showDelay: a load that ends sooner never flashes a panel.
+         minDisplayTime: once shown, the panel stays long enough to read.
+         (shown) / (hidden) fire when it actually appears / disappears. -->
+    <section>
+      <oge-load-panel
+        [visible]="loading()"
+        [showDelay]="300"
+        [minDisplayTime]="800"
+        (shown)="log('shown')"
+        (hidden)="log('hidden')"
+      />
+      <button type="button" (click)="load(100)">Fast load (100 ms)</button>
+      <button type="button" (click)="load(1500)">Slow load (1.5 s)</button>
+    </section>
+  `,
+})
+export class Demo {
+  protected readonly loading = signal(false);
+
+  protected load(ms: number): void {
+    this.loading.set(true);
+    setTimeout(() => this.loading.set(false), ms);
+  }
+
+  protected log(what: string): void {
+    console.log(what);
+  }
+}
+```
+
 ### Actions
 
 ```ts
@@ -1070,6 +1363,62 @@ import { OgeAccordion, OgeAccordionItem } from '@oge-ui/layout';
 })
 export class Demo {
   protected readonly index = signal(0);
+}
+```
+
+### Expansion panel
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeExpansionPanel, OgeExpansionPanelContent } from '@oge-ui/layout';
+import type { OgeExpansionPanelExpandingEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeExpansionPanel, OgeExpansionPanelContent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One stand-alone disclosure panel: the title is a <button
+         aria-expanded aria-controls> inside a heading. [(expanded)] is two-way;
+         a click runs the cancelable (expanding) / (collapsing) first, then
+         (opened) / (closed). Header actions are real buttons beside the
+         toggle — never inside it. -->
+    <oge-expansion-panel
+      title="Shipping address"
+      subtitle="Home · 2 saved"
+      [(expanded)]="shippingOpen"
+      (opened)="log('opened')"
+      (closed)="log('closed')"
+    >
+      <button ogeExpansionPanelActions type="button" (click)="log('edit')">Edit</button>
+      <p>221B Baker Street, London</p>
+    </oge-expansion-panel>
+
+    <!-- ogeExpansionPanelContent: instantiated on first expand, kept after -->
+    <oge-expansion-panel
+      title="Order history"
+      subtitle="Loads on first expand"
+      (expanding)="confirm($event)"
+    >
+      <ng-template ogeExpansionPanelContent>
+        <p>12 orders in the last year.</p>
+      </ng-template>
+    </oge-expansion-panel>
+
+    <oge-expansion-panel title="Archived addresses" [disabled]="true" />
+  `,
+})
+export class Demo {
+  protected readonly shippingOpen = signal(true);
+
+  protected log(what: string): void {
+    console.log(what);
+  }
+
+  protected confirm(event: OgeExpansionPanelExpandingEvent): void {
+    // set event.cancel = true to keep the panel closed
+    console.log('expanding', event.cancel);
+  }
 }
 ```
 
@@ -1245,6 +1594,71 @@ export class Demo {
 }
 ```
 
+### Panel bar
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePanelBar } from '@oge-ui/layout';
+import type { OgePanelBarExpandMode, OgePanelBarItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePanelBar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Kendo's PanelBar on the APG disclosure pattern: every header is a
+         real <button> (aria-expanded + aria-controls on groups), leaves are
+         selectable and announced with aria-current. Child groups render on
+         first expand. Up/Down/Home/End walk the headers, Right/Left expand or
+         enter / collapse or climb (mirrored in RTL). expandMode="full" lets the
+         open root group fill the host's height. -->
+    <oge-panel-bar
+      [items]="nav"
+      [expandMode]="mode()"
+      [(selectedKey)]="selected"
+      ariaLabel="Mailbox"
+    />
+    <p>Selected: {{ selected() ?? 'none' }}</p>
+  `,
+})
+export class Demo {
+  protected readonly mode = signal<OgePanelBarExpandMode>('multiple');
+  protected readonly selected = signal<string | undefined>('inbox');
+  protected readonly nav: OgePanelBarItem[] = [
+    {
+      key: 'mail',
+      title: 'Mail',
+      expanded: true,
+      children: [
+        { key: 'inbox', title: 'Inbox', badge: 12 },
+        { key: 'sent', title: 'Sent' },
+        { key: 'spam', title: 'Spam', disabled: true },
+      ],
+    },
+    {
+      key: 'projects',
+      title: 'Projects',
+      children: [
+        { key: 'active', title: 'Active' },
+        {
+          key: 'archive',
+          title: 'Archive',
+          children: [
+            { key: 'y2025', title: '2025' },
+            { key: 'y2024', title: '2024' },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'about',
+      title: 'About',
+      content: 'A content item expands into text or a template instead of child items.',
+    },
+  ];
+}
+```
+
 ### Panel
 
 ```ts
@@ -1368,6 +1782,44 @@ import { OgeProgressBar } from '@oge-ui/layout';
 })
 export class Demo {
   protected readonly step = signal(3);
+}
+```
+
+### Circular
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeProgressBar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeProgressBar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- type="circular" draws the same role="progressbar" contract as an
+         SVG ring (Kendo's CircularProgressBar): stroke-dasharray from the value
+         between min and max, the label centred inside and formatLabel feeding
+         aria-valuetext. value: null spins — and still omits aria-valuenow. -->
+    <oge-progress-bar type="circular" [value]="done()" [showLabel]="true" ariaLabel="Upload" />
+
+    <oge-progress-bar
+      type="circular"
+      [value]="3"
+      [max]="5"
+      [size]="64"
+      [thickness]="6"
+      [showLabel]="true"
+      [formatLabel]="asSteps"
+      severity="success"
+      ariaLabel="Steps"
+    />
+
+    <oge-progress-bar type="circular" [size]="32" ariaLabel="Syncing" />
+  `,
+})
+export class Demo {
+  protected readonly done = signal(72);
+  protected readonly asSteps = (value: number): string => `${value}/5`;
 }
 ```
 

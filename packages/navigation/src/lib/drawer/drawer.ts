@@ -8,6 +8,7 @@ import {
   afterNextRender,
   afterRenderEffect,
   computed,
+  contentChild,
   effect,
   inject,
   input,
@@ -17,8 +18,25 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { resolveDrawerMode } from '@oge-ui/core';
 import {
+  beginOgeDrawerSwipe,
+  buildOgeDrawerItems,
+  ogeDrawerItemNavIndex,
+  ogeDrawerPhysicalEdge,
+  ogeDrawerRailTooltipPlacement,
+  ogeResolveDirection,
+  runOgeDrawerItemClick,
+  type OgeDirection,
+  type OgeDrawerItem,
+  type OgeDrawerItemClickEvent,
+  type OgeDrawerItemView,
+  type OgeDrawerSelectionChangedEvent,
+  type OgePointerGestureHandle,
+} from '@oge-ui/behavior';
+import {
+  OgeTooltip,
   getTabbableElements,
   isTopOverlay,
   lockBodyScroll,
@@ -28,6 +46,7 @@ import {
   unlockBodyScroll,
 } from '@oge-ui/overlay';
 import { OGE_DRAWER_CONFIG, type OgeDrawerMessages } from './config';
+import { OgeDrawerItemTemplate } from './drawer-item-template';
 import type {
   OgeDrawerAutoFocus,
   OgeDrawerClosedEvent,
@@ -37,6 +56,7 @@ import type {
   OgeDrawerMode,
   OgeDrawerModeChangedEvent,
   OgeDrawerOpeningEvent,
+  OgeDrawerItemTemplateContext,
   OgeDrawerPosition,
 } from './drawer-types';
 
@@ -86,9 +106,13 @@ function toCssSize(value: number | string | undefined): string | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   styleUrl: './drawer.scss',
+  imports: [NgTemplateOutlet, OgeTooltip],
   host: {
     class: 'oge-drawer',
     '[class.oge-drawer-opened]': 'opened()',
+    '[class.oge-drawer-rail]': 'rail()',
+    '[class.oge-drawer-swipe]': 'swipeEnabled()',
+    '(pointerdown)': 'onHostPointerDown($event)',
     '[class.oge-drawer-modal]': 'isModal()',
     '[class.oge-drawer-compact]': 'resolved().compact',
     '[class.oge-drawer-animated]': 'animationEnabled()',
@@ -147,8 +171,96 @@ function toCssSize(value: number | string | undefined): string | null {
           </svg>
         </button>
       }
+      @if (itemViews().length > 0) {
+        <!--
+          A navigation list of real links / buttons, each in the Tab order
+          (the APG disclosure-navigation shape, not a composite widget); the
+          active entry is aria-current="page". Arrow / Home / End are a
+          convenience on top. Separators are hidden from AT.
+        -->
+        <ul class="oge-drawer-items">
+          @for (view of itemViews(); track view.key) {
+            @if (view.separator) {
+              <li class="oge-drawer-separator" aria-hidden="true"></li>
+            } @else {
+              <li class="oge-drawer-item-wrap">
+                @if (view.item.url !== undefined && !view.disabled) {
+                  <a
+                    class="oge-drawer-item"
+                    [class.oge-drawer-item-active]="view.active"
+                    [attr.href]="view.item.url"
+                    [attr.target]="view.item.target ?? null"
+                    [attr.aria-current]="view.active ? 'page' : null"
+                    [attr.data-drawer-item]="view.index"
+                    [ogeTooltip]="view.text"
+                    [tooltipDisabled]="!rail()"
+                    [tooltipPlacement]="tooltipPlacement()"
+                    (click)="onItemClick(view, $event)"
+                    (keydown)="onItemsKeydown($event)"
+                  >
+                    <ng-container
+                      *ngTemplateOutlet="itemBody; context: { $implicit: view }"
+                    />
+                  </a>
+                } @else {
+                  <button
+                    type="button"
+                    class="oge-drawer-item"
+                    [class.oge-drawer-item-active]="view.active"
+                    [class.oge-drawer-item-disabled]="view.disabled"
+                    [disabled]="view.disabled"
+                    [attr.aria-current]="view.active ? 'page' : null"
+                    [attr.data-drawer-item]="view.index"
+                    [ogeTooltip]="view.text"
+                    [tooltipDisabled]="!rail()"
+                    [tooltipPlacement]="tooltipPlacement()"
+                    (click)="onItemClick(view, $event)"
+                    (keydown)="onItemsKeydown($event)"
+                  >
+                    <ng-container
+                      *ngTemplateOutlet="itemBody; context: { $implicit: view }"
+                    />
+                  </button>
+                }
+              </li>
+            }
+          }
+        </ul>
+      }
       <ng-content select="[ogeDrawerPanel]" />
     </div>
+
+    <ng-template #itemBody let-view>
+      @if (itemTemplate(); as tpl) {
+        <ng-container
+          *ngTemplateOutlet="tpl.templateRef; context: itemContext(view)"
+        />
+      } @else {
+        <span class="oge-drawer-item-icon" aria-hidden="true">
+          @if (view.item.icon; as icon) {
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path
+                [attr.d]="icon"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          }
+        </span>
+        <span class="oge-drawer-item-text">{{ view.text }}</span>
+        @if (view.item.badge !== undefined && view.item.badge !== '') {
+          <span class="oge-drawer-item-badge">{{ view.item.badge }}</span>
+        }
+      }
+    </ng-template>
+
+    @if (swipeEnabled() && !opened()) {
+      <!-- the touch strip an opening edge swipe starts in (pointer: coarse only) -->
+      <div class="oge-drawer-swipe-zone" aria-hidden="true"></div>
+    }
 
     <div class="oge-drawer-content">
       <ng-content />
@@ -233,6 +345,21 @@ export class OgeDrawer {
   );
   /** Per-instance message overrides. */
   readonly messages = input<Partial<OgeDrawerMessages> | undefined>(undefined);
+  /**
+   * Built-in navigation entries rendered at the top of the panel, before the
+   * `[ogeDrawerPanel]` content: links (`url`) or buttons, icons, badges and
+   * separators. In the mini rail (`minSize`, closed) only the icons show and
+   * the label becomes the accessible name and a tooltip.
+   */
+  readonly items = input<readonly OgeDrawerItem[] | undefined>(undefined);
+  /** Key of the active entry (`aria-current="page"`). Two-way. */
+  readonly selectedKey = model<string | undefined>(undefined);
+  /**
+   * Touch gestures: an edge swipe opens the drawer, a swipe toward the edge
+   * closes it (reason `'swipe'`, through `closing` and `closeGuard`). Touch
+   * pointers only; off by default so existing apps keep their behaviour.
+   */
+  readonly swipeEnabled = input(false);
 
   /** Cancelable — set `cancel` to keep the drawer closed. */
   readonly opening = output<OgeDrawerOpeningEvent>();
@@ -248,6 +375,22 @@ export class OgeDrawer {
   readonly closed = output<OgeDrawerClosedEvent>();
   /** The resolved layout mode changed. */
   readonly modeChanged = output<OgeDrawerModeChangedEvent>();
+  /** An entry of `items` was activated (click, Enter or Space). */
+  readonly itemClick = output<OgeDrawerItemClickEvent>();
+  /** `selectedKey` changed through the item list. */
+  readonly selectionChanged = output<OgeDrawerSelectionChangedEvent>();
+
+  protected readonly itemTemplate = contentChild(OgeDrawerItemTemplate, {
+    descendants: false,
+  });
+
+  /** The rendered entries, with the active one resolved. */
+  protected readonly itemViews = computed<readonly OgeDrawerItemView[]>(() =>
+    buildOgeDrawerItems(this.items(), this.selectedKey()),
+  );
+
+  private readonly direction = signal<OgeDirection>('ltr');
+  private swipe: OgePointerGestureHandle | null = null;
 
   private readonly _closePending = signal(false);
   /** `true` while an async `closeGuard` is in flight. */
@@ -293,6 +436,20 @@ export class OgeDrawer {
     return this.ariaLabel() ?? this.msg().drawer;
   });
 
+  /** Closed `side` drawer with a `minSize`: the icon-only mini rail. */
+  protected readonly rail = computed(
+    () =>
+      !this.opened() &&
+      this.resolved().mode === 'side' &&
+      this.minSize() !== undefined,
+  );
+
+  protected readonly tooltipPlacement = computed(() =>
+    ogeDrawerRailTooltipPlacement(
+      ogeDrawerPhysicalEdge(this.position(), this.direction()),
+    ),
+  );
+
   protected readonly cssSize = computed(() => toCssSize(this.size()));
   protected readonly cssMinSize = computed(
     () => toCssSize(this.minSize()) ?? '0px',
@@ -335,6 +492,7 @@ export class OgeDrawer {
         this.destroyRef.onDestroy(() => observer.disconnect());
       }
       this.measure();
+      this.direction.set(ogeResolveDirection(this.host.nativeElement));
     });
     afterRenderEffect(() => {
       const resolved = this.resolved();
@@ -355,6 +513,7 @@ export class OgeDrawer {
       });
     });
     this.destroyRef.onDestroy(() => {
+      this.swipe?.cancel();
       if (this.shown) this.teardown();
     });
   }
@@ -569,6 +728,66 @@ export class OgeDrawer {
     const started = this.backdropPress;
     this.backdropPress = false;
     if (started && this.closeOnBackdropClick()) this.requestClose('backdrop');
+  }
+
+  protected itemContext(view: OgeDrawerItemView): OgeDrawerItemTemplateContext {
+    return {
+      $implicit: view.item,
+      key: view.key,
+      active: view.active,
+      rail: this.rail(),
+      index: view.index,
+    };
+  }
+
+  protected onItemClick(view: OgeDrawerItemView, event: MouseEvent): void {
+    runOgeDrawerItemClick({
+      view,
+      selectedKey: this.selectedKey(),
+      event,
+      emitItemClick: (click) => this.itemClick.emit(click),
+      commit: (key) => this.selectedKey.set(key),
+      emitSelectionChanged: (changed) => this.selectionChanged.emit(changed),
+    });
+  }
+
+  protected onItemsKeydown(event: KeyboardEvent): void {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const target =
+      event.target instanceof Element
+        ? event.target.closest('[data-drawer-item]')
+        : null;
+    if (!target) return;
+    const current = Number(target.getAttribute('data-drawer-item'));
+    const next = ogeDrawerItemNavIndex(this.itemViews(), current, event.key);
+    if (next === null) return;
+    event.preventDefault();
+    this.panelEl()
+      .nativeElement.querySelector<HTMLElement>(`[data-drawer-item="${next}"]`)
+      ?.focus();
+  }
+
+  /** Touch edge swipe (`swipeEnabled`) — the decisions are `beginOgeDrawerSwipe`'s. */
+  protected onHostPointerDown(event: PointerEvent): void {
+    if (!this.swipeEnabled() || this.disabled()) return;
+    const host = this.host.nativeElement;
+    const vertical = this.position() === 'top' || this.position() === 'bottom';
+    const panel = this.panelEl().nativeElement;
+    const size = this.size();
+    const panelSize =
+      typeof size === 'number'
+        ? size
+        : (vertical ? panel.offsetHeight : panel.offsetWidth) || 260;
+    const direction = ogeResolveDirection(host);
+    this.swipe?.cancel();
+    this.swipe = beginOgeDrawerSwipe(event, {
+      edge: ogeDrawerPhysicalEdge(this.position(), direction),
+      opened: this.opened(),
+      rect: host.getBoundingClientRect(),
+      panelSize,
+      onOpen: () => this.open(),
+      onClose: () => this.requestClose('swipe'),
+    });
   }
 
   private measure(): void {

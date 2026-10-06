@@ -267,6 +267,16 @@ export const ja: OgeLocalePack = {
     toastClose: '閉じる',
     toastRegionLabel: '通知',
     toastCountBadge: '×{count}',
+    dialogOk: 'OK',
+    dialogCancel: 'キャンセル',
+    dialogConfirmTitle: '確認',
+    dialogAlertTitle: 'お知らせ',
+    dialogPromptTitle: '値を入力してください',
+    dialogRequired: 'この項目は必須です。',
+    windowMinimize: '最小化',
+    windowMoved: 'ウィンドウを {x}, {y} に移動しました',
+    windowResized: 'ウィンドウのサイズを {width} × {height} に変更しました',
+    popoverClose: '閉じる',
   },
   tabs: {
     closeTab: 'タブを閉じる',
@@ -375,6 +385,7 @@ export const ja: OgeLocalePack = {
     },
     loadIndicator: {
       loading: '読み込み中',
+      loadPanelMessage: '読み込み中…',
     },
     splitter: {
       separator: 'ペイン {{first}} と {{second}} のサイズを変更',
@@ -404,6 +415,7 @@ export const ja: OgeLocalePack = {
     menubar: {
       menubar: 'メニュー バー',
       hamburger: 'メニュー',
+      more: 'その他',
     },
     pagination: {
       paginationLabel: 'ページ切り替え',
@@ -437,6 +449,15 @@ export const ja: OgeLocalePack = {
       childrenLoadFailed: 'これらの項目を読み込めませんでした。',
       noData: '表示する項目がありません',
       noSearchResults: '一致する項目がありません',
+      loadMore: '{count, plural, other {さらに # 件表示}}',
+      editLabel: '項目名',
+      editInvalid: '有効な名前を入力してください。',
+      cutAnnouncement:
+        '{item} を切り取りました。移動先の項目に移動して Ctrl+V キーを押すと移動します。Escape キーでキャンセルします。',
+      movedAnnouncement:
+        '{position, select, inside {{item} を {target} の中に移動しました。} before {{item} を {target} の前に移動しました。} other {{item} を {target} の後に移動しました。}}',
+      moveCancelledAnnouncement: '移動をキャンセルしました。',
+      moveRejectedAnnouncement: '{item} はここに移動できません。',
     },
   },
   pivot: {

@@ -1,6 +1,6 @@
 # @oge-ui/navigation
 
-> Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
+> Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling, load-more paging, F2 label editing and drag & drop within and between trees, a drawer with built-in navigation items and touch swipe whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus, checkbox/radio rows and a More-item or container-width hamburger overflow, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/tree-view
@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/navigation`
 
-- values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_PAGINATION_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgePagination`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgePaginationConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
-- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+- values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_PAGINATION_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeDrawerItemTemplate`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgePagination`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgePaginationConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
+- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerItem`, `OgeDrawerItemClickEvent`, `OgeDrawerItemTemplateContext`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeDrawerSelectionChangedEvent`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemOverflow`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarOverflowMode`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeAllowEditing`, `OgeTreeCheckBoxesMode`, `OgeTreeChildPageEvent`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeEditStartingEvent`, `OgeTreeEditValidator`, `OgeTreeEditedEvent`, `OgeTreeEditingEvent`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeMoveSource`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeTransferredEvent`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
 
 ## API reference
 
@@ -164,6 +164,16 @@ _Lazy loading, virtualization & drag_
 | `height` | `string \| undefined` | `—` | Height of the scroll container (any CSS length) — required for virtual scrolling to have a viewport. |
 | `allowDragging` | `boolean` | `false` | Enables pointer drag reordering. |
 | `allowDropInside` | `boolean` | `true` | Allows dropping *into* a node (reparenting), not just between siblings. |
+| `dragGroup` | `string \| undefined` | `—` | Trees sharing a group accept each other's nodes — by pointer drag and by the Ctrl+X / Ctrl+V keyboard twin. Both trees need `allowDragging`. The target fires `itemReordering` / `itemReordered` (with `sourceTreeId` / `targetTreeId`), the source `itemTransferred`; neither moves data. |
+| `childPageSize` | `number \| undefined` | `—` | Children rendered per parent (roots included) before a "Load more" row — Kendo's node page size. `aria-setsize` keeps reporting the real total. `0` / unset renders every child. Paging pauses while searching. |
+
+_Label editing_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `allowEditing` | `boolean \| ((item: T) => boolean)` | `false` | Lets users rename nodes in place: F2 (or a double-click with `editOnDblClick`) turns the label into a text field; Enter or blur commits, Escape cancels. The tree does not write the label — apply `itemEdited` to your data. |
+| `editOnDblClick` | `boolean` | `false` | A double-click opens the label editor instead of toggling the node. |
+| `validateEdit` | `(value: string, item: T) => boolean \| string \| null \| undefined` | `—` | Validates an edited label: `true` / `null` accepts, `false` rejects with the catalog's `editInvalid`, a string rejects with that message. A rejected label keeps the editor open. |
 
 _Presentation_
 
@@ -191,6 +201,11 @@ _Presentation_
 | `getSelectedKeys(mode?)` | `(mode?: OgeTreeSelectedKeysMode) => RowKey[]` | Selected keys under a projection, defaulting to `selectedKeysMode`. |
 | `focus(key?)` | `(key?: RowKey) => void` | Focuses a node's row, or the first enabled one. |
 | `scrollToItem(key)` | `(key: RowKey) => void` | Scrolls a node into view, using offset math when virtualized. |
+| `editItem(key)` | `(key: RowKey) => boolean` | Opens the label editor on a node (what F2 does). Returns `false` when editing is off for it or `itemEditStarting` vetoed. |
+| `cancelEdit()` | `() => void` | Closes an open label editor without committing. |
+| `showMoreChildren(parentKey)` | `(parentKey: RowKey \| null) => void` | Reveals the next `childPageSize` children of a paged parent (`null` for the root level) — what activating its "Load more" row does. |
+| `cutItem(key)` | `(key: RowKey) => boolean` | Marks a node for a keyboard move (what Ctrl+X does); `pasteItem` on any tree of the same `dragGroup` moves it. Wire both to buttons or a context menu for a single-pointer path. Requires `allowDragging`. |
+| `pasteItem(targetKey, position?)` | `(targetKey: RowKey, position?: 'inside' \| 'before' \| 'after') => boolean` | Moves the cut node of this tree's group onto `targetKey` through the same pipeline as a drop (`itemReordering` → `itemReordered` → `itemTransferred`). `position` defaults to `inside` (`after` when `allowDropInside` is off). |
 
 #### Events
 
@@ -204,7 +219,11 @@ _Presentation_
 | `itemClick / itemDblClick` | `OgeTreeItemClickEvent<T>` | Emitted when a node row is clicked or double-clicked. |
 | `childrenLoaded / childrenLoadFailed` | `OgeTreeChildrenLoadedEvent<T> / OgeTreeChildrenFailedEvent<T>` | Emitted after a lazy `loadChildren` settled; the failure carries the original error. |
 | `selectAllChanged` | `OgeTreeSelectAllChangedEvent` | Emitted when the "select all" row is toggled. |
-| `itemReordering / itemReordered` | `OgeTreeReorderingEvent<T> / OgeTreeReorderedEvent<T>` | Cancelable pre-event and result of a drag & drop reparent, carrying `position: 'inside' \| 'before' \| 'after'`. The tree does not mutate your data. |
+| `itemReordering / itemReordered` | `OgeTreeReorderingEvent<T> / OgeTreeReorderedEvent<T>` | Cancelable pre-event and result of a move onto this tree, carrying `position: 'inside' \| 'before' \| 'after'`, `sourceTreeId` / `targetTreeId` (different for a drop from another tree of the `dragGroup`) and `trigger: 'pointer' \| 'keyboard' \| 'api'`. The tree does not mutate your data. |
+| `itemTransferred` | `OgeTreeTransferredEvent<T>` | Fired by the source tree after one of its nodes moved to another tree of the same `dragGroup` — remove it from this tree's data. |
+| `itemEditStarting` | `OgeTreeEditStartingEvent<T>` | Cancelable pre-event of the label editor opening, with the current `value`. |
+| `itemEditing / itemEdited` | `OgeTreeEditingEvent<T> / OgeTreeEditedEvent<T>` | Cancelable pre-event and result of a label edit, carrying `previousValue` and `value`. Runs after `validateEdit`; an unchanged or blank label closes the editor without either. |
+| `childPageShown` | `OgeTreeChildPageEvent<T>` | Fired after a "Load more" row revealed the next page, with `parentKey` (`null` for the roots), `shown` and `total`. |
 
 #### Types
 
@@ -229,6 +248,8 @@ _Keyboard (WAI-ARIA APG treeview)_
 | `Printable characters` | `type-ahead` | Moves focus to the next node whose label starts with the typed prefix, accent-insensitively. |
 | `*` | `expansion` | Expands every sibling at the focused level. |
 | `Ctrl+A, Shift+Arrow, Ctrl+Shift+Home/End` | `multi-select` | Select all, extend by one, and range-select to the start/end — the APG "recommended" model, so plain navigation needs no modifier. |
+| `F2` | `editing` | Opens the label editor (`allowEditing`); inside it Enter commits, Escape cancels and the focus returns to the node. Advertised with `aria-keyshortcuts`. |
+| `Ctrl+X, Ctrl+V, Ctrl+Shift+V` | `move` | The keyboard twin of drag & drop (`allowDragging`): cut the focused node, then paste it into (or, with Shift, after) the focused target — in this tree or another of the `dragGroup`. Escape abandons the cut; each step is announced through the live region. |
 
 ### Tree view configuration
 
@@ -246,6 +267,13 @@ _OgeTreeViewMessages_
 | `childrenLoadFailed` | `string` | `'Could not load these items.'` | Shown when `loadChildren` rejected. |
 | `noData` | `string` | `'No items to display'` | Shown when the tree has no nodes at all. |
 | `noSearchResults` | `string` | `'No matching items'` | Shown when a search matched nothing. |
+| `loadMore` | `string` | `'Show {count, plural, one {# more item} other {# more items}}'` | Label of the "Load more" row under a paged parent (`childPageSize`); an ICU plural over `count`, the children still hidden. |
+| `editLabel` | `string` | `'Item name'` | Accessible name of the in-place label editor. |
+| `editInvalid` | `string` | `'Enter a valid name.'` | Shown when `validateEdit` rejects a value without its own message. |
+| `cutAnnouncement` | `string` | `'{item} cut. Move to the target item and press Control+V to move it there, or Escape to cancel.'` | Announced after Ctrl+X marked a node for a keyboard move. |
+| `movedAnnouncement` | `string` | `'{position, select, inside {{item} moved into {target}.} before {{item} moved before {target}.} other {{item} moved after {target}.}}'` | Announced after a move committed; an ICU `select` over `position`. |
+| `moveCancelledAnnouncement` | `string` | `'Move cancelled.'` | Announced when Escape abandons a pending keyboard move. |
+| `moveRejectedAnnouncement` | `string` | `'{item} cannot be moved here.'` | Announced when the focused node cannot take the cut node (its own subtree). |
 
 #### Types
 
@@ -303,6 +331,14 @@ _Accessibility_
 | `inertBackground` | `boolean` | `true` | Marks the content behind a modal drawer `inert`, so neither Tab nor assistive tech can reach it. Scoped to the drawer's own content region rather than the document, because a drawer wraps the very content it covers. None of the four reference drawers does this. |
 | `drawerId` | `string (readonly)` | `—` | id of the panel element. The panel stays in the DOM while closed, so a trigger's `aria-controls` always resolves to a real element. |
 
+_Navigation items & gestures_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeDrawerItem[] \| undefined` | `—` | Built-in navigation entries rendered at the top of the panel, before the panel content: links (`url`) or buttons, icons, badges and separators. Each entry stays in the Tab order and Arrow / Home / End move between them. In the mini rail (`minSize`, closed) only the icons show and the label becomes the accessible name and a tooltip. |
+| `selectedKey` | `string \| undefined (two-way)` | `—` | Key of the active entry (`aria-current="page"`). Two-way: `[(selectedKey)]`. |
+| `swipeEnabled` | `boolean` | `false` | Touch gestures: an edge swipe opens the drawer, a swipe toward the edge closes it (reason `'swipe'`, through `closing` and `closeGuard`). Touch pointers only, RTL-aware; off by default so existing apps keep their behaviour. |
+
 #### Methods
 
 _Methods_
@@ -326,6 +362,8 @@ _Events_
 | `closing` | `OgeDrawerClosingEvent` | Cancelable, carries the `reason`. Runs before `closeGuard`. |
 | `closed` | `OgeDrawerClosedEvent` | The drawer finished closing. |
 | `modeChanged` | `OgeDrawerModeChangedEvent` | The resolved layout mode changed, carrying the requested mode and whether `compactBelow` forced it. |
+| `itemClick` | `OgeDrawerItemClickEvent` | An entry of `items` was activated (click, Enter or Space), with `item`, `key`, `index` and the DOM `event`. |
+| `selectionChanged` | `OgeDrawerSelectionChangedEvent` | `selectedKey` changed through the item list, with `key` and `previousKey`. |
 
 #### Types
 
@@ -334,6 +372,7 @@ _Content slots_
 | Name | Type | Description |
 | --- | --- | --- |
 | `[ogeDrawerPanel]` | `attribute` | Marks the element that becomes the drawer panel. Everything else projected into `<oge-drawer>` is the content. |
+| `[ogeDrawerItemTemplate]` | `{ $implicit: OgeDrawerItem; key; active; rail; index }` | Replaces the content of a built-in entry. The drawer keeps the `<a>` / `<button>` around it — with `aria-current`, the disabled state and the rail tooltip — so the template must not add a focusable control. |
 
 _Types_
 
@@ -343,11 +382,14 @@ _Types_
 | `OgeDrawerPosition` | `'start' \| 'end' \| 'top' \| 'bottom'` | Edge the panel attaches to; logical for RTL. |
 | `OgeDrawerLandmark` | `'navigation' \| 'complementary' \| 'region'` | Landmark role of a persistent drawer. |
 | `OgeDrawerAutoFocus` | `'first-tabbable' \| 'panel' \| 'none' \| string` | Initial-focus strategy of a modal drawer. |
-| `OgeDrawerCloseReason` | `'api' \| 'escape' \| 'backdrop' \| 'outside' \| 'compact'` | Why the drawer closed. |
+| `OgeDrawerCloseReason` | `'api' \| 'escape' \| 'backdrop' \| 'outside' \| 'compact' \| 'swipe'` | Why the drawer closed. |
 | `OgeDrawerOpeningEvent` | `{ cancel: boolean }` | Cancelable pre-event for opening. |
 | `OgeDrawerClosingEvent` | `{ cancel: boolean; reason: OgeDrawerCloseReason }` | Cancelable pre-event for closing. |
 | `OgeDrawerClosedEvent` | `{ reason: OgeDrawerCloseReason }` | Payload of `closed`. |
 | `OgeDrawerModeChangedEvent` | `{ mode; requestedMode; compact: boolean }` | Payload of `modeChanged`. |
+| `OgeDrawerItem` | `{ key?; text?; icon?; url?; target?; disabled?; separator?; badge? }` | One built-in entry. `icon` is SVG path data (`d`) for a 24×24 stroke icon; `key` defaults to `text`; `separator: true` renders a divider. |
+| `OgeDrawerItemClickEvent` | `{ item; key; index; event }` | Payload of the item click. |
+| `OgeDrawerSelectionChangedEvent` | `{ key; previousKey; item; event? }` | Payload of the selection change. |
 | `resolveDrawerMode()` | `(request: OgeDrawerModeRequest) => OgeDrawerModeResult` | The pure function in `@oge-ui/core` that decides whether a drawer keeps its mode or goes compact. DOM-free, so the rule is unit-tested on its own. A non-positive `containerSize` means &ldquo;not measured yet&rdquo; and the requested mode is returned unchanged. |
 
 ### Drawer configuration
@@ -477,6 +519,7 @@ _Behavior_
 | `openMode` | `'click' \| 'hover'` | `'click'` | How **top-level** submenus open. Nested levels always open on hover and on ArrowRight/Enter — the reference libraries&rsquo; first-vs-nested split baked in as behavior. With a menu open, hovering siblings switches it in either mode. |
 | `hoverDelay` | `number` | `100` | Hover dwell before a top-level submenu opens in `'hover'` mode, in ms. Nested levels use the overlay config's `menuShowDelayMs`/`menuHideDelayMs` (50/300). |
 | `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the whole bar collapses into a hamburger button opening the full tree as one nested menu. Measured against the menubar's own box, never the window. |
+| `overflowMode` | `'hamburger' \| 'more' \| 'none'` | `'hamburger'` | What happens when the top-level items stop fitting. `'hamburger'` — the `compactBelow` collapse, unchanged; `'more'` — only the items that do not fit move into a trailing _More_ item (label `messages.more`) whose submenu holds them, own submenus included; the last `'auto'` item yields first (see the item's `overflow`), More joins the roving tabindex and reads as current when the `activeKey` item moved into it, and item-click paths stay the items' real paths. Horizontal bars only; `compactBelow` still applies below it. `'none'` — nothing collapses, `compactBelow` included. |
 | `disabled` | `boolean` | `false` | Disables the whole bar: every item goes inert and the bar leaves the Tab sequence. |
 | `submenuItemTemplate` | `TemplateRef<OgeMenuItemTemplateContext> \| undefined` | `—` | Custom rendering for submenu rows at **every depth** — the shared `oge-menu-list` context. Top-level bar items use `[ogeMenubarItemTemplate]` instead. |
 
@@ -503,9 +546,9 @@ _Behavior_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `<a href>` at the bar **and** at any submenu depth; `itemClick` fires first so `preventDefault()` hands navigation to a router) and `visible`. Submenus come from `items`. |
+| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `<a href>` at the bar **and** at any submenu depth; `itemClick` fires first so `preventDefault()` hands navigation to a router), `visible` and `overflow` (top-level placement under `overflowMode: 'more'`). Submenu rows take the menu item's `type` / `checked` / `group` / `keepOpen` (checkbox, radio and header rows). Submenus come from `items`. |
 | `OgeMenubarCloseReason` | `'escape' \| 'outside' \| 'select' \| 'tab' \| 'navigation' \| 'api'` | Why a submenu closed. `'navigation'` is a Left/Right or hover switch to a sibling top-level item. |
-| `OgeMenubarItemClickEvent` | `{ item; key?; index; path; event }` | `path` is the hierarchical index chain from the bar down to the item; `index` is its last entry. |
+| `OgeMenubarItemClickEvent` | `{ item; key?; index; path; checked?; event }` | `path` is the hierarchical index chain from the bar down to the item (items reached through the More overflow report their real top-level index); `index` is its last entry. `checked` is the state the activation moves a checkbox/radio row to. |
 | `OgeMenubarItemTemplate` | `directive — ng-template[ogeMenubarItemTemplate]` | Replaces the rendering of **top-level** bar items; context is `OgeMenubarItemTemplateContext`. Submenu rows keep the shared `oge-menu-list` rendering. |
 | `OgeMenubarItemTemplateContext` | `{ $implicit: OgeMenubarItemData; index: number }` | Context of `[ogeMenubarItemTemplate]`: the item and its top-level index. |
 
@@ -525,6 +568,11 @@ _Behavior_
 | `disabled` | `boolean` | `false` | Disabled items are exposed (`aria-disabled`) but inert and skipped by the arrow keys. |
 | `visible` | `boolean` | `true` | `false` removes the item and its subtree. |
 | `separator` | `boolean` | `false` | Renders a divider (`role="separator"`); every other input is ignored. |
+| `type` | `OgeMenuItemType \| undefined` | `—` | Submenu rows: `'checkbox'` / `'radio'` render `menuitemcheckbox` / `menuitemradio` with `aria-checked`; `'header'` renders a non-focusable caption labelling the rows after it as a `role="group"`, skipped by the keyboard. |
+| `checked` | `boolean \| undefined` | `—` | Checked state of a checkbox/radio row — owned by the application: the item-click event reports the next state in `checked`, apply it with `applyMenuItemCheck`. |
+| `group` | `string \| undefined` | `—` | Radio group of a `radio` row; checking one unchecks the others of the group on the same level. |
+| `keepOpen` | `boolean` | `false` | Keeps the submenu open after the row is activated. Without it checkbox/radio rows stay open on Space only (APG). |
+| `overflow` | `'auto' \| 'always' \| 'never' \| undefined` | `—` | Top-level items with `overflowMode: 'more'`: `'auto'` (default) moves into More when it stops fitting, `'always'` lives there, `'never'` never leaves the bar. |
 
 ### Menubar configuration
 
@@ -534,11 +582,12 @@ _provideOgeMenubarConfig()_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `messages` | `OgeMenubarMessages` | Every user-facing string: `menubar` (accessible name of the bar, default `Menu bar`) and `hamburger` (aria label of the compact button, default `Menu`). |
+| `messages` | `OgeMenubarMessages` | Every user-facing string: `menubar` (accessible name of the bar, default `Menu bar`), `hamburger` (aria label of the compact button, default `Menu`) and `more` (label of the overflow item, default `More`). |
 | `openMode` | `'click' \| 'hover' \| undefined` | Default for the `openMode` input. |
 | `hoverDelay` | `number \| undefined` | Default for the `hoverDelay` input, in ms. |
 | `orientation` | `'horizontal' \| 'vertical' \| undefined` | Default for the `orientation` input. |
 | `compactBelow` | `number \| undefined` | Default for the `compactBelow` input. |
+| `overflowMode` | `'hamburger' \| 'more' \| 'none' \| undefined` | Default for the `overflowMode` input. |
 
 ### OgeBreadcrumb — `<oge-breadcrumb>`
 
@@ -1000,6 +1049,55 @@ export class Demo {
 }
 ```
 
+### Items
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+import type { OgeDrawerItem } from '@oge-ui/navigation';
+
+const ICON = {
+  inbox: 'M4 13h4l2 3h4l2-3h4M4 13l2-8h12l2 8v6H4z',
+  send: 'M4 12l16-8-6 16-2-6-8-2z',
+  star: 'M12 4l2.5 5 5.5.8-4 3.9.9 5.5L12 16.6 7.1 19.2 8 13.7 4 9.8 9.5 9z',
+  trash: 'M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12',
+  settings: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 12h2M18 12h2M12 4v2M12 18v2',
+};
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- a list of real buttons / links, each in the Tab order; the active
+         entry is aria-current="page". Closed with a minSize it is an icon rail
+         whose labels become the accessible name and a tooltip. -->
+    <oge-drawer
+      [(opened)]="opened"
+      mode="side"
+      [size]="220"
+      [minSize]="56"
+      ariaLabel="Mail"
+      [items]="items"
+      [(selectedKey)]="page"
+    >
+      <main>{{ page() }}</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(true);
+  protected readonly page = signal<string | undefined>('inbox');
+  protected readonly items: OgeDrawerItem[] = [
+    { key: 'inbox', text: 'Inbox', icon: ICON.inbox, badge: 4 },
+    { key: 'sent', text: 'Sent', icon: ICON.send },
+    { separator: true },
+    { key: 'trash', text: 'Trash', icon: ICON.trash, disabled: true },
+    { key: 'help', text: 'Help', url: '/help' },
+  ];
+}
+```
+
 ### Modal
 
 ```ts
@@ -1113,6 +1211,41 @@ export class Demo {
 }
 ```
 
+### Swipe
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+import type { OgeDrawerClosingEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- touch only: an edge swipe opens, a swipe toward the edge closes
+         (reason 'swipe', through closing and closeGuard). Off by default. -->
+    <oge-drawer
+      [(opened)]="opened"
+      mode="overlay"
+      [swipeEnabled]="true"
+      ariaLabel="Menu"
+      (closing)="onClosing($event)"
+    >
+      <div ogeDrawerPanel>Menu</div>
+      <main>Swipe in from the start edge</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(false);
+
+  protected onClosing(event: OgeDrawerClosingEvent): void {
+    console.log('closing because of', event.reason);
+  }
+}
+```
+
 ### Menubar routed
 
 ```ts
@@ -1210,6 +1343,54 @@ export class Demo {
 
   protected run(event: OgeMenubarItemClickEvent): void {
     console.log(event.key, event.path);
+  }
+}
+```
+
+### Check items
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import { applyMenuItemCheck } from '@oge-ui/overlay';
+import type { OgeMenubarItemData, OgeMenubarItemClickEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- type: 'radio' rows render menuitemradio, 'checkbox' rows
+         menuitemcheckbox, both with aria-checked. A 'header' row is a
+         non-focusable caption that labels the rows after it as a role="group".
+         The menubar never mutates checked: itemClick reports the next state and
+         applyMenuItemCheck applies it (a radio unchecks its group). Space
+         toggles without closing the menu (APG); keepOpen stays open on click. -->
+    <oge-menubar [items]="menu()" (itemClick)="onItem($event)" />
+  `,
+})
+export class Demo {
+  protected readonly menu = signal<readonly OgeMenubarItemData[]>([
+    {
+      text: 'View',
+      items: [
+        { text: 'Layout', type: 'header' },
+        { text: 'Grid', type: 'radio', group: 'layout', checked: true },
+        { text: 'List', type: 'radio', group: 'layout' },
+        { text: 'Details', type: 'radio', group: 'layout' },
+        { separator: true, text: '' },
+        { text: 'Show', type: 'header' },
+        { text: 'Status bar', key: 'status', type: 'checkbox', checked: true },
+        { text: 'Hidden files', key: 'hidden', type: 'checkbox' },
+        { text: 'Word wrap', key: 'wrap', type: 'checkbox', keepOpen: true },
+      ],
+    },
+    { text: 'Help', key: 'help' },
+  ]);
+
+  protected onItem(event: OgeMenubarItemClickEvent): void {
+    if (event.checked === undefined) return; // a plain command
+    this.menu.update((items) => applyMenuItemCheck(items, event.item));
   }
 }
 ```
@@ -1375,6 +1556,41 @@ export class Demo {
 }
 ```
 
+### Overflow
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import type { OgeMenubarItemData } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- overflowMode="more" moves only the top-level items that do not
+         fit into a trailing "More" item (its label lives in messages.more); the
+         rest of the bar stays put. The fit is measured against the menubar's own
+         container, the last 'auto' item yields first, overflow: 'never' pins an
+         item and 'always' parks it in More. More is part of the roving tabindex
+         like any other bar item. -->
+    <div style="width: 360px">
+      <oge-menubar [items]="menu" overflowMode="more" />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly menu: OgeMenubarItemData[] = [
+    { text: 'File', items: [{ text: 'New' }, { text: 'Open…' }] },
+    { text: 'Edit', items: [{ text: 'Undo' }, { text: 'Redo' }] },
+    { text: 'View', items: [{ text: 'Zoom in' }, { text: 'Zoom out' }] },
+    { text: 'Insert', items: [{ text: 'Image' }, { text: 'Table' }] },
+    { text: 'Tools', items: [{ text: 'Options' }] },
+    { text: 'Help', key: 'help', overflow: 'never' },
+  ];
+}
+```
+
 ### Vertical
 
 ```ts
@@ -1399,6 +1615,77 @@ export class Demo {
     { text: 'Reports', items: [{ text: 'Monthly' }, { text: 'Annual' }] },
     { text: 'Settings', items: [{ text: 'Profile' }] },
   ];
+}
+```
+
+### Between
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { OgeTreeReorderedEvent, OgeTreeTransferredEvent } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+type List = 'projects' | 'archive';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- trees sharing a dragGroup accept each other's nodes;
+         Ctrl+X on a node and Ctrl+V on a target is the keyboard twin -->
+    <oge-tree-view
+      treeId="projects"
+      [items]="lists.projects()"
+      displayExpr="name"
+      [allowDragging]="true"
+      dragGroup="files"
+      ariaLabel="Projects"
+      (itemReordered)="received('projects', $event)"
+      (itemTransferred)="removed('projects', $event)"
+    />
+    <oge-tree-view
+      treeId="archive"
+      [items]="lists.archive()"
+      displayExpr="name"
+      [allowDragging]="true"
+      dragGroup="files"
+      ariaLabel="Archive"
+      (itemReordered)="received('archive', $event)"
+      (itemTransferred)="removed('archive', $event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly lists = {
+    projects: signal<Folder[]>([
+      { id: 1, parentId: null, name: 'Website' },
+      { id: 2, parentId: 1, name: 'Landing page' },
+      { id: 3, parentId: null, name: 'Mobile app' },
+    ]),
+    archive: signal<Folder[]>([{ id: 11, parentId: null, name: '2024' }]),
+  };
+
+  // the trees never move data: the target adds, the source removes
+  protected received(list: List, e: OgeTreeReorderedEvent<Folder>): void {
+    const parentId =
+      e.position === 'inside' ? (e.dropKey as number) : e.dropItem.parentId;
+    this.lists[list].update((rows) => [
+      ...rows.filter((row) => row.id !== e.dragKey),
+      { ...e.dragItem, parentId },
+    ]);
+  }
+
+  protected removed(list: List, e: OgeTreeTransferredEvent<Folder>): void {
+    this.lists[list].update((rows) => rows.filter((row) => row.id !== e.dragKey));
+  }
 }
 ```
 
@@ -1492,6 +1779,55 @@ export class Demo {
             }
           : row,
       ),
+    );
+  }
+}
+```
+
+### Editing
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { OgeTreeEditedEvent } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- F2 (or a double-click here) renames; Enter / blur commits,
+         Escape cancels and the focus returns to the node -->
+    <oge-tree-view
+      [items]="folders()"
+      displayExpr="name"
+      [allowEditing]="true"
+      [editOnDblClick]="true"
+      [validateEdit]="validate"
+      (itemEdited)="rename($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly folders = signal<Folder[]>([
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+  ]);
+
+  protected readonly validate = (value: string) =>
+    value.length > 40 ? 'Keep names under 40 characters.' : null;
+
+  // the tree does not write the label: apply it to your data
+  protected rename(e: OgeTreeEditedEvent<Folder>): void {
+    this.folders.update((rows) =>
+      rows.map((row) => (row.id === e.key ? { ...row, name: e.value } : row)),
     );
   }
 }
@@ -1605,6 +1941,54 @@ export class Demo {
       children: [{ id: 2, name: 'app', children: [{ id: 3, name: 'main.ts' }] }],
     },
   ];
+}
+```
+
+### Paging
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { OgeTreeChildPageEvent } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- five children per parent, then a "Show N more items" row;
+         aria-setsize keeps reporting the real total -->
+    <oge-tree-view
+      [items]="mail"
+      displayExpr="name"
+      [childPageSize]="5"
+      [expandedKeys]="[1]"
+      (childPageShown)="pageShown($event)"
+    />
+    <p>{{ progress() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly progress = signal('');
+  protected readonly mail: Folder[] = [
+    { id: 1, parentId: null, name: 'Inbox' },
+    ...Array.from({ length: 23 }, (_, i) => ({
+      id: 100 + i,
+      parentId: 1,
+      name: `Message ${i + 1}`,
+    })),
+  ];
+
+  protected pageShown(e: OgeTreeChildPageEvent<Folder>): void {
+    this.progress.set(`${e.shown} of ${e.total} shown`);
+  }
 }
 ```
 

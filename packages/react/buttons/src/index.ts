@@ -2,6 +2,7 @@ export {
   OgeButton,
   type OgeButtonProps,
   type OgeButtonHandle,
+  type OgeButtonSelectedChangeEvent,
 } from './lib/button';
 export {
   OgeButtonGroup,
@@ -42,5 +43,6 @@ export type {
   OgeButtonGroupSelectionChange,
   OgeMenuItem,
   OgeMenuItemSeverity,
+  OgeMenuItemType,
   OgePopupPlacement,
 } from '@oge-ui/behavior';

@@ -78,6 +78,8 @@ const FAMILIES = [
           'The Angular anchored-panel model is public for templates/tests; the React handle exposes open()/close()/toggle() instead (present in the React table).',
         selectedkeyschange:
           'The banana half of Angular’s [(selectedKeys)]; React’s controlled pair is selectedKeys + onSelectionChange (present in the React table).',
+        selectedchanged:
+          'The toggle button’s rich event ({ selected, previousValue, event }) beside the [(selected)] banana; React folds both into onSelectedChange, which carries the same payload and pairs with the banana’s selectedChange.',
       },
       reactOnly: {
         classname:
@@ -153,6 +155,10 @@ const FAMILIES = [
           'Render prop replacing the [ogeAccordionToggleIconTemplate] slot (documented in the Angular OgeAccordionItem block’s types table).',
         renderheaderactions:
           'Render prop replacing the [ogeAccordionHeaderActionsTemplate] slot (documented in the Angular OgeAccordionItem block’s types table).',
+        headeractions:
+          'ReactNode prop of <OgeExpansionPanel>; Angular projects real buttons marked with the ogeExpansionPanelActions attribute (documented in the OgeExpansionPanel block’s types table) and needs no member.',
+        children:
+          'JSX body of <OgeExpansionPanel>; Angular projects the body via <ng-content> (plus the lazy [ogeExpansionPanelContent] template) and needs no member.',
       },
     },
   },
@@ -194,6 +200,10 @@ const FAMILIES = [
     angularApiPage: 'apps/dev-app/src/app/pages/layout/progress-api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-layout/progress-api.ts',
     exceptions: {
+      angularOnly: {
+        isshown:
+          'Public method of the oge-load-panel instance (template ref / viewChild). <OgeLoadPanel> is a plain function component with no ref handle; React readers track the painted state through onShown / onHidden (present in the React table).',
+      },
       reactOnly: {
         classname:
           'React host styling idiom; Angular hosts take class/style natively.',
@@ -441,6 +451,8 @@ const FAMILIES = [
         searchvaluechange:
           'The controlled half of the tree view’s `[(searchValue)]` model.',
         openedchange: 'The controlled half of the drawer’s `[(opened)]` model.',
+        selectedkeychange:
+          'The controlled half of the drawer’s `[(selectedKey)]` model.',
         activeindexchange:
           'The controlled half of the stepper’s `[(activeIndex)]` model.',
         activekeychange:
@@ -582,9 +594,20 @@ const FAMILIES = [
         tooltipshowdelay: 'showdelay',
         tooltiphidedelay: 'hidedelay',
         tooltipdisabled: 'disabled',
+        tooltipshowmode: 'showmode',
+        tooltiparrow: 'arrow',
+        tooltipmaxwidth: 'maxwidth',
         ogecontextmenu: 'items', // the directive's selector binding ↔ the prop
         contextmenuarialabel: 'arialabel',
         contextmenudisabled: 'disabled',
+        contextmenutarget: 'target',
+        contextmenuopening: 'opening',
+        // popover: the trigger directive ↔ the trigger prop, structural
+        // slots ↔ render props, the two-way model ↔ the controlled prop
+        ogepopover: 'trigger',
+        ogepopovertitle: 'rendertitle',
+        ogepopoverfooter: 'renderfooter',
+        visible: 'open',
         contextmenuitemclick: 'itemclick', // outputs drop the prefix too
         contextmenuopened: 'opened',
         contextmenuclosed: 'closed',
@@ -602,8 +625,18 @@ const FAMILIES = [
           'The Angular panel model is torn down from DestroyRef; the React hook destroys its machine on unmount, so there is no member to call.',
         provideogeoverlayconfig:
           'DI provider; the React counterpart is the <OgeOverlayConfigProvider> row (a JSX tag, which the gate cannot pair by name).',
+        tooltipcontext:
+          'The $implicit of a template ogeTooltip; React’s `content` render function closes over whatever it needs.',
       },
       reactOnly: {
+        rendertitle:
+          'Target of the `ogeModalTitle` / `ogePopoverTitle` pairs — a pair maps one Angular name to one React name.',
+        renderfooter:
+          'Target of the `ogeModalFooter` / `ogePopoverFooter` pairs — a pair maps one Angular name to one React name.',
+        content:
+          'Rich tooltip content as a node / render prop; Angular passes a TemplateRef to `ogeTooltip` itself (paired with `text`).',
+        openchange:
+          'The controlled half of the popover’s `open`; Angular’s `[(visible)]` model is both halves at once.',
         // The reverse half of the directive-prefix pairs above: a pair maps
         // one Angular name to one React name, while the React `disabled` and
         // `closed` names are the target of two pairs each (tooltip + context
@@ -623,6 +656,7 @@ const FAMILIES = [
         openedchange: 'The controlled half of the modal’s `[(opened)]` model.',
         fullscreenchange:
           'The controlled half of the modal’s `[(fullScreen)]` model.',
+        statechange: 'The controlled half of the window’s `[(state)]` model.',
         closependingchange:
           'Callback reporting the modal’s async close guard settling; Angular’s `closePending` signal is read directly in the template.',
         renderitem:

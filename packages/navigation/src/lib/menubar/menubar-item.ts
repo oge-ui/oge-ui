@@ -7,7 +7,11 @@ import {
   input,
   type Signal,
 } from '@angular/core';
-import type { OgeMenubarItemData } from './menubar-types';
+import type { OgeMenuItemType } from '@oge-ui/overlay';
+import type {
+  OgeMenubarItemData,
+  OgeMenubarItemOverflow,
+} from './menubar-types';
 
 let nextMenubarItemId = 0;
 
@@ -57,6 +61,23 @@ export class OgeMenubarItem {
   readonly visible = input(true);
   /** Renders a divider; every other input is ignored. */
   readonly separator = input(false);
+  /**
+   * Submenu rows: `'checkbox'` / `'radio'` render `menuitemcheckbox` /
+   * `menuitemradio` with `aria-checked`; `'header'` a non-focusable caption
+   * labelling the rows after it.
+   */
+  readonly type = input<OgeMenuItemType | undefined>(undefined);
+  /** Checked state of a checkbox/radio row (owned by the application). */
+  readonly checked = input<boolean | undefined>(undefined);
+  /** Radio group name of a `type="radio"` row. */
+  readonly group = input<string | undefined>(undefined);
+  /** Keeps the submenu open after the row is activated. */
+  readonly keepOpen = input(false);
+  /**
+   * Top-level items with `overflowMode="more"`: `'auto'` (default),
+   * `'always'` (lives in More) or `'never'` (never leaves the bar).
+   */
+  readonly overflow = input<OgeMenubarItemOverflow | undefined>(undefined);
 
   // Explicit annotations break the type-inference cycle of the recursive query.
   private readonly children: Signal<readonly OgeMenubarItem[]> =
@@ -77,6 +98,11 @@ export class OgeMenubarItem {
       icon: this.icon(),
       iconClass: this.iconClass(),
       disabled: this.disabled(),
+      ...(this.type() !== undefined ? { type: this.type() } : {}),
+      ...(this.checked() !== undefined ? { checked: this.checked() } : {}),
+      ...(this.group() !== undefined ? { group: this.group() } : {}),
+      ...(this.keepOpen() ? { keepOpen: true } : {}),
+      ...(this.overflow() !== undefined ? { overflow: this.overflow() } : {}),
       ...(children.length ? { items: children } : {}),
     };
   });

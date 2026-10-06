@@ -261,6 +261,16 @@ export const tr: OgeLocalePack = {
     toastClose: 'Kapat',
     toastRegionLabel: 'Bildirimler',
     toastCountBadge: '×{count}',
+    dialogOk: 'Tamam',
+    dialogCancel: 'İptal',
+    dialogConfirmTitle: 'Onayla',
+    dialogAlertTitle: 'Bilgi',
+    dialogPromptTitle: 'Bir değer girin',
+    dialogRequired: 'Bu alan zorunludur.',
+    windowMinimize: 'Simge durumuna küçült',
+    windowMoved: 'Pencere {x}, {y} konumuna taşındı',
+    windowResized: 'Pencere {width} × {height} boyutuna getirildi',
+    popoverClose: 'Kapat',
   },
   tabs: {
     closeTab: 'Sekmeyi kapat',
@@ -369,6 +379,7 @@ export const tr: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'Yükleniyor',
+      loadPanelMessage: 'Yükleniyor…',
     },
     splitter: {
       separator: 'Bölmeleri yeniden boyutlandır: {{first}} ve {{second}}',
@@ -398,6 +409,7 @@ export const tr: OgeLocalePack = {
     menubar: {
       menubar: 'Menü çubuğu',
       hamburger: 'Menü',
+      more: 'Diğer',
     },
     pagination: {
       paginationLabel: 'Sayfalama',
@@ -431,6 +443,16 @@ export const tr: OgeLocalePack = {
       childrenLoadFailed: 'Bu öğeler yüklenemedi.',
       noData: 'Görüntülenecek öğe yok',
       noSearchResults: 'Eşleşen öğe yok',
+      loadMore:
+        '{count, plural, one {# öğe daha göster} other {# öğe daha göster}}',
+      editLabel: 'Öğe adı',
+      editInvalid: 'Geçerli bir ad girin.',
+      cutAnnouncement:
+        '{item} kesildi. Hedef öğeye gidin ve oraya taşımak için Ctrl+V, iptal etmek için Escape tuşuna basın.',
+      movedAnnouncement:
+        '{position, select, inside {{item}, {target} içine taşındı.} before {{item}, {target} öncesine taşındı.} other {{item}, {target} sonrasına taşındı.}}',
+      moveCancelledAnnouncement: 'Taşıma iptal edildi.',
+      moveRejectedAnnouncement: '{item} buraya taşınamaz.',
     },
   },
   pivot: {

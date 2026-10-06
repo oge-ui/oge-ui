@@ -104,7 +104,20 @@ export const OGE_REACT_MODAL_API: ApiSections = {
           type: 'OgeModalPlacement',
           default: "'center'",
           description:
-            "Viewport position: centered or pinned near the top edge (<code>'top'</code>, command-palette style).",
+            "Viewport position: the centre, an edge (<code>'top'</code> — command-palette style — <code>'bottom'</code>, logical <code>'start'</code> / <code>'end'</code>) or a corner (<code>'top-start'</code> … <code>'bottom-end'</code>). Logical values mirror in RTL.",
+        },
+        {
+          name: 'dialogRole',
+          type: 'OgeModalRole',
+          default: "'dialog'",
+          description:
+            "ARIA role of the panel; <code>'alertdialog'</code> for urgent confirmations (APG alert dialog) — what <code>confirm()</code> / <code>alert()</code> use.",
+        },
+        {
+          name: 'ariaDescribedBy',
+          type: 'string | undefined',
+          description:
+            'Id(s) of the element(s) describing the dialog — wired to <code>aria-describedby</code>.',
         },
         {
           name: 'shading',
@@ -323,8 +336,14 @@ export const OGE_REACT_MODAL_API: ApiSections = {
         },
         {
           name: 'OgeModalPlacement',
-          type: "'center' | 'top'",
-          description: 'Where the panel sits in the viewport.',
+          type: "'center' | 'top' | 'bottom' | 'start' | 'end' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end'",
+          description:
+            'Where the panel sits in the viewport; <code>start</code> / <code>end</code> are logical (mirror in RTL).',
+        },
+        {
+          name: 'OgeModalRole',
+          type: "'dialog' | 'alertdialog'",
+          description: 'ARIA role of the modal panel.',
         },
         {
           name: 'OgeModalOpeningEvent',
@@ -361,6 +380,24 @@ export const OGE_REACT_MODAL_SERVICE_API: ApiSections = {
           type: 'OgeModalRef&lt;R&gt;',
           description:
             'Opens <code>content</code> (a node, or a function receiving <code>{ data, close }</code>) in a body-appended modal — the escape hatch for <code>transform</code>ed ancestors and for prompt/confirm flows without a declared <code>&lt;OgeModal&gt;</code>. Returned by <code>useOgeModals()</code>; needs an <code>&lt;OgeModalProvider&gt;</code> above.',
+        },
+        {
+          name: 'confirm(options: string | OgeConfirmOptions): Promise&lt;boolean&gt;',
+          type: 'Promise&lt;boolean&gt;',
+          description:
+            'Asks a yes/no question in an APG alert dialog (<code>role="alertdialog"</code>, described by the message): <code>true</code> for the primary button, <code>false</code> for Cancel and Escape. <code>danger</code> (default: <code>severity === \'danger\'</code>) styles the primary button as destructive and moves the initial focus to Cancel; otherwise the primary button has it. A string argument is the message.',
+        },
+        {
+          name: 'alert(options: string | OgeAlertOptions): Promise&lt;void&gt;',
+          type: 'Promise&lt;void&gt;',
+          description:
+            'Shows a message with a single OK button (APG alert dialog); Escape acknowledges it too.',
+        },
+        {
+          name: 'prompt(options: string | OgePromptOptions): Promise&lt;string | null&gt;',
+          type: 'Promise&lt;string | null&gt;',
+          description:
+            'Asks for a line of text: the submitted value, or <code>null</code> for Cancel and Escape. The field has the initial focus and <kbd>Enter</kbd> submits unless invalid; <code>required</code> and <code>validate</code> (sync or async — OK waits, latest call wins) render the error beside the field with <code>aria-invalid</code> + <code>aria-describedby</code> and announce it.',
         },
       ],
     },
@@ -403,6 +440,41 @@ export const OGE_REACT_MODAL_SERVICE_API: ApiSections = {
           type: 'OgeModalRef&lt;R&gt;',
           description:
             'The enclosing modal’s handle — the counterpart of injecting <code>OgeModalRef</code>.',
+        },
+        {
+          name: 'OgeConfirmOptions',
+          type: '{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width? }',
+          description:
+            'Options of <code>confirm()</code>. <code>title</code> defaults to the localized <code>dialogConfirmTitle</code>, <code>okText</code> / <code>cancelText</code> to <code>dialogOk</code> / <code>dialogCancel</code>; <code>icon</code>: <code>false</code> hides the severity icon, any React node replaces it; <code>width</code> defaults to 400.',
+        },
+        {
+          name: 'OgeAlertOptions',
+          type: '{ title?; message?; severity?; icon?; okText?; width? }',
+          description:
+            'Options of <code>alert()</code> (no Cancel button; the title defaults to <code>dialogAlertTitle</code>).',
+        },
+        {
+          name: 'OgePromptOptions',
+          type: 'OgeConfirmOptions &amp; { defaultValue?; placeholder?; label?; inputType?; required?; validate? }',
+          description:
+            'Options of <code>prompt()</code>: the field’s initial text, placeholder, visible label (without one the field is labelled by the message or title), native type, the required rule (<code>dialogRequired</code> message) and the custom validator; the title defaults to <code>dialogPromptTitle</code>.',
+        },
+        {
+          name: 'OgeDialogSeverity',
+          type: "'info' | 'success' | 'warning' | 'danger'",
+          description:
+            'Tone of a helper dialog — picks the built-in icon and its colour.',
+        },
+        {
+          name: 'OgePromptInputType',
+          type: "'text' | 'password' | 'email' | 'number' | 'tel' | 'url' | 'search'",
+          description: 'Native <code>type</code> of the prompt field.',
+        },
+        {
+          name: 'OgePromptValidator',
+          type: '(value: string) =&gt; string | null | Promise&lt;string | null&gt;',
+          description:
+            'Return an error message to block the submit, <code>null</code> to accept; a rejected promise blocks without a message.',
         },
       ],
     },
@@ -689,9 +761,37 @@ export const OGE_REACT_TOOLTIP_API: ApiSections = {
       entries: [
         {
           name: 'text',
-          type: 'string (required)',
+          type: 'string',
+          default: "''",
           description:
-            'Tooltip text — the React face of the <code>ogeTooltip</code> binding. The child element gets <code>aria-describedby</code> pointing at the bubble while it is shown.',
+            'Tooltip text — the React face of the <code>ogeTooltip</code> binding. The child element gets <code>aria-describedby</code> pointing at the bubble while it is shown. Empty (with no <code>content</code>) disables it.',
+        },
+        {
+          name: 'content',
+          type: 'ReactNode | (() =&gt; ReactNode)',
+          description:
+            'Rich content — a node or a render function (formatting, icons; never focusable controls: a tooltip is not interactive). Wins over <code>text</code>; the React face of a template <code>ogeTooltip</code>.',
+        },
+        {
+          name: 'showMode',
+          type: 'OgeTooltipShowMode',
+          default: "'hover'",
+          description:
+            "What shows it: <code>'hover'</code> (dwell + keyboard focus), <code>'focus'</code>, <code>'click'</code> (activation toggles; blur and Escape hide it) or <code>'manual'</code> (only the ref handle).",
+        },
+        {
+          name: 'arrow',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Draws a callout arrow pointing at the trigger (shared geometry with the popover).',
+        },
+        {
+          name: 'maxWidth',
+          type: 'number | string | undefined',
+          default: '—',
+          description:
+            'Maximum bubble width — px number or any CSS length; the stylesheet default is 280px.',
         },
         {
           name: 'placement',
@@ -730,6 +830,45 @@ export const OGE_REACT_TOOLTIP_API: ApiSections = {
       ],
     },
   ],
+  methods: [
+    {
+      title: 'Handle (ref)',
+      entries: [
+        {
+          name: 'open(): void',
+          type: 'void',
+          description:
+            'Shows the tooltip now, whatever the show mode (no dwell).',
+        },
+        {
+          name: 'close(): void',
+          type: 'void',
+          description: 'Hides the tooltip now.',
+        },
+        {
+          name: 'toggle(): void',
+          type: 'void',
+          description: 'Shows a hidden tooltip, hides a visible one.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeTooltipShowMode',
+          type: "'hover' | 'focus' | 'click' | 'manual'",
+          description: 'Which trigger interactions show the tooltip.',
+        },
+        {
+          name: 'OgeTooltipHandle',
+          type: '{ open(); close(); toggle() }',
+          description: 'The ref handle.',
+        },
+      ],
+    },
+  ],
 };
 
 export const OGE_REACT_CONTEXT_MENU_API: ApiSections = {
@@ -740,7 +879,14 @@ export const OGE_REACT_CONTEXT_MENU_API: ApiSections = {
           name: 'items',
           type: 'readonly OgeMenuItem[] (required)',
           description:
-            'Items of the menu opened on right-click or Shift+F10 — the React face of the <code>ogeContextMenu</code> binding. An empty array falls back to the native browser menu.',
+            'Items of the menu opened on right-click or Shift+F10 — the React face of the <code>ogeContextMenu</code> binding. An empty array falls back to the native browser menu — unless an <code>onOpening</code> handler builds the items per target.',
+        },
+        {
+          name: 'target',
+          type: 'string | undefined',
+          default: '—',
+          description:
+            'CSS selector delegating the menu to matching elements inside the child (<code>closest()</code> from the clicked / focused element): one menu serves many rows. Requests outside every match keep the browser menu; the match becomes the anchor, the <code>onOpening</code> target and the focus-return point.',
         },
         {
           name: 'ariaLabel',
@@ -775,6 +921,18 @@ export const OGE_REACT_CONTEXT_MENU_API: ApiSections = {
       title: 'Handle (ref)',
       entries: [
         {
+          name: 'open(x: number, y: number): void',
+          type: 'void',
+          description:
+            'Opens the menu at a viewport point through the same pipeline as a right-click (<code>onOpening</code> runs with <code>event: null</code>); with <code>target</code>, the target is the match under the point.',
+        },
+        {
+          name: 'open(event: MouseEvent | React.MouseEvent): void',
+          type: 'void',
+          description:
+            'Opens at a pointer event’s location (a keyboard-synthesized event anchors to the target) — e.g. a “More” button’s <code>onClick</code>.',
+        },
+        {
           name: 'close(): void',
           type: 'void',
           description: 'Closes the menu programmatically.',
@@ -785,6 +943,12 @@ export const OGE_REACT_CONTEXT_MENU_API: ApiSections = {
   events: [
     {
       entries: [
+        {
+          name: 'onOpening',
+          type: '(event: OgeContextMenuOpeningEvent) =&gt; void',
+          description:
+            'Cancelable, before every open (pointer, keyboard, <code>open()</code>): <code>{ target, items, cancel, event }</code>. Assign <code>items</code> to build the menu for this target; <code>cancel</code> keeps it closed (and the browser menu suppressed).',
+        },
         {
           name: 'onItemClick',
           type: '(event: OgeMenuListItemClickEvent) =&gt; void',
@@ -802,6 +966,279 @@ export const OGE_REACT_CONTEXT_MENU_API: ApiSections = {
           type: '() =&gt; void',
           description:
             'The menu closed — by selection, Escape, an outside click or a scroll.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeContextMenuOpeningEvent',
+          type: '{ readonly target: Element; items: readonly OgeMenuItem[]; cancel: boolean; readonly event: Event | null }',
+          description:
+            'Payload of <code>onOpening</code>; shared with the Angular <code>contextMenuOpening</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_POPOVER_API: ApiSections = {
+  properties: [
+    {
+      title: 'Trigger & content slots (render props)',
+      entries: [
+        {
+          name: 'trigger',
+          type: 'ReactElement',
+          description:
+            'The trigger, rendered in place inside a <code>display: contents</code> wrapper carrying the listeners — the React face of Angular’s <code>[ogePopover]</code>. Its focusable control (the inner <code>&lt;button&gt;</code> of an <code>&lt;OgeButton&gt;</code>) gets the trigger ARIA: <code>aria-haspopup="dialog"</code> for click / manual, <code>aria-expanded</code>, <code>aria-controls</code> while open.',
+        },
+        {
+          name: 'renderTitle',
+          type: '(context: OgePopoverSlotContext) =&gt; ReactNode',
+          description:
+            'Rich title, replacing the plain <code>title</code> text (still labels the dialog).',
+        },
+        {
+          name: 'renderFooter',
+          type: '(context: OgePopoverSlotContext) =&gt; ReactNode',
+          description:
+            'Footer (actions) bar; <code>close</code> closes the popover with reason <code>closeButton</code>.',
+        },
+        {
+          name: 'children',
+          type: 'ReactNode | ((context: OgePopoverSlotContext) =&gt; ReactNode)',
+          description:
+            'Body content, or a render function receiving the slot context.',
+        },
+      ],
+    },
+    {
+      entries: [
+        {
+          name: 'open / defaultOpen',
+          type: 'boolean',
+          default: 'uncontrolled, false',
+          description:
+            'Controlled open state (pair with <code>onOpenChange</code>) or the initial state when uncontrolled — the React face of <code>[(visible)]</code>. Changes run the cancelable <code>onOpening</code> / <code>onClosing</code> with reason <code>api</code>.',
+        },
+        {
+          name: 'onOpenChange',
+          type: '(open: boolean) =&gt; void',
+          description:
+            'The open state changed — a user interaction, the ref handle, or a vetoed controlled change reporting the state actually reached.',
+        },
+        {
+          name: 'title',
+          type: 'string | undefined',
+          description:
+            'Title text in the header; labels the dialog (<code>aria-labelledby</code>).',
+        },
+        {
+          name: 'ariaLabel',
+          type: 'string | undefined',
+          description: 'Accessible name when there is no title.',
+        },
+        {
+          name: 'showOn',
+          type: 'OgePopoverShowOn',
+          default: "'click'",
+          description:
+            "What opens it from the trigger: <code>'click'</code> (the APG disclosure), <code>'hover'</code> (dwell + a grace period that survives moving into the panel; keyboard focus opens it too), <code>'focus'</code> or <code>'manual'</code> (code only).",
+        },
+        {
+          name: 'placement',
+          type: 'OgePopupPlacement',
+          default: "'bottom'",
+          description:
+            'Preferred side; flips and clamps against the viewport, RTL-aware.',
+        },
+        {
+          name: 'arrow',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Draws a callout arrow on the edge facing the trigger (geometry shared with the tooltip).',
+        },
+        {
+          name: 'modal',
+          type: 'boolean',
+          default: 'false',
+          description:
+            '<code>true</code>: an <code>aria-modal</code> dialog — focus moves in, Tab is trapped, focus returns to the trigger on close. <code>false</code>: a non-modal dialog — focus stays on the trigger, Tab moves into the panel and on past it (as if it followed the trigger inline), and focus leaving closes it.',
+        },
+        {
+          name: 'showCloseButton',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Renders the header ✕ — labelled by <code>messages.popoverClose</code>.',
+        },
+        {
+          name: 'width',
+          type: 'number | string | undefined',
+          description: 'Content width — px number or CSS length.',
+        },
+        {
+          name: 'maxWidth',
+          type: 'number | string | undefined',
+          description:
+            'Maximum content width — px number or CSS length; the stylesheet default is 360px.',
+        },
+        {
+          name: 'showDelay',
+          type: 'number | undefined',
+          default: '—',
+          description:
+            'Hover dwell before opening (hover mode); falls back to <code>popoverShowDelayMs</code>.',
+        },
+        {
+          name: 'hideDelay',
+          type: 'number | undefined',
+          default: '—',
+          description:
+            'Grace period before closing after the pointer left trigger and panel; falls back to <code>popoverHideDelayMs</code>.',
+        },
+        {
+          name: 'initialFocus',
+          type: 'OgePopoverInitialFocus',
+          default: "'auto'",
+          description:
+            "Focus target on click / API opens: <code>'auto'</code> (first tabbable when modal, none otherwise), <code>'none'</code>, <code>'first-tabbable'</code>, <code>'panel'</code> or a CSS selector. Hover / focus opens never move focus; an <code>autoFocus</code> element always wins.",
+        },
+        {
+          name: 'restoreFocus',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Returns focus to the trigger when a close would lose it (never after an outside click or a focus move).',
+        },
+        {
+          name: 'closeOnEscape',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Escape closes it — through the shared overlay stack, so a select box open inside closes first.',
+        },
+        {
+          name: 'closeOnOutsideClick',
+          type: 'boolean',
+          default: 'true',
+          description: 'A pointer-down outside trigger and panel closes it.',
+        },
+        {
+          name: 'disabled',
+          type: 'boolean',
+          default: 'false',
+          description: 'Prevents opening; closes an open popover.',
+        },
+        {
+          name: 'anchor',
+          type: 'HTMLElement | RefObject&lt;HTMLElement | null&gt; | null',
+          description:
+            'Element (or ref) to anchor to when there is no <code>trigger</code> — a popover driven only from code.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgeOverlayMessages&gt; | undefined',
+          description:
+            'Per-instance message overrides — <code>popoverClose</code> labels the ✕.',
+        },
+        {
+          name: 'className / style',
+          type: 'string / CSSProperties',
+          description: 'Extra class / inline style on the panel.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      title: 'Handle (ref)',
+      entries: [
+        {
+          name: 'open(): void',
+          type: 'void',
+          description:
+            'Opens it (reason <code>api</code>; runs <code>onOpening</code>).',
+        },
+        {
+          name: 'close(): void',
+          type: 'void',
+          description:
+            'Closes it (reason <code>api</code>; runs <code>onClosing</code>).',
+        },
+        {
+          name: 'toggle(): void',
+          type: 'void',
+          description: 'Opens a closed popover, closes an open one.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'onOpening',
+          type: '(event: OgePopoverOpeningEvent) =&gt; void',
+          description:
+            'Cancelable, before every open: <code>{ reason, cancel }</code>, reason <code>click</code> | <code>hover</code> | <code>focus</code> | <code>api</code>.',
+        },
+        {
+          name: 'onOpened',
+          type: '(event: OgePopoverOpenedEvent) =&gt; void',
+          description: 'After it opened: <code>{ reason }</code>.',
+        },
+        {
+          name: 'onClosing',
+          type: '(event: OgePopoverClosingEvent) =&gt; void',
+          description:
+            'Cancelable, before every close: <code>{ reason, cancel }</code>, reason <code>api</code> | <code>trigger</code> | <code>pointerLeave</code> | <code>focusOut</code> | <code>outside</code> | <code>escape</code> | <code>closeButton</code>.',
+        },
+        {
+          name: 'onClosed',
+          type: '(event: OgePopoverClosedEvent) =&gt; void',
+          description: 'After it closed: <code>{ reason }</code>.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgePopoverShowOn',
+          type: "'click' | 'hover' | 'focus' | 'manual'",
+          description: 'Trigger interaction model.',
+        },
+        {
+          name: 'OgePopoverOpenReason',
+          type: "'api' | 'click' | 'hover' | 'focus'",
+          description: 'Why it opened.',
+        },
+        {
+          name: 'OgePopoverCloseReason',
+          type: "'api' | 'trigger' | 'pointerLeave' | 'focusOut' | 'outside' | 'escape' | 'closeButton'",
+          description: 'Why it closed.',
+        },
+        {
+          name: 'OgePopoverInitialFocus',
+          type: "'auto' | 'none' | 'first-tabbable' | 'panel' | (string &amp; {})",
+          description: 'Initial-focus strategy (a string is a CSS selector).',
+        },
+        {
+          name: 'OgePopoverSlotContext',
+          type: '{ close: () =&gt; void }',
+          description:
+            'Context of <code>renderTitle</code> / <code>renderFooter</code> / function children.',
+        },
+        {
+          name: 'OgePopoverHandle',
+          type: '{ open(); close(); toggle() }',
+          description: 'The ref handle.',
         },
       ],
     },
@@ -864,7 +1301,7 @@ export const OGE_REACT_MENU_LIST_API: ApiSections = {
           name: 'onItemClick',
           type: '(event: OgeMenuListItemClickEvent) =&gt; void',
           description:
-            'An enabled item was activated (click, Enter or Space). Order: <code>onItemClick</code> → <code>item.action?.()</code> → <code>onCloseRequest</code>.',
+            'An enabled item was activated (click, Enter or Space). Order: <code>onItemClick</code> → <code>item.action?.()</code> → <code>onCloseRequest</code> — skipped when the row stays open (Space on a checkbox/radio row, or <code>keepOpen</code>). For checkbox/radio rows <code>checked</code> is the next state.',
         },
         {
           name: 'onCloseRequest',
@@ -880,9 +1317,21 @@ export const OGE_REACT_MENU_LIST_API: ApiSections = {
       entries: [
         {
           name: 'OgeMenuItem&lt;T&gt;',
-          type: '{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () =&gt; void; url?; badge?; shortcut?; items?: readonly OgeMenuItem&lt;T&gt;[] }',
+          type: '{ text: string; value?: T; hint?; disabled?; type?: OgeMenuItemType; checked?; group?: string; keepOpen?: boolean; icon?; iconClass?; severity?; separator?; action?: () =&gt; void; url?; badge?; shortcut?; items?: readonly OgeMenuItem&lt;T&gt;[] }',
           description:
-            'Canonical menu item of the suite, shared with the Angular overlay via <code>&#64;oge-ui/behavior</code>. A defined <code>checked</code> renders <code>menuitemcheckbox</code>; <code>separator: true</code> ignores every other field; <code>url</code> renders a real <code>&lt;a href&gt;</code>; <code>items</code> makes the row a submenu parent.',
+            "Canonical menu item of the suite, shared with the Angular overlay via <code>&#64;oge-ui/behavior</code>. <code>separator: true</code> ignores every other field; <code>type</code> picks the row kind: <code>'checkbox'</code> renders <code>menuitemcheckbox</code> and <code>'radio'</code> <code>menuitemradio</code>, both with <code>aria-checked</code> from <code>checked</code> (a check mark / an accent dot); radios of one <code>group</code> render inside a <code>role=\"group\"</code>, and checking one unchecks the rest of the group (see <code>applyMenuItemCheck</code>). <code>'header'</code> is a non-focusable caption that labels the rows after it — up to the next separator or header — as a <code>role=\"group\"</code>; the arrow keys and type-ahead skip it. The menu never mutates <code>checked</code>: the item-click event carries the next state. Space toggles a <code>checkbox</code>/<code>radio</code> row without closing the menu (APG); <code>keepOpen</code> keeps the menu open on any activation. Without <code>type</code> the historical rule holds: a defined <code>checked</code> renders <code>menuitemcheckbox</code>. Also: <code>url</code> renders a real <code>&lt;a href&gt;</code>; <code>items</code> makes the row a submenu parent.",
+        },
+        {
+          name: 'OgeMenuItemType',
+          type: "'normal' | 'checkbox' | 'radio' | 'header'",
+          description:
+            'Row kind of an <code>OgeMenuItem</code>: a command, a <code>menuitemcheckbox</code>, a <code>menuitemradio</code> (grouped by <code>group</code>) or a non-focusable section caption.',
+        },
+        {
+          name: 'applyMenuItemCheck',
+          type: '(items: readonly I[], target: OgeMenuItem) =&gt; readonly I[]',
+          description:
+            'Returns <code>items</code> with the activation of <code>target</code> applied — immutably and at any depth: a checkbox toggles, a radio becomes checked and every other radio of its <code>group</code> on the same level is unchecked. Untouched rows keep their references; pass the item the click event carried. Framework-free (<code>&#64;oge-ui/behavior</code>), re-exported here.',
         },
         {
           name: 'OgeMenuItemSeverity',
@@ -891,9 +1340,9 @@ export const OGE_REACT_MENU_LIST_API: ApiSections = {
         },
         {
           name: 'OgeMenuListItemClickEvent',
-          type: '{ item: OgeMenuItem; index: number; event: MouseEvent | KeyboardEvent }',
+          type: '{ item: OgeMenuItem; index: number; checked?: boolean; event: MouseEvent | KeyboardEvent }',
           description:
-            'Index within the <code>items</code> prop (separators included).',
+            '<code>checked</code> is the state the activation moves a checkbox/radio row to (<code>undefined</code> for plain rows). Index within the <code>items</code> prop (separators included).',
         },
         {
           name: 'OgeMenuCloseRequestEvent',
@@ -1014,6 +1463,12 @@ export const OGE_REACT_ANCHORED_PANEL_API: ApiSections = {
           default: 'false',
           description:
             'Transient surfaces (tooltips) skip the Escape stack so an open tooltip never swallows the Escape meant for the popup underneath.',
+        },
+        {
+          name: 'arrow',
+          type: '() =&gt; boolean | undefined',
+          description:
+            'When it returns <code>true</code>, every measure also resolves the callout-arrow geometry into <code>position.arrow</code> (<code>resolvePopupArrow</code>) — the popover and the tooltip render their arrow from it.',
         },
       ],
     },
@@ -1225,6 +1680,30 @@ export const OGE_REACT_RESOLVE_POPUP_POSITION_API: ApiSections = {
           description:
             'Panel width when anchor-width matching or a fixed width was requested (set by the hook, not by the pure function).',
         },
+        {
+          name: 'arrow?',
+          type: 'OgePopupArrow',
+          description:
+            'Callout-arrow geometry <code>{ side, offset }</code>, present when the anchored panel was asked for an arrow — the panel edge facing the anchor and the arrow centre along it, in px.',
+        },
+      ],
+    },
+    {
+      title: 'Callout arrow',
+      entries: [
+        {
+          name: 'resolvePopupArrow(req: OgePopupArrowRequest): OgePopupArrow',
+          type: 'OgePopupArrow',
+          description:
+            'Pure arrow geometry shared by the popover and the tooltip in both layers (import from <code>&#64;oge-ui/behavior</code>): the arrow sits on the panel edge facing the anchor (RTL-aware) and points at the anchor centre, clamped <code>edgePadding</code> (default 12px) inside the edge.',
+        },
+        {
+          name: 'OGE_POPUP_ARROW_SIZE',
+          type: 'number',
+          default: '7',
+          description:
+            'How far the arrow tip reaches out of the edge; hosts add it to the panel <code>offset</code> while an arrow is shown.',
+        },
       ],
     },
     {
@@ -1320,6 +1799,13 @@ export const OGE_REACT_OVERLAY_CONFIG_API: ApiSections = {
             'Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides.',
         },
         {
+          name: 'popoverShowDelayMs / popoverHideDelayMs',
+          type: 'number',
+          default: '150 / 300',
+          description:
+            "Hover dwell before a <code>showOn='hover'</code> popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel.",
+        },
+        {
           name: 'toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates',
           type: 'OgeToastPosition / number / number / boolean / boolean',
           default: "'bottom-end' / 4000 / 5 / false / false",
@@ -1329,7 +1815,13 @@ export const OGE_REACT_OVERLAY_CONFIG_API: ApiSections = {
           name: 'messages',
           type: 'OgeOverlayMessages',
           description:
-            'User-facing strings of the modal header buttons and the toast chrome: <code>modalClose</code>, <code>modalMaximize</code>, <code>modalRestore</code>, <code>toastClose</code>, <code>toastRegionLabel</code>, <code>toastCountBadge</code>.',
+            'User-facing strings of the modal header buttons, the toast chrome and the popover: <code>modalClose</code>, <code>modalMaximize</code>, <code>modalRestore</code>, <code>toastClose</code>, <code>toastRegionLabel</code>, <code>toastCountBadge</code>, <code>popoverClose</code> (optional; English “Close” when a catalog predates it).',
+        },
+        {
+          name: 'messages — dialog helpers & window',
+          type: 'OgeOverlayMessages (optional keys)',
+          description:
+            "<code>dialogOk</code> ('OK'), <code>dialogCancel</code> ('Cancel'), <code>dialogConfirmTitle</code> ('Confirm'), <code>dialogAlertTitle</code> ('Notice'), <code>dialogPromptTitle</code> ('Enter a value'), <code>dialogRequired</code> ('This field is required.'), <code>windowMinimize</code> ('Minimize'), <code>windowMoved</code> ('Window moved to {x}, {y}'), <code>windowResized</code> ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps.",
         },
       ],
     },
@@ -1398,6 +1890,377 @@ export const OGE_REACT_OVERLAY_PRIMITIVES_API: ApiSections = {
           type: 'void',
           description:
             'Releases one reference; the last release restores the inline styles exactly as they were.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_WINDOW_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'opened',
+          type: 'boolean',
+          description:
+            'Open state — controlled when provided, so pass <code>onOpenedChange</code> with it. Setting it <code>false</code> closes without <code>onClosing</code>.',
+        },
+        {
+          name: 'defaultOpened',
+          type: 'boolean',
+          default: 'false',
+          description: 'Uncontrolled initial open state.',
+        },
+        {
+          name: 'onOpenedChange',
+          type: '(opened: boolean) =&gt; void',
+          description: 'The controlled half of <code>opened</code>.',
+        },
+        {
+          name: 'state',
+          type: 'OgeWindowState',
+          description:
+            "Display state — controlled when provided: <code>'normal'</code>, <code>'minimized'</code> (title bar only) or <code>'maximized'</code> (fills the viewport). A prop change runs the cancelable pipeline.",
+        },
+        {
+          name: 'defaultState',
+          type: 'OgeWindowState',
+          default: "'normal'",
+          description: 'Uncontrolled initial display state.',
+        },
+        {
+          name: 'onStateChange',
+          type: '(state: OgeWindowState) =&gt; void',
+          description: 'The controlled half of <code>state</code>.',
+        },
+        {
+          name: 'title',
+          type: 'string | undefined',
+          description:
+            'Title-bar text; also the accessible name (<code>aria-labelledby</code>).',
+        },
+        {
+          name: 'ariaLabel',
+          type: 'string | undefined',
+          description: 'Accessible name when there is no <code>title</code>.',
+        },
+        {
+          name: 'position',
+          type: 'OgeWindowPosition | null | undefined',
+          description:
+            'Explicit top-left corner (<code>{ x, y }</code> in viewport px, <code>x</code> = left edge in both directions); wins over <code>placement</code> and moves the open window when it changes.',
+        },
+        {
+          name: 'placement',
+          type: 'OgeWindowPlacement',
+          default: "'center'",
+          description:
+            'Where the window opens without a <code>position</code> — the modal’s nine placements, RTL-aware. A new placement re-places an open window; a reopened window otherwise keeps its last box.',
+        },
+        {
+          name: 'width / height',
+          type: 'number | string | undefined',
+          description:
+            'Initial size — numbers are px, strings pass through. Default width <code>min(420px, 100vw - 32px)</code>, height from the content. A user resize wins.',
+        },
+        {
+          name: 'minWidth / minHeight',
+          type: 'number | undefined',
+          default: '200 / 120',
+          description: 'Smallest size (px) a resize may reach.',
+        },
+        {
+          name: 'maxWidth / maxHeight',
+          type: 'number | undefined',
+          description: 'Largest size (px); default the viewport.',
+        },
+        {
+          name: 'zIndex',
+          type: 'number | undefined',
+          description:
+            'Base z-index; the window’s stacking layer is added to it. Default: <code>calc(var(--oge-z-window) + layer)</code> — below anchored popups and modals.',
+        },
+        {
+          name: 'draggable',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'The title bar drags the window (shared pointer gesture; Escape mid-drag puts it back) and the arrow keys move the focused frame.',
+        },
+        {
+          name: 'resizable',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Eight edge/corner handles resize the window; Ctrl/⌘ + arrows on the focused frame are the keyboard twin.',
+        },
+        {
+          name: 'keepInViewport',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Keeps the whole window on screen; <code>false</code> lets it hang off the sides and bottom while 48px of the title bar stay reachable. A viewport resize re-clamps.',
+        },
+        {
+          name: 'showMinimizeButton',
+          type: 'boolean',
+          default: 'true',
+          description: 'Shows the minimize / restore title-bar button.',
+        },
+        {
+          name: 'showMaximizeButton',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Shows the maximize / restore title-bar button; a title-bar double-click toggles too.',
+        },
+        {
+          name: 'showCloseButton',
+          type: 'boolean',
+          default: 'true',
+          description: 'Shows the ✕ title-bar button.',
+        },
+        {
+          name: 'closeOnEscape',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Escape closes the window while focus is inside it and no popup or modal is open. Windows never join the modal Escape stack.',
+        },
+        {
+          name: 'autoFocus',
+          type: 'OgeWindowAutoFocus',
+          default: "'first-tabbable'",
+          description:
+            'Where focus lands on open — resolved in the body (never on the title-bar buttons), falling back to the frame; <code>false</code> leaves focus alone.',
+        },
+        {
+          name: 'restoreFocus',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Restores focus to the opener on close — only when focus would otherwise be lost.',
+        },
+        {
+          name: 'padding',
+          type: 'boolean',
+          default: 'true',
+          description: '<code>false</code> makes the body flush.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgeOverlayMessages&gt; | undefined',
+          description:
+            'Per-instance message overrides (button labels <code>windowMinimize</code> / <code>modalMaximize</code> / <code>modalRestore</code> / <code>modalClose</code>, announcements <code>windowMoved</code> / <code>windowResized</code>).',
+        },
+        {
+          name: 'children',
+          type: 'ReactNode',
+          description:
+            'Body content (Angular projects it via <code>&lt;ng-content&gt;</code>).',
+        },
+        {
+          name: 'className / style',
+          type: 'string / CSSProperties',
+          description: 'Applied to the window frame.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      title: 'Handle (ref)',
+      entries: [
+        {
+          name: 'open(): void',
+          type: 'void',
+          description: 'Opens the window.',
+        },
+        {
+          name: 'close(): void',
+          type: 'void',
+          description:
+            "Closes through the cancelable closing event; reason <code>'api'</code>.",
+        },
+        {
+          name: 'toggle(): void',
+          type: 'void',
+          description: 'Open ⇄ close.',
+        },
+        {
+          name: 'minimize(): boolean',
+          type: 'boolean',
+          description:
+            'Collapses the window to its title bar; <code>false</code> when vetoed.',
+        },
+        {
+          name: 'maximize(): boolean',
+          type: 'boolean',
+          description:
+            'Fills the viewport (inside the safe-area insets); <code>false</code> when vetoed.',
+        },
+        {
+          name: 'restore(): boolean',
+          type: 'boolean',
+          description:
+            'Back to the normal box; <code>false</code> when vetoed or already normal.',
+        },
+        {
+          name: 'bringToFront(): void',
+          type: 'void',
+          description:
+            'Raises the window above the other open windows (a press or focus does it too).',
+        },
+        {
+          name: 'center(): void',
+          type: 'void',
+          description:
+            'Re-centres the window in the viewport and fires the moved event.',
+        },
+        {
+          name: 'moveTo(x: number, y: number): void',
+          type: 'void',
+          description:
+            "Moves the top-left corner (clamped) and fires the moved event with source <code>'api'</code>.",
+        },
+        {
+          name: 'resizeTo(width: number, height: number): void',
+          type: 'void',
+          description:
+            'Resizes (min/max-limited, top-left fixed) and fires the resized event.',
+        },
+        {
+          name: 'focus(): void',
+          type: 'void',
+          description:
+            'Moves focus into the window (the <code>autoFocus</code> resolution).',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'onOpening',
+          type: '(event: OgeWindowOpeningEvent) =&gt; void',
+          description:
+            'Cancelable: fires before the window opens (any open path).',
+        },
+        {
+          name: 'onClosing',
+          type: '(event: OgeWindowClosingEvent) =&gt; void',
+          description:
+            'Cancelable: fires before Escape / ✕ / <code>close()</code> closes the window, with the <code>reason</code>.',
+        },
+        {
+          name: 'onClosed',
+          type: '(event: OgeWindowClosedEvent) =&gt; void',
+          description: 'Fires after the window closed, with the reason.',
+        },
+        {
+          name: 'onMoved',
+          type: '(event: OgeWindowMovedEvent) =&gt; void',
+          description:
+            "Fires after a drag, a keyboard move, <code>center()</code>, <code>moveTo()</code> or a <code>position</code> / <code>placement</code> change — new <code>x</code>/<code>y</code> and the <code>source</code> (<code>'pointer' | 'keyboard' | 'api'</code>).",
+        },
+        {
+          name: 'onResized',
+          type: '(event: OgeWindowResizedEvent) =&gt; void',
+          description:
+            'Fires after a resize gesture (with the <code>edge</code>), a keyboard resize or <code>resizeTo()</code>.',
+        },
+        {
+          name: 'onStateChanging',
+          type: '(event: OgeWindowStateChangingEvent) =&gt; void',
+          description:
+            'Cancelable: fires before minimize / maximize / restore (buttons, double-click, Alt+↑/↓, the state binding, methods).',
+        },
+        {
+          name: 'onStateChanged',
+          type: '(event: OgeWindowStateChangedEvent) =&gt; void',
+          description: 'Fires after the display state changed.',
+        },
+        {
+          name: 'onActivated',
+          type: '() =&gt; void',
+          description:
+            'Fires when the window becomes the frontmost (active) one.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeWindowState',
+          type: "'normal' | 'minimized' | 'maximized'",
+          description: 'Display state.',
+        },
+        {
+          name: 'OgeWindowPlacement',
+          type: 'OgeModalPlacement',
+          description:
+            "The modal's placements: <code>'center'</code>, edges and corners.",
+        },
+        {
+          name: 'OgeWindowPosition',
+          type: '{ x: number; y: number }',
+          description: 'Top-left corner in viewport px.',
+        },
+        {
+          name: 'OgeWindowAutoFocus',
+          type: 'OgeModalAutoFocus | false',
+          description:
+            'Initial-focus strategy; <code>false</code> leaves focus where it is.',
+        },
+        {
+          name: 'OgeWindowCloseReason',
+          type: "'api' | 'escape' | 'closeButton'",
+          description: 'Why the window closed.',
+        },
+        {
+          name: 'OgeWindowMovedEvent',
+          type: "{ x; y; source: 'pointer' | 'keyboard' | 'api'; event? }",
+          description: 'Payload of the moved event.',
+        },
+        {
+          name: 'OgeWindowResizedEvent',
+          type: '{ width; height; edge?: OgeWindowResizeEdge; source; event? }',
+          description: 'Payload of the resized event.',
+        },
+        {
+          name: 'OgeWindowResizeEdge',
+          type: "'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'",
+          description: 'The eight resize handles (physical compass edges).',
+        },
+        {
+          name: 'OgeWindowStateChangingEvent',
+          type: '{ state; previousState; cancel: boolean }',
+          description: 'Cancelable pre-state-change event.',
+        },
+        {
+          name: 'OgeWindowStateChangedEvent',
+          type: '{ state; previousState }',
+          description: 'Post-state-change event.',
+        },
+        {
+          name: 'OgeWindowOpeningEvent / OgeWindowClosingEvent / OgeWindowClosedEvent',
+          type: '{ cancel } / { reason; cancel } / { reason }',
+          description: 'Open/close pipeline payloads.',
+        },
+        {
+          name: 'Keyboard (focused frame)',
+          type: 'aria-keyshortcuts',
+          description:
+            'Arrows move 10px, Ctrl/⌘ + arrows resize, Shift = 1px steps, Alt+↑ maximize (or restore from minimized), Alt+↓ minimize (or restore from maximized), Escape closes (focus inside, no popup open). Moves and resizes are announced politely.',
+        },
+        {
+          name: 'OgeWindowHandle',
+          type: '{ opened; state; open(); close(); toggle(); minimize(); maximize(); restore(); bringToFront(); center(); moveTo(); resizeTo(); focus() }',
+          description: 'The <code>ref</code> handle.',
         },
       ],
     },

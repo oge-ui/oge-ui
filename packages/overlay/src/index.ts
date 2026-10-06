@@ -45,13 +45,47 @@ export {
 export {
   type OgeMenuItem,
   type OgeMenuItemSeverity,
+  type OgeMenuItemType,
   type OgeMenuListItemClickEvent,
   type OgeMenuCloseRequestEvent,
   type OgeMenuItemTemplateContext,
 } from './lib/menu/menu-types';
+// The checkbox/radio state helper is framework-free; re-exported so a menu's
+// owner updates its items from the package it already imports.
+export { applyMenuItemCheck } from '@oge-ui/behavior';
 export { OgeMenuList } from './lib/menu/menu-list';
-export { OgeTooltip } from './lib/tooltip/tooltip';
-export { OgeContextMenu } from './lib/context-menu/context-menu';
+export {
+  OgeTooltip,
+  type OgeTooltipTemplateContext,
+} from './lib/tooltip/tooltip';
+export {
+  OgeContextMenu,
+  type OgeContextMenuOpeningEvent,
+} from './lib/context-menu/context-menu';
+export {
+  OgePopover,
+  OgePopoverTrigger,
+  type OgePopoverShowOn,
+  type OgePopoverOpenReason,
+  type OgePopoverCloseReason,
+  type OgePopoverInitialFocus,
+  type OgePopoverOpeningEvent,
+  type OgePopoverOpenedEvent,
+  type OgePopoverClosingEvent,
+  type OgePopoverClosedEvent,
+} from './lib/popover/popover';
+export {
+  OgePopoverTitle,
+  OgePopoverFooter,
+  type OgePopoverSlotContext,
+} from './lib/popover/popover-templates';
+export {
+  resolvePopupArrow,
+  OGE_POPUP_ARROW_SIZE,
+  type OgePopupArrow,
+  type OgePopupArrowRequest,
+  type OgeTooltipShowMode,
+} from '@oge-ui/behavior';
 export { OgeModal } from './lib/modal/modal';
 export {
   OgeModalTitle,
@@ -73,7 +107,33 @@ export {
   type OgeModalAutoFocus,
   type OgeModalPlacement,
   type OgeModalSlotContext,
+  type OgeModalRole,
 } from './lib/modal/modal-types';
+export {
+  type OgeConfirmOptions,
+  type OgeAlertOptions,
+  type OgePromptOptions,
+  type OgeDialogSeverity,
+  type OgePromptInputType,
+  type OgePromptValidator,
+} from './lib/modal/dialog-types';
+export { OgeWindow } from './lib/window/window';
+export {
+  type OgeWindowState,
+  type OgeWindowPlacement,
+  type OgeWindowAutoFocus,
+  type OgeWindowPosition,
+  type OgeWindowResizeEdge,
+  type OgeWindowCloseReason,
+  type OgeWindowChangeSource,
+  type OgeWindowOpeningEvent,
+  type OgeWindowClosingEvent,
+  type OgeWindowClosedEvent,
+  type OgeWindowMovedEvent,
+  type OgeWindowResizedEvent,
+  type OgeWindowStateChangingEvent,
+  type OgeWindowStateChangedEvent,
+} from '@oge-ui/behavior';
 export { OgeLiveAnnouncer } from './lib/live-announcer/live-announcer';
 export {
   type OgeLivePoliteness,

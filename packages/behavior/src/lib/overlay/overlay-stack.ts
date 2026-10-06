@@ -27,3 +27,12 @@ export function removeOverlay(surface: object): void {
 export function isTopOverlay(surface: object): boolean {
   return stack[stack.length - 1] === surface;
 }
+
+/**
+ * How many surfaces are open. A non-modal surface that handles Escape
+ * locally (the floating window) only acts while this is `0`, so Escape in a
+ * popup opened inside it closes the popup, not the window.
+ */
+export function overlayStackSize(): number {
+  return stack.length;
+}

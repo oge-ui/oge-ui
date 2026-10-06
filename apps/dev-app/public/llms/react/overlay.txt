@@ -1,6 +1,6 @@
 # @oge-ui/react-overlay
 
-> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
+> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/overlay
@@ -108,7 +108,9 @@ _Content slots (render props)_
 | `title` | `string` | `—` | Header text; also the aria-label fallback when the header is hidden. |
 | `ariaLabel` | `string` | `—` | Accessible name override for headerless modals. |
 | `width / height / minWidth / minHeight / maxWidth / maxHeight` | `number \| string` | `—` | Panel size — numbers are px, strings pass through. Default width `min(560px, 100%)`. |
-| `placement` | `OgeModalPlacement` | `'center'` | Viewport position: centered or pinned near the top edge (`'top'`, command-palette style). |
+| `placement` | `OgeModalPlacement` | `'center'` | Viewport position: the centre, an edge (`'top'` — command-palette style — `'bottom'`, logical `'start'` / `'end'`) or a corner (`'top-start'` … `'bottom-end'`). Logical values mirror in RTL. |
+| `dialogRole` | `OgeModalRole` | `'dialog'` | ARIA role of the panel; `'alertdialog'` for urgent confirmations (APG alert dialog) — what `confirm()` / `alert()` use. |
+| `ariaDescribedBy` | `string \| undefined` | `—` | Id(s) of the element(s) describing the dialog — wired to `aria-describedby`. |
 | `shading` | `boolean` | `true` | Dims the page behind the modal. `false` keeps the backdrop transparent while staying fully modal. |
 | `showCloseButton` | `boolean` | `true` | Shows the header ✕ button. |
 | `showMaximizeButton` | `boolean` | `false` | Shows a maximize/restore toggle in the header, driving `fullScreen`. |
@@ -159,7 +161,8 @@ _Handle (ref)_
 | `OgeModalClosingEvent` | `{ reason: OgeModalCloseReason; cancel: boolean }` | Cancelable pre-close event. |
 | `OgeModalClosedEvent<R>` | `{ reason: OgeModalCloseReason; result?: R }` | Post-close event; `result` comes from `close(result)` or the slot close function. |
 | `OgeModalAutoFocus` | `'first-tabbable' \| 'panel' \| string` | Initial-focus strategy — a plain string is treated as a CSS selector inside the panel. |
-| `OgeModalPlacement` | `'center' \| 'top'` | Where the panel sits in the viewport. |
+| `OgeModalPlacement` | `'center' \| 'top' \| 'bottom' \| 'start' \| 'end' \| 'top-start' \| 'top-end' \| 'bottom-start' \| 'bottom-end'` | Where the panel sits in the viewport; `start` / `end` are logical (mirror in RTL). |
+| `OgeModalRole` | `'dialog' \| 'alertdialog'` | ARIA role of the modal panel. |
 | `OgeModalOpeningEvent` | `{ cancel: boolean }` | Cancelable pre-open event. |
 | `OgeModalResizeEvent` | `{ width: number; height: number; event: PointerEvent }` | Payload of the resize callbacks. |
 | `OgeModalSlotContext<R>` | `{ close: (result?: R) => void; closePending: boolean }` | Argument of `renderTitle` / `renderHeaderActions` / `renderFooter`. |
@@ -172,6 +175,9 @@ _Handle (ref)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `open<R, D>(content: OgeModalContent<D, R>, config?: OgeModalOpenConfig<D>): OgeModalRef<R>` | `OgeModalRef<R>` | Opens `content` (a node, or a function receiving `{ data, close }`) in a body-appended modal — the escape hatch for `transform`ed ancestors and for prompt/confirm flows without a declared `<OgeModal>`. Returned by `useOgeModals()`; needs an `<OgeModalProvider>` above. |
+| `confirm(options: string \| OgeConfirmOptions): Promise<boolean>` | `Promise<boolean>` | Asks a yes/no question in an APG alert dialog (`role="alertdialog"`, described by the message): `true` for the primary button, `false` for Cancel and Escape. `danger` (default: `severity === 'danger'`) styles the primary button as destructive and moves the initial focus to Cancel; otherwise the primary button has it. A string argument is the message. |
+| `alert(options: string \| OgeAlertOptions): Promise<void>` | `Promise<void>` | Shows a message with a single OK button (APG alert dialog); Escape acknowledges it too. |
+| `prompt(options: string \| OgePromptOptions): Promise<string \| null>` | `Promise<string \| null>` | Asks for a line of text: the submitted value, or `null` for Cancel and Escape. The field has the initial focus and Enter submits unless invalid; `required` and `validate` (sync or async — OK waits, latest call wins) render the error beside the field with `aria-invalid` + `aria-describedby` and announce it. |
 
 #### Types
 
@@ -183,6 +189,95 @@ _Handle (ref)_
 | `OgeModalRef<R>` | `{ close(result?: R): void; closed: Promise<OgeModalClosedEvent<R>> }` | Handle of an imperatively opened modal; content reads it via `useOgeModalRef()` to close itself with a result. |
 | `useOgeModalData<D>()` | `D` | The `config.data` payload — the counterpart of injecting `OGE_MODAL_DATA`. |
 | `useOgeModalRef<R>()` | `OgeModalRef<R>` | The enclosing modal’s handle — the counterpart of injecting `OgeModalRef`. |
+| `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, any React node replaces it; `width` defaults to 400. |
+| `OgeAlertOptions` | `{ title?; message?; severity?; icon?; okText?; width? }` | Options of `alert()` (no Cancel button; the title defaults to `dialogAlertTitle`). |
+| `OgePromptOptions` | `OgeConfirmOptions & { defaultValue?; placeholder?; label?; inputType?; required?; validate? }` | Options of `prompt()`: the field’s initial text, placeholder, visible label (without one the field is labelled by the message or title), native type, the required rule (`dialogRequired` message) and the custom validator; the title defaults to `dialogPromptTitle`. |
+| `OgeDialogSeverity` | `'info' \| 'success' \| 'warning' \| 'danger'` | Tone of a helper dialog — picks the built-in icon and its colour. |
+| `OgePromptInputType` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel' \| 'url' \| 'search'` | Native `type` of the prompt field. |
+| `OgePromptValidator` | `(value: string) => string \| null \| Promise<string \| null>` | Return an error message to block the submit, `null` to accept; a rejected promise blocks without a message. |
+
+### <OgeWindow>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opened` | `boolean` | `—` | Open state — controlled when provided, so pass `onOpenedChange` with it. Setting it `false` closes without `onClosing`. |
+| `defaultOpened` | `boolean` | `false` | Uncontrolled initial open state. |
+| `onOpenedChange` | `(opened: boolean) => void` | `—` | The controlled half of `opened`. |
+| `state` | `OgeWindowState` | `—` | Display state — controlled when provided: `'normal'`, `'minimized'` (title bar only) or `'maximized'` (fills the viewport). A prop change runs the cancelable pipeline. |
+| `defaultState` | `OgeWindowState` | `'normal'` | Uncontrolled initial display state. |
+| `onStateChange` | `(state: OgeWindowState) => void` | `—` | The controlled half of `state`. |
+| `title` | `string \| undefined` | `—` | Title-bar text; also the accessible name (`aria-labelledby`). |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name when there is no `title`. |
+| `position` | `OgeWindowPosition \| null \| undefined` | `—` | Explicit top-left corner (`{ x, y }` in viewport px, `x` = left edge in both directions); wins over `placement` and moves the open window when it changes. |
+| `placement` | `OgeWindowPlacement` | `'center'` | Where the window opens without a `position` — the modal’s nine placements, RTL-aware. A new placement re-places an open window; a reopened window otherwise keeps its last box. |
+| `width / height` | `number \| string \| undefined` | `—` | Initial size — numbers are px, strings pass through. Default width `min(420px, 100vw - 32px)`, height from the content. A user resize wins. |
+| `minWidth / minHeight` | `number \| undefined` | `200 / 120` | Smallest size (px) a resize may reach. |
+| `maxWidth / maxHeight` | `number \| undefined` | `—` | Largest size (px); default the viewport. |
+| `zIndex` | `number \| undefined` | `—` | Base z-index; the window’s stacking layer is added to it. Default: `calc(var(--oge-z-window) + layer)` — below anchored popups and modals. |
+| `draggable` | `boolean` | `true` | The title bar drags the window (shared pointer gesture; Escape mid-drag puts it back) and the arrow keys move the focused frame. |
+| `resizable` | `boolean` | `true` | Eight edge/corner handles resize the window; Ctrl/⌘ + arrows on the focused frame are the keyboard twin. |
+| `keepInViewport` | `boolean` | `true` | Keeps the whole window on screen; `false` lets it hang off the sides and bottom while 48px of the title bar stay reachable. A viewport resize re-clamps. |
+| `showMinimizeButton` | `boolean` | `true` | Shows the minimize / restore title-bar button. |
+| `showMaximizeButton` | `boolean` | `true` | Shows the maximize / restore title-bar button; a title-bar double-click toggles too. |
+| `showCloseButton` | `boolean` | `true` | Shows the ✕ title-bar button. |
+| `closeOnEscape` | `boolean` | `true` | Escape closes the window while focus is inside it and no popup or modal is open. Windows never join the modal Escape stack. |
+| `autoFocus` | `OgeWindowAutoFocus` | `'first-tabbable'` | Where focus lands on open — resolved in the body (never on the title-bar buttons), falling back to the frame; `false` leaves focus alone. |
+| `restoreFocus` | `boolean` | `true` | Restores focus to the opener on close — only when focus would otherwise be lost. |
+| `padding` | `boolean` | `true` | `false` makes the body flush. |
+| `messages` | `Partial<OgeOverlayMessages> \| undefined` | `—` | Per-instance message overrides (button labels `windowMinimize` / `modalMaximize` / `modalRestore` / `modalClose`, announcements `windowMoved` / `windowResized`). |
+| `children` | `ReactNode` | `—` | Body content (Angular projects it via `<ng-content>`). |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the window frame. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(): void` | `void` | Opens the window. |
+| `close(): void` | `void` | Closes through the cancelable closing event; reason `'api'`. |
+| `toggle(): void` | `void` | Open ⇄ close. |
+| `minimize(): boolean` | `boolean` | Collapses the window to its title bar; `false` when vetoed. |
+| `maximize(): boolean` | `boolean` | Fills the viewport (inside the safe-area insets); `false` when vetoed. |
+| `restore(): boolean` | `boolean` | Back to the normal box; `false` when vetoed or already normal. |
+| `bringToFront(): void` | `void` | Raises the window above the other open windows (a press or focus does it too). |
+| `center(): void` | `void` | Re-centres the window in the viewport and fires the moved event. |
+| `moveTo(x: number, y: number): void` | `void` | Moves the top-left corner (clamped) and fires the moved event with source `'api'`. |
+| `resizeTo(width: number, height: number): void` | `void` | Resizes (min/max-limited, top-left fixed) and fires the resized event. |
+| `focus(): void` | `void` | Moves focus into the window (the `autoFocus` resolution). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onOpening` | `(event: OgeWindowOpeningEvent) => void` | Cancelable: fires before the window opens (any open path). |
+| `onClosing` | `(event: OgeWindowClosingEvent) => void` | Cancelable: fires before Escape / ✕ / `close()` closes the window, with the `reason`. |
+| `onClosed` | `(event: OgeWindowClosedEvent) => void` | Fires after the window closed, with the reason. |
+| `onMoved` | `(event: OgeWindowMovedEvent) => void` | Fires after a drag, a keyboard move, `center()`, `moveTo()` or a `position` / `placement` change — new `x`/`y` and the `source` (`'pointer' \| 'keyboard' \| 'api'`). |
+| `onResized` | `(event: OgeWindowResizedEvent) => void` | Fires after a resize gesture (with the `edge`), a keyboard resize or `resizeTo()`. |
+| `onStateChanging` | `(event: OgeWindowStateChangingEvent) => void` | Cancelable: fires before minimize / maximize / restore (buttons, double-click, Alt+↑/↓, the state binding, methods). |
+| `onStateChanged` | `(event: OgeWindowStateChangedEvent) => void` | Fires after the display state changed. |
+| `onActivated` | `() => void` | Fires when the window becomes the frontmost (active) one. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeWindowState` | `'normal' \| 'minimized' \| 'maximized'` | Display state. |
+| `OgeWindowPlacement` | `OgeModalPlacement` | The modal's placements: `'center'`, edges and corners. |
+| `OgeWindowPosition` | `{ x: number; y: number }` | Top-left corner in viewport px. |
+| `OgeWindowAutoFocus` | `OgeModalAutoFocus \| false` | Initial-focus strategy; `false` leaves focus where it is. |
+| `OgeWindowCloseReason` | `'api' \| 'escape' \| 'closeButton'` | Why the window closed. |
+| `OgeWindowMovedEvent` | `{ x; y; source: 'pointer' \| 'keyboard' \| 'api'; event? }` | Payload of the moved event. |
+| `OgeWindowResizedEvent` | `{ width; height; edge?: OgeWindowResizeEdge; source; event? }` | Payload of the resized event. |
+| `OgeWindowResizeEdge` | `'n' \| 's' \| 'e' \| 'w' \| 'ne' \| 'nw' \| 'se' \| 'sw'` | The eight resize handles (physical compass edges). |
+| `OgeWindowStateChangingEvent` | `{ state; previousState; cancel: boolean }` | Cancelable pre-state-change event. |
+| `OgeWindowStateChangedEvent` | `{ state; previousState }` | Post-state-change event. |
+| `OgeWindowOpeningEvent / OgeWindowClosingEvent / OgeWindowClosedEvent` | `{ cancel } / { reason; cancel } / { reason }` | Open/close pipeline payloads. |
+| `Keyboard (focused frame)` | `aria-keyshortcuts` | Arrows move 10px, Ctrl/⌘ + arrows resize, Shift = 1px steps, Alt+↑ maximize (or restore from minimized), Alt+↓ minimize (or restore from maximized), Escape closes (focus inside, no popup open). Moves and resizes are announced politely. |
+| `OgeWindowHandle` | `{ opened; state; open(); close(); toggle(); minimize(); maximize(); restore(); bringToFront(); center(); moveTo(); resizeTo(); focus() }` | The `ref` handle. |
 
 ### OgeToastService (useOgeToasts)
 
@@ -263,18 +358,106 @@ _OgeLiveAnnouncerHandle_
 | `OgeLiveAnnounceOptions` | `{ politeness?: OgeLivePoliteness; delay?: number; clearAfter?: number }` | `delay: 0` writes synchronously — for a caller that already cleared and waited itself (the toast engine). |
 | `OgeLiveAnnouncerCore / getOgeLiveAnnouncer(doc?)` | `@oge-ui/behavior` | The framework-free engine both layers wrap: one polite and one assertive visually hidden `aria-live` region per document (`.oge-live-announcer[data-oge-live-announcer]`, no role, created on the first announcement, never inerted by a modal’s `inertBackground`). Every OGE announcement — grid, tree list, toast, Gantt, uploader — goes through it; components never render their own live regions. |
 
+### <OgePopover>
+
+#### Properties
+
+_Trigger & content slots (render props)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `trigger` | `ReactElement` | The trigger, rendered in place inside a `display: contents` wrapper carrying the listeners — the React face of Angular’s `[ogePopover]`. Its focusable control (the inner `<button>` of an `<OgeButton>`) gets the trigger ARIA: `aria-haspopup="dialog"` for click / manual, `aria-expanded`, `aria-controls` while open. |
+| `renderTitle` | `(context: OgePopoverSlotContext) => ReactNode` | Rich title, replacing the plain `title` text (still labels the dialog). |
+| `renderFooter` | `(context: OgePopoverSlotContext) => ReactNode` | Footer (actions) bar; `close` closes the popover with reason `closeButton`. |
+| `children` | `ReactNode \| ((context: OgePopoverSlotContext) => ReactNode)` | Body content, or a render function receiving the slot context. |
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open / defaultOpen` | `boolean` | `uncontrolled, false` | Controlled open state (pair with `onOpenChange`) or the initial state when uncontrolled — the React face of `[(visible)]`. Changes run the cancelable `onOpening` / `onClosing` with reason `api`. |
+| `onOpenChange` | `(open: boolean) => void` | `—` | The open state changed — a user interaction, the ref handle, or a vetoed controlled change reporting the state actually reached. |
+| `title` | `string \| undefined` | `—` | Title text in the header; labels the dialog (`aria-labelledby`). |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name when there is no title. |
+| `showOn` | `OgePopoverShowOn` | `'click'` | What opens it from the trigger: `'click'` (the APG disclosure), `'hover'` (dwell + a grace period that survives moving into the panel; keyboard focus opens it too), `'focus'` or `'manual'` (code only). |
+| `placement` | `OgePopupPlacement` | `'bottom'` | Preferred side; flips and clamps against the viewport, RTL-aware. |
+| `arrow` | `boolean` | `false` | Draws a callout arrow on the edge facing the trigger (geometry shared with the tooltip). |
+| `modal` | `boolean` | `false` | `true`: an `aria-modal` dialog — focus moves in, Tab is trapped, focus returns to the trigger on close. `false`: a non-modal dialog — focus stays on the trigger, Tab moves into the panel and on past it (as if it followed the trigger inline), and focus leaving closes it. |
+| `showCloseButton` | `boolean` | `true` | Renders the header ✕ — labelled by `messages.popoverClose`. |
+| `width` | `number \| string \| undefined` | `—` | Content width — px number or CSS length. |
+| `maxWidth` | `number \| string \| undefined` | `—` | Maximum content width — px number or CSS length; the stylesheet default is 360px. |
+| `showDelay` | `number \| undefined` | `—` | Hover dwell before opening (hover mode); falls back to `popoverShowDelayMs`. |
+| `hideDelay` | `number \| undefined` | `—` | Grace period before closing after the pointer left trigger and panel; falls back to `popoverHideDelayMs`. |
+| `initialFocus` | `OgePopoverInitialFocus` | `'auto'` | Focus target on click / API opens: `'auto'` (first tabbable when modal, none otherwise), `'none'`, `'first-tabbable'`, `'panel'` or a CSS selector. Hover / focus opens never move focus; an `autoFocus` element always wins. |
+| `restoreFocus` | `boolean` | `true` | Returns focus to the trigger when a close would lose it (never after an outside click or a focus move). |
+| `closeOnEscape` | `boolean` | `true` | Escape closes it — through the shared overlay stack, so a select box open inside closes first. |
+| `closeOnOutsideClick` | `boolean` | `true` | A pointer-down outside trigger and panel closes it. |
+| `disabled` | `boolean` | `false` | Prevents opening; closes an open popover. |
+| `anchor` | `HTMLElement \| RefObject<HTMLElement \| null> \| null` | `—` | Element (or ref) to anchor to when there is no `trigger` — a popover driven only from code. |
+| `messages` | `Partial<OgeOverlayMessages> \| undefined` | `—` | Per-instance message overrides — `popoverClose` labels the ✕. |
+| `className / style` | `string / CSSProperties` | `—` | Extra class / inline style on the panel. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(): void` | `void` | Opens it (reason `api`; runs `onOpening`). |
+| `close(): void` | `void` | Closes it (reason `api`; runs `onClosing`). |
+| `toggle(): void` | `void` | Opens a closed popover, closes an open one. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onOpening` | `(event: OgePopoverOpeningEvent) => void` | Cancelable, before every open: `{ reason, cancel }`, reason `click` \| `hover` \| `focus` \| `api`. |
+| `onOpened` | `(event: OgePopoverOpenedEvent) => void` | After it opened: `{ reason }`. |
+| `onClosing` | `(event: OgePopoverClosingEvent) => void` | Cancelable, before every close: `{ reason, cancel }`, reason `api` \| `trigger` \| `pointerLeave` \| `focusOut` \| `outside` \| `escape` \| `closeButton`. |
+| `onClosed` | `(event: OgePopoverClosedEvent) => void` | After it closed: `{ reason }`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePopoverShowOn` | `'click' \| 'hover' \| 'focus' \| 'manual'` | Trigger interaction model. |
+| `OgePopoverOpenReason` | `'api' \| 'click' \| 'hover' \| 'focus'` | Why it opened. |
+| `OgePopoverCloseReason` | `'api' \| 'trigger' \| 'pointerLeave' \| 'focusOut' \| 'outside' \| 'escape' \| 'closeButton'` | Why it closed. |
+| `OgePopoverInitialFocus` | `'auto' \| 'none' \| 'first-tabbable' \| 'panel' \| (string & {})` | Initial-focus strategy (a string is a CSS selector). |
+| `OgePopoverSlotContext` | `{ close: () => void }` | Context of `renderTitle` / `renderFooter` / function children. |
+| `OgePopoverHandle` | `{ open(); close(); toggle() }` | The ref handle. |
+
 ### <OgeTooltip>
 
 #### Properties
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `text` | `string (required)` | `—` | Tooltip text — the React face of the `ogeTooltip` binding. The child element gets `aria-describedby` pointing at the bubble while it is shown. |
+| `text` | `string` | `''` | Tooltip text — the React face of the `ogeTooltip` binding. The child element gets `aria-describedby` pointing at the bubble while it is shown. Empty (with no `content`) disables it. |
+| `content` | `ReactNode \| (() => ReactNode)` | `—` | Rich content — a node or a render function (formatting, icons; never focusable controls: a tooltip is not interactive). Wins over `text`; the React face of a template `ogeTooltip`. |
+| `showMode` | `OgeTooltipShowMode` | `'hover'` | What shows it: `'hover'` (dwell + keyboard focus), `'focus'`, `'click'` (activation toggles; blur and Escape hide it) or `'manual'` (only the ref handle). |
+| `arrow` | `boolean` | `false` | Draws a callout arrow pointing at the trigger (shared geometry with the popover). |
+| `maxWidth` | `number \| string \| undefined` | `—` | Maximum bubble width — px number or any CSS length; the stylesheet default is 280px. |
 | `placement` | `OgePopupPlacement` | `'top'` | Preferred side; flips and clamps against the viewport like every anchored panel. |
 | `showDelay` | `number \| undefined` | `—` | Hover dwell before showing, in ms. Falls back to `tooltipShowDelayMs` from the overlay config. Keyboard focus always shows immediately. |
 | `hideDelay` | `number \| undefined` | `—` | Grace period after the pointer leaves, in ms; falls back to `tooltipHideDelayMs`. |
 | `disabled` | `boolean` | `false` | Suppresses the tooltip without removing the wrapper — hides an already open bubble. |
 | `children` | `ReactNode` | `—` | The trigger — exactly one element child. Angular attaches the directive to the element itself; React wraps it in a `display: contents` span carrying the listeners, so the child keeps its own ref and props. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(): void` | `void` | Shows the tooltip now, whatever the show mode (no dwell). |
+| `close(): void` | `void` | Hides the tooltip now. |
+| `toggle(): void` | `void` | Shows a hidden tooltip, hides a visible one. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTooltipShowMode` | `'hover' \| 'focus' \| 'click' \| 'manual'` | Which trigger interactions show the tooltip. |
+| `OgeTooltipHandle` | `{ open(); close(); toggle() }` | The ref handle. |
 
 ### <OgeContextMenu>
 
@@ -282,7 +465,8 @@ _OgeLiveAnnouncerHandle_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeMenuItem[] (required)` | `—` | Items of the menu opened on right-click or Shift+F10 — the React face of the `ogeContextMenu` binding. An empty array falls back to the native browser menu. |
+| `items` | `readonly OgeMenuItem[] (required)` | `—` | Items of the menu opened on right-click or Shift+F10 — the React face of the `ogeContextMenu` binding. An empty array falls back to the native browser menu — unless an `onOpening` handler builds the items per target. |
+| `target` | `string \| undefined` | `—` | CSS selector delegating the menu to matching elements inside the child (`closest()` from the clicked / focused element): one menu serves many rows. Requests outside every match keep the browser menu; the match becomes the anchor, the `onOpening` target and the focus-return point. |
 | `ariaLabel` | `string \| undefined` | `—` | Accessible name of the menu. |
 | `disabled` | `boolean` | `false` | Leaves the browser menu in charge without removing the wrapper. |
 | `renderItem` | `(item: OgeMenuItem, index: number) => ReactNode` | `—` | Replaces the default item rendering of the hosted `<OgeMenuList>`. |
@@ -294,15 +478,24 @@ _Handle (ref)_
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `open(x: number, y: number): void` | `void` | Opens the menu at a viewport point through the same pipeline as a right-click (`onOpening` runs with `event: null`); with `target`, the target is the match under the point. |
+| `open(event: MouseEvent \| React.MouseEvent): void` | `void` | Opens at a pointer event’s location (a keyboard-synthesized event anchors to the target) — e.g. a “More” button’s `onClick`. |
 | `close(): void` | `void` | Closes the menu programmatically. |
 
 #### Events
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `onOpening` | `(event: OgeContextMenuOpeningEvent) => void` | Cancelable, before every open (pointer, keyboard, `open()`): `{ target, items, cancel, event }`. Assign `items` to build the menu for this target; `cancel` keeps it closed (and the browser menu suppressed). |
 | `onItemClick` | `(event: OgeMenuListItemClickEvent) => void` | An item was activated — same payload as `<OgeMenuList>`. The menu closes afterwards and focus returns to the target. |
 | `onOpened` | `() => void` | The menu opened at the pointer (or at the target for Shift+F10). |
 | `onClosed` | `() => void` | The menu closed — by selection, Escape, an outside click or a scroll. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeContextMenuOpeningEvent` | `{ readonly target: Element; items: readonly OgeMenuItem[]; cancel: boolean; readonly event: Event \| null }` | Payload of `onOpening`; shared with the Angular `contextMenuOpening`. |
 
 ### <OgeMenuList>
 
@@ -328,16 +521,18 @@ _Handle (ref)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `onItemClick` | `(event: OgeMenuListItemClickEvent) => void` | An enabled item was activated (click, Enter or Space). Order: `onItemClick` → `item.action?.()` → `onCloseRequest`. |
+| `onItemClick` | `(event: OgeMenuListItemClickEvent) => void` | An enabled item was activated (click, Enter or Space). Order: `onItemClick` → `item.action?.()` → `onCloseRequest` — skipped when the row stays open (Space on a checkbox/radio row, or `keepOpen`). For checkbox/radio rows `checked` is the next state. |
 | `onCloseRequest` | `(event: OgeMenuCloseRequestEvent) => void` | The menu asks its owner to close it; the owner handles focus. Tab does not `preventDefault`, so the browser keeps tabbing from the owner. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite, shared with the Angular overlay via `@oge-ui/behavior`. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field; `url` renders a real `<a href>`; `items` makes the row a submenu parent. |
+| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; type?: OgeMenuItemType; checked?; group?: string; keepOpen?: boolean; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite, shared with the Angular overlay via `@oge-ui/behavior`. `separator: true` ignores every other field; `type` picks the row kind: `'checkbox'` renders `menuitemcheckbox` and `'radio'` `menuitemradio`, both with `aria-checked` from `checked` (a check mark / an accent dot); radios of one `group` render inside a `role="group"`, and checking one unchecks the rest of the group (see `applyMenuItemCheck`). `'header'` is a non-focusable caption that labels the rows after it — up to the next separator or header — as a `role="group"`; the arrow keys and type-ahead skip it. The menu never mutates `checked`: the item-click event carries the next state. Space toggles a `checkbox`/`radio` row without closing the menu (APG); `keepOpen` keeps the menu open on any activation. Without `type` the historical rule holds: a defined `checked` renders `menuitemcheckbox`. Also: `url` renders a real `<a href>`; `items` makes the row a submenu parent. |
+| `OgeMenuItemType` | `'normal' \| 'checkbox' \| 'radio' \| 'header'` | Row kind of an `OgeMenuItem`: a command, a `menuitemcheckbox`, a `menuitemradio` (grouped by `group`) or a non-focusable section caption. |
+| `applyMenuItemCheck` | `(items: readonly I[], target: OgeMenuItem) => readonly I[]` | Returns `items` with the activation of `target` applied — immutably and at any depth: a checkbox toggles, a radio becomes checked and every other radio of its `group` on the same level is unchecked. Untouched rows keep their references; pass the item the click event carried. Framework-free (`@oge-ui/behavior`), re-exported here. |
 | `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
-| `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the `items` prop (separators included). |
+| `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; checked?: boolean; event: MouseEvent \| KeyboardEvent }` | `checked` is the state the activation moves a checkbox/radio row to (`undefined` for plain rows). Index within the `items` prop (separators included). |
 | `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select' \| 'back'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. `'back'` is a nested submenu returning to its parent item — absorbed by the parent menu, it never reaches the root owner. |
 | `OgeMenuListHandle` | `{ focus(position?: 'first' \| 'last'): void }` | The `ref` handle. |
 
@@ -369,6 +564,7 @@ _UseAnchoredPanelOptions (hook argument)_
 | `onClosed` | `(reason: OgePopupCloseReason) => void` | `—` | Notified after every close with its reason. |
 | `anchorRect` | `() => OgeRect \| null` | `—` | Virtual anchor rectangle used for positioning when it returns a rect — e.g. the pointer location of a context menu. |
 | `transient` | `boolean` | `false` | Transient surfaces (tooltips) skip the Escape stack so an open tooltip never swallows the Escape meant for the popup underneath. |
+| `arrow` | `() => boolean \| undefined` | `—` | When it returns `true`, every measure also resolves the callout-arrow geometry into `position.arrow` (`resolvePopupArrow`) — the popover and the tooltip render their arrow from it. |
 
 #### Methods
 
@@ -446,6 +642,14 @@ _OgeResolvedPopupPosition_
 | `top / left` | `number` | Viewport-relative — apply with `position: fixed`. |
 | `placement` | `OgePopupPlacement` | Logical placement actually used after flipping. |
 | `width?` | `number` | Panel width when anchor-width matching or a fixed width was requested (set by the hook, not by the pure function). |
+| `arrow?` | `OgePopupArrow` | Callout-arrow geometry `{ side, offset }`, present when the anchored panel was asked for an arrow — the panel edge facing the anchor and the arrow centre along it, in px. |
+
+_Callout arrow_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `resolvePopupArrow(req: OgePopupArrowRequest): OgePopupArrow` | `OgePopupArrow` | `—` | Pure arrow geometry shared by the popover and the tooltip in both layers (import from `@oge-ui/behavior`): the arrow sits on the panel edge facing the anchor (RTL-aware) and points at the anchor centre, clamped `edgePadding` (default 12px) inside the edge. |
+| `OGE_POPUP_ARROW_SIZE` | `number` | `7` | How far the arrow tip reaches out of the edge; hosts add it to the panel `offset` while an arrow is shown. |
 
 _Supporting types_
 
@@ -477,8 +681,10 @@ _OgeOverlayConfig_
 | `menuShowDelayMs` | `number` | `50` | Hover dwell time before a submenu parent row opens its submenu. |
 | `menuHideDelayMs` | `number` | `300` | Grace period before an open submenu closes after hovering a sibling row — the diagonal-pointer allowance. |
 | `tooltipShowDelayMs / tooltipHideDelayMs` | `number` | `400 / 100` | Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides. |
+| `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn='hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons and the toast chrome: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`. |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome and the popover: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose` (optional; English “Close” when a catalog predates it). |
+| `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
 ### Overlay primitives
 
@@ -743,6 +949,76 @@ export function ConfirmModal() {
 }
 ```
 
+### Dialog helpers
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { useOgeModals } from '@oge-ui/react-overlay';
+
+export function DialogHelpers() {
+  // needs an <OgeModalProvider> above (once, near the app root)
+  const modals = useOgeModals();
+
+  // confirm → Promise<boolean>; danger = destructive OK + focus on Cancel
+  const remove = async () => {
+    const ok = await modals.confirm({
+      title: 'Delete file?',
+      message: 'report.xlsx will be removed permanently.',
+      severity: 'danger',
+      okText: 'Delete',
+    });
+    if (ok) console.log('deleted');
+  };
+
+  // prompt → Promise<string | null>; validation blocks Enter / OK
+  const rename = async () => {
+    const name = await modals.prompt({
+      title: 'Rename file',
+      label: 'File name',
+      defaultValue: 'report.xlsx',
+      required: true,
+      validate: (value) => (value.endsWith('.xlsx') ? null : 'Keep the .xlsx extension.'),
+    });
+    if (name !== null) console.log('renamed to', name);
+  };
+
+  // alert → Promise<void>; Escape acknowledges it too
+  const notice = () => modals.alert({ message: 'Export finished.', severity: 'success' });
+  return (
+    <>
+      <OgeButton text="Delete…" severity="danger" onClick={remove} />
+      <OgeButton text="Rename…" onClick={rename} />
+      <OgeButton text="Show notice" onClick={notice} />
+    </>
+  );
+}
+```
+
+### Placements
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeModal } from '@oge-ui/react-overlay';
+import type { OgeModalPlacement } from '@oge-ui/react-overlay';
+
+export function PlacedModal() {
+  const [opened, setOpened] = useState(false);
+  // 'center' | 'top' | 'bottom' | 'start' | 'end'
+  // | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end'
+  const [placement] = useState<OgeModalPlacement>('bottom-end');
+  return (
+    <>
+      {/* edges and corners; start/end are logical and mirror in RTL */}
+      <OgeModal title="Filters" opened={opened} onOpenedChange={setOpened} placement={placement} width={320} />
+    </>
+  );
+}
+```
+
 ### Anchored panel
 
 ```ts
@@ -809,6 +1085,187 @@ export function MenuListDemo() {
         onItemClick={(event) => setLast(event.item.text)}
       />
       <span className="text-sm opacity-70">last action: {last || '—'}</span>
+    </>
+  );
+}
+```
+
+### Basics
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgePopover } from '@oge-ui/react-overlay';
+
+export function PopoverDemo() {
+  return (
+    <OgePopover
+      trigger={<OgeButton text="Share" />}
+      title="Share report"
+      arrow
+      renderFooter={({ close }) => (
+        <>
+          <OgeButton text="Done" stylingMode="text" onClick={close} />
+          <OgeButton text="Copy link" onClick={close} />
+        </>
+      )}
+    >
+      <p>Anyone with the link can view this report.</p>
+      {/* the trigger gets aria-haspopup="dialog", aria-expanded and
+          aria-controls; Escape, outside clicks and the ✕ close it */}
+    </OgePopover>
+  );
+}
+```
+
+### Triggers
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgePopover } from '@oge-ui/react-overlay';
+import type { OgePopoverHandle } from '@oge-ui/react-overlay';
+
+export function PopoverTriggersDemo() {
+  const manual = useRef<OgePopoverHandle>(null);
+  return (
+    <>
+      {/* click (default): the APG disclosure */}
+      <OgePopover trigger={<OgeButton text="Click" />} title="Click">
+        Toggles on activation.
+      </OgePopover>
+      {/* hover: dwell + a grace period that survives moving into the panel;
+          keyboard focus opens it too */}
+      <OgePopover
+        trigger={<OgeButton text="Hover" />}
+        showOn="hover"
+        showCloseButton={false}
+        ariaLabel="Hover help"
+      >
+        Move into me — I stay open. <a href="#hover">Links work</a>.
+      </OgePopover>
+      {/* focus: opens while the trigger (or the panel) has focus */}
+      <OgePopover
+        trigger={<input aria-label="Coupon" placeholder="Coupon code" />}
+        showOn="focus"
+        showCloseButton={false}
+        ariaLabel="Coupon help"
+      >
+        Codes are case-insensitive.
+      </OgePopover>
+      {/* manual: only code opens it (the ref handle) */}
+      <OgePopover
+        ref={manual}
+        trigger={<OgeButton text="Manual" onClick={() => manual.current?.toggle()} />}
+        showOn="manual"
+        title="Manual"
+      >
+        Opened from code.
+      </OgePopover>
+    </>
+  );
+}
+```
+
+### Placement & arrow
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgePopover } from '@oge-ui/react-overlay';
+
+export function PopoverPlacementDemo() {
+  return (
+    <>
+      <OgePopover trigger={<OgeButton text="Top" />} placement="top" arrow title="Top">
+        Centered above; flips below when there is no room.
+      </OgePopover>
+      <OgePopover
+        trigger={<OgeButton text="Right start" />}
+        placement="right-start"
+        arrow
+        width={220}
+        title="Right start"
+      >
+        The arrow keeps pointing at the trigger after the viewport clamp.
+      </OgePopover>
+    </>
+  );
+}
+```
+
+### Modal vs non-modal
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgePopover } from '@oge-ui/react-overlay';
+
+export function PopoverModalDemo() {
+  return (
+    <>
+      {/* non-modal (default): Tab moves from the trigger into the panel and
+          on past it — focus order matches the visual order */}
+      <OgePopover trigger={<OgeButton text="Filter" />} title="Filter">
+        <label>Contains <input /></label>
+      </OgePopover>
+      {/* modal: aria-modal, focus moves in, Tab is trapped, focus returns */}
+      <OgePopover
+        trigger={<OgeButton text="Rename" />}
+        title="Rename file"
+        modal
+        renderFooter={({ close }) => (
+          <>
+            <OgeButton text="Cancel" stylingMode="text" onClick={close} />
+            <OgeButton text="Save" onClick={close} />
+          </>
+        )}
+      >
+        <label>Name <input defaultValue="report.xlsx" /></label>
+      </OgePopover>
+    </>
+  );
+}
+```
+
+### Events & imperative API
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgePopover } from '@oge-ui/react-overlay';
+import type { OgePopoverClosingEvent } from '@oge-ui/react-overlay';
+
+export function PopoverEventsDemo() {
+  const [open, setOpen] = useState(false);
+  const [pinned] = useState(false);
+
+  // onClosing is cancelable: keep the popover while "pinned"
+  const guard = (event: OgePopoverClosingEvent) => {
+    event.cancel = pinned && event.reason !== 'closeButton';
+  };
+  return (
+    <>
+      <OgePopover
+        trigger={<OgeButton text="Details" />}
+        title="Order #1042"
+        open={open}
+        onOpenChange={setOpen}
+        onOpened={(e) => console.log('opened:', e.reason)}
+        onClosing={guard}
+        onClosed={(e) => console.log('closed:', e.reason)}
+      >
+        Shipped today.
+      </OgePopover>
+      {/* the controlled state opens it through the same pipeline */}
+      <OgeButton text="Open from code" stylingMode="outlined" onClick={() => setOpen(true)} />
     </>
   );
 }
@@ -1025,6 +1482,45 @@ export function TooltipOptionsDemo() {
 }
 ```
 
+### Tooltip templates
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeTooltip } from '@oge-ui/react-overlay';
+import type { OgeTooltipHandle } from '@oge-ui/react-overlay';
+
+export function TooltipTemplatesDemo() {
+  const copied = useRef<OgeTooltipHandle>(null);
+  return (
+    <>
+      {/* rich content: a node or a render function, with a callout arrow */}
+      <OgeTooltip
+        content={() => (
+          <>
+            <strong>Ada Lovelace</strong> · Engineer<br />Last seen 5 min ago
+          </>
+        )}
+        arrow
+        placement="bottom"
+        maxWidth={240}
+      >
+        <OgeButton text="Ada Lovelace" />
+      </OgeTooltip>
+      {/* show modes: hover (default), focus, click, manual */}
+      <OgeTooltip text="Toggled by clicking" showMode="click">
+        <OgeButton text="Click me" />
+      </OgeTooltip>
+      <OgeTooltip text="Copied!" showMode="manual" ref={copied}>
+        <OgeButton text="Copy" onClick={() => copied.current?.open()} />
+      </OgeTooltip>
+    </>
+  );
+}
+```
+
 ### Context menu
 
 ```ts
@@ -1078,6 +1574,243 @@ export function ContextMenuEventsDemo() {
     >
       <div tabIndex={0}>File: quarterly-report.xlsx</div>
     </OgeContextMenu>
+  );
+}
+```
+
+### Context menu delegation
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeContextMenu } from '@oge-ui/react-overlay';
+import type { OgeContextMenuHandle, OgeContextMenuOpeningEvent, OgeMenuItem } from '@oge-ui/react-overlay';
+
+const files = [
+  { name: 'report.xlsx', locked: false },
+  { name: 'budget.xlsx', locked: true },
+];
+
+// cancelable; build the items for the row that was right-clicked
+function build(event: OgeContextMenuOpeningEvent) {
+  const name = event.target.getAttribute('data-name');
+  const file = files.find((f) => f.name === name);
+  if (!file) {
+    event.cancel = true;
+    return;
+  }
+  const items: OgeMenuItem[] = [
+    { text: 'Open ' + file.name, value: 'open' },
+    { text: 'Delete', value: 'delete', severity: 'danger', disabled: file.locked },
+  ];
+  event.items = items;
+}
+
+export function ContextMenuDelegationDemo() {
+  const menu = useRef<OgeContextMenuHandle>(null);
+  return (
+    <>
+      {/* one menu serves every row: target delegates by selector */}
+      <OgeContextMenu ref={menu} items={[]} target="li" ariaLabel="File actions" onOpening={build}>
+        <ul>
+          {files.map((file) => (
+            <li key={file.name} tabIndex={0} data-name={file.name}>
+              {file.name}
+            </li>
+          ))}
+        </ul>
+      </OgeContextMenu>
+      {/* imperative: open at a viewport point (or menu.current?.open(event)) */}
+      <button type="button" onClick={() => menu.current?.open(240, 160)}>
+        Open at (240, 160)
+      </button>
+    </>
+  );
+}
+```
+
+### Basics
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeWindow } from '@oge-ui/react-overlay';
+
+export function BasicWindow() {
+  const [opened, setOpened] = useState(false);
+  return (
+    <>
+      <OgeButton text="Open window" onClick={() => setOpened(true)} />
+
+      {/* non-modal: no backdrop, no focus trap, no scroll lock */}
+      <OgeWindow title="Quick notes" opened={opened} onOpenedChange={setOpened} width={360}>
+        <textarea aria-label="Notes" />
+      </OgeWindow>
+    </>
+  );
+}
+```
+
+### Multiple windows & stacking
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeWindow } from '@oge-ui/react-overlay';
+
+export function StackedWindows() {
+  const [inspector, setInspector] = useState(true);
+  const [layers, setLayers] = useState(true);
+  const [log, setLog] = useState(true);
+  const [active, setActive] = useState('');
+  return (
+    <>
+      {/* any number at once; a press or focus brings one to the front */}
+      <OgeWindow title="Inspector" opened={inspector} onOpenedChange={setInspector}
+                 placement="top-start" onActivated={() => setActive('Inspector')} />
+      <OgeWindow title="Layers" opened={layers} onOpenedChange={setLayers}
+                 placement="top-end" onActivated={() => setActive('Layers')} />
+      <OgeWindow title="Console" opened={log} onOpenedChange={setLog}
+                 placement="bottom" zIndex={2000} onActivated={() => setActive('Console')} />
+      <p>active: {active}</p>
+    </>
+  );
+}
+```
+
+### Drag & resize (keyboard too)
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeWindow } from '@oge-ui/react-overlay';
+import type { OgeWindowMovedEvent, OgeWindowResizedEvent } from '@oge-ui/react-overlay';
+
+export function DraggableWindow() {
+  const [opened, setOpened] = useState(false);
+
+  const onMoved = (event: OgeWindowMovedEvent) =>
+    console.log(event.x, event.y, event.source); // 'pointer' | 'keyboard' | 'api'
+  const onResized = (event: OgeWindowResizedEvent) =>
+    console.log(event.width, event.height, event.edge);
+  return (
+    <>
+      {/* title bar drags, eight edge handles resize; with the frame focused:
+          arrows move (10px, Shift 1px), Ctrl/⌘+arrows resize */}
+      <OgeWindow
+        title="Drag me"
+        opened={opened}
+        onOpenedChange={setOpened}
+        minWidth={260}
+        minHeight={160}
+        maxWidth={640}
+        onMoved={onMoved}
+        onResized={onResized}
+      />
+    </>
+  );
+}
+```
+
+### Minimize / maximize
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeWindow } from '@oge-ui/react-overlay';
+import type { OgeWindowState, OgeWindowStateChangingEvent } from '@oge-ui/react-overlay';
+
+export function ReportWindow() {
+  const [opened, setOpened] = useState(false);
+  const [state, setState] = useState<OgeWindowState>('normal');
+  const [locked] = useState(false);
+
+  // cancelable, like every -ing event
+  const onStateChanging = (event: OgeWindowStateChangingEvent) => {
+    if (event.state === 'maximized' && locked) event.cancel = true;
+  };
+  return (
+    <>
+      {/* title-bar buttons, a title-bar double-click, Alt+↑ / Alt+↓,
+          the controlled state pair or the handle's minimize() / maximize() / restore() */}
+      <OgeWindow
+        title="Report"
+        opened={opened}
+        onOpenedChange={setOpened}
+        state={state}
+        onStateChange={setState}
+        onStateChanging={onStateChanging}
+      />
+    </>
+  );
+}
+```
+
+### Placement & constraints
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeWindow } from '@oge-ui/react-overlay';
+import type { OgeWindowPlacement } from '@oge-ui/react-overlay';
+
+export function PlacedWindows() {
+  const [opened, setOpened] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const [placement] = useState<OgeWindowPlacement>('bottom-end');
+  const [contained] = useState(true);
+  return (
+    <>
+      {/* placement applies when there is no position; start/end mirror in RTL.
+          keepInViewport={false} lets the window hang off the edges, but the
+          title bar always stays reachable */}
+      <OgeWindow title="Placed window" opened={opened} onOpenedChange={setOpened}
+                 placement={placement} keepInViewport={contained} />
+
+      {/* an explicit position (viewport px) wins and moves it when it changes */}
+      <OgeWindow title="Pinned" opened={pinned} onOpenedChange={setPinned}
+                 position={{ x: 24, y: 96 }} />
+    </>
+  );
+}
+```
+
+### Events
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeWindow } from '@oge-ui/react-overlay';
+import type { OgeWindowClosingEvent, OgeWindowClosedEvent } from '@oge-ui/react-overlay';
+
+export function EventLogWindow() {
+  const [opened, setOpened] = useState(false);
+  const log = (entry: string) => console.log(entry);
+
+  // Escape (focus inside, no popup open), ✕ and close() — all cancelable
+  const onClosing = (event: OgeWindowClosingEvent) => log(`closing (${event.reason})`);
+  const onClosed = (event: OgeWindowClosedEvent) => log(`closed (${event.reason})`);
+  return (
+    <OgeWindow
+      title="Event log"
+      opened={opened}
+      onOpenedChange={setOpened}
+      onOpening={() => log('opening')}
+      onClosing={onClosing}
+      onClosed={onClosed}
+      onMoved={() => log('moved')}
+      onResized={() => log('resized')}
+      onStateChanged={() => log('stateChanged')}
+      onActivated={() => log('activated')}
+    />
   );
 }
 ```

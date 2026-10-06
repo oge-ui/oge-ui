@@ -64,6 +64,14 @@ export interface OgePointerGestureOptions {
   /** Sets `touch-action: none` on the source while armed. Default `true`. */
   touchAction?: boolean;
   /**
+   * Blocks page panning (the document `touchmove` guard) while a touch
+   * gesture is armed. Default `true`. A gesture that has to let a
+   * perpendicular scroll through — an edge swipe over scrollable content,
+   * which cancels itself on the wrong axis — turns it off and declares the
+   * allowed pan in CSS (`touch-action: pan-y`) instead.
+   */
+  touchLock?: boolean;
+  /**
    * Element that receives pointer capture and the `touch-action` override.
    * Defaults to the event target.
    */
@@ -128,7 +136,7 @@ export function beginPointerGesture(
 
   let touchLocked = false;
   const lockTouch = (): void => {
-    if (!touch || touchLocked) return;
+    if (!touch || touchLocked || options.touchLock === false) return;
     touchLocked = true;
     lockedTouchGestures++;
   };

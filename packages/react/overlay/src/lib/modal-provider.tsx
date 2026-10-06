@@ -3,19 +3,37 @@
 import {
   createContext,
   useContext,
+  useId,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import type {
-  OgeModalAutoFocus,
-  OgeModalClosedEvent,
-  OgeModalPlacement,
-  OgeOverlayMessages,
+import {
+  OgeDialogCore,
+  ogeConfirmResult,
+  ogeDialogAutoFocusSelector,
+  ogeDialogOptions,
+  ogePromptResult,
+  resolveOgeDialog,
+  type OgeDialogKind,
+  type OgeDialogOutcome,
+  type OgeModalAutoFocus,
+  type OgeModalClosedEvent,
+  type OgeModalPlacement,
+  type OgeModalRole,
+  type OgeOverlayMessages,
 } from '@oge-ui/behavior';
+import {
+  OgeDialogContent,
+  createOgeDialogStore,
+  type OgeAlertOptions,
+  type OgeConfirmOptions,
+  type OgePromptOptions,
+} from './dialog-content';
 import { OgeModal, type OgeModalHandle } from './modal';
+import { useOgeOverlayConfig } from './overlay-config';
 
 /** Configuration of an imperatively opened modal — the declarative props, minus slots. */
 export interface OgeModalOpenConfig<D = unknown> {
@@ -28,6 +46,10 @@ export interface OgeModalOpenConfig<D = unknown> {
   maxWidth?: number | string;
   maxHeight?: number | string;
   placement?: OgeModalPlacement;
+  /** ARIA role of the panel. Default `'dialog'`. */
+  dialogRole?: OgeModalRole;
+  /** Id(s) of the element(s) describing the dialog (`aria-describedby`). */
+  ariaDescribedBy?: string;
   shading?: boolean;
   fullScreen?: boolean;
   showCloseButton?: boolean;
@@ -91,6 +113,20 @@ export interface OgeModalsHandle {
     content: OgeModalContent<D, R>,
     config?: OgeModalOpenConfig<D>,
   ): OgeModalRef<R>;
+  /**
+   * Asks a yes/no question in an APG alert dialog; resolves `true` for the
+   * primary button, `false` for Cancel and Escape. `danger` styles the
+   * primary button as destructive and puts initial focus on Cancel.
+   */
+  confirm(options: string | OgeConfirmOptions): Promise<boolean>;
+  /** Shows a message with a single OK button (APG alert dialog); Escape also acknowledges it. */
+  alert(options: string | OgeAlertOptions): Promise<void>;
+  /**
+   * Asks for a line of text; resolves the submitted value, or `null` for
+   * Cancel and Escape. `required` and `validate` (sync or async) block the
+   * submit and render the error beside the field.
+   */
+  prompt(options: string | OgePromptOptions): Promise<string | null>;
 }
 
 interface OpenModal {
@@ -125,9 +161,67 @@ export function OgeModalProvider({ children }: { children?: ReactNode }) {
   const [modals, setModals] = useState<readonly OpenModal[]>([]);
   const modalsRef = useRef(modals);
   modalsRef.current = modals;
+  const config = useOgeOverlayConfig();
+  const configRef = useRef(config);
+  configRef.current = config;
+  const providerId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const dialogCount = useRef(0);
 
-  const handle = useMemo<OgeModalsHandle>(
-    () => ({
+  const handle = useMemo<OgeModalsHandle>(() => {
+    const openDialog = (
+      kind: OgeDialogKind,
+      input: string | OgePromptOptions,
+    ): Promise<{ outcome: OgeDialogOutcome | undefined; value: string }> => {
+      const options = ogeDialogOptions<OgePromptOptions>(input);
+      const messages = configRef.current.messages;
+      const dialog = resolveOgeDialog(kind, options, messages);
+      const id = `oge-dialog-${providerId}-${dialogCount.current++}`;
+      const store = createOgeDialogStore();
+      let ref: OgeModalRef<OgeDialogOutcome> | null = null;
+      const core = new OgeDialogCore({
+        adapter: store.adapter,
+        dialog,
+        validate: options.validate,
+        messages,
+        settle: (outcome) => ref?.close(outcome),
+      });
+      const icon =
+        options.icon === true || options.icon === false ? null : options.icon;
+      ref = api.open<OgeDialogOutcome>(
+        <OgeDialogContent
+          dialog={dialog}
+          core={core}
+          store={store}
+          id={id}
+          icon={icon ?? null}
+        />,
+        {
+          title: dialog.title,
+          width: dialog.width,
+          dialogRole: dialog.role,
+          ariaDescribedBy: dialog.message ? `${id}-message` : undefined,
+          autoFocus: ogeDialogAutoFocusSelector(dialog.initialFocus),
+          showCloseButton: false,
+          closeOnBackdropClick: false,
+          padding: false,
+        },
+      );
+      // Escape closes the modal without a result, which the mappers read as Cancel
+      return ref.closed.then(({ result }) => ({
+        outcome: result,
+        value: core.value(),
+      }));
+    };
+    const api: OgeModalsHandle = {
+      confirm: (options) =>
+        openDialog('confirm', options).then(({ outcome }) =>
+          ogeConfirmResult(outcome),
+        ),
+      alert: (options) => openDialog('alert', options).then(() => undefined),
+      prompt: (options) =>
+        openDialog('prompt', options).then(({ outcome, value }) =>
+          ogePromptResult(outcome, value),
+        ),
       open<R, D>(
         content: OgeModalContent<D, R>,
         config: OgeModalOpenConfig<D> = {},
@@ -148,9 +242,9 @@ export function OgeModalProvider({ children }: { children?: ReactNode }) {
         setModals((list) => [...list, entry]);
         return ref;
       },
-    }),
-    [],
-  );
+    };
+    return api;
+  }, [providerId]);
 
   const remove = (key: number): void =>
     setModals((list) => list.filter((m) => m.key !== key));
@@ -201,6 +295,8 @@ function HostedModal({
           maxWidth={config.maxWidth}
           maxHeight={config.maxHeight}
           placement={config.placement}
+          dialogRole={config.dialogRole}
+          ariaDescribedBy={config.ariaDescribedBy}
           shading={config.shading}
           showCloseButton={config.showCloseButton}
           showMaximizeButton={config.showMaximizeButton}

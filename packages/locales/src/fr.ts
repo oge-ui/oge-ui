@@ -269,6 +269,16 @@ export const fr: OgeLocalePack = {
     toastClose: 'Fermer',
     toastRegionLabel: 'Notifications',
     toastCountBadge: '×{count}',
+    dialogOk: 'OK',
+    dialogCancel: 'Annuler',
+    dialogConfirmTitle: 'Confirmer',
+    dialogAlertTitle: 'Information',
+    dialogPromptTitle: 'Saisissez une valeur',
+    dialogRequired: 'Ce champ est obligatoire.',
+    windowMinimize: 'Réduire',
+    windowMoved: 'Fenêtre déplacée en {x}, {y}',
+    windowResized: 'Fenêtre redimensionnée à {width} × {height}',
+    popoverClose: 'Fermer',
   },
   tabs: {
     closeTab: 'Fermer l’onglet',
@@ -380,6 +390,7 @@ export const fr: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'Chargement',
+      loadPanelMessage: 'Chargement…',
     },
     splitter: {
       separator: 'Redimensionner les volets {{first}} et {{second}}',
@@ -409,6 +420,7 @@ export const fr: OgeLocalePack = {
     menubar: {
       menubar: 'Barre de menus',
       hamburger: 'Menu',
+      more: 'Plus',
     },
     pagination: {
       paginationLabel: 'Pagination',
@@ -442,6 +454,16 @@ export const fr: OgeLocalePack = {
       childrenLoadFailed: 'Impossible de charger ces éléments.',
       noData: 'Aucun élément à afficher',
       noSearchResults: 'Aucun élément correspondant',
+      loadMore:
+        '{count, plural, one {Afficher # élément de plus} other {Afficher # éléments de plus}}',
+      editLabel: 'Nom de l’élément',
+      editInvalid: 'Saisissez un nom valide.',
+      cutAnnouncement:
+        '{item} coupé. Placez-vous sur l’élément cible et appuyez sur Ctrl+V pour l’y déplacer, ou sur Échap pour annuler.',
+      movedAnnouncement:
+        '{position, select, inside {{item} déplacé dans {target}.} before {{item} déplacé avant {target}.} other {{item} déplacé après {target}.}}',
+      moveCancelledAnnouncement: 'Déplacement annulé.',
+      moveRejectedAnnouncement: '{item} ne peut pas être déplacé ici.',
     },
   },
   pivot: {

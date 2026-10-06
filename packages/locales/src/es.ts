@@ -268,6 +268,16 @@ export const es: OgeLocalePack = {
     toastClose: 'Cerrar',
     toastRegionLabel: 'Notificaciones',
     toastCountBadge: '×{count}',
+    dialogOk: 'Aceptar',
+    dialogCancel: 'Cancelar',
+    dialogConfirmTitle: 'Confirmar',
+    dialogAlertTitle: 'Aviso',
+    dialogPromptTitle: 'Introduzca un valor',
+    dialogRequired: 'Este campo es obligatorio.',
+    windowMinimize: 'Minimizar',
+    windowMoved: 'Ventana movida a {x}, {y}',
+    windowResized: 'Ventana redimensionada a {width} × {height}',
+    popoverClose: 'Cerrar',
   },
   tabs: {
     closeTab: 'Cerrar pestaña',
@@ -377,6 +387,7 @@ export const es: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'Cargando',
+      loadPanelMessage: 'Cargando…',
     },
     splitter: {
       separator: 'Cambiar tamaño de los paneles {{first}} y {{second}}',
@@ -406,6 +417,7 @@ export const es: OgeLocalePack = {
     menubar: {
       menubar: 'Barra de menús',
       hamburger: 'Menú',
+      more: 'Más',
     },
     pagination: {
       paginationLabel: 'Paginación',
@@ -439,6 +451,16 @@ export const es: OgeLocalePack = {
       childrenLoadFailed: 'No se pudieron cargar estos elementos.',
       noData: 'No hay elementos para mostrar',
       noSearchResults: 'No hay elementos coincidentes',
+      loadMore:
+        '{count, plural, one {Mostrar # elemento más} other {Mostrar # elementos más}}',
+      editLabel: 'Nombre del elemento',
+      editInvalid: 'Introduzca un nombre válido.',
+      cutAnnouncement:
+        '{item} cortado. Vaya al elemento de destino y pulse Control+V para moverlo allí, o Escape para cancelar.',
+      movedAnnouncement:
+        '{position, select, inside {{item} movido dentro de {target}.} before {{item} movido antes de {target}.} other {{item} movido después de {target}.}}',
+      moveCancelledAnnouncement: 'Movimiento cancelado.',
+      moveRejectedAnnouncement: '{item} no se puede mover aquí.',
     },
   },
   pivot: {

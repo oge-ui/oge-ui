@@ -438,3 +438,22 @@ describe('destroy', () => {
     expect(() => h.core.destroy()).not.toThrow();
   });
 });
+
+describe('callout arrow', () => {
+  it('resolves no arrow unless asked for one', async () => {
+    const h = harness();
+    h.core.open();
+    await frame();
+    expect(h.core.position()?.arrow).toBeUndefined();
+    h.core.destroy();
+  });
+
+  it('resolves the arrow on the edge facing the anchor, pointing at its centre', async () => {
+    const h = harness({ arrow: () => true, placement: () => 'bottom-start' });
+    h.core.open();
+    await frame();
+    // anchor 50..250 → centre 150; panel starts at 50 → offset 100
+    expect(h.core.position()?.arrow).toEqual({ side: 'top', offset: 100 });
+    h.core.destroy();
+  });
+});

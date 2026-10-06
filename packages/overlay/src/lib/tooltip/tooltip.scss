@@ -1,4 +1,5 @@
 @use '../../../../grid/src/lib/styles/tokens';
+@use '../popup/callout-arrow';
 
 .oge-tooltip {
   @include tokens.core-tokens;
@@ -41,10 +42,21 @@
     transform: none;
   }
 
+  /* rich content (a template / render prop) keeps the bubble's type scale;
+     it stays non-interactive — the bubble is never a pointer target */
+  p {
+    margin: 0;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transform: none;
     transition: none;
   }
+}
+
+// callout pointer (`tooltipArrow` / `arrow`), in the bubble's background
+.oge-tooltip-arrow {
+  @include callout-arrow.arrow(var(--oge-tooltip-bg));
 }
 
 // --- forced colors (Windows High Contrast) ---------------------------------
@@ -54,5 +66,9 @@
     border: 1px solid CanvasText;
     background: Canvas;
     color: CanvasText;
+  }
+
+  .oge-tooltip-arrow {
+    @include callout-arrow.arrow-forced-colors;
   }
 }

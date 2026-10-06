@@ -268,6 +268,16 @@ export const ar: OgeLocalePack = {
     toastClose: 'إغلاق',
     toastRegionLabel: 'الإشعارات',
     toastCountBadge: '×{count}',
+    dialogOk: 'موافق',
+    dialogCancel: 'إلغاء',
+    dialogConfirmTitle: 'تأكيد',
+    dialogAlertTitle: 'تنبيه',
+    dialogPromptTitle: 'أدخل قيمة',
+    dialogRequired: 'هذا الحقل مطلوب.',
+    windowMinimize: 'تصغير',
+    windowMoved: 'تم نقل النافذة إلى {x}، {y}',
+    windowResized: 'تم تغيير حجم النافذة إلى {width} × {height}',
+    popoverClose: 'إغلاق',
   },
   tabs: {
     closeTab: 'إغلاق علامة التبويب',
@@ -375,6 +385,7 @@ export const ar: OgeLocalePack = {
     },
     loadIndicator: {
       loading: 'جارٍ التحميل',
+      loadPanelMessage: 'جارٍ التحميل…',
     },
     splitter: {
       separator: 'تغيير حجم الجزأين {{first}} و{{second}}',
@@ -404,6 +415,7 @@ export const ar: OgeLocalePack = {
     menubar: {
       menubar: 'شريط القوائم',
       hamburger: 'القائمة',
+      more: 'المزيد',
     },
     pagination: {
       paginationLabel: 'ترقيم الصفحات',
@@ -437,6 +449,16 @@ export const ar: OgeLocalePack = {
       childrenLoadFailed: 'تعذر تحميل هذه العناصر.',
       noData: 'لا توجد عناصر لعرضها',
       noSearchResults: 'لا توجد عناصر مطابقة',
+      loadMore:
+        '{count, plural, zero {عرض # عنصر إضافي} one {عرض عنصر إضافي واحد} two {عرض عنصرين إضافيين} few {عرض # عناصر إضافية} many {عرض # عنصرًا إضافيًا} other {عرض # عنصر إضافي}}',
+      editLabel: 'اسم العنصر',
+      editInvalid: 'أدخل اسمًا صالحًا.',
+      cutAnnouncement:
+        'تم قص {item}. انتقل إلى العنصر الهدف واضغط Ctrl+V لنقله إليه، أو Escape للإلغاء.',
+      movedAnnouncement:
+        '{position, select, inside {تم نقل {item} إلى داخل {target}.} before {تم نقل {item} قبل {target}.} other {تم نقل {item} بعد {target}.}}',
+      moveCancelledAnnouncement: 'تم إلغاء النقل.',
+      moveRejectedAnnouncement: 'لا يمكن نقل {item} إلى هنا.',
     },
   },
   pivot: {

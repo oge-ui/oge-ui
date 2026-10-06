@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { OgeButton, OgeButtonIcon } from '@oge-ui/buttons';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -13,6 +18,7 @@ import {
   COLOR_SNIPPET,
   ICON_SNIPPET,
   SIZES_SNIPPET,
+  TOGGLE_SNIPPET,
   VARIANTS_SNIPPET,
 } from './overview-snippets';
 
@@ -22,6 +28,7 @@ const SECTIONS = [
   'Icons',
   'Custom colors',
   'Badges',
+  'Toggle button',
 ] as const;
 
 @Component({
@@ -220,6 +227,43 @@ const SECTIONS = [
         </div>
       </app-demo-card>
 
+      <app-demo-card
+        [chips]="['toggle', '[(selected)]', 'aria-pressed', 'selectedChanged']"
+        heading="Toggle button"
+        description='<code>toggle</code> turns a standalone button into a WAI-ARIA toggle button: every accepted click flips the two-way <code>selected</code> state and the native button announces <code>aria-pressed</code>. Pressed reads at a glance in every styling mode — accent tint, solid edge and an underline indicator (a system-colour fill under forced colours) — while an unpressed toggle keeps a readable label, never the disabled look. Inside a <code>single</code>/<code>multiple</code> button group the group keeps owning the selection; a plain toolbar group (<code>selectionMode="none"</code>) lets each button toggle itself.'
+        [code]="toggleSnippet"
+        language="ts"
+      >
+        <div
+          class="flex flex-wrap items-center gap-4"
+          data-testid="toggle-demo"
+        >
+          <oge-button text="Bold" [toggle]="true" [(selected)]="bold" />
+          <oge-button
+            text="Italic"
+            stylingMode="outlined"
+            [toggle]="true"
+            [(selected)]="italic"
+          />
+          <oge-button
+            text="Pinned"
+            stylingMode="text"
+            [toggle]="true"
+            [(selected)]="pinned"
+          />
+          <oge-button
+            text="Locked"
+            [toggle]="true"
+            [selected]="true"
+            [disabled]="true"
+          />
+        </div>
+        <p class="mt-3 text-sm" data-testid="toggle-state">
+          Bold <code>{{ bold() }}</code> · Italic <code>{{ italic() }}</code> ·
+          Pinned <code>{{ pinned() }}</code>
+        </p>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -253,4 +297,9 @@ export class ButtonsOverviewPage {
   protected readonly iconSnippet = ICON_SNIPPET;
   protected readonly colorSnippet = COLOR_SNIPPET;
   protected readonly badgeSnippet = BADGE_SNIPPET;
+  protected readonly toggleSnippet = TOGGLE_SNIPPET;
+
+  protected readonly bold = signal(true);
+  protected readonly italic = signal(false);
+  protected readonly pinned = signal(true);
 }

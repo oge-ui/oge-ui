@@ -105,3 +105,34 @@ test('progress page has no axe violations (light and dark)', async ({
     expect(results.violations, `${theme} violations`).toEqual([]);
   }
 });
+
+test('circular progress keeps the progressbar contract on an SVG ring', async ({
+  page,
+}) => {
+  await page.goto('/components/progress');
+  const card = page.locator('app-demo-card:has(#circular-progress)');
+  const rings = card.locator('oge-progress-bar.oge-progress-bar-circular');
+  await rings.first().scrollIntoViewIfNeeded();
+  await expect(rings).toHaveCount(3);
+
+  const steps = rings.nth(1);
+  await expect(steps).toHaveAttribute('role', 'progressbar');
+  await expect(steps).toHaveAttribute('aria-valuenow', '3');
+  await expect(steps).toHaveAttribute('aria-valuemax', '5');
+  await expect(steps).toHaveAttribute('aria-valuetext', '3/5');
+  await expect(steps.locator('.oge-progress-ring-label')).toHaveText('3/5');
+  await expect(steps.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  // 60% filled: the dash offset is 40% of the circumference
+  const offset = await steps
+    .locator('.oge-progress-ring-value')
+    .evaluate((el) => {
+      const r = Number(el.getAttribute('r'));
+      return Number(el.getAttribute('stroke-dashoffset')) / (2 * Math.PI * r);
+    });
+  expect(offset).toBeCloseTo(0.4, 3);
+
+  // indeterminate: spins, no aria-valuenow
+  const spinner = rings.nth(2);
+  await expect(spinner).not.toHaveAttribute('aria-valuenow', /.*/);
+  await expect(spinner.locator('svg')).not.toHaveCSS('animation-name', 'none');
+});

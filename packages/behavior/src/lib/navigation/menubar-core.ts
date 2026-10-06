@@ -1,4 +1,4 @@
-import { resolveMenubarCompact } from '@oge-ui/core';
+import { fitToolbarItems, resolveMenubarCompact } from '@oge-ui/core';
 import type { OgePopupCloseReason } from '../overlay/anchored-panel-core';
 import type { OgeMenuItem } from '../menu/menu-types';
 
@@ -32,6 +32,23 @@ export type OgeMenubarOrientation = 'horizontal' | 'vertical';
 export type OgeMenubarOpenMode = 'click' | 'hover';
 
 /**
+ * What the bar does when its top-level items stop fitting:
+ * `'hamburger'` (default) collapses the whole bar into a menu button below
+ * `compactBelow` container pixels; `'more'` moves only the items that do not
+ * fit into a trailing "More" item whose submenu holds them (and still honours
+ * `compactBelow` for the hamburger below that); `'none'` never collapses
+ * anything, `compactBelow` included.
+ */
+export type OgeMenubarOverflowMode = 'hamburger' | 'more' | 'none';
+
+/**
+ * Whether a top-level item may move into the "More" overflow menu:
+ * `'auto'` (default) when it stops fitting, `'always'` regardless of room,
+ * `'never'` — it stays on the bar even if the row then overflows.
+ */
+export type OgeMenubarItemOverflow = 'auto' | 'always' | 'never';
+
+/**
  * Why a submenu closed. `'navigation'` is a Left/Right (or hover) switch to a
  * sibling top-level item.
  */
@@ -55,6 +72,12 @@ export interface OgeMenubarItemData<T = unknown> extends OgeMenuItem<T> {
   url?: string;
   /** `false` removes the item (and its subtree) entirely. */
   visible?: boolean;
+  /**
+   * Top-level items only, with `overflowMode: 'more'`: whether the item may
+   * move into the "More" menu (`'auto'`, the default), always lives there
+   * (`'always'`) or never leaves the bar (`'never'`).
+   */
+  overflow?: OgeMenubarItemOverflow;
   /** Child items, recursively. */
   items?: readonly OgeMenubarItemData<T>[];
 }
@@ -66,8 +89,17 @@ export interface OgeMenubarItemClickEvent<T = unknown> {
   key?: string;
   /** Index within the item's own level (the last entry of `path`). */
   index: number;
-  /** Hierarchical index chain from the bar down to the item. */
+  /**
+   * Hierarchical index chain from the bar down to the item. Items reached
+   * through the "More" overflow menu report their real top-level index.
+   */
   path: readonly number[];
+  /**
+   * The checked state the activation moves a checkbox/radio row to (see
+   * `OgeMenuItem.type`); `undefined` for plain rows. The menubar does not
+   * mutate the item — update your items (`applyMenuItemCheck`).
+   */
+  checked?: boolean;
   event: MouseEvent | KeyboardEvent;
 }
 
@@ -136,11 +168,17 @@ export interface OgeMenubarMessages {
   menubar: string;
   /** Aria label of the compact hamburger button. */
   hamburger: string;
+  /**
+   * Label of the trailing overflow item (`overflowMode: 'more'`). Optional so
+   * existing catalogs keep type-checking; falls back to English.
+   */
+  more?: string;
 }
 
 export const OGE_DEFAULT_MENUBAR_MESSAGES: OgeMenubarMessages = {
   menubar: 'Menu bar',
   hamburger: 'Menu',
+  more: 'More',
 };
 
 export interface OgeMenubarConfig {
@@ -153,6 +191,8 @@ export interface OgeMenubarConfig {
   orientation?: OgeMenubarOrientation;
   /** Default for the `compactBelow` input. */
   compactBelow?: number;
+  /** Default for the `overflowMode` input. */
+  overflowMode?: OgeMenubarOverflowMode;
 }
 
 export const OGE_DEFAULT_MENUBAR_CONFIG: OgeMenubarConfig = {
@@ -375,10 +415,168 @@ export {
   type OgeMenubarCompactResult,
 } from '@oge-ui/core';
 
-/** Convenience wrapper: `true` when the bar should render as a hamburger. */
+/**
+ * Convenience wrapper: `true` when the bar should render as a hamburger.
+ * `overflowMode: 'none'` disables the hamburger altogether.
+ */
 export function isMenubarCompact(
   containerSize: number,
   compactBelow: number | undefined,
+  overflowMode: OgeMenubarOverflowMode = 'hamburger',
 ): boolean {
+  if (overflowMode === 'none') return false;
   return resolveMenubarCompact({ containerSize, compactBelow }).compact;
+}
+
+// --- "More" overflow ---------------------------------------------------------
+
+/** `key` of the synthetic trailing "More" item (`overflowMode: 'more'`). */
+export const OGE_MENUBAR_MORE_KEY = 'oge-more';
+
+/** Inputs of {@link resolveMenubarOverflow}. */
+export interface OgeMenubarOverflowRequest {
+  /**
+   * Inline size available to the bar's items, in pixels. Non-positive means
+   * "not measured yet" (jsdom, first paint) — nothing overflows.
+   */
+  readonly containerSize: number;
+  /** The top-level entries, in bar order (without the More item). */
+  readonly descriptors: readonly OgeMenubarDescriptorCore[];
+  /** Measured inline size of each entry, by index. */
+  readonly sizes: readonly number[];
+  /** Measured inline size of the More item. */
+  readonly moreSize: number;
+  /** Gap between adjacent bar entries, in pixels. */
+  readonly gap?: number;
+}
+
+/**
+ * Indexes of the top-level entries that move into the "More" menu, ascending.
+ * The fit arithmetic is `@oge-ui/core`'s `fitToolbarItems` (the toolbar's own
+ * rule: the last `'auto'` entry yields first, `'never'` stays, `'always'`
+ * always moves). A separator left trailing on the bar moves along with the
+ * items after it, so the bar never ends in a divider before "More".
+ */
+export function resolveMenubarOverflow(
+  request: OgeMenubarOverflowRequest,
+): readonly number[] {
+  const { containerSize, descriptors, sizes, moreSize, gap = 0 } = request;
+  const fit = fitToolbarItems({
+    containerSize,
+    items: descriptors.map((d, index) => ({
+      size: sizes[index] ?? 0,
+      policy: d.item.overflow ?? 'auto',
+    })),
+    menuButtonSize: moreSize,
+    gap,
+  });
+  if (!fit.menuVisible) return [];
+  const moved = new Set(fit.inMenu);
+  const inline = fit.inline;
+  const last = inline[inline.length - 1];
+  if (last !== undefined && descriptors[last]?.item.separator) {
+    moved.add(last);
+  }
+  return [...moved].sort((a, b) => a - b);
+}
+
+/**
+ * The items the "More" submenu shows: the overflowed entries in bar order,
+ * with separators that would lead, trail or double up dropped.
+ */
+export function menubarOverflowItems<T>(
+  descriptors: readonly OgeMenubarDescriptorCore<T>[],
+  overflowed: readonly number[],
+): readonly OgeMenubarItemData<T>[] {
+  const result: OgeMenubarItemData<T>[] = [];
+  for (const index of overflowed) {
+    const item = descriptors[index]?.item;
+    if (!item) continue;
+    if (item.separator) {
+      const previous = result[result.length - 1];
+      if (!previous || previous.separator) continue;
+    }
+    result.push(item);
+  }
+  while (result.length && result[result.length - 1].separator) result.pop();
+  return result;
+}
+
+/**
+ * The bar's entries with the synthetic "More" item appended — always present
+ * in `'more'` mode so it can be measured, holding the overflowed items as its
+ * submenu. Every other mode returns `descriptors` unchanged.
+ */
+export function menubarBarEntries<T>(
+  descriptors: readonly OgeMenubarDescriptorCore<T>[],
+  overflowMode: OgeMenubarOverflowMode,
+  overflowed: readonly number[],
+  moreLabel: string | undefined,
+): readonly OgeMenubarDescriptorCore<T>[] {
+  if (overflowMode !== 'more') return descriptors;
+  return [
+    ...descriptors,
+    {
+      id: OGE_MENUBAR_MORE_KEY,
+      item: {
+        text: moreLabel ?? OGE_DEFAULT_MENUBAR_MESSAGES.more ?? 'More',
+        key: OGE_MENUBAR_MORE_KEY,
+        items: menubarOverflowItems(descriptors, overflowed),
+      },
+    },
+  ];
+}
+
+/**
+ * `true` for a bar entry rendered for measurement only, which must not hold
+ * the tab stop: an overflowed item, or the More item while nothing overflows.
+ * `count` is the number of real descriptors (the More item sits at `count`).
+ */
+export function menubarEntryHidden(
+  index: number,
+  count: number,
+  overflowMode: OgeMenubarOverflowMode,
+  overflowed: readonly number[],
+): boolean {
+  if (overflowMode !== 'more') return false;
+  if (index === count) return overflowed.length === 0;
+  return overflowed.includes(index);
+}
+
+/**
+ * `true` when the More item should read as current: the `activeKey` item
+ * moved into it.
+ */
+export function menubarMoreActive(
+  descriptors: readonly OgeMenubarDescriptorCore[],
+  overflowed: readonly number[],
+  activeKey: string | undefined,
+): boolean {
+  if (activeKey === undefined) return false;
+  return overflowed.some((index) => descriptors[index]?.item.key === activeKey);
+}
+
+/**
+ * Path of an item activated inside a bar submenu. Items reached through the
+ * "More" menu report their real chain from the bar (their own top-level
+ * index first) rather than the More item's position.
+ */
+export function menubarItemPath(
+  descriptors: readonly OgeMenubarDescriptorCore[],
+  panelItems: readonly OgeMenubarItemData[],
+  source: OgeMenubarPanelSource,
+  openIndex: number,
+  item: OgeMenuItem,
+  fallbackIndex: number,
+): number[] {
+  if (source === 'bar' && openIndex === descriptors.length) {
+    const real = findMenubarItemPath(
+      descriptors.map((d) => d.item),
+      item,
+    );
+    if (real) return real;
+  }
+  const base = source === 'bar' ? [openIndex] : [];
+  const inTree = findMenubarItemPath(panelItems, item);
+  return inTree ? [...base, ...inTree] : [...base, fallbackIndex];
 }

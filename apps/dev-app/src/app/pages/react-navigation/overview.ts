@@ -6,8 +6,11 @@ import {
 import { createElement, useState, type ReactNode } from 'react';
 import {
   OgeTreeView,
+  type OgeTreeChildPageEvent,
+  type OgeTreeEditedEvent,
   type OgeTreeItemRenderContext,
   type OgeTreeReorderedEvent,
+  type OgeTreeTransferredEvent,
   type RowKey,
 } from '@oge-ui/react-navigation';
 import { DemoCard } from '../../shared/demo-card';
@@ -15,8 +18,8 @@ import { ReactHost } from '../../shared/react-host';
 import { NAVIGATION_TREE_VIEW_DEMOS } from './overview-snippets';
 
 /**
- * TOC of the React view — the same eight sections as the Angular tree view
- * page (`docs/REACT-PARITY.md`: pages mirror section for section).
+ * TOC of the React view — the same sections as the Angular tree view page
+ * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_NAVIGATION_TREE_VIEW_SECTIONS = [
   'Flat data',
@@ -26,6 +29,9 @@ export const REACT_NAVIGATION_TREE_VIEW_SECTIONS = [
   'Lazy load on demand',
   'Virtual scrolling',
   'Drag & drop reparenting',
+  'Drag between trees',
+  'Label editing (F2)',
+  'Load more paging',
   'Custom node template',
 ] as const;
 
@@ -84,6 +90,50 @@ const MANY: Folder[] = Array.from({ length: 10000 }, (_, i) => ({
   parentId: null,
   name: `Item ${i + 1}`,
 }));
+
+const PROJECTS: Folder[] = [
+  { id: 101, parentId: null, name: 'Website' },
+  { id: 102, parentId: 101, name: 'Landing page' },
+  { id: 103, parentId: 101, name: 'Pricing page' },
+  { id: 104, parentId: null, name: 'Mobile app' },
+  { id: 105, parentId: 104, name: 'Onboarding' },
+];
+
+const ARCHIVE: Folder[] = [
+  { id: 201, parentId: null, name: '2024' },
+  { id: 202, parentId: null, name: '2023' },
+];
+
+const MAIL: Folder[] = [
+  { id: 1, parentId: null, name: 'Inbox' },
+  ...Array.from({ length: 23 }, (_, i) => ({
+    id: 100 + i,
+    parentId: 1,
+    name: `Message ${i + 1}`,
+  })),
+  { id: 2, parentId: null, name: 'Sent' },
+  ...Array.from({ length: 4 }, (_, i) => ({
+    id: 200 + i,
+    parentId: 2,
+    name: `Reply ${i + 1}`,
+  })),
+];
+
+/** A node plus every descendant, in `rows` order. */
+function subtreeOf(rows: readonly Folder[], id: number): Folder[] {
+  const ids = new Set<number>([id]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const row of rows) {
+      if (row.parentId !== null && ids.has(row.parentId) && !ids.has(row.id)) {
+        ids.add(row.id);
+        grew = true;
+      }
+    }
+  }
+  return rows.filter((row) => ids.has(row.id));
+}
 
 /** Instantiation expressions, so the demos keep their row type end to end. */
 const FolderTree = OgeTreeView<Folder>;
@@ -220,6 +270,172 @@ function DragDemo(): ReactNode {
   );
 }
 
+function BetweenDemo(): ReactNode {
+  const [lists, setLists] = useState<{
+    projects: readonly Folder[];
+    archive: readonly Folder[];
+  }>({ projects: PROJECTS, archive: ARCHIVE });
+  const [lastMove, setLastMove] = useState<string | null>(null);
+  type List = 'projects' | 'archive';
+  const other = (list: List): List =>
+    list === 'projects' ? 'archive' : 'projects';
+  const received =
+    (list: List) =>
+    (event: OgeTreeReorderedEvent<Folder>): void => {
+      const parentId =
+        event.position === 'inside'
+          ? (event.dropKey as number)
+          : event.dropItem.parentId;
+      setLists((current) => {
+        const from =
+          event.sourceTreeId === event.targetTreeId
+            ? current[list]
+            : current[other(list)];
+        const moved = subtreeOf(from, event.dragKey as number);
+        const ids = new Set(moved.map((row) => row.id));
+        return {
+          ...current,
+          [list]: [
+            ...current[list].filter((row) => !ids.has(row.id)),
+            ...moved.map((row) =>
+              row.id === event.dragKey ? { ...row, parentId } : row,
+            ),
+          ],
+        };
+      });
+      setLastMove(
+        `${event.dragItem.name} → ${event.position} ${event.dropItem.name} (${event.trigger})`,
+      );
+    };
+  const removed =
+    (list: List) =>
+    (event: OgeTreeTransferredEvent<Folder>): void =>
+      setLists((current) => {
+        const ids = new Set(
+          subtreeOf(current[list], event.dragKey as number).map(
+            (row) => row.id,
+          ),
+        );
+        return {
+          ...current,
+          [list]: current[list].filter((row) => !ids.has(row.id)),
+        };
+      });
+  return createElement(
+    'div',
+    null,
+    createElement(
+      'div',
+      { className: 'grid gap-3 sm:grid-cols-2' },
+      createElement(FolderTree, {
+        treeId: 'docs-react-tree-projects',
+        items: lists.projects,
+        displayExpr: 'name',
+        rootValue: null,
+        allowDragging: true,
+        dragGroup: 'docs-react-files',
+        ariaLabel: 'Projects',
+        defaultExpandedKeys: [101, 104],
+        onItemReordered: received('projects'),
+        onItemTransferred: removed('projects'),
+        height: '220px',
+      }),
+      createElement(FolderTree, {
+        treeId: 'docs-react-tree-archive',
+        items: lists.archive,
+        displayExpr: 'name',
+        rootValue: null,
+        allowDragging: true,
+        dragGroup: 'docs-react-files',
+        ariaLabel: 'Archive',
+        onItemReordered: received('archive'),
+        onItemTransferred: removed('archive'),
+        height: '220px',
+      }),
+    ),
+    createElement(
+      'div',
+      { className: 'mt-2 flex items-center gap-3' },
+      demoButton('Reset', () => {
+        setLists({ projects: PROJECTS, archive: ARCHIVE });
+        setLastMove(null);
+      }),
+      lastMove
+        ? createElement(
+            'span',
+            {
+              className: 'text-sm opacity-70',
+              'data-testid': 'tree-transfer-log',
+            },
+            lastMove,
+          )
+        : null,
+    ),
+  );
+}
+
+function EditingDemo(): ReactNode {
+  const [rows, setRows] = useState<readonly Folder[]>(FOLDERS);
+  const [lastEdit, setLastEdit] = useState<string | null>(null);
+  const rename = (event: OgeTreeEditedEvent<Folder>): void => {
+    setRows((current) =>
+      current.map((row) =>
+        row.id === event.key ? { ...row, name: event.value } : row,
+      ),
+    );
+    setLastEdit(`“${event.previousValue}” → “${event.value}”`);
+  };
+  return createElement(
+    'div',
+    null,
+    createElement(FolderTree, {
+      items: rows,
+      displayExpr: 'name',
+      rootValue: null,
+      allowEditing: true,
+      editOnDblClick: true,
+      validateEdit: (value: string) =>
+        value.length > 40 ? 'Keep names under 40 characters.' : null,
+      defaultExpandedKeys: [1],
+      ariaLabel: 'Renamable folders',
+      onItemEdited: rename,
+      height: '220px',
+    }),
+    lastEdit
+      ? createElement(
+          'p',
+          {
+            className: 'mt-2 text-sm opacity-70',
+            'data-testid': 'tree-edit-log',
+          },
+          lastEdit,
+        )
+      : null,
+  );
+}
+
+function PagingDemo(): ReactNode {
+  const [lastPage, setLastPage] = useState<string | null>(null);
+  return createElement(
+    'div',
+    null,
+    createElement(FolderTree, {
+      items: MAIL,
+      displayExpr: 'name',
+      rootValue: null,
+      childPageSize: 5,
+      defaultExpandedKeys: [1],
+      ariaLabel: 'Mail folders',
+      onChildPageShown: (event: OgeTreeChildPageEvent<Folder>) =>
+        setLastPage(
+          `${event.parentItem?.name ?? 'Root'}: ${event.shown} of ${event.total} shown`,
+        ),
+      height: '260px',
+    }),
+    lastPage ? keyLine(lastPage) : null,
+  );
+}
+
 /**
  * The React half of the tree view page — the same eight demo sections as the
  * Angular page, with the same example data, rendered as real React trees
@@ -305,10 +521,40 @@ function DragDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['dragGroup', 'onItemTransferred', 'Ctrl+X / Ctrl+V']"
+      heading="Drag between trees"
+      description="Trees that share a <code>dragGroup</code> accept each other's nodes. The target previews the drop zone and fires the cancelable <code>onItemReordering</code> and <code>onItemReordered</code> with <code>sourceTreeId</code> / <code>targetTreeId</code>; the source fires <code>onItemTransferred</code>. Neither tree moves data. The keyboard twin is Ctrl+X on a node and Ctrl+V on the target (Ctrl+Shift+V places it after), announced through the live region; <code>cutItem()</code> / <code>pasteItem()</code> on the handle wire the same move to buttons."
+      [code]="demos[7].source"
+      language="tsx"
+    >
+      <app-react-host [render]="between" />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['allowEditing', 'F2', 'validateEdit', 'onItemEdited']"
+      heading="Label editing (F2)"
+      description="F2 — or a double-click with <code>editOnDblClick</code> — turns the label into a text field. Enter or blur commits, Escape cancels, and the focus returns to the node. <code>onItemEditStarting</code> and <code>onItemEditing</code> are cancelable, <code>validateEdit</code> keeps the field open with its message, and <code>onItemEdited</code> carries <code>previousValue</code> / <code>value</code> — the tree leaves the data change to you."
+      [code]="demos[8].source"
+      language="tsx"
+    >
+      <app-react-host [render]="editing" />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['childPageSize', 'Load more', 'aria-setsize']"
+      heading="Load more paging"
+      description="With <code>childPageSize</code> a parent renders its first page of children and a “Show N more items” row, which Enter, Space or a click expands by one more page — the focus lands on the first new child. The row is in the arrow-key order, <code>aria-setsize</code> keeps reporting the real total, and paging pauses while searching. Works with <code>virtualScroll</code> too."
+      [code]="demos[9].source"
+      language="tsx"
+    >
+      <app-react-host [render]="paging" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['renderItem']"
       heading="Custom node template"
       description='The <code>renderItem</code> prop replaces the built-in label. It renders inside the <code>role="treeitem"</code> row, so it must stay free of focusable controls.'
-      [code]="demos[7].source"
+      [code]="demos[10].source"
       language="tsx"
     >
       <app-react-host [render]="renderItem" />
@@ -321,6 +567,9 @@ export class ReactNavigationTreeViewDemos {
   protected readonly flat = () => createElement(FlatDemo);
   protected readonly checkBoxes = () => createElement(CheckBoxesDemo);
   protected readonly drag = () => createElement(DragDemo);
+  protected readonly between = () => createElement(BetweenDemo);
+  protected readonly editing = () => createElement(EditingDemo);
+  protected readonly paging = () => createElement(PagingDemo);
 
   protected readonly nested = () =>
     createElement(NestedTreeView, {

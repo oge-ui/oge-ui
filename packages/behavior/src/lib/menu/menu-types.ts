@@ -2,6 +2,13 @@
 export type OgeMenuItemSeverity = 'normal' | 'danger';
 
 /**
+ * What a menu row is: a plain command (`'normal'`), a `menuitemcheckbox`
+ * (`'checkbox'`), a `menuitemradio` (`'radio'`, grouped by `group`) or a
+ * non-focusable section caption (`'header'`) that labels the rows after it.
+ */
+export type OgeMenuItemType = 'normal' | 'checkbox' | 'radio' | 'header';
+
+/**
  * Canonical menu item of the oge suite — used by drop-down buttons, context
  * menus and menubars across packages, in **both** render layers. Pure data
  * plus an optional `action` callback, so it lives in the framework-free
@@ -15,10 +22,34 @@ export interface OgeMenuItem<T = unknown> {
   hint?: string;
   disabled?: boolean;
   /**
+   * The row's kind. Unset keeps the historical rule: a defined `checked`
+   * renders a `menuitemcheckbox`, otherwise a plain `menuitem`. `'checkbox'`
+   * and `'radio'` render `menuitemcheckbox` / `menuitemradio` with
+   * `aria-checked`; `'header'` renders a non-focusable caption that labels
+   * the following rows (up to the next separator or header) as a
+   * `role="group"` — skipped by arrow keys and type-ahead.
+   */
+  type?: OgeMenuItemType;
+  /**
    * Defined (true or false) renders the item as `menuitemcheckbox` with a
-   * check mark when `true`.
+   * check mark when `true`. On a `type: 'radio'` row it is the radio state.
+   * The menu never mutates it: the item-click event reports the next state
+   * in its `checked` field and the application updates its items
+   * (`applyMenuItemCheck` does it immutably).
    */
   checked?: boolean;
+  /**
+   * Radio group name of a `type: 'radio'` row — checking one radio unchecks
+   * the others of the same group on the same level. Rows without a group
+   * share the unnamed group of their level.
+   */
+  group?: string;
+  /**
+   * Keeps the menu open after the row is activated, so several checkboxes
+   * can be toggled in one visit. Without it, `type: 'checkbox' | 'radio'`
+   * rows stay open on Space only (WAI-ARIA APG) and close on click/Enter.
+   */
+  keepOpen?: boolean;
   /** `'danger'` renders the destructive style. Default `'normal'`. */
   severity?: OgeMenuItemSeverity;
   /**

@@ -307,6 +307,13 @@ inputs and layout took the initial JS from 913 KB to 704 KB.
   `import { OgeSelectBox } from '@oge-ui/inputs'` in `app.ts` (the version menu) put every inputs
   entry into the initial bundle — 861 KB → 1.29 MB; the `dev-app` budget (error at 1 MB) is the
   guard. Lazy demo pages may use the primary, as consumers do.
+  Even one entry is a lot. The select-box entry imports the `@oge-ui/overlay` primary barrel.
+  Workspace sources compile as app code, so their component classes (`static ɵcmp = …`) are
+  never tree-shaken, which means every overlay component and most of `behavior` rode along.
+  G5a's popover and window took the initial bundle to 1.01 MB this way. The header's two
+  selects (version, theme) now render inside `@defer (on idle)` with fixed-size placeholders,
+  and the initial bundle dropped to 438 KB. Keep every library component out of the eager
+  shell's templates unless it is deferred.
 - Code shared between sibling entries lives in a base entry (`@oge-ui/inputs/field`,
   `@oge-ui/layout/element-attrs`) and is exported there under a "shared with sibling entry points"
   comment — reachable, but deliberately absent from the primary's public list.
@@ -1276,6 +1283,96 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   (`ogeFormatMessage`). Exports: `buildKanbanExportRows` → `buildKanbanCsv`
   (core's guarded `buildCsv`) and the lazy `@oge-ui/kanban-engine/export-excel`
   builder that both `/export-excel` entries wrap.
+
+### Overlay, navigation, layout and buttons depth (G5a)
+
+- **Popover and callout arrow.** `OgePopoverCore` (`behavior/lib/overlay/popover-core.ts`)
+  owns trigger timing (hover dwell + grace into the panel), open / close reasons, focus and the
+  ARIA decisions. Both layers keep the anchored panel's own closes inside the pipeline
+  (`beforeClose: core.beforePanelClose` always returns `false` and re-enters through `close()`),
+  so Escape and outside clicks fire the same cancelable `closing`. A portaled non-modal panel keeps
+  its focus order "as if inline": Tab on the trigger enters the panel, Tab from its last stop goes
+  to `nextTabbableAfter(trigger)`, and focus leaving closes it. Trigger ARIA is written
+  imperatively (`syncPopoverTriggerAria`) onto the trigger's focusable control, never onto a
+  wrapper host, and `aria-expanded` is left off text fields. The arrow is anchored-panel data
+  (`arrow` option → `position().arrow`, `resolvePopupArrow`), drawn as a rotated square from
+  `popup/_callout-arrow.scss` with physical sides (the geometry is measured, so RTL is already
+  resolved); under forced colors it draws a `CanvasText` chevron, because forced colors repaint
+  transparent borders.
+- **Tooltips stay non-interactive.** Template / render-prop content and the click / focus /
+  manual `showMode`s route through `OgeTooltipCore`; the bubble keeps `pointer-events: none` and
+  never joins the Escape stack. Interactive content belongs in a popover.
+- **Context menus resolve a target before they open.** `ogeResolveContextMenuOpen`
+  (`context-menu-core.ts`) maps a pointer, keyboard or `open(x, y)` request to the delegated
+  `closest(target)` inside the host, then runs the cancelable `opening` (whose `items` the handler
+  may replace per target). A cancelled opening still suppresses the browser menu; an ignored
+  request (outside every target) leaves it alone.
+
+- **Dialog helpers are a core plus markup.** `behavior/lib/overlay/dialog-helpers.ts`
+  (`resolveOgeDialog`, `OgeDialogCore`) resolves options, the initial focus (prompt → the
+  field, `danger` confirm → Cancel, otherwise OK), the Enter / Escape defaults and the prompt
+  validation flow (only the latest async run counts). The render layers open the dialogs through
+  their modal service with `dialogRole` / `ariaDescribedBy` / `autoFocus` and draw only the
+  markup. A core built outside render (React `confirm()`) is held in a versioned store read with
+  `useSyncExternalStore`. The modal input is `dialogRole`, not `role`, because a static `role`
+  attribute would also stamp the host element.
+- **Non-modal windows never join the overlay Escape stack.** `oge-window` / `<OgeWindow>`
+  (`OgeWindowCore`) keep their own z-order in `window-stack.ts`, which both layers share, so
+  windows of either layer stack together. A window handles Escape locally, and only when focus
+  is inside it and `overlayStackSize() === 0`, so a popup opened inside it closes first. Window
+  geometry is physical viewport px (like BPMN DI); only the placements are logical
+  (`start` / `end` through `ogeIsRtl`). An element that stays `visibility: hidden` until it is
+  placed is focused one render after the placing render. `--oge-z-window` (900) sits below
+  popups (1000) and modals (1100).
+- **Menus own no check state.** `OgeMenuItem.type` (`checkbox` | `radio` | `header`) picks the
+  role, and the menu reports the next state in the item-click event's `checked`. The owner
+  updates its items, usually with `applyMenuItemCheck` (immutable, any depth; a radio unchecks
+  the rest of its `group`). Rows that set only `checked` and no `type` keep their historical
+  `menuitemcheckbox` rendering. Space keeps check and radio rows open (APG); `keepOpen` keeps
+  any row open. The list keeps its active row across a re-render with the same rows
+  (`menuRetainedActiveIndex`). Header rows are `role="presentation"` captions that label a
+  `role="group"`, and every navigation helper skips them through `isMenuItemNavigable`
+  (`behavior/lib/menu/menu-item-state.ts`).
+- **Overflow that must stay measurable stays rendered.** The menubar's `overflowMode: 'more'`
+  keeps overflowed entries in the DOM, absolutely positioned with `visibility: hidden`. That
+  takes them out of the accessibility tree and the tab order while `fitToolbarItems` can still
+  read their natural width (`resolveMenubarOverflow`). The synthetic More entry
+  (`OGE_MENUBAR_MORE_KEY`) is a normal roving-tabindex stop.
+- **Toggle buttons.** `resolveButtonSelectionState` (`behavior/lib/button/button-toggle.ts`)
+  lets a `single` / `multiple` button group always own the selection. Outside one, including a
+  `selectionMode: 'none'` toolbar group, `toggle` renders `aria-pressed`. The buttons family has
+  no `-ing` events, so the toggle has none either.
+- **Cross-tree moves are a registry.** Mounted trees with `allowDragging` register an
+  `OgeTreeDragPeer` (`behavior/lib/navigation/tree-view-transfer.ts`) under
+  `ogeTreeDragGroupOf(dragGroup, treeId)`; an ungrouped tree's group is private.
+  - Pointer drags (`beginOgeTreeDrag` on `beginPointerDragDrop`) hit-test the innermost peer
+    host.
+  - Ctrl+X / Ctrl+V is a per-group clipboard.
+  - Both paths run `ogeTreeCommitMove`: the target's `itemReordering` → `itemReordered`, then
+    the source's `itemTransferred`, then an announcement.
+  - Trees move no data; the app applies the move.
+- **Tree items may hold a transient editor.** Label editing puts an `<input>` inside
+  `role="treeitem"`. That is legal because treeitem has no presentational children, so axe's
+  `nested-interactive` does not apply. The editor's keydown stops propagation, and it commits on
+  Enter / blur, never per keystroke. "Load more" rows are `OgeTreeViewNode`s with `more` set:
+  their keys use the reserved `OGE_TREE_LOAD_MORE_PREFIX`, they carry no posinset / setsize, and
+  the real children keep `aria-setsize` equal to the true total.
+- **Drawer items are a tabbable list, not a composite widget.** They are real links / buttons,
+  each in the Tab order, with `aria-current="page"` on the active one; arrow keys are a
+  convenience. The swipe is touch-only, on `beginPointerGesture` with `touchLock: false` plus CSS
+  `touch-action: pan-y` / `pan-x`, so a cross-axis scroll still works. It is opt-in
+  (`swipeEnabled`), because a minor release must not change existing apps.
+- **The panel bar is an APG disclosure, not a treeview.** A `role="tree"` may own only tree
+  items, but panel bar groups hold free content. So every header is a `<button>` in the Tab
+  sequence and arrow keys are an opt-in layer. Stand-alone toggles (expansion panel, panel bar
+  groups) run `runOgeExpansionToggle` (pre-event → guard → commit). The expansion panel's
+  past-tense events are `opened` / `closed` because its model is named `expanded`.
+- **Loading overlays mark the covered container busy, never `<body>`, and never use `inert`.**
+  `ogeAcquireLoadPanelTarget` ref-counts `aria-busy` and restores the previous value. Making the
+  target inert would blur a focused field and drop focus to `<body>`, so pointer input is blocked
+  by the shade instead. A full-screen panel without a target marks nothing busy: `aria-busy` on
+  `<body>` would mute the shared live regions its own message goes to. A React component that
+  calls `createPortal` declares `react-dom` as a peer (`@oge-ui/react-layout`).
 
 ## Component completeness standard
 
