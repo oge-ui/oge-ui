@@ -159,6 +159,10 @@ for (const layer of LAYERS) {
       await page.keyboard.press('F2');
       const title = host.locator('.oge-kanban-card-title-input');
       await title.fill('Renamed inline');
+      // let the controlled input settle (value applied, focus kept) before
+      // committing — Enter on a stale render commits the old title
+      await expect(title).toHaveValue('Renamed inline');
+      await expect(title).toBeFocused();
       // React re-renders the editor on input: press Enter on the focused
       // element, not on a locator the re-render may have replaced
       await page.keyboard.press('Enter');

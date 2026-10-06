@@ -25,7 +25,8 @@
  * Run after the builds: `npx nx run @oge/source:package-check`.
  */
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ROOT, publishablePackages } from './release/publishable.mjs';
 
@@ -69,9 +70,11 @@ function run(argv, cwd, env = process.env) {
   });
 }
 
-// attw holds a whole packed package in memory; the largest APF packages
-// (inputs, layout) outgrow Node's default heap on CI runners and die without
-// a word, so attw gets a bigger heap and one retry.
+// attw prints its JSON report and then exits 1 when it has findings. On a
+// Linux pipe Node writes stdout asynchronously, so a large report (the APF
+// inputs / layout packages, ~800 kB) is cut off by that exit — the report is
+// therefore redirected to a file (file writes are synchronous) and read back.
+// A bigger heap and one retry cover the size of those packages.
 const ATTW_ENV = {
   ...process.env,
   NODE_OPTIONS:
@@ -134,12 +137,23 @@ async function attw(pkg) {
   const exclude = attwEntrypoints(pkg);
   const argv = [ATTW, '--pack', JSON.stringify(pkg.dist), '--format', 'json'];
   if (exclude.length) argv.push('--exclude-entrypoints', ...exclude);
-  let result = await run(argv, ROOT, ATTW_ENV);
-  let report = parseReport(result.stdout);
-  if (report === null) {
-    result = await run(argv, ROOT, ATTW_ENV);
-    report = parseReport(result.stdout);
-  }
+  const out = join(
+    tmpdir(),
+    `oge-attw-${pkg.name.replace(/[@/]/g, '_')}-${process.pid}.json`,
+  );
+  const attempt = async () => {
+    rmSync(out, { force: true });
+    const result = await run(
+      [...argv, '>', JSON.stringify(out)],
+      ROOT,
+      ATTW_ENV,
+    );
+    const text = existsSync(out) ? readFileSync(out, 'utf8') : result.stdout;
+    rmSync(out, { force: true });
+    return { result, report: parseReport(text) };
+  };
+  let { result, report } = await attempt();
+  if (report === null) ({ result, report } = await attempt());
   if (report === null) {
     const { code, signal, stderr } = result;
     return [
