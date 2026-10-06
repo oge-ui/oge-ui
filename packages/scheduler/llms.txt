@@ -95,7 +95,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/scheduler`
 
 - values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OGE_SCHEDULER_CONFIG`, `OgeAppointmentTemplate`, `OgeDateHeaderTemplate`, `OgeResourceHeaderTemplate`, `OgeScheduler`, `OgeSchedulerCellTemplate`, `OgeSchedulerDraggable`, `provideOgeSchedulerConfig`
-- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeResourceHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentDroppedEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerBlockedRange`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerConflictCheck`, `OgeSchedulerDisabledSlots`, `OgeSchedulerDragOutEvent`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerExportMessages`, `OgeSchedulerGridMessages`, `OgeSchedulerGroupOrientation`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerMoreMode`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWeekNumberRule`, `OgeSchedulerWorkHours`
+- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeResourceHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentDroppedEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerBlockedRange`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerConflictCheck`, `OgeSchedulerDataSource`, `OgeSchedulerDataSourceInput`, `OgeSchedulerDisabledSlots`, `OgeSchedulerDragOutEvent`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerExportMessages`, `OgeSchedulerGridMessages`, `OgeSchedulerGroupOrientation`, `OgeSchedulerLoadOptions`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerMoreMode`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWeekNumberRule`, `OgeSchedulerWorkHours`
 
 `@oge-ui/scheduler/export-pdf`
 
@@ -122,11 +122,13 @@ _Data_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `dataSource` | `readonly T[] \| DataSource<T> \| null` | `null` | Appointment items: a plain array (copied into an internal working set — the input is never mutated) or any `@oge-ui/core` `DataSource`, whose `insert`/`update`/`remove` are used for CRUD when present. |
+| `dataSource` | `readonly T[] \| DataSource<T> \| OgeSchedulerDataSource<T> \| null` | `null` | Appointment items: a plain array (copied into an internal working set — the input is never mutated), any `@oge-ui/core` `DataSource` (loaded once; with `remoteFiltering` per visible range) or an `OgeSchedulerDataSource` loaded **per visible range**: `load({ startDate, endDate, resources?, signal })` runs for the period on screen, the previous and next periods are prefetched, navigation is debounced (`debounce`, 150 ms), stale requests are aborted through `signal` and every range is cached (`cacheSize`, 12). A visible status line and `aria-busy` show the load. CRUD goes through the source's `insert`/`update`/`remove` when present (the range reloads afterwards). |
+| `remoteFiltering` | `boolean` | `false` | Loads a filtering `@oge-ui/core` `DataSource` per visible range: `load()` receives a `filter` on the date fields (appointments overlapping the range, or any recurring series) and the `signal` of the range. |
 | `keyExpr` | `string \| ((item: T) => unknown)` | `'id'` | Key field or selector; items without a resolvable key fall back to their index. |
 | `textExpr / startDateExpr / endDateExpr / allDayExpr / colorExpr / locationExpr / descriptionExpr / disabledExpr` | `string \| ((item: T) => unknown)` | `'text' / 'startDate' / …` | Field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
 | `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Recurrence fields: rules in the documented RFC 5545 subset expand into occurrence instances in every view; exceptions are comma-separated EXDATE stamps. |
 | `reminderExpr` | `string \| ((item: T) => unknown)` | `'reminder'` | Minutes before the start a reminder fires (see `reminderTriggered`) — **OGE extra** (Outlook parity). |
+| `startTimeZoneExpr / endTimeZoneExpr` | `string \| ((item: T) => unknown)` | `'startTimeZone' / 'endTimeZone'` | An appointment’s own IANA zones. A series recurs on its start zone’s clocks (a `DTSTART;TZID=` in the rule wins), so “09:00 New York” stays 09:00 there across DST while the display shifts; the editor shows and saves the dates in these zones with `showTimeZoneEditor`. Unknown names are ignored. |
 | `resources` | `readonly OgeSchedulerResource[]` | `[]` | Resource kinds (`{ fieldExpr, items, label?, useColorAsDefault? }`): editor select fields, default appointment colors and timeline rows. |
 | `groups` | `readonly string[]` | `[]` | Resource fields grouping the views, outermost first — `['roomId', 'ownerId']` nests owners inside rooms (**multi-level**, nested headers): day/week columns or row blocks, timeline rows with group header rows. Grouped cells prefill every level on create, and drags across columns / rows / blocks reassign them. |
 | `groupOrientation` | `'horizontal' \| 'vertical' \| undefined` | `undefined` | How grouped resources lay out: side by side, or stacked — day/week **row blocks** (a group label column, every block a full time grid) and the timeline rows. Unset = horizontal for day/week, vertical for the timelines; a view option’s own `groupOrientation` wins. Horizontal timelines lay the leaves out as blocks of one track. |
@@ -139,6 +141,8 @@ _Date & views_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `currentDate` | `Date` | `new Date()` | Anchor date of the visible period. Two-way (`[(currentDate)]`); writes clamp into `[min, max]`. |
+| `timeZone` | `string \| undefined` | `undefined` | The display zone (IANA, e.g. `'Europe/Istanbul'`); unset = the browser’s. Stored dates stay **instants**: every slot, day boundary (23- and 25-hour DST days, skipped and repeated hours), drag snap, “today” line and recurrence expansion follows this zone’s clocks, computed with `Intl.DateTimeFormat` offsets (core’s `ogeZonedParts` / `ogeFromZoned`) — no time-zone database. Events, `currentDate` writes and item patches carry instants; all-day appointments stay on their calendar days. |
+| `showTimeZoneEditor` | `boolean` | `false` | Adds start / end **time-zone pickers** to the appointment editor: the date boxes then show the appointment’s own zones (an empty picker follows the scheduler’s zone), and the typed time is saved in the picked zone. |
 | `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek' \| 'timelineWorkWeek' \| 'timelineMonth' \| 'timelineYear' \| 'year'` | `'week'` | The active view. Two-way (`[(currentView)]`). The month and year timelines run at day scale (one column per day, bars snap to days). |
 | `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour`, `cellDuration` and `groupOrientation` per view, and `intervalCount` makes **custom N-day / N-week / N-month views** (`{ type: 'day', intervalCount: 3, name: '3 days' }`); navigation steps by the whole interval. Entries sharing a type are told apart by the switcher. |
 | `showWeekNumbers` | `boolean` | `false` | Week numbers in the month rows and the day/week header corner (`W32`, `W32–33` for a fortnight); the grid label carries the spoken text. |
@@ -188,8 +192,9 @@ _Behavior_
 | `hideAppointmentPopup()` | `void` | Closes the editor dialog and the summary popup. |
 | `scrollToTime(hours, minutes?)` | `void` | Scrolls the day/week body to the given time of day. |
 | `scrollTo(date)` | `void` | Navigates to `date` and scrolls to its time of day. |
-| `getStartViewDate() / getEndViewDate()` | `Date` | First moment / exclusive end of the visible period. |
-| `getDataSource()` | `readonly T[] \| DataSource<T> \| null` | The bound data source, as given. |
+| `getStartViewDate() / getEndViewDate()` | `Date` | First moment / exclusive end of the visible period, as instants (with `timeZone`, the zone’s midnights — a DST day is 23 or 25 hours long). |
+| `getDataSource()` | `readonly T[] \| DataSource<T> \| OgeSchedulerDataSource<T> \| null` | The bound data source, as given. |
+| `reload()` | `void` | Reloads the data source: a load-once `DataSource` loads again, a range source drops its cache and reloads the visible range. |
 | `focus()` | `void` | Focuses the active view's grid (roving cell). |
 | `goToday() / navigate(direction)` | `void` | Toolbar equivalents: jump to today / step one period (respects `min`/`max`). |
 | `copyAppointments(appointment?) / pasteAppointments(target)` | `number` | The clipboard (what Ctrl+C on a chip and Ctrl+V on a cell do): copies the selection — or `appointment` when it is not part of it — and pastes so the earliest copy starts at `target.date` (`{ date, allDay, values }`), keys dropped, a grouped target’s resources applied, each copy through the guarded insert pipeline, all as one undo step. Return the count. |
@@ -246,6 +251,8 @@ _Interaction_
 | `OgeSchedulerDisabledSlots / OgeSchedulerBlockedRange` | `type / interface` | A predicate `(date, resources) => boolean` or a list of `{ startDate, endDate, resources?, recurrenceRule?, text? }` — `resources` limits a range to `{ field: id \| id[] }`. |
 | `OgeSchedulerConflictCheck<T>` | `type` | `(appointment, conflicts) => boolean` — `true` lets an overlapping change land. |
 | `OgeSchedulerAppointmentDroppedEvent<T> / OgeSchedulerDragOutEvent<T>` | `interface` | The drag-in / drag-out payloads (see the events). |
+| `OgeSchedulerDataSource<T> / OgeSchedulerLoadOptions` | `interface` | `{ load(options), insert?, update?, remove?, debounce?, prefetch?, cacheSize? }` — the range source; `load` receives `{ startDate, endDate, resources?, signal }` (instants, `resources` = the grouped ids on screen) and resolves to the items overlapping the range (series included). |
+| `ogeZonedParts / ogeFromZoned / ogeTzOffset / ogeToWallClock / ogeFromWallClock` | `function (@oge-ui/core)` | The zoned date math the scheduler and the Gantt share: an instant’s fields on a zone’s clocks, the instant of a wall time (skipped times move forward, repeated ones take the earlier side unless `disambiguation` says otherwise), the offset in minutes, and the wall-clock frame conversions — all `Intl`, DST-exact. |
 | `OgeSchedulerExportData<T>` | `interface` | `{ title, rangeStart, rangeEnd, locale, rows, appointments, fields, resources, messages }` — what `getExportData()` returns and the export builders read. |
 | `OgeResourceHeaderTemplate` | `structural directive [ogeResourceHeaderTemplate]` | Replaces the grouped resource headers (day/week column headers, vertical group labels, timeline row heads and group rows — dx `resourceCellTemplate` parity); context `{ $implicit: OgeSchedulerResourceItem, resource, level, view }`. |
 | `[ogeAppointmentTemplate]` | `structural directive` | Replaces the chip content; context `{ $implicit: OgeSchedulerAppointment<T>, view }`. |
@@ -995,6 +1002,71 @@ export class Demo {
 }
 ```
 
+### Range loading
+
+```ts
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+import type { OgeSchedulerDataSource, OgeSchedulerLoadOptions } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- load() runs per visible range: the neighbours are prefetched, navigation
+         is debounced, a range the user navigated away from is aborted through
+         signal, and every range is cached. Edits go through insert / update /
+         remove, then the range reloads. -->
+    <div class="mb-3 flex gap-2">
+      <button type="button" (click)="scheduler().reload()">Reload</button>
+    </div>
+    <oge-scheduler
+      #cal
+      [dataSource]="source"
+      [currentDate]="date"
+      currentView="week"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly scheduler = viewChild.required<OgeScheduler<Record<string, unknown>>>('cal');
+  protected readonly date = new Date(2026, 2, 4);
+  protected readonly source: OgeSchedulerDataSource<Record<string, unknown>> = {
+    debounce: 200,
+    load: async ({ startDate, endDate, signal }: OgeSchedulerLoadOptions) => {
+      const query = new URLSearchParams({
+        from: startDate.toISOString(),
+        to: endDate.toISOString(),
+      });
+      // the server returns every appointment overlapping the range, recurring
+      // series included; the scheduler expands occurrences client-side
+      const response = await fetch('/api/appointments?' + query.toString(), { signal });
+      const rows: { id: number; text: string; start: string; end: string }[] =
+        await response.json();
+      return rows.map((row) => ({
+        id: row.id,
+        text: row.text,
+        startDate: new Date(row.start),
+        endDate: new Date(row.end),
+      }));
+    },
+    insert: (item) =>
+      fetch('/api/appointments', { method: 'POST', body: JSON.stringify(item) }),
+    update: (key, patch) =>
+      fetch('/api/appointments/' + String(key), {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      }),
+    remove: (key) =>
+      fetch('/api/appointments/' + String(key), { method: 'DELETE' }),
+  };
+}
+```
+
 ### Availability
 
 ```ts
@@ -1253,6 +1325,123 @@ export class Demo {
       startDate: new Date(2026, 7, 7, 14, 0),
       endDate: new Date(2026, 7, 7, 16, 0),
       color: '#d97706',
+    },
+  ];
+}
+```
+
+### Dst day
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- New York springs forward at 02:00 on 8 March 2026: the day has 23 hours.
+         Slots stay wall-clock slots (02:00–03:00 is skipped by the clocks), a
+         drag or a click there lands on the first real instant after the gap, and
+         the daily 09:00 series stays at 09:00 on both sides of the switch. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="day"
+      [views]="['day', 'week']"
+      timeZone="America/New_York"
+      [scrollTime]="0"
+      (cellClick)="clicked.set($event.cellDate.toISOString())"
+      style="height: 560px"
+    />
+    <p class="mt-2 text-sm" aria-live="polite">Last clicked slot (UTC): {{ clicked() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly clicked = signal('—');
+  protected readonly date = new Date(Date.UTC(2026, 2, 8, 17));
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'Night shift (1½ real hours)',
+      startDate: new Date(Date.UTC(2026, 2, 8, 6, 0)), // 01:00 EST
+      endDate: new Date(Date.UTC(2026, 2, 8, 7, 30)), // 03:30 EDT
+    },
+    {
+      id: 2,
+      text: 'Daily check-in',
+      startDate: new Date(Date.UTC(2026, 2, 6, 14, 0)), // 09:00 EST
+      endDate: new Date(Date.UTC(2026, 2, 6, 14, 30)),
+      recurrenceRule: 'FREQ=DAILY;COUNT=5',
+      startTimeZone: 'America/New_York',
+    },
+  ];
+}
+```
+
+### Zone switcher
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Stored dates are instants; [timeZone] picks the clocks the views show.
+         Each meeting keeps its own zone (startTimeZone): a series recurs on that
+         zone's clocks, and the editor shows the zone pickers. -->
+    <label class="mb-3 flex items-center gap-2 text-sm">
+      Display zone
+      <select (change)="zone.set($any($event.target).value)">
+        @for (option of zones; track option.value) {
+          <option [value]="option.value" [selected]="option.value === zone()">
+            {{ option.text }}
+          </option>
+        }
+      </select>
+    </label>
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="week"
+      [timeZone]="zone() || undefined"
+      [showTimeZoneEditor]="true"
+      [dayStartHour]="0"
+      [dayEndHour]="24"
+      [scrollTime]="7"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly zones = [
+    { value: '', text: 'Browser zone' },
+    { value: 'America/New_York', text: 'New York' },
+    { value: 'Europe/Istanbul', text: 'Istanbul' },
+    { value: 'Asia/Kathmandu', text: 'Kathmandu (UTC+5:45)' },
+    { value: 'Australia/Lord_Howe', text: 'Lord Howe (half-hour DST)' },
+  ];
+  protected readonly zone = signal('Europe/Istanbul');
+  protected readonly date = new Date(Date.UTC(2026, 2, 4, 12));
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'New York standup',
+      startDate: new Date(Date.UTC(2026, 2, 2, 14, 0)), // 09:00 EST
+      endDate: new Date(Date.UTC(2026, 2, 2, 14, 30)),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      startTimeZone: 'America/New_York',
+    },
+    {
+      id: 2,
+      text: 'Kathmandu support sync',
+      startDate: new Date(Date.UTC(2026, 2, 4, 12, 15)), // 18:00 NPT
+      endDate: new Date(Date.UTC(2026, 2, 4, 13, 15)),
+      startTimeZone: 'Asia/Kathmandu',
     },
   ];
 }

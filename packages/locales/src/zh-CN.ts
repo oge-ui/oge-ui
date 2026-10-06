@@ -546,6 +546,9 @@ export const zhCN: OgeLocalePack = {
       dayKinds: { day: '天', weekday: '工作日', weekendDay: '周末日' },
       yearMonthLabel: '月份',
       exceptionsLabel: '已跳过的重复',
+      startTimeZoneLabel: '开始时区',
+      endTimeZoneLabel: '结束时区',
+      timeZonePlaceholder: '日程表时区（{zone}）',
       summaryLabel: '重复摘要',
       summary: {
         daily: '{interval, plural, =1 {每天} other {每 # 天}}',
@@ -624,6 +627,8 @@ export const zhCN: OgeLocalePack = {
       morePopupLabel: '{date}的约会',
       goToDay: '转到日期',
       closeLabel: '关闭',
+      loadingLabel: '正在加载约会…',
+      loadErrorLabel: '无法加载约会',
       gridLabel: '日程表，{period}',
       allDayLabel: '全天',
       cellLabel: '{date}，{time}',

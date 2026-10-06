@@ -560,6 +560,9 @@ export const ptBR: OgeLocalePack = {
       },
       yearMonthLabel: 'Mês',
       exceptionsLabel: 'Ocorrências ignoradas',
+      startTimeZoneLabel: 'Fuso horário de início',
+      endTimeZoneLabel: 'Fuso horário de término',
+      timeZonePlaceholder: 'Fuso horário da agenda ({zone})',
       summaryLabel: 'Resumo da recorrência',
       summary: {
         daily: '{interval, plural, one {Todos os dias} other {A cada # dias}}',
@@ -641,6 +644,8 @@ export const ptBR: OgeLocalePack = {
       morePopupLabel: 'Compromissos em {date}',
       goToDay: 'Ir para o dia',
       closeLabel: 'Fechar',
+      loadingLabel: 'Carregando compromissos…',
+      loadErrorLabel: 'Não foi possível carregar os compromissos',
       gridLabel: 'Agendador, {period}',
       allDayLabel: 'Dia inteiro',
       cellLabel: '{date}, {time}',

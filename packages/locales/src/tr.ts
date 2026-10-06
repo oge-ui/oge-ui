@@ -553,6 +553,9 @@ export const tr: OgeLocalePack = {
       },
       yearMonthLabel: 'Ay',
       exceptionsLabel: 'Atlanan tekrarlar',
+      startTimeZoneLabel: 'Başlangıç saat dilimi',
+      endTimeZoneLabel: 'Bitiş saat dilimi',
+      timeZonePlaceholder: 'Takvim saat dilimi ({zone})',
       summaryLabel: 'Tekrar özeti',
       summary: {
         daily: '{interval, plural, =1 {Her gün} other {# günde bir}}',
@@ -633,6 +636,8 @@ export const tr: OgeLocalePack = {
       morePopupLabel: '{date} tarihindeki randevular',
       goToDay: 'Güne git',
       closeLabel: 'Kapat',
+      loadingLabel: 'Randevular yükleniyor…',
+      loadErrorLabel: 'Randevular yüklenemedi',
       gridLabel: 'Zamanlayıcı, {period}',
       allDayLabel: 'Tüm gün',
       cellLabel: '{date}, {time}',

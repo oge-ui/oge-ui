@@ -561,6 +561,9 @@ export const es: OgeLocalePack = {
       },
       yearMonthLabel: 'Mes',
       exceptionsLabel: 'Repeticiones omitidas',
+      startTimeZoneLabel: 'Zona horaria de inicio',
+      endTimeZoneLabel: 'Zona horaria de fin',
+      timeZonePlaceholder: 'Zona horaria del calendario ({zone})',
       summaryLabel: 'Resumen de la repetición',
       summary: {
         daily: '{interval, plural, one {Todos los días} other {Cada # días}}',
@@ -642,6 +645,8 @@ export const es: OgeLocalePack = {
       morePopupLabel: 'Citas del {date}',
       goToDay: 'Ir al día',
       closeLabel: 'Cerrar',
+      loadingLabel: 'Cargando citas…',
+      loadErrorLabel: 'No se pudieron cargar las citas',
       gridLabel: 'Programador, {period}',
       allDayLabel: 'Todo el día',
       cellLabel: '{date}, {time}',

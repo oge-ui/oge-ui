@@ -564,6 +564,9 @@ export const it: OgeLocalePack = {
       },
       yearMonthLabel: 'Mese',
       exceptionsLabel: 'Occorrenze saltate',
+      startTimeZoneLabel: 'Fuso orario di inizio',
+      endTimeZoneLabel: 'Fuso orario di fine',
+      timeZonePlaceholder: 'Fuso orario del calendario ({zone})',
       summaryLabel: 'Riepilogo della ricorrenza',
       summary: {
         daily: '{interval, plural, one {Ogni giorno} other {Ogni # giorni}}',
@@ -646,6 +649,8 @@ export const it: OgeLocalePack = {
       morePopupLabel: 'Appuntamenti del {date}',
       goToDay: 'Vai al giorno',
       closeLabel: 'Chiudi',
+      loadingLabel: 'Caricamento appuntamenti…',
+      loadErrorLabel: 'Impossibile caricare gli appuntamenti',
       gridLabel: 'Agenda, {period}',
       allDayLabel: 'Tutto il giorno',
       cellLabel: '{date}, {time}',

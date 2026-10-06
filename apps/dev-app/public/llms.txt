@@ -206,6 +206,8 @@ For code generation, prefer the full reference — it inlines every API table an
 - [Scheduler Resources & Availability](https://www.ogeui.com/components/scheduler/resources-availability): Angular Scheduler availability: hatched disabled slots, per-resource work hours, conflict checks, external drag-in, multi-select, copy, paste, undo.
 - [Scheduler Recurrence Editor](https://www.ogeui.com/components/scheduler/recurrence-editor): Angular Scheduler recurrence editor: nth and last weekday rules, several month days, yearly patterns, count or until, skipped dates, live summary.
 - [Scheduler Import / Export](https://www.ogeui.com/components/scheduler/import-export): Angular Scheduler import and export: iCalendar .ics export and import with series and overrides, PDF and Excel list exports and print of the current view.
+- [Scheduler Time Zones](https://www.ogeui.com/components/scheduler/time-zones): Angular Scheduler time zones: display timeZone, per-appointment start and end zones, DST-exact 23- and 25-hour days, TZID recurrence and zone pickers.
+- [Scheduler Remote Data](https://www.ogeui.com/components/scheduler/remote-data): Angular Scheduler remote data: load appointments per visible range with prefetch, debounce, AbortSignal, a range cache, CRUD write-back and reload().
 
 ## Other pages
 

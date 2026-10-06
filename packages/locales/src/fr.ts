@@ -564,6 +564,9 @@ export const fr: OgeLocalePack = {
       },
       yearMonthLabel: 'Mois',
       exceptionsLabel: 'Occurrences ignorées',
+      startTimeZoneLabel: 'Fuseau horaire de début',
+      endTimeZoneLabel: 'Fuseau horaire de fin',
+      timeZonePlaceholder: 'Fuseau horaire du planning ({zone})',
       summaryLabel: 'Résumé de la récurrence',
       summary: {
         daily:
@@ -646,6 +649,8 @@ export const fr: OgeLocalePack = {
       morePopupLabel: 'Rendez-vous du {date}',
       goToDay: 'Aller au jour',
       closeLabel: 'Fermer',
+      loadingLabel: 'Chargement des rendez-vous…',
+      loadErrorLabel: 'Impossible de charger les rendez-vous',
       gridLabel: 'Planificateur, {period}',
       allDayLabel: 'Toute la journée',
       cellLabel: '{date}, {time}',
