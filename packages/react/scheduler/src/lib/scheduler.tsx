@@ -26,6 +26,7 @@ import {
   registerOgeSchedulerDropTarget,
   schedulerShortcut,
   scrollOffsetForTime,
+  toSchedulerView,
   type OgeSchedulerCoreInputs,
   type OgeSchedulerDropSlot,
   type OgeSchedulerView,
@@ -167,6 +168,11 @@ function OgeSchedulerInner<T extends object>(
       selectedAppointments: () => modelRef.current.selection,
       undoLimit: () => p().undoLimit ?? 50,
       moreMode: () => p().moreMode ?? 'popup',
+      timeZone: () => p().timeZone,
+      showTimeZoneEditor: () => p().showTimeZoneEditor ?? false,
+      startTimeZoneExpr: () => p().startTimeZoneExpr ?? 'startTimeZone',
+      endTimeZoneExpr: () => p().endTimeZoneExpr ?? 'endTimeZone',
+      remoteFiltering: () => p().remoteFiltering ?? false,
     };
     /** Writes the two-way `currentView` (core pipelines + adaptive switch). */
     const writeView = (view: OgeSchedulerView): void => {
@@ -276,6 +282,11 @@ function OgeSchedulerInner<T extends object>(
   useIsomorphicLayoutEffect(() => {
     core.bindSource(props.dataSource ?? null);
   }, [core, props.dataSource]);
+  // a range-loading source follows the visible period (a no-op otherwise,
+  // and for a range already current — cheap to run after every render)
+  useEffect(() => {
+    core.syncRange();
+  });
 
   // adaptive view: observe the scheduler's own width (never the window)
   const adaptiveView = model.adaptive;
@@ -391,9 +402,11 @@ function OgeSchedulerInner<T extends object>(
     },
     scrollToTime,
     scrollTo: (date) => {
-      core.setDate(date);
-      scrollToTime(date.getHours(), date.getMinutes());
+      const wall = toSchedulerView(date, core.viewTimeZone());
+      core.setDate(wall);
+      scrollToTime(wall.getHours(), wall.getMinutes());
     },
+    reload: () => core.reload(),
     showAppointmentPopup: (appointmentData, createNew) =>
       core.showAppointmentPopup(appointmentData, createNew),
     hideAppointmentPopup: () => core.hideAppointmentPopup(),
@@ -449,6 +462,10 @@ function OgeSchedulerInner<T extends object>(
   const contextMenu = core.contextMenu();
   const notice = core.notice();
   const dropPreview = core.dropPreview();
+  const viewDate = core.viewDate();
+  const timeZone = core.viewTimeZone();
+  const disabledSlots = core.viewDisabledSlots();
+  const loadStatus = core.loadStatus();
   const showAddButton = props.showAddButton ?? true;
   const agendaDuration = props.agendaDuration ?? 7;
   const {
@@ -493,7 +510,8 @@ function OgeSchedulerInner<T extends object>(
           key={currentView}
           rtl={rtl}
           view={currentView}
-          anchorDate={currentDate}
+          anchorDate={viewDate}
+          timeZone={timeZone}
           appointments={visible}
           firstDayOfWeek={firstDayOfWeek}
           weekendDays={weekendDays}
@@ -510,7 +528,7 @@ function OgeSchedulerInner<T extends object>(
           allowDragging={canDrag}
           snapDuration={props.snapDuration}
           workHours={props.workHours ?? null}
-          disabledSlots={props.disabledSlots ?? null}
+          disabledSlots={disabledSlots}
           virtualScrolling={props.virtualScrolling ?? 'auto'}
           renderResourceHeader={renderResourceHeader}
           {...chipHandlers}
@@ -524,7 +542,8 @@ function OgeSchedulerInner<T extends object>(
       case 'agenda':
         return (
           <SchedulerAgendaView<T>
-            anchorDate={currentDate}
+            anchorDate={viewDate}
+            timeZone={timeZone}
             agendaDuration={agendaDuration}
             appointments={visible}
             locale={locale}
@@ -535,7 +554,8 @@ function OgeSchedulerInner<T extends object>(
       case 'year':
         return (
           <SchedulerYearView<T>
-            anchorDate={currentDate}
+            anchorDate={viewDate}
+            timeZone={timeZone}
             appointments={visible}
             firstDayOfWeek={firstDayOfWeek}
             locale={locale}
@@ -547,7 +567,8 @@ function OgeSchedulerInner<T extends object>(
           <SchedulerMonthView<T>
             ref={monthRef}
             rtl={rtl}
-            anchorDate={currentDate}
+            anchorDate={viewDate}
+            timeZone={timeZone}
             appointments={visible}
             firstDayOfWeek={firstDayOfWeek}
             weekendDays={weekendDays}
@@ -560,7 +581,7 @@ function OgeSchedulerInner<T extends object>(
             readOnly={gridReadOnly}
             showWeekNumbers={props.showWeekNumbers ?? false}
             weekNumberRule={props.weekNumberRule ?? 'iso'}
-            disabledSlots={props.disabledSlots ?? null}
+            disabledSlots={disabledSlots}
             renderAppointment={renderAppointment}
             renderCell={renderCell}
             onMoreClick={(date, anchor) => {
@@ -586,7 +607,8 @@ function OgeSchedulerInner<T extends object>(
             ref={dayWeekRef}
             rtl={rtl}
             view={core.dayWeekView()}
-            anchorDate={currentDate}
+            anchorDate={viewDate}
+            timeZone={timeZone}
             appointments={visible}
             firstDayOfWeek={firstDayOfWeek}
             weekendDays={weekendDays}
@@ -615,7 +637,7 @@ function OgeSchedulerInner<T extends object>(
             groupByDate={props.groupByDate ?? true}
             showWeekNumbers={props.showWeekNumbers ?? false}
             weekNumberRule={props.weekNumberRule ?? 'iso'}
-            disabledSlots={props.disabledSlots ?? null}
+            disabledSlots={disabledSlots}
             renderAppointment={renderAppointment}
             renderCell={renderCell}
             renderDateHeader={renderDateHeader}
@@ -645,6 +667,7 @@ function OgeSchedulerInner<T extends object>(
         props.className ? `oge-scheduler ${props.className}` : 'oge-scheduler'
       }
       dir={hostDir}
+      aria-busy={core.loading() || undefined}
       style={props.style}
       onKeyDown={(event) => {
         const shortcut = schedulerShortcut(
@@ -763,14 +786,14 @@ function OgeSchedulerInner<T extends object>(
           <OgePopup panel={navigatorPanel}>
             <div className="oge-scheduler-navigator" ref={navigatorRef}>
               <OgeCalendar
-                value={currentDate}
+                value={viewDate}
                 onValueChange={(date) => {
                   core.onNavigatorPicked(date);
                   navigatorPanel.close();
                 }}
                 firstDayOfWeek={props.firstDayOfWeek}
-                min={props.min}
-                max={props.max}
+                min={core.viewMin()}
+                max={core.viewMax()}
                 locale={locale}
               />
             </div>
@@ -804,6 +827,16 @@ function OgeSchedulerInner<T extends object>(
           {notice}
         </div>
       )}
+      <div
+        className={
+          'oge-scheduler-load-status' +
+          (loadStatus !== '' ? ' oge-scheduler-load-status-active' : '') +
+          (core.loadError() ? ' oge-scheduler-load-status-error' : '')
+        }
+        role="status"
+      >
+        {loadStatus}
+      </div>
 
       {renderView()}
 

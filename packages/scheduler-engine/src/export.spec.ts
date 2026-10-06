@@ -197,10 +197,16 @@ describe('iCalendar', () => {
     const events = parseOgeICalendar(text);
     expect(events).toHaveLength(2);
     expect(events[0].summary).toBe('Weekly'); // VALARM SUMMARY ignored
-    expect(events[0].endDate).toEqual(new Date(2026, 7, 3, 10, 45));
+    // TZID is honoured: 10:45 in Berlin (CEST) is 08:45 UTC
+    expect(events[0].endDate).toEqual(new Date(Date.UTC(2026, 7, 3, 8, 45)));
+    expect(events[0].timeZone).toBe('Europe/Berlin');
     expect(events[1].startDate).toEqual(new Date(Date.UTC(2026, 7, 10, 12)));
     const items = schedulerItemsFromICalendar<Item>(text, fields);
+    // the override's EXDATE is written in the series' own zone
     expect(items[0].recurrenceException).toBe('20260810T100000');
+    expect((items[0] as Item & { startTimeZone?: string }).startTimeZone).toBe(
+      'Europe/Berlin',
+    );
     expect(items[1].recurrenceRule).toBeUndefined();
     expect(items[1].text).toBe('Moved');
   });

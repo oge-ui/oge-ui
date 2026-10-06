@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { DataSource } from '@oge-ui/core';
 import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
 import type {
   OgeSchedulerAdaptiveView,
@@ -14,6 +13,7 @@ import type {
   OgeSchedulerAppointmentUpdatingEvent,
   OgeSchedulerCellClickEvent,
   OgeSchedulerConflictCheck,
+  OgeSchedulerDataSourceInput,
   OgeSchedulerDisabledSlots,
   OgeSchedulerDragOutEvent,
   OgeSchedulerEditorShowingEvent as EditorShowingEventBase,
@@ -87,8 +87,19 @@ export interface OgeResourceHeaderRenderContext {
 
 /** Props of `<OgeScheduler>`. */
 export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
-  /** Appointment items: a plain array or any `@oge-ui/core` `DataSource`. */
-  dataSource?: readonly T[] | DataSource<T> | null;
+  /**
+   * Appointment items: a plain array, any `@oge-ui/core` `DataSource`
+   * (loaded once — or per visible range with `remoteFiltering`), or an
+   * `OgeSchedulerDataSource` whose `load({ startDate, endDate, resources,
+   * signal })` runs per visible range (neighbours prefetched, navigation
+   * debounced, ranges cached, stale requests aborted).
+   */
+  dataSource?: OgeSchedulerDataSourceInput<T>;
+  /**
+   * Loads a filtering core `DataSource` per visible range: the scheduler
+   * sends a range filter on the date fields (plus every recurring series).
+   */
+  remoteFiltering?: boolean;
   /** Key field or selector; defaults to `id`, falling back to the item index. */
   keyExpr?: string | ((item: T) => unknown);
   textExpr?: SchedulerFieldExpr<T, unknown>;
@@ -102,6 +113,18 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
   recurrenceExceptionExpr?: SchedulerFieldExpr<T, unknown>;
   disabledExpr?: SchedulerFieldExpr<T, unknown>;
   reminderExpr?: SchedulerFieldExpr<T, unknown>;
+  /** The item field / getter holding an appointment's start zone (IANA). */
+  startTimeZoneExpr?: SchedulerFieldExpr<T, unknown>;
+  /** The item field / getter holding an appointment's end zone (IANA). */
+  endTimeZoneExpr?: SchedulerFieldExpr<T, unknown>;
+  /**
+   * The display zone (IANA, e.g. `'Europe/Istanbul'`); unset = the
+   * browser's. Stored dates stay instants — slots, day boundaries (23- and
+   * 25-hour days), drags and recurrence follow this zone's clocks.
+   */
+  timeZone?: string;
+  /** Shows start / end time-zone pickers in the appointment editor. */
+  showTimeZoneEditor?: boolean;
 
   /** The anchor date of the visible period — controlled when provided. */
   currentDate?: Date;
@@ -327,7 +350,12 @@ export interface OgeSchedulerHandle<
   /** Exclusive end of the visible period. */
   getEndViewDate(): Date;
   /** The bound data source, as given. */
-  getDataSource(): readonly T[] | DataSource<T> | null;
+  getDataSource(): OgeSchedulerDataSourceInput<T>;
+  /**
+   * Reloads the data source: a load-once `DataSource` loads again, a range
+   * source drops its cache and reloads the visible range.
+   */
+  reload(): void;
   /** Moves the visible period to today. */
   goToday(): void;
   /** Steps the visible period backwards (`-1`) or forwards (`1`). */

@@ -406,6 +406,43 @@
   transform: translateX(50%);
 }
 
+/*
+ * Remote range loading: one persistent status region (so screen readers
+ * hear "Loading…" / the failure), visually hidden while idle and a small
+ * pill in the view's top corner while a range loads.
+ */
+.oge-scheduler-load-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.oge-scheduler-load-status-active {
+  inset-block-start: 56px;
+  inset-inline-end: 16px;
+  z-index: 6;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  padding: 4px 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-popup);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.oge-scheduler-load-status-error {
+  border-color: var(--oge-danger);
+  color: var(--oge-danger);
+}
+
 /* selected appointments: an accent ring, readable at a glance */
 .oge-scheduler-chip-selected > .oge-scheduler-chip,
 .oge-scheduler-timeline-bar.oge-scheduler-chip-selected {

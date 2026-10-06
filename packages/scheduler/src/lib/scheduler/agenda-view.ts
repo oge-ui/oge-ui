@@ -11,6 +11,7 @@ import {
   agendaDayText,
   agendaTimeText,
   buildAgendaDays,
+  toSchedulerView,
   type AgendaDay,
   type SchedulerAppointment,
   type SchedulerChipEvent,
@@ -90,6 +91,8 @@ export class OgeSchedulerAgendaView<T = unknown> {
   readonly agendaDuration = input.required<number>();
   readonly appointments = input.required<readonly SchedulerAppointment<T>[]>();
   readonly locale = input<string | undefined>(undefined);
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerGridMessages>();
 
   readonly chipClicked = output<SchedulerChipEvent<T>>();
@@ -105,7 +108,7 @@ export class OgeSchedulerAgendaView<T = unknown> {
   );
 
   protected isToday(day: Date): boolean {
-    return sameDay(day, new Date());
+    return sameDay(day, toSchedulerView(new Date(), this.timeZone()));
   }
 
   protected dayText(day: Date): string {

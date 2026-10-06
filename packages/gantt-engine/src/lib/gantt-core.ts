@@ -46,7 +46,9 @@ import {
 import {
   buildGanttDependencies,
   buildGanttTasks,
+  ganttInstant,
   ganttTaskPatch,
+  ganttWallClock,
   isDatedConstraint,
   resolveGanttFields,
   wouldCreateCycle,
@@ -436,6 +438,11 @@ export interface OgeGanttCoreInputs<T, D> {
   allowColumnReordering?(): boolean;
   filterRow?(): boolean;
   searchPanel?(): boolean;
+  /*
+   * W7: the display zone (IANA). Stored dates stay instants; the scale,
+   * today, working days and gestures follow this zone's clocks.
+   */
+  timeZone?(): string | undefined;
 }
 
 /** The outputs; each layer maps them to `output()`s or `onX` props. */
@@ -756,6 +763,7 @@ export class OgeGanttCore<
         baselinesExpr: inputs.baselinesExpr?.(),
         unitsExpr: inputs.unitsExpr?.(),
         effortExpr: inputs.effortExpr?.(),
+        timeZone: inputs.timeZone?.(),
       }),
     );
     this.allTasks = rx.derived(() =>
@@ -901,7 +909,7 @@ export class OgeGanttCore<
         : this.taskStore().length,
     );
     this.dataRange = rx.derived(() =>
-      ganttDataRange(this.allTasks(), startOfDay(new Date())),
+      ganttDataRange(this.allTasks(), startOfDay(this.now())),
     );
     this.stableRange = rx.derived(() =>
       widenGanttRange(this.dataRange(), this.renderedRange()),
@@ -1133,10 +1141,10 @@ export class OgeGanttCore<
     this.stripRects = rx.derived(() => {
       const scale = this.scale();
       return inputs.stripLines().map((strip) => {
-        const px = dateToPx(scale, strip.start);
+        const px = dateToPx(scale, this.toWall(strip.start));
         const widthPx =
           strip.end !== undefined
-            ? Math.max(0, dateToPx(scale, strip.end) - px)
+            ? Math.max(0, dateToPx(scale, this.toWall(strip.end)) - px)
             : 0;
         return { px, widthPx, label: strip.label, color: strip.color };
       });
@@ -1230,7 +1238,9 @@ export class OgeGanttCore<
     this.progressLine = rx.derived(() => {
       if (!(inputs.showProgressLine?.() ?? false)) return null;
       const scale = this.scale();
-      const status = inputs.statusDate?.() ?? startOfDay(new Date());
+      const statusInput = inputs.statusDate?.();
+      const status =
+        statusInput == null ? startOfDay(this.now()) : this.toWall(statusInput);
       const statusPx = dateToPx(scale, status);
       const rowHeight = this.rowHeight();
       const points: string[] = [];
@@ -1568,7 +1578,7 @@ export class OgeGanttCore<
   /** The today marker's chart x, or `null` when today is off the range. */
   todayPx(): number | null {
     const scale = this.scale();
-    const now = new Date();
+    const now = this.now();
     if (
       now.getTime() < scale.start.getTime() ||
       now.getTime() > scale.end.getTime()
@@ -1646,7 +1656,9 @@ export class OgeGanttCore<
       default: {
         if (task.source == null) return '';
         const value = (task.source as Record<string, unknown>)[column.field];
-        if (value instanceof Date) return dateFormat.format(value);
+        if (value instanceof Date) {
+          return dateFormat.format(this.toWall(value));
+        }
         return value == null ? '' : String(value);
       }
     }
@@ -2539,7 +2551,17 @@ export class OgeGanttCore<
     this.events.scaleTypeChange?.(fitGanttScaleType(range, viewport, firstDay));
   }
 
-  /** Scrolls the chart so `date` sits near the left edge. */
+  /** "Now" on the display zone's clocks. */
+  now(): Date {
+    return this.toWall(new Date());
+  }
+
+  /** An instant → the display zone's wall clock. */
+  toWall(date: Date): Date {
+    return ganttWallClock(date, this.fields().timeZone);
+  }
+
+  /** Scrolls the chart so `date` (an instant) sits near the left edge. */
   scrollToDate(date: Date): void {
     const chart = this.host.chartScrollElement();
     if (chart === null) return;
@@ -2547,7 +2569,7 @@ export class OgeGanttCore<
       0,
       dateToPx(
         this.run(() => this.scale()),
-        date,
+        this.run(() => this.toWall(date)),
       ) - 40,
     );
     // RTL scroll offsets run from 0 at the start edge towards negative
@@ -2991,7 +3013,9 @@ export class OgeGanttCore<
         return this.cellText(task, column);
       default: {
         const raw = (task.source as Record<string, unknown>)[column.field];
-        if (raw instanceof Date) return ganttDateInputValue(raw);
+        if (raw instanceof Date) {
+          return ganttDateInputValue(this.toWall(raw));
+        }
         return raw == null ? '' : String(raw);
       }
     }
@@ -4087,7 +4111,10 @@ export class OgeGanttCore<
       this.ganttDependencies(),
       {
         calendar: this.calendarFor(),
-        projectStart: this.inputs.projectStart?.() ?? null,
+        projectStart: (() => {
+          const start = this.inputs.projectStart?.() ?? null;
+          return start === null ? null : this.toWall(start);
+        })(),
       },
     );
     if (result.changes.length === 0) return;
@@ -4235,7 +4262,7 @@ export class OgeGanttCore<
         return;
       }
       if (!this.effectiveEditing() || !this.inputs.allowTaskAdding()) return;
-      const today = startOfDay(new Date());
+      const today = startOfDay(this.now());
       this.openDialog(
         {
           title: '',
@@ -4266,10 +4293,15 @@ export class OgeGanttCore<
       `oge-task-${++this.draftCounter}-${this.taskStore().length}`,
     );
     set(inputs.titleExpr(), '');
-    set(inputs.startExpr(), start);
+    // the draft is a stored item: instants, like every patch
+    const zone = this.fields().timeZone;
+    set(inputs.startExpr(), ganttInstant(start, zone));
     set(
       inputs.endExpr(),
-      new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1),
+      ganttInstant(
+        new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1),
+        zone,
+      ),
     );
     set(inputs.progressExpr(), 0);
     return item as T;

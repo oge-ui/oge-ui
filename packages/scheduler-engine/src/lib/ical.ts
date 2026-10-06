@@ -5,13 +5,18 @@
  * `DTSTAMP`, `DTSTART` / `DTEND` (`VALUE=DATE` for all-day, exclusive end),
  * `SUMMARY`, `LOCATION`, `DESCRIPTION`, `RRULE`, `RDATE`, `EXDATE` and an
  * `X-OGE-COLOR`; TEXT values escaped (`\\ \; \, \n`), lines folded at 75
- * octets with CRLF. Date-times are floating local time — the suite's model
- * (time zones are a later wave): `Z` values read as UTC and convert to the
- * local instant, and a `TZID` parameter is read as local wall time.
+ * octets with CRLF. Timed values are written with `TZID=<IANA zone>` (the
+ * event's `timeZone`, else `options.timeZone`) as that zone's wall time, or
+ * floating local time without a zone. No `VTIMEZONE` is emitted — IANA
+ * names are the reference, as Google / Apple / Outlook.com read them.
  * What it reads: the same, plus `DURATION`, multi-line / comma-listed
  * `EXDATE` and `RECURRENCE-ID` overrides, tolerant of LF-only files and of
- * unknown properties and components.
+ * unknown properties and components (a `VTIMEZONE` is skipped). `Z` values
+ * are UTC, a `TZID` naming an IANA zone the runtime knows is that zone's
+ * wall time (DST-correct, through core's `ogeFromZoned`), and an unknown
+ * `TZID` (a Windows zone name) or no zone is floating local time.
  */
+import { ogeFromZoned, ogeIsTimeZone, ogeToWallClock } from '@oge-ui/core';
 
 /** One event as the codec reads and writes it. */
 export interface OgeICalEvent {
@@ -30,6 +35,11 @@ export interface OgeICalEvent {
   readonly color?: string;
   /** Set on an override of one occurrence of a series (`RECURRENCE-ID`). */
   readonly recurrenceId?: Date;
+  /**
+   * The IANA zone of the event (`DTSTART;TZID=…`): written as the TZID of
+   * its timed values, read back from DTSTART. Timed dates are instants.
+   */
+  readonly timeZone?: string;
 }
 
 /** Calendar-level options of {@link buildOgeICalendar}. */
@@ -40,6 +50,11 @@ export interface OgeICalendarOptions {
   readonly calendarName?: string;
   /** The `DTSTAMP` instant. Default: now. */
   readonly now?: Date;
+  /**
+   * The zone of timed events without their own `timeZone` (the scheduler's
+   * display zone). Omitted = floating local time, as 1.x wrote.
+   */
+  readonly timeZone?: string;
 }
 
 const pad = (value: number, width = 2): string =>
@@ -127,9 +142,21 @@ export function buildOgeICalendar(
     lines.push(`X-WR-CALNAME:${escapeICalText(options.calendarName)}`);
   }
   for (const event of events) {
+    const zoneName = event.allDay
+      ? undefined
+      : (event.timeZone ?? options.timeZone);
+    const zone = ogeIsTimeZone(zoneName) ? zoneName : undefined;
     const date = (value: Date): string =>
-      event.allDay ? formatICalDate(value) : formatICalDateTime(value);
-    const valueParam = event.allDay ? ';VALUE=DATE' : '';
+      event.allDay
+        ? formatICalDate(value)
+        : formatICalDateTime(
+            zone === undefined ? value : ogeToWallClock(value, zone),
+          );
+    const valueParam = event.allDay
+      ? ';VALUE=DATE'
+      : zone !== undefined
+        ? `;TZID=${zone}`
+        : '';
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:${escapeICalText(sanitizeUid(event.uid))}`);
     lines.push(`DTSTAMP:${stamp}`);
@@ -230,11 +257,38 @@ function parseICalStamp(
       dateOnly: false,
     };
   }
-  // floating — and a TZID wall time read as local (time zones: later wave)
+  const zone = icalZone(params);
+  if (zone !== undefined) {
+    return {
+      date: ogeFromZoned(
+        {
+          year,
+          month: month + 1,
+          day,
+          hour: hours,
+          minute: minutes,
+          second: seconds,
+        },
+        zone,
+      ),
+      dateOnly: false,
+    };
+  }
+  // floating, or a TZID the runtime does not know (a Windows zone name)
   return {
     date: new Date(year, month, day, hours, minutes, seconds),
     dateOnly: false,
   };
+}
+
+/** The IANA zone of a `TZID` parameter, if the runtime knows it. */
+function icalZone(
+  params: Readonly<Record<string, string>>,
+): string | undefined {
+  const raw = params['TZID'];
+  if (raw === undefined) return undefined;
+  const name = raw.replace(/^\//, '');
+  return ogeIsTimeZone(name) ? name : undefined;
 }
 
 const DURATION =
@@ -339,6 +393,8 @@ function buildEvent(
   const exDates = dates('EXDATE');
   const rule = first('RRULE')?.value;
   const color = text('X-OGE-COLOR') ?? text('COLOR');
+  const timeZone =
+    allDay || start === undefined ? undefined : icalZone(start.params);
   return {
     uid: text('UID') ?? `oge-import-${index}`,
     summary: text('SUMMARY') ?? '',
@@ -354,6 +410,7 @@ function buildEvent(
     ...(exDates.length > 0 ? { exDates } : {}),
     ...(color !== undefined ? { color } : {}),
     ...(recurrenceId !== undefined ? { recurrenceId } : {}),
+    ...(timeZone !== undefined ? { timeZone } : {}),
   };
 }
 

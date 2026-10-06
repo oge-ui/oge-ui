@@ -15,6 +15,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { sameDay } from '@oge-ui/core';
 import {
+  allDayDragProposal,
   beginPointerGesture,
   buildColumnHeaderRows,
   buildDayWeekGroupLayout,
@@ -50,7 +51,6 @@ import {
   isWeekendDay,
   layoutGroupedDayWeekSegments,
   leafIndexOfValues,
-  allDayDragProposal,
   partitionAllDay,
   schedulerCellAriaLabel,
   schedulerChipAriaLabel,
@@ -60,8 +60,9 @@ import {
   segmentKey,
   timeGridCellKey,
   timeGridChipCtrlKey,
-  weekNumbersOfDays,
+  toSchedulerView,
   weekdayShortText,
+  weekNumbersOfDays,
   withSelectedLabel,
   withUnavailableLabel,
   type AllDayPlacedBar,
@@ -468,6 +469,8 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly showCurrentTimeIndicator = input.required<boolean>();
   readonly minAppointmentMinutes = input.required<number>();
   readonly locale = input<string | undefined>(undefined);
+  /** The display zone: "today" and the now-line follow its clocks. */
+  readonly timeZone = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerResolvedMessages['grid']>();
   readonly periodLabel = input('');
   readonly allowDragging = input(true);
@@ -1357,12 +1360,16 @@ export class OgeSchedulerDayWeekView<T = unknown> {
 
   /** Ticks every 30s so the now-indicator drifts without change detection hacks. */
   private readonly now = signal(new Date());
+  /** `now` on the display zone's clocks. */
+  private readonly viewNow = computed(() =>
+    toSchedulerView(this.now(), this.timeZone()),
+  );
 
   protected readonly nowBoxes = computed(() =>
     dayWeekNowBoxes(
       this.grid(),
       this.layout(),
-      this.now(),
+      this.viewNow(),
       this.showCurrentTimeIndicator(),
     ),
   );
@@ -1376,7 +1383,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   }
 
   protected isToday(day: Date): boolean {
-    return sameDay(day, this.now());
+    return sameDay(day, this.viewNow());
   }
 
   protected weekdayText(day: Date): string {

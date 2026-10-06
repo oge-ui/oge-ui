@@ -5,15 +5,11 @@
  * occurrence drops its series' rule, and the key field is removed so the
  * store (or the `appointmentAdding` handler) assigns a fresh one.
  */
+import { addDays, addMinutes, startOfDay } from '@oge-ui/core';
 import {
-  addDays,
-  addMinutes,
-  serializeLikeOriginal,
-  startOfDay,
-} from '@oge-ui/core';
-import type {
-  ResolvedSchedulerFields,
-  SchedulerAppointment,
+  serializeSchedulerDate,
+  type ResolvedSchedulerFields,
+  type SchedulerAppointment,
 } from './scheduler-model';
 import { minutesOfDay } from './time-math';
 
@@ -94,15 +90,19 @@ export function planSchedulerPaste<T>(
     const end = shift(entry.endDate);
     const names = fields.fieldNames;
     if (names.startDate !== null) {
-      item[names.startDate] = serializeLikeOriginal(
+      item[names.startDate] = serializeSchedulerDate(
         start,
         fields.startDate(entry.source),
+        fields,
+        entry.allDay,
       );
     }
     if (names.endDate !== null) {
-      item[names.endDate] = serializeLikeOriginal(
+      item[names.endDate] = serializeSchedulerDate(
         end,
         fields.endDate(entry.source),
+        fields,
+        entry.allDay,
       );
     }
     if (entry.occurrence) {

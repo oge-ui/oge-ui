@@ -8,10 +8,14 @@
  * BYMONTH (1..12), BYHOUR (0..23), BYMINUTE (0..59), BYSETPOS (±1..366,
  * applied to each period's candidate set), WKST.
  *
- * Date-times: a value WITHOUT a trailing `Z` is floating local wall time; a
- * value WITH `Z` is UTC and is converted to the matching local `Date`
- * instant (so `UNTIL=20261231T140000Z` ends at 14:00 UTC, whatever the
- * viewer's zone). DATE-only values are local days.
+ * Date-times: a value WITHOUT a trailing `Z` is floating wall time; a value
+ * WITH `Z` is UTC and is converted to the matching wall clock of the parse
+ * frame (`options.timeZone`, default the runtime zone — so
+ * `UNTIL=20261231T140000Z` ends at 14:00 UTC, whatever the viewer's zone).
+ * A `TZID=` parameter (DTSTART / RDATE / EXDATE lines) reads the stamp as
+ * that zone's wall time and converts it into the frame; DTSTART's zone
+ * becomes the rule's `timeZone`, the zone its recurrence is expanded in.
+ * Unknown zone names reject the block. DATE-only values are local days.
  *
  * Multi-line content: besides a bare RRULE value, the rule text may be an
  * iCalendar property block — one `RRULE:` line plus optional `DTSTART:`,
@@ -22,10 +26,15 @@
  * but the appointment's start date remains the series start.
  *
  * Still excluded (parse returns `null`): BYYEARDAY, BYWEEKNO, BYSECOND,
- * EXRULE, `TZID=` parameters (no TZ database — the suite is Intl-only),
- * multiple RRULE lines, RDATE `VALUE=PERIOD`, and the
+ * EXRULE, multiple RRULE lines, RDATE `VALUE=PERIOD`, and the
  * SECONDLY/MINUTELY/HOURLY frequencies.
  */
+
+import {
+  ogeConvertWallClock,
+  ogeIsTimeZone,
+  ogeToWallClock,
+} from '@oge-ui/core';
 
 /** Supported recurrence frequencies (string union, house rule). */
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -58,6 +67,11 @@ export interface RecurrenceRule {
   readonly weekStart: number;
   /** DTSTART line of a property block (informational; the appointment start wins). */
   readonly dtStart?: Date;
+  /**
+   * The IANA zone of a `DTSTART;TZID=…` line: the series recurs on that
+   * zone's clocks (it wins over the appointment's own start zone).
+   */
+  readonly timeZone?: string;
   /** RDATE values: extra occurrence starts added to the set. */
   readonly rDates?: readonly Date[];
   /** EXDATE values from the property block: occurrences removed from the set. */
@@ -77,12 +91,27 @@ const WEEKDAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'] as const;
 
 const STAMP = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z?))?$/;
 
+/** Options of {@link parseRecurrenceRule} / {@link parseRecurrenceException}. */
+export interface RecurrenceParseOptions {
+  /**
+   * The wall-clock frame the parsed dates are expressed in: UTC (`Z`) and
+   * `TZID=` stamps convert to this zone's clocks. Default: the runtime zone.
+   */
+  readonly timeZone?: string;
+}
+
 /**
- * Parses one DATE / DATE-TIME stamp. `Z` → UTC converted to the local
- * instant; no `Z` → floating local wall time. `dateOnlyEnd` fills a DATE
- * value with 23:59:59 (inclusive UNTIL) instead of midnight.
+ * Parses one DATE / DATE-TIME stamp. `Z` → UTC converted to the frame's
+ * wall clock; `zone` (a TZID) → that zone's wall time converted to the
+ * frame; otherwise floating wall time. `dateOnlyEnd` fills a DATE value
+ * with 23:59:59 (inclusive UNTIL) instead of midnight.
  */
-function parseStamp(value: string, dateOnlyEnd: boolean): Date | null {
+function parseStamp(
+  value: string,
+  dateOnlyEnd: boolean,
+  frame?: string,
+  zone?: string,
+): Date | null {
   const match = STAMP.exec(value.trim().toUpperCase());
   if (!match) return null;
   const [, y, m, d, hh, mm, ss, z] = match;
@@ -100,11 +129,22 @@ function parseStamp(value: string, dateOnlyEnd: boolean): Date | null {
   const seconds = Number(ss);
   if (hours > 23 || minutes > 59 || seconds > 60) return null;
   if (z === 'Z') {
-    return new Date(
+    return ogeToWallClock(
       Date.UTC(year, month - 1, day, hours, minutes, Math.min(seconds, 59)),
+      frame,
     );
   }
-  return new Date(year, month - 1, day, hours, minutes, Math.min(seconds, 59));
+  const floating = new Date(
+    year,
+    month - 1,
+    day,
+    hours,
+    minutes,
+    Math.min(seconds, 59),
+  );
+  return zone === undefined
+    ? floating
+    : ogeConvertWallClock(floating, zone, frame);
 }
 
 function parseByDay(value: string): RecurrenceByDay[] | null {
@@ -151,7 +191,7 @@ function parseSetPos(value: string): number[] | null {
 }
 
 /** The RRULE value (`FREQ=…;…`) → model, or null. */
-function parseRuleValue(body: string): RecurrenceRule | null {
+function parseRuleValue(body: string, frame?: string): RecurrenceRule | null {
   if (body === '') return null;
 
   let freq: RecurrenceFrequency | null = null;
@@ -198,7 +238,7 @@ function parseRuleValue(body: string): RecurrenceRule | null {
         break;
       }
       case 'UNTIL': {
-        const parsed = parseStamp(value, true);
+        const parsed = parseStamp(value, true, frame);
         if (parsed === null) return null;
         until = parsed;
         break;
@@ -279,22 +319,52 @@ function parseRuleValue(body: string): RecurrenceRule | null {
 
 /**
  * Parses a DTSTART/RDATE/EXDATE property value with its parameters.
- * Only `VALUE=DATE` / `VALUE=DATE-TIME` are understood; anything else
- * (`TZID=…`, `VALUE=PERIOD`) rejects the block.
+ * `VALUE=DATE` / `VALUE=DATE-TIME` and `TZID=<IANA zone>` are understood;
+ * anything else (`VALUE=PERIOD`, an unknown zone) rejects the block.
  */
-function parseDateList(params: string, value: string): Date[] | null {
+function parseDateList(
+  params: string,
+  value: string,
+  frame: string | undefined,
+): { dates: Date[]; zone: string | undefined } | null {
+  let zone: string | undefined;
   for (const param of params.split(';')) {
     if (param === '') continue;
     const upper = param.toUpperCase();
+    if (upper.startsWith('TZID=')) {
+      const name = tzidName(param.slice(5));
+      if (name === undefined) return null;
+      zone = name;
+      continue;
+    }
     if (upper !== 'VALUE=DATE' && upper !== 'VALUE=DATE-TIME') return null;
   }
   const dates: Date[] = [];
   for (const part of value.split(',')) {
-    const parsed = parseStamp(part, false);
+    const parsed = parseStamp(part, false, frame, zone);
     if (parsed === null) return null;
     dates.push(parsed);
   }
-  return dates.length > 0 ? dates : null;
+  return dates.length > 0 ? { dates, zone } : null;
+}
+
+/**
+ * A TZID parameter value as an IANA zone: RFC 5545 allows a quoted value
+ * and a leading `/` for a globally unique id. `undefined` when unknown.
+ */
+function tzidName(raw: string): string | undefined {
+  const name = raw.replace(/^"(.*)"$/, '$1').replace(/^\//, '');
+  return ogeIsTimeZone(name) ? name : undefined;
+}
+
+/**
+ * The zone of a rule's `DTSTART;TZID=…` line, without parsing the rest —
+ * what an expander needs to pick the frame before the real parse.
+ */
+export function recurrenceRuleTimeZone(rule: string): string | undefined {
+  const match =
+    /(?:^|\n)[ \t]*DTSTART;(?:[^:\n]*;)?TZID=("[^"\n]*"|[^;:\n]+)/i.exec(rule);
+  return match === null ? undefined : tzidName(match[1]);
 }
 
 /** Unfolds RFC 5545 content lines (CRLF/LF; a leading space/tab continues). */
@@ -317,12 +387,17 @@ function contentLines(text: string): string[] {
  * part — a rule is either fully understood or rejected, never silently
  * truncated.
  */
-export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
+export function parseRecurrenceRule(
+  rule: string,
+  options: RecurrenceParseOptions = {},
+): RecurrenceRule | null {
+  const frame = options.timeZone;
   const lines = contentLines(rule);
   if (lines.length === 0) return null;
 
   let ruleValue: string | null = null;
   let dtStart: Date | undefined;
+  let timeZone: string | undefined;
   const rDates: Date[] = [];
   const exDates: Date[] = [];
 
@@ -348,11 +423,13 @@ export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
       ruleValue = value;
       continue;
     }
-    const dates = parseDateList(params, value);
-    if (dates === null) return null;
+    const list = parseDateList(params, value, frame);
+    if (list === null) return null;
+    const dates = list.dates;
     if (name === 'DTSTART') {
       if (dtStart !== undefined || dates.length !== 1) return null;
       dtStart = dates[0];
+      timeZone = list.zone;
     } else if (name === 'RDATE') {
       rDates.push(...dates);
     } else {
@@ -361,11 +438,12 @@ export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
   }
 
   if (ruleValue === null) return null;
-  const parsed = parseRuleValue(ruleValue);
+  const parsed = parseRuleValue(ruleValue, frame);
   if (parsed === null) return null;
   return {
     ...parsed,
     ...(dtStart !== undefined ? { dtStart } : {}),
+    ...(timeZone !== undefined ? { timeZone } : {}),
     ...(rDates.length > 0 ? { rDates } : {}),
     ...(exDates.length > 0 ? { exDates } : {}),
   };
@@ -385,7 +463,9 @@ function formatStamp(date: Date): string {
  * Serializes a rule model back into RRULE text (no `RRULE:` prefix). Rules
  * carrying DTSTART/RDATE/EXDATE values serialize as a property block: the
  * RRULE value on the first line, then one `DTSTART:` / `RDATE:` / `EXDATE:`
- * line each (local floating stamps).
+ * line each (floating stamps). A rule with a `timeZone` writes
+ * `DTSTART;TZID=…` (and TZID on RDATE / EXDATE): its dates must then be
+ * wall clocks of that zone — parse it with `{ timeZone: rule.timeZone }`.
  */
 export function serializeRecurrenceRule(rule: RecurrenceRule): string {
   const parts = [`FREQ=${rule.freq.toUpperCase()}`];
@@ -420,14 +500,15 @@ export function serializeRecurrenceRule(rule: RecurrenceRule): string {
     parts.push(`WKST=${WEEKDAY_CODES[rule.weekStart]}`);
   }
   const lines = [parts.join(';')];
+  const tz = rule.timeZone !== undefined ? `;TZID=${rule.timeZone}` : '';
   if (rule.dtStart !== undefined) {
-    lines.push(`DTSTART:${formatStamp(rule.dtStart)}`);
+    lines.push(`DTSTART${tz}:${formatStamp(rule.dtStart)}`);
   }
   if (rule.rDates !== undefined && rule.rDates.length > 0) {
-    lines.push(`RDATE:${rule.rDates.map(formatStamp).join(',')}`);
+    lines.push(`RDATE${tz}:${rule.rDates.map(formatStamp).join(',')}`);
   }
   if (rule.exDates !== undefined && rule.exDates.length > 0) {
-    lines.push(`EXDATE:${rule.exDates.map(formatStamp).join(',')}`);
+    lines.push(`EXDATE${tz}:${rule.exDates.map(formatStamp).join(',')}`);
   }
   return lines.join('\n');
 }
@@ -435,13 +516,16 @@ export function serializeRecurrenceRule(rule: RecurrenceRule): string {
 /**
  * Parses a recurrence-exception value: comma-separated `yyyyMMdd` or
  * `yyyyMMddTHHmmss` stamps. A trailing `Z` marks UTC and is converted to the
- * local instant; without it the stamp is local wall time. Invalid entries
+ * frame's wall clock (`options.timeZone`); without it the stamp is wall time. Invalid entries
  * are skipped rather than failing the list.
  */
-export function parseRecurrenceException(value: string): Date[] {
+export function parseRecurrenceException(
+  value: string,
+  options: RecurrenceParseOptions = {},
+): Date[] {
   const dates: Date[] = [];
   for (const part of value.split(',')) {
-    const parsed = parseStamp(part, false);
+    const parsed = parseStamp(part, false, options.timeZone);
     if (parsed !== null) dates.push(parsed);
   }
   return dates;
