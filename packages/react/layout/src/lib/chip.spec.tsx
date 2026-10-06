@@ -205,6 +205,7 @@ describe('<OgeChipList> grid and list', () => {
     );
     fireEvent.keyDown(screen.getAllByRole('option')[0], { key: 'Delete' });
     expect(screen.getAllByRole('option')).toHaveLength(3);
-    expect(document.activeElement?.textContent).toContain('Beta');
+    // Beta is disabled, so focus skips to Gamma
+    expect(document.activeElement?.textContent).toContain('Gamma');
   });
 });
