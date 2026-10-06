@@ -69,16 +69,20 @@ for (const layer of LAYERS) {
       const halfCard = page.locator(card('half-and-fractional-values'));
       const half = halfCard.locator('.oge-rating').first();
       const second = half.locator('.oge-rating-item').nth(1);
+      // locator actions scroll the card into view before measuring, so the
+      // positions below land on the item even when the card starts off-screen
+      await second.scrollIntoViewIfNeeded();
       const box = (await second.boundingBox())!;
+      const at = (fraction: number) => ({
+        x: box.width * fraction,
+        y: box.height / 2,
+      });
       // hover previews, the first half of an item picks the half
-      await page.mouse.move(box.x + box.width * 0.25, box.y + box.height / 2);
+      await second.hover({ position: at(0.25) });
       await expect(half).toHaveClass(/oge-rating-hovering/);
-      await page.mouse.down();
-      await page.mouse.up();
+      await second.click({ position: at(0.25) });
       await expect(page.getByTestId('rating-half')).toHaveText('1.5');
-      await page.mouse.move(box.x + box.width * 0.9, box.y + box.height / 2);
-      await page.mouse.down();
-      await page.mouse.up();
+      await second.click({ position: at(0.9) });
       await expect(page.getByTestId('rating-half')).toHaveText('2');
     });
 
