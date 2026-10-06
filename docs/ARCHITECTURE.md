@@ -2250,3 +2250,48 @@ npx nx run oge-schematics:schematics  # build the bundles into dist
 `dist/{projectRoot}`. Keep workspace-internal deps pinned exactly to the current release
 (`"@oge-ui/core": "0.6.0"` at the time of writing). `nx release` also generates the root
 `CHANGELOG.md` and a GitHub Release per version.
+
+### Packaging gates (CI `verify` and the release workflow)
+
+All read the npm payloads in `dist/<root>` of every project in `nx.json` → `release.projects`
+(discovery and publish order: `tools/release/publishable.mjs`), so run them after the builds; the
+Nx targets build first.
+
+- `npx nx run @oge/source:package-check` — `publint` + `@arethetypeswrong/cli` (pinned `npx`, no
+  devDependency). Angular Package Format packages are checked ESM-only (APF ships no CommonJS);
+  React and rollup packages under every resolution mode. A by-design finding goes in
+  `tools/package-check-allowlist.json` with a reason — never fixed by weakening the script.
+- `npx nx run @oge/source:license-boundary-check` — the ADR 0003 commercial list must match every
+  `license` field and `LICENSE` file, and no MIT package may list a commercial one (only
+  `@oge-ui/locales`' optional, type-only engine peers are sanctioned) or import one in its built JS.
+- `npx nx run @oge/source:size-check` — gzip size per published entry point (entry + its
+  package-internal chunks), baseline `tools/size-budgets.json`, fails on > 10 % growth or a new
+  entry without a number. Intended growth: `node tools/size-check.mjs --update` and say why in the PR.
+  TODO (W6): show these numbers on the docs site — there is no bundle-size page yet.
+- Commit messages: `commitlint.config.mjs`, checked on pull requests only.
+
+Exports-map shapes the gates enforce: rollup packages (`core`, `behavior`, `locales`, engines) use
+`{ "types", "module": "./x.esm.js", "default": "./x.cjs.js" }` per entry — never `"import"` → the
+`.esm.js` file, which Node would load as CommonJS in a typeless package. React packages use
+`{ "import": { "types": "./x.d.ts", … }, "require": { "types": "./x.d.cts", … } }`; their Vite
+config passes `afterBuild: ogeDualTypes` (`tools/react-package/dual-types.mts`) to `vite-plugin-dts`,
+which writes explicit `.js` specifiers and the `.d.cts` twins. Every package exports `./package.json`.
+
+### Publishing (`.github/workflows/release.yml`)
+
+Run manually with a version input, or by pushing a `v<x.y.z>` tag; the version must already be
+committed (`nx release version`). The job builds, runs the gates, publishes every `dist` folder in
+dependency order with `npm publish --provenance --access public` through npm **trusted publishing**
+(OIDC, no token), skips versions already on npm (so a failed run can be re-run), and attaches a
+CycloneDX SBOM to the GitHub release. Until the one-time setup below is done it cannot publish.
+
+One-time setup (maintainer):
+
+1. GitHub → Settings → Environments → create `npm-publish`; add yourself as required reviewer and
+   restrict deployment to `main` and tags `v*`.
+2. For **each** package on npmjs.com (Package → Settings → Trusted Publisher → GitHub Actions):
+   organization/user `oge-ui`, repository `oge-ui`, workflow file `release.yml`, environment
+   `npm-publish`. A package must exist on npm before it can get a trusted publisher, so a brand-new
+   package's first version is still published by hand (`npm publish dist/packages/<p>`).
+3. Optionally, on each package's settings, set publishing access to "Require two-factor
+   authentication and disallow tokens" once the workflow has published successfully.

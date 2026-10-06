@@ -25,31 +25,57 @@
   "types": "./index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
     },
     "./export-excel": {
-      "types": "./export-excel.d.ts",
-      "import": "./export-excel.js",
-      "require": "./export-excel.cjs"
+      "import": {
+        "types": "./export-excel.d.ts",
+        "default": "./export-excel.js"
+      },
+      "require": {
+        "types": "./export-excel.d.cts",
+        "default": "./export-excel.cjs"
+      }
     },
     "./export-pdf": {
-      "types": "./export-pdf.d.ts",
-      "import": "./export-pdf.js",
-      "require": "./export-pdf.cjs"
+      "import": {
+        "types": "./export-pdf.d.ts",
+        "default": "./export-pdf.js"
+      },
+      "require": {
+        "types": "./export-pdf.d.cts",
+        "default": "./export-pdf.cjs"
+      }
     },
     "./export-image": {
-      "types": "./export-image.d.ts",
-      "import": "./export-image.js",
-      "require": "./export-image.cjs"
+      "import": {
+        "types": "./export-image.d.ts",
+        "default": "./export-image.js"
+      },
+      "require": {
+        "types": "./export-image.d.cts",
+        "default": "./export-image.cjs"
+      }
     },
     "./export-msproject": {
-      "types": "./export-msproject.d.ts",
-      "import": "./export-msproject.js",
-      "require": "./export-msproject.cjs"
+      "import": {
+        "types": "./export-msproject.d.ts",
+        "default": "./export-msproject.js"
+      },
+      "require": {
+        "types": "./export-msproject.d.cts",
+        "default": "./export-msproject.cjs"
+      }
     },
-    "./styles.css": "./styles.css"
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json"
   },
   "sideEffects": [
     "*.css"

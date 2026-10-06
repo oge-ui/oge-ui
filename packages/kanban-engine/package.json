@@ -34,14 +34,15 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.esm.js",
-      "require": "./index.cjs.js"
+      "module": "./index.esm.js",
+      "default": "./index.cjs.js"
     },
     "./export-excel": {
       "types": "./export-excel.d.ts",
-      "import": "./export-excel.esm.js",
-      "require": "./export-excel.cjs.js"
-    }
+      "module": "./export-excel.esm.js",
+      "default": "./export-excel.cjs.js"
+    },
+    "./package.json": "./package.json"
   },
   "peerDependencies": {
     "exceljs": "^4.4.0"

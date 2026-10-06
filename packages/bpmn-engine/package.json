@@ -21,14 +21,15 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.esm.js",
-      "require": "./index.cjs.js"
+      "module": "./index.esm.js",
+      "default": "./index.cjs.js"
     },
     "./testing": {
       "types": "./testing.d.ts",
-      "import": "./testing.esm.js",
-      "require": "./testing.cjs.js"
-    }
+      "module": "./testing.esm.js",
+      "default": "./testing.cjs.js"
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "dependencies": {},

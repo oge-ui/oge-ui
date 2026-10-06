@@ -48,6 +48,44 @@ Closes the gaps the W5a SSR proof listed:
   SVG `data:` URLs, which `sanitizeResourceUrl` rightly rejects, so the React
   demo shows them again. The Angular and React demos use the same data.
 
+### Release and packaging gates (W5c)
+
+The npm payloads (`dist/packages/**`) are now checked before they can ship,
+and the packaging defects the checks found are fixed.
+
+- **Fixed — rollup packages** (`@oge-ui/core`, `@oge-ui/behavior`,
+  `@oge-ui/locales` and the six `*-engine` packages): the `import` condition
+  pointed at `index.esm.js`, an ES module inside a package without
+  `"type"`, so Node loaded it as CommonJS (a `MODULE_TYPELESS_PACKAGE_JSON`
+  warning and a re-parse on Node ≥ 22, a syntax error on older Node). Each
+  entry is now `{ types, module, default }`: bundlers take the ESM build
+  through `module`, Node takes the CommonJS build, and the types match
+  both. `@oge-ui/core` gains an `exports` map (`.`, `./themes/*`,
+  `./llms.txt`, `./package.json`); every package exports `./package.json`.
+- **Fixed — React packages** (all eighteen `@oge-ui/react-*`): the single
+  `.d.ts` tree described the CommonJS entry as ESM ("masquerading as ESM")
+  and used extension-less relative imports that do not resolve under
+  `node16` / `nodenext`. The build now writes explicit `.js` specifiers
+  and a `.d.cts` twin (`tools/react-package/dual-types.mts`), and the
+  exports map carries `import.types` / `require.types` separately.
+- **`package-check`** (`tools/package-check.mjs`): `publint` and
+  `@arethetypeswrong/cli` on every publishable package (Angular Package
+  Format packages are checked ESM-only by design); by-design findings go in
+  `tools/package-check-allowlist.json` with a reason (empty today).
+- **`license-boundary-check`**: no MIT package may depend on — or, in its
+  built JavaScript, import — a commercial package (ADR 0003 list), and
+  every `license` field and `LICENSE` file must match that list.
+- **`size-check`**: gzip budgets per published entry point, generated from
+  the dist folders, baseline in `tools/size-budgets.json`, fails on more
+  than 10 % growth.
+- **Release workflow** (`.github/workflows/release.yml`): manual or `v*`
+  tag; builds, runs the gates, publishes in dependency order with npm
+  trusted publishing and `--provenance`, inside the protected
+  `npm-publish` environment, and attaches a CycloneDX SBOM to the GitHub
+  release.
+- **Commit lint** on pull requests (`commitlint.config.mjs`, conventional
+  commits; accepts the repo's `merge:` and multi-type headers).
+
 ### Carousel, action sheet, list / data view and tile layout (W8d) — `@oge-ui/layout`, `@oge-ui/overlay`, `@oge-ui/react-layout`, `@oge-ui/react-overlay`, `@oge-ui/behavior`, `@oge-ui/locales`
 
 Five new components in both render layers; their decisions (index and

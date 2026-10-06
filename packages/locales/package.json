@@ -24,58 +24,58 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.esm.js",
-      "require": "./index.cjs.js"
+      "module": "./index.esm.js",
+      "default": "./index.cjs.js"
     },
     "./de": {
       "types": "./de.d.ts",
-      "import": "./de.esm.js",
-      "require": "./de.cjs.js"
+      "module": "./de.esm.js",
+      "default": "./de.cjs.js"
     },
     "./fr": {
       "types": "./fr.d.ts",
-      "import": "./fr.esm.js",
-      "require": "./fr.cjs.js"
+      "module": "./fr.esm.js",
+      "default": "./fr.cjs.js"
     },
     "./es": {
       "types": "./es.d.ts",
-      "import": "./es.esm.js",
-      "require": "./es.cjs.js"
+      "module": "./es.esm.js",
+      "default": "./es.cjs.js"
     },
     "./it": {
       "types": "./it.d.ts",
-      "import": "./it.esm.js",
-      "require": "./it.cjs.js"
+      "module": "./it.esm.js",
+      "default": "./it.cjs.js"
     },
     "./pt-BR": {
       "types": "./pt-BR.d.ts",
-      "import": "./pt-BR.esm.js",
-      "require": "./pt-BR.cjs.js"
+      "module": "./pt-BR.esm.js",
+      "default": "./pt-BR.cjs.js"
     },
     "./tr": {
       "types": "./tr.d.ts",
-      "import": "./tr.esm.js",
-      "require": "./tr.cjs.js"
+      "module": "./tr.esm.js",
+      "default": "./tr.cjs.js"
     },
     "./ja": {
       "types": "./ja.d.ts",
-      "import": "./ja.esm.js",
-      "require": "./ja.cjs.js"
+      "module": "./ja.esm.js",
+      "default": "./ja.cjs.js"
     },
     "./zh-CN": {
       "types": "./zh-CN.d.ts",
-      "import": "./zh-CN.esm.js",
-      "require": "./zh-CN.cjs.js"
+      "module": "./zh-CN.esm.js",
+      "default": "./zh-CN.cjs.js"
     },
     "./ar": {
       "types": "./ar.d.ts",
-      "import": "./ar.esm.js",
-      "require": "./ar.cjs.js"
+      "module": "./ar.esm.js",
+      "default": "./ar.cjs.js"
     },
     "./he": {
       "types": "./he.d.ts",
-      "import": "./he.esm.js",
-      "require": "./he.cjs.js"
+      "module": "./he.esm.js",
+      "default": "./he.cjs.js"
     },
     "./package.json": "./package.json"
   },

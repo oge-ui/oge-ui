@@ -34,29 +34,30 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.esm.js",
-      "require": "./index.cjs.js"
+      "module": "./index.esm.js",
+      "default": "./index.cjs.js"
     },
     "./export-excel": {
       "types": "./export-excel.d.ts",
-      "import": "./export-excel.esm.js",
-      "require": "./export-excel.cjs.js"
+      "module": "./export-excel.esm.js",
+      "default": "./export-excel.cjs.js"
     },
     "./export-pdf": {
       "types": "./export-pdf.d.ts",
-      "import": "./export-pdf.esm.js",
-      "require": "./export-pdf.cjs.js"
+      "module": "./export-pdf.esm.js",
+      "default": "./export-pdf.cjs.js"
     },
     "./export-image": {
       "types": "./export-image.d.ts",
-      "import": "./export-image.esm.js",
-      "require": "./export-image.cjs.js"
+      "module": "./export-image.esm.js",
+      "default": "./export-image.cjs.js"
     },
     "./export-msproject": {
       "types": "./export-msproject.d.ts",
-      "import": "./export-msproject.esm.js",
-      "require": "./export-msproject.cjs.js"
-    }
+      "module": "./export-msproject.esm.js",
+      "default": "./export-msproject.cjs.js"
+    },
+    "./package.json": "./package.json"
   },
   "peerDependencies": {
     "exceljs": "^4.4.0",

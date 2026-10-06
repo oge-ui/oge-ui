@@ -1,0 +1,4 @@
+{
+  "$comment": "Findings of tools/package-check.mjs that are correct by design. Each entry matches by tool + package name (or layout: apf | react | rollup, or \"*\") + a substring of the finding, and must say why. Unused entries are reported.",
+  "entries": []
+}

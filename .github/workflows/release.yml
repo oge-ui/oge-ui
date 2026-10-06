@@ -1,0 +1,104 @@
+name: Release
+
+# Publishes every package in nx.json → release.projects to npm with
+# provenance, in dependency order, through npm trusted publishing (OIDC — no
+# npm token is stored anywhere). The version must already be committed
+# (`nx release version <x.y.z>`, docs/ARCHITECTURE.md → "Release"); this
+# workflow only builds, gates and publishes what is on the ref.
+#
+# Safe without setup: the publish job waits on the protected `npm-publish`
+# environment, and npm rejects the OIDC exchange until the one-time trusted
+# publisher setup in docs/ARCHITECTURE.md → "Release" is done.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (must equal packages/ui/package.json, e.g. 1.1.3)'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write # create the GitHub release + attach the SBOM
+      id-token: write # npm trusted publishing + provenance
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Resolve the version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then v="$INPUT_VERSION"; else v="${REF_NAME#v}"; fi
+          committed="$(node -p "require('./packages/ui/package.json').version")"
+          if [ "$v" != "$committed" ]; then
+            echo "::error::requested $v but the ref carries $committed — run nx release version first"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      # trusted publishing needs npm >= 11.5
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+
+      - run: npx nx run-many -t build --projects="$(node -p "require('./nx.json').release.projects.join(',')")"
+      - run: npx nx run oge-schematics:schematics
+      - run: node tools/license-boundary-check.mjs
+      - run: node tools/package-check.mjs
+      - run: node tools/size-check.mjs
+
+      - name: Publish in dependency order
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for dir in $(node tools/release/publish-order.mjs); do
+            name="$(node -p "require('./$dir/package.json').name")"
+            if npm view "$name@$VERSION" version >/dev/null 2>&1; then
+              echo "$name@$VERSION is already on npm — skipping"
+              continue
+            fi
+            npm publish "$dir" --provenance --access public
+          done
+
+      - name: SBOM (CycloneDX)
+        run: npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --output-format JSON --output-file "oge-ui-${{ steps.version.outputs.version }}.cdx.json"
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release upload "v$VERSION" "oge-ui-$VERSION.cdx.json" --clobber
+          else
+            gh release create "v$VERSION" "oge-ui-$VERSION.cdx.json" --title "v$VERSION" --notes "See CHANGELOG.md." --target "$GITHUB_SHA"
+          fi

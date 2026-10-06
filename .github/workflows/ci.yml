@@ -54,6 +54,34 @@ jobs:
       # Rollup strips module directives; the React dists must still lead with
       # 'use client' or an RSC import crashes at runtime
       - run: npx nx run @oge/source:use-client-check
+      # release gates over every dist/packages/** payload: publint + attw,
+      # the MIT ↔ commercial boundary, and per-entry gzip budgets
+      - run: npx nx run @oge/source:license-boundary-check
+      - run: npx nx run @oge/source:package-check
+      - run: npx nx run @oge/source:size-check
+
+  # Conventional commits, on pull requests only (main receives merges of
+  # commits that already passed). Config: commitlint.config.mjs.
+  commitlint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: npx --yes @commitlint/cli@21.2.3 --from "$BASE" --to "$HEAD" --verbose
 
   # The docs site is the integration surface of every package, so e2e always
   # runs in full (not `affected`), sharded to keep the wall clock short.

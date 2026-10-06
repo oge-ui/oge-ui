@@ -25,26 +25,47 @@
   "types": "./index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
     },
     "./export-excel": {
-      "types": "./export-excel.d.ts",
-      "import": "./export-excel.js",
-      "require": "./export-excel.cjs"
+      "import": {
+        "types": "./export-excel.d.ts",
+        "default": "./export-excel.js"
+      },
+      "require": {
+        "types": "./export-excel.d.cts",
+        "default": "./export-excel.cjs"
+      }
     },
     "./export-pdf": {
-      "types": "./export-pdf.d.ts",
-      "import": "./export-pdf.js",
-      "require": "./export-pdf.cjs"
+      "import": {
+        "types": "./export-pdf.d.ts",
+        "default": "./export-pdf.js"
+      },
+      "require": {
+        "types": "./export-pdf.d.cts",
+        "default": "./export-pdf.cjs"
+      }
     },
     "./foundation": {
-      "types": "./foundation.d.ts",
-      "import": "./foundation.js",
-      "require": "./foundation.cjs"
+      "import": {
+        "types": "./foundation.d.ts",
+        "default": "./foundation.js"
+      },
+      "require": {
+        "types": "./foundation.d.cts",
+        "default": "./foundation.cjs"
+      }
     },
-    "./styles.css": "./styles.css"
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json"
   },
   "sideEffects": [
     "*.css"

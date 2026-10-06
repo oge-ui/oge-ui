@@ -25,26 +25,47 @@
   "types": "./index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
     },
     "./sparkline": {
-      "types": "./sparkline.d.ts",
-      "import": "./sparkline.js",
-      "require": "./sparkline.cjs"
+      "import": {
+        "types": "./sparkline.d.ts",
+        "default": "./sparkline.js"
+      },
+      "require": {
+        "types": "./sparkline.d.cts",
+        "default": "./sparkline.cjs"
+      }
     },
     "./export-image": {
-      "types": "./export-image.d.ts",
-      "import": "./export-image.js",
-      "require": "./export-image.cjs"
+      "import": {
+        "types": "./export-image.d.ts",
+        "default": "./export-image.js"
+      },
+      "require": {
+        "types": "./export-image.d.cts",
+        "default": "./export-image.cjs"
+      }
     },
     "./export-pdf": {
-      "types": "./export-pdf.d.ts",
-      "import": "./export-pdf.js",
-      "require": "./export-pdf.cjs"
+      "import": {
+        "types": "./export-pdf.d.ts",
+        "default": "./export-pdf.js"
+      },
+      "require": {
+        "types": "./export-pdf.d.cts",
+        "default": "./export-pdf.cjs"
+      }
     },
-    "./styles.css": "./styles.css"
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json"
   },
   "sideEffects": [
     "*.css"

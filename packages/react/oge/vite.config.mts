@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
+import { ogeDualTypes } from '../../../tools/react-package/dual-types.mjs';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 /**
@@ -37,6 +38,8 @@ export default defineConfig(() => ({
       // emitted declarations, so `@oge-ui/behavior` would ship as a relative
       // path into this repo's sources and break the moment it is installed.
       aliasesExclude: [/^@oge-ui\//],
+      // explicit `.js` specifiers + a `.d.cts` twin for the `require` condition
+      afterBuild: ogeDualTypes,
     }),
   ],
   build: {

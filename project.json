@@ -18,6 +18,33 @@
         "cwd": "{workspaceRoot}"
       },
       "dependsOn": [{ "projects": ["tag:platform:react"], "target": "build" }]
+    },
+    "package-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/package-check.mjs",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": [{ "projects": ["packages/**/*"], "target": "build" }]
+    },
+    "size-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/size-check.mjs",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": [{ "projects": ["packages/**/*"], "target": "build" }]
+    },
+    "license-boundary-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/license-boundary-check.mjs",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": [{ "projects": ["packages/**/*"], "target": "build" }]
     }
   }
 }
