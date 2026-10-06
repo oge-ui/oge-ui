@@ -126,6 +126,11 @@ const DRAG_EXCLUDED =
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
+    // Declarative <oge-tile-layout-item> children hand their projected
+    // content over as templates the layout stamps in its own tiles; Angular
+    // hydration cannot match content projected that way (NG0500), so the
+    // layout re-renders on the client instead of hydrating.
+    ngSkipHydration: 'true',
     class: 'oge-tile-layout',
     '[class.oge-tile-layout-dragging]': 'dragKey() !== null',
     '[class.oge-tile-layout-resizing]': 'resizePreview() !== null',

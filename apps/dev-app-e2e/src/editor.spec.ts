@@ -245,7 +245,7 @@ test('under require-trusted-types-for the editor parses through oge-ui#editor', 
       headers: {
         ...response.headers(),
         'content-security-policy':
-          "require-trusted-types-for 'script'; trusted-types default angular angular#bundler angular#unsafe-bypass oge-ui#editor 'allow-duplicates'",
+          "require-trusted-types-for 'script'; trusted-types default angular angular#bundler angular#unsafe-bypass oge-ui#editor oge-docs#json-ld 'allow-duplicates'",
       },
     });
   });
