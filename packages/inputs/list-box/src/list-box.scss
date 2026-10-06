@@ -1,0 +1,364 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A standing listbox: a framed, scrollable option column. Selection reads at
+// a glance — an accent tint plus an inline-start indicator bar — and the
+// keyboard-active option gets the inset focus ring only while the list
+// itself has keyboard focus (`aria-activedescendant` pattern: the options
+// never take DOM focus).
+
+.oge-list-box {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-list-box-label {
+  color: var(--oge-text-color);
+  font-weight: 600;
+}
+
+.oge-list-box-required {
+  margin-inline-start: 2px;
+  color: var(--oge-danger);
+}
+
+.oge-list-box-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.oge-list-box:hover:not(.oge-disabled) .oge-list-box-frame {
+  border-color: var(--oge-muted-color);
+}
+
+.oge-list-box-frame:focus-within {
+  border-color: var(--oge-accent);
+}
+
+.oge-list-box-invalid .oge-list-box-frame {
+  border-color: var(--oge-danger);
+}
+
+// --- search -----------------------------------------------------------------
+
+.oge-list-box-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-list-box-search-icon {
+  position: absolute;
+  inset-inline-start: 14px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--oge-input-muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.oge-list-box-search-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  padding-block: 4px;
+  padding-inline: 28px 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-input-filled-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+  }
+
+  &:focus {
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+
+    border-color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (pointer: coarse) {
+    font-size: max(16px, 1em);
+  }
+}
+
+// --- list -------------------------------------------------------------------
+
+.oge-list-box-list {
+  @include tokens.scrollbar;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  max-height: 280px;
+  padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+}
+
+.oge-list-box-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  & + .oge-list-box-group {
+    margin-block-start: 4px;
+    padding-block-start: 4px;
+    border-block-start: 1px solid var(--oge-border-color);
+  }
+}
+
+.oge-list-box-group-header {
+  padding: 6px 10px 2px;
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 2px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.oge-list-box-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding-block: 4px;
+  padding-inline: 12px 10px;
+  border-radius: var(--oge-radius);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  // the selection indicator bar — drawn on the inline-start edge
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block: 6px;
+    inset-inline-start: 3px;
+    width: 3px;
+    border-radius: 3px;
+    background: transparent;
+    transition: background-color 120ms ease;
+  }
+
+  &:hover:not(.oge-disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &.oge-disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.oge-list-box-option-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-list-box-option-selected {
+  background: var(--oge-selected-bg);
+  color: var(--oge-text-color);
+  font-weight: 500;
+
+  &::after {
+    background: var(--oge-accent);
+  }
+
+  &:hover:not(.oge-disabled) {
+    background: var(--oge-selected-bg);
+  }
+}
+
+.oge-list-box-list:focus-visible .oge-list-box-option-active {
+  @include tokens.focus-ring($inset: true, $width: 2px);
+}
+
+.oge-list-box-list:focus:not(:focus-visible) .oge-list-box-option-active {
+  box-shadow: inset 0 0 0 1px var(--oge-accent-25);
+}
+
+// --- check glyph (multiple + showCheckBoxes) --------------------------------
+
+.oge-list-box-check {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--oge-muted-color);
+  border-radius: 4px;
+  background: var(--oge-bg);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: transparent;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.oge-list-box-option-selected .oge-list-box-check {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+
+  svg {
+    stroke: var(--oge-severity-contrast);
+  }
+}
+
+// the check carries the state — the bar would say it twice
+.oge-list-box-checks .oge-list-box-option-selected::after {
+  background: transparent;
+}
+
+// --- empty / subscript ------------------------------------------------------
+
+.oge-list-box-empty {
+  padding: 16px 12px;
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 1px);
+  text-align: center;
+}
+
+.oge-list-box-subscript {
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-list-box-error {
+  color: var(--oge-danger);
+}
+
+// --- states / sizes ---------------------------------------------------------
+
+.oge-list-box.oge-disabled {
+  opacity: 0.55;
+
+  .oge-list-box-option {
+    cursor: default;
+  }
+}
+
+.oge-list-box-readonly .oge-list-box-option {
+  cursor: default;
+}
+
+.oge-list-box-sm .oge-list-box-option {
+  min-height: 26px;
+  padding-block: 2px;
+}
+
+.oge-list-box-lg .oge-list-box-option {
+  min-height: 40px;
+}
+
+@media (pointer: coarse) {
+  .oge-list-box-option {
+    min-height: 44px;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+@include tokens.forced-colors {
+  .oge-list-box-frame {
+    border-color: CanvasText;
+  }
+
+  .oge-list-box-option-selected {
+    background: Highlight;
+    color: HighlightText;
+
+    &::after {
+      background: HighlightText;
+    }
+  }
+
+  .oge-list-box-list:focus-visible .oge-list-box-option-active {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+
+  .oge-list-box-option.oge-disabled {
+    color: GrayText;
+  }
+
+  .oge-list-box-check {
+    border-color: CanvasText;
+  }
+
+  .oge-list-box-option-selected .oge-list-box-check {
+    border-color: HighlightText;
+    background: Highlight;
+
+    svg {
+      stroke: HighlightText;
+    }
+  }
+
+  .oge-list-box-invalid .oge-list-box-frame {
+    border-style: dashed;
+  }
+
+  .oge-list-box-error {
+    color: CanvasText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-list-box-frame,
+  .oge-list-box-search-input,
+  .oge-list-box-option,
+  .oge-list-box-option::after,
+  .oge-list-box-check {
+    transition: none;
+  }
+}

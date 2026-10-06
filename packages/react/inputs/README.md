@@ -55,6 +55,13 @@ subscript — and the standard React controlled/uncontrolled pair
   plus the standalone **`<OgeColorGradient>`** (inline picker with an optional
   WCAG contrast readout) and **`<OgeColorPalette>`** (swatch grid from a preset
   or your own colours).
+- **W8b editors** — **`<OgeRating>`** (half / fractional values, APG slider
+  or radio group), **`<OgeOtpInput>`** (one-time-code cells, paste and SMS
+  autofill), **`<OgeSignaturePad>`** (smooth strokes, undo, PNG/SVG data URL,
+  typed-signature mode), **`<OgeListBox>`** (APG listbox, single/multiple,
+  groups, type-ahead), **`<OgeTransferList>`** (two list boxes with buttons,
+  keyboard shortcuts and drag) and **`<OgeMention>`** (`@`-triggers with a
+  caret-anchored suggestion popup).
 - **Adaptive popups** — `adaptiveMode` (`'none'` by default) and
   `adaptiveBreakpoint` turn the select box, tag box, autocomplete, tree
   select, multi-column combo box, date box, date range box and colour box

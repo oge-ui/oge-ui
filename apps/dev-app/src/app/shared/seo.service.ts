@@ -408,6 +408,30 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular ColorPalette: a standalone swatch grid with preset palettes, custom swatches, configurable columns and APG grid keyboard navigation as a form value.',
   ],
   [
+    '/components/inputs/rating',
+    'Angular Rating: stars or custom icons with half and fractional precision, hover preview, clear on re-click, read-only display, RTL and APG slider or radio-group keyboard semantics as a form value.',
+  ],
+  [
+    '/components/inputs/otp-input',
+    'Angular OTP input: one-time-code cells with numeric or alphanumeric filtering, paste distribution, Backspace and arrow navigation, masked mode, one-time-code autofill and a completion event.',
+  ],
+  [
+    '/components/inputs/signature-pad',
+    'Angular signature pad: smooth pointer strokes, undo and clear, PNG or SVG data URL output, a keyboard-accessible typed signature mode and resize-safe redraws.',
+  ],
+  [
+    '/components/inputs/list-box',
+    'Angular ListBox: a WAI-ARIA listbox with single or multiple selection, groups, item templates, type-ahead, search and range selection as a form value.',
+  ],
+  [
+    '/components/inputs/transfer-list',
+    'Angular TransferList: a dual list box that moves selected or all items between two lists by buttons, drag and drop or keyboard shortcuts, with search and live announcements.',
+  ],
+  [
+    '/components/inputs/mention',
+    'Angular Mention: @ and # triggers inside a text area with a caret-anchored WAI-ARIA combobox popup, custom suggestion templates and the mentioned items as an output.',
+  ],
+  [
     '/components/inputs/showcase',
     'Angular input showcase: a character counter, password reveal and copy buttons, locale-aware number entry and debounced value commits on OGE text editors.',
   ],

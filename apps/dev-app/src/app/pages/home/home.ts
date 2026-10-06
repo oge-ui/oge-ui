@@ -2052,7 +2052,7 @@ export class HomePage {
     {
       icon: 'text-cursor',
       name: 'Inputs',
-      desc: 'Text, masked, number, select, date, color and choice editors on one field chrome.',
+      desc: 'Text, masked, number, select, date, color, rating, OTP, signature, list and mention editors on one field chrome.',
       path: '/components/inputs',
     },
     {

@@ -1,0 +1,211 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// Two list boxes (their look is `oge-list-box`'s own sheet) with a column of
+// move buttons between them. Below ~520px of its own width the transfer list
+// stacks the lists and turns the arrows to point down/up — a container
+// query, so it adapts inside dialogs and drawers as well as on phones.
+
+.oge-transfer-list {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  container-type: inline-size;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-transfer-list-label {
+  font-weight: 600;
+}
+
+.oge-transfer-list-required {
+  margin-inline-start: 2px;
+  color: var(--oge-danger);
+}
+
+.oge-transfer-list-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+}
+
+.oge-transfer-list-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 6px;
+  border-radius: var(--oge-radius-lg);
+  transition:
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+
+  .oge-list-box {
+    min-width: 0;
+  }
+
+  // the inner list stretches to the pane and keeps a stable height so the
+  // two sides line up however many items each holds
+  .oge-list-box-list {
+    min-height: 200px;
+  }
+}
+
+.oge-transfer-list-pane-drop {
+  background: var(--oge-accent-soft);
+  box-shadow: 0 0 0 2px var(--oge-accent-25);
+
+  .oge-list-box-frame {
+    border-color: var(--oge-accent);
+    border-style: dashed;
+  }
+}
+
+.oge-transfer-list-dragging .oge-list-box-option {
+  cursor: grabbing;
+}
+
+.oge-transfer-list-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-inline: 2px;
+}
+
+.oge-transfer-list-title {
+  font-weight: 600;
+}
+
+.oge-transfer-list-count {
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 1px);
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-transfer-list-actions {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  gap: 8px;
+}
+
+.oge-transfer-list-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-btn);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    box-shadow: none;
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  @media (pointer: coarse) {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+// the arrows point at the other list — mirrored in RTL
+.oge-transfer-list-action svg:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+@container (max-width: 520px) {
+  .oge-transfer-list-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .oge-transfer-list-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .oge-transfer-list-action svg,
+  .oge-transfer-list-action svg:dir(rtl) {
+    transform: rotate(90deg);
+  }
+}
+
+.oge-transfer-list-subscript {
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-transfer-list-error {
+  color: var(--oge-danger);
+}
+
+.oge-transfer-list-invalid .oge-list-box-frame {
+  border-color: var(--oge-danger);
+}
+
+.oge-transfer-list.oge-disabled {
+  opacity: 0.55;
+}
+
+@include tokens.forced-colors {
+  .oge-transfer-list-action {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+
+    &:disabled {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+
+  .oge-transfer-list-pane-drop .oge-list-box-frame {
+    border-color: Highlight;
+  }
+
+  .oge-transfer-list-error {
+    color: CanvasText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-transfer-list-pane,
+  .oge-transfer-list-action {
+    transition: none;
+  }
+}

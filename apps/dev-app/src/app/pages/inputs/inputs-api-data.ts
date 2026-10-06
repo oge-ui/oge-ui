@@ -3740,3 +3740,1096 @@ export const OGE_MULTI_COLUMN_COMBO_BOX_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_RATING_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeRating',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;number | null&gt;',
+          default: 'null',
+          description:
+            'The rating — two-way; <code>null</code> means not rated. Snapped to <code>precision</code> inside <code>0…max</code>.',
+        },
+        {
+          name: 'max',
+          type: 'number | undefined',
+          default: '5',
+          description:
+            'Number of items (stars); <code>undefined</code> means 5. A Signal Forms schema <code>max()</code> writes it through <code>[formField]</code>.',
+        },
+        {
+          name: 'precision',
+          type: 'number',
+          default: '1',
+          description:
+            'Value step: <code>1</code> whole items, <code>0.5</code> halves, <code>0.1</code> tenths (at least <code>0.01</code>). A pointer press rounds up to the next step inside the item.',
+        },
+        {
+          name: 'allowClear',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'A press on the current value — or Delete / Backspace / <code>0</code> — clears it; also lowers <code>aria-valuemin</code> to 0.',
+        },
+        {
+          name: 'icon',
+          type: 'OgeRatingIcon',
+          default: "'star'",
+          description:
+            "The built-in glyph: <code>'star' | 'heart' | 'circle'</code>. An item template replaces it.",
+        },
+        {
+          name: 'selection',
+          type: 'OgeRatingSelection',
+          default: "'continuous'",
+          description:
+            "<code>'continuous'</code> paints every item up to the value; <code>'single'</code> only the item holding it (a pick-one scale).",
+        },
+        {
+          name: 'semantics',
+          type: 'OgeRatingSemantics',
+          default: "'slider'",
+          description:
+            "<code>'slider'</code> — one APG slider, any precision; <code>'radiogroup'</code> — one radio per item with a roving tab stop (whole-item precision only, otherwise the slider).",
+        },
+        {
+          name: 'hoverPreview',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Paints the value under a mouse pointer before it is pressed.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Accessible name; empty falls back to the <code>ratingLabel</code> message.',
+        },
+        {
+          name: 'locale',
+          type: 'string | undefined',
+          description:
+            'Locale of the spoken value (<code>aria-valuetext</code>); falls back to the config <code>locale</code>, then <code>LOCALE_ID</code>.',
+        },
+        {
+          name: 'itemTemplate',
+          type: 'TemplateRef&lt;OgeRatingItemTemplateContext&gt; | undefined',
+          description:
+            'Custom glyph per item — the input form of the <code>[ogeRatingItemTemplate]</code> slot.',
+        },
+        {
+          name: 'size',
+          type: "'sm' | 'md' | 'lg'",
+          default: "'md'",
+          description: 'Item size preset — 18 / 24 / 32px.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [COMMON_METHODS],
+  events: [
+    {
+      title: 'OgeRating events',
+      entries: [
+        {
+          name: 'hoverChanged',
+          type: 'OgeRatingHoverEvent',
+          description:
+            'The pointer previews another value — <code>{ value, event }</code>, <code>value: null</code> once it leaves.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'Rating types',
+      entries: [
+        {
+          name: 'OgeRatingItemTemplate',
+          type: 'directive',
+          description:
+            '<code>&lt;ng-template ogeRatingItemTemplate let-item let-filled="filled"&gt;</code> — rendered for the empty and the filled (clipped) layer of every item, so fractional fills work with any markup.',
+        },
+        {
+          name: 'OgeRatingItemTemplateContext',
+          type: '{ $implicit: OgeRatingItemState; filled: boolean; hovered: boolean }',
+          description: 'Context of the item template.',
+        },
+        {
+          name: 'OgeRatingItemState',
+          type: '{ index; itemValue; fill; full; partial }',
+          description:
+            'One item: zero-based <code>index</code>, the <code>itemValue</code> a full press commits, the filled share <code>fill</code> (0…1).',
+        },
+        {
+          name: 'OgeRatingIcon',
+          type: "'star' | 'heart' | 'circle'",
+          description: 'The built-in glyphs.',
+        },
+        {
+          name: 'OgeRatingSelection',
+          type: "'continuous' | 'single'",
+          description: 'How the value is painted.',
+        },
+        {
+          name: 'OgeRatingSemantics',
+          type: "'slider' | 'radiogroup'",
+          description: 'The ARIA pattern rendered.',
+        },
+        {
+          name: 'OgeRatingHoverEvent',
+          type: '{ value: number | null; event: Event }',
+          description: 'Payload of <code>hoverChanged</code>.',
+        },
+        {
+          name: 'Keyboard',
+          type: 'APG slider / radio group',
+          description:
+            'Slider: ArrowRight/ArrowUp step up by <code>precision</code>, ArrowLeft/ArrowDown down (horizontal arrows mirror in RTL), PageUp/PageDown by one item, Home/End, digits <code>1</code>–<code>9</code> jump, Delete/Backspace/<code>0</code> clear. Radio group: arrows move and select with wrapping, Home/End, Space.',
+        },
+        {
+          name: 'Messages',
+          type: 'OgeInputsMessages',
+          description:
+            '<code>ratingLabel</code>, <code>ratingValueText</code> (<code>{value}</code> / <code>{max}</code>, or an ICU plural) and <code>ratingNoValueText</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_OTP_INPUT_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeOtpInput',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;string&gt;',
+          default: "''",
+          description:
+            'The characters entered — always a contiguous prefix, so <code>value.length === length</code> means complete. Two-way.',
+        },
+        {
+          name: 'length',
+          type: 'number',
+          default: '6',
+          description: 'Number of cells (1–12).',
+        },
+        {
+          name: 'type',
+          type: 'OgeOtpInputType',
+          default: "'numeric'",
+          description:
+            "Accepted characters: <code>'numeric'</code> (script and full-width digits fold to ASCII), <code>'alphanumeric'</code> or <code>'alphabetic'</code>. Rejected characters never land.",
+        },
+        {
+          name: 'letterCase',
+          type: 'OgeOtpInputCase',
+          default: "'none'",
+          description:
+            "<code>'upper'</code> / <code>'lower'</code> applied to typed and pasted letters.",
+        },
+        {
+          name: 'masked',
+          type: 'boolean',
+          default: 'false',
+          description: 'Hides the characters like a password field (PINs).',
+        },
+        {
+          name: 'groupSize',
+          type: 'number',
+          default: '0',
+          description:
+            'Draws <code>separator</code> after every <code>groupSize</code> cells (<code>3</code> → 123–456); <code>0</code> = none.',
+        },
+        {
+          name: 'separator',
+          type: 'string',
+          default: "'–'",
+          description:
+            'Separator glyph between groups — decorative, hidden from assistive technology.',
+        },
+        {
+          name: 'placeholder',
+          type: 'string',
+          default: "''",
+          description: 'Placeholder character shown in empty cells.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Visible group label and the group’s accessible name; empty falls back to the <code>otpLabel</code> message.',
+        },
+        {
+          name: 'hint',
+          type: 'string | undefined',
+          description:
+            'Helper text under the cells (hidden while an error shows).',
+        },
+        {
+          name: 'locale',
+          type: 'string | undefined',
+          description:
+            'Locale of the cell names’ digits; falls back to the config <code>locale</code>, then <code>LOCALE_ID</code>.',
+        },
+        {
+          name: 'size',
+          type: "'sm' | 'md' | 'lg'",
+          default: "'md'",
+          description: 'Cell size preset.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [COMMON_METHODS],
+  events: [
+    {
+      title: 'OgeOtpInput events',
+      entries: [
+        {
+          name: 'completed',
+          type: 'OgeOtpCompletedEvent',
+          description:
+            'Every cell got filled — by typing, a paste or the SMS autofill: <code>{ value, event }</code>.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'OTP input types',
+      entries: [
+        {
+          name: 'OgeOtpInputType',
+          type: "'numeric' | 'alphanumeric' | 'alphabetic'",
+          description: 'Which characters a cell accepts.',
+        },
+        {
+          name: 'OgeOtpInputCase',
+          type: "'none' | 'upper' | 'lower'",
+          description: 'Letter case applied to accepted letters.',
+        },
+        {
+          name: 'OgeOtpCompletedEvent',
+          type: '{ value: string; event: Event | undefined }',
+          description: 'Payload of <code>completed</code>.',
+        },
+        {
+          name: 'Keyboard',
+          type: 'one Tab stop',
+          description:
+            'Only the caret cell is tabbable. Typing fills and advances, Backspace clears and steps back, Delete closes the gap, ArrowLeft/ArrowRight (RTL-mirrored) and Home/End move; a cell past the first empty one hands the focus back to it.',
+        },
+        {
+          name: 'Autofill',
+          type: 'autocomplete="one-time-code"',
+          description:
+            'On the first cell, so iOS/Android SMS suggestions fill the whole code; a paste of a whole code always fills from the first cell.',
+        },
+        {
+          name: 'Messages',
+          type: 'OgeInputsMessages',
+          description:
+            '<code>otpLabel</code> (group name without a <code>label</code>) and <code>otpCellLabel</code> (<code>{index}</code> / <code>{length}</code>).',
+        },
+      ],
+    },
+  ],
+};
+
+const LIST_BOX_KEYBOARD = {
+  name: 'Keyboard',
+  type: 'APG listbox',
+  description:
+    'One Tab stop (<code>aria-activedescendant</code>). ↑/↓, Home/End, PageUp/PageDown move the active option — in <code>single</code> mode the selection follows. Typing jumps by prefix (accent-insensitive; repeat a letter to cycle). Multiple: Space/Enter toggle, Shift+↑/↓ and Shift+Space extend from the anchor, Ctrl+Shift+Home/End select to an edge, Ctrl+A (⌘A) selects all — or none when all are selected. In the search field ↓ moves into the list.',
+};
+
+export const OGE_LIST_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeListBox',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;unknown&gt;',
+          default: 'null',
+          description:
+            'The selection — one <code>valueExpr</code> result (or <code>null</code>) in single mode, an items-ordered array in multiple mode. Two-way.',
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[]',
+          default: '[]',
+          description: 'The options.',
+        },
+        {
+          name: 'displayExpr / valueExpr / disabledExpr',
+          type: 'shared with OgeSelectBox',
+          description:
+            'Field-name string or function expressions; disabled options are skipped by the keyboard and keep their state.',
+        },
+        {
+          name: 'groupBy',
+          type: 'OgeSelectGroupExpr&lt;TItem&gt; | undefined',
+          description:
+            'Groups the options under headers (first-seen group order); each group is a <code>role="group"</code> labelled by its header.',
+        },
+        {
+          name: 'selectionMode',
+          type: 'OgeListBoxSelectionMode',
+          default: "'single'",
+          description:
+            "<code>'single'</code> (selection follows focus) or <code>'multiple'</code> (<code>aria-multiselectable</code>).",
+        },
+        {
+          name: 'showCheckBoxes',
+          type: 'boolean',
+          default: 'false',
+          description: 'A check glyph on every option (multiple mode only).',
+        },
+        {
+          name: 'searchEnabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A search field above the list that filters the options.',
+        },
+        {
+          name: 'searchExpr / searchMode',
+          type: "OgeSelectSearchExpr&lt;TItem&gt; / 'contains' | 'startswith'",
+          default: "— / 'contains'",
+          description:
+            'Which text the search matches (default: the display text) and how.',
+        },
+        {
+          name: 'searchPlaceholder',
+          type: 'string | undefined',
+          description:
+            'Placeholder of the search field; <code>undefined</code> = the <code>listBoxSearchPlaceholder</code> message.',
+        },
+        {
+          name: 'height',
+          type: 'number | string | undefined',
+          description:
+            'Maximum list height — a px number or any CSS length; the list scrolls past it (default 280px).',
+        },
+        {
+          name: 'noDataText',
+          type: 'string | undefined',
+          description:
+            'Text while there are no (matching) options; <code>undefined</code> = the <code>noDataText</code> message.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Visible label above the list and its accessible name; without one the list is named by the <code>listBoxLabel</code> message.',
+        },
+        {
+          name: 'labelledBy',
+          type: 'string | undefined',
+          description:
+            'Id of an external element naming the list (overrides <code>label</code>) — what the transfer list uses for its titles.',
+        },
+        {
+          name: 'hint',
+          type: 'string | undefined',
+          description:
+            'Helper text under the list, hidden while an error shows.',
+        },
+        {
+          name: 'keyShortcuts',
+          type: 'string | undefined',
+          description:
+            'Shortcuts a host handles on the list, advertised as <code>aria-keyshortcuts</code>.',
+        },
+        {
+          name: 'itemTemplate',
+          type: 'TemplateRef&lt;OgeListBoxItemTemplateContext&lt;TItem&gt;&gt; | undefined',
+          description:
+            'Option content as a <code>TemplateRef</code>; wins over a projected <code>[ogeListBoxItemTemplate]</code>. The option keeps its role, state and check glyph.',
+        },
+        {
+          name: 'groupTemplate',
+          type: 'TemplateRef&lt;OgeListBoxGroupTemplateContext&gt; | undefined',
+          description:
+            'Group header content; wins over a projected <code>[ogeListBoxGroupTemplate]</code>.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeListBox methods',
+      entries: [
+        {
+          name: 'selectAll() / unselectAll()',
+          type: 'void',
+          description:
+            'Selects / deselects every enabled option (disabled options keep their state).',
+        },
+        {
+          name: 'scrollToItem(item: TItem): void',
+          type: 'void',
+          description:
+            'Makes the item the active option and scrolls it into view.',
+        },
+        {
+          name: 'search(text: string): void',
+          type: 'void',
+          description:
+            "Sets the search text programmatically; <code>''</code> clears the filter.",
+        },
+        {
+          name: 'getVisibleItems() / getSelectedItems()',
+          type: 'readonly TItem[] / TItem[]',
+          description:
+            'The options currently shown (after the search) in display order / the selected items in items order.',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeListBox events',
+      entries: [
+        {
+          name: 'selectionChanged',
+          type: 'OgeListBoxSelectionChangedEvent&lt;TItem&gt;',
+          description:
+            'The selection changed — <code>{ value, previousValue, addedItems, removedItems, event }</code>.',
+        },
+        {
+          name: 'itemClick',
+          type: 'OgeListBoxItemClickEvent&lt;TItem&gt;',
+          description:
+            'An enabled option was clicked — <code>{ item, index, event }</code> (fires in read-only mode too).',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'List box types',
+      entries: [
+        {
+          name: 'OgeListBoxSelectionMode',
+          type: "'single' | 'multiple'",
+          description: 'The selection model.',
+        },
+        {
+          name: 'OgeListBoxItemTemplate',
+          type: '[ogeListBoxItemTemplate]',
+          description:
+            'Structural directive for the option content; context <code>OgeListBoxItemTemplateContext</code> = <code>{ $implicit: item, index, selected, active, disabled }</code>.',
+        },
+        {
+          name: 'OgeListBoxGroupTemplate',
+          type: '[ogeListBoxGroupTemplate]',
+          description:
+            'Structural directive for group headers; context <code>OgeListBoxGroupTemplateContext</code> = <code>{ $implicit: label, count }</code>.',
+        },
+        {
+          name: 'OgeListBoxSelectionChangedEvent / OgeListBoxItemClickEvent',
+          type: 'event payloads',
+          description: 'See the events table.',
+        },
+        LIST_BOX_KEYBOARD,
+      ],
+    },
+  ],
+};
+
+export const OGE_TRANSFER_LIST_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeTransferList',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;readonly unknown[]&gt;',
+          default: '[]',
+          description:
+            'The target side — the moved items’ <code>valueExpr</code> results in arrival order. Two-way.',
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[]',
+          default: '[]',
+          description:
+            'Every item; those not in <code>value</code> form the source list (items order).',
+        },
+        {
+          name: 'displayExpr / valueExpr / disabledExpr',
+          type: 'shared with OgeSelectBox',
+          description:
+            'Field-name string or function expressions; disabled items cannot be selected or moved.',
+        },
+        {
+          name: 'groupBy',
+          type: 'OgeSelectGroupExpr&lt;TItem&gt; | undefined',
+          description: 'Groups both lists’ options under headers.',
+        },
+        {
+          name: 'sourceTitle / targetTitle',
+          type: 'string | undefined',
+          description:
+            'List titles (and accessible names); <code>undefined</code> = the <code>transferSourceTitle</code> / <code>transferTargetTitle</code> messages.',
+        },
+        {
+          name: 'searchEnabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A search field above each list; the move-all buttons move what a list shows.',
+        },
+        {
+          name: 'searchExpr / searchMode',
+          type: "OgeSelectSearchExpr&lt;TItem&gt; / 'contains' | 'startswith'",
+          default: "— / 'contains'",
+          description: 'Which text the search matches and how.',
+        },
+        {
+          name: 'showCheckBoxes',
+          type: 'boolean',
+          default: 'false',
+          description: 'Check glyphs on the options of both lists.',
+        },
+        {
+          name: 'height',
+          type: 'number | string | undefined',
+          description: 'Maximum height of each list — px number or CSS length.',
+        },
+        {
+          name: 'noDataText',
+          type: 'string | undefined',
+          description: 'Text of an empty list.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Visible label above both lists; the <code>role="group"</code>’s accessible name.',
+        },
+        {
+          name: 'hint',
+          type: 'string | undefined',
+          description:
+            'Helper text under the lists, hidden while an error shows.',
+        },
+        {
+          name: 'itemTemplate / groupTemplate',
+          type: 'TemplateRef | undefined',
+          description:
+            'Option / group header content for both lists; win over projected <code>[ogeListBoxItemTemplate]</code> / <code>[ogeListBoxGroupTemplate]</code>.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeTransferList methods',
+      entries: [
+        {
+          name: 'moveSelectedToTarget() / moveAllToTarget()',
+          type: 'void',
+          description:
+            'Moves the source selection / every shown, enabled source item to the target list.',
+        },
+        {
+          name: 'moveSelectedToSource() / moveAllToSource()',
+          type: 'void',
+          description:
+            'Moves the target selection / every shown, enabled target item back to the source list.',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeTransferList events',
+      entries: [
+        {
+          name: 'moving',
+          type: 'OgeTransferListMovingEvent&lt;TItem&gt;',
+          description:
+            "Cancelable pre-event of every move — <code>{ items, values, from, to, cause, cancel }</code>; <code>cause</code> is <code>'button' | 'keyboard' | 'drag'</code>.",
+        },
+        {
+          name: 'moved',
+          type: 'OgeTransferListMovedEvent&lt;TItem&gt;',
+          description:
+            'Items changed sides — <code>{ items, values, from, to, cause, value }</code>, after the commit and the live announcement.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'Transfer list types',
+      entries: [
+        {
+          name: 'OgeTransferListSide',
+          type: "'source' | 'target'",
+          description: 'One side of the transfer list.',
+        },
+        {
+          name: 'OgeTransferListMoveCause',
+          type: "'button' | 'keyboard' | 'drag'",
+          description:
+            'What triggered a move — all three run the same move path.',
+        },
+        {
+          name: 'Keyboard',
+          type: 'listbox + shortcuts',
+          description:
+            'Every list box key on each list, plus Ctrl/⌘+→ (from the source) / Ctrl/⌘+← (from the target) to move the selection toward the other list — with Shift, everything shown. Visual arrows, mirrored in RTL, advertised with <code>aria-keyshortcuts</code>.',
+        },
+        {
+          name: 'Drag and drop',
+          type: 'beginPointerDragDrop',
+          description:
+            'Drag an option (or the selection it belongs to) onto the other list — mouse and pen at once, touch after a long press; Escape cancels. The drop runs the same move as the buttons.',
+        },
+        {
+          name: 'Announcements',
+          type: 'OgeLiveAnnouncer',
+          description:
+            'Every move is announced politely through the shared live announcer (<code>transferMovedAnnouncement</code>, an ICU plural).',
+        },
+      ],
+    },
+  ],
+};
+
+const SIGNATURE_TYPES: ApiGroup = {
+  title: 'Signature pad types',
+  entries: [
+    {
+      name: 'OgeSignatureFormat',
+      type: "'png' | 'svg'",
+      description:
+        'Export format. PNG renders through a canvas (falling back to SVG where no 2D context exists, e.g. SSR or jsdom); SVG is built without the DOM and embeds the strokes in a <code>&lt;metadata&gt;</code> element, so the value restores an editable pad.',
+    },
+    {
+      name: 'OgeSignatureMode',
+      type: "'draw' | 'type'",
+      description:
+        'Pointer drawing, or the keyboard-accessible typed signature (a labelled text field rendered in <code>fontFamily</code>).',
+    },
+    {
+      name: 'OgeSignatureStroke',
+      type: '{ points: readonly OgeSignaturePoint[] }',
+      description: 'One pen-down → pen-up trace.',
+    },
+    {
+      name: 'OgeSignaturePoint',
+      type: '{ x: number; y: number; t: number }',
+      description:
+        'A sample in surface-relative coordinates (<code>0..1</code> on both axes) with its time in ms — why a resized pad redraws exactly.',
+    },
+    {
+      name: 'OgeSignatureStrokeEvent',
+      type: '{ stroke: OgeSignatureStroke; strokeCount: number; event: Event | undefined }',
+      description: 'Payload of the stroke-ended event.',
+    },
+    {
+      name: 'Keyboard',
+      type: 'buttons + text field',
+      description:
+        'Draw / Type is a pressed-state button pair; Undo (also <kbd>Ctrl</kbd>+<kbd>Z</kbd> anywhere in the pad) and Clear are real buttons; <kbd>Escape</kbd> mid-stroke cancels the stroke. The surface is <code>role="img"</code> named “label, signed / not signed”.',
+    },
+  ],
+};
+
+export const OGE_SIGNATURE_PAD_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeSignaturePad',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;string | null&gt;',
+          default: 'null',
+          description:
+            'The signature as a <code>data:</code> URL in <code>format</code> — two-way. Writing a stored value back restores the pad’s own SVG export as strokes; any other image URL is shown (sanitized) until the next stroke replaces it.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Accessible name of the pad; falls back to the <code>signatureLabel</code> message.',
+        },
+        {
+          name: 'placeholder',
+          type: 'string | undefined',
+          description:
+            'Text on the empty pad; <code>undefined</code> = the <code>signaturePlaceholder</code> message (“Sign here”), an empty string hides it.',
+        },
+        {
+          name: 'format',
+          type: 'OgeSignatureFormat',
+          default: "'png'",
+          description:
+            'Export format of <code>value</code> and of <code>toDataUrl()</code> without an argument.',
+        },
+        {
+          name: 'mode',
+          type: 'model&lt;OgeSignatureMode&gt;',
+          default: "'draw'",
+          description: 'Draw with a pointer or type a name — two-way.',
+        },
+        {
+          name: 'allowTyping',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Shows the Draw / Type switch — the keyboard-accessible alternative (WCAG 2.1.1).',
+        },
+        {
+          name: 'height',
+          type: 'number',
+          default: '160',
+          description:
+            'Surface height in px; the width follows the host (<code>--oge-signature-pad-width</code>, 420px).',
+        },
+        {
+          name: 'strokeColor',
+          type: 'string | undefined',
+          description:
+            'Ink colour; <code>undefined</code> = the <code>--oge-signature-ink</code> token (forced colors repaint it).',
+        },
+        {
+          name: 'backgroundColor',
+          type: 'string | undefined',
+          description:
+            'Background baked into the export; <code>undefined</code> = transparent.',
+        },
+        {
+          name: 'minWidth',
+          type: 'number',
+          default: '1',
+          description:
+            'Thinnest stroke width in px — reached at high pen speed.',
+        },
+        {
+          name: 'maxWidth',
+          type: 'number',
+          default: '3',
+          description:
+            'Thickest stroke width in px — reached when the pen moves slowly.',
+        },
+        {
+          name: 'fontFamily',
+          type: 'string',
+          default: "script stack + 'cursive'",
+          description:
+            'Font of a typed signature, on screen and in the export.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeSignaturePad methods',
+      entries: [
+        {
+          name: 'undo(): void',
+          type: 'void',
+          description: 'Removes the last stroke and re-exports the value.',
+        },
+        {
+          name: 'toDataUrl(format?): string | null',
+          type: 'string | null',
+          description:
+            'The signature as a <code>data:</code> URL (default: <code>format</code>); <code>null</code> when empty.',
+        },
+        {
+          name: 'toSvg(): string | null',
+          type: 'string | null',
+          description:
+            'The signature as an SVG document string; <code>null</code> when empty.',
+        },
+        {
+          name: 'setMode(mode): void',
+          type: 'void',
+          description:
+            'Switches between drawing and typing, re-exporting the value.',
+        },
+        {
+          name: 'isEmpty(): boolean',
+          type: 'boolean',
+          description: 'No signature (<code>value === null</code>).',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeSignaturePad events',
+      entries: [
+        {
+          name: 'strokeEnded',
+          type: 'OgeSignatureStrokeEvent',
+          description: 'A stroke was completed (pen up) and committed.',
+        },
+        {
+          name: 'modeChange',
+          type: 'OgeSignatureMode',
+          description: 'Implicit output of the <code>mode</code> model.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [SIGNATURE_TYPES],
+};
+
+const MENTION_TYPES: ApiGroup = {
+  title: 'Mention types',
+  entries: [
+    {
+      name: 'OgeMentionTrigger&lt;T&gt;',
+      type: '{ char: string; items: OgeMentionItemsSource&lt;T&gt;; displayExpr?; valueExpr?; searchExpr? }',
+      description: 'One trigger character and the items it suggests.',
+    },
+    {
+      name: 'OgeMentionItemsSource&lt;T&gt;',
+      type: 'readonly T[] | ((query: string) =&gt; readonly T[] | PromiseLike&lt;readonly T[]&gt;)',
+      description:
+        'A list filtered locally by the query, or a function of the query (debounced by <code>searchTimeout</code>; stale answers are dropped) returning the filtered items.',
+    },
+    {
+      name: 'OgeMentionToken&lt;T&gt;',
+      type: '{ trigger: string; item: T; value: unknown; text: string; start: number; end: number }',
+      description:
+        'An inserted mention — the item, its <code>valueExpr</code> value, the inserted text and its <code>[start, end)</code> range. Tokens shift with edits before them and drop out when edited.',
+    },
+    {
+      name: 'OgeMentionSelectedEvent&lt;T&gt;',
+      type: '{ token: OgeMentionToken&lt;T&gt;; item: T; event: Event | undefined }',
+      description: 'Payload of the mention-selected event.',
+    },
+    {
+      name: 'OgeMentionSearchChangedEvent',
+      type: '{ trigger: string; text: string }',
+      description: 'Payload of the search-changed event.',
+    },
+    {
+      name: 'OgeMentionItemTemplate',
+      type: 'directive',
+      description:
+        '<code>&lt;ng-template ogeMentionItemTemplate let-item&gt;</code> child — a custom suggestion row; wins over <code>itemTemplate</code>.',
+    },
+    {
+      name: 'OgeMentionItemTemplateContext&lt;T&gt;',
+      type: '{ $implicit: T; item: T; index: number; trigger: string; query: string; active: boolean }',
+      description: 'Context of a custom suggestion row.',
+    },
+    {
+      name: 'Keyboard',
+      type: 'APG combobox',
+      description:
+        '<kbd>ArrowDown</kbd>/<kbd>ArrowUp</kbd> move the active suggestion, <kbd>PageUp</kbd>/<kbd>PageDown</kbd> jump to the ends, <kbd>Enter</kbd> or <kbd>Tab</kbd> insert, <kbd>Escape</kbd> closes until the next trigger. A trigger counts only at the start or after whitespace. The single-line field is <code>role="combobox"</code>; the text area keeps its textbox role (ARIA allows no combobox role there) with <code>aria-autocomplete</code>, <code>aria-controls</code> and <code>aria-activedescendant</code>.',
+    },
+  ],
+};
+
+export const OGE_MENTION_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeMention',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;string&gt;',
+          default: "''",
+          description:
+            'The text, mentions included as plain-text tokens — two-way.',
+        },
+        {
+          name: 'mentions',
+          type: 'model&lt;readonly OgeMentionToken&lt;T&gt;[]&gt;',
+          default: '[]',
+          description:
+            'The inserted mentions in text order — two-way, kept in step with every edit (a token edited away drops out).',
+        },
+        {
+          name: 'triggers',
+          type: 'readonly OgeMentionTrigger&lt;T&gt;[] | undefined',
+          description:
+            'Several trigger characters with their own items and expressions; overrides the single-trigger shorthand below.',
+        },
+        {
+          name: 'items',
+          type: 'OgeMentionItemsSource&lt;T&gt;',
+          default: '[]',
+          description:
+            'Shorthand single trigger: its suggestions — a list or a function of the query.',
+        },
+        {
+          name: 'trigger',
+          type: 'string',
+          default: "'@'",
+          description: 'Shorthand single trigger: its character.',
+        },
+        {
+          name: 'displayExpr',
+          type: 'OgeSelectBoxDisplayExpr&lt;T&gt; | undefined',
+          description:
+            'Shorthand: item → display text, also the inserted token text.',
+        },
+        {
+          name: 'valueExpr',
+          type: 'OgeSelectBoxValueExpr&lt;T&gt; | undefined',
+          description:
+            'Shorthand: item → the <code>value</code> reported in <code>mentions</code> (default: the item).',
+        },
+        {
+          name: 'searchExpr',
+          type: 'OgeSelectBoxSearchExpr&lt;T&gt; | undefined',
+          description:
+            'Shorthand: which text the local filter matches (default: the display text).',
+        },
+        {
+          name: 'searchMode',
+          type: 'OgeSelectBoxSearchMode',
+          default: "'contains'",
+          description: 'Substring or prefix matching of local items.',
+        },
+        {
+          name: 'minSearchLength',
+          type: 'number',
+          default: '0',
+          description:
+            'Characters required after the trigger before suggestions show.',
+        },
+        {
+          name: 'maxSuggestions',
+          type: 'number',
+          default: '8',
+          description: 'Caps the suggestion list.',
+        },
+        {
+          name: 'allowSpaces',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Lets a query run across spaces (<code>@Ada Lo</code>); line breaks always end it.',
+        },
+        {
+          name: 'insertSpace',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Adds a space after the inserted token (unless one follows already).',
+        },
+        {
+          name: 'searchTimeout',
+          type: 'number | undefined',
+          description:
+            'Debounce (ms) before a query function is called; <code>undefined</code> = the config <code>searchTimeoutMs</code> (250).',
+        },
+        {
+          name: 'multiline',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'A text area (<code>true</code>) or a single-line combobox field.',
+        },
+        {
+          name: 'rows',
+          type: 'number',
+          default: '3',
+          description: 'Visible rows of the text area.',
+        },
+        {
+          name: 'maxLength',
+          type: 'number | undefined',
+          description: 'Native <code>maxlength</code>.',
+        },
+        {
+          name: 'spellcheck',
+          type: 'boolean',
+          default: 'true',
+          description: 'Native <code>spellcheck</code>.',
+        },
+        {
+          name: 'dropdownMaxHeight',
+          type: 'number | undefined',
+          description:
+            'Suggestion list height cap; <code>undefined</code> = the CSS default (320px).',
+        },
+        {
+          name: 'itemTemplate',
+          type: 'TemplateRef&lt;OgeMentionItemTemplateContext&lt;T&gt;&gt; | undefined',
+          description:
+            'Custom suggestion row; an <code>[ogeMentionItemTemplate]</code> child wins.',
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeMention methods',
+      entries: [
+        {
+          name: 'close(): void',
+          type: 'void',
+          description: 'Closes the suggestion list.',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeMention events',
+      entries: [
+        {
+          name: 'mentionSelected',
+          type: 'OgeMentionSelectedEvent&lt;T&gt;',
+          description: 'A suggestion was inserted.',
+        },
+        {
+          name: 'mentionsChange',
+          type: 'readonly OgeMentionToken&lt;T&gt;[]',
+          description:
+            'Implicit output of the <code>mentions</code> model — after an insert and after an edit that shifted or dropped a mention.',
+        },
+        {
+          name: 'searchChanged',
+          type: 'OgeMentionSearchChangedEvent',
+          description:
+            'The query after a trigger changed — drive your own server-side suggestions from here.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [MENTION_TYPES],
+};

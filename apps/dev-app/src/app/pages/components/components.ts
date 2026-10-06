@@ -967,6 +967,36 @@ export class ComponentsIndexPage {
       path: '/components/buttons/fab',
     },
     {
+      family: 'Inputs',
+      label: 'Rating',
+      path: '/components/inputs/rating',
+    },
+    {
+      family: 'Inputs',
+      label: 'OTP input',
+      path: '/components/inputs/otp-input',
+    },
+    {
+      family: 'Inputs',
+      label: 'Signature pad',
+      path: '/components/inputs/signature-pad',
+    },
+    {
+      family: 'Inputs',
+      label: 'List box',
+      path: '/components/inputs/list-box',
+    },
+    {
+      family: 'Inputs',
+      label: 'Transfer list',
+      path: '/components/inputs/transfer-list',
+    },
+    {
+      family: 'Inputs',
+      label: 'Mention',
+      path: '/components/inputs/mention',
+    },
+    {
       family: 'Data Grid',
       label: 'Range selection & clipboard',
       path: '/components/data-grid/range-selection',
@@ -1089,7 +1119,7 @@ export class ComponentsIndexPage {
       icon: 'text-cursor',
       path: '/components/inputs',
       description:
-        'TextBox, MaskedTextBox, NumberBox, SelectBox, TagBox, a multi-column combo box, date editors, color box, gradient and palette, check box and toggle groups on one field chrome: floating labels, input masks, remote paged lists and WAI-ARIA comboboxes.',
+        'TextBox, MaskedTextBox, NumberBox, SelectBox, TagBox, a multi-column combo box, date editors, color box, gradient and palette, check box and toggle groups, rating, OTP input, signature pad, list box, transfer list and mentions on one field chrome: floating labels, input masks, remote paged lists and WAI-ARIA comboboxes.',
     },
     {
       key: 'tabs',

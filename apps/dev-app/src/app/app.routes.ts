@@ -872,6 +872,46 @@ export const appRoutes: Route[] = [
         title: 'OGE — Color Palette',
       },
       {
+        path: 'rating',
+        loadComponent: () =>
+          import('./pages/inputs/rating').then((m) => m.InputsRatingPage),
+        title: 'OGE — Rating',
+      },
+      {
+        path: 'otp-input',
+        loadComponent: () =>
+          import('./pages/inputs/otp-input').then((m) => m.InputsOtpInputPage),
+        title: 'OGE — OTP Input',
+      },
+      {
+        path: 'signature-pad',
+        loadComponent: () =>
+          import('./pages/inputs/signature-pad').then(
+            (m) => m.InputsSignaturePadPage,
+          ),
+        title: 'OGE — Signature Pad',
+      },
+      {
+        path: 'list-box',
+        loadComponent: () =>
+          import('./pages/inputs/list-box').then((m) => m.InputsListBoxPage),
+        title: 'OGE — List Box',
+      },
+      {
+        path: 'transfer-list',
+        loadComponent: () =>
+          import('./pages/inputs/transfer-list').then(
+            (m) => m.InputsTransferListPage,
+          ),
+        title: 'OGE — Transfer List',
+      },
+      {
+        path: 'mention',
+        loadComponent: () =>
+          import('./pages/inputs/mention').then((m) => m.InputsMentionPage),
+        title: 'OGE — Mention',
+      },
+      {
         path: 'showcase',
         loadComponent: () =>
           import('./pages/inputs/showcase').then((m) => m.InputsShowcasePage),

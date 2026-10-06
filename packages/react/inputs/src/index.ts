@@ -203,6 +203,70 @@ export type {
   OgeInputCopyState,
 } from './lib/field-chrome';
 // The shared vocabulary, config and error shapes come from `@oge-ui/behavior`
+export {
+  OgeRating,
+  type OgeRatingProps,
+  type OgeRatingHandle,
+  type OgeRatingHoverEvent,
+  type OgeRatingItemRenderContext,
+} from './lib/rating';
+export type {
+  OgeRatingIcon,
+  OgeRatingItemState,
+  OgeRatingSelection,
+  OgeRatingSemantics,
+  OgeOtpInputType,
+  OgeOtpInputCase,
+} from '@oge-ui/behavior';
+export {
+  OgeOtpInput,
+  type OgeOtpInputProps,
+  type OgeOtpInputHandle,
+  type OgeOtpCompletedEvent,
+} from './lib/otp-input';
+export {
+  OgeListBox,
+  type OgeListBoxProps,
+  type OgeListBoxHandle,
+  type OgeListBoxRenderItemContext,
+  type OgeListBoxSelectionChangeEvent,
+  type OgeListBoxItemClickEvent,
+} from './lib/list-box';
+export {
+  OgeTransferList,
+  type OgeTransferListProps,
+  type OgeTransferListHandle,
+  type OgeTransferListMovingEvent,
+  type OgeTransferListMovedEvent,
+} from './lib/transfer-list';
+export {
+  OgeSignaturePad,
+  type OgeSignaturePadProps,
+  type OgeSignaturePadHandle,
+} from './lib/signature-pad';
+export {
+  OgeMention,
+  type OgeMentionProps,
+  type OgeMentionHandle,
+} from './lib/mention';
+export type {
+  OgeSignatureFormat,
+  OgeSignatureMode,
+  OgeSignaturePoint,
+  OgeSignatureStroke,
+  OgeSignatureStrokeEvent,
+  OgeMentionItemContext,
+  OgeMentionItemsSource,
+  OgeMentionSearchChangedEvent,
+  OgeMentionSelectedEvent,
+  OgeMentionToken,
+  OgeMentionTrigger,
+} from '@oge-ui/behavior';
+export type {
+  OgeListBoxSelectionMode,
+  OgeTransferListSide,
+  OgeTransferListMoveCause,
+} from '@oge-ui/behavior';
 // — re-exported so consumers import one package.
 export {
   OGE_DEFAULT_INPUTS_CONFIG,

@@ -1,0 +1,182 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// Every item is two stacked layers: the empty glyph, and the filled glyph
+// inside a clip box whose inline size is the item's fill share. The clip box
+// starts at the logical inline start, so half values and RTL need no extra
+// rule — and a custom item template gets fractional fills for free.
+.oge-rating {
+  @include tokens.core-tokens;
+
+  --oge-rating-size: 24px;
+  --oge-rating-gap: 4px;
+
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  color: var(--oge-text-color);
+}
+
+.oge-rating-sm {
+  --oge-rating-size: 18px;
+  --oge-rating-gap: 2px;
+}
+
+.oge-rating-lg {
+  --oge-rating-size: 32px;
+  --oge-rating-gap: 6px;
+}
+
+.oge-rating-items {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--oge-rating-gap);
+  padding: 2px;
+  border-radius: var(--oge-radius);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus {
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-rating-item {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  width: var(--oge-rating-size);
+  height: var(--oge-rating-size);
+  border-radius: var(--oge-radius);
+  transition: transform 120ms ease;
+
+  // the small size still offers a 24px (44px coarse) pointer target
+  @include tokens.hit-area;
+
+  &[role='radio'] {
+    &:focus {
+      @include tokens.focus-ring($color: var(--oge-accent-soft));
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring;
+    }
+  }
+}
+
+.oge-rating-layer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--oge-rating-size);
+  height: var(--oge-rating-size);
+  line-height: 1;
+  font-size: calc(var(--oge-rating-size) * 0.8);
+}
+
+.oge-rating-empty {
+  color: var(--oge-rating-empty-color);
+}
+
+.oge-rating-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.oge-rating-filled {
+  color: var(--oge-rating-color);
+}
+
+.oge-rating-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+// the empty glyph is a soft tint with an edge, so "0 of 5" still reads as
+// a control and not as missing content
+.oge-rating-empty .oge-rating-svg {
+  fill: color-mix(in srgb, currentColor 28%, transparent);
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+}
+
+// hover preview: the previewed items lift slightly
+.oge-rating:not(.oge-rating-readonly, .oge-disabled) {
+  .oge-rating-items:hover .oge-rating-item:hover {
+    transform: scale(1.12);
+  }
+}
+
+.oge-rating-hovering .oge-rating-filled {
+  color: color-mix(in srgb, var(--oge-rating-color) 82%, transparent);
+}
+
+.oge-rating-readonly .oge-rating-items {
+  cursor: default;
+}
+
+.oge-rating.oge-disabled {
+  opacity: 0.55;
+
+  .oge-rating-items {
+    cursor: default;
+  }
+}
+
+.oge-rating-invalid .oge-rating-empty {
+  color: var(--oge-danger);
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// The filled share is drawn in Highlight, the empty glyph as a CanvasText
+// outline — the value never rides on a tint alone.
+@include tokens.forced-colors {
+  .oge-rating-empty .oge-rating-svg {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .oge-rating-filled {
+    color: Highlight;
+  }
+
+  .oge-rating-filled .oge-rating-svg {
+    fill: Highlight;
+  }
+
+  .oge-rating-hovering .oge-rating-filled .oge-rating-svg {
+    fill: Highlight;
+  }
+
+  .oge-rating.oge-disabled {
+    .oge-rating-empty .oge-rating-svg {
+      stroke: GrayText;
+    }
+
+    .oge-rating-filled .oge-rating-svg {
+      fill: GrayText;
+    }
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-rating-item {
+    transition: none;
+  }
+
+  .oge-rating:not(.oge-rating-readonly, .oge-disabled)
+    .oge-rating-items:hover
+    .oge-rating-item:hover {
+    transform: none;
+  }
+}

@@ -104,6 +104,10 @@
   --oge-chart-axis-fg: var(--oge-muted-color);
   --oge-avatar-bg: color-mix(in srgb, var(--oge-accent) 14%, var(--oge-bg));
   --oge-avatar-fg: var(--oge-accent);
+  --oge-rating-color: var(--oge-warning);
+  --oge-rating-empty-color: var(--oge-muted-color);
+  --oge-signature-ink: var(--oge-text-color);
+  --oge-signature-bg: var(--oge-bg);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -195,5 +199,9 @@
     --oge-chart-axis-fg: var(--oge-muted-color);
     --oge-avatar-bg: color-mix(in srgb, var(--oge-accent) 14%, var(--oge-bg));
     --oge-avatar-fg: var(--oge-accent);
+    --oge-rating-color: var(--oge-warning);
+    --oge-rating-empty-color: var(--oge-muted-color);
+    --oge-signature-ink: var(--oge-text-color);
+    --oge-signature-bg: var(--oge-bg);
   }
 }

@@ -850,6 +850,36 @@ export class App {
           icon: 'palette',
         },
         {
+          path: '/components/inputs/rating',
+          label: 'Rating',
+          icon: 'heart',
+        },
+        {
+          path: '/components/inputs/otp-input',
+          label: 'OTP Input',
+          icon: 'shield',
+        },
+        {
+          path: '/components/inputs/signature-pad',
+          label: 'Signature Pad',
+          icon: 'pencil',
+        },
+        {
+          path: '/components/inputs/list-box',
+          label: 'List Box',
+          icon: 'list',
+        },
+        {
+          path: '/components/inputs/transfer-list',
+          label: 'Transfer List',
+          icon: 'columns',
+        },
+        {
+          path: '/components/inputs/mention',
+          label: 'Mention',
+          icon: 'text-cursor',
+        },
+        {
           path: '/components/inputs/showcase',
           label: 'Showcase',
           icon: 'lightbulb',

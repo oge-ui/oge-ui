@@ -9,8 +9,13 @@ three form systems at once: `oge-text-box`, `oge-masked-text-box`,
 date editors (`oge-calendar`, `oge-date-box`, `oge-date-range-box`), the APG
 sliders (`oge-slider`, `oge-range-slider` — arrows/PageUp/Home/End, live drag
 commits with Escape-to-cancel, dynamic aria constraints between range thumbs)
-and the color editors (`oge-color-box`, `oge-color-gradient`,
-`oge-color-palette`).
+the color editors (`oge-color-box`, `oge-color-gradient`,
+`oge-color-palette`), `oge-rating` (half / fractional values, APG slider or
+radio group), `oge-otp-input` (one-time-code cells with paste and SMS
+autofill), `oge-signature-pad` (smooth strokes, undo, PNG/SVG output and a
+typed-signature keyboard mode), the APG `oge-list-box` and the dual-list
+`oge-transfer-list`, and `oge-mention` (`@`-triggers with a caret-anchored
+suggestion popup).
 
 Every editor also has its own secondary entry point
 (`@oge-ui/inputs/<editor>`, e.g. `@oge-ui/inputs/select-box`,

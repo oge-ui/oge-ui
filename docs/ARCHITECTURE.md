@@ -181,8 +181,9 @@ consumers:
 - **Docs previews inline that stylesheet.** The React demo components carry
   `styleUrl: '…/packages/react/<family>/src/styles.scss'` under
   `ViewEncapsulation.None`, so `dev-app`'s `anyComponentStyle` budget is sized
-  for a whole package stylesheet, not an app component's (warning 80 kB since
-  W8a took the React layout sheet to 68 kB; error 96 kB).
+  for a whole package stylesheet, not an app component's (warning 88 kB since
+  W8a took the React layout sheet to 68 kB and W8b `react-inputs` to ~80 kB;
+  error 96 kB).
   Writing a rule in the React package is a defect.
 - **Anything the first paint is judged on must be derived, not seeded in an
   effect.** Angular seeds state inside change detection and paints with it
@@ -1026,6 +1027,49 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   order; disabled items keep their state under "select all".
 - **Signal Forms `required()` treats `[]` as a value.** Array editors express "at least one"
   as `minLength(path, 1, { message })`; reactive `Validators.required` already rejects `[]`.
+
+### Rating, OTP, signature pad, list box, transfer list and mention (W8b)
+
+- **Each editor is an `@oge-ui/inputs` entry over a `behavior` core** (`rating-core.ts`,
+  `otp-core.ts`, `signature-core.ts`, `list-box-core.ts`, `transfer-list-core.ts`,
+  `mention-core.ts`, `caret-rect.ts`); their strings join `OgeInputsMessages`, so
+  `provideOgeInputsConfig()` / `<OgeInputsConfigProvider>` and the locale packs cover them.
+- **A `FormValueControl` with a `max` input types it `number | undefined`.** The contract
+  declares `max?: InputSignal<NonNullable<T> | undefined>`, so `input(5)` does not satisfy it;
+  the rating declares `input<number | undefined>(5)` and treats `undefined` as the default
+  (the range slider instead omits the clause — see **Packages**).
+- **Fractional fills are two layers, not a gradient.** A rating item draws the empty glyph
+  and, on top, the filled glyph inside a clip box whose inline size is the fill share,
+  anchored at `inset-inline-start` — half values and RTL need no extra rule, and an item
+  template (rendered once per layer with `filled`) gets fractional fills for free.
+- **The OTP value is always a contiguous prefix.** Removing a character closes the gap and
+  the caret can never sit past the first empty cell, so `value.length === length` means
+  complete and forms see no holes. One Tab stop (the caret cell); the `input` event is the
+  source of truth (`otpTypedText` strips the selected character a browser kept, but takes a
+  whole code — autofill — as is), keydown only handles Backspace/Delete/navigation.
+- **Signature strokes are surface-normalized data, the bitmap is a projection.** Points are
+  stored 0…1 with timestamps, so a `ResizeObserver` redraw is exact; PNG export needs a 2D
+  context and silently falls back to SVG without one (jsdom, SSR). Our own SVG values embed
+  the strokes in `<metadata id="oge-signature">` and round-trip as editable strokes; any
+  other external value is an image through `sanitizeResourceUrl`. The keyboard alternative
+  (WCAG 2.1.1) is the typed-signature mode — a real labelled input rendered into the export.
+- **The list box is the select list without a popup.** `OgeListBoxCore` extends
+  `OgeSelectListCore` with `opened: () => true` and adds selection, the APG listbox key map
+  and type-ahead; it returns the next value and never commits — the host does. The transfer
+  list's buttons, Ctrl/⌘+arrow shortcuts and `beginPointerDragDrop` drop all call one
+  cancelable move (`moving` → `moved`, `cause: 'button' | 'keyboard' | 'drag'`) and announce
+  through the shared live announcer.
+- **A `<textarea>` cannot be a `combobox`.** ARIA allows no such role on it (axe
+  `aria-allowed-role`), so the multi-line mention field stays a textbox carrying
+  `aria-autocomplete` / `aria-haspopup` / `aria-controls` / `aria-activedescendant`; only the
+  `multiline: false` field is `role="combobox"`. The popup is the anchored panel with a
+  virtual `anchorRect` from `ogeCaretRect` (mirror-div measurement, SSR-safe). Mention tokens
+  follow edits by a common prefix/suffix diff (`ogeShiftMentions`): a token the edit touched
+  drops out.
+- **A structural template directive with no inputs defaults its generic to `any`.** Angular
+  cannot infer `T` for `let-item`, and an `unknown` default makes `item.name` fail under
+  `strictTemplates` (the snippet gate caught it in the list box and the mention); the
+  directive carries an eslint-disable with that reason.
 
 ### Direction (RTL)
 

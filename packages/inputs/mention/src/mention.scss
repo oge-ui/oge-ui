@@ -1,0 +1,28 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The field, the text area and the suggestion rows are the shared field
+// chrome's (`.oge-input-*`, `.oge-text-area`, `.oge-select-*`); this sheet
+// only adds what a caret-anchored list needs.
+.oge-mention {
+  @include tokens.core-tokens;
+}
+
+.oge-mention-list {
+  min-inline-size: 220px;
+  max-inline-size: min(360px, calc(100vw - 32px));
+}
+
+.oge-mention-option-trigger {
+  margin-inline-end: 1px;
+  color: var(--oge-input-muted);
+}
+
+.oge-select-option-active .oge-mention-option-trigger {
+  color: var(--oge-accent);
+}
+
+@include tokens.forced-colors {
+  .oge-mention-option-trigger {
+    color: inherit;
+  }
+}

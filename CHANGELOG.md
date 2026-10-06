@@ -65,6 +65,59 @@ decisions in a shared `@oge-ui/behavior` core:
   `/chip`, `/alert`, `/timeline`, `/app-bar`, `/buttons/fab`), gallery cards,
   landing tiles and regenerated `llms.txt` files.
 
+### Input components (W8b) — `@oge-ui/inputs`, `@oge-ui/react-inputs`, `@oge-ui/behavior`, `@oge-ui/locales`
+
+Six new editors, each a secondary entry point of `@oge-ui/inputs`
+(`rating`, `otp-input`, `signature-pad`, `list-box`, `transfer-list`,
+`mention`) with a React twin in `@oge-ui/react-inputs`. The logic is shared
+through new `@oge-ui/behavior` cores, so both layers run the same code.
+Every editor works with `[(value)]`, Signal Forms `[formField]` and reactive /
+template forms (CVA) in Angular, and with a controlled / uncontrolled pair in
+React. All strings are in `OgeInputsMessages`, translated in all ten locale
+packs.
+
+- **Rating** (`oge-rating` / `<OgeRating>`): `0`…`max` in steps of
+  `precision` (half stars, tenths for averages), `null` = not rated; an APG
+  slider by default (arrows follow the reading direction, PageUp/PageDown,
+  Home/End, digits, Delete clears) or `semantics="radiogroup"` with a roving
+  tab stop; clear on re-click (`allowClear`), hover preview (`hoverChanged` /
+  `onHoverChange`), `icon` star / heart / circle, `selection` continuous /
+  single, item templates rendered in an empty and a clipped filled layer so
+  fractional fills work with any markup. Core: `rating-core.ts`.
+- **OTP input** (`oge-otp-input` / `<OgeOtpInput>`): `length` cells in one
+  labelled group with a single Tab stop, `numeric` / `alphanumeric` /
+  `alphabetic` (script and full-width digits fold to ASCII), `letterCase`,
+  `masked`, `groupSize` separators, paste and SMS autofill
+  (`autocomplete="one-time-code"`) distributed over the cells, Backspace /
+  Delete / arrow rules, `completed` / `onCompleted`. The value is always a
+  contiguous prefix. Core: `otp-core.ts`.
+- **Signature pad** (`oge-signature-pad` / `<OgeSignaturePad>`): pointer
+  drawing on `beginPointerGesture` (a tap is a dot, Escape cancels a stroke),
+  speed-based smooth strokes stored surface-normalized so resizes redraw
+  exactly, undo / clear, PNG or SVG data URL value (`toDataUrl()`, `toSvg()`;
+  PNG falls back to SVG without a canvas), a keyboard-accessible typed
+  signature mode, read-only. Stored SVG values round-trip as editable
+  strokes; external images go through `sanitizeResourceUrl` in both layers.
+  Core: `signature-core.ts`.
+- **List box** (`oge-list-box` / `<OgeListBox>`): an APG listbox
+  (`aria-activedescendant`) with single / multiple selection, Shift ranges,
+  Ctrl+A, check boxes, groups, search, type-ahead, item / group templates and
+  `selectionChanged` with added / removed items. `OgeListBoxCore` extends the
+  select box's `OgeSelectListCore`, so expressions, search and grouping are
+  the same code.
+- **Transfer list** (`oge-transfer-list` / `<OgeTransferList>`): two list boxes
+  with move selected / all buttons, Ctrl/⌘+arrow shortcuts and pointer drag
+  between the lists — one cancelable `moving` → `moved` path for all three,
+  announced through the shared live announcer; per-list search and counts,
+  stacks below 520px of its own width. Core: `transfer-list-core.ts`.
+- **Mention** (`oge-mention` / `<OgeMention>`): a text area (or single-line
+  combobox) with one or more triggers (`@`, `#`, …), static, function or
+  async suggestion sources, a caret-anchored popup on `OgeAnchoredPanel` /
+  `useAnchoredPanel` (`ogeCaretRect`), item templates, plain-text tokens and a
+  `mentions` model that tracks edits by text diff. Core: `mention-core.ts`.
+- **Tokens**: `--oge-rating-color`, `--oge-rating-empty-color`,
+  `--oge-signature-ink`, `--oge-signature-bg` (derived, in every theme).
+
 ### BPMN editor depth (G5b) — `@oge-ui/bpmn`, `@oge-ui/react-bpmn`, `@oge-ui/bpmn-engine`, `@oge-ui/locales`
 
 - **Validation**: a bpmnlint-style rule engine in the engine (`OgeBpmnLintRule

@@ -195,9 +195,10 @@ Most families also publish one entry point per component, so an app that needs
 a single editor does not pull in the whole family. `@oge-ui/inputs` has one per
 editor — `autocomplete`, `calendar`, `check-box`, `check-box-group`,
 `color-box`, `color-gradient`, `color-palette`, `date-box`, `field`,
-`masked-text-box`, `multi-column-combo-box`, `number-box`, `radio-group`,
-`select-box`, `slider`, `switch`, `tag-box`, `text-area`, `text-box`,
-`toggle-group` and `tree-select` (e.g.
+`list-box`, `masked-text-box`, `mention`, `multi-column-combo-box`,
+`number-box`, `otp-input`, `radio-group`, `rating`, `select-box`,
+`signature-pad`, `slider`, `switch`, `tag-box`, `text-area`, `text-box`,
+`toggle-group`, `transfer-list` and `tree-select` (e.g.
 `import { OgeMaskedTextBox } from '@oge-ui/inputs/masked-text-box'`). The grid,
 tree list, pivot and Gantt export helpers live in `export-excel` / `export-pdf`
 entries of their packages, so `exceljs` and `jspdf` load only when you export.

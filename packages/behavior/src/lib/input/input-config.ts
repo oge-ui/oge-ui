@@ -224,6 +224,70 @@ export interface OgeInputsMessages {
   maxSelectedItemsMessage: string;
   /** `compare` validation rule failure (forms). */
   compareError: string;
+  /** Accessible name of a rating that has no `label`. */
+  ratingLabel: string;
+  /**
+   * Spoken rating value (`aria-valuetext`, each radio's name) — placeholders
+   * `{value}` `{max}`, or an ICU plural over them.
+   */
+  ratingValueText: string;
+  /** Spoken value of a rating with no value. */
+  ratingNoValueText: string;
+  /** Accessible name of a one-time-code input that has no `label`. */
+  otpLabel: string;
+  /** Accessible name of one code cell — placeholders `{index}` `{length}`. */
+  otpCellLabel: string;
+  /** Accessible name of a list box that has no `label`. */
+  listBoxLabel: string;
+  /** Placeholder of the list box's search field. */
+  listBoxSearchPlaceholder: string;
+  /** Accessible name of the list box's search field. */
+  listBoxSearchLabel: string;
+  /** Default title (and accessible name) of the transfer list's source list. */
+  transferSourceTitle: string;
+  /** Default title (and accessible name) of the transfer list's target list. */
+  transferTargetTitle: string;
+  /** Accessible name of the transfer list's button column. */
+  transferActionsLabel: string;
+  /** Button: move the source selection to the target list. */
+  transferAddSelected: string;
+  /** Button: move every shown source item to the target list. */
+  transferAddAll: string;
+  /** Button: move the target selection back to the source list. */
+  transferRemoveSelected: string;
+  /** Button: move every shown target item back to the source list. */
+  transferRemoveAll: string;
+  /** A list header's item count — an ICU plural over `{count}`. */
+  transferItemCount: string;
+  /**
+   * Announced after a move — an ICU plural over `{count}`; `{list}` is the
+   * destination list's title.
+   */
+  transferMovedAnnouncement: string;
+  /** Accessible name of a signature pad that has no `label`. */
+  signatureLabel: string;
+  /** Placeholder drawn on an empty signature pad. */
+  signaturePlaceholder: string;
+  /** Spoken state of an empty signature pad. */
+  signatureEmptyStatus: string;
+  /** Spoken state of a signed signature pad. */
+  signatureSignedStatus: string;
+  /** Accessible name of the drawing surface — placeholders `{label}` `{status}`. */
+  signatureImageLabel: string;
+  /** Aria label / title of the signature pad's undo button. */
+  signatureUndo: string;
+  /** Aria label / title of the signature pad's clear button. */
+  signatureClear: string;
+  /** Accessible name of the signature pad's draw / type switch. */
+  signatureModeLabel: string;
+  /** The signature pad's draw-mode button. */
+  signatureDrawMode: string;
+  /** The signature pad's type-mode button (the keyboard alternative). */
+  signatureTypeMode: string;
+  /** Label of the typed-signature text field. */
+  signatureTypeInputLabel: string;
+  /** Accessible name of the mention suggestion list. */
+  mentionListLabel: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -326,6 +390,36 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   moreTags: '+{count} more',
   maxSelectedItemsMessage: 'You can select up to {max} items',
   compareError: 'The values do not match',
+  ratingLabel: 'Rating',
+  ratingValueText: '{value} of {max}',
+  ratingNoValueText: 'Not rated',
+  otpLabel: 'Verification code',
+  otpCellLabel: 'Character {index} of {length}',
+  listBoxLabel: 'Options',
+  listBoxSearchPlaceholder: 'Search',
+  listBoxSearchLabel: 'Search the list',
+  transferSourceTitle: 'Available',
+  transferTargetTitle: 'Selected',
+  transferActionsLabel: 'Move items',
+  transferAddSelected: 'Add selected',
+  transferAddAll: 'Add all',
+  transferRemoveSelected: 'Remove selected',
+  transferRemoveAll: 'Remove all',
+  transferItemCount: '{count, plural, one {# item} other {# items}}',
+  transferMovedAnnouncement:
+    '{count, plural, one {# item moved to {list}} other {# items moved to {list}}}',
+  signatureLabel: 'Signature',
+  signaturePlaceholder: 'Sign here',
+  signatureEmptyStatus: 'not signed',
+  signatureSignedStatus: 'signed',
+  signatureImageLabel: '{label}, {status}',
+  signatureUndo: 'Undo last stroke',
+  signatureClear: 'Clear signature',
+  signatureModeLabel: 'Signature input method',
+  signatureDrawMode: 'Draw',
+  signatureTypeMode: 'Type',
+  signatureTypeInputLabel: 'Type your full name',
+  mentionListLabel: 'Suggestions',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */

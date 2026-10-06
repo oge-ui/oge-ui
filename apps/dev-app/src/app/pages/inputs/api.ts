@@ -14,6 +14,12 @@ import {
   OGE_COLOR_PALETTE_API,
   OGE_CHECK_BOX_GROUP_API,
   OGE_TOGGLE_GROUP_API,
+  OGE_RATING_API,
+  OGE_OTP_INPUT_API,
+  OGE_LIST_BOX_API,
+  OGE_TRANSFER_LIST_API,
+  OGE_SIGNATURE_PAD_API,
+  OGE_MENTION_API,
   OGE_DATE_BOX_API,
   OGE_MULTI_COLUMN_COMBO_BOX_API,
   OGE_INPUTS_CONFIG_API,
@@ -53,6 +59,12 @@ const SECTIONS = [
   'OgeColorPalette',
   'OgeCheckBoxGroup',
   'OgeToggleGroup',
+  'OgeRating',
+  'OgeOtpInput',
+  'OgeListBox',
+  'OgeTransferList',
+  'OgeSignaturePad',
+  'OgeMention',
   'Shared input types',
   'Inputs configuration',
 ] as const;
@@ -80,6 +92,12 @@ const SECTIONS_REACT = [
   '<OgeColorPalette>',
   '<OgeCheckBoxGroup>',
   '<OgeToggleGroup>',
+  '<OgeRating>',
+  '<OgeOtpInput>',
+  '<OgeListBox>',
+  '<OgeTransferList>',
+  '<OgeSignaturePad>',
+  '<OgeMention>',
   'Shared input types',
   'Inputs configuration',
 ] as const;
@@ -241,6 +259,36 @@ const SECTIONS_REACT = [
         selector="oge-toggle-group"
         [sections]="toggleGroupApi"
       />
+      <app-api-reference
+        title="OgeRating"
+        selector="oge-rating"
+        [sections]="ratingApi"
+      />
+      <app-api-reference
+        title="OgeOtpInput"
+        selector="oge-otp-input"
+        [sections]="otpInputApi"
+      />
+      <app-api-reference
+        title="OgeListBox"
+        selector="oge-list-box"
+        [sections]="listBoxApi"
+      />
+      <app-api-reference
+        title="OgeTransferList"
+        selector="oge-transfer-list"
+        [sections]="transferListApi"
+      />
+      <app-api-reference
+        title="OgeSignaturePad"
+        selector="oge-signature-pad"
+        [sections]="signaturePadApi"
+      />
+      <app-api-reference
+        title="OgeMention"
+        selector="oge-mention"
+        [sections]="mentionApi"
+      />
       <app-api-reference title="Shared input types" [sections]="typesApi" />
       <app-api-reference title="Inputs configuration" [sections]="configApi" />
     }
@@ -311,6 +359,12 @@ export class InputsApiPage {
   protected readonly colorPaletteApi = OGE_COLOR_PALETTE_API;
   protected readonly checkBoxGroupApi = OGE_CHECK_BOX_GROUP_API;
   protected readonly toggleGroupApi = OGE_TOGGLE_GROUP_API;
+  protected readonly ratingApi = OGE_RATING_API;
+  protected readonly otpInputApi = OGE_OTP_INPUT_API;
+  protected readonly listBoxApi = OGE_LIST_BOX_API;
+  protected readonly transferListApi = OGE_TRANSFER_LIST_API;
+  protected readonly signaturePadApi = OGE_SIGNATURE_PAD_API;
+  protected readonly mentionApi = OGE_MENTION_API;
   protected readonly typesApi = OGE_INPUTS_TYPES_API;
   protected readonly configApi = OGE_INPUTS_CONFIG_API;
 }

@@ -9,6 +9,12 @@ import {
   OGE_REACT_COLOR_PALETTE_API,
   OGE_REACT_CHECK_BOX_GROUP_API,
   OGE_REACT_TOGGLE_GROUP_API,
+  OGE_REACT_RATING_API,
+  OGE_REACT_OTP_INPUT_API,
+  OGE_REACT_LIST_BOX_API,
+  OGE_REACT_TRANSFER_LIST_API,
+  OGE_REACT_SIGNATURE_PAD_API,
+  OGE_REACT_MENTION_API,
   OGE_REACT_DATE_BOX_API,
   OGE_REACT_MULTI_COLUMN_COMBO_BOX_API,
   OGE_REACT_INPUTS_CONFIG_API,
@@ -96,6 +102,18 @@ import {
       title="&lt;OgeToggleGroup&gt;"
       [sections]="toggleGroupApi"
     />
+    <app-api-reference title="&lt;OgeRating&gt;" [sections]="ratingApi" />
+    <app-api-reference title="&lt;OgeOtpInput&gt;" [sections]="otpInputApi" />
+    <app-api-reference title="&lt;OgeListBox&gt;" [sections]="listBoxApi" />
+    <app-api-reference
+      title="&lt;OgeTransferList&gt;"
+      [sections]="transferListApi"
+    />
+    <app-api-reference
+      title="&lt;OgeSignaturePad&gt;"
+      [sections]="signaturePadApi"
+    />
+    <app-api-reference title="&lt;OgeMention&gt;" [sections]="mentionApi" />
     <app-api-reference title="Shared input types" [sections]="typesApi" />
     <app-api-reference title="Inputs configuration" [sections]="configApi" />
   `,
@@ -123,6 +141,12 @@ export class ReactInputsApiSections {
   protected readonly colorPaletteApi = OGE_REACT_COLOR_PALETTE_API;
   protected readonly checkBoxGroupApi = OGE_REACT_CHECK_BOX_GROUP_API;
   protected readonly toggleGroupApi = OGE_REACT_TOGGLE_GROUP_API;
+  protected readonly ratingApi = OGE_REACT_RATING_API;
+  protected readonly otpInputApi = OGE_REACT_OTP_INPUT_API;
+  protected readonly listBoxApi = OGE_REACT_LIST_BOX_API;
+  protected readonly transferListApi = OGE_REACT_TRANSFER_LIST_API;
+  protected readonly signaturePadApi = OGE_REACT_SIGNATURE_PAD_API;
+  protected readonly mentionApi = OGE_REACT_MENTION_API;
   protected readonly typesApi = OGE_REACT_INPUTS_TYPES_API;
   protected readonly configApi = OGE_REACT_INPUTS_CONFIG_API;
 }

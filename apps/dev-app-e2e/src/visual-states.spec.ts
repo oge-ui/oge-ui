@@ -588,6 +588,82 @@ for (const theme of THEMES) {
         .toBe(await token(panel, 'color', 'var(--oge-text-color)'));
     });
 
+    test('rating: filled and empty glyphs read differently', async ({
+      page,
+    }) => {
+      await open(page, '/components/inputs/rating', theme);
+      const card = page.locator('app-demo-card:has(#getting-started)');
+      await card.scrollIntoViewIfNeeded();
+      const rating = card.locator('.oge-rating').first();
+      const filled = rating
+        .locator('.oge-rating-item')
+        .first()
+        .locator('.oge-rating-filled .oge-rating-svg');
+      const empty = rating
+        .locator('.oge-rating-item')
+        .last()
+        .locator('.oge-rating-empty .oge-rating-svg');
+      const ratingColor = await token(
+        rating,
+        'color',
+        'var(--oge-rating-color)',
+      );
+      const emptyColor = await token(
+        rating,
+        'color',
+        'var(--oge-rating-empty-color)',
+      );
+      expect(await css(filled, 'fill')).toBe(ratingColor);
+      // the empty glyph is outlined in its token so 0 still reads as a control
+      expect(await css(empty, 'stroke')).toBe(emptyColor);
+      expect(ratingColor).not.toBe(emptyColor);
+    });
+
+    test('list box: selected and idle options read differently', async ({
+      page,
+    }) => {
+      await open(page, '/components/inputs/list-box', theme);
+      const card = page.locator('app-demo-card:has(#getting-started)');
+      await card.scrollIntoViewIfNeeded();
+      const list = card.locator('.oge-list-box').first();
+      const options = list.locator('.oge-list-box-option');
+      await options.nth(1).click();
+      const selected = list.locator('.oge-list-box-option-selected').first();
+      await expect(selected).toBeVisible();
+      await page.mouse.move(0, 0);
+      await expect
+        .poll(() => css(selected, 'background-color'))
+        .toBe(await token(list, 'background-color', 'var(--oge-selected-bg)'));
+      const idle = list
+        .locator('.oge-list-box-option:not(.oge-list-box-option-selected)')
+        .last();
+      expect(await css(idle, 'background-color')).not.toBe(
+        await css(selected, 'background-color'),
+      );
+    });
+
+    test('otp input: filled and empty cells read differently', async ({
+      page,
+    }) => {
+      await open(page, '/components/inputs/otp-input', theme);
+      const card = page.locator('app-demo-card:has(#getting-started)');
+      await card.scrollIntoViewIfNeeded();
+      const cells = card.locator('.oge-otp-input-cell');
+      await cells.first().focus();
+      await page.keyboard.type('1');
+      await cells.nth(1).blur();
+      const group = card.locator('.oge-otp-input');
+      await expect
+        .poll(() => css(cells.first(), 'border-top-color'))
+        .toBe(await token(group, 'border-color', 'var(--oge-input-muted)'));
+      expect(await css(cells.last(), 'border-top-color')).toBe(
+        await token(group, 'border-color', 'var(--oge-border-color)'),
+      );
+      expect(await css(cells.first(), 'background-color')).toBe(
+        await token(group, 'background-color', 'var(--oge-accent-soft)'),
+      );
+    });
+
     test('tooltip: the callout arrow carries the bubble fill', async ({
       page,
     }) => {
@@ -619,6 +695,8 @@ test.describe('phone width', () => {
   }) => {
     for (const path of [
       '/components/inputs/date-box',
+      '/components/inputs/otp-input',
+      '/components/inputs/transfer-list',
       '/components/charts',
       '/components/tabs',
     ]) {

@@ -108,4 +108,8 @@
   --oge-chart-axis-fg: var(--oge-muted-color);
   --oge-avatar-bg: var(--oge-bg);
   --oge-avatar-fg: var(--oge-text-color);
+  --oge-rating-color: var(--oge-warning);
+  --oge-rating-empty-color: var(--oge-muted-color);
+  --oge-signature-ink: var(--oge-text-color);
+  --oge-signature-bg: var(--oge-bg);
 }

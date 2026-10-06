@@ -1,0 +1,182 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// Cells share the text box's surface, border and focus treatment, so a code
+// field sits naturally next to the other editors of a form.
+.oge-otp-input {
+  @include tokens.core-tokens;
+
+  --oge-otp-cell-width: 42px;
+  --oge-otp-cell-height: 48px;
+  --oge-otp-cell-font: 20px;
+  --oge-otp-gap: 8px;
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  // never wider than its container: on a phone the cells wrap instead of
+  // pushing the page sideways
+  max-inline-size: 100%;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-otp-input-sm {
+  --oge-otp-cell-width: 34px;
+  --oge-otp-cell-height: 38px;
+  --oge-otp-cell-font: 16px;
+  --oge-otp-gap: 6px;
+}
+
+.oge-otp-input-lg {
+  --oge-otp-cell-width: 52px;
+  --oge-otp-cell-height: 60px;
+  --oge-otp-cell-font: 26px;
+  --oge-otp-gap: 10px;
+}
+
+.oge-otp-input-label {
+  color: var(--oge-text-color);
+  font-weight: 600;
+}
+
+.oge-otp-input-required {
+  margin-inline-start: 2px;
+  color: var(--oge-danger);
+}
+
+.oge-otp-input-cells {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--oge-otp-gap);
+}
+
+.oge-otp-input-cell {
+  box-sizing: border-box;
+  width: var(--oge-otp-cell-width);
+  height: var(--oge-otp-cell-height);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: var(--oge-otp-cell-font);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+  caret-color: var(--oge-accent);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+    font-weight: 400;
+    opacity: 1;
+  }
+
+  &::selection {
+    background: transparent;
+  }
+
+  &:hover:not(:disabled, :read-only) {
+    border-color: var(--oge-input-muted);
+  }
+
+  &:focus {
+    border-color: var(--oge-accent);
+    @include tokens.focus-ring($color: var(--oge-accent-soft), $width: 2px);
+
+    outline-offset: 0;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+
+    outline-offset: 0;
+  }
+
+  &:disabled {
+    cursor: default;
+    background: var(--oge-input-filled-bg);
+    color: var(--oge-muted-color);
+  }
+
+  // a 16px floor on touch devices keeps iOS from zooming into the field
+  @media (pointer: coarse) {
+    font-size: max(16px, var(--oge-otp-cell-font));
+  }
+}
+
+.oge-otp-input-cell-filled {
+  border-color: var(--oge-input-muted);
+  background: var(--oge-accent-soft);
+}
+
+.oge-otp-input-complete .oge-otp-input-cell-filled {
+  border-color: var(--oge-accent);
+}
+
+.oge-otp-input-readonly .oge-otp-input-cell {
+  cursor: default;
+}
+
+.oge-otp-input-invalid .oge-otp-input-cell {
+  border-color: var(--oge-danger);
+}
+
+.oge-otp-input-separator {
+  color: var(--oge-input-muted);
+  font-size: var(--oge-otp-cell-font);
+  user-select: none;
+}
+
+.oge-otp-input-subscript {
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-otp-input-error {
+  color: var(--oge-danger);
+}
+
+.oge-otp-input.oge-disabled {
+  opacity: 0.55;
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+@include tokens.forced-colors {
+  .oge-otp-input-cell {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-otp-input-cell:focus {
+    border-color: Highlight;
+    border-width: 2px;
+  }
+
+  .oge-otp-input-cell:disabled {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  .oge-otp-input-invalid .oge-otp-input-cell {
+    border-style: dashed;
+  }
+
+  .oge-otp-input-error {
+    color: CanvasText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-otp-input-cell {
+    transition: none;
+  }
+}
