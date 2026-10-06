@@ -1,0 +1,525 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A templated collection: a header row of tools, the items in responsive
+// columns (container query on the view's own inline size, never the window)
+// or one per row, and a pager. The host is the query container; nothing in
+// it is position: fixed, so size containment is safe here.
+.oge-data-view {
+  @include tokens.core-tokens;
+
+  // component-local knobs, written by the host's style binding
+  --oge-data-view-gap: 16px;
+  --oge-data-view-columns: 3;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  container-type: inline-size;
+  container-name: oge-data-view;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  .oge-sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+// --- header ------------------------------------------------------------------
+
+.oge-data-view-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.oge-data-view-search {
+  flex: 1 1 200px;
+  min-inline-size: 0;
+  block-size: 34px;
+  padding-inline: 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+  }
+
+  &:hover {
+    border-color: var(--oge-muted-color);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+    border-color: var(--oge-accent);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (pointer: coarse) {
+    font-size: max(16px, 1em);
+  }
+}
+
+.oge-data-view-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--oge-input-muted);
+  font-size: 0.92em;
+}
+
+.oge-data-view-sort-select {
+  block-size: 34px;
+  padding-inline: 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: var(--oge-font-size);
+
+  &:hover {
+    border-color: var(--oge-muted-color);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-data-view-layout-switch {
+  display: inline-flex;
+  margin-inline-start: auto;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-header-bg);
+}
+
+.oge-data-view-tool {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: calc(var(--oge-radius) - 2px);
+  background: transparent;
+  color: var(--oge-input-muted);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--oge-bg);
+    color: var(--oge-accent);
+    box-shadow: var(--oge-shadow-btn);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (pointer: coarse) {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+}
+
+.oge-data-view-direction {
+  border-color: var(--oge-border-color);
+  inline-size: 34px;
+  block-size: 34px;
+
+  &[aria-pressed='true'] svg {
+    transform: scaleY(-1);
+  }
+}
+
+// --- items -------------------------------------------------------------------
+
+.oge-data-view-items {
+  display: grid;
+  gap: var(--oge-data-view-gap);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-data-view-layout-grid .oge-data-view-items {
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, var(--oge-data-view-min-item-width)), 1fr)
+  );
+}
+
+.oge-data-view-layout-grid.oge-data-view-fixed-columns .oge-data-view-items {
+  grid-template-columns: repeat(var(--oge-data-view-columns), minmax(0, 1fr));
+}
+
+.oge-data-view-layout-list .oge-data-view-items {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+}
+
+.oge-data-view-item {
+  position: relative;
+  min-inline-size: 0;
+  padding: 14px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.oge-data-view-layout-grid .oge-data-view-item:hover {
+  box-shadow: var(--oge-shadow-card);
+}
+
+.oge-data-view-layout-list .oge-data-view-item {
+  padding-block: 10px;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: 0;
+
+  & + .oge-data-view-item {
+    border-block-start: 1px solid var(--oge-border-color);
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+}
+
+.oge-data-view-option {
+  padding-inline-end: 36px;
+  cursor: pointer;
+  user-select: none;
+
+  &:focus {
+    outline: 2px solid transparent;
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-data-view-layout-list .oge-data-view-option {
+  &:focus,
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+
+  &:focus:not(:focus-visible) {
+    @include tokens.focus-ring($inset: true, $color: var(--oge-accent-soft));
+  }
+}
+
+.oge-data-view-check {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-end: 10px;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 18px;
+  block-size: 18px;
+  border: 1.5px solid var(--oge-muted-color);
+  border-radius: 999px;
+  background: var(--oge-bg);
+  color: transparent;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.oge-data-view-item-selected {
+  border-color: var(--oge-accent);
+  background: var(--oge-row-focused-bg);
+
+  .oge-data-view-check {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent);
+    color: var(--oge-severity-contrast);
+  }
+}
+
+.oge-data-view-layout-list .oge-data-view-item-selected {
+  background: var(--oge-row-focused-bg);
+  box-shadow: inset 3px 0 0 var(--oge-accent);
+}
+
+.oge-data-view-text {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.oge-data-view-loading
+  .oge-data-view-items[aria-busy='true']
+  > .oge-data-view-item:not(.oge-data-view-bone) {
+  opacity: 0.6;
+}
+
+.oge-data-view-bone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-block-size: 96px;
+}
+
+.oge-data-view-bone-line {
+  display: block;
+  block-size: 12px;
+  border-radius: 999px;
+  background: var(--oge-skeleton-color);
+  animation: oge-data-view-pulse 1.4s ease-in-out infinite;
+}
+
+.oge-data-view-bone-short {
+  inline-size: 60%;
+}
+
+@keyframes oge-data-view-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.oge-data-view-empty {
+  padding: 32px 16px;
+  border: 1px dashed var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  color: var(--oge-input-muted);
+  text-align: center;
+}
+
+// --- pager -------------------------------------------------------------------
+
+.oge-data-view-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.oge-data-view-page-btn {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 32px;
+  block-size: 32px;
+  padding-inline: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (pointer: coarse) {
+    min-inline-size: 44px;
+    block-size: 44px;
+  }
+}
+
+.oge-data-view-page-current {
+  border-color: var(--oge-accent-25);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-weight: 600;
+}
+
+[dir='rtl'] .oge-data-view-page-btn svg,
+.oge-data-view-page-btn:dir(rtl) svg {
+  transform: scaleX(-1);
+}
+
+.oge-data-view-ellipsis {
+  min-inline-size: 24px;
+  color: var(--oge-muted-color);
+  text-align: center;
+}
+
+.oge-data-view-info {
+  margin-inline-start: 8px;
+  color: var(--oge-input-muted);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+
+// --- narrow containers --------------------------------------------------------
+
+@container oge-data-view (max-width: 480px) {
+  .oge-data-view-layout-grid.oge-data-view-fixed-columns .oge-data-view-items {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .oge-data-view-layout-switch {
+    margin-inline-start: 0;
+  }
+
+  .oge-data-view-info {
+    flex-basis: 100%;
+    margin-inline-start: 0;
+    text-align: center;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-data-view-search,
+  .oge-data-view-tool,
+  .oge-data-view-item,
+  .oge-data-view-check,
+  .oge-data-view-page-btn {
+    transition: none;
+  }
+
+  .oge-data-view-bone-line {
+    animation-duration: 3s;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-data-view-item,
+  .oge-data-view-search,
+  .oge-data-view-sort-select,
+  .oge-data-view-layout-switch {
+    border-color: CanvasText;
+  }
+
+  .oge-data-view-item-selected {
+    border: 2px solid Highlight;
+    background: Highlight;
+    color: HighlightText;
+
+    .oge-data-view-check {
+      border-color: HighlightText;
+      background: Canvas;
+      color: CanvasText;
+    }
+  }
+
+  .oge-data-view-tool[aria-pressed='true'],
+  .oge-data-view-page-current {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-data-view-tool,
+  .oge-data-view-page-btn {
+    color: ButtonText;
+  }
+
+  .oge-data-view-tool:disabled,
+  .oge-data-view-page-btn:disabled {
+    color: GrayText;
+  }
+
+  .oge-data-view-bone-line {
+    background: GrayText;
+  }
+}

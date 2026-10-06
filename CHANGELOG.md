@@ -7,6 +7,81 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Carousel, action sheet, list / data view and tile layout (W8d) — `@oge-ui/layout`, `@oge-ui/overlay`, `@oge-ui/react-layout`, `@oge-ui/react-overlay`, `@oge-ui/behavior`, `@oge-ui/locales`
+
+Five new components in both render layers; their decisions (index and
+layout arithmetic, keyboard maps, ARIA shapes, timers, state validation, the
+modal machine) live in `@oge-ui/behavior` cores, so the two layers only draw
+markup:
+
+- **Carousel** (`@oge-ui/layout/carousel`, `<OgeCarousel>`): the WAI-ARIA APG
+  carousel — a labelled region with `aria-roledescription="carousel"`, slides
+  named "Beach, 2 of 5", off-screen slides `inert`. Data-driven `items` (image
+  - frosted caption, `[ogeCarouselSlideTemplate]` / `renderSlide`) and
+    declarative `oge-carousel-slide` / `<OgeCarouselSlide>` children; previous /
+    next buttons (`aria-disabled` at the ends, so they keep focus); a dot or
+    thumbnail picker that is an APG tab list with one slide per view and a row
+    of `aria-current` buttons with several (`slidesPerView`, `gap`); `loop`
+    (rewinds, never clones slides); autoplay that pauses on hover and while the
+    tab is hidden, **stops** when keyboard focus enters, always renders its
+    rotation control first (WCAG 2.2.2), turns the slides' `aria-live` off while
+    rotating and starts stopped under `prefers-reduced-motion`. The track is a
+    script-driven scroll-snap container; touch, pen and mouse swipes run on the
+    shared `beginPointerGesture` (vertical pans still scroll the page, Escape
+    cancels) and RTL mirrors the picker keys and offsets. `[(selectedIndex)]`,
+    `slideChanged` (with its `source`), `autoplayChanged`, `next()` /
+    `previous()` / `goTo()` / `play()` / `pause()` / `focus()`.
+- **Action sheet** (`@oge-ui/overlay`, `<OgeActionSheet>` in
+  `@oge-ui/react-overlay`): a bottom sheet of actions — icons, descriptions,
+  destructive and disabled rows, a `bottom` group after a divider, a Cancel
+  button — as a modal `role="dialog"` labelled by its title and portaled to
+  `<body>`, on `OgeActionSheetCore`: the shared focus trap, ref-counted scroll
+  lock, inert background, overlay Escape stack and focus restore, backdrop
+  dismissal and a swipe down from the handle on `beginPointerGesture`. The
+  actions are an APG menu (one tab stop, ↑/↓ wrap past disabled rows,
+  Home / End). `[(opened)]`, cancelable `opening` / `closing` (with the close
+  `reason`), `closed`, `itemClick` (`keepOpen`), an item template / render
+  prop, and `open()` returning a promise of the chosen action. The bottom edge
+  pads with `env(safe-area-inset-bottom)`; on wide screens the sheet floats.
+  New optional overlay messages `actionSheetCancel` / `actionSheetLabel`.
+- **List view** (`@oge-ui/layout/list-view`, `<OgeListView>`): a templated list
+  that is an APG listbox when it selects (single / multiple, Shift ranges,
+  Ctrl+A, `aria-activedescendant` — the focus model that survives windowing)
+  and a roving-tab-stop list when it does not; sticky labelled group headers;
+  fixed-height virtual scrolling for 10 000+ rows on core's `OffsetTree`; a
+  search field with accent-insensitive matching and announced result counts;
+  a load-more button or infinite scroll with announced arrivals; swipe / hover
+  item actions with `aria-keyshortcuts` keyboard twins.
+- **Data view** (`@oge-ui/layout/data-view`, `<OgeDataView>`): templated items
+  in responsive columns resolved by a container query on the view's own width
+  (or one per row), a grid / list layout switch, folded multi-word search,
+  locale-aware sorting, a filter hook, a built-in pager on behavior's
+  pagination decisions with focus management and announcements, remote
+  operations through `optionsChanged`, loading skeletons, and optional
+  single / multiple selection as an APG listbox with 2-D keyboard navigation.
+- **Tile layout** (`@oge-ui/layout/tile-layout`, `<OgeTileLayout>`): a
+  dashboard of tiles on a CSS grid with column and row spans, drag-by-header
+  reordering and corner-handle resizing on the shared pointer gesture (Escape
+  cancels), and keyboard twins — Ctrl+Arrow moves, Ctrl+Shift+Arrow resizes,
+  mirrored in RTL and announced through the shared live region. Cancelable
+  `reordering` / `resizing` → `reordered` / `resized` → `layoutChanged` fire
+  identically for pointer, keyboard and API; a serializable `[(state)]` with
+  `getState()` / `applyState()` passes through the `sanitizeOgeTileLayoutState`
+  validator. Declarative `oge-tile-layout-item` children or the `items` twin,
+  header / content slots or render props; one column below 480px of its own
+  width.
+- **Locales**: new `layout.carousel`, `layout.listView`, `layout.dataView` and
+  `layout.tileLayout` slices plus the two overlay keys, translated in all ten
+  packs and wired into `provideOgeLocale()` / `<OgeLocaleProvider>`.
+- **Packaging**: `@oge-ui/react-layout` now declares its `@oge-ui/core`
+  dependency (the list and data views format plural messages and run the
+  type-ahead buffer from it) and keeps it external in the build.
+- **Docs**: overview and API pages for both frameworks (`/components/carousel`,
+  `/list-view`, `/data-view`, `/tile-layout`, `/overlay/action-sheet`), gallery
+  cards, landing tiles, Playwright + axe specs and regenerated `llms.txt`
+  files. The React demos load only their component's stylesheet, keeping every
+  demo inside the `anyComponentStyle` budget.
+
 ### Layout and feedback components (W8a) — `@oge-ui/layout`, `@oge-ui/buttons`, `@oge-ui/react-layout`, `@oge-ui/react-buttons`, `@oge-ui/behavior`, `@oge-ui/locales`
 
 Seven new components in both render layers, each a secondary entry with its

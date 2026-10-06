@@ -159,7 +159,7 @@ function AnnounceDemo(): ReactNode {
   // the React components carry the class names but no styles of their own —
   // the docs pull the same SCSS the package build compiles
   encapsulation: ViewEncapsulation.None,
-  styleUrl: '../../../../../../packages/react/layout/src/styles.scss',
+  styleUrl: '../../shared/react-layout-demo-base.scss',
   template: `
     @for (demo of demos; track demo.title; let i = $index) {
       <app-demo-card

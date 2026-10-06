@@ -21,6 +21,7 @@ import {
   OGE_WINDOW_API,
   RESOLVE_POPUP_POSITION_API,
 } from './overlay-api-data';
+import { OGE_ACTION_SHEET_API } from './action-sheet-api-data';
 
 const SECTIONS = [
   'OgeModal',
@@ -29,6 +30,7 @@ const SECTIONS = [
   'OgeToastService',
   'OgeLiveAnnouncer',
   'OgePopover',
+  'OgeActionSheet',
   'OgeTooltip',
   'OgeContextMenu',
   'OgeMenuList',
@@ -47,6 +49,7 @@ const SECTIONS_REACT = [
   'OgeToastService (useOgeToasts)',
   'OgeLiveAnnouncer (useOgeLiveAnnouncer)',
   '<OgePopover>',
+  '<OgeActionSheet>',
   '<OgeTooltip>',
   '<OgeContextMenu>',
   '<OgeMenuList>',
@@ -131,6 +134,11 @@ const SECTIONS_REACT = [
         [sections]="popoverApi"
       />
       <app-api-reference
+        title="OgeActionSheet"
+        selector="oge-action-sheet"
+        [sections]="actionSheetApi"
+      />
+      <app-api-reference
         title="OgeTooltip"
         selector="[ogeTooltip]"
         [sections]="tooltipApi"
@@ -190,6 +198,7 @@ export class OverlayApiPage {
   protected readonly toastApi = OGE_TOAST_API;
   protected readonly liveAnnouncerApi = OGE_LIVE_ANNOUNCER_API;
   protected readonly popoverApi = OGE_POPOVER_API;
+  protected readonly actionSheetApi = OGE_ACTION_SHEET_API;
   protected readonly tooltipApi = OGE_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_MENU_LIST_API;

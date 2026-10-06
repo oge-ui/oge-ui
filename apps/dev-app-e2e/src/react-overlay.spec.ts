@@ -17,7 +17,8 @@ async function rightClick(page: Page, locator: Locator): Promise<void> {
 
 /**
  * The React view of the overlay family (ADR 0002 + `docs/REACT-PARITY.md`):
- * every page of the family — overview, tooltip & context menu, modal, toast
+ * every page of the family — overview, tooltip & context menu, popover,
+ * action sheet, modal, toast
  * and the API page — renders real React surfaces on the same routes the
  * Angular view uses, the keyboard contracts work, and the pages are axe-clean.
  */
@@ -27,6 +28,7 @@ const PAGES = [
   '',
   'tooltip-context-menu',
   'popover',
+  'action-sheet',
   'modal',
   'toast',
 ] as const;

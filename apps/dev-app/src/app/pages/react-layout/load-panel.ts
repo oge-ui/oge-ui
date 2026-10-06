@@ -247,7 +247,7 @@ function TargetDemo(): ReactNode {
   // The React panel carries the class names but no styles of its own — the
   // docs pull the same SCSS the package build compiles.
   encapsulation: ViewEncapsulation.None,
-  styleUrl: '../../../../../../packages/react/layout/src/styles.scss',
+  styleUrl: '../../shared/react-layout-demo-base.scss',
   template: `
     <app-demo-card
       [chips]="['visible', 'aria-busy', 'pointer blocked']"

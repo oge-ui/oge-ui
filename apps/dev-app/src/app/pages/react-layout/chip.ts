@@ -214,7 +214,7 @@ function TemplateDemo(): ReactNode {
   imports: [DemoCard, ReactHost],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  styleUrl: '../../../../../../packages/react/layout/src/styles.scss',
+  styleUrl: '../../shared/react-layout-demo-base.scss',
   template: `
     <app-demo-card
       [chips]="['icon', 'avatar', 'severity', 'stylingMode', 'size']"

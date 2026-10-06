@@ -1,6 +1,6 @@
 # @oge-ui/react-overlay
 
-> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
+> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/overlay
@@ -425,6 +425,70 @@ _Handle (ref)_
 | `OgePopoverSlotContext` | `{ close: () => void }` | Context of `renderTitle` / `renderFooter` / function children. |
 | `OgePopoverHandle` | `{ open(); close(); toggle() }` | The ref handle. |
 
+### <OgeActionSheet>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opened` | `boolean` | `false` | Open state (controlled; `defaultOpened` when uncontrolled). Writing `false` closes without `onClosing`. |
+| `items` | `readonly OgeActionSheetItem[]` | `[]` | The actions, in order — `group: 'bottom'` ones render after a divider. Fields: `key?`, `text`, `description?`, `icon?` (SVG path data, 24×24, stroked), `destructive?`, `disabled?`, `group?: 'top' \| 'bottom'`. |
+| `title` | `string` | `—` | Heading of the sheet — also its accessible name and the name of the action menu. |
+| `description` | `string` | `—` | Secondary text under the title, referenced by `aria-describedby`. |
+| `ariaLabel` | `string` | `—` | Accessible name without a `title`; falls back to the `actionSheetLabel` message. |
+| `showCancel` | `boolean` | `true` | Renders the Cancel button after the menu. |
+| `cancelText` | `string` | `—` | Text of the Cancel button; falls back to the `actionSheetCancel` message. |
+| `closeOnBackdropClick` | `boolean` | `true` | Closes on a press on the shaded backdrop. |
+| `closeOnEscape` | `boolean` | `true` | Closes on Escape while the sheet is the topmost overlay surface. |
+| `swipeToClose` | `boolean` | `true` | Closes on a swipe down (≥ 72px) from the handle or the header. |
+| `messages` | `Partial<OgeOverlayMessages>` | `—` | Per-instance overrides of `actionSheetCancel` / `actionSheetLabel`. |
+| `renderItem` | `(context: OgeActionSheetItemRenderContext) => ReactNode` | `—` | Replaces the icon + text of every action (the Angular `[ogeActionSheetItemTemplate]`). |
+| `children` | `ReactNode` | `—` | Extra content between the header and the actions. |
+| `className` | `string` | `—` | Extra classes on the sheet surface. |
+| `style` | `CSSProperties` | `—` | Inline styles on the sheet surface. |
+
+#### Methods
+
+_Ref handle (OgeActionSheetHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open()` | `() => Promise<OgeActionSheetResult>` | Opens the sheet (runs `onOpening`) and resolves with the chosen action, or `null` when dismissed or vetoed. |
+| `close()` | `() => void` | Closes the sheet with reason `'api'` (runs `onClosing`). |
+| `toggle()` | `() => void` | Opens a closed sheet, closes an open one. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onOpenedChange` | `(opened: boolean) => void` | The open state a gesture or a method committed. |
+| `onOpening` | `(event: OgeActionSheetOpeningEvent) => void` | Cancelable: the sheet is about to open. Set `cancel` to keep it closed. |
+| `onClosing` | `(event: OgeActionSheetClosingEvent) => void` | Cancelable: the sheet is about to close — `reason` and the chosen `item`. |
+| `onClosed` | `(event: OgeActionSheetClosedEvent) => void` | The sheet closed — `reason` and the chosen `item` (or `null`); focus is restored. |
+| `onItemClick` | `(event: OgeActionSheetItemClickEvent) => void` | An action was chosen; set `keepOpen` to keep the sheet open. |
+
+#### Types
+
+_Render props & handle_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeActionSheetItemRenderContext` | `{ item: OgeActionSheetItem; index: number }` | Context of `renderItem`. |
+| `OgeActionSheetProps` | `interface` | Props of `<OgeActionSheet>`. |
+| `OgeActionSheetHandle` | `{ open(): Promise<OgeActionSheetResult>; close(): void; toggle(): void }` | The ref handle. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeActionSheetItem` | `interface` | One action: `key?`, `text`, `description?`, `icon?` (SVG path data, 24×24, stroked), `destructive?`, `disabled?`, `group?: 'top' \| 'bottom'`. |
+| `OgeActionSheetCloseReason` | `'action' \| 'cancel' \| 'escape' \| 'backdrop' \| 'swipe' \| 'api'` | Why the sheet closed. |
+| `OgeActionSheetOpeningEvent` | `{ cancel: boolean }` | Payload of `onOpening`. |
+| `OgeActionSheetClosingEvent` | `{ reason; item: OgeActionSheetItem \| null; cancel: boolean }` | Payload of `onClosing`. |
+| `OgeActionSheetClosedEvent` | `{ reason; item: OgeActionSheetItem \| null }` | Payload of `onClosed`. |
+| `OgeActionSheetItemClickEvent` | `{ item; index: number; event: Event; keepOpen: boolean }` | Payload of `onItemClick`. |
+| `OgeActionSheetResult` | `OgeActionSheetItem \| null` | What `open()` resolves with. |
+
 ### <OgeTooltip>
 
 #### Properties
@@ -683,7 +747,7 @@ _OgeOverlayConfig_
 | `tooltipShowDelayMs / tooltipHideDelayMs` | `number` | `400 / 100` | Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides. |
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn='hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome and the popover: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose` (optional; English “Close” when a catalog predates it). |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover and the action sheet: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose` and the action sheet’s `actionSheetCancel` / `actionSheetLabel` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
 ### Overlay primitives
@@ -715,6 +779,126 @@ _Scroll lock_
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Basics
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeActionSheet } from '@oge-ui/react-overlay';
+import type { OgeActionSheetHandle, OgeActionSheetItem } from '@oge-ui/react-overlay';
+
+const actions: OgeActionSheetItem[] = [
+  { key: 'share', text: 'Share', icon: 'M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13' },
+  { key: 'link', text: 'Copy link' },
+  { key: 'edit', text: 'Edit', icon: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z' },
+  { key: 'delete', text: 'Delete photo', icon: 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6', destructive: true },
+];
+
+export function ActionSheetBasicsDemo() {
+  const sheet = useRef<OgeActionSheetHandle>(null);
+  const [last, setLast] = useState('none');
+  return (
+    <>
+      <button type="button" onClick={() => sheet.current?.open()}>
+        Photo actions
+      </button>
+      <OgeActionSheet
+        ref={sheet}
+        title="Photo"
+        description="Taken on 3 October in Göreme"
+        items={actions}
+        onItemClick={(e) => setLast(e.item.text)}
+      />
+      <p>Last action: {last}</p>
+    </>
+  );
+}
+```
+
+### Groups, disabled actions & templates
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeActionSheet } from '@oge-ui/react-overlay';
+import type { OgeActionSheetItem } from '@oge-ui/react-overlay';
+
+const actions: OgeActionSheetItem[] = [
+  { key: 'download', text: 'Download', description: 'PDF, 2.4 MB' },
+  { key: 'share', text: 'Share with team', description: 'Only owners can share this file', disabled: true },
+  { key: 'report', text: 'Report a problem', group: 'bottom' },
+  { key: 'delete', text: 'Move to trash', destructive: true, group: 'bottom' },
+];
+
+export function ActionSheetGroupsDemo() {
+  const [opened, setOpened] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpened(!opened)}>
+        File actions
+      </button>
+      <OgeActionSheet
+        opened={opened}
+        onOpenedChange={setOpened}
+        title="Quarterly report.pdf"
+        items={actions}
+        renderItem={({ item }) => (
+          <span>
+            <strong>{item.text}</strong>
+            {item.description && <small> — {item.description}</small>}
+          </span>
+        )}
+      />
+    </>
+  );
+}
+```
+
+### Promise API & events
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeActionSheet } from '@oge-ui/react-overlay';
+import type { OgeActionSheetHandle, OgeActionSheetItem } from '@oge-ui/react-overlay';
+
+const layouts: OgeActionSheetItem[] = [
+  { key: 'grid', text: 'Grid' },
+  { key: 'list', text: 'List' },
+  { key: 'preview', text: 'Preview (keeps the sheet open)' },
+];
+
+export function ActionSheetPromiseDemo() {
+  const sheet = useRef<OgeActionSheetHandle>(null);
+  const [result, setResult] = useState('Nothing chosen yet');
+  const [lock, setLock] = useState(false);
+  const choose = async () => {
+    const chosen = await sheet.current?.open();
+    setResult(chosen ? `Chose ${chosen.text}` : 'Dismissed');
+  };
+  return (
+    <>
+      <button type="button" onClick={choose}>Choose a layout</button>
+      <label>
+        <input type="checkbox" checked={lock} onChange={() => setLock(!lock)} />
+        Veto backdrop closing
+      </label>
+      <OgeActionSheet
+        ref={sheet}
+        title="Layout"
+        items={layouts}
+        onItemClick={(e) => (e.keepOpen = e.item.key === 'preview')}
+        onClosing={(e) => (e.cancel = lock && e.reason === 'backdrop')}
+      />
+      <p>{result}</p>
+    </>
+  );
+}
+```
 
 ### Basics
 

@@ -2169,6 +2169,30 @@ export class HomePage {
       desc: 'Top or bottom bar with start/center/end sections, sticky or fixed with safe areas.',
       path: '/components/app-bar',
     },
+    {
+      icon: 'list-view',
+      name: 'List View',
+      desc: 'Virtualized APG listbox with selection, sticky groups, search and swipe actions.',
+      path: '/components/list-view',
+    },
+    {
+      icon: 'data-view',
+      name: 'Data View',
+      desc: 'Templated items in container-responsive grid or list layouts with search, sort and paging.',
+      path: '/components/data-view',
+    },
+    {
+      icon: 'dashboard',
+      name: 'Tile Layout',
+      desc: 'Dashboard tiles with spans, drag to reorder, resize handles and keyboard twins.',
+      path: '/components/tile-layout',
+    },
+    {
+      icon: 'carousel',
+      name: 'Carousel',
+      desc: 'APG slide show with swipe, thumbnails, loop and autoplay that stops on focus.',
+      path: '/components/carousel',
+    },
   ];
 
   protected readonly org = ORG;

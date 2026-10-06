@@ -1,0 +1,261 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The `<oge-action-sheet>` element is only the declaration point; the layer
+// is moved to `document.body` while open.
+.oge-action-sheet-host {
+  display: contents;
+}
+
+// --- layer: the backdrop, pinning the sheet to the bottom edge -------------
+.oge-action-sheet-layer {
+  @include tokens.core-tokens;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--oge-z-modal);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  background: transparent;
+  transition: background-color 160ms ease;
+
+  &.oge-action-sheet-ready {
+    background: var(--oge-modal-backdrop-bg);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+// --- the sheet ----------------------------------------------------------------
+.oge-action-sheet {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  max-inline-size: 560px;
+  max-block-size: calc(100vh - 48px);
+  max-block-size: calc(100dvh - 48px);
+  // the home-indicator edge: the normal gutter is a floor, the inset adds to it
+  padding-block-end: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-inline: max(8px, env(safe-area-inset-left, 0px))
+    max(8px, env(safe-area-inset-right, 0px));
+  border: 1px solid var(--oge-border-color);
+  border-block-end: 0;
+  border-start-start-radius: calc(var(--oge-radius-lg) * 1.6);
+  border-start-end-radius: calc(var(--oge-radius-lg) * 1.6);
+  background: var(--oge-popup-bg);
+  box-shadow: var(--oge-shadow-popup);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  line-height: 1.45;
+  translate: 0 100%;
+  transition: translate 200ms ease;
+
+  .oge-action-sheet-ready & {
+    translate: 0 0;
+  }
+
+  // the swipe sets an inline translate; the transition would lag the finger
+  &.oge-action-sheet-dragging {
+    transition: none;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+}
+
+// on wider screens the sheet floats above the edge, rounded all round
+@media (min-width: 600px) {
+  .oge-action-sheet {
+    margin-block-end: max(16px, env(safe-area-inset-bottom, 0px));
+    padding-block-end: 12px;
+    border-block-end: 1px solid var(--oge-border-color);
+    border-radius: calc(var(--oge-radius-lg) * 1.6);
+  }
+}
+
+.oge-action-sheet-header {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 12px 10px;
+  text-align: center;
+  touch-action: none;
+  cursor: grab;
+}
+
+.oge-action-sheet-handle {
+  inline-size: 36px;
+  block-size: 4px;
+  margin-block-end: 6px;
+  border-radius: 999px;
+  background: var(--oge-muted-color);
+  opacity: 0.6;
+}
+
+.oge-action-sheet-title {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.oge-action-sheet-description {
+  margin: 0;
+  color: var(--oge-input-muted);
+  font-size: 0.93em;
+}
+
+.oge-action-sheet-content:empty {
+  display: none;
+}
+
+.oge-action-sheet-content {
+  padding: 0 8px 8px;
+  overflow: auto;
+}
+
+.oge-action-sheet-menu {
+  display: grid;
+  gap: 2px;
+  padding: 4px 0;
+  overflow-y: auto;
+  @include tokens.scrollbar;
+}
+
+.oge-action-sheet-divider {
+  block-size: 1px;
+  margin: 6px 8px;
+  background: var(--oge-border-color);
+}
+
+.oge-action-sheet-item,
+.oge-action-sheet-cancel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  inline-size: 100%;
+  min-block-size: 48px;
+  margin: 0;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: var(--oge-radius-lg);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+}
+
+.oge-action-sheet-item[aria-disabled='true'] {
+  color: var(--oge-muted-color);
+  cursor: default;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+.oge-action-sheet-item-destructive {
+  color: var(--oge-danger);
+
+  &:hover {
+    background: var(--oge-danger-soft);
+  }
+}
+
+.oge-action-sheet-icon {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oge-action-sheet-text {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.oge-action-sheet-label {
+  font-weight: 500;
+}
+
+.oge-action-sheet-item-description {
+  color: var(--oge-input-muted);
+  font-size: 0.9em;
+}
+
+.oge-action-sheet-item[aria-disabled='true']
+  .oge-action-sheet-item-description {
+  color: inherit;
+}
+
+.oge-action-sheet-cancel {
+  justify-content: center;
+  margin-block-start: 8px;
+  background: var(--oge-header-bg);
+  font-weight: 600;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-action-sheet-layer,
+  .oge-action-sheet,
+  .oge-action-sheet-item,
+  .oge-action-sheet-cancel {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-action-sheet {
+    border: 1px solid CanvasText;
+  }
+
+  .oge-action-sheet-handle,
+  .oge-action-sheet-divider {
+    background: CanvasText;
+  }
+
+  .oge-action-sheet-item,
+  .oge-action-sheet-cancel {
+    color: ButtonText;
+  }
+
+  .oge-action-sheet-cancel {
+    border: 1px solid ButtonText;
+  }
+
+  .oge-action-sheet-item:hover,
+  .oge-action-sheet-cancel:hover {
+    outline: 1px solid Highlight;
+  }
+
+  .oge-action-sheet-item[aria-disabled='true'] {
+    color: GrayText;
+  }
+}

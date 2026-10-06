@@ -47,6 +47,10 @@ export interface OgeOverlayMessages {
    * from English.
    */
   popoverClose?: string;
+  /** Label of the action sheet's Cancel button. Optional for pre-W8d catalogs. */
+  actionSheetCancel?: string;
+  /** Accessible name of an action sheet opened without a `title`. */
+  actionSheetLabel?: string;
 }
 
 export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
@@ -66,6 +70,8 @@ export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
   windowMoved: 'Window moved to {x}, {y}',
   windowResized: 'Window resized to {width} by {height}',
   popoverClose: 'Close',
+  actionSheetCancel: 'Cancel',
+  actionSheetLabel: 'Actions',
 };
 
 /**

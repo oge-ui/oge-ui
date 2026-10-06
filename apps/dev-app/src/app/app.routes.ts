@@ -550,6 +550,84 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/carousel',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/carousel').then((m) => m.LayoutCarouselPage),
+        title: 'OGE — Carousel',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/carousel-api').then(
+            (m) => m.LayoutCarouselApiPage,
+          ),
+        title: 'OGE — Carousel API',
+      },
+    ],
+  },
+  {
+    path: 'components/tile-layout',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/tile-layout').then(
+            (m) => m.LayoutTileLayoutPage,
+          ),
+        title: 'OGE — Tile Layout',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/tile-layout-api').then(
+            (m) => m.LayoutTileLayoutApiPage,
+          ),
+        title: 'OGE — Tile Layout API',
+      },
+    ],
+  },
+  {
+    path: 'components/data-view',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/data-view').then((m) => m.LayoutDataViewPage),
+        title: 'OGE — Data View',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/data-view-api').then(
+            (m) => m.LayoutDataViewApiPage,
+          ),
+        title: 'OGE — Data View API',
+      },
+    ],
+  },
+  {
+    path: 'components/list-view',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/list-view').then((m) => m.LayoutListViewPage),
+        title: 'OGE — List View',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/list-view-api').then(
+            (m) => m.LayoutListViewApiPage,
+          ),
+        title: 'OGE — List View API',
+      },
+    ],
+  },
+  {
     path: 'components/app-bar',
     children: [
       {
@@ -947,6 +1025,14 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/overlay/popover').then((m) => m.OverlayPopoverPage),
         title: 'OGE — Popover',
+      },
+      {
+        path: 'action-sheet',
+        loadComponent: () =>
+          import('./pages/overlay/action-sheet').then(
+            (m) => m.OverlayActionSheetPage,
+          ),
+        title: 'OGE — Action Sheet',
       },
       {
         path: 'modal',

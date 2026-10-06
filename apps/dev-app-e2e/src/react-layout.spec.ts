@@ -3,8 +3,9 @@ import { test, expect } from '@playwright/test';
 
 /**
  * The React view of the layout family (ADR 0002 + `docs/REACT-PARITY.md`).
- * The package ships as five route families — accordion, card, progress,
- * splitter and toolbar — each with an overview and an API page.
+ * The package ships as route families — accordion, card, progress, splitter,
+ * toolbar and the W8d collections (carousel, list view, data view, tile
+ * layout) — each with an overview and an API page.
  */
 const REACT = '?framework=react';
 
@@ -14,6 +15,10 @@ const FAMILIES = [
   'progress',
   'splitter',
   'toolbar',
+  'carousel',
+  'list-view',
+  'data-view',
+  'tile-layout',
 ] as const;
 
 test.describe('React layout docs', () => {
@@ -128,9 +133,10 @@ test.describe('React layout docs', () => {
     await expect(shipping).toHaveAttribute('aria-expanded', 'false');
   });
 
-  test('React layout pages have no axe violations', async ({ page }) => {
-    test.slow();
-    for (const family of FAMILIES) {
+  // one test per family: the whole loop outgrew a single test's budget
+  for (const family of FAMILIES) {
+    test(`React ${family} pages have no axe violations`, async ({ page }) => {
+      test.slow();
       for (const route of [
         `/components/${family}`,
         `/components/${family}/api`,
@@ -151,6 +157,6 @@ test.describe('React layout docs', () => {
           .analyze();
         expect(results.violations, `axe violations on ${route}`).toEqual([]);
       }
-    }
-  });
+    });
+  }
 });

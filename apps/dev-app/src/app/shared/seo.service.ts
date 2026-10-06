@@ -300,6 +300,38 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular App Bar API reference: every input and type of oge-app-bar, the start, center and end slots, positions, colors, landmarks and the config provider.',
   ],
   [
+    '/components/list-view',
+    'Angular List View by OGE UI: a templated APG listbox or list with selection, sticky groups, virtual scrolling, search, infinite scroll and swipe actions.',
+  ],
+  [
+    '/components/list-view/api',
+    'Angular List View API reference: every input, model, method, output and type of oge-list-view, the item, group, empty and footer slots and the config provider.',
+  ],
+  [
+    '/components/data-view',
+    'Angular Data View by OGE UI: templated items in responsive grid or list layouts via container queries, with search, sorting, paging and listbox selection.',
+  ],
+  [
+    '/components/data-view/api',
+    'Angular Data View API reference: every input, model, output, method and type of oge-data-view, its item, list-item and empty slots, and the config provider.',
+  ],
+  [
+    '/components/tile-layout',
+    'Angular Tile Layout by OGE UI: drag-and-drop dashboard tiles on a CSS grid with column and row spans, resize handles, keyboard twins and a saved layout state.',
+  ],
+  [
+    '/components/tile-layout/api',
+    'Angular Tile Layout API reference: every input, output and method of oge-tile-layout and its items, the cancelable reorder and resize events, slots and state.',
+  ],
+  [
+    '/components/carousel',
+    'Angular Carousel by OGE UI: an APG slide show with swipe, scroll snap, dots or thumbnails, loop, autoplay with a pause control, slides per view and RTL.',
+  ],
+  [
+    '/components/carousel/api',
+    'Angular Carousel API reference: every input, method, output and type of oge-carousel, its declarative slides, the slide template and the config provider.',
+  ],
+  [
     '/components/splitter',
     'Angular Splitter by OGE UI: resizable, collapsible, nestable panes on the WAI-ARIA window splitter pattern with ratio or pixel sizes, keyboard, RTL and touch.',
   ],
@@ -450,6 +482,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/components/overlay/popover',
     'Angular Popover by OGE UI: anchored dialogs with title, actions and a callout arrow; click, hover, focus or manual triggers, modal focus trap, typed events.',
+  ],
+  [
+    '/components/overlay/action-sheet',
+    'Angular Action Sheet by OGE UI: a mobile bottom sheet of actions with icons, destructive and disabled rows, swipe-down dismissal, a focus trap and Cancel.',
   ],
   [
     '/components/overlay/modal',

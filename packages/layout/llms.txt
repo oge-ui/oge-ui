@@ -1,6 +1,6 @@
 # @oge-ui/layout
 
-> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks.
+> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks — plus the collection and dashboard set: an APG carousel (tab-list or button picker, scroll-snap swipes, loop, autoplay that stops on keyboard focus with a rotation control), a list view (virtualized listbox or list with sticky group headers, search, infinite scroll and swipe actions), a data view (templated items in container-query columns with sorting, search, paging and selection) and a tile layout (dashboard tiles with spans, drag to reorder, resize handles, Ctrl+Arrow keyboard twins and a validated serializable state).
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeChipConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CAROUSEL_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DATA_VIEW_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LIST_VIEW_CONFIG`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TILE_LAYOUT_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeCarousel`, `OgeCarouselSlide`, `OgeCarouselSlideTemplate`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeDataView`, `OgeDataViewEmptyTemplate`, `OgeDataViewItemTemplate`, `OgeDataViewListItemTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeListView`, `OgeListViewEmptyTemplate`, `OgeListViewFooterTemplate`, `OgeListViewGroupTemplate`, `OgeListViewItemTemplate`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTileLayout`, `OgeTileLayoutContentTemplate`, `OgeTileLayoutHeaderTemplate`, `OgeTileLayoutItem`, `OgeTileLayoutItemHeader`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeCarouselConfig`, `provideOgeChipConfig`, `provideOgeDataViewConfig`, `provideOgeListViewConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTileLayoutConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`, `sanitizeOgeTileLayoutState`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSlideTemplateContext`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewEmptyTemplateContext`, `OgeDataViewItemClickEvent`, `OgeDataViewItemTemplateContext`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewEmptyTemplateContext`, `OgeListViewExpr`, `OgeListViewFooterTemplateContext`, `OgeListViewGroupTemplateContext`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemTemplateContext`, `OgeListViewKey`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewPageLoadMode`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutMessages`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTemplateContext`, `OgeTileLayoutTileState`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 `@oge-ui/layout/*`
 
@@ -1262,6 +1262,454 @@ _Vocabulary_
 | --- | --- | --- |
 | `OgeAppBarConfig / OgeAppBarConfigInput` | `interface` | The config shape and its partial input; `OGE_DEFAULT_APP_BAR_CONFIG` is the resolved default. |
 
+### OgeListView — `<oge-list-view>`
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly T[]` | `[]` | The items, in order. The component is generic: `T` is inferred from the binding, so templates and event payloads are typed. |
+| `keyExpr` | `string \| ((item: T) => unknown)` | `'id'` | Field (or function) giving each item&rsquo;s key — the identity in `selectedKeys` and every event. Primitive items are their own key. |
+| `displayExpr` | `string \| ((item: T) => unknown) \| undefined` | `—` | Field (or function) giving the text of the default row, the search and type-ahead. |
+| `disabledExpr` | `string \| ((item: T) => unknown) \| undefined` | `—` | Field (or function) marking an item disabled: it stays visible with `aria-disabled`, the keyboard skips it and it never selects. |
+| `groupExpr` | `string \| ((item: T) => unknown) \| undefined` | `—` | Field (or function) grouping the items (first-appearance order) under sticky headers. Each group is a labelled segment: `role="group"` with `aria-label` in a listbox, a `listitem` holding a labelled nested `list` otherwise; the visible header is `aria-hidden`. |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `'none' \| 'single' \| 'multiple'` | `config ?? 'none'` | `none` renders a `role="list"` with a roving tab stop; `single` / `multiple` an APG listbox whose viewport tracks the active option with `aria-activedescendant` (`aria-multiselectable` for multiple). |
+| `selectedKeys` | `readonly OgeListViewKey[] (model)` | `[]` | Keys of the selected items — two-way. Space toggles, Enter selects (single), Shift+arrows / Shift+Space / Shift+click extend a range, Ctrl+Shift+Home/End select to an edge, Ctrl+A selects all (or none). |
+| `showSelectionControls` | `boolean \| undefined` | `config ?? false` | Draws an `aria-hidden` check (multiple) or radio (single) glyph in every row; the state itself is `aria-selected`. |
+| `disabled` | `boolean` | `false` | Disables the whole list: nothing selects or activates, the search field is disabled, the viewport leaves the Tab order. |
+
+_Scrolling & paging_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `height` | `number \| string \| undefined` | `—` | Height of the scroll viewport — a number is px, a string any CSS length. A virtualized list without one uses 320px. |
+| `virtualScroll` | `boolean \| OgeListViewVirtualScrollOptions` | `false` | Windowed rendering with fixed row heights (`{ itemHeight: 44, groupHeaderHeight: 32, overscan: 6 }`) on core&rsquo;s offset tree. Keyboard navigation scrolls the active option into the window first; the header of a group the window starts inside stays pinned. |
+| `pageLoadMode` | `'none' \| 'button' \| 'scroll'` | `config ?? 'none'` | `button` renders a Load more button under the list, `scroll` emits `loadMoreRequested` when the viewport nears the end (once per page — also when a first page does not fill the viewport). The arrival of the next items is announced politely. |
+| `hasMore` | `boolean` | `false` | Whether more items can be requested; nothing is requested without it. |
+| `loading` | `boolean` | `false` | Shows the loading row under the list, sets `aria-busy` and holds further requests. |
+
+_Search, actions & labels_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `searchEnabled` | `boolean` | `false` | Renders a labelled search field (with a clear button) above the list; ArrowDown moves into the list, Escape clears. Matching is locale- and accent-insensitive and the result count is announced. |
+| `searchExpr` | `OgeListViewSearchExpr<T> \| undefined` | `—` | Field(s) the search matches — one expression or an array; default the display text. |
+| `searchMode` | `'contains' \| 'startsWith'` | `config ?? 'contains'` | How the search text matches. |
+| `searchValue` | `string (model)` | `''` | The search text — two-way. |
+| `itemActions` | `readonly OgeListViewItemAction[]` | `[]` | Per-item actions, revealed by a horizontal swipe on touch (mirrored in RTL) and on hover / focus with a mouse. They are `aria-hidden` glyphs inside the row (an option cannot hold buttons); the keyboard twin is each action&rsquo;s `shortcut`, listed in `aria-keyshortcuts` and in a shared description. |
+| `ariaLabel` | `string \| undefined` | `messages.listLabel` | Accessible name of the list / listbox. |
+| `locale` | `string \| undefined` | `config ?? LOCALE_ID` | BCP 47 locale of the announced counts (ICU plurals). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves focus into the list — the listbox viewport, or the active item of a plain list — and scrolls the active item into view. |
+| `scrollToItem(key)` | `(key: OgeListViewKey) => void` | Scrolls the item with `key` into view and makes it the active one. |
+| `clearSelection()` | `() => void` | Clears the selection (emits `selectionChanged`). |
+| `selectAll()` | `() => void` | Selects every enabled item of a multiple-selection list and announces the count. |
+| `clearSearch()` | `() => void` | Empties the search field. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectedKeysChange` | `readonly OgeListViewKey[]` | The banana half of `[(selectedKeys)]`. |
+| `searchValueChange` | `string` | The banana half of `[(searchValue)]`. |
+| `selectionChanged` | `OgeListViewSelectionChangedEvent<T>` | The selection changed through a click, a key, a range, Ctrl+A or a method — with the previous, added and removed keys, the item and the originating event. |
+| `itemClick` | `OgeListViewItemClickEvent<T>` | An item was clicked or activated with Enter. |
+| `itemActionClick` | `OgeListViewItemActionClickEvent<T>` | An item action ran — by tap, click or its keyboard shortcut (one event for all three). |
+| `loadMoreRequested` | `OgeListViewLoadMoreEvent` | The list asks for more items: `reason` `button` or `scroll`, and the `itemCount` held now (the next page&rsquo;s offset). |
+| `activeItemChanged` | `OgeListViewActiveItemChangedEvent<T>` | The active (keyboard) item moved. |
+
+#### Types
+
+_Template slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeListViewItemTemplate` | `[ogeListViewItemTemplate]` | Replaces each row&rsquo;s content. Context `OgeListViewItemTemplateContext`: `$implicit` item, `index`, `key`, `selected`, `active`, `disabled`, `group`. Keep it non-interactive — an option cannot hold controls. |
+| `OgeListViewGroupTemplate` | `[ogeListViewGroupTemplate]` | Replaces each sticky header&rsquo;s text. Context `OgeListViewGroupTemplateContext`: `$implicit` group label, `count`. |
+| `OgeListViewEmptyTemplate` | `[ogeListViewEmptyTemplate]` | Replaces the empty state. Context `OgeListViewEmptyTemplateContext`: `$implicit` searching, `searchValue`. |
+| `OgeListViewFooterTemplate` | `[ogeListViewFooterTemplate]` | Content under the list; replaces the Load more button. Context `OgeListViewFooterTemplateContext`: `$implicit` loadMore function, `loading`, `hasMore`, `itemCount`. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeListViewKey` | `string \| number` | Identity of an item. |
+| `OgeListViewExpr / OgeListViewSearchExpr` | `string \| ((item: T) => unknown) / one or an array` | Field names or reader functions. |
+| `OgeListViewSelectionMode` | `'none' \| 'single' \| 'multiple'` | Selection union. |
+| `OgeListViewPageLoadMode / OgeListViewSearchMode` | `'none' \| 'button' \| 'scroll' / 'contains' \| 'startsWith'` | Paging and search unions. |
+| `OgeListViewItemAction` | `{ key; label; icon?; severity?: 'neutral' \| 'accent' \| 'success' \| 'warning' \| 'danger'; shortcut? }` | A swipe / hover action; `icon` is SVG path data, `shortcut` an `aria-keyshortcuts` value (`Delete`, `Shift+A`). |
+| `OgeListViewVirtualScrollOptions` | `{ itemHeight?; groupHeaderHeight?; overscan? }` | Options form of `virtualScroll`. |
+| `OgeListViewSelectionChangedEvent` | `{ selectedKeys; previousKeys; addedKeys; removedKeys; item?; event? }` | Payload of `selectionChanged`. |
+| `OgeListViewItemClickEvent / OgeListViewActiveItemChangedEvent` | `{ item; key; index; event? }` | Payloads of `itemClick` / `activeItemChanged`. |
+| `OgeListViewItemActionClickEvent` | `{ action; item; key; index; event? }` | Payload of `itemActionClick`. |
+| `OgeListViewLoadMoreEvent` | `{ reason: 'button' \| 'scroll'; itemCount }` | Payload of `loadMoreRequested`. |
+| `OgeListViewActionSeverity` | `'neutral' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Colour of an action. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeListViewConfig(config)` | `(config: OgeListViewConfigInput \| (() => OgeListViewConfigInput)) => Provider` | Application- or component-scoped defaults for `selectionMode`, `searchMode`, `showSelectionControls`, `pageLoadMode`, `locale` and the `messages` (a function makes it live). Translated in every `@oge-ui/locales` pack (`layout.listView`). |
+| `OGE_LIST_VIEW_CONFIG` | `InjectionToken<OgeListViewConfig>` | The token behind `provideOgeListViewConfig()`, with `OGE_DEFAULT_LIST_VIEW_CONFIG` as its factory default. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeListViewMessages` | `interface` | Every user-facing string: `listLabel`, `searchLabel`, `searchPlaceholder`, `clearSearch`, `loadMore`, `loading`, `noData`, `noResults`, the ICU plurals `resultsCount` / `loadedCount` / `selectedCount` over `{count}`, and `itemActions` (`{actions}`). `OGE_DEFAULT_LIST_VIEW_MESSAGES` is the English catalog. |
+| `OgeListViewConfig / OgeListViewConfigInput` | `interface` | The config shape and its partial input; `OGE_DEFAULT_LIST_VIEW_CONFIG` is the resolved default. |
+
+### OgeDataView — `<oge-data-view>`
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly T[]` | `[]` | The items in their own order. With `remoteOperations`: the current page. |
+| `keyExpr` | `OgeDataViewKeyExpr<T>` | `'id'` | Field (dot paths allowed) or function giving each item’s key — the identity in `selectedKeys` and every event. |
+| `displayExpr` | `OgeDataViewDisplayExpr<T> \| undefined` | `—` | The text an item shows without a template; falls back to its `title`, `name`, `text` or `label` field. |
+| `remoteOperations` | `boolean` | `false` | The app sorts, searches and pages: listen to `optionsChanged`, pass the page as `items` and the total as `itemCount`. |
+| `itemCount` | `number \| undefined` | `—` | Total item count under `remoteOperations`; defaults to the processed items’ length. |
+| `loading` | `boolean` | `false` | Marks the items `aria-busy`; with nothing to show yet it draws skeleton tiles and a visually hidden “Loading…”. |
+| `locale` | `string \| undefined` | `config ?? LOCALE_ID` | BCP 47 locale of the sort comparison (numeric collation, so “Item 9” sorts before “Item 10”). |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the items; a listbox falls back to the `dataView` message. |
+
+_Layout_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `layout` | `'grid' \| 'list' (model)` | `config ?? 'grid'` | Responsive columns or one item per row — two-way. |
+| `showLayoutSwitch` | `boolean` | `false` | Renders the grid / list toggle-button group (`aria-pressed`) in the header. |
+| `minItemWidth` | `number \| undefined` | `config ?? 240` | Narrowest grid cell in px before another column fits. Resolved by a container query on the view’s own inline size, never the window. |
+| `columns` | `number \| undefined` | `—` | A fixed column count for the grid layout; collapses to one column in a container under 480px. |
+| `gap` | `number \| string \| undefined` | `16px` | Gap between items — px number or any CSS length. |
+
+_Paging_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `pageSize` | `number \| undefined` | `config ?? 0` | Items per page; `0` shows every item. |
+| `pageIndex` | `number (model)` | `0` | 0-based current page — two-way, clamped into the page range when rendered. |
+| `showPager` | `boolean` | `true` | Renders the built-in pager when there is more than one page. Set it to `false` and bind an `oge-pagination` to `[(pageIndex)]` for the full bar (the layout package does not depend on navigation). |
+| `showPageInfo` | `boolean` | `true` | Renders the `{from}–{to} of {itemCount}` text beside the pager. |
+
+_Sorting, search & filtering_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `sortOptions` | `readonly OgeDataViewSortOption[]` | `[]` | Choices of the built-in sort select (plus a direction toggle); empty hides both. |
+| `sort` | `OgeDataViewSort \| null (model)` | `null` | The active sort — two-way. Text compares with the locale’s collator, numbers / dates / booleans numerically, empty values last. |
+| `filter` | `((item: T) => boolean) \| null` | `null` | A predicate the items must pass (client-side only). |
+| `searchEnabled` | `boolean` | `false` | Renders the search field in the header. |
+| `searchValue` | `string (model)` | `''` | The search text — two-way. Every word must occur, compared case-, accent- and locale-insensitively. |
+| `searchExpr` | `OgeDataViewSearchExpr<T> \| undefined` | `—` | Field(s) or function the search matches; default every primitive field. |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `'none' \| 'single' \| 'multiple'` | `'none'` | Selection turns the list into an APG listbox: one roving tab stop, arrows in reading order (mirrored in RTL), Up / Down by the measured column count, PageUp / PageDown turn the page, Space / Enter toggle, Ctrl+A selects all. Options are leaves, so the template must not hold controls. |
+| `selectedKeys` | `readonly OgeDataViewKey[] (model)` | `[]` | Keys of the selected items — two-way. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(index?)` | `(index?: number) => void` | Focuses the item at `index` of the page (default: the tab stop); without selection the first focusable control inside the items. |
+| `goToPage(index)` | `(index: number) => void` | Shows page `index` (clamped) and emits `pageChanged` when it changed. |
+| `setLayout(layout)` | `(layout: OgeDataViewLayout) => void` | Switches the layout and emits `layoutChanged` when it changed. |
+| `clearSelection()` | `() => void` | Deselects everything (emits `selectionChanged`). |
+| `selectAll()` | `() => void` | Selects every item that passes the filter and search — multiple selection only. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `layoutChange` | `OgeDataViewLayout` | The banana half of `[(layout)]`. |
+| `pageIndexChange` | `number` | The banana half of `[(pageIndex)]`. |
+| `sortChange` | `OgeDataViewSort \| null` | The banana half of `[(sort)]`. |
+| `searchValueChange` | `string` | The banana half of `[(searchValue)]`. |
+| `selectedKeysChange` | `readonly OgeDataViewKey[]` | The banana half of `[(selectedKeys)]`. |
+| `layoutChanged` | `OgeDataViewLayoutChangedEvent` | The layout changed through the switch or `setLayout()`. |
+| `pageChanged` | `OgeDataViewPageChangedEvent` | The page changed through the pager, PageUp / PageDown or `goToPage()`; the new page is announced politely. |
+| `sortChanged` | `OgeDataViewSortChangedEvent` | The sort changed through the built-in select or direction toggle (the page resets to 0). |
+| `selectionChanged` | `OgeDataViewSelectionChangedEvent<T>` | The selection changed through a click, Space / Enter, Ctrl+A or a method. |
+| `itemClick` | `OgeDataViewItemClickEvent<T>` | An item was clicked (or activated with Enter / Space in a listbox). |
+| `optionsChanged` | `OgeDataViewOptionsChangedEvent` | Sort, search or page changed — the request to answer under `remoteOperations`. |
+
+#### Types
+
+_Slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDataViewItemTemplate` | `[ogeDataViewItemTemplate]` | Structural directive rendering each item in both layouts (non-interactive in a selectable view). |
+| `OgeDataViewListItemTemplate` | `[ogeDataViewListItemTemplate]` | Renders each item in the `list` layout; falls back to the item template. |
+| `OgeDataViewEmptyTemplate` | `[ogeDataViewEmptyTemplate]` | Replaces the empty state; `$implicit` says whether a search or filter caused it. |
+| `[ogeDataViewToolbar]` | `attribute slot` | Projects your own controls into the header, before the built-in search, sort and layout switch. |
+| `OgeDataViewItemTemplateContext` | `{ $implicit: T; index: number; layout: OgeDataViewLayout; selected: boolean }` | Context of the two item templates. |
+| `OgeDataViewEmptyTemplateContext` | `{ $implicit: boolean; text: string }` | Context of the empty template. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDataViewLayout` | `'grid' \| 'list'` | Responsive columns, or one item per row. |
+| `OgeDataViewSelectionMode` | `'none' \| 'single' \| 'multiple'` | `none` renders a `list`; `single` / `multiple` an APG `listbox`. |
+| `OgeDataViewKey` | `string \| number` | An item identity, from `keyExpr`. |
+| `OgeDataViewKeyExpr` | `string \| ((item: T) => OgeDataViewKey)` | Field (dot paths allowed) or function; an item without a usable key falls back to its index. |
+| `OgeDataViewDisplayExpr` | `string \| ((item: T) => string)` | Where the fallback text of a template-less item comes from. |
+| `OgeDataViewSearchExpr` | `string \| readonly string[] \| ((item: T) => string)` | The text the search matches. |
+| `OgeDataViewSort` | `{ field: string; direction: 'asc' \| 'desc' }` | The active sort. |
+| `OgeDataViewSortDirection` | `'asc' \| 'desc'` | Direction of a sort. |
+| `OgeDataViewSortOption` | `{ field: string; label: string }` | One choice of the built-in sort select. |
+| `OgeDataViewLayoutChangedEvent` | `{ layout; previousLayout; event? }` | Payload of the layout change. |
+| `OgeDataViewPageChangedEvent` | `{ pageIndex; previousPageIndex; pageSize; event? }` | Payload of the page change (0-based pages). |
+| `OgeDataViewSortChangedEvent` | `{ sort: OgeDataViewSort \| null; previousSort; event? }` | Payload of the sort change. |
+| `OgeDataViewSelectionChangedEvent` | `{ selectedKeys; previousKeys; item?; event? }` | Payload of the selection change; `item` is absent for Ctrl+A and the methods. |
+| `OgeDataViewItemClickEvent` | `{ item: T; index; key; event }` | Payload of an item click / activation. |
+| `OgeDataViewOptionsChangedEvent` | `{ sort; searchValue; pageIndex; pageSize }` | The request a `remoteOperations` app answers with the next page. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeDataViewConfig(config)` | `(config: OgeDataViewConfigInput \| (() => OgeDataViewConfigInput)) => Provider` | Application- or component-scoped defaults for `layout`, `pageSize`, `minItemWidth`, `locale` and the `messages` (a function makes it live). |
+| `OGE_DATA_VIEW_CONFIG` | `InjectionToken<OgeDataViewConfig>` | The token behind `provideOgeDataViewConfig()`, with `OGE_DEFAULT_DATA_VIEW_CONFIG` as its factory default. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDataViewConfig` | `interface` | The resolved config (`messages`, `layout?`, `pageSize?`, `minItemWidth?`, `locale?`). |
+| `OgeDataViewConfigInput` | `interface` | The partial input both providers accept (messages merged one level deep). |
+| `OGE_DEFAULT_DATA_VIEW_CONFIG` | `OgeDataViewConfig` | The resolved defaults. |
+| `OgeDataViewMessages` | `interface` | Every user-facing string, aria labels included: `dataView`, `layoutSwitch`, `gridLayout`, `listLayout`, `sortBy`, `sortNone`, `ascending`, `descending`, `search`, `searchPlaceholder`, `pager`, `previousPage`, `nextPage`, `page` (`{page}`), `pageInfo` (`{from}` `{to}` `{itemCount}`), `pageAnnouncement`, `noData`, `noResults`, `results` (ICU plural over `{count}`) and `loading`. Translated in every `@oge-ui/locales` pack (`layout.dataView`). |
+| `OGE_DEFAULT_DATA_VIEW_MESSAGES` | `OgeDataViewMessages` | The English catalog. |
+
+### OgeTileLayout — `<oge-tile-layout>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeTileLayoutItemData[]` | `[]` | The tiles as data, rendered after the declarative `oge-tile-layout-item` children. Fields: `key`, `title?`, `colSpan?`, `rowSpan?`, `order?`, `minColSpan?` / `maxColSpan?`, `minRowSpan?` / `maxRowSpan?`, `resizable?`, `reorderable?`. |
+| `columns` | `number \| undefined` | `config ?? 4` | Number of grid columns. Column spans are clamped to it; below 480px of container width the layout collapses to one column. |
+| `rowHeight` | `number \| 'auto' \| undefined` | `config ?? 160` | Height of one row track in px, or `auto` to size rows by their content. |
+| `gap` | `number \| undefined` | `config ?? 16` | Gap between tiles in px. |
+| `columnWidth` | `number \| string \| undefined` | `—` | Fixed column width (`240` px or any CSS length); default equal `1fr` columns. |
+| `resizable` | `boolean \| 'horizontal' \| 'vertical'` | `false` | Default resizability of every tile (the item&rsquo;s own `resizable` overrides it): a corner handle for the pointer, Ctrl+Shift+arrows for the keyboard. |
+| `reorderable` | `boolean` | `true` | Default reorderability: drag by the header, Ctrl+arrows on the keyboard. |
+| `state` | `OgeTileLayoutState \| undefined` | `undefined` | The committed layout (two-way `[(state)]`). `undefined` lays the tiles out from their own `order` and spans; every move and resize writes a new state. |
+| `ariaLabel` | `string \| undefined` | `messages.layoutLabel ('Dashboard')` | Accessible name of the list. |
+| `locale` | `string \| undefined` | `config ?? LOCALE_ID` | BCP 47 locale of the announcements&rsquo; plural rules. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(key?)` | `(key?: OgeTileLayoutKey) => void` | Focuses a tile (default: the current tab stop). |
+| `moveTile(key, toIndex)` | `(key: OgeTileLayoutKey, toIndex: number) => boolean` | Moves a tile through the cancelable pipeline (`source: 'api'`); `false` when nothing moved. |
+| `resizeTile(key, colSpan, rowSpan)` | `(key: OgeTileLayoutKey, colSpan: number, rowSpan: number) => boolean` | Gives a tile new spans, clamped to its bounds, through the cancelable pipeline. |
+| `getState()` | `() => OgeTileLayoutState` | The current layout as a serializable state. |
+| `applyState(state)` | `(state: unknown) => boolean` | Validates (`sanitizeOgeTileLayoutState`) and applies a persisted state; `false` and no change when it is invalid. Emits `layoutChanged`. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `reordering` | `OgeTileLayoutReorderingEvent` | A tile is about to move — set `cancel` to keep it. |
+| `reordered` | `OgeTileLayoutReorderedEvent` | A tile moved. |
+| `resizing` | `OgeTileLayoutResizingEvent` | A tile is about to change its spans — set `cancel` to keep them. |
+| `resized` | `OgeTileLayoutResizedEvent` | A tile changed its spans. |
+| `layoutChanged` | `OgeTileLayoutChangedEvent` | The layout changed (move, resize, `applyState`) — persist `state`. |
+| `stateChange` | `OgeTileLayoutState \| undefined` | The `[(state)]` model&rsquo;s change half. |
+
+#### Types
+
+_Template slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTileLayoutHeaderTemplate` | `[ogeTileLayoutHeaderTemplate]` | Replaces the title in the header of every `items` tile. The header stays the drag handle; buttons inside it are real controls that never start a drag. |
+| `OgeTileLayoutContentTemplate` | `[ogeTileLayoutContentTemplate]` | The body of every `items` tile. Ordinary flow content in the normal Tab order. |
+| `OgeTileLayoutTemplateContext` | `{ $implicit: OgeTileLayoutItemData; key; index; colSpan; rowSpan }` | Context of both slots; the spans are the live preview while a resize is in progress. |
+
+_Events & state_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTileLayoutReorderingEvent` | `{ item; key; fromIndex; toIndex; source: 'pointer' \| 'keyboard' \| 'api'; event?; cancel }` | A tile is about to move — set `cancel` to keep it where it is. The pointer drop and the keyboard emit the same payload. |
+| `OgeTileLayoutReorderedEvent` | `Omit<OgeTileLayoutReorderingEvent, 'cancel'>` | A tile moved. |
+| `OgeTileLayoutResizingEvent` | `{ item; key; previous: OgeTileLayoutSpan; next: OgeTileLayoutSpan; source; event?; cancel }` | A tile is about to change its spans (already clamped to its bounds) — set `cancel` to keep them. |
+| `OgeTileLayoutResizedEvent` | `Omit<OgeTileLayoutResizingEvent, 'cancel'>` | A tile changed its spans. |
+| `OgeTileLayoutChangedEvent` | `{ state: OgeTileLayoutState; source }` | The layout changed through a move, a resize or `applyState()` — the state to persist. |
+| `OgeTileLayoutState` | `{ version: 1; tiles: { key; order; colSpan; rowSpan }[] }` | The serializable layout. `order` is the 0-based display position. Tiles the state does not list are placed after the known ones; entries whose key no longer exists are ignored. |
+| `sanitizeOgeTileLayoutState(input, knownKeys?)` | `(input: unknown, knownKeys?: Iterable<OgeTileLayoutKey>) => OgeTileLayoutState \| null` | Validates persisted / imported state (untrusted input): never throws, rejects prototype keys at any depth, drops unknown fields, duplicate and unknown keys, keeps integer spans ≥ 1 and renumbers the order. `applyState()` runs it for you. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTileLayoutItemData` | `interface` | One tile as data: `key`, `title?`, `colSpan?`, `rowSpan?`, `order?`, `minColSpan?` / `maxColSpan?`, `minRowSpan?` / `maxRowSpan?`, `resizable?`, `reorderable?`. |
+| `OgeTileLayoutResizable` | `boolean \| 'horizontal' \| 'vertical'` | Which spans the user may change. |
+| `OgeTileLayoutSpan` | `{ colSpan: number; rowSpan: number }` | Column and row span of a tile. |
+| `OgeTileLayoutKey` | `string \| number` | Identity of a tile. |
+| `OgeTileLayoutChangeSource` | `'pointer' \| 'keyboard' \| 'api'` | What started a change; `api` is a method call. |
+
+_Keyboard_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Arrow keys / Home / End` | `focus` | Move focus between tiles (one roving tab stop; ↑/↓ go to the closest tile in the row above / below). Content inside a tile keeps its own Tab order, and the tile keys only act while the tile itself is focused. |
+| `Ctrl+← / Ctrl+→` | `move` | Move the focused tile one position earlier / later (mirrored in RTL). ⌘ works as Ctrl. |
+| `Ctrl+↑ / Ctrl+↓` | `move` | Move the focused tile to the position of the tile above / below. |
+| `Ctrl+Shift+← / Ctrl+Shift+→` | `resize` | Shrink / grow the column span (mirrored in RTL), within the tile&rsquo;s bounds. |
+| `Ctrl+Shift+↑ / Ctrl+Shift+↓` | `resize` | Shrink / grow the row span. |
+| `Escape` | `cancel` | Cancels a pointer drag or resize in progress. |
+
+### OgeTileLayoutItem — `<oge-tile-layout-item>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `key` | `string \| number \| undefined` | `auto id` | Identity reported by every event and stored in the state. Set it when the layout is persisted — the auto id is per page load. |
+| `title` | `string \| undefined` | `—` | Header text; also the tile&rsquo;s accessible name. |
+| `colSpan / rowSpan` | `number \| undefined` | `1` | Columns and rows the tile spans. |
+| `order` | `number \| undefined` | `—` | Initial position; tiles without one keep document order. |
+| `minColSpan / maxColSpan` | `number \| undefined` | `1 / columns` | Bounds of a column-span resize. |
+| `minRowSpan / maxRowSpan` | `number \| undefined` | `1 / unbounded` | Bounds of a row-span resize. |
+| `resizable` | `boolean \| 'horizontal' \| 'vertical' \| undefined` | `—` | Overrides the layout&rsquo;s `resizable`. |
+| `reorderable` | `boolean \| undefined` | `—` | Overrides the layout&rsquo;s `reorderable`. |
+
+#### Types
+
+_Slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTileLayoutItemHeader` | `[ogeTileLayoutItemHeader]` | Attribute slot: the projected element replaces the header title. Everything else projected is the tile body. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeTileLayoutConfig(config)` | `(config: OgeTileLayoutConfigInput \| (() => OgeTileLayoutConfigInput)) => Provider` | Application- or component-scoped defaults for `columns`, `rowHeight`, `gap`, `locale` and the `messages` (a function makes it live). |
+| `OGE_TILE_LAYOUT_CONFIG` | `InjectionToken<OgeTileLayoutConfig>` | The token behind `provideOgeTileLayoutConfig()`, with `OGE_DEFAULT_TILE_LAYOUT_CONFIG` as its factory default. |
+
+#### Types
+
+_Messages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTileLayoutMessages` | `interface` | `layoutLabel`, `tileRoleDescription`, `untitledTile` (`{position}`), `keyboardHint`, `dragHint`, `moved` (`{title}`, `{position}`, `{count}`), `resized` (ICU plurals over `{colSpan}` / `{rowSpan}`), `unchanged`, `dragCancelled`. Translated in every `@oge-ui/locales` pack (`layout.tileLayout`). |
+| `OgeTileLayoutConfig / OgeTileLayoutConfigInput` | `interface` | The config shape (`messages`, `columns?`, `rowHeight?`, `gap?`, `locale?`) and its partial input; `OGE_DEFAULT_TILE_LAYOUT_CONFIG` / `OGE_DEFAULT_TILE_LAYOUT_MESSAGES` are the resolved defaults. |
+
+### OgeCarousel — `<oge-carousel>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeCarouselItem[]` | `[]` | Data-driven slides, rendered after the declarative `oge-carousel-slide` children. Fields: `key?`, `image?`, `imageAlt?` (default `''` = decorative), `title?`, `description?`, `thumbnail?`, `label?`. The default template draws the image and a frosted caption. |
+| `selectedIndex` | `number (model)` | `0` | Index of the first visible slide — two-way, clamped to the slides (with several per view, to `count - slidesPerView`). |
+| `slidesPerView` | `number` | `1` | Slides shown side by side. Above one the picker switches from the APG tab list to a row of buttons, because a picker entry no longer maps to one slide. |
+| `gap` | `number \| string \| undefined` | `0 (one per view) / 16 (several)` | Space between slides — px number or any CSS length. |
+| `height` | `number \| string \| undefined` | `—` | Height of the slide viewport (px number or CSS length). Without it the track takes the tallest slide. |
+| `indicators` | `'dots' \| 'thumbnails' \| 'none'` | `config ?? 'dots'` | The picker under the slides. Thumbnails are decorative images (the tab keeps its "Slide N" name); hidden with one reachable position. |
+| `showNavigation` | `boolean \| undefined` | `config ?? true` | The previous / next buttons over the viewport edges. At an end without `loop` they are `aria-disabled` (they keep focus) rather than `disabled`. |
+| `loop` | `boolean \| undefined` | `config ?? false` | Wraps the buttons, the picker keys and swipes from the last slide to the first. The carousel rewinds — it never clones slides, so the accessibility tree always holds the real count. |
+| `autoplay` | `boolean` | `false` | Rotates the slides and renders the rotation control first in the Tab order (WCAG 2.2.2). Pauses while hovered or while the tab is hidden; keyboard focus entering the carousel **stops** it until the user restarts it (APG). Rotation always wraps. Starts stopped under `prefers-reduced-motion`. |
+| `autoplayInterval` | `number \| undefined` | `config ?? 5000` | Rotation interval in ms (at least 1000). Every manual move restarts the full interval. |
+| `pauseOnHover` | `boolean` | `true` | Pauses the rotation while a mouse or pen pointer is over the carousel. |
+| `swipeEnabled` | `boolean` | `true` | Lets touch, pen and mouse drags move between slides on the shared pointer gesture (vertical swipes still scroll the page; Escape cancels a drag). |
+| `locale` | `string \| undefined` | `config ?? LOCALE_ID` | BCP 47 locale the slide numbers are formatted in. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name. Set, the host is a named `region`; unset, a `group` named by the `label` message (no unnamed landmark). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `next()` | `() => void` | Shows the next slide (wraps only with `loop`). |
+| `previous()` | `() => void` | Shows the previous slide (wraps only with `loop`). |
+| `goTo(index)` | `(index: number) => void` | Shows slide `index` (clamped). |
+| `play()` | `() => void` | Starts the rotation (only while `autoplay` is on); emits `autoplayChanged` with `source: 'api'`. |
+| `pause()` | `() => void` | Stops the rotation until the user or `play()` restarts it. |
+| `focus()` | `() => void` | Focuses the selected picker entry, else the first control. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectedIndexChange` | `number` | The banana half of `[(selectedIndex)]`. |
+| `slideChanged` | `OgeCarouselSlideChangedEvent` | The first visible slide changed: `index`, `previousIndex` and `source` (`'next'`, `'previous'`, `'picker'`, `'swipe'`, `'autoplay'`, `'api'`). |
+| `autoplayChanged` | `OgeCarouselAutoplayChangedEvent` | The rotation was started or stopped: `playing` and `source` (`'user'` — the rotation control or focus entering — or `'api'`). Temporary hover / hidden-tab pauses are not reported. |
+
+#### Types
+
+_Declarative slides & templates_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCarouselSlide` | `component <oge-carousel-slide>` | One declarative slide; projected content is the body. Inputs: `label` (the slide name prefix), `thumbnail`, `visible`. |
+| `OgeCarouselSlideTemplate` | `[ogeCarouselSlideTemplate]` | Structural directive replacing the image + caption of every `items` slide. The carousel keeps the slide role, the name and the `inert` state. |
+| `OgeCarouselSlideTemplateContext` | `{ $implicit: OgeCarouselItem; index: number; count: number; active: boolean }` | Context of the slide template. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCarouselItem` | `interface` | One data-driven slide: `key?`, `image?`, `imageAlt?` (default `''` = decorative), `title?`, `description?`, `thumbnail?`, `label?`. |
+| `OgeCarouselIndicators` | `'dots' \| 'thumbnails' \| 'none'` | Picker union. |
+| `OgeCarouselPickerMode` | `'tabs' \| 'buttons'` | The APG picker shape (`ogeCarouselPickerMode(slidesPerView)`). |
+| `OgeCarouselChangeSource` | `'next' \| 'previous' \| 'picker' \| 'swipe' \| 'autoplay' \| 'api'` | What moved the carousel. |
+| `OgeCarouselSlideChangedEvent` | `{ index: number; previousIndex: number; source: OgeCarouselChangeSource }` | Payload of `slideChanged`. |
+| `OgeCarouselAutoplayChangedEvent` | `{ playing: boolean; source: 'user' \| 'api' }` | Payload of `autoplayChanged`. |
+
+### Configuration
+
+#### Properties
+
+_provideOgeCarouselConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeCarouselMessages` | Every user-facing string: the role descriptions `carousel` / `slide`, the fallback `label`, `previous`, `next`, `play`, `pause`, `picker`, and the numbered names `slideLabel` (`{index} of {count}`), `slideTitleLabel` (`{title}, {index} of {count}`) and `goToSlide` (`Slide {index}`). Translated in every `@oge-ui/locales` pack (`layout.carousel`). |
+| `indicators / loop / autoplayInterval / showNavigation / locale` | `—` | Defaults for the matching inputs. Pass a function for a live config. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeCarouselConfig` | `(config: OgeCarouselConfigInput \| (() => OgeCarouselConfigInput)) => Provider` | Application- or component-scoped defaults; a function makes the config live. |
+| `OGE_CAROUSEL_CONFIG` | `InjectionToken<OgeCarouselConfig>` | The resolved config the carousel injects. |
+| `OGE_DEFAULT_CAROUSEL_CONFIG` | `OgeCarouselConfig` | The defaults (from `@oge-ui/behavior`). |
+| `OGE_DEFAULT_CAROUSEL_MESSAGES` | `OgeCarouselMessages` | The English catalog. |
+| `OgeCarouselConfig` | `{ messages: OgeCarouselMessages; indicators?; loop?; autoplayInterval?; showNavigation?; locale? }` | Resolved config shape. |
+| `OgeCarouselConfigInput` | `Partial<OgeCarouselConfig> with partial messages` | What the provider accepts. |
+| `OgeCarouselMessages` | `{ carousel; slide; label; previous; next; play; pause; picker; slideLabel; slideTitleLabel; goToSlide }` | The carousel catalog. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -2073,6 +2521,254 @@ export class Demo {
 }
 ```
 
+### Carousel autoplay
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeCarousel } from '@oge-ui/layout';
+import type { OgeCarouselAutoplayChangedEvent, OgeCarouselItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCarousel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- WCAG 2.2.2: the rotation control is always rendered and comes first.
+         Hovering pauses; keyboard focus entering the carousel stops it until the
+         user presses play. The slides region is aria-live="off" while it
+         rotates and "polite" once stopped. Under prefers-reduced-motion it
+         starts stopped. -->
+    <oge-carousel
+      #carousel
+      [items]="destinations"
+      [autoplay]="true"
+      [autoplayInterval]="4000"
+      [height]="300"
+      ariaLabel="Rotating highlights"
+      (slideChanged)="log('slide ' + ($event.index + 1) + ' via ' + $event.source)"
+      (autoplayChanged)="onAutoplay($event)"
+    />
+    <button type="button" (click)="carousel.play()">play()</button>
+    <button type="button" (click)="carousel.pause()">pause()</button>
+    <button type="button" (click)="carousel.goTo(0)">goTo(0)</button>
+    <p>{{ last() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly last = signal('No events yet');
+  protected readonly destinations: OgeCarouselItem[] = [
+    {
+      key: 'coast',
+      image: '/demo/carousel/coast.svg',
+      imageAlt: 'A palm tree on a sandy beach by a calm blue sea',
+      title: 'Turquoise Coast',
+      description: 'Seven days of coves, ruins and slow mornings.',
+    },
+    {
+      key: 'mountains',
+      image: '/demo/carousel/mountains.svg',
+      imageAlt: 'Snow-capped violet peaks under a pink evening sky',
+      title: 'Kaçkar Mountains',
+      description: 'Highland villages and the trail to the glacier lakes.',
+    },
+    {
+      key: 'city',
+      image: '/demo/carousel/city.svg',
+      imageAlt: 'A city skyline with lit windows at sunset',
+      title: 'Istanbul by night',
+      description: 'Rooftops, ferries and the Bosphorus after dark.',
+    },
+  ];
+
+  protected log(message: string): void {
+    this.last.set(message);
+  }
+
+  protected onAutoplay(event: OgeCarouselAutoplayChangedEvent): void {
+    this.log((event.playing ? 'playing' : 'stopped') + ' by ' + event.source);
+  }
+}
+```
+
+### Carousel basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeCarousel } from '@oge-ui/layout';
+import type { OgeCarouselItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCarousel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A named region with aria-roledescription="carousel"; every slide is a
+         group named "Turquoise Coast, 1 of 3", and the slides out of view are
+         inert. The dots are an APG tab list: arrows, Home and End. -->
+    <oge-carousel
+      [items]="destinations"
+      [(selectedIndex)]="index"
+      [height]="320"
+      ariaLabel="Featured destinations"
+    />
+    <p>Showing slide {{ index() + 1 }}</p>
+  `,
+})
+export class Demo {
+  protected readonly index = signal(0);
+  protected readonly destinations: OgeCarouselItem[] = [
+    {
+      key: 'coast',
+      image: '/demo/carousel/coast.svg',
+      imageAlt: 'A palm tree on a sandy beach by a calm blue sea',
+      title: 'Turquoise Coast',
+      description: 'Seven days of coves, ruins and slow mornings.',
+    },
+    {
+      key: 'mountains',
+      image: '/demo/carousel/mountains.svg',
+      imageAlt: 'Snow-capped violet peaks under a pink evening sky',
+      title: 'Kaçkar Mountains',
+      description: 'Highland villages and the trail to the glacier lakes.',
+    },
+    {
+      key: 'city',
+      image: '/demo/carousel/city.svg',
+      imageAlt: 'A city skyline with lit windows at sunset',
+      title: 'Istanbul by night',
+      description: 'Rooftops, ferries and the Bosphorus after dark.',
+    },
+  ];
+}
+```
+
+### Carousel declarative
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeCarousel, OgeCarouselSlide } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCarousel, OgeCarouselSlide],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Declarative slides project any content. Off-screen slides are inert,
+         so the link in a hidden slide never steals a Tab stop. -->
+    <oge-carousel ariaLabel="Release notes" [height]="200">
+      <oge-carousel-slide label="Version 1.3">
+        <h3>Version 1.3</h3>
+        <p>Carousel, action sheet, list and data views, tile layouts.</p>
+        <a href="#declarative-slides">Read the notes</a>
+      </oge-carousel-slide>
+      <oge-carousel-slide label="Version 1.2">
+        <h3>Version 1.2</h3>
+        <p>Avatars, badges, chips, alerts, timelines and app bars.</p>
+      </oge-carousel-slide>
+      <oge-carousel-slide label="Version 1.1">
+        <h3>Version 1.1</h3>
+        <p>The React render layer.</p>
+      </oge-carousel-slide>
+    </oge-carousel>
+  `,
+})
+export class Demo {}
+```
+
+### Carousel multi
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeCarousel, OgeCarouselSlideTemplate } from '@oge-ui/layout';
+import type { OgeCarouselItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCarousel, OgeCarouselSlideTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Several slides per view: the picker becomes a row of buttons (one
+         per reachable position, aria-current on the current one), because a
+         dot no longer maps to one slide. The template draws the content only;
+         the carousel keeps the group role and the "N of M" name. -->
+    <oge-carousel
+      [items]="products"
+      [slidesPerView]="3"
+      [gap]="16"
+      ariaLabel="Recommended products"
+    >
+      <ng-template ogeCarouselSlideTemplate let-item let-active="active">
+        <div class="product">
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.description }}</span>
+          <button type="button" [disabled]="!active">Add to basket</button>
+        </div>
+      </ng-template>
+    </oge-carousel>
+  `,
+})
+export class Demo {
+  protected readonly products: OgeCarouselItem[] = [
+    { key: 'p1', title: 'Desk lamp', description: '€49 · warm white' },
+    { key: 'p2', title: 'Notebook', description: '€12 · dotted, A5' },
+    { key: 'p3', title: 'Headphones', description: '€129 · noise cancelling' },
+    { key: 'p4', title: 'Mug', description: '€15 · stoneware' },
+    { key: 'p5', title: 'Backpack', description: '€89 · 20 litres' },
+  ];
+}
+```
+
+### Carousel thumbnails
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeCarousel } from '@oge-ui/layout';
+import type { OgeCarouselItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCarousel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Thumbnails come from each item's thumbnail (or its image) and are
+         decorative: the tab is named "Slide 2". loop wraps the buttons, the
+         picker keys and swipes from the last slide back to the first. -->
+    <oge-carousel
+      [items]="destinations"
+      indicators="thumbnails"
+      [loop]="true"
+      [height]="300"
+      ariaLabel="Destinations with thumbnails"
+    />
+  `,
+})
+export class Demo {
+  protected readonly destinations: OgeCarouselItem[] = [
+    {
+      key: 'coast',
+      image: '/demo/carousel/coast.svg',
+      imageAlt: 'A palm tree on a sandy beach by a calm blue sea',
+      title: 'Turquoise Coast',
+      description: 'Seven days of coves, ruins and slow mornings.',
+    },
+    {
+      key: 'mountains',
+      image: '/demo/carousel/mountains.svg',
+      imageAlt: 'Snow-capped violet peaks under a pink evening sky',
+      title: 'Kaçkar Mountains',
+      description: 'Highland villages and the trail to the glacier lakes.',
+    },
+    {
+      key: 'city',
+      image: '/demo/carousel/city.svg',
+      imageAlt: 'A city skyline with lit windows at sunset',
+      title: 'Istanbul by night',
+      description: 'Rooftops, ferries and the Bosphorus after dark.',
+    },
+  ];
+}
+```
+
 ### Chips
 
 ```ts
@@ -2292,6 +2988,656 @@ export class Demo {
   ];
   protected readonly counts: Record<string, number> = { ts: 128, rs: 42, go: 37 };
   protected readonly picked = signal<readonly OgeChipKey[]>(['ts']);
+}
+```
+
+### Basics
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeDataView, OgeDataViewItemTemplate } from '@oge-ui/layout';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  rating: number;
+  inStock: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDataView, OgeDataViewItemTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Without selection the view is a list of listitems: templates may
+         hold links and buttons, which stay in the Tab order. Columns follow
+         the view's own width (a container query), never the window. -->
+    <oge-data-view [items]="products" ariaLabel="Products">
+      <ng-template ogeDataViewItemTemplate let-item>
+        <p class="category">{{ item.category }}</p>
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.price }} USD · ★ {{ item.rating }}</p>
+      </ng-template>
+    </oge-data-view>
+  `,
+})
+export class Demo {
+  protected readonly products: Product[] = [
+    { id: 1, name: 'Oak desk', category: 'Furniture', price: 420, rating: 4.6, inStock: true },
+    { id: 2, name: 'Mesh office chair', category: 'Furniture', price: 260, rating: 4.4, inStock: true },
+    { id: 3, name: 'Desk lamp', category: 'Lighting', price: 45, rating: 4.1, inStock: false },
+    { id: 4, name: 'Wall shelf', category: 'Storage', price: 89, rating: 3.9, inStock: true },
+    { id: 5, name: 'Wool rug', category: 'Textiles', price: 150, rating: 4.8, inStock: true },
+    { id: 6, name: 'Floor lamp', category: 'Lighting', price: 120, rating: 4.2, inStock: true },
+  ];
+}
+```
+
+### Layout
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDataView, OgeDataViewItemTemplate, OgeDataViewListItemTemplate } from '@oge-ui/layout';
+import type { OgeDataViewLayout } from '@oge-ui/layout';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  rating: number;
+  inStock: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDataView, OgeDataViewItemTemplate, OgeDataViewListItemTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The switch is a real toggle-button group (aria-pressed). minItemWidth
+         sets the narrowest cell before another column fits; the list layout
+         can render its own row template. -->
+    <oge-data-view
+      [items]="products"
+      [(layout)]="layout"
+      [showLayoutSwitch]="true"
+      [minItemWidth]="200"
+      ariaLabel="Products by layout"
+    >
+      <ng-template ogeDataViewItemTemplate let-item>
+        <p class="category">{{ item.category }}</p>
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.price }} USD · ★ {{ item.rating }}</p>
+      </ng-template>
+      <ng-template ogeDataViewListItemTemplate let-item>
+        <strong>{{ item.name }}</strong> — {{ item.category }}, {{ item.price }} USD
+      </ng-template>
+    </oge-data-view>
+    <p>Layout: {{ layout() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly layout = signal<OgeDataViewLayout>('grid');
+  protected readonly products: Product[] = [
+    { id: 1, name: 'Oak desk', category: 'Furniture', price: 420, rating: 4.6, inStock: true },
+    { id: 2, name: 'Mesh office chair', category: 'Furniture', price: 260, rating: 4.4, inStock: true },
+    { id: 3, name: 'Desk lamp', category: 'Lighting', price: 45, rating: 4.1, inStock: false },
+    { id: 4, name: 'Wall shelf', category: 'Storage', price: 89, rating: 3.9, inStock: true },
+    { id: 5, name: 'Wool rug', category: 'Textiles', price: 150, rating: 4.8, inStock: true },
+    { id: 6, name: 'Floor lamp', category: 'Lighting', price: 120, rating: 4.2, inStock: true },
+  ];
+}
+```
+
+### Paging
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDataView, OgeDataViewItemTemplate } from '@oge-ui/layout';
+import type { OgeDataViewPageChangedEvent } from '@oge-ui/layout';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  rating: number;
+  inStock: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDataView, OgeDataViewItemTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- pageSize turns paging on; the built-in pager keeps focus on the
+         button you pressed and announces "Page 2 of 3". For the full
+         oge-pagination bar, bind it to [(pageIndex)] and set showPager=false. -->
+    <oge-data-view
+      [items]="products"
+      [pageSize]="2"
+      [(pageIndex)]="page"
+      ariaLabel="Paged products"
+      (pageChanged)="onPage($event)"
+    >
+      <ng-template ogeDataViewItemTemplate let-item>
+        <p class="category">{{ item.category }}</p>
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.price }} USD · ★ {{ item.rating }}</p>
+      </ng-template>
+    </oge-data-view>
+    <p>Page {{ page() + 1 }}</p>
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+  protected readonly products: Product[] = [
+    { id: 1, name: 'Oak desk', category: 'Furniture', price: 420, rating: 4.6, inStock: true },
+    { id: 2, name: 'Mesh office chair', category: 'Furniture', price: 260, rating: 4.4, inStock: true },
+    { id: 3, name: 'Desk lamp', category: 'Lighting', price: 45, rating: 4.1, inStock: false },
+    { id: 4, name: 'Wall shelf', category: 'Storage', price: 89, rating: 3.9, inStock: true },
+    { id: 5, name: 'Wool rug', category: 'Textiles', price: 150, rating: 4.8, inStock: true },
+    { id: 6, name: 'Floor lamp', category: 'Lighting', price: 120, rating: 4.2, inStock: true },
+  ];
+
+  protected onPage(event: OgeDataViewPageChangedEvent): void {
+    console.log('page', event.previousPageIndex, '→', event.pageIndex);
+  }
+}
+```
+
+### Remote
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDataView, OgeDataViewItemTemplate } from '@oge-ui/layout';
+import { ogeDataViewProcess } from '@oge-ui/behavior';
+import type { OgeDataViewOptionsChangedEvent } from '@oge-ui/layout';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  rating: number;
+  inStock: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDataView, OgeDataViewItemTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- remoteOperations: the view neither sorts, searches nor pages. It
+         emits optionsChanged; the app answers with the page as items and the
+         total as itemCount. loading draws skeletons and sets aria-busy. -->
+    <oge-data-view
+      [items]="page()"
+      [itemCount]="total()"
+      [pageSize]="3"
+      [remoteOperations]="true"
+      [loading]="loading()"
+      [searchEnabled]="true"
+      [sortOptions]="[{ field: 'name', label: 'Name' }, { field: 'price', label: 'Price' }]"
+      ariaLabel="Server products"
+      (optionsChanged)="load($event)"
+    >
+      <ng-template ogeDataViewItemTemplate let-item>
+        <p class="category">{{ item.category }}</p>
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.price }} USD · ★ {{ item.rating }}</p>
+      </ng-template>
+    </oge-data-view>
+  `,
+})
+export class Demo {
+  protected readonly page = signal<Product[]>([]);
+  protected readonly total = signal(0);
+  protected readonly loading = signal(false);
+  protected readonly products: Product[] = [
+    { id: 1, name: 'Oak desk', category: 'Furniture', price: 420, rating: 4.6, inStock: true },
+    { id: 2, name: 'Mesh office chair', category: 'Furniture', price: 260, rating: 4.4, inStock: true },
+    { id: 3, name: 'Desk lamp', category: 'Lighting', price: 45, rating: 4.1, inStock: false },
+    { id: 4, name: 'Wall shelf', category: 'Storage', price: 89, rating: 3.9, inStock: true },
+    { id: 5, name: 'Wool rug', category: 'Textiles', price: 150, rating: 4.8, inStock: true },
+    { id: 6, name: 'Floor lamp', category: 'Lighting', price: 120, rating: 4.2, inStock: true },
+  ];
+
+  constructor() {
+    this.load({ sort: null, searchValue: '', pageIndex: 0, pageSize: 3 });
+  }
+
+  /** Stands in for an HTTP call: the "server" filters, sorts and slices. */
+  protected load(options: OgeDataViewOptionsChangedEvent): void {
+    this.loading.set(true);
+    setTimeout(() => {
+      const all = ogeDataViewProcess(this.products, {
+        searchValue: options.searchValue,
+        searchExpr: ['name', 'category'],
+        sort: options.sort,
+      });
+      const start = options.pageIndex * options.pageSize;
+      this.page.set(all.slice(start, start + options.pageSize));
+      this.total.set(all.length);
+      this.loading.set(false);
+    }, 400);
+  }
+}
+```
+
+### Selection
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDataView, OgeDataViewItemTemplate } from '@oge-ui/layout';
+import type { OgeDataViewKey } from '@oge-ui/layout';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  rating: number;
+  inStock: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDataView, OgeDataViewItemTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- With selection the view is an APG listbox: one tab stop, arrows in
+         reading order (mirrored in RTL), Up/Down by a row, Space/Enter toggle,
+         Ctrl+A selects all. Options are leaves — keep the template free of
+         buttons and links. -->
+    <oge-data-view
+      [items]="products"
+      selectionMode="multiple"
+      [(selectedKeys)]="selected"
+      ariaLabel="Pick products"
+    >
+      <ng-template ogeDataViewItemTemplate let-item>
+        <p class="category">{{ item.category }}</p>
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.price }} USD · ★ {{ item.rating }}</p>
+      </ng-template>
+    </oge-data-view>
+    <p>Selected: {{ selected().join(', ') || 'none' }}</p>
+  `,
+})
+export class Demo {
+  protected readonly selected = signal<readonly OgeDataViewKey[]>([2]);
+  protected readonly products: Product[] = [
+    { id: 1, name: 'Oak desk', category: 'Furniture', price: 420, rating: 4.6, inStock: true },
+    { id: 2, name: 'Mesh office chair', category: 'Furniture', price: 260, rating: 4.4, inStock: true },
+    { id: 3, name: 'Desk lamp', category: 'Lighting', price: 45, rating: 4.1, inStock: false },
+    { id: 4, name: 'Wall shelf', category: 'Storage', price: 89, rating: 3.9, inStock: true },
+    { id: 5, name: 'Wool rug', category: 'Textiles', price: 150, rating: 4.8, inStock: true },
+    { id: 6, name: 'Floor lamp', category: 'Lighting', price: 120, rating: 4.2, inStock: true },
+  ];
+}
+```
+
+### Sort
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDataView, OgeDataViewItemTemplate } from '@oge-ui/layout';
+import type { OgeDataViewSort, OgeDataViewSortOption } from '@oge-ui/layout';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  rating: number;
+  inStock: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDataView, OgeDataViewItemTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Search folds case and accents ("eclair" finds "Éclair"); the sort
+         compares text with the locale's collator and numbers numerically.
+         filter is a plain predicate hook. -->
+    <label>
+      <input type="checkbox" (change)="inStockOnly.set($any($event.target).checked)" />
+      In stock only
+    </label>
+    <oge-data-view
+      [items]="products"
+      [searchEnabled]="true"
+      [searchExpr]="['name', 'category']"
+      [sortOptions]="sortOptions"
+      [(sort)]="sort"
+      [filter]="inStockOnly() ? inStock : null"
+      ariaLabel="Searchable products"
+    >
+      <ng-template ogeDataViewItemTemplate let-item>
+        <p class="category">{{ item.category }}</p>
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.price }} USD · ★ {{ item.rating }}</p>
+      </ng-template>
+    </oge-data-view>
+  `,
+})
+export class Demo {
+  protected readonly inStockOnly = signal(false);
+  protected readonly sort = signal<OgeDataViewSort | null>({ field: 'price', direction: 'asc' });
+  protected readonly sortOptions: OgeDataViewSortOption[] = [
+    { field: 'name', label: 'Name' },
+    { field: 'price', label: 'Price' },
+    { field: 'rating', label: 'Rating' },
+  ];
+  protected readonly inStock = (product: Product) => product.inStock;
+  protected readonly products: Product[] = [
+    { id: 1, name: 'Oak desk', category: 'Furniture', price: 420, rating: 4.6, inStock: true },
+    { id: 2, name: 'Mesh office chair', category: 'Furniture', price: 260, rating: 4.4, inStock: true },
+    { id: 3, name: 'Desk lamp', category: 'Lighting', price: 45, rating: 4.1, inStock: false },
+    { id: 4, name: 'Wall shelf', category: 'Storage', price: 89, rating: 3.9, inStock: true },
+    { id: 5, name: 'Wool rug', category: 'Textiles', price: 150, rating: 4.8, inStock: true },
+    { id: 6, name: 'Floor lamp', category: 'Lighting', price: 120, rating: 4.2, inStock: true },
+  ];
+}
+```
+
+### Actions
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeListView } from '@oge-ui/layout';
+import type { OgeListViewItemAction, OgeListViewItemActionClickEvent } from '@oge-ui/layout';
+
+interface Message {
+  id: number;
+  from: string;
+  subject: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeListView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Swipe a row sideways on touch (mirrored in RTL) or hover it with a mouse
+         to reveal the actions; the keyboard twin is each action's shortcut,
+         advertised in aria-keyshortcuts. -->
+    <oge-list-view
+      [items]="inbox()"
+      displayExpr="subject"
+      selectionMode="single"
+      [itemActions]="actions"
+      ariaLabel="Inbox"
+      (itemActionClick)="onAction($event)"
+    />
+    <p>Last action: {{ last() ?? '—' }}</p>
+  `,
+})
+export class Demo {
+  protected readonly inbox = signal<Message[]>([
+    { id: 1, from: 'Build bot', subject: 'Nightly build passed' },
+    { id: 2, from: 'Ayşe Kaya', subject: 'Design review moved to Friday' },
+    { id: 3, from: 'Billing', subject: 'Your invoice for October' },
+  ]);
+  protected readonly last = signal<string | null>(null);
+  protected readonly actions: OgeListViewItemAction[] = [
+    { key: 'archive', label: 'Archive', severity: 'accent', shortcut: 'Shift+A' },
+    { key: 'delete', label: 'Delete', severity: 'danger', shortcut: 'Delete' },
+  ];
+
+  protected onAction(event: OgeListViewItemActionClickEvent<Message>): void {
+    this.last.set(`${event.action.label}: ${event.item.subject}`);
+    this.inbox.set(this.inbox().filter((m) => m.id !== event.key));
+  }
+}
+```
+
+### Basics
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeListView, OgeListViewItemTemplate } from '@oge-ui/layout';
+import type { OgeListViewItemClickEvent } from '@oge-ui/layout';
+
+interface Person {
+  id: number;
+  name: string;
+  role: string;
+  team: string;
+  away?: boolean;
+}
+
+const PEOPLE: Person[] = [
+  { id: 1, name: 'Ada Lovelace', role: 'Analyst', team: 'Research' },
+  { id: 2, name: 'Grace Hopper', role: 'Compiler lead', team: 'Platform' },
+  { id: 3, name: 'Alan Turing', role: 'Cryptanalyst', team: 'Research', away: true },
+  { id: 4, name: 'Margaret Hamilton', role: 'Flight software', team: 'Platform' },
+  { id: 7, name: 'Barbara Liskov', role: 'Abstractions', team: 'Design' },
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeListView, OgeListViewItemTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- selectionMode "none" (the default) renders role="list": the items hold
+         one roving tab stop, arrows / Home / End / type-ahead move it and Enter
+         (or a click) reports itemClick. -->
+    <oge-list-view
+      [items]="people"
+      displayExpr="name"
+      ariaLabel="Team"
+      (itemClick)="onClick($event)"
+    >
+      <ng-template ogeListViewItemTemplate let-person>
+        <span class="flex flex-col">
+          <strong>{{ person.name }}</strong>
+          <small>{{ person.role }}</small>
+        </span>
+      </ng-template>
+    </oge-list-view>
+    <p>Opened: {{ opened() ?? '—' }}</p>
+  `,
+})
+export class Demo {
+  protected readonly people = PEOPLE;
+  protected readonly opened = signal<string | null>(null);
+  protected onClick(event: OgeListViewItemClickEvent<Person>): void {
+    this.opened.set(event.item.name);
+  }
+}
+```
+
+### Grouping
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeListView, OgeListViewGroupTemplate } from '@oge-ui/layout';
+
+interface Person {
+  id: number;
+  name: string;
+  role: string;
+  team: string;
+  away?: boolean;
+}
+
+const PEOPLE: Person[] = [
+  { id: 1, name: 'Ada Lovelace', role: 'Analyst', team: 'Research' },
+  { id: 2, name: 'Grace Hopper', role: 'Compiler lead', team: 'Platform' },
+  { id: 3, name: 'Alan Turing', role: 'Cryptanalyst', team: 'Research', away: true },
+  { id: 4, name: 'Margaret Hamilton', role: 'Flight software', team: 'Platform' },
+  { id: 7, name: 'Barbara Liskov', role: 'Abstractions', team: 'Design' },
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeListView, OgeListViewGroupTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Each group is a labelled segment; its header is aria-hidden and
+         position: sticky inside the segment, so the next header pushes it out. -->
+    <oge-list-view
+      [items]="people"
+      displayExpr="name"
+      groupExpr="team"
+      selectionMode="single"
+      height="260px"
+      ariaLabel="People by team"
+    >
+      <ng-template ogeListViewGroupTemplate let-team let-count="count">
+        {{ team }} · {{ count }}
+      </ng-template>
+    </oge-list-view>
+  `,
+})
+export class Demo {
+  protected readonly people = PEOPLE;
+}
+```
+
+### Search
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeListView } from '@oge-ui/layout';
+
+interface City {
+  id: number;
+  name: string;
+  country: string;
+}
+
+const NAMES = ['İstanbul', 'Ankara', 'Berlin', 'München', 'Paris', 'Zürich', 'Kraków', 'São Paulo'];
+
+function page(index: number, size = 16): City[] {
+  return Array.from({ length: size }, (_, i) => {
+    const n = index * size + i;
+    return { id: n + 1, name: `${NAMES[n % NAMES.length]} ${n + 1}`, country: 'Demo' };
+  });
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeListView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The search field filters locale- and accent-insensitively ("istanbul"
+         finds "İstanbul") and announces the result count. pageLoadMode "scroll"
+         asks for the next page near the end; "button" renders a Load more button. -->
+    <oge-list-view
+      [items]="cities()"
+      displayExpr="name"
+      [searchEnabled]="true"
+      pageLoadMode="scroll"
+      [hasMore]="cities().length < 96"
+      [loading]="loading()"
+      [height]="300"
+      ariaLabel="Cities"
+      (loadMoreRequested)="loadMore()"
+    />
+  `,
+})
+export class Demo {
+  protected readonly cities = signal<City[]>(page(0));
+  protected readonly loading = signal(false);
+
+  protected loadMore(): void {
+    this.loading.set(true);
+    setTimeout(() => {
+      const next = page(this.cities().length / 16);
+      this.cities.set([...this.cities(), ...next]);
+      this.loading.set(false);
+    }, 600);
+  }
+}
+```
+
+### Selection
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeListView } from '@oge-ui/layout';
+import type { OgeListViewKey } from '@oge-ui/layout';
+
+interface Person {
+  id: number;
+  name: string;
+  role: string;
+  team: string;
+  away?: boolean;
+}
+
+const PEOPLE: Person[] = [
+  { id: 1, name: 'Ada Lovelace', role: 'Analyst', team: 'Research' },
+  { id: 2, name: 'Grace Hopper', role: 'Compiler lead', team: 'Platform' },
+  { id: 3, name: 'Alan Turing', role: 'Cryptanalyst', team: 'Research', away: true },
+  { id: 4, name: 'Margaret Hamilton', role: 'Flight software', team: 'Platform' },
+  { id: 7, name: 'Barbara Liskov', role: 'Abstractions', team: 'Design' },
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeListView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A selectable list is an APG listbox: the viewport takes focus and tracks
+         the active option with aria-activedescendant. Space toggles, Shift+arrows
+         extend, Ctrl+A selects all; disabledExpr marks options aria-disabled. -->
+    <oge-list-view
+      [items]="people"
+      displayExpr="name"
+      disabledExpr="away"
+      selectionMode="multiple"
+      [showSelectionControls]="true"
+      [(selectedKeys)]="picked"
+      ariaLabel="Reviewers"
+    />
+    <p>Selected: {{ picked().join(', ') || 'none' }}</p>
+  `,
+})
+export class Demo {
+  protected readonly people = PEOPLE;
+  protected readonly picked = signal<readonly OgeListViewKey[]>([2]);
+}
+```
+
+### Virtual
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeListView } from '@oge-ui/layout';
+import type { OgeListViewKey } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeListView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Fixed row heights let the list render only a window of rows — 10 000
+         tickets stay instant. Keyboard navigation scrolls the active option into
+         the window first, so aria-activedescendant always resolves. -->
+    <oge-list-view
+      [items]="tickets"
+      displayExpr="name"
+      selectionMode="single"
+      [(selectedKeys)]="selected"
+      [virtualScroll]="{ itemHeight: 44 }"
+      [height]="320"
+      ariaLabel="Tickets"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tickets = Array.from({ length: 10_000 }, (_, i) => ({
+    id: i + 1,
+    name: `Ticket #${String(i + 1).padStart(5, '0')}`,
+  }));
+  protected readonly selected = signal<readonly OgeListViewKey[]>([]);
 }
 ```
 
@@ -3397,6 +4743,258 @@ export class Demo {
     effect(() =>
       localStorage.setItem('editor-layout', JSON.stringify(this.sizes())),
     );
+  }
+}
+```
+
+### Basics
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTileLayout, OgeTileLayoutContentTemplate } from '@oge-ui/layout';
+import type { OgeTileLayoutItemData } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTileLayout, OgeTileLayoutContentTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A labelled list of tiles on a 4-column grid. colSpan / rowSpan
+         place each tile; grid-auto-flow: dense back-fills the gaps. Below
+         480px of container width the layout collapses to one column. -->
+    <oge-tile-layout
+      [items]="tiles"
+      [columns]="4"
+      [rowHeight]="120"
+      ariaLabel="Sales dashboard"
+    >
+      <ng-template ogeTileLayoutContentTemplate let-item>
+        <strong class="kpi">{{ kpis[item.key] }}</strong>
+      </ng-template>
+    </oge-tile-layout>
+  `,
+})
+export class Demo {
+  protected readonly tiles: OgeTileLayoutItemData[] = [
+    { key: 'revenue', title: 'Revenue', colSpan: 2 },
+    { key: 'orders', title: 'Orders' },
+    { key: 'visitors', title: 'Visitors' },
+    { key: 'traffic', title: 'Traffic sources', colSpan: 2, rowSpan: 2 },
+    { key: 'conversion', title: 'Conversion' },
+    { key: 'refunds', title: 'Refunds' },
+    { key: 'tickets', title: 'Open tickets', colSpan: 2 },
+  ];
+  protected readonly kpis: Record<string, string> = {
+    revenue: '€ 48,210',
+    orders: '1,284',
+    visitors: '23,915',
+    traffic: '61% search',
+    conversion: '3.4%',
+    refunds: '18',
+    tickets: '42',
+  };
+}
+```
+
+### Declarative
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTileLayout, OgeTileLayoutItem, OgeTileLayoutItemHeader } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTileLayout, OgeTileLayoutItem, OgeTileLayoutItemHeader],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Declarative tiles: projected content is the body, an element marked
+         ogeTileLayoutItemHeader replaces the title. Buttons in a header stay
+         real controls — pressing them never starts a drag. -->
+    <oge-tile-layout [columns]="3" [rowHeight]="'auto'" ariaLabel="Team board">
+      <oge-tile-layout-item key="welcome" title="Welcome" [colSpan]="2">
+        <p>Drag the headers or use Ctrl+Arrow keys to arrange the board.</p>
+      </oge-tile-layout-item>
+      <oge-tile-layout-item key="notes" title="Notes">
+        <span ogeTileLayoutItemHeader>
+          Notes
+          <button type="button" (click)="count.set(count() + 1)">Add</button>
+        </span>
+        <p>{{ count() }} notes pinned</p>
+      </oge-tile-layout-item>
+      <oge-tile-layout-item key="links" title="Links" [colSpan]="3">
+        <a href="#declarative-tiles-templates">Team handbook</a>
+      </oge-tile-layout-item>
+    </oge-tile-layout>
+  `,
+})
+export class Demo {
+  protected readonly count = signal(3);
+}
+```
+
+### Reorder
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTileLayout, OgeTileLayoutContentTemplate } from '@oge-ui/layout';
+import type { OgeTileLayoutItemData, OgeTileLayoutReorderedEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTileLayout, OgeTileLayoutContentTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Drag a tile by its header, or focus it and press Ctrl+Arrow keys.
+         Both run the same commit: reordering (cancelable) → reordered →
+         layoutChanged, and the move is announced in the shared live region.
+         Escape cancels a drag. -->
+    <oge-tile-layout
+      [items]="tiles"
+      [columns]="4"
+      [rowHeight]="110"
+      ariaLabel="Reorderable dashboard"
+      (reordered)="onReordered($event)"
+    >
+      <ng-template ogeTileLayoutContentTemplate let-item>
+        <strong>{{ kpis[item.key] }}</strong>
+      </ng-template>
+    </oge-tile-layout>
+    <p>{{ log() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly tiles: OgeTileLayoutItemData[] = [
+    { key: 'revenue', title: 'Revenue', colSpan: 2 },
+    { key: 'orders', title: 'Orders' },
+    { key: 'visitors', title: 'Visitors' },
+    { key: 'traffic', title: 'Traffic sources', colSpan: 2, rowSpan: 2 },
+    { key: 'conversion', title: 'Conversion' },
+    { key: 'refunds', title: 'Refunds' },
+    { key: 'tickets', title: 'Open tickets', colSpan: 2 },
+  ];
+  protected readonly kpis: Record<string, string> = {
+    revenue: '€ 48,210',
+    orders: '1,284',
+    visitors: '23,915',
+    traffic: '61% search',
+    conversion: '3.4%',
+    refunds: '18',
+    tickets: '42',
+  };
+  protected readonly log = signal('Drag a header or press Ctrl+Arrow on a tile.');
+  protected onReordered(event: OgeTileLayoutReorderedEvent): void {
+    this.log.set(
+      `Moved ${event.key} from ${event.fromIndex + 1} to ${event.toIndex + 1} (${event.source})`,
+    );
+  }
+}
+```
+
+### Resize
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTileLayout, OgeTileLayoutContentTemplate } from '@oge-ui/layout';
+import type { OgeTileLayoutItemData, OgeTileLayoutResizedEvent, OgeTileLayoutResizingEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTileLayout, OgeTileLayoutContentTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- resizable turns on the corner handle (pointer) and Ctrl+Shift+Arrow
+         (keyboard). Spans snap to whole tracks and stay inside each tile's
+         min/max bounds; 'horizontal' / 'vertical' lock an axis. -->
+    <oge-tile-layout
+      [items]="tiles"
+      [columns]="4"
+      [rowHeight]="110"
+      resizable
+      ariaLabel="Resizable dashboard"
+      (resizing)="onResizing($event)"
+      (resized)="onResized($event)"
+    >
+      <ng-template
+        ogeTileLayoutContentTemplate
+        let-colSpan="colSpan"
+        let-rowSpan="rowSpan"
+      >
+        {{ colSpan }} × {{ rowSpan }}
+      </ng-template>
+    </oge-tile-layout>
+    <p>{{ log() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly tiles: OgeTileLayoutItemData[] = [
+    { key: 'revenue', title: 'Revenue', colSpan: 2, maxColSpan: 3 },
+    { key: 'orders', title: 'Orders', maxRowSpan: 2 },
+    { key: 'traffic', title: 'Traffic sources', resizable: 'horizontal' },
+    { key: 'tickets', title: 'Open tickets', resizable: false },
+  ];
+  protected readonly log = signal('Drag a corner or press Ctrl+Shift+Arrow.');
+  protected onResizing(event: OgeTileLayoutResizingEvent): void {
+    // veto anything taller than three rows
+    event.cancel = event.next.rowSpan > 3;
+  }
+  protected onResized(event: OgeTileLayoutResizedEvent): void {
+    this.log.set(`${event.key}: ${event.next.colSpan} × ${event.next.rowSpan}`);
+  }
+}
+```
+
+### State
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTileLayout, OgeTileLayoutContentTemplate, sanitizeOgeTileLayoutState } from '@oge-ui/layout';
+import type { OgeTileLayoutItemData, OgeTileLayoutState } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTileLayout, OgeTileLayoutContentTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [(state)] is the serializable layout: { version: 1, tiles: [{ key,
+         order, colSpan, rowSpan }] }. Persist it on layoutChanged; restore it
+         through applyState(), which validates untrusted input first. -->
+    <oge-tile-layout
+      #layout
+      [items]="tiles"
+      [columns]="4"
+      [rowHeight]="100"
+      resizable
+      [(state)]="state"
+      ariaLabel="Persisted dashboard"
+      (layoutChanged)="saved.set(json($event.state))"
+    >
+      <ng-template ogeTileLayoutContentTemplate let-item>{{ item.key }}</ng-template>
+    </oge-tile-layout>
+    <button type="button" (click)="layout.applyState(parse(saved()))">Restore saved</button>
+    <button type="button" (click)="state.set(undefined)">Reset</button>
+    <pre>{{ saved() }}</pre>
+  `,
+})
+export class Demo {
+  protected readonly tiles: OgeTileLayoutItemData[] = [
+    { key: 'revenue', title: 'Revenue', colSpan: 2 },
+    { key: 'orders', title: 'Orders' },
+    { key: 'visitors', title: 'Visitors' },
+    { key: 'tickets', title: 'Open tickets', colSpan: 2 },
+  ];
+  protected readonly state = signal<OgeTileLayoutState | undefined>(undefined);
+  protected readonly saved = signal('');
+  protected json(state: OgeTileLayoutState): string {
+    return JSON.stringify(state);
+  }
+  protected parse(text: string): unknown {
+    try {
+      // applyState() runs sanitizeOgeTileLayoutState itself; calling it here
+      // too lets you reject a bad file before touching the layout
+      return sanitizeOgeTileLayoutState(JSON.parse(text));
+    } catch {
+      return null;
+    }
   }
 }
 ```

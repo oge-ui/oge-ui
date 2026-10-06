@@ -360,6 +360,105 @@ const FAMILIES = [
     },
   },
   {
+    family: 'layout-tile-layout',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/tile-layout-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/tile-layout-api.ts',
+    exceptions: {
+      blocksAngularOnly: {
+        ogetilelayoutitem:
+          'The declarative <oge-tile-layout-item> child exists because Angular content projection needs a component per tile; React passes the same OgeTileLayoutItemData through `items` and the slots as renderHeader / renderContent.',
+      },
+      pairs: {
+        provideogetilelayoutconfig: 'ogetilelayoutconfigprovider', // DI provider ↔ context provider
+      },
+      angularOnly: {
+        ogetilelayoutconfig:
+          'The `OGE_TILE_LAYOUT_CONFIG` InjectionToken behind provideOgeTileLayoutConfig(); React resolves the same defaults through the provider’s context, which has no token.',
+      },
+      reactOnly: {
+        renderheader:
+          'Render prop replacing the [ogeTileLayoutHeaderTemplate] structural directive (documented in the Angular types table).',
+        rendercontent:
+          'Render prop replacing the [ogeTileLayoutContentTemplate] structural directive (documented in the Angular types table).',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        useogetilelayoutconfig:
+          'Hook reading the resolved config; the Angular counterpart is the OGE_TILE_LAYOUT_CONFIG token (excepted above).',
+      },
+    },
+  },
+  {
+    family: 'layout-data-view',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/data-view-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/data-view-api.ts',
+    exceptions: {
+      pairs: {
+        provideogedataviewconfig: 'ogedataviewconfigprovider', // DI provider ↔ context provider
+      },
+      angularOnly: {
+        ogedataviewconfig:
+          'The `OGE_DATA_VIEW_CONFIG` InjectionToken behind provideOgeDataViewConfig(); React resolves the same defaults through the provider’s context, which has no token.',
+      },
+      reactOnly: {
+        toolbar:
+          'ReactNode prop replacing the [ogeDataViewToolbar] attribute slot (documented in the Angular types table).',
+        renderitem:
+          'Render prop replacing the [ogeDataViewItemTemplate] structural directive (documented in the Angular types table).',
+        renderlistitem:
+          'Render prop replacing the [ogeDataViewListItemTemplate] structural directive (documented in the Angular types table).',
+        renderempty:
+          'Render prop replacing the [ogeDataViewEmptyTemplate] structural directive (documented in the Angular types table).',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        useogedataviewconfig:
+          'Hook reading the resolved config; the Angular counterpart is the OGE_DATA_VIEW_CONFIG token (excepted above).',
+      },
+    },
+  },
+  {
+    family: 'layout-list-view',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/list-view-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/list-view-api.ts',
+    exceptions: {
+      pairs: {
+        provideogelistviewconfig: 'ogelistviewconfigprovider', // DI provider ↔ context provider
+      },
+      angularOnly: {
+        ogelistviewconfig:
+          'The `OGE_LIST_VIEW_CONFIG` InjectionToken behind provideOgeListViewConfig(); React resolves the same defaults through the provider’s context, which has no token.',
+      },
+      reactOnly: {
+        renderitem:
+          'Render prop replacing the [ogeListViewItemTemplate] structural directive (documented in the Angular types table).',
+        rendergroup:
+          'Render prop replacing the [ogeListViewGroupTemplate] structural directive (documented in the Angular types table).',
+        renderempty:
+          'Render prop replacing the [ogeListViewEmptyTemplate] structural directive (documented in the Angular types table).',
+        renderfooter:
+          'Render prop replacing the [ogeListViewFooterTemplate] structural directive (documented in the Angular types table).',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        useogelistviewconfig:
+          'Hook reading the resolved config; the Angular counterpart is the OGE_LIST_VIEW_CONFIG token (excepted above).',
+      },
+    },
+  },
+  {
+    family: 'layout-carousel',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/carousel-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/carousel-api.ts',
+    exceptions: {
+      reactOnly: {
+        renderslide:
+          'Render prop replacing the [ogeCarouselSlideTemplate] structural directive (documented in the Angular types table).',
+        children:
+          'JSX children carry the declarative <OgeCarouselSlide> elements; Angular projects <oge-carousel-slide> children (documented in the Angular types table).',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+      },
+    },
+  },
+  {
     family: 'layout-app-bar',
     angularApiPage: 'apps/dev-app/src/app/pages/layout/app-bar-api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-layout/app-bar-api.ts',

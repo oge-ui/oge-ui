@@ -16,6 +16,7 @@ import {
   OGE_REACT_TOOLTIP_API,
   OGE_REACT_WINDOW_API,
 } from './react-overlay-api-data';
+import { OGE_REACT_ACTION_SHEET_API } from './action-sheet-api-data';
 
 /**
  * The React half of the overlay API reference.
@@ -51,6 +52,10 @@ import {
       [sections]="liveAnnouncerApi"
     />
     <app-api-reference title="&lt;OgePopover&gt;" [sections]="popoverApi" />
+    <app-api-reference
+      title="&lt;OgeActionSheet&gt;"
+      [sections]="actionSheetApi"
+    />
     <app-api-reference title="&lt;OgeTooltip&gt;" [sections]="tooltipApi" />
     <app-api-reference
       title="&lt;OgeContextMenu&gt;"
@@ -74,6 +79,7 @@ export class ReactOverlayApiSections {
   protected readonly toastApi = OGE_REACT_TOAST_API;
   protected readonly liveAnnouncerApi = OGE_REACT_LIVE_ANNOUNCER_API;
   protected readonly popoverApi = OGE_REACT_POPOVER_API;
+  protected readonly actionSheetApi = OGE_REACT_ACTION_SHEET_API;
   protected readonly tooltipApi = OGE_REACT_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_REACT_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_REACT_MENU_LIST_API;

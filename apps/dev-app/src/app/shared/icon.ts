@@ -54,6 +54,10 @@ export type IconName =
   | 'alert'
   | 'timeline'
   | 'app-bar'
+  | 'list-view'
+  | 'data-view'
+  | 'dashboard'
+  | 'carousel'
   | 'plus';
 
 /** Lucide-style inline SVG icons — no emoji, no icon-font dependency. */
@@ -275,6 +279,32 @@ export type IconName =
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M3 9h18" />
           <path d="M7 6h.01" />
+        }
+        @case ('dashboard') {
+          <rect x="3" y="3" width="7" height="9" rx="1" />
+          <rect x="14" y="3" width="7" height="5" rx="1" />
+          <rect x="14" y="12" width="7" height="9" rx="1" />
+          <rect x="3" y="16" width="7" height="5" rx="1" />
+        }
+        @case ('data-view') {
+          <rect x="3" y="3" width="7" height="9" rx="1.5" />
+          <rect x="14" y="3" width="7" height="5" rx="1.5" />
+          <rect x="14" y="12" width="7" height="9" rx="1.5" />
+          <rect x="3" y="16" width="7" height="5" rx="1.5" />
+        }
+        @case ('list-view') {
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 10h18" />
+          <path d="M3 15h18" />
+          <path d="M7 7h.01" />
+        }
+        @case ('carousel') {
+          <rect x="6" y="4" width="12" height="13" rx="2" />
+          <path d="M2 7v7" />
+          <path d="M22 7v7" />
+          <path d="M9 21h.01" />
+          <path d="M12 21h.01" />
+          <path d="M15 21h.01" />
         }
         @case ('plus') {
           <circle cx="12" cy="12" r="10" />

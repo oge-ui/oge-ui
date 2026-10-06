@@ -32,6 +32,12 @@ export {
   type OgePopoverSlotContext,
 } from './lib/popover';
 export {
+  OgeActionSheet,
+  type OgeActionSheetProps,
+  type OgeActionSheetHandle,
+  type OgeActionSheetItemRenderContext,
+} from './lib/action-sheet';
+export {
   OgeModal,
   type OgeModalProps,
   type OgeModalHandle,
@@ -99,6 +105,13 @@ export type {
   OgePopoverOpenedEvent,
   OgePopoverClosingEvent,
   OgePopoverClosedEvent,
+  OgeActionSheetCloseReason,
+  OgeActionSheetClosedEvent,
+  OgeActionSheetClosingEvent,
+  OgeActionSheetItem,
+  OgeActionSheetItemClickEvent,
+  OgeActionSheetOpeningEvent,
+  OgeActionSheetResult,
   OgeModalCloseReason,
   OgeModalOpeningEvent,
   OgeModalClosingEvent,

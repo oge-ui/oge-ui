@@ -51,6 +51,10 @@ const COVERAGE: Readonly<
     alert: ['', 'api'],
     timeline: ['', 'api'],
     'app-bar': ['', 'api'],
+    'list-view': ['', 'api'],
+    'data-view': ['', 'api'],
+    'tile-layout': ['', 'api'],
+    carousel: ['', 'api'],
     // the API page is mirrored; only `routed` is Angular-router-driven, so
     // React readers get the shell notice there (see docs/REACT-PARITY.md)
     tabs: ['', 'api'],

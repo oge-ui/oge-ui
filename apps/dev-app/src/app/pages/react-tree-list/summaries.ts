@@ -191,7 +191,7 @@ function RemoteDemo(): ReactNode {
   styleUrls: [
     '../../../../../../packages/react/tree-list/src/styles.scss',
     '../../../../../../packages/react/inputs/src/styles.scss',
-    '../../../../../../packages/react/layout/src/styles.scss',
+    '../../shared/react-layout-demo-base.scss',
     '../../../../../../packages/react/overlay/src/styles.scss',
   ],
   template: `

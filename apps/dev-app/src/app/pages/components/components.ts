@@ -21,10 +21,17 @@ import {
   OgeTimeline,
   OgeAppBar,
   OgeAppBarEnd,
+  OgeListView,
+  OgeDataView,
+  OgeDataViewItemTemplate,
+  OgeTileLayout,
+  OgeCarousel,
   OgeSplitter,
   OgeSplitterPane,
   OgeToolbar,
   OgeToolbarItem,
+  type OgeTileLayoutItemData,
+  type OgeCarouselItem,
   type OgeAvatarItem,
   type OgeChipItem,
   type OgeTimelineItem,
@@ -68,6 +75,10 @@ type FamilyKey =
   | 'alert'
   | 'timeline'
   | 'app-bar'
+  | 'list-view'
+  | 'data-view'
+  | 'tile-layout'
+  | 'carousel'
   | 'progress'
   | 'splitter'
   | 'toolbar'
@@ -136,6 +147,11 @@ interface OrgNode {
     OgeTimeline,
     OgeAppBar,
     OgeAppBarEnd,
+    OgeListView,
+    OgeDataView,
+    OgeDataViewItemTemplate,
+    OgeTileLayout,
+    OgeCarousel,
     OgeProgressBar,
     OgeLoadIndicator,
     OgeSkeleton,
@@ -774,6 +790,57 @@ interface OrgNode {
                     />
                   </div>
                 }
+                @case ('carousel') {
+                  <div class="w-full self-start">
+                    <oge-carousel
+                      [items]="gallerySlides"
+                      [height]="112"
+                      ariaLabel="Gallery slides"
+                    />
+                  </div>
+                }
+                @case ('tile-layout') {
+                  <div class="w-full self-start">
+                    <oge-tile-layout
+                      [items]="galleryTiles"
+                      [columns]="3"
+                      [rowHeight]="44"
+                      [gap]="8"
+                      ariaLabel="Gallery dashboard"
+                    />
+                  </div>
+                }
+                @case ('data-view') {
+                  <div class="w-full self-start">
+                    <oge-data-view
+                      [items]="galleryProducts"
+                      [minItemWidth]="96"
+                      gap="8px"
+                      ariaLabel="Products"
+                    >
+                      <ng-template ogeDataViewItemTemplate let-item>
+                        <span class="block text-sm font-semibold">{{
+                          item.name
+                        }}</span>
+                        <span class="block text-xs text-gray-500"
+                          >{{ item.price }} USD</span
+                        >
+                      </ng-template>
+                    </oge-data-view>
+                  </div>
+                }
+                @case ('list-view') {
+                  <div class="w-full self-start">
+                    <oge-list-view
+                      [items]="galleryContacts"
+                      displayExpr="name"
+                      selectionMode="single"
+                      [selectedKeys]="galleryContactPick"
+                      [height]="132"
+                      ariaLabel="Contacts"
+                    />
+                  </div>
+                }
                 @case ('app-bar') {
                   <div class="w-full self-start">
                     <oge-app-bar color="primary" size="sm">
@@ -961,6 +1028,19 @@ export class ComponentsIndexPage {
     { family: 'Layout', label: 'Alert', path: '/components/alert' },
     { family: 'Layout', label: 'Timeline', path: '/components/timeline' },
     { family: 'Layout', label: 'App bar', path: '/components/app-bar' },
+    { family: 'Layout', label: 'List view', path: '/components/list-view' },
+    { family: 'Layout', label: 'Data view', path: '/components/data-view' },
+    {
+      family: 'Layout',
+      label: 'Tile layout',
+      path: '/components/tile-layout',
+    },
+    { family: 'Layout', label: 'Carousel', path: '/components/carousel' },
+    {
+      family: 'Overlay',
+      label: 'Action sheet',
+      path: '/components/overlay/action-sheet',
+    },
     {
       family: 'Buttons',
       label: 'FAB & speed dial',
@@ -1071,11 +1151,47 @@ export class ComponentsIndexPage {
     { name: 'Edsger Dijkstra' },
     { name: 'Barbara Liskov' },
   ];
+  protected readonly galleryContacts = [
+    { id: 1, name: 'Ada Lovelace' },
+    { id: 2, name: 'Grace Hopper' },
+    { id: 3, name: 'Alan Turing' },
+    { id: 4, name: 'Barbara Liskov' },
+  ];
+  protected readonly galleryContactPick: readonly number[] = [2];
+  protected readonly gallerySlides: readonly OgeCarouselItem[] = [
+    {
+      key: 'coast',
+      image: '/demo/carousel/coast.svg',
+      imageAlt: 'A palm tree on a sandy beach',
+    },
+    {
+      key: 'mountains',
+      image: '/demo/carousel/mountains.svg',
+      imageAlt: 'Snow-capped violet peaks',
+    },
+    {
+      key: 'city',
+      image: '/demo/carousel/city.svg',
+      imageAlt: 'A city skyline at sunset',
+    },
+  ];
+  protected readonly galleryTiles: readonly OgeTileLayoutItemData[] = [
+    { key: 'sales', title: 'Sales', colSpan: 2 },
+    { key: 'visits', title: 'Visits' },
+    { key: 'goals', title: 'Goals' },
+    { key: 'team', title: 'Team', colSpan: 2 },
+  ];
+
   protected readonly galleryChips: readonly OgeChipItem[] = [
     { key: 'angular', label: 'Angular' },
     { key: 'react', label: 'React' },
     { key: 'signals', label: 'Signals' },
     { key: 'a11y', label: 'Accessibility' },
+  ];
+  protected readonly galleryProducts = [
+    { id: 1, name: 'Desk', price: 420 },
+    { id: 2, name: 'Chair', price: 260 },
+    { id: 3, name: 'Lamp', price: 45 },
   ];
   protected readonly galleryEvents: readonly OgeTimelineItem[] = [
     { title: 'Design review', time: 'Mon', severity: 'success' },
@@ -1184,6 +1300,38 @@ export class ComponentsIndexPage {
       path: '/components/timeline',
       description:
         'Vertical, horizontal or alternating history as a real ordered list: severity markers with icons, locale-formatted times in datetime elements and per-item templates.',
+    },
+    {
+      key: 'carousel',
+      name: 'Carousel',
+      icon: 'carousel',
+      path: '/components/carousel',
+      description:
+        'A swipeable APG slide show with dots or thumbnails, looping and several slides per view; autoplay pauses on hover and always shows its rotation control.',
+    },
+    {
+      key: 'tile-layout',
+      name: 'Tile Layout',
+      icon: 'dashboard',
+      path: '/components/tile-layout',
+      description:
+        'Drag-and-drop dashboard tiles with column and row spans, resize handles, Ctrl+Arrow keyboard moves with announcements and a serializable layout to save and restore.',
+    },
+    {
+      key: 'data-view',
+      name: 'Data View',
+      icon: 'data-view',
+      path: '/components/data-view',
+      description:
+        'Templated items in responsive columns or rows that follow their container, with a layout switch, search, locale-aware sorting, paging and selectable items.',
+    },
+    {
+      key: 'list-view',
+      name: 'List View',
+      icon: 'list-view',
+      path: '/components/list-view',
+      description:
+        'A templated listbox or plain list: single or multiple selection, sticky group headers, windowed rendering for 10 000 rows, search, infinite scroll and swipe actions.',
     },
     {
       key: 'app-bar',

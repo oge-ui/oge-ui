@@ -1,0 +1,601 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+@keyframes oge-list-view-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// A templated list: a framed surface, soft hover / selection layers, a
+// selection rail on the inline-start edge, sticky group headers and an
+// action tray at the inline end that a swipe (touch) or hover reveals.
+.oge-list-view {
+  @include tokens.core-tokens;
+
+  --oge-list-view-item-height: 44px;
+  --oge-list-view-group-height: 32px;
+  --oge-list-view-pad-x: 14px;
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  overflow: hidden;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  .oge-sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+.oge-list-view-disabled {
+  opacity: 0.6;
+}
+
+// --- search ------------------------------------------------------------------
+
+.oge-list-view-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-block-end: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+.oge-list-view-search-icon {
+  position: absolute;
+  inset-inline-start: 20px;
+  fill: none;
+  stroke: var(--oge-input-muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.oge-list-view-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 34px;
+  padding-inline: 32px 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+  }
+
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+    border-color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (pointer: coarse) {
+    font-size: max(16px, 1em);
+  }
+}
+
+.oge-list-view-search-clear {
+  position: absolute;
+  inset-inline-end: 16px;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--oge-input-muted);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  @include tokens.hit-area;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+// --- viewport ----------------------------------------------------------------
+
+.oge-list-view-viewport {
+  @include tokens.scrollbar;
+
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  // keyboard scrolling stops below the sticky group header
+  scroll-padding-block-start: var(--oge-list-view-group-height);
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+}
+
+.oge-list-view-viewport-empty {
+  height: auto !important;
+  min-height: 0;
+}
+
+.oge-list-view-canvas {
+  position: relative;
+}
+
+.oge-list-view-virtual .oge-list-view-window {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  will-change: transform;
+}
+
+// --- groups ------------------------------------------------------------------
+
+.oge-list-view-group {
+  position: relative;
+}
+
+.oge-list-view-group-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--oge-list-view-group-height);
+  padding-inline: var(--oge-list-view-pad-x);
+  border-block-end: 1px solid var(--oge-border-color);
+  background: var(--oge-group-bg);
+  color: var(--oge-header-color);
+  font-size: 0.8125em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.oge-list-view-group-count {
+  margin-inline-start: auto;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--oge-accent-soft);
+  color: var(--oge-input-muted);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+// --- items -------------------------------------------------------------------
+
+.oge-list-view-item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: var(--oge-list-view-item-height);
+  overflow: hidden;
+  border-block-end: 1px solid var(--oge-border-color);
+  cursor: default;
+  user-select: none;
+
+  &:last-child {
+    border-block-end-color: transparent;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+}
+
+.oge-list-view-has-actions .oge-list-view-item {
+  // a horizontal swipe reveals the actions; vertical panning still scrolls
+  touch-action: pan-y;
+}
+
+.oge-list-view-item-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-block: 8px;
+  padding-inline: var(--oge-list-view-pad-x);
+  background: var(--oge-bg);
+  transition:
+    background-color 120ms ease,
+    translate 160ms ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 6px;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: transparent;
+    transition: background-color 120ms ease;
+  }
+}
+
+.oge-list-view-item:hover .oge-list-view-item-main {
+  background: var(--oge-row-hover-bg);
+}
+
+.oge-list-view-item-active .oge-list-view-item-main {
+  background: var(--oge-row-hover-bg);
+}
+
+// the active descendant of a focused listbox reads as focused
+.oge-list-view-viewport:focus-visible
+  .oge-list-view-item-active
+  .oge-list-view-item-main {
+  background: var(--oge-row-focused-bg);
+  box-shadow: inset 0 0 0 2px var(--oge-focus-ring);
+}
+
+.oge-list-view-item-selected .oge-list-view-item-main {
+  background: var(--oge-selected-bg);
+
+  &::before {
+    background: var(--oge-accent);
+  }
+}
+
+.oge-list-view-item-disabled {
+  color: var(--oge-muted-color);
+  cursor: not-allowed;
+
+  .oge-list-view-item-main {
+    background: var(--oge-bg);
+  }
+}
+
+.oge-list-view-item-text,
+.oge-list-view-item-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oge-list-view-item-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-list-view-virtual .oge-list-view-item {
+  min-height: 0;
+}
+
+// --- selection glyph ---------------------------------------------------------
+
+.oge-list-view-check {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--oge-muted-color);
+  border-radius: 4px;
+  background: var(--oge-bg);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: var(--oge-severity-contrast);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+  }
+}
+
+.oge-list-view-check-radio {
+  border-radius: 999px;
+}
+
+.oge-list-view-item-selected .oge-list-view-check {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+
+  svg {
+    opacity: 1;
+  }
+}
+
+// --- actions -----------------------------------------------------------------
+
+.oge-list-view-actions {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+// mouse and keyboard: the tray floats over the row end on hover / focus
+.oge-list-view-item:hover .oge-list-view-actions,
+.oge-list-view-viewport:focus-visible
+  .oge-list-view-item-active
+  .oge-list-view-actions,
+.oge-list-view-item:focus-visible .oge-list-view-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+// touch: the tray sits under the row and the swipe slides the row away
+@media (hover: none) {
+  .oge-list-view-actions {
+    z-index: 0;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .oge-list-view-item .oge-list-view-actions {
+    z-index: 0;
+  }
+}
+
+.oge-list-view-item-swiped .oge-list-view-actions {
+  z-index: 0;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.oge-list-view-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding-inline: 12px;
+  background: var(--oge-header-bg);
+  color: var(--oge-text-color);
+  font-size: 0.8125em;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    filter: brightness(0.96);
+  }
+}
+
+.oge-list-view-action-accent {
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+}
+
+.oge-list-view-action-success {
+  background: var(--oge-success);
+  color: var(--oge-severity-contrast);
+}
+
+.oge-list-view-action-warning {
+  background: var(--oge-warning);
+  color: var(--oge-severity-contrast);
+}
+
+.oge-list-view-action-danger {
+  background: var(--oge-danger);
+  color: var(--oge-severity-contrast);
+}
+
+// --- states under the list ---------------------------------------------------
+
+.oge-list-view-empty {
+  padding: 28px 16px;
+  color: var(--oge-input-muted);
+  text-align: center;
+}
+
+.oge-list-view-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-block-start: 1px solid var(--oge-border-color);
+  color: var(--oge-input-muted);
+}
+
+.oge-list-view-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--oge-accent-25);
+  border-block-start-color: var(--oge-accent);
+  border-radius: 999px;
+  animation: oge-list-view-spin 700ms linear infinite;
+}
+
+.oge-list-view-load-more {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 0;
+  border-block-start: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  color: var(--oge-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: not-allowed;
+  }
+}
+
+.oge-list-view-footer {
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+@include tokens.reduced-motion {
+  .oge-list-view-item-main,
+  .oge-list-view-item-main::before,
+  .oge-list-view-check,
+  .oge-list-view-actions,
+  .oge-list-view-action,
+  .oge-list-view-search-input,
+  .oge-list-view-search-clear,
+  .oge-list-view-load-more {
+    transition: none;
+  }
+
+  // slowed, not frozen: a stopped spinner reads as a hang
+  .oge-list-view-spinner {
+    animation-duration: 2s;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-list-view {
+    border-color: CanvasText;
+  }
+
+  .oge-list-view-item-main {
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-list-view-item-selected .oge-list-view-item-main {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-list-view-item-selected .oge-list-view-item-main::before {
+    background: HighlightText;
+  }
+
+  .oge-list-view-viewport:focus-visible
+    .oge-list-view-item-active
+    .oge-list-view-item-main {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+
+  .oge-list-view-item-disabled .oge-list-view-item-main {
+    color: GrayText;
+  }
+
+  .oge-list-view-group-header {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-list-view-check {
+    border-color: CanvasText;
+  }
+
+  .oge-list-view-item-selected .oge-list-view-check {
+    border-color: HighlightText;
+    background: Highlight;
+
+    svg {
+      stroke: HighlightText;
+    }
+  }
+
+  .oge-list-view-action {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+
+  .oge-list-view-load-more {
+    background: ButtonFace;
+    color: ButtonText;
+  }
+
+  .oge-list-view-spinner {
+    border-color: GrayText;
+    border-block-start-color: CanvasText;
+  }
+}

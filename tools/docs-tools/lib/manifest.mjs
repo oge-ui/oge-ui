@@ -102,7 +102,7 @@ export const PACKAGES = [
     npm: '@oge-ui/overlay',
     label: 'Overlay',
     summary:
-      'Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, and `OgeToastService` notifications.',
+      'Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), and `OgeToastService` notifications.',
     docsRoot: '/components/overlay',
     pageDirs: ['overlay'],
     apiPage: 'apps/dev-app/src/app/pages/overlay/api.ts',
@@ -124,7 +124,7 @@ export const PACKAGES = [
     npm: '@oge-ui/layout',
     label: 'Layout',
     summary:
-      'Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks.',
+      'Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks — plus the collection and dashboard set: an APG carousel (tab-list or button picker, scroll-snap swipes, loop, autoplay that stops on keyboard focus with a rotation control), a list view (virtualized listbox or list with sticky group headers, search, infinite scroll and swipe actions), a data view (templated items in container-query columns with sorting, search, paging and selection) and a tile layout (dashboard tiles with spans, drag to reorder, resize handles, Ctrl+Arrow keyboard twins and a validated serializable state).',
     docsRoot: '/components/accordion',
     pageDirs: ['layout'],
     apiPage: [
@@ -138,6 +138,10 @@ export const PACKAGES = [
       'apps/dev-app/src/app/pages/layout/alert-api.ts',
       'apps/dev-app/src/app/pages/layout/timeline-api.ts',
       'apps/dev-app/src/app/pages/layout/app-bar-api.ts',
+      'apps/dev-app/src/app/pages/layout/list-view-api.ts',
+      'apps/dev-app/src/app/pages/layout/data-view-api.ts',
+      'apps/dev-app/src/app/pages/layout/tile-layout-api.ts',
+      'apps/dev-app/src/app/pages/layout/carousel-api.ts',
     ],
     tier: 'mit',
   },
@@ -355,7 +359,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-layout',
     label: 'Layout (React)',
     summary:
-      'React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar — running the same config defaults, decision functions and stylesheet as the Angular layout package.',
+      'React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view and tile layout — running the same config defaults, decision functions and stylesheet as the Angular layout package.',
     // The React content renders inside the single layout routes (ADR 0002:
     // routes stay single, the header switch picks the layer). The docs pages
     // branch when the family's docs parity lands.
@@ -372,6 +376,10 @@ export const PACKAGES = [
       'apps/dev-app/src/app/pages/react-layout/alert-api.ts',
       'apps/dev-app/src/app/pages/react-layout/timeline-api.ts',
       'apps/dev-app/src/app/pages/react-layout/app-bar-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/list-view-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/data-view-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/tile-layout-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/carousel-api.ts',
     ],
     tier: 'mit',
     platform: 'react',
@@ -495,7 +503,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-overlay',
     label: 'Overlay (React)',
     summary:
-      'React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.',
+      'React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.',
     // The React content renders inside the single Overlay routes (ADR 0002).
     docsRoot: '/components/overlay',
     pageDirs: ['react-overlay'],

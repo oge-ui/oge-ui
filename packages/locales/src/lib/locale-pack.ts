@@ -8,7 +8,11 @@
 // reference silent.
 import type {
   OgeAccordionMessages,
+  OgeDataViewMessages,
+  OgeTileLayoutMessages,
+  OgeListViewMessages,
   OgeAlertMessages,
+  OgeCarouselMessages,
   OgeAvatarMessages,
   OgeBadgeMessages,
   OgeBreadcrumbMessages,
@@ -63,6 +67,10 @@ export interface OgeLocaleLayoutMessages {
   readonly badge?: OgeDeepPartial<OgeBadgeMessages>;
   readonly chip?: OgeDeepPartial<OgeChipMessages>;
   readonly alert?: OgeDeepPartial<OgeAlertMessages>;
+  readonly carousel?: OgeDeepPartial<OgeCarouselMessages>;
+  readonly dataView?: OgeDeepPartial<OgeDataViewMessages>;
+  readonly tileLayout?: OgeDeepPartial<OgeTileLayoutMessages>;
+  readonly listView?: OgeDeepPartial<OgeListViewMessages>;
 }
 
 /** The navigation family's catalogs, one per component. */

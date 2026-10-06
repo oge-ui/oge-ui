@@ -104,7 +104,7 @@ const TIP_ICON = createElement(
   imports: [DemoCard, ReactHost],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  styleUrl: '../../../../../../packages/react/layout/src/styles.scss',
+  styleUrl: '../../shared/react-layout-demo-base.scss',
   template: `
     <app-demo-card
       [chips]="['info', 'success', 'warning', 'error']"

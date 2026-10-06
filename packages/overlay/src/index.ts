@@ -79,6 +79,20 @@ export {
   OgePopoverFooter,
   type OgePopoverSlotContext,
 } from './lib/popover/popover-templates';
+export { OgeActionSheet } from './lib/action-sheet/action-sheet';
+export {
+  OgeActionSheetItemTemplate,
+  type OgeActionSheetItemTemplateContext,
+} from './lib/action-sheet/action-sheet-templates';
+export type {
+  OgeActionSheetCloseReason,
+  OgeActionSheetClosedEvent,
+  OgeActionSheetClosingEvent,
+  OgeActionSheetItem,
+  OgeActionSheetItemClickEvent,
+  OgeActionSheetOpeningEvent,
+  OgeActionSheetResult,
+} from '@oge-ui/behavior';
 export {
   resolvePopupArrow,
   OGE_POPUP_ARROW_SIZE,

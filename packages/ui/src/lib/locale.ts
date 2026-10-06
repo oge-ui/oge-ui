@@ -2,6 +2,8 @@ import type { Provider } from '@angular/core';
 import {
   OGE_DEFAULT_ACCORDION_MESSAGES,
   OGE_DEFAULT_ALERT_MESSAGES,
+  OGE_DEFAULT_CAROUSEL_MESSAGES,
+  OGE_DEFAULT_DATA_VIEW_MESSAGES,
   OGE_DEFAULT_AVATAR_MESSAGES,
   OGE_DEFAULT_BADGE_MESSAGES,
   OGE_DEFAULT_BREADCRUMB_MESSAGES,
@@ -20,6 +22,8 @@ import {
   OGE_DEFAULT_SPLITTER_MESSAGES,
   OGE_DEFAULT_STEPPER_MESSAGES,
   OGE_DEFAULT_TABS_MESSAGES,
+  OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
+  OGE_DEFAULT_LIST_VIEW_MESSAGES,
   OGE_DEFAULT_TOOLBAR_MESSAGES,
   OGE_DEFAULT_TREE_VIEW_MESSAGES,
   OGE_DEFAULT_UPLOAD_MESSAGES,
@@ -31,6 +35,8 @@ import { provideOgeGridConfig } from '@oge-ui/grid';
 import { provideOgeInputsConfig } from '@oge-ui/inputs/field';
 import { provideOgeAccordionConfig } from '@oge-ui/layout/accordion';
 import { provideOgeAlertConfig } from '@oge-ui/layout/alert';
+import { provideOgeCarouselConfig } from '@oge-ui/layout/carousel';
+import { provideOgeDataViewConfig } from '@oge-ui/layout/data-view';
 import { provideOgeAvatarConfig } from '@oge-ui/layout/avatar';
 import { provideOgeBadgeConfig } from '@oge-ui/layout/badge';
 import { provideOgeChipConfig } from '@oge-ui/layout/chip';
@@ -38,6 +44,8 @@ import { provideOgeLoadIndicatorConfig } from '@oge-ui/layout/load-indicator';
 import { provideOgeProgressBarConfig } from '@oge-ui/layout/progress-bar';
 import { provideOgeSplitterConfig } from '@oge-ui/layout/splitter';
 import { provideOgeTimelineConfig } from '@oge-ui/layout/timeline';
+import { provideOgeTileLayoutConfig } from '@oge-ui/layout/tile-layout';
+import { provideOgeListViewConfig } from '@oge-ui/layout/list-view';
 import { provideOgeToolbarConfig } from '@oge-ui/layout/toolbar';
 import { ogeMergeMessages, type OgeLocalePack } from '@oge-ui/locales';
 import {
@@ -192,6 +200,42 @@ export function provideOgeLocale(pack: PackSource): Provider[] {
     ),
     // no catalog — the timeline only needs the pack's locale for its dates
     provideOgeTimelineConfig(config((p) => ({ locale: p.locale }))),
+    provideOgeCarouselConfig(
+      config((p) => ({
+        locale: p.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_CAROUSEL_MESSAGES,
+          p.layout?.carousel,
+        ),
+      })),
+    ),
+    provideOgeListViewConfig(
+      config((p) => ({
+        locale: p.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_LIST_VIEW_MESSAGES,
+          p.layout?.listView,
+        ),
+      })),
+    ),
+    provideOgeDataViewConfig(
+      config((p) => ({
+        locale: p.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_DATA_VIEW_MESSAGES,
+          p.layout?.dataView,
+        ),
+      })),
+    ),
+    provideOgeTileLayoutConfig(
+      config((p) => ({
+        locale: p.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
+          p.layout?.tileLayout,
+        ),
+      })),
+    ),
     provideOgeFabConfig(
       config((p) => ({
         messages: ogeMergeMessages(OGE_DEFAULT_FAB_MESSAGES, p.fab),

@@ -1,0 +1,390 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A slide show: a scroll-snap track scrolled by script and swipes, frosted
+// navigation buttons over the viewport edges, a rotation control in the
+// top corner and a dot / thumbnail picker under it. Every target is at
+// least 24px (44px on coarse pointers) and mirrors with the direction.
+.oge-carousel {
+  @include tokens.core-tokens;
+
+  --oge-carousel-per-view: 1;
+  --oge-carousel-gap: 0px;
+  --oge-carousel-nav-size: 40px;
+
+  position: relative;
+  display: grid;
+  gap: 12px;
+  min-inline-size: 0;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.oge-carousel-viewport {
+  position: relative;
+  min-inline-size: 0;
+  border-radius: var(--oge-radius-lg);
+  overflow: hidden;
+  background: var(--oge-header-bg);
+}
+
+.oge-carousel-multi .oge-carousel-viewport {
+  background: transparent;
+}
+
+.oge-carousel-track {
+  position: relative;
+  display: flex;
+  gap: var(--oge-carousel-gap);
+  block-size: 100%;
+  // a scroll container that only script and swipes move: snapping applies to
+  // programmatic scrolls, and the track never becomes a keyboard-scrollable
+  // region with no focusable content (axe `scrollable-region-focusable`)
+  overflow: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  // horizontal pans are the swipe gesture; vertical ones still scroll the page
+  touch-action: pan-y;
+  cursor: grab;
+
+  &.oge-carousel-dragging {
+    scroll-snap-type: none;
+    cursor: grabbing;
+    user-select: none;
+  }
+}
+
+.oge-carousel-slide {
+  position: relative;
+  flex: 0 0
+    calc(
+      (100% - (var(--oge-carousel-per-view) - 1) * var(--oge-carousel-gap)) /
+        var(--oge-carousel-per-view)
+    );
+  min-inline-size: 0;
+  scroll-snap-align: start;
+  overflow: hidden;
+
+  .oge-carousel-multi & {
+    border-radius: var(--oge-radius-lg);
+    background: var(--oge-header-bg);
+  }
+}
+
+.oge-carousel-figure {
+  position: relative;
+  display: grid;
+  block-size: 100%;
+  margin: 0;
+}
+
+.oge-carousel-image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+// a frosted surface over the image, readable on any photo in both themes
+.oge-carousel-caption {
+  position: absolute;
+  inset-inline: 12px;
+  inset-block-end: 12px;
+  display: grid;
+  gap: 2px;
+  max-inline-size: min(560px, calc(100% - 24px));
+  padding: 10px 14px;
+  border-radius: var(--oge-radius);
+  background: color-mix(in srgb, var(--oge-bg) 86%, transparent);
+  box-shadow: var(--oge-shadow-card);
+  backdrop-filter: blur(8px);
+  color: var(--oge-text-color);
+  line-height: 1.4;
+}
+
+.oge-carousel-figure:not(:has(.oge-carousel-image)) .oge-carousel-caption {
+  position: static;
+  max-inline-size: none;
+  margin: 12px;
+}
+
+.oge-carousel-caption-title {
+  font-weight: 600;
+}
+
+.oge-carousel-caption-text {
+  color: var(--oge-input-muted);
+}
+
+.oge-carousel-nav,
+.oge-carousel-rotation {
+  display: inline-grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--oge-bg) 90%, transparent);
+  box-shadow: var(--oge-shadow-btn);
+  backdrop-filter: blur(6px);
+  color: var(--oge-text-color);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease,
+    opacity 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    background: var(--oge-bg);
+    box-shadow: var(--oge-shadow-btn-hover);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-carousel-nav {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 50%;
+  inline-size: var(--oge-carousel-nav-size);
+  block-size: var(--oge-carousel-nav-size);
+  translate: 0 -50%;
+
+  &[aria-disabled='true'] {
+    opacity: 0.4;
+    cursor: default;
+    box-shadow: none;
+  }
+}
+
+.oge-carousel-prev {
+  inset-inline-start: 12px;
+}
+
+.oge-carousel-next {
+  inset-inline-end: 12px;
+}
+
+// the chevrons point along the reading direction
+:dir(rtl) .oge-carousel-nav svg {
+  scale: -1 1;
+}
+
+.oge-carousel-rotation {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
+  inline-size: 32px;
+  block-size: 32px;
+
+  .oge-carousel-glyph-play {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .oge-carousel-glyph-bars {
+    stroke-width: 3;
+  }
+}
+
+.oge-carousel-picker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  min-inline-size: 0;
+}
+
+.oge-carousel-picker-thumbnails {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 2px;
+  overflow-x: auto;
+  @include tokens.scrollbar;
+
+  @supports (justify-content: safe center) {
+    justify-content: safe center;
+  }
+}
+
+// a 24px target (44px on coarse pointers) around an 8px dot; the current
+// position stretches into an accent pill
+.oge-carousel-dot {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  @include tokens.hit-area;
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &:hover .oge-carousel-dot-mark {
+    background: var(--oge-input-muted);
+  }
+}
+
+.oge-carousel-dot-mark {
+  display: block;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 999px;
+  background: var(--oge-muted-color);
+  transition:
+    inline-size 120ms ease,
+    background-color 120ms ease;
+}
+
+.oge-carousel-dot.oge-carousel-current .oge-carousel-dot-mark {
+  inline-size: 20px;
+  background: var(--oge-accent);
+}
+
+.oge-carousel-thumb {
+  flex: 0 0 auto;
+  inline-size: 72px;
+  block-size: 48px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--oge-radius);
+  background: var(--oge-header-bg);
+  overflow: hidden;
+  opacity: 0.7;
+  cursor: pointer;
+  transition:
+    opacity 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &.oge-carousel-current {
+    border-color: var(--oge-accent);
+    opacity: 1;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  .oge-carousel-dot-mark {
+    margin: auto;
+  }
+}
+
+.oge-carousel-thumb-image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  -webkit-user-drag: none;
+}
+
+@media (pointer: coarse) {
+  .oge-carousel {
+    --oge-carousel-nav-size: 44px;
+  }
+
+  .oge-carousel-rotation {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-carousel-nav,
+  .oge-carousel-rotation,
+  .oge-carousel-dot-mark,
+  .oge-carousel-thumb {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-carousel-viewport {
+    border: 1px solid CanvasText;
+  }
+
+  .oge-carousel-caption {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    backdrop-filter: none;
+  }
+
+  .oge-carousel-nav,
+  .oge-carousel-rotation {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    backdrop-filter: none;
+
+    &[aria-disabled='true'] {
+      border-color: GrayText;
+      color: GrayText;
+      opacity: 1;
+    }
+  }
+
+  .oge-carousel-dot-mark {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .oge-carousel-dot.oge-carousel-current .oge-carousel-dot-mark {
+    border-color: Highlight;
+    background: Highlight;
+  }
+
+  .oge-carousel-thumb {
+    border-color: CanvasText;
+    opacity: 1;
+
+    &.oge-carousel-current {
+      outline: 2px solid Highlight;
+      outline-offset: 1px;
+    }
+  }
+}

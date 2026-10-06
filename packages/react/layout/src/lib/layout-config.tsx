@@ -2,6 +2,22 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import {
+  OGE_DEFAULT_LIST_VIEW_CONFIG,
+  resolveOgeListViewConfig,
+  type OgeListViewConfig,
+  type OgeListViewConfigInput,
+  OGE_DEFAULT_CAROUSEL_CONFIG,
+  resolveOgeCarouselConfig,
+  type OgeCarouselConfig,
+  type OgeCarouselConfigInput,
+  OGE_DEFAULT_TILE_LAYOUT_CONFIG,
+  resolveOgeTileLayoutConfig,
+  type OgeTileLayoutConfig,
+  type OgeTileLayoutConfigInput,
+  OGE_DEFAULT_DATA_VIEW_CONFIG,
+  resolveOgeDataViewConfig,
+  type OgeDataViewConfig,
+  type OgeDataViewConfigInput,
   OGE_DEFAULT_ACCORDION_CONFIG,
   OGE_DEFAULT_CARD_CONFIG,
   OGE_DEFAULT_LOAD_INDICATOR_CONFIG,
@@ -321,3 +337,95 @@ export function OgeAppBarConfigProvider({
 
 export const useOgeAppBarConfig = (): OgeAppBarConfig =>
   useContext(AppBarContext);
+
+const DataViewContext = createContext<OgeDataViewConfig>(
+  OGE_DEFAULT_DATA_VIEW_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeDataViewConfig()`. */
+export function OgeDataViewConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeDataViewConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeDataViewConfig(config), [config]);
+  return (
+    <DataViewContext.Provider value={value}>
+      {children}
+    </DataViewContext.Provider>
+  );
+}
+
+export const useOgeDataViewConfig = (): OgeDataViewConfig =>
+  useContext(DataViewContext);
+
+const TileLayoutContext = createContext<OgeTileLayoutConfig>(
+  OGE_DEFAULT_TILE_LAYOUT_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeTileLayoutConfig()`. */
+export function OgeTileLayoutConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeTileLayoutConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeTileLayoutConfig(config), [config]);
+  return (
+    <TileLayoutContext.Provider value={value}>
+      {children}
+    </TileLayoutContext.Provider>
+  );
+}
+
+export const useOgeTileLayoutConfig = (): OgeTileLayoutConfig =>
+  useContext(TileLayoutContext);
+
+const CarouselContext = createContext<OgeCarouselConfig>(
+  OGE_DEFAULT_CAROUSEL_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeCarouselConfig()`. */
+export function OgeCarouselConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeCarouselConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeCarouselConfig(config), [config]);
+  return (
+    <CarouselContext.Provider value={value}>
+      {children}
+    </CarouselContext.Provider>
+  );
+}
+
+export const useOgeCarouselConfig = (): OgeCarouselConfig =>
+  useContext(CarouselContext);
+
+const ListViewContext = createContext<OgeListViewConfig>(
+  OGE_DEFAULT_LIST_VIEW_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeListViewConfig()`. */
+export function OgeListViewConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeListViewConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeListViewConfig(config), [config]);
+  return (
+    <ListViewContext.Provider value={value}>
+      {children}
+    </ListViewContext.Provider>
+  );
+}
+
+export const useOgeListViewConfig = (): OgeListViewConfig =>
+  useContext(ListViewContext);

@@ -4,11 +4,13 @@ import { useMemo, type ReactNode } from 'react';
 import {
   OGE_DEFAULT_ACCORDION_MESSAGES,
   OGE_DEFAULT_ALERT_MESSAGES,
+  OGE_DEFAULT_CAROUSEL_MESSAGES,
   OGE_DEFAULT_AVATAR_MESSAGES,
   OGE_DEFAULT_BADGE_MESSAGES,
   OGE_DEFAULT_BREADCRUMB_MESSAGES,
   OGE_DEFAULT_BUTTONS_MESSAGES,
   OGE_DEFAULT_CHIP_MESSAGES,
+  OGE_DEFAULT_DATA_VIEW_MESSAGES,
   OGE_DEFAULT_DRAWER_MESSAGES,
   OGE_DEFAULT_FAB_MESSAGES,
   OGE_DEFAULT_FORMS_MESSAGES,
@@ -22,6 +24,8 @@ import {
   OGE_DEFAULT_SPLITTER_MESSAGES,
   OGE_DEFAULT_STEPPER_MESSAGES,
   OGE_DEFAULT_TABS_MESSAGES,
+  OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
+  OGE_DEFAULT_LIST_VIEW_MESSAGES,
   OGE_DEFAULT_TOOLBAR_MESSAGES,
   OGE_DEFAULT_TREE_VIEW_MESSAGES,
   OGE_DEFAULT_UPLOAD_MESSAGES,
@@ -37,12 +41,16 @@ import { OgeInputsConfigProvider } from '@oge-ui/react-inputs';
 import {
   OgeAccordionConfigProvider,
   OgeAlertConfigProvider,
+  OgeCarouselConfigProvider,
   OgeAvatarConfigProvider,
   OgeBadgeConfigProvider,
   OgeChipConfigProvider,
+  OgeDataViewConfigProvider,
   OgeLoadIndicatorConfigProvider,
   OgeProgressBarConfigProvider,
   OgeSplitterConfigProvider,
+  OgeTileLayoutConfigProvider,
+  OgeListViewConfigProvider,
   OgeTimelineConfigProvider,
   OgeToolbarConfigProvider,
 } from '@oge-ui/react-layout';
@@ -158,6 +166,34 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
       },
       // no catalog — the timeline only needs the pack's locale for its dates
       timeline: { locale: pack.locale },
+      carousel: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_CAROUSEL_MESSAGES,
+          layout?.carousel,
+        ),
+      },
+      dataView: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_DATA_VIEW_MESSAGES,
+          layout?.dataView,
+        ),
+      },
+      tileLayout: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
+          layout?.tileLayout,
+        ),
+      },
+      listView: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_LIST_VIEW_MESSAGES,
+          layout?.listView,
+        ),
+      },
       fab: {
         messages: ogeMergeMessages(OGE_DEFAULT_FAB_MESSAGES, pack.fab),
       },
@@ -268,6 +304,10 @@ function W8aProviders({
     alert: ConfigOf<typeof OgeAlertConfigProvider>;
     timeline: ConfigOf<typeof OgeTimelineConfigProvider>;
     fab: ConfigOf<typeof OgeFabConfigProvider>;
+    tileLayout: ConfigOf<typeof OgeTileLayoutConfigProvider>;
+    dataView: ConfigOf<typeof OgeDataViewConfigProvider>;
+    listView: ConfigOf<typeof OgeListViewConfigProvider>;
+    carousel: ConfigOf<typeof OgeCarouselConfigProvider>;
   };
   children?: ReactNode;
 }) {
@@ -278,7 +318,15 @@ function W8aProviders({
           <OgeAlertConfigProvider config={c.alert}>
             <OgeTimelineConfigProvider config={c.timeline}>
               <OgeFabConfigProvider config={c.fab}>
-                {children}
+                <OgeTileLayoutConfigProvider config={c.tileLayout}>
+                  <OgeDataViewConfigProvider config={c.dataView}>
+                    <OgeListViewConfigProvider config={c.listView}>
+                      <OgeCarouselConfigProvider config={c.carousel}>
+                        {children}
+                      </OgeCarouselConfigProvider>
+                    </OgeListViewConfigProvider>
+                  </OgeDataViewConfigProvider>
+                </OgeTileLayoutConfigProvider>
               </OgeFabConfigProvider>
             </OgeTimelineConfigProvider>
           </OgeAlertConfigProvider>

@@ -566,6 +566,58 @@ export class App {
       ],
     },
     {
+      title: 'Carousel',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/carousel', label: 'Overview', icon: 'carousel' },
+        {
+          path: '/components/carousel/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Tile Layout',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/tile-layout',
+          label: 'Overview',
+          icon: 'dashboard',
+        },
+        {
+          path: '/components/tile-layout/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Data View',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/data-view', label: 'Overview', icon: 'data-view' },
+        {
+          path: '/components/data-view/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'List View',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/list-view', label: 'Overview', icon: 'list-view' },
+        {
+          path: '/components/list-view/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'App Bar',
       group: COMPONENTS_GROUP,
       items: [
@@ -915,6 +967,11 @@ export class App {
           path: '/components/overlay/popover',
           label: 'Popover',
           icon: 'layers',
+        },
+        {
+          path: '/components/overlay/action-sheet',
+          label: 'Action Sheet',
+          icon: 'list',
         },
         {
           path: '/components/overlay/modal',

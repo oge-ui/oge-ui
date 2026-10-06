@@ -362,7 +362,7 @@ function SlotsDemo(): ReactNode {
   // puts a React select box on the bar, so those stylesheets come too.
   encapsulation: ViewEncapsulation.None,
   styleUrls: [
-    '../../../../../../packages/react/layout/src/styles.scss',
+    '../../shared/react-layout-demo-base.scss',
     '../../../../../../packages/react/overlay/src/styles.scss',
     '../../../../../../packages/react/inputs/src/styles.scss',
   ],

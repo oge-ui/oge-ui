@@ -1,0 +1,23 @@
+// The React layout stylesheet the docs' React demos inline — every partial of
+// `packages/react/layout/src/styles.scss` up to W8a. The package sheet itself
+// keeps every partial (consumers import its compiled `styles.css` once); the
+// docs inline a sheet per demo component under ViewEncapsulation.None, and
+// with the W8d collections (carousel, list / data view, tile layout) the full
+// sheet outgrew the `anyComponentStyle` budget. Demos of those components load
+// their own entry's SCSS instead (see docs/ARCHITECTURE.md, W8d).
+@use '../../../../../packages/layout/card/src/card';
+@use '../../../../../packages/layout/progress-bar/src/progress-bar';
+@use '../../../../../packages/layout/load-indicator/src/load-indicator';
+@use '../../../../../packages/layout/load-panel/src/load-panel';
+@use '../../../../../packages/layout/skeleton/src/skeleton';
+@use '../../../../../packages/layout/accordion/src/accordion';
+@use '../../../../../packages/layout/expansion-panel/src/expansion-panel';
+@use '../../../../../packages/layout/panel-bar/src/panel-bar';
+@use '../../../../../packages/layout/splitter/src/splitter';
+@use '../../../../../packages/layout/toolbar/src/toolbar';
+@use '../../../../../packages/layout/avatar/src/avatar';
+@use '../../../../../packages/layout/badge/src/badge';
+@use '../../../../../packages/layout/chip/src/chip';
+@use '../../../../../packages/layout/alert/src/alert';
+@use '../../../../../packages/layout/timeline/src/timeline';
+@use '../../../../../packages/layout/app-bar/src/app-bar';

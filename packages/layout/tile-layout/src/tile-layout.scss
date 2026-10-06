@@ -1,0 +1,260 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A dashboard of tiles: a CSS grid laid out by display order + spans
+// (`grid-auto-flow: dense` back-fills the holes a wide tile leaves). The
+// host is an inline-size container, so a narrow container (a phone, a side
+// panel) collapses the layout to one column instead of overflowing.
+.oge-tile-layout {
+  @include tokens.core-tokens;
+
+  display: block;
+  container-type: inline-size;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  .oge-sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+.oge-tile-layout-list {
+  display: grid;
+  grid-template-columns: var(
+    --oge-tile-layout-columns,
+    repeat(4, minmax(0, 1fr))
+  );
+  grid-auto-rows: var(--oge-tile-layout-rows, 160px);
+  grid-auto-flow: row dense;
+  gap: var(--oge-tile-layout-gap, 16px);
+  margin: 0;
+  padding: 0;
+}
+
+.oge-tile-layout-cell {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  grid-column: span var(--oge-tile-col-span, 1);
+  grid-row: span var(--oge-tile-row-span, 1);
+}
+
+.oge-tile-layout-tile {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  box-shadow: var(--oge-shadow-card);
+  transition:
+    box-shadow 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
+
+  &:focus {
+    outline: 2px solid transparent;
+
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-tile-layout-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding-block: 8px;
+  padding-inline: 12px;
+  border-block-end: 1px solid var(--oge-border-color);
+  color: var(--oge-text-color);
+  font-weight: 600;
+  user-select: none;
+}
+
+.oge-tile-layout-header-draggable {
+  cursor: grab;
+  // the header is a dedicated drag handle: touch drags start at once
+  touch-action: none;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+}
+
+.oge-tile-layout-grip {
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--oge-muted-color);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.oge-tile-layout-title {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-tile-layout-body {
+  @include tokens.scrollbar;
+
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px;
+}
+
+// pointer-only corner handle (Ctrl+Shift+Arrow on the tile is its twin)
+.oge-tile-layout-resize {
+  @include tokens.hit-area;
+
+  position: absolute;
+  inset-block-end: 2px;
+  inset-inline-end: 2px;
+  width: 14px;
+  height: 14px;
+  border-inline-end: 2px solid var(--oge-muted-color);
+  border-block-end: 2px solid var(--oge-muted-color);
+  border-end-end-radius: var(--oge-radius);
+  cursor: nwse-resize;
+  opacity: 0.6;
+  touch-action: none;
+  transition: opacity 120ms ease;
+
+  &:dir(rtl) {
+    cursor: nesw-resize;
+  }
+}
+
+.oge-tile-layout-resize-x {
+  cursor: ew-resize;
+
+  &:dir(rtl) {
+    cursor: ew-resize;
+  }
+}
+
+.oge-tile-layout-resize-y {
+  cursor: ns-resize;
+
+  &:dir(rtl) {
+    cursor: ns-resize;
+  }
+}
+
+.oge-tile-layout-tile:hover .oge-tile-layout-resize,
+.oge-tile-layout-tile:focus-within .oge-tile-layout-resize,
+.oge-tile-layout-tile-resized .oge-tile-layout-resize {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .oge-tile-layout-resize {
+    opacity: 1;
+  }
+}
+
+// the dragged tile follows the pointer above its neighbours
+.oge-tile-layout-tile-dragged {
+  z-index: 2;
+  border-color: var(--oge-accent);
+  box-shadow: var(--oge-shadow-popup);
+  cursor: grabbing;
+  transition: none;
+
+  .oge-tile-layout-header-draggable {
+    cursor: grabbing;
+  }
+}
+
+// where it lands: an accent ring + tint
+.oge-tile-layout-tile-drop-target {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent-soft);
+  box-shadow: 0 0 0 2px var(--oge-accent-25);
+}
+
+.oge-tile-layout-tile-resized {
+  border-color: var(--oge-accent);
+  border-style: dashed;
+}
+
+.oge-tile-layout-dragging,
+.oge-tile-layout-resizing {
+  user-select: none;
+}
+
+@container (max-width: 480px) {
+  .oge-tile-layout-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .oge-tile-layout-cell {
+    grid-column: auto;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-tile-layout-tile,
+  .oge-tile-layout-resize {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-tile-layout-tile {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-tile-layout-header {
+    border-block-end-color: CanvasText;
+  }
+
+  .oge-tile-layout-grip {
+    stroke: CanvasText;
+  }
+
+  .oge-tile-layout-resize {
+    border-color: CanvasText;
+    opacity: 1;
+  }
+
+  .oge-tile-layout-tile-dragged {
+    outline: 3px solid Highlight;
+  }
+
+  .oge-tile-layout-tile-drop-target {
+    border: 2px dashed Highlight;
+  }
+
+  .oge-tile-layout-tile-resized {
+    border: 2px dashed Highlight;
+  }
+}

@@ -161,7 +161,7 @@ function TemplatesDemo(): ReactNode {
   encapsulation: ViewEncapsulation.None,
   styleUrls: [
     '../../../../../../packages/react/upload/src/styles.scss',
-    '../../../../../../packages/react/layout/src/styles.scss',
+    '../../shared/react-layout-demo-base.scss',
     '../../../../../../packages/react/overlay/src/styles.scss',
   ],
   template: `
