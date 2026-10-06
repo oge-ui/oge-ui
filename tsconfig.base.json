@@ -32,6 +32,8 @@
       "@oge-ui/charts-engine/export-pdf": [
         "./packages/charts-engine/src/export-pdf.ts"
       ],
+      "@oge-ui/charts/config": ["./packages/charts/config/src/index.ts"],
+      "@oge-ui/charts/sparkline": ["./packages/charts/sparkline/src/index.ts"],
       "@oge-ui/charts/export-image": [
         "./packages/charts/export-image/src/index.ts"
       ],
@@ -111,6 +113,9 @@
       "@oge-ui/react-bpmn": ["./packages/react/bpmn/src/index.ts"],
       "@oge-ui/react-buttons": ["./packages/react/buttons/src/index.ts"],
       "@oge-ui/react-charts": ["./packages/react/charts/src/index.ts"],
+      "@oge-ui/react-charts/sparkline": [
+        "./packages/react/charts/src/sparkline.ts"
+      ],
       "@oge-ui/react-charts/export-image": [
         "./packages/react/charts/src/export-image.ts"
       ],

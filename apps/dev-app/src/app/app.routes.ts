@@ -1070,6 +1070,20 @@ export const appRoutes: Route[] = [
         title: 'OGE — Charts Axes & Layout',
       },
       {
+        path: 'gauges',
+        loadComponent: () =>
+          import('./pages/charts/gauges').then((m) => m.ChartsGaugesPage),
+        title: 'OGE — Gauges & Sparklines',
+      },
+      {
+        path: 'specialized',
+        loadComponent: () =>
+          import('./pages/charts/specialized').then(
+            (m) => m.ChartsSpecializedPage,
+          ),
+        title: 'OGE — Funnel, Heatmap & Flows',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/charts/api').then((m) => m.ChartsApiPage),

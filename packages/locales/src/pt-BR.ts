@@ -1385,6 +1385,54 @@ export const ptBR: OgeLocalePack = {
       year1Label: '1 ano',
       allLabel: 'Todos os dados',
     },
+    visuals: {
+      gaugeLabel: 'Medidor {title}',
+      gaugeValueInRange: '{value}, {range}',
+      bulletLabel:
+        'Gráfico de marcadores {title}: valor {value}, meta {target}',
+      sparklineLabel:
+        'Minigráfico {title}, {count, plural, one {# ponto} other {# pontos}}: primeiro {first}, último {last}, mínimo {min}, máximo {max}',
+      funnelLabel:
+        'Gráfico de funil {title}, {count, plural, one {# etapa} other {# etapas}}',
+      pyramidLabel:
+        'Gráfico de pirâmide {title}, {count, plural, one {# nível} other {# níveis}}',
+      heatmapLabel:
+        'Mapa de calor {title}, {rows, plural, one {# linha} other {# linhas}} por {columns, plural, one {# coluna} other {# colunas}}',
+      treemapLabel:
+        'Mapa de árvore {title}, {count, plural, one {# bloco} other {# blocos}}',
+      sankeyLabel:
+        'Diagrama de Sankey {title}, {nodes, plural, one {# nó} other {# nós}}, {links, plural, one {# ligação} other {# ligações}}',
+      sunburstLabel:
+        'Gráfico de explosão solar {title}, {count, plural, one {# segmento} other {# segmentos}}',
+      mapLabel:
+        'Mapa {title}, {count, plural, one {# região} other {# regiões}}',
+      drillHint:
+        'As teclas de seta movem entre os itens, Enter abre um grupo, Esc sobe um nível',
+      mapHint:
+        'As teclas de seta movem entre as regiões, mais e menos aplicam zoom, Shift com uma tecla de seta move a visualização',
+      breadcrumbLabel: 'Caminho de detalhamento',
+      colorScaleLabel: 'Escala de cores',
+      zoomIn: 'Ampliar',
+      zoomOut: 'Reduzir',
+      resetZoom: 'Redefinir zoom',
+      valueHeader: 'Valor',
+      shareHeader: 'Participação',
+      sourceHeader: 'Origem',
+      targetHeader: 'Destino',
+      target: 'meta {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '{percent} da primeira etapa',
+      percentOfPrevious: '{percent} da etapa anterior',
+      inflow: 'entrada {value}',
+      outflow: 'saída {value}',
+      flow: '{source} → {target}',
+      root: 'Tudo',
+      noValue: 'sem dados',
+      item: '{name}: {value}',
+      cell: '{row}, {column}: {value}',
+      drilledDown: '{name} aberto',
+      drilledUp: 'Voltar para {name}',
+    },
     noData: 'Nenhum dado',
   },
 };

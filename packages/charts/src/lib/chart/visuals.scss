@@ -1,0 +1,415 @@
+// The non-cartesian charts: funnel / pyramid, heatmap, treemap, sunburst,
+// Sankey and the vector map, plus the colour-scale legend and the
+// drill-down breadcrumb they share. Loaded together with `chart.scss` (the
+// hosts also carry `.oge-chart`, which declares the tokens).
+@use '../../../../grid/src/lib/styles/tokens';
+
+/* ---------- shared marks ---------- */
+
+.oge-funnel-item,
+.oge-heatmap-cell,
+.oge-treemap-tile,
+.oge-sunburst-segment,
+.oge-sankey-node,
+.oge-map-region {
+  cursor: pointer;
+  transition:
+    opacity 120ms ease,
+    filter 120ms ease;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+}
+
+// the keyboard's active mark: drawn while the plot holds the focus
+.oge-chart-plot-wrap:focus-visible .oge-chart-item-active,
+.oge-chart-plot-wrap:focus .oge-chart-item-active {
+  stroke: var(--oge-text-color);
+  stroke-width: 3;
+  paint-order: stroke;
+}
+
+.oge-chart-visual-enter {
+  transform-box: view-box;
+  transform-origin: center;
+  animation: oge-chart-visual-in var(--oge-chart-anim-duration, 600ms)
+    var(--oge-chart-anim-easing, ease-out) both;
+}
+
+@keyframes oge-chart-visual-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- funnel ---------- */
+
+.oge-funnel-item {
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+}
+
+.oge-funnel-connector {
+  fill: none;
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+/* ---------- heatmap ---------- */
+
+.oge-heatmap-cell {
+  stroke: none;
+  rx: 2px;
+}
+
+.oge-heatmap-cell-empty {
+  stroke: var(--oge-border-color);
+  stroke-dasharray: 2 2;
+  cursor: default;
+}
+
+/* ---------- colour-scale legend ---------- */
+
+.oge-chart-color-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 8px;
+  min-inline-size: 160px;
+  max-inline-size: 320px;
+  font-size: 11px;
+  color: var(--oge-chart-axis-fg);
+}
+
+.oge-chart-color-bar {
+  block-size: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--oge-border-color);
+}
+
+.oge-chart-color-ticks {
+  position: relative;
+  block-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-chart-color-tick {
+  position: absolute;
+  inset-block-start: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+
+  &:dir(rtl) {
+    transform: translateX(50%);
+  }
+}
+
+.oge-chart-color-segments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-chart-color-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ---------- drill-down breadcrumb ---------- */
+
+.oge-chart-breadcrumb {
+  padding: 4px 8px 0;
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+  }
+
+  li + li::before {
+    content: '/';
+    padding-inline: 2px;
+    color: var(--oge-muted-color);
+  }
+}
+
+.oge-chart-breadcrumb-btn {
+  padding: 2px 6px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-accent);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-chart-breadcrumb-current {
+  padding: 2px 6px;
+  font-weight: 600;
+}
+
+/* ---------- treemap ---------- */
+
+.oge-treemap-tile {
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+}
+
+.oge-treemap-group {
+  stroke: var(--oge-bg);
+  stroke-width: 1.5;
+}
+
+.oge-treemap-label {
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.oge-treemap-label-strong {
+  font-weight: 600;
+}
+
+/* ---------- sunburst ---------- */
+
+.oge-sunburst-segment {
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+}
+
+.oge-sunburst-center {
+  fill: transparent;
+}
+
+.oge-sunburst-center-up {
+  cursor: pointer;
+
+  &:hover {
+    fill: var(--oge-row-hover-bg);
+  }
+}
+
+.oge-sunburst-center-name {
+  fill: var(--oge-text-color);
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.oge-sunburst-center-value {
+  fill: var(--oge-chart-axis-fg);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* ---------- sankey ---------- */
+
+.oge-sankey-link {
+  fill-opacity: 0.32;
+  stroke: none;
+  cursor: pointer;
+  transition:
+    fill-opacity 120ms ease,
+    opacity 120ms ease;
+}
+
+.oge-sankey-link-lit {
+  fill-opacity: 0.6;
+}
+
+.oge-sankey-dim {
+  opacity: 0.25;
+}
+
+.oge-sankey-node {
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+}
+
+/* ---------- vector map ---------- */
+
+.oge-map-svg {
+  cursor: grab;
+  touch-action: none;
+}
+
+.oge-map-dragging {
+  cursor: grabbing;
+}
+
+.oge-map-region {
+  stroke: var(--oge-bg);
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+.oge-map-region-empty {
+  cursor: default;
+}
+
+.oge-map-label {
+  fill: var(--oge-text-color);
+  font-weight: 500;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--oge-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.oge-map-controls {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oge-map-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  svg {
+    inline-size: 14px;
+    block-size: 14px;
+  }
+}
+
+.oge-chart-static {
+  .oge-funnel-item,
+  .oge-heatmap-cell,
+  .oge-treemap-tile,
+  .oge-sunburst-segment,
+  .oge-sankey-node,
+  .oge-sankey-link,
+  .oge-map-region {
+    transition: none;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-funnel-item,
+  .oge-heatmap-cell,
+  .oge-treemap-tile,
+  .oge-sunburst-segment,
+  .oge-sankey-node,
+  .oge-sankey-link,
+  .oge-map-region,
+  .oge-chart-breadcrumb-btn,
+  .oge-map-control {
+    transition: none;
+  }
+
+  .oge-chart-visual-enter {
+    animation: none;
+  }
+}
+
+@include tokens.forced-colors {
+  // colour is the data here (stages, heat, groups, flows, regions): keep
+  // the author colours and draw a CanvasText edge around every mark
+  .oge-funnel-item,
+  .oge-heatmap-cell,
+  .oge-treemap-tile,
+  .oge-treemap-group,
+  .oge-sunburst-segment,
+  .oge-sankey-node,
+  .oge-sankey-link,
+  .oge-map-region,
+  .oge-chart-color-bar {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+  }
+
+  .oge-heatmap-cell-empty {
+    stroke: GrayText;
+  }
+
+  .oge-chart-plot-wrap:focus-visible .oge-chart-item-active,
+  .oge-chart-plot-wrap:focus .oge-chart-item-active {
+    stroke: Highlight;
+  }
+
+  .oge-funnel-connector {
+    stroke: CanvasText;
+  }
+
+  .oge-treemap-label,
+  .oge-sunburst-center-name,
+  .oge-sunburst-center-value,
+  .oge-map-label {
+    fill: CanvasText;
+    stroke: Canvas;
+  }
+
+  .oge-chart-breadcrumb-btn {
+    color: LinkText;
+  }
+
+  .oge-map-control {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}

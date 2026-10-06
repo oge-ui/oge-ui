@@ -12,12 +12,34 @@ import {
   OGE_POLAR_CHART_API,
   OGE_RANGE_SELECTOR_API,
 } from './charts-api-data';
+import {
+  OGE_BULLET_CHART_API,
+  OGE_CIRCULAR_GAUGE_API,
+  OGE_FUNNEL_CHART_API,
+  OGE_HEATMAP_API,
+  OGE_LINEAR_GAUGE_API,
+  OGE_SANKEY_CHART_API,
+  OGE_SPARKLINE_API,
+  OGE_SUNBURST_CHART_API,
+  OGE_TREEMAP_API,
+  OGE_VECTOR_MAP_API,
+} from './visuals-api-data';
 
 const SECTIONS = [
   'OgeChart',
   'OgePieChart',
   'OgePolarChart',
   'OgeRangeSelector',
+  'OgeCircularGauge',
+  'OgeLinearGauge',
+  'OgeBulletChart',
+  'OgeSparkline',
+  'OgeFunnelChart',
+  'OgeHeatmap',
+  'OgeTreemap',
+  'OgeSunburstChart',
+  'OgeSankeyChart',
+  'OgeVectorMap',
   'Configuration',
 ] as const;
 
@@ -27,6 +49,16 @@ const SECTIONS_REACT = [
   '<OgePieChart>',
   '<OgePolarChart>',
   '<OgeRangeSelector>',
+  '<OgeCircularGauge>',
+  '<OgeLinearGauge>',
+  '<OgeBulletChart>',
+  '<OgeSparkline>',
+  '<OgeFunnelChart>',
+  '<OgeHeatmap>',
+  '<OgeTreemap>',
+  '<OgeSunburstChart>',
+  '<OgeSankeyChart>',
+  '<OgeVectorMap>',
   'Configuration',
 ] as const;
 
@@ -104,6 +136,56 @@ const SECTIONS_REACT = [
         selector="oge-range-selector"
         [sections]="rangeApi"
       />
+      <app-api-reference
+        title="OgeCircularGauge"
+        selector="oge-circular-gauge"
+        [sections]="circularGaugeApi"
+      />
+      <app-api-reference
+        title="OgeLinearGauge"
+        selector="oge-linear-gauge"
+        [sections]="linearGaugeApi"
+      />
+      <app-api-reference
+        title="OgeBulletChart"
+        selector="oge-bullet-chart"
+        [sections]="bulletChartApi"
+      />
+      <app-api-reference
+        title="OgeSparkline"
+        selector="oge-sparkline"
+        [sections]="sparklineApi"
+      />
+      <app-api-reference
+        title="OgeFunnelChart"
+        selector="oge-funnel-chart"
+        [sections]="funnelChartApi"
+      />
+      <app-api-reference
+        title="OgeHeatmap"
+        selector="oge-heatmap"
+        [sections]="heatmapApi"
+      />
+      <app-api-reference
+        title="OgeTreemap"
+        selector="oge-treemap"
+        [sections]="treemapApi"
+      />
+      <app-api-reference
+        title="OgeSunburstChart"
+        selector="oge-sunburst-chart"
+        [sections]="sunburstChartApi"
+      />
+      <app-api-reference
+        title="OgeSankeyChart"
+        selector="oge-sankey-chart"
+        [sections]="sankeyChartApi"
+      />
+      <app-api-reference
+        title="OgeVectorMap"
+        selector="oge-vector-map"
+        [sections]="vectorMapApi"
+      />
       <app-api-reference title="Configuration" [sections]="configApi" />
     }
 
@@ -141,5 +223,15 @@ export class ChartsApiPage {
   protected readonly pieApi = OGE_PIE_CHART_API;
   protected readonly polarApi = OGE_POLAR_CHART_API;
   protected readonly rangeApi = OGE_RANGE_SELECTOR_API;
+  protected readonly circularGaugeApi = OGE_CIRCULAR_GAUGE_API;
+  protected readonly linearGaugeApi = OGE_LINEAR_GAUGE_API;
+  protected readonly bulletChartApi = OGE_BULLET_CHART_API;
+  protected readonly sparklineApi = OGE_SPARKLINE_API;
+  protected readonly funnelChartApi = OGE_FUNNEL_CHART_API;
+  protected readonly heatmapApi = OGE_HEATMAP_API;
+  protected readonly treemapApi = OGE_TREEMAP_API;
+  protected readonly sunburstChartApi = OGE_SUNBURST_CHART_API;
+  protected readonly sankeyChartApi = OGE_SANKEY_CHART_API;
+  protected readonly vectorMapApi = OGE_VECTOR_MAP_API;
   protected readonly configApi = OGE_CHARTS_CONFIG_API;
 }

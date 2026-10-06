@@ -1,6 +1,6 @@
 # @oge-ui/charts
 
-> Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection.
+> Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series, pie/doughnut and polar, circular and linear gauges, bullet charts, sparklines (own entry), funnel/pyramid, heatmap, treemap, sunburst, Sankey and a GeoJSON vector map on a dependency-free SVG kernel — time/log axes, zoom & pan, tooltips, drill-down and full keyboard access.
 >
 > This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
@@ -94,8 +94,18 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/charts`
 
-- values: `OGE_CHARTS_CONFIG`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OgeChart`, `OgeChartAnnotationTemplate`, `OgeChartLabelTemplate`, `OgeChartLegendTemplate`, `OgeChartTooltipTemplate`, `OgePieChart`, `OgePolarChart`, `OgeRangeSelector`, `ogeBollingerBands`, `ogeBoxStats`, `ogeEma`, `ogeHistogramBins`, `ogeMacd`, `ogeRsi`, `ogeSma`, `ogeTrendline`, `provideOgeChartsConfig`
-- types: `OgeChartAnimationEasing`, `OgeChartAnimationOptions`, `OgeChartAnnotation`, `OgeChartAnnotationTemplateContext`, `OgeChartAxisBreak`, `OgeChartAxisLabelOptions`, `OgeChartAxisOptions`, `OgeChartAxisStrip`, `OgeChartAxisType`, `OgeChartConstantLine`, `OgeChartCrosshairOptions`, `OgeChartCustomPeriod`, `OgeChartDateInterval`, `OgeChartExportData`, `OgeChartIndicatorOptions`, `OgeChartLabelFormat`, `OgeChartLabelInfo`, `OgeChartLabelOptions`, `OgeChartLabelOverlap`, `OgeChartLabelPosition`, `OgeChartLabelTemplateContext`, `OgeChartLegendClickEvent`, `OgeChartLegendOptions`, `OgeChartLegendTemplateContext`, `OgeChartMinorTickOptions`, `OgeChartPane`, `OgeChartPeriod`, `OgeChartPieSliceEvent`, `OgeChartPoint`, `OgeChartPointCustomizer`, `OgeChartPointEvent`, `OgeChartPointInfo`, `OgeChartPointRef`, `OgeChartPointStyle`, `OgeChartPrintOptions`, `OgeChartRange`, `OgeChartRenderLabel`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSmallValuesGrouping`, `OgeChartStripLine`, `OgeChartTickInterval`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipTemplateContext`, `OgeChartTrendlineOptions`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgeChartsPeriodMessages`, `OgeChartsValueMessages`, `OgePieSeriesInput`
+- values: `OGE_CHARTS_CONFIG`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OgeBulletChart`, `OgeChart`, `OgeChartAnnotationTemplate`, `OgeChartLabelTemplate`, `OgeChartLegendTemplate`, `OgeChartTooltipTemplate`, `OgeCircularGauge`, `OgeFunnelChart`, `OgeHeatmap`, `OgeLinearGauge`, `OgePieChart`, `OgePolarChart`, `OgeRangeSelector`, `OgeSankeyChart`, `OgeSparkline`, `OgeSunburstChart`, `OgeTreemap`, `OgeVectorMap`, `ogeBollingerBands`, `ogeBoxStats`, `ogeEma`, `ogeHistogramBins`, `ogeMacd`, `ogeRsi`, `ogeSma`, `ogeTrendline`, `provideOgeChartsConfig`
+- types: `OgeChartAnimationEasing`, `OgeChartAnimationOptions`, `OgeChartAnnotation`, `OgeChartAnnotationTemplateContext`, `OgeChartAxisBreak`, `OgeChartAxisLabelOptions`, `OgeChartAxisOptions`, `OgeChartAxisStrip`, `OgeChartAxisType`, `OgeChartCellRef`, `OgeChartColorScale`, `OgeChartConstantLine`, `OgeChartCrosshairOptions`, `OgeChartCustomPeriod`, `OgeChartDateInterval`, `OgeChartExportData`, `OgeChartFunnelItemEvent`, `OgeChartHeatmapCellEvent`, `OgeChartHierarchyNodeEvent`, `OgeChartIndicatorOptions`, `OgeChartLabelFormat`, `OgeChartLabelInfo`, `OgeChartLabelOptions`, `OgeChartLabelOverlap`, `OgeChartLabelPosition`, `OgeChartLabelTemplateContext`, `OgeChartLegendClickEvent`, `OgeChartLegendOptions`, `OgeChartLegendTemplateContext`, `OgeChartMapRegionEvent`, `OgeChartMinorTickOptions`, `OgeChartPane`, `OgeChartPeriod`, `OgeChartPieSliceEvent`, `OgeChartPoint`, `OgeChartPointCustomizer`, `OgeChartPointEvent`, `OgeChartPointInfo`, `OgeChartPointRef`, `OgeChartPointStyle`, `OgeChartPrintOptions`, `OgeChartRange`, `OgeChartRenderLabel`, `OgeChartSankeyLinkEvent`, `OgeChartSankeyNodeEvent`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSmallValuesGrouping`, `OgeChartStripLine`, `OgeChartTickInterval`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipTemplateContext`, `OgeChartTrendlineOptions`, `OgeChartValueRange`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgeChartsPeriodMessages`, `OgeChartsValueMessages`, `OgeChartsVisualMessages`, `OgeCircularGaugeIndicator`, `OgeFunnelAlgorithm`, `OgeFunnelType`, `OgeGaugeOrientation`, `OgeGaugeScaleOptions`, `OgeGeoJsonFeature`, `OgeGeoJsonFeatureCollection`, `OgeGeoJsonGeometry`, `OgeLinearGaugeIndicator`, `OgeMapProjection`, `OgePieSeriesInput`, `OgeSankeyLinkColor`, `OgeSankeyNode`, `OgeSankeyNodeAlign`, `OgeSparklineMarkers`, `OgeSparklineType`, `OgeTreemapLayoutAlgorithm`
+
+`@oge-ui/charts/config`
+
+- values: `OGE_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `provideOgeChartsConfig`
+- types: `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgeChartsPeriodMessages`, `OgeChartsValueMessages`, `OgeChartsVisualMessages`
+
+`@oge-ui/charts/sparkline`
+
+- values: `OgeSparkline`
+- types: `OgeSparklineMarkers`, `OgeSparklineType`
 
 `@oge-ui/charts/export-pdf`
 
@@ -307,6 +317,386 @@ _Analytics (pure functions)_
 | --- | --- | --- |
 | `valueChange` | `OgeChartRange \| null` | The two-way model output. Interaction: drag the window (grab cursor), drag either handle, click the track to center the window there — Escape mid-drag restores; the handles are WAI-ARIA sliders (arrow keys adjust by 2%, Home/End jump to the bounds, changes announced). |
 
+### OgeCircularGauge — `<oge-circular-gauge>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| null` | `null` | The reading; `null` draws the scale alone (and reads _no data_). Values outside the scale clamp the indicator, while `aria-valuetext` speaks the real value. |
+| `scale` | `OgeGaugeScaleOptions` | `{}` | `{ min?, max?, tickInterval?, minorTickInterval?, visible?, labelsVisible?, labelFormat? }` — default 0..100 with 1-2-5 major ticks (about five intervals) and a fifth of that as minor ticks (`0` hides them); labels thin out when they would collide. |
+| `ranges` | `readonly OgeChartValueRange[]` | `[]` | Coloured bands `{ start, end, color?, label? }`; unset colours cycle the success / warning / danger tokens. A `label` is spoken with the value when it falls in the band (`aria-valuetext` “85, Warning”) and lists in the screen-reader table — colour is never the only channel. |
+| `barBase` | `number \| undefined` | `—` | Where the bar indicator starts (a bar from 0 on a −50..50 scale); default the scale minimum. |
+| `subvalues` | `readonly number[]` | `[]` | Secondary readings drawn as small markers (targets, last week). |
+| `showValue` | `boolean` | `true` | The value text on the gauge. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | Value text and `aria-valuetext` (`v => v + ' km/h'`); default the locale number. |
+| `color` | `string \| undefined` | `—` | Indicator colour — any CSS colour or token; default the accent. |
+| `indicator` | `OgeCircularGaugeIndicator` | `'needle'` | `'needle'`, `'bar'` (a filled arc from `barBase`) or `'marker'` (a triangle on the scale). The needle and the marker rotate, the bar fills through `stroke-dasharray` — all three transition on value changes and sweep in from the minimum on the first render. |
+| `startAngle / endAngle` | `number / number` | `-120 / 120` | The arc in degrees, 0 = 12 o'clock, clockwise (`-90 / 90` is a half gauge); the radius is fitted to the arc's bounding box, so partial gauges fill their box. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGaugeScaleOptions / OgeChartValueRange` | `interfaces` | The `scale` and `ranges` shapes, shared by both gauges and the bullet chart. |
+| `OgeCircularGaugeIndicator` | `'needle' \| 'bar' \| 'marker'` | The circular gauge's value indicators. |
+| `role="meter"` | `semantics` | The plot is a `role="meter"` with `aria-valuenow` (clamped into the scale), `aria-valuemin`, `aria-valuemax` and `aria-valuetext`; the svg is `aria-hidden`, and a screen-reader table outside the meter lists value, bounds, ranges and subvalues. |
+
+### OgeLinearGauge — `<oge-linear-gauge>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| null` | `null` | The reading; `null` draws the scale alone (and reads _no data_). Values outside the scale clamp the indicator, while `aria-valuetext` speaks the real value. |
+| `scale` | `OgeGaugeScaleOptions` | `{}` | `{ min?, max?, tickInterval?, minorTickInterval?, visible?, labelsVisible?, labelFormat? }` — default 0..100 with 1-2-5 major ticks (about five intervals) and a fifth of that as minor ticks (`0` hides them); labels thin out when they would collide. |
+| `ranges` | `readonly OgeChartValueRange[]` | `[]` | Coloured bands `{ start, end, color?, label? }`; unset colours cycle the success / warning / danger tokens. A `label` is spoken with the value when it falls in the band (`aria-valuetext` “85, Warning”) and lists in the screen-reader table — colour is never the only channel. |
+| `barBase` | `number \| undefined` | `—` | Where the bar indicator starts (a bar from 0 on a −50..50 scale); default the scale minimum. |
+| `subvalues` | `readonly number[]` | `[]` | Secondary readings drawn as small markers (targets, last week). |
+| `showValue` | `boolean` | `true` | The value text on the gauge. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | Value text and `aria-valuetext` (`v => v + ' km/h'`); default the locale number. |
+| `color` | `string \| undefined` | `—` | Indicator colour — any CSS colour or token; default the accent. |
+| `orientation` | `OgeGaugeOrientation` | `'horizontal'` | `'horizontal'` or `'vertical'` (minimum at the bottom; give the host a height). |
+| `indicator` | `OgeLinearGaugeIndicator` | `'bar'` | `'bar'` fills the track from `barBase`; `'marker'` slides a triangle along it. Both transition and sweep in like the circular gauge. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Mirrored layout; unset follows the page `dir` (and a later flip of it). An explicit value is also set as `dir` on the host. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLinearGaugeIndicator / OgeGaugeOrientation` | `'bar' \| 'marker' / 'horizontal' \| 'vertical'` | The linear gauge's indicators and orientations; the meter semantics are the circular gauge's. |
+
+### OgeBulletChart — `<oge-bullet-chart>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / target` | `number \| null / number \| null` | `null / null` | The measure (the bar, from zero) and the comparative measure (the target marker). |
+| `ranges` | `readonly OgeChartValueRange[]` | `[]` | Qualitative bands, low → high; unset colours are shades of the muted colour, darkest first (poor → good). Labels list in the screen-reader table. |
+| `scale` | `OgeGaugeScaleOptions` | `{}` | `min` / `max` default to 0 and the nice ceiling of bands, value and target; `visible: false` drops the axis. |
+| `orientation` | `OgeGaugeOrientation` | `'horizontal'` | Vertical bullets stand the bar up (give the host a height). |
+| `color / targetColor` | `string \| undefined / string \| undefined` | `—` | Bar and target colours; default the text colour. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `tooltipEnabled` | `boolean` | `true` | Hovering shows the value and the target. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Mirrored layout; unset follows the page `dir` (and a later flip of it). An explicit value is also set as `dir` on the host. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `role="img"` | `semantics` | The svg's accessible name speaks title, value and target (`visuals.bulletLabel`); the screen-reader table lists value, target and every band. |
+
+### OgeSparkline — `<oge-sparkline>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly (T \| number \| null)[]` | `[]` | Plain numbers or items; `null` is a gap. |
+| `valueField / argumentField` | `string \| getter / string \| getter \| undefined` | `'value' / undefined` | Field mapping for items (names, dotted paths or getters); the argument only feeds the tooltip (default the 1-based position). |
+| `type` | `OgeSparklineType` | `'line'` | `'line'`, `'area'`, `'bar'` (bars from zero, negatives in `negativeColor`) or `'winloss'` (equal-height ticks above / below the middle, flat for a draw). |
+| `markers` | `boolean \| OgeSparklineMarkers` | `false` | Dots on the `first` / `last` / `min` / `max` points (`true` = all four; max in the success colour, min in danger). |
+| `winlossThreshold` | `number` | `0` | Win-loss: above wins, below loses, equal draws. |
+| `minValue / maxValue` | `number \| undefined` | `—` | A fixed value range, so sparklines of one column compare; default the data range (bars always include 0). |
+| `color / negativeColor` | `string \| undefined` | `—` | Series / positive colour (default the accent) and negative bars / losses (default danger). |
+| `lineWidth` | `number` | `1.5` | Line stroke width, px. |
+| `tooltipEnabled` | `boolean` | `false` | A hover balloon with `argument: value` of the nearest point. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Mirrored layout; unset follows the page `dir` (and a later flip of it). An explicit value is also set as `dir` on the host. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | The prefix of the accessible label — the svg is a `role="img"` summarizing the series (`visuals.sparklineLabel`: “Sales sparkline, 7 points: first 171, last 182, low 171, high 182”), the locale of its numbers and message overrides. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSvgElement()` | `SVGSVGElement` | The live SVG root, for the image exporters. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSparklineType / OgeSparklineMarkers` | `'line' \| 'area' \| 'bar' \| 'winloss' / { first?, last?, min?, max? }` | Import the component from `@oge-ui/charts/sparkline` (also re-exported by `@oge-ui/charts`): that entry never loads the cartesian chart. It has no frame, no animation and no screen-reader table — a cell-sized chart speaks one summary sentence. |
+
+### OgeFunnelChart — `<oge-funnel-chart>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource / argumentField / valueField` | `readonly T[] / string \| getter / string \| getter` | `[] / 'argument' / 'value'` | One stage per item; negative values clamp to zero. |
+| `colorField / customizePoint` | `field / (info: OgeChartPointInfo) => OgeChartPointStyle` | `—` | Per-stage colour, or `{ color?, label?, description? }` overrides; `description` is spoken with the value. |
+| `type` | `OgeFunnelType` | `'funnel'` | `'funnel'` or `'pyramid'` (a dynamic-height triangle with the apex on top and the first stage at the base). |
+| `algorithm` | `OgeFunnelAlgorithm` | `'dynamicSlope'` | `'dynamicSlope'`: equal heights, widths follow the values. `'dynamicHeight'`: one fixed outline narrowing to the neck, heights follow the values. |
+| `neckWidth / neckHeight` | `number / number` | `0 / 0` | The neck as fractions of the width and (dynamic height) of the height. |
+| `inverted / sortData / itemGap` | `boolean / boolean / number` | `false / true / 2` | Upside down; sort the stages largest first; the gap between stages, px. |
+| `showLabels / label` | `boolean / OgeChartLabelOptions` | `true / undefined` | Labels inside the stages (dropped where they do not fit, contrast-picked colour) or `position: 'outside'` in a column beside the shape with connectors; `format(info)` with `info.percent` = the share of the first stage. Default text `stage: value`. |
+| `legend / tooltipEnabled` | `OgeChartLegendOptions / boolean` | `{} / true` | One legend button per stage (toggles its selection, `legendClick` is cancelable); the tooltip adds the share of the first and of the previous stage. |
+| `palette` | `readonly string[] \| undefined` | `—` | Colours in order; default `OGE_CHART_PALETTE`. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `selectedItems` | `readonly number[]` | `[]` | Selected stage indexes (drawing order). Two-way (`[(selectedItems)]`). |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Mirrored layout; unset follows the page `dir` (and a later flip of it). An explicit value is also set as `dir` on the host. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Moves the keyboard focus to the plot. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeChartFunnelItemEvent<T>` | Stage click or Enter: `{ index, argument, value, percentOfFirst, percentOfPrevious, source }`. |
+| `legendClick` | `OgeChartLegendClickEvent` | Cancelable legend toggle. |
+| `selectedItemsChange` | `readonly number[]` | The two-way `selectedItems` output. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `focusable plot (role="group")` | Up/Down (and Left/Right, mirrored in RTL) walk the stages, Home/End jump, Enter/Space select. Each move is announced in a polite live region; the screen-reader table carries every value. |
+| `OgeFunnelType / OgeFunnelAlgorithm` | `'funnel' \| 'pyramid' / 'dynamicSlope' \| 'dynamicHeight'` | Shapes and algorithms. The `[ogeChartLegendTemplate]` and `[ogeChartLabelTemplate]` slots of the pie chart work here too. |
+
+### OgeHeatmap — `<oge-heatmap>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly T[]` | `[]` | One item per cell; missing cells render empty and read _no data_. |
+| `xField / yField / valueField` | `string \| getter` | `'x' / 'y' / 'value'` | Column category, row category and the value. |
+| `xCategories / yCategories` | `readonly unknown[] \| undefined` | `—` | Explicit column / row orders (top to bottom); default the order of first appearance. Items outside them are skipped. |
+| `colorScale` | `OgeChartColorScale \| undefined` | `—` | `{ type?: 'linear' \| 'segmented', min?, max?, colors?, ranges?, emptyColor?, labelFormat? }` — two or more `colors` blend evenly with `color-mix()` (three make a diverging scale; theme tokens follow the theme), `segmented` paints `ranges` flat. Default: the `--oge-chart-heat-low` / `--oge-chart-heat-high` tokens over the data range. |
+| `showLabels` | `boolean` | `true` | Values in the cells where they fit. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `cellGap / xAxisPosition` | `number / 'top' \| 'bottom'` | `2 / 'bottom'` | Gap between cells, px; column labels above or below the grid. |
+| `legend / tooltipEnabled` | `OgeChartLegendOptions / boolean` | `{} / true` | The colour-scale legend (a gradient bar with ticks, or swatches when segmented; mirrored in RTL) and the cell tooltip. |
+| `selectedCells` | `readonly OgeChartCellRef[]` | `[]` | Selected `{ row, column }` cells (click / Enter toggles). Two-way (`[(selectedCells)]`). |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Mirrored layout; unset follows the page `dir` (and a later flip of it). An explicit value is also set as `dir` on the host. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Moves the keyboard focus to the plot. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `cellClick` | `OgeChartHeatmapCellEvent<T>` | Cell click or Enter: `{ row, column, x, y, value, source }`. |
+| `selectedCellsChange` | `readonly OgeChartCellRef[]` | The two-way `selectedCells` output. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `focusable plot (role="group")` | The APG grid's navigation keys: arrows move one cell (the horizontal pair mirrors in RTL), Home/End to the row's ends, Ctrl+Home/End to the first/last cell, PageUp/PageDown to the column's ends, Enter/Space select. The screen-reader table is two-dimensional — one row per row category, one column per column category. Each move is announced in a polite live region; the screen-reader table carries every value. |
+| `OgeChartColorScale / OgeChartCellRef` | `interfaces` | The colour scale (shared with the treemap and the map) and a selected cell. |
+
+### OgeTreemap — `<oge-treemap>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly T[]` | `[]` | Nested items (children under `childrenField`) or a flat list (`idField` + `parentField`; unknown parents and cycles are tolerated). Groups sum their children. |
+| `childrenField / idField / parentField` | `string \| getter` | `'items' / 'id' / undefined` | Setting `parentField` switches to flat data. |
+| `labelField / valueField / colorField` | `string \| getter` | `'name' / 'value' / undefined` | Name, leaf value and an optional colour; unset colours come from the palette per top-level branch, lightened by depth. |
+| `layoutAlgorithm` | `OgeTreemapLayoutAlgorithm` | `'squarified'` | `'squarified'` (tiles as close to squares as the data allows) or `'sliceAndDice'` (strips alternating per level, input order kept). |
+| `maxDepth` | `number \| undefined` | `—` | Levels drawn below the current root; groups that are deep enough nest their children under a header band. Unset = all. |
+| `colorScale` | `OgeChartColorScale \| undefined` | `—` | Colour the leaves by value instead (adds the colour-scale legend). |
+| `palette` | `readonly string[] \| undefined` | `—` | Colours in order; default `OGE_CHART_PALETTE`. |
+| `showLabels` | `boolean` | `true` | Name and value lines fitted to each tile (cut with an ellipsis). |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `drillDown / tooltipEnabled` | `boolean / boolean` | `true / true` | Clicking a group (or Enter) makes it the root and shows the breadcrumb; the tooltip shows the path, value and share of the parent. |
+| `rootKey` | `string` | `''` | The drill-down root's key (`''` = the whole tree; keys are index paths like `'0/2'`). Two-way (`[(rootKey)]`). |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Mirrored layout; unset follows the page `dir` (and a later flip of it). An explicit value is also set as `dir` on the host. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `drillTo(key) / drillUp()` | `void` | Re-roots on a node (announced) / one level up (no-op at the top). |
+| `focus()` | `void` | Moves the keyboard focus to the plot. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `tileClick` | `OgeChartHierarchyNodeEvent<T>` | Tile click or Enter: `{ key, name, value, depth, percentOfParent, isGroup, source }` — fires before a group drills. |
+| `rootKeyChange` | `string` | The two-way `rootKey` output. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `focusable plot (role="group")` | Left/Right (mirrored in RTL) walk the siblings, Down goes to the first child, Up to the parent, Home/End to the first/last sibling, Enter/Space drill into a group (or activate a leaf) and Escape/Backspace drill up. The breadcrumb is a `<nav>` of buttons ending in the `aria-current` level. Each move is announced in a polite live region; the screen-reader table carries every value. |
+| `OgeChartHierarchyNodeEvent / OgeTreemapLayoutAlgorithm` | `interface / string union` | The node payload (shared with the sunburst) and the tilings. |
+
+### OgeSunburstChart — `<oge-sunburst-chart>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly T[]` | `[]` | Nested items (children under `childrenField`) or a flat list (`idField` + `parentField`; unknown parents and cycles are tolerated). Groups sum their children. |
+| `childrenField / idField / parentField` | `string \| getter` | `'items' / 'id' / undefined` | Setting `parentField` switches to flat data. |
+| `labelField / valueField / colorField` | `string \| getter` | `'name' / 'value' / undefined` | Name, leaf value and an optional colour; unset colours come from the palette per top-level branch, lightened by depth. |
+| `maxDepth` | `number \| undefined` | `—` | Rings drawn below the current root; unset = all. |
+| `innerRadius / startAngle` | `number / number` | `0.25 / 0` | The centre hole as a fraction of the radius (it shows the root and goes up on click) and the start in radians (0 = 12 o'clock, clockwise, as on the pie). |
+| `palette` | `readonly string[] \| undefined` | `—` | Colours in order; default `OGE_CHART_PALETTE`. |
+| `showLabels` | `boolean` | `true` | Radial labels where a segment is wide and deep enough. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `drillDown / tooltipEnabled` | `boolean / boolean` | `true / true` | Clicking a branch (or Enter) re-roots on it; the centre, the breadcrumb or Escape goes back up. |
+| `rootKey` | `string` | `''` | The drill-down root's key (`''` = the whole tree). Two-way (`[(rootKey)]`). |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `drillTo(key) / drillUp()` | `void` | Re-roots on a node / one level up. |
+| `focus()` | `void` | Moves the keyboard focus to the plot. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `segmentClick` | `OgeChartHierarchyNodeEvent<T>` | Segment click or Enter (before a branch drills). |
+| `rootKeyChange` | `string` | The two-way `rootKey` output. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `focusable plot (role="group")` | The treemap's keys: Left/Right siblings, Down first child, Up parent, Enter drills, Escape goes up. Each move is announced in a polite live region; the screen-reader table carries every value. |
+
+### OgeSankeyChart — `<oge-sankey-chart>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource / sourceField / targetField / valueField` | `readonly T[] / string \| getter` | `[] / 'source' / 'target' / 'value'` | One item per flow; nodes are derived from the link ends. Zero links and self-loops are dropped; cycles are tolerated (their back-edges ignore the columns). |
+| `nodes` | `readonly OgeSankeyNode[]` | `[]` | Optional per-node `{ id, label?, color? }`; listing nodes also fixes their order. |
+| `nodeWidth / nodePadding` | `number / number` | `14 / 12` | Node bar width and the vertical gap within a column, px. |
+| `nodeAlign` | `OgeSankeyNodeAlign` | `'justify'` | Columns from the longest path from a source: `'justify'` pushes sinks to the last column, `'left'` / `'right'` / `'center'` align by depth / height. |
+| `linkColor` | `OgeSankeyLinkColor` | `'source'` | Bands take the `'source'` or `'target'` node colour, or a `'neutral'` grey (`--oge-chart-link`). |
+| `showLabels / tooltipEnabled` | `boolean / boolean` | `true / true` | Node labels facing the inside of the diagram; tooltips for nodes (in / out totals) and links (source → target: value). |
+| `palette` | `readonly string[] \| undefined` | `—` | Colours in order; default `OGE_CHART_PALETTE`. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Mirrored layout; unset follows the page `dir` (and a later flip of it). An explicit value is also set as `dir` on the host. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Moves the keyboard focus to the plot. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `nodeClick` | `OgeChartSankeyNodeEvent` | Node click or Enter: `{ id, label, inflow, outflow }`. |
+| `linkClick` | `OgeChartSankeyLinkEvent<T>` | Link click: `{ source, target, value, item }`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `focusable plot (role="group")` | Up/Down within a column, Left/Right to the neighbouring column (mirrored in RTL) at the closest rank, Home/End, Enter/Space. The active node lights up its links like a hover; the screen-reader table lists every flow. Each move is announced in a polite live region; the screen-reader table carries every value. |
+| `OgeSankeyNode / OgeSankeyNodeAlign / OgeSankeyLinkColor` | `interface / string unions` | Per-node settings, the column alignments and the link colourings. |
+
+### OgeVectorMap — `<oge-vector-map>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `geoJson` | `OgeGeoJsonFeatureCollection \| null` | `null` | Any GeoJSON `FeatureCollection`; `Polygon` and `MultiPolygon` features are drawn, fitted into the box. No tiles, no projection library. |
+| `projection` | `OgeMapProjection` | `'mercator'` | `'mercator'` or `'equirectangular'`. |
+| `regionKey / nameField` | `(feature) => string / string` | `undefined / 'name'` | A feature's join key (default `feature.id`, then `properties.name`) and the property holding its display name. |
+| `dataSource / keyField / valueField` | `readonly T[] / string \| getter / string \| getter` | `[] / 'key' / 'value'` | The values, joined to the regions by key; regions without one read _no data_. |
+| `colorScale` | `OgeChartColorScale \| undefined` | `—` | The choropleth scale (see the heatmap); default the heat tokens. |
+| `showLabels` | `boolean` | `true` | Region names where the region is wide enough at the current zoom. |
+| `valueFormat` | `(value: number) => string \| undefined` | `—` | The text of every value — labels, tooltip, announcements, the screen-reader table; default the locale number. |
+| `legend / tooltipEnabled` | `OgeChartLegendOptions / boolean` | `{} / true` | The colour-scale legend and the region tooltip. |
+| `zoomEnabled / maxZoom` | `boolean / number` | `true / 8` | Wheel (a non-passive listener), pinch, the zoom buttons and the keyboard zoom; dragging pans while zoomed (the shared chart gesture machine, Escape cancels). The view is clamped so the map never leaves the box. |
+| `selectedRegions` | `readonly string[]` | `[]` | Selected region keys (click / Enter toggles). Two-way (`[(selectedRegions)]`). |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | The first-render draw-in and the hover / value transitions (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins. |
+| `title / locale / messages` | `string / string \| undefined / Partial<OgeChartsMessages>` | `—` | Shared with every chart: the heading (also the start of the accessible name), the BCP 47 locale of every number, and per-instance message overrides — the strings of these charts live in the `visuals` block (`OgeChartsVisualMessages`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `zoomIn() / zoomOut() / resetZoom()` | `void` | Zoom about the centre / back to the fitted view. |
+| `focus()` | `void` | Moves the keyboard focus to the plot. |
+| `refresh()` | `void` | Re-measures the container and re-reads the page direction (rarely needed — a ResizeObserver and a `dir` observer cover it). |
+| `getSvgElement() / print(options?)` | `SVGSVGElement / Promise<void>` | The live SVG root — what the image and PDF exporters serialize (token colours are resolved to their computed values) / the browser print dialog for the chart alone. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `regionClick` | `OgeChartMapRegionEvent<T>` | Region click or Enter: `{ index, key, name, value, feature, source }` (not fired by the click that ends a drag). |
+| `selectedRegionsChange` | `readonly string[]` | The two-way `selectedRegions` output. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `focusable plot (role="group")` | Arrows move to the nearest region in that screen direction (by centroid) and pan it into view, `+` / `-` zoom, Shift+arrows pan, `0` resets, Home/End jump, Enter/Space select. The keys are described to screen readers (`visuals.mapHint`). Each move is announced in a polite live region; the screen-reader table carries every value. |
+| `OgeGeoJsonFeatureCollection / OgeGeoJsonFeature / OgeGeoJsonGeometry / OgeMapProjection` | `interfaces / string union` | The minimal GeoJSON shapes the map reads and the projections. |
+
 ### Configuration
 
 #### Properties
@@ -314,7 +704,7 @@ _Analytics (pure functions)_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `provideOgeChartsConfig(config)` | `Provider` | `—` | Configures every chart below the provider (`OgeChartsConfigInput`); shallow merge over `OGE_DEFAULT_CHARTS_CONFIG` per top-level key — a partial `messages` replaces whole nested blocks. The token is `OGE_CHARTS_CONFIG` (`OgeChartsConfig`). |
-| `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`), `values` (`OgeChartsValueMessages` — the words of analytic value texts: box-plot `low`/`q1`/`median`/`q3`/`high`/`outliers`, waterfall `increase`/`decrease`/`intermediate`/`total`, pareto `cumulative`, `upper`/`lower`/`signal`/`histogram`, the trendline suffix `trend` with `{value}`/`{r2}`, the histogram `bin` and the default indicator names `sma`/`ema`/`bollinger`/`macd`/`rsi`), `periods` (`OgeChartsPeriodMessages` — the range-selector period group label, button texts and their spelled-out descriptions) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
+| `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`), `values` (`OgeChartsValueMessages` — the words of analytic value texts: box-plot `low`/`q1`/`median`/`q3`/`high`/`outliers`, waterfall `increase`/`decrease`/`intermediate`/`total`, pareto `cumulative`, `upper`/`lower`/`signal`/`histogram`, the trendline suffix `trend` with `{value}`/`{r2}`, the histogram `bin` and the default indicator names `sma`/`ema`/`bollinger`/`macd`/`rsi`), `periods` (`OgeChartsPeriodMessages` — the range-selector period group label, button texts and their spelled-out descriptions) `visuals` (`OgeChartsVisualMessages` — the accessible names, keyboard hints, table headers, value words and announcements of the gauges, the bullet chart, the sparkline, the funnel, heatmap, treemap, sunburst, Sankey and map; count-bearing names are ICU plurals) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `[locale]` input wins. |
 | `a11yTableLimit` | `number` | `50` | Rows of the screen-reader data table. |
 | `markerThreshold` | `number` | `200` | Marker circles render only up to this many points per series — beyond it the single path carries the series alone. Line-family paths additionally auto-downsample with LTTB to about one point per pixel once a series outgrows the plot width (hit-testing and tooltips keep the full data). |
@@ -1140,6 +1530,219 @@ export class Demo {
 }
 ```
 
+### Bullet
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBulletChart } from '@oge-ui/charts';
+import type { OgeChartValueRange } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBulletChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Stephen Few's bullet graph: qualitative bands (darkest = poor), the
+         value bar and the target marker on one compact scale. The svg's label
+         speaks value and target; the sr table lists the bands. -->
+    @for (row of rows; track row.kpi) {
+      <oge-bullet-chart
+        [value]="row.value"
+        [target]="row.target"
+        [ranges]="row.ranges"
+        [title]="row.kpi"
+      />
+    }
+  `,
+})
+export class Demo {
+  protected readonly rows: { kpi: string; value: number; target: number; ranges: OgeChartValueRange[] }[] = [
+    {
+      kpi: 'Revenue (k$)',
+      value: 270,
+      target: 250,
+      ranges: [
+        { start: 0, end: 150, label: 'Poor' },
+        { start: 150, end: 225, label: 'Satisfactory' },
+        { start: 225, end: 300, label: 'Good' },
+      ],
+    },
+    {
+      kpi: 'Profit (%)',
+      value: 22,
+      target: 27,
+      ranges: [{ start: 0, end: 20 }, { start: 20, end: 25 }, { start: 25, end: 30 }],
+    },
+    {
+      kpi: 'New customers',
+      value: 1650,
+      target: 2100,
+      ranges: [{ start: 0, end: 1400 }, { start: 1400, end: 2000 }, { start: 2000, end: 2500 }],
+    },
+  ];
+}
+```
+
+### Circular gauge
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeCircularGauge } from '@oge-ui/charts';
+import type { OgeChartValueRange } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeCircularGauge],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A dial: scale ticks and labels, coloured ranges, a needle (or a bar /
+         marker indicator) and the value text. It is a role="meter": the value
+         and the labelled range it falls in are spoken (aria-valuetext). The
+         needle sweeps in on the first render and glides on every change —
+         never under prefers-reduced-motion. -->
+    <div class="grid gap-3 sm:grid-cols-3">
+      <oge-circular-gauge
+        [value]="speed()"
+        [scale]="{ min: 0, max: 160, tickInterval: 20 }"
+        [ranges]="speedRanges"
+        [valueFormat]="kmh"
+        title="Speed"
+        style="height: 240px"
+      />
+      <oge-circular-gauge
+        [value]="cpu()"
+        indicator="bar"
+        [ranges]="cpuRanges"
+        [startAngle]="-90"
+        [endAngle]="90"
+        [valueFormat]="percent"
+        title="CPU"
+        style="height: 240px"
+      />
+      <oge-circular-gauge
+        [value]="cpu()"
+        indicator="marker"
+        [subvalues]="[40, 85]"
+        [startAngle]="-135"
+        [endAngle]="135"
+        title="Load"
+        style="height: 240px"
+      />
+    </div>
+    <button type="button" (click)="randomize()">New reading</button>
+  `,
+})
+export class Demo {
+  protected readonly speed = signal(96);
+  protected readonly cpu = signal(64);
+
+  protected readonly speedRanges: OgeChartValueRange[] = [
+    { start: 0, end: 90, label: 'Normal' },
+    { start: 90, end: 120, label: 'Fast' },
+    { start: 120, end: 160, label: 'Over the limit' },
+  ];
+
+  protected readonly cpuRanges: OgeChartValueRange[] = [
+    { start: 0, end: 70, color: 'var(--oge-success)', label: 'Healthy' },
+    { start: 70, end: 90, color: 'var(--oge-warning)', label: 'Busy' },
+    { start: 90, end: 100, color: 'var(--oge-danger)', label: 'Saturated' },
+  ];
+
+  protected readonly kmh = (value: number) => `${Math.round(value)} km/h`;
+  protected readonly percent = (value: number) => `${Math.round(value)}%`;
+
+  protected randomize(): void {
+    this.speed.set(Math.round(Math.random() * 160));
+    this.cpu.set(Math.round(Math.random() * 100));
+  }
+}
+```
+
+### Linear gauge
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeLinearGauge } from '@oge-ui/charts';
+import type { OgeChartValueRange } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeLinearGauge],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The same scale, ranges and meter semantics on a straight track:
+         horizontal or vertical, a filling bar or a sliding marker, subvalue
+         ticks, mirrored in right-to-left pages. -->
+    <oge-linear-gauge
+      [value]="level"
+      [ranges]="refill"
+      [subvalues]="[25, 80]"
+      [valueFormat]="litres"
+      [scale]="{ min: 0, max: 100 }"
+      title="Water tank"
+    />
+    <oge-linear-gauge
+      [value]="level"
+      indicator="marker"
+      orientation="vertical"
+      title="Level"
+      style="height: 260px; width: 140px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly level = 62;
+
+  protected readonly refill: OgeChartValueRange[] = [
+    { start: 0, end: 15, color: 'var(--oge-danger)', label: 'Refill' },
+  ];
+
+  protected readonly litres = (value: number) => `${value} L`;
+}
+```
+
+### Sparkline
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSparkline } from '@oge-ui/charts/sparkline';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSparkline],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Word-sized charts for table cells and KPI tiles. The sparkline is its
+         own entry point (@oge-ui/charts/sparkline) and never loads the
+         cartesian chart. Its svg label summarizes the series: count, first,
+         last, low and high. -->
+    <table>
+      <thead>
+        <tr><th>Symbol</th><th>Price</th><th>7 days</th><th>Trend</th><th>Up / down days</th></tr>
+      </thead>
+      <tbody>
+        @for (row of rows; track row.symbol) {
+          <tr>
+            <td>{{ row.symbol }}</td>
+            <td>{{ row.price }}</td>
+            <td><oge-sparkline [dataSource]="row.week" [markers]="{ min: true, max: true }" [tooltipEnabled]="true" [title]="row.symbol" /></td>
+            <td><oge-sparkline [dataSource]="row.week" type="area" [title]="row.symbol" /></td>
+            <td><oge-sparkline [dataSource]="row.results" type="winloss" [title]="row.symbol" /></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  `,
+})
+export class Demo {
+  protected readonly rows = [
+    { symbol: 'ACME', price: 182.4, week: [171, 174, 173, 178, 176, 181, 182], results: [1, 1, -1, 1, -1, 1, 1] },
+    { symbol: 'GLOBX', price: 64.1, week: [70, 69, 66, 67, 65, 63, 64], results: [-1, -1, -1, 1, -1, -1, 1] },
+    { symbol: 'INITECH', price: 23.9, week: [22, 22.5, 23, 22.8, 23.4, 23.7, 23.9], results: [1, 1, 1, -1, 1, 1, 1] },
+  ];
+}
+```
+
 ### Annotations
 
 ```ts
@@ -1658,6 +2261,328 @@ export class Demo {
   protected readonly series: OgeChartSeriesInput[] = [
     { type: 'line', argumentField: 't', valueField: 'cpu', name: 'CPU' },
     { type: 'line', argumentField: 't', valueField: 'memory', name: 'Memory' },
+  ];
+}
+```
+
+### Funnel
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeFunnelChart } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeFunnelChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Stages sized by value. The tooltip, the announcement and the sr
+         table carry the conversion rates (share of the first and of the
+         previous stage). Arrow keys walk the stages, Enter selects. -->
+    <oge-funnel-chart
+      [dataSource]="pipeline"
+      argumentField="stage"
+      valueField="count"
+      [neckWidth]="0.2"
+      [label]="{ position: 'outside' }"
+      title="Sales pipeline"
+      style="height: 320px"
+    />
+    <!-- a pyramid: apex on top, stage heights follow the values -->
+    <oge-funnel-chart
+      [dataSource]="ages"
+      argumentField="group"
+      valueField="people"
+      type="pyramid"
+      algorithm="dynamicHeight"
+      [sortData]="false"
+      title="Population (thousands)"
+      style="height: 320px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly pipeline = [
+    { stage: 'Visits', count: 12400 },
+    { stage: 'Sign-ups', count: 5120 },
+    { stage: 'Trials', count: 2380 },
+    { stage: 'Quotes', count: 1060 },
+    { stage: 'Orders', count: 512 },
+  ];
+
+  protected readonly ages = [
+    { group: '0–14', people: 1650 },
+    { group: '15–24', people: 1210 },
+    { group: '25–44', people: 2480 },
+    { group: '45–64', people: 2110 },
+    { group: '65+', people: 1380 },
+  ];
+}
+```
+
+### Heatmap
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeHeatmap } from '@oge-ui/charts';
+import type { OgeChartColorScale } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeHeatmap],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Category × category cells coloured through a colour scale — theme
+         tokens or any CSS colours, blended with color-mix(). Arrow keys move
+         the active cell (Home/End, Ctrl+Home/End, PageUp/PageDown too); screen
+         readers get a real two-dimensional table. -->
+    <oge-heatmap
+      [dataSource]="tickets"
+      xField="hour"
+      yField="day"
+      valueField="tickets"
+      title="Support tickets by hour"
+      style="height: 340px"
+    />
+    <!-- three stops make a diverging scale -->
+    <oge-heatmap
+      [dataSource]="change"
+      xField="quarter"
+      yField="region"
+      valueField="change"
+      [colorScale]="diverging"
+      [valueFormat]="signed"
+      title="Change vs last year (%)"
+      style="height: 260px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tickets = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].flatMap((day, d) =>
+    ['08', '10', '12', '14', '16', '18', '20', '22'].map((hour, h) => ({
+      day,
+      hour,
+      tickets: Math.round(14 + 26 * Math.sin(((h + 1) / 8) * Math.PI) * (d < 5 ? 1 : 0.45) + ((d * 7 + h * 3) % 9)),
+    })),
+  );
+
+  protected readonly change = ['North', 'East', 'South', 'West'].flatMap((region, r) =>
+    ['Q1', 'Q2', 'Q3', 'Q4'].map((quarter, q) => ({ region, quarter, change: ((r * 5 + q * 7) % 13) - 6 })),
+  );
+
+  protected readonly diverging: OgeChartColorScale = {
+    min: -6,
+    max: 6,
+    colors: ['var(--oge-danger)', 'var(--oge-bg)', 'var(--oge-success)'],
+  };
+
+  protected readonly signed = (value: number) => (value > 0 ? `+${value}` : String(value));
+}
+```
+
+### Map
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeVectorMap } from '@oge-ui/charts';
+import type { OgeGeoJsonFeatureCollection } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeVectorMap],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Any GeoJSON FeatureCollection of polygons — no tiles, no projection
+         library. Values join the regions by key (feature.id, then
+         properties.name). Wheel / pinch / the buttons zoom, drag pans; arrows
+         move to the nearest region, + and - zoom, Shift+arrows pan. -->
+    <oge-vector-map
+      [geoJson]="provinces"
+      [dataSource]="sales"
+      keyField="province"
+      valueField="revenue"
+      projection="mercator"
+      title="Revenue by province"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  // load your own: this.http.get<OgeGeoJsonFeatureCollection>('/assets/regions.geo.json')
+  protected readonly provinces: OgeGeoJsonFeatureCollection = {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        id: 'Northmark',
+        properties: { name: 'Northmark' },
+        geometry: { type: 'Polygon', coordinates: [[[6, 56], [9.2, 56], [9.6, 53.4], [6, 53.4], [6, 56]]] },
+      },
+      {
+        type: 'Feature',
+        id: 'Fjordale',
+        properties: { name: 'Fjordale' },
+        geometry: { type: 'Polygon', coordinates: [[[9.2, 56], [12.4, 56], [12.4, 53.4], [9.6, 53.4], [9.2, 56]]] },
+      },
+      {
+        type: 'Feature',
+        id: 'Midvale',
+        properties: { name: 'Midvale' },
+        geometry: { type: 'Polygon', coordinates: [[[6, 53.4], [12.4, 53.4], [12.4, 50.8], [6, 50.8], [6, 53.4]]] },
+      },
+    ],
+  };
+
+  protected readonly sales = [
+    { province: 'Northmark', revenue: 48 },
+    { province: 'Fjordale', revenue: 85 },
+    { province: 'Midvale', revenue: 22 },
+  ];
+}
+```
+
+### Sankey
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSankeyChart } from '@oge-ui/charts';
+import type { OgeSankeyNode } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSankeyChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One item per flow. Columns come from the longest path, node heights
+         from the throughput; hovering a node lights up its links. Keyboard:
+         Up/Down within a column, Left/Right across columns. -->
+    <oge-sankey-chart
+      [dataSource]="energy"
+      [nodes]="nodes"
+      title="Energy flows (TWh)"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly energy = [
+    { source: 'Solar', target: 'Electricity', value: 42 },
+    { source: 'Wind', target: 'Electricity', value: 58 },
+    { source: 'Gas', target: 'Electricity', value: 64 },
+    { source: 'Gas', target: 'Heat', value: 38 },
+    { source: 'Coal', target: 'Electricity', value: 27 },
+    { source: 'Oil', target: 'Transport', value: 92 },
+    { source: 'Electricity', target: 'Homes', value: 71 },
+    { source: 'Electricity', target: 'Industry', value: 84 },
+    { source: 'Electricity', target: 'Transport', value: 18 },
+    { source: 'Electricity', target: 'Losses', value: 18 },
+    { source: 'Heat', target: 'Homes', value: 26 },
+    { source: 'Heat', target: 'Industry', value: 12 },
+  ];
+
+  // optional per-node settings: a label or a colour
+  protected readonly nodes: OgeSankeyNode[] = [{ id: 'Losses', color: 'var(--oge-muted-color)' }];
+}
+```
+
+### Sunburst
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSunburstChart } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSunburstChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Flat data works too: idField + parentField build the hierarchy.
+         One ring per level; click a branch to re-root on it, click the centre
+         to go back up. -->
+    <oge-sunburst-chart
+      [dataSource]="org"
+      parentField="parent"
+      valueField="people"
+      title="Headcount"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly org = [
+    { id: 'eng', parent: null, name: 'Engineering' },
+    { id: 'web', parent: 'eng', name: 'Web', people: 18 },
+    { id: 'mobile', parent: 'eng', name: 'Mobile', people: 11 },
+    { id: 'platform', parent: 'eng', name: 'Platform' },
+    { id: 'infra', parent: 'platform', name: 'Infrastructure', people: 9 },
+    { id: 'data', parent: 'platform', name: 'Data', people: 7 },
+    { id: 'sales', parent: null, name: 'Sales' },
+    { id: 'emea', parent: 'sales', name: 'EMEA', people: 12 },
+    { id: 'amer', parent: 'sales', name: 'Americas', people: 14 },
+    { id: 'ops', parent: null, name: 'Operations' },
+    { id: 'support', parent: 'ops', name: 'Support', people: 10 },
+    { id: 'finance', parent: 'ops', name: 'Finance', people: 5 },
+  ];
+}
+```
+
+### Treemap
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreemap } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreemap],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Squarified tiles under group headers. Click a group (or press Enter)
+         to drill into it; the breadcrumb or Escape goes back. [(rootKey)] is
+         the drill state. -->
+    <oge-treemap
+      [dataSource]="markets"
+      valueField="sales"
+      [(rootKey)]="root"
+      title="Sales by market (M$)"
+      style="height: 380px"
+    />
+    <p>Current root: {{ root() || 'all markets' }}</p>
+  `,
+})
+export class Demo {
+  protected readonly root = signal('');
+
+  protected readonly markets = [
+    {
+      name: 'Americas',
+      items: [
+        { name: 'United States', sales: 412 },
+        { name: 'Canada', sales: 96 },
+        { name: 'Brazil', sales: 88 },
+        { name: 'Mexico', sales: 61 },
+      ],
+    },
+    {
+      name: 'Europe',
+      items: [
+        { name: 'Germany', sales: 184 },
+        { name: 'United Kingdom', sales: 151 },
+        { name: 'France', sales: 120 },
+        { name: 'Spain', sales: 64 },
+        { name: 'Türkiye', sales: 58 },
+      ],
+    },
+    {
+      name: 'Asia Pacific',
+      items: [
+        { name: 'Japan', sales: 163 },
+        { name: 'Australia', sales: 77 },
+        { name: 'India', sales: 70 },
+        { name: 'Singapore', sales: 34 },
+      ],
+    },
+    { name: 'Africa', items: [{ name: 'South Africa', sales: 29 }, { name: 'Egypt', sales: 18 }] },
   ];
 }
 ```

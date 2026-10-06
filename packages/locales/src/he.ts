@@ -1380,6 +1380,53 @@ export const he: OgeLocalePack = {
       year1Label: 'שנה אחת',
       allLabel: 'כל הנתונים',
     },
+    visuals: {
+      gaugeLabel: 'מד {title}',
+      gaugeValueInRange: '{value}, {range}',
+      bulletLabel: 'תרשים Bullet {title}: ערך {value}, יעד {target}',
+      sparklineLabel:
+        'תרשים זעיר {title}, {count, plural, one {נקודה אחת} two {שתי נקודות} other {# נקודות}}: ראשון {first}, אחרון {last}, נמוך {min}, גבוה {max}',
+      funnelLabel:
+        'תרשים משפך {title}, {count, plural, one {שלב אחד} two {שני שלבים} other {# שלבים}}',
+      pyramidLabel:
+        'תרשים פירמידה {title}, {count, plural, one {רמה אחת} two {שתי רמות} other {# רמות}}',
+      heatmapLabel:
+        'מפת חום {title}, {rows, plural, one {שורה אחת} two {שתי שורות} other {# שורות}} על {columns, plural, one {עמודה אחת} two {שתי עמודות} other {# עמודות}}',
+      treemapLabel:
+        'מפת עץ {title}, {count, plural, one {אריח אחד} two {שני אריחים} other {# אריחים}}',
+      sankeyLabel:
+        'דיאגרמת סנקי {title}, {nodes, plural, one {צומת אחד} two {שני צמתים} other {# צמתים}}, {links, plural, one {קישור אחד} two {שני קישורים} other {# קישורים}}',
+      sunburstLabel:
+        'תרשים קרני שמש {title}, {count, plural, one {מקטע אחד} two {שני מקטעים} other {# מקטעים}}',
+      mapLabel:
+        'מפה {title}, {count, plural, one {אזור אחד} two {שני אזורים} other {# אזורים}}',
+      drillHint:
+        'מקשי החצים עוברים בין הפריטים, Enter פותח קבוצה, Escape עולה רמה אחת',
+      mapHint:
+        'מקשי החצים עוברים בין האזורים, פלוס ומינוס משנים את הזום, Shift עם מקש חץ מזיז את התצוגה',
+      breadcrumbLabel: 'נתיב ההתעמקות',
+      colorScaleLabel: 'סולם צבעים',
+      zoomIn: 'הגדלת התצוגה',
+      zoomOut: 'הקטנת התצוגה',
+      resetZoom: 'איפוס התצוגה',
+      valueHeader: 'ערך',
+      shareHeader: 'חלק יחסי',
+      sourceHeader: 'מקור',
+      targetHeader: 'יעד',
+      target: 'יעד {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '{percent} מהשלב הראשון',
+      percentOfPrevious: '{percent} מהשלב הקודם',
+      inflow: 'נכנס {value}',
+      outflow: 'יוצא {value}',
+      flow: '{source} → {target}',
+      root: 'הכול',
+      noValue: 'אין נתונים',
+      item: '{name}: {value}',
+      cell: '{row}, {column}: {value}',
+      drilledDown: 'נפתח: {name}',
+      drilledUp: 'חזרה אל {name}',
+    },
     noData: 'אין נתונים',
   },
 };

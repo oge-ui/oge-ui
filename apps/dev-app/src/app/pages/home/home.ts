@@ -2016,7 +2016,7 @@ export class HomePage {
     {
       icon: 'activity',
       name: 'Charts',
-      desc: 'Line, bar, area, pie and more on a dependency-free SVG kernel.',
+      desc: 'Line, pie, gauges, heatmaps, treemaps, Sankey and maps on a dependency-free SVG kernel.',
       path: '/components/charts',
     },
     {

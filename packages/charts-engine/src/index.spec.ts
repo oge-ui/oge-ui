@@ -44,6 +44,26 @@ describe('@oge-ui/charts-engine barrel', () => {
     'ogeTrendline',
     'ogeBoxStats',
     'ogeHistogramBins',
+    // W8c: gauges, sparkline, bullet and the non-cartesian charts
+    'buildCircularGaugeScene',
+    'buildLinearGaugeScene',
+    'buildBulletScene',
+    'buildSparklineScene',
+    'buildFunnelScene',
+    'buildHeatmapScene',
+    'buildChartHierarchy',
+    'buildTreemapScene',
+    'buildSunburstScene',
+    'buildSankeyScene',
+    'buildMapScene',
+    'resolveChartColorScale',
+    'squarify',
+    'layoutSankey',
+    'chartHierarchyKeyCommand',
+    'chartGridKeyCommand',
+    'chartListKeyCommand',
+    'chartColumnsKeyCommand',
+    'chartMapKeyCommand',
   ])('exports %s', (name) => {
     expect((engine as Record<string, unknown>)[name]).toBeDefined();
   });

@@ -132,6 +132,9 @@
   --oge-chart-zoom-bg: rgba(99, 102, 241, 0.14);
   --oge-chart-candle-up: #10b981;
   --oge-chart-candle-down: #ef4444;
+  /* heatmap / map colour scale ends (W8c) */
+  --oge-chart-heat-low: #e0e7ff;
+  --oge-chart-heat-high: #4338ca;
 }
 
 // Tokens computed from other tokens. Keep this list in sync with the
@@ -167,6 +170,19 @@
   --oge-rating-empty-color: var(--oge-muted-color);
   --oge-signature-ink: var(--oge-text-color);
   --oge-signature-bg: var(--oge-bg);
+  /* gauges, bullets, heatmap / map empties, neutral Sankey links (W8c) */
+  --oge-chart-track: color-mix(
+    in srgb,
+    var(--oge-muted-color) 22%,
+    transparent
+  );
+  --oge-chart-needle: var(--oge-text-color);
+  --oge-chart-empty: color-mix(
+    in srgb,
+    var(--oge-muted-color) 14%,
+    var(--oge-bg)
+  );
+  --oge-chart-link: var(--oge-muted-color);
 }
 
 /// Included by every component at its host rule (`.oge-x { @include

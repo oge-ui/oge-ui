@@ -41,3 +41,31 @@ describe('serializeChartSvg', () => {
     svg.remove();
   });
 });
+
+describe('serializeChartSvg — token-coloured marks', () => {
+  it('replaces inline var() styles with the computed value', () => {
+    const svg = makeSvg();
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('style', 'fill: var(--oge-chart-heat-high)');
+    svg.appendChild(rect);
+    // jsdom resolves no custom properties; a browser would
+    const real = window.getComputedStyle.bind(window);
+    const spy = vi
+      .spyOn(window, 'getComputedStyle')
+      .mockImplementation((element: Element) =>
+        element === rect
+          ? ({
+              getPropertyValue: (prop: string) =>
+                prop === 'fill' ? 'rgb(67, 56, 202)' : '',
+            } as CSSStyleDeclaration)
+          : real(element),
+      );
+    const markup = serializeChartSvg(svg);
+    spy.mockRestore();
+    expect(markup).not.toContain('var(--oge-chart-heat-high)');
+    expect(markup).toContain('fill="rgb(67, 56, 202)"');
+    // the live chart keeps its token
+    expect(rect.getAttribute('style')).toContain('var(--oge-chart-heat-high)');
+    svg.remove();
+  });
+});

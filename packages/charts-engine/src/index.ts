@@ -66,6 +66,7 @@ export {
   type OgeChartsMessages,
   type OgeChartsValueMessages,
   type OgeChartsPeriodMessages,
+  type OgeChartsVisualMessages,
 } from './lib/charts-config';
 
 /* ---------------- analytics (pure) ---------------- */
@@ -249,6 +250,204 @@ export {
   type OgePolarSpokeVm,
   type OgePolarTooltipVm,
 } from './lib/polar-model';
+
+/* ---------------- gauges, sparkline, bullet (W8c) ---------------- */
+
+export {
+  GAUGE_BAR_LENGTH,
+  OGE_GAUGE_RANGE_COLORS,
+  buildCircularGaugeScene,
+  buildLinearGaugeScene,
+  gaugeArcBounds,
+  gaugeArcPath,
+  gaugeBandPath,
+  gaugeBarDash,
+  gaugeFraction,
+  resolveGaugeScale,
+  type OgeCircularGaugeIndicator,
+  type OgeCircularGaugeScene,
+  type OgeCircularGaugeSceneInput,
+  type OgeGaugeAria,
+  type OgeGaugeLabelVm,
+  type OgeGaugeOrientation,
+  type OgeGaugeRangeVm,
+  type OgeGaugeScaleOptions,
+  type OgeGaugeSrRow,
+  type OgeGaugeTickVm,
+  type OgeLinearGaugeIndicator,
+  type OgeLinearGaugeScene,
+  type OgeLinearGaugeSceneInput,
+} from './lib/gauge-model';
+export {
+  buildBulletScene,
+  bulletRangeShade,
+  type OgeBulletRangeVm,
+  type OgeBulletRect,
+  type OgeBulletScene,
+  type OgeBulletSceneInput,
+} from './lib/bullet-model';
+export {
+  buildSparklineScene,
+  sparklineIndexAt,
+  sparklineTooltip,
+  type OgeSparklineBarVm,
+  type OgeSparklineMarkers,
+  type OgeSparklineMarkerVm,
+  type OgeSparklinePointVm,
+  type OgeSparklineScene,
+  type OgeSparklineSceneInput,
+  type OgeSparklineTooltipVm,
+  type OgeSparklineType,
+} from './lib/sparkline-model';
+
+/* ---------------- non-cartesian charts (W8c) ---------------- */
+
+export {
+  OGE_CHART_EMPTY_COLOR,
+  OGE_CHART_HEAT_COLORS,
+  chartMixColor,
+  chartRampColor,
+  resolveChartColorScale,
+  type OgeChartColorScale,
+  type OgeChartColorScaleLegend,
+  type OgeChartColorScaleSegment,
+  type OgeChartColorScaleTick,
+  type OgeChartResolvedColorScale,
+  type OgeChartValueRange,
+} from './lib/color-scale';
+export {
+  buildFunnelScene,
+  funnelAnnouncement,
+  funnelSrTable,
+  funnelTooltip,
+  toggleChartIndex,
+  type OgeChartFunnelItemEvent,
+  type OgeFunnelItemVm,
+  type OgeFunnelLabelVm,
+  type OgeFunnelLegendItemVm,
+  type OgeFunnelScene,
+  type OgeFunnelSceneInput,
+  type OgeFunnelTooltipVm,
+} from './lib/funnel-model';
+export {
+  layoutFunnel,
+  type FunnelLayoutInput,
+  type FunnelStageGeometry,
+  type OgeFunnelAlgorithm,
+  type OgeFunnelType,
+} from './lib/funnel-layout';
+export {
+  buildHeatmapScene,
+  heatmapAnnouncement,
+  heatmapCell,
+  heatmapSrTable,
+  heatmapTooltip,
+  type OgeChartHeatmapCellEvent,
+  type OgeHeatmapAxisLabelVm,
+  type OgeHeatmapCellVm,
+  type OgeHeatmapScene,
+  type OgeHeatmapSceneInput,
+  type OgeHeatmapTooltipVm,
+} from './lib/heatmap-model';
+export {
+  buildChartHierarchy,
+  chartHierarchyColor,
+  chartHierarchyDescendants,
+  chartHierarchyDrillFocus,
+  chartHierarchyEvent,
+  chartHierarchyKeyCommand,
+  chartHierarchyPath,
+  type OgeChartHierarchy,
+  type OgeChartHierarchyCommand,
+  type OgeChartHierarchyInput,
+  type OgeChartHierarchyNode,
+  type OgeChartHierarchyNodeEvent,
+} from './lib/hierarchy';
+export {
+  mirrorTreemapRect,
+  sliceAndDice,
+  squarify,
+  worstAspectRatio,
+  type OgeTreemapLayoutAlgorithm,
+  type TreemapRect,
+} from './lib/treemap-layout';
+export {
+  buildTreemapScene,
+  chartHierarchySrTable,
+  chartHierarchyValueText,
+  fitChartText,
+  treemapTooltip,
+  type OgeTreemapScene,
+  type OgeTreemapSceneInput,
+  type OgeTreemapTileVm,
+  type OgeTreemapTooltipVm,
+} from './lib/treemap-model';
+export {
+  buildSunburstScene,
+  sunburstSegmentAt,
+  sunburstTooltip,
+  type OgeSunburstScene,
+  type OgeSunburstSceneInput,
+  type OgeSunburstSegmentVm,
+  type OgeSunburstTooltipVm,
+} from './lib/sunburst-model';
+export {
+  layoutSankey,
+  sankeyLinkPath,
+  type OgeSankeyNodeAlign,
+  type SankeyLayout,
+  type SankeyLayoutInput,
+  type SankeyLinkInput,
+  type SankeyLinkLayout,
+  type SankeyNodeLayout,
+} from './lib/sankey-layout';
+export {
+  buildSankeyScene,
+  sankeyHighlight,
+  sankeyNodeText,
+  sankeySrTable,
+  sankeyTooltip,
+  type OgeChartSankeyLinkEvent,
+  type OgeChartSankeyNodeEvent,
+  type OgeSankeyLinkColor,
+  type OgeSankeyLinkVm,
+  type OgeSankeyNode,
+  type OgeSankeyNodeVm,
+  type OgeSankeyScene,
+  type OgeSankeySceneInput,
+  type OgeSankeyTooltipVm,
+} from './lib/sankey-model';
+export {
+  OGE_MAP_HOME_VIEW,
+  buildMapScene,
+  clampMapView,
+  geoPolygons,
+  mapEnsureVisible,
+  mapPanBy,
+  mapRegionLabel,
+  mapSrTable,
+  mapViewTransform,
+  mapZoomAt,
+  projectGeoPoint,
+  type OgeChartMapRegionEvent,
+  type OgeGeoJsonFeature,
+  type OgeGeoJsonFeatureCollection,
+  type OgeGeoJsonGeometry,
+  type OgeMapProjection,
+  type OgeMapRegionVm,
+  type OgeMapScene,
+  type OgeMapSceneInput,
+  type OgeMapView,
+} from './lib/geo-model';
+export {
+  chartColumnsKeyCommand,
+  chartGridKeyCommand,
+  chartListKeyCommand,
+  chartMapKeyCommand,
+  type OgeChartGridCommand,
+  type OgeChartListCommand,
+  type OgeChartMapCommand,
+} from './lib/visual-keyboard';
 export {
   buildRangeSelectorData,
   buildRangeSelectorScene,

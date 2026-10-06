@@ -6,6 +6,17 @@ export { OgeChart, OGE_CHART_PALETTE } from './lib/chart/chart';
 export { OgePieChart, type OgeChartPieSliceEvent } from './lib/chart/pie-chart';
 export { OgePolarChart } from './lib/chart/polar-chart';
 export { OgeRangeSelector } from './lib/chart/range-selector';
+export { OgeCircularGauge } from './lib/chart/circular-gauge';
+export { OgeLinearGauge } from './lib/chart/linear-gauge';
+export { OgeBulletChart } from './lib/chart/bullet-chart';
+export { OgeFunnelChart } from './lib/chart/funnel-chart';
+export { OgeHeatmap, type OgeChartCellRef } from './lib/chart/heatmap';
+export { OgeTreemap } from './lib/chart/treemap';
+export { OgeSunburstChart } from './lib/chart/sunburst-chart';
+export { OgeSankeyChart } from './lib/chart/sankey-chart';
+export { OgeVectorMap } from './lib/chart/vector-map';
+// the sparkline is its own entry point (it never loads the cartesian chart)
+export { OgeSparkline } from '@oge-ui/charts/sparkline';
 export {
   OgeChartAnnotationTemplate,
   OgeChartLabelTemplate,
@@ -68,6 +79,30 @@ export {
   type OgeChartTickInterval,
   type OgeChartTooltipOptions,
   type OgeChartTooltipShowingEvent,
+  type OgeChartColorScale,
+  type OgeChartFunnelItemEvent,
+  type OgeChartHeatmapCellEvent,
+  type OgeChartHierarchyNodeEvent,
+  type OgeChartMapRegionEvent,
+  type OgeChartSankeyLinkEvent,
+  type OgeChartSankeyNodeEvent,
+  type OgeChartValueRange,
+  type OgeCircularGaugeIndicator,
+  type OgeFunnelAlgorithm,
+  type OgeFunnelType,
+  type OgeGaugeOrientation,
+  type OgeGaugeScaleOptions,
+  type OgeGeoJsonFeature,
+  type OgeGeoJsonFeatureCollection,
+  type OgeGeoJsonGeometry,
+  type OgeLinearGaugeIndicator,
+  type OgeMapProjection,
+  type OgeSankeyLinkColor,
+  type OgeSankeyNode,
+  type OgeSankeyNodeAlign,
+  type OgeSparklineMarkers,
+  type OgeSparklineType,
+  type OgeTreemapLayoutAlgorithm,
 } from '@oge-ui/charts-engine';
 export {
   OGE_CHARTS_CONFIG,
@@ -81,4 +116,5 @@ export {
   type OgeChartsMessages,
   type OgeChartsValueMessages,
   type OgeChartsPeriodMessages,
+  type OgeChartsVisualMessages,
 } from './lib/config';

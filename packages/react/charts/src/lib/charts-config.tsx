@@ -18,6 +18,7 @@ export type {
   OgeChartsConfigInput,
   OgeChartsMessages,
   OgeChartsPeriodMessages,
+  OgeChartsVisualMessages,
 } from '@oge-ui/charts-engine';
 
 const OgeChartsConfigContext = createContext<OgeChartsConfig>(

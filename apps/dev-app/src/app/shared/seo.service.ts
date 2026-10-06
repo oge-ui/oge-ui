@@ -516,8 +516,16 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Chart axes and layout: rotated horizontal bars, price and volume panes, constant lines and strips, axis breaks, tick intervals, RTL, pinch zoom and draw-in.',
   ],
   [
+    '/components/charts/gauges',
+    'Angular gauges and sparklines: circular and linear gauges with ranges and needle, bar or marker indicators, bullet charts and word-sized sparklines.',
+  ],
+  [
+    '/components/charts/specialized',
+    'Funnel, pyramid, heatmap, treemap, sunburst, Sankey and GeoJSON vector map charts with drill-down, colour scales, zoom and full keyboard access.',
+  ],
+  [
     '/components/charts/api',
-    'Angular Charts API reference: every input, output and type of oge-chart, oge-pie-chart, oge-polar-chart and oge-range-selector, plus chart configuration.',
+    'Angular Charts API reference: every input, output and type of the cartesian, pie, polar, gauge, sparkline, funnel, heatmap, treemap, Sankey and map charts.',
   ],
   [
     '/components/gantt',

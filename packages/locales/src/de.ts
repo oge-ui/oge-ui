@@ -1386,6 +1386,53 @@ export const de: OgeLocalePack = {
       year1Label: '1 Jahr',
       allLabel: 'Alle Daten',
     },
+    visuals: {
+      gaugeLabel: 'Messanzeige {title}',
+      gaugeValueInRange: '{value}, {range}',
+      bulletLabel: 'Bullet-Diagramm {title}: Wert {value}, Ziel {target}',
+      sparklineLabel:
+        'Sparkline {title}, {count, plural, one {# Punkt} other {# Punkte}}: erster {first}, letzter {last}, Tiefstwert {min}, Höchstwert {max}',
+      funnelLabel:
+        'Trichterdiagramm {title}, {count, plural, one {# Stufe} other {# Stufen}}',
+      pyramidLabel:
+        'Pyramidendiagramm {title}, {count, plural, one {# Ebene} other {# Ebenen}}',
+      heatmapLabel:
+        'Heatmap {title}, {rows, plural, one {# Zeile} other {# Zeilen}} und {columns, plural, one {# Spalte} other {# Spalten}}',
+      treemapLabel:
+        'Treemap {title}, {count, plural, one {# Kachel} other {# Kacheln}}',
+      sankeyLabel:
+        'Sankey-Diagramm {title}, {nodes, plural, one {# Knoten} other {# Knoten}}, {links, plural, one {# Verbindung} other {# Verbindungen}}',
+      sunburstLabel:
+        'Sunburst-Diagramm {title}, {count, plural, one {# Segment} other {# Segmente}}',
+      mapLabel:
+        'Karte {title}, {count, plural, one {# Region} other {# Regionen}}',
+      drillHint:
+        'Pfeiltasten wechseln zwischen Elementen, die Eingabetaste öffnet eine Gruppe, Esc wechselt eine Ebene nach oben',
+      mapHint:
+        'Pfeiltasten wechseln zwischen Regionen, Plus und Minus zoomen, Umschalt mit einer Pfeiltaste verschiebt die Ansicht',
+      breadcrumbLabel: 'Drilldown-Pfad',
+      colorScaleLabel: 'Farbskala',
+      zoomIn: 'Vergrößern',
+      zoomOut: 'Verkleinern',
+      resetZoom: 'Zoom zurücksetzen',
+      valueHeader: 'Wert',
+      shareHeader: 'Anteil',
+      sourceHeader: 'Quelle',
+      targetHeader: 'Ziel',
+      target: 'Ziel {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '{percent} der ersten Stufe',
+      percentOfPrevious: '{percent} der vorherigen Stufe',
+      inflow: 'Zufluss {value}',
+      outflow: 'Abfluss {value}',
+      flow: '{source} → {target}',
+      root: 'Alle',
+      noValue: 'keine Daten',
+      item: '{name}: {value}',
+      cell: '{row}, {column}: {value}',
+      drilledDown: '{name} geöffnet',
+      drilledUp: 'Zurück zu {name}',
+    },
     noData: 'Keine Daten',
   },
 };

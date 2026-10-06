@@ -22,6 +22,46 @@ export {
   type OgeRangeSelectorProps,
 } from './lib/range-selector';
 export {
+  OgeCircularGauge,
+  type OgeCircularGaugeProps,
+  type OgeGaugeBaseProps,
+  type OgeGaugeHandle,
+} from './lib/circular-gauge';
+export { OgeLinearGauge, type OgeLinearGaugeProps } from './lib/linear-gauge';
+export { OgeBulletChart, type OgeBulletChartProps } from './lib/bullet-chart';
+// also its own `./sparkline` entry (it never loads the cartesian chart)
+export {
+  OgeSparkline,
+  type OgeSparklineHandle,
+  type OgeSparklineProps,
+} from './lib/sparkline';
+export {
+  OgeFunnelChart,
+  type OgeFunnelChartProps,
+  type OgeVisualChartHandle,
+} from './lib/funnel-chart';
+export {
+  OgeHeatmap,
+  type OgeChartCellRef,
+  type OgeHeatmapProps,
+} from './lib/heatmap';
+export {
+  OgeTreemap,
+  type OgeHierarchyChartHandle,
+  type OgeHierarchyChartProps,
+  type OgeTreemapProps,
+} from './lib/treemap';
+export {
+  OgeSunburstChart,
+  type OgeSunburstChartProps,
+} from './lib/sunburst-chart';
+export { OgeSankeyChart, type OgeSankeyChartProps } from './lib/sankey-chart';
+export {
+  OgeVectorMap,
+  type OgeVectorMapHandle,
+  type OgeVectorMapProps,
+} from './lib/vector-map';
+export {
   OgeChartsConfigProvider,
   useOgeChartsConfig,
   type OgeChartsAnnouncementMessages,
@@ -30,6 +70,7 @@ export {
   type OgeChartsConfigInput,
   type OgeChartsMessages,
   type OgeChartsPeriodMessages,
+  type OgeChartsVisualMessages,
 } from './lib/charts-config';
 // The public types, the palette and the default catalog come from the engine
 // both layers share; re-exported so React consumers import one package — the
@@ -93,4 +134,28 @@ export {
   type OgeChartTickInterval,
   type OgeChartTooltipOptions,
   type OgeChartTooltipShowingEvent,
+  type OgeChartColorScale,
+  type OgeChartFunnelItemEvent,
+  type OgeChartHeatmapCellEvent,
+  type OgeChartHierarchyNodeEvent,
+  type OgeChartMapRegionEvent,
+  type OgeChartSankeyLinkEvent,
+  type OgeChartSankeyNodeEvent,
+  type OgeChartValueRange,
+  type OgeCircularGaugeIndicator,
+  type OgeFunnelAlgorithm,
+  type OgeFunnelType,
+  type OgeGaugeOrientation,
+  type OgeGaugeScaleOptions,
+  type OgeGeoJsonFeature,
+  type OgeGeoJsonFeatureCollection,
+  type OgeGeoJsonGeometry,
+  type OgeLinearGaugeIndicator,
+  type OgeMapProjection,
+  type OgeSankeyLinkColor,
+  type OgeSankeyNode,
+  type OgeSankeyNodeAlign,
+  type OgeSparklineMarkers,
+  type OgeSparklineType,
+  type OgeTreemapLayoutAlgorithm,
 } from '@oge-ui/charts-engine';

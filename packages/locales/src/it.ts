@@ -1394,6 +1394,53 @@ export const it: OgeLocalePack = {
       year1Label: '1 anno',
       allLabel: 'Tutti i dati',
     },
+    visuals: {
+      gaugeLabel: 'Indicatore {title}',
+      gaugeValueInRange: '{value}, {range}',
+      bulletLabel: 'Grafico bullet {title}: valore {value}, obiettivo {target}',
+      sparklineLabel:
+        'Sparkline {title}, {count, plural, one {# punto} other {# punti}}: primo {first}, ultimo {last}, minimo {min}, massimo {max}',
+      funnelLabel:
+        'Grafico a imbuto {title}, {count, plural, one {# fase} other {# fasi}}',
+      pyramidLabel:
+        'Grafico a piramide {title}, {count, plural, one {# livello} other {# livelli}}',
+      heatmapLabel:
+        'Mappa di calore {title}, {rows, plural, one {# riga} other {# righe}} per {columns, plural, one {# colonna} other {# colonne}}',
+      treemapLabel:
+        'Treemap {title}, {count, plural, one {# riquadro} other {# riquadri}}',
+      sankeyLabel:
+        'Diagramma di Sankey {title}, {nodes, plural, one {# nodo} other {# nodi}}, {links, plural, one {# collegamento} other {# collegamenti}}',
+      sunburstLabel:
+        'Grafico sunburst {title}, {count, plural, one {# segmento} other {# segmenti}}',
+      mapLabel:
+        'Mappa {title}, {count, plural, one {# regione} other {# regioni}}',
+      drillHint:
+        'I tasti freccia spostano tra gli elementi, Invio apre un gruppo, Esc risale di un livello',
+      mapHint:
+        'I tasti freccia spostano tra le regioni, più e meno regolano lo zoom, Maiusc con un tasto freccia sposta la vista',
+      breadcrumbLabel: 'Percorso di drill-down',
+      colorScaleLabel: 'Scala dei colori',
+      zoomIn: 'Aumenta zoom',
+      zoomOut: 'Riduci zoom',
+      resetZoom: 'Reimposta zoom',
+      valueHeader: 'Valore',
+      shareHeader: 'Quota',
+      sourceHeader: 'Origine',
+      targetHeader: 'Destinazione',
+      target: 'obiettivo {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '{percent} della prima fase',
+      percentOfPrevious: '{percent} della fase precedente',
+      inflow: 'in entrata {value}',
+      outflow: 'in uscita {value}',
+      flow: '{source} → {target}',
+      root: 'Tutto',
+      noValue: 'nessun dato',
+      item: '{name}: {value}',
+      cell: '{row}, {column}: {value}',
+      drilledDown: '{name} aperto',
+      drilledUp: 'Torna a {name}',
+    },
     noData: 'Nessun dato',
   },
 };

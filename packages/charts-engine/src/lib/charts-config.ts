@@ -99,12 +99,85 @@ export interface OgeChartsPeriodMessages {
   readonly allLabel: string;
 }
 
+/**
+ * The strings of the gauges, the sparkline, the bullet chart and the
+ * non-cartesian charts (funnel, heatmap, treemap, Sankey, sunburst, map).
+ * Count-bearing labels are ICU plurals rendered by `ogeFormatMessage`.
+ */
+export interface OgeChartsVisualMessages {
+  /** Circular / linear gauge `role="meter"` label; `{title}`. */
+  readonly gaugeLabel: string;
+  /** Gauge `aria-valuetext` when the value sits in a labelled range; `{value}`, `{range}`. */
+  readonly gaugeValueInRange: string;
+  /** Bullet chart label; `{title}`, `{value}`, `{target}`. */
+  readonly bulletLabel: string;
+  /** Sparkline label; `{title}`, `{count}` (plural), `{first}`, `{last}`, `{min}`, `{max}`. */
+  readonly sparklineLabel: string;
+  /** Funnel label; `{title}`, `{count}` (plural). */
+  readonly funnelLabel: string;
+  /** Pyramid label; `{title}`, `{count}` (plural). */
+  readonly pyramidLabel: string;
+  /** Heatmap label; `{title}`, `{rows}`, `{columns}` (plurals). */
+  readonly heatmapLabel: string;
+  /** Treemap label; `{title}`, `{count}` (plural). */
+  readonly treemapLabel: string;
+  /** Sankey label; `{title}`, `{nodes}`, `{links}` (plurals). */
+  readonly sankeyLabel: string;
+  /** Sunburst label; `{title}`, `{count}` (plural). */
+  readonly sunburstLabel: string;
+  /** Map label; `{title}`, `{count}` (plural). */
+  readonly mapLabel: string;
+  /** Keyboard hint of the drill-down charts (treemap, sunburst). */
+  readonly drillHint: string;
+  /** Keyboard hint of the map. */
+  readonly mapHint: string;
+  /** `<nav>` label of the drill-down breadcrumb. */
+  readonly breadcrumbLabel: string;
+  /** Label of the colour-scale legend (heatmap, map). */
+  readonly colorScaleLabel: string;
+  /** Map zoom buttons. */
+  readonly zoomIn: string;
+  readonly zoomOut: string;
+  readonly resetZoom: string;
+  /** Screen-reader table headers. */
+  readonly valueHeader: string;
+  readonly shareHeader: string;
+  readonly sourceHeader: string;
+  readonly targetHeader: string;
+  /** Bullet target text; `{value}`. */
+  readonly target: string;
+  /** A value range; `{start}`, `{end}`. */
+  readonly range: string;
+  /** Funnel conversion vs. the first stage; `{percent}`. */
+  readonly percentOfFirst: string;
+  /** Funnel conversion vs. the previous stage; `{percent}`. */
+  readonly percentOfPrevious: string;
+  /** Sankey node totals; `{value}`. */
+  readonly inflow: string;
+  readonly outflow: string;
+  /** Sankey link; `{source}`, `{target}`. */
+  readonly flow: string;
+  /** Root crumb of the drill-down breadcrumb. */
+  readonly root: string;
+  /** A region / cell without a value. */
+  readonly noValue: string;
+  /** Live region: an item became active; `{name}`, `{value}`. */
+  readonly item: string;
+  /** Live region: a heatmap cell became active; `{row}`, `{column}`, `{value}`. */
+  readonly cell: string;
+  /** Live region: drilled into a group; `{name}`. */
+  readonly drilledDown: string;
+  /** Live region: drilled back up; `{name}`. */
+  readonly drilledUp: string;
+}
+
 /** Every user-facing string of the charts (house i18n rule). */
 export interface OgeChartsMessages {
   readonly aria: OgeChartsAriaMessages;
   readonly announcements: OgeChartsAnnouncementMessages;
   readonly values: OgeChartsValueMessages;
   readonly periods: OgeChartsPeriodMessages;
+  readonly visuals: OgeChartsVisualMessages;
   readonly noData: string;
 }
 
@@ -167,6 +240,52 @@ export const OGE_DEFAULT_CHARTS_MESSAGES: OgeChartsMessages = {
     year1Label: '1 year',
     allLabel: 'All data',
   },
+  visuals: {
+    gaugeLabel: '{title} gauge',
+    gaugeValueInRange: '{value}, {range}',
+    bulletLabel: '{title} bullet chart: value {value}, target {target}',
+    sparklineLabel:
+      '{title} sparkline, {count, plural, one {# point} other {# points}}: first {first}, last {last}, low {min}, high {max}',
+    funnelLabel:
+      '{title} funnel chart, {count, plural, one {# stage} other {# stages}}',
+    pyramidLabel:
+      '{title} pyramid chart, {count, plural, one {# level} other {# levels}}',
+    heatmapLabel:
+      '{title} heatmap, {rows, plural, one {# row} other {# rows}} by {columns, plural, one {# column} other {# columns}}',
+    treemapLabel:
+      '{title} treemap, {count, plural, one {# tile} other {# tiles}}',
+    sankeyLabel:
+      '{title} Sankey diagram, {nodes, plural, one {# node} other {# nodes}}, {links, plural, one {# link} other {# links}}',
+    sunburstLabel:
+      '{title} sunburst chart, {count, plural, one {# segment} other {# segments}}',
+    mapLabel: '{title} map, {count, plural, one {# region} other {# regions}}',
+    drillHint:
+      'Arrow keys move between items, Enter opens a group, Escape goes up a level',
+    mapHint:
+      'Arrow keys move between regions, plus and minus zoom, Shift with an arrow key pans',
+    breadcrumbLabel: 'Drill-down path',
+    colorScaleLabel: 'Colour scale',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
+    resetZoom: 'Reset zoom',
+    valueHeader: 'Value',
+    shareHeader: 'Share',
+    sourceHeader: 'Source',
+    targetHeader: 'Target',
+    target: 'target {value}',
+    range: '{start} – {end}',
+    percentOfFirst: '{percent} of first stage',
+    percentOfPrevious: '{percent} of previous stage',
+    inflow: 'in {value}',
+    outflow: 'out {value}',
+    flow: '{source} → {target}',
+    root: 'All',
+    noValue: 'no data',
+    item: '{name}: {value}',
+    cell: '{row}, {column}: {value}',
+    drilledDown: '{name} opened',
+    drilledUp: 'Back to {name}',
+  },
   noData: 'No data',
 };
 
@@ -214,7 +333,7 @@ export function resolveOgeChartsConfig(
 /**
  * A component's effective messages: its per-instance override over the
  * configured catalog, merged one level deeper (`aria`, `announcements`,
- * `values` and `periods` key by key).
+ * `values`, `periods` and `visuals` key by key).
  */
 export function mergeOgeChartsMessages(
   configured: OgeChartsMessages,
@@ -228,6 +347,7 @@ export function mergeOgeChartsMessages(
     announcements: { ...configured.announcements, ...local.announcements },
     values: { ...configured.values, ...local.values },
     periods: { ...configured.periods, ...local.periods },
+    visuals: { ...configured.visuals, ...local.visuals },
   };
 }
 

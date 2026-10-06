@@ -82,6 +82,8 @@
   --oge-chart-zoom-bg: rgba(0, 55, 179, 0.16);
   --oge-chart-candle-up: #00611a;
   --oge-chart-candle-down: #b3000c;
+  --oge-chart-heat-low: #ffffff;
+  --oge-chart-heat-high: #0037b3;
   /* derived tokens, re-resolved inside this scope (keep in sync with
      derived-tokens in _tokens.scss). The focus ring is the solid accent
      here — a 40% tint would fall under 3:1. */
@@ -112,4 +114,12 @@
   --oge-rating-empty-color: var(--oge-muted-color);
   --oge-signature-ink: var(--oge-text-color);
   --oge-signature-bg: var(--oge-bg);
+  --oge-chart-track: color-mix(in srgb, var(--oge-text-color) 22%, transparent);
+  --oge-chart-needle: var(--oge-text-color);
+  --oge-chart-empty: color-mix(
+    in srgb,
+    var(--oge-muted-color) 14%,
+    var(--oge-bg)
+  );
+  --oge-chart-link: var(--oge-muted-color);
 }

@@ -1385,6 +1385,53 @@ export const ar: OgeLocalePack = {
       year1Label: 'سنة واحدة',
       allLabel: 'كل البيانات',
     },
+    visuals: {
+      gaugeLabel: 'مقياس {title}',
+      gaugeValueInRange: '{value}، {range}',
+      bulletLabel: 'مخطط Bullet {title}: القيمة {value}، الهدف {target}',
+      sparklineLabel:
+        'خط مؤشر {title}، {count, plural, zero {لا توجد نقاط} one {نقطة واحدة} two {نقطتان} few {# نقاط} many {# نقطة} other {# نقطة}}: الأول {first}، الأخير {last}، الأدنى {min}، الأعلى {max}',
+      funnelLabel:
+        'مخطط قمعي {title}، {count, plural, zero {لا توجد مراحل} one {مرحلة واحدة} two {مرحلتان} few {# مراحل} many {# مرحلة} other {# مرحلة}}',
+      pyramidLabel:
+        'مخطط هرمي {title}، {count, plural, zero {لا توجد مستويات} one {مستوى واحد} two {مستويان} few {# مستويات} many {# مستوى} other {# مستوى}}',
+      heatmapLabel:
+        'خريطة حرارية {title}، {rows, plural, zero {لا توجد صفوف} one {صف واحد} two {صفان} few {# صفوف} many {# صفًا} other {# صف}} في {columns, plural, zero {لا توجد أعمدة} one {عمود واحد} two {عمودان} few {# أعمدة} many {# عمودًا} other {# عمود}}',
+      treemapLabel:
+        'مخطط شجري {title}، {count, plural, zero {لا توجد مربعات} one {مربع واحد} two {مربعان} few {# مربعات} many {# مربعًا} other {# مربع}}',
+      sankeyLabel:
+        'مخطط سانكي {title}، {nodes, plural, zero {لا توجد عقد} one {عقدة واحدة} two {عقدتان} few {# عقد} many {# عقدة} other {# عقدة}}، {links, plural, zero {لا توجد روابط} one {رابط واحد} two {رابطان} few {# روابط} many {# رابطًا} other {# رابط}}',
+      sunburstLabel:
+        'مخطط اندلاع الشمس {title}، {count, plural, zero {لا توجد قطاعات} one {قطاع واحد} two {قطاعان} few {# قطاعات} many {# قطاعًا} other {# قطاع}}',
+      mapLabel:
+        'خريطة {title}، {count, plural, zero {لا توجد مناطق} one {منطقة واحدة} two {منطقتان} few {# مناطق} many {# منطقة} other {# منطقة}}',
+      drillHint:
+        'تنتقل مفاتيح الأسهم بين العناصر، ويفتح Enter مجموعة، ويصعد Escape مستوى واحدًا',
+      mapHint:
+        'تنتقل مفاتيح الأسهم بين المناطق، ويكبّر مفتاحا الزائد والناقص العرض ويصغّرانه، ويحرّك Shift مع مفتاح سهم العرض',
+      breadcrumbLabel: 'مسار التنقل التفصيلي',
+      colorScaleLabel: 'مقياس الألوان',
+      zoomIn: 'تكبير',
+      zoomOut: 'تصغير',
+      resetZoom: 'إعادة تعيين التكبير',
+      valueHeader: 'القيمة',
+      shareHeader: 'الحصة',
+      sourceHeader: 'المصدر',
+      targetHeader: 'الهدف',
+      target: 'الهدف {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '{percent} من المرحلة الأولى',
+      percentOfPrevious: '{percent} من المرحلة السابقة',
+      inflow: 'الوارد {value}',
+      outflow: 'الصادر {value}',
+      flow: '{source} → {target}',
+      root: 'الكل',
+      noValue: 'لا توجد بيانات',
+      item: '{name}: {value}',
+      cell: '{row}، {column}: {value}',
+      drilledDown: 'تم فتح {name}',
+      drilledUp: 'العودة إلى {name}',
+    },
     noData: 'لا توجد بيانات',
   },
 };

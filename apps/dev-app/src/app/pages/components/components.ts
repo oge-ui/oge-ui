@@ -1287,7 +1287,7 @@ export class ComponentsIndexPage {
       icon: 'activity',
       path: '/components/charts',
       description:
-        'Data visualization on a dependency-free SVG kernel: 11 cartesian series types plus pie/doughnut, time and log axes, zoom & pan, crosshair, tooltips and an interactive legend.',
+        'Data visualization on a dependency-free SVG kernel: cartesian series, pie, polar, gauges, sparklines, funnel, heatmap, treemap, sunburst, Sankey and GeoJSON maps — zoom & pan, tooltips and full keyboard access.',
     },
     {
       key: 'gantt',

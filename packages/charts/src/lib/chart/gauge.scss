@@ -1,0 +1,198 @@
+// Gauges and the bullet chart. Loaded together with `chart.scss` (the
+// hosts also carry `.oge-chart`, which declares the tokens), so this
+// partial only adds rules.
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-gauge {
+  min-block-size: 160px;
+
+  .oge-chart-plot-wrap {
+    min-height: 100px;
+  }
+}
+
+.oge-linear-gauge,
+.oge-bullet-chart {
+  // component-local knob: the plot height of the compact gauges
+  --oge-gauge-block-size: 96px;
+
+  min-block-size: 0;
+  height: auto;
+
+  .oge-chart-plot-wrap {
+    min-height: 0;
+    block-size: var(--oge-gauge-block-size);
+  }
+}
+
+.oge-linear-gauge-vertical {
+  height: 100%;
+  min-block-size: 200px;
+
+  .oge-chart-plot-wrap {
+    block-size: auto;
+    min-height: 180px;
+  }
+}
+
+.oge-bullet-chart {
+  --oge-gauge-block-size: 64px;
+}
+
+.oge-bullet-chart-vertical {
+  height: 100%;
+  min-block-size: 200px;
+
+  .oge-chart-plot-wrap {
+    block-size: auto;
+    min-height: 180px;
+  }
+}
+
+.oge-gauge-range {
+  stroke: none;
+}
+
+.oge-gauge-track {
+  fill: none;
+  stroke: var(--oge-chart-track);
+  stroke-linecap: butt;
+}
+
+.oge-gauge-bar {
+  fill: none;
+  stroke: var(--oge-accent);
+  stroke-linecap: butt;
+  transition: stroke-dasharray var(--oge-chart-anim-duration, 600ms)
+    var(--oge-chart-anim-easing, ease-out);
+}
+
+.oge-gauge-tick {
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1.5;
+}
+
+.oge-gauge-tick-minor {
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.oge-gauge-needle,
+.oge-gauge-hub {
+  fill: var(--oge-chart-needle);
+}
+
+.oge-gauge-hub {
+  stroke: var(--oge-bg);
+  stroke-width: 2;
+}
+
+.oge-gauge-needle,
+.oge-gauge-marker {
+  transform-box: view-box;
+  transition: transform var(--oge-chart-anim-duration, 600ms)
+    var(--oge-chart-anim-easing, ease-out);
+}
+
+.oge-gauge-marker {
+  fill: var(--oge-accent);
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+}
+
+.oge-gauge-subvalue {
+  fill: var(--oge-chart-axis-fg);
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 2;
+}
+
+.oge-gauge-value {
+  fill: var(--oge-text-color);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-gauge-value-linear {
+  font-size: 13px;
+}
+
+/* ---------- bullet ---------- */
+
+.oge-bullet-range {
+  stroke: none;
+}
+
+.oge-bullet-bar {
+  fill: var(--oge-text-color);
+}
+
+.oge-bullet-tooltip {
+  inset-inline-start: 8px;
+  inset-block-start: 4px;
+}
+
+.oge-bullet-target {
+  stroke: var(--oge-text-color);
+  stroke-width: 3;
+  stroke-linecap: butt;
+}
+
+.oge-chart-static {
+  .oge-gauge-bar,
+  .oge-gauge-needle,
+  .oge-gauge-marker {
+    transition: none;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-gauge-bar,
+  .oge-gauge-needle,
+  .oge-gauge-marker {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-gauge-track {
+    stroke: GrayText;
+  }
+
+  // range colours carry meaning (normal / warning / danger): keep them,
+  // with a CanvasText edge so every band still reads against Canvas
+  .oge-gauge-range,
+  .oge-bullet-range {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .oge-gauge-bar {
+    stroke: Highlight;
+  }
+
+  .oge-gauge-needle,
+  .oge-gauge-hub,
+  .oge-gauge-marker,
+  .oge-bullet-bar {
+    fill: CanvasText;
+  }
+
+  .oge-gauge-hub {
+    stroke: Canvas;
+  }
+
+  .oge-gauge-tick,
+  .oge-gauge-subvalue,
+  .oge-bullet-target {
+    stroke: CanvasText;
+  }
+
+  .oge-gauge-subvalue {
+    fill: CanvasText;
+  }
+
+  .oge-gauge-value {
+    fill: CanvasText;
+  }
+}

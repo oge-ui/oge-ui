@@ -1,0 +1,120 @@
+// The sparkline's own stylesheet — its entry point never loads `chart.scss`.
+@use '../../../grid/src/lib/styles/tokens';
+
+.oge-sparkline {
+  @include tokens.core-tokens;
+
+  display: inline-block;
+  inline-size: 120px;
+  block-size: 32px;
+  vertical-align: middle;
+  color: var(--oge-text-color);
+}
+
+.oge-sparkline-wrap {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.oge-sparkline-svg {
+  display: block;
+  overflow: visible;
+  // geometry is mirrored by the engine; keep text anchors unflipped
+  direction: ltr;
+}
+
+.oge-sparkline-line {
+  fill: none;
+  stroke: var(--oge-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oge-sparkline-area {
+  fill: var(--oge-accent);
+  fill-opacity: 0.18;
+  stroke: none;
+}
+
+.oge-sparkline-bar {
+  fill: var(--oge-accent);
+}
+
+.oge-sparkline-bar-negative {
+  fill: var(--oge-danger);
+}
+
+.oge-sparkline-bar-draw {
+  fill: var(--oge-muted-color);
+}
+
+.oge-sparkline-marker {
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+  fill: var(--oge-muted-color);
+}
+
+.oge-sparkline-marker-max {
+  fill: var(--oge-success);
+}
+
+.oge-sparkline-marker-min {
+  fill: var(--oge-danger);
+}
+
+.oge-sparkline-marker-first,
+.oge-sparkline-marker-last {
+  fill: var(--oge-text-color);
+}
+
+.oge-sparkline-hover {
+  fill: var(--oge-bg);
+  stroke: var(--oge-text-color);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.oge-sparkline-tooltip {
+  position: absolute;
+  z-index: 5;
+  transform: translate(8px, -110%);
+  padding: 3px 7px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-tooltip-bg);
+  color: var(--oge-tooltip-color);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--oge-shadow-btn);
+}
+
+.oge-sparkline-tooltip-flip {
+  transform: translate(calc(-100% - 8px), -110%);
+}
+
+@include tokens.forced-colors {
+  // the series colour is the only mark: keep it, edged in CanvasText
+  .oge-sparkline-line,
+  .oge-sparkline-area,
+  .oge-sparkline-bar,
+  .oge-sparkline-marker {
+    forced-color-adjust: none;
+  }
+
+  .oge-sparkline-bar {
+    stroke: CanvasText;
+    stroke-width: 0.5;
+  }
+
+  .oge-sparkline-hover {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .oge-sparkline-tooltip {
+    border: 1px solid CanvasText;
+  }
+}

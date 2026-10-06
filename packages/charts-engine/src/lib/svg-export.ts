@@ -52,7 +52,18 @@ export function serializeChartSvg(
     const computed = getComputedStyle(node);
     for (const prop of INLINE_PROPS) {
       const value = computed.getPropertyValue(prop);
-      if (value !== '' && target.getAttribute(prop) === null) {
+      if (value === '') continue;
+      // an inline style or attribute naming a token (`var(--oge-…)`,
+      // `color-mix(…)` over tokens) cannot resolve in a standalone file:
+      // replace it with the computed value
+      const inline = target.style?.getPropertyValue(prop) ?? '';
+      if (inline !== '') {
+        target.style.removeProperty(prop);
+        target.setAttribute(prop, value);
+        continue;
+      }
+      const attribute = target.getAttribute(prop);
+      if (attribute === null || /var\(|color-mix\(/.test(attribute)) {
         target.setAttribute(prop, value);
       }
     }

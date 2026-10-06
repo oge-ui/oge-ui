@@ -1390,6 +1390,54 @@ export const es: OgeLocalePack = {
       year1Label: '1 año',
       allLabel: 'Todos los datos',
     },
+    visuals: {
+      gaugeLabel: 'Indicador {title}',
+      gaugeValueInRange: '{value}, {range}',
+      bulletLabel:
+        'Gráfico de viñetas {title}: valor {value}, objetivo {target}',
+      sparklineLabel:
+        'Minigráfico {title}, {count, plural, one {# punto} other {# puntos}}: primero {first}, último {last}, mínimo {min}, máximo {max}',
+      funnelLabel:
+        'Gráfico de embudo {title}, {count, plural, one {# etapa} other {# etapas}}',
+      pyramidLabel:
+        'Gráfico de pirámide {title}, {count, plural, one {# nivel} other {# niveles}}',
+      heatmapLabel:
+        'Mapa de calor {title}, {rows, plural, one {# fila} other {# filas}} por {columns, plural, one {# columna} other {# columnas}}',
+      treemapLabel:
+        'Mapa de árbol {title}, {count, plural, one {# mosaico} other {# mosaicos}}',
+      sankeyLabel:
+        'Diagrama de Sankey {title}, {nodes, plural, one {# nodo} other {# nodos}}, {links, plural, one {# vínculo} other {# vínculos}}',
+      sunburstLabel:
+        'Gráfico de proyección solar {title}, {count, plural, one {# segmento} other {# segmentos}}',
+      mapLabel:
+        'Mapa {title}, {count, plural, one {# región} other {# regiones}}',
+      drillHint:
+        'Las teclas de dirección mueven entre elementos, Entrar abre un grupo, Escape sube un nivel',
+      mapHint:
+        'Las teclas de dirección mueven entre regiones, más y menos aplican zoom, Mayús con una tecla de dirección desplaza la vista',
+      breadcrumbLabel: 'Ruta de exploración',
+      colorScaleLabel: 'Escala de colores',
+      zoomIn: 'Acercar',
+      zoomOut: 'Alejar',
+      resetZoom: 'Restablecer zoom',
+      valueHeader: 'Valor',
+      shareHeader: 'Proporción',
+      sourceHeader: 'Origen',
+      targetHeader: 'Destino',
+      target: 'objetivo {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '{percent} de la primera etapa',
+      percentOfPrevious: '{percent} de la etapa anterior',
+      inflow: 'entrada {value}',
+      outflow: 'salida {value}',
+      flow: '{source} → {target}',
+      root: 'Todo',
+      noValue: 'sin datos',
+      item: '{name}: {value}',
+      cell: '{row}, {column}: {value}',
+      drilledDown: '{name} abierto',
+      drilledUp: 'Volver a {name}',
+    },
     noData: 'No hay datos',
   },
 };

@@ -73,4 +73,16 @@
   --oge-rating-empty-color: var(--oge-muted-color);
   --oge-signature-ink: var(--oge-text-color);
   --oge-signature-bg: var(--oge-bg);
+  --oge-chart-track: color-mix(
+    in srgb,
+    var(--oge-muted-color) 22%,
+    transparent
+  );
+  --oge-chart-needle: var(--oge-text-color);
+  --oge-chart-empty: color-mix(
+    in srgb,
+    var(--oge-muted-color) 14%,
+    var(--oge-bg)
+  );
+  --oge-chart-link: var(--oge-muted-color);
 }

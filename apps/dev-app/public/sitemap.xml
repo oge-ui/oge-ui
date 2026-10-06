@@ -122,6 +122,8 @@
   <url><loc>https://www.ogeui.com/components/bpmn/api</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/charts</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/charts/axes-layout</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/charts/gauges</loc></url>
+  <url><loc>https://www.ogeui.com/components/charts/specialized</loc></url>
   <url><loc>https://www.ogeui.com/components/charts/api</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/gantt</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/gantt/scheduling</loc><lastmod>2026-10-05</lastmod></url>

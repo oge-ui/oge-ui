@@ -365,6 +365,16 @@ export class App {
           icon: 'layers',
         },
         {
+          path: '/components/charts/gauges',
+          label: 'Gauges & Sparklines',
+          icon: 'gauge',
+        },
+        {
+          path: '/components/charts/specialized',
+          label: 'Funnel, Heatmap & Flows',
+          icon: 'globe',
+        },
+        {
           path: '/components/charts/api',
           label: 'API Reference',
           icon: 'code',

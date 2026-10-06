@@ -1401,6 +1401,53 @@ export const fr: OgeLocalePack = {
       year1Label: '1 an',
       allLabel: 'Toutes les données',
     },
+    visuals: {
+      gaugeLabel: 'Jauge {title}',
+      gaugeValueInRange: '{value}, {range}',
+      bulletLabel: 'Graphique bullet {title} : valeur {value}, cible {target}',
+      sparklineLabel:
+        'Graphique sparkline {title}, {count, plural, one {# point} other {# points}} : premier {first}, dernier {last}, min. {min}, max. {max}',
+      funnelLabel:
+        'Graphique en entonnoir {title}, {count, plural, one {# étape} other {# étapes}}',
+      pyramidLabel:
+        'Graphique en pyramide {title}, {count, plural, one {# niveau} other {# niveaux}}',
+      heatmapLabel:
+        'Carte de chaleur {title}, {rows, plural, one {# ligne} other {# lignes}} et {columns, plural, one {# colonne} other {# colonnes}}',
+      treemapLabel:
+        'Carte proportionnelle {title}, {count, plural, one {# tuile} other {# tuiles}}',
+      sankeyLabel:
+        'Diagramme de Sankey {title}, {nodes, plural, one {# nœud} other {# nœuds}}, {links, plural, one {# lien} other {# liens}}',
+      sunburstLabel:
+        'Graphique en rayons de soleil {title}, {count, plural, one {# segment} other {# segments}}',
+      mapLabel:
+        'Carte {title}, {count, plural, one {# région} other {# régions}}',
+      drillHint:
+        'Les touches fléchées passent d’un élément à l’autre, Entrée ouvre un groupe, Échap remonte d’un niveau',
+      mapHint:
+        'Les touches fléchées passent d’une région à l’autre, plus et moins zooment, Maj avec une touche fléchée déplace la vue',
+      breadcrumbLabel: 'Chemin d’exploration',
+      colorScaleLabel: 'Échelle de couleurs',
+      zoomIn: 'Zoom avant',
+      zoomOut: 'Zoom arrière',
+      resetZoom: 'Réinitialiser le zoom',
+      valueHeader: 'Valeur',
+      shareHeader: 'Part',
+      sourceHeader: 'Source',
+      targetHeader: 'Cible',
+      target: 'cible {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '{percent} de la première étape',
+      percentOfPrevious: '{percent} de l’étape précédente',
+      inflow: 'entrée {value}',
+      outflow: 'sortie {value}',
+      flow: '{source} → {target}',
+      root: 'Tout',
+      noValue: 'aucune donnée',
+      item: '{name} : {value}',
+      cell: '{row}, {column} : {value}',
+      drilledDown: '{name} ouvert',
+      drilledUp: 'Retour à {name}',
+    },
     noData: 'Aucune donnée',
   },
 };

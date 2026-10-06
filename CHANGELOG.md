@@ -118,6 +118,64 @@ packs.
 - **Tokens**: `--oge-rating-color`, `--oge-rating-empty-color`,
   `--oge-signature-ink`, `--oge-signature-bg` (derived, in every theme).
 
+### Chart components (W8c) — `@oge-ui/charts`, `@oge-ui/react-charts`, `@oge-ui/charts-engine`, `@oge-ui/locales`
+
+- **Gauges**: `oge-circular-gauge` / `<OgeCircularGauge>` (arc from
+  `startAngle` to `endAngle` in degrees, needle / bar / marker `indicator`,
+  `barBase`, `subvalues`, value text) and `oge-linear-gauge` /
+  `<OgeLinearGauge>` (horizontal or vertical, bar or marker, mirrored in RTL).
+  Both share `scale` (1-2-5 major and minor ticks, `labelFormat`), coloured
+  `ranges` whose `label` is spoken with the value, and `role="meter"`
+  semantics (`aria-valuenow` clamped, `aria-valuetext` with the range). The
+  indicator sweeps in from the minimum and transitions on change through CSS
+  (`transform` / `stroke-dasharray` over a fixed `pathLength`) — off under
+  `prefers-reduced-motion`.
+- **Bullet chart**: `oge-bullet-chart` / `<OgeBulletChart>` — qualitative bands
+  (default shades darkest = poor), value bar and target marker, horizontal or
+  vertical, RTL, a hover tooltip and an accessible name speaking value and
+  target.
+- **Sparkline**: `oge-sparkline` / `<OgeSparkline>` — `line`, `area`, `bar`,
+  `winloss`, first / last / min / max `markers`, an optional tooltip and a
+  summary label. Its own entry points, `@oge-ui/charts/sparkline` and
+  `@oge-ui/react-charts/sparkline`, never load the cartesian chart (the
+  Angular config moved to `@oge-ui/charts/config` for that; the primary entry
+  re-exports everything unchanged).
+- **Funnel / pyramid**: `oge-funnel-chart` / `<OgeFunnelChart>` —
+  `dynamicSlope` or `dynamicHeight`, neck, inverted, inside or outside
+  labels with connectors, conversion rates (share of first / previous stage)
+  in the tooltip, announcements and sr table, legend, selection, keyboard.
+- **Heatmap**: `oge-heatmap` / `<OgeHeatmap>` — category × category cells
+  through `OgeChartColorScale` (linear stops blended with `color-mix()`, theme
+  tokens included, or segmented bands), a colour-scale legend, APG-grid
+  keyboard navigation and a two-dimensional sr table.
+- **Treemap and sunburst**: `oge-treemap` / `<OgeTreemap>` (squarified or
+  slice-and-dice, group headers, fitted labels, palette or value colours) and
+  `oge-sunburst-chart` / `<OgeSunburstChart>` (one ring per level) on one
+  hierarchy model — nested or flat (`idField` + `parentField`) data,
+  drill-down with a breadcrumb, `[(rootKey)]` / `rootKey`, `drillTo()` /
+  `drillUp()`, treeview-like keys.
+- **Sankey**: `oge-sankey-chart` / `<OgeSankeyChart>` — longest-path columns,
+  throughput heights, relaxed positions, cycles tolerated, links coloured by
+  source / target / neutral, hover highlighting, column keyboard navigation,
+  RTL.
+- **Vector map**: `oge-vector-map` / `<OgeVectorMap>` — GeoJSON polygons,
+  Mercator or equirectangular projection, choropleth by key, labels, wheel /
+  pinch / button / keyboard zoom and drag pan on the shared gesture machine,
+  spatial arrow-key region navigation.
+- **Engine**: the models, layouts (`squarify`, `layoutSankey`, `layoutFunnel`,
+  gauge geometry), colour scales, hierarchy, keyboard maps and the new
+  `visuals` message block (`OgeChartsVisualMessages`, ICU plurals) are all
+  framework-free in `@oge-ui/charts-engine`. The image / PDF exporters now
+  resolve token colours set inline (`var()` / `color-mix()`) to their computed
+  values.
+- **Tokens**: `--oge-chart-heat-low` / `--oge-chart-heat-high` (literal, with
+  dark and high-contrast values) and the derived `--oge-chart-track`,
+  `--oge-chart-needle`, `--oge-chart-empty`, `--oge-chart-link`.
+- **Locales**: the `charts.visuals` block in all ten packs.
+- **Docs**: two new pages, `/components/charts/gauges` and
+  `/components/charts/specialized`, in both layers, plus ten API blocks per
+  layer.
+
 ### BPMN editor depth (G5b) — `@oge-ui/bpmn`, `@oge-ui/react-bpmn`, `@oge-ui/bpmn-engine`, `@oge-ui/locales`
 
 - **Validation**: a bpmnlint-style rule engine in the engine (`OgeBpmnLintRule

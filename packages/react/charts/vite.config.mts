@@ -49,6 +49,8 @@ export default defineConfig(() => ({
         index: 'src/index.ts',
         styles: 'src/styles.ts',
         'export-image': 'src/export-image.ts',
+        // the word-sized chart: never pulls the cartesian chart
+        sparkline: 'src/sparkline.ts',
         // the only module that reaches the optional `jspdf` peer
         'export-pdf': 'src/export-pdf.ts',
       },

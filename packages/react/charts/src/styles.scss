@@ -1,6 +1,12 @@
-// The React charts render the exact `.oge-chart-*` / `.oge-range-*` markup the
-// Angular package styles — so their stylesheet IS the Angular package's SCSS,
-// compiled here into this package's own `styles.css`. No second stylesheet,
-// no drift (ADR 0001). `chart.scss` is the family's only partial: the
-// cartesian, pie, polar and range-selector components all load it.
+// The React charts render the exact `.oge-chart-*` / `.oge-range-*` /
+// `.oge-gauge-*` / visual markup the Angular package styles — so their
+// stylesheet IS the Angular package's SCSS, compiled here into this package's
+// own `styles.css`. No second stylesheet, no drift (ADR 0001). Every partial of
+// the Angular charts belongs here: `chart.scss` (cartesian, pie, polar, range
+// selector — and the frame every visual shares), `gauge.scss` (gauges,
+// bullet), `visuals.scss` (funnel, heatmap, treemap, sunburst, Sankey, map)
+// and the sparkline entry's own stylesheet.
 @use '../../../charts/src/lib/chart/chart';
+@use '../../../charts/src/lib/chart/gauge';
+@use '../../../charts/src/lib/chart/visuals';
+@use '../../../charts/sparkline/src/sparkline';

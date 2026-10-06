@@ -1375,6 +1375,51 @@ export const ja: OgeLocalePack = {
       year1Label: '1 年',
       allLabel: 'すべてのデータ',
     },
+    visuals: {
+      gaugeLabel: '{title} ゲージ',
+      gaugeValueInRange: '{value}、{range}',
+      bulletLabel: '{title} ブレット グラフ: 値 {value}、目標 {target}',
+      sparklineLabel:
+        '{title} スパークライン (ポイント {count, plural, other {# 個}}): 最初 {first}、最後 {last}、最小 {min}、最大 {max}',
+      funnelLabel: '{title} じょうごグラフ ({count, plural, other {# 段階}})',
+      pyramidLabel:
+        '{title} ピラミッド グラフ ({count, plural, other {# レベル}})',
+      heatmapLabel:
+        '{title} ヒートマップ ({rows, plural, other {# 行}} × {columns, plural, other {# 列}})',
+      treemapLabel:
+        '{title} ツリーマップ (タイル {count, plural, other {# 個}})',
+      sankeyLabel:
+        '{title} サンキー ダイアグラム (ノード {nodes, plural, other {# 個}}、リンク {links, plural, other {# 個}})',
+      sunburstLabel:
+        '{title} サンバースト グラフ (セグメント {count, plural, other {# 個}})',
+      mapLabel: '{title} マップ (地域 {count, plural, other {# 個}})',
+      drillHint:
+        '方向キーで項目間を移動し、Enter キーでグループを開き、Esc キーで 1 つ上のレベルに戻ります',
+      mapHint:
+        '方向キーで地域間を移動し、プラス キーとマイナス キーでズームし、Shift キーと方向キーで表示を移動します',
+      breadcrumbLabel: 'ドリルダウンのパス',
+      colorScaleLabel: 'カラー スケール',
+      zoomIn: '拡大',
+      zoomOut: '縮小',
+      resetZoom: 'ズームをリセット',
+      valueHeader: '値',
+      shareHeader: '割合',
+      sourceHeader: 'ソース',
+      targetHeader: 'ターゲット',
+      target: '目標 {value}',
+      range: '{start} – {end}',
+      percentOfFirst: '最初の段階の {percent}',
+      percentOfPrevious: '前の段階の {percent}',
+      inflow: '流入 {value}',
+      outflow: '流出 {value}',
+      flow: '{source} → {target}',
+      root: 'すべて',
+      noValue: 'データなし',
+      item: '{name}: {value}',
+      cell: '{row}、{column}: {value}',
+      drilledDown: '{name} を開きました',
+      drilledUp: '{name} に戻りました',
+    },
     noData: 'データがありません',
   },
 };

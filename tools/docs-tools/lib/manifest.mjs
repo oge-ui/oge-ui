@@ -213,7 +213,7 @@ export const PACKAGES = [
     npm: '@oge-ui/charts',
     label: 'Charts',
     summary:
-      'Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection.',
+      'Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series, pie/doughnut and polar, circular and linear gauges, bullet charts, sparklines (own entry), funnel/pyramid, heatmap, treemap, sunburst, Sankey and a GeoJSON vector map on a dependency-free SVG kernel — time/log axes, zoom & pan, tooltips, drill-down and full keyboard access.',
     docsRoot: '/components/charts',
     pageDirs: ['charts'],
     apiPage: 'apps/dev-app/src/app/pages/charts/api.ts',
@@ -224,7 +224,7 @@ export const PACKAGES = [
     npm: '@oge-ui/charts-engine',
     label: 'Charts engine',
     summary:
-      'Framework-free charts engine shared by the Angular and React charts: scales, series normalization, stacking, path builders with LTTB downsampling, pie and radar geometry, the cartesian/pie/polar/range-selector view models, keyboard maps, the gesture machine, the message catalog and the image exporter. Installed automatically — you rarely import it directly.',
+      'Framework-free charts engine shared by the Angular and React charts: scales, series normalization, stacking, path builders with LTTB downsampling, pie and radar geometry, the cartesian/pie/polar/range-selector view models, the gauge, bullet, sparkline, funnel, heatmap, squarified treemap, sunburst, Sankey and GeoJSON map models with their colour scales, keyboard maps, the gesture machine, the message catalog and the image exporter. Installed automatically — you rarely import it directly.',
     docsRoot: null,
     pageDirs: [],
     apiPage: null,
@@ -443,7 +443,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-charts',
     label: 'Charts (React)',
     summary:
-      'React charts on a dependency-free SVG kernel: sixteen cartesian series types (line/spline/step/area/stacked/bar/range/scatter/bubble/candlestick), pie and doughnut, radar/polar and a range selector — time and log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection and PNG/SVG export — running the same charts engine and stylesheet as the Angular charts package.',
+      'React charts on a dependency-free SVG kernel: sixteen cartesian series types (line/spline/step/area/stacked/bar/range/scatter/bubble/candlestick), pie and doughnut, radar/polar, a range selector, circular and linear gauges, bullet charts, sparklines, funnel/pyramid, heatmap, treemap, sunburst, Sankey and a GeoJSON vector map — time and log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection and PNG/SVG export — running the same charts engine and stylesheet as the Angular charts package.',
     // The React content renders inside the single Charts routes (ADR 0002).
     docsRoot: '/components/charts',
     pageDirs: ['react-charts'],
