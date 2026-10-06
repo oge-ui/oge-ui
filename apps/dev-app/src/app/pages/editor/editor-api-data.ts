@@ -445,7 +445,7 @@ export const OGE_EDITOR_API: ApiSections = {
           name: 'ogeSanitizeEditorHtml(html, options?)',
           type: '(html: string | null | undefined, options?: OgeEditorParseOptions) => string',
           description:
-            'The editor’s allowlist as a function — for values that did not come through the editor. Only the editor’s own tags and attributes come out.',
+            'The editor’s allowlist as a function — for values that did not come through the editor. Only the editor’s own tags and attributes come out. Works on a server too: without <code>DOMParser</code> the editor’s own tokenizer reads the markup (the same one that server-renders the editing surface).',
         },
         {
           name: 'ogeEditorHtmlLength(html)',

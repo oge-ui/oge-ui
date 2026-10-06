@@ -24,6 +24,20 @@ describe('ArrayDataSource', () => {
     expect(result.totalCount).toBe(3);
   });
 
+  it('loadSync answers the same load without a promise', async () => {
+    const source = new ArrayDataSource(ROWS, { key: 'id' });
+    const options = {
+      sort: [{ field: 'name', dir: 'asc' as const }],
+      skip: 1,
+      take: 1,
+      requireTotalCount: true,
+    };
+    const result = source.loadSync(options);
+    expect((result.data as Row[]).map((r) => r.name)).toEqual(['b']);
+    expect(result.totalCount).toBe(3);
+    expect(await source.load(options)).toEqual(result);
+  });
+
   it('supports a getter as data provider', async () => {
     let rows = ROWS.slice(0, 1);
     const source = new ArrayDataSource(() => rows, { key: 'id' });

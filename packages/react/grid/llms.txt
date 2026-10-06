@@ -92,7 +92,7 @@ _Data & columns_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `data` | `readonly T[] \| DataSource<T>` | `[]` | Rows to render: a static array or any `DataSource` implementation (remote, windowed, pushing live changes). |
+| `data` | `readonly T[] \| DataSource<T>` | `[]` | Rows to render: a static array or any `DataSource` implementation (remote, windowed, pushing live changes). An array (or a source with `loadSync`) loads in the first render, so `renderToString` already contains the first page; asynchronous sources load after mount. |
 | `columns` | `readonly (string \| OgeColumnDef \| OgeGridColumnProps<T>)[]` | `undefined` | The columns. When omitted, columns are derived from the first row’s keys; a plain string is shorthand for `{ field }`. |
 | `keyField` | `keyof T \| ((row: T) => RowKey)` | `undefined` | Field (or selector) producing a stable row key; falls back to the row index. |
 

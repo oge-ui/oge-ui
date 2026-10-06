@@ -23,6 +23,7 @@ import {
   groupNodeKey,
   resolveKeySelector,
   type CsvOptions,
+  type DataSource,
   type DataRowNode,
   type FilterExpr,
   type FilterOperator,
@@ -1495,17 +1496,22 @@ function OgeGridInner<T extends object>(
     };
   }, [props.columns]);
 
-  useEffect(() => {
+  const createSource = (): DataSource<T> => {
     const source = props.data ?? [];
-    data.setSource(
-      isDataSource(source)
-        ? source
-        : new ArrayDataSource<T>(source, {
-            key: keyField,
-            sortValues: columnSelectors.sortValues,
-            customSummaries: columnSelectors.customSummaries,
-          }),
-    );
+    return isDataSource(source)
+      ? source
+      : new ArrayDataSource<T>(source, {
+          key: keyField,
+          sortValues: columnSelectors.sortValues,
+          customSummaries: columnSelectors.customSummaries,
+        });
+  };
+  /** The source the first render loaded from, adopted by the effect below. */
+  const primedSource = useRef<DataSource<T> | null>(null);
+  useEffect(() => {
+    const source = primedSource.current ?? createSource();
+    primedSource.current = null;
+    data.setSource(source);
     return () => data.setSource(null);
   }, [data, props.data, keyField, columnSelectors]);
 
@@ -1513,17 +1519,19 @@ function OgeGridInner<T extends object>(
 
   // option effects react to *content* changes only (inline objects/arrays are new every render)
   const pagingJson = props.paging ? JSON.stringify(props.paging) : 'off';
-  useEffect(() => {
+  const applyPaging = () => {
     const options = props.paging ? props.paging : null;
     state.paging.configure(options ? options.pageSize : null);
-  }, [state, pagingJson]);
+  };
+  useEffect(applyPaging, [state, pagingJson]);
 
   const groupByJson = props.groupBy ? JSON.stringify(props.groupBy) : null;
-  useEffect(() => {
+  const applyGroupBy = () => {
     if (groupByJson === null) return;
     const fields = JSON.parse(groupByJson) as string[];
     state.grouping.set(fields.map((field) => ({ field, dir: 'asc' as const })));
-  }, [state, groupByJson]);
+  };
+  useEffect(applyGroupBy, [state, groupByJson]);
 
   // summary configuration comes from the declared columns
   const summaryJson = JSON.stringify(
@@ -1533,7 +1541,7 @@ function OgeGridInner<T extends object>(
       asList(column.totalSummary),
     ]),
   );
-  useEffect(() => {
+  const applySummaries = () => {
     const group: SummaryDescriptor[] = [];
     const total: SummaryDescriptor[] = [];
     for (const column of normalizeColumns<T>(latest.current.columns) ?? []) {
@@ -1545,7 +1553,8 @@ function OgeGridInner<T extends object>(
         total.push({ field, type });
     }
     state.grouping.setSummaries(group, total);
-  }, [state, summaryJson]);
+  };
+  useEffect(applySummaries, [state, summaryJson]);
 
   // date columns group by calendar day unless they say otherwise
   const intervalJson = JSON.stringify(
@@ -1555,7 +1564,7 @@ function OgeGridInner<T extends object>(
         (column.dataType && isOgeDateType(column.dataType) ? 'day' : null),
     ]),
   );
-  useEffect(() => {
+  const applyIntervals = () => {
     const intervals: Record<string, GroupInterval> = {};
     for (const [field, interval] of JSON.parse(intervalJson) as [
       string | undefined,
@@ -1564,7 +1573,8 @@ function OgeGridInner<T extends object>(
       if (field && interval) intervals[field] = interval;
     }
     state.grouping.setIntervals(intervals);
-  }, [state, intervalJson]);
+  };
+  useEffect(applyIntervals, [state, intervalJson]);
 
   // initial sort/group from the column props — applied only while untouched
   const initialJson = JSON.stringify(
@@ -1575,7 +1585,7 @@ function OgeGridInner<T extends object>(
       group: column.groupIndex,
     })),
   );
-  useEffect(() => {
+  const applyInitialSortGroup = () => {
     const columns = JSON.parse(initialJson) as {
       field?: string;
       dir?: 'asc' | 'desc';
@@ -1601,10 +1611,34 @@ function OgeGridInner<T extends object>(
         groupConfigs.map((c) => ({ field: c.field as string, dir: 'asc' })),
       );
     }
-  }, [state, initialJson]);
+  };
+  useEffect(applyInitialSortGroup, [state, initialJson]);
 
   // windowed mode: load strategy + block requests for the visible window
   const windowed = model.windowed();
+
+  // The first render applies the option props and loads an in-memory array
+  // on the spot (DataSource.loadSync), so a server render — which cannot wait
+  // for an effect or a promise — already shows the first page, and the
+  // hydration render, doing the same, reproduces it. The effects above then
+  // re-apply equal values and adopt the primed source: no reload, no
+  // loading flash. Remote sources keep loading after mount.
+  const primed = useRef(false);
+  if (!primed.current) {
+    primed.current = true;
+    model.rx.quietly(() => {
+      const source = createSource();
+      applyPaging();
+      applyGroupBy();
+      applySummaries();
+      applyIntervals();
+      applyInitialSortGroup();
+      if (!source.loadSync || model.windowed()) return;
+      data.setSource(source);
+      if (data.syncNow()) primedSource.current = source;
+      else data.setSource(null);
+    });
+  }
   useEffect(() => {
     data.setMode(windowed ? 'window' : 'full');
     if (!windowed) data.sync();

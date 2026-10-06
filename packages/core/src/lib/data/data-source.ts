@@ -51,6 +51,14 @@ export interface SubscribableLike<T> {
 export interface DataSource<T = unknown> {
   readonly capabilities: DataSourceCapabilities;
   load(options: LoadOptions): Promise<LoadResult<T>>;
+  /**
+   * The same load answered synchronously, for sources that hold their rows
+   * in memory. Optional: the React grid and tree list use it for the first
+   * render only, so a server render (`renderToString`, which cannot await)
+   * already contains the first page. Remote sources leave it out and load
+   * after mount.
+   */
+  loadSync?(options: LoadOptions): LoadResult<T>;
   keyOf(item: T): RowKey;
   /**
    * Distinct values of a field (for Excel-style header filters), optionally

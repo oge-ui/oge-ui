@@ -152,13 +152,16 @@ export class ArrayDataSource<T> implements DataSource<T> {
   }
 
   load(options: LoadOptions): Promise<LoadResult<T>> {
-    return Promise.resolve(
-      runLoadOptions(this.getRows(), options, {
-        searchFields: this.searchFields,
-        sortValues: this.sortValues,
-        customSummaries: this.customSummaries,
-      }),
-    );
+    return Promise.resolve(this.loadSync(options));
+  }
+
+  /** {@link load} without the promise — the rows are already in memory. */
+  loadSync(options: LoadOptions): LoadResult<T> {
+    return runLoadOptions(this.getRows(), options, {
+      searchFields: this.searchFields,
+      sortValues: this.sortValues,
+      customSummaries: this.customSummaries,
+    });
   }
 
   distinct(

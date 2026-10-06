@@ -20,7 +20,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           type: 'readonly T[] | DataSource&lt;T&gt;',
           default: '[]',
           description:
-            'Rows to render: a static array or any <code>DataSource</code> implementation (remote, windowed, pushing live changes).',
+            'Rows to render: a static array or any <code>DataSource</code> implementation (remote, windowed, pushing live changes). An array (or a source with <code>loadSync</code>) loads in the first render, so <code>renderToString</code> already contains the first page; asynchronous sources load after mount.',
         },
         {
           name: 'columns',

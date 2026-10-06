@@ -92,7 +92,7 @@ _Tree data_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `data` | `readonly T[] \| DataSource<T>` | `[]` | Flat self-referencing rows: a static array or any DataSource. |
+| `data` | `readonly T[] \| DataSource<T>` | `[]` | Flat self-referencing rows: a static array or any DataSource. An array loads in the first render, so `renderToString` already contains the rows; asynchronous and lazy sources load after mount. |
 | `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Row key: field path or selector (the grid uses `keyField`). |
 | `parentIdExpr` | `string \| ((row: T) => unknown)` | `'parentId'` | Parent reference: field path or selector. |
 | `rootValue` | `unknown` | `null` | Parent value marking root rows. |

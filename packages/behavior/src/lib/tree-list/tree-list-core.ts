@@ -301,26 +301,33 @@ export function ogeTreeDataSource<T>(
   remoteFiltering = false,
 ): DataSource<T> {
   const passFilter = remoteFiltering && !lazy;
+  const forInner = (options: LoadOptions): LoadOptions => {
+    if (passFilter) return options;
+    const rest = withoutFilter(options);
+    return lazy
+      ? {
+          ...rest,
+          filter: {
+            type: 'binary',
+            field: lazy.parentField,
+            op: 'eq',
+            value: lazy.rootValue,
+          },
+        }
+      : rest;
+  };
+  const loadSync = inner.loadSync;
   return {
     capabilities: { ...inner.capabilities, filter: passFilter },
     keyOf: (item) => inner.keyOf(item),
-    load: (options) => {
-      if (passFilter) return inner.load(options);
-      const rest = withoutFilter(options);
-      return inner.load(
-        lazy
-          ? {
-              ...rest,
-              filter: {
-                type: 'binary',
-                field: lazy.parentField,
-                op: 'eq',
-                value: lazy.rootValue,
-              },
-            }
-          : rest,
-      );
-    },
+    load: (options) => inner.load(forInner(options)),
+    // an in-memory tree answers its first page synchronously (server render)
+    ...(loadSync && !lazy
+      ? {
+          loadSync: (options: LoadOptions) =>
+            loadSync.call(inner, forInner(options)),
+        }
+      : {}),
     ...(inner.distinct ? { distinct: inner.distinct.bind(inner) } : {}),
     ...(inner.insert ? { insert: inner.insert.bind(inner) } : {}),
     ...(inner.update ? { update: inner.update.bind(inner) } : {}),

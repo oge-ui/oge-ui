@@ -120,6 +120,7 @@ describe('React SSR: renderToString in Node → hydrateRoot (StrictMode)', () =>
       if (family === undefined) throw new Error(`no family ${name}`);
       const html = serverHtml.get(name) ?? '';
       for (const text of family.expect) expect(html).toContain(text);
+      for (const text of family.reject ?? []) expect(html).not.toContain(text);
 
       const { act, createElement, StrictMode } = client.react;
       const container = document.createElement('div');

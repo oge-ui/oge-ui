@@ -51,6 +51,16 @@
 .app-version-placeholder {
   width: 8.5rem;
 }
+/* the same unlayered-beats-utility trap: the rules above win over the
+   placeholders' `max-sm:hidden`, so the prerendered header (placeholders
+   still in place until the deferred selects load) was 214px too wide on
+   phones until hydration swapped them out */
+@media (max-width: 39.99rem) {
+  .app-theme-placeholder,
+  .app-version-placeholder {
+    display: none;
+  }
+}
 .app-theme-select .oge-input-subscript {
   display: none;
 }

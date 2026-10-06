@@ -171,14 +171,24 @@ export class OgeEditorCore {
    * Loads an external value (a form write, a bound `value`). A value equal
    * to the last one the editor emitted is its own echo and is ignored, so
    * the caret and the history survive two-way binding.
+   *
+   * `parser: 'portable'` reads the value with the editor's own parser even
+   * where `DOMParser` exists — the React adapter loads its initial value that
+   * way so the server render and the hydrating browser hold the same model.
    */
-  setValue(html: string | null | undefined): void {
+  setValue(
+    html: string | null | undefined,
+    options: { readonly parser?: 'auto' | 'portable' } = {},
+  ): void {
     const value = html ?? '';
     if (value === this.lastEmitted) return;
     const current = this.html();
     this.lastEmitted = value;
     if (value === current) return;
-    const doc = ogeEditorFromHtml(value, this.urlOptions());
+    const doc = ogeEditorFromHtml(value, {
+      ...this.urlOptions(),
+      parser: options.parser,
+    });
     this.state.set(ogeEditorState(doc));
     this.history.clear();
     this.syncHistoryCells();
@@ -229,6 +239,16 @@ export class OgeEditorCore {
     this.listeners.push(() =>
       doc.removeEventListener('selectionchange', selection),
     );
+  }
+
+  /**
+   * Builds the current document into `root` without binding to it — the
+   * server render of the editing surface (`createElement` on the element's
+   * own document, never markup). A later {@link attach} on the browser's copy
+   * of that element adopts every top-level element that matches the model.
+   */
+  renderTo(root: HTMLElement): void {
+    renderOgeEditorDom(root, this.state().doc, this.urlOptions());
   }
 
   /** Removes every listener (the element stays as rendered). */

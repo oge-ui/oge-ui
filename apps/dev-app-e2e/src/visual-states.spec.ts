@@ -695,19 +695,55 @@ test.describe('phone width', () => {
   }) => {
     for (const path of [
       '/components/inputs/date-box',
-      '/components/inputs/otp-input',
-      '/components/inputs/transfer-list',
-      '/components/charts',
       '/components/tabs',
+      // the W8a–W8e pages
+      '/components/avatar',
+      '/components/chip',
+      '/components/alert',
+      '/components/timeline',
+      '/components/app-bar',
+      '/components/buttons/fab',
+      '/components/inputs/rating',
+      '/components/inputs/otp-input',
+      '/components/inputs/signature-pad',
+      '/components/inputs/list-box',
+      '/components/inputs/transfer-list',
+      '/components/inputs/mention',
+      '/components/charts',
+      '/components/charts/gauges',
+      '/components/charts/specialized',
+      '/components/carousel',
+      '/components/overlay/action-sheet',
+      '/components/list-view',
+      '/components/data-view',
+      '/components/tile-layout',
+      '/components/editor',
     ]) {
       await page.goto(path);
       await expect(page.locator('app-demo-card').first()).toBeVisible();
       // the theme select is desktop-only; it used to overlap the header icons
       await expect(page.locator('.app-theme-select')).toBeHidden();
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - window.innerWidth,
-      );
-      expect(overflow, path).toBeLessThanOrEqual(0);
+      // so are the placeholders the deferred header selects show first: they
+      // once widened every page by 214px until the selects loaded (the
+      // server-HTML twin of this check is ssr/phone-width.spec.ts)
+      for (const placeholder of await page
+        .locator('.app-theme-placeholder, .app-version-placeholder')
+        .all()) {
+        await expect(placeholder).toBeHidden();
+      }
+      // polled: the page settles (deferred blocks, fonts) after the first
+      // card shows; a lasting overflow still fails, and the transient one the
+      // header placeholders caused is caught deterministically by the
+      // JavaScript-off server-HTML check (ssr/phone-width.spec.ts)
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              () => document.documentElement.scrollWidth - window.innerWidth,
+            ),
+          { message: path },
+        )
+        .toBeLessThanOrEqual(0);
     }
   });
 });

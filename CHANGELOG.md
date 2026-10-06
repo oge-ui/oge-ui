@@ -7,6 +7,47 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### SSR follow-ups — editor surface, React grid first page, phone-width fixes — `@oge-ui/behavior`, `@oge-ui/core`, `@oge-ui/editor`, `@oge-ui/react-editor`, `@oge-ui/react-grid`, `@oge-ui/react-tree-list`
+
+Closes the gaps the W5a SSR proof listed:
+
+- **The rich-text editor server-renders its document** (both layers). The
+  editing surface used to be empty in the server markup. Angular now builds
+  it on the server from the model with the same `createElement` routine the
+  browser uses (`OgeEditorCore.renderTo`, new), and the browser's editor
+  **adopts** every server-built block that matches its model instead of
+  rebuilding it. React renders the first surface as React elements from the
+  same render tree, then hands it to the editor machine after mount, before
+  the first paint. Hydration matches in both layers, under StrictMode too,
+  and there is still no `innerHTML` or `dangerouslySetInnerHTML`.
+- **The editor reads HTML on a server.** Where `DOMParser` is missing (Node),
+  the bound value, `ogeSanitizeEditorHtml()` and `ogeEditorHtmlLength()` used
+  to keep only the text. They now go through the editor's own small,
+  environment-independent tokenizer, which feeds the same allow-list walker,
+  so formatting survives. `OgeEditorParseOptions.parser: 'portable'` (new)
+  forces that tokenizer in the browser as well; the React adapter loads its
+  initial value this way so the server and the hydrating browser hold the
+  same model. The XSS corpus also runs through the portable tokenizer.
+- **The React grid and tree list server-render their first page.** An
+  in-memory array, or any source with the new optional
+  `DataSource.loadSync()` (`ArrayDataSource` implements it), is loaded during
+  the first render with the option props (paging, initial sort and grouping,
+  summaries) already applied, through `OgeGridDataCore.syncNow()` (new). The
+  mount effect adopts that same source, so nothing reloads and no loading
+  state flashes. Remote and lazy sources still load after mount.
+- `OgeGridDataCore.setSource()` given the source it already holds now keeps
+  that source's push subscription; it used to drop it.
+- Docs: the deferred header selects' placeholders ignored `max-sm:hidden`
+  (an unlayered rule beat the utility), so every prerendered page was 214px
+  too wide on phones until hydration. A phone-width check of the server HTML
+  with JavaScript off (`ssr/phone-width.spec.ts`) and a wider route list in
+  `visual-states.spec.ts` now guard this. The transfer list and the other
+  W8a–W8e component pages were checked at 390px in both frameworks and none
+  of them overflow.
+- Docs: the tag box avatar demos use PNG files (`/avatars/*.png`) instead of
+  SVG `data:` URLs, which `sanitizeResourceUrl` rightly rejects, so the React
+  demo shows them again. The Angular and React demos use the same data.
+
 ### Carousel, action sheet, list / data view and tile layout (W8d) — `@oge-ui/layout`, `@oge-ui/overlay`, `@oge-ui/react-layout`, `@oge-ui/react-overlay`, `@oge-ui/behavior`, `@oge-ui/locales`
 
 Five new components in both render layers; their decisions (index and

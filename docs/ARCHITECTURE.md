@@ -1115,13 +1115,33 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   HTML would drop them; a trailing `<br>` is doubled (HTML gives one no line).
 - **Sanitizer = parse into the model + serialize.** `ogeEditorFromHtml`
   walks an inert `DOMParser` document (policy `oge-ui#editor`; without
-  `DOMParser`, during SSR, only the text survives) with an allowlist: unknown
+  `DOMParser` — a server — the editor's own tokenizer, see below) with an allowlist: unknown
   inline tags are unwrapped, `DROP` tags vanish with their content, Office
   namespace tags (`o:p`) and `mso-list:Ignore` markers are skipped, Word list
   paragraphs (`mso-list: lN levelM`) become nested list items, the Google
   Docs `font-weight:normal` wrapper is honoured, and default black / white
   colours are dropped from pastes. Depth is capped (256) to keep hostile
   nesting off the stack.
+- **The surface is server-rendered from the model.** `editor-portable-parser.ts`
+  is a small HTML tokenizer (void and raw-text elements, implied `</p>` /
+  `</li>`, the newline after `<pre>`, character references, `<head>`
+  dropped) producing plain objects with just the `Node` members the walker
+  reads, so a server with no `DOMParser` reads the value into the same model
+  a browser does — `editor-portable-parser.spec.ts` holds it to the browser's
+  output on a corpus, and the XSS corpus runs through it too. Angular builds
+  the surface on the server with `core.renderTo(element)` (an effect under
+  `isPlatformServer`: `createElement` on the server document, never markup);
+  on the client `attach` → `renderOgeEditorDom` **adopts** every top-level
+  element that `isEqualNode`s what the model builds, so hydration keeps the
+  nodes the reader already sees (`ngSkipHydration` was not needed: Angular
+  never walks into an element with no template children, and
+  `apps/ssr-smoke` proves both the match and the adoption). React renders
+  the first surface as React elements from the same render tree
+  (`editor-surface.tsx`, no `dangerouslySetInnerHTML`) from a model loaded
+  with `parser: 'portable'` during render, so server and hydration agree
+  byte for byte; a layout effect then hands the surface off — React drops
+  its elements and the machine builds its own, before the first paint — so
+  React never reconciles nodes the machine edits (StrictMode-safe).
 - **The chrome decisions are shared too** (`editor-toolbar.ts`,
   `editor-shell.ts`): which tools exist and what each is (toggle, button,
   menu, colour, dialog), icons, `aria-keyshortcuts` and tooltip spelling per
@@ -2179,14 +2199,20 @@ Rules the suites enforce (and the fixes they produced):
   script (`event-replay-script.ts`, which also normalises the call so the static CSP needs one hash
   for every page); `hydration.spec.ts` pins the upstream bug and fails once it is fixed.
 
+- **A surface built outside the templates is server-rendered from the model too** (rich-text
+  editor): build it on the server with the same model → DOM routine the client uses, and let the
+  client adopt matching elements rather than rebuild them. `SsrFamily.survives` in
+  `apps/ssr-smoke` names the elements that must be the same objects after hydration.
+- **In-memory data loads in the first render (React).** `renderToString` cannot await an effect
+  or a promise, so the React grid and tree list apply their option props and call
+  `OgeGridDataCore.syncNow()` while rendering (quietly — `OgeGridRxAdapter.quietly` writes cells
+  without a re-render request): a source with `DataSource.loadSync` (`ArrayDataSource`, the tree
+  wrapper over one) answers on the spot, and the mount effect adopts that same source, so nothing
+  reloads. Remote sources keep loading after mount. `ReactSsrFamily.reject` lets a family assert
+  that rows past the first page are absent.
+
 Known gaps (not mismatches — the hydration matches — but worth closing):
 
-- The **React grid and tree list** set their data source in an effect, so their server markup is
-  the headers and the empty state; rows appear after hydration. The Angular grid server-renders
-  its first page. Closing it needs a synchronous first load for in-memory arrays.
-- The **rich-text editor** (both layers) server-renders its label, toolbar and counter but an
-  empty editing surface: the document is built into the DOM on the client. `ssr-smoke` asserts
-  only the shell until the surface is server-rendered from the model.
 - Local-date layouts (scheduler today cells, Gantt ranges that include today) assume the server
   and the browser share a time zone; pass `timeZone` where they may not.
 

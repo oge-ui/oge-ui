@@ -39,6 +39,13 @@ export interface SsrFamily {
   readonly providers?: readonly (Provider | EnvironmentProviders)[];
   /** Strings the family's components must have put in the markup. */
   readonly expect: readonly string[];
+  /**
+   * Server-rendered elements built outside Angular's templates (the editor's
+   * surface) that the browser must adopt rather than rebuild: each selector
+   * must match before hydration, and the same element must still be
+   * connected after it.
+   */
+  readonly survives?: readonly string[];
 }
 
 /**

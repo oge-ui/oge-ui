@@ -167,4 +167,42 @@ describe('OgeGridDataCore', () => {
     source.push([{ type: 'update', key: 1, patch: { name: 'z' } }]);
     expect(core.result()?.data[0]).toEqual({ id: 1, name: 'a' });
   });
+
+  it('syncNow() answers an in-memory source synchronously, once', async () => {
+    const options: LoadOptions = { skip: 0, take: 1 };
+    const rows = [
+      { id: 1, name: 'a' },
+      { id: 2, name: 'b' },
+    ];
+    const source = {
+      ...fakeSource(rows),
+      loadSync: (o: LoadOptions) => ({
+        data: rows.slice(o.skip ?? 0, (o.skip ?? 0) + (o.take ?? 2)),
+        totalCount: 2,
+      }),
+    };
+    const core = new OgeGridDataCore<Row>({ loadOptions: () => options }, rx);
+    core.setSource(source);
+    expect(core.syncNow()).toBe(true);
+    expect(core.result()?.data).toEqual([{ id: 1, name: 'a' }]);
+    expect(core.loading()).toBe(false);
+    // the regular sync() sees the same options: no asynchronous reload
+    core.sync();
+    await flush();
+    expect(source.calls).toEqual([]);
+    expect(core.syncNow()).toBe(false);
+    // the same source again keeps its push subscription
+    core.setSource(source);
+    source.push([{ type: 'update', key: 1, patch: { name: 'z' } }]);
+    expect(core.result()?.data[0]).toEqual({ id: 1, name: 'z' });
+  });
+
+  it('syncNow() leaves asynchronous sources to sync()', () => {
+    const source = fakeSource([{ id: 1, name: 'a' }]);
+    const core = new OgeGridDataCore<Row>({ loadOptions: () => ({}) }, rx);
+    core.setSource(source);
+    expect(core.syncNow()).toBe(false);
+    expect(core.result()).toBeNull();
+    expect(source.calls).toEqual([]);
+  });
 });

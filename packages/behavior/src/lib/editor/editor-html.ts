@@ -37,6 +37,7 @@ import {
   type OgeEditorListKind,
   type OgeEditorMarks,
 } from './editor-model';
+import { ogeEditorParsePortable } from './editor-portable-parser';
 import { ogeEditorParserInput } from './editor-trusted-types';
 
 // --- the render tree ----------------------------------------------------------
@@ -591,6 +592,12 @@ export interface OgeEditorParseOptions extends OgeEditorUrlOptions {
   readonly source?: OgeEditorParseSource;
   /** Keep text/highlight colours. Default `true`. */
   readonly keepColors?: boolean;
+  /**
+   * The tokenizer of {@link ogeEditorFromHtml}: `'auto'` (default) uses
+   * `DOMParser` where it exists; `'portable'` always uses the editor's own
+   * parser, so a server and a hydrating browser read a value identically.
+   */
+  readonly parser?: 'auto' | 'portable';
 }
 
 /** Elements dropped together with everything inside them. */
@@ -1238,41 +1245,12 @@ export function ogeEditorReadDom(
   return new Walker(options).run(root);
 }
 
-/** Strips markup without a parser (SSR fallback): the text only, as paragraphs. */
-function textOnlyDoc(html: string): OgeEditorDoc {
-  const text = html
-    .replace(
-      /<(script|style|template|svg|math|iframe|noscript)\b[\s\S]*?<\/\1\s*>/gi,
-      '',
-    )
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|h[1-6]|li|blockquote|pre|tr)\s*>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, '&');
-  const lines = stripControls(text)
-    .split('\n')
-    .map((line) => line.replace(/[ \t\r\f]+/g, ' ').trim())
-    .filter((line, i, all) => line !== '' || (i > 0 && i < all.length - 1));
-  return ensureDoc(
-    lines.map((line) => ({
-      type: 'paragraph' as const,
-      indent: 0,
-      inlines: line
-        ? [{ kind: 'text' as const, text: line, marks: ogeEditorNoMarks() }]
-        : [],
-    })),
-  );
-}
-
 /**
  * Parses HTML into a sanitized document. Uses an inert `DOMParser` document
  * (Trusted Types policy `oge-ui#editor`); without `DOMParser` (server
- * rendering) the text survives and all markup is dropped.
+ * rendering), or with `parser: 'portable'`, the editor's own
+ * environment-independent parser (`ogeEditorParsePortable`) reads it — the
+ * same allow-list applies either way, only the tokenizer differs.
  */
 export function ogeEditorFromHtml(
   html: string | null | undefined,
@@ -1280,7 +1258,11 @@ export function ogeEditorFromHtml(
 ): OgeEditorDoc {
   const source = (html ?? '').trim();
   if (source === '') return ensureDoc([]);
-  if (typeof DOMParser === 'undefined') return textOnlyDoc(source);
+  const portable = () =>
+    ogeEditorReadDom(ogeEditorParsePortable(source), options);
+  if (options.parser === 'portable' || typeof DOMParser === 'undefined') {
+    return portable();
+  }
   let parsed: Document;
   try {
     parsed = new DOMParser().parseFromString(
@@ -1288,7 +1270,7 @@ export function ogeEditorFromHtml(
       'text/html',
     );
   } catch {
-    return textOnlyDoc(source);
+    return portable();
   }
   return ogeEditorReadDom(parsed.body, options);
 }

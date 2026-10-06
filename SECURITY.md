@@ -74,9 +74,14 @@ the markup into the editor's document model — allow-listed tags, `href`
 emits is re-serialized from that model with every text node and attribute
 escaped, so a payload that only turns dangerous when the browser re-parses it
 (mutation XSS) has nothing left to mutate. The editing surface is built with
-`createElement` and the CSSOM — no `innerHTML`, no `dangerouslySetInnerHTML`.
-`ogeSanitizeEditorHtml()` applies the same allowlist to HTML you render
-elsewhere; still sanitize on the server, as you would any user-written HTML.
+`createElement` and the CSSOM — no `innerHTML`, no `dangerouslySetInnerHTML`
+— on the server too (the server render builds the same elements from the
+model; React's first render emits them as React elements). Where there is no
+`DOMParser` (a Node server) the markup is tokenized by the editor's own small
+parser into plain objects that the same allowlist walker reads; nothing is
+ever inserted from it. `ogeSanitizeEditorHtml()` applies the same allowlist to
+HTML you render elsewhere, in the browser or on the server; still sanitize
+server-side, as you would any user-written HTML.
 
 ### URLs are sanitized in both render layers
 

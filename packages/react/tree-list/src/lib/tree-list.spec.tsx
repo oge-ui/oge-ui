@@ -6,6 +6,7 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { StrictMode, createRef, useState } from 'react';
+import { renderToString } from 'react-dom/server';
 import type { RowKey } from '@oge-ui/core';
 import { OgeTreeList } from './tree-list';
 import type { OgeTreeListHandle } from './tree-list-types';
@@ -259,5 +260,24 @@ describe('OgeTreeList', () => {
     await waitFor(() => expect(rows()).toHaveLength(5));
     fireEvent.click(expanderOf('Root A'));
     await waitFor(() => expect(names()).toEqual(['Root A', 'Root B']));
+  });
+});
+
+describe('<OgeTreeList> (React) — first page in the first render', () => {
+  it('server-renders the rows of an in-memory tree', () => {
+    const html = renderToString(
+      <OgeTreeList
+        data={[
+          { id: 1, parentId: null, name: 'Root' },
+          { id: 2, parentId: 1, name: 'Leaf' },
+        ]}
+        keyExpr="id"
+        parentIdExpr="parentId"
+        autoExpandAll
+        columns={['name']}
+      />,
+    );
+    expect(html).toContain('Root');
+    expect(html).toContain('Leaf');
   });
 });

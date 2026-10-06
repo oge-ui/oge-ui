@@ -18,6 +18,7 @@ import {
 import {
   buildSearchHighlightSegments,
   type CsvOptions,
+  type DataSource,
   foldText,
   type DataRowNode,
   type FilterOperator,
@@ -951,8 +952,14 @@ function OgeTreeListInner<T extends object>(
   const parentIdExprDep = exprDep(props.parentIdExpr, 'parentId');
   const itemsExprDep = exprDep(props.itemsExpr, '');
   const lazyDep = core.effLoadMode();
+  /** The source the first render loaded from, adopted by the effect below. */
+  const primedSource = useRef<DataSource<T> | null>(null);
   useEffect(() => {
-    data.setSource(core.connect(latest.current.data ?? [], sortValues));
+    const source =
+      primedSource.current ??
+      core.connect(latest.current.data ?? [], sortValues);
+    primedSource.current = null;
+    data.setSource(source);
     return () => data.setSource(null);
   }, [
     data,
@@ -965,6 +972,23 @@ function OgeTreeListInner<T extends object>(
     lazyDep,
     sortValues,
   ]);
+
+  // The first render loads an in-memory tree on the spot
+  // (DataSource.loadSync), so a server render — which cannot wait for an
+  // effect or a promise — already shows the first page of rows, and the
+  // hydration render reproduces it; the effect above adopts that source, so
+  // nothing reloads. Lazy and remote sources keep loading after mount.
+  const primed = useRef(false);
+  if (!primed.current) {
+    primed.current = true;
+    model.rx.quietly(() => {
+      const source = core.connect(latest.current.data ?? [], sortValues);
+      if (!source.loadSync) return;
+      data.setSource(source);
+      if (data.syncNow()) primedSource.current = source;
+      else data.setSource(null);
+    });
+  }
 
   // StrictMode unmounts and remounts with the same model: the cleanup tears
   // the data core down, and the effect above re-wires the source on remount

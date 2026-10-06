@@ -1,4 +1,5 @@
 import { StrictMode, createRef, useState } from 'react';
+import { renderToString } from 'react-dom/server';
 import { act, render, screen } from '@testing-library/react';
 import { ogeEditorWriteSelection } from '@oge-ui/behavior';
 import { OgeEditor, type OgeEditorHandle } from './editor';
@@ -190,5 +191,25 @@ describe('<OgeEditor> (React)', () => {
     ).map((el) => el.textContent?.trim());
     expect(items).toContain('Heading 2');
     expect(tool('blockFormat').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('server-renders the document as the surface, then the machine owns it', () => {
+    const value = '<h2>Title</h2><p>a <strong>b</strong></p><hr>';
+    const html = renderToString(<OgeEditor defaultValue={value} />);
+    expect(html).toContain('<h2 data-oge-block="0">Title</h2>');
+    expect(html).toContain('<strong>b</strong>');
+    expect(html).toMatch(/<hr data-oge-block="2" contenteditable="false"/i);
+    expect(html).not.toContain('oge-editor-empty');
+
+    render(
+      <StrictMode>
+        <OgeEditor defaultValue={value} />
+      </StrictMode>,
+    );
+    // one copy of the document, built by the machine (typing works on it)
+    expect(surface().querySelectorAll('h2')).toHaveLength(1);
+    caret(0, 5);
+    type('!');
+    expect(surface().querySelector('h2')?.textContent).toBe('Title!');
   });
 });

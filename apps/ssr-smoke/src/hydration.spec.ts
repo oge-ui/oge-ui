@@ -32,12 +32,16 @@ async function hydrate(
   readonly pending: number;
   readonly reused: boolean;
   readonly hydratedLog: string | undefined;
+  readonly adopted: readonly boolean[];
 }> {
   const { html } = await renderOnServer(family, options);
   const body = /<body[^>]*>([\s\S]*)<\/body>/.exec(html)?.[1] ?? '';
   document.body.innerHTML = body;
   const host = document.querySelector(HOST_SELECTOR);
   const firstChild = host?.firstElementChild ?? null;
+  const survivors = (family.survives ?? []).map((selector) =>
+    document.querySelector(selector),
+  );
 
   const lines: string[] = [];
   const logs: string[] = [];
@@ -63,6 +67,7 @@ async function hydrate(
       pending: document.querySelectorAll('[ngh]').length,
       reused: firstChild !== null && firstChild.isConnected,
       hydratedLog: logs.find((line) => line.includes('hydrated')),
+      adopted: survivors.map((el) => el !== null && el.isConnected),
     };
   } finally {
     app?.destroy();
@@ -81,6 +86,7 @@ describe('hydration round trip (server render → provideClientHydration)', () =
       expect(result.pending).toBe(0);
       expect(result.reused).toBe(true);
       expect(result.hydratedLog).toMatch(/hydrated \d+ component/);
+      expect(result.adopted).toEqual((family.survives ?? []).map(() => true));
     });
   }
 

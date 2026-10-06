@@ -143,6 +143,11 @@ describe('editor HTML — XSS corpus', () => {
     expectInert(clean(payload));
   });
 
+  // the server (and React's first render) tokenizes with the portable parser
+  it.each(corpus)('neutralizes %s through the portable parser', (payload) => {
+    expectInert(clean(payload, { parser: 'portable' }));
+  });
+
   it('keeps escaped text as text', () => {
     expect(clean('<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>')).toBe(
       '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>',
@@ -423,14 +428,19 @@ describe('editor HTML — Trusted Types', () => {
     expect(clean('<p>x</p>')).toBe('<p>x</p>');
   });
 
-  it('without DOMParser (SSR) keeps the text and drops all markup', () => {
+  it('without DOMParser (SSR) parses with the portable parser, same allowlist', () => {
     const original = globalThis.DOMParser;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).DOMParser = undefined;
     try {
       expect(
         clean('<p>a <b>b</b></p><script>x()</script><p>c &amp; d</p>'),
-      ).toBe('<p>a b</p><p>c &amp; d</p>');
+      ).toBe('<p>a <strong>b</strong></p><p>c &amp; d</p>');
+      expect(
+        clean(
+          '<p><a href="javascript:alert(1)">x</a><img src=x onerror=y></p>',
+        ),
+      ).toBe('<p>x<img src="x" alt=""></p>');
     } finally {
       globalThis.DOMParser = original;
     }

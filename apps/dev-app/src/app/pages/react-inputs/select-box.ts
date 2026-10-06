@@ -77,7 +77,7 @@ const PLANS: DemoPlan[] = [
 
 const SKILLS = ['Angular', 'Signals', 'Nx', 'Vitest', 'SCSS'];
 
-/** Inline SVG avatars — the docs stay fully offline. */
+/** Avatar images served by the docs (`public/avatars`), as in the snippet. */
 const AVATAR_USERS = [1, 2, 3, 4, 5].map((id) => ({
   id,
   name: [
@@ -87,11 +87,7 @@ const AVATAR_USERS = [1, 2, 3, 4, 5].map((id) => ({
     'Can Yılmaz',
     'Deniz Arslan',
   ][id - 1],
-  avatar:
-    'data:image/svg+xml;utf8,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" rx="8" fill="${['#6366f1', '#22d3ee', '#ec4899', '#10b981', '#f59e0b'][id - 1]}"/><text x="16" y="21" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#fff">${['EK', 'MD', 'SD', 'CY', 'DA'][id - 1]}</text></svg>`,
-    ),
+  avatar: `/avatars/${id}.png`,
 }));
 
 /** Invoked once, on first open — loading/error rows render while pending. */

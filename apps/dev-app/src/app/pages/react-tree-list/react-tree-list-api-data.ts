@@ -19,7 +19,7 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
           type: 'readonly T[] | DataSource&lt;T&gt;',
           default: '[]',
           description:
-            'Flat self-referencing rows: a static array or any DataSource.',
+            'Flat self-referencing rows: a static array or any DataSource. An array loads in the first render, so <code>renderToString</code> already contains the rows; asynchronous and lazy sources load after mount.',
         },
         {
           name: 'keyExpr',

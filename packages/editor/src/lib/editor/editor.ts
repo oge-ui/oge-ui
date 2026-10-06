@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  PLATFORM_ID,
   ViewEncapsulation,
   afterNextRender,
   computed,
@@ -15,6 +16,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import {
   NgControl,
   type ControlValueAccessor,
@@ -689,6 +691,16 @@ export class OgeEditor
         lastActive = active;
       });
     });
+    // the server has no afterNextRender: build the surface from the model
+    // there (createElement on the server document, no markup), and the
+    // browser's attach adopts every element that matches its own model
+    if (isPlatformServer(inject(PLATFORM_ID))) {
+      effect(() => {
+        const element = this.content()?.nativeElement;
+        this.core.state();
+        if (element) untracked(() => this.core.renderTo(element));
+      });
+    }
     afterNextRender(() => {
       const element = this.content()?.nativeElement;
       if (element) this.core.attach(element);

@@ -82,9 +82,13 @@ export function renderOgeEditorDom(
     const blocks = RENDERED.get(node);
     if (blocks && blocks.length > 0) byFirstBlock.set(blocks[0], node);
   }
+  // a surface rendered elsewhere (the server render, a React first render):
+  // its elements are adopted where they equal what the model builds, so
+  // hydration keeps the very nodes the reader already sees
+  const adoptable = byFirstBlock.size === 0 ? Array.from(root.childNodes) : [];
   const desired: Node[] = [];
   let index = 0;
-  for (const group of groups) {
+  for (const [i, group] of groups.entries()) {
     const candidate = byFirstBlock.get(group.blocks[0]);
     let element: Node;
     if (candidate && sameBlocks(RENDERED.get(candidate), group.blocks)) {
@@ -93,6 +97,8 @@ export function renderOgeEditorDom(
       renumber(element as HTMLElement, index);
     } else {
       element = build(owner, group.node);
+      const existing = adoptable[i];
+      if (existing && existing.isEqualNode(element)) element = existing;
       RENDERED.set(element, group.blocks);
     }
     desired.push(element);

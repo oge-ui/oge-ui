@@ -107,9 +107,10 @@ export class OgeGridDataCore<T = unknown> {
   }
 
   setSource(source: DataSource<T> | null): void {
+    // the same source again keeps its push subscription (and its result)
+    if (this._source() === source) return;
     this.changesSub?.unsubscribe();
     this.changesSub = null;
-    if (this._source() === source) return;
     this._source.set(source);
     this.lastLoadJson = null;
     if (source?.changes) {
@@ -138,6 +139,34 @@ export class OgeGridDataCore<T = unknown> {
     if (json === this.lastLoadJson) return;
     this.lastLoadJson = json;
     this.load(source, options);
+  }
+
+  /**
+   * {@link sync}, answered on the spot when the source can load
+   * synchronously (`DataSource.loadSync`, in-memory arrays): the result is
+   * in place before this returns, so the render that called it — a server
+   * render, or the hydration render that must reproduce it — shows the
+   * first page. Returns `false` (and does nothing) for asynchronous sources,
+   * windowed mode, or when the options already loaded.
+   */
+  syncNow(): boolean {
+    const source = this._source();
+    if (!source?.loadSync || this._mode() === 'window') return false;
+    const options = this.deps.loadOptions();
+    const json = JSON.stringify(options);
+    if (json === this.lastLoadJson) return false;
+    let result: LoadResult<T>;
+    try {
+      result = source.loadSync(options);
+    } catch {
+      return false; // the regular asynchronous load reports the error
+    }
+    this.inflight?.abort();
+    this.inflight = null;
+    this.lastLoadJson = json;
+    this._result.set(result);
+    this.error.set(null);
+    return true;
   }
 
   /** Re-runs the current load (e.g. after external data mutations). */

@@ -49,6 +49,8 @@ export interface ReactSsrFamily {
   readonly name: string;
   readonly tree: () => ReactElement;
   readonly expect: readonly string[];
+  /** Text the server markup must not contain (e.g. rows past the first page). */
+  readonly reject?: readonly string[];
 }
 
 // Fixed local dates and explicit locales: nothing may depend on "today", and
@@ -73,14 +75,14 @@ export const REACT_FAMILIES: readonly ReactSsrFamily[] = [
         data={people}
         keyField="id"
         columns={['id', 'name', 'team', 'salary']}
-        paging={{ pageSize: 10 }}
+        paging={{ pageSize: 1 }}
         filterRow
       />
     ),
-    // the React grid sets its data source in an effect, so the server markup
-    // is the column headers and the empty state (ARCHITECTURE → "SSR and
-    // hydration", known gaps); the hydration itself must still match
-    expect: ['oge-grid', 'Salary'],
+    // an in-memory array loads synchronously in the first render, with the
+    // option props applied: the server markup is the first page
+    expect: ['oge-grid', 'Salary', 'Ada Lovelace'],
+    reject: ['Grace Hopper'],
   },
   {
     name: 'react-tree-list',
@@ -93,7 +95,7 @@ export const REACT_FAMILIES: readonly ReactSsrFamily[] = [
         columns={['name', 'title']}
       />
     ),
-    expect: ['oge-tree-list', 'Title'],
+    expect: ['oge-tree-list', 'Title', 'Ada Lovelace', 'Alan Turing'],
   },
   {
     name: 'react-pivot',
@@ -387,6 +389,6 @@ export const REACT_FAMILIES: readonly ReactSsrFamily[] = [
         maxLength={500}
       />
     ),
-    expect: ['oge-editor', 'Notes'],
+    expect: ['oge-editor', 'Release notes', '<strong>world</strong>'],
   },
 ];

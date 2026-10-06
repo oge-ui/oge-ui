@@ -7,6 +7,7 @@ import {
   within,
 } from '@testing-library/react';
 import { StrictMode, createRef, useState } from 'react';
+import { renderToString } from 'react-dom/server';
 import type { DataSource, LoadOptions, RowKey } from '@oge-ui/core';
 import { OgeGrid } from './grid';
 import { OgeGridConfigProvider } from './grid-config';
@@ -455,5 +456,66 @@ describe('OgeGrid', () => {
     );
     await settled();
     expect(rows()).toHaveLength(4);
+  });
+});
+
+describe('<OgeGrid> (React) — first page in the first render', () => {
+  it('server-renders the first page of an in-memory array, options applied', () => {
+    const html = renderToString(
+      <OgeGrid
+        data={people}
+        keyField="id"
+        columns={[{ field: 'name', sortOrder: 'desc' }, 'age']}
+        paging={{ pageSize: 2 }}
+      />,
+    );
+    // sorted descending and paged before any effect ran
+    expect(html).toContain('Margaret');
+    expect(html).toContain('Linus');
+    expect(html).not.toContain('Grace');
+  });
+
+  it('leaves an asynchronous DataSource to load after mount', () => {
+    const source: DataSource<Person> = {
+      capabilities: {
+        sort: true,
+        filter: true,
+        group: true,
+        paging: true,
+        summary: true,
+      },
+      keyOf: (row) => row.id,
+      load: () => new Promise(() => undefined),
+    };
+    const html = renderToString(<OgeGrid data={source} keyField="id" />);
+    expect(html).toContain('oge-grid');
+    expect(html).not.toContain('Linus');
+  });
+
+  it('does not reload what the first render loaded', async () => {
+    const loads: LoadOptions[] = [];
+    const rowsCopy = [...people];
+    const source: DataSource<Person> = {
+      capabilities: {
+        sort: true,
+        filter: true,
+        group: true,
+        paging: true,
+        summary: true,
+      },
+      keyOf: (row) => row.id,
+      load: (options) => {
+        loads.push(options);
+        return Promise.resolve({ data: rowsCopy, totalCount: 3 });
+      },
+      loadSync: () => ({ data: rowsCopy, totalCount: 3 }),
+    };
+    render(<OgeGrid data={source} keyField="id" columns={['name']} />);
+    expect(screen.getByText('Linus')).toBeTruthy();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(loads).toEqual([]);
+    expect(screen.getByText('Linus')).toBeTruthy();
   });
 });

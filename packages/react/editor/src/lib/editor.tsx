@@ -70,6 +70,7 @@ import {
   type OgeMenuListHandle,
 } from '@oge-ui/react-overlay';
 import { useOgeEditorConfig } from './editor-config';
+import { ogeEditorSurfaceElements } from './editor-surface';
 
 const useIsomorphicLayoutEffect =
   typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -287,32 +288,45 @@ function EditorInner(props: InnerProps): ReactNode {
 
   const openLinkDialogRef = useRef<() => Promise<void>>(async () => undefined);
   const coreRef = useRef<OgeEditorCore | null>(null);
-  coreRef.current ??= new OgeEditorCore(createEditorAdapter(bump), {
-    options: () => ({
-      config: latest.current.resolved,
-      readOnly: latest.current.readOnly,
-      disabled: latest.current.disabled,
-      maxLength: latest.current.props.maxLength,
-    }),
-    valueChanged: (html, event) => {
-      const previousValue = valueRef.current;
-      valueRef.current = html;
-      if (latest.current.props.value === undefined) setUncontrolled(html);
-      setDirty(true);
-      latest.current.props.onValueChange?.(html);
-      if (previousValue !== html) {
-        latest.current.props.onValueCommitted?.({
-          value: html,
-          previousValue,
-          event,
-        });
-      }
-    },
-    requestLink: () => void openLinkDialogRef.current(),
-    pasting: (event) => latest.current.props.onPasting?.(event),
-    commandExecuted: (command, event) =>
-      latest.current.props.onCommandExecuted?.({ command, event }),
-  });
+  if (coreRef.current === null) {
+    // the initial value loads while rendering, silently (no re-render) and
+    // through the portable parser: the server render and the hydrating
+    // browser must hold the same model to produce the same markup
+    let live = false;
+    coreRef.current = new OgeEditorCore(
+      createEditorAdapter(() => {
+        if (live) bump();
+      }),
+      {
+        options: () => ({
+          config: latest.current.resolved,
+          readOnly: latest.current.readOnly,
+          disabled: latest.current.disabled,
+          maxLength: latest.current.props.maxLength,
+        }),
+        valueChanged: (html, event) => {
+          const previousValue = valueRef.current;
+          valueRef.current = html;
+          if (latest.current.props.value === undefined) setUncontrolled(html);
+          setDirty(true);
+          latest.current.props.onValueChange?.(html);
+          if (previousValue !== html) {
+            latest.current.props.onValueCommitted?.({
+              value: html,
+              previousValue,
+              event,
+            });
+          }
+        },
+        requestLink: () => void openLinkDialogRef.current(),
+        pasting: (event) => latest.current.props.onPasting?.(event),
+        commandExecuted: (command, event) =>
+          latest.current.props.onCommandExecuted?.({ command, event }),
+      },
+    );
+    coreRef.current.setValue(value, { parser: 'portable' });
+    live = true;
+  }
   const core = coreRef.current;
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -326,13 +340,30 @@ function EditorInner(props: InnerProps): ReactNode {
     core.setValue(value);
   }, [core, value]);
 
-  // StrictMode-safe lifetime: attach (or revive) on mount, destroy on unmount
+  // The surface's first render (server, hydration, client mount) is React
+  // elements built from the model; right after mount React drops them and
+  // the machine builds and owns the surface. Both happen before the browser
+  // paints, so the reader sees one continuous document.
+  const [initialSurface] = useState(() =>
+    ogeEditorSurfaceElements(core.state().doc, {
+      allowedSchemes: resolved.allowedSchemes,
+      allowDataImages: resolved.allowDataImages,
+    }),
+  );
+  const [handedOff, setHandedOff] = useState(false);
+
+  // StrictMode-safe lifetime: attach (or revive) once the surface is handed
+  // off, destroy on unmount
   useIsomorphicLayoutEffect(() => {
+    if (!handedOff) {
+      setHandedOff(true);
+      return;
+    }
     const element = contentRef.current;
     if (element) core.revive(element);
     if (latest.current.props.autofocus) core.focus();
     return () => core.destroy();
-  }, [core]);
+  }, [core, handedOff]);
 
   const active = core.active();
   const canUndo = core.canUndo();
@@ -830,7 +861,9 @@ function EditorInner(props: InnerProps): ReactNode {
             aria-placeholder={placeholder || undefined}
             spellCheck={props.spellcheck ?? true}
             data-name={props.name || undefined}
-          />
+          >
+            {handedOff ? null : initialSurface}
+          </div>
           {placeholder && empty && (
             <div className="oge-editor-placeholder" aria-hidden="true">
               {placeholder}

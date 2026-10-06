@@ -17,13 +17,29 @@ import type { OgeReactiveCell, OgeReactivityAdapter } from '@oge-ui/behavior';
 export interface OgeGridRxAdapter extends OgeReactivityAdapter {
   /** Invalidates every derived value — call once per render. */
   invalidate(): void;
+  /**
+   * Runs `write` without asking for a re-render: for state the render in
+   * progress writes before it reads it (the first page of a server or
+   * hydration render), where a re-render request would be a render-phase
+   * update.
+   */
+  quietly(write: () => void): void;
 }
 
 export function createGridRxAdapter(bump: () => void): OgeGridRxAdapter {
   let version = 0;
+  let quiet = 0;
   return {
     invalidate() {
       version += 1;
+    },
+    quietly(write) {
+      quiet += 1;
+      try {
+        write();
+      } finally {
+        quiet -= 1;
+      }
     },
     cell<T>(initial: T): OgeReactiveCell<T> {
       let value = initial;
@@ -32,7 +48,7 @@ export function createGridRxAdapter(bump: () => void): OgeGridRxAdapter {
         if (Object.is(value, next)) return;
         value = next;
         version += 1;
-        bump();
+        if (quiet === 0) bump();
       };
       return cell;
     },

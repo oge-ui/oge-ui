@@ -151,3 +151,38 @@ describe('DOM ↔ model points', () => {
     root.remove();
   });
 });
+
+describe('renderOgeEditorDom adopting a surface rendered elsewhere', () => {
+  const html = '<h2>T</h2><p>a <strong>b</strong></p><ul><li>c</li></ul>';
+  const copy = (from: Element) => {
+    const root = document.createElement('div');
+    root.append(...Array.from(from.childNodes).map((n) => n.cloneNode(true)));
+    return root;
+  };
+
+  it('keeps every server-built element that matches the model', () => {
+    // the "server" render (portable parser), copied as a browser would see it
+    const server = document.createElement('div');
+    renderOgeEditorDom(server, ogeEditorFromHtml(html, { parser: 'portable' }));
+    const root = copy(server);
+    const before = Array.from(root.childNodes);
+
+    renderOgeEditorDom(root, ogeEditorFromHtml(html));
+    expect(root.childNodes).toHaveLength(before.length);
+    Array.from(root.childNodes).forEach((n, i) => expect(n).toBe(before[i]));
+  });
+
+  it('rebuilds the elements that differ and keeps the rest', () => {
+    const first = document.createElement('div');
+    renderOgeEditorDom(first, ogeEditorFromHtml(html));
+    const root = copy(first);
+    const [h2, , list] = Array.from(root.childNodes);
+
+    renderOgeEditorDom(root, ogeEditorFromHtml(html.replace('a ', 'z ')));
+    const after = Array.from(root.childNodes);
+    expect(after).toHaveLength(3);
+    expect(after[0]).toBe(h2);
+    expect(after[2]).toBe(list);
+    expect(after[1].textContent).toBe('z b');
+  });
+});

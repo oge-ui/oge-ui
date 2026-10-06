@@ -92,5 +92,8 @@ class EditorHost {
 export const EDITOR: SsrFamily = {
   name: 'editor',
   host: EditorHost,
-  expect: ['oge-editor', 'Notes'],
+  expect: ['oge-editor', 'Release notes', '<strong>world</strong>'],
+  // the surface is built from the model on the server; the browser's
+  // editor adopts those elements instead of rebuilding them
+  survives: ['.oge-editor-content > h2', '.oge-editor-content > p'],
 };
