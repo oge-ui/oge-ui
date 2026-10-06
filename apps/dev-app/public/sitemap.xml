@@ -95,14 +95,14 @@
   <url><loc>https://www.ogeui.com/components/inputs/color-box</loc><lastmod>2026-08-14</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/color-gradient</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/color-palette</loc><lastmod>2026-10-04</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/inputs/rating</loc></url>
-  <url><loc>https://www.ogeui.com/components/inputs/otp-input</loc></url>
-  <url><loc>https://www.ogeui.com/components/inputs/signature-pad</loc></url>
-  <url><loc>https://www.ogeui.com/components/inputs/list-box</loc></url>
-  <url><loc>https://www.ogeui.com/components/inputs/transfer-list</loc></url>
-  <url><loc>https://www.ogeui.com/components/inputs/mention</loc></url>
+  <url><loc>https://www.ogeui.com/components/inputs/rating</loc><lastmod>2026-10-06</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/otp-input</loc><lastmod>2026-10-06</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/signature-pad</loc><lastmod>2026-10-06</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/list-box</loc><lastmod>2026-10-06</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/transfer-list</loc><lastmod>2026-10-06</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/mention</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/showcase</loc><lastmod>2026-10-05</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/inputs/api</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/api</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay</loc><lastmod>2026-08-23</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/overlay/tooltip-context-menu</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay/popover</loc><lastmod>2026-10-06</lastmod></url>
