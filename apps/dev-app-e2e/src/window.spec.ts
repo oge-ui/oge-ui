@@ -111,8 +111,10 @@ for (const layer of LAYERS) {
       await expect(win).toBeFocused();
       await page.keyboard.press('ArrowRight');
       await page.keyboard.press('ArrowRight');
-      const keyed = await box(win);
-      expect(Math.round(keyed.x - dragged.x)).toBe(20);
+      // the move lands on the next render — poll instead of reading once
+      await expect
+        .poll(async () => Math.round((await box(win)).x - dragged.x))
+        .toBe(20);
       await expect(page.getByTestId('drag-status')).toContainText('(keyboard)');
       await expect(
         page.locator('[data-oge-live-announcer="polite"]'),
@@ -141,12 +143,15 @@ for (const layer of LAYERS) {
       await expect(page.getByTestId('drag-status')).toContainText('resized');
       await win.focus();
       await page.keyboard.press('Control+ArrowLeft');
-      const narrower = await box(win);
-      expect(Math.round(resized.width - narrower.width)).toBe(10);
+      await expect
+        .poll(async () => Math.round(resized.width - (await box(win)).width))
+        .toBe(10);
       // the minimum holds
       for (let i = 0; i < 40; i++)
         await page.keyboard.press('Control+ArrowLeft');
-      expect(Math.round((await box(win)).width)).toBe(260);
+      await expect
+        .poll(async () => Math.round((await box(win)).width))
+        .toBe(260);
     });
 
     test('minimize, maximize and restore', async ({ page }) => {

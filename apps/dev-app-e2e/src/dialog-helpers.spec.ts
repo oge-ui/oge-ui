@@ -97,7 +97,10 @@ for (const layer of LAYERS) {
       await expect(result(page)).toHaveText('result: prompt → summary.xlsx');
 
       await helpers(page).getByRole('button', { name: 'Rename…' }).click();
+      // wait for the reopened prompt to take focus before dismissing it
+      await expect(dialog.getByLabel('File name')).toBeFocused();
       await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
       await expect(result(page)).toHaveText('result: prompt → null');
     });
 

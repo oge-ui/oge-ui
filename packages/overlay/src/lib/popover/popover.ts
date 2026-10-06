@@ -444,7 +444,9 @@ export class OgePopover {
   }
 
   private anchorElement(): HTMLElement | null {
-    return this.activeTrigger() ?? this.anchor() ?? this.triggers[0]?.() ?? null;
+    return (
+      this.activeTrigger() ?? this.anchor() ?? this.triggers[0]?.() ?? null
+    );
   }
 }
 
