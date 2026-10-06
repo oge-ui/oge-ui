@@ -500,7 +500,68 @@ export class App {
           icon: 'chevron-down',
         },
         {
+          path: '/components/buttons/fab',
+          label: 'FAB & Speed Dial',
+          icon: 'plus',
+        },
+        {
           path: '/components/buttons/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Avatar & Badge',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/avatar', label: 'Overview', icon: 'user' },
+        {
+          path: '/components/avatar/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Chip',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/chip', label: 'Overview', icon: 'tag' },
+        { path: '/components/chip/api', label: 'API Reference', icon: 'code' },
+      ],
+    },
+    {
+      title: 'Alert',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/alert', label: 'Overview', icon: 'alert' },
+        {
+          path: '/components/alert/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Timeline',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/timeline', label: 'Overview', icon: 'timeline' },
+        {
+          path: '/components/timeline/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'App Bar',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/app-bar', label: 'Overview', icon: 'app-bar' },
+        {
+          path: '/components/app-bar/api',
           label: 'API Reference',
           icon: 'code',
         },

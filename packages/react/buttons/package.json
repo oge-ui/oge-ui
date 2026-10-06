@@ -1,12 +1,14 @@
 {
   "name": "@oge-ui/react-buttons",
   "version": "1.1.2",
-  "description": "React buttons from the OGE UI suite: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat gestures — sharing the Angular suite's press machine and design tokens.",
+  "description": "React buttons from the OGE UI suite: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat gestures, a floating action button and a speed dial — sharing the Angular suite's press machine and design tokens.",
   "keywords": [
     "react",
     "button",
     "button-group",
     "toggle-group",
+    "fab",
+    "speed-dial",
     "accessibility",
     "design-system",
     "typescript"

@@ -1,7 +1,7 @@
 {
   "name": "@oge-ui/react-layout",
   "version": "1.1.2",
-  "description": "React layout containers and loading visuals from the OGE UI suite: accordion, splitter, toolbar, card, progress bar, load indicator and skeleton — running the same config defaults, message catalogs and stylesheet as the Angular layout package.",
+  "description": "React layout containers and loading visuals from the OGE UI suite: accordion, splitter, toolbar, card, progress bar, load indicator, skeleton, avatar, badge, chip, alert, timeline and app bar — running the same config defaults, message catalogs and stylesheet as the Angular layout package.",
   "keywords": [
     "react",
     "layout",
@@ -9,6 +9,12 @@
     "splitter",
     "toolbar",
     "card",
+    "avatar",
+    "badge",
+    "chip",
+    "alert",
+    "timeline",
+    "app-bar",
     "progress",
     "skeleton",
     "design-system",

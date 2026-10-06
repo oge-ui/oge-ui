@@ -30,6 +30,30 @@ import {
   type OgeSkeletonConfigInput,
   type OgeToolbarConfig,
   type OgeToolbarConfigInput,
+  OGE_DEFAULT_AVATAR_CONFIG,
+  resolveOgeAvatarConfig,
+  type OgeAvatarConfig,
+  type OgeAvatarConfigInput,
+  OGE_DEFAULT_BADGE_CONFIG,
+  resolveOgeBadgeConfig,
+  type OgeBadgeConfig,
+  type OgeBadgeConfigInput,
+  OGE_DEFAULT_CHIP_CONFIG,
+  resolveOgeChipConfig,
+  type OgeChipConfig,
+  type OgeChipConfigInput,
+  OGE_DEFAULT_ALERT_CONFIG,
+  resolveOgeAlertConfig,
+  type OgeAlertConfig,
+  type OgeAlertConfigInput,
+  OGE_DEFAULT_TIMELINE_CONFIG,
+  resolveOgeTimelineConfig,
+  type OgeTimelineConfig,
+  type OgeTimelineConfigInput,
+  OGE_DEFAULT_APP_BAR_CONFIG,
+  resolveOgeAppBarConfig,
+  type OgeAppBarConfig,
+  type OgeAppBarConfigInput,
 } from '@oge-ui/behavior';
 
 /**
@@ -180,3 +204,120 @@ export function OgeSplitterConfigProvider({
 
 export const useOgeSplitterConfig = (): OgeSplitterConfig =>
   useContext(SplitterContext);
+
+// --- layout and feedback components (W8a) -----------------------------------
+
+const AvatarContext = createContext<OgeAvatarConfig>(OGE_DEFAULT_AVATAR_CONFIG);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeAvatarConfig()`. */
+export function OgeAvatarConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeAvatarConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeAvatarConfig(config), [config]);
+  return (
+    <AvatarContext.Provider value={value}>{children}</AvatarContext.Provider>
+  );
+}
+
+export const useOgeAvatarConfig = (): OgeAvatarConfig =>
+  useContext(AvatarContext);
+
+const BadgeContext = createContext<OgeBadgeConfig>(OGE_DEFAULT_BADGE_CONFIG);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeBadgeConfig()`. */
+export function OgeBadgeConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeBadgeConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeBadgeConfig(config), [config]);
+  return (
+    <BadgeContext.Provider value={value}>{children}</BadgeContext.Provider>
+  );
+}
+
+export const useOgeBadgeConfig = (): OgeBadgeConfig => useContext(BadgeContext);
+
+const ChipContext = createContext<OgeChipConfig>(OGE_DEFAULT_CHIP_CONFIG);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeChipConfig()`. */
+export function OgeChipConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeChipConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeChipConfig(config), [config]);
+  return <ChipContext.Provider value={value}>{children}</ChipContext.Provider>;
+}
+
+export const useOgeChipConfig = (): OgeChipConfig => useContext(ChipContext);
+
+const AlertContext = createContext<OgeAlertConfig>(OGE_DEFAULT_ALERT_CONFIG);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeAlertConfig()`. */
+export function OgeAlertConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeAlertConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeAlertConfig(config), [config]);
+  return (
+    <AlertContext.Provider value={value}>{children}</AlertContext.Provider>
+  );
+}
+
+export const useOgeAlertConfig = (): OgeAlertConfig => useContext(AlertContext);
+
+const TimelineContext = createContext<OgeTimelineConfig>(
+  OGE_DEFAULT_TIMELINE_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeTimelineConfig()`. */
+export function OgeTimelineConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeTimelineConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeTimelineConfig(config), [config]);
+  return (
+    <TimelineContext.Provider value={value}>
+      {children}
+    </TimelineContext.Provider>
+  );
+}
+
+export const useOgeTimelineConfig = (): OgeTimelineConfig =>
+  useContext(TimelineContext);
+
+const AppBarContext = createContext<OgeAppBarConfig>(
+  OGE_DEFAULT_APP_BAR_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeAppBarConfig()`. */
+export function OgeAppBarConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeAppBarConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeAppBarConfig(config), [config]);
+  return (
+    <AppBarContext.Provider value={value}>{children}</AppBarContext.Provider>
+  );
+}
+
+export const useOgeAppBarConfig = (): OgeAppBarConfig =>
+  useContext(AppBarContext);

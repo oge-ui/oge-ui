@@ -1,6 +1,6 @@
 # @oge-ui/react-layout
 
-> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel — running the same config defaults, decision functions and stylesheet as the Angular layout package.
+> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar — running the same config defaults, decision functions and stylesheet as the Angular layout package.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -909,9 +909,914 @@ _OgeToolbarConfigProvider (config prop)_
 | --- | --- | --- |
 | `useOgeToolbarConfig()` | `() => OgeToolbarConfig` | Reads the resolved config of the current subtree — how a bar of your own picks up the same defaults and messages. The Angular counterpart is `inject(OGE_TOOLBAR_CONFIG)`. |
 
+### <OgeAvatar>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string \| undefined` | `—` | Person or entity name — the accessible name and the initials source (first letter of the first and last word, upper-cased in the locale). |
+| `src` | `string \| undefined` | `—` | Image URL. A failed load falls back to the initials, then the icon; a new `src` gets a fresh attempt. |
+| `initials` | `string \| undefined` | `—` | Explicit initials, overriding the ones derived from `name`. |
+| `icon` | `string \| undefined` | `person glyph` | SVG path data (`d`, 24×24 viewBox) of the last fallback; `OGE_AVATAR_ICON_PATH` by default. |
+| `size` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | `config → group → 'md'` | Size preset — 24 / 32 / 40 / 48 / 64 px. |
+| `shape` | `'circle' \| 'rounded' \| 'square'` | `config → group → 'circle'` | Outline; `rounded` uses `--oge-radius-lg`. |
+| `status` | `'online' \| 'away' \| 'busy' \| 'offline' \| undefined` | `—` | Presence dot (`aria-hidden`) — the presence label joins the accessible name through the `withStatus` message. Offline is a hollow ring, so the state never rides on colour alone. |
+| `decorative` | `boolean` | `false` | The name is already visible beside it: the host becomes `aria-hidden` with no role, so it is not read twice. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name override; otherwise `name`, else the catalog&rsquo;s `avatar` (the host is `role="img"`). |
+| `imageLoading` | `'lazy' \| 'eager'` | `'lazy'` | Native `loading` of the image. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the initials casing; `undefined` = config `locale` → the runtime default. |
+| `className / style` | `string / CSSProperties` | `—` | Host styling, merged onto the `.oge-avatar` element. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onImageLoaded` | `(event: OgeAvatarImageLoadedEvent) => void` | The image at `src` loaded. |
+| `onImageFailed` | `(event: OgeAvatarImageFailedEvent) => void` | The image at `src` failed; the avatar now shows its initials or icon. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAvatarSize` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | Size vocabulary. |
+| `OgeAvatarShape` | `'circle' \| 'rounded' \| 'square'` | Shape vocabulary. |
+| `OgeAvatarStatus` | `'online' \| 'away' \| 'busy' \| 'offline'` | Presence vocabulary. |
+| `OgeAvatarImageLoadedEvent` | `{ src: string; event: Event }` | Payload of `onImageLoaded`. |
+| `OgeAvatarImageFailedEvent` | `{ src: string; event: Event }` | Payload of `onImageFailed`. |
+| `OgeAvatarProps` | `interface` | Props of `<OgeAvatar>`. |
+
+### <OgeAvatarGroup>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeAvatarItem[]` | `[]` | Data-driven avatars, rendered before any `<OgeAvatar>` children. |
+| `max` | `number \| undefined` | `—` | Rendered circles **including** the "+N" one (minimum 2), so the row never grows past it; `undefined` renders all. |
+| `total` | `number \| undefined` | `—` | Full population of a partially loaded list — the members not in the list count into "+N". |
+| `size` | `OgeAvatarSize \| undefined` | `config → 'md'` | Size of every avatar in the group (a child&rsquo;s own `size` wins). |
+| `shape` | `OgeAvatarShape \| undefined` | `config → 'circle'` | Shape of every avatar in the group (a child&rsquo;s own `shape` wins). |
+| `overlap` | `boolean` | `true` | Stack the avatars with a ring in the page surface; `false` spaces them. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name; the host becomes `role="group"` once it has one. The surplus avatar is a `role="img"` named by the `overflow` message ("4 more"). |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the "+N" digits and its plural label; `undefined` = config → the runtime default. |
+| `children` | `ReactNode` | `—` | `<OgeAvatar>` children, rendered after `items`; the ones beyond the window are not rendered. |
+| `className / style` | `string / CSSProperties` | `—` | Host styling, merged onto the `.oge-avatar-group` element. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAvatarItem` | `{ key?; name?; src?; initials?; status?; icon? }` | One avatar of the data-driven `items`. |
+| `OgeAvatarGroupProps` | `interface` | Props of `<OgeAvatarGroup>`. |
+
+### <OgeBadge>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| string \| null \| undefined` | `null` | A count (digits in the locale), a short text shown verbatim, or `null` — no badge. |
+| `max` | `number \| undefined` | `config → 99` | Counts above it show the `overflow` pattern ("99+"). |
+| `dot` | `boolean` | `false` | A small dot instead of a value; described by the `dot` message. |
+| `showZero` | `boolean` | `false` | Show a `0` count — hidden by default, "nothing new" needs no badge. |
+| `invisible` | `boolean` | `false` | Force-hide the badge, e.g. while a count loads. |
+| `severity` | `'danger' \| 'accent' \| 'success' \| 'warning' \| 'neutral' \| undefined` | `config → 'danger'` | Colour; `danger` paints the `--oge-badge-bg` / `--oge-badge-color` tokens. |
+| `size` | `'sm' \| 'md'` | `'md'` | Size preset of the count badge (the dot has one size). |
+| `position` | `'top-end' \| 'top-start' \| 'bottom-end' \| 'bottom-start' \| undefined` | `config → 'top-end'` | Corner of the wrapped content — logical, so RTL mirrors it. |
+| `overlap` | `'rectangle' \| 'circle'` | `'rectangle'` | `circle` pulls the badge onto the outline of a round host (an avatar) instead of its bounding box. |
+| `description` | `string \| undefined` | `—` | Accessible text override. The default reads the catalog: "5 new items", "More than 99 new items", "New" for a dot, a text value itself. An overlay badge points the wrapped control&rsquo;s `aria-describedby` at it; a standalone one renders it visually hidden. |
+| `announce` | `boolean` | `false` | Speak later changes of the description through a polite live region. The initial value is never announced. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the digits and the plural description; `undefined` = config → the runtime default. |
+| `children` | `ReactNode` | `—` | The content the badge overlays (its anchor); without children the badge is standalone. |
+| `className / style` | `string / CSSProperties` | `—` | Host styling, merged onto the `.oge-badge` element. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBadgeValue` | `number \| string \| null \| undefined` | What a badge shows. |
+| `OgeBadgeSeverity` | `'danger' \| 'accent' \| 'success' \| 'warning' \| 'neutral'` | Colour vocabulary. |
+| `OgeBadgePosition` | `'top-end' \| 'top-start' \| 'bottom-end' \| 'bottom-start'` | Logical corner vocabulary. |
+| `OgeBadgeOverlap` | `'rectangle' \| 'circle'` | Shape of the wrapped content. |
+| `OgeBadgeSize` | `'sm' \| 'md'` | Size vocabulary. |
+| `OgeBadgeProps` | `interface` | Props of `<OgeBadge>`. |
+
+### Configuration
+
+#### Properties
+
+_OgeAvatarConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeAvatarMessages` | Every user-facing string: `avatar` (fallback name, "Avatar"), `withStatus` ("{name} ({status})"), the presence labels `online` / `away` / `busy` / `offline`, and `overflow` — the ICU plural naming the surplus avatar ("{count, plural, one {# more} other {# more}}"). |
+| `size / shape` | `—` | Defaults for the matching inputs of the avatar and the group. |
+| `locale` | `string \| undefined` | Default locale of the initials casing and the "+N" digits (`<OgeLocaleProvider>` sets it from the pack). |
+
+_OgeBadgeConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeBadgeMessages` | Every user-facing string: `count` (ICU plural, "5 new items"), `overflow` ("{max}+"), `overflowCount` ("More than 99 new items") and `dot` ("New"). |
+| `max / severity / position` | `—` | Defaults for the matching inputs. |
+| `locale` | `string \| undefined` | Default locale of the digits and the plural description. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAvatarConfig / OgeAvatarConfigInput` | `interface` | Resolved config and its partial input (`messages` merged one level deep). |
+| `OgeAvatarMessages` | `interface` | The avatar catalog (`layout.avatar` in the locale packs). |
+| `OgeBadgeConfig / OgeBadgeConfigInput` | `interface` | Resolved config and its partial input. |
+| `OgeBadgeMessages` | `interface` | The badge catalog (`layout.badge` in the locale packs). |
+| `useOgeAvatarConfig / useOgeBadgeConfig` | `hook` | Read the resolved config of the nearest provider. |
+| `OGE_DEFAULT_AVATAR_CONFIG / OGE_DEFAULT_AVATAR_MESSAGES / OGE_DEFAULT_BADGE_CONFIG / OGE_DEFAULT_BADGE_MESSAGES` | `const` | The English defaults (from `@oge-ui/behavior`). |
+
+### <OgeChip>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Visible text and accessible name. |
+| `icon` | `string` | `—` | SVG path data (`d`, 24×24 viewBox) of a leading `aria-hidden` icon. |
+| `avatar` | `OgeChipAvatar` | `—` | A small leading avatar — the image, else the initials, else a person glyph. Always `aria-hidden`. Wins over `icon`. |
+| `selectable` | `boolean` | `false` | Renders the chip as a toggle `<button aria-pressed>` with a check glyph for the pressed state. |
+| `selected` | `boolean` | `—` | Pressed state (controlled); `defaultSelected` is the uncontrolled initial value. |
+| `defaultSelected` | `boolean` | `false` | Initial pressed state when uncontrolled. |
+| `removable` | `boolean` | `false` | Adds a separate, real remove button named by the `remove` message (&ldquo;Remove {label}&rdquo;); Delete / Backspace on a selectable chip&rsquo;s toggle remove too. 24px target, 44px on coarse pointers. |
+| `disabled` | `boolean` | `false` | Disables the toggle and the remove button. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `config ?? 'md'` | Density preset — 24 / 28 / 34 px tall. |
+| `stylingMode` | `'filled' \| 'outlined'` | `config ?? 'filled'` | `filled` is the tinted surface, `outlined` a hairline frame on a transparent background. |
+| `severity` | `'neutral' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | `—` | Colour; `undefined` is the neutral chip. |
+| `ariaLabel` | `string` | `—` | Accessible name of the toggle when the label is not enough; also names the remove button. |
+| `className` | `string` | `—` | Extra classes on the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+#### Methods
+
+_Ref handle (OgeChipHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Focuses the toggle button, else the remove button. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectedChange` | `(selected: boolean) => void` | The pressed state a toggle committed. |
+| `onRemoved` | `(event: OgeChipRemovedEvent) => void` | The remove button (or Delete / Backspace) was pressed — hide the chip. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeChipProps` | `interface` | Props of `<OgeChip>`. |
+| `OgeChipHandle` | `{ focus(): void }` | The ref handle. |
+| `OgeChipAvatar` | `{ src?: string; name?: string; initials?: string }` | Leading avatar data of a chip. |
+| `OgeChipRemovedEvent` | `{ event?: Event }` | Payload of `onRemoved`. |
+| `OgeChipSeverity` | `'neutral' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Chip colour vocabulary. |
+| `OgeChipSize` | `'sm' \| 'md' \| 'lg'` | Density presets. |
+| `OgeChipStylingMode` | `'filled' \| 'outlined'` | Surface presets. |
+
+### <OgeChipList>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeChipItem[]` | `[]` | The chips, in order. `key` identifies a chip in every event; the list moves no data. |
+| `selectionMode` | `'none' \| 'single' \| 'multiple'` | `'none'` | Selection turns the list into a WAI-ARIA APG **listbox**; with `none`, removable chips form an APG layout **grid** and static chips a plain **list** (`ogeChipListRole`). A second press clears a `single` selection. |
+| `selectedKeys` | `readonly OgeChipKey[]` | `—` | Keys of the selected chips (controlled); `defaultSelectedKeys` is the uncontrolled initial value. |
+| `defaultSelectedKeys` | `readonly OgeChipKey[]` | `[]` | Initial selection when uncontrolled. |
+| `removable` | `boolean` | `false` | Default removability of every chip (`OgeChipItem.removable` overrides it). In a listbox the ✕ is `aria-hidden` and Delete / Backspace is the keyboard path; in a grid it is a real button. |
+| `disabled` | `boolean` | `false` | Disables every chip (`aria-disabled`): nothing toggles, nothing is removed. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `config ?? 'md'` | Density preset — 24 / 28 / 34 px tall. |
+| `stylingMode` | `'filled' \| 'outlined'` | `config ?? 'filled'` | `filled` is the tinted surface, `outlined` a hairline frame on a transparent background. |
+| `ariaLabel` | `string` | `—` | Accessible name; a listbox or grid falls back to the `chipList` message. |
+| `renderChip` | `(context: OgeChipRenderContext) => ReactNode` | `—` | Replaces every chip&rsquo;s label — the Angular `[ogeChipTemplate]`. Keep it non-interactive. |
+| `className` | `string` | `—` | Extra classes on the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+#### Methods
+
+_Ref handle (OgeChipListHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(index?)` | `(index?: number) => void` | Focuses the chip at `index` (default: the roving tab stop). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectedKeysChange` | `(keys: OgeChipKey[]) => void` | The committed selection. |
+| `onSelectionChanged` | `(event: OgeChipSelectionChangedEvent) => void` | A click, Space or Enter changed the selection: next and previous keys, the toggled item and index. |
+| `onItemClick` | `(event: OgeChipItemClickEvent) => void` | A chip was clicked or activated with Enter / Space. |
+| `onItemRemoving` | `(event: OgeChipItemRemovingEvent) => void` | Cancelable: a chip is about to be removed. Set `cancel` to keep it. |
+| `onItemRemoved` | `(event: OgeChipItemRemovedEvent) => void` | Drop the chip from `items` now; focus moves to its neighbour (Delete: next, Backspace: previous). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeChipListProps` | `interface` | Props of `<OgeChipList>`. |
+| `OgeChipListHandle` | `{ focus(index?: number): void }` | The ref handle. |
+| `OgeChipRenderContext` | `{ item; index; selected; removable; disabled }` | Argument of `renderChip`. |
+| `OgeChipItem` | `{ key; label; icon?; avatar?; disabled?; removable?; severity? }` | One chip. |
+| `OgeChipKey` | `string \| number` | Identity of a chip. |
+| `OgeChipSelectionMode` | `'none' \| 'single' \| 'multiple'` | Selection vocabulary. |
+| `OgeChipSelectionChangedEvent` | `{ selectedKeys; previousKeys; item; index; event? }` | Payload of `onSelectionChanged`. |
+| `OgeChipItemClickEvent` | `{ item; index; event }` | Payload of `onItemClick`. |
+| `OgeChipItemRemovingEvent` | `{ item; index; event?; cancel: boolean }` | Payload of `onItemRemoving`. |
+| `OgeChipItemRemovedEvent` | `{ item; index; event? }` | Payload of `onItemRemoved`. |
+
+### Configuration
+
+#### Properties
+
+_OgeChipConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeChipMessages` | Every user-facing string: `remove` (default `Remove {label}`) and `chipList` (default `Chips`). Translated in every `@oge-ui/locales` pack (`layout.chip`). |
+| `size / stylingMode` | `—` | Defaults for the matching props of both components. `useOgeChipConfig()` reads the resolved value. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeChipConfigProvider` | `({ config?, children }) => JSX.Element` | Subtree-scoped defaults. |
+| `useOgeChipConfig` | `() => OgeChipConfig` | Reads the resolved config. |
+| `OGE_DEFAULT_CHIP_CONFIG` | `OgeChipConfig` | The defaults. |
+| `OGE_DEFAULT_CHIP_MESSAGES` | `OgeChipMessages` | The English catalog. |
+| `OgeChipConfig` | `{ messages: OgeChipMessages; size?; stylingMode? }` | Resolved config shape. |
+| `OgeChipConfigInput` | `Partial<OgeChipConfig> with partial messages` | What the provider accepts. |
+| `OgeChipMessages` | `{ remove: string; chipList: string }` | The chip catalog. |
+
+### <OgeAlert>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `severity` | `'info' \| 'success' \| 'warning' \| 'error'` | `config ?? 'info'` | Meaning of the message — colour, glyph, hidden prefix and (with `live: auto`) the role: `error` / `warning` are `role="alert"`, `info` / `success` `role="status"`. |
+| `title` | `string` | `—` | Bold first line above the message; the severity prefix moves into it. |
+| `stylingMode` | `'soft' \| 'outlined' \| 'filled'` | `config ?? 'soft'` | `soft` is a tinted surface with a severity rail, `outlined` a coloured frame, `filled` the solid severity colour. |
+| `dismissible` | `boolean` | `false` | Renders a real dismiss button that runs the cancelable close; focus moves to the next tabbable element when the alert held it. |
+| `live` | `'auto' \| 'polite' \| 'assertive' \| 'off'` | `'auto'` | `auto` derives the role from the severity, `assertive` / `polite` force one, `off` renders none. The role stays while hidden, so showing again is announced. |
+| `showIcon` | `boolean` | `true` | Shows the severity glyph (or `icon`); `false` drops the icon column. |
+| `icon` | `ReactNode` | `—` | Replaces the default glyph inside an `aria-hidden` wrapper — the Angular `[ogeAlertIcon]`. |
+| `actions` | `ReactNode` | `—` | A row of real controls under the message — the Angular `[ogeAlertActions]`. |
+| `ariaLabel` | `string` | `—` | Accessible name of the live region — only written while it has a role. |
+| `visible` | `boolean` | `—` | Whether the alert is shown (controlled); `false` renders nothing and sets `hidden`. |
+| `defaultVisible` | `boolean` | `true` | Initial visibility when uncontrolled. |
+| `children` | `ReactNode` | `—` | The message. |
+| `className` | `string` | `—` | Extra classes on the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+#### Methods
+
+_Ref handle (OgeAlertHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `show()` | `() => void` | Shows the alert again. |
+| `close()` | `() => void` | Runs the cancelable close, as the dismiss button does. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onVisibleChange` | `(visible: boolean) => void` | The visibility a close / show committed. |
+| `onClosing` | `(event: OgeAlertClosingEvent) => void` | Cancelable: the alert is about to close. Set `cancel` to keep it. |
+| `onClosed` | `(event: OgeAlertClosedEvent) => void` | The alert closed. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAlertProps` | `interface` | Props of `<OgeAlert>`. |
+| `OgeAlertHandle` | `{ show(): void; close(): void }` | The ref handle. |
+| `OgeAlertSeverity` | `'info' \| 'success' \| 'warning' \| 'error'` | Severity vocabulary. |
+| `OgeAlertStylingMode` | `'soft' \| 'outlined' \| 'filled'` | Surface presets. |
+| `OgeAlertLive` | `'auto' \| 'polite' \| 'assertive' \| 'off'` | Live-region behaviour. |
+| `OgeAlertClosingEvent` | `{ event?: Event; cancel: boolean }` | Payload of `onClosing`. |
+| `OgeAlertClosedEvent` | `{ event?: Event }` | Payload of `onClosed`. |
+
+### Configuration
+
+#### Properties
+
+_OgeAlertConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeAlertMessages` | Every user-facing string: `dismiss` and the visually hidden severity prefixes `info` / `success` / `warning` / `error`. Translated in every `@oge-ui/locales` pack (`layout.alert`). |
+| `severity / stylingMode` | `—` | Defaults for the matching props. `useOgeAlertConfig()` reads the resolved value. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAlertConfigProvider` | `({ config?, children }) => JSX.Element` | Subtree-scoped defaults. |
+| `useOgeAlertConfig` | `() => OgeAlertConfig` | Reads the resolved config. |
+| `OGE_DEFAULT_ALERT_CONFIG` | `OgeAlertConfig` | The defaults. |
+| `OGE_DEFAULT_ALERT_MESSAGES` | `OgeAlertMessages` | The English catalog. |
+| `OgeAlertConfig` | `{ messages: OgeAlertMessages; severity?; stylingMode? }` | Resolved config shape. |
+| `OgeAlertConfigInput` | `Partial<OgeAlertConfig> with partial messages` | What the provider accepts. |
+| `OgeAlertMessages` | `{ dismiss; info; success; warning; error }` | The alert catalog. |
+
+### <OgeTimeline>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeTimelineItem[]` | `[]` | The entries, in display order — the list's order is its meaning. Fields: `key?`, `title?`, `description?`, `time?: Date \| string`, `opposite?`, `severity?`, `variant?`, `icon?` (SVG path data). |
+| `orientation` | `'vertical' \| 'horizontal'` | `config ?? 'vertical'` | Axis of the timeline. Horizontal entries share a row and the list scrolls inline when they do not fit. |
+| `align` | `'start' \| 'end' \| 'alternate' \| 'alternate-reverse'` | `config ?? 'end'` | Side of the axis the content sits on — logical, so RTL mirrors. `alternate` starts at the end side and swaps per entry, `alternate-reverse` starts at the start side; both render the opposite column (the entry&rsquo;s `opposite`, else its time). |
+| `dateFormat` | `Intl.DateTimeFormatOptions \| undefined` | `config ?? { dateStyle: 'medium', timeStyle: 'short' }` | Format of `Date` times (through the core Intl cache). String times are shown verbatim. |
+| `locale` | `string \| undefined` | `config ?? runtime locale` | BCP 47 locale of `Date` times. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the `<ol>` ("Order history"). Recommended when a page has more than one list. |
+| `renderContent` | `(context: OgeTimelineItemRenderContext) => ReactNode` | `—` | Replaces the built-in time / title / description block of every entry — the counterpart of `[ogeTimelineContentTemplate]`. Interactive content stays in the Tab order. |
+| `renderMarker` | `(context: OgeTimelineItemRenderContext) => ReactNode` | `—` | Replaces the dot on the axis. The marker column is `aria-hidden`, so say the same thing in the content. |
+| `renderOpposite` | `(context: OgeTimelineItemRenderContext) => ReactNode` | `—` | Replaces the opposite-side text of an alternating timeline. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-timeline` root. |
+
+#### Types
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTimelineItemRenderContext` | `{ item: OgeTimelineItem; index: number; side: 'start' \| 'end'; first: boolean; last: boolean }` | Argument of all three render props. |
+| `OgeTimelineProps` | `interface` | Props of `<OgeTimeline>`. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTimelineItem` | `interface` | One entry: `key?`, `title?`, `description?`, `time?: Date \| string`, `opposite?`, `severity?`, `variant?`, `icon?` (SVG path data). A `Date` time is written into `<time dateTime>` from its local fields (never `toISOString`). |
+| `OgeTimelineOrientation` | `'vertical' \| 'horizontal'` | Axis union. |
+| `OgeTimelineAlign` | `'start' \| 'end' \| 'alternate' \| 'alternate-reverse'` | Content side union. |
+| `OgeTimelineSeverity` | `'accent' \| 'neutral' \| 'success' \| 'warning' \| 'danger'` | Marker colour union (default `accent`). |
+| `OgeTimelineMarkerVariant` | `'filled' \| 'outlined'` | Solid marker, or a ring for pending / future entries. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTimelineConfigProvider` | `(props: { config?: OgeTimelineConfigInput; children?: ReactNode }) => JSX.Element` | Subtree defaults for `orientation`, `align`, `dateFormat` and `locale` — the React counterpart of `provideOgeTimelineConfig()`. There is deliberately no `messages` block: the timeline renders no user-facing strings of its own. |
+| `useOgeTimelineConfig()` | `() => OgeTimelineConfig` | Reads the resolved config of the nearest provider, merged over `OGE_DEFAULT_TIMELINE_CONFIG`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTimelineConfig / OgeTimelineConfigInput` | `interface` | The config shape (`orientation?`, `align?`, `dateFormat?`, `locale?`) and its partial input; `OGE_DEFAULT_TIMELINE_CONFIG` is the resolved default. |
+
+### <OgeAppBar>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `position` | `'top' \| 'bottom'` | `config ?? 'top'` | Edge the bar belongs to — decides the hairline and shadow side, the sticky / fixed edge and which safe-area inset pads it. |
+| `positionMode` | `'static' \| 'sticky' \| 'fixed'` | `config ?? 'static'` | `sticky` sticks to its edge of the nearest scroll container, `fixed` pins to the viewport (full width, inline safe-area insets). Both use the `--oge-z-app-bar` layer and pad with `env(safe-area-inset-*)` as a floor. |
+| `color` | `'default' \| 'primary' \| 'inverse' \| 'transparent'` | `config ?? 'default'` | Surface: the page surface with a hairline, the accent, the dark tooltip surface, or none. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `config ?? 'md'` | Density preset — 48 / 56 / 64 px rows. |
+| `elevated` | `boolean` | `false` | Draws a shadow on the bar&rsquo;s content edge. |
+| `landmark` | `'none' \| 'banner' \| 'contentinfo' \| 'navigation' \| 'region'` | `'none'` | Landmark role, only on request: `banner` for the one page header, `contentinfo` for a page footer, `navigation` / `region` (with `ariaLabel`) for a named secondary bar. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the landmark — written only when `landmark` is not `none` (a role-less element may not carry one). |
+| `centerAlign` | `'start' \| 'center'` | `'start'` | Alignment of the center section&rsquo;s content. |
+| `start` | `ReactNode` | `—` | Start section content — the counterpart of `[ogeAppBarStart]`. |
+| `center` | `ReactNode` | `—` | Center section content rendered before `children` — the counterpart of `[ogeAppBarCenter]`. |
+| `end` | `ReactNode` | `—` | End section content — the counterpart of `[ogeAppBarEnd]`. |
+| `children` | `ReactNode` | `—` | Center section content (the title) — like unmarked projected content in Angular. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-app-bar` root. |
+
+#### Types
+
+_Section props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAppBarProps` | `interface` | Props of `<OgeAppBar>`, including the `start` / `center` / `end` section nodes. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAppBarPosition` | `'top' \| 'bottom'` | Edge union. |
+| `OgeAppBarPositionMode` | `'static' \| 'sticky' \| 'fixed'` | Positioning union. |
+| `OgeAppBarColor` | `'default' \| 'primary' \| 'inverse' \| 'transparent'` | Surface union. |
+| `OgeAppBarSize` | `'sm' \| 'md' \| 'lg'` | Density union. |
+| `OgeAppBarLandmark` | `'none' \| 'banner' \| 'contentinfo' \| 'navigation' \| 'region'` | Landmark union. |
+| `OgeAppBarCenterAlign` | `'start' \| 'center'` | Center alignment union. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAppBarConfigProvider` | `(props: { config?: OgeAppBarConfigInput; children?: ReactNode }) => JSX.Element` | Subtree defaults for `position`, `positionMode`, `color` and `size` — the React counterpart of `provideOgeAppBarConfig()`. There is deliberately no `messages` block: the bar renders no user-facing strings. |
+| `useOgeAppBarConfig()` | `() => OgeAppBarConfig` | Reads the resolved config of the nearest provider, merged over `OGE_DEFAULT_APP_BAR_CONFIG`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAppBarConfig / OgeAppBarConfigInput` | `interface` | The config shape and its partial input; `OGE_DEFAULT_APP_BAR_CONFIG` is the resolved default. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Severities
+
+```ts
+'use client';
+
+import { OgeAlert } from '@oge-ui/react-layout';
+
+export function AlertSeveritiesDemo() {
+  return (
+    <>
+      <OgeAlert severity="info">A new version is available.</OgeAlert>
+      <OgeAlert severity="success">Your changes were saved.</OgeAlert>
+      <OgeAlert severity="warning">Your trial ends in three days.</OgeAlert>
+      <OgeAlert severity="error">The payment could not be processed.</OgeAlert>
+    </>
+  );
+}
+```
+
+### Styling modes
+
+```ts
+'use client';
+
+import { OgeAlert } from '@oge-ui/react-layout';
+
+export function AlertModesDemo() {
+  return (
+    <>
+      <OgeAlert severity="success" stylingMode="soft">Soft</OgeAlert>
+      <OgeAlert severity="success" stylingMode="outlined">Outlined</OgeAlert>
+      <OgeAlert severity="success" stylingMode="filled">Filled</OgeAlert>
+    </>
+  );
+}
+```
+
+### Title, actions & dismiss
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAlert } from '@oge-ui/react-layout';
+
+export function AlertDismissDemo() {
+  const [visible, setVisible] = useState(true);
+  return (
+    <>
+      <OgeAlert
+        severity="warning"
+        title="Storage almost full"
+        dismissible
+        visible={visible}
+        onVisibleChange={setVisible}
+        actions={<button type="button">Manage storage</button>}
+      >
+        You have used 92% of your quota.
+      </OgeAlert>
+      {!visible && (
+        <button type="button" onClick={() => setVisible(true)}>
+          Show again
+        </button>
+      )}
+    </>
+  );
+}
+```
+
+### Live regions
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAlert } from '@oge-ui/react-layout';
+
+export function AlertLiveDemo() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setSaved(!saved)}>
+        Toggle saved
+      </button>
+      <OgeAlert severity="success" visible={saved} onVisibleChange={setSaved}>
+        Draft saved.
+      </OgeAlert>
+      <OgeAlert severity="info" live="off">
+        This page is read-only.
+      </OgeAlert>
+    </>
+  );
+}
+```
+
+### Custom icon
+
+```ts
+'use client';
+
+import { OgeAlert } from '@oge-ui/react-layout';
+
+export function AlertIconDemo() {
+  return (
+    <>
+      <OgeAlert
+        severity="info"
+        title="Tip"
+        icon={
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z" />
+          </svg>
+        }
+      >
+        Press <kbd>?</kbd> to see every keyboard shortcut.
+      </OgeAlert>
+      <OgeAlert severity="info" showIcon={false}>
+        No icon at all.
+      </OgeAlert>
+    </>
+  );
+}
+```
+
+### Sections
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAppBar } from '@oge-ui/react-layout';
+
+export function AppBarSectionsDemo() {
+  const [last, setLast] = useState('—');
+  return (
+    <>
+      <OgeAppBar
+        start={
+          <button type="button" aria-label="Open menu" onClick={() => setLast('menu')}>
+            ☰
+          </button>
+        }
+        end={
+          <>
+            <button type="button" onClick={() => setLast('search')}>Search</button>
+            <button type="button" onClick={() => setLast('profile')}>Profile</button>
+          </>
+        }
+      >
+        <strong>Inbox</strong>
+      </OgeAppBar>
+      <p>last action → {last}</p>
+    </>
+  );
+}
+```
+
+### Colors & sizes
+
+```ts
+'use client';
+
+import { OgeAppBar } from '@oge-ui/react-layout';
+
+export function AppBarColorsDemo() {
+  return (
+    <>
+      <OgeAppBar size="sm"><strong>Default · sm</strong></OgeAppBar>
+      <OgeAppBar color="primary" elevated end={<button type="button">Action</button>}>
+        <strong>Primary · elevated</strong>
+      </OgeAppBar>
+      <OgeAppBar color="inverse" size="lg" centerAlign="center">
+        <strong>Inverse · lg · centered</strong>
+      </OgeAppBar>
+      <OgeAppBar color="transparent"><strong>Transparent</strong></OgeAppBar>
+    </>
+  );
+}
+```
+
+### Sticky & fixed (safe areas)
+
+```ts
+'use client';
+
+import { OgeAppBar } from '@oge-ui/react-layout';
+
+const paragraphs = Array.from(
+  { length: 8 },
+  (_, i) => `Paragraph ${i + 1}: scroll inside this box — the bar stays on top.`,
+);
+
+export function AppBarStickyDemo() {
+  return (
+    <div
+      role="region"
+      aria-label="Scrolling article"
+      tabIndex={0}
+      style={{ maxHeight: 240, overflow: 'auto' }}
+    >
+      <OgeAppBar positionMode="sticky" elevated end={<button type="button">Share</button>}>
+        <strong>Article</strong>
+      </OgeAppBar>
+      {paragraphs.map((paragraph) => (
+        <p key={paragraph}>{paragraph}</p>
+      ))}
+    </div>
+  );
+}
+```
+
+### Bottom bar
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAppBar } from '@oge-ui/react-layout';
+
+const messages = Array.from({ length: 8 }, (_, i) => `Message ${i + 1}`);
+const tabs = ['home', 'search', 'me'] as const;
+
+export function AppBarBottomDemo() {
+  const [tab, setTab] = useState<string>('home');
+  return (
+    <div
+      role="region"
+      aria-label="Phone screen"
+      tabIndex={0}
+      style={{ maxHeight: 240, overflow: 'auto' }}
+    >
+      {messages.map((message) => (
+        <p key={message}>{message}</p>
+      ))}
+      <OgeAppBar position="bottom" positionMode="sticky" centerAlign="center">
+        {tabs.map((option) => (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={tab === option}
+            onClick={() => setTab(option)}
+          >
+            {option}
+          </button>
+        ))}
+      </OgeAppBar>
+    </div>
+  );
+}
+```
+
+### Landmarks
+
+```ts
+'use client';
+
+import { OgeAppBar } from '@oge-ui/react-layout';
+
+export function AppBarLandmarkDemo() {
+  return (
+    <OgeAppBar
+      landmark="navigation"
+      ariaLabel="Project"
+      color="inverse"
+      size="sm"
+      start={<strong>Project</strong>}
+    >
+      <a href="#landmarks">Overview</a>
+      <a href="#landmarks">Issues</a>
+      <a href="#landmarks">Settings</a>
+    </OgeAppBar>
+  );
+}
+```
+
+### Image, initials & icon
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAvatar } from '@oge-ui/react-layout';
+
+export function AvatarContentDemo() {
+  const [failed, setFailed] = useState('');
+  return (
+    <>
+      {/* role="img" named by the name; the image, the initials and the icon are
+          aria-hidden content of it. */}
+      <OgeAvatar name="OGE UI" src="/logo.png" />
+      <OgeAvatar
+        name="Ada Lovelace"
+        src="/missing-avatar.png"
+        onImageFailed={(event) => setFailed(event.src)}
+      />
+      <OgeAvatar name="Grace Hopper" initials="GH" />
+      <OgeAvatar ariaLabel="Guest" />
+      <p>imageFailed → {failed || '—'}</p>
+    </>
+  );
+}
+```
+
+### Sizes & shapes
+
+```ts
+'use client';
+
+import { OgeAvatar } from '@oge-ui/react-layout';
+
+const sizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
+
+export function AvatarSizesDemo() {
+  return (
+    <>
+      {sizes.map((size) => (
+        <OgeAvatar key={size} name="Ada Lovelace" size={size} />
+      ))}
+      <OgeAvatar name="Grace Hopper" size="lg" shape="rounded" />
+      <OgeAvatar name="Alan Turing" size="lg" shape="square" />
+    </>
+  );
+}
+```
+
+### Presence status
+
+```ts
+'use client';
+
+import { OgeAvatar } from '@oge-ui/react-layout';
+
+export function AvatarStatusDemo() {
+  return (
+    <>
+      <OgeAvatar name="Ada Lovelace" status="online" />
+      <OgeAvatar name="Grace Hopper" status="away" />
+      <OgeAvatar name="Alan Turing" status="busy" />
+      <OgeAvatar name="Edsger Dijkstra" status="offline" />
+      <span>
+        <OgeAvatar name="Ada Lovelace" size="sm" decorative />
+        Ada Lovelace
+      </span>
+    </>
+  );
+}
+```
+
+### Avatar group
+
+```ts
+'use client';
+
+import { OgeAvatar, OgeAvatarGroup } from '@oge-ui/react-layout';
+import type { OgeAvatarItem } from '@oge-ui/react-layout';
+
+const team: OgeAvatarItem[] = [
+  { key: 1, name: 'Ada Lovelace', status: 'online' },
+  { key: 2, name: 'Grace Hopper' },
+  { key: 3, name: 'Alan Turing', status: 'away' },
+  { key: 4, name: 'Edsger Dijkstra' },
+  { key: 5, name: 'Barbara Liskov' },
+  { key: 6, name: 'Donald Knuth' },
+];
+// three of 24 reviewers are loaded — total counts the rest into "+N"
+const reviewers = team.slice(0, 3);
+
+export function AvatarGroupDemo() {
+  return (
+    <>
+      <OgeAvatarGroup items={team} max={4} ariaLabel="Project team" />
+      <OgeAvatarGroup
+        items={reviewers}
+        max={4}
+        total={24}
+        size="sm"
+        ariaLabel="Reviewers"
+      />
+      <OgeAvatarGroup overlap={false} ariaLabel="On call">
+        <OgeAvatar name="Ada Lovelace" status="online" />
+        <OgeAvatar name="Grace Hopper" status="busy" />
+      </OgeAvatarGroup>
+    </>
+  );
+}
+```
+
+### Badge on an element
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAvatar, OgeBadge } from '@oge-ui/react-layout';
+
+export function BadgeOverlayDemo() {
+  const [unread, setUnread] = useState(5);
+  return (
+    <>
+      <OgeBadge value={unread}>
+        <button type="button" onClick={() => setUnread(unread + 1)}>
+          Inbox
+        </button>
+      </OgeBadge>
+      <OgeBadge value={120} severity="accent" position="bottom-end">
+        <button type="button">Notifications</button>
+      </OgeBadge>
+      <OgeBadge dot severity="success" overlap="circle" description="Available">
+        <OgeAvatar name="Grace Hopper" />
+      </OgeBadge>
+    </>
+  );
+}
+```
+
+### Standalone badge & dot
+
+```ts
+'use client';
+
+import { OgeBadge } from '@oge-ui/react-layout';
+
+export function BadgeStandaloneDemo() {
+  return (
+    <>
+      <span>Messages <OgeBadge value={3} /></span>
+      <span>Plan <OgeBadge value="Beta" severity="accent" /></span>
+      <span>Updates <OgeBadge dot description="New updates" /></span>
+      <span>
+        Errors <OgeBadge value={0} showZero severity="neutral" size="sm" />
+      </span>
+    </>
+  );
+}
+```
+
+### Live announcements
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeBadge } from '@oge-ui/react-layout';
+
+export function BadgeAnnounceDemo() {
+  const [cart, setCart] = useState(1);
+  return (
+    <>
+      <OgeBadge value={cart} announce description={`${cart} items in cart`}>
+        <button type="button">Cart</button>
+      </OgeBadge>
+      <button type="button" onClick={() => setCart(cart + 1)}>
+        Add item
+      </button>
+    </>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeAvatar, OgeAvatarConfigProvider, OgeBadge, OgeBadgeConfigProvider } from '@oge-ui/react-layout';
+
+export function AvatarConfigDemo() {
+  return (
+    <OgeAvatarConfigProvider
+      config={{ size: 'sm', messages: { busy: 'In a meeting' } }}
+    >
+      <OgeBadgeConfigProvider config={{ max: 9, severity: 'accent' }}>
+        <OgeAvatar name="Ada Lovelace" status="busy" />
+        <OgeBadge value={12} />
+      </OgeBadgeConfigProvider>
+    </OgeAvatarConfigProvider>
+  );
+}
+```
 
 ### Basics
 
@@ -1254,6 +2159,209 @@ export function CardClickableDemo() {
         </a>
       </OgeCard>
     </div>
+  );
+}
+```
+
+### Chips
+
+```ts
+'use client';
+
+import { OgeChip } from '@oge-ui/react-layout';
+
+const STAR = 'M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z';
+
+export function ChipBasicsDemo() {
+  return (
+    <>
+      <OgeChip label="Angular" />
+      <OgeChip label="Featured" icon={STAR} severity="accent" />
+      <OgeChip label="Ada Lovelace" avatar={{ name: 'Ada Lovelace' }} />
+      <OgeChip label="Passed" severity="success" stylingMode="outlined" />
+      <OgeChip label="Blocked" severity="danger" size="sm" />
+    </>
+  );
+}
+```
+
+### Selectable chips
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChip } from '@oge-ui/react-layout';
+
+export function ChipSelectableDemo() {
+  const [remote, setRemote] = useState(true);
+  const [fullTime, setFullTime] = useState(false);
+  return (
+    <>
+      <OgeChip label="Remote" selectable selected={remote} onSelectedChange={setRemote} />
+      <OgeChip label="Full-time" selectable selected={fullTime} onSelectedChange={setFullTime} />
+      <p>
+        remote: {String(remote)} · full-time: {String(fullTime)}
+      </p>
+    </>
+  );
+}
+```
+
+### Removable chips
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChip } from '@oge-ui/react-layout';
+
+export function ChipRemovableDemo() {
+  const [tags, setTags] = useState(['Design', 'Research', 'Writing']);
+  return (
+    <>
+      {tags.map((tag) => (
+        <OgeChip
+          key={tag}
+          label={tag}
+          removable
+          onRemoved={() => setTags((current) => current.filter((t) => t !== tag))}
+        />
+      ))}
+    </>
+  );
+}
+```
+
+### Chip list — single selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChipList } from '@oge-ui/react-layout';
+import type { OgeChipItem, OgeChipKey } from '@oge-ui/react-layout';
+
+const SIZES: OgeChipItem[] = [
+  { key: 's', label: 'Small' },
+  { key: 'm', label: 'Medium' },
+  { key: 'l', label: 'Large' },
+  { key: 'xl', label: 'X-Large', disabled: true },
+];
+
+export function ChipSingleDemo() {
+  const [size, setSize] = useState<readonly OgeChipKey[]>(['m']);
+  return (
+    <OgeChipList
+      items={SIZES}
+      selectionMode="single"
+      selectedKeys={size}
+      onSelectedKeysChange={setSize}
+      ariaLabel="Size"
+    />
+  );
+}
+```
+
+### Chip list — multiple selection (filters)
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChipList } from '@oge-ui/react-layout';
+import type { OgeChipItem, OgeChipKey } from '@oge-ui/react-layout';
+
+const FILTERS: OgeChipItem[] = [
+  { key: 'open', label: 'Open' },
+  { key: 'mine', label: 'Assigned to me' },
+  { key: 'bug', label: 'Bug', severity: 'danger' },
+  { key: 'docs', label: 'Docs', severity: 'accent' },
+];
+
+export function ChipMultipleDemo() {
+  const [active, setActive] = useState<readonly OgeChipKey[]>(['open']);
+  const [last, setLast] = useState('—');
+  return (
+    <>
+      <OgeChipList
+        items={FILTERS}
+        selectionMode="multiple"
+        selectedKeys={active}
+        onSelectedKeysChange={setActive}
+        ariaLabel="Filters"
+        onSelectionChanged={(event) => setLast(event.item.label)}
+      />
+      <p>
+        active: {active.join(', ') || 'none'} · last: {last}
+      </p>
+    </>
+  );
+}
+```
+
+### Removable list (APG grid)
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChipList } from '@oge-ui/react-layout';
+import type { OgeChipItem } from '@oge-ui/react-layout';
+
+const PEOPLE: OgeChipItem[] = [
+  { key: 1, label: 'Ada Lovelace', avatar: { name: 'Ada Lovelace' } },
+  { key: 2, label: 'Grace Hopper', avatar: { name: 'Grace Hopper' } },
+  { key: 3, label: 'Alan Turing', avatar: { name: 'Alan Turing' } },
+  { key: 4, label: 'Katherine Johnson', avatar: { name: 'Katherine Johnson' } },
+];
+
+export function ChipGridDemo() {
+  const [people, setPeople] = useState(PEOPLE);
+  return (
+    <OgeChipList
+      items={people}
+      removable
+      ariaLabel="Recipients"
+      onItemRemoved={(event) =>
+        setPeople((current) => current.filter((p) => p.key !== event.item.key))
+      }
+    />
+  );
+}
+```
+
+### Custom chip template
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChipList } from '@oge-ui/react-layout';
+import type { OgeChipItem, OgeChipKey } from '@oge-ui/react-layout';
+
+const LANGUAGES: OgeChipItem[] = [
+  { key: 'ts', label: 'TypeScript' },
+  { key: 'rs', label: 'Rust' },
+  { key: 'go', label: 'Go' },
+];
+const COUNTS: Record<string, number> = { ts: 128, rs: 42, go: 37 };
+
+export function ChipTemplateDemo() {
+  const [picked, setPicked] = useState<readonly OgeChipKey[]>(['ts']);
+  return (
+    <OgeChipList
+      items={LANGUAGES}
+      selectionMode="multiple"
+      selectedKeys={picked}
+      onSelectedKeysChange={setPicked}
+      ariaLabel="Languages"
+      renderChip={({ item }) => (
+        <>
+          <strong>{item.label}</strong> <span className="opacity-70">{COUNTS[item.key]}</span>
+        </>
+      )}
+    />
   );
 }
 ```
@@ -2496,6 +3604,192 @@ export function SplitterPersistDemo() {
         { content: <div>Left</div> },
         { content: <div>Right</div> },
       ]}
+    />
+  );
+}
+```
+
+### Vertical timeline
+
+```ts
+'use client';
+
+import { OgeTimeline } from '@oge-ui/react-layout';
+import type { OgeTimelineItem } from '@oge-ui/react-layout';
+
+const order: OgeTimelineItem[] = [
+  {
+    key: 'placed',
+    title: 'Order placed',
+    description: 'Payment confirmed by card ending 4242.',
+    time: new Date(2026, 2, 14, 9, 30),
+    severity: 'success',
+  },
+  {
+    key: 'packed',
+    title: 'Packed',
+    description: 'Two parcels, 3.4 kg.',
+    time: new Date(2026, 2, 14, 16, 5),
+  },
+  {
+    key: 'shipped',
+    title: 'Shipped',
+    description: 'Handed to the carrier in Istanbul.',
+    time: new Date(2026, 2, 15, 8, 0),
+  },
+  {
+    key: 'delivered',
+    title: 'Delivery expected',
+    time: 'Tomorrow, 10:00–14:00',
+    variant: 'outlined',
+    severity: 'neutral',
+  },
+];
+
+export function TimelineVerticalDemo() {
+  return (
+    <OgeTimeline items={order} ariaLabel="Order history" />
+  );
+}
+```
+
+### Alignment & alternating
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTimeline } from '@oge-ui/react-layout';
+import type { OgeTimelineAlign, OgeTimelineItem } from '@oge-ui/react-layout';
+
+const order: OgeTimelineItem[] = [
+  {
+    key: 'placed',
+    title: 'Order placed',
+    description: 'Payment confirmed by card ending 4242.',
+    time: new Date(2026, 2, 14, 9, 30),
+    severity: 'success',
+  },
+  {
+    key: 'packed',
+    title: 'Packed',
+    description: 'Two parcels, 3.4 kg.',
+    time: new Date(2026, 2, 14, 16, 5),
+  },
+  {
+    key: 'shipped',
+    title: 'Shipped',
+    description: 'Handed to the carrier in Istanbul.',
+    time: new Date(2026, 2, 15, 8, 0),
+  },
+  {
+    key: 'delivered',
+    title: 'Delivery expected',
+    time: 'Tomorrow, 10:00–14:00',
+    variant: 'outlined',
+    severity: 'neutral',
+  },
+];
+
+export function TimelineAlignDemo() {
+  const [align, setAlign] = useState<OgeTimelineAlign>('alternate');
+  return (
+    <>
+      <label>
+        Align
+        <select
+          value={align}
+          onChange={(event) => setAlign(event.target.value as OgeTimelineAlign)}
+        >
+          <option value="end">end</option>
+          <option value="start">start</option>
+          <option value="alternate">alternate</option>
+          <option value="alternate-reverse">alternate-reverse</option>
+        </select>
+      </label>
+      <OgeTimeline items={order} align={align} ariaLabel="Order history, aligned" />
+    </>
+  );
+}
+```
+
+### Horizontal timeline
+
+```ts
+'use client';
+
+import { OgeTimeline } from '@oge-ui/react-layout';
+import type { OgeTimelineItem } from '@oge-ui/react-layout';
+
+const releases: OgeTimelineItem[] = [
+  { title: '1.0', description: 'Data grid', opposite: 'Jan 2026' },
+  { title: '1.1', description: 'React layer', opposite: 'Jun 2026' },
+  { title: '1.2', description: 'Feedback components', opposite: 'Oct 2026' },
+  { title: '1.3', description: 'Planned', opposite: 'Q1 2027', variant: 'outlined' },
+];
+
+export function TimelineHorizontalDemo() {
+  return (
+    <OgeTimeline
+      orientation="horizontal"
+      align="alternate"
+      items={releases}
+      ariaLabel="Release history"
+    />
+  );
+}
+```
+
+### Markers, icons & severities
+
+```ts
+'use client';
+
+import { OgeTimeline } from '@oge-ui/react-layout';
+import type { OgeTimelineItem } from '@oge-ui/react-layout';
+
+const deploys: OgeTimelineItem[] = [
+  { title: 'Build passed', time: '09:12', severity: 'success', icon: 'M20 6 9 17l-5-5' },
+  { title: 'Canary at 5 %', time: '09:20', severity: 'accent', icon: 'M4 22V4m0 0h13l-2 4 2 4H4' },
+  { title: 'Error rate above budget', time: '09:41', severity: 'warning', icon: 'M12 9v4m0 3.5h.01' },
+  { title: 'Rolled back', time: '09:43', severity: 'danger', icon: 'M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5' },
+  { title: 'Retry scheduled', time: '14:00', severity: 'neutral', variant: 'outlined' },
+];
+
+export function TimelineMarkersDemo() {
+  return (
+    <OgeTimeline items={deploys} ariaLabel="Deployments" />
+  );
+}
+```
+
+### Custom templates
+
+```ts
+'use client';
+
+import { OgeTimeline } from '@oge-ui/react-layout';
+import type { OgeTimelineItem } from '@oge-ui/react-layout';
+
+const steps: OgeTimelineItem[] = [
+  { title: 'Create a workspace', description: 'Name it and invite your team.' },
+  { title: 'Connect a data source', description: 'REST, OData or a plain array.' },
+  { title: 'Publish a dashboard', description: 'Share a read-only link.' },
+];
+
+export function TimelineTemplatesDemo() {
+  return (
+    <OgeTimeline
+      items={steps}
+      ariaLabel="Onboarding"
+      renderMarker={({ index }) => <span className="step-number">{index + 1}</span>}
+      renderContent={({ item }) => (
+        <>
+          <strong>{item.title}</strong>
+          <span>{item.description}</span>
+          <a href="#timeline-help">Learn more</a>
+        </>
+      )}
     />
   );
 }

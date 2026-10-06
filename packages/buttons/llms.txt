@@ -1,6 +1,6 @@
 # @oge-ui/buttons
 
-> Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, stand-alone toggle buttons with `aria-pressed`, button groups and drop-down/split buttons.
+> Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, stand-alone toggle buttons with `aria-pressed`, button groups, drop-down/split buttons, and (`@oge-ui/buttons/fab`) a floating action button pinned with safe-area insets plus a speed dial on the WAI-ARIA APG menu-button pattern.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/buttons
@@ -92,8 +92,10 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/buttons`
 
-- values: `OGE_BUTTONS_CONFIG`, `OGE_BUTTON_GROUP`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OgeButton`, `OgeButtonGroup`, `OgeButtonIcon`, `OgeDropDownButton`, `OgeDropDownContent`, `provideOgeButtonsConfig`
-- types: `OgeAutoRepeatOptions`, `OgeButtonActionDoneEvent`, `OgeButtonActionFailedEvent`, `OgeButtonClickEvent`, `OgeButtonGroupContext`, `OgeButtonGroupItem`, `OgeButtonGroupItemClickEvent`, `OgeButtonGroupSelectionChangedEvent`, `OgeButtonGroupSelectionMode`, `OgeButtonIconPosition`, `OgeButtonSelectedChangedEvent`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeClickGuardOptions`, `OgeDropDownButtonItemClickEvent`, `OgeDropDownContentContext`, `OgeDropDownItemsFn`, `OgeDropDownSelectionChangedEvent`, `OgeHoldToConfirmOptions`
+- values: `OGE_BUTTONS_CONFIG`, `OGE_BUTTON_GROUP`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_FAB_CONFIG`, `OGE_DEFAULT_FAB_MESSAGES`, `OGE_FAB_CONFIG`, `OgeButton`, `OgeButtonGroup`, `OgeButtonIcon`, `OgeDropDownButton`, `OgeDropDownContent`, `OgeFab`, `OgeSpeedDial`, `provideOgeButtonsConfig`, `provideOgeFabConfig`
+- types: `OgeAutoRepeatOptions`, `OgeButtonActionDoneEvent`, `OgeButtonActionFailedEvent`, `OgeButtonClickEvent`, `OgeButtonGroupContext`, `OgeButtonGroupItem`, `OgeButtonGroupItemClickEvent`, `OgeButtonGroupSelectionChangedEvent`, `OgeButtonGroupSelectionMode`, `OgeButtonIconPosition`, `OgeButtonSelectedChangedEvent`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeClickGuardOptions`, `OgeDropDownButtonItemClickEvent`, `OgeDropDownContentContext`, `OgeDropDownItemsFn`, `OgeDropDownSelectionChangedEvent`, `OgeFabClickEvent`, `OgeFabConfig`, `OgeFabConfigInput`, `OgeFabMessages`, `OgeFabPosition`, `OgeFabPositionMode`, `OgeFabSeverity`, `OgeFabSize`, `OgeHoldToConfirmOptions`, `OgeSpeedDialDirection`, `OgeSpeedDialItem`, `OgeSpeedDialItemClickEvent`, `OgeSpeedDialLabelMode`, `OgeSpeedDialOpenMode`
+
+`@oge-ui/buttons/*`
 
 ## API reference
 
@@ -282,6 +284,94 @@ _Drop-down panel_
 | `OgeDropDownSelectionChangedEvent` | `{ item: OgeMenuItem; previousItem: OgeMenuItem \| null }` | Remembered-item change in `rememberLastAction` mode. |
 | `OgeDropDownContent` | `directive — [ogeDropDownContent]` | Replaces the item menu with arbitrary panel content; context `{ $implicit: () => void }` closes the panel and restores focus. |
 
+### OgeFab — `<oge-fab>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Accessible name of the icon-only FAB (`aria-label`) — and its visible text when `extended`. Always set it. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`, 24×24 viewBox, stroked) of the icon. Project your own `aria-hidden` icon instead for an icon font or component. |
+| `extended` | `boolean` | `false` | Shows the label as text beside the icon in a pill (Material's extended FAB); the label is then the button's content, not an `aria-label`. |
+| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Corner or edge the FAB is pinned to; `start`/`end` are logical and mirror in RTL. Falls back to the config. |
+| `positionMode` | `'fixed' \| 'absolute' \| 'static'` | `'fixed'` | `fixed` pins to the viewport with `max(offset, env(safe-area-inset-*))` on the touched edges, `absolute` pins to the nearest positioned ancestor, `static` leaves it in the flow. Fixed and absolute layers sit on `--oge-z-fab` (below windows, popups and modals). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
+| `severity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill colour — the button severity vocabulary; `normal` is the page surface with a hairline. |
+| `offset` | `string \| undefined` | `'16px'` | Gap to the pinned edges (any CSS length), written to the `--oge-fab-offset` knob; the safe-area inset stays its floor. |
+| `disabled` | `boolean` | `false` | Disables the FAB. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves focus to the button. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `clicked` | `OgeFabClickEvent` | The FAB was pressed (not emitted while disabled). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFabClickEvent` | `{ event: Event }` | Payload of `clicked`. |
+| `OgeFabPosition / OgeFabPositionMode / OgeFabSize / OgeFabSeverity` | `string unions` | The vocabularies above, single-sourced in `@oge-ui/behavior`. |
+
+### OgeSpeedDial — `<oge-speed-dial>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeSpeedDialItem[]` | `[]` | The actions, nearest the FAB first — each a `role="menuitem"` named by its `label`. |
+| `label` | `string \| undefined` | `—` | Accessible name of the FAB and the menu; falls back to `messages.speedDial` (`Actions`). |
+| `icon` | `string \| undefined` | `—` | SVG path data of the FAB glyph; default a plus that turns 45° into an ✕ while open. |
+| `direction` | `'up' \| 'down' \| 'start' \| 'end' \| undefined` | `—` | Unfold direction; default away from the pinned edge — up from a bottom FAB, down from a top one (`ogeSpeedDialDirection`). The arrow keys follow it. |
+| `openMode` | `'click' \| 'hover'` | `'click'` | `hover` also opens the dial while a mouse hovers it (never on touch); hover never moves focus. |
+| `labelMode` | `'hover' \| 'always' \| 'none'` | `'hover'` | Action labels: beside the hovered / keyboard-focused action (always on `hover: none` screens), beside every action while open, or visually hidden — the label stays the accessible name in every mode. |
+| `opened` | `boolean` | `false` | Whether the actions are shown — a two-way `model()` (`[(opened)]`). The closed menu is not rendered. |
+| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Corner or edge the FAB is pinned to; `start`/`end` are logical and mirror in RTL. Falls back to the config. |
+| `positionMode` | `'fixed' \| 'absolute' \| 'static'` | `'fixed'` | `fixed` pins to the viewport with `max(offset, env(safe-area-inset-*))` on the touched edges, `absolute` pins to the nearest positioned ancestor, `static` leaves it in the flow. Fixed and absolute layers sit on `--oge-z-fab` (below windows, popups and modals). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
+| `severity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill colour — the button severity vocabulary; `normal` is the page surface with a hairline. |
+| `offset` | `string \| undefined` | `'16px'` | Gap to the pinned edges (any CSS length), written to the `--oge-fab-offset` knob; the safe-area inset stays its floor. |
+| `disabled` | `boolean` | `false` | Disables the FAB. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(): void` | `void` | Opens the dial; focus stays where it is (the click and arrow-key paths move it into the menu). |
+| `close(): void` | `void` | Closes the dial. |
+| `toggle(): void` | `void` | Toggles `opened`. |
+| `focus(): void` | `void` | Moves focus to the FAB. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeSpeedDialItemClickEvent` | An enabled action was activated (click, Enter or Space); the dial then closes and focus returns to the FAB. |
+| `openedChange` | `boolean` | Implicit output of the `opened` model — fires on open and close, any reason (press, Escape, Tab, outside press). |
+
+#### Types
+
+_Keyboard (WAI-ARIA APG menu button)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Enter / Space / click` | `FAB` | Toggles the dial; opening moves focus to the first enabled action. |
+| `Arrow along the dial / back` | `FAB` | Opens with focus on the first (nearest) / last action (`ogeSpeedDialToggleKey`). |
+| `Arrows · Home · End` | `action` | Move along the dial axis and wrap, skipping disabled actions (`ogeSpeedDialItemKey`, `ogeSpeedDialNavIndex`); horizontal dials mirror in RTL. |
+| `Escape / Tab` | `action` | Escape closes and returns focus to the FAB; Tab closes and lets focus move on. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSpeedDialItem` | `{ key: string \| number; label: string; icon?: string; disabled?: boolean; severity?: OgeFabSeverity }` | One action; a disabled action is `aria-disabled`, inert to clicks and skipped by the arrows. |
+| `OgeSpeedDialItemClickEvent` | `{ item: OgeSpeedDialItem; index: number; event: Event }` | Payload of `itemClick`. |
+| `OgeSpeedDialDirection / OgeSpeedDialOpenMode / OgeSpeedDialLabelMode` | `string unions` | The vocabularies above, single-sourced in `@oge-ui/behavior`. |
+
 ### Buttons configuration
 
 #### Methods
@@ -316,6 +406,17 @@ _OgeButtonsMessages_
 | `dropDownToggle` | `string` | `'Open menu'` | Aria label of the split drop-down's chevron toggle. |
 | `adaptiveClose` | `string` | `'Close'` | Aria label of the adaptive menu sheet's close button. |
 | `adaptiveTitle` | `string` | `'Actions'` | Sheet title when the button has no `text` or `hint`. |
+
+### FAB configuration
+
+#### Properties
+
+_provideOgeFabConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeFabMessages` | Every user-facing string: `speedDial` — the speed dial&rsquo;s accessible name fallback (default `Actions`; `fab` slice of the locale packs). |
+| `position / positionMode / size / severity` | `—` | Defaults for the matching inputs of both `oge-fab` and `oge-speed-dial`. |
 
 ## Demos
 
@@ -526,6 +627,246 @@ export class Demo {
 
   protected run(target: unknown): void {
     console.log('run', target);
+  }
+}
+```
+
+### Directions
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSpeedDial } from '@oge-ui/buttons';
+import type { OgeSpeedDialItem } from '@oge-ui/buttons';
+
+const DOC = 'M6 3h9l4 4v14H6zM14 3v5h5';
+const IMAGE = 'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4';
+const MAIL = 'M3 6h18v12H3zM3 6l9 7 9-7';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSpeedDial],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- direction overrides the default (away from the pinned edge);
+         labelMode "always" shows every label while open, "none" keeps them as
+         accessible names only. -->
+    <div style="position: relative; height: 240px">
+      <oge-speed-dial
+        label="New file"
+        positionMode="absolute"
+        position="bottom-end"
+        direction="start"
+        labelMode="none"
+        [items]="files"
+      />
+      <oge-speed-dial
+        label="Insert"
+        positionMode="absolute"
+        position="top-start"
+        labelMode="always"
+        size="sm"
+        [items]="files"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly files: OgeSpeedDialItem[] = [
+    { key: 'doc', label: 'Document', icon: DOC },
+    { key: 'image', label: 'Image', icon: IMAGE },
+    { key: 'mail', label: 'Email draft', icon: MAIL, disabled: true },
+  ];
+}
+```
+
+### Extended
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeFab } from '@oge-ui/buttons';
+
+const PENCIL = 'M4 20h4L19 9l-4-4L4 16v4Z';
+const SHARE = 'M4 12v7h16v-7M12 3v12M7 8l5-5 5 5';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeFab],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- extended shows the label as text beside the icon (a pill);
+         size and severity follow the button vocabulary. -->
+    <oge-fab label="Compose" [icon]="pencil" [extended]="true" positionMode="static" />
+    <oge-fab label="Share" [icon]="share" size="sm" severity="normal" positionMode="static" />
+    <oge-fab label="Share" [icon]="share" severity="success" positionMode="static" />
+    <oge-fab label="Share" [icon]="share" size="lg" severity="danger" positionMode="static" />
+  `,
+})
+export class Demo {
+  protected readonly pencil = PENCIL;
+  protected readonly share = SHARE;
+}
+```
+
+### Fab
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeFab } from '@oge-ui/buttons';
+
+const PENCIL = 'M4 20h4L19 9l-4-4L4 16v4Z';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeFab],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- An icon-only FAB is named by its label. positionMode="absolute"
+         pins it inside the nearest positioned ancestor; the default "fixed"
+         pins it to the viewport, with safe-area insets as a floor. -->
+    <div style="position: relative; height: 224px">
+      <oge-fab
+        label="Compose"
+        [icon]="pencil"
+        positionMode="absolute"
+        (clicked)="compose()"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly pencil = PENCIL;
+
+  protected compose(): void {
+    console.log('compose');
+  }
+}
+```
+
+### Hover
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSpeedDial } from '@oge-ui/buttons';
+import type { OgeSpeedDialItem } from '@oge-ui/buttons';
+
+const MAIL = 'M3 6h18v12H3zM3 6l9 7 9-7';
+const SHARE = 'M4 12v7h16v-7M12 3v12M7 8l5-5 5 5';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSpeedDial],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- openMode="hover" also opens while a mouse hovers the dial (never
+         on touch, where a tap is the only gesture). Hover does not move focus;
+         a click still opens it with focus on the first action. -->
+    <div style="position: relative; height: 224px">
+      <oge-speed-dial
+        label="Quick actions"
+        openMode="hover"
+        positionMode="absolute"
+        severity="normal"
+        [items]="quick"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly quick: OgeSpeedDialItem[] = [
+    { key: 'share', label: 'Share', icon: SHARE },
+    { key: 'mail', label: 'Email', icon: MAIL },
+  ];
+}
+```
+
+### Positions
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeFab } from '@oge-ui/buttons';
+import type { OgeFabPosition } from '@oge-ui/buttons';
+
+const PENCIL = 'M4 20h4L19 9l-4-4L4 16v4Z';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeFab],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Six logical positions (start/end mirror in RTL). Pinned edges
+         use max(offset, env(safe-area-inset-*)), so the FAB clears a phone's
+         home indicator once the app opts into viewport-fit=cover. -->
+    <div style="position: relative; height: 256px">
+      @for (position of positions; track position) {
+        <oge-fab
+          [label]="position"
+          [icon]="pencil"
+          size="sm"
+          positionMode="absolute"
+          [position]="position"
+          offset="12px"
+        />
+      }
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly pencil = PENCIL;
+  protected readonly positions: OgeFabPosition[] = [
+    'top-start',
+    'top-center',
+    'top-end',
+    'bottom-start',
+    'bottom-center',
+    'bottom-end',
+  ];
+}
+```
+
+### Speed dial
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSpeedDial } from '@oge-ui/buttons';
+import type { OgeSpeedDialItem, OgeSpeedDialItemClickEvent } from '@oge-ui/buttons';
+
+const MAIL = 'M3 6h18v12H3zM3 6l9 7 9-7';
+const PRINT = 'M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z';
+const SHARE = 'M4 12v7h16v-7M12 3v12M7 8l5-5 5 5';
+const TRASH = 'M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSpeedDial],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The APG menu button pattern on a FAB: Enter, Space, a click or the
+         arrow pointing along the dial opens it on the nearest action; the
+         arrows move and wrap, Escape returns focus to the FAB. -->
+    <div style="position: relative; height: 288px">
+      <oge-speed-dial
+        label="Share options"
+        positionMode="absolute"
+        [items]="actions"
+        [(opened)]="opened"
+        (itemClick)="run($event)"
+      />
+    </div>
+    <p>Last action: {{ last() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(false);
+  protected readonly last = signal('none');
+  protected readonly actions: OgeSpeedDialItem[] = [
+    { key: 'mail', label: 'Email', icon: MAIL },
+    { key: 'print', label: 'Print', icon: PRINT },
+    { key: 'share', label: 'Copy link', icon: SHARE },
+    { key: 'delete', label: 'Delete', icon: TRASH, severity: 'danger' },
+  ];
+
+  protected run(event: OgeSpeedDialItemClickEvent): void {
+    this.last.set(event.item.label);
   }
 }
 ```

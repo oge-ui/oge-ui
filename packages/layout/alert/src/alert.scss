@@ -1,0 +1,191 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// An inline message: tinted surface + a severity rail on the inline-start
+// edge + glyph + visually hidden prefix — meaning never rides on colour.
+.oge-alert {
+  @include tokens.core-tokens;
+
+  --oge-alert-tone: var(--oge-accent);
+  --oge-alert-bg: var(--oge-accent-soft);
+  --oge-alert-fg: var(--oge-text-color);
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 12px;
+  box-sizing: border-box;
+  padding-block: 12px;
+  padding-inline: 14px 10px;
+  border: 1px solid transparent;
+  border-inline-start: 4px solid var(--oge-alert-tone);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-alert-bg);
+  color: var(--oge-alert-fg);
+  font-size: var(--oge-font-size);
+  line-height: 1.45;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  &[hidden] {
+    display: none;
+  }
+
+  .oge-sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+.oge-alert-no-icon {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.oge-alert-success {
+  --oge-alert-tone: var(--oge-success);
+  --oge-alert-bg: var(--oge-success-soft);
+}
+
+.oge-alert-warning {
+  --oge-alert-tone: var(--oge-warning);
+  --oge-alert-bg: var(--oge-warning-soft);
+}
+
+.oge-alert-error {
+  --oge-alert-tone: var(--oge-danger);
+  --oge-alert-bg: var(--oge-danger-soft);
+}
+
+.oge-alert-outlined {
+  --oge-alert-bg: var(--oge-bg);
+
+  border-color: var(--oge-alert-tone);
+}
+
+.oge-alert-filled {
+  --oge-alert-bg: var(--oge-alert-tone);
+  --oge-alert-fg: var(--oge-severity-contrast);
+
+  .oge-alert-icon {
+    color: inherit;
+  }
+
+  .oge-alert-dismiss {
+    color: inherit;
+
+    &:hover {
+      background: color-mix(in srgb, currentColor 16%, transparent);
+    }
+  }
+}
+
+.oge-alert-icon {
+  display: inline-flex;
+  margin-block-start: 1px;
+  color: var(--oge-alert-tone);
+
+  svg {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.oge-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.oge-alert-title {
+  font-weight: 600;
+}
+
+.oge-alert-message:empty {
+  display: none;
+}
+
+.oge-alert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 8px;
+}
+
+.oge-alert-dismiss {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-input-muted);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  @include tokens.hit-area;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-alert,
+  .oge-alert-dismiss {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-alert {
+    border: 1px solid CanvasText;
+    border-inline-start-width: 4px;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-alert-icon,
+  .oge-alert-dismiss {
+    color: CanvasText;
+  }
+}

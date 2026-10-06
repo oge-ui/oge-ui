@@ -1,6 +1,6 @@
 # @oge-ui/layout
 
-> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right.
+> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_CARD_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeCardConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeToolbarConfig`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeChipConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 `@oge-ui/layout/*`
 
@@ -872,9 +872,908 @@ _provideOgeToolbarConfig()_
 | `messages.scrollForward` | `string` | `'Scroll forward'` | Accessible name of the forward scroll button. |
 | `messages.noData` | `string` | `'No commands to display'` | Shown when the toolbar has no items of its own and nothing is projected into a slot (the reference `noDataText`). |
 
+### OgeAvatar — `<oge-avatar>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string \| undefined` | `—` | Person or entity name — the accessible name and the initials source (first letter of the first and last word, upper-cased in the locale). |
+| `src` | `string \| undefined` | `—` | Image URL. A failed load falls back to the initials, then the icon; a new `src` gets a fresh attempt. |
+| `initials` | `string \| undefined` | `—` | Explicit initials, overriding the ones derived from `name`. |
+| `icon` | `string \| undefined` | `person glyph` | SVG path data (`d`, 24×24 viewBox) of the last fallback; `OGE_AVATAR_ICON_PATH` by default. |
+| `size` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | `config → group → 'md'` | Size preset — 24 / 32 / 40 / 48 / 64 px. |
+| `shape` | `'circle' \| 'rounded' \| 'square'` | `config → group → 'circle'` | Outline; `rounded` uses `--oge-radius-lg`. |
+| `status` | `'online' \| 'away' \| 'busy' \| 'offline' \| undefined` | `—` | Presence dot (`aria-hidden`) — the presence label joins the accessible name through the `withStatus` message. Offline is a hollow ring, so the state never rides on colour alone. |
+| `decorative` | `boolean` | `false` | The name is already visible beside it: the host becomes `aria-hidden` with no role, so it is not read twice. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name override; otherwise `name`, else the catalog&rsquo;s `avatar` (the host is `role="img"`). |
+| `imageLoading` | `'lazy' \| 'eager'` | `'lazy'` | Native `loading` of the image. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the initials casing; `undefined` = config `locale` → `LOCALE_ID`. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `imageLoaded` | `OgeAvatarImageLoadedEvent` | The image at `src` loaded. |
+| `imageFailed` | `OgeAvatarImageFailedEvent` | The image at `src` failed; the avatar now shows its initials or icon. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAvatarSize` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | Size vocabulary. |
+| `OgeAvatarShape` | `'circle' \| 'rounded' \| 'square'` | Shape vocabulary. |
+| `OgeAvatarStatus` | `'online' \| 'away' \| 'busy' \| 'offline'` | Presence vocabulary. |
+| `OgeAvatarImageLoadedEvent` | `{ src: string; event: Event }` | Payload of `imageLoaded`. |
+| `OgeAvatarImageFailedEvent` | `{ src: string; event: Event }` | Payload of `imageFailed`. |
+
+### OgeAvatarGroup — `<oge-avatar-group>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeAvatarItem[]` | `[]` | Data-driven avatars, rendered before any projected `<oge-avatar>` children. |
+| `max` | `number \| undefined` | `—` | Rendered circles **including** the "+N" one (minimum 2), so the row never grows past it; `undefined` renders all. |
+| `total` | `number \| undefined` | `—` | Full population of a partially loaded list — the members not in the list count into "+N". |
+| `size` | `OgeAvatarSize \| undefined` | `config → 'md'` | Size of every avatar in the group (a child&rsquo;s own `size` wins). |
+| `shape` | `OgeAvatarShape \| undefined` | `config → 'circle'` | Shape of every avatar in the group (a child&rsquo;s own `shape` wins). |
+| `overlap` | `boolean` | `true` | Stack the avatars with a ring in the page surface; `false` spaces them. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name; the host becomes `role="group"` once it has one. The surplus avatar is a `role="img"` named by the `overflow` message ("4 more"). |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the "+N" digits and its plural label; `undefined` = config → `LOCALE_ID`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAvatarItem` | `{ key?; name?; src?; initials?; status?; icon? }` | One avatar of the data-driven `items`. |
+
+### OgeBadge — `<oge-badge>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| string \| null \| undefined` | `null` | A count (digits in the locale), a short text shown verbatim, or `null` — no badge. |
+| `max` | `number \| undefined` | `config → 99` | Counts above it show the `overflow` pattern ("99+"). |
+| `dot` | `boolean` | `false` | A small dot instead of a value; described by the `dot` message. |
+| `showZero` | `boolean` | `false` | Show a `0` count — hidden by default, "nothing new" needs no badge. |
+| `invisible` | `boolean` | `false` | Force-hide the badge, e.g. while a count loads. |
+| `severity` | `'danger' \| 'accent' \| 'success' \| 'warning' \| 'neutral' \| undefined` | `config → 'danger'` | Colour; `danger` paints the `--oge-badge-bg` / `--oge-badge-color` tokens. |
+| `size` | `'sm' \| 'md'` | `'md'` | Size preset of the count badge (the dot has one size). |
+| `position` | `'top-end' \| 'top-start' \| 'bottom-end' \| 'bottom-start' \| undefined` | `config → 'top-end'` | Corner of the wrapped content — logical, so RTL mirrors it. |
+| `overlap` | `'rectangle' \| 'circle'` | `'rectangle'` | `circle` pulls the badge onto the outline of a round host (an avatar) instead of its bounding box. |
+| `description` | `string \| undefined` | `—` | Accessible text override. The default reads the catalog: "5 new items", "More than 99 new items", "New" for a dot, a text value itself. An overlay badge points the wrapped control&rsquo;s `aria-describedby` at it; a standalone one renders it visually hidden. |
+| `announce` | `boolean` | `false` | Speak later changes of the description through a polite live region. The initial value is never announced. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the digits and the plural description; `undefined` = config → `LOCALE_ID`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBadgeValue` | `number \| string \| null \| undefined` | What a badge shows. |
+| `OgeBadgeSeverity` | `'danger' \| 'accent' \| 'success' \| 'warning' \| 'neutral'` | Colour vocabulary. |
+| `OgeBadgePosition` | `'top-end' \| 'top-start' \| 'bottom-end' \| 'bottom-start'` | Logical corner vocabulary. |
+| `OgeBadgeOverlap` | `'rectangle' \| 'circle'` | Shape of the wrapped content. |
+| `OgeBadgeSize` | `'sm' \| 'md'` | Size vocabulary. |
+
+### Configuration
+
+#### Properties
+
+_provideOgeAvatarConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeAvatarMessages` | Every user-facing string: `avatar` (fallback name, "Avatar"), `withStatus` ("{name} ({status})"), the presence labels `online` / `away` / `busy` / `offline`, and `overflow` — the ICU plural naming the surplus avatar ("{count, plural, one {# more} other {# more}}"). |
+| `size / shape` | `—` | Defaults for the matching inputs of the avatar and the group. |
+| `locale` | `string \| undefined` | Default locale of the initials casing and the "+N" digits (`provideOgeLocale()` sets it from the pack). |
+
+_provideOgeBadgeConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeBadgeMessages` | Every user-facing string: `count` (ICU plural, "5 new items"), `overflow` ("{max}+"), `overflowCount` ("More than 99 new items") and `dot` ("New"). |
+| `max / severity / position` | `—` | Defaults for the matching inputs. |
+| `locale` | `string \| undefined` | Default locale of the digits and the plural description. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAvatarConfig / OgeAvatarConfigInput` | `interface` | Resolved config and its partial input (`messages` merged one level deep). |
+| `OgeAvatarMessages` | `interface` | The avatar catalog (`layout.avatar` in the locale packs). |
+| `OgeBadgeConfig / OgeBadgeConfigInput` | `interface` | Resolved config and its partial input. |
+| `OgeBadgeMessages` | `interface` | The badge catalog (`layout.badge` in the locale packs). |
+| `OGE_AVATAR_CONFIG / OGE_BADGE_CONFIG` | `InjectionToken` | The DI tokens the providers write. |
+| `OGE_DEFAULT_AVATAR_CONFIG / OGE_DEFAULT_AVATAR_MESSAGES / OGE_DEFAULT_BADGE_CONFIG / OGE_DEFAULT_BADGE_MESSAGES` | `const` | The English defaults (from `@oge-ui/behavior`). |
+
+### OgeChip — `<oge-chip>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Visible text and accessible name. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`, 24×24 viewBox) of a leading `aria-hidden` icon. |
+| `avatar` | `OgeChipAvatar \| undefined` | `—` | A small leading avatar — the image, else the initials (from `initials` or `name`), else a person glyph. Always `aria-hidden`: the label is the name. Wins over `icon`. |
+| `selectable` | `boolean` | `false` | Renders the chip as a toggle `<button aria-pressed>` with a check glyph for the pressed state. |
+| `selected` | `boolean (model)` | `false` | Pressed state of a `selectable` chip — two-way `[(selected)]`. |
+| `removable` | `boolean` | `false` | Adds a separate, real remove button named by the `remove` message (&ldquo;Remove {label}&rdquo;); Delete / Backspace on a selectable chip&rsquo;s toggle remove too (`aria-keyshortcuts`). 24px target, 44px on coarse pointers. |
+| `disabled` | `boolean` | `false` | Disables the toggle and the remove button. |
+| `size` | `'sm' \| 'md' \| 'lg' \| undefined` | `config ?? 'md'` | Density preset — 24 / 28 / 34 px tall. |
+| `stylingMode` | `'filled' \| 'outlined' \| undefined` | `config ?? 'filled'` | `filled` is the tinted surface, `outlined` a hairline frame on a transparent background. |
+| `severity` | `'neutral' \| 'accent' \| 'success' \| 'warning' \| 'danger' \| undefined` | `—` | Colour; `undefined` is the neutral chip. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the toggle when the label is not enough; also names the remove button. A static chip is plain text, so its name is always the label. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Focuses the toggle button, else the remove button. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectedChange` | `boolean` | The banana half of `[(selected)]`. |
+| `removed` | `OgeChipRemovedEvent` | The remove button (or Delete / Backspace) was pressed — hide the chip. The chip moves no data. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeChipAvatar` | `{ src?: string; name?: string; initials?: string }` | Leading avatar data of a chip. |
+| `OgeChipRemovedEvent` | `{ event?: Event }` | Payload of `removed`. |
+| `OgeChipSeverity` | `'neutral' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Chip colour vocabulary. |
+| `OgeChipSize` | `'sm' \| 'md' \| 'lg'` | Density presets. |
+| `OgeChipStylingMode` | `'filled' \| 'outlined'` | Surface presets. |
+
+### OgeChipList — `<oge-chip-list>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeChipItem[]` | `[]` | The chips, in order. `key` identifies a chip in every event; the list moves no data. |
+| `selectionMode` | `'none' \| 'single' \| 'multiple'` | `'none'` | Selection turns the list into a WAI-ARIA APG **listbox** (options with `aria-selected`, `aria-multiselectable` for `multiple`). With `none`, removable chips form an APG layout **grid** and static chips a plain **list** (`ogeChipListRole`). A second press clears a `single` selection. |
+| `selectedKeys` | `readonly OgeChipKey[] (model)` | `[]` | Keys of the selected chips — two-way. |
+| `removable` | `boolean` | `false` | Default removability of every chip (`OgeChipItem.removable` overrides it). In a listbox the ✕ is an `aria-hidden` glyph and Delete / Backspace (`aria-keyshortcuts`) is the keyboard path; in a grid it is a real button in its own cell. |
+| `disabled` | `boolean` | `false` | Disables every chip (`aria-disabled`): nothing toggles, nothing is removed. |
+| `size` | `'sm' \| 'md' \| 'lg' \| undefined` | `config ?? 'md'` | Density preset — 24 / 28 / 34 px tall. |
+| `stylingMode` | `'filled' \| 'outlined' \| undefined` | `config ?? 'filled'` | `filled` is the tinted surface, `outlined` a hairline frame on a transparent background. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name; a listbox or grid falls back to the `chipList` message, a static list stays unnamed. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(index?)` | `(index?: number) => void` | Focuses the chip at `index` (default: the roving tab stop). A static list ignores it. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectedKeysChange` | `OgeChipKey[]` | The banana half of `[(selectedKeys)]`. |
+| `selectionChanged` | `OgeChipSelectionChangedEvent` | A click, Space or Enter changed the selection: `selectedKeys`, `previousKeys`, the toggled `item` and `index`. |
+| `itemClick` | `OgeChipItemClickEvent` | A chip was clicked or activated with Enter / Space. |
+| `itemRemoving` | `OgeChipItemRemovingEvent` | Cancelable: a chip is about to be removed (✕ press, Delete or Backspace). Set `cancel` to keep it. |
+| `itemRemoved` | `OgeChipItemRemovedEvent` | Drop the chip from `items` now. Focus then moves to the chip that took its place (Delete) or the previous one (Backspace); when the last chip goes, focus stays where the app puts it. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeChipItem` | `{ key; label; icon?; avatar?; disabled?; removable?; severity? }` | One chip. `disabled` chips are skipped by the arrows; `removable` overrides the list. |
+| `OgeChipKey` | `string \| number` | Identity of a chip. |
+| `OgeChipSelectionMode` | `'none' \| 'single' \| 'multiple'` | Selection vocabulary. |
+| `OgeChipTemplate` | `directive [ogeChipTemplate]` | Replaces the label of every chip; the list keeps role, focus, check glyph and remove affordance. Context: `OgeChipTemplateContext`. |
+| `OgeChipTemplateContext` | `{ $implicit: OgeChipItem; index; selected; removable; disabled }` | Context of `[ogeChipTemplate]`. |
+| `OgeChipSelectionChangedEvent` | `{ selectedKeys; previousKeys; item; index; event? }` | Payload of `selectionChanged`. |
+| `OgeChipItemClickEvent` | `{ item; index; event }` | Payload of `itemClick`. |
+| `OgeChipItemRemovingEvent` | `{ item; index; event?; cancel: boolean }` | Payload of `itemRemoving`. |
+| `OgeChipItemRemovedEvent` | `{ item; index; event? }` | Payload of `itemRemoved`. |
+
+### Configuration
+
+#### Properties
+
+_provideOgeChipConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeChipMessages` | Every user-facing string: `remove` — the remove button&rsquo;s name with a `{label}` placeholder (default `Remove {label}`) — and `chipList`, the list&rsquo;s fallback name (default `Chips`). Translated in every `@oge-ui/locales` pack (`layout.chip`). |
+| `size / stylingMode` | `—` | Defaults for the matching inputs of both components. Pass a function for a live config. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeChipConfig` | `(config: OgeChipConfigInput \| (() => OgeChipConfigInput)) => Provider` | Application- or component-scoped defaults; a function makes the config live. |
+| `OGE_CHIP_CONFIG` | `InjectionToken<OgeChipConfig>` | The resolved config both components inject. |
+| `OGE_DEFAULT_CHIP_CONFIG` | `OgeChipConfig` | The defaults (from `@oge-ui/behavior`). |
+| `OGE_DEFAULT_CHIP_MESSAGES` | `OgeChipMessages` | The English catalog. |
+| `OgeChipConfig` | `{ messages: OgeChipMessages; size?; stylingMode? }` | Resolved config shape. |
+| `OgeChipConfigInput` | `Partial<OgeChipConfig> with partial messages` | What the provider accepts. |
+| `OgeChipMessages` | `{ remove: string; chipList: string }` | The chip catalog. |
+
+### OgeAlert — `<oge-alert>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `severity` | `'info' \| 'success' \| 'warning' \| 'error' \| undefined` | `config ?? 'info'` | Meaning of the message — the colour, the glyph, the visually hidden prefix and (with `live: auto`) the role: `error` / `warning` are `role="alert"`, `info` / `success` `role="status"`. |
+| `title` | `string \| undefined` | `—` | Bold first line above the message; the severity prefix moves into it. |
+| `stylingMode` | `'soft' \| 'outlined' \| 'filled' \| undefined` | `config ?? 'soft'` | `soft` is a tinted surface with a severity rail, `outlined` a coloured frame, `filled` the solid severity colour with `--oge-severity-contrast` text. |
+| `dismissible` | `boolean` | `false` | Renders a real dismiss button (name from the `dismiss` message) that runs the cancelable close. When the alert held focus, focus moves to the next tabbable element (`ogeAlertFocusAfterClose`). |
+| `live` | `'auto' \| 'polite' \| 'assertive' \| 'off'` | `'auto'` | `auto` derives `alert` / `status` from the severity, `assertive` / `polite` force one, `off` renders no role (a permanent note). The role stays while the alert is hidden, so showing it again is announced (`ogeAlertRole`). |
+| `showIcon` | `boolean` | `true` | Shows the severity glyph (or the projected `[ogeAlertIcon]`); `false` drops the icon column. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the live region — only written while the alert has a role. |
+| `visible` | `boolean (model)` | `true` | Whether the alert is shown — two-way. `false` renders nothing and sets `hidden` on the host. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `show()` | `() => void` | Shows the alert again. |
+| `close()` | `() => void` | Runs the cancelable close (`closing` → `closed`), as the dismiss button does. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `visibleChange` | `boolean` | The banana half of `[(visible)]`. |
+| `closing` | `OgeAlertClosingEvent` | Cancelable: the alert is about to close. Set `cancel` to keep it. |
+| `closed` | `OgeAlertClosedEvent` | The alert closed (`visible` is now `false`). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAlertActions` | `directive [ogeAlertActions]` | Marks a row of real controls rendered under the message (in the Tab order). |
+| `OgeAlertIcon` | `directive [ogeAlertIcon]` | Replaces the default glyph; rendered inside an `aria-hidden` wrapper. |
+| `OgeAlertSeverity` | `'info' \| 'success' \| 'warning' \| 'error'` | Severity vocabulary. |
+| `OgeAlertStylingMode` | `'soft' \| 'outlined' \| 'filled'` | Surface presets. |
+| `OgeAlertLive` | `'auto' \| 'polite' \| 'assertive' \| 'off'` | Live-region behaviour. |
+| `OgeAlertClosingEvent` | `{ event?: Event; cancel: boolean }` | Payload of `closing`. |
+| `OgeAlertClosedEvent` | `{ event?: Event }` | Payload of `closed`. |
+
+### Configuration
+
+#### Properties
+
+_provideOgeAlertConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeAlertMessages` | Every user-facing string: `dismiss` (default `Dismiss`) and the visually hidden severity prefixes `info` / `success` / `warning` / `error` (default `Information`, `Success`, `Warning`, `Error`). Translated in every `@oge-ui/locales` pack (`layout.alert`). |
+| `severity / stylingMode` | `—` | Defaults for the matching inputs. Pass a function for a live config. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeAlertConfig` | `(config: OgeAlertConfigInput \| (() => OgeAlertConfigInput)) => Provider` | Application- or component-scoped defaults; a function makes the config live. |
+| `OGE_ALERT_CONFIG` | `InjectionToken<OgeAlertConfig>` | The resolved config the alert injects. |
+| `OGE_DEFAULT_ALERT_CONFIG` | `OgeAlertConfig` | The defaults (from `@oge-ui/behavior`). |
+| `OGE_DEFAULT_ALERT_MESSAGES` | `OgeAlertMessages` | The English catalog. |
+| `OgeAlertConfig` | `{ messages: OgeAlertMessages; severity?; stylingMode? }` | Resolved config shape. |
+| `OgeAlertConfigInput` | `Partial<OgeAlertConfig> with partial messages` | What the provider accepts. |
+| `OgeAlertMessages` | `{ dismiss; info; success; warning; error }` | The alert catalog. |
+
+### OgeTimeline — `<oge-timeline>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeTimelineItem[]` | `[]` | The entries, in display order — the list's order is its meaning. Fields: `key?`, `title?`, `description?`, `time?: Date \| string`, `opposite?`, `severity?`, `variant?`, `icon?` (SVG path data). |
+| `orientation` | `'vertical' \| 'horizontal'` | `config ?? 'vertical'` | Axis of the timeline. Horizontal entries share a row and the list scrolls inline when they do not fit. |
+| `align` | `'start' \| 'end' \| 'alternate' \| 'alternate-reverse'` | `config ?? 'end'` | Side of the axis the content sits on — logical, so RTL mirrors. `alternate` starts at the end side and swaps per entry, `alternate-reverse` starts at the start side; both render the opposite column (the entry&rsquo;s `opposite`, else its time). |
+| `dateFormat` | `Intl.DateTimeFormatOptions \| undefined` | `config ?? { dateStyle: 'medium', timeStyle: 'short' }` | Format of `Date` times (through the core Intl cache). String times are shown verbatim. |
+| `locale` | `string \| undefined` | `config ?? LOCALE_ID` | BCP 47 locale of `Date` times. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the `<ol>` ("Order history"). Recommended when a page has more than one list. |
+
+#### Types
+
+_Template slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTimelineContentTemplate` | `[ogeTimelineContentTemplate]` | Structural directive replacing the built-in time / title / description block of every entry. Interactive content stays in the Tab order. |
+| `OgeTimelineMarkerTemplate` | `[ogeTimelineMarkerTemplate]` | Replaces the dot on the axis (a step number, an avatar). The marker column is `aria-hidden`, so say the same thing in the content. |
+| `OgeTimelineOppositeTemplate` | `[ogeTimelineOppositeTemplate]` | Replaces the opposite-side text of an alternating timeline. |
+| `OgeTimelineItemTemplateContext` | `{ $implicit: OgeTimelineItem; index: number; side: 'start' \| 'end'; first: boolean; last: boolean }` | Context of all three slots. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTimelineItem` | `interface` | One entry: `key?`, `title?`, `description?`, `time?: Date \| string`, `opposite?`, `severity?`, `variant?`, `icon?` (SVG path data). A `Date` time is written into `<time datetime>` from its local fields (never `toISOString`). |
+| `OgeTimelineOrientation` | `'vertical' \| 'horizontal'` | Axis union. |
+| `OgeTimelineAlign` | `'start' \| 'end' \| 'alternate' \| 'alternate-reverse'` | Content side union. |
+| `OgeTimelineSeverity` | `'accent' \| 'neutral' \| 'success' \| 'warning' \| 'danger'` | Marker colour union (default `accent`). |
+| `OgeTimelineMarkerVariant` | `'filled' \| 'outlined'` | Solid marker, or a ring for pending / future entries. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeTimelineConfig(config)` | `(config: OgeTimelineConfigInput \| (() => OgeTimelineConfigInput)) => Provider` | Application- or component-scoped defaults for `orientation`, `align`, `dateFormat` and `locale` (a function makes it live). There is deliberately no `messages` block: the timeline renders no user-facing strings of its own. |
+| `OGE_TIMELINE_CONFIG` | `InjectionToken<OgeTimelineConfig>` | The token behind `provideOgeTimelineConfig()`, with `OGE_DEFAULT_TIMELINE_CONFIG` as its factory default. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTimelineConfig / OgeTimelineConfigInput` | `interface` | The config shape (`orientation?`, `align?`, `dateFormat?`, `locale?`) and its partial input; `OGE_DEFAULT_TIMELINE_CONFIG` is the resolved default. |
+
+### OgeAppBar — `<oge-app-bar>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `position` | `'top' \| 'bottom'` | `config ?? 'top'` | Edge the bar belongs to — decides the hairline and shadow side, the sticky / fixed edge and which safe-area inset pads it. |
+| `positionMode` | `'static' \| 'sticky' \| 'fixed'` | `config ?? 'static'` | `sticky` sticks to its edge of the nearest scroll container, `fixed` pins to the viewport (full width, inline safe-area insets). Both use the `--oge-z-app-bar` layer and pad with `env(safe-area-inset-*)` as a floor. |
+| `color` | `'default' \| 'primary' \| 'inverse' \| 'transparent'` | `config ?? 'default'` | Surface: the page surface with a hairline, the accent, the dark tooltip surface, or none. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `config ?? 'md'` | Density preset — 48 / 56 / 64 px rows. |
+| `elevated` | `boolean` | `false` | Draws a shadow on the bar&rsquo;s content edge. |
+| `landmark` | `'none' \| 'banner' \| 'contentinfo' \| 'navigation' \| 'region'` | `'none'` | Landmark role, only on request: `banner` for the one page header, `contentinfo` for a page footer, `navigation` / `region` (with `ariaLabel`) for a named secondary bar. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the landmark — written only when `landmark` is not `none` (a role-less element may not carry one). |
+| `centerAlign` | `'start' \| 'center'` | `'start'` | Alignment of the center section&rsquo;s content. |
+
+#### Types
+
+_Section slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAppBarStart` | `[ogeAppBarStart]` | Attribute marker moving an element into the start section (a menu button, a logo). |
+| `OgeAppBarCenter` | `[ogeAppBarCenter]` | Moves an element into the center section explicitly — rendered before unmarked content, which lands there too. |
+| `OgeAppBarEnd` | `[ogeAppBarEnd]` | Moves an element into the end section (actions, an avatar). |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAppBarPosition` | `'top' \| 'bottom'` | Edge union. |
+| `OgeAppBarPositionMode` | `'static' \| 'sticky' \| 'fixed'` | Positioning union. |
+| `OgeAppBarColor` | `'default' \| 'primary' \| 'inverse' \| 'transparent'` | Surface union. |
+| `OgeAppBarSize` | `'sm' \| 'md' \| 'lg'` | Density union. |
+| `OgeAppBarLandmark` | `'none' \| 'banner' \| 'contentinfo' \| 'navigation' \| 'region'` | Landmark union. |
+| `OgeAppBarCenterAlign` | `'start' \| 'center'` | Center alignment union. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeAppBarConfig(config)` | `(config: OgeAppBarConfigInput \| (() => OgeAppBarConfigInput)) => Provider` | Application- or component-scoped defaults for `position`, `positionMode`, `color` and `size`. There is deliberately no `messages` block: the bar renders no user-facing strings. |
+| `OGE_APP_BAR_CONFIG` | `InjectionToken<OgeAppBarConfig>` | The token behind `provideOgeAppBarConfig()`, with `OGE_DEFAULT_APP_BAR_CONFIG` as its factory default. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAppBarConfig / OgeAppBarConfigInput` | `interface` | The config shape and its partial input; `OGE_DEFAULT_APP_BAR_CONFIG` is the resolved default. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Dismiss
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeAlert, OgeAlertActions } from '@oge-ui/layout';
+import type { OgeAlertClosingEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAlert, OgeAlertActions],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- dismissible adds a real "Dismiss" button; closing is cancelable and
+         focus moves past the alert instead of dropping to <body>. -->
+    <oge-alert
+      severity="warning"
+      title="Storage almost full"
+      [dismissible]="true"
+      [(visible)]="visible"
+      (closing)="confirmClose($event)"
+    >
+      You have used 92% of your quota.
+      <div ogeAlertActions>
+        <button type="button">Manage storage</button>
+      </div>
+    </oge-alert>
+    @if (!visible()) {
+      <button type="button" (click)="visible.set(true)">Show again</button>
+    }
+  `,
+})
+export class Demo {
+  protected readonly visible = signal(true);
+
+  protected confirmClose(event: OgeAlertClosingEvent): void {
+    // e.g. keep it while an upload is still running
+    event.cancel = false;
+  }
+}
+```
+
+### Icon
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAlert, OgeAlertIcon } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAlert, OgeAlertIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [ogeAlertIcon] replaces the default glyph; it is rendered inside an
+         aria-hidden wrapper. showIcon=false drops the icon column. -->
+    <oge-alert severity="info" title="Tip">
+      <svg ogeAlertIcon viewBox="0 0 24 24" width="20" height="20" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z" />
+      </svg>
+      Press <kbd>?</kbd> to see every keyboard shortcut.
+    </oge-alert>
+    <oge-alert severity="info" [showIcon]="false">No icon at all.</oge-alert>
+  `,
+})
+export class Demo {}
+```
+
+### Live
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeAlert } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAlert],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The role stays on the host while it is hidden, so showing the alert
+         again inserts its text into an existing live region — and screen readers
+         announce it. live="off" renders no role for a permanent note. -->
+    <button type="button" (click)="saved.set(!saved())">Toggle saved</button>
+    <oge-alert severity="success" [(visible)]="saved">Draft saved.</oge-alert>
+    <oge-alert severity="info" live="off">This page is read-only.</oge-alert>
+  `,
+})
+export class Demo {
+  protected readonly saved = signal(false);
+}
+```
+
+### Modes
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAlert } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAlert],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- soft (default) is a tinted surface, outlined a coloured frame,
+         filled the solid severity colour with --oge-severity-contrast text. -->
+    <oge-alert severity="success" stylingMode="soft">Soft</oge-alert>
+    <oge-alert severity="success" stylingMode="outlined">Outlined</oge-alert>
+    <oge-alert severity="success" stylingMode="filled">Filled</oge-alert>
+  `,
+})
+export class Demo {}
+```
+
+### Severities
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAlert } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAlert],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Role follows the severity: info / success are role="status"
+         (polite), warning / error role="alert" (assertive). The glyph is
+         aria-hidden; a visually hidden prefix ("Warning") carries the meaning. -->
+    <oge-alert severity="info">A new version is available.</oge-alert>
+    <oge-alert severity="success">Your changes were saved.</oge-alert>
+    <oge-alert severity="warning">Your trial ends in three days.</oge-alert>
+    <oge-alert severity="error">The payment could not be processed.</oge-alert>
+  `,
+})
+export class Demo {}
+```
+
+### Bottom
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeAppBar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAppBar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- position="bottom" moves the hairline and the shadow to the top
+         edge and the safe-area padding to the home-indicator edge. -->
+    <div role="region" aria-label="Phone screen" tabindex="0" style="max-height: 240px; overflow: auto">
+      @for (paragraph of paragraphs; track $index) {
+        <p>{{ paragraph }}</p>
+      }
+      <oge-app-bar position="bottom" positionMode="sticky" centerAlign="center">
+        <button type="button" [attr.aria-pressed]="tab() === 'home'" (click)="tab.set('home')">Home</button>
+        <button type="button" [attr.aria-pressed]="tab() === 'search'" (click)="tab.set('search')">Search</button>
+        <button type="button" [attr.aria-pressed]="tab() === 'me'" (click)="tab.set('me')">Me</button>
+      </oge-app-bar>
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly tab = signal('home');
+  protected readonly paragraphs = Array.from(
+    { length: 8 },
+    (_, i) => `Message ${i + 1}`,
+  );
+}
+```
+
+### Colors
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAppBar, OgeAppBarEnd } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAppBar, OgeAppBarEnd],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- default is the page surface with a hairline on the content edge,
+         primary the accent, inverse the dark tooltip surface, transparent
+         none. size is the 48 / 56 / 64 px density; elevated adds the card
+         shadow. All colours are tokens, so a theme re-tunes every bar. -->
+    <oge-app-bar size="sm"><strong>Default · sm</strong></oge-app-bar>
+    <oge-app-bar color="primary" [elevated]="true">
+      <strong>Primary · elevated</strong>
+      <button ogeAppBarEnd type="button">Action</button>
+    </oge-app-bar>
+    <oge-app-bar color="inverse" size="lg" centerAlign="center">
+      <strong>Inverse · lg · centered</strong>
+    </oge-app-bar>
+    <oge-app-bar color="transparent"><strong>Transparent</strong></oge-app-bar>
+  `,
+})
+export class Demo {}
+```
+
+### Landmark
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAppBar, OgeAppBarStart } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAppBar, OgeAppBarStart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A landmark only on request: landmark="banner" for the ONE page header,
+         "contentinfo" for a page footer, "navigation" / "region" plus an
+         ariaLabel for a named secondary bar. ariaLabel is written only when a
+         landmark is set — on a role-less element it would be invalid ARIA. -->
+    <oge-app-bar landmark="navigation" ariaLabel="Project" color="inverse" size="sm">
+      <strong ogeAppBarStart>Project</strong>
+      <a href="#landmarks">Overview</a>
+      <a href="#landmarks">Issues</a>
+      <a href="#landmarks">Settings</a>
+    </oge-app-bar>
+  `,
+})
+export class Demo {}
+```
+
+### Sections
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeAppBar, OgeAppBarEnd, OgeAppBarStart } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAppBar, OgeAppBarEnd, OgeAppBarStart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [ogeAppBarStart] / [ogeAppBarEnd] size to their content; unmarked
+         content goes to the center section, which takes the rest and lets a
+         long title truncate instead of pushing the actions off a phone. -->
+    <oge-app-bar>
+      <button ogeAppBarStart type="button" aria-label="Open menu" (click)="last.set('menu')">
+        ☰
+      </button>
+      <strong>Inbox</strong>
+      <button ogeAppBarEnd type="button" (click)="last.set('search')">Search</button>
+      <button ogeAppBarEnd type="button" (click)="last.set('profile')">Profile</button>
+    </oge-app-bar>
+    <p>last action → {{ last() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly last = signal('—');
+}
+```
+
+### Sticky
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAppBar, OgeAppBarEnd } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAppBar, OgeAppBarEnd],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- sticky sticks to the top of the nearest scroll container; fixed pins
+         to the viewport instead (positionMode="fixed" — not shown here, it would
+         cover these docs). Both pad with env(safe-area-inset-*) as a floor, so
+         the bar clears a notch once the app opts into viewport-fit=cover. -->
+    <div role="region" aria-label="Scrolling article" tabindex="0" style="max-height: 240px; overflow: auto">
+      <oge-app-bar positionMode="sticky" [elevated]="true">
+        <strong>Article</strong>
+        <button ogeAppBarEnd type="button">Share</button>
+      </oge-app-bar>
+      @for (paragraph of paragraphs; track $index) {
+        <p>{{ paragraph }}</p>
+      }
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly paragraphs = Array.from(
+    { length: 8 },
+    (_, i) => `Paragraph ${i + 1}: scroll inside this box — the bar stays on top.`,
+  );
+}
+```
+
+### Announce
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeBadge } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBadge],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- announce speaks later changes through a polite live region; the
+         initial value is part of the page and is never announced. -->
+    <oge-badge [value]="cart()" [announce]="true" description="{{ cart() }} items in cart">
+      <button type="button">Cart</button>
+    </oge-badge>
+    <button type="button" (click)="cart.set(cart() + 1)">Add item</button>
+  `,
+})
+export class Demo {
+  protected readonly cart = signal(1);
+}
+```
+
+### Config
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAvatar, OgeBadge, provideOgeAvatarConfig, provideOgeBadgeConfig } from '@oge-ui/layout';
+
+// Application- or component-scoped defaults; every user-facing string
+// (presence labels, "N more", the badge descriptions) is in messages.
+export const avatarProviders = [
+  provideOgeAvatarConfig({ size: 'sm', messages: { busy: 'In a meeting' } }),
+  provideOgeBadgeConfig({ max: 9, severity: 'accent' }),
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAvatar, OgeBadge],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-avatar name="Ada Lovelace" status="busy" />
+    <oge-badge [value]="12" />
+  `,
+})
+export class Demo {}
+```
+
+### Content
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeAvatar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAvatar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The fallback chain runs on its own: an image while src loads, the
+         initials (explicit or derived from name) when it fails, the icon
+         without either. The host is role="img" named by the name. -->
+    <oge-avatar name="OGE UI" src="/logo.png" />
+    <oge-avatar name="Ada Lovelace" src="/missing-avatar.png" (imageFailed)="failed.set($event.src)" />
+    <oge-avatar name="Grace Hopper" initials="GH" />
+    <oge-avatar ariaLabel="Guest" />
+  `,
+})
+export class Demo {
+  protected readonly failed = signal('');
+}
+```
+
+### Group
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAvatar, OgeAvatarGroup } from '@oge-ui/layout';
+import type { OgeAvatarItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAvatar, OgeAvatarGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- max counts the rendered circles INCLUDING the surplus one, so the
+         row never grows past it. total is the full population of a partially
+         loaded list. Projected children follow the items. -->
+    <oge-avatar-group [items]="team" [max]="4" ariaLabel="Project team" />
+
+    <oge-avatar-group [items]="reviewers" [max]="4" [total]="24" size="sm" ariaLabel="Reviewers" />
+
+    <oge-avatar-group [overlap]="false" ariaLabel="On call">
+      <oge-avatar name="Ada Lovelace" status="online" />
+      <oge-avatar name="Grace Hopper" status="busy" />
+    </oge-avatar-group>
+  `,
+})
+export class Demo {
+  protected readonly team: OgeAvatarItem[] = [
+    { key: 1, name: 'Ada Lovelace', status: 'online' },
+    { key: 2, name: 'Grace Hopper' },
+    { key: 3, name: 'Alan Turing', status: 'away' },
+    { key: 4, name: 'Edsger Dijkstra' },
+    { key: 5, name: 'Barbara Liskov' },
+    { key: 6, name: 'Donald Knuth' },
+  ];
+  // three of 24 reviewers are loaded — total counts the rest into "+N"
+  protected readonly reviewers = this.team.slice(0, 3);
+}
+```
+
+### Overlay
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeAvatar, OgeBadge } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAvatar, OgeBadge],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The glyph is aria-hidden decoration; the wrapped control's
+         aria-describedby points at the description, so a screen reader hears
+         "Inbox, 5 new items". Above max it shows 99+. -->
+    <oge-badge [value]="unread()">
+      <button type="button" (click)="unread.set(unread() + 1)">Inbox</button>
+    </oge-badge>
+
+    <oge-badge [value]="120" severity="accent" position="bottom-end">
+      <button type="button">Notifications</button>
+    </oge-badge>
+
+    <!-- overlap="circle" sits on the outline of a round host -->
+    <oge-badge [dot]="true" severity="success" overlap="circle" description="Available">
+      <oge-avatar name="Grace Hopper" />
+    </oge-badge>
+  `,
+})
+export class Demo {
+  protected readonly unread = signal(5);
+}
+```
+
+### Sizes
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAvatar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAvatar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- xs 24 · sm 32 · md 40 · lg 48 · xl 64 px; circle, rounded, square. -->
+    @for (size of sizes; track size) {
+      <oge-avatar name="Ada Lovelace" [size]="size" />
+    }
+    <oge-avatar name="Grace Hopper" size="lg" shape="rounded" />
+    <oge-avatar name="Alan Turing" size="lg" shape="square" />
+  `,
+})
+export class Demo {
+  protected readonly sizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
+}
+```
+
+### Standalone
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBadge } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBadge],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Without content the badge is an inline pill with a visually hidden
+         description. A zero count hides unless showZero; invisible force-hides. -->
+    <span>Messages <oge-badge [value]="3" /></span>
+    <span>Plan <oge-badge value="Beta" severity="accent" /></span>
+    <span>Updates <oge-badge [dot]="true" description="New updates" /></span>
+    <span>Errors <oge-badge [value]="0" [showZero]="true" severity="neutral" size="sm" /></span>
+  `,
+})
+export class Demo {}
+```
+
+### Status
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAvatar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAvatar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The dot is aria-hidden; the presence joins the accessible name
+         ("Ada Lovelace (Online)"). Offline is a hollow ring, so the state never
+         rides on colour alone. Next to a visible name, decorative avoids
+         reading it twice. -->
+    <oge-avatar name="Ada Lovelace" status="online" />
+    <oge-avatar name="Grace Hopper" status="away" />
+    <oge-avatar name="Alan Turing" status="busy" />
+    <oge-avatar name="Edsger Dijkstra" status="offline" />
+
+    <span class="person">
+      <oge-avatar name="Ada Lovelace" size="sm" [decorative]="true" />
+      Ada Lovelace
+    </span>
+  `,
+})
+export class Demo {}
+```
 
 ### Actions
 
@@ -1171,6 +2070,228 @@ export class Demo {
   protected readonly pending = signal(true);
 
   protected retry(): void {}
+}
+```
+
+### Chips
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChip } from '@oge-ui/layout';
+
+const STAR = 'M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChip],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A plain chip is static text — no role, nothing focusable.
+         icon takes SVG path data; avatar renders image → initials, aria-hidden. -->
+    <oge-chip label="Angular" />
+    <oge-chip label="Featured" [icon]="star" severity="accent" />
+    <oge-chip label="Ada Lovelace" [avatar]="{ name: 'Ada Lovelace' }" />
+    <oge-chip label="Passed" severity="success" stylingMode="outlined" />
+    <oge-chip label="Blocked" severity="danger" size="sm" />
+  `,
+})
+export class Demo {
+  protected readonly star = STAR;
+}
+```
+
+### Grid
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChipList } from '@oge-ui/layout';
+import type { OgeChipItem, OgeChipItemRemovedEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChipList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Not selectable but removable → an APG layout grid: each chip is a
+         row with a label cell and a cell holding a real remove button. Arrows walk
+         the cells, Delete / Backspace remove, focus lands on the neighbour. -->
+    <oge-chip-list
+      [items]="people()"
+      [removable]="true"
+      ariaLabel="Recipients"
+      (itemRemoved)="remove($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly people = signal<OgeChipItem[]>([
+    { key: 1, label: 'Ada Lovelace', avatar: { name: 'Ada Lovelace' } },
+    { key: 2, label: 'Grace Hopper', avatar: { name: 'Grace Hopper' } },
+    { key: 3, label: 'Alan Turing', avatar: { name: 'Alan Turing' } },
+    { key: 4, label: 'Katherine Johnson', avatar: { name: 'Katherine Johnson' } },
+  ]);
+
+  protected remove(event: OgeChipItemRemovedEvent): void {
+    this.people.update((people) => people.filter((p) => p.key !== event.item.key));
+  }
+}
+```
+
+### Multiple
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChipList } from '@oge-ui/layout';
+import type { OgeChipItem, OgeChipKey, OgeChipSelectionChangedEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChipList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- multiple → aria-multiselectable; selectionChanged carries the
+         previous and the next keys plus the toggled chip. -->
+    <oge-chip-list
+      [items]="filters"
+      selectionMode="multiple"
+      [(selectedKeys)]="active"
+      ariaLabel="Filters"
+      (selectionChanged)="last.set($event.item.label)"
+    />
+    <p>active: {{ active().join(', ') || 'none' }} · last: {{ last() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly filters: OgeChipItem[] = [
+    { key: 'open', label: 'Open' },
+    { key: 'mine', label: 'Assigned to me' },
+    { key: 'bug', label: 'Bug', severity: 'danger' },
+    { key: 'docs', label: 'Docs', severity: 'accent' },
+  ];
+  protected readonly active = signal<readonly OgeChipKey[]>(['open']);
+  protected readonly last = signal('—');
+}
+```
+
+### Removable
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChip } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChip],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- removable adds a separate, real remove button ("Remove Design").
+         The chip moves no data — drop it in (removed). -->
+    @for (tag of tags(); track tag) {
+      <oge-chip [label]="tag" [removable]="true" (removed)="drop(tag)" />
+    }
+  `,
+})
+export class Demo {
+  protected readonly tags = signal(['Design', 'Research', 'Writing']);
+
+  protected drop(tag: string): void {
+    this.tags.update((tags) => tags.filter((t) => t !== tag));
+  }
+}
+```
+
+### Selectable
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChip } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChip],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- selectable renders a toggle <button aria-pressed>; the check glyph
+         and the accent frame show the state, never colour alone. -->
+    <oge-chip label="Remote" [selectable]="true" [(selected)]="remote" />
+    <oge-chip label="Full-time" [selectable]="true" [(selected)]="fullTime" />
+    <p>remote: {{ remote() }} · full-time: {{ fullTime() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly remote = signal(true);
+  protected readonly fullTime = signal(false);
+}
+```
+
+### Single
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChipList } from '@oge-ui/layout';
+import type { OgeChipItem, OgeChipKey } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChipList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Selectable → an APG listbox: one tab stop, arrows / Home / End move,
+         Space or Enter toggles. A second press clears a single selection. -->
+    <oge-chip-list
+      [items]="sizes"
+      selectionMode="single"
+      [(selectedKeys)]="size"
+      ariaLabel="Size"
+    />
+  `,
+})
+export class Demo {
+  protected readonly sizes: OgeChipItem[] = [
+    { key: 's', label: 'Small' },
+    { key: 'm', label: 'Medium' },
+    { key: 'l', label: 'Large' },
+    { key: 'xl', label: 'X-Large', disabled: true },
+  ];
+  protected readonly size = signal<readonly OgeChipKey[]>(['m']);
+}
+```
+
+### Template
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChipList, OgeChipTemplate } from '@oge-ui/layout';
+import type { OgeChipItem, OgeChipKey } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChipList, OgeChipTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [ogeChipTemplate] replaces the label only: the list keeps the role,
+         focus, check glyph and remove affordance. Keep it non-interactive. -->
+    <oge-chip-list
+      [items]="languages"
+      selectionMode="multiple"
+      [(selectedKeys)]="picked"
+      ariaLabel="Languages"
+    >
+      <ng-template ogeChipTemplate let-item let-selected="selected">
+        <strong>{{ item.label }}</strong>
+        <span class="opacity-70">{{ counts[item.key] }}</span>
+      </ng-template>
+    </oge-chip-list>
+  `,
+})
+export class Demo {
+  protected readonly languages: OgeChipItem[] = [
+    { key: 'ts', label: 'TypeScript' },
+    { key: 'rs', label: 'Rust' },
+    { key: 'go', label: 'Go' },
+  ];
+  protected readonly counts: Record<string, number> = { ts: 128, rs: 42, go: 37 };
+  protected readonly picked = signal<readonly OgeChipKey[]>(['ts']);
 }
 ```
 
@@ -2277,6 +3398,215 @@ export class Demo {
       localStorage.setItem('editor-layout', JSON.stringify(this.sizes())),
     );
   }
+}
+```
+
+### Align
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTimeline } from '@oge-ui/layout';
+import type { OgeTimelineAlign, OgeTimelineItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTimeline],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- start / end keep one side (logical, so RTL mirrors);
+         alternate swaps per entry and moves each time — or the entry's
+         opposite text — to the other side of the axis. -->
+    <oge-timeline [items]="order" [align]="align()" ariaLabel="Order history" />
+
+    <label>
+      Align
+      <select (change)="align.set($any($event.target).value)">
+        <option value="end">end</option>
+        <option value="start">start</option>
+        <option value="alternate" selected>alternate</option>
+        <option value="alternate-reverse">alternate-reverse</option>
+      </select>
+    </label>
+  `,
+})
+export class Demo {
+  protected readonly align = signal<OgeTimelineAlign>('alternate');
+  protected readonly order: OgeTimelineItem[] = [
+    {
+      key: 'placed',
+      title: 'Order placed',
+      description: 'Payment confirmed by card ending 4242.',
+      time: new Date(2026, 2, 14, 9, 30),
+      severity: 'success',
+    },
+    {
+      key: 'packed',
+      title: 'Packed',
+      description: 'Two parcels, 3.4 kg.',
+      time: new Date(2026, 2, 14, 16, 5),
+    },
+    {
+      key: 'shipped',
+      title: 'Shipped',
+      description: 'Handed to the carrier in Istanbul.',
+      time: new Date(2026, 2, 15, 8, 0),
+    },
+    {
+      key: 'delivered',
+      title: 'Delivery expected',
+      time: 'Tomorrow, 10:00–14:00',
+      variant: 'outlined',
+      severity: 'neutral',
+    },
+  ];
+}
+```
+
+### Horizontal
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTimeline } from '@oge-ui/layout';
+import type { OgeTimelineItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTimeline],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The entries share a row and the list scrolls inline when they do
+         not fit, instead of widening the page on a phone. -->
+    <oge-timeline
+      orientation="horizontal"
+      align="alternate"
+      [items]="releases"
+      ariaLabel="Release history"
+    />
+  `,
+})
+export class Demo {
+  protected readonly releases: OgeTimelineItem[] = [
+    { title: '1.0', description: 'Data grid', opposite: 'Jan 2026' },
+    { title: '1.1', description: 'React layer', opposite: 'Jun 2026' },
+    { title: '1.2', description: 'Feedback components', opposite: 'Oct 2026' },
+    { title: '1.3', description: 'Planned', opposite: 'Q1 2027', variant: 'outlined' },
+  ];
+}
+```
+
+### Markers
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTimeline } from '@oge-ui/layout';
+import type { OgeTimelineItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTimeline],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- severity colours the marker, variant="outlined" draws a ring
+         (pending / future entries), icon (SVG path data) draws a larger marker
+         with the glyph inside. Markers are aria-hidden decoration, so the
+         meaning must also be in the text. -->
+    <oge-timeline [items]="deploys" ariaLabel="Deployments" />
+  `,
+})
+export class Demo {
+  protected readonly deploys: OgeTimelineItem[] = [
+    { title: 'Build passed', time: '09:12', severity: 'success', icon: 'M20 6 9 17l-5-5' },
+    { title: 'Canary at 5 %', time: '09:20', severity: 'accent', icon: 'M4 22V4m0 0h13l-2 4 2 4H4' },
+    { title: 'Error rate above budget', time: '09:41', severity: 'warning', icon: 'M12 9v4m0 3.5h.01' },
+    { title: 'Rolled back', time: '09:43', severity: 'danger', icon: 'M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5' },
+    { title: 'Retry scheduled', time: '14:00', severity: 'neutral', variant: 'outlined' },
+  ];
+}
+```
+
+### Templates
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTimeline, OgeTimelineContentTemplate, OgeTimelineMarkerTemplate } from '@oge-ui/layout';
+import type { OgeTimelineItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTimeline, OgeTimelineContentTemplate, OgeTimelineMarkerTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Templates replace the content and the marker per entry. Content
+         is ordinary flow content — the link stays in the Tab order (the
+         timeline adds no keyboard model). -->
+    <oge-timeline [items]="steps" ariaLabel="Onboarding">
+      <ng-template ogeTimelineMarkerTemplate let-index="index">
+        <span class="step-number">{{ index + 1 }}</span>
+      </ng-template>
+      <ng-template ogeTimelineContentTemplate let-item>
+        <strong>{{ item.title }}</strong>
+        <span>{{ item.description }}</span>
+        <a href="#timeline-help">Learn more</a>
+      </ng-template>
+    </oge-timeline>
+  `,
+})
+export class Demo {
+  protected readonly steps: OgeTimelineItem[] = [
+    { title: 'Create a workspace', description: 'Name it and invite your team.' },
+    { title: 'Connect a data source', description: 'REST, OData or a plain array.' },
+    { title: 'Publish a dashboard', description: 'Share a read-only link.' },
+  ];
+}
+```
+
+### Vertical
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTimeline } from '@oge-ui/layout';
+import type { OgeTimelineItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTimeline],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- An ordered list: screen readers announce "list, 4 items" and each
+         position. Date times are formatted in the app locale and written into
+         <time datetime>; a string time is shown verbatim. -->
+    <oge-timeline [items]="order" ariaLabel="Order history" />
+  `,
+})
+export class Demo {
+  protected readonly order: OgeTimelineItem[] = [
+    {
+      key: 'placed',
+      title: 'Order placed',
+      description: 'Payment confirmed by card ending 4242.',
+      time: new Date(2026, 2, 14, 9, 30),
+      severity: 'success',
+    },
+    {
+      key: 'packed',
+      title: 'Packed',
+      description: 'Two parcels, 3.4 kg.',
+      time: new Date(2026, 2, 14, 16, 5),
+    },
+    {
+      key: 'shipped',
+      title: 'Shipped',
+      description: 'Handed to the carrier in Istanbul.',
+      time: new Date(2026, 2, 15, 8, 0),
+    },
+    {
+      key: 'delivered',
+      title: 'Delivery expected',
+      time: 'Tomorrow, 10:00–14:00',
+      variant: 'outlined',
+      severity: 'neutral',
+    },
+  ];
 }
 ```
 

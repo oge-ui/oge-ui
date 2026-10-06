@@ -64,7 +64,7 @@ High impact, ranked by how many competitors ship it and how often users hit it.
 | 13  | Value-axis constant lines/strips, per-point colour, full data labels                                  | Charts       | S      | Planned (G2)                                                           |
 | 14  | Sparkline (+ grid cell renderer) and Gauges packages                                                  | Charts       | S / M  | Planned (W8)                                                           |
 | 15  | Pivot chart binding, calculated measures, Top-N / value filters                                       | Pivot        | M      | **Shipped** (G1b)                                                      |
-| 16  | Chip/ChipList, ListView, Avatar, Badge, inline Alert                                                  | Layout/Nav   | S each | Planned (W8)                                                           |
+| 16  | Chip/ChipList, ListView, Avatar, Badge, inline Alert                                                  | Layout/Nav   | S each | Shipped (W8a) except ListView (W8)                                     |
 | 17  | Gantt task list: inline editing, sort, filter, column resize; quarter/year scales                     | Gantt        | M      | Planned (G3)                                                           |
 | 18  | Async validation in grid editing; built-in locale packs                                               | Grid, all    | S–M    | **Partial** — async validation shipped (G1); locale packs planned (W4) |
 | 19  | Rich text / HTML editor                                                                               | Inputs       | L      | Planned (W8)                                                           |

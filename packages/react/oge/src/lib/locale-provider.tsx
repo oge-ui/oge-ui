@@ -3,9 +3,14 @@
 import { useMemo, type ReactNode } from 'react';
 import {
   OGE_DEFAULT_ACCORDION_MESSAGES,
+  OGE_DEFAULT_ALERT_MESSAGES,
+  OGE_DEFAULT_AVATAR_MESSAGES,
+  OGE_DEFAULT_BADGE_MESSAGES,
   OGE_DEFAULT_BREADCRUMB_MESSAGES,
   OGE_DEFAULT_BUTTONS_MESSAGES,
+  OGE_DEFAULT_CHIP_MESSAGES,
   OGE_DEFAULT_DRAWER_MESSAGES,
+  OGE_DEFAULT_FAB_MESSAGES,
   OGE_DEFAULT_FORMS_MESSAGES,
   OGE_DEFAULT_GRID_MESSAGES,
   OGE_DEFAULT_INPUTS_MESSAGES,
@@ -22,15 +27,23 @@ import {
   OGE_DEFAULT_UPLOAD_MESSAGES,
 } from '@oge-ui/behavior';
 import { ogeMergeMessages, type OgeLocalePack } from '@oge-ui/locales';
-import { OgeButtonsConfigProvider } from '@oge-ui/react-buttons';
+import {
+  OgeButtonsConfigProvider,
+  OgeFabConfigProvider,
+} from '@oge-ui/react-buttons';
 import { OgeFormsConfigProvider } from '@oge-ui/react-forms';
 import { OgeGridConfigProvider } from '@oge-ui/react-grid';
 import { OgeInputsConfigProvider } from '@oge-ui/react-inputs';
 import {
   OgeAccordionConfigProvider,
+  OgeAlertConfigProvider,
+  OgeAvatarConfigProvider,
+  OgeBadgeConfigProvider,
+  OgeChipConfigProvider,
   OgeLoadIndicatorConfigProvider,
   OgeProgressBarConfigProvider,
   OgeSplitterConfigProvider,
+  OgeTimelineConfigProvider,
   OgeToolbarConfigProvider,
 } from '@oge-ui/react-layout';
 import {
@@ -129,6 +142,25 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
           layout?.toolbar,
         ),
       },
+      avatar: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(OGE_DEFAULT_AVATAR_MESSAGES, layout?.avatar),
+      },
+      badge: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(OGE_DEFAULT_BADGE_MESSAGES, layout?.badge),
+      },
+      chip: {
+        messages: ogeMergeMessages(OGE_DEFAULT_CHIP_MESSAGES, layout?.chip),
+      },
+      alert: {
+        messages: ogeMergeMessages(OGE_DEFAULT_ALERT_MESSAGES, layout?.alert),
+      },
+      // no catalog — the timeline only needs the pack's locale for its dates
+      timeline: { locale: pack.locale },
+      fab: {
+        messages: ogeMergeMessages(OGE_DEFAULT_FAB_MESSAGES, pack.fab),
+      },
       breadcrumb: {
         messages: ogeMergeMessages(
           OGE_DEFAULT_BREADCRUMB_MESSAGES,
@@ -193,7 +225,9 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
                                       <OgeTreeViewConfigProvider
                                         config={c.treeView}
                                       >
-                                        {children}
+                                        <W8aProviders c={c}>
+                                          {children}
+                                        </W8aProviders>
                                       </OgeTreeViewConfigProvider>
                                     </OgeStepperConfigProvider>
                                   </OgePaginationConfigProvider>
@@ -212,5 +246,44 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
         </OgeButtonsConfigProvider>
       </OgeInputsConfigProvider>
     </OgeGridConfigProvider>
+  );
+}
+
+type ConfigOf<P extends (props: never) => unknown> = NonNullable<
+  Parameters<P>[0] extends { config?: infer C } ? C : never
+>;
+
+/**
+ * The layout and feedback families added in W8a (avatar, badge, chip, alert,
+ * timeline, FAB) — split out so the provider nesting above stays readable.
+ */
+function W8aProviders({
+  c,
+  children,
+}: {
+  c: {
+    avatar: ConfigOf<typeof OgeAvatarConfigProvider>;
+    badge: ConfigOf<typeof OgeBadgeConfigProvider>;
+    chip: ConfigOf<typeof OgeChipConfigProvider>;
+    alert: ConfigOf<typeof OgeAlertConfigProvider>;
+    timeline: ConfigOf<typeof OgeTimelineConfigProvider>;
+    fab: ConfigOf<typeof OgeFabConfigProvider>;
+  };
+  children?: ReactNode;
+}) {
+  return (
+    <OgeAvatarConfigProvider config={c.avatar}>
+      <OgeBadgeConfigProvider config={c.badge}>
+        <OgeChipConfigProvider config={c.chip}>
+          <OgeAlertConfigProvider config={c.alert}>
+            <OgeTimelineConfigProvider config={c.timeline}>
+              <OgeFabConfigProvider config={c.fab}>
+                {children}
+              </OgeFabConfigProvider>
+            </OgeTimelineConfigProvider>
+          </OgeAlertConfigProvider>
+        </OgeChipConfigProvider>
+      </OgeBadgeConfigProvider>
+    </OgeAvatarConfigProvider>
   );
 }

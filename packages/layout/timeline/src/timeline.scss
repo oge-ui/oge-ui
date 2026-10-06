@@ -1,0 +1,305 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The timeline is an ordered list laid out on a CSS grid per entry: the
+// separator column (marker + connector) and the content column, plus the
+// opposite column when alternating. Sides are logical, so RTL mirrors.
+.oge-timeline {
+  @include tokens.core-tokens;
+
+  --oge-timeline-marker-size: 12px;
+  --oge-timeline-marker-icon-size: 24px;
+  --oge-timeline-gap: 12px;
+  --oge-timeline-connector-width: 2px;
+
+  display: block;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-timeline-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-timeline-item {
+  display: grid;
+  column-gap: var(--oge-timeline-gap);
+  margin: 0;
+  padding: 0;
+}
+
+.oge-timeline-separator {
+  grid-area: sep;
+  display: flex;
+  align-items: center;
+}
+
+.oge-timeline-content {
+  grid-area: content;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.oge-timeline-opposite {
+  grid-area: opp;
+  min-width: 0;
+  color: var(--oge-muted-color);
+  font-size: 0.875em;
+  overflow-wrap: anywhere;
+}
+
+.oge-timeline-title {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.oge-timeline-description {
+  color: var(--oge-input-muted);
+  line-height: 1.45;
+}
+
+.oge-timeline-time {
+  color: var(--oge-muted-color);
+  font-size: 0.8125em;
+  font-variant-numeric: tabular-nums;
+}
+
+// --- marker ------------------------------------------------------------------
+.oge-timeline-marker {
+  --oge-timeline-color: var(--oge-accent);
+
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--oge-timeline-marker-size);
+  block-size: var(--oge-timeline-marker-size);
+  border: 2px solid var(--oge-timeline-color);
+  border-radius: 999px;
+  background: var(--oge-timeline-color);
+  color: var(--oge-severity-contrast);
+}
+
+.oge-timeline-marker-icon,
+.oge-timeline-marker-custom {
+  inline-size: var(--oge-timeline-marker-icon-size);
+  block-size: var(--oge-timeline-marker-icon-size);
+}
+
+.oge-timeline-marker-custom {
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.oge-timeline-marker-outlined {
+  background: var(--oge-bg);
+  color: var(--oge-timeline-color);
+}
+
+.oge-timeline-severity-neutral .oge-timeline-marker {
+  --oge-timeline-color: var(--oge-muted-color);
+}
+
+.oge-timeline-severity-success .oge-timeline-marker {
+  --oge-timeline-color: var(--oge-success);
+}
+
+.oge-timeline-severity-warning .oge-timeline-marker {
+  --oge-timeline-color: var(--oge-warning);
+}
+
+.oge-timeline-severity-danger .oge-timeline-marker {
+  --oge-timeline-color: var(--oge-danger);
+}
+
+.oge-timeline-connector {
+  flex: 1 1 auto;
+  border-radius: 999px;
+  background: var(--oge-border-color);
+}
+
+// --- vertical ----------------------------------------------------------------
+.oge-timeline-vertical {
+  .oge-timeline-item {
+    grid-template-columns: var(--oge-timeline-marker-icon-size) minmax(0, 1fr);
+    grid-template-areas: 'sep content';
+  }
+
+  .oge-timeline-item-start {
+    grid-template-columns: minmax(0, 1fr) var(--oge-timeline-marker-icon-size);
+    grid-template-areas: 'content sep';
+
+    .oge-timeline-content {
+      align-items: flex-end;
+      text-align: end;
+    }
+  }
+
+  .oge-timeline-separator {
+    flex-direction: column;
+    // the marker centres on the first text line of the content
+    padding-block-start: 4px;
+  }
+
+  .oge-timeline-connector {
+    inline-size: var(--oge-timeline-connector-width);
+    min-block-size: 16px;
+    margin-block: 4px;
+  }
+
+  .oge-timeline-content,
+  .oge-timeline-opposite {
+    padding-block-end: 20px;
+  }
+
+  .oge-timeline-item-last .oge-timeline-content,
+  .oge-timeline-item-last .oge-timeline-opposite {
+    padding-block-end: 0;
+  }
+}
+
+.oge-timeline-vertical.oge-timeline-alternating {
+  .oge-timeline-item,
+  .oge-timeline-item-start {
+    grid-template-columns:
+      minmax(0, 1fr) var(--oge-timeline-marker-icon-size)
+      minmax(0, 1fr);
+  }
+
+  .oge-timeline-item-end {
+    grid-template-areas: 'opp sep content';
+
+    .oge-timeline-opposite {
+      text-align: end;
+    }
+  }
+
+  .oge-timeline-item-start {
+    grid-template-areas: 'content sep opp';
+  }
+
+  .oge-timeline-opposite {
+    padding-block-start: 2px;
+  }
+}
+
+// --- horizontal --------------------------------------------------------------
+// Entries share the row; the list scrolls inline rather than widening the
+// page when they do not fit (390px phones).
+.oge-timeline-horizontal {
+  .oge-timeline-list {
+    display: flex;
+    overflow-x: auto;
+    @include tokens.scrollbar;
+  }
+
+  .oge-timeline-item {
+    flex: 1 1 0;
+    min-inline-size: 8rem;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      'sep'
+      'content';
+    row-gap: 8px;
+  }
+
+  .oge-timeline-item-start {
+    grid-template-areas:
+      'content'
+      'sep';
+  }
+
+  .oge-timeline-separator {
+    flex-direction: row;
+    block-size: var(--oge-timeline-marker-icon-size);
+  }
+
+  .oge-timeline-connector {
+    block-size: var(--oge-timeline-connector-width);
+    min-inline-size: 16px;
+    margin-inline: 4px;
+  }
+
+  .oge-timeline-content,
+  .oge-timeline-opposite {
+    padding-inline-end: 16px;
+  }
+}
+
+.oge-timeline-horizontal.oge-timeline-alternating {
+  .oge-timeline-item {
+    grid-template-rows: minmax(2.5em, auto) auto minmax(2.5em, auto);
+  }
+
+  .oge-timeline-item-end {
+    grid-template-areas:
+      'opp'
+      'sep'
+      'content';
+
+    .oge-timeline-opposite {
+      align-self: end;
+    }
+  }
+
+  .oge-timeline-item-start {
+    grid-template-areas:
+      'content'
+      'sep'
+      'opp';
+
+    .oge-timeline-content {
+      justify-content: flex-end;
+    }
+  }
+}
+
+// --- forced colors (Windows High Contrast) -----------------------------------
+// Markers keep a real border so their shape survives the repaint; filled vs
+// outlined stays readable as solid vs hollow.
+@include tokens.forced-colors {
+  .oge-timeline-marker {
+    border-color: CanvasText;
+    background: CanvasText;
+    color: Canvas;
+  }
+
+  .oge-timeline-marker-outlined {
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-timeline-marker-custom {
+    border: 0;
+    background: none;
+    color: CanvasText;
+  }
+
+  .oge-timeline-connector {
+    background: CanvasText;
+  }
+
+  .oge-timeline-time,
+  .oge-timeline-opposite,
+  .oge-timeline-description {
+    color: CanvasText;
+  }
+}
+
+// The timeline itself does not animate; the only motion is the horizontal
+// list's scroll, which follows the user's input.
+@include tokens.reduced-motion {
+  .oge-timeline-list {
+    scroll-behavior: auto;
+  }
+}

@@ -8,9 +8,14 @@
 // reference silent.
 import type {
   OgeAccordionMessages,
+  OgeAlertMessages,
+  OgeAvatarMessages,
+  OgeBadgeMessages,
   OgeBreadcrumbMessages,
   OgeButtonsMessages,
+  OgeChipMessages,
   OgeDrawerMessages,
+  OgeFabMessages,
   OgeFormsMessages,
   OgeGridMessages,
   OgeInputsMessages,
@@ -54,6 +59,10 @@ export interface OgeLocaleLayoutMessages {
   readonly loadIndicator?: OgeDeepPartial<OgeLoadIndicatorMessages>;
   readonly splitter?: OgeDeepPartial<OgeSplitterMessages>;
   readonly toolbar?: OgeDeepPartial<OgeToolbarMessages>;
+  readonly avatar?: OgeDeepPartial<OgeAvatarMessages>;
+  readonly badge?: OgeDeepPartial<OgeBadgeMessages>;
+  readonly chip?: OgeDeepPartial<OgeChipMessages>;
+  readonly alert?: OgeDeepPartial<OgeAlertMessages>;
 }
 
 /** The navigation family's catalogs, one per component. */
@@ -88,6 +97,8 @@ export interface OgeLocalePack {
   readonly inputs?: OgeDeepPartial<OgeInputsMessages>;
   /** Buttons (`provideOgeButtonsConfig`). */
   readonly buttons?: OgeDeepPartial<OgeButtonsMessages>;
+  /** Floating action button and speed dial (`provideOgeFabConfig`). */
+  readonly fab?: OgeDeepPartial<OgeFabMessages>;
   /** Modal, toast, tooltip (`provideOgeOverlayConfig`). */
   readonly overlay?: OgeDeepPartial<OgeOverlayMessages>;
   /** Tabs (`provideOgeTabsConfig`). */
@@ -96,7 +107,7 @@ export interface OgeLocalePack {
   readonly forms?: OgeDeepPartial<OgeFormsMessages>;
   /** File uploader (`provideOgeUploadConfig`). */
   readonly upload?: OgeDeepPartial<OgeUploadMessages>;
-  /** Accordion, progress bar, load indicator, splitter, toolbar. */
+  /** Accordion, progress bar, load indicator, splitter, toolbar, avatar, badge, chip, alert. */
   readonly layout?: OgeLocaleLayoutMessages;
   /** Breadcrumb, drawer, menubar, pagination, stepper, tree view. */
   readonly navigation?: OgeLocaleNavigationMessages;

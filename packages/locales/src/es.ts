@@ -404,6 +404,37 @@ export const es: OgeLocalePack = {
       scrollForward: 'Desplazar hacia delante',
       noData: 'No hay comandos para mostrar',
     },
+    avatar: {
+      avatar: 'Avatar',
+      withStatus: '{name} ({status})',
+      online: 'En línea',
+      away: 'Ausente',
+      busy: 'Ocupado',
+      offline: 'Desconectado',
+      overflow: '{count, plural, one {# más} other {# más}}',
+    },
+    badge: {
+      count:
+        '{count, plural, one {# elemento nuevo} other {# elementos nuevos}}',
+      overflow: '{max}+',
+      overflowCount:
+        '{max, plural, one {Más de # elemento nuevo} other {Más de # elementos nuevos}}',
+      dot: 'Nuevo',
+    },
+    chip: {
+      remove: 'Quitar {label}',
+      chipList: 'Etiquetas',
+    },
+    alert: {
+      dismiss: 'Descartar',
+      info: 'Información',
+      success: 'Éxito',
+      warning: 'Advertencia',
+      error: 'Error',
+    },
+  },
+  fab: {
+    speedDial: 'Acciones',
   },
   navigation: {
     breadcrumb: {

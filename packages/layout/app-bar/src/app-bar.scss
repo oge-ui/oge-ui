@@ -1,0 +1,178 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A three-section flex row. Start and end size to their content; the center
+// section takes the rest (and may shrink to zero, so a long title truncates
+// instead of pushing the actions off a phone screen).
+.oge-app-bar {
+  @include tokens.core-tokens;
+
+  --oge-app-bar-height: 56px;
+  --oge-app-bar-pad: 16px;
+  --oge-app-bar-gap: 8px;
+
+  display: flex;
+  align-items: center;
+  gap: var(--oge-app-bar-gap);
+  min-block-size: var(--oge-app-bar-height);
+  padding-inline: var(--oge-app-bar-pad);
+  border: 0 solid transparent;
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  transition: box-shadow 120ms ease;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-app-bar-sm {
+  --oge-app-bar-height: 48px;
+  --oge-app-bar-pad: 12px;
+}
+
+.oge-app-bar-lg {
+  --oge-app-bar-height: 64px;
+  --oge-app-bar-pad: 24px;
+  --oge-app-bar-gap: 12px;
+}
+
+.oge-app-bar-start,
+.oge-app-bar-center,
+.oge-app-bar-end {
+  display: flex;
+  align-items: center;
+  gap: var(--oge-app-bar-gap);
+  min-inline-size: 0;
+}
+
+.oge-app-bar-start,
+.oge-app-bar-end {
+  flex: none;
+}
+
+.oge-app-bar-start:empty,
+.oge-app-bar-end:empty {
+  display: none;
+}
+
+.oge-app-bar-center {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+
+  // a heading placed in the bar loses its document margins and truncates
+  > :is(h1, h2, h3, h4, h5, h6) {
+    overflow: hidden;
+    margin: 0;
+    font-size: 1.125em;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.oge-app-bar-center-centered {
+  justify-content: center;
+  text-align: center;
+}
+
+// --- colours -----------------------------------------------------------------
+// The hairline sits on the edge facing the content: below a top bar, above a
+// bottom one.
+.oge-app-bar-color-default.oge-app-bar-top {
+  border-block-end-width: 1px;
+  border-block-end-color: var(--oge-border-color);
+}
+
+.oge-app-bar-color-default.oge-app-bar-bottom {
+  border-block-start-width: 1px;
+  border-block-start-color: var(--oge-border-color);
+}
+
+.oge-app-bar-color-primary {
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+}
+
+.oge-app-bar-color-inverse {
+  background: var(--oge-tooltip-bg);
+  color: var(--oge-tooltip-color);
+}
+
+.oge-app-bar-color-transparent {
+  background: transparent;
+  color: inherit;
+}
+
+.oge-app-bar-elevated.oge-app-bar-top {
+  box-shadow: var(--oge-shadow-card);
+}
+
+.oge-app-bar-elevated.oge-app-bar-bottom {
+  box-shadow: var(--oge-shadow-popup);
+}
+
+// --- sticky / fixed ------------------------------------------------------------
+.oge-app-bar-sticky {
+  position: sticky;
+  z-index: var(--oge-z-app-bar);
+}
+
+.oge-app-bar-fixed {
+  position: fixed;
+  z-index: var(--oge-z-app-bar);
+  inset-inline: 0;
+  // safe areas as a floor: the normal gutter is unchanged where the inset is 0
+  padding-inline: max(var(--oge-app-bar-pad), env(safe-area-inset-left, 0px))
+    max(var(--oge-app-bar-pad), env(safe-area-inset-right, 0px));
+}
+
+.oge-app-bar-sticky.oge-app-bar-top,
+.oge-app-bar-fixed.oge-app-bar-top {
+  inset-block-start: 0;
+}
+
+.oge-app-bar-sticky.oge-app-bar-bottom,
+.oge-app-bar-fixed.oge-app-bar-bottom {
+  inset-block-end: 0;
+}
+
+.oge-app-bar-fixed.oge-app-bar-top {
+  padding-block-start: env(safe-area-inset-top, 0px);
+  min-block-size: calc(
+    var(--oge-app-bar-height) + env(safe-area-inset-top, 0px)
+  );
+}
+
+.oge-app-bar-fixed.oge-app-bar-bottom,
+.oge-app-bar-sticky.oge-app-bar-bottom {
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+  min-block-size: calc(
+    var(--oge-app-bar-height) + env(safe-area-inset-bottom, 0px)
+  );
+}
+
+@include tokens.reduced-motion {
+  .oge-app-bar {
+    transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) -----------------------------------
+// Backgrounds and shadows are repainted away, so the bar keeps a real frame
+// on its content edge in every colour mode.
+@include tokens.forced-colors {
+  .oge-app-bar {
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-app-bar-top {
+    border-block-end: 1px solid CanvasText;
+  }
+
+  .oge-app-bar-bottom {
+    border-block-start: 1px solid CanvasText;
+  }
+}

@@ -48,7 +48,13 @@ export type IconName =
   | 'stepper'
   | 'toolbar'
   | 'tree'
-  | 'workflow';
+  | 'workflow'
+  | 'user'
+  | 'tag'
+  | 'alert'
+  | 'timeline'
+  | 'app-bar'
+  | 'plus';
 
 /** Lucide-style inline SVG icons — no emoji, no icon-font dependency. */
 @Component({
@@ -241,6 +247,39 @@ export type IconName =
           <path d="M18 7h.01" />
           <path d="M3 14h18" />
           <path d="M3 18h12" />
+        }
+        @case ('user') {
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        }
+        @case ('tag') {
+          <path
+            d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"
+          />
+          <circle cx="7.5" cy="7.5" r="1.5" />
+        }
+        @case ('alert') {
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4" />
+          <path d="M12 16h.01" />
+        }
+        @case ('timeline') {
+          <path d="M6 3v18" />
+          <circle cx="6" cy="6" r="2" />
+          <circle cx="6" cy="18" r="2" />
+          <path d="M11 6h10" />
+          <path d="M11 18h7" />
+          <path d="M11 12h9" />
+        }
+        @case ('app-bar') {
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18" />
+          <path d="M7 6h.01" />
+        }
+        @case ('plus') {
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v8" />
+          <path d="M8 12h8" />
         }
         @case ('workflow') {
           <circle cx="5" cy="7" r="2.5" />

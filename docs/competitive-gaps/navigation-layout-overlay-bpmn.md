@@ -6,6 +6,8 @@ Date: 2026-10-03. Read-only research; no repo changes, no builds.
 
 **Status refresh (2026-10-06, G5a).** Wave G5a closed items 1–9 of the overlay / navigation / layout / buttons plan in both render layers (rows marked "Have (G5a)" below): popover, dialog helpers, rich tooltips, context-menu delegation, a non-modal window, the load panel, circular progress, the toggle button, radio / checkbox / header menu rows, menubar "More" overflow, cross-tree drag, label editing and node paging in the tree view, drawer items and swipe, the panel bar and a stand-alone expansion panel. From §3 / §4 these close shortlist rows 2, 3, 11, 20, 21 and 28 and recommendations 1, 2, 9, 10, 13 and 14; recommendation 12 is half done (the toggle button shipped, FAB / SpeedDial did not).
 
+**Status refresh (2026-10-06, W8a).** Wave W8a shipped the small display and feedback set in both render layers: avatar + avatar group, stand-alone / overlay badge, chip + chip list, inline alert, timeline, app bar, and the floating action button + speed dial (rows marked "Have (W8a)"; ranking items 4, 14-17, 19 and 29 are closed).
+
 **Method.** I took OGE's surface from `apps/dev-app/src/app/pages/{navigation,layout,overlay,tabs,buttons,bpmn}/*-api-data.ts`, cross-checked it against the React twins (`pages/react-*`, `packages/react/*/src/lib`), read the per-component parity tables in `ROADMAP.md` (lines 314-478 and 700-1884) and grepped `packages/` source to confirm every "Missing".
 
 The competitor feature lists come from my knowledge of the official docs: DevExtreme 25.x, Kendo UI for Angular 2025-26, Syncfusion Angular 2025-26 and bpmn-js / Camunda Modeler. They were **not** fetched live in this session. Where I am unsure a competitor ships something, the row says _Unverified_.
@@ -122,12 +124,12 @@ The **existing** components are unusually complete. Every one has a ROADMAP pari
 
 ### 2.9 Toolbar / AppBar
 
-| Feature                                                                         | Who has it                  | OGE status                                                                                                            | Impact | Effort |
-| ------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| Overflow modes menu/scroll/extended, priorities, three location groups          | dx/K/S                      | Have (all of S's `overflowMode`s)                                                                                     | —      | —      |
-| Toggle items, runtime add/remove/hide/enable                                    | dx/K/S                      | Have                                                                                                                  | —      | —      |
-| **AppBar (positioned header/footer bar, sticky/fixed, themeColor, responsive)** | K (AppBar), S (AppBar)      | **Partial**: toolbar slots cover layout; no `position: top/bottom`, fixed/sticky or "app bar" semantics (role=banner) | L      | S      |
-| **Ribbon (tabs + groups + gallery + backstage + simplified mode)**              | S (Ribbon), dx (no), K (no) | **Missing**                                                                                                           | M      | L      |
+| Feature                                                                         | Who has it                  | OGE status                                                                                                                                                                     | Impact | Effort |
+| ------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ |
+| Overflow modes menu/scroll/extended, priorities, three location groups          | dx/K/S                      | Have (all of S's `overflowMode`s)                                                                                                                                              | —      | —      |
+| Toggle items, runtime add/remove/hide/enable                                    | dx/K/S                      | Have                                                                                                                                                                           | —      | —      |
+| **AppBar (positioned header/footer bar, sticky/fixed, themeColor, responsive)** | K (AppBar), S (AppBar)      | **Have (W8a)**: `oge-app-bar` — top / bottom, static / sticky / fixed with safe-area padding, four colours, opt-in `banner` / `contentinfo` / `navigation` / `region` landmark | L      | S      |
+| **Ribbon (tabs + groups + gallery + backstage + simplified mode)**              | S (Ribbon), dx (no), K (no) | **Missing**                                                                                                                                                                    | M      | L      |
 
 ### 2.10 Progress / LoadIndicator / Skeleton
 
@@ -167,13 +169,13 @@ The **existing** components are unusually complete. Every one has a ROADMAP pari
 
 ### 2.13 Toast / Notification
 
-| Feature                                                                                         | Who has it                                                 | OGE status                                                 | Impact | Effort |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- | ------ | ------ |
-| 6 positions, max visible, progress, actions, pause on hover, template, `promise()`, coalescing  | dx/K/S                                                     | Have (beyond the references)                               | —      | —      |
-| Stacked/expanded deck (sonner style)                                                            | P/sonner                                                   | Backlog                                                    | L      | M      |
-| Swipe to dismiss                                                                                | S/Material                                                 | Backlog                                                    | L      | S      |
-| **Notification center / inbox** (history of past toasts, unread badge, mark-read)               | none of dx/K/S                                             | Missing; differentiator opportunity, not a parity gap      | L      | M      |
-| **Inline Message / Alert / Banner** (static severity banner with icon, close, actions, in flow) | S (Message), P (Message/Messages), Material (none), K (no) | **Missing**: no `oge-message` / `oge-alert` / `oge-banner` | M      | S      |
+| Feature                                                                                         | Who has it                                                 | OGE status                                                                               | Impact | Effort |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------ | ------ |
+| 6 positions, max visible, progress, actions, pause on hover, template, `promise()`, coalescing  | dx/K/S                                                     | Have (beyond the references)                                                             | —      | —      |
+| Stacked/expanded deck (sonner style)                                                            | P/sonner                                                   | Backlog                                                                                  | L      | M      |
+| Swipe to dismiss                                                                                | S/Material                                                 | Backlog                                                                                  | L      | S      |
+| **Notification center / inbox** (history of past toasts, unread badge, mark-read)               | none of dx/K/S                                             | Missing; differentiator opportunity, not a parity gap                                    | L      | M      |
+| **Inline Message / Alert / Banner** (static severity banner with icon, close, actions, in flow) | S (Message), P (Message/Messages), Material (none), K (no) | **Have (W8a)**: `oge-alert` — four severities, title, actions, dismiss, role by severity | M      | S      |
 
 ### 2.14 Tabs
 
@@ -193,9 +195,9 @@ The **existing** components are unusually complete. Every one has a ROADMAP pari
 | ButtonGroup: none/single/multiple selection                                                                             | dx/K/S                                                          | Have                                                      | —      | —      |
 | DropDownButton + SplitButton, remember last action, lazy items, custom content                                          | dx/K/S                                                          | Have                                                      | —      | —      |
 | **Stand-alone toggle button (`[(pressed)]`, aria-pressed)**                                                             | K (`toggleable` + `selected`), S (`isToggle`), P (ToggleButton) | **Have (G5a)**: `toggle` + `[(selected)]`, `aria-pressed` | M      | S      |
-| **FloatingActionButton** (positioned, align/offset, extended label)                                                     | K (FAB), S (FAB), dx (SpeedDialAction)                          | **Missing**                                               | M      | S      |
-| **SpeedDial** (FAB plus radial/linear item list)                                                                        | K (FAB `dialItems`), S (SpeedDial), dx (SpeedDialAction)        | **Missing**                                               | M      | M      |
-| **Chip / ChipList** (selectable, removable, avatar, filter chips)                                                       | K (Chip, ChipList), S (Chips), P (Chip), Material (chips)       | **Missing** (tag-box has tags internally)                 | **H**  | S      |
+| **FloatingActionButton** (positioned, align/offset, extended label)                                                     | K (FAB), S (FAB), dx (SpeedDialAction)                          | **Have (W8a)**: `oge-fab` (`@oge-ui/buttons/fab`)         | M      | S      |
+| **SpeedDial** (FAB plus radial/linear item list)                                                                        | K (FAB `dialItems`), S (SpeedDial), dx (SpeedDialAction)        | **Have (W8a)**: `oge-speed-dial`, linear, APG menu button | M      | M      |
+| **Chip / ChipList** (selectable, removable, avatar, filter chips)                                                       | K (Chip, ChipList), S (Chips), P (Chip), Material (chips)       | **Have (W8a)**: `oge-chip` + `oge-chip-list`              | **H**  | S      |
 | Progress button                                                                                                         | S (ProgressButton)                                              | Partial (`loading` spinner; no fill progress)             | L      | S      |
 | SmartPasteButton (AI form fill from clipboard)                                                                          | K (SmartPasteButton), S (Smart Paste)                           | **Missing**                                               | M      | M      |
 

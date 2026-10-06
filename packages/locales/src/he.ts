@@ -402,6 +402,37 @@ export const he: OgeLocalePack = {
       scrollForward: 'גלילה קדימה',
       noData: 'אין פקודות להצגה',
     },
+    avatar: {
+      avatar: 'אווטאר',
+      withStatus: '{name} ({status})',
+      online: 'מחובר',
+      away: 'לא נמצא',
+      busy: 'עסוק',
+      offline: 'לא מחובר',
+      overflow: '{count, plural, one {עוד אחד} two {עוד שניים} other {עוד #}}',
+    },
+    badge: {
+      count:
+        '{count, plural, one {פריט חדש אחד} two {שני פריטים חדשים} other {# פריטים חדשים}}',
+      overflow: '{max}+',
+      overflowCount:
+        '{max, plural, one {יותר מפריט חדש אחד} two {יותר משני פריטים חדשים} other {יותר מ־# פריטים חדשים}}',
+      dot: 'חדש',
+    },
+    chip: {
+      remove: 'הסרת {label}',
+      chipList: 'תגיות',
+    },
+    alert: {
+      dismiss: 'סגירה',
+      info: 'מידע',
+      success: 'הצלחה',
+      warning: 'אזהרה',
+      error: 'שגיאה',
+    },
+  },
+  fab: {
+    speedDial: 'פעולות',
   },
   navigation: {
     breadcrumb: {

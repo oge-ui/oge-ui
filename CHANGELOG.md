@@ -7,6 +7,64 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Layout and feedback components (W8a) — `@oge-ui/layout`, `@oge-ui/buttons`, `@oge-ui/react-layout`, `@oge-ui/react-buttons`, `@oge-ui/behavior`, `@oge-ui/locales`
+
+Seven new components in both render layers, each a secondary entry with its
+decisions in a shared `@oge-ui/behavior` core:
+
+- **Avatar and avatar group** (`@oge-ui/layout/avatar`): image → initials →
+  icon fallback chain (`ogeResolveAvatarContent`, locale-aware initials),
+  five sizes, circle / rounded / square, a presence dot spoken through the
+  accessible name (`withStatus`), `decorative` for avatars next to a visible
+  name, `imageLoaded` / `imageFailed`. The group stacks items or projected
+  avatars, folds the rest into a "+N" surplus avatar (`max` counts it, `total`
+  covers partially loaded lists) and passes size and shape down.
+- **Badge** (`@oge-ui/layout/badge`): count (with a `max` — "99+"), dot or
+  short text, stand-alone or overlaid on any content at four logical corners
+  (`overlap: 'circle'` for round hosts), severities, `showZero` / `invisible`.
+  The glyph is `aria-hidden`; a plural-aware description ("5 new items") is
+  wired into the anchored control's `aria-describedby`, and `announce` speaks
+  changes in a polite live region.
+- **Chip and chip list** (`@oge-ui/layout/chip`): stand-alone chips that toggle
+  (`aria-pressed`) or remove (a real ✕ button, Delete / Backspace), icons and
+  leading avatars; a data-driven list that renders the APG listbox when it
+  selects (single / multiple, roving focus, `aria-keyshortcuts` for removal),
+  a layout grid when it only removes, a plain list otherwise. Cancelable
+  `itemRemoving`, `itemRemoved`, `selectionChanged`, `itemClick`, focus that
+  follows a removal, and a chip template / render prop.
+- **Alert** (`@oge-ui/layout/alert`): inline info / success / warning / error
+  message with a title, an actions slot, a custom icon slot and a dismiss
+  button; `role="alert"` for errors and warnings, `role="status"` otherwise
+  (`live` overrides, `off` for permanent notes); soft / outlined / filled;
+  cancelable `closing`, `closed`, `[(visible)]`, `show()` / `close()`; focus
+  moves on when the dismissed alert held it.
+- **Timeline** (`@oge-ui/layout/timeline`): an ordered list, vertical or
+  horizontal, items on the start or end side or alternating, an opposite
+  column, severity markers with icons and an outlined variant, `Date` times
+  formatted in the locale inside `<time datetime>`, and content / marker /
+  opposite templates (render props in React).
+- **App bar** (`@oge-ui/layout/app-bar`): top or bottom bar with start / center
+  / end sections, static / sticky / fixed placement padded with
+  `env(safe-area-inset-*)`, default / primary / inverse / transparent colours,
+  three sizes, an elevation, and an opt-in landmark (`banner`,
+  `contentinfo`, `navigation`, `region`).
+- **Floating action button and speed dial** (`@oge-ui/buttons/fab`, the
+  buttons package's first secondary entry): six pinned positions with
+  safe-area insets, fixed / absolute / static modes, three sizes, an extended
+  label; the speed dial follows the APG menu-button pattern (arrow keys along
+  the dial axis, RTL-aware, wrap, Escape returns focus, Tab closes), unfolds
+  away from its edge or in an explicit direction, opens on click or hover and
+  shows its action labels on hover, always or never.
+- **Tokens**: `--oge-avatar-bg` / `--oge-avatar-fg` (derived, every theme),
+  `--oge-z-fab` (800) and `--oge-z-app-bar` (700).
+- **Locales**: new `layout.avatar`, `layout.badge`, `layout.chip`,
+  `layout.alert` and `fab` slices translated in all ten packs and wired into
+  `provideOgeLocale()` / `<OgeLocaleProvider>` (the avatar, badge and timeline
+  configs also take the pack's `locale`).
+- **Docs**: overview and API pages for both frameworks (`/components/avatar`,
+  `/chip`, `/alert`, `/timeline`, `/app-bar`, `/buttons/fab`), gallery cards,
+  landing tiles and regenerated `llms.txt` files.
+
 ### BPMN editor depth (G5b) — `@oge-ui/bpmn`, `@oge-ui/react-bpmn`, `@oge-ui/bpmn-engine`, `@oge-ui/locales`
 
 - **Validation**: a bpmnlint-style rule engine in the engine (`OgeBpmnLintRule

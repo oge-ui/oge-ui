@@ -11,3 +11,4 @@
 @use '../../../buttons/src/lib/drop-down-button/drop-down-button.scss';
 // The panel/menu chrome ships with `@oge-ui/react-overlay/styles.css` — the
 // docs tell drop-down users to import both, exactly one time each.
+@use '../../../buttons/fab/src/fab.scss';

@@ -4,6 +4,9 @@ import {
   OGE_REACT_BUTTON_API,
   OGE_REACT_BUTTON_GROUP_API,
   OGE_REACT_DROP_DOWN_BUTTON_API,
+  OGE_REACT_FAB_API,
+  OGE_REACT_FAB_CONFIG_API,
+  OGE_REACT_SPEED_DIAL_API,
 } from './react-buttons-api-data';
 
 /**
@@ -33,10 +36,16 @@ import {
       title="&lt;OgeDropDownButton&gt;"
       [sections]="dropDownButtonApi"
     />
+    <app-api-reference title="&lt;OgeFab&gt;" [sections]="fabApi" />
+    <app-api-reference title="&lt;OgeSpeedDial&gt;" [sections]="speedDialApi" />
+    <app-api-reference title="FAB configuration" [sections]="fabConfigApi" />
   `,
 })
 export class ReactButtonsApiSections {
   protected readonly buttonApi = OGE_REACT_BUTTON_API;
   protected readonly buttonGroupApi = OGE_REACT_BUTTON_GROUP_API;
   protected readonly dropDownButtonApi = OGE_REACT_DROP_DOWN_BUTTON_API;
+  protected readonly fabApi = OGE_REACT_FAB_API;
+  protected readonly speedDialApi = OGE_REACT_SPEED_DIAL_API;
+  protected readonly fabConfigApi = OGE_REACT_FAB_CONFIG_API;
 }

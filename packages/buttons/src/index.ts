@@ -41,3 +41,25 @@ export {
   type OgeButtonsConfigInput,
   type OgeButtonsMessages,
 } from './lib/config';
+export { OgeFab, OgeSpeedDial } from '@oge-ui/buttons/fab';
+export {
+  OGE_FAB_CONFIG,
+  OGE_DEFAULT_FAB_CONFIG,
+  OGE_DEFAULT_FAB_MESSAGES,
+  provideOgeFabConfig,
+  type OgeFabConfig,
+  type OgeFabConfigInput,
+  type OgeFabMessages,
+} from '@oge-ui/buttons/fab';
+export type {
+  OgeFabClickEvent,
+  OgeFabPosition,
+  OgeFabPositionMode,
+  OgeFabSeverity,
+  OgeFabSize,
+  OgeSpeedDialDirection,
+  OgeSpeedDialItem,
+  OgeSpeedDialItemClickEvent,
+  OgeSpeedDialLabelMode,
+  OgeSpeedDialOpenMode,
+} from '@oge-ui/buttons/fab';

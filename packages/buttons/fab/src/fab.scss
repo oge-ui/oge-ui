@@ -1,0 +1,428 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// --- positioning layer (oge-fab and oge-speed-dial hosts) -------------------
+.oge-fab-layer {
+  @include tokens.core-tokens;
+
+  // component-local knobs (the size presets swap them)
+  --oge-fab-offset: 16px;
+  --oge-fab-size: 56px;
+  --oge-fab-icon-size: 24px;
+  --oge-fab-action-size: 40px;
+  // per-severity palette; the severity modifiers only swap these
+  --oge-fab-bg: var(--oge-accent);
+  --oge-fab-fg: var(--oge-severity-contrast);
+
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--oge-font-size);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-fab-fixed,
+.oge-fab-absolute {
+  z-index: var(--oge-z-fab);
+}
+
+.oge-fab-fixed {
+  position: fixed;
+}
+
+.oge-fab-absolute {
+  position: absolute;
+}
+
+.oge-fab-static {
+  position: relative;
+}
+
+// Edges: the offset is the gap, the safe-area inset its floor (zero unless
+// the app opts into viewport-fit=cover). Insets are physical, so the
+// logical start/end sides pick the matching physical inset per direction.
+.oge-fab-fixed,
+.oge-fab-absolute {
+  &[class*='oge-fab-position-top'] {
+    top: max(var(--oge-fab-offset), env(safe-area-inset-top, 0px));
+  }
+
+  &[class*='oge-fab-position-bottom'] {
+    bottom: max(var(--oge-fab-offset), env(safe-area-inset-bottom, 0px));
+  }
+
+  &.oge-fab-position-top-start,
+  &.oge-fab-position-bottom-start {
+    left: max(var(--oge-fab-offset), env(safe-area-inset-left, 0px));
+
+    &:dir(rtl) {
+      left: auto;
+      right: max(var(--oge-fab-offset), env(safe-area-inset-right, 0px));
+    }
+  }
+
+  &.oge-fab-position-top-end,
+  &.oge-fab-position-bottom-end {
+    right: max(var(--oge-fab-offset), env(safe-area-inset-right, 0px));
+
+    &:dir(rtl) {
+      right: auto;
+      left: max(var(--oge-fab-offset), env(safe-area-inset-left, 0px));
+    }
+  }
+
+  &.oge-fab-position-top-center,
+  &.oge-fab-position-bottom-center {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.oge-fab-size-sm {
+  --oge-fab-size: 40px;
+  --oge-fab-icon-size: 20px;
+  --oge-fab-action-size: 32px;
+}
+
+.oge-fab-size-lg {
+  --oge-fab-size: 72px;
+  --oge-fab-icon-size: 32px;
+  --oge-fab-action-size: 48px;
+}
+
+.oge-fab-severity-normal {
+  --oge-fab-bg: var(--oge-bg);
+  --oge-fab-fg: var(--oge-text-color);
+}
+
+.oge-fab-severity-success {
+  --oge-fab-bg: var(--oge-success);
+}
+
+.oge-fab-severity-warning {
+  --oge-fab-bg: var(--oge-warning);
+}
+
+.oge-fab-severity-danger {
+  --oge-fab-bg: var(--oge-danger);
+}
+
+// --- the round button -------------------------------------------------------
+.oge-fab-button {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: var(--oge-fab-size);
+  height: var(--oge-fab-size);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--oge-fab-bg);
+  color: var(--oge-fab-fg);
+  box-shadow: var(--oge-shadow-popup);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    box-shadow 120ms ease,
+    transform 120ms ease,
+    filter 120ms ease;
+
+  &:hover:not(:disabled) {
+    box-shadow: var(--oge-shadow-popup), var(--oge-shadow-btn-hover);
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    filter: brightness(0.95);
+  }
+
+  &:focus {
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    background: var(--oge-header-bg);
+    color: var(--oge-muted-color);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+.oge-fab-severity-normal .oge-fab-button {
+  border-color: var(--oge-border-color);
+}
+
+.oge-fab-icon,
+.oge-fab-button > svg {
+  flex: none;
+  width: var(--oge-fab-icon-size);
+  height: var(--oge-fab-icon-size);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oge-fab-extended .oge-fab-button {
+  width: auto;
+  min-width: var(--oge-fab-size);
+  padding-inline: calc(var(--oge-fab-size) * 0.32);
+}
+
+.oge-fab-label {
+  white-space: nowrap;
+}
+
+// --- speed dial -------------------------------------------------------------
+.oge-speed-dial {
+  // the menu is laid out against this box in every position mode
+  isolation: isolate;
+}
+
+.oge-speed-dial-icon {
+  transition: transform 120ms ease;
+}
+
+.oge-speed-dial-open .oge-speed-dial-icon {
+  transform: rotate(45deg);
+}
+
+.oge-speed-dial-menu {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+// the action nearest the FAB comes first in the DOM and on screen
+.oge-speed-dial-up .oge-speed-dial-menu {
+  bottom: calc(100% + 12px);
+  inset-inline: 0;
+  flex-direction: column-reverse;
+}
+
+.oge-speed-dial-down .oge-speed-dial-menu {
+  top: calc(100% + 12px);
+  inset-inline: 0;
+  flex-direction: column;
+}
+
+.oge-speed-dial-start .oge-speed-dial-menu {
+  inset-block: 0;
+  inset-inline-end: calc(100% + 12px);
+  flex-direction: row-reverse;
+}
+
+.oge-speed-dial-end .oge-speed-dial-menu {
+  inset-block: 0;
+  inset-inline-start: calc(100% + 12px);
+  flex-direction: row;
+}
+
+@keyframes oge-speed-dial-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.oge-speed-dial-action {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--oge-fab-action-size);
+  height: var(--oge-fab-action-size);
+  padding: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 999px;
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-btn-hover);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  animation: oge-speed-dial-in 120ms ease both;
+  animation-delay: calc(var(--oge-speed-dial-index) * 30ms);
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  @include tokens.hit-area;
+
+  &:hover:not(.oge-speed-dial-action-disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-speed-dial-action-disabled {
+  color: var(--oge-muted-color);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.oge-speed-dial-action-accent {
+  color: var(--oge-accent);
+}
+
+.oge-speed-dial-action-success {
+  color: var(--oge-success);
+}
+
+.oge-speed-dial-action-warning {
+  color: var(--oge-warning);
+}
+
+.oge-speed-dial-action-danger {
+  color: var(--oge-danger);
+}
+
+.oge-speed-dial-action-icon {
+  width: calc(var(--oge-fab-action-size) * 0.5);
+  height: calc(var(--oge-fab-action-size) * 0.5);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+// The label bubble: inside the menuitem (it is the accessible name), drawn
+// beside the action on the side away from the screen edge.
+.oge-speed-dial-label {
+  position: absolute;
+  padding: 4px 8px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-tooltip-bg);
+  color: var(--oge-tooltip-color);
+  font-size: 0.85em;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.oge-speed-dial-up,
+.oge-speed-dial-down {
+  &.oge-speed-dial-labels-before .oge-speed-dial-label {
+    inset-inline-end: calc(100% + 10px);
+  }
+
+  &.oge-speed-dial-labels-after .oge-speed-dial-label {
+    inset-inline-start: calc(100% + 10px);
+  }
+}
+
+.oge-speed-dial-start,
+.oge-speed-dial-end {
+  &.oge-speed-dial-labels-above .oge-speed-dial-label {
+    bottom: calc(100% + 10px);
+  }
+
+  &.oge-speed-dial-labels-below .oge-speed-dial-label {
+    top: calc(100% + 10px);
+  }
+}
+
+.oge-speed-dial-labels-always .oge-speed-dial-label,
+.oge-speed-dial-labels-hover .oge-speed-dial-action:hover .oge-speed-dial-label,
+.oge-speed-dial-labels-hover
+  .oge-speed-dial-action:focus-visible
+  .oge-speed-dial-label {
+  opacity: 1;
+}
+
+// touch screens have no hover: show the labels whenever the dial is open
+@media (hover: none) {
+  .oge-speed-dial-labels-hover .oge-speed-dial-label {
+    opacity: 1;
+  }
+}
+
+// `none`: visually hidden, still the accessible name
+.oge-speed-dial-labels-none .oge-speed-dial-label {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@include tokens.reduced-motion {
+  .oge-fab-button,
+  .oge-speed-dial-icon,
+  .oge-speed-dial-action,
+  .oge-speed-dial-label {
+    transition: none;
+  }
+
+  .oge-fab-button:hover:not(:disabled) {
+    transform: none;
+  }
+
+  // appear without the scale-in movement
+  .oge-speed-dial-action {
+    animation: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+@include tokens.forced-colors {
+  .oge-fab-button,
+  .oge-speed-dial-action {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+
+  .oge-fab-button:disabled,
+  .oge-speed-dial-action-disabled {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  // the open dial: its FAB reads as pressed
+  .oge-speed-dial-open .oge-speed-dial-toggle {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-speed-dial-label {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}

@@ -38,13 +38,19 @@ const COVERAGE: Readonly<
   angular: {},
   react: {
     buttons: '*',
-    // The layout package ships as five route families; each covers its
+    // The layout package ships as ten route families; each covers its
     // overview and its API page.
     accordion: ['', 'api'],
     card: ['', 'api'],
     progress: ['', 'api', 'load-panel'],
     splitter: ['', 'api'],
     toolbar: ['', 'api'],
+    // W8a layout and feedback families: overview and API page each
+    avatar: ['', 'api'],
+    chip: ['', 'api'],
+    alert: ['', 'api'],
+    timeline: ['', 'api'],
+    'app-bar': ['', 'api'],
     // the API page is mirrored; only `routed` is Angular-router-driven, so
     // React readers get the shell notice there (see docs/REACT-PARITY.md)
     tabs: ['', 'api'],

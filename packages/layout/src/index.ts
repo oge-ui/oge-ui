@@ -187,3 +187,126 @@ export type {
   OgeToolbarSize,
   OgeToolbarStylingMode,
 } from '@oge-ui/layout/toolbar';
+export { OgeAvatar, OgeAvatarGroup } from '@oge-ui/layout/avatar';
+export {
+  OGE_AVATAR_CONFIG,
+  OGE_DEFAULT_AVATAR_CONFIG,
+  OGE_DEFAULT_AVATAR_MESSAGES,
+  provideOgeAvatarConfig,
+  type OgeAvatarConfig,
+  type OgeAvatarConfigInput,
+  type OgeAvatarMessages,
+} from '@oge-ui/layout/avatar';
+export type {
+  OgeAvatarImageFailedEvent,
+  OgeAvatarImageLoadedEvent,
+  OgeAvatarItem,
+  OgeAvatarShape,
+  OgeAvatarSize,
+  OgeAvatarStatus,
+} from '@oge-ui/layout/avatar';
+export { OgeBadge } from '@oge-ui/layout/badge';
+export {
+  OGE_BADGE_CONFIG,
+  OGE_DEFAULT_BADGE_CONFIG,
+  OGE_DEFAULT_BADGE_MESSAGES,
+  provideOgeBadgeConfig,
+  type OgeBadgeConfig,
+  type OgeBadgeConfigInput,
+  type OgeBadgeMessages,
+} from '@oge-ui/layout/badge';
+export type {
+  OgeBadgeOverlap,
+  OgeBadgePosition,
+  OgeBadgeSeverity,
+  OgeBadgeSize,
+  OgeBadgeValue,
+} from '@oge-ui/layout/badge';
+export { OgeChip, OgeChipList } from '@oge-ui/layout/chip';
+export {
+  OgeChipTemplate,
+  type OgeChipTemplateContext,
+} from '@oge-ui/layout/chip';
+export {
+  OGE_CHIP_CONFIG,
+  OGE_DEFAULT_CHIP_CONFIG,
+  OGE_DEFAULT_CHIP_MESSAGES,
+  provideOgeChipConfig,
+  type OgeChipConfig,
+  type OgeChipConfigInput,
+  type OgeChipMessages,
+} from '@oge-ui/layout/chip';
+export type {
+  OgeChipAvatar,
+  OgeChipItem,
+  OgeChipItemClickEvent,
+  OgeChipItemRemovedEvent,
+  OgeChipItemRemovingEvent,
+  OgeChipKey,
+  OgeChipRemovedEvent,
+  OgeChipSelectionChangedEvent,
+  OgeChipSelectionMode,
+  OgeChipSeverity,
+  OgeChipSize,
+  OgeChipStylingMode,
+} from '@oge-ui/layout/chip';
+export { OgeAlert } from '@oge-ui/layout/alert';
+export { OgeAlertActions, OgeAlertIcon } from '@oge-ui/layout/alert';
+export {
+  OGE_ALERT_CONFIG,
+  OGE_DEFAULT_ALERT_CONFIG,
+  OGE_DEFAULT_ALERT_MESSAGES,
+  provideOgeAlertConfig,
+  type OgeAlertConfig,
+  type OgeAlertConfigInput,
+  type OgeAlertMessages,
+} from '@oge-ui/layout/alert';
+export type {
+  OgeAlertClosedEvent,
+  OgeAlertClosingEvent,
+  OgeAlertLive,
+  OgeAlertSeverity,
+  OgeAlertStylingMode,
+} from '@oge-ui/layout/alert';
+export { OgeTimeline } from '@oge-ui/layout/timeline';
+export {
+  OgeTimelineContentTemplate,
+  OgeTimelineMarkerTemplate,
+  OgeTimelineOppositeTemplate,
+  type OgeTimelineItemTemplateContext,
+} from '@oge-ui/layout/timeline';
+export {
+  OGE_TIMELINE_CONFIG,
+  OGE_DEFAULT_TIMELINE_CONFIG,
+  provideOgeTimelineConfig,
+  type OgeTimelineConfig,
+  type OgeTimelineConfigInput,
+} from '@oge-ui/layout/timeline';
+export type {
+  OgeTimelineAlign,
+  OgeTimelineItem,
+  OgeTimelineMarkerVariant,
+  OgeTimelineOrientation,
+  OgeTimelineSeverity,
+} from '@oge-ui/layout/timeline';
+export { OgeAppBar } from '@oge-ui/layout/app-bar';
+export {
+  OgeAppBarCenter,
+  OgeAppBarEnd,
+  OgeAppBarStart,
+} from '@oge-ui/layout/app-bar';
+export {
+  OGE_APP_BAR_CONFIG,
+  OGE_DEFAULT_APP_BAR_CONFIG,
+  provideOgeAppBarConfig,
+  type OgeAppBarConfig,
+  type OgeAppBarConfigInput,
+} from '@oge-ui/layout/app-bar';
+export type {
+  OgeAppBarCenterAlign,
+  OgeAppBarColor,
+  OgeAppBarLandmark,
+  OgeAppBarPosition,
+  OgeAppBarPositionMode,
+  OgeAppBarSize,
+} from '@oge-ui/layout/app-bar';

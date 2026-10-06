@@ -396,6 +396,35 @@ export const tr: OgeLocalePack = {
       scrollForward: 'İleri kaydır',
       noData: 'Görüntülenecek komut yok',
     },
+    avatar: {
+      avatar: 'Avatar',
+      withStatus: '{name} ({status})',
+      online: 'Çevrimiçi',
+      away: 'Uzakta',
+      busy: 'Meşgul',
+      offline: 'Çevrimdışı',
+      overflow: '{count, plural, other {# daha}}',
+    },
+    badge: {
+      count: '{count, plural, other {# yeni öğe}}',
+      overflow: '{max}+',
+      overflowCount: '{max, plural, other {# adetten fazla yeni öğe}}',
+      dot: 'Yeni',
+    },
+    chip: {
+      remove: '{label} öğesini kaldır',
+      chipList: 'Etiketler',
+    },
+    alert: {
+      dismiss: 'Kapat',
+      info: 'Bilgi',
+      success: 'Başarılı',
+      warning: 'Uyarı',
+      error: 'Hata',
+    },
+  },
+  fab: {
+    speedDial: 'Eylemler',
   },
   navigation: {
     breadcrumb: {

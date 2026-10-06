@@ -1,9 +1,14 @@
 import type { Provider } from '@angular/core';
 import {
   OGE_DEFAULT_ACCORDION_MESSAGES,
+  OGE_DEFAULT_ALERT_MESSAGES,
+  OGE_DEFAULT_AVATAR_MESSAGES,
+  OGE_DEFAULT_BADGE_MESSAGES,
   OGE_DEFAULT_BREADCRUMB_MESSAGES,
   OGE_DEFAULT_BUTTONS_MESSAGES,
+  OGE_DEFAULT_CHIP_MESSAGES,
   OGE_DEFAULT_DRAWER_MESSAGES,
+  OGE_DEFAULT_FAB_MESSAGES,
   OGE_DEFAULT_FORMS_MESSAGES,
   OGE_DEFAULT_GRID_MESSAGES,
   OGE_DEFAULT_INPUTS_MESSAGES,
@@ -20,13 +25,19 @@ import {
   OGE_DEFAULT_UPLOAD_MESSAGES,
 } from '@oge-ui/behavior';
 import { provideOgeButtonsConfig } from '@oge-ui/buttons';
+import { provideOgeFabConfig } from '@oge-ui/buttons/fab';
 import { provideOgeFormsConfig } from '@oge-ui/forms';
 import { provideOgeGridConfig } from '@oge-ui/grid';
 import { provideOgeInputsConfig } from '@oge-ui/inputs/field';
 import { provideOgeAccordionConfig } from '@oge-ui/layout/accordion';
+import { provideOgeAlertConfig } from '@oge-ui/layout/alert';
+import { provideOgeAvatarConfig } from '@oge-ui/layout/avatar';
+import { provideOgeBadgeConfig } from '@oge-ui/layout/badge';
+import { provideOgeChipConfig } from '@oge-ui/layout/chip';
 import { provideOgeLoadIndicatorConfig } from '@oge-ui/layout/load-indicator';
 import { provideOgeProgressBarConfig } from '@oge-ui/layout/progress-bar';
 import { provideOgeSplitterConfig } from '@oge-ui/layout/splitter';
+import { provideOgeTimelineConfig } from '@oge-ui/layout/timeline';
 import { provideOgeToolbarConfig } from '@oge-ui/layout/toolbar';
 import { ogeMergeMessages, type OgeLocalePack } from '@oge-ui/locales';
 import {
@@ -152,6 +163,38 @@ export function provideOgeLocale(pack: PackSource): Provider[] {
           OGE_DEFAULT_TOOLBAR_MESSAGES,
           p.layout?.toolbar,
         ),
+      })),
+    ),
+    provideOgeAvatarConfig(
+      config((p) => ({
+        locale: p.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_AVATAR_MESSAGES,
+          p.layout?.avatar,
+        ),
+      })),
+    ),
+    provideOgeBadgeConfig(
+      config((p) => ({
+        locale: p.locale,
+        messages: ogeMergeMessages(OGE_DEFAULT_BADGE_MESSAGES, p.layout?.badge),
+      })),
+    ),
+    provideOgeChipConfig(
+      config((p) => ({
+        messages: ogeMergeMessages(OGE_DEFAULT_CHIP_MESSAGES, p.layout?.chip),
+      })),
+    ),
+    provideOgeAlertConfig(
+      config((p) => ({
+        messages: ogeMergeMessages(OGE_DEFAULT_ALERT_MESSAGES, p.layout?.alert),
+      })),
+    ),
+    // no catalog — the timeline only needs the pack's locale for its dates
+    provideOgeTimelineConfig(config((p) => ({ locale: p.locale }))),
+    provideOgeFabConfig(
+      config((p) => ({
+        messages: ogeMergeMessages(OGE_DEFAULT_FAB_MESSAGES, p.fab),
       })),
     ),
     provideOgeBreadcrumbConfig(

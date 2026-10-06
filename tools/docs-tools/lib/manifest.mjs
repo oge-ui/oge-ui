@@ -91,7 +91,7 @@ export const PACKAGES = [
     npm: '@oge-ui/buttons',
     label: 'Buttons',
     summary:
-      'Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, stand-alone toggle buttons with `aria-pressed`, button groups and drop-down/split buttons.',
+      'Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, stand-alone toggle buttons with `aria-pressed`, button groups, drop-down/split buttons, and (`@oge-ui/buttons/fab`) a floating action button pinned with safe-area insets plus a speed dial on the WAI-ARIA APG menu-button pattern.',
     docsRoot: '/components/buttons',
     pageDirs: ['buttons'],
     apiPage: 'apps/dev-app/src/app/pages/buttons/api.ts',
@@ -124,7 +124,7 @@ export const PACKAGES = [
     npm: '@oge-ui/layout',
     label: 'Layout',
     summary:
-      'Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right.',
+      'Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks.',
     docsRoot: '/components/accordion',
     pageDirs: ['layout'],
     apiPage: [
@@ -133,6 +133,11 @@ export const PACKAGES = [
       'apps/dev-app/src/app/pages/layout/progress-api.ts',
       'apps/dev-app/src/app/pages/layout/splitter-api.ts',
       'apps/dev-app/src/app/pages/layout/toolbar-api.ts',
+      'apps/dev-app/src/app/pages/layout/avatar-api.ts',
+      'apps/dev-app/src/app/pages/layout/chip-api.ts',
+      'apps/dev-app/src/app/pages/layout/alert-api.ts',
+      'apps/dev-app/src/app/pages/layout/timeline-api.ts',
+      'apps/dev-app/src/app/pages/layout/app-bar-api.ts',
     ],
     tier: 'mit',
   },
@@ -307,7 +312,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-buttons',
     label: 'Buttons (React)',
     summary:
-      'React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm, auto-repeat and stand-alone toggle buttons — running the same press machine and the same stylesheet as the Angular package.',
+      'React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm, auto-repeat, stand-alone toggle buttons, a floating action button and an APG menu-button speed dial — running the same press machine, keyboard maps and stylesheet as the Angular package.',
     // The React content renders inside the single Buttons route (ADR 0002:
     // routes stay single, the header switch picks the layer) — there is no
     // /components/react-buttons route to link to.
@@ -350,7 +355,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-layout',
     label: 'Layout (React)',
     summary:
-      'React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel — running the same config defaults, decision functions and stylesheet as the Angular layout package.',
+      'React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar — running the same config defaults, decision functions and stylesheet as the Angular layout package.',
     // The React content renders inside the single layout routes (ADR 0002:
     // routes stay single, the header switch picks the layer). The docs pages
     // branch when the family's docs parity lands.
@@ -362,6 +367,11 @@ export const PACKAGES = [
       'apps/dev-app/src/app/pages/react-layout/progress-api.ts',
       'apps/dev-app/src/app/pages/react-layout/splitter-api.ts',
       'apps/dev-app/src/app/pages/react-layout/toolbar-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/avatar-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/chip-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/alert-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/timeline-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/app-bar-api.ts',
     ],
     tier: 'mit',
     platform: 'react',

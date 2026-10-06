@@ -1,0 +1,191 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// --- avatar ------------------------------------------------------------------
+// One square box whose size is a host-local knob; the image, the initials and
+// the icon all fill it, so the fallback chain never shifts layout.
+.oge-avatar {
+  @include tokens.core-tokens;
+
+  --oge-avatar-size: 40px;
+  --oge-avatar-font: 0.95rem;
+
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  inline-size: var(--oge-avatar-size);
+  block-size: var(--oge-avatar-size);
+  border-radius: 50%;
+  background: var(--oge-avatar-bg);
+  color: var(--oge-avatar-fg);
+  font-size: var(--oge-avatar-font);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  user-select: none;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.oge-avatar-xs {
+  --oge-avatar-size: 24px;
+  --oge-avatar-font: 0.625rem;
+}
+
+.oge-avatar-sm {
+  --oge-avatar-size: 32px;
+  --oge-avatar-font: 0.75rem;
+}
+
+.oge-avatar-lg {
+  --oge-avatar-size: 48px;
+  --oge-avatar-font: 1.1rem;
+}
+
+.oge-avatar-xl {
+  --oge-avatar-size: 64px;
+  --oge-avatar-font: 1.4rem;
+}
+
+.oge-avatar-rounded {
+  border-radius: var(--oge-radius-lg);
+}
+
+.oge-avatar-square {
+  border-radius: 0;
+}
+
+.oge-avatar-image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+// an image avatar paints no tint behind a transparent picture edge
+.oge-avatar-type-image {
+  background: transparent;
+}
+
+.oge-avatar-initials {
+  white-space: nowrap;
+}
+
+.oge-avatar-icon {
+  inline-size: 60%;
+  block-size: 60%;
+  fill: currentColor;
+}
+
+// --- presence dot --------------------------------------------------------------
+// Bottom-end corner, ringed in the page surface so it reads over any picture.
+.oge-avatar-status {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  box-sizing: border-box;
+  inline-size: max(8px, 28%);
+  block-size: max(8px, 28%);
+  border: 2px solid var(--oge-bg);
+  border-radius: 50%;
+  background: var(--oge-muted-color);
+}
+
+// a square/rounded outline puts the dot on the corner, a circle on its rim
+.oge-avatar-circle .oge-avatar-status {
+  inset-block-end: 2%;
+  inset-inline-end: 2%;
+}
+
+.oge-avatar-status-online {
+  background: var(--oge-success);
+}
+
+.oge-avatar-status-away {
+  background: var(--oge-warning);
+}
+
+.oge-avatar-status-busy {
+  background: var(--oge-danger);
+}
+
+.oge-avatar-status-offline {
+  // offline is a hollow ring — presence never rides on colour alone
+  background: var(--oge-bg);
+  box-shadow: inset 0 0 0 2px var(--oge-muted-color);
+}
+
+// --- group -------------------------------------------------------------------
+.oge-avatar-group {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.oge-avatar-group-overlap {
+  gap: 0;
+
+  > .oge-avatar {
+    // the ring separates overlapping pictures; logical so RTL stacks mirror
+    box-shadow: 0 0 0 2px var(--oge-bg);
+    transition: transform 120ms ease;
+
+    &:not(:first-child) {
+      margin-inline-start: calc(var(--oge-avatar-size) * -0.28);
+    }
+  }
+}
+
+.oge-avatar-overflow {
+  background: var(--oge-header-bg);
+  color: var(--oge-input-muted);
+  font-size: calc(var(--oge-avatar-font) * 0.9);
+}
+
+@include tokens.reduced-motion {
+  .oge-avatar-group-overlap > .oge-avatar {
+    transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+@include tokens.forced-colors {
+  .oge-avatar {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-avatar-icon {
+    fill: CanvasText;
+  }
+
+  .oge-avatar-status {
+    border-color: Canvas;
+    background: CanvasText;
+  }
+
+  // filled = present, hollow = offline; away/busy add a centre mark
+  .oge-avatar-status-offline {
+    background: Canvas;
+    box-shadow: inset 0 0 0 2px CanvasText;
+  }
+
+  .oge-avatar-status-away,
+  .oge-avatar-status-busy {
+    background: Highlight;
+  }
+
+  .oge-avatar-group-overlap > .oge-avatar {
+    box-shadow: none;
+  }
+}

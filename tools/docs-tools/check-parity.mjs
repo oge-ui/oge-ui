@@ -48,6 +48,12 @@ const abs = (...parts) => path.join(workspaceRoot, ...parts);
  * }} ParityFamily
  */
 
+/** Reasons shared by many families (W8a onwards keeps them in one place). */
+const STYLING_IDIOM =
+  'React host styling idiom; Angular hosts take class/style natively.';
+const JSX_CHILDREN =
+  'JSX content projection; Angular projects via <ng-content> and needs no member.';
+
 /** @type {ParityFamily[]} */
 const FAMILIES = [
   {
@@ -283,6 +289,99 @@ const FAMILIES = [
           'React host styling idiom; Angular hosts take class/style natively.',
         useogetoolbarconfig:
           'Hook reading the resolved config; the Angular counterpart is `inject(OGE_TOOLBAR_CONFIG)`, not a documented member.',
+      },
+    },
+  },
+  // --- W8a layout and feedback families -------------------------------------
+  {
+    family: 'layout-avatar',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/avatar-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/avatar-api.ts',
+    exceptions: {
+      reactOnly: {
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        children: JSX_CHILDREN,
+      },
+    },
+  },
+  {
+    family: 'layout-chip',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/chip-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/chip-api.ts',
+    exceptions: {
+      reactOnly: {
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        renderchip:
+          'Render prop replacing the [ogeChipTemplate] structural directive (documented in the Angular types table).',
+      },
+    },
+  },
+  {
+    family: 'layout-alert',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/alert-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/alert-api.ts',
+    exceptions: {
+      reactOnly: {
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        children: JSX_CHILDREN,
+        actions:
+          'ReactNode prop replacing the [ogeAlertActions] attribute slot (documented in the Angular types table).',
+        icon: 'ReactNode prop replacing the [ogeAlertIcon] attribute slot (documented in the Angular types table).',
+      },
+    },
+  },
+  {
+    family: 'layout-timeline',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/timeline-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/timeline-api.ts',
+    exceptions: {
+      pairs: {
+        provideogetimelineconfig: 'ogetimelineconfigprovider', // DI provider ↔ context provider
+      },
+      angularOnly: {
+        ogetimelineconfig:
+          'The `OGE_TIMELINE_CONFIG` InjectionToken behind provideOgeTimelineConfig(); React resolves the same defaults through the provider’s context, which has no token.',
+      },
+      reactOnly: {
+        rendercontent:
+          'Render prop replacing the [ogeTimelineContentTemplate] structural directive (documented in the Angular types table).',
+        rendermarker:
+          'Render prop replacing the [ogeTimelineMarkerTemplate] structural directive (documented in the Angular types table).',
+        renderopposite:
+          'Render prop replacing the [ogeTimelineOppositeTemplate] structural directive (documented in the Angular types table).',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        useogetimelineconfig:
+          'Hook reading the resolved config; the Angular counterpart is the OGE_TIMELINE_CONFIG token (excepted above).',
+      },
+    },
+  },
+  {
+    family: 'layout-app-bar',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/app-bar-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/app-bar-api.ts',
+    exceptions: {
+      pairs: {
+        provideogeappbarconfig: 'ogeappbarconfigprovider', // DI provider ↔ context provider
+      },
+      angularOnly: {
+        ogeappbarconfig:
+          'The `OGE_APP_BAR_CONFIG` InjectionToken behind provideOgeAppBarConfig(); React resolves the same defaults through the provider’s context, which has no token.',
+      },
+      reactOnly: {
+        start:
+          'ReactNode prop replacing the [ogeAppBarStart] attribute slot (documented in the Angular types table).',
+        center:
+          'ReactNode prop replacing the [ogeAppBarCenter] attribute slot (documented in the Angular types table).',
+        end: 'ReactNode prop replacing the [ogeAppBarEnd] attribute slot (documented in the Angular types table).',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        children: JSX_CHILDREN,
+        useogeappbarconfig:
+          'Hook reading the resolved config; the Angular counterpart is the OGE_APP_BAR_CONFIG token (excepted above).',
       },
     },
   },

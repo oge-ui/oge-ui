@@ -23,6 +23,7 @@
       "@oge-ui/bpmn-engine": ["./packages/bpmn-engine/src/index.ts"],
       "@oge-ui/bpmn-engine/testing": ["./packages/bpmn-engine/src/testing.ts"],
       "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
+      "@oge-ui/buttons/*": ["./packages/buttons/*/src/index.ts"],
       "@oge-ui/charts": ["./packages/charts/src/index.ts"],
       "@oge-ui/charts-engine": ["./packages/charts-engine/src/index.ts"],
       "@oge-ui/charts-engine/export-image": [

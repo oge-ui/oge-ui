@@ -67,4 +67,6 @@
   --oge-kanban-lane-border: var(--oge-border-color);
   --oge-chart-axis-line: var(--oge-border-color);
   --oge-chart-axis-fg: var(--oge-muted-color);
+  --oge-avatar-bg: color-mix(in srgb, var(--oge-accent) 14%, var(--oge-bg));
+  --oge-avatar-fg: var(--oge-accent);
 }

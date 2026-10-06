@@ -1,6 +1,6 @@
 # @oge-ui/react-buttons
 
-> React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm, auto-repeat and stand-alone toggle buttons — running the same press machine and the same stylesheet as the Angular package.
+> React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm, auto-repeat, stand-alone toggle buttons, a floating action button and an APG menu-button speed dial — running the same press machine, keyboard maps and stylesheet as the Angular package.
 
 Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/buttons
@@ -265,9 +265,302 @@ _Imperative handle (via ref)_
 | `OgeDropDownButtonItemClickEvent` | `{ item; index; checked?; event }` | Payload of `onItemClick`; `checked` is the next state of a checkbox/radio row (`OgeMenuItem.type`), `undefined` for plain rows. |
 | `OgeDropDownSelectionChangedEvent` | `{ item; previousItem }` | Payload of `onSelectionChange`. |
 
+### <OgeFab>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Accessible name of the icon-only FAB (`aria-label`) — and its visible text when `extended`. Always set it. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`, 24×24 viewBox, stroked) of the icon. Pass your own `aria-hidden` icon as `children` instead. |
+| `extended` | `boolean` | `false` | Shows the label as text beside the icon in a pill (Material's extended FAB); the label is then the button's content, not an `aria-label`. |
+| `children` | `ReactNode` | `—` | A custom icon, rendered inside the button after the `icon` path — the counterpart of Angular content projection. |
+| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Corner or edge the FAB is pinned to; `start`/`end` are logical and mirror in RTL. Falls back to `<OgeFabConfigProvider>`. |
+| `positionMode` | `'fixed' \| 'absolute' \| 'static'` | `'fixed'` | `fixed` pins to the viewport with `max(offset, env(safe-area-inset-*))` on the touched edges, `absolute` pins to the nearest positioned ancestor, `static` leaves it in the flow. Fixed and absolute layers sit on `--oge-z-fab` (below windows, popups and modals). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
+| `severity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill colour — the button severity vocabulary; `normal` is the page surface with a hairline. |
+| `offset` | `string \| undefined` | `'16px'` | Gap to the pinned edges (any CSS length), written to the `--oge-fab-offset` knob; the safe-area inset stays its floor. |
+| `disabled` | `boolean` | `false` | Disables the FAB. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the positioning wrapper. |
+
+#### Methods
+
+_Imperative handle (OgeFabHandle, via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves focus to the button. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onClick` | `(event: OgeFabClickEvent) => void` | The FAB was pressed (not called while disabled). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFabClickEvent` | `{ event: Event }` | Payload of `onClick`. |
+| `OgeFabPosition / OgeFabPositionMode / OgeFabSize / OgeFabSeverity` | `string unions` | The vocabularies above, single-sourced in `@oge-ui/behavior`. |
+
+### <OgeSpeedDial>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeSpeedDialItem[]` | `[]` | The actions, nearest the FAB first — each a `role="menuitem"` named by its `label`. |
+| `label` | `string \| undefined` | `—` | Accessible name of the FAB and the menu; falls back to `messages.speedDial` (`Actions`). |
+| `icon` | `string \| undefined` | `—` | SVG path data of the FAB glyph; default a plus that turns 45° into an ✕ while open. |
+| `direction` | `'up' \| 'down' \| 'start' \| 'end' \| undefined` | `—` | Unfold direction; default away from the pinned edge — up from a bottom FAB, down from a top one (`ogeSpeedDialDirection`). The arrow keys follow it. |
+| `openMode` | `'click' \| 'hover'` | `'click'` | `hover` also opens the dial while a mouse hovers it (never on touch); hover never moves focus. |
+| `labelMode` | `'hover' \| 'always' \| 'none'` | `'hover'` | Action labels: beside the hovered / keyboard-focused action (always on `hover: none` screens), beside every action while open, or visually hidden — the label stays the accessible name in every mode. |
+| `opened / defaultOpened` | `boolean` | `false` | Whether the actions are shown — controlled with `opened` + `onOpenedChange`, or uncontrolled starting from `defaultOpened`. The closed menu is not rendered. |
+| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Corner or edge the FAB is pinned to; `start`/`end` are logical and mirror in RTL. Falls back to `<OgeFabConfigProvider>`. |
+| `positionMode` | `'fixed' \| 'absolute' \| 'static'` | `'fixed'` | `fixed` pins to the viewport with `max(offset, env(safe-area-inset-*))` on the touched edges, `absolute` pins to the nearest positioned ancestor, `static` leaves it in the flow. Fixed and absolute layers sit on `--oge-z-fab` (below windows, popups and modals). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
+| `severity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill colour — the button severity vocabulary; `normal` is the page surface with a hairline. |
+| `offset` | `string \| undefined` | `'16px'` | Gap to the pinned edges (any CSS length), written to the `--oge-fab-offset` knob; the safe-area inset stays its floor. |
+| `disabled` | `boolean` | `false` | Disables the FAB. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the positioning wrapper. |
+
+#### Methods
+
+_Imperative handle (OgeSpeedDialHandle, via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `() => void` | Programmatic dial control; focus stays where it is (the click and arrow-key paths move it into the menu). |
+| `focus()` | `() => void` | Moves focus to the FAB. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeSpeedDialItemClickEvent) => void` | An enabled action was activated (click, Enter or Space); the dial then closes and focus returns to the FAB. |
+| `onOpenedChange` | `(opened: boolean) => void` | The dial opened or closed, any reason (press, Escape, Tab, outside press). |
+
+#### Types
+
+_Keyboard (WAI-ARIA APG menu button)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Enter / Space / click` | `FAB` | Toggles the dial; opening moves focus to the first enabled action. |
+| `Arrow along the dial / back` | `FAB` | Opens with focus on the first (nearest) / last action (`ogeSpeedDialToggleKey`). |
+| `Arrows · Home · End` | `action` | Move along the dial axis and wrap, skipping disabled actions (`ogeSpeedDialItemKey`, `ogeSpeedDialNavIndex`); horizontal dials mirror in RTL. |
+| `Escape / Tab` | `action` | Escape closes and returns focus to the FAB; Tab closes and lets focus move on. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSpeedDialItem` | `{ key: string \| number; label: string; icon?: string; disabled?: boolean; severity?: OgeFabSeverity }` | One action; a disabled action is `aria-disabled`, inert to clicks and skipped by the arrows. |
+| `OgeSpeedDialItemClickEvent` | `{ item: OgeSpeedDialItem; index: number; event: Event }` | Payload of `onItemClick`. |
+| `OgeSpeedDialDirection / OgeSpeedDialOpenMode / OgeSpeedDialLabelMode` | `string unions` | The vocabularies above, single-sourced in `@oge-ui/behavior`. |
+
+### FAB configuration
+
+#### Properties
+
+_OgeFabConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeFabMessages` | Every user-facing string: `speedDial` — the speed dial&rsquo;s accessible name fallback (default `Actions`; `fab` slice of the locale packs). `useOgeFabConfig()` reads the resolved value. |
+| `position / positionMode / size / severity` | `—` | Defaults for the matching props of both `<OgeFab>` and `<OgeSpeedDial>`. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Floating action button
+
+```ts
+'use client';
+
+import { OgeFab } from '@oge-ui/react-buttons';
+
+const PENCIL = 'M4 20h4L19 9l-4-4L4 16v4Z';
+
+export function FabDemo() {
+  return (
+    <div style={{ position: 'relative', height: 224 }}>
+      {/* positionMode="absolute" pins it inside the nearest positioned
+          ancestor; the default "fixed" pins it to the viewport. */}
+      <OgeFab
+        label="Compose"
+        icon={PENCIL}
+        positionMode="absolute"
+        onClick={() => console.log('compose')}
+      />
+    </div>
+  );
+}
+```
+
+### Extended FAB
+
+```ts
+'use client';
+
+import { OgeFab } from '@oge-ui/react-buttons';
+
+const PENCIL = 'M4 20h4L19 9l-4-4L4 16v4Z';
+const SHARE = 'M4 12v7h16v-7M12 3v12M7 8l5-5 5 5';
+
+export function FabExtendedDemo() {
+  return (
+    <div className="demo-row">
+      <OgeFab label="Compose" icon={PENCIL} extended positionMode="static" />
+      <OgeFab label="Share" icon={SHARE} size="sm" severity="normal" positionMode="static" />
+      <OgeFab label="Share" icon={SHARE} severity="success" positionMode="static" />
+      <OgeFab label="Share" icon={SHARE} size="lg" severity="danger" positionMode="static" />
+    </div>
+  );
+}
+```
+
+### Positions & safe areas
+
+```ts
+'use client';
+
+import { OgeFab } from '@oge-ui/react-buttons';
+import type { OgeFabPosition } from '@oge-ui/react-buttons';
+
+const PENCIL = 'M4 20h4L19 9l-4-4L4 16v4Z';
+const POSITIONS: OgeFabPosition[] = [
+  'top-start',
+  'top-center',
+  'top-end',
+  'bottom-start',
+  'bottom-center',
+  'bottom-end',
+];
+
+export function FabPositionsDemo() {
+  return (
+    <div style={{ position: 'relative', height: 256 }}>
+      {POSITIONS.map((position) => (
+        <OgeFab
+          key={position}
+          label={position}
+          icon={PENCIL}
+          size="sm"
+          positionMode="absolute"
+          position={position}
+          offset="12px"
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+### Speed dial
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSpeedDial } from '@oge-ui/react-buttons';
+import type { OgeSpeedDialItem } from '@oge-ui/react-buttons';
+
+const ACTIONS: OgeSpeedDialItem[] = [
+  { key: 'mail', label: 'Email', icon: 'M3 6h18v12H3zM3 6l9 7 9-7' },
+  { key: 'print', label: 'Print', icon: 'M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z' },
+  { key: 'share', label: 'Copy link', icon: 'M4 12v7h16v-7M12 3v12M7 8l5-5 5 5' },
+  { key: 'delete', label: 'Delete', icon: 'M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3', severity: 'danger' },
+];
+
+export function SpeedDialDemo() {
+  const [opened, setOpened] = useState(false);
+  const [last, setLast] = useState('none');
+  return (
+    <>
+      <div style={{ position: 'relative', height: 288 }}>
+        <OgeSpeedDial
+          label="Share options"
+          positionMode="absolute"
+          items={ACTIONS}
+          opened={opened}
+          onOpenedChange={setOpened}
+          onItemClick={({ item }) => setLast(item.label)}
+        />
+      </div>
+      <p>
+        Last action: {last} · opened: {String(opened)}
+      </p>
+    </>
+  );
+}
+```
+
+### Directions & label modes
+
+```ts
+'use client';
+
+import { OgeSpeedDial } from '@oge-ui/react-buttons';
+import type { OgeSpeedDialItem } from '@oge-ui/react-buttons';
+
+const FILES: OgeSpeedDialItem[] = [
+  { key: 'doc', label: 'Document', icon: 'M6 3h9l4 4v14H6zM14 3v5h5' },
+  { key: 'image', label: 'Image', icon: 'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4' },
+  { key: 'mail', label: 'Email draft', icon: 'M3 6h18v12H3zM3 6l9 7 9-7', disabled: true },
+];
+
+export function SpeedDialDirectionsDemo() {
+  return (
+    <div style={{ position: 'relative', height: 240 }}>
+      <OgeSpeedDial
+        label="New file"
+        positionMode="absolute"
+        position="bottom-end"
+        direction="start"
+        labelMode="none"
+        items={FILES}
+      />
+      <OgeSpeedDial
+        label="Insert"
+        positionMode="absolute"
+        position="top-start"
+        labelMode="always"
+        size="sm"
+        items={FILES}
+      />
+    </div>
+  );
+}
+```
+
+### Hover mode
+
+```ts
+'use client';
+
+import { OgeSpeedDial } from '@oge-ui/react-buttons';
+import type { OgeSpeedDialItem } from '@oge-ui/react-buttons';
+
+const QUICK: OgeSpeedDialItem[] = [
+  { key: 'share', label: 'Share', icon: 'M4 12v7h16v-7M12 3v12M7 8l5-5 5 5' },
+  { key: 'mail', label: 'Email', icon: 'M3 6h18v12H3zM3 6l9 7 9-7' },
+];
+
+export function SpeedDialHoverDemo() {
+  return (
+    <div style={{ position: 'relative', height: 224 }}>
+      <OgeSpeedDial
+        label="Quick actions"
+        openMode="hover"
+        positionMode="absolute"
+        severity="normal"
+        items={QUICK}
+      />
+    </div>
+  );
+}
+```
 
 ### Severities & styling modes
 

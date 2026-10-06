@@ -1,0 +1,311 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// --- chip ---------------------------------------------------------------------
+// One pill for the stand-alone `oge-chip` host and every chip of a list
+// (option / row / listitem). Component-local knobs scale with the size preset.
+.oge-chip {
+  @include tokens.core-tokens;
+
+  --oge-chip-height: 28px;
+  --oge-chip-pad: 10px;
+  --oge-chip-gap: 6px;
+  --oge-chip-font: 0.8125rem;
+  --oge-chip-bg: var(--oge-header-bg);
+  --oge-chip-fg: var(--oge-text-color);
+  --oge-chip-border: var(--oge-border-color);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: var(--oge-chip-height);
+  border: 1px solid var(--oge-chip-border);
+  border-radius: 999px;
+  background: var(--oge-chip-bg);
+  color: var(--oge-chip-fg);
+  font-size: var(--oge-chip-font);
+  line-height: 1.2;
+  vertical-align: middle;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  // a focused option / pill carries the ring itself
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible,
+  &:has(> .oge-chip-main:focus-visible) {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-chip-sm {
+  --oge-chip-height: 24px;
+  --oge-chip-pad: 8px;
+  --oge-chip-gap: 4px;
+  --oge-chip-font: 0.75rem;
+}
+
+.oge-chip-lg {
+  --oge-chip-height: 34px;
+  --oge-chip-pad: 14px;
+  --oge-chip-gap: 8px;
+  --oge-chip-font: 0.875rem;
+}
+
+.oge-chip-outlined {
+  --oge-chip-bg: transparent;
+}
+
+// Severity tints: the soft token as the surface, the strong one as the frame.
+.oge-chip-accent {
+  --oge-chip-bg: var(--oge-accent-soft);
+  --oge-chip-border: var(--oge-accent-25);
+  --oge-chip-fg: var(--oge-accent);
+}
+
+.oge-chip-success {
+  --oge-chip-bg: var(--oge-success-soft);
+  --oge-chip-border: var(--oge-success);
+}
+
+.oge-chip-warning {
+  --oge-chip-bg: var(--oge-warning-soft);
+  --oge-chip-border: var(--oge-warning);
+}
+
+.oge-chip-danger {
+  --oge-chip-bg: var(--oge-danger-soft);
+  --oge-chip-border: var(--oge-danger);
+}
+
+.oge-chip-outlined:is(
+  .oge-chip-accent,
+  .oge-chip-success,
+  .oge-chip-warning,
+  .oge-chip-danger
+) {
+  --oge-chip-bg: transparent;
+}
+
+.oge-chip-main {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--oge-chip-gap);
+  min-width: 0;
+  min-height: calc(var(--oge-chip-height) - 2px);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--oge-chip-pad);
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+}
+
+button.oge-chip-main {
+  cursor: pointer;
+}
+
+.oge-chip-removable .oge-chip-main {
+  padding-inline-end: 2px;
+}
+
+.oge-chip-label {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Hover / pressed state layers on interactive chips only.
+.oge-chip-selectable:not(.oge-chip-disabled),
+.oge-chip-list[role='grid'] .oge-chip:not(.oge-chip-disabled) {
+  cursor: pointer;
+
+  &:hover {
+    --oge-chip-bg: var(--oge-row-hover-bg);
+  }
+}
+
+// --- selected: tint + accent frame + a check glyph (never colour alone) ----
+.oge-chip-check {
+  display: none;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oge-chip-selected {
+  --oge-chip-bg: var(--oge-selected-bg);
+  --oge-chip-border: var(--oge-accent);
+  --oge-chip-fg: var(--oge-accent);
+
+  &:hover {
+    --oge-chip-bg: var(--oge-selected-bg);
+  }
+
+  .oge-chip-check {
+    display: block;
+  }
+}
+
+.oge-chip-disabled {
+  opacity: 0.55;
+  cursor: default;
+  color: var(--oge-muted-color);
+}
+
+// --- leading avatar / icon ----------------------------------------------
+.oge-chip-lead {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-start: calc(var(--oge-chip-pad) * -0.5);
+}
+
+.oge-chip-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oge-chip-avatar {
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  width: calc(var(--oge-chip-height) - 8px);
+  height: calc(var(--oge-chip-height) - 8px);
+  border-radius: 50%;
+  background: var(--oge-avatar-bg);
+  color: var(--oge-avatar-fg);
+  font-size: 0.7em;
+  font-weight: 600;
+}
+
+.oge-chip-avatar-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// --- remove affordance --------------------------------------------------
+.oge-chip-remove {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  margin-inline: 2px 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--oge-input-muted);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  @include tokens.hit-area;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring($width: 2px);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.oge-chip-remove-cell {
+  display: inline-flex;
+}
+
+// --- list -----------------------------------------------------------------
+.oge-chip-list {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@include tokens.reduced-motion {
+  .oge-chip,
+  .oge-chip-remove {
+    transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) -------------------------------
+@include tokens.forced-colors {
+  .oge-chip {
+    border-color: CanvasText;
+  }
+
+  .oge-chip-selected {
+    border: 2px solid Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-chip-disabled {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  .oge-chip-remove {
+    color: ButtonText;
+  }
+
+  .oge-chip-avatar {
+    border: 1px solid CanvasText;
+  }
+}

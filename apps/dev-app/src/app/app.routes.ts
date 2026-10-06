@@ -350,6 +350,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Drop Down Button',
       },
       {
+        path: 'fab',
+        loadComponent: () =>
+          import('./pages/buttons/fab').then((m) => m.ButtonsFabPage),
+        title: 'OGE — FAB & Speed Dial',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/buttons/api').then((m) => m.ButtonsApiPage),
@@ -468,6 +474,97 @@ export const appRoutes: Route[] = [
             (m) => m.LayoutLoadPanelPage,
           ),
         title: 'OGE — Load Panel',
+      },
+    ],
+  },
+  {
+    path: 'components/avatar',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/avatar').then((m) => m.LayoutAvatarPage),
+        title: 'OGE — Avatar & Badge',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/avatar-api').then(
+            (m) => m.LayoutAvatarApiPage,
+          ),
+        title: 'OGE — Avatar & Badge API',
+      },
+    ],
+  },
+  {
+    path: 'components/chip',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/chip').then((m) => m.LayoutChipPage),
+        title: 'OGE — Chip',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/chip-api').then((m) => m.LayoutChipApiPage),
+        title: 'OGE — Chip API',
+      },
+    ],
+  },
+  {
+    path: 'components/alert',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/alert').then((m) => m.LayoutAlertPage),
+        title: 'OGE — Alert',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/alert-api').then((m) => m.LayoutAlertApiPage),
+        title: 'OGE — Alert API',
+      },
+    ],
+  },
+  {
+    path: 'components/timeline',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/timeline').then((m) => m.LayoutTimelinePage),
+        title: 'OGE — Timeline',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/timeline-api').then(
+            (m) => m.LayoutTimelineApiPage,
+          ),
+        title: 'OGE — Timeline API',
+      },
+    ],
+  },
+  {
+    path: 'components/app-bar',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/app-bar').then((m) => m.LayoutAppBarPage),
+        title: 'OGE — App Bar',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/app-bar-api').then(
+            (m) => m.LayoutAppBarApiPage,
+          ),
+        title: 'OGE — App Bar API',
       },
     ],
   },

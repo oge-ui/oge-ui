@@ -402,6 +402,35 @@ export const ja: OgeLocalePack = {
       scrollForward: '前方へスクロール',
       noData: '表示するコマンドがありません',
     },
+    avatar: {
+      avatar: 'アバター',
+      withStatus: '{name}（{status}）',
+      online: 'オンライン',
+      away: '離席中',
+      busy: '取り込み中',
+      offline: 'オフライン',
+      overflow: '{count, plural, other {他 # 件}}',
+    },
+    badge: {
+      count: '{count, plural, other {新着 # 件}}',
+      overflow: '{max}+',
+      overflowCount: '{max, plural, other {新着 # 件以上}}',
+      dot: '新着',
+    },
+    chip: {
+      remove: '{label} を削除',
+      chipList: 'チップ',
+    },
+    alert: {
+      dismiss: '閉じる',
+      info: '情報',
+      success: '成功',
+      warning: '警告',
+      error: 'エラー',
+    },
+  },
+  fab: {
+    speedDial: 'アクション',
   },
   navigation: {
     breadcrumb: {

@@ -402,6 +402,38 @@ export const ar: OgeLocalePack = {
       scrollForward: 'تمرير للأمام',
       noData: 'لا توجد أوامر لعرضها',
     },
+    avatar: {
+      avatar: 'الصورة الرمزية',
+      withStatus: '{name} ({status})',
+      online: 'متصل',
+      away: 'بعيد',
+      busy: 'مشغول',
+      offline: 'غير متصل',
+      overflow:
+        '{count, plural, zero {لا مزيد} one {واحد آخر} two {اثنان آخران} few {# آخرين} many {# آخر} other {# آخر}}',
+    },
+    badge: {
+      count:
+        '{count, plural, zero {لا عناصر جديدة} one {عنصر جديد واحد} two {عنصران جديدان} few {# عناصر جديدة} many {# عنصرًا جديدًا} other {# عنصر جديد}}',
+      overflow: '{max}+',
+      overflowCount:
+        '{max, plural, zero {أكثر من # عنصر جديد} one {أكثر من عنصر جديد واحد} two {أكثر من عنصرين جديدين} few {أكثر من # عناصر جديدة} many {أكثر من # عنصرًا جديدًا} other {أكثر من # عنصر جديد}}',
+      dot: 'جديد',
+    },
+    chip: {
+      remove: 'إزالة {label}',
+      chipList: 'الشرائح',
+    },
+    alert: {
+      dismiss: 'تجاهل',
+      info: 'معلومات',
+      success: 'نجاح',
+      warning: 'تحذير',
+      error: 'خطأ',
+    },
+  },
+  fab: {
+    speedDial: 'الإجراءات',
   },
   navigation: {
     breadcrumb: {

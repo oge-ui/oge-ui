@@ -84,6 +84,10 @@
   /* non-modal floating windows: below anchored popups (a select opened in a
      window shows above it) and modals; each window adds its stacking layer */
   --oge-z-window: 900;
+  /* floating action buttons: below windows, popups and modals, above content */
+  --oge-z-fab: 800;
+  /* fixed / sticky app bars: below FABs, so a FAB never hides under a bottom bar */
+  --oge-z-app-bar: 700;
   /* modal layer (above anchored popups; legacy grid dialogs sit at 1090/1100) */
   --oge-z-modal: 1100;
   /* drawer panel; shares the modal layer, ordering comes from the shared stack */
@@ -157,6 +161,8 @@
   --oge-kanban-lane-border: var(--oge-border-color);
   --oge-chart-axis-line: var(--oge-border-color);
   --oge-chart-axis-fg: var(--oge-muted-color);
+  --oge-avatar-bg: color-mix(in srgb, var(--oge-accent) 14%, var(--oge-bg));
+  --oge-avatar-fg: var(--oge-accent);
 }
 
 /// Included by every component at its host rule (`.oge-x { @include

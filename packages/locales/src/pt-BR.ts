@@ -403,6 +403,36 @@ export const ptBR: OgeLocalePack = {
       scrollForward: 'Rolar para frente',
       noData: 'Nenhum comando para exibir',
     },
+    avatar: {
+      avatar: 'Avatar',
+      withStatus: '{name} ({status})',
+      online: 'Online',
+      away: 'Ausente',
+      busy: 'Ocupado',
+      offline: 'Offline',
+      overflow: '{count, plural, one {mais #} other {mais #}}',
+    },
+    badge: {
+      count: '{count, plural, one {# novo item} other {# novos itens}}',
+      overflow: '{max}+',
+      overflowCount:
+        '{max, plural, one {Mais de # novo item} other {Mais de # novos itens}}',
+      dot: 'Novo',
+    },
+    chip: {
+      remove: 'Remover {label}',
+      chipList: 'Etiquetas',
+    },
+    alert: {
+      dismiss: 'Dispensar',
+      info: 'Informação',
+      success: 'Sucesso',
+      warning: 'Aviso',
+      error: 'Erro',
+    },
+  },
+  fab: {
+    speedDial: 'Ações',
   },
   navigation: {
     breadcrumb: {

@@ -10,13 +10,19 @@ import {
   OGE_BUTTON_GROUP_API,
   OGE_BUTTONS_CONFIG_API,
   OGE_DROP_DOWN_BUTTON_API,
+  OGE_FAB_API,
+  OGE_FAB_CONFIG_API,
+  OGE_SPEED_DIAL_API,
 } from './buttons-api-data';
 
 const SECTIONS = [
   'OgeButton',
   'OgeButtonGroup',
   'OgeDropDownButton',
+  'OgeFab',
+  'OgeSpeedDial',
   'Buttons configuration',
+  'FAB configuration',
 ] as const;
 
 /** TOC of the React view — must mirror `ReactButtonsApiSections`' titles. */
@@ -24,6 +30,9 @@ const SECTIONS_REACT = [
   '<OgeButton>',
   '<OgeButtonGroup>',
   '<OgeDropDownButton>',
+  '<OgeFab>',
+  '<OgeSpeedDial>',
+  'FAB configuration',
 ] as const;
 
 @Component({
@@ -73,7 +82,18 @@ const SECTIONS_REACT = [
         selector="oge-drop-down-button"
         [sections]="dropDownButtonApi"
       />
+      <app-api-reference
+        title="OgeFab"
+        selector="oge-fab"
+        [sections]="fabApi"
+      />
+      <app-api-reference
+        title="OgeSpeedDial"
+        selector="oge-speed-dial"
+        [sections]="speedDialApi"
+      />
       <app-api-reference title="Buttons configuration" [sections]="configApi" />
+      <app-api-reference title="FAB configuration" [sections]="fabConfigApi" />
     }
 
     <h3>Notes</h3>
@@ -117,4 +137,7 @@ export class ButtonsApiPage {
   protected readonly buttonGroupApi = OGE_BUTTON_GROUP_API;
   protected readonly dropDownButtonApi = OGE_DROP_DOWN_BUTTON_API;
   protected readonly configApi = OGE_BUTTONS_CONFIG_API;
+  protected readonly fabApi = OGE_FAB_API;
+  protected readonly speedDialApi = OGE_SPEED_DIAL_API;
+  protected readonly fabConfigApi = OGE_FAB_CONFIG_API;
 }

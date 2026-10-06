@@ -393,6 +393,35 @@ export const zhCN: OgeLocalePack = {
       scrollForward: '向前滚动',
       noData: '无可显示的命令',
     },
+    avatar: {
+      avatar: '头像',
+      withStatus: '{name}（{status}）',
+      online: '在线',
+      away: '离开',
+      busy: '忙碌',
+      offline: '离线',
+      overflow: '{count, plural, other {另外 # 个}}',
+    },
+    badge: {
+      count: '{count, plural, other {# 个新项目}}',
+      overflow: '{max}+',
+      overflowCount: '{max, plural, other {超过 # 个新项目}}',
+      dot: '新',
+    },
+    chip: {
+      remove: '移除 {label}',
+      chipList: '标签',
+    },
+    alert: {
+      dismiss: '关闭',
+      info: '信息',
+      success: '成功',
+      warning: '警告',
+      error: '错误',
+    },
+  },
+  fab: {
+    speedDial: '操作',
   },
   navigation: {
     breadcrumb: {

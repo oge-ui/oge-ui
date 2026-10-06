@@ -814,3 +814,292 @@ export const OGE_BUTTONS_CONFIG_API: ApiSections = {
     },
   ],
 };
+
+/** Shared rows of `oge-fab` and `oge-speed-dial` (the positioning layer). */
+const FAB_LAYER_ENTRIES = [
+  {
+    name: 'position',
+    type: "'top-start' | 'top-center' | 'top-end' | 'bottom-start' | 'bottom-center' | 'bottom-end'",
+    default: "'bottom-end'",
+    description:
+      'Corner or edge the FAB is pinned to; <code>start</code>/<code>end</code> are logical and mirror in RTL. Falls back to the config.',
+  },
+  {
+    name: 'positionMode',
+    type: "'fixed' | 'absolute' | 'static'",
+    default: "'fixed'",
+    description:
+      '<code>fixed</code> pins to the viewport with <code>max(offset, env(safe-area-inset-*))</code> on the touched edges, <code>absolute</code> pins to the nearest positioned ancestor, <code>static</code> leaves it in the flow. Fixed and absolute layers sit on <code>--oge-z-fab</code> (below windows, popups and modals).',
+  },
+  {
+    name: 'size',
+    type: "'sm' | 'md' | 'lg'",
+    default: "'md'",
+    description:
+      'FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px).',
+  },
+  {
+    name: 'severity',
+    type: "'normal' | 'accent' | 'success' | 'warning' | 'danger'",
+    default: "'accent'",
+    description:
+      'Fill colour — the button severity vocabulary; <code>normal</code> is the page surface with a hairline.',
+  },
+  {
+    name: 'offset',
+    type: 'string | undefined',
+    default: "'16px'",
+    description:
+      'Gap to the pinned edges (any CSS length), written to the <code>--oge-fab-offset</code> knob; the safe-area inset stays its floor.',
+  },
+  {
+    name: 'disabled',
+    type: 'boolean',
+    default: 'false',
+    description: 'Disables the FAB.',
+  },
+];
+
+export const OGE_FAB_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Accessible name of the icon-only FAB (<code>aria-label</code>) — and its visible text when <code>extended</code>. Always set it.',
+        },
+        {
+          name: 'icon',
+          type: 'string | undefined',
+          description:
+            'SVG path data (<code>d</code>, 24×24 viewBox, stroked) of the icon. Project your own <code>aria-hidden</code> icon instead for an icon font or component.',
+        },
+        {
+          name: 'extended',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Shows the label as text beside the icon in a pill (Material's extended FAB); the label is then the button's content, not an <code>aria-label</code>.",
+        },
+        ...FAB_LAYER_ENTRIES,
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'focus(): void',
+          type: 'void',
+          description: 'Moves focus to the button.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'clicked',
+          type: 'OgeFabClickEvent',
+          description: 'The FAB was pressed (not emitted while disabled).',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeFabClickEvent',
+          type: '{ event: Event }',
+          description: 'Payload of <code>clicked</code>.',
+        },
+        {
+          name: 'OgeFabPosition / OgeFabPositionMode / OgeFabSize / OgeFabSeverity',
+          type: 'string unions',
+          description:
+            'The vocabularies above, single-sourced in <code>&#64;oge-ui/behavior</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_SPEED_DIAL_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'items',
+          type: 'readonly OgeSpeedDialItem[]',
+          default: '[]',
+          description:
+            'The actions, nearest the FAB first — each a <code>role="menuitem"</code> named by its <code>label</code>.',
+        },
+        {
+          name: 'label',
+          type: 'string | undefined',
+          description:
+            'Accessible name of the FAB and the menu; falls back to <code>messages.speedDial</code> (<code>Actions</code>).',
+        },
+        {
+          name: 'icon',
+          type: 'string | undefined',
+          description:
+            'SVG path data of the FAB glyph; default a plus that turns 45° into an ✕ while open.',
+        },
+        {
+          name: 'direction',
+          type: "'up' | 'down' | 'start' | 'end' | undefined",
+          description:
+            'Unfold direction; default away from the pinned edge — up from a bottom FAB, down from a top one (<code>ogeSpeedDialDirection</code>). The arrow keys follow it.',
+        },
+        {
+          name: 'openMode',
+          type: "'click' | 'hover'",
+          default: "'click'",
+          description:
+            '<code>hover</code> also opens the dial while a mouse hovers it (never on touch); hover never moves focus.',
+        },
+        {
+          name: 'labelMode',
+          type: "'hover' | 'always' | 'none'",
+          default: "'hover'",
+          description:
+            'Action labels: beside the hovered / keyboard-focused action (always on <code>hover: none</code> screens), beside every action while open, or visually hidden — the label stays the accessible name in every mode.',
+        },
+        {
+          name: 'opened',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Whether the actions are shown — a two-way <code>model()</code> (<code>[(opened)]</code>). The closed menu is not rendered.',
+        },
+        ...FAB_LAYER_ENTRIES,
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'open(): void',
+          type: 'void',
+          description:
+            'Opens the dial; focus stays where it is (the click and arrow-key paths move it into the menu).',
+        },
+        {
+          name: 'close(): void',
+          type: 'void',
+          description: 'Closes the dial.',
+        },
+        {
+          name: 'toggle(): void',
+          type: 'void',
+          description: 'Toggles <code>opened</code>.',
+        },
+        {
+          name: 'focus(): void',
+          type: 'void',
+          description: 'Moves focus to the FAB.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'itemClick',
+          type: 'OgeSpeedDialItemClickEvent',
+          description:
+            'An enabled action was activated (click, Enter or Space); the dial then closes and focus returns to the FAB.',
+        },
+        {
+          name: 'openedChange',
+          type: 'boolean',
+          description:
+            'Implicit output of the <code>opened</code> model — fires on open and close, any reason (press, Escape, Tab, outside press).',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Keyboard (WAI-ARIA APG menu button)',
+      entries: [
+        {
+          name: 'Enter / Space / click',
+          type: 'FAB',
+          description:
+            'Toggles the dial; opening moves focus to the first enabled action.',
+        },
+        {
+          name: 'Arrow along the dial / back',
+          type: 'FAB',
+          description:
+            'Opens with focus on the first (nearest) / last action (<code>ogeSpeedDialToggleKey</code>).',
+        },
+        {
+          name: 'Arrows · Home · End',
+          type: 'action',
+          description:
+            'Move along the dial axis and wrap, skipping disabled actions (<code>ogeSpeedDialItemKey</code>, <code>ogeSpeedDialNavIndex</code>); horizontal dials mirror in RTL.',
+        },
+        {
+          name: 'Escape / Tab',
+          type: 'action',
+          description:
+            'Escape closes and returns focus to the FAB; Tab closes and lets focus move on.',
+        },
+      ],
+    },
+    {
+      entries: [
+        {
+          name: 'OgeSpeedDialItem',
+          type: '{ key: string | number; label: string; icon?: string; disabled?: boolean; severity?: OgeFabSeverity }',
+          description:
+            'One action; a disabled action is <code>aria-disabled</code>, inert to clicks and skipped by the arrows.',
+        },
+        {
+          name: 'OgeSpeedDialItemClickEvent',
+          type: '{ item: OgeSpeedDialItem; index: number; event: Event }',
+          description: 'Payload of <code>itemClick</code>.',
+        },
+        {
+          name: 'OgeSpeedDialDirection / OgeSpeedDialOpenMode / OgeSpeedDialLabelMode',
+          type: 'string unions',
+          description:
+            'The vocabularies above, single-sourced in <code>&#64;oge-ui/behavior</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_FAB_CONFIG_API: ApiSections = {
+  properties: [
+    {
+      title: 'provideOgeFabConfig()',
+      entries: [
+        {
+          name: 'messages',
+          type: 'OgeFabMessages',
+          description:
+            'Every user-facing string: <code>speedDial</code> — the speed dial&rsquo;s accessible name fallback (default <code>Actions</code>; <code>fab</code> slice of the locale packs).',
+        },
+        {
+          name: 'position / positionMode / size / severity',
+          type: '—',
+          description:
+            'Defaults for the matching inputs of both <code>oge-fab</code> and <code>oge-speed-dial</code>.',
+        },
+      ],
+    },
+  ],
+};

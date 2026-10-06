@@ -2046,7 +2046,7 @@ export class HomePage {
     {
       icon: 'pointer',
       name: 'Buttons',
-      desc: 'Async actions with automatic loading, hold-to-confirm, groups and drop-downs.',
+      desc: 'Async actions, hold-to-confirm, groups, drop-downs, a FAB and a speed dial.',
       path: '/components/buttons',
     },
     {
@@ -2138,6 +2138,36 @@ export class HomePage {
       name: 'Pagination',
       desc: 'Standalone pager: numeric window, page sizes, jump-to-page, adaptive compact mode.',
       path: '/components/pagination',
+    },
+    {
+      icon: 'user',
+      name: 'Avatar & Badge',
+      desc: 'Image → initials → icon fallback, presence dots, +N groups and described count badges.',
+      path: '/components/avatar',
+    },
+    {
+      icon: 'tag',
+      name: 'Chip',
+      desc: 'Selectable and removable chips; an APG listbox or grid with Delete-key removal.',
+      path: '/components/chip',
+    },
+    {
+      icon: 'alert',
+      name: 'Alert',
+      desc: 'Inline severity messages with actions and dismiss; role alert or status by severity.',
+      path: '/components/alert',
+    },
+    {
+      icon: 'timeline',
+      name: 'Timeline',
+      desc: 'Vertical, horizontal or alternating ordered-list history with markers and dates.',
+      path: '/components/timeline',
+    },
+    {
+      icon: 'app-bar',
+      name: 'App Bar',
+      desc: 'Top or bottom bar with start/center/end sections, sticky or fixed with safe areas.',
+      path: '/components/app-bar',
     },
   ];
 

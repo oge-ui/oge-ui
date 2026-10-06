@@ -6,6 +6,10 @@ import {
   resolveOgeButtonsConfig,
   type OgeButtonsConfig,
   type OgeButtonsConfigInput,
+  OGE_DEFAULT_FAB_CONFIG,
+  resolveOgeFabConfig,
+  type OgeFabConfig,
+  type OgeFabConfigInput,
 } from '@oge-ui/behavior';
 
 // The shape, the defaults and the merge come from `@oge-ui/behavior`, the same
@@ -57,3 +61,22 @@ export function OgeButtonsConfigProvider({
 export function useOgeButtonsConfig(): OgeButtonsConfig {
   return useContext(OgeButtonsConfigContext);
 }
+
+// --- floating action button + speed dial (W8a) ------------------------------
+
+const FabContext = createContext<OgeFabConfig>(OGE_DEFAULT_FAB_CONFIG);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeFabConfig()`. */
+export function OgeFabConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeFabConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeFabConfig(config), [config]);
+  return <FabContext.Provider value={value}>{children}</FabContext.Provider>;
+}
+
+/** Reads the nearest FAB / speed-dial configuration. */
+export const useOgeFabConfig = (): OgeFabConfig => useContext(FabContext);

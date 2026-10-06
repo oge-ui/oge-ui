@@ -196,6 +196,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Drop Down Button and split button: menu items, a remembered last action, async item loading and custom panel content with full keyboard support.',
   ],
   [
+    '/components/buttons/fab',
+    'Angular Floating Action Button and Speed Dial by OGE UI: pinned FABs with safe-area insets, extended labels and an APG menu-button dial with arrow keys.',
+  ],
+  [
     '/components/buttons/api',
     'Angular Buttons API reference: every input, output and type of oge-button, oge-button-group and oge-drop-down-button, plus the buttons config provider.',
   ],
@@ -254,6 +258,46 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/components/card/api',
     'Angular Card API reference: every input and type of oge-card, the media, avatar, header-action, action, footer and separator slots, and the config provider.',
+  ],
+  [
+    '/components/avatar',
+    'Angular Avatar and Badge by OGE UI: image, initials and icon fallback, presence dots, avatar groups with +N overflow and count badges described to readers.',
+  ],
+  [
+    '/components/avatar/api',
+    'Angular Avatar & Badge API reference: every input, output and type of oge-avatar, oge-avatar-group and oge-badge, plus their config providers and messages.',
+  ],
+  [
+    '/components/chip',
+    'Angular Chip and Chip List by OGE UI: selectable and removable chips, single or multiple selection as an APG listbox, removable grids and Delete-key removal.',
+  ],
+  [
+    '/components/chip/api',
+    'Angular Chip API reference: every input, output, method and type of oge-chip and oge-chip-list, the chip template slot, removal events and the config provider.',
+  ],
+  [
+    '/components/alert',
+    'Angular Alert by OGE UI: inline info, success, warning and error messages with titles, actions and dismiss, role alert or status by severity, and custom icons.',
+  ],
+  [
+    '/components/alert/api',
+    'Angular Alert API reference: every input, output, method and type of oge-alert, the actions and icon slots, the cancelable closing event and config provider.',
+  ],
+  [
+    '/components/timeline',
+    'Angular Timeline by OGE UI: vertical or horizontal ordered-list timelines with alternating sides, markers, icons, severities, Intl dates and item templates.',
+  ],
+  [
+    '/components/timeline/api',
+    'Angular Timeline API reference: every input and type of oge-timeline, the content, marker and opposite template slots, item fields and the config provider.',
+  ],
+  [
+    '/components/app-bar',
+    'Angular App Bar by OGE UI: top and bottom bars with start, center and end sections, sticky or fixed placement with safe-area padding, colors and landmarks.',
+  ],
+  [
+    '/components/app-bar/api',
+    'Angular App Bar API reference: every input and type of oge-app-bar, the start, center and end slots, positions, colors, landmarks and the config provider.',
   ],
   [
     '/components/splitter',

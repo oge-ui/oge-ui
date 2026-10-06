@@ -14,10 +14,20 @@ import {
   OgeCard,
   OgeCardActions,
   OgeCardMedia,
+  OgeAvatarGroup,
+  OgeBadge,
+  OgeChipList,
+  OgeAlert,
+  OgeTimeline,
+  OgeAppBar,
+  OgeAppBarEnd,
   OgeSplitter,
   OgeSplitterPane,
   OgeToolbar,
   OgeToolbarItem,
+  type OgeAvatarItem,
+  type OgeChipItem,
+  type OgeTimelineItem,
 } from '@oge-ui/layout';
 import {
   OgeBreadcrumb,
@@ -53,6 +63,11 @@ type FamilyKey =
   | 'forms'
   | 'accordion'
   | 'card'
+  | 'avatar'
+  | 'chip'
+  | 'alert'
+  | 'timeline'
+  | 'app-bar'
   | 'progress'
   | 'splitter'
   | 'toolbar'
@@ -114,6 +129,13 @@ interface OrgNode {
     OgeCard,
     OgeCardActions,
     OgeCardMedia,
+    OgeAvatarGroup,
+    OgeBadge,
+    OgeChipList,
+    OgeAlert,
+    OgeTimeline,
+    OgeAppBar,
+    OgeAppBarEnd,
     OgeProgressBar,
     OgeLoadIndicator,
     OgeSkeleton,
@@ -705,6 +727,67 @@ interface OrgNode {
                     </oge-card>
                   </div>
                 }
+                @case ('avatar') {
+                  <div
+                    class="flex w-full flex-col items-start gap-4 self-start"
+                  >
+                    <oge-avatar-group
+                      [items]="galleryPeople"
+                      [max]="4"
+                      ariaLabel="Project team"
+                    />
+                    <oge-badge [value]="12">
+                      <button
+                        type="button"
+                        class="rounded border border-gray-200 px-3 py-1.5 text-sm dark:border-gray-700"
+                      >
+                        Inbox
+                      </button>
+                    </oge-badge>
+                  </div>
+                }
+                @case ('chip') {
+                  <div class="w-full self-start">
+                    <oge-chip-list
+                      [items]="galleryChips"
+                      selectionMode="multiple"
+                      [selectedKeys]="['angular', 'signals']"
+                      ariaLabel="Topics"
+                    />
+                  </div>
+                }
+                @case ('alert') {
+                  <div class="flex w-full flex-col gap-2 self-start">
+                    <oge-alert severity="success" title="Deployed" live="off">
+                      Version 1.2 is live.
+                    </oge-alert>
+                    <oge-alert severity="warning" live="off">
+                      Your trial ends in 3 days.
+                    </oge-alert>
+                  </div>
+                }
+                @case ('timeline') {
+                  <div class="w-full self-start">
+                    <oge-timeline
+                      [items]="galleryEvents"
+                      ariaLabel="Release history"
+                    />
+                  </div>
+                }
+                @case ('app-bar') {
+                  <div class="w-full self-start">
+                    <oge-app-bar color="primary" size="sm">
+                      <span class="text-sm font-semibold">Dashboard</span>
+                      <button
+                        ogeAppBarEnd
+                        type="button"
+                        class="rounded px-2 py-1 text-sm"
+                      >
+                        Sign in
+                      </button>
+                    </oge-app-bar>
+                  </div>
+                }
                 @case ('splitter') {
                   <div class="h-28 w-full self-start">
                     <oge-splitter class="h-full rounded border">
@@ -873,6 +956,16 @@ export class ComponentsIndexPage {
     label: string;
     path: string;
   }[] = [
+    { family: 'Layout', label: 'Avatar & badge', path: '/components/avatar' },
+    { family: 'Layout', label: 'Chip', path: '/components/chip' },
+    { family: 'Layout', label: 'Alert', path: '/components/alert' },
+    { family: 'Layout', label: 'Timeline', path: '/components/timeline' },
+    { family: 'Layout', label: 'App bar', path: '/components/app-bar' },
+    {
+      family: 'Buttons',
+      label: 'FAB & speed dial',
+      path: '/components/buttons/fab',
+    },
     {
       family: 'Data Grid',
       label: 'Range selection & clipboard',
@@ -940,6 +1033,26 @@ export class ComponentsIndexPage {
     },
   ];
 
+  protected readonly galleryPeople: readonly OgeAvatarItem[] = [
+    { name: 'Ada Lovelace', status: 'online' },
+    { name: 'Grace Hopper', status: 'busy' },
+    { name: 'Alan Turing' },
+    { name: 'Katherine Johnson' },
+    { name: 'Edsger Dijkstra' },
+    { name: 'Barbara Liskov' },
+  ];
+  protected readonly galleryChips: readonly OgeChipItem[] = [
+    { key: 'angular', label: 'Angular' },
+    { key: 'react', label: 'React' },
+    { key: 'signals', label: 'Signals' },
+    { key: 'a11y', label: 'Accessibility' },
+  ];
+  protected readonly galleryEvents: readonly OgeTimelineItem[] = [
+    { title: 'Design review', time: 'Mon', severity: 'success' },
+    { title: 'Release candidate', time: 'Wed' },
+    { title: 'General availability', time: 'Fri', variant: 'outlined' },
+  ];
+
   protected readonly cellClass =
     'border border-gray-200 px-2 py-1 dark:border-gray-700';
   protected readonly totalClass =
@@ -968,7 +1081,7 @@ export class ComponentsIndexPage {
       icon: 'pointer',
       path: '/components/buttons',
       description:
-        'Async actions with automatic loading, click guards, hold-to-confirm, badges, stand-alone toggle buttons, radio-pattern groups and drop-down/split buttons.',
+        'Async actions with automatic loading, click guards, hold-to-confirm, badges, stand-alone toggle buttons, radio-pattern groups, drop-down/split buttons, a floating action button and a speed dial.',
     },
     {
       key: 'inputs',
@@ -1009,6 +1122,46 @@ export class ComponentsIndexPage {
       path: '/components/card',
       description:
         'Content surface with header, full-bleed media, action row and footer as attribute slots — one component, outlined/raised/filled/flat chrome, horizontal orientation, and no nested-interactive trap.',
+    },
+    {
+      key: 'avatar',
+      name: 'Avatar & Badge',
+      icon: 'user',
+      path: '/components/avatar',
+      description:
+        'Image, initials and icon fallback with presence dots, stacked groups that fold the rest into "+N", and count or dot badges whose meaning reaches screen readers through the decorated control.',
+    },
+    {
+      key: 'chip',
+      name: 'Chip',
+      icon: 'tag',
+      path: '/components/chip',
+      description:
+        'Selectable and removable chips with icons or avatars; a list that is a WAI-ARIA listbox when it selects and a layout grid when it only removes — Delete and Backspace included.',
+    },
+    {
+      key: 'alert',
+      name: 'Alert',
+      icon: 'alert',
+      path: '/components/alert',
+      description:
+        'Inline info, success, warning and error messages with a title, actions and dismiss — announced politely or assertively by severity, never by colour alone.',
+    },
+    {
+      key: 'timeline',
+      name: 'Timeline',
+      icon: 'timeline',
+      path: '/components/timeline',
+      description:
+        'Vertical, horizontal or alternating history as a real ordered list: severity markers with icons, locale-formatted times in datetime elements and per-item templates.',
+    },
+    {
+      key: 'app-bar',
+      name: 'App Bar',
+      icon: 'app-bar',
+      path: '/components/app-bar',
+      description:
+        'Top or bottom bar with start, center and end sections; sticky or fixed with safe-area padding, four surface colours, and a landmark only when you ask for one.',
     },
     {
       key: 'progress',
