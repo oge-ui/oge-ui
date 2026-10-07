@@ -238,6 +238,13 @@ export interface OgeGanttExportData<T = unknown> {
   readonly workCalendar?: OgeGanttWorkCalendar | null;
   /** Total / free slack per leaf task. */
   readonly slack?: ReadonlyMap<RowKey, OgeGanttSlack>;
+  /**
+   * The chart's direction when the snapshot was taken. The PNG and PDF
+   * builders mirror their layout for `true` (title column on the right,
+   * timeline running right to left) and the Excel builder writes a
+   * right-to-left sheet; each builder's `rtl` option overrides it.
+   */
+  readonly rtl?: boolean;
 }
 
 /** Task click / double-click / context menu. */

@@ -205,6 +205,16 @@ export function pivotExpandablePaths(
 // --- remote payload ---------------------------------------------------------
 
 /**
+ * Text of a remote member the payload carries no `text` for: the axis, the
+ * member's level on it (0 = outermost field) and its value.
+ */
+export type OgePivotPayloadMemberText = (
+  axis: 'row' | 'column',
+  level: number,
+  value: unknown,
+) => string;
+
+/**
  * Rebuilds a {@link PivotResult} from a remote store's serializable payload
  * (parent-first order), appending grand-total slots when the payload carries
  * them and the grid shows them.
@@ -213,10 +223,12 @@ export function pivotResultFromPayload(
   payload: PivotLoadResult,
   measures: readonly PivotFieldConfig[],
   settings: { showRowGrandTotals: boolean; showColumnGrandTotals: boolean },
+  memberText?: OgePivotPayloadMemberText,
 ): PivotResult {
   const buildAxis = (
     nodes: readonly PivotAxisPayloadNode[],
     showGrand: boolean,
+    axis: 'row' | 'column',
   ): { nodes: PivotAxisNode[]; count: number } => {
     let slot = 0;
     const visit = (
@@ -231,7 +243,12 @@ export function pivotResultFromPayload(
         const built: PivotAxisNode[] = expanded ? visit(children, ownPath) : [];
         return {
           value: node.value,
-          text: node.text ?? String(node.value ?? ''),
+          // a server text wins; otherwise the field's header format
+          text:
+            node.text ??
+            (memberText
+              ? memberText(axis, path.length, node.value)
+              : String(node.value ?? '')),
           path: ownPath,
           children: built,
           expanded,
@@ -263,8 +280,8 @@ export function pivotResultFromPayload(
   const showGrandRows = settings.showRowGrandTotals && !!payload.columnTotals;
   const showGrandColumns =
     settings.showColumnGrandTotals && !!payload.rowTotals;
-  const rows = buildAxis(payload.rows, showGrandRows);
-  const columns = buildAxis(payload.columns, showGrandColumns);
+  const rows = buildAxis(payload.rows, showGrandRows, 'row');
+  const columns = buildAxis(payload.columns, showGrandColumns, 'column');
   const blank = measures.map(() => null as unknown);
 
   const values: unknown[][][] = [];

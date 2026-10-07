@@ -29,6 +29,43 @@ are versioned independently, which is the case here.
   ADR 0003 commercial list moved to `tools/commercial-families.json`, read by
   both the license-boundary gate and the bundle-size page.
 
+### Leftovers — Gantt RTL, rotated chart labels, pivot header format, audit
+
+- **Gantt: the context menu and the drawn exports mirror in RTL**
+  (`@oge-ui/gantt-engine`, `@oge-ui/gantt`, `@oge-ui/react-gantt`). The
+  built-in context menu opens from the inline-start edge — towards the left of
+  the pointer in RTL — and now runs the APG menu keys (Up/Down/Home/End,
+  Escape); the arrow pointing back towards the row (Left in LTR, Right in
+  RTL) closes it and returns focus to the row (`ganttMenuKeyCommand`).
+  Shift+F10 / the ContextMenu key opens it from a focused row.
+  `getExportData()` carries `rtl`: the PNG and PDF builders mirror the picture
+  (title column on the right, timeline right to left, right-aligned text) and
+  the Excel builder writes a right-to-left sheet; each takes an `rtl` option
+  that overrides it. MS Project XML is direction-neutral data and is
+  unchanged.
+- **Charts: measured axis labels, exact overlap on rotated charts**
+  (`@oge-ui/charts-engine`, `@oge-ui/charts`, `@oge-ui/react-charts`). Both
+  render layers measure argument labels in the chart's own svg
+  (`createChartLabelMeasure`; the character estimate before the first render,
+  in SSR and in jsdom), so `label.overlap` decides on real text boxes in both
+  orientations. On a rotated chart's vertical argument axis a label wider than
+  the side band wraps (up to three lines, the last ellipsized, centred on its
+  tick), `hide` / `skip` compare the real line boxes and `stagger` alternates
+  two columns instead of falling back to `skip`. New "Rotated labels" demo.
+- **Pivot: `headerFormat` for member headers** (`@oge-ui/pivot-engine`,
+  `@oge-ui/pivot`, `@oge-ui/react-pivot`). A row / column field's
+  `headerFormat` — a function or a declarative `OgeValueFormat` — writes its
+  member headers and wins over `format` there, which keeps formatting the
+  field's cells when it is dragged into the data area. A date format on a
+  date-grouped field names the bucket (`{ type: 'date', pattern: 'MMMM' }`
+  turns month `1` into `January`, `Ocak` in tr-TR). Headers, label filters,
+  the chart adapter, remote members without a server `text` and the
+  Excel / PDF / CSV exports read the same text.
+- **Audit.** `http-cache-semantics` 4.3.0 (2026-10-04) patches
+  GHSA-ch52-4w7c-c8xp, so a targeted `overrides` entry replaces its allowlist
+  entry. `braces` still has no release above 3.0.3 (GHSA-vfj7-8cjw-p6xm); its
+  entry was re-checked and extended to 2026-12-06.
+
 ### Docs site
 
 - **Framework-neutral titles, descriptions and copy.** The site, its page titles, meta descriptions, home and getting-started copy, the README and the `llms.txt` summary now present OGE as one suite for Angular and React; a page only one layer covers (the router-driven demos) keeps its framework in the title.

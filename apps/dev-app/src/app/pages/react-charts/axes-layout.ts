@@ -23,6 +23,9 @@ import {
   GUIDES_SERIES,
   GUIDES_VALUE_AXIS,
   ROTATED_DATA,
+  ROTATED_LABELS_ARGUMENT_AXIS,
+  ROTATED_LABELS_DATA,
+  ROTATED_LABELS_SERIES,
   ROTATED_SERIES,
   ROTATED_VALUE_AXIS,
   RTL_DATA,
@@ -41,7 +44,7 @@ import {
 import { CHARTS_AXES_LAYOUT_DEMOS } from './axes-layout-snippets';
 
 /**
- * TOC of the React view — the same seven sections as the Angular page
+ * TOC of the React view — the same eight sections as the Angular page
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_CHARTS_AXES_LAYOUT_SECTIONS = [
@@ -52,6 +55,7 @@ export const REACT_CHARTS_AXES_LAYOUT_SECTIONS = [
   'Ticks & labels',
   'RTL & touch',
   'Draw-in animation',
+  'Rotated labels',
 ] as const;
 
 function PanesDemo(): ReactNode {
@@ -108,7 +112,7 @@ function AnimationDemo(): ReactNode {
 }
 
 /**
- * The React half of the "Axes & layout" page — the same seven sections, data
+ * The React half of the "Axes & layout" page — the same eight sections, data
  * and options as the Angular page, rendered as real React trees when the
  * reader has chosen React (ADR 0002).
  */
@@ -189,6 +193,16 @@ function AnimationDemo(): ReactNode {
     >
       <app-react-host [render]="animation" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['rotated', 'label.overlap', 'wrap', 'measured labels']"
+      heading="Rotated labels"
+      description="Down a vertical axis the labels collide by their <em>height</em>. The chart measures every label in its own svg: a name wider than the side band wraps (up to three lines, centred on its bar) and <code>label.overlap</code> works on the real boxes — <code>hide</code> keeps the labels that clear each other, <code>skip</code> thins by the tallest one, <code>stagger</code> alternates two columns."
+      [code]="demos[7].source"
+      language="tsx"
+    >
+      <app-react-host [render]="rotatedLabels" />
+    </app-demo-card>
   `,
 })
 export class ReactChartsAxesLayoutDemos {
@@ -239,4 +253,12 @@ export class ReactChartsAxesLayoutDemos {
       style: { height: 340 },
     });
   protected readonly animation = () => createElement(AnimationDemo);
+  protected readonly rotatedLabels = () =>
+    createElement(OgeChart, {
+      dataSource: ROTATED_LABELS_DATA,
+      series: ROTATED_LABELS_SERIES,
+      rotated: true,
+      argumentAxis: ROTATED_LABELS_ARGUMENT_AXIS,
+      style: { height: 320 },
+    });
 }

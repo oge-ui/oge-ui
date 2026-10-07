@@ -254,7 +254,8 @@ _Row/column fields_
 | `sortBySummaryField / sortBySummaryPath` | `string / PivotPath` | `—` | Sort by a summary value at an opposite-axis path. |
 | `filterValues / filterType` | `readonly unknown[] / 'include' \| 'exclude'` | `—` | Field filter. |
 | `showTotals` | `boolean` | `true` | Sub-totals for this field. |
-| `selector / format / customizeText` | `functions` | `—` | Out-of-band value selector, display format and text hook. `format` is a function or a declarative `OgeValueFormat` (`{ type: 'currency', currency: 'EUR' }`) rendered in the grid’s `locale`. |
+| `selector / format / customizeText` | `functions` | `—` | Out-of-band value selector, display format and text hook. `format` is a function or a declarative `OgeValueFormat` (`{ type: 'currency', currency: 'EUR' }`) rendered in the grid’s `locale`. Without a `headerFormat` it also writes a row / column field’s member headers. |
+| `headerFormat` | `((value: unknown) => string) \| OgeValueFormat` | `—` | Row / column fields: the **member-header** text — a function, or a declarative `OgeValueFormat` (`{ type: 'number' \| 'currency' \| 'percent' \| 'date', … }`, `pattern` included) rendered in the grid’s `locale`. Wins over `format` for headers, so `format` keeps formatting the field’s cells when it is dragged into the data area. A date format on a date-grouped field (`groupInterval` `'year'` / `'quarter'` / `'month'` / `'day'` / `'dayOfWeek'`) names the bucket: `{ type: 'date', pattern: 'MMMM' }` turns month `1` into `January` (`Ocak` in tr-TR). Headers, label filters, the chart adapter, remote members without a server `text` and the Excel / PDF / CSV exports all use it; `customizeText` runs after it. |
 | `labelFilter` | `OgePivotLabelFilter \| undefined` | `—` | Keeps the members whose label matches — `{ operator: 'contains' \| 'notContains' \| 'beginsWith' \| 'endsWith' \| 'equals' \| 'notEquals', value }`, case- and accent-insensitive. |
 | `valueFilter` | `OgePivotValueFilter \| undefined` | `—` | Keeps the members whose total of a measure passes — `{ measure, operator: 'greaterThan' \| 'greaterThanOrEqual' \| 'lessThan' \| 'lessThanOrEqual' \| 'equals' \| 'notEquals' \| 'between' \| 'notBetween', value, value2? }` (`measure` is a data field id). |
 | `topN` | `OgePivotTopNFilter \| undefined` | `—` | Keeps the `count` members with the highest (`direction: 'top'`, default) or lowest total of `measure`. Member filters run before aggregation — totals follow — in area order; value and Top-N filters compare a member’s grand total (local data only). |
@@ -276,7 +277,12 @@ import { OgePivotField, OgePivotGrid } from '@oge-ui/pivot';
   template: `
     <oge-pivot-grid [data]="sales">
       <oge-pivot-field dataField="region" area="row" />
-      <oge-pivot-field dataField="date" area="column" groupInterval="year" />
+      <!-- headerFormat writes the member headers (2026 → FY2026); on a
+           date-grouped field a date format names the bucket, e.g.
+           { type: 'date', pattern: 'MMMM' } for groupInterval="month" -->
+      <oge-pivot-field
+        dataField="date" area="column" groupInterval="year"
+        [headerFormat]="fiscalYear" />
 
       <!-- measures can post-process their values -->
       <oge-pivot-field
@@ -294,6 +300,8 @@ export class Demo {
     { region: 'EMEA', date: '2026-05-02', amount: 890 },
     { region: 'APAC', date: '2025-11-19', amount: 2140 },
   ];
+
+  protected readonly fiscalYear = { type: 'number', pattern: "'FY'0" } as const;
 }
 ```
 

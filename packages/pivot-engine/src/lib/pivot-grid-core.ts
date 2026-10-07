@@ -33,8 +33,11 @@ import {
   pivotAreaFields,
   pivotCustomSummariesOf,
   pivotFieldConfigOf,
+  pivotAxisFieldFns,
   pivotFieldFnsOf,
+  pivotMemberText,
   pivotOverridesFromSnapshot,
+  type OgePivotFieldFns,
   pivotPanelAreas,
   pivotStateSnapshot,
 } from './pivot-fields';
@@ -51,6 +54,7 @@ import {
   pivotMatrixKeyTarget,
   pivotMatrixTemplate,
   pivotResultFromPayload,
+  type OgePivotPayloadMemberText,
   pivotRowWindow,
   pivotSlotFlags,
   pivotVirtualColumnWidth,
@@ -261,7 +265,9 @@ export class OgePivotGridCore<T = unknown> {
   readonly baseFields: () => readonly PivotFieldConfig[];
   /** Declared fields + user layout overrides, ready for the engine. */
   readonly resolvedFields: () => readonly PivotFieldConfig[];
-  readonly fieldFns: () => Readonly<Record<string, PivotFieldFns<T>>>;
+  readonly fieldFns: () => Readonly<Record<string, OgePivotFieldFns<T>>>;
+  /** What the axes render members with: `headerFormat` in place of `format`. */
+  readonly axisFieldFns: () => Readonly<Record<string, PivotFieldFns<T>>>;
   readonly customSummaries: () => CustomSummaryMap<T> | undefined;
   readonly isRemote: () => boolean;
   readonly dataRows: () => readonly T[];
@@ -358,6 +364,7 @@ export class OgePivotGridCore<T = unknown> {
     this.fieldFns = rx.derived(() =>
       pivotFieldFnsOf(inputs.fields(), inputs.locale?.()),
     );
+    this.axisFieldFns = rx.derived(() => pivotAxisFieldFns(this.fieldFns()));
     this.customSummaries = rx.derived(() =>
       pivotCustomSummariesOf(inputs.fields()),
     );
@@ -384,7 +391,8 @@ export class OgePivotGridCore<T = unknown> {
         this.dataRows(),
         this.resolvedFields(),
         this.memberFilters(),
-        this.fieldFns(),
+        // label filters match the member text as the headers show it
+        this.axisFieldFns(),
         this.customSummaries(),
       ),
     );
@@ -405,7 +413,7 @@ export class OgePivotGridCore<T = unknown> {
         new PivotEngine<T>({
           rows: this.filteredRows(),
           fields: this.resolvedFields(),
-          fns: this.fieldFns(),
+          fns: this.axisFieldFns(),
           customSummaries: this.customSummaries(),
         }),
     );
@@ -590,15 +598,32 @@ export class OgePivotGridCore<T = unknown> {
       .then((payload) => {
         if (abort.signal.aborted) return;
         this.remoteResult.set(
-          pivotResultFromPayload(payload, measures, {
-            showRowGrandTotals: this.inputs.showRowGrandTotals(),
-            showColumnGrandTotals: this.inputs.showColumnGrandTotals(),
-          }),
+          pivotResultFromPayload(
+            payload,
+            measures,
+            {
+              showRowGrandTotals: this.inputs.showRowGrandTotals(),
+              showColumnGrandTotals: this.inputs.showColumnGrandTotals(),
+            },
+            this.remoteMemberText(),
+          ),
         );
       })
       .finally(() => {
         if (!abort.signal.aborted) this.loading.set(false);
       });
+  }
+
+  /** Remote members without a server `text`: the local axis text rule. */
+  private remoteMemberText(): OgePivotPayloadMemberText {
+    const fields = this.resolvedFields();
+    const fns = this.axisFieldFns();
+    const byLevel = (area: 'row' | 'column') =>
+      pivotAreaFields(fields, area).map((field) => fns[field.id]);
+    const rows = byLevel('row');
+    const columns = byLevel('column');
+    return (axis, level, value) =>
+      pivotMemberText((axis === 'row' ? rows : columns)[level], value);
   }
 
   /**

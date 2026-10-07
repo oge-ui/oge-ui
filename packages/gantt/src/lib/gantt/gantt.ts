@@ -1138,9 +1138,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
         class="oge-gantt-menu"
         role="menu"
         tabindex="-1"
-        [style.left.px]="menu.x"
+        [style.inset-inline-start.px]="menu.x"
         [style.top.px]="menu.y"
-        (keydown.escape)="core.closeMenu()"
+        (keydown)="core.onMenuKeydown($event)"
       >
         @if (menu.task !== null) {
           <button

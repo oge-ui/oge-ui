@@ -41,7 +41,10 @@ import {
   type ChartPinchTracker,
   type OgeChartAnimationOptions,
   type OgeChartPane,
+  CHART_AXIS_LABEL_LINE_H,
   buildCartesianScene,
+  createChartLabelMeasure,
+  type OgeChartTextMeasure,
   cartesianActivePoints,
   cartesianAriaLabel,
   cartesianCrosshair,
@@ -271,6 +274,15 @@ function OgeChartInner<T extends object>(
     return observeChartRtl(rootRef.current, setAutoRtl);
   }, []);
   const rtl = props.rtlEnabled ?? autoRtl;
+  // measures label text in the chart's svg once it exists (real text boxes
+  // for the label overlap / wrap decisions); the estimate until then
+  const [measureLabel, setMeasureLabel] = useState<
+    OgeChartTextMeasure | undefined
+  >(undefined);
+  useEffect(() => {
+    const measure = createChartLabelMeasure(svgRef.current);
+    setMeasureLabel(() => measure);
+  }, []);
   const [reducedMotion] = useState(chartPrefersReducedMotion);
   const animation = useMemo(
     () => resolveChartAnimation(animationOption, reducedMotion),
@@ -321,6 +333,7 @@ function OgeChartInner<T extends object>(
         rotated,
         rtl,
         panes,
+        measureLabel,
       }),
     [
       data,
@@ -338,6 +351,7 @@ function OgeChartInner<T extends object>(
       rotated,
       rtl,
       panes,
+      measureLabel,
     ],
   );
 
@@ -1260,7 +1274,17 @@ function OgeChartInner<T extends object>(
                 textAnchor={label.anchor}
                 transform={label.transform ?? undefined}
               >
-                {label.text}
+                {label.lines === undefined
+                  ? label.text
+                  : label.lines.map((line, lineIndex) => (
+                      <tspan
+                        key={lineIndex}
+                        x={label.x}
+                        dy={lineIndex === 0 ? 0 : CHART_AXIS_LABEL_LINE_H}
+                      >
+                        {line}
+                      </tspan>
+                    ))}
               </text>
             ))}
             {scene.axisTitles.map((axisTitle, index) => (

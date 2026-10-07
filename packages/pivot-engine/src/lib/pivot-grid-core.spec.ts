@@ -267,6 +267,129 @@ describe('OgePivotGridCore — layout and cells', () => {
   });
 });
 
+describe('OgePivotGridCore — member header format', () => {
+  interface Order {
+    readonly day: Date;
+    readonly region: string;
+    readonly amount: number;
+  }
+  const ORDERS: Order[] = [
+    { day: new Date(2026, 0, 5), region: 'EU', amount: 10 },
+    { day: new Date(2026, 1, 9), region: 'EU', amount: 20 },
+    { day: new Date(2026, 1, 20), region: 'US', amount: 5 },
+  ];
+  const orderCore = (
+    fields: readonly OgePivotFieldDef<Order>[],
+    data: unknown = ORDERS,
+    locale = 'en-US',
+  ) =>
+    new OgePivotGridCore<Order>(PLAIN_ADAPTER, {
+      inputs: {
+        data: () => data as readonly Order[],
+        fields: () => fields,
+        virtualScrolling: () => false,
+        showRowTotals: () => true,
+        showColumnTotals: () => true,
+        showRowGrandTotals: () => true,
+        showColumnGrandTotals: () => true,
+        messages: () => OGE_DEFAULT_PIVOT_MESSAGES,
+        customizeCell: () => undefined,
+        fieldChooser: () => ({}),
+        locale: () => locale,
+      },
+    });
+  const MONTHS: OgePivotFieldDef<Order>[] = [
+    {
+      dataField: 'day',
+      area: 'row',
+      dataType: 'date',
+      groupInterval: 'month',
+      headerFormat: { type: 'date', pattern: 'MMMM' },
+    },
+    { dataField: 'region', area: 'column' },
+    {
+      dataField: 'amount',
+      area: 'data',
+      format: { type: 'currency', currency: 'EUR' },
+    },
+  ];
+
+  it('names date-interval buckets through a declarative date format, in the locale', () => {
+    const en = orderCore(MONTHS);
+    expect(en.rowLines().map((line) => line.text)).toEqual([
+      'January',
+      'February',
+      'Grand Total',
+    ]);
+    const tr = orderCore(MONTHS, ORDERS, 'tr-TR');
+    expect(tr.rowLines()[0].text).toBe('Ocak');
+    // the cell format is untouched
+    expect(en.preparedCell(0, 0, 0).text).toBe('€10.00');
+  });
+
+  it('wins over format for headers, which keeps formatting cells', () => {
+    const fields: OgePivotFieldDef<Order>[] = [
+      {
+        dataField: 'region',
+        area: 'row',
+        format: () => 'cell-format',
+        headerFormat: (value) => `Region ${String(value)}`,
+        customizeText: ({ valueText }) => `${valueText}!`,
+      },
+      { dataField: 'amount', area: 'data' },
+    ];
+    const core = orderCore(fields);
+    expect(core.rowLines()[0].text).toBe('Region EU!');
+    // without a headerFormat the field's format still reads the members
+    const legacy = orderCore([
+      { ...fields[0], headerFormat: undefined },
+      fields[1],
+    ]);
+    expect(legacy.rowLines()[0].text).toBe('cell-format!');
+  });
+
+  it('label filters match the formatted header text', () => {
+    const core = orderCore([
+      { ...MONTHS[0], labelFilter: { operator: 'beginsWith', value: 'Feb' } },
+      MONTHS[2],
+    ]);
+    expect(core.rowLines().map((line) => line.text)).toEqual([
+      'February',
+      'Grand Total',
+    ]);
+  });
+
+  it('exports (CSV) carry the formatted headers', () => {
+    const csv = orderCore(MONTHS).getCsv({ bom: false });
+    expect(csv).toContain('January');
+    expect(csv).toContain('February');
+  });
+
+  it('formats remote members without a server text', async () => {
+    const inner = new LocalPivotStore<Order>(ORDERS);
+    const strip = (nodes: PivotLoadResult['rows']): PivotLoadResult['rows'] =>
+      nodes.map((node) => ({
+        ...node,
+        text: undefined,
+        children: node.children ? strip(node.children) : undefined,
+      }));
+    const store: OgePivotStore<Order> = {
+      load: async (options) => {
+        const payload = await inner.load(options);
+        return { ...payload, rows: strip(payload.rows) };
+      },
+    };
+    const core = orderCore(MONTHS, store);
+    core.syncRemote();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(core.rowLines().map((line) => line.text)).toEqual([
+      'January',
+      'February',
+      'Grand Total',
+    ]);
+  });
+});
+
 describe('OgePivotGridCore — keyboard', () => {
   it('roves the tab stop and reports moves', () => {
     const core = makeCore();

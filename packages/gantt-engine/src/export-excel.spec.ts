@@ -95,4 +95,18 @@ describe('buildGanttExcelWorkbook', () => {
     expect(sheet?.getRow(1).cellCount).toBe(3);
     expect(sheet?.getRow(3).getCell(1).value).toBe('Design');
   });
+
+  it('writes a right-to-left sheet for an RTL chart; the option overrides', () => {
+    const ltr = buildGanttExcelWorkbook(DATA).getWorksheet('Tasks');
+    expect(ltr?.views.some((view) => view.rightToLeft)).toBe(false);
+    const rtl = buildGanttExcelWorkbook({ ...DATA, rtl: true }).getWorksheet(
+      'Tasks',
+    );
+    expect(rtl?.views[0]?.rightToLeft).toBe(true);
+    const forced = buildGanttExcelWorkbook(
+      { ...DATA, rtl: true },
+      { rtl: false },
+    ).getWorksheet('Tasks');
+    expect(forced?.views.some((view) => view.rightToLeft)).toBe(false);
+  });
 });

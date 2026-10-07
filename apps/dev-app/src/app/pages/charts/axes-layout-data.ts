@@ -199,3 +199,38 @@ export const ANIMATION_OPTIONS: OgeChartAnimationOptions = {
   duration: 1100,
   easing: 'easeInOut',
 };
+
+export const ROTATED_LABELS_DATA = [
+  'Enterprise support renewals (annual)',
+  'Cloud storage',
+  'Professional services and onboarding',
+  'Mobile',
+  'Hardware leasing',
+  'Training and certification programmes',
+  'Analytics add-on',
+  'Marketplace commissions from partners',
+  'Consulting',
+  'Premium SLA upgrades for regulated industries',
+  'API usage',
+  'Desktop licences',
+  'Security audits',
+  'Data migration packages',
+  'Custom integrations',
+  'Community edition sponsorships',
+  'Managed backups',
+  'Developer seats',
+].map((product, i) => ({
+  product,
+  revenue: 40 + ((i * 37) % 90),
+}));
+export const ROTATED_LABELS_SERIES: OgeChartSeriesInput[] = [
+  {
+    type: 'bar',
+    argumentField: 'product',
+    valueField: 'revenue',
+    name: 'Revenue (k€)',
+  },
+];
+export const ROTATED_LABELS_ARGUMENT_AXIS: OgeChartAxisOptions = {
+  label: { overlap: 'hide' },
+};

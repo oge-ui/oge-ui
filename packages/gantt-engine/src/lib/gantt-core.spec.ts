@@ -6,6 +6,8 @@ import type {
 import type { RowKey } from '@oge-ui/core';
 import {
   OgeGanttCore,
+  ganttMenuFocusIndex,
+  ganttMenuKeyCommand,
   mirrorGanttKey,
   type OgeGanttCoreEvents,
   type OgeGanttCoreInputs,
@@ -619,6 +621,114 @@ describe('OgeGanttCore — right-to-left', () => {
     move(650);
     expect(core.dragTip()?.x).toBe(900 - 650);
     up();
+  });
+
+  it('the context menu opens from the inline-start edge (towards the left in RTL)', () => {
+    const rtl = setup({ rtlEnabled: true });
+    rtl.hostEl.getBoundingClientRect = canvas(800).getBoundingClientRect;
+    rtl.core.onRowContextMenu(
+      rtl.core.visibleTasks()[1],
+      new MouseEvent('contextmenu', { clientX: 850, clientY: 40 }),
+    );
+    // logical x = host right (900) - clientX (850)
+    expect(rtl.core.contextMenu()).toMatchObject({ x: 50, y: 40 });
+
+    const ltr = setup();
+    ltr.hostEl.getBoundingClientRect = canvas(800).getBoundingClientRect;
+    ltr.core.onRowContextMenu(
+      ltr.core.visibleTasks()[1],
+      new MouseEvent('contextmenu', { clientX: 850, clientY: 40 }),
+    );
+    expect(ltr.core.contextMenu()).toMatchObject({ x: 750, y: 40 });
+  });
+
+  it('ganttMenuKeyCommand mirrors the "back" arrow and keeps Up/Down/Home/End', () => {
+    expect(ganttMenuKeyCommand('ArrowDown', false)).toBe('next');
+    expect(ganttMenuKeyCommand('ArrowUp', true)).toBe('previous');
+    expect(ganttMenuKeyCommand('Home', true)).toBe('first');
+    expect(ganttMenuKeyCommand('End', false)).toBe('last');
+    expect(ganttMenuKeyCommand('Escape', true)).toBe('close');
+    expect(ganttMenuKeyCommand('ArrowLeft', false)).toBe('close');
+    expect(ganttMenuKeyCommand('ArrowRight', false)).toBeNull();
+    expect(ganttMenuKeyCommand('ArrowRight', true)).toBe('close');
+    expect(ganttMenuKeyCommand('ArrowLeft', true)).toBeNull();
+    expect(ganttMenuKeyCommand('a', false)).toBeNull();
+  });
+
+  it('ganttMenuFocusIndex wraps Up/Down and jumps Home/End', () => {
+    expect(ganttMenuFocusIndex('next', 2, 3)).toBe(0);
+    expect(ganttMenuFocusIndex('previous', 0, 3)).toBe(2);
+    expect(ganttMenuFocusIndex('next', -1, 3)).toBe(0);
+    expect(ganttMenuFocusIndex('previous', -1, 3)).toBe(2);
+    expect(ganttMenuFocusIndex('first', 1, 3)).toBe(0);
+    expect(ganttMenuFocusIndex('last', 0, 3)).toBe(2);
+    expect(ganttMenuFocusIndex('next', 0, 0)).toBe(-1);
+  });
+
+  it('the menu moves focus with the arrows and closes on the mirrored back arrow', () => {
+    const { core, hostEl } = setup({ rtlEnabled: true });
+    core.onRowContextMenu(
+      core.visibleTasks()[1],
+      new MouseEvent('contextmenu', { clientX: 10, clientY: 10 }),
+    );
+    const menu = document.createElement('div');
+    menu.className = 'oge-gantt-menu';
+    const items = ['Edit', 'New', 'Delete'].map((label) => {
+      const button = document.createElement('button');
+      button.className = 'oge-gantt-menu-item';
+      button.textContent = label;
+      menu.append(button);
+      return button;
+    });
+    hostEl.append(menu);
+    items[0].focus();
+    const down = key('ArrowDown');
+    core.onMenuKeydown(down);
+    expect(down.preventDefault).toHaveBeenCalled();
+    expect(document.activeElement).toBe(items[1]);
+    core.onMenuKeydown(key('End'));
+    expect(document.activeElement).toBe(items[2]);
+    core.onMenuKeydown(key('ArrowDown'));
+    expect(document.activeElement).toBe(items[0]);
+    // ArrowLeft points away from the row in RTL: nothing happens
+    core.onMenuKeydown(key('ArrowLeft'));
+    expect(core.contextMenu()).not.toBeNull();
+    core.onMenuKeydown(key('ArrowRight'));
+    expect(core.contextMenu()).toBeNull();
+  });
+
+  it('Shift+F10 / the ContextMenu key opens the menu at the row start edge', () => {
+    const { core, hostEl } = setup({ rtlEnabled: true });
+    hostEl.getBoundingClientRect = canvas(800).getBoundingClientRect;
+    const row = document.createElement('div');
+    row.setAttribute('data-focus-target', '');
+    row.getBoundingClientRect = () =>
+      ({
+        left: 500,
+        right: 900,
+        top: 60,
+        bottom: 90,
+        width: 400,
+        height: 30,
+        x: 500,
+        y: 60,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    hostEl.append(row);
+    const shiftF10 = key('F10', { shiftKey: true });
+    core.onRowKeydown(core.visibleTasks()[1], shiftF10);
+    expect(shiftF10.preventDefault).toHaveBeenCalled();
+    // the row's right edge, 24px in; just below the row
+    expect(core.contextMenu()).toMatchObject({ x: 24, y: 90 });
+    expect(core.contextMenu()?.task?.key).toBe('a');
+    core.closeMenu();
+    core.onRowKeydown(core.visibleTasks()[1], key('ContextMenu'));
+    expect(core.contextMenu()).not.toBeNull();
+  });
+
+  it('the export snapshot carries the direction', () => {
+    expect(setup({ rtlEnabled: true }).core.getExportData().rtl).toBe(true);
+    expect(setup({ rtlEnabled: false }).core.getExportData().rtl).toBe(false);
   });
 
   it('the splitter widens the pane when dragged left in RTL', () => {

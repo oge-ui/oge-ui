@@ -217,7 +217,7 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'boolean | undefined',
           default: 'undefined',
           description:
-            'Right-to-left layout: the task tree moves to the right, the timeline runs from right to left (dependency arrows, baselines, today line and drag tip included), pointer drags and the splitter invert their direction and the Left/Right keys mirror — Left expands a summary, Alt+Shift+Left indents and Ctrl+Left moves a bar later. Unset follows the page: the computed <code>direction</code> or the nearest <code>dir</code> attribute, read after the first render and kept current while it changes; an explicit value also sets <code>dir</code> on the host.',
+            'Right-to-left layout: the task tree moves to the right, the timeline runs from right to left (dependency arrows, baselines, today line and drag tip included), pointer drags and the splitter invert their direction and the Left/Right keys mirror — Left expands a summary, Alt+Shift+Left indents and Ctrl+Left moves a bar later. Unset follows the page: the computed <code>direction</code> or the nearest <code>dir</code> attribute, read after the first render and kept current while it changes; an explicit value also sets <code>dir</code> on the host. The built-in context menu opens towards the inline-start side of the pointer and its back arrow mirrors (Right closes it in RTL), and the PNG / PDF exports mirror the picture while the Excel export writes a right-to-left sheet (MS Project XML is direction-neutral data).',
         },
         {
           name: 'selectedTaskKey',
@@ -508,25 +508,25 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'exportGanttToExcel(gantt, options?) / buildGanttExcelWorkbook(data, options?)',
           type: '@oge-ui/gantt/export-excel',
           description:
-            'Lazy Excel export (<code>exceljs</code> peer): the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. Import the entry point dynamically so exceljs stays out of the initial bundle.',
+            'Lazy Excel export (<code>exceljs</code> peer): the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column; a right-to-left sheet when the Gantt is RTL (<code>rtl</code> option overrides). Import the entry point dynamically so exceljs stays out of the initial bundle.',
         },
         {
           name: 'exportGanttToPdf(gantt, options?) / buildGanttPdfDocument(data, options?)',
           type: '@oge-ui/gantt/export-pdf',
           description:
-            'Lazy PDF export (<code>jspdf</code> peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. Text outside WinAnsi (Turkish <code>ğ ş ı İ</code>, Central European, Greek, Cyrillic) needs a Unicode TrueType <code>font</code> — per export, or once for every PDF via <code>setOgePdfDefaultFont({ family, normal, bold })</code> from <code>@oge-ui/behavior</code>; without one the built-in Helvetica cannot draw it (a dev-mode warning says so).',
+            'Lazy PDF export (<code>jspdf</code> peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. An RTL Gantt exports mirrored — title column on the right, timeline running right to left, right-aligned text — unless <code>rtl: false</code> is passed. Text outside WinAnsi (Turkish <code>ğ ş ı İ</code>, Central European, Greek, Cyrillic) needs a Unicode TrueType <code>font</code> — per export, or once for every PDF via <code>setOgePdfDefaultFont({ family, normal, bold })</code> from <code>@oge-ui/behavior</code>; without one the built-in Helvetica cannot draw it (a dev-mode warning says so).',
         },
         {
           name: 'exportGanttToPng(gantt, options?) / buildGanttCanvas(data, options?)',
           type: '@oge-ui/gantt/export-image',
           description:
-            'Lazy PNG export with <strong>no dependencies</strong> — plain canvas drawing of the same chart (configurable width, pixel ratio, background and critical-path outlining).',
+            'Lazy PNG export with <strong>no dependencies</strong> — plain canvas drawing of the same chart (configurable width, pixel ratio, background and critical-path outlining), mirrored for an RTL Gantt like the PDF (<code>rtl</code> option overrides).',
         },
         {
           name: 'exportGanttToMsProject(gantt, options?) / importMsProjectXml(xml)',
           type: '@oge-ui/gantt/export-msproject',
           description:
-            'MS Project XML (MSPDI) <strong>without dependencies</strong>: the export writes tasks with WBS, outline levels, manual mode, constraints, deadlines and baselines, links with <code>LinkLag</code>, resources with max units, assignments with units and work, and the calendar (working weekdays + holiday exceptions), then downloads (<code>download: false</code> returns the XML only). The import parses with a small DOM-free reader (no Trusted Types sink, no DTD entities) into plain <code>tasks</code> / <code>dependencies</code> / <code>resources</code> / <code>workCalendar</code> in the default field names \u2014 bind them. Midnight-to-midnight dates map to 08:00\u201317:00 and back, so a round trip is lossless.',
+            'MS Project XML (MSPDI) <strong>without dependencies</strong>: the export writes tasks with WBS, outline levels, manual mode, constraints, deadlines and baselines, links with <code>LinkLag</code>, resources with max units, assignments with units and work, and the calendar (working weekdays + holiday exceptions), then downloads (<code>download: false</code> returns the XML only). The import parses with a small DOM-free reader (no Trusted Types sink, no DTD entities) into plain <code>tasks</code> / <code>dependencies</code> / <code>resources</code> / <code>workCalendar</code> in the default field names \u2014 bind them. Midnight-to-midnight dates map to 08:00\u201317:00 and back, so a round trip is lossless. MSPDI is direction-neutral data, so an RTL Gantt writes the same XML.',
         },
       ],
     },
@@ -572,7 +572,7 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'taskClick / taskDblClick / taskContextMenu',
           type: 'OgeGanttTaskClickEvent&lt;T&gt;',
           description:
-            'Bar/row pointer events with the normalized task and the raw <code>MouseEvent</code>. Right-click also opens the <strong>built-in context menu</strong> (edit, new task/subtask, indent/outdent, delete — labels in <code>messages.menu</code>); listen to <code>taskContextMenu</code> to add your own entries alongside it.',
+            'Bar/row pointer events with the normalized task and the raw <code>MouseEvent</code>. Right-click — or <strong>Shift+F10</strong> / the ContextMenu key on a row — also opens the <strong>built-in context menu</strong> (edit, new task/subtask, indent/outdent, delete — labels in <code>messages.menu</code>; Up/Down/Home/End move, Escape or the inline-start arrow closes it and returns to the row); listen to <code>taskContextMenu</code> to add your own entries alongside it.',
         },
         {
           name: 'selectionChanged',

@@ -316,6 +316,35 @@ describe('<OgeGantt>', () => {
     await settle();
   });
 
+  it('the built-in menu runs the APG menu keys and Escape closes it', async () => {
+    render(<Harness />);
+    fireEvent.contextMenu(rows()[2]);
+    const items = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '.oge-gantt-menu .oge-gantt-menu-item:not(:disabled)',
+      ),
+    );
+    expect(items.length).toBeGreaterThan(2);
+    items[0].focus();
+    fireEvent.keyDown(items[0], { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(items[1]);
+    fireEvent.keyDown(items[1], { key: 'Home' });
+    expect(document.activeElement).toBe(items[0]);
+    fireEvent.keyDown(items[0], { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(items.at(-1));
+    fireEvent.keyDown(items.at(-1) as HTMLButtonElement, { key: 'Escape' });
+    expect(document.querySelector('.oge-gantt-menu')).toBeNull();
+    await settle();
+  });
+
+  it('Shift+F10 on a row opens the built-in menu', async () => {
+    render(<Harness />);
+    fireEvent.click(rows()[1]);
+    fireEvent.keyDown(rows()[1], { key: 'F10', shiftKey: true });
+    expect(document.querySelector('.oge-gantt-menu')).not.toBeNull();
+    await settle();
+  });
+
   it('Alt+Shift+ArrowLeft outdents the focused row', () => {
     const onTaskUpdated = vi.fn();
     render(<Harness onTaskUpdated={onTaskUpdated} />);

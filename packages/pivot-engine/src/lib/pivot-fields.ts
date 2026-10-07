@@ -1,11 +1,13 @@
 import { humanize } from '@oge-ui/behavior';
-import { ogeValueFormatter } from '@oge-ui/core';
+import { isOgeDateFormatType, ogeValueFormatter } from '@oge-ui/core';
 import type {
   CustomSummaryMap,
   FilterExpr,
+  OgeValueFormat,
   PivotArea,
   PivotFieldConfig,
   PivotFieldFns,
+  PivotGroupInterval,
   PivotGridStateSnapshot,
   PivotLoadOptions,
   PivotPath,
@@ -62,8 +64,8 @@ export function applyPivotFieldOverrides(
 export function pivotFieldFnsOf<T>(
   defs: readonly OgePivotFieldDef<T>[],
   locale?: string,
-): Readonly<Record<string, PivotFieldFns<T>>> {
-  const fns: Record<string, PivotFieldFns<T>> = {};
+): Readonly<Record<string, OgePivotFieldFns<T>>> {
+  const fns: Record<string, OgePivotFieldFns<T>> = {};
   for (const def of defs) {
     const id = def.id ?? def.dataField;
     const { selector, customizeText } = def;
@@ -71,10 +73,100 @@ export function pivotFieldFnsOf<T>(
       def.format && typeof def.format !== 'function'
         ? ogeValueFormatter(def.format, locale)
         : def.format;
-    if (selector || format || customizeText)
-      fns[id] = { selector, format, customizeText };
+    const headerFormat =
+      def.headerFormat === undefined
+        ? undefined
+        : pivotHeaderFormatter(def.headerFormat, def.groupInterval, locale);
+    if (selector || format || customizeText || headerFormat)
+      fns[id] = { selector, format, customizeText, headerFormat };
   }
   return fns;
+}
+
+/** A field's out-of-band functions, plus its compiled member-header format. */
+export interface OgePivotFieldFns<T = unknown> extends PivotFieldFns<T> {
+  /** Member-header text on a row / column axis (wins over `format` there). */
+  readonly headerFormat?: (value: unknown) => string;
+}
+
+/**
+ * A representative `Date` of a date group-interval bucket, so a date format
+ * can name it: year `2024` → 1 Jan 2024, quarter `q` → the quarter's first
+ * month, month `m` → 1st of that month, day `d` → that day of January,
+ * dayOfWeek `w` (0 = Sunday) → a date on that weekday (the reference year is
+ * 2000). Anything else — a numeric interval, no interval, a non-numeric
+ * bucket — comes back unchanged.
+ */
+export function pivotIntervalDate(
+  bucket: unknown,
+  interval: PivotGroupInterval | undefined,
+): unknown {
+  if (typeof bucket !== 'number' || !Number.isFinite(bucket)) return bucket;
+  switch (interval) {
+    case 'year':
+      return new Date(bucket, 0, 1);
+    case 'quarter':
+      return new Date(2000, (bucket - 1) * 3, 1);
+    case 'month':
+      return new Date(2000, bucket - 1, 1);
+    case 'day':
+      return new Date(2000, 0, bucket);
+    case 'dayOfWeek':
+      // 2 Jan 2000 was a Sunday
+      return new Date(2000, 0, 2 + bucket);
+    default:
+      return bucket;
+  }
+}
+
+/**
+ * Compiles a field's `headerFormat`: a function passes through; a
+ * declarative `OgeValueFormat` renders in `locale`, and a date format on a
+ * date-grouped field formats the bucket's {@link pivotIntervalDate}.
+ */
+export function pivotHeaderFormatter(
+  format: ((value: unknown) => string) | OgeValueFormat,
+  groupInterval: PivotGroupInterval | undefined,
+  locale?: string,
+): (value: unknown) => string {
+  if (typeof format === 'function') return format;
+  const formatter = ogeValueFormatter(format, locale);
+  if (!isOgeDateFormatType(format.type) || typeof groupInterval !== 'string') {
+    return formatter;
+  }
+  return (value) => formatter(pivotIntervalDate(value, groupInterval));
+}
+
+/**
+ * The functions an axis renders members with: `headerFormat` takes the place
+ * of `format` (which keeps formatting the field's cells as a measure).
+ */
+export function pivotAxisFieldFns<T>(
+  fns: Readonly<Record<string, OgePivotFieldFns<T>>>,
+): Readonly<Record<string, PivotFieldFns<T>>> {
+  const axis: Record<string, PivotFieldFns<T>> = {};
+  for (const [id, entry] of Object.entries(fns)) {
+    axis[id] =
+      entry.headerFormat === undefined
+        ? entry
+        : { ...entry, format: entry.headerFormat };
+  }
+  return axis;
+}
+
+/**
+ * A member's header text — the same rule the engine's axes use: the axis
+ * `format`, else `String(value)`, then `customizeText`.
+ */
+export function pivotMemberText<T>(
+  fns: PivotFieldFns<T> | undefined,
+  value: unknown,
+): string {
+  const base = value == null ? '' : String(value);
+  const formatted = fns?.format ? fns.format(value) : base;
+  return fns?.customizeText
+    ? fns.customizeText({ value, valueText: formatted })
+    : formatted;
 }
 
 /** Custom reducers keyed by `summaryName ?? dataField`; `undefined` when none. */

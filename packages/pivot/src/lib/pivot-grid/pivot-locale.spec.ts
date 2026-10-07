@@ -44,6 +44,34 @@ class Host {
   readonly locale = signal<string | undefined>('en-US');
 }
 
+@Component({
+  imports: [OgePivotGrid, OgePivotField],
+  template: `
+    <oge-pivot-grid [data]="orders" [locale]="locale()">
+      <oge-pivot-field
+        dataField="day"
+        area="row"
+        dataType="date"
+        groupInterval="month"
+        [headerFormat]="{ type: 'date', pattern: 'MMMM' }"
+      />
+      <oge-pivot-field dataField="amount" area="data" />
+    </oge-pivot-grid>
+  `,
+})
+class HeaderFormatHost {
+  readonly orders = [
+    { day: new Date(2026, 0, 5), amount: 10 },
+    { day: new Date(2026, 1, 9), amount: 20 },
+  ];
+  readonly locale = signal('en-US');
+}
+
+const rowHeaders = (el: HTMLElement) =>
+  Array.from(el.querySelectorAll('.oge-pivot-row-header')).map(
+    (cell) => cell.textContent?.trim() ?? '',
+  );
+
 const cells = (el: HTMLElement) =>
   Array.from(el.querySelectorAll('.oge-pivot-cell > span')).map(
     (cell) => cell.textContent?.trim() ?? '',
@@ -73,6 +101,17 @@ describe('OgePivotGrid locale', () => {
         currency: 'EUR',
       }).format(100),
     );
+  });
+
+  it('renders member headers through headerFormat, live with the locale', async () => {
+    TestBed.configureTestingModule({});
+    const fixture = TestBed.createComponent(HeaderFormatHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(rowHeaders(el).slice(0, 2)).toEqual(['January', 'February']);
+    fixture.componentInstance.locale.set('tr-TR');
+    await settle(fixture);
+    expect(rowHeaders(el).slice(0, 2)).toEqual(['Ocak', 'Şubat']);
   });
 
   it('falls back to provideOgePivotConfig, then LOCALE_ID', async () => {

@@ -318,4 +318,52 @@ const [run, setRun] = useState(0);`,
 </>`,
     }),
   },
+  {
+    title: 'Rotated labels',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-charts': ['OgeChart'] },
+      types: {
+        '@oge-ui/react-charts': ['OgeChartAxisOptions', 'OgeChartSeriesInput'],
+      },
+      name: 'RotatedLabels',
+      before: `const data = [
+  'Enterprise support renewals (annual)',
+  'Cloud storage',
+  'Professional services and onboarding',
+  'Mobile',
+  'Hardware leasing',
+  'Training and certification programmes',
+  'Analytics add-on',
+  'Marketplace commissions from partners',
+  'Consulting',
+  'Premium SLA upgrades for regulated industries',
+  'API usage',
+  'Desktop licences',
+  'Security audits',
+  'Data migration packages',
+  'Custom integrations',
+  'Community edition sponsorships',
+  'Managed backups',
+  'Developer seats',
+].map((product, i) => ({ product, revenue: 40 + ((i * 37) % 90) }));
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'product', valueField: 'revenue', name: 'Revenue (k€)' },
+];
+
+const argumentAxis: OgeChartAxisOptions = { label: { overlap: 'hide' } };`,
+      jsx: `// Down a vertical axis, labels collide by their height. The chart
+// measures every label in its own svg: a name wider than the side band
+// wraps (up to three lines, centred on its bar) and label.overlap then
+// works on the real boxes — 'hide' keeps the labels that clear each other,
+// 'skip' thins by the tallest one, 'stagger' alternates two columns.
+<OgeChart
+  dataSource={data}
+  series={series}
+  rotated
+  argumentAxis={argumentAxis}
+  style={{ height: 320 }}
+/>`,
+    }),
+  },
 ];

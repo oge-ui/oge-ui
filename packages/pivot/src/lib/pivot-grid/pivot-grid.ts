@@ -113,6 +113,7 @@ function fieldDefOf<T>(directive: OgePivotField<T>): OgePivotFieldDef<T> {
     showTotals: directive.showTotals(),
     selector: directive.selector(),
     format: directive.format(),
+    headerFormat: directive.headerFormat(),
     customizeText: directive.customizeText(),
     labelFilter: directive.labelFilter(),
     valueFilter: directive.valueFilter(),

@@ -6,7 +6,11 @@ import {
   pivotAreaFields,
   pivotCustomSummariesOf,
   pivotFieldConfigOf,
+  pivotAxisFieldFns,
   pivotFieldFnsOf,
+  pivotHeaderFormatter,
+  pivotIntervalDate,
+  pivotMemberText,
   pivotOverridesFromSnapshot,
   pivotPanelAreas,
   pivotStateSnapshot,
@@ -164,5 +168,76 @@ describe('field layout helpers', () => {
     expect(overrides?.get('city')).toMatchObject({ area: 'row', areaIndex: 0 });
     expect(overrides?.get('city')).not.toHaveProperty('id');
     expect(pivotOverridesFromSnapshot({})).toBeNull();
+  });
+});
+
+describe('member header formats', () => {
+  it('pivotIntervalDate maps date-interval buckets to a representative date', () => {
+    expect(pivotIntervalDate(2024, 'year')).toEqual(new Date(2024, 0, 1));
+    expect(pivotIntervalDate(3, 'quarter')).toEqual(new Date(2000, 6, 1));
+    expect(pivotIntervalDate(12, 'month')).toEqual(new Date(2000, 11, 1));
+    expect(pivotIntervalDate(17, 'day')).toEqual(new Date(2000, 0, 17));
+    expect((pivotIntervalDate(0, 'dayOfWeek') as Date).getDay()).toBe(0);
+    expect((pivotIntervalDate(5, 'dayOfWeek') as Date).getDay()).toBe(5);
+    // numeric intervals, no interval and non-numbers pass through
+    expect(pivotIntervalDate(100, 50)).toBe(100);
+    expect(pivotIntervalDate(7, undefined)).toBe(7);
+    expect(pivotIntervalDate(null, 'month')).toBeNull();
+  });
+
+  it('pivotHeaderFormatter: functions pass, declarative formats are interval-aware', () => {
+    const fn = (value: unknown) => `#${String(value)}`;
+    expect(pivotHeaderFormatter(fn, 'month')).toBe(fn);
+    const month = pivotHeaderFormatter(
+      { type: 'date', pattern: 'MMMM' },
+      'month',
+      'de-DE',
+    );
+    expect(month(3)).toBe('März');
+    expect(month(null)).toBe('');
+    const weekday = pivotHeaderFormatter(
+      { type: 'date', pattern: 'EEEE' },
+      'dayOfWeek',
+      'en-US',
+    );
+    expect(weekday(1)).toBe('Monday');
+    // a number format on a numeric interval formats the bucket start
+    const bucket = pivotHeaderFormatter({ type: 'number' }, 1000, 'en-US');
+    expect(bucket(12000)).toBe('12,000');
+    // ungrouped date values format as dates
+    const plain = pivotHeaderFormatter(
+      { type: 'date', dateStyle: 'medium' },
+      undefined,
+      'en-US',
+    );
+    expect(plain(new Date(2026, 0, 5))).toBe('Jan 5, 2026');
+  });
+
+  it('pivotFieldFnsOf compiles headerFormat; pivotAxisFieldFns puts it in format', () => {
+    const fns = pivotFieldFnsOf(
+      [
+        {
+          dataField: 'day',
+          groupInterval: 'month',
+          format: () => 'cell',
+          headerFormat: { type: 'date', pattern: 'MMM' },
+        },
+        { dataField: 'region', format: () => 'only-format' },
+      ],
+      'en-US',
+    );
+    expect(fns['day'].format?.(1)).toBe('cell');
+    expect(fns['day'].headerFormat?.(1)).toBe('Jan');
+    const axis = pivotAxisFieldFns(fns);
+    expect(axis['day'].format?.(1)).toBe('Jan');
+    expect(axis['region'].format?.('EU')).toBe('only-format');
+    expect(pivotMemberText(axis['day'], 2)).toBe('Feb');
+    expect(pivotMemberText(undefined, null)).toBe('');
+    expect(
+      pivotMemberText(
+        { customizeText: ({ valueText }) => `<${valueText}>` },
+        'x',
+      ),
+    ).toBe('<x>');
   });
 });

@@ -61,6 +61,16 @@ export class OgePivotField<T = unknown> {
    * (`{ type: 'currency', currency: 'EUR' }`) rendered in the grid's `locale`.
    */
   readonly format = input<((value: unknown) => string) | OgeValueFormat>();
+  /**
+   * Row / column fields: the member-header text — a function, or a
+   * declarative `OgeValueFormat`; wins over `format` for headers. A date
+   * format on a date-grouped field names the bucket
+   * (`{ type: 'date', pattern: 'MMMM' }` → `January`). Headers, label
+   * filters, the chart adapter and the exports all use it.
+   */
+  readonly headerFormat = input<
+    ((value: unknown) => string) | OgeValueFormat
+  >();
   readonly customizeText =
     input<(info: { value: unknown; valueText: string }) => string>();
   // member filters (row / column fields), applied before aggregation

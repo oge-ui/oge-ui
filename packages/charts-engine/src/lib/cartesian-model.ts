@@ -85,6 +85,13 @@ import {
   chartValueLabelFormatter,
 } from './axis-labels';
 import {
+  CHART_AXIS_LABEL_LINE_H,
+  chartAxisLabelBox,
+  estimateChartLabelWidth,
+  type ChartAxisLabelBox,
+  type OgeChartTextMeasure,
+} from './axis-label-boxes';
+import {
   createChartFrame,
   frameLabelAnchor,
   frameLabelBaseline,
@@ -147,6 +154,12 @@ export type { OgeChartRenderLabel } from './data-labels';
 const MARGIN_TOP = 16;
 const MARGIN_BOTTOM = 34;
 const AXIS_W = 52;
+/** Rotated charts: the widest the argument-label band grows, px. */
+const ROTATED_SIDE_MAX = 160;
+/** Rotated charts: labels wider than this wrap (the band less its padding). */
+const ROTATED_LABEL_MAX_W = ROTATED_SIDE_MAX - 14;
+/** Rotated stagger: the gap between the two label columns, px. */
+const ROTATED_STAGGER_GAP = 8;
 
 /* ------------------------------------------------------------------ */
 /* stage 1 — data                                                      */
@@ -488,13 +501,28 @@ export interface OgeCartesianSceneInput<T> {
   readonly rtl?: boolean;
   /** Plot areas stacked over the shared argument axis. */
   readonly panes?: readonly OgeChartPane[];
+  /**
+   * Measures an argument label's rendered width (px). The render layers
+   * pass `createChartLabelMeasure(svg)` once the svg exists, so overlap
+   * avoidance (both orientations) and the rotated side band work on real
+   * text boxes; unset falls back to the character estimate.
+   */
+  readonly measureLabel?: OgeChartTextMeasure;
 }
 
 /** A tick label of any axis, in svg px. */
 export interface OgeChartAxisLabelVm {
   readonly x: number;
+  /** Baseline of the (first) line. */
   readonly y: number;
   readonly text: string;
+  /**
+   * Set when the label wrapped (rotated charts: a label wider than the
+   * side band): draw one `<tspan>` per line at `x`, each
+   * `CHART_AXIS_LABEL_LINE_H` below the previous. `text` stays the full
+   * label.
+   */
+  readonly lines?: readonly string[];
   readonly anchor: 'start' | 'middle' | 'end';
   /** Tilted labels (`overlap: 'rotate'`). */
   readonly transform: string | null;
@@ -769,17 +797,37 @@ export function buildCartesianScene<T>(
     locale,
   );
   const allArgLabels = probeScale.ticks.map((tick) => argLabelOf(tick));
+  const measureLabel = input.measureLabel ?? estimateChartLabelWidth;
   const widest = allArgLabels.reduce(
-    (acc, label) => Math.max(acc, label.length * 7),
+    (acc, label) => Math.max(acc, measureLabel(label)),
     0,
   );
   const requestedOverlap =
     argLabelOptions.overlap ?? argumentAxis.labelOverlap ?? 'skip';
-  // a vertical argument axis cannot tilt or stagger its labels
+  // a vertical argument axis cannot tilt its labels; it staggers them into
+  // two columns instead of two rows
   const overlapMode =
-    rotated && (requestedOverlap === 'rotate' || requestedOverlap === 'stagger')
-      ? 'skip'
-      : requestedOverlap;
+    rotated && requestedOverlap === 'rotate' ? 'skip' : requestedOverlap;
+  /*
+   * Rotated: the labels stack down a vertical axis, so what collides is
+   * their *height* — one line each, more when a label wider than the side
+   * band wraps. Boxes are measured once per text; a staggered axis does
+   * not wrap (each column takes the widest label instead).
+   */
+  const rotatedStagger = rotated && overlapMode === 'stagger';
+  const rotatedBoxes = new Map<string, ChartAxisLabelBox>();
+  const rotatedBox = (text: string): ChartAxisLabelBox => {
+    let box = rotatedBoxes.get(text);
+    if (box === undefined) {
+      box = chartAxisLabelBox(
+        text,
+        measureLabel,
+        rotatedStagger ? Infinity : ROTATED_LABEL_MAX_W,
+      );
+      rotatedBoxes.set(text, box);
+    }
+    return box;
+  };
 
   /* plot rect */
   const slots = chartValueAxisSlots(valueAxesOptions, binding.axisPane);
@@ -818,6 +866,7 @@ export function buildCartesianScene<T>(
   let plotW: number;
   let plotH: number;
   let layout: LabelLayoutDecision;
+  let staggerColumnW = 0;
   if (!rotated) {
     const leftAxes = rtl ? slots.endCount : slots.startCount;
     const rightAxes = rtl ? slots.startCount : slots.endCount;
@@ -843,9 +892,19 @@ export function buildCartesianScene<T>(
       (argLabelsVisible && layout.staggered === true ? STAGGER_H : 0);
     plotH = Math.max(10, input.height - plotY - bottom);
   } else {
+    const boxes = allArgLabels.map(rotatedBox);
+    const widestBox = boxes.reduce((acc, box) => Math.max(acc, box.width), 0);
+    const tallest = boxes.reduce(
+      (acc, box) => Math.max(acc, box.height),
+      CHART_AXIS_LABEL_LINE_H,
+    );
+    // stagger: a second column, pushed out by the first column's width
+    staggerColumnW = rotatedStagger ? widestBox + ROTATED_STAGGER_GAP : 0;
+    const labelBand = rotatedStagger
+      ? Math.min(2 * ROTATED_SIDE_MAX, Math.max(36, 2 * widestBox + 22))
+      : Math.min(ROTATED_SIDE_MAX, Math.max(36, widestBox + 14));
     const argSide =
-      (argLabelsVisible ? Math.min(160, Math.max(36, widest + 14)) : 8) +
-      (argAxisTitle ? 18 : 0);
+      (argLabelsVisible ? labelBand : 8) + (argAxisTitle ? 18 : 0);
     const left = rtl ? 12 + outside.end : argSide;
     const right = rtl ? argSide : 12 + outside.end;
     const bottom = Math.max(12, sideRows('start') + 6);
@@ -853,7 +912,12 @@ export function buildCartesianScene<T>(
     plotY = MARGIN_TOP + sideRows('end') + (outside.top ? OUTSIDE_LABEL_H : 0);
     plotW = Math.max(10, input.width - left - right);
     plotH = Math.max(10, input.height - plotY - bottom);
-    layout = decideLabelLayout(probeScale.ticks.length, plotH, 14, overlapMode);
+    layout = decideLabelLayout(
+      probeScale.ticks.length,
+      plotH,
+      tallest,
+      overlapMode,
+    );
   }
   const argLen = rotated ? plotH : plotW;
   const valLen = rotated ? plotW : plotH;
@@ -980,7 +1044,13 @@ export function buildCartesianScene<T>(
     const subset = kept;
     kept = hideOverlappingLabels(
       subset.map((index) => argScale.toPx(argScale.ticks[index])),
-      subset.map((index) => (rotated ? 14 : tickLabels[index].length * 7)),
+      // the extent along the axis: box height down a vertical axis, the
+      // measured width along a horizontal one
+      subset.map((index) =>
+        rotated
+          ? rotatedBox(tickLabels[index]).height
+          : measureLabel(tickLabels[index]),
+      ),
     ).map((position) => subset[position]);
   }
   const argTicks = kept.map((index) => ({
@@ -1054,10 +1124,20 @@ export function buildCartesianScene<T>(
           axisIndex: 0,
         });
       } else {
+        // a staggered label sits in the outer column
+        const shift =
+          layout.staggered === true && order % 2 === 1 ? staggerColumnW : 0;
+        const box = rotatedBox(tick.label);
         axisLabels.push({
-          x: rtl ? plotX + plotW + 8 : plotX - 8,
-          y: plotY + tick.px + 4,
+          x: rtl ? plotX + plotW + 8 + shift : plotX - 8 - shift,
+          // the lines are centred on the tick
+          y:
+            plotY +
+            tick.px +
+            4 -
+            ((box.lines.length - 1) * CHART_AXIS_LABEL_LINE_H) / 2,
           text: tick.label,
+          ...(box.lines.length > 1 ? { lines: box.lines } : {}),
           anchor: rtl ? 'start' : 'end',
           transform: null,
           axis: 'argument',

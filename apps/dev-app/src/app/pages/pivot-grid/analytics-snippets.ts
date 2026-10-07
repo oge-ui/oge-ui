@@ -10,7 +10,12 @@ export const ANALYTICS_SNIPPET = demoSource({
   use: { '@oge-ui/pivot': ['OgePivotField', 'OgePivotGrid'] },
   template: `<oge-pivot-grid [data]="sales">
   <oge-pivot-field dataField="region" area="row" />
-  <oge-pivot-field dataField="date" area="column" groupInterval="year" />
+  <!-- headerFormat writes the member headers (2026 → FY2026); on a
+       date-grouped field a date format names the bucket, e.g.
+       { type: 'date', pattern: 'MMMM' } for groupInterval="month" -->
+  <oge-pivot-field
+    dataField="date" area="column" groupInterval="year"
+    [headerFormat]="fiscalYear" />
 
   <!-- measures can post-process their values -->
   <oge-pivot-field
@@ -20,7 +25,9 @@ export const ANALYTICS_SNIPPET = demoSource({
     dataField="amount" caption="Running" area="data"
     summaryType="sum" [runningTotal]="{ direction: 'row' }" />
 </oge-pivot-grid>`,
-  body: SALES,
+  body: `${SALES}
+
+protected readonly fiscalYear = { type: 'number', pattern: "'FY'0" } as const;`,
 });
 
 export const EXPORT_SNIPPET = demoSource({

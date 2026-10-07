@@ -556,7 +556,13 @@ export const OGE_PIVOT_FIELD_API: ApiSections = {
           name: 'selector / format / customizeText',
           type: 'functions',
           description:
-            "Out-of-band value selector, display format and text hook. <code>format</code> is a function or a declarative <code>OgeValueFormat</code> (<code>{ type: 'currency', currency: 'EUR' }</code>) rendered in the grid’s <code>locale</code>.",
+            "Out-of-band value selector, display format and text hook. <code>format</code> is a function or a declarative <code>OgeValueFormat</code> (<code>{ type: 'currency', currency: 'EUR' }</code>) rendered in the grid’s <code>locale</code>. Without a <code>headerFormat</code> it also writes a row / column field’s member headers.",
+        },
+        {
+          name: 'headerFormat',
+          type: '((value: unknown) =&gt; string) | OgeValueFormat',
+          description:
+            "Row / column fields: the <strong>member-header</strong> text — a function, or a declarative <code>OgeValueFormat</code> (<code>{ type: 'number' | 'currency' | 'percent' | 'date', … }</code>, <code>pattern</code> included) rendered in the grid’s <code>locale</code>. Wins over <code>format</code> for headers, so <code>format</code> keeps formatting the field’s cells when it is dragged into the data area. A date format on a date-grouped field (<code>groupInterval</code> <code>'year'</code> / <code>'quarter'</code> / <code>'month'</code> / <code>'day'</code> / <code>'dayOfWeek'</code>) names the bucket: <code>{ type: 'date', pattern: 'MMMM' }</code> turns month <code>1</code> into <code>January</code> (<code>Ocak</code> in tr-TR). Headers, label filters, the chart adapter, remote members without a server <code>text</code> and the Excel / PDF / CSV exports all use it; <code>customizeText</code> runs after it.",
         },
         {
           name: 'labelFilter',

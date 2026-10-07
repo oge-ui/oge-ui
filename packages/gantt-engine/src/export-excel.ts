@@ -23,6 +23,12 @@ export interface OgeGanttExcelExportOptions {
   includeResources?: boolean;
   /** Header of the appended resource column. Default: `Assigned`. */
   resourcesHeader?: string;
+  /**
+   * Write a right-to-left worksheet (the first column on the right, as the
+   * RTL task list shows it). Default: the Gantt's own direction
+   * (`OgeGanttExportData.rtl`), else `false`.
+   */
+  rtl?: boolean;
 }
 
 /** Typed cell value: start/end stay dates, progress stays a number. */
@@ -59,7 +65,11 @@ export function buildGanttExcelWorkbook<T>(
   options: OgeGanttExcelExportOptions = {},
 ): Workbook {
   const workbook = new Workbook();
-  const sheet = workbook.addWorksheet(options.sheetName ?? 'Tasks');
+  const rtl = options.rtl ?? data.rtl ?? false;
+  const sheet = workbook.addWorksheet(
+    options.sheetName ?? 'Tasks',
+    rtl ? { views: [{ rightToLeft: true }] } : undefined,
+  );
   const hasResources =
     options.includeResources !== false &&
     data.tasks.some((task) => data.resourceText(task) !== null);

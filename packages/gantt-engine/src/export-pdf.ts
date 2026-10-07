@@ -10,6 +10,10 @@ import {
   warnOgePdfUnicode,
   type OgePdfFont,
 } from '@oge-ui/behavior';
+import {
+  ganttExportFrame,
+  type GanttExportFrame,
+} from './lib/engine/export-frame';
 import type { OgeGanttExportData, OgeGanttTask } from './lib/gantt-types';
 
 export interface OgeGanttPdfExportOptions {
@@ -32,6 +36,13 @@ export interface OgeGanttPdfExportOptions {
    * Helvetica; `null` forces Helvetica.
    */
   font?: OgePdfFont | null;
+  /**
+   * Mirror the chart for right-to-left: the title column on the right, the
+   * timeline running right to left, titles and scale labels right-aligned.
+   * Default: the Gantt's own direction (`OgeGanttExportData.rtl`), else
+   * `false`. The heading moves to the right edge too.
+   */
+  rtl?: boolean;
 }
 
 const MARGIN = 12;
@@ -40,9 +51,8 @@ const ROW_H = 7;
 const TITLE_COL_W = 60;
 
 interface PdfLayout {
-  readonly chartX: number;
-  readonly chartW: number;
-  readonly msPerMm: number;
+  readonly frame: GanttExportFrame;
+  readonly rangeMs: number;
   readonly rangeStart: number;
 }
 
@@ -50,13 +60,12 @@ function barSpan(
   task: OgeGanttTask,
   layout: PdfLayout,
 ): { x: number; w: number } {
-  const x =
-    layout.chartX + (task.start.getTime() - layout.rangeStart) / layout.msPerMm;
-  const w = Math.max(
+  const box = layout.frame.span(
+    (task.start.getTime() - layout.rangeStart) / layout.rangeMs,
+    (task.end.getTime() - layout.rangeStart) / layout.rangeMs,
     0.5,
-    (task.end.getTime() - task.start.getTime()) / layout.msPerMm,
   );
-  return { x, w };
+  return { x: box.left, w: box.width };
 }
 
 /**
@@ -84,16 +93,12 @@ export function buildGanttPdfDocument<T>(
   }
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const chartX = MARGIN + TITLE_COL_W;
-  const chartW = pageW - chartX - MARGIN;
+  const rtl = options.rtl ?? data.rtl ?? false;
+  const frame = ganttExportFrame(MARGIN, pageW - MARGIN, TITLE_COL_W, rtl);
+  const align = frame.textAlign;
   const rangeStart = data.rangeStart.getTime();
   const rangeMs = Math.max(1, data.rangeEnd.getTime() - rangeStart);
-  const layout: PdfLayout = {
-    chartX,
-    chartW,
-    msPerMm: rangeMs / chartW,
-    rangeStart,
-  };
+  const layout: PdfLayout = { frame, rangeMs, rangeStart };
   const dateFormat = ogeDateTimeFormat(options.locale, {
     day: 'numeric',
     month: 'short',
@@ -103,7 +108,7 @@ export function buildGanttPdfDocument<T>(
   if (options.title !== undefined) {
     doc.setFontSize(13);
     doc.setFont(family, 'bold');
-    doc.text(options.title, MARGIN, y + 4);
+    doc.text(options.title, rtl ? pageW - MARGIN : MARGIN, y + 4, { align });
     y += 9;
   }
 
@@ -114,9 +119,16 @@ export function buildGanttPdfDocument<T>(
     doc.setDrawColor(210);
     const ticks = 8;
     for (let i = 0; i <= ticks; i++) {
-      const x = chartX + (chartW / ticks) * i;
+      const x = frame.x(i / ticks);
       const date = new Date(rangeStart + rangeMs * (i / ticks));
-      if (i < ticks) doc.text(dateFormat.format(date), x + 0.8, top + 4);
+      if (i < ticks) {
+        doc.text(
+          dateFormat.format(date),
+          frame.tickLabelX(i / ticks, 0.8),
+          top + 4,
+          { align },
+        );
+      }
       doc.line(x, top + HEADER_H - 4, x, top + HEADER_H);
     }
     doc.line(MARGIN, top + HEADER_H, pageW - MARGIN, top + HEADER_H);
@@ -138,18 +150,20 @@ export function buildGanttPdfDocument<T>(
     const indent = Math.min(20, task.level * 3);
     doc.text(
       doc.splitTextToSize(task.title, TITLE_COL_W - indent - 2)[0] ?? '',
-      MARGIN + indent,
+      frame.titleX(indent),
       y + ROW_H / 2 + 1,
+      { align },
     );
     // timeline cell
     const { x, w } = barSpan(task, layout);
     const midY = y + ROW_H / 2;
     if (task.isMilestone) {
+      const at = frame.x((task.start.getTime() - rangeStart) / rangeMs);
       if (critical) doc.setFillColor(220, 38, 38);
       else doc.setFillColor(55, 65, 81);
       const r = 1.8;
-      doc.triangle(x - r, midY, x, midY - r, x + r, midY, 'F');
-      doc.triangle(x - r, midY, x, midY + r, x + r, midY, 'F');
+      doc.triangle(at - r, midY, at, midY - r, at + r, midY, 'F');
+      doc.triangle(at - r, midY, at, midY + r, at + r, midY, 'F');
     } else if (task.isSummary) {
       doc.setFillColor(51, 65, 85);
       doc.rect(x, midY - 1.6, w, 1.9, 'F');
@@ -160,15 +174,12 @@ export function buildGanttPdfDocument<T>(
       doc.roundedRect(x, midY - 2.2, w, 4.4, 1, 1, 'F');
       if (task.progress > 0) {
         doc.setFillColor(79, 70, 229);
-        doc.roundedRect(
-          x,
-          midY - 2.2,
-          Math.max(0.5, (w * task.progress) / 100),
-          4.4,
-          1,
-          1,
-          'F',
+        const fill = frame.fromStart(
+          { left: x, width: w },
+          task.progress / 100,
+          0.5,
         );
+        doc.roundedRect(fill.left, midY - 2.2, fill.width, 4.4, 1, 1, 'F');
       }
       if (critical) {
         doc.setDrawColor(220, 38, 38);

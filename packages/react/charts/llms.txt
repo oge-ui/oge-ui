@@ -200,7 +200,7 @@ _Analytics (pure functions)_
 | `OgeChartConstantLine / OgeChartAxisStrip / OgeChartAxisBreak` | `interface` | Guides of an axis: `{ value, label?, color?, dash? ('solid' \| 'dash' \| 'dot'), width?, position? ('inside' \| 'outside') }`, `{ start, end, label?, color? }` and `{ start, end }` (value axes only). Colours take any CSS colour, theme tokens included. |
 | `OgeChartPane` | `interface` | `{ name, height? }` — a pane of `panes`; `height` is a ratio against the other panes (default 1). |
 | `OgeChartTickInterval / OgeChartDateInterval / OgeChartMinorTickOptions` | `number \| interface` | `tickInterval`: a number in axis units (ms on time axes, every n-th category on category axes) or a calendar interval `{ years?, months?, weeks?, days?, hours?, minutes? }` stepping real calendar boundaries; `minorTicks`: `true` or `{ visible?, count? (4) }`. |
-| `OgeChartAxisLabelOptions / OgeChartLabelFormat / OgeChartLabelOverlap` | `interface / union` | `{ visible?, format?, template?, overlap? }`; `format` is a function or `Intl.NumberFormatOptions` / `Intl.DateTimeFormatOptions`; `overlap` is `'rotate' \| 'stagger' \| 'hide' \| 'skip' \| 'none'` (a rotated chart's vertical argument axis falls back to `skip` for rotate/stagger). |
+| `OgeChartAxisLabelOptions / OgeChartLabelFormat / OgeChartLabelOverlap` | `interface / union` | `{ visible?, format?, template?, overlap? }`; `format` is a function or `Intl.NumberFormatOptions` / `Intl.DateTimeFormatOptions`; `overlap` is `'rotate' \| 'stagger' \| 'hide' \| 'skip' \| 'none'` — decided on measured label boxes (the chart measures each label in its own svg; a character estimate before the first render). On a rotated chart's vertical argument axis the boxes are measured by their height: a label wider than the side band wraps (up to three lines, the last ellipsized, centred on its tick), `hide` / `skip` compare the real line boxes, `stagger` alternates two columns and `rotate` falls back to `skip`. |
 | `OgeChartAnimationOptions / OgeChartAnimationEasing` | `interface / union` | `{ enabled?, duration?, easing? }` with `'linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut'`. |
 | `OgeChartPeriod / OgeChartCustomPeriod` | `union / interface` | Range-selector periods: `'1M' \| '3M' \| '6M' \| 'YTD' \| '1Y' \| 'All'`, or `{ label, range }` where `range` is a window `{ min, max }`, a span in axis units back from the data end, or a calendar interval back from it. |
 | `OgeChartHandle<T>` | `ref handle` | Every method above: `zoomToRange`, `resetZoom`, `hideTooltip`, `refresh`, `focus`, `getExportData`, `getSvgElement`, `print`. |
@@ -1513,6 +1513,59 @@ export function DrawIn() {
         style={{ height: 320 }}
       />
     </>
+  );
+}
+```
+
+### Rotated labels
+
+```ts
+'use client';
+
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartAxisOptions, OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = [
+  'Enterprise support renewals (annual)',
+  'Cloud storage',
+  'Professional services and onboarding',
+  'Mobile',
+  'Hardware leasing',
+  'Training and certification programmes',
+  'Analytics add-on',
+  'Marketplace commissions from partners',
+  'Consulting',
+  'Premium SLA upgrades for regulated industries',
+  'API usage',
+  'Desktop licences',
+  'Security audits',
+  'Data migration packages',
+  'Custom integrations',
+  'Community edition sponsorships',
+  'Managed backups',
+  'Developer seats',
+].map((product, i) => ({ product, revenue: 40 + ((i * 37) % 90) }));
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'product', valueField: 'revenue', name: 'Revenue (k€)' },
+];
+
+const argumentAxis: OgeChartAxisOptions = { label: { overlap: 'hide' } };
+
+export function RotatedLabels() {
+  return (
+    // Down a vertical axis, labels collide by their height. The chart
+    // measures every label in its own svg: a name wider than the side band
+    // wraps (up to three lines, centred on its bar) and label.overlap then
+    // works on the real boxes — 'hide' keeps the labels that clear each other,
+    // 'skip' thins by the tallest one, 'stagger' alternates two columns.
+    <OgeChart
+      dataSource={data}
+      series={series}
+      rotated
+      argumentAxis={argumentAxis}
+      style={{ height: 320 }}
+    />
   );
 }
 ```

@@ -328,7 +328,7 @@ export const OGE_REACT_CHART_API: ApiSections = {
           name: 'OgeChartAxisLabelOptions / OgeChartLabelFormat / OgeChartLabelOverlap',
           type: 'interface / union',
           description:
-            "<code>{ visible?, format?, template?, overlap? }</code>; <code>format</code> is a function or <code>Intl.NumberFormatOptions</code> / <code>Intl.DateTimeFormatOptions</code>; <code>overlap</code> is <code>'rotate' | 'stagger' | 'hide' | 'skip' | 'none'</code> (a rotated chart's vertical argument axis falls back to <code>skip</code> for rotate/stagger).",
+            "<code>{ visible?, format?, template?, overlap? }</code>; <code>format</code> is a function or <code>Intl.NumberFormatOptions</code> / <code>Intl.DateTimeFormatOptions</code>; <code>overlap</code> is <code>'rotate' | 'stagger' | 'hide' | 'skip' | 'none'</code> — decided on measured label boxes (the chart measures each label in its own svg; a character estimate before the first render). On a rotated chart's vertical argument axis the boxes are measured by their height: a label wider than the side band wraps (up to three lines, the last ellipsized, centred on its tick), <code>hide</code> / <code>skip</code> compare the real line boxes, <code>stagger</code> alternates two columns and <code>rotate</code> falls back to <code>skip</code>.",
         },
         {
           name: 'OgeChartAnimationOptions / OgeChartAnimationEasing',

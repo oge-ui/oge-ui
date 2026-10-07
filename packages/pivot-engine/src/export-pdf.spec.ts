@@ -1,5 +1,8 @@
 import { computePivot, pathKey, type PivotFieldConfig } from '@oge-ui/core';
 import { buildPivotPdfDocument } from './export-pdf';
+import { OgePivotGridCore } from './lib/pivot-grid-core';
+import { OGE_DEFAULT_PIVOT_MESSAGES } from './lib/pivot-messages';
+import { PLAIN_ADAPTER } from './lib/test-adapter';
 
 interface Sale {
   region: string;
@@ -69,5 +72,38 @@ describe('buildPivotPdfDocument', () => {
     expect(text).toContain('FIRST');
     expect(text).toContain('<1.1.1>');
     expect(text).toContain('1 / 1');
+  });
+
+  it('writes member headers through the fields’ headerFormat', () => {
+    const core = new OgePivotGridCore<Sale>(PLAIN_ADAPTER, {
+      inputs: {
+        data: () => SALES,
+        fields: () => [
+          {
+            dataField: 'region',
+            area: 'row',
+            headerFormat: (value) => `Region ${String(value)}`,
+          },
+          {
+            dataField: 'year',
+            area: 'column',
+            headerFormat: { type: 'number', pattern: "'FY'0" },
+          },
+          { dataField: 'amount', area: 'data' },
+        ],
+        virtualScrolling: () => false,
+        showRowTotals: () => true,
+        showColumnTotals: () => true,
+        showRowGrandTotals: () => true,
+        showColumnGrandTotals: () => true,
+        messages: () => OGE_DEFAULT_PIVOT_MESSAGES,
+        customizeCell: () => undefined,
+        fieldChooser: () => ({}),
+        locale: () => 'en-US',
+      },
+    });
+    const text = textOf(buildPivotPdfDocument(core.result()));
+    expect(text).toContain('Region EU');
+    expect(text).toContain('FY2024');
   });
 });

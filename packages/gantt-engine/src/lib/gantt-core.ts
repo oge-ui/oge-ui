@@ -313,7 +313,12 @@ export interface GanttStripRect {
 
 /** The open built-in context menu. */
 export interface GanttContextMenuState<T> {
+  /**
+   * Logical px from the host's inline-start edge (its left edge in LTR, its
+   * right edge in RTL) — render it as `inset-inline-start`.
+   */
   readonly x: number;
+  /** Px from the host's top edge. */
   readonly y: number;
   readonly task: GanttTask<T> | null;
 }
@@ -2094,9 +2099,12 @@ export class OgeGanttCore<
   private openMenu(task: GanttTask<T> | null, event: GanttMouseLike): void {
     if (!this.effectiveEditing()) return;
     event.preventDefault();
-    const hostRect = this.host.hostElement()?.getBoundingClientRect();
+    const hostRect = this.menuContainingRect();
+    // `x` is logical — measured from the host's inline-start edge — and the
+    // menu is placed with `inset-inline-start`, so in RTL it opens towards
+    // the left of the pointer, the way the menu lists of the suite do
     this.contextMenu.set({
-      x: event.clientX - (hostRect?.left ?? 0),
+      x: this.logicalX(event.clientX, hostRect ?? ZERO_RECT, this.rtl()),
       y: event.clientY - (hostRect?.top ?? 0),
       task,
     });
@@ -2109,13 +2117,76 @@ export class OgeGanttCore<
     });
   }
 
+  /**
+   * The box the absolutely positioned menu is placed in: the host when it is
+   * positioned, else the host's `offsetParent` (the menu is the host's
+   * child, so they share it) — in RTL its *right* edge is the menu's
+   * inline-start, which need not line up with the host's.
+   */
+  private menuContainingRect(): DOMRect | undefined {
+    const host = this.host.hostElement();
+    if (!host) return undefined;
+    const view = host.ownerDocument.defaultView;
+    const positioned =
+      (view?.getComputedStyle(host).position ?? 'static') !== 'static';
+    const block = positioned ? host : (host.offsetParent ?? host);
+    return block.getBoundingClientRect();
+  }
+
   closeMenu(): void {
     this.contextMenu.set(null);
   }
 
-  /** Escape on the focused menu closes it. */
-  onMenuKeydown(event: { readonly key: string }): void {
-    if (event.key === 'Escape') this.closeMenu();
+  /**
+   * The menu's keyboard map (APG menu): Up/Down move with wrap-around,
+   * Home/End jump, Escape — or the arrow pointing back towards the
+   * inline-start edge (Left in LTR, Right in RTL) — closes it and returns
+   * focus to the task row. See {@link ganttMenuKeyCommand}.
+   */
+  onMenuKeydown(event: {
+    readonly key: string;
+    preventDefault?(): void;
+  }): void {
+    const command = ganttMenuKeyCommand(
+      event.key,
+      this.run(() => this.rtl()),
+    );
+    if (command === null) return;
+    event.preventDefault?.();
+    if (command === 'close') {
+      this.closeMenu();
+      this.focusRovingRow();
+      return;
+    }
+    const menu = this.host
+      .hostElement()
+      ?.querySelector<HTMLElement>('.oge-gantt-menu');
+    if (menu === null || menu === undefined) return;
+    const items = Array.from(
+      menu.querySelectorAll<HTMLElement>('.oge-gantt-menu-item:not(:disabled)'),
+    );
+    if (items.length === 0) return;
+    const active = menu.ownerDocument.activeElement as HTMLElement | null;
+    const current = active === null ? -1 : items.indexOf(active);
+    items[ganttMenuFocusIndex(command, current, items.length)]?.focus();
+  }
+
+  /**
+   * Shift+F10 / the ContextMenu key on a row: opens the built-in menu at the
+   * row's inline-start edge (its right edge in RTL), just under the row.
+   */
+  private openMenuFromKeyboard(task: GanttTask<T>, event: GanttKeyLike): void {
+    const row = this.host
+      .hostElement()
+      ?.querySelector<HTMLElement>('[data-focus-target]');
+    const rect = row?.getBoundingClientRect() ?? ZERO_RECT;
+    const inset = Math.min(24, rect.width / 2);
+    this.openMenu(task, {
+      clientX: this.rtl() ? rect.right - inset : rect.left + inset,
+      clientY: rect.bottom,
+      target: row ?? null,
+      preventDefault: () => event.preventDefault(),
+    });
   }
 
   /** Right-click on the chart: a bar opens its task menu, space the generic. */
@@ -2374,6 +2445,13 @@ export class OgeGanttCore<
         this.focusRovingRow();
       };
       const multiple = this.selectionMode() === 'multiple';
+      if (
+        event.key === 'ContextMenu' ||
+        (event.shiftKey && event.key === 'F10')
+      ) {
+        this.openMenuFromKeyboard(task, event);
+        return;
+      }
       if (event.key === 'F2') {
         event.preventDefault();
         this.beginCellEdit(task);
@@ -2611,6 +2689,7 @@ export class OgeGanttCore<
         resources: this.inputs.resources(),
         workCalendar: this.effectiveWorkCalendar(),
         slack,
+        rtl: this.rtl(),
       };
     });
   }
@@ -4487,3 +4566,73 @@ export function mirrorGanttKey(
     preventDefault: () => event.preventDefault(),
   };
 }
+
+/** What a key does on the open built-in context menu. */
+export type GanttMenuKeyCommand =
+  'next' | 'previous' | 'first' | 'last' | 'close';
+
+/**
+ * The built-in context menu's keyboard decision (APG menu, vertical):
+ * Down/Up move, Home/End jump, Escape closes. The menu has no submenus, so
+ * the horizontal arrows follow the suite's submenu rule for "back": the
+ * arrow pointing towards the inline-start edge (Left in LTR, Right in RTL)
+ * closes the menu and returns to the row it was opened from; the opposite
+ * arrow does nothing. Pure, so both layers mirror identically.
+ */
+export function ganttMenuKeyCommand(
+  key: string,
+  rtl: boolean,
+): GanttMenuKeyCommand | null {
+  switch (key) {
+    case 'ArrowDown':
+      return 'next';
+    case 'ArrowUp':
+      return 'previous';
+    case 'Home':
+      return 'first';
+    case 'End':
+      return 'last';
+    case 'Escape':
+      return 'close';
+    case 'ArrowLeft':
+      return rtl ? null : 'close';
+    case 'ArrowRight':
+      return rtl ? 'close' : null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * The item index a menu move lands on (`current` is `-1` when focus is not
+ * on an item): Down/Up wrap around, Home/End jump.
+ */
+export function ganttMenuFocusIndex(
+  command: Exclude<GanttMenuKeyCommand, 'close'>,
+  current: number,
+  count: number,
+): number {
+  if (count <= 0) return -1;
+  switch (command) {
+    case 'first':
+      return 0;
+    case 'last':
+      return count - 1;
+    case 'next':
+      return current < 0 ? 0 : (current + 1) % count;
+    case 'previous':
+      return current < 0 ? count - 1 : (current - 1 + count) % count;
+  }
+}
+
+const ZERO_RECT = {
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  width: 0,
+  height: 0,
+  x: 0,
+  y: 0,
+  toJSON: () => ({}),
+} as DOMRect;

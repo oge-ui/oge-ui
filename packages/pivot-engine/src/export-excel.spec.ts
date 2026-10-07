@@ -1,6 +1,9 @@
 import { computePivot, pathKey } from '@oge-ui/core';
 import type { PivotFieldConfig } from '@oge-ui/core';
 import { buildPivotWorkbook } from './export-excel';
+import { OgePivotGridCore } from './lib/pivot-grid-core';
+import { OGE_DEFAULT_PIVOT_MESSAGES } from './lib/pivot-messages';
+import { PLAIN_ADAPTER } from './lib/test-adapter';
 
 interface Sale {
   region: string;
@@ -96,5 +99,45 @@ describe('buildPivotWorkbook', () => {
     expect(sheet?.getCell(3, 3).value).toBe(2); // EU × 2024 count
     expect(sheet?.getCell(5, 1).value).toBe('Sum');
     expect(sheet?.getCell(5, 6).value).toBe(450);
+  });
+
+  it('writes member headers through the fields’ headerFormat', () => {
+    const core = new OgePivotGridCore<{ day: Date; amount: number }>(
+      PLAIN_ADAPTER,
+      {
+        inputs: {
+          data: () => [
+            { day: new Date(2026, 0, 5), amount: 10 },
+            { day: new Date(2026, 2, 9), amount: 20 },
+          ],
+          fields: () => [
+            {
+              dataField: 'day',
+              area: 'column',
+              groupInterval: 'month',
+              headerFormat: { type: 'date', pattern: 'MMM' },
+            },
+            {
+              dataField: 'amount',
+              area: 'data',
+              headerFormat: () => 'never a header',
+            },
+          ],
+          virtualScrolling: () => false,
+          showRowTotals: () => true,
+          showColumnTotals: () => true,
+          showRowGrandTotals: () => true,
+          showColumnGrandTotals: () => true,
+          messages: () => OGE_DEFAULT_PIVOT_MESSAGES,
+          customizeCell: () => undefined,
+          fieldChooser: () => ({}),
+          locale: () => 'en-US',
+        },
+      },
+    );
+    const sheet = buildPivotWorkbook(core.result()).getWorksheet('Pivot');
+    expect(sheet?.getCell(1, 2).value).toBe('Jan');
+    expect(sheet?.getCell(1, 3).value).toBe('Mar');
+    expect(sheet?.getCell(2, 2).value).toBe(10);
   });
 });

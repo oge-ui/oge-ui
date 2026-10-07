@@ -610,6 +610,15 @@ export {
   chartValueLabelFormatter,
 } from './lib/axis-labels';
 export {
+  CHART_AXIS_LABEL_LINE_H,
+  CHART_AXIS_LABEL_MAX_LINES,
+  chartAxisLabelBox,
+  createChartLabelMeasure,
+  estimateChartLabelWidth,
+  type ChartAxisLabelBox,
+  type OgeChartTextMeasure,
+} from './lib/axis-label-boxes';
+export {
   buildPieSlices,
   groupSmallValues,
   layoutPieLabels,

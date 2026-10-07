@@ -56,6 +56,37 @@ describe('OgePivotGrid locale', () => {
     );
   });
 
+  it('renders member headers through headerFormat, live with the locale', () => {
+    interface Order {
+      day: Date;
+      amount: number;
+    }
+    const orders: Order[] = [
+      { day: new Date(2026, 0, 5), amount: 10 },
+      { day: new Date(2026, 1, 9), amount: 20 },
+    ];
+    const fields: OgePivotFieldDef<Order>[] = [
+      {
+        dataField: 'day',
+        area: 'row',
+        dataType: 'date',
+        groupInterval: 'month',
+        headerFormat: { type: 'date', pattern: 'MMMM' },
+      },
+      { dataField: 'amount', area: 'data' },
+    ];
+    const headers = (container: HTMLElement) =>
+      Array.from(container.querySelectorAll('.oge-pivot-row-header'))
+        .map((cell) => cell.textContent?.trim() ?? '')
+        .slice(0, 2);
+    const { container, rerender } = render(
+      <OgePivotGrid data={orders} fields={fields} locale="en-US" />,
+    );
+    expect(headers(container)).toEqual(['January', 'February']);
+    rerender(<OgePivotGrid data={orders} fields={fields} locale="tr-TR" />);
+    expect(headers(container)).toEqual(['Ocak', 'Şubat']);
+  });
+
   it('falls back to the provider locale', () => {
     const { container } = render(
       <OgePivotConfigProvider config={{ locale: 'de-DE' }}>

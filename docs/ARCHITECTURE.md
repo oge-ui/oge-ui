@@ -1228,6 +1228,15 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   flip every label's `text-anchor`) and the arrow-key nudges move shapes in diagram space. Only
   the chrome mirrors — rail and properties panel swap sides through the flex row, their separator
   keys and drags invert, and the context pad sits left of the shape (`side: 'left'`).
+- **Context menus and drawn exports mirror too.** A hand-drawn popup positions with
+  `inset-inline-start` from a logical x (`rect.right - clientX` in RTL), so it opens towards
+  the inline-start side of the pointer; its horizontal "back" arrow is a pure decision taking
+  `rtl` (`ganttMenuKeyCommand`). Exports that _draw_ a layout (Gantt PNG / PDF) read the
+  direction from the export snapshot (`OgeGanttExportData.rtl`, overridable per call) and lay
+  out through one horizontal frame (`gantt-engine/lib/engine/export-frame.ts`): the title column
+  moves right, time grows leftwards, text is right-aligned but never mirrored. Spreadsheet
+  exports set the sheet's `rightToLeft` view; data-only formats (MS Project XML, CSV, iCal)
+  stay direction-neutral on purpose.
 - **e2e proves the geometry.** `apps/dev-app-e2e/src/rtl.spec.ts` boots each page with
   `<html dir="rtl">` in both layers and asserts mirrored positions and arrow keys; jsdom has no
   layout, so unit specs cover only the decisions and the `dir` plumbing.
@@ -1254,6 +1263,17 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   `dir`) after the first render — SSR-safe — `observeChartRtl` follows a later `dir` flip and
   `refresh()` re-reads it; an explicit value is
   also set as `dir` on the host so the HTML legend and tooltip follow.
+- **Axis labels are measured, not guessed.** Each render layer hands the scene
+  `measureLabel = createChartLabelMeasure(svg)` once its svg exists: a hidden `<text>` with the
+  axis-label classes is appended to the chart's own svg and read with
+  `getComputedTextLength()`, so the chart's CSS font applies (cached per text; a zero width —
+  a hidden container — falls back to the estimate and is measured again later). Before the
+  first render, in SSR and in jsdom the scene keeps `estimateChartLabelWidth` (7px per
+  character), so unit specs stay deterministic. Overlap modes compare the extent _along_ the
+  axis: the measured width on a horizontal axis, the line-box height (`chartAxisLabelBox`:
+  wrapped lines × 14px) on a rotated chart's vertical one, where labels wider than the side
+  band wrap and `stagger` means two columns. A new axis-label path must measure through
+  `measureLabel`, never `text.length`.
 - **Panes split the logical value axis.** `layoutChartPanes` gives each pane a band; value
   scales are created per pane and shifted with `offsetChartScale`, so every `valueScale.toPx`
   in the series code lands in the right band untouched. `bindChartPaneAxes` resolves series →

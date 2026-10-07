@@ -279,3 +279,51 @@ protected replay(): void {
   setTimeout(() => this.visible.set(true));
 }`,
 });
+
+export const ROTATED_LABELS_SNIPPET = demoSource({
+  use: { '@oge-ui/charts': ['OgeChart'] },
+  types: {
+    '@oge-ui/charts': ['OgeChartAxisOptions', 'OgeChartSeriesInput'],
+  },
+  template: `<!-- Down a vertical axis, labels collide by their height. The chart
+     measures every label in its own svg: a name wider than the side band
+     wraps (up to three lines, centred on its bar) and label.overlap then
+     works on the real boxes — 'hide' keeps the labels that clear each
+     other, 'skip' thins by the tallest one, 'stagger' alternates two
+     columns. -->
+<oge-chart
+  [dataSource]="data"
+  [series]="series"
+  [rotated]="true"
+  [argumentAxis]="argumentAxis"
+  style="height: 320px"
+/>`,
+  body: `protected readonly data = [
+  'Enterprise support renewals (annual)',
+  'Cloud storage',
+  'Professional services and onboarding',
+  'Mobile',
+  'Hardware leasing',
+  'Training and certification programmes',
+  'Analytics add-on',
+  'Marketplace commissions from partners',
+  'Consulting',
+  'Premium SLA upgrades for regulated industries',
+  'API usage',
+  'Desktop licences',
+  'Security audits',
+  'Data migration packages',
+  'Custom integrations',
+  'Community edition sponsorships',
+  'Managed backups',
+  'Developer seats',
+].map((product, i) => ({ product, revenue: 40 + ((i * 37) % 90) }));
+
+protected readonly series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'product', valueField: 'revenue', name: 'Revenue (k€)' },
+];
+
+protected readonly argumentAxis: OgeChartAxisOptions = {
+  label: { overlap: 'hide' },
+};`,
+});

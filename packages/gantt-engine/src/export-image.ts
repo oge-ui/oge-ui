@@ -3,6 +3,7 @@
  * render layers.
  */
 import { ogeDateTimeFormat } from '@oge-ui/core';
+import { ganttExportFrame } from './lib/engine/export-frame';
 import type { OgeGanttExportData, OgeGanttTask } from './lib/gantt-types';
 
 /**
@@ -23,6 +24,12 @@ export interface OgeGanttImageExportOptions {
   locale?: string;
   /** Background color. Default: white. */
   background?: string;
+  /**
+   * Mirror the picture for right-to-left: the title column on the right,
+   * the timeline running right to left, titles right-aligned. Default: the
+   * Gantt's own direction (`OgeGanttExportData.rtl`), else `false`.
+   */
+  rtl?: boolean;
 }
 
 const MARGIN = 24;
@@ -59,12 +66,15 @@ export function buildGanttCanvas<T>(
   ctx.fillStyle = options.background ?? '#ffffff';
   ctx.fillRect(0, 0, size.width, size.height);
 
-  const chartX = MARGIN + TITLE_COL_W;
-  const chartW = size.width - chartX - MARGIN;
+  const rtl = options.rtl ?? data.rtl ?? false;
+  const frame = ganttExportFrame(MARGIN, size.width - MARGIN, TITLE_COL_W, rtl);
+  // text keeps its own reading order; only its anchor side mirrors
+  ctx.direction = rtl ? 'rtl' : 'ltr';
+  ctx.textAlign = frame.textAlign;
   const rangeStart = data.rangeStart.getTime();
   const rangeMs = Math.max(1, data.rangeEnd.getTime() - rangeStart);
-  const xOf = (date: Date): number =>
-    chartX + ((date.getTime() - rangeStart) / rangeMs) * chartW;
+  const fractionOf = (date: Date): number =>
+    (date.getTime() - rangeStart) / rangeMs;
   const dateFormat = ogeDateTimeFormat(options.locale, {
     day: 'numeric',
     month: 'short',
@@ -77,9 +87,15 @@ export function buildGanttCanvas<T>(
   ctx.lineWidth = 1;
   const ticks = 10;
   for (let i = 0; i <= ticks; i++) {
-    const x = chartX + (chartW / ticks) * i;
+    const x = frame.x(i / ticks);
     const date = new Date(rangeStart + rangeMs * (i / ticks));
-    if (i < ticks) ctx.fillText(dateFormat.format(date), x + 3, MARGIN + 14);
+    if (i < ticks) {
+      ctx.fillText(
+        dateFormat.format(date),
+        frame.tickLabelX(i / ticks, 3),
+        MARGIN + 14,
+      );
+    }
     ctx.beginPath();
     ctx.moveTo(x, MARGIN + HEADER_H - 8);
     ctx.lineTo(x, MARGIN + HEADER_H);
@@ -93,10 +109,10 @@ export function buildGanttCanvas<T>(
   const drawBar = (task: OgeGanttTask<T>, y: number): void => {
     const critical =
       options.markCriticalPath !== false && data.critical.has(task.key);
-    const x = xOf(task.start);
-    const w = Math.max(2, xOf(task.end) - x);
+    const box = frame.span(fractionOf(task.start), fractionOf(task.end), 2);
     const midY = y + ROW_H / 2;
     if (task.isMilestone) {
+      const x = frame.x(fractionOf(task.start));
       ctx.fillStyle = critical ? '#dc2626' : '#374151';
       ctx.beginPath();
       ctx.moveTo(x, midY - 6);
@@ -107,20 +123,21 @@ export function buildGanttCanvas<T>(
       ctx.fill();
     } else if (task.isSummary) {
       ctx.fillStyle = '#334155';
-      ctx.fillRect(x, midY - 5, w, 6);
-      ctx.fillRect(x, midY - 5, 3, 11);
-      ctx.fillRect(x + w - 3, midY - 5, 3, 11);
+      ctx.fillRect(box.left, midY - 5, box.width, 6);
+      ctx.fillRect(box.left, midY - 5, 3, 11);
+      ctx.fillRect(box.left + box.width - 3, midY - 5, 3, 11);
     } else {
       ctx.fillStyle = '#c7d2fe';
-      ctx.fillRect(x, midY - 7, w, 14);
+      ctx.fillRect(box.left, midY - 7, box.width, 14);
       if (task.progress > 0) {
+        const fill = frame.fromStart(box, task.progress / 100, 2);
         ctx.fillStyle = '#4f46e5';
-        ctx.fillRect(x, midY - 7, Math.max(2, (w * task.progress) / 100), 14);
+        ctx.fillRect(fill.left, midY - 7, fill.width, 14);
       }
       if (critical) {
         ctx.strokeStyle = '#dc2626';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(x, midY - 7, w, 14);
+        ctx.strokeRect(box.left, midY - 7, box.width, 14);
         ctx.lineWidth = 1;
         ctx.strokeStyle = '#d1d5db';
       }
@@ -136,7 +153,7 @@ export function buildGanttCanvas<T>(
     const indent = Math.min(60, task.level * 12);
     ctx.fillText(
       task.title,
-      MARGIN + indent,
+      frame.titleX(indent),
       y + ROW_H / 2 + 4,
       TITLE_COL_W - indent - 8,
     );

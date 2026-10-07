@@ -10,6 +10,8 @@
 /* ---------------- the controller ---------------- */
 export {
   OgeGanttCore,
+  ganttMenuFocusIndex,
+  ganttMenuKeyCommand,
   mirrorGanttKey,
   trimGanttDialogChange,
   type GanttArrow,
@@ -23,6 +25,7 @@ export {
   type GanttHistogramRowVm,
   type GanttKeyLike,
   type GanttMenuItemState,
+  type GanttMenuKeyCommand,
   type GanttMouseLike,
   type GanttProgressLine,
   type GanttResolvedColumn,

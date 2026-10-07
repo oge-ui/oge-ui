@@ -40,7 +40,10 @@ import {
   type ChartGestureHandle,
   type OgeChartAnimationOptions,
   type OgeChartPane,
+  CHART_AXIS_LABEL_LINE_H,
   buildCartesianScene,
+  createChartLabelMeasure,
+  type OgeChartTextMeasure,
   cartesianActivePoints,
   cartesianAriaLabel,
   cartesianCrosshair,
@@ -536,7 +539,15 @@ export { OGE_CHART_PALETTE };
               [attr.text-anchor]="label.anchor"
               [attr.transform]="label.transform"
             >
-              {{ label.text }}
+              @if (label.lines; as lines) {
+                @for (line of lines; track $index) {
+                  <tspan [attr.x]="label.x" [attr.dy]="$first ? 0 : lineH">
+                    {{ line }}
+                  </tspan>
+                }
+              } @else {
+                {{ label.text }}
+              }
             </text>
           }
           @for (axisTitle of axisTitles(); track $index) {
@@ -712,6 +723,12 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   /* ---------------- sizing ---------------- */
 
   private readonly hostSize = signal({ width: 600, height: 400 });
+  /** Set after the first render: measures label text in the chart's svg. */
+  private readonly labelMeasure = signal<OgeChartTextMeasure | undefined>(
+    undefined,
+  );
+  /** Line step of a wrapped axis label. */
+  protected readonly lineH = CHART_AXIS_LABEL_LINE_H;
   protected readonly width = computed(() => this.hostSize().width);
   protected readonly height = computed(() => this.hostSize().height);
 
@@ -727,6 +744,10 @@ export class OgeChart<T extends object = Record<string, unknown>> {
         this.hostSize.set(size),
       );
       this.destroyRef.onDestroy(stop);
+      // real text boxes for the label overlap / wrap decisions
+      this.labelMeasure.set(
+        createChartLabelMeasure(this.svgEl().nativeElement),
+      );
     });
     effect(() => {
       this.renderSeries();
@@ -803,6 +824,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       rotated: this.rotated(),
       rtl: this.rtl(),
       panes: this.panes(),
+      measureLabel: this.labelMeasure(),
     }),
   );
 

@@ -455,6 +455,165 @@ describe('axis options', () => {
   });
 });
 
+describe('rotated argument labels (measured boxes)', () => {
+  const crowd = (count: number, name: (i: number) => string) =>
+    Array.from({ length: count }, (_, i) => ({
+      month: name(i),
+      sales: i + 1,
+      cost: i,
+    }));
+  /** The box a label covers down the vertical axis. */
+  const span = (label: { y: number; lines?: readonly string[] }) => {
+    const lines = label.lines?.length ?? 1;
+    // y is the first baseline, 4px below the line centre
+    const top = label.y - 4 - 7;
+    return { top, bottom: top + lines * 14 };
+  };
+  const expectNoOverlap = (labels: ReturnType<typeof argLabels>) => {
+    const byColumn = new Map<number, ReturnType<typeof argLabels>>();
+    for (const label of labels) {
+      byColumn.set(label.x, [...(byColumn.get(label.x) ?? []), label]);
+    }
+    for (const column of byColumn.values()) {
+      const sorted = [...column].sort((a, b) => a.y - b.y);
+      for (let i = 1; i < sorted.length; i++) {
+        expect(span(sorted[i]).top).toBeGreaterThanOrEqual(
+          span(sorted[i - 1]).bottom,
+        );
+      }
+    }
+  };
+
+  it('hide keeps only labels whose boxes clear each other down the axis', () => {
+    const s = scene(
+      { rotated: true, argumentAxis: { label: { overlap: 'hide' } } },
+      SERIES,
+      crowd(60, (i) => `C${i}`),
+    );
+    const labels = argLabels(s);
+    expect(labels.length).toBeLessThan(60);
+    expect(labels.length).toBeGreaterThan(5);
+    expectNoOverlap(labels);
+  });
+
+  it('skip thins by the tallest box, so wrapped labels skip more', () => {
+    const short = argLabels(
+      scene(
+        { rotated: true },
+        SERIES,
+        crowd(30, (i) => `C${i}`),
+      ),
+    );
+    const long = argLabels(
+      scene(
+        { rotated: true },
+        SERIES,
+        crowd(30, (i) => `Enterprise support renewals region ${i}`),
+      ),
+    );
+    expect(long.length).toBeLessThan(short.length);
+    expectNoOverlap(short);
+    expectNoOverlap(long);
+  });
+
+  it('wraps a label wider than the side band and centres its lines on the tick', () => {
+    const data = [
+      { month: 'North', sales: 1, cost: 1 },
+      {
+        month: 'Enterprise support renewals (annual)',
+        sales: 2,
+        cost: 2,
+      },
+    ];
+    const s = scene({ rotated: true }, SERIES, data);
+    const [plain, wrapped] = argLabels(s);
+    expect(plain.lines).toBeUndefined();
+    expect(wrapped.text).toBe('Enterprise support renewals (annual)');
+    expect(wrapped.lines?.length).toBeGreaterThan(1);
+    for (const line of wrapped.lines ?? []) {
+      expect(line.length * 7).toBeLessThanOrEqual(146);
+    }
+    // same tick spacing; the wrapped label's first baseline moves up by
+    // half of the extra lines
+    const bandStep = s.plot.h / 2;
+    expect(wrapped.y - plain.y).toBeCloseTo(
+      bandStep - ((wrapped.lines!.length - 1) * 14) / 2,
+    );
+    // the side band never grows past 160px
+    expect(s.plot.x).toBeLessThanOrEqual(160);
+  });
+
+  it('stagger alternates two columns, the outer one past the widest label', () => {
+    const s = scene(
+      { rotated: true, argumentAxis: { label: { overlap: 'stagger' } } },
+      SERIES,
+      crowd(40, (i) => `Item ${i}`),
+    );
+    const labels = argLabels(s);
+    const xs = [...new Set(labels.map((label) => label.x))].sort(
+      (a, b) => b - a,
+    );
+    expect(xs).toHaveLength(2);
+    // the inner column sits 8px left of the plot, the outer one beyond it
+    expect(xs[0]).toBe(s.plot.x - 8);
+    expect(xs[0] - xs[1]).toBe('Item 39'.length * 7 + 8);
+    expect(labels[0].x).toBe(xs[0]);
+    expect(labels[1].x).toBe(xs[1]);
+    expectNoOverlap(labels);
+    // two columns show more labels than skipping alone
+    const skipped = argLabels(
+      scene(
+        { rotated: true },
+        SERIES,
+        crowd(40, (i) => `Item ${i}`),
+      ),
+    );
+    expect(labels.length).toBeGreaterThan(skipped.length);
+  });
+
+  it('rotated + RTL staggers outwards on the right', () => {
+    const s = scene(
+      {
+        rotated: true,
+        rtl: true,
+        argumentAxis: { label: { overlap: 'stagger' } },
+      },
+      SERIES,
+      crowd(40, (i) => `Item ${i}`),
+    );
+    const xs = [...new Set(argLabels(s).map((label) => label.x))].sort(
+      (a, b) => a - b,
+    );
+    expect(xs[0]).toBe(s.plot.x + s.plot.w + 8);
+    expect(xs[1]).toBeGreaterThan(xs[0]);
+  });
+
+  it('uses the supplied measurer instead of the character estimate', () => {
+    const data = crowd(12, (i) => `Category ${i}`);
+    // a narrow font: everything fits on the horizontal axis
+    const narrow = scene(
+      { measureLabel: (text) => text.length * 2 },
+      SERIES,
+      data,
+    );
+    expect(argLabels(narrow)).toHaveLength(12);
+    // a wide font: the same labels must thin out
+    const wide = scene(
+      { measureLabel: (text) => text.length * 12 },
+      SERIES,
+      data,
+    );
+    expect(argLabels(wide).length).toBeLessThan(12);
+    // rotated: the band follows the measured width
+    const rotatedNarrow = scene(
+      { rotated: true, measureLabel: (text) => text.length * 2 },
+      SERIES,
+      data,
+    );
+    expect(rotatedNarrow.plot.x).toBe(36);
+  });
+});
+
 describe('touch', () => {
   it('maps touch drags and declares the touch-action', () => {
     expect(chartDragMode('both', true, false, 'touch')).toBe('pan');

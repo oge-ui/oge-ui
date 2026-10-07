@@ -102,6 +102,7 @@
     "smol-toml": "^1.9.0",
     "brace-expansion@^5": "^5.0.12",
     "js-yaml@^5": "^5.4.2",
-    "compression": "^1.8.2"
+    "compression": "^1.8.2",
+    "http-cache-semantics": "^4.3.0"
   }
 }

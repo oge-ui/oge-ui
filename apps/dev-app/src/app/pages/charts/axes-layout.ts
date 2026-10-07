@@ -26,6 +26,9 @@ import {
   GUIDES_SERIES,
   GUIDES_VALUE_AXIS,
   ROTATED_DATA,
+  ROTATED_LABELS_ARGUMENT_AXIS,
+  ROTATED_LABELS_DATA,
+  ROTATED_LABELS_SERIES,
   ROTATED_SERIES,
   ROTATED_VALUE_AXIS,
   RTL_DATA,
@@ -46,6 +49,7 @@ import {
   BREAKS_SNIPPET,
   GUIDES_SNIPPET,
   PANES_SNIPPET,
+  ROTATED_LABELS_SNIPPET,
   ROTATED_SNIPPET,
   RTL_SNIPPET,
   TICKS_SNIPPET,
@@ -59,6 +63,7 @@ const SECTIONS = [
   'Ticks & labels',
   'RTL & touch',
   'Draw-in animation',
+  'Rotated labels',
 ] as const;
 
 @Component({
@@ -243,6 +248,22 @@ const SECTIONS = [
           />
         }
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['rotated', 'label.overlap', 'wrap', 'measured labels']"
+        heading="Rotated labels"
+        description="Down a vertical axis the labels collide by their <em>height</em>. The chart measures every label in its own svg: a name wider than the side band wraps (up to three lines, centred on its bar) and <code>label.overlap</code> works on the real boxes — <code>hide</code> keeps the labels that clear each other, <code>skip</code> thins by the tallest one, <code>stagger</code> alternates two columns."
+        [code]="rotatedLabelsSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="rotatedLabelsData"
+          [series]="rotatedLabelsSeries"
+          [rotated]="true"
+          [argumentAxis]="rotatedLabelsArgumentAxis"
+          style="height: 320px"
+        />
+      </app-demo-card>
     }
   `,
 })
@@ -258,6 +279,7 @@ export class ChartsAxesLayoutPage {
   protected readonly ticksSnippet = TICKS_SNIPPET;
   protected readonly rtlSnippet = RTL_SNIPPET;
   protected readonly animationSnippet = ANIMATION_SNIPPET;
+  protected readonly rotatedLabelsSnippet = ROTATED_LABELS_SNIPPET;
 
   protected readonly rotatedData = ROTATED_DATA;
   protected readonly rotatedSeries = ROTATED_SERIES;
@@ -286,6 +308,9 @@ export class ChartsAxesLayoutPage {
   protected readonly animationSeries = ANIMATION_SERIES;
   protected readonly animationOptions = ANIMATION_OPTIONS;
   protected readonly animationVisible = signal(true);
+  protected readonly rotatedLabelsData = ROTATED_LABELS_DATA;
+  protected readonly rotatedLabelsSeries = ROTATED_LABELS_SERIES;
+  protected readonly rotatedLabelsArgumentAxis = ROTATED_LABELS_ARGUMENT_AXIS;
 
   /** Re-mounting the chart plays the draw-in again. */
   protected replay(): void {

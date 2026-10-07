@@ -217,6 +217,92 @@ for (const layer of LAYERS) {
       await expect(summary).toHaveAttribute('aria-expanded', 'true');
     });
 
+    test('gantt: the context menu opens towards the left and its back arrow is ArrowRight', async ({
+      page,
+    }) => {
+      await openRtl(page, '/components/gantt', layer.query);
+      const gantt = page
+        .locator(`app-demo-card:has(#getting-started) ${s}.oge-gantt`)
+        .first();
+      await expect(gantt).toHaveClass(/oge-gantt-rtl/);
+      const row = gantt.locator('.oge-gantt-row').nth(1);
+      const rowBox = await box(row);
+      const clickX = 80;
+      await row.click({ button: 'right', position: { x: clickX, y: 10 } });
+      const menu = gantt.locator('.oge-gantt-menu');
+      await expect(menu).toBeVisible();
+      // the menu's inline-start (right) edge sits at the pointer
+      await expect
+        .poll(async () => {
+          const menuBox = await menu.boundingBox();
+          return menuBox === null
+            ? Number.NaN
+            : Math.abs(menuBox.x + menuBox.width - (rowBox.x + clickX));
+        })
+        .toBeLessThanOrEqual(2);
+
+      const items = menu.locator('.oge-gantt-menu-item:not(:disabled)');
+      await expect(items.first()).toBeFocused();
+      await page.keyboard.press('ArrowDown');
+      await expect(items.nth(1)).toBeFocused();
+      // ArrowLeft points away from the row in RTL: the menu stays
+      await page.keyboard.press('ArrowLeft');
+      await expect(items.nth(1)).toBeFocused();
+      await page.keyboard.press('ArrowRight');
+      await expect(menu).toBeHidden();
+      await expect(gantt.locator('[data-focus-target]')).toBeFocused();
+    });
+
+    test('gantt: the PNG export of an RTL chart is mirrored', async ({
+      page,
+    }) => {
+      // record every canvas text draw: [text, x, textAlign, canvas width]
+      await page.addInitScript(() => {
+        const calls: [string, number, string, number][] = [];
+        (window as unknown as { __ganttText: typeof calls }).__ganttText =
+          calls;
+        const fillText = CanvasRenderingContext2D.prototype.fillText;
+        CanvasRenderingContext2D.prototype.fillText = function (
+          this: CanvasRenderingContext2D,
+          text: string,
+          x: number,
+          y: number,
+          maxWidth?: number,
+        ) {
+          // titles are the only draws with a max width
+          if (maxWidth !== undefined) {
+            calls.push([text, x, this.textAlign, this.canvas.width]);
+          }
+          return maxWidth === undefined
+            ? fillText.call(this, text, x, y)
+            : fillText.call(this, text, x, y, maxWidth);
+        };
+      });
+      await openRtl(page, '/components/gantt', layer.query);
+      const card = page.locator('app-demo-card', {
+        hasText: 'Work calendar, teams & export',
+      });
+      await expect(card.locator(`${s}.oge-gantt`)).toHaveClass(/oge-gantt-rtl/);
+      const download = page.waitForEvent('download');
+      await card.getByRole('button', { name: 'Export PNG' }).click();
+      await download;
+      const titles = () =>
+        page.evaluate(
+          () =>
+            (
+              window as unknown as {
+                __ganttText: [string, number, string, number][];
+              }
+            ).__ganttText,
+        );
+      await expect.poll(async () => (await titles()).length).toBeGreaterThan(0);
+      for (const [, x, align, width] of await titles()) {
+        expect(align).toBe('right');
+        // canvas width is CSS width × pixel ratio 2; titles sit in the right half
+        expect(x).toBeGreaterThan(width / 4);
+      }
+    });
+
     test('kanban: the first column is rightmost and ArrowLeft moves into the next column', async ({
       page,
     }) => {

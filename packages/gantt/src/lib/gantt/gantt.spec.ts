@@ -247,6 +247,33 @@ describe('<oge-gantt>', () => {
     expect(updated?.end).toBe('2026-01-09');
   });
 
+  it('the built-in menu runs the APG menu keys and Escape returns to the row', async () => {
+    rows()[2].dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+    );
+    await settle(fixture);
+    const items = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(
+        '.oge-gantt-menu .oge-gantt-menu-item:not(:disabled)',
+      ),
+    );
+    expect(items.length).toBeGreaterThan(2);
+    items[0].focus();
+    const press = (key: string) =>
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+      );
+    press('ArrowDown');
+    expect(document.activeElement).toBe(items[1]);
+    press('End');
+    expect(document.activeElement).toBe(items.at(-1));
+    press('ArrowDown');
+    expect(document.activeElement).toBe(items[0]);
+    press('Escape');
+    await settle(fixture);
+    expect(host.querySelector('.oge-gantt-menu')).toBeNull();
+  });
+
   it('right-click opens the built-in menu and indent reparents to the previous sibling', async () => {
     // 'Build' (b) sits after its sibling 'Design' (a) under 'Phase 1'
     rows()[2].dispatchEvent(

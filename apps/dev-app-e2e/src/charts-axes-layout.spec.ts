@@ -64,6 +64,64 @@ for (const layer of LAYERS) {
       await expect(host.locator('.oge-chart-live')).toContainText('East');
     });
 
+    test('rotated labels: measured boxes never overlap, long names wrap inside the svg', async ({
+      page,
+    }) => {
+      const host = await open(page, 'rotated-labels');
+      await expect(host.locator('.oge-chart-bar')).toHaveCount(18);
+      const labels = host.locator('.oge-chart-arg-label');
+      // a wrapped name draws one tspan per line
+      await expect
+        .poll(() => labels.locator('tspan').count())
+        .toBeGreaterThan(1);
+      const read = () =>
+        labels.evaluateAll((nodes) =>
+          nodes.map((node) => {
+            const rect = node.getBoundingClientRect();
+            return {
+              top: rect.top,
+              bottom: rect.bottom,
+              left: rect.left,
+              right: rect.right,
+            };
+          }),
+        );
+      // polled: the first paint uses the estimate, the measured layout
+      // follows one render later
+      await expect
+        .poll(async () => {
+          const boxes = (await read()).sort((a, b) => a.top - b.top);
+          let overlaps = 0;
+          for (let i = 1; i < boxes.length; i++) {
+            const columnOverlap =
+              boxes[i].left < boxes[i - 1].right &&
+              boxes[i - 1].left < boxes[i].right;
+            if (columnOverlap && boxes[i].top < boxes[i - 1].bottom - 0.5) {
+              overlaps++;
+            }
+          }
+          return overlaps;
+        })
+        .toBe(0);
+      const boxes = await read();
+      expect(boxes.length).toBeGreaterThan(3);
+      expect(boxes.length).toBeLessThan(18);
+      const svg = await host.locator('.oge-chart-svg').boundingBox();
+      if (svg === null) throw new Error('no svg box');
+      for (const label of boxes) {
+        // never clipped at the svg's left edge, never into the plot
+        expect(label.left).toBeGreaterThanOrEqual(svg.x - 0.5);
+      }
+      const plotStart = await host
+        .locator('.oge-chart-bar')
+        .first()
+        .boundingBox();
+      if (plotStart === null) throw new Error('no bar box');
+      for (const label of boxes) {
+        expect(label.right).toBeLessThanOrEqual(plotStart.x + 0.5);
+      }
+    });
+
     test('constant lines and strips label inside the svg', async ({ page }) => {
       const host = await open(page, 'constant-lines-strips');
       await expect(host.locator('.oge-chart-constant-line')).toHaveCount(3);

@@ -97,10 +97,15 @@ export {
   pivotAreaFields,
   pivotCustomSummariesOf,
   pivotFieldConfigOf,
+  pivotAxisFieldFns,
   pivotFieldFnsOf,
+  pivotHeaderFormatter,
+  pivotIntervalDate,
+  pivotMemberText,
   pivotOverridesFromSnapshot,
   pivotPanelAreas,
   pivotStateSnapshot,
+  type OgePivotFieldFns,
 } from './lib/pivot-fields';
 export {
   OGE_EMPTY_PIVOT_RESULT,
@@ -126,4 +131,5 @@ export {
   pivotVirtualColumnWidth,
   pivotWindowIndexes,
   type OgePivotHeaderRow,
+  type OgePivotPayloadMemberText,
 } from './lib/pivot-layout';

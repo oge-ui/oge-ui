@@ -30,7 +30,13 @@ export const PIVOT_ANALYTICS_DEMOS: readonly ReactDemo[] = [
 
 const fields: OgePivotFieldDef<Sale>[] = [
   { dataField: 'region', area: 'row' },
-  { dataField: 'date', area: 'column', groupInterval: 'year' },
+  // headerFormat writes the member headers (2026 → FY2026); on a
+  // date-grouped field a date format names the bucket, e.g.
+  // { type: 'date', pattern: 'MMMM' } for groupInterval: 'month'
+  {
+    dataField: 'date', area: 'column', groupInterval: 'year',
+    headerFormat: { type: 'number', pattern: "'FY'0" },
+  },
 
   // measures can post-process their values
   {

@@ -1617,7 +1617,7 @@ function OgeGanttInner<
             className="oge-gantt-menu"
             role="menu"
             tabIndex={-1}
-            style={{ left: menu.x, top: menu.y }}
+            style={{ insetInlineStart: menu.x, top: menu.y }}
             onKeyDown={(event) => core.onMenuKeydown(event)}
           >
             {menu.task !== null ? (

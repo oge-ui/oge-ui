@@ -62,6 +62,19 @@ export interface OgePivotFieldDef<T = unknown> {
    * (`{ type: 'currency', currency: 'EUR' }`) rendered in the grid's `locale`.
    */
   readonly format?: ((value: unknown) => string) | OgeValueFormat;
+  /**
+   * Member-header text of the field on a row or column axis: a function, or
+   * a declarative `OgeValueFormat` rendered in the grid's `locale`. Wins over
+   * `format` for headers, which then formats only the field's cells when it
+   * is dragged into the data area. A date format on a date-grouped field
+   * (`groupInterval` `'year'` / `'quarter'` / `'month'` / `'day'` /
+   * `'dayOfWeek'`) formats a representative date of the bucket, so
+   * `{ type: 'date', pattern: 'MMMM' }` turns month `1` into `January`.
+   * Everything that shows a member uses it — headers, label filters, the
+   * chart adapter, remote members without a server `text`, and the
+   * Excel / PDF / CSV exports. `customizeText` still runs after it.
+   */
+  readonly headerFormat?: ((value: unknown) => string) | OgeValueFormat;
   readonly customizeText?: (info: {
     value: unknown;
     valueText: string;

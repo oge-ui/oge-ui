@@ -2,6 +2,11 @@
 // export, shared by both Gantt render layers. A separate entry point like the
 // other exporters, although it has no peer dependency: a plan that never
 // exchanges files with MS Project does not ship the reader/writer.
+//
+// Direction-neutral on purpose: MSPDI carries data (tasks, links, calendars,
+// assignments), never layout, so an RTL Gantt writes the same XML as an LTR
+// one and `OgeGanttExportData.rtl` is ignored — MS Project lays the plan out
+// in its own UI direction.
 import {
   buildMsProjectXml,
   parseMsProjectXml,
