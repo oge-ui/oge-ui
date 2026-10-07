@@ -2,7 +2,7 @@
 
 > Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks — plus the collection and dashboard set: an APG carousel (tab-list or button picker, scroll-snap swipes, loop, autoplay that stops on keyboard focus with a rotation control), a list view (virtualized listbox or list with sticky group headers, search, infinite scroll and swipe actions), a data view (templated items in container-query columns with sorting, search, paging and selection) and a tile layout (dashboard tiles with spans, drag to reorder, resize handles, Ctrl+Arrow keyboard twins and a validated serializable state).
 
-Part of OGE UI v1.1.2.
+Part of OGE UI v1.1.3.
 Docs and live demos: https://www.ogeui.com/components/accordion
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

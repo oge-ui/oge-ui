@@ -2,7 +2,7 @@
 
 > React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state, load-more paging, label editing and drag & drop between trees, a drawer with overlay/push/side modes, derived modality, navigation items and touch swipe, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus, type-ahead, checkbox/radio rows and More overflow, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.
 
-Part of OGE UI v1.1.2.
+Part of OGE UI v1.1.3.
 Docs and live demos: https://www.ogeui.com/components/tree-view
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

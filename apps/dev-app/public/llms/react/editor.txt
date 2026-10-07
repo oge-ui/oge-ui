@@ -2,7 +2,7 @@
 
 > React rich-text editor: a dependency-free contenteditable editor over its own document model (no execCommand) with headings, lists, quotes, code, links, images, colours and alignment, its own undo history, markdown shortcuts, Word / Google Docs paste cleanup, a strict allowlist HTML sanitizer and an APG toolbar — running the same editor machine and stylesheet as the Angular editor package.
 
-Part of OGE UI v1.1.2.
+Part of OGE UI v1.1.3.
 Docs and live demos: https://www.ogeui.com/components/editor
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

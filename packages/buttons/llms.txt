@@ -2,7 +2,7 @@
 
 > Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, stand-alone toggle buttons with `aria-pressed`, button groups, drop-down/split buttons, and (`@oge-ui/buttons/fab`) a floating action button pinned with safe-area insets plus a speed dial on the WAI-ARIA APG menu-button pattern.
 
-Part of OGE UI v1.1.2.
+Part of OGE UI v1.1.3.
 Docs and live demos: https://www.ogeui.com/components/buttons
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
