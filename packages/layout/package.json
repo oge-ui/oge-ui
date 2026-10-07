@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/layout",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Signal-based Angular layout family: OgeAccordion with declarative <oge-accordion-item> children or data-driven items, APG keyboard support, single/multiple expansion, lazy rendering, async expand guards, invalid-section indicators and per-panel async content loaders; OgeSplitter with resizable, collapsible and nestable panes following the WAI-ARIA window splitter pattern; OgeToolbar with a WAI-ARIA APG roving tabindex, before/center/after groups and an overflow menu for the commands that stop fitting; OgeCard, a content surface with header, full-bleed media, action row and footer as attribute slots, outlined/raised/filled/flat chrome and a horizontal orientation; and the loading trio OgeProgressBar/OgeLoadIndicator/OgeSkeleton with the aria progressbar contract done right; plus OgeAvatar/OgeAvatarGroup, OgeBadge, OgeChip/OgeChipList, OgeAlert, OgeTimeline and OgeAppBar; and OgeCarousel (APG carousel with swipe, thumbnails and an accessible autoplay), OgeListView (virtualized APG listbox with sticky groups, search and swipe actions), OgeDataView (container-responsive templated items with sorting and paging) and OgeTileLayout (dashboard tiles with drag / resize and keyboard twins).",
   "keywords": [
     "angular",
@@ -36,9 +36,9 @@
     "@angular/core": ">=22.0.0 <24.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.2",
-    "@oge-ui/core": "1.1.2",
-    "@oge-ui/overlay": "1.1.2"
+    "@oge-ui/behavior": "1.1.3",
+    "@oge-ui/core": "1.1.3",
+    "@oge-ui/overlay": "1.1.3"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/scheduler-engine",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Framework-free engine behind the OGE UI scheduler: view-model builders, transitive-overlap column layout, lane packing, an RFC 5545 RRULE-subset parser and expander, gesture math, keyboard maps, the editing/recurrence/CRUD core, default config and message catalogs — shared by @oge-ui/scheduler (Angular) and @oge-ui/react-scheduler. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "scheduler",
@@ -21,8 +21,8 @@
   "types": "./index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "@oge-ui/behavior": "1.1.2",
-    "@oge-ui/core": "1.1.2"
+    "@oge-ui/behavior": "1.1.3",
+    "@oge-ui/core": "1.1.3"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {

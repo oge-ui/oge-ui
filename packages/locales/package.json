@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/locales",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Ready-made translations for every OGE UI message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic and Hebrew. Framework-free data: one typed OgeLocalePack per language, each its own entry point (@oge-ui/locales/tr), applied with provideOgeLocale() (oge-ui) or <OgeLocaleProvider> (@oge-ui/react).",
   "keywords": [
     "i18n",
@@ -81,13 +81,13 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "@oge-ui/behavior": "1.1.2",
-    "@oge-ui/bpmn-engine": "1.1.2",
-    "@oge-ui/charts-engine": "1.1.2",
-    "@oge-ui/gantt-engine": "1.1.2",
-    "@oge-ui/kanban-engine": "1.1.2",
-    "@oge-ui/pivot-engine": "1.1.2",
-    "@oge-ui/scheduler-engine": "1.1.2"
+    "@oge-ui/behavior": "1.1.3",
+    "@oge-ui/bpmn-engine": "1.1.3",
+    "@oge-ui/charts-engine": "1.1.3",
+    "@oge-ui/gantt-engine": "1.1.3",
+    "@oge-ui/kanban-engine": "1.1.3",
+    "@oge-ui/pivot-engine": "1.1.3",
+    "@oge-ui/scheduler-engine": "1.1.3"
   },
   "peerDependenciesMeta": {
     "@oge-ui/behavior": {
