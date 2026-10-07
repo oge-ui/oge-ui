@@ -28,6 +28,7 @@ import {
   GROUP_SNIPPET,
   ITEMS_SNIPPET,
   LABEL_SNIPPET,
+  MORE_EDITORS_SNIPPET,
   TEMPLATE_SNIPPET,
 } from './overview-snippets';
 
@@ -35,6 +36,7 @@ const SECTIONS = [
   'Declarative items',
   'Data-driven items',
   'Editor selection',
+  'More editors',
   'Groups',
   'Label placement',
   'Template slots',
@@ -174,6 +176,24 @@ const SECTIONS = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="[
+          'rating',
+          'otpInput',
+          'listBox',
+          'transferList',
+          'mention',
+          'richText',
+          'signaturePad',
+        ]"
+        heading="More editors"
+        description="Every editor of the suite is an <code>editorType</code>: the rating, the one-time-code cells, the list box, the transfer list, the mention field, the signature pad and the rich-text editor (<code>&amp;lt;oge-editor&amp;gt;</code> from <code>&#64;oge-ui/editor</code>). The rating and the signature pad are bare controls, so the form draws their label and error text; the rest keep their own. The heavier editors render inside <code>&#64;defer</code>, so a form that never uses them never loads them."
+        [code]="moreEditorsSnippet"
+        language="ts"
+      >
+        <oge-form [(formData)]="review" [items]="reviewFields" [colCount]="2" />
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['&lt;oge-form-group&gt;', 'caption', 'colCount']"
         heading="Groups"
         description="A group renders a real <code>&amp;lt;fieldset&amp;gt;</code> with the caption as its <code>&amp;lt;legend&amp;gt;</code> — the markup screen readers expect for a labelled section — and carries its own column count. Groups nest."
@@ -291,6 +311,7 @@ export class FormsOverviewPage {
   protected readonly groupSnippet = GROUP_SNIPPET;
   protected readonly labelSnippet = LABEL_SNIPPET;
   protected readonly actionsSnippet = ACTIONS_SNIPPET;
+  protected readonly moreEditorsSnippet = MORE_EDITORS_SNIPPET;
 
   protected readonly teams = ['Platform', 'Design', 'Support'];
 
@@ -331,6 +352,70 @@ export class FormsOverviewPage {
     team: 'Platform',
     bio: '',
   });
+
+  protected readonly review = signal({
+    stars: 4,
+    code: '',
+    channels: ['email'],
+    reviewers: ['Ada'],
+    note: '',
+    details: '<p>Shipped on <strong>time</strong>.</p>',
+    signature: null as string | null,
+  });
+
+  protected readonly reviewFields: OgeFormItemData[] = [
+    {
+      field: 'stars',
+      label: 'Rating',
+      editorType: 'rating',
+      editorOptions: { precision: 0.5 },
+    },
+    {
+      field: 'code',
+      label: 'Confirmation code',
+      editorType: 'otpInput',
+      editorOptions: { length: 4 },
+    },
+    {
+      field: 'channels',
+      label: 'Channels',
+      editorType: 'listBox',
+      editorOptions: {
+        items: ['email', 'sms', 'push'],
+        selectionMode: 'multiple',
+        showCheckBoxes: 'normal',
+      },
+    },
+    {
+      field: 'reviewers',
+      label: 'Reviewers',
+      editorType: 'transferList',
+      editorOptions: {
+        items: ['Ada', 'Grace', 'Linus', 'Margaret'],
+        height: 160,
+      },
+    },
+    {
+      field: 'note',
+      label: 'Note',
+      editorType: 'mention',
+      colSpan: 2,
+      editorOptions: { items: ['ada', 'grace', 'linus'] },
+    },
+    {
+      field: 'details',
+      label: 'Details',
+      editorType: 'richText',
+      colSpan: 2,
+      editorOptions: { height: 160 },
+    },
+    {
+      field: 'signature',
+      label: 'Signature',
+      editorType: 'signaturePad',
+      colSpan: 2,
+    },
+  ];
 
   protected readonly account = signal({
     firstName: 'Ada',

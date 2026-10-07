@@ -137,3 +137,26 @@ export const FORMS_SNIPPET = demoSource({
   body: `${CITY_DATA}
 protected readonly destinations = new FormControl<number[]>([], Validators.required);`,
 });
+
+export const REORDER_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeListBox'] },
+  types: { '@oge-ui/inputs': ['OgeListBoxReorderedEvent'] },
+  before: CITY_TYPE,
+  template: `<!-- Alt+ArrowUp / Alt+ArrowDown move the active option; drag an
+     option before or after another. Store the new order to keep it. -->
+<oge-list-box
+  label="Route"
+  [items]="route()"
+  displayExpr="name"
+  valueExpr="id"
+  [allowReordering]="true"
+  [height]="260"
+  (reordered)="onReordered($event)"
+/>`,
+  body: `${CITY_DATA}
+protected readonly route = signal<readonly City[]>(this.cities.slice(0, 5));
+
+protected onReordered(event: OgeListBoxReorderedEvent<City>): void {
+  this.route.set(event.items);
+}`,
+});

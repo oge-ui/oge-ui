@@ -68,6 +68,41 @@ protected readonly profile = signal({
 });`,
 });
 
+export const MORE_EDITORS_SNIPPET = demoSource({
+  use: { '@oge-ui/forms': ['OgeForm'] },
+  types: { '@oge-ui/forms': ['OgeFormItemData'] },
+  template: `<oge-form [(formData)]="review" [items]="fields" [colCount]="2" />`,
+  body: `protected readonly review = signal({
+  stars: 4,
+  code: '',
+  channels: ['email'],
+  reviewers: ['Ada'],
+  note: '',
+  details: '<p>Shipped on <strong>time</strong>.</p>',
+  signature: null as string | null,
+});
+
+protected readonly fields: OgeFormItemData[] = [
+  { field: 'stars', label: 'Rating', editorType: 'rating', editorOptions: { precision: 0.5 } },
+  { field: 'code', label: 'Confirmation code', editorType: 'otpInput', editorOptions: { length: 4 } },
+  {
+    field: 'channels',
+    label: 'Channels',
+    editorType: 'listBox',
+    editorOptions: { items: ['email', 'sms', 'push'], selectionMode: 'multiple', showCheckBoxes: 'normal' },
+  },
+  {
+    field: 'reviewers',
+    label: 'Reviewers',
+    editorType: 'transferList',
+    editorOptions: { items: ['Ada', 'Grace', 'Linus', 'Margaret'], height: 160 },
+  },
+  { field: 'note', label: 'Note', editorType: 'mention', colSpan: 2, editorOptions: { items: ['ada', 'grace', 'linus'] } },
+  { field: 'details', label: 'Details', editorType: 'richText', colSpan: 2, editorOptions: { height: 160 } },
+  { field: 'signature', label: 'Signature', editorType: 'signaturePad', colSpan: 2 },
+];`,
+});
+
 export const GROUP_SNIPPET = demoSource({
   use: { '@oge-ui/forms': ['OgeForm', 'OgeFormGroup', 'OgeFormItem'] },
   template: `<oge-form [(formData)]="account" [colCount]="2">

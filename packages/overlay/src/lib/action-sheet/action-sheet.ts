@@ -8,6 +8,7 @@ import {
   afterRenderEffect,
   computed,
   contentChild,
+  effect,
   inject,
   input,
   model,
@@ -264,6 +265,20 @@ export class OgeActionSheet {
   constructor() {
     let portaled: HTMLElement | null = null;
     let wasOpen = false;
+    // Escape works from the moment the sheet opens — the layer (and the
+    // activation below) only exist a render later
+    effect(() => {
+      const open = this.opened();
+      untracked(() => {
+        if (open) {
+          this.core.arm();
+        } else if (!wasOpen && this.core.isArmed()) {
+          // dismissed before it ever rendered
+          this.core.deactivate();
+          this.settle(true);
+        }
+      });
+    });
     afterRenderEffect(() => {
       const layer = this.layerEl()?.nativeElement ?? null;
       untracked(() => {
@@ -317,6 +332,7 @@ export class OgeActionSheet {
       this.lastReason = 'api';
       this.lastItem = null;
       this.opened.set(true);
+      this.core.arm();
     });
   }
 

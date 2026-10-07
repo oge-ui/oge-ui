@@ -83,6 +83,51 @@ export interface OgeSelectListCoreDeps<TItem> {
  * `signal`/`computed`, the React hook with a version-bumping store — the
  * machine body is identical code either way.
  */
+/**
+ * The select family's client-side search: `term` trimmed and matched
+ * case-insensitively (`contains` or `startswith`) against each item's search
+ * strings; an empty term keeps every item. The one filter the list editors
+ * and the transfer list's button state share.
+ */
+export function ogeSelectSearchFilter<TItem>(
+  items: readonly TItem[],
+  term: string | null,
+  mode: OgeSelectSearchMode,
+  searchStrings: (item: TItem) => readonly string[],
+): readonly TItem[] {
+  const typed = (term ?? '').trim();
+  if (typed.length === 0) return items;
+  const needle = typed.toLocaleLowerCase();
+  const startsWith = mode === 'startswith';
+  return items.filter((item) =>
+    searchStrings(item).some((text) => {
+      const lower = text.toLocaleLowerCase();
+      return startsWith ? lower.startsWith(needle) : lower.includes(needle);
+    }),
+  );
+}
+
+/**
+ * An item's search strings: `searchExpr` (a field, several fields or a
+ * function), else its display text.
+ */
+export function ogeSelectSearchStrings<TItem>(
+  item: TItem,
+  searchExpr: OgeSelectSearchExpr<TItem> | undefined,
+  displayExpr: OgeSelectDisplayExpr<TItem> | undefined,
+): string[] {
+  if (typeof searchExpr === 'function') return [searchExpr(item)];
+  if (typeof searchExpr === 'string') {
+    return [String((item as Record<string, unknown>)[searchExpr] ?? '')];
+  }
+  if (Array.isArray(searchExpr)) {
+    return searchExpr.map((key) =>
+      String((item as Record<string, unknown>)[key] ?? ''),
+    );
+  }
+  return [resolveDisplay(displayExpr, item)];
+}
+
 export class OgeSelectListCore<TItem> {
   /** Search text while the user is filtering; `null` = not searching. */
   readonly searchText: OgeReactiveCell<string | null>;
@@ -319,14 +364,8 @@ export class OgeSelectListCore<TItem> {
     if (min > 0 && typed.length < min) {
       return (this.deps.showDataBeforeSearch?.() ?? false) ? items : [];
     }
-    if (term === null || typed.length === 0) return items;
-    const trimmed = typed.toLocaleLowerCase();
-    const startsWith = this.deps.searchMode() === 'startswith';
-    return items.filter((item) =>
-      this.searchStrings(item).some((text) => {
-        const lower = text.toLocaleLowerCase();
-        return startsWith ? lower.startsWith(trimmed) : lower.includes(trimmed);
-      }),
+    return ogeSelectSearchFilter(items, term, this.deps.searchMode(), (item) =>
+      this.searchStrings(item),
     );
   }
 

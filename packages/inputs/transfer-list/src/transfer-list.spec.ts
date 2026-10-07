@@ -236,6 +236,35 @@ describe('OgeTransferList', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
+  it('the buttons follow the search-filtered view', async () => {
+    const f = TestBed.createComponent(Host);
+    await settle(f);
+    const [addSelected, addAll] = buttons(f);
+    option(f, 'source', 1).click(); // Write
+    await settle(f);
+    expect(addSelected.disabled).toBe(false);
+    const search = pane(f, 'source').querySelector<HTMLInputElement>(
+      '.oge-list-box-search-input',
+    )!;
+    // only Read is shown: the selected Write is filtered out
+    search.value = 'rea';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle(f);
+    expect(texts(f, 'source')).toEqual(['Read']);
+    expect(addSelected.disabled).toBe(true);
+    expect(addAll.disabled).toBe(false);
+    // only the locked Admin is shown: nothing movable
+    search.value = 'adm';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle(f);
+    expect(addAll.disabled).toBe(true);
+    search.value = '';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle(f);
+    expect(addSelected.disabled).toBe(false);
+    expect(addAll.disabled).toBe(false);
+  });
+
   it('binds reactive forms', async () => {
     const f = TestBed.createComponent(FormHost);
     await settle(f);

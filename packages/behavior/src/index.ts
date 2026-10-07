@@ -514,6 +514,8 @@ export {
 } from './lib/tree-list/tree-list-core';
 export {
   OgeSelectListCore,
+  ogeSelectSearchFilter,
+  ogeSelectSearchStrings,
   type OgeSelectListCoreDeps,
   type OgeSelectListRow,
 } from './lib/input/select-list-core';
@@ -681,12 +683,20 @@ export {
 } from './lib/input/choice-group-core';
 // W8b — list box
 export {
+  OGE_LIST_BOX_REORDER_SHORTCUTS,
   OgeListBoxCore,
+  ogeListBoxDropTarget,
+  ogeListBoxReorderAnnouncement,
   ogeListBoxSections,
+  ogeListReorderDropIndex,
+  ogeMoveListItem,
   type OgeListBoxClickInput,
   type OgeListBoxCoreDeps,
+  type OgeListBoxDropTarget,
   type OgeListBoxKeyInput,
   type OgeListBoxKeyResult,
+  type OgeListBoxReorder,
+  type OgeListBoxReorderCause,
   type OgeListBoxSection,
   type OgeListBoxSelectionMode,
 } from './lib/input/list-box-core';
@@ -701,9 +711,16 @@ export {
   ogeTransferMove,
   ogeTransferOpposite,
   ogeTransferSplit,
+  ogeTransferDropTarget,
+  ogeTransferReorderable,
+  ogeTransferReorderLine,
+  ogeTransferReorderSource,
+  ogeTransferReorderTarget,
+  type OgeTransferListDropTarget,
   type OgeTransferListKeyInput,
   type OgeTransferListMoveCause,
   type OgeTransferListMoveCommand,
+  type OgeTransferListReorderSides,
   type OgeTransferListSide,
   type OgeTransferListSplit,
 } from './lib/input/transfer-list-core';
@@ -2439,6 +2456,7 @@ export {
   ogeListViewToggle,
   ogeListViewVirtualSettings,
   ogeListViewWindow,
+  ogeListViewWindowHasIndex,
   resolveOgeListViewConfig,
   type OgeListViewActionSeverity,
   type OgeListViewActiveItemChangedEvent,

@@ -5,8 +5,11 @@ export { OgeTransferList } from './transfer-list';
 export {
   type OgeTransferListMovingEvent,
   type OgeTransferListMovedEvent,
+  type OgeTransferListReorderingEvent,
+  type OgeTransferListReorderedEvent,
 } from './transfer-list-types';
 export {
   type OgeTransferListSide,
   type OgeTransferListMoveCause,
+  type OgeTransferListReorderSides,
 } from '@oge-ui/behavior';

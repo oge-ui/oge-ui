@@ -1,6 +1,7 @@
 import {
   createTypeAheadBuffer,
   matchByPrefix,
+  ogeFormatMessage,
   type OgeTypeAheadBuffer,
 } from '@oge-ui/core';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
@@ -41,6 +42,109 @@ export interface OgeListBoxClickInput {
 export interface OgeListBoxKeyResult {
   readonly handled: boolean;
   readonly value?: unknown;
+}
+
+/** What started a reorder — keyboard, pointer drag or a method call. */
+export type OgeListBoxReorderCause = 'keyboard' | 'drag' | 'api';
+
+/**
+ * A reorder the list box asks for, as indices into its **whole** `items`
+ * array (not the searched / grouped view): the item at `fromIndex` ends up
+ * at `toIndex`.
+ */
+export interface OgeListBoxReorder {
+  readonly fromIndex: number;
+  readonly toIndex: number;
+}
+
+/** Where a pointer drag would drop: before or after the option at `index`. */
+export interface OgeListBoxDropTarget {
+  /** Visible index of the option under the pointer. */
+  readonly index: number;
+  readonly position: 'before' | 'after';
+}
+
+/** The keys that reorder the active option (`aria-keyshortcuts`). */
+export const OGE_LIST_BOX_REORDER_SHORTCUTS = 'Alt+ArrowUp Alt+ArrowDown';
+
+/**
+ * `items` with the entry at `from` moved to `to` (its final index). A new
+ * array; out-of-range indices return a copy unchanged.
+ */
+export function ogeMoveListItem<T>(
+  items: readonly T[],
+  from: number,
+  to: number,
+): T[] {
+  const next = [...items];
+  if (
+    from < 0 ||
+    from >= next.length ||
+    to < 0 ||
+    to >= next.length ||
+    from === to
+  ) {
+    return next;
+  }
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
+
+/**
+ * The final index of the entry at `from` dropped before / after the entry at
+ * `over` (both indices into one array), or `-1` when the drop changes
+ * nothing.
+ */
+export function ogeListReorderDropIndex(
+  from: number,
+  over: number,
+  position: 'before' | 'after',
+): number {
+  if (from < 0 || over < 0 || from === over) return -1;
+  const to =
+    position === 'after'
+      ? over > from
+        ? over
+        : over + 1
+      : over < from
+        ? over
+        : over - 1;
+  return to === from ? -1 : to;
+}
+
+/**
+ * Drop-target resolution of a reorder drag: the option under the pointer in
+ * `list` (the `role="listbox"` element — an option of a nested list never
+ * answers for it), before or after by the pointer's side of its middle.
+ */
+export function ogeListBoxDropTarget(
+  hit: Element | null,
+  list: Element,
+  clientY: number,
+): OgeListBoxDropTarget | null {
+  const option = hit?.closest('.oge-list-box-option') ?? null;
+  if (!option || option.closest('[role="listbox"]') !== list) return null;
+  const index = Number(option.getAttribute('data-index'));
+  if (!Number.isInteger(index) || index < 0) return null;
+  const rect = option.getBoundingClientRect();
+  const position = clientY > rect.top + rect.height / 2 ? 'after' : 'before';
+  return { index, position };
+}
+
+/**
+ * The announcement after a reorder — `template` is the
+ * `listBoxReorderedAnnouncement` catalog string over `{item}`, `{position}`
+ * and `{count}`.
+ */
+export function ogeListBoxReorderAnnouncement(
+  template: string,
+  item: string,
+  position: number,
+  count: number,
+  locale?: string,
+): string {
+  return ogeFormatMessage(template, { item, position, count }, locale);
 }
 
 /** Reactive getters the owning component wires into the list box machine. */
@@ -356,12 +460,81 @@ export class OgeListBoxCore<TItem> extends OgeSelectListCore<TItem> {
     return { handled: false };
   }
 
+  // --- reordering ------------------------------------------------------------
+
+  /**
+   * Alt+↑ / Alt+↓ on the active option: `handled` for those keys (always —
+   * the page must not scroll), with the reorder when the option can move.
+   */
+  reorderKey(input: OgeListBoxKeyInput): {
+    handled: boolean;
+    reorder?: OgeListBoxReorder;
+  } {
+    if (!input.altKey || input.ctrlKey || input.metaKey || input.shiftKey) {
+      return { handled: false };
+    }
+    if (input.key !== 'ArrowUp' && input.key !== 'ArrowDown') {
+      return { handled: false };
+    }
+    const visible = this.visibleItems();
+    const index = this.activeIndex();
+    const neighbor = visible[index + (input.key === 'ArrowDown' ? 1 : -1)];
+    const reorder =
+      neighbor === undefined
+        ? null
+        : this.reorderRelative(visible[index], neighbor, 'at');
+    return reorder ? { handled: true, reorder } : { handled: true };
+  }
+
+  /**
+   * The reorder that drops `item` before / after `target` (both items of the
+   * list), `null` when it would change nothing or crosses a group. A
+   * disabled item never moves.
+   */
+  reorderAt(
+    item: TItem,
+    target: TItem,
+    position: 'before' | 'after',
+  ): OgeListBoxReorder | null {
+    return this.reorderRelative(item, target, position);
+  }
+
   /** Drops the type-ahead prefix (blur). */
   resetTypeAhead(): void {
     this.typeAhead.clear();
   }
 
   // --- internals -------------------------------------------------------------
+
+  /**
+   * `'at'` takes the neighbour's own index (one keyboard step); a drop
+   * position goes through {@link ogeListReorderDropIndex}. Indices are into
+   * the whole item set, so a search that hides rows moves the item past
+   * them, and grouping keeps the move inside the item's group.
+   */
+  private reorderRelative(
+    item: TItem | undefined,
+    target: TItem,
+    position: 'before' | 'after' | 'at',
+  ): OgeListBoxReorder | null {
+    if (item === undefined || item === target) return null;
+    if (this.isItemDisabled(item)) return null;
+    if (
+      this.boxDeps.groupBy?.() !== undefined &&
+      this.groupKeyOf(item) !== this.groupKeyOf(target)
+    ) {
+      return null;
+    }
+    const items = this.resolvedItems();
+    const fromIndex = items.indexOf(item);
+    const over = items.indexOf(target);
+    if (fromIndex < 0 || over < 0) return null;
+    const toIndex =
+      position === 'at'
+        ? over
+        : ogeListReorderDropIndex(fromIndex, over, position);
+    return toIndex < 0 || toIndex === fromIndex ? null : { fromIndex, toIndex };
+  }
 
   /** `delta` steps from the active option over enabled items, clamped. */
   private steppedIndex(delta: number): number {

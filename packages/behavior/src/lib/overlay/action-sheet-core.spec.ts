@@ -188,6 +188,45 @@ describe('OgeActionSheetCore', () => {
     core.destroy();
   });
 
+  it('armed before it renders, an Escape anywhere dismisses it', () => {
+    const core = make();
+    core.arm();
+    core.arm(); // idempotent
+    expect(core.isArmed()).toBe(true);
+    // focus is still on the trigger outside the (not yet active) layer
+    const early = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    });
+    trigger.dispatchEvent(early);
+    expect(early.defaultPrevented).toBe(true);
+    expect(dismissed).toEqual(['escape']);
+    // closed before it ever rendered: deactivate releases the stack slot
+    core.deactivate();
+    expect(core.isArmed()).toBe(false);
+    const other = {};
+    pushOverlay(other);
+    trigger.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
+    expect(dismissed).toEqual(['escape']);
+    removeOverlay(other);
+  });
+
+  it('activation takes Escape over from the armed listener', () => {
+    const core = make();
+    core.arm();
+    core.activate();
+    expect(core.isArmed()).toBe(false);
+    first.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
+    // once, from the layer — the document listener is gone
+    expect(dismissed).toEqual(['escape']);
+    core.destroy();
+  });
+
   it('dismisses on a backdrop press', () => {
     const core = make();
     core.activate();

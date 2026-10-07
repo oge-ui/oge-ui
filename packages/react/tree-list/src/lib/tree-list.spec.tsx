@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import { StrictMode, createRef, useState } from 'react';
 import { renderToString } from 'react-dom/server';
-import type { RowKey } from '@oge-ui/core';
+import type { FilterExpr, RowKey } from '@oge-ui/core';
 import { OgeTreeList } from './tree-list';
 import type { OgeTreeListHandle } from './tree-list-types';
 import {
@@ -263,6 +263,13 @@ describe('OgeTreeList', () => {
   });
 });
 
+const LONDON: FilterExpr = {
+  type: 'binary',
+  field: 'office',
+  op: 'eq',
+  value: 'London',
+};
+
 describe('<OgeTreeList> (React) — first page in the first render', () => {
   it('server-renders the rows of an in-memory tree', () => {
     const html = renderToString(
@@ -279,5 +286,50 @@ describe('<OgeTreeList> (React) — first page in the first render', () => {
     );
     expect(html).toContain('Root');
     expect(html).toContain('Leaf');
+  });
+
+  it('applies the initial filter in that first load — the server sees it', () => {
+    const html = renderToString(
+      <OgeTreeList
+        data={makeRows()}
+        columns={COLUMNS}
+        autoExpandAll
+        defaultFilterValue={LONDON}
+      />,
+    );
+    // the matches and their ancestors only
+    expect(html).toContain('Grand A1a');
+    expect(html).toContain('Root B');
+    expect(html).not.toContain('Child A2');
+  });
+
+  it.each([
+    ['filterValue', { filterValue: LONDON }],
+    ['defaultFilterValue', { defaultFilterValue: LONDON }],
+  ])('loads once with %s — no unfiltered first result', async (_, filter) => {
+    const onContentReady = vi.fn();
+    const onFilterValueChange = vi.fn();
+    // (no StrictMode here: its unmount / remount re-wires the source on
+    // purpose, which is a second result by design)
+    render(
+      <OgeTreeList
+        data={makeRows()}
+        columns={COLUMNS}
+        autoExpandAll
+        {...filter}
+        onContentReady={onContentReady}
+        onFilterValueChange={onFilterValueChange}
+      />,
+    );
+    // the very first rendered result is already filtered
+    expect(names()).not.toContain('Child A2');
+    await settled();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    expect(names()).toEqual(['Root A', 'Child A1', 'Grand A1a', 'Root B']);
+    expect(onContentReady).toHaveBeenCalledTimes(1);
+    // the initial value is the baseline, not a change
+    expect(onFilterValueChange).not.toHaveBeenCalled();
   });
 });

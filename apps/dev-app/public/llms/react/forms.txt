@@ -165,7 +165,8 @@ _OgeFormHandle — via ref_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeFormDataType` | `'string' \| 'number' \| 'boolean' \| 'date' \| 'datetime' \| 'dateRange' \| 'array' \| 'object'` | Value shape of an item. Inferred from the model value when not set. |
-| `OgeFormEditorType` | `'textBox' \| 'textArea' \| 'numberBox' \| 'selectBox' \| 'tagBox' \| 'autocomplete' \| 'treeSelect' \| 'dateBox' \| 'dateRangeBox' \| 'calendar' \| 'checkBox' \| 'switch' \| 'radioGroup'` | Which `@oge-ui/react-inputs` editor renders an item. The same string union both layers share from `@oge-ui/behavior`. |
+| `OgeFormEditorType` | `'textBox' \| 'textArea' \| 'numberBox' \| 'slider' \| 'selectBox' \| 'tagBox' \| 'autocomplete' \| 'treeSelect' \| 'dateBox' \| 'dateRangeBox' \| 'calendar' \| 'checkBox' \| 'switch' \| 'radioGroup' \| 'colorBox' \| 'fileUploader' \| 'rating' \| 'otpInput' \| 'signaturePad' \| 'listBox' \| 'transferList' \| 'mention' \| 'richText'` | Which `@oge-ui/react-inputs` editor renders an item. The same string union both layers share from `@oge-ui/behavior`. |
+| `OgeFormEditorOptions` | `interface` | The curated editor inputs an item may set. Beside the list, bound, text and date options: `precision` (`rating`; `max` is the item count), `length` / `masked` (`otpInput`), `signatureFormat` (`signaturePad`), `selectionMode` (`listBox`), `sourceTitle` / `targetTitle` (`transferList`), `trigger` (`mention`) and `height` (list box, transfer list, signature pad, rich text). `showCheckBoxes` other than `'none'` turns on the list box and transfer list check glyphs. |
 | `OgeFormLabelLocation` | `'top' \| 'start' \| 'end'` | Where an item's label sits relative to its editor. |
 | `OgeFormScreenSize` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | Container-query breakpoints: under 480, then 480 / 720 / 960 / 1200 pixels of form width. |
 | `OgeFormColCount` | `number \| 'auto'` | A fixed track count, or auto-fit by `minColWidth`. |
@@ -191,7 +192,7 @@ _OgeFormHandle — via ref_
 | `hint` | `string \| undefined` | `undefined` | Help text under the editor. Chrome editors render it in their own subscript; bare controls get it from the form. |
 | `placeholder` | `string \| undefined` | `undefined` | Placeholder forwarded to the editor. |
 | `dataType` | `OgeFormDataType \| undefined` | `undefined` | Value shape. Inferred from the current model value when omitted. |
-| `editorType` | `OgeFormEditorType \| undefined` | `undefined` | Explicit editor; beats both `editorOptions.items` and `dataType`. |
+| `editorType` | `OgeFormEditorType \| undefined` | `undefined` | Explicit editor; beats both `editorOptions.items` and `dataType`. `rating` and `signaturePad` are bare (the form draws label and error); `richText` renders the rich-text editor and is loaded only when an item uses it. |
 | `editorOptions` | `OgeFormEditorOptions \| undefined` | `undefined` | A curated, typed subset of editor props (`items`, `displayExpr`, `min`, `max`, `rows`, …). Supplying `items` selects a select box or tag box. |
 | `colSpan` | `number` | `1` | Layout columns the item spans, clamped to the column count in force. |
 | `visible` | `boolean` | `true` | A hidden item is dropped from the layout entirely — no hidden input, no stale DOM value. |
@@ -804,6 +805,51 @@ export function EditorSelectionDemo() {
         { field: 'bio', label: 'Bio', editorType: 'textArea', colSpan: 2 },
       ]}
     />
+  );
+}
+```
+
+### More editors
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
+
+const fields: OgeFormItemDefinition[] = [
+  { field: 'stars', label: 'Rating', editorType: 'rating', editorOptions: { precision: 0.5 } },
+  { field: 'code', label: 'Confirmation code', editorType: 'otpInput', editorOptions: { length: 4 } },
+  {
+    field: 'channels',
+    label: 'Channels',
+    editorType: 'listBox',
+    editorOptions: { items: ['email', 'sms', 'push'], selectionMode: 'multiple', showCheckBoxes: 'normal' },
+  },
+  {
+    field: 'reviewers',
+    label: 'Reviewers',
+    editorType: 'transferList',
+    editorOptions: { items: ['Ada', 'Grace', 'Linus', 'Margaret'], height: 160 },
+  },
+  { field: 'note', label: 'Note', editorType: 'mention', colSpan: 2, editorOptions: { items: ['ada', 'grace', 'linus'] } },
+  { field: 'details', label: 'Details', editorType: 'richText', colSpan: 2, editorOptions: { height: 160 } },
+  { field: 'signature', label: 'Signature', editorType: 'signaturePad', colSpan: 2 },
+];
+
+export function MoreEditorsDemo() {
+  const [review, setReview] = useState({
+    stars: 4,
+    code: '',
+    channels: ['email'],
+    reviewers: ['Ada'],
+    note: '',
+    details: '<p>Shipped on <strong>time</strong>.</p>',
+    signature: null as string | null,
+  });
+  return (
+    <OgeForm formData={review} onFormDataChange={setReview} items={fields} colCount={2} />
   );
 }
 ```

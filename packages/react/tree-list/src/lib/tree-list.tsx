@@ -227,6 +227,14 @@ function OgeTreeListInner<T extends object>(
     const cfg = () => configRef.current;
 
     const state = new OgeGridStateCore(rx);
+    // The initial builder filter is part of the first render's load (see the
+    // priming below) — seeded in an effect, the tree would render and load
+    // unfiltered, then reload. Set before anything reads the filter slice.
+    const initialFilter =
+      p().filterValue !== undefined ? p().filterValue : p().defaultFilterValue;
+    if (initialFilter) {
+      rx.quietly(() => state.filter.setBuilderFilter(initialFilter));
+    }
     const data = new OgeGridDataCore<T>({ loadOptions: state.loadOptions }, rx);
 
     const scrollTop = rx.cell(0);
@@ -1150,7 +1158,14 @@ function OgeTreeListInner<T extends object>(
   }, [filterValueJson]);
   useEffect(() => {
     const initial = latest.current.defaultFilterValue;
-    if (initial) state.filter.setBuilderFilter(initial);
+    // already applied by the first render's load (a no-op re-set would
+    // still be a new filter expression, and reload)
+    if (!initial) return;
+    if (
+      JSON.stringify(initial) === JSON.stringify(state.filter.builderFilter())
+    )
+      return;
+    state.filter.setBuilderFilter(initial);
   }, [state]);
   const builderFilter = state.filter.builderFilter();
   const builderFilterJson = JSON.stringify(builderFilter);

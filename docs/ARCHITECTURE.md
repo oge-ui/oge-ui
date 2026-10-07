@@ -896,6 +896,14 @@ share one vocabulary in both layers, and every decision in it lives in `@oge-ui/
   `[formGroup]` mode sets `{ server }` on the control.
 - `src/lib/forms/form-values.ts` holds `readPath` / `writePath` / `isEmptyFormValue` so the item
   model and the rule evaluator can share them without an import cycle.
+- **Every suite editor is an `editorType`**, including the W8b / W8e ones (`rating`, `otpInput`,
+  `signaturePad`, `listBox`, `transferList`, `mention`, `richText`). `rating` and `signaturePad`
+  are bare (in `BARE_EDITORS`: the form draws label, hint and error); the others render their own.
+  Heavy editors stay out of a form that does not use them: Angular renders `transferList`,
+  `signaturePad`, `mention` and `richText` inside `@defer (on immediate)` (referenced nowhere
+  else in `form-editor.ts`), React loads `@oge-ui/react-editor` with `React.lazy` behind a
+  `Suspense` placeholder (the inputs family is one bundle there already). A Signal Forms arm never
+  binds `max` / `maxLength` — `[formField]` owns them, so they come from the schema.
 
 ### Grid interaction depth (ranges, clipboard, formats, spans, drag groups)
 
@@ -1069,6 +1077,21 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   list's buttons, Ctrl/⌘+arrow shortcuts and `beginPointerDragDrop` drop all call one
   cancelable move (`moving` → `moved`, `cause: 'button' | 'keyboard' | 'drag'`) and announce
   through the shared live announcer.
+- **Reordering is the list box's, the transfer list composes it.** `allowReordering` (Alt+↑/↓,
+  `beginPointerDragDrop`) runs one cancelable `reordering` → `reordered` path whose indices are
+  into the whole `items` array (`OgeListBoxCore.reorderKey` / `reorderAt`: a move passes rows a
+  search hides, stays inside its group and never moves a disabled option); the component shows
+  the new order at once (Angular `linkedSignal`, React a ref keyed by the `items` array) and a new
+  `items` resets it. Inside a transfer list the list box leaves the pointer alone — the transfer
+  list runs **one** drag that moves over the other pane and reorders over its own list
+  (`ogeTransferDropTarget`) by calling the list box's `reorderItem(…, 'drag')`, and draws its own
+  drop line (a re-rendering React child would drop a class set from outside). A target reorder
+  re-orders the value; a source reorder refills the source slots of the display order.
+- **The transfer list's button state is derived, not read from the children.** The list boxes'
+  filtered views update after the buttons' bindings in the same render (Angular) or a render
+  later (React), so the transfer list tracks each search field's text from its `input` events
+  and filters with the list editors' own `ogeSelectSearchFilter` / `ogeSelectSearchStrings`.
+  The moves themselves still read the child's visible items at event time.
 - **A `<textarea>` cannot be a `combobox`.** ARIA allows no such role on it (axe
   `aria-allowed-role`), so the multi-line mention field stays a textbox carrying
   `aria-autocomplete` / `aria-haspopup` / `aria-controls` / `aria-activedescendant`; only the
@@ -1713,7 +1736,12 @@ decisions in a `behavior` core (`lib/layout/{carousel,list-view,data-view,tile-l
   owns the modal half through the house primitives — the ref-counted scroll
   lock, `inertModalBackground`, the overlay Escape stack, `trapTabKey`, focus
   restore — and dismisses on a backdrop press and a swipe down from the
-  handle / header (`beginPointerGesture`, `OGE_SHEET_SWIPE_DISMISS`). Its
+  handle / header (`beginPointerGesture`, `OGE_SHEET_SWIPE_DISMISS`). The
+  layer renders a frame after `open()`, so the core is **armed** the moment the
+  sheet opens (`arm()`: its Escape-stack slot plus a capture-phase document
+  Escape listener) and `activate()` hands Escape to the layer — an Escape in
+  between still closes it, and a sheet closed before it rendered settles its
+  `open()` promise. Its
   strings are two optional `OgeOverlayMessages` keys, so the overlay slice of
   every locale pack carries them. `open()` resolves with the chosen action or
   `null`.
@@ -1721,7 +1749,13 @@ decisions in a `behavior` core (`lib/layout/{carousel,list-view,data-view,tile-l
   and tracks the active option with `aria-activedescendant` — the one focus
   model that survives windowing, because only the active option has to be
   rendered; keyboard navigation scrolls it into the window first.
-  `selectionMode: 'none'` is a `role="list"` with a roving tab stop. Groups
+  `selectionMode: 'none'` is a `role="list"` with a roving tab stop — there
+  the rows own focus, so a virtual window must not drop it: when a scroll is
+  about to take the focused row out of the window, focus is **parked** on the
+  scroll viewport (which also becomes the tab stop while the active row is
+  not rendered) and returns to the row once it renders again
+  (`ogeListViewWindowHasIndex`); Tab onto the parked stop brings the row back
+  and focuses it. Groups
   render as labelled segments in both modes (`group` + `aria-label`, or a
   `listitem` holding a labelled nested `list`) whose visible header is
   `aria-hidden` and `position: sticky` inside its segment; a window that
@@ -1949,8 +1983,10 @@ rules — change both together.
    `families` entry; also add the family to `components-index.spec.ts`'s `FAMILIES` list, and **never
    mention another family's name in a gallery description** — the e2e locates cards by case-insensitive
    `hasText` substring, so a description containing "overlay" hijacks the Overlay card's locator), the
-   landing page index (`pages/home/home.ts` — `tiles`, kept at three columns so
-   the page does not grow), and the landing page's npm band (`packages`).
+   landing page index (`pages/home/home.ts` — `tiles`, 4 / 3 / 2 / 1 columns so
+   the page does not grow; the closing "Browse all components" tile spans what
+   the last row leaves free at each column count, `restOf()`, so adding a family
+   never leaves a ragged row), and the landing page's npm band (`packages`).
 6. API members in the family's `*-api-data.ts`, rendered from its `api.ts` page — this is what
    `llms.txt` reads, so an undocumented member is invisible to every coding assistant.
 7. `npx nx run docs-tools:llms`, and commit the regenerated artifacts.
@@ -2209,7 +2245,11 @@ Rules the suites enforce (and the fixes they produced):
   without a re-render request): a source with `DataSource.loadSync` (`ArrayDataSource`, the tree
   wrapper over one) answers on the spot, and the mount effect adopts that same source, so nothing
   reloads. Remote sources keep loading after mount. `ReactSsrFamily.reject` lets a family assert
-  that rows past the first page are absent.
+  that rows past the first page are absent. **Initial option state belongs to that first load:**
+  an initial `filterValue` / `defaultFilterValue` is written into the filter slice (quietly) when
+  the model is built — before anything reads it — not in an effect, which would load unfiltered
+  and then reload; the sync effects then find nothing to change, and the mount value is the
+  `onFilterValueChange` baseline, never reported as a change.
 
 Known gaps (not mismatches — the hydration matches — but worth closing):
 
@@ -2268,6 +2308,16 @@ Nx targets build first.
   package-internal chunks), baseline `tools/size-budgets.json`, fails on > 10 % growth or a new
   entry without a number. Intended growth: `node tools/size-check.mjs --update` and say why in the PR.
   TODO (W6): show these numbers on the docs site — there is no bundle-size page yet.
+- `npx nx run @oge/source:api-check` — public-API snapshots of the MIT substrate,
+  `@oge-ui/core` and `@oge-ui/behavior` (every `exports` entry with types): API Extractor
+  (pinned `npx`, no devDependency) reads the **dist** declarations and the report must equal
+  the committed `tools/api-reports/<pkg>[-<entry>].api.md` (line endings normalized, so
+  Windows and Linux agree). Its own lint messages are off — the report is the signatures
+  (plus API Extractor's `ae-forgotten-export` notes, kept on purpose: a referenced type the
+  entry does not export). Intended change: `node tools/api-report.mjs --update`, commit the
+  reports and say why in the PR — documenting a member changes its `(undocumented)` marker too.
+  The bundled compiler is older than the workspace's TypeScript and says so; declarations
+  are plain enough that it does not matter.
 - Commit messages: `commitlint.config.mjs`, checked on pull requests only.
 
 Exports-map shapes the gates enforce: rollup packages (`core`, `behavior`, `locales`, engines) use

@@ -213,12 +213,18 @@ export {
   type OgeListBoxGroupTemplateContext,
   type OgeListBoxSelectionChangedEvent,
   type OgeListBoxItemClickEvent,
+  type OgeListBoxReorderingEvent,
+  type OgeListBoxReorderedEvent,
+  type OgeListBoxReorderCause,
   type OgeListBoxSelectionMode,
 } from '@oge-ui/inputs/list-box';
 export {
   OgeTransferList,
   type OgeTransferListMovingEvent,
   type OgeTransferListMovedEvent,
+  type OgeTransferListReorderingEvent,
+  type OgeTransferListReorderedEvent,
+  type OgeTransferListReorderSides,
   type OgeTransferListSide,
   type OgeTransferListMoveCause,
 } from '@oge-ui/inputs/transfer-list';

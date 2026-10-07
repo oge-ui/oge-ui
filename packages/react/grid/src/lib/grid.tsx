@@ -333,6 +333,13 @@ function OgeGridInner<T extends object>(
     const cfg = () => configRef.current;
 
     const state = new OgeGridStateCore(rx);
+    // The initial builder filter is part of the first render's load — seeded
+    // in an effect, the grid would load unfiltered, then reload.
+    const initialFilter =
+      p().filterValue !== undefined ? p().filterValue : p().defaultFilterValue;
+    if (initialFilter) {
+      rx.quietly(() => state.filter.setBuilderFilter(initialFilter));
+    }
     const data = new OgeGridDataCore<T>({ loadOptions: state.loadOptions }, rx);
 
     const scrollTop = rx.cell(0);
@@ -1862,13 +1869,21 @@ function OgeGridInner<T extends object>(
   }, [JSON.stringify(filterValueProp ?? null)]);
 
   const builderFilter = state.filter.builderFilter();
+  // the mount value (an initial filterValue / defaultFilterValue) is the
+  // baseline, not a change
+  const builderFilterJson = JSON.stringify(builderFilter);
+  const previousBuilderJson = useRef<string | null>(null);
   useEffect(() => {
+    const previous = previousBuilderJson.current;
+    previousBuilderJson.current = builderFilterJson;
+    // StrictMode re-runs the effect with the same value: not a change either
+    if (previous === null || previous === builderFilterJson) return;
     if (
       JSON.stringify(builderFilter) === JSON.stringify(filterValueProp ?? null)
     )
       return;
     latest.current.onFilterValueChange?.(builderFilter);
-  }, [JSON.stringify(builderFilter)]);
+  }, [builderFilterJson]);
 
   // focus the first editor when one opens
   const editorSession =

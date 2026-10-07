@@ -17,7 +17,43 @@ export const REACT_INPUTS_TRANSFER_LIST_SECTIONS = [
   'Groups and templates',
   'Cancelable moves',
   'Inside a form',
+  'Reordering',
 ] as const;
+
+/** Only the target reorders — and with it the value. */
+function ReorderDemo(): ReactNode {
+  const [priority, setPriority] = useState<readonly unknown[]>([
+    'orders.refund',
+    'users.invite',
+    'reports.export',
+  ]);
+  return createElement(
+    'div',
+    null,
+    createElement(OgeTransferList<DemoPermission>, {
+      key: 'list',
+      label: 'Escalation order',
+      items: DEMO_PERMISSIONS,
+      displayExpr: 'name',
+      valueExpr: 'id',
+      targetTitle: 'Priority',
+      allowReordering: 'target',
+      height: 240,
+      value: priority,
+      onValueChange: setPriority,
+    }),
+    createElement(
+      'p',
+      { key: 'out', className: 'mt-3 text-sm' },
+      'Value: ',
+      createElement(
+        'code',
+        { 'data-testid': 'transfer-priority' },
+        JSON.stringify(priority),
+      ),
+    ),
+  );
+}
 
 function BasicDemo(): ReactNode {
   const [granted, setGranted] = useState<readonly unknown[]>(['orders.read']);
@@ -199,6 +235,16 @@ function FormDemo(): ReactNode {
     >
       <app-react-host [render]="form" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['allowReordering', 'Alt+↑/↓', 'drag', 'onReordered']"
+      heading="Reordering"
+      description="<code>allowReordering</code> opens one or both lists to reordering — <code>'target'</code> here, so the granted permissions can be put in priority order. Alt+↑/↓ moves the active option; one drag reorders when dropped inside its own list and still moves when dropped on the other. The target&#39;s order is the value&#39;s order, so a reorder commits a new value."
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="reorder" />
+    </app-demo-card>
   `,
 })
 export class ReactInputsTransferListDemos {
@@ -209,4 +255,5 @@ export class ReactInputsTransferListDemos {
   protected readonly templates = () => createElement(TemplatesDemo);
   protected readonly cancel = () => createElement(CancelDemo);
   protected readonly form = () => createElement(FormDemo);
+  protected readonly reorder = () => createElement(ReorderDemo);
 }

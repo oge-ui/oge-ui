@@ -33,6 +33,7 @@
 }
 
 .oge-transfer-list-pane {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -61,6 +62,17 @@
     border-color: var(--oge-accent);
     border-style: dashed;
   }
+}
+
+// the drop line of a reorder inside one list (allowReordering)
+.oge-transfer-list-reorder-line {
+  position: absolute;
+  z-index: 1;
+  height: 2px;
+  margin-block-start: -1px;
+  border-radius: 2px;
+  background: var(--oge-accent);
+  pointer-events: none;
 }
 
 .oge-transfer-list-dragging .oge-list-box-option {
@@ -196,6 +208,10 @@
 
   .oge-transfer-list-pane-drop .oge-list-box-frame {
     border-color: Highlight;
+  }
+
+  .oge-transfer-list-reorder-line {
+    background: Highlight;
   }
 
   .oge-transfer-list-error {

@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { OgeForm } from './form';
 import type { OgeFormItemDefinition } from './form-types';
 
@@ -74,6 +74,79 @@ describe('the editor switch', () => {
       expect(document.querySelector(selector), editorType).toBeTruthy();
       view.unmount();
     }
+  });
+
+  it('renders the W8b editors, bare or with their own chrome', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const cases: [OgeFormItemDefinition['editorType'], string, boolean][] = [
+      ['rating', '.oge-rating', true],
+      ['otpInput', '.oge-otp-input', false],
+      ['signaturePad', '.oge-signature-pad', true],
+      ['listBox', '.oge-list-box', false],
+      ['transferList', '.oge-transfer-list', false],
+      ['mention', '.oge-mention', false],
+    ];
+    for (const [editorType, selector, bare] of cases) {
+      const view = renderItem({
+        field: 'value',
+        label: 'Value',
+        editorType,
+        editorOptions: { items: ['a', 'b'] },
+      });
+      expect(document.querySelector(selector), editorType).toBeTruthy();
+      // only a bare editor gets the form's own label
+      expect(
+        document.querySelector('.oge-form-label') !== null,
+        editorType,
+      ).toBe(bare);
+      view.unmount();
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('forwards the curated options of the new editors', () => {
+    renderItem({
+      field: 'code',
+      editorType: 'otpInput',
+      editorOptions: { length: 4 },
+    });
+    expect(document.querySelectorAll('.oge-otp-input input')).toHaveLength(4);
+  });
+
+  it('writes a list box pick back to the model', async () => {
+    const onFieldChanged = vi.fn();
+    render(
+      <OgeForm
+        defaultFormData={{ city: null }}
+        items={[
+          {
+            field: 'city',
+            editorType: 'listBox',
+            editorOptions: { items: ['Ankara', 'Lisbon'] },
+          },
+        ]}
+        onFieldChanged={onFieldChanged}
+      />,
+    );
+    const option = Array.from(
+      document.querySelectorAll<HTMLElement>('[role="option"]'),
+    ).find((o) => o.textContent?.trim() === 'Lisbon');
+    await act(async () => {
+      fireEvent.click(option as HTMLElement);
+    });
+    expect(onFieldChanged).toHaveBeenCalledWith(
+      expect.objectContaining({ field: 'city', value: 'Lisbon' }),
+    );
+  });
+
+  it('loads the rich-text editor lazily, behind a placeholder', async () => {
+    renderItem(
+      { field: 'body', editorType: 'richText', label: 'Body' },
+      { body: '<p>Hello</p>' },
+    );
+    const editor = await screen.findByText('Hello');
+    expect(editor.closest('.oge-editor')).toBeTruthy();
+    expect(document.querySelector('.oge-form-editor-pending')).toBeNull();
   });
 
   it('commits an edit through the form’s model', async () => {

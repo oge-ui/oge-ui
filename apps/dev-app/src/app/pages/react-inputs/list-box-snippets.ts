@@ -166,4 +166,25 @@ const empty = !Array.isArray(value) || value.length === 0;`,
 />`,
     }),
   },
+  {
+    title: 'Reordering',
+    description:
+      'allowReordering lets the user reorder the options: Alt+↑/↓ moves the active option, a pointer drag drops it before or after another (touch: after a long press). Each move runs the cancelable onReordering → onReordered pair and is announced; keep the order by storing the items onReordered hands you.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeListBox'] },
+      name: 'ListBoxReorderDemo',
+      before: CITIES,
+      body: `const [route, setRoute] = useState(cities.slice(0, 5));`,
+      jsx: `<OgeListBox
+  label="Route"
+  items={route}
+  displayExpr="name"
+  valueExpr="id"
+  allowReordering
+  height={260}
+  onReordered={(event) => setRoute(event.items)}
+/>`,
+    }),
+  },
 ];

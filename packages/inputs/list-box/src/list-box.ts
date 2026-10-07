@@ -5,11 +5,13 @@ import {
   ElementRef,
   TemplateRef,
   ViewEncapsulation,
+  afterNextRender,
   computed,
   contentChild,
   effect,
   inject,
   input,
+  linkedSignal,
   model,
   output,
   signal,
@@ -18,8 +20,17 @@ import {
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
 import {
+  OGE_LIST_BOX_REORDER_SHORTCUTS,
   OgeListBoxCore,
+  beginPointerDragDrop,
+  ogeListBoxDropTarget,
+  ogeListBoxReorderAnnouncement,
   ogeListBoxSections,
+  ogeMoveListItem,
+  prepareTouchDrag,
+  type OgeListBoxDropTarget,
+  type OgeListBoxReorder,
+  type OgeListBoxReorderCause,
   type OgeListBoxSelectionMode,
   type OgeReactiveCell,
   type OgeReactivityAdapter,
@@ -31,6 +42,7 @@ import {
   type OgeSelectValueExpr,
 } from '@oge-ui/behavior';
 import { OgeControlBase } from '@oge-ui/inputs/field';
+import { OgeLiveAnnouncer } from '@oge-ui/overlay';
 import {
   OgeListBoxGroupTemplate,
   OgeListBoxItemTemplate,
@@ -39,6 +51,8 @@ import {
 } from './list-box-templates';
 import type {
   OgeListBoxItemClickEvent,
+  OgeListBoxReorderedEvent,
+  OgeListBoxReorderingEvent,
   OgeListBoxSelectionChangedEvent,
 } from './list-box-types';
 
@@ -78,7 +92,10 @@ const SIGNAL_ADAPTER: OgeReactivityAdapter = {
  * `role="group"`s, `searchEnabled` a filter field above the list. The value
  * is one `valueExpr` result (or `null`) in single mode and an items-ordered
  * array in multiple mode; the list machine is `@oge-ui/behavior`'s
- * `OgeListBoxCore`, shared with React. Works standalone via `[(value)]`,
+ * `OgeListBoxCore`, shared with React. `allowReordering` lets the user
+ * reorder the options — Alt+↑/↓ on the active option, or a pointer drag —
+ * through the cancelable `reordering` → `reordered` pair, announced through
+ * the shared live announcer; persist `reordered.items` to keep the order. Works standalone via `[(value)]`,
  * with Signal Forms via `[formField]` and with reactive/template forms via
  * `formControl`/`ngModel`.
  */
@@ -95,6 +112,7 @@ const SIGNAL_ADAPTER: OgeReactivityAdapter = {
     '[class.oge-list-box-readonly]': 'readonly()',
     '[class.oge-list-box-sm]': "size() === 'sm'",
     '[class.oge-list-box-lg]': "size() === 'lg'",
+    '[class.oge-list-box-reorderable]': 'allowReordering()',
     '(focusin)': 'onFocusIn($event)',
     '(focusout)': 'onFocusOut($event)',
   },
@@ -151,9 +169,10 @@ const SIGNAL_ADAPTER: OgeReactivityAdapter = {
         [attr.aria-required]="required() ? 'true' : null"
         [attr.aria-readonly]="readonly() ? 'true' : null"
         [attr.aria-disabled]="effectiveDisabled() ? 'true' : null"
-        [attr.aria-keyshortcuts]="keyShortcuts() ?? null"
+        [attr.aria-keyshortcuts]="shortcuts()"
         (keydown)="onKeydown($event)"
         (click)="onListClick($event)"
+        (pointerdown)="onListPointerDown($event)"
         (focus)="onListFocus()"
       >
         @for (section of sections(); track $index; let s = $index) {
@@ -228,6 +247,8 @@ const SIGNAL_ADAPTER: OgeReactivityAdapter = {
         [class.oge-list-box-option-active]="index === core.activeIndex()"
         [class.oge-list-box-option-selected]="core.isSelected(item)"
         [class.oge-disabled]="core.isItemDisabled(item)"
+        [class.oge-list-box-option-drop-before]="dropAt(index, 'before')"
+        [class.oge-list-box-option-drop-after]="dropAt(index, 'after')"
         [attr.aria-selected]="core.isSelected(item)"
         [attr.aria-disabled]="core.isItemDisabled(item) ? 'true' : null"
       >
@@ -264,6 +285,7 @@ export class OgeListBox<TItem = unknown>
   implements FormValueControl<unknown>
 {
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly announcer = inject(OgeLiveAnnouncer);
 
   /**
    * The selection — one `valueExpr` result (or `null`) in `single` mode, an
@@ -310,6 +332,12 @@ export class OgeListBox<TItem = unknown>
   readonly hint = input<string | undefined>(undefined);
   /** Shortcuts advertised as `aria-keyshortcuts` on the list (hosts handling extra keys). */
   readonly keyShortcuts = input<string | undefined>(undefined);
+  /**
+   * Lets the user reorder the options: Alt+↑/↓ moves the active option, a
+   * pointer drag drops it before / after another. The list shows the new
+   * order at once; persist `reordered.items` (a new `items` resets it).
+   */
+  readonly allowReordering = input(false);
   /** Option template as a `TemplateRef` (wins over a projected `[ogeListBoxItemTemplate]`). */
   readonly itemTemplate = input<
     TemplateRef<OgeListBoxItemTemplateContext<TItem>> | undefined
@@ -323,6 +351,10 @@ export class OgeListBox<TItem = unknown>
   readonly selectionChanged = output<OgeListBoxSelectionChangedEvent<TItem>>();
   /** An enabled option was clicked. */
   readonly itemClick = output<OgeListBoxItemClickEvent<TItem>>();
+  /** Cancelable pre-event of every reorder (keyboard, drag, `reorderItem()`). */
+  readonly reordering = output<OgeListBoxReorderingEvent<TItem>>();
+  /** An option moved — `items` is the new order. */
+  readonly reordered = output<OgeListBoxReorderedEvent<TItem>>();
 
   private readonly itemTemplateDir = contentChild(OgeListBoxItemTemplate, {
     descendants: false,
@@ -332,11 +364,16 @@ export class OgeListBox<TItem = unknown>
   });
   private readonly listEl = viewChild<ElementRef<HTMLElement>>('list');
 
+  /** The displayed order: `items`, until the user reorders (reset by a new `items`). */
+  private readonly order = linkedSignal<readonly TItem[]>(() => this.items());
+  /** Where a reorder drag would drop. */
+  protected readonly dropIndicator = signal<OgeListBoxDropTarget | null>(null);
+
   /** The shared APG listbox machine. */
   protected readonly core = new OgeListBoxCore<TItem>(
     {
       inputId: () => this.inputId,
-      items: () => this.items(),
+      items: () => this.order(),
       displayExpr: () => this.displayExpr(),
       valueExpr: () => this.valueExpr(),
       disabledExpr: () => this.disabledExpr(),
@@ -384,9 +421,20 @@ export class OgeListBox<TItem = unknown>
     return hint ? { id: this.hintId, text: hint, error: false } : null;
   });
   protected readonly describedBy = computed(() => this.subscript()?.id ?? null);
+  protected readonly shortcuts = computed(() => {
+    const keys = [
+      this.keyShortcuts(),
+      this.allowReordering() ? OGE_LIST_BOX_REORDER_SHORTCUTS : undefined,
+    ].filter((entry): entry is string => !!entry);
+    return keys.length > 0 ? keys.join(' ') : null;
+  });
 
   constructor() {
     super();
+    // touch drags must be armed before the first touchstart (Chrome decides there)
+    afterNextRender(() => {
+      if (this.allowReordering()) prepareTouchDrag();
+    });
     // a filter that hides the active option moves it to the first match
     effect(() => {
       const items = this.core.visibleItems();
@@ -433,6 +481,26 @@ export class OgeListBox<TItem = unknown>
     this.core.activateItem(item);
   }
 
+  /**
+   * Moves `item` before / after `target` (both options of this list) through
+   * the same cancelable path as the keyboard and the pointer; `false` when
+   * the move is not possible (disabled item, another group, read-only) or a
+   * `reordering` handler cancelled it. `cause` is reported in the events —
+   * the transfer list passes `'drag'` for its own pointer drops.
+   */
+  reorderItem(
+    item: TItem,
+    target: TItem,
+    position: 'before' | 'after' = 'before',
+    cause: OgeListBoxReorderCause = 'api',
+  ): boolean {
+    return this.commitReorder(
+      this.core.reorderAt(item, target, position),
+      cause,
+      undefined,
+    );
+  }
+
   /** Sets the search text programmatically (`''` clears the filter). */
   search(text: string): void {
     if (text) this.core.setSearch(text);
@@ -464,8 +532,64 @@ export class OgeListBox<TItem = unknown>
     this.core.ensureActive();
   }
 
+  private commitReorder(
+    reorder: OgeListBoxReorder | null,
+    cause: OgeListBoxReorderCause,
+    event: Event | undefined,
+  ): boolean {
+    if (!reorder || !this.editable()) return false;
+    const items = this.order();
+    const item = items[reorder.fromIndex];
+    const pre: OgeListBoxReorderingEvent<TItem> = {
+      item,
+      fromIndex: reorder.fromIndex,
+      toIndex: reorder.toIndex,
+      cause,
+      event,
+      cancel: false,
+    };
+    this.reordering.emit(pre);
+    if (pre.cancel) return false;
+    const next = ogeMoveListItem(items, reorder.fromIndex, reorder.toIndex);
+    this.order.set(next);
+    // focus stays on the moved option
+    this.core.activateItem(item);
+    this.announcer.announce(
+      ogeListBoxReorderAnnouncement(
+        this.msg().listBoxReorderedAnnouncement,
+        this.core.displayOf(item),
+        reorder.toIndex + 1,
+        next.length,
+        this.config.locale,
+      ),
+    );
+    this.reordered.emit({
+      item,
+      fromIndex: reorder.fromIndex,
+      toIndex: reorder.toIndex,
+      cause,
+      items: next,
+      event,
+    });
+    return true;
+  }
+
+  protected dropAt(index: number, position: 'before' | 'after'): boolean {
+    const drop = this.dropIndicator();
+    return drop !== null && drop.index === index && drop.position === position;
+  }
+
   protected onKeydown(event: KeyboardEvent): void {
     if (this.effectiveDisabled()) return;
+    if (this.allowReordering() && !this.readonly()) {
+      const reorder = this.core.reorderKey(event);
+      if (reorder.handled) {
+        event.preventDefault();
+        if (reorder.reorder)
+          this.commitReorder(reorder.reorder, 'keyboard', event);
+        return;
+      }
+    }
     const result = this.core.handleKey(event, !this.readonly());
     if (result.handled) event.preventDefault();
     if ('value' in result) this.commitSelection(result.value, event);
@@ -487,6 +611,41 @@ export class OgeListBox<TItem = unknown>
     }
     const next = this.core.clickOption(index, event);
     if (next !== undefined) this.commitSelection(next, event);
+  }
+
+  protected onListPointerDown(event: PointerEvent): void {
+    if (!this.allowReordering() || !this.editable() || event.button !== 0) {
+      return;
+    }
+    // inside a transfer list the transfer list runs one drag for both moves
+    // between the lists and reorders inside one (it calls `reorderItem`)
+    if (this.hostEl.nativeElement.closest('.oge-transfer-list-pane')) return;
+    const list = this.listEl()?.nativeElement;
+    const option = (event.target as Element | null)?.closest?.(
+      '.oge-list-box-option',
+    );
+    if (!list || !option || option.closest('[role="listbox"]') !== list) {
+      return;
+    }
+    const item =
+      this.core.visibleItems()[Number(option.getAttribute('data-index'))];
+    if (item === undefined || this.core.isItemDisabled(item)) return;
+    beginPointerDragDrop<OgeListBoxDropTarget>(event, {
+      source: option,
+      autoScroll: list,
+      resolve: (hit, move) => ogeListBoxDropTarget(hit, list, move.clientY),
+      onOver: (target) => this.dropIndicator.set(target),
+      onDrop: (target) => {
+        const over = this.core.visibleItems()[target.index];
+        if (over === undefined) return;
+        this.commitReorder(
+          this.core.reorderAt(item, over, target.position),
+          'drag',
+          event,
+        );
+      },
+      onEnd: () => this.dropIndicator.set(null),
+    });
   }
 
   protected onSearchInput(event: Event): void {

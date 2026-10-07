@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -14,7 +15,7 @@ import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
-import { DEMO_CITIES } from './list-box-data';
+import { DEMO_CITIES, type DemoCity } from './list-box-data';
 import {
   REACT_INPUTS_LIST_BOX_SECTIONS,
   ReactInputsListBoxDemos,
@@ -24,6 +25,7 @@ import {
   FORMS_SNIPPET,
   GROUPS_SNIPPET,
   MULTIPLE_SNIPPET,
+  REORDER_SNIPPET,
   TEMPLATE_SNIPPET,
 } from './list-box-snippets';
 
@@ -33,6 +35,7 @@ const SECTIONS = [
   'Groups and search',
   'Custom templates',
   'Inside a form',
+  'Reordering',
 ] as const;
 
 @Component({
@@ -216,6 +219,28 @@ const SECTIONS = [
           <code data-testid="list-box-valid">{{ destinations.valid }}</code>
         </p>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['allowReordering', 'Alt+↑/↓', 'drag', 'reordered']"
+        heading="Reordering"
+        description="<code>allowReordering</code> lets the user reorder the options: Alt+↑/↓ moves the active option, a pointer drag drops it before or after another (touch: after a long press). Each move runs the cancelable <code>reordering</code> → <code>reordered</code> pair and is announced; keep the order by storing <code>reordered.items</code>."
+        [code]="reorderSnippet"
+        language="ts"
+      >
+        <oge-list-box
+          label="Route"
+          [items]="route()"
+          displayExpr="name"
+          valueExpr="id"
+          [allowReordering]="true"
+          [height]="260"
+          (reordered)="route.set($event.items)"
+        />
+        <p class="mt-3 text-sm">
+          Order:
+          <code data-testid="list-box-route">{{ routeNames() }}</code>
+        </p>
+      </app-demo-card>
     }
   `,
 })
@@ -228,6 +253,15 @@ export class InputsListBoxPage {
   protected readonly groupsSnippet = GROUPS_SNIPPET;
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly formsSnippet = FORMS_SNIPPET;
+  protected readonly reorderSnippet = REORDER_SNIPPET;
+  protected readonly route = signal<readonly DemoCity[]>(
+    DEMO_CITIES.slice(0, 5),
+  );
+  protected readonly routeNames = computed(() =>
+    this.route()
+      .map((city) => city.name)
+      .join(' → '),
+  );
 
   protected readonly cities = DEMO_CITIES;
   protected readonly city = signal<unknown>(3);

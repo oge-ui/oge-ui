@@ -251,6 +251,8 @@ export const tr: OgeLocalePack = {
     listBoxLabel: 'Seçenekler',
     listBoxSearchPlaceholder: 'Ara',
     listBoxSearchLabel: 'Listede ara',
+    listBoxReorderedAnnouncement:
+      '{item}, {count} öğe içinde {position}. sıraya taşındı',
     transferSourceTitle: 'Kullanılabilir',
     transferTargetTitle: 'Seçilenler',
     transferActionsLabel: 'Öğeleri taşı',

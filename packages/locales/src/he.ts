@@ -258,6 +258,7 @@ export const he: OgeLocalePack = {
     listBoxLabel: 'אפשרויות',
     listBoxSearchPlaceholder: 'חיפוש',
     listBoxSearchLabel: 'חיפוש ברשימה',
+    listBoxReorderedAnnouncement: '{item} הועבר למיקום {position} מתוך {count}',
     transferSourceTitle: 'זמינים',
     transferTargetTitle: 'נבחרים',
     transferActionsLabel: 'העברת פריטים',

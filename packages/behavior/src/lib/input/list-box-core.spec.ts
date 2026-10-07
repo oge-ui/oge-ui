@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 import {
   OgeListBoxCore,
+  ogeListBoxDropTarget,
+  ogeListBoxReorderAnnouncement,
   ogeListBoxSections,
+  ogeListReorderDropIndex,
+  ogeMoveListItem,
   type OgeListBoxSelectionMode,
 } from './list-box-core';
 
@@ -217,5 +221,126 @@ describe('OgeListBoxCore', () => {
     expect(s.core.visibleItems().map((c) => c.name)).toEqual(['Bremen']);
     expect(s.core.activateItem(CITIES[4])).toBe(true);
     expect(s.core.activateItem(CITIES[0])).toBe(false);
+  });
+});
+
+describe('list box reordering', () => {
+  it('moves an entry to its final index', () => {
+    expect(ogeMoveListItem(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a']);
+    expect(ogeMoveListItem(['a', 'b', 'c'], 2, 0)).toEqual(['c', 'a', 'b']);
+    expect(ogeMoveListItem(['a', 'b'], 0, 5)).toEqual(['a', 'b']);
+  });
+
+  it('turns a before / after drop into a final index', () => {
+    // [A, B, C]: A after B → [B, A, C]; C before A → [C, A, B]
+    expect(ogeListReorderDropIndex(0, 1, 'after')).toBe(1);
+    expect(ogeListReorderDropIndex(2, 0, 'before')).toBe(0);
+    expect(ogeListReorderDropIndex(0, 2, 'before')).toBe(1);
+    expect(ogeListReorderDropIndex(2, 0, 'after')).toBe(1);
+    // onto itself or the slot it already holds
+    expect(ogeListReorderDropIndex(1, 1, 'after')).toBe(-1);
+    expect(ogeListReorderDropIndex(1, 0, 'after')).toBe(-1);
+    expect(ogeListReorderDropIndex(1, 2, 'before')).toBe(-1);
+  });
+
+  it('reorders the active option with Alt+arrows only', () => {
+    const { core } = setup('single');
+    core.setActive(1);
+    expect(core.reorderKey({ key: 'ArrowDown', altKey: true })).toEqual({
+      handled: true,
+      reorder: { fromIndex: 1, toIndex: 2 },
+    });
+    expect(core.reorderKey({ key: 'ArrowUp', altKey: true })).toEqual({
+      handled: true,
+      reorder: { fromIndex: 1, toIndex: 0 },
+    });
+    expect(core.reorderKey({ key: 'ArrowDown' }).handled).toBe(false);
+    expect(
+      core.reorderKey({ key: 'ArrowDown', altKey: true, ctrlKey: true })
+        .handled,
+    ).toBe(false);
+    // at an edge the key is still swallowed, but nothing moves
+    core.setActive(0);
+    expect(core.reorderKey({ key: 'ArrowUp', altKey: true })).toEqual({
+      handled: true,
+    });
+  });
+
+  it('never moves a disabled option', () => {
+    const { core } = setup('single');
+    core.setActive(2); // Bonn is closed
+    expect(core.reorderKey({ key: 'ArrowDown', altKey: true })).toEqual({
+      handled: true,
+    });
+  });
+
+  it('keeps a move inside its group and maps grouped views to items', () => {
+    const { core } = setup('single', null, { groupBy: 'country' });
+    // grouped view: Ankara, İzmir | Berlin, Bonn, Bremen
+    expect(core.visibleItems().map((c) => c.name)).toEqual([
+      'Ankara',
+      'İzmir',
+      'Berlin',
+      'Bonn',
+      'Bremen',
+    ]);
+    core.setActive(1); // İzmir — the next option is in another group
+    expect(core.reorderKey({ key: 'ArrowDown', altKey: true })).toEqual({
+      handled: true,
+    });
+    core.setActive(0); // Ankara ↓ İzmir: indices into the whole item set
+    expect(core.reorderKey({ key: 'ArrowDown', altKey: true })).toEqual({
+      handled: true,
+      reorder: { fromIndex: 0, toIndex: 3 },
+    });
+  });
+
+  it('moves past rows a search hides', () => {
+    const { core } = setup('single', null, { search: true });
+    core.setSearch('br');
+    expect(core.visibleItems().map((c) => c.name)).toEqual(['Bremen']);
+    // Bremen dropped before the hidden Ankara lands at the very top
+    expect(core.reorderAt(CITIES[4], CITIES[0], 'before')).toEqual({
+      fromIndex: 4,
+      toIndex: 0,
+    });
+    expect(core.reorderAt(CITIES[0], CITIES[0], 'after')).toBeNull();
+  });
+
+  it('resolves the drop target from the option under the pointer', () => {
+    const list = document.createElement('div');
+    list.setAttribute('role', 'listbox');
+    const option = document.createElement('div');
+    option.className = 'oge-list-box-option';
+    option.setAttribute('data-index', '3');
+    const label = document.createElement('span');
+    option.append(label);
+    list.append(option);
+    option.getBoundingClientRect = () =>
+      ({ top: 100, height: 20, bottom: 120 }) as DOMRect;
+    expect(ogeListBoxDropTarget(label, list, 105)).toEqual({
+      index: 3,
+      position: 'before',
+    });
+    expect(ogeListBoxDropTarget(label, list, 115)).toEqual({
+      index: 3,
+      position: 'after',
+    });
+    expect(ogeListBoxDropTarget(list, list, 105)).toBeNull();
+    const other = document.createElement('div');
+    other.setAttribute('role', 'listbox');
+    expect(ogeListBoxDropTarget(label, other, 105)).toBeNull();
+  });
+
+  it('words the announcement', () => {
+    expect(
+      ogeListBoxReorderAnnouncement(
+        '{item} moved to position {position} of {count}',
+        'Berlin',
+        2,
+        5,
+        'en',
+      ),
+    ).toBe('Berlin moved to position 2 of 5');
   });
 });

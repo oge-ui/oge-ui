@@ -551,6 +551,22 @@ export function ogeListViewWindow<T>(
 }
 
 /**
+ * Whether the item at `index` is rendered in `window`. A plain list
+ * (`selectionMode: 'none'`) focuses its rows themselves, so a host checks this
+ * before a scroll drops the focused row out of the window — and parks focus
+ * on the scroll viewport until the row is back.
+ */
+export function ogeListViewWindowHasIndex<T>(
+  window: OgeListViewWindow<T>,
+  index: number,
+): boolean {
+  if (index < 0) return false;
+  return window.segments.some((segment) =>
+    segment.items.some((row) => row.index === index),
+  );
+}
+
+/**
  * The scroll offset that brings `[offset, offset + height)` fully into view
  * below a sticky inset (the pinned group header), or `null` when it already
  * is.

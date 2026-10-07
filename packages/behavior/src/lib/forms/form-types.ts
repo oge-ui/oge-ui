@@ -44,7 +44,14 @@ export type OgeFormEditorType =
   | 'switch'
   | 'radioGroup'
   | 'colorBox'
-  | 'fileUploader';
+  | 'fileUploader'
+  | 'rating'
+  | 'otpInput'
+  | 'signaturePad'
+  | 'listBox'
+  | 'transferList'
+  | 'mention'
+  | 'richText';
 
 /** Where an item's label sits relative to its editor. */
 export type OgeFormLabelLocation = 'top' | 'start' | 'end';
@@ -180,6 +187,10 @@ export interface OgeFormEditorOptions {
   readonly itemsExpr?: string;
   readonly hasItemsExpr?: string;
   readonly dataStructure?: 'plain' | 'tree';
+  /**
+   * `treeSelect` check boxes; `listBox` / `transferList` draw their check
+   * glyphs for any value but `'none'`.
+   */
   readonly showCheckBoxes?: 'none' | 'normal' | 'selectAll';
   /** `calendar` / `dateBox` week rendering. */
   readonly firstDayOfWeek?: number;
@@ -190,6 +201,26 @@ export interface OgeFormEditorOptions {
   readonly editAlphaChannel?: boolean;
   readonly view?: 'gradient' | 'palette' | 'both';
   readonly palette?: readonly string[];
+  /** `rating` value step (`1` whole items, `0.5` halves); `max` sets the item count. */
+  readonly precision?: number;
+  /** `otpInput` cell count. */
+  readonly length?: number;
+  /** `otpInput` hides the characters (PINs). */
+  readonly masked?: boolean;
+  /** `signaturePad` export format of the value. */
+  readonly signatureFormat?: 'png' | 'svg';
+  /** `listBox` selection: `'single'` (default) or `'multiple'` (the value is an array). */
+  readonly selectionMode?: 'single' | 'multiple';
+  /**
+   * `listBox` / `transferList` maximum list height, `signaturePad` surface
+   * height (px) and `richText` editor height — px number or CSS length.
+   */
+  readonly height?: number | string;
+  /** `transferList` pane titles; `undefined` = the messages catalog. */
+  readonly sourceTitle?: string;
+  readonly targetTitle?: string;
+  /** `mention` trigger character (default `'@'`). */
+  readonly trigger?: string;
 }
 
 /** One data-driven form item, minus the render layer's own content slots. */

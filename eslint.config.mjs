@@ -329,6 +329,8 @@ export default [
               sourceTag: 'scope:react-forms',
               onlyDependOnLibsWithTags: [
                 'scope:react-forms',
+                // the `richText` editor type (a lazy import)
+                'scope:react-editor',
                 'scope:react-inputs',
                 'scope:react-layout',
                 'scope:react-navigation',
@@ -657,6 +659,8 @@ export default [
               onlyDependOnLibsWithTags: [
                 'scope:forms',
                 'scope:behavior',
+                // the `richText` editor type (deferred in the template)
+                'scope:editor',
                 'scope:inputs',
                 'scope:buttons',
                 'scope:overlay',

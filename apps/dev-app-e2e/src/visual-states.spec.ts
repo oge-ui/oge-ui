@@ -747,3 +747,56 @@ test.describe('phone width', () => {
     }
   });
 });
+
+test.describe('narrowest phone width (320px)', () => {
+  test.use({ viewport: { width: 320, height: 640 }, locale: 'en-US' });
+
+  test('the docs header fits after hydration, with every control reachable', async ({
+    page,
+  }) => {
+    // a component page (framework switch shown) in both render layers, and
+    // the landing page, whose header carries the brand and no switch
+    for (const path of [
+      '/components/tabs',
+      '/components/tabs?framework=react',
+      '/components/inputs/list-box',
+      '/',
+    ]) {
+      await page.goto(path);
+      const header = page.locator('header').first();
+      await expect(header).toBeVisible();
+      // polled: the deferred header blocks and fonts settle after load
+      await expect
+        .poll(
+          () =>
+            header.evaluate((el) => {
+              const row = el.firstElementChild as HTMLElement;
+              const right = Math.max(
+                ...Array.from(row.querySelectorAll<HTMLElement>('*'))
+                  .filter((child) => child.getClientRects().length > 0)
+                  .map((child) => child.getBoundingClientRect().right),
+              );
+              return Math.max(
+                row.scrollWidth - row.clientWidth,
+                right - window.innerWidth,
+              );
+            }),
+          { message: `${path}: header overflow (px)` },
+        )
+        .toBeLessThanOrEqual(0);
+      // the narrow switch shows only the marks, but keeps its names
+      if (path !== '/') {
+        const group = header.getByRole('group', { name: 'Framework' });
+        await expect(
+          group.getByRole('button', { name: 'Angular' }),
+        ).toBeVisible();
+        await expect(
+          group.getByRole('button', { name: 'React' }),
+        ).toBeVisible();
+      }
+      await expect(
+        header.getByRole('link', { name: 'GitHub repository' }),
+      ).toBeVisible();
+    }
+  });
+});

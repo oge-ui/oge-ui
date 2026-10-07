@@ -50,6 +50,7 @@ import {
   ogeListViewTextOf,
   ogeListViewVirtualSettings,
   ogeListViewWindow,
+  ogeListViewWindowHasIndex,
   OGE_LIST_VIEW_FALLBACK_HEIGHT,
   type OgeListViewItemRow,
   type OgeListViewNavResult,
@@ -193,7 +194,7 @@ interface SwipeState {
       "
       [attr.aria-busy]="loading() ? true : null"
       [attr.aria-disabled]="disabled() ? true : null"
-      [tabindex]="role() === 'listbox' && !disabled() ? 0 : -1"
+      [tabindex]="viewportTabIndex()"
       [style.height]="cssHeight()"
       (scroll)="onScroll()"
       (keydown)="onKeydown($event)"
@@ -201,6 +202,7 @@ interface SwipeState {
       (pointerdown)="onPointerDown($event)"
       (focus)="onViewportFocus()"
       (focusin)="onFocusIn($event)"
+      (focusout)="onFocusOut($event)"
     >
       <div
         role="none"
@@ -561,6 +563,24 @@ export class OgeListView<T = unknown> {
       this.viewportHeight(),
     ),
   );
+  /** The active row is rendered (always, unless a scroll moved it out of the window). */
+  private readonly activeRendered = computed(() =>
+    ogeListViewWindowHasIndex(this.win(), this.activeIndex()),
+  );
+  /**
+   * The listbox is the tab stop; a plain list's rows are — unless the active
+   * row is scrolled out of a virtual window, when the viewport stands in so
+   * the list keeps its Tab stop (focus then moves on to the row).
+   */
+  protected readonly viewportTabIndex = computed(() => {
+    if (this.disabled()) return -1;
+    if (this.role() === 'listbox') return 0;
+    return this.activeRendered() || this.isEmpty() ? -1 : 0;
+  });
+  /** Focus moved to the viewport because the focused row scrolled away. */
+  private parked = false;
+  private parking = false;
+
   protected readonly cssHeight = computed(() => {
     const h = this.height();
     if (typeof h === 'number') return `${h}px`;
@@ -631,6 +651,22 @@ export class OgeListView<T = unknown> {
       this.model();
       if (this.resolvedPageLoadMode() !== 'scroll') return;
       untracked(() => this.checkInfinite());
+    });
+    // a parked focus returns to the active row once it is rendered again
+    afterRenderEffect(() => {
+      if (!this.activeRendered()) return;
+      untracked(() => {
+        const el = this.viewport().nativeElement;
+        if (!this.parked || el.ownerDocument.activeElement !== el) return;
+        const key = this.keys()[this.activeIndex()];
+        const row =
+          key === undefined
+            ? null
+            : el.querySelector<HTMLElement>(`#${this.itemId(key)}`);
+        if (!row) return;
+        this.parked = false;
+        row.focus({ preventScroll: true });
+      });
     });
   }
 
@@ -731,12 +767,40 @@ export class OgeListView<T = unknown> {
 
   protected onScroll(): void {
     const el = this.viewport().nativeElement;
+    // a plain list's focused row is about to leave the window: park focus on
+    // the viewport (it would fall to <body> with the row) until it is back
+    const focusedRow =
+      this.role() === 'list' && this.settings() !== null
+        ? (el.ownerDocument.activeElement as HTMLElement | null)
+        : null;
+    const rowHadFocus =
+      !!focusedRow &&
+      focusedRow !== el &&
+      el.contains(focusedRow) &&
+      focusedRow.classList.contains('oge-list-view-item');
     this.scrollTop.set(el.scrollTop);
+    if (rowHadFocus && !this.activeRendered()) {
+      this.parking = true;
+      el.focus({ preventScroll: true });
+      this.parking = false;
+      this.parked = true;
+    }
     if (this.resolvedPageLoadMode() === 'scroll') this.checkInfinite();
   }
 
   protected onViewportFocus(): void {
-    if (this.role() === 'listbox') this.revealIndex(this.activeIndex());
+    if (this.role() === 'listbox') {
+      this.revealIndex(this.activeIndex());
+      return;
+    }
+    // Tab landed on the stand-in stop: bring the active row back and focus it
+    if (!this.parking && !this.parked) {
+      this.focusItemAfterRender(this.activeIndex());
+    }
+  }
+
+  protected onFocusOut(event: FocusEvent): void {
+    if (event.target === this.viewport().nativeElement) this.parked = false;
   }
 
   protected onFocusIn(event: FocusEvent): void {

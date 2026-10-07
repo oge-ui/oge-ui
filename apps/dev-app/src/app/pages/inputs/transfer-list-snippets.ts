@@ -129,3 +129,26 @@ export const FORMS_SNIPPET = demoSource({
   body: `${PERMISSION_DATA}
 protected readonly granted = new FormControl<string[]>([], Validators.required);`,
 });
+
+export const REORDER_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeTransferList'] },
+  before: PERMISSION_TYPE,
+  template: `<!-- 'target' opens only the target list: Alt+ArrowUp / Alt+ArrowDown,
+     or a drag dropped inside it, reorder — and reorder the value. -->
+<oge-transfer-list
+  label="Escalation order"
+  [items]="permissions"
+  displayExpr="name"
+  valueExpr="id"
+  targetTitle="Priority"
+  allowReordering="target"
+  [height]="240"
+  [(value)]="priority"
+/>`,
+  body: `${PERMISSION_DATA}
+protected readonly priority = signal<readonly unknown[]>([
+  'orders.refund',
+  'users.invite',
+  'reports.export',
+]);`,
+});

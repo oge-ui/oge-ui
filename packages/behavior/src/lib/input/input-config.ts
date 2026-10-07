@@ -243,6 +243,11 @@ export interface OgeInputsMessages {
   listBoxSearchPlaceholder: string;
   /** Accessible name of the list box's search field. */
   listBoxSearchLabel: string;
+  /**
+   * Announced after a reorder (`allowReordering`) — placeholders `{item}`,
+   * `{position}` and `{count}`.
+   */
+  listBoxReorderedAnnouncement: string;
   /** Default title (and accessible name) of the transfer list's source list. */
   transferSourceTitle: string;
   /** Default title (and accessible name) of the transfer list's target list. */
@@ -398,6 +403,8 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   listBoxLabel: 'Options',
   listBoxSearchPlaceholder: 'Search',
   listBoxSearchLabel: 'Search the list',
+  listBoxReorderedAnnouncement:
+    '{item} moved to position {position} of {count}',
   transferSourceTitle: 'Available',
   transferTargetTitle: 'Selected',
   transferActionsLabel: 'Move items',

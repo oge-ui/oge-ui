@@ -9,6 +9,7 @@ import {
   contentChild,
   inject,
   input,
+  linkedSignal,
   model,
   output,
   signal,
@@ -19,14 +20,20 @@ import {
   beginPointerDragDrop,
   choiceIncludes,
   ogeIsRtl,
+  ogeSelectSearchFilter,
+  ogeSelectSearchStrings,
   ogeTransferAnnouncement,
   ogeTransferCountText,
-  ogeTransferDropSide,
+  ogeTransferDropTarget,
   ogeTransferKeyCommand,
   ogeTransferKeyShortcuts,
   ogeTransferMovableValues,
   ogeTransferMove,
   ogeTransferOpposite,
+  ogeTransferReorderLine,
+  ogeTransferReorderSource,
+  ogeTransferReorderTarget,
+  ogeTransferReorderable,
   ogeTransferSplit,
   prepareTouchDrag,
   resolveDisabled,
@@ -38,7 +45,9 @@ import {
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
   type OgeTransferListMoveCause,
+  type OgeTransferListDropTarget,
   type OgeTransferListMoveCommand,
+  type OgeTransferListReorderSides,
   type OgeTransferListSide,
 } from '@oge-ui/behavior';
 import { OgeControlBase } from '@oge-ui/inputs/field';
@@ -48,11 +57,15 @@ import {
   OgeListBoxItemTemplate,
   type OgeListBoxGroupTemplateContext,
   type OgeListBoxItemTemplateContext,
+  type OgeListBoxReorderedEvent,
+  type OgeListBoxReorderingEvent,
 } from '@oge-ui/inputs/list-box';
 import { OgeLiveAnnouncer } from '@oge-ui/overlay';
 import type {
   OgeTransferListMovedEvent,
   OgeTransferListMovingEvent,
+  OgeTransferListReorderedEvent,
+  OgeTransferListReorderingEvent,
 } from './transfer-list-types';
 
 /**
@@ -97,7 +110,8 @@ import type {
     role: 'group',
     '[class.oge-transfer-list-invalid]': 'showError()',
     '[class.oge-transfer-list-readonly]': 'readonly()',
-    '[class.oge-transfer-list-dragging]': 'dropSide() !== null',
+    '[class.oge-transfer-list-dragging]':
+      'dropSide() !== null || reorderLine() !== null',
     '[attr.aria-labelledby]': 'label() ? labelId : null',
     '[attr.aria-describedby]': 'describedBy()',
     '[attr.aria-disabled]': "effectiveDisabled() ? 'true' : null",
@@ -119,6 +133,7 @@ import type {
         class="oge-transfer-list-pane"
         data-oge-transfer-side="source"
         [class.oge-transfer-list-pane-drop]="dropSide() === 'source'"
+        (input)="onPaneInput($event, 'source')"
         (pointerdown)="onPointerDown($event, 'source')"
         (keydown)="onPaneKeydown($event, 'source')"
       >
@@ -147,6 +162,7 @@ import type {
           [noDataText]="noDataText()"
           [labelledBy]="titleId('source')"
           [keyShortcuts]="shortcuts().source"
+          [allowReordering]="reorderable('source')"
           [itemTemplate]="resolvedItemTemplate()"
           [groupTemplate]="resolvedGroupTemplate()"
           [disabled]="effectiveDisabled()"
@@ -155,7 +171,20 @@ import type {
           [messages]="messages()"
           [tabIndex]="tabIndex()"
           [(value)]="sourceSelection"
+          (reordering)="onListReordering('source', $event)"
+          (reordered)="onListReordered('source', $event)"
         />
+        @if (reorderLine(); as line) {
+          @if (line.side === 'source') {
+            <div
+              class="oge-transfer-list-reorder-line"
+              aria-hidden="true"
+              [style.top.px]="line.top"
+              [style.left.px]="line.left"
+              [style.width.px]="line.width"
+            ></div>
+          }
+        }
       </div>
       <div
         class="oge-transfer-list-actions"
@@ -224,6 +253,7 @@ import type {
         class="oge-transfer-list-pane"
         data-oge-transfer-side="target"
         [class.oge-transfer-list-pane-drop]="dropSide() === 'target'"
+        (input)="onPaneInput($event, 'target')"
         (pointerdown)="onPointerDown($event, 'target')"
         (keydown)="onPaneKeydown($event, 'target')"
       >
@@ -252,6 +282,7 @@ import type {
           [noDataText]="noDataText()"
           [labelledBy]="titleId('target')"
           [keyShortcuts]="shortcuts().target"
+          [allowReordering]="reorderable('target')"
           [itemTemplate]="resolvedItemTemplate()"
           [groupTemplate]="resolvedGroupTemplate()"
           [disabled]="effectiveDisabled()"
@@ -260,7 +291,20 @@ import type {
           [messages]="messages()"
           [tabIndex]="tabIndex()"
           [(value)]="targetSelection"
+          (reordering)="onListReordering('target', $event)"
+          (reordered)="onListReordered('target', $event)"
         />
+        @if (reorderLine(); as line) {
+          @if (line.side === 'target') {
+            <div
+              class="oge-transfer-list-reorder-line"
+              aria-hidden="true"
+              [style.top.px]="line.top"
+              [style.left.px]="line.left"
+              [style.width.px]="line.width"
+            ></div>
+          }
+        }
       </div>
     </div>
     @if (subscript(); as sub) {
@@ -320,6 +364,14 @@ export class OgeTransferList<TItem = unknown>
   readonly label = input('');
   /** Helper text under the lists (hidden while an error shows). */
   readonly hint = input<string | undefined>(undefined);
+  /**
+   * Lets the user reorder a list: `true` both, `'source'` / `'target'` only
+   * that one. Alt+↑/↓ moves the active option; a drag dropped inside its
+   * own list reorders, over the other list it moves. The target's order is
+   * the value's order; a reordered source keeps its order until `items`
+   * changes.
+   */
+  readonly allowReordering = input<OgeTransferListReorderSides>(false);
   /** Option template for both lists (wins over a projected `[ogeListBoxItemTemplate]`). */
   readonly itemTemplate = input<
     TemplateRef<OgeListBoxItemTemplateContext<TItem>> | undefined
@@ -333,6 +385,10 @@ export class OgeTransferList<TItem = unknown>
   readonly moving = output<OgeTransferListMovingEvent<TItem>>();
   /** Items changed sides. */
   readonly moved = output<OgeTransferListMovedEvent<TItem>>();
+  /** Cancelable pre-event of a reorder inside one list (`allowReordering`). */
+  readonly reordering = output<OgeTransferListReorderingEvent<TItem>>();
+  /** An item moved inside one list — the target's reorder also changes `value`. */
+  readonly reordered = output<OgeTransferListReorderedEvent<TItem>>();
 
   /** The source list's selection (values). */
   protected readonly sourceSelection = signal<unknown>([]);
@@ -349,6 +405,15 @@ export class OgeTransferList<TItem = unknown>
   private readonly targetList = viewChild<OgeListBox<TItem>>('targetList');
 
   protected readonly dropSide = signal<OgeTransferListSide | null>(null);
+  /** The drop line of a reorder drag, relative to its pane. */
+  protected readonly reorderLine = signal<{
+    side: OgeTransferListSide;
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  /** Every item in display order — the source keeps a user reorder here. */
+  private readonly order = linkedSignal<readonly TItem[]>(() => this.items());
   private readonly rtl = signal(false);
 
   protected readonly resolvedItemTemplate = computed(
@@ -359,7 +424,7 @@ export class OgeTransferList<TItem = unknown>
   );
 
   protected readonly split = computed(() =>
-    ogeTransferSplit(this.items(), this.value() ?? [], (item) =>
+    ogeTransferSplit(this.order(), this.value() ?? [], (item) =>
       this.itemValueOf(item),
     ),
   );
@@ -375,16 +440,43 @@ export class OgeTransferList<TItem = unknown>
     target: ogeTransferKeyShortcuts('target', this.rtl()),
   }));
 
-  /** Which of the four buttons have something to move. */
+  /** Each list's search text, read from its search field's `input` events. */
+  private readonly searchTexts = signal<Record<OgeTransferListSide, string>>({
+    source: '',
+    target: '',
+  });
+
+  /**
+   * What each list shows after its search — derived here from the same
+   * filter the list box runs, so the buttons are right in the same render
+   * (the child list's own view updates after this template's bindings).
+   */
+  private readonly shownSides = computed(() => {
+    const split = this.split();
+    if (!this.searchEnabled()) return split;
+    const texts = this.searchTexts();
+    const filter = (items: readonly TItem[], text: string) =>
+      ogeSelectSearchFilter(items, text, this.searchMode(), (item) =>
+        ogeSelectSearchStrings(item, this.searchExpr(), this.displayExpr()),
+      );
+    return {
+      source: filter(split.source, texts.source),
+      target: filter(split.target, texts.target),
+    };
+  });
+
+  /**
+   * Which of the four buttons have something to move — judged on what each
+   * list shows, like the moves themselves: "move all" needs a movable item
+   * in the filtered view, "move selected" a selected one that is visible.
+   */
   protected readonly canMove = computed(() => {
     const editable = !this.effectiveDisabled() && !this.readonly();
-    // judged on the side's own items (not the child list's filtered view,
-    // which updates after this template's bindings in the same pass)
     const count = (scope: 'selected' | 'all', from: OgeTransferListSide) =>
       editable &&
       ogeTransferMovableValues(
         scope,
-        from === 'source' ? this.split().source : this.split().target,
+        this.shownSides()[from],
         this.selectionOf(from),
         (item) => this.itemValueOf(item),
         (item) => this.isItemDisabled(item),
@@ -416,6 +508,10 @@ export class OgeTransferList<TItem = unknown>
 
   protected titleId(side: OgeTransferListSide): string {
     return `${this.inputId}-${side}-title`;
+  }
+
+  protected reorderable(side: OgeTransferListSide): boolean {
+    return ogeTransferReorderable(this.allowReordering(), side);
   }
 
   protected countText(count: number): string {
@@ -552,7 +648,64 @@ export class OgeTransferList<TItem = unknown>
     });
   }
 
+  // --- reordering inside one list ----------------------------------------------
+
+  protected onListReordering(
+    side: OgeTransferListSide,
+    inner: OgeListBoxReorderingEvent<TItem>,
+  ): void {
+    const pre: OgeTransferListReorderingEvent<TItem> = {
+      side,
+      item: inner.item,
+      fromIndex: inner.fromIndex,
+      toIndex: inner.toIndex,
+      cause: inner.cause,
+      event: inner.event,
+      cancel: false,
+    };
+    this.reordering.emit(pre);
+    if (pre.cancel) inner.cancel = true;
+  }
+
+  protected onListReordered(
+    side: OgeTransferListSide,
+    inner: OgeListBoxReorderedEvent<TItem>,
+  ): void {
+    const value = this.value() ?? [];
+    if (side === 'target') {
+      // the target's order is the value's order
+      this.commitNow(
+        ogeTransferReorderTarget(value, inner.items, (item) =>
+          this.itemValueOf(item),
+        ),
+        inner.event,
+      );
+    } else {
+      this.order.set(
+        ogeTransferReorderSource(this.order(), inner.items, value, (item) =>
+          this.itemValueOf(item),
+        ),
+      );
+    }
+    this.reordered.emit({
+      side,
+      item: inner.item,
+      fromIndex: inner.fromIndex,
+      toIndex: inner.toIndex,
+      cause: inner.cause,
+      items: inner.items,
+      value: this.value() ?? [],
+      event: inner.event,
+    });
+  }
+
   // --- keyboard + pointer -----------------------------------------------------
+
+  protected onPaneInput(event: Event, side: OgeTransferListSide): void {
+    const target = event.target as HTMLInputElement | null;
+    if (!target?.classList?.contains('oge-list-box-search-input')) return;
+    this.searchTexts.update((texts) => ({ ...texts, [side]: target.value }));
+  }
 
   protected onPaneKeydown(
     event: KeyboardEvent,
@@ -589,12 +742,46 @@ export class OgeTransferList<TItem = unknown>
       ? this.movableValues('selected', from)
       : [value];
     const host = this.hostEl.nativeElement;
-    beginPointerDragDrop<OgeTransferListSide>(event, {
+    // a reorderable side also resolves drops on its own options
+    const list = this.reorderable(from)
+      ? option.closest('[role="listbox"]')
+      : null;
+    const pane = option.closest('.oge-transfer-list-pane');
+    beginPointerDragDrop<OgeTransferListDropTarget>(event, {
       source: option,
-      resolve: (hit) => ogeTransferDropSide(hit, host, from),
-      onOver: (side) => this.dropSide.set(side),
-      onDrop: () => this.moveValues(values, from, 'drag', event),
-      onEnd: () => this.dropSide.set(null),
+      autoScroll: list instanceof HTMLElement ? list : null,
+      resolve: (hit, move) =>
+        ogeTransferDropTarget(hit, host, from, list, move.clientY),
+      onOver: (target) => {
+        this.dropSide.set(target?.kind === 'move' ? target.side : null);
+        const over =
+          target?.kind === 'reorder'
+            ? list?.querySelector(`[data-index="${target.index}"]`)
+            : null;
+        this.reorderLine.set(
+          over && pane && target?.kind === 'reorder'
+            ? {
+                side: from,
+                ...ogeTransferReorderLine(over, pane, target.position),
+              }
+            : null,
+        );
+      },
+      onDrop: (target) => {
+        if (target.kind === 'move') {
+          this.moveValues(values, from, 'drag', event);
+          return;
+        }
+        const over = shown[target.index];
+        const box = from === 'source' ? this.sourceList() : this.targetList();
+        if (over !== undefined) {
+          box?.reorderItem(item, over, target.position, 'drag');
+        }
+      },
+      onEnd: () => {
+        this.dropSide.set(null);
+        this.reorderLine.set(null);
+      },
     });
   }
 

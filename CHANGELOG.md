@@ -7,6 +7,62 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Leftover fixes — form editor types, list box reordering, transfer list, header, API reports
+
+- **Forms: seven new editor types** (`@oge-ui/forms`, `@oge-ui/react-forms`,
+  `@oge-ui/behavior`). `editorType` now also takes `rating`, `otpInput`,
+  `signaturePad`, `listBox`, `transferList`, `mention` and `richText` (the
+  `@oge-ui/editor` rich-text editor). The rating and the signature pad are bare
+  controls, so the form draws their label and error; the others keep their
+  own. New curated `editorOptions`: `precision`, `length`, `masked`,
+  `signatureFormat`, `selectionMode`, `height`, `sourceTitle`, `targetTitle`
+  and `trigger`. The heavier editors load only when an item uses them:
+  Angular renders them inside `@defer`, React loads `@oge-ui/react-editor`
+  with `React.lazy`. Both forms packages gain a dependency on their layer's
+  editor package (MIT).
+- **List box reordering** (`@oge-ui/inputs`, `@oge-ui/react-inputs`,
+  `@oge-ui/behavior`). `allowReordering` on `oge-list-box` / `<OgeListBox>`:
+  Alt+↑/↓ moves the focused option, a pointer drag drops it before or after
+  another (touch after a long press), through the cancelable `reordering` →
+  `reordered` pair and a live announcement (`listBoxReorderedAnnouncement`,
+  translated in all ten locale packs). New `reorderItem()` method. The
+  transfer list opts in per side (`allowReordering: true | 'source' |
+'target'`): one drag reorders inside its own list and still moves over the
+  other; reordering the target reorders the value.
+- **Transfer list buttons follow the search.** "Move all" is enabled only
+  while the filtered view holds a movable item and "move selected" only while a
+  selected item is visible — what the buttons actually move. They used to be
+  judged on the unfiltered lists.
+- **Action sheet: Escape right after opening** (`@oge-ui/overlay`,
+  `@oge-ui/behavior`). An Escape pressed in the frame between `open()` and the
+  sheet rendering was lost; the sheet now joins the Escape stack the moment it
+  opens (`OgeActionSheetCore.arm()`, new), and its `open()` promise resolves
+  with `null`.
+- **React tree list and grid: the initial filter loads once**
+  (`@oge-ui/react-tree-list`, `@oge-ui/react-grid`). `filterValue` /
+  `defaultFilterValue` used to be applied in an effect after mount, so the
+  first render loaded unfiltered and then reloaded; it is now part of the first
+  synchronous load (the server render shows the filtered rows too). The React
+  grid also honours `defaultFilterValue`, which it documented but ignored, and
+  no longer reports the initial value through `onFilterValueChange`.
+- **List view: focus survives a virtual scroll in plain-list mode**
+  (`@oge-ui/layout`, `@oge-ui/react-layout`, `@oge-ui/behavior`). With
+  `selectionMode: 'none'` and `virtualScroll`, wheel-scrolling the focused row
+  out of the window dropped focus to the page. Focus now waits on the list's
+  scroll viewport and returns to the row when it scrolls back; the viewport is
+  the list's tab stop while the active row is not rendered.
+- **Public API reports** for `@oge-ui/core` and `@oge-ui/behavior`: API
+  Extractor reports of every entry point in `tools/api-reports/`, checked by
+  `npx nx run @oge/source:api-check` in CI verify after the builds;
+  `node tools/api-report.mjs --update` rewrites them for an intended change.
+- Docs: at 320px the docs header was ~20px wider than the screen once
+  hydrated; below 25rem the framework switch shows only the marks (the words
+  stay its accessible names) and the row's padding tightens. The phone-width
+  e2e checks now hold the header to 320px, before and after hydration.
+- Docs: the home page's component index ends on a full row at every width — a
+  closing "Browse all components" tile spans the columns the last row leaves
+  free.
+
 ### SSR follow-ups — editor surface, React grid first page, phone-width fixes — `@oge-ui/behavior`, `@oge-ui/core`, `@oge-ui/editor`, `@oge-ui/react-editor`, `@oge-ui/react-grid`, `@oge-ui/react-tree-list`
 
 Closes the gaps the W5a SSR proof listed:

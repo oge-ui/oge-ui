@@ -115,14 +115,22 @@ describe('isBareEditor', () => {
       'radioGroup',
       'calendar',
       'slider',
+      'rating',
+      'signaturePad',
     ] as const) {
       expect(isBareEditor(editor)).toBe(true);
     }
+    // the W8b/W8e editors that draw their own label, hint and error
     for (const editor of [
       'textBox',
       'numberBox',
       'selectBox',
       'dateBox',
+      'otpInput',
+      'listBox',
+      'transferList',
+      'mention',
+      'richText',
     ] as const) {
       expect(isBareEditor(editor)).toBe(false);
     }

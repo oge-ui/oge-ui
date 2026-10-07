@@ -331,9 +331,15 @@ const FORM_TYPE_GROUPS: readonly ApiGroup[] = [
       },
       {
         name: 'OgeFormEditorType',
-        type: "'textBox' | 'textArea' | 'numberBox' | 'selectBox' | 'tagBox' | 'autocomplete' | 'treeSelect' | 'dateBox' | 'dateRangeBox' | 'calendar' | 'checkBox' | 'switch' | 'radioGroup'",
+        type: "'textBox' | 'textArea' | 'numberBox' | 'slider' | 'selectBox' | 'tagBox' | 'autocomplete' | 'treeSelect' | 'dateBox' | 'dateRangeBox' | 'calendar' | 'checkBox' | 'switch' | 'radioGroup' | 'colorBox' | 'fileUploader' | 'rating' | 'otpInput' | 'signaturePad' | 'listBox' | 'transferList' | 'mention' | 'richText'",
         description:
           'Which <code>&#64;oge-ui/inputs</code> editor renders an item. House camelCase names, not the reference libraries&#39; class names.',
+      },
+      {
+        name: 'OgeFormEditorOptions',
+        type: 'interface',
+        description:
+          'The curated editor inputs an item may set. Beside the list, bound, text and date options: <code>precision</code> (<code>rating</code>; <code>max</code> is the item count), <code>length</code> / <code>masked</code> (<code>otpInput</code>), <code>signatureFormat</code> (<code>signaturePad</code>), <code>selectionMode</code> (<code>listBox</code>), <code>sourceTitle</code> / <code>targetTitle</code> (<code>transferList</code>), <code>trigger</code> (<code>mention</code>) and <code>height</code> (list box, transfer list, signature pad, rich text). <code>showCheckBoxes</code> other than <code>&#39;none&#39;</code> turns on the list box and transfer list check glyphs.',
       },
       {
         name: 'OgeFormLabelLocation',
@@ -722,7 +728,7 @@ export const OGE_FORM_ITEM_API: ApiSections = {
           type: 'OgeFormEditorType | undefined',
           default: 'undefined',
           description:
-            'Explicit editor; beats both <code>editorOptions.items</code> and <code>dataType</code>.',
+            'Explicit editor; beats both <code>editorOptions.items</code> and <code>dataType</code>. <code>rating</code> and <code>signaturePad</code> are bare (the form draws label and error); <code>richText</code> renders the rich-text editor and is loaded only when an item uses it.',
         },
         {
           name: 'editorOptions',

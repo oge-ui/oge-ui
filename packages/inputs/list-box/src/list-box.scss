@@ -218,6 +218,30 @@
   box-shadow: inset 0 0 0 1px var(--oge-accent-25);
 }
 
+// --- reordering (allowReordering) ------------------------------------------
+
+// the drop line of a reorder drag, on the edge the option would land at
+.oge-list-box-option-drop-before,
+.oge-list-box-option-drop-after {
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline: 4px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--oge-accent);
+    pointer-events: none;
+  }
+}
+
+.oge-list-box-option-drop-before::before {
+  inset-block-start: -1px;
+}
+
+.oge-list-box-option-drop-after::before {
+  inset-block-end: -1px;
+}
+
 // --- check glyph (multiple + showCheckBoxes) --------------------------------
 
 .oge-list-box-check {
@@ -329,6 +353,11 @@
 
   .oge-list-box-option.oge-disabled {
     color: GrayText;
+  }
+
+  .oge-list-box-option-drop-before::before,
+  .oge-list-box-option-drop-after::before {
+    background: Highlight;
   }
 
   .oge-list-box-check {

@@ -2326,6 +2326,7 @@ _OgeListBox_
 | `labelledBy` | `string \| undefined` | `—` | Id of an external element naming the list (overrides `label`) — what the transfer list uses for its titles. |
 | `hint` | `string \| undefined` | `—` | Helper text under the list, hidden while an error shows. |
 | `keyShortcuts` | `string \| undefined` | `—` | Shortcuts a host handles on the list, advertised as `aria-keyshortcuts`. |
+| `allowReordering` | `boolean` | `false` | Lets the user reorder the options: Alt+↑/↓ moves the active option, a pointer drag (touch: after a long press) drops it before / after another. The list shows the new order at once and announces it; persist `onReordered`'s `items` — a new `items` array resets the order. Moves stay inside a group, pass rows a search hides, and never move a disabled option. |
 | `renderItem` | `(item: TItem, context: OgeListBoxRenderItemContext) => ReactNode` | `—` | Option content — the render prop replacing Angular’s `itemTemplate`; context `{ index, selected, active, disabled }`. The option keeps its role, state and check glyph. |
 | `renderGroup` | `(label: string, context: { count }) => ReactNode` | `—` | Group header content — the render prop replacing Angular’s `groupTemplate`. |
 
@@ -2363,6 +2364,7 @@ _OgeListBox handle_
 | `scrollToItem(item: TItem): void` | `void` | Makes the item the active option and scrolls it into view. |
 | `search(text: string): void` | `void` | Sets the search text programmatically; `''` clears the filter. |
 | `getVisibleItems() / getSelectedItems()` | `readonly TItem[] / TItem[]` | The options currently shown (after the search) in display order / the selected items in items order. |
+| `reorderItem(item, target, position?, cause?): boolean` | `boolean` | Moves `item` before (default) / after `target` through the same cancelable path as the keys and the pointer; `false` when it cannot move or an `onReordering` handler cancelled it. `cause` defaults to `'api'` (the transfer list passes `'drag'`). |
 
 _Common — imperative handle (via ref)_
 
@@ -2380,6 +2382,8 @@ _OgeListBox callbacks_
 | --- | --- | --- |
 | `onSelectionChange` | `(event: OgeListBoxSelectionChangeEvent<TItem>) => void` | The selection changed — `{ value, previousValue, addedItems, removedItems, event }`. |
 | `onItemClick` | `(event: OgeListBoxItemClickEvent<TItem>) => void` | An enabled option was clicked — `{ item, index, event }` (fires in read-only mode too). |
+| `onReordering` | `(event: OgeListBoxReorderingEvent<TItem>) => void` | Cancelable pre-event of every reorder — `{ item, fromIndex, toIndex, cause, event, cancel }`; indices into the whole `items` array. |
+| `onReordered` | `(event: OgeListBoxReorderedEvent<TItem>) => void` | An option moved — `{ item, fromIndex, toIndex, cause, items, event }`, after the announcement (`listBoxReorderedAnnouncement`). |
 
 _Common (all editors)_
 
@@ -2399,9 +2403,10 @@ _List box types_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeListBoxSelectionMode` | `'single' \| 'multiple'` | The selection model. |
-| `OgeListBoxHandle` | `{ focus(); blur(); clear(); selectAll(); unselectAll(); scrollToItem(); search(); getVisibleItems(); getSelectedItems() }` | The imperative handle. |
+| `OgeListBoxHandle` | `{ focus(); blur(); clear(); selectAll(); unselectAll(); scrollToItem(); search(); getVisibleItems(); getSelectedItems(); reorderItem() }` | The imperative handle. |
 | `OgeListBoxRenderItemContext` | `{ index; selected; active; disabled }` | Context of `renderItem`. |
-| `OgeListBoxSelectionChangeEvent / OgeListBoxItemClickEvent` | `callback payloads` | See the callbacks table. |
+| `OgeListBoxSelectionChangeEvent / OgeListBoxItemClickEvent / OgeListBoxReorderingEvent / OgeListBoxReorderedEvent` | `callback payloads` | See the callbacks table. |
+| `OgeListBoxReorderCause` | `'keyboard' \| 'drag' \| 'api'` | What started a reorder. |
 | `Keyboard` | `APG listbox` | One Tab stop (`aria-activedescendant`). ↑/↓, Home/End, PageUp/PageDown move the active option — in `single` mode the selection follows. Typing jumps by prefix (accent-insensitive; repeat a letter to cycle). Multiple: Space/Enter toggle, Shift+↑/↓ and Shift+Space extend from the anchor, Ctrl+Shift+Home/End select to an edge, Ctrl+A (⌘A) selects all — or none when all are selected. In the search field ↓ moves into the list. |
 
 ### <OgeTransferList>
@@ -2417,7 +2422,7 @@ _OgeTransferList_
 | `displayExpr / valueExpr / disabledExpr` | `shared with OgeSelectBox` | `—` | Field-name string or function expressions; disabled items cannot be selected or moved. |
 | `groupBy` | `OgeSelectGroupExpr<TItem> \| undefined` | `—` | Groups both lists’ options under headers. |
 | `sourceTitle / targetTitle` | `string \| undefined` | `—` | List titles (and accessible names); `undefined` = the `transferSourceTitle` / `transferTargetTitle` messages. |
-| `searchEnabled` | `boolean` | `false` | A search field above each list; the move-all buttons move what a list shows. |
+| `searchEnabled` | `boolean` | `false` | A search field above each list. The buttons act on what a list shows: “move all” is enabled only while the filtered view holds a movable item, “move selected” only while a selected item is visible. |
 | `searchExpr / searchMode` | `OgeSelectSearchExpr<TItem> / 'contains' \| 'startswith'` | `— / 'contains'` | Which text the search matches and how. |
 | `showCheckBoxes` | `boolean` | `false` | Check glyphs on the options of both lists. |
 | `height` | `number \| string \| undefined` | `—` | Maximum height of each list — px number or CSS length. |
@@ -2425,6 +2430,7 @@ _OgeTransferList_
 | `label` | `string` | `''` | Visible label above both lists; the `role="group"`’s accessible name. |
 | `hint` | `string \| undefined` | `—` | Helper text under the lists, hidden while an error shows. |
 | `renderItem / renderGroup` | `render props` | `—` | Option / group header content for both lists — the render props of `<OgeListBox>`. |
+| `allowReordering` | `OgeTransferListReorderSides` | `false` | Lets the user reorder a list — `true` both, `'source'` / `'target'` only that one. Alt+↑/↓ moves the active option; one drag reorders when dropped inside its own list and moves when dropped on the other. The target's order is the value's order (a reorder commits it); a reordered source keeps its order until `items` changes. |
 
 _Host styling_
 
@@ -2475,6 +2481,8 @@ _OgeTransferList callbacks_
 | --- | --- | --- |
 | `onMoving` | `(event: OgeTransferListMovingEvent<TItem>) => void` | Cancelable pre-event of every move — `{ items, values, from, to, cause, cancel }`; `cause` is `'button' \| 'keyboard' \| 'drag'`. |
 | `onMoved` | `(event: OgeTransferListMovedEvent<TItem>) => void` | Items changed sides — `{ items, values, from, to, cause, value }`, after the commit and the live announcement. |
+| `onReordering` | `(event: OgeTransferListReorderingEvent<TItem>) => void` | Cancelable pre-event of a reorder inside one list — `{ side, item, fromIndex, toIndex, cause, event, cancel }`. |
+| `onReordered` | `(event: OgeTransferListReorderedEvent<TItem>) => void` | An item moved inside one list — `{ side, item, fromIndex, toIndex, cause, items, value, event }`; a target reorder has already committed the new `value`. |
 
 _Common (all editors)_
 
@@ -2495,6 +2503,7 @@ _Transfer list types_
 | --- | --- | --- |
 | `OgeTransferListSide` | `'source' \| 'target'` | One side of the transfer list. |
 | `OgeTransferListMoveCause` | `'button' \| 'keyboard' \| 'drag'` | What triggered a move — all three run the same move path. |
+| `OgeTransferListReorderSides` | `boolean \| 'source' \| 'target'` | Which lists `allowReordering` opens. |
 | `Keyboard` | `listbox + shortcuts` | Every list box key on each list, plus Ctrl/⌘+→ (from the source) / Ctrl/⌘+← (from the target) to move the selection toward the other list — with Shift, everything shown. Visual arrows, mirrored in RTL, advertised with `aria-keyshortcuts`. |
 | `Drag and drop` | `beginPointerDragDrop` | Drag an option (or the selection it belongs to) onto the other list — mouse and pen at once, touch after a long press; Escape cancels. The drop runs the same move as the buttons. |
 | `OgeTransferListHandle` | `{ focus(); blur(); moveSelectedToTarget(); moveAllToTarget(); moveSelectedToSource(); moveAllToSource() }` | The imperative handle. |
@@ -4077,6 +4086,48 @@ export function ListBoxFormDemo() {
       touched={touched}
       onBlur={() => setTouched(true)}
       errors={empty ? [{ kind: 'required' }] : []}
+    />
+  );
+}
+```
+
+### Reordering
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeListBox } from '@oge-ui/react-inputs';
+
+interface City {
+  id: number;
+  name: string;
+  country: string;
+  closed?: boolean;
+}
+
+const cities: City[] = [
+  { id: 1, name: 'Amsterdam', country: 'Netherlands' },
+  { id: 2, name: 'Ankara', country: 'Türkiye' },
+  { id: 3, name: 'Berlin', country: 'Germany' },
+  { id: 4, name: 'Bonn', country: 'Germany', closed: true },
+  { id: 5, name: 'Hamburg', country: 'Germany' },
+  { id: 6, name: 'İstanbul', country: 'Türkiye' },
+  { id: 7, name: 'İzmir', country: 'Türkiye' },
+  { id: 8, name: 'Rotterdam', country: 'Netherlands' },
+];
+
+export function ListBoxReorderDemo() {
+  const [route, setRoute] = useState(cities.slice(0, 5));
+  return (
+    <OgeListBox
+      label="Route"
+      items={route}
+      displayExpr="name"
+      valueExpr="id"
+      allowReordering
+      height={260}
+      onReordered={(event) => setRoute(event.items)}
     />
   );
 }
@@ -6445,6 +6496,54 @@ export function TransferListFormDemo() {
       touched={touched}
       onBlur={() => setTouched(true)}
       errors={granted.length === 0 ? [{ kind: 'required' }] : []}
+    />
+  );
+}
+```
+
+### Reordering
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTransferList } from '@oge-ui/react-inputs';
+
+interface Permission {
+  id: string;
+  name: string;
+  area: string;
+  locked?: boolean;
+}
+
+const permissions: Permission[] = [
+  { id: 'orders.read', name: 'View orders', area: 'Orders' },
+  { id: 'orders.write', name: 'Edit orders', area: 'Orders' },
+  { id: 'orders.refund', name: 'Issue refunds', area: 'Orders' },
+  { id: 'users.read', name: 'View users', area: 'Users' },
+  { id: 'users.invite', name: 'Invite users', area: 'Users' },
+  { id: 'users.admin', name: 'Manage roles', area: 'Users', locked: true },
+  { id: 'reports.read', name: 'View reports', area: 'Reports' },
+  { id: 'reports.export', name: 'Export reports', area: 'Reports' },
+];
+
+export function TransferReorderDemo() {
+  const [priority, setPriority] = useState<readonly unknown[]>([
+    'orders.refund',
+    'users.invite',
+    'reports.export',
+  ]);
+  return (
+    <OgeTransferList
+      label="Escalation order"
+      items={permissions}
+      displayExpr="name"
+      valueExpr="id"
+      targetTitle="Priority"
+      allowReordering="target"
+      height={240}
+      value={priority}
+      onValueChange={setPriority}
     />
   );
 }

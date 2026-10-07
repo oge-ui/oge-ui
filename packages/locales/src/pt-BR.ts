@@ -259,6 +259,8 @@ export const ptBR: OgeLocalePack = {
     listBoxLabel: 'Opções',
     listBoxSearchPlaceholder: 'Pesquisar',
     listBoxSearchLabel: 'Pesquisar na lista',
+    listBoxReorderedAnnouncement:
+      '{item} movido para a posição {position} de {count}',
     transferSourceTitle: 'Disponíveis',
     transferTargetTitle: 'Selecionados',
     transferActionsLabel: 'Mover itens',

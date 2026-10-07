@@ -9,6 +9,11 @@ import {
   ogeTransferMove,
   ogeTransferOpposite,
   ogeTransferSplit,
+  ogeTransferDropTarget,
+  ogeTransferReorderable,
+  ogeTransferReorderLine,
+  ogeTransferReorderSource,
+  ogeTransferReorderTarget,
 } from './transfer-list-core';
 
 const ITEMS = [
@@ -141,6 +146,70 @@ describe('transfer list core', () => {
     expect(ogeTransferDropSide(at('s'), host, 'target')).toBe('source');
     expect(ogeTransferDropSide(at('n'), host, 'target')).toBeNull();
     expect(ogeTransferDropSide(null, host, 'source')).toBeNull();
+    document.body.innerHTML = '';
+  });
+});
+
+describe('transfer list reordering', () => {
+  it('reads allowReordering per side', () => {
+    expect(ogeTransferReorderable(true, 'source')).toBe(true);
+    expect(ogeTransferReorderable('target', 'source')).toBe(false);
+    expect(ogeTransferReorderable('target', 'target')).toBe(true);
+    expect(ogeTransferReorderable(false, 'target')).toBe(false);
+  });
+
+  it('refills only the source slots of the item order', () => {
+    // a, c, d on the source; b on the target
+    const next = ogeTransferReorderSource(
+      ITEMS,
+      [ITEMS[3], ITEMS[0], ITEMS[2]],
+      ['b'],
+      id,
+    );
+    expect(next.map(id)).toEqual(['d', 'b', 'a', 'c']);
+  });
+
+  it('orders the value like the target list and keeps unknown values', () => {
+    expect(
+      ogeTransferReorderTarget(['a', 'zz', 'c'], [ITEMS[2], ITEMS[0]], id),
+    ).toEqual(['c', 'a', 'zz']);
+  });
+
+  it('resolves a move over the other pane, a reorder over its own list', () => {
+    document.body.innerHTML = `
+      <div class="oge-transfer-list" id="host">
+        <div data-oge-transfer-side="source">
+          <div role="listbox" id="list">
+            <div class="oge-list-box-option" data-index="1"><span id="o">o</span></div>
+          </div>
+        </div>
+        <div data-oge-transfer-side="target"><span id="t">t</span></div>
+      </div>`;
+    const host = document.getElementById('host')!;
+    const list = document.getElementById('list')!;
+    const option = list.firstElementChild as HTMLElement;
+    option.getBoundingClientRect = () =>
+      ({ top: 0, height: 20, bottom: 20, left: 4, width: 80 }) as DOMRect;
+    const at = (key: string) => document.getElementById(key);
+    expect(ogeTransferDropTarget(at('t'), host, 'source', list, 5)).toEqual({
+      kind: 'move',
+      side: 'target',
+    });
+    expect(ogeTransferDropTarget(at('o'), host, 'source', list, 15)).toEqual({
+      kind: 'reorder',
+      index: 1,
+      position: 'after',
+    });
+    // not reorderable: no list, no reorder target
+    expect(ogeTransferDropTarget(at('o'), host, 'source', null, 15)).toBeNull();
+    const pane = list.parentElement as HTMLElement;
+    pane.getBoundingClientRect = () =>
+      ({ top: -10, left: 0, bottom: 200, width: 100 }) as DOMRect;
+    expect(ogeTransferReorderLine(option, pane, 'after')).toEqual({
+      top: 30,
+      left: 4,
+      width: 80,
+    });
     document.body.innerHTML = '';
   });
 });

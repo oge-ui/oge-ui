@@ -23,6 +23,7 @@ import {
   BASIC_SNIPPET,
   CANCEL_SNIPPET,
   FORMS_SNIPPET,
+  REORDER_SNIPPET,
   SEARCH_SNIPPET,
   TEMPLATES_SNIPPET,
 } from './transfer-list-snippets';
@@ -33,6 +34,7 @@ const SECTIONS = [
   'Groups and templates',
   'Cancelable moves',
   'Inside a form',
+  'Reordering',
 ] as const;
 
 @Component({
@@ -199,6 +201,29 @@ const SECTIONS = [
           Valid: <code>{{ formGranted.valid }}</code>
         </p>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['allowReordering', 'Alt+↑/↓', 'drag', 'reordered']"
+        heading="Reordering"
+        description="<code>allowReordering</code> opens one or both lists to reordering — <code>'target'</code> here, so the granted permissions can be put in priority order. Alt+↑/↓ moves the active option; one drag reorders when dropped inside its own list and still moves when dropped on the other. The target&#39;s order is the value&#39;s order, so a reorder commits a new value."
+        [code]="reorderSnippet"
+        language="ts"
+      >
+        <oge-transfer-list
+          label="Escalation order"
+          [items]="permissions"
+          displayExpr="name"
+          valueExpr="id"
+          targetTitle="Priority"
+          allowReordering="target"
+          [height]="240"
+          [(value)]="priority"
+        />
+        <p class="mt-3 text-sm">
+          Value:
+          <code data-testid="transfer-priority">{{ show(priority()) }}</code>
+        </p>
+      </app-demo-card>
     }
   `,
 })
@@ -211,6 +236,12 @@ export class InputsTransferListPage {
   protected readonly templatesSnippet = TEMPLATES_SNIPPET;
   protected readonly cancelSnippet = CANCEL_SNIPPET;
   protected readonly formsSnippet = FORMS_SNIPPET;
+  protected readonly reorderSnippet = REORDER_SNIPPET;
+  protected readonly priority = signal<readonly unknown[]>([
+    'orders.refund',
+    'users.invite',
+    'reports.export',
+  ]);
 
   protected readonly permissions = DEMO_PERMISSIONS;
   protected readonly granted = signal<readonly unknown[]>(['orders.read']);

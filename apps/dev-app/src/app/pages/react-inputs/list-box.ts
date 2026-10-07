@@ -17,6 +17,7 @@ export const REACT_INPUTS_LIST_BOX_SECTIONS = [
   'Groups and search',
   'Custom templates',
   'Inside a form',
+  'Reordering',
 ] as const;
 
 const valueLine = (testId: string, value: unknown): ReactNode =>
@@ -30,6 +31,35 @@ const valueLine = (testId: string, value: unknown): ReactNode =>
       JSON.stringify(value ?? null),
     ),
   );
+
+/** Reorder by Alt+arrows or a drag; the demo stores the new order. */
+function ReorderDemo(): ReactNode {
+  const [route, setRoute] = useState<DemoCity[]>(DEMO_CITIES.slice(0, 5));
+  return createElement(
+    'div',
+    null,
+    createElement(OgeListBox<DemoCity>, {
+      key: 'list',
+      label: 'Route',
+      items: route,
+      displayExpr: 'name',
+      valueExpr: 'id',
+      allowReordering: true,
+      height: 260,
+      onReordered: (event) => setRoute(event.items),
+    }),
+    createElement(
+      'p',
+      { key: 'out', className: 'mt-3 text-sm' },
+      'Order: ',
+      createElement(
+        'code',
+        { 'data-testid': 'list-box-route' },
+        route.map((city) => city.name).join(' → '),
+      ),
+    ),
+  );
+}
 
 function BasicDemo(): ReactNode {
   const [city, setCity] = useState<unknown>(3);
@@ -218,6 +248,16 @@ function FormDemo(): ReactNode {
     >
       <app-react-host [render]="form" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['allowReordering', 'Alt+↑/↓', 'drag', 'onReordered']"
+      heading="Reordering"
+      description="<code>allowReordering</code> lets the user reorder the options: Alt+↑/↓ moves the active option, a pointer drag drops it before or after another (touch: after a long press). Each move runs the cancelable <code>onReordering</code> → <code>onReordered</code> pair and is announced; keep the order by storing the <code>items</code> <code>onReordered</code> hands you."
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="reorder" />
+    </app-demo-card>
   `,
 })
 export class ReactInputsListBoxDemos {
@@ -228,4 +268,5 @@ export class ReactInputsListBoxDemos {
   protected readonly groups = () => createElement(GroupsDemo);
   protected readonly templates = () => createElement(TemplatesDemo);
   protected readonly form = () => createElement(FormDemo);
+  protected readonly reorder = () => createElement(ReorderDemo);
 }

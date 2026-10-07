@@ -82,6 +82,27 @@
     gap: 0;
   }
 }
+/* The narrowest phones (320px): the full header row — mark, framework
+   switch with its words, theme, sponsor and GitHub icons — was ~20px wider
+   than the screen. Below 25rem the switch keeps only the framework marks
+   (each word stays the button's accessible name, visually hidden) and the
+   row's side padding tightens. `visual-states.spec.ts` and
+   `ssr/phone-width.spec.ts` hold the header to 320px. */
+@media (max-width: 24.99rem) {
+  .app-header-row {
+    padding-inline: 0.75rem;
+  }
+  .app-header-fw .app-fw-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
 
 .app-fw-fallback {
   display: flex;

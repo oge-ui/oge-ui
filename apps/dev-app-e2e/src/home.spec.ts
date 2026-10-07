@@ -46,6 +46,31 @@ test.describe('home / landing page', () => {
     expect(panel.y - (field.y + field.height)).toBeLessThan(40);
   });
 
+  test('the component index always ends on a full row', async ({ page }) => {
+    // 4 / 3 / 2 / 1 columns: the closing "browse all" tile fills what the
+    // last row of families leaves free, so the grid never ends ragged
+    for (const width of [1440, 1100, 800, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      const all = page.locator('app-home .og-row-all');
+      await all.scrollIntoViewIfNeeded();
+      // the gap between the tile's end and the grid's end (polled: the
+      // reveal animation and the layout settle after navigation)
+      await expect
+        .poll(
+          async () => {
+            const grid = await all.locator('xpath=..').boundingBox();
+            const tile = await all.boundingBox();
+            if (!grid || !tile) return Number.POSITIVE_INFINITY;
+            return Math.abs(grid.x + grid.width - (tile.x + tile.width));
+          },
+          { message: `closing tile reaches the row end at ${width}px` },
+        )
+        .toBeLessThan(2);
+    }
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
+
   test('CTA navigates into the docs shell', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('link', { name: 'Get started', exact: true }).click();

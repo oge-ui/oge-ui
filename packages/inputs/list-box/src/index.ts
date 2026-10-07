@@ -11,5 +11,10 @@ export {
 export {
   type OgeListBoxSelectionChangedEvent,
   type OgeListBoxItemClickEvent,
+  type OgeListBoxReorderingEvent,
+  type OgeListBoxReorderedEvent,
 } from './list-box-types';
-export { type OgeListBoxSelectionMode } from '@oge-ui/behavior';
+export {
+  type OgeListBoxSelectionMode,
+  type OgeListBoxReorderCause,
+} from '@oge-ui/behavior';

@@ -257,6 +257,8 @@ export const ja: OgeLocalePack = {
     listBoxLabel: 'オプション',
     listBoxSearchPlaceholder: '検索',
     listBoxSearchLabel: 'リストを検索',
+    listBoxReorderedAnnouncement:
+      '{item} を {count} 件中 {position} 番目に移動しました',
     transferSourceTitle: '選択可能',
     transferTargetTitle: '選択済み',
     transferActionsLabel: '項目を移動',

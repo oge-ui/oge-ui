@@ -46,6 +46,7 @@ import {
   ogeListViewTextOf,
   ogeListViewVirtualSettings,
   ogeListViewWindow,
+  ogeListViewWindowHasIndex,
   type OgeListViewActiveItemChangedEvent,
   type OgeListViewExpr,
   type OgeListViewItemAction,
@@ -268,6 +269,9 @@ export const OgeListView = forwardRef(function OgeListViewRender<T>(
   const requestedAt = useRef(-1);
   const pendingLoadFrom = useRef<number | null>(null);
   const pendingFocus = useRef<OgeListViewKey | null>(null);
+  /** Focus moved to the viewport because the focused row scrolled away. */
+  const parked = useRef(false);
+  const parking = useRef(false);
   const pendingReveal = useRef<OgeListViewKey | null>(null);
   const gesture = useRef<OgePointerGestureHandle | null>(null);
 
@@ -362,6 +366,16 @@ export const OgeListView = forwardRef(function OgeListViewRender<T>(
   const shortcuts = ogeListViewActionShortcuts(actions);
   const actionsText = ogeListViewActionsText(actions, msg);
   const isEmpty = model.items.length === 0;
+  // The listbox is the tab stop; a plain list's rows are — unless the active
+  // row is scrolled out of a virtual window, when the viewport stands in so
+  // the list keeps its Tab stop (focus then moves on to the row).
+  const viewportTabIndex = disabled
+    ? -1
+    : role === 'listbox'
+      ? 0
+      : isEmpty || ogeListViewWindowHasIndex(win, activeIndex)
+        ? -1
+        : 0;
   const searching = !!searchValue.trim();
 
   const say = (template: string, count: number) =>
@@ -406,6 +420,18 @@ export const OgeListView = forwardRef(function OgeListViewRender<T>(
       el.querySelector<HTMLElement>(`#${itemId(focus)}`)?.focus({
         preventScroll: true,
       });
+    }
+    // a parked focus returns to the active row once it is rendered again
+    if (parked.current && el.ownerDocument.activeElement === el) {
+      const key = keys[activeIndex];
+      const row =
+        key === undefined
+          ? null
+          : el.querySelector<HTMLElement>(`#${itemId(key)}`);
+      if (row) {
+        parked.current = false;
+        row.focus({ preventScroll: true });
+      }
     }
   });
 
@@ -696,6 +722,11 @@ export const OgeListView = forwardRef(function OgeListViewRender<T>(
       if (event.target === event.currentTarget) revealIndex(activeIndex);
       return;
     }
+    if (event.target === event.currentTarget) {
+      // Tab landed on the stand-in stop: bring the active row back, focus it
+      if (!parking.current && !parked.current) focusItem(activeIndex);
+      return;
+    }
     const index = ogeListViewIndexFromTarget(event.target, viewportRef.current);
     if (index >= 0 && index !== activeIndex) setActive(index);
   };
@@ -892,11 +923,43 @@ export const OgeListView = forwardRef(function OgeListViewRender<T>(
         }
         aria-busy={props.loading || undefined}
         aria-disabled={disabled || undefined}
-        tabIndex={role === 'listbox' && !disabled ? 0 : -1}
+        tabIndex={viewportTabIndex}
         style={cssHeight ? { height: cssHeight } : undefined}
         onScroll={(event) => {
-          setScrollTop(event.currentTarget.scrollTop);
+          const el = event.currentTarget;
+          // a plain list's focused row is about to leave the window: park
+          // focus on the viewport (it would fall to <body> with the row)
+          const focused = el.ownerDocument.activeElement as HTMLElement | null;
+          const rowHadFocus =
+            role === 'list' &&
+            settings !== null &&
+            !!focused &&
+            focused !== el &&
+            el.contains(focused) &&
+            focused.classList.contains('oge-list-view-item');
+          setScrollTop(el.scrollTop);
+          if (
+            rowHadFocus &&
+            !ogeListViewWindowHasIndex(
+              ogeListViewWindow(
+                model,
+                tree,
+                settings,
+                el.scrollTop,
+                viewportHeight,
+              ),
+              activeIndex,
+            )
+          ) {
+            parking.current = true;
+            el.focus({ preventScroll: true });
+            parking.current = false;
+            parked.current = true;
+          }
           if (pageLoadMode === 'scroll') checkInfinite();
+        }}
+        onBlur={(event) => {
+          if (event.target === event.currentTarget) parked.current = false;
         }}
         onKeyDown={onKeyDown}
         onClick={onClick}

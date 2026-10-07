@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@oge-ui/behavior": "1.1.2",
+    "@oge-ui/editor": "1.1.2",
     "@oge-ui/inputs": "1.1.2",
     "@oge-ui/tabs": "1.1.2",
     "@oge-ui/layout": "1.1.2",

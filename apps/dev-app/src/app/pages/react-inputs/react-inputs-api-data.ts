@@ -4235,6 +4235,13 @@ export const OGE_REACT_LIST_BOX_API: ApiSections = {
             'Shortcuts a host handles on the list, advertised as <code>aria-keyshortcuts</code>.',
         },
         {
+          name: 'allowReordering',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Lets the user reorder the options: Alt+↑/↓ moves the active option, a pointer drag (touch: after a long press) drops it before / after another. The list shows the new order at once and announces it; persist <code>onReordered</code>&#39;s <code>items</code> — a new <code>items</code> array resets the order. Moves stay inside a group, pass rows a search hides, and never move a disabled option.',
+        },
+        {
           name: 'renderItem',
           type: '(item: TItem, context: OgeListBoxRenderItemContext) =&gt; ReactNode',
           description:
@@ -4279,6 +4286,12 @@ export const OGE_REACT_LIST_BOX_API: ApiSections = {
           description:
             'The options currently shown (after the search) in display order / the selected items in items order.',
         },
+        {
+          name: 'reorderItem(item, target, position?, cause?): boolean',
+          type: 'boolean',
+          description:
+            "Moves <code>item</code> before (default) / after <code>target</code> through the same cancelable path as the keys and the pointer; <code>false</code> when it cannot move or an <code>onReordering</code> handler cancelled it. <code>cause</code> defaults to <code>'api'</code> (the transfer list passes <code>'drag'</code>).",
+        },
       ],
     },
     COMMON_METHODS,
@@ -4299,6 +4312,18 @@ export const OGE_REACT_LIST_BOX_API: ApiSections = {
           description:
             'An enabled option was clicked — <code>{ item, index, event }</code> (fires in read-only mode too).',
         },
+        {
+          name: 'onReordering',
+          type: '(event: OgeListBoxReorderingEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'Cancelable pre-event of every reorder — <code>{ item, fromIndex, toIndex, cause, event, cancel }</code>; indices into the whole <code>items</code> array.',
+        },
+        {
+          name: 'onReordered',
+          type: '(event: OgeListBoxReorderedEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'An option moved — <code>{ item, fromIndex, toIndex, cause, items, event }</code>, after the announcement (<code>listBoxReorderedAnnouncement</code>).',
+        },
       ],
     },
     COMMON_EVENTS,
@@ -4314,7 +4339,7 @@ export const OGE_REACT_LIST_BOX_API: ApiSections = {
         },
         {
           name: 'OgeListBoxHandle',
-          type: '{ focus(); blur(); clear(); selectAll(); unselectAll(); scrollToItem(); search(); getVisibleItems(); getSelectedItems() }',
+          type: '{ focus(); blur(); clear(); selectAll(); unselectAll(); scrollToItem(); search(); getVisibleItems(); getSelectedItems(); reorderItem() }',
           description: 'The imperative handle.',
         },
         {
@@ -4323,9 +4348,14 @@ export const OGE_REACT_LIST_BOX_API: ApiSections = {
           description: 'Context of <code>renderItem</code>.',
         },
         {
-          name: 'OgeListBoxSelectionChangeEvent / OgeListBoxItemClickEvent',
+          name: 'OgeListBoxSelectionChangeEvent / OgeListBoxItemClickEvent / OgeListBoxReorderingEvent / OgeListBoxReorderedEvent',
           type: 'callback payloads',
           description: 'See the callbacks table.',
+        },
+        {
+          name: 'OgeListBoxReorderCause',
+          type: "'keyboard' | 'drag' | 'api'",
+          description: 'What started a reorder.',
         },
         REACT_LIST_BOX_KEYBOARD,
       ],
@@ -4374,7 +4404,7 @@ export const OGE_REACT_TRANSFER_LIST_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            'A search field above each list; the move-all buttons move what a list shows.',
+            'A search field above each list. The buttons act on what a list shows: “move all” is enabled only while the filtered view holds a movable item, “move selected” only while a selected item is visible.',
         },
         {
           name: 'searchExpr / searchMode',
@@ -4417,6 +4447,13 @@ export const OGE_REACT_TRANSFER_LIST_API: ApiSections = {
           description:
             'Option / group header content for both lists — the render props of <code>&lt;OgeListBox&gt;</code>.',
         },
+        {
+          name: 'allowReordering',
+          type: 'OgeTransferListReorderSides',
+          default: 'false',
+          description:
+            "Lets the user reorder a list — <code>true</code> both, <code>'source'</code> / <code>'target'</code> only that one. Alt+↑/↓ moves the active option; one drag reorders when dropped inside its own list and moves when dropped on the other. The target&#39;s order is the value&#39;s order (a reorder commits it); a reordered source keeps its order until <code>items</code> changes.",
+        },
       ],
     },
     HOST_PROPS,
@@ -4458,6 +4495,18 @@ export const OGE_REACT_TRANSFER_LIST_API: ApiSections = {
           description:
             'Items changed sides — <code>{ items, values, from, to, cause, value }</code>, after the commit and the live announcement.',
         },
+        {
+          name: 'onReordering',
+          type: '(event: OgeTransferListReorderingEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'Cancelable pre-event of a reorder inside one list — <code>{ side, item, fromIndex, toIndex, cause, event, cancel }</code>.',
+        },
+        {
+          name: 'onReordered',
+          type: '(event: OgeTransferListReorderedEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'An item moved inside one list — <code>{ side, item, fromIndex, toIndex, cause, items, value, event }</code>; a target reorder has already committed the new <code>value</code>.',
+        },
       ],
     },
     COMMON_EVENTS,
@@ -4476,6 +4525,11 @@ export const OGE_REACT_TRANSFER_LIST_API: ApiSections = {
           type: "'button' | 'keyboard' | 'drag'",
           description:
             'What triggered a move — all three run the same move path.',
+        },
+        {
+          name: 'OgeTransferListReorderSides',
+          type: "boolean | 'source' | 'target'",
+          description: 'Which lists <code>allowReordering</code> opens.',
         },
         {
           name: 'Keyboard',

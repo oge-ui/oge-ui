@@ -16,15 +16,22 @@ import { OgeCheckBox } from '@oge-ui/inputs/check-box';
 import { OgeColorBox } from '@oge-ui/inputs/color-box';
 import { OgeDateBox, OgeDateRangeBox } from '@oge-ui/inputs/date-box';
 import { type OgeTextBoxMode } from '@oge-ui/inputs/field';
+import { OgeListBox } from '@oge-ui/inputs/list-box';
+import { OgeMention } from '@oge-ui/inputs/mention';
 import { OgeNumberBox } from '@oge-ui/inputs/number-box';
+import { OgeOtpInput } from '@oge-ui/inputs/otp-input';
 import { OgeRadioGroup } from '@oge-ui/inputs/radio-group';
+import { OgeRating } from '@oge-ui/inputs/rating';
 import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+import { OgeSignaturePad } from '@oge-ui/inputs/signature-pad';
 import { OgeSlider } from '@oge-ui/inputs/slider';
 import { OgeSwitch } from '@oge-ui/inputs/switch';
 import { OgeTagBox } from '@oge-ui/inputs/tag-box';
 import { OgeTextArea } from '@oge-ui/inputs/text-area';
 import { OgeTextBox } from '@oge-ui/inputs/text-box';
+import { OgeTransferList } from '@oge-ui/inputs/transfer-list';
 import { OgeTreeSelect } from '@oge-ui/inputs/tree-select';
+import { OgeEditor } from '@oge-ui/editor';
 import { OgeFileUploader } from '@oge-ui/upload';
 import type {
   OgeFormEditorAppearance,
@@ -47,6 +54,11 @@ import type {
  * `[formField]` present, the `FormField` directive writes those inputs itself
  * and silently overwrites any template binding, so state there comes from the
  * schema (`disabled()` / `readonly()`).
+ *
+ * The heavier editors — `richText` (`@oge-ui/editor`), `signaturePad`,
+ * `mention` and `transferList` — render inside `@defer (on immediate)`: they
+ * are referenced nowhere else in this file, so a form that never uses them
+ * never loads their chunks.
  */
 @Component({
   selector: 'oge-form-editor',
@@ -71,6 +83,14 @@ import type {
     OgeTextBox,
     OgeTreeSelect,
     OgeFileUploader,
+    OgeRating,
+    OgeOtpInput,
+    OgeListBox,
+    // deferred — only ever rendered inside `@defer` blocks
+    OgeTransferList,
+    OgeSignaturePad,
+    OgeMention,
+    OgeEditor,
   ],
   host: {
     class: 'oge-form-editor',
@@ -127,6 +147,26 @@ export class OgeFormEditor {
     () => this.opts().displayExpr ?? '',
   );
   protected readonly valueExpr = computed(() => this.opts().valueExpr ?? '');
+  /** The list editors read an absent expression as "the item itself". */
+  protected readonly displayExprOrUndefined = computed(
+    () => this.opts().displayExpr,
+  );
+  protected readonly valueExprOrUndefined = computed(
+    () => this.opts().valueExpr,
+  );
+  /** List box / transfer list check glyphs: any value but `'none'`. */
+  protected readonly listCheckBoxes = computed(() => {
+    const value = this.opts().showCheckBoxes;
+    return value !== undefined && value !== 'none';
+  });
+  protected readonly placeholderOrUndefined = computed(() =>
+    this.placeholder().length > 0 ? this.placeholder() : undefined,
+  );
+  /** The signature surface takes a px height only. */
+  protected readonly signatureHeight = computed(() => {
+    const height = this.opts().height;
+    return typeof height === 'number' ? height : 160;
+  });
   /** The tree select takes object rows; the curated options carry `unknown[]`. */
   protected readonly treeItems = computed(
     () => this.items() as readonly object[],

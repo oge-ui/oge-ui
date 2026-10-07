@@ -124,6 +124,39 @@ describe('<OgeTransferList>', () => {
     expect(screen.getByTestId('v').textContent).toBe('[]');
   });
 
+  it('the buttons follow the search-filtered view', () => {
+    render(
+      <OgeTransferList
+        items={PERMS}
+        displayExpr="name"
+        valueExpr="id"
+        disabledExpr="locked"
+        searchEnabled
+        defaultValue={['share']}
+      />,
+    );
+    const addSelected = screen.getByRole('button', { name: 'Add selected' });
+    const addAll = screen.getByRole('button', { name: 'Add all' });
+    fireEvent.click(option('source', 1)); // Write
+    expect(addSelected).not.toBeDisabled();
+    const search = pane('source').querySelector<HTMLInputElement>(
+      '.oge-list-box-search-input',
+    )!;
+    // only Read is shown: the selected Write is filtered out
+    fireEvent.input(search, { target: { value: 'rea' } });
+    fireEvent.change(search, { target: { value: 'rea' } });
+    expect(texts('source')).toEqual(['Read']);
+    expect(addSelected).toBeDisabled();
+    expect(addAll).not.toBeDisabled();
+    // only the locked Admin is shown: nothing movable
+    fireEvent.input(search, { target: { value: 'adm' } });
+    fireEvent.change(search, { target: { value: 'adm' } });
+    expect(addAll).toBeDisabled();
+    fireEvent.input(search, { target: { value: '' } });
+    fireEvent.change(search, { target: { value: '' } });
+    expect(addSelected).not.toBeDisabled();
+  });
+
   it('a vetoed onMoving keeps the value', () => {
     render(<Host veto />);
     fireEvent.click(screen.getByRole('button', { name: 'Add all' }));

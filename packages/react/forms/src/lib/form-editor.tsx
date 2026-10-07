@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  Suspense,
+  lazy,
   useEffect,
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -12,19 +14,34 @@ import {
   OgeColorBox,
   OgeDateBox,
   OgeDateRangeBox,
+  OgeListBox,
+  OgeMention,
   OgeNumberBox,
+  OgeOtpInput,
   OgeRadioGroup,
+  OgeRating,
   OgeSelectBox,
+  OgeSignaturePad,
   OgeSlider,
   OgeSwitch,
   OgeTagBox,
   OgeTextArea,
   OgeTextBox,
+  OgeTransferList,
   OgeTreeSelect,
 } from '@oge-ui/react-inputs';
 import { OgeFileUploader } from '@oge-ui/react-upload';
 import type { OgeFieldError, OgeResolvedFormItem } from '@oge-ui/behavior';
 import type { OgeFormAppearance } from './form-types';
+
+/**
+ * The `richText` editor is the one heavy editor outside the inputs family:
+ * loaded on first use, so a form that never renders it never pulls
+ * `@oge-ui/react-editor` (and its toolbar / overlay cone) into the bundle.
+ */
+const OgeRichTextEditor = lazy(() =>
+  import('@oge-ui/react-editor').then((m) => ({ default: m.OgeEditor })),
+);
 
 /**
  * The one editor of a resolved item. Which editor that is was decided by the
@@ -87,6 +104,21 @@ export function OgeFormEditor(props: OgeFormEditorProps) {
     disabled: item.disabled,
     readonly: item.readOnly,
   };
+  // editors that draw their own label / hint / error but no input chrome
+  // (OTP cells, the list box, the transfer list)
+  const control = {
+    ...bare,
+    hint: chrome.hint,
+    errors: props.errors,
+    touched: props.showError,
+    errorDisplay: 'touched' as const,
+    onBlur: props.onTouched,
+  };
+  const listCheckBoxes =
+    options.showCheckBoxes !== undefined && options.showCheckBoxes !== 'none';
+  const pending = (
+    <div className="oge-form-editor-pending" aria-hidden="true" />
+  );
 
   const items = (options.items ?? []) as readonly unknown[];
   const displayExpr = options.displayExpr ?? '';
@@ -309,6 +341,105 @@ export function OgeFormEditor(props: OgeFormEditorProps) {
             onValueChange={commit}
             onTouch={props.onTouched}
           />
+        );
+      case 'rating':
+        return (
+          <OgeRating
+            {...bare}
+            value={(props.value as number | null) ?? null}
+            onValueChange={commit}
+            max={numberMax}
+            precision={options.precision ?? 1}
+          />
+        );
+      case 'otpInput':
+        return (
+          <OgeOtpInput
+            {...control}
+            value={(props.value as string) ?? ''}
+            onValueChange={commit}
+            length={options.length ?? 6}
+            masked={options.masked ?? false}
+          />
+        );
+      case 'signaturePad':
+        return (
+          <OgeSignaturePad
+            {...bare}
+            value={(props.value as string | null) ?? null}
+            onValueChange={commit}
+            placeholder={
+              item.placeholder.length > 0 ? item.placeholder : undefined
+            }
+            format={options.signatureFormat ?? 'png'}
+            height={typeof options.height === 'number' ? options.height : 160}
+          />
+        );
+      case 'listBox':
+        return (
+          <OgeListBox
+            {...control}
+            value={props.value ?? null}
+            onValueChange={commit}
+            items={items}
+            displayExpr={options.displayExpr}
+            valueExpr={options.valueExpr}
+            selectionMode={options.selectionMode ?? 'single'}
+            showCheckBoxes={listCheckBoxes}
+            searchEnabled={options.searchEnabled ?? false}
+            height={options.height}
+          />
+        );
+      case 'transferList':
+        return (
+          <OgeTransferList
+            {...control}
+            value={(props.value as readonly unknown[]) ?? []}
+            onValueChange={commit}
+            items={items}
+            displayExpr={options.displayExpr}
+            valueExpr={options.valueExpr}
+            showCheckBoxes={listCheckBoxes}
+            searchEnabled={options.searchEnabled ?? false}
+            height={options.height}
+            sourceTitle={options.sourceTitle}
+            targetTitle={options.targetTitle}
+          />
+        );
+      case 'mention':
+        return (
+          <OgeMention
+            {...chrome}
+            value={(props.value as string) ?? ''}
+            onValueChange={commit}
+            items={items}
+            displayExpr={options.displayExpr}
+            valueExpr={options.valueExpr}
+            trigger={options.trigger ?? '@'}
+            rows={options.rows ?? 3}
+            maxLength={options.maxLength}
+          />
+        );
+      case 'richText':
+        return (
+          <Suspense fallback={pending}>
+            <OgeRichTextEditor
+              id={editorId}
+              label={props.label}
+              hint={chrome.hint}
+              placeholder={item.placeholder}
+              required={item.required}
+              disabled={item.disabled}
+              readonly={item.readOnly}
+              errors={props.errors}
+              touched={props.showError}
+              onBlur={props.onTouched}
+              value={(props.value as string) ?? ''}
+              onValueChange={commit}
+              height={options.height}
+              maxLength={options.maxLength}
+            />
+          </Suspense>
         );
       default:
         return (

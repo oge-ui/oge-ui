@@ -627,6 +627,29 @@ const ORG: OrgNode[] = [
                 </span>
               </a>
             }
+            <!--
+              The closing tile fills whatever the last row leaves free at every
+              column count (4 / 3 / 2 / 1), so the grid always ends on a full,
+              intentional row — the spans are derived from the tile count.
+            -->
+            <a
+              routerLink="/components"
+              class="home-reveal og-row og-row-all group"
+              [style.--og-rest-4]="restOf(4)"
+              [style.--og-rest-3]="restOf(3)"
+              [style.--og-rest-2]="restOf(2)"
+            >
+              <span class="og-row-icon shrink-0" aria-hidden="true">
+                <app-icon name="arrow-right" [size]="16" />
+              </span>
+              <span class="min-w-0">
+                <span class="og-row-name">Browse all components</span>
+                <span class="og-row-desc mt-1.5 block"
+                  >Every family in the gallery, with live demos and API
+                  tables.</span
+                >
+              </span>
+            </a>
           </div>
         </div>
       </div>
@@ -1372,6 +1395,35 @@ const ORG: OrgNode[] = [
       color: var(--og-bone);
     }
 
+    /* the closing "browse all" tile spans the columns the last row leaves
+       free — the custom properties are set from the tile count per column
+       count, the media queries match the grid's Tailwind breakpoints */
+    app-home .og-row-all {
+      grid-column: span var(--og-rest-4, 1);
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed color-mix(in srgb, var(--og-gold) 30%, transparent);
+      text-align: start;
+    }
+
+    @media (width < 80rem) {
+      app-home .og-row-all {
+        grid-column: span var(--og-rest-3, 1);
+      }
+    }
+
+    @media (width < 64rem) {
+      app-home .og-row-all {
+        grid-column: span var(--og-rest-2, 1);
+      }
+    }
+
+    @media (width < 40rem) {
+      app-home .og-row-all {
+        grid-column: auto;
+      }
+    }
+
     /* clamped to two lines so every row is exactly the same height and the
        grid stays a tidy 3 × 3 */
     app-home .og-row-desc {
@@ -1989,6 +2041,15 @@ export class HomePage {
     { name: 'Tailwind', color: '#0ea5e9' },
     { name: 'Bootstrap', color: '#7c3aed' },
   ];
+
+  /**
+   * Columns the closing "browse all" tile spans at `columns` per row: what the
+   * last row leaves free, or the whole row when the families fill it exactly.
+   */
+  protected restOf(columns: number): number {
+    const used = this.tiles.length % columns;
+    return used === 0 ? columns : columns - used;
+  }
 
   protected readonly tiles: ComponentTile[] = [
     {

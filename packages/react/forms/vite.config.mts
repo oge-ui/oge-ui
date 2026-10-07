@@ -61,6 +61,7 @@ export default defineConfig(() => ({
         'react-dom',
         'react/jsx-runtime',
         '@oge-ui/behavior',
+        '@oge-ui/react-editor',
         '@oge-ui/react-inputs',
         '@oge-ui/react-layout',
         '@oge-ui/react-navigation',

@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@oge-ui/behavior": "1.1.2",
+    "@oge-ui/react-editor": "1.1.2",
     "@oge-ui/react-inputs": "1.1.2",
     "@oge-ui/react-layout": "1.1.2",
     "@oge-ui/react-navigation": "1.1.2",

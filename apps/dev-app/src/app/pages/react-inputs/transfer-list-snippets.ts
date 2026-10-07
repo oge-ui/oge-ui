@@ -164,4 +164,31 @@ const [touched, setTouched] = useState(false);`,
 />`,
     }),
   },
+  {
+    title: 'Reordering',
+    description:
+      "allowReordering opens one or both lists to reordering — 'target' here, so the granted permissions can be put in priority order. Alt+↑/↓ moves the active option; one drag reorders when dropped inside its own list and still moves when dropped on the other. The target's order is the value's order, so a reorder commits a new value.",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeTransferList'] },
+      name: 'TransferReorderDemo',
+      before: PERMISSIONS,
+      body: `const [priority, setPriority] = useState<readonly unknown[]>([
+  'orders.refund',
+  'users.invite',
+  'reports.export',
+]);`,
+      jsx: `<OgeTransferList
+  label="Escalation order"
+  items={permissions}
+  displayExpr="name"
+  valueExpr="id"
+  targetTitle="Priority"
+  allowReordering="target"
+  height={240}
+  value={priority}
+  onValueChange={setPriority}
+/>`,
+    }),
+  },
 ];

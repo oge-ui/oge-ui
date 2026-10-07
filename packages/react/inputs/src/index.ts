@@ -231,6 +231,8 @@ export {
   type OgeListBoxRenderItemContext,
   type OgeListBoxSelectionChangeEvent,
   type OgeListBoxItemClickEvent,
+  type OgeListBoxReorderingEvent,
+  type OgeListBoxReorderedEvent,
 } from './lib/list-box';
 export {
   OgeTransferList,
@@ -238,6 +240,8 @@ export {
   type OgeTransferListHandle,
   type OgeTransferListMovingEvent,
   type OgeTransferListMovedEvent,
+  type OgeTransferListReorderingEvent,
+  type OgeTransferListReorderedEvent,
 } from './lib/transfer-list';
 export {
   OgeSignaturePad,
@@ -264,8 +268,10 @@ export type {
 } from '@oge-ui/behavior';
 export type {
   OgeListBoxSelectionMode,
+  OgeListBoxReorderCause,
   OgeTransferListSide,
   OgeTransferListMoveCause,
+  OgeTransferListReorderSides,
 } from '@oge-ui/behavior';
 // — re-exported so consumers import one package.
 export {

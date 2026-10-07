@@ -260,6 +260,46 @@ describe('OgeListView', () => {
     );
   });
 
+  it('a plain virtual list keeps focus when the focused row scrolls away', async () => {
+    host.items.set(
+      Array.from({ length: 1000 }, (_, i) => ({
+        id: i,
+        name: `Person ${i}`,
+        team: 'All',
+      })),
+    );
+    host.mode.set('none');
+    host.virtual.set(true);
+    document.body.appendChild(el);
+    await settle(fixture);
+    const vp = viewport(el);
+    const first = rows(el)[0];
+    first.focus();
+    await settle(fixture);
+    expect(document.activeElement).toBe(first);
+    expect(vp.tabIndex).toBe(-1);
+
+    // a wheel scroll far down: the row leaves the window, focus must not
+    // fall to <body> — it waits on the viewport, which becomes the tab stop
+    vp.scrollTop = 20000;
+    vp.dispatchEvent(new Event('scroll'));
+    await settle(fixture);
+    expect(rows(el).some((row) => row.textContent?.trim() === 'Person 0')).toBe(
+      false,
+    );
+    expect(document.activeElement).toBe(vp);
+    expect(vp.tabIndex).toBe(0);
+
+    // scrolled back: the row is rendered again and gets the focus back
+    vp.scrollTop = 0;
+    vp.dispatchEvent(new Event('scroll'));
+    await settle(fixture);
+    expect(document.activeElement?.textContent?.trim()).toBe('Person 0');
+    expect(document.activeElement?.classList).toContain('oge-list-view-item');
+    expect(vp.tabIndex).toBe(-1);
+    el.remove();
+  });
+
   it('filters through the search field and announces the results', async () => {
     vi.useFakeTimers();
     try {

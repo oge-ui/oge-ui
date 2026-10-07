@@ -251,6 +251,8 @@ export const zhCN: OgeLocalePack = {
     listBoxLabel: '选项',
     listBoxSearchPlaceholder: '搜索',
     listBoxSearchLabel: '搜索列表',
+    listBoxReorderedAnnouncement:
+      '已将{item}移至第 {position} 位（共 {count} 项）',
     transferSourceTitle: '可选',
     transferTargetTitle: '已选',
     transferActionsLabel: '移动项目',

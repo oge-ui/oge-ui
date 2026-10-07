@@ -234,6 +234,26 @@ describe('OgeActionSheet', () => {
     ]);
   });
 
+  it('closes on an Escape pressed before the sheet has rendered', async () => {
+    const trigger = document.getElementById('trigger') as HTMLButtonElement;
+    trigger.focus();
+    const result = host.sheet().open();
+    // no change detection yet: the layer does not exist, focus is still on
+    // the trigger — the Escape is already the sheet's
+    key(trigger, 'Escape');
+    await settle(fixture);
+    expect(sheetEl()).toBeNull();
+    expect(host.opened()).toBe(false);
+    await expect(result).resolves.toBeNull();
+    expect(host.closed.map((c) => c.reason)).toEqual(['escape']);
+    // the stack slot is released: a sheet opened afterwards works as usual
+    const again = await openSheet();
+    key(menuItems()[0], 'Escape');
+    await settle(fixture);
+    expect(sheetEl()).toBeNull();
+    await expect(again.result).resolves.toBeNull();
+  });
+
   it('opening can be vetoed and toggle closes', async () => {
     const sub = host.sheet().opening.subscribe((e) => (e.cancel = true));
     await expect(host.sheet().open()).resolves.toBeNull();

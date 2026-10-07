@@ -3,6 +3,7 @@
   "dest": "../../dist/packages/forms",
   "allowedNonPeerDependencies": [
     "@oge-ui/behavior",
+    "@oge-ui/editor",
     "@oge-ui/inputs",
     "@oge-ui/tabs",
     "@oge-ui/layout",

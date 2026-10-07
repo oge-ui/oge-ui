@@ -261,7 +261,125 @@
   [showWeekNumbers]="opts().showWeekNumbers ?? false"
   [formControl]="ctrl"
 />
-} @default {
+} @case ('rating') {
+<oge-rating
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [max]="numberMax()"
+  [precision]="opts().precision ?? 1"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
+} @case ('otpInput') {
+<oge-otp-input
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [length]="opts().length ?? 6"
+  [masked]="opts().masked ?? false"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
+} @case ('listBox') {
+<oge-list-box
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [items]="items()"
+  [displayExpr]="displayExprOrUndefined()"
+  [valueExpr]="valueExprOrUndefined()"
+  [selectionMode]="opts().selectionMode ?? 'single'"
+  [showCheckBoxes]="listCheckBoxes()"
+  [searchEnabled]="opts().searchEnabled ?? false"
+  [height]="opts().height"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
+} @case ('transferList') { @defer (on immediate) {
+<oge-transfer-list
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [items]="items()"
+  [displayExpr]="displayExprOrUndefined()"
+  [valueExpr]="valueExprOrUndefined()"
+  [showCheckBoxes]="listCheckBoxes()"
+  [searchEnabled]="opts().searchEnabled ?? false"
+  [height]="opts().height"
+  [sourceTitle]="opts().sourceTitle"
+  [targetTitle]="opts().targetTitle"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @case ('signaturePad') { @defer (on immediate) {
+<oge-signature-pad
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [placeholder]="placeholderOrUndefined()"
+  [format]="opts().signatureFormat ?? 'png'"
+  [height]="signatureHeight()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @case ('mention') { @defer (on immediate) {
+<oge-mention
+  [fluid]="true"
+  [size]="size()"
+  [stylingMode]="stylingMode()"
+  [labelMode]="labelMode()"
+  [subscriptSizing]="subscriptSizing()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [placeholder]="placeholder()"
+  [items]="items()"
+  [displayExpr]="displayExprOrUndefined()"
+  [valueExpr]="valueExprOrUndefined()"
+  [trigger]="opts().trigger ?? '@'"
+  [rows]="opts().rows ?? 3"
+  [maxLength]="opts().maxLength"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @case ('richText') { @defer (on immediate) {
+<oge-editor
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [placeholder]="placeholder()"
+  [height]="opts().height"
+  [maxLength]="opts().maxLength"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @default {
 <oge-text-box
   [fluid]="true"
   [size]="size()"
@@ -488,7 +606,102 @@
   [showWeekNumbers]="opts().showWeekNumbers ?? false"
   [formField]="node"
 />
-} @default {
+} @case ('rating') {
+<!-- max flows from the schema metadata — [formField] owns that input. -->
+<oge-rating
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [precision]="opts().precision ?? 1"
+  [formField]="node"
+/>
+} @case ('otpInput') {
+<oge-otp-input
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [length]="opts().length ?? 6"
+  [masked]="opts().masked ?? false"
+  [formField]="node"
+/>
+} @case ('listBox') {
+<oge-list-box
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [items]="items()"
+  [displayExpr]="displayExprOrUndefined()"
+  [valueExpr]="valueExprOrUndefined()"
+  [selectionMode]="opts().selectionMode ?? 'single'"
+  [showCheckBoxes]="listCheckBoxes()"
+  [searchEnabled]="opts().searchEnabled ?? false"
+  [height]="opts().height"
+  [formField]="node"
+/>
+} @case ('transferList') { @defer (on immediate) {
+<oge-transfer-list
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [items]="items()"
+  [displayExpr]="displayExprOrUndefined()"
+  [valueExpr]="valueExprOrUndefined()"
+  [showCheckBoxes]="listCheckBoxes()"
+  [searchEnabled]="opts().searchEnabled ?? false"
+  [height]="opts().height"
+  [sourceTitle]="opts().sourceTitle"
+  [targetTitle]="opts().targetTitle"
+  [formField]="node"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @case ('signaturePad') { @defer (on immediate) {
+<oge-signature-pad
+  [size]="size()"
+  [id]="editorId()"
+  [label]="label()"
+  [placeholder]="placeholderOrUndefined()"
+  [format]="opts().signatureFormat ?? 'png'"
+  [height]="signatureHeight()"
+  [formField]="node"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @case ('mention') { @defer (on immediate) {
+<oge-mention
+  [fluid]="true"
+  [size]="size()"
+  [stylingMode]="stylingMode()"
+  [labelMode]="labelMode()"
+  [subscriptSizing]="subscriptSizing()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [placeholder]="placeholder()"
+  [items]="items()"
+  [displayExpr]="displayExprOrUndefined()"
+  [valueExpr]="valueExprOrUndefined()"
+  [trigger]="opts().trigger ?? '@'"
+  [rows]="opts().rows ?? 3"
+  [formField]="node"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @case ('richText') { @defer (on immediate) {
+<oge-editor
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [placeholder]="placeholder()"
+  [height]="opts().height"
+  [formField]="node"
+/>
+} @placeholder {
+<div class="oge-form-editor-pending" aria-hidden="true"></div>
+} } @default {
 <oge-text-box
   [fluid]="true"
   [size]="size()"

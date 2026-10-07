@@ -154,6 +154,48 @@ describe('<OgeListView>', () => {
     expect(document.getElementById(id)?.textContent).toBe('Person 999');
   });
 
+  it('a plain virtual list keeps focus when the focused row scrolls away', async () => {
+    const many = Array.from({ length: 1000 }, (_, i) => ({
+      id: i,
+      name: `Person ${i}`,
+    }));
+    render(
+      <OgeListView
+        items={many}
+        displayExpr="name"
+        selectionMode="none"
+        virtualScroll
+        height={200}
+        ariaLabel="People"
+      />,
+    );
+    const viewport = screen.getByRole('list', { name: 'People' });
+    const first = rows()[0];
+    await act(async () => {
+      first.focus();
+    });
+    expect(document.activeElement).toBe(first);
+    expect(viewport.tabIndex).toBe(-1);
+
+    // a wheel scroll far down: the row leaves the window, focus waits on the
+    // viewport (not <body>), which becomes the tab stop
+    await act(async () => {
+      viewport.scrollTop = 20000;
+      fireEvent.scroll(viewport);
+    });
+    expect(rows().some((row) => row.textContent === 'Person 0')).toBe(false);
+    expect(document.activeElement).toBe(viewport);
+    expect(viewport.tabIndex).toBe(0);
+
+    // scrolled back: the row is rendered again and gets the focus back
+    await act(async () => {
+      viewport.scrollTop = 0;
+      fireEvent.scroll(viewport);
+    });
+    expect(document.activeElement?.textContent).toBe('Person 0');
+    expect(viewport.tabIndex).toBe(-1);
+  });
+
   it('searches, announces the count and shows the empty state', () => {
     vi.useFakeTimers();
     try {

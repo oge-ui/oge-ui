@@ -259,6 +259,8 @@ export const fr: OgeLocalePack = {
     listBoxLabel: 'Options',
     listBoxSearchPlaceholder: 'Rechercher',
     listBoxSearchLabel: 'Rechercher dans la liste',
+    listBoxReorderedAnnouncement:
+      '{item} déplacé en position {position} sur {count}',
     transferSourceTitle: 'Disponibles',
     transferTargetTitle: 'Sélectionnés',
     transferActionsLabel: 'Déplacer les éléments',

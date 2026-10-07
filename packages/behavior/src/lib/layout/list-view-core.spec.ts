@@ -26,6 +26,7 @@ import {
   ogeListViewToggle,
   ogeListViewVirtualSettings,
   ogeListViewWindow,
+  ogeListViewWindowHasIndex,
   resolveOgeListViewConfig,
   type OgeListViewNavState,
 } from './list-view-core';
@@ -132,6 +133,11 @@ describe('list view core', () => {
     const all = ogeListViewWindow(model, null, null, 0, 0);
     expect(all.segments.map((s) => s.items.length)).toEqual([50, 50]);
     expect(ogeListViewVirtualSettings(false)).toBeNull();
+    // which items a window renders (by item index, not row index)
+    expect(ogeListViewWindowHasIndex(win, 20)).toBe(true);
+    expect(ogeListViewWindowHasIndex(win, 0)).toBe(false);
+    expect(ogeListViewWindowHasIndex(all, 99)).toBe(true);
+    expect(ogeListViewWindowHasIndex(all, -1)).toBe(false);
   });
 
   it('computes scroll targets with a sticky inset', () => {

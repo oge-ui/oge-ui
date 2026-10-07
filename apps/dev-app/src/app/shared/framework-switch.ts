@@ -46,7 +46,9 @@ import { FrameworkService } from './framework.service';
               [brand]="fw.framework() === entry.id"
               [size]="15"
             />
-            {{ entry.label }}
+            <!-- a span, so a narrow header can hide the word visually and
+                 keep it as the button's accessible name -->
+            <span class="app-fw-label">{{ entry.label }}</span>
           </button>
         }
       </div>

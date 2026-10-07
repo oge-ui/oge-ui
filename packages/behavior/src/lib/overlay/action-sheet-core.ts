@@ -170,8 +170,11 @@ export interface OgeActionSheetCoreOptions {
 export const OGE_ACTION_SHEET_FOCUS_ATTR = 'data-oge-action-sheet-focus';
 
 /**
- * The modal half of an action sheet. `activate()` once the sheet is rendered,
- * `deactivate()` when it goes; both are idempotent. While active it holds the
+ * The modal half of an action sheet. `arm()` the moment it opens, `activate()`
+ * once the sheet is rendered, `deactivate()` when it goes; all idempotent.
+ * Armed, it already holds its place on the overlay Escape stack and listens
+ * for Escape on the document — a render layer that renders the sheet a frame
+ * after `open()` would otherwise drop an Escape pressed in between. While active it holds the
  * scroll lock, inerts the background, joins the overlay Escape stack, traps
  * Tab, dismisses on a backdrop press and on a swipe down from the handle or
  * header, and restores focus to the element focused before it opened.
@@ -181,8 +184,26 @@ export class OgeActionSheetCore {
   private previousFocus: HTMLElement | null = null;
   private releaseInert: (() => void) | null = null;
   private swipe: { cancel(): void } | null = null;
+  private armedDoc: Document | null = null;
 
   constructor(private readonly options: OgeActionSheetCoreOptions) {}
+
+  /** Whether the sheet is armed (opened, not yet activated). */
+  isArmed(): boolean {
+    return this.armedDoc !== null;
+  }
+
+  /**
+   * Joins the Escape stack before the sheet renders: an Escape pressed
+   * between `open()` and `activate()` dismisses it (`onDismiss('escape')`).
+   * No-op on a server and while active.
+   */
+  arm(): void {
+    if (typeof document === 'undefined' || this.active || this.armedDoc) return;
+    this.armedDoc = document;
+    pushOverlay(this);
+    document.addEventListener('keydown', this.onArmedKeyDown, true);
+  }
 
   /** Whether the sheet is currently active. */
   isActive(): boolean {
@@ -195,6 +216,8 @@ export class OgeActionSheetCore {
     const layer = this.options.layer();
     if (!layer || this.active === layer) return;
     if (this.active) this.deactivate();
+    // the layer's own listener takes Escape over (the stack slot is kept)
+    this.disarm();
     this.active = layer;
     const focused = document.activeElement;
     this.previousFocus =
@@ -214,7 +237,11 @@ export class OgeActionSheetCore {
   /** Releases everything `activate()` took; restores focus when orphaned. */
   deactivate(): void {
     const layer = this.active;
-    if (!layer) return;
+    if (!layer) {
+      // closed before it ever rendered
+      if (this.disarm()) removeOverlay(this);
+      return;
+    }
     this.active = null;
     this.swipe?.cancel();
     this.swipe = null;
@@ -235,6 +262,22 @@ export class OgeActionSheetCore {
   destroy(): void {
     this.deactivate();
   }
+
+  /** Drops the armed document listener; `true` when it was armed. */
+  private disarm(): boolean {
+    const doc = this.armedDoc;
+    if (!doc) return false;
+    this.armedDoc = null;
+    doc.removeEventListener('keydown', this.onArmedKeyDown, true);
+    return true;
+  }
+
+  private readonly onArmedKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' || !isTopOverlay(this)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.options.onDismiss('escape');
+  };
 
   private initialFocusTarget(): HTMLElement | null {
     const sheet = this.options.sheet();

@@ -518,4 +518,59 @@ describe('<OgeGrid> (React) — first page in the first render', () => {
     expect(loads).toEqual([]);
     expect(screen.getByText('Linus')).toBeTruthy();
   });
+
+  it.each(['filterValue', 'defaultFilterValue'] as const)(
+    'applies an initial %s in that first load and does not reload',
+    async (prop) => {
+      const loads: LoadOptions[] = [];
+      const syncLoads: LoadOptions[] = [];
+      const onFilterValueChange = vi.fn();
+      const source: DataSource<Person> = {
+        capabilities: {
+          sort: true,
+          filter: true,
+          group: true,
+          paging: true,
+          summary: true,
+        },
+        keyOf: (row) => row.id,
+        load: (options) => {
+          loads.push(options);
+          return Promise.resolve({ data: people, totalCount: 4 });
+        },
+        loadSync: (options) => {
+          syncLoads.push(options);
+          const data = options.filter
+            ? people.filter((person) => person.age > 80)
+            : people;
+          return { data, totalCount: data.length };
+        },
+      };
+      const filter = {
+        type: 'binary',
+        field: 'age',
+        op: 'gt',
+        value: 80,
+      } as const;
+      render(
+        <OgeGrid
+          data={source}
+          keyField="id"
+          columns={['name']}
+          {...{ [prop]: filter }}
+          onFilterValueChange={onFilterValueChange}
+        />,
+      );
+      expect(screen.queryByText('Linus')).toBeNull();
+      expect(screen.getByText('Grace')).toBeTruthy();
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      expect(syncLoads).toHaveLength(1);
+      expect(syncLoads[0].filter).toEqual(filter);
+      expect(loads).toEqual([]);
+      // the initial value is the baseline, not a change
+      expect(onFilterValueChange).not.toHaveBeenCalled();
+    },
+  );
 });

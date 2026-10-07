@@ -11,11 +11,21 @@ import {
   type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
 import {
+  OGE_LIST_BOX_REORDER_SHORTCUTS,
   OgeListBoxCore,
+  beginPointerDragDrop,
+  ogeListBoxDropTarget,
+  ogeListBoxReorderAnnouncement,
   ogeListBoxSections,
+  ogeMoveListItem,
+  prepareTouchDrag,
+  type OgeListBoxDropTarget,
+  type OgeListBoxReorder,
+  type OgeListBoxReorderCause,
   type OgeListBoxSelectionMode,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
@@ -24,6 +34,8 @@ import {
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
 } from '@oge-ui/behavior';
+import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
+import { useOgeInputsConfig } from './inputs-config';
 import { createBumpAdapter } from './rx-adapter';
 import { useOgeField, type OgeControlProps } from './use-field';
 
@@ -47,6 +59,32 @@ export interface OgeListBoxItemClickEvent<TItem = unknown> {
   /** Position among the visible (filtered) options. */
   index: number;
   event: MouseEvent;
+}
+
+/** Payload of the cancelable `onReordering` — set `cancel` to keep the order. */
+export interface OgeListBoxReorderingEvent<TItem = unknown> {
+  /** The option that moves. */
+  item: TItem;
+  /** Its index in the whole `items` array before the move. */
+  fromIndex: number;
+  /** The index it lands at. */
+  toIndex: number;
+  /** `'keyboard'` (Alt+arrows), `'drag'` or `'api'` (`reorderItem()`). */
+  cause: OgeListBoxReorderCause;
+  /** The originating DOM event; `undefined` for programmatic moves. */
+  event: Event | undefined;
+  cancel: boolean;
+}
+
+/** Payload of `onReordered` — persist `items` to keep the new order. */
+export interface OgeListBoxReorderedEvent<TItem = unknown> {
+  item: TItem;
+  fromIndex: number;
+  toIndex: number;
+  cause: OgeListBoxReorderCause;
+  /** Every item in the new order. */
+  items: TItem[];
+  event: Event | undefined;
 }
 
 /** Context of `renderItem`. */
@@ -76,6 +114,18 @@ export interface OgeListBoxHandle<TItem = unknown> {
   getVisibleItems(): readonly TItem[];
   /** The selected items, in items order. */
   getSelectedItems(): TItem[];
+  /**
+   * Moves `item` before / after `target` through the same cancelable path as
+   * the keyboard and the pointer; `false` when the move is not possible or an
+   * `onReordering` handler cancelled it. `cause` is reported in the events —
+   * the transfer list passes `'drag'` for its own pointer drops.
+   */
+  reorderItem(
+    item: TItem,
+    target: TItem,
+    position?: 'before' | 'after',
+    cause?: OgeListBoxReorderCause,
+  ): boolean;
 }
 
 export interface OgeListBoxProps<
@@ -115,6 +165,12 @@ export interface OgeListBoxProps<
   hint?: string;
   /** Shortcuts advertised as `aria-keyshortcuts` on the list (hosts handling extra keys). */
   keyShortcuts?: string;
+  /**
+   * Lets the user reorder the options: Alt+↑/↓ moves the active option, a
+   * pointer drag drops it before / after another. The list shows the new
+   * order at once; persist `onReordered`'s `items` (a new `items` resets it).
+   */
+  allowReordering?: boolean;
   /** Custom option content (the option keeps its role, state and check glyph). */
   renderItem?: (item: TItem, context: OgeListBoxRenderItemContext) => ReactNode;
   /** Custom group header content (`groupBy`). */
@@ -123,6 +179,10 @@ export interface OgeListBoxProps<
   onSelectionChange?: (event: OgeListBoxSelectionChangeEvent<TItem>) => void;
   /** An enabled option was clicked. */
   onItemClick?: (event: OgeListBoxItemClickEvent<TItem>) => void;
+  /** Cancelable pre-event of every reorder (keyboard, drag, `reorderItem()`). */
+  onReordering?: (event: OgeListBoxReorderingEvent<TItem>) => void;
+  /** An option moved — `items` is the new order. */
+  onReordered?: (event: OgeListBoxReorderedEvent<TItem>) => void;
   className?: string;
   style?: CSSProperties;
 }
@@ -159,6 +219,9 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
   } = props;
   const multiple = selectionMode === 'multiple';
   const checks = multiple && showCheckBoxes;
+  const allowReordering = props.allowReordering ?? false;
+  const config = useOgeInputsConfig();
+  const announcer = useOgeLiveAnnouncer();
 
   const hostRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -174,8 +237,19 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
   const readonly = props.readonly ?? false;
   const editable = !field.effectiveDisabled && !readonly;
 
-  const latest = useRef({ props, field });
-  latest.current = { props, field };
+  // The displayed order: `items`, until the user reorders — a new `items`
+  // array resets it (the ref remembers which array the order was made from).
+  const orderRef = useRef<{
+    source: readonly TItem[] | undefined;
+    order: readonly TItem[];
+  } | null>(null);
+  const order =
+    orderRef.current && orderRef.current.source === props.items
+      ? orderRef.current.order
+      : (props.items ?? []);
+
+  const latest = useRef({ props, field, order });
+  latest.current = { props, field, order };
 
   // --- the shared listbox machine, on a version-bump adapter ---------------
 
@@ -185,7 +259,7 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
     coreRef.current = new OgeListBoxCore<TItem>(
       {
         inputId: () => latest.current.field.ids.inputId,
-        items: () => latest.current.props.items ?? [],
+        items: () => latest.current.order,
         displayExpr: () => latest.current.props.displayExpr,
         valueExpr: () => latest.current.props.valueExpr,
         disabledExpr: () => latest.current.props.disabledExpr,
@@ -211,6 +285,13 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
   useEffect(() => () => core.destroy(), [core]);
 
   const [listFocused, setListFocused] = useState(false);
+  const [dropIndicator, setDropIndicator] =
+    useState<OgeListBoxDropTarget | null>(null);
+
+  // touch drags must be armed before the first touchstart (Chrome decides there)
+  useEffect(() => {
+    if (allowReordering) prepareTouchDrag();
+  }, [allowReordering]);
   const visible = core.visibleItems();
   const sections = ogeListBoxSections(core.rows());
 
@@ -237,6 +318,50 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
     });
   };
 
+  const commitReorder = (
+    reorder: OgeListBoxReorder | null,
+    cause: OgeListBoxReorderCause,
+    event: Event | undefined,
+  ): boolean => {
+    const { field: f, props: p, order: items } = latest.current;
+    if (!reorder || f.effectiveDisabled || (p.readonly ?? false)) return false;
+    const item = items[reorder.fromIndex];
+    const pre: OgeListBoxReorderingEvent<TItem> = {
+      item,
+      fromIndex: reorder.fromIndex,
+      toIndex: reorder.toIndex,
+      cause,
+      event,
+      cancel: false,
+    };
+    p.onReordering?.(pre);
+    if (pre.cancel) return false;
+    const next = ogeMoveListItem(items, reorder.fromIndex, reorder.toIndex);
+    orderRef.current = { source: p.items, order: next };
+    latest.current = { ...latest.current, order: next };
+    // focus stays on the moved option (this also re-renders)
+    core.activateItem(item);
+    bump();
+    announcer.announce(
+      ogeListBoxReorderAnnouncement(
+        f.msg.listBoxReorderedAnnouncement,
+        core.displayOf(item),
+        reorder.toIndex + 1,
+        next.length,
+        config.locale,
+      ),
+    );
+    p.onReordered?.({
+      item,
+      fromIndex: reorder.fromIndex,
+      toIndex: reorder.toIndex,
+      cause,
+      items: next,
+      event,
+    });
+    return true;
+  };
+
   const search = (text: string): void => {
     if (text) core.setSearch(text);
     else core.resetSearch();
@@ -256,12 +381,24 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
     search,
     getVisibleItems: () => core.visibleItems(),
     getSelectedItems: () => core.selectedItems(),
+    reorderItem: (item, target, position = 'before', cause = 'api') =>
+      commitReorder(core.reorderAt(item, target, position), cause, undefined),
   }));
 
   // --- interactions ----------------------------------------------------------
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
     if (field.effectiveDisabled) return;
+    if (allowReordering && !readonly) {
+      const reorder = core.reorderKey(event);
+      if (reorder.handled) {
+        event.preventDefault();
+        if (reorder.reorder) {
+          commitReorder(reorder.reorder, 'keyboard', event.nativeEvent);
+        }
+        return;
+      }
+    }
     const result = core.handleKey(event, !readonly);
     if (result.handled) event.preventDefault();
     if ('value' in result) commitSelection(result.value, event.nativeEvent);
@@ -283,6 +420,41 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
     }
     const next = core.clickOption(index, event);
     if (next !== undefined) commitSelection(next, event.nativeEvent);
+  };
+
+  const onListPointerDown = (
+    event: ReactPointerEvent<HTMLDivElement>,
+  ): void => {
+    if (!allowReordering || !editable || event.button !== 0) return;
+    // inside a transfer list the transfer list runs one drag for both moves
+    // between the lists and reorders inside one (it calls `reorderItem`)
+    if (hostRef.current?.closest('.oge-transfer-list-pane')) return;
+    const list = listRef.current;
+    const option = (event.target as Element | null)?.closest?.(
+      '.oge-list-box-option',
+    );
+    if (!list || !option || option.closest('[role="listbox"]') !== list) {
+      return;
+    }
+    const item = core.visibleItems()[Number(option.getAttribute('data-index'))];
+    if (item === undefined || core.isItemDisabled(item)) return;
+    const nativeEvent = event.nativeEvent;
+    beginPointerDragDrop<OgeListBoxDropTarget>(event, {
+      source: option,
+      autoScroll: list,
+      resolve: (hit, move) => ogeListBoxDropTarget(hit, list, move.clientY),
+      onOver: (target) => setDropIndicator(target),
+      onDrop: (target) => {
+        const over = core.visibleItems()[target.index];
+        if (over === undefined) return;
+        commitReorder(
+          core.reorderAt(item, over, target.position),
+          'drag',
+          nativeEvent,
+        );
+      },
+      onEnd: () => setDropIndicator(null),
+    });
   };
 
   const onFocusIn = (event: ReactFocusEvent): void => {
@@ -315,6 +487,7 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
     readonly && 'oge-list-box-readonly',
     props.size === 'sm' && 'oge-list-box-sm',
     props.size === 'lg' && 'oge-list-box-lg',
+    allowReordering && 'oge-list-box-reorderable',
     field.effectiveDisabled && 'oge-disabled',
     className,
   ]
@@ -334,6 +507,8 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
           active && 'oge-list-box-option-active',
           selected && 'oge-list-box-option-selected',
           disabled && 'oge-disabled',
+          dropIndicator?.index === index &&
+            `oge-list-box-option-drop-${dropIndicator.position}`,
         ]
           .filter(Boolean)
           .join(' ')}
@@ -438,10 +613,18 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
           aria-required={props.required ? true : undefined}
           aria-readonly={readonly ? true : undefined}
           aria-disabled={field.effectiveDisabled ? true : undefined}
-          aria-keyshortcuts={props.keyShortcuts}
+          aria-keyshortcuts={
+            [
+              props.keyShortcuts,
+              allowReordering ? OGE_LIST_BOX_REORDER_SHORTCUTS : undefined,
+            ]
+              .filter(Boolean)
+              .join(' ') || undefined
+          }
           autoFocus={props.autofocus}
           onKeyDown={onKeyDown}
           onClick={onListClick}
+          onPointerDown={onListPointerDown}
           onFocus={(event) => {
             if (event.target !== listRef.current) return;
             setListFocused(true);

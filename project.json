@@ -37,6 +37,15 @@
       },
       "dependsOn": [{ "projects": ["packages/**/*"], "target": "build" }]
     },
+    "api-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/api-report.mjs",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": [{ "projects": ["core", "behavior"], "target": "build" }]
+    },
     "license-boundary-check": {
       "executor": "nx:run-commands",
       "outputs": [],

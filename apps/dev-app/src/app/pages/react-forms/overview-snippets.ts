@@ -8,7 +8,7 @@ import {
  * the `llms.txt` generator and the compile gate load this module in plain Node.
  *
  * Section-for-section mirror of `../forms/overview.ts`, per the parity standard
- * (`docs/REACT-PARITY.md`): same seven sections, same order, same example
+ * (`docs/REACT-PARITY.md`): same eight sections, same order, same example
  * content, React idiom — the `layout` array in place of projected children and
  * render props in place of the template slots.
  */
@@ -108,6 +108,46 @@ export const FORMS_OVERVIEW_DEMOS: readonly ReactDemo[] = [
     { field: 'bio', label: 'Bio', editorType: 'textArea', colSpan: 2 },
   ]}
 />`,
+    }),
+  },
+  {
+    title: 'More editors',
+    description:
+      'Every editor of the suite is an editorType: the rating, the one-time-code cells, the list box, the transfer list, the mention field, the signature pad and the rich-text editor (<OgeEditor> from @oge-ui/react-editor). The rating and the signature pad are bare controls, so the form draws their label and error text; the rest keep their own. The rich-text editor is loaded on first use, so a form that never renders it never pulls it in — import @oge-ui/react-editor/styles.css when you use it.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-forms': ['OgeForm'] },
+      types: { '@oge-ui/react-forms': ['OgeFormItemDefinition'] },
+      name: 'MoreEditorsDemo',
+      before: `const fields: OgeFormItemDefinition[] = [
+  { field: 'stars', label: 'Rating', editorType: 'rating', editorOptions: { precision: 0.5 } },
+  { field: 'code', label: 'Confirmation code', editorType: 'otpInput', editorOptions: { length: 4 } },
+  {
+    field: 'channels',
+    label: 'Channels',
+    editorType: 'listBox',
+    editorOptions: { items: ['email', 'sms', 'push'], selectionMode: 'multiple', showCheckBoxes: 'normal' },
+  },
+  {
+    field: 'reviewers',
+    label: 'Reviewers',
+    editorType: 'transferList',
+    editorOptions: { items: ['Ada', 'Grace', 'Linus', 'Margaret'], height: 160 },
+  },
+  { field: 'note', label: 'Note', editorType: 'mention', colSpan: 2, editorOptions: { items: ['ada', 'grace', 'linus'] } },
+  { field: 'details', label: 'Details', editorType: 'richText', colSpan: 2, editorOptions: { height: 160 } },
+  { field: 'signature', label: 'Signature', editorType: 'signaturePad', colSpan: 2 },
+];`,
+      body: `const [review, setReview] = useState({
+  stars: 4,
+  code: '',
+  channels: ['email'],
+  reviewers: ['Ada'],
+  note: '',
+  details: '<p>Shipped on <strong>time</strong>.</p>',
+  signature: null as string | null,
+});`,
+      jsx: `<OgeForm formData={review} onFormDataChange={setReview} items={fields} colCount={2} />`,
     }),
   },
   {

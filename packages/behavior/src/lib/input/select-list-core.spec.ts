@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   OgeSelectListCore,
+  ogeSelectSearchFilter,
+  ogeSelectSearchStrings,
   type OgeReactiveCell,
   type OgeReactivityAdapter,
   type OgeSelectListCoreDeps,
@@ -354,5 +356,39 @@ describe('active-option bookkeeping', () => {
     expect(scrollActiveIntoView).toHaveBeenCalledWith(2);
     core.setActive(-1);
     expect(scrollActiveIntoView).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ogeSelectSearchFilter / ogeSelectSearchStrings', () => {
+  const items = [
+    { name: 'Berlin', code: 'BER' },
+    { name: 'Bern', code: 'BRN' },
+    { name: 'Ankara', code: 'ESB' },
+  ];
+  const strings = (item: (typeof items)[number]) =>
+    ogeSelectSearchStrings(item, undefined, 'name');
+
+  it('matches the trimmed term case-insensitively, contains or startswith', () => {
+    expect(
+      ogeSelectSearchFilter(items, ' ER ', 'contains', strings).map(
+        (i) => i.name,
+      ),
+    ).toEqual(['Berlin', 'Bern']);
+    expect(ogeSelectSearchFilter(items, 'er', 'startswith', strings)).toEqual(
+      [],
+    );
+    expect(ogeSelectSearchFilter(items, '', 'contains', strings)).toBe(items);
+    expect(ogeSelectSearchFilter(items, null, 'contains', strings)).toBe(items);
+  });
+
+  it('reads searchExpr fields before the display text', () => {
+    expect(ogeSelectSearchStrings(items[0], 'code', 'name')).toEqual(['BER']);
+    expect(ogeSelectSearchStrings(items[0], ['name', 'code'], 'name')).toEqual([
+      'Berlin',
+      'BER',
+    ]);
+    expect(
+      ogeSelectSearchStrings(items[0], (i) => i.code.toLowerCase(), 'name'),
+    ).toEqual(['ber']);
   });
 });

@@ -18,16 +18,18 @@ import {
 } from '@oge-ui/react-forms';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
+import { ReactFormsMoreEditorsStyles } from './more-editors-styles';
 import { FORMS_OVERVIEW_DEMOS } from './overview-snippets';
 
 /**
- * TOC of the React view — the same seven sections as the Angular overview
+ * TOC of the React view — the same eight sections as the Angular overview
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_FORMS_OVERVIEW_SECTIONS = [
   'Declarative items',
   'Data-driven items',
   'Editor selection',
+  'More editors',
   'Groups',
   'Label placement',
   'Template slots',
@@ -59,6 +61,15 @@ interface Profile {
   active: boolean;
   team: string;
   bio: string;
+}
+interface Review {
+  stars: number;
+  code: string;
+  channels: string[];
+  reviewers: string[];
+  note: string;
+  details: string;
+  signature: string | null;
 }
 interface Account {
   firstName: string;
@@ -161,6 +172,79 @@ function EditorSelectionDemo(): ReactNode {
       { field: 'team', label: 'Team', editorOptions: { items: TEAMS } },
       { field: 'bio', label: 'Bio', editorType: 'textArea', colSpan: 2 },
     ],
+  });
+}
+
+const REVIEW_FIELDS: OgeFormItemDefinition[] = [
+  {
+    field: 'stars',
+    label: 'Rating',
+    editorType: 'rating',
+    editorOptions: { precision: 0.5 },
+  },
+  {
+    field: 'code',
+    label: 'Confirmation code',
+    editorType: 'otpInput',
+    editorOptions: { length: 4 },
+  },
+  {
+    field: 'channels',
+    label: 'Channels',
+    editorType: 'listBox',
+    editorOptions: {
+      items: ['email', 'sms', 'push'],
+      selectionMode: 'multiple',
+      showCheckBoxes: 'normal',
+    },
+  },
+  {
+    field: 'reviewers',
+    label: 'Reviewers',
+    editorType: 'transferList',
+    editorOptions: {
+      items: ['Ada', 'Grace', 'Linus', 'Margaret'],
+      height: 160,
+    },
+  },
+  {
+    field: 'note',
+    label: 'Note',
+    editorType: 'mention',
+    colSpan: 2,
+    editorOptions: { items: ['ada', 'grace', 'linus'] },
+  },
+  {
+    field: 'details',
+    label: 'Details',
+    editorType: 'richText',
+    colSpan: 2,
+    editorOptions: { height: 160 },
+  },
+  {
+    field: 'signature',
+    label: 'Signature',
+    editorType: 'signaturePad',
+    colSpan: 2,
+  },
+];
+
+/** The W8b / W8e editors as editor types; the rich-text one loads lazily. */
+function MoreEditorsDemo(): ReactNode {
+  const [review, setReview] = useState<Review>({
+    stars: 4,
+    code: '',
+    channels: ['email'],
+    reviewers: ['Ada'],
+    note: '',
+    details: '<p>Shipped on <strong>time</strong>.</p>',
+    signature: null,
+  });
+  return createElement(OgeForm<Review>, {
+    formData: review,
+    onFormDataChange: setReview,
+    items: REVIEW_FIELDS,
+    colCount: 2,
   });
 }
 
@@ -301,7 +385,7 @@ function ActionsDemo(): ReactNode {
  */
 @Component({
   selector: 'app-react-forms-overview-demos',
-  imports: [DemoCard, ReactHost],
+  imports: [DemoCard, ReactHost, ReactFormsMoreEditorsStyles],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   template: `
@@ -336,10 +420,29 @@ function ActionsDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="[
+        'rating',
+        'otpInput',
+        'listBox',
+        'transferList',
+        'mention',
+        'richText',
+        'signaturePad',
+      ]"
+      heading="More editors"
+      description="Every editor of the suite is an <code>editorType</code>: the rating, the one-time-code cells, the list box, the transfer list, the mention field, the signature pad and the rich-text editor (<code>&amp;lt;OgeEditor&amp;gt;</code> from <code>&#64;oge-ui/react-editor</code>). The rating and the signature pad are bare controls, so the form draws their label and error text; the rest keep their own. The rich-text editor is loaded on first use, so a form that never renders it never pulls it in — import <code>&#64;oge-ui/react-editor/styles.css</code> when you use it."
+      [code]="demos[3].source"
+      language="tsx"
+    >
+      <app-react-forms-more-editors-styles />
+      <app-react-host [render]="moreEditors" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['caption', 'children', 'colCount']"
       heading="Groups"
       description="A group renders a real <code>&amp;lt;fieldset&amp;gt;</code> with the caption as its <code>&amp;lt;legend&amp;gt;</code> — the markup screen readers expect for a labelled section — and carries its own column count. Groups nest."
-      [code]="demos[3].source"
+      [code]="demos[4].source"
       language="tsx"
     >
       <app-react-host [render]="groups" />
@@ -349,7 +452,7 @@ function ActionsDemo(): ReactNode {
       [chips]="['labelLocation', 'alignItemLabels', 'showColonAfterLabel']"
       heading="Label placement"
       description="<code>labelLocation: 'top'</code> keeps each editor's own label chrome. <code>'start'</code> and <code>'end'</code> hand the label to the form, which draws a real <code>&amp;lt;label htmlFor&amp;gt;</code> in its own column — <code>alignItemLabels</code> gives every row the same label width so the editors line up."
-      [code]="demos[4].source"
+      [code]="demos[5].source"
       language="tsx"
     >
       <app-react-host [render]="labels" />
@@ -359,7 +462,7 @@ function ActionsDemo(): ReactNode {
       [chips]="['renderItem', 'renderEditor', 'renderLabel']"
       heading="Template slots"
       description="Four render props, each legal on <code>&amp;lt;OgeForm&amp;gt;</code> (applies to every item) or on a single item definition (applies to that one, and wins). <code>renderEditor</code> replaces only the control and keeps the label, required mark and error text — the context hands you <code>editorId</code> so your control keeps the <code>&amp;lt;label htmlFor&amp;gt;</code> association, and <code>setValue</code> so it writes back into the model. <code>renderItem</code> replaces the whole field, and <code>renderGroupCaption</code> replaces a legend's content."
-      [code]="demos[5].source"
+      [code]="demos[6].source"
       language="tsx"
     >
       <app-react-host [render]="templates" />
@@ -369,7 +472,7 @@ function ActionsDemo(): ReactNode {
       [chips]="['actions', 'onSubmitted', 'reset()']"
       heading="Actions &amp; submit"
       description="Pass the buttons to the <code>actions</code> prop. Submitting marks every field touched, runs validation, fires the cancelable <code>onSubmitting</code> and — only if both pass — <code>onSubmitted</code>. A failed submit reveals the summary and moves focus to the first invalid field."
-      [code]="demos[6].source"
+      [code]="demos[7].source"
       language="tsx"
     >
       <app-react-host [render]="actions" />
@@ -382,6 +485,7 @@ export class ReactFormsOverviewDemos {
   protected readonly declarative = () => createElement(DeclarativeItemsDemo);
   protected readonly items = () => createElement(ItemsDemo);
   protected readonly editors = () => createElement(EditorSelectionDemo);
+  protected readonly moreEditors = () => createElement(MoreEditorsDemo);
   protected readonly groups = () => createElement(GroupsDemo);
   protected readonly labels = () => createElement(LabelPlacementDemo);
   protected readonly templates = () => createElement(RenderPropsDemo);
