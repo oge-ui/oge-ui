@@ -14,6 +14,8 @@
  *                                         apps/dev-app/public/tokens.json
  *   pages/getting-started/generated/      the token reference table and the
  *                                         ThemeBuilder presets (lib/tokens.mjs)
+ *   pages/guides/generated/keyboard.json  the accessibility guide's keyboard
+ *                                         maps (lib/keyboard.mjs)
  *
  * Everything is derived from the workspace — routes, `<app-api-reference>`
  * blocks, `*-api-data.ts` tables, entry-point exports and `*-snippets.ts` demo
@@ -63,6 +65,7 @@ import { readRoutes, readSeoDescriptions } from './lib/routes.mjs';
 import { buildSearchIndex } from './lib/search-index.mjs';
 import { readSnippets } from './lib/snippets.mjs';
 import { buildTokenArtifacts } from './lib/tokens.mjs';
+import { buildKeyboardMaps } from './lib/keyboard.mjs';
 
 const workspaceRoot = process.cwd();
 const checkOnly = process.argv.includes('--check');
@@ -140,6 +143,11 @@ artifacts.set(
     packages: PACKAGES,
     tokens: JSON.parse(tokenArtifacts.reference).tokens,
   }),
+);
+// Keyboard maps of the accessibility guide, read out of the API reference data
+artifacts.set(
+  `${PATHS.pagesDir}/guides/generated/keyboard.json`,
+  await buildKeyboardMaps({ workspaceRoot, packages: PACKAGES }),
 );
 artifacts.set(
   'apps/dev-app/src/app/shared/site-version.ts',
@@ -553,6 +561,7 @@ function groupRoutes() {
   /** @type {Map<string, { path: string, label: string }[]>} */
   const grouped = new Map();
   grouped.set('Getting started', []);
+  grouped.set('Guides', []);
   grouped.set('AI', []);
   for (const { pkg } of docs.values()) {
     if (pkg.docsRoot) grouped.set(pkg.label, []);
@@ -567,6 +576,10 @@ function groupRoutes() {
     if (page.path === '') continue; // the H1 already is the home page
     if (page.path.startsWith('getting-started')) {
       grouped.get('Getting started').push(page);
+      continue;
+    }
+    if (page.path === 'guides' || page.path.startsWith('guides/')) {
+      grouped.get('Guides').push(page);
       continue;
     }
     if (page.path === 'ai' || page.path.startsWith('ai/')) {

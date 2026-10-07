@@ -86,6 +86,74 @@ export const appRoutes: Route[] = [
     title: 'OGE — Theme builder',
   },
   {
+    path: 'guides',
+    loadComponent: () =>
+      import('./pages/guides/guides').then((m) => m.GuidesIndexPage),
+    title: 'OGE — Guides',
+  },
+  {
+    path: 'guides/angular-ssr',
+    loadComponent: () =>
+      import('./pages/guides/angular-ssr').then((m) => m.GuideAngularSsrPage),
+    title: 'OGE — Angular SSR, hydration and zoneless',
+  },
+  {
+    path: 'guides/nextjs',
+    loadComponent: () =>
+      import('./pages/guides/nextjs').then((m) => m.GuideNextjsPage),
+    title: 'OGE — Next.js App Router',
+  },
+  {
+    path: 'guides/build-tools',
+    loadComponent: () =>
+      import('./pages/guides/build-tools').then((m) => m.GuideBuildToolsPage),
+    title: 'OGE — Vite, Angular CLI and Nx',
+  },
+  {
+    path: 'guides/testing',
+    loadComponent: () =>
+      import('./pages/guides/testing').then((m) => m.GuideTestingPage),
+    title: 'OGE — Testing',
+  },
+  {
+    path: 'guides/performance',
+    loadComponent: () =>
+      import('./pages/guides/performance').then((m) => m.GuidePerformancePage),
+    title: 'OGE — Performance',
+  },
+  {
+    path: 'guides/security',
+    loadComponent: () =>
+      import('./pages/guides/security').then((m) => m.GuideSecurityPage),
+    title: 'OGE — CSP and Trusted Types',
+  },
+  {
+    path: 'guides/headless',
+    loadComponent: () =>
+      import('./pages/guides/headless').then((m) => m.GuideHeadlessPage),
+    title: 'OGE — Headless engines',
+  },
+  {
+    path: 'guides/accessibility',
+    loadComponent: () =>
+      import('./pages/guides/accessibility').then(
+        (m) => m.GuideAccessibilityPage,
+      ),
+    title: 'OGE — Accessibility',
+  },
+  {
+    path: 'guides/accessibility/conformance',
+    loadComponent: () =>
+      import('./pages/guides/conformance').then((m) => m.GuideConformancePage),
+    title: 'OGE — Accessibility conformance report',
+  },
+  {
+    path: 'guides/versioning',
+    loadComponent: () =>
+      import('./pages/guides/versioning').then((m) => m.GuideVersioningPage),
+    title: 'OGE — Versioning and deprecation',
+  },
+  {
     path: 'ai',
     loadComponent: () =>
       import('./pages/ai/overview').then((m) => m.AiOverviewPage),

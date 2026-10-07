@@ -2220,6 +2220,7 @@ the site serves. Three artifacts serve them, all **generated and committed**:
 | `apps/dev-app/public/search-index.json`  | the Ctrl/⌘K palette's index: pages, headings, API members, tokens            |
 | `packages/core/tokens.json`              | DTCG design tokens (light / dark / high contrast), also `public/tokens.json` |
 | `pages/getting-started/generated/*.json` | token reference rows + ThemeBuilder presets (`lib/tokens.mjs`)               |
+| `pages/guides/generated/keyboard.json`   | the accessibility guide's keyboard maps (`lib/keyboard.mjs`)                 |
 
 Everything is **derived from the workspace**, never hand-written twice: routes from `app.routes.ts`,
 link notes from `SeoService.DESCRIPTIONS`, member tables from each API page's
@@ -2389,6 +2390,38 @@ scoped / DTCG exports. Rules the page keeps:
   `font-family` on the scope.
 - Under `?framework=react` the page says the preview renders the Angular components and that the
   exported tokens style React identically (one stylesheet); there is no React preview.
+
+### Docs site: guides
+
+`/guides/*` (`pages/guides/`, sidebar section **Guides**, breadcrumb Home → Guides → page) holds the
+task-oriented guides: Angular SSR / zoneless, Next.js, Vite / Angular CLI / Nx, testing,
+performance, CSP and Trusted Types, headless engines, accessibility, the accessibility
+conformance report and the versioning policy. Rules they keep:
+
+- **Every claim is true of the code and names its proof.** A guide states what a spec, a gate or
+  the source shows (`strict-csp.spec.ts`, `react-hydration.spec.tsx`, `size-budgets.json`), and
+  says plainly what is not covered (no component harnesses yet, the editor is not driven under
+  the strict run, no recorded screen-reader test). Change the guide in the same change that
+  changes the behaviour it describes.
+- **Samples are `*-snippets.ts` like every page.** Whole components go through `demoSource()` /
+  `reactDemoSource()` and are compiled by `docs-tools:typecheck`; config excerpts, specs and
+  shell commands are plain-string fragments the checker lists. `guides` is in `GUIDE_DIRS`, so
+  the snippets land in `llms-full.txt` → "Guides" and the routes get their own `llms.txt`
+  heading.
+- **Tables are data.** `GuideTable` (`pages/guides/guide-table.ts`) renders rows of strings with
+  backtick runs as `<code>` — template-only, no `innerHTML` — inside a labelled, focusable scroll
+  region (the caption names it, which is also what the e2e spec locates).
+- **Keyboard maps are generated.** `lib/keyboard.mjs` collects every API-reference group whose
+  title names the keyboard (rows of keys, not properties) into
+  `pages/guides/generated/keyboard.json`; `llms-check` fails when an api-data edit leaves it
+  stale. A family whose keyboard table lives in prose is not in the generated list — move it
+  into an api-data group to have it appear.
+- **The conformance report is data with a spec.** `conformance-data.ts` holds the WCAG 2.2 A /
+  AA rows (VPAT 2.5 levels); `conformance-data.spec.ts` pins the 31 + 24 criteria and their
+  order. It is self-assessed: "Supports" only for built-in behaviour, with the test named in the
+  remark where there is one; "Partially Supports" where a part is missing or unverified.
+- Numbers come from their source of truth at build time (the performance guide imports
+  `tools/size-budgets.json`, the versioning guide `SITE_VERSION`), never retyped.
 
 ## SSR and hydration
 

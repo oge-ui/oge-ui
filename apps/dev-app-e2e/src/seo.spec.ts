@@ -16,6 +16,9 @@ const PAGES = [
   '/getting-started/setup',
   '/getting-started/tokens',
   '/getting-started/theme-builder',
+  '/guides',
+  '/guides/security',
+  '/guides/accessibility/conformance',
   '/components/data-grid',
   '/components/data-grid/filtering',
   '/components/data-grid/editing',
@@ -76,6 +79,17 @@ test.describe('per-page SEO', () => {
       expect(trail[0]?.name, path).toBe('Home');
       expect(trail.at(-1)?.item, path).toBe(meta.canonical);
     }
+  });
+
+  test('a guide trail runs Home → Guides → Guide', async ({ page }) => {
+    await page.goto('/guides/accessibility/conformance');
+    await expect(page.locator('h1').first()).toBeVisible();
+    const { breadcrumbs } = await head(page);
+    expect(breadcrumbs?.itemListElement.map((crumb) => crumb.name)).toEqual([
+      'Home',
+      'Guides',
+      'Accessibility conformance report',
+    ]);
   });
 
   test('a family sub-page trail runs Home → Components → Family → Page', async ({

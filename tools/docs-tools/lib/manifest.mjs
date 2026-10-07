@@ -22,7 +22,7 @@ export const PATHS = {
  * Docs folders that belong to no package — guides rather than component demos.
  * Their snippets land in `llms-full.txt` under "Getting started samples".
  */
-export const GUIDE_DIRS = ['getting-started', 'ai'];
+export const GUIDE_DIRS = ['getting-started', 'guides', 'ai'];
 
 export const SITE_ORIGIN = 'https://www.ogeui.com';
 export const REPO_URL = 'https://github.com/oge-ui/oge-ui';

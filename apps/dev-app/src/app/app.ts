@@ -148,6 +148,42 @@ export class App {
       ],
     },
     {
+      title: 'Guides',
+      items: [
+        { path: '/guides', label: 'All guides', icon: 'lightbulb' },
+        {
+          path: '/guides/angular-ssr',
+          label: 'Angular SSR & zoneless',
+          icon: 'layers',
+        },
+        { path: '/guides/nextjs', label: 'Next.js App Router', icon: 'zap' },
+        {
+          path: '/guides/build-tools',
+          label: 'Vite, Angular CLI, Nx',
+          icon: 'package',
+        },
+        { path: '/guides/testing', label: 'Testing', icon: 'check-square' },
+        { path: '/guides/performance', label: 'Performance', icon: 'gauge' },
+        {
+          path: '/guides/security',
+          label: 'CSP & Trusted Types',
+          icon: 'shield',
+        },
+        { path: '/guides/headless', label: 'Headless engines', icon: 'code' },
+        {
+          path: '/guides/accessibility',
+          label: 'Accessibility',
+          icon: 'user',
+        },
+        {
+          path: '/guides/accessibility/conformance',
+          label: 'Conformance (ACR)',
+          icon: 'check',
+        },
+        { path: '/guides/versioning', label: 'Versioning policy', icon: 'tag' },
+      ],
+    },
+    {
       title: 'AI',
       items: [
         { path: '/ai', label: 'Coding assistants', icon: 'code' },

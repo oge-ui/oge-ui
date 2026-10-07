@@ -64,6 +64,20 @@ For code generation, prefer the full reference — it inlines every API table an
 - [Localization](https://www.ogeui.com/getting-started/localization): Localize OGE UI: global and per-component message overrides, switching language at runtime, validation messages and Intl number and date locales.
 - [Localization API](https://www.ogeui.com/getting-started/localization/api): Localization API of OGE UI: provideOgeLocale, OgeLocaleProvider and the @oge-ui/locales packs for ten languages, lazy loaders and the message merge helper.
 
+## Guides
+
+- [Guides](https://www.ogeui.com/guides): OGE UI guides: server rendering, Next.js, Vite and Nx setup, testing, performance, CSP and Trusted Types, headless engines, accessibility and versioning.
+- [Angular SSR, hydration and zoneless](https://www.ogeui.com/guides/angular-ssr): Angular SSR with OGE UI: client hydration with event replay, the replay fold for projected tabs and steps, SSR-safe ids, server output and zoneless apps.
+- [Next.js App Router](https://www.ogeui.com/guides/nextjs): Use OGE UI React components in the Next.js App Router: client boundaries, server rendering and hydration, locale on the server, CSS imports and providers.
+- [Vite, Angular CLI and Nx](https://www.ogeui.com/guides/build-tools): Add OGE UI to a Vite React app, an Angular CLI project or an Nx workspace: install, stylesheets, themes, ng add, secondary entry points and module boundaries.
+- [Testing](https://www.ogeui.com/guides/testing): Test apps built on OGE UI: Angular TestBed with DOM queries, React Testing Library recipes, Playwright keyboard and polling tips, and the jsdom gaps to stub.
+- [Performance](https://www.ogeui.com/guides/performance): Make OGE UI fast: grid virtualization knobs, remote data sources, loadSync for first paint, deferred loading of heavy families and per-entry bundle sizes.
+- [CSP and Trusted Types](https://www.ogeui.com/guides/security): Run OGE UI under a strict Content Security Policy: nonces, Trusted Types policy names, URL sanitizing, the rich-text sanitizer and a tested policy example.
+- [Headless engines](https://www.ogeui.com/guides/headless): Use OGE UI engines without the components: data processing in @oge-ui/core, interaction cores in @oge-ui/behavior and the commercial family engine packages.
+- [Accessibility](https://www.ogeui.com/guides/accessibility): OGE UI accessibility: keyboard maps per component family, screen reader behaviour, forced colors, reduced motion, RTL and the axe checks every change passes.
+- [Accessibility conformance report](https://www.ogeui.com/guides/accessibility/conformance): OGE UI accessibility conformance report (ACR) in the VPAT 2.5 format: self-assessed WCAG 2.2 level A and AA criteria with support levels and honest remarks.
+- [Versioning and deprecation](https://www.ogeui.com/guides/versioning): OGE UI versioning policy: semantic versions, small 1.1.x patch releases, how deprecations are announced, supported Angular and React ranges, LTS and EOL.
+
 ## AI
 
 - [AI coding assistants](https://www.ogeui.com/ai): Use OGE UI with AI coding assistants: llms.txt and llms-full.txt references, the ng add AGENTS.md block, the rules that matter and the mistakes models make.

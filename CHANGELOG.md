@@ -7,6 +7,47 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Docs site — guides, accessibility conformance, versioning policy (W6b)
+
+- **A Guides section** (`/guides`, its own sidebar group), every page
+  following the Angular / React switch and every code sample compiled by
+  `docs-tools:typecheck` or listed as a fragment:
+  - **Angular SSR, hydration and zoneless** — `withEventReplay()`, the
+    `BEFORE_APP_SERIALIZED` fold that Angular 22.2 needs for projected
+    `<oge-tab>` / `<oge-step>` content (NG0509), ids, `LOCALE_ID`, time zones,
+    browser-only work and zoneless apps, each claim linked to its test.
+  - **Next.js App Router** — what a Server Component can render directly,
+    function props in client modules, providers, server rendering with
+    `loadSync`, `locale` on the server, `next/dynamic` for heavy families.
+  - **Vite, Angular CLI and Nx** — install, stylesheets and themes, `ng add`
+    and its Nx fallback, the setup facts every toolchain shares.
+  - **Testing** — TestBed and React Testing Library recipes, stable
+    selectors, the jsdom gaps (canvas, `createObjectURL`, `ResizeObserver`,
+    `matchMedia`, pointer events) and Playwright tips. Component harnesses
+    are not shipped yet and the page says so.
+  - **Performance** — virtualization settings and defaults per family, the
+    four data sources, `loadSync`, `@defer` / lazy exports, and entry-point
+    sizes read from `tools/size-budgets.json`.
+  - **CSP and Trusted Types** — the strict policy `strict-csp.spec.ts`
+    serves, nonces, the `oge-ui#editor` / `oge-ui#bpmn` policies, the URL and
+    rich-text sanitizers, and what the strict run does not cover yet.
+  - **Headless engines** — `@oge-ui/core`, `@oge-ui/behavior` and the
+    commercial `*-engine` packages used directly, with the licence note.
+  - **Accessibility** — WAI-ARIA pattern per family, keyboard maps generated
+    from the API reference data (`pages/guides/generated/keyboard.json`,
+    written by `docs-tools:llms`), screen-reader behaviour, forced colors,
+    reduced motion, RTL and the axe gates.
+  - **Accessibility conformance report** — WCAG 2.2 A and AA in the VPAT 2.5
+    format, self-assessed: 55 criteria with Supports / Partially Supports /
+    Not Applicable and a remark naming the test behind each claim.
+  - **Versioning and deprecation** — lockstep versions, what a 1.1.x release
+    may change, how deprecations are announced, supported versions and end
+    of life, the CI gates and ADRs behind the promise.
+- Guides are listed in `llms.txt` under their own heading, their snippets
+  land in `llms-full.txt`, and their headings are in the Ctrl/⌘K search. All
+  pages are lazy; the docs site's initial bundle grew by about 1.2 kB (gzip)
+  for the sidebar entries and SEO descriptions.
+
 ### Docs site — token reference, ThemeBuilder, DTCG tokens (W6c)
 
 - **`/getting-started/tokens`**: every `--oge-*` design token in one table —

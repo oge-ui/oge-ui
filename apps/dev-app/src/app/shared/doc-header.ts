@@ -8,7 +8,9 @@ import { RouterLink } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mb-6 border-b border-gray-200 pb-6 dark:border-gray-800">
-      <nav class="mb-2 flex items-center gap-1.5 text-[12.5px] text-gray-400">
+      <nav
+        class="mb-2 flex items-center gap-1.5 text-[12.5px] text-gray-500 dark:text-gray-400"
+      >
         <a
           routerLink="/getting-started"
           class="hover:text-gray-600 dark:hover:text-gray-300"

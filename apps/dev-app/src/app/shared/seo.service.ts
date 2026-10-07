@@ -56,6 +56,50 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Localization API of OGE UI: provideOgeLocale, OgeLocaleProvider and the @oge-ui/locales packs for ten languages, lazy loaders and the message merge helper.',
   ],
   [
+    '/guides',
+    'OGE UI guides: server rendering, Next.js, Vite and Nx setup, testing, performance, CSP and Trusted Types, headless engines, accessibility and versioning.',
+  ],
+  [
+    '/guides/angular-ssr',
+    'Angular SSR with OGE UI: client hydration with event replay, the replay fold for projected tabs and steps, SSR-safe ids, server output and zoneless apps.',
+  ],
+  [
+    '/guides/nextjs',
+    'Use OGE UI React components in the Next.js App Router: client boundaries, server rendering and hydration, locale on the server, CSS imports and providers.',
+  ],
+  [
+    '/guides/build-tools',
+    'Add OGE UI to a Vite React app, an Angular CLI project or an Nx workspace: install, stylesheets, themes, ng add, secondary entry points and module boundaries.',
+  ],
+  [
+    '/guides/testing',
+    'Test apps built on OGE UI: Angular TestBed with DOM queries, React Testing Library recipes, Playwright keyboard and polling tips, and the jsdom gaps to stub.',
+  ],
+  [
+    '/guides/performance',
+    'Make OGE UI fast: grid virtualization knobs, remote data sources, loadSync for first paint, deferred loading of heavy families and per-entry bundle sizes.',
+  ],
+  [
+    '/guides/security',
+    'Run OGE UI under a strict Content Security Policy: nonces, Trusted Types policy names, URL sanitizing, the rich-text sanitizer and a tested policy example.',
+  ],
+  [
+    '/guides/headless',
+    'Use OGE UI engines without the components: data processing in @oge-ui/core, interaction cores in @oge-ui/behavior and the commercial family engine packages.',
+  ],
+  [
+    '/guides/accessibility',
+    'OGE UI accessibility: keyboard maps per component family, screen reader behaviour, forced colors, reduced motion, RTL and the axe checks every change passes.',
+  ],
+  [
+    '/guides/accessibility/conformance',
+    'OGE UI accessibility conformance report (ACR) in the VPAT 2.5 format: self-assessed WCAG 2.2 level A and AA criteria with support levels and honest remarks.',
+  ],
+  [
+    '/guides/versioning',
+    'OGE UI versioning policy: semantic versions, small 1.1.x patch releases, how deprecations are announced, supported Angular and React ranges, LTS and EOL.',
+  ],
+  [
     '/ai',
     'Use OGE UI with AI coding assistants: llms.txt and llms-full.txt references, the ng add AGENTS.md block, the rules that matter and the mistakes models make.',
   ],
@@ -825,6 +869,8 @@ export class SeoService {
         name: 'Getting Started',
         url: `${ORIGIN}/getting-started`,
       });
+    } else if (section === 'guides' && family) {
+      crumbs.push({ name: 'Guides', url: `${ORIGIN}/guides` });
     }
     crumbs.push({ name, url: ORIGIN + canonicalPath });
     return {

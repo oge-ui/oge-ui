@@ -1111,6 +1111,942 @@ tokens.light.accent.$extensions['com.ogeui'].cssVariable; // '--oge-accent'
 }
 ```
 
+### Angular ssr — App config
+
+```ts
+// app.config.ts — the browser half
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    // adopt the server DOM instead of re-rendering it; clicks and keys made
+    // before hydration finishes are queued and replayed
+    provideClientHydration(withEventReplay()),
+    provideRouter(routes),
+  ],
+};
+```
+
+### Angular ssr — Browser only
+
+```ts
+import { ChangeDetectionStrategy, Component, afterNextRender, signal } from '@angular/core';
+import { OgeGrid, OgeColumn } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGrid, OgeColumn],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" [virtualScroll]="true" [style.height.px]="height()">
+      <oge-column field="firstName" caption="First name" />
+      <oge-column field="city" caption="City" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  // the server renders the default height; the browser sizes it after hydration
+  readonly height = signal(400);
+
+  constructor() {
+    afterNextRender(() => {
+      this.height.set(Math.max(300, window.innerHeight - 200));
+    });
+  }
+}
+```
+
+### Angular ssr — Locale
+
+```ts
+// app.config.ts — server and browser must agree on the locale
+import { ApplicationConfig, LOCALE_ID } from '@angular/core';
+
+export const appConfig: ApplicationConfig = {
+  providers: [{ provide: LOCALE_ID, useValue: 'de-DE' }],
+};
+```
+
+### Angular ssr — Server config
+
+```ts
+// app.config.server.ts — the server half, with the event-replay fold
+import { ApplicationConfig, DOCUMENT, inject, mergeApplicationConfig } from '@angular/core';
+import { BEFORE_APP_SERIALIZED } from '@angular/platform-server';
+import { provideServerRendering, withRoutes } from '@angular/ssr';
+import { appConfig } from './app.config';
+import { serverRoutes } from './app.routes.server';
+
+/**
+ * Angular 22.2 inserts the replay bootstrap <script> into <body> after it has
+ * computed the hydration annotations, so nodes located by a path from <body>
+ * (<oge-tab> projected into <oge-tab-panel>, <oge-step> into <oge-stepper>)
+ * end up one sibling off and the client fails with NG0509. Folding the call
+ * into the contract script restores the child list the annotations expect.
+ */
+function foldReplayBootstrap(doc: Document): void {
+  const contract = doc.getElementById('ng-event-dispatch-contract');
+  if (contract === null) return;
+  for (const script of Array.from(doc.querySelectorAll('script'))) {
+    if (script === contract || script.hasAttribute('type')) continue;
+    const code = script.textContent ?? '';
+    if (!code.startsWith('window.__jsaction_bootstrap(')) continue;
+    contract.textContent = `${contract.textContent ?? ''}\n${code}`;
+    script.remove();
+  }
+}
+
+export const serverConfig: ApplicationConfig = mergeApplicationConfig(appConfig, {
+  providers: [
+    provideServerRendering(withRoutes(serverRoutes)),
+    {
+      provide: BEFORE_APP_SERIALIZED,
+      useFactory: () => {
+        const doc = inject(DOCUMENT);
+        return () => foldReplayBootstrap(doc);
+      },
+      multi: true,
+    },
+  ],
+});
+```
+
+### Angular ssr — Zoneless
+
+```ts
+// main.ts — Angular 22 bootstraps zoneless when zone.js is not loaded;
+// leave "zone.js" out of the polyfills in angular.json and that is all
+import { bootstrapApplication } from '@angular/platform-browser';
+import { App } from './app/app';
+import { appConfig } from './app/app.config';
+
+bootstrapApplication(App, appConfig).catch((error) => console.error(error));
+```
+
+### Build tools — Cli component
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGrid, OgeColumn } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGrid, OgeColumn],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" [filterRow]="true">
+      <oge-column field="firstName" caption="First name" />
+      <oge-column field="department" caption="Department" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+
+### Build tools — Cli create
+
+```ts
+ng new orders --style=css
+cd orders
+ng add @oge-ui/grid --theme=dark   # installs, registers the theme, writes AGENTS.md
+```
+
+### Build tools — Cli styles
+
+```ts
+/* src/styles.css — the manual equivalent of --theme (an Nx repo, a library) */
+@import '@oge-ui/core/themes/dark.css';
+```
+
+### Build tools — Nx install
+
+```ts
+# OGE packages are ordinary npm dependencies of the workspace
+npm install @oge-ui/grid @oge-ui/inputs        # Angular apps
+npm install @oge-ui/react-grid                 # React apps
+
+# no ng add step: an Nx workspace has no angular.json for the schematic to edit
+# (it would only warn: "no angular.json found — Add @import … instead")
+```
+
+### Build tools — Nx project
+
+```ts
+// apps/orders/project.json (excerpt) — a theme in the build styles, first
+{
+  "targets": {
+    "build": {
+      "options": {
+        "styles": [
+          "node_modules/@oge-ui/core/themes/dark.css",
+          "apps/orders/src/styles.css"
+        ]
+      }
+    }
+  }
+}
+```
+
+### Build tools — Vite app
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+const employees = [
+  { id: 1, name: 'Ada Lovelace', title: 'Engineer' },
+  { id: 2, name: 'Grace Hopper', title: 'Rear Admiral' },
+];
+
+// the 'use client' line is for React Server Component frameworks; Vite ignores it
+const columns = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' as const },
+  { field: 'name', caption: 'Name' },
+  { field: 'title', caption: 'Title' },
+];
+
+export function App() {
+  return (
+    <OgeGrid data={employees} keyField="id" columns={columns} locale="en-US" />
+  );
+}
+```
+
+### Build tools — Vite create
+
+```ts
+npm create vite@latest orders -- --template react-ts
+cd orders
+npm install @oge-ui/react-grid @oge-ui/react-buttons
+```
+
+### Build tools — Vite main
+
+```ts
+// src/main.tsx — the stylesheets once, at the entry
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import '@oge-ui/react-grid/styles.css';
+import '@oge-ui/react-buttons/styles.css';
+import '@oge-ui/core/themes/dark.css'; // optional theme
+import { App } from './App';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+```
+
+### Headless — Adapter
+
+```ts
+// @oge-ui/behavior — how a framework-free machine holds reactive state
+export interface OgeReactiveCell<T> {
+  (): T;
+  set(value: T): void;
+}
+
+export interface OgeReactivityAdapter {
+  cell<T>(initial: T): OgeReactiveCell<T>;
+  derived<T>(compute: () => T): () => T;
+}
+
+// Angular backs it with signal() / computed(); React with a store plus
+// change notification; a test can use plain closures.
+```
+
+### Headless — Bpmn engine
+
+```ts
+import { readBpmnXml, renderDiagramSvg, writeBpmnXml } from '@oge-ui/bpmn-engine';
+
+// on a server too: import, validate, render a static SVG, write normalized XML
+const { model, warnings } = readBpmnXml(xml);
+if (model) {
+  const svg = renderDiagramSvg(model);
+  const normalized = writeBpmnXml(model); // byte-stable: import → export → import is equal
+}
+```
+
+### Headless — Charts engine
+
+```ts
+import { createLinearScale, niceTicks } from '@oge-ui/charts-engine';
+
+niceTicks(0, 87, 5); // round tick values for an axis
+const y = createLinearScale({ min: 0, max: 100, rangePx: 320, inverted: true });
+y.toPx(25); // domain value → pixel offset; y.ticks holds the tick values
+```
+
+### Headless — Core csv
+
+```ts
+import { buildCsv, parseStateJson, sanitizeGridStateSnapshot } from '@oge-ui/core';
+
+// CSV with the formula guard on (=cmd|… is written as text, not evaluated)
+const csv = buildCsv(orders, [
+  { caption: 'Customer', accessor: (row) => row.customer },
+  { caption: 'Total', accessor: (row) => row.total },
+]);
+
+// restore a stored grid state without trusting it
+const state = sanitizeGridStateSnapshot(parseStateJson(localStorage.getItem('orders') ?? ''));
+```
+
+### Headless — Core query
+
+```ts
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { runLoadOptions } from '@oge-ui/core';
+
+interface Order {
+  id: number;
+  customer: string;
+  total: number;
+}
+
+const ORDERS: Order[] = [
+  { id: 1, customer: 'Ada', total: 120 },
+  { id: 2, customer: 'Grace', total: 80 },
+  { id: 3, customer: 'Linus', total: 310 },
+];
+
+@Component({
+  selector: 'demo-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- your own markup over the grid's query engine -->
+    <ul>
+      @for (order of rows(); track order.id) {
+        <li>{{ order.customer }} — {{ order.total }}</li>
+      }
+    </ul>
+    <p>{{ page().totalCount }} orders of 100 or more</p>
+  `,
+})
+export class Demo {
+  // the same filter → search → sort → page pipeline the data grid runs in memory
+  protected readonly page = computed(() =>
+    runLoadOptions(ORDERS, {
+      filter: { type: 'binary', field: 'total', op: 'ge', value: 100 },
+      sort: [{ field: 'total', dir: 'desc' }],
+      skip: 0,
+      take: 20,
+      requireTotalCount: true,
+    }),
+  );
+
+  // no `group` in the query, so the result is rows, not group items
+  protected readonly rows = computed(() => this.page().data as readonly Order[]);
+}
+```
+
+### Headless — Scheduler engine
+
+```ts
+import { expandRecurrence, parseRecurrenceRule } from '@oge-ui/scheduler-engine';
+
+// RFC 5545 subset: FREQ, INTERVAL, COUNT / UNTIL, BYDAY, BYMONTHDAY, BYMONTH, BYSETPOS, …
+const rule = parseRecurrenceRule('FREQ=WEEKLY;BYDAY=MO,WE;COUNT=6');
+const dates = rule
+  ? expandRecurrence(rule, new Date(2026, 9, 5, 9), new Date(2026, 9, 1), new Date(2026, 10, 1))
+  : [];
+```
+
+### Nextjs — Client component
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Order {
+  readonly id: number;
+  readonly customer: string;
+}
+
+const columns = [
+  { field: 'id', caption: 'Order', width: 90, dataType: 'number' as const },
+  { field: 'customer', caption: 'Customer' },
+];
+
+export function OrdersBoard() {
+  // event handlers are functions — they need a client module of your own
+  const [orders, setOrders] = useState<readonly Order[]>([
+    { id: 1, customer: 'Ada' },
+  ]);
+  const add = () =>
+    setOrders((rows) => [...rows, { id: rows.length + 1, customer: 'Grace' }]);
+  return (
+    <>
+      <OgeButton text="Add order" onClick={add} />
+      <OgeGrid data={orders} keyField="id" columns={columns} locale="en-US" />
+    </>
+  );
+}
+```
+
+### Nextjs — Install
+
+```ts
+npm install @oge-ui/react          # every MIT React family
+# or one family at a time
+npm install @oge-ui/react-grid @oge-ui/react-inputs
+```
+
+### Nextjs — Layout
+
+```ts
+// app/layout.tsx — a Server Component: global CSS and the client providers
+import type { ReactNode } from 'react';
+import '@oge-ui/react/styles.css';          // or @oge-ui/react-<family>/styles.css
+import '@oge-ui/core/themes/dark.css';      // optional theme, shared with Angular
+import { Providers } from './providers';
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="de">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+### Nextjs — Lazy
+
+```ts
+'use client';
+
+import dynamic from 'next/dynamic';
+
+// a heavy family the first paint does not need: load it after hydration
+const Scheduler = dynamic(
+  () => import('@oge-ui/react-scheduler').then((m) => m.OgeScheduler),
+  { ssr: false, loading: () => <p>Loading the calendar…</p> },
+);
+```
+
+### Nextjs — Providers
+
+```ts
+'use client';
+
+import type { ReactNode } from 'react';
+import { OgeLocaleProvider } from '@oge-ui/react';
+import { de } from '@oge-ui/locales/de';
+
+// app/providers.tsx — config and locale providers hold React context, so they
+// live in a client module; the layout above stays a Server Component
+export function Providers({ children }: { children: ReactNode }) {
+  return <OgeLocaleProvider pack={de}>{children}</OgeLocaleProvider>;
+}
+```
+
+### Nextjs — Server page
+
+```ts
+// app/orders/page.tsx — a Server Component rendering an OGE client component
+import { OgeGrid } from '@oge-ui/react-grid';
+import { getOrders } from '@/lib/orders';
+
+const columns = [
+  { field: 'id', caption: 'Order', width: 90, dataType: 'number' as const },
+  { field: 'customer', caption: 'Customer' },
+  { field: 'total', caption: 'Total', dataType: 'number' as const },
+];
+
+export default async function OrdersPage() {
+  const orders = await getOrders();
+  // only serializable props cross the boundary: arrays, plain objects, strings
+  return <OgeGrid data={orders} keyField="id" columns={columns} locale="de-DE" />;
+}
+```
+
+### Performance — Deferred
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- the scheduler's code loads when the block scrolls into view -->
+    @defer (on viewport) {
+      <oge-scheduler [dataSource]="appointments" [currentDate]="date" style="height: 560px" />
+    } @placeholder {
+      <div style="height: 560px">Calendar</div>
+    }
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 9, 5);
+  protected readonly appointments = [
+    { id: 1, text: 'Design review', startDate: new Date(2026, 9, 6, 9), endDate: new Date(2026, 9, 6, 10) },
+  ];
+}
+```
+
+### Performance — Entry points
+
+```ts
+// one editor, not the whole inputs family
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+import { OgeSplitter } from '@oge-ui/layout/splitter';
+import { OgeFab } from '@oge-ui/buttons/fab';
+```
+
+### Performance — Grid defaults
+
+```ts
+// app-wide defaults instead of per-grid inputs
+import { ApplicationConfig } from '@angular/core';
+import { provideOgeGridConfig } from '@oge-ui/grid';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideOgeGridConfig({ rowHeight: 32, overscan: 8, filterDebounce: 250 })],
+};
+```
+
+### Performance — Lazy export
+
+```ts
+// exceljs loads with this chunk, on the first click — not with the grid
+async exportOrders(grid: OgeGrid<Order>): Promise<void> {
+  const { exportGridToExcel } = await import('@oge-ui/grid/export-excel');
+  await exportGridToExcel(grid, { filename: 'orders.xlsx', scope: 'all' });
+}
+```
+
+### Performance — Remote
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGrid, OgeColumn } from '@oge-ui/grid';
+import { CustomDataSource } from '@oge-ui/core';
+import type { LoadResult } from '@oge-ui/core';
+
+interface Order {
+  id: number;
+  customer: string;
+  total: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGrid, OgeColumn],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="orders" keyField="id" [paging]="{ pageSize: 50 }" [filterRow]="true">
+      <oge-column field="id" caption="Order" dataType="number" />
+      <oge-column field="customer" caption="Customer" />
+      <oge-column field="total" caption="Total" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  // the server sorts, filters, groups and pages; the grid sends one query per change
+  // and aborts the previous request when a newer one starts
+  protected readonly orders = new CustomDataSource<Order>({
+    key: 'id',
+    load: async ({ signal, ...query }) => {
+      const response = await fetch('/api/orders/query', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(query), // { skip, take, sort, filter, searchText, … }
+        signal,
+      });
+      return (await response.json()) as LoadResult<Order>;
+    },
+  });
+}
+```
+
+### Performance — Virtual
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGrid, OgeColumn } from '@oge-ui/grid';
+
+interface Reading {
+  id: number;
+  sensor: string;
+  value: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGrid, OgeColumn],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- a bounded height is what gives the virtualizer a viewport -->
+    <oge-grid
+      [data]="rows"
+      keyField="id"
+      [scrolling]="{ mode: 'virtual', columnRenderingMode: 'virtual' }"
+      [rowHeight]="32"
+      [overscan]="10"
+      style="height: 560px"
+    >
+      <oge-column field="id" caption="Id" [width]="90" dataType="number" />
+      <oge-column field="sensor" caption="Sensor" [width]="160" />
+      <oge-column field="value" caption="Value" [width]="120" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  // 100 000 rows: only the rows in view (plus overscan) are in the DOM
+  protected readonly rows: Reading[] = Array.from({ length: 100_000 }, (_, i) => ({
+    id: i + 1,
+    sensor: 'S-' + (i % 250),
+    value: Math.round(Math.sin(i) * 1000) / 10,
+  }));
+}
+```
+
+### Performance — Virtual react
+
+```ts
+'use client';
+
+import { useMemo } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+
+const columns = [
+  { field: 'id', caption: 'Id', width: 90, dataType: 'number' as const },
+  { field: 'sensor', caption: 'Sensor', width: 160 },
+  { field: 'value', caption: 'Value', width: 120, dataType: 'number' as const },
+];
+
+export function Readings() {
+  // 100 000 rows: only the rows in view (plus overscan) are in the DOM
+  const rows = useMemo(
+    () =>
+      Array.from({ length: 100_000 }, (_, i) => ({
+        id: i + 1,
+        sensor: 'S-' + (i % 250),
+        value: Math.round(Math.sin(i) * 1000) / 10,
+      })),
+    [],
+  );
+  return (
+    <div style={{ height: 560 }}>
+      <OgeGrid
+        data={rows}
+        keyField="id"
+        columns={columns}
+        scrolling={{ mode: 'virtual', columnRenderingMode: 'virtual' }}
+        rowHeight={32}
+        overscan={10}
+      />
+    </div>
+  );
+}
+```
+
+### Security — Angular nonce
+
+```ts
+<!-- index.html as your server sends it: the same per-request nonce as the header.
+     Angular stamps it on the <style> elements it adds for component styles. -->
+<app-root ngCspNonce="{NONCE}"></app-root>
+```
+
+### Security — Angular nonce provider
+
+```ts
+// …or provide it in code (e.g. read from a meta tag your server writes)
+import { ApplicationConfig, CSP_NONCE } from '@angular/core';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    {
+      provide: CSP_NONCE,
+      useFactory: () =>
+        document.querySelector<HTMLMetaElement>('meta[name="csp-nonce"]')
+          ?.content ?? null,
+    },
+  ],
+};
+```
+
+### Security — Editor sanitize
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ogeSanitizeEditorHtml } from '@oge-ui/editor';
+
+@Component({
+  selector: 'demo-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <article [innerHTML]="html"></article>
+  `,
+})
+export class Demo {
+  // stored rich text, rendered outside the editor: the same allowlist the editor
+  // applies to its value, pastes and drops (scripts, styles, svg, iframes and
+  // event handlers are dropped; href/src go through sanitizeUrl)
+  readonly html = ogeSanitizeEditorHtml(
+    '<p>Hello <a href="javascript:alert(1)">there</a><script>steal()</script></p>',
+  );
+}
+```
+
+### Security — Sanitize url react
+
+```ts
+'use client';
+
+import { sanitizeUrl } from '@oge-ui/behavior';
+
+interface Link {
+  readonly label: string;
+  readonly url: string;
+}
+
+// links from a CMS or an API: javascript: and other script schemes become about:blank
+export function CmsLinks({ links }: { links: readonly Link[] }) {
+  return (
+    <ul>
+      {links.map((link) => (
+        <li key={link.label}>
+          <a href={sanitizeUrl(link.url, { allowedSchemes: ['web+app'] })}>
+            {link.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Security — Static policy
+
+```ts
+# a static host cannot mint a nonce — allow component styles inline
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: blob:;
+  object-src 'none';
+  base-uri 'self'
+```
+
+### Security — Strict policy
+
+```ts
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'nonce-{NONCE}' 'strict-dynamic';
+  style-src 'self' 'nonce-{NONCE}';
+  style-src-attr 'unsafe-inline';
+  img-src 'self' data: blob:;
+  font-src 'self' data:;
+  connect-src 'self';
+  worker-src 'self' blob:;
+  object-src 'none';
+  base-uri 'self';
+  frame-ancestors 'none';
+  form-action 'self';
+  require-trusted-types-for 'script';
+  trusted-types angular angular#bundler oge-ui#bpmn oge-ui#editor
+```
+
+### Testing — Angular spec
+
+```ts
+// orders.spec.ts — vitest (or Jasmine) + TestBed, zoneless
+import { Component, signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+
+@Component({
+  imports: [OgeSelectBox],
+  template: `<oge-select-box label="City" [items]="cities" [(value)]="city" />`,
+})
+class Host {
+  readonly cities = ['Lisbon', 'Oslo', 'Rome'];
+  readonly city = signal<unknown>(null);
+}
+
+/** Render, let signals and effects flush, render again. */
+async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+}
+
+describe('city picker', () => {
+  beforeEach(() => {
+    // popups position in requestAnimationFrame — stub it *asynchronously*;
+    // a synchronous stub re-enters change detection mid-tick (NG0100)
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      setTimeout(() => cb(performance.now()), 0) as unknown as number);
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id));
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('is a combobox that starts closed', async () => {
+    const fixture = TestBed.createComponent(Host);
+    await settle(fixture);
+    const input: HTMLInputElement =
+      fixture.nativeElement.querySelector('oge-select-box input');
+    expect(input.getAttribute('role')).toBe('combobox');
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+  });
+});
+```
+
+### Testing — Jsdom stubs
+
+```ts
+// only in the specs that need them — the gaps jsdom leaves
+// <canvas>: signature pad, chart and Gantt image export
+vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+
+// URL.createObjectURL / revokeObjectURL: upload thumbnails, file downloads
+URL.createObjectURL = () => 'blob:test';
+URL.revokeObjectURL = () => undefined;
+
+// ResizeObserver: toolbars and breadcrumbs that collapse into overflow menus
+class FakeResizeObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+
+// matchMedia: prefers-reduced-motion, adaptive popups
+window.matchMedia = (query: string) =>
+  ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList;
+
+// PointerEvent: jsdom has no constructor — dispatch a MouseEvent with the pointer type
+const down = new MouseEvent('pointerdown', { bubbles: true, button: 0 });
+Object.defineProperty(down, 'pointerId', { value: 1 });
+Object.defineProperty(down, 'pointerType', { value: 'mouse' });
+element.dispatchEvent(down);
+```
+
+### Testing — Playwright
+
+```ts
+import { expect, test } from '@playwright/test';
+
+// a fixed locale and time zone: number and date formatting follow the browser
+test.use({ locale: 'en-US', timezoneId: 'UTC' });
+
+test('select box: arrows and Enter pick a city', async ({ page }) => {
+  await page.goto('/orders');
+  const input = page.getByRole('combobox', { name: 'City' });
+  await input.click();
+  await input.press('ArrowDown');
+  await input.press('Enter');
+  // web-first assertions retry until the component has re-rendered
+  await expect(input).toHaveValue('Lisbon');
+  await expect(input).toBeFocused();
+});
+
+test('grid: sorting announces itself', async ({ page }) => {
+  await page.goto('/orders');
+  await page.getByRole('columnheader', { name: 'Total' }).click();
+  // poll values that are not a locator state (a computed style, a count)
+  await expect
+    .poll(() => page.locator('.oge-row').count())
+    .toBeGreaterThan(0);
+  await expect(page.locator('[data-oge-live-announcer="polite"]')).toContainText(
+    'Sorted by Total',
+  );
+});
+```
+
+### Testing — React spec
+
+```ts
+// Orders.test.tsx — vitest + jsdom + React Testing Library
+import { fireEvent, render, screen } from '@testing-library/react';
+import { OgeButton } from '@oge-ui/react-buttons';
+
+it('fires onClick', () => {
+  const onClick = vi.fn();
+  render(<OgeButton text="Save" onClick={onClick} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  expect(onClick).toHaveBeenCalledTimes(1);
+});
+
+it('opens a select box from the keyboard', () => {
+  render(<Cities />); // your component rendering <OgeSelectBox label="City" …>
+  const combo = screen.getByRole('combobox');
+  fireEvent.keyDown(combo, { key: 'ArrowDown' });
+  expect(combo).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByRole('listbox')).toBeInTheDocument();
+});
+```
+
+### Testing — Vitest setup
+
+```ts
+// vitest.setup.ts — React Testing Library under vitest's globals
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+
+// RTL does not auto-clean under `globals: true` unless registered explicitly
+afterEach(() => cleanup());
+```
+
+### Versioning — Deprecated member
+
+```ts
+// @oge-ui/behavior — OgeGridMessages (excerpt)
+rowCountAnnouncement: string;
+/**
+ * @deprecated Put the singular into `rowCountAnnouncement` as an ICU plural
+ * branch. Still honoured for exactly one row (with a dev-mode warning)
+ * until the next minor.
+ */
+rowCountOneAnnouncement?: string;
+```
+
+### Versioning — Lockstep
+
+```ts
+# every @oge-ui package releases together — keep them on one version
+npm install @oge-ui/grid@1.1.3 @oge-ui/inputs@1.1.3
+
+# a mixed install shows up as two copies of the shared engines
+npm ls @oge-ui/core @oge-ui/behavior
+```
+
 ## @oge-ui/grid
 
 Virtualized data grid: 100k+ rows, sorting, filtering, grouping with summaries, inline/batch/form editing, selection, master-detail, state persistence and CSV/Excel/PDF export.

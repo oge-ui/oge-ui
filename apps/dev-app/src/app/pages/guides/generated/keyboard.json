@@ -1,0 +1,223 @@
+{
+  "maps": [
+    {
+      "family": "OgeSpeedDial",
+      "npm": "@oge-ui/buttons",
+      "title": "Keyboard (WAI-ARIA APG menu button)",
+      "rows": [
+        [
+          "Enter / Space / click",
+          "FAB",
+          "Toggles the dial; opening moves focus to the first enabled action."
+        ],
+        [
+          "Arrow along the dial / back",
+          "FAB",
+          "Opens with focus on the first (nearest) / last action (`ogeSpeedDialToggleKey`)."
+        ],
+        [
+          "Arrows · Home · End",
+          "action",
+          "Move along the dial axis and wrap, skipping disabled actions (`ogeSpeedDialItemKey`, `ogeSpeedDialNavIndex`); horizontal dials mirror in RTL."
+        ],
+        [
+          "Escape / Tab",
+          "action",
+          "Escape closes and returns focus to the FAB; Tab closes and lets focus move on."
+        ]
+      ]
+    },
+    {
+      "family": "OgePanelBar",
+      "npm": "@oge-ui/layout",
+      "title": "Keyboard & accessibility",
+      "rows": [
+        [
+          "APG disclosure, not treeview",
+          "—",
+          "Kendo renders its PanelBar as `role=\"tree\"`, but a tree may own nothing but tree items — and panel bar groups may hold free content. So every header is a real `<button>` in the Tab sequence (`aria-expanded` + `aria-controls` on groups, `aria-current` on the selected leaf), collapsed groups are `inert`, and Up/Down/Home/End plus Right/Left (expand-or-enter / collapse-or-parent, mirrored in RTL) are layered on top. Collapsing a group that holds focus hands focus to its header."
+        ]
+      ]
+    },
+    {
+      "family": "OgeExpansionPanel",
+      "npm": "@oge-ui/layout",
+      "title": "Keyboard & accessibility",
+      "rows": [
+        [
+          "APG disclosure",
+          "—",
+          "The title is a `<button aria-expanded aria-controls>` inside a heading; Enter / Space toggle it natively, the body is `role=\"region\"` labelled by the header and `inert` while collapsed. Collapsing a panel that holds focus hands focus back to the header. The pipeline is `runOgeExpansionToggle` in `@oge-ui/behavior`, shared with the panel bar."
+        ]
+      ]
+    },
+    {
+      "family": "OgeTileLayout",
+      "npm": "@oge-ui/layout",
+      "title": "Keyboard",
+      "rows": [
+        [
+          "Arrow keys / Home / End",
+          "focus",
+          "Move focus between tiles (one roving tab stop; ↑/↓ go to the closest tile in the row above / below). Content inside a tile keeps its own Tab order, and the tile keys only act while the tile itself is focused."
+        ],
+        [
+          "Ctrl+← / Ctrl+→",
+          "move",
+          "Move the focused tile one position earlier / later (mirrored in RTL). ⌘ works as Ctrl."
+        ],
+        [
+          "Ctrl+↑ / Ctrl+↓",
+          "move",
+          "Move the focused tile to the position of the tile above / below."
+        ],
+        [
+          "Ctrl+Shift+← / Ctrl+Shift+→",
+          "resize",
+          "Shrink / grow the column span (mirrored in RTL), within the tile&rsquo;s bounds."
+        ],
+        [
+          "Ctrl+Shift+↑ / Ctrl+Shift+↓",
+          "resize",
+          "Shrink / grow the row span."
+        ],
+        [
+          "Escape",
+          "cancel",
+          "Cancels a pointer drag or resize in progress."
+        ]
+      ]
+    },
+    {
+      "family": "OgeTreeView",
+      "npm": "@oge-ui/navigation",
+      "title": "Keyboard (WAI-ARIA APG treeview)",
+      "rows": [
+        [
+          "Down / Up Arrow",
+          "navigation",
+          "Moves focus over the visible nodes, skipping disabled ones. Trees do not wrap at the ends."
+        ],
+        [
+          "Right Arrow",
+          "navigation",
+          "Opens a collapsed parent; on an open parent moves to its first child; no-op on a leaf."
+        ],
+        [
+          "Left Arrow",
+          "navigation",
+          "Closes an open parent; otherwise moves focus to the parent node."
+        ],
+        [
+          "Home / End",
+          "navigation",
+          "Moves to the first / last visible node."
+        ],
+        [
+          "Enter",
+          "activation",
+          "Toggles a parent, or selects a leaf when a selection mode is set."
+        ],
+        [
+          "Space",
+          "selection",
+          "Toggles selection on the focused node. `Shift+Space` selects the contiguous range."
+        ],
+        [
+          "Printable characters",
+          "type-ahead",
+          "Moves focus to the next node whose label starts with the typed prefix, accent-insensitively."
+        ],
+        [
+          "*",
+          "expansion",
+          "Expands every sibling at the focused level."
+        ],
+        [
+          "Ctrl+A, Shift+Arrow, Ctrl+Shift+Home/End",
+          "multi-select",
+          "Select all, extend by one, and range-select to the start/end — the APG \"recommended\" model, so plain navigation needs no modifier."
+        ],
+        [
+          "F2",
+          "editing",
+          "Opens the label editor (`allowEditing`); inside it Enter commits, Escape cancels and the focus returns to the node. Advertised with `aria-keyshortcuts`."
+        ],
+        [
+          "Ctrl+X, Ctrl+V, Ctrl+Shift+V",
+          "move",
+          "The keyboard twin of drag & drop (`allowDragging`): cut the focused node, then paste it into (or, with Shift, after) the focused target — in this tree or another of the `dragGroup`. Escape abandons the cut; each step is announced through the live region."
+        ]
+      ]
+    },
+    {
+      "family": "OgePivotGrid",
+      "npm": "@oge-ui/pivot",
+      "title": "Keyboard (WAI-ARIA APG grid + field chips)",
+      "rows": [
+        [
+          "Tab",
+          "grid",
+          "The matrix is one APG grid with a single tab stop shared by column headers, row headers and value cells (the first value cell until something is focused)."
+        ],
+        [
+          "Arrow keys",
+          "grid",
+          "Move between headers and value cells; a spanning column header is one stop, and Down out of it keeps the column you came from. Left/Right are mirrored in RTL."
+        ],
+        [
+          "Home / End · Ctrl+Home / Ctrl+End",
+          "grid",
+          "First / last cell of the row · first column header / last value cell of the grid."
+        ],
+        [
+          "Enter / Space (header)",
+          "grid",
+          "Expands or collapses an expandable row or column header."
+        ],
+        [
+          "Shift+F10 / ContextMenu (header)",
+          "grid",
+          "Opens the header menu (sort, sort by summary, filter, remove, expand/collapse all, field chooser) — the keyboard right-click."
+        ],
+        [
+          "Enter / Space / Shift+F10 (field chip)",
+          "field panel + chooser",
+          "Every field chip is a focusable `role=\"button\"` with `aria-haspopup=\"menu\"`; these keys (and right-click) open its field menu: Move left / Move right, Move to Filters / Rows / Columns / Values, Remove field, and on a measure the summary-type and display-mode items. The single-pointer alternative to dragging (WCAG 2.5.7)."
+        ],
+        [
+          "Ctrl+Left / Ctrl+Right (field chip)",
+          "field panel + chooser",
+          "Reorders the field within its area (mirrored in RTL); the new position is announced in a polite live region."
+        ],
+        [
+          "Ctrl+Up / Ctrl+Down (field chip)",
+          "field panel + chooser",
+          "Moves the field to the end of the previous / next area in panel order (Filters, Rows, Columns, Values)."
+        ],
+        [
+          "Delete (field chip)",
+          "field panel + chooser",
+          "Removes the field from the layout. In the chooser’s `onDemand` mode every move edits the draft until Apply."
+        ],
+        [
+          "Up / Down / Home / End / Escape / Tab (menu)",
+          "menu",
+          "APG menu keys over the enabled items; Escape and Tab close it and return focus to the chip or header that opened it (a moved chip is re-focused in its new area)."
+        ]
+      ]
+    },
+    {
+      "family": "OgeBpmnEditor",
+      "npm": "@oge-ui/bpmn",
+      "title": "Canvas keyboard",
+      "rows": [
+        [
+          "role=\"application\" canvas",
+          "Tab / Shift+Tab · arrows (Shift = 1px) · C · A · H / L / S · F2 / Enter · Delete · Ctrl+Z / Ctrl+Y · Ctrl+C / Ctrl+X / Ctrl+V · Ctrl+A · Ctrl+F · + / − / F · Escape",
+          "Tab cycles elements (never trapped on an empty selection — leave with Escape then Tab, announced in the canvas hint), arrows move the selection by one grid step, `C` arms the connect tool (Tab/arrows walk candidate targets, Enter commits), `A` appends a connected task, `H`/`L`/`S` switch to the hand / lasso / space tool (edit mode only), `F` zooms to fit, `F2`/Enter edit the label, Ctrl+C/X/V copy/cut/paste via the internal clipboard, Ctrl+A selects all, Ctrl+F opens the element search overlay, Escape cancels the active tool or drag. The selected element is exposed via `aria-activedescendant` and every action is narrated in a polite live region."
+        ]
+      ]
+    }
+  ]
+}

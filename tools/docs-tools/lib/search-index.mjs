@@ -48,6 +48,7 @@ const API_TABLES = ['properties', 'methods', 'events', 'types'];
 /** Context labels for pages outside `/components/<family>`. */
 const TOP_LEVEL_CONTEXT = {
   'getting-started': 'Getting Started',
+  guides: 'Guides',
   ai: 'AI',
   license: 'Getting Started',
   changelog: 'Resources',
