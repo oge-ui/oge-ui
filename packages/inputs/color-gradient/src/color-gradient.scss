@@ -98,14 +98,16 @@
   }
 }
 
+// severity text on its own soft fill sat near 4:1; a fifth of the text
+// colour mixed in keeps the hue and clears 4.5:1 in every theme
 .oge-color-gradient-contrast-pass {
   background: var(--oge-success-soft);
-  color: var(--oge-success);
+  color: color-mix(in srgb, var(--oge-success) 80%, var(--oge-text-color));
 }
 
 .oge-color-gradient-contrast-fail {
   background: var(--oge-danger-soft);
-  color: var(--oge-danger);
+  color: color-mix(in srgb, var(--oge-danger) 80%, var(--oge-text-color));
 }
 
 @include tokens.reduced-motion {

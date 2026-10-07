@@ -68,6 +68,11 @@ export class OgeGridRowVirtualizerCore<T = unknown> {
   readonly viewNodes: () => readonly RowNode<T>[];
   readonly bodyHeight: () => number | null;
   readonly rowsTransform: () => string | null;
+  /**
+   * Virtual ↔ physical scroll mapping: identity until the rows are taller
+   * than a browser can lay out ({@link OGE_MAX_SCROLL_HEIGHT}).
+   */
+  readonly scrollScale: () => OgeScrollScale;
 
   private readonly windowed: () => boolean;
 
@@ -105,14 +110,30 @@ export class OgeGridRowVirtualizerCore<T = unknown> {
       });
     });
 
+    this.scrollScale = rx.derived(() =>
+      ogeScrollScale(this.offsetTree().totalHeight, this.deps.viewportHeight()),
+    );
+
     this.viewWindow = rx.derived<ViewportWindow | null>(() => {
       if (!this.deps.virtualized()) return null;
-      return computeWindow(
-        this.deps.scrollTop(),
+      const scale = this.scrollScale();
+      const scrollTop = this.deps.scrollTop();
+      const virtualTop = scale.toVirtual(scrollTop);
+      const window = computeWindow(
+        virtualTop,
         this.deps.viewportHeight(),
         this.offsetTree(),
         this.deps.overscan(),
       );
+      if (scale.ratio === 1) return window;
+      // the rows are laid out around the physical scroll position: the first
+      // rendered row sits as far above the viewport top as it does in the
+      // virtual space
+      return {
+        ...window,
+        offsetY: scrollTop + window.offsetY - virtualTop,
+        totalHeight: scale.physicalTotal,
+      };
     });
 
     this.viewStart = rx.derived(() => this.viewWindow()?.start ?? 0);
@@ -192,7 +213,7 @@ export class OgeGridRowVirtualizerCore<T = unknown> {
     if (!changed) return;
     this.measuredHeights.set(changed);
     if (deltaAbove !== 0) {
-      viewport.scrollTop += deltaAbove;
+      viewport.scrollTop += deltaAbove / this.scrollScale().ratio;
       this.deps.setScrollTop(viewport.scrollTop);
     }
   }
@@ -203,11 +224,63 @@ export class OgeGridRowVirtualizerCore<T = unknown> {
     const tree = this.offsetTree();
     const viewport = this.deps.viewport();
     if (!viewport) return;
+    const scale = this.scrollScale();
+    const virtualTop = scale.toVirtual(viewport.scrollTop);
     const top = tree.offsetOf(row);
     const bottom = top + tree.heightAt(row);
-    if (top < viewport.scrollTop) viewport.scrollTop = top;
-    else if (bottom > viewport.scrollTop + viewport.clientHeight) {
-      viewport.scrollTop = bottom - viewport.clientHeight;
+    if (top < virtualTop) viewport.scrollTop = scale.toPhysical(top);
+    else if (bottom > virtualTop + viewport.clientHeight) {
+      viewport.scrollTop = scale.toPhysical(bottom - viewport.clientHeight);
     }
   }
+}
+
+/**
+ * The tallest scroll extent the virtualizer lays out. Browsers cap an
+ * element's height — Firefox near 17.9M px (it drops a larger `height`
+ * outright, so the body collapses to its rendered rows), Chromium and WebKit
+ * at 2^25 ≈ 33.5M px (they clamp, and the rows past it are unreachable). A
+ * million 36px rows is 36M px, so above this height the scroll range is
+ * compressed and scroll positions are scaled into the virtual row space.
+ */
+export const OGE_MAX_SCROLL_HEIGHT = 15_000_000;
+
+/** Virtual (row-space) ↔ physical (`scrollTop`) mapping of a scaled body. */
+export interface OgeScrollScale {
+  /** Virtual pixels per physical pixel; 1 when nothing is compressed. */
+  readonly ratio: number;
+  /** The laid-out body height. */
+  readonly physicalTotal: number;
+  toVirtual(scrollTop: number): number;
+  toPhysical(virtualTop: number): number;
+}
+
+const IDENTITY_SCALE: OgeScrollScale = {
+  ratio: 1,
+  physicalTotal: 0,
+  toVirtual: (value) => value,
+  toPhysical: (value) => value,
+};
+
+/**
+ * The scroll mapping for `virtualTotal` px of rows in a `viewportHeight` px
+ * viewport, capped at `max`. Both ends line up: physical 0 is the first row,
+ * the physical bottom is the last row, and positions between scale linearly.
+ */
+export function ogeScrollScale(
+  virtualTotal: number,
+  viewportHeight: number,
+  max = OGE_MAX_SCROLL_HEIGHT,
+): OgeScrollScale {
+  if (virtualTotal <= max) {
+    return { ...IDENTITY_SCALE, physicalTotal: virtualTotal };
+  }
+  const viewport = Math.max(0, Math.min(viewportHeight, max / 2));
+  const ratio = (virtualTotal - viewport) / (max - viewport);
+  return {
+    ratio,
+    physicalTotal: max,
+    toVirtual: (scrollTop) => scrollTop * ratio,
+    toPhysical: (virtualTop) => virtualTop / ratio,
+  };
 }

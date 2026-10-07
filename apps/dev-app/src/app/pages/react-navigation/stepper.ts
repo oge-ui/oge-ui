@@ -65,7 +65,7 @@ const demoButton = (
 
 /** A step body — the node the Angular `<oge-step>` would have projected. */
 const body = (text: string) =>
-  createElement('p', { className: 'text-sm opacity-70' }, text);
+  createElement('p', { className: 'text-sm text-(--oge-muted-color)' }, text);
 
 /** The checkbox rows the linear-flow and leave-guard demos use. */
 const checkbox = (
@@ -149,7 +149,7 @@ function LinearDemo(): ReactNode {
     }),
     createElement(
       'p',
-      { className: 'mt-2 text-sm opacity-70' },
+      { className: 'mt-2 text-sm text-(--oge-muted-color)' },
       `last refusal → ${blocked ?? '—'}`,
     ),
   );
@@ -237,7 +237,7 @@ function NavButtonsDemo(): ReactNode {
             null,
             createElement(
               'p',
-              { className: 'mb-2 text-sm opacity-70' },
+              { className: 'mb-2 text-sm text-(--oge-muted-color)' },
               'First body…',
             ),
             demoButton('continue', 'Continue', () => wizard.current?.next()),

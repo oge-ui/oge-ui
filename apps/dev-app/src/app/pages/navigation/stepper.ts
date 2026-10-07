@@ -126,7 +126,7 @@ interface Order extends Record<string, unknown> {
           ariaLabel="Checkout"
         >
           <oge-step label="Account" description="Who you are" [icon]="userIcon">
-            <p class="text-sm opacity-70">Account fields…</p>
+            <p class="text-sm text-(--oge-muted-color)">Account fields…</p>
           </oge-step>
           <oge-step
             label="Shipping"
@@ -134,14 +134,14 @@ interface Order extends Record<string, unknown> {
             [optional]="true"
             [icon]="boxIcon"
           >
-            <p class="text-sm opacity-70">Shipping fields…</p>
+            <p class="text-sm text-(--oge-muted-color)">Shipping fields…</p>
           </oge-step>
           <oge-step
             label="Review"
             description="One last look"
             [icon]="starIcon"
           >
-            <p class="text-sm opacity-70">Confirm and submit…</p>
+            <p class="text-sm text-(--oge-muted-color)">Confirm and submit…</p>
           </oge-step>
         </oge-stepper>
       </app-demo-card>
@@ -186,7 +186,7 @@ interface Order extends Record<string, unknown> {
           <oge-step label="Payment" [completed]="paymentDone()" />
           <oge-step label="Review" />
         </oge-stepper>
-        <p class="mt-2 text-sm opacity-70">
+        <p class="mt-2 text-sm text-(--oge-muted-color)">
           last refusal → {{ blockedReason() ?? '—' }}
         </p>
       </app-demo-card>
@@ -227,10 +227,10 @@ interface Order extends Record<string, unknown> {
           ariaLabel="Leave guard"
         >
           <oge-step label="Details" [stepGuard]="confirmLeave">
-            <p class="text-sm opacity-70">Details…</p>
+            <p class="text-sm text-(--oge-muted-color)">Details…</p>
           </oge-step>
           <oge-step label="Done">
-            <p class="text-sm opacity-70">Done…</p>
+            <p class="text-sm text-(--oge-muted-color)">Done…</p>
           </oge-step>
         </oge-stepper>
       </app-demo-card>
@@ -261,10 +261,10 @@ interface Order extends Record<string, unknown> {
           ariaLabel="Orientation"
         >
           <oge-step label="One">
-            <p class="text-sm opacity-70">First body…</p>
+            <p class="text-sm text-(--oge-muted-color)">First body…</p>
           </oge-step>
           <oge-step label="Two">
-            <p class="text-sm opacity-70">Second body…</p>
+            <p class="text-sm text-(--oge-muted-color)">Second body…</p>
           </oge-step>
         </oge-stepper>
       </app-demo-card>
@@ -282,7 +282,7 @@ interface Order extends Record<string, unknown> {
           ariaLabel="Navigation buttons"
         >
           <oge-step label="One">
-            <p class="mb-2 text-sm opacity-70">First body…</p>
+            <p class="mb-2 text-sm text-(--oge-muted-color)">First body…</p>
             <button
               type="button"
               class="rounded border px-2 py-1"
@@ -292,7 +292,7 @@ interface Order extends Record<string, unknown> {
             </button>
           </oge-step>
           <oge-step label="Two">
-            <p class="text-sm opacity-70">Second body…</p>
+            <p class="text-sm text-(--oge-muted-color)">Second body…</p>
           </oge-step>
         </oge-stepper>
         <button

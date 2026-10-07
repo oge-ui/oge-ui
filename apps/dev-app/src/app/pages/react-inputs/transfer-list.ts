@@ -116,7 +116,7 @@ function TemplatesDemo(): ReactNode {
         createElement('span', null, permission.name),
         createElement(
           'code',
-          { className: 'text-xs opacity-70' },
+          { className: 'text-xs text-(--oge-muted-color)' },
           permission.id,
         ),
       ),

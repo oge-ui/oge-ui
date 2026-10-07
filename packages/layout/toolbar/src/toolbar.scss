@@ -245,11 +245,13 @@
   }
 
   // A toggle that is on stays visibly on — a tinted surface plus an accent
-  // hairline, so it survives next to a hovered neighbour.
+  // hairline, so it survives next to a hovered neighbour. Its label is the
+  // accent deepened a fifth toward the text colour: plain accent on the
+  // accent-soft fill sat at 4.48:1.
   &[aria-pressed='true'] {
     background: var(--oge-accent-soft);
     border-color: var(--oge-accent-25);
-    color: var(--oge-accent);
+    color: color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color));
   }
 }
 
@@ -308,7 +310,7 @@
 .oge-toolbar-menu-btn[aria-expanded='true'] {
   background: var(--oge-accent-soft);
   border-color: var(--oge-accent-25);
-  color: var(--oge-accent);
+  color: color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color));
 }
 
 // --- overflow: 'scroll' ----------------------------------------------------

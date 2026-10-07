@@ -2004,7 +2004,7 @@ const SEED_STOCKS: Stock[] = [
       <oge-column field="price" caption="Price" dataType="number" [format]="money" />
       <oge-column field="change" caption="Change" dataType="number">
         <span *ogeCellTemplate="let value; row as row"
-              [class]="asStock(row).change >= 0 ? 'text-emerald-600' : 'text-red-600'">
+              [class]="asStock(row).change >= 0 ? 'text-emerald-800' : 'text-red-800'">
           {{ value }} ({{ asStock(row).changePercent }}%)
         </span>
       </oge-column>

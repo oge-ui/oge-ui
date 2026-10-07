@@ -131,20 +131,24 @@ const SECTIONS = [
         [code]="dragInSnippet"
         language="ts"
       >
-        <ul class="mb-3 flex flex-wrap gap-2">
+        <div
+          class="mb-3 flex flex-wrap gap-2"
+          role="group"
+          aria-label="Backlog"
+        >
           @for (task of tasks(); track task.id) {
-            <li
+            <div
               [ogeSchedulerDraggable]="task"
               [ogeSchedulerDraggableDuration]="task.minutes"
               class="rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-600"
               [style.border-left]="'4px solid ' + task.color"
             >
               {{ task.text }} · {{ task.minutes }} min
-            </li>
+            </div>
           } @empty {
-            <li class="text-sm opacity-70">Backlog empty.</li>
+            <p class="text-sm text-(--oge-muted-color)">Backlog empty.</p>
           }
-        </ul>
+        </div>
         <oge-scheduler
           [dataSource]="dropData"
           [currentDate]="date"

@@ -253,19 +253,21 @@
     color 120ms ease;
 }
 
+// the limit reads lighter by weight alone: an opacity dropped it below 3:1
 .oge-kanban-count-limit {
-  opacity: 0.7;
-  font-weight: 500;
+  font-weight: 400;
 }
 
+// severity text on its own soft fill sat near 4:1; a fifth of the text
+// colour mixed in keeps the hue and clears 4.5:1 in every theme
 .oge-kanban-count-danger {
   background: var(--oge-danger-soft);
-  color: var(--oge-danger);
+  color: color-mix(in srgb, var(--oge-danger) 80%, var(--oge-text-color));
 }
 
 .oge-kanban-count-warn {
   background: var(--oge-warning-soft);
-  color: var(--oge-warning);
+  color: color-mix(in srgb, var(--oge-warning) 80%, var(--oge-text-color));
 }
 
 .oge-kanban-wip-exceeded {

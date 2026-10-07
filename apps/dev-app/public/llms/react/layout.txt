@@ -3032,7 +3032,7 @@ export function ChipTemplateDemo() {
       ariaLabel="Languages"
       renderChip={({ item }) => (
         <>
-          <strong>{item.label}</strong> <span className="opacity-70">{COUNTS[item.key]}</span>
+          <strong>{item.label}</strong> <span className="text-(--oge-muted-color)">{COUNTS[item.key]}</span>
         </>
       )}
     />

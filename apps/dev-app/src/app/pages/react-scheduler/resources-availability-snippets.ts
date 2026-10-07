@@ -157,9 +157,9 @@ const backlog: Task[] = [
 function TaskChip({ task }: { task: Task }) {
   const drag = useOgeSchedulerDraggable({ data: task, duration: task.minutes });
   return (
-    <li {...drag} className={drag.className + ' rounded border px-3 py-1 text-sm'}>
+    <div {...drag} className={drag.className + ' rounded border px-3 py-1 text-sm'}>
       {task.text} · {task.minutes} min
-    </li>
+    </div>
   );
 }`,
       body: `const [tasks, setTasks] = useState(backlog);
@@ -173,11 +173,11 @@ const dropped = (event: OgeSchedulerAppointmentDroppedEvent<Record<string, unkno
   setLastAction('Scheduled ' + task.text);
 };`,
       jsx: `<>
-  <ul className="mb-3 flex flex-wrap gap-2">
+  <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Backlog">
     {tasks.map((task) => (
       <TaskChip key={task.id} task={task} />
     ))}
-  </ul>
+  </div>
   <OgeScheduler
     dataSource={appointments}
     defaultCurrentDate={new Date(2026, 7, 6)}

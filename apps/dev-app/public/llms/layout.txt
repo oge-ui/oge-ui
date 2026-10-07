@@ -2975,7 +2975,7 @@ import type { OgeChipItem, OgeChipKey } from '@oge-ui/layout';
     >
       <ng-template ogeChipTemplate let-item let-selected="selected">
         <strong>{{ item.label }}</strong>
-        <span class="opacity-70">{{ counts[item.key] }}</span>
+        <span class="text-(--oge-muted-color)">{{ counts[item.key] }}</span>
       </ng-template>
     </oge-chip-list>
   `,

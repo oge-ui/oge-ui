@@ -228,7 +228,7 @@ export const CHIP_PEOPLE: readonly OgeChipItem[] = [
         >
           <ng-template ogeChipTemplate let-item>
             <strong>{{ item.label }}</strong>
-            <span class="opacity-70">{{ counts[item.key] }}</span>
+            <span class="text-(--oge-muted-color)">{{ counts[item.key] }}</span>
           </ng-template>
         </oge-chip-list>
       </app-demo-card>

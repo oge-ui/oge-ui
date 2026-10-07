@@ -134,7 +134,7 @@ export const VERTICAL_SNIPPET = demoSource({
   [dayStartHour]="9"
   [dayEndHour]="17"
   [cellDuration]="60"
-  style="height: 640px"
+  style="height: 640px; --oge-scheduler-slot-height: 48px"
 />`,
   body: `protected readonly date = new Date(2026, 7, 6);
 ${PEOPLE}

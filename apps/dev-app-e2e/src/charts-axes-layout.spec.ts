@@ -16,6 +16,21 @@ const LAYERS = [
   },
 ] as const;
 
+/**
+ * The painted box of an SVG `<text>`, from `getBoundingClientRect()`.
+ * Playwright's `boundingBox()` reports the enclosing `<svg>`'s origin for
+ * SVG text in WebKit (every label then sits at the same point), so text
+ * geometry is always read in the page.
+ */
+async function textBox(
+  locator: Locator,
+): Promise<{ x: number; y: number; width: number; height: number }> {
+  return locator.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, width: r.width, height: r.height };
+  });
+}
+
 for (const layer of LAYERS) {
   test.describe(`charts axes & layout (${layer.name})`, () => {
     const chart = (page: Page, id: string): Locator =>
@@ -45,9 +60,8 @@ for (const layer of LAYERS) {
       expect(bar.width).toBeGreaterThan(bar.height);
       const labels = host.locator('.oge-chart-arg-label');
       await expect(labels.first()).toHaveText('North');
-      const first = await labels.first().boundingBox();
-      const last = await labels.last().boundingBox();
-      if (first === null || last === null) throw new Error('no label box');
+      const first = await textBox(labels.first());
+      const last = await textBox(labels.last());
       expect(first.y).toBeLessThan(last.y);
       // hover a row: the tooltip names its category
       const svg = await host.locator('.oge-chart-svg').boundingBox();
@@ -135,8 +149,7 @@ for (const layer of LAYERS) {
         'Freeze',
       ]) {
         const label = host.locator('.oge-chart-strip-label', { hasText: text });
-        const box = await label.boundingBox();
-        if (box === null) throw new Error(`no box for ${text}`);
+        const box = await textBox(label);
         expect(box.x).toBeGreaterThanOrEqual(svg.x - 1);
         expect(box.x + box.width).toBeLessThanOrEqual(svg.x + svg.width + 1);
       }
@@ -202,9 +215,8 @@ for (const layer of LAYERS) {
       );
       const host = await open(page, 'rtl-touch');
       const labels = host.locator('.oge-chart-arg-label');
-      const first = await labels.first().boundingBox();
-      const last = await labels.last().boundingBox();
-      if (first === null || last === null) throw new Error('no label box');
+      const first = await textBox(labels.first());
+      const last = await textBox(labels.last());
       expect(first.x).toBeGreaterThan(last.x);
       const texts = async () =>
         labels.evaluateAll((nodes) => nodes.map((node) => node.textContent));

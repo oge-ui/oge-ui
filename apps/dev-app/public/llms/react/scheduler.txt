@@ -1177,9 +1177,9 @@ const backlog: Task[] = [
 function TaskChip({ task }: { task: Task }) {
   const drag = useOgeSchedulerDraggable({ data: task, duration: task.minutes });
   return (
-    <li {...drag} className={drag.className + ' rounded border px-3 py-1 text-sm'}>
+    <div {...drag} className={drag.className + ' rounded border px-3 py-1 text-sm'}>
       {task.text} · {task.minutes} min
-    </li>
+    </div>
   );
 }
 
@@ -1196,11 +1196,11 @@ export function Backlog() {
   };
   return (
     <>
-      <ul className="mb-3 flex flex-wrap gap-2">
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Backlog">
         {tasks.map((task) => (
           <TaskChip key={task.id} task={task} />
         ))}
-      </ul>
+      </div>
       <OgeScheduler
         dataSource={appointments}
         defaultCurrentDate={new Date(2026, 7, 6)}
@@ -1579,6 +1579,7 @@ export function RoomsAndOwners() {
 'use client';
 
 import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { CSSProperties } from 'react';
 
 // groupOrientation="vertical" stacks one full time grid per resource
 // under a group label column; drags across blocks reassign the owner.
@@ -1635,7 +1636,7 @@ export function StackedOwners() {
       dayStartHour={9}
       dayEndHour={17}
       cellDuration={60}
-      style={{ height: 640 }}
+      style={{ height: 640, '--oge-scheduler-slot-height': '48px' } as CSSProperties}
     />
   );
 }

@@ -153,7 +153,9 @@ const SECTIONS = [
           <ng-template ogeListBoxItemTemplate let-permission>
             <span class="inline-flex w-full items-center justify-between gap-2">
               <span>{{ permission.name }}</span>
-              <code class="text-xs opacity-70">{{ permission.id }}</code>
+              <code class="text-xs text-(--oge-muted-color)">{{
+                permission.id
+              }}</code>
             </span>
           </ng-template>
         </oge-transfer-list>

@@ -118,8 +118,8 @@ const SEED: Omit<Stock, 'change' | 'changePercent' | 'volume'>[] = [
               class="inline-flex items-center gap-1 font-medium tabular-nums"
               [class]="
                 asNumber(value) >= 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-red-600 dark:text-red-400'
+                  ? 'text-emerald-800 dark:text-emerald-400'
+                  : 'text-red-800 dark:text-red-400'
               "
             >
               @if (asNumber(value) >= 0) {

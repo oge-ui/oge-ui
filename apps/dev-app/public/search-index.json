@@ -1583,7 +1583,7 @@
 ["--oge-chart-axis-line","component","var(--oge-border-color)"],
 ["--oge-chart-axis-fg","component","var(--oge-muted-color)"],
 ["--oge-avatar-bg","component","color-mix(in srgb, var(--oge-accent) 14%, var(--oge-bg))"],
-["--oge-avatar-fg","component","var(--oge-accent)"],
+["--oge-avatar-fg","component","color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color))"],
 ["--oge-rating-color","component","var(--oge-warning)"],
 ["--oge-rating-empty-color","component","var(--oge-muted-color)"],
 ["--oge-signature-ink","component","var(--oge-text-color)"],

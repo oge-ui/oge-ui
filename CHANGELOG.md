@@ -40,6 +40,36 @@ are versioned independently, which is the case here.
   grew by about 0.3 kB (gzip) for the two sidebar entries and the search
   group.
 
+### Cross-browser fixes — `@oge-ui/behavior` (grid / tree list, both layers), `@oge-ui/core` (themes), `@oge-ui/layout`, `@oge-ui/navigation`, `@oge-ui/inputs`, `@oge-ui/forms`, `@oge-ui/kanban`, `@oge-ui/gantt`
+
+- **A million-row grid scrolls to its last row in every browser.** The
+  virtual body was laid out at rows × row height; past an engine's element
+  height cap that broke — Firefox (~17.9M px) dropped the height outright,
+  so the 1M-row remote grid could not scroll beyond its first screen, and
+  Chromium / WebKit clamp at 2^25 px, leaving the last ~70k rows
+  unreachable. Above 15M px the body is now compressed and scroll positions
+  are scaled into the row space (window, row placement, `scrollRowIntoView`,
+  scroll anchoring) — Angular and React grids and tree lists alike.
+- **AA contrast for labels on soft fills.** Avatar and chip-avatar
+  initials (`--oge-avatar-fg`, every theme), the pressed toolbar toggle and
+  open toolbar menu button, the gantt toggle, the active drawer item, the
+  colour-gradient contrast badges, the validation summary title and the
+  kanban WIP count now use the accent / severity colour deepened a fifth
+  toward the text colour (4.24–4.48:1 → ≥ 5:1); the WIP limit no longer
+  drops below 3:1 through an extra opacity.
+- **A disabled field's hint stays readable** — it is usually the reason
+  the field is disabled; it was dimmed with the field to 2.3:1.
+- Docs demos: dimmed text inside components uses `--oge-muted-color`, the
+  scheduler drag-in backlog is a button group (not a `<ul>` of
+  `role=button` items), the vertical-grouping scheduler demo keeps 30-min
+  appointments at a 24px target, and the React accordion demos keep clear
+  space under their checkboxes.
+- Tests: the WebKit-only failures (SVG text geometry, mid-transition
+  colours, key presses racing focus), the infinite-scroll skeleton race,
+  the axe crawl racing the header's deferred selects, and the visual
+  regression spec's locators (every shot used to time out) are fixed;
+  `node tools/e2e/visual.mjs --local` dry-runs the shots without Docker.
+
 ### Docs site — search, changelog, bundle size (W6a)
 
 - **Search the docs with Ctrl/⌘K** (or `/`, or the header's search button).

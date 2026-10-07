@@ -126,17 +126,17 @@ export const DRAG_IN_SNIPPET = demoSource({
      Enter / click a cell to place it (the keyboard and single-pointer twin).
      appointmentDropped reports the built item; dragOut fires when a chip is
      dragged out and released elsewhere. -->
-<ul class="mb-3 flex flex-wrap gap-2">
+<div class="mb-3 flex flex-wrap gap-2" role="group" aria-label="Backlog">
   @for (task of tasks(); track task.id) {
-    <li
+    <div
       [ogeSchedulerDraggable]="task"
       [ogeSchedulerDraggableDuration]="task.minutes"
       class="rounded border px-3 py-1 text-sm"
     >
       {{ task.text }} · {{ task.minutes }} min
-    </li>
+    </div>
   }
-</ul>
+</div>
 <oge-scheduler
   [dataSource]="appointments"
   [currentDate]="date"

@@ -136,7 +136,7 @@ const trail: OgeBreadcrumbItemData[] = [
       jsx: `<OgeBreadcrumb
   items={trail}
   renderItem={({ item, last }) => (
-    <strong style={{ opacity: last ? 1 : 0.75 }}>{item.text}</strong>
+    <strong style={{ fontWeight: last ? 700 : 500 }}>{item.text}</strong>
   )}
   renderSeparator={() => '·'}
 />`,

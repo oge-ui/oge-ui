@@ -170,7 +170,7 @@ const ASSIGNMENT_COLUMNS: OgeGridColumnProps<Assignment>[] = [
             @for (entry of saveLog(); track $index) {
               <li class="break-all">{{ entry }}</li>
             } @empty {
-              <li class="list-none text-gray-400">No saves yet</li>
+              <li class="list-none text-(--oge-muted-color)">No saves yet</li>
             }
           </ol>
         </oge-card>

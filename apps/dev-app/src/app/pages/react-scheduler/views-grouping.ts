@@ -3,7 +3,7 @@ import {
   Component,
   ViewEncapsulation,
 } from '@angular/core';
-import { createElement, type ReactNode } from 'react';
+import { createElement, type CSSProperties, type ReactNode } from 'react';
 import {
   OgeScheduler,
   type OgeSchedulerView,
@@ -88,7 +88,11 @@ function VerticalDemo(): ReactNode {
     dayStartHour: 9,
     dayEndHour: 17,
     cellDuration: 60,
-    style: { height: 640 },
+    // a 30-minute appointment stays a 24px target (WCAG 2.5.8)
+    style: {
+      height: 640,
+      '--oge-scheduler-slot-height': '48px',
+    } as CSSProperties,
   });
 }
 

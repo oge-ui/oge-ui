@@ -84,7 +84,7 @@ function ConflictsDemo(): ReactNode {
 function TaskChip({ task }: { task: DepthTask }): ReactNode {
   const drag = useOgeSchedulerDraggable({ data: task, duration: task.minutes });
   return createElement(
-    'li',
+    'div',
     {
       ...drag,
       className: `${drag.className} rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-600`,
@@ -108,13 +108,17 @@ function DragInDemo(): ReactNode {
     Fragment,
     null,
     createElement(
-      'ul',
-      { className: 'mb-3 flex flex-wrap gap-2' },
+      'div',
+      {
+        className: 'mb-3 flex flex-wrap gap-2',
+        role: 'group',
+        'aria-label': 'Backlog',
+      },
       tasks.length
         ? tasks.map((task) => createElement(TaskChip, { key: task.id, task }))
         : createElement(
-            'li',
-            { className: 'text-sm opacity-70' },
+            'p',
+            { className: 'text-sm text-(--oge-muted-color)' },
             'Backlog empty.',
           ),
     ),

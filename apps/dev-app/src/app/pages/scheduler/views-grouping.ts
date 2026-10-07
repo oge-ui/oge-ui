@@ -131,7 +131,7 @@ const SECTIONS = [
           [dayStartHour]="9"
           [dayEndHour]="17"
           [cellDuration]="60"
-          style="height: 640px"
+          style="height: 640px; --oge-scheduler-slot-height: 48px"
         />
       </app-demo-card>
 

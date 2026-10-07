@@ -1975,11 +1975,11 @@
       "c": "component",
       "k": "d",
       "v": {
-        "light": "var(--oge-accent)",
+        "light": "color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color))",
         "hc": "var(--oge-text-color)"
       },
       "s": {
-        "light": "#2563eb",
+        "light": "#2456c6",
         "hc": "#000000"
       },
       "u": [

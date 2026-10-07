@@ -417,7 +417,9 @@
 // rail — readable at a glance, and the bar survives forced colours.
 .oge-drawer-item-active {
   background: var(--oge-accent-soft);
-  color: var(--oge-accent);
+  // accent text on the accent-soft fill sat at 4.48:1; a fifth of the text
+  // colour mixed in keeps the hue and clears 4.5:1 in every theme
+  color: color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color));
   font-weight: 600;
 
   &::before {

@@ -34,6 +34,18 @@ async function open(page: Page, path: string, theme: Theme): Promise<void> {
         }
       }),
     );
+    // the controls transition their colours into the dark palette; a
+    // computed style read mid-transition is still the light value (WebKit
+    // starts them later than Chromium), so wait until every one has ended
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .every(
+          (animation) =>
+            !(animation instanceof CSSTransition) ||
+            animation.playState !== 'running',
+        ),
+    );
   }
 }
 
@@ -449,10 +461,19 @@ for (const theme of THEMES) {
         .locator('app-demo-card')
         .filter({ hasText: 'Navigation items' })
         .locator('.oge-drawer-items');
+      // the demo's list re-renders once after boot (its selection settles):
+      // scroll only once the active entry is there
+      await expect(list.locator('.oge-drawer-item-active')).toBeVisible();
       await list.scrollIntoViewIfNeeded();
       const active = list.locator('.oge-drawer-item-active');
+      // the accent deepened a fifth toward the text colour (AA on the
+      // accent-soft fill)
       expect(await css(active, 'color')).toBe(
-        await token(list, 'color', 'var(--oge-accent)'),
+        await token(
+          list,
+          'color',
+          'color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color))',
+        ),
       );
       expect(await css(active, 'background-color')).toBe(
         await token(list, 'background-color', 'var(--oge-accent-soft)'),

@@ -97,7 +97,7 @@ export const INPUTS_TRANSFER_LIST_DEMOS: readonly ReactDemo[] = [
   renderItem={(permission) => (
     <span className="inline-flex w-full items-center justify-between gap-2">
       <span>{permission.name}</span>
-      <code className="text-xs opacity-70">{permission.id}</code>
+      <code className="text-xs text-(--oge-muted-color)">{permission.id}</code>
     </span>
   )}
 />`,

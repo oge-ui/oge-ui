@@ -201,7 +201,7 @@ export class ReactNavigationBreadcrumbDemos {
       renderItem: ({ item, last }: OgeBreadcrumbItemRenderContext) =>
         createElement(
           'strong',
-          { style: { opacity: last ? 1 : 0.75 } },
+          { style: { fontWeight: last ? 700 : 500 } },
           item.text,
         ),
       renderSeparator: () => '·',

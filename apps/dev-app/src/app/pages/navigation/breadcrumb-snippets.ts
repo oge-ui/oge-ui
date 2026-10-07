@@ -70,7 +70,7 @@ export const TEMPLATES_SNIPPET = demoSource({
      separator template renders aria-hidden: a separator is decoration. -->
 <oge-breadcrumb [items]="trail">
   <ng-template ogeBreadcrumbItemTemplate let-item let-last="last">
-    <strong [style.opacity]="last ? 1 : 0.75">{{ item.text }}</strong>
+    <strong [style.font-weight]="last ? 700 : 500">{{ item.text }}</strong>
   </ng-template>
   <ng-template ogeBreadcrumbSeparatorTemplate>·</ng-template>
 </oge-breadcrumb>`,

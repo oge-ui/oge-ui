@@ -2027,6 +2027,18 @@ rules — change both together.
   tall card and how far a click scrolls a scroll container: scroll the element you are about
   to press with the mouse into view itself before reading its `boundingBox()`. Firefox and
   WebKit get a 60 s test budget (axe over a whole API page runs about twice as long there).
+- **More engine traps the nightly found.** Playwright's `boundingBox()` reports the enclosing
+  `<svg>`'s origin for SVG `<text>` in WebKit — read text geometry with
+  `getBoundingClientRect()` in the page. A computed colour read right after a theme switch
+  can be mid-transition (WebKit starts them later): wait until no `CSSTransition` is running.
+  A transient state (skeleton rows during a 150 ms load) is recorded in the page with a
+  `MutationObserver`, never sampled by `expect.poll`. Press keys one at a time and wait for
+  focus to land before the next. Before axe, wait for every `[role=combobox]` to carry
+  `aria-expanded`: the header's `@defer (on idle)` selects exist for a tick without bindings.
+- **Element height caps.** Firefox drops a `height` above ~17.9M px and Chromium / WebKit clamp
+  at 2^25 px, so `OgeGridRowVirtualizerCore` caps the body at `OGE_MAX_SCROLL_HEIGHT` (15M px)
+  and scales scroll positions into the row space above it (`ogeScrollScale`). Anything that
+  maps a row to a `scrollTop` goes through the core's `scrollScale()`.
 - Locally: `npx playwright install firefox webkit`, then e.g.
   `OGE_E2E_BROWSERS=webkit npx nx run dev-app-e2e:e2e -- --grep=@smoke`.
 
@@ -2046,6 +2058,14 @@ rules — change both together.
 - Compare: `npm run e2e:visual` (or `npx nx run dev-app-e2e:e2e-visual`). Update after an
   intended visual change: `npm run e2e:visual:update`, review the PNG diff, commit the
   baselines with the change. Needs Docker. `BASE_URL` points at another dev-server port.
+- **Without Docker:** `node tools/e2e/visual.mjs --local` runs every shot in the locally
+  installed Chromium with `OGE_VISUAL_DRY=1` — locators, readiness and rendering are checked
+  and each shot lands in the git-ignored `test-output-visual/` for a look, but nothing is
+  compared or written to `__screenshots__` (it refuses `--update`). Baselines come only from
+  Docker locally or the `visual-baselines.yml` workflow.
+- Shots address a card as the functional specs do — `app-demo-card:has(#<heading-id>)`, or the
+  page's first card — and capture its preview pane (`:scope > section > div.p-4`); `ready` is
+  looked up inside that pane, and the shot waits for fonts and for running transitions to end.
 - Adding a shot: one entry in `SHOTS`; mask anything time- or data-dependent (`mask`), keep the
   set curated (each PNG is a review burden) and the folder well under 15 MB.
 

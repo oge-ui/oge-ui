@@ -171,7 +171,7 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
               >
                 Toggle
               </button>
-              <p class="mt-2 opacity-70">
+              <p class="mt-2 text-(--oge-muted-color)">
                 overlay covers this, push shifts it, side shrinks it.
               </p>
             </div>
@@ -251,7 +251,7 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
               >
                 Open menu
               </button>
-              <p class="mt-2 opacity-70">
+              <p class="mt-2 text-(--oge-muted-color)">
                 Escape, or a click on the backdrop, closes it and returns focus
                 here.
               </p>
@@ -287,7 +287,7 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
               >
                 Toggle rail
               </button>
-              <p class="mt-2 opacity-70">
+              <p class="mt-2 text-(--oge-muted-color)">
                 Closed it is a rail, not a gap — and it stays keyboard
                 reachable.
               </p>
@@ -314,7 +314,7 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
             [value]="shellWidth()"
             (input)="onWidth($event)"
           />
-          <span class="opacity-70">{{ shellWidth() }}px</span>
+          <span class="text-(--oge-muted-color)">{{ shellWidth() }}px</span>
         </div>
         <div
           class="h-40 overflow-hidden rounded border"
@@ -341,7 +341,7 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
             </div>
           </oge-drawer>
         </div>
-        <p class="mt-2 text-sm opacity-70">
+        <p class="mt-2 text-sm text-(--oge-muted-color)">
           resolved mode → {{ resolvedMode() }}
         </p>
       </app-demo-card>
@@ -459,7 +459,10 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
               >
                 {{ itemsOpen() ? 'Collapse to rail' : 'Expand' }}
               </button>
-              <p class="mt-2 opacity-70" data-testid="drawer-items-page">
+              <p
+                class="mt-2 text-(--oge-muted-color)"
+                data-testid="drawer-items-page"
+              >
                 Showing: {{ page() }}
               </p>
             </div>
@@ -498,7 +501,7 @@ const POSITIONS: readonly OgeDrawerPosition[] = [
               >
                 Open menu
               </button>
-              <p class="mt-2 opacity-70">
+              <p class="mt-2 text-(--oge-muted-color)">
                 Or swipe in from the start edge.
                 @if (lastClose(); as reason) {
                   Last close: {{ reason }}.

@@ -126,7 +126,7 @@ export const TEMPLATE_SNIPPET = demoSource({
 >
   <ng-template ogeChipTemplate let-item let-selected="selected">
     <strong>{{ item.label }}</strong>
-    <span class="opacity-70">{{ counts[item.key] }}</span>
+    <span class="text-(--oge-muted-color)">{{ counts[item.key] }}</span>
   </ng-template>
 </oge-chip-list>`,
   body: `protected readonly languages: OgeChipItem[] = [

@@ -132,7 +132,7 @@ function ModesDemo(): ReactNode {
           }),
           createElement(
             'p',
-            { className: 'mt-2 opacity-70' },
+            { className: 'mt-2 text-(--oge-muted-color)' },
             'overlay covers this, push shifts it, side shrinks it.',
           ),
         ),
@@ -204,7 +204,7 @@ function ModalDemo(): ReactNode {
         }),
         createElement(
           'p',
-          { className: 'mt-2 opacity-70' },
+          { className: 'mt-2 text-(--oge-muted-color)' },
           'Escape, or a click on the backdrop, closes it and returns focus here.',
         ),
       ),
@@ -261,7 +261,7 @@ function ItemsDemo(): ReactNode {
         createElement(
           'p',
           {
-            className: 'mt-2 opacity-70',
+            className: 'mt-2 text-(--oge-muted-color)',
             'data-testid': 'drawer-items-page',
           },
           `Showing: ${page}`,
@@ -302,7 +302,7 @@ function SwipeDemo(): ReactNode {
         }),
         createElement(
           'p',
-          { className: 'mt-2 opacity-70' },
+          { className: 'mt-2 text-(--oge-muted-color)' },
           'Or swipe in from the start edge.',
           lastClose ? ` Last close: ${lastClose}.` : '',
         ),
@@ -336,7 +336,7 @@ function RailDemo(): ReactNode {
         demoButton('toggle', 'Toggle rail', () => setOpened(!opened)),
         createElement(
           'p',
-          { className: 'mt-2 opacity-70' },
+          { className: 'mt-2 text-(--oge-muted-color)' },
           'Closed it is a rail, not a gap — and it stays keyboard reachable.',
         ),
       ),
@@ -365,7 +365,11 @@ function CompactDemo(): ReactNode {
         onChange: (event: { target: { value: string } }) =>
           setWidth(Number(event.target.value)),
       }),
-      createElement('span', { className: 'opacity-70' }, `${width}px`),
+      createElement(
+        'span',
+        { className: 'text-(--oge-muted-color)' },
+        `${width}px`,
+      ),
     ),
     frame(
       createElement(
@@ -396,7 +400,7 @@ function CompactDemo(): ReactNode {
     ),
     createElement(
       'p',
-      { className: 'mt-2 text-sm opacity-70' },
+      { className: 'mt-2 text-sm text-(--oge-muted-color)' },
       `resolved mode → ${resolvedMode}`,
     ),
   );

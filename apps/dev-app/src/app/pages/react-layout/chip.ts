@@ -197,7 +197,7 @@ function TemplateDemo(): ReactNode {
       ' ',
       createElement(
         'span',
-        { key: 'c', className: 'opacity-70' },
+        { key: 'c', className: 'text-(--oge-muted-color)' },
         String(COUNTS[item.key]),
       ),
     ],

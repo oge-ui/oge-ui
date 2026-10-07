@@ -44,8 +44,15 @@ export const REACT_LAYOUT_OVERVIEW_SECTIONS = [
   'Expansion panel',
 ] as const;
 
+// `mb-2`, as on the Angular page: the native checkboxes are 13px, so they
+// need the clear space around them (WCAG 2.5.8) — flush against the
+// accordion headers below they failed target-size
 const row = (...children: ReactNode[]) =>
-  createElement('div', { className: 'demo-row demo-row-start' }, ...children);
+  createElement(
+    'div',
+    { className: 'demo-row demo-row-start mb-2' },
+    ...children,
+  );
 
 const checkbox = (label: string, checked: boolean, toggle: () => void) =>
   createElement(

@@ -43,17 +43,21 @@ test('keyboard navigation moves the focused cell and selects with Space', async 
   await grid.locator('[data-cell="0-0"]').click();
   await expect(page.getByText('Selected:')).toContainText('1');
 
-  // …then walk with arrows and add row 3 with Space
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowRight');
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () => (document.activeElement as HTMLElement)?.dataset?.['cell'],
-      ),
-    )
-    .toBe('2-1');
+  // …then walk with arrows and add row 3 with Space; each step waits for
+  // focus to land, so a key never goes to a cell that is being re-rendered
+  const focusedCell = () =>
+    page.evaluate(
+      () => (document.activeElement as HTMLElement)?.dataset?.['cell'],
+    );
+  await expect.poll(focusedCell).toBe('0-0');
+  for (const [key, cell] of [
+    ['ArrowDown', '1-0'],
+    ['ArrowDown', '2-0'],
+    ['ArrowRight', '2-1'],
+  ] as const) {
+    await page.keyboard.press(key);
+    await expect.poll(focusedCell).toBe(cell);
+  }
 
   await page.keyboard.press(' ');
   await expect(page.getByText('Selected:')).toContainText('2');

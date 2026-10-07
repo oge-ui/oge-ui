@@ -54,7 +54,7 @@ interface Toggle {
     <div class="mb-4 grid grid-cols-4 gap-3 max-md:grid-cols-2">
       <oge-card size="sm">
         <div
-          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+          class="text-[11px] font-semibold uppercase tracking-wider text-(--oge-muted-color)"
         >
           Dataset
         </div>
@@ -63,11 +63,11 @@ interface Toggle {
         >
           {{ rowCount().toLocaleString() }}
         </div>
-        <div class="text-xs text-gray-400">rows in memory</div>
+        <div class="text-xs text-(--oge-muted-color)">rows in memory</div>
       </oge-card>
       <oge-card size="sm">
         <div
-          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+          class="text-[11px] font-semibold uppercase tracking-wider text-(--oge-muted-color)"
         >
           DOM
         </div>
@@ -76,11 +76,13 @@ interface Toggle {
         >
           {{ domRows() }}
         </div>
-        <div class="text-xs text-gray-400">row elements rendered</div>
+        <div class="text-xs text-(--oge-muted-color)">
+          row elements rendered
+        </div>
       </oge-card>
       <oge-card size="sm">
         <div
-          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+          class="text-[11px] font-semibold uppercase tracking-wider text-(--oge-muted-color)"
         >
           Ratio
         </div>
@@ -89,11 +91,13 @@ interface Toggle {
         >
           {{ domRatio() }}
         </div>
-        <div class="text-xs text-gray-400">of the data is in the DOM</div>
+        <div class="text-xs text-(--oge-muted-color)">
+          of the data is in the DOM
+        </div>
       </oge-card>
       <oge-card size="sm">
         <div
-          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+          class="text-[11px] font-semibold uppercase tracking-wider text-(--oge-muted-color)"
         >
           Features
         </div>
@@ -101,9 +105,11 @@ interface Toggle {
           class="mt-0.5 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100"
         >
           {{ enabledCount()
-          }}<span class="text-sm text-gray-400">/{{ toggles.length }}</span>
+          }}<span class="text-sm text-(--oge-muted-color)"
+            >/{{ toggles.length }}</span
+          >
         </div>
-        <div class="text-xs text-gray-400">enabled</div>
+        <div class="text-xs text-(--oge-muted-color)">enabled</div>
       </oge-card>
     </div>
 
@@ -112,7 +118,7 @@ interface Toggle {
     >
       <oge-card class="max-lg:order-first" role="complementary">
         <div
-          class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+          class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-(--oge-muted-color)"
         >
           Features
         </div>
@@ -124,7 +130,7 @@ interface Toggle {
               <span
                 class="flex items-center gap-2.5 text-gray-700 dark:text-gray-300"
               >
-                <span class="text-gray-400"
+                <span class="text-(--oge-muted-color)"
                   ><app-icon [name]="option.icon" [size]="14"
                 /></span>
                 {{ option.label }}
@@ -154,7 +160,7 @@ interface Toggle {
         </div>
 
         <div
-          class="mb-2 mt-5 text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+          class="mb-2 mt-5 text-[11px] font-semibold uppercase tracking-wider text-(--oge-muted-color)"
         >
           Data
         </div>

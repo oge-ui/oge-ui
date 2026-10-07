@@ -1221,17 +1221,17 @@ import type { OgeSchedulerAppointmentDroppedEvent, OgeSchedulerDragOutEvent } fr
          Enter / click a cell to place it (the keyboard and single-pointer twin).
          appointmentDropped reports the built item; dragOut fires when a chip is
          dragged out and released elsewhere. -->
-    <ul class="mb-3 flex flex-wrap gap-2">
+    <div class="mb-3 flex flex-wrap gap-2" role="group" aria-label="Backlog">
       @for (task of tasks(); track task.id) {
-        <li
+        <div
           [ogeSchedulerDraggable]="task"
           [ogeSchedulerDraggableDuration]="task.minutes"
           class="rounded border px-3 py-1 text-sm"
         >
           {{ task.text }} · {{ task.minutes }} min
-        </li>
+        </div>
       }
-    </ul>
+    </div>
     <oge-scheduler
       [dataSource]="appointments"
       [currentDate]="date"
@@ -1673,7 +1673,7 @@ import { OgeScheduler } from '@oge-ui/scheduler';
       [dayStartHour]="9"
       [dayEndHour]="17"
       [cellDuration]="60"
-      style="height: 640px"
+      style="height: 640px; --oge-scheduler-slot-height: 48px"
     />
   `,
 })

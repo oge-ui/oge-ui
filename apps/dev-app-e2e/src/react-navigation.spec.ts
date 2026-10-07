@@ -196,6 +196,17 @@ test.describe('React navigation docs', () => {
       // (`page-has-heading-one` was the tell).
       await expect(page.locator('h1').first()).toBeVisible();
       await expect(page.getByRole('status')).toHaveCount(0);
+      // the header's deferred selects get their bindings a tick after they
+      // are created; axe must not catch a combobox in between
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            [...document.querySelectorAll('[role="combobox"]')].every((el) =>
+              el.hasAttribute('aria-expanded'),
+            ),
+          ),
+        )
+        .toBe(true);
       // heading-order (h1 → demo-card h3) is the site-wide demo-card pattern,
       // identical in the Angular views — a best-practice flag, not a WCAG
       // failure, and not something the React layer introduced.

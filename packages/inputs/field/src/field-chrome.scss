@@ -97,8 +97,10 @@
   opacity: 0.55;
 }
 
-.oge-disabled .oge-input-label,
-.oge-disabled .oge-input-subscript {
+// The subscript stays at full strength: on a disabled field the hint is
+// usually the reason it is disabled ("enabled for Company only"), and dimmed
+// it fell to about 2.3:1.
+.oge-disabled .oge-input-label {
   opacity: 0.55;
 }
 

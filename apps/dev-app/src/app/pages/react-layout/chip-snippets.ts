@@ -178,7 +178,7 @@ const COUNTS: Record<string, number> = { ts: 128, rs: 42, go: 37 };`,
   ariaLabel="Languages"
   renderChip={({ item }) => (
     <>
-      <strong>{item.label}</strong> <span className="opacity-70">{COUNTS[item.key]}</span>
+      <strong>{item.label}</strong> <span className="text-(--oge-muted-color)">{COUNTS[item.key]}</span>
     </>
   )}
 />`,

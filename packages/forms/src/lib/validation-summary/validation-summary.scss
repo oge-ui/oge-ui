@@ -18,7 +18,9 @@
 .oge-validation-summary-title {
   margin: 0 0 6px;
   font-weight: 600;
-  color: var(--oge-danger);
+  // danger on the danger-soft panel sat at 4:1; a fifth of the text colour
+  // mixed in keeps the hue and clears 4.5:1 in every theme
+  color: color-mix(in srgb, var(--oge-danger) 80%, var(--oge-text-color));
 }
 
 .oge-validation-summary-list {

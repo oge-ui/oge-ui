@@ -112,8 +112,8 @@ const COLUMNS: OgeGridColumnProps<Stock>[] = [
         {
           className: `inline-flex items-center gap-1 font-medium tabular-nums ${
             up
-              ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-red-600 dark:text-red-400'
+              ? 'text-emerald-800 dark:text-emerald-400'
+              : 'text-red-800 dark:text-red-400'
           }`,
         },
         arrow(up),

@@ -37,10 +37,20 @@ async function openRtl(page: Page, path: string, query: string): Promise<void> {
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 }
 
+/**
+ * The element's box from `getBoundingClientRect()` — Playwright's
+ * `boundingBox()` reports the enclosing `<svg>`'s origin for SVG text in
+ * WebKit, which would put every chart label at the same point.
+ */
 async function box(locator: Locator) {
   await locator.scrollIntoViewIfNeeded();
-  const b = await locator.boundingBox();
-  if (b === null) throw new Error('element has no layout box');
+  const b = await locator.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, width: r.width, height: r.height };
+  });
+  if (b.width === 0 && b.height === 0) {
+    throw new Error('element has no layout box');
+  }
   return b;
 }
 

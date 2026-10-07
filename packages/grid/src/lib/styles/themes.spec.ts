@@ -280,6 +280,46 @@ describe.each([
     }
   });
 
+  it('a colour on its own soft tint reads once deepened toward the text (>= 4.5:1)', () => {
+    // the recipe the components use for a label on a soft fill (avatar
+    // initials, pressed toolbar / gantt toggles, the active drawer item,
+    // severity badges): `color-mix(in srgb, <colour> 80%, --oge-text-color)`
+    // on the colour tinted over the surface — 16% is the strongest tint any
+    // soft token or `--oge-avatar-bg` uses
+    const mixHex = (a: string, b: string, p: number): string => {
+      const rgb = (hex: string) => {
+        const n = parseInt(hex.slice(1), 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+      };
+      const [x, y] = [rgb(a), rgb(b)];
+      return `#${x
+        .map((v, i) =>
+          Math.round(v * p + y[i] * (1 - p))
+            .toString(16)
+            .padStart(2, '0'),
+        )
+        .join('')}`;
+    };
+    for (const colour of [
+      '--oge-accent',
+      '--oge-success',
+      '--oge-warning',
+      '--oge-danger',
+    ]) {
+      const text = mixHex(t(colour), t('--oge-text-color'), 0.8);
+      for (const tint of [0.08, 0.12, 0.16]) {
+        const fill = mixHex(t(colour), t('--oge-bg'), tint);
+        expect(
+          contrast(text, fill),
+          `${colour} (80% toward text) on its ${tint * 100}% tint`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+    expect(derived.get('--oge-avatar-fg')).toBe(
+      'color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color))',
+    );
+  });
+
   it('text on filled severity and accent controls reads (>= 4.5:1)', () => {
     for (const fill of [
       '--oge-accent',

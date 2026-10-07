@@ -138,6 +138,7 @@ ${APPOINTMENTS}`,
     title: 'Vertical grouping',
     source: reactDemoSource({
       use: { '@oge-ui/react-scheduler': ['OgeScheduler'] },
+      types: { react: ['CSSProperties'] },
       name: 'StackedOwners',
       before: `// groupOrientation="vertical" stacks one full time grid per resource
 // under a group label column; drags across blocks reassign the owner.
@@ -154,7 +155,7 @@ ${APPOINTMENTS}`,
   dayStartHour={9}
   dayEndHour={17}
   cellDuration={60}
-  style={{ height: 640 }}
+  style={{ height: 640, '--oge-scheduler-slot-height': '48px' } as CSSProperties}
 />`,
     }),
   },

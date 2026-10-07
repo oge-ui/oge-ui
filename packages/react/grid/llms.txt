@@ -1517,7 +1517,7 @@ const columns: OgeGridColumnProps<Stock>[] = [
     dataType: 'number',
     // renderCell is the React form of *ogeCellTemplate — and the row is typed
     renderCell: ({ value, row }) => (
-      <span className={row.change >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+      <span className={row.change >= 0 ? 'text-emerald-800' : 'text-red-800'}>
         {String(value)} ({row.changePercent}%)
       </span>
     ),

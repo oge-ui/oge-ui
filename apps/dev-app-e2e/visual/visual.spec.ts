@@ -17,12 +17,7 @@ type Theme = 'light' | 'dark' | 'high-contrast';
 /** A fixed "now", so a calendar or a relative date paints the same day. */
 const NOW = new Date('2026-03-16T10:00:00Z');
 
-async function open(
-  page: Page,
-  route: string,
-  theme: Theme,
-  ready: string,
-): Promise<void> {
+async function open(page: Page, route: string, theme: Theme): Promise<void> {
   await page.clock.setFixedTime(NOW);
   await page.addInitScript((theme) => {
     try {
@@ -54,30 +49,68 @@ async function open(
       ),
     )
     .toBe(true);
-  await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  if (route.includes('framework=react')) {
+    await expect(html).toHaveAttribute('data-framework', 'react');
+  }
 }
 
-/** The preview pane of the page's first (or the named) demo card. */
-function preview(page: Page, heading?: string): Locator {
-  const card = heading
-    ? page.locator('app-demo-card').filter({
-        has: page.getByRole('heading', { name: heading, exact: true }),
-      })
-    : page.locator('app-demo-card').first();
-  // the card's own frame → its preview pane (not a `.p-4` inside the demo)
-  return card.locator(
-    'xpath=./div/div[contains(concat(" ", normalize-space(@class), " "), " p-4 ")]',
+/**
+ * Fonts loaded, no transition or animation still running (a theme applied
+ * at boot can transition the controls' colours) and two frames painted.
+ */
+async function settle(page: Page): Promise<void> {
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (animation) =>
+          animation.playState !== 'running' ||
+          animation.effect?.getTiming().iterations === Infinity,
+      ),
+  );
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
   );
 }
+
+/**
+ * The demo card with the given heading anchor id (`app-demo-card:has(#id)`,
+ * as the functional specs address cards), or the page's first card.
+ */
+function card(page: Page, id?: string): Locator {
+  return id
+    ? page.locator(`app-demo-card:has(#${id})`)
+    : page.locator('app-demo-card').first();
+}
+
+/**
+ * The card's preview pane: `app-demo-card > section > div.p-4` (the card's
+ * own frame — never a `.p-4` inside the demo itself).
+ */
+function preview(page: Page, id?: string): Locator {
+  return card(page, id).locator(':scope > section > div.p-4');
+}
+
+/**
+ * `OGE_VISUAL_DRY=1` (`node tools/e2e/visual.mjs --local`) runs every shot
+ * against a local browser without comparing or writing a baseline: it proves
+ * the locators match and the demos render, where Docker is unavailable. A
+ * local rasteriser must never write the committed PNGs.
+ */
+const DRY = !!process.env['OGE_VISUAL_DRY'];
 
 interface Shot {
   name: string;
   route: string;
-  /** an element that proves the demo has rendered */
+  /** an element inside the preview that proves the demo has rendered */
   ready: string;
   themes: readonly Theme[];
-  heading?: string;
+  /** the demo card's heading anchor id; omitted → the page's first card */
+  card?: string;
   /** regions repainted by time or data, masked out of the comparison */
   mask?: readonly string[];
 }
@@ -169,11 +202,29 @@ const SHOTS: readonly Shot[] = [
 for (const shot of SHOTS) {
   for (const theme of shot.themes) {
     test(`${shot.name} (${theme})`, async ({ page }) => {
-      await open(page, shot.route, theme, shot.ready);
-      const target = preview(page, shot.heading);
+      await open(page, shot.route, theme);
+      const target = preview(page, shot.card);
+      await expect(target).toHaveCount(1);
       await target.scrollIntoViewIfNeeded();
+      await expect(target.locator(shot.ready).first()).toBeVisible({
+        timeout: 30_000,
+      });
+      await settle(page);
+      const mask = (shot.mask ?? []).map((selector) => page.locator(selector));
+      if (DRY) {
+        const box = await target.boundingBox();
+        expect(box?.width ?? 0).toBeGreaterThan(100);
+        expect(box?.height ?? 0).toBeGreaterThan(40);
+        // kept in the (git-ignored) test output for a look, never compared
+        await target.screenshot({
+          animations: 'disabled',
+          mask,
+          path: test.info().outputPath(`${shot.name}-${theme}.png`),
+        });
+        return;
+      }
       await expect(target).toHaveScreenshot(`${shot.name}-${theme}.png`, {
-        mask: (shot.mask ?? []).map((selector) => page.locator(selector)),
+        mask,
       });
     });
   }

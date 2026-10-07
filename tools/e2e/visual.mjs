@@ -8,6 +8,8 @@
  *
  *   node tools/e2e/visual.mjs            compare against the baselines
  *   node tools/e2e/visual.mjs --update   rewrite the baselines
+ *   node tools/e2e/visual.mjs --local    no Docker: render every shot in the
+ *                                        local Chromium, compare nothing
  *
  * Any other argument is passed to `playwright test`. The test runner and the
  * dev server stay on the host; only the browser runs in the container
@@ -36,7 +38,40 @@ const name = `oge-visual-${process.pid}`;
 
 const args = process.argv.slice(2);
 const update = args.includes('--update');
-const passThrough = args.filter((arg) => arg !== '--update');
+const local = args.includes('--local');
+const passThrough = args.filter(
+  (arg) => arg !== '--update' && arg !== '--local',
+);
+
+/**
+ * `--local`: no Docker — the shots run in the locally installed Chromium
+ * with `OGE_VISUAL_DRY=1`, which renders and checks every shot but never
+ * compares or writes a baseline (a local rasteriser's PNGs would not match
+ * CI). For checking the spec itself where Docker is unavailable.
+ */
+if (local) {
+  if (update) {
+    console.error('visual: --local never writes baselines; drop --update');
+    process.exit(1);
+  }
+  const result = spawnSync(
+    'npx',
+    [
+      'playwright',
+      'test',
+      '-c',
+      'apps/dev-app-e2e/playwright.visual.config.mts',
+      ...passThrough,
+    ],
+    {
+      cwd: root,
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+      env: { ...process.env, OGE_VISUAL_DRY: '1', TZ: 'UTC' },
+    },
+  );
+  process.exit(result.status ?? 1);
+}
 
 function docker(dockerArgs, options = {}) {
   const result = spawnSync('docker', dockerArgs, {

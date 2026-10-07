@@ -3031,7 +3031,7 @@ const SEED_STOCKS: Stock[] = [
       <oge-column field="price" caption="Price" dataType="number" [format]="money" />
       <oge-column field="change" caption="Change" dataType="number">
         <span *ogeCellTemplate="let value; row as row"
-              [class]="asStock(row).change >= 0 ? 'text-emerald-600' : 'text-red-600'">
+              [class]="asStock(row).change >= 0 ? 'text-emerald-800' : 'text-red-800'">
           {{ value }} ({{ asStock(row).changePercent }}%)
         </span>
       </oge-column>
@@ -16972,7 +16972,7 @@ import type { OgeChipItem, OgeChipKey } from '@oge-ui/layout';
     >
       <ng-template ogeChipTemplate let-item let-selected="selected">
         <strong>{{ item.label }}</strong>
-        <span class="opacity-70">{{ counts[item.key] }}</span>
+        <span class="text-(--oge-muted-color)">{{ counts[item.key] }}</span>
       </ng-template>
     </oge-chip-list>
   `,
@@ -22332,7 +22332,7 @@ import type { OgeBreadcrumbItemData } from '@oge-ui/navigation';
          separator template renders aria-hidden: a separator is decoration. -->
     <oge-breadcrumb [items]="trail">
       <ng-template ogeBreadcrumbItemTemplate let-item let-last="last">
-        <strong [style.opacity]="last ? 1 : 0.75">{{ item.text }}</strong>
+        <strong [style.font-weight]="last ? 700 : 500">{{ item.text }}</strong>
       </ng-template>
       <ng-template ogeBreadcrumbSeparatorTemplate>·</ng-template>
     </oge-breadcrumb>
@@ -31657,17 +31657,17 @@ import type { OgeSchedulerAppointmentDroppedEvent, OgeSchedulerDragOutEvent } fr
          Enter / click a cell to place it (the keyboard and single-pointer twin).
          appointmentDropped reports the built item; dragOut fires when a chip is
          dragged out and released elsewhere. -->
-    <ul class="mb-3 flex flex-wrap gap-2">
+    <div class="mb-3 flex flex-wrap gap-2" role="group" aria-label="Backlog">
       @for (task of tasks(); track task.id) {
-        <li
+        <div
           [ogeSchedulerDraggable]="task"
           [ogeSchedulerDraggableDuration]="task.minutes"
           class="rounded border px-3 py-1 text-sm"
         >
           {{ task.text }} · {{ task.minutes }} min
-        </li>
+        </div>
       }
-    </ul>
+    </div>
     <oge-scheduler
       [dataSource]="appointments"
       [currentDate]="date"
@@ -32109,7 +32109,7 @@ import { OgeScheduler } from '@oge-ui/scheduler';
       [dayStartHour]="9"
       [dayEndHour]="17"
       [cellDuration]="60"
-      style="height: 640px"
+      style="height: 640px; --oge-scheduler-slot-height: 48px"
     />
   `,
 })
@@ -39513,7 +39513,7 @@ export function TransferListTemplatesDemo() {
       renderItem={(permission) => (
         <span className="inline-flex w-full items-center justify-between gap-2">
           <span>{permission.name}</span>
-          <code className="text-xs opacity-70">{permission.id}</code>
+          <code className="text-xs text-(--oge-muted-color)">{permission.id}</code>
         </span>
       )}
     />
@@ -43652,7 +43652,7 @@ export function ChipTemplateDemo() {
       ariaLabel="Languages"
       renderChip={({ item }) => (
         <>
-          <strong>{item.label}</strong> <span className="opacity-70">{COUNTS[item.key]}</span>
+          <strong>{item.label}</strong> <span className="text-(--oge-muted-color)">{COUNTS[item.key]}</span>
         </>
       )}
     />
@@ -47176,7 +47176,7 @@ export function BreadcrumbTemplatesDemo() {
     <OgeBreadcrumb
       items={trail}
       renderItem={({ item, last }) => (
-        <strong style={{ opacity: last ? 1 : 0.75 }}>{item.text}</strong>
+        <strong style={{ fontWeight: last ? 700 : 500 }}>{item.text}</strong>
       )}
       renderSeparator={() => '·'}
     />
@@ -55684,7 +55684,7 @@ const columns: OgeGridColumnProps<Stock>[] = [
     dataType: 'number',
     // renderCell is the React form of *ogeCellTemplate — and the row is typed
     renderCell: ({ value, row }) => (
-      <span className={row.change >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+      <span className={row.change >= 0 ? 'text-emerald-800' : 'text-red-800'}>
         {String(value)} ({row.changePercent}%)
       </span>
     ),
@@ -61395,9 +61395,9 @@ const backlog: Task[] = [
 function TaskChip({ task }: { task: Task }) {
   const drag = useOgeSchedulerDraggable({ data: task, duration: task.minutes });
   return (
-    <li {...drag} className={drag.className + ' rounded border px-3 py-1 text-sm'}>
+    <div {...drag} className={drag.className + ' rounded border px-3 py-1 text-sm'}>
       {task.text} · {task.minutes} min
-    </li>
+    </div>
   );
 }
 
@@ -61414,11 +61414,11 @@ export function Backlog() {
   };
   return (
     <>
-      <ul className="mb-3 flex flex-wrap gap-2">
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Backlog">
         {tasks.map((task) => (
           <TaskChip key={task.id} task={task} />
         ))}
-      </ul>
+      </div>
       <OgeScheduler
         dataSource={appointments}
         defaultCurrentDate={new Date(2026, 7, 6)}
@@ -61797,6 +61797,7 @@ export function RoomsAndOwners() {
 'use client';
 
 import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { CSSProperties } from 'react';
 
 // groupOrientation="vertical" stacks one full time grid per resource
 // under a group label column; drags across blocks reassign the owner.
@@ -61853,7 +61854,7 @@ export function StackedOwners() {
       dayStartHour={9}
       dayEndHour={17}
       cellDuration={60}
-      style={{ height: 640 }}
+      style={{ height: 640, '--oge-scheduler-slot-height': '48px' } as CSSProperties}
     />
   );
 }
