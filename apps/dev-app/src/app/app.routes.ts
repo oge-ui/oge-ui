@@ -43,7 +43,7 @@ export const appRoutes: Route[] = [
     path: '',
     pathMatch: 'full',
     loadComponent: () => import('./pages/home/home').then((m) => m.HomePage),
-    title: 'OGE — Angular UI components',
+    title: 'OGE — UI components for Angular and React',
   },
   {
     path: 'getting-started',

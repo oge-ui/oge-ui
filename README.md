@@ -2,12 +2,13 @@
   <img src="apps/dev-app/public/logo.png" alt="OGE UI logo" width="120" />
 </p>
 
-<h1 align="center">OGE — Angular UI Components</h1>
+<h1 align="center">OGE — UI Components for Angular and React</h1>
 
 <p align="center">
-  Signal-based, zoneless Angular components engineered for data-heavy apps:<br />
-  a virtualized <b>Data Grid</b>, <b>Tree List</b>, <b>Pivot Grid</b>, a full set of <b>form editors</b> (text, number,<br />
-  select/tag/autocomplete, date, toggle), <b>Buttons</b>, <b>Modal</b> dialogs and <b>Toast</b> notifications.
+  Components engineered for data-heavy apps, native to Angular and React:<br />
+  a virtualized <b>Data Grid</b>, <b>Tree List</b>, <b>Pivot Grid</b>, <b>Charts</b>, <b>Scheduler</b>, <b>Gantt</b>, <b>Kanban</b>,<br />
+  a full set of <b>form editors</b>, <b>Buttons</b>, <b>Modal</b> dialogs and <b>Toast</b> notifications —<br />
+  one framework-free engine, two render layers, the same CSS design tokens.
 </p>
 
 <p align="center">
@@ -20,14 +21,17 @@
   <a href="https://github.com/oge-ui/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/oge-ui/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial-22d3ee" alt="MIT license with commercial pivot, bpmn, scheduler, gantt, kanban and charts" /></a>
   <img src="https://img.shields.io/badge/Angular-22%E2%80%9323-dd0031" alt="Angular 22–23" />
+  <img src="https://img.shields.io/badge/React-18%E2%80%9319-087ea4" alt="React 18–19" />
 </p>
 
 ---
 
 ## Why OGE?
 
-- **Signals end to end** — every input, output and piece of state is a signal.
-  No decorators, no lifecycle guesswork, full template type checking.
+- **Native to each framework** — Angular gets signals end to end (every input,
+  output and piece of state is a signal, full template type checking); React
+  gets real components with props, callbacks and controlled state. Nothing is
+  wrapped: both layers run the same framework-free engines.
 - **Zoneless by default** — no Zone.js, no global change-detection sweeps;
   components mark exactly what moved.
 - **Built for serious data** — row _and_ column virtualization into the

@@ -29,11 +29,11 @@ const DEFAULT_DESCRIPTION =
 export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/getting-started',
-    'Get started with OGE UI: install the packages, render your first Angular data grid and form editors, and see how the open-source packages fit together.',
+    'Get started with OGE UI: install the packages, render your first Angular or React data grid and form editors, and see how the open-source packages fit together.',
   ],
   [
     '/getting-started/setup',
-    'Set up an Angular project for OGE UI: version requirements, npm install or ng add, optional export dependencies, application providers and a quick check.',
+    'Set up an Angular or React project for OGE UI: version requirements, npm install or ng add, optional export dependencies, app providers and a quick check.',
   ],
   [
     '/getting-started/styling',
@@ -61,151 +61,151 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/data-grid',
-    'Angular Data Grid by OGE UI: row and column virtualization, sorting, filtering, grouping, editing, master-detail, remote data and Excel/PDF export. React too.',
+    'Data Grid for Angular and React: row and column virtualization, sorting, filtering, grouping, editing, master-detail, remote data and Excel/PDF export.',
   ],
   [
     '/components/data-grid/playground',
-    'Interactive Angular Data Grid playground: toggle filtering, paging, virtual scroll, selection, grouping, editing and more, and copy the generated template.',
+    'Interactive OGE Data Grid playground: toggle filtering, paging, virtual scroll, selection, grouping, editing and more, and copy the generated template.',
   ],
   [
     '/components/data-grid/sorting',
-    'Angular Data Grid sorting and paging: click to sort, Shift+click for multi-column sort, a third click to clear, plus a pager with page sizes over 10k rows.',
+    'OGE Data Grid sorting and paging: click to sort, Shift+click for multi-column sort, a third click to clear, plus a pager with page sizes over 10k rows.',
   ],
   [
     '/components/data-grid/virtual-scroll',
-    'Angular Data Grid virtual scrolling: thousands of rows in one scrollable list with only the visible window in the DOM — tune rowHeight and overscan.',
+    'OGE Data Grid virtual scrolling: thousands of rows in one scrollable list with only the visible window in the DOM — tune rowHeight and overscan.',
   ],
   [
     '/components/data-grid/infinite-scroll',
-    'Angular Data Grid infinite scroll: a million remote rows, none preloaded — the grid fetches sparse 100-row blocks around the viewport as you drag the scrollbar.',
+    'OGE Data Grid infinite scroll: a million remote rows, none preloaded — the grid fetches sparse 100-row blocks around the viewport as you drag the scrollbar.',
   ],
   [
     '/components/data-grid/remote-data',
-    'Angular Data Grid remote data: delegate sorting, filtering, search and paging to a backend with CustomDataSource, cursor paging, debouncing and AbortSignal.',
+    'OGE Data Grid remote data: delegate sorting, filtering, search and paging to a backend with CustomDataSource, cursor paging, debouncing and AbortSignal.',
   ],
   [
     '/components/data-grid/live-updates',
-    'Angular Data Grid live updates: push batches through a DataSource changes stream and the grid patches rows in place, flashing changed cells without a reload.',
+    'OGE Data Grid live updates: push batches through a DataSource changes stream and the grid patches rows in place, flashing changed cells without a reload.',
   ],
   [
     '/components/data-grid/columns',
-    'Angular Data Grid columns: banded headers with column groups, lookup columns, calculated values, initial sort order, word wrap and responsive column hiding.',
+    'OGE Data Grid columns: banded headers with column groups, lookup columns, calculated values, initial sort order, word wrap and responsive column hiding.',
   ],
   [
     '/components/data-grid/filtering',
-    'Angular Data Grid filtering: a filter row with operators, Excel-style header filters, a highlighting search panel and a filter builder for and/or trees.',
+    'OGE Data Grid filtering: a filter row with operators, Excel-style header filters, a highlighting search panel and a filter builder for and/or trees.',
   ],
   [
     '/components/data-grid/selection',
-    'Angular Data Grid selection: checkbox and click selection with a filter-aware select-all, Ctrl and Shift ranges, keyboard cell navigation and row actions.',
+    'OGE Data Grid selection: checkbox and click selection with a filter-aware select-all, Ctrl and Shift ranges, keyboard cell navigation and row actions.',
   ],
   [
     '/components/data-grid/editing',
-    'Angular Data Grid editing: row, cell, batch, form and popup modes with dirty markers, required-field validation, custom edit templates and save events.',
+    'OGE Data Grid editing: row, cell, batch, form and popup modes with dirty markers, required-field validation, custom edit templates and save events.',
   ],
   [
     '/components/data-grid/grouping',
-    'Angular Data Grid grouping: drag headers into the group panel, collapse group rows, show group and total summaries, pin columns and use the column chooser.',
+    'OGE Data Grid grouping: drag headers into the group panel, collapse group rows, show group and total summaries, pin columns and use the column chooser.',
   ],
   [
     '/components/data-grid/rows',
-    'Angular Data Grid rows and templates: full row templates, a custom no-data state, row drag and drop reordering, a focused row and a loading panel.',
+    'Data Grid rows and templates for Angular and React: full row templates, a custom no-data state, row drag and drop reordering, a focused row and a loading panel.',
   ],
   [
     '/components/data-grid/persistence',
-    'Angular Data Grid state persistence: save sorting, filters, grouping, widths, order and pins with stateKey, a custom storage backend or state()/applyState().',
+    'OGE Data Grid state persistence: save sorting, filters, grouping, widths, order and pins with stateKey, a custom storage backend or state()/applyState().',
   ],
   [
     '/components/data-grid/context-menu',
-    'Angular Data Grid context menus: right-click rows for your own actions and headers for the built-in sort, group and column commands, with typed menu items.',
+    'OGE Data Grid context menus: right-click rows for your own actions and headers for the built-in sort, group and column commands, with typed menu items.',
   ],
   [
     '/components/data-grid/master-detail',
-    'Angular Data Grid master-detail: expand a row to render any component beneath it from a typed detail template, with treegrid semantics for screen readers.',
+    'OGE Data Grid master-detail: expand a row to render any component beneath it from a typed detail template, with treegrid semantics for screen readers.',
   ],
   [
     '/components/data-grid/range-selection',
-    'Angular Data Grid range selection: drag or Shift+Arrow cell ranges, TSV copy, paste from Excel, a fill handle that extends series, Ctrl+Z undo and validation.',
+    'OGE Data Grid range selection: drag or Shift+Arrow cell ranges, TSV copy, paste from Excel, a fill handle that extends series, Ctrl+Z undo and validation.',
   ],
   [
     '/components/data-grid/conditional-formatting',
-    'Angular Data Grid conditional formatting: rowClass and cellClass hooks, declarative rules, data bars, color scales, icon sets, merged cells and auto-fit.',
+    'OGE Data Grid conditional formatting: rowClass and cellClass hooks, declarative rules, data bars, color scales, icon sets, merged cells and auto-fit.',
   ],
   [
     '/components/data-grid/pinned-rows',
-    'Angular Data Grid pinned rows: sticky top and bottom rows that survive virtual scroll, sticky group headers, row drag between grids and a go-to-page pager.',
+    'OGE Data Grid pinned rows: sticky top and bottom rows that survive virtual scroll, sticky group headers, row drag between grids and a go-to-page pager.',
   ],
   [
     '/components/data-grid/export',
-    'Angular Data Grid Excel and PDF export: merged banded headers, frozen panes, collapsible group outlines, SUBTOTAL formulas, typed cells and styled formatting.',
+    'OGE Data Grid Excel and PDF export: merged banded headers, frozen panes, collapsible group outlines, SUBTOTAL formulas, typed cells and styled formatting.',
   ],
   [
     '/components/data-grid/api',
-    'Angular Data Grid API reference: every input, output, method and type of oge-grid and oge-column, plus data sources, grid types and the config provider.',
+    'OGE Data Grid API reference: every input, output, method and type of oge-grid and oge-column, plus data sources, grid types and the config provider.',
   ],
   [
     '/components/tree-list',
-    'Angular Tree List by OGE UI: the data grid feature set on hierarchical data from flat parent-id rows or nested children — also available as a React component.',
+    'Tree List for Angular and React: the data grid feature set on hierarchical data from flat parent-id rows or nested children, with lazy loading and drag-drop.',
   ],
   [
     '/components/tree-list/lazy-loading',
-    'Angular Tree List lazy loading: hand the tree a DataSource and hasItemsExpr, and child rows are fetched from the server on demand the first time a node expands.',
+    'OGE Tree List lazy loading: hand the tree a DataSource and hasItemsExpr, and child rows are fetched from the server on demand the first time a node expands.',
   ],
   [
     '/components/tree-list/filtering',
-    'Angular Tree List filtering and search: a filter row and search panel that keep every matching row’s ancestor chain visible, so a filtered tree stays a tree.',
+    'OGE Tree List filtering and search: a filter row and search panel that keep every matching row’s ancestor chain visible, so a filtered tree stays a tree.',
   ],
   [
     '/components/tree-list/selection',
-    'Angular Tree List selection: single and multiple row selection, plus recursive tri-state checkboxes where checking a parent selects its entire subtree.',
+    'OGE Tree List selection: single and multiple row selection, plus recursive tri-state checkboxes where checking a parent selects its entire subtree.',
   ],
   [
     '/components/tree-list/virtual-scroll',
-    'Angular Tree List virtual scroll: 100,000 nodes stay smooth because only visible branches are flattened and the DOM is windowed by a Fenwick-tree virtualizer.',
+    'OGE Tree List virtual scroll: 100,000 nodes stay smooth because only visible branches are flattened and the DOM is windowed by a Fenwick-tree virtualizer.',
   ],
   [
     '/components/tree-list/drag-drop',
-    'Angular Tree List drag and drop: drag a row by its handle onto another to reparent it with its subtree, guarded against cycles and with keyboard moving.',
+    'OGE Tree List drag and drop: drag a row by its handle onto another to reparent it with its subtree, guarded against cycles and with keyboard moving.',
   ],
   [
     '/components/tree-list/summaries',
-    'Angular Tree List summaries: total footers over every visible row, recursive per-parent aggregates, both carried into Excel/PDF export, and remote filtering.',
+    'OGE Tree List summaries: total footers over every visible row, recursive per-parent aggregates, both carried into Excel/PDF export, and remote filtering.',
   ],
   [
     '/components/tree-list/editing',
-    'Angular Tree List editing: all five data grid edit modes on hierarchical rows, form layouts, and adding child rows under a chosen parent with initNewRow.',
+    'OGE Tree List editing: all five data grid edit modes on hierarchical rows, form layouts, and adding child rows under a chosen parent with initNewRow.',
   ],
   [
     '/components/tree-list/api',
-    'Angular Tree List API reference: every input, output, method and type of oge-tree-list — hierarchy mapping, expansion, selection, editing and lazy data.',
+    'OGE Tree List API reference: every input, output, method and type of oge-tree-list — hierarchy mapping, expansion, selection, editing and lazy data.',
   ],
   [
     '/components/buttons',
-    'Angular Button by OGE UI: severities and styling modes, sizes, icons, custom colors and badges on a signal-based, accessible button — with a React twin.',
+    'Button for Angular and React by OGE UI: severities and styling modes, sizes, icons, custom colors and badges on a signal-based, accessible button.',
   ],
   [
     '/components/buttons/interactions',
-    'Angular button interactions: async click handlers with automatic loading state, a click guard against double submits, hold-to-confirm and auto-repeat.',
+    'OGE button interactions: async click handlers with automatic loading state, a click guard against double submits, hold-to-confirm and auto-repeat.',
   ],
   [
     '/components/buttons/button-group',
-    'Angular Button Group: single selection on the WAI-ARIA radio pattern, multiple selection as toggle buttons, and data-driven items with two-way binding.',
+    'OGE Button Group: single selection on the WAI-ARIA radio pattern, multiple selection as toggle buttons, and data-driven items with two-way binding.',
   ],
   [
     '/components/buttons/drop-down-button',
-    'Angular Drop Down Button and split button: menu items, a remembered last action, async item loading and custom panel content with full keyboard support.',
+    'OGE Drop Down Button and split button: menu items, a remembered last action, async item loading and custom panel content with full keyboard support.',
   ],
   [
     '/components/buttons/fab',
-    'Angular Floating Action Button and Speed Dial by OGE UI: pinned FABs with safe-area insets, extended labels and an APG menu-button dial with arrow keys.',
+    'Floating Action Button and Speed Dial for Angular and React: pinned FABs with safe-area insets, extended labels and an APG menu-button dial with arrow keys.',
   ],
   [
     '/components/buttons/api',
-    'Angular Buttons API reference: every input, output and type of oge-button, oge-button-group and oge-drop-down-button, plus the buttons config provider.',
+    'OGE Buttons API reference: every input, output and type of oge-button, oge-button-group and oge-drop-down-button, plus the buttons config provider.',
   ],
   [
     '/components/tabs',
-    'Angular Tabs by OGE UI: declarative or data-driven tabs with lazy panels, keep-alive, closable tabs with async guards, overflow menus and drag reordering.',
+    'Tabs for Angular and React: declarative or data-driven tabs with lazy panels, keep-alive, closable tabs with async guards, overflow menus and drag reordering.',
   ],
   [
     '/components/tabs/routed',
@@ -213,151 +213,151 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/tabs/api',
-    'Angular Tabs API reference: every input, output and type of oge-tab-panel, oge-tabs and oge-tab, including selection, overflow and the tabs config provider.',
+    'OGE Tabs API reference: every input, output and type of oge-tab-panel, oge-tabs and oge-tab, including selection, overflow and the tabs config provider.',
   ],
   [
     '/components/forms',
-    'Angular Form by OGE UI: declarative or data-driven items over the OGE editors, dataType-based editor selection, groups, label placement, templates and submit.',
+    'Forms for Angular and React: declarative or data-driven items over the OGE editors, dataType-based editor selection, groups, label placement and submit.',
   ],
   [
     '/components/forms/layout',
-    'Angular form layout: fixed or auto-fit columns, container-query responsive layouts, nested groups, tab and accordion sections, read-only and visibility rules.',
+    'OGE form layout: fixed or auto-fit columns, container-query responsive layouts, nested groups, tab and accordion sections, read-only and visibility rules.',
   ],
   [
     '/components/forms/validation',
-    'Angular form validation: declarative and cross-field rules, server errors, conditional fields, Signal Forms and reactive forms, and an accessible summary.',
+    'OGE form validation: declarative and cross-field rules, server errors, conditional fields, Angular Signal Forms and reactive forms, and an accessible summary.',
   ],
   [
     '/components/forms/api',
-    'Angular Forms API reference: every input, output and type of oge-form, oge-form-item, oge-form-group and oge-validation-summary, plus schema metadata.',
+    'OGE Forms API reference: every input, output and type of oge-form, oge-form-item, oge-form-group and oge-validation-summary, plus schema metadata.',
   ],
   [
     '/components/accordion',
-    'Angular Accordion by OGE UI: WAI-ARIA panels with single or multiple expansion, lazy content, async guards, a nested panel bar and a standalone expansion panel.',
+    'Angular and React Accordion: WAI-ARIA panels with single or multiple expansion, lazy content, async guards, a nested panel bar and a standalone expansion panel.',
   ],
   [
     '/components/accordion/api',
-    'Angular Accordion API reference: oge-accordion, oge-accordion-item, oge-panel-bar and oge-expansion-panel — every input, output, type and the config provider.',
+    'OGE Accordion API reference: oge-accordion, oge-accordion-item, oge-panel-bar and oge-expansion-panel — every input, output, type and the config provider.',
   ],
   [
     '/components/progress',
-    'Angular progress bar, circular ring, load indicator and skeleton: determinate, buffer, chunked and circular bars, spinners and placeholders with correct ARIA.',
+    'OGE progress bar, circular ring, load indicator and skeleton: determinate, buffer, chunked and circular bars, spinners and placeholders with correct ARIA.',
   ],
   [
     '/components/progress/api',
-    'Angular Progress & Loading API reference: every input, output and type of oge-progress-bar, oge-load-indicator, oge-load-panel and oge-skeleton, with configs.',
+    'OGE Progress & Loading API reference: every input, output and type of oge-progress-bar, oge-load-indicator, oge-load-panel and oge-skeleton, with configs.',
   ],
   [
     '/components/progress/load-panel',
-    'Angular Load Panel by OGE UI: a shading overlay over a container or the page, with show delay, minimum display time, aria-busy and a screen-reader message.',
+    'Load Panel for Angular and React: a shading overlay over a container or the page, with show delay, minimum display time, aria-busy and a screen-reader message.',
   ],
   [
     '/components/card',
-    'Angular Card by OGE UI: header, full-bleed media, actions and footer as attribute slots, four chrome presets, horizontal layout and accessible clickable cards.',
+    'Angular and React Card: header, full-bleed media, actions and footer as attribute slots, four chrome presets, horizontal layout and accessible clickable cards.',
   ],
   [
     '/components/card/api',
-    'Angular Card API reference: every input and type of oge-card, the media, avatar, header-action, action, footer and separator slots, and the config provider.',
+    'OGE Card API reference: every input and type of oge-card, the media, avatar, header-action, action, footer and separator slots, and the config provider.',
   ],
   [
     '/components/avatar',
-    'Angular Avatar and Badge by OGE UI: image, initials and icon fallback, presence dots, avatar groups with +N overflow and count badges described to readers.',
+    'Avatar and Badge for Angular and React: image, initials and icon fallback, presence dots, avatar groups with +N overflow and count badges described to readers.',
   ],
   [
     '/components/avatar/api',
-    'Angular Avatar & Badge API reference: every input, output and type of oge-avatar, oge-avatar-group and oge-badge, plus their config providers and messages.',
+    'OGE Avatar & Badge API reference: every input, output and type of oge-avatar, oge-avatar-group and oge-badge, plus their config providers and messages.',
   ],
   [
     '/components/chip',
-    'Angular Chip and Chip List by OGE UI: selectable and removable chips, single or multiple selection as an APG listbox, removable grids and Delete-key removal.',
+    'Angular and React Chip and Chip List: selectable and removable chips, single or multiple selection as an APG listbox, removable grids and Delete-key removal.',
   ],
   [
     '/components/chip/api',
-    'Angular Chip API reference: every input, output, method and type of oge-chip and oge-chip-list, the chip template slot, removal events and the config provider.',
+    'OGE Chip API reference: every input, output, method and type of oge-chip and oge-chip-list, the chip template slot, removal events and the config provider.',
   ],
   [
     '/components/alert',
-    'Angular Alert by OGE UI: inline info, success, warning and error messages with titles, actions and dismiss, role alert or status by severity, and custom icons.',
+    'Angular and React Alert: inline info, success, warning and error messages with titles, actions and dismiss, role alert or status by severity, and custom icons.',
   ],
   [
     '/components/alert/api',
-    'Angular Alert API reference: every input, output, method and type of oge-alert, the actions and icon slots, the cancelable closing event and config provider.',
+    'OGE Alert API reference: every input, output, method and type of oge-alert, the actions and icon slots, the cancelable closing event and config provider.',
   ],
   [
     '/components/timeline',
-    'Angular Timeline by OGE UI: vertical or horizontal ordered-list timelines with alternating sides, markers, icons, severities, Intl dates and item templates.',
+    'Timeline for Angular and React: vertical or horizontal ordered-list timelines with alternating sides, markers, icons, severities, Intl dates and item templates.',
   ],
   [
     '/components/timeline/api',
-    'Angular Timeline API reference: every input and type of oge-timeline, the content, marker and opposite template slots, item fields and the config provider.',
+    'OGE Timeline API reference: every input and type of oge-timeline, the content, marker and opposite template slots, item fields and the config provider.',
   ],
   [
     '/components/app-bar',
-    'Angular App Bar by OGE UI: top and bottom bars with start, center and end sections, sticky or fixed placement with safe-area padding, colors and landmarks.',
+    'App Bar for Angular and React: top and bottom bars with start, center and end sections, sticky or fixed placement with safe-area padding, colors and landmarks.',
   ],
   [
     '/components/app-bar/api',
-    'Angular App Bar API reference: every input and type of oge-app-bar, the start, center and end slots, positions, colors, landmarks and the config provider.',
+    'OGE App Bar API reference: every input and type of oge-app-bar, the start, center and end slots, positions, colors, landmarks and the config provider.',
   ],
   [
     '/components/list-view',
-    'Angular List View by OGE UI: a templated APG listbox or list with selection, sticky groups, virtual scrolling, search, infinite scroll and swipe actions.',
+    'List View for Angular and React: a templated APG listbox or list with selection, sticky groups, virtual scrolling, search, infinite scroll and swipe actions.',
   ],
   [
     '/components/list-view/api',
-    'Angular List View API reference: every input, model, method, output and type of oge-list-view, the item, group, empty and footer slots and the config provider.',
+    'OGE List View API reference: every input, model, method, output and type of oge-list-view, the item, group, empty and footer slots and the config provider.',
   ],
   [
     '/components/data-view',
-    'Angular Data View by OGE UI: templated items in responsive grid or list layouts via container queries, with search, sorting, paging and listbox selection.',
+    'Data View for Angular and React: templated items in responsive grid or list layouts via container queries, with search, sorting, paging and listbox selection.',
   ],
   [
     '/components/data-view/api',
-    'Angular Data View API reference: every input, model, output, method and type of oge-data-view, its item, list-item and empty slots, and the config provider.',
+    'OGE Data View API reference: every input, model, output, method and type of oge-data-view, its item, list-item and empty slots, and the config provider.',
   ],
   [
     '/components/tile-layout',
-    'Angular Tile Layout by OGE UI: drag-and-drop dashboard tiles on a CSS grid with column and row spans, resize handles, keyboard twins and a saved layout state.',
+    'Angular and React Tile Layout: drag-and-drop dashboard tiles on a CSS grid with column and row spans, resize handles, keyboard twins and a saved layout state.',
   ],
   [
     '/components/tile-layout/api',
-    'Angular Tile Layout API reference: every input, output and method of oge-tile-layout and its items, the cancelable reorder and resize events, slots and state.',
+    'OGE Tile Layout API reference: every input, output and method of oge-tile-layout and its items, the cancelable reorder and resize events, slots and state.',
   ],
   [
     '/components/carousel',
-    'Angular Carousel by OGE UI: an APG slide show with swipe, scroll snap, dots or thumbnails, loop, autoplay with a pause control, slides per view and RTL.',
+    'Carousel for Angular and React: an APG slide show with swipe, scroll snap, dots or thumbnails, loop, autoplay with a pause control, slides per view and RTL.',
   ],
   [
     '/components/carousel/api',
-    'Angular Carousel API reference: every input, method, output and type of oge-carousel, its declarative slides, the slide template and the config provider.',
+    'OGE Carousel API reference: every input, method, output and type of oge-carousel, its declarative slides, the slide template and the config provider.',
   ],
   [
     '/components/splitter',
-    'Angular Splitter by OGE UI: resizable, collapsible, nestable panes on the WAI-ARIA window splitter pattern with ratio or pixel sizes, keyboard, RTL and touch.',
+    'Angular and React Splitter: resizable, collapsible, nestable panes on the WAI-ARIA window splitter pattern with ratio or pixel sizes, keyboard, RTL and touch.',
   ],
   [
     '/components/splitter/api',
-    'Angular Splitter API reference: every input, output, method and type of oge-splitter and oge-splitter-pane, the separator ARIA and the config provider.',
+    'OGE Splitter API reference: every input, output, method and type of oge-splitter and oge-splitter-pane, the separator ARIA and the config provider.',
   ],
   [
     '/components/toolbar',
-    'Angular Toolbar by OGE UI: a WAI-ARIA command bar with roving tabindex, before, center and after groups, toggle commands and an overflow menu that adapts.',
+    'Toolbar for Angular and React: a WAI-ARIA command bar with roving tabindex, before, center and after groups, toggle commands and an overflow menu that adapts.',
   ],
   [
     '/components/toolbar/api',
-    'Angular Toolbar API reference: every input, output, method and type of oge-toolbar and oge-toolbar-item, the overflow model and the config provider.',
+    'OGE Toolbar API reference: every input, output, method and type of oge-toolbar and oge-toolbar-item, the overflow model and the config provider.',
   ],
   [
     '/components/stepper',
-    'Angular Stepper by OGE UI: a linear or free wizard with step states, async leave guards, horizontal or vertical orientation and aria-current step semantics.',
+    'Stepper for Angular and React: a linear or free wizard with step states, async leave guards, horizontal or vertical orientation and aria-current step semantics.',
   ],
   [
     '/components/drawer',
-    'Angular Drawer by OGE UI: overlay, push or side panels with a focus trap when modal, a compact rail, responsive downgrade, close guards and an app shell layout.',
+    'Angular and React Drawer: overlay, push or side panels with a focus trap when modal, a compact rail, responsive downgrade, close guards and an app shell layout.',
   ],
   [
     '/components/breadcrumb',
-    'Angular Breadcrumb by OGE UI: a WAI-ARIA trail of real links with aria-current, collapsing middle crumbs into an ellipsis menu as its container narrows.',
+    'Breadcrumb for Angular and React: a WAI-ARIA trail of real links with aria-current, collapsing middle crumbs into an ellipsis menu as its container narrows.',
   ],
   [
     '/components/breadcrumb/routed',
@@ -365,11 +365,11 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/pagination',
-    'Angular Pagination by OGE UI: a standalone pager with a numeric window and ellipses, page-size selector, info range, jump-to-page and an adaptive compact mode.',
+    'Angular and React Pagination: a standalone pager with a numeric window and ellipses, page-size selector, info range, jump-to-page and an adaptive compact mode.',
   ],
   [
     '/components/menubar',
-    'Angular Menubar by OGE UI: a WAI-ARIA menubar with roving tabindex, nested submenus, vertical layout, cancelable open and close events and a hamburger collapse.',
+    'Angular and React Menubar: a WAI-ARIA menubar with roving tabindex, nested submenus, vertical layout, cancelable open and close events and a hamburger collapse.',
   ],
   [
     '/components/menubar/routed',
@@ -377,167 +377,167 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/tree-view',
-    'Angular Tree View by OGE UI: flat or nested data, tri-state checkboxes with cascade, search, lazy loading, virtual scrolling and drag and drop reparenting.',
+    'Tree View for Angular and React: flat or nested data, tri-state checkboxes with cascade, search, lazy loading, virtual scrolling and drag and drop reparenting.',
   ],
   [
     '/components/tree-view/api',
-    'Angular navigation API reference: inputs, outputs and types of oge-tree-view, oge-drawer, oge-stepper, oge-menubar, oge-breadcrumb and oge-pagination.',
+    'OGE navigation API reference: inputs, outputs and types of oge-tree-view, oge-drawer, oge-stepper, oge-menubar, oge-breadcrumb and oge-pagination.',
   ],
   [
     '/components/inputs',
-    'Angular form inputs by OGE UI: TextBox, TextArea and NumberBox on one field chrome with styling modes, sizes, floating labels, prefix and suffix slots.',
+    'Form inputs for Angular and React: TextBox, TextArea and NumberBox on one field chrome with styling modes, sizes, floating labels, prefix and suffix slots.',
   ],
   [
     '/components/inputs/validation',
-    'Angular input validation: standalone validators, reactive forms and Signal Forms on OGE editors, linked fields and an async validation pending indicator.',
+    'OGE input validation: standalone validators, Angular reactive forms and Signal Forms on OGE editors, linked fields and an async validation pending indicator.',
   ],
   [
     '/components/inputs/masked-text-box',
-    'Angular MaskedTextBox: mask slots, escapes and custom rules, overwrite typing that skips literals, raw or formatted values and a mask validator for forms.',
+    'OGE MaskedTextBox: mask slots, escapes and custom rules, overwrite typing that skips literals, raw or formatted values and a mask validator for forms.',
   ],
   [
     '/components/inputs/select-box',
-    'Angular Select Box and Tag Box: a searchable WAI-ARIA combobox with data mapping, grouping, remote paged data, templates, multi-select tags and select all.',
+    'OGE Select Box and Tag Box: a searchable WAI-ARIA combobox with data mapping, grouping, remote paged data, templates, multi-select tags and select all.',
   ],
   [
     '/components/inputs/tree-select',
-    'Angular Tree Select: a dropdown that picks values from a tree — nested data, search, single or multiple selection shown as chips and lazy loaded children.',
+    'OGE Tree Select: a dropdown that picks values from a tree — nested data, search, single or multiple selection shown as chips and lazy loaded children.',
   ],
   [
     '/components/inputs/multi-column-combo-box',
-    'Angular Multi-Column ComboBox: a combo box whose popup is a small grid with columns, formats, cell templates, multiple selection, remote data and APG keyboard.',
+    'OGE Multi-Column ComboBox: a combo box whose popup is a small grid with columns, formats, cell templates, multiple selection, remote data and APG keyboard.',
   ],
   [
     '/components/inputs/autocomplete',
-    'Angular Autocomplete: suggestions as you type with tunable matching, force selection, virtual scrolling, lazy server-side data and full keyboard support.',
+    'OGE Autocomplete: suggestions as you type with tunable matching, force selection, virtual scrolling, lazy server-side data and full keyboard support.',
   ],
   [
     '/components/inputs/toggle-controls',
-    'Angular CheckBox, Switch, RadioGroup and ToggleGroup: tri-state checkboxes, on/off switches, radio choices and segmented toggles bound to Signal Forms.',
+    'OGE CheckBox, Switch, RadioGroup and ToggleGroup: tri-state checkboxes, on/off switches, radio choices and segmented toggles, each an accessible form value.',
   ],
   [
     '/components/inputs/check-box-group',
-    'Angular CheckBoxGroup: an items-bound list of checkboxes with an array value, horizontal, vertical or column layouts, a tri-state select all and validation.',
+    'OGE CheckBoxGroup: an items-bound list of checkboxes with an array value, horizontal, vertical or column layouts, a tri-state select all and validation.',
   ],
   [
     '/components/inputs/slider',
-    'Angular Slider and RangeSlider: WAI-ARIA single and multi-thumb sliders with ticks, labels, a value indicator, step buttons, vertical mode and form binding.',
+    'OGE Slider and RangeSlider: WAI-ARIA single and multi-thumb sliders with ticks, labels, a value indicator, step buttons, vertical mode and form binding.',
   ],
   [
     '/components/inputs/date-box',
-    'Angular DateBox and Calendar: date, time and datetime pickers, range selection with presets, masked segment entry, a clock and data grid integration.',
+    'OGE DateBox and Calendar: date, time and datetime pickers, range selection with presets, masked segment entry, a clock and data grid integration.',
   ],
   [
     '/components/inputs/color-box',
-    'Angular ColorBox: a color picker dropdown with hex, rgb and hsl output, alpha, a swatch palette view, apply buttons and parsing of any typed CSS color.',
+    'OGE ColorBox: a color picker dropdown with hex, rgb and hsl output, alpha, a swatch palette view, apply buttons and parsing of any typed CSS color.',
   ],
   [
     '/components/inputs/color-gradient',
-    'Angular ColorGradient: an inline color picker with a saturation surface, hue and alpha sliders, hex and RGBA inputs and a live WCAG contrast-ratio check.',
+    'OGE ColorGradient: an inline color picker with a saturation surface, hue and alpha sliders, hex and RGBA inputs and a live WCAG contrast-ratio check.',
   ],
   [
     '/components/inputs/color-palette',
-    'Angular ColorPalette: a standalone swatch grid with preset palettes, custom swatches, configurable columns and APG grid keyboard navigation as a form value.',
+    'OGE ColorPalette: a standalone swatch grid with preset palettes, custom swatches, configurable columns and APG grid keyboard navigation as a form value.',
   ],
   [
     '/components/inputs/rating',
-    'Angular Rating: stars or custom icons with half and fractional precision, hover preview, clear on re-click, read-only mode, RTL and slider or radio-group keys.',
+    'OGE Rating: stars or custom icons with half and fractional precision, hover preview, clear on re-click, read-only mode, RTL and slider or radio-group keys.',
   ],
   [
     '/components/inputs/otp-input',
-    'Angular OTP input: one-time-code cells with numeric or alphanumeric filtering, paste and SMS autofill, arrow and Backspace keys, masking and a completion event.',
+    'OGE OTP input: one-time-code cells with numeric or alphanumeric filtering, paste and SMS autofill, arrow and Backspace keys, masking and a completion event.',
   ],
   [
     '/components/inputs/signature-pad',
-    'Angular signature pad: smooth pointer strokes, undo and clear, PNG or SVG data URL output, a keyboard-accessible typed signature mode and resize-safe redraws.',
+    'OGE signature pad: smooth pointer strokes, undo and clear, PNG or SVG data URL output, a keyboard-accessible typed signature mode and resize-safe redraws.',
   ],
   [
     '/components/inputs/list-box',
-    'Angular ListBox: a WAI-ARIA listbox with single or multiple selection, groups, item templates, type-ahead, search and range selection as a form value.',
+    'OGE ListBox: a WAI-ARIA listbox with single or multiple selection, groups, item templates, type-ahead, search and range selection as a form value.',
   ],
   [
     '/components/inputs/transfer-list',
-    'Angular TransferList: a dual list box moving selected or all items by buttons, drag and drop or keyboard shortcuts, with per-list search and live announcements.',
+    'OGE TransferList: a dual list box moving selected or all items by buttons, drag and drop or keyboard shortcuts, with per-list search and live announcements.',
   ],
   [
     '/components/inputs/mention',
-    'Angular Mention: @ and # triggers in a text area with a caret-anchored suggestion popup, async sources, custom item templates and the mentioned items as output.',
+    'OGE Mention: @ and # triggers in a text area with a caret-anchored suggestion popup, async sources, custom item templates and the mentioned items as output.',
   ],
   [
     '/components/inputs/showcase',
-    'Angular input showcase: a character counter, password reveal and copy buttons, locale-aware number entry and debounced value commits on OGE text editors.',
+    'OGE input showcase: a character counter, password reveal and copy buttons, locale-aware number entry and debounced value commits on OGE text editors.',
   ],
   [
     '/components/inputs/api',
-    'Angular Inputs API reference: every input, output and type of the OGE editors — text, masked, number, select, tag, date, color, slider and choice controls.',
+    'OGE Inputs API reference: every input, output and type of the OGE editors — text, masked, number, select, tag, date, color, slider and choice controls.',
   ],
   [
     '/components/overlay',
-    'Angular overlay primitives by OGE UI: flip-aware anchored panels, popups and WAI-ARIA menu lists — the positioning engine behind every OGE dropdown and menu.',
+    'Angular and React overlay primitives: flip-aware anchored panels, popups and WAI-ARIA menu lists — the positioning engine behind every OGE dropdown and menu.',
   ],
   [
     '/components/overlay/tooltip-context-menu',
-    'Angular Tooltip and Context Menu directives: placement, show and hide delays, right-click menus on any element with nested items and typed menu events.',
+    'Tooltip and Context Menu for Angular and React: placement, show and hide delays, right-click menus on any element with nested items and typed menu events.',
   ],
   [
     '/components/overlay/popover',
-    'Angular Popover by OGE UI: anchored dialogs with title, actions and a callout arrow; click, hover, focus or manual triggers, modal focus trap, typed events.',
+    'Popover for Angular and React: anchored dialogs with title, actions and a callout arrow; click, hover, focus or manual triggers, modal focus trap, typed events.',
   ],
   [
     '/components/overlay/action-sheet',
-    'Angular Action Sheet by OGE UI: a mobile bottom sheet of actions with icons, destructive and disabled rows, swipe-down dismissal, a focus trap and Cancel.',
+    'Action Sheet for Angular and React: a mobile bottom sheet of actions with icons, destructive and disabled rows, swipe-down dismissal, a focus trap and Cancel.',
   ],
   [
     '/components/overlay/modal',
-    'Angular Modal dialog: confirm, alert and prompt helpers, nine placements, full screen, drag and resize, a modal service, async close guards and typed results.',
+    'OGE Modal dialog: confirm, alert and prompt helpers, nine placements, full screen, drag and resize, a modal service, async close guards and typed results.',
   ],
   [
     '/components/overlay/toast',
-    'Angular Toast notifications: severities, positions and stacking, sticky toasts with actions and undo, promise toasts, coalescing, progress and announcements.',
+    'OGE Toast notifications: severities, positions and stacking, sticky toasts with actions and undo, promise toasts, coalescing, progress and announcements.',
   ],
   [
     '/components/overlay/window',
-    'Angular Window by OGE UI: non-modal floating windows with shared z-order, title-bar drag, 8-way resize, keyboard move, minimize, maximize and placements.',
+    'Window for Angular and React: non-modal floating windows with shared z-order, title-bar drag, 8-way resize, keyboard move, minimize, maximize and placements.',
   ],
   [
     '/components/overlay/api',
-    'Angular Overlay API reference: oge-modal, the modal and toast services, live announcer, tooltip, context menu, menu list, anchored panel, popup and positions.',
+    'OGE Overlay API reference: oge-modal, the modal and toast services, live announcer, tooltip, context menu, menu list, anchored panel, popup and positions.',
   ],
   [
     '/components/pivot-grid',
-    'Angular Pivot Grid by OGE UI: cross-tab analytics over raw records with rows, columns and measures, grand totals, a field panel and sorting — React too.',
+    'Pivot Grid for Angular and React by OGE UI: cross-tab analytics over raw records with rows, columns and measures, grand totals, a field panel and sorting.',
   ],
   [
     '/components/pivot-grid/analytics',
-    'Angular Pivot Grid analytics: percent-of-total and running-sum display modes, two-axis virtual scrolling, persisted layouts, and CSV or Excel export.',
+    'OGE Pivot Grid analytics: percent-of-total and running-sum display modes, two-axis virtual scrolling, persisted layouts, and CSV or Excel export.',
   ],
   [
     '/components/pivot-grid/chart-integration',
-    'Angular Pivot Grid with charts: getChartData turns the pivot view into chart series, resultChange keeps a linked chart in sync and row clicks narrow it.',
+    'OGE Pivot Grid with charts: getChartData turns the pivot view into chart series, resultChange keeps a linked chart in sync and row clicks narrow it.',
   ],
   [
     '/components/pivot-grid/calculated-fields',
-    'Angular Pivot Grid calculated fields and filters: measures computed from other measures, Top N, label and value filters, row header layouts and PDF export.',
+    'OGE Pivot Grid calculated fields and filters: measures computed from other measures, Top N, label and value filters, row header layouts and PDF export.',
   ],
   [
     '/components/pivot-grid/api',
-    'Angular Pivot Grid API reference: every input, output, method and type of oge-pivot-grid and oge-pivot-field, from areas and summaries to export options.',
+    'OGE Pivot Grid API reference: every input, output, method and type of oge-pivot-grid and oge-pivot-field, from areas and summaries to export options.',
   ],
   [
     '/components/bpmn',
-    'Angular BPMN Editor by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no watermark. React too.',
+    'BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no watermark.',
   ],
   [
     '/components/bpmn/validation',
-    'Angular BPMN Editor validation: bpmnlint-style rules, live badges, a problems panel, custom rules and severity overrides, and validate() for headless CI checks.',
+    'OGE BPMN Editor validation: bpmnlint-style rules, live badges, a problems panel, custom rules and severity overrides, and validate() for headless CI checks.',
   ],
   [
     '/components/bpmn/extending',
-    'Extending the Angular BPMN Editor: pluggable properties providers, custom palette and context-pad entries, safe SVG renderers and Camunda element templates.',
+    'Extending the OGE BPMN Editor: pluggable properties providers, custom palette and context-pad entries, safe SVG renderers and Camunda element templates.',
   ],
   [
     '/components/bpmn/camunda',
-    'Angular BPMN Editor for Camunda and Zeebe: editable task definitions, io mappings, headers and assignments, timer and message payloads, and PNG export.',
+    'OGE BPMN Editor for Camunda and Zeebe: editable task definitions, io mappings, headers and assignments, timer and message payloads, and PNG export.',
   ],
   [
     '/components/bpmn/api',
@@ -545,7 +545,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/charts',
-    'Angular Charts by OGE UI: line, bar, area, candlestick, pie, polar and range selector charts on an SVG kernel with zoom, pan, tooltips and annotations.',
+    'Charts for Angular and React: line, bar, area, candlestick, pie, polar and range selector charts on an SVG kernel with zoom, pan, tooltips and annotations.',
   ],
   [
     '/components/charts/axes-layout',
@@ -553,7 +553,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/charts/gauges',
-    'Angular gauges and sparklines: circular and linear gauges with ranges and needle, bar or marker indicators, bullet charts and word-sized sparklines.',
+    'OGE gauges and sparklines: circular and linear gauges with ranges and needle, bar or marker indicators, bullet charts and word-sized sparklines.',
   ],
   [
     '/components/charts/specialized',
@@ -561,95 +561,95 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/charts/api',
-    'Angular Charts API reference: every input, output and type of the cartesian, pie, polar, gauge, sparkline, funnel, heatmap, treemap, Sankey and map charts.',
+    'OGE Charts API reference: every input, output and type of the cartesian, pie, polar, gauge, sparkline, funnel, heatmap, treemap, Sankey and map charts.',
   ],
   [
     '/components/gantt',
-    'Angular Gantt chart by OGE UI: task tree and timeline with dependencies, critical path, baselines, drag editing, work calendars, undo/redo and export.',
+    'Gantt chart for Angular and React: task tree and timeline with dependencies, critical path, baselines, drag editing, work calendars, undo/redo and export.',
   ],
   [
     '/components/gantt/scheduling',
-    'Angular Gantt scheduling: lag and lead on every link type, constraints, deadlines, manual tasks, slack, conflicts, baselines, split tasks and progress line.',
+    'OGE Gantt scheduling: lag and lead on every link type, constraints, deadlines, manual tasks, slack, conflicts, baselines, split tasks and progress line.',
   ],
   [
     '/components/gantt/resources',
-    'Angular Gantt resources: assignment units, effort-driven durations, a utilization histogram with over-allocation and a resource-centric view.',
+    'Gantt resources for Angular and React: assignment units, effort-driven durations, a utilization histogram with over-allocation and a resource-centric view.',
   ],
   [
     '/components/gantt/task-list',
-    'Angular Gantt task list: inline cell editing, header sorting, filter row and search, column resize, reorder and freeze, multi-select with bulk edits.',
+    'OGE Gantt task list: inline cell editing, header sorting, filter row and search, column resize, reorder and freeze, multi-select with bulk edits.',
   ],
   [
     '/components/gantt/import-export',
-    'Angular Gantt MS Project XML import and export: tasks, links with lag, constraints, baselines, resources, assignments and calendars, no dependencies.',
+    'OGE Gantt MS Project XML import and export: tasks, links with lag, constraints, baselines, resources, assignments and calendars, no dependencies.',
   ],
   [
     '/components/gantt/api',
-    'Angular Gantt API reference: every input, output, method and type of oge-gantt — task and dependency field mapping, scales, editing and the config provider.',
+    'OGE Gantt API reference: every input, output, method and type of oge-gantt — task and dependency field mapping, scales, editing and the config provider.',
   ],
   [
     '/components/upload',
-    'Angular file upload by OGE UI: drag and drop with directories and paste, restrictions with reasons, image previews, and chunked, resumable transfer with retry.',
+    'Angular and React file upload: drag and drop with directories and paste, restrictions with reasons, image previews, and chunked, resumable transfer with retry.',
   ],
   [
     '/components/upload/api',
-    'Angular Upload API reference: every input, output, method and type of oge-file-uploader, the upload adapter and transport contract and the config provider.',
+    'OGE Upload API reference: every input, output, method and type of oge-file-uploader, the upload adapter and transport contract and the config provider.',
   ],
   [
     '/components/editor',
-    'Angular rich text editor by OGE UI: headings, lists, links, images, colors and undo on its own document model, markdown shortcuts and sanitized HTML output.',
+    'Rich text editor for Angular and React: headings, lists, links, images, colors and undo on its own document model, markdown shortcuts and sanitized HTML output.',
   ],
   [
     '/components/editor/api',
-    'Angular Rich Text Editor API reference: every input, output and method of oge-editor, the toolbar tools, the command vocabulary, the sanitizer and config.',
+    'OGE Rich Text Editor API reference: every input, output and method of oge-editor, the toolbar tools, the command vocabulary, the sanitizer and config.',
   ],
   [
     '/components/kanban',
-    'Angular Kanban board by OGE UI: columns, swimlanes and WIP limits, virtualized cards, drag and drop with Escape-cancel, keyboard moving and an edit dialog.',
+    'Kanban board for Angular and React: columns, swimlanes and WIP limits, virtualized cards, drag and drop with Escape-cancel, keyboard moving and an edit dialog.',
   ],
   [
     '/components/kanban/filtering',
-    'Angular Kanban filtering and sorting by OGE UI: tag, assignee and priority filter chips, predicate filters, per-column sort menus and CSV or Excel card export.',
+    'Angular and React Kanban filtering and sorting: tag, assignee and priority filter chips, predicate filters, per-column sort menus and CSV or Excel card export.',
   ],
   [
     '/components/kanban/multi-select',
-    'Angular Kanban multi-select by OGE UI: Ctrl and Shift selection, multi-card drag, drag between boards, swimlane WIP limits, quick add, checklists and undo.',
+    'Kanban multi-select for Angular and React: Ctrl and Shift selection, multi-card drag, drag between boards, swimlane WIP limits, quick add, checklists and undo.',
   ],
   [
     '/components/kanban/api',
-    'Angular Kanban API reference: every input, output, method and type of oge-kanban — card field mapping, columns, swimlanes, templates and config provider.',
+    'OGE Kanban API reference: every input, output, method and type of oge-kanban — card field mapping, columns, swimlanes, templates and config provider.',
   ],
   [
     '/components/scheduler',
-    'Angular Scheduler by OGE UI: day, week, month, year, agenda and timeline views with drag and resize, recurrence, teams, appointment popups and form editing.',
+    'Scheduler for Angular and React: day, week, month, year, agenda and timeline views with drag and resize, recurrence, teams, appointment popups and form editing.',
   ],
   [
     '/components/scheduler/api',
-    'Angular Scheduler API reference: every input, output, method and type of oge-scheduler — appointment field mapping, views, editing and the config provider.',
+    'OGE Scheduler API reference: every input, output, method and type of oge-scheduler — appointment field mapping, views, editing and the config provider.',
   ],
   [
     '/components/scheduler/views-grouping',
-    'Angular Scheduler views and grouping: N-day and N-week views, month and year timelines, week numbers, nested resource groups, vertical layout, +N more.',
+    'OGE Scheduler views and grouping: N-day and N-week views, month and year timelines, week numbers, nested resource groups, vertical layout, +N more.',
   ],
   [
     '/components/scheduler/resources-availability',
-    'Angular Scheduler availability: hatched disabled slots, per-resource work hours, conflict checks, external drag-in, multi-select, copy, paste, undo.',
+    'OGE Scheduler availability: hatched disabled slots, per-resource work hours, conflict checks, external drag-in, multi-select, copy, paste, undo.',
   ],
   [
     '/components/scheduler/recurrence-editor',
-    'Angular Scheduler recurrence editor: nth and last weekday rules, several month days, yearly patterns, count or until, skipped dates, live summary.',
+    'Scheduler recurrence editor for Angular and React: nth and last weekday rules, several month days, yearly patterns, count or until, skipped dates, live summary.',
   ],
   [
     '/components/scheduler/import-export',
-    'Angular Scheduler import and export: iCalendar .ics export and import with series and overrides, PDF and Excel list exports and print of the current view.',
+    'OGE Scheduler import and export: iCalendar .ics export and import with series and overrides, PDF and Excel list exports and print of the current view.',
   ],
   [
     '/components/scheduler/time-zones',
-    'Angular Scheduler time zones: display timeZone, per-appointment start and end zones, DST-exact 23- and 25-hour days, TZID recurrence and zone pickers.',
+    'OGE Scheduler time zones: display timeZone, per-appointment start and end zones, DST-exact 23- and 25-hour days, TZID recurrence and zone pickers.',
   ],
   [
     '/components/scheduler/remote-data',
-    'Angular Scheduler remote data: load appointments per visible range with prefetch, debounce, AbortSignal, a range cache, CRUD write-back and reload().',
+    'OGE Scheduler remote data: load appointments per visible range with prefetch, debounce, AbortSignal, a range cache, CRUD write-back and reload().',
   ],
 ];
 

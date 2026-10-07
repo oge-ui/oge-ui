@@ -43,11 +43,7 @@ interface ComponentCard {
       <h1
         class="!m-0 text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"
       >
-        @if (fw.isReact()) {
-          UI components for React
-        } @else {
-          UI components for Angular
-        }
+        UI components for Angular and React
       </h1>
       <p class="mt-3 max-w-2xl text-[15px] text-gray-600 dark:text-gray-400">
         @if (fw.isReact()) {
@@ -57,11 +53,12 @@ interface ComponentCard {
           engine the Angular suite runs, and the same CSS design tokens. Nothing
           is wrapped: there is no Angular in your bundle.
         } @else {
-          OGE is a suite of Angular UI components built on signals: a
-          virtualized data grid, tree list and pivot table, charts, scheduler,
-          gantt and kanban, form editors and form layout, plus layout,
-          navigation and overlay building blocks. Components run zoneless, ship
-          with full template type checking and theme through CSS design tokens.
+          OGE is a suite of UI components for Angular and React: a virtualized
+          data grid, tree list and pivot table, charts, scheduler, gantt and
+          kanban, form editors and form layout, plus layout, navigation and
+          overlay building blocks. The Angular components are built on signals,
+          run zoneless, ship with full template type checking and theme through
+          CSS design tokens.
         }
       </p>
       <div class="mt-6 flex flex-wrap items-center gap-3">

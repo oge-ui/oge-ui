@@ -7,7 +7,7 @@
  */
 
 export const SUMMARY =
-  'Signal-based Angular UI component suite for data-heavy applications: a virtualized Data Grid, Tree List, Pivot Grid, BPMN editor, form editors, buttons, overlay surfaces (modal and toast), tabs and layout containers. Angular 22+, standalone components only, zoneless, zero runtime dependencies. MIT licensed, except @oge-ui/pivot and @oge-ui/bpmn which are commercial.';
+  'UI component suite for data-heavy Angular and React applications: a virtualized Data Grid, Tree List, Pivot Grid, Charts, Scheduler, Gantt, Kanban, BPMN and rich-text editors, form editors and forms, upload, buttons, overlay surfaces, tabs, navigation and layout containers. One framework-free engine with two native render layers — Angular 22+ (signal APIs, standalone, zoneless) and React 18+ (`@oge-ui/react-*`) — and zero runtime dependencies. MIT licensed, except the Pivot, BPMN, Scheduler, Gantt, Kanban and Charts packages, which are commercial.';
 
 export const INSTALL = `## Install
 

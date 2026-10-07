@@ -1,6 +1,6 @@
 # @oge-ui/forms
 
-Form layout for the [OGE](https://www.ogeui.com) Angular UI suite. Signal-based,
+Form layout for the [OGE](https://www.ogeui.com) UI suite (Angular and React) — this is the Angular package. Signal-based,
 standalone, zoneless-ready, MIT.
 
 The package ships **`OgeForm`** with its renderless children

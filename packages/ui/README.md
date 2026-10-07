@@ -5,7 +5,7 @@
 <h1 align="center">oge-ui</h1>
 
 <p align="center">
-  One-install umbrella for the <b>OGE Angular UI suite</b> — signal-based,
+  One-install Angular umbrella for the <b>OGE UI suite</b> (React: <code>@oge-ui/react</code>) — signal-based,
   zoneless, themeable components engineered for data-heavy apps.
 </p>
 

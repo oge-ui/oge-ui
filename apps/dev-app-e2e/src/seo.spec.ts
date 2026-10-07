@@ -88,6 +88,20 @@ test.describe('per-page SEO', () => {
     ]);
   });
 
+  test('titles name the frameworks a page exists in', async ({ page }) => {
+    await page.goto('/components/data-grid/filtering');
+    await expect(page.locator('h1').first()).toBeVisible();
+    await expect(page).toHaveTitle(
+      'Data Grid Filtering for Angular and React | OGE UI',
+    );
+    // the router-driven demo has no React layer, so it does not promise one
+    await page.goto('/components/tabs/routed');
+    await expect(page.locator('h1').first()).toBeVisible();
+    await expect(page).toHaveTitle('Angular Routed Tabs | OGE UI');
+    await page.goto('/');
+    await expect(page).toHaveTitle(/Angular and React/);
+  });
+
   test('routed demo children canonicalize to the page they belong to', async ({
     page,
   }) => {

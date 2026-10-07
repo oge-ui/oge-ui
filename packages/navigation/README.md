@@ -1,6 +1,6 @@
 # @oge-ui/navigation
 
-Navigation controls for the [OGE](https://www.ogeui.com) Angular UI suite.
+Navigation controls for the [OGE](https://www.ogeui.com) UI suite (Angular and React) — this is the Angular package.
 Signal-based, standalone, zoneless-ready, MIT.
 
 Today the package ships **`OgeTreeView`**, **`OgeDrawer`**, **`OgeStepper`**,

@@ -51,10 +51,16 @@ const SECTIONS_REACT = [
       [chips]="['npm install', 'standalone', 'zoneless-ready']"
     >
       <p>
-        Add OGE to a new or existing Angular application. There is no required
-        global stylesheet and no module to import — install a package, import a
-        component class, done. <code>ng add</code> works too, and does a little
-        extra for the AI assistants working in your repo.
+        @if (fw.isReact()) {
+          Add OGE to a new or existing React application. There is no wrapper
+          and no required provider — install a package, import the stylesheet
+          once at your app entry, render a component, done.
+        } @else {
+          Add OGE to a new or existing Angular application. There is no required
+          global stylesheet and no module to import — install a package, import
+          a component class, done. <code>ng add</code> works too, and does a
+          little extra for the AI assistants working in your repo.
+        }
       </p>
     </app-doc-header>
     <app-page-toc [sections]="sections()" />

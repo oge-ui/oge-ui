@@ -1,7 +1,7 @@
 {
-  "name": "OGE UI — Angular Components",
+  "name": "OGE UI — Angular & React Components",
   "short_name": "OGE UI",
-  "description": "Signal-based Angular UI component suite: Data Grid, Tree List, Pivot Grid, form Inputs and Overlay primitives.",
+  "description": "UI component suite for Angular and React: Data Grid, Tree List, Pivot Grid, Charts, Scheduler, Gantt, Kanban, form inputs, navigation and overlays.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

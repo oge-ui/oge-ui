@@ -7,6 +7,10 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Docs site
+
+- **Framework-neutral titles, descriptions and copy.** The site, its page titles, meta descriptions, home and getting-started copy, the README and the `llms.txt` summary now present OGE as one suite for Angular and React; a page only one layer covers (the router-driven demos) keeps its framework in the title.
+
 ### Leftover fixes — form editor types, list box reordering, transfer list, header, API reports
 
 - **Forms: seven new editor types** (`@oge-ui/forms`, `@oge-ui/react-forms`,

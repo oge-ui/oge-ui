@@ -376,7 +376,7 @@ const ORG: OrgNode[] = [
     <section class="og-body">
       <div class="mx-auto max-w-6xl px-6 py-14">
         <h2 class="home-reveal og-h2 text-center">
-          Modern Angular, <span class="og-gilded">no compromises</span>
+          Angular and React, <span class="og-gilded">no compromises</span>
         </h2>
 
         <div

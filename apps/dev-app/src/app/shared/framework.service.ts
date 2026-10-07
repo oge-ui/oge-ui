@@ -170,10 +170,7 @@ export class FrameworkService {
     subpath: string,
     framework: DocsFramework,
   ): boolean {
-    if (framework === 'angular') return true;
-    const pages = COVERAGE[framework][family];
-    if (pages === undefined) return false;
-    return pages === '*' || pages.includes(subpath);
+    return pageInFramework(family, subpath, framework);
   }
 
   set(framework: DocsFramework): void {
@@ -228,6 +225,34 @@ function readInitial(): DocsFramework {
     // ignore
   }
   return 'angular';
+}
+
+/** Whether one page of `family` (`''` = overview) exists in `framework`. */
+function pageInFramework(
+  family: string,
+  subpath: string,
+  framework: DocsFramework,
+): boolean {
+  if (framework === 'angular') return true;
+  const pages = COVERAGE[framework][family];
+  if (pages === undefined) return false;
+  return pages === '*' || pages.includes(subpath);
+}
+
+/**
+ * The frameworks a component page exists in, in switch order —
+ * `/components/tabs/routed` → `[Angular]`, `/components/tabs` →
+ * `[Angular, React]`. A path outside `/components` is about the whole suite,
+ * so it lists every framework. Pure, so the title strategy and the prerender
+ * can use it without the service.
+ */
+export function frameworksOfPage(url: string): readonly FrameworkMeta[] {
+  const family = familyOf(url);
+  if (family === null) return FRAMEWORKS;
+  const subpath = subpathOf(url);
+  return FRAMEWORKS.filter((entry) =>
+    pageInFramework(family, subpath, entry.id),
+  );
 }
 
 /**
