@@ -113,6 +113,11 @@ interface Shot {
   card?: string;
   /** regions repainted by time or data, masked out of the comparison */
   mask?: readonly string[];
+  /**
+   * Overlay demos: click `click` inside the preview, then capture `capture`
+   * (looked up on the page — overlays render into <body>) instead of the card.
+   */
+  open?: { click: string; capture: string };
 }
 
 const ALL: readonly Theme[] = ['light', 'dark', 'high-contrast'];
@@ -196,6 +201,7 @@ const SHOTS: readonly Shot[] = [
     route: '/components/overlay/modal',
     ready: '.oge-button',
     themes: ['light'],
+    open: { click: '.oge-button', capture: '.oge-modal' },
   },
 ];
 
@@ -210,20 +216,27 @@ for (const shot of SHOTS) {
         timeout: 30_000,
       });
       await settle(page);
+      let subject = target;
+      if (shot.open) {
+        await target.locator(shot.open.click).first().click();
+        subject = page.locator(shot.open.capture).first();
+        await expect(subject).toBeVisible();
+        await settle(page);
+      }
       const mask = (shot.mask ?? []).map((selector) => page.locator(selector));
       if (DRY) {
-        const box = await target.boundingBox();
+        const box = await subject.boundingBox();
         expect(box?.width ?? 0).toBeGreaterThan(100);
         expect(box?.height ?? 0).toBeGreaterThan(40);
         // kept in the (git-ignored) test output for a look, never compared
-        await target.screenshot({
+        await subject.screenshot({
           animations: 'disabled',
           mask,
           path: test.info().outputPath(`${shot.name}-${theme}.png`),
         });
         return;
       }
-      await expect(target).toHaveScreenshot(`${shot.name}-${theme}.png`, {
+      await expect(subject).toHaveScreenshot(`${shot.name}-${theme}.png`, {
         mask,
       });
     });
