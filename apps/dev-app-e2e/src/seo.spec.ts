@@ -14,6 +14,8 @@ const PAGES = [
   '/bundle-size',
   '/getting-started',
   '/getting-started/setup',
+  '/getting-started/tokens',
+  '/getting-started/theme-builder',
   '/components/data-grid',
   '/components/data-grid/filtering',
   '/components/data-grid/editing',

@@ -13,6 +13,8 @@ export const PATHS = {
   seo: 'apps/dev-app/src/app/shared/seo.service.ts',
   publicDir: 'apps/dev-app/public',
   pagesDir: 'apps/dev-app/src/app/pages',
+  /** generated token data the token reference and ThemeBuilder pages import */
+  tokensDir: 'apps/dev-app/src/app/pages/getting-started/generated',
   tsconfigBase: 'tsconfig.base.json',
 };
 

@@ -65,6 +65,37 @@ describe('flattenIndex', () => {
   });
 });
 
+describe('design tokens', () => {
+  const withTokens = flattenIndex({
+    ...INDEX,
+    pages: [...INDEX.pages, { p: '/getting-started/tokens', t: 'Tokens' }],
+    tokens: {
+      p: 3,
+      t: [
+        ['--oge-accent', 'color', '#2563eb'],
+        ['--oge-z-modal', 'z-index', '1100'],
+      ],
+    },
+  });
+
+  it('become their own group, anchored at the row', () => {
+    const groups = searchItems(withTokens, 'accent', 'angular', frameworksOf);
+    const tokens = groups.find((group) => group.kind === 'token');
+    expect(tokens?.label).toBe('Tokens');
+    expect(tokens?.results[0].item).toMatchObject({
+      title: '--oge-accent',
+      path: '/getting-started/tokens',
+      anchor: 'oge-accent',
+      detail: 'Colour · #2563eb',
+    });
+  });
+
+  it('match by value too', () => {
+    const groups = searchItems(withTokens, '2563eb', 'angular', frameworksOf);
+    expect(groups.map((group) => group.kind)).toEqual(['token']);
+  });
+});
+
 describe('matchTerm', () => {
   it('ranks exact > prefix > word start > substring', () => {
     const score = (text: string, term: string): number =>

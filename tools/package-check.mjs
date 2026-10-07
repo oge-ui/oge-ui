@@ -14,7 +14,7 @@
  * `node16` CommonJS resolution are not checked for them (the APF spec ships
  * no CommonJS); React and rollup packages ship CJS + ESM and are checked
  * under every resolution mode. Stylesheet exports (`./styles.css`) have no
- * types and are not attw entry points, nor is `./llms.txt`.
+ * types and are not attw entry points, nor are `./llms.txt` and `./tokens.json`.
  *
  * A finding that is correct by design goes into
  * `tools/package-check-allowlist.json` with a reason — never silenced in
@@ -129,7 +129,11 @@ async function publint(pkg) {
 function attwEntrypoints(pkg) {
   const exportsField = pkg.manifest.exports;
   if (!exportsField || typeof exportsField !== 'object') return [];
-  return Object.keys(exportsField).filter((key) => /\.(css|txt)$/.test(key));
+  // data files (`./tokens.json`) have no types either; `./package.json` is
+  // still analysed
+  return Object.keys(exportsField).filter(
+    (key) => /\.(css|txt)$/.test(key) || key === './tokens.json',
+  );
 }
 
 async function attw(pkg) {

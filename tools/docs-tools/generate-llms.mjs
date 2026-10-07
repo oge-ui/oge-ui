@@ -8,7 +8,12 @@
  *   packages/<pkg>/llms.txt               the same file, shipped in the tarball
  *   apps/dev-app/public/sitemap.xml       derived from app.routes.ts
  *   apps/dev-app/public/search-index.json the Ctrl/⌘K palette's index (pages,
- *                                         headings, API members)
+ *                                         headings, API members, tokens)
+ *   packages/core/tokens.json             DTCG design tokens (light / dark /
+ *                                         high contrast); also served as
+ *                                         apps/dev-app/public/tokens.json
+ *   pages/getting-started/generated/      the token reference table and the
+ *                                         ThemeBuilder presets (lib/tokens.mjs)
  *
  * Everything is derived from the workspace — routes, `<app-api-reference>`
  * blocks, `*-api-data.ts` tables, entry-point exports and `*-snippets.ts` demo
@@ -57,6 +62,7 @@ import {
 import { readRoutes, readSeoDescriptions } from './lib/routes.mjs';
 import { buildSearchIndex } from './lib/search-index.mjs';
 import { readSnippets } from './lib/snippets.mjs';
+import { buildTokenArtifacts } from './lib/tokens.mjs';
 
 const workspaceRoot = process.cwd();
 const checkOnly = process.argv.includes('--check');
@@ -113,6 +119,17 @@ for (const [dir, doc] of docs) {
   artifacts.set(`packages/${dir}/llms.txt`, contents);
 }
 artifacts.set(`${PATHS.publicDir}/sitemap.xml`, buildSitemap());
+// Design tokens: the reference table and ThemeBuilder presets the docs pages
+// import at build time, and the DTCG file @oge-ui/core ships (the site serves
+// the same file for the token page's download link).
+const tokenArtifacts = buildTokenArtifacts(workspaceRoot);
+artifacts.set(
+  `${PATHS.tokensDir}/design-tokens.json`,
+  tokenArtifacts.reference,
+);
+artifacts.set(`${PATHS.tokensDir}/theme-presets.json`, tokenArtifacts.presets);
+artifacts.set('packages/core/tokens.json', tokenArtifacts.dtcg);
+artifacts.set(`${PATHS.publicDir}/tokens.json`, tokenArtifacts.dtcg);
 artifacts.set(
   `${PATHS.publicDir}/search-index.json`,
   await buildSearchIndex({
@@ -121,6 +138,7 @@ artifacts.set(
     routes,
     seoDescriptions,
     packages: PACKAGES,
+    tokens: JSON.parse(tokenArtifacts.reference).tokens,
   }),
 );
 artifacts.set(

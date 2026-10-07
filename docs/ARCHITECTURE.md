@@ -724,6 +724,15 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   scoped block must re-declare each derived token so a themed subtree re-resolves it —
   `packages/grid/src/lib/styles/themes.spec.ts` enforces that, the zero-specificity emission, and the
   dark/auto blocks being identical.
+- **Token data is generated from the stylesheets.** `tools/docs-tools/lib/tokens.mjs` parses
+  `literal-tokens` / `derived-tokens` and the first rule of each `themes/*.css` and writes three
+  artifacts through `docs-tools:llms`: the docs token reference rows, the ThemeBuilder presets and
+  the DTCG `packages/core/tokens.json` (shipped as `@oge-ui/core/tokens.json`). Adding, renaming
+  or re-valuing a token — or a new `var(--oge-x)` read in a package, which changes its "used by"
+  — therefore means re-running `npx nx run docs-tools:llms`; `llms-check` fails otherwise. The
+  category comes from the name (`categoryOf`: `z-`, `radius`, `font-`, `shadow`, a family prefix
+  such as `gantt-`, sizes) — a token family with a new prefix gets a line there. A comment directly
+  above a declaration becomes its description in the table and in `tokens.json`.
 - Scroll containers the suite draws use `--oge-scrollbar-thumb` / `-thumb-hover` / `-track` (the
   `tokens.scrollbar` mixin, or `scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track)`),
   never `--oge-border-color` — a border-coloured thumb is invisible on a mouse desktop.
@@ -2181,14 +2190,16 @@ React demo cannot silently exit the gate.
 Coding assistants are a first-class docs audience: they read the repo, `node_modules`, and whatever
 the site serves. Three artifacts serve them, all **generated and committed**:
 
-| Artifact                                | Purpose                                                      |
-| --------------------------------------- | ------------------------------------------------------------ |
-| `apps/dev-app/public/llms.txt`          | [llmstxt.org](https://llmstxt.org) index of packages + pages |
-| `apps/dev-app/public/llms-full.txt`     | conventions, every API member, every demo — one file         |
-| `apps/dev-app/public/llms/<pkg>.txt`    | one self-contained reference per package                     |
-| `packages/<pkg>/llms.txt`               | same file, shipped in the tarball via `assets`               |
-| `apps/dev-app/public/sitemap.xml`       | generated from `app.routes.ts` (no longer hand-maintained)   |
-| `apps/dev-app/public/search-index.json` | the Ctrl/⌘K palette's index: pages, headings, API members    |
+| Artifact                                 | Purpose                                                                      |
+| ---------------------------------------- | ---------------------------------------------------------------------------- |
+| `apps/dev-app/public/llms.txt`           | [llmstxt.org](https://llmstxt.org) index of packages + pages                 |
+| `apps/dev-app/public/llms-full.txt`      | conventions, every API member, every demo — one file                         |
+| `apps/dev-app/public/llms/<pkg>.txt`     | one self-contained reference per package                                     |
+| `packages/<pkg>/llms.txt`                | same file, shipped in the tarball via `assets`                               |
+| `apps/dev-app/public/sitemap.xml`        | generated from `app.routes.ts` (no longer hand-maintained)                   |
+| `apps/dev-app/public/search-index.json`  | the Ctrl/⌘K palette's index: pages, headings, API members, tokens            |
+| `packages/core/tokens.json`              | DTCG design tokens (light / dark / high contrast), also `public/tokens.json` |
+| `pages/getting-started/generated/*.json` | token reference rows + ThemeBuilder presets (`lib/tokens.mjs`)               |
 
 Everything is **derived from the workspace**, never hand-written twice: routes from `app.routes.ts`,
 link notes from `SeoService.DESCRIPTIONS`, member tables from each API page's
@@ -2322,6 +2333,42 @@ and `#<release>-<group-slug>`. Nothing is generated, so editing `CHANGELOG.md` n
 `tools/commercial-families.json` (the ADR 0003 list, also read by `license-boundary-check.mjs`).
 Both pages sit in the sidebar's **Resources** section; the sidebar and home-footer version badges
 link to `/changelog`.
+
+### Docs site: token reference and theme builder
+
+**`/getting-started/tokens`** imports `pages/getting-started/generated/design-tokens.json` (see
+"Styling & theming" → token data): one row per token with its default, dark, high-contrast,
+Tailwind and Bootstrap values (a theme cell only when it differs from the default), resolved
+swatch colours (`color-mix()` and `var()` evaluated per theme by the generator), a category and the
+packages whose SCSS/CSS/TS read it. Rows are grouped per category (`<tbody>` + `scope="rowgroup"`),
+filterable by text and category, and anchored at the name without `--` (`#oge-accent`) — the same
+anchor the search index's **Tokens** group (`"tokens": { p, t: [name, category, value] }`) opens. A
+deep link to a row the filter hides clears the filter. The DTCG file is linked as `/tokens.json`
+(the generator writes the same bytes to `public/`).
+
+**`/getting-started/theme-builder`** edits nine key colours (OGE's own `oge-color-box`), radius,
+density and font on top of a preset from `generated/theme-presets.json` — every token of each
+built-in theme with bridge fallbacks substituted and derived tokens kept as expressions, so an
+edited accent re-derives its tints even from Dark. The model (`theme-builder-model.ts`) is pure
+and unit-tested: state encoding, WCAG contrast (translucent colours composited), `:root` /
+scoped / DTCG exports. Rules the page keeps:
+
+- **The preview is themed through CSSOM**: one constructed `CSSStyleSheet` in
+  `document.adoptedStyleSheets` with a single `.app-theme-preview, oge-toast-host` rule written by
+  `style.setProperty` — no `<style>` element (the strict-CSP run allows nonce'd ones only) and no
+  string concatenation of user values into CSS. Removed on destroy. The toast host is in the
+  selector because toasts render into `<body>`.
+- **State is shareable and validated**: `?theme=p.dark~a.ff00aa~r.8~d.compact~f.inter` (only
+  what differs from the initial state), written with `Location.replaceState` (a router navigation
+  would scroll to top on every edit) and mirrored to `localStorage` (`oge-docs-theme-builder`, in
+  try/catch). `decodeState` accepts closed sets and strict hex only, so a crafted link yields a
+  legal state or nothing. Read in `afterNextRender` — the prerendered page is the default theme.
+- The scoped export re-declares the whole derived set (the "every scoped block re-declares derived
+  tokens" rule above); the `:root` export lists every token that differs from the default, so a
+  theme started from Dark needs no `dark.css`. Font family is not a token — it is exported as
+  `font-family` on the scope.
+- Under `?framework=react` the page says the preview renders the Angular components and that the
+  exported tokens style React identically (one stylesheet); there is no React preview.
 
 ## SSR and hydration
 

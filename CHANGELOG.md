@@ -7,6 +7,39 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Docs site — token reference, ThemeBuilder, DTCG tokens (W6c)
+
+- **`/getting-started/tokens`**: every `--oge-*` design token in one table —
+  default, dark, high-contrast, Tailwind and Bootstrap values with colour
+  swatches (computed tints resolved per theme), the category (colour, spacing,
+  radius, typography, elevation, z-index, component) and the packages whose
+  stylesheets read it. Filter by text or category, copy a name, link to any
+  row (`#oge-accent`). Generated at build time from `_tokens.scss` and
+  `themes/*.css`, so it cannot drift from what ships. Tokens are also a
+  **Tokens** group in the Ctrl/⌘K search.
+- **`/getting-started/theme-builder`**: start from Default, Dark, High
+  contrast, Tailwind or Bootstrap; edit accent, background, surface, text,
+  muted, border and the severity colours with OGE's own colour box, plus
+  radius, density and font; watch a live preview of real components (buttons,
+  select box, date box, tabs, grid, toasts). WCAG AA contrast is checked as
+  you edit (text on surfaces, accent text, text on accent and severity
+  fills). Export as `:root` CSS, a scoped `[data-oge-theme='…']` theme (with
+  the derived tints re-declared) or DTCG JSON — copy or download. The state is
+  kept in the URL (shareable link) and on the device. The tokens are shared by
+  both render layers, so the theme styles React identically.
+- **`@oge-ui/core/tokens.json`**: the light, dark and high-contrast themes in
+  the Design Tokens Community Group format (2025.10 — `$value` / `$type`,
+  sRGB colour objects with a `hex` fallback, `{ value, unit }` dimensions,
+  aliases kept as aliases, computed tints with their CSS in `$extensions`),
+  for design tools and token pipelines. Also served at
+  `https://www.ogeui.com/tokens.json`.
+- Tooling: `tools/docs-tools/lib/tokens.mjs` generates the table data, the
+  builder presets and `tokens.json` through `npx nx run docs-tools:llms`;
+  `llms-check` fails when a token, a theme or a package's token usage changes
+  without regenerating. Both pages are lazy; the docs site's initial bundle
+  grew by about 0.3 kB (gzip) for the two sidebar entries and the search
+  group.
+
 ### Docs site — search, changelog, bundle size (W6a)
 
 - **Search the docs with Ctrl/⌘K** (or `/`, or the header's search button).

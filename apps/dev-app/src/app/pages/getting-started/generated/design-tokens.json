@@ -1,0 +1,2196 @@
+{
+  "version": 1,
+  "source": "packages/grid/src/lib/styles/_tokens.scss",
+  "themes": [
+    {
+      "id": "light",
+      "label": "Default (light)"
+    },
+    {
+      "id": "dark",
+      "label": "Dark"
+    },
+    {
+      "id": "hc",
+      "label": "High contrast"
+    },
+    {
+      "id": "tailwind",
+      "label": "Tailwind"
+    },
+    {
+      "id": "bootstrap",
+      "label": "Bootstrap"
+    }
+  ],
+  "categories": [
+    {
+      "id": "color",
+      "label": "Colour"
+    },
+    {
+      "id": "spacing",
+      "label": "Spacing & size"
+    },
+    {
+      "id": "radius",
+      "label": "Radius"
+    },
+    {
+      "id": "typography",
+      "label": "Typography"
+    },
+    {
+      "id": "elevation",
+      "label": "Elevation"
+    },
+    {
+      "id": "z-index",
+      "label": "Z-index"
+    },
+    {
+      "id": "component",
+      "label": "Component-specific"
+    }
+  ],
+  "tokens": [
+    {
+      "n": "--oge-bg",
+      "c": "color",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#111827",
+        "bootstrap": "var(--bs-body-bg, #ffffff)"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#111827",
+        "bootstrap": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/charts-engine",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-text-color",
+      "c": "color",
+      "v": {
+        "light": "#1e2430",
+        "dark": "#d1d5db",
+        "hc": "#000000",
+        "tailwind": "var(--color-slate-700, #334155)",
+        "bootstrap": "var(--bs-body-color, #212529)"
+      },
+      "s": {
+        "light": "#1e2430",
+        "dark": "#d1d5db",
+        "hc": "#000000",
+        "tailwind": "#334155",
+        "bootstrap": "#212529"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-border-color",
+      "c": "color",
+      "v": {
+        "light": "#e6e9ef",
+        "dark": "#374151",
+        "hc": "#1a1a1a",
+        "tailwind": "var(--color-slate-200, #e2e8f0)",
+        "bootstrap": "var(--bs-border-color, #dee2e6)"
+      },
+      "s": {
+        "light": "#e6e9ef",
+        "dark": "#374151",
+        "hc": "#1a1a1a",
+        "tailwind": "#e2e8f0",
+        "bootstrap": "#dee2e6"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-header-bg",
+      "c": "color",
+      "v": {
+        "light": "#fafbfc",
+        "dark": "#1f2937",
+        "hc": "#f2f2f2",
+        "tailwind": "var(--color-slate-50, #f8fafc)",
+        "bootstrap": "var(--bs-tertiary-bg, #f8f9fa)"
+      },
+      "s": {
+        "light": "#fafbfc",
+        "dark": "#1f2937",
+        "hc": "#f2f2f2",
+        "tailwind": "#f8fafc",
+        "bootstrap": "#f8f9fa"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-header-color",
+      "c": "color",
+      "v": {
+        "light": "#5b6472",
+        "dark": "#e5e7eb",
+        "hc": "#000000",
+        "tailwind": "var(--color-slate-600, #475569)",
+        "bootstrap": "var(--bs-emphasis-color, #212529)"
+      },
+      "s": {
+        "light": "#5b6472",
+        "dark": "#e5e7eb",
+        "hc": "#000000",
+        "tailwind": "#475569",
+        "bootstrap": "#212529"
+      },
+      "u": [
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-row-hover-bg",
+      "c": "color",
+      "v": {
+        "light": "#f5f7fa",
+        "dark": "#1e293b",
+        "hc": "#e8e8e8",
+        "tailwind": "var(--color-slate-100, #f1f5f9)",
+        "bootstrap": "var(--bs-secondary-bg, #e9ecef)"
+      },
+      "s": {
+        "light": "#f5f7fa",
+        "dark": "#1e293b",
+        "hc": "#e8e8e8",
+        "tailwind": "#f1f5f9",
+        "bootstrap": "#e9ecef"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-selected-bg",
+      "c": "color",
+      "v": {
+        "light": "#e9f0fd",
+        "dark": "#1e3a5f",
+        "hc": "#cfe0ff",
+        "tailwind": "var(--color-indigo-50, #eef2ff)",
+        "bootstrap": "rgba(var(--bs-primary-rgb, 13, 110, 253), 0.15)"
+      },
+      "s": {
+        "light": "#e9f0fd",
+        "dark": "#1e3a5f",
+        "hc": "#cfe0ff",
+        "tailwind": "#eef2ff",
+        "bootstrap": "rgb(13 110 253 / 0.15)"
+      },
+      "u": [
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-row-alt-bg",
+      "c": "color",
+      "v": {
+        "light": "rgba(148, 163, 184, 0.08)",
+        "dark": "rgba(148, 163, 184, 0.06)",
+        "hc": "#f5f5f5"
+      },
+      "s": {
+        "light": "rgb(148 163 184 / 0.08)",
+        "dark": "rgb(148 163 184 / 0.06)",
+        "hc": "#f5f5f5"
+      },
+      "u": [
+        "@oge-ui/grid"
+      ]
+    },
+    {
+      "n": "--oge-cell-padding-x",
+      "c": "spacing",
+      "v": {
+        "light": "14px"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/pivot"
+      ]
+    },
+    {
+      "n": "--oge-cell-padding-y",
+      "c": "spacing",
+      "v": {
+        "light": "8px",
+        "bootstrap": "10px"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/pivot"
+      ]
+    },
+    {
+      "n": "--oge-font-size",
+      "c": "typography",
+      "v": {
+        "light": "14px",
+        "tailwind": "var(--text-sm, 13.5px)",
+        "bootstrap": "15px"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/tree-list"
+      ]
+    },
+    {
+      "n": "--oge-font-mono",
+      "c": "typography",
+      "v": {
+        "light": "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/editor"
+      ]
+    },
+    {
+      "n": "--oge-row-height",
+      "c": "spacing",
+      "v": {
+        "light": "36px",
+        "bootstrap": "42px"
+      },
+      "u": [
+        "@oge-ui/grid"
+      ]
+    },
+    {
+      "n": "--oge-muted-color",
+      "c": "color",
+      "d": "≥ 4.5:1 on every light surface (bg, header, group, hover, selected)",
+      "v": {
+        "light": "#636b78",
+        "dark": "#9ca3af",
+        "hc": "#404040",
+        "tailwind": "var(--color-slate-500, #64748b)",
+        "bootstrap": "var(--bs-secondary-color, #6c757d)"
+      },
+      "s": {
+        "light": "#636b78",
+        "dark": "#9ca3af",
+        "hc": "#404040",
+        "tailwind": "#64748b",
+        "bootstrap": "#6c757d"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/charts-engine",
+        "@oge-ui/editor",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-radius",
+      "c": "radius",
+      "v": {
+        "light": "6px",
+        "tailwind": "var(--radius-lg, 8px)",
+        "bootstrap": "var(--bs-border-radius, 6px)"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-radius-lg",
+      "c": "radius",
+      "v": {
+        "light": "10px"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-group-bg",
+      "c": "color",
+      "v": {
+        "light": "#f4f6f9",
+        "dark": "#182031",
+        "hc": "#ededed",
+        "tailwind": "var(--color-slate-100, #f1f5f9)",
+        "bootstrap": "var(--bs-tertiary-bg, #f8f9fa)"
+      },
+      "s": {
+        "light": "#f4f6f9",
+        "dark": "#182031",
+        "hc": "#ededed",
+        "tailwind": "#f1f5f9",
+        "bootstrap": "#f8f9fa"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/layout",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-detail-bg",
+      "c": "color",
+      "v": {
+        "light": "#fafbfd",
+        "dark": "#0f1623",
+        "hc": "#f7f7f7",
+        "tailwind": "var(--color-slate-50, #f8fafc)",
+        "bootstrap": "var(--bs-tertiary-bg, #f8f9fa)"
+      },
+      "s": {
+        "light": "#fafbfd",
+        "dark": "#0f1623",
+        "hc": "#f7f7f7",
+        "tailwind": "#f8fafc",
+        "bootstrap": "#f8f9fa"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-popup-bg",
+      "c": "color",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#1f2937",
+        "bootstrap": "var(--bs-body-bg, #ffffff)"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#1f2937",
+        "bootstrap": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-accent",
+      "c": "color",
+      "v": {
+        "light": "#2563eb",
+        "dark": "#60a5fa",
+        "hc": "#0037b3",
+        "tailwind": "var(--color-indigo-600, #4f46e5)",
+        "bootstrap": "var(--bs-primary, #0d6efd)"
+      },
+      "s": {
+        "light": "#2563eb",
+        "dark": "#60a5fa",
+        "hc": "#0037b3",
+        "tailwind": "#4f46e5",
+        "bootstrap": "#0d6efd"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-shadow-popup",
+      "c": "elevation",
+      "v": {
+        "light": "0 12px 32px -8px rgba(15, 23, 42, 0.18), 0 4px 12px -6px rgba(15, 23, 42, 0.1)",
+        "dark": "0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 4px 12px -6px rgba(0, 0, 0, 0.4)",
+        "hc": "0 0 0 1px #000000, 0 8px 24px -8px rgba(0, 0, 0, 0.35)"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-tree-indent",
+      "c": "spacing",
+      "v": {
+        "light": "20px"
+      },
+      "u": [
+        "@oge-ui/react-tree-list"
+      ]
+    },
+    {
+      "n": "--oge-success",
+      "c": "color",
+      "d": "severity palette (buttons, inputs, toasts, badges); each fill carries white text and each colour reads as text on white at >= 4.5:1",
+      "v": {
+        "light": "#15803d",
+        "dark": "#22c55e",
+        "hc": "#00611a",
+        "tailwind": "var(--color-green-700, #15803d)",
+        "bootstrap": "var(--bs-success, #198754)"
+      },
+      "s": {
+        "light": "#15803d",
+        "dark": "#22c55e",
+        "hc": "#00611a",
+        "tailwind": "#15803d",
+        "bootstrap": "#198754"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/charts-engine",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-success-soft",
+      "c": "color",
+      "v": {
+        "light": "rgba(21, 128, 61, 0.12)",
+        "dark": "rgba(34, 197, 94, 0.16)",
+        "hc": "rgba(0, 97, 26, 0.12)",
+        "tailwind": "color-mix(in srgb, var(--color-green-700, #15803d) 12%, transparent)",
+        "bootstrap": "rgba(var(--bs-success-rgb, 25, 135, 84), 0.12)"
+      },
+      "s": {
+        "light": "rgb(21 128 61 / 0.12)",
+        "dark": "rgb(34 197 94 / 0.16)",
+        "hc": "rgb(0 97 26 / 0.12)",
+        "tailwind": "rgb(21 128 61 / 0.12)",
+        "bootstrap": "rgb(25 135 84 / 0.12)"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-warning",
+      "c": "color",
+      "v": {
+        "light": "#b45309",
+        "dark": "#f59e0b",
+        "hc": "#7a4100",
+        "tailwind": "var(--color-amber-700, #b45309)",
+        "bootstrap": "var(--bs-warning, #ffc107)"
+      },
+      "s": {
+        "light": "#b45309",
+        "dark": "#f59e0b",
+        "hc": "#7a4100",
+        "tailwind": "#b45309",
+        "bootstrap": "#ffc107"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/charts-engine",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-warning-soft",
+      "c": "color",
+      "v": {
+        "light": "rgba(180, 83, 9, 0.14)",
+        "dark": "rgba(245, 158, 11, 0.16)",
+        "hc": "rgba(122, 65, 0, 0.12)",
+        "tailwind": "color-mix(in srgb, var(--color-amber-700, #b45309) 14%, transparent)",
+        "bootstrap": "rgba(var(--bs-warning-rgb, 255, 193, 7), 0.15)"
+      },
+      "s": {
+        "light": "rgb(180 83 9 / 0.14)",
+        "dark": "rgb(245 158 11 / 0.16)",
+        "hc": "rgb(122 65 0 / 0.12)",
+        "tailwind": "rgb(180 83 9 / 0.14)",
+        "bootstrap": "rgb(255 193 7 / 0.15)"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-danger",
+      "c": "color",
+      "v": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c",
+        "tailwind": "var(--color-red-600, #dc2626)",
+        "bootstrap": "var(--bs-danger, #dc3545)"
+      },
+      "s": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c",
+        "tailwind": "#dc2626",
+        "bootstrap": "#dc3545"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/charts-engine",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-danger-soft",
+      "c": "color",
+      "v": {
+        "light": "rgba(220, 38, 38, 0.12)",
+        "dark": "rgba(239, 68, 68, 0.16)",
+        "hc": "rgba(179, 0, 12, 0.1)",
+        "tailwind": "color-mix(in srgb, var(--color-red-600, #dc2626) 12%, transparent)",
+        "bootstrap": "rgba(var(--bs-danger-rgb, 220, 53, 69), 0.12)"
+      },
+      "s": {
+        "light": "rgb(220 38 38 / 0.12)",
+        "dark": "rgb(239 68 68 / 0.16)",
+        "hc": "rgb(179 0 12 / 0.1)",
+        "tailwind": "rgb(220 38 38 / 0.12)",
+        "bootstrap": "rgb(220 53 69 / 0.12)"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-severity-contrast",
+      "c": "color",
+      "d": "text color on contained severity/accent fills",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-badge-bg",
+      "c": "component",
+      "v": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c",
+        "tailwind": "var(--color-red-600, #dc2626)",
+        "bootstrap": "var(--bs-danger, #dc3545)"
+      },
+      "s": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c",
+        "tailwind": "#dc2626",
+        "bootstrap": "#dc3545"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/tabs"
+      ]
+    },
+    {
+      "n": "--oge-badge-color",
+      "c": "component",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/tabs"
+      ]
+    },
+    {
+      "n": "--oge-shadow-btn",
+      "c": "elevation",
+      "d": "elevation of contained buttons (dark theme overrides with black-based)",
+      "v": {
+        "light": "0 1px 2px rgba(15, 23, 42, 0.12)",
+        "dark": "0 1px 2px rgba(0, 0, 0, 0.4)",
+        "hc": "0 0 0 1px #000000"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/gantt",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-shadow-btn-hover",
+      "c": "elevation",
+      "v": {
+        "light": "0 2px 6px rgba(15, 23, 42, 0.16)",
+        "dark": "0 2px 6px rgba(0, 0, 0, 0.5)",
+        "hc": "0 0 0 2px #000000"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/gantt",
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-shadow-card",
+      "c": "elevation",
+      "d": "resting elevation of raised cards — lighter than --oge-shadow-popup",
+      "v": {
+        "light": "0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px -4px rgba(15, 23, 42, 0.1)",
+        "dark": "0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 12px -4px rgba(0, 0, 0, 0.3)",
+        "hc": "0 0 0 1px #000000"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-skeleton-color",
+      "c": "color",
+      "d": "loading placeholders (skeleton bones, grid skeleton rows)",
+      "v": {
+        "light": "rgba(148, 163, 184, 0.25)",
+        "dark": "rgba(148, 163, 184, 0.18)",
+        "hc": "#bfbfbf"
+      },
+      "s": {
+        "light": "rgb(148 163 184 / 0.25)",
+        "dark": "rgb(148 163 184 / 0.18)",
+        "hc": "#bfbfbf"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-switch-thumb",
+      "c": "component",
+      "d": "switch knob — stays light on both themes, like the platform controls",
+      "v": {
+        "light": "#ffffff"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-scrollbar-thumb",
+      "c": "color",
+      "d": "scrollbars of every scroll area the suite draws (grid body, lists, calendars, pivot); visible against the surface on a mouse desktop",
+      "v": {
+        "light": "rgba(100, 116, 139, 0.45)",
+        "dark": "rgba(148, 163, 184, 0.4)",
+        "hc": "#404040"
+      },
+      "s": {
+        "light": "rgb(100 116 139 / 0.45)",
+        "dark": "rgb(148 163 184 / 0.4)",
+        "hc": "#404040"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/navigation",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-scrollbar-thumb-hover",
+      "c": "color",
+      "v": {
+        "light": "rgba(100, 116, 139, 0.7)",
+        "dark": "rgba(148, 163, 184, 0.62)",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "rgb(100 116 139 / 0.7)",
+        "dark": "rgb(148 163 184 / 0.62)",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/grid"
+      ]
+    },
+    {
+      "n": "--oge-scrollbar-track",
+      "c": "color",
+      "v": {
+        "light": "transparent",
+        "hc": "#f2f2f2"
+      },
+      "s": {
+        "light": "rgb(0 0 0 / 0)",
+        "hc": "#f2f2f2"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/navigation",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-z-popup",
+      "c": "z-index",
+      "d": "stacking layer of anchored popups/menus",
+      "v": {
+        "light": "1000"
+      },
+      "u": [
+        "@oge-ui/kanban",
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-z-window",
+      "c": "z-index",
+      "d": "non-modal floating windows: below anchored popups (a select opened in a window shows above it) and modals; each window adds its stacking layer",
+      "v": {
+        "light": "900"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-z-fab",
+      "c": "z-index",
+      "d": "floating action buttons: below windows, popups and modals, above content",
+      "v": {
+        "light": "800"
+      },
+      "u": [
+        "@oge-ui/buttons"
+      ]
+    },
+    {
+      "n": "--oge-z-app-bar",
+      "c": "z-index",
+      "d": "fixed / sticky app bars: below FABs, so a FAB never hides under a bottom bar",
+      "v": {
+        "light": "700"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-z-modal",
+      "c": "z-index",
+      "d": "modal layer (above anchored popups; legacy grid dialogs sit at 1090/1100)",
+      "v": {
+        "light": "1100"
+      },
+      "u": [
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-z-drawer",
+      "c": "z-index",
+      "d": "drawer panel; shares the modal layer, ordering comes from the shared stack",
+      "v": {
+        "light": "1100"
+      },
+      "u": [
+        "@oge-ui/navigation"
+      ]
+    },
+    {
+      "n": "--oge-modal-backdrop-bg",
+      "c": "component",
+      "v": {
+        "light": "rgb(15 23 42 / 0.32)",
+        "dark": "rgb(0 0 0 / 0.55)",
+        "hc": "rgb(0 0 0 / 0.6)"
+      },
+      "s": {
+        "light": "rgb(15 23 42 / 0.32)",
+        "dark": "rgb(0 0 0 / 0.55)",
+        "hc": "rgb(0 0 0 / 0.6)"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-z-toast",
+      "c": "z-index",
+      "d": "toast regions (above modals — failure toasts must show over open dialogs)",
+      "v": {
+        "light": "1200"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-toast-width",
+      "c": "component",
+      "v": {
+        "light": "360px"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-tooltip-bg",
+      "c": "component",
+      "d": "tooltip bubble (inverted surface; dark theme overrides)",
+      "v": {
+        "light": "#1e2430",
+        "dark": "#334155",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#1e2430",
+        "dark": "#334155",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/gantt",
+        "@oge-ui/layout",
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-tooltip-color",
+      "c": "component",
+      "v": {
+        "light": "#f5f7fa",
+        "dark": "#f1f5f9",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#f5f7fa",
+        "dark": "#f1f5f9",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/gantt",
+        "@oge-ui/layout",
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-scheduler-chip-fg",
+      "c": "component",
+      "d": "scheduler surfaces (commercial package hooks into the same theme files)",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "u": [
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-scheduler-now-color",
+      "c": "component",
+      "v": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c"
+      },
+      "s": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c"
+      },
+      "u": [
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-gantt-bar-fg",
+      "c": "component",
+      "d": "gantt surfaces",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-scale-head",
+      "c": "component",
+      "d": "height of the timeline scale header (gantt chart pane)",
+      "v": {
+        "light": "48px"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-summary-bg",
+      "c": "component",
+      "v": {
+        "light": "#475569",
+        "dark": "#94a3b8",
+        "hc": "#333333"
+      },
+      "s": {
+        "light": "#475569",
+        "dark": "#94a3b8",
+        "hc": "#333333"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-milestone-bg",
+      "c": "component",
+      "v": {
+        "light": "#7c3aed",
+        "hc": "#5b00b3"
+      },
+      "s": {
+        "light": "#7c3aed",
+        "hc": "#5b00b3"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-baseline-bg",
+      "c": "component",
+      "v": {
+        "light": "rgba(100, 116, 139, 0.45)",
+        "hc": "#595959"
+      },
+      "s": {
+        "light": "rgb(100 116 139 / 0.45)",
+        "hc": "#595959"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-offday-bg",
+      "c": "component",
+      "v": {
+        "light": "rgba(148, 163, 184, 0.1)",
+        "dark": "rgba(148, 163, 184, 0.07)",
+        "hc": "#f0f0f0"
+      },
+      "s": {
+        "light": "rgb(148 163 184 / 0.1)",
+        "dark": "rgb(148 163 184 / 0.07)",
+        "hc": "#f0f0f0"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-today-color",
+      "c": "component",
+      "v": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c"
+      },
+      "s": {
+        "light": "#dc2626",
+        "dark": "#ef4444",
+        "hc": "#b3000c"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-arrow-color",
+      "c": "component",
+      "v": {
+        "light": "#94a3b8",
+        "dark": "#64748b",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#94a3b8",
+        "dark": "#64748b",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-kanban-board-bg",
+      "c": "component",
+      "d": "kanban surfaces",
+      "v": {
+        "light": "transparent"
+      },
+      "s": {
+        "light": "rgb(0 0 0 / 0)"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-column-bg",
+      "c": "component",
+      "v": {
+        "light": "#f6f8fb",
+        "dark": "rgba(148, 163, 184, 0.08)",
+        "hc": "#f2f2f2"
+      },
+      "s": {
+        "light": "#f6f8fb",
+        "dark": "rgb(148 163 184 / 0.08)",
+        "hc": "#f2f2f2"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-column-header-bg",
+      "c": "component",
+      "v": {
+        "light": "transparent"
+      },
+      "s": {
+        "light": "rgb(0 0 0 / 0)"
+      },
+      "u": []
+    },
+    {
+      "n": "--oge-kanban-card-ring",
+      "c": "component",
+      "v": {
+        "light": "rgba(15, 23, 42, 0.07)",
+        "dark": "rgba(255, 255, 255, 0.08)",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "rgb(15 23 42 / 0.07)",
+        "dark": "rgb(255 255 255 / 0.08)",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-card-shadow",
+      "c": "component",
+      "v": {
+        "light": "0 1px 2px rgba(15, 23, 42, 0.1)",
+        "dark": "0 1px 2px rgba(0, 0, 0, 0.4)",
+        "hc": "0 0 0 1px #000000"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-card-shadow-hover",
+      "c": "component",
+      "v": {
+        "light": "0 3px 10px rgba(15, 23, 42, 0.16)",
+        "dark": "0 3px 10px rgba(0, 0, 0, 0.5)",
+        "hc": "0 0 0 2px #000000"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-card-shadow-drag",
+      "c": "component",
+      "v": {
+        "light": "0 12px 28px -6px rgba(15, 23, 42, 0.28), 0 4px 10px -4px rgba(15, 23, 42, 0.18)",
+        "dark": "0 12px 28px -6px rgba(0, 0, 0, 0.6), 0 4px 10px -4px rgba(0, 0, 0, 0.45)",
+        "hc": "0 0 0 2px #000000, 0 12px 28px -6px rgba(0, 0, 0, 0.4)"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-tag-bg",
+      "c": "component",
+      "v": {
+        "light": "rgba(100, 116, 139, 0.14)",
+        "dark": "rgba(148, 163, 184, 0.18)",
+        "hc": "#e0e0e0"
+      },
+      "s": {
+        "light": "rgb(100 116 139 / 0.14)",
+        "dark": "rgb(148 163 184 / 0.18)",
+        "hc": "#e0e0e0"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-avatar-bg",
+      "c": "component",
+      "v": {
+        "light": "#64748b",
+        "dark": "#94a3b8",
+        "hc": "#333333"
+      },
+      "s": {
+        "light": "#64748b",
+        "dark": "#94a3b8",
+        "hc": "#333333"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-avatar-fg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#0b1220"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-chart-grid-line",
+      "c": "component",
+      "d": "charts surfaces",
+      "v": {
+        "light": "rgba(148, 163, 184, 0.22)",
+        "dark": "rgba(148, 163, 184, 0.14)",
+        "hc": "#8c8c8c"
+      },
+      "s": {
+        "light": "rgb(148 163 184 / 0.22)",
+        "dark": "rgb(148 163 184 / 0.14)",
+        "hc": "#8c8c8c"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-crosshair",
+      "c": "component",
+      "v": {
+        "light": "rgba(100, 116, 139, 0.55)",
+        "dark": "rgba(148, 163, 184, 0.5)",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "rgb(100 116 139 / 0.55)",
+        "dark": "rgb(148 163 184 / 0.5)",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-strip-bg",
+      "c": "component",
+      "v": {
+        "light": "rgba(148, 163, 184, 0.14)",
+        "dark": "rgba(148, 163, 184, 0.1)",
+        "hc": "rgba(0, 0, 0, 0.08)"
+      },
+      "s": {
+        "light": "rgb(148 163 184 / 0.14)",
+        "dark": "rgb(148 163 184 / 0.1)",
+        "hc": "rgb(0 0 0 / 0.08)"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-zoom-bg",
+      "c": "component",
+      "v": {
+        "light": "rgba(99, 102, 241, 0.14)",
+        "dark": "rgba(129, 140, 248, 0.18)",
+        "hc": "rgba(0, 55, 179, 0.16)"
+      },
+      "s": {
+        "light": "rgb(99 102 241 / 0.14)",
+        "dark": "rgb(129 140 248 / 0.18)",
+        "hc": "rgb(0 55 179 / 0.16)"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-candle-up",
+      "c": "component",
+      "v": {
+        "light": "#10b981",
+        "hc": "#00611a"
+      },
+      "s": {
+        "light": "#10b981",
+        "hc": "#00611a"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-candle-down",
+      "c": "component",
+      "v": {
+        "light": "#ef4444",
+        "hc": "#b3000c"
+      },
+      "s": {
+        "light": "#ef4444",
+        "hc": "#b3000c"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-heat-low",
+      "c": "component",
+      "d": "heatmap / map colour scale ends (W8c)",
+      "v": {
+        "light": "#e0e7ff",
+        "dark": "#1e1b4b",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#e0e7ff",
+        "dark": "#1e1b4b",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/charts-engine"
+      ]
+    },
+    {
+      "n": "--oge-chart-heat-high",
+      "c": "component",
+      "v": {
+        "light": "#4338ca",
+        "dark": "#a5b4fc",
+        "hc": "#0037b3"
+      },
+      "s": {
+        "light": "#4338ca",
+        "dark": "#a5b4fc",
+        "hc": "#0037b3"
+      },
+      "u": [
+        "@oge-ui/charts-engine"
+      ]
+    },
+    {
+      "n": "--oge-accent-soft",
+      "c": "color",
+      "k": "d",
+      "d": "soft accent tints: follow --oge-accent wherever it is set with them",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-accent) 8%, transparent)",
+        "dark": "rgba(96, 165, 250, 0.12)",
+        "hc": "color-mix(in srgb, var(--oge-accent) 10%, transparent)",
+        "tailwind": "color-mix(in srgb, var(--oge-accent) 10%, transparent)",
+        "bootstrap": "color-mix(in srgb, var(--oge-accent) 10%, transparent)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.08)",
+        "dark": "rgb(96 165 250 / 0.12)",
+        "hc": "rgb(0 55 179 / 0.1)",
+        "tailwind": "rgb(79 70 229 / 0.1)",
+        "bootstrap": "rgb(13 110 253 / 0.1)"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-accent-25",
+      "c": "color",
+      "k": "d",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-accent) 25%, transparent)",
+        "dark": "rgba(96, 165, 250, 0.3)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.25)",
+        "dark": "rgb(96 165 250 / 0.3)"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/editor",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-focus-ring",
+      "c": "color",
+      "k": "d",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-accent) 40%, transparent)",
+        "dark": "rgba(96, 165, 250, 0.45)",
+        "hc": "var(--oge-accent)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.4)",
+        "dark": "rgb(96 165 250 / 0.45)",
+        "hc": "#0037b3"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/editor",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation"
+      ]
+    },
+    {
+      "n": "--oge-row-focused-bg",
+      "c": "color",
+      "k": "d",
+      "d": "derived tokens, re-resolved inside this scope so a dark subtree gets dark tints (keep in sync with derived-tokens in _tokens.scss)",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-accent) 10%, transparent)",
+        "hc": "color-mix(in srgb, var(--oge-accent) 12%, transparent)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.1)",
+        "hc": "rgb(0 55 179 / 0.12)"
+      },
+      "u": [
+        "@oge-ui/grid",
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-update-flash-bg",
+      "c": "color",
+      "k": "d",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-accent) 24%, transparent)",
+        "dark": "rgba(96, 165, 250, 0.28)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.24)",
+        "dark": "rgb(96 165 250 / 0.28)"
+      },
+      "u": [
+        "@oge-ui/grid"
+      ]
+    },
+    {
+      "n": "--oge-input-muted",
+      "c": "component",
+      "k": "d",
+      "d": "readable muted text (labels/placeholders/hints — WCAG-safe)",
+      "v": {
+        "light": "var(--oge-header-color)",
+        "hc": "var(--oge-muted-color)"
+      },
+      "s": {
+        "light": "#5b6472",
+        "hc": "#404040"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/tabs"
+      ]
+    },
+    {
+      "n": "--oge-input-filled-bg",
+      "c": "component",
+      "k": "d",
+      "d": "filled-field surface; dark theme overrides with a surface-independent tint",
+      "v": {
+        "light": "var(--oge-header-bg)",
+        "dark": "rgba(148, 163, 184, 0.08)"
+      },
+      "s": {
+        "light": "#fafbfc",
+        "dark": "rgb(148 163 184 / 0.08)"
+      },
+      "u": [
+        "@oge-ui/editor",
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-scheduler-chip-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-accent)"
+      },
+      "s": {
+        "light": "#2563eb"
+      },
+      "u": [
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-scheduler-grid-line",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-border-color)"
+      },
+      "s": {
+        "light": "#e6e9ef"
+      },
+      "u": [
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-scheduler-allday-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-header-bg)"
+      },
+      "s": {
+        "light": "#fafbfc"
+      },
+      "u": [
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-scheduler-hour-fg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-muted-color)"
+      },
+      "s": {
+        "light": "#636b78"
+      },
+      "u": [
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-scheduler-off-hours-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-detail-bg)"
+      },
+      "s": {
+        "light": "#fafbfd"
+      },
+      "u": [
+        "@oge-ui/scheduler"
+      ]
+    },
+    {
+      "n": "--oge-gantt-bar-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-accent)"
+      },
+      "s": {
+        "light": "#2563eb"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-gantt-grid-line",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-border-color)"
+      },
+      "s": {
+        "light": "#e6e9ef"
+      },
+      "u": [
+        "@oge-ui/gantt"
+      ]
+    },
+    {
+      "n": "--oge-kanban-card-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-bg)"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-card-fg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-text-color)"
+      },
+      "s": {
+        "light": "#1e2430"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-placeholder-border",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-accent-25)",
+        "hc": "var(--oge-accent)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.25)",
+        "hc": "#0037b3"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-placeholder-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-accent-soft)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.08)"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-kanban-lane-border",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-border-color)"
+      },
+      "s": {
+        "light": "#e6e9ef"
+      },
+      "u": [
+        "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-chart-axis-line",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-border-color)",
+        "hc": "var(--oge-text-color)"
+      },
+      "s": {
+        "light": "#e6e9ef",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-axis-fg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-muted-color)"
+      },
+      "s": {
+        "light": "#636b78"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-avatar-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-accent) 14%, var(--oge-bg))",
+        "hc": "var(--oge-bg)"
+      },
+      "s": {
+        "light": "#e0e9fc",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-avatar-fg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-accent)",
+        "hc": "var(--oge-text-color)"
+      },
+      "s": {
+        "light": "#2563eb",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-rating-color",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-warning)"
+      },
+      "s": {
+        "light": "#b45309"
+      },
+      "u": [
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-rating-empty-color",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-muted-color)"
+      },
+      "s": {
+        "light": "#636b78"
+      },
+      "u": [
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-signature-ink",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-text-color)"
+      },
+      "s": {
+        "light": "#1e2430"
+      },
+      "u": [
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-signature-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-bg)"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-chart-track",
+      "c": "component",
+      "k": "d",
+      "d": "gauges, bullets, heatmap / map empties, neutral Sankey links (W8c)",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-muted-color) 22%, transparent)",
+        "hc": "color-mix(in srgb, var(--oge-text-color) 22%, transparent)"
+      },
+      "s": {
+        "light": "rgb(99 107 120 / 0.22)",
+        "hc": "rgb(0 0 0 / 0.22)"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-needle",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-text-color)"
+      },
+      "s": {
+        "light": "#1e2430"
+      },
+      "u": [
+        "@oge-ui/charts"
+      ]
+    },
+    {
+      "n": "--oge-chart-empty",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-muted-color) 14%, var(--oge-bg))"
+      },
+      "s": {
+        "light": "#e9eaec"
+      },
+      "u": [
+        "@oge-ui/charts-engine"
+      ]
+    },
+    {
+      "n": "--oge-chart-link",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-muted-color)"
+      },
+      "s": {
+        "light": "#636b78"
+      },
+      "u": [
+        "@oge-ui/charts-engine"
+      ]
+    },
+    {
+      "n": "--oge-editor-bg",
+      "c": "component",
+      "k": "d",
+      "d": "rich-text editor (W8e)",
+      "v": {
+        "light": "var(--oge-bg)"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/editor"
+      ]
+    },
+    {
+      "n": "--oge-editor-toolbar-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-header-bg)",
+        "hc": "var(--oge-bg)"
+      },
+      "s": {
+        "light": "#fafbfc",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/editor"
+      ]
+    },
+    {
+      "n": "--oge-editor-link",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-accent)"
+      },
+      "s": {
+        "light": "#2563eb"
+      },
+      "u": [
+        "@oge-ui/editor"
+      ]
+    },
+    {
+      "n": "--oge-editor-code-bg",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-muted-color) 16%, transparent)",
+        "hc": "color-mix(in srgb, var(--oge-text-color) 12%, transparent)"
+      },
+      "s": {
+        "light": "rgb(99 107 120 / 0.16)",
+        "hc": "rgb(0 0 0 / 0.12)"
+      },
+      "u": [
+        "@oge-ui/editor"
+      ]
+    },
+    {
+      "n": "--oge-editor-quote-border",
+      "c": "component",
+      "k": "d",
+      "v": {
+        "light": "color-mix(in srgb, var(--oge-accent) 45%, var(--oge-border-color))",
+        "hc": "var(--oge-text-color)"
+      },
+      "s": {
+        "light": "#8faded",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/editor"
+      ]
+    },
+    {
+      "n": "--oge-warning-contrast",
+      "c": "color",
+      "d": "Bootstrap's warning is a light amber — dark text, like Bootstrap itself",
+      "v": {
+        "bootstrap": "#212529"
+      },
+      "s": {
+        "bootstrap": "#212529"
+      },
+      "u": [
+        "@oge-ui/buttons"
+      ]
+    }
+  ]
+}

@@ -126,6 +126,16 @@ export class App {
           icon: 'palette',
         },
         {
+          path: '/getting-started/tokens',
+          label: 'Design tokens',
+          icon: 'list',
+        },
+        {
+          path: '/getting-started/theme-builder',
+          label: 'Theme builder',
+          icon: 'sliders',
+        },
+        {
           path: '/getting-started/localization',
           label: 'Localization',
           icon: 'globe',

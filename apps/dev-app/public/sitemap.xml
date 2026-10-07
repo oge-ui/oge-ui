@@ -4,6 +4,8 @@
   <url><loc>https://www.ogeui.com/getting-started</loc><lastmod>2026-10-07</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/getting-started/setup</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/styling</loc><lastmod>2026-10-03</lastmod></url>
+  <url><loc>https://www.ogeui.com/getting-started/tokens</loc></url>
+  <url><loc>https://www.ogeui.com/getting-started/theme-builder</loc></url>
   <url><loc>https://www.ogeui.com/ai</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-10-05</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/getting-started/localization/api</loc><lastmod>2026-10-05</lastmod></url>
@@ -120,26 +122,26 @@
   <url><loc>https://www.ogeui.com/components/overlay/window</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay/api</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid</loc><lastmod>2026-10-01</lastmod><priority>0.9</priority></url>
-  <url><loc>https://www.ogeui.com/components/pivot-grid/analytics</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/pivot-grid/analytics</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid/chart-integration</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid/calculated-fields</loc><lastmod>2026-10-04</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/pivot-grid/api</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/pivot-grid/api</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/components/bpmn</loc><lastmod>2026-10-06</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/bpmn/validation</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/bpmn/extending</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/bpmn/camunda</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/bpmn/api</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/charts</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
-  <url><loc>https://www.ogeui.com/components/charts/axes-layout</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/charts/axes-layout</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/components/charts/gauges</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/charts/specialized</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/charts/api</loc><lastmod>2026-10-06</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/charts/api</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/components/gantt</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/gantt/scheduling</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/gantt/resources</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/gantt/task-list</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/gantt/import-export</loc><lastmod>2026-10-05</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/gantt/api</loc><lastmod>2026-10-06</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/gantt/api</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/components/upload</loc><lastmod>2026-08-23</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/components/upload/api</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/editor</loc><lastmod>2026-10-06</lastmod><priority>0.9</priority></url>

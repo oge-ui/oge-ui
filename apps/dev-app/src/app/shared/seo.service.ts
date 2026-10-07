@@ -40,6 +40,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Theme OGE UI with CSS design tokens: scoped overrides, Tailwind and Bootstrap bridge themes, dark mode, high contrast, reduced motion and component colors.',
   ],
   [
+    '/getting-started/tokens',
+    'OGE UI design token reference: every --oge-* CSS variable with its light, dark, high-contrast and bridge values, swatches, categories and the packages using it.',
+  ],
+  [
+    '/getting-started/theme-builder',
+    'Build an OGE UI theme live: edit accent, surfaces, text, radius and density on real components, check WCAG contrast, then export CSS variables or JSON.',
+  ],
+  [
     '/getting-started/localization',
     'Localize OGE UI: global and per-component message overrides, switching language at runtime, validation messages and Intl number and date locales.',
   ],

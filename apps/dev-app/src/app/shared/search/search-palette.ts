@@ -61,6 +61,7 @@ const KIND_ICON: Readonly<Record<SearchKind, IconName>> = {
   page: 'pages',
   section: 'list',
   api: 'code',
+  token: 'palette',
 };
 
 let indexRequest: Promise<SearchItem[]> | null = null;
@@ -188,7 +189,10 @@ function loadIndex(): Promise<SearchItem[]> {
                     <span class="flex min-w-0 flex-1 flex-col">
                       <span
                         class="truncate text-[14px] font-medium text-gray-900 dark:text-gray-100"
-                        [class.font-mono]="row.result.item.kind === 'api'"
+                        [class.font-mono]="
+                          row.result.item.kind === 'api' ||
+                          row.result.item.kind === 'token'
+                        "
                       >
                         @if (row.result.match; as range) {
                           {{ row.result.item.title.slice(0, range[0])
@@ -587,7 +591,7 @@ function readRecent(): RecentEntry[] {
           typeof entry.title === 'string' &&
           typeof entry.path === 'string' &&
           entry.path.startsWith('/') &&
-          ['page', 'section', 'api'].includes(entry.kind),
+          ['page', 'section', 'api', 'token'].includes(entry.kind),
       )
       .slice(0, RECENT_LIMIT);
   } catch {

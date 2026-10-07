@@ -70,6 +70,22 @@ export const appRoutes: Route[] = [
     title: 'OGE — Style the app',
   },
   {
+    path: 'getting-started/tokens',
+    loadComponent: () =>
+      import('./pages/getting-started/tokens').then(
+        (m) => m.GettingStartedTokensPage,
+      ),
+    title: 'OGE — Design tokens',
+  },
+  {
+    path: 'getting-started/theme-builder',
+    loadComponent: () =>
+      import('./pages/getting-started/theme-builder').then(
+        (m) => m.GettingStartedThemeBuilderPage,
+      ),
+    title: 'OGE — Theme builder',
+  },
+  {
     path: 'ai',
     loadComponent: () =>
       import('./pages/ai/overview').then((m) => m.AiOverviewPage),

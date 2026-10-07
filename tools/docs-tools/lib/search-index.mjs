@@ -8,7 +8,7 @@ import { decodeEntities } from './markdown.mjs';
  * Builds `apps/dev-app/public/search-index.json`, the data behind the docs
  * site's Ctrl/⌘K palette (`apps/dev-app/src/app/shared/search/`).
  *
- * Three kinds of entries, all derived from the workspace — never typed twice:
+ * Four kinds of entries, all derived from the workspace — never typed twice:
  *
  * - `page`    every titled route (`app.routes.ts`), its label, the family or
  *             guide it belongs to and its SEO description (`seo.service.ts`).
@@ -16,6 +16,8 @@ import { decodeEntities } from './markdown.mjs';
  *             and `<h2 id="…">`, with the anchor id the page renders.
  * - `api`     every `<app-api-reference>` block and every member row of its
  *             `*-api-data.ts` tables, anchored at the block's section.
+ * - `token`   every design token of the reference table (`lib/tokens.mjs`),
+ *             anchored at its row on `/getting-started/tokens`.
  *
  * Framework tags (`f`): a page's own frameworks are decided at runtime from
  * `FrameworkService`'s coverage table (one source of truth), so pages carry no
@@ -37,6 +39,9 @@ export function slugify(text) {
     .replace(/^-+|-+$/g, '');
 }
 
+/** The page the token reference renders on. */
+const TOKEN_PAGE = '/getting-started/tokens';
+
 /** The member tables of an API block, in page order. */
 const API_TABLES = ['properties', 'methods', 'events', 'types'];
 
@@ -57,6 +62,8 @@ const TOP_LEVEL_CONTEXT = {
  * @param {import('./routes.mjs').RoutePage[]} options.routes
  * @param {{ prefix: string, description: string }[]} options.seoDescriptions
  * @param {object[]} options.packages the manifest's `PACKAGES`
+ * @param {{ n: string, c: string, v: Record<string, string> }[]} [options.tokens]
+ *   the token reference rows (`lib/tokens.mjs`)
  * @returns {Promise<string>} the JSON file contents
  */
 export async function buildSearchIndex({
@@ -65,6 +72,7 @@ export async function buildSearchIndex({
   routes,
   seoDescriptions,
   packages,
+  tokens = [],
 }) {
   const abs = (relative) => path.join(workspaceRoot, relative);
   const routesDir = path.dirname(abs(routesFile));
@@ -197,11 +205,25 @@ export async function buildSearchIndex({
     }
   }
 
+  // ---------------------------------------------------------------- tokens
+  // `[name, category, default value]`, anchored at the row id the token page
+  // renders (the name without its leading dashes)
+  const tokenPage = pageIndex.get(TOKEN_PAGE);
+  if (tokens.length && tokenPage === undefined) {
+    throw new Error(`search index: no ${TOKEN_PAGE} route for the tokens`);
+  }
+  const tokenRows = tokens.map((token) => [
+    token.n,
+    token.c,
+    token.v.light ?? Object.values(token.v)[0] ?? '',
+  ]);
+
   const list = (items) =>
     `[\n${items.map((item) => JSON.stringify(item)).join(',\n')}\n]`;
   return (
     `{"version":1,\n"pages":${list(pages)},\n"sections":${list(sections)},\n` +
-    `"api":${list(api)}}\n`
+    `"api":${list(api)},\n` +
+    `"tokens":{"p":${tokenPage ?? -1},"t":${list(tokenRows)}}}\n`
   );
 }
 

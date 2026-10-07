@@ -59,6 +59,8 @@ For code generation, prefer the full reference — it inlines every API table an
 - [Getting Started](https://www.ogeui.com/getting-started): Get started with OGE UI: install the packages, render your first Angular or React data grid and form editors, and see how the open-source packages fit together.
 - [Set up your project](https://www.ogeui.com/getting-started/setup): Set up an Angular or React project for OGE UI: version requirements, npm install or ng add, optional export dependencies, app providers and a quick check.
 - [Style the app](https://www.ogeui.com/getting-started/styling): Theme OGE UI with CSS design tokens: scoped overrides, Tailwind and Bootstrap bridge themes, dark mode, high contrast, reduced motion and component colors.
+- [Design tokens](https://www.ogeui.com/getting-started/tokens): OGE UI design token reference: every --oge-* CSS variable with its light, dark, high-contrast and bridge values, swatches, categories and the packages using it.
+- [Theme builder](https://www.ogeui.com/getting-started/theme-builder): Build an OGE UI theme live: edit accent, surfaces, text, radius and density on real components, check WCAG contrast, then export CSS variables or JSON.
 - [Localization](https://www.ogeui.com/getting-started/localization): Localize OGE UI: global and per-component message overrides, switching language at runtime, validation messages and Intl number and date locales.
 - [Localization API](https://www.ogeui.com/getting-started/localization/api): Localization API of OGE UI: provideOgeLocale, OgeLocaleProvider and the @oge-ui/locales packs for ten languages, lazy loaders and the message merge helper.
 

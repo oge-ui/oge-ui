@@ -27,9 +27,17 @@ export interface SearchIndexFile {
     readonly f?: DocsFramework;
     readonly m: Readonly<Record<string, readonly string[]>>;
   }[];
+  /**
+   * Design tokens: `p` = the token reference page, `t` = `[name, category,
+   * default value]` rows; each anchors at its row (the name minus `--`).
+   */
+  readonly tokens?: {
+    readonly p: number;
+    readonly t: readonly (readonly [string, string, string])[];
+  };
 }
 
-export type SearchKind = 'page' | 'section' | 'api';
+export type SearchKind = 'page' | 'section' | 'api' | 'token';
 
 /** One searchable thing — a page, a heading on a page or an API member. */
 export interface SearchItem {
@@ -133,8 +141,32 @@ export function flattenIndex(file: SearchIndexFile): SearchItem[] {
       }
     }
   }
+  const tokenPage = file.tokens ? file.pages[file.tokens.p] : undefined;
+  if (file.tokens && tokenPage) {
+    for (const [name, category, value] of file.tokens.t) {
+      add({
+        kind: 'token',
+        title: name,
+        context: 'Design tokens',
+        detail: `${TOKEN_CATEGORY[category] ?? category} · ${value}`,
+        path: tokenPage.p,
+        anchor: name.replace(/^--/, ''),
+      });
+    }
+  }
   return items;
 }
+
+const TOKEN_CATEGORY: Readonly<Record<string, string>> = {
+  color: 'Colour',
+  spacing: 'Spacing & size',
+  radius: 'Radius',
+  typography: 'Typography',
+  elevation: 'Elevation',
+  'z-index': 'Z-index',
+  motion: 'Motion',
+  component: 'Component',
+};
 
 /**
  * How well `term` (lower-case) matches `text`: exact > prefix > word start
@@ -174,6 +206,7 @@ const KIND_BONUS: Readonly<Record<SearchKind, number>> = {
   page: 8,
   section: 4,
   api: 0,
+  token: 0,
 };
 
 /**
@@ -216,6 +249,7 @@ const GROUPS: readonly { kind: SearchKind; label: string; limit: number }[] = [
   { kind: 'page', label: 'Pages', limit: 6 },
   { kind: 'section', label: 'Sections', limit: 8 },
   { kind: 'api', label: 'API', limit: 10 },
+  { kind: 'token', label: 'Tokens', limit: 6 },
 ];
 
 /**
