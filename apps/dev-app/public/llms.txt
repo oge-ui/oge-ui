@@ -269,6 +269,8 @@ For code generation, prefer the full reference — it inlines every API table an
 - [Menubar](https://www.ogeui.com/components/menubar): Angular and React Menubar: a WAI-ARIA menubar with roving tabindex, nested submenus, vertical layout, cancelable open and close events and a hamburger collapse.
 - [Routed Menubar](https://www.ogeui.com/components/menubar/routed): Angular Menubar with the router: bind activeKey from the URL to mark aria-current="page" and navigate on itemClick, while url items stay real links.
 - [Licensing](https://www.ogeui.com/license): OGE UI licensing: open-core, with the suite MIT forever and six enterprise packages — Pivot, BPMN, Scheduler, Gantt, Kanban and Charts — commercial.
+- [Changelog](https://www.ogeui.com/changelog): OGE UI changelog: every release of the Angular and React packages, with new components, API additions, fixes and breaking changes, each linkable by version.
+- [Bundle size](https://www.ogeui.com/bundle-size): OGE UI bundle size: the gzip size of every published Angular, React and engine entry point, grouped by package and license, and how CI enforces each budget.
 
 ## Optional
 

@@ -33,15 +33,14 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { isMit, publishablePackages } from './release/publishable.mjs';
 
-/** ADR 0003 — the authoritative commercial list. */
-const COMMERCIAL_FAMILIES = [
-  'pivot',
-  'bpmn',
-  'scheduler',
-  'gantt',
-  'kanban',
-  'charts',
-];
+/**
+ * ADR 0003 — the authoritative commercial list, kept in
+ * `tools/commercial-families.json` so the docs site's bundle-size page marks
+ * the same packages this gate enforces.
+ */
+const COMMERCIAL_FAMILIES = JSON.parse(
+  readFileSync(new URL('./commercial-families.json', import.meta.url), 'utf8'),
+).families;
 const COMMERCIAL = new Set(
   COMMERCIAL_FAMILIES.flatMap((f) => [
     `@oge-ui/${f}`,

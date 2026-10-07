@@ -56,6 +56,26 @@
     </nav>
     <div class="flex items-center gap-2 max-md:ml-auto max-sm:gap-1">
       <!--
+        Search: the button and the Ctrl/⌘K + "/" shortcuts (SearchService)
+        are all the initial bundle carries; the palette and its index load
+        on first use (the @defer at the end of this file).
+      -->
+      <button
+        type="button"
+        class="app-search-trigger flex h-8 items-center gap-2 rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-gray-500 transition-colors hover:border-indigo-300 hover:text-gray-900 max-sm:w-8 max-sm:justify-center max-sm:border-transparent max-sm:bg-transparent max-sm:px-0 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:border-indigo-500/50 dark:hover:text-gray-100"
+        aria-label="Search the documentation"
+        aria-haspopup="dialog"
+        aria-keyshortcuts="Control+K Meta+K /"
+        (click)="search.open()"
+      >
+        <app-icon name="search" [size]="14" />
+        <span class="max-sm:hidden">Search</span>
+        <kbd
+          class="rounded border border-gray-200 px-1 font-mono text-[10.5px] text-gray-400 max-lg:hidden dark:border-white/10 dark:text-gray-500"
+          >{{ searchShortcut() }}</kbd
+        >
+      </button>
+      <!--
         docs version: this site is the latest release; archives are their own
         sites. Both header selects are deferred: they are the shell's only
         route into the overlay / inputs / behavior barrels, which do not
@@ -274,7 +294,12 @@
       class="mt-auto flex items-center justify-between border-t border-gray-200 px-2 pt-4 text-[12px] text-gray-400 dark:border-gray-800 dark:text-gray-500"
     >
       <span>OGE UI</span>
-      <span class="font-mono">v{{ version }}</span>
+      <a
+        routerLink="/changelog"
+        class="font-mono transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+        title="What's new — the changelog"
+        >v{{ version }}</a
+      >
     </div>
   </nav>
   }
@@ -300,3 +325,11 @@
     </div>
   </main>
 </div>
+<!--
+  The search palette loads on first use — Ctrl/⌘K, "/" or the header button
+  flip `search.requested()`; until then neither the palette nor its index is
+  fetched. Never rendered in the prerender.
+-->
+@defer (when search.requested()) {
+<app-search-palette />
+}

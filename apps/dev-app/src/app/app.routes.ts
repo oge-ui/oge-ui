@@ -1358,6 +1358,18 @@ export const appRoutes: Route[] = [
       import('./pages/license/license').then((m) => m.LicensePage),
     title: 'OGE — Licensing',
   },
+  {
+    path: 'changelog',
+    loadComponent: () =>
+      import('./pages/resources/changelog').then((m) => m.ChangelogPage),
+    title: 'OGE — Changelog',
+  },
+  {
+    path: 'bundle-size',
+    loadComponent: () =>
+      import('./pages/resources/bundle-size').then((m) => m.BundleSizePage),
+    title: 'OGE — Bundle size',
+  },
   // legacy redirects — the static host answers these with a 301 first
   // (vercel.json "redirects"); these keep client-side navigation working
   { path: 'basic-grid', redirectTo: 'components/data-grid' },

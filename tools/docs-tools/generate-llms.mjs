@@ -7,6 +7,8 @@
  *   apps/dev-app/public/llms/<pkg>.txt    one full reference per package
  *   packages/<pkg>/llms.txt               the same file, shipped in the tarball
  *   apps/dev-app/public/sitemap.xml       derived from app.routes.ts
+ *   apps/dev-app/public/search-index.json the Ctrl/⌘K palette's index (pages,
+ *                                         headings, API members)
  *
  * Everything is derived from the workspace — routes, `<app-api-reference>`
  * blocks, `*-api-data.ts` tables, entry-point exports and `*-snippets.ts` demo
@@ -53,6 +55,7 @@ import {
   buildSiteVersionFile,
 } from './lib/prose.mjs';
 import { readRoutes, readSeoDescriptions } from './lib/routes.mjs';
+import { buildSearchIndex } from './lib/search-index.mjs';
 import { readSnippets } from './lib/snippets.mjs';
 
 const workspaceRoot = process.cwd();
@@ -110,6 +113,16 @@ for (const [dir, doc] of docs) {
   artifacts.set(`packages/${dir}/llms.txt`, contents);
 }
 artifacts.set(`${PATHS.publicDir}/sitemap.xml`, buildSitemap());
+artifacts.set(
+  `${PATHS.publicDir}/search-index.json`,
+  await buildSearchIndex({
+    workspaceRoot,
+    routesFile: PATHS.routes,
+    routes,
+    seoDescriptions,
+    packages: PACKAGES,
+  }),
+);
 artifacts.set(
   'apps/dev-app/src/app/shared/site-version.ts',
   buildSiteVersionFile(version),

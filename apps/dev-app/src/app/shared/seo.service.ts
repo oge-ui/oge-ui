@@ -60,6 +60,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE UI licensing: open-core, with the suite MIT forever and six enterprise packages — Pivot, BPMN, Scheduler, Gantt, Kanban and Charts — commercial.',
   ],
   [
+    '/changelog',
+    'OGE UI changelog: every release of the Angular and React packages, with new components, API additions, fixes and breaking changes, each linkable by version.',
+  ],
+  [
+    '/bundle-size',
+    'OGE UI bundle size: the gzip size of every published Angular, React and engine entry point, grouped by package and license, and how CI enforces each budget.',
+  ],
+  [
     '/components/data-grid',
     'Data Grid for Angular and React: row and column virtualization, sorting, filtering, grouping, editing, master-detail, remote data and Excel/PDF export.',
   ],

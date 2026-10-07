@@ -1,0 +1,4 @@
+{
+  "$comment": "ADR 0003 — the authoritative commercial list. Each family covers @oge-ui/<f>, @oge-ui/<f>-engine and @oge-ui/react-<f>. Read by tools/license-boundary-check.mjs (the gate) and the docs site's /bundle-size page (the MIT / commercial marker).",
+  "families": ["pivot", "bpmn", "scheduler", "gantt", "kanban", "charts"]
+}

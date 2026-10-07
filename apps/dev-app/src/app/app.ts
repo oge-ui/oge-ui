@@ -1,6 +1,7 @@
 import {
   Component,
   DOCUMENT,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -25,6 +26,8 @@ import { Icon, type IconName } from './shared/icon';
 import { SITE_VERSION } from './shared/site-version';
 import { VersionMenu } from './shared/version-menu';
 import { SeoService } from './shared/seo.service';
+import { SearchPalette } from './shared/search/search-palette';
+import { SearchService } from './shared/search/search.service';
 import { ThemeService, type GridTheme } from './shared/theme.service';
 
 interface NavItem {
@@ -74,6 +77,7 @@ const COMPONENTS_GROUP = 'Components';
     ThemeLogo,
     OgeSelectBox,
     VersionMenu,
+    SearchPalette,
   ],
   selector: 'app-root',
   templateUrl: './app.html',
@@ -144,6 +148,13 @@ export class App {
           icon: 'book',
           file: true,
         },
+      ],
+    },
+    {
+      title: 'Resources',
+      items: [
+        { path: '/changelog', label: 'Changelog', icon: 'timeline' },
+        { path: '/bundle-size', label: 'Bundle size', icon: 'gauge' },
       ],
     },
     {
@@ -1050,8 +1061,24 @@ export class App {
   /** True once the page is scrolled — the header then settles onto its rule. */
   protected readonly scrolled = signal(false);
 
+  /** Ctrl/⌘K palette — the palette itself is deferred (see app.html). */
+  protected readonly search = inject(SearchService);
+
+  /**
+   * The shortcut hint on the search button. The prerender cannot know the
+   * reader's platform, so it renders "Ctrl K" and Apple devices swap in "⌘K"
+   * after hydration.
+   */
+  protected readonly searchShortcut = signal('Ctrl K');
+
   constructor() {
     if (typeof window !== 'undefined') {
+      this.search.listen();
+      afterNextRender(() => {
+        if (/Mac|iPhone|iPad/.test(navigator.userAgent)) {
+          this.searchShortcut.set('⌘K');
+        }
+      });
       const onScroll = (): void => {
         const isScrolled = window.scrollY > 4;
         if (isScrolled !== this.scrolled()) this.scrolled.set(isScrolled);

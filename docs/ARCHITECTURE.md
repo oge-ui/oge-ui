@@ -2161,13 +2161,14 @@ React demo cannot silently exit the gate.
 Coding assistants are a first-class docs audience: they read the repo, `node_modules`, and whatever
 the site serves. Three artifacts serve them, all **generated and committed**:
 
-| Artifact                             | Purpose                                                      |
-| ------------------------------------ | ------------------------------------------------------------ |
-| `apps/dev-app/public/llms.txt`       | [llmstxt.org](https://llmstxt.org) index of packages + pages |
-| `apps/dev-app/public/llms-full.txt`  | conventions, every API member, every demo — one file         |
-| `apps/dev-app/public/llms/<pkg>.txt` | one self-contained reference per package                     |
-| `packages/<pkg>/llms.txt`            | same file, shipped in the tarball via `assets`               |
-| `apps/dev-app/public/sitemap.xml`    | generated from `app.routes.ts` (no longer hand-maintained)   |
+| Artifact                                | Purpose                                                      |
+| --------------------------------------- | ------------------------------------------------------------ |
+| `apps/dev-app/public/llms.txt`          | [llmstxt.org](https://llmstxt.org) index of packages + pages |
+| `apps/dev-app/public/llms-full.txt`     | conventions, every API member, every demo — one file         |
+| `apps/dev-app/public/llms/<pkg>.txt`    | one self-contained reference per package                     |
+| `packages/<pkg>/llms.txt`               | same file, shipped in the tarball via `assets`               |
+| `apps/dev-app/public/sitemap.xml`       | generated from `app.routes.ts` (no longer hand-maintained)   |
+| `apps/dev-app/public/search-index.json` | the Ctrl/⌘K palette's index: pages, headings, API members    |
 
 Everything is **derived from the workspace**, never hand-written twice: routes from `app.routes.ts`,
 link notes from `SeoService.DESCRIPTIONS`, member tables from each API page's
@@ -2263,6 +2264,44 @@ Archiving a version, once per line:
    the same path on that origin.
 
 Archive branches take no feature work; only a fix that keeps the old site building is allowed.
+
+### Docs site: search, changelog, bundle size
+
+**Search (Ctrl/⌘K, `/`, the header button)** lives in `shared/search/`:
+
+- `search-index.json` is **generated and committed** by `docs-tools:llms`
+  (`tools/docs-tools/lib/search-index.mjs`) and checked by `llms-check`, like the sitemap — so
+  `dev-app:serve`, the prerender, the e2e suites and the Vercel build all read the same file with no
+  build-order wiring. It holds every titled route (label, family, SEO description), every
+  `<app-demo-card heading>` and `<h2|h3 id>` heading of each route's page file, and every
+  `<app-api-reference>` block with its member names per table, anchored at `#<block>-<table>`.
+  Changing a demo heading, an api-data row, a route title or an SEO description therefore means
+  re-running `llms` — the gate says so.
+- **Framework tags**: a page's frameworks come from `FrameworkService`'s coverage table at runtime
+  (one source of truth). A heading or API block from a page that branches on the switch is tagged
+  `angular`; the `react-*` page modules it imports (followed transitively) are tagged `react`.
+  Results in the reader's framework rank first; others carry an "_X_ only" badge, and opening one
+  switches the site to that layer.
+- The palette is the WAI-ARIA combobox + listbox pattern inside a native modal `<dialog>`, loaded
+  by `@defer (when search.requested())` — the initial bundle carries only `SearchService` (open
+  state + the global shortcuts) and the header button. Recent picks live in `localStorage`
+  (`oge-docs-recent-searches`, every access in try/catch). Rendering is template-only (no
+  `innerHTML`), so it holds under the strict-CSP / Trusted Types run.
+
+**`/changelog`** imports the repository's `CHANGELOG.md` as text (the `.md` loader in the
+`dev-app` `project.json`) and parses it with `pages/resources/changelog-markdown.ts` — a reader for
+the subset the file uses (`##` releases, `###` groups, nested bullets, code / strong / em / links)
+into data, then serializes each body itself — every text escaped, a fixed set of tags, links
+limited to http(s), mailto and anchors (repo-relative paths become GitHub links) — and binds it
+through Angular's sanitizer. Headings stay template elements. (A recursive-template rendering made
+the prerendered page 1.6 MB, mostly hydration bookkeeping for ~40 000 comment anchors — bind long
+generated prose as one string per section.) Anchors: `#v<version-slug>` (`#v1-1-2`, `#unreleased` — the `v` keeps the id a valid CSS identifier)
+and `#<release>-<group-slug>`. Nothing is generated, so editing `CHANGELOG.md` never fails a gate.
+
+**`/bundle-size`** imports `tools/size-budgets.json` (the baseline `size-check` enforces) and
+`tools/commercial-families.json` (the ADR 0003 list, also read by `license-boundary-check.mjs`).
+Both pages sit in the sidebar's **Resources** section; the sidebar and home-footer version badges
+link to `/changelog`.
 
 ## SSR and hydration
 
@@ -2401,7 +2440,8 @@ Nx targets build first.
 - `npx nx run @oge/source:size-check` — gzip size per published entry point (entry + its
   package-internal chunks), baseline `tools/size-budgets.json`, fails on > 10 % growth or a new
   entry without a number. Intended growth: `node tools/size-check.mjs --update` and say why in the PR.
-  TODO (W6): show these numbers on the docs site — there is no bundle-size page yet.
+  The docs site's `/bundle-size` page renders this baseline at build time (see "Docs site: search,
+  changelog, bundle size"), so a re-baseline shows up there with the next deploy.
 - `npx nx run @oge/source:api-check` — public-API snapshots of the MIT substrate,
   `@oge-ui/core` and `@oge-ui/behavior` (every `exports` entry with types): API Extractor
   (pinned `npx`, no devDependency) reads the **dist** declarations and the report must equal

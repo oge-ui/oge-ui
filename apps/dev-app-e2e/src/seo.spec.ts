@@ -10,6 +10,8 @@ const PAGES = [
   '/components',
   '/ai',
   '/license',
+  '/changelog',
+  '/bundle-size',
   '/getting-started',
   '/getting-started/setup',
   '/components/data-grid',

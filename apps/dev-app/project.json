@@ -10,6 +10,13 @@
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/CHANGELOG.md",
+        "{workspaceRoot}/tools/size-budgets.json",
+        "{workspaceRoot}/tools/commercial-families.json"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/dev-app",
@@ -19,6 +26,7 @@
         "prerender": { "discoverRoutes": true },
         "tsConfig": "apps/dev-app/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
+        "loader": { ".md": "text" },
         "assets": [
           {
             "glob": "**/*",

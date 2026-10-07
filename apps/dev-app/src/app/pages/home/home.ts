@@ -886,8 +886,11 @@ const ORG: OrgNode[] = [
             <span class="text-[12px] text-[#555d6b]"
               >© 2026 OGE UI · MIT License</span
             >
-            <span class="font-mono text-[11px] text-[#555d6b] max-sm:hidden"
-              >v{{ version }}</span
+            <a
+              routerLink="/changelog"
+              class="font-mono text-[11px] text-[#555d6b] hover:text-[#9aa3b2] max-sm:hidden"
+              title="What's new — the changelog"
+              >v{{ version }}</a
             >
             <span class="ml-auto font-mono text-[11px] text-[#555d6b]"
               >signals all the way down</span

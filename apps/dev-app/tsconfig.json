@@ -9,6 +9,7 @@
     "isolatedModules": true,
     "emitDecoratorMetadata": false,
     "module": "preserve",
+    "resolveJsonModule": true,
     "jsx": "react-jsx"
   },
   "angularCompilerOptions": {
