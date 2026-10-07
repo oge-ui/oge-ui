@@ -95,6 +95,11 @@ Predictable wrong guesses, and what to write instead.
 - values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeWindow`, `applyMenuItemCheck`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
 - types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
 
+`@oge-ui/overlay/testing`
+
+- values: `OgeModalHarness`
+- types: `OgeModalHarnessFilters`
+
 ## API reference
 
 ### OgeModal — `<oge-modal>`
@@ -744,6 +749,56 @@ _Scroll lock_
 | --- | --- | --- |
 | `lockBodyScroll(): void` | `void` | Locks body scroll and compensates for the scrollbar width. Ref-counted, so nested surfaces cannot unlock each other. |
 | `unlockBodyScroll(): void` | `void` | Releases one reference; the last release restores the inline styles exactly as they were. |
+
+### OgeModalHarness
+
+#### Properties
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-modal'` | Static. The host selector the CDK loader matches — import from `@oge-ui/overlay/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+
+#### Methods
+
+_Finding the modal_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `with(filters?: OgeModalHarnessFilters)` | `HarnessPredicate<OgeModalHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `title` (string or RegExp) and `open`. Service-opened modals live in `document.body`: use `TestbedHarnessEnvironment.documentRootLoader(fixture)`. |
+
+_State_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `Promise<boolean>` | Whether the modal is open (its panel is rendered). |
+| `getTitle()` | `Promise<string>` | The title — the heading’s text, or the `aria-label` of an untitled modal. |
+| `getRole()` | `Promise<string \| null>` | The panel's role: `'dialog'` or `'alertdialog'`. |
+| `isBusy()` | `Promise<boolean>` | Whether the modal reports `aria-busy`. |
+| `getContentText()` | `Promise<string>` | Text of the modal body (the projected content). |
+
+_Actions_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getButtonTexts()` | `Promise<string[]>` | Labels of the action buttons — the footer’s, or an alert / confirm / prompt dialog’s; text, or `aria-label` when empty. |
+| `clickButton(label: string \| RegExp)` | `Promise<void>` | Clicks the matching action button; throws with the button list when none matches. |
+| `close()` | `Promise<void>` | Clicks the header’s close (✕) button — the full close pipeline runs. |
+| `pressEscape()` | `Promise<void>` | Presses Escape inside the modal (`closeOnEscape`). |
+| `clickBackdrop()` | `Promise<void>` | Presses on the backdrop outside the panel (`closeOnBackdropClick`). |
+
+_Content container_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getHarness / getHarnessOrNull / getAllHarnesses / getChildLoader` | `ContentContainerComponentHarness` | Search the open panel for other harnesses — the editors of a modal form are one call away. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeModalHarnessFilters` | `BaseHarnessFilters & { title?: string \| RegExp; open?: boolean }` | Options of `OgeModalHarness.with()`. |
 
 ## Demos
 

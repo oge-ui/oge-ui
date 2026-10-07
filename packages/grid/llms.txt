@@ -95,6 +95,11 @@ Predictable wrong guesses, and what to write instead.
 - values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgePagerInfoTemplate`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
 - types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnFormat`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`, `OgeValueFormat`, `OgeValueFormatType`
 
+`@oge-ui/grid/testing`
+
+- values: `OgeGridHarness`, `OgeGridRowHarness`
+- types: `OgeGridHarnessFilters`, `OgeGridRowHarnessFilters`, `OgeGridSortDirection`
+
 `@oge-ui/grid/export-pdf`
 
 - values: `buildPdfDocument`, `exportGridToPdf`
@@ -534,6 +539,84 @@ _Ranges, formats, spans & drag_
 | `OgePagerInfoTemplate` | `directive` | `*ogePagerInfoTemplate="let info"` replaces the pager’s info text; `info` is `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` add first/last buttons and a go-to-page input. |
 | `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
 | `messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern` | `string` | Header filter menu sections and condition names, pager first/last/go-to-page labels (`of {count}`) and the interval group captions (`Week of {date}`, `Q{quarter} {year}`, `{from} – {to}`). |
+
+### OgeGridHarness
+
+#### Properties
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-grid'` | Static. The host selector the CDK loader matches — import from `@oge-ui/grid/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+
+#### Methods
+
+_Finding the grid_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `with(filters?: OgeGridHarnessFilters)` | `HarnessPredicate<OgeGridHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor` and `column` (a caption the grid must have, string or RegExp). |
+
+_Rows & cells_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getColumnCaptions()` | `Promise<string[]>` | Captions of the data columns, in display order. |
+| `getRows(filter?: OgeGridRowHarnessFilters)` | `Promise<OgeGridRowHarness[]>` | The rendered body rows (data and row-template rows; pinned, group and filler rows excluded), optionally filtered by `text` or `selected`. |
+| `getRowCount()` | `Promise<number>` | Number of rendered body rows — the window of a virtualized grid, the page of a paged one. |
+| `getCellTexts()` | `Promise<string[][]>` | Every rendered row’s data-cell texts (trimmed, whitespace collapsed). |
+| `getCellText(rowIndex: number, column: string \| number)` | `Promise<string>` | Text of one cell. A column is its caption (exact, trimmed) or its 0-based position among the data columns. |
+| `isEmpty()` | `Promise<boolean>` | Whether the "no data" row is shown. |
+
+_Sorting_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `sortBy(column: string \| number, modifiers?: { shift?, control? })` | `Promise<void>` | Clicks the column header — one step of the sort cycle; `shift` adds the column to a multi-column sort. |
+| `getSortDirection(column: string \| number)` | `Promise<'asc' \| 'desc' \| 'none'>` | The column’s sort state, read from the header’s `aria-sort`. |
+
+_Filter row_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hasFilterRow()` | `Promise<boolean>` | Whether the filter row is shown. |
+| `setFilter(column: string \| number, text: string)` | `Promise<void>` | Replaces a column’s filter-row text (Enter commits a date filter; `''` clears) and waits out the debounce. Boolean and lookup filters are select boxes: drive them with `OgeSelectBoxHarness.with({ label: 'Filter <caption>' })`. |
+| `getFilterText(column: string \| number)` | `Promise<string>` | The current text of a column’s filter-row editor. |
+
+_Paging_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hasPager()` | `Promise<boolean>` | Whether the grid shows a pager. |
+| `getCurrentPage()` | `Promise<number>` | The current page, 1-based — from the current page button, the go-to-page input or the compact `n / m` text. |
+| `goToPage(page: number)` | `Promise<void>` | Goes to a 1-based page: its page button when listed, otherwise the go-to-page input (`showPageInput`). |
+| `nextPage() / previousPage()` | `Promise<void>` | Clicks the pager’s next / previous page button. |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `toggleRowSelection(rowIndex: number)` | `Promise<void>` | Toggles a row’s selection: its checkbox in `selectionMode: 'checkbox'`, otherwise a click on its first data cell. |
+| `isRowSelected(rowIndex: number)` | `Promise<boolean>` | Whether a row is selected (`aria-selected="true"`). |
+| `getSelectedRowIndexes()` | `Promise<number[]>` | 0-based indexes of the selected rendered rows. |
+| `toggleSelectAll()` | `Promise<void>` | Clicks the header’s select-all checkbox. |
+
+_Editing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `editCell(rowIndex: number, column: string \| number, text: string)` | `Promise<void>` | Edits a cell as a keyboard user does: focus, F2 (unless the row is already editing), replace the text, Enter — which commits per the edit mode. Text, number and date editors. |
+| `isCellEditing(rowIndex: number, column: string \| number)` | `Promise<boolean>` | Whether a cell shows its editor. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridHarnessFilters` | `BaseHarnessFilters & { column?: string \| RegExp }` | Options of `OgeGridHarness.with()`. |
+| `OgeGridRowHarness` | `ComponentHarness` | One body row: `getCellTexts()`, `getCell(columnIndex)` (a `TestElement`), `isSelected()`, `toggleSelection()`; `OgeGridRowHarness.with({ text, selected })`. |
+| `OgeGridRowHarnessFilters` | `BaseHarnessFilters & { text?: string \| RegExp; selected?: boolean }` | Options of `OgeGridRowHarness.with()` and `getRows()`. |
+| `OgeGridSortDirection` | `'asc' \| 'desc' \| 'none'` | A column’s sort state. |
 
 ## Demos
 

@@ -2716,6 +2716,175 @@ _OgeInputsMessages_
 | `hourColumnLabel / minuteColumnLabel / secondColumnLabel / dayPeriodColumnLabel` | `string` | `'Hours' / 'Minutes' / 'Seconds' / 'AM/PM'` | Aria labels of the time picker columns (`timeView: 'columns'`). |
 | `segmentDay / segmentMonth / segmentYear / segmentHour / segmentMinute / segmentSecond / segmentDayPeriod` | `string` | `'dd' / 'mm' / 'yyyy' / 'hh' / 'mm' / 'ss' / '--'` | Empty-segment placeholders of the masked date entry (`useMaskBehavior`) — translate them with the UI (`TT.MM.JJJJ`). |
 
+### OgeTextBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-text-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeTextBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
+
+### OgeNumberBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-number-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeNumberBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Spin_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `increment() / decrement()` | `Promise<void>` | One step up / down with ArrowUp / ArrowDown, which commits immediately. `getValue()` is the formatted text — pin `locale` in specs. |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
+
+### OgeSelectBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-select-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeSelectBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `Promise<boolean>` | Whether the popup is open (`aria-expanded="true"`). |
+| `open() / close()` | `Promise<void>` | Opens the popup with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Options_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getOptions(filter?: OgeSelectOptionFilter)` | `Promise<string[]>` | Texts of the listed options (opens the popup); the listbox is found through `aria-controls` from the document root. |
+| `selectOption(text: string \| RegExp)` | `Promise<void>` | Opens the popup and clicks the first matching option; throws with the option list when none matches. |
+| `getSelectedOptionText()` | `Promise<string \| null>` | Text of the `aria-selected` option of the open list. |
+| `search(text: string)` | `Promise<void>` | Types into the search field (`searchEnabled`). |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSelectOptionFilter` | `{ text?: string \| RegExp }` | Filter of `getOptions()`. |
+
+### OgeDateBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-date-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeDateBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `Promise<boolean>` | Whether the picker is open (`aria-expanded="true"`). |
+| `open() / close()` | `Promise<void>` | Opens the picker with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Calendar_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getCalendarTitle()` | `Promise<string>` | The heading of the month on show (`"March 2026"`). |
+| `nextMonth() / previousMonth()` | `Promise<void>` | Moves the picker one month. |
+| `selectDay(day: number)` | `Promise<void>` | Opens the picker and clicks a day of the month on show (adjacent months’ days skipped); a date-only box commits and closes. |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.

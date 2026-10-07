@@ -31,6 +31,12 @@ import {
   OGE_REACT_TEXT_BOX_API,
   OGE_REACT_TREE_SELECT_API,
 } from './react-inputs-api-data';
+import {
+  OGE_REACT_DATE_BOX_TESTING_API,
+  OGE_REACT_NUMBER_BOX_TESTING_API,
+  OGE_REACT_SELECT_BOX_TESTING_API,
+  OGE_REACT_TEXT_BOX_TESTING_API,
+} from './react-inputs-testing-api-data';
 
 /**
  * The React half of the inputs API reference.
@@ -116,6 +122,16 @@ import {
     <app-api-reference title="&lt;OgeMention&gt;" [sections]="mentionApi" />
     <app-api-reference title="Shared input types" [sections]="typesApi" />
     <app-api-reference title="Inputs configuration" [sections]="configApi" />
+    <app-api-reference title="getTextBox()" [sections]="textBoxTestingApi" />
+    <app-api-reference
+      title="getNumberBox()"
+      [sections]="numberBoxTestingApi"
+    />
+    <app-api-reference
+      title="getSelectBox()"
+      [sections]="selectBoxTestingApi"
+    />
+    <app-api-reference title="getDateBox()" [sections]="dateBoxTestingApi" />
   `,
 })
 export class ReactInputsApiSections {
@@ -149,4 +165,8 @@ export class ReactInputsApiSections {
   protected readonly mentionApi = OGE_REACT_MENTION_API;
   protected readonly typesApi = OGE_REACT_INPUTS_TYPES_API;
   protected readonly configApi = OGE_REACT_INPUTS_CONFIG_API;
+  protected readonly textBoxTestingApi = OGE_REACT_TEXT_BOX_TESTING_API;
+  protected readonly numberBoxTestingApi = OGE_REACT_NUMBER_BOX_TESTING_API;
+  protected readonly selectBoxTestingApi = OGE_REACT_SELECT_BOX_TESTING_API;
+  protected readonly dateBoxTestingApi = OGE_REACT_DATE_BOX_TESTING_API;
 }

@@ -94,7 +94,7 @@ export class GuidesIndexPage {
           title: 'Testing',
           icon: 'check-square',
           summary:
-            'TestBed and React Testing Library recipes, stable selectors, jsdom gaps, Playwright tips.',
+            'CDK harnesses and Testing Library helpers, TestBed and RTL recipes, stable selectors, jsdom gaps, Playwright tips.',
         },
       ],
     },

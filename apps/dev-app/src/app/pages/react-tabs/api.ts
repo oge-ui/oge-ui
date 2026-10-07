@@ -6,6 +6,7 @@ import {
   OGE_REACT_TAB_API,
   OGE_REACT_TAB_PANEL_API,
 } from './react-tabs-api-data';
+import { OGE_REACT_TABS_TESTING_API } from './react-tabs-testing-api-data';
 
 /**
  * The React half of the tabs API reference.
@@ -33,6 +34,7 @@ import {
     <app-api-reference title="&lt;OgeTabs&gt;" [sections]="tabsApi" />
     <app-api-reference title="OgeTab (OgeTabDefinition)" [sections]="tabApi" />
     <app-api-reference title="Tabs configuration" [sections]="configApi" />
+    <app-api-reference title="getTabs()" [sections]="testingApi" />
   `,
 })
 export class ReactTabsApiSections {
@@ -40,4 +42,5 @@ export class ReactTabsApiSections {
   protected readonly tabsApi = OGE_REACT_TABS_API;
   protected readonly tabApi = OGE_REACT_TAB_API;
   protected readonly configApi = OGE_REACT_TABS_CONFIG_API;
+  protected readonly testingApi = OGE_REACT_TABS_TESTING_API;
 }

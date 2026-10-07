@@ -6,14 +6,19 @@ import { PageToc } from '../../shared/page-toc';
 import { GuideTable } from './guide-table';
 import {
   ANGULAR_SPEC,
+  HARNESS_COMPONENT,
+  HARNESS_SPEC,
   JSDOM_STUBS,
   PLAYWRIGHT,
   REACT_SPEC,
+  RTL_COMPONENT,
+  RTL_SPEC,
   VITEST_SETUP,
 } from './testing-snippets';
 
 const SECTIONS = [
   'Unit tests',
+  'Harnesses and helpers',
   'Querying OGE components',
   'jsdom gaps',
   'End-to-end with Playwright',
@@ -66,12 +71,64 @@ const SECTIONS = [
       </p>
       <app-code-block [code]="angularSpec" language="ts" />
     }
-    <p>
-      <strong>Component harnesses are not shipped yet.</strong> There is no
-      <code>&#64;oge-ui/&lt;pkg&gt;/testing</code> entry point today; query the
-      DOM as above. Planned: CDK harnesses for the grid, select box, date box,
-      modal and tabs, plus React Testing Library helpers.
-    </p>
+
+    <h2 id="harnesses-and-helpers" class="scroll-mt-20">
+      Harnesses and helpers
+    </h2>
+    @if (fw.isReact()) {
+      <p>
+        The grid, the select box, date box, text box and number box, the modal
+        and the tabs ship <strong>React Testing Library helpers</strong> in a
+        <code>/testing</code> entry of their package. Each
+        <code>get*()</code> finds one component in a container and returns a
+        typed object — the same member names as the Angular CDK harnesses —
+        whose reads are synchronous and whose actions fire events through
+        Testing Library, so <code>&#64;testing-library/react</code> wraps them
+        in <code>act</code>. Work a component finishes later (the grid's filter
+        debounce, an async close guard) is asserted with
+        <code>await waitFor(…)</code>, as anywhere in RTL. The main entries
+        never import these, and <code>&#64;testing-library/dom</code> is an
+        optional peer only the testing entries need. Each helper has its own
+        spec against the real component under <code>&lt;StrictMode&gt;</code>.
+      </p>
+      <app-guide-table
+        caption="Testing Library helper entry points"
+        [head]="['Import from', 'Helpers', 'Drives']"
+        [rows]="reactHelpers"
+      />
+      <app-code-block [code]="rtlComponent" language="tsx" />
+      <app-code-block [code]="rtlSpec" language="tsx" />
+    } @else {
+      <p>
+        The grid, the select box, date box, text box and number box, the modal
+        and the tabs ship <strong>Angular CDK component harnesses</strong> in a
+        <code>/testing</code> secondary entry point of their package. A harness
+        reads the component through the same ARIA roles and
+        <code>.oge-*</code> classes a user's assistive technology sees, and
+        waits for the fixture to settle after every action. Install
+        <code>&#64;angular/cdk</code> as a dev dependency: it is an optional
+        peer that only the testing entries import, and the main entries never
+        import a testing entry. Every harness has a spec against the real
+        component with <code>TestbedHarnessEnvironment</code>, and the grid's
+        also runs in a zoneless TestBed.
+      </p>
+      <app-guide-table
+        caption="Component harness entry points"
+        [head]="['Import from', 'Harnesses', 'Drives']"
+        [rows]="angularHarnesses"
+      />
+      <p>
+        Modals opened by <code>OgeModalService</code> (alert, confirm, prompt
+        included) render into <code>document.body</code>: find them with
+        <code>TestbedHarnessEnvironment.documentRootLoader(fixture)</code>. In a
+        zoneless TestBed the harness waits for change detection but not for
+        timers, so give the grid's filter row
+        <code>provideOgeGridConfig({{ '{' }} filterDebounce: 0 {{ '}' }})</code
+        >.
+      </p>
+      <app-code-block [code]="harnessComponent" language="ts" />
+      <app-code-block [code]="harnessSpec" language="ts" />
+    }
 
     <h2 id="querying-oge-components" class="scroll-mt-20">
       Querying OGE components
@@ -134,6 +191,56 @@ export class GuideTestingPage {
   protected readonly vitestSetup = VITEST_SETUP;
   protected readonly jsdomStubs = JSDOM_STUBS;
   protected readonly playwright = PLAYWRIGHT;
+  protected readonly harnessComponent = HARNESS_COMPONENT;
+  protected readonly harnessSpec = HARNESS_SPEC;
+  protected readonly rtlComponent = RTL_COMPONENT;
+  protected readonly rtlSpec = RTL_SPEC;
+
+  protected readonly angularHarnesses = [
+    [
+      '`@oge-ui/grid/testing`',
+      '`OgeGridHarness`, `OgeGridRowHarness`',
+      'Rows and cells as text, header sorting and `aria-sort`, the filter row, the pager, row selection, F2 cell editing',
+    ],
+    [
+      '`@oge-ui/inputs/testing`',
+      '`OgeSelectBoxHarness`, `OgeDateBoxHarness`, `OgeTextBoxHarness`, `OgeNumberBoxHarness`',
+      'Value, label, disabled / invalid / required state, open and close, options and `selectOption(text)`, calendar days, keyboard spin',
+    ],
+    [
+      '`@oge-ui/overlay/testing`',
+      '`OgeModalHarness`',
+      'Open state, title, role, content, action buttons, close via ✕, Escape or backdrop; harnesses inside the panel',
+    ],
+    [
+      '`@oge-ui/tabs/testing`',
+      '`OgeTabsHarness`',
+      'Tab labels, the selected tab, `selectTab(label)`, disabled and closable tabs, the visible panel',
+    ],
+  ];
+
+  protected readonly reactHelpers = [
+    [
+      '`@oge-ui/react-grid/testing`',
+      '`getGrid()`, `getAllGrids()`',
+      'Rows and cells as text, header sorting and `aria-sort`, the filter row, the pager, row selection, F2 cell editing',
+    ],
+    [
+      '`@oge-ui/react-inputs/testing`',
+      '`getSelectBox()`, `getDateBox()`, `getTextBox()`, `getNumberBox()` (and `getAll*`), `selectOption()`',
+      'Value, label, disabled / invalid / required state, open and close, options, calendar days, keyboard spin',
+    ],
+    [
+      '`@oge-ui/react-overlay/testing`',
+      '`getModal()`, `getAllModals()`',
+      'Title, role, content, action buttons, close via ✕, Escape or backdrop — dialogs from `useOgeModals()` included',
+    ],
+    [
+      '`@oge-ui/react-tabs/testing`',
+      '`getTabs()`, `getAllTabs()`, `selectTab()`',
+      'Tab labels, the selected tab, selecting by label, disabled and closable tabs, the visible panel',
+    ],
+  ];
 
   protected readonly queries = [
     [

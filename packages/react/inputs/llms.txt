@@ -2807,6 +2807,230 @@ _OgeInputsConfig_
 | `dataPageSize` | `number` | `30` | Rows a list editor asks its `dataSource` for per page (select box, tag box, autocomplete, multi-column combo box). |
 | `messages` | `OgeInputsMessages` | `—` | User-facing strings — the same key set the Angular package documents (clear/reveal/copy/spin labels, counter patterns and the validation messages). |
 
+### getTextBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTextBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeInputQueries` | The one `<OgeTextBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllTextBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeInputQueries[]` | Every matching editor in the container. |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+### getNumberBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getNumberBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeNumberBoxQueries` | The one `<OgeNumberBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllNumberBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeNumberBoxQueries[]` | Every matching editor in the container. |
+
+_Spin_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `increment() / decrement()` | `void` | One step up / down with ArrowUp / ArrowDown, which commits immediately. `getValue()` is the formatted text — pin `locale` in specs. |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeNumberBoxQueries` | `OgeInputQueries & { increment(), decrement() }` | What `getNumberBox()` returns. |
+
+### getSelectBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSelectBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeSelectBoxQueries` | The one `<OgeSelectBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllSelectBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeSelectBoxQueries[]` | Every matching editor in the container. |
+
+_Shortcut_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectOption(selectBox: HTMLElement \| OgeSelectBoxQueries, text: string \| RegExp)` | `void` | Picks an option from any element inside a select box (its combobox from `getByRole`, its root) or its queries object. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `boolean` | Whether the popup is open (`aria-expanded="true"`). |
+| `open() / close()` | `void` | Opens the popup with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Options_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getOptions(filter?: OgeSelectOptionFilter)` | `string[]` | Texts of the listed options (opens the popup); the listbox is found through `aria-controls` in the document. |
+| `selectOption(text: string \| RegExp)` | `void` | Opens the popup and clicks the first matching option; throws with the option list when none matches. |
+| `getSelectedOptionText()` | `string \| null` | Text of the `aria-selected` option of the open list. |
+| `search(text: string)` | `void` | Types into the search field (`searchEnabled`). |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSelectBoxQueries` | `OgeInputQueries & { popup and option members }` | What `getSelectBox()` returns. |
+| `OgeSelectOptionFilter` | `{ text?: string \| RegExp }` | Filter of `getOptions()`. |
+
+### getDateBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getDateBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeDateBoxQueries` | The one `<OgeDateBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllDateBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeDateBoxQueries[]` | Every matching editor in the container. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `boolean` | Whether the picker is open (`aria-expanded="true"`). |
+| `open() / close()` | `void` | Opens the picker with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Calendar_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getCalendarTitle()` | `string` | The heading of the month on show (`"March 2026"`). |
+| `nextMonth() / previousMonth()` | `void` | Moves the picker one month. |
+| `selectDay(day: number)` | `void` | Opens the picker and clicks a day of the month on show (adjacent months’ days skipped); a date-only box commits and closes. |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDateBoxQueries` | `OgeInputQueries & { popup and calendar members }` | What `getDateBox()` returns. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.

@@ -54,6 +54,21 @@ const STYLING_IDIOM =
 const JSX_CHILDREN =
   'JSX content projection; Angular projects via <ng-content> and needs no member.';
 
+/**
+ * W6e testing helpers: each family pairs its Angular CDK harness block with
+ * its React Testing Library queries block (`blockPairs`). Their members share
+ * names; these are the deliberate differences of the two idioms.
+ */
+const HARNESS_ANGULAR_ONLY = {
+  hostselector:
+    'Static member of a CDK `ComponentHarness`: the selector the HarnessLoader matches. The React helpers find their element with `get*()` / `getAll*()` instead (excepted on the React side).',
+  with: 'Static `HarnessPredicate` factory of a CDK harness (`loader.getHarness(X.with({…}))`); the React finders take the same filters as their second argument.',
+};
+const RTL_ELEMENT =
+  'The React queries object exposes its DOM element so Testing Library queries can be scoped (`within(x.element)`); a CDK harness keeps its host behind `host()` and child loaders.';
+const RTL_FINDER =
+  'Entry function of the React Testing Library helpers, standing in for `loader.getHarness(X.with(…))` / `getAllHarnesses(…)` on the Angular side.';
+
 /** @type {ParityFamily[]} */
 const FAMILIES = [
   {
@@ -105,11 +120,16 @@ const FAMILIES = [
     angularApiPage: 'apps/dev-app/src/app/pages/tabs/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-tabs/api.ts',
     exceptions: {
+      blockPairs: { ogetabsharness: 'gettabs' },
+      angularOnly: { ...HARNESS_ANGULAR_ONLY },
       pairs: {
         // angular ↔ react (both already normalized): deliberate renames
         provideogetabsconfig: 'ogetabsconfigprovider', // DI provider ↔ context provider
       },
       reactOnly: {
+        element: RTL_ELEMENT,
+        gettabs: RTL_FINDER,
+        getalltabs: RTL_FINDER,
         tabs: 'The `tabs` prop of OgeTabDefinition objects replaces Angular’s projected <oge-tab> children — the same fields, documented as the "OgeTab (OgeTabDefinition)" block.',
         content:
           'Panel content of an OgeTabDefinition; Angular projects it into <oge-tab> via <ng-content> and needs no member.',
@@ -489,6 +509,12 @@ const FAMILIES = [
     angularApiPage: 'apps/dev-app/src/app/pages/inputs/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-inputs/api.ts',
     exceptions: {
+      blockPairs: {
+        ogetextboxharness: 'gettextbox',
+        ogenumberboxharness: 'getnumberbox',
+        ogeselectboxharness: 'getselectbox',
+        ogedateboxharness: 'getdatebox',
+      },
       pairs: {
         // angular ↔ react (both already normalized): deliberate renames
         itemtemplate: 'renderitem', // TemplateRef ↔ render prop
@@ -510,6 +536,7 @@ const FAMILIES = [
         provideogeinputsconfig: 'ogeinputsconfigprovider', // DI provider ↔ context provider
       },
       angularOnly: {
+        ...HARNESS_ANGULAR_ONLY,
         reset:
           'Public method that also resets a bound reactive-forms control; React has no forms binding to reset, so the handles expose clear() and the app owns the rest of the state.',
         touch:
@@ -528,6 +555,17 @@ const FAMILIES = [
           'Locale helper exported for consumers building their own date editors; it stays in @oge-ui/inputs until the shared date kernel moves to @oge-ui/behavior.',
       },
       reactOnly: {
+        element: RTL_ELEMENT,
+        input:
+          'The queries object also hands out the native `<input>` for Testing Library matchers (`toHaveValue`, `toHaveFocus`); a CDK harness wraps it in its own reads.',
+        gettextbox: RTL_FINDER,
+        getalltextboxes: RTL_FINDER,
+        getnumberbox: RTL_FINDER,
+        getallnumberboxes: RTL_FINDER,
+        getselectbox: RTL_FINDER,
+        getallselectboxes: RTL_FINDER,
+        getdatebox: RTL_FINDER,
+        getalldateboxes: RTL_FINDER,
         classname:
           'React host styling idiom; Angular hosts take class/style natively.',
         style:
@@ -812,6 +850,7 @@ const FAMILIES = [
     angularApiPage: 'apps/dev-app/src/app/pages/overlay/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-overlay/api.ts',
     exceptions: {
+      blockPairs: { ogemodalharness: 'getmodal' },
       pairs: {
         // angular ↔ react (both already normalized): deliberate renames
         ogemodaltitle: 'rendertitle', // structural directive ↔ render prop
@@ -851,6 +890,15 @@ const FAMILIES = [
         ogeadaptiveviewport: 'useogeadaptiveviewport',
       },
       angularOnly: {
+        ...HARNESS_ANGULAR_ONLY,
+        getharness:
+          'The CDK `ContentContainerComponentHarness` API: harnesses of the content inside the open modal. React scopes Testing Library queries with `within(modal.element)` instead (see `element`).',
+        getharnessornull:
+          'Content-container API of the CDK harness — see `getharness`.',
+        getallharnesses:
+          'Content-container API of the CDK harness — see `getharness`.',
+        getchildloader:
+          'Content-container API of the CDK harness — see `getharness`.',
         destroy:
           'The Angular panel model is torn down from DestroyRef; the React hook destroys its machine on unmount, so there is no member to call.',
         provideogeoverlayconfig:
@@ -859,6 +907,9 @@ const FAMILIES = [
           'The $implicit of a template ogeTooltip; React’s `content` render function closes over whatever it needs.',
       },
       reactOnly: {
+        element: RTL_ELEMENT,
+        getmodal: RTL_FINDER,
+        getallmodals: RTL_FINDER,
         rendertitle:
           'Target of the `ogeModalTitle` / `ogePopoverTitle` pairs — a pair maps one Angular name to one React name.',
         renderfooter:
@@ -907,6 +958,8 @@ const FAMILIES = [
         // the same column contract: a component in Angular, a props interface
         // in React — every member below is still compared
         ogecolumn: 'ogegridcolumnprops',
+        // W6e: the CDK harness ↔ the React Testing Library queries object
+        ogegridharness: 'getgrid',
       },
       pairs: {
         // same feature, different shape: Angular wraps columns in a
@@ -915,12 +968,18 @@ const FAMILIES = [
         ogecolumngroup: 'bandcaption',
       },
       angularOnly: {
+        ...HARNESS_ANGULAR_ONLY,
         asyncvalidators:
           'Angular takes `AsyncValidatorFn`s beside its `ValidatorFn`s (Angular forms keep the two lists apart); a React column rule may itself return a promise, so `validators` covers both and there is no second prop.',
         ogegridtoolbaritem:
           'Content-projection directive for the grid toolbar (`ogeToolbar="before|center|after"`, a static attribute). React has no projection; the same three groups are the `toolbarBefore` / `toolbarCenter` / `toolbarAfter` slot props.',
       },
       reactOnly: {
+        element: RTL_ELEMENT,
+        getgrid: RTL_FINDER,
+        getallgrids: RTL_FINDER,
+        getcell:
+          'The React queries object returns a cell element directly; the Angular harness reaches the same cell as a `TestElement` through `OgeGridRowHarness.getCell()` (documented in its types table).',
         toolbarbefore:
           'Slot prop standing in for `[ogeToolbar]="before"` content projection (see `ogegridtoolbaritem`).',
         toolbarcenter:

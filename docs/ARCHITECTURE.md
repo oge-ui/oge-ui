@@ -1998,6 +1998,45 @@ rules — change both together.
   (`setTimeout(cb, 0)`) — a synchronous stub re-enters Angular's render scheduler mid-tick and
   produces bogus NG0100 errors (see `select-box.spec.ts`).
 
+### Testing entry points for consumers (`/testing`, W6e)
+
+The grid, inputs, overlay and tabs families ship test helpers for **their users' specs** —
+Angular CDK harnesses (`@oge-ui/<pkg>/testing`) and React Testing Library helpers
+(`@oge-ui/react-<pkg>/testing`). Rules:
+
+- **Never imported by a main entry.** A testing entry is a leaf: Angular ones import only
+  `@angular/cdk/testing`, React ones only `@testing-library/dom`, and neither imports the
+  component code (they read the DOM). Check the dist after a change: only
+  `fesm2022/oge-ui-<pkg>-testing.mjs` / `testing.js` may mention `@angular/cdk` /
+  `@testing-library`.
+- **The test library is an optional peer, never a dependency.** `@angular/cdk` (Angular) and
+  `@testing-library/dom` (React) sit in `peerDependencies` + `peerDependenciesMeta.optional`
+  of the package, so an app that never imports `/testing` installs nothing extra.
+  `@angular/cdk` is a workspace devDependency pinned to the Angular version.
+- **Declared like any secondary entry.** Angular: `testing/ng-package.json` + `testing/src/`,
+  a `tsconfig.base.json` path, `testing` in the package's vitest `include` and
+  `tsconfig.spec.json`. React: `src/testing.ts` as a Vite lib entry, a `./testing` `exports`
+  subpath (dual `import` / `require` types) and `@testing-library/dom` in rollup `external`.
+- **Read what a user's assistive technology reads.** Roles, `aria-*` state and the stable
+  `.oge-*` classes — never component internals. Scope selectors to the component's own
+  regions (`:scope > .oge-viewport > …`) so a nested component (a grid in a detail row, tabs
+  inside a tab panel) never leaks into the outer one's answers, and find popups through the
+  trigger's `aria-controls` from the document root, wherever they render.
+- **One vocabulary in both layers.** The React queries object uses the harness's member names
+  (`getCellTexts`, `sortBy`, `selectOption`, `closeTab` …); `docs-tools:parity` pairs each
+  harness block with its React block (`blockPairs`), and the idiom differences — `hostSelector` /
+  `with()` vs `get*()` / `getAll*()`, `element`, the CDK content-container API — are listed
+  once in `check-parity.mjs` (`HARNESS_ANGULAR_ONLY`, `RTL_ELEMENT`, `RTL_FINDER`).
+- **Async in Angular, synchronous in React.** A harness awaits the fixture after every action
+  (under zone.js that includes timers such as the grid's filter debounce; zoneless, it does not
+  — the docs say to pass `provideOgeGridConfig({ filterDebounce: 0 })`). React helpers fire
+  events through Testing Library, which `@testing-library/react` wraps in `act`; whatever
+  settles later is asserted with `waitFor`. Never wrap work in `act` from the helper itself:
+  use `getConfig().eventWrapper` so the consumer's RTL configuration applies.
+- **Each helper has a spec against the real component** beside it (`testing/src/*.spec.ts`,
+  `src/lib/testing/*.spec.tsx`, the React ones under `<StrictMode>`); a new public member
+  gets an api-data row on the family's API page in both layers.
+
 <!-- W5b: browser matrix, visual regression, coverage ratchet, axe crawl, property specs -->
 
 ### Browser matrix and the `@smoke` tag
@@ -2403,7 +2442,7 @@ conformance report and the versioning policy. Rules they keep:
 
 - **Every claim is true of the code and names its proof.** A guide states what a spec, a gate or
   the source shows (`strict-csp.spec.ts`, `react-hydration.spec.tsx`, `size-budgets.json`), and
-  says plainly what is not covered (no component harnesses yet, the editor is not driven under
+  says plainly what is not covered (harnesses exist for five families only, the editor is not driven under
   the strict run, no recorded screen-reader test). Change the guide in the same change that
   changes the behaviour it describes.
 - **Samples are `*-snippets.ts` like every page.** Whole components go through `demoSource()` /

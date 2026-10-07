@@ -776,6 +776,52 @@ _Scroll lock_
 | `lockBodyScroll(): void` | `void` | Locks body scroll and compensates for the scrollbar width. Ref-counted, so nested surfaces cannot unlock each other. |
 | `unlockBodyScroll(): void` | `void` | Releases one reference; the last release restores the inline styles exactly as they were. |
 
+### getModal()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The dialog panel (`.oge-modal`) — scope content queries with `within(modal.element)`. |
+
+#### Methods
+
+_Finding the modal_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getModal(container?: HTMLElement, filters?: OgeModalQueryFilters)` | `OgeModalQueries` | The one open modal in the container (default `document.body`, where `useOgeModals()` renders its dialogs); throws on none or several. `filters.title` is a string or RegExp. A closed React modal renders nothing, so only open ones are found. Import from `@oge-ui/react-overlay/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllModals(container?: HTMLElement, filters?: OgeModalQueryFilters)` | `OgeModalQueries[]` | Every open modal in the container that matches. |
+
+_State_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `boolean` | Whether the modal is still open (its panel is in the document). |
+| `getTitle()` | `string` | The title — the heading’s text, or the `aria-label` of an untitled modal. |
+| `getRole()` | `string \| null` | The panel's role: `'dialog'` or `'alertdialog'`. |
+| `isBusy()` | `boolean` | Whether the modal reports `aria-busy`. |
+| `getContentText()` | `string` | Text of the modal body. |
+
+_Actions_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getButtonTexts()` | `string[]` | Labels of the action buttons — the footer’s, or an alert / confirm / prompt dialog’s; text, or `aria-label` when empty. |
+| `clickButton(label: string \| RegExp)` | `void` | Clicks the matching action button; throws with the button list when none matches. |
+| `close()` | `void` | Clicks the header’s close (✕) button — the full close pipeline runs. |
+| `pressEscape()` | `void` | Presses Escape inside the modal (`closeOnEscape`). |
+| `clickBackdrop()` | `void` | Presses on the backdrop outside the panel (`closeOnBackdropClick`). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeModalQueries` | `interface` | What `getModal()` returns — the members above. |
+| `OgeModalQueryFilters` | `{ title?: string \| RegExp }` | Filters of `getModal()` / `getAllModals()`. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.

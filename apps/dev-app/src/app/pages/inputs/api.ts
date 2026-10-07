@@ -36,6 +36,12 @@ import {
   OGE_TEXT_AREA_API,
   OGE_TEXT_BOX_API,
 } from './inputs-api-data';
+import {
+  OGE_DATE_BOX_HARNESS_API,
+  OGE_NUMBER_BOX_HARNESS_API,
+  OGE_SELECT_BOX_HARNESS_API,
+  OGE_TEXT_BOX_HARNESS_API,
+} from './inputs-testing-api-data';
 
 const SECTIONS = [
   'OgeTextBox',
@@ -67,6 +73,10 @@ const SECTIONS = [
   'OgeMention',
   'Shared input types',
   'Inputs configuration',
+  'OgeTextBoxHarness',
+  'OgeNumberBoxHarness',
+  'OgeSelectBoxHarness',
+  'OgeDateBoxHarness',
 ] as const;
 
 /** TOC of the React view — must mirror `ReactInputsApiSections`' titles. */
@@ -100,6 +110,10 @@ const SECTIONS_REACT = [
   '<OgeMention>',
   'Shared input types',
   'Inputs configuration',
+  'getTextBox()',
+  'getNumberBox()',
+  'getSelectBox()',
+  'getDateBox()',
 ] as const;
 
 @Component({
@@ -291,6 +305,22 @@ const SECTIONS_REACT = [
       />
       <app-api-reference title="Shared input types" [sections]="typesApi" />
       <app-api-reference title="Inputs configuration" [sections]="configApi" />
+      <app-api-reference
+        title="OgeTextBoxHarness"
+        [sections]="textBoxHarnessApi"
+      />
+      <app-api-reference
+        title="OgeNumberBoxHarness"
+        [sections]="numberBoxHarnessApi"
+      />
+      <app-api-reference
+        title="OgeSelectBoxHarness"
+        [sections]="selectBoxHarnessApi"
+      />
+      <app-api-reference
+        title="OgeDateBoxHarness"
+        [sections]="dateBoxHarnessApi"
+      />
     }
 
     <h3>Notes</h3>
@@ -367,4 +397,8 @@ export class InputsApiPage {
   protected readonly mentionApi = OGE_MENTION_API;
   protected readonly typesApi = OGE_INPUTS_TYPES_API;
   protected readonly configApi = OGE_INPUTS_CONFIG_API;
+  protected readonly textBoxHarnessApi = OGE_TEXT_BOX_HARNESS_API;
+  protected readonly numberBoxHarnessApi = OGE_NUMBER_BOX_HARNESS_API;
+  protected readonly selectBoxHarnessApi = OGE_SELECT_BOX_HARNESS_API;
+  protected readonly dateBoxHarnessApi = OGE_DATE_BOX_HARNESS_API;
 }

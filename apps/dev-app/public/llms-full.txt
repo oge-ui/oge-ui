@@ -1928,6 +1928,136 @@ describe('city picker', () => {
 });
 ```
 
+### Testing — Harness component
+
+```ts
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+import { OgeGrid, OgeColumn } from '@oge-ui/grid';
+import { OgeSelectBox } from '@oge-ui/inputs';
+import { OgeTabPanel, OgeTab } from '@oge-ui/tabs';
+import { OgeModalService } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'app-team',
+  imports: [OgeButton, OgeGrid, OgeColumn, OgeSelectBox, OgeTabPanel, OgeTab],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tab-panel>
+      <oge-tab text="People">
+        <oge-select-box label="Department" [items]="departments" [(value)]="department" />
+        <oge-grid
+          [data]="employees"
+          keyField="id"
+          [filterRow]="true"
+          [paging]="{ pageSize: 3 }"
+          selectionMode="checkbox"
+        >
+          <oge-column field="firstName" caption="First name" />
+          <oge-column field="department" caption="Department" />
+        </oge-grid>
+        <oge-button text="Remove" (clicked)="remove()" />
+      </oge-tab>
+      <oge-tab text="Settings"><p>Notification settings</p></oge-tab>
+    </oge-tab-panel>
+  `,
+})
+export class TeamPage {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  private readonly modals = inject(OgeModalService);
+  readonly departments = ['Engineering', 'Finance', 'Sales', 'Support'];
+  readonly department = signal<unknown>(null);
+  readonly removed = signal(false);
+
+  async remove(): Promise<void> {
+    const ok = await this.modals.confirm({
+      title: 'Remove people?',
+      message: 'They lose access at once.',
+      okText: 'Remove',
+    });
+    this.removed.set(ok);
+  }
+}
+```
+
+### Testing — Harness spec
+
+```ts
+// team.spec.ts — the CDK harnesses (npm i -D @angular/cdk)
+import { TestBed } from '@angular/core/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { provideOgeGridConfig } from '@oge-ui/grid';
+import { OgeGridHarness } from '@oge-ui/grid/testing';
+import { OgeSelectBoxHarness } from '@oge-ui/inputs/testing';
+import { OgeModalHarness } from '@oge-ui/overlay/testing';
+import { OgeTabsHarness } from '@oge-ui/tabs/testing';
+import { TeamPage } from './team';
+
+describe('TeamPage', () => {
+  beforeEach(() => {
+    // a zoneless TestBed waits for change detection, not for timers: apply
+    // filter-row input at once instead of after the 300 ms debounce
+    TestBed.configureTestingModule({
+      providers: [provideOgeGridConfig({ filterDebounce: 0 })],
+    });
+    // popups position in requestAnimationFrame — stub it *asynchronously*
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      setTimeout(() => cb(performance.now()), 0) as unknown as number);
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id));
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('filters, sorts, pages and selects people', async () => {
+    const fixture = TestBed.createComponent(TeamPage);
+    const loader = TestbedHarnessEnvironment.loader(fixture);
+    const grid = await loader.getHarness(OgeGridHarness.with({ column: 'First name' }));
+
+    await grid.sortBy('First name');
+    expect(await grid.getSortDirection('First name')).toBe('asc');
+    expect(await grid.getCellText(0, 'First name')).toBe('Ali');
+
+    await grid.nextPage();
+    expect(await grid.getCurrentPage()).toBe(2);
+
+    await grid.setFilter('Department', 'Eng');
+    expect(await grid.getCellTexts()).toEqual([['Ali', 'Engineering'], ['Mehmet', 'Engineering']]);
+
+    await grid.toggleRowSelection(1);
+    expect(await grid.getSelectedRowIndexes()).toEqual([1]);
+  });
+
+  it('picks a department and switches tabs', async () => {
+    const fixture = TestBed.createComponent(TeamPage);
+    const loader = TestbedHarnessEnvironment.loader(fixture);
+    const department = await loader.getHarness(OgeSelectBoxHarness.with({ label: 'Department' }));
+    await department.selectOption('Finance');
+    expect(await department.getValue()).toBe('Finance');
+
+    const tabs = await loader.getHarness(OgeTabsHarness);
+    await tabs.selectTab('Settings');
+    expect(await tabs.getPanelText()).toBe('Notification settings');
+  });
+
+  it('confirms the removal in a service dialog', async () => {
+    const fixture = TestBed.createComponent(TeamPage);
+    // OgeModalService renders into document.body, outside the fixture
+    const root = TestbedHarnessEnvironment.documentRootLoader(fixture);
+    fixture.componentInstance.remove();
+    const dialog = await root.getHarness(OgeModalHarness.with({ title: 'Remove people?' }));
+    expect(await dialog.getButtonTexts()).toEqual(['Cancel', 'Remove']);
+    await dialog.clickButton('Remove');
+    expect(fixture.componentInstance.removed()).toBe(true);
+  });
+});
+```
+
 ### Testing — Jsdom stubs
 
 ```ts
@@ -2013,6 +2143,122 @@ it('opens a select box from the keyboard', () => {
 });
 ```
 
+### Testing — Rtl component
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+import { useOgeModals } from '@oge-ui/react-overlay';
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+
+const employees = [
+  { id: 1, firstName: 'Ali', department: 'Engineering' },
+  { id: 2, firstName: 'Ayşe', department: 'Sales' },
+  { id: 3, firstName: 'Mehmet', department: 'Engineering' },
+  { id: 4, firstName: 'Zeynep', department: 'Finance' },
+  { id: 5, firstName: 'Emre', department: 'Support' },
+];
+const columns = [
+  { field: 'firstName', caption: 'First name' },
+  { field: 'department', caption: 'Department' },
+];
+const departments = ['Engineering', 'Finance', 'Sales', 'Support'];
+
+export function Team() {
+  const [department, setDepartment] = useState<unknown>(null);
+  const [removed, setRemoved] = useState(false);
+  const modals = useOgeModals(); // inside an <OgeModalProvider>
+  const remove = async () =>
+    setRemoved(
+      await modals.confirm({
+        title: 'Remove people?',
+        message: 'They lose access at once.',
+        okText: 'Remove',
+      }),
+    );
+  const people = (
+    <>
+      <OgeSelectBox label="Department" items={departments} value={department} onValueChange={setDepartment} />
+      <OgeGrid
+        data={employees}
+        keyField="id"
+        columns={columns}
+        filterRow
+        paging={{ pageSize: 3 }}
+        selectionMode="checkbox"
+      />
+      <button type="button" onClick={remove}>
+        Remove
+      </button>
+      {removed ? <p>Removed</p> : null}
+    </>
+  );
+  return (
+    <OgeTabPanel
+      tabs={[
+        { text: 'People', content: people },
+        { text: 'Settings', content: <p>Notification settings</p> },
+      ]}
+    />
+  );
+}
+```
+
+### Testing — Rtl spec
+
+```ts
+// Team.test.tsx — React Testing Library helpers (@testing-library/dom is their peer)
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { getGrid } from '@oge-ui/react-grid/testing';
+import { getSelectBox, selectOption } from '@oge-ui/react-inputs/testing';
+import { OgeModalProvider } from '@oge-ui/react-overlay';
+import { getModal } from '@oge-ui/react-overlay/testing';
+import { getTabs, selectTab } from '@oge-ui/react-tabs/testing';
+import { Team } from './Team';
+
+const renderTeam = () => render(<OgeModalProvider><Team /></OgeModalProvider>);
+
+it('filters, sorts, pages and selects people', async () => {
+  const { container } = renderTeam();
+  const grid = getGrid(container, { column: 'First name' });
+
+  grid.sortBy('First name');
+  await waitFor(() => expect(grid.getSortDirection('First name')).toBe('asc'));
+
+  grid.nextPage();
+  await waitFor(() => expect(grid.getCurrentPage()).toBe(2));
+
+  grid.setFilter('Department', 'Eng'); // the filter applies after the debounce
+  await waitFor(() =>
+    expect(grid.getCellTexts()).toEqual([['Ali', 'Engineering'], ['Mehmet', 'Engineering']]),
+  );
+
+  grid.toggleRowSelection(1);
+  await waitFor(() => expect(grid.getSelectedRowIndexes()).toEqual([1]));
+});
+
+it('picks a department and switches tabs', async () => {
+  const { container } = renderTeam();
+  selectOption(screen.getByRole('combobox', { name: 'Department' }), 'Finance');
+  await waitFor(() => expect(getSelectBox(container).getValue()).toBe('Finance'));
+
+  selectTab('Settings');
+  await waitFor(() => expect(getTabs(container).getPanelText()).toBe('Notification settings'));
+});
+
+it('confirms the removal in a dialog', async () => {
+  renderTeam();
+  fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+  const dialog = getModal(document.body, { title: 'Remove people?' });
+  expect(dialog.getButtonTexts()).toEqual(['Cancel', 'Remove']);
+  dialog.clickButton('Remove');
+  expect(await screen.findByText('Removed')).toBeInTheDocument();
+});
+```
+
 ### Testing — Vitest setup
 
 ```ts
@@ -2059,6 +2305,11 @@ Docs: https://www.ogeui.com/components/data-grid
 
 - values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgePagerInfoTemplate`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
 - types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnFormat`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`, `OgeValueFormat`, `OgeValueFormatType`
+
+`@oge-ui/grid/testing`
+
+- values: `OgeGridHarness`, `OgeGridRowHarness`
+- types: `OgeGridHarnessFilters`, `OgeGridRowHarnessFilters`, `OgeGridSortDirection`
 
 `@oge-ui/grid/export-pdf`
 
@@ -2497,6 +2748,84 @@ _Ranges, formats, spans & drag_
 | `OgePagerInfoTemplate` | `directive` | `*ogePagerInfoTemplate="let info"` replaces the pager’s info text; `info` is `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` add first/last buttons and a go-to-page input. |
 | `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
 | `messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern` | `string` | Header filter menu sections and condition names, pager first/last/go-to-page labels (`of {count}`) and the interval group captions (`Week of {date}`, `Q{quarter} {year}`, `{from} – {to}`). |
+
+### OgeGridHarness
+
+#### Properties
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-grid'` | Static. The host selector the CDK loader matches — import from `@oge-ui/grid/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+
+#### Methods
+
+_Finding the grid_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `with(filters?: OgeGridHarnessFilters)` | `HarnessPredicate<OgeGridHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor` and `column` (a caption the grid must have, string or RegExp). |
+
+_Rows & cells_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getColumnCaptions()` | `Promise<string[]>` | Captions of the data columns, in display order. |
+| `getRows(filter?: OgeGridRowHarnessFilters)` | `Promise<OgeGridRowHarness[]>` | The rendered body rows (data and row-template rows; pinned, group and filler rows excluded), optionally filtered by `text` or `selected`. |
+| `getRowCount()` | `Promise<number>` | Number of rendered body rows — the window of a virtualized grid, the page of a paged one. |
+| `getCellTexts()` | `Promise<string[][]>` | Every rendered row’s data-cell texts (trimmed, whitespace collapsed). |
+| `getCellText(rowIndex: number, column: string \| number)` | `Promise<string>` | Text of one cell. A column is its caption (exact, trimmed) or its 0-based position among the data columns. |
+| `isEmpty()` | `Promise<boolean>` | Whether the "no data" row is shown. |
+
+_Sorting_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `sortBy(column: string \| number, modifiers?: { shift?, control? })` | `Promise<void>` | Clicks the column header — one step of the sort cycle; `shift` adds the column to a multi-column sort. |
+| `getSortDirection(column: string \| number)` | `Promise<'asc' \| 'desc' \| 'none'>` | The column’s sort state, read from the header’s `aria-sort`. |
+
+_Filter row_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hasFilterRow()` | `Promise<boolean>` | Whether the filter row is shown. |
+| `setFilter(column: string \| number, text: string)` | `Promise<void>` | Replaces a column’s filter-row text (Enter commits a date filter; `''` clears) and waits out the debounce. Boolean and lookup filters are select boxes: drive them with `OgeSelectBoxHarness.with({ label: 'Filter <caption>' })`. |
+| `getFilterText(column: string \| number)` | `Promise<string>` | The current text of a column’s filter-row editor. |
+
+_Paging_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hasPager()` | `Promise<boolean>` | Whether the grid shows a pager. |
+| `getCurrentPage()` | `Promise<number>` | The current page, 1-based — from the current page button, the go-to-page input or the compact `n / m` text. |
+| `goToPage(page: number)` | `Promise<void>` | Goes to a 1-based page: its page button when listed, otherwise the go-to-page input (`showPageInput`). |
+| `nextPage() / previousPage()` | `Promise<void>` | Clicks the pager’s next / previous page button. |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `toggleRowSelection(rowIndex: number)` | `Promise<void>` | Toggles a row’s selection: its checkbox in `selectionMode: 'checkbox'`, otherwise a click on its first data cell. |
+| `isRowSelected(rowIndex: number)` | `Promise<boolean>` | Whether a row is selected (`aria-selected="true"`). |
+| `getSelectedRowIndexes()` | `Promise<number[]>` | 0-based indexes of the selected rendered rows. |
+| `toggleSelectAll()` | `Promise<void>` | Clicks the header’s select-all checkbox. |
+
+_Editing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `editCell(rowIndex: number, column: string \| number, text: string)` | `Promise<void>` | Edits a cell as a keyboard user does: focus, F2 (unless the row is already editing), replace the text, Enter — which commits per the edit mode. Text, number and date editors. |
+| `isCellEditing(rowIndex: number, column: string \| number)` | `Promise<boolean>` | Whether a cell shows its editor. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridHarnessFilters` | `BaseHarnessFilters & { column?: string \| RegExp }` | Options of `OgeGridHarness.with()`. |
+| `OgeGridRowHarness` | `ComponentHarness` | One body row: `getCellTexts()`, `getCell(columnIndex)` (a `TestElement`), `isSelected()`, `toggleSelection()`; `OgeGridRowHarness.with({ text, selected })`. |
+| `OgeGridRowHarnessFilters` | `BaseHarnessFilters & { text?: string \| RegExp; selected?: boolean }` | Options of `OgeGridRowHarness.with()` and `getRows()`. |
+| `OgeGridSortDirection` | `'asc' \| 'desc' \| 'none'` | A column’s sort state. |
 
 ### Demos
 
@@ -7403,6 +7732,175 @@ _OgeInputsMessages_
 | `presetsLabel / presetToday … presetLastYear` | `string` | `'Quick ranges' / 'Today' … 'Last year'` | Aria label of the date range box preset list, and the labels of the built-in `ogeDateRangePresets` (`presetToday`, `presetYesterday`, `presetLast7Days`, `presetLast30Days`, `presetThisWeek`, `presetLastWeek`, `presetThisMonth`, `presetLastMonth`, `presetThisYear`, `presetLastYear`). |
 | `hourColumnLabel / minuteColumnLabel / secondColumnLabel / dayPeriodColumnLabel` | `string` | `'Hours' / 'Minutes' / 'Seconds' / 'AM/PM'` | Aria labels of the time picker columns (`timeView: 'columns'`). |
 | `segmentDay / segmentMonth / segmentYear / segmentHour / segmentMinute / segmentSecond / segmentDayPeriod` | `string` | `'dd' / 'mm' / 'yyyy' / 'hh' / 'mm' / 'ss' / '--'` | Empty-segment placeholders of the masked date entry (`useMaskBehavior`) — translate them with the UI (`TT.MM.JJJJ`). |
+
+### OgeTextBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-text-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeTextBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
+
+### OgeNumberBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-number-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeNumberBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Spin_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `increment() / decrement()` | `Promise<void>` | One step up / down with ArrowUp / ArrowDown, which commits immediately. `getValue()` is the formatted text — pin `locale` in specs. |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
+
+### OgeSelectBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-select-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeSelectBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `Promise<boolean>` | Whether the popup is open (`aria-expanded="true"`). |
+| `open() / close()` | `Promise<void>` | Opens the popup with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Options_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getOptions(filter?: OgeSelectOptionFilter)` | `Promise<string[]>` | Texts of the listed options (opens the popup); the listbox is found through `aria-controls` from the document root. |
+| `selectOption(text: string \| RegExp)` | `Promise<void>` | Opens the popup and clicks the first matching option; throws with the option list when none matches. |
+| `getSelectedOptionText()` | `Promise<string \| null>` | Text of the `aria-selected` option of the open list. |
+| `search(text: string)` | `Promise<void>` | Types into the search field (`searchEnabled`). |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSelectOptionFilter` | `{ text?: string \| RegExp }` | Filter of `getOptions()`. |
+
+### OgeDateBoxHarness
+
+#### Methods
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-date-box'` | Static. The host selector the CDK loader matches — import from `@oge-ui/inputs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+| `with(filters?: OgeInputHarnessFilters)` | `HarnessPredicate<OgeDateBoxHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `label`, `value` (string or RegExp) and `disabled`. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `Promise<boolean>` | Whether the picker is open (`aria-expanded="true"`). |
+| `open() / close()` | `Promise<void>` | Opens the picker with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Calendar_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getCalendarTitle()` | `Promise<string>` | The heading of the month on show (`"March 2026"`). |
+| `nextMonth() / previousMonth()` | `Promise<void>` | Moves the picker one month. |
+| `selectDay(day: number)` | `Promise<void>` | Opens the picker and clicks a day of the month on show (adjacent months’ days skipped); a date-only box commits and closes. |
+
+_Common (every input harness)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `Promise<string>` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `Promise<void>` | Replaces the text as a user would — clear, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `Promise<void>` | Types without clearing or committing (as-you-type behaviour). |
+| `pressEnter()` | `Promise<void>` | Presses Enter in the input. |
+| `getLabel()` | `Promise<string>` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `Promise<string>` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `Promise<boolean>` | State from the host classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `Promise<boolean>` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `Promise<string>` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `Promise<void> \| Promise<boolean>` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputHarnessFilters` | `BaseHarnessFilters & { label?, value?: string \| RegExp; disabled?: boolean }` | Options of every input harness’s `with()`. |
 
 ### Demos
 
@@ -12592,6 +13090,11 @@ Docs: https://www.ogeui.com/components/overlay
 - values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeWindow`, `applyMenuItemCheck`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
 - types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
 
+`@oge-ui/overlay/testing`
+
+- values: `OgeModalHarness`
+- types: `OgeModalHarnessFilters`
+
 ### OgeModal — `<oge-modal>`
 
 #### Properties
@@ -13239,6 +13742,56 @@ _Scroll lock_
 | --- | --- | --- |
 | `lockBodyScroll(): void` | `void` | Locks body scroll and compensates for the scrollbar width. Ref-counted, so nested surfaces cannot unlock each other. |
 | `unlockBodyScroll(): void` | `void` | Releases one reference; the last release restores the inline styles exactly as they were. |
+
+### OgeModalHarness
+
+#### Properties
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-modal'` | Static. The host selector the CDK loader matches — import from `@oge-ui/overlay/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+
+#### Methods
+
+_Finding the modal_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `with(filters?: OgeModalHarnessFilters)` | `HarnessPredicate<OgeModalHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `title` (string or RegExp) and `open`. Service-opened modals live in `document.body`: use `TestbedHarnessEnvironment.documentRootLoader(fixture)`. |
+
+_State_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `Promise<boolean>` | Whether the modal is open (its panel is rendered). |
+| `getTitle()` | `Promise<string>` | The title — the heading’s text, or the `aria-label` of an untitled modal. |
+| `getRole()` | `Promise<string \| null>` | The panel's role: `'dialog'` or `'alertdialog'`. |
+| `isBusy()` | `Promise<boolean>` | Whether the modal reports `aria-busy`. |
+| `getContentText()` | `Promise<string>` | Text of the modal body (the projected content). |
+
+_Actions_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getButtonTexts()` | `Promise<string[]>` | Labels of the action buttons — the footer’s, or an alert / confirm / prompt dialog’s; text, or `aria-label` when empty. |
+| `clickButton(label: string \| RegExp)` | `Promise<void>` | Clicks the matching action button; throws with the button list when none matches. |
+| `close()` | `Promise<void>` | Clicks the header’s close (✕) button — the full close pipeline runs. |
+| `pressEscape()` | `Promise<void>` | Presses Escape inside the modal (`closeOnEscape`). |
+| `clickBackdrop()` | `Promise<void>` | Presses on the backdrop outside the panel (`closeOnBackdropClick`). |
+
+_Content container_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getHarness / getHarnessOrNull / getAllHarnesses / getChildLoader` | `ContentContainerComponentHarness` | Search the open panel for other harnesses — the editors of a modal form are one call away. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeModalHarnessFilters` | `BaseHarnessFilters & { title?: string \| RegExp; open?: boolean }` | Options of `OgeModalHarness.with()`. |
 
 ### Demos
 
@@ -14513,6 +15066,11 @@ Docs: https://www.ogeui.com/components/tabs
 - values: `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_TABS_CONFIG`, `OgeTab`, `OgeTabContentTemplate`, `OgeTabHeaderTemplate`, `OgeTabPanel`, `OgeTabs`, `provideOgeTabsConfig`
 - types: `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabContentTemplateContext`, `OgeTabHeaderTemplateContext`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`
 
+`@oge-ui/tabs/testing`
+
+- values: `OgeTabsHarness`
+- types: `OgeTabQuery`, `OgeTabsHarnessFilters`
+
 ### OgeTabPanel — `<oge-tab-panel>`
 
 #### Properties
@@ -14685,6 +15243,55 @@ _Template slots_
 | `OgeTabsIndicatorFit` | `'tab' \| 'content'` | Width of the selected-tab indicator. |
 | `OgeTabPanelAnimation` | `'none' \| 'fade' \| 'slide'` | Transition played by the newly displayed panel. |
 | `OgeTabsStylingMode / OgeTabsSize` | `'primary' \| 'secondary' / 'sm' \| 'md' \| 'lg'` | Visual variant and density unions. |
+
+### OgeTabsHarness
+
+#### Properties
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-tab-panel, oge-tabs'` | Static. The host selector the CDK loader matches — both tab components. Import from `@oge-ui/tabs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+
+#### Methods
+
+_Finding the tabs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `with(filters?: OgeTabsHarnessFilters)` | `HarnessPredicate<OgeTabsHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `tab` (a tab label it must have) and `selectedTab`, each a string or RegExp. |
+
+_Tabs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTabLabels()` | `Promise<string[]>` | Labels of every tab, in order — badges and dirty markers excluded. |
+| `getSelectedTabLabel()` | `Promise<string \| null>` | Label of the selected tab, `null` when none is. |
+| `getSelectedIndex()` | `Promise<number>` | 0-based index of the selected tab, `-1` when none is. |
+| `selectTab(tab: OgeTabQuery)` | `Promise<void>` | Clicks a tab — by exact label, RegExp or 0-based index; a disabled tab stays unselected. |
+| `isTabDisabled(tab: OgeTabQuery)` | `Promise<boolean>` | Whether a tab is disabled (`aria-disabled="true"`). |
+| `pressKey(tab: OgeTabQuery, key: TestKey)` | `Promise<void>` | Focuses a tab and presses a key on it — the strip’s keyboard model (arrows, Home / End, Delete on a closable tab). |
+
+_Closing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isTabClosable(tab: OgeTabQuery)` | `Promise<boolean>` | Whether a tab shows its close (✕) affordance. |
+| `closeTab(tab: OgeTabQuery)` | `Promise<void>` | Clicks the tab’s ✕ — the close guard and the closing / closed events run as for a user; throws for a tab that is not closable. |
+
+_Panel_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getPanelText()` | `Promise<string>` | Text of the visible panel (tab panel only; `''` for a stand-alone strip). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabsHarnessFilters` | `BaseHarnessFilters & { tab?, selectedTab?: string \| RegExp }` | Options of `OgeTabsHarness.with()`. |
+| `OgeTabQuery` | `string \| RegExp \| number` | A tab by exact label, pattern or 0-based index. |
 
 ### Demos
 
@@ -36866,6 +37473,230 @@ _OgeInputsConfig_
 | `dataPageSize` | `number` | `30` | Rows a list editor asks its `dataSource` for per page (select box, tag box, autocomplete, multi-column combo box). |
 | `messages` | `OgeInputsMessages` | `—` | User-facing strings — the same key set the Angular package documents (clear/reveal/copy/spin labels, counter patterns and the validation messages). |
 
+### getTextBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTextBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeInputQueries` | The one `<OgeTextBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllTextBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeInputQueries[]` | Every matching editor in the container. |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+### getNumberBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getNumberBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeNumberBoxQueries` | The one `<OgeNumberBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllNumberBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeNumberBoxQueries[]` | Every matching editor in the container. |
+
+_Spin_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `increment() / decrement()` | `void` | One step up / down with ArrowUp / ArrowDown, which commits immediately. `getValue()` is the formatted text — pin `locale` in specs. |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeNumberBoxQueries` | `OgeInputQueries & { increment(), decrement() }` | What `getNumberBox()` returns. |
+
+### getSelectBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSelectBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeSelectBoxQueries` | The one `<OgeSelectBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllSelectBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeSelectBoxQueries[]` | Every matching editor in the container. |
+
+_Shortcut_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectOption(selectBox: HTMLElement \| OgeSelectBoxQueries, text: string \| RegExp)` | `void` | Picks an option from any element inside a select box (its combobox from `getByRole`, its root) or its queries object. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `boolean` | Whether the popup is open (`aria-expanded="true"`). |
+| `open() / close()` | `void` | Opens the popup with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Options_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getOptions(filter?: OgeSelectOptionFilter)` | `string[]` | Texts of the listed options (opens the popup); the listbox is found through `aria-controls` in the document. |
+| `selectOption(text: string \| RegExp)` | `void` | Opens the popup and clicks the first matching option; throws with the option list when none matches. |
+| `getSelectedOptionText()` | `string \| null` | Text of the `aria-selected` option of the open list. |
+| `search(text: string)` | `void` | Types into the search field (`searchEnabled`). |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSelectBoxQueries` | `OgeInputQueries & { popup and option members }` | What `getSelectBox()` returns. |
+| `OgeSelectOptionFilter` | `{ text?: string \| RegExp }` | Filter of `getOptions()`. |
+
+### getDateBox()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The editor’s root element. |
+| `input` | `HTMLInputElement` | The native input — hand it to any Testing Library query or matcher. |
+
+#### Methods
+
+_Finding the editor_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getDateBox(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeDateBoxQueries` | The one `<OgeDateBox>` in (or being) the container (default `document.body`) matching `label`, `value` (string or RegExp) and `disabled`; throws on none or several. Import from `@oge-ui/react-inputs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllDateBoxes(container?: HTMLElement, filters?: OgeInputQueryFilters)` | `OgeDateBoxQueries[]` | Every matching editor in the container. |
+
+_Popup_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `boolean` | Whether the picker is open (`aria-expanded="true"`). |
+| `open() / close()` | `void` | Opens the picker with a click on the field / closes it with Escape; each is a no-op when already in that state. |
+
+_Calendar_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getCalendarTitle()` | `string` | The heading of the month on show (`"March 2026"`). |
+| `nextMonth() / previousMonth()` | `void` | Moves the picker one month. |
+| `selectDay(day: number)` | `void` | Opens the picker and clicks a day of the month on show (adjacent months’ days skipped); a date-only box commits and closes. |
+
+_Common (every input query)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getValue()` | `string` | The text the editor shows (the native input’s value). |
+| `setValue(text: string)` | `void` | Replaces the text as a user would — focus, type, blur (the commit point). The date box commits with Enter instead. |
+| `typeText(text: string)` | `void` | Replaces the text without committing (as-you-type behaviour). |
+| `pressEnter()` | `void` | Presses Enter in the input. |
+| `getLabel()` | `string` | The visible label without the required mark, or the input’s `aria-label` under `labelMode="hidden"`. |
+| `getPlaceholder()` | `string` | The input’s placeholder. |
+| `isDisabled() / isReadonly() / isRequired()` | `boolean` | State from the root classes (`oge-disabled`, `oge-input-readonly`) and `aria-required`. |
+| `isInvalid()` | `boolean` | Whether the error state shows (`aria-invalid="true"`) — after `errorDisplay` allows it. |
+| `getErrorText() / getHintText()` | `string` | The visible error message or hint, `''` when none. |
+| `focus() / blur() / isFocused()` | `void \| boolean` | Focus control of the native input; blur is the commit point. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputQueryFilters` | `{ label?, value?: string \| RegExp; disabled?: boolean }` | Filters of every `get*` / `getAll*` finder. |
+| `OgeInputQueries` | `interface` | What `getTextBox()` returns — the common members. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDateBoxQueries` | `OgeInputQueries & { popup and calendar members }` | What `getDateBox()` returns. |
+
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -41222,6 +42053,58 @@ _OgeTabsConfig_
 | `OgeTabsIndicatorFit` | `'tab' \| 'content'` | Width of the selected-tab indicator. |
 | `OgeTabPanelAnimation` | `'none' \| 'fade' \| 'slide'` | Transition played by the newly displayed panel. |
 | `OgeTabsStylingMode / OgeTabsSize` | `'primary' \| 'secondary' / 'sm' \| 'md' \| 'lg'` | Visual variant and density unions. |
+
+### getTabs()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The component’s root element (`.oge-tab-panel` / `.oge-tabs`). |
+
+#### Methods
+
+_Finding the tabs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTabs(container?: HTMLElement, filters?: OgeTabsQueryFilters)` | `OgeTabsQueries` | The one `<OgeTabPanel>` / `<OgeTabs>` in (or being) the container (default `document.body`) matching `tab` (a tab label it must have) and `selectedTab`; throws on none or several. Import from `@oge-ui/react-tabs/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllTabs(container?: HTMLElement, filters?: OgeTabsQueryFilters)` | `OgeTabsQueries[]` | Every tab component in the container that matches. |
+| `selectTab(name: string \| RegExp, container?: HTMLElement)` | `void` | Shortcut: clicks the tab with this label in the one tab component that has it. |
+
+_Tabs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTabLabels()` | `string[]` | Labels of every tab, in order — badges and dirty markers excluded. |
+| `getSelectedTabLabel()` | `string \| null` | Label of the selected tab, `null` when none is. |
+| `getSelectedIndex()` | `number` | 0-based index of the selected tab, `-1` when none is. |
+| `selectTab(tab: OgeTabQuery)` | `void` | Clicks a tab — by exact label, RegExp or 0-based index; a disabled tab stays unselected. |
+| `isTabDisabled(tab: OgeTabQuery)` | `boolean` | Whether a tab is disabled (`aria-disabled="true"`). |
+| `pressKey(tab: OgeTabQuery, key: string)` | `void` | Focuses a tab and presses a key on it (`'ArrowRight'`, `'Home'`, `'Delete'`…) — the strip’s keyboard model. |
+
+_Closing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isTabClosable(tab: OgeTabQuery)` | `boolean` | Whether a tab shows its close (✕) affordance. |
+| `closeTab(tab: OgeTabQuery)` | `void` | Clicks the tab’s ✕ — the close guard and the closing / closed callbacks run as for a user; throws for a tab that is not closable. |
+
+_Panel_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getPanelText()` | `string` | Text of the visible panel (tab panel only; `''` for a stand-alone strip). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabsQueries` | `interface` | What `getTabs()` returns — the members above. |
+| `OgeTabsQueryFilters` | `{ tab?, selectedTab?: string \| RegExp }` | Filters of `getTabs()` / `getAllTabs()`. |
+| `OgeTabQuery` | `string \| RegExp \| number` | A tab by exact label, pattern or 0-based index. |
 
 ### Demos
 
@@ -55586,6 +56469,85 @@ _Ranges, formats, spans & drag_
 | `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
 | `messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern` | `string` | Header filter menu sections and condition names, pager first/last/go-to-page labels (`of {count}`) and the interval group captions (`Week of {date}`, `Q{quarter} {year}`, `{from} – {to}`). |
 
+### getGrid()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The grid’s root element (`.oge-grid`) — scope further queries with `within(grid.element)`. |
+
+#### Methods
+
+_Finding the grid_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getGrid(container?: HTMLElement, filters?: OgeGridQueryFilters)` | `OgeGridQueries` | The one `<OgeGrid>` in (or being) the container (default `document.body`); throws on none or several. `filters.column` keeps grids with that caption. Import from `@oge-ui/react-grid/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllGrids(container?: HTMLElement, filters?: OgeGridQueryFilters)` | `OgeGridQueries[]` | Every grid in the container that matches the filters. |
+
+_Rows & cells_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getColumnCaptions()` | `string[]` | Captions of the data columns, in display order. |
+| `getRows()` | `HTMLElement[]` | The rendered body rows (data and render-row rows; pinned, group and filler rows excluded). |
+| `getRowCount()` | `number` | Number of rendered body rows — the window of a virtualized grid, the page of a paged one. |
+| `getCellTexts()` | `string[][]` | Every rendered row’s data-cell texts (trimmed, whitespace collapsed). |
+| `getCellText(rowIndex: number, column: string \| number)` | `string` | Text of one cell. A column is its caption (exact, trimmed) or its 0-based position among the data columns. |
+| `getCell(rowIndex: number, column: string \| number)` | `HTMLElement` | The data cell element itself. |
+| `isEmpty()` | `boolean` | Whether the "no data" row is shown. |
+
+_Sorting_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `sortBy(column: string \| number, modifiers?: { shift?, control? })` | `void` | Clicks the column header — one step of the sort cycle; `shift` adds the column to a multi-column sort. |
+| `getSortDirection(column: string \| number)` | `'asc' \| 'desc' \| 'none'` | The column’s sort state, read from the header’s `aria-sort`. |
+
+_Filter row_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hasFilterRow()` | `boolean` | Whether the filter row is shown. |
+| `setFilter(column: string \| number, text: string)` | `void` | Replaces a column’s filter-row text (Enter commits a date filter). The filter applies after `filterDebounce`: assert with `await waitFor(…)`. Boolean and lookup filters are select boxes: `getSelectBox(grid.element, { label: 'Filter <caption>' })`. |
+| `getFilterText(column: string \| number)` | `string` | The current text of a column’s filter-row editor. |
+
+_Paging_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hasPager()` | `boolean` | Whether the grid shows a pager. |
+| `getCurrentPage()` | `number` | The current page, 1-based — from the current page button, the go-to-page input or the compact `n / m` text. |
+| `goToPage(page: number)` | `void` | Goes to a 1-based page: its page button when listed, otherwise the go-to-page input. |
+| `nextPage() / previousPage()` | `void` | Clicks the pager’s next / previous page button. |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `toggleRowSelection(rowIndex: number)` | `void` | Toggles a row’s selection: its checkbox in `selectionMode="checkbox"`, otherwise a click on its first data cell. |
+| `isRowSelected(rowIndex: number)` | `boolean` | Whether a row is selected (`aria-selected="true"`). |
+| `getSelectedRowIndexes()` | `number[]` | 0-based indexes of the selected rendered rows. |
+| `toggleSelectAll()` | `void` | Clicks the header’s select-all checkbox. |
+
+_Editing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `editCell(rowIndex: number, column: string \| number, text: string)` | `void` | Edits a cell as a keyboard user does: focus, F2 (unless already editing), replace the text, Enter — which commits per the edit mode. Text, number and date editors. |
+| `isCellEditing(rowIndex: number, column: string \| number)` | `boolean` | Whether a cell shows its editor. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridQueries` | `interface` | What `getGrid()` returns — the members above. |
+| `OgeGridQueryFilters` | `{ column?: string \| RegExp }` | Filters of `getGrid()` / `getAllGrids()`. |
+| `OgeGridSortDirection` | `'asc' \| 'desc' \| 'none'` | A column’s sort state. |
+
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -59944,6 +60906,52 @@ _Scroll lock_
 | --- | --- | --- |
 | `lockBodyScroll(): void` | `void` | Locks body scroll and compensates for the scrollbar width. Ref-counted, so nested surfaces cannot unlock each other. |
 | `unlockBodyScroll(): void` | `void` | Releases one reference; the last release restores the inline styles exactly as they were. |
+
+### getModal()
+
+#### Properties
+
+_Queries object_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` | The dialog panel (`.oge-modal`) — scope content queries with `within(modal.element)`. |
+
+#### Methods
+
+_Finding the modal_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getModal(container?: HTMLElement, filters?: OgeModalQueryFilters)` | `OgeModalQueries` | The one open modal in the container (default `document.body`, where `useOgeModals()` renders its dialogs); throws on none or several. `filters.title` is a string or RegExp. A closed React modal renders nothing, so only open ones are found. Import from `@oge-ui/react-overlay/testing`; `@testing-library/dom` is an optional peer only this entry needs. |
+| `getAllModals(container?: HTMLElement, filters?: OgeModalQueryFilters)` | `OgeModalQueries[]` | Every open modal in the container that matches. |
+
+_State_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isOpen()` | `boolean` | Whether the modal is still open (its panel is in the document). |
+| `getTitle()` | `string` | The title — the heading’s text, or the `aria-label` of an untitled modal. |
+| `getRole()` | `string \| null` | The panel's role: `'dialog'` or `'alertdialog'`. |
+| `isBusy()` | `boolean` | Whether the modal reports `aria-busy`. |
+| `getContentText()` | `string` | Text of the modal body. |
+
+_Actions_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getButtonTexts()` | `string[]` | Labels of the action buttons — the footer’s, or an alert / confirm / prompt dialog’s; text, or `aria-label` when empty. |
+| `clickButton(label: string \| RegExp)` | `void` | Clicks the matching action button; throws with the button list when none matches. |
+| `close()` | `void` | Clicks the header’s close (✕) button — the full close pipeline runs. |
+| `pressEscape()` | `void` | Presses Escape inside the modal (`closeOnEscape`). |
+| `clickBackdrop()` | `void` | Presses on the backdrop outside the panel (`closeOnBackdropClick`). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeModalQueries` | `interface` | What `getModal()` returns — the members above. |
+| `OgeModalQueryFilters` | `{ title?: string \| RegExp }` | Filters of `getModal()` / `getAllModals()`. |
 
 ### Demos
 

@@ -59,6 +59,9 @@ export default defineConfig(() => ({
         // the React half of the grid foundation, shared with react-tree-list
         // (the counterpart of Angular's `@oge-ui/grid/foundation`)
         foundation: 'src/foundation.ts',
+        // test-only helpers over Testing Library — never imported by the
+        // main entry (the counterpart of `@oge-ui/grid/testing`)
+        testing: 'src/testing.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
@@ -71,6 +74,7 @@ export default defineConfig(() => ({
         'react',
         'react-dom',
         'react/jsx-runtime',
+        '@testing-library/dom',
         '@oge-ui/behavior',
         '@oge-ui/behavior/export-excel',
         '@oge-ui/behavior/export-pdf',

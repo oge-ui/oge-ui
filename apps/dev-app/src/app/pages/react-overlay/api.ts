@@ -17,6 +17,7 @@ import {
   OGE_REACT_WINDOW_API,
 } from './react-overlay-api-data';
 import { OGE_REACT_ACTION_SHEET_API } from './action-sheet-api-data';
+import { OGE_REACT_MODAL_TESTING_API } from './react-modal-testing-api-data';
 
 /**
  * The React half of the overlay API reference.
@@ -70,6 +71,7 @@ import { OGE_REACT_ACTION_SHEET_API } from './action-sheet-api-data';
     <app-api-reference title="resolvePopupPosition" [sections]="positionApi" />
     <app-api-reference title="Overlay configuration" [sections]="configApi" />
     <app-api-reference title="Overlay primitives" [sections]="primitivesApi" />
+    <app-api-reference title="getModal()" [sections]="testingApi" />
   `,
 })
 export class ReactOverlayApiSections {
@@ -88,4 +90,5 @@ export class ReactOverlayApiSections {
   protected readonly positionApi = OGE_REACT_RESOLVE_POPUP_POSITION_API;
   protected readonly configApi = OGE_REACT_OVERLAY_CONFIG_API;
   protected readonly primitivesApi = OGE_REACT_OVERLAY_PRIMITIVES_API;
+  protected readonly testingApi = OGE_REACT_MODAL_TESTING_API;
 }

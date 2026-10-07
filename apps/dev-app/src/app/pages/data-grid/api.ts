@@ -10,11 +10,13 @@ import {
   OGE_GRID_API,
   OGE_GRID_TYPES_API,
 } from './data-grid-api-data';
+import { OGE_GRID_HARNESS_API } from './grid-testing-api-data';
 
 const SECTIONS = [
   'OgeGrid',
   'OgeColumn',
   'Grid types & configuration',
+  'OgeGridHarness',
 ] as const;
 
 /** TOC of the React view — must mirror `ReactGridApiSections`' titles. */
@@ -22,6 +24,7 @@ const SECTIONS_REACT = [
   '<OgeGrid>',
   'OgeGridColumnProps',
   'Grid types & configuration',
+  'getGrid()',
 ] as const;
 
 @Component({
@@ -79,6 +82,7 @@ const SECTIONS_REACT = [
         title="Grid types & configuration"
         [sections]="typesApi"
       />
+      <app-api-reference title="OgeGridHarness" [sections]="harnessApi" />
     }
 
     <h3>Notes</h3>
@@ -104,4 +108,5 @@ export class DataGridApiPage {
   protected readonly gridApi = OGE_GRID_API;
   protected readonly columnApi = OGE_COLUMN_API;
   protected readonly typesApi = OGE_GRID_TYPES_API;
+  protected readonly harnessApi = OGE_GRID_HARNESS_API;
 }

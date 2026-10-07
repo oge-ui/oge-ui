@@ -70,6 +70,37 @@ describe('<OgeGrid> editing', () => {
     await waitFor(() => expect(rows[0].name).toBe('Ada L.'));
   });
 
+  it('cell mode: F2 and Enter on a focused cell open its editor', async () => {
+    const rows = seed();
+    render(
+      <OgeGrid
+        data={new ArrayDataSource(rows, { key: 'id' })}
+        keyField="id"
+        columns={columns}
+        editing={{ mode: 'cell', allowUpdating: true }}
+      />,
+    );
+    await waitFor(() => expect(dataRows().length).toBe(3));
+
+    fireEvent.keyDown(cellsOf(dataRows()[0])[0], { key: 'F2' });
+    await settle();
+    expect(editorInput()).not.toBeNull();
+    fireEvent.keyDown(editorInput() as HTMLInputElement, { key: 'Escape' });
+    await settle();
+    expect(editorInput()).toBeNull();
+
+    // a modified Enter is not the edit key
+    fireEvent.keyDown(cellsOf(dataRows()[1])[1], {
+      key: 'Enter',
+      shiftKey: true,
+    });
+    await settle();
+    expect(editorInput()).toBeNull();
+    fireEvent.keyDown(cellsOf(dataRows()[1])[1], { key: 'Enter' });
+    await settle();
+    expect(editorInput()?.value).toBe('New York');
+  });
+
   it('Escape abandons the edit and leaves the row untouched', async () => {
     const rows = seed();
     render(

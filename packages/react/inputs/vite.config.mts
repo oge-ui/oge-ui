@@ -48,7 +48,13 @@ export default defineConfig(() => ({
       // consumer that renders on the server (or bundles without a CSS loader)
       // is not forced to resolve it. `styles.css` is imported once by the app,
       // which is what the docs tell people to do.
-      entry: { index: 'src/index.ts', styles: 'src/styles.ts' },
+      entry: {
+        index: 'src/index.ts',
+        styles: 'src/styles.ts',
+        // test-only helpers over Testing Library — never imported by the
+        // main entry (the counterpart of `@oge-ui/inputs/testing`)
+        testing: 'src/testing.ts',
+      },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
       formats: ['es', 'cjs'],
@@ -60,6 +66,7 @@ export default defineConfig(() => ({
         'react',
         'react-dom',
         'react/jsx-runtime',
+        '@testing-library/dom',
         '@oge-ui/behavior',
         '@oge-ui/react-navigation',
         '@oge-ui/react-overlay',

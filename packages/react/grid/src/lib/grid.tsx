@@ -3004,7 +3004,35 @@ function OgeGridInner<T extends object>(
     if ((event.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
     if (double) latest.current.onCellDblClick?.(payload);
     else latest.current.onCellClick?.(payload);
+    // range selection owns the single click (spreadsheet style): editing
+    // starts on double-click, F2 or Enter
+    if (model.selectionMode() === 'cell' && !double) return;
+    startCellEdit(node, column);
+  }
 
+  /**
+   * F2 / Enter on a focused cell opens its editor — the keyboard path of
+   * `onCellClick`, as on the Angular grid's `(keydown.f2)` / `(keydown.enter)`.
+   * Keys bubbling out of an open editor (its own Enter commit) are ignored.
+   */
+  function onCellEditKey(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+    event: React.KeyboardEvent,
+  ): void {
+    if (event.key !== 'F2' && event.key !== 'Enter') return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return;
+    }
+    if ((event.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
+    startCellEdit(node, column);
+  }
+
+  /** Opens a cell editor when the edit mode and the column allow it. */
+  function startCellEdit(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): void {
     const mode = model.editing.editMode();
     if (
       (mode !== 'cell' && mode !== 'batch') ||
@@ -3015,9 +3043,6 @@ function OgeGridInner<T extends object>(
     ) {
       return;
     }
-    // range selection owns the single click (spreadsheet style): editing
-    // starts on double-click, F2 or Enter
-    if (model.selectionMode() === 'cell' && !double) return;
     if (!state.editing.isCellEditing(node.key, column.field)) {
       if (!model.editing.notifyEditingStart(node.key, node.data, column.field))
         return;
@@ -5092,6 +5117,7 @@ function OgeGridInner<T extends object>(
               }
               onClick={(event) => onCellClick(node, column, event, false)}
               onDoubleClick={(event) => onCellClick(node, column, event, true)}
+              onKeyDown={(event) => onCellEditKey(node, column, event)}
             >
               {cellEditorOpen
                 ? renderCellEditor(node, column, 'cell')

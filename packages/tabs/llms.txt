@@ -95,6 +95,11 @@ Predictable wrong guesses, and what to write instead.
 - values: `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_TABS_CONFIG`, `OgeTab`, `OgeTabContentTemplate`, `OgeTabHeaderTemplate`, `OgeTabPanel`, `OgeTabs`, `provideOgeTabsConfig`
 - types: `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabContentTemplateContext`, `OgeTabHeaderTemplateContext`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`
 
+`@oge-ui/tabs/testing`
+
+- values: `OgeTabsHarness`
+- types: `OgeTabQuery`, `OgeTabsHarnessFilters`
+
 ## API reference
 
 ### OgeTabPanel — `<oge-tab-panel>`
@@ -269,6 +274,55 @@ _Template slots_
 | `OgeTabsIndicatorFit` | `'tab' \| 'content'` | Width of the selected-tab indicator. |
 | `OgeTabPanelAnimation` | `'none' \| 'fade' \| 'slide'` | Transition played by the newly displayed panel. |
 | `OgeTabsStylingMode / OgeTabsSize` | `'primary' \| 'secondary' / 'sm' \| 'md' \| 'lg'` | Visual variant and density unions. |
+
+### OgeTabsHarness
+
+#### Properties
+
+_Harness_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hostSelector` | `'oge-tab-panel, oge-tabs'` | Static. The host selector the CDK loader matches — both tab components. Import from `@oge-ui/tabs/testing`; `@angular/cdk` is an optional peer only this entry needs. |
+
+#### Methods
+
+_Finding the tabs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `with(filters?: OgeTabsHarnessFilters)` | `HarnessPredicate<OgeTabsHarness>` | Static. Predicate for `loader.getHarness()`: `selector`, `ancestor`, `tab` (a tab label it must have) and `selectedTab`, each a string or RegExp. |
+
+_Tabs_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTabLabels()` | `Promise<string[]>` | Labels of every tab, in order — badges and dirty markers excluded. |
+| `getSelectedTabLabel()` | `Promise<string \| null>` | Label of the selected tab, `null` when none is. |
+| `getSelectedIndex()` | `Promise<number>` | 0-based index of the selected tab, `-1` when none is. |
+| `selectTab(tab: OgeTabQuery)` | `Promise<void>` | Clicks a tab — by exact label, RegExp or 0-based index; a disabled tab stays unselected. |
+| `isTabDisabled(tab: OgeTabQuery)` | `Promise<boolean>` | Whether a tab is disabled (`aria-disabled="true"`). |
+| `pressKey(tab: OgeTabQuery, key: TestKey)` | `Promise<void>` | Focuses a tab and presses a key on it — the strip’s keyboard model (arrows, Home / End, Delete on a closable tab). |
+
+_Closing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isTabClosable(tab: OgeTabQuery)` | `Promise<boolean>` | Whether a tab shows its close (✕) affordance. |
+| `closeTab(tab: OgeTabQuery)` | `Promise<void>` | Clicks the tab’s ✕ — the close guard and the closing / closed events run as for a user; throws for a tab that is not closable. |
+
+_Panel_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getPanelText()` | `Promise<string>` | Text of the visible panel (tab panel only; `''` for a stand-alone strip). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabsHarnessFilters` | `BaseHarnessFilters & { tab?, selectedTab?: string \| RegExp }` | Options of `OgeTabsHarness.with()`. |
+| `OgeTabQuery` | `string \| RegExp \| number` | A tab by exact label, pattern or 0-based index. |
 
 ## Demos
 

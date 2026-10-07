@@ -38,6 +38,16 @@
         "default": "./index.cjs"
       }
     },
+    "./testing": {
+      "import": {
+        "types": "./testing.d.ts",
+        "default": "./testing.js"
+      },
+      "require": {
+        "types": "./testing.d.cts",
+        "default": "./testing.cjs"
+      }
+    },
     "./styles.css": "./styles.css",
     "./package.json": "./package.json"
   },
@@ -46,7 +56,13 @@
   ],
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "@testing-library/dom": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@testing-library/dom": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@oge-ui/behavior": "1.1.3"

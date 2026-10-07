@@ -48,7 +48,13 @@ export default defineConfig(() => ({
       // consumer that renders on the server (or bundles without a CSS loader)
       // is not forced to resolve it. `styles.css` is imported once by the app,
       // which is what the docs tell people to do.
-      entry: { index: 'src/index.ts', styles: 'src/styles.ts' },
+      entry: {
+        index: 'src/index.ts',
+        styles: 'src/styles.ts',
+        // test-only helpers over Testing Library — never imported by the
+        // main entry (the counterpart of `@oge-ui/overlay/testing`)
+        testing: 'src/testing.ts',
+      },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
       formats: ['es', 'cjs'],
@@ -56,7 +62,13 @@ export default defineConfig(() => ({
     rollupOptions: {
       // never bundle the host's React, and keep the shared substrate a real
       // dependency so both render layers load exactly one copy of it
-      external: ['react', 'react-dom', 'react/jsx-runtime', '@oge-ui/behavior'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@testing-library/dom',
+        '@oge-ui/behavior',
+      ],
       output: {
         // Rollup strips module-level directives when it bundles, so the
         // `'use client'` the sources carry would never reach the published

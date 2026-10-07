@@ -118,6 +118,23 @@ test.describe('guides', () => {
     await expect(page.locator('main')).toContainText('@testing-library/react');
   });
 
+  test('the testing guide lists the harness and helper entry points', async ({
+    page,
+  }) => {
+    await page.goto('/guides/testing');
+    const harnesses = page.getByRole('region', {
+      name: 'Component harness entry points',
+    });
+    await expect(harnesses).toContainText('@oge-ui/grid/testing');
+    await expect(harnesses).toContainText('OgeSelectBoxHarness');
+    await page.goto('/guides/testing?framework=react');
+    const helpers = page.getByRole('region', {
+      name: 'Testing Library helper entry points',
+    });
+    await expect(helpers).toContainText('@oge-ui/react-grid/testing');
+    await expect(helpers).toContainText('getModal()');
+  });
+
   test('the accessibility guide renders the generated keyboard maps', async ({
     page,
   }) => {

@@ -10,12 +10,14 @@ import {
   OGE_TABS_API,
   OGE_TABS_CONFIG_API,
 } from './tabs-api-data';
+import { OGE_TABS_HARNESS_API } from './tabs-testing-api-data';
 
 const SECTIONS = [
   'OgeTabPanel',
   'OgeTabs',
   'OgeTab',
   'Tabs configuration',
+  'OgeTabsHarness',
 ] as const;
 
 /** TOC of the React view — must mirror `ReactTabsApiSections`' titles. */
@@ -24,6 +26,7 @@ const SECTIONS_REACT = [
   '<OgeTabs>',
   'OgeTab (OgeTabDefinition)',
   'Tabs configuration',
+  'getTabs()',
 ] as const;
 
 @Component({
@@ -76,6 +79,7 @@ const SECTIONS_REACT = [
         [sections]="tabApi"
       />
       <app-api-reference title="Tabs configuration" [sections]="configApi" />
+      <app-api-reference title="OgeTabsHarness" [sections]="harnessApi" />
     }
   `,
 })
@@ -87,4 +91,5 @@ export class TabsApiPage {
   protected readonly tabsApi = OGE_TABS_API;
   protected readonly tabApi = OGE_TAB_API;
   protected readonly configApi = OGE_TABS_CONFIG_API;
+  protected readonly harnessApi = OGE_TABS_HARNESS_API;
 }

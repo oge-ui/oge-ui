@@ -7,6 +7,47 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Testing harnesses (W6e) — `@oge-ui/grid`, `@oge-ui/inputs`, `@oge-ui/overlay`, `@oge-ui/tabs`, `@oge-ui/react-grid`, `@oge-ui/react-inputs`, `@oge-ui/react-overlay`, `@oge-ui/react-tabs`
+
+- **Angular CDK component harnesses** in new `/testing` secondary entry points,
+  each with `static with(filters)` predicates and specs that drive the real
+  component through `TestbedHarnessEnvironment`:
+  - `@oge-ui/grid/testing` — `OgeGridHarness` (column captions, rows and
+    cells as text, `sortBy` / `getSortDirection` from `aria-sort`, filter-row
+    `setFilter`, the pager, row and select-all selection, F2 `editCell`) and
+    `OgeGridRowHarness`. Also proven in a zoneless TestBed.
+  - `@oge-ui/inputs/testing` — `OgeTextBoxHarness`, `OgeNumberBoxHarness`,
+    `OgeSelectBoxHarness` (open / close, options, `selectOption(text)`) and
+    `OgeDateBoxHarness` (typed dates, calendar navigation, `selectDay`), with
+    value, label, disabled / readonly / required / invalid state and the
+    error and hint texts.
+  - `@oge-ui/overlay/testing` — `OgeModalHarness`: open state, title, role,
+    content, action buttons (footer or alert / confirm / prompt), close via
+    ✕, Escape or backdrop; a content container for harnesses inside the
+    panel, and `documentRootLoader` finds `OgeModalService` dialogs.
+  - `@oge-ui/tabs/testing` — `OgeTabsHarness` for `oge-tab-panel` and
+    `oge-tabs`: labels, the selected tab, selecting by label or index, key
+    presses,
+    disabled and closable tabs, the visible panel.
+  - `@angular/cdk` is an **optional peer** of the four packages, imported only
+    by the testing entries (a workspace devDependency, pinned to the Angular
+    version); no main entry imports a testing entry, checked in the built FESM.
+- **React Testing Library helpers** in `/testing` subpaths of the React
+  packages — `getGrid()`, `getTextBox()` / `getNumberBox()` / `getSelectBox()` /
+  `getDateBox()` (plus `getAll*` and a `selectOption()` shortcut), `getModal()`
+  and `getTabs()` (plus `selectTab()`) — typed objects with the harnesses'
+  member names, synchronous reads and act-wrapped Testing Library events.
+  `@testing-library/dom` is an optional peer of the four packages, imported
+  only by the testing entries.
+- **React grid:** F2 and Enter on a focused cell now open its editor in cell
+  and batch mode, as on the Angular grid (`(keydown.f2)` / `(keydown.enter)`)
+  and the React tree list; React had only the pointer path.
+- **Docs:** the Testing guide documents both (entry-point tables, a harness
+  spec and an RTL spec over a compiled sample screen) instead of saying
+  harnesses are not shipped; every harness and helper has API-reference rows
+  on its family's API page, and `docs-tools:parity` pairs each harness block
+  with its React helper block.
+
 ### Docs site — guides, accessibility conformance, versioning policy (W6b)
 
 - **A Guides section** (`/guides`, its own sidebar group), every page

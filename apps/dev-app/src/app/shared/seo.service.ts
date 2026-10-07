@@ -73,7 +73,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/guides/testing',
-    'Test apps built on OGE UI: Angular TestBed with DOM queries, React Testing Library recipes, Playwright keyboard and polling tips, and the jsdom gaps to stub.',
+    'Test apps built on OGE UI: Angular CDK harnesses and React Testing Library helpers for the grid, inputs, modal and tabs, plus jsdom gaps and Playwright tips.',
   ],
   [
     '/guides/performance',

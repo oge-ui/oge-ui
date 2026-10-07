@@ -5,6 +5,7 @@ import {
   OGE_REACT_GRID_COLUMN_API,
   OGE_REACT_GRID_TYPES_API,
 } from './react-grid-api-data';
+import { OGE_REACT_GRID_TESTING_API } from './react-grid-testing-api-data';
 
 /**
  * The React half of the data-grid API reference.
@@ -30,10 +31,12 @@ import {
       title="Grid types &amp; configuration"
       [sections]="typesApi"
     />
+    <app-api-reference title="getGrid()" [sections]="testingApi" />
   `,
 })
 export class ReactGridApiSections {
   protected readonly gridApi = OGE_REACT_GRID_API;
   protected readonly columnApi = OGE_REACT_GRID_COLUMN_API;
   protected readonly typesApi = OGE_REACT_GRID_TYPES_API;
+  protected readonly testingApi = OGE_REACT_GRID_TESTING_API;
 }

@@ -22,6 +22,7 @@ import {
   RESOLVE_POPUP_POSITION_API,
 } from './overlay-api-data';
 import { OGE_ACTION_SHEET_API } from './action-sheet-api-data';
+import { OGE_MODAL_HARNESS_API } from './modal-testing-api-data';
 
 const SECTIONS = [
   'OgeModal',
@@ -39,6 +40,7 @@ const SECTIONS = [
   'resolvePopupPosition',
   'Overlay configuration',
   'Overlay primitives',
+  'OgeModalHarness',
 ] as const;
 
 /** TOC of the React view — must mirror `ReactOverlayApiSections`' titles. */
@@ -58,6 +60,7 @@ const SECTIONS_REACT = [
   'resolvePopupPosition',
   'Overlay configuration',
   'Overlay primitives',
+  'getModal()',
 ] as const;
 
 @Component({
@@ -171,6 +174,7 @@ const SECTIONS_REACT = [
         title="Overlay primitives"
         [sections]="primitivesApi"
       />
+      <app-api-reference title="OgeModalHarness" [sections]="harnessApi" />
     }
 
     <h3>Notes</h3>
@@ -207,4 +211,5 @@ export class OverlayApiPage {
   protected readonly positionApi = RESOLVE_POPUP_POSITION_API;
   protected readonly configApi = OGE_OVERLAY_CONFIG_API;
   protected readonly primitivesApi = OVERLAY_PRIMITIVES_API;
+  protected readonly harnessApi = OGE_MODAL_HARNESS_API;
 }

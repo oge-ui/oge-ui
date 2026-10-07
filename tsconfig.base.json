@@ -83,6 +83,7 @@
       ],
       "@oge-ui/grid/export-pdf": ["./packages/grid/export-pdf/src/index.ts"],
       "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
+      "@oge-ui/grid/testing": ["./packages/grid/testing/src/index.ts"],
       "@oge-ui/inputs": ["./packages/inputs/src/index.ts"],
       "@oge-ui/inputs/*": ["./packages/inputs/*/src/index.ts"],
       "@oge-ui/kanban": ["./packages/kanban/src/index.ts"],
@@ -97,6 +98,7 @@
       "@oge-ui/layout/*": ["./packages/layout/*/src/index.ts"],
       "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],
       "@oge-ui/overlay": ["./packages/overlay/src/index.ts"],
+      "@oge-ui/overlay/testing": ["./packages/overlay/testing/src/index.ts"],
       "@oge-ui/pivot": ["./packages/pivot/src/index.ts"],
       "@oge-ui/pivot-engine": ["./packages/pivot-engine/src/index.ts"],
       "@oge-ui/pivot-engine/export-excel": [
@@ -146,7 +148,11 @@
       "@oge-ui/react-grid/foundation": [
         "./packages/react/grid/src/foundation.ts"
       ],
+      "@oge-ui/react-grid/testing": ["./packages/react/grid/src/testing.ts"],
       "@oge-ui/react-inputs": ["./packages/react/inputs/src/index.ts"],
+      "@oge-ui/react-inputs/testing": [
+        "./packages/react/inputs/src/testing.ts"
+      ],
       "@oge-ui/react-kanban": ["./packages/react/kanban/src/index.ts"],
       "@oge-ui/react-kanban/export-excel": [
         "./packages/react/kanban/src/export-excel.ts"
@@ -154,6 +160,9 @@
       "@oge-ui/react-layout": ["./packages/react/layout/src/index.ts"],
       "@oge-ui/react-navigation": ["./packages/react/navigation/src/index.ts"],
       "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],
+      "@oge-ui/react-overlay/testing": [
+        "./packages/react/overlay/src/testing.ts"
+      ],
       "@oge-ui/react-pivot": ["./packages/react/pivot/src/index.ts"],
       "@oge-ui/react-pivot/export-excel": [
         "./packages/react/pivot/src/export-excel.ts"
@@ -172,6 +181,7 @@
         "./packages/react/scheduler/src/export-pdf.ts"
       ],
       "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],
+      "@oge-ui/react-tabs/testing": ["./packages/react/tabs/src/testing.ts"],
       "@oge-ui/react-tree-list": ["./packages/react/tree-list/src/index.ts"],
       "@oge-ui/react-tree-list/export-excel": [
         "./packages/react/tree-list/src/export-excel.ts"
@@ -202,6 +212,7 @@
         "./packages/scheduler/export-pdf/src/index.ts"
       ],
       "@oge-ui/tabs": ["./packages/tabs/src/index.ts"],
+      "@oge-ui/tabs/testing": ["./packages/tabs/testing/src/index.ts"],
       "@oge-ui/tree-list": ["./packages/tree-list/src/index.ts"],
       "@oge-ui/tree-list/export-excel": [
         "./packages/tree-list/export-excel/src/index.ts"
