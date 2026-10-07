@@ -11,6 +11,10 @@ are versioned independently, which is the case here.
 
 - **Framework-neutral titles, descriptions and copy.** The site, its page titles, meta descriptions, home and getting-started copy, the README and the `llms.txt` summary now present OGE as one suite for Angular and React; a page only one layer covers (the router-driven demos) keeps its framework in the title.
 
+## 1.1.3 — 2026-10-07
+
+Forty-five packages, including the new MIT `@oge-ui/editor` and `@oge-ui/react-editor`. New components (layout and feedback, inputs, charts, carousel / list / tile layout, rich-text editor), overlay / navigation / BPMN depth, scheduling depth and time zones, ready-made translations, SSR and hydration proof, release and packaging gates, and the cross-browser test matrix.
+
 ### Leftover fixes — form editor types, list box reordering, transfer list, header, API reports
 
 - **Forms: seven new editor types** (`@oge-ui/forms`, `@oge-ui/react-forms`,
