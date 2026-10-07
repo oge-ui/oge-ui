@@ -16,6 +16,9 @@
  *                                         ThemeBuilder presets (lib/tokens.mjs)
  *   pages/guides/generated/keyboard.json  the accessibility guide's keyboard
  *                                         maps (lib/keyboard.mjs)
+ *   shared/stackblitz/stackblitz-manifest.ts  toolchain versions + @oge-ui
+ *                                         package graph for "Open in
+ *                                         StackBlitz" (lib/stackblitz.mjs)
  *
  * Everything is derived from the workspace — routes, `<app-api-reference>`
  * blocks, `*-api-data.ts` tables, entry-point exports and `*-snippets.ts` demo
@@ -64,6 +67,7 @@ import {
 import { readRoutes, readSeoDescriptions } from './lib/routes.mjs';
 import { buildSearchIndex } from './lib/search-index.mjs';
 import { readSnippets } from './lib/snippets.mjs';
+import { buildStackblitzManifestFile } from './lib/stackblitz.mjs';
 import { buildTokenArtifacts } from './lib/tokens.mjs';
 import { buildKeyboardMaps } from './lib/keyboard.mjs';
 
@@ -152,6 +156,12 @@ artifacts.set(
 artifacts.set(
   'apps/dev-app/src/app/shared/site-version.ts',
   buildSiteVersionFile(version),
+);
+// "Open in StackBlitz": toolchain versions and the @oge-ui package graph the
+// docs site's project builder reads (checked by docs-tools:stackblitz-check).
+artifacts.set(
+  'apps/dev-app/src/app/shared/stackblitz/stackblitz-manifest.ts',
+  buildStackblitzManifestFile(workspaceRoot),
 );
 
 reportGaps();

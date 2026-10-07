@@ -44,6 +44,8 @@ jobs:
       # the committed llms.txt / sitemap artifacts must match their generator
       - run: npx nx run docs-tools:llms-check
       - run: npx nx run docs-tools:parity
+      # every demo's "Open in StackBlitz" project resolves all of its imports
+      - run: npx nx run docs-tools:stackblitz-check
       - run: npx nx affected -t lint build typecheck --exclude=dev-app-e2e
       # --- W5b: unit tests under V8 coverage ---------------------------------
       # Each package's vitest config carries `coverage.thresholds` (a ratchet:

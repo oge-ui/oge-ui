@@ -18,7 +18,8 @@
  * builds and renders locally where no CSP is enforced.
  *
  * So: build, then run this. It fails when the built HTML contains an inline
- * script or event handler the policy does not cover.
+ * script or event handler the policy does not cover — or when `form-action`
+ * no longer admits https://stackblitz.com, where "Open in StackBlitz" posts.
  *
  *   node tools/docs-tools/check-csp.mjs [--dist <dir>]
  */
@@ -73,6 +74,19 @@ function scriptSrc() {
   return new Set(directive.split(/\s+/).slice(1));
 }
 
+/** The `form-action` sources of the site-wide policy (empty when absent). */
+function formAction() {
+  const config = JSON.parse(readFileSync(VERCEL, 'utf8'));
+  const header = (config.headers ?? [])
+    .flatMap((entry) => entry.headers ?? [])
+    .find((h) => h.key.toLowerCase() === 'content-security-policy');
+  const directive = (header?.value ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('form-action'));
+  return new Set(directive ? directive.split(/\s+/).slice(1) : []);
+}
+
 /**
  * The HTML event-handler content attributes — the ones CSP actually gates.
  * An explicit list, because `on[a-z]+` also matches component inputs that
@@ -100,9 +114,19 @@ const INLINE_HANDLER = /\son([a-z]+)\s*=\s*"([^"]*)"/gi;
 const INLINE_SCRIPT = /<script([^>]*)>([\s\S]*?)<\/script>/gi;
 
 const sources = scriptSrc();
+const problems = [];
+
+// "Open in StackBlitz" submits a form to stackblitz.com/run
+// (apps/dev-app/src/app/shared/stackblitz/stackblitz-open.ts); a form-action
+// that drops the origin breaks the button on every demo, silently.
+const STACKBLITZ = 'https://stackblitz.com';
+if (!formAction().has(STACKBLITZ)) {
+  problems.push(
+    `form-action does not allow ${STACKBLITZ} — "Open in StackBlitz" posts there`,
+  );
+}
 const allowsAllInline = sources.has("'unsafe-inline'");
 const allowsHashedHandlers = sources.has("'unsafe-hashes'");
-const problems = [];
 /** Hash → the files it was seen in, for the "policy is stale" report. */
 const seen = new Map();
 

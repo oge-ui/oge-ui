@@ -59,6 +59,14 @@
       },
       "dependsOn": ["react-buttons:build"]
     },
+    "stackblitz-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/docs-tools/check-stackblitz.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "lint": {
       "dependsOn": ["control-chars", "locales-check"]
     }

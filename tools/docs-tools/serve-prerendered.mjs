@@ -132,7 +132,8 @@ function strictPolicy(nonce) {
     "object-src 'none'",
     "base-uri 'self'",
     "frame-ancestors 'none'",
-    "form-action 'self'",
+    // "Open in StackBlitz" POSTs the demo project to stackblitz.com/run
+    "form-action 'self' https://stackblitz.com",
     "require-trusted-types-for 'script'",
     `trusted-types ${TRUSTED_TYPES.join(' ')}`,
   ].join('; ');

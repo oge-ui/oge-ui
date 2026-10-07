@@ -46,6 +46,33 @@ test.describe('strict CSP + Trusted Types', () => {
     expect(policy).toContain("require-trusted-types-for 'script'");
     expect(policy).toContain('oge-ui#bpmn');
     expect(policy).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+    expect(policy).toContain("form-action 'self' https://stackblitz.com");
+  });
+
+  test('docs: "Open in StackBlitz" posts under form-action', async ({
+    page,
+  }) => {
+    const violations = await watchViolations(page);
+    // StackBlitz is never contacted: the POST is answered with a stub. A
+    // request only reaches this route when the CSP let the form submit.
+    const posts: string[] = [];
+    await page.context().route('https://stackblitz.com/**', async (route) => {
+      posts.push(`${route.request().method()} ${route.request().url()}`);
+      await route.fulfill({ status: 200, contentType: 'text/html', body: '' });
+    });
+    await page.goto('/components/buttons');
+    await expectHydrated(page);
+    const card = page.locator('app-demo-card:has(#sizes)');
+    await card.getByRole('button', { name: 'Code', exact: true }).click();
+    const popup = page.waitForEvent('popup');
+    await card.getByRole('button', { name: 'Open in StackBlitz' }).click();
+    await popup;
+    await expect
+      .poll(() => posts)
+      .toEqual([
+        'POST https://stackblitz.com/run?file=src%2Fapp%2Fapp.component.ts',
+      ]);
+    expect(await violations()).toEqual([]);
   });
 
   test('grid: hydrates and exports CSV and Excel', async ({ page }) => {

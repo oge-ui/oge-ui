@@ -48,6 +48,30 @@ are versioned independently, which is the case here.
   pages are lazy; the docs site's initial bundle grew by about 1.2 kB (gzip)
   for the sidebar entries and SEO descriptions.
 
+### Docs site — Open in StackBlitz (W6d)
+
+- **Every demo opens as a runnable project**: the code view of each demo card
+  has an **Open in StackBlitz** button. Angular demos become a minimal
+  standalone Angular CLI app (`@angular/build`, zoneless bootstrap, the demo
+  as `src/app/app.component.ts`); React demos a Vite + React + TypeScript app
+  (the demo as `src/App.tsx`, the stylesheets of every `@oge-ui/react-*`
+  package it renders through imported once in `main.tsx`). Every `@oge-ui/*`
+  dependency is pinned to the release the site documents, the toolchain to the
+  versions the suite is built and tested with; export demos bring their
+  optional `exceljs` / `jspdf` peers. A project that uses a commercial family
+  says in its README that it is free for evaluation and development.
+- Submitted through StackBlitz's form-POST API in a new tab — no SDK, nothing
+  requested before the click, and the builder is a lazy chunk (preloaded on
+  hover/focus so the new tab is never popup-blocked). The site CSP now allows
+  `form-action 'self' https://stackblitz.com`.
+- Tooling: `npx nx run docs-tools:stackblitz-check` (CI) builds the project of
+  every demo and fails on a relative import the project does not ship, a bare
+  import its `package.json` lacks, an `@oge-ui/*` version other than the
+  release, or a commercial project without its licence line; it also fails
+  when the button and `docs-tools:typecheck` disagree about what is a
+  complete demo. `--write <dir> --demo <name>` writes one project to disk to
+  try it. `docs-tools:csp-check` fails when `form-action` drops StackBlitz.
+
 ### Docs site — token reference, ThemeBuilder, DTCG tokens (W6c)
 
 - **`/getting-started/tokens`**: every `--oge-*` design token in one table —

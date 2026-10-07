@@ -2,11 +2,16 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DOCUMENT,
+  inject,
   input,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
 import { highlight } from './highlight';
+import { demoFramework } from './stackblitz/demo-framework';
+
+type StackblitzModule = typeof import('./stackblitz/stackblitz-open');
 
 export interface CodeFile {
   name: string;
@@ -125,6 +130,30 @@ const LANGUAGE_LABELS: Record<string, string> = {
             Copy
           }
         </button>
+        @if (runnable()) {
+          <!-- the builder is a lazy chunk: preloaded on hover/focus, so the
+               click submits synchronously and the new tab is not blocked -->
+          <button
+            type="button"
+            class="code-copy code-stackblitz mb-1.5 flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors"
+            aria-label="Open in StackBlitz"
+            title="Open this demo as a runnable project on StackBlitz (new tab)"
+            (pointerenter)="preloadStackblitz()"
+            (focus)="preloadStackblitz()"
+            (click)="openStackblitz()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="11"
+              height="11"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M9.6 1 3 9.2h4.3L6.4 15 13 6.8H8.7L9.6 1Z" />
+            </svg>
+            <span class="hidden sm:inline">StackBlitz</span>
+          </button>
+        }
       </div>
       <!-- editor body -->
       <!-- focusable so a keyboard user can scroll long lines (axe
@@ -284,6 +313,12 @@ export class CodeBlock {
   readonly files = input<readonly CodeFile[] | undefined>(undefined);
   /** Removes outer border/margins (for embedding inside demo cards). */
   readonly frameless = input(false);
+  /** Title of the StackBlitz project a runnable sample opens as. */
+  readonly demoTitle = input<string | undefined>(undefined);
+
+  private readonly document = inject(DOCUMENT);
+  private stackblitzModule?: StackblitzModule;
+  private stackblitzLoading?: Promise<StackblitzModule>;
 
   protected readonly copied = signal(false);
   protected readonly activeIndex = signal(0);
@@ -327,6 +362,15 @@ export class CodeBlock {
     }
   }
 
+  /**
+   * A complete Angular or React component (what `demoSource()` /
+   * `reactDemoSource()` render) gets "Open in StackBlitz"; fragments do not.
+   */
+  protected readonly runnable = computed(() => {
+    const file = this.activeFile();
+    return file ? demoFramework(file.code) !== null : false;
+  });
+
   protected readonly lineNumbers = computed(() => {
     const count = (this.activeFile()?.code ?? '').split('\n').length;
     return Array.from({ length: count }, (_, i) => i + 1);
@@ -343,6 +387,25 @@ export class CodeBlock {
     const file = this.activeFile();
     return file ? highlight(file.code, file.language) : '';
   });
+
+  protected preloadStackblitz(): Promise<StackblitzModule> {
+    return (this.stackblitzLoading ??=
+      import('./stackblitz/stackblitz-open').then(
+        (module) => (this.stackblitzModule = module),
+      ));
+  }
+
+  protected openStackblitz(): void {
+    const file = this.activeFile();
+    if (!file) return;
+    const open = (module: StackblitzModule) =>
+      module.openInStackblitz(this.document, file.code, {
+        title: this.demoTitle() ?? this.title(),
+        pageUrl: this.document.location.href.split('#')[0],
+      });
+    if (this.stackblitzModule) open(this.stackblitzModule);
+    else void this.preloadStackblitz().then(open);
+  }
 
   protected copy(): void {
     const file = this.activeFile();

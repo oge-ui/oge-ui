@@ -121,6 +121,7 @@ export function slugify(text: string): string {
             [language]="language()"
             [files]="files()"
             [frameless]="true"
+            [demoTitle]="heading() ?? title()"
           />
         </div>
       }

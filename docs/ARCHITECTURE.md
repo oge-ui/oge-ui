@@ -2135,13 +2135,14 @@ rules — change both together.
 7. `npx nx run docs-tools:llms`, and commit the regenerated artifacts.
 8. Optional Playwright smoke/a11y spec in `apps/dev-app-e2e/src/`.
 
-**A component is not done until its AI-facing docs ship with it.** Three gates enforce that:
+**A component is not done until its AI-facing docs ship with it.** Four gates enforce that:
 
-| Gate                    | Fails when                                                          |
-| ----------------------- | ------------------------------------------------------------------- |
-| `docs-tools:typecheck`  | a page declares a code sample inline, or a snippet does not compile |
-| `docs-tools:llms`       | a demo folder is claimed by no package's `pageDirs`                 |
-| `docs-tools:llms-check` | the committed `llms.txt` / `sitemap.xml` differ from the generator  |
+| Gate                          | Fails when                                                          |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `docs-tools:typecheck`        | a page declares a code sample inline, or a snippet does not compile |
+| `docs-tools:llms`             | a demo folder is claimed by no package's `pageDirs`                 |
+| `docs-tools:llms-check`       | the committed `llms.txt` / `sitemap.xml` differ from the generator  |
+| `docs-tools:stackblitz-check` | a demo's StackBlitz project has an import it cannot resolve         |
 
 `docs-tools:llms` additionally _warns_ about exported symbols with no API-reference row. That list is
 the backlog of members an assistant currently has to guess at — keep it shrinking.
@@ -2210,17 +2211,18 @@ React demo cannot silently exit the gate.
 Coding assistants are a first-class docs audience: they read the repo, `node_modules`, and whatever
 the site serves. Three artifacts serve them, all **generated and committed**:
 
-| Artifact                                 | Purpose                                                                      |
-| ---------------------------------------- | ---------------------------------------------------------------------------- |
-| `apps/dev-app/public/llms.txt`           | [llmstxt.org](https://llmstxt.org) index of packages + pages                 |
-| `apps/dev-app/public/llms-full.txt`      | conventions, every API member, every demo — one file                         |
-| `apps/dev-app/public/llms/<pkg>.txt`     | one self-contained reference per package                                     |
-| `packages/<pkg>/llms.txt`                | same file, shipped in the tarball via `assets`                               |
-| `apps/dev-app/public/sitemap.xml`        | generated from `app.routes.ts` (no longer hand-maintained)                   |
-| `apps/dev-app/public/search-index.json`  | the Ctrl/⌘K palette's index: pages, headings, API members, tokens            |
-| `packages/core/tokens.json`              | DTCG design tokens (light / dark / high contrast), also `public/tokens.json` |
-| `pages/getting-started/generated/*.json` | token reference rows + ThemeBuilder presets (`lib/tokens.mjs`)               |
-| `pages/guides/generated/keyboard.json`   | the accessibility guide's keyboard maps (`lib/keyboard.mjs`)                 |
+| Artifact                                   | Purpose                                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `apps/dev-app/public/llms.txt`             | [llmstxt.org](https://llmstxt.org) index of packages + pages                         |
+| `apps/dev-app/public/llms-full.txt`        | conventions, every API member, every demo — one file                                 |
+| `apps/dev-app/public/llms/<pkg>.txt`       | one self-contained reference per package                                             |
+| `packages/<pkg>/llms.txt`                  | same file, shipped in the tarball via `assets`                                       |
+| `apps/dev-app/public/sitemap.xml`          | generated from `app.routes.ts` (no longer hand-maintained)                           |
+| `apps/dev-app/public/search-index.json`    | the Ctrl/⌘K palette's index: pages, headings, API members, tokens                    |
+| `packages/core/tokens.json`                | DTCG design tokens (light / dark / high contrast), also `public/tokens.json`         |
+| `pages/getting-started/generated/*.json`   | token reference rows + ThemeBuilder presets (`lib/tokens.mjs`)                       |
+| `pages/guides/generated/keyboard.json`     | the accessibility guide's keyboard maps (`lib/keyboard.mjs`)                         |
+| `shared/stackblitz/stackblitz-manifest.ts` | toolchain versions + `@oge-ui/*` graph for Open in StackBlitz (`lib/stackblitz.mjs`) |
 
 Everything is **derived from the workspace**, never hand-written twice: routes from `app.routes.ts`,
 link notes from `SeoService.DESCRIPTIONS`, member tables from each API page's
@@ -2233,6 +2235,7 @@ in `lib/prose.mjs` (**Writing OGE code** rules + a **Common mistakes** table of 
 npx nx run docs-tools:llms         # regenerate (commit the result)
 npx nx run docs-tools:llms-check   # CI gate: committed artifacts match the generator
 npx nx run docs-tools:typecheck    # CI gate: every docs snippet compiles (see Testing)
+npx nx run docs-tools:stackblitz-check  # CI gate: every demo's StackBlitz project resolves
 ```
 
 `llms` also prints two "no silent gaps" reports: package folders missing from the manifest, and
@@ -2422,6 +2425,52 @@ conformance report and the versioning policy. Rules they keep:
   remark where there is one; "Partially Supports" where a part is missing or unverified.
 - Numbers come from their source of truth at build time (the performance guide imports
   `tools/size-budgets.json`, the versioning guide `SITE_VERSION`), never retyped.
+
+### Docs site: Open in StackBlitz
+
+Every code block whose active file is a **complete component** — what `demoSource()` /
+`reactDemoSource()` render, decided by `shared/stackblitz/demo-framework.ts`, the same structural
+rule `docs-tools:typecheck` uses to pick what it compiles — shows an **Open in StackBlitz** button.
+Only that detector is in the initial bundle; the rest lives in `shared/stackblitz/` and is a lazy
+chunk, preloaded on `pointerenter` / `focus` so the click submits synchronously (an `await` between
+click and `form.submit()` can cost the user activation, and Safari then blocks the new tab).
+
+- **Assembly** (`stackblitz-project.ts`, pure and DOM-free): imports are scanned (static, type,
+  side-effect, dynamic). Angular → a minimal Angular CLI app: `angular.json` (`@angular/build`
+  application + dev-server), `tsconfig*.json` (strict + `strictTemplates`), `src/index.html` with the
+  demo's selector, `src/main.ts` (`bootstrapApplication` of the first `@Component`'s exported class
+  with `provideZonelessChangeDetection()`, plus `provideRouter([])` / `provideHttpClient()` when
+  the demo imports them and the providers of an exported `appConfig`), the demo verbatim as
+  `src/app/app.component.ts`. React → Vite + React + TypeScript: `index.html`, `vite.config.ts`,
+  `src/main.tsx` rendering the prop-less exported component in `<StrictMode>` after importing
+  `<pkg>/styles.css` for every package in the `@oge-ui/*` closure of the demo's imports that ships
+  one (dependencies first), the demo verbatim as `src/App.tsx`. Both use StackBlitz's `node`
+  (WebContainers) template with a `start` script and a `.stackblitzrc`.
+- **Versions come from one place each**: `@oge-ui/*` = `SITE_VERSION` (generated from
+  `packages/ui/package.json`); the toolchain (Angular, React, Vite, TypeScript, rxjs, tslib, and
+  the optional `exceljs` / `jspdf` / `jspdf-autotable` peers added for `*/export-excel` /
+  `*/export-pdf` imports) and the `@oge-ui/*` package graph (deps, commercial, ships
+  `styles.css`) from `stackblitz-manifest.ts`, **generated** by `docs-tools:llms`
+  (`lib/stackblitz.mjs`) from the root and package manifests and checked by `llms-check`. Never
+  hard-code a version in the builder.
+- **Licence**: a project whose `@oge-ui/*` closure includes a commercial package (its `license`
+  is not MIT — ADR 0003) carries a `**Licence:**` line in its README: free for evaluation and
+  development, paid for production.
+- **Submission** (`stackblitz-open.ts`): a hidden `<form method="POST" target="_blank">` to
+  `https://stackblitz.com/run?file=<demo file>` with `project[title]`, `project[description]`,
+  `project[template]`, `project[dependencies]` and one `project[files][<path>]` per file —
+  appended, submitted, removed. No SDK dependency, nothing requested before the click. The CSP
+  directive `form-action 'self' https://stackblitz.com` (`vercel.json`, and the strict model in
+  `serve-prerendered.mjs`) is what admits it; `docs-tools:csp-check` fails if StackBlitz drops
+  out of `form-action`.
+- **Gate**: `npx nx run docs-tools:stackblitz-check` (CI, next to `parity`) loads the builder with
+  jiti and builds every demo's project: the button and the compile gate must agree on every snippet;
+  every relative import in every generated `.ts` / `.tsx` must resolve inside the file map (a demo
+  that imports a local helper must ship it); every bare import must be in the generated
+  `package.json`, every `@oge-ui/*` pinned to the release, every `<pkg>/styles.css` exported; JSON
+  files must parse; commercial projects need their licence line. To try one for real:
+  `node tools/docs-tools/check-stackblitz.mjs --write <dir> --demo "<file or snippet name>"`, then
+  `npm install` and `npm run build` there.
 
 ## SSR and hydration
 
