@@ -1,0 +1,38 @@
+name: Visual baselines
+
+# Renders the screenshot baselines (apps/dev-app-e2e/visual) on a CI runner —
+# the browser in the same Playwright Docker image the `visual` CI job compares
+# in — and uploads them as an artifact. Review the PNGs, then commit them under
+# apps/dev-app-e2e/visual/__screenshots__ (docs/ARCHITECTURE.md → Testing).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx nx run dev-app-e2e:e2e-visual-update
+
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: visual-baselines
+          path: apps/dev-app-e2e/visual/__screenshots__
+          if-no-files-found: error
