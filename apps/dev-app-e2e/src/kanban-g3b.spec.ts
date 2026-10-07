@@ -158,9 +158,15 @@ for (const layer of LAYERS) {
       await input.press('Escape');
 
       const renamed = cardsIn(host, 'todo').first();
-      await renamed.focus();
-      await page.keyboard.press('F2');
       const title = host.locator('.oge-kanban-card-title-input');
+      // the board re-renders after the composer closes, so the card may lose
+      // the focus it was just given: retry until F2 opens the title editor
+      await expect(async () => {
+        await renamed.focus();
+        await expect(renamed).toBeFocused({ timeout: 1000 });
+        await page.keyboard.press('F2');
+        await expect(title).toBeVisible({ timeout: 1000 });
+      }).toPass({ timeout: 10_000 });
       await title.fill('Renamed inline');
       // let the controlled input settle (value applied, focus kept) before
       // committing — Enter on a stale render commits the old title
