@@ -283,48 +283,54 @@ for (const fw of FRAMEWORKS) {
       );
     });
 
-    test('kanban: a touch long press drags a card to the next column', async ({
-      page,
-    }) => {
-      await page.goto(`/components/kanban${fw.query}`);
-      const host = page.locator(
-        'app-demo-card:has(#getting-started) .oge-kanban',
-      );
-      await host.scrollIntoViewIfNeeded();
-      const card = host
-        .locator('.oge-kanban-cards[data-col="todo"] .oge-kanban-card')
-        .first();
-      await expect(card).toBeVisible({ timeout: 30_000 });
-      const title = (
-        await card.locator('.oge-kanban-card-title').innerText()
-      ).trim();
-      const doing = host.locator('.oge-kanban-cards[data-col="doing"]');
-      const box = (await card.boundingBox())!;
-      const target = (await doing.boundingBox())!;
-      // a swipe without the hold never lifts the card
-      await touchDrag(
-        page,
-        { x: box.x + 40, y: box.y + 10 },
-        { x: target.x + target.width / 2, y: target.y + 60 },
-        0,
-      );
-      await expect(
-        doing.locator('.oge-kanban-card-title', { hasText: title }),
-      ).toHaveCount(0);
-      await touchDrag(
-        page,
-        { x: box.x + 40, y: box.y + 10 },
-        { x: target.x + target.width / 2, y: target.y + 60 },
-      );
-      await expect(
-        doing.locator('.oge-kanban-card-title', { hasText: title }),
-      ).toBeVisible();
-    });
+    test(
+      'kanban: a touch long press drags a card to the next column',
+      { tag: '@smoke' },
+      async ({ page }) => {
+        await page.goto(`/components/kanban${fw.query}`);
+        const host = page.locator(
+          'app-demo-card:has(#getting-started) .oge-kanban',
+        );
+        await host.scrollIntoViewIfNeeded();
+        const card = host
+          .locator('.oge-kanban-cards[data-col="todo"] .oge-kanban-card')
+          .first();
+        await expect(card).toBeVisible({ timeout: 30_000 });
+        const title = (
+          await card.locator('.oge-kanban-card-title').innerText()
+        ).trim();
+        const doing = host.locator('.oge-kanban-cards[data-col="doing"]');
+        const box = (await card.boundingBox())!;
+        const target = (await doing.boundingBox())!;
+        // a swipe without the hold never lifts the card
+        await touchDrag(
+          page,
+          { x: box.x + 40, y: box.y + 10 },
+          { x: target.x + target.width / 2, y: target.y + 60 },
+          0,
+        );
+        await expect(
+          doing.locator('.oge-kanban-card-title', { hasText: title }),
+        ).toHaveCount(0);
+        await touchDrag(
+          page,
+          { x: box.x + 40, y: box.y + 10 },
+          { x: target.x + target.width / 2, y: target.y + 60 },
+        );
+        await expect(
+          doing.locator('.oge-kanban-card-title', { hasText: title }),
+        ).toBeVisible();
+      },
+    );
   });
 }
 
 test.describe('real touch input (CDP)', () => {
   test.use({ hasTouch: true });
+  test.skip(
+    ({ browserName }) => browserName !== 'chromium',
+    'Input.dispatchTouchEvent is a Chrome DevTools Protocol call',
+  );
 
   for (const fw of FRAMEWORKS) {
     test(`${fw.name} kanban: held finger drags the card instead of panning`, async ({

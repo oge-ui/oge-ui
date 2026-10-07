@@ -87,6 +87,14 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../../../coverage/packages/react/tabs',
       provider: 'v8' as const,
+      // ratchet floor: measured level − 1, rounded down. Raise it when
+      // coverage grows (docs/ARCHITECTURE.md → Testing → coverage ratchet)
+      thresholds: {
+        statements: 79,
+        branches: 71,
+        functions: 69,
+        lines: 82,
+      },
     },
   },
 }));

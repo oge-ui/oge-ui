@@ -128,20 +128,22 @@ test.describe('kanban', () => {
     ).toBeVisible();
   });
 
-  test('Ctrl+Arrow moves the focused card and announces it', async ({
-    page,
-  }) => {
-    await page.goto('/components/kanban');
-    const host = board(page, KEYBOARD);
-    await host.scrollIntoViewIfNeeded();
-    const card = cardsIn(host, 'todo').first();
-    await card.click();
-    await page.keyboard.press('Control+ArrowRight');
-    await expect(cardsIn(host, 'doing')).toHaveCount(2);
-    await expect(host.locator('.oge-kanban-live')).toHaveText(
-      /moved to doing, position \d of \d/,
-    );
-  });
+  test(
+    'Ctrl+Arrow moves the focused card and announces it',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await page.goto('/components/kanban');
+      const host = board(page, KEYBOARD);
+      await host.scrollIntoViewIfNeeded();
+      const card = cardsIn(host, 'todo').first();
+      await card.click();
+      await page.keyboard.press('Control+ArrowRight');
+      await expect(cardsIn(host, 'doing')).toHaveCount(2);
+      await expect(host.locator('.oge-kanban-live')).toHaveText(
+        /moved to doing, position \d of \d/,
+      );
+    },
+  );
 
   test('Tab from a focused card reaches its quick-action buttons', async ({
     page,

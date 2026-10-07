@@ -21,32 +21,34 @@ async function openBasic(page: Page): Promise<void> {
 }
 
 test.describe('scheduler', () => {
-  test('renders the week grid with chips and the all-day strip', async ({
-    page,
-  }) => {
-    await openBasic(page);
-    const host = scheduler(page);
-    await expect(host.locator('.oge-scheduler-row').first()).toBeVisible();
-    expect(
-      await host.locator('.oge-scheduler-row').first().locator('> *').count(),
-    ).toBe(7);
-    await expect(
-      host.locator('.oge-scheduler-chip-box', { hasText: 'Sprint planning' }),
-    ).toBeVisible();
-    await expect(
-      host.locator('.oge-scheduler-allday-bar', {
-        hasText: 'Customer workshop',
-      }),
-    ).toBeVisible();
-    // overlapping appointments share the column width
-    const overlapped = host.locator('.oge-scheduler-chip-box', {
-      hasText: 'Pairing session',
-    });
-    const width = await overlapped.evaluate(
-      (el) => (el as HTMLElement).style.width,
-    );
-    expect(parseFloat(width)).toBeLessThan(10); // < one full column of 7
-  });
+  test(
+    'renders the week grid with chips and the all-day strip',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await openBasic(page);
+      const host = scheduler(page);
+      await expect(host.locator('.oge-scheduler-row').first()).toBeVisible();
+      expect(
+        await host.locator('.oge-scheduler-row').first().locator('> *').count(),
+      ).toBe(7);
+      await expect(
+        host.locator('.oge-scheduler-chip-box', { hasText: 'Sprint planning' }),
+      ).toBeVisible();
+      await expect(
+        host.locator('.oge-scheduler-allday-bar', {
+          hasText: 'Customer workshop',
+        }),
+      ).toBeVisible();
+      // overlapping appointments share the column width
+      const overlapped = host.locator('.oge-scheduler-chip-box', {
+        hasText: 'Pairing session',
+      });
+      const width = await overlapped.evaluate(
+        (el) => (el as HTMLElement).style.width,
+      );
+      expect(parseFloat(width)).toBeLessThan(10); // < one full column of 7
+    },
+  );
 
   test('view switcher and toolbar navigation update the period', async ({
     page,

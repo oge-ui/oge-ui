@@ -235,6 +235,67 @@ describe('high-contrast.css', () => {
 });
 
 /**
+ * WCAG AA for the default and the dark palette (the e2e contrast scan,
+ * `contrast.spec.ts`, found `--oge-muted-color` at 2.6:1 and white on the
+ * success / warning fills at 3.2:1): muted text and the severity colours
+ * read at >= 4.5:1 on the surfaces they sit on, and the text on a filled
+ * severity / accent control does too.
+ */
+describe.each([
+  ['default tokens', () => mixinDeclarations('literal-tokens')],
+  [
+    'dark.css',
+    () =>
+      declarations(
+        ruleBodies(readFileSync(join(themesDir, 'dark.css'), 'utf8'))[0]
+          ?.body ?? '',
+      ),
+  ],
+])('%s: AA text contrast', (_name, read) => {
+  const tokens = read();
+  const t = (name: string): string => {
+    const value = tokens.get(name);
+    expect(value, name).toMatch(/^#[0-9a-f]{6}$/i);
+    return value as string;
+  };
+
+  it('muted text and severity colours read on every surface (>= 4.5:1)', () => {
+    for (const fg of [
+      '--oge-muted-color',
+      '--oge-success',
+      '--oge-warning',
+      '--oge-danger',
+    ]) {
+      for (const bg of [
+        '--oge-bg',
+        '--oge-header-bg',
+        '--oge-group-bg',
+        '--oge-row-hover-bg',
+      ]) {
+        if (fg !== '--oge-muted-color' && bg !== '--oge-bg') continue;
+        expect(contrast(t(fg), t(bg)), `${fg} on ${bg}`).toBeGreaterThanOrEqual(
+          4.5,
+        );
+      }
+    }
+  });
+
+  it('text on filled severity and accent controls reads (>= 4.5:1)', () => {
+    for (const fill of [
+      '--oge-accent',
+      '--oge-success',
+      '--oge-warning',
+      '--oge-danger',
+    ]) {
+      expect(
+        contrast(t('--oge-severity-contrast'), t(fill)),
+        `--oge-severity-contrast on ${fill}`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+/**
  * Consumer knobs a stylesheet reads with a fallback and nothing declares by
  * design — setting one is how an app opts in. Anything else a stylesheet
  * reads must be declared: a misspelt token with a literal fallback renders

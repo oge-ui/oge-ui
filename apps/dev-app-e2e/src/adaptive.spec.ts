@@ -25,7 +25,7 @@ async function openAdaptiveDemo(page: Page, suffix: string) {
 }
 
 for (const fw of FRAMEWORKS) {
-  test.describe(`adaptive popups — ${fw.name}`, () => {
+  test.describe(`adaptive popups — ${fw.name}`, { tag: '@mobile' }, () => {
     test('select box: bottom sheet with a search field, commit and focus restore', async ({
       page,
     }) => {

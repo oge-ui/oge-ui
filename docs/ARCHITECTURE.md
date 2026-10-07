@@ -1926,10 +1926,11 @@ rules — change both together.
 - **Visual states are guarded by computed styles, not screenshots.** `visual-states.spec.ts`
   compares the painted colours of on/off/selected/idle/disabled states (toggle controls, date box
   closed/open, buttons, tabs, open select box; light and dark) with the token each must resolve
-  to, read through a probe inside the component, plus a 390px no-sideways-scroll check. Pixel
-  baselines were rejected: Windows and the Linux CI runners rasterise text differently, so
-  `toHaveScreenshot` would need per-platform baselines and still flake on sub-pixel text, while
-  the regressions it must catch are a state losing its colour.
+  to, read through a probe inside the component, plus a 390px no-sideways-scroll check. That
+  stays the guard for _state_ colours. Pixel baselines (below, "Visual regression") were added
+  later for layout and surfaces, and only work because the browser that renders them always runs
+  in the same Docker image — Windows and the Linux runners rasterise text differently, so a
+  baseline from a local browser would never match CI.
 - **Docs chrome vs. component CSS.** The components' styles are unlayered, so they beat any
   Tailwind utility on the same element: never hide or resize an `oge-*` host with a utility
   (`max-sm:hidden` on `<oge-select-box>` did nothing and widened every page on phones) — use a
@@ -1967,6 +1968,99 @@ rules — change both together.
 - Overlay-flavored specs must stub `requestAnimationFrame` **asynchronously**
   (`setTimeout(cb, 0)`) — a synchronous stub re-enters Angular's render scheduler mid-tick and
   produces bogus NG0100 errors (see `select-box.spec.ts`).
+
+<!-- W5b: browser matrix, visual regression, coverage ratchet, axe crawl, property specs -->
+
+### Browser matrix and the `@smoke` tag
+
+- `apps/dev-app-e2e/playwright.config.mts` defines five projects: `chromium` (the default),
+  `firefox`, `webkit`, `mobile-chrome` (Pixel 7) and `mobile-safari` (iPhone 14). Only chromium
+  runs unless `OGE_E2E_BROWSERS` names others (`OGE_E2E_BROWSERS=firefox,webkit` or `=all`), so
+  a plain `npx nx run dev-app-e2e:e2e` is unchanged. The variable is an input of the `e2e`
+  target (`project.json`), so Nx never replays a chromium result for another browser.
+- **Where each runs.** PRs: chromium in full (3 shards) plus the `@smoke` subset on the four
+  other projects (`ci.yml` → `e2e-smoke`). Nightly (`nightly.yml`, also `workflow_dispatch`):
+  the full suite on every project, sharded, with reports uploaded; `failOnFlakyTests` stays on.
+- **`@smoke`** (`test('…', { tag: '@smoke' }, …)`) marks about twenty representative tests:
+  home, grid sort/page and grouping (both layers), select box, date box, modal dialog helpers,
+  tabs, tree view, scheduler, charts, editor typing, kanban keyboard move, the kanban touch
+  long-press drag, context menu and the theme switch. Keep it small — it runs four times per
+  PR. Tag a new test only when it covers a family the subset does not reach yet.
+- **Phones run `@smoke` + `@mobile` only** (`grep` on the two mobile projects): the rest of the
+  suite drives the desktop docs layout. `@mobile` marks tests written for a phone viewport (the
+  adaptive popups in `adaptive.spec.ts`).
+- **Engine-only tests say so.** CDP (`newCDPSession`), clipboard permissions (Playwright grants
+  `clipboard-read` in Chromium only) and synthetic `ClipboardEvent` data (Firefox empties it)
+  are Chromium- or not-Firefox-only: `test.skip(browserName !== 'chromium', reason)` with the
+  reason spelled out, never a silent skip. Everything else must pass everywhere; a failure in
+  one engine is a bug in the library or in the test, fixed rather than skipped.
+- **Cross-engine test hygiene.** Engines differ in how far `scrollIntoViewIfNeeded()` scrolls a
+  tall card and how far a click scrolls a scroll container: scroll the element you are about
+  to press with the mouse into view itself before reading its `boundingBox()`. Firefox and
+  WebKit get a 60 s test budget (axe over a whole API page runs about twice as long there).
+- Locally: `npx playwright install firefox webkit`, then e.g.
+  `OGE_E2E_BROWSERS=webkit npx nx run dev-app-e2e:e2e -- --grep=@smoke`.
+
+### Visual regression (`apps/dev-app-e2e/visual`)
+
+- `visual.spec.ts` takes `toHaveScreenshot` baselines of each component's demo preview — grid,
+  buttons, tabs, date box, select box, tree view, kanban, charts, modal — in light, dark and
+  (where it matters) high contrast, and the React layer where it exists (25 shots). Config:
+  `playwright.visual.config.mts`, project `visual`, chromium only, `animations: 'disabled'`,
+  `reducedMotion: 'reduce'`, locale `en-US`, `TZ=UTC`, a pinned clock (`page.clock`), one
+  baseline set for every OS (`snapshotPathTemplate` without `{platform}`).
+- **The browser always runs in `mcr.microsoft.com/playwright:v<version>-noble`**, the image
+  matching the installed `@playwright/test`. `tools/e2e/visual.mjs` starts it with
+  `playwright run-server`, the test runner and the dev server stay on the host, and the
+  container reaches the host's `localhost` through `connectOptions.exposeNetwork`. CI's `visual`
+  job runs the same script, so a baseline written on a laptop is the one CI compares against.
+- Compare: `npm run e2e:visual` (or `npx nx run dev-app-e2e:e2e-visual`). Update after an
+  intended visual change: `npm run e2e:visual:update`, review the PNG diff, commit the
+  baselines with the change. Needs Docker. `BASE_URL` points at another dev-server port.
+- Adding a shot: one entry in `SHOTS`; mask anything time- or data-dependent (`mask`), keep the
+  set curated (each PNG is a review burden) and the folder well under 15 MB.
+
+### Coverage ratchet
+
+- CI runs the unit tests under V8 coverage: `nx affected -t test --coverage --testTimeout=30000`
+  (instrumented TestBed compiles need the larger budget). Every package's vitest config carries
+  `coverage.thresholds` set to the measured level minus one point, rounded down; a package that
+  drops below its floor fails `verify`.
+- **Raising a floor** (do it whenever a change adds meaningful coverage): run
+  `npx nx run <project>:test --coverage --testTimeout=30000`, read the summary, set each
+  threshold to the new level minus one (rounded down). Never lower a floor to make a change pass
+  — add the tests instead, or say in the PR why the code is unreachable from a spec.
+- Time-budget assertions (perf specs) scale under coverage: the package's vitest config sets
+  `OGE_COVERAGE` when `--coverage` is on and the spec multiplies its budget
+  (`BUDGET_SCALE`), so the budgets keep catching complexity regressions.
+
+### Accessibility depth
+
+- `apps/dev-app-e2e/a11y/axe-crawl.spec.ts` (config `playwright.a11y.config.mts`, target
+  `dev-app-e2e:e2e-a11y`, nightly, 2 shards) opens every sitemap route of the prerendered build
+  in both layers and runs axe with `withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])`
+  over the whole page, plus `color-contrast` over the components only (every top-level
+  `.oge-*` element). A contrast failure in a component is fixed in the tokens
+  (`_tokens.scss` and every theme), never with a raw value.
+- On every PR, `src/contrast.spec.ts` runs the same component `color-contrast` scan over a dozen
+  representative pages in light and dark, and `themes.spec.ts` holds the default and dark
+  palettes to AA (muted text and severity colours on the surfaces, `--oge-severity-contrast`
+  on the filled controls). Demos whose colours are the demo's own input (the buttons'
+  "Custom colors") are listed in `CONTRAST_EXEMPT_DEMOS` with the reason.
+
+### Property-based engine specs
+
+- `compute-pivot-property.spec.ts` (core), `schedule-property.spec.ts` (gantt-engine) and
+  `bpmn-xml-property.spec.ts` (bpmn-engine) check invariants over generated inputs: every
+  pivot subtotal and grand total equals the sum of what it summarises; no gantt task starts
+  before its predecessors plus the lag allow, linked tasks sit on their binding link, and
+  scheduling is a fixpoint, with and without a work calendar; BPMN import → export → import is
+  an equal model and export is byte-stable.
+- They use a small seeded PRNG inside the spec (no extra dependency): runs are deterministic,
+  a failure prints its seed and input, and `OGE_PROPERTY_SEED=<n>` replays one. When a property
+  finds a bug, also add the minimal case as a plain example test beside it.
+
+<!-- end W5b -->
 
 ## Dev-app registration (per new component)
 

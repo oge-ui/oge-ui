@@ -18,6 +18,14 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../../coverage/packages/bpmn-engine',
       provider: 'v8' as const,
+      // ratchet floor: measured level − 1, rounded down. Raise it when
+      // coverage grows (docs/ARCHITECTURE.md → Testing → coverage ratchet)
+      thresholds: {
+        statements: 71,
+        branches: 65,
+        functions: 74,
+        lines: 72,
+      },
     },
   },
 }));

@@ -129,8 +129,14 @@ for (const theme of THEMES) {
       expect(await css(pressed, 'border-top-color')).toBe(
         await token(pressed, 'border-color', 'var(--oge-accent)'),
       );
+      // its label: the accent deepened a fifth toward the text colour (AA on
+      // the accent-soft fill)
       expect(await css(pressed, 'color')).toBe(
-        await token(pressed, 'color', 'var(--oge-accent)'),
+        await token(
+          pressed,
+          'color',
+          'color-mix(in srgb, var(--oge-accent) 80%, var(--oge-text-color))',
+        ),
       );
       const idle = page
         .locator(

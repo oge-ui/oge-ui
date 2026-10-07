@@ -2,6 +2,13 @@ import { buildTreeIndex, type TreeIndex } from './tree-index';
 import { flattenTreeData } from './flatten-tree';
 import { filterTreeKeys } from './tree-filter';
 
+/**
+ * V8 coverage instrumentation slows hot loops several times over; the CI
+ * coverage run (`--coverage`, see the package's vitest config) scales the
+ * time budgets so they keep catching complexity regressions, not the probe.
+ */
+const BUDGET_SCALE = process.env['OGE_COVERAGE'] ? 4 : 1;
+
 interface Node {
   id: number;
   parentId: number | null;
@@ -51,7 +58,7 @@ describe('tree pipeline performance budgets (100k rows)', () => {
       index = buildTreeIndex(rows, { keyOf, parentIdOf });
     });
     expect(index.byKey.size).toBe(100_000);
-    expect(elapsed).toBeLessThan(400);
+    expect(elapsed).toBeLessThan(400 * BUDGET_SCALE);
   });
 
   it('fully-expanded flatten stays under 400ms', () => {
@@ -64,7 +71,7 @@ describe('tree pipeline performance budgets (100k rows)', () => {
       }).length;
     });
     expect(count).toBe(100_000);
-    expect(elapsed).toBeLessThan(400);
+    expect(elapsed).toBeLessThan(400 * BUDGET_SCALE);
   });
 
   it('collapsed flatten is O(visible), not O(n): under 50ms', () => {
@@ -77,7 +84,7 @@ describe('tree pipeline performance budgets (100k rows)', () => {
       }).length;
     });
     expect(count).toBe(100); // only the roots
-    expect(elapsed).toBeLessThan(50);
+    expect(elapsed).toBeLessThan(50 * BUDGET_SCALE);
   });
 
   it('a single expansion re-flattens in O(visible): under 50ms', () => {
@@ -90,7 +97,7 @@ describe('tree pipeline performance budgets (100k rows)', () => {
       }).length;
     });
     expect(count).toBe(100 + 999);
-    expect(elapsed).toBeLessThan(50);
+    expect(elapsed).toBeLessThan(50 * BUDGET_SCALE);
   });
 
   it('filterTreeKeys sweeps 100k rows under 400ms', () => {
@@ -103,6 +110,6 @@ describe('tree pipeline performance budgets (100k rows)', () => {
       ).size;
     });
     expect(size).toBeGreaterThan(100);
-    expect(elapsed).toBeLessThan(400);
+    expect(elapsed).toBeLessThan(400 * BUDGET_SCALE);
   });
 });

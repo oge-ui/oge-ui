@@ -26,30 +26,36 @@ for (const layer of LAYERS) {
 
     const result = (page: Page) => page.getByTestId('dialog-result');
 
-    test('danger confirm: Cancel has focus, Escape resolves false, Delete true', async ({
-      page,
-    }) => {
-      await helpers(page).getByRole('button', { name: 'Delete file…' }).click();
-      const dialog = page.getByRole('alertdialog', { name: 'Delete file?' });
-      await expect(dialog).toBeVisible();
-      await expect(dialog).toHaveAttribute('aria-modal', 'true');
-      await expect(dialog).toHaveAccessibleDescription(
-        'report.xlsx will be removed permanently.',
-      );
-      await expect(
-        dialog.getByRole('button', { name: 'Cancel' }),
-      ).toBeFocused();
-      await page.keyboard.press('Escape');
-      await expect(dialog).toHaveCount(0);
-      await expect(result(page)).toHaveText('result: confirm → false');
+    test(
+      'danger confirm: Cancel has focus, Escape resolves false, Delete true',
+      { tag: '@smoke' },
+      async ({ page }) => {
+        await helpers(page)
+          .getByRole('button', { name: 'Delete file…' })
+          .click();
+        const dialog = page.getByRole('alertdialog', { name: 'Delete file?' });
+        await expect(dialog).toBeVisible();
+        await expect(dialog).toHaveAttribute('aria-modal', 'true');
+        await expect(dialog).toHaveAccessibleDescription(
+          'report.xlsx will be removed permanently.',
+        );
+        await expect(
+          dialog.getByRole('button', { name: 'Cancel' }),
+        ).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(dialog).toHaveCount(0);
+        await expect(result(page)).toHaveText('result: confirm → false');
 
-      await helpers(page).getByRole('button', { name: 'Delete file…' }).click();
-      await page
-        .getByRole('alertdialog', { name: 'Delete file?' })
-        .getByRole('button', { name: 'Delete' })
-        .click();
-      await expect(result(page)).toHaveText('result: confirm → true');
-    });
+        await helpers(page)
+          .getByRole('button', { name: 'Delete file…' })
+          .click();
+        await page
+          .getByRole('alertdialog', { name: 'Delete file?' })
+          .getByRole('button', { name: 'Delete' })
+          .click();
+        await expect(result(page)).toHaveText('result: confirm → true');
+      },
+    );
 
     test('plain confirm: the primary button has focus and Enter confirms', async ({
       page,

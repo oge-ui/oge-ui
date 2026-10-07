@@ -136,7 +136,12 @@ for (const layer of LAYERS) {
 
     test('RTL mirrors the axis; two fingers pinch-zoom the plot', async ({
       page,
+      browserName,
     }) => {
+      test.skip(
+        browserName !== 'chromium',
+        'the two-finger pinch is CDP Input.dispatchTouchEvent',
+      );
       const host = await open(page, 'rtl-touch');
       const labels = host.locator('.oge-chart-arg-label');
       const first = await labels.first().boundingBox();

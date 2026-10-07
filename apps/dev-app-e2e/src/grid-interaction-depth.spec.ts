@@ -31,7 +31,12 @@ for (const layer of LAYERS) {
     test('selects a cell range, copies TSV, pastes, fills and undoes', async ({
       page,
       context,
+      browserName,
     }) => {
+      test.skip(
+        browserName !== 'chromium',
+        'reads the clipboard: Playwright grants clipboard-read in Chromium only',
+      );
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);
       await page.goto(`/components/data-grid/range-selection${layer.query}`);
       const grid = page.locator(layer.host).first();

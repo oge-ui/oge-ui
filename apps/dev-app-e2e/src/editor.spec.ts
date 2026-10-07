@@ -20,6 +20,13 @@ const card = (page: Page, id: string) =>
 const surface = (scope: Locator) =>
   scope.locator('.oge-editor-content').first();
 const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
+/**
+ * The paste specs dispatch a synthetic `ClipboardEvent` carrying a
+ * script-built `DataTransfer`; Firefox hands an untrusted paste event an
+ * empty `clipboardData`, and Playwright cannot put HTML on its clipboard.
+ */
+const SYNTHETIC_PASTE =
+  'Firefox empties clipboardData on a synthetic ClipboardEvent';
 
 /** Puts the caret at the end of the editor's text. */
 async function caretToEnd(editor: Locator): Promise<void> {
@@ -31,26 +38,28 @@ for (const layer of LAYERS) {
   test.describe(`${layer.name}: rich-text editor`, () => {
     const route = `/components/editor${layer.query}`;
 
-    test('typing goes through the model into the sanitized value', async ({
-      page,
-    }) => {
-      await page.goto(route);
-      const demo = card(page, 'getting-started');
-      const editor = surface(demo);
-      await expect(editor).toHaveAttribute('role', 'textbox');
-      await expect(editor).toHaveAttribute('aria-multiline', 'true');
-      await caretToEnd(editor);
-      await page.keyboard.type(' again');
-      const value = demo.getByTestId('editor-value');
-      await expect(value).toHaveText(
-        '<p>Hello <strong>world again</strong></p>',
-      );
-      await page.keyboard.press('Enter');
-      await page.keyboard.type('Second line');
-      await expect(value).toHaveText(
-        '<p>Hello <strong>world again</strong></p><p><strong>Second line</strong></p>',
-      );
-    });
+    test(
+      'typing goes through the model into the sanitized value',
+      { tag: '@smoke' },
+      async ({ page }) => {
+        await page.goto(route);
+        const demo = card(page, 'getting-started');
+        const editor = surface(demo);
+        await expect(editor).toHaveAttribute('role', 'textbox');
+        await expect(editor).toHaveAttribute('aria-multiline', 'true');
+        await caretToEnd(editor);
+        await page.keyboard.type(' again');
+        const value = demo.getByTestId('editor-value');
+        await expect(value).toHaveText(
+          '<p>Hello <strong>world again</strong></p>',
+        );
+        await page.keyboard.press('Enter');
+        await page.keyboard.type('Second line');
+        await expect(value).toHaveText(
+          '<p>Hello <strong>world again</strong></p><p><strong>Second line</strong></p>',
+        );
+      },
+    );
 
     test('shortcuts format the selection; undo and Shift+Enter', async ({
       page,
@@ -164,7 +173,9 @@ for (const layer of LAYERS) {
 
     test('paste: hostile HTML is sanitized, Word lists become lists', async ({
       page,
+      browserName,
     }) => {
+      test.skip(browserName === 'firefox', SYNTHETIC_PASTE);
       await page.goto(route);
       const demo = card(page, 'paste-and-sanitizing');
       const editor = surface(demo);
@@ -232,7 +243,9 @@ test('the API page renders both layers', async ({ page }) => {
 
 test('under require-trusted-types-for the editor parses through oge-ui#editor', async ({
   page,
+  browserName,
 }) => {
+  test.skip(browserName === 'firefox', SYNTHETIC_PASTE);
   // A strict Trusted Types policy on the editor page: only the named
   // policies may create TrustedHTML, so an HTML sink fed a plain string is
   // a violation. The docs app's own chunk loader assigns `script.src`, which

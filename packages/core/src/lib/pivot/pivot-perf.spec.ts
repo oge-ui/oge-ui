@@ -1,6 +1,13 @@
 import { PivotEngine, pathKey } from './compute-pivot';
 import type { PivotFieldConfig } from './pivot-types';
 
+/**
+ * V8 coverage instrumentation slows hot loops several times over; the CI
+ * coverage run (`--coverage`, see the package's vitest config) scales the
+ * time budgets so they keep catching complexity regressions, not the probe.
+ */
+const BUDGET_SCALE = process.env['OGE_COVERAGE'] ? 4 : 1;
+
 interface Row {
   region: string;
   country: string;
@@ -58,7 +65,7 @@ describe('pivot performance budgets', () => {
     const elapsed = performance.now() - start;
     expect(result.rowLeafCount).toBe(6); // 5 regions + grand
     // Target ~250ms on dev machines; generous bound for shared CI runners.
-    expect(elapsed).toBeLessThan(1_500);
+    expect(elapsed).toBeLessThan(1_500 * BUDGET_SCALE);
   });
 
   it('expansion re-materialization only pays the visible phase', () => {
@@ -75,6 +82,6 @@ describe('pivot performance budgets', () => {
     });
     const elapsed = performance.now() - start;
     // Target ~30ms; generous bound for shared CI runners.
-    expect(elapsed).toBeLessThan(400);
+    expect(elapsed).toBeLessThan(400 * BUDGET_SCALE);
   });
 });

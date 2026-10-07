@@ -1,6 +1,13 @@
 import { downsamplePath } from './downsample';
 import type { PathPoint } from './path-builder';
 
+/**
+ * V8 coverage instrumentation slows hot loops several times over; the CI
+ * coverage run (`--coverage`, see the package's vitest config) scales the
+ * time budgets so they keep catching complexity regressions, not the probe.
+ */
+const BUDGET_SCALE = process.env['OGE_COVERAGE'] ? 4 : 1;
+
 describe('downsamplePath (LTTB)', () => {
   const wave = (n: number): PathPoint[] =>
     Array.from({ length: n }, (_, i) => ({
@@ -44,6 +51,6 @@ describe('downsamplePath (LTTB)', () => {
     const points = wave(200_000);
     const start = performance.now();
     downsamplePath(points, 1_000);
-    expect(performance.now() - start).toBeLessThan(500);
+    expect(performance.now() - start).toBeLessThan(500 * BUDGET_SCALE);
   });
 });

@@ -1,17 +1,23 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '@playwright/test';
 
-test('tabs overview renders and switches tabs by click', async ({ page }) => {
-  await page.goto('/components/tabs');
-  const firstPanel = page.locator('.oge-tab-panel').first();
-  await expect(firstPanel.getByRole('tab', { name: 'Overview' })).toBeVisible();
+test(
+  'tabs overview renders and switches tabs by click',
+  { tag: '@smoke' },
+  async ({ page }) => {
+    await page.goto('/components/tabs');
+    const firstPanel = page.locator('.oge-tab-panel').first();
+    await expect(
+      firstPanel.getByRole('tab', { name: 'Overview' }),
+    ).toBeVisible();
 
-  await firstPanel.getByRole('tab', { name: 'Activity' }).click();
-  await expect(
-    firstPanel.getByRole('tab', { name: 'Activity' }),
-  ).toHaveAttribute('aria-selected', 'true');
-  await expect(firstPanel.getByText('Latest activity feed…')).toBeVisible();
-});
+    await firstPanel.getByRole('tab', { name: 'Activity' }).click();
+    await expect(
+      firstPanel.getByRole('tab', { name: 'Activity' }),
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect(firstPanel.getByText('Latest activity feed…')).toBeVisible();
+  },
+);
 
 test('arrow keys move selection with a roving tabindex', async ({ page }) => {
   await page.goto('/components/tabs');

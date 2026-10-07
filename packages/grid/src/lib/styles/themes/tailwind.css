@@ -20,20 +20,20 @@
   --oge-selected-bg: var(--color-indigo-50, #eef2ff);
   --oge-group-bg: var(--color-slate-100, #f1f5f9);
   --oge-detail-bg: var(--color-slate-50, #f8fafc);
-  --oge-muted-color: var(--color-slate-400, #94a3b8);
+  --oge-muted-color: var(--color-slate-500, #64748b);
   --oge-accent: var(--color-indigo-600, #4f46e5);
   --oge-radius: var(--radius-lg, 8px);
   --oge-font-size: var(--text-sm, 13.5px);
-  --oge-success: var(--color-green-600, #16a34a);
+  --oge-success: var(--color-green-700, #15803d);
   --oge-success-soft: color-mix(
     in srgb,
-    var(--color-green-600, #16a34a) 12%,
+    var(--color-green-700, #15803d) 12%,
     transparent
   );
-  --oge-warning: var(--color-amber-600, #d97706);
+  --oge-warning: var(--color-amber-700, #b45309);
   --oge-warning-soft: color-mix(
     in srgb,
-    var(--color-amber-600, #d97706) 14%,
+    var(--color-amber-700, #b45309) 14%,
     transparent
   );
   --oge-danger: var(--color-red-600, #dc2626);

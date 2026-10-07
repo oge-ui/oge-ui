@@ -26,6 +26,14 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../../coverage/packages/navigation',
       provider: 'v8' as const,
+      // ratchet floor: measured level − 1, rounded down. Raise it when
+      // coverage grows (docs/ARCHITECTURE.md → Testing → coverage ratchet)
+      thresholds: {
+        statements: 87,
+        branches: 72,
+        functions: 89,
+        lines: 90,
+      },
     },
   },
 }));

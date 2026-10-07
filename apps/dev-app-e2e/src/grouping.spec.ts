@@ -1,37 +1,41 @@
 import { test, expect } from '@playwright/test';
 
-test('groups rows, collapses a group and shows summaries', async ({ page }) => {
-  await page.goto('/components/data-grid/grouping');
-  const grid = page.locator('oge-grid').first();
+test(
+  'groups rows, collapses a group and shows summaries',
+  { tag: '@smoke' },
+  async ({ page }) => {
+    await page.goto('/components/data-grid/grouping');
+    const grid = page.locator('oge-grid').first();
 
-  // pre-grouped by department via [groupBy]
-  await expect(grid.locator('.oge-group-chip')).toHaveText(/Department/);
-  const groupRows = grid.locator('.oge-group-row');
-  await expect(groupRows.first()).toBeVisible();
-  await expect(groupRows.first()).toContainText('Department:');
-  await expect(groupRows.first()).toContainText('Avg of Salary:');
+    // pre-grouped by department via [groupBy]
+    await expect(grid.locator('.oge-group-chip')).toHaveText(/Department/);
+    const groupRows = grid.locator('.oge-group-row');
+    await expect(groupRows.first()).toBeVisible();
+    await expect(groupRows.first()).toContainText('Department:');
+    await expect(groupRows.first()).toContainText('Avg of Salary:');
 
-  // total summary row
-  await expect(
-    grid.locator('.oge-total-cell', { hasText: 'Sum:' }),
-  ).toBeVisible();
+    // total summary row
+    await expect(
+      grid.locator('.oge-total-cell', { hasText: 'Sum:' }),
+    ).toBeVisible();
 
-  // collapsing the first group removes its child rows
-  const before = await grid.locator('.oge-row').count();
-  await groupRows.first().click();
-  await expect(grid.locator('.oge-group-row').first()).toHaveAttribute(
-    'aria-expanded',
-    'false',
-  );
-  const after = await grid.locator('.oge-row').count();
-  expect(after).toBeLessThan(before);
+    // collapsing the first group removes its child rows
+    const before = await grid.locator('.oge-row').count();
+    await groupRows.first().click();
+    await expect(grid.locator('.oge-group-row').first()).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    const after = await grid.locator('.oge-row').count();
+    expect(after).toBeLessThan(before);
 
-  // drag the City header into the group panel → second-level grouping
-  await grid
-    .locator('.oge-header-cell', { hasText: 'City' })
-    .dragTo(grid.locator('.oge-group-panel'));
-  await expect(grid.locator('.oge-group-chip')).toHaveCount(2);
-});
+    // drag the City header into the group panel → second-level grouping
+    await grid
+      .locator('.oge-header-cell', { hasText: 'City' })
+      .dragTo(grid.locator('.oge-group-panel'));
+    await expect(grid.locator('.oge-group-chip')).toHaveCount(2);
+  },
+);
 
 test('deferred groups fetch children only on expand', async ({ page }) => {
   await page.goto('/components/data-grid/grouping');

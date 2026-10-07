@@ -15,9 +15,23 @@ export default defineConfig(() => ({
     environment: 'jsdom',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
+    // the perf specs scale their time budgets under coverage instrumentation
+    env: {
+      OGE_COVERAGE: process.argv.some((arg) => arg.startsWith('--coverage'))
+        ? '1'
+        : '',
+    },
     coverage: {
       reportsDirectory: '../../coverage/packages/charts-engine',
       provider: 'v8' as const,
+      // ratchet floor: measured level − 1, rounded down. Raise it when
+      // coverage grows (docs/ARCHITECTURE.md → Testing → coverage ratchet)
+      thresholds: {
+        statements: 90,
+        branches: 78,
+        functions: 93,
+        lines: 93,
+      },
     },
   },
 }));

@@ -2,7 +2,10 @@
   "name": "@oge/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "e2e:visual": "node tools/e2e/visual.mjs",
+    "e2e:visual:update": "node tools/e2e/visual.mjs --update"
+  },
   "private": true,
   "dependencies": {
     "@angular/common": "22.2.1",

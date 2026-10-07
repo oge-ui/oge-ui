@@ -301,18 +301,42 @@ export function scheduleGanttProject(
     const calendar = calendarFor(task);
     const span = spans.get(key) as Span;
     let es: number | null = null;
+    // the latest finish an FF / SF link demands (see the push below)
+    let ef: number | null = null;
     for (const link of graph.incoming.get(key) ?? []) {
       const predecessor = dates.get(link.predecessorKey);
       if (predecessor === undefined) continue;
       const predecessorTask = graph.leaves.get(link.predecessorKey);
-      const bound = linkStartBound(
+      const linkCalendar =
+        predecessorTask !== undefined ? calendarFor(predecessorTask) : calendar;
+      let bound = linkStartBound(
         link.type,
         link.lag,
         link.lagUnit,
         predecessor,
         span.ms,
-        predecessorTask !== undefined ? calendarFor(predecessorTask) : calendar,
+        linkCalendar,
       ).getTime();
+      if (link.type === 'FF' || link.type === 'SF') {
+        const finish = linkStartBound(
+          link.type,
+          link.lag,
+          link.lagUnit,
+          predecessor,
+          0,
+          linkCalendar,
+        ).getTime();
+        ef = ef === null ? finish : Math.max(ef, finish);
+        // on a calendar, count the working days back from the finish
+        // instead of subtracting today's wall-clock length
+        if (calendar !== undefined && span.days > 0) {
+          bound = placeEndingAt(
+            new Date(finish),
+            span,
+            calendar,
+          ).start.getTime();
+        }
+      }
       es = es === null ? bound : Math.max(es, bound);
     }
     if (es !== null) earliest.set(key, es);
@@ -344,7 +368,19 @@ export function scheduleGanttProject(
       default:
         start = base;
     }
-    dates.set(key, placeAt(new Date(start), span, calendar));
+    let placed = placeAt(new Date(start), span, calendar);
+    // FF / SF bound the finish, but the start bound subtracts the task's
+    // wall-clock length — on a work calendar a task placed across a
+    // different weekend or holiday keeps its working days, not its hours, and
+    // could finish before the link allows. Step it a working day at a time
+    // to the earliest start whose finish holds (a bigger jump could skip
+    // past it, and a re-run would then pull the task back: no fixpoint).
+    if (ef !== null && task.constraintType !== 'MSO') {
+      for (let i = 0; i < 400 && placed.end.getTime() < ef - EPSILON_MS; i++) {
+        placed = placeAt(addDays(placed.start, 1), span, calendar);
+      }
+    }
+    dates.set(key, placed);
   }
 
   // backward pass: ALAP tasks slide as late as their successors allow

@@ -1,5 +1,12 @@
 import { buildArgumentIndex, nearestIndex } from './hit-test';
 
+/**
+ * V8 coverage instrumentation slows hot loops several times over; the CI
+ * coverage run (`--coverage`, see the package's vitest config) scales the
+ * time budgets so they keep catching complexity regressions, not the probe.
+ */
+const BUDGET_SCALE = process.env['OGE_COVERAGE'] ? 4 : 1;
+
 describe('nearestIndex', () => {
   const args = [0, 10, 20, 50, 100];
 
@@ -23,7 +30,7 @@ describe('nearestIndex', () => {
     const big = Array.from({ length: 50_000 }, (_, i) => i * 2);
     const start = performance.now();
     for (let i = 0; i < 10_000; i++) nearestIndex(big, i * 7);
-    expect(performance.now() - start).toBeLessThan(200);
+    expect(performance.now() - start).toBeLessThan(200 * BUDGET_SCALE);
   });
 });
 

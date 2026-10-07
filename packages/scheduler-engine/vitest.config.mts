@@ -18,6 +18,14 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../../coverage/packages/scheduler-engine',
       provider: 'v8' as const,
+      // ratchet floor: measured level − 1, rounded down. Raise it when
+      // coverage grows (docs/ARCHITECTURE.md → Testing → coverage ratchet)
+      thresholds: {
+        statements: 86,
+        branches: 76,
+        functions: 85,
+        lines: 89,
+      },
     },
   },
 }));

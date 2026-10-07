@@ -96,14 +96,21 @@
 }
 
 .oge-toggle-group-item-selected {
+  // accent text on the accent-soft fill sat at 4.3:1; a fifth of the text
+  // colour mixed in keeps the hue and clears 4.5:1 in every theme
+  --oge-toggle-group-selected-fg: color-mix(
+    in srgb,
+    var(--oge-accent) 80%,
+    var(--oge-text-color)
+  );
   border-color: var(--oge-accent);
   background: var(--oge-accent-soft);
-  color: var(--oge-accent);
+  color: var(--oge-toggle-group-selected-fg);
   font-weight: 600;
 
   &:hover:not(:disabled) {
     background: var(--oge-accent-soft);
-    color: var(--oge-accent);
+    color: var(--oge-toggle-group-selected-fg);
   }
 }
 

@@ -465,7 +465,7 @@ const MANY: Folder[] = Array.from({ length: 10000 }, (_, i) => ({
             let-level="level"
           >
             <strong>{{ item.name }}</strong>
-            <small class="opacity-60">level {{ level }}</small>
+            <small class="opacity-75">level {{ level }}</small>
           </ng-template>
         </oge-tree-view>
       </app-demo-card>

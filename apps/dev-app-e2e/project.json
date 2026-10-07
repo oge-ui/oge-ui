@@ -6,6 +6,15 @@
   "tags": ["scope:app", "platform:docs"],
   "implicitDependencies": ["dev-app"],
   "targets": {
+    "e2e": {
+      "inputs": [
+        "default",
+        "^production",
+        "^{projectRoot}/tsconfig*.json",
+        { "externalDependencies": ["@playwright/test"] },
+        { "env": "OGE_E2E_BROWSERS" }
+      ]
+    },
     "e2e-ssr": {
       "executor": "nx:run-commands",
       "outputs": [],
@@ -14,6 +23,31 @@
         "cwd": "{workspaceRoot}"
       },
       "dependsOn": ["dev-app:build"]
+    },
+    "e2e-a11y": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "npx playwright test -c apps/dev-app-e2e/playwright.a11y.config.mts",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": ["dev-app:build"]
+    },
+    "e2e-visual": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/e2e/visual.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "e2e-visual-update": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/e2e/visual.mjs --update",
+        "cwd": "{workspaceRoot}"
+      }
     }
   }
 }

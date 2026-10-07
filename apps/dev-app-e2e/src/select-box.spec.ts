@@ -2,32 +2,34 @@ import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '@playwright/test';
 
 test.describe('select box page', () => {
-  test('opens, filters and selects with the combobox pattern', async ({
-    page,
-  }) => {
-    await page.goto('/components/inputs/select-box');
+  test(
+    'opens, filters and selects with the combobox pattern',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await page.goto('/components/inputs/select-box');
 
-    // basic select-only: open via chevron, pick an option
-    const basic = page.locator('oge-select-box', { hasText: 'City' }).first();
-    await basic.locator('.oge-input-dropdown').click();
-    const listbox = page.locator('.oge-select-list');
-    await expect(listbox).toBeVisible();
-    await page.locator('.oge-select-option', { hasText: 'Lisbon' }).click();
-    await expect(listbox).toBeHidden();
-    await expect(basic.locator('.oge-input-native')).toHaveValue('Lisbon');
+      // basic select-only: open via chevron, pick an option
+      const basic = page.locator('oge-select-box', { hasText: 'City' }).first();
+      await basic.locator('.oge-input-dropdown').click();
+      const listbox = page.locator('.oge-select-list');
+      await expect(listbox).toBeVisible();
+      await page.locator('.oge-select-option', { hasText: 'Lisbon' }).click();
+      await expect(listbox).toBeHidden();
+      await expect(basic.locator('.oge-input-native')).toHaveValue('Lisbon');
 
-    // searchable: typing filters, committed value is the valueExpr
-    const search = page
-      .locator('oge-select-box', { hasText: 'Assignee' })
-      .first();
-    const searchInput = search.locator('.oge-input-native');
-    await searchInput.click();
-    await searchInput.fill('mert');
-    await expect(page.locator('.oge-select-option')).toHaveCount(1);
-    await searchInput.press('Enter');
-    await expect(searchInput).toHaveValue('Mert Demir');
-    await expect(page.getByText('committed id:')).toContainText('2');
-  });
+      // searchable: typing filters, committed value is the valueExpr
+      const search = page
+        .locator('oge-select-box', { hasText: 'Assignee' })
+        .first();
+      const searchInput = search.locator('.oge-input-native');
+      await searchInput.click();
+      await searchInput.fill('mert');
+      await expect(page.locator('.oge-select-option')).toHaveCount(1);
+      await searchInput.press('Enter');
+      await expect(searchInput).toHaveValue('Mert Demir');
+      await expect(page.getByText('committed id:')).toContainText('2');
+    },
+  );
 
   test('keyboard: arrows + Enter select without leaving the input', async ({
     page,

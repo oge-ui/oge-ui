@@ -44,7 +44,15 @@ jobs:
       # the committed llms.txt / sitemap artifacts must match their generator
       - run: npx nx run docs-tools:llms-check
       - run: npx nx run docs-tools:parity
-      - run: npx nx affected -t lint test build typecheck --exclude=dev-app-e2e
+      - run: npx nx affected -t lint build typecheck --exclude=dev-app-e2e
+      # --- W5b: unit tests under V8 coverage ---------------------------------
+      # Each package's vitest config carries `coverage.thresholds` (a ratchet:
+      # docs/ARCHITECTURE.md → Testing → "Coverage ratchet"); a package that
+      # drops below its floor fails here. This is the unit-test run itself,
+      # not a second one. Instrumented TestBed compiles are several times
+      # slower, so the per-test budget rises with it (ssr-smoke's own 30 s).
+      - run: npx nx affected -t test --exclude=dev-app-e2e --coverage --testTimeout=30000
+      # --- end W5b -------------------------------------------------------------
       # the ng-add bundle only ships if it builds — release runs this too
       - run: npx nx run oge-schematics:schematics
       # the site's CSP is a fixed string on a static host, so it has to be
@@ -122,6 +130,93 @@ jobs:
             apps/dev-app-e2e/test-output
           retention-days: 14
           if-no-files-found: ignore
+
+  # --- W5b: cross-browser smoke + visual regression --------------------------
+  # The `@smoke` subset (~20 tests: home, grid, select / date box, modal, tabs,
+  # tree view, scheduler, charts, editor, kanban keyboard + touch drag) on every
+  # non-default browser project. The full suite on all of them runs nightly
+  # (nightly.yml); the default chromium run above is unchanged.
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: firefox
+            browser: firefox
+          - project: webkit
+            browser: webkit
+          - project: mobile-chrome
+            browser: chromium
+          - project: mobile-safari
+            browser: webkit
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npx nx run dev-app-e2e:e2e -- --grep=@smoke
+        env:
+          OGE_E2E_BROWSERS: ${{ matrix.project }}
+
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-smoke-report-${{ matrix.project }}
+          path: |
+            apps/dev-app-e2e/playwright-report
+            apps/dev-app-e2e/test-results.xml
+            apps/dev-app-e2e/test-output
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # Screenshot baselines (apps/dev-app-e2e/visual). The browser runs inside
+  # the official Playwright Docker image matching @playwright/test — the same
+  # container `npm run e2e:visual:update` renders the baselines in — so the
+  # pixels compare across machines (tools/e2e/visual.mjs).
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      # until the first baseline set is committed there is nothing to compare
+      - if: ${{ hashFiles('apps/dev-app-e2e/visual/__screenshots__/**') != '' }}
+        run: npx nx run dev-app-e2e:e2e-visual
+
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-visual-report
+          path: |
+            apps/dev-app-e2e/playwright-report-visual
+            apps/dev-app-e2e/test-results-visual.xml
+            apps/dev-app-e2e/test-output-visual
+          retention-days: 14
+          if-no-files-found: ignore
+  # --- end W5b ---------------------------------------------------------------
 
   # The SSR / hydration proof runs against the prerendered build the docs
   # host serves (not the dev server above): every route must hydrate under

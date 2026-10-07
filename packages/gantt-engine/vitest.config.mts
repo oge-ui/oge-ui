@@ -19,6 +19,14 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../../coverage/packages/gantt-engine',
       provider: 'v8' as const,
+      // ratchet floor: measured level − 1, rounded down. Raise it when
+      // coverage grows (docs/ARCHITECTURE.md → Testing → coverage ratchet)
+      thresholds: {
+        statements: 78,
+        branches: 67,
+        functions: 81,
+        lines: 81,
+      },
     },
   },
 }));

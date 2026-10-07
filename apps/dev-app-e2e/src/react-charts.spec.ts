@@ -161,6 +161,9 @@ test.describe('React charts docs', () => {
       .locator('.oge-chart-arg-label')
       .allTextContents();
     const handle = selector.locator('.oge-range-handle').first();
+    // the card can be taller than the viewport, and engines differ in how
+    // far scrollIntoViewIfNeeded scrolls it: bring the handle itself in
+    await handle.scrollIntoViewIfNeeded();
     const box = await handle.boundingBox();
     if (box === null) throw new Error('no handle box');
     await page.mouse.move(box.x + 4, box.y + box.height / 2);

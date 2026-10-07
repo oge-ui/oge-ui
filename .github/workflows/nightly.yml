@@ -1,0 +1,109 @@
+name: Nightly
+
+# The slow half of the test matrix (docs/ARCHITECTURE.md → Testing): the full
+# e2e suite on every browser project, and the per-route axe crawl. Pull
+# requests run chromium in full plus a cross-browser `@smoke` subset
+# (ci.yml); this catches what only the rest of the suite reaches in the
+# other engines. `failOnFlakyTests` stays on: a flake here is a bug too.
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { project: chromium, browser: chromium, shard: 1, total: 3 }
+          - { project: chromium, browser: chromium, shard: 2, total: 3 }
+          - { project: chromium, browser: chromium, shard: 3, total: 3 }
+          - { project: firefox, browser: firefox, shard: 1, total: 4 }
+          - { project: firefox, browser: firefox, shard: 2, total: 4 }
+          - { project: firefox, browser: firefox, shard: 3, total: 4 }
+          - { project: firefox, browser: firefox, shard: 4, total: 4 }
+          - { project: webkit, browser: webkit, shard: 1, total: 4 }
+          - { project: webkit, browser: webkit, shard: 2, total: 4 }
+          - { project: webkit, browser: webkit, shard: 3, total: 4 }
+          - { project: webkit, browser: webkit, shard: 4, total: 4 }
+          # the phone projects run `@smoke` + `@mobile` (playwright.config.mts)
+          - { project: mobile-chrome, browser: chromium, shard: 1, total: 1 }
+          - { project: mobile-safari, browser: webkit, shard: 1, total: 1 }
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npx nx run dev-app-e2e:e2e -- --shard=${{ matrix.shard }}/${{ matrix.total }}
+        env:
+          OGE_E2E_BROWSERS: ${{ matrix.project }}
+
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nightly-${{ matrix.project }}-${{ matrix.shard }}
+          path: |
+            apps/dev-app-e2e/playwright-report
+            apps/dev-app-e2e/test-results.xml
+            apps/dev-app-e2e/test-output
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # axe over every sitemap route of the prerendered build, WCAG 2.0 A
+  # through 2.2 AA tags with color-contrast on (apps/dev-app-e2e/a11y).
+  a11y-crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx nx run dev-app-e2e:e2e-a11y -- --shard=${{ matrix.shard }}/2
+
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nightly-a11y-crawl-${{ matrix.shard }}
+          path: |
+            apps/dev-app-e2e/test-results-a11y.xml
+            apps/dev-app-e2e/test-output-a11y
+          retention-days: 14
+          if-no-files-found: ignore

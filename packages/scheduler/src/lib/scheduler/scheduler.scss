@@ -36,7 +36,9 @@
   border-radius: calc(var(--oge-radius) + 3px);
   background: color-mix(in srgb, var(--oge-border-color) 34%, transparent);
 
-  > .oge-scheduler-btn {
+  // the primary "New" button keeps its accent fill: on the transparent pill
+  // its white label was unreadable
+  > .oge-scheduler-btn:not(.oge-scheduler-btn-primary) {
     border-color: transparent;
     background: transparent;
 
@@ -161,7 +163,7 @@
 
 .oge-scheduler-view-active {
   background: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 
   &:hover {
     background: var(--oge-accent);
@@ -240,7 +242,7 @@
 
 .oge-scheduler-date-today {
   background: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 }
 
 /* ---------- resource sub-header (column grouping) ---------- */
@@ -971,7 +973,7 @@
 
 .oge-scheduler-month-cell.oge-scheduler-day-today .oge-scheduler-month-daynum {
   background: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 }
 
 .oge-scheduler-month-lane-layer {
@@ -1091,7 +1093,7 @@
 .oge-scheduler-btn-primary {
   background: var(--oge-accent);
   border-color: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 
   &:hover {
     background: var(--oge-accent);
@@ -1562,10 +1564,10 @@
 
 .oge-scheduler-year-cell.oge-scheduler-date-today {
   background: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 
   .oge-scheduler-year-dot {
-    background: #fff;
+    background: var(--oge-severity-contrast);
   }
 }
 

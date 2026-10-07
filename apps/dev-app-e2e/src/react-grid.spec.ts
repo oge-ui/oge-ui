@@ -26,21 +26,25 @@ test.describe('React data-grid docs', () => {
     await expect(grid.locator('.oge-pager-info')).toHaveText('50 rows');
   });
 
-  test('sorts on header click and pages with the pager', async ({ page }) => {
-    await page.goto(`/components/data-grid${REACT}`);
-    const grid = page.locator('app-react-host .oge-grid').first();
-    const firstId = () =>
-      grid.locator('.oge-row').first().locator('.oge-cell').first();
-    await expect(firstId()).toHaveText('1');
-    const header = grid.getByRole('columnheader', { name: 'Id' });
-    await header.click();
-    await expect(header).toHaveAttribute('aria-sort', 'ascending');
-    await header.click();
-    await expect(header).toHaveAttribute('aria-sort', 'descending');
-    await expect(firstId()).toHaveText('50');
-    await grid.getByRole('button', { name: 'Next page' }).click();
-    await expect(firstId()).toHaveText('40');
-  });
+  test(
+    'sorts on header click and pages with the pager',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await page.goto(`/components/data-grid${REACT}`);
+      const grid = page.locator('app-react-host .oge-grid').first();
+      const firstId = () =>
+        grid.locator('.oge-row').first().locator('.oge-cell').first();
+      await expect(firstId()).toHaveText('1');
+      const header = grid.getByRole('columnheader', { name: 'Id' });
+      await header.click();
+      await expect(header).toHaveAttribute('aria-sort', 'ascending');
+      await header.click();
+      await expect(header).toHaveAttribute('aria-sort', 'descending');
+      await expect(firstId()).toHaveText('50');
+      await grid.getByRole('button', { name: 'Next page' }).click();
+      await expect(firstId()).toHaveText('40');
+    },
+  );
 
   test('the api page renders the React tables', async ({ page }) => {
     await page.goto(`/components/data-grid/api${REACT}`);

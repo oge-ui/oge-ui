@@ -1,21 +1,25 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-test('expands and collapses nodes, exposing the APG hierarchy', async ({
-  page,
-}) => {
-  await page.goto('/components/tree-view');
-  const tree = page.locator('.oge-tree-view').first();
-  const documents = tree.getByRole('treeitem', { name: /Documents/ });
+test(
+  'expands and collapses nodes, exposing the APG hierarchy',
+  { tag: '@smoke' },
+  async ({ page }) => {
+    await page.goto('/components/tree-view');
+    const tree = page.locator('.oge-tree-view').first();
+    const documents = tree.getByRole('treeitem', { name: /Documents/ });
 
-  await expect(documents).toHaveAttribute('aria-level', '1');
-  await expect(documents).toHaveAttribute('aria-expanded', 'true');
-  await expect(tree.getByRole('treeitem', { name: /Reports/ })).toBeVisible();
+    await expect(documents).toHaveAttribute('aria-level', '1');
+    await expect(documents).toHaveAttribute('aria-expanded', 'true');
+    await expect(tree.getByRole('treeitem', { name: /Reports/ })).toBeVisible();
 
-  await documents.click();
-  await expect(documents).toHaveAttribute('aria-expanded', 'false');
-  await expect(tree.getByRole('treeitem', { name: /Reports/ })).toHaveCount(0);
-});
+    await documents.click();
+    await expect(documents).toHaveAttribute('aria-expanded', 'false');
+    await expect(tree.getByRole('treeitem', { name: /Reports/ })).toHaveCount(
+      0,
+    );
+  },
+);
 
 test('arrow keys follow the treeview semantics with one node tabbable', async ({
   page,

@@ -20,6 +20,7 @@ import {
   buildGroupedTimelineRows,
   buildHorizontalTimelineRow,
   buildTimelineGrid,
+  chipForeground,
   chipSelectKey,
   isOgeSchedulerDragOut,
   isWeekendDay,
@@ -762,6 +763,8 @@ function TimelineViewInner<T>(
                           width: `${bar.widthPct}%`,
                           top: `${4 + bar.lane * 26}px`,
                           backgroundColor: bar.appointment.color,
+                          color:
+                            chipForeground(bar.appointment.color) ?? undefined,
                         }}
                         onClick={(event) =>
                           props.onChipClicked(chipEvent(bar.appointment, event))

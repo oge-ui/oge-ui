@@ -37,10 +37,17 @@ test.describe('React scheduler docs', () => {
       'data-framework',
       'react',
     );
-    await expect(page.getByRole('status')).toHaveCount(0);
     await expect(
       page.locator('app-react-host .oge-scheduler').first(),
     ).toBeVisible();
+    // every scheduler carries its own (empty) `role="status"` load region,
+    // so look for the coverage notice by its text — a bare role count only
+    // passed when it ran before the schedulers mounted
+    await expect(
+      page
+        .getByRole('status')
+        .filter({ hasText: 'not in the React packages yet' }),
+    ).toHaveCount(0);
     // all nine sections mirror the Angular page
     await expect(page.locator('app-demo-card')).toHaveCount(9);
   });

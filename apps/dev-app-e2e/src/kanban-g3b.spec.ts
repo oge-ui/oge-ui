@@ -73,6 +73,9 @@ for (const layer of LAYERS) {
       await todo.nth(0).click();
       await todo.nth(1).click({ modifiers: ['Control'] });
       await expect(host.locator('.oge-kanban-card-multi')).toHaveCount(2);
+      // clicking the second card scrolls the column list to it; how far
+      // differs per engine (Firefox leaves the first under the sticky header)
+      await todo.nth(0).scrollIntoViewIfNeeded();
       const from = (await todo.nth(0).boundingBox())!;
       const target = host.locator('.oge-kanban-cards[data-col="doing"]');
       const to = (await target.boundingBox())!;

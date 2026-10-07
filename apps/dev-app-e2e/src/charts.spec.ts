@@ -20,18 +20,20 @@ async function openBasic(page: Page): Promise<void> {
 }
 
 test.describe('charts', () => {
-  test('renders bars, a line path, axis labels and the sr data table', async ({
-    page,
-  }) => {
-    await openBasic(page);
-    const host = chart(page);
-    await expect(host.locator('.oge-chart-line')).toHaveCount(1);
-    await expect(host.locator('.oge-chart-bar')).toHaveCount(4);
-    const labels = host.locator('.oge-chart-arg-label');
-    await expect(labels).toHaveCount(4);
-    await expect(labels.first()).toHaveText('Q1');
-    await expect(host.locator('.oge-chart-sr-table tbody tr')).toHaveCount(4);
-  });
+  test(
+    'renders bars, a line path, axis labels and the sr data table',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await openBasic(page);
+      const host = chart(page);
+      await expect(host.locator('.oge-chart-line')).toHaveCount(1);
+      await expect(host.locator('.oge-chart-bar')).toHaveCount(4);
+      const labels = host.locator('.oge-chart-arg-label');
+      await expect(labels).toHaveCount(4);
+      await expect(labels.first()).toHaveText('Q1');
+      await expect(host.locator('.oge-chart-sr-table tbody tr')).toHaveCount(4);
+    },
+  );
 
   test('legend click hides the series and rescales', async ({ page }) => {
     await openBasic(page);
@@ -158,6 +160,9 @@ test.describe('charts', () => {
       .allTextContents();
     // drag the start handle to the right
     const handle = selector.locator('.oge-range-handle').first();
+    // the card can be taller than the viewport, and engines differ in how
+    // far scrollIntoViewIfNeeded scrolls it: bring the handle itself in
+    await handle.scrollIntoViewIfNeeded();
     const box = await handle.boundingBox();
     if (box === null) throw new Error('no handle box');
     await page.mouse.move(box.x + 4, box.y + box.height / 2);

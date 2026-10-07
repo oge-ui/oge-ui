@@ -2,20 +2,22 @@ import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '@playwright/test';
 
 test.describe('home / landing page', () => {
-  test('renders the animated hero without the docs sidebar', async ({
-    page,
-  }) => {
-    await page.goto('/');
-    // framework-neutral hero copy (ADR 0002): the h1 names no framework, the
-    // hero switch beside it does
-    await expect(
-      page.getByRole('heading', { level: 1, name: /UI components/ }),
-    ).toBeVisible();
-    // landing renders full-bleed: no sidebar nav, no page filter box
-    await expect(page.getByPlaceholder('Filter pages…')).toHaveCount(0);
-    // the live demo is the real grid
-    await expect(page.locator('app-home .oge-grid').first()).toBeVisible();
-  });
+  test(
+    'renders the animated hero without the docs sidebar',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await page.goto('/');
+      // framework-neutral hero copy (ADR 0002): the h1 names no framework, the
+      // hero switch beside it does
+      await expect(
+        page.getByRole('heading', { level: 1, name: /UI components/ }),
+      ).toBeVisible();
+      // landing renders full-bleed: no sidebar nav, no page filter box
+      await expect(page.getByPlaceholder('Filter pages…')).toHaveCount(0);
+      // the live demo is the real grid
+      await expect(page.locator('app-home .oge-grid').first()).toBeVisible();
+    },
+  );
 
   test('demo window tabs switch the live component', async ({ page }) => {
     await page.goto('/');

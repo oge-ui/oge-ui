@@ -53,18 +53,20 @@ test.describe('tooltip', () => {
 });
 
 test.describe('context menu', () => {
-  test('right-click opens at the pointer; item click selects and closes', async ({
-    page,
-  }) => {
-    await page.goto('/components/overlay/tooltip-context-menu');
-    const target = page.getByTestId('context-target');
-    await rightClick(page, target);
-    const menu = page.locator('.oge-menu-list');
-    await expect(menu).toBeVisible();
+  test(
+    'right-click opens at the pointer; item click selects and closes',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await page.goto('/components/overlay/tooltip-context-menu');
+      const target = page.getByTestId('context-target');
+      await rightClick(page, target);
+      const menu = page.locator('.oge-menu-list');
+      await expect(menu).toBeVisible();
 
-    await page.locator('.oge-menu-item', { hasText: 'Duplicate' }).click();
-    await expect(menu).toBeHidden();
-  });
+      await page.locator('.oge-menu-item', { hasText: 'Duplicate' }).click();
+      await expect(menu).toBeHidden();
+    },
+  );
 
   test('Escape closes and outside click closes', async ({ page }) => {
     await page.goto('/components/overlay/tooltip-context-menu');

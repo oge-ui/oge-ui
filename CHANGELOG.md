@@ -63,6 +63,58 @@ are versioned independently, which is the case here.
   closing "Browse all components" tile spans the columns the last row leaves
   free.
 
+### Test matrix, visual regression and coverage (W5b) — `@oge-ui/core` (themes), `@oge-ui/gantt-engine`, `@oge-ui/scheduler`, `@oge-ui/react-scheduler`, `@oge-ui/inputs`
+
+Testing depth, plus the library bugs it surfaced:
+
+- **Browser matrix.** The e2e config gains `firefox`, `webkit`,
+  `mobile-chrome` (Pixel 7) and `mobile-safari` (iPhone 14) projects, opted
+  into with `OGE_E2E_BROWSERS`; the default run stays chromium. Pull requests
+  run an `@smoke` subset (about twenty tests across the families, including
+  a touch drag on the phones) on the four new projects; a new nightly
+  workflow runs the whole suite on every project, sharded, with
+  `failOnFlakyTests` on. Tests that need CDP or Chromium-only permissions
+  say so with an explicit `test.skip(browserName !== 'chromium', reason)`.
+- **Visual regression.** `toHaveScreenshot` baselines of the main components
+  in light, dark and high contrast, in both render layers where React exists
+  (`apps/dev-app-e2e/visual`). The browser always runs in the official
+  Playwright Docker image (`npm run e2e:visual` / `npm run e2e:visual:update`,
+  and the CI `visual` job), so one baseline set holds on every machine.
+- **Coverage ratchet.** CI runs the unit tests under V8 coverage, and every
+  package's vitest config carries `coverage.thresholds` one point under its
+  measured level. Perf-budget specs scale their time budgets under
+  instrumentation.
+- **Accessibility.** A new `contrast.spec.ts` runs axe `color-contrast` over
+  the components (light and dark) on the representative pages, the
+  per-route axe crawl (WCAG 2.0 A – 2.2 AA tags, components' contrast
+  included) runs nightly over every sitemap route, and a token unit test
+  holds the default and dark palettes to AA.
+- **Property-based engine specs** (seeded generator, no new dependency):
+  pivot totals equal the sum of their cells, gantt scheduling honours every
+  link and is a fixpoint, BPMN import → export → import is stable.
+
+Fixed along the way:
+
+- **Gantt: FF / SF links on a work calendar** could leave the successor
+  finishing before the link allowed (a dependency conflict right after
+  auto-scheduling), and a second scheduling pass then moved it again. The
+  forward pass now counts the successor's working days back from the
+  required finish and steps to the earliest start whose finish holds.
+- **Contrast (tokens, every theme).** `--oge-muted-color` read at 2.6:1 on
+  white (pager info, calendar weekdays and other-month days, empty states,
+  toolbar text buttons, scheduler hour labels) — now `#636b78` (≥ 4.7:1 on
+  every light surface); dark `#9ca3af`; Tailwind theme `slate-500`. White on
+  the success and warning fills read at 3.2–3.3:1 — `--oge-success` is now
+  `#15803d`, `--oge-warning` `#b45309` (Tailwind theme: the `-700` shades).
+  The selected toggle-group item's accent label on its soft fill rose from
+  4.3:1 to AA.
+- **Scheduler.** The primary "New" toolbar button rendered its white label on
+  the transparent toolbar pill (1.1:1); it keeps its accent fill now. Text on
+  accent fills (active view, today markers, primary buttons) follows
+  `--oge-severity-contrast` instead of a hard-coded white, so the dark theme's
+  light accent gets dark text. Timeline bars painted in an appointment colour
+  pick a readable label colour, as the other chips already did (both layers).
+
 ### SSR follow-ups — editor surface, React grid first page, phone-width fixes — `@oge-ui/behavior`, `@oge-ui/core`, `@oge-ui/editor`, `@oge-ui/react-editor`, `@oge-ui/react-grid`, `@oge-ui/react-tree-list`
 
 Closes the gaps the W5a SSR proof listed:

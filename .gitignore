@@ -67,6 +67,9 @@ playwright-report/
 apps/dev-app-e2e/test-results.xml
 apps/dev-app-e2e/test-results-ssr.xml
 apps/dev-app-e2e/test-output-ssr/
+apps/dev-app-e2e/test-results-*.xml
+apps/dev-app-e2e/test-output-*/
+apps/dev-app-e2e/playwright-report-*/
 
 # Credentials and local environment — never committed. `.npmrc` in particular
 # holds the publish token, and this repo publishes by hand.

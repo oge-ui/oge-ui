@@ -625,7 +625,7 @@ export class ReactNavigationTreeViewDemos {
           ' ',
           createElement(
             'small',
-            { className: 'opacity-60' },
+            { className: 'opacity-75' },
             `level ${context.level}`,
           ),
         ),

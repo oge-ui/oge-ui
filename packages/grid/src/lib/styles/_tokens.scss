@@ -42,7 +42,8 @@
   --oge-font-mono:
     ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   --oge-row-height: 36px;
-  --oge-muted-color: #98a1af;
+  // ≥ 4.5:1 on every light surface (bg, header, group, hover, selected)
+  --oge-muted-color: #636b78;
   --oge-radius: 6px;
   --oge-radius-lg: 10px;
   --oge-group-bg: #f4f6f9;
@@ -53,11 +54,12 @@
     0 12px 32px -8px rgba(15, 23, 42, 0.18),
     0 4px 12px -6px rgba(15, 23, 42, 0.1);
   --oge-tree-indent: 20px;
-  /* severity palette (buttons, inputs, toasts, badges) */
-  --oge-success: #16a34a;
-  --oge-success-soft: rgba(22, 163, 74, 0.12);
-  --oge-warning: #d97706;
-  --oge-warning-soft: rgba(217, 119, 6, 0.14);
+  /* severity palette (buttons, inputs, toasts, badges); each fill carries
+     white text and each colour reads as text on white at >= 4.5:1 */
+  --oge-success: #15803d;
+  --oge-success-soft: rgba(21, 128, 61, 0.12);
+  --oge-warning: #b45309;
+  --oge-warning-soft: rgba(180, 83, 9, 0.14);
   --oge-danger: #dc2626;
   --oge-danger-soft: rgba(220, 38, 38, 0.12);
   /* text color on contained severity/accent fills */

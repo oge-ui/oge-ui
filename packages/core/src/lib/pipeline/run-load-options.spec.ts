@@ -2,6 +2,13 @@ import { applyPaging } from './steps/paginate.step';
 import { applySort } from './steps/sort.step';
 import { runLoadOptions } from './run-load-options';
 
+/**
+ * V8 coverage instrumentation slows hot loops several times over; the CI
+ * coverage run (`--coverage`, see the package's vitest config) scales the
+ * time budgets so they keep catching complexity regressions, not the probe.
+ */
+const BUDGET_SCALE = process.env['OGE_COVERAGE'] ? 4 : 1;
+
 interface Row {
   id: number;
   name: string | null;
@@ -93,7 +100,7 @@ describe('runLoadOptions', () => {
       requireTotalCount: true,
     });
     // Generous bound for shared CI runners; still catches accidental O(n²).
-    expect(performance.now() - start).toBeLessThan(250);
+    expect(performance.now() - start).toBeLessThan(250 * BUDGET_SCALE);
   });
 
   it('sorts 100k rows by a dotted path within the performance budget', () => {
@@ -110,7 +117,7 @@ describe('runLoadOptions', () => {
       (result.data as { nested: { value: number } }[])[0].nested.value,
     ).toBeGreaterThan(999_000);
     // Precomputed sort keys keep even path-accessor sorts comfortably fast.
-    expect(performance.now() - start).toBeLessThan(1_000);
+    expect(performance.now() - start).toBeLessThan(1_000 * BUDGET_SCALE);
   });
 
   it('text-filters 10k rows within the performance budget', () => {
@@ -124,6 +131,6 @@ describe('runLoadOptions', () => {
       requireTotalCount: true,
     });
     expect(result.totalCount).toBe(5000);
-    expect(performance.now() - start).toBeLessThan(250);
+    expect(performance.now() - start).toBeLessThan(250 * BUDGET_SCALE);
   });
 });

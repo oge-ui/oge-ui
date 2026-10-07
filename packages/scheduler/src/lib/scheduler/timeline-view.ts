@@ -25,6 +25,7 @@ import {
   sameGroupValues,
   schedulerChipAriaLabel,
   schedulerShortcut,
+  chipForeground,
   shouldVirtualizeTimeline,
   timelineAxisPct,
   timelineBarCtrlKey,
@@ -244,6 +245,7 @@ import type {
                       [style.width.%]="bar.widthPct"
                       [style.top.px]="4 + bar.lane * 26"
                       [style.background-color]="bar.appointment.color ?? null"
+                      [style.color]="chipForeground(bar.appointment.color)"
                       (click)="onBarClick(bar.appointment, $event)"
                       (dblclick)="onBarDblClick(bar.appointment, $event)"
                       (keydown)="onBarKeydown(bar.appointment, $event)"
@@ -857,4 +859,6 @@ export class OgeSchedulerTimelineView<T = unknown> {
   }
 
   protected readonly String = String;
+  /** Readable text over a bar painted in its appointment colour. */
+  protected readonly chipForeground = chipForeground;
 }
