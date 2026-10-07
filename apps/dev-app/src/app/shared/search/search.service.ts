@@ -40,6 +40,9 @@ export class SearchService {
     const onKeydown = (event: KeyboardEvent): void => {
       const key = event.key.toLowerCase();
       if (key === 'k' && (event.ctrlKey || event.metaKey) && !event.altKey) {
+        // a component that owns Ctrl/⌘K (the rich-text editor's link
+        // command) handles it first or is focused in a contenteditable
+        if (event.defaultPrevented || isRichText(event.target)) return;
         event.preventDefault();
         this.toggle();
         return;
@@ -79,4 +82,14 @@ export function isEditable(target: EventTarget | null): boolean {
     ].includes(type);
   }
   return element.isContentEditable || !!element.closest?.('[contenteditable]');
+}
+
+/** Whether `target` sits in a rich-text editing surface (contenteditable). */
+export function isRichText(target: EventTarget | null): boolean {
+  if (!target || !(target as Element).tagName) return false;
+  const element = target as HTMLElement;
+  return (
+    element.isContentEditable ||
+    !!element.closest?.('[contenteditable]:not([contenteditable="false"])')
+  );
 }
