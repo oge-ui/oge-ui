@@ -112,9 +112,12 @@ export {
   type OgeGridLayoutColumn,
 } from './lib/grid/grid-column-layout';
 export {
+  OGE_MAX_SCROLL_HEIGHT,
   OgeGridRowVirtualizerCore,
+  ogeScrollScale,
   type OgeGridRowVirtualizerDeps,
   type OgeGridRowWindowAdapter,
+  type OgeScrollScale,
 } from './lib/grid/grid-row-virtualizer';
 export {
   OgeGridDeferredChildrenCore,

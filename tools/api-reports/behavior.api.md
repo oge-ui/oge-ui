@@ -1154,6 +1154,9 @@ export const OGE_LOAD_PANEL_TARGET_CLASS = "oge-load-panel-target";
 export const OGE_LONG_PRESS_DELAY = 300;
 
 // @public
+export const OGE_MAX_SCROLL_HEIGHT = 15000000;
+
+// @public
 export const OGE_MENUBAR_HOVER_DELAY = 100;
 
 // @public
@@ -6829,6 +6832,7 @@ export class OgeGridRowVirtualizerCore<T = unknown> {
     // (undocumented)
     readonly rowsTransform: () => string | null;
     scrollRowIntoView(row: number): void;
+    readonly scrollScale: () => OgeScrollScale;
     // (undocumented)
     readonly viewNodes: () => readonly RowNode<T>[];
     readonly viewStart: () => number;
@@ -9750,6 +9754,19 @@ export interface OgeScrollingOptions {
     mode?: 'standard' | 'virtual' | 'infinite';
     remote?: boolean;
 }
+
+// @public
+export interface OgeScrollScale {
+    readonly physicalTotal: number;
+    readonly ratio: number;
+    // (undocumented)
+    toPhysical(virtualTop: number): number;
+    // (undocumented)
+    toVirtual(scrollTop: number): number;
+}
+
+// @public
+export function ogeScrollScale(virtualTotal: number, viewportHeight: number, max?: number): OgeScrollScale;
 
 // @public (undocumented)
 export interface OgeSearchPanelOptions {
