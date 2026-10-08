@@ -142,9 +142,14 @@ test.describe('drop down button', () => {
     const popup = page.locator('.oge-popup');
     await expect(popup).toBeVisible();
 
-    const triggerBox = await trigger.boundingBox();
-    const popupBox = await popup.boundingBox();
-    expect(popupBox && triggerBox && popupBox.y > triggerBox.y).toBe(true);
+    // the panel is positioned after it renders — poll until it settles below
+    await expect
+      .poll(async () => {
+        const triggerBox = await trigger.boundingBox();
+        const popupBox = await popup.boundingBox();
+        return !!popupBox && !!triggerBox && popupBox.y > triggerBox.y;
+      })
+      .toBe(true);
 
     await page.locator('.oge-menu-item', { hasText: 'CSV' }).click();
     await expect(popup).not.toBeVisible();
