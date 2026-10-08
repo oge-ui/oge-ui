@@ -7,6 +7,10 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+## 1.1.4 — 2026-10-08
+
+The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates.
+
 ### Testing harnesses (W6e) — `@oge-ui/grid`, `@oge-ui/inputs`, `@oge-ui/overlay`, `@oge-ui/tabs`, `@oge-ui/react-grid`, `@oge-ui/react-inputs`, `@oge-ui/react-overlay`, `@oge-ui/react-tabs`
 
 - **Angular CDK component harnesses** in new `/testing` secondary entry points,
