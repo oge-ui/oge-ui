@@ -131,6 +131,8 @@ test.describe('React inputs docs', () => {
   // budget as the family grew
   for (const route of COVERED) {
     test(`${route} has no axe violations (React)`, async ({ page }) => {
+      // the API page carries every editor's tables plus the testing helpers
+      test.slow();
       await page.goto(`${route}${REACT}`);
       // Wait for the page to actually render before auditing it: an empty
       // page has zero status elements too, so `toHaveCount(0)` alone lets

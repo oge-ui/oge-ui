@@ -103,7 +103,7 @@ const SECTION_ORDER = [
             section.count
           }}</span>
         </h3>
-        @for (group of section.groups; track $index) {
+        @for (group of section.groups; track $index; let groupIndex = $index) {
           @if (group.title) {
             <h4
               class="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
@@ -121,7 +121,11 @@ const SECTION_ORDER = [
               title() +
               ' ' +
               section.label +
-              (group.title ? ' — ' + group.title : '')
+              (group.title
+                ? ' — ' + group.title
+                : section.groups.length > 1
+                  ? ' (' + (groupIndex + 1) + ')'
+                  : '')
             "
           >
             <table class="api-table">
