@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   OGE_DEFAULT_TABS_MESSAGES,
   applyTabOrder,
@@ -6,6 +6,7 @@ import {
   reorderTabIds,
   resolveOgeTabsConfig,
   resolveTabIndex,
+  scrollTabIntoStrip,
   tabItemDescriptor,
   type OgeTabDescriptorCore,
 } from './tabs-core';
@@ -172,5 +173,57 @@ describe('canSelectTab', () => {
   it('refuses an index that does not exist', () => {
     expect(canSelectTab(tabs, 9, 0, false)).toBe(false);
     expect(canSelectTab([], 0, -1, false)).toBe(false);
+  });
+});
+
+describe('scrollTabIntoStrip', () => {
+  /** A scroller showing client x 100–300 and a tab at the given x range. */
+  function strip(tabLeft: number, tabRight: number, scrollLeft: number) {
+    const scroller = document.createElement('div');
+    const tab = document.createElement('button');
+    scroller.appendChild(tab);
+    const rect = (left: number, right: number) =>
+      ({
+        left,
+        right,
+        top: 0,
+        bottom: 40,
+        width: right - left,
+        height: 40,
+      }) as DOMRect;
+    scroller.getBoundingClientRect = () => rect(100, 300);
+    tab.getBoundingClientRect = () => rect(tabLeft, tabRight);
+    Object.defineProperty(scroller, 'clientWidth', { value: 200 });
+    Object.defineProperty(scroller, 'clientHeight', { value: 40 });
+    const state = { left: scrollLeft, writes: 0 };
+    Object.defineProperty(scroller, 'scrollLeft', {
+      get: () => state.left,
+      set: (v: number) => {
+        state.left = v;
+        state.writes += 1;
+      },
+    });
+    const scrollIntoView = vi.fn();
+    tab.scrollIntoView = scrollIntoView;
+    return { scroller, tab, state, scrollIntoView };
+  }
+
+  it('scrolls only the strip, never an ancestor (no scrollIntoView)', () => {
+    const { scroller, tab, state, scrollIntoView } = strip(320, 380, 50);
+    scrollTabIntoStrip(scroller, tab);
+    expect(state.left).toBe(50 + 80);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('aligns a tab cut off at the start to the start', () => {
+    const { scroller, tab, state } = strip(60, 120, 100);
+    scrollTabIntoStrip(scroller, tab);
+    expect(state.left).toBe(60);
+  });
+
+  it('leaves a visible tab alone', () => {
+    const { scroller, tab, state } = strip(150, 250, 0);
+    scrollTabIntoStrip(scroller, tab);
+    expect(state.writes).toBe(0);
   });
 });

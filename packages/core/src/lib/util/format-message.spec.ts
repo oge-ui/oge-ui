@@ -188,4 +188,26 @@ describe('warnOgeDeprecatedMessage', () => {
     expect(warn.mock.calls[0][0]).toContain('specOnlyKey');
     warn.mockRestore();
   });
+
+  it('gives generic advice that holds for every key', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    warnOgeDeprecatedMessage('specSuffixKey', 'specInfo');
+    const text = String(warn.mock.calls[0][0]);
+    expect(text).toContain('supply "specInfo" instead.');
+    expect(text).not.toContain('singular branch');
+    warn.mockRestore();
+  });
+
+  it('appends the per-key advice', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    warnOgeDeprecatedMessage(
+      'specOneKey',
+      'specCount',
+      'put the singular branch into it as an ICU plural.',
+    );
+    expect(String(warn.mock.calls[0][0])).toContain(
+      'supply "specCount" instead — put the singular branch into it as an ICU plural.',
+    );
+    warn.mockRestore();
+  });
 });

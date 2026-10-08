@@ -358,4 +358,82 @@ describe('editor core — drag re-parenting', () => {
     expect(core.diagram().nodes['A'].parentId).toBeUndefined();
     expect(core.diagram().shapeDi['A'].bounds.x).toBe(50);
   });
+
+  /** Task A in the process and an expanded sub-process at x 400–700. */
+  function dragFixture() {
+    const ctx = setup();
+    let m = createEmptyDiagram();
+    m = addNodeCommand('task', { x: 100, y: 100 }, 'A').apply(m);
+    m = addNodeCommand('subProcess', { x: 550, y: 100 }, 'Sub').apply(m);
+    m = toggleSubProcessCollapseCommand('Sub', false).apply(m);
+    m = resizeNodeCommand('Sub', {
+      x: 400,
+      y: 0,
+      width: 300,
+      height: 200,
+    }).apply(m);
+    ctx.core.importJson(toBpmnJson(m));
+    ctx.core.vp.set({ x: 0, y: 0, zoom: 1 });
+    ctx.core.onShapePointerDown('A', {
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+      shiftKey: false,
+      pointerId: 1,
+      target: null,
+      preventDefault: () => undefined,
+      stopPropagation: () => undefined,
+    });
+    return ctx;
+  }
+
+  it('commits the container the highlight showed, not a second hit test at release', () => {
+    const { core } = dragFixture();
+    document.dispatchEvent(
+      new MouseEvent('pointermove', { clientX: 500, clientY: 100 }),
+    );
+    expect(core.dropContainerId()).toBe('Sub');
+    // the release reports other coordinates than the last move (coalesced
+    // moves): the drop still lands where the preview and highlight were
+    document.dispatchEvent(
+      new MouseEvent('pointerup', { clientX: 5, clientY: 5 }),
+    );
+    expect(core.diagram().nodes['A'].parentId).toBe('Sub');
+    expect(core.diagram().shapeDi['A'].bounds.x).toBe(450);
+  });
+
+  it('commits nothing when the model changed under the highlight before release', () => {
+    const { core } = dragFixture();
+    document.dispatchEvent(
+      new MouseEvent('pointermove', { clientX: 500, clientY: 100 }),
+    );
+    expect(core.dropContainerId()).toBe('Sub');
+    // an app command moves the sub-process away mid-drag: a fresh hit test
+    // at release would now say "process" and commit a plain move the
+    // highlight never showed
+    core.onPanelCommand(
+      resizeNodeCommand('Sub', { x: 1000, y: 0, width: 300, height: 200 }),
+    );
+    document.dispatchEvent(new MouseEvent('pointerup'));
+    expect(core.dropContainerId()).toBeNull();
+    expect(core.dragState()).toBeNull();
+    expect(core.diagram().nodes['A'].parentId).toBeUndefined();
+    expect(core.diagram().shapeDi['A'].bounds.x).toBe(50);
+  });
+
+  it('a move after the model change resolves against the new model', () => {
+    const { core } = dragFixture();
+    document.dispatchEvent(
+      new MouseEvent('pointermove', { clientX: 500, clientY: 100 }),
+    );
+    core.onPanelCommand(
+      resizeNodeCommand('Sub', { x: 1000, y: 0, width: 300, height: 200 }),
+    );
+    document.dispatchEvent(
+      new MouseEvent('pointermove', { clientX: 1100, clientY: 100 }),
+    );
+    expect(core.dropContainerId()).toBe('Sub');
+    document.dispatchEvent(new MouseEvent('pointerup'));
+    expect(core.diagram().nodes['A'].parentId).toBe('Sub');
+  });
 });

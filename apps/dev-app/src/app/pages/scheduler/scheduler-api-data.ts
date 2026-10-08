@@ -442,7 +442,7 @@ export const OGE_SCHEDULER_API: ApiSections = {
           name: 'print(options?)',
           type: 'Promise&lt;void&gt;',
           description:
-            'Prints the current view: the scheduler cloned with the page’s stylesheets into a hidden frame (scroll areas expanded), then the browser’s print dialog.',
+            'Prints the current view: the scheduler cloned with the page’s stylesheets into a hidden frame (scroll areas expanded), then the browser’s print dialog. <code>options</code>: <code>title</code> (the print document’s title) and <code>nonce</code> — the CSP nonce stamped on the print sheet <code>&lt;style&gt;</code>; defaults to Angular’s <code>CSP_NONCE</code>, else the nonce of the page’s own nonce’d elements, so a nonce-only <code>style-src</code> admits it.',
         },
       ],
     },

@@ -1487,7 +1487,7 @@ export interface ViewportWindow {
 }
 
 // @public
-export function warnOgeDeprecatedMessage(key: string, replacement: string): void;
+export function warnOgeDeprecatedMessage(key: string, replacement: string, advice?: string): void;
 
 // @public
 export function weekNumber(date: Date, rule: WeekNumberRule): number;

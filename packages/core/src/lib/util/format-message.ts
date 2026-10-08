@@ -362,17 +362,21 @@ const warnedKeys = new Set<string>();
 /**
  * Dev-mode console warning for a deprecated message key a consumer still
  * supplies — once per key per page. Silent in production Angular builds.
+ * `advice` is the key's own migration hint (a singular branch moves into an
+ * ICU plural, a suffix into a `{count}` template…); without it the warning
+ * only names the replacement key, which is correct for every key.
  */
 export function warnOgeDeprecatedMessage(
   key: string,
   replacement: string,
+  advice?: string,
 ): void {
   if (typeof ngDevMode !== 'undefined' && !ngDevMode) return;
   if (warnedKeys.has(key)) return;
   warnedKeys.add(key);
   console.warn(
     `[oge] the "${key}" message is deprecated and will be removed in the next minor; ` +
-      `put the singular branch into "${replacement}" as an ICU plural instead ` +
-      `('{count, plural, one {…} other {…}}').`,
+      `supply "${replacement}" instead` +
+      (advice ? ` — ${advice}` : '.'),
   );
 }

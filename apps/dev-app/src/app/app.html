@@ -1,3 +1,10 @@
+<!-- WCAG 2.4.1: the first focusable element; visible only while focused. -->
+<a
+  class="app-skip-link"
+  [attr.href]="skipHref()"
+  (click)="skipToContent($event)"
+  >Skip to content</a
+>
 <!-- brand chrome: white by day, deep slate by night, indigo accents.
      Seamless with the hero at the top; lifts clearly off the page once
      scrolled (blur + border + real shadow). -->
@@ -132,14 +139,18 @@
         type="button"
         class="flex h-8 w-8 items-center justify-center rounded-md border border-transparent transition-colors hover:border-gray-200 hover:text-indigo-600 dark:hover:border-white/10 dark:hover:text-indigo-400"
         [attr.aria-label]="
-          themeService.mode() === 'dark'
-            ? 'Switch to light mode'
-            : 'Switch to dark mode'
+          themeService.modeLocked()
+            ? 'Dark mode is off: the high-contrast theme is a light theme'
+            : themeService.mode() === 'dark'
+              ? 'Switch to light mode'
+              : 'Switch to dark mode'
         "
+        [attr.aria-disabled]="themeService.modeLocked() ? 'true' : null"
+        [class.opacity-50]="themeService.modeLocked()"
         (click)="themeService.toggleMode()"
       >
         <app-icon
-          [name]="themeService.mode() === 'dark' ? 'sun' : 'moon'"
+          [name]="themeService.effectiveMode() === 'dark' ? 'sun' : 'moon'"
           [size]="15"
         />
       </button>
@@ -303,7 +314,11 @@
     </div>
   </nav>
   }
-  <main [class]="isHome() ? 'min-w-0' : 'min-w-0 px-8 py-10 max-md:px-4'">
+  <main
+    id="main-content"
+    tabindex="-1"
+    [class]="isHome() ? 'min-w-0' : 'min-w-0 px-8 py-10 max-md:px-4'"
+  >
     <div [class]="isHome() ? '' : 'doc-shell'">
       <!--
         The framework preference is site-wide, so a reader can land on a page

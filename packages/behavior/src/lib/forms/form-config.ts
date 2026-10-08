@@ -110,6 +110,7 @@ export function validationSummaryTitle(
     warnOgeDeprecatedMessage(
       'validationSummaryTitleOne',
       'validationSummaryTitle',
+      "put the singular branch into it as an ICU plural ('{count, plural, one {…} other {…}}').",
     );
     if (count === 1) return ogeFormatMessage(legacyOne, { count }, locale);
   }

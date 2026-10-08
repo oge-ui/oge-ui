@@ -917,6 +917,7 @@ export {
   resolveTabIndex,
   reorderTabIds,
   canSelectTab,
+  scrollTabIntoStrip,
   type OgeTabsMessages,
   type OgeTabsConfig,
   type OgeTabsConfigInput,

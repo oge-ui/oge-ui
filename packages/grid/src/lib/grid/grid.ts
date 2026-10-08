@@ -5695,6 +5695,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.hintCore.scheduleHide();
   }
 
+  /** WCAG 1.4.13 hoverable: the pointer reached the hint bubble — keep it. */
+  protected onHintBubbleEnter(): void {
+    this.hintCore.bubblePointerEnter();
+  }
+
   protected onHintFocus(event: FocusEvent): void {
     const cell = this.hintTargetOf(event.target);
     if (!cell) {

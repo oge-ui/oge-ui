@@ -6676,6 +6676,8 @@ function OgeGridInner<T extends object>(
             left: hintPanel.position?.left ?? 0,
             opacity: hintPanel.position ? undefined : 0,
           }}
+          onPointerEnter={() => hintCore.bubblePointerEnter()}
+          onPointerLeave={() => hintCore.scheduleHide()}
         >
           {model.hintText()}
         </div>

@@ -284,6 +284,36 @@ export function reorderTabIds(
 }
 
 /**
+ * Scrolls `tab` into view inside the strip's own `scroller` ("nearest"
+ * alignment, both axes) — the strip's keep-the-selection-visible step.
+ * Unlike `scrollIntoView` it never scrolls an ancestor (a strip below the
+ * fold no longer scrolls the page on load) and leaves the browser's
+ * sequential-focus starting point alone (Chromium moves it to the element a
+ * `scrollIntoView` targets, so the page's first Tab skipped the skip link
+ * and everything before the last tab strip). Physical deltas, so it holds
+ * in RTL.
+ */
+export function scrollTabIntoStrip(
+  scroller: HTMLElement,
+  tab: HTMLElement,
+): void {
+  const box = scroller.getBoundingClientRect();
+  const r = tab.getBoundingClientRect();
+  const delta = (start: number, end: number, min: number, max: number) =>
+    start < min || end - start > max - min
+      ? start - min
+      : end > max
+        ? end - max
+        : 0;
+  const left = box.left + scroller.clientLeft;
+  const top = box.top + scroller.clientTop;
+  const dx = delta(r.left, r.right, left, left + scroller.clientWidth);
+  const dy = delta(r.top, r.bottom, top, top + scroller.clientHeight);
+  if (dx !== 0) scroller.scrollLeft += dx;
+  if (dy !== 0) scroller.scrollTop += dy;
+}
+
+/**
  * Whether a user gesture may move the selection to `index` — the guard both
  * layers run before emitting the cancelable `selectionChanging` event.
  */

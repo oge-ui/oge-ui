@@ -11575,6 +11575,8 @@ export type OgeToolbarStylingMode = 'outlined' | 'filled' | 'flat';
 // @public
 export class OgeTooltipCore {
     constructor(options: OgeTooltipCoreOptions);
+    bubblePointerEnter(): void;
+    bubblePointerLeave(): void;
     canShow(): boolean;
     click(): void;
     destroy(): void;
@@ -14233,6 +14235,9 @@ export function sanitizeResourceUrl(url: string | null | undefined): string;
 
 // @public
 export function sanitizeUrl(url: string | null | undefined, options?: OgeSanitizeUrlOptions): string;
+
+// @public
+export function scrollTabIntoStrip(scroller: HTMLElement, tab: HTMLElement): void;
 
 // @public
 export interface SearchHighlightSegment {

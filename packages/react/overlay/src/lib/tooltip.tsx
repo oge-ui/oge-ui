@@ -82,7 +82,9 @@ export interface OgeTooltipProps {
  * includes the tooltip id — any existing value is preserved. The bubble
  * renders into `document.body` so transformed/overflow ancestors never clip
  * it, is viewport-aware (flips and clamps), optionally draws a callout arrow,
- * and never receives pointer events.
+ * and is hoverable (WCAG 1.4.13): moving the pointer onto it within the hide
+ * delay keeps it open, and Escape pressed anywhere hides it. Nothing in the
+ * bubble is focusable — it stays a non-interactive `role="tooltip"`.
  *
  * The timing machine and the `aria-describedby` bookkeeping are
  * `@oge-ui/behavior`'s `OgeTooltipCore`, shared verbatim with the Angular
@@ -231,6 +233,8 @@ export const OgeTooltip = forwardRef<OgeTooltipHandle, OgeTooltipProps>(
                 opacity: position ? undefined : 0,
                 maxWidth: modalCssSize(maxWidth) ?? undefined,
               }}
+              onPointerEnter={() => core.bubblePointerEnter()}
+              onPointerLeave={() => core.bubblePointerLeave()}
             >
               {body}
               {arrowGeometry && arrowInset && (

@@ -308,8 +308,10 @@ interface DemoFile {
         underneath.
       </li>
       <li>
-        The tooltip bubble is <code>pointer-events: none</code> — it never
-        blocks clicks on content beneath it.
+        The tooltip bubble is hoverable (WCAG 1.4.13): the pointer can move from
+        the trigger onto it and it stays open; <kbd>Escape</kbd> pressed
+        anywhere dismisses it. It stays non-interactive — nothing in it takes
+        focus; interactive content belongs in a popover.
       </li>
       @if (fw.isReact()) {
         <li>

@@ -88,6 +88,19 @@ export class App {
   protected readonly framework = inject(FrameworkService);
   private readonly doc = inject(DOCUMENT);
 
+  /**
+   * The skip link: focus the main region (`tabindex="-1"`) in place, without
+   * a router navigation. Its href (the page's own path + `#main-content` — a
+   * bare fragment would resolve against `<base href="/">` to the home page)
+   * is the no-script fallback.
+   */
+  protected skipToContent(event: Event): void {
+    const main = this.doc.getElementById('main-content');
+    if (main === null) return;
+    event.preventDefault();
+    main.focus();
+  }
+
   /** Human label of the active framework, for the brand lockup badge. */
   protected readonly frameworkLabel = computed(
     () =>
@@ -1080,6 +1093,9 @@ export class App {
   );
 
   protected readonly isHome = computed(() => this.path() === '/');
+
+  /** The skip link's no-script target: this page's main region. */
+  protected readonly skipHref = computed(() => `${this.path()}#main-content`);
 
   protected readonly themeService = inject(ThemeService);
   protected readonly themes: { value: GridTheme; label: string }[] = [

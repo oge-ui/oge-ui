@@ -195,9 +195,16 @@ describe('high-contrast.css', () => {
       ['--oge-muted-color', '--oge-bg'],
       ['--oge-muted-color', '--oge-header-bg'],
       ['--oge-muted-color', '--oge-row-hover-bg'],
+      // accent as text: selected tab, link, text / outlined button, active
+      // pager page, menu item, toggle — on every surface it is drawn on
       ['--oge-accent', '--oge-bg'],
       ['--oge-accent', '--oge-header-bg'],
       ['--oge-accent', '--oge-selected-bg'],
+      ['--oge-accent', '--oge-popup-bg'],
+      ['--oge-accent', '--oge-row-hover-bg'],
+      ['--oge-accent', '--oge-row-alt-bg'],
+      ['--oge-accent', '--oge-detail-bg'],
+      ['--oge-accent', '--oge-kanban-column-bg'],
       ['--oge-severity-contrast', '--oge-accent'],
       ['--oge-severity-contrast', '--oge-success'],
       ['--oge-severity-contrast', '--oge-warning'],
@@ -216,6 +223,17 @@ describe('high-contrast.css', () => {
         7,
       );
     }
+  });
+
+  it('is a light-surface palette: accent text needs the light surface it is tuned for', () => {
+    // Transparent components (tabs, text buttons, links) paint on the page,
+    // not on --oge-bg. The palette's AAA pairs hold against its own light
+    // surface only — on a near-black page the same accent falls under 3:1,
+    // which is why the theme declares `color-scheme: light` and the docs
+    // render light while it is active.
+    expect(rules[0]?.body).toMatch(/(^|[;{\s])color-scheme:\s*light;/);
+    expect(contrast(t('--oge-bg'), '#ffffff')).toBeLessThan(1.1);
+    expect(contrast(t('--oge-popup-bg'), '#ffffff')).toBeLessThan(1.1);
   });
 
   it('keeps borders and other UI parts at >= 3:1', () => {

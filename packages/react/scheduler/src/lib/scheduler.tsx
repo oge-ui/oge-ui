@@ -435,6 +435,7 @@ function OgeSchedulerInner<T extends object>(
         ? Promise.resolve()
         : printOgeScheduler(host, {
             title: options.title ?? core.periodTitle(),
+            nonce: options.nonce,
           });
     },
   }));

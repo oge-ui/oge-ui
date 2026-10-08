@@ -7,6 +7,12 @@
  * Windows High Contrast. Under OS forced colors the components follow the
  * system palette instead, whatever theme is loaded.
  *
+ * It is a light-surface palette: the AAA pairs hold against its own white
+ * surfaces. Components without a background of their own (tabs, text and
+ * outlined buttons, links, toggles) paint on whatever is behind them, so put
+ * the scope on a light page or give it `background: var(--oge-bg)` — on a
+ * near-black page the accent falls under 3:1.
+ *
  * Import it once, in global styles:
  *
  *   @import '@oge-ui/core/themes/high-contrast.css';

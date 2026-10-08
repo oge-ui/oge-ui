@@ -17,7 +17,7 @@ import type {
 
 /**
  * `DataTransfer` type the field chips carried while HTML5-dragged.
- * @deprecated Field chips move with a pointer drag since 1.2 (touch
+ * @deprecated Field chips move with a pointer drag since 1.1.2 (touch
  * included) and no longer put anything on a `DataTransfer`; kept so existing
  * imports compile.
  */
@@ -207,7 +207,7 @@ export interface OgePivotPointer {
 
 /**
  * The drag facts the field panel needed under HTML5 drag and drop.
- * @deprecated Field chips use {@link OgePivotFieldPointerInput} since 1.2.
+ * @deprecated Field chips use {@link OgePivotFieldPointerInput} since 1.1.2.
  */
 export interface OgePivotDragLike {
   readonly dataTransfer?: DataTransfer | null;

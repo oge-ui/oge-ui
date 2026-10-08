@@ -184,7 +184,7 @@ _Imperative handle (ref)_
 | `undo() / redo()` | `boolean` | Reverts / re-applies the last scheduler edit (the Ctrl+Z / Ctrl+Y keys); `false` when there is none. |
 | `canUndo() / canRedo()` | `boolean` | Whether a step is available (as of the last render). |
 | `getExportData(range?)` | `OgeSchedulerExportData<T>` | The export model the `/export-*` entries read: every appointment (series unexpanded) plus the expanded, chronological rows of `range` — the visible period by default. |
-| `print(options?)` | `Promise<void>` | Prints the current view: the scheduler cloned with the page’s stylesheets into a hidden frame (scroll areas expanded), then the browser’s print dialog. |
+| `print(options?)` | `Promise<void>` | Prints the current view: the scheduler cloned with the page’s stylesheets into a hidden frame (scroll areas expanded), then the browser’s print dialog. `options`: `title` (the print document’s title) and `nonce` — the CSP nonce stamped on the print sheet `<style>`; defaults to the nonce of the page’s own nonce’d style or script elements, so a nonce-only `style-src` admits it. |
 
 _Import / export (lazy secondary entries)_
 

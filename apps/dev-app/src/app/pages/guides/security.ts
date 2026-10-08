@@ -91,6 +91,12 @@ const SECTIONS = [
         <code>style-src-attr 'unsafe-inline'</code> admits; they cannot run
         script.
       </p>
+      <p>
+        The one runtime <code>&lt;style&gt;</code> is the scheduler's print
+        sheet, added to its print frame by <code>print()</code>. It carries the
+        nonce of the page's own nonce'd style or script elements, or the one you
+        pass: <code>ref.current?.print({{ '{' }} nonce {{ '}' }})</code>.
+      </p>
     } @else {
       <p>
         Angular adds a <code>&lt;style&gt;</code> element per component
@@ -105,6 +111,14 @@ const SECTIONS = [
         Server-rendered layout values (virtual-scroll offsets, popup positions)
         arrive as inline <code>style</code> attributes, hence
         <code>style-src-attr 'unsafe-inline'</code>; they cannot run script.
+      </p>
+      <p>
+        The scheduler's <code>print()</code> adds a print sheet to its print
+        frame as a <code>&lt;style&gt;</code> element; it carries the same
+        <code>CSP_NONCE</code> (or
+        <code>print({{ '{' }} nonce {{ '}' }})</code>, or the nonce of the
+        page's own nonce'd elements), so a nonce-only
+        <code>style-src</code> admits it.
       </p>
     }
 
@@ -186,12 +200,6 @@ const SECTIONS = [
         <code>oge-ui#editor</code> policy is documented and listed in the
         policy, but no end-to-end test types into the editor under
         <code>require-trusted-types-for</code>.
-      </li>
-      <li>
-        The scheduler's <code>print()</code> adds a print stylesheet to its
-        print frame as a <code>&lt;style&gt;</code> element without a nonce;
-        under a nonce-only <code>style-src</code> that sheet is blocked and the
-        printout keeps the on-screen scroll heights.
       </li>
       <li>
         The production docs site itself uses the static-host shape (script

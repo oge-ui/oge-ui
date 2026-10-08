@@ -119,6 +119,21 @@ export class OgeTooltipCore {
     if (key === 'Escape') this.hide();
   }
 
+  /**
+   * Bubble `pointerenter` (WCAG 1.4.13 "hoverable"): the pointer reached the
+   * bubble within the trigger's grace period, so the pending hide is
+   * cancelled — the content stays while the pointer is over it. The bubble
+   * stays non-interactive: `role="tooltip"`, nothing focusable in it.
+   */
+  bubblePointerEnter(): void {
+    if (this.showMode() === 'hover') this.clearTimer('hide');
+  }
+
+  /** Bubble `pointerleave`: the same grace period as leaving the trigger. */
+  bubblePointerLeave(): void {
+    if (this.showMode() === 'hover') this.scheduleHide();
+  }
+
   /** Imperative toggle — the `toggle()` the render layers expose. */
   toggle(): void {
     if (this.options.isOpen()) this.hide();
@@ -147,10 +162,12 @@ export class OgeTooltipCore {
     if (this.options.isOpen() || !this.canShow()) return;
     this.options.open();
     this.addDescribedBy();
+    this.listenEscape();
   }
 
   hide(): void {
     this.clearTimers();
+    this.stopEscape();
     this.options.close();
   }
 
@@ -164,13 +181,39 @@ export class OgeTooltipCore {
 
   /** Call from the panel's `onClosed` so the id leaves `aria-describedby`. */
   onPanelClosed(): void {
+    this.stopEscape();
     this.removeDescribedBy();
   }
 
   /** Clears timers and the describedby link; the host closes the panel. */
   destroy(): void {
     this.clearTimers();
+    this.stopEscape();
     this.removeDescribedBy();
+  }
+
+  /**
+   * WCAG 1.4.13 "dismissible": while open, Escape anywhere on the page hides
+   * the tooltip — a hover-opened bubble must go without moving the pointer,
+   * and focus is then usually not on the trigger. The key is not consumed,
+   * so an enclosing dialog's Escape still runs.
+   */
+  private readonly onDocumentKeydown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape' && this.options.isOpen()) this.hide();
+  };
+
+  private escapeListening = false;
+
+  private listenEscape(): void {
+    if (this.escapeListening || typeof document === 'undefined') return;
+    document.addEventListener('keydown', this.onDocumentKeydown);
+    this.escapeListening = true;
+  }
+
+  private stopEscape(): void {
+    if (!this.escapeListening) return;
+    document.removeEventListener('keydown', this.onDocumentKeydown);
+    this.escapeListening = false;
   }
 
   private addDescribedBy(): void {

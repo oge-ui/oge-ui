@@ -1,4 +1,11 @@
-import { DOCUMENT, Injectable, effect, inject, signal } from '@angular/core';
+import {
+  DOCUMENT,
+  Injectable,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 
 export type GridTheme = 'default' | 'high-contrast' | 'tailwind' | 'bootstrap';
 export type DocsMode = 'light' | 'dark';
@@ -31,8 +38,12 @@ function writeStored(key: string, value: string): void {
  * Switches the grid bridge theme at runtime by swapping a stylesheet link —
  * exactly what a consuming app does at build time with a static import.
  * `high-contrast` is a scoped theme like dark: besides its stylesheet it needs
- * the `oge-theme-high-contrast` class on <html>, and it takes precedence over
- * the docs dark mode for the components (the docs chrome stays dark).
+ * the `oge-theme-high-contrast` class on <html>. It is a light-surface
+ * palette (AAA against white): components without a surface of their own —
+ * tabs, text buttons, links — paint on the page, so while it is active the
+ * docs render light whatever the stored mode (on the dark docs chrome its
+ * accent read dark blue on near-black). The stored mode comes back with any
+ * other theme.
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -47,7 +58,16 @@ export class ThemeService {
     (readStored(MODE_STORAGE_KEY) as DocsMode | null) ?? 'light',
   );
 
+  /** Whether the light/dark switch applies (not under the light high-contrast theme). */
+  readonly modeLocked = computed(() => this.theme() === 'high-contrast');
+
+  /** The mode the docs actually render in. */
+  readonly effectiveMode = computed<DocsMode>(() =>
+    this.modeLocked() ? 'light' : this.mode(),
+  );
+
   toggleMode(): void {
+    if (this.modeLocked()) return;
     this.mode.set(this.mode() === 'dark' ? 'light' : 'dark');
   }
 
@@ -72,14 +92,11 @@ export class ThemeService {
       if (!existing) this.document.head.appendChild(link);
     });
     effect(() => {
-      const dark = this.mode() === 'dark';
       writeStored(MODE_STORAGE_KEY, this.mode());
+      const dark = this.effectiveMode() === 'dark';
       const root = this.document.documentElement;
       root.classList.toggle('dark', dark);
-      root.classList.toggle(
-        'oge-theme-dark',
-        dark && this.theme() !== 'high-contrast',
-      );
+      root.classList.toggle('oge-theme-dark', dark);
       if (dark && !this.document.getElementById(DARK_LINK_ID)) {
         const link = this.document.createElement('link');
         link.id = DARK_LINK_ID;

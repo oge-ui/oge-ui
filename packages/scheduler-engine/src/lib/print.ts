@@ -5,12 +5,43 @@
  * browser's print dialog. Nodes are cloned with `importNode` — no
  * `document.write`, no string-built DOM (security rules). SSR-safe: a call
  * without a document resolves at once.
+ *
+ * Strict CSP: the frame is `about:blank`, so it inherits the page's policy.
+ * Cloned page `<style>` elements keep their nonce (cloning copies it); the
+ * print sheet this module adds is stamped with {@link
+ * OgeSchedulerPrintOptions.nonce}, else the nonce of the page's own
+ * nonce'd `<style>` / `<link>` / `<script>`, so a nonce-only `style-src`
+ * admits it.
  */
 
 /** Options of {@link printOgeScheduler}. */
 export interface OgeSchedulerPrintOptions {
   /** The print document's title (the browser's default file name). */
   readonly title?: string;
+  /**
+   * The CSP nonce stamped on the print sheet `<style>`. Defaults to Angular's
+   * `CSP_NONCE` (the Angular layer passes it), else the nonce of the first
+   * nonce'd style or script element on the page.
+   */
+  readonly nonce?: string | null;
+}
+
+/**
+ * The nonce the page's own elements carry — a server that sends a nonce-only
+ * `style-src` stamps it on the styles and scripts it emits. Browsers hide the
+ * `nonce` attribute after parsing (it reads `""`), so the `.nonce` property is
+ * what is read.
+ */
+export function ogePageCspNonce(doc: Document): string | null {
+  for (const element of Array.from(
+    doc.querySelectorAll<HTMLElement>(
+      'style[nonce], link[rel="stylesheet"][nonce], script[nonce]',
+    ),
+  )) {
+    const nonce = element.nonce || element.getAttribute('nonce');
+    if (nonce) return nonce;
+  }
+  return null;
 }
 
 /** The print sheet: every scroll container expands, the toolbar stays. */
@@ -50,6 +81,11 @@ export function printOgeScheduler(
     doc.head.appendChild(doc.importNode(node, true));
   }
   const sheet = doc.createElement('style');
+  const nonce = options.nonce || ogePageCspNonce(document);
+  if (nonce) {
+    sheet.setAttribute('nonce', nonce);
+    sheet.nonce = nonce;
+  }
   sheet.textContent = PRINT_CSS;
   doc.head.appendChild(sheet);
   // the theme scope the host sits in (dark / high-contrast classes)

@@ -103,3 +103,52 @@ describe('OgeTooltipCore content', () => {
     expect(harness({ text: '', hasContent: false }).core.canShow()).toBe(false);
   });
 });
+
+describe('OgeTooltipCore — WCAG 1.4.13 (hoverable, dismissible)', () => {
+  it('stays open while the pointer moves from the trigger onto the bubble', () => {
+    const h = harness();
+    h.core.pointerEnter();
+    vi.advanceTimersByTime(100);
+    expect(h.state.open).toBe(true);
+    h.core.pointerLeave(); // crossing the gap
+    vi.advanceTimersByTime(30);
+    h.core.bubblePointerEnter(); // within the grace period
+    vi.advanceTimersByTime(1000);
+    expect(h.state.open).toBe(true);
+    h.core.bubblePointerLeave();
+    vi.advanceTimersByTime(50);
+    expect(h.state.open).toBe(false);
+  });
+
+  it('hides on Escape pressed anywhere, without moving pointer or focus', () => {
+    const h = harness();
+    h.core.pointerEnter();
+    vi.advanceTimersByTime(100);
+    expect(h.state.open).toBe(true);
+    // focus is elsewhere (the body): the trigger's own keydown never runs
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
+    expect(h.state.open).toBe(false);
+  });
+
+  it('drops the document listener once hidden or destroyed', () => {
+    const remove = vi.spyOn(document, 'removeEventListener');
+    const h = harness();
+    h.core.focusIn();
+    h.core.hide();
+    expect(remove).toHaveBeenCalledWith('keydown', expect.any(Function));
+    h.core.focusIn();
+    h.core.destroy();
+    expect(remove).toHaveBeenCalledTimes(2);
+    remove.mockRestore();
+  });
+
+  it('the bubble does not keep a non-hover tooltip alive', () => {
+    const h = harness({ showMode: 'click' });
+    h.core.click();
+    h.core.bubblePointerLeave();
+    vi.advanceTimersByTime(500);
+    expect(h.state.open).toBe(true);
+  });
+});

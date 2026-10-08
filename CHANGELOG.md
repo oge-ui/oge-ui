@@ -48,6 +48,60 @@ are versioned independently, which is the case here.
   on its family's API page, and `docs-tools:parity` pairs each harness block
   with its React helper block.
 
+### Fixes — BPMN drop, high-contrast accent, scheduler print CSP, docs skip link, tooltip hover
+
+- **BPMN drag re-parenting commits what the highlight showed**
+  (`@oge-ui/bpmn-engine`, both layers). The drop no longer runs a second
+  container hit test at release: it commits the target the last pointer move
+  resolved — the one `dropContainerId` highlights — and only against the model
+  that move saw; if the diagram changed under the gesture (an undo, an import,
+  an app command) the release commits nothing instead of a plain move the
+  preview never showed. The intermittent CI failure of
+  `bpmn-g5b.spec.ts` was in the test's keyboard step, not the drop: it chose
+  "Move to" while the shared properties panel still rendered the previously
+  selected task (already in the sub-process), a no-op; the test now waits for
+  the panel to show the newly selected task.
+- **High-contrast theme on a dark page** (`@oge-ui/core` themes, docs). The
+  palette is a light-surface one — its accent is 9.5:1 on its own white
+  surface — but components without a background (tabs, text and outlined
+  buttons, links) painted it on the docs' near-black chrome (the "dark blue
+  on black" visual baseline). The theme header now says so, `themes.spec.ts`
+  checks the accent at ≥ 7:1 on every high-contrast surface it is drawn on and
+  that the theme stays light, and the docs render light while the
+  high-contrast theme is active (the light/dark switch is marked unavailable
+  and keeps the stored mode).
+- **Tab strips no longer call `scrollIntoView`** (`@oge-ui/tabs`,
+  `@oge-ui/react-tabs`, new `scrollTabIntoStrip` in `@oge-ui/behavior`).
+  Keeping the selected tab visible scrolled every ancestor too — a strip below
+  the fold scrolled the page on load — and Chromium moves the page's
+  sequential-focus starting point to a `scrollIntoView` target, so the first
+  Tab on a page with tabs landed after the last tab strip.
+- **Scheduler `print()` under a nonce-only `style-src`**
+  (`@oge-ui/scheduler-engine`, `@oge-ui/scheduler`,
+  `@oge-ui/react-scheduler`). The print sheet added to the print frame now
+  carries a CSP nonce: `print({ nonce })`, else Angular's `CSP_NONCE`, else the
+  nonce of the page's own nonce'd style or script elements.
+- **Tooltips meet WCAG 1.4.13** (`@oge-ui/behavior` `OgeTooltipCore`,
+  `@oge-ui/overlay`, `@oge-ui/react-overlay`, the grid overflow hint in both
+  layers). The bubble is hoverable — moving the pointer from the trigger onto
+  it within the hide delay keeps it open (`bubblePointerEnter()` /
+  `bubblePointerLeave()`) — and Escape pressed anywhere dismisses it, not only
+  on the focused trigger. It stays non-interactive (nothing in it takes
+  focus) and still never joins the Escape stack.
+- **Deprecated-message warnings give the right advice**
+  (`warnOgeDeprecatedMessage`, `@oge-ui/core`): the text no longer tells every
+  key to become an ICU plural branch; it names the replacement and takes an
+  optional per-key hint (`rowsSuffix` → write the whole text into
+  `pagerInfo`).
+- **Docs site: "Skip to content"** is the first focusable element of the
+  shell in both framework modes; Enter moves focus to the main region
+  (`tabindex="-1"`) without a navigation.
+- Docs: `SECURITY.md` now states the tested strict policy (nonce'd `<style>`
+  elements plus `style-src-attr 'unsafe-inline'`, no `'unsafe-inline'` in
+  `style-src`); the conformance report rates 1.4.13 "Supports"; pivot's
+  deprecated `OGE_PIVOT_FIELD_DRAG_TYPE` / `OgePivotDragLike` say "since
+  1.1.2" (1.2 was never released).
+
 ### Docs site — guides, accessibility conformance, versioning policy (W6b)
 
 - **A Guides section** (`/guides`, its own sidebar group), every page

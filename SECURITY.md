@@ -150,9 +150,24 @@ server**. The uploader will happily send whatever your server accepts.
 ### Content Security Policy
 
 The packages ship no inline scripts and evaluate no strings — no `eval`, no
-`new Function`, no `document.write`. Inline styles are used for layout
-(virtual-scroll offsets, panel positioning), so a strict policy needs
-`style-src 'self' 'unsafe-inline'`. `script-src 'self'` is enough.
+`new Function`, no `document.write`. `script-src 'self'` (or a nonce with
+`'strict-dynamic'`) is enough.
+
+Styles need no `'unsafe-inline'` in `style-src`. The `<style>` elements at
+runtime are Angular's component styles, which Angular stamps with your
+`CSP_NONCE` / `ngCspNonce`, and the scheduler's print sheet, which carries
+the same nonce (`print({ nonce })`, Angular's `CSP_NONCE`, or the nonce of
+the page's own nonce'd elements); the React packages ship a stylesheet file.
+Layout values (virtual-scroll offsets, panel positioning) are inline `style`
+attributes, which cannot run script — admit those with
+`style-src-attr 'unsafe-inline'`. The tested strict policy is therefore:
+
+```
+style-src 'self' 'nonce-{NONCE}'; style-src-attr 'unsafe-inline'
+```
+
+A static host that cannot mint a per-request nonce falls back to
+`style-src 'self' 'unsafe-inline'`.
 
 ### Trusted Types
 

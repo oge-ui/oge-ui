@@ -20,6 +20,7 @@ import {
   OGE_TAB_DRAG_THRESHOLD,
   motionScrollBehavior,
   ogeIsRtl,
+  scrollTabIntoStrip,
 } from '@oge-ui/behavior';
 import {
   OgeAnchoredPanel,
@@ -395,9 +396,8 @@ export class OgeTabStrip {
   /** Scrolls the tab at `index` into view (no-op when already visible). */
   scrollToIndex(index: number): void {
     const el = this.tabElements()[index]?.nativeElement;
-    if (el && typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    }
+    const scroller = this.scroller()?.nativeElement;
+    if (el && scroller) scrollTabIntoStrip(scroller, el);
   }
 
   /**

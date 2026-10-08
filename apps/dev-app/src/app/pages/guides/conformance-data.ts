@@ -344,9 +344,9 @@ export const CRITERIA: readonly CriterionRow[] = [
     id: '1.4.13',
     name: 'Content on Hover or Focus',
     level: 'AA',
-    conformance: 'Partially Supports',
+    conformance: 'Supports',
     remarks:
-      'Tooltips show on hover and focus, hide with Escape and stay while the trigger is hovered or focused; keeping a tooltip open while the pointer moves onto it is not verified.',
+      'Tooltips (and the grid overflow hint) are hoverable — the pointer can move from the trigger onto the bubble and it stays — persistent while the trigger or bubble is hovered or the trigger is focused, and dismissible with Escape pressed anywhere, without moving pointer or focus. Verified in both render layers by `tooltip-hover-persistence.spec.ts`.',
   },
   {
     id: '2.4.5',

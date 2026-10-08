@@ -25,7 +25,11 @@ export function ogePagerInfoText(
   locale?: string,
 ): string {
   if (messages.rowsSuffix !== undefined) {
-    warnOgeDeprecatedMessage('rowsSuffix', 'pagerInfo');
+    warnOgeDeprecatedMessage(
+      'rowsSuffix',
+      'pagerInfo',
+      "write the whole text there with the count as a placeholder ('{count, plural, one {# row} other {# rows}}').",
+    );
     return `${count} ${messages.rowsSuffix}`;
   }
   return ogeFormatMessage(messages.pagerInfo, { count }, locale);

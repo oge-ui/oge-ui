@@ -719,7 +719,9 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   dark is `.oge-theme-dark, [data-oge-theme='dark']` plus the same block under
   `prefers-color-scheme: dark` for `.oge-theme-auto` / `[data-oge-theme='auto']`; high-contrast is
   `.oge-theme-high-contrast, [data-oge-theme='high-contrast']` (its spec also checks AAA text / 3:1 UI
-  contrast and a solid `--oge-focus-ring`); the bridges target
+  contrast — the accent on every surface it is drawn on — and a solid `--oge-focus-ring`). It is a
+  **light-surface** palette: components without a background (tabs, text buttons, links) paint on
+  the page, so it is only AAA on a light page; the docs render light while it is active. The bridges target
   `:root` (bootstrap also `[data-bs-theme]`). A new component needs **no** theme-file entry. Every
   scoped block must re-declare each derived token so a themed subtree re-resolves it —
   `packages/grid/src/lib/styles/themes.spec.ts` enforces that, the zero-specificity emission, and the
@@ -1526,8 +1528,17 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   resolved); under forced colors it draws a `CanvasText` chevron, because forced colors repaint
   transparent borders.
 - **Tooltips stay non-interactive.** Template / render-prop content and the click / focus /
-  manual `showMode`s route through `OgeTooltipCore`; the bubble keeps `pointer-events: none` and
-  never joins the Escape stack. Interactive content belongs in a popover.
+  manual `showMode`s route through `OgeTooltipCore`; nothing in the bubble is focusable and it
+  never joins the Escape stack. Interactive content belongs in a popover. The bubble _is_ a pointer
+  target (WCAG 1.4.13 "hoverable"): render layers route its `pointerenter` / `pointerleave` to
+  `bubblePointerEnter()` / `bubblePointerLeave()`, which cancel / re-arm the hide grace, and while
+  open the core listens for Escape on `document` (dismissible without moving pointer or focus; the
+  key is not consumed). A new bubble — like the grid overflow hint — wires both.
+- **Tab strips scroll themselves, never with `scrollIntoView`.** Keeping the selected tab visible
+  goes through `scrollTabIntoStrip(scroller, tab)` (behavior): `scrollIntoView` also scrolls every
+  ancestor (a strip below the fold scrolled the page on load) and Chromium moves the sequential
+  focus starting point to its target, so the page's first Tab skipped the docs skip link. The
+  same applies to any init-time "reveal" in a new component.
 - **Context menus resolve a target before they open.** `ogeResolveContextMenuOpen`
   (`context-menu-core.ts`) maps a pointer, keyboard or `open(x, y)` request to the delegated
   `closest(target)` inside the host, then runs the cancelable `opening` (whose `items` the handler
@@ -1653,7 +1664,13 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   step, and the panel's "Move to…" select is `moveToContainerCommand`
   (position inside the target, then re-parent). Sequence flows that would
   cross pools or scopes are removed; lanes stay geometric. Pools never
-  re-parent, a drop outside every pool keeps the current container.
+  re-parent, a drop outside every pool keeps the current container. The
+  release commits exactly the target the last move resolved (the one
+  `dropContainerId` highlights) — no second hit test at pointerup — and only
+  if the model is still the one that move saw; otherwise it commits nothing.
+  An e2e that drives the properties panel after a selection change must wait
+  for the panel to show the new element: entries are reused by id, so the
+  same `<select>` briefly still describes the previous one.
 - **PNG export rasterizes in the render packages** (`bpmn-png.ts` in both
   layers, a canvas and an `Image` of the SVG export) — the engine stays
   DOM-free and dependency-free; jsdom / SSR resolve `null`.
@@ -1916,6 +1933,13 @@ rules — change both together.
   `apps/dev-app-e2e/ssr/strict-csp.spec.ts` serves the site with
   `require-trusted-types-for 'script'` and a `trusted-types` list read from
   `SECURITY.md`, so an undocumented policy or an unwrapped sink fails it.
+- **A runtime `<style>` element carries the CSP nonce.** The strict policy is
+  `style-src 'self' 'nonce-…'` plus `style-src-attr 'unsafe-inline'`, so a
+  `<style>` a component creates itself (today only the scheduler's print
+  sheet, `scheduler-engine/print.ts`) takes a `nonce` option, the Angular
+  layer passes `inject(CSP_NONCE, { optional: true })`, and the fallback is the
+  page's own nonce'd element (`.nonce` — browsers blank the attribute). Inline
+  `style` attributes / CSSOM writes need nothing.
 - **No raw control characters in source.** Write `\0`, `\u0000`, `\x1f` as
   escapes; a literal NUL makes grep treat the file as binary and hides it from
   every search. `node tools/docs-tools/check-control-chars.mjs` (run by

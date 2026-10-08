@@ -223,7 +223,11 @@ export function rowCountText(
 ): string {
   const legacyOne = messages.rowCountOneAnnouncement;
   if (legacyOne !== undefined) {
-    warnOgeDeprecatedMessage('rowCountOneAnnouncement', 'rowCountAnnouncement');
+    warnOgeDeprecatedMessage(
+      'rowCountOneAnnouncement',
+      'rowCountAnnouncement',
+      "put the singular branch into it as an ICU plural ('{count, plural, one {# row} other {# rows}}').",
+    );
     if (count === 1) return ogeFormatMessage(legacyOne, { count }, locale);
   }
   return ogeFormatMessage(messages.rowCountAnnouncement, { count }, locale);

@@ -25,6 +25,7 @@ import {
   type OgeTabsStylingMode,
   motionScrollBehavior,
   ogeIsRtl,
+  scrollTabIntoStrip,
 } from '@oge-ui/behavior';
 import {
   OgeMenuList,
@@ -169,9 +170,8 @@ export function OgeTabStrip(props: OgeTabStripProps) {
   const scrollToIndex = useCallback((index: number): void => {
     const d = latest.current.descriptors[index];
     const el = d ? tabEls.current.get(d.id) : undefined;
-    if (el && typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    }
+    const scroller = scrollerRef.current;
+    if (el && scroller) scrollTabIntoStrip(scroller, el);
   }, []);
 
   useEffect(() => {

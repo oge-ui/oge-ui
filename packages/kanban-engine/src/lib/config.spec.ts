@@ -34,7 +34,7 @@ describe('kanban config', () => {
     expect(inner.cardHeight).toBe(80);
   });
 
-  it('fills keys a pre-1.2 catalog omits from English', () => {
+  it('fills keys a pre-1.1.3 catalog omits from English', () => {
     const oldToolbar: Record<string, string | undefined> = {
       ...OGE_DEFAULT_KANBAN_MESSAGES.toolbar,
       addCard: 'Neue Karte',

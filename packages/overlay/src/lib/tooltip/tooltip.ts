@@ -115,12 +115,14 @@ export class OgeTooltipPanel {
  * ```
  *
  * Shows after a hover dwell (configurable, `provideOgeOverlayConfig`) or
- * immediately on keyboard focus; hides on leave, blur or Escape —
- * `tooltipShowMode` switches to focus-only, click-to-toggle or manual. While
- * visible the trigger's `aria-describedby` includes the tooltip id — any
- * existing value is preserved. The bubble is viewport-aware (flips and
- * clamps), optionally draws a callout arrow, and never receives pointer
- * events: rich content stays non-interactive (APG tooltip).
+ * immediately on keyboard focus; hides on leave, blur or Escape (pressed
+ * anywhere while it shows) — `tooltipShowMode` switches to focus-only,
+ * click-to-toggle or manual. While visible the trigger's `aria-describedby`
+ * includes the tooltip id — any existing value is preserved. The bubble is
+ * viewport-aware (flips and clamps), optionally draws a callout arrow, and
+ * is hoverable (WCAG 1.4.13): moving the pointer from the trigger onto it
+ * within the hide delay keeps it open. Rich content stays non-interactive
+ * (APG tooltip) — nothing in the bubble is focusable.
  *
  * The timing machine and the `aria-describedby` bookkeeping are
  * `@oge-ui/behavior`'s `OgeTooltipCore`, shared verbatim with the React
@@ -286,6 +288,14 @@ export class OgeTooltip {
     this.componentRef.setInput('panel', this.panel);
     this.syncBubbleInputs();
     this.appRef.attachView(this.componentRef.hostView);
-    document.body.appendChild(this.componentRef.location.nativeElement);
+    const bubble: HTMLElement = this.componentRef.location.nativeElement;
+    // WCAG 1.4.13 hoverable: the pointer may move onto the bubble
+    bubble.addEventListener('pointerenter', () =>
+      this.core.bubblePointerEnter(),
+    );
+    bubble.addEventListener('pointerleave', () =>
+      this.core.bubblePointerLeave(),
+    );
+    document.body.appendChild(bubble);
   }
 }

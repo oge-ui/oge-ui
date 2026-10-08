@@ -3360,6 +3360,11 @@ export class OgeBpmnEditorCore {
           (current.kind !== 'process' && target.id === current.id));
       return same || !canReparent(this.diagram(), ids, target) ? null : target;
     };
+    // The drop commits exactly what the last move resolved — the value the
+    // highlight (`dropContainerId`) shows — never a second resolution at
+    // release, and only against the model that resolution saw.
+    let hovered: BpmnContainerRef | null = null;
+    let hoveredModel: BpmnDiagram = m;
     const finish = (cancelled: boolean): void => {
       cleanup();
       const state = this.dragState();
@@ -3371,7 +3376,13 @@ export class OgeBpmnEditorCore {
       if (state.dx === 0 && state.dy === 0) {
         return;
       }
-      const target = dropTarget(state.dx, state.dy);
+      if (this.diagram() !== hoveredModel) {
+        // the model changed under the gesture after the last move (an
+        // undo, an import, an app command): the preview no longer describes
+        // it, so the release commits nothing rather than a guess
+        return;
+      }
+      const target = hovered;
       const move = moveElementsCommand(state.ids, state.dx, state.dy);
       if (target === null) {
         this.exec(move);
@@ -3414,8 +3425,10 @@ export class OgeBpmnEditorCore {
           guides = snap.guides;
         }
         this.dragState.set({ ids, dx, dy, moved, guides });
+        hoveredModel = this.diagram();
         if (moved) {
           const target = dropTarget(dx, dy);
+          hovered = target;
           const next =
             target === null
               ? null

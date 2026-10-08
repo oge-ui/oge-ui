@@ -1691,6 +1691,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   [style.opacity]="hintPanel.position() ? null : '0'"
   [class.oge-tooltip-ready]="hintPanel.position() !== null"
   [attr.data-placement]="hintPanel.position()?.placement ?? null"
+  (pointerenter)="onHintBubbleEnter()"
+  (pointerleave)="onHintLeave()"
 >
   {{ hintText() }}
 </div>

@@ -1,4 +1,5 @@
 import {
+  CSP_NONCE,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
@@ -564,6 +565,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   private readonly config = inject(OGE_SCHEDULER_CONFIG);
   private readonly destroyRef = inject(DestroyRef);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** The app's CSP nonce, stamped on the print sheet `print()` adds. */
+  private readonly cspNonce = inject(CSP_NONCE, { optional: true });
 
   /**
    * Appointment items: a plain array, any `@oge-ui/core` `DataSource`
@@ -1279,10 +1282,14 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     return untracked(() => this.core.getExportData(range));
   }
 
-  /** Prints the current view (a hidden frame + the browser's print dialog). */
+  /**
+   * Prints the current view (a hidden frame + the browser's print dialog).
+   * The print sheet carries `options.nonce`, else Angular's `CSP_NONCE`.
+   */
   print(options: OgeSchedulerPrintOptions = {}): Promise<void> {
     return printOgeScheduler(this.hostEl.nativeElement, {
       title: options.title ?? untracked(() => this.periodTitle()),
+      nonce: options.nonce ?? this.cspNonce,
     });
   }
 

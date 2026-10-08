@@ -175,14 +175,18 @@ for (const layer of LAYERS) {
       await page.mouse.up();
       const moveTo = editor.locator('[data-entry="move-to"] select');
       await expect(moveTo).toHaveValue('Sub_fulfil');
-      // keyboard twin: move the charge task the same way
+      // keyboard twin: move the charge task the same way. The panel is the
+      // same <select> element for both tasks, so wait until it shows the
+      // charge task (still in the process) before choosing — choosing while
+      // it still renders the approve task (already in Sub_fulfil) is a no-op,
+      // which is what made this step flaky on slow CI runners.
       await shape(editor, 'Task_charge').locator('.oge-bpmn-node').click();
-      await editor
-        .locator('[data-entry="move-to"] select')
-        .selectOption('Sub_fulfil');
-      await expect(editor.locator('[data-entry="move-to"] select')).toHaveValue(
-        'Sub_fulfil',
+      await expect(shape(editor, 'Task_charge')).toHaveClass(
+        /oge-bpmn-selected/,
       );
+      await expect(moveTo).toHaveValue('Process_payment');
+      await moveTo.selectOption('Sub_fulfil');
+      await expect(moveTo).toHaveValue('Sub_fulfil');
     });
 
     for (const path of ['validation', 'extending', 'camunda'] as const) {
