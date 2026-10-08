@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-gantt",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "React Gantt chart from the OGE UI suite: a virtualized task tree pane and a timeline chart with summary brackets, milestone diamonds, baseline bars, FS/SS/FF/SF dependency arrows, critical path, forward auto-scheduling on work calendars, resource labels and a workload band, drag move/resize/progress with Escape-cancel, link drawing with cycle rejection, snapshot undo/redo, keyboard bar editing, a built-in context menu and task dialog, and Excel/PDF/PNG export — running the same framework-free Gantt engine and the same stylesheet as the Angular package. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "react",
@@ -84,11 +84,11 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.3",
-    "@oge-ui/core": "1.1.3",
-    "@oge-ui/gantt-engine": "1.1.3",
-    "@oge-ui/react-forms": "1.1.3",
-    "@oge-ui/react-overlay": "1.1.3"
+    "@oge-ui/behavior": "1.1.4",
+    "@oge-ui/core": "1.1.4",
+    "@oge-ui/gantt-engine": "1.1.4",
+    "@oge-ui/react-forms": "1.1.4",
+    "@oge-ui/react-overlay": "1.1.4"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {

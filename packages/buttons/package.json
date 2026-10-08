@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/buttons",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Signal-based Angular button family: OgeButton with async single-flight actions and hold-to-confirm, OgeButtonGroup selection, OgeDropDownButton, and (@oge-ui/buttons/fab) OgeFab with safe-area pinning plus OgeSpeedDial on the WAI-ARIA menu-button pattern.",
   "keywords": [
     "angular",
@@ -23,8 +23,8 @@
     "@angular/core": ">=22.0.0 <24.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.3",
-    "@oge-ui/overlay": "1.1.3"
+    "@oge-ui/behavior": "1.1.4",
+    "@oge-ui/overlay": "1.1.4"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

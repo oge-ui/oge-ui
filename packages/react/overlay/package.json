@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-overlay",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "React overlay surfaces from the OGE UI suite: viewport-aware anchored popups (flip + clamp, RTL-aware, Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, a mobile action sheet, and stacked toast notifications with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.",
   "keywords": [
     "react",
@@ -65,7 +65,7 @@
     }
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.3"
+    "@oge-ui/behavior": "1.1.4"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {

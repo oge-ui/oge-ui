@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-buttons",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "React buttons from the OGE UI suite: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat gestures, a floating action button and a speed dial — sharing the Angular suite's press machine and design tokens.",
   "keywords": [
     "react",
@@ -42,8 +42,8 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.3",
-    "@oge-ui/react-overlay": "1.1.3"
+    "@oge-ui/behavior": "1.1.4",
+    "@oge-ui/react-overlay": "1.1.4"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {

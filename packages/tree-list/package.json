@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/tree-list",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Signal-based Angular tree list (hierarchical data grid): lazy loading, virtualization, editing, selection and Excel export, sharing the @oge-ui/grid column API.",
   "keywords": [
     "angular",
@@ -22,13 +22,13 @@
     "@angular/forms": ">=22.0.0 <24.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.3",
-    "@oge-ui/core": "1.1.3",
-    "@oge-ui/grid": "1.1.3",
-    "@oge-ui/inputs": "1.1.3",
-    "@oge-ui/forms": "1.1.3",
-    "@oge-ui/layout": "1.1.3",
-    "@oge-ui/overlay": "1.1.3"
+    "@oge-ui/behavior": "1.1.4",
+    "@oge-ui/core": "1.1.4",
+    "@oge-ui/grid": "1.1.4",
+    "@oge-ui/inputs": "1.1.4",
+    "@oge-ui/forms": "1.1.4",
+    "@oge-ui/layout": "1.1.4",
+    "@oge-ui/overlay": "1.1.4"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

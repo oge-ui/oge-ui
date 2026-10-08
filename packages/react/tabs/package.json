@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-tabs",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "React tabs from the OGE UI suite: a WAI-ARIA APG tab strip and tab panel with data-driven or declarative tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards and drag reordering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.",
   "keywords": [
     "react",
@@ -57,8 +57,8 @@
     }
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.3",
-    "@oge-ui/react-overlay": "1.1.3"
+    "@oge-ui/behavior": "1.1.4",
+    "@oge-ui/react-overlay": "1.1.4"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {

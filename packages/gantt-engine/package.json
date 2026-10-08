@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/gantt-engine",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Framework-free engine behind the OGE UI Gantt chart, shared by the Angular and React render layers: task-tree model with field mapping and summary roll-ups, calendar-true time scales, forward auto-scheduling on work calendars, the critical-path pass, orthogonal dependency routing, gesture math, the Gantt controller (editing pipelines, undo/redo, virtualization, keyboard map), message catalogs and the Excel/PDF/PNG export builders. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "gantt",
@@ -20,8 +20,8 @@
   "types": "./index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "@oge-ui/behavior": "1.1.3",
-    "@oge-ui/core": "1.1.3"
+    "@oge-ui/behavior": "1.1.4",
+    "@oge-ui/core": "1.1.4"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {
