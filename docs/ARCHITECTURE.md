@@ -1968,6 +1968,12 @@ rules — change both together.
 
 - Specs live **beside the source**; large components split into feature-named files
   (`tree-list-selection.spec.ts`, `button-hold.spec.ts`).
+- **Parsers of untrusted text get property tests** in `<file>.property.spec.ts`, written with
+  `fast-check` (root dev dependency; it is also what OpenSSF Scorecard detects as fuzzing). Assert
+  invariants (round-trips, "never throws", "never emits a formula lead"), plus a timing bound on
+  long adversarial input for anything regex-based. A regex over library input must not backtrack
+  polynomially (CodeQL `js/polynomial-redos`): split on a fixed delimiter or scan with
+  `indexOf` instead of chaining overlapping quantifiers such as `\d+\.?\d*` or `\s*(x)?\s*`.
 - Pattern: local host `@Component` + `TestBed.createComponent` + a `settle(fixture)` helper
   (`detectChanges → whenStable → detectChanges`); assert on rendered DOM by `.oge-*` class.
   `globals: true` (no vitest imports needed).
