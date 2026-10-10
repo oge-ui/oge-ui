@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { ApiReference, type ApiSections } from './api-reference';
+import { ApiReference, decodeApiText, type ApiSections } from './api-reference';
 
 const SECTIONS: ApiSections = {
   properties: [
@@ -123,5 +123,20 @@ describe('ApiReference', () => {
     expect(fixture.nativeElement.textContent).toContain('No members match');
     filterTo(fixture, '');
     expect(headings(fixture)).toEqual(['Properties', 'Methods']);
+  });
+});
+
+describe('decodeApiText', () => {
+  it('decodes the entities the api-data files store', () => {
+    expect(decodeApiText('Promise&lt;OgeExportData&lt;T&gt;&gt;')).toBe(
+      'Promise<OgeExportData<T>>',
+    );
+    expect(decodeApiText('(e) =&gt; void')).toBe('(e) => void');
+    expect(decodeApiText('&#39;auto&#39; | &#64;Input')).toBe(
+      "'auto' | @Input",
+    );
+    expect(decodeApiText('a &amp;lt; b')).toBe('a &lt; b');
+    expect(decodeApiText('&bogus; stays')).toBe('&bogus; stays');
+    expect(decodeApiText('plain')).toBe('plain');
   });
 });

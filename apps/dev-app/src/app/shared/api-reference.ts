@@ -42,6 +42,60 @@ interface RenderedSection {
   groups: readonly ApiGroup[];
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  lt: '<',
+  gt: '>',
+  amp: '&',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+  rarr: '→',
+  larr: '←',
+  hellip: '…',
+  mdash: '—',
+  ndash: '–',
+  lsquo: '‘',
+  rsquo: '’',
+  ldquo: '“',
+  rdquo: '”',
+};
+
+/**
+ * `Promise&lt;void&gt;` → `Promise<void>`. The api-data files store names,
+ * types and defaults HTML-escaped (the same strings feed the llms generator,
+ * which decodes them too), but the table interpolates them as text — so
+ * they are decoded once here instead of showing the entities literally.
+ * Unknown entities are left as written.
+ */
+export function decodeApiText(text: string): string {
+  if (!text.includes('&')) return text;
+  return text.replace(
+    /&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,
+    (entity, body: string) => {
+      if (body[0] === '#') {
+        const code =
+          body[1] === 'x' || body[1] === 'X'
+            ? parseInt(body.slice(2), 16)
+            : parseInt(body.slice(1), 10);
+        return Number.isFinite(code) && code <= 0x10ffff
+          ? String.fromCodePoint(code)
+          : entity;
+      }
+      return NAMED_ENTITIES[body.toLowerCase()] ?? entity;
+    },
+  );
+}
+
+function decodeEntry(entry: ApiEntry): ApiEntry {
+  return {
+    ...entry,
+    name: decodeApiText(entry.name),
+    type: decodeApiText(entry.type),
+    default:
+      entry.default === undefined ? undefined : decodeApiText(entry.default),
+  };
+}
+
 const SECTION_ORDER = [
   { key: 'properties', label: 'Properties' },
   { key: 'methods', label: 'Methods' },
@@ -197,14 +251,17 @@ export class ApiReference {
       const result: RenderedSection[] = [];
       for (const { key, label } of SECTION_ORDER) {
         const groups = (sections[key] ?? [])
-          .map((group) => ({
-            ...group,
-            entries: needle
-              ? group.entries.filter((entry) =>
-                  entry.name.toLowerCase().includes(needle),
-                )
-              : group.entries,
-          }))
+          .map((group) => {
+            const entries = group.entries.map(decodeEntry);
+            return {
+              ...group,
+              entries: needle
+                ? entries.filter((entry) =>
+                    entry.name.toLowerCase().includes(needle),
+                  )
+                : entries,
+            };
+          })
           .filter((group) => group.entries.length > 0);
         if (!groups.length) continue;
         const entries = groups.flatMap((group) => group.entries);
