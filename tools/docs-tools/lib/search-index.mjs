@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { readApiBlocks } from './api-data.mjs';
-import { decodeEntities } from './markdown.mjs';
+import { decodeEntities, stripTags } from './markdown.mjs';
 
 /**
  * Builds `apps/dev-app/public/search-index.json`, the data behind the docs
@@ -339,7 +339,7 @@ export function readHeadings(file) {
   for (const match of text.matchAll(
     /<h([23])\b[^>]*?\sid="([a-z0-9-]+)"[^>]*>([\s\S]*?)<\/h\1>/g,
   )) {
-    const label = decodeEntities(match[3].replace(/<[^>]+>/g, ''))
+    const label = decodeEntities(stripTags(match[3]))
       .replace(/\s+/g, ' ')
       .trim();
     if (label && !label.includes('{{')) out.push({ id: match[2], text: label });

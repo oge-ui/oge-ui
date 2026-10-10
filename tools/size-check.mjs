@@ -32,6 +32,20 @@ import { ROOT, publishablePackages } from './release/publishable.mjs';
 const BUDGETS = join(ROOT, 'tools', 'size-budgets.json');
 const args = new Set(process.argv.slice(2));
 
+/**
+ * Parses `file` as JSON, or returns `fallback` when it does not exist. Reading
+ * straight away (rather than `existsSync` first) leaves no window for the file
+ * to change between the check and the read.
+ */
+function readJsonOr(file, fallback) {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return fallback;
+    throw error;
+  }
+}
+
 /** The file a bundler picks for an export target (ESM first). */
 function pickTarget(target) {
   if (typeof target === 'string') return target;
@@ -55,7 +69,7 @@ function entryPoints(pkg) {
   for (const [subpath, target] of Object.entries(exportsField)) {
     if (subpath === './package.json') continue;
     const file = pickTarget(target);
-    if (!file || !/\.(m?js|cjs|css)$/.test(file.replace('*', 'x.css')))
+    if (!file || !/\.(m?js|cjs|css)$/.test(file.replaceAll('*', 'x.css')))
       continue;
     if (subpath.includes('*')) {
       // `./themes/*` → one entry per file the pattern covers
@@ -71,7 +85,7 @@ function entryPoints(pkg) {
         )
           continue;
         const middle = rel.slice(prefix.length, rel.length - suffix.length);
-        out.push([subpath.replace('*', middle), rel]);
+        out.push([subpath.replaceAll('*', middle), rel]);
       }
     } else {
       out.push([subpath, file]);
@@ -121,9 +135,7 @@ const sorted = Object.fromEntries(
   Object.entries(current).sort(([a], [b]) => a.localeCompare(b)),
 );
 
-const baseline = existsSync(BUDGETS)
-  ? JSON.parse(readFileSync(BUDGETS, 'utf8'))
-  : { tolerance: 0.1, entries: {} };
+const baseline = readJsonOr(BUDGETS, { tolerance: 0.1, entries: {} });
 
 if (args.has('--update')) {
   writeFileSync(

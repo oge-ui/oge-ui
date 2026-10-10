@@ -25,6 +25,20 @@ export function decodeEntities(text) {
 }
 
 /**
+ * Drops every tag. Repeats until nothing changes, so input such as
+ * `<scr<b>ipt>` cannot reassemble a tag out of the pieces one pass leaves.
+ */
+export function stripTags(text) {
+  let out = text;
+  let previous;
+  do {
+    previous = out;
+    out = out.replace(/<[^>]+>/g, '');
+  } while (out !== previous);
+  return out;
+}
+
+/**
  * Sentinel wrapping a lifted-out code span. A private-use code point rather
  * than the NUL byte it used to be: NUL cannot appear in the docs sources
  * either, but it makes every regex holding it a `no-control-regex` lint
@@ -49,8 +63,8 @@ export function htmlToMarkdown(html) {
     })
     .replace(/<\/?(?:strong|b)>/g, '**')
     .replace(/<\/?(?:em|i)>/g, '_')
-    .replace(/<br\s*\/?>/g, ' ')
-    .replace(/<[^>]+>/g, '');
+    .replace(/<br\s*\/?>/g, ' ');
+  out = stripTags(out);
   out = decodeEntities(out).replace(
     new RegExp(`${MARK}(\\d+)${MARK}`, 'g'),
     (_, index) => spans[Number(index)],
@@ -58,9 +72,12 @@ export function htmlToMarkdown(html) {
   return out.replace(/\s+/g, ' ').trim();
 }
 
-/** Escapes the two characters that break a markdown table cell. */
+/**
+ * Escapes the characters that break a markdown table cell. Backslashes go
+ * first, so a literal `\|` in the source cannot turn into an escaped pipe.
+ */
 export function cell(text) {
-  return text.replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  return text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 }
 
 /** Wraps a type/signature in backticks, decoding entities first. */

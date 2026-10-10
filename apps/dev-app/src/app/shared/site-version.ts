@@ -5,4 +5,4 @@
  * `nx release` bumps) by `npx nx run docs-tools:llms`, and checked by
  * `docs-tools:llms-check`.
  */
-export const SITE_VERSION = '1.1.3';
+export const SITE_VERSION = '1.1.4';

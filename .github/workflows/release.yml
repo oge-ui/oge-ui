@@ -66,8 +66,13 @@ jobs:
           fi
           echo "version=$v" >> "$GITHUB_OUTPUT"
 
-      # trusted publishing needs npm >= 11.5
-      - run: npm install -g npm@11.6.2
+      # trusted publishing needs npm >= 11.5. Node 24 bundles a newer npm, so
+      # assert it instead of `npm install -g npm@…` (an unpinned global install)
+      - name: Check npm supports trusted publishing
+        run: |
+          npm_version="$(npm --version)"
+          node -e "const [a,b]=process.argv[1].split('.').map(Number); process.exit(a>11||(a===11&&b>=5)?0:1)" "$npm_version" \
+            || { echo "::error::npm $npm_version is older than 11.5 — trusted publishing needs 11.5+"; exit 1; }
       - run: npm ci
 
       - run: npx nx run-many -t build --projects="$(node -p "require('./nx.json').release.projects.join(',')")"

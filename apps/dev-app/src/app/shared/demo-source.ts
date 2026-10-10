@@ -194,7 +194,10 @@ function compareSymbols(a: string, b: string): number {
 
 /** The template is embedded in a backtick literal in the rendered source. */
 function escapeTemplate(template: string): string {
-  return template.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+  return template
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$\{/g, '\\${');
 }
 
 function indent(text: string, spaces: number): string {

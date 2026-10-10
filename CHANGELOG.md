@@ -7,6 +7,25 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Security hardening (code scanning) — `@oge-ui/core`, `@oge-ui/behavior`, `@oge-ui/charts-engine`, `@oge-ui/bpmn-engine`
+
+- **No polynomial-time regular expressions on library input.** Number
+  parsing in grid paste and the CSV formula guard, splitter sizes, grid
+  export column widths, `rgb()`/`hsl()` colour parsing, form and editor
+  email detection, the editor's `!important` colour stripping, signature
+  metadata, BPMN SVG size and fill-series text splitting were rewritten so
+  that long crafted strings (`'0'.repeat(50_000)`, long dotted or blank runs)
+  are handled in linear time. Accepted and rejected inputs are unchanged,
+  with regression specs on pathological input.
+- **Chart print** passes only `portrait` / `landscape` into the print
+  stylesheet, whatever a caller sets as `orientation`.
+- Tooling: tag stripping in the docs generators repeats until stable, markdown
+  table cells and demo templates escape backslashes, the CSP check matches
+  `</script >`, and the size / downloads scripts read their JSON without an
+  exists-then-read race. `handlebars` (dev-only, via verdaccio) is overridden
+  to 4.7.10, and the release workflow asserts the bundled npm instead of
+  installing an unpinned global one.
+
 ## 1.1.4 — 2026-10-08
 
 The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates.

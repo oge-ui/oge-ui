@@ -22,6 +22,20 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUT = join(root, 'apps/dev-app/public/npm-downloads.json');
 /** First day any OGE package existed on npm — counts start here. */
 const SINCE = '2026-01-01';
+
+/**
+ * Parses `file` as JSON, or returns `fallback` when it does not exist. Reading
+ * straight away (rather than `existsSync` first) leaves no window for the file
+ * to change between the check and the read.
+ */
+function readJsonOr(file, fallback) {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return fallback;
+    throw error;
+  }
+}
 const CONCURRENCY = 2;
 
 /** Published package names: every non-private package.json under packages/. */
@@ -94,9 +108,7 @@ async function count(pkg, ranges) {
   return total;
 }
 
-const previous = existsSync(OUT)
-  ? (JSON.parse(readFileSync(OUT, 'utf8')).packages ?? {})
-  : {};
+const previous = readJsonOr(OUT, {}).packages ?? {};
 const packages = publishedPackages();
 const ranges = windows();
 const result = {};

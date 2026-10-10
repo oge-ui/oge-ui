@@ -111,7 +111,7 @@ const HANDLER_ATTRS = new Set(
 const INLINE_HANDLER = /\son([a-z]+)\s*=\s*"([^"]*)"/gi;
 // `type` is captured so data blocks (application/ld+json) can be skipped —
 // the browser never executes those, and CSP does not gate them.
-const INLINE_SCRIPT = /<script([^>]*)>([\s\S]*?)<\/script>/gi;
+const INLINE_SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi;
 
 const sources = scriptSrc();
 const problems = [];
