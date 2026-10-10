@@ -40,8 +40,9 @@
   gap: 6px;
   border-radius: var(--oge-radius-lg);
   transition:
-    box-shadow 120ms ease,
-    background-color 120ms ease;
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   .oge-list-box {
     min-width: 0;
@@ -119,9 +120,11 @@
   box-shadow: var(--oge-shadow-btn);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     width: 16px;

@@ -30,11 +30,16 @@
   /* hidden for the one frame before the core measured and placed it */
   visibility: hidden;
   transition:
-    box-shadow 120ms ease,
-    border-color 120ms ease;
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &.oge-window-placed {
     visibility: visible;
+    /* entrance: fades in where it was placed — opacity only, so the
+       geometry a drag, resize or test reads is final from the first frame */
+    animation: oge-window-in var(--oge-motion-duration-base)
+      var(--oge-motion-easing-decelerate);
   }
 
   &.oge-window-active {
@@ -82,8 +87,9 @@
   background: var(--oge-header-bg);
   color: var(--oge-input-muted);
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   .oge-window-active > & {
     background: var(--oge-popup-bg);
@@ -136,7 +142,8 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-accent-soft);
@@ -273,10 +280,20 @@
   }
 }
 
+@keyframes oge-window-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @include tokens.reduced-motion {
   .oge-window,
   .oge-window-header,
   .oge-window-button {
     transition: none;
+  }
+
+  .oge-window.oge-window-placed {
+    animation: none;
   }
 }

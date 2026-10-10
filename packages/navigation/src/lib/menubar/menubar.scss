@@ -46,8 +46,9 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   // Soft state layer instead of a hard color swap.
   &:hover:not(:disabled):not([aria-disabled='true']) {
@@ -135,7 +136,8 @@
   color: var(--oge-muted-color);
 
   svg {
-    transition: transform 120ms ease;
+    transition: transform var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
   }
 
   [aria-expanded='true'] & {
@@ -181,7 +183,8 @@
   background: var(--oge-bg);
   color: var(--oge-text-color);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);

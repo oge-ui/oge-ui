@@ -8,7 +8,8 @@
   --oge-card-pad: 16px;
   --oge-card-gap: 8px;
   --oge-card-media-size: 200px;
-  --oge-card-transition: 160ms ease;
+  --oge-card-transition: var(--oge-motion-duration-base)
+    var(--oge-motion-easing-standard);
 
   display: flex;
   flex-direction: column;

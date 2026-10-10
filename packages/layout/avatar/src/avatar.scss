@@ -137,7 +137,8 @@
   > .oge-avatar {
     // the ring separates overlapping pictures; logical so RTL stacks mirror
     box-shadow: 0 0 0 2px var(--oge-bg);
-    transition: transform 120ms ease;
+    transition: transform var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
     &:not(:first-child) {
       margin-inline-start: calc(var(--oge-avatar-size) * -0.28);

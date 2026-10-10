@@ -24,8 +24,13 @@
   font-size: var(--oge-font-size);
   line-height: 1.45;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+  // shown (rendered, or `hidden` lifted): settles in from just above
+  animation: oge-alert-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
 
   *,
   *::before,
@@ -143,8 +148,9 @@
   color: var(--oge-input-muted);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   @include tokens.hit-area;
 
@@ -169,10 +175,21 @@
   }
 }
 
+@keyframes oge-alert-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
 @include tokens.reduced-motion {
   .oge-alert,
   .oge-alert-dismiss {
     transition: none;
+  }
+
+  .oge-alert {
+    animation: none;
   }
 }
 

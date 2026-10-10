@@ -31,7 +31,8 @@
   background: var(--oge-accent);
   transform-origin: left;
   transform: scaleX(0);
-  transition: transform 160ms ease;
+  transition: transform var(--oge-motion-duration-base)
+    var(--oge-motion-easing-standard);
 
   [dir='rtl'] & {
     transform-origin: right;
@@ -45,7 +46,8 @@
   background: var(--oge-accent-25);
   transform-origin: left;
   transform: scaleX(0);
-  transition: transform 160ms ease;
+  transition: transform var(--oge-motion-duration-base)
+    var(--oge-motion-easing-standard);
 
   [dir='rtl'] & {
     transform-origin: right;
@@ -76,7 +78,8 @@
   height: 100%;
   border-radius: 999px;
   background: var(--oge-border-color);
-  transition: background-color 160ms ease;
+  transition: background-color var(--oge-motion-duration-base)
+    var(--oge-motion-easing-standard);
 
   &.oge-progress-bar-chunk-filled {
     background: var(--oge-accent);
@@ -156,7 +159,8 @@
 .oge-progress-ring-value {
   stroke: var(--oge-accent);
   stroke-linecap: round;
-  transition: stroke-dashoffset 160ms ease;
+  transition: stroke-dashoffset var(--oge-motion-duration-base)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-progress-ring-label {

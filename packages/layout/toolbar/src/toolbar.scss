@@ -10,7 +10,8 @@
   --oge-toolbar-item-padding: 6px 10px;
   --oge-toolbar-icon-size: 16px;
   --oge-toolbar-separator-inset: 5px;
-  --oge-toolbar-transition: 120ms ease;
+  --oge-toolbar-transition: var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   position: relative;
   display: flex;

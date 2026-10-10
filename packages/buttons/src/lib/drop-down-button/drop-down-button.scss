@@ -8,7 +8,8 @@
   flex: none;
   // After the icon slot even with iconPosition="after" (icon has order: 2).
   order: 3;
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-drop-down-open .oge-drop-down-chevron {

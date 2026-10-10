@@ -64,8 +64,9 @@
   color: var(--oge-text-color);
   font: inherit;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &::placeholder {
     color: var(--oge-input-muted);
@@ -143,8 +144,9 @@
   color: var(--oge-input-muted);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     fill: none;
@@ -232,9 +234,11 @@
   border-radius: var(--oge-radius-lg);
   background: var(--oge-bg);
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease,
-    background-color 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 }
 
 .oge-data-view-layout-grid .oge-data-view-item:hover {
@@ -295,8 +299,10 @@
   background: var(--oge-bg);
   color: transparent;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   svg {
     fill: none;
@@ -391,8 +397,9 @@
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     fill: none;

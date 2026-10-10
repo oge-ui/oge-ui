@@ -60,8 +60,8 @@
   color: var(--oge-muted-color);
   opacity: 0.6;
   transition:
-    opacity 120ms ease,
-    color 120ms ease;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     fill: none;
@@ -112,8 +112,10 @@
   font: inherit;
   font-weight: 600;
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     border-color: var(--oge-border-color);
@@ -158,8 +160,9 @@
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     fill: none;
@@ -213,7 +216,8 @@
   touch-action: none;
   position: relative;
   z-index: 2;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-accent-soft);
@@ -258,10 +262,12 @@
   color: var(--oge-text-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     display: block;
@@ -309,10 +315,12 @@
   color: var(--oge-text-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     display: block;
@@ -443,8 +451,8 @@
     stroke: var(--oge-border-color);
     stroke-width: 1.5;
     transition:
-      fill 120ms ease,
-      stroke 120ms ease;
+      fill var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+      stroke var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
   }
 
   .oge-bpmn-event,
@@ -549,7 +557,8 @@
     fill: none;
     stroke: var(--oge-muted-color);
     stroke-width: 1.5;
-    transition: stroke 120ms ease;
+    transition: stroke var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
   }
 
   &.oge-bpmn-association .oge-bpmn-edge-line {
@@ -702,9 +711,10 @@
   color: var(--oge-text-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     display: block;

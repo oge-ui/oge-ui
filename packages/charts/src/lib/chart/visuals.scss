@@ -14,8 +14,8 @@
 .oge-map-region {
   cursor: pointer;
   transition:
-    opacity 120ms ease,
-    filter 120ms ease;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    filter var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     filter: brightness(1.08);
@@ -34,7 +34,7 @@
   transform-box: view-box;
   transform-origin: center;
   animation: oge-chart-visual-in var(--oge-chart-anim-duration, 600ms)
-    var(--oge-chart-anim-easing, ease-out) both;
+    var(--oge-chart-anim-easing, var(--oge-motion-easing-decelerate)) both;
 }
 
 @keyframes oge-chart-visual-in {
@@ -164,7 +164,8 @@
   color: var(--oge-accent);
   font: inherit;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -241,8 +242,9 @@
   stroke: none;
   cursor: pointer;
   transition:
-    fill-opacity 120ms ease,
-    opacity 120ms ease;
+    fill-opacity var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 }
 
 .oge-sankey-link-lit {
@@ -315,7 +317,8 @@
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);

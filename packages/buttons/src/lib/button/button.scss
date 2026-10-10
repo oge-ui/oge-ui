@@ -69,11 +69,13 @@
   -webkit-tap-highlight-color: transparent;
   overflow: hidden; // clips the hold fill
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease,
-    transform 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);
@@ -270,9 +272,9 @@
   transform: scaleX(0);
   transform-origin: 0 50%;
   transition:
-    transform 120ms ease,
+    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
     // fast reset on cancel
-    opacity 160ms ease;
+    opacity var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
   pointer-events: none;
 }
 
@@ -285,7 +287,7 @@
   transform: scaleX(1);
   transition:
     transform var(--oge-hold-ms, 800ms) linear,
-    opacity 160ms ease;
+    opacity var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
 }
 
 // The press-feedback shrink reads as a glitch when stretched over a whole

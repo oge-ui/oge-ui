@@ -83,8 +83,9 @@
   color: inherit;
   font: inherit;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &::placeholder {
     color: var(--oge-input-muted);
@@ -121,7 +122,8 @@
   background: transparent;
   color: var(--oge-input-muted);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   @include tokens.hit-area;
 
@@ -259,8 +261,9 @@
   padding-inline: var(--oge-list-view-pad-x);
   background: var(--oge-bg);
   transition:
-    background-color 120ms ease,
-    translate 160ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    translate var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
 
   &::before {
     content: '';
@@ -270,7 +273,8 @@
     width: 3px;
     border-radius: 0 3px 3px 0;
     background: transparent;
-    transition: background-color 120ms ease;
+    transition: background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
   }
 }
 
@@ -335,8 +339,10 @@
   border-radius: 4px;
   background: var(--oge-bg);
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   svg {
     fill: none;
@@ -371,7 +377,8 @@
   display: flex;
   align-items: stretch;
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
   pointer-events: none;
 }
 
@@ -417,8 +424,9 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     fill: none;
@@ -492,7 +500,8 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-accent-soft);

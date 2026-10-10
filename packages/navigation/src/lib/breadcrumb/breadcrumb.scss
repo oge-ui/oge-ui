@@ -68,8 +68,9 @@
   text-decoration: none;
   white-space: nowrap;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &[aria-disabled='true'] {
     opacity: 0.6;
@@ -133,8 +134,9 @@
   color: var(--oge-muted-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);

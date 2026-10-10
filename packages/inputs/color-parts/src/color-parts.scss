@@ -32,7 +32,8 @@
     0 0 0 1px rgba(0, 0, 0, 0.35),
     inset 0 0 0 1px rgba(0, 0, 0, 0.2);
   transform: translate(-50%, -50%);
-  transition: box-shadow 120ms ease;
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   [dir='rtl'] & {
     transform: translate(50%, -50%);
@@ -101,7 +102,8 @@
     0 0 0 1px rgba(0, 0, 0, 0.35),
     0 1px 3px rgba(0, 0, 0, 0.25);
   transform: translate(-50%, -50%);
-  transition: box-shadow 120ms ease;
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   [dir='rtl'] & {
     transform: translate(50%, -50%);
@@ -148,8 +150,9 @@
   font-variant-numeric: tabular-nums;
   text-align: center;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
   appearance: textfield;
 
   &::-webkit-outer-spin-button,
@@ -201,8 +204,8 @@
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   transition:
-    transform 120ms ease,
-    box-shadow 120ms ease;
+    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     transform: scale(1.12);

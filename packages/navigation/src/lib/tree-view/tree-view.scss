@@ -88,8 +88,9 @@
   cursor: pointer;
   user-select: none;
   transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -135,7 +136,8 @@
   inline-size: 18px;
   block-size: 18px;
   color: var(--oge-muted-color);
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-tree-view-toggle-hidden {

@@ -9,7 +9,8 @@
   --oge-splitter-separator-line: var(--oge-border-color);
   --oge-splitter-separator-hover: var(--oge-accent-soft);
   --oge-splitter-separator-line-hover: var(--oge-accent);
-  --oge-splitter-transition: 120ms ease;
+  --oge-splitter-transition: var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   display: grid;
   min-inline-size: 0;

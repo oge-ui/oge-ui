@@ -135,7 +135,10 @@ export const OGE_DEFAULT_TOAST_DEFAULTS: OgeToastDefaults = {
   coalesceDuplicates: false,
 };
 
-/** Exit-transition length; keep in sync with `--oge-toast-transition`. */
+/**
+ * Exit-transition length; must cover `--oge-toast-transition` (default
+ * `--oge-motion-duration-fast`, 120ms).
+ */
 export const OGE_TOAST_EXIT_MS = 150;
 /** Delay before writing announcer text (guarantees live-region pickup). */
 export const OGE_TOAST_ANNOUNCE_DELAY_MS = 100;

@@ -7,6 +7,30 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Motion tokens and enter animations — all styled packages (Angular and React share the stylesheets)
+
+- **Motion tokens** in the default theme: `--oge-motion-duration-fast` /
+  `-base` / `-slow` (120 / 200 / 300ms) and `--oge-motion-easing-standard` /
+  `-emphasized` / `-decelerate` / `-accelerate`. Every transition and enter
+  animation in the component stylesheets now reads them (about 390 raw
+  durations and curves replaced), so `:root { --oge-motion-duration-fast: 0ms }`
+  or a slower brand curve retimes the whole suite. They appear in the token
+  reference, the ThemeBuilder presets and `@oge-ui/core/tokens.json` (DTCG
+  `duration` / `cubicBezier`).
+- **New enter motion**, CSS only and switched off under
+  `prefers-reduced-motion`: the check box mark pops in, the radio dot grows
+  from the centre, a field's validation message settles in, tag box / tree
+  select / multi-column combo tags and chip-list chips pop in, alerts slide in
+  when shown, the grid / tree list sort arrow fades in along its direction
+  (and the tree list expander's hover is eased), the content-fitted tab ink
+  grows from the label's centre, and floating windows fade in where they are
+  placed.
+- **Softer surfaces**: popups, popovers, the modal panel, the action sheet and
+  the adaptive bottom sheet enter on the emphasized curve; the modal panel
+  lifts over 200ms instead of 120ms.
+- No exit animations were added: removal stays synchronous, so focus return,
+  `inert` and DOM-based tests are unaffected. No public API changed.
+
 ### Testing harnesses (W6e) — `@oge-ui/grid`, `@oge-ui/inputs`, `@oge-ui/overlay`, `@oge-ui/tabs`, `@oge-ui/react-grid`, `@oge-ui/react-inputs`, `@oge-ui/react-overlay`, `@oge-ui/react-tabs`
 
 - **Angular CDK component harnesses** in new `/testing` secondary entry points,

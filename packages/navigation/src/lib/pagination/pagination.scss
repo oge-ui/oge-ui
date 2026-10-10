@@ -28,9 +28,10 @@
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);
@@ -97,8 +98,9 @@
   font: inherit;
   font-size: 1em;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:focus-visible {
     outline: 2px solid transparent;

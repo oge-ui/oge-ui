@@ -21,7 +21,8 @@
   background: var(--oge-bg);
   color: var(--oge-text-color);
   font-size: var(--oge-font-size);
-  transition: border-color 120ms ease;
+  transition: border-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-color-gradient:focus-within {

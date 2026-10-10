@@ -28,10 +28,15 @@
   line-height: 1.2;
   vertical-align: middle;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
+  // a chip added to a list pops in (removal is immediate — focus moves on)
+  animation: oge-chip-in var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-emphasized);
 
   *,
   *::before,
@@ -230,8 +235,9 @@ button.oge-chip-main {
   color: var(--oge-input-muted);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   @include tokens.hit-area;
 
@@ -277,10 +283,21 @@ button.oge-chip-main {
   list-style: none;
 }
 
+@keyframes oge-chip-in {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
 @include tokens.reduced-motion {
   .oge-chip,
   .oge-chip-remove {
     transition: none;
+  }
+
+  .oge-chip {
+    animation: none;
   }
 }
 

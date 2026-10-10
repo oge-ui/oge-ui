@@ -16,8 +16,10 @@
   background: var(--oge-bg);
   color: var(--oge-severity-contrast);
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;

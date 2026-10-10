@@ -55,7 +55,8 @@
   background: var(--oge-popup-bg);
   color: var(--oge-muted-color);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -77,8 +78,10 @@
   border: 1px dashed var(--oge-border-color);
   border-radius: var(--oge-radius);
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 }
 
 // a dragged field chip is over this area (panel or chooser zone)
@@ -114,7 +117,8 @@
   cursor: grab;
   user-select: none;
   position: relative;
-  transition: box-shadow 120ms ease;
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 // insert indicator: the dragged field lands in front of this chip
@@ -241,7 +245,8 @@
   font-size: 13px;
   color: var(--oge-header-color);
   white-space: nowrap;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-pivot-expandable {
@@ -269,13 +274,15 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-pivot-arrow {
   display: inline-flex;
   color: var(--oge-muted-color);
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-pivot-arrow-open {
@@ -305,7 +312,8 @@
   white-space: nowrap;
   min-width: 0;
   overflow: hidden;
-  transition: background-color 100ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -406,8 +414,10 @@
   border: 1px dashed var(--oge-border-color);
   border-radius: var(--oge-radius);
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 }
 
 .oge-pivot-chooser-all {
@@ -459,7 +469,8 @@
   text-align: start;
   cursor: pointer;
   color: var(--oge-header-color);
-  transition: background-color 100ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);

@@ -29,8 +29,9 @@
   transform: scale(0.97);
   transform-origin: center top;
   transition:
-    opacity 120ms ease-out,
-    transform 120ms ease-out;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate),
+    transform var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-emphasized);
 
   &[data-placement^='top'] {
     transform-origin: center bottom;
@@ -95,7 +96,8 @@
   /* a coarse pointer gets the touch-sized text and targets */
   font-size: max(16px, var(--oge-font-size));
   opacity: 1;
-  animation: oge-popup-backdrop-in 160ms ease-out;
+  animation: oge-popup-backdrop-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
 
   > .oge-popup-sheet {
     display: flex;
@@ -114,7 +116,8 @@
     padding-block-end: env(safe-area-inset-bottom, 0px);
     padding-inline: env(safe-area-inset-left, 0px)
       env(safe-area-inset-right, 0px);
-    animation: oge-popup-sheet-in 200ms cubic-bezier(0.2, 0, 0, 1);
+    animation: oge-popup-sheet-in var(--oge-motion-duration-base)
+      var(--oge-motion-easing-emphasized);
   }
 
   .oge-popup-sheet-body {
@@ -195,7 +198,8 @@
   background: transparent;
   color: var(--oge-input-muted);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);

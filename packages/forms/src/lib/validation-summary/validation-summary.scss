@@ -41,7 +41,8 @@
   text-align: start;
   cursor: pointer;
   border-radius: 3px;
-  transition: box-shadow 120ms ease;
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:focus {
     @include tokens.focus-ring($color: var(--oge-accent-soft));

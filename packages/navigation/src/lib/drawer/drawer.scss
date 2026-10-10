@@ -9,7 +9,7 @@
   --oge-drawer-min-size: 0px;
   --oge-drawer-duration: 240ms;
   // Standard decelerate curve: fast out of the gate, soft landing.
-  --oge-drawer-easing: cubic-bezier(0.2, 0, 0, 1);
+  --oge-drawer-easing: var(--oge-motion-easing-standard);
   // The panel's own size right now: the rail while closed, the full size while
   // open. Every mode below lays out from this one value.
   --oge-drawer-current: var(--oge-drawer-min-size);
@@ -151,8 +151,9 @@
   color: var(--oge-muted-color);
   cursor: pointer;
   transition:
-    background-color var(--oge-drawer-duration) ease,
-    color var(--oge-drawer-duration) ease;
+    background-color var(--oge-drawer-duration)
+      var(--oge-motion-easing-standard),
+    color var(--oge-drawer-duration) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);
@@ -396,8 +397,9 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);

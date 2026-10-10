@@ -132,9 +132,9 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition:
-    box-shadow 120ms ease,
-    transform 120ms ease,
-    filter 120ms ease;
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    filter var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     box-shadow: var(--oge-shadow-popup), var(--oge-shadow-btn-hover);
@@ -196,7 +196,8 @@
 }
 
 .oge-speed-dial-icon {
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-speed-dial-open .oge-speed-dial-icon {
@@ -264,11 +265,13 @@
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  animation: oge-speed-dial-in 120ms ease both;
+  animation: oge-speed-dial-in var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard) both;
   animation-delay: calc(var(--oge-speed-dial-index) * 30ms);
   transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   @include tokens.hit-area;
 
@@ -331,7 +334,8 @@
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-speed-dial-up,

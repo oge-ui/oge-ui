@@ -7,7 +7,7 @@
 
   --oge-expansion-panel-pad-x: 14px;
   --oge-expansion-panel-pad-y: 12px;
-  --oge-expansion-panel-transition: 200ms;
+  --oge-expansion-panel-transition: var(--oge-motion-duration-base);
 
   display: block;
   overflow: hidden;
@@ -16,7 +16,8 @@
   background: var(--oge-bg);
   color: var(--oge-text-color);
   font-size: var(--oge-font-size);
-  transition: box-shadow 120ms ease;
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &,
   * {
@@ -77,8 +78,9 @@
   text-align: start;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -124,7 +126,8 @@
   display: inline-flex;
   flex: none;
   color: var(--oge-input-muted);
-  transition: transform var(--oge-expansion-panel-transition) ease;
+  transition: transform var(--oge-expansion-panel-transition)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-expansion-panel-expanded .oge-expansion-panel-chevron {
@@ -202,8 +205,10 @@
 .oge-expansion-panel-region-animated {
   opacity: 0;
   transition:
-    grid-template-rows var(--oge-expansion-panel-transition) ease,
-    opacity var(--oge-expansion-panel-transition) ease;
+    grid-template-rows var(--oge-expansion-panel-transition)
+      var(--oge-motion-easing-standard),
+    opacity var(--oge-expansion-panel-transition)
+      var(--oge-motion-easing-standard);
 }
 
 .oge-expansion-panel-region-open {
