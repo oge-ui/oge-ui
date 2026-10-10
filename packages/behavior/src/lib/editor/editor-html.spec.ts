@@ -204,6 +204,13 @@ describe('editor HTML — URLs and colours', () => {
       'https://ogeui.com/docs',
     );
     expect(ogeEditorNormalizeLinkInput(' a@b.test ')).toBe('mailto:a@b.test');
+    expect(ogeEditorNormalizeLinkInput('a@b.')).toBe('a@b.');
+    const started = performance.now();
+    const long = `!@!.${'!.'.repeat(50_000)}`;
+    expect(ogeEditorNormalizeLinkInput(long)).toBe(`mailto:${long}`);
+    expect(ogeEditorSafeColor(`${' '.repeat(50_000)}x`)).toBeNull();
+    expect(ogeEditorSafeColor('red  !important')).toBe('red');
+    expect(performance.now() - started).toBeLessThan(500);
     expect(ogeEditorNormalizeLinkInput('/docs')).toBe('/docs');
     expect(ogeEditorNormalizeLinkInput('#top')).toBe('#top');
     expect(ogeEditorNormalizeLinkInput('https://x.test')).toBe(

@@ -29,9 +29,13 @@ export function chartPrintDocument(
   svgMarkup: string,
   options: OgeChartPrintOptions & { width: number; height: number },
 ): string {
+  // only the two keywords reach the stylesheet, whatever a caller passes
   const orientation =
-    options.orientation ??
-    (options.width >= options.height ? 'landscape' : 'portrait');
+    options.orientation === 'portrait' || options.orientation === 'landscape'
+      ? options.orientation
+      : options.width >= options.height
+        ? 'landscape'
+        : 'portrait';
   const title = options.title ?? '';
   return [
     '<!doctype html><html><head><meta charset="utf-8">',

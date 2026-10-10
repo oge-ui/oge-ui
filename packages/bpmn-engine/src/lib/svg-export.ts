@@ -387,8 +387,13 @@ export function bpmnSvgSize(svg: string): {
   readonly width: number;
   readonly height: number;
 } {
-  const width = /<svg[^>]*\swidth="(\d+(?:\.\d+)?)"/.exec(svg);
-  const height = /<svg[^>]*\sheight="(\d+(?:\.\d+)?)"/.exec(svg);
+  // cut the opening tag out first: `/<svg[^>]*\swidth=…/` restarts at every
+  // `<svg` and rescans to the next `>`, quadratic on many unclosed `<svg`
+  const open = svg.indexOf('<svg');
+  const close = open === -1 ? -1 : svg.indexOf('>', open);
+  const tag = close === -1 ? '' : svg.slice(open, close);
+  const width = /\swidth="(\d+(?:\.\d+)?)"/.exec(tag);
+  const height = /\sheight="(\d+(?:\.\d+)?)"/.exec(tag);
   return {
     width: width === null ? 300 : Number(width[1]),
     height: height === null ? 150 : Number(height[1]),

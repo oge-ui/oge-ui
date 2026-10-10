@@ -111,6 +111,18 @@ export function ogeEditorSafeHref(
 }
 
 /**
+ * `name@example.com`: one `@`, no whitespace or `/`, and a domain with a dot
+ * that has text on both sides. Found with `indexOf` — a single
+ * `[^@]+\.[^@]+` regex backtracks polynomially on long dotted input.
+ */
+function isBareEmail(value: string): boolean {
+  const domain = /^[^\s@/]+@([^\s@/]+)$/.exec(value)?.[1];
+  if (domain === undefined) return false;
+  const dot = domain.indexOf('.', 1);
+  return dot !== -1 && dot < domain.length - 1;
+}
+
+/**
  * What a person typed into a link field, as an address: `ogeui.com/docs`
  * gets `https://`, `name@example.com` gets `mailto:` — without this a bare
  * domain would become a *relative* link to a page of that name. Text with a
@@ -120,7 +132,7 @@ export function ogeEditorNormalizeLinkInput(text: string): string {
   const value = text.trim();
   if (value === '') return '';
   if (/^[a-z][a-z0-9+.-]*:/i.test(value) || /^[/#?.]/.test(value)) return value;
-  if (/^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(value)) return `mailto:${value}`;
+  if (isBareEmail(value)) return `mailto:${value}`;
   if (/^[^\s/]+\.[^\s/]{2,}(?:[/?#].*)?$/.test(value))
     return `https://${value}`;
   return value;
@@ -181,10 +193,12 @@ const NOT_COLORS = new Set([
 export function ogeEditorSafeColor(
   value: string | null | undefined,
 ): string | null {
-  const color = (value ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s*!important$/, '');
+  let color = (value ?? '').trim().toLowerCase();
+  // `endsWith` + `trimEnd`, not `/\s*!important$/` — that regex retries the
+  // whitespace run from every position, quadratic on long blank input
+  if (color.endsWith('!important')) {
+    color = color.slice(0, -'!important'.length).trimEnd();
+  }
   if (color === '' || color.length > 64 || NOT_COLORS.has(color)) return null;
   if (/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(color)) return color;
   if (/^(?:rgb|rgba|hsl|hsla)\([0-9.,%\s/deg+-]+\)$/.test(color)) return color;

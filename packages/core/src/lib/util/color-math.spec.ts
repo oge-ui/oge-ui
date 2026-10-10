@@ -32,6 +32,15 @@ describe('parseColor', () => {
 
   it('parses comma rgb()', () => {
     expect(parseColor('rgb(1, 2, 3)')).toEqual({ r: 1, g: 2, b: 3, a: 1 });
+    expect(parseColor('rgb(1 , 2 , 3)')).toEqual({ r: 1, g: 2, b: 3, a: 1 });
+  });
+
+  it('rejects long runs of blanks quickly', () => {
+    const started = performance.now();
+    const blanks = ' '.repeat(50_000);
+    expect(parseColor(`rgb(.${blanks}`)).toBeNull();
+    expect(parseColor(`hsl(.${blanks}`)).toBeNull();
+    expect(performance.now() - started).toBeLessThan(500);
   });
 
   it('parses comma rgba() with fractional alpha', () => {

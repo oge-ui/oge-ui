@@ -289,9 +289,9 @@ export function parseSplitterSize(
     return Number.isFinite(value) ? { kind: 'share', value } : undefined;
   }
   const text = value.trim();
-  const percent = /^(-?\d*\.?\d+)%$/.exec(text);
+  const percent = /^(-?(?:\d+(?:\.\d+)?|\.\d+))%$/.exec(text);
   if (percent) return { kind: 'share', value: Number(percent[1]) };
-  const pixels = /^(-?\d*\.?\d+)px$/.exec(text);
+  const pixels = /^(-?(?:\d+(?:\.\d+)?|\.\d+))px$/.exec(text);
   if (pixels) return { kind: 'fixed', value: Number(pixels[1]) };
   warn?.(
     `size "${text}" is not a share number, a "<n>%" or a "<n>px" value — ignoring it.`,

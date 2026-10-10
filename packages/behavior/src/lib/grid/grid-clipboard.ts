@@ -324,7 +324,7 @@ export function parseLocaleNumber(
   locale?: string,
 ): number | null {
   const compact = text.replace(/[\s\u00A0\u202F]/g, '');
-  if (/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(compact))
+  if (/^[+-]?(\d+(?:\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(compact))
     return Number(compact);
   const { group, decimal } = separatorsOf(locale);
   const normalized = compact
@@ -333,7 +333,7 @@ export function parseLocaleNumber(
     .split(decimal)
     .join('.')
     .replace(/^\((.*)\)$/, '-$1');
-  if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(normalized)) return null;
+  if (!/^[+-]?(\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) return null;
   return Number(normalized);
 }
 
@@ -435,7 +435,20 @@ function constantStep(steps: readonly number[]): number | null {
   return steps.every((step) => Math.abs(step - first) < 1e-9) ? first : null;
 }
 
-const TEXT_SERIES = /^(.*?)(\d+)$/;
+/**
+ * `Item 3` → `['Item ', '3']`: the text before the trailing digit run, and the
+ * run. `null` without trailing digits or when the prefix spans lines. A scan
+ * from the end rather than `/^(.*?)(\d+)$/`, which backtracks quadratically
+ * on long digit strings.
+ */
+function splitTextSeries(value: string): readonly [string, string] | null {
+  let start = value.length;
+  while (start > 0 && /\d/.test(value[start - 1])) start--;
+  if (start === value.length) return null;
+  const prefix = value.slice(0, start);
+  if (/[\n\r\u2028\u2029]/.test(prefix)) return null;
+  return [prefix, value.slice(start)];
+}
 
 /**
  * The values a fill writes after (or, `reverse`, before) `source`, Excel
@@ -489,16 +502,16 @@ export function ogeFillSeries(
         return out;
       }
     }
-    if (ordered.every((v) => typeof v === 'string' && TEXT_SERIES.test(v))) {
-      const parts = (ordered as readonly string[]).map(
-        (v) => TEXT_SERIES.exec(v) as RegExpExecArray,
-      );
-      const prefix = parts[0][1];
-      if (parts.every((p) => p[1] === prefix)) {
-        const nums = parts.map((p) => Number(p[2]));
+    const parts = ordered.map((v) =>
+      typeof v === 'string' ? splitTextSeries(v) : null,
+    );
+    if (parts.every((p): p is readonly [string, string] => p !== null)) {
+      const prefix = parts[0][0];
+      if (parts.every((p) => p[0] === prefix)) {
+        const nums = parts.map((p) => Number(p[1]));
         const step = constantStep(nums.slice(1).map((v, i) => v - nums[i]));
         if (step !== null && Number.isInteger(step)) {
-          const width = parts[parts.length - 1][2].length;
+          const width = parts[parts.length - 1][1].length;
           const last = nums[nums.length - 1];
           for (let i = 1; i <= count; i++) {
             const n = last + step * i;

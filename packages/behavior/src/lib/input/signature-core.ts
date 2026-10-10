@@ -425,9 +425,15 @@ export function parseOgeSignatureSvg(
   } catch {
     return null;
   }
-  const meta = /<metadata id="oge-signature">([\s\S]*?)<\/metadata>/.exec(svg);
-  if (!meta) return null;
-  const json = meta[1]
+  // `indexOf`, not a lazy `[\s\S]*?` regex: that one is quadratic on input
+  // repeating the opening tag without ever closing it
+  const OPEN = '<metadata id="oge-signature">';
+  const start = svg.indexOf(OPEN);
+  if (start === -1) return null;
+  const end = svg.indexOf('</metadata>', start + OPEN.length);
+  if (end === -1) return null;
+  const json = svg
+    .slice(start + OPEN.length, end)
     .replace(/&quot;/g, '"')
     .replace(/&gt;/g, '>')
     .replace(/&lt;/g, '<')

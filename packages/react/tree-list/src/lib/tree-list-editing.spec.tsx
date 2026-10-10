@@ -135,7 +135,7 @@ describe('OgeTreeList editing', () => {
     );
     const labels = [
       ...document.querySelectorAll('.oge-edit-form-row label'),
-    ].map((label) => label.textContent?.replace('*', '').trim());
+    ].map((label) => label.textContent?.replaceAll('*', '').trim());
     expect(labels).toContain('Effort (days)');
     expect(labels).not.toContain('Office');
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

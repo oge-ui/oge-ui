@@ -213,6 +213,13 @@ describe('fill', () => {
       'Item 10',
       'Item 11',
     ]);
+    expect(ogeFillSeries(['7', '8'], 1)).toEqual(['9']);
+    // a prefix spanning lines is not a numbered text
+    expect(ogeFillSeries(['a\nb1', 'a\nb2'], 1)).toEqual(['a\nb1']);
+    const started = performance.now();
+    const digits = `${'0'.repeat(50_000)}x`;
+    expect(ogeFillSeries([digits, digits], 1)).toEqual([digits]);
+    expect(performance.now() - started).toBeLessThan(500);
   });
 
   it('picks the fill direction from where the pointer left the range', () => {

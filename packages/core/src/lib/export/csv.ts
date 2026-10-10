@@ -40,7 +40,7 @@ const LEADING_SPACE = /^\s+/;
 const CONTROL_LEAD = /^[\t\r]/;
 
 /** A cell that is just a number — `-5`, `+3.1`, `1e9` — and so not a formula. */
-const PLAIN_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
+const PLAIN_NUMBER = /^[+-]?(\d+(?:\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
 
 /**
  * Defuses CSV formula injection (CWE-1236).

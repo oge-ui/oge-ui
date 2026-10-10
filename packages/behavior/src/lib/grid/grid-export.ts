@@ -56,7 +56,7 @@ export interface OgeExportColumnSource<T> {
 function pixelWidth(width: number | string | undefined): number | undefined {
   if (typeof width === 'number') return width > 0 ? width : undefined;
   if (typeof width === 'string') {
-    const match = /^\s*(\d+(?:\.\d+)?)\s*(px)?\s*$/.exec(width);
+    const match = /^(\d+(?:\.\d+)?)(?:\s*px)?$/.exec(width.trim());
     if (match) return Number(match[1]);
   }
   return undefined;

@@ -24,8 +24,18 @@ import type {
 /** An error carrying the bound the message pattern interpolates. */
 type RuleError = OgeFieldError & Record<string, unknown>;
 
-// Deliberately the same shape the inputs package validates an email with.
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Deliberately the same shape the inputs package validates an email with:
+// `local@domain` where the domain has a dot with text on both sides. The dot
+// is found with `indexOf` rather than a `[^\s@]+\.[^\s@]+` regex, which
+// backtracks polynomially on long dotted input.
+const EMAIL_PARTS = /^[^\s@]+@([^\s@]+)$/;
+
+function isEmail(value: string): boolean {
+  const domain = EMAIL_PARTS.exec(value)?.[1];
+  if (domain === undefined) return false;
+  const dot = domain.indexOf('.', 1);
+  return dot !== -1 && dot < domain.length - 1;
+}
 
 function evaluateRule(
   rule: OgeValidationRule,
@@ -61,7 +71,7 @@ function evaluateRule(
 
   switch (rule.type) {
     case 'email':
-      return EMAIL.test(String(value))
+      return isEmail(String(value))
         ? null
         : { kind: 'email', message: rule.message };
     case 'numeric': {

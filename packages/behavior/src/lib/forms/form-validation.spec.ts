@@ -75,6 +75,20 @@ describe('email', () => {
     expect(kinds('nope', [{ type: 'email' }])).toEqual(['email']);
     expect(kinds('a@b', [{ type: 'email' }])).toEqual(['email']);
     expect(kinds('a b@c.co', [{ type: 'email' }])).toEqual(['email']);
+    expect(kinds('a@.b.co', [{ type: 'email' }])).toEqual([]);
+    expect(kinds('a@b.', [{ type: 'email' }])).toEqual(['email']);
+    expect(kinds('a@b@c.co', [{ type: 'email' }])).toEqual(['email']);
+  });
+
+  it('stays linear on long dotted input', () => {
+    const started = performance.now();
+    expect(kinds(`!@!.${'!.'.repeat(50_000)}`, [{ type: 'email' }])).toEqual(
+      [],
+    );
+    expect(kinds(`a@${'.'.repeat(50_000)}@`, [{ type: 'email' }])).toEqual([
+      'email',
+    ]);
+    expect(performance.now() - started).toBeLessThan(500);
   });
 });
 

@@ -94,7 +94,7 @@ const labels = (fixture: ComponentFixture<unknown>) =>
     (fixture.nativeElement as HTMLElement).querySelectorAll(
       '.oge-form-label, .oge-input-label',
     ),
-  ).map((el) => el.textContent?.replace('*', '').trim());
+  ).map((el) => el.textContent?.replaceAll('*', '').trim());
 
 describe('OgeForm conditions, compare rule and server errors', () => {
   it('visibleWhen hides an item (and its validation) until the condition holds', async () => {
