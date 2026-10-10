@@ -3,6 +3,7 @@
   class="app-skip-link"
   [attr.href]="skipHref()"
   (click)="skipToContent($event)"
+  [attr.inert]="navOpen() ? '' : null"
   >Skip to content</a
 >
 <!-- brand chrome: white by day, deep slate by night, indigo accents.
@@ -15,27 +16,47 @@
       ? 'border-b border-gray-200 bg-white/90 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.35)] backdrop-blur-md dark:border-white/10 dark:bg-[#0b0d14]/85 dark:shadow-[0_12px_32px_-12px_rgba(0,0,0,0.8)]'
       : 'border-b border-transparent bg-white dark:bg-[#0b0d14]'
   "
+  [attr.inert]="navOpen() ? '' : null"
 >
+  <!--
+    Header reflow (docs pages): below the docked-sidebar breakpoint (lg) the
+    row leads with the menu button and the brand; the Docs/Components links,
+    the version menu and the theme select only fit from xl (the theme select
+    moves into the sidebar's footer below that); phones keep the framework
+    switch, an icon-only search, the mode toggle and GitHub.
+  -->
   <div
     [class]="
       isHome()
-        ? 'app-header-row relative mx-auto flex h-13 items-center gap-1 px-5'
-        : 'app-header-row relative mx-auto flex h-13 items-center gap-1 px-5 md:pl-[266px]'
+        ? 'app-header-row relative mx-auto flex h-13 items-center gap-1 px-5 max-sm:px-4'
+        : 'app-header-row app-header-docs relative mx-auto flex h-13 items-center gap-1 px-5 max-sm:px-4 lg:pl-[266px]'
     "
     style="height: 52px"
   >
+    @if (!isHome()) {
+    <button
+      type="button"
+      class="app-nav-toggle lg:hidden"
+      aria-label="Open navigation"
+      aria-controls="app-sidebar"
+      [attr.aria-expanded]="navOpen()"
+      (click)="openNav()"
+    >
+      <app-icon name="menu" [size]="20" />
+    </button>
+    }
     <!--
       On doc pages the brand lives at the top of the full-height sidebar, so
-      the header carries it only on the landing page — and on small screens,
-      where the sidebar collapses into the flow and no longer leads the page.
-      On phones only the mark fits beside the framework switch and the icons.
+      the header carries it only on the landing page — and below lg, where the
+      sidebar is a drawer and no longer leads the page. On phones only the
+      mark fits beside the framework switch and the icons.
     -->
     <a
       routerLink="/"
       [class]="
         isHome()
           ? 'group flex items-center gap-2.5 pr-3'
-          : 'group flex items-center gap-2.5 pr-3 md:hidden max-sm:[&>span]:hidden'
+          : 'group flex items-center gap-2.5 pr-3 lg:hidden max-sm:pr-1 max-sm:[&>span]:hidden'
       "
     >
       <img src="favicon-192.png" alt="OGE logo" class="h-8 w-8" />
@@ -45,7 +66,11 @@
       >
     </a>
     <nav
-      class="ml-auto flex items-center gap-1 pr-2 max-md:hidden"
+      [class]="
+        isHome()
+          ? 'ml-auto flex items-center gap-1 pr-2 max-md:hidden'
+          : 'ml-auto flex items-center gap-1 pr-2 max-xl:hidden'
+      "
       aria-label="Primary"
     >
       <a
@@ -61,7 +86,13 @@
         >Components</a
       >
     </nav>
-    <div class="flex items-center gap-2 max-md:ml-auto max-sm:gap-1">
+    <div
+      [class]="
+        isHome()
+          ? 'flex items-center gap-2 max-md:ml-auto max-sm:gap-1'
+          : 'flex items-center gap-2 max-xl:ml-auto max-sm:gap-1'
+      "
+    >
       <!--
         Search: the button and the Ctrl/⌘K + "/" shortcuts (SearchService)
         are all the initial bundle carries; the palette and its index load
@@ -90,7 +121,7 @@
         those whole barrels into the initial bundle (1 MB budget).
       -->
       @defer (on idle) {
-      <app-version-menu class="max-sm:hidden" />
+      <app-version-menu class="app-header-version max-sm:hidden" />
       } @placeholder {
       <span
         class="app-version-placeholder max-sm:hidden"
@@ -154,13 +185,24 @@
           [size]="15"
         />
       </button>
-      <span class="h-5 w-px bg-gray-200 dark:bg-white/10"></span>
+      <!-- the sponsor link moves into the sidebar's footer on phones -->
+      <span
+        [class]="
+          isHome()
+            ? 'h-5 w-px bg-gray-200 dark:bg-white/10'
+            : 'h-5 w-px bg-gray-200 max-sm:hidden dark:bg-white/10'
+        "
+      ></span>
       <a
         href="https://github.com/sponsors/kaya2m"
         target="_blank"
         rel="noopener"
         aria-label="Sponsor OGE UI on GitHub"
-        class="flex h-8 w-8 items-center justify-center rounded-md border border-transparent transition-colors hover:border-gray-200 hover:text-pink-600 dark:hover:border-white/10 dark:hover:text-pink-400"
+        [class]="
+          isHome()
+            ? 'flex h-8 w-8 items-center justify-center rounded-md border border-transparent transition-colors hover:border-gray-200 hover:text-pink-600 dark:hover:border-white/10 dark:hover:text-pink-400'
+            : 'flex h-8 w-8 items-center justify-center rounded-md border border-transparent transition-colors hover:border-gray-200 hover:text-pink-600 max-sm:hidden dark:hover:border-white/10 dark:hover:text-pink-400'
+        "
       >
         <app-icon name="heart" [size]="16" />
       </a>
@@ -177,147 +219,213 @@
   </div>
 </header>
 <div
-  [class]="
-    isHome() ? 'flex flex-1 flex-col' : 'flex flex-1 flex-col md:pl-[250px]'
-  "
+  [class]="isHome() ? 'flex flex-1 flex-col' : 'flex flex-1 flex-col lg:pl-[250px]'"
 >
   @if (!isHome()) {
+  <!--
+      The sidebar: docked from lg up, an off-canvas drawer below it (opened by
+      the header's menu button; Escape, the backdrop, the close button and
+      any navigation close it). Styles: `.app-sidebar` in tailwind.css.
+    -->
+  <div
+    class="app-nav-backdrop"
+    [class.is-open]="navOpen()"
+    aria-hidden="true"
+    (click)="closeNav()"
+  ></div>
+  <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keydown bubbles up from the drawer's focusable controls (Escape, the Tab wrap); the landmark itself takes no focus -->
   <nav
-    class="app-sidebar-glow scrollbar-hide fixed inset-y-0 left-0 z-40 flex w-[250px] flex-col overflow-y-auto border-r border-gray-200 bg-gray-50 px-3 py-4 max-md:static max-md:z-auto max-md:w-auto max-md:border-b max-md:border-r-0 max-md:py-5 dark:border-gray-800 dark:bg-[#11141c]"
+    id="app-sidebar"
+    class="app-sidebar app-sidebar-glow"
+    [class.is-open]="navOpen()"
     aria-label="Documentation"
+    [attr.inert]="navHidden() ? '' : null"
+    (keydown)="onNavKeydown($event)"
   >
     <!--
-      The brand leads the sidebar: OGE mark, then the active framework's mark
-      right beside it. The framework colour radiates softly out of its badge
-      and down into the column below — which framework you are reading is
-      visible before a single word. (On small screens the sidebar joins the
-      flow and the header carries the brand instead.)
-    -->
-    <div class="mb-4 flex items-center gap-2.5 px-1 max-md:hidden">
-      <a routerLink="/" class="flex items-center gap-2.5">
+        The brand leads the sidebar: OGE mark, then the active framework's mark
+        right beside it. The framework colour radiates softly out of its badge
+        and down into the column below — which framework you are reading is
+        visible before a single word.
+      -->
+    <div class="app-nav-brand">
+      <a routerLink="/" class="app-nav-logo">
         <img src="favicon-192.png" alt="OGE logo" class="h-8 w-8" />
-        <span
-          class="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-100"
-          >OGE</span
-        >
+        <span>OGE</span>
       </a>
       <span class="app-fw-brandmark ml-auto" [attr.title]="frameworkLabel()">
         <app-framework-logo [name]="framework.framework()" [size]="17" />
         <span class="sr-only">{{ frameworkLabel() }}</span>
       </span>
-    </div>
-    <div class="relative mb-4 px-1">
-      <span
-        class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+      <button
+        type="button"
+        class="app-nav-close"
+        aria-label="Close navigation"
+        (click)="closeNav()"
       >
-        <app-icon name="search" [size]="13" />
-      </span>
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+    <div class="app-nav-search">
+      <app-icon name="search" [size]="14" />
       <input
         type="search"
+        class="app-nav-filter"
         placeholder="Filter pages…"
-        class="h-8 w-full rounded-md border border-gray-200 bg-white pl-8 pr-2 text-[13px] text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-indigo-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder:text-gray-500 dark:focus:border-indigo-500"
+        aria-label="Filter pages"
+        autocomplete="off"
+        spellcheck="false"
         [value]="navQuery()"
         (input)="navQuery.set($any($event.target).value)"
       />
     </div>
-    @for (group of navGroups(); track group.label) { @if (group.label; as
-    groupLabel) {
-    <div
-      class="mb-1 mt-3 flex items-center gap-2 px-2 first:mt-0"
-      aria-hidden="true"
-    >
-      <span
-        class="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500"
-        >{{ groupLabel }}</span
-      >
-      <span class="h-px flex-1 bg-gray-200 dark:bg-gray-800"></span>
-    </div>
-    } @for (section of group.sections; track section.title) {
-    <div class="mb-1.5">
-      <button
-        type="button"
-        class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-        (click)="toggleSection(section.title)"
-        [attr.aria-expanded]="!collapsed().has(section.title)"
-      >
-        {{ section.title }}
-        <span
-          class="text-gray-400 transition-transform duration-200 dark:text-gray-500"
-          [class]="collapsed().has(section.title) ? '-rotate-90' : ''"
+    <div class="app-nav-scroll">
+      @for (group of navGroups(); track group.label) { @if (group.label; as
+      groupLabel) {
+      <div class="app-nav-group-head">
+        <span class="app-nav-group-label">{{ groupLabel }}</span>
+        <span class="app-nav-count" [attr.title]="familyCount + ' families'"
+          >{{ familyCount }}</span
         >
-          <app-icon name="chevron-down" [size]="13" />
-        </span>
-      </button>
+        <a
+          routerLink="/components"
+          class="app-nav-group-link"
+          (click)="closeNav(false)"
+          >View all<span class="sr-only"> components</span></a
+        >
+      </div>
+      } @for (section of group.sections; track section.title) {
       <div
-        class="grid transition-[grid-template-rows] duration-300 ease-out"
-        [class]="
-            collapsed().has(section.title)
-              ? 'grid-rows-[0fr]'
-              : 'grid-rows-[1fr]'
-          "
+        class="app-nav-section"
+        [class.has-active]="section.title === activeTitle()"
       >
-        <div class="overflow-hidden">
-          <div class="flex flex-col gap-0.5 py-1">
-            @for (item of section.items; track item.path) { @if (item.file) {
-            <a
-              [href]="item.path"
-              target="_blank"
-              rel="noopener"
-              class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13.5px] text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
-            >
-              <span class="opacity-70">
-                <app-icon [name]="item.icon" [size]="14" />
-              </span>
-              <span class="font-mono text-[12.5px]">{{ item.label }}</span>
-              <span class="ml-auto text-gray-300 dark:text-gray-600">
-                <app-icon name="arrow-right" [size]="12" />
-              </span>
-            </a>
-            } @else {
-            <a
-              [routerLink]="item.path"
-              [fragment]="item.fragment"
-              [routerLinkActiveOptions]="
-                item.fragment
-                  ? {
-                      paths: 'exact',
-                      queryParams: 'ignored',
-                      matrixParams: 'ignored',
-                      fragment: 'exact',
-                    }
-                  : { exact: true }
-              "
-              routerLinkActive="bg-indigo-50 font-medium text-indigo-700 hover:bg-indigo-50 hover:text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
-              class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13.5px] text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
-            >
-              <span class="opacity-70">
-                <app-icon [name]="item.icon" [size]="14" />
-              </span>
-              {{ item.label }}
-            </a>
-            } }
-          </div>
+        <button
+          type="button"
+          class="app-nav-section-toggle"
+          [attr.aria-expanded]="!isCollapsed(section.title)"
+          [attr.aria-controls]="sectionId(section.title)"
+          (click)="toggleSection(section.title)"
+        >
+          <span class="app-nav-section-icon">
+            <app-icon [name]="section.items[0].icon" [size]="15" />
+          </span>
+          <span class="app-nav-section-title">{{ section.title }}</span>
+          @if (isCommercial(section)) {
+          <span class="app-nav-badge" title="Commercial license"
+            >Pro<span class="sr-only">, commercial license</span></span
+          >
+          }
+          <span
+            class="app-nav-chevron"
+            [class.is-collapsed]="isCollapsed(section.title)"
+          >
+            <app-icon name="chevron-down" [size]="14" />
+          </span>
+        </button>
+        <div
+          class="app-nav-panel"
+          [id]="sectionId(section.title)"
+          [class.is-collapsed]="isCollapsed(section.title)"
+          [attr.inert]="isCollapsed(section.title) ? '' : null"
+        >
+          <ul class="app-nav-items">
+            @for (item of section.items; track item.path + (item.fragment ??
+            '')) {
+            <li>
+              @if (item.file) {
+              <a
+                [href]="item.path"
+                target="_blank"
+                rel="noopener"
+                class="app-nav-link"
+                (click)="closeNav(false)"
+              >
+                <span class="font-mono text-[12.5px]">{{ item.label }}</span>
+                <span class="app-nav-external">
+                  <app-icon name="arrow-right" [size]="12" />
+                </span>
+              </a>
+              } @else {
+              <a
+                [routerLink]="item.path"
+                [fragment]="item.fragment"
+                [routerLinkActiveOptions]="
+                            item.fragment
+                              ? {
+                                  paths: 'exact',
+                                  queryParams: 'ignored',
+                                  matrixParams: 'ignored',
+                                  fragment: 'exact',
+                                }
+                              : { exact: true }
+                          "
+                routerLinkActive="is-active"
+                ariaCurrentWhenActive="page"
+                class="app-nav-link"
+                (click)="closeNav(false)"
+                >{{ item.label }}</a
+              >
+              }
+            </li>
+            }
+          </ul>
         </div>
       </div>
+      } } @empty {
+      <div class="app-nav-empty" role="status">
+        <p>No page titles match “{{ navQuery() }}”.</p>
+        <button type="button" (click)="search.open()">
+          <app-icon name="search" [size]="13" />
+          Search the docs instead
+        </button>
+      </div>
+      }
     </div>
-    } }
-    <div
-      class="mt-auto flex items-center justify-between border-t border-gray-200 px-2 pt-4 text-[12px] text-gray-400 dark:border-gray-800 dark:text-gray-500"
-    >
-      <span>OGE UI</span>
-      <a
-        routerLink="/changelog"
-        class="font-mono transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
-        title="What's new — the changelog"
-        >v{{ version }}</a
-      >
+    <div class="app-nav-footer">
+      <!-- the header shows its theme select from xl; below, it lives here -->
+      <label class="app-nav-theme">
+        <span>Theme</span>
+        <select
+          [value]="themeService.theme()"
+          (change)="themeService.theme.set($any($event.target).value)"
+        >
+          @for (theme of themes; track theme.value) {
+          <option
+            [value]="theme.value"
+            [selected]="theme.value === themeService.theme()"
+            [attr.selected]="theme.value === themeService.theme() ? '' : null"
+          >
+            {{ theme.label }}
+          </option>
+          }
+        </select>
+      </label>
+      <div class="app-nav-meta">
+        <span>OGE UI</span>
+        <a
+          href="https://github.com/sponsors/kaya2m"
+          target="_blank"
+          rel="noopener"
+          class="app-nav-sponsor"
+        >
+          <app-icon name="heart" [size]="13" />
+          Sponsor
+        </a>
+        <a
+          routerLink="/changelog"
+          class="app-nav-version"
+          title="What's new — the changelog"
+          >v{{ version }}</a
+        >
+      </div>
     </div>
   </nav>
   }
   <main
     id="main-content"
     tabindex="-1"
-    [class]="isHome() ? 'min-w-0' : 'min-w-0 px-8 py-10 max-md:px-4'"
+    [class]="isHome() ? 'min-w-0' : 'min-w-0 px-4 py-8 sm:px-6 lg:px-8 lg:py-10'"
+    [attr.inert]="navOpen() ? '' : null"
   >
     <div [class]="isHome() ? '' : 'doc-shell'">
       <!--

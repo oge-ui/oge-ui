@@ -1,6 +1,7 @@
 import {
   Component,
   DOCUMENT,
+  Injector,
   afterNextRender,
   computed,
   effect,
@@ -29,6 +30,8 @@ import { SeoService } from './shared/seo.service';
 import { SearchPalette } from './shared/search/search-palette';
 import { SearchService } from './shared/search/search.service';
 import { ThemeService, type GridTheme } from './shared/theme.service';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- a build-time data file at the repo root, not a project import
+import commercial from '../../../../tools/commercial-families.json';
 
 interface NavItem {
   path: string;
@@ -65,6 +68,44 @@ interface NavGroup {
 }
 
 const COMPONENTS_GROUP = 'Components';
+
+/**
+ * The docked-sidebar breakpoint (Tailwind's `lg`). Below it the sidebar is an
+ * off-canvas drawer behind the header's menu button; keep in step with the
+ * `64rem` media queries in `tailwind.css`.
+ */
+const DESKTOP_QUERY = '(min-width: 64rem)';
+
+/** The sidebar sections the reader collapsed, as a JSON array of titles. */
+const NAV_STORAGE_KEY = 'oge-docs-nav-collapsed';
+
+/** ADR 0003's commercial families (`tools/commercial-families.json`). */
+const COMMERCIAL = new Set<string>(commercial.families);
+
+/** Route slugs that differ from the family name in the commercial list. */
+const FAMILY_SLUG_ALIASES: Record<string, string> = { 'pivot-grid': 'pivot' };
+
+/** `localStorage` is absent in the prerender and may throw in private browsing. */
+function readCollapsed(): Set<string> | null {
+  try {
+    const raw = localStorage.getItem(NAV_STORAGE_KEY);
+    if (raw === null) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? new Set(parsed.filter((item) => typeof item === 'string'))
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCollapsed(titles: ReadonlySet<string>): void {
+  try {
+    localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify([...titles]));
+  } catch {
+    // private browsing — the in-memory signal still drives the sidebar
+  }
+}
 
 @Component({
   imports: [
@@ -1110,7 +1151,9 @@ export class App {
   /**
    * Component families start collapsed — nine expanded families would bury the
    * guides under hundreds of pixels of links. The family you are actually
-   * reading opens itself (see the effect below); the guides stay open.
+   * reading opens itself (see the effect below); the guides stay open. What
+   * the reader opens or closes by hand is remembered (`NAV_STORAGE_KEY`),
+   * restored after the first render so the prerendered HTML stays the default.
    */
   protected readonly collapsed = signal<ReadonlySet<string>>(
     new Set(
@@ -1122,6 +1165,25 @@ export class App {
 
   /** True once the page is scrolled — the header then settles onto its rule. */
   protected readonly scrolled = signal(false);
+
+  /**
+   * Below the `lg` breakpoint the sidebar is an off-canvas drawer: this is
+   * whether it is open. Always `false` at desktop widths.
+   */
+  protected readonly navOpen = signal(false);
+
+  /**
+   * Whether the viewport is at the desktop breakpoint (`DESKTOP_QUERY`),
+   * where the sidebar is docked. `true` on the server, so the prerendered
+   * sidebar is never `inert` — below the breakpoint CSS alone hides the closed
+   * drawer (`visibility: hidden`) until hydration takes over.
+   */
+  protected readonly isDesktop = signal(true);
+
+  /** The drawer is hidden from interaction: a closed drawer on a narrow screen. */
+  protected readonly navHidden = computed(
+    () => !this.isDesktop() && !this.navOpen(),
+  );
 
   /** Ctrl/⌘K palette — the palette itself is deferred (see app.html). */
   protected readonly search = inject(SearchService);
@@ -1140,6 +1202,22 @@ export class App {
         if (/Mac|iPhone|iPad/.test(navigator.userAgent)) {
           this.searchShortcut.set('⌘K');
         }
+        const stored = readCollapsed();
+        if (stored) {
+          // the family being read stays open even if it was closed last time
+          const active = this.activeSection();
+          if (active) stored.delete(active.title);
+          this.collapsed.set(stored);
+        }
+        const desktop = window.matchMedia?.(DESKTOP_QUERY);
+        if (desktop) {
+          this.isDesktop.set(desktop.matches);
+          desktop.addEventListener('change', (event) => {
+            this.isDesktop.set(event.matches);
+            if (event.matches) this.closeNav(false);
+          });
+        }
+        this.scrollActiveIntoView();
       });
       const onScroll = (): void => {
         const isScrolled = window.scrollY > 4;
@@ -1147,8 +1225,34 @@ export class App {
       };
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
+      // a navigation to another page (a link, Back/Forward) closes the
+      // drawer, and the new page's entry is kept in view inside the
+      // sidebar's own scroll. The path is compared so that the initial
+      // navigation settling late, or a query/fragment update on the same
+      // page, never shuts a drawer the reader just opened.
+      let shownPath = window.location.pathname;
+      this.router.events
+        .pipe(
+          filter(
+            (event): event is NavigationEnd => event instanceof NavigationEnd,
+          ),
+        )
+        .subscribe((event) => {
+          const path = event.urlAfterRedirects.split(/[?#]/)[0];
+          if (path !== shownPath && this.navOpen()) this.closeNav(false);
+          shownPath = path;
+          requestAnimationFrame(() => this.scrollActiveIntoView());
+        });
     }
   }
+
+  /** The section owning the current page, if any. */
+  private readonly activeSection = computed(() => {
+    const path = this.path();
+    return this.allSections.find((section) =>
+      section.items.some((item) => item.path === path),
+    );
+  });
 
   /**
    * Opens the family that owns the current page. Runs on every navigation so a
@@ -1156,10 +1260,7 @@ export class App {
    * reader opened by hand.
    */
   private readonly revealActiveSection = effect(() => {
-    const path = this.path();
-    const active = this.allSections.find((section) =>
-      section.items.some((item) => item.path === path),
-    );
+    const active = this.activeSection();
     if (!active) return;
     untracked(() => {
       if (!this.collapsed().has(active.title)) return;
@@ -1169,24 +1270,150 @@ export class App {
     });
   });
 
+  /**
+   * While the drawer is open the page behind it neither scrolls nor takes
+   * focus: `app-nav-locked` on <html> stops the scroll (styles.css), and the
+   * header and main region are `inert` (bound in app.html).
+   */
+  private readonly lockScroll = effect(() => {
+    this.doc.documentElement.classList.toggle('app-nav-locked', this.navOpen());
+  });
+
+  /** Title of the section holding the current page — its header is tinted. */
+  protected readonly activeTitle = computed(
+    () => this.activeSection()?.title ?? null,
+  );
+
+  protected isCollapsed(title: string): boolean {
+    // a filter shows every match, whatever the reader collapsed
+    return this.navQuery().trim() === '' && this.collapsed().has(title);
+  }
+
   protected toggleSection(title: string): void {
     const next = new Set(this.collapsed());
     if (!next.delete(title)) next.add(title);
     this.collapsed.set(next);
+    writeCollapsed(next);
   }
+
+  protected openNav(): void {
+    this.navOpen.set(true);
+    // Focus moves into the drawer once it is no longer inert. The browser
+    // blurs the menu button a little later (its header turns inert), and a
+    // render still settling can do the same, so focus is re-placed for a few
+    // frames while it would otherwise sit on <body> — never taken from an
+    // element the reader moved to.
+    let frames = 0;
+    const focusClose = (): void => {
+      if (!this.navOpen()) return;
+      const active = this.doc.activeElement;
+      if (active === null || active === this.doc.body) {
+        this.doc
+          .querySelector<HTMLElement>('#app-sidebar .app-nav-close')
+          ?.focus();
+      }
+      if (++frames < 20) requestAnimationFrame(focusClose);
+    };
+    afterNextRender(
+      () =>
+        this.doc
+          .querySelector<HTMLElement>('#app-sidebar .app-nav-close')
+          ?.focus(),
+      { injector: this.injector },
+    );
+    afterNextRender(() => requestAnimationFrame(focusClose), {
+      injector: this.injector,
+    });
+  }
+
+  /** Closes the drawer; `restoreFocus` hands focus back to the menu button. */
+  protected closeNav(restoreFocus = true): void {
+    if (!this.navOpen()) return;
+    this.navOpen.set(false);
+    if (restoreFocus) {
+      afterNextRender(
+        () => this.doc.querySelector<HTMLElement>('.app-nav-toggle')?.focus(),
+        { injector: this.injector },
+      );
+    }
+  }
+
+  /**
+   * Drawer keyboard: Escape closes it (a non-empty filter is cleared first),
+   * and Tab wraps between its first and last focusable elements — the page
+   * behind is `inert`, so focus could otherwise only leave to the browser.
+   */
+  protected onNavKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      const target = event.target as HTMLElement | null;
+      if (target?.classList.contains('app-nav-filter') && this.navQuery()) {
+        this.navQuery.set('');
+        event.preventDefault();
+        return;
+      }
+      if (this.navOpen()) {
+        event.preventDefault();
+        this.closeNav();
+      }
+      return;
+    }
+    if (event.key !== 'Tab' || !this.navOpen()) return;
+    const nav = event.currentTarget as HTMLElement;
+    const focusable = Array.from(
+      nav.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, select, [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => !el.closest('[inert]') && el.getClientRects().length > 0);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = this.doc.activeElement;
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  /**
+   * Keeps the current page's entry visible inside the sidebar's own scroll
+   * container — scrolling the sidebar only, never the page.
+   */
+  private scrollActiveIntoView(): void {
+    const scroller = this.doc.querySelector<HTMLElement>('.app-nav-scroll');
+    const link = scroller?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!scroller || !link) return;
+    const box = scroller.getBoundingClientRect();
+    const item = link.getBoundingClientRect();
+    if (item.top >= box.top + 8 && item.bottom <= box.bottom - 8) return;
+    scroller.scrollTop += item.top - box.top - box.height / 3;
+  }
+
+  private readonly injector = inject(Injector);
 
   private readonly sections = computed<NavSection[]>(() => {
     const query = this.navQuery().trim().toLocaleLowerCase();
     if (!query) return this.allSections;
     return this.allSections
-      .map((section) => ({
-        ...section,
-        items: section.items.filter((item) =>
-          item.label.toLocaleLowerCase().includes(query),
-        ),
-      }))
+      .map((section) =>
+        section.title.toLocaleLowerCase().includes(query)
+          ? section
+          : {
+              ...section,
+              items: section.items.filter((item) =>
+                item.label.toLocaleLowerCase().includes(query),
+              ),
+            },
+      )
       .filter((section) => section.items.length > 0);
   });
+
+  /** Number of component families, shown beside the group label. */
+  protected readonly familyCount = this.allSections.filter(
+    (section) => section.group === COMPONENTS_GROUP,
+  ).length;
 
   /**
    * Sidebar layout: ungrouped guides first, then one labelled group per family
@@ -1207,4 +1434,19 @@ export class App {
     }
     return groups;
   });
+
+  /** The disclosure region id of a section (`aria-controls`). */
+  protected sectionId(title: string): string {
+    return 'nav-' + title.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-');
+  }
+
+  /**
+   * Whether a family ships under the commercial license (ADR 0003) — read
+   * from `tools/commercial-families.json`, the list the license gate uses.
+   */
+  protected isCommercial(section: NavSection): boolean {
+    if (section.group !== COMPONENTS_GROUP) return false;
+    const slug = section.items[0]?.path.split('/')[2] ?? '';
+    return COMMERCIAL.has(FAMILY_SLUG_ALIASES[slug] ?? slug);
+  }
 }

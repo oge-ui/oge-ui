@@ -153,4 +153,697 @@
   .api-table th {
     @apply bg-gray-100 dark:bg-gray-900;
   }
+
+  /* phones: the API table keeps readable columns and scrolls inside its
+     labelled region (api-reference.ts) instead of crushing the name column */
+  @media (max-width: 39.99rem) {
+    [role='region'].overflow-x-auto > .api-table {
+      min-width: 38rem;
+    }
+  }
+}
+
+/* ── Docs sidebar ─────────────────────────────────────────────────────────
+   Docked (fixed, full height, its own scroll) from lg (64rem) up; below it
+   an off-canvas drawer opened by the header's menu button (app.html). The
+   colours are the docs chrome's own tokens — Tailwind's palette variables,
+   the same ones the header's utilities resolve to — declared once per mode
+   here: light, `.dark`, and the high-contrast theme (a light palette with
+   stronger text, rails and indicator). Forced colors and reduced motion
+   have their own blocks at the end. */
+@layer components {
+  .app-sidebar,
+  .app-nav-backdrop,
+  .app-nav-toggle {
+    --app-nav-bg: var(--color-gray-50);
+    --app-nav-text: var(--color-gray-600);
+    --app-nav-strong: var(--color-gray-900);
+    --app-nav-muted: var(--color-gray-500);
+    --app-nav-rule: var(--color-gray-200);
+    --app-nav-rail: var(--color-gray-200);
+    --app-nav-rail-hover: var(--color-gray-400);
+    --app-nav-hover: color-mix(in oklab, var(--color-gray-900) 5%, transparent);
+    --app-nav-press: color-mix(in oklab, var(--color-gray-900) 9%, transparent);
+    --app-nav-accent: var(--color-indigo-600);
+    --app-nav-accent-text: var(--color-indigo-700);
+    --app-nav-accent-soft: color-mix(
+      in oklab,
+      var(--color-indigo-500) 10%,
+      transparent
+    );
+    --app-nav-field-bg: var(--color-white);
+    --app-nav-field-border: var(--color-gray-200);
+    --app-nav-badge-bg: color-mix(
+      in oklab,
+      var(--color-amber-500) 14%,
+      transparent
+    );
+    --app-nav-badge-text: var(--color-amber-800);
+    --app-nav-ring: color-mix(
+      in oklab,
+      var(--color-indigo-500) 55%,
+      transparent
+    );
+    --app-nav-scrim: color-mix(
+      in oklab,
+      var(--color-gray-950) 45%,
+      transparent
+    );
+    --app-nav-shadow: 0 24px 64px -12px
+      color-mix(in oklab, var(--color-gray-950) 35%, transparent);
+    --app-nav-width: 250px;
+    --app-nav-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  :where(.dark) .app-sidebar,
+  :where(.dark) .app-nav-backdrop,
+  :where(.dark) .app-nav-toggle {
+    --app-nav-bg: color-mix(
+      in oklab,
+      var(--color-gray-900) 45%,
+      var(--color-gray-950)
+    );
+    --app-nav-text: var(--color-gray-400);
+    --app-nav-strong: var(--color-gray-100);
+    --app-nav-muted: var(--color-gray-500);
+    --app-nav-rule: var(--color-gray-800);
+    --app-nav-rail: var(--color-gray-800);
+    --app-nav-rail-hover: var(--color-gray-600);
+    --app-nav-hover: color-mix(in oklab, var(--color-white) 6%, transparent);
+    --app-nav-press: color-mix(in oklab, var(--color-white) 10%, transparent);
+    --app-nav-accent: var(--color-indigo-400);
+    --app-nav-accent-text: var(--color-indigo-300);
+    --app-nav-accent-soft: color-mix(
+      in oklab,
+      var(--color-indigo-400) 13%,
+      transparent
+    );
+    --app-nav-field-bg: var(--color-gray-900);
+    --app-nav-field-border: var(--color-gray-700);
+    --app-nav-badge-bg: color-mix(
+      in oklab,
+      var(--color-amber-400) 14%,
+      transparent
+    );
+    --app-nav-badge-text: var(--color-amber-300);
+    --app-nav-ring: color-mix(
+      in oklab,
+      var(--color-indigo-400) 60%,
+      transparent
+    );
+    --app-nav-scrim: color-mix(in oklab, var(--color-black) 60%, transparent);
+  }
+
+  /* high contrast renders the docs light (ThemeService): AAA text, a solid
+     indicator and rails a 3:1 non-text contrast can see */
+  :where(.oge-theme-high-contrast) .app-sidebar,
+  :where(.oge-theme-high-contrast) .app-nav-backdrop,
+  :where(.oge-theme-high-contrast) .app-nav-toggle {
+    --app-nav-bg: var(--color-white);
+    --app-nav-text: var(--color-gray-800);
+    --app-nav-strong: var(--color-gray-950);
+    --app-nav-muted: var(--color-gray-700);
+    --app-nav-rule: var(--color-gray-500);
+    --app-nav-rail: var(--color-gray-500);
+    --app-nav-rail-hover: var(--color-gray-800);
+    --app-nav-accent: var(--color-indigo-800);
+    --app-nav-accent-text: var(--color-indigo-900);
+    --app-nav-accent-soft: var(--color-indigo-50);
+    --app-nav-field-border: var(--color-gray-600);
+    --app-nav-badge-bg: var(--color-amber-50);
+    --app-nav-badge-text: var(--color-amber-900);
+    --app-nav-ring: var(--color-indigo-800);
+  }
+
+  .app-sidebar {
+    position: fixed;
+    inset-block: 0;
+    left: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    width: var(--app-nav-width);
+    border-right: 1px solid var(--app-nav-rule);
+    background-color: var(--app-nav-bg);
+    color: var(--app-nav-text);
+  }
+
+  .app-nav-backdrop {
+    display: none;
+  }
+
+  /* below lg: the off-canvas drawer */
+  @media (max-width: 63.99rem) {
+    .app-sidebar {
+      z-index: 50;
+      width: min(20rem, calc(100vw - 3rem));
+      padding-left: env(safe-area-inset-left, 0px);
+      transform: translateX(-100%);
+      visibility: hidden;
+      box-shadow: none;
+    }
+
+    .app-sidebar.is-open {
+      transform: none;
+      visibility: visible;
+      box-shadow: var(--app-nav-shadow);
+    }
+
+    .app-nav-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      background: var(--app-nav-scrim);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .app-nav-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .app-sidebar {
+        transition:
+          transform 280ms var(--app-nav-ease),
+          visibility 0s linear 280ms,
+          box-shadow 280ms ease;
+      }
+
+      .app-sidebar.is-open {
+        transition:
+          transform 280ms var(--app-nav-ease),
+          visibility 0s,
+          box-shadow 280ms ease;
+      }
+
+      .app-nav-backdrop {
+        transition: opacity 200ms ease;
+      }
+    }
+  }
+
+  /* the page behind an open drawer does not scroll */
+  html.app-nav-locked {
+    overflow: hidden;
+  }
+
+  /* ── header row of the sidebar: brand, framework mark, close ── */
+  .app-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 1rem 1rem 0.75rem;
+  }
+
+  .app-nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: 0.5rem;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--app-nav-strong);
+  }
+
+  .app-nav-close,
+  .app-nav-toggle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .app-nav-toggle {
+    margin-inline-start: -0.5rem;
+  }
+
+  .app-nav-close:hover,
+  .app-nav-toggle:hover {
+    background: var(--app-nav-hover);
+  }
+
+  @media (min-width: 64rem) {
+    .app-nav-close {
+      display: none;
+    }
+  }
+
+  /* ── filter field ── */
+  .app-nav-search {
+    position: relative;
+    margin: 0 0.75rem 0.5rem;
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-search app-icon {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0.625rem;
+    pointer-events: none;
+  }
+
+  .app-nav-filter {
+    width: 100%;
+    height: 2.25rem;
+    padding-inline: 2rem 0.625rem;
+    border: 1px solid var(--app-nav-field-border);
+    border-radius: 0.5rem;
+    background: var(--app-nav-field-bg);
+    color: var(--app-nav-strong);
+    font-size: 13px;
+  }
+
+  .app-nav-filter::placeholder {
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-filter:focus {
+    border-color: var(--app-nav-accent);
+  }
+
+  /* ── the scrolling list ── */
+  .app-nav-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.25rem 0.75rem 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    /* rows fade out under the filter field and the footer instead of being
+       cut by a hard edge (a luminance mask, not a colour) */
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 0.75rem,
+      black calc(100% - 0.75rem),
+      transparent
+    );
+  }
+
+  .app-nav-scroll:hover,
+  .app-nav-scroll:focus-within {
+    scrollbar-color: color-mix(in oklab, var(--app-nav-muted) 45%, transparent)
+      transparent;
+  }
+
+  .app-nav-group-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0.375rem;
+    padding: 0.875rem 0.5rem 0;
+    border-top: 1px solid var(--app-nav-rule);
+  }
+
+  .app-nav-group-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-count {
+    min-width: 1.5rem;
+    padding: 0 0.375rem;
+    border-radius: 999px;
+    background: var(--app-nav-hover);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.125rem;
+    text-align: center;
+    color: var(--app-nav-text);
+  }
+
+  .app-nav-group-link {
+    position: relative;
+    margin-inline-start: auto;
+    border-radius: 0.375rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--app-nav-accent-text);
+  }
+
+  .app-nav-group-link:hover {
+    background: var(--app-nav-accent-soft);
+  }
+
+  .app-nav-section + .app-nav-section {
+    margin-top: 0.125rem;
+  }
+
+  .app-nav-section-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 2rem;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-align: start;
+    color: var(--app-nav-strong);
+    cursor: pointer;
+  }
+
+  .app-nav-section-toggle:hover {
+    background: var(--app-nav-hover);
+  }
+
+  .app-nav-section-toggle:active {
+    background: var(--app-nav-press);
+  }
+
+  .app-nav-section-icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.375rem;
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-section.has-active .app-nav-section-toggle {
+    font-weight: 600;
+  }
+
+  .app-nav-section.has-active .app-nav-section-icon {
+    background: var(--app-nav-accent-soft);
+    color: var(--app-nav-accent);
+  }
+
+  .app-nav-section-title {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .app-nav-badge {
+    flex: none;
+    padding: 0 0.375rem;
+    border-radius: 0.3125rem;
+    background: var(--app-nav-badge-bg);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.125rem;
+    text-transform: uppercase;
+    color: var(--app-nav-badge-text);
+  }
+
+  .app-nav-chevron {
+    display: inline-flex;
+    flex: none;
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-chevron.is-collapsed {
+    transform: rotate(-90deg);
+  }
+
+  /* collapse: animate the row track, `inert` (app.html) takes the links out
+     of the tab order and the accessibility tree */
+  .app-nav-panel {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+
+  .app-nav-panel.is-collapsed {
+    grid-template-rows: 0fr;
+  }
+
+  .app-nav-items {
+    min-height: 0;
+    overflow: hidden;
+    margin: 0 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* the list's breathing room is content, not padding: padding would not
+     shrink with the collapsed (0fr) row */
+  .app-nav-items::before,
+  .app-nav-items::after {
+    content: '';
+    display: block;
+    height: 0.125rem;
+  }
+
+  .app-nav-items::after {
+    height: 0.375rem;
+  }
+
+  .app-nav-panel.is-collapsed .app-nav-items {
+    visibility: hidden;
+  }
+
+  .app-nav-link {
+    position: relative;
+    display: flex;
+    min-height: 2rem;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block: 1px;
+    padding: 0.3125rem 0.625rem 0.3125rem 0.875rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-size: 13.5px;
+    line-height: 1.35;
+    color: var(--app-nav-text);
+  }
+
+  /* the rail: one hairline per section, the active page's segment drawn in
+     the accent (a pseudo-element, so the link keeps its full hit area) */
+  .app-nav-link::before {
+    content: '';
+    position: absolute;
+    inset-block: -1px;
+    left: 0;
+    width: 1px;
+    background: var(--app-nav-rail);
+  }
+
+  .app-nav-link:hover {
+    background: var(--app-nav-hover);
+    color: var(--app-nav-strong);
+  }
+
+  .app-nav-link:hover::before {
+    background: var(--app-nav-rail-hover);
+  }
+
+  .app-nav-link.is-active {
+    background: var(--app-nav-accent-soft);
+    font-weight: 600;
+    color: var(--app-nav-accent-text);
+  }
+
+  .app-nav-link.is-active::before {
+    inset-block: 0.25rem;
+    left: -1px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--app-nav-accent);
+  }
+
+  .app-nav-external {
+    margin-inline-start: auto;
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-empty {
+    padding: 1.5rem 0.5rem;
+    font-size: 13px;
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-empty button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    border: 1px solid var(--app-nav-field-border);
+    border-radius: 0.5rem;
+    background: var(--app-nav-field-bg);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--app-nav-strong);
+    cursor: pointer;
+  }
+
+  /* ── footer: theme (below xl), sponsor (phones), version ── */
+  .app-nav-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem max(0.875rem, env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--app-nav-rule);
+    font-size: 12px;
+    color: var(--app-nav-muted);
+  }
+
+  .app-nav-theme {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .app-nav-theme select {
+    height: 2rem;
+    min-width: 8.5rem;
+    padding-inline: 0.5rem;
+    border: 1px solid var(--app-nav-field-border);
+    border-radius: 0.5rem;
+    background: var(--app-nav-field-bg);
+    color: var(--app-nav-strong);
+    font-size: 12.5px;
+  }
+
+  @media (min-width: 80rem) {
+    .app-nav-theme {
+      display: none;
+    }
+  }
+
+  .app-nav-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .app-nav-sponsor,
+  .app-nav-version {
+    border-radius: 0.375rem;
+  }
+
+  .app-nav-sponsor {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline-start: auto;
+  }
+
+  .app-nav-sponsor:hover {
+    color: var(--color-pink-600);
+  }
+
+  @media (min-width: 40rem) {
+    .app-nav-sponsor {
+      display: none;
+    }
+  }
+
+  .app-nav-version {
+    margin-inline-start: auto;
+    font-family: var(--font-mono);
+  }
+
+  .app-nav-sponsor + .app-nav-version {
+    margin-inline-start: 0;
+  }
+
+  .app-nav-version:hover {
+    color: var(--app-nav-accent-text);
+  }
+
+  /* touch: primary navigation targets grow to 44px */
+  @media (pointer: coarse) {
+    .app-nav-section-toggle,
+    .app-nav-link {
+      min-height: 2.75rem;
+    }
+
+    .app-nav-filter,
+    .app-nav-theme select {
+      height: 2.75rem;
+      /* no iOS focus zoom */
+      font-size: max(16px, 1em);
+    }
+  }
+
+  /* ── focus: the docs' two-ring convention (soft for pointer focus, strong
+     for keyboard), drawn as a box-shadow over a transparent outline so
+     forced colors still repaint a ring ── */
+  .app-sidebar :is(a, button, input, select):focus-visible,
+  .app-nav-toggle:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 1px;
+    box-shadow: 0 0 0 3px var(--app-nav-ring);
+  }
+
+  .app-nav-filter:focus {
+    outline: 2px solid transparent;
+  }
+
+  .app-nav-link:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--app-nav-ring);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .app-nav-section-toggle,
+    .app-nav-link,
+    .app-nav-link::before,
+    .app-nav-group-link,
+    .app-nav-close,
+    .app-nav-toggle {
+      transition:
+        background-color 120ms ease,
+        color 120ms ease;
+    }
+
+    .app-nav-chevron {
+      transition: transform 200ms var(--app-nav-ease);
+    }
+
+    .app-nav-panel {
+      transition: grid-template-rows 220ms var(--app-nav-ease);
+    }
+
+    .app-nav-items {
+      transition: visibility 0s;
+    }
+
+    .app-nav-panel.is-collapsed .app-nav-items {
+      transition: visibility 0s linear 220ms;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .app-sidebar {
+      border-right-color: CanvasText;
+    }
+
+    .app-nav-link.is-active {
+      color: Highlight;
+    }
+
+    .app-nav-link.is-active::before {
+      background: Highlight;
+      forced-color-adjust: none;
+    }
+
+    .app-nav-link::before {
+      background: CanvasText;
+      forced-color-adjust: none;
+    }
+
+    .app-nav-badge,
+    .app-nav-count {
+      border: 1px solid CanvasText;
+    }
+  }
 }
