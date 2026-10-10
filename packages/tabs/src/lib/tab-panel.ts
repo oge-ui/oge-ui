@@ -124,7 +124,7 @@ export class OgeTabPanel extends OgeTabsBase {
   readonly keepAlive = input(true);
   /**
    * Transition played by the newly displayed panel. Duration comes from the
-   * `--oge-tab-panel-transition` CSS variable (180ms) and is suppressed under
+   * `--oge-tab-panel-transition` CSS variable (200ms by default — `--oge-motion-duration-base`) and is suppressed under
    * `prefers-reduced-motion`.
    */
   readonly panelAnimation = input<OgeTabPanelAnimation>('none');

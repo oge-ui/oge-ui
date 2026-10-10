@@ -137,9 +137,10 @@
   color: var(--oge-text-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease,
-    opacity 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   svg {
     fill: none;
@@ -267,8 +268,10 @@
   border-radius: 999px;
   background: var(--oge-muted-color);
   transition:
-    inline-size 120ms ease,
-    background-color 120ms ease;
+    inline-size var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 }
 
 .oge-carousel-dot.oge-carousel-current .oge-carousel-dot-mark {
@@ -289,8 +292,9 @@
   opacity: 0.7;
   cursor: pointer;
   transition:
-    opacity 120ms ease,
-    border-color 120ms ease;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &:hover {
     opacity: 1;

@@ -26,6 +26,30 @@ are versioned independently, which is the case here.
   to 4.7.10, and the release workflow asserts the bundled npm instead of
   installing an unpinned global one.
 
+### Motion tokens and enter animations — all styled packages (Angular and React share the stylesheets)
+
+- **Motion tokens** in the default theme: `--oge-motion-duration-fast` /
+  `-base` / `-slow` (120 / 200 / 300ms) and `--oge-motion-easing-standard` /
+  `-emphasized` / `-decelerate` / `-accelerate`. Every transition and enter
+  animation in the component stylesheets now reads them (about 390 raw
+  durations and curves replaced), so `:root { --oge-motion-duration-fast: 0ms }`
+  or a slower brand curve retimes the whole suite. They appear in the token
+  reference, the ThemeBuilder presets and `@oge-ui/core/tokens.json` (DTCG
+  `duration` / `cubicBezier`).
+- **New enter motion**, CSS only and switched off under
+  `prefers-reduced-motion`: the check box mark pops in, the radio dot grows
+  from the centre, a field's validation message settles in, tag box / tree
+  select / multi-column combo tags and chip-list chips pop in, alerts slide in
+  when shown, the grid / tree list sort arrow fades in along its direction
+  (and the tree list expander's hover is eased), the content-fitted tab ink
+  grows from the label's centre, and floating windows fade in where they are
+  placed.
+- **Softer surfaces**: popups, popovers, the modal panel, the action sheet and
+  the adaptive bottom sheet enter on the emphasized curve; the modal panel
+  lifts over 200ms instead of 120ms.
+- No exit animations were added: removal stays synchronous, so focus return,
+  `inert` and DOM-based tests are unaffected. No public API changed.
+
 ## 1.1.4 — 2026-10-08
 
 The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates.

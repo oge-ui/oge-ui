@@ -66,7 +66,11 @@
 .oge-toast-cell {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows var(--oge-toast-transition, 150ms ease-out);
+  transition: grid-template-rows
+    var(
+      --oge-toast-transition,
+      var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate)
+    );
 
   > * {
     overflow: hidden;
@@ -99,8 +103,16 @@
   opacity: 0;
   transform: translateY(8px);
   transition:
-    opacity var(--oge-toast-transition, 150ms ease-out),
-    transform var(--oge-toast-transition, 150ms ease-out);
+    opacity
+      var(
+        --oge-toast-transition,
+        var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate)
+      ),
+    transform
+      var(
+        --oge-toast-transition,
+        var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate)
+      );
 
   .oge-toast-region-top-start &,
   .oge-toast-region-top-center &,
@@ -202,7 +214,8 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-accent-soft);
@@ -229,7 +242,8 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-accent-soft);

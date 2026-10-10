@@ -283,7 +283,7 @@ export const OGE_REACT_TAB_PANEL_API: ApiSections = {
           type: "'none' | 'fade' | 'slide'",
           default: "'none'",
           description:
-            'Transition played by the incoming panel; <code>slide</code> enters from the direction of travel (mirrored in RTL). Duration comes from <code>--oge-tab-panel-transition</code> (180ms) and is suppressed under <code>prefers-reduced-motion</code>.',
+            'Transition played by the incoming panel; <code>slide</code> enters from the direction of travel (mirrored in RTL). Duration comes from <code>--oge-tab-panel-transition</code> (200ms by default — the <code>--oge-motion-duration-base</code> token) and is suppressed under <code>prefers-reduced-motion</code>.',
         },
         {
           name: 'dynamicHeight',

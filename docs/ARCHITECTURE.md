@@ -746,7 +746,7 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   ring survives there and is invisible everywhere else. **Never write `outline: none` / `outline: 0`** —
   a rule that hides the UA ring uses `outline: 2px solid transparent` on `:focus`/`:focus-visible`, never
   on the base state (under forced colors a base-state transparent outline is drawn all the time).
-  Transitions `120ms ease`. RTL via logical properties; a script that needs the direction asks
+  Transitions use the motion tokens (see **Motion** below). RTL via logical properties; a script that needs the direction asks
   `ogeResolveDirection` (see "Direction (RTL)" below).
 - **Forced colors.** Every stylesheet with state (selected, checked, active, focused, disabled,
   progress, chart/gantt marks) ends with an `@include tokens.forced-colors { … }` block using system
@@ -760,6 +760,31 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   `@include tokens.reduced-motion { … }` (or `@media (prefers-reduced-motion: reduce)`) block. Script
   motion asks `prefersReducedMotion()` / `motionScrollBehavior()` from `@oge-ui/behavior` (SSR-safe) —
   never a literal `behavior: 'smooth'`.
+- **Motion.** Durations and curves are tokens in `literal-tokens` — never raw values in a
+  component stylesheet:
+  `--oge-motion-duration-fast` (120ms: hover/press state layers, colour, glyphs),
+  `-base` (200ms: thumbs, popups, panels, expand/collapse, small enters) and `-slow` (300ms: large
+  surfaces travelling a distance); `--oge-motion-easing-standard` (state changes that stay on
+  screen — the default), `-emphasized` (surfaces and marks entering: popups, sheets, dialogs,
+  check marks, ink), `-decelerate` (fades and reveals) and `-accelerate` (exits). A consumer
+  retimes the whole suite from `:root`. Rules:
+  - **Enter-only by default.** An element that appears runs a keyframe (`animation: oge-x-in
+var(--oge-motion-duration-…) var(--oge-motion-easing-…)`, keyframe `from { … }` only) or a
+    `*-ready` class transition the script already toggles. Exit animations are added only where
+    the component already delays removal (drawer, toast, accordion); never hold a node in the DOM
+    for an exit — focus return, `inert` and the specs expect synchronous removal.
+  - **Geometry stays honest.** A surface that tests, drags or positioning code measure right after
+    it appears (floating windows) fades with opacity only; small transforms (`scale` ≥ 0.85,
+    `translate` ≤ 4px) are fine on popups, chips, tags and glyphs.
+  - Enter keyframes fire on (re)creation, so they suit nodes keyed by identity (`track item.key`,
+    React `key`) and appended items; skip them for virtualized rows, which are re-created by
+    scrolling.
+  - Looping indicators (spinners, shimmer, indeterminate bars) and script-tuned component knobs
+    (`--oge-drawer-duration`, `--oge-chart-anim-duration`) keep their own cycle lengths; their
+    curves still come from the tokens.
+  - Each animation is switched off in the file's `@include tokens.reduced-motion` block, and the
+    final (non-animated) state is what the visual baselines capture — `animations: 'disabled'`
+    must not change a pixel.
 - **Target size.** A pointer target under 24×24 (WCAG 2.5.8) gets `@include tokens.hit-area` (a
   transparent `::before`: 24px, 44px under `pointer: coarse`) with its visual size unchanged. Inside an
   `overflow: hidden` parent grow the hit area inward instead (the grid column resize handle). Hover-only
@@ -1885,7 +1910,7 @@ component's SCSS is expected to look contemporary out of the box — token-drive
 (never raw values): consistent radii (`--oge-radius`/`-lg`), soft state layers
 (`--oge-row-hover-bg`, `--oge-accent-soft`) instead of hard color swaps, the
 house focus ring (`@include tokens.focus-ring` on `:focus-visible` — it survives forced colors),
-an `@include tokens.forced-colors` block for every state, 120ms ease micro-transitions suppressed under
+an `@include tokens.forced-colors` block for every state, token-timed micro-transitions (`--oge-motion-*`) suppressed under
 `prefers-reduced-motion`, logical properties for RTL, and open/selected states
 that read at a glance (accent tint + indicator, not just a border). "Works but
 looks like a prototype" does not pass review.

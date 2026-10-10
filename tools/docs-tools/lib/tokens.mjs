@@ -704,6 +704,22 @@ function dtcgToken(name, value, map, group, derived) {
       $extensions: extensions,
     };
   }
+  const duration = /^(\d+(?:\.\d+)?)(ms|s)$/.exec(value);
+  if (duration) {
+    return {
+      $type: 'duration',
+      $value: { value: Number(duration[1]), unit: duration[2] },
+      $extensions: extensions,
+    };
+  }
+  const bezier = /^cubic-bezier\(([^)]+)\)$/.exec(value);
+  if (bezier) {
+    return {
+      $type: 'cubicBezier',
+      $value: bezier[1].split(',').map(Number),
+      $extensions: extensions,
+    };
+  }
   const dim = dtcgDimension(value);
   if (dim) return { $type: 'dimension', $value: dim, $extensions: extensions };
   if (/shadow/.test(bare)) {

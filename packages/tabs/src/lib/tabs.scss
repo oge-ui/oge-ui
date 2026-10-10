@@ -146,10 +146,12 @@
   user-select: none;
   position: relative;
   transition:
-    color 120ms ease,
-    background-color 120ms ease,
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(.oge-tab-disabled) {
     color: var(--oge-text-color);
@@ -268,6 +270,9 @@
     inset-block-end: -2px;
     block-size: 2px;
     background: var(--oge-accent);
+    // the fitted ink grows out from the label's centre on selection
+    animation: oge-tab-ink-in var(--oge-motion-duration-base)
+      var(--oge-motion-easing-emphasized);
   }
 }
 
@@ -282,6 +287,7 @@
     inset-block: var(--oge-tab-pad-y);
     inline-size: 2px;
     block-size: auto;
+    animation-name: oge-tab-ink-in-vertical;
   }
 }
 
@@ -337,7 +343,8 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-accent-25);
@@ -366,10 +373,27 @@
   }
 }
 
+@keyframes oge-tab-ink-in {
+  from {
+    scale: 0 1;
+  }
+}
+
+// vertical strips draw the ink as a column: it grows along the block axis
+@keyframes oge-tab-ink-in-vertical {
+  from {
+    scale: 1 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .oge-tab,
   .oge-tab-close {
     transition: none;
+  }
+
+  .oge-tab-strip-ink-content .oge-tab.oge-tab-selected::after {
+    animation: none;
   }
 
   .oge-tab-close-pending .oge-tab-close svg {
@@ -390,9 +414,10 @@
   color: var(--oge-muted-color);
   cursor: pointer;
   transition:
-    color 120ms ease,
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     color: var(--oge-text-color);
@@ -423,7 +448,7 @@
   min-inline-size: 0;
   min-block-size: 0;
 
-  --oge-tab-panel-transition: 180ms;
+  --oge-tab-panel-transition: var(--oge-motion-duration-base);
 }
 
 // ── Panel transition ──
@@ -472,17 +497,20 @@
 }
 
 .oge-tab-panel-animated.oge-tab-anim-a .oge-tab-panel-body:not([hidden]) {
-  animation: oge-tab-anim-a var(--oge-tab-panel-transition) ease;
+  animation: oge-tab-anim-a var(--oge-tab-panel-transition)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-tab-panel-animated.oge-tab-anim-b .oge-tab-panel-body:not([hidden]) {
-  animation: oge-tab-anim-b var(--oge-tab-panel-transition) ease;
+  animation: oge-tab-anim-b var(--oge-tab-panel-transition)
+    var(--oge-motion-easing-standard);
 }
 
 // ── dynamicHeight ──
 .oge-tab-panel-dynamic-height {
   overflow: hidden;
-  transition: block-size var(--oge-tab-panel-transition) ease;
+  transition: block-size var(--oge-tab-panel-transition)
+    var(--oge-motion-easing-standard);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -88,8 +88,9 @@
   color: inherit;
   font: inherit;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &::placeholder {
     color: var(--oge-input-muted);
@@ -146,9 +147,11 @@
   font-weight: 500;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);

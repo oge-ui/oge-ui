@@ -18,7 +18,8 @@
   justify-content: flex-end;
   align-items: center;
   background: transparent;
-  transition: background-color 160ms ease;
+  transition: background-color var(--oge-motion-duration-base)
+    var(--oge-motion-easing-standard);
 
   &.oge-action-sheet-ready {
     background: var(--oge-modal-backdrop-bg);
@@ -53,7 +54,8 @@
   font-size: var(--oge-font-size);
   line-height: 1.45;
   translate: 0 100%;
-  transition: translate 200ms ease;
+  transition: translate var(--oge-motion-duration-base)
+    var(--oge-motion-easing-emphasized);
 
   .oge-action-sheet-ready & {
     translate: 0 0;
@@ -150,8 +152,9 @@
   text-align: start;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);

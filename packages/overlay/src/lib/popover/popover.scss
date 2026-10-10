@@ -33,8 +33,9 @@
   transform: scale(0.97);
   transform-origin: center top;
   transition:
-    opacity 120ms ease-out,
-    transform 120ms ease-out;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate),
+    transform var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-emphasized);
 
   &[data-placement^='top'] {
     transform-origin: center bottom;
@@ -115,8 +116,9 @@
   color: var(--oge-input-muted);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);

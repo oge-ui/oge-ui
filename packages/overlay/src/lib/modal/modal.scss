@@ -26,7 +26,11 @@
   /* entrance: backdrop fades, panel lifts in once mounted; duration/curve
      tunable via --oge-modal-transition (a config API stays deliberately out) */
   opacity: 0;
-  transition: opacity var(--oge-modal-transition, 120ms ease-out);
+  transition: opacity
+    var(
+      --oge-modal-transition,
+      var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate)
+    );
 
   &.oge-modal-layer-ready {
     opacity: 1;
@@ -93,7 +97,11 @@
   box-shadow: var(--oge-shadow-popup);
   font-size: var(--oge-font-size);
   transform: translateY(8px) scale(0.98);
-  transition: transform var(--oge-modal-transition, 120ms ease-out);
+  transition: transform
+    var(
+      --oge-modal-transition,
+      var(--oge-motion-duration-base) var(--oge-motion-easing-emphasized)
+    );
 
   .oge-modal-layer-ready & {
     transform: none;
@@ -158,7 +166,8 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-accent-soft);

@@ -65,8 +65,9 @@
   font-size: 13px;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);
@@ -131,8 +132,9 @@
   font: inherit;
   font-size: 13px;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &::placeholder {
     color: var(--oge-input-muted);
@@ -249,8 +251,9 @@
   font-weight: 600;
   line-height: 1.5;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 }
 
 // the limit reads lighter by weight alone: an opacity dropped it below 3:1
@@ -289,8 +292,9 @@
   color: var(--oge-muted-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: color-mix(in srgb, var(--oge-border-color) 50%, transparent);
@@ -319,9 +323,11 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     border-color: var(--oge-accent);
@@ -379,7 +385,8 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: color-mix(
@@ -421,8 +428,9 @@
   color: var(--oge-muted-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: color-mix(in srgb, var(--oge-border-color) 50%, transparent);
@@ -469,7 +477,8 @@
 }
 
 .oge-kanban-lane-chevron {
-  transition: rotate 120ms ease;
+  transition: rotate var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-kanban-lane-chevron-collapsed {
@@ -482,7 +491,8 @@
 }
 
 .oge-kanban-lane-title {
-  transition: color 120ms ease;
+  transition: color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 /* ---------- card lists ---------- */
@@ -546,9 +556,11 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     border-color: var(--oge-accent);
@@ -581,8 +593,8 @@
   cursor: pointer;
   overflow: hidden;
   transition:
-    box-shadow 120ms ease,
-    translate 120ms ease;
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    translate var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     translate: 0 -1px;
@@ -763,7 +775,8 @@
   display: inline-flex;
   gap: 2px;
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-kanban-card:hover .oge-kanban-card-actions,
@@ -797,8 +810,9 @@
   font: inherit;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:focus-visible {
     @include tokens.focus-ring;
@@ -834,7 +848,8 @@
 /* cards below the placeholder slide down to open the gap */
 .oge-kanban-card-shifted {
   transform: translateY(calc(var(--oge-kanban-slot, 120px)));
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-kanban-placeholder {
@@ -912,7 +927,8 @@
   font-size: 13px;
   text-align: start;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled),
   &:focus-visible {
@@ -1102,9 +1118,11 @@
   line-height: 1.6;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -1150,8 +1168,9 @@
   color: var(--oge-input-muted);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: color-mix(in srgb, var(--oge-border-color) 50%, transparent);

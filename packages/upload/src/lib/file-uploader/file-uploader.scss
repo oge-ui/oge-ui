@@ -60,10 +60,12 @@
   border-radius: var(--oge-radius-lg);
   cursor: pointer;
   transition:
-    border-color 0.18s ease,
-    background-size 0.28s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+    border-color var(--oge-motion-duration-base)
+      var(--oge-motion-easing-standard),
+    background-size var(--oge-motion-duration-slow)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-base) var(--oge-motion-easing-standard),
+    transform var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background-size: 100% 100%;
@@ -144,9 +146,11 @@
   box-shadow: var(--oge-shadow-btn);
   cursor: pointer;
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);
@@ -222,9 +226,11 @@
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   /* The status rail: a 3px inset edge, coloured per state. */
   &::before {
@@ -233,7 +239,8 @@
     width: 3px;
     content: '';
     background: transparent;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--oge-motion-duration-base)
+      var(--oge-motion-easing-standard);
   }
 
   &:hover {
@@ -340,9 +347,10 @@
   cursor: pointer;
   opacity: 0.55;
   transition:
-    opacity 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     color: var(--oge-text-color);
@@ -431,8 +439,10 @@
 
 .oge-upload-external-zone {
   transition:
-    background-color 0.18s ease,
-    outline-color 0.18s ease;
+    background-color var(--oge-motion-duration-base)
+      var(--oge-motion-easing-standard),
+    outline-color var(--oge-motion-duration-base)
+      var(--oge-motion-easing-standard);
 }
 
 .oge-upload-external-zone-over {

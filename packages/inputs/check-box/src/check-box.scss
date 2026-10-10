@@ -67,6 +67,21 @@
   @include selection-glyph.selection-glyph-on;
 }
 
+// The mark is rendered only while checked / mixed, so it is created on every
+// check: it pops out of the box's centre as the fill colours in.
+.oge-check-box-checked .oge-check-box-icon svg,
+.oge-check-box-indeterminate .oge-check-box-icon svg {
+  animation: oge-check-box-mark-in var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-emphasized);
+}
+
+@keyframes oge-check-box-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
 .oge-check-box-invalid .oge-check-box-icon {
   border-color: var(--oge-danger);
 }
@@ -104,6 +119,13 @@
       width: 13px;
       height: 13px;
     }
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-check-box-checked .oge-check-box-icon svg,
+  .oge-check-box-indeterminate .oge-check-box-icon svg {
+    animation: none;
   }
 }
 

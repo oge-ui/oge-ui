@@ -49,6 +49,10 @@
       "label": "Z-index"
     },
     {
+      "id": "motion",
+      "label": "Motion"
+    },
+    {
       "id": "component",
       "label": "Component-specific"
     }
@@ -1106,6 +1110,123 @@
       "u": [
         "@oge-ui/overlay"
       ]
+    },
+    {
+      "n": "--oge-motion-duration-fast",
+      "c": "motion",
+      "d": "micro-interactions — hover/press state layers, colour, glyphs",
+      "v": {
+        "light": "120ms"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-motion-duration-base",
+      "c": "motion",
+      "d": "moving controls and small surfaces — thumbs, popups, panels",
+      "v": {
+        "light": "200ms"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/inputs",
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/tabs",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-motion-duration-slow",
+      "c": "motion",
+      "d": "large surfaces — windows, sheets, dialogs travelling a distance",
+      "v": {
+        "light": "300ms"
+      },
+      "u": [
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-motion-easing-standard",
+      "c": "motion",
+      "d": "the default curve for state changes that stay on screen",
+      "v": {
+        "light": "cubic-bezier(0.2, 0, 0, 1)"
+      },
+      "u": [
+        "@oge-ui/bpmn",
+        "@oge-ui/buttons",
+        "@oge-ui/charts",
+        "@oge-ui/editor",
+        "@oge-ui/forms",
+        "@oge-ui/gantt",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/kanban",
+        "@oge-ui/layout",
+        "@oge-ui/navigation",
+        "@oge-ui/overlay",
+        "@oge-ui/pivot",
+        "@oge-ui/scheduler",
+        "@oge-ui/tabs",
+        "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-motion-easing-emphasized",
+      "c": "motion",
+      "d": "entering surfaces — a quick start that settles softly",
+      "v": {
+        "light": "cubic-bezier(0.05, 0.7, 0.1, 1)"
+      },
+      "u": [
+        "@oge-ui/inputs",
+        "@oge-ui/layout",
+        "@oge-ui/overlay",
+        "@oge-ui/tabs"
+      ]
+    },
+    {
+      "n": "--oge-motion-easing-decelerate",
+      "c": "motion",
+      "d": "fades and reveals that start at full speed",
+      "v": {
+        "light": "cubic-bezier(0, 0, 0, 1)"
+      },
+      "u": [
+        "@oge-ui/charts",
+        "@oge-ui/grid",
+        "@oge-ui/inputs",
+        "@oge-ui/layout",
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-motion-easing-accelerate",
+      "c": "motion",
+      "d": "leaving surfaces — gathers speed as it exits",
+      "v": {
+        "light": "cubic-bezier(0.3, 0, 1, 1)"
+      },
+      "u": []
     },
     {
       "n": "--oge-tooltip-bg",

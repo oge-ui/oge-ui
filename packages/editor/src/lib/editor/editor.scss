@@ -43,8 +43,9 @@
   border-radius: var(--oge-radius-lg);
   background: var(--oge-editor-bg);
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     border-color: var(--oge-muted-color);
@@ -359,7 +360,8 @@
   color: var(--oge-text-color);
   font: inherit;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);

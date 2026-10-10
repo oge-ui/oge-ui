@@ -48,7 +48,8 @@
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
-  animation: oge-badge-pop 120ms ease;
+  animation: oge-badge-pop var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 @keyframes oge-badge-pop {

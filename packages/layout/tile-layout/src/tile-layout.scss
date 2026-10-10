@@ -65,9 +65,11 @@
   background: var(--oge-bg);
   box-shadow: var(--oge-shadow-card);
   transition:
-    box-shadow 120ms ease,
-    border-color 120ms ease,
-    background-color 120ms ease;
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &:focus {
     outline: 2px solid transparent;
@@ -144,7 +146,8 @@
   cursor: nwse-resize;
   opacity: 0.6;
   touch-action: none;
-  transition: opacity 120ms ease;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:dir(rtl) {
     cursor: nesw-resize;

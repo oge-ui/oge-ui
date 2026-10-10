@@ -67,7 +67,8 @@
   padding-inline: 10px;
   overflow: hidden;
   border-radius: calc(var(--oge-radius) - 2px);
-  transition: box-shadow 120ms ease;
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-mccb-header-cell {

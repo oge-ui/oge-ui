@@ -26,8 +26,9 @@
   /* entrance: fades in and drifts from the anchored edge once measured */
   transform: translateY(2px);
   transition:
-    opacity 100ms ease-out,
-    transform 100ms ease-out;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate),
+    transform var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-decelerate);
 
   &[data-placement^='bottom'] {
     transform: translateY(-2px);

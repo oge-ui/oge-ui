@@ -31,9 +31,11 @@
   color: var(--oge-muted-color);
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &:hover {
     color: var(--oge-header-color);
@@ -59,8 +61,9 @@ input.oge-filter-input,
 .oge-editor-input,
 .oge-fb-input {
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:focus,
   &:focus-visible {
@@ -80,8 +83,10 @@ input.oge-filter-input,
   border-radius: var(--oge-radius);
   flex-wrap: wrap;
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 }
 
 // a dragged header is over the panel: dropping groups by that column
@@ -414,7 +419,8 @@ input.oge-filter-input,
   white-space: nowrap;
   user-select: none;
   background: var(--oge-header-bg);
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 // insert indicator while dragging a header: the column lands in front of this one
@@ -447,8 +453,22 @@ input.oge-filter-input,
   align-items: center;
   color: var(--oge-header-color);
 
+  // the arrow path is re-created when the column sorts or flips direction:
+  // it fades in sliding along its own direction
+  path {
+    animation: oge-sort-arrow-in var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-decelerate);
+  }
+
   sub {
     font-size: 9px;
+  }
+}
+
+@keyframes oge-sort-arrow-in {
+  from {
+    opacity: 0;
+    translate: 0 2px;
   }
 }
 
@@ -580,7 +600,8 @@ input.oge-filter-input {
   text-overflow: ellipsis;
   white-space: nowrap;
   background: var(--oge-bg);
-  transition: background-color 100ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-cell-number {
@@ -651,7 +672,11 @@ input.oge-filter-input {
   background: none;
   color: var(--oge-muted-color);
   cursor: pointer;
-  transition: transform 120ms ease;
+  transition:
+    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &:hover {
     color: var(--oge-header-color);
@@ -689,7 +714,8 @@ input.oge-filter-input {
 .oge-group-arrow {
   display: inline-flex;
   color: var(--oge-muted-color);
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &.oge-expanded {
     transform: rotate(90deg);
@@ -831,11 +857,11 @@ input.oge-filter-input {
 // push batch restarts the flash even when the same cell updates repeatedly.
 
 .oge-cell-flash-a {
-  animation: oge-cell-flash-a 1.2s ease-out;
+  animation: oge-cell-flash-a 1.2s var(--oge-motion-easing-decelerate);
 }
 
 .oge-cell-flash-b {
-  animation: oge-cell-flash-b 1.2s ease-out;
+  animation: oge-cell-flash-b 1.2s var(--oge-motion-easing-decelerate);
 }
 
 @keyframes oge-cell-flash-a {
@@ -1067,7 +1093,8 @@ input.oge-filter-input {
 
 .oge-loading .oge-viewport {
   opacity: 0.6;
-  transition: opacity 120ms ease;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 // zebra striping (rowAlternation)
@@ -1747,7 +1774,8 @@ input.oge-filter-input {
   background: none;
   color: var(--oge-muted-color);
   cursor: pointer;
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &.oge-expanded {
     transform: rotate(90deg);
@@ -1902,5 +1930,9 @@ input.oge-filter-input {
   .oge-hf-toggle,
   .oge-loading .oge-viewport {
     transition: none;
+  }
+
+  .oge-sort-indicator path {
+    animation: none;
   }
 }

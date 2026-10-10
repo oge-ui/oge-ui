@@ -60,8 +60,9 @@
   font-size: 13px;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);
@@ -128,8 +129,9 @@
   font: inherit;
   font-size: 13px;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     border-color: var(--oge-muted-color);
@@ -223,7 +225,8 @@
 
 .oge-gantt-headcell-interactive {
   cursor: default;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &.oge-gantt-sortable {
     cursor: pointer;
@@ -254,7 +257,8 @@
 
 .oge-gantt-sort-icon {
   flex-shrink: 0;
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-gantt-sort-desc {
@@ -279,7 +283,8 @@
     border-radius: 1px;
     background: var(--oge-muted-color);
     opacity: 0;
-    transition: opacity 120ms ease;
+    transition: opacity var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
   }
 }
 
@@ -337,7 +342,8 @@
   color: var(--oge-text-color);
   font: inherit;
   font-size: 12px;
-  transition: border-color 120ms ease;
+  transition: border-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     border-color: var(--oge-muted-color);
@@ -375,7 +381,8 @@
   align-items: center;
   border-block-end: 1px solid var(--oge-gantt-grid-line);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:focus-visible {
     @include tokens.focus-ring($inset: true);
@@ -420,7 +427,8 @@
   margin-inline-end: 4px;
   border-radius: var(--oge-radius);
   color: var(--oge-muted-color);
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
   flex-shrink: 0;
 
   &:hover {
@@ -449,7 +457,8 @@
   cursor: col-resize;
   background: var(--oge-border-color);
   opacity: 0.5;
-  transition: opacity 120ms ease;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
   touch-action: none;
 
   &:hover {
@@ -578,7 +587,8 @@
   pointer-events: stroke;
   cursor: pointer;
   marker-end: none;
-  transition: stroke 120ms ease;
+  transition: stroke var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     stroke: var(--oge-accent);
@@ -661,9 +671,9 @@
     0 1px 2px rgba(15, 23, 42, 0.18),
     inset 0 0 0 1px color-mix(in srgb, #000000 8%, transparent);
   transition:
-    box-shadow 120ms ease,
-    translate 120ms ease,
-    filter 120ms ease;
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    translate var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    filter var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     translate: 0 -1px;
@@ -681,7 +691,8 @@
   box-sizing: border-box;
   cursor: grab;
   overflow: visible;
-  transition: filter 120ms ease;
+  transition: filter var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:active {
     cursor: grabbing;
@@ -775,7 +786,8 @@
 
 .oge-gantt-milestone {
   filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.3));
-  transition: filter 120ms ease;
+  transition: filter var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     filter: drop-shadow(0 2px 5px rgba(15, 23, 42, 0.4)) brightness(1.08);
@@ -1292,7 +1304,8 @@
   font-size: 13px;
   text-align: start;
   cursor: pointer;
-  transition: background-color 100ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled),
   &:focus-visible {

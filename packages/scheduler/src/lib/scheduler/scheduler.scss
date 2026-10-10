@@ -63,9 +63,11 @@
   font-size: 13px;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -119,7 +121,8 @@
   padding: 4px 8px;
   border-radius: var(--oge-radius);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   > span {
     white-space: nowrap;
@@ -495,7 +498,8 @@
   font: inherit;
   text-align: start;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -626,7 +630,8 @@
 /* resize handles appear on hover/focus only (modern DS convention) */
 .oge-scheduler-resize-handle {
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &::after {
     content: '';
@@ -727,9 +732,9 @@
     0 1px 2px rgba(15, 23, 42, 0.16),
     inset 0 0 0 1px color-mix(in srgb, #000000 7%, transparent);
   transition:
-    box-shadow 120ms ease,
-    translate 120ms ease,
-    filter 120ms ease;
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    translate var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    filter var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 }
 
 .oge-scheduler-chip-box:hover > .oge-scheduler-chip {
@@ -1254,7 +1259,8 @@
   font: inherit;
   text-align: start;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -1531,7 +1537,8 @@
   padding: 3px 0 7px;
   border-radius: var(--oge-radius);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -1636,7 +1643,8 @@
   font-size: 13px;
   text-align: start;
   cursor: pointer;
-  transition: background-color 100ms ease;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled),
   &:focus-visible {

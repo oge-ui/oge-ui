@@ -19,7 +19,8 @@
   background: var(--oge-bg);
   color: var(--oge-text-color);
   font-size: var(--oge-font-size);
-  transition: box-shadow 120ms ease;
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   &,
   * {

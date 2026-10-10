@@ -36,8 +36,9 @@
   border-radius: var(--oge-radius-lg);
   background: var(--oge-bg);
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 }
 
 .oge-list-box:hover:not(.oge-disabled) .oge-list-box-frame {
@@ -86,8 +87,9 @@
   color: var(--oge-text-color);
   font: inherit;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &::placeholder {
     color: var(--oge-input-muted);
@@ -162,8 +164,9 @@
   cursor: pointer;
   user-select: none;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   // the selection indicator bar — drawn on the inline-start edge
   &::after {
@@ -174,7 +177,8 @@
     width: 3px;
     border-radius: 3px;
     background: transparent;
-    transition: background-color 120ms ease;
+    transition: background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
   }
 
   &:hover:not(.oge-disabled) {
@@ -256,8 +260,10 @@
   border-radius: 4px;
   background: var(--oge-bg);
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
 
   svg {
     width: 12px;

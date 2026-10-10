@@ -9,7 +9,8 @@
   --oge-stepper-indicator-size: 28px;
   --oge-stepper-header-pad-x: 8px;
   --oge-stepper-header-pad-y: 6px;
-  --oge-stepper-transition: 120ms ease;
+  --oge-stepper-transition: var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   display: block;
   color: var(--oge-text-color);

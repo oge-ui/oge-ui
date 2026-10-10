@@ -64,7 +64,7 @@
   stroke: var(--oge-accent);
   stroke-linecap: butt;
   transition: stroke-dasharray var(--oge-chart-anim-duration, 600ms)
-    var(--oge-chart-anim-easing, ease-out);
+    var(--oge-chart-anim-easing, var(--oge-motion-easing-decelerate));
 }
 
 .oge-gauge-tick {
@@ -91,7 +91,7 @@
 .oge-gauge-marker {
   transform-box: view-box;
   transition: transform var(--oge-chart-anim-duration, 600ms)
-    var(--oge-chart-anim-easing, ease-out);
+    var(--oge-chart-anim-easing, var(--oge-motion-easing-decelerate));
 }
 
 .oge-gauge-marker {

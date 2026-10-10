@@ -98,6 +98,20 @@
   /* toast regions (above modals — failure toasts must show over open dialogs) */
   --oge-z-toast: 1200;
   --oge-toast-width: 360px;
+  /* micro-interactions — hover/press state layers, colour, glyphs */
+  --oge-motion-duration-fast: 120ms;
+  /* moving controls and small surfaces — thumbs, popups, panels */
+  --oge-motion-duration-base: 200ms;
+  /* large surfaces — windows, sheets, dialogs travelling a distance */
+  --oge-motion-duration-slow: 300ms;
+  /* the default curve for state changes that stay on screen */
+  --oge-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  /* entering surfaces — a quick start that settles softly */
+  --oge-motion-easing-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  /* fades and reveals that start at full speed */
+  --oge-motion-easing-decelerate: cubic-bezier(0, 0, 0, 1);
+  /* leaving surfaces — gathers speed as it exits */
+  --oge-motion-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
   /* tooltip bubble (inverted surface; dark theme overrides) */
   --oge-tooltip-bg: #1e2430;
   --oge-tooltip-color: #f5f7fa;

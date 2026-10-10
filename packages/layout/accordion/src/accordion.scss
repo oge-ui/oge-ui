@@ -7,7 +7,7 @@
 
   --oge-accordion-pad-x: 14px;
   --oge-accordion-pad-y: 12px;
-  --oge-accordion-transition: 200ms;
+  --oge-accordion-transition: var(--oge-motion-duration-base);
 
   display: flex;
   flex-direction: column;
@@ -122,8 +122,9 @@
   text-align: start;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -163,7 +164,8 @@
   justify-content: center;
   flex: none;
   color: var(--oge-muted-color);
-  transition: transform var(--oge-accordion-transition) ease;
+  transition: transform var(--oge-accordion-transition)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-accordion-item-expanded .oge-accordion-toggle-icon {
@@ -253,8 +255,9 @@
 
 .oge-accordion-panel-animated {
   transition:
-    grid-template-rows var(--oge-accordion-transition) ease,
-    opacity var(--oge-accordion-transition) ease;
+    grid-template-rows var(--oge-accordion-transition)
+      var(--oge-motion-easing-standard),
+    opacity var(--oge-accordion-transition) var(--oge-motion-easing-standard);
   opacity: 0;
 }
 
@@ -289,11 +292,13 @@
 }
 
 .oge-accordion-fade-a {
-  animation: oge-accordion-fade-a var(--oge-accordion-transition) ease;
+  animation: oge-accordion-fade-a var(--oge-accordion-transition)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-accordion-fade-b {
-  animation: oge-accordion-fade-b var(--oge-accordion-transition) ease;
+  animation: oge-accordion-fade-b var(--oge-accordion-transition)
+    var(--oge-motion-easing-standard);
 }
 
 // The references' action-row counterpart: a divided footer inside the panel.

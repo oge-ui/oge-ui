@@ -52,7 +52,8 @@
   width: var(--oge-rating-size);
   height: var(--oge-rating-size);
   border-radius: var(--oge-radius);
-  transition: transform 120ms ease;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
 
   // the small size still offers a 24px (44px coarse) pointer target
   @include tokens.hit-area;

@@ -10,7 +10,7 @@
   --oge-panel-bar-pad-x: 14px;
   --oge-panel-bar-pad-y: 10px;
   --oge-panel-bar-indent: 16px;
-  --oge-panel-bar-transition: 200ms;
+  --oge-panel-bar-transition: var(--oge-motion-duration-base);
 
   display: block;
   overflow: hidden;
@@ -67,8 +67,9 @@
   text-align: start;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
@@ -164,7 +165,8 @@
   flex: none;
   margin-inline-start: auto;
   color: var(--oge-input-muted);
-  transition: transform var(--oge-panel-bar-transition) ease;
+  transition: transform var(--oge-panel-bar-transition)
+    var(--oge-motion-easing-standard);
 }
 
 .oge-panel-bar-item-expanded > .oge-panel-bar-header .oge-panel-bar-chevron {
@@ -180,8 +182,9 @@
 .oge-panel-bar-panel-animated {
   opacity: 0;
   transition:
-    grid-template-rows var(--oge-panel-bar-transition) ease,
-    opacity var(--oge-panel-bar-transition) ease;
+    grid-template-rows var(--oge-panel-bar-transition)
+      var(--oge-motion-easing-standard),
+    opacity var(--oge-panel-bar-transition) var(--oge-motion-easing-standard);
 }
 
 .oge-panel-bar-panel-open {

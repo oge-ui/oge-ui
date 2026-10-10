@@ -26,7 +26,8 @@
 
   &.oge-load-panel-shown {
     display: grid;
-    animation: oge-load-panel-in 120ms ease;
+    animation: oge-load-panel-in var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
   }
 
   &[data-position='top'] {

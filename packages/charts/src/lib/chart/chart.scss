@@ -81,8 +81,9 @@
   font-size: 12px;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    opacity 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);
@@ -183,7 +184,7 @@
 .oge-chart-series-enter {
   transform-box: view-box;
   animation: oge-chart-draw-in var(--oge-chart-anim-duration, 600ms)
-    var(--oge-chart-anim-easing, ease-out) both;
+    var(--oge-chart-anim-easing, var(--oge-motion-easing-decelerate)) both;
 }
 
 @keyframes oge-chart-draw-in {
@@ -242,8 +243,8 @@
 .oge-chart-marker,
 .oge-chart-pie-slice {
   transition:
-    opacity 120ms ease,
-    filter 120ms ease;
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    filter var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 }
 
 .oge-chart-bar:hover,
@@ -478,9 +479,11 @@
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   &:hover {
     background: var(--oge-row-hover-bg);
