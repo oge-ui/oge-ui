@@ -1443,6 +1443,12 @@ export const appRoutes: Route[] = [
     title: 'OGE — Licensing',
   },
   {
+    path: 'license/claim',
+    loadComponent: () =>
+      import('./pages/license/license-claim').then((m) => m.LicenseClaimPage),
+    title: 'OGE — Get your license key',
+  },
+  {
     path: 'changelog',
     loadComponent: () =>
       import('./pages/resources/changelog').then((m) => m.ChangelogPage),

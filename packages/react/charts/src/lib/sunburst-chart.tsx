@@ -9,12 +9,14 @@ import {
   type ForwardedRef,
   type ReactElement,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildSunburstScene,
   chartHierarchySrTable,
   sunburstTooltip,
   type OgeChartHierarchyNodeEvent,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, svgSafeId, useStable } from './hooks';
 import {
@@ -43,6 +45,7 @@ function OgeSunburstChartInner<T extends object>(
   props: OgeSunburstChartProps<T>,
   ref: ForwardedRef<OgeHierarchyChartHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const palette = useStable(props.palette);
   const tooltipEnabled = props.tooltipEnabled ?? true;
   const visual = useChartVisual({

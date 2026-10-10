@@ -40,6 +40,7 @@ import {
   type OgeBpmnReactiveCell,
   type OgeBpmnReactivity,
   type OgeBpmnSelectionEvent,
+  ogeCheckBpmnLicense,
 } from '@oge-ui/bpmn-engine';
 import { OGE_BPMN_CONFIG } from '../config';
 import { OgeBpmnPalette } from './bpmn-palette';
@@ -1709,6 +1710,7 @@ export class OgeBpmnEditor {
   protected readonly maximized = this.core.maximized;
 
   constructor() {
+    ogeCheckBpmnLicense();
     this.core.revive();
     this.destroyRef.onDestroy(() => this.core.destroy());
     // the host is attached only after the first render: read the chrome

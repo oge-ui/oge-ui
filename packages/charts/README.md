@@ -3,7 +3,7 @@
 > **Commercial package.** Unlike the rest of the OGE UI suite (MIT), the
 > charts are source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
-> No watermark, no runtime license checks. See [LICENSE](LICENSE) and
+> Without a license key, production pages show a small corner notice (never on development hosts). See [LICENSE](LICENSE) and
 > [ogeui.com/license](https://www.ogeui.com/license).
 
 Signal-based Angular charts on a **dependency-free SVG kernel** — no D3,

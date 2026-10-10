@@ -2076,7 +2076,7 @@ export class HomePage {
     {
       icon: 'workflow',
       name: 'BPMN Editor',
-      desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no watermark.',
+      desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no third-party branding.',
       path: '/components/bpmn',
     },
     {

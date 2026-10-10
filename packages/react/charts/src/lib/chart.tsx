@@ -91,6 +91,7 @@ import {
   type OgeChartTooltipOptions,
   type OgeChartTooltipShowingEvent,
   type OgeChartsMessages,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
 import { ChartDataLabel } from './data-label';
@@ -207,6 +208,7 @@ function OgeChartInner<T extends object>(
   props: OgeChartProps<T>,
   ref: ForwardedRef<OgeChartHandle<T>>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const config = useOgeChartsConfig();
   const {
     zoomEnabled = 'none',

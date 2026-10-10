@@ -104,7 +104,7 @@ type DemoTask = Record<string, unknown>;
           <code>ref</code> handle and the two templates are the
           <code>renderTask</code> / <code>renderTooltip</code> render props. It
           is a commercial package — free for evaluation and development, with no
-          watermark and no runtime license checks. See
+          notice on development hosts; production use needs a license key. See
           <a
             routerLink="/license"
             class="text-indigo-600 underline dark:text-indigo-400"
@@ -115,8 +115,8 @@ type DemoTask = Record<string, unknown>;
       } @else {
         <p>
           <code>&#64;oge-ui/gantt</code> is a commercial package — free for
-          evaluation and development, with no watermark and no runtime license
-          checks. See
+          evaluation and development, with no notice on development hosts;
+          production use needs a license key. See
           <a
             routerLink="/license"
             class="text-indigo-600 underline dark:text-indigo-400"

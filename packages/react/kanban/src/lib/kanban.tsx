@@ -42,6 +42,7 @@ import {
   type KanbanChecklistItem,
   type KanbanColumnDef,
   type OgeKanbanSortField,
+  ogeCheckKanbanLicense,
 } from '@oge-ui/kanban-engine';
 import { OgeKanbanCardDialog } from './kanban-card-dialog';
 import { useOgeKanbanConfig } from './kanban-config';
@@ -72,6 +73,7 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
   props: OgeKanbanProps<T>,
   ref: Ref<OgeKanbanHandle<T>>,
 ) {
+  useEffect(() => ogeCheckKanbanLicense(), []);
   const config = useOgeKanbanConfig();
   const controllerRef = useRef<KanbanController<T> | null>(null);
   controllerRef.current ??= new KanbanController<T>(props, config);

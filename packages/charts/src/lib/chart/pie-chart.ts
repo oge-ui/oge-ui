@@ -37,6 +37,7 @@ import {
   type OgeChartSmallValuesGrouping,
   type OgePieSeriesInput,
   type OgePieSliceVm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
 import {
@@ -287,6 +288,7 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   protected readonly announcement = signal('');
 
   constructor() {
+    ogeCheckChartsLicense();
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>

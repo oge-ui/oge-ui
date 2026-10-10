@@ -109,7 +109,11 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/license',
-    'OGE UI licensing: open-core, with the suite MIT forever and six enterprise packages — Pivot, BPMN, Scheduler, Gantt, Kanban and Charts — commercial.',
+    'OGE UI licensing and pricing: the suite is MIT forever; OGE UI Pro — Pivot, Gantt, Scheduler, Kanban, Charts and BPMN — is $299 per developer per year.',
+  ],
+  [
+    '/license/claim',
+    'Get your OGE UI Pro license key: enter the order number and email from your purchase to retrieve the key, and come back any time to retrieve it again.',
   ],
   [
     '/changelog',
@@ -585,7 +589,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/bpmn',
-    'BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no watermark.',
+    'BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no third-party branding.',
   ],
   [
     '/components/bpmn/validation',

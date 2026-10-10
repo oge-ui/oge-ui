@@ -109,7 +109,7 @@ type DemoAppt = Record<string, unknown>;
           <code>&#64;oge-ui/scheduler</code>
         }
         is a commercial package — free for evaluation and development, with no
-        watermark and no runtime license checks. See
+        notice on development hosts; production use needs a license key. See
         <a
           routerLink="/license"
           class="text-indigo-600 underline dark:text-indigo-400"

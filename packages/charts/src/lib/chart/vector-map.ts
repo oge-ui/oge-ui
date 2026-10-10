@@ -32,6 +32,7 @@ import {
   type OgeMapProjection,
   type OgeMapRegionVm,
   type OgeMapView,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeChartColorLegend } from './color-legend';
 import { OgeChartVisualBase } from './visual-base';
@@ -240,6 +241,11 @@ import { OgeChartVisualBase } from './visual-base';
 export class OgeVectorMap<
   T extends object = Record<string, unknown>,
 > extends OgeChartVisualBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   /** A GeoJSON `FeatureCollection`; `Polygon` and `MultiPolygon` features are drawn. */
   readonly geoJson = input<OgeGeoJsonFeatureCollection | null>(null);
   /** `'mercator'` (default) or `'equirectangular'`. */

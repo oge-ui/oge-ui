@@ -3,7 +3,7 @@
 > **Commercial package.** Like the Angular `@oge-ui/charts`, the React
 > charts are source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
-> No watermark, no runtime license checks. See [LICENSE](LICENSE) and
+> Without a license key, production pages show a small corner notice (never on development hosts). See [LICENSE](LICENSE) and
 > [ogeui.com/license](https://www.ogeui.com/license).
 
 React charts from the OGE UI suite on a **dependency-free SVG kernel** — no

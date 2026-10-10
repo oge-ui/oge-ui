@@ -1496,7 +1496,7 @@ export class ComponentsIndexPage {
       icon: 'workflow',
       path: '/components/bpmn',
       description:
-        'BPMN 2.0 process modeler: palette, orthogonal connections, undo/redo, XML import/export — on its own dependency-free engine, with no watermark.',
+        'BPMN 2.0 process modeler: palette, orthogonal connections, undo/redo, XML import/export — on its own dependency-free engine, with no third-party branding.',
     },
     {
       key: 'charts',

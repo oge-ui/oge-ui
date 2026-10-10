@@ -275,8 +275,34 @@ the family LICENSE, `platform:agnostic`, rollup like `core`), never into MIT
 `packages/kanban-engine` is the first). Copy the family's LICENSE into both
 the engine and the `react-<family>` package (adapting only the package name in
 its header), list both directories in the root `LICENSE`, and rewire the
-Angular package onto the engine in the same change. The root `LICENSE` lists the per-directory split. There is no
-license-key/runtime enforcement yet — deliberate, revisit when sales start.
+Angular package onto the engine in the same change. The root `LICENSE` lists the per-directory split.
+
+**License keys (ADR 0004).** OGE UI Pro is sold per developer per year
+(Lemon Squeezy, one bundle for all six families). A key is
+`OGE1.<payload>.<signature>` — Ed25519 over base64url JSON — verified
+**offline** in `@oge-ui/core` (`packages/core/src/lib/license/`) against the
+embedded public key; the private key lives outside the repo
+(`~/.oge-license/private-key.pem` locally, `OGE_LICENSE_PRIVATE_KEY` on Vercel).
+Rules:
+
+- Every root component of a commercial family calls its engine's
+  `ogeCheck<Family>License()` on start — Angular in the constructor, React in a
+  `useEffect(() => …, [])` as the first hook. A new commercial component (or a
+  new secondary entry with one) adds the same call; the hook lives in the
+  engine so the check stays in commercial code and MIT `core` only verifies.
+- Without a valid key on a production host: one `console.warn` per family and
+  a single fixed corner link (`.oge-license-watermark`, inline styles, set
+  through CSSOM so a strict `style-src` CSP allows it). The component always
+  works in full — never degrade or block functionality. Development hosts
+  (`ogeIsLicenseExemptHost`) and jsdom / happy-dom runs get nothing, so unit
+  tests never see the notice.
+- Perpetual fallback: a key covers releases dated on or before its `expires`.
+  The release day is `OGE_RELEASE_DATE` in `release-info.ts`, **generated** by
+  `docs-tools:llms` from the dated `## <version> — <YYYY-MM-DD>` CHANGELOG
+  heading — dating the changelog entry is part of cutting a release.
+- Keys are issued by `api/license/claim.mjs` (Vercel function: order number +
+  email → Lemon Squeezy API → signed key) and by hand with
+  `node tools/license/issue.mjs`; both share `tools/license/sign.mjs`.
 
 ## New package checklist
 

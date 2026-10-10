@@ -122,8 +122,12 @@ const SECTIONS = [
         still use of the family.
       </li>
       <li>
-        There is no licence key, runtime check, watermark or network call in any
-        package; the licence is enforced by its text (<a
+        No package makes a network call. The Angular and React components of a
+        commercial family check an offline-signed key set with
+        <code>ogeSetLicenseKey()</code>; without one, a production page gets a
+        console warning and a small corner notice, and the component keeps
+        working. Engine functions called on their own (a server, a worker, a
+        test) are not checked — the licence still applies by its text (<a
           class="text-indigo-600 underline dark:text-indigo-400"
           [href]="repo + '/docs/adr/0003-commercial-engine-packages.md'"
           >ADR 0003</a

@@ -63,6 +63,7 @@ import {
   USAGE_NOTES,
   readSiteVersion,
   buildSiteVersionFile,
+  buildReleaseInfoFile,
 } from './lib/prose.mjs';
 import { readRoutes, readSeoDescriptions } from './lib/routes.mjs';
 import { buildSearchIndex } from './lib/search-index.mjs';
@@ -156,6 +157,10 @@ artifacts.set(
 artifacts.set(
   'apps/dev-app/src/app/shared/site-version.ts',
   buildSiteVersionFile(version),
+);
+artifacts.set(
+  'packages/core/src/lib/license/release-info.ts',
+  buildReleaseInfoFile(version, readFileSync(abs('CHANGELOG.md'), 'utf8')),
 );
 // "Open in StackBlitz": toolchain versions and the @oge-ui package graph the
 // docs site's project builder reads (checked by docs-tools:stackblitz-check).

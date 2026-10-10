@@ -12,6 +12,7 @@ import {
   type ReactElement,
   type ReactNode,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildPieScene,
@@ -34,6 +35,7 @@ import {
   type OgeChartSmallValuesGrouping,
   type OgeChartsMessages,
   type OgePieSeriesInput,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
 import { ChartDataLabel } from './data-label';
@@ -101,6 +103,7 @@ function OgePieChartInner<T extends object>(
   props: OgePieChartProps<T>,
   ref: ForwardedRef<OgePieChartHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const config = useOgeChartsConfig();
   const {
     argumentField = 'argument',

@@ -13,6 +13,7 @@ import {
   type ReactElement,
   type ReactNode,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildPolarData,
@@ -39,6 +40,7 @@ import {
   type OgeChartSeriesInput,
   type OgeChartsMessages,
   type OgePolarHover,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
 import { ChartDataLabel } from './data-label';
@@ -99,6 +101,7 @@ function OgePolarChartInner<T extends object>(
   props: OgePolarChartProps<T>,
   ref: ForwardedRef<OgePolarChartHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const config = useOgeChartsConfig();
   const {
     spider = false,

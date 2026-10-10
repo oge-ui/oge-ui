@@ -12,6 +12,7 @@ import {
   type ReactElement,
   type ReactNode,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildFunnelScene,
@@ -35,6 +36,7 @@ import {
   type OgeFunnelAlgorithm,
   type OgeFunnelItemVm,
   type OgeFunnelType,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { ChartDataLabel } from './data-label';
 import { cx, useControllable, useStable } from './hooks';
@@ -109,6 +111,7 @@ function OgeFunnelChartInner<T extends object>(
   props: OgeFunnelChartProps<T>,
   ref: ForwardedRef<OgeVisualChartHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const dataSource = props.dataSource ?? EMPTY;
   const label = useStable(props.label);
   const legend = useStable<OgeChartLegendOptions>(props.legend ?? NO_OPTIONS);

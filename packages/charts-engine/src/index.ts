@@ -636,3 +636,4 @@ export {
   radarLoopPath,
   type PolarXY,
 } from './lib/polar-layout';
+export { ogeCheckChartsLicense } from './lib/license';
