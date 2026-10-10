@@ -2214,7 +2214,10 @@ Angular CDK harnesses (`@oge-ui/<pkg>/testing`) and React Testing Library helper
 3. Lazy route in `apps/dev-app/src/app/app.routes.ts` (`components/<name>/…`, `title: 'OGE — …'`).
 4. Nav entry in `allSections` in `apps/dev-app/src/app/app.ts` — icon must exist in the `IconName` union
    in `apps/dev-app/src/app/shared/icon.ts`. A new **family** gets its own section with
-   `group: COMPONENTS_GROUP`; sections in that group render alphabetically.
+   `group: COMPONENTS_GROUP`; sections in that group render alphabetically. The section's
+   **first item's icon** is the section's icon in the sidebar, and a family listed in
+   `tools/commercial-families.json` gets the "Pro" badge on its own (a route slug that differs
+   from the family name goes into `FAMILY_SLUG_ALIASES`).
 5. Three places a new family must also appear, or it is invisible to visitors:
    the `/components` gallery (`pages/components/components.ts` — `FamilyKey`, a `@case` preview and a
    `families` entry; also add the family to `components-index.spec.ts`'s `FAMILIES` list, and **never
@@ -2451,6 +2454,55 @@ and `#<release>-<group-slug>`. Nothing is generated, so editing `CHANGELOG.md` n
 `tools/commercial-families.json` (the ADR 0003 list, also read by `license-boundary-check.mjs`).
 Both pages sit in the sidebar's **Resources** section; the sidebar and home-footer version badges
 link to `/changelog`.
+
+### Docs site: navigation shell and breakpoints
+
+The shell (`app.html` / `app.ts`, sidebar styles as `.app-sidebar` / `.app-nav-*` in
+`tailwind.css`) has three layouts:
+
+| Width           | Sidebar                                      | Header row                                                                    |
+| --------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| ≥ 80rem (`xl`)  | docked, 250px, fixed with its own scroll     | Docs/Components links, search with shortcut, version, framework, theme, icons |
+| 64–80rem (`lg`) | docked; the theme select moves to its footer | search, framework switch, mode, sponsor, GitHub                               |
+| < 64rem         | off-canvas drawer behind the menu button     | menu button + brand lead the row; search is icon-only below `sm`              |
+
+- The shell is positioned with **physical** properties (`left`, `border-right`): the RTL demos
+  flip `<html dir>`, and a logical `inset-inline-start` once moved the docked sidebar over the
+  content. The 250px width is load-bearing for the visual baselines (it sets the demo previews'
+  width at 1280px on pages with a TOC).
+- **Breakpoint in one place per language**: `DESKTOP_QUERY` in `app.ts` and the `64rem` media
+  queries in `tailwind.css` (plus Tailwind's `lg:` in `app.html`). Change them together.
+- **SSR-safe drawer.** `isDesktop` is `true` on the server and until `afterNextRender` reads
+  `matchMedia`, so the prerendered sidebar is never `inert`; below `lg` the closed drawer is
+  hidden by CSS alone (`visibility: hidden` + `translateX(-100%)`), which also takes it out of
+  the tab order before hydration. After hydration a closed drawer is `inert` too.
+- **Drawer contract** (`docs-navigation.spec.ts`, `@mobile`): the menu button carries
+  `aria-controls="app-sidebar"` + `aria-expanded`; opening focuses the drawer's close button,
+  sets `inert` on the header, the skip link and `<main>`, and locks the page scroll
+  (`html.app-nav-locked`); Tab wraps inside the drawer; Escape (after clearing a non-empty
+  filter), the backdrop, the close button, any link click and every navigation to another path close it,
+  and an explicit close hands focus back to the menu button. Crossing into `lg` closes it.
+- **Sections are disclosures**: a `<button aria-expanded aria-controls>` per section; a
+  collapsed panel is `inert` (its links leave the tab order and the accessibility tree) and
+  animates `grid-template-rows` (no padding on the collapsing row — padding does not shrink
+  with `0fr`). The reader's collapsed set is stored under `oge-docs-nav-collapsed`
+  (`localStorage`, every access in try/catch), restored in `afterNextRender` so the prerender
+  stays the default; the current page's section is always opened. A non-empty filter shows
+  every match regardless of the collapsed set.
+- The current page's link gets `aria-current="page"` (`ariaCurrentWhenActive`) and is scrolled
+  into view **inside the sidebar's scroll container** after each navigation — by adjusting its
+  `scrollTop`, never `scrollIntoView()`, which would also scroll the page.
+- **Colours**: the docs chrome's tokens, i.e. Tailwind's palette variables, declared once per
+  mode as `--app-nav-*` (light, `.dark`, `.oge-theme-high-contrast`); never raw values. Rules
+  that read Tailwind variables live in `tailwind.css`, which Tailwind processes — a variable only
+  read from `styles.css` may be tree-shaken out of the theme. The block ends with
+  `prefers-reduced-motion` and `forced-colors` rules like the components' stylesheets.
+- **No sideways scroll at any width ≥ 320px.** Wide content scrolls inside its own box (code
+  blocks, API tables — which keep a 38rem minimum inside their labelled region on phones — demo
+  previews). A scroll box whose descendants include absolutely positioned elements (sr-only
+  labels) must be `position: relative`, or they escape it and widen the page (the token
+  reference did, by 500px). `docs-navigation.spec.ts` checks representative pages at 390px and
+  the header at 768/1024px; `visual-states.spec.ts` and `ssr/phone-width.spec.ts` cover more.
 
 ### Docs site: token reference and theme builder
 

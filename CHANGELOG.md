@@ -50,6 +50,30 @@ are versioned independently, which is the case here.
 - No exit animations were added: removal stays synchronous, so focus return,
   `inert` and DOM-based tests are unaffected. No public API changed.
 
+### Docs site — sidebar redesign and responsive layout
+
+- **Sidebar**: every section is a disclosure button (`aria-expanded` /
+  `aria-controls`, collapsed panels `inert`) led by its family's icon, with a
+  rail and accent bar marking the current page (`aria-current="page"`),
+  soft hover layers, a "Pro" badge on the commercial families (from
+  `tools/commercial-families.json`) and a family count with a "View all" link
+  to the gallery. What you open or close is remembered across visits. The
+  filter now also matches section titles, shows matches inside collapsed
+  families, says when nothing matches (with a way into the full search) and
+  clears on Escape. The list scrolls on its own, keeps the current page in
+  view after every navigation, and the theme select sits in its footer
+  wherever the header has no room for it. Light, dark and high-contrast
+  palettes, forced colors and reduced motion are covered.
+- **Responsive**: below 1024px the sidebar becomes an off-canvas drawer
+  behind a menu button in the header — focus moves in and is trapped, the
+  page behind is `inert` and does not scroll, and Escape, the backdrop, the
+  close button or any navigation closes it. The header reflows per
+  breakpoint (it overflowed by up to 350px between 768px and 1279px), phones
+  get 16px gutters and 44px touch targets in the navigation, API tables keep
+  readable columns and scroll inside their labelled region, and the token
+  reference no longer widens the page on phones (its screen-reader labels
+  escaped the table's scroll box).
+
 ## 1.1.4 — 2026-10-08
 
 The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates.

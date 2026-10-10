@@ -61,6 +61,19 @@
     display: none;
   }
 }
+/* Docs pages share the header row with the docked sidebar from lg up, so
+   the version menu and the theme select (and their placeholders) only fit
+   from xl (80rem); below that the theme select lives in the sidebar's footer
+   (`.app-nav-theme`) and the version badge links the changelog there. The
+   landing page keeps them down to sm. */
+@media (max-width: 79.99rem) {
+  .app-header-docs .app-header-version,
+  .app-header-docs .app-theme-select.oge-input,
+  .app-header-docs .app-theme-placeholder,
+  .app-header-docs .app-version-placeholder {
+    display: none;
+  }
+}
 .app-theme-select .oge-input-subscript {
   display: none;
 }
@@ -232,23 +245,24 @@ html.dark[data-framework='javascript'] {
 /* The mark's colour spilling down into the sidebar: a soft radial centred on
    the brandmark, which sits right-aligned in the sidebar's brand row, fading
    out within the first rows. Chrome, not content — strong enough to name the
-   framework at a glance, weak enough to leave the old sidebar exactly as it
-   was underneath. */
+   framework at a glance, weak enough to leave the sidebar exactly as it is
+   underneath. The brand row does not scroll (the list below it has its own
+   scroll), so neither does the glow. */
 .app-sidebar-glow {
   background-image: radial-gradient(
-    340px 220px at 218px 30px,
+    340px 220px at calc(100% - 31px) 36px,
     color-mix(in srgb, var(--app-fw-color) 17%, transparent),
     transparent 72%
   );
-  /* the glow belongs to the brand row: when the sidebar's own scrollbar
-     moves, it must ride along instead of staining whatever scrolls under it */
-  background-attachment: local;
 }
-/* Small screens: the sidebar joins the flow and the brand row is hidden, so a
-   glow with no visible source would read as a stain — drop it. */
-@media (max-width: 767px) {
+/* in the drawer the close button follows the mark */
+@media (max-width: 63.99rem) {
   .app-sidebar-glow {
-    background-image: none;
+    background-image: radial-gradient(
+      340px 220px at calc(100% - 81px) 36px,
+      color-mix(in srgb, var(--app-fw-color) 17%, transparent),
+      transparent 72%
+    );
   }
 }
 

@@ -129,8 +129,10 @@ const INLINE_PACKAGES = 3;
     </p>
 
     @if (groups().length) {
+      <!-- relative: the cells' sr-only labels are absolutely positioned and
+           escaped this scroll box, widening the page on phones by 500px -->
       <div
-        class="overflow-x-auto rounded-lg border border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 dark:border-gray-800"
+        class="relative overflow-x-auto rounded-lg border border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 dark:border-gray-800"
         tabindex="0"
         role="region"
         aria-labelledby="all-tokens"
