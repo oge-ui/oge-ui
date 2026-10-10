@@ -2,7 +2,7 @@
 
 > Rich-text editor — a dependency-free contenteditable editor over its own document model (no execCommand): headings, lists, quotes, code, links, images, colours, alignment, undo history, markdown shortcuts, Word / Google Docs paste cleanup and a strict allowlist HTML sanitizer.
 
-Part of OGE UI v1.1.3.
+Part of OGE UI v1.1.4.
 Docs and live demos: https://www.ogeui.com/components/editor
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

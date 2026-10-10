@@ -2,7 +2,7 @@
 
 > UI component suite for data-heavy Angular and React applications: a virtualized Data Grid, Tree List, Pivot Grid, Charts, Scheduler, Gantt, Kanban, BPMN and rich-text editors, form editors and forms, upload, buttons, overlay surfaces, tabs, navigation and layout containers. One framework-free engine with two native render layers — Angular 22+ (signal APIs, standalone, zoneless) and React 18+ (`@oge-ui/react-*`) — and zero runtime dependencies. MIT licensed, except the Pivot, BPMN, Scheduler, Gantt, Kanban and Charts packages, which are commercial.
 
-Version 1.1.3. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://www.ogeui.com renders. Index: https://www.ogeui.com/llms.txt
+Version 1.1.4. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://www.ogeui.com renders. Index: https://www.ogeui.com/llms.txt
 
 ## Contents
 

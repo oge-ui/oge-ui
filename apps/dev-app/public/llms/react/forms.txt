@@ -2,7 +2,7 @@
 
 > React form layout over the editors: a nested layout array of items, groups and tabbed/accordion/wizard sections, responsive container-query columns, declarative validation rules and a validation summary — running the same item model, the same rule evaluator and the same stylesheet as the Angular forms package.
 
-Part of OGE UI v1.1.3.
+Part of OGE UI v1.1.4.
 Docs and live demos: https://www.ogeui.com/components/forms
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

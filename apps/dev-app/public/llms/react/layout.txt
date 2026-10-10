@@ -2,7 +2,7 @@
 
 > React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view and tile layout — running the same config defaults, decision functions and stylesheet as the Angular layout package.
 
-Part of OGE UI v1.1.3.
+Part of OGE UI v1.1.4.
 Docs and live demos: https://www.ogeui.com/components/accordion
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
