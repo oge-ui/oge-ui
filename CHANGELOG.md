@@ -7,6 +7,10 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+## 1.1.4 — 2026-10-10
+
+The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates — plus motion tokens with enter animations across the suite, a redesigned docs sidebar with a responsive layout and mobile drawer, and a security pass closing the code-scanning alerts (linear-time parsers, property-based fuzzing).
+
 ### Security hardening (code scanning) — `@oge-ui/core`, `@oge-ui/behavior`, `@oge-ui/charts-engine`, `@oge-ui/bpmn-engine`
 
 - **No polynomial-time regular expressions on library input.** Number
@@ -73,10 +77,9 @@ are versioned independently, which is the case here.
   readable columns and scroll inside their labelled region, and the token
   reference no longer widens the page on phones (its screen-reader labels
   escaped the table's scroll box).
-
-## 1.1.4 — 2026-10-08
-
-The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates.
+- **API tables decode their entities**: names, types and defaults stored
+  HTML-escaped in the api-data files showed `Promise&lt;void&gt;` literally;
+  they now read `Promise<void>`.
 
 ### Testing harnesses (W6e) — `@oge-ui/grid`, `@oge-ui/inputs`, `@oge-ui/overlay`, `@oge-ui/tabs`, `@oge-ui/react-grid`, `@oge-ui/react-inputs`, `@oge-ui/react-overlay`, `@oge-ui/react-tabs`
 
