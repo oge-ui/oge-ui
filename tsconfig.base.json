@@ -73,6 +73,7 @@
       "@oge-ui/locales/es": ["./packages/locales/src/es.ts"],
       "@oge-ui/locales/fr": ["./packages/locales/src/fr.ts"],
       "@oge-ui/locales/he": ["./packages/locales/src/he.ts"],
+      "@oge-ui/locales/ru": ["./packages/locales/src/ru.ts"],
       "@oge-ui/locales/it": ["./packages/locales/src/it.ts"],
       "@oge-ui/locales/ja": ["./packages/locales/src/ja.ts"],
       "@oge-ui/locales/pt-BR": ["./packages/locales/src/pt-BR.ts"],

@@ -169,14 +169,14 @@
   <url><loc>https://www.ogeui.com/components/scheduler/import-export</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/scheduler/time-zones</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/scheduler/remote-data</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/license</loc><lastmod>2026-10-10</lastmod><priority>0.9</priority></url>
+  <url><loc>https://www.ogeui.com/license</loc><lastmod>2026-10-15</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/license/claim</loc><lastmod>2026-10-10</lastmod></url>
-  <url><loc>https://www.ogeui.com/pricing</loc><priority>0.9</priority></url>
-  <url><loc>https://www.ogeui.com/compare</loc><priority>0.9</priority></url>
-  <url><loc>https://www.ogeui.com/compare/ag-grid</loc></url>
-  <url><loc>https://www.ogeui.com/compare/kendo-ui</loc></url>
-  <url><loc>https://www.ogeui.com/compare/devextreme</loc></url>
-  <url><loc>https://www.ogeui.com/compare/primeng</loc></url>
+  <url><loc>https://www.ogeui.com/pricing</loc><lastmod>2026-10-15</lastmod><priority>0.9</priority></url>
+  <url><loc>https://www.ogeui.com/compare</loc><lastmod>2026-10-15</lastmod><priority>0.9</priority></url>
+  <url><loc>https://www.ogeui.com/compare/ag-grid</loc><lastmod>2026-10-15</lastmod></url>
+  <url><loc>https://www.ogeui.com/compare/kendo-ui</loc><lastmod>2026-10-15</lastmod></url>
+  <url><loc>https://www.ogeui.com/compare/devextreme</loc><lastmod>2026-10-15</lastmod></url>
+  <url><loc>https://www.ogeui.com/compare/primeng</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://www.ogeui.com/changelog</loc><lastmod>2026-10-07</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/bundle-size</loc><lastmod>2026-10-07</lastmod><priority>0.9</priority></url>
 </urlset>

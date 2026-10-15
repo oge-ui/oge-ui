@@ -77,6 +77,11 @@
       "module": "./he.esm.js",
       "default": "./he.cjs.js"
     },
+    "./ru": {
+      "types": "./ru.d.ts",
+      "module": "./ru.esm.js",
+      "default": "./ru.cjs.js"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {},

@@ -16,6 +16,7 @@ data:
 | `@oge-ui/locales/zh-CN` | Simplified Chinese   | `zh-CN`  | `ltr` |
 | `@oge-ui/locales/ar`    | Arabic               | `ar`     | `rtl` |
 | `@oge-ui/locales/he`    | Hebrew               | `he`     | `rtl` |
+| `@oge-ui/locales/ru`    | Russian              | `ru`     | `ltr` |
 
 Each language is its own entry point, so an app bundles only the pack it
 imports. Count-bearing messages are ICU plurals with the language's own

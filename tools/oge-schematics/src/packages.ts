@@ -215,7 +215,7 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
   ],
   '@oge-ui/locales': [
     {
-      need: 'translate the UI (German, French, Spanish, Italian, pt-BR, Turkish, Japanese, zh-CN, Arabic, Hebrew)',
+      need: 'translate the UI (German, French, Spanish, Italian, pt-BR, Turkish, Japanese, zh-CN, Arabic, Hebrew, Russian)',
       use: "`import { tr } from '@oge-ui/locales/tr'` + `provideOgeLocale(tr)` from `oge-ui` (live: `provideOgeLocale(() => pack())` with `ogeLocalePacks[code]()`); commercial families: `messages: ogeMergeMessages(OGE_DEFAULT_SCHEDULER_MESSAGES, tr.scheduler)` in their own provider; set `LOCALE_ID` and `<html dir>` from `pack.locale` / `pack.dir` yourself",
     },
   ],
