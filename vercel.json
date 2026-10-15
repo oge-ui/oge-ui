@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
   "buildCommand": "node tools/docs-tools/npm-downloads.mjs && npx nx build dev-app && node tools/docs-tools/not-found-page.mjs",
   "outputDirectory": "dist/apps/dev-app/browser",
   "installCommand": "npm ci",
@@ -45,6 +44,12 @@
       "source": "/components/breadcrumb/routed",
       "destination": "/components/breadcrumb/routed/reports",
       "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/not-found"
     }
   ],
   "headers": [
@@ -133,5 +138,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/not-found.mjs": {
+      "includeFiles": "dist/apps/dev-app/browser/404.html"
+    }
+  }
 }
