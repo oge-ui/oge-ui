@@ -29,6 +29,17 @@ are versioned independently, which is the case here.
 - The commercial READMEs and docs pages no longer say "no watermark, no
   runtime license checks".
 
+### Docs site — search and sharing
+
+- Unknown URLs now answer **404** with a `noindex` not-found page instead of a
+  200 copy of the home page; hashed scripts and stylesheets are cached for a
+  year.
+- Share cards: every page shares a 1200×630 screenshot card (one per flagship
+  family) instead of the 1 MB logo; titles stay within 60 characters; the
+  home page and the data grid page carry descriptive headings; the
+  structured data names the MIT and Pro offers separately.
+- Showcase demos format money in US dollars.
+
 ## 1.1.4 — 2026-10-10
 
 The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates — plus motion tokens with enter animations across the suite, a redesigned docs sidebar with a responsive layout and mobile drawer, and a security pass closing the code-scanning alerts (linear-time parsers, property-based fuzzing).

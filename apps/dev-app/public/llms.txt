@@ -206,7 +206,7 @@ For code generation, prefer the full reference — it inlines every API table an
 
 ## BPMN Editor
 
-- [BPMN Editor](https://www.ogeui.com/components/bpmn): BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no third-party branding.
+- [BPMN Editor](https://www.ogeui.com/components/bpmn): BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export and no third-party branding.
 - [BPMN Validation](https://www.ogeui.com/components/bpmn/validation): OGE BPMN Editor validation: bpmnlint-style rules, live badges, a problems panel, custom rules and severity overrides, and validate() for headless CI checks.
 - [Extending the BPMN Editor](https://www.ogeui.com/components/bpmn/extending): Extending the OGE BPMN Editor: pluggable properties providers, custom palette and context-pad entries, safe SVG renderers and Camunda element templates.
 - [BPMN Camunda / Zeebe](https://www.ogeui.com/components/bpmn/camunda): OGE BPMN Editor for Camunda and Zeebe: editable task definitions, io mappings, headers and assignments, timer and message payloads, and PNG export.

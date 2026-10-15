@@ -1,30 +1,117 @@
 <p align="center">
-  <img src="apps/dev-app/public/logo.png" alt="OGE UI logo" width="120" />
+  <a href="https://www.ogeui.com"><img src="apps/dev-app/public/web-app-manifest-192x192.png" alt="OGE UI logo" width="88" /></a>
 </p>
 
-<h1 align="center">OGE — UI Components for Angular and React</h1>
+<h1 align="center">OGE UI</h1>
 
 <p align="center">
-  Components engineered for data-heavy apps, native to Angular and React:<br />
-  a virtualized <b>Data Grid</b>, <b>Tree List</b>, <b>Pivot Grid</b>, <b>Charts</b>, <b>Scheduler</b>, <b>Gantt</b>, <b>Kanban</b>,<br />
-  a full set of <b>form editors</b>, <b>Buttons</b>, <b>Modal</b> dialogs and <b>Toast</b> notifications —<br />
-  one framework-free engine, two render layers, the same CSS design tokens.
+  <b>Signal-native UI components for Angular and React, built for data-heavy apps.</b><br />
+  A virtualized Data Grid, Tree List, Pivot Grid, Charts, Scheduler, Gantt, Kanban, BPMN,<br />
+  a rich-text editor and 25+ form editors — one framework-free engine, two native render layers.
 </p>
 
 <p align="center">
-  <a href="https://www.ogeui.com"><b>ogeui.com</b></a> — docs, live demos &amp; API reference
+  <a href="https://www.ogeui.com"><b>Website</b></a> ·
+  <a href="https://www.ogeui.com/components/data-grid"><b>Live demos</b></a> ·
+  <a href="https://www.ogeui.com/getting-started">Docs</a> ·
+  <a href="https://www.ogeui.com/components">All components</a> ·
+  <a href="https://www.ogeui.com/changelog">Changelog</a> ·
+  <a href="https://github.com/oge-ui/oge-ui/discussions">Discussions</a>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/oge-ui"><img src="https://img.shields.io/npm/v/oge-ui?label=oge-ui&color=6366f1" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/@oge-ui/grid"><img src="https://img.shields.io/npm/v/@oge-ui/grid?label=%40oge-ui%2Fgrid&color=8b5cf6" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@oge-ui/grid"><img src="https://img.shields.io/npm/dm/@oge-ui/grid?label=downloads&color=8b5cf6" alt="npm downloads per month" /></a>
   <a href="https://github.com/oge-ui/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/oge-ui/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial-22d3ee" alt="MIT license with commercial pivot, bpmn, scheduler, gantt, kanban and charts" /></a>
+  <a href="https://securityscorecards.dev/viewer/?uri=github.com/oge-ui/oge-ui"><img src="https://api.securityscorecards.dev/projects/github.com/oge-ui/oge-ui/badge" alt="OpenSSF Scorecard" /></a>
+  <a href="#licensing"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial-22d3ee" alt="MIT license with commercial pivot, bpmn, scheduler, gantt, kanban and charts" /></a>
   <img src="https://img.shields.io/badge/Angular-22%E2%80%9323-dd0031" alt="Angular 22–23" />
   <img src="https://img.shields.io/badge/React-18%E2%80%9319-087ea4" alt="React 18–19" />
 </p>
 
----
+<p align="center">
+  <a href="https://www.ogeui.com/components/data-grid">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme-hero-dark.png" />
+      <img src="docs/assets/readme-hero-light.png" alt="OGE UI components: a grouped data grid with summaries, a pivot grid, charts, a Gantt chart and a kanban board" width="900" />
+    </picture>
+  </a>
+</p>
+
+## Quick start
+
+**Angular** — standalone, signals, zoneless:
+
+```sh
+npm install oge-ui
+```
+
+```ts
+import { Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from 'oge-ui';
+
+@Component({
+  selector: 'app-orders',
+  imports: [OgeGrid, OgeColumn],
+  template: `
+    <oge-grid [data]="orders()" keyField="id" [filterRow]="true">
+      <oge-column field="product" caption="Product" />
+      <oge-column field="amount" caption="Amount" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Orders {
+  readonly orders = signal([{ id: 1, product: 'Aurora Display', amount: 1249 }]);
+}
+```
+
+**React** — real components over the same engine:
+
+```sh
+npm install @oge-ui/react
+```
+
+```tsx
+import { OgeGrid } from '@oge-ui/react';
+import '@oge-ui/react/styles.css';
+
+const orders = [{ id: 1, product: 'Aurora Display', amount: 1249 }];
+
+export function Orders() {
+  return (
+    <OgeGrid
+      data={orders}
+      keyField="id"
+      filterRow
+      columns={[
+        { field: 'product', caption: 'Product' },
+        { field: 'amount', caption: 'Amount', dataType: 'number' },
+      ]}
+    />
+  );
+}
+```
+
+Prefer a generator? `ng add @oge-ui/grid` wires providers, themes and an
+`AGENTS.md` block for your coding assistant. Full walkthrough:
+[Getting started](https://www.ogeui.com/getting-started) ·
+[Setup](https://www.ogeui.com/getting-started/setup).
+
+## What's inside
+
+| Family                                                                                                                                                        | Highlights                                                                                                    | Angular | React | License    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | :-----: | :---: | ---------- |
+| [Data Grid](https://www.ogeui.com/components/data-grid)                                                                                                       | row + column virtualization into the millions, grouping, editing, Excel-style ranges, master-detail, XLSX/PDF |   ✅    |  ✅   | MIT        |
+| [Tree List](https://www.ogeui.com/components/tree-list)                                                                                                       | lazy loading, tri-state selection, recursive summaries, drag & drop                                           |   ✅    |  ✅   | MIT        |
+| [Inputs](https://www.ogeui.com/components/inputs) & [Forms](https://www.ogeui.com/components/forms)                                                           | 25+ editors (select, tag, multi-column combo, date, masked, color…), form layout and validation               |   ✅    |  ✅   | MIT        |
+| [Rich Text Editor](https://www.ogeui.com/components/editor) · [Upload](https://www.ogeui.com/components/upload)                                               | own document model, Word/Docs paste · chunked resumable uploads                                               |   ✅    |  ✅   | MIT        |
+| Buttons · Tabs · Layout · Navigation · Overlay                                                                                                                | drawers, menubar, tree view, splitter, modal, toast, tooltip, context menu…                                   |   ✅    |  ✅   | MIT        |
+| [Pivot Grid](https://www.ogeui.com/components/pivot-grid)                                                                                                     | drag-and-drop field layout, totals, calculated fields, Top-N filters, chart binding                           |   ✅    |  ✅   | Commercial |
+| [Charts](https://www.ogeui.com/components/charts)                                                                                                             | dependency-free SVG, 16 series types, zoom & pan, keyboard point inspection                                   |   ✅    |  ✅   | Commercial |
+| [Scheduler](https://www.ogeui.com/components/scheduler) · [Gantt](https://www.ogeui.com/components/gantt) · [Kanban](https://www.ogeui.com/components/kanban) | recurrence, timelines · dependencies, critical path, baselines · swimlanes, WIP limits                        |   ✅    |  ✅   | Commercial |
+| [BPMN Editor](https://www.ogeui.com/components/bpmn)                                                                                                          | from-scratch BPMN 2.0 modeler with its own XML + DI engine                                                    |   ✅    |  ✅   | Commercial |
+
+Commercial families are free for evaluation and development — see [Licensing](#licensing).
 
 ## Why OGE?
 
@@ -105,41 +192,10 @@ page between them. The few deliberate differences (router-driven demos, idiom
 mappings such as `TemplateRef` ↔ render props) are recorded in
 [`docs/REACT-PARITY.md`](docs/REACT-PARITY.md).
 
-## Quick start
-
-```ts
-import { Component, signal } from '@angular/core';
-import { OgeButton, OgeColumn, OgeGrid, OgeSelectBox } from 'oge-ui';
-
-@Component({
-  selector: 'app-orders',
-  imports: [OgeGrid, OgeColumn, OgeSelectBox, OgeButton],
-  template: `
-    <oge-select-box label="Region" [items]="regions" [searchEnabled]="true" [(value)]="region" />
-
-    <oge-grid [data]="orders()" keyField="id" [filterRow]="true">
-      <oge-column field="product" caption="Product" />
-      <oge-column field="amount" caption="Amount" dataType="number" />
-    </oge-grid>
-
-    <oge-button text="Save" severity="accent" [action]="save" />
-  `,
-})
-export class Orders {
-  readonly regions = ['EMEA', 'APAC', 'Americas'];
-  readonly region = signal<unknown>(null);
-  readonly orders = signal([{ id: 1, product: 'Aurora Display', amount: 1249 }]);
-
-  // async action: the button manages its own loading spinner
-  readonly save = () => fetch('/api/orders', { method: 'POST' });
-}
-```
-
-No modules, no forms boilerplate — `[(value)]` binds straight to a
-`signal()`, and the same editors also plug into Signal Forms
-(`[formField]`) and reactive forms (`formControl`).
-
 ## Packages
+
+<details>
+<summary><b>Every package</b> — umbrella, MIT families, commercial families and their engines, React layers</summary>
 
 All packages are MIT except the six commercial families — `@oge-ui/pivot`,
 `@oge-ui/bpmn`, `@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` and
@@ -209,6 +265,8 @@ editor — `autocomplete`, `calendar`, `check-box`, `check-box-group`,
 `import { OgeMaskedTextBox } from '@oge-ui/inputs/masked-text-box'`). The grid,
 tree list, pivot and Gantt export helpers live in `export-excel` / `export-pdf`
 entries of their packages, so `exceljs` and `jspdf` load only when you export.
+
+</details>
 
 ## Theming
 
@@ -281,6 +339,19 @@ Architecture and house conventions live in
 [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a PR; security issues go
 through [`SECURITY.md`](SECURITY.md), and the
 [code of conduct](CODE_OF_CONDUCT.md) applies in all project spaces.
+
+New here? Issues labelled [good first issue](https://github.com/oge-ui/oge-ui/labels/good%20first%20issue) are scoped to one package and come with pointers; questions and ideas go to [Discussions](https://github.com/oge-ui/oge-ui/discussions).
+
+## Star history
+
+<a href="https://www.star-history.com/#oge-ui/oge-ui&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=oge-ui/oge-ui&type=Date&theme=dark" />
+    <img alt="Star history of oge-ui/oge-ui" src="https://api.star-history.com/svg?repos=oge-ui/oge-ui&type=Date" width="600" />
+  </picture>
+</a>
+
+If OGE UI saves you time, a star helps other Angular and React developers find it.
 
 ## Licensing
 

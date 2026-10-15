@@ -67,7 +67,8 @@ function collect(array, prefix, out) {
   for (const element of array.elements) {
     if (!ts.isObjectLiteralExpression(element)) continue;
     const route = readRouteProps(element);
-    if (route.redirectTo !== undefined) continue;
+    // redirects and the not-found catch-all are not pages to list
+    if (route.redirectTo !== undefined || route.path === '**') continue;
     const path = joinPath(prefix, route.path ?? '');
     // A route can carry both a component and children (routed tabs) — the page
     // itself comes first so the flat list stays in reading order.

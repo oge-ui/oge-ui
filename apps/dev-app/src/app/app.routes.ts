@@ -1467,4 +1467,13 @@ export const appRoutes: Route[] = [
   { path: 'sorting', redirectTo: 'components/data-grid/sorting' },
   { path: 'virtual-scroll', redirectTo: 'components/data-grid/virtual-scroll' },
   { path: 'remote-data', redirectTo: 'components/data-grid/remote-data' },
+  // every unknown URL — not prerendered: the host serves `404.html` (the client
+  // shell, noindex) with a 404 status, and this route renders inside it
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./pages/not-found/not-found').then((m) => m.NotFoundPage),
+    title: 'OGE — Page not found',
+    data: { noindex: true },
+  },
 ];

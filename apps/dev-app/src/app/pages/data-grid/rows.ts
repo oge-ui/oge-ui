@@ -248,7 +248,7 @@ export class RowsPage {
 
   protected readonly money = (value: unknown): string =>
     typeof value === 'number'
-      ? `₺${value.toLocaleString('tr-TR')}`
+      ? `$${value.toLocaleString('en-US')}`
       : String(value ?? '');
 
   protected onReordered(event: OgeRowReorderedEvent<Employee>): void {

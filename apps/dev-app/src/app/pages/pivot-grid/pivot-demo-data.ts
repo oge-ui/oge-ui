@@ -71,5 +71,5 @@ export function makeAnalyticsSales(count: number): Sale[] {
 /** The pages' currency formatter. */
 export const money = (value: unknown): string =>
   typeof value === 'number'
-    ? `₺${Math.round(value).toLocaleString('tr-TR')}`
+    ? `$${Math.round(value).toLocaleString('en-US')}`
     : String(value ?? '');

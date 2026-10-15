@@ -3657,7 +3657,7 @@ export class EmployeesPage {
   ];
 
   protected readonly money = (value: unknown): string =>
-    `₺${(value as number).toLocaleString('tr-TR')}`;
+    `$${(value as number).toLocaleString('en-US')}`;
 }
 ```
 
@@ -57763,7 +57763,7 @@ export function EmployeeDetails() {
           </section>
           <section>
             <h4>Compensation</h4>
-            <p>₺{row.salary.toLocaleString('tr-TR')}</p>
+            <p>${row.salary.toLocaleString('en-US')}</p>
             <p>since {row.hireDate}</p>
           </section>
         </div>
@@ -57795,7 +57795,7 @@ interface Employee {
 declare const employees: Employee[];
 
 const money = (value: unknown): string =>
-  typeof value === 'number' ? `₺${value.toLocaleString('tr-TR')}` : String(value ?? '');
+  typeof value === 'number' ? `$${value.toLocaleString('en-US')}` : String(value ?? '');
 
 const columns: OgeGridColumnProps<Employee>[] = [
   { field: 'id', caption: 'Id', width: 70, dataType: 'number' },

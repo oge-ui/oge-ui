@@ -2374,16 +2374,25 @@ JavaScript. Before this, every URL served the same `index.html` with a canonical
 and Search Console reported the whole site as "redirected / discovered – not indexed".
 
 - Routes are discovered from `app.routes.ts` (`app.config.server.ts` maps `**` to
-  `RenderMode.Prerender`); a new page needs no registration. `vercel.json` rewrites unknown URLs to
-  `index.csr.html` (the client-only shell).
+  `RenderMode.Prerender`); a new page needs no registration. **Unknown URLs answer 404**: the
+  Vercel build runs `tools/docs-tools/not-found-page.mjs`, which writes `404.html` from the client-only
+  shell (`index.csr.html`) with `noindex`, no canonical and a not-found title, and the host serves it
+  with a 404 status (there is no catch-all rewrite). In the browser the router's `**` route renders
+  `pages/not-found`; its `data: { noindex: true }` makes `SeoService` keep it out of the index too.
+  `readRoutes` skips `**`, so it never reaches the sitemap or `llms.txt`. A catch-all rewrite to a
+  200 page once made every typo a soft-404 copy of the home page.
 - Per-page head tags: route `title` stays short (`OGE — Button Group`) because it also labels the
   sidebar and `llms.txt`; `shared/title.strategy.ts` turns it into the document title
-  (`Angular Button Group | OGE UI`). `shared/seo.service.ts` writes canonical, description and
+  (`Angular Button Group | OGE UI`), **at most 60 characters** — longer ones step down to
+  `Angular & React <page> | OGE UI`, then drop the brand suffix (`title.strategy.spec.ts`). `shared/seo.service.ts` writes canonical, description and
   og/twitter tags on every `NavigationEnd` — on the server too, so they land in the static HTML.
   **Every indexable route has its own 140–160-character description** in `DESCRIPTIONS`
   (exact path first, then the longest whole-segment prefix, home text as the fallback);
   `seo.service.spec.ts` fails on a duplicate or an out-of-range length — a family-level fallback
-  once gave 92 of 112 pages the same description. Each page also emits a `BreadcrumbList` JSON-LD
+  once gave 92 of 112 pages the same description. Share images are 1200×630 cards in
+  `public/og/` — one per flagship family (`OG_IMAGES`), `default.jpg` for the rest — rendered from
+  the live demos by `tools/docs-tools/social-cards.mjs` (which also writes the README hero and the
+  GitHub social preview in `docs/assets/`); re-run it after a visible change to those demos. Each page also emits a `BreadcrumbList` JSON-LD
   (Home → Components/Getting Started → Family → Page); routed demo children canonicalise to the
   page they land on.
 - The sitemap's `<lastmod>` is the last commit touching the page file, its snippets and (API
@@ -2407,6 +2416,8 @@ and Search Console reported the whole site as "redirected / discovered – not i
   `robots.txt`, sitemap, `llms.txt` links, package `homepage`). Vercel serves `www.` as the primary
   domain and 308-redirects the apex to it, so the canonical must name `www.` — a canonical that
   points at a redirecting URL sends Google conflicting signals (2026-10-04: switched from apex).
+- Hashed build output (`main-*`, `chunk-*`, `polyfills-*`, `styles-*`) is served
+  `max-age=31536000, immutable` by a `vercel.json` header rule; HTML stays revalidated.
 - `robots.txt` explicitly allows the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, …) — the
   `llms.txt` pipeline exists for them.
 - **Security headers live in `vercel.json`** — CSP, HSTS, `frame-ancestors`, Permissions-Policy,

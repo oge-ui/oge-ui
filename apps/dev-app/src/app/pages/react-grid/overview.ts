@@ -19,7 +19,7 @@ const employees = makeEmployees(50);
 
 const money = (value: unknown): string =>
   typeof value === 'number'
-    ? `₺${value.toLocaleString('tr-TR')}`
+    ? `$${value.toLocaleString('en-US')}`
     : String(value ?? '');
 
 const COLUMNS: OgeGridColumnProps<Employee>[] = [

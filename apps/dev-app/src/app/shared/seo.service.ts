@@ -589,7 +589,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/bpmn',
-    'BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no third-party branding.',
+    'BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export and no third-party branding.',
   ],
   [
     '/components/bpmn/validation',
@@ -728,6 +728,35 @@ export function descriptionFor(path: string): string {
   return best?.[1] ?? DEFAULT_DESCRIPTION;
 }
 
+/**
+ * Families with their own 1200×630 share card in `public/og/` (rendered by
+ * `tools/docs-tools/social-cards.mjs`); every other page shares the default.
+ */
+const OG_IMAGES: readonly (readonly [string, string, string])[] = [
+  ['/components/data-grid', 'data-grid', 'the OGE data grid'],
+  ['/components/pivot-grid', 'pivot-grid', 'the OGE pivot grid'],
+  ['/components/gantt', 'gantt', 'the OGE Gantt chart'],
+  ['/components/scheduler', 'scheduler', 'the OGE scheduler'],
+  ['/components/charts', 'charts', 'OGE charts'],
+  ['/components/kanban', 'kanban', 'the OGE kanban board'],
+];
+
+/** The share card for `path`, with its alt text. */
+export function ogImageFor(path: string): { url: string; alt: string } {
+  const match = OG_IMAGES.find(
+    ([prefix]) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+  const [, file, subject] = match ?? [
+    '',
+    'default',
+    'the OGE data grid and the component suite',
+  ];
+  return {
+    url: `${ORIGIN}/og/${file}.jpg`,
+    alt: `OGE UI for Angular and React: a screenshot of ${subject}`,
+  };
+}
+
 const BREADCRUMBS_ID = 'oge-breadcrumbs';
 
 /** `OGE — Data Grid Filtering` → `Data Grid Filtering`. */
@@ -780,9 +809,27 @@ export class SeoService {
     const canonicalPath = page?.canonical ?? path;
     const canonicalUrl = ORIGIN + (canonicalPath === '/' ? '/' : canonicalPath);
 
+    // the not-found page is served for every unknown URL (with a 404 status
+    // from the host): it must not be indexed nor claim a canonical URL
+    const noindex = this.leafData()['noindex'] === true;
+    this.meta.updateTag({
+      name: 'robots',
+      content: noindex ? 'noindex, follow' : 'index, follow',
+    });
+
+    const image = ogImageFor(canonicalPath);
+    this.meta.updateTag({ property: 'og:image', content: image.url });
+    this.meta.updateTag({ property: 'og:image:alt', content: image.alt });
+    this.meta.updateTag({ name: 'twitter:image', content: image.url });
+
     let canonical = this.document.querySelector<HTMLLinkElement>(
       'link[rel="canonical"]',
     );
+    if (noindex) {
+      canonical?.remove();
+      this.writeJsonLd(BREADCRUMBS_ID, null);
+      return;
+    }
     if (!canonical) {
       canonical = this.document.createElement('link');
       canonical.setAttribute('rel', 'canonical');
@@ -846,6 +893,13 @@ export class SeoService {
       if (landing) canonical = `${page.path}/${landing.path}`;
     }
     return { title: page.title, path: page.path, canonical };
+  }
+
+  /** The `data` of the deepest activated route. */
+  private leafData(): Record<string, unknown> {
+    let route: ActivatedRouteSnapshot = this.router.routerState.snapshot.root;
+    while (route.firstChild) route = route.firstChild;
+    return route.data;
   }
 
   /** Home → Components → Family → Page, as schema.org `BreadcrumbList`. */

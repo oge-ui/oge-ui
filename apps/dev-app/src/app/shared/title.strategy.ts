@@ -4,8 +4,10 @@ import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import { frameworksOfPage } from './framework.service';
 
 const BRAND = 'OGE UI';
-const HOME_TITLE =
-  'OGE UI — Free Angular and React UI Components: Data Grid, Tree List';
+const HOME_TITLE = 'OGE UI — Free Angular & React Data Grid and UI Components';
+
+/** Search results cut titles past about 60 characters. */
+const MAX_TITLE = 60;
 
 /**
  * Turns the short route titles (`OGE — Button Group`) into search-friendly
@@ -17,6 +19,12 @@ const HOME_TITLE =
  *   /components/tabs/routed           →  "Angular Routed Tabs | OGE UI"
  *   /getting-started                  →  "Getting Started | OGE UI"
  *   /                                 →  HOME_TITLE
+ *
+ * A title longer than MAX_TITLE is shortened in steps — `Angular & React`
+ * instead of `for Angular and React`, then without the brand suffix (results
+ * show the site name on their own) — so no search result is cut mid-word:
+ *
+ *   /components/data-grid/range-selection  →  "Angular & React Data Grid Range Selection & Clipboard"
  *
  * Route `title` fields stay short on purpose — they also label the sidebar
  * and the generated llms.txt, where the suffix would be noise.
@@ -42,9 +50,16 @@ export function documentTitle(raw: string | undefined, url: string): string {
     page.toLowerCase().startsWith(`${label.toLowerCase()} `),
   );
   if (labels.length === 0 || named) return `${page} | ${BRAND}`;
-  const lead =
+  const candidates =
     labels.length === 1
-      ? `${labels[0]} ${page}`
-      : `${page} for ${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
-  return `${lead} | ${BRAND}`;
+      ? [`${labels[0]} ${page} | ${BRAND}`, `${labels[0]} ${page}`]
+      : [
+          `${page} for ${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]} | ${BRAND}`,
+          `${labels.join(' & ')} ${page} | ${BRAND}`,
+          `${labels.join(' & ')} ${page}`,
+        ];
+  return (
+    candidates.find((title) => title.length <= MAX_TITLE) ??
+    `${page} | ${BRAND}`
+  );
 }

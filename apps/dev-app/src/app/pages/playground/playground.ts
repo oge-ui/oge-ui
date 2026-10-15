@@ -43,7 +43,7 @@ interface Toggle {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-doc-header title="Playground" category="Data Grid">
+    <app-doc-header title="Data Grid Playground" category="Data Grid">
       <p>
         Toggle the features — the grid, the live stats and the code snippet
         update instantly. Combine anything: virtual scroll with filters,
