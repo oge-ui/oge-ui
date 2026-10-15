@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node tools/docs-tools/npm-downloads.mjs && npx nx build dev-app",
+  "buildCommand": "node tools/docs-tools/npm-downloads.mjs && npx nx build dev-app && node tools/docs-tools/not-found-page.mjs",
   "outputDirectory": "dist/apps/dev-app/browser",
   "installCommand": "npm ci",
   "trailingSlash": false,
@@ -44,12 +44,6 @@
       "source": "/components/breadcrumb/routed",
       "destination": "/components/breadcrumb/routed/reports",
       "permanent": false
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.csr.html"
     }
   ],
   "headers": [
@@ -117,6 +111,24 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/((?:chunk|main|polyfills|styles)-[A-Za-z0-9_-]+\\.(?:js|css))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(og|fonts|avatars)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
         }
       ]
     }

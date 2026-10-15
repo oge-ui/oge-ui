@@ -2,16 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>OGE — UI components for Angular and React</title>
+    <title>OGE UI — Free Angular &amp; React Data Grid and UI Components</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
       content="OGE UI: free, signal-based components for Angular and React — virtualized Data Grid, Tree List, Pivot Grid, inputs and forms. Zoneless, themeable, accessible."
-    />
-    <meta
-      name="keywords"
-      content="angular ui components, angular data grid, angular tree list, angular pivot grid, angular select box, angular signals, devextreme alternative, angular component library"
     />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0b1120" />
@@ -29,10 +25,14 @@
       content="OGE UI: free, signal-based components for Angular and React — virtualized Data Grid, Tree List, Pivot Grid, inputs and forms. Zoneless, themeable, accessible."
     />
     <meta property="og:url" content="https://www.ogeui.com/" />
-    <meta property="og:image" content="https://www.ogeui.com/logo.png" />
-    <meta property="og:image:width" content="1536" />
-    <meta property="og:image:height" content="1024" />
-    <meta property="og:image:alt" content="The OGE UI logo" />
+    <meta property="og:image" content="https://www.ogeui.com/og/default.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="OGE UI for Angular and React: a screenshot of the OGE data grid and the component suite"
+    />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -44,7 +44,7 @@
       name="twitter:description"
       content="OGE UI: free, signal-based components for Angular and React — virtualized Data Grid, Tree List, Pivot Grid, inputs and forms. Zoneless, themeable, accessible."
     />
-    <meta name="twitter:image" content="https://www.ogeui.com/logo.png" />
+    <meta name="twitter:image" content="https://www.ogeui.com/og/default.jpg" />
 
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
@@ -56,9 +56,24 @@
         "@context": "https://schema.org",
         "@graph": [
           {
-            "@type": "WebSite",
+            "@type": "Organization",
+            "@id": "https://www.ogeui.com/#organization",
             "name": "OGE UI",
             "url": "https://www.ogeui.com/",
+            "logo": "https://www.ogeui.com/web-app-manifest-512x512.png",
+            "sameAs": [
+              "https://github.com/oge-ui/oge-ui",
+              "https://www.npmjs.com/package/oge-ui"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.ogeui.com/#website",
+            "name": "OGE UI",
+            "url": "https://www.ogeui.com/",
+            "publisher": {
+              "@id": "https://www.ogeui.com/#organization"
+            },
             "description": "Signal-based UI component suite for Angular and React: Data Grid, Tree List, Pivot Grid, Charts, Scheduler, Gantt, Kanban, inputs, forms and navigation."
           },
           {
@@ -66,14 +81,32 @@
             "@id": "https://www.ogeui.com/#software",
             "name": "OGE UI",
             "applicationCategory": "DeveloperApplication",
+            "applicationSubCategory": "UI component library",
             "operatingSystem": "Web",
             "url": "https://www.ogeui.com/",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
+            "image": "https://www.ogeui.com/og/default.jpg",
+            "publisher": {
+              "@id": "https://www.ogeui.com/#organization"
             },
             "softwareRequirements": "Angular 22+ or React 18+",
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "MIT packages",
+                "description": "Data Grid, Tree List, inputs, forms, navigation, layout, overlay, upload and the rich-text editor — free under the MIT license.",
+                "price": "0",
+                "priceCurrency": "USD",
+                "url": "https://www.ogeui.com/pricing"
+              },
+              {
+                "@type": "Offer",
+                "name": "OGE UI Pro",
+                "description": "Pivot Grid, Charts, Scheduler, Gantt, Kanban and BPMN for production use — per developer, per year.",
+                "price": "299",
+                "priceCurrency": "USD",
+                "url": "https://www.ogeui.com/pricing"
+              }
+            ],
             "sameAs": ["https://github.com/oge-ui/oge-ui"]
           },
           {
@@ -82,8 +115,10 @@
             "codeRepository": "https://github.com/oge-ui/oge-ui",
             "programmingLanguage": "TypeScript",
             "runtimePlatform": ["Angular", "React"],
-            "license": "https://opensource.org/licenses/MIT",
-            "targetProduct": { "@id": "https://www.ogeui.com/#software" }
+            "license": "https://github.com/oge-ui/oge-ui/blob/main/LICENSE",
+            "targetProduct": {
+              "@id": "https://www.ogeui.com/#software"
+            }
           }
         ]
       }

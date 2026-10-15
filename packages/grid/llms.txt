@@ -1448,7 +1448,7 @@ export class EmployeesPage {
   ];
 
   protected readonly money = (value: unknown): string =>
-    `₺${(value as number).toLocaleString('tr-TR')}`;
+    `$${(value as number).toLocaleString('en-US')}`;
 }
 ```
 

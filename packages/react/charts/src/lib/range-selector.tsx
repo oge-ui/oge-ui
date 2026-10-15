@@ -13,6 +13,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactElement,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   beginChartGesture,
@@ -35,6 +36,7 @@ import {
   type OgeChartRange,
   type OgeChartSeriesInput,
   type OgeChartsMessages,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
 import { cx, useChartSize, useControllable, useStable } from './hooks';
@@ -77,6 +79,7 @@ function OgeRangeSelectorInner<T extends object>(
   props: OgeRangeSelectorProps<T>,
   ref: ForwardedRef<OgeRangeSelectorHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const config = useOgeChartsConfig();
   const dataSource = props.dataSource ?? EMPTY;
   const series = useStable(props.series ?? EMPTY);

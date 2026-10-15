@@ -11,6 +11,7 @@ import {
   type KeyboardEvent,
   type ReactElement,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildChartHierarchy,
@@ -30,6 +31,7 @@ import {
   type OgeChartPrintOptions,
   type OgeChartsMessages,
   type OgeTreemapLayoutAlgorithm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, svgSafeId, useControllable, useStable } from './hooks';
 import { useChartVisual, type ChartVisual } from './visual-hooks';
@@ -247,6 +249,7 @@ function OgeTreemapInner<T extends object>(
   props: OgeTreemapProps<T>,
   ref: ForwardedRef<OgeHierarchyChartHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const colorScale = useStable(props.colorScale);
   const palette = useStable(props.palette);
   const tooltipEnabled = props.tooltipEnabled ?? true;

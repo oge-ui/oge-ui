@@ -22,6 +22,7 @@ import {
   type OgeChartHierarchyNode,
   type OgeChartHierarchyNodeEvent,
   type OgeTreemapLayoutAlgorithm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeChartBreadcrumb } from './chart-breadcrumb';
 import { OgeChartColorLegend } from './color-legend';
@@ -175,6 +176,11 @@ import { OgeChartVisualRtlBase } from './visual-base';
 export class OgeTreemap<
   T extends object = Record<string, unknown>,
 > extends OgeChartVisualRtlBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   /** Nested items (`childrenField`) or a flat list (`idField` + `parentField`). */
   readonly dataSource = input<readonly T[]>([]);
   /** Default `'items'`. */

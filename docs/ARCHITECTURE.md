@@ -275,8 +275,34 @@ the family LICENSE, `platform:agnostic`, rollup like `core`), never into MIT
 `packages/kanban-engine` is the first). Copy the family's LICENSE into both
 the engine and the `react-<family>` package (adapting only the package name in
 its header), list both directories in the root `LICENSE`, and rewire the
-Angular package onto the engine in the same change. The root `LICENSE` lists the per-directory split. There is no
-license-key/runtime enforcement yet — deliberate, revisit when sales start.
+Angular package onto the engine in the same change. The root `LICENSE` lists the per-directory split.
+
+**License keys (ADR 0004).** OGE UI Pro is sold per developer per year
+(Lemon Squeezy, one bundle for all six families). A key is
+`OGE1.<payload>.<signature>` — Ed25519 over base64url JSON — verified
+**offline** in `@oge-ui/core` (`packages/core/src/lib/license/`) against the
+embedded public key; the private key lives outside the repo
+(`~/.oge-license/private-key.pem` locally, `OGE_LICENSE_PRIVATE_KEY` on Vercel).
+Rules:
+
+- Every root component of a commercial family calls its engine's
+  `ogeCheck<Family>License()` on start — Angular in the constructor, React in a
+  `useEffect(() => …, [])` as the first hook. A new commercial component (or a
+  new secondary entry with one) adds the same call; the hook lives in the
+  engine so the check stays in commercial code and MIT `core` only verifies.
+- Without a valid key on a production host: one `console.warn` per family and
+  a single fixed corner link (`.oge-license-watermark`, inline styles, set
+  through CSSOM so a strict `style-src` CSP allows it). The component always
+  works in full — never degrade or block functionality. Development hosts
+  (`ogeIsLicenseExemptHost`) and jsdom / happy-dom runs get nothing, so unit
+  tests never see the notice.
+- Perpetual fallback: a key covers releases dated on or before its `expires`.
+  The release day is `OGE_RELEASE_DATE` in `release-info.ts`, **generated** by
+  `docs-tools:llms` from the dated `## <version> — <YYYY-MM-DD>` CHANGELOG
+  heading — dating the changelog entry is part of cutting a release.
+- Keys are issued by `api/license/claim.mjs` (Vercel function: order number +
+  email → Lemon Squeezy API → signed key) and by hand with
+  `node tools/license/issue.mjs`; both share `tools/license/sign.mjs`.
 
 ## New package checklist
 
@@ -2348,18 +2374,36 @@ JavaScript. Before this, every URL served the same `index.html` with a canonical
 and Search Console reported the whole site as "redirected / discovered – not indexed".
 
 - Routes are discovered from `app.routes.ts` (`app.config.server.ts` maps `**` to
-  `RenderMode.Prerender`); a new page needs no registration. `vercel.json` rewrites unknown URLs to
-  `index.csr.html` (the client-only shell).
+  `RenderMode.Prerender`); a new page needs no registration. **Unknown URLs answer 404**: the
+  Vercel build runs `tools/docs-tools/not-found-page.mjs`, which writes `404.html` from the client-only
+  shell (`index.csr.html`) with `noindex`, no canonical and a not-found title, and the host serves it
+  with a 404 status (there is no catch-all rewrite). In the browser the router's `**` route renders
+  `pages/not-found`; its `data: { noindex: true }` makes `SeoService` keep it out of the index too.
+  `readRoutes` skips `**`, so it never reaches the sitemap or `llms.txt`. A catch-all rewrite to a
+  200 page once made every typo a soft-404 copy of the home page.
 - Per-page head tags: route `title` stays short (`OGE — Button Group`) because it also labels the
   sidebar and `llms.txt`; `shared/title.strategy.ts` turns it into the document title
-  (`Angular Button Group | OGE UI`). `shared/seo.service.ts` writes canonical, description and
+  (`Angular Button Group | OGE UI`), **at most 60 characters** — longer ones step down to
+  `Angular & React <page> | OGE UI`, then drop the brand suffix (`title.strategy.spec.ts`). `shared/seo.service.ts` writes canonical, description and
   og/twitter tags on every `NavigationEnd` — on the server too, so they land in the static HTML.
   **Every indexable route has its own 140–160-character description** in `DESCRIPTIONS`
   (exact path first, then the longest whole-segment prefix, home text as the fallback);
   `seo.service.spec.ts` fails on a duplicate or an out-of-range length — a family-level fallback
-  once gave 92 of 112 pages the same description. Each page also emits a `BreadcrumbList` JSON-LD
+  once gave 92 of 112 pages the same description. Share images are 1200×630 cards in
+  `public/og/` — one per flagship family (`OG_IMAGES`), `default.jpg` for the rest — rendered from
+  the live demos by `tools/docs-tools/social-cards.mjs` (which also writes the README hero and the
+  GitHub social preview in `docs/assets/`); re-run it after a visible change to those demos. Each page also emits a `BreadcrumbList` JSON-LD
   (Home → Components/Getting Started → Family → Page); routed demo children canonicalise to the
   page they land on.
+- Commercial-intent pages (`/pricing`, `/compare/*`) get hand-written document titles from
+  `DOCUMENT_TITLES` in `title.strategy.ts` (exact path, ≤ 60 characters, spec-checked) instead of
+  the `Page | OGE UI` pattern. Page-owned structured data (`FAQPage`, `Product`) goes through
+  `pageJsonLd(id, data)` from `seo.service.ts`, called in the page's injection context: it writes
+  the block at once (so the prerendered HTML has it) and removes it on destroy, through the same
+  `<`-escaping, Trusted-Types-safe `writeJsonLd` the breadcrumbs use. Never write a
+  `<script type="application/ld+json">` any other way. Competitor facts on `/compare/*` live in
+  `pages/compare/compare-data.ts` with their vendor source URLs and a `CHECKED_ON` date — refresh
+  both together.
 - The sitemap's `<lastmod>` is the last commit touching the page file, its snippets and (API
   pages) the api-data beside it; `llms-check` ignores `<lastmod>` so dates never fail CI.
 - Redirects the static host must answer itself (legacy grid paths: 301; routed demo parents:
@@ -2381,6 +2425,8 @@ and Search Console reported the whole site as "redirected / discovered – not i
   `robots.txt`, sitemap, `llms.txt` links, package `homepage`). Vercel serves `www.` as the primary
   domain and 308-redirects the apex to it, so the canonical must name `www.` — a canonical that
   points at a redirecting URL sends Google conflicting signals (2026-10-04: switched from apex).
+- Hashed build output (`main-*`, `chunk-*`, `polyfills-*`, `styles-*`) is served
+  `max-age=31536000, immutable` by a `vercel.json` header rule; HTML stays revalidated.
 - `robots.txt` explicitly allows the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, …) — the
   `llms.txt` pipeline exists for them.
 - **Security headers live in `vercel.json`** — CSP, HSTS, `frame-ancestors`, Permissions-Policy,

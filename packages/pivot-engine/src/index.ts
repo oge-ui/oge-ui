@@ -133,3 +133,4 @@ export {
   type OgePivotHeaderRow,
   type OgePivotPayloadMemberText,
 } from './lib/pivot-layout';
+export { ogeCheckPivotLicense } from './lib/license';

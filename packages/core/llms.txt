@@ -1,8 +1,9 @@
 # @oge-ui/core
 
-> Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
+> Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math, and the OGE UI Pro license check (`ogeSetLicenseKey`). Installed automatically — you rarely import it directly, except to register a Pro license key.
 
 Part of OGE UI v1.1.4.
+Docs and live demos: https://www.ogeui.com/license
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
@@ -91,7 +92,102 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/core`
 
-- values: `ArrayDataSource`, `CursorDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_PAGE_ELLIPSIS`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMinutes`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildSearchHighlightSegments`, `buildTreeIndex`, `clampDate`, `clampValue`, `clearOgeIntlCache`, `clearOgeTimeZoneCache`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupKeyFilter`, `groupKeyOf`, `groupNodeKey`, `groupRows`, `guardCsvFormula`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `isGroupInterval`, `isOgeDateFormatType`, `isOgeIcuMessage`, `isUnsafeStateKey`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `ogeConvertWallClock`, `ogeDateTimeFormat`, `ogeDefaultLocale`, `ogeFormatMessage`, `ogeFormatTzOffset`, `ogeFormatValue`, `ogeFromWallClock`, `ogeFromZoned`, `ogeIntlCacheSize`, `ogeIsTimeZone`, `ogeLiveConfig`, `ogeLocalTimeZone`, `ogeNumberFormat`, `ogeParseNumber`, `ogePluralRules`, `ogeRelativeTimeFormat`, `ogeTimeZoneLabel`, `ogeTimeZones`, `ogeToDate`, `ogeToWallClock`, `ogeTzOffset`, `ogeValueFormatter`, `ogeZonedDayMinutes`, `ogeZonedParts`, `ogeZonedStartOfDay`, `parseColor`, `parseStateJson`, `pathKey`, `pathToFilterExpr`, `rangesOverlap`, `ratioToValue`, `relativeLuminance`, `resizeSplitAt`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `resolveWeekendDays`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `sanitizeGridStateSnapshot`, `sanitizePivotGridStateSnapshot`, `sanitizeTreeListStateSnapshot`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `startOfMonth`, `startOfWeek`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `warnOgeDeprecatedMessage`, `weekNumber`
-- types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CursorDataSourceOptions`, `CursorPage`, `CursorPageRequest`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupInterval`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeColorFormat`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeHsva`, `OgeLocaleInput`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMessageValue`, `OgeMessageValues`, `OgeNavDirection`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePivotStore`, `OgeRangeThumb`, `OgeRgba`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `OgeValueFormat`, `OgeValueFormatType`, `OgeZoneDisambiguation`, `OgeZonedParts`, `OgeZonedPartsInput`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SearchHighlightSegment`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
+- values: `ArrayDataSource`, `CursorDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_LICENSE_KEY_PREFIX`, `OGE_LICENSE_PUBLIC_KEY`, `OGE_LICENSE_WATERMARK_CLASS`, `OGE_PAGE_ELLIPSIS`, `OGE_RELEASE_DATE`, `OGE_RELEASE_VERSION`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMinutes`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildSearchHighlightSegments`, `buildTreeIndex`, `clampDate`, `clampValue`, `clearOgeIntlCache`, `clearOgeTimeZoneCache`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupKeyFilter`, `groupKeyOf`, `groupNodeKey`, `groupRows`, `guardCsvFormula`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `isGroupInterval`, `isOgeDateFormatType`, `isOgeIcuMessage`, `isUnsafeStateKey`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `ogeBase64UrlToBytes`, `ogeCheckLicense`, `ogeConvertWallClock`, `ogeDateTimeFormat`, `ogeDecodeLicenseKey`, `ogeDefaultLocale`, `ogeFormatMessage`, `ogeFormatTzOffset`, `ogeFormatValue`, `ogeFromWallClock`, `ogeFromZoned`, `ogeGetLicenseInfo`, `ogeIntlCacheSize`, `ogeIsLicenseExemptHost`, `ogeIsTimeZone`, `ogeLicenseCoversFamily`, `ogeLicenseCoversRelease`, `ogeLicenseStatus`, `ogeLiveConfig`, `ogeLocalTimeZone`, `ogeNumberFormat`, `ogeParseNumber`, `ogePluralRules`, `ogeRelativeTimeFormat`, `ogeSetLicenseKey`, `ogeTimeZoneLabel`, `ogeTimeZones`, `ogeToDate`, `ogeToWallClock`, `ogeTzOffset`, `ogeValueFormatter`, `ogeVerifyLicenseSignature`, `ogeZonedDayMinutes`, `ogeZonedParts`, `ogeZonedStartOfDay`, `parseColor`, `parseStateJson`, `pathKey`, `pathToFilterExpr`, `rangesOverlap`, `ratioToValue`, `relativeLuminance`, `resetOgeLicenseForTests`, `resizeSplitAt`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `resolveWeekendDays`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `sanitizeGridStateSnapshot`, `sanitizePivotGridStateSnapshot`, `sanitizeTreeListStateSnapshot`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `startOfMonth`, `startOfWeek`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `warnOgeDeprecatedMessage`, `weekNumber`
+- types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CursorDataSourceOptions`, `CursorPage`, `CursorPageRequest`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupInterval`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeColorFormat`, `OgeCommercialFamily`, `OgeDecodedLicenseKey`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeHsva`, `OgeLicenseInfo`, `OgeLicenseStatus`, `OgeLocaleInput`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMessageValue`, `OgeMessageValues`, `OgeNavDirection`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePivotStore`, `OgeRangeThumb`, `OgeRgba`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `OgeValueFormat`, `OgeValueFormatType`, `OgeZoneDisambiguation`, `OgeZonedParts`, `OgeZonedPartsInput`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SearchHighlightSegment`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
 
+## API reference
+
+### License API
+
+#### Methods
+
+_@oge-ui/core_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeSetLicenseKey(key)` | `(key: string) => void` | Registers the OGE UI Pro license key. Call it once before the first Pro component renders — in `main.ts` before bootstrapping, or at the top of the React entry. Calling it again replaces the key and re-evaluates; a valid key removes the corner notice. The key is verified offline and is safe to ship in the bundle. |
+| `ogeLicenseStatus(family)` | `(family: OgeCommercialFamily) => Promise<OgeLicenseStatus>` | How the registered key stands for one family on the current host: `licensed`, `development` (no key, development host), `missing`, `invalid`, `expired` (the update window ended before this release) or `not-covered`. |
+| `ogeGetLicenseInfo()` | `() => Promise<OgeLicenseInfo \| null>` | The verified payload of the registered key — licensee, seats, families, issue and expiry day — or `null` without a valid key. |
+| `ogeCheckLicense(family)` | `(family: OgeCommercialFamily) => void` | What every Pro component calls on start (through its engine’s `ogeCheck<Family>License`). Never throws, never blocks rendering, no-op during server rendering; on a production host without a valid key it logs one console warning per family and pins a single “OGE UI Pro — unlicensed” link to the page corner. |
+| `ogeIsLicenseExemptHost(location?)` | `(location?: { hostname: string; protocol: string }) => boolean` | Whether the page counts as development: `localhost`, `127.*`, `*.localhost`, `*.local`, `*.test`, file URLs, StackBlitz and CodeSandbox, jsdom / happy-dom test runs and the OGE UI docs site. Exempt hosts never show the notice. |
+| `ogeDecodeLicenseKey(key)` | `(key: string \| null \| undefined) => OgeDecodedLicenseKey \| null` | Parses a key without verifying it (whitespace and line breaks ignored); `null` when it is not a well-formed `OGE1` key. |
+| `ogeVerifyLicenseSignature(decoded, publicKey?)` | `(decoded: OgeDecodedLicenseKey, publicKey?: string) => Promise<boolean \| null>` | Checks the Ed25519 signature with Web Crypto. `null` where the runtime cannot verify Ed25519 at all — the library then trusts a well-formed key rather than penalize the browser. |
+| `ogeLicenseCoversFamily(info, family)` | `(info: OgeLicenseInfo, family: OgeCommercialFamily) => boolean` | Whether the key covers a family — `families` holds it or `all` (the OGE UI Pro bundle). |
+| `ogeLicenseCoversRelease(info, releaseDate)` | `(info: OgeLicenseInfo, releaseDate: string) => boolean` | Whether a release dated `releaseDate` (`YYYY-MM-DD`) falls inside the key’s update window — the perpetual-fallback rule. |
+| `ogeBase64UrlToBytes(text)` | `(text: string) => Uint8Array \| null` | base64url decoding used by the key parser; `null` for invalid input. |
+| `resetOgeLicenseForTests(publicKey?)` | `(publicKey?: string) => void` | Test seam: forgets the key, the requested families and the notice, and optionally verifies with another public key so specs can sign with a throwaway pair. |
+
+_Engine hooks (commercial families)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeCheckPivotLicense()` | `() => void` | From `@oge-ui/pivot-engine`; called by the Angular and React pivot grid. |
+| `ogeCheckGanttLicense()` | `() => void` | From `@oge-ui/gantt-engine`; called by both Gantt components. |
+| `ogeCheckSchedulerLicense()` | `() => void` | From `@oge-ui/scheduler-engine`; called by both schedulers. |
+| `ogeCheckKanbanLicense()` | `() => void` | From `@oge-ui/kanban-engine`; called by both Kanban boards. |
+| `ogeCheckChartsLicense()` | `() => void` | From `@oge-ui/charts-engine`; called by every chart, gauge, map and the sparkline. |
+| `ogeCheckBpmnLicense()` | `() => void` | From `@oge-ui/bpmn-engine`; called by both BPMN editors. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLicenseInfo` | `{ id; licensee; seats; families; issued; expires }` | The decoded key payload. `expires` is the last day of the update window: every release dated on or before it stays licensed forever. |
+| `OgeLicenseStatus` | `'licensed' \| 'development' \| 'missing' \| 'invalid' \| 'expired' \| 'not-covered'` | Result of `ogeLicenseStatus()`. |
+| `OgeCommercialFamily` | `'pivot' \| 'bpmn' \| 'scheduler' \| 'gantt' \| 'kanban' \| 'charts'` | The six families OGE UI Pro covers. |
+| `OgeDecodedLicenseKey` | `{ info: OgeLicenseInfo; signed: string; signature: Uint8Array }` | A parsed key before verification. |
+| `OGE_LICENSE_PUBLIC_KEY` | `string` | The Ed25519 public key (raw, base64url) that verifies issued keys. |
+| `OGE_LICENSE_KEY_PREFIX` | `'OGE1'` | Key format prefix. |
+| `OGE_LICENSE_WATERMARK_CLASS` | `'oge-license-watermark'` | CSS class of the corner notice, for apps that look for it in tests. |
+| `OGE_RELEASE_VERSION` | `string` | The suite version of this build. |
+| `OGE_RELEASE_DATE` | `string` | The release day of this build (`YYYY-MM-DD`), compared with a key’s `expires`. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Angular key
+
+```ts
+// main.ts — before bootstrapping
+import { bootstrapApplication } from '@angular/platform-browser';
+import { ogeSetLicenseKey } from '@oge-ui/core';
+import { App } from './app/app';
+import { appConfig } from './app/app.config';
+
+ogeSetLicenseKey('OGE1.eyJpZCI6…');
+
+bootstrapApplication(App, appConfig);
+```
+
+### Check key
+
+```ts
+import { ogeGetLicenseInfo, ogeLicenseStatus } from '@oge-ui/core';
+
+console.log(await ogeLicenseStatus('gantt')); // 'licensed'
+console.log(await ogeGetLicenseInfo());       // { licensee, seats, expires, … }
+```
+
+### Env key
+
+```ts
+// .env.production (Vite) — or an Angular environment file
+// VITE_OGE_LICENSE_KEY=OGE1.eyJpZCI6…
+
+ogeSetLicenseKey(import.meta.env.VITE_OGE_LICENSE_KEY ?? '');
+```
+
+### React key
+
+```ts
+// main.tsx — before the first render
+import { createRoot } from 'react-dom/client';
+import { ogeSetLicenseKey } from '@oge-ui/core';
+import { App } from './App';
+
+ogeSetLicenseKey('OGE1.eyJpZCI6…');
+
+createRoot(document.getElementById('root')!).render(<App />);
+```
 

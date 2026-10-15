@@ -95,6 +95,7 @@ import {
   type OgeChartStripLine,
   type OgeChartTooltipOptions,
   type OgeChartTooltipShowingEvent,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import {
   OgeChartAnnotationTemplate,
@@ -733,6 +734,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   protected readonly height = computed(() => this.hostSize().height);
 
   constructor() {
+    ogeCheckChartsLicense();
     afterNextRender(() => {
       this.autoRtl.set(detectChartRtl(this.hostEl.nativeElement));
       // follow a later `dir` flip (an app-wide language switch)

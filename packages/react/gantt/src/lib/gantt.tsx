@@ -25,6 +25,7 @@ import {
   type OgeGanttScaleType,
   type OgeGanttStripLine,
   type OgeGanttViewMode,
+  ogeCheckGanttLicense,
 } from '@oge-ui/gantt-engine';
 import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
 import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
@@ -59,6 +60,7 @@ function OgeGanttInner<
   T extends object = Record<string, unknown>,
   D extends object = Record<string, unknown>,
 >(props: OgeGanttProps<T, D>, ref: ForwardedRef<OgeGanttHandle<T, D>>) {
+  useEffect(() => ogeCheckGanttLicense(), []);
   const config = useOgeGanttConfig();
   const [, rerender] = useReducer((n: number) => n + 1, 0);
 

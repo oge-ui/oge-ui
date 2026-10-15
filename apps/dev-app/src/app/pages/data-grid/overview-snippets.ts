@@ -18,5 +18,5 @@ export const QUICK_START_SNIPPET = demoSource({
   <oge-column field="salary" caption="Salary" dataType="number" [format]="money" />
 </oge-grid>`,
   body: `protected readonly money = (value: unknown): string =>
-  \`₺\${(value as number).toLocaleString('tr-TR')}\`;`,
+  \`$\${(value as number).toLocaleString('en-US')}\`;`,
 });

@@ -20,6 +20,7 @@ import {
   sunburstTooltip,
   type OgeChartHierarchyNode,
   type OgeChartHierarchyNodeEvent,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeChartBreadcrumb } from './chart-breadcrumb';
 import { OgeChartVisualBase } from './visual-base';
@@ -198,6 +199,11 @@ import { OgeChartVisualBase } from './visual-base';
 export class OgeSunburstChart<
   T extends object = Record<string, unknown>,
 > extends OgeChartVisualBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   /** Nested items (`childrenField`) or a flat list (`idField` + `parentField`). */
   readonly dataSource = input<readonly T[]>([]);
   readonly childrenField = input<string | ((item: T) => unknown)>('items');

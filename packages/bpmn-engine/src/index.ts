@@ -422,3 +422,4 @@ export {
   type BpmnOverlayTextNode,
 } from './lib/overlay-html';
 export { OGE_BPMN_TRUSTED_TYPES_POLICY } from './lib/trusted-types';
+export { ogeCheckBpmnLicense } from './lib/license';

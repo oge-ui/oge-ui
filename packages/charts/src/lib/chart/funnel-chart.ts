@@ -29,6 +29,7 @@ import {
   type OgeFunnelAlgorithm,
   type OgeFunnelItemVm,
   type OgeFunnelType,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import {
   OgeChartLabelTemplate,
@@ -230,6 +231,11 @@ import { OgeChartVisualRtlBase } from './visual-base';
 export class OgeFunnelChart<
   T extends object = Record<string, unknown>,
 > extends OgeChartVisualRtlBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   /** One stage per item; negative values clamp to zero. */
   readonly dataSource = input<readonly T[]>([]);
   readonly argumentField = input<string | ((item: T) => unknown)>('argument');

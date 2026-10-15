@@ -1,6 +1,6 @@
 # @oge-ui/bpmn
 
-> From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, bpmnlint-style validation with a problems panel, pluggable properties providers, custom palette / context-pad entries and renderers, element templates, editable Camunda / Zeebe extensions and event payloads, a keyboard-accessible SVG canvas and no watermark.
+> From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, bpmnlint-style validation with a problems panel, pluggable properties providers, custom palette / context-pad entries and renderers, element templates, editable Camunda / Zeebe extensions and event payloads, a keyboard-accessible SVG canvas and no third-party branding.
 >
 > This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
