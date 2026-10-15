@@ -8,6 +8,20 @@ const HOME_TITLE =
   'OGE UI — Free Angular and React UI Components: Data Grid, Tree List';
 
 /**
+ * Hand-written document titles for commercial-intent pages, where the query
+ * people type ("AG Grid alternative", "pricing") matters more than the house
+ * pattern. Exact paths only, each at most 60 characters.
+ */
+export const DOCUMENT_TITLES: Readonly<Record<string, string>> = {
+  '/pricing': 'OGE UI Pricing — Free MIT Suite, Pro $299/Developer/Year',
+  '/compare': 'OGE UI vs AG Grid, Kendo UI, DevExtreme and PrimeNG',
+  '/compare/ag-grid': 'OGE UI vs AG Grid — Angular & React Alternative',
+  '/compare/kendo-ui': 'OGE UI vs Kendo UI — Angular & React Alternative',
+  '/compare/devextreme': 'OGE UI vs DevExtreme — Angular & React Alternative',
+  '/compare/primeng': 'OGE UI vs PrimeNG — Angular UI Library Alternative',
+};
+
+/**
  * Turns the short route titles (`OGE — Button Group`) into search-friendly
  * document titles. Component pages name the frameworks the page exists in,
  * so the tab and the search snippet both read as what people actually
@@ -34,6 +48,8 @@ export class OgeTitleStrategy extends TitleStrategy {
 export function documentTitle(raw: string | undefined, url: string): string {
   const path = url.split(/[?#]/)[0];
   if (path === '/' || !raw) return HOME_TITLE;
+  const fixed = DOCUMENT_TITLES[path];
+  if (fixed) return fixed;
   const page = raw.replace(/^OGE\s+—\s+/, '').trim();
   if (!path.startsWith('/components/')) return `${page} | ${BRAND}`;
   const labels = frameworksOfPage(path).map((entry) => entry.label);

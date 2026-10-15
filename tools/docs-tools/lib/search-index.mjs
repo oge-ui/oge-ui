@@ -53,6 +53,8 @@ const TOP_LEVEL_CONTEXT = {
   license: 'Getting Started',
   changelog: 'Resources',
   'bundle-size': 'Resources',
+  pricing: 'Resources',
+  compare: 'Resources',
   components: 'Components',
 };
 

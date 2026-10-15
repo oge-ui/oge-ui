@@ -2386,6 +2386,15 @@ and Search Console reported the whole site as "redirected / discovered – not i
   once gave 92 of 112 pages the same description. Each page also emits a `BreadcrumbList` JSON-LD
   (Home → Components/Getting Started → Family → Page); routed demo children canonicalise to the
   page they land on.
+- Commercial-intent pages (`/pricing`, `/compare/*`) get hand-written document titles from
+  `DOCUMENT_TITLES` in `title.strategy.ts` (exact path, ≤ 60 characters, spec-checked) instead of
+  the `Page | OGE UI` pattern. Page-owned structured data (`FAQPage`, `Product`) goes through
+  `pageJsonLd(id, data)` from `seo.service.ts`, called in the page's injection context: it writes
+  the block at once (so the prerendered HTML has it) and removes it on destroy, through the same
+  `<`-escaping, Trusted-Types-safe `writeJsonLd` the breadcrumbs use. Never write a
+  `<script type="application/ld+json">` any other way. Competitor facts on `/compare/*` live in
+  `pages/compare/compare-data.ts` with their vendor source URLs and a `CHECKED_ON` date — refresh
+  both together.
 - The sitemap's `<lastmod>` is the last commit touching the page file, its snippets and (API
   pages) the api-data beside it; `llms-check` ignores `<lastmod>` so dates never fail CI.
 - Redirects the static host must answer itself (legacy grid paths: 301; routed demo parents:
