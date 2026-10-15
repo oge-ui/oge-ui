@@ -2376,10 +2376,13 @@ and Search Console reported the whole site as "redirected / discovered – not i
 - Routes are discovered from `app.routes.ts` (`app.config.server.ts` maps `**` to
   `RenderMode.Prerender`); a new page needs no registration. **Unknown URLs answer 404**: the
   Vercel build runs `tools/docs-tools/not-found-page.mjs`, which writes `404.html` from the client-only
-  shell (`index.csr.html`) with `noindex`, no canonical and a not-found title, and the host serves it
-  with a 404 status (there is no catch-all rewrite, and `vercel.json` sets `"framework": null`: the
-  Angular preset otherwise adds its own SPA fallback that serves the prerendered home page, with a 200, for
-  every unknown URL — `serve-prerendered.mjs` cannot show that, so check `curl -I` on production). In the browser the router's `**` route renders
+  shell (`index.csr.html`) with `noindex`, no canonical and a not-found title. The catch-all rewrite
+  in `vercel.json` (applied only after the filesystem misses) sends every unknown URL to
+  `api/not-found.mjs`, which returns that file with a **404 status** (`includeFiles` bundles it). A
+  static rewrite always answers 200, and without any rewrite Vercel's Angular preset — detected
+  from `@angular/core` even with `"framework": null` — adds its own SPA fallback to the prerendered
+  home page. `serve-prerendered.mjs` answers 404 itself and cannot show either trap, so check
+  `curl -I` on production after touching routing. In the browser the router's `**` route renders
   `pages/not-found`; its `data: { noindex: true }` makes `SeoService` keep it out of the index too.
   `readRoutes` skips `**`, so it never reaches the sitemap or `llms.txt`. A catch-all rewrite to a
   200 page once made every typo a soft-404 copy of the home page.
