@@ -816,6 +816,8 @@ const ORG: OrgNode[] = [
               <li>
                 <a routerLink="/components/data-grid/playground">Playground</a>
               </li>
+              <li><a routerLink="/pricing">Pricing</a></li>
+              <li><a routerLink="/compare">Compare</a></li>
             </ul>
           </nav>
 

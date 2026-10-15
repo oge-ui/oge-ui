@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.ogeui.com/</loc><lastmod>2026-10-10</lastmod><priority>1.0</priority></url>
+  <url><loc>https://www.ogeui.com/</loc><lastmod>2026-10-15</lastmod><priority>1.0</priority></url>
   <url><loc>https://www.ogeui.com/getting-started</loc><lastmod>2026-10-10</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/getting-started/setup</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/styling</loc><lastmod>2026-10-03</lastmod></url>
@@ -21,8 +21,8 @@
   <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-10-05</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/getting-started/localization/api</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components</loc><lastmod>2026-10-10</lastmod><priority>0.9</priority></url>
-  <url><loc>https://www.ogeui.com/components/data-grid</loc><lastmod>2026-10-04</lastmod><priority>0.9</priority></url>
-  <url><loc>https://www.ogeui.com/components/data-grid/playground</loc><lastmod>2026-10-08</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-grid</loc><lastmod>2026-10-15</lastmod><priority>0.9</priority></url>
+  <url><loc>https://www.ogeui.com/components/data-grid/playground</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/sorting</loc><lastmod>2026-10-01</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/virtual-scroll</loc><lastmod>2026-10-01</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/infinite-scroll</loc><lastmod>2026-10-01</lastmod></url>
@@ -32,11 +32,11 @@
   <url><loc>https://www.ogeui.com/components/data-grid/filtering</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/selection</loc><lastmod>2026-09-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/editing</loc><lastmod>2026-10-08</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/data-grid/grouping</loc><lastmod>2026-08-23</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/data-grid/rows</loc><lastmod>2026-08-23</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-grid/grouping</loc><lastmod>2026-10-15</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-grid/rows</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/persistence</loc><lastmod>2026-09-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/context-menu</loc><lastmod>2026-09-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/data-grid/master-detail</loc><lastmod>2026-08-23</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-grid/master-detail</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/range-selection</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/conditional-formatting</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/pinned-rows</loc><lastmod>2026-10-04</lastmod></url>
@@ -171,6 +171,12 @@
   <url><loc>https://www.ogeui.com/components/scheduler/remote-data</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/license</loc><lastmod>2026-10-10</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/license/claim</loc><lastmod>2026-10-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/pricing</loc><priority>0.9</priority></url>
+  <url><loc>https://www.ogeui.com/compare</loc><priority>0.9</priority></url>
+  <url><loc>https://www.ogeui.com/compare/ag-grid</loc></url>
+  <url><loc>https://www.ogeui.com/compare/kendo-ui</loc></url>
+  <url><loc>https://www.ogeui.com/compare/devextreme</loc></url>
+  <url><loc>https://www.ogeui.com/compare/primeng</loc></url>
   <url><loc>https://www.ogeui.com/changelog</loc><lastmod>2026-10-07</lastmod><priority>0.9</priority></url>
   <url><loc>https://www.ogeui.com/bundle-size</loc><lastmod>2026-10-07</lastmod><priority>0.9</priority></url>
 </urlset>

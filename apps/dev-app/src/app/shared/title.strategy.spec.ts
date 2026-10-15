@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { documentTitle } from './title.strategy';
+import { DOCUMENT_TITLES, documentTitle } from './title.strategy';
 
 describe('documentTitle', () => {
   it('names both frameworks on a page both layers cover', () => {
@@ -64,5 +64,17 @@ describe('documentTitle', () => {
     expect(home).toMatch(/^OGE UI — .*Angular & React/);
     expect(home.length).toBeLessThanOrEqual(60);
     expect(documentTitle(undefined, '/')).toMatch(/^OGE UI — /);
+  });
+
+  it('uses the hand-written titles of the commercial-intent pages', () => {
+    expect(documentTitle('OGE — OGE UI vs AG Grid', '/compare/ag-grid')).toBe(
+      'OGE UI vs AG Grid — Angular & React Alternative',
+    );
+    expect(documentTitle('OGE — Pricing', '/pricing?ref=x')).toMatch(
+      /^OGE UI Pricing/,
+    );
+    for (const [path, title] of Object.entries(DOCUMENT_TITLES)) {
+      expect(title.length, path).toBeLessThanOrEqual(60);
+    }
   });
 });

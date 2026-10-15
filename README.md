@@ -15,6 +15,8 @@
   <a href="https://www.ogeui.com/components/data-grid"><b>Live demos</b></a> ·
   <a href="https://www.ogeui.com/getting-started">Docs</a> ·
   <a href="https://www.ogeui.com/components">All components</a> ·
+  <a href="https://www.ogeui.com/pricing">Pricing</a> ·
+  <a href="https://www.ogeui.com/compare">Compare</a> ·
   <a href="https://www.ogeui.com/changelog">Changelog</a> ·
   <a href="https://github.com/oge-ui/oge-ui/discussions">Discussions</a>
 </p>

@@ -72,6 +72,7 @@ import { ANGULAR_KEY, CHECK_KEY, ENV_KEY, REACT_KEY } from './license-snippets';
         <a routerLink="/license/claim" class="text-sm"
           >Already bought? Get your key</a
         >
+        <a routerLink="/pricing" class="text-sm">Compare plans</a>
       </div>
     </section>
 
