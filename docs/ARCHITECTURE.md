@@ -2006,8 +2006,7 @@ rules — change both together.
   with the reason it cannot reach consumers and an `expires` date a few weeks out, after which the gate
   fails again and someone re-checks upstream (an entry that no longer matches is flagged for
   deletion). Everything else is fixed, never listed. The fix is an upgrade; when the advisory sits in a
-  dependency a tool **pins exactly** (nx pins `axios`/`smol-toml`, verdaccio
-  pins `js-yaml`), it is a targeted `overrides` entry in the root
+  dependency a tool **pins exactly** (nx pins `axios`/`smol-toml`), it is a targeted `overrides` entry in the root
   `package.json`, scoped by major (`"brace-expansion@^5": "^5.0.12"`) so other
   majors in the tree keep their own line. After changing either, regenerate the
   lockfile from a clean directory (`npm install --package-lock-only` beside a
@@ -2830,10 +2829,16 @@ which writes explicit `.js` specifiers and the `.d.cts` twins. Every package exp
 ### Publishing (`.github/workflows/release.yml`)
 
 Run manually with a version input, or by pushing a `v<x.y.z>` tag; the version must already be
-committed (`nx release version`). The job builds, runs the gates, publishes every `dist` folder in
-dependency order with `npm publish --provenance --access public` through npm **trusted publishing**
-(OIDC, no token), skips versions already on npm (so a failed run can be re-run), and attaches a
-CycloneDX SBOM to the GitHub release. Until the one-time setup below is done it cannot publish.
+committed (`nx release version`). The job builds, runs the gates, packs every `dist` folder in
+dependency order and publishes **that tarball** with `npm publish --provenance --access public`
+through npm **trusted publishing** (OIDC, no token), skips versions already on npm (so a failed run
+can be re-run), and attaches a CycloneDX SBOM and the tarballs to the GitHub release. A second job
+(the reusable `slsa-github-generator` generic workflow, pinned by tag as its builder identity
+requires) signs a SLSA build provenance for those tarballs and uploads it to the same release as
+`oge-ui-<version>.intoto.jsonl` — verify a download with `slsa-verifier verify-artifact`. Release
+the suite through this workflow, not by hand: the signed release assets and a successful publish run
+are what OpenSSF Scorecard's Signed-Releases and Packaging checks look for. Until the one-time setup
+below is done it cannot publish.
 
 One-time setup (maintainer):
 

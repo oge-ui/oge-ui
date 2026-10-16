@@ -1,12 +1,4 @@
 {
   "$comment": "Advisories with NO patched release yet. Each entry: why it cannot reach consumers, and an expiry within weeks. tools/audit-check.mjs (CI audit job) enforces it.",
-  "advisories": [
-    {
-      "id": "GHSA-vfj7-8cjw-p6xm",
-      "package": "braces",
-      "reason": "No release above 3.0.3 exists (re-checked 2026-10-07: npm view braces versions tops out at 3.0.3, advisory range <=3.0.3). Reached only through build tooling (nx, verdaccio → micromatch); it expands glob patterns written in this repo, never user input, and nothing ships to consumers.",
-      "added": "2026-10-03",
-      "expires": "2026-12-06"
-    }
-  ]
+  "advisories": []
 }
