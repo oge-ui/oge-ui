@@ -12,6 +12,7 @@ const LANGUAGES = [
   'zh-CN',
   'ar',
   'he',
+  'ru',
 ];
 
 module.exports = withNx(

@@ -17,6 +17,7 @@ const LANGUAGES: readonly (readonly [string, string, string])[] = [
   ['zhCN', 'zh-CN', 'Simplified Chinese'],
   ['ar', 'ar', "Arabic (<code>dir: 'rtl'</code>)"],
   ['he', 'he', "Hebrew (<code>dir: 'rtl'</code>)"],
+  ['ru', 'ru', 'Russian'],
 ];
 
 const PACK_ENTRIES: readonly ApiEntry[] = LANGUAGES.map(

@@ -33809,7 +33809,7 @@ createRoot(document.getElementById('root')!).render(<App />);
 
 ## @oge-ui/locales
 
-Ready-made translations of every message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic and Hebrew — as framework-free data, one entry point per language (`import { tr } from '@oge-ui/locales/tr'`). Applied with `provideOgeLocale(tr)` from `oge-ui` or `<OgeLocaleProvider pack={tr}>` from `@oge-ui/react`; commercial families take `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)` through their own provider.
+Ready-made translations of every message catalog — German, French, Spanish, Italian, Brazilian Portuguese, Turkish, Japanese, Simplified Chinese, Arabic, Hebrew and Russian — as framework-free data, one entry point per language (`import { tr } from '@oge-ui/locales/tr'`). Applied with `provideOgeLocale(tr)` from `oge-ui` or `<OgeLocaleProvider pack={tr}>` from `@oge-ui/react`; commercial families take `ogeMergeMessages(OGE_DEFAULT_<X>_MESSAGES, tr.<x>)` through their own provider.
 
 Docs: https://www.ogeui.com/getting-started/localization
 
@@ -33847,6 +33847,10 @@ Docs: https://www.ogeui.com/getting-started/localization
 `@oge-ui/locales/ja`
 
 - values: `ja`
+
+`@oge-ui/locales/ru`
+
+- values: `ru`
 
 `@oge-ui/locales/tr`
 
@@ -33887,6 +33891,7 @@ _Language packs_
 | `zhCN` | `OgeLocalePack` | Simplified Chinese — every catalog, MIT and commercial. `import { zhCN } from '@oge-ui/locales/zh-CN'`. |
 | `ar` | `OgeLocalePack` | Arabic (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { ar } from '@oge-ui/locales/ar'`. |
 | `he` | `OgeLocalePack` | Hebrew (`dir: 'rtl'`) — every catalog, MIT and commercial. `import { he } from '@oge-ui/locales/he'`. |
+| `ru` | `OgeLocalePack` | Russian — every catalog, MIT and commercial. `import { ru } from '@oge-ui/locales/ru'`. |
 
 _Primary entry (@oge-ui/locales)_
 

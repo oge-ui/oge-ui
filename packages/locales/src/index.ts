@@ -37,7 +37,8 @@ export type OgeLocaleCode =
   | 'ja'
   | 'zh-CN'
   | 'ar'
-  | 'he';
+  | 'he'
+  | 'ru';
 
 /**
  * The English baseline: no slices, so every catalog keeps its built-in
@@ -58,6 +59,7 @@ export const OGE_LOCALE_NAMES: Readonly<Record<OgeLocaleCode, string>> = {
   'zh-CN': '简体中文',
   ar: 'العربية',
   he: 'עברית',
+  ru: 'Русский',
 };
 
 /**
@@ -86,4 +88,5 @@ export const ogeLocalePacks: Readonly<
   'zh-CN': () => import('./zh-CN').then((m) => m.zhCN),
   ar: () => import('./ar').then((m) => m.ar),
   he: () => import('./he').then((m) => m.he),
+  ru: () => import('./ru').then((m) => m.ru),
 };
