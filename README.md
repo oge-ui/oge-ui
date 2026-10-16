@@ -344,6 +344,14 @@ through [`SECURITY.md`](SECURITY.md), and the
 
 New here? Issues labelled [good first issue](https://github.com/oge-ui/oge-ui/labels/good%20first%20issue) are scoped to one package and come with pointers; questions and ideas go to [Discussions](https://github.com/oge-ui/oge-ui/discussions).
 
+### Contributors
+
+Thank you to everyone who has helped build OGE UI:
+
+| Contributor                        | Contribution                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| [@mrvi0](https://github.com/mrvi0) | Russian locale pack for `@oge-ui/locales` ([#22](https://github.com/oge-ui/oge-ui/pull/22)) |
+
 ## Star history
 
 <a href="https://www.star-history.com/#oge-ui/oge-ui&Date">
