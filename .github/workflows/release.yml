@@ -9,6 +9,11 @@ name: Release
 # Safe without setup: the publish job waits on the protected `npm-publish`
 # environment, and npm rejects the OIDC exchange until the one-time trusted
 # publisher setup in docs/ARCHITECTURE.md → "Release" is done.
+#
+# The exact tarballs it publishes are attached to the GitHub release with a
+# SLSA build provenance (`*.intoto.jsonl`, signed through Sigstore by the
+# reusable SLSA generator), so anyone can verify a download with
+# `slsa-verifier verify-artifact`.
 
 on:
   workflow_dispatch:
@@ -32,6 +37,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm-publish
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      hashes: ${{ steps.hashes.outputs.hashes }}
     permissions:
       contents: write # create the GitHub release + attach the SBOM
       id-token: write # npm trusted publishing + provenance
@@ -81,18 +89,27 @@ jobs:
       - run: node tools/package-check.mjs
       - run: node tools/size-check.mjs
 
-      - name: Publish in dependency order
+      # pack first and publish the tarball itself, so the bytes on npm are the
+      # bytes the SLSA provenance below attests
+      - name: Pack and publish in dependency order
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          mkdir -p release-artifacts
           for dir in $(node tools/release/publish-order.mjs); do
             name="$(node -p "require('./$dir/package.json').name")"
+            tarball="release-artifacts/$(npm pack "$dir" --pack-destination release-artifacts --json | node -p "JSON.parse(require('fs').readFileSync(0))[0].filename")"
             if npm view "$name@$VERSION" version >/dev/null 2>&1; then
               echo "$name@$VERSION is already on npm — skipping"
               continue
             fi
-            npm publish "$dir" --provenance --access public
+            npm publish "$tarball" --provenance --access public
           done
+
+      - name: Hash the release tarballs
+        id: hashes
+        working-directory: release-artifacts
+        run: echo "hashes=$(sha256sum -- *.tgz | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: SBOM (CycloneDX)
         run: npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --output-format JSON --output-file "oge-ui-${{ steps.version.outputs.version }}.cdx.json"
@@ -103,7 +120,23 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           if gh release view "v$VERSION" >/dev/null 2>&1; then
-            gh release upload "v$VERSION" "oge-ui-$VERSION.cdx.json" --clobber
+            gh release upload "v$VERSION" "oge-ui-$VERSION.cdx.json" release-artifacts/*.tgz --clobber
           else
-            gh release create "v$VERSION" "oge-ui-$VERSION.cdx.json" --title "v$VERSION" --notes "See CHANGELOG.md." --target "$GITHUB_SHA"
+            gh release create "v$VERSION" "oge-ui-$VERSION.cdx.json" release-artifacts/*.tgz --title "v$VERSION" --notes "See CHANGELOG.md." --target "$GITHUB_SHA"
           fi
+
+  # SLSA v1 build provenance for the tarballs, uploaded to the same release.
+  # Reusable workflows from slsa-github-generator must be referenced by tag
+  # (their builder identity is the tag), which Scorecard accepts.
+  provenance:
+    needs: publish
+    permissions:
+      actions: read # read the workflow run
+      id-token: write # sign the provenance through Sigstore
+      contents: write # upload it to the release
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.publish.outputs.hashes }}
+      provenance-name: oge-ui-${{ needs.publish.outputs.version }}.intoto.jsonl
+      upload-assets: true
+      upload-tag-name: v${{ needs.publish.outputs.version }}
