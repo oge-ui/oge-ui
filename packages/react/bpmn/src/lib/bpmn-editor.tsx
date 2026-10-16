@@ -35,6 +35,7 @@ import {
   type OgeBpmnMessages,
   type OgeBpmnOverlay,
   type OgeBpmnSelectionEvent,
+  ogeCheckBpmnLicense,
 } from '@oge-ui/bpmn-engine';
 import { useOgeBpmnConfig } from './bpmn-config';
 import { BpmnPalette } from './bpmn-palette';
@@ -213,6 +214,7 @@ export const OgeBpmnEditor = forwardRef<
   OgeBpmnEditorHandle,
   OgeBpmnEditorProps
 >(function OgeBpmnEditorRender(props, ref) {
+  useEffect(() => ogeCheckBpmnLicense(), []);
   const {
     readOnly = false,
     allowModeToggle = false,

@@ -120,19 +120,26 @@ const ORG: OrgNode[] = [
       >
         <!-- Left: copy -->
         <div>
-          <h1 class="home-in home-d1 og-display">
+          <!--
+            The h1 is the plain, searchable statement; the display line under
+            it restates it visually with the word rotator, so it is hidden
+            from assistive technology rather than read twice.
+          -->
+          <h1 class="home-in home-d1 og-eyebrow og-hero-kicker">
+            Angular &amp; React UI components for data-heavy apps
+          </h1>
+          <p class="home-in home-d1 og-display" aria-hidden="true">
             UI components
             <br />
             built for
-            <span class="home-rotator" aria-hidden="true">
+            <span class="home-rotator">
               <span class="home-rotator-track">
                 @for (word of rotatorWords; track $index) {
                   <span class="og-gilded">{{ word }}</span>
                 }
               </span>
             </span>
-            <span class="sr-only">data grids</span>
-          </h1>
+          </p>
 
           <!--
             The same switch the docs use, so the choice a reader makes here
@@ -161,6 +168,15 @@ const ORG: OrgNode[] = [
             <a routerLink="/components" class="og-btn-stone"
               >Browse components</a
             >
+            <a
+              href="https://github.com/oge-ui/oge-ui"
+              target="_blank"
+              rel="noopener"
+              class="og-hero-github"
+            >
+              <app-icon name="github" [size]="15" />
+              Star on GitHub
+            </a>
           </div>
 
           <div class="home-in home-d5 og-install mt-6">
@@ -727,7 +743,7 @@ const ORG: OrgNode[] = [
               class="og-btn-stone"
             >
               <app-icon name="github" [size]="15" />
-              GitHub
+              Star on GitHub
             </a>
             <a
               href="https://www.npmjs.com/package/@oge-ui/grid"
@@ -800,6 +816,8 @@ const ORG: OrgNode[] = [
               <li>
                 <a routerLink="/components/data-grid/playground">Playground</a>
               </li>
+              <li><a routerLink="/pricing">Pricing</a></li>
+              <li><a routerLink="/compare">Compare</a></li>
             </ul>
           </nav>
 
@@ -1249,6 +1267,26 @@ const ORG: OrgNode[] = [
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--og-turk);
+    }
+
+    app-home .og-hero-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--og-mut);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    app-home .og-hero-github:hover {
+      color: var(--og-bone);
+    }
+
+    app-home .og-hero-kicker {
+      margin-block-end: 0.9rem;
+      font-size: 12.5px;
     }
 
     app-home .og-h2 {
@@ -2076,7 +2114,7 @@ export class HomePage {
     {
       icon: 'workflow',
       name: 'BPMN Editor',
-      desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no watermark.',
+      desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no third-party branding.',
       path: '/components/bpmn',
     },
     {

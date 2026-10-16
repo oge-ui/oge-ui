@@ -38,6 +38,7 @@ import {
   type OgePivotMenuItem,
   type OgePivotFieldDef,
   type OgePivotMessages,
+  ogeCheckPivotLicense,
 } from '@oge-ui/pivot-engine';
 import { useOgeGridStateStorage } from '@oge-ui/react-grid';
 import { useOgePivotConfig, useOgePivotMessages } from './pivot-config';
@@ -78,6 +79,7 @@ function OgePivotGridInner<T>(
   props: OgePivotGridProps<T>,
   ref: ForwardedRef<OgePivotGridHandle<T>>,
 ): ReactElement {
+  useEffect(() => ogeCheckPivotLicense(), []);
   const contextMessages = useOgePivotMessages();
   const pivotConfig = useOgePivotConfig();
   const contextStorage = useOgeGridStateStorage();

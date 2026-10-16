@@ -41,6 +41,7 @@ import {
   type OgeChartPointRef,
   type OgeChartSeriesInput,
   type OgePolarSeriesVm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
 import {
@@ -357,6 +358,7 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   protected readonly activeSeriesIndex = signal(0);
 
   constructor() {
+    ogeCheckChartsLicense();
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>

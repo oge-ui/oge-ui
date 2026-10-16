@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
   type ReactElement,
+  useEffect,
 } from 'react';
 import {
   buildBulletScene,
@@ -15,6 +16,7 @@ import {
   type OgeChartValueRange,
   type OgeGaugeOrientation,
   type OgeGaugeScaleOptions,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, useStable } from './hooks';
 import { useChartVisual } from './visual-hooks';
@@ -63,6 +65,7 @@ export interface OgeBulletChartProps {
  */
 export const OgeBulletChart = forwardRef<OgeGaugeHandle, OgeBulletChartProps>(
   function OgeBulletChart(props, ref): ReactElement {
+    useEffect(() => ogeCheckChartsLicense(), []);
     const value = props.value ?? null;
     const target = props.target ?? null;
     const scale = useStable<OgeGaugeScaleOptions>(props.scale ?? NO_OPTIONS);

@@ -5,7 +5,7 @@ wrapper — running the **same** framework-free engine and editor core
 ([`@oge-ui/bpmn-engine`](https://www.npmjs.com/package/@oge-ui/bpmn-engine):
 the model, the BPMN XML + DI reader/writer, routing, snapping, the modeling
 rules, the command stack, every tool, gesture and key) as the Angular
-`@oge-ui/bpmn` package, and the same stylesheet. No watermark.
+`@oge-ui/bpmn` package, and the same stylesheet. No third-party branding.
 
 The OGE suite is one component engine with a native render layer per
 framework: nothing here wraps Angular.

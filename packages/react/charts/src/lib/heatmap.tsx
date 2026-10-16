@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
   type ReactElement,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildHeatmapScene,
@@ -26,6 +27,7 @@ import {
   type OgeChartLegendOptions,
   type OgeChartsMessages,
   type OgeHeatmapCellVm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, useControllable, useStable } from './hooks';
 import { useChartVisual } from './visual-hooks';
@@ -82,6 +84,7 @@ function OgeHeatmapInner<T extends object>(
   props: OgeHeatmapProps<T>,
   ref: ForwardedRef<OgeVisualChartHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const dataSource = props.dataSource ?? EMPTY;
   const xCategories = useStable(props.xCategories);
   const yCategories = useStable(props.yCategories);

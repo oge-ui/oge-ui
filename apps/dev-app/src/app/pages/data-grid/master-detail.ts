@@ -86,7 +86,7 @@ import { SNIPPET } from './master-detail-snippets';
                 Compensation
               </div>
               <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                ₺{{ employee.salary.toLocaleString('tr-TR') }}
+                \${{ employee.salary.toLocaleString('en-US') }}
               </div>
               <div class="text-sm text-gray-500 dark:text-gray-400">
                 since {{ employee.hireDate }}

@@ -20,7 +20,7 @@ const dragRows = makeEmployees(6, 13);
 
 const money = (value: unknown): string =>
   typeof value === 'number'
-    ? `₺${value.toLocaleString('tr-TR')}`
+    ? `$${value.toLocaleString('en-US')}`
     : String(value ?? '');
 
 const initials = (employee: Employee): string =>

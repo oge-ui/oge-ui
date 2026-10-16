@@ -67,7 +67,7 @@ function detail(employee: Employee): ReactNode {
       createElement(
         'div',
         { className: 'mt-1 text-sm text-gray-700 dark:text-gray-300' },
-        `₺${employee.salary.toLocaleString('tr-TR')}`,
+        `$${employee.salary.toLocaleString('en-US')}`,
       ),
       createElement(
         'div',

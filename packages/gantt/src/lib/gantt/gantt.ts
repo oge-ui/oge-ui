@@ -25,6 +25,7 @@ import {
   type GanttLagUnit,
   type GanttTask,
   type OgeGanttCoreEvents,
+  ogeCheckGanttLicense,
 } from '@oge-ui/gantt-engine';
 import type { OgeGanttMessages } from '../config';
 import { OGE_GANTT_CONFIG } from '../config';
@@ -1528,6 +1529,7 @@ export class OgeGantt<
   }
 
   constructor() {
+    ogeCheckGanttLicense();
     // direction is read in the browser only, after the first render
     afterNextRender(() => this.core.connectDirection());
     effect(() => this.core.syncRenderedRange());

@@ -9,6 +9,7 @@ import {
   GAUGE_BAR_LENGTH,
   buildCircularGaugeScene,
   type OgeCircularGaugeIndicator,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeGaugeBase } from './gauge-base';
 
@@ -167,6 +168,11 @@ import { OgeGaugeBase } from './gauge-base';
   `,
 })
 export class OgeCircularGauge extends OgeGaugeBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   /** `'needle'` (default), `'bar'` (a filled arc) or `'marker'` (a triangle on the scale). */
   readonly indicator = input<OgeCircularGaugeIndicator>('needle');
   /** Arc start in degrees; 0 = 12 o'clock, clockwise. Default -120. */

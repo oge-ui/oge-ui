@@ -238,3 +238,4 @@ export {
   buildResourceWorkload,
   type GanttWorkloadSegment,
 } from './lib/engine/workload';
+export { ogeCheckGanttLicense } from './lib/license';

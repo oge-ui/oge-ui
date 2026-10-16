@@ -28,6 +28,11 @@
         "upload:build",
         "editor:build",
         "locales:build",
+        "bpmn:build",
+        "scheduler:build",
+        "gantt:build",
+        "kanban:build",
+        "charts:build",
         "ui:build"
       ],
       "outputs": ["{workspaceRoot}/dist/packages/*/schematics"],

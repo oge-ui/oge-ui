@@ -10,6 +10,7 @@ import {
   type ForwardedRef,
   type ReactElement,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildSparklineScene,
@@ -22,6 +23,7 @@ import {
   type OgeChartsMessages,
   type OgeSparklineMarkers,
   type OgeSparklineType,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
 import {
@@ -78,6 +80,7 @@ function OgeSparklineInner<T extends object>(
   props: OgeSparklineProps<T>,
   ref: ForwardedRef<OgeSparklineHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const config = useOgeChartsConfig();
   const messages = useStable(props.messages);
   const msg = useMemo(

@@ -36,7 +36,7 @@ export const GRID_OVERVIEW_DEMOS: readonly ReactDemo[] = [
 declare const employees: Employee[];
 
 const money = (value: unknown): string =>
-  typeof value === 'number' ? \`₺\${value.toLocaleString('tr-TR')}\` : String(value ?? '');
+  typeof value === 'number' ? \`$\${value.toLocaleString('en-US')}\` : String(value ?? '');
 
 const columns: OgeGridColumnProps<Employee>[] = [
   { field: 'id', caption: 'Id', width: 70, dataType: 'number' },

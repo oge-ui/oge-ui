@@ -7,6 +7,39 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### OGE UI Pro licensing — `@oge-ui/core`, the six commercial families (Angular, React, engines)
+
+- **Buy and register a license.** OGE UI Pro — Pivot Grid, Gantt, Scheduler,
+  Kanban, Charts and BPMN in both render layers — is $299 per developer per
+  year with a perpetual fallback: a key covers every release published while
+  it is current, forever. Buy on [ogeui.com/license](https://www.ogeui.com/license),
+  retrieve the key at `/license/claim`, and register it once with
+  `ogeSetLicenseKey('OGE1.…')` before bootstrapping (ADR 0004).
+- **Offline check, never a block.** Keys are Ed25519-signed and verified in the
+  browser with no network call. Without a valid key on a production host a
+  Pro component still works in full; the page logs one console warning per
+  family and shows a small "OGE UI Pro — unlicensed" corner link. Localhost,
+  `*.local`, `*.test`, file URLs, StackBlitz / CodeSandbox and jsdom /
+  happy-dom test runs never show it.
+- New in `@oge-ui/core`: `ogeSetLicenseKey`, `ogeLicenseStatus`,
+  `ogeGetLicenseInfo`, `ogeIsLicenseExemptHost` and the key helpers; each
+  commercial engine exports its `ogeCheck<Family>License()` hook, which the
+  family's components call. `@oge-ui/bpmn-engine` now depends on
+  `@oge-ui/core`.
+- The commercial READMEs and docs pages no longer say "no watermark, no
+  runtime license checks".
+
+### Docs site — search and sharing
+
+- Unknown URLs now answer **404** with a `noindex` not-found page instead of a
+  200 copy of the home page; hashed scripts and stylesheets are cached for a
+  year.
+- Share cards: every page shares a 1200×630 screenshot card (one per flagship
+  family) instead of the 1 MB logo; titles stay within 60 characters; the
+  home page and the data grid page carry descriptive headings; the
+  structured data names the MIT and Pro offers separately.
+- Showcase demos format money in US dollars.
+
 ## 1.1.4 — 2026-10-10
 
 The docs site wave and the technical-debt pass: Ctrl/⌘K search, `/changelog` and `/bundle-size`, guides with a WCAG 2.2 conformance report and a versioning policy, the design-token reference and ThemeBuilder (plus `tokens.json` in `@oge-ui/core`), Open in StackBlitz, `@oge-ui/<package>/testing` harnesses and React Testing Library helpers; cross-browser and accessibility fixes from the first full nightly matrix, Gantt RTL, measured rotated chart labels, pivot `headerFormat`, hoverable tooltips and dependency updates — plus motion tokens with enter animations across the suite, a redesigned docs sidebar with a responsive layout and mobile drawer, and a security pass closing the code-scanning alerts (linear-time parsers, property-based fuzzing).

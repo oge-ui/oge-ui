@@ -11,6 +11,7 @@ import {
   type OgeChartValueRange,
   type OgeGaugeOrientation,
   type OgeGaugeScaleOptions,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeChartVisualRtlBase } from './visual-base';
 
@@ -141,6 +142,11 @@ import { OgeChartVisualRtlBase } from './visual-base';
   `,
 })
 export class OgeBulletChart extends OgeChartVisualRtlBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   /** The measure; `null` draws the bands and the target alone. */
   readonly value = input<number | null>(null);
   /** The comparative measure (the target marker). */

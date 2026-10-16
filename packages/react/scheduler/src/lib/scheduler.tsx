@@ -32,6 +32,7 @@ import {
   type OgeSchedulerView,
   type OgeSchedulerViewOptions,
   type SchedulerEditorModel,
+  ogeCheckSchedulerLicense,
 } from '@oge-ui/scheduler-engine';
 import {
   SchedulerAppointmentDialog,
@@ -75,6 +76,7 @@ function OgeSchedulerInner<T extends object>(
   props: OgeSchedulerProps<T>,
   ref: ForwardedRef<OgeSchedulerHandle<T>>,
 ): ReactElement {
+  useEffect(() => ogeCheckSchedulerLicense(), []);
   const config = useOgeSchedulerConfig();
   const [, rerender] = useReducer((n: number) => n + 1, 0);
 

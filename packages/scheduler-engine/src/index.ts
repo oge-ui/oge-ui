@@ -430,3 +430,4 @@ export {
   type SchedulerScopeAction,
   type SchedulerScopePending,
 } from './lib/scheduler-core';
+export { ogeCheckSchedulerLicense } from './lib/license';

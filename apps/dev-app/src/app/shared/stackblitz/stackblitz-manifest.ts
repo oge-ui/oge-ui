@@ -58,7 +58,9 @@ export const STACKBLITZ_PACKAGES: Readonly<
     "styles": false
   },
   "@oge-ui/bpmn-engine": {
-    "deps": [],
+    "deps": [
+      "@oge-ui/core"
+    ],
     "commercial": true,
     "styles": false
   },

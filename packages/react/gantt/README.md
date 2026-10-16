@@ -10,8 +10,8 @@ and the markup is the same `.oge-gantt` structure the one shared stylesheet
 styles. Nothing here wraps Angular.
 
 > **Commercial.** `@oge-ui/react-gantt` is source-available commercial
-> software — free for evaluation and development, with no watermark and no
-> runtime license checks; production use requires a paid license. See
+> software — free for evaluation and development, with no notice on development hosts; production use needs
+> a license key; production use requires a paid license. See
 > [LICENSE](LICENSE) and <https://www.ogeui.com/license>.
 
 ## What ships
