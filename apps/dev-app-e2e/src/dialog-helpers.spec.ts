@@ -72,10 +72,14 @@ for (const layer of LAYERS) {
     test('alert: Escape acknowledges', async ({ page }) => {
       await helpers(page).getByRole('button', { name: 'Show notice' }).click();
       const dialog = page.getByRole('alertdialog', { name: 'Notice' });
+      // wait for the alert to take focus: the Cancel check below also passes
+      // before the dialog renders, and an early Escape lands on the page
+      await expect(dialog.getByRole('button', { name: 'OK' })).toBeFocused();
       await expect(dialog.getByRole('button', { name: 'Cancel' })).toHaveCount(
         0,
       );
       await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
       await expect(result(page)).toHaveText('result: alert → acknowledged');
     });
 
