@@ -40,14 +40,17 @@ export const ru: OgeLocalePack = {
     columnResized: 'Ширина столбца {column}: {width} пикс.',
     columnMoved: 'Столбец {column} перемещён на позицию {position} из {total}',
     rowMoved: 'Строка перемещена на позицию {position} из {total}',
-    treeRowMoved: 'Строка перемещена на уровень {level}, позиция {position} из {total}',
-    groupMoved: 'Группировка по {column} перемещена на позицию {position} из {total}',
+    treeRowMoved:
+      'Строка перемещена на уровень {level}, позиция {position} из {total}',
+    groupMoved:
+      'Группировка по {column} перемещена на позицию {position} из {total}',
     groupRemoved: 'Группировка по {column} удалена',
     expandRow: 'Развернуть строку',
     collapseRow: 'Свернуть строку',
     previousPage: 'Предыдущая страница',
     nextPage: 'Следующая страница',
-    pagerInfo: '{count, plural, one {# строка} other {# строк}}',
+    pagerInfo:
+      '{count, plural, one {# строка} few {# строки} many {# строк} other {# строки}}',
     pageSizeLabel: 'Строк на странице',
     allRows: 'Все',
     confirmDelete: 'Удалить эту строку?',
@@ -115,22 +118,28 @@ export const ru: OgeLocalePack = {
     sortAscendingAnnouncement: 'Сортировка по столбцу {column}, по возрастанию',
     sortDescendingAnnouncement: 'Сортировка по столбцу {column}, по убыванию',
     sortClearedAnnouncement: 'Сортировка сброшена',
-    rowCountAnnouncement: '{count, plural, one {# строка} other {# строк}}',
+    rowCountAnnouncement:
+      '{count, plural, one {# строка} few {# строки} many {# строк} other {# строки}}',
     pageAnnouncement: 'Страница {n} из {total}',
     groupExpandedAnnouncement: 'Группа {value} развёрнута',
     groupCollapsedAnnouncement: 'Группа {value} свёрнута',
     rowExpandedAnnouncement: '{value} развёрнуто',
     rowCollapsedAnnouncement: '{value} свёрнуто',
-    selectionCountAnnouncement: '{count, plural, one {Выбрана # строка} other {Выбрано # строк}}',
+    selectionCountAnnouncement:
+      '{count, plural, one {Выбрана # строка} few {Выбрано # строки} many {Выбрано # строк} other {Выбрано # строки}}',
     validationErrorAnnouncement: '{column}: {error}',
     rangeSelectedAnnouncement: 'Выбрано ячеек: {rows}×{columns}',
-    cellsPastedAnnouncement: '{count, plural, one {Вставлена # ячейка} other {Вставлено # ячеек}}',
-    cellsFilledAnnouncement: '{count, plural, one {Заполнена # ячейка} other {Заполнено # ячеек}}',
-    undoAnnouncement: 'Отменить: {count, plural, one {восстановлена # ячейка} other {восстановлено # ячеек}}',
-    redoAnnouncement: 'Повторить: {count, plural, one {изменена # ячейка} other {изменено # ячеек}}',
+    cellsPastedAnnouncement:
+      '{count, plural, one {Вставлена # ячейка} few {Вставлено # ячейки} many {Вставлено # ячеек} other {Вставлено # ячейки}}',
+    cellsFilledAnnouncement:
+      '{count, plural, one {Заполнена # ячейка} few {Заполнено # ячейки} many {Заполнено # ячеек} other {Заполнено # ячейки}}',
+    undoAnnouncement:
+      'Отмена: {count, plural, one {восстановлена # ячейка} few {восстановлено # ячейки} many {восстановлено # ячеек} other {восстановлено # ячейки}}',
+    redoAnnouncement:
+      'Повтор: {count, plural, one {изменена # ячейка} few {изменено # ячейки} many {изменено # ячеек} other {изменено # ячейки}}',
     fillHandle: 'Перетащите для заполнения',
     validationPending: 'Проверка…',
-    autoFitColumn: 'По размеру окна',
+    autoFitColumn: 'Автоподбор ширины',
     filterByCondition: 'Фильтр по условию',
     filterByValues: 'Фильтр по значениям',
     firstCondition: 'Первое условие',
@@ -251,7 +260,8 @@ export const ru: OgeLocalePack = {
     listBoxLabel: 'Параметры',
     listBoxSearchPlaceholder: 'Поиск',
     listBoxSearchLabel: 'Поиск в списке',
-    listBoxReorderedAnnouncement: '{item} перемещён на позицию {position} из {count}',
+    listBoxReorderedAnnouncement:
+      '{item} перемещён на позицию {position} из {count}',
     transferSourceTitle: 'Доступно',
     transferTargetTitle: 'Выбрано',
     transferActionsLabel: 'Переместить элементы',
@@ -259,8 +269,10 @@ export const ru: OgeLocalePack = {
     transferAddAll: 'Добавить все',
     transferRemoveSelected: 'Удалить выбранное',
     transferRemoveAll: 'Удалить все',
-    transferItemCount: '{count, plural, one {# элемент} other {# элементов}}',
-    transferMovedAnnouncement: '{count, plural, one {# элемент перемещён в {list}} other {# элементов перемещено в {list}}}',
+    transferItemCount:
+      '{count, plural, one {# элемент} few {# элемента} many {# элементов} other {# элемента}}',
+    transferMovedAnnouncement:
+      '{count, plural, one {# элемент перемещён в {list}} few {# элемента перемещено в {list}} many {# элементов перемещено в {list}} other {# элемента перемещено в {list}}}',
     signatureLabel: 'Подпись',
     signaturePlaceholder: 'Подпишите здесь',
     signatureEmptyStatus: 'не подписано',
@@ -270,7 +282,7 @@ export const ru: OgeLocalePack = {
     signatureClear: 'Очистить подпись',
     signatureModeLabel: 'Способ ввода подписи',
     signatureDrawMode: 'Рисовать',
-    signatureTypeMode: 'Тип',
+    signatureTypeMode: 'Ввести',
     signatureTypeInputLabel: 'Введите полное имя',
     mentionListLabel: 'Предложения',
   },
@@ -318,7 +330,8 @@ export const ru: OgeLocalePack = {
     requiredLabel: 'обязательно',
     optionalLabel: 'необязательно',
     labelColon: ':',
-    validationSummaryTitle: '{count, plural, one {# поле требует внимания} other {# полей требуют внимания}}',
+    validationSummaryTitle:
+      '{count, plural, one {# поле требует внимания} few {# поля требуют внимания} many {# полей требуют внимания} other {# поля требуют внимания}}',
     validationSummaryLabel: 'Сводка проверки',
     invalidError: 'Недопустимое значение',
     submitButton: 'Отправить',
@@ -378,7 +391,8 @@ export const ru: OgeLocalePack = {
     },
     announcements: {
       fileAdded: '{name} добавлен',
-      filesAdded: '{count, plural, one {Добавлен # файл} other {Добавлено # файлов}}',
+      filesAdded:
+        '{count, plural, one {Добавлен # файл} few {Добавлено # файла} many {Добавлено # файлов} other {Добавлено # файла}}',
       fileRejected: '«{name}» отклонён: {reason}',
       uploadStarted: 'Загрузка {name}',
       uploadProgress: '{name}, {percent} %',
@@ -389,7 +403,8 @@ export const ru: OgeLocalePack = {
       uploadAborted: '{name} отменён',
       fileRemoved: '«{name}» удалён',
       cleared: 'Все файлы удалены',
-      allCompleted: 'Загружено {succeeded} из {total, plural, one {# файла} other {# файлов}}',
+      allCompleted:
+        'Загружено {succeeded} из {total, plural, one {# файла} few {# файлов} many {# файлов} other {# файла}}',
       dropZoneEntered: 'Перетащите файлы, чтобы добавить',
     },
   },
@@ -450,7 +465,8 @@ export const ru: OgeLocalePack = {
       imageOk: 'Далее',
       imageAltTitle: 'Опишите изображение',
       imageAltLabel: 'Альтернативный текст',
-      imageAltMessage: 'Программы чтения с экрана озвучивают этот текст вместо изображения. Оставьте поле пустым для декоративного изображения.',
+      imageAltMessage:
+        'Программы чтения с экрана озвучивают этот текст вместо изображения. Оставьте поле пустым для декоративного изображения.',
     },
     colors: {
       textColorLabel: 'Цвет текста',
@@ -458,8 +474,10 @@ export const ru: OgeLocalePack = {
       removeColor: 'Без цвета',
     },
     counter: {
-      characters: '{count, plural, one {# символ} other {# символов}}',
-      words: '{count, plural, one {# слово} other {# слов}}',
+      characters:
+        '{count, plural, one {# символ} few {# символа} many {# символов} other {# символа}}',
+      words:
+        '{count, plural, one {# слово} few {# слова} many {# слов} other {# слова}}',
       limit: '{count} / {max}',
     },
     announcements: {
@@ -491,7 +509,7 @@ export const ru: OgeLocalePack = {
   layout: {
     accordion: {
       invalidSection: 'в разделе есть ошибки',
-      pending: 'рабочий',
+      pending: 'выполняется',
       loadingContent: 'Загрузка…',
       contentLoadFailed: 'Не удалось загрузить этот раздел.',
       retry: 'Повторить',
@@ -526,13 +544,16 @@ export const ru: OgeLocalePack = {
       away: 'Отошёл',
       busy: 'Занят',
       offline: 'Не в сети',
-      overflow: '{count, plural, one {Ещё #} other {Ещё #}}',
+      overflow:
+        '{count, plural, one {Ещё #} few {Ещё #} many {Ещё #} other {Ещё #}}',
     },
     badge: {
-      count: '{count, plural, one {# новый элемент} other {# новых элементов}}',
+      count:
+        '{count, plural, one {# новый элемент} few {# новых элемента} many {# новых элементов} other {# нового элемента}}',
       overflow: '{max}+',
-      overflowCount: '{max, plural, one {Более # нового элемента} other {Более # новых элементов}}',
-      dot: 'Создать',
+      overflowCount:
+        '{max, plural, one {Более # нового элемента} few {Более # новых элементов} many {Более # новых элементов} other {Более # нового элемента}}',
+      dot: 'Новое',
     },
     chip: {
       remove: 'Удалить {label}',
@@ -562,10 +583,12 @@ export const ru: OgeLocalePack = {
       layoutLabel: 'Панель мониторинга',
       tileRoleDescription: 'плитка',
       untitledTile: 'Плитка {position}',
-      keyboardHint: 'Нажмите Control и клавишу со стрелкой, чтобы переместить плитку; Control, Shift и стрелку — чтобы изменить размер.',
+      keyboardHint:
+        'Нажмите Control и клавишу со стрелкой, чтобы переместить плитку; Control, Shift и стрелку — чтобы изменить размер.',
       dragHint: 'Перетащите для перемещения',
       moved: '«{title}» перемещён на позицию {position} из {count}',
-      resized: '«{title}» изменён до {colSpan, plural, one {# столбца} other {# столбцов}} на {rowSpan, plural, one {# строку} other {# строк}}',
+      resized:
+        '«{title}»: размер {colSpan, plural, one {# столбец} few {# столбца} many {# столбцов} other {# столбца}} на {rowSpan, plural, one {# строка} few {# строки} many {# строк} other {# строки}}',
       unchanged: '«{title}» больше нельзя изменить',
       dragCancelled: 'Перетаскивание отменено',
     },
@@ -588,7 +611,8 @@ export const ru: OgeLocalePack = {
       pageAnnouncement: 'Страница {page} из {pageCount}',
       noData: 'Нет элементов для отображения',
       noResults: 'Нет подходящих элементов',
-      results: '{count, plural, =0 {Нет результатов} one {# результат} other {# результатов}}',
+      results:
+        '{count, plural, =0 {Нет результатов} one {# результат} few {# результата} many {# результатов} other {# результата}}',
       loading: 'Загрузка…',
     },
     listView: {
@@ -600,9 +624,12 @@ export const ru: OgeLocalePack = {
       loading: 'Загрузка…',
       noData: 'Нет элементов',
       noResults: 'Нет подходящих элементов',
-      resultsCount: '{count, plural, =0 {Нет результатов} one {# результат} other {# результатов}}',
-      loadedCount: '{count, plural, one {Загружен ещё # элемент} other {Загружено ещё # элементов}}',
-      selectedCount: '{count, plural, =0 {Выбор снят} one {Выбран # элемент} other {Выбрано # элементов}}',
+      resultsCount:
+        '{count, plural, =0 {Нет результатов} one {# результат} few {# результата} many {# результатов} other {# результата}}',
+      loadedCount:
+        '{count, plural, one {Загружен ещё # элемент} few {Загружено ещё # элемента} many {Загружено ещё # элементов} other {Загружено ещё # элемента}}',
+      selectedCount:
+        '{count, plural, =0 {Выбор снят} one {Выбран # элемент} few {Выбрано # элемента} many {Выбрано # элементов} other {Выбрано # элемента}}',
       itemActions: 'Действия: {actions}',
     },
   },
@@ -644,7 +671,7 @@ export const ru: OgeLocalePack = {
       invalid: 'Есть ошибки',
       previous: 'Назад',
       next: 'Далее',
-      finish: 'Окончание',
+      finish: 'Готово',
     },
     treeView: {
       selectAll: 'Выбрать все',
@@ -655,11 +682,14 @@ export const ru: OgeLocalePack = {
       childrenLoadFailed: 'Не удалось загрузить эти элементы.',
       noData: 'Нет элементов для отображения',
       noSearchResults: 'Нет подходящих элементов',
-      loadMore: 'Показать ещё {count, plural, one {# элемент} other {# элементов}}',
+      loadMore:
+        'Показать ещё {count, plural, one {# элемент} few {# элемента} many {# элементов} other {# элемента}}',
       editLabel: 'Имя элемента',
       editInvalid: 'Введите допустимое имя.',
-      cutAnnouncement: '{item} вырезан. Перейдите к целевому элементу и нажмите Ctrl+V для перемещения или Esc для отмены.',
-      movedAnnouncement: '{position, select, inside {{item} перемещён в {target}.} before {{item} перемещён перед {target}.} other {{item} перемещён после {target}.}}',
+      cutAnnouncement:
+        '{item} вырезан. Перейдите к целевому элементу и нажмите Ctrl+V для перемещения или Esc для отмены.',
+      movedAnnouncement:
+        '{position, select, inside {{item} перемещён в {target}.} before {{item} перемещён перед {target}.} other {{item} перемещён после {target}.}}',
       moveCancelledAnnouncement: 'Перемещение отменено.',
       moveRejectedAnnouncement: '{item} нельзя переместить сюда.',
     },
@@ -682,7 +712,7 @@ export const ru: OgeLocalePack = {
     filterField: 'Значения фильтра',
     removeField: 'Удалить поле',
     expandAll: 'Развернуть всё',
-    collapseAll: 'Свернуть все',
+    collapseAll: 'Свернуть всё',
     showFieldChooser: 'Выбор полей',
     fieldChooserTitle: 'Выбор полей',
     allFields: 'Все поля',
@@ -792,14 +822,22 @@ export const ru: OgeLocalePack = {
       timeZonePlaceholder: 'Часовой пояс планировщика ({zone})',
       summaryLabel: 'Сводка повторения',
       summary: {
-        daily: '{interval, plural, one {Каждый день} other {Каждые # дней}}',
-        weekly: '{interval, plural, one {Каждую неделю} other {Каждые # недель}}',
-        weeklyOn: '{interval, plural, one {Каждую неделю} other {Каждые # недель}} в {days}',
-        monthlyDay: '{interval, plural, one {Каждый месяц} other {Каждые # месяцев}} в день {days}',
-        monthlyWeekday: '{interval, plural, one {Каждый месяц} other {Каждые # месяцев}} в {ordinal} {day}',
-        yearlyDay: '{interval, plural, one {Каждый год} other {Каждые # лет}} {month} {days}',
-        yearlyWeekday: '{interval, plural, one {Каждый год} other {Каждые # лет}} в {ordinal} {day} месяца {month}',
-        count: '{summary}, {count, plural, one {один раз} other {# раз}}',
+        daily:
+          '{interval, plural, =1 {Каждый день} one {Каждый # день} few {Каждые # дня} many {Каждые # дней} other {Каждые # дня}}',
+        weekly:
+          '{interval, plural, =1 {Каждую неделю} one {Каждую # неделю} few {Каждые # недели} many {Каждые # недель} other {Каждые # недели}}',
+        weeklyOn:
+          '{interval, plural, =1 {Каждую неделю} one {Каждую # неделю} few {Каждые # недели} many {Каждые # недель} other {Каждые # недели}} в {days}',
+        monthlyDay:
+          '{interval, plural, =1 {Каждый месяц} one {Каждый # месяц} few {Каждые # месяца} many {Каждые # месяцев} other {Каждые # месяца}} в день {days}',
+        monthlyWeekday:
+          '{interval, plural, =1 {Каждый месяц} one {Каждый # месяц} few {Каждые # месяца} many {Каждые # месяцев} other {Каждые # месяца}} в {ordinal} {day}',
+        yearlyDay:
+          '{interval, plural, =1 {Каждый год} one {Каждый # год} few {Каждые # года} many {Каждые # лет} other {Каждые # года}} {month} {days}',
+        yearlyWeekday:
+          '{interval, plural, =1 {Каждый год} one {Каждый # год} few {Каждые # года} many {Каждые # лет} other {Каждые # года}} в {ordinal} {day} месяца {month}',
+        count:
+          '{summary}, {count, plural, =1 {один раз} one {# раз} few {# раза} many {# раз} other {# раза}}',
         until: '{summary}, до {date}',
       },
       titleNew: 'Новая запись',
@@ -860,7 +898,8 @@ export const ru: OgeLocalePack = {
       weekNumberLabel: 'Неделя {week}',
       unavailableLabel: 'недоступно',
       selectedLabel: 'выбрано',
-      moreAppointmentsLabel: '{count, plural, one {Ещё # встреча} other {Ещё # встреч}} {date}',
+      moreAppointmentsLabel:
+        '{count, plural, one {Ещё # встреча} few {Ещё # встречи} many {Ещё # встреч} other {Ещё # встречи}} {date}',
       morePopupLabel: 'Встречи на {date}',
       goToDay: 'Перейти к дню',
       closeLabel: 'Закрыть',
@@ -879,13 +918,17 @@ export const ru: OgeLocalePack = {
     announcements: {
       slotUnavailable: 'Это время недоступно',
       conflict: '«{text}» пересекается с другой встречей',
-      copied: '{count, plural, one {Скопирована # встреча} other {Скопировано # встреч}}',
-      pasted: '{count, plural, one {Вставлена # встреча} other {Вставлено # встреч}}',
-      selected: '{count, plural, =0 {Выбор снят} one {Выбрана # встреча} other {Выбрано # встреч}}',
+      copied:
+        '{count, plural, one {Скопирована # встреча} few {Скопировано # встречи} many {Скопировано # встреч} other {Скопировано # встречи}}',
+      pasted:
+        '{count, plural, one {Вставлена # встреча} few {Вставлено # встречи} many {Вставлено # встреч} other {Вставлено # встречи}}',
+      selected:
+        '{count, plural, =0 {Выбор снят} one {Выбрана # встреча} few {Выбрано # встречи} many {Выбрано # встреч} other {Выбрано # встречи}}',
       undone: 'Отменено',
       redone: 'Повторено',
       dropped: '«{text}» добавлен',
-      pickedUp: 'Выбрано: {text}. Выберите ячейку планировщика и нажмите Enter для размещения или Escape для отмены.',
+      pickedUp:
+        'Выбрано: {text}. Выберите ячейку планировщика и нажмите Enter для размещения или Escape для отмены.',
       created: '«{text}» создан',
       updated: '«{text}» обновлён',
       deleted: '«{text}» удалён',
@@ -902,7 +945,7 @@ export const ru: OgeLocalePack = {
       zoomOut: 'Уменьшить',
       zoomToFit: 'По размеру окна',
       expandAll: 'Развернуть всё',
-      collapseAll: 'Свернуть все',
+      collapseAll: 'Свернуть всё',
       addTask: 'Новая задача',
       undo: 'Отменить',
       redo: 'Повторить',
@@ -969,10 +1012,12 @@ export const ru: OgeLocalePack = {
       noTasks: 'Задач пока нет',
       noTasksHint: 'Создайте первую задачу, чтобы начать',
       filterLabel: 'Фильтр: {column}',
-      headerHint: 'Enter — сортировка, Alt+← или Alt+→ — изменить ширину, Ctrl+Shift+← или Ctrl+Shift+→ — переместить столбец',
+      headerHint:
+        'Enter — сортировка, Alt+← или Alt+→ — изменить ширину, Ctrl+Shift+← или Ctrl+Shift+→ — переместить столбец',
       cellEditorLabel: '{column} из {title}',
       histogramLabel: 'Загрузка ресурсов',
-      histogramRow: '{resource}: пик {peak}%, {count, plural, =0 {мощность не превышалась} one {превышение мощности в # период} other {превышение мощности в # периодов}}',
+      histogramRow:
+        '{resource}: пик {peak}%, {count, plural, =0 {мощность не превышалась} one {мощность превышена в # периоде} few {мощность превышена в # периодах} many {мощность превышена в # периодах} other {мощность превышена в # периода}}',
       unassigned: 'Не назначено',
       baselineNone: 'Нет базового плана',
       baselineOption: 'Базовая линия {index}',
@@ -992,11 +1037,16 @@ export const ru: OgeLocalePack = {
       cancelled: 'Отменено',
       undone: 'Отменено',
       redone: 'Повторено',
-      tasksDeleted: '{count, plural, one {Удалена # задача} other {Удалено # задач}}',
-      tasksIndented: '{count, plural, one {Сдвинута # задача} other {Сдвинуто # задач}}',
-      tasksOutdented: '{count, plural, one {Вынесена # задача} other {Вынесено # задач}}',
-      selectionCount: '{count, plural, =0 {Задачи не выбраны} one {Выбрана # задача} other {Выбрано # задач}}',
-      filtered: '{count, plural, one {Показана # задача} other {Показано # задач}}',
+      tasksDeleted:
+        '{count, plural, one {Удалена # задача} few {Удалено # задачи} many {Удалено # задач} other {Удалено # задачи}}',
+      tasksIndented:
+        '{count, plural, one {Сдвинута # задача} few {Сдвинуто # задачи} many {Сдвинуто # задач} other {Сдвинуто # задачи}}',
+      tasksOutdented:
+        '{count, plural, one {Вынесена # задача} few {Вынесено # задачи} many {Вынесено # задач} other {Вынесено # задачи}}',
+      selectionCount:
+        '{count, plural, =0 {Задачи не выбраны} one {Выбрана # задача} few {Выбрано # задачи} many {Выбрано # задач} other {Выбрано # задачи}}',
+      filtered:
+        '{count, plural, one {Показана # задача} few {Показано # задачи} many {Показано # задач} other {Показано # задачи}}',
       sorted: 'Сортировка по столбцу {column}, {direction}',
       sortAscending: 'по возрастанию',
       sortDescending: 'по убыванию',
@@ -1014,7 +1064,7 @@ export const ru: OgeLocalePack = {
       weeks: 'Недели',
       months: 'Месяцы',
       quarters: 'Кварталы',
-      years: 'Лет',
+      years: 'Годы',
       quarterLabel: 'Q{quarter}',
       decadeLabel: '{start}–{end}',
     },
@@ -1040,10 +1090,12 @@ export const ru: OgeLocalePack = {
       deadline: 'Крайний срок: {date}',
       overdue: 'просрочено',
       manual: 'запланировано вручную',
-      conflictDependency: '«{title}» начинается раньше, чем допускает связь {type}',
+      conflictDependency:
+        '«{title}» начинается раньше, чем допускает связь {type}',
       conflictConstraint: '«{title}» нарушает ограничение: {constraint} {date}',
       conflictDeadline: '«{title}» завершается после срока {date}',
-      conflictCount: '{count, plural, =0 {Конфликтов планирования нет} one {# конфликт планирования} other {# конфликтов планирования}}',
+      conflictCount:
+        '{count, plural, =0 {Конфликтов планирования нет} one {# конфликт планирования} few {# конфликта планирования} many {# конфликтов планирования} other {# конфликта планирования}}',
       statusDate: 'Дата состояния',
     },
     dependencyEditor: {
@@ -1055,14 +1107,14 @@ export const ru: OgeLocalePack = {
       hours: 'Часы',
       save: 'Сохранить',
       cancel: 'Отмена',
-      delete: 'Удалить ссылку',
+      delete: 'Удалить связь',
     },
   },
   kanban: {
     toolbar: {
       label: 'Панель инструментов канбана',
       addCard: 'Новая карточка',
-      collapseAll: 'Свернуть все',
+      collapseAll: 'Свернуть всё',
       expandAll: 'Развернуть всё',
       searchLabel: 'Поиск карточек',
       searchPlaceholder: 'Поиск…',
@@ -1133,23 +1185,31 @@ export const ru: OgeLocalePack = {
       quickAddLabel: 'Название новой карточки в {title}',
       quickAddPlaceholder: 'Введите заголовок и нажмите Enter',
       editTitleLabel: 'Заголовок: {title}',
-      checklistProgress: 'Выполнено {done} из {total, plural, one {# пункта} other {# пунктов}}',
-      dragCount: '{count, plural, one {# карточка} other {# карточек}}',
+      checklistProgress:
+        'Выполнено {done} из {total, plural, one {# пункта} few {# пунктов} many {# пунктов} other {# пункта}}',
+      dragCount:
+        '{count, plural, one {# карточка} few {# карточки} many {# карточек} other {# карточки}}',
       laneWipExceeded: '{count} карточек превышают лимит дорожки {limit}',
-      cellWipExceeded: '{count} карточек превышают лимит {limit} на этой дорожке',
+      cellWipExceeded:
+        '{count} карточек превышают лимит {limit} на этой дорожке',
       noFilterResults: 'Нет карточек, соответствующих фильтрам',
     },
     announcements: {
       cardCreated: '«{title}» создан',
       cardUpdated: '«{title}» обновлён',
       cardDeleted: '«{title}» удалён',
-      cardMoved: '«{title}» перемещён в {column}, позиция {position} из {count}',
+      cardMoved:
+        '«{title}» перемещён в {column}, позиция {position} из {count}',
       columnMoved: 'Столбец «{title}» перемещён на позицию {position}',
       cancelled: 'Отменено',
-      cardsMoved: '{count, plural, one {# карточка перемещена} other {# карточек перемещено}} в {column}',
-      cardsDeleted: '{count, plural, one {Удалена # карточка} other {Удалено # карточек}}',
-      selection: '{count, plural, one {Выбрана # карточка} other {Выбрано # карточек}}',
-      cardsTransferred: '{count, plural, one {# карточка перемещена} other {# карточек перемещено}} на доску {board}, {column}',
+      cardsMoved:
+        '{count, plural, one {# карточка перемещена} few {# карточки перемещены} many {# карточек перемещено} other {# карточки перемещено}} в {column}',
+      cardsDeleted:
+        '{count, plural, one {Удалена # карточка} few {Удалено # карточки} many {Удалено # карточек} other {Удалено # карточки}}',
+      selection:
+        '{count, plural, one {Выбрана # карточка} few {Выбрано # карточки} many {Выбрано # карточек} other {Выбрано # карточки}}',
+      cardsTransferred:
+        '{count, plural, one {# карточка перемещена} few {# карточки перемещены} many {# карточек перемещено} other {# карточки перемещено}} на доску {board}, {column}',
       undone: 'Отменено',
       redone: 'Повторено',
       sorted: 'Столбец {column} отсортирован по полю {field}',
@@ -1198,8 +1258,8 @@ export const ru: OgeLocalePack = {
     tools: {
       label: 'Инструменты холста',
       hand: 'Инструмент «Рука»',
-      lasso: 'Инструмент «Лasso»',
-      space: 'Инструмент «Пробел»',
+      lasso: 'Инструмент «Лассо»',
+      space: 'Инструмент «Пространство»',
       globalConnect: 'Инструмент глобального соединения',
       search: 'Поиск элементов',
     },
@@ -1252,11 +1312,11 @@ export const ru: OgeLocalePack = {
       moved: '«{name}» перемещён',
       connected: 'Соединено «{source}» с «{target}»',
       deleted: 'Удалено элементов: {count}',
-      undone: 'Отменить: {label}',
-      redone: 'Повторить: {label}',
+      undone: 'Отменено: {label}',
+      redone: 'Повторено: {label}',
       selected: '«{name}» выбран',
       selectionCleared: 'Выбор снят',
-      importedWithWarnings: 'Импортировано с {count} предупреждением(ями)',
+      importedWithWarnings: 'Импортировано, предупреждений: {count}',
       imported: 'Диаграмма импортирована',
       connectDenied: 'Соединение не разрешено',
       labelEdited: 'Метка обновлена',
@@ -1353,7 +1413,8 @@ export const ru: OgeLocalePack = {
     lint: {
       panelLabel: 'Проблемы',
       empty: 'Проблем не найдено',
-      summary: 'Ошибок: {errors}, предупреждений: {warnings}, сообщений: {infos}',
+      summary:
+        'Ошибок: {errors}, предупреждений: {warnings}, сообщений: {infos}',
       severityNames: {
         error: 'Ошибка',
         warning: 'Предупреждение',
@@ -1366,14 +1427,16 @@ export const ru: OgeLocalePack = {
         endEventRequired: 'У процесса нет конечного события',
         disconnected: 'Элемент не связан ни с одним последовательным потоком',
         superfluousGateway: 'Шлюз не разветвляет и не объединяет потоки',
-        conditionMissing: 'Исходящий поток из исключающего шлюза должен иметь условие или быть потоком по умолчанию',
+        conditionMissing:
+          'Исходящий поток из исключающего шлюза должен иметь условие или быть потоком по умолчанию',
         defaultFlowCondition: 'У потока по умолчанию не должно быть условия',
         implicitSplit: 'Элемент неявно разделяет поток; используйте шлюз',
         implicitJoin: 'Элемент неявно объединяет потоки; используйте шлюз',
         labelRequired: 'У элемента нет подписи',
         duplicateId: 'Идентификатор «{id}» используется более одного раза',
         subProcessStart: 'У подпроцесса нет начального события',
-        subProcessBlankStart: 'У начального события подпроцесса не должно быть определения события',
+        subProcessBlankStart:
+          'У начального события подпроцесса не должно быть определения события',
         messageFlowPools: 'Поток сообщений должен соединять два разных пула',
         boundaryAttached: 'Граничное событие не привязано к действию',
         boundaryOutgoing: 'У граничного события нет исходящего потока',
@@ -1455,8 +1518,8 @@ export const ru: OgeLocalePack = {
       point: '{series}, {argument}: {value}',
       seriesHidden: '«{series}» скрыт',
       seriesShown: '«{series}» показан',
-      zoomed: 'Изменён масштаб',
-      zoomReset: 'Сбросить масштаб',
+      zoomed: 'Масштаб изменён',
+      zoomReset: 'Масштаб сброшен',
       selected: '{series}, {argument} выбран',
     },
     values: {
@@ -1466,8 +1529,8 @@ export const ru: OgeLocalePack = {
       q3: 'Q3',
       high: 'Макс.',
       outliers: 'Выбросов: {count}',
-      increase: 'увеличить',
-      decrease: 'уменьшить',
+      increase: 'рост',
+      decrease: 'снижение',
       intermediate: 'промежуточный итог',
       total: 'итого',
       cumulative: 'накопительно {value}',
@@ -1501,24 +1564,35 @@ export const ru: OgeLocalePack = {
     visuals: {
       gaugeLabel: 'Индикатор «{title}»',
       gaugeValueInRange: '{value}, {range}',
-      bulletLabel: 'Линейчатая диаграмма «{title}»: значение {value}, цель {target}',
-      sparklineLabel: 'Спарклайн «{title}», {count, plural, one {# точка} other {# точек}}: первая {first}, последняя {last}, мин. {min}, макс. {max}',
-      funnelLabel: 'Воронка «{title}», {count, plural, one {# этап} other {# этапов}}',
-      pyramidLabel: 'Пирамида «{title}», {count, plural, one {# уровень} other {# уровней}}',
-      heatmapLabel: 'Тепловая карта «{title}», {rows, plural, one {# строка} other {# строк}} на {columns, plural, one {# столбец} other {# столбцов}}',
-      treemapLabel: 'Treemap «{title}», {count, plural, one {# плитка} other {# плиток}}',
-      sankeyLabel: 'Диаграмма Sankey «{title}», {nodes, plural, one {# узел} other {# узлов}}, {links, plural, one {# связь} other {# связей}}',
-      sunburstLabel: 'Sunburst «{title}», {count, plural, one {# сегмент} other {# сегментов}}',
-      mapLabel: 'Карта «{title}», {count, plural, one {# регион} other {# регионов}}',
-      drillHint: 'Стрелки перемещают между элементами, Enter открывает группу, Escape — на уровень выше',
-      mapHint: 'Стрелки перемещают между областями, «+» и «−» масштабируют, Shift со стрелкой сдвигает вид',
+      bulletLabel:
+        'Линейчатая диаграмма «{title}»: значение {value}, цель {target}',
+      sparklineLabel:
+        'Спарклайн «{title}», {count, plural, one {# точка} few {# точки} many {# точек} other {# точки}}: первая {first}, последняя {last}, мин. {min}, макс. {max}',
+      funnelLabel:
+        'Воронка «{title}», {count, plural, one {# этап} few {# этапа} many {# этапов} other {# этапа}}',
+      pyramidLabel:
+        'Пирамида «{title}», {count, plural, one {# уровень} few {# уровня} many {# уровней} other {# уровня}}',
+      heatmapLabel:
+        'Тепловая карта «{title}», {rows, plural, one {# строка} few {# строки} many {# строк} other {# строки}} на {columns, plural, one {# столбец} few {# столбца} many {# столбцов} other {# столбца}}',
+      treemapLabel:
+        'Treemap «{title}», {count, plural, one {# плитка} few {# плитки} many {# плиток} other {# плитки}}',
+      sankeyLabel:
+        'Диаграмма Sankey «{title}», {nodes, plural, one {# узел} few {# узла} many {# узлов} other {# узла}}, {links, plural, one {# связь} few {# связи} many {# связей} other {# связи}}',
+      sunburstLabel:
+        'Sunburst «{title}», {count, plural, one {# сегмент} few {# сегмента} many {# сегментов} other {# сегмента}}',
+      mapLabel:
+        'Карта «{title}», {count, plural, one {# регион} few {# региона} many {# регионов} other {# региона}}',
+      drillHint:
+        'Стрелки перемещают между элементами, Enter открывает группу, Escape — на уровень выше',
+      mapHint:
+        'Стрелки перемещают между областями, «+» и «−» масштабируют, Shift со стрелкой сдвигает вид',
       breadcrumbLabel: 'Путь детализации',
       colorScaleLabel: 'Цветовая шкала',
       zoomIn: 'Увеличить',
       zoomOut: 'Уменьшить',
       resetZoom: 'Сбросить масштаб',
       valueHeader: 'Значение',
-      shareHeader: 'Поделиться',
+      shareHeader: 'Доля',
       sourceHeader: 'Источник',
       targetHeader: 'Цель',
       target: 'цель {value}',
