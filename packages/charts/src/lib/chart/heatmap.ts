@@ -21,6 +21,7 @@ import {
   type OgeChartHeatmapCellEvent,
   type OgeChartLegendOptions,
   type OgeHeatmapCellVm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeChartColorLegend } from './color-legend';
 import { OgeChartVisualRtlBase } from './visual-base';
@@ -194,6 +195,11 @@ export interface OgeChartCellRef {
 export class OgeHeatmap<
   T extends object = Record<string, unknown>,
 > extends OgeChartVisualRtlBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   readonly dataSource = input<readonly T[]>([]);
   /** Column category. Default `'x'`. */
   readonly xField = input<string | ((item: T) => unknown)>('x');

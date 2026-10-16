@@ -311,8 +311,9 @@ interface ComponentCard {
         <tr>
           <td><code>&#64;oge-ui/bpmn</code></td>
           <td>
-            BPMN 2.0 process modeler with its own XML + DI engine, no watermark
-            (commercial — free for evaluation and development).
+            BPMN 2.0 process modeler with its own XML + DI engine, no
+            third-party branding (commercial — free for evaluation and
+            development).
           </td>
         </tr>
         <tr>

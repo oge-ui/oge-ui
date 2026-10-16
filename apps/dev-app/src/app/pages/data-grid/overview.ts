@@ -34,7 +34,7 @@ import { loadDocsPdfFont } from '../../shared/pdf-font';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
-      title="Overview"
+      title="Data Grid"
       [chips]="
         fw.isReact()
           ? ['OgeGrid', 'columns', 'renderCell']
@@ -237,7 +237,7 @@ export class DataGridOverviewPage {
   protected readonly quickStartSnippet = QUICK_START_SNIPPET;
   protected readonly money = (value: unknown): string =>
     typeof value === 'number'
-      ? `₺${value.toLocaleString('tr-TR')}`
+      ? `$${value.toLocaleString('en-US')}`
       : String(value ?? '');
 
   protected readonly grid = viewChild(OgeGrid<Employee>);

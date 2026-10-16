@@ -5,6 +5,7 @@ import {
   useImperativeHandle,
   useMemo,
   type ReactElement,
+  useEffect,
 } from 'react';
 import {
   GAUGE_BAR_LENGTH,
@@ -12,6 +13,7 @@ import {
   type OgeGaugeOrientation,
   type OgeGaugeScaleOptions,
   type OgeLinearGaugeIndicator,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, useStable } from './hooks';
 import { useChartVisual, useGaugeSweep } from './visual-hooks';
@@ -41,6 +43,7 @@ export interface OgeLinearGaugeProps extends OgeGaugeBaseProps {
  */
 export const OgeLinearGauge = forwardRef<OgeGaugeHandle, OgeLinearGaugeProps>(
   function OgeLinearGauge(props, ref): ReactElement {
+    useEffect(() => ogeCheckChartsLicense(), []);
     const value = props.value ?? null;
     const scale = useStable<OgeGaugeScaleOptions>(props.scale ?? NO_OPTIONS);
     const ranges = useStable(props.ranges ?? EMPTY);

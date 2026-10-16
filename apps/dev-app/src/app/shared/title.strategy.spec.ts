@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { documentTitle } from './title.strategy';
+import { DOCUMENT_TITLES, documentTitle } from './title.strategy';
 
 describe('documentTitle', () => {
   it('names both frameworks on a page both layers cover', () => {
@@ -35,10 +35,46 @@ describe('documentTitle', () => {
     ).toBe('Tabs for Angular and React | OGE UI');
   });
 
-  it('uses the fixed home title for the landing page', () => {
+  it('shortens a component title that would pass 60 characters', () => {
     expect(
-      documentTitle('OGE — UI components for Angular and React', '/'),
-    ).toMatch(/^OGE UI — .*Angular and React/);
+      documentTitle(
+        'OGE — Data Grid Excel & PDF Export',
+        '/components/data-grid/export',
+      ),
+    ).toBe('Data Grid Excel & PDF Export for Angular and React | OGE UI');
+    expect(
+      documentTitle(
+        'OGE — Scheduler Resources & Availability',
+        '/components/scheduler/resources-availability',
+      ),
+    ).toBe('Angular & React Scheduler Resources & Availability | OGE UI');
+    expect(
+      documentTitle(
+        'OGE — Data Grid Range Selection & Clipboard',
+        '/components/data-grid/range-selection',
+      ),
+    ).toBe('Angular & React Data Grid Range Selection & Clipboard');
+  });
+
+  it('uses the fixed home title for the landing page', () => {
+    const home = documentTitle(
+      'OGE — UI components for Angular and React',
+      '/',
+    );
+    expect(home).toMatch(/^OGE UI — .*Angular & React/);
+    expect(home.length).toBeLessThanOrEqual(60);
     expect(documentTitle(undefined, '/')).toMatch(/^OGE UI — /);
+  });
+
+  it('uses the hand-written titles of the commercial-intent pages', () => {
+    expect(documentTitle('OGE — OGE UI vs AG Grid', '/compare/ag-grid')).toBe(
+      'OGE UI vs AG Grid — Angular & React Alternative',
+    );
+    expect(documentTitle('OGE — Pricing', '/pricing?ref=x')).toMatch(
+      /^OGE UI Pricing/,
+    );
+    for (const [path, title] of Object.entries(DOCUMENT_TITLES)) {
+      expect(title.length, path).toBeLessThanOrEqual(60);
+    }
   });
 });

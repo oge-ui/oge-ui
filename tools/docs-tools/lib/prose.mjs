@@ -137,6 +137,35 @@ export const SITE_VERSION = '${version}';
 `;
 }
 
+/**
+ * `release-info.ts` in `@oge-ui/core`: the version and its release day, which
+ * the license check compares with a key's update window. The day is read from
+ * the `## <version> — <YYYY-MM-DD>` heading of the hand-written CHANGELOG, so
+ * cutting a release means dating its changelog entry.
+ */
+export function buildReleaseInfoFile(version, changelog) {
+  const heading = changelog
+    .split(/\r?\n/)
+    .find((line) => line.startsWith(`## ${version} `));
+  const date = /(\d{4}-\d{2}-\d{2})\s*$/.exec(heading ?? '')?.[1];
+  if (date === undefined) {
+    throw new Error(
+      `CHANGELOG.md has no dated "## ${version} — YYYY-MM-DD" heading; the license release date comes from it`,
+    );
+  }
+  return `/**
+ * The release this build of the suite belongs to.
+ *
+ * GENERATED — do not edit. Derived from packages/ui/package.json (the version)
+ * and the matching \`## <version> — <date>\` heading in CHANGELOG.md by
+ * \`npx nx run docs-tools:llms\`, and checked by \`docs-tools:llms-check\`.
+ * A license key covers every release dated on or before its \`expires\` day.
+ */
+export const OGE_RELEASE_VERSION = '${version}';
+export const OGE_RELEASE_DATE = '${date}';
+`;
+}
+
 export const COMMERCIAL_NOTE =
   'This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.';
 

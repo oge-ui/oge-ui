@@ -23,6 +23,7 @@ import {
   sparklineTooltip,
   type OgeSparklineMarkers,
   type OgeSparklineType,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import {
   OGE_CHARTS_CONFIG,
@@ -188,6 +189,7 @@ export class OgeSparkline<T extends object = Record<string, unknown>> {
   );
 
   constructor() {
+    ogeCheckChartsLicense();
     afterNextRender(() => {
       this.autoRtl.set(detectChartRtl(this.hostEl.nativeElement));
       const stopRtl = observeChartRtl(this.hostEl.nativeElement, (rtl) =>

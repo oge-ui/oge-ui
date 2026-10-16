@@ -111,8 +111,8 @@ const SECTIONS = [
         </p>
         <p>
           <code>&#64;oge-ui/react-charts</code> is a commercial package — free
-          for evaluation and development, with no watermark and no runtime
-          license checks. See
+          for evaluation and development, with no notice on development hosts;
+          production use needs a license key. See
           <a
             routerLink="/license"
             class="text-indigo-600 underline dark:text-indigo-400"
@@ -139,8 +139,8 @@ const SECTIONS = [
         </p>
         <p>
           <code>&#64;oge-ui/charts</code> is a commercial package — free for
-          evaluation and development, with no watermark and no runtime license
-          checks. See
+          evaluation and development, with no notice on development hosts;
+          production use needs a license key. See
           <a
             routerLink="/license"
             class="text-indigo-600 underline dark:text-indigo-400"

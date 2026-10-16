@@ -41,6 +41,7 @@ import {
   type OgeMapProjection,
   type OgeMapRegionVm,
   type OgeMapView,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, svgSafeId, useControllable, useStable } from './hooks';
 import { useChartVisual } from './visual-hooks';
@@ -101,6 +102,7 @@ function OgeVectorMapInner<T extends object>(
   props: OgeVectorMapProps<T>,
   ref: ForwardedRef<OgeVectorMapHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const geoJson = props.geoJson ?? null;
   const dataSource = props.dataSource ?? EMPTY;
   const colorScale = useStable(props.colorScale);

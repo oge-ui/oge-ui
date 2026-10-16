@@ -47,6 +47,7 @@ import {
   type OgePivotHeaderCell,
   type OgePivotMenuItem,
   type OgePivotRowHeaderLayout,
+  ogeCheckPivotLicense,
 } from '@oge-ui/pivot-engine';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -304,6 +305,7 @@ export class OgePivotGrid<T = unknown> {
     viewChild<ElementRef<HTMLElement>>('pivotViewport');
 
   constructor() {
+    ogeCheckPivotLicense();
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(() => this.core.dispose());
     createStatePersistence<PivotGridStateSnapshot>({

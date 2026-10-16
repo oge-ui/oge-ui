@@ -117,7 +117,7 @@ test.describe('per-page SEO', () => {
     await expect(page.locator('h1').first()).toBeVisible();
     await expect(page).toHaveTitle('Angular Routed Tabs | OGE UI');
     await page.goto('/');
-    await expect(page).toHaveTitle(/Angular and React/);
+    await expect(page).toHaveTitle(/Angular & React/);
   });
 
   test('routed demo children canonicalize to the page they belong to', async ({

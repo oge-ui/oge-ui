@@ -70,7 +70,7 @@ const BADGE_HTML = (count: number): string =>
       categoryLink="/components/bpmn"
       [chips]="[
         'BPMN 2.0 XML',
-        'no watermark',
+        'no third-party branding',
         'pools & lanes',
         'undo/redo',
         'keyboard editing',
@@ -98,8 +98,8 @@ const BADGE_HTML = (count: number): string =>
         </p>
         <p>
           <code>&#64;oge-ui/react-bpmn</code> is a commercial package — free for
-          evaluation and non-commercial use, with no watermark and no runtime
-          license checks, and not part of the MIT
+          evaluation and non-commercial use, with no notice on development
+          hosts; production use needs a license key, and not part of the MIT
           <code>&#64;oge-ui/react</code> umbrella. See
           <a
             routerLink="/license"
@@ -128,8 +128,8 @@ const BADGE_HTML = (count: number): string =>
         </p>
         <p>
           <code>&#64;oge-ui/bpmn</code> is a commercial package — free for
-          evaluation and non-commercial use, with no watermark and no runtime
-          license checks. See
+          evaluation and non-commercial use, with no notice on development
+          hosts; production use needs a license key. See
           <a
             routerLink="/license"
             class="text-indigo-600 underline dark:text-indigo-400"

@@ -5,7 +5,8 @@
  *
  * - Routing mirrors `vercel.json`: its `redirects` are answered first, then a
  *   path is served from `<path>/index.html`, then as a file, and anything
- *   else falls back to `index.csr.html` (the `rewrites` rule).
+ *   else gets `404.html` (written by `not-found-page.mjs`; the client shell
+ *   when it is missing) with a 404 status, as the production host does.
  * - Every response carries the `vercel.json` headers, so the hydration crawl
  *   runs under the **production** CSP. `upgrade-insecure-requests` and HSTS
  *   are dropped: this server speaks plain HTTP on localhost.
@@ -172,7 +173,11 @@ const server = createServer((request, response) => {
     return;
   }
 
-  const file = resolveFile(path) ?? join(DIST, 'index.csr.html');
+  const found = resolveFile(path);
+  const notFound = existsSync(join(DIST, '404.html'))
+    ? join(DIST, '404.html')
+    : join(DIST, 'index.csr.html');
+  const file = found ?? notFound;
   const type = TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream';
   const headers = { ...productionHeaders(path), 'content-type': type };
   let body = readFileSync(file);
@@ -185,7 +190,10 @@ const server = createServer((request, response) => {
     }
   }
 
-  response.writeHead(200, { ...headers, 'cache-control': 'no-store' });
+  response.writeHead(found ? 200 : 404, {
+    ...headers,
+    'cache-control': 'no-store',
+  });
   response.end(body);
 });
 

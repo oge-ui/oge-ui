@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESCRIPTIONS, descriptionFor } from './seo.service';
+import { DESCRIPTIONS, descriptionFor, ogImageFor } from './seo.service';
 
 describe('descriptionFor', () => {
   it('prefers the exact entry over a family prefix', () => {
@@ -37,5 +37,23 @@ describe('descriptionFor', () => {
         `${path}: ${text.length}`,
       ).toBe(true);
     }
+  });
+});
+
+describe('ogImageFor', () => {
+  it('gives a flagship family and its sub-pages their own card', () => {
+    expect(ogImageFor('/components/gantt').url).toBe(
+      'https://www.ogeui.com/og/gantt.jpg',
+    );
+    expect(ogImageFor('/components/data-grid/filtering').url).toBe(
+      'https://www.ogeui.com/og/data-grid.jpg',
+    );
+  });
+
+  it('falls back to the default card on every other page', () => {
+    expect(ogImageFor('/').url).toBe('https://www.ogeui.com/og/default.jpg');
+    expect(ogImageFor('/components/data-gridx').url).toBe(
+      'https://www.ogeui.com/og/default.jpg',
+    );
   });
 });

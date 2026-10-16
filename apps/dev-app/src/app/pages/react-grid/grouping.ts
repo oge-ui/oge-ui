@@ -17,7 +17,7 @@ const deferredRows = makeEmployees(400, 7);
 
 const money = (value: unknown): string =>
   typeof value === 'number'
-    ? `₺${Math.round(value).toLocaleString('tr-TR')}`
+    ? `$${Math.round(value).toLocaleString('en-US')}`
     : String(value ?? '');
 
 /** Custom summary: distinct city count per group. */

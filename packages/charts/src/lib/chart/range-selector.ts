@@ -35,6 +35,7 @@ import {
   type OgeChartRange,
   type OgeChartSeriesInput,
   type OgeRangeSelectorPeriodVm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
 
@@ -205,6 +206,7 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
   protected readonly announcement = signal('');
 
   constructor() {
+    ogeCheckChartsLicense();
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>

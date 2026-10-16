@@ -51,7 +51,7 @@ const columns = [
       </section>
       <section>
         <h4>Compensation</h4>
-        <p>₺{row.salary.toLocaleString('tr-TR')}</p>
+        <p>\${row.salary.toLocaleString('en-US')}</p>
         <p>since {row.hireDate}</p>
       </section>
     </div>

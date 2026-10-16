@@ -153,6 +153,7 @@ import {
   type OgeKanbanResolvedMessages,
   type OgeKanbanSelectionMode,
   type OgeKanbanSortField,
+  ogeCheckKanbanLicense,
 } from '@oge-ui/kanban-engine';
 import { OGE_KANBAN_CONFIG } from '../config';
 import type {
@@ -1602,6 +1603,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   private readonly store = signal<readonly T[]>([]);
 
   constructor() {
+    ogeCheckKanbanLicense();
     effect(() => {
       this.store.set([...this.dataSource()]);
     });

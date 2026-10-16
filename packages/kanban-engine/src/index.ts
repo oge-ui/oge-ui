@@ -243,3 +243,4 @@ export {
   type KanbanDragGeometry,
   type KanbanDragOrigin,
 } from './lib/dom';
+export { ogeCheckKanbanLicense } from './lib/license';

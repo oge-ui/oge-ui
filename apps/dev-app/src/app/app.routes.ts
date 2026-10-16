@@ -1443,6 +1443,52 @@ export const appRoutes: Route[] = [
     title: 'OGE — Licensing',
   },
   {
+    path: 'license/claim',
+    loadComponent: () =>
+      import('./pages/license/license-claim').then((m) => m.LicenseClaimPage),
+    title: 'OGE — Get your license key',
+  },
+  {
+    path: 'pricing',
+    loadComponent: () =>
+      import('./pages/pricing/pricing').then((m) => m.PricingPage),
+    title: 'OGE — Pricing',
+  },
+  {
+    path: 'compare',
+    loadComponent: () =>
+      import('./pages/compare/compare').then((m) => m.CompareHubPage),
+    title: 'OGE — Compare',
+  },
+  {
+    path: 'compare/ag-grid',
+    loadComponent: () =>
+      import('./pages/compare/compare-page').then((m) => m.ComparePage),
+    data: { competitor: 'ag-grid' },
+    title: 'OGE — OGE UI vs AG Grid',
+  },
+  {
+    path: 'compare/kendo-ui',
+    loadComponent: () =>
+      import('./pages/compare/compare-page').then((m) => m.ComparePage),
+    data: { competitor: 'kendo-ui' },
+    title: 'OGE — OGE UI vs Kendo UI',
+  },
+  {
+    path: 'compare/devextreme',
+    loadComponent: () =>
+      import('./pages/compare/compare-page').then((m) => m.ComparePage),
+    data: { competitor: 'devextreme' },
+    title: 'OGE — OGE UI vs DevExtreme',
+  },
+  {
+    path: 'compare/primeng',
+    loadComponent: () =>
+      import('./pages/compare/compare-page').then((m) => m.ComparePage),
+    data: { competitor: 'primeng' },
+    title: 'OGE — OGE UI vs PrimeNG',
+  },
+  {
     path: 'changelog',
     loadComponent: () =>
       import('./pages/resources/changelog').then((m) => m.ChangelogPage),
@@ -1461,4 +1507,13 @@ export const appRoutes: Route[] = [
   { path: 'sorting', redirectTo: 'components/data-grid/sorting' },
   { path: 'virtual-scroll', redirectTo: 'components/data-grid/virtual-scroll' },
   { path: 'remote-data', redirectTo: 'components/data-grid/remote-data' },
+  // every unknown URL — not prerendered: the host serves `404.html` (the client
+  // shell, noindex) with a 404 status, and this route renders inside it
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./pages/not-found/not-found').then((m) => m.NotFoundPage),
+    title: 'OGE — Page not found',
+    data: { noindex: true },
+  },
 ];

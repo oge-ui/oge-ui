@@ -6,6 +6,7 @@ import {
   useMemo,
   type CSSProperties,
   type ReactElement,
+  useEffect,
 } from 'react';
 import {
   GAUGE_BAR_LENGTH,
@@ -16,6 +17,7 @@ import {
   type OgeChartValueRange,
   type OgeCircularGaugeIndicator,
   type OgeGaugeScaleOptions,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, useStable } from './hooks';
 import { useChartVisual, useGaugeSweep } from './visual-hooks';
@@ -84,6 +86,7 @@ export const OgeCircularGauge = forwardRef<
   OgeGaugeHandle,
   OgeCircularGaugeProps
 >(function OgeCircularGauge(props, ref): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const value = props.value ?? null;
   const scale = useStable<OgeGaugeScaleOptions>(props.scale ?? NO_OPTIONS);
   const ranges = useStable(props.ranges ?? EMPTY);

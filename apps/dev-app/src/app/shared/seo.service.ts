@@ -1,4 +1,4 @@
-import { DOCUMENT, Injectable, inject } from '@angular/core';
+import { DOCUMENT, DestroyRef, Injectable, inject } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import {
   ActivatedRouteSnapshot,
@@ -109,7 +109,35 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/license',
-    'OGE UI licensing: open-core, with the suite MIT forever and six enterprise packages — Pivot, BPMN, Scheduler, Gantt, Kanban and Charts — commercial.',
+    'OGE UI licensing and pricing: the suite is MIT forever; OGE UI Pro — Pivot, Gantt, Scheduler, Kanban, Charts and BPMN — is $299 per developer per year.',
+  ],
+  [
+    '/license/claim',
+    'Get your OGE UI Pro license key: enter the order number and email from your purchase to retrieve the key, and come back any time to retrieve it again.',
+  ],
+  [
+    '/pricing',
+    'OGE UI pricing: the core suite of Angular and React components is MIT and free forever; OGE UI Pro adds six enterprise families for $299 per developer per year.',
+  ],
+  [
+    '/compare',
+    'Compare OGE UI with AG Grid, Kendo UI, DevExtreme and PrimeNG: licenses, prices, Angular and React support, grid features and where each library is stronger.',
+  ],
+  [
+    '/compare/ag-grid',
+    'OGE UI vs AG Grid: an AG Grid alternative for Angular and React with MIT range selection, Excel export and master-detail. License, price and features compared.',
+  ],
+  [
+    '/compare/kendo-ui',
+    'OGE UI vs Kendo UI: a Kendo UI alternative for Angular and React with an MIT data grid, signal APIs and zoneless support. License, price and features compared.',
+  ],
+  [
+    '/compare/devextreme',
+    'OGE UI vs DevExtreme: a DevExtreme alternative for Angular and React with an MIT data grid and familiar remote load options. License, price, features compared.',
+  ],
+  [
+    '/compare/primeng',
+    'OGE UI vs PrimeNG: a PrimeNG alternative for Angular that covers React too, with an MIT grid, signal APIs and zoneless. PrimeUI licensing and features compared.',
   ],
   [
     '/changelog',
@@ -585,7 +613,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/bpmn',
-    'BPMN Editor for Angular and React by OGE UI: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no watermark.',
+    'BPMN Editor for Angular and React: a BPMN 2.0 modeler with palette, orthogonal routing, undo/redo, XML import and export, autosave and no third-party branding.',
   ],
   [
     '/components/bpmn/validation',
@@ -724,6 +752,35 @@ export function descriptionFor(path: string): string {
   return best?.[1] ?? DEFAULT_DESCRIPTION;
 }
 
+/**
+ * Families with their own 1200×630 share card in `public/og/` (rendered by
+ * `tools/docs-tools/social-cards.mjs`); every other page shares the default.
+ */
+const OG_IMAGES: readonly (readonly [string, string, string])[] = [
+  ['/components/data-grid', 'data-grid', 'the OGE data grid'],
+  ['/components/pivot-grid', 'pivot-grid', 'the OGE pivot grid'],
+  ['/components/gantt', 'gantt', 'the OGE Gantt chart'],
+  ['/components/scheduler', 'scheduler', 'the OGE scheduler'],
+  ['/components/charts', 'charts', 'OGE charts'],
+  ['/components/kanban', 'kanban', 'the OGE kanban board'],
+];
+
+/** The share card for `path`, with its alt text. */
+export function ogImageFor(path: string): { url: string; alt: string } {
+  const match = OG_IMAGES.find(
+    ([prefix]) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+  const [, file, subject] = match ?? [
+    '',
+    'default',
+    'the OGE data grid and the component suite',
+  ];
+  return {
+    url: `${ORIGIN}/og/${file}.jpg`,
+    alt: `OGE UI for Angular and React: a screenshot of ${subject}`,
+  };
+}
+
 const BREADCRUMBS_ID = 'oge-breadcrumbs';
 
 /** `OGE — Data Grid Filtering` → `Data Grid Filtering`. */
@@ -776,9 +833,27 @@ export class SeoService {
     const canonicalPath = page?.canonical ?? path;
     const canonicalUrl = ORIGIN + (canonicalPath === '/' ? '/' : canonicalPath);
 
+    // the not-found page is served for every unknown URL (with a 404 status
+    // from the host): it must not be indexed nor claim a canonical URL
+    const noindex = this.leafData()['noindex'] === true;
+    this.meta.updateTag({
+      name: 'robots',
+      content: noindex ? 'noindex, follow' : 'index, follow',
+    });
+
+    const image = ogImageFor(canonicalPath);
+    this.meta.updateTag({ property: 'og:image', content: image.url });
+    this.meta.updateTag({ property: 'og:image:alt', content: image.alt });
+    this.meta.updateTag({ name: 'twitter:image', content: image.url });
+
     let canonical = this.document.querySelector<HTMLLinkElement>(
       'link[rel="canonical"]',
     );
+    if (noindex) {
+      canonical?.remove();
+      writeJsonLd(this.document, BREADCRUMBS_ID, null);
+      return;
+    }
     if (!canonical) {
       canonical = this.document.createElement('link');
       canonical.setAttribute('rel', 'canonical');
@@ -799,7 +874,8 @@ export class SeoService {
     this.meta.updateTag({ property: 'og:title', content: title });
     this.meta.updateTag({ name: 'twitter:title', content: title });
 
-    this.writeJsonLd(
+    writeJsonLd(
+      this.document,
       BREADCRUMBS_ID,
       page && canonicalPath !== '/'
         ? this.breadcrumbs(canonicalPath, page.path, pageName(page.title))
@@ -844,6 +920,13 @@ export class SeoService {
     return { title: page.title, path: page.path, canonical };
   }
 
+  /** The `data` of the deepest activated route. */
+  private leafData(): Record<string, unknown> {
+    let route: ActivatedRouteSnapshot = this.router.routerState.snapshot.root;
+    while (route.firstChild) route = route.firstChild;
+    return route.data;
+  }
+
   /** Home → Components → Family → Page, as schema.org `BreadcrumbList`. */
   private breadcrumbs(
     canonicalPath: string,
@@ -871,6 +954,8 @@ export class SeoService {
       });
     } else if (section === 'guides' && family) {
       crumbs.push({ name: 'Guides', url: `${ORIGIN}/guides` });
+    } else if (section === 'compare' && family) {
+      crumbs.push({ name: 'Compare', url: `${ORIGIN}/compare` });
     }
     crumbs.push({ name, url: ORIGIN + canonicalPath });
     return {
@@ -884,24 +969,44 @@ export class SeoService {
       })),
     };
   }
+}
 
-  /** Writes (or, for `null`, removes) one JSON-LD block in the head. */
-  private writeJsonLd(id: string, data: object | null): void {
-    let script = this.document.getElementById(id);
-    if (!data) {
-      script?.remove();
-      return;
-    }
-    if (!script) {
-      script = this.document.createElement('script');
-      script.setAttribute('type', 'application/ld+json');
-      script.setAttribute('id', id);
-      this.document.head.appendChild(script);
-    }
-    // `<` escaped so no string can close the script element early
-    const json = JSON.stringify(data).replace(/</g, '\\u003c');
-    script.textContent = jsonLdScript(json) as string;
+/**
+ * Writes (or, for `null`, removes) one JSON-LD block in the head. The JSON is
+ * `JSON.stringify` output with `<` escaped, so no string can close the script
+ * element early, and it reaches `textContent` through the docs-only Trusted
+ * Types policy ({@link DOCS_JSON_LD_POLICY}).
+ */
+export function writeJsonLd(
+  document: Document,
+  id: string,
+  data: object | null,
+): void {
+  let script = document.getElementById(id);
+  if (!data) {
+    script?.remove();
+    return;
   }
+  if (!script) {
+    script = document.createElement('script');
+    script.setAttribute('type', 'application/ld+json');
+    script.setAttribute('id', id);
+    document.head.appendChild(script);
+  }
+  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  script.textContent = jsonLdScript(json) as string;
+}
+
+/**
+ * Page-owned structured data (`FAQPage`, `Product`, …) next to the
+ * breadcrumbs `SeoService` writes: call it in a page component's injection
+ * context. The block is written at once — so the prerendered HTML carries it
+ * — and removed when the page is destroyed, so it never outlives its route.
+ */
+export function pageJsonLd(id: string, data: object): void {
+  const document = inject(DOCUMENT);
+  writeJsonLd(document, id, data);
+  inject(DestroyRef).onDestroy(() => writeJsonLd(document, id, null));
 }
 
 /** Name of the docs app's own Trusted Types policy (JSON-LD only). */
@@ -915,7 +1020,8 @@ let jsonLdPolicy: ScriptPolicyLike | null | undefined;
 /**
  * `script.textContent` is a Trusted Types sink even for a data block, so
  * under `require-trusted-types-for 'script'` the breadcrumb JSON-LD goes
- * through a docs-only policy (the strict-CSP e2e allows it by name). The
+ * through a docs-only policy (the strict-CSP e2e allows it by name) — the
+ * breadcrumbs and every page's own blocks ({@link pageJsonLd}). The
  * input is `JSON.stringify` output with `<` escaped — data, never code.
  * Without `trustedTypes` (the prerender, older browsers) it is the string.
  */

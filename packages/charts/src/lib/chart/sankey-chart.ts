@@ -22,6 +22,7 @@ import {
   type OgeSankeyNode,
   type OgeSankeyNodeAlign,
   type OgeSankeyNodeVm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeChartVisualRtlBase } from './visual-base';
 
@@ -169,6 +170,11 @@ type SankeyHover = { readonly kind: 'node' | 'link'; readonly index: number };
 export class OgeSankeyChart<
   T extends object = Record<string, unknown>,
 > extends OgeChartVisualRtlBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   /** One item per link. */
   readonly dataSource = input<readonly T[]>([]);
   readonly sourceField = input<string | ((item: T) => unknown)>('source');

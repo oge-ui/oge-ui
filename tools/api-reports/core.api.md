@@ -667,19 +667,55 @@ export class OffsetTree {
 }
 
 // @public
+export const OGE_LICENSE_KEY_PREFIX = "OGE1";
+
+// @public
+export const OGE_LICENSE_PUBLIC_KEY = "gWAVntG4oxPNiyOGjmvT9haz8L9uL7pypDTjR0SusRU";
+
+// @public
+export const OGE_LICENSE_WATERMARK_CLASS = "oge-license-watermark";
+
+// @public
 export const OGE_PAGE_ELLIPSIS: "ellipsis";
+
+// @public (undocumented)
+export const OGE_RELEASE_DATE = "2026-10-10";
+
+// @public
+export const OGE_RELEASE_VERSION = "1.1.4";
 
 // @public
 export type OgeAsyncGuard = () => boolean | Promise<boolean>;
 
 // @public
+export function ogeBase64UrlToBytes(text: string): Uint8Array | null;
+
+// @public
+export function ogeCheckLicense(family: OgeCommercialFamily): void;
+
+// @public
 export type OgeColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl';
+
+// @public
+export type OgeCommercialFamily = 'pivot' | 'bpmn' | 'scheduler' | 'gantt' | 'kanban' | 'charts';
 
 // @public
 export function ogeConvertWallClock(wall: Date, from: string | undefined, to: string | undefined): Date;
 
 // @public
 export function ogeDateTimeFormat(locale?: OgeLocaleInput, options?: Intl.DateTimeFormatOptions): Intl.DateTimeFormat;
+
+// @public
+export interface OgeDecodedLicenseKey {
+    // (undocumented)
+    readonly info: OgeLicenseInfo;
+    // (undocumented)
+    readonly signature: Uint8Array;
+    readonly signed: string;
+}
+
+// @public
+export function ogeDecodeLicenseKey(key: string | null | undefined): OgeDecodedLicenseKey | null;
 
 // @public
 export function ogeDefaultLocale(): string | undefined;
@@ -716,6 +752,9 @@ export function ogeFromWallClock(wall: Date, timeZone?: string, disambiguation?:
 export function ogeFromZoned(parts: OgeZonedPartsInput, timeZone?: string, disambiguation?: OgeZoneDisambiguation): Date;
 
 // @public
+export function ogeGetLicenseInfo(): Promise<OgeLicenseInfo | null>;
+
+// @public
 export interface OgeGuardHandlers {
     allow(): void;
     deny?(reason: 'denied' | 'failed'): void;
@@ -744,7 +783,35 @@ export function ogeIntlCacheSize(): {
 };
 
 // @public
+export function ogeIsLicenseExemptHost(location?: {
+    hostname: string;
+    protocol: string;
+} | undefined): boolean;
+
+// @public
 export function ogeIsTimeZone(timeZone: unknown): timeZone is string;
+
+// @public
+export function ogeLicenseCoversFamily(info: OgeLicenseInfo, family: OgeCommercialFamily): boolean;
+
+// @public
+export function ogeLicenseCoversRelease(info: OgeLicenseInfo, releaseDate: string): boolean;
+
+// @public
+export interface OgeLicenseInfo {
+    readonly expires: string;
+    readonly families: readonly (OgeCommercialFamily | 'all')[];
+    readonly id: string;
+    readonly issued: string;
+    readonly licensee: string;
+    readonly seats: number;
+}
+
+// @public
+export type OgeLicenseStatus = 'licensed' | 'development' | 'missing' | 'invalid' | 'expired' | 'not-covered';
+
+// @public
+export function ogeLicenseStatus(family: OgeCommercialFamily): Promise<OgeLicenseStatus>;
 
 // @public
 export function ogeLiveConfig<T extends object>(read: () => T, derive: <V>(compute: () => V) => () => V): T;
@@ -847,6 +914,9 @@ export interface OgeRgba {
 }
 
 // @public
+export function ogeSetLicenseKey(key: string): void;
+
+// @public
 export interface OgeSplitBounds {
     readonly max?: number;
     readonly min?: number;
@@ -934,6 +1004,9 @@ export function ogeValueFormatter(format: OgeValueFormat, locale?: OgeLocaleInpu
 
 // @public
 export type OgeValueFormatType = 'number' | 'decimal' | 'currency' | 'percent' | 'date' | 'time' | 'datetime';
+
+// @public
+export function ogeVerifyLicenseSignature(decoded: OgeDecodedLicenseKey, publicKey?: string): Promise<boolean | null>;
 
 // @public
 export function ogeZonedDayMinutes(year: number, month: number, day: number, timeZone?: string): number;
@@ -1276,6 +1349,9 @@ export function ratioToValue(ratio: number, min: number, max: number, step: numb
 
 // @public
 export function relativeLuminance(rgba: OgeRgba): number;
+
+// @public
+export function resetOgeLicenseForTests(publicKey?: string): void;
 
 // @public
 export function resizeSplitAt(tracks: readonly OgeSplitTrack[], separatorIndex: number, deltaPx: number, flexiblePx: number, bounds: readonly OgeSplitBounds[]): OgeSplitTrack[];

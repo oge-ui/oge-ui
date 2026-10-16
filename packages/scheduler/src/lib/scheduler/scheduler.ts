@@ -45,6 +45,7 @@ import {
   type SchedulerRangeEvent,
   type SchedulerScopeAction,
   type SchedulerTimelineViewType,
+  ogeCheckSchedulerLicense,
 } from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerMessages } from '../config';
 import { OGE_SCHEDULER_CONFIG } from '../config';
@@ -944,6 +945,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   });
 
   constructor() {
+    ogeCheckSchedulerLicense();
     effect(() => {
       const source = this.dataSource();
       untracked(() => this.core.bindSource(source));

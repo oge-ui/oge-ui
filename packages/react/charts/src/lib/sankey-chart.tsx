@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
   type ReactElement,
   type Ref,
+  useEffect,
 } from 'react';
 import {
   buildSankeyScene,
@@ -27,6 +28,7 @@ import {
   type OgeSankeyNode,
   type OgeSankeyNodeAlign,
   type OgeSankeyNodeVm,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { cx, useStable } from './hooks';
 import { useChartVisual } from './visual-hooks';
@@ -79,6 +81,7 @@ function OgeSankeyChartInner<T extends object>(
   props: OgeSankeyChartProps<T>,
   ref: ForwardedRef<OgeVisualChartHandle>,
 ): ReactElement {
+  useEffect(() => ogeCheckChartsLicense(), []);
   const dataSource = props.dataSource ?? EMPTY;
   const nodes = useStable(props.nodes ?? EMPTY);
   const palette = useStable(props.palette);

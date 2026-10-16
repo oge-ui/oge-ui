@@ -10,6 +10,7 @@ import {
   buildLinearGaugeScene,
   type OgeGaugeOrientation,
   type OgeLinearGaugeIndicator,
+  ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OgeGaugeBase } from './gauge-base';
 
@@ -152,6 +153,11 @@ import { OgeGaugeBase } from './gauge-base';
   `,
 })
 export class OgeLinearGauge extends OgeGaugeBase {
+  constructor() {
+    super();
+    ogeCheckChartsLicense();
+  }
+
   readonly orientation = input<OgeGaugeOrientation>('horizontal');
   /** `'bar'` (default — fills the track) or `'marker'` (a triangle on it). */
   readonly indicator = input<OgeLinearGaugeIndicator>('bar');
