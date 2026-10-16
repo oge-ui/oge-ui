@@ -2832,10 +2832,12 @@ Run manually with a version input, or by pushing a `v<x.y.z>` tag; the version m
 committed (`nx release version`). The job builds, runs the gates, packs every `dist` folder in
 dependency order and publishes **that tarball** with `npm publish --provenance --access public`
 through npm **trusted publishing** (OIDC, no token), skips versions already on npm (so a failed run
-can be re-run), and attaches a CycloneDX SBOM and the tarballs to the GitHub release. A second job
-(the reusable `slsa-github-generator` generic workflow, pinned by tag as its builder identity
-requires) signs a SLSA build provenance for those tarballs and uploads it to the same release as
-`oge-ui-<version>.intoto.jsonl` — verify a download with `slsa-verifier verify-artifact`. Release
+can be re-run), and attaches a CycloneDX SBOM and the tarballs to the GitHub release, together with
+a Sigstore-signed SLSA build provenance for them (`actions/attest-build-provenance`, uploaded as
+`oge-ui-<version>.sigstore.json`) — verify a download with
+`gh attestation verify <tarball> --repo oge-ui/oge-ui`. Every action stays pinned to a commit SHA;
+the reusable `slsa-github-generator` workflow is not used because it only runs when referenced by
+tag, which costs Scorecard's Pinned-Dependencies check. Release
 the suite through this workflow, not by hand: the signed release assets and a successful publish run
 are what OpenSSF Scorecard's Signed-Releases and Packaging checks look for. Until the one-time setup
 below is done it cannot publish.
