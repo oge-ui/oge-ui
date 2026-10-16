@@ -35,7 +35,7 @@
   <a href="https://www.ogeui.com/components/data-grid">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme-hero-dark.png" />
-      <img src="docs/assets/readme-hero-light.png" alt="OGE UI components: a grouped data grid with summaries, a pivot grid, charts, a Gantt chart and a kanban board" width="900" />
+      <img src="docs/assets/readme-hero-light.png" alt="OGE UI components in window frames: a grouped data grid with summaries, a Gantt chart, charts and a kanban board" width="960" />
     </picture>
   </a>
 </p>

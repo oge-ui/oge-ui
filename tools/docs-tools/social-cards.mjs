@@ -33,7 +33,7 @@ mkdirSync(ASSET_DIR, { recursive: true });
 const SHOTS = {
   'data-grid': ['/components/data-grid/grouping', 'oge-grid', 0],
   'pivot-grid': ['/components/pivot-grid', 'oge-pivot-grid', 0],
-  gantt: ['/components/gantt', 'oge-gantt', 1],
+  gantt: ['/components/gantt', 'oge-gantt', 2],
   scheduler: ['/components/scheduler', 'oge-scheduler', 0],
   charts: ['/components/charts', 'oge-chart', 1],
   kanban: ['/components/kanban', 'oge-kanban', 0],
@@ -150,33 +150,118 @@ function cardHtml(card, width, height) {
   </body></html>`;
 }
 
-/** README hero: the grid large, four families stacked beside it. */
-function heroHtml(scheme) {
+/** CSS size of a 2×-DPR screenshot (PNG IHDR width/height / 2). */
+const cssSize = (png) => ({
+  width: png.readUInt32BE(16) / 2,
+  height: png.readUInt32BE(20) / 2,
+});
+
+/**
+ * README hero (CSS px; rendered at 2× DPR, shown at `width="960"` in the
+ * README). Two columns of framed live components at a readable scale; the
+ * canvas height follows the taller column, so no frame shows empty space.
+ */
+const HERO_PAD = 48;
+const HERO_GAP = 24;
+const HERO_BAR = 38;
+const HERO_COLUMNS = [
+  {
+    width: 700,
+    windows: [
+      { shot: 'data-grid', title: 'Data Grid', pkg: '@oge-ui/grid' },
+      { shot: 'gantt', title: 'Gantt', pkg: '@oge-ui/gantt', crop: 300 },
+    ],
+  },
+  {
+    width: 476,
+    windows: [
+      { shot: 'charts', title: 'Charts', pkg: '@oge-ui/charts' },
+      // `zoom` keeps a busy component legible: shown at that scale and
+      // cropped on the right instead of shrunk to the column width.
+      { shot: 'kanban', title: 'Kanban', pkg: '@oge-ui/kanban', zoom: 0.9 },
+    ],
+  },
+];
+const HERO_WIDTH =
+  HERO_PAD * 2 +
+  HERO_COLUMNS.reduce((sum, c) => sum + c.width, 0) +
+  HERO_GAP * (HERO_COLUMNS.length - 1);
+
+/**
+ * Lays one scheme's hero out; `crop` caps the visible component height
+ * (component CSS px) where a demo ends in blank space.
+ */
+function heroLayout(scheme) {
   const s = shots[scheme];
-  const dark = scheme === 'dark';
-  const tile = (name) =>
-    `<div class="tile"><img class="shot" src="${dataUri(s[name])}" alt="" /></div>`;
-  return `<!doctype html><html><head><style>${BASE_CSS}
-    body { width: 1600px; height: 820px; overflow: hidden; padding: 40px;
-      background: ${dark ? '#0d1117' : '#ffffff'}; }
-    .grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; height: 100%; }
-    .main { overflow: hidden; border-radius: 14px; }
-    .main .shot { width: 100%; }
-    .side { display: grid; grid-template-rows: repeat(2, 1fr); grid-template-columns: 1fr 1fr; gap: 24px; min-height: 0; }
-    .tile { overflow: hidden; border-radius: 14px; min-height: 0; }
-    .tile .shot { width: 100%; }
-    ${dark ? '' : '.shot { box-shadow: 0 18px 50px rgba(15,23,42,.14), 0 0 0 1px rgba(15,23,42,.08); }'}
-  </style></head><body><div class="grid">
-    <div class="main"><img class="shot" src="${dataUri(s['data-grid'])}" alt="" /></div>
-    <div class="side">${['pivot-grid', 'charts', 'gantt', 'kanban'].map(tile).join('')}</div>
-  </div></body></html>`;
+  const columns = HERO_COLUMNS.map((c) => {
+    const windows = c.windows.map((w) => {
+      const size = cssSize(s[w.shot]);
+      const scale = w.zoom ?? c.width / size.width;
+      const visible = Math.min(size.height, w.crop ?? Infinity);
+      return {
+        ...w,
+        imgWidth: Math.round(size.width * scale),
+        bodyHeight: Math.round(visible * scale),
+      };
+    });
+    const height =
+      windows.reduce((sum, w) => sum + HERO_BAR + w.bodyHeight, 0) +
+      HERO_GAP * (windows.length - 1);
+    return { ...c, windows, height };
+  });
+  return {
+    columns,
+    height: HERO_PAD * 2 + Math.max(...columns.map((c) => c.height)),
+  };
 }
 
-async function render(html, width, height, file, type) {
-  const page = await browser.newPage({ viewport: { width, height } });
+/** README hero: real components in window frames on a brand backdrop. */
+function heroHtml(scheme, layout) {
+  const s = shots[scheme];
+  const dark = scheme === 'dark';
+  const win = (w) => `<section class="win">
+      <header><i></i><i></i><i></i><b>${w.title}</b><span>${w.pkg}</span></header>
+      <div class="body" style="height:${w.bodyHeight}px"><img src="${dataUri(s[w.shot])}" style="width:${w.imgWidth}px" alt="" /></div>
+    </section>`;
+  const columns = layout.columns
+    .map(
+      (c) =>
+        `<div class="col" style="width:${c.width}px">${c.windows.map(win).join('')}</div>`,
+    )
+    .join('');
+  return `<!doctype html><html><head><style>${BASE_CSS}
+    body { width: ${HERO_WIDTH}px; height: ${layout.height}px; overflow: hidden; padding: ${HERO_PAD}px;
+      display: flex; gap: ${HERO_GAP}px; align-items: flex-start;
+      background:
+        radial-gradient(900px 520px at 100% 100%, ${dark ? 'rgba(99,102,241,.45)' : 'rgba(99,102,241,.22)'}, transparent 70%),
+        radial-gradient(760px 480px at 0% 0%, ${dark ? 'rgba(34,211,238,.22)' : 'rgba(34,211,238,.18)'}, transparent 70%),
+        radial-gradient(${dark ? 'rgba(148,163,184,.10)' : 'rgba(15,23,42,.07)'} 1px, transparent 1px) 0 0 / 22px 22px,
+        ${dark ? '#0b1020' : '#f8fafc'};
+      border-radius: 24px; }
+    .col { display: flex; flex-direction: column; gap: ${HERO_GAP}px; }
+    .win { overflow: hidden; border-radius: 14px; background: ${dark ? '#0f172a' : '#ffffff'};
+      box-shadow: ${dark ? '0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(148,163,184,.16)' : '0 24px 60px rgba(15,23,42,.16), 0 0 0 1px rgba(15,23,42,.08)'}; }
+    header { display: flex; align-items: center; gap: 7px; height: ${HERO_BAR}px; padding: 0 14px;
+      background: ${dark ? '#111827' : '#f1f5f9'}; border-bottom: 1px solid ${dark ? 'rgba(148,163,184,.14)' : 'rgba(15,23,42,.07)'}; }
+    header i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+    header i:nth-child(2) { background: #febc2e; }
+    header i:nth-child(3) { background: #28c840; margin-right: 10px; }
+    header b { font-size: 13.5px; font-weight: 650; color: ${dark ? '#e2e8f0' : '#0f172a'}; }
+    header span { font: 12px ui-monospace, "Cascadia Code", Consolas, monospace; color: ${dark ? '#94a3b8' : '#64748b'}; margin-left: auto; }
+    .body { overflow: hidden; }
+    .body img { display: block; max-width: none; }
+  </style></head><body>${columns}</body></html>`;
+}
+
+async function render(html, width, height, file, type, scale = 1) {
+  const page = await browser.newPage({
+    viewport: { width, height },
+    deviceScaleFactor: scale,
+  });
   await page.setContent(html, { waitUntil: 'load' });
   const buffer = await page.screenshot(
-    type === 'jpeg' ? { type, quality: 82 } : { type },
+    // PNGs keep transparent page corners so the hero's rounded edge shows.
+    type === 'jpeg' ? { type, quality: 82 } : { type, omitBackground: true },
   );
   writeFileSync(file, buffer);
   await page.close();
@@ -202,12 +287,14 @@ await render(
   'png',
 );
 for (const scheme of ['light', 'dark']) {
+  const layout = heroLayout(scheme);
   await render(
-    heroHtml(scheme),
-    1600,
-    820,
+    heroHtml(scheme, layout),
+    HERO_WIDTH,
+    layout.height,
     join(ASSET_DIR, `readme-hero-${scheme}.png`),
     'png',
+    2,
   );
 }
 
