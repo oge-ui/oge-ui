@@ -17,8 +17,8 @@ export interface StackblitzPackageInfo {
 }
 
 export const STACKBLITZ_TOOLCHAIN = {
-  "@angular/build": "22.2.0",
-  "@angular/cli": "22.2.0",
+  "@angular/build": "22.2.2",
+  "@angular/cli": "22.2.2",
   "@angular/common": "22.2.1",
   "@angular/compiler": "22.2.1",
   "@angular/compiler-cli": "22.2.1",
