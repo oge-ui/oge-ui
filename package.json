@@ -107,6 +107,7 @@
     "js-yaml@^5": "^5.4.2",
     "compression": "^1.8.2",
     "http-cache-semantics": "^4.3.0",
-    "handlebars@^4": "^4.7.10"
+    "handlebars@^4": "^4.7.10",
+    "undici@^7": "7.30.0"
   }
 }
