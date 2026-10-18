@@ -195,3 +195,57 @@ export function navigate(
   if (zoom === 'year') return addMonths(anchor, direction * 12);
   return addMonths(anchor, direction * 120);
 }
+
+/**
+ * How the visible calendar view changed — the direction its enter motion
+ * takes: `next`/`prev` slide in from the end/start side (month, year or
+ * decade paging), `zoom-out` (month → year → decade) and `zoom-in` scale in.
+ */
+export type OgeCalendarViewMotion = 'next' | 'prev' | 'zoom-in' | 'zoom-out';
+
+const ZOOM_DEPTH: Readonly<Record<OgeCalendarZoomLevel, number>> = {
+  month: 0,
+  year: 1,
+  decade: 2,
+};
+
+/**
+ * Identity of the visible view: one key per month (`month` zoom), year or
+ * decade. The render layers key the view container on it, so a page or zoom
+ * change re-creates the container (and runs its enter keyframe) while moving
+ * the focus inside the same view does not.
+ */
+export function calendarViewKey(
+  anchor: Date,
+  zoom: OgeCalendarZoomLevel,
+): string {
+  const year = anchor.getFullYear();
+  if (zoom === 'month') return `m${year}-${anchor.getMonth()}`;
+  if (zoom === 'year') return `y${year}`;
+  return `d${Math.floor(year / 10)}`;
+}
+
+/** A visible calendar view: its anchor date and drill level. */
+export interface OgeCalendarView {
+  readonly anchor: Date;
+  readonly zoom: OgeCalendarZoomLevel;
+}
+
+/**
+ * The motion from one view to the next — `null` when the view did not change
+ * or there was no previous one (the first render never animates).
+ */
+export function calendarViewMotion(
+  previous: OgeCalendarView | null,
+  next: OgeCalendarView,
+): OgeCalendarViewMotion | null {
+  if (!previous) return null;
+  const depth = ZOOM_DEPTH[next.zoom] - ZOOM_DEPTH[previous.zoom];
+  if (depth !== 0) return depth > 0 ? 'zoom-out' : 'zoom-in';
+  if (
+    calendarViewKey(previous.anchor, previous.zoom) ===
+    calendarViewKey(next.anchor, next.zoom)
+  )
+    return null;
+  return next.anchor.getTime() > previous.anchor.getTime() ? 'next' : 'prev';
+}

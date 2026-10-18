@@ -11,7 +11,9 @@
  * with a `transform` (`--oge-motion-duration-layout` +
  * `--oge-motion-easing-spring`). Geometry is read from the items themselves —
  * the one physical border side that has a width is the ink edge — so RTL,
- * vertical strips and start/end placements need no configuration.
+ * vertical strips and start/end placements need no configuration. With
+ * `shape: 'box'` the bar is a pill covering the whole item instead (the
+ * selection of a segmented control or a single-select button group).
  */
 import {
   ogeFlipDelta,
@@ -127,7 +129,18 @@ export interface OgeIndicatorGlide {
 export interface OgeIndicatorGlideOptions {
   /** Class of the transient bar (style it like the ink). Default `oge-indicator-glide`. */
   className?: string;
+  /**
+   * `'edge'` (default) slides an underline along the items' single bordered
+   * side; `'box'` slides a pill covering each item's whole border box (a
+   * segmented control's selection). Like the underline, the pill paints over
+   * the items (`pointer-events: none`), so style it translucent — a tint
+   * plus a border — and the labels stay readable through it.
+   */
+  shape?: OgeIndicatorShape;
 }
+
+/** What the glide bar covers — see {@link OgeIndicatorGlideOptions.shape}. */
+export type OgeIndicatorShape = 'edge' | 'box';
 
 /** The attribute the root carries while a glide runs. */
 export const OGE_INDICATOR_GLIDE_ATTR = 'data-oge-indicator-glide';
@@ -143,6 +156,7 @@ export function createOgeIndicatorGlide(
   options: OgeIndicatorGlideOptions = {},
 ): OgeIndicatorGlide {
   const className = options.className ?? 'oge-indicator-glide';
+  const box = options.shape === 'box';
   let bar: HTMLElement | null = null;
   let animation: Animation | null = null;
 
@@ -195,8 +209,9 @@ export function createOgeIndicatorGlide(
         }
         return false;
       }
-      const edge = ogeIndicatorEdge(to);
-      if (!edge) {
+      // a box glide covers the whole item; an edge glide needs an ink edge
+      const edge = box ? null : ogeIndicatorEdge(to);
+      if (!box && !edge) {
         if (animation) {
           animation.cancel();
           settle();
@@ -204,13 +219,15 @@ export function createOgeIndicatorGlide(
         return false;
       }
       const fit = move.fit ?? 'item';
+      const inkBox = (item: HTMLElement): OgeRect =>
+        edge ? inkOf(item, edge, fit) : ogeRectOf(item);
       const origin = ogeRectOf(root);
       // an interrupted glide continues from the bar's in-flight box
       const first = relative(
-        animation && bar ? ogeRectOf(bar) : inkOf(from, edge, fit),
+        animation && bar ? ogeRectOf(bar) : inkBox(from),
         origin,
       );
-      const last = relative(inkOf(to, edge, fit), origin);
+      const last = relative(inkBox(to), origin);
       if (animation) {
         const running = animation;
         animation = null;

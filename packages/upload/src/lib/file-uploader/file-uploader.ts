@@ -3,7 +3,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   ViewEncapsulation,
+  afterRenderEffect,
   computed,
   contentChild,
   effect,
@@ -24,7 +26,10 @@ import { OgeProgressBar } from '@oge-ui/layout/progress-bar';
 import { OgeLiveAnnouncer, OgeModal } from '@oge-ui/overlay';
 import {
   OgeFileUploaderCore,
+  createOgeLayoutAnimator,
   mergeUploadMessages,
+  ogeExitGhost,
+  type OgeLayoutAnimator,
   type OgeFileUploaderEvents,
   type OgeFileUploaderProps,
   type OgeUploadAbortReason,
@@ -242,6 +247,7 @@ let uidCounter = 0;
 
       @if (files().length > 0) {
         <ul
+          #fileList
           class="oge-upload-list"
           role="list"
           [attr.aria-label]="listLabel()"
@@ -287,6 +293,22 @@ let uidCounter = 0;
                         context: iconCtx('file')
                       "
                     />
+                    @if (file.status === 'uploaded') {
+                      <span class="oge-upload-file-done" aria-hidden="true">
+                        <svg
+                          viewBox="0 0 16 16"
+                          width="10"
+                          height="10"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.4"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="m3.5 8.5 3 3 6-7" pathLength="1" />
+                        </svg>
+                      </span>
+                    }
                   </span>
                 }
 
@@ -1090,8 +1112,67 @@ export class OgeFileUploader implements ControlValueAccessor {
 
   /** Removes one row, and its preview URL with it. */
   removeFile(uid: string): void {
+    this.prepareRowExit(uid);
     this.core.removeFile(uid);
   }
+
+  /** Ghosts a row about to be removed and snapshots the rows below it. */
+  private prepareRowExit(uid: string): void {
+    const list = this.fileList()?.nativeElement;
+    const row = list
+      ? this.rowElements(list).find(([key]) => key === uid)
+      : null;
+    if (list && row) {
+      // the row leaves at once; a ghost fades where it was and the rows
+      // below glide up (both no-ops with motion off, and when the
+      // fileRemoving handler keeps the row)
+      ogeExitGhost(row[1], { parent: list });
+      this.rowLayout(list).capture();
+      this.rowFlipPending = true;
+    }
+  }
+
+  private readonly fileList = viewChild<ElementRef<HTMLElement>>('fileList');
+  /** FLIPs the rows that close up after a removal. */
+  private rowAnimator: OgeLayoutAnimator<string> | null = null;
+  private rowFlipPending = false;
+
+  private rowElements(list: HTMLElement): [string, HTMLElement][] {
+    return Array.from(
+      list.querySelectorAll<HTMLElement>(
+        ':scope > .oge-upload-file:not(.oge-exit-ghost)',
+      ),
+      (el) => [el.getAttribute('data-uid') ?? '', el],
+    );
+  }
+
+  private rowLayout(list: HTMLElement): OgeLayoutAnimator<string> {
+    if (this.rowAnimator && this.rowAnimatorRoot !== list) {
+      this.rowAnimator.cancel();
+      this.rowAnimator = null;
+    }
+    this.rowAnimatorRoot = list;
+    this.rowAnimator ??= createOgeLayoutAnimator<string>({
+      root: list,
+      enter: false,
+      exit: false,
+      query: () => this.rowElements(list),
+    });
+    return this.rowAnimator;
+  }
+  private rowAnimatorRoot: HTMLElement | null = null;
+
+  protected readonly rowFlipCleanup = this.destroyRef.onDestroy(() =>
+    this.rowAnimator?.cancel(),
+  );
+
+  protected readonly rowFlip = afterRenderEffect(() => {
+    this.files();
+    if (!this.rowFlipPending) return;
+    this.rowFlipPending = false;
+    const list = this.fileList()?.nativeElement;
+    if (list?.isConnected) void this.rowLayout(list).play();
+  });
 
   /** Empties the list — Kendo's `clearFiles`, PrimeNG's `clear`. */
   clear(): void {
@@ -1167,6 +1248,10 @@ export class OgeFileUploader implements ControlValueAccessor {
   // --- keyboard --------------------------------------------------------------
 
   protected onListKeydown(event: KeyboardEvent): void {
+    const active = this.activeUid();
+    if ((event.key === 'Delete' || event.key === 'Backspace') && active) {
+      this.prepareRowExit(active);
+    }
     const uid = this.core.onListKeydown(event);
     if (uid !== null) this.focusRow(uid);
   }

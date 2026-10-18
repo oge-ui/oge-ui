@@ -1,8 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
   Injector,
   afterNextRender,
+  afterRenderEffect,
   TemplateRef,
   ViewEncapsulation,
   computed,
@@ -36,7 +39,10 @@ import {
   type OgeInputStylingMode,
   type OgeInputSubscriptSizing,
 } from '@oge-ui/inputs/field';
-import { motionScrollBehavior } from '@oge-ui/behavior';
+import {
+  createOgeFormItemMotion,
+  motionScrollBehavior,
+} from '@oge-ui/behavior';
 import { OGE_FORMS_CONFIG, type OgeFormsMessages } from '../config';
 import { OgeValidationSummary } from '../validation-summary/validation-summary';
 import { OgeFormField } from './form-field';
@@ -714,6 +720,22 @@ export class OgeForm<T extends object = Record<string, unknown>> {
   });
 
   constructor() {
+    // visibleWhen motion: an item that appears fades in and the items below
+    // glide from where they were (records the settled layout otherwise)
+    const hostEl = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+    const itemMotion = createOgeFormItemMotion(hostEl);
+    let visibleIds: string | null = null;
+    afterRenderEffect(() => {
+      const ids = this.resolvedItems()
+        .map((item) => item.id)
+        .join(' ');
+      this.errors();
+      const changed = visibleIds !== null && ids !== visibleIds;
+      visibleIds = ids;
+      itemMotion.update(changed);
+    });
+    inject(DestroyRef).onDestroy(() => itemMotion.destroy());
+
     effect((onCleanup) => {
       const group = this.formGroup();
       if (!group) return;

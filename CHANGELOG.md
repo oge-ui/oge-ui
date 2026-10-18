@@ -7,6 +7,43 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Inputs, forms and upload motion — `@oge-ui/behavior`, `@oge-ui/inputs`, `@oge-ui/react-inputs`, `@oge-ui/buttons`, `@oge-ui/react-buttons`, `@oge-ui/forms`, `@oge-ui/react-forms`, `@oge-ui/upload`, `@oge-ui/react-upload`
+
+- **The calendar moves the way you travel.** Paging months, years or decades
+  slides the new view in from the side you went to (mirrored in RTL), and
+  zooming between the month, year and decade views scales it in — in the
+  standalone calendar and in every date-box / date-range popup. The view is
+  keyed by the visible month, so moving the keyboard focus inside a month
+  never replays it, and the roving focus still lands on the new month after
+  PageUp/PageDown. A polite live region now announces the visible month,
+  year or decade (the label button's accessible name stays the zoom action).
+- **Selection pills slide.** A single-select toggle group and a
+  single-select button group move a translucent selection pill from the old
+  segment to the new one (`--oge-motion-duration-layout` +
+  `--oge-motion-easing-spring`); multiple mode and solid-severity segments
+  keep the plain swap.
+- **Validation errors no longer push the form down in one jump.** An error
+  appearing in an empty dynamic subscript opens its row
+  (`grid-template-rows: 0fr → 1fr`) while it fades in; replacing a hint just
+  fades.
+- **Reorders and transfers glide.** List-box reorders (Alt+↑/↓, drag,
+  `reorderItem()`) and transfer-list moves FLIP the options to their new
+  slots — a moved item travels from one list to the other.
+- **Upload rows enter and leave.** Added files slide in, a removed row
+  (button, Delete/Backspace, `removeFile()`) fades out through an exit ghost
+  while the rows below close up, and an uploaded file's glyph gets a check
+  badge that pops in and draws its tick.
+- **Conditional form fields fade in.** A `visibleWhen` field that appears
+  fades in and the fields below glide to make room, per grid (a group moves
+  as one).
+- Reduced motion, the first render and the visual baselines keep the plain
+  final layout. No new inputs or props. **Behavior API (additive):**
+  `calendarViewKey`, `calendarViewMotion`, `OgeCalendarView`,
+  `OgeCalendarViewMotion`, `createOgeIndicatorGlide({ shape: 'box' })` +
+  `OgeIndicatorShape`, `glideButtonGroupPill`,
+  `OGE_BUTTON_GROUP_PILL_CLASS`, `ogeTransferOptionEntries`,
+  `createOgeFormItemMotion`, `OgeFormItemMotion`, `OGE_FORM_ITEM_ATTR`.
+
 ### Tab and overlay motion — `@oge-ui/behavior`, `@oge-ui/tabs`, `@oge-ui/react-tabs`, `@oge-ui/overlay`, `@oge-ui/react-overlay`
 
 - **The tab ink slides.** Selecting another tab moves the underline from the

@@ -4,13 +4,16 @@ import {
   Component,
   ElementRef,
   TemplateRef,
+  DestroyRef,
   ViewEncapsulation,
+  afterRenderEffect,
   computed,
   inject,
   input,
   model,
   output,
   signal,
+  viewChild,
   viewChildren,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
@@ -18,6 +21,7 @@ import {
   applyToggleGroupPress,
   buttonGroupNavIndex,
   buttonGroupRole,
+  createOgeIndicatorGlide,
   resolveDisabled,
   resolveDisplay,
   resolveValue,
@@ -25,6 +29,7 @@ import {
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
   type OgeSelectValueExpr,
+  type OgeIndicatorGlide,
   type OgeToggleGroupSelectionMode,
   ogeIsRtl,
 } from '@oge-ui/behavior';
@@ -102,6 +107,7 @@ export interface OgeToggleGroupSelectionChangedEvent {
       <span class="oge-toggle-group-label" [id]="labelId">{{ label() }}</span>
     }
     <div
+      #track
       class="oge-toggle-group-track"
       [attr.role]="role()"
       [attr.aria-labelledby]="label() && !hideLabel() ? labelId : null"
@@ -208,6 +214,42 @@ export class OgeToggleGroup<TItem = unknown>
 
   private readonly segments =
     viewChildren<ElementRef<HTMLButtonElement>>('segment');
+  private readonly track = viewChild<ElementRef<HTMLElement>>('track');
+
+  /** Slides the selection pill (single mode); created on the first move. */
+  private pillGlide: OgeIndicatorGlide | null = null;
+  /** The segment the pill sat on after the last render — the glide's origin. */
+  private pillIndex = -1;
+
+  /**
+   * After a render that moved a single selection, slides the pill from the
+   * old segment to the new one — a no-op on the first render, in multiple
+   * mode and under reduced motion (the CSS pill then just moves).
+   */
+  protected readonly pillEffect = afterRenderEffect(() => {
+    const index =
+      this.selectionMode() === 'single'
+        ? ([...this.selectedIndices()][0] ?? -1)
+        : -1;
+    const segments = this.segments();
+    const previous = this.pillIndex;
+    this.pillIndex = index;
+    if (previous < 0 || index < 0 || previous === index) return;
+    const track = this.track()?.nativeElement;
+    if (!track) return;
+    this.pillGlide ??= createOgeIndicatorGlide(track, {
+      shape: 'box',
+      className: 'oge-toggle-group-pill',
+    });
+    this.pillGlide.move(
+      segments[previous]?.nativeElement ?? null,
+      segments[index]?.nativeElement ?? null,
+    );
+  });
+
+  protected readonly pillCleanup = inject(DestroyRef).onDestroy(() =>
+    this.pillGlide?.cancel(),
+  );
 
   protected readonly role = computed(() =>
     buttonGroupRole(this.selectionMode()),

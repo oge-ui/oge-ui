@@ -8,6 +8,7 @@ import {
   ogeTransferMovableValues,
   ogeTransferMove,
   ogeTransferOpposite,
+  ogeTransferOptionEntries,
   ogeTransferSplit,
   ogeTransferDropTarget,
   ogeTransferReorderable,
@@ -15,6 +16,45 @@ import {
   ogeTransferReorderSource,
   ogeTransferReorderTarget,
 } from './transfer-list-core';
+
+describe('ogeTransferOptionEntries', () => {
+  function panes(): HTMLElement {
+    const root = document.createElement('div');
+    root.innerHTML = `
+      <div data-oge-transfer-side="source">
+        <div class="oge-list-box-option" data-index="0"></div>
+        <div class="oge-list-box-option" data-index="1"></div>
+      </div>
+      <div data-oge-transfer-side="target">
+        <div class="oge-list-box-option" data-index="0"></div>
+      </div>`;
+    return root;
+  }
+  const shown = {
+    source: [{ id: 'a' }, { id: 'b' }],
+    target: [{ id: 'c' }],
+  };
+
+  it('keys every option of both panes by its item value', () => {
+    const root = panes();
+    const entries = ogeTransferOptionEntries(
+      root,
+      shown,
+      (item) => item.id,
+      false,
+    );
+    expect(entries.map(([key]) => key)).toEqual(['a', 'b', 'c']);
+    expect(entries[2][1].closest('[data-oge-transfer-side]')).toBe(
+      root.querySelector('[data-oge-transfer-side="target"]'),
+    );
+  });
+
+  it('yields nothing for grouped lists', () => {
+    expect(
+      ogeTransferOptionEntries(panes(), shown, (item) => item.id, true),
+    ).toEqual([]);
+  });
+});
 
 const ITEMS = [
   { id: 'a', locked: false },

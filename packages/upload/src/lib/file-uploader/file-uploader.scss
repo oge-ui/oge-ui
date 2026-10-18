@@ -231,6 +231,10 @@
     border-color var(--oge-motion-duration-fast)
       var(--oge-motion-easing-standard),
     box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
+  /* Rows are keyed by file uid, so this runs once per added file; a removed
+     row leaves through an exit ghost while the rows below glide up. */
+  animation: oge-upload-file-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-emphasized);
 
   /* The status rail: a 3px inset edge, coloured per state. */
   &::before {
@@ -284,7 +288,15 @@
   border-radius: var(--oge-radius);
 }
 
+@keyframes oge-upload-file-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
 .oge-upload-file-glyph {
+  position: relative;
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -294,6 +306,44 @@
   color: var(--oge-muted-color);
   background: var(--oge-group-bg);
   border-radius: var(--oge-radius);
+}
+
+/* Success: the progress bar gives way to a check badge on the file glyph,
+   which pops in and draws its tick (pathLength 1 → dash offset 1 to 0). */
+.oge-upload-file-done {
+  position: absolute;
+  inset-block-end: -3px;
+  inset-inline-end: -3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--oge-severity-contrast);
+  background: var(--oge-success);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--oge-bg);
+  animation: oge-upload-done-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-emphasized);
+
+  path {
+    stroke-dasharray: 1;
+    animation: oge-upload-done-draw var(--oge-motion-duration-slow)
+      var(--oge-motion-easing-decelerate);
+  }
+}
+
+@keyframes oge-upload-done-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes oge-upload-done-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
 }
 
 .oge-upload-file-main {
@@ -470,5 +520,19 @@
 
   .oge-upload-dropzone-over {
     transform: none;
+  }
+
+  .oge-upload-file,
+  .oge-upload-file-done,
+  .oge-upload-file-done path {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .oge-upload-file-done {
+    color: Canvas;
+    background: CanvasText;
+    box-shadow: none;
   }
 }

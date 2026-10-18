@@ -14,6 +14,8 @@ import {
   addDays,
   addMonths,
   addYears,
+  calendarViewKey,
+  calendarViewMotion,
   decadeCells,
   isDayDisabled,
   monthCells,
@@ -31,6 +33,8 @@ import {
   type OgeCalendarDisabledDates,
   type OgeCalendarRange,
   type OgeCalendarSelectionMode,
+  type OgeCalendarView,
+  type OgeCalendarViewMotion,
   type OgeCalendarWeekNumberOptions,
   type OgeCalendarZoomLevel,
 } from '@oge-ui/behavior';
@@ -259,6 +263,38 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
       }
       lastAnchor.current = selectionAnchor;
     }, [selectionAnchor?.getTime()]);
+
+    // --- view motion ----------------------------------------------------------
+
+    /**
+     * The pane is keyed by the visible month/year/decade, so a page or zoom
+     * change re-creates it and its enter keyframe runs once; `viewMotion` is
+     * the direction it arrived from (`null` for the first view, which never
+     * animates). Tracked as state updated during render — the "previous
+     * props" pattern — so StrictMode's double render stays idempotent.
+     */
+    const viewKey = calendarViewKey(viewDate, zoom);
+    const [viewTrack, setViewTrack] = useState<{
+      key: string;
+      view: OgeCalendarView;
+      motion: OgeCalendarViewMotion | null;
+    }>(() => ({
+      key: viewKey,
+      view: { anchor: viewDate, zoom },
+      motion: null,
+    }));
+    let viewMotion = viewTrack.motion;
+    if (viewTrack.key !== viewKey) {
+      viewMotion = calendarViewMotion(viewTrack.view, {
+        anchor: viewDate,
+        zoom,
+      });
+      setViewTrack({
+        key: viewKey,
+        view: { anchor: viewDate, zoom },
+        motion: viewMotion,
+      });
+    }
 
     // --- derivations --------------------------------------------------------
 
@@ -592,6 +628,15 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
           >
             {headerLabel}
           </button>
+          {/* the button's name is the zoom action; the live region
+              announces the new view */}
+          <span
+            className="oge-calendar-sr-only"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {headerLabel}
+          </span>
           {navButton(1)}
         </div>
         {/* Delegated keyboard handler: focus lives on the roving-tabindex
@@ -607,136 +652,153 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
           aria-label={label || field.msg.calendarLabel}
           onKeyDown={onGridKeydown}
         >
-          {zoom === 'month' ? (
-            <div
-              className="oge-calendar-views"
-              onMouseLeave={() => setHoveredDate(null)}
-            >
-              {viewOffsets.map((offset, viewIndex) => (
-                <div className="oge-calendar-view" key={offset}>
-                  {viewsCount === 2 && (
-                    <div
-                      className="oge-calendar-view-title"
-                      role="presentation"
-                    >
-                      {viewLabel(addMonths(viewDate, offset), 'month', locale)}
-                    </div>
-                  )}
-                  <div
-                    className="oge-calendar-row oge-calendar-weekdays"
-                    role="row"
-                  >
-                    {weekNumbersOn && (
-                      <span
-                        className="oge-calendar-weeknum"
-                        role="columnheader"
+          <div
+            key={viewKey}
+            className="oge-calendar-pane"
+            data-oge-view-motion={viewMotion ?? undefined}
+          >
+            {zoom === 'month' ? (
+              <div
+                className="oge-calendar-views"
+                onMouseLeave={() => setHoveredDate(null)}
+              >
+                {viewOffsets.map((offset, viewIndex) => (
+                  <div className="oge-calendar-view" key={offset}>
+                    {viewsCount === 2 && (
+                      <div
+                        className="oge-calendar-view-title"
+                        role="presentation"
                       >
-                        <span className="oge-calendar-sr-only">
-                          {field.msg.weekColumnLabel}
-                        </span>
-                      </span>
+                        {viewLabel(
+                          addMonths(viewDate, offset),
+                          'month',
+                          locale,
+                        )}
+                      </div>
                     )}
-                    {weekdays.map((name, index) => (
-                      <span
-                        className="oge-calendar-weekday"
-                        role="columnheader"
-                        key={index}
-                      >
-                        {name}
-                      </span>
-                    ))}
-                  </div>
-                  {viewWeeks[viewIndex].map((week, weekIndex) => (
                     <div
-                      className="oge-calendar-row"
+                      className="oge-calendar-row oge-calendar-weekdays"
                       role="row"
-                      key={weekIndex}
                     >
                       {weekNumbersOn && (
-                        <span className="oge-calendar-weeknum" role="rowheader">
-                          {weekNumber(week[0].date, weekRule)}
+                        <span
+                          className="oge-calendar-weeknum"
+                          role="columnheader"
+                        >
+                          <span className="oge-calendar-sr-only">
+                            {field.msg.weekColumnLabel}
+                          </span>
                         </span>
                       )}
-                      {week.map((cell) => (
-                        <button
-                          key={cell.date.getTime()}
-                          type="button"
-                          className={[
-                            'oge-calendar-cell',
-                            cell.otherPeriod && 'oge-calendar-cell-other',
-                            isSelected(cell.date) &&
-                              'oge-calendar-cell-selected',
-                            isInRange(cell.date) &&
-                              'oge-calendar-cell-in-range',
-                            isToday(cell.date) && 'oge-calendar-cell-today',
-                          ]
-                            .filter(Boolean)
-                            .join(' ')}
-                          role="gridcell"
-                          disabled={field.effectiveDisabled || cell.disabled}
-                          tabIndex={
-                            isFocusTarget(cell.date, cell.otherPeriod)
-                              ? (props.tabIndex ?? 0)
-                              : -1
-                          }
-                          aria-selected={isSelected(cell.date)}
-                          aria-current={isToday(cell.date) ? 'date' : undefined}
-                          aria-label={dayLabelFormat.format(cell.date)}
-                          data-focus-target={
-                            isFocusTarget(cell.date, cell.otherPeriod)
-                              ? ''
-                              : undefined
-                          }
-                          onClick={(event) =>
-                            onCellClick(cell, event.nativeEvent)
-                          }
-                          onMouseEnter={() => {
-                            if (selectionMode === 'range') {
-                              setHoveredDate(cell.date);
-                            }
-                          }}
-                          onFocus={() => setFocusedDate(startOfDay(cell.date))}
+                      {weekdays.map((name, index) => (
+                        <span
+                          className="oge-calendar-weekday"
+                          role="columnheader"
+                          key={index}
                         >
-                          {cellBody(cell)}
-                        </button>
+                          {name}
+                        </span>
                       ))}
                     </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ) : (
-            zoomedRows.map((row, rowIndex) => (
-              <div className="oge-calendar-row" role="row" key={rowIndex}>
-                {row.map((cell) => (
-                  <button
-                    key={cell.date.getTime()}
-                    type="button"
-                    className={[
-                      'oge-calendar-cell',
-                      'oge-calendar-cell-wide',
-                      cell.otherPeriod && 'oge-calendar-cell-other',
-                      isZoomedSelected(cell.date) &&
-                        'oge-calendar-cell-selected',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    role="gridcell"
-                    disabled={field.effectiveDisabled || cell.disabled}
-                    tabIndex={
-                      isFocusTarget(cell.date) ? (props.tabIndex ?? 0) : -1
-                    }
-                    data-focus-target={
-                      isFocusTarget(cell.date) ? '' : undefined
-                    }
-                    onClick={(event) => onCellClick(cell, event.nativeEvent)}
-                  >
-                    {cellBody(cell)}
-                  </button>
+                    {viewWeeks[viewIndex].map((week, weekIndex) => (
+                      <div
+                        className="oge-calendar-row"
+                        role="row"
+                        key={weekIndex}
+                      >
+                        {weekNumbersOn && (
+                          <span
+                            className="oge-calendar-weeknum"
+                            role="rowheader"
+                          >
+                            {weekNumber(week[0].date, weekRule)}
+                          </span>
+                        )}
+                        {week.map((cell) => (
+                          <button
+                            key={cell.date.getTime()}
+                            type="button"
+                            className={[
+                              'oge-calendar-cell',
+                              cell.otherPeriod && 'oge-calendar-cell-other',
+                              isSelected(cell.date) &&
+                                'oge-calendar-cell-selected',
+                              isInRange(cell.date) &&
+                                'oge-calendar-cell-in-range',
+                              isToday(cell.date) && 'oge-calendar-cell-today',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                            role="gridcell"
+                            disabled={field.effectiveDisabled || cell.disabled}
+                            tabIndex={
+                              isFocusTarget(cell.date, cell.otherPeriod)
+                                ? (props.tabIndex ?? 0)
+                                : -1
+                            }
+                            aria-selected={isSelected(cell.date)}
+                            aria-current={
+                              isToday(cell.date) ? 'date' : undefined
+                            }
+                            aria-label={dayLabelFormat.format(cell.date)}
+                            data-focus-target={
+                              isFocusTarget(cell.date, cell.otherPeriod)
+                                ? ''
+                                : undefined
+                            }
+                            onClick={(event) =>
+                              onCellClick(cell, event.nativeEvent)
+                            }
+                            onMouseEnter={() => {
+                              if (selectionMode === 'range') {
+                                setHoveredDate(cell.date);
+                              }
+                            }}
+                            onFocus={() =>
+                              setFocusedDate(startOfDay(cell.date))
+                            }
+                          >
+                            {cellBody(cell)}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))
-          )}
+            ) : (
+              zoomedRows.map((row, rowIndex) => (
+                <div className="oge-calendar-row" role="row" key={rowIndex}>
+                  {row.map((cell) => (
+                    <button
+                      key={cell.date.getTime()}
+                      type="button"
+                      className={[
+                        'oge-calendar-cell',
+                        'oge-calendar-cell-wide',
+                        cell.otherPeriod && 'oge-calendar-cell-other',
+                        isZoomedSelected(cell.date) &&
+                          'oge-calendar-cell-selected',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      role="gridcell"
+                      disabled={field.effectiveDisabled || cell.disabled}
+                      tabIndex={
+                        isFocusTarget(cell.date) ? (props.tabIndex ?? 0) : -1
+                      }
+                      data-focus-target={
+                        isFocusTarget(cell.date) ? '' : undefined
+                      }
+                      onClick={(event) => onCellClick(cell, event.nativeEvent)}
+                    >
+                      {cellBody(cell)}
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
         </div>
         {showTodayButton && (
           <button

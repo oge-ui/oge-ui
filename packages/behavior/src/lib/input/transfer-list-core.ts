@@ -293,3 +293,36 @@ export function ogeTransferReorderLine(
     width: rect.width,
   };
 }
+
+/**
+ * The options of both panes keyed by item value — the `query` of the
+ * transfer list's layout animator, so a moved item glides from its slot in
+ * one list to its slot in the other and the neighbours close up. `shown` is
+ * what each list displays (after its search); an option's `data-index`
+ * indexes it. Grouped lists sort their options by group, so they yield
+ * nothing (the move just applies).
+ */
+export function ogeTransferOptionEntries<TItem>(
+  root: Element,
+  shown: {
+    readonly source: readonly TItem[];
+    readonly target: readonly TItem[];
+  },
+  valueOf: (item: TItem) => unknown,
+  grouped: boolean,
+): (readonly [unknown, HTMLElement])[] {
+  if (grouped) return [];
+  const entries: (readonly [unknown, HTMLElement])[] = [];
+  for (const side of ['source', 'target'] as const) {
+    const pane = root.querySelector(`[data-oge-transfer-side="${side}"]`);
+    if (!pane) continue;
+    const items = shown[side];
+    for (const el of Array.from(
+      pane.querySelectorAll<HTMLElement>('.oge-list-box-option'),
+    )) {
+      const item = items[Number(el.getAttribute('data-index'))];
+      if (item !== undefined) entries.push([valueOf(item), el] as const);
+    }
+  }
+  return entries;
+}

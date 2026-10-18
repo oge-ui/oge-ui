@@ -33,6 +33,8 @@
 }
 
 .oge-toggle-group-track {
+  // positioning context of the sliding selection pill
+  position: relative;
   display: inline-flex;
   align-self: flex-start;
   gap: 2px;
@@ -116,6 +118,36 @@
   }
 }
 
+// ── Sliding selection pill ──
+// On a single-selection change the script (createOgeIndicatorGlide, shape
+// 'box') FLIPs one pill from the old segment to the new one. While it runs
+// the track carries data-oge-indicator-glide: the real selected fill and
+// border hide and no segment transitions them, so the CSS pill reappears at
+// once where the glide lands. The CSS pill stays the truth — the first
+// render, reduced motion and the baselines never see the glide.
+// it paints over the segments: the translucent accent-soft tint keeps the
+// labels readable, and is exactly the selected segment's own fill
+.oge-toggle-group-pill {
+  z-index: 1;
+  box-sizing: border-box;
+  border: 1px solid var(--oge-accent);
+  border-radius: calc(var(--oge-radius) - 2px);
+  background: var(--oge-accent-soft);
+}
+
+.oge-toggle-group-track[data-oge-indicator-glide] .oge-toggle-group-item {
+  transition-property: color, box-shadow;
+}
+
+.oge-toggle-group-track[data-oge-indicator-glide='run']
+  .oge-toggle-group-item-selected {
+  &,
+  &:hover:not(:disabled) {
+    border-color: transparent;
+    background: transparent;
+  }
+}
+
 .oge-toggle-group-readonly .oge-toggle-group-item {
   cursor: default;
 }
@@ -137,6 +169,11 @@
   .oge-toggle-group-item {
     transition: none;
   }
+
+  // the script never starts a glide under reduced motion; belt and braces
+  .oge-toggle-group-pill {
+    display: none;
+  }
 }
 
 @include tokens.forced-colors {
@@ -153,6 +190,12 @@
     border-color: Highlight;
     background: Highlight;
     color: HighlightText;
+  }
+
+  // a frame only: a Highlight fill over the labels would hide them
+  .oge-toggle-group-pill {
+    border: 2px solid Highlight;
+    background: transparent;
   }
 
   .oge-toggle-group-item:disabled {

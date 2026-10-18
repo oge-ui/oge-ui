@@ -3,6 +3,8 @@
 .oge-button-group {
   @include tokens.core-tokens;
 
+  // positioning context of the sliding selection pill
+  position: relative;
   display: inline-flex;
   vertical-align: middle;
 
@@ -12,7 +14,9 @@
     border-end-start-radius: 0;
   }
 
-  > .oge-button:not(:last-child) .oge-button-native {
+  // "last of the buttons", not "last child": the transient selection pill is
+  // appended after them and must not square the last segment's corners
+  > .oge-button:not(:nth-last-child(1 of .oge-button)) .oge-button-native {
     border-start-end-radius: 0;
     border-end-end-radius: 0;
   }
@@ -45,10 +49,30 @@
   }
 }
 
+// ── Sliding selection pill ──
+// On a single-selection change the script (glideButtonGroupPill) FLIPs one
+// translucent pill from the old segment to the new one. While it runs the
+// group carries data-oge-indicator-glide="run": the selected segment shows
+// its plain look (the rule below is gated on it, with zero specificity) and
+// no segment transitions its fill or border, so the CSS selection reappears
+// at once where the pill lands. The CSS selection stays the truth — the
+// first render, reduced motion and the baselines never see the pill.
+.oge-button-group-pill {
+  z-index: 2;
+  box-sizing: border-box;
+  border: 1px solid var(--oge-accent);
+  background: var(--oge-accent-soft);
+}
+
+.oge-button-group[data-oge-indicator-glide] .oge-button-native {
+  transition-property: color, box-shadow, transform;
+}
+
 // Selected segments always use the accent pair, independent of severity.
 // Scoped under the group so intent beats the styling-mode rules regardless
 // of component style injection order.
-.oge-button-group .oge-button-selected {
+.oge-button-group:where(:not([data-oge-indicator-glide='run']))
+  .oge-button-selected {
   --oge-btn-main: var(--oge-accent);
   --oge-btn-soft: var(--oge-accent-soft);
 
@@ -91,5 +115,18 @@
     border-color: Highlight;
     background: Highlight;
     color: HighlightText;
+  }
+
+  // a frame only: a Highlight fill over the labels would hide them
+  .oge-button-group-pill {
+    border: 2px solid Highlight;
+    background: transparent;
+  }
+}
+
+@include tokens.reduced-motion {
+  // the script never starts a glide under reduced motion; belt and braces
+  .oge-button-group-pill {
+    display: none;
   }
 }

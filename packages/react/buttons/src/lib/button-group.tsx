@@ -13,9 +13,13 @@ import {
 } from 'react';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect';
 import {
+  OGE_BUTTON_GROUP_PILL_CLASS,
   applyButtonGroupSelection,
   buttonGroupNavIndex,
   buttonGroupRole,
+  createOgeIndicatorGlide,
+  glideButtonGroupPill,
+  type OgeIndicatorGlide,
   type OgeButtonGroupSelectionChange,
   type OgeButtonGroupSelectionMode,
   type OgeButtonSeverity,
@@ -250,6 +254,34 @@ export const OgeButtonGroup = forwardRef<
       el.tabIndex = i === target ? 0 : -1;
     });
   });
+
+  // --- sliding selection pill (single mode) ---------------------------------
+  const pillGlide = useRef<OgeIndicatorGlide | null>(null);
+  /** The native button the pill sat on after the last commit. */
+  const pillTarget = useRef<HTMLElement | null>(null);
+  const selectionSignature =
+    selectionMode === 'single' ? selectedKeys.join('\u0000') : null;
+  // slide the pill from the old segment (a no-op on the first commit,
+  // outside single mode, for solid-severity segments and under reduced
+  // motion — the CSS selection then just moves)
+  useIsomorphicLayoutEffect(() => {
+    const root = rootRef.current;
+    const target =
+      selectionSignature !== null && root
+        ? root.querySelector<HTMLElement>(
+            '.oge-button-selected .oge-button-native',
+          )
+        : null;
+    const previous = pillTarget.current;
+    pillTarget.current = target;
+    if (!root || !previous || !target || previous === target) return;
+    pillGlide.current ??= createOgeIndicatorGlide(root, {
+      shape: 'box',
+      className: OGE_BUTTON_GROUP_PILL_CLASS,
+    });
+    glideButtonGroupPill(pillGlide.current, root, previous, target);
+  }, [selectionSignature]);
+  useEffect(() => () => pillGlide.current?.cancel(), []);
 
   useEffect(() => {
     if (!isDevMode()) return;

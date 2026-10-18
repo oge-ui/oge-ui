@@ -5,6 +5,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,7 +19,10 @@ import {
 } from 'react';
 import {
   OgeFileUploaderCore,
+  createOgeLayoutAnimator,
   mergeUploadMessages,
+  ogeExitGhost,
+  type OgeLayoutAnimator,
   type OgeFileUploaderEvents,
   type OgeFileUploaderProps as OgeFileUploaderCoreProps,
   type OgeUploadAbortReason,
@@ -435,6 +439,60 @@ export const OgeFileUploader = forwardRef<
   }
   const core = coreRef.current;
 
+  // --- row motion: an exit ghost on remove, the rows below glide up ---------
+  const listRef = useRef<HTMLUListElement>(null);
+  const rowAnimator = useRef<{
+    root: HTMLElement;
+    animator: OgeLayoutAnimator<string>;
+  } | null>(null);
+  const rowFlipPending = useRef(false);
+  const rowElements = (list: HTMLElement): [string, HTMLElement][] =>
+    Array.from(
+      list.querySelectorAll<HTMLElement>(
+        ':scope > .oge-upload-file:not(.oge-exit-ghost)',
+      ),
+      (el) => [el.getAttribute('data-uid') ?? '', el],
+    );
+  const rowLayout = (list: HTMLElement): OgeLayoutAnimator<string> => {
+    if (rowAnimator.current?.root !== list) {
+      rowAnimator.current?.animator.cancel();
+      rowAnimator.current = {
+        root: list,
+        animator: createOgeLayoutAnimator<string>({
+          root: list,
+          enter: false,
+          exit: false,
+          query: () => rowElements(list),
+        }),
+      };
+    }
+    return rowAnimator.current.animator;
+  };
+  /** Ghosts a row about to be removed and snapshots the rows below it. */
+  const prepareRowExit = (uid: string): void => {
+    const list = listRef.current;
+    const row = list ? rowElements(list).find(([key]) => key === uid) : null;
+    if (list && row) {
+      // the row leaves at once; a ghost fades where it was and the rows
+      // below glide up (both no-ops with motion off, and when the
+      // fileRemoving handler keeps the row)
+      ogeExitGhost(row[1], { parent: list });
+      rowLayout(list).capture();
+      rowFlipPending.current = true;
+    }
+  };
+  const removeRow = (uid: string): void => {
+    prepareRowExit(uid);
+    core.removeFile(uid);
+  };
+  useLayoutEffect(() => {
+    if (!rowFlipPending.current) return;
+    rowFlipPending.current = false;
+    const list = listRef.current;
+    if (list?.isConnected) void rowLayout(list).play();
+  });
+  useEffect(() => () => rowAnimator.current?.animator.cancel(), []);
+
   // the machine's announcements go through the document's shared live region
   const liveAnnouncer = useOgeLiveAnnouncer();
   const announcement = core.announcement;
@@ -536,7 +594,7 @@ export const OgeFileUploader = forwardRef<
       retry: (uid) => core.retry(uid),
       openFileDialog: () => core.openFileDialog(),
       addFiles: (files) => core.addFiles(files),
-      removeFile: (uid) => core.removeFile(uid),
+      removeFile: (uid) => removeRow(uid),
       clear: () => core.clear(),
       getFiles: (index) => core.getFiles(index),
       reset: (next) => core.reset(next),
@@ -569,6 +627,10 @@ export const OgeFileUploader = forwardRef<
     renderIcon ? renderIcon(slot) : DEFAULT_ICONS[slot];
 
   const onListKeyDown = (event: ReactKeyboardEvent<HTMLUListElement>): void => {
+    const active = core.activeUid;
+    if ((event.key === 'Delete' || event.key === 'Backspace') && active) {
+      prepareRowExit(active);
+    }
     const uid = core.onListKeydown(event.nativeEvent);
     if (uid !== null) {
       hostRef.current
@@ -624,6 +686,22 @@ export const OgeFileUploader = forwardRef<
         ) : (
           <span className="oge-upload-file-glyph" aria-hidden="true">
             {glyph('file')}
+            {file.status === 'uploaded' && (
+              <span className="oge-upload-file-done" aria-hidden="true">
+                <svg
+                  viewBox="0 0 16 16"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m3.5 8.5 3 3 6-7" pathLength={1} />
+                </svg>
+              </span>
+            )}
           </span>
         )}
 
@@ -721,7 +799,7 @@ export const OgeFileUploader = forwardRef<
             className="oge-upload-file-action"
             disabled={!interactive}
             aria-label={core.actionLabel('remove', file)}
-            onClick={() => core.removeFile(file.uid)}
+            onClick={() => removeRow(file.uid)}
           >
             {glyph('remove')}
           </button>
@@ -826,6 +904,7 @@ export const OgeFileUploader = forwardRef<
           {renderHeader?.(core.headerContext())}
           {rows.length > 0 ? (
             <ul
+              ref={listRef}
               className="oge-upload-list"
               role="list"
               aria-label={core.listLabel}

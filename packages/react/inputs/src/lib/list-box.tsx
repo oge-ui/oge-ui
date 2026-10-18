@@ -4,6 +4,7 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useReducer,
   useRef,
   useState,
@@ -18,11 +19,13 @@ import {
   OGE_LIST_BOX_REORDER_SHORTCUTS,
   OgeListBoxCore,
   beginPointerDragDrop,
+  createOgeLayoutAnimator,
   ogeListBoxDropTarget,
   ogeListBoxReorderAnnouncement,
   ogeListBoxSections,
   ogeMoveListItem,
   prepareTouchDrag,
+  type OgeLayoutAnimator,
   type OgeListBoxDropTarget,
   type OgeListBoxReorder,
   type OgeListBoxReorderCause,
@@ -318,6 +321,37 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
     });
   };
 
+  // --- reorder FLIP ----------------------------------------------------------
+  const layoutAnimator = useRef<OgeLayoutAnimator<TItem> | null>(null);
+  const reorderFlipPending = useRef(false);
+  const optionLayout = (): OgeLayoutAnimator<TItem> | null => {
+    const list = listRef.current;
+    if (!list) return null;
+    // options are tracked by position, so the key is the item each one shows
+    layoutAnimator.current ??= createOgeLayoutAnimator<TItem>({
+      root: list,
+      enter: false,
+      exit: false,
+      query: () =>
+        Array.from(
+          list.querySelectorAll<HTMLElement>('.oge-list-box-option'),
+          (el) =>
+            [
+              core.visibleItems()[Number(el.getAttribute('data-index'))],
+              el,
+            ] as const,
+        ),
+    });
+    return layoutAnimator.current;
+  };
+  // a reorder glides its options from their old slots
+  useLayoutEffect(() => {
+    if (!reorderFlipPending.current) return;
+    reorderFlipPending.current = false;
+    void layoutAnimator.current?.play();
+  }, [order]);
+  useEffect(() => () => layoutAnimator.current?.cancel(), []);
+
   const commitReorder = (
     reorder: OgeListBoxReorder | null,
     cause: OgeListBoxReorderCause,
@@ -337,6 +371,9 @@ export const OgeListBox = forwardRef(function OgeListBoxRender<TItem>(
     p.onReordering?.(pre);
     if (pre.cancel) return false;
     const next = ogeMoveListItem(items, reorder.fromIndex, reorder.toIndex);
+    // snapshot before the write; the commit plays the glide
+    optionLayout()?.capture();
+    reorderFlipPending.current = true;
     orderRef.current = { source: p.items, order: next };
     latest.current = { ...latest.current, order: next };
     // focus stays on the moved option (this also re-renders)

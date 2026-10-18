@@ -1,8 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
+  afterRenderEffect,
   computed,
   contentChildren,
   effect,
@@ -14,10 +16,14 @@ import {
   viewChildren,
 } from '@angular/core';
 import {
+  OGE_BUTTON_GROUP_PILL_CLASS,
   applyButtonGroupSelection,
   buttonGroupNavIndex,
   buttonGroupRole,
+  createOgeIndicatorGlide,
+  glideButtonGroupPill,
   ogeIsRtl,
+  type OgeIndicatorGlide,
 } from '@oge-ui/behavior';
 import { OgeButton } from '../button/button';
 import {
@@ -142,7 +148,36 @@ export class OgeButtonGroup implements OgeButtonGroupContext {
     return enabled[0];
   });
 
+  /** Slides the selection pill (single mode); created on the first move. */
+  private pillGlide: OgeIndicatorGlide | null = null;
+  /** The native button the pill sat on after the last render. */
+  private pillTarget: HTMLElement | null = null;
+
   constructor() {
+    // After a render that moved a single selection, slide the pill from the
+    // old segment to the new one — a no-op on the first render, outside
+    // single mode, for solid-severity segments (their selected look is a
+    // darker fill, not the accent tint) and under reduced motion.
+    afterRenderEffect(() => {
+      const single = this.selectionMode() === 'single';
+      this.selectedKeys();
+      this.allButtons();
+      const target = single
+        ? this.host.nativeElement.querySelector<HTMLElement>(
+            '.oge-button-selected .oge-button-native',
+          )
+        : null;
+      const previous = this.pillTarget;
+      this.pillTarget = target;
+      if (!previous || !target || previous === target) return;
+      const root = this.host.nativeElement;
+      this.pillGlide ??= createOgeIndicatorGlide(root, {
+        shape: 'box',
+        className: OGE_BUTTON_GROUP_PILL_CLASS,
+      });
+      glideButtonGroupPill(this.pillGlide, root, previous, target);
+    });
+    inject(DestroyRef).onDestroy(() => this.pillGlide?.cancel());
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
       effect(() => {
         if (this.selectionMode() === 'none') return;

@@ -819,7 +819,8 @@
         "@oge-ui/layout",
         "@oge-ui/navigation",
         "@oge-ui/overlay",
-        "@oge-ui/scheduler"
+        "@oge-ui/scheduler",
+        "@oge-ui/upload"
       ]
     },
     {
@@ -1258,7 +1259,8 @@
         "@oge-ui/inputs",
         "@oge-ui/layout",
         "@oge-ui/overlay",
-        "@oge-ui/tabs"
+        "@oge-ui/tabs",
+        "@oge-ui/upload"
       ]
     },
     {
@@ -1274,7 +1276,8 @@
         "@oge-ui/grid",
         "@oge-ui/inputs",
         "@oge-ui/layout",
-        "@oge-ui/overlay"
+        "@oge-ui/overlay",
+        "@oge-ui/upload"
       ]
     },
     {

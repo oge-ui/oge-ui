@@ -2,10 +2,12 @@ import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   TemplateRef,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   computed,
   contentChild,
   effect,
@@ -23,11 +25,13 @@ import {
   OGE_LIST_BOX_REORDER_SHORTCUTS,
   OgeListBoxCore,
   beginPointerDragDrop,
+  createOgeLayoutAnimator,
   ogeListBoxDropTarget,
   ogeListBoxReorderAnnouncement,
   ogeListBoxSections,
   ogeMoveListItem,
   prepareTouchDrag,
+  type OgeLayoutAnimator,
   type OgeListBoxDropTarget,
   type OgeListBoxReorder,
   type OgeListBoxReorderCause,
@@ -429,8 +433,42 @@ export class OgeListBox<TItem = unknown>
     return keys.length > 0 ? keys.join(' ') : null;
   });
 
+  /** FLIPs the options of a reorder (created on the first one). */
+  private layoutAnimator: OgeLayoutAnimator<TItem> | null = null;
+  /** A reorder captured the old boxes; the next render plays them. */
+  private reorderFlipPending = false;
+
+  private optionLayout(): OgeLayoutAnimator<TItem> | null {
+    const list = this.listEl()?.nativeElement;
+    if (!list) return null;
+    // options are tracked by position, so the key is the item each one shows
+    this.layoutAnimator ??= createOgeLayoutAnimator<TItem>({
+      root: list,
+      enter: false,
+      exit: false,
+      query: () =>
+        Array.from(
+          list.querySelectorAll<HTMLElement>('.oge-list-box-option'),
+          (el) =>
+            [
+              this.core.visibleItems()[Number(el.getAttribute('data-index'))],
+              el,
+            ] as const,
+        ),
+    });
+    return this.layoutAnimator;
+  }
+
   constructor() {
     super();
+    // a reorder glides its options from their old slots
+    afterRenderEffect(() => {
+      this.order();
+      if (!this.reorderFlipPending) return;
+      this.reorderFlipPending = false;
+      void this.optionLayout()?.play();
+    });
+    inject(DestroyRef).onDestroy(() => this.layoutAnimator?.cancel());
     // touch drags must be armed before the first touchstart (Chrome decides there)
     afterNextRender(() => {
       if (this.allowReordering()) prepareTouchDrag();
@@ -551,6 +589,9 @@ export class OgeListBox<TItem = unknown>
     this.reordering.emit(pre);
     if (pre.cancel) return false;
     const next = ogeMoveListItem(items, reorder.fromIndex, reorder.toIndex);
+    // snapshot before the write; the render plays the glide
+    this.optionLayout()?.capture();
+    this.reorderFlipPending = true;
     this.order.set(next);
     // focus stays on the moved option
     this.core.activateItem(item);

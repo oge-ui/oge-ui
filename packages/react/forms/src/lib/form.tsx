@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,6 +19,7 @@ import {
   isFormItemVisible,
   asyncValidationRules,
   formColumnsCount,
+  createOgeFormItemMotion,
   formColumnsCss,
   messageForFieldError,
   motionScrollBehavior,
@@ -962,6 +964,7 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
         return (
           <fieldset
             key={node.id}
+            data-oge-form-item={node.id}
             className={['oge-form-group', node.cssClass]
               .filter(Boolean)
               .join(' ')}
@@ -1021,6 +1024,25 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
       );
     });
 
+  // visibleWhen motion: an item that appears fades in and the items below
+  // glide from where they were (records the settled layout otherwise)
+  const hostRef = useRef<HTMLDivElement>(null);
+  const itemMotion = useRef<ReturnType<typeof createOgeFormItemMotion> | null>(
+    null,
+  );
+  const visibleIds = useRef<string | null>(null);
+  const visibleSignature = resolvedItems.map((item) => item.id).join(' ');
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    itemMotion.current ??= createOgeFormItemMotion(host);
+    const changed =
+      visibleIds.current !== null && visibleIds.current !== visibleSignature;
+    visibleIds.current = visibleSignature;
+    itemMotion.current.update(changed);
+  });
+  useEffect(() => () => itemMotion.current?.destroy(), []);
+
   const hostClasses = [
     'oge-form',
     labelLocation === 'start' && 'oge-form-label-start',
@@ -1063,7 +1085,12 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
   );
 
   return (
-    <div className={hostClasses} style={props.style} id={props.id}>
+    <div
+      ref={hostRef}
+      className={hostClasses}
+      style={props.style}
+      id={props.id}
+    >
       {renderFormElement ? (
         <form
           className="oge-form-body"

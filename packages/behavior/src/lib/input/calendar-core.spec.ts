@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  calendarViewKey,
+  calendarViewMotion,
   decadeCells,
   isDayDisabled,
   monthCells,
@@ -215,5 +217,60 @@ describe('navigate', () => {
   it('does not overflow when the anchor day exceeds the target month', () => {
     const back = navigate(d(2024, 3, 31), 'month', -1);
     expect(back.getMonth()).toBe(1); // February, not March
+  });
+});
+
+describe('calendarViewKey / calendarViewMotion', () => {
+  it('keys a view by its month, year or decade — not by the day', () => {
+    expect(calendarViewKey(d(2024, 3, 1), 'month')).toBe(
+      calendarViewKey(d(2024, 3, 31), 'month'),
+    );
+    expect(calendarViewKey(d(2024, 3, 1), 'month')).not.toBe(
+      calendarViewKey(d(2024, 4, 1), 'month'),
+    );
+    expect(calendarViewKey(d(2024, 1, 1), 'year')).toBe(
+      calendarViewKey(d(2024, 12, 31), 'year'),
+    );
+    expect(calendarViewKey(d(2020, 1, 1), 'decade')).toBe(
+      calendarViewKey(d(2029, 6, 1), 'decade'),
+    );
+  });
+
+  it('never animates the first view or a move inside the same view', () => {
+    expect(
+      calendarViewMotion(null, { anchor: d(2024, 3, 1), zoom: 'month' }),
+    ).toBeNull();
+    expect(
+      calendarViewMotion(
+        { anchor: d(2024, 3, 1), zoom: 'month' },
+        { anchor: d(2024, 3, 20), zoom: 'month' },
+      ),
+    ).toBeNull();
+  });
+
+  it('slides in the direction of travel', () => {
+    const march = { anchor: d(2024, 3, 15), zoom: 'month' as const };
+    expect(
+      calendarViewMotion(march, { anchor: d(2024, 4, 1), zoom: 'month' }),
+    ).toBe('next');
+    expect(
+      calendarViewMotion(march, { anchor: d(2024, 2, 29), zoom: 'month' }),
+    ).toBe('prev');
+    expect(
+      calendarViewMotion(
+        { anchor: d(2024, 3, 1), zoom: 'decade' },
+        { anchor: d(2034, 3, 1), zoom: 'decade' },
+      ),
+    ).toBe('next');
+  });
+
+  it('zooms out towards the decade and in towards the month', () => {
+    const month = { anchor: d(2024, 3, 1), zoom: 'month' as const };
+    const year = { anchor: d(2024, 3, 1), zoom: 'year' as const };
+    expect(calendarViewMotion(month, year)).toBe('zoom-out');
+    expect(calendarViewMotion(year, month)).toBe('zoom-in');
+    expect(
+      calendarViewMotion(year, { anchor: d(2024, 3, 1), zoom: 'decade' }),
+    ).toBe('zoom-out');
   });
 });

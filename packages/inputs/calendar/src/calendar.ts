@@ -25,6 +25,12 @@ import {
   startOfDay,
   weekNumber,
 } from '@oge-ui/core';
+import {
+  calendarViewKey,
+  calendarViewMotion,
+  type OgeCalendarView,
+  type OgeCalendarViewMotion,
+} from '@oge-ui/behavior';
 import { OgeControlBase } from '@oge-ui/inputs/field';
 import {
   decadeCells,
@@ -125,6 +131,13 @@ const ZOOM_ORDER: OgeCalendarZoomLevel[] = ['month', 'year', 'decade'];
       >
         {{ headerLabel() }}
       </button>
+      <!-- the button's name is the zoom action; the live region announces the new view -->
+      <span
+        class="oge-calendar-sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+        >{{ headerLabel() }}</span
+      >
       <button
         type="button"
         class="oge-calendar-nav"
@@ -156,6 +169,24 @@ const ZOOM_ORDER: OgeCalendarZoomLevel[] = ['month', 'year', 'decade'];
       [attr.aria-label]="label() || msg().calendarLabel"
       (keydown)="onGridKeydown($event)"
     >
+      <!-- keyed by the visible month/year/decade: a page or zoom change flips the branch, which re-creates the pane and runs its enter keyframe once -->
+      @if (viewParity()) {
+        <div
+          class="oge-calendar-pane"
+          [attr.data-oge-view-motion]="viewMotion()"
+        >
+          <ng-container *ngTemplateOutlet="paneBody" />
+        </div>
+      } @else {
+        <div
+          class="oge-calendar-pane"
+          [attr.data-oge-view-motion]="viewMotion()"
+        >
+          <ng-container *ngTemplateOutlet="paneBody" />
+        </div>
+      }
+    </div>
+    <ng-template #paneBody>
       @if (zoom() === 'month') {
         <div class="oge-calendar-views" (mouseleave)="onGridLeave()">
           @for (offset of viewOffsets(); track offset) {
@@ -251,7 +282,7 @@ const ZOOM_ORDER: OgeCalendarZoomLevel[] = ['month', 'year', 'decade'];
           </div>
         }
       }
-    </div>
+    </ng-template>
     @if (showTodayButton()) {
       <button
         type="button"
@@ -369,6 +400,35 @@ export class OgeCalendar
   protected readonly weekdays = computed(() =>
     weekdayNames(this.effectiveLocale(), this.effFirstDay()),
   );
+
+  /**
+   * Flips whenever the visible view (its month, year or decade —
+   * `calendarViewKey`) changes; the template renders the pane in one of two
+   * `@if` branches on it, so a page or zoom change re-creates the pane while
+   * a focus move inside the view keeps it.
+   */
+  protected readonly viewParity = linkedSignal<string, boolean>({
+    source: () => calendarViewKey(this.viewDate(), this.zoom()),
+    computation: (key, previous) =>
+      previous && previous.source !== key ? !previous.value : !!previous?.value,
+  });
+
+  /**
+   * The direction the current view arrived from (`next`/`prev` slide,
+   * `zoom-in`/`zoom-out` scale) — `null` for the first view, which never
+   * animates. A focus move inside the same view keeps the previous value,
+   * so the pane's enter keyframe never replays.
+   */
+  protected readonly viewMotion = linkedSignal<
+    OgeCalendarView,
+    OgeCalendarViewMotion | null
+  >({
+    source: () => ({ anchor: this.viewDate(), zoom: this.zoom() }),
+    computation: (view, previous) =>
+      previous
+        ? (calendarViewMotion(previous.source, view) ?? previous.value)
+        : null,
+  });
 
   protected readonly headerLabel = computed(() =>
     viewLabel(this.viewDate(), this.zoom(), this.effectiveLocale()),

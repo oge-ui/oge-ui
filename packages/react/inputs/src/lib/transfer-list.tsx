@@ -17,6 +17,7 @@ import {
 import {
   beginPointerDragDrop,
   choiceIncludes,
+  createOgeLayoutAnimator,
   ogeIsRtl,
   ogeSelectSearchFilter,
   ogeSelectSearchStrings,
@@ -28,6 +29,7 @@ import {
   ogeTransferMovableValues,
   ogeTransferMove,
   ogeTransferOpposite,
+  ogeTransferOptionEntries,
   ogeTransferReorderLine,
   ogeTransferReorderSource,
   ogeTransferReorderTarget,
@@ -36,6 +38,7 @@ import {
   prepareTouchDrag,
   resolveDisabled,
   resolveValue,
+  type OgeLayoutAnimator,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
   type OgeSelectGroupExpr,
@@ -339,6 +342,35 @@ export const OgeTransferList = forwardRef(function OgeTransferListRender<TItem>(
       isItemDisabled,
     );
 
+  // --- move FLIP -------------------------------------------------------------
+  const layoutAnimator = useRef<OgeLayoutAnimator<unknown> | null>(null);
+  const moveFlipPending = useRef(false);
+  const optionLayout = (): OgeLayoutAnimator<unknown> | null => {
+    const root = hostRef.current;
+    if (!root) return null;
+    // keyed by item value across both panes: a moved item glides from its
+    // slot in one list to its slot in the other, the neighbours close up
+    layoutAnimator.current ??= createOgeLayoutAnimator<unknown>({
+      root,
+      enter: false,
+      exit: false,
+      query: () =>
+        ogeTransferOptionEntries(
+          root,
+          { source: shownItems('source'), target: shownItems('target') },
+          (item) => resolveValue(latest.current.props.valueExpr, item),
+          latest.current.props.groupBy !== undefined,
+        ),
+    });
+    return layoutAnimator.current;
+  };
+  useIsomorphicLayoutEffect(() => {
+    if (!moveFlipPending.current) return;
+    moveFlipPending.current = false;
+    void layoutAnimator.current?.play();
+  });
+  useEffect(() => () => layoutAnimator.current?.cancel(), []);
+
   const moveValues = (
     values: readonly unknown[],
     from: OgeTransferListSide,
@@ -364,6 +396,9 @@ export const OgeTransferList = forwardRef(function OgeTransferListRender<TItem>(
     current.props.onMoving?.(moving);
     if (moving.cancel) return;
     const next = ogeTransferMove(current.value, values, to);
+    // snapshot before the write; the commit plays the glide
+    optionLayout()?.capture();
+    moveFlipPending.current = true;
     current.field.commit.commitNow(next, event);
     const remaining = selectionOf(from).filter(
       (entry) => !choiceIncludes(values, entry),

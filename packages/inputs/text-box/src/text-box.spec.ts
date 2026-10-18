@@ -146,6 +146,30 @@ describe('OgeTextBox', () => {
     expect(box().classList.contains('oge-input-lg')).toBe(true);
   });
 
+  it('opens the subscript row for an error only where it would shift the layout', async () => {
+    const { fixture, host, el } = await render((h) => {
+      h.subscriptSizing.set('dynamic');
+    });
+    const text = () =>
+      el.querySelector('.oge-input-subscript-text') as HTMLElement;
+    expect(text().classList).not.toContain('oge-input-subscript-expand');
+    host.invalid.set(true);
+    host.errorText.set('Broken');
+    await settle(fixture);
+    // an empty dynamic subscript grows: the 0fr → 1fr collapse class is on
+    expect(text().classList).toContain('oge-input-subscript-expand');
+    expect(text().querySelector(':scope > .oge-input-error')).not.toBeNull();
+    // replacing a hint keeps the row — fade only
+    host.hint.set('Helper');
+    await settle(fixture);
+    expect(text().classList).not.toContain('oge-input-subscript-expand');
+    // a fixed subscript reserves the row already
+    host.hint.set(undefined);
+    host.subscriptSizing.set('fixed');
+    await settle(fixture);
+    expect(text().classList).not.toContain('oge-input-subscript-expand');
+  });
+
   it('chains aria-describedby across hint, error and counter', async () => {
     const { fixture, host, native, el } = await render((h) => {
       h.hint.set('Helper');
