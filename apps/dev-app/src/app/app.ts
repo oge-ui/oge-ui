@@ -554,7 +554,11 @@ export class App {
       title: 'AI',
       group: COMPONENTS_GROUP,
       items: [
-        { path: '/components/ai', label: 'Grid Assistant', icon: 'sparkles' },
+        {
+          path: '/components/ai',
+          label: 'Grid Assistant & Smart Paste',
+          icon: 'sparkles',
+        },
         {
           path: '/components/ai/api',
           label: 'API Reference',

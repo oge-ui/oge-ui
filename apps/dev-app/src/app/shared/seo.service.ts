@@ -693,7 +693,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/ai',
-    'AI grid assistant for Angular and React: ask a data grid in plain language to sort, filter and group. Any model, validated changes, preview and undo.',
+    'AI for Angular and React: ask a data grid in plain language, or fill a form from pasted text. Any model, validated changes, preview and undo, no rows sent.',
   ],
   [
     '/components/ai/api',

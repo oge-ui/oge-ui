@@ -157,6 +157,13 @@ filter trees are bounded, and the merged state still passes
 `sanitizeGridStateSnapshot` before it reaches the grid. The model's summary is
 rendered as text. Parts that do not fit are dropped, never applied.
 
+Smart paste (`oge-smart-paste` / `<OgeSmartPaste>`) sends the form's field
+catalog (labels, types, choice values) and the text the user chose to paste
+— never the form's current values. The pasted text is fenced and labelled as
+data in the prompt, so instructions inside it are not followed; read-only
+fields are never offered, and every value is validated against its field
+before the Now → New table shows it.
+
 The vendor transports (`createOgeOpenAiTransport`,
 `createOgeAnthropicTransport`) refuse to send an `apiKey` from a browser
 unless `dangerouslyAllowBrowser` is set: a key in client code is readable by

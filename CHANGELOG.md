@@ -7,6 +7,23 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Smart paste — `@oge-ui/ai`, `@oge-ui/react-ai`, `@oge-ui/forms`, `@oge-ui/react-forms`, `@oge-ui/behavior`, `@oge-ui/locales`
+
+- **Fill a form from copied text.** `<oge-smart-paste [target]="form">` /
+  `<OgeSmartPaste target={formRef}>` reads the clipboard (an email, a
+  signature, a table row), asks the model for field values and shows a
+  Now → New table before writing them (`mode: 'preview'`, default) or writes
+  them at once (`'apply'`). Undo restores the replaced values. When the
+  clipboard cannot be read, a text box takes the paste.
+- **Validated like the grid assistant.** Values must name a writable field,
+  coerce to its type (dates as local days) and, for choice fields, be one of
+  the listed values; read-only fields are never offered. The request carries
+  the field catalog and the pasted text — **never the form's current
+  values** — and labels the text as data, not instructions.
+- New form method `describeFields()` in both layers (`ogeDescribeFormFields`
+  in behavior); `coerceOgeAiValue` is now the one coercion rule both AI
+  features share. Strings in all eleven locale packs.
+
 ### AI grid assistant — new `@oge-ui/ai` and `@oge-ui/react-ai` (MIT), `@oge-ui/behavior`, `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/locales`
 
 - **Ask the grid in plain language.** `<oge-grid-assistant [target]="grid">` /

@@ -32,7 +32,7 @@ const FAMILIES = [
   { name: 'Gantt', preview: '[data-preview="gantt"]' },
   { name: 'Upload', preview: '[data-preview="upload"]' },
   { name: 'Rich Text Editor', preview: '[data-preview="editor"]' },
-  { name: 'AI Grid Assistant', preview: '[data-preview="ai"]' },
+  { name: 'AI', preview: '[data-preview="ai"]' },
   { name: 'Kanban', preview: '[data-preview="kanban"]' },
   { name: 'Charts', preview: '[data-preview="charts"]' },
   { name: 'Overlay', preview: 'oge-button' },

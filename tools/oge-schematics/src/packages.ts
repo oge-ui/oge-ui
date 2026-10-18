@@ -223,6 +223,10 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`createOgeOpenAiTransport({ baseUrl, model })` (any OpenAI-compatible server) or `createOgeAnthropicTransport({ model })` — behind your own proxy; sending an `apiKey` from the browser needs `dangerouslyAllowBrowser: true`',
     },
     {
+      need: 'fill a form from pasted text (email, signature) — smart paste / autofill',
+      use: '`<oge-smart-paste [target]="form" />` next to `<oge-form #form>` — reads the clipboard (falls back to a text box), shows Now → New values, Apply / Undo; values are validated against each field\'s type and choices, current values are never sent',
+    },
+    {
       need: 'keep a column or data away from the AI model',
       use: 'the model never receives rows — only column names, types and lookup values; pass `[columns]` to add `description`s or omit a column, `[capabilities]="{ columns: false }"` to switch a part of the state off',
     },
