@@ -1,5 +1,5 @@
 /**
- * Cross-framework parity gate (ROADMAP-REACT R2, ADR 0001 Faz 4).
+ * Cross-framework parity gate (ADR 0001 Faz 4).
  *
  * For every family that ships in both render layers, diffs the Angular and
  * React API reference tables — the same `*-api-data.ts` sources the docs and
@@ -17,7 +17,7 @@
  *
  * Everything else must either match or be listed in a family's `exceptions`
  * with a reason — deliberate differences are documented, never silent
- * (ROADMAP-REACT, parity principle 3).
+ * (docs/REACT-PARITY.md).
  *
  * `types` sections are compared by block presence only: they document shapes
  * whose names legitimately differ per language idiom (events vs callbacks).

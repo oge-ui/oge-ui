@@ -5,10 +5,9 @@ import type { FaqEntry } from '../pricing/pricing-data';
  * Content of the `/compare/*` pages.
  *
  * Sources, so the pages stay honest when they are refreshed:
- * - OGE UI facts: the packages themselves, `/license` and
- *   `docs/competitive-gaps/*.md` (the "where they are stronger" lists come
- *   from rows still marked Missing or Partial there — re-check them against
- *   `packages/` before reusing one).
+ * - OGE UI facts: the packages themselves, `/license` and `ROADMAP.md` (the
+ *   "where they are stronger" lists come from rows still marked Missing or
+ *   Partial there — re-check them against `packages/` before reusing one).
  * - Competitor facts: the vendor pages listed in each `sources` array, read on
  *   {@link CHECKED_ON}. Anything a vendor page did not state is written as
  *   "see the vendor's docs", never guessed.
