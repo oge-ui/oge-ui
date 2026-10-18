@@ -198,6 +198,7 @@ import {
   resolveOgeAttributeTarget,
   resolveOgeHeaderDropTarget,
   resolveOgeRowDropIndex,
+  ogeDescribeGridColumns,
   type OgeGridHeaderDropTarget,
 } from '@oge-ui/behavior';
 import {
@@ -1379,6 +1380,7 @@ function OgeGridInner<T extends object>(
       groupFooterFields,
       resolvedColumns,
       exportColumnSources,
+      firstDataRow,
       bandRow,
       colVirtualized,
       layout,
@@ -2443,6 +2445,12 @@ function OgeGridInner<T extends object>(
     isRowSelected,
     state: () => model.persistedSnapshot(),
     applyState: (snapshot) => model.applyState(snapshot),
+    describeColumns: () =>
+      ogeDescribeGridColumns(
+        model.exportColumnSources(true),
+        new Set(model.exportColumnSources(false).map((column) => column.id)),
+        model.firstDataRow(),
+      ),
     getExportData,
     getCsv,
     exportCsv,

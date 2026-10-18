@@ -94,6 +94,7 @@ export type {
   OgeGridCellCoord,
   OgeGridCellRange,
   OgeGridCellSpan,
+  OgeGridColumnDescription,
   OgeGridColumnInfo,
   OgeHeaderFilterMode,
   OgeHeaderFilterOptions,

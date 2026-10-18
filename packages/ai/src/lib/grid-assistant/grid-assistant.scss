@@ -1,0 +1,421 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The grid assistant: a prompt bar whose ring turns into a slow accent sweep
+// while the model thinks, suggestion chips, and a proposal card that settles
+// in under the bar. Everything is token-driven and mirrors in RTL.
+.oge-grid-assistant {
+  @include tokens.core-tokens;
+
+  --oge-grid-assistant-ring: var(--oge-border-color);
+  --oge-grid-assistant-glow: color-mix(
+    in srgb,
+    var(--oge-accent) 18%,
+    transparent
+  );
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  line-height: 1.45;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.oge-grid-assistant-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-block-size: 40px;
+  margin: 0;
+  padding-block: 4px;
+  padding-inline: 12px 4px;
+  border: 1px solid var(--oge-grid-assistant-ring);
+  border-radius: 999px;
+  background: var(--oge-bg);
+  box-shadow: var(--oge-shadow-btn);
+  transition:
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-base)
+      var(--oge-motion-easing-standard);
+
+  &:hover {
+    --oge-grid-assistant-ring: color-mix(
+      in srgb,
+      var(--oge-accent) 35%,
+      var(--oge-border-color)
+    );
+  }
+
+  &:focus-within {
+    --oge-grid-assistant-ring: var(--oge-accent);
+
+    box-shadow:
+      0 0 0 3px var(--oge-focus-ring),
+      0 6px 20px var(--oge-grid-assistant-glow);
+  }
+
+  // thinking: a conic accent sweep travels around the bar's edge
+  .oge-grid-assistant-busy &::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from var(--oge-grid-assistant-angle, 0deg),
+      transparent 0deg,
+      var(--oge-accent) 70deg,
+      transparent 140deg
+    );
+    // keep only the border band of the gradient
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: oge-grid-assistant-sweep 1.6s linear infinite;
+  }
+}
+
+@property --oge-grid-assistant-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes oge-grid-assistant-sweep {
+  to {
+    --oge-grid-assistant-angle: 360deg;
+  }
+}
+
+.oge-grid-assistant-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--oge-accent);
+
+  svg {
+    fill: currentColor;
+  }
+
+  .oge-grid-assistant-busy & svg {
+    animation: oge-grid-assistant-pulse 1.2s
+      var(--oge-motion-easing-standard) infinite;
+  }
+}
+
+@keyframes oge-grid-assistant-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82) rotate(18deg);
+  }
+}
+
+.oge-grid-assistant-input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  block-size: 30px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: var(--oge-muted-color);
+    opacity: 1;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.oge-grid-assistant-button {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 30px;
+  padding-inline: 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    transform var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+
+  @include tokens.hit-area;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.oge-grid-assistant-submit,
+.oge-grid-assistant-apply {
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--oge-accent) 86%, var(--oge-text-color));
+  }
+}
+
+.oge-grid-assistant-stop {
+  border-color: var(--oge-border-color);
+}
+
+.oge-grid-assistant-undo {
+  color: var(--oge-muted-color);
+
+  &:hover:not(:disabled) {
+    color: var(--oge-text-color);
+  }
+}
+
+.oge-grid-assistant-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-grid-assistant-chip {
+  position: relative;
+  padding-block: 4px;
+  padding-inline: 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 999px;
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: 0.92em;
+  cursor: pointer;
+  animation: oge-grid-assistant-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate) both;
+  transition:
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+
+  @include tokens.hit-area;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(
+      in srgb,
+      var(--oge-accent) 45%,
+      var(--oge-border-color)
+    );
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.oge-grid-assistant-proposal {
+  display: grid;
+  gap: 6px;
+  padding-block: 12px;
+  padding-inline: 14px;
+  border: 1px solid
+    color-mix(in srgb, var(--oge-accent) 30%, var(--oge-border-color));
+  border-inline-start: 4px solid var(--oge-accent);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-accent-soft);
+  animation: oge-grid-assistant-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
+}
+
+@keyframes oge-grid-assistant-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.oge-grid-assistant-proposal-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.oge-grid-assistant-proposal-title {
+  font-weight: 600;
+}
+
+.oge-grid-assistant-slices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-grid-assistant-slice {
+  padding-block: 1px;
+  padding-inline: 8px;
+  border-radius: 999px;
+  background: var(--oge-bg);
+  color: var(--oge-accent);
+  font-size: 0.82em;
+  font-weight: 600;
+}
+
+.oge-grid-assistant-summary,
+.oge-grid-assistant-warning,
+.oge-grid-assistant-status {
+  margin: 0;
+}
+
+.oge-grid-assistant-warning {
+  color: var(--oge-warning);
+  font-size: 0.92em;
+}
+
+.oge-grid-assistant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-block-start: 2px;
+}
+
+.oge-grid-assistant-discard {
+  border-color: var(--oge-border-color);
+  background: var(--oge-bg);
+}
+
+.oge-grid-assistant-status {
+  padding-inline: 14px;
+  color: var(--oge-muted-color);
+  font-size: 0.92em;
+}
+
+.oge-grid-assistant-status-error {
+  color: var(--oge-danger);
+}
+
+// visually hidden but still a live region, so the next text is announced
+.oge-grid-assistant-status-hidden {
+  position: absolute;
+  overflow: hidden;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.oge-grid-assistant-disabled .oge-grid-assistant-bar {
+  background: var(--oge-header-bg);
+}
+
+@include tokens.reduced-motion {
+  .oge-grid-assistant-bar,
+  .oge-grid-assistant-button,
+  .oge-grid-assistant-chip {
+    transition: none;
+  }
+
+  .oge-grid-assistant-chip,
+  .oge-grid-assistant-proposal {
+    animation: none;
+  }
+
+  // the sweep becomes a steady accent edge; the pulse slows to a fade
+  .oge-grid-assistant-busy .oge-grid-assistant-bar::after {
+    animation: none;
+    background: var(--oge-accent);
+  }
+
+  .oge-grid-assistant-busy .oge-grid-assistant-icon svg {
+    animation-duration: 2.4s;
+    animation-name: oge-grid-assistant-fade;
+  }
+}
+
+@keyframes oge-grid-assistant-fade {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-grid-assistant-bar,
+  .oge-grid-assistant-chip,
+  .oge-grid-assistant-button,
+  .oge-grid-assistant-proposal {
+    border-color: ButtonText;
+  }
+
+  .oge-grid-assistant-bar:focus-within {
+    outline: 2px solid Highlight;
+  }
+
+  .oge-grid-assistant-submit,
+  .oge-grid-assistant-apply {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-grid-assistant-busy .oge-grid-assistant-bar::after {
+    background: Highlight;
+  }
+
+  .oge-grid-assistant-button:disabled,
+  .oge-grid-assistant-chip:disabled {
+    color: GrayText;
+  }
+
+  .oge-grid-assistant-icon svg {
+    fill: CanvasText;
+  }
+}

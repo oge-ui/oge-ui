@@ -2540,6 +2540,7 @@ export {
   mergeOgeGridAssistantMessages,
   OGE_DEFAULT_AI_CONFIG,
   OGE_DEFAULT_AI_MESSAGES,
+  OGE_GRID_ASSISTANT_ICON_PATH,
   resolveOgeAiConfig,
   type OgeAiConfig,
   type OgeAiConfigInput,

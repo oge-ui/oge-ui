@@ -213,3 +213,7 @@ export function formatOgeAiMessage(
 ): string {
   return ogeFormatMessage(template, tokens, locale);
 }
+
+/** The assistant's sparkle glyph (24 × 24 view box), shared by both layers. */
+export const OGE_GRID_ASSISTANT_ICON_PATH =
+  'M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9L12 2.5zm6.5 11l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z';

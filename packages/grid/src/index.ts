@@ -53,6 +53,7 @@ export {
   type OgeRowPreparedEvent,
   type OgeCellPreparedEvent,
   type OgeGridColumnInfo,
+  type OgeGridColumnDescription,
   type OgeClassValue,
   type OgeConditionalFormat,
   type OgeGridCellSpan,
