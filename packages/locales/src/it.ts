@@ -409,6 +409,43 @@ export const it: OgeLocalePack = {
   },
 
   ai: {
+    smartPaste: {
+      label: 'Incolla intelligente',
+      textLabel: 'Testo da cui compilare il modulo',
+      textPlaceholder: 'Incolla un’e-mail, una firma o una nota…',
+      fill: 'Compila il modulo',
+      pasteText: 'Incolla invece il testo',
+      stop: 'Interrompi',
+      apply: 'Applica',
+      discard: 'Scarta',
+      undo: 'Annulla',
+      proposal: 'Valori proposti',
+      field: 'Campo',
+      current: 'Ora',
+      next: 'Nuovo',
+      emptyValue: '(vuoto)',
+      yes: 'Sì',
+      no: 'No',
+      reading: 'Lettura degli appunti…',
+      thinking: 'Lettura del testo…',
+      proposed:
+        '{count, plural, one {# campo da compilare dal testo.} other {# campi da compilare dal testo.}}',
+      applied:
+        '{count, plural, one {# campo compilato.} other {# campi compilati.}}',
+      unchanged: 'Il modulo contiene già questi valori.',
+      unsupported: 'Niente nel testo corrisponde a questo modulo. {summary}',
+      invalid: 'La risposta non è adatta a questo modulo. Riprova.',
+      error: 'L’incolla intelligente non è disponibile al momento.',
+      noTransport: 'Nessun servizio di IA configurato.',
+      clipboardDenied:
+        'Impossibile leggere gli appunti: incolla il testo nella casella.',
+      empty: 'Non c’è testo da leggere.',
+      aborted: 'Interrotto.',
+      discarded: 'Proposta scartata.',
+      undone: 'Valori ripristinati.',
+      ignored:
+        '{count, plural, one {# valore non era adatto al suo campo ed è stato ignorato.} other {# valori non erano adatti ai loro campi e sono stati ignorati.}}',
+    },
     gridAssistant: {
       label: 'Chiedi alla tabella',
       placeholder:

@@ -401,6 +401,42 @@ export const tr: OgeLocalePack = {
   },
 
   ai: {
+    smartPaste: {
+      label: 'Akıllı yapıştır',
+      textLabel: 'Formun doldurulacağı metin',
+      textPlaceholder: 'Bir e-posta, imza ya da not yapıştırın…',
+      fill: 'Formu doldur',
+      pasteText: 'Bunun yerine metin yapıştır',
+      stop: 'Durdur',
+      apply: 'Uygula',
+      discard: 'Vazgeç',
+      undo: 'Geri al',
+      proposal: 'Önerilen değerler',
+      field: 'Alan',
+      current: 'Şu an',
+      next: 'Yeni',
+      emptyValue: '(boş)',
+      yes: 'Evet',
+      no: 'Hayır',
+      reading: 'Pano okunuyor…',
+      thinking: 'Metin okunuyor…',
+      proposed:
+        '{count, plural, one {Metinden # alan doldurulacak.} other {Metinden # alan doldurulacak.}}',
+      applied:
+        '{count, plural, one {# alan dolduruldu.} other {# alan dolduruldu.}}',
+      unchanged: 'Form zaten bu değerleri içeriyor.',
+      unsupported: 'Metinde bu forma uyan bir şey yok. {summary}',
+      invalid: 'Yanıt bu forma uymadı. Tekrar deneyin.',
+      error: 'Akıllı yapıştır şu anda kullanılamıyor.',
+      noTransport: 'Yapılandırılmış bir yapay zekâ hizmeti yok.',
+      clipboardDenied: 'Pano okunamadı — metni bunun yerine kutuya yapıştırın.',
+      empty: 'Okunacak metin yok.',
+      aborted: 'Durduruldu.',
+      discarded: 'Öneri iptal edildi.',
+      undone: 'Değerler geri yüklendi.',
+      ignored:
+        '{count, plural, one {# değer alanına uymadığı için yok sayıldı.} other {# değer alanlarına uymadığı için yok sayıldı.}}',
+    },
     gridAssistant: {
       label: 'Tabloya sor',
       placeholder:

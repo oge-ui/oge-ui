@@ -413,6 +413,44 @@ export const fr: OgeLocalePack = {
   },
 
   ai: {
+    smartPaste: {
+      label: 'Collage intelligent',
+      textLabel: 'Texte à partir duquel remplir le formulaire',
+      textPlaceholder: 'Collez un e-mail, une signature ou une note…',
+      fill: 'Remplir le formulaire',
+      pasteText: 'Coller du texte à la place',
+      stop: 'Arrêter',
+      apply: 'Appliquer',
+      discard: 'Ignorer',
+      undo: 'Annuler',
+      proposal: 'Valeurs proposées',
+      field: 'Champ',
+      current: 'Actuel',
+      next: 'Nouveau',
+      emptyValue: '(vide)',
+      yes: 'Oui',
+      no: 'Non',
+      reading: 'Lecture du presse-papiers…',
+      thinking: 'Lecture du texte…',
+      proposed:
+        '{count, plural, one {# champ à remplir à partir du texte.} other {# champs à remplir à partir du texte.}}',
+      applied:
+        '{count, plural, one {# champ rempli.} other {# champs remplis.}}',
+      unchanged: 'Le formulaire contient déjà ces valeurs.',
+      unsupported:
+        'Rien dans le texte ne correspond à ce formulaire. {summary}',
+      invalid: 'La réponse ne correspond pas à ce formulaire. Réessayez.',
+      error: 'Le collage intelligent est indisponible pour le moment.',
+      noTransport: 'Aucun service d’IA n’est configuré.',
+      clipboardDenied:
+        'Le presse-papiers n’a pas pu être lu — collez plutôt le texte dans la zone.',
+      empty: 'Il n’y a aucun texte à lire.',
+      aborted: 'Arrêté.',
+      discarded: 'Proposition ignorée.',
+      undone: 'Valeurs restaurées.',
+      ignored:
+        '{count, plural, one {# valeur ne correspondait pas à son champ et a été ignorée.} other {# valeurs ne correspondaient pas à leurs champs et ont été ignorées.}}',
+    },
     gridAssistant: {
       label: 'Interroger la grille',
       placeholder:

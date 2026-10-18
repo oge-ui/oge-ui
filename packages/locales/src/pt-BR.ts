@@ -408,6 +408,43 @@ export const ptBR: OgeLocalePack = {
   },
 
   ai: {
+    smartPaste: {
+      label: 'Colar inteligente',
+      textLabel: 'Texto para preencher o formulário',
+      textPlaceholder: 'Cole um e-mail, uma assinatura ou uma nota…',
+      fill: 'Preencher o formulário',
+      pasteText: 'Colar texto em vez disso',
+      stop: 'Parar',
+      apply: 'Aplicar',
+      discard: 'Descartar',
+      undo: 'Desfazer',
+      proposal: 'Valores propostos',
+      field: 'Campo',
+      current: 'Agora',
+      next: 'Novo',
+      emptyValue: '(vazio)',
+      yes: 'Sim',
+      no: 'Não',
+      reading: 'Lendo a área de transferência…',
+      thinking: 'Lendo o texto…',
+      proposed:
+        '{count, plural, one {# campo a preencher a partir do texto.} other {# campos a preencher a partir do texto.}}',
+      applied:
+        '{count, plural, one {# campo preenchido.} other {# campos preenchidos.}}',
+      unchanged: 'O formulário já tem esses valores.',
+      unsupported: 'Nada no texto se encaixa neste formulário. {summary}',
+      invalid: 'A resposta não se encaixa neste formulário. Tente novamente.',
+      error: 'O colar inteligente não está disponível no momento.',
+      noTransport: 'Nenhum serviço de IA configurado.',
+      clipboardDenied:
+        'Não foi possível ler a área de transferência — cole o texto na caixa.',
+      empty: 'Não há texto para ler.',
+      aborted: 'Interrompido.',
+      discarded: 'Proposta descartada.',
+      undone: 'Valores restaurados.',
+      ignored:
+        '{count, plural, one {# valor não se encaixava no seu campo e foi ignorado.} other {# valores não se encaixavam nos seus campos e foram ignorados.}}',
+    },
     gridAssistant: {
       label: 'Perguntar à tabela',
       placeholder:
