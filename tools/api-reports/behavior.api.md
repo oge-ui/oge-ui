@@ -184,6 +184,12 @@ export interface CalendarCell {
 }
 
 // @public
+export function calendarViewKey(anchor: Date, zoom: OgeCalendarZoomLevel): string;
+
+// @public
+export function calendarViewMotion(previous: OgeCalendarView | null, next: OgeCalendarView): OgeCalendarViewMotion | null;
+
+// @public
 export function canCollapseAccordionPanel(expanded: ReadonlySet<string>, id: string, collapsible: boolean): boolean;
 
 // @public
@@ -277,6 +283,9 @@ export function createOgeAiHttpTransport(options: OgeAiHttpTransportOptions): Og
 
 // @public
 export function createOgeAnthropicTransport(options: OgeAiAnthropicTransportOptions): OgeAiTransport;
+
+// @public
+export function createOgeFormItemMotion(root: HTMLElement): OgeFormItemMotion;
 
 // @public
 export function createOgeIndicatorGlide(root: HTMLElement, options?: OgeIndicatorGlideOptions): OgeIndicatorGlide;
@@ -476,6 +485,9 @@ export function getOgePdfDefaultFont(): OgePdfFont | null;
 
 // @public
 export function getTabbableElements(root: HTMLElement): HTMLElement[];
+
+// @public
+export function glideButtonGroupPill(glide: OgeIndicatorGlide, root: HTMLElement, previous: HTMLElement | null, target: HTMLElement | null): boolean;
 
 // @public
 export function graphemeCount(text: string): number;
@@ -873,6 +885,9 @@ export const OGE_BADGE_DEFAULT_MAX = 99;
 export const OGE_BREADCRUMB_ELLIPSIS_FALLBACK = 44;
 
 // @public
+export const OGE_BUTTON_GROUP_PILL_CLASS = "oge-button-group-pill";
+
+// @public
 export const OGE_CAROUSEL_DEFAULT_INTERVAL = 5000;
 
 // @public
@@ -1152,6 +1167,9 @@ export const OGE_EXIT_FADE: readonly Keyframe[];
 
 // @public
 export const OGE_FAB_PLUS_PATH = "M12 5v14M5 12h14";
+
+// @public
+export const OGE_FORM_ITEM_ATTR = "data-oge-form-item";
 
 // @public
 export const OGE_GESTURE_THRESHOLD = 3;
@@ -2455,6 +2473,17 @@ export type OgeCalendarRange = readonly [Date | null, Date | null];
 
 // @public
 export type OgeCalendarSelectionMode = 'single' | 'multiple' | 'range';
+
+// @public
+export interface OgeCalendarView {
+    // (undocumented)
+    readonly anchor: Date;
+    // (undocumented)
+    readonly zoom: OgeCalendarZoomLevel;
+}
+
+// @public
+export type OgeCalendarViewMotion = 'next' | 'prev' | 'zoom-in' | 'zoom-out';
 
 // @public
 export interface OgeCalendarWeekNumberOptions {
@@ -5914,6 +5943,12 @@ export interface OgeFormItemDataBase {
 }
 
 // @public
+export interface OgeFormItemMotion {
+    destroy(): void;
+    update(visibleChanged: boolean): void;
+}
+
+// @public
 export type OgeFormLabelLocation = 'top' | 'start' | 'end';
 
 // @public
@@ -7732,6 +7767,7 @@ export interface OgeIndicatorGlide {
 // @public
 export interface OgeIndicatorGlideOptions {
     className?: string;
+    shape?: OgeIndicatorShape;
 }
 
 // @public
@@ -7741,6 +7777,9 @@ export interface OgeIndicatorMoveOptions {
 
 // @public
 export function ogeIndicatorRect(box: OgeRect, edge: OgeIndicatorEdge, inset?: readonly [number, number]): OgeRect;
+
+// @public
+export type OgeIndicatorShape = 'edge' | 'box';
 
 // @public
 export type OgeIndicatorSide = 'top' | 'right' | 'bottom' | 'left';
@@ -12369,6 +12408,12 @@ export function ogeTransferMove(value: readonly unknown[], moved: readonly unkno
 
 // @public
 export function ogeTransferOpposite(side: OgeTransferListSide): OgeTransferListSide;
+
+// @public
+export function ogeTransferOptionEntries<TItem>(root: Element, shown: {
+    readonly source: readonly TItem[];
+    readonly target: readonly TItem[];
+}, valueOf: (item: TItem) => unknown, grouped: boolean): (readonly [unknown, HTMLElement])[];
 
 // @public
 export function ogeTransferReorderable(allow: OgeTransferListReorderSides, side: OgeTransferListSide): boolean;
