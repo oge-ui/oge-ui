@@ -65,6 +65,14 @@ fields; a Now → New table shows every value before it is written (or
   it are not followed.
 - No clipboard permission (or an insecure origin)? A text box takes the paste.
 
+## AI column
+
+`createOgeAiColumn()` + `<OgeAiCell>` add a column the model fills — a sentiment, a category, a summary per
+row. The visible rows are batched into a few requests, every answer is
+validated against the column's type and choices, values are cached per row,
+and a failed cell offers a retry. **It sends row data**: exactly the `inputs`
+fields the column names, nothing else.
+
 ## Transports
 
 | Transport                     | Use it for                                                              |

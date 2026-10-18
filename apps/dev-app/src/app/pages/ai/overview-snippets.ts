@@ -209,6 +209,52 @@ protected readonly fields: OgeFormItemData[] = [
 ];`,
 });
 
+export const AI_COLUMN_SNIPPET = demoSource({
+  use: {
+    '@oge-ui/ai': ['OgeAiCell'],
+    '@oge-ui/grid': ['OgeCellTemplate', 'OgeColumn', 'OgeGrid'],
+  },
+  helpers: { '@oge-ui/ai': ['createOgeAiColumn'] },
+  before: `interface Review {
+  id: number;
+  product: string;
+  review: string;
+  stars: number;
+}`,
+  template: `<!-- The AI column sends exactly the fields it names in \`inputs\` — here the
+     review text of the visible rows, in one batched request. Values are
+     validated against the listed choices and cached per row. -->
+<oge-grid [data]="reviews" keyField="id">
+  <oge-column field="product" caption="Product" />
+  <oge-column field="review" caption="Review" />
+  <oge-column field="stars" caption="Stars" dataType="number" [width]="80" />
+  <oge-column caption="Sentiment" [width]="140">
+    <ng-container *ogeCellTemplate="let value; let row = row">
+      <oge-ai-cell [column]="sentiment" [row]="row" />
+    </ng-container>
+  </oge-column>
+</oge-grid>
+
+<button type="button" (click)="sentiment.refresh()">Recompute</button>`,
+  body: `protected readonly reviews: Review[] = [
+  { id: 1, product: 'Desk lamp', review: 'Loved it — bright, sturdy and arrived fast.', stars: 5 },
+  { id: 2, product: 'Office chair', review: 'Arrived damaged and support was rude.', stars: 1 },
+  { id: 3, product: 'Keyboard', review: 'Does the job. Keys are a bit loud.', stars: 3 },
+];
+
+/** One machine per column, shared by every cell (uses the provider's transport). */
+protected readonly sentiment = createOgeAiColumn<Review>({
+  prompt: "Classify the review's sentiment",
+  inputs: ['review'],
+  keyField: 'id',
+  values: [
+    { value: 'positive', text: 'Positive' },
+    { value: 'neutral', text: 'Neutral' },
+    { value: 'negative', text: 'Negative' },
+  ],
+});`,
+});
+
 export const CONFIG_SNIPPET = demoSource({
   use: { '@oge-ui/ai': ['OgeGridAssistant'] },
   helpers: {

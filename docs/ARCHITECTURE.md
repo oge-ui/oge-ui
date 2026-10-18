@@ -1916,7 +1916,11 @@ application configures. Rules every AI feature follows:
   `apiKey` from a browser unless `dangerouslyAllowBrowser` is set. A new
   feature adds a `feature` name to its request, never a new transport type.
 - **No row data in a request** unless the feature is about the rows themselves
-  and says so in its docs. The grid assistant sends the column catalog, the
+  and says so in its docs — the AI column is that feature, and it sends only the
+  `inputs` fields it names. Its machine (`OgeAiColumn`) is not a reactive core:
+  cells `request` their row and `subscribe` to its key (Angular bumps a signal,
+  React uses `useSyncExternalStore`), so a column of a thousand rows holds no
+  per-cell framework state. The grid assistant sends the column catalog, the
   current state and the prompt; `columns` (descriptions, omissions) and
   `capabilities` narrow it. Dates go out as local `YYYY-MM-DD` — the
   replacer reads the raw property, because `JSON.stringify` has already run

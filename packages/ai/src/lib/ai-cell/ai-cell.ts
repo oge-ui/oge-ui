@@ -89,7 +89,10 @@ export class OgeAiCell {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any row type
   readonly column = input.required<OgeAiColumn<any>>();
   /** The row whose value this cell shows. */
-  readonly row = input.required<object>();
+  readonly row = input.required<object, unknown>({
+    // a cell template's `row` is typed `unknown`; the column reads it by key
+    transform: (row: unknown) => row as object,
+  });
   /** BCP 47 locale of number and date values; falls back to the config, then `LOCALE_ID`. */
   readonly locale = input<string | undefined>(undefined);
   /** Per-instance message overrides, merged over the catalog. */

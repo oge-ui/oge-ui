@@ -279,6 +279,9 @@ export function createNumberFormatter(locale: string, options?: Intl.NumberForma
 export function createNumberTypingGrouper(locale: string | undefined): (digits: string) => string;
 
 // @public
+export function createOgeAiColumn<T extends object = Record<string, unknown>>(options: OgeAiColumnOptions<T>): OgeAiColumn<T>;
+
+// @public
 export function createOgeAiHttpTransport(options: OgeAiHttpTransportOptions): OgeAiTransport;
 
 // @public
@@ -452,6 +455,9 @@ export function formatNumberWhileTyping(text: string, caret: number, options: Og
 
 // @public
 export function formatOgeAiMessage(template: string, tokens: Record<string, string | number>, locale?: string): string;
+
+// @public
+export function formatOgeAiValue(value: unknown, options: OgeAiFormatOptions): string;
 
 // @public
 export function formatPaginationMessage(template: string, params: Record<string, string | number>): string;
@@ -1687,11 +1693,65 @@ export interface OgeAiCallOptions {
 }
 
 // @public
+export interface OgeAiCellMessages {
+    readonly empty: string;
+    readonly error: string;
+    readonly generating: string;
+    // (undocumented)
+    readonly no: string;
+    readonly retry: string;
+    // (undocumented)
+    readonly yes: string;
+}
+
+// @public
+export interface OgeAiCellState {
+    // (undocumented)
+    readonly status: OgeAiCellStatus;
+    readonly value: unknown;
+}
+
+// @public
+export type OgeAiCellStatus = 'idle' | 'pending' | 'done' | 'error';
+
+// @public
 export interface OgeAiChoice {
     // (undocumented)
     readonly text?: string;
     // (undocumented)
     readonly value: string | number | boolean;
+}
+
+// @public
+export class OgeAiColumn<T extends object = Record<string, unknown>> {
+    constructor(options: OgeAiColumnOptions<T>);
+    destroy(): void;
+    fill(rows: readonly T[]): Promise<ReadonlyMap<RowKey, unknown>>;
+    key(row: T): RowKey;
+    // (undocumented)
+    readonly options: OgeAiColumnOptions<T>;
+    refresh(key?: RowKey): void;
+    request(row: T): void;
+    state(key: RowKey): OgeAiCellState;
+    // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts
+    subscribe(key: RowKey, listener: Listener): () => void;
+    useTransport(transport: OgeAiTransport | null | undefined): void;
+    valueOf(key: RowKey): unknown;
+    values(): ReadonlyMap<RowKey, unknown>;
+}
+
+// @public
+export interface OgeAiColumnOptions<T> {
+    readonly batchSize?: number;
+    readonly dataType?: 'string' | 'number' | 'boolean' | 'date';
+    readonly inputs: readonly string[];
+    readonly instructions?: string;
+    readonly keyField: string | ((row: T) => RowKey);
+    readonly maxConcurrent?: number;
+    readonly maxLength?: number;
+    readonly prompt: string;
+    readonly transport?: OgeAiTransport;
+    readonly values?: readonly OgeAiChoice[];
 }
 
 // @public
@@ -1740,6 +1800,20 @@ export type OgeAiFetch = (input: string, init: {
     };
     text(): Promise<string>;
 }>;
+
+// @public
+export interface OgeAiFormatOptions {
+    // (undocumented)
+    readonly dataType?: string;
+    readonly empty: string;
+    // (undocumented)
+    readonly locale?: string;
+    // (undocumented)
+    readonly no: string;
+    // (undocumented)
+    readonly values?: readonly OgeAiChoice[];
+    readonly yes: string;
+}
 
 // @public
 export interface OgeAiFormField {
@@ -1802,6 +1876,8 @@ export interface OgeAiMessage {
 // @public
 export interface OgeAiMessages {
     // (undocumented)
+    readonly aiCell: OgeAiCellMessages;
+    // (undocumented)
     readonly gridAssistant: OgeGridAssistantMessages;
     // (undocumented)
     readonly smartPaste: OgeSmartPasteMessages;
@@ -1811,6 +1887,7 @@ export interface OgeAiMessages {
 export type OgeAiMessagesInput = {
     gridAssistant?: OgeGridAssistantMessagesInput;
     smartPaste?: Partial<OgeSmartPasteMessages>;
+    aiCell?: Partial<OgeAiCellMessages>;
 };
 
 // @public

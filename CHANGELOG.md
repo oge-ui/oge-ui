@@ -7,6 +7,20 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### AI column — `@oge-ui/ai`, `@oge-ui/react-ai`, `@oge-ui/behavior`, `@oge-ui/locales`
+
+- **A column the model fills.** `createOgeAiColumn({ prompt, inputs, keyField, values? })`
+  plus `<oge-ai-cell [column] [row]>` / `<OgeAiCell column row>` in a cell
+  template: a sentiment, a category, a score or a summary per row. The
+  visible rows go out in batched requests (`batchSize`, `maxConcurrent`),
+  values are validated (`coerceOgeAiValue`; a choice column accepts only its
+  listed values), cached per row and shown with a shimmer while pending and a
+  retry when a row failed. `values()` / `fill(rows)` hand the results back to
+  write into your data for sorting, filtering or export.
+- **Explicit about data.** Unlike the assistant and smart paste, an AI column
+  sends row data — exactly the `inputs` fields of the rows being shown.
+- `formatOgeAiValue` is the display rule smart paste and AI cells share.
+
 ### Smart paste — `@oge-ui/ai`, `@oge-ui/react-ai`, `@oge-ui/forms`, `@oge-ui/react-forms`, `@oge-ui/behavior`, `@oge-ui/locales`
 
 - **Fill a form from copied text.** `<oge-smart-paste [target]="form">` /
