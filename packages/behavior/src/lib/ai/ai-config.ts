@@ -109,11 +109,40 @@ export interface OgeAiCellMessages {
   readonly no: string;
 }
 
+/** Strings of the chat. */
+export interface OgeChatMessages {
+  /** Accessible name of the chat. */
+  readonly label: string;
+  /** Accessible name of the message list. */
+  readonly logLabel: string;
+  /** Accessible name of the composer. */
+  readonly composerLabel: string;
+  readonly placeholder: string;
+  readonly send: string;
+  readonly stop: string;
+  readonly retry: string;
+  readonly clear: string;
+  /** Visually hidden author prefixes. */
+  readonly you: string;
+  readonly assistant: string;
+  /** The typing indicator's text. */
+  readonly thinking: string;
+  /** The text of a failed assistant turn. */
+  readonly error: string;
+  /** Stands in for an empty reply. */
+  readonly emptyReply: string;
+  /** Shown before the first message. */
+  readonly empty: string;
+  /** Accessible name of the suggestion list. */
+  readonly suggestions: string;
+}
+
 /** Every AI string, grouped per component. */
 export interface OgeAiMessages {
   readonly gridAssistant: OgeGridAssistantMessages;
   readonly smartPaste: OgeSmartPasteMessages;
   readonly aiCell: OgeAiCellMessages;
+  readonly chat: OgeChatMessages;
 }
 
 /** The shipped English catalog. */
@@ -194,6 +223,23 @@ export const OGE_DEFAULT_AI_MESSAGES: OgeAiMessages = {
     yes: 'Yes',
     no: 'No',
   },
+  chat: {
+    label: 'Chat',
+    logLabel: 'Conversation',
+    composerLabel: 'Message',
+    placeholder: 'Type a message…',
+    send: 'Send',
+    stop: 'Stop',
+    retry: 'Try again',
+    clear: 'Clear conversation',
+    you: 'You:',
+    assistant: 'Assistant:',
+    thinking: 'Typing…',
+    error: 'The reply could not be loaded.',
+    emptyReply: '(no reply)',
+    empty: 'Start the conversation.',
+    suggestions: 'Suggestions',
+  },
 };
 
 /**
@@ -216,6 +262,16 @@ export interface OgeGridAssistantConfig {
   readonly instructions: string | undefined;
 }
 
+/** Defaults of every chat under a provider. */
+export interface OgeChatConfig {
+  /** System instructions sent before the conversation. */
+  readonly instructions: string | undefined;
+  /** Earlier messages replayed to the model. */
+  readonly historyLimit: number;
+  /** Prompts offered as chips before the first message. */
+  readonly suggestions: readonly string[];
+}
+
 /** Defaults of every smart paste under a provider. */
 export interface OgeSmartPasteConfig {
   readonly mode: OgeGridAssistantMode;
@@ -233,6 +289,7 @@ export interface OgeAiConfig {
   readonly locale: string | undefined;
   readonly gridAssistant: OgeGridAssistantConfig;
   readonly smartPaste: OgeSmartPasteConfig;
+  readonly chat: OgeChatConfig;
   readonly messages: OgeAiMessages;
 }
 
@@ -249,6 +306,7 @@ export const OGE_DEFAULT_AI_CONFIG: OgeAiConfig = {
     instructions: undefined,
   },
   smartPaste: { mode: 'preview', undoLimit: 10, instructions: undefined },
+  chat: { instructions: undefined, historyLimit: 20, suggestions: [] },
   messages: OGE_DEFAULT_AI_MESSAGES,
 };
 
@@ -257,6 +315,7 @@ export type OgeAiMessagesInput = {
   gridAssistant?: OgeGridAssistantMessagesInput;
   smartPaste?: Partial<OgeSmartPasteMessages>;
   aiCell?: Partial<OgeAiCellMessages>;
+  chat?: Partial<OgeChatMessages>;
 };
 
 /** A partial grid-assistant catalog (`slices` merged key by key). */
@@ -268,9 +327,10 @@ export type OgeGridAssistantMessagesInput = Partial<
 
 /** What the providers accept: everything optional, nested objects partial. */
 export type OgeAiConfigInput = Partial<
-  Omit<OgeAiConfig, 'messages' | 'gridAssistant' | 'smartPaste'>
+  Omit<OgeAiConfig, 'messages' | 'gridAssistant' | 'smartPaste' | 'chat'>
 > & {
   smartPaste?: Partial<OgeSmartPasteConfig>;
+  chat?: Partial<OgeChatConfig>;
   gridAssistant?: Partial<Omit<OgeGridAssistantConfig, 'capabilities'>> & {
     capabilities?: Partial<OgeGridAiCapabilities>;
   };
@@ -300,6 +360,7 @@ export function mergeOgeAiMessages(
     ),
     smartPaste: { ...base.smartPaste, ...input.smartPaste },
     aiCell: { ...base.aiCell, ...input.aiCell },
+    chat: { ...base.chat, ...input.chat },
   };
 }
 
@@ -308,7 +369,7 @@ export function resolveOgeAiConfig(
   input: OgeAiConfigInput | undefined,
   base: OgeAiConfig = OGE_DEFAULT_AI_CONFIG,
 ): OgeAiConfig {
-  const { messages, gridAssistant, smartPaste, ...rest } = input ?? {};
+  const { messages, gridAssistant, smartPaste, chat, ...rest } = input ?? {};
   return {
     ...base,
     ...rest,
@@ -321,6 +382,7 @@ export function resolveOgeAiConfig(
       },
     },
     smartPaste: { ...base.smartPaste, ...smartPaste },
+    chat: { ...base.chat, ...chat },
     messages: mergeOgeAiMessages(base.messages, messages),
   };
 }
