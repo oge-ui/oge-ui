@@ -72,6 +72,8 @@ import {
   type OgeGridColumnHidingMode,
   ogeIsRtl,
   observeDirection,
+  OgeRowMotionCore,
+  ogeSyncPinnedShadows,
 } from '@oge-ui/behavior';
 import {
   OgeContextMenuEcho,
@@ -870,6 +872,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   readonly rowReordered = output<OgeRowReorderedEvent<T>>();
 
   /**
+   * Glides the rows on screen to their new slots when a sort, a filter,
+   * grouping, an expand/collapse or a row drop re-orders them (FLIP, at most
+   * 60 rows). Scrolling, a page change and remote (windowed) scrolling never
+   * animate; reduced motion switches it off. `false` applies changes at once.
+   */
+  readonly animateRows = input(true);
+
+  /**
    * Customizes the trailing command column: reorder/mix the built-in
    * 'edit'/'delete' buttons with custom ones (text + onClick), with an
    * optional per-row `visible` predicate.
@@ -921,6 +931,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.chooserPanel.destroy();
       this.hintCore.destroy();
       this.hintPanel.destroy();
+      this.rowMotion.cancel();
     });
     // measure real row heights once the DOM for the current window is in place
     afterRenderEffect(() => {
@@ -2138,6 +2149,37 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected readonly viewNodes = this.virtualizer.viewNodes;
 
+  /** `animateRows`: row FLIP keyed by row key over the on-screen window. */
+  private readonly rowMotion = new OgeRowMotionCore<RowNode<T>, RowKey>({
+    keyOf: (node) => node.key,
+    viewport: () => this.viewportRef()?.nativeElement ?? null,
+    root: () =>
+      this.viewportRef()?.nativeElement.querySelector<HTMLElement>(
+        ':scope > .oge-body',
+      ) ?? null,
+    rows: (root) =>
+      root.querySelectorAll<HTMLElement>(
+        ':scope > .oge-rows > [data-rowindex]',
+      ),
+  });
+
+  /**
+   * A component effect runs before this view's template refresh, so the
+   * snapshot sees the old rows; the render effect below plays the change.
+   */
+  private readonly rowMotionPrepareEffect = effect(() => {
+    const nodes = this.viewNodes();
+    const start = this.viewStart();
+    const on = this.animateRows() && !this.windowed();
+    untracked(() => this.rowMotion.prepare(on ? { nodes, start } : null));
+  });
+
+  private readonly rowMotionCommitEffect = afterRenderEffect(() => {
+    this.viewNodes();
+    this.viewStart();
+    untracked(() => void this.rowMotion.commit());
+  });
+
   private measureRenderedRows(): void {
     this.virtualizer.measureRenderedRows();
   }
@@ -2337,6 +2379,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected pinnedRightOf(column: ResolvedColumn<T>): number | null {
     return this.layoutModel.pinnedRightOf(column);
   }
+
+  /** The pinned column bordering the scrolling content carries the edge shadow. */
+  protected pinEdgeOf(column: ResolvedColumn<T>): 'start' | 'end' | null {
+    return this.layoutModel.pinnedEdgeOf(column);
+  }
+
+  /** Pinned-edge shadows follow the scroll position and the scroll width. */
+  private readonly pinShadowEffect = afterRenderEffect(() => {
+    this.scrollLeft();
+    this.hostWidth();
+    this.gridTemplateColumns();
+    ogeSyncPinnedShadows(this.viewportRef()?.nativeElement ?? null);
+  });
 
   // --- sorting -------------------------------------------------------------
 

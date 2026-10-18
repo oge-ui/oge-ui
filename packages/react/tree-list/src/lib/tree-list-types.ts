@@ -267,6 +267,13 @@ export interface OgeTreeListProps<T extends object = Record<string, unknown>> {
    * `onRowReparented` instead.
    */
   rowDragging?: boolean;
+  /**
+   * Glides the rows on screen to their new slots when a sort, a filter, an
+   * expand/collapse or a row drop re-orders them (FLIP, at most 60 rows).
+   * Scrolling and a page change never animate; reduced motion switches it
+   * off. `false` applies changes at once. Default `true`.
+   */
+  animateRows?: boolean;
   /** Enables editing: `{ mode: 'cell' | 'row' | 'batch' | 'form' | 'popup', allow… }`. */
   editing?: false | OgeEditingOptions;
   /** Renders the empty state instead of the `noData` message — the React form of `*ogeNoDataTemplate`. */

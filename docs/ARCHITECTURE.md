@@ -740,6 +740,13 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
 - A `var(--oge-x, <literal>)` fallback for a shared token is a bug: the token is always declared, so the
   literal only misleads (and, when the name is misspelt, silently wins — `themes.spec.ts` style checks
   exist because `--oge-text-muted`, `--oge-border` and `--oge-muted-text-color` once did exactly that).
+  `themes.spec.ts` fails on any fallback (literal or `var()`) for a token in `literal-tokens` /
+  `derived-tokens`; component-local knobs (`--oge-gantt-row-height`, `--oge-btn-contrast`) may keep one.
+- **Pinned columns** (grid, tree list): the viewport carries `oge-pin-shadow-start` / `-end` while
+  content is scrolled under the start / end pinned group (`ogeSyncPinnedShadows` from the scroll
+  handler and after a render that changes the scroll width; `|scrollLeft|`, so RTL needs no branch),
+  and the bordering cells carry `oge-pin-edge-start` / `-end` (`pinnedEdgeOf`) — the separator
+  shadow (`--oge-shadow-pinned-color`) is drawn on those cells only, mirrored under `.oge-rtl`.
 - All styles are global `.oge-*` classes (ViewEncapsulation.None), BEM-ish dashes.
 - Themes: source in `packages/grid/src/lib/styles/themes/{dark,high-contrast,bootstrap,tailwind}.css`, shipped as
   **`@oge-ui/core/themes/*`** (core's rollup assets — every package installs core, React ones included)
@@ -830,6 +837,17 @@ var(--oge-motion-duration-…) var(--oge-motion-easing-…)`, keyframe `from { �
     preview) stays and just jumps. Drag ghosts lift (`--oge-drag-scale`, `--oge-shadow-drag`)
     and `createDragGhost(...).destroy(to)` / `beginPointerDragDrop({ settleTo })` settle them
     onto the drop and glide them back on a cancel.
+  - **Row motion (grid families).** `animateRows` (default `true`, both layers) runs through
+    `OgeRowMotionCore` (`@oge-ui/behavior`), not a hand-wired animator: the host calls
+    `prepare({ nodes, start })` while the DOM still shows the old rows — Angular from a component
+    `effect` (component effects run before their view's template refresh), React from the render
+    body (idempotent, so StrictMode's double render is harmless) — and `commit()` once the new rows
+    are in (`afterRenderEffect` / a layout effect). `ogeRowMotionDecision` animates only a change of
+    the same window: a different `start` (scroll re-creation, a virtual jump), a first render or an
+    entirely new key set just records. Only rows intersecting the viewport animate (cap
+    `OGE_ROW_MOTION_LIMIT`, 60), rows are keyed through `data-rowindex` against the window's keys
+    (no key attribute in the DOM), there are no exit ghosts (they would float over the sticky
+    header), and remote windowed scrolling passes `null` (off).
   - Each animation is switched off in the file's `@include tokens.reduced-motion` block, and the
     final (non-animated) state is what the visual baselines capture — `animations: 'disabled'`
     must not change a pixel.

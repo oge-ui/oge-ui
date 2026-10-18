@@ -660,7 +660,7 @@ input.oge-filter-input {
 }
 
 .oge-cell:focus-visible {
-  outline: 2px solid var(--oge-focus-ring, var(--oge-accent));
+  outline: 2px solid var(--oge-focus-ring);
   outline-offset: -2px;
 }
 
@@ -831,6 +831,51 @@ input.oge-filter-input {
   z-index: 2;
 }
 
+// the pinned column bordering the scrolling content casts a separator shadow
+// while content is scrolled under it (the script toggles `oge-pin-shadow-*`
+// on the viewport from the scroll position; RTL mirrors the offset)
+.oge-pin-edge-start,
+.oge-pin-edge-end {
+  transition: box-shadow var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
+}
+
+.oge-pin-shadow-start .oge-pin-edge-start {
+  box-shadow: 6px 0 8px -6px var(--oge-shadow-pinned-color);
+}
+
+.oge-pin-shadow-end .oge-pin-edge-end {
+  box-shadow: -6px 0 8px -6px var(--oge-shadow-pinned-color);
+}
+
+.oge-rtl {
+  .oge-pin-shadow-start .oge-pin-edge-start {
+    box-shadow: -6px 0 8px -6px var(--oge-shadow-pinned-color);
+  }
+
+  .oge-pin-shadow-end .oge-pin-edge-end {
+    box-shadow: 6px 0 8px -6px var(--oge-shadow-pinned-color);
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-pin-edge-start,
+  .oge-pin-edge-end {
+    transition: none;
+  }
+}
+
+// forced colors drop shadows: the frozen-pane edge is a solid rule there
+@include tokens.forced-colors {
+  .oge-pin-edge-start {
+    border-inline-end: 1px solid CanvasText;
+  }
+
+  .oge-pin-edge-end {
+    border-inline-start: 1px solid CanvasText;
+  }
+}
+
 // --- total summary row -----------------------------------------------------
 
 .oge-total-row {
@@ -888,7 +933,7 @@ input.oge-filter-input {
   display: grid;
   align-items: stretch;
   border-bottom: 1px solid var(--oge-border-color);
-  background: var(--oge-group-bg, var(--oge-header-bg));
+  background: var(--oge-group-bg);
   min-width: fit-content;
 }
 
@@ -905,7 +950,7 @@ input.oge-filter-input {
   &.oge-pinned {
     position: sticky;
     z-index: 2;
-    background: var(--oge-group-bg, var(--oge-header-bg));
+    background: var(--oge-group-bg);
   }
 }
 
@@ -1057,10 +1102,10 @@ input.oge-filter-input {
   overflow: auto;
   padding: 18px;
   border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius-lg, 8px);
+  border-radius: var(--oge-radius-lg);
   background: var(--oge-popup-bg);
-  color: var(--oge-text-color, inherit);
-  box-shadow: var(--oge-shadow-popup, 0 20px 50px rgb(0 0 0 / 0.25));
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-popup);
   font-size: var(--oge-font-size);
 }
 
@@ -1286,7 +1331,7 @@ input.oge-filter-input {
   max-height: 280px;
   overflow: auto;
   padding: 5px;
-  color: var(--oge-text-color, inherit);
+  color: var(--oge-text-color);
   font-size: var(--oge-font-size);
   scrollbar-width: thin;
   scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);

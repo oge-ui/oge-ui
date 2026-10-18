@@ -267,7 +267,9 @@
   -webkit-tap-highlight-color: transparent;
   animation: oge-speed-dial-in var(--oge-motion-duration-fast)
     var(--oge-motion-easing-standard) both;
-  animation-delay: calc(var(--oge-speed-dial-index) * 30ms);
+  animation-delay: calc(
+    var(--oge-speed-dial-index) * var(--oge-motion-stagger)
+  );
   transition:
     background-color var(--oge-motion-duration-fast)
       var(--oge-motion-easing-standard),

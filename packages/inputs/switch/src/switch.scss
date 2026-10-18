@@ -52,7 +52,7 @@
   // a control (the hairline border colour all but vanishes on the surface)
   border: 1px solid var(--oge-muted-color);
   border-radius: 999px;
-  background: var(--oge-header-bg, var(--oge-bg));
+  background: var(--oge-header-bg);
   transition:
     background-color var(--oge-motion-duration-base)
       var(--oge-motion-easing-standard),

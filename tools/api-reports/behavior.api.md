@@ -1253,6 +1253,9 @@ export const OGE_RATING_ICON_PATHS: Readonly<Record<OgeRatingIcon, string>>;
 export const OGE_RATING_MIN_PRECISION = 0.01;
 
 // @public
+export const OGE_ROW_MOTION_LIMIT = 60;
+
+// @public
 export const OGE_SELECT_OPTION_HEIGHT: Record<OgeInputSize, number>;
 
 // @public
@@ -6384,6 +6387,8 @@ export class OgeGridColumnLayoutCore<C extends OgeGridLayoutColumn = OgeGridLayo
     readonly colWidths: () => readonly number[];
     // (undocumented)
     readonly gridTemplateColumns: () => string;
+    pinnedEdgeOf(column: C): 'start' | 'end' | null;
+    readonly pinnedEdges: () => OgeGridPinnedEdges;
     // (undocumented)
     pinnedLeftOf(column: C): number | null;
     readonly pinnedOffsets: () => ReadonlyMap<string, {
@@ -7218,6 +7223,14 @@ export interface OgeGridPasteContext {
 export interface OgeGridPastePlan {
     readonly cells: readonly OgeGridCellWrite<string>[];
     readonly extraRows: readonly (readonly OgeGridCellWrite<string>[])[];
+}
+
+// @public
+export interface OgeGridPinnedEdges {
+    // (undocumented)
+    readonly end: string | null;
+    // (undocumented)
+    readonly start: string | null;
 }
 
 // @public
@@ -9548,6 +9561,19 @@ export interface OgePendingChildRequest {
     key: RowKey;
 }
 
+// @public
+export function ogePinnedEdgeClass(edge: 'start' | 'end' | null): string;
+
+// @public
+export function ogePinnedScrollShadows(metrics: {
+    readonly scrollLeft: number;
+    readonly scrollWidth: number;
+    readonly clientWidth: number;
+}): {
+    start: boolean;
+    end: boolean;
+};
+
 // @public (undocumented)
 export type OgePinOverride = 'left' | 'right' | false;
 
@@ -10247,6 +10273,44 @@ export interface OgeRowInsertingEvent {
     key: RowKey;
     // (undocumented)
     values: Record<string, unknown>;
+}
+
+// @public
+export class OgeRowMotionCore<N, K> {
+    constructor(options: OgeRowMotionOptions<N, K>);
+    get animating(): boolean;
+    cancel(): void;
+    commit(): Promise<void>;
+    prepare(input: OgeRowMotionInput<N> | null): OgeRowMotionDecision;
+}
+
+// @public
+export type OgeRowMotionDecision = 'animate' | 'record' | 'none';
+
+// @public
+export function ogeRowMotionDecision<K>(shown: OgeRowMotionWindow<K> | null, next: OgeRowMotionWindow<K> | null): OgeRowMotionDecision;
+
+// @public
+export interface OgeRowMotionInput<N> {
+    // (undocumented)
+    readonly nodes: readonly N[];
+    // (undocumented)
+    readonly start: number;
+}
+
+// @public
+export interface OgeRowMotionOptions<N, K> {
+    keyOf(node: N): K;
+    limit?: number;
+    root(): HTMLElement | null;
+    rows(root: HTMLElement): Iterable<HTMLElement>;
+    viewport(): HTMLElement | null;
+}
+
+// @public
+export interface OgeRowMotionWindow<K> {
+    readonly keys: readonly K[];
+    readonly start: number;
 }
 
 // @public
@@ -11216,6 +11280,9 @@ export function ogeSummaryText(summary: SummaryValue, column: OgeGridExportField
 
 // @public
 export function ogeSvgDataUrl(svg: string): string;
+
+// @public
+export function ogeSyncPinnedShadows(viewport: HTMLElement | null): void;
 
 // @public
 export interface OgeTabClickEvent {

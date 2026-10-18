@@ -960,6 +960,19 @@
       ]
     },
     {
+      "n": "--oge-shadow-pinned-color",
+      "c": "elevation",
+      "d": "the separator shadow a pinned (frozen) column casts while content scrolls under it",
+      "v": {
+        "light": "rgba(15, 23, 42, 0.16)",
+        "dark": "rgba(0, 0, 0, 0.5)",
+        "hc": "rgba(0, 0, 0, 0.55)"
+      },
+      "u": [
+        "@oge-ui/grid"
+      ]
+    },
+    {
       "n": "--oge-skeleton-color",
       "c": "color",
       "d": "loading placeholders (skeleton bones, grid skeleton rows)",
@@ -1311,7 +1324,9 @@
       "v": {
         "light": "30ms"
       },
-      "u": []
+      "u": [
+        "@oge-ui/buttons"
+      ]
     },
     {
       "n": "--oge-tooltip-bg",

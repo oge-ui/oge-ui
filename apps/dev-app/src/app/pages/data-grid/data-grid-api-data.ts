@@ -236,6 +236,13 @@ export const OGE_GRID_API: ApiSections = {
           description:
             'Drag-handle column for reordering rows. Arrays mutate in place; DataSources handle <code>rowReordered</code>. Keyboard: <kbd>Ctrl+↑/↓</kbd> on a focused cell moves the row onto its neighbour through the same drop path (same event), announced via <code>messages.rowMoved</code>.',
         },
+        {
+          name: 'animateRows',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Glides the rows on screen to their new slots when a sort, a filter, grouping, an expand/collapse or a row drop re-orders them (FLIP keyed by row key, at most 60 on-screen rows, rows joining the window fade in). Scrolling, a page change, an entirely new row set and remote (windowed) scrolling never animate; under <code>prefers-reduced-motion</code> the change applies at once. Timing comes from <code>--oge-motion-duration-layout</code> / <code>--oge-motion-easing-spring</code>. <code>false</code> turns it off.',
+        },
       ],
     },
     {
@@ -978,7 +985,8 @@ export const OGE_COLUMN_API: ApiSections = {
           name: 'pinned',
           type: "false | 'left' | 'right'",
           default: 'false',
-          description: 'Pins the column to an edge.',
+          description:
+            'Pins the column to an edge. <code>left</code> / <code>right</code> are the logical start / end edge (mirrored in RTL). While content scrolls under the pinned group, the column bordering it casts a separator shadow (<code>--oge-shadow-pinned-color</code>; a solid rule under forced colors).',
         },
         {
           name: 'hidingPriority',

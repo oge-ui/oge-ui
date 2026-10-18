@@ -70,6 +70,12 @@ export class OgeGridColumnLayoutCore<
     string,
     { left?: number; right?: number }
   >;
+  /**
+   * The pinned columns that border the scrolling content: the last
+   * start-pinned one and the first end-pinned one (ids, or `null`). Their
+   * cells carry the edge shadow while content scrolls under them.
+   */
+  readonly pinnedEdges: () => OgeGridPinnedEdges;
 
   private readonly colRange: () => OgeGridColumnRange | null;
 
@@ -171,6 +177,16 @@ export class OgeGridColumnLayoutCore<
       }
       return offsets;
     });
+
+    this.pinnedEdges = rx.derived<OgeGridPinnedEdges>(() => {
+      let start: string | null = null;
+      let end: string | null = null;
+      for (const column of this.deps.resolvedColumns()) {
+        if (column.pinned === 'left') start = column.id;
+        else if (column.pinned === 'right' && end === null) end = column.id;
+      }
+      return { start, end };
+    });
   }
 
   private pinnedWidth(column: C): number {
@@ -186,6 +202,53 @@ export class OgeGridColumnLayoutCore<
   pinnedRightOf(column: C): number | null {
     return this.pinnedOffsets().get(column.id)?.right ?? null;
   }
+
+  /** `'start'` / `'end'` for the pinned column bordering the scrolling content. */
+  pinnedEdgeOf(column: C): 'start' | 'end' | null {
+    const edges = this.pinnedEdges();
+    if (column.id === edges.start) return 'start';
+    if (column.id === edges.end) return 'end';
+    return null;
+  }
+}
+
+/** Ids of the pinned columns that border the scrolling content. */
+export interface OgeGridPinnedEdges {
+  readonly start: string | null;
+  readonly end: string | null;
+}
+
+/** Class of the pinned cell on the start / end edge of the scrolling content. */
+export function ogePinnedEdgeClass(edge: 'start' | 'end' | null): string {
+  return edge === null ? '' : `oge-pin-edge-${edge}`;
+}
+
+/**
+ * Which pinned edges have content scrolled under them: `start` once the
+ * view left its start, `end` while content remains past the end-pinned
+ * columns. Direction-agnostic — a right-to-left scroller counts `scrollLeft`
+ * down from 0, so its magnitude is the distance from the start.
+ */
+export function ogePinnedScrollShadows(metrics: {
+  readonly scrollLeft: number;
+  readonly scrollWidth: number;
+  readonly clientWidth: number;
+}): { start: boolean; end: boolean } {
+  const offset = Math.abs(metrics.scrollLeft);
+  const max = Math.max(0, metrics.scrollWidth - metrics.clientWidth);
+  return { start: offset > 0.5, end: max - offset > 0.5 };
+}
+
+/**
+ * Toggles `oge-pin-shadow-start` / `oge-pin-shadow-end` on the grid's scroll
+ * viewport from its scroll position — call it from the scroll handler and
+ * after a render that can change the scroll width (columns, resize).
+ */
+export function ogeSyncPinnedShadows(viewport: HTMLElement | null): void {
+  if (!viewport) return;
+  const { start, end } = ogePinnedScrollShadows(viewport);
+  viewport.classList.toggle('oge-pin-shadow-start', start);
+  viewport.classList.toggle('oge-pin-shadow-end', end);
 }
 
 /**

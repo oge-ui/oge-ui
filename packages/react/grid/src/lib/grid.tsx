@@ -49,6 +49,9 @@ import {
   type OgeGridToggleKind,
   ogeIsRtl,
   observeDirection,
+  OgeRowMotionCore,
+  ogePinnedEdgeClass,
+  ogeSyncPinnedShadows,
 } from '@oge-ui/behavior';
 import { groupKeyFilter, type GroupInterval } from '@oge-ui/core';
 import { OgeDateRangeBox } from '@oge-ui/react-inputs';
@@ -4557,6 +4560,32 @@ function OgeGridInner<T extends object>(
   const gridTemplateColumns = model.layout.gridTemplateColumns();
   const viewNodes = model.virtualizer.viewNodes();
   const viewStart = model.virtualizer.viewStart();
+  // animateRows: the render body still sees the old rows in the DOM, so the
+  // snapshot is taken here; the layout effect plays once the new ones are in
+  const [rowMotion] = useState(
+    () =>
+      new OgeRowMotionCore<RowNode<T>, RowKey>({
+        keyOf: (node) => node.key,
+        viewport: () => viewportRef.current,
+        root: () =>
+          viewportRef.current?.querySelector<HTMLElement>(
+            ':scope > .oge-body',
+          ) ?? null,
+        rows: (root) =>
+          root.querySelectorAll<HTMLElement>(
+            ':scope > .oge-rows > [data-rowindex]',
+          ),
+      }),
+  );
+  rowMotion.prepare(
+    (props.animateRows ?? true) && !model.windowed()
+      ? { nodes: viewNodes, start: viewStart }
+      : null,
+  );
+  useLayoutEffect(() => {
+    void rowMotion.commit();
+  });
+  useEffect(() => () => rowMotion.cancel(), [rowMotion]);
   const bodyHeight = model.virtualizer.bodyHeight();
   const rowsTransform = model.virtualizer.rowsTransform();
   const virtualized = model.virtualized();
@@ -4635,6 +4664,17 @@ function OgeGridInner<T extends object>(
     insetInlineStart: model.layout.pinnedLeftOf(column) ?? undefined,
     insetInlineEnd: model.layout.pinnedRightOf(column) ?? undefined,
   });
+  /** `oge-pinned`, plus the edge class on the column bordering the scrolling content. */
+  const pinnedClass = (column: ResolvedColumn<T>): string =>
+    column.pinned === false
+      ? ''
+      : `oge-pinned ${ogePinnedEdgeClass(model.layout.pinnedEdgeOf(column))}`.trimEnd();
+  // pinned-edge shadows follow the scroll width (columns, resize); the scroll
+  // handler covers the scroll position
+  const scrollHostWidth = model.hostWidth();
+  useLayoutEffect(() => {
+    ogeSyncPinnedShadows(viewportRef.current);
+  }, [gridTemplateColumns, scrollHostWidth]);
 
   /** 0 = no flash; 1/2 alternate per push batch (see `updatedCells`). */
   const cellFlashPhase = (key: RowKey, field: string | undefined): number => {
@@ -5088,7 +5128,7 @@ function OgeGridInner<T extends object>(
           if (column.dataType === 'number') cellClasses.push('oge-cell-number');
           if (column.alignment !== 'start')
             cellClasses.push(`oge-align-${column.alignment}`);
-          if (column.pinned !== false) cellClasses.push('oge-pinned');
+          if (column.pinned !== false) cellClasses.push(pinnedClass(column));
           const cellEditorOpen = model.editing.isCellEditorOpen(node, column);
           if (model.editing.isCellDirty(node, column))
             cellClasses.push('oge-cell-dirty');
@@ -5471,7 +5511,7 @@ function OgeGridInner<T extends object>(
         if (column.dataType === 'number') classes.push('oge-cell-number');
         if (column.alignment !== 'start')
           classes.push(`oge-align-${column.alignment}`);
-        if (column.pinned !== false) classes.push('oge-pinned');
+        if (column.pinned !== false) classes.push(pinnedClass(column));
         return (
           <div
             key={column.id}
@@ -5574,7 +5614,7 @@ function OgeGridInner<T extends object>(
                   column.alignment !== 'start'
                     ? `oge-align-${column.alignment}`
                     : '',
-                  column.pinned !== false ? 'oge-pinned' : '',
+                  pinnedClass(column),
                 ]
                   .filter(Boolean)
                   .join(' ')}
@@ -5884,6 +5924,7 @@ function OgeGridInner<T extends object>(
           const target = event.currentTarget;
           model.scrollTop.set(target.scrollTop);
           model.scrollLeft.set(target.scrollLeft);
+          ogeSyncPinnedShadows(target);
           updateStickyGroups();
           if (model.hintCell()) hintCore.hide();
         }}
@@ -5972,7 +6013,8 @@ function OgeGridInner<T extends object>(
               const draggable = headerDraggable(column);
               const headerClasses = ['oge-header-cell'];
               if (sortable) headerClasses.push('oge-header-sortable');
-              if (column.pinned !== false) headerClasses.push('oge-pinned');
+              if (column.pinned !== false)
+                headerClasses.push(pinnedClass(column));
               if (column.alignment !== 'start')
                 headerClasses.push(`oge-align-${column.alignment}`);
               if (headerDropTargetId === column.id)
@@ -6084,11 +6126,7 @@ function OgeGridInner<T extends object>(
               {renderColumns.map((column) => (
                 <div
                   key={column.id}
-                  className={
-                    column.pinned !== false
-                      ? 'oge-filter-cell oge-pinned'
-                      : 'oge-filter-cell'
-                  }
+                  className={`oge-filter-cell ${pinnedClass(column)}`.trimEnd()}
                   role="gridcell"
                   style={pinnedStyle(column)}
                 >
@@ -6169,7 +6207,7 @@ function OgeGridInner<T extends object>(
                       column.alignment !== 'start'
                         ? `oge-align-${column.alignment}`
                         : '',
-                      column.pinned !== false ? 'oge-pinned' : '',
+                      pinnedClass(column),
                     ]
                       .filter(Boolean)
                       .join(' ')}
