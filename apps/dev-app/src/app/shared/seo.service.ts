@@ -693,11 +693,11 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/ai',
-    'AI grid assistant for Angular and React by OGE UI: ask a data grid in plain language to sort, filter and group — any model, validated changes, preview and undo, no row data sent.',
+    'AI grid assistant for Angular and React: ask a data grid in plain language to sort, filter and group. Any model, validated changes, preview and undo.',
   ],
   [
     '/components/ai/api',
-    'AI API reference: every input, output and method of oge-grid-assistant, the OpenAI-compatible, Anthropic and HTTP transports, the config provider and shared types.',
+    'AI API reference: every input, output and method of oge-grid-assistant, the OpenAI-compatible, Anthropic and HTTP transports, config and shared types.',
   ],
   [
     '/components/kanban',
