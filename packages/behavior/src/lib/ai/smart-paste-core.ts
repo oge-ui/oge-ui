@@ -1,4 +1,4 @@
-import { ogeDateTimeFormat, ogeNumberFormat } from '@oge-ui/core';
+import { formatOgeAiValue } from './ai-format';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 import {
   formatOgeAiMessage,
@@ -298,25 +298,15 @@ export class OgeSmartPasteCore {
    */
   formatValue(field: string, value: unknown): string {
     const m = this.options.messages();
-    const locale = this.options.locale();
     const meta = this.fields().find((f) => f.field === field);
-    const one = (item: unknown): string => {
-      const choice = meta?.values?.find((v) => v.value === item);
-      if (choice) return choice.text ?? String(choice.value);
-      if (item instanceof Date) {
-        return ogeDateTimeFormat(
-          locale,
-          meta?.dataType === 'datetime'
-            ? { dateStyle: 'medium', timeStyle: 'short' }
-            : { dateStyle: 'medium' },
-        ).format(item);
-      }
-      if (typeof item === 'number') return ogeNumberFormat(locale).format(item);
-      if (typeof item === 'boolean') return item ? m.yes : m.no;
-      return item == null ? '' : String(item);
-    };
-    const text = Array.isArray(value) ? value.map(one).join(', ') : one(value);
-    return text === '' ? m.emptyValue : text;
+    return formatOgeAiValue(value, {
+      dataType: meta?.dataType,
+      values: meta?.values,
+      locale: this.options.locale(),
+      yes: m.yes,
+      no: m.no,
+      empty: m.emptyValue,
+    });
   }
 
   private fields(): OgeSmartPasteField[] {
