@@ -409,6 +409,14 @@ export const it: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'Generazione…',
+      error: 'Non disponibile',
+      retry: 'Riprova',
+      empty: '—',
+      yes: 'Sì',
+      no: 'No',
+    },
     smartPaste: {
       label: 'Incolla intelligente',
       textLabel: 'Testo da cui compilare il modulo',

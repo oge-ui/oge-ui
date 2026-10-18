@@ -409,6 +409,14 @@ export const ru: OgeLocalePack = {
     },
   },
   ai: {
+    aiCell: {
+      generating: 'Генерация…',
+      error: 'Недоступно',
+      retry: 'Повторить',
+      empty: '—',
+      yes: 'Да',
+      no: 'Нет',
+    },
     smartPaste: {
       label: 'Умная вставка',
       textLabel: 'Текст, из которого заполняется форма',

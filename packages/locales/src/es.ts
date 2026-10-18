@@ -409,6 +409,14 @@ export const es: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'Generando…',
+      error: 'No disponible',
+      retry: 'Reintentar',
+      empty: '—',
+      yes: 'Sí',
+      no: 'No',
+    },
     smartPaste: {
       label: 'Pegado inteligente',
       textLabel: 'Texto con el que rellenar el formulario',

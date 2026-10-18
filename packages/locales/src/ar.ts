@@ -408,6 +408,14 @@ export const ar: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'جارٍ الإنشاء…',
+      error: 'غير متاح',
+      retry: 'أعد المحاولة',
+      empty: '—',
+      yes: 'نعم',
+      no: 'لا',
+    },
     smartPaste: {
       label: 'لصق ذكي',
       textLabel: 'النص الذي يُملأ منه النموذج',

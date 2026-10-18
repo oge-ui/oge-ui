@@ -397,6 +397,14 @@ export const zhCN: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: '正在生成…',
+      error: '不可用',
+      retry: '重试',
+      empty: '—',
+      yes: '是',
+      no: '否',
+    },
     smartPaste: {
       label: '智能粘贴',
       textLabel: '用于填写表单的文本',

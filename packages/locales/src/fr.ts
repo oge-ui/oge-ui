@@ -413,6 +413,14 @@ export const fr: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'Génération…',
+      error: 'Indisponible',
+      retry: 'Réessayer',
+      empty: '—',
+      yes: 'Oui',
+      no: 'Non',
+    },
     smartPaste: {
       label: 'Collage intelligent',
       textLabel: 'Texte à partir duquel remplir le formulaire',

@@ -407,6 +407,14 @@ export const ja: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: '生成中…',
+      error: '利用できません',
+      retry: '再試行',
+      empty: '—',
+      yes: 'はい',
+      no: 'いいえ',
+    },
     smartPaste: {
       label: 'スマート貼り付け',
       textLabel: 'フォームに入力するテキスト',

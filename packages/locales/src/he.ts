@@ -406,6 +406,14 @@ export const he: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'יוצר…',
+      error: 'לא זמין',
+      retry: 'נסה שוב',
+      empty: '—',
+      yes: 'כן',
+      no: 'לא',
+    },
     smartPaste: {
       label: 'הדבקה חכמה',
       textLabel: 'הטקסט שממנו ימולא הטופס',
