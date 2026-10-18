@@ -54,6 +54,20 @@ export {
   type OgeGridAssistantStatus,
   type OgeGridAssistantTarget,
   type OgeGridAssistantUndoneEvent,
+  type OgeAiFormField,
+  type OgeSmartPasteAppliedEvent,
+  type OgeSmartPasteApplyingEvent,
+  type OgeSmartPasteChange,
+  type OgeSmartPasteConfig,
+  type OgeSmartPasteErrorEvent,
+  type OgeSmartPasteField,
+  type OgeSmartPasteMessages,
+  type OgeSmartPasteProposal,
+  type OgeSmartPasteStatus,
+  type OgeSmartPasteTarget,
+  type OgeSmartPasteUndoneEvent,
+  type OgeSmartPasteWarning,
+  type OgeSmartPasteWarningKind,
 } from '@oge-ui/behavior';
 
 /** Injection token every AI component reads its defaults from. */

@@ -55,6 +55,8 @@ export type {
   OgeFormLabelLocation,
   OgeFormScreenSize,
   OgeFormValidatedEvent,
+  OgeFormFieldDescription,
+  OgeFormFieldValue,
   OgeResolvedFormItem,
   OgeValidationContext,
   OgeValidationRule,

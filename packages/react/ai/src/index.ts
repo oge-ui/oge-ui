@@ -44,6 +44,20 @@ export {
   type OgeGridAssistantStatus,
   type OgeGridAssistantTarget,
   type OgeGridAssistantUndoneEvent,
+  type OgeAiFormField,
+  type OgeSmartPasteAppliedEvent,
+  type OgeSmartPasteApplyingEvent,
+  type OgeSmartPasteChange,
+  type OgeSmartPasteConfig,
+  type OgeSmartPasteErrorEvent,
+  type OgeSmartPasteField,
+  type OgeSmartPasteMessages,
+  type OgeSmartPasteProposal,
+  type OgeSmartPasteStatus,
+  type OgeSmartPasteTarget,
+  type OgeSmartPasteUndoneEvent,
+  type OgeSmartPasteWarning,
+  type OgeSmartPasteWarningKind,
 } from '@oge-ui/behavior';
 export { OgeAiConfigProvider, useOgeAiConfig } from './lib/ai-config';
 export {
@@ -51,3 +65,8 @@ export {
   type OgeGridAssistantHandle,
   type OgeGridAssistantProps,
 } from './lib/grid-assistant';
+export {
+  OgeSmartPaste,
+  type OgeSmartPasteHandle,
+  type OgeSmartPasteProps,
+} from './lib/smart-paste';

@@ -1,4 +1,5 @@
 @use '../../../../grid/src/lib/styles/tokens';
+@use '../styles/ai-button' as ai;
 
 // The grid assistant: a prompt bar whose ring turns into a slow accent sweep
 // while the model thinks, suggestion chips, and a proposal card that settles
@@ -142,45 +143,7 @@
 }
 
 .oge-grid-assistant-button {
-  position: relative;
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  min-block-size: 30px;
-  padding-inline: 14px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--oge-text-color);
-  font: inherit;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background-color var(--oge-motion-duration-fast)
-      var(--oge-motion-easing-standard),
-    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
-    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
-
-  @include tokens.hit-area;
-
-  &:hover:not(:disabled) {
-    background: var(--oge-row-hover-bg);
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  &:focus-visible {
-    @include tokens.focus-ring;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  @include ai.button;
 }
 
 .oge-grid-assistant-submit,

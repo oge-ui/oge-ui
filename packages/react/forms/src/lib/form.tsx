@@ -29,6 +29,7 @@ import {
   type OgeFormColCount,
   type OgeFormErrorEntry,
   type OgeFormsMessages,
+  ogeDescribeFormFields,
   type OgeResolvedFormItem,
 } from '@oge-ui/behavior';
 import { useOgeInputsConfig } from '@oge-ui/react-inputs';
@@ -733,6 +734,9 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
       },
       itemOption(field: string) {
         return resolvedItems.find((item) => item.field === field);
+      },
+      describeFields() {
+        return ogeDescribeFormFields(resolvedItems, dataRef.current);
       },
       setErrors(errors) {
         const next = new Map<string, readonly string[]>();

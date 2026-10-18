@@ -10,6 +10,7 @@ import type {
   OgeFormItemDataBase,
   OgeFormLabelLocation,
   OgeFormScreenSize,
+  OgeFormFieldDescription,
   OgeResolvedFormItem,
 } from '@oge-ui/behavior';
 
@@ -164,6 +165,12 @@ export interface OgeFormHandle<T extends object = Record<string, unknown>> {
   focusFirstInvalid(): boolean;
   /** The resolved configuration of one item, as the form renders it. */
   itemOption(field: string): OgeResolvedFormItem | undefined;
+  /**
+   * Plain descriptions of every visible field — label, data and editor type,
+   * required / read-only, choice values and the value the form holds now.
+   * What smart paste (`<OgeSmartPaste>`) and autofill helpers read.
+   */
+  describeFields(): OgeFormFieldDescription[];
   /** Merges a partial object, or one field's value, into the bound data. */
   updateData(fieldOrData: string | Partial<T>, value?: unknown): void;
   /**
