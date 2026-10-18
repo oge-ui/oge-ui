@@ -67,6 +67,8 @@ const COVERAGE: Readonly<
     upload: '*',
     // overview and api both branch (W8e: one editor machine in behavior)
     editor: '*',
+    // overview and api both branch (G6a: one assistant machine in behavior)
+    ai: '*',
     // commercial family (ADR 0003): overview and api both branch
     kanban: '*',
     // commercial: @oge-ui/react-bpmn over @oge-ui/bpmn-engine (ADR 0003);

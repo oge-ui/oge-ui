@@ -60,6 +60,7 @@ export type IconName =
   | 'carousel'
   | 'plus'
   | 'type'
+  | 'sparkles'
   | 'menu'
   | 'x';
 
@@ -313,6 +314,10 @@ export type IconName =
           <circle cx="12" cy="12" r="10" />
           <path d="M12 8v8" />
           <path d="M8 12h8" />
+        }
+        @case ('sparkles') {
+          <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+          <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />
         }
         @case ('type') {
           <path d="M4 7V4h16v3" />

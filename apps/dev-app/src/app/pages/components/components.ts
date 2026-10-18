@@ -94,6 +94,7 @@ type FamilyKey =
   | 'gantt'
   | 'upload'
   | 'editor'
+  | 'ai'
   | 'kanban'
   | 'charts'
   | 'overlay';
@@ -488,6 +489,50 @@ interface OrgNode {
                       fill="currentColor"
                       opacity="0.4"
                       stroke="none"
+                    />
+                  </svg>
+                }
+                @case ('ai') {
+                  <!-- illustrative sketch; the live assistant renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="ai"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <rect x="10" y="10" width="260" height="26" rx="13" />
+                    <path
+                      d="M26 17l1.6 4.4L32 23l-4.4 1.6L26 29l-1.6-4.4L20 23l4.4-1.6z"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                    <rect
+                      x="40"
+                      y="20"
+                      width="120"
+                      height="6"
+                      rx="3"
+                      fill="currentColor"
+                      opacity="0.3"
+                      stroke="none"
+                    />
+                    <rect
+                      x="222"
+                      y="15"
+                      width="40"
+                      height="16"
+                      rx="8"
+                      fill="currentColor"
+                      opacity="0.55"
+                      stroke="none"
+                    />
+                    <rect x="10" y="46" width="260" height="66" rx="8" />
+                    <path
+                      d="M10 62h260M10 78h260M10 94h260M90 46v66M180 46v66"
+                      opacity="0.6"
                     />
                   </svg>
                 }
@@ -1529,6 +1574,14 @@ export class ComponentsIndexPage {
       path: '/components/editor',
       description:
         'Rich-text editing on its own document model: headings, nested lists, links, images and colours, undo history, markdown shortcuts and Word paste cleanup — the HTML value is sanitized by a strict allowlist.',
+    },
+    {
+      key: 'ai',
+      name: 'AI Grid Assistant',
+      icon: 'sparkles',
+      path: '/components/ai',
+      description:
+        'Ask a data grid in plain language — “orders over 500 this month, newest first” — and get a validated sort, filter and grouping change with preview and undo. Works with any model; rows never leave the page.',
     },
     {
       key: 'kanban',

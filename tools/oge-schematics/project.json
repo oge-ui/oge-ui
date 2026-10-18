@@ -27,6 +27,7 @@
         "navigation:build",
         "upload:build",
         "editor:build",
+        "ai:build",
         "locales:build",
         "bpmn:build",
         "scheduler:build",

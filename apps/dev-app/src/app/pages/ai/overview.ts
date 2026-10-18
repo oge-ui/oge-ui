@@ -1,203 +1,530 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CodeBlock } from '../../shared/code-block';
+import {
+  createOgeOpenAiTransport,
+  OgeGridAssistant,
+  type OgeAiGridColumn,
+  type OgeAiRequest,
+  type OgeAiTransport,
+  type OgeGridAssistantAppliedEvent,
+  type OgeGridAssistantApplyingEvent,
+} from '@oge-ui/ai';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
-import { AGENTS_BLOCK, FETCH, NG_ADD, RULES } from './overview-snippets';
+import {
+  REACT_AI_OVERVIEW_SECTIONS,
+  ReactAiOverviewDemos,
+} from '../react-ai/overview';
+import {
+  AI_DEMO_STATUSES,
+  createDemoAiTransport,
+  makeAiOrders,
+  type AiOrder,
+} from './ai-demo';
+import {
+  APPLY_SNIPPET,
+  CONFIG_SNIPPET,
+  EVENTS_SNIPPET,
+  GETTING_STARTED_SNIPPET,
+  PRIVACY_SNIPPET,
+} from './overview-snippets';
 
 const SECTIONS = [
-  'Machine-readable reference',
-  'ng add & AGENTS.md',
-  'Rules that matter',
-  'Common mistakes',
+  'Getting started',
+  'Apply at once and undo',
+  'What the model sees',
+  'Events',
+  'Transports and configuration',
 ] as const;
 
-/**
- * The docs page for the AI-facing half of the documentation: what OGE publishes
- * for coding assistants, where it lives, and how to point a project at it.
- */
+/** Wraps a transport and remembers the last request it sent. */
+export function inspectingTransport(
+  inner: OgeAiTransport,
+  seen: (request: OgeAiRequest) => void,
+): OgeAiTransport {
+  return {
+    complete(request, options) {
+      seen(request);
+      return inner.complete(request, options);
+    },
+  };
+}
+
 @Component({
   selector: 'app-ai-overview',
-  imports: [CodeBlock, DocHeader, PageToc, RouterLink],
+  imports: [
+    DemoCard,
+    DocHeader,
+    PageToc,
+    RouterLink,
+    OgeColumn,
+    OgeGrid,
+    OgeGridAssistant,
+    ReactAiOverviewDemos,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
-      title="AI coding assistants"
+      title="AI"
       category="AI"
-      [chips]="['llms.txt', 'llms-full.txt', 'ng add', 'AGENTS.md']"
+      categoryLink="/components/ai"
+      [chips]="['any model', 'no row data sent', 'preview + undo', 'MIT']"
     >
       <p>
-        Assistants are a first-class audience for these docs. Every package
-        publishes a machine-readable API reference — on the site and inside the
-        installed tarball — so a model writes real OGE code instead of guessing
-        at an API it has never seen. Every snippet on this site is compiled in
-        CI, so what an assistant copies actually builds.
+        AI that works with <strong>your</strong> model. The grid assistant turns
+        a sentence — “orders over 500 from İzmir this month, newest first” —
+        into a sort, filter, grouping, search or column change, checks every
+        field, operator and value the model returns against the grid's columns,
+        and applies it after you press Apply. Undo steps back.
+      </p>
+      <p>
+        There is no hosted service and no AI surcharge: requests go to the
+        transport you configure — your own backend, any OpenAI-compatible server
+        (OpenAI, Azure, Ollama, vLLM) or Anthropic. The model is told the column
+        names, types and lookup values; rows never leave the page. The demos
+        below run on an offline demo model, so they work without a key — connect
+        a real one in the last section.
+        @if (fw.isReact()) {
+          The React assistant runs the same machine from
+          <code>&#64;oge-ui/behavior</code> and loads the same stylesheet.
+        }
+        <a routerLink="/components/ai/api">Full API reference →</a>
       </p>
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <h2 id="machine-readable-reference" class="scroll-mt-20">
-      Machine-readable reference
-    </h2>
-    <table class="api-table">
-      <thead>
-        <tr>
-          <th class="w-[38%]">File</th>
-          <th>What it contains</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <a
-              href="/llms.txt"
-              class="text-indigo-600 underline dark:text-indigo-400"
-              ><code>/llms.txt</code></a
-            >
-          </td>
-          <td>
-            The <a href="https://llmstxt.org" rel="noopener">llmstxt.org</a>
-            index: every package and every documentation page, one line each.
-            Start here when context is tight.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <a
-              href="/llms-full.txt"
-              class="text-indigo-600 underline dark:text-indigo-400"
-              ><code>/llms-full.txt</code></a
-            >
-          </td>
-          <td>
-            Everything inlined: the conventions below, every documented input,
-            output, method and type, and every demo as a complete component. The
-            best single input for code generation.
-          </td>
-        </tr>
-        <tr>
-          <td><code>/llms/&lt;package&gt;.txt</code></td>
-          <td>
-            One self-contained reference per package — conventions, API tables
-            and demos scoped to that family.
-            <strong>Each file carries its own framework's rules:</strong>
-            <code>/llms/buttons.txt</code> teaches the Angular API,
-            <code>/llms/react/buttons.txt</code> the React one. Handing an
-            assistant the wrong file is worse than handing it none — it would
-            confidently write <code>imports: [OgeButton]</code> into a
-            <code>.tsx</code> file.
-          </td>
-        </tr>
-        <tr>
-          <td><code>node_modules/&#64;oge-ui/&lt;pkg&gt;/llms.txt</code></td>
-          <td>
-            The same per-package file, shipped in the tarball. No network access
-            needed: it is on disk right after
-            <code>npm install</code>.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <app-code-block [code]="fetch" language="bash" />
-    <p>
-      These files are generated from the source tree — routes, API tables,
-      entry-point exports and demo sources — so they cannot drift from the site,
-      and CI fails if the committed copies fall behind.
-    </p>
-
-    <h2 id="ng-add-agents-md" class="scroll-mt-20">ng add &amp; AGENTS.md</h2>
-    <p>
-      Assistants read <code>AGENTS.md</code> before they write code. Running
-      <code>ng add</code> writes a short usage block into yours, so every
-      assistant working in the repo reaches for OGE by default — and reads the
-      reference in <code>node_modules</code> instead of inventing an API.
-    </p>
-    <app-code-block [code]="ngAdd" language="bash" />
-    <p>
-      The block lives between markers and is regenerated from the OGE packages
-      in your <code>package.json</code>, so installing a second family grows the
-      table instead of duplicating the block. Everything outside the markers is
-      left untouched.
-    </p>
-    <app-code-block [code]="agentsBlock" language="md" />
-    <p>
-      See
-      <a
-        class="text-indigo-600 underline dark:text-indigo-400"
-        routerLink="/getting-started/setup"
-        >Set up your project</a
+    @if (fw.isReact()) {
+      <app-react-ai-overview-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['[target]', 'suggestions', 'preview']"
+        heading="Getting started"
+        description="Pick a suggestion or type your own request, then Apply or Discard the proposal. The status line under the bar is a polite live region; Escape stops a request or discards a proposal."
+        [code]="gettingStartedSnippet"
+        language="ts"
       >
-      for the full <code>ng add</code> options.
-    </p>
+        <oge-grid-assistant
+          [target]="grid1"
+          [transport]="transport()"
+          [suggestions]="suggestions"
+        />
+        <div class="mt-3">
+          <oge-grid
+            #grid1
+            [data]="orders"
+            keyField="id"
+            [groupPanel]="true"
+            [searchPanel]="true"
+            [paging]="{ pageSize: 8 }"
+          >
+            <oge-column
+              field="id"
+              caption="Order"
+              dataType="number"
+              [width]="90"
+            />
+            <oge-column field="customer" caption="Customer" />
+            <oge-column field="city" caption="City" />
+            <oge-column
+              field="status"
+              caption="Status"
+              dataType="number"
+              [lookup]="statusLookup"
+            />
+            <oge-column
+              field="amount"
+              caption="Amount"
+              dataType="number"
+              [format]="money"
+            />
+            <oge-column
+              field="ordered"
+              caption="Ordered"
+              dataType="date"
+              [format]="day"
+            />
+          </oge-grid>
+        </div>
+      </app-demo-card>
 
-    <h2 id="rules-that-matter" class="scroll-mt-20">Rules that matter</h2>
-    <p>
-      The seven rules that decide whether generated code compiles. They are the
-      opening section of <code>llms-full.txt</code>, repeated here for humans:
-    </p>
-    <app-code-block [code]="rules" language="ts" />
+      <app-demo-card
+        [chips]="['mode=&quot;apply&quot;', 'undo()', 'submit(text)']"
+        heading="Apply at once and undo"
+        description="In &lt;code&gt;apply&lt;/code&gt; mode the change lands immediately; Undo steps back through every applied change. Follow-ups build on the current state — try “newest first”, then “and only İzmir”."
+        [code]="applySnippet"
+        language="ts"
+      >
+        <oge-grid-assistant
+          #assistant2
+          [target]="grid2"
+          [transport]="transport()"
+          mode="apply"
+        />
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="button" (click)="assistant2.submit('Newest first')">
+            Ask “Newest first” from code
+          </button>
+        </div>
+        <div class="mt-3">
+          <oge-grid
+            #grid2
+            [data]="orders"
+            keyField="id"
+            [groupPanel]="true"
+            [paging]="{ pageSize: 8 }"
+          >
+            <oge-column
+              field="id"
+              caption="Order"
+              dataType="number"
+              [width]="90"
+            />
+            <oge-column field="customer" caption="Customer" />
+            <oge-column field="city" caption="City" />
+            <oge-column
+              field="status"
+              caption="Status"
+              dataType="number"
+              [lookup]="statusLookup"
+            />
+            <oge-column
+              field="amount"
+              caption="Amount"
+              dataType="number"
+              [format]="money"
+            />
+            <oge-column
+              field="ordered"
+              caption="Ordered"
+              dataType="date"
+              [format]="day"
+            />
+          </oge-grid>
+        </div>
+      </app-demo-card>
 
-    <h2 id="common-mistakes" class="scroll-mt-20">Common mistakes</h2>
-    <p>
-      Models trained on other component suites reach for the wrong names.
-      <code>llms.txt</code> lists these explicitly, because naming the wrong
-      guess works better than only stating the right one. The React files carry
-      their own table — where the Angular one warns against
-      <code>OgeGridModule</code>, the React one warns against importing
-      <code>&#64;oge-ui/buttons</code> when you meant
-      <code>&#64;oge-ui/react-buttons</code>:
-    </p>
-    <table class="api-table">
-      <thead>
-        <tr>
-          <th class="w-[45%]">Wrong</th>
-          <th>Right</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>&lt;oge-data-grid&gt;</code></td>
-          <td><code>&lt;oge-grid&gt;</code></td>
-        </tr>
-        <tr>
-          <td><code>[dataSource]="rows"</code></td>
-          <td><code>[data]="rows"</code></td>
-        </tr>
-        <tr>
-          <td><code>import &#123; OgeGridModule &#125;</code></td>
-          <td>no modules — <code>imports: [OgeGrid, OgeColumn]</code></td>
-        </tr>
-        <tr>
-          <td><code>&#64;Input() foo</code></td>
-          <td><code>readonly foo = input&lt;T&gt;()</code></td>
-        </tr>
-        <tr>
-          <td><code>(onRowClick)</code> / <code>(onSelectionChanged)</code></td>
-          <td><code>(rowClick)</code> / <code>(selectionChanged)</code></td>
-        </tr>
-        <tr>
-          <td><code>MatDialog</code> / <code>DialogService</code></td>
-          <td>
-            <code>&lt;oge-modal&gt;</code> or
-            <code>OgeModalService.open()</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>MessageService</code> / <code>MatSnackBar</code></td>
-          <td><code>OgeToastService.show()</code></td>
-        </tr>
-        <tr>
-          <td><code>::ng-deep .oge-grid-row</code></td>
-          <td>override a <code>--oge-*</code> token</td>
-        </tr>
-      </tbody>
-    </table>
+      <app-demo-card
+        [chips]="['[columns]', '[capabilities]', 'instructions']"
+        heading="What the model sees"
+        description="The panel shows the exact request the last prompt sent. Customer is left out of &lt;code&gt;[columns]&lt;/code&gt;, so the model never hears of it; column changes are switched off with &lt;code&gt;[capabilities]&lt;/code&gt;. No row is ever part of a request."
+        [code]="privacySnippet"
+        language="ts"
+      >
+        <oge-grid-assistant
+          [target]="grid3"
+          [transport]="inspected"
+          [columns]="described"
+          [capabilities]="{ columns: false }"
+          instructions="Amounts are net, in EUR. 'Open' orders are not shipped yet."
+          [suggestions]="['Open orders over 1000', 'Hide the city column']"
+        />
+        <div class="mt-3">
+          <oge-grid
+            #grid3
+            [data]="orders"
+            keyField="id"
+            [paging]="{ pageSize: 5 }"
+          >
+            <oge-column
+              field="id"
+              caption="Order"
+              dataType="number"
+              [width]="90"
+            />
+            <oge-column field="customer" caption="Customer" />
+            <oge-column field="city" caption="City" />
+            <oge-column
+              field="status"
+              caption="Status"
+              dataType="number"
+              [lookup]="statusLookup"
+            />
+            <oge-column
+              field="amount"
+              caption="Amount"
+              dataType="number"
+              [format]="money"
+            />
+            <oge-column
+              field="ordered"
+              caption="Ordered"
+              dataType="date"
+              [format]="day"
+            />
+          </oge-grid>
+        </div>
+        <pre
+          class="mt-3 max-h-72 overflow-auto rounded-md bg-gray-50 p-3 text-xs whitespace-pre-wrap dark:bg-gray-900"
+          data-testid="ai-request"
+          >{{ requestText() }}</pre>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['(applying)', '(applied)', '(undone)', '(errorOccurred)']"
+        heading="Events"
+        description="&lt;code&gt;(applying)&lt;/code&gt; is cancelable — tick the box to veto changes that touch column visibility. &lt;code&gt;(applied)&lt;/code&gt; carries the complete snapshot, ready to be saved as a view."
+        [code]="eventsSnippet"
+        language="ts"
+      >
+        <label class="mb-3 flex items-center gap-2">
+          <input
+            type="checkbox"
+            [checked]="veto()"
+            (change)="veto.set(!veto())"
+          />
+          Veto changes to column visibility
+        </label>
+        <oge-grid-assistant
+          [target]="grid4"
+          [transport]="transport()"
+          mode="apply"
+          [suggestions]="[
+            'Hide the city column',
+            'Sort by amount, highest first',
+          ]"
+          (applying)="onApplying($event)"
+          (applied)="onApplied($event)"
+          (undone)="note('undone: ' + $event.summary)"
+          (errorOccurred)="note('error: ' + $event.code)"
+        />
+        <div class="mt-3">
+          <oge-grid
+            #grid4
+            [data]="orders"
+            keyField="id"
+            [paging]="{ pageSize: 5 }"
+          >
+            <oge-column
+              field="id"
+              caption="Order"
+              dataType="number"
+              [width]="90"
+            />
+            <oge-column field="customer" caption="Customer" />
+            <oge-column field="city" caption="City" />
+            <oge-column
+              field="status"
+              caption="Status"
+              dataType="number"
+              [lookup]="statusLookup"
+            />
+            <oge-column
+              field="amount"
+              caption="Amount"
+              dataType="number"
+              [format]="money"
+            />
+            <oge-column
+              field="ordered"
+              caption="Ordered"
+              dataType="date"
+              [format]="day"
+            />
+          </oge-grid>
+        </div>
+        <ol class="mt-3 list-decimal ps-6 text-sm" data-testid="ai-event-log">
+          @for (line of log(); track $index) {
+            <li>{{ line }}</li>
+          }
+        </ol>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'provideOgeAiConfig',
+          'createOgeOpenAiTransport',
+          'createOgeAiHttpTransport',
+        ]"
+        heading="Transports and configuration"
+        description="Point every demo on this page at a real OpenAI-compatible endpoint — a local Ollama needs no key. The key is held in this tab’s memory only and sent straight to the URL you enter; in production use your own backend so the key never reaches the browser."
+        [code]="configSnippet"
+        language="ts"
+      >
+        <form class="grid max-w-xl gap-2 text-sm" (submit)="connect($event)">
+          <label class="grid gap-1">
+            Base URL
+            <input
+              #baseUrl
+              class="rounded border px-2 py-1"
+              name="baseUrl"
+              value="http://localhost:11434/v1"
+            />
+          </label>
+          <label class="grid gap-1">
+            Model
+            <input
+              #model
+              class="rounded border px-2 py-1"
+              name="model"
+              value="llama3.1"
+            />
+          </label>
+          <label class="grid gap-1">
+            API key (optional)
+            <input
+              #apiKey
+              class="rounded border px-2 py-1"
+              name="apiKey"
+              type="password"
+              autocomplete="off"
+            />
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              (click)="connectTo(baseUrl.value, model.value, apiKey.value)"
+            >
+              Use this model
+            </button>
+            <button type="button" (click)="useDemo()">
+              Back to the demo model
+            </button>
+          </div>
+          <p data-testid="ai-transport-label">
+            Now answering: {{ transportLabel() }}
+          </p>
+        </form>
+      </app-demo-card>
+    }
   `,
 })
 export class AiOverviewPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
-  protected readonly fetch = FETCH;
-  protected readonly ngAdd = NG_ADD;
-  protected readonly agentsBlock = AGENTS_BLOCK;
-  protected readonly rules = RULES;
+  protected readonly reactSections = REACT_AI_OVERVIEW_SECTIONS;
+
+  protected readonly gettingStartedSnippet = GETTING_STARTED_SNIPPET;
+  protected readonly applySnippet = APPLY_SNIPPET;
+  protected readonly privacySnippet = PRIVACY_SNIPPET;
+  protected readonly eventsSnippet = EVENTS_SNIPPET;
+  protected readonly configSnippet = CONFIG_SNIPPET;
+
+  protected readonly orders: AiOrder[] = makeAiOrders();
+  protected readonly statusLookup = {
+    dataSource: AI_DEMO_STATUSES,
+    valueExpr: 'id',
+    displayExpr: 'label',
+  };
+  protected readonly money = {
+    type: 'currency',
+    currency: 'EUR',
+  } as const;
+  protected readonly day = { type: 'date' } as const;
+  protected readonly suggestions = [
+    'Orders over 500 this month',
+    'Group by status',
+    'Newest first',
+  ];
+
+  private readonly demo = createDemoAiTransport();
+  protected readonly transport = signal<OgeAiTransport>(this.demo);
+  protected readonly transportLabel = signal('the offline demo model');
+
+  private readonly lastRequest = signal<OgeAiRequest | null>(null);
+  protected readonly inspected: OgeAiTransport = inspectingTransport(
+    {
+      complete: (request, options) =>
+        this.transport().complete(request, options),
+    },
+    (request) => this.lastRequest.set(request),
+  );
+  protected readonly requestText = computed(() => {
+    const request = this.lastRequest();
+    return request
+      ? request.messages.map((m) => `[${m.role}]\n${m.content}`).join('\n\n')
+      : 'Send a prompt to see the request the model receives.';
+  });
+  protected readonly described: readonly OgeAiGridColumn[] = [
+    {
+      field: 'city',
+      caption: 'City',
+      dataType: 'string',
+      sortable: true,
+      filterable: true,
+      groupable: true,
+      visible: true,
+    },
+    {
+      field: 'status',
+      caption: 'Status',
+      dataType: 'number',
+      sortable: true,
+      filterable: true,
+      groupable: true,
+      visible: true,
+      values: AI_DEMO_STATUSES.map((s) => ({ value: s.id, text: s.label })),
+    },
+    {
+      field: 'amount',
+      caption: 'Amount',
+      dataType: 'number',
+      sortable: true,
+      filterable: true,
+      groupable: true,
+      visible: true,
+      description: 'Net order value in EUR',
+    },
+    {
+      field: 'ordered',
+      caption: 'Ordered',
+      dataType: 'date',
+      sortable: true,
+      filterable: true,
+      groupable: true,
+      visible: true,
+    },
+  ];
+
+  protected readonly veto = signal(false);
+  protected readonly log = signal<string[]>([]);
+
+  protected onApplying(event: OgeGridAssistantApplyingEvent): void {
+    if (this.veto() && event.slices.includes('columns')) {
+      event.cancel = true;
+      this.log.update((l) => [`vetoed: ${event.summary}`, ...l]);
+    }
+  }
+
+  protected onApplied(event: OgeGridAssistantAppliedEvent): void {
+    this.log.update((l) => [
+      `applied: ${event.prompt} → ${event.slices.join(', ')}`,
+      ...l,
+    ]);
+  }
+
+  protected note(line: string): void {
+    this.log.update((l) => [line, ...l]);
+  }
+
+  protected connect(event: Event): void {
+    event.preventDefault();
+  }
+
+  protected connectTo(baseUrl: string, model: string, apiKey: string): void {
+    if (!baseUrl.trim() || !model.trim()) return;
+    this.transport.set(
+      createOgeOpenAiTransport({
+        baseUrl: baseUrl.trim(),
+        model: model.trim(),
+        apiKey: apiKey.trim() || undefined,
+        // the reader's own key, held in memory for this tab only
+        dangerouslyAllowBrowser: true,
+      }),
+    );
+    this.transportLabel.set(`${model.trim()} at ${baseUrl.trim()}`);
+  }
+
+  protected useDemo(): void {
+    this.transport.set(this.demo);
+    this.transportLabel.set('the offline demo model');
+  }
 }

@@ -213,6 +213,20 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`ogeSanitizeEditorHtml(html)` — the same allowlist the editor applies to values and pastes (Trusted Types policy `oge-ui#editor`)',
     },
   ],
+  '@oge-ui/ai': [
+    {
+      need: 'natural-language filtering / sorting / grouping of a data grid ("ask the grid")',
+      use: '`<oge-grid-assistant [target]="grid" />` above `<oge-grid #grid>` plus `provideOgeAiConfig({ transport: createOgeAiHttpTransport({ url: \'/api/ai\' }) })` — the model returns a state change that is validated against the columns; `mode="preview"` (default) asks before applying, Undo steps back',
+    },
+    {
+      need: 'call OpenAI, Azure OpenAI, Ollama or Claude from the AI components',
+      use: '`createOgeOpenAiTransport({ baseUrl, model })` (any OpenAI-compatible server) or `createOgeAnthropicTransport({ model })` — behind your own proxy; sending an `apiKey` from the browser needs `dangerouslyAllowBrowser: true`',
+    },
+    {
+      need: 'keep a column or data away from the AI model',
+      use: 'the model never receives rows — only column names, types and lookup values; pass `[columns]` to add `description`s or omit a column, `[capabilities]="{ columns: false }"` to switch a part of the state off',
+    },
+  ],
   '@oge-ui/locales': [
     {
       need: 'translate the UI (German, French, Spanish, Italian, pt-BR, Turkish, Japanese, zh-CN, Arabic, Hebrew, Russian)',
@@ -240,6 +254,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/forms',
   '@oge-ui/upload',
   '@oge-ui/editor',
+  '@oge-ui/ai',
   '@oge-ui/locales',
 ];
 
@@ -259,4 +274,5 @@ export const UMBRELLA_FAMILIES: readonly string[] = [
   '@oge-ui/forms',
   '@oge-ui/upload',
   '@oge-ui/editor',
+  '@oge-ui/ai',
 ];

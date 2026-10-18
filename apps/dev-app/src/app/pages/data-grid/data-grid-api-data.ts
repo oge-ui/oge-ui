@@ -603,6 +603,12 @@ export const OGE_GRID_API: ApiSections = {
             'Captures / applies the persistable UI state. <code>applyState</code> validates the snapshot first (<code>sanitize*StateSnapshot</code>): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown.',
         },
         {
+          name: 'describeColumns()',
+          type: 'OgeGridColumnDescription[]',
+          description:
+            'Plain descriptions of every column with a data field — <code>{ field, caption, dataType, visible, sortable, filterable, groupable, values? }</code>, lookup items as <code>values</code>. What a saved-view editor or the AI grid assistant reads; no templates, no accessors.',
+        },
+        {
           name: 'clearFilters() / clearSorting()',
           type: 'void',
           description:

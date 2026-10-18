@@ -72,6 +72,7 @@
         "bootstrap": "#ffffff"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/behavior",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
@@ -107,6 +108,7 @@
         "bootstrap": "#212529"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/behavior",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
@@ -145,6 +147,7 @@
         "bootstrap": "#dee2e6"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/behavior",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
@@ -183,6 +186,7 @@
         "bootstrap": "#f8f9fa"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/gantt",
@@ -241,6 +245,7 @@
         "bootstrap": "#e9ecef"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -334,6 +339,7 @@
         "bootstrap": "15px"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -393,6 +399,7 @@
         "bootstrap": "#6c757d"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -447,6 +454,7 @@
         "light": "10px"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/charts",
         "@oge-ui/editor",
@@ -554,6 +562,7 @@
         "bootstrap": "#0d6efd"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -680,6 +689,7 @@
         "bootstrap": "#ffc107"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -737,6 +747,7 @@
         "bootstrap": "#dc3545"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -799,6 +810,7 @@
         "dark": "#0b1220"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/buttons",
         "@oge-ui/gantt",
         "@oge-ui/grid",
@@ -862,6 +874,7 @@
         "hc": "0 0 0 1px #000000"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/buttons",
         "@oge-ui/charts",
         "@oge-ui/gantt",
@@ -1119,6 +1132,7 @@
         "light": "120ms"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -1145,6 +1159,7 @@
         "light": "200ms"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/buttons",
         "@oge-ui/inputs",
         "@oge-ui/layout",
@@ -1172,6 +1187,7 @@
         "light": "cubic-bezier(0.2, 0, 0, 1)"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -1212,6 +1228,7 @@
         "light": "cubic-bezier(0, 0, 0, 1)"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/charts",
         "@oge-ui/grid",
         "@oge-ui/inputs",
@@ -1727,6 +1744,7 @@
         "bootstrap": "rgb(13 110 253 / 0.1)"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/charts",
@@ -1786,6 +1804,7 @@
         "hc": "#0037b3"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/editor",
