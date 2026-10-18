@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
+import AxeBuilder from './axe';
 import { expect, test } from '@playwright/test';
 
 test('expanding a panel collapses its sibling in single mode', async ({

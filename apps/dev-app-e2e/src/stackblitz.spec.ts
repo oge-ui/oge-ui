@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
+import AxeBuilder from './axe';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';

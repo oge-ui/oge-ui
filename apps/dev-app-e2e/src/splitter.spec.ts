@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
+import AxeBuilder from './axe';
 import { expect, test } from '@playwright/test';
 
 /** Reads the grid template the splitter writes onto its own host. */
