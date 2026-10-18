@@ -111,8 +111,8 @@ Three rules govern the split:
 
 ### React package template (per new React family)
 
-`packages/react/buttons` is the template; the execution schedule and the full
-per-family definition of done live in [`ROADMAP-REACT.md`](../ROADMAP-REACT.md).
+`packages/react/buttons` is the template; the per-family definition of done
+lives in [`REACT-PARITY.md`](REACT-PARITY.md).
 The rules that exist because the pilot's audit found their absence breaking real
 consumers:
 

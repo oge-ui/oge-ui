@@ -1275,14 +1275,13 @@ noreferrer"`. The value is re-serialized from the model, which defeats
 
 Everything below is on `main` and ships together as **1.1.2**. It is the
 first half of the plan that closes the gaps found by four post-1.1.1 audits
-and the [competitive gap reports](docs/competitive-gaps/README.md): a green,
+and the competitive gap reports: a green,
 hardened CI; security and locale fixes; accessibility, touch and mobile
 support across every family; the grid, inputs and charts depth waves (G1, G4,
 G2); and locale formatting, plural messages and right-to-left support (W4).
 Every addition lands in the Angular and the React layer together. Charts
 depth (G2), scheduling depth (G3), overlay/BPMN depth (G5), locale packs,
-time zones, new components and AI helpers follow — see
-[`ROADMAP.md`](ROADMAP.md#120-plan-and-what-comes-next). Read **Migration
+time zones, new components and AI helpers follow in later patch releases. Read **Migration
 notes / behaviour changes** at the end before upgrading.
 
 ### CI, security and project

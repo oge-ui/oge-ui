@@ -3,46 +3,11 @@
 Comparison of `@oge-ui/grid` against the feature set of leading commercial data grids.
 Legend: Done · Partial · Missing.
 
-Last updated: 2026-10-04 (1.1.2 released — waves W0–W4, G1, G2 and G4).
+Last updated: 2026-10-04 (1.1.2). What shipped in each release is listed in [`CHANGELOG.md`](CHANGELOG.md).
 
 > This roadmap tracks the **Angular** packages against the reference grids.
-> The React render layer — which families ship, in what slices, and every
-> recorded difference — is tracked in [`ROADMAP-REACT.md`](ROADMAP-REACT.md)
-> and [`docs/REACT-PARITY.md`](docs/REACT-PARITY.md).
-
-## 1.1.2 plan and what comes next
-
-After 1.1.1, four audits (components, quality/CI, platform/DX,
-a11y/i18n/mobile/security) and the per-family
-[competitive gap reports](docs/competitive-gaps/README.md) produced one plan,
-whose first half shipped as **1.1.2** (2026-10-04); the rest follows in small
-patch releases (1.1.x). Every wave lands in the Angular and
-React layers together, with API rows, demos and regenerated `llms` artifacts;
-what shipped is listed in [`CHANGELOG.md`](CHANGELOG.md) under
-"1.1.2". Order for the next releases: G3 + W7 → G5 → W8 → W5 / W6 → G6, plus the
-`@oge-ui/locales` packs left from W4.
-
-| Wave | Scope                                                                                                                                                                                                                                                                                                                                                                                                       | Status  |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| W0   | Green CI: Angular 22.2 / Nx 23.2.1, zero-finding audit gate (`tools/audit-check.mjs` + dated `audit-allowlist.json`), SHA-pinned actions, harden-runner, Scorecard, sharded e2e with reports, fail on flaky                                                                                                                                                                                                 | Done    |
-| W1   | Quick fixes: SSR-safe React ids, RRULE UTC / `BYSETPOS` / `BYHOUR` / `RDATE` / `EXDATE`, CSV guard, state-snapshot sanitizers, `sanitizeUrl` allowlist, BPMN overlay `rel` + Trusted Types, control-char guard, localized grid labels, boolean cell text, `weekendDays`, RTL resize, Angular peers `>=22 <24`                                                                                               | Done    |
-| W2   | Accessibility: forced colors + focus-ring mixin, high-contrast theme, reduced motion, 24/44 px targets, keyboard alternatives for every drag, shared live announcer, edit-cell `aria-invalid`                                                                                                                                                                                                               | Done    |
-| W3   | Touch and mobile: shared pointer gesture (no HTML5 drag and drop), touch long press, adaptive bottom-sheet / full-screen popups, visual viewport + safe areas, grid `columnHidingMode: 'detail'`, scheduler `adaptiveView`                                                                                                                                                                                  | Done    |
-| G1   | Grid depth: cell ranges, clipboard paste, fill handle, undo, pinned + sticky rows, class hooks + conditional formats, Excel-style filter menu, async validators, auto-fit, cell hints, spans, cross-grid drag, pager first/last/go-to, `datetime` + intervals; rich XLSX/PDF; tree-list summaries + PDF + remote filtering; pivot chart binding, calculated fields, member filters, templates, layouts, PDF | Done    |
-| G4   | Inputs depth: mask engine + MaskedTextBox, DateBox segments, NumberBox typing / wheel, time 12h / seconds / Now, range presets + time ranges, ColorGradient, ColorPalette, CheckBoxGroup, ToggleGroup, remote load-on-scroll, TagBox parity + select all + limits, SelectBox templates + cancelable open/close, MultiColumnComboBox, TreeSelect chips, form server errors + conditional rules + `compare`   | Done    |
-| G2   | Charts depth: rotated bars, constant lines / strips, per-point colour, full data labels, panes, axis breaks, trendlines + indicators, pinch zoom, RTL, PDF / JPEG / print, draw-in animation; waterfall, box plot, histogram, Pareto, OHLC, stacked lines, nested donut, radial bar                                                                                                                         | Done    |
-| W4   | i18n: `locale` config + shared `Intl` formatter cache, declarative column formats, ICU-lite plurals, `@oge-ui/locales` packs (de, fr, es, it, pt-BR, tr, ja, zh-CN, ar, he) + `provideOgeLocale`, RTL in the commercial engines                                                                                                                                                                             | Partial |
-| G3   | Scheduling depth: scheduler timeline month/year + custom views, multi-level grouping, external drag, blocked slots, conflicts, recurrence editor parity, export; Gantt lag/lead, constraints, manual mode, task-list editing, WBS, split tasks, baselines, resources, MS Project XML; Kanban filter / sort, multi-drag, cross-board drag, undo, export                                                      | Planned |
-| W7   | Time zones: scheduler + Gantt `timeZone`, DST-safe slots, RRULE `TZID`, remote range loading                                                                                                                                                                                                                                                                                                                | Planned |
-| G5   | Overlay / navigation / BPMN depth: popover, confirm / alert / prompt, tooltip templates, context menu `open(x, y)`, non-modal window, load panel, menu radio items + overflow, tree-view drag between trees, drawer swipe; BPMN linting, pluggable panels, Camunda / Zeebe extensions, PNG export                                                                                                           | Planned |
-| W8   | New components: popover, avatar, badge, chip, alert, rating, OTP input, timeline, list view, data view, rich-text editor, gauge, sparkline, funnel, heatmap, treemap, sankey, filter builder, tile layout, FAB / speed dial, carousel, signature pad, transfer list and more                                                                                                                                | Planned |
-| W5   | SSR / test / release infra: hydration and SSR smoke specs, strict CSP + Trusted Types e2e, coverage thresholds, cross-browser + mobile Playwright projects, visual regression, provenance releases, SBOM, API reports, `publint` / `attw`, `size-limit`                                                                                                                                                     | Planned |
-| W6   | DX and docs: full-text search, StackBlitz, framework guides, ACR / VPAT, changelog page, token reference + ThemeBuilder, `@oge-ui/themes`, testing harnesses                                                                                                                                                                                                                                                | Planned |
-| G6   | AI: grid assistant (natural language → state), AI column, smart paste, AI prompt + chat components                                                                                                                                                                                                                                                                                                          | Planned |
-| W9   | Release 1.1.2: changelog + migration notes, `nx release`, publish, site deploy (no versioned docs archive)                                                                                                                                                                                                                                                                                                  | Done    |
-
-Outside 1.2: a third render layer (Vue / Web Components) and a Figma kit stay
-recorded as planned work (ADR 0001), not scheduled.
+> The React render layer — which families ship and every recorded
+> difference — is tracked in [`docs/REACT-PARITY.md`](docs/REACT-PARITY.md).
 
 ## 1. Data binding & data operations
 
