@@ -442,4 +442,59 @@ const exportSvg = async (): Promise<void> => {
 </>`,
     }),
   },
+  {
+    title: 'Live data',
+    source: reactDemoSource({
+      react: ['useMemo', 'useState'],
+      use: { '@oge-ui/react-charts': ['OgeChart'] },
+      types: { '@oge-ui/react-charts': ['OgeChartSeriesInput'] },
+      name: 'LiveData',
+      before: `const MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/** Six months from \`start\`; \`tick\` reshuffles the values. */
+function rows(start: number, tick: number) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const n = start + i;
+    const wave = Math.sin(n * 1.3 + tick * 2.1);
+    return {
+      month: MONTHS[n % MONTHS.length],
+      orders: Math.round(60 + wave * 35 + ((n * 17 + tick * 11) % 20)),
+      returns: Math.round(18 + Math.cos(n + tick) * 10),
+    };
+  });
+}
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'month', valueField: 'orders', name: 'Orders' },
+  { type: 'spline', argumentField: 'month', valueField: 'returns', name: 'Returns' },
+];`,
+      body: `const [start, setStart] = useState(0);
+const [tick, setTick] = useState(0);
+// a stable array per update: the chart tweens on each new one
+const data = useMemo(() => rows(start, tick), [start, tick]);`,
+      jsx: `<>
+  {/* Updates glide instead of jumping: marks are matched by series name
+      and category, so changed values tween, a new month grows from the
+      baseline and a dropped one shrinks into it, and the line morphs point
+      by point. Clicking a legend item fades that series out while the value
+      axis re-scales. New data mid-tween continues from the frame on
+      screen; the animation prop times it, and prefers-reduced-motion turns
+      it off. */}
+  <div className="mb-2 flex gap-2">
+    <button type="button" onClick={() => setTick(tick + 1)}>New values</button>
+    <button type="button" onClick={() => setStart(start + 1)}>Next month</button>
+  </div>
+  <OgeChart
+    dataSource={data}
+    series={series}
+    animation={{ duration: 600, easing: 'easeOut' }}
+    title="Live data"
+    style={{ height: 340 }}
+  />
+</>`,
+    }),
+  },
 ];

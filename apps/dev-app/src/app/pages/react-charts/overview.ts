@@ -20,6 +20,7 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { CHARTS_OVERVIEW_DEMOS } from './overview-snippets';
+import { liveDataRows } from '../charts/live-data';
 import { REACT_CHARTS_ANALYTICS_SECTIONS } from './analytics-demos';
 
 /**
@@ -39,6 +40,7 @@ export const REACT_CHARTS_OVERVIEW_SECTIONS = [
   'Annotations',
   'Range selector',
   'Selection, i18n & export',
+  'Live data',
   ...REACT_CHARTS_ANALYTICS_SECTIONS,
 ] as const;
 
@@ -264,6 +266,67 @@ function RangeSelectorDemo(): ReactNode {
 const buttonClass =
   'rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800';
 
+const liveSeries: OgeChartSeriesInput[] = [
+  {
+    type: 'bar',
+    argumentField: 'month',
+    valueField: 'orders',
+    name: 'Orders',
+  },
+  {
+    type: 'spline',
+    argumentField: 'month',
+    valueField: 'returns',
+    name: 'Returns',
+  },
+];
+const LIVE_ANIMATION = { duration: 600, easing: 'easeOut' } as const;
+
+function LiveDataDemo(): ReactNode {
+  const [start, setStart] = useState(0);
+  const [tick, setTick] = useState(0);
+  const [data, setData] = useState(() => liveDataRows(0, 0));
+  const update = (nextStart: number, nextTick: number): void => {
+    setStart(nextStart);
+    setTick(nextTick);
+    setData(liveDataRows(nextStart, nextTick));
+  };
+  return createElement(
+    'div',
+    null,
+    createElement(
+      'div',
+      { className: 'mb-2 flex gap-2' },
+      createElement(
+        'button',
+        {
+          type: 'button',
+          className: buttonClass,
+          onClick: () => update(start, tick + 1),
+        },
+        'New values',
+      ),
+      createElement(
+        'button',
+        {
+          type: 'button',
+          className: buttonClass,
+          onClick: () => update(start + 1, tick),
+        },
+        'Next month',
+      ),
+    ),
+    createElement(OgeChart, {
+      className: 'oge-live-data-chart',
+      dataSource: data,
+      series: liveSeries,
+      animation: LIVE_ANIMATION,
+      title: 'Live data',
+      style: { height: 340 },
+    }),
+  );
+}
+
 function SelectionDemo(): ReactNode {
   const chart = useRef<OgeChartHandle>(null);
   const [selected, setSelected] = useState<readonly OgeChartPointRef[]>([]);
@@ -447,6 +510,21 @@ function SelectionDemo(): ReactNode {
     >
       <app-react-host [render]="selection" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="[
+        'data-change tweens',
+        'enter / exit',
+        'legend fade',
+        'motion tokens',
+      ]"
+      heading="Live data"
+      description="Updates glide instead of jumping. Marks are matched by series name and category: changed values tween, a new month grows from the baseline, a dropped one shrinks into it, and the line morphs point by point. Clicking a legend item fades the series out while the value axis re-scales. New data arriving mid-tween continues from the frame on screen. <code>animation</code> sets the timing, the easing presets follow the motion tokens, and <code>prefers-reduced-motion</code> turns it all off."
+      [code]="demos[11].source"
+      language="tsx"
+    >
+      <app-react-host [render]="liveData" />
+    </app-demo-card>
   `,
 })
 export class ReactChartsOverviewDemos {
@@ -519,4 +597,5 @@ export class ReactChartsOverviewDemos {
     });
   protected readonly rangeSelector = () => createElement(RangeSelectorDemo);
   protected readonly selection = () => createElement(SelectionDemo);
+  protected readonly liveData = () => createElement(LiveDataDemo);
 }

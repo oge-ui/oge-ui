@@ -184,6 +184,7 @@ describe('React pie & polar depth', () => {
       <OgePieChart<Row>
         dataSource={data}
         argumentField="k"
+        animation={false}
         valueField="v"
         type="doughnut"
         label={{ visible: true, position: 'inside' }}
@@ -200,6 +201,7 @@ describe('React pie & polar depth', () => {
       <OgePieChart<Row>
         dataSource={data}
         argumentField="k"
+        animation={false}
         valueField="v"
         type="doughnut"
         series={[{ name: '2025' }, { name: '2026', valueField: 'w' }]}

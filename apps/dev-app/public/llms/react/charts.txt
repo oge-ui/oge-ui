@@ -145,7 +145,7 @@ _Appearance & i18n_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `title / subtitle` | `string` | `''` | Headings above the plot. |
-| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions plus a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation. `{ enabled?, duration? (ms, 600), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; `false` turns both off and `prefers-reduced-motion: reduce` always does. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions, a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation — and tweens on every later data change: marks are matched by series name and category and glide to their new geometry, new marks grow from the baseline, removed ones shrink to it, line and area paths morph point by point; a legend toggle fades the series out (or in) while the value axis re-scales. New data arriving mid-tween continues from the frame on screen. Resizes, zoom and pan stay immediate. `{ enabled?, duration? (ms, 600 — draw-in and tweens), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; the presets follow the motion tokens (`easeOut` → `--oge-motion-easing-decelerate`, `easeIn` → `-accelerate`, `ease`/`easeInOut` → `-standard`). `false` turns everything off and `prefers-reduced-motion: reduce` always does. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
 | `messages` | `Partial<OgeChartsMessages>` | `{}` | Per-instance message overrides, merged over the provider config per top-level block. |
 | `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-chart` host element — give it a height (`style={{ height: 380 }}`). |
@@ -229,6 +229,7 @@ _Template directives (render props)_
 | `colorField / customizePoint` | `field / (info: OgeChartPointInfo) => OgeChartPointStyle` | `—` | Per-slice colour from the data, or per-slice `{ color?, label?, description? }` overrides; the legend follows, and `description` is spoken in the tooltip and the sr table. |
 | `series` | `readonly OgePieSeriesInput[]` | `[]` | Nested doughnut: one ring per entry, inner → outer (`{ name?, dataSource?, argumentField?, valueField?, colorField?, customizePoint?, label? }` — unset fields fall back to the chart props). Slices of the same argument share a colour and one legend button across rings; the sr table gets a column per ring, the tooltip prefixes the ring name, `onSliceClick` carries `ringIndex`/`ringName`. Small-value grouping does not apply to rings. |
 | `selectedSlices / defaultSelectedSlices` | `readonly number[]` | `undefined / []` | Selected slice indexes — selected slices explode. Controlled when `selectedSlices` is provided. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover transitions plus an arc tween on data changes: slices matched by ring and argument sweep to their new angles, a new slice opens from the seam where it appears and a removed one closes onto its neighbours' seam; new data mid-tween continues from the frame on screen. `{ enabled?, duration? (ms, 600), easing? }` as on the cartesian chart; `false` turns it off and `prefers-reduced-motion: reduce` always does. |
 | `legend / tooltipEnabled / palette / title / locale / messages` | `see OgeChart` | `—` | Shared options with the cartesian chart. |
 | `renderLegendItem / renderLabel / className / style` | `see OgeChart` | `—` | The legend and data-label render props (`*ogeChartLegendTemplate` / `*ogeChartLabelTemplate`) and the host styling props. |
 
@@ -1910,6 +1911,68 @@ export function SelectableChart() {
         onPointClick={(event) => {
           lastPoint.current = event;
         }}
+        style={{ height: 340 }}
+      />
+    </>
+  );
+}
+```
+
+### Live data
+
+```ts
+'use client';
+
+import { useMemo, useState } from 'react';
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/** Six months from `start`; `tick` reshuffles the values. */
+function rows(start: number, tick: number) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const n = start + i;
+    const wave = Math.sin(n * 1.3 + tick * 2.1);
+    return {
+      month: MONTHS[n % MONTHS.length],
+      orders: Math.round(60 + wave * 35 + ((n * 17 + tick * 11) % 20)),
+      returns: Math.round(18 + Math.cos(n + tick) * 10),
+    };
+  });
+}
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'month', valueField: 'orders', name: 'Orders' },
+  { type: 'spline', argumentField: 'month', valueField: 'returns', name: 'Returns' },
+];
+
+export function LiveData() {
+  const [start, setStart] = useState(0);
+  const [tick, setTick] = useState(0);
+  // a stable array per update: the chart tweens on each new one
+  const data = useMemo(() => rows(start, tick), [start, tick]);
+  return (
+    <>
+      {/* Updates glide instead of jumping: marks are matched by series name
+          and category, so changed values tween, a new month grows from the
+          baseline and a dropped one shrinks into it, and the line morphs point
+          by point. Clicking a legend item fades that series out while the value
+          axis re-scales. New data mid-tween continues from the frame on
+          screen; the animation prop times it, and prefers-reduced-motion turns
+          it off. */}
+      <div className="mb-2 flex gap-2">
+        <button type="button" onClick={() => setTick(tick + 1)}>New values</button>
+        <button type="button" onClick={() => setStart(start + 1)}>Next month</button>
+      </div>
+      <OgeChart
+        dataSource={data}
+        series={series}
+        animation={{ duration: 600, easing: 'easeOut' }}
+        title="Live data"
         style={{ height: 340 }}
       />
     </>

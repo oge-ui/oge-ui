@@ -4,6 +4,7 @@ import {
   Fragment,
   forwardRef,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,6 +17,18 @@ import {
 } from 'react';
 import {
   buildPieScene,
+  chartAnimationEasing,
+  chartEasingFunction,
+  chartPrefersReducedMotion,
+  createChartTweenDriver,
+  interpolatePieFrames,
+  pieShouldTween,
+  pieTweenFrame,
+  resolveChartAnimation,
+  type OgeChartAnimationOptions,
+  type OgeChartTweenDriver,
+  type OgePieScene,
+  type OgePieTweenFrame,
   mergeOgeChartsMessages,
   pieAriaLabel,
   pieSelectedAnnouncement,
@@ -40,6 +53,11 @@ import {
 import { useOgeChartsConfig } from './charts-config';
 import { ChartDataLabel } from './data-label';
 import { cx, useChartSize, useControllable, useStable } from './hooks';
+
+// a layout effect in the browser (no painted frame of the target), a plain
+// effect on the server
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 const EMPTY: readonly never[] = [];
 const NO_OPTIONS = {};
@@ -73,6 +91,12 @@ export interface OgePieChartProps<T extends object = Record<string, unknown>> {
   readonly legend?: OgeChartLegendOptions;
   readonly tooltipEnabled?: boolean;
   readonly palette?: readonly string[];
+  /**
+   * Hover transitions plus the arc tween on data changes (slices sweep to
+   * their new angles; `{ enabled, duration, easing }`);
+   * `prefers-reduced-motion` always wins. Default `true`.
+   */
+  readonly animation?: boolean | OgeChartAnimationOptions;
   readonly title?: string;
   readonly locale?: string;
   readonly messages?: Partial<OgeChartsMessages>;
@@ -189,6 +213,47 @@ function OgePieChartInner<T extends object>(
       locale,
     ],
   );
+  // data changes sweep the slices from the frame on screen
+  const animationOption = useStable(props.animation ?? true);
+  const [reducedMotion] = useState(chartPrefersReducedMotion);
+  const animation = useMemo(
+    () => resolveChartAnimation(animationOption, reducedMotion),
+    [animationOption, reducedMotion],
+  );
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [tweenFrame, setTweenFrame] = useState<OgePieTweenFrame<T> | null>(
+    null,
+  );
+  const tweenRef = useRef<OgeChartTweenDriver<OgePieTweenFrame<T>> | null>(
+    null,
+  );
+  if (tweenRef.current === null) {
+    tweenRef.current = createChartTweenDriver<OgePieTweenFrame<T>>(
+      interpolatePieFrames,
+      setTweenFrame,
+    );
+  }
+  const tweenedScene = useRef<OgePieScene<T> | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    const prev = tweenedScene.current;
+    tweenedScene.current = scene;
+    const driver = tweenRef.current as OgeChartTweenDriver<OgePieTweenFrame<T>>;
+    if (!animation.tweens || !pieShouldTween(prev, scene)) {
+      driver.cancel();
+      return;
+    }
+    driver.run(pieTweenFrame(prev as OgePieScene<T>), pieTweenFrame(scene), {
+      duration: animation.duration,
+      easing: chartEasingFunction(
+        chartAnimationEasing(animation, rootRef.current),
+      ),
+    });
+    // only a new scene starts (or retargets) a tween
+  }, [scene]);
+  useEffect(() => () => tweenRef.current?.cancel(), []);
+  const drawnSlices = tweenFrame?.sliceVms ?? scene.slices;
+  const drawnLabels = tweenFrame?.labelVms ?? scene.labelVms;
+
   const srTable = useMemo(() => pieSrTable(scene, locale), [scene, locale]);
   const tooltipVm = tooltipEnabled ? pieTooltip(scene, hoverKey, locale) : null;
   const isSelected = (index: number): boolean => selectedSlices.includes(index);
@@ -226,7 +291,13 @@ function OgePieChartInner<T extends object>(
 
   return (
     <div
-      className={cx('oge-chart', 'oge-pie-chart', props.className)}
+      ref={rootRef}
+      className={cx(
+        'oge-chart',
+        'oge-pie-chart',
+        !animation.transitions && 'oge-chart-static',
+        props.className,
+      )}
       style={props.style}
     >
       {title ? <div className="oge-chart-title">{title}</div> : null}
@@ -279,7 +350,7 @@ function OgePieChartInner<T extends object>(
             height={size.height}
             viewBox={`0 0 ${size.width} ${size.height}`}
           >
-            {scene.slices.map((vm) => (
+            {drawnSlices.map((vm) => (
               <path
                 key={vm.key}
                 className={cx(
@@ -299,7 +370,7 @@ function OgePieChartInner<T extends object>(
                 onMouseLeave={() => setHoverKey(null)}
               />
             ))}
-            {scene.labelVms.map((labelVm) => (
+            {drawnLabels.map((labelVm) => (
               <Fragment key={labelVm.key}>
                 {labelVm.connector !== null ? (
                   <polyline

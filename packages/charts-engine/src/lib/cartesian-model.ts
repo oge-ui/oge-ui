@@ -384,6 +384,12 @@ export interface OgeChartRenderSeries {
   readonly dashArray: string | null;
   readonly strokeWidth: number;
   readonly opacity: number;
+  /**
+   * Tween frames only: the fade (0–1) of a series entering or leaving — a
+   * legend toggle, a series added to or removed from the data. Multiply it
+   * into the series group's opacity; unset = 1.
+   */
+  readonly fade?: number;
 }
 
 /** Marker radius when a render marker carries none (bubbles do). */
@@ -529,6 +535,10 @@ export interface OgeChartAxisLabelVm {
   readonly axis: 'argument' | 'value';
   /** Value axes: the `valueAxis` index. */
   readonly axisIndex: number;
+  /** Value axes: the tick value (tweens slide a tick to its new place). */
+  readonly value?: number;
+  /** Tween frames only: a tick fading in or out; unset = 1. */
+  readonly opacity?: number;
 }
 
 /** An axis title, in svg px (`transform` carries the rotation). */
@@ -1193,6 +1203,7 @@ export function buildCartesianScene<T>(
             transform: null,
             axis: 'value',
             axisIndex: index,
+            value: tick,
           });
         }
       }
@@ -1231,6 +1242,7 @@ export function buildCartesianScene<T>(
           transform: null,
           axis: 'value',
           axisIndex: index,
+          value: ticks[position],
         });
       }
     }

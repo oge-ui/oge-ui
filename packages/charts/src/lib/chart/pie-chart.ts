@@ -1,13 +1,15 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
+  PLATFORM_ID,
   ViewEncapsulation,
   afterNextRender,
   computed,
   contentChild,
+  effect,
   inject,
   input,
   model,
@@ -37,6 +39,17 @@ import {
   type OgeChartSmallValuesGrouping,
   type OgePieSeriesInput,
   type OgePieSliceVm,
+  type OgeChartAnimationOptions,
+  type OgePieScene,
+  type OgePieTweenFrame,
+  chartAnimationEasing,
+  chartEasingFunction,
+  chartPrefersReducedMotion,
+  createChartTweenDriver,
+  interpolatePieFrames,
+  pieShouldTween,
+  pieTweenFrame,
+  resolveChartAnimation,
   ogeCheckChartsLicense,
 } from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
@@ -64,7 +77,10 @@ type SliceVm<T> = OgePieSliceVm<T>;
   styleUrl: './chart.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  host: { class: 'oge-chart oge-pie-chart' },
+  host: {
+    class: 'oge-chart oge-pie-chart',
+    '[class.oge-chart-static]': '!resolvedAnimation().transitions',
+  },
   template: `
     @if (title()) {
       <div class="oge-chart-title">{{ title() }}</div>
@@ -163,7 +179,7 @@ type SliceVm<T> = OgePieSliceVm<T>;
               </text>
             }
           }
-          @if (slices().length === 0) {
+          @if (scene().slices.length === 0) {
             <text
               class="oge-chart-no-data"
               [attr.x]="width() / 2"
@@ -251,6 +267,12 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   readonly legend = input<OgeChartLegendOptions>({});
   readonly tooltipEnabled = input(true);
   readonly palette = input<readonly string[] | undefined>(undefined);
+  /**
+   * Hover transitions plus the arc tween on data changes (slices sweep to
+   * their new angles; `{ enabled, duration, easing }`);
+   * `prefers-reduced-motion` always wins.
+   */
+  readonly animation = input<boolean | OgeChartAnimationOptions>(true);
   readonly title = input('');
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input<Partial<OgeChartsMessages>>({});
@@ -287,6 +309,20 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   protected readonly hoverKey = signal<string | null>(null);
   protected readonly announcement = signal('');
 
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly reducedMotion = chartPrefersReducedMotion();
+  protected readonly resolvedAnimation = computed(() =>
+    resolveChartAnimation(this.animation(), this.reducedMotion),
+  );
+  /** The frame on screen while an arc tween runs; `null` = the scene. */
+  private readonly tweenFrame = signal<OgePieTweenFrame<T> | null>(null);
+  private readonly tween = createChartTweenDriver<OgePieTweenFrame<T>>(
+    interpolatePieFrames,
+    (frame) => this.tweenFrame.set(frame),
+  );
+  private tweenedScene: OgePieScene<T> | null = null;
+
   constructor() {
     ogeCheckChartsLicense();
     const destroyRef = inject(DestroyRef);
@@ -296,6 +332,34 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
       );
       destroyRef.onDestroy(stop);
     });
+    // data changes sweep the slices from the frame on screen
+    effect(() => {
+      const next = this.scene();
+      const prev = this.tweenedScene;
+      this.tweenedScene = next;
+      untracked(() => {
+        const animation = this.resolvedAnimation();
+        if (
+          !this.isBrowser ||
+          !animation.tweens ||
+          !pieShouldTween(prev, next)
+        ) {
+          this.tween.cancel();
+          return;
+        }
+        this.tween.run(
+          pieTweenFrame(prev as OgePieScene<T>),
+          pieTweenFrame(next),
+          {
+            duration: animation.duration,
+            easing: chartEasingFunction(
+              chartAnimationEasing(animation, this.hostEl.nativeElement),
+            ),
+          },
+        );
+      });
+    });
+    destroyRef.onDestroy(() => this.tween.cancel());
   }
 
   protected readonly legendVisible = computed(
@@ -306,7 +370,7 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   );
 
   /** The engine's view model (ADR 0003): slices, rings, labels, geometry. */
-  private readonly scene = computed(() =>
+  protected readonly scene = computed(() =>
     buildPieScene<T>({
       dataSource: this.dataSource(),
       argumentField: this.argumentField(),
@@ -329,9 +393,11 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   );
 
   protected readonly slices = computed<readonly SliceVm<T>[]>(
-    () => this.scene().slices,
+    () => this.tweenFrame()?.sliceVms ?? this.scene().slices,
   );
-  protected readonly labelVms = computed(() => this.scene().labelVms);
+  protected readonly labelVms = computed(
+    () => this.tweenFrame()?.labelVms ?? this.scene().labelVms,
+  );
   protected readonly legendItems = computed(() => this.scene().legendItems);
   protected readonly srTable = computed(() =>
     pieSrTable(this.scene(), this.effectiveLocale()),
@@ -395,6 +461,6 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   }
 
   protected readonly rootAriaLabel = computed(() =>
-    pieAriaLabel(this.msg(), this.title(), this.slices().length),
+    pieAriaLabel(this.msg(), this.title(), this.scene().slices.length),
   );
 }

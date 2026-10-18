@@ -170,7 +170,7 @@ export const OGE_REACT_CHART_API: ApiSections = {
           type: 'boolean | OgeChartAnimationOptions',
           default: 'true',
           description:
-            "Hover/selection transitions plus a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation. <code>{ enabled?, duration? (ms, 600), easing? ('linear' | 'ease' | 'easeIn' | 'easeOut' | 'easeInOut') }</code>; <code>false</code> turns both off and <code>prefers-reduced-motion: reduce</code> always does.",
+            "Hover/selection transitions, a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation — and tweens on every later data change: marks are matched by series name and category and glide to their new geometry, new marks grow from the baseline, removed ones shrink to it, line and area paths morph point by point; a legend toggle fades the series out (or in) while the value axis re-scales. New data arriving mid-tween continues from the frame on screen. Resizes, zoom and pan stay immediate. <code>{ enabled?, duration? (ms, 600 — draw-in and tweens), easing? ('linear' | 'ease' | 'easeIn' | 'easeOut' | 'easeInOut') }</code>; the presets follow the motion tokens (<code>easeOut</code> → <code>--oge-motion-easing-decelerate</code>, <code>easeIn</code> → <code>-accelerate</code>, <code>ease</code>/<code>easeInOut</code> → <code>-standard</code>). <code>false</code> turns everything off and <code>prefers-reduced-motion: reduce</code> always does.",
         },
         {
           name: 'locale',
@@ -598,6 +598,13 @@ export const OGE_REACT_PIE_CHART_API: ApiSections = {
           default: 'undefined / []',
           description:
             'Selected slice indexes — selected slices explode. Controlled when <code>selectedSlices</code> is provided.',
+        },
+        {
+          name: 'animation',
+          type: 'boolean | OgeChartAnimationOptions',
+          default: 'true',
+          description:
+            "Hover transitions plus an arc tween on data changes: slices matched by ring and argument sweep to their new angles, a new slice opens from the seam where it appears and a removed one closes onto its neighbours' seam; new data mid-tween continues from the frame on screen. <code>{ enabled?, duration? (ms, 600), easing? }</code> as on the cartesian chart; <code>false</code> turns it off and <code>prefers-reduced-motion: reduce</code> always does.",
         },
         {
           name: 'legend / tooltipEnabled / palette / title / locale / messages',

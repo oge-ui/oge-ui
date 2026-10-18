@@ -7,6 +7,39 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Chart tweens — `@oge-ui/charts-engine`, `@oge-ui/charts`, `@oge-ui/react-charts`
+
+- **Chart updates no longer jump.** After the first-render draw-in, every
+  data change animates: bars, points and candles are matched by series name
+  and category and glide to their new geometry. New marks grow from the
+  value baseline, removed ones shrink into it, and line and area paths morph
+  point by point, resampling when the point count changes. New data arriving
+  mid-tween continues from the frame on screen. Column/bar, line, spline,
+  area and scatter are covered, plus the overlays drawn with them (guides,
+  annotations, indicator paths). Resizes, zoom and pan stay immediate.
+- **Legend toggles fade.** A hidden series fades out while the value axis
+  re-scales: kept ticks and grid lines slide to their new place, new ones fade
+  in from where their value sat. Showing it again reverses that.
+- **Pie and doughnut arc tween.** Slices sweep to their new angles; a new
+  slice opens from the seam where it appears and a removed one closes onto its
+  neighbours. `OgePieChart` gains the `animation` input / prop
+  (`boolean | OgeChartAnimationOptions`, default `true`), with the same options
+  as the cartesian chart.
+- **The easing presets follow the motion tokens.** `easeOut` reads
+  `--oge-motion-easing-decelerate`, `easeIn` reads `-accelerate`, and
+  `ease`/`easeInOut` read `-standard`. The old curves remain only as SSR
+  fallbacks, so retiming the suite from `:root` retimes the charts too. The
+  draw-in, gauges and tweens share the curve.
+- `animation: false` and `prefers-reduced-motion: reduce` turn the tweens off
+  along with everything else. The gauges keep their own CSS transitions.
+- Engine: `cartesianTweenFrame`, `interpolateChartFrames`,
+  `cartesianShouldTween`, `pieTweenFrame`, `interpolatePieFrames`,
+  `pieShouldTween`, `interpolateChartPath`, `createChartTweenDriver`,
+  `chartEasingFunction`, `chartAnimationEasing` and `chartValueBaselinePx`.
+  The view models gain optional fields: `OgeChartRenderSeries.fade`, `value` /
+  `opacity` on axis labels, and `axis` / `value` / `pane` / `opacity` on grid
+  lines. A "Live data" demo is on the charts overview.
+
 ### Layout motion — `@oge-ui/behavior`, `@oge-ui/layout`, `@oge-ui/react-layout`, `@oge-ui/grid` (tokens), `@oge-ui/locales`
 
 - **Nothing teleports in the tile layout any more.** Dragging a tile lifts it

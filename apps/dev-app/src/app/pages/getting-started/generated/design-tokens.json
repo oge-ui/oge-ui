@@ -1271,6 +1271,7 @@
       "u": [
         "@oge-ui/ai",
         "@oge-ui/charts",
+        "@oge-ui/charts-engine",
         "@oge-ui/grid",
         "@oge-ui/inputs",
         "@oge-ui/layout",

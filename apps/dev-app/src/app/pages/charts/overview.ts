@@ -35,6 +35,7 @@ import {
   EVENTS_EXPORT_SNIPPET,
   FINANCIAL_SNIPPET,
   GETTING_STARTED_SNIPPET,
+  LIVE_DATA_SNIPPET,
   PIE_SNIPPET,
   POLAR_SNIPPET,
   RANGE_SELECTOR_SNIPPET,
@@ -43,6 +44,7 @@ import {
   TIME_AXIS_SNIPPET,
   ZOOM_SNIPPET,
 } from './overview-snippets';
+import { liveDataRows } from './live-data';
 
 const SECTIONS = [
   'Getting started',
@@ -56,6 +58,7 @@ const SECTIONS = [
   'Annotations',
   'Range selector',
   'Selection, i18n & export',
+  'Live data',
   ...CHARTS_ANALYTICS_SECTIONS,
 ] as const;
 
@@ -367,6 +370,44 @@ const SECTIONS = [
           style="height: 340px"
         />
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'data-change tweens',
+          'enter / exit',
+          'legend fade',
+          'motion tokens',
+        ]"
+        heading="Live data"
+        description="Updates glide instead of jumping. Marks are matched by series name and category: changed values tween, a new month grows from the baseline, a dropped one shrinks into it, and the line morphs point by point. Clicking a legend item fades the series out while the value axis re-scales. New data arriving mid-tween continues from the frame on screen. <code>animation</code> sets the timing, the easing presets follow the motion tokens, and <code>prefers-reduced-motion</code> turns it all off."
+        [code]="liveDataSnippet"
+        language="ts"
+      >
+        <div class="mb-2 flex gap-2">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="liveShuffle()"
+          >
+            New values
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="liveShift()"
+          >
+            Next month
+          </button>
+        </div>
+        <oge-chart
+          class="oge-live-data-chart"
+          [dataSource]="liveData()"
+          [series]="liveSeries"
+          [animation]="{ duration: 600, easing: 'easeOut' }"
+          title="Live data"
+          style="height: 340px"
+        />
+      </app-demo-card>
       <app-charts-analytics-demos />
     }
   `,
@@ -386,6 +427,35 @@ export class ChartsOverviewPage {
   protected readonly annotationsSnippet = ANNOTATIONS_SNIPPET;
   protected readonly rangeSelectorSnippet = RANGE_SELECTOR_SNIPPET;
   protected readonly eventsExportSnippet = EVENTS_EXPORT_SNIPPET;
+  protected readonly liveDataSnippet = LIVE_DATA_SNIPPET;
+
+  private liveTick = 0;
+  private liveStart = 0;
+  protected readonly liveData = signal(liveDataRows(0, 0));
+  protected readonly liveSeries: OgeChartSeriesInput[] = [
+    {
+      type: 'bar',
+      argumentField: 'month',
+      valueField: 'orders',
+      name: 'Orders',
+    },
+    {
+      type: 'spline',
+      argumentField: 'month',
+      valueField: 'returns',
+      name: 'Returns',
+    },
+  ];
+
+  protected liveShuffle(): void {
+    this.liveTick++;
+    this.liveData.set(liveDataRows(this.liveStart, this.liveTick));
+  }
+
+  protected liveShift(): void {
+    this.liveStart++;
+    this.liveData.set(liveDataRows(this.liveStart, this.liveTick));
+  }
 
   protected readonly basicData = [
     { quarter: 'Q1', product: 120, services: 60 },

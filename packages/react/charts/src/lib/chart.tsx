@@ -6,6 +6,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -29,8 +30,16 @@ import {
   cartesianSeriesEnterOrigin,
   cartesianSeriesPane,
   cartesianZoomRect,
+  cartesianShouldTween,
+  cartesianTweenFrame,
+  chartAnimationEasing,
   chartAnimationVars,
+  chartEasingFunction,
   chartPrefersReducedMotion,
+  createChartTweenDriver,
+  interpolateChartFrames,
+  type OgeChartTweenDriver,
+  type OgeChartTweenFrame,
   chartTouchAction,
   chartTouchGestures,
   createChartPinchTracker,
@@ -104,6 +113,10 @@ import {
 } from './hooks';
 
 const EMPTY: readonly never[] = [];
+// a layout effect in the browser (no painted frame of the target), a plain
+// effect on the server
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
 const NO_OPTIONS = {};
 
 /** Props of `<OgeChart>` — the React face of `<oge-chart>`'s inputs and outputs. */
@@ -356,6 +369,44 @@ function OgeChartInner<T extends object>(
       measureLabel,
     ],
   );
+
+  // data-change / legend-toggle tweens glide from the frame on screen
+  const [tweenFrame, setTweenFrame] = useState<OgeChartTweenFrame | null>(null);
+  const tweenRef = useRef<OgeChartTweenDriver<OgeChartTweenFrame> | null>(null);
+  if (tweenRef.current === null) {
+    tweenRef.current = createChartTweenDriver(
+      interpolateChartFrames,
+      setTweenFrame,
+    );
+  }
+  const tweenedScene = useRef<OgeCartesianScene<T> | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    const prev = tweenedScene.current;
+    tweenedScene.current = scene;
+    const driver = tweenRef.current as OgeChartTweenDriver<OgeChartTweenFrame>;
+    if (!animation.tweens || drawingIn || !cartesianShouldTween(prev, scene)) {
+      // a resize / zoom mid-tween lands on the new scene at once
+      driver.cancel();
+      return;
+    }
+    driver.run(
+      cartesianTweenFrame(prev as OgeCartesianScene<T>),
+      cartesianTweenFrame(scene),
+      {
+        duration: animation.duration,
+        easing: chartEasingFunction(
+          chartAnimationEasing(animation, rootRef.current),
+        ),
+      },
+    );
+    // only a new scene starts (or retargets) a tween
+  }, [scene]);
+  useEffect(() => () => tweenRef.current?.cancel(), []);
+  const drawnSeries = tweenFrame?.renderSeries ?? scene.renderSeries;
+  const drawnGuides = tweenFrame?.guides ?? scene.guides;
+  const drawnGridLines = tweenFrame?.gridLines ?? scene.gridLines;
+  const drawnAxisLabels = tweenFrame?.axisLabels ?? scene.axisLabels;
+  const drawnAnnotations = tweenFrame?.annotations ?? scene.annotations;
 
   // the draw-in runs once: from the first render with data, for `duration`
   const sceneEmpty = scene.empty;
@@ -925,7 +976,7 @@ function OgeChartInner<T extends object>(
             </defs>
             <g transform={`translate(${plot.x},${plot.y})`}>
               {/* strips (bands) */}
-              {scene.guides.map((guide, index) =>
+              {drawnGuides.map((guide, index) =>
                 guide.kind === 'band' ? (
                   <rect
                     key={index}
@@ -939,13 +990,14 @@ function OgeChartInner<T extends object>(
                 ) : null,
               )}
               {/* grid */}
-              {scene.gridLines.map((line, index) => (
+              {drawnGridLines.map((line, index) => (
                 <line
                   key={index}
                   className={cx(
                     'oge-chart-grid',
                     line.minor && 'oge-chart-grid-minor',
                   )}
+                  opacity={line.opacity}
                   x1={line.x1}
                   x2={line.x2}
                   y1={line.y1}
@@ -957,7 +1009,7 @@ function OgeChartInner<T extends object>(
                 className="oge-chart-plot-frame"
                 transform={scene.frame.transform ?? undefined}
               >
-                {renderSeries.map((rs) => (
+                {drawnSeries.map((rs) => (
                   <g
                     key={rs.seriesIndex}
                     clipPath={`url(#${clipId}-${cartesianSeriesPane(scene, rs.seriesIndex)})`}
@@ -977,10 +1029,10 @@ function OgeChartInner<T extends object>(
                             }
                           : undefined
                       }
-                      opacity={chartSeriesGroupOpacity(
-                        hoveredLegend,
-                        rs.seriesIndex,
-                      )}
+                      opacity={
+                        chartSeriesGroupOpacity(hoveredLegend, rs.seriesIndex) *
+                        (rs.fade ?? 1)
+                      }
                     >
                       {rs.areaPathD !== null ? (
                         <path
@@ -1111,7 +1163,7 @@ function OgeChartInner<T extends object>(
                 ))}
               </g>
               {/* constant lines / strip lines */}
-              {scene.guides.map((guide, index) =>
+              {drawnGuides.map((guide, index) =>
                 guide.kind === 'line' ? (
                   <line
                     key={index}
@@ -1137,7 +1189,7 @@ function OgeChartInner<T extends object>(
                   <path className="oge-chart-break-line" d={marker.lineD} />
                 </Fragment>
               ))}
-              {scene.guides.map((guide, index) =>
+              {drawnGuides.map((guide, index) =>
                 guide.label !== null ? (
                   <text
                     key={index}
@@ -1190,7 +1242,7 @@ function OgeChartInner<T extends object>(
                 />
               ) : null}
               {/* annotations */}
-              {scene.annotations.map((note, index) => (
+              {drawnAnnotations.map((note, index) => (
                 <Fragment key={index}>
                   {note.isPoint ? (
                     <>
@@ -1264,13 +1316,14 @@ function OgeChartInner<T extends object>(
               ))}
             </g>
             {/* axis labels + titles */}
-            {scene.axisLabels.map((label, index) => (
+            {drawnAxisLabels.map((label, index) => (
               <text
                 key={index}
                 className={cx(
                   'oge-chart-axis-label',
                   label.axis === 'argument' && 'oge-chart-arg-label',
                 )}
+                opacity={label.opacity}
                 x={label.x}
                 y={label.y}
                 textAnchor={label.anchor}
