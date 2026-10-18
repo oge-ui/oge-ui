@@ -105,6 +105,13 @@ export function beginOgeCarouselSwipe(event: OgePointerGestureInput & {
 export function beginOgeDrawerSwipe(event: OgePointerGestureInput, options: OgeDrawerSwipeOptions): OgePointerGestureHandle | null;
 
 // @public
+export function beginOgeToastSwipe(event: OgePointerGestureInput & {
+    readonly button?: number;
+}, options: OgeToastSwipeOptions): {
+    cancel(): void;
+} | null;
+
+// @public
 export function beginOgeTreeDrag(event: OgePointerGestureInput, options: OgeTreeDragOptions): OgePointerGestureHandle | null;
 
 // @public
@@ -286,6 +293,9 @@ export function createOgeLayoutAnimator<K>(options: OgeLayoutAnimatorOptions<K>)
 
 // @public
 export function createOgeOpenAiTransport(options: OgeAiOpenAiTransportOptions): OgeAiTransport;
+
+// @public
+export function createOgeTrackAnimator(root: HTMLElement, options: OgeTrackAnimatorOptions): OgeTrackAnimator;
 
 // @public
 export function createTreeSearchPredicate<T>(text: string, mode: OgeTreeSearchMode, accessors: readonly ((row: T) => unknown)[]): ((row: T) => boolean) | null;
@@ -1302,6 +1312,12 @@ export const OGE_TOAST_EXIT_MS = 150;
 export const OGE_TOAST_POSITIONS: readonly OgeToastPosition[];
 
 // @public
+export const OGE_TOAST_STACK_VISIBLE = 3;
+
+// @public
+export const OGE_TOAST_SWIPE_DISMISS = 48;
+
+// @public
 export const OGE_TOOLBAR_STOP_SELECTOR = "button, [href], input, select, textarea, [tabindex]";
 
 // @public
@@ -1582,6 +1598,9 @@ export interface OgeActionSheetCoreOptions {
 
 // @public
 export function ogeActionSheetDividerIndex(ordered: readonly OgeActionSheetItem[]): number;
+
+// @public
+export function ogeActionSheetExitGhost(layer: HTMLElement | null): void;
 
 // @public
 export interface OgeActionSheetItem {
@@ -5019,6 +5038,10 @@ export function ogeExitGhost(element: Element, options?: OgeExitGhostOptions): v
 export interface OgeExitGhostOptions {
     keyframes?: readonly Keyframe[];
     parent?: Element | null;
+    parts?: ReadonlyArray<{
+        readonly selector: string;
+        readonly keyframes: readonly Keyframe[];
+    }>;
     rect?: OgeRect;
 }
 
@@ -7979,7 +8002,10 @@ export interface OgeLayoutAnimator<K> {
 // @public
 export interface OgeLayoutAnimatorOptions<K> {
     enter?: boolean;
+    enterKeyframes?: readonly Keyframe[];
     exit?: boolean;
+    exitKeyframes?: readonly Keyframe[];
+    exitParent?: () => Element | null;
     limit?: number;
     query(): Iterable<readonly [K, HTMLElement]>;
     root: HTMLElement;
@@ -7994,6 +8020,9 @@ export interface OgeLayoutPlayOptions<K> {
     exclude?: Iterable<K>;
     scale?: boolean;
 }
+
+// @public
+export function ogeLayoutToastStack(region: HTMLElement): void;
 
 // @public
 export interface OgeListBoxClickInput {
@@ -9201,6 +9230,7 @@ export interface OgeOverlayConfig extends OgeOverlayTimings {
     toastMaxVisible: number;
     toastPosition: OgeToastPosition;
     toastProgressBar: boolean;
+    toastStacked: boolean;
 }
 
 // @public
@@ -11850,7 +11880,7 @@ export interface OgeToastClosedEvent {
 }
 
 // @public
-export type OgeToastCloseReason = 'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear';
+export type OgeToastCloseReason = 'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear' | 'swipe';
 
 // @public
 export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
@@ -11863,11 +11893,13 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
     error(message: string, options?: Omit<O, 'message' | 'severity'>): OgeToastRef;
     // (undocumented)
     info(message: string, options?: Omit<O, 'message' | 'severity'>): OgeToastRef;
+    isExpanded(position: OgeToastPosition): boolean;
     markReady(entries: readonly OgeToastEntry<O>[]): void;
     pause(entry: OgeToastEntry<O>): void;
     promise<T>(promise: Promise<T>, options: OgeToastPromiseBaseOptions<T, O>): OgeToastRef;
     regions(): OgeToastRegion<O>[];
     resume(entry: OgeToastEntry<O>): void;
+    setRegionExpanded(position: OgeToastPosition, cause: OgeToastExpandCause, on: boolean): void;
     show(toast: string | O): OgeToastRef;
     success(message: string, options?: Omit<O, 'message' | 'severity'>): OgeToastRef;
     // (undocumented)
@@ -11888,6 +11920,7 @@ export interface OgeToastDefaults {
     maxVisible: number;
     position: OgeToastPosition;
     progressBar: boolean;
+    stacked?: boolean;
 }
 
 // @public
@@ -11908,6 +11941,8 @@ export interface OgeToastEntry<O extends AnyToastOptions = OgeToastBaseOptions> 
     remaining: number;
     // @internal (undocumented)
     resolveClosed: (event: OgeToastClosedEvent) => void;
+    // @internal
+    stackPaused: boolean;
     // @internal (undocumented)
     startedAt: number;
     // @internal (undocumented)
@@ -11915,6 +11950,9 @@ export interface OgeToastEntry<O extends AnyToastOptions = OgeToastBaseOptions> 
     // @internal (undocumented)
     total: number;
 }
+
+// @public
+export type OgeToastExpandCause = 'hover' | 'focus';
 
 // @public
 export type OgeToastPosition = 'top-start' | 'top-center' | 'top-end' | 'bottom-start' | 'bottom-center' | 'bottom-end';
@@ -11948,13 +11986,24 @@ export class OgeToastRef<D = unknown> {
 
 // @public (undocumented)
 export interface OgeToastRegion<O extends AnyToastOptions> {
+    readonly expanded: boolean;
     // (undocumented)
     readonly position: OgeToastPosition;
+    readonly stacked: boolean;
     readonly visible: readonly OgeToastEntry<O>[];
 }
 
 // @public
 export type OgeToastSeverity = 'info' | 'success' | 'warning' | 'error';
+
+// @public
+export function ogeToastSwipeDismisses(deltaX: number): boolean;
+
+// @public
+export interface OgeToastSwipeOptions {
+    onFinish: (dismiss: boolean) => void;
+    toast: HTMLElement;
+}
 
 // @public
 export function ogeToggleAllValues<TItem>(current: readonly unknown[], items: readonly TItem[], valueOf: (item: TItem) => unknown, isDisabled: (item: TItem) => boolean, select: boolean, maxSelected?: number): readonly unknown[];
@@ -12297,6 +12346,24 @@ export interface OgeTooltipCoreOptions {
 
 // @public
 export type OgeTooltipShowMode = 'hover' | 'focus' | 'click' | 'manual';
+
+// @public
+export interface OgeTrackAnimator {
+    readonly animating: boolean;
+    cancel(): void;
+    capture(): void;
+    play(): Promise<void>;
+}
+
+// @public
+export interface OgeTrackAnimatorOptions {
+    duration?: OgeMotionDuration;
+    easing?: OgeMotionEasing;
+    property(): OgeTrackProperty;
+}
+
+// @public
+export type OgeTrackProperty = 'grid-template-columns' | 'grid-template-rows';
 
 // @public
 export function ogeTransferAnnouncement(template: string, count: number, list: string, locale?: string): string;
@@ -14246,6 +14313,9 @@ export interface OgeWindowCoreProps {
     // (undocumented)
     readonly resizable: boolean;
 }
+
+// @public
+export function ogeWindowExitGhost(panel: HTMLElement | null, parent: Element | null, rect?: OgeRect): void;
 
 // @public
 export type OgeWindowKeyCommand = {

@@ -4,6 +4,7 @@ import {
   Component,
   ElementRef,
   ViewEncapsulation,
+  afterNextRender,
   computed,
   contentChild,
   contentChildren,
@@ -89,6 +90,8 @@ let nextStepperId = 0;
     '[class.oge-stepper-vertical]': "orientation() === 'vertical'",
     '[class.oge-stepper-linear]': 'linear()',
     '[class.oge-disabled]': 'disabled()',
+    '[class.oge-stepper-anim-a]': 'panelPhase() === 1',
+    '[class.oge-stepper-anim-b]': 'panelPhase() === 2',
     '[attr.data-orientation]': 'orientation()',
     '[attr.data-display]': 'display()',
   },
@@ -342,6 +345,16 @@ export class OgeStepper {
 
   private readonly renderedIds = signal<ReadonlySet<string>>(new Set());
 
+  /**
+   * Alternates 1 ↔ 2 on every step change after the first render, which
+   * swaps between two identical fade keyframes and so replays the panel's
+   * entrance (the tab-panel approach). `0` means "never animated yet".
+   */
+  private readonly _panelPhase = signal<0 | 1 | 2>(0);
+  protected readonly panelPhase = this._panelPhase.asReadonly();
+  private panelMotionReady = false;
+  private lastPanelIndex = -1;
+
   protected readonly msg = computed<OgeStepperMessages>(() => ({
     ...this.config.messages,
     ...this.messages(),
@@ -413,6 +426,17 @@ export class OgeStepper {
       const index = untracked(this.activeIndex);
       if (count > 0 && index > count - 1) this.activeIndex.set(count - 1);
     });
+    // Replay the panel fade on a step change — never on the first render.
+    effect(() => {
+      const index = this.activeIndex();
+      untracked(() => {
+        const previous = this.lastPanelIndex;
+        this.lastPanelIndex = index;
+        if (!this.panelMotionReady || previous === index) return;
+        this._panelPhase.update((phase) => (phase === 1 ? 2 : 1));
+      });
+    });
+    afterNextRender(() => (this.panelMotionReady = true));
     // Remember which bodies have been shown, for keepAlive.
     effect(() => {
       const id = this.descriptors()[this.activeIndex()]?.id;

@@ -9,6 +9,12 @@
  * after mount via `markReady`, and provide the two live-region elements.
  */
 
+import { prefersReducedMotion } from '../a11y/motion';
+import {
+  beginPointerGesture,
+  type OgePointerGestureInput,
+} from '../gesture/pointer-gesture';
+
 // --- vocabulary -------------------------------------------------------------
 
 /** Visual + semantic severity of a toast. */
@@ -25,7 +31,7 @@ export type OgeToastPosition =
 
 /** Why a toast closed. */
 export type OgeToastCloseReason =
-  'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear';
+  'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear' | 'swipe';
 
 /**
  * Screen-reader announcement mode. When omitted it derives from severity:
@@ -125,6 +131,13 @@ export interface OgeToastDefaults {
   progressBar: boolean;
   /** Coalesce identical toasts into one with a count badge by default. */
   coalesceDuplicates: boolean;
+  /**
+   * Stack mode: each region collapses into a deck (the newest toast in
+   * front, up to {@link OGE_TOAST_STACK_VISIBLE} peeking behind it) that
+   * expands into a list on hover / focus-within, and toasts swipe away
+   * sideways. Optional so layers built before it keep type-checking.
+   */
+  stacked?: boolean;
 }
 
 export const OGE_DEFAULT_TOAST_DEFAULTS: OgeToastDefaults = {
@@ -133,7 +146,13 @@ export const OGE_DEFAULT_TOAST_DEFAULTS: OgeToastDefaults = {
   maxVisible: 5,
   progressBar: false,
   coalesceDuplicates: false,
+  stacked: false,
 };
+
+/** Toasts a collapsed stack shows: the front one and two peeking behind it. */
+export const OGE_TOAST_STACK_VISIBLE = 3;
+/** Horizontal travel (px) past which a released swipe dismisses a toast. */
+export const OGE_TOAST_SWIPE_DISMISS = 48;
 
 /**
  * Exit-transition length; must cover `--oge-toast-transition` (default
@@ -205,6 +224,8 @@ export interface OgeToastEntry<
   total: number;
   /** @internal */
   pauseCauses: number;
+  /** @internal paused because its stacked region is expanded */
+  stackPaused: boolean;
   /** @internal */
   resolveClosed: (event: OgeToastClosedEvent) => void;
 }
@@ -255,7 +276,14 @@ export interface OgeToastRegion<O extends AnyToastOptions> {
   readonly position: OgeToastPosition;
   /** Entries to render in this region — visible ones plus those exiting. */
   readonly visible: readonly OgeToastEntry<O>[];
+  /** Stack mode (config `toastStacked`): the region renders as a deck. */
+  readonly stacked: boolean;
+  /** A stacked region the pointer or focus is in — laid out as a list, timers paused. */
+  readonly expanded: boolean;
 }
+
+/** Why a stacked region is expanded — the pointer is over it, focus is in it. */
+export type OgeToastExpandCause = 'hover' | 'focus';
 
 export interface OgeToastCoreOptions {
   /** Live option defaults (a config read, so provider changes apply). */
@@ -281,6 +309,11 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
 
   private destroyed = false;
   private listening = false;
+  /** Stack mode: what keeps each region expanded. */
+  private readonly expandCauses = new Map<
+    OgeToastPosition,
+    Set<OgeToastExpandCause>
+  >();
 
   constructor(private readonly options: OgeToastCoreOptions) {}
 
@@ -319,6 +352,7 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
       remaining: 0,
       total: 0,
       pauseCauses: typeof document !== 'undefined' && document.hidden ? 1 : 0,
+      stackPaused: false,
       resolveClosed,
     };
     ref._close = () => this.dismiss(entry, 'api');
@@ -327,6 +361,8 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
     this.entries = [...this.entries, entry];
     this.announce(resolved);
     this.scheduleClose(entry);
+    // a toast arriving in an expanded stack waits like the rest of it
+    if (this.isExpanded(resolved.position)) this.setStackPause(entry, true);
     this.notify();
     return ref;
   }
@@ -418,7 +454,9 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
    * the same pass.
    */
   regions(): OgeToastRegion<O>[] {
-    const max = this.options.defaults().maxVisible;
+    const defaults = this.options.defaults();
+    const max = defaults.maxVisible;
+    const stacked = defaults.stacked ?? false;
     const grouped = new Map<OgeToastPosition, OgeToastEntry<O>[]>();
     for (const entry of this.entries) {
       const list = grouped.get(entry.options.position) ?? [];
@@ -437,7 +475,12 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
             shown++;
           }
         }
-        return { position, visible };
+        return {
+          position,
+          visible,
+          stacked,
+          expanded: stacked && this.isExpanded(position),
+        };
       },
     );
   }
@@ -466,9 +509,47 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
     setTimeout(() => {
       if (this.destroyed) return;
       this.entries = this.entries.filter((e) => e !== entry);
+      // an emptied region forgets its expansion — the pointer may never
+      // have left a node that was removed under it
+      const position = entry.options.position;
+      if (!this.entries.some((e) => e.options.position === position)) {
+        this.expandCauses.delete(position);
+      }
       entry.resolveClosed({ reason });
       this.notify();
     }, OGE_TOAST_EXIT_MS);
+  }
+
+  /**
+   * Stack mode: the pointer entered / left a stacked region, or focus moved
+   * in / out of it. While any cause holds, the region is expanded and every
+   * toast in it is paused; the last cause leaving collapses it and resumes
+   * them with their remaining time.
+   */
+  setRegionExpanded(
+    position: OgeToastPosition,
+    cause: OgeToastExpandCause,
+    on: boolean,
+  ): void {
+    const before = this.isExpanded(position);
+    const causes = new Set(this.expandCauses.get(position) ?? []);
+    if (on) causes.add(cause);
+    else causes.delete(cause);
+    if (causes.size) this.expandCauses.set(position, causes);
+    else this.expandCauses.delete(position);
+    const after = this.isExpanded(position);
+    if (before === after) return;
+    for (const entry of this.entries) {
+      if (entry.options.position === position) {
+        this.setStackPause(entry, after);
+      }
+    }
+    this.notify();
+  }
+
+  /** Whether a stacked region is expanded (any cause holds). */
+  isExpanded(position: OgeToastPosition): boolean {
+    return (this.expandCauses.get(position)?.size ?? 0) > 0;
   }
 
   /** Ref-counted pause (hover / focus-within / tab hidden). */
@@ -513,6 +594,16 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
     this.listening = true;
     this.destroyed = false;
     document.addEventListener('visibilitychange', this.onVisibilityChange);
+  }
+
+  private setStackPause(entry: OgeToastEntry<O>, on: boolean): void {
+    if (on && !entry.stackPaused && !entry.closing) {
+      entry.stackPaused = true;
+      this.pause(entry);
+    } else if (!on && entry.stackPaused) {
+      entry.stackPaused = false;
+      this.resume(entry);
+    }
   }
 
   private notify(): void {
@@ -667,4 +758,113 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
       else this.resume(entry);
     }
   };
+}
+
+// --- stack mode: the deck layout and the swipe ------------------------------
+
+/**
+ * The full height of a toast — also while its cell still collapses it
+ * (entering, `grid-template-rows: 0fr`): the clipped content's
+ * `scrollHeight` plus the borders.
+ */
+function toastHeight(toast: HTMLElement | null): number {
+  if (!toast) return 0;
+  const borders = toast.offsetHeight - toast.clientHeight;
+  return Math.max(toast.offsetHeight, toast.scrollHeight + borders);
+}
+
+/**
+ * Lays out a stacked region after a render: every live (non-closing) cell,
+ * newest first, gets its `--oge-toast-depth` (0 = front) and its
+ * `--oge-toast-stack-offset` — the height of the newer toasts plus the gaps,
+ * i.e. where the expanded list puts it — and cells from depth
+ * {@link OGE_TOAST_STACK_VISIBLE} on are marked `data-oge-toast-buried`. The
+ * stylesheet turns these into transforms with a transition, so collapsing,
+ * expanding, a new toast and a dismissal all glide without moving layout
+ * (`toast.scss`). A closing cell keeps its last values and leaves from
+ * there. Heights are layout heights, unaffected by the transforms. Call it after every render of the host.
+ */
+export function ogeLayoutToastStack(region: HTMLElement): void {
+  const cells = Array.from(
+    region.querySelectorAll<HTMLElement>(':scope > .oge-toast-cell'),
+  ).filter((cell) => !cell.classList.contains('oge-toast-cell-closing'));
+  let gap = 0;
+  try {
+    gap = parseFloat(getComputedStyle(region).rowGap) || 0;
+  } catch {
+    gap = 0;
+  }
+  let offset = 0;
+  for (let depth = 0; depth < cells.length; depth++) {
+    const cell = cells[cells.length - 1 - depth];
+    cell.style.setProperty('--oge-toast-depth', String(depth));
+    cell.style.setProperty('--oge-toast-stack-offset', `${offset}px`);
+    cell.toggleAttribute(
+      'data-oge-toast-buried',
+      depth >= OGE_TOAST_STACK_VISIBLE,
+    );
+    offset +=
+      toastHeight(cell.querySelector<HTMLElement>(':scope > .oge-toast')) + gap;
+  }
+}
+
+/** Whether a horizontal swipe of `deltaX` px dismisses the toast. */
+export function ogeToastSwipeDismisses(deltaX: number): boolean {
+  return Math.abs(deltaX) >= OGE_TOAST_SWIPE_DISMISS;
+}
+
+/** Options of {@link beginOgeToastSwipe}. */
+export interface OgeToastSwipeOptions {
+  /** The `.oge-toast` element that follows the pointer. */
+  toast: HTMLElement;
+  /** Called once: `true` when the release passed the dismiss distance. */
+  onFinish: (dismiss: boolean) => void;
+}
+
+/** Controls inside a toast whose presses never start a swipe. */
+const SWIPE_EXEMPT =
+  'button, a[href], input, select, textarea, [contenteditable]';
+
+/**
+ * Stack mode's swipe-to-dismiss, from a `pointerdown` on a toast: the toast
+ * follows the pointer sideways (fading as it goes) and a release past
+ * {@link OGE_TOAST_SWIPE_DISMISS} px dismisses it — it then leaves from
+ * where it was let go; a shorter one glides back. Runs on the shared
+ * `beginPointerGesture` (pointer capture, Escape / `pointercancel` cancel,
+ * the click after a swipe swallowed). Presses on the toast's own controls
+ * (the close button, the action, links and fields in custom content) never
+ * start one. Returns `null` when no swipe started.
+ */
+export function beginOgeToastSwipe(
+  event: OgePointerGestureInput & { readonly button?: number },
+  options: OgeToastSwipeOptions,
+): { cancel(): void } | null {
+  if (event.button !== undefined && event.button !== 0) return null;
+  const target = event.target as Element | null;
+  if (target?.closest?.(SWIPE_EXEMPT)) return null;
+  const { toast } = options;
+  let deltaX = 0;
+  const width = (): number => toast.offsetWidth || 1;
+  return beginPointerGesture(event, {
+    source: toast,
+    suppressClick: true,
+    onMove(dx) {
+      deltaX = dx;
+      toast.classList.add('oge-toast-swiping');
+      if (prefersReducedMotion()) return;
+      toast.style.translate = `${dx}px 0`;
+      toast.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / width()));
+    },
+    onFinish(commit) {
+      toast.classList.remove('oge-toast-swiping');
+      const dismiss = commit && ogeToastSwipeDismisses(deltaX);
+      // a dismissed toast fades out from where it was let go; anything else
+      // glides back (the stylesheet transitions `translate`)
+      if (!dismiss) {
+        toast.style.translate = '';
+        toast.style.opacity = '';
+      }
+      options.onFinish(dismiss);
+    },
+  });
 }

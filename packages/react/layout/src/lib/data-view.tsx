@@ -2,6 +2,7 @@
 
 import {
   forwardRef,
+  useEffect,
   useId,
   useImperativeHandle,
   useMemo,
@@ -33,6 +34,8 @@ import {
   ogeDataViewTabStop,
   ogeDataViewToggleSelection,
   ogeIsRtl,
+  createOgeLayoutAnimator,
+  type OgeLayoutAnimator,
   OGE_DATA_VIEW_DEFAULT_MIN_ITEM_WIDTH,
   type OgeDataViewDisplayExpr,
   type OgeDataViewItemClickEvent,
@@ -286,6 +289,31 @@ export const OgeDataView = forwardRef(function OgeDataViewRender<T>(
   const emptyText = filtered ? msg.noResults : msg.noData;
   const pagerVisible =
     (props.showPager ?? true) && pageSize > 0 && pageCount > 1;
+
+  /**
+   * FLIPs the items on a filter, sort or page change: kept items glide to
+   * their new slot, new ones fade in and leaving ones fade out through exit
+   * ghosts (the real nodes go at once). The first commit only records.
+   */
+  const itemLayout = useRef<OgeLayoutAnimator<string> | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    itemLayout.current ??= createOgeLayoutAnimator<string>({
+      root: host,
+      query: () =>
+        Array.from(
+          host.querySelectorAll<HTMLElement>(
+            '.oge-data-view-items > [data-oge-data-view-key]',
+          ),
+          (el) =>
+            [el.getAttribute('data-oge-data-view-key') ?? '', el] as const,
+        ),
+      exitParent: () => host.parentElement,
+    });
+    void itemLayout.current.play();
+  }, [keys]);
+  useEffect(() => () => itemLayout.current?.cancel(), []);
 
   useIsomorphicLayoutEffect(() => {
     const run = pendingFocus.current;
@@ -606,6 +634,7 @@ export const OgeDataView = forwardRef(function OgeDataViewRender<T>(
               }
               aria-selected={selected}
               data-oge-data-view-index={i}
+              data-oge-data-view-key={keys[i]}
               tabIndex={i === tabStop ? 0 : -1}
               onKeyDown={(event) => onOptionKeyDown(event, i)}
               onFocus={() => setFocusIndex(i)}
@@ -641,6 +670,7 @@ export const OgeDataView = forwardRef(function OgeDataViewRender<T>(
             role="listitem"
             className="oge-data-view-item"
             data-oge-data-view-index={i}
+            data-oge-data-view-key={keys[i]}
           >
             {body(item, i)}
           </div>

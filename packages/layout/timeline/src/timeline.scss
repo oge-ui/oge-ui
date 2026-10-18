@@ -264,6 +264,22 @@
   }
 }
 
+// --- motion ------------------------------------------------------------------
+// An entry appended after the first render (keyed by `key`, else its index)
+// carries `oge-timeline-item-entering` and fades in; the first render and
+// re-renders of known entries never animate.
+.oge-timeline-item-entering {
+  animation: oge-timeline-item-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-emphasized);
+}
+
+@keyframes oge-timeline-item-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
 // --- forced colors (Windows High Contrast) -----------------------------------
 // Markers keep a real border so their shape survives the repaint; filled vs
 // outlined stays readable as solid vs hollow.
@@ -296,10 +312,13 @@
   }
 }
 
-// The timeline itself does not animate; the only motion is the horizontal
-// list's scroll, which follows the user's input.
+// Entries appear without the fade; the horizontal list's scroll jumps.
 @include tokens.reduced-motion {
   .oge-timeline-list {
     scroll-behavior: auto;
+  }
+
+  .oge-timeline-item-entering {
+    animation: none;
   }
 }

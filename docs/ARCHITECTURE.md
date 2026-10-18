@@ -855,6 +855,28 @@ parent)` after their teardown (it takes the viewport box when a controlled close
     preview) stays and just jumps. Drag ghosts lift (`--oge-drag-scale`, `--oge-shadow-drag`)
     and `createDragGhost(...).destroy(to)` / `beginPointerDragDrop({ settleTo })` settle them
     onto the drop and glide them back on a cancel.
+  - **Who uses which primitive.** Chip list, list view (non-virtualized) and data view FLIP their
+    keyed items with `createOgeLayoutAnimator` (`data-oge-*-key` attributes, `play()` after every
+    change of the rendered set — the first render only records) and pass
+    `exitParent: () => host.parentElement`: the ghost keeps the theme but never lands inside the
+    host, whose own `querySelector`s (and the animator's `query()`) would otherwise find it.
+    Chips enter through their CSS keyframe, so their animator runs `enter: false`. A component
+    that only appends (timeline) marks the keys new since the last render with an
+    `*-entering` class — memoised on `items`, so an unrelated re-render keeps it — instead of
+    animating the first render. Grid track sizes on a discrete toggle (splitter collapse /
+    expand) go through `createOgeTrackAnimator`: it animates between the _resolved_ pixel
+    tracks, so `fr` / `minmax()` templates interpolate, and is cancelled by any drag or keyboard
+    resize. Step / panel content fades in by alternating two identical keyframes on the host
+    (`*-anim-a` / `*-anim-b`) after the first render — the tab-panel approach. Connector or
+    progress fills are a `scaleX` / `scaleY` pseudo-element over the track pseudo (origin
+    mirrored under RTL, top in vertical layouts) with `-emphasized`.
+  - **Stacked toasts glide on transforms, not FLIP.** With `toastStacked` the cells of a region
+    share one grid area; `ogeLayoutToastStack(region)` writes each live cell's
+    `--oge-toast-depth` and `--oge-toast-stack-offset` after every render and the stylesheet
+    turns them into transitioned transforms (collapsed deck ↔ expanded list), so nothing
+    reflows. Expansion is engine state (`setRegionExpanded(position, 'hover' | 'focus', on)`),
+    which also pauses every toast in the region; swipe-to-dismiss is `beginOgeToastSwipe` on
+    the shared gesture machine (reason `'swipe'`).
   - Each animation is switched off in the file's `@include tokens.reduced-motion` block, and the
     final (non-animated) state is what the visual baselines capture — `animations: 'disabled'`
     must not change a pixel.

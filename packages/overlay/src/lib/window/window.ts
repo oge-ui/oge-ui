@@ -22,6 +22,7 @@ import {
   isModalFocusOrphaned,
   modalCssSize,
   ogeOverlayMessage,
+  ogeWindowExitGhost,
   ogeWindowZIndex,
   resolveOgeWindowInitialFocus,
   type OgeWindowAutoFocus,
@@ -507,6 +508,9 @@ export class OgeWindow {
     if (!this.shown) return;
     const panel = this.panelRef()?.nativeElement ?? null;
     this.teardown();
+    // the fade-out runs on a ghost in the host — the real panel still goes
+    // synchronously with the next render
+    ogeWindowExitGhost(panel, panel?.parentElement ?? null);
     if (this.restoreFocus() && this.previouslyFocused) {
       if (isModalFocusOrphaned(panel)) this.previouslyFocused.focus();
     }

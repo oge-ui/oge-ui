@@ -22,6 +22,8 @@ import {
   beginPointerGesture,
   getOgeLiveAnnouncer,
   ogeIsRtl,
+  createOgeLayoutAnimator,
+  type OgeLayoutAnimator,
   ogeListViewActionFromTarget,
   ogeListViewActionShortcuts,
   ogeListViewActionsText,
@@ -441,6 +443,31 @@ export const OgeListView = forwardRef(function OgeListViewRender<T>(
 
   // --- actions ------------------------------------------------------------------
 
+  /**
+   * FLIPs the rows of a non-virtualized list on a filter (search), sort or
+   * load-more: kept rows glide to their new place, new ones fade in and
+   * leaving ones fade out through exit ghosts (the real nodes go at once).
+   * Virtualized rows are re-created by scrolling, so they never animate.
+   */
+  const rowLayout = useRef<OgeLayoutAnimator<string> | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    rowLayout.current ??= createOgeLayoutAnimator<string>({
+      root: host,
+      query: () =>
+        Array.from(
+          host.querySelectorAll<HTMLElement>('[data-oge-list-key]'),
+          (el) => [el.getAttribute('data-oge-list-key') ?? '', el] as const,
+        ),
+      exitParent: () => host.parentElement,
+    });
+    // the first commit only records
+    if (settings) rowLayout.current.reset();
+    else void rowLayout.current.play();
+  }, [model, settings]);
+  useEffect(() => () => rowLayout.current?.cancel(), []);
+
   const rtl = () => ogeIsRtl(hostRef.current);
 
   const setActive = (index: number) => {
@@ -763,6 +790,7 @@ export const OgeListView = forwardRef(function OgeListViewRender<T>(
         role={role === 'listbox' ? 'option' : 'listitem'}
         id={itemId(row.key)}
         data-oge-list-index={row.index}
+        data-oge-list-key={settings ? undefined : row.key}
         aria-selected={role === 'listbox' ? selected : undefined}
         aria-disabled={rowDisabled || undefined}
         aria-setsize={model.items.length}

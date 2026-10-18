@@ -131,6 +131,39 @@ const report = () => {
     }),
   },
   {
+    title: 'Stack mode',
+    source: reactDemoSource({
+      use: {
+        '@oge-ui/react-buttons': ['OgeButton'],
+        '@oge-ui/react-overlay': [
+          'OgeOverlayConfigProvider',
+          'OgeToastProvider',
+          'useOgeToasts',
+        ],
+      },
+      name: 'SyncButton',
+      before: `// a collapsed deck: hover or focus expands it into a list (and pauses
+// every timer in it); swipe a toast sideways to dismiss it
+export function App() {
+  return (
+    <OgeOverlayConfigProvider config={{ toastStacked: true }}>
+      <OgeToastProvider>
+        <SyncButton />
+      </OgeToastProvider>
+    </OgeOverlayConfigProvider>
+  );
+}`,
+      body: `const toasts = useOgeToasts();
+
+const sync = () => {
+  for (const folder of ['Inbox', 'Drafts', 'Archive', 'Sent']) {
+    toasts.success(\`\${folder} synced\`);
+  }
+};`,
+      jsx: `<OgeButton text="Sync 4 folders" onClick={sync} />`,
+    }),
+  },
+  {
     title: 'Live announcements without a toast',
     source: reactDemoSource({
       use: {

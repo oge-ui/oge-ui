@@ -3,10 +3,12 @@ import {
   Component,
   LOCALE_ID,
   ViewEncapsulation,
+  afterRenderEffect,
   computed,
   contentChild,
   inject,
   input,
+  untracked,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -26,6 +28,23 @@ import {
   OgeTimelineOppositeTemplate,
   type OgeTimelineItemTemplateContext,
 } from './templates';
+
+/**
+ * Keys of `items` not in `rendered` — the entries appended since the last
+ * render. Nothing enters on the first render (`rendered` is `null`).
+ */
+function ogeTimelineEnteringKeys(
+  rendered: ReadonlySet<string | number> | null,
+  items: readonly OgeTimelineItem[],
+): ReadonlySet<string | number> {
+  const entering = new Set<string | number>();
+  if (!rendered) return entering;
+  items.forEach((item, index) => {
+    const key = item.key ?? index;
+    if (!rendered.has(key)) entering.add(key);
+  });
+  return entering;
+}
 
 /** One entry with everything the template needs, resolved once. */
 interface TimelineRow {
@@ -82,6 +101,7 @@ interface TimelineRow {
           [class.oge-timeline-item-start]="row.context.side === 'start'"
           [class.oge-timeline-item-end]="row.context.side === 'end'"
           [class.oge-timeline-item-last]="row.context.last"
+          [class.oge-timeline-item-entering]="entering().has(row.key)"
           [class]="'oge-timeline-severity-' + (row.item.severity ?? 'accent')"
         >
           @if (hasOpposite()) {
@@ -207,6 +227,27 @@ export class OgeTimeline {
   protected readonly hasOpposite = computed(() =>
     ogeTimelineHasOpposite(this.resolvedAlign()),
   );
+
+  /** Keys of the last rendered entries; `null` before the first render. */
+  private renderedKeys: ReadonlySet<string | number> | null = null;
+
+  /**
+   * Entries appended since the last render — they run the enter keyframe.
+   * Recomputed only when `items` changes, so an unrelated re-render keeps
+   * the class (and the running animation).
+   */
+  protected readonly entering = computed<ReadonlySet<string | number>>(() =>
+    ogeTimelineEnteringKeys(
+      untracked(() => this.renderedKeys),
+      this.items(),
+    ),
+  );
+
+  constructor() {
+    afterRenderEffect(() => {
+      this.renderedKeys = new Set(this.rows().map((row) => row.key));
+    });
+  }
 
   protected readonly rows = computed<TimelineRow[]>(() => {
     const items = this.items();

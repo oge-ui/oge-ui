@@ -94,6 +94,27 @@ protected report(): void {
 }`,
 });
 
+export const STACK_SNIPPET = demoSource({
+  use: { '@oge-ui/buttons': ['OgeButton'] },
+  helpers: {
+    '@oge-ui/overlay': ['OgeToastService', 'provideOgeOverlayConfig'],
+  },
+  types: { '@angular/core': ['ApplicationConfig'] },
+  template: `<oge-button text="Sync 4 folders" (clicked)="sync()" />`,
+  body: `private readonly toasts = inject(OgeToastService);
+
+// a collapsed deck: hover or focus expands it into a list (and pauses
+// every timer in it); swipe a toast sideways to dismiss it
+protected sync(): void {
+  for (const folder of ['Inbox', 'Drafts', 'Archive', 'Sent']) {
+    this.toasts.success(\`\${folder} synced\`);
+  }
+}`,
+  after: `export const appConfig: ApplicationConfig = {
+  providers: [provideOgeOverlayConfig({ toastStacked: true })],
+};`,
+});
+
 export const ANNOUNCER_SNIPPET = demoSource({
   use: { '@oge-ui/buttons': ['OgeButton'] },
   helpers: { '@oge-ui/overlay': ['OgeLiveAnnouncer'] },

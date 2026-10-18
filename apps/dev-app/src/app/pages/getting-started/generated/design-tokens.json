@@ -1204,6 +1204,7 @@
         "@oge-ui/buttons",
         "@oge-ui/inputs",
         "@oge-ui/layout",
+        "@oge-ui/navigation",
         "@oge-ui/overlay",
         "@oge-ui/tabs",
         "@oge-ui/upload"
@@ -1217,6 +1218,7 @@
         "light": "300ms"
       },
       "u": [
+        "@oge-ui/navigation",
         "@oge-ui/upload"
       ]
     },
@@ -1257,6 +1259,7 @@
       "u": [
         "@oge-ui/inputs",
         "@oge-ui/layout",
+        "@oge-ui/navigation",
         "@oge-ui/overlay",
         "@oge-ui/tabs"
       ]
@@ -1274,6 +1277,7 @@
         "@oge-ui/grid",
         "@oge-ui/inputs",
         "@oge-ui/layout",
+        "@oge-ui/navigation",
         "@oge-ui/overlay"
       ]
     },
@@ -1293,7 +1297,9 @@
       "v": {
         "light": "280ms"
       },
-      "u": []
+      "u": [
+        "@oge-ui/overlay"
+      ]
     },
     {
       "n": "--oge-motion-easing-spring",
@@ -1302,7 +1308,9 @@
       "v": {
         "light": "linear(0, 0.017, 0.062, 0.124, 0.198, 0.277, 0.357, 0.436, 0.511, 0.581, 0.645, 0.702, 0.753, 0.798, 0.837, 0.87, 0.898, 0.921, 0.941, 0.957, 0.969, 0.98, 0.988, 0.994, 0.998, 1.002, 1.004, 1.006, 1.007, 1.007, 1.007, 1.007, 1)"
       },
-      "u": []
+      "u": [
+        "@oge-ui/overlay"
+      ]
     },
     {
       "n": "--oge-motion-stagger",

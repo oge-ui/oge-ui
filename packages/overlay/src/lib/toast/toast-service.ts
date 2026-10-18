@@ -13,11 +13,14 @@ import {
   inject,
   signal,
   untracked,
+  ElementRef,
   type ComponentRef,
 } from '@angular/core';
 import {
   OgeToastCore,
   OgeToastRef,
+  beginOgeToastSwipe,
+  ogeLayoutToastStack,
   type OgeToastClosedEvent,
   type OgeToastEntry,
   type OgeToastRegion,
@@ -53,10 +56,17 @@ export type ToastEntry = OgeToastEntry<OgeToastOptions>;
   styleUrl: './toast.scss',
   template: `
     @for (region of regions(); track region.position) {
+      <!-- stack mode: the pointer or focus inside a region expands its deck -->
       <div
         class="oge-toast-region oge-toast-region-{{ region.position }}"
         role="region"
+        [class.oge-toast-region-stacked]="region.stacked"
+        [class.oge-toast-region-expanded]="region.expanded"
         [attr.aria-label]="messages().toastRegionLabel"
+        (pointerover)="onRegionPointer(region, $event, true)"
+        (pointerout)="onRegionPointer(region, $event, false)"
+        (focusin)="onRegionFocus(region, $event, true)"
+        (focusout)="onRegionFocus(region, $event, false)"
       >
         @for (entry of region.visible; track entry.key) {
           <div
@@ -70,6 +80,7 @@ export type ToastEntry = OgeToastEntry<OgeToastOptions>;
               class="oge-toast"
               [class]="toastClasses(entry)"
               (click)="onToastClick(entry, $event)"
+              (pointerdown)="onToastPointerDown(region, entry, $event)"
               (mouseenter)="svc.pause(entry)"
               (mouseleave)="svc.resume(entry)"
               (focusin)="onFocusIn(entry, $event)"
@@ -234,6 +245,7 @@ export type ToastEntry = OgeToastEntry<OgeToastOptions>;
 export class OgeToastHost {
   protected readonly svc = inject(OgeToastService);
   private readonly config = inject(OGE_OVERLAY_CONFIG);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly messages = computed(() => this.config.messages);
 
@@ -263,6 +275,56 @@ export class OgeToastHost {
           this.svc.markReady(pending);
         });
       });
+    });
+    // Stack mode: after every render, give each live cell its depth and
+    // expanded offset (the stylesheet turns them into gliding transforms).
+    afterRenderEffect(() => {
+      if (!this.regions().some((region) => region.stacked)) return;
+      for (const region of Array.from(
+        this.host.nativeElement.querySelectorAll<HTMLElement>(
+          '.oge-toast-region-stacked',
+        ),
+      )) {
+        ogeLayoutToastStack(region);
+      }
+    });
+  }
+
+  protected onRegionPointer(
+    region: OgeToastRegion<OgeToastOptions>,
+    event: PointerEvent,
+    entering: boolean,
+  ): void {
+    if (!region.stacked) return;
+    const el = event.currentTarget as HTMLElement;
+    // moves between the region's own toasts (and the gaps) change nothing
+    if (el.contains(event.relatedTarget as Node | null)) return;
+    this.svc.setRegionExpanded(region.position, 'hover', entering);
+  }
+
+  protected onRegionFocus(
+    region: OgeToastRegion<OgeToastOptions>,
+    event: FocusEvent,
+    entering: boolean,
+  ): void {
+    if (!region.stacked) return;
+    const el = event.currentTarget as HTMLElement;
+    if (el.contains(event.relatedTarget as Node | null)) return;
+    this.svc.setRegionExpanded(region.position, 'focus', entering);
+  }
+
+  /** Stack mode: a sideways swipe dismisses the toast (reason `'swipe'`). */
+  protected onToastPointerDown(
+    region: OgeToastRegion<OgeToastOptions>,
+    entry: ToastEntry,
+    event: PointerEvent,
+  ): void {
+    if (!region.stacked || !entry.options.closable || entry.closing) return;
+    beginOgeToastSwipe(event, {
+      toast: event.currentTarget as HTMLElement,
+      onFinish: (dismiss) => {
+        if (dismiss) this.svc.dismiss(entry, 'swipe');
+      },
     });
   }
 
@@ -367,6 +429,7 @@ export class OgeToastService {
       maxVisible: this.config.toastMaxVisible,
       progressBar: this.config.toastProgressBar,
       coalesceDuplicates: this.config.toastCoalesceDuplicates,
+      stacked: this.config.toastStacked ?? false,
     }),
     onChange: () => this._version.update((v) => v + 1),
     // The core already waits before it writes, so the shared announcer
@@ -466,6 +529,15 @@ export class OgeToastService {
   /** @internal Two-phase dismissal: closing class → removal + resolve. */
   dismiss(entry: ToastEntry, reason: OgeToastCloseReason): void {
     this.core.dismiss(entry, reason);
+  }
+
+  /** @internal Stack mode: a hover / focus cause entered or left a region. */
+  setRegionExpanded(
+    position: OgeToastPosition,
+    cause: 'hover' | 'focus',
+    on: boolean,
+  ): void {
+    this.core.setRegionExpanded(position, cause, on);
   }
 
   /** @internal Ref-counted pause (hover / focus-within / tab hidden). */

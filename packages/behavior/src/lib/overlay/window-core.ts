@@ -29,6 +29,7 @@ import {
 } from './modal-core';
 import { ogeOverlayMessage, type OgeOverlayMessages } from './overlay-config';
 import { overlayStackSize } from './overlay-stack';
+import { OGE_EXIT_FADE, ogeExitGhost, type OgeRect } from '../motion/motion';
 import {
   bringOgeWindowToFront,
   isOgeFrontWindow,
@@ -355,6 +356,28 @@ export function ogeWindowKeyCommand(
     return { type: 'resize', dw: arrow[0] * step, dh: arrow[1] * step };
   }
   return { type: 'move', dx: arrow[0] * step, dy: arrow[1] * step };
+}
+
+/**
+ * The close's exit motion: an `ogeExitGhost` of the window panel fades out
+ * (opacity only — a floating window's geometry stays honest) while the real
+ * panel is removed synchronously. `rect` is the panel's last box, for a
+ * close that already rendered it away; a panel that was never placed (still
+ * transparent) has nothing to fade. Pass the node it lived in as `parent`
+ * so the ghost keeps its theme and direction.
+ */
+export function ogeWindowExitGhost(
+  panel: HTMLElement | null,
+  parent: Element | null,
+  rect?: OgeRect,
+): void {
+  if (!panel?.classList.contains('oge-window-placed')) return;
+  if (!panel.isConnected && !rect) return;
+  ogeExitGhost(panel, {
+    parent,
+    keyframes: OGE_EXIT_FADE,
+    rect: panel.isConnected ? undefined : rect,
+  });
 }
 
 /** Next state for Alt+↑ / Alt+↓. */

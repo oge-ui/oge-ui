@@ -333,10 +333,10 @@ _OgeToastRef_
 | `<OgeToastProvider>` | `component` | Hosts the toast regions (announcements go through the shared `useOgeLiveAnnouncer` regions); mount once near the app root. The React counterpart of the root-provided Angular service. |
 | `OgeToastSeverity` | `'info' \| 'success' \| 'warning' \| 'error'` | Toast severity. |
 | `OgeToastPosition` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | Logical, RTL-aware region positions. |
-| `OgeToastCloseReason` | `'timeout' \| 'closeButton' \| 'click' \| 'action' \| 'api' \| 'clear'` | Why a toast closed. |
+| `OgeToastCloseReason` | `'timeout' \| 'closeButton' \| 'click' \| 'action' \| 'api' \| 'clear' \| 'swipe'` | Why a toast closed — `'swipe'` when stack mode's swipe-to-dismiss sent it away. |
 | `OgeToastAction<D>` | `{ text: string; handler?: (event: OgeToastActionEvent<D>) => void }` | Inline action button. |
 | `OgeToastSlotContext<D>` | `{ close: () => void; data?: D }` | Argument of `renderContent`. |
-| `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates` | Defaults via `<OgeOverlayConfigProvider>`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
+| `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates · toastStacked` | Defaults via `<OgeOverlayConfigProvider>`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
 
 ### OgeLiveAnnouncer (useOgeLiveAnnouncer)
 
@@ -747,6 +747,7 @@ _OgeOverlayConfig_
 | `tooltipShowDelayMs / tooltipHideDelayMs` | `number` | `400 / 100` | Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides. |
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn='hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
+| `toastStacked` | `boolean` | `false` | Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason `'swipe'`). The moves glide on transforms; reduced motion switches at once. |
 | `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover and the action sheet: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose` and the action sheet’s `actionSheetCancel` / `actionSheetLabel` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
@@ -1634,6 +1635,40 @@ export function ImportButton() {
   };
   return (
     <OgeButton text="Import" onClick={report} />
+  );
+}
+```
+
+### Stack mode
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeOverlayConfigProvider, OgeToastProvider, useOgeToasts } from '@oge-ui/react-overlay';
+
+// a collapsed deck: hover or focus expands it into a list (and pauses
+// every timer in it); swipe a toast sideways to dismiss it
+export function App() {
+  return (
+    <OgeOverlayConfigProvider config={{ toastStacked: true }}>
+      <OgeToastProvider>
+        <SyncButton />
+      </OgeToastProvider>
+    </OgeOverlayConfigProvider>
+  );
+}
+
+export function SyncButton() {
+  const toasts = useOgeToasts();
+
+  const sync = () => {
+    for (const folder of ['Inbox', 'Drafts', 'Archive', 'Sent']) {
+      toasts.success(`${folder} synced`);
+    }
+  };
+  return (
+    <OgeButton text="Sync 4 folders" onClick={sync} />
   );
 }
 ```

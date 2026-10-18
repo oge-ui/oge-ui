@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useMemo, useRef, type CSSProperties, type ReactNode } from 'react';
 import {
   OGE_TIMELINE_DEFAULT_DATE_FORMAT,
   ogeTimelineHasOpposite,
@@ -11,6 +11,27 @@ import {
   type OgeTimelineOrientation,
 } from '@oge-ui/behavior';
 import { useOgeTimelineConfig } from './layout-config';
+import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect';
+
+const NO_KEYS: ReadonlySet<string | number> = new Set();
+const EMPTY_ITEMS: readonly OgeTimelineItem[] = [];
+
+/**
+ * Keys of `items` not in `rendered` — the entries appended since the last
+ * commit. Nothing enters on the first render (`rendered` is `null`).
+ */
+function enteringKeys(
+  rendered: ReadonlySet<string | number> | null,
+  items: readonly OgeTimelineItem[],
+): ReadonlySet<string | number> {
+  if (!rendered) return NO_KEYS;
+  const entering = new Set<string | number>();
+  items.forEach((item, index) => {
+    const key = item.key ?? index;
+    if (!rendered.has(key)) entering.add(key);
+  });
+  return entering;
+}
 
 /** Argument of every timeline render prop (content, marker, opposite). */
 export interface OgeTimelineItemRenderContext {
@@ -74,7 +95,21 @@ export interface OgeTimelineProps {
  */
 export function OgeTimeline(props: OgeTimelineProps) {
   const config = useOgeTimelineConfig();
-  const items = props.items ?? [];
+  const items = props.items ?? EMPTY_ITEMS;
+  // Entries appended since the last commit run the enter keyframe. Memoised
+  // on `items`, so an unrelated re-render keeps the class (and the running
+  // animation); the ref only changes after a commit, so StrictMode's double
+  // render computes the same set.
+  const renderedKeys = useRef<ReadonlySet<string | number> | null>(null);
+  const entering = useMemo(
+    () => enteringKeys(renderedKeys.current, items),
+    [items],
+  );
+  useIsomorphicLayoutEffect(() => {
+    renderedKeys.current = new Set(
+      items.map((item, index) => item.key ?? index),
+    );
+  }, [items]);
   const orientation = props.orientation ?? config.orientation ?? 'vertical';
   const align = props.align ?? config.align ?? 'end';
   const hasOpposite = ogeTimelineHasOpposite(align);
@@ -123,6 +158,7 @@ export function OgeTimeline(props: OgeTimelineProps) {
               ? 'oge-timeline-item-start'
               : 'oge-timeline-item-end',
             context.last && 'oge-timeline-item-last',
+            entering.has(item.key ?? index) && 'oge-timeline-item-entering',
             `oge-timeline-severity-${item.severity ?? 'accent'}`,
           ]
             .filter(Boolean)
