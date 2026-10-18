@@ -75,7 +75,7 @@ const SORT = {
   imports: [OgeGridAssistant],
   template: `
     <oge-grid-assistant
-      [for]="grid"
+      [target]="grid"
       [mode]="mode()"
       [suggestions]="suggestions()"
       [disabled]="disabled()"
@@ -190,17 +190,23 @@ describe('OgeGridAssistant', () => {
     type(input, 'x');
     q<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     fixture.detectChanges();
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
     fixture.detectChanges();
     expect(manual.aborted).toBe(1);
-    expect(q('.oge-grid-assistant-status')!.textContent?.trim()).toBe('Stopped.');
+    expect(q('.oge-grid-assistant-status')!.textContent?.trim()).toBe(
+      'Stopped.',
+    );
 
     q<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     manual.reply({ status: 'clarify', summary: 'first' });
     manual.reply(SORT);
     await settle(fixture);
     expect(q('.oge-grid-assistant-proposal')).not.toBeNull();
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
     fixture.detectChanges();
     expect(q('.oge-grid-assistant-proposal')).toBeNull();
   });
@@ -228,7 +234,11 @@ describe('OgeGridAssistant', () => {
     const { fixture, host, q } = setup();
     host.disabled.set(true);
     fixture.detectChanges();
-    expect(q<HTMLInputElement>('.oge-grid-assistant-input')!.disabled).toBe(true);
-    expect(q<HTMLButtonElement>('.oge-grid-assistant-chip')!.disabled).toBe(true);
+    expect(q<HTMLInputElement>('.oge-grid-assistant-input')!.disabled).toBe(
+      true,
+    );
+    expect(q<HTMLButtonElement>('.oge-grid-assistant-chip')!.disabled).toBe(
+      true,
+    );
   });
 });

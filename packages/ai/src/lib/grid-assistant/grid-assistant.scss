@@ -45,8 +45,7 @@
   transition:
     border-color var(--oge-motion-duration-fast)
       var(--oge-motion-easing-standard),
-    box-shadow var(--oge-motion-duration-base)
-      var(--oge-motion-easing-standard);
+    box-shadow var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
 
   &:hover {
     --oge-grid-assistant-ring: color-mix(
@@ -109,8 +108,8 @@
   }
 
   .oge-grid-assistant-busy & svg {
-    animation: oge-grid-assistant-pulse 1.2s
-      var(--oge-motion-easing-standard) infinite;
+    animation: oge-grid-assistant-pulse 1.2s var(--oge-motion-easing-standard)
+      infinite;
   }
 }
 
@@ -162,8 +161,7 @@
     background-color var(--oge-motion-duration-fast)
       var(--oge-motion-easing-standard),
     color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
-    transform var(--oge-motion-duration-fast)
-      var(--oge-motion-easing-standard);
+    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
 
   @include tokens.hit-area;
 
@@ -191,7 +189,11 @@
   color: var(--oge-severity-contrast);
 
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--oge-accent) 86%, var(--oge-text-color));
+    background: color-mix(
+      in srgb,
+      var(--oge-accent) 86%,
+      var(--oge-text-color)
+    );
   }
 }
 

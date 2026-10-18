@@ -54,7 +54,7 @@ let nextId = 0;
  * Apply in `'preview'` mode, at once in `'apply'` mode. Undo steps back.
  *
  * ```html
- * <oge-grid-assistant [for]="grid" [suggestions]="['Top 10 by revenue']" />
+ * <oge-grid-assistant [target]="grid" [suggestions]="['Top 10 by revenue']" />
  * <oge-grid #grid [data]="orders">…</oge-grid>
  * ```
  *
@@ -207,10 +207,10 @@ export class OgeGridAssistant {
     viewChild.required<ElementRef<HTMLInputElement>>('field');
 
   /**
-   * The grid to drive: an `OgeGrid` or `OgeTreeList` reference, or any object
+   * The grid to drive: an `OgeGrid` reference, or any object
    * with `state()`, `applyState()` and `describeColumns()`.
    */
-  readonly for = input<OgeGridAssistantTarget | null | undefined>(undefined);
+  readonly target = input<OgeGridAssistantTarget | null | undefined>(undefined);
   /** Replaces the configured transport for this assistant. */
   readonly transport = input<OgeAiTransport | null | undefined>(undefined);
   /** `'preview'` asks before applying, `'apply'` applies at once; falls back to the config. */
@@ -265,10 +265,10 @@ export class OgeGridAssistant {
     () => this.suggestions() ?? this.config.gridAssistant.suggestions,
   );
 
-  /** The shared machine; its state is readable from templates and specs. */
-  readonly core = new OgeGridAssistantCore({
+  /** The shared machine (`@oge-ui/behavior`), the same one the React assistant runs. */
+  protected readonly core = new OgeGridAssistantCore({
     adapter: SIGNAL_ADAPTER,
-    target: () => untracked(this.for),
+    target: () => untracked(this.target),
     transport: () =>
       untracked(this.transport) ?? untracked(() => this.config.transport),
     mode: () =>

@@ -1,0 +1,56 @@
+{
+  "name": "@oge-ui/react-ai",
+  "version": "1.1.4",
+  "description": "React AI components from the OGE UI suite that work with any model: a natural-language grid assistant that turns \"orders over 500 from last month, newest first\" into validated sort, filter, grouping and column changes, with preview, apply and undo — running the same assistant machine, transports and stylesheet as the Angular @oge-ui/ai package. Bring your own model: OpenAI-compatible (OpenAI, Azure, Ollama, vLLM), Anthropic or your own backend; no hosted service, no row data sent.",
+  "keywords": [
+    "react",
+    "ai",
+    "llm",
+    "natural-language",
+    "data-grid",
+    "ai-assistant",
+    "openai",
+    "anthropic",
+    "ollama",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
+    },
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "1.1.4"
+  },
+  "homepage": "https://www.ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/ai"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

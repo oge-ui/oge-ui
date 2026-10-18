@@ -24,10 +24,9 @@ import {
 } from './grid-ai-response';
 
 /**
- * What the assistant drives: the grid's own state API. The Angular `OgeGrid`,
- * the React grid handle and the tree list all have exactly these members, so
- * the assistant takes any of them — or a host object that adapts another
- * component.
+ * What the assistant drives: the grid's own state API. The Angular `OgeGrid`
+ * and the React grid handle both have exactly these members, so the assistant
+ * takes either — or a host object that adapts another component.
  */
 export interface OgeGridAssistantTarget {
   state(): GridStateSnapshot;

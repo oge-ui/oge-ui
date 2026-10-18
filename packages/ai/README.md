@@ -11,12 +11,11 @@ npm install @oge-ui/ai
 
 ```ts
 // app.config.ts — requests go to your endpoint, the API key stays on the server
-provideOgeAiConfig({ transport: createOgeAiHttpTransport({ url: '/api/ai' }) })
+provideOgeAiConfig({ transport: createOgeAiHttpTransport({ url: '/api/ai' }) });
 ```
 
 ```html
-<oge-grid-assistant [for]="grid" [suggestions]="['Top 10 orders this month']" />
-<oge-grid #grid [data]="orders">…</oge-grid>
+<oge-grid-assistant [target]="grid" [suggestions]="['Top 10 orders this month']" /> <oge-grid #grid [data]="orders">…</oge-grid>
 ```
 
 ## Grid assistant
@@ -42,16 +41,16 @@ groups, searches and shows or hides columns accordingly.
   every step, Escape to stop or discard, forced-colours and reduced-motion
   support, RTL.
 
-Works with `OgeGrid`, `OgeTreeList` and the React grid handle — anything with
+Works with `OgeGrid` and the React grid handle — anything with
 `state()`, `applyState()` and `describeColumns()`.
 
 ## Transports
 
-| Transport                         | Use it for                                                               |
-| --------------------------------- | ------------------------------------------------------------------------ |
-| `createOgeAiHttpTransport`        | Production: your backend calls the model; the browser never sees a key. |
-| `createOgeOpenAiTransport`        | OpenAI and every compatible server: Azure, Ollama, vLLM, LM Studio.     |
-| `createOgeAnthropicTransport`     | Claude, directly or through a proxy.                                     |
+| Transport                     | Use it for                                                              |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `createOgeAiHttpTransport`    | Production: your backend calls the model; the browser never sees a key. |
+| `createOgeOpenAiTransport`    | OpenAI and every compatible server: Azure, Ollama, vLLM, LM Studio.     |
+| `createOgeAnthropicTransport` | Claude, directly or through a proxy.                                    |
 
 Sending an API key from the browser requires `dangerouslyAllowBrowser: true`
 — meant for prototypes and internal tools. Any object with a
