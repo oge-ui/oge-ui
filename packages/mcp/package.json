@@ -1,0 +1,54 @@
+{
+  "name": "@oge-ui/mcp",
+  "version": "1.1.4",
+  "description": "Free MCP (Model Context Protocol) server for the OGE UI component suite: gives Claude Code, Cursor, Copilot and any MCP client the suite's own machine-readable docs — every package's API, rules and examples for Angular and React — offline and matching the installed version. Dependency-free, stdio.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "llm",
+    "claude",
+    "cursor",
+    "copilot",
+    "angular",
+    "react",
+    "ui-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "oge-ui-mcp": "./cli.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./server.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./index.d.ts",
+  "files": [
+    "cli.mjs",
+    "server.mjs",
+    "index.d.ts",
+    "docs.json",
+    "README.md",
+    "llms.txt",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "homepage": "https://www.ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/mcp"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

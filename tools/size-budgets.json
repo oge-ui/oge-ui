@@ -113,6 +113,7 @@
     "@oge-ui/locales/pt-BR": 16077,
     "@oge-ui/locales/tr": 16178,
     "@oge-ui/locales/zh-CN": 16284,
+    "@oge-ui/mcp": 3951,
     "@oge-ui/navigation": 75917,
     "@oge-ui/overlay": 69494,
     "@oge-ui/overlay/testing": 1921,

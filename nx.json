@@ -96,6 +96,7 @@
       "upload",
       "editor",
       "ai",
+      "mcp",
       "ui"
     ],
     "projectsRelationship": "independent",

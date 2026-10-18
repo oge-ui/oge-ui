@@ -1954,6 +1954,13 @@ application configures. Rules every AI feature follows:
   Angular a second `provideOgeAiConfig` in the same injector would replace
   the app's transport. Packs carry an `ai` slice; the app merges it:
   `provideOgeAiConfig({ transport, messages: ogeMergeMessages(OGE_DEFAULT_AI_MESSAGES, pack.ai) })`.
+- **The MCP server is a build of the docs, not a second source.**
+  `packages/mcp` (`@oge-ui/mcp`) bundles every package's generated
+  `llms.txt` into `docs.json` at build time (`packages/mcp/build.mjs`, which
+  reads the docs manifest), so it can never disagree with the published
+  references. `server.mjs` is transport-free (`handle(message)` per JSON-RPC
+  message, unit-tested), `cli.mjs` wires it to stdio. A new tool returns text
+  content and validates its arguments; unknown tools are a `-32602`.
 - **Docs run offline.** `apps/dev-app/src/app/pages/ai/ai-demo.ts` is a
   rule-based demo model that reads the column catalog back out of the real
   system prompt; the pages and the e2e suite use it, and readers can switch

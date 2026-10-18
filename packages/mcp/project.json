@@ -1,0 +1,39 @@
+{
+  "name": "mcp",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/mcp/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["{projectRoot}", "dist/{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": ["scope:mcp", "platform:agnostic"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/build.mjs",
+        "{projectRoot}/package.json",
+        "{projectRoot}/README.md",
+        "{workspaceRoot}/packages/*/llms.txt",
+        "{workspaceRoot}/packages/react/*/llms.txt",
+        "{workspaceRoot}/apps/dev-app/public/llms.txt",
+        "{workspaceRoot}/tools/docs-tools/lib/manifest.mjs"
+      ],
+      "options": {
+        "command": "node packages/mcp/build.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  }
+}

@@ -19,6 +19,16 @@ ng add @oge-ui/grid --theme=dark
 # without touching AGENTS.md
 ng add @oge-ui/inputs --skip-agents-file`;
 
+export const MCP = `# Claude Code
+claude mcp add oge-ui -- npx -y @oge-ui/mcp
+
+# Cursor (.cursor/mcp.json), VS Code (.vscode/mcp.json), Windsurf, Zed…
+{
+  "mcpServers": {
+    "oge-ui": { "command": "npx", "args": ["-y", "@oge-ui/mcp"] }
+  }
+}`;
+
 export const OPTIONAL = `# Excel export (grid, tree list, pivot, gantt export-excel entries)
 npm install exceljs
 
