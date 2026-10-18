@@ -18,9 +18,13 @@ import {
 import { edgeEnabledIndex, stepEnabledIndex } from '@oge-ui/core';
 import {
   OGE_TAB_DRAG_THRESHOLD,
+  createOgeIndicatorGlide,
+  createOgeLayoutAnimator,
   motionScrollBehavior,
   ogeIsRtl,
   scrollTabIntoStrip,
+  type OgeIndicatorGlide,
+  type OgeLayoutAnimator,
 } from '@oge-ui/behavior';
 import {
   OgeAnchoredPanel,
@@ -119,6 +123,7 @@ const DRAG_THRESHOLD = OGE_TAB_DRAG_THRESHOLD;
     }
     <div class="oge-tab-strip-scroll" #scroller (scroll)="measure()">
       <div
+        #list
         class="oge-tab-strip-list"
         role="tablist"
         [attr.aria-orientation]="
@@ -293,6 +298,7 @@ export class OgeTabStrip {
   readonly reorderRequest = output<OgeTabStripReorderEvent>();
 
   private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
+  private readonly list = viewChild<ElementRef<HTMLElement>>('list');
   private readonly tabElements = viewChildren<ElementRef<HTMLElement>>('tabEl');
   private readonly menuButton =
     viewChild<ElementRef<HTMLElement>>('menuButton');
@@ -315,6 +321,14 @@ export class OgeTabStrip {
   private dragFromIndex = -1;
   private dragActive = false;
   private suppressClick = false;
+
+  /** The sliding ink (created on the first selection move). */
+  private inkGlide: OgeIndicatorGlide | null = null;
+  /** The tab the ink sat on after the last render — the glide's origin. */
+  private inkTabId: string | null = null;
+  /** FLIPs the tabs after a drag reorder. */
+  private layoutAnimator: OgeLayoutAnimator<string> | null = null;
+  private reorderFlipPending = false;
   private readonly onDragKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && this.dragActive) {
       event.stopPropagation();
@@ -371,12 +385,16 @@ export class OgeTabStrip {
     // Re-measure and keep the selected tab visible whenever tabs or
     // selection change.
     afterRenderEffect(() => {
-      this.descriptors();
+      const ds = this.descriptors();
       const index = this.selectedIndex();
+      this.playReorderFlip();
+      this.glideInk(ds[index]?.id ?? null);
       this.measure();
       this.scrollToIndex(index);
     });
     this.destroyRef.onDestroy(() => {
+      this.inkGlide?.cancel();
+      this.layoutAnimator?.cancel();
       this.menuPanel.destroy();
       // Guarded: destroy also runs during build-time prerender, where there
       // is no global `document`.
@@ -612,8 +630,56 @@ export class OgeTabStrip {
     if (!wasDragging) return;
     this.suppressClick = true;
     if (to !== null && to !== from) {
+      // snapshot before the owner writes the new order; the render plays it
+      this.tabLayout()?.capture();
+      this.reorderFlipPending = true;
       this.reorderRequest.emit({ fromIndex: from, toIndex: to });
     }
+  }
+
+  /**
+   * Slides the ink from the tab it sat on to the newly selected one (a no-op
+   * on the first render, under reduced motion and for pill strips — the CSS
+   * ink then just moves).
+   */
+  private glideInk(id: string | null): void {
+    const previous = this.inkTabId;
+    this.inkTabId = id;
+    if (previous === null || id === null || previous === id) return;
+    const list = this.list()?.nativeElement;
+    if (!list) return;
+    this.inkGlide ??= createOgeIndicatorGlide(list, {
+      className: 'oge-tab-ink-glide',
+    });
+    this.inkGlide.move(this.elementFor(previous), this.elementFor(id), {
+      fit: this.indicatorFit() === 'content' ? 'content' : 'item',
+    });
+  }
+
+  private tabLayout(): OgeLayoutAnimator<string> | null {
+    const list = this.list()?.nativeElement;
+    if (!list) return null;
+    this.layoutAnimator ??= createOgeLayoutAnimator<string>({
+      root: list,
+      query: () =>
+        this.tabElements().map(
+          (ref) =>
+            [
+              ref.nativeElement.getAttribute('data-tab-id') ?? '',
+              ref.nativeElement,
+            ] as const,
+        ),
+      enter: false,
+      exit: false,
+    });
+    return this.layoutAnimator;
+  }
+
+  /** Glides the tabs of a drag reorder from their old slots. */
+  private playReorderFlip(): void {
+    if (!this.reorderFlipPending) return;
+    this.reorderFlipPending = false;
+    void this.tabLayout()?.play();
   }
 
   protected onPointerCancel(): void {

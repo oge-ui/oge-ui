@@ -85,6 +85,8 @@ for (const layer of LAYERS) {
         panel.getByRole('button', { name: 'Last 7 days' }),
       ).toHaveAttribute('aria-pressed', 'true');
       await page.keyboard.press('Escape');
+      // let the closed panel's exit fade (an aria-hidden ghost) finish first
+      await expect(panel).toHaveCount(0);
 
       const hours = demo.locator('.oge-date-range-box', {
         hasText: 'Opening hours',

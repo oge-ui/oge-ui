@@ -90,6 +90,67 @@ describe('OgeModal', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
+  describe('exit motion', () => {
+    /** jsdom has no Web Animations API (motion off) — a stub turns it on. */
+    const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+    let calls: Keyframe[][] = [];
+    beforeEach(() => {
+      calls = [];
+      proto.animate = (keyframes: Keyframe[]) => {
+        calls.push(keyframes);
+        return {
+          finished: new Promise(() => undefined),
+          cancel: () => undefined,
+        };
+      };
+    });
+    afterEach(() => {
+      delete proto.animate;
+      document.querySelectorAll('.oge-exit-ghost').forEach((g) => g.remove());
+    });
+
+    function openPlaced(): HTMLElement {
+      const opener = screen.getByRole('button', { name: 'Open' });
+      act(() => opener.focus());
+      fireEvent.click(opener);
+      nextFrame();
+      const layer = document.querySelector<HTMLElement>('.oge-modal-layer')!;
+      layer.getBoundingClientRect = () =>
+        ({ left: 0, top: 0, width: 800, height: 600 }) as DOMRect;
+      return opener;
+    }
+
+    it('fades a ghost of the layer while the dialog goes at once', async () => {
+      render(<Host />);
+      const opener = openPlaced();
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('dialog')).toBeNull();
+      // the ghost lands from the removal's mutation record (a microtask)
+      await Promise.resolve();
+      const ghost = document.querySelector<HTMLElement>(
+        '.oge-modal-layer.oge-exit-ghost',
+      );
+      expect(ghost?.getAttribute('aria-hidden')).toBe('true');
+      expect(ghost?.hasAttribute('inert')).toBe(true);
+      expect(calls).toEqual([[{ opacity: 1 }, { opacity: 0 }]]);
+      // focus return and the scroll lock are untouched by the ghost
+      expect(opener).toHaveFocus();
+      expect(document.body.style.overflow).toBe('');
+    });
+
+    it('also fades a controlled close the render removed first', () => {
+      const { rerender } = render(<OgeModal title="T" opened />);
+      nextFrame();
+      const layer = document.querySelector<HTMLElement>('.oge-modal-layer')!;
+      layer.getBoundingClientRect = () =>
+        ({ left: 0, top: 0, width: 800, height: 600 }) as DOMRect;
+      rerender(<OgeModal title="T" opened={false} />);
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(document.querySelector('.oge-exit-ghost')).not.toBeNull();
+      expect(calls).toHaveLength(1);
+    });
+  });
+
   it('the footer close(result) carries a typed result', () => {
     const onClosed = vi.fn();
     render(<Host onClosed={onClosed} />);

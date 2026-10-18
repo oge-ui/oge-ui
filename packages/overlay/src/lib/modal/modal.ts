@@ -16,7 +16,7 @@ import {
   untracked,
   viewChild,
   Injector,
-  type ElementRef,
+  ElementRef,
   type Signal,
 } from '@angular/core';
 import { OGE_OVERLAY_CONFIG } from '../config';
@@ -29,6 +29,7 @@ import {
   lockBodyScroll,
   modalCssSize,
   modalPlacementClass,
+  ogeModalExitGhost,
   pushOverlay,
   removeOverlay,
   resolveModalInitialFocus,
@@ -248,6 +249,7 @@ let nextModalId = 0;
 export class OgeModal<R = unknown> {
   private readonly config = inject(OGE_OVERLAY_CONFIG);
   private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Id of the title element — wired to `aria-labelledby`. */
   protected readonly titleId = `oge-modal-title-${nextModalId++}`;
@@ -419,6 +421,8 @@ export class OgeModal<R = unknown> {
   /** Removes the document listeners of an in-flight drag/resize gesture. */
   private activeGestureCleanup: (() => void) | null = null;
   private releaseInert: (() => void) | null = null;
+  /** The rendered layer, kept for the exit ghost of a close that renders it away first. */
+  private exitLayer: HTMLElement | null = null;
 
   constructor() {
     // `opened` model ↔ DOM-side state, loop-guarded by comparing states first.
@@ -484,6 +488,7 @@ export class OgeModal<R = unknown> {
       () => {
         // One frame after mount: play the entrance transition and move focus.
         this.ready.set(true);
+        this.exitLayer = this.layerRef()?.nativeElement ?? null;
         this.applyInitialFocus();
         if (this.inertBackground()) this.applyInertBackground();
       },
@@ -510,7 +515,12 @@ export class OgeModal<R = unknown> {
   private finalizeClose(reason: OgeModalCloseReason, result?: R): void {
     if (!this.shown) return;
     const panelEl = this.panelRef()?.nativeElement ?? null;
+    const layerEl = this.layerRef()?.nativeElement ?? this.exitLayer;
     this.teardown();
+    // the fade-out runs on a ghost in the host's parent — the real layer
+    // still goes synchronously (and a service host is removed right after)
+    ogeModalExitGhost(layerEl, this.host.nativeElement.parentElement);
+    this.exitLayer = null;
     if (this.restoreFocus() && this.previouslyFocused) {
       // Only restore when focus would otherwise be lost — never steal the
       // user's new focus target.

@@ -228,6 +228,8 @@ test.describe('drop down button', () => {
     ).toBeVisible({ timeout: 5000 });
 
     await page.keyboard.press('Escape');
+    // let the closed menu's exit fade (an aria-hidden ghost) finish first
+    await expect(page.locator('.oge-menu-item')).toHaveCount(0);
     await trigger.click(); // cached: items render immediately, no loading row
     await expect(
       page.locator('.oge-menu-item', { hasText: 'develop' }),

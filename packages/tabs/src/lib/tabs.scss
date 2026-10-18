@@ -82,6 +82,8 @@
 }
 
 .oge-tab-strip-list {
+  // positioning context of the sliding ink bar
+  position: relative;
   display: flex;
   // Natural width, but never narrower than the strip — otherwise the
   // alignment modes below would have no free space to distribute.
@@ -302,6 +304,31 @@
   inset-inline-start: -2px;
 }
 
+// ── Sliding ink ──
+// On a selection change the script (createOgeIndicatorGlide) FLIPs one bar
+// from the old tab's ink to the new one's. While it runs the list carries
+// data-oge-indicator-glide="run": the real ink hides and no tab transitions
+// its border colour, so the ink reappears at once where the bar lands. The
+// CSS ink above stays the truth — first render, reduced motion and the
+// baselines never see the bar.
+.oge-tab-ink-glide {
+  z-index: 1;
+  background: var(--oge-accent);
+  pointer-events: none;
+}
+
+.oge-tab-strip-list[data-oge-indicator-glide] .oge-tab {
+  transition-property: color, background-color, box-shadow;
+}
+
+.oge-tab-strip-list[data-oge-indicator-glide='run'] .oge-tab.oge-tab-selected {
+  border-color: transparent;
+
+  &::after {
+    visibility: hidden;
+  }
+}
+
 .oge-tab-text {
   min-inline-size: 0;
   overflow: hidden;
@@ -394,6 +421,11 @@
 
   .oge-tab-strip-ink-content .oge-tab.oge-tab-selected::after {
     animation: none;
+  }
+
+  // the script never starts a glide under reduced motion; belt and braces
+  .oge-tab-ink-glide {
+    display: none;
   }
 
   .oge-tab-close-pending .oge-tab-close svg {
@@ -566,7 +598,8 @@
     border-inline-start-color: Highlight;
   }
 
-  .oge-tab-strip-ink-content .oge-tab.oge-tab-selected::after {
+  .oge-tab-strip-ink-content .oge-tab.oge-tab-selected::after,
+  .oge-tab-ink-glide {
     background: Highlight;
   }
 

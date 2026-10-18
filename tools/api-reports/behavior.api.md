@@ -279,6 +279,9 @@ export function createOgeAiHttpTransport(options: OgeAiHttpTransportOptions): Og
 export function createOgeAnthropicTransport(options: OgeAiAnthropicTransportOptions): OgeAiTransport;
 
 // @public
+export function createOgeIndicatorGlide(root: HTMLElement, options?: OgeIndicatorGlideOptions): OgeIndicatorGlide;
+
+// @public
 export function createOgeLayoutAnimator<K>(options: OgeLayoutAnimatorOptions<K>): OgeLayoutAnimator<K>;
 
 // @public
@@ -1145,6 +1148,9 @@ export const OGE_EDITOR_TOOLS: Readonly<Record<OgeEditorToolName, ToolDefinition
 export const OGE_EDITOR_TRUSTED_TYPES_POLICY = "oge-ui#editor";
 
 // @public
+export const OGE_EXIT_FADE: readonly Keyframe[];
+
+// @public
 export const OGE_FAB_PLUS_PATH = "M12 5v14M5 12h14";
 
 // @public
@@ -1164,6 +1170,9 @@ export const OGE_GRID_HOST_SELECTOR = ".oge-grid, .oge-tree-list";
 
 // @public
 export const OGE_GRID_WINDOW_BLOCK_SIZE = 100;
+
+// @public
+export const OGE_INDICATOR_GLIDE_ATTR = "data-oge-indicator-glide";
 
 // @public
 export const OGE_LIST_BOX_REORDER_SHORTCUTS = "Alt+ArrowUp Alt+ArrowDown";
@@ -5008,7 +5017,8 @@ export function ogeExitGhost(element: Element, options?: OgeExitGhostOptions): v
 
 // @public
 export interface OgeExitGhostOptions {
-    keyframes?: Keyframe[];
+    keyframes?: readonly Keyframe[];
+    parent?: Element | null;
     rect?: OgeRect;
 }
 
@@ -7698,6 +7708,43 @@ export interface OgeIconSetFormat {
     type: 'iconSet';
 }
 
+// @public
+export interface OgeIndicatorEdge {
+    // (undocumented)
+    readonly side: OgeIndicatorSide;
+    // (undocumented)
+    readonly thickness: number;
+}
+
+// @public
+export function ogeIndicatorEdge(item: Element): OgeIndicatorEdge | null;
+
+// @public
+export type OgeIndicatorFit = 'item' | 'content';
+
+// @public
+export interface OgeIndicatorGlide {
+    cancel(): void;
+    readonly gliding: boolean;
+    move(from: HTMLElement | null, to: HTMLElement | null, options?: OgeIndicatorMoveOptions): boolean;
+}
+
+// @public
+export interface OgeIndicatorGlideOptions {
+    className?: string;
+}
+
+// @public
+export interface OgeIndicatorMoveOptions {
+    fit?: OgeIndicatorFit;
+}
+
+// @public
+export function ogeIndicatorRect(box: OgeRect, edge: OgeIndicatorEdge, inset?: readonly [number, number]): OgeRect;
+
+// @public
+export type OgeIndicatorSide = 'top' | 'right' | 'bottom' | 'left';
+
 // @public (undocumented)
 export class OgeInputCommit<T> {
     constructor(options: OgeInputCommitOptions<T>);
@@ -9011,6 +9058,9 @@ export interface OgeModalDragRequest {
         height: number;
     };
 }
+
+// @public
+export function ogeModalExitGhost(layer: HTMLElement | null, parent?: Element | null): void;
 
 // @public
 export interface OgeModalOpeningEvent {

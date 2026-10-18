@@ -423,6 +423,81 @@ describe('focus restore', () => {
   });
 });
 
+describe('exit motion', () => {
+  /** jsdom has no Web Animations API — a stub turns motion "on". */
+  function stubAnimate(): { calls: Keyframe[][]; restore(): void } {
+    const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+    const original = proto.animate;
+    const calls: Keyframe[][] = [];
+    proto.animate = (keyframes: Keyframe[]) => {
+      calls.push(keyframes);
+      return {
+        finished: new Promise(() => undefined),
+        cancel: () => undefined,
+      };
+    };
+    return {
+      calls,
+      restore() {
+        if (original === undefined) delete proto.animate;
+        else proto.animate = original;
+      },
+    };
+  }
+
+  const placed = (h: Harness) => {
+    h.panel.getBoundingClientRect = () =>
+      ({ top: 130, left: 50, width: 150, height: 80 }) as DOMRect;
+  };
+
+  it('fades an inert ghost of the panel in its parent on close', async () => {
+    const stub = stubAnimate();
+    try {
+      const h = harness();
+      placed(h);
+      h.core.open();
+      h.core.close('escape');
+      // the owner's render removes the panel; the ghost then takes its place
+      h.panel.remove();
+      await Promise.resolve();
+      const ghost = document.body.querySelector<HTMLElement>(
+        ':scope > .oge-exit-ghost',
+      );
+      expect(ghost?.getAttribute('aria-hidden')).toBe('true');
+      expect(ghost?.hasAttribute('inert')).toBe(true);
+      expect(stub.calls).toEqual([[{ opacity: 1 }, { opacity: 0 }]]);
+      // the close itself stays synchronous
+      expect(h.core.isOpen()).toBe(false);
+      expect(h.closed).toEqual(['escape']);
+    } finally {
+      stub.restore();
+    }
+  });
+
+  it('has nothing to fade for a panel that was never measured', () => {
+    const stub = stubAnimate();
+    try {
+      const h = harness();
+      placed(h);
+      h.panel.style.opacity = '0';
+      h.core.open();
+      h.core.close();
+      expect(document.querySelector('.oge-exit-ghost')).toBeNull();
+      expect(stub.calls).toHaveLength(0);
+    } finally {
+      stub.restore();
+    }
+  });
+
+  it('is off without the Web Animations API (jsdom)', () => {
+    const h = harness();
+    placed(h);
+    h.core.open();
+    h.core.close();
+    expect(document.querySelector('.oge-exit-ghost')).toBeNull();
+  });
+});
+
 describe('destroy', () => {
   it('detaches every listener and leaves the stack', () => {
     const h = harness();

@@ -431,9 +431,84 @@ export function ogeSettleGhost(
 /** Options of {@link ogeExitGhost}. */
 export interface OgeExitGhostOptions {
   /** The exit keyframes (default: fade out while shrinking to 96 %). */
-  keyframes?: Keyframe[];
+  keyframes?: readonly Keyframe[];
   /** Where the ghost appears — for an element already detached. Default: its current box. */
   rect?: OgeRect;
+  /**
+   * The element the ghost is appended to (default `document.body`). Pass the
+   * leaving node's own parent so the ghost keeps the theme, direction and
+   * stacking context it inherited — an overlay closing inside a themed
+   * subtree or a modal layer. Falls back to `body` when detached.
+   */
+  parent?: Element | null;
+}
+
+/** Opacity-only exit keyframes — for surfaces whose geometry must stay put. */
+export const OGE_EXIT_FADE: readonly Keyframe[] = [
+  { opacity: 1 },
+  { opacity: 0 },
+];
+
+/**
+ * Lifts a ghost that has no stacking order of its own (a tile, a card) above
+ * the page; one that does (a popup, a modal layer — same classes, same
+ * parent) keeps it, so it never paints over a surface opened meanwhile.
+ */
+function liftGhost(clone: HTMLElement): void {
+  let z = '';
+  try {
+    z = getComputedStyle(clone).zIndex;
+  } catch {
+    z = '';
+  }
+  if (!z || z === 'auto') clone.style.zIndex = '10000';
+}
+
+/**
+ * Jumps the CSS animations a fresh clone would replay (enter keyframes,
+ * staggered items) to their end, so the ghost leaves from the settled look.
+ * Endless loops (spinners) cannot finish and keep running.
+ */
+function settleCloneAnimations(clone: HTMLElement): void {
+  if (typeof clone.getAnimations !== 'function') return;
+  for (const animation of clone.getAnimations({ subtree: true })) {
+    try {
+      animation.finish();
+    } catch {
+      // infinite iteration count — leave the loop running
+    }
+  }
+}
+
+/** How long a ghost waits for the framework to remove the real node. */
+const DETACH_WAIT_MS = 250;
+
+/**
+ * Runs `then` once `element` has left the document — at once when it
+ * already has, else from the mutation that removes it (a microtask, so
+ * before the next paint). Gives up when the node is still there after
+ * {@link DETACH_WAIT_MS}: the owner kept it, so nothing vanished.
+ */
+function whenDetached(element: Element, then: () => void): void {
+  if (!element.isConnected) {
+    then();
+    return;
+  }
+  const doc = element.ownerDocument;
+  if (typeof MutationObserver === 'undefined' || !doc.documentElement) return;
+  let done = false;
+  const observer = new MutationObserver(() => {
+    if (done || element.isConnected) return;
+    done = true;
+    observer.disconnect();
+    clearTimeout(timer);
+    then();
+  });
+  observer.observe(doc.documentElement, { childList: true, subtree: true });
+  const timer = setTimeout(() => {
+    done = true;
+    observer.disconnect();
+  }, DETACH_WAIT_MS);
 }
 
 /**
@@ -441,8 +516,13 @@ export interface OgeExitGhostOptions {
  * `aria-hidden`, inert, pointer-transparent overlay at its box and fades it
  * out there, so the caller removes the real node synchronously — focus
  * return, `inert` and specs keep seeing an immediate removal. Call it just
- * before the removal, or afterwards with the last known `rect`. A no-op
- * with motion off.
+ * before the removal (the box and the clone are taken then), or afterwards
+ * with the last known `rect`. The ghost is appended only once the real node
+ * has left the document — the framework's next render — so the two never
+ * exist side by side (a strict test locator never sees two matches); a node
+ * the owner keeps gets no ghost. The ghost keeps the element's own `z-index`
+ * and starts from its settled look (the clone's CSS enter animations are
+ * finished at once). A no-op with motion off.
  */
 export function ogeExitGhost(
   element: Element,
@@ -460,6 +540,7 @@ export function ogeExitGhost(
   clone.classList.add('oge-exit-ghost');
   Object.assign(clone.style, {
     position: 'fixed',
+    inset: 'auto',
     left: `${rect.left}px`,
     top: `${rect.top}px`,
     width: `${rect.width}px`,
@@ -467,17 +548,24 @@ export function ogeExitGhost(
     margin: '0',
     boxSizing: 'border-box',
     pointerEvents: 'none',
-    zIndex: '10000',
     transform: 'none',
+    transition: 'none',
   } satisfies Partial<CSSStyleDeclaration>);
-  doc.body.appendChild(clone);
-  const timing = ogeMotionTiming(doc.body, 'fast', 'accelerate');
-  const animation = clone.animate(
-    options.keyframes ?? [
-      { opacity: 1, transform: 'scale(1)' },
-      { opacity: 0, transform: 'scale(0.96)' },
-    ],
-    { duration: timing.duration, easing: timing.easing, fill: 'forwards' },
-  );
-  void finished(animation).then(() => clone.remove());
+  const keyframes = (options.keyframes as Keyframe[] | undefined) ?? [
+    { opacity: 1, transform: 'scale(1)' },
+    { opacity: 0, transform: 'scale(0.96)' },
+  ];
+  whenDetached(element, () => {
+    const parent = options.parent?.isConnected ? options.parent : doc.body;
+    parent.appendChild(clone);
+    liftGhost(clone);
+    settleCloneAnimations(clone);
+    const timing = ogeMotionTiming(clone, 'fast', 'accelerate');
+    const animation = clone.animate(keyframes, {
+      duration: timing.duration,
+      easing: timing.easing,
+      fill: 'forwards',
+    });
+    void finished(animation).then(() => clone.remove());
+  });
 }

@@ -121,6 +121,89 @@ describe('OgeModal', () => {
     ]);
   });
 
+  describe('exit motion', () => {
+    /** jsdom has no Web Animations API (motion off) — a stub turns it on. */
+    function stubAnimate(): Keyframe[][] {
+      const calls: Keyframe[][] = [];
+      vi.spyOn(
+        HTMLElement.prototype as unknown as {
+          animate: (k: Keyframe[]) => unknown;
+        },
+        'animate',
+      ).mockImplementation((keyframes: Keyframe[]) => {
+        calls.push(keyframes);
+        return {
+          finished: new Promise(() => undefined),
+          cancel: () => undefined,
+        };
+      });
+      return calls;
+    }
+
+    beforeEach(() => {
+      (HTMLElement.prototype as unknown as { animate?: unknown }).animate ??=
+        () => undefined;
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      delete (HTMLElement.prototype as unknown as { animate?: unknown })
+        .animate;
+    });
+
+    async function openPlaced(): Promise<ComponentFixture<ModalHost>> {
+      const fixture = await create();
+      fixture.componentInstance.opened.set(true);
+      await settle(fixture);
+      const layer = query(fixture, '.oge-modal-layer');
+      if (layer) {
+        layer.getBoundingClientRect = () =>
+          ({ left: 0, top: 0, width: 800, height: 600 }) as DOMRect;
+      }
+      return fixture;
+    }
+
+    it('fades a ghost of the layer while the real one goes at once', async () => {
+      const calls = stubAnimate();
+      const fixture = await openPlaced();
+      query(fixture, '.oge-modal-close')?.click();
+      await settle(fixture);
+      expect(
+        document.querySelector('.oge-modal-layer:not(.oge-exit-ghost)'),
+      ).toBeNull();
+      const ghost = document.querySelector<HTMLElement>(
+        '.oge-modal-layer.oge-exit-ghost',
+      );
+      expect(ghost?.getAttribute('aria-hidden')).toBe('true');
+      expect(ghost?.hasAttribute('inert')).toBe(true);
+      expect(ghost?.querySelector('[id]')).toBeNull();
+      expect(calls).toEqual([[{ opacity: 1 }, { opacity: 0 }]]);
+      // the ghost never takes focus: it went back out of the dialog
+      expect(ghost?.contains(document.activeElement)).toBe(false);
+    });
+
+    it('also fades a model-write close', async () => {
+      const calls = stubAnimate();
+      const fixture = await openPlaced();
+      fixture.componentInstance.opened.set(false);
+      await settle(fixture);
+      expect(
+        document.querySelector('.oge-modal-layer:not(.oge-exit-ghost)'),
+      ).toBeNull();
+      expect(document.querySelector('.oge-exit-ghost')).not.toBeNull();
+      expect(calls).toHaveLength(1);
+    });
+
+    it('is off without the Web Animations API (jsdom)', async () => {
+      delete (HTMLElement.prototype as unknown as { animate?: unknown })
+        .animate;
+      const fixture = await openPlaced();
+      query(fixture, '.oge-modal-close')?.click();
+      await settle(fixture);
+      expect(document.querySelector('.oge-exit-ghost')).toBeNull();
+    });
+  });
+
   it('Escape closes with reason escape; closeOnEscape=false keeps it open', async () => {
     const fixture = await create();
     fixture.componentInstance.opened.set(true);

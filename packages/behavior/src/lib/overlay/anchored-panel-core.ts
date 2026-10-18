@@ -1,4 +1,5 @@
 import { ogeIsRtl } from '../a11y/direction';
+import { OGE_EXIT_FADE, ogeExitGhost } from '../motion/motion';
 import { resolvePopupArrow } from './arrow';
 import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
 import {
@@ -93,6 +94,21 @@ export interface OgeAnchoredPanelCoreOptions {
 let nextPanelId = 0;
 
 /**
+ * The close's exit motion: an `ogeExitGhost` of the panel fades out
+ * (opacity only — `--oge-motion-duration-fast`, `-easing-accelerate`) in the
+ * panel's own parent, so it keeps the theme and stacking context, while the
+ * owner still removes the real panel synchronously. A panel that never got
+ * measured (still transparent) has nothing to fade.
+ */
+function exitPanel(panel: HTMLElement | null): void {
+  if (!panel?.isConnected || panel.style.opacity === '0') return;
+  ogeExitGhost(panel, {
+    parent: panel.parentElement,
+    keyframes: OGE_EXIT_FADE,
+  });
+}
+
+/**
  * Custom property the machine writes on the panel: the height left on the
  * resolved side of the anchor inside the visible viewport (`.oge-popup` caps
  * its `max-height` with it).
@@ -163,6 +179,7 @@ export class OgeAnchoredPanelCore {
     if (!this.open_) return;
     const panelEl = this.options.panel();
     const anchorEl = this.options.anchor();
+    exitPanel(panelEl);
     removeOverlay(this.stackHandle);
     this.removeListeners();
     this.cancelFrame();

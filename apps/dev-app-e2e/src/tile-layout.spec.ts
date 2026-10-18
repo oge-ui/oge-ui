@@ -221,6 +221,8 @@ for (const fw of FRAMEWORKS) {
       await expect(revenue).toContainText('3 × 1');
 
       const orders = tile(demo, 'Orders');
+      // the resize reflowed the neighbours — measure once their glide settled
+      await expect(demo.locator('[data-oge-animating]')).toHaveCount(0);
       const box = await orders.boundingBox();
       const handle = orders.locator('.oge-tile-layout-resize');
       await expect(handle).toHaveAttribute('aria-hidden', 'true');

@@ -3,7 +3,7 @@
   "tolerance": 0.1,
   "entries": {
     "@oge-ui/ai": 6838,
-    "@oge-ui/behavior": 303016,
+    "@oge-ui/behavior": 334612,
     "@oge-ui/behavior/export-excel": 13888,
     "@oge-ui/behavior/export-pdf": 14945,
     "@oge-ui/bpmn": 45264,
@@ -173,7 +173,7 @@
     "@oge-ui/react-scheduler/export-pdf": 246,
     "@oge-ui/react-scheduler/styles.css": 6093,
     "@oge-ui/react-tabs": 9362,
-    "@oge-ui/react-tabs/styles.css": 3101,
+    "@oge-ui/react-tabs/styles.css": 3568,
     "@oge-ui/react-tabs/testing": 1092,
     "@oge-ui/react-tree-list": 24051,
     "@oge-ui/react-tree-list/export-excel": 406,
