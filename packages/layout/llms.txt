@@ -1579,11 +1579,12 @@ _Keyboard_
 | Name | Type | Description |
 | --- | --- | --- |
 | `Arrow keys / Home / End` | `focus` | Move focus between tiles (one roving tab stop; ↑/↓ go to the closest tile in the row above / below). Content inside a tile keeps its own Tab order, and the tile keys only act while the tile itself is focused. |
+| `Space / Enter` | `grab` | Picks the focused tile up: it lifts, and the arrows (or Home / End) move it with a live preview — the neighbours reflow around it. Space / Enter drops it (one `reordering` → `reordered`), Escape or moving focus away puts it back. Every step is announced. |
 | `Ctrl+← / Ctrl+→` | `move` | Move the focused tile one position earlier / later (mirrored in RTL). ⌘ works as Ctrl. |
 | `Ctrl+↑ / Ctrl+↓` | `move` | Move the focused tile to the position of the tile above / below. |
 | `Ctrl+Shift+← / Ctrl+Shift+→` | `resize` | Shrink / grow the column span (mirrored in RTL), within the tile&rsquo;s bounds. |
 | `Ctrl+Shift+↑ / Ctrl+Shift+↓` | `resize` | Shrink / grow the row span. |
-| `Escape` | `cancel` | Cancels a pointer drag or resize in progress. |
+| `Escape` | `cancel` | Cancels a pointer drag or resize in progress, or puts a picked-up tile back. |
 
 ### OgeTileLayoutItem — `<oge-tile-layout-item>`
 
@@ -1623,7 +1624,7 @@ _Messages_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeTileLayoutMessages` | `interface` | `layoutLabel`, `tileRoleDescription`, `untitledTile` (`{position}`), `keyboardHint`, `dragHint`, `moved` (`{title}`, `{position}`, `{count}`), `resized` (ICU plurals over `{colSpan}` / `{rowSpan}`), `unchanged`, `dragCancelled`. Translated in every `@oge-ui/locales` pack (`layout.tileLayout`). |
+| `OgeTileLayoutMessages` | `interface` | `layoutLabel`, `tileRoleDescription`, `untitledTile` (`{position}`), `keyboardHint`, `dragHint`, `moved` (`{title}`, `{position}`, `{count}`), `resized` (ICU plurals over `{colSpan}` / `{rowSpan}`), `unchanged`, `dragCancelled`, `pickedUp` / `dropped` (`{title}`, `{position}`, `{count}`). `keyboardHint` interpolates `{modifier}` (`Ctrl`, or `⌘` on Apple platforms). Translated in every `@oge-ui/locales` pack (`layout.tileLayout`). |
 | `OgeTileLayoutConfig / OgeTileLayoutConfigInput` | `interface` | The config shape (`messages`, `columns?`, `rowHeight?`, `gap?`, `locale?`) and its partial input; `OGE_DEFAULT_TILE_LAYOUT_CONFIG` / `OGE_DEFAULT_TILE_LAYOUT_MESSAGES` are the resolved defaults. |
 
 ### OgeCarousel — `<oge-carousel>`

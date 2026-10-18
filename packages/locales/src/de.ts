@@ -617,13 +617,16 @@ export const de: OgeLocalePack = {
       tileRoleDescription: 'Kachel',
       untitledTile: 'Kachel {position}',
       keyboardHint:
-        'Strg und eine Pfeiltaste verschieben die Kachel, Strg, Umschalt und eine Pfeiltaste ändern ihre Größe.',
+        'Leertaste hebt die Kachel an, die Pfeiltasten verschieben sie, Leertaste legt sie ab. {modifier} und eine Pfeiltaste verschieben sie sofort; {modifier}, Umschalt und eine Pfeiltaste ändern ihre Größe.',
       dragHint: 'Zum Verschieben ziehen',
       moved: '{title} an Position {position} von {count} verschoben',
       resized:
         '{title} auf {colSpan, plural, one {# Spalte} other {# Spalten}} × {rowSpan, plural, one {# Zeile} other {# Zeilen}} geändert',
       unchanged: '{title} kann nicht weiter geändert werden',
       dragCancelled: 'Ziehen abgebrochen',
+      pickedUp:
+        '{title} angehoben, Position {position} von {count}. Pfeiltasten verschieben, Leertaste legt ab, Escape bricht ab.',
+      dropped: '{title} an Position {position} von {count} abgelegt',
     },
     dataView: {
       dataView: 'Elemente',

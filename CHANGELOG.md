@@ -7,6 +7,40 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Layout motion — `@oge-ui/behavior`, `@oge-ui/layout`, `@oge-ui/react-layout`, `@oge-ui/grid` (tokens), `@oge-ui/locales`
+
+- **Nothing teleports in the tile layout any more.** Dragging a tile lifts it
+  off the page and the neighbours reflow live around the slot it would land
+  in; on release it settles into place with a spring, and Escape glides it
+  back. Keyboard moves, `applyState()` and `moveTile()` / `resizeTile()`
+  glide the same way; added tiles fade in and removed ones fade out.
+- **Keyboard pick-up.** Space (or Enter) picks the focused tile up, the
+  arrows move it with the same live preview, Space drops it and Escape — or
+  moving focus away — puts it back; every step is announced (new
+  `pickedUp` / `dropped` messages, translated in all 11 locale packs).
+  `Ctrl+Arrow` still moves at once. On Apple platforms the hint and
+  `aria-keyshortcuts` say ⌘ (the hint's new `{modifier}` placeholder).
+- **Resizing follows the pointer**: an outline tracks it pixel for pixel with
+  a "2 × 1" badge while the tile snaps to whole tracks underneath and the
+  neighbours glide out of the way. Drags and resizes auto-scroll the page or
+  the nearest scroll container.
+- **Resting polish:** tiles rise to `--oge-shadow-card-hover` under the
+  pointer, the grip fades in on hover / focus, the resize handle is drawn as
+  two diagonal strokes.
+- **One motion layer for the whole suite** in `@oge-ui/behavior`:
+  `createOgeLayoutAnimator` (FLIP with in-flight interruption, enter and
+  exit), `ogeExitGhost`, `ogeSettleGhost`, `ogeMotionTiming`,
+  `ogeSpringEasing`, `ogeMotionEnabled` and `ogeScrollParent`. All of it
+  no-ops under reduced motion and without the Web Animations API (SSR,
+  jsdom). `createDragGhost` now lifts its preview and `destroy(to)` settles
+  it; `beginPointerDragDrop` takes `settleTo` and glides a cancelled ghost
+  back. `createAutoScroller` handles the page scroller.
+- **New tokens:** `--oge-motion-duration-layout`,
+  `--oge-motion-easing-spring` (a CSS `linear()` spring),
+  `--oge-motion-stagger`, `--oge-shadow-card-hover`, `--oge-shadow-drag`,
+  `--oge-drag-scale` and `--oge-drop-placeholder-border` / `-bg`, with
+  dark and high-contrast values.
+
 ### AI grid assistant — new `@oge-ui/ai` and `@oge-ui/react-ai` (MIT), `@oge-ui/behavior`, `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/locales`
 
 - **Ask the grid in plain language.** `<oge-grid-assistant [target]="grid">` /

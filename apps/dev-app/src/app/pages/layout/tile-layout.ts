@@ -127,9 +127,15 @@ const BUTTON_CLASS =
       </app-demo-card>
 
       <app-demo-card
-        [chips]="['reorderable', 'reordering', 'reordered', 'Ctrl+Arrow']"
+        [chips]="[
+          'reorderable',
+          'reordering',
+          'reordered',
+          'Space',
+          'Ctrl+Arrow',
+        ]"
         heading="Reorder by drag & keyboard"
-        description="Drag a tile by its header (touch drags start at once — the header is a dedicated handle), or focus a tile and press <kbd>Ctrl</kbd>+arrows. Both run the same commit, so <code>reordering</code> (cancelable) → <code>reordered</code> → <code>layoutChanged</code> fire identically, focus stays on the moved tile and the new position is announced. <kbd>Escape</kbd> cancels a drag."
+        description="Drag a tile by its header (touch drags start at once — the header is a dedicated handle): it lifts off the page, the neighbours reflow live around the slot it would land in, and on release it settles into place. On the keyboard, <kbd>Space</kbd> picks the focused tile up, the arrows move it with the same live preview and <kbd>Space</kbd> drops it — or <kbd>Ctrl</kbd>+arrows (<kbd>⌘</kbd> on a Mac) move it at once. Every path runs the same commit, so <code>reordering</code> (cancelable) → <code>reordered</code> → <code>layoutChanged</code> fire identically, focus stays on the moved tile and the new position is announced. <kbd>Escape</kbd> cancels and the tile glides back. Motion follows the OS reduced-motion setting and the <code>--oge-motion-*</code> tokens."
         [code]="reorderSnippet"
         language="ts"
       >

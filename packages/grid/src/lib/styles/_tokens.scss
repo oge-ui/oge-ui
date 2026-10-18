@@ -72,6 +72,15 @@
   /* resting elevation of raised cards — lighter than --oge-shadow-popup */
   --oge-shadow-card:
     0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px -4px rgba(15, 23, 42, 0.1);
+  /* a raised card under the pointer — between card and popup */
+  --oge-shadow-card-hover:
+    0 2px 6px rgba(15, 23, 42, 0.1), 0 10px 24px -8px rgba(15, 23, 42, 0.16);
+  /* every lifted drag surface (ghosts, a carried tile) — above popups */
+  --oge-shadow-drag:
+    0 18px 40px -10px rgba(15, 23, 42, 0.3),
+    0 6px 14px -6px rgba(15, 23, 42, 0.2);
+  /* how much a lifted drag surface grows */
+  --oge-drag-scale: 1.02;
   /* loading placeholders (skeleton bones, grid skeleton rows) */
   --oge-skeleton-color: rgba(148, 163, 184, 0.25);
   /* switch knob — stays light on both themes, like the platform controls */
@@ -112,6 +121,47 @@
   --oge-motion-easing-decelerate: cubic-bezier(0, 0, 0, 1);
   /* leaving surfaces — gathers speed as it exits */
   --oge-motion-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  /* layout moves — FLIP reflows, drop settles, sliding indicators */
+  --oge-motion-duration-layout: 280ms;
+  /* layout moves: a damped spring (about 1 % overshoot) sampled by
+     ogeSpringEasing() in @oge-ui/behavior */
+  --oge-motion-easing-spring: linear(
+    0,
+    0.017,
+    0.062,
+    0.124,
+    0.198,
+    0.277,
+    0.357,
+    0.436,
+    0.511,
+    0.581,
+    0.645,
+    0.702,
+    0.753,
+    0.798,
+    0.837,
+    0.87,
+    0.898,
+    0.921,
+    0.941,
+    0.957,
+    0.969,
+    0.98,
+    0.988,
+    0.994,
+    0.998,
+    1.002,
+    1.004,
+    1.006,
+    1.007,
+    1.007,
+    1.007,
+    1.007,
+    1
+  );
+  /* delay between siblings of a staggered enter (speed dial, list enters) */
+  --oge-motion-stagger: 30ms;
   /* tooltip bubble (inverted surface; dark theme overrides) */
   --oge-tooltip-bg: #1e2430;
   --oge-tooltip-color: #f5f7fa;
@@ -177,6 +227,9 @@
   --oge-kanban-card-fg: var(--oge-text-color);
   --oge-kanban-placeholder-border: var(--oge-accent-25);
   --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  /* the slot a dragged item will land in (tile layout, sortable lists) */
+  --oge-drop-placeholder-border: var(--oge-accent-25);
+  --oge-drop-placeholder-bg: var(--oge-accent-soft);
   --oge-kanban-lane-border: var(--oge-border-color);
   --oge-chart-axis-line: var(--oge-border-color);
   --oge-chart-axis-fg: var(--oge-muted-color);

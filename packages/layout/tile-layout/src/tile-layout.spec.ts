@@ -130,7 +130,8 @@ describe('OgeTileLayout', () => {
     expect(title?.textContent?.trim()).toBe('Alpha');
     expect(d.getAttribute('aria-label')).toBe('Tile 4');
     const hint = root.querySelector(`#${a.getAttribute('aria-describedby')}`);
-    expect(hint?.textContent).toContain('Control');
+    expect(hint?.textContent).toContain('Space to pick the tile up');
+    expect(hint?.textContent).toContain('Ctrl and an arrow key');
     expect(a.getAttribute('aria-keyshortcuts')).toContain(
       'Control+Shift+ArrowUp',
     );
@@ -225,19 +226,70 @@ describe('OgeTileLayout', () => {
       y: 0,
       toJSON: () => ({}),
     }));
+    // cells are what the live drag hit-tests (tiles may be mid-glide)
     all.forEach(
-      (t, i) => (t.getBoundingClientRect = () => rects[i] as DOMRect),
+      (t, i) =>
+        ((t.parentElement as HTMLElement).getBoundingClientRect = () =>
+          rects[i] as DOMRect),
     );
     const header = all[0].querySelector('.oge-tile-layout-header')!;
     pointer(header, 'pointerdown', 10, 10);
     pointer(header, 'pointermove', 240, 20);
     await settle(fixture);
     expect(all[0].classList).toContain('oge-tile-layout-tile-dragged');
-    expect(all[1].classList).toContain('oge-tile-layout-tile-drop-target');
+    // the tile floats at its origin plus the pointer travel
+    expect(all[0].style.left).toBe('230px');
+    expect(all[0].style.width).toBe('100px');
+    const cells = all.map((t) => t.parentElement as HTMLElement);
+    expect(cells[0].classList).toContain('oge-tile-layout-cell-placeholder');
+    // the layout previews the drop live, without moving DOM nodes (focus stays)
+    expect(cells.map((c) => c.style.order)).toEqual(['1', '0', '2', '3']);
+    expect(keysOf(root)).toEqual(['a', 'b', 'c', 'd']);
+    expect(host.moves).toEqual([]);
     pointer(header, 'pointerup', 240, 20);
     await settle(fixture);
     expect(keysOf(root)).toEqual(['b', 'a', 'c', 'd']);
     expect(host.changes.at(-1)?.source).toBe('pointer');
+    expect(tiles(root)[1].style.left).toBe('');
+    expect(root.querySelector('.oge-tile-layout-cell-placeholder')).toBeNull();
+  });
+
+  it('Space picks a tile up, arrows preview, Space drops; Escape and blur cancel', async () => {
+    const [a] = tiles(root);
+    a.focus();
+    key(a, ' ');
+    await settle(fixture);
+    expect(a.classList).toContain('oge-tile-layout-tile-grabbed');
+    key(a, 'ArrowRight');
+    key(a, 'ArrowRight');
+    await settle(fixture);
+    const cells = () =>
+      tiles(root).map((t) => (t.parentElement as HTMLElement).style.order);
+    expect(cells()).toEqual(['2', '0', '1', '3']);
+    expect(document.activeElement).toBe(a);
+    expect(host.moves).toEqual([]);
+    key(a, ' ');
+    await settle(fixture);
+    expect(keysOf(root)).toEqual(['b', 'c', 'a', 'd']);
+    expect(host.moves).toEqual([2]);
+    expect(host.changes.at(-1)?.source).toBe('keyboard');
+    expect(root.querySelector('.oge-tile-layout-tile-grabbed')).toBeNull();
+    const moved = tiles(root)[2];
+    moved.focus();
+    key(moved, 'Enter');
+    key(moved, 'Home');
+    await settle(fixture);
+    expect(cells()[2]).toBe('0');
+    key(moved, 'Escape');
+    await settle(fixture);
+    expect(keysOf(root)).toEqual(['b', 'c', 'a', 'd']);
+    expect(cells()).toEqual(['0', '1', '2', '3']);
+    key(moved, ' ');
+    await settle(fixture);
+    moved.blur();
+    await settle(fixture);
+    expect(root.querySelector('.oge-tile-layout-tile-grabbed')).toBeNull();
+    expect(host.moves).toEqual([2]);
   });
 
   it('cancels a drag with Escape', async () => {
@@ -275,8 +327,17 @@ describe('OgeTileLayout', () => {
         '--oge-tile-col-span',
       ),
     ).toBe('3');
+    // the outline follows the pointer exactly; the badge names the snap
+    const frame = root.querySelector<HTMLElement>(
+      '.oge-tile-layout-resize-frame',
+    );
+    expect(frame?.style.width).toBe('330px');
+    expect(frame?.style.height).toBe('340px');
+    expect(frame?.getAttribute('aria-hidden')).toBe('true');
+    expect(frame?.textContent?.trim()).toBe('3 × 2');
     pointer(handle, 'pointerup', 330, 340);
     await settle(fixture);
+    expect(root.querySelector('.oge-tile-layout-resize-frame')).toBeNull();
     expect(host.resizes.at(-1)).toMatchObject({
       key: 'a',
       source: 'pointer',

@@ -142,7 +142,10 @@ export interface OgeTileLayoutMessages {
   tileRoleDescription: string;
   /** Accessible name of a tile without a title; `{position}` is 1-based. */
   untitledTile: string;
-  /** Visually hidden keyboard help every tile is described by. */
+  /**
+   * Visually hidden keyboard help every tile is described by. `{modifier}`
+   * is the platform's shortcut key (`Ctrl`, or `⌘` on Apple platforms).
+   */
   keyboardHint: string;
   /** `title` tooltip of a draggable header. */
   dragHint: string;
@@ -154,6 +157,10 @@ export interface OgeTileLayoutMessages {
   unchanged: string;
   /** Announced when Escape cancels a drag. */
   dragCancelled: string;
+  /** Announced when Space picks a tile up. `{title}`, `{position}`, `{count}`. */
+  pickedUp: string;
+  /** Announced when a picked-up tile is dropped. `{title}`, `{position}`, `{count}`. */
+  dropped: string;
 }
 
 export const OGE_DEFAULT_TILE_LAYOUT_MESSAGES: OgeTileLayoutMessages = {
@@ -161,13 +168,16 @@ export const OGE_DEFAULT_TILE_LAYOUT_MESSAGES: OgeTileLayoutMessages = {
   tileRoleDescription: 'tile',
   untitledTile: 'Tile {position}',
   keyboardHint:
-    'Press Control and an arrow key to move the tile, Control, Shift and an arrow key to resize it.',
+    'Press Space to pick the tile up, the arrow keys to move it and Space to drop it. {modifier} and an arrow key move it at once; {modifier}, Shift and an arrow key resize it.',
   dragHint: 'Drag to move',
   moved: '{title} moved to position {position} of {count}',
   resized:
     '{title} resized to {colSpan, plural, one {# column} other {# columns}} by {rowSpan, plural, one {# row} other {# rows}}',
   unchanged: '{title} cannot change further',
   dragCancelled: 'Drag cancelled',
+  pickedUp:
+    '{title} picked up at position {position} of {count}. Arrow keys move it, Space drops it, Escape cancels.',
+  dropped: '{title} dropped at position {position} of {count}',
 };
 
 /** Application-wide defaults for `oge-tile-layout`. */
@@ -210,16 +220,39 @@ export const OGE_TILE_LAYOUT_DEFAULTS = {
   gap: 16,
 } as const;
 
-/** The keys a tile advertises in `aria-keyshortcuts`. */
+/**
+ * The keys a tile advertises in `aria-keyshortcuts` — `Meta` instead of
+ * `Control` on Apple platforms (`apple`).
+ */
 export function ogeTileLayoutShortcuts(
   reorderable: boolean,
   resizable: boolean,
+  apple = false,
 ): string | null {
   const keys: string[] = [];
+  const mod = apple ? 'Meta' : 'Control';
   const arrows = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
-  if (reorderable) keys.push(...arrows.map((a) => `Control+${a}`));
-  if (resizable) keys.push(...arrows.map((a) => `Control+Shift+${a}`));
+  if (reorderable) keys.push('Space', ...arrows.map((a) => `${mod}+${a}`));
+  if (resizable) keys.push(...arrows.map((a) => `${mod}+Shift+${a}`));
   return keys.length ? keys.join(' ') : null;
+}
+
+/** The shortcut-modifier name `keyboardHint` interpolates as `{modifier}`. */
+export function ogeTileLayoutModifier(apple: boolean): string {
+  return apple ? '⌘' : 'Ctrl';
+}
+
+/** The visually hidden keyboard help, with the platform's modifier. */
+export function ogeTileLayoutKeyboardHint(
+  messages: OgeTileLayoutMessages,
+  apple: boolean,
+  locale?: string,
+): string {
+  return ogeFormatMessage(
+    messages.keyboardHint,
+    { modifier: ogeTileLayoutModifier(apple) },
+    locale,
+  );
 }
 
 const positiveInt = (value: unknown, fallback: number): number =>
@@ -394,12 +427,14 @@ export type OgeTileLayoutDirection = 'prev' | 'next' | 'up' | 'down';
 
 /** What a key press on a focused tile asks for. */
 export type OgeTileLayoutKeyIntent =
+  | { type: 'grab' }
   | { type: 'focus'; to: OgeTileLayoutDirection | 'first' | 'last' }
   | { type: 'move'; to: OgeTileLayoutDirection }
   | { type: 'resize'; axis: 'col' | 'row'; delta: 1 | -1 };
 
 /**
  * The keyboard map as a pure decision. Arrows / Home / End move focus;
+ * Space / Enter pick the tile up (see {@link ogeTileLayoutGrabIntent});
  * `Ctrl` (or `⌘`) + arrows move the tile; `Ctrl+Shift` + arrows resize it.
  * Horizontal arrows are visual — in RTL `←` means "later" and grows the span
  * towards the inline end, which is the left.
@@ -424,6 +459,7 @@ export function ogeTileLayoutKeyIntent(
             : null;
   if (!mod) {
     if (event.shiftKey) return null;
+    if (event.key === ' ' || event.key === 'Enter') return { type: 'grab' };
     if (dir) return { type: 'focus', to: dir };
     if (event.key === 'Home') return { type: 'focus', to: 'first' };
     if (event.key === 'End') return { type: 'focus', to: 'last' };
@@ -434,6 +470,33 @@ export function ogeTileLayoutKeyIntent(
   if (dir === 'next') return { type: 'resize', axis: 'col', delta: 1 };
   if (dir === 'prev') return { type: 'resize', axis: 'col', delta: -1 };
   return { type: 'resize', axis: 'row', delta: dir === 'down' ? 1 : -1 };
+}
+
+/** What a key press means while a tile is picked up (keyboard grab mode). */
+export type OgeTileLayoutGrabIntent =
+  | { type: 'drop' }
+  | { type: 'cancel' }
+  | { type: 'move'; to: OgeTileLayoutDirection | 'first' | 'last' };
+
+/**
+ * The grab-mode keyboard map: arrows (and `Ctrl`/`⌘` + arrows) / Home /
+ * End move the picked-up tile, Space / Enter drop it, Escape cancels. Tab is
+ * left alone — the host drops on blur.
+ */
+export function ogeTileLayoutGrabIntent(
+  event: OgeTileLayoutKeyInput,
+  rtl: boolean,
+): OgeTileLayoutGrabIntent | null {
+  if (event.altKey || event.shiftKey) return null;
+  if (event.key === ' ' || event.key === 'Enter') return { type: 'drop' };
+  if (event.key === 'Escape') return { type: 'cancel' };
+  if (event.key === 'Home') return { type: 'move', to: 'first' };
+  if (event.key === 'End') return { type: 'move', to: 'last' };
+  const intent = ogeTileLayoutKeyIntent(
+    { key: event.key, ctrlKey: false, metaKey: false },
+    rtl,
+  );
+  return intent?.type === 'focus' ? { type: 'move', to: intent.to } : null;
 }
 
 /** A measured tile rectangle (viewport coordinates). */
@@ -541,6 +604,55 @@ export function ogeTileLayoutDropIndex(
   return best;
 }
 
+/**
+ * The live drop target while a drag reflows the layout: the index of the
+ * cell under the point — measured from the current (preview) layout — or
+ * `current` when the point is over the placeholder, a gap or nothing.
+ * Re-targeting only on a cell the pointer is inside (never the nearest one)
+ * keeps mixed spans from oscillating: after a reflow the pointer sits over
+ * the placeholder, which never re-targets.
+ */
+export function ogeTileLayoutLiveTarget(
+  cells: readonly OgeTileLayoutRect[],
+  x: number,
+  y: number,
+  current: number,
+): number {
+  for (let i = 0; i < cells.length; i++) {
+    const r = cells[i];
+    if (
+      x >= r.left &&
+      x <= r.left + r.width &&
+      y >= r.top &&
+      y <= r.top + r.height
+    )
+      return i;
+  }
+  return current;
+}
+
+/** `items` with the element at `from` moved to `to` (a new array). */
+export function ogeTileLayoutPreviewOrder<T>(
+  items: readonly T[],
+  from: number,
+  to: number,
+): T[] {
+  const out = items.slice();
+  if (from < 0 || from >= out.length || from === to) return out;
+  const [moved] = out.splice(from, 1);
+  out.splice(Math.max(0, Math.min(to, out.length)), 0, moved);
+  return out;
+}
+
+/** The size badge a pointer resize shows: "2 × 1" (columns × rows). */
+export function ogeTileLayoutSizeText(
+  span: OgeTileLayoutSpan,
+  locale?: string,
+): string {
+  const n = (v: number) => v.toLocaleString(locale);
+  return `${n(span.colSpan)} × ${n(span.rowSpan)}`;
+}
+
 /** Input of {@link ogeTileLayoutResizeSpan}. */
 export interface OgeTileLayoutResizeInput {
   /** The tile's spans when the drag started. */
@@ -611,6 +723,18 @@ export function ogeTileLayoutMovedText(
   locale?: string,
 ): string {
   return ogeFormatMessage(messages.moved, { title, position, count }, locale);
+}
+
+/** "Sales picked up at position 2 of 6. …" / "Sales dropped at position 3 of 6". */
+export function ogeTileLayoutGrabText(
+  messages: OgeTileLayoutMessages,
+  which: 'pickedUp' | 'dropped',
+  title: string,
+  position: number,
+  count: number,
+  locale?: string,
+): string {
+  return ogeFormatMessage(messages[which], { title, position, count }, locale);
 }
 
 /** "Sales resized to 2 columns by 1 row". */

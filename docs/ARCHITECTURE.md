@@ -791,10 +791,14 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
 - **Motion.** Durations and curves are tokens in `literal-tokens` — never raw values in a
   component stylesheet:
   `--oge-motion-duration-fast` (120ms: hover/press state layers, colour, glyphs),
-  `-base` (200ms: thumbs, popups, panels, expand/collapse, small enters) and `-slow` (300ms: large
-  surfaces travelling a distance); `--oge-motion-easing-standard` (state changes that stay on
+  `-base` (200ms: thumbs, popups, panels, expand/collapse, small enters), `-slow` (300ms: large
+  surfaces travelling a distance) and `-layout` (280ms: FLIP reflows, drop settles); `--oge-motion-easing-standard` (state changes that stay on
   screen — the default), `-emphasized` (surfaces and marks entering: popups, sheets, dialogs,
-  check marks, ink), `-decelerate` (fades and reveals) and `-accelerate` (exits). A consumer
+  check marks, ink), `-decelerate` (fades and reveals), `-accelerate` (exits) and `-spring`
+  (layout moves and settles only — state layers keep `standard`); `--oge-motion-stagger` (30ms)
+  spaces staggered enters. Elevation: `--oge-shadow-card` → `-card-hover` (a raised surface under
+  the pointer) → `--oge-shadow-popup` → `--oge-shadow-drag` (every lifted drag surface);
+  `--oge-drop-placeholder-border` / `-bg` paint every landing slot. A consumer
   retimes the whole suite from `:root`. Rules:
   - **Enter-only by default.** An element that appears runs a keyframe (`animation: oge-x-in
 var(--oge-motion-duration-…) var(--oge-motion-easing-…)`, keyframe `from { … }` only) or a
@@ -810,6 +814,22 @@ var(--oge-motion-duration-…) var(--oge-motion-easing-…)`, keyframe `from { �
   - Looping indicators (spinners, shimmer, indeterminate bars) and script-tuned component knobs
     (`--oge-drawer-duration`, `--oge-chart-anim-duration`) keep their own cycle lengths; their
     curves still come from the tokens.
+  - **Layout motion is FLIP, through one primitive.** A reorder, drop, insert or removal never
+    teleports: `createOgeLayoutAnimator` (`@oge-ui/behavior`) snapshots the keyed elements
+    (`capture()`, just before a state write the component makes itself), and after the render
+    `play()` glides each moved element from its old box with a WAAPI `transform`
+    (`--oge-motion-duration-layout` + `--oge-motion-easing-spring`, a `linear()` spring sampled
+    by `ogeSpringEasing`), fades appearing ones in and fades an `ogeExitGhost` clone of leaving
+    ones out — the real node is still removed synchronously. Boxes are measured against the root,
+    so scrolling is not a move; a capture mid-glide reads the in-flight box, so an interrupted move
+    continues instead of jumping. Track changes (columns, gap) and container resizes `reset()` /
+    re-record instead of animating. Angular plays from `afterRenderEffect`, React from a layout
+    effect keyed on a layout signature (never every render — a play cancels running glides).
+    Everything no-ops under reduced motion, without `Element.animate` (SSR, jsdom — specs never
+    see an animation) and in a hidden tab; feedback that is not decoration (placeholders, the live
+    preview) stays and just jumps. Drag ghosts lift (`--oge-drag-scale`, `--oge-shadow-drag`)
+    and `createDragGhost(...).destroy(to)` / `beginPointerDragDrop({ settleTo })` settle them
+    onto the drop and glide them back on a cancel.
   - Each animation is switched off in the file's `@include tokens.reduced-motion` block, and the
     final (non-animated) state is what the visual baselines capture — `animations: 'disabled'`
     must not change a pixel.
@@ -1885,11 +1905,21 @@ decisions in a `behavior` core (`lib/layout/{carousel,list-view,data-view,tile-l
   dense-flow CSS grid; the serializable state
   (`{ version: 1, tiles: [{ key, order, colSpan, rowSpan }] }`) wins over item
   defaults and every import goes through `sanitizeOgeTileLayoutState`.
-  Ctrl+←/→ move, Ctrl+↑/↓ move a row, Ctrl+Shift+arrows resize (horizontal
-  keys mirror in RTL), announced through the shared announcer; the pointer
-  drop runs the same commit. The grid never reflows mid-drag (the drop index
-  comes from tile rects measured at drag start); the corner resize handle is
-  pointer-only and `aria-hidden` because its twin lives on the tile.
+  Space picks the focused tile up (arrows move a live preview, Space drops,
+  Escape or blur puts it back), Ctrl+←/→ move, Ctrl+↑/↓ move a row,
+  Ctrl+Shift+arrows resize (horizontal keys mirror in RTL; ⌘ on Apple
+  platforms, where `aria-keyshortcuts` says `Meta` and the hint's
+  `{modifier}` reads ⌘), announced through the shared announcer; the pointer
+  drop runs the same commit. **The layout reflows live under a drag**: the
+  carried tile floats `position: fixed`, its cell stays as the dashed
+  placeholder, and the preview is CSS `order` on the cells — never a DOM
+  move, which would blur the focused tile. The live target is the _cell_
+  under the pointer (cells never animate; their boxes stay honest
+  mid-glide) and re-targets only after 8px of travel, so mixed spans cannot
+  oscillate. The corner resize handle is pointer-only and `aria-hidden`
+  because its twin lives on the tile; a pointer-following outline with a
+  "2 × 1" badge shows the snap. Drags and resizes auto-scroll the nearest
+  scroll parent (`ogeScrollParent`).
 - **React demos load their component's stylesheet, not the family sheet.**
   With these components the compiled React layout sheet reached ~99 kB —
   past the 96 kB `anyComponentStyle` error budget every demo that inlined it

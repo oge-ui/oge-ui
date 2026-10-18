@@ -23,6 +23,13 @@ import {
   type OgeAutoScrollOptions,
   type OgeAutoScroller,
 } from './auto-scroll';
+import {
+  ogeMotionEnabled,
+  ogeMotionTiming,
+  ogeRectOf,
+  ogeSettleGhost,
+  type OgeRect,
+} from '../motion/motion';
 
 /** Options of {@link beginPointerDragDrop}. */
 export interface OgePointerDragDropOptions<TTarget> {
@@ -49,6 +56,13 @@ export interface OgePointerDragDropOptions<TTarget> {
    * clones that element instead, `false` draws none.
    */
   ghost?: boolean | Element | null;
+  /**
+   * Where the ghost settles after a drop — usually the dropped item's new
+   * element, looked up once the host re-rendered. Without it (or when it
+   * answers `null`) the ghost just disappears. A cancelled or missed drop
+   * always glides the ghost back to its origin.
+   */
+  settleTo?(target: TTarget): Element | OgeRect | null;
   /** Scroll container to edge-auto-scroll while dragging. */
   autoScroll?: HTMLElement | null;
   /** Auto-scroll tuning. */
@@ -83,11 +97,36 @@ export function ogeElementAtPoint(
   return fallback instanceof Element ? fallback : null;
 }
 
+/** Where a drag ghost goes when it is destroyed — see {@link OgeDragGhost.destroy}. */
+export type OgeDragGhostDestination =
+  Element | OgeRect | (() => Element | OgeRect | null) | null;
+
 /** A floating drag preview that follows the pointer. */
 export interface OgeDragGhost {
   move(clientX: number, clientY: number): void;
-  destroy(): void;
+  /**
+   * Removes the preview: at once, or — with motion on — after gliding onto
+   * `to` (the drop settle, or the return to the origin). A function is
+   * resolved two frames later, once the host rendered the drop.
+   */
+  destroy(to?: OgeDragGhostDestination): void;
 }
+
+/** Options of {@link createDragGhost}. */
+export interface OgeDragGhostOptions {
+  /**
+   * Lift the preview off the page: `--oge-drag-scale` and
+   * `--oge-shadow-drag` (default `true`). `false` draws the flat clone.
+   */
+  lift?: boolean;
+}
+
+const nextFrame = (): Promise<void> =>
+  new Promise((resolve) => {
+    if (typeof requestAnimationFrame === 'function')
+      requestAnimationFrame(() => resolve());
+    else setTimeout(resolve, 16);
+  });
 
 /**
  * Clones `element` into a fixed-position, pointer-transparent, `aria-hidden`
@@ -98,7 +137,9 @@ export function createDragGhost(
   element: Element,
   startX: number,
   startY: number,
+  options: OgeDragGhostOptions = {},
 ): OgeDragGhost {
+  const lift = options.lift ?? true;
   const rect = element.getBoundingClientRect();
   const clone = element.cloneNode(true) as HTMLElement;
   clone.removeAttribute('id');
@@ -118,23 +159,54 @@ export function createDragGhost(
     boxSizing: 'border-box',
     pointerEvents: 'none',
     zIndex: '10000',
-    opacity: '0.85',
+    opacity: lift ? '0.96' : '0.85',
     font: computed?.font ?? '',
     color: 'var(--oge-text-color)',
     background: 'var(--oge-bg)',
     border: '1px solid var(--oge-border-color)',
     borderRadius: 'var(--oge-radius)',
-    boxShadow: 'var(--oge-shadow-popup)',
+    boxShadow: lift ? 'var(--oge-shadow-drag)' : 'var(--oge-shadow-popup)',
     overflow: 'hidden',
     transform: 'translate(0px, 0px)',
   } satisfies Partial<CSSStyleDeclaration>);
+  if (lift) clone.style.setProperty('scale', 'var(--oge-drag-scale)');
   (element.ownerDocument ?? document).body.appendChild(clone);
+  if (lift && ogeMotionEnabled(clone)) {
+    const timing = ogeMotionTiming(clone, 'fast', 'emphasized');
+    clone.animate(
+      [{ scale: '1', boxShadow: 'var(--oge-shadow-card)' }, {}],
+      timing,
+    );
+  }
+  let destroyed = false;
   return {
     move(clientX, clientY) {
+      if (destroyed) return;
       clone.style.transform = `translate(${clientX - startX}px, ${clientY - startY}px)`;
     },
-    destroy() {
-      clone.remove();
+    destroy(to) {
+      if (destroyed) return;
+      destroyed = true;
+      if (!to || !ogeMotionEnabled(clone)) {
+        clone.remove();
+        return;
+      }
+      const land = (dest: Element | OgeRect | null): Promise<void> => {
+        if (!dest) return Promise.resolve();
+        const rect = dest instanceof Element ? ogeRectOf(dest) : dest;
+        if (rect.width === 0 && rect.height === 0) return Promise.resolve();
+        return ogeSettleGhost(clone, rect);
+      };
+      const run =
+        typeof to === 'function'
+          ? nextFrame()
+              .then(nextFrame)
+              .then(() => land(to()))
+          : land(to);
+      void run.then(
+        () => clone.remove(),
+        () => clone.remove(),
+      );
     },
   };
 }
@@ -203,9 +275,18 @@ export function beginPointerDragDrop<TTarget>(
     },
     onFinish: (commit, cancelled) => {
       scroller?.stop();
-      ghost?.destroy();
       const dropped = commit && target !== null;
+      // the origin box before the drop re-renders anything
+      const origin =
+        ghost && !dropped && ghostSource ? ogeRectOf(ghostSource) : null;
       if (dropped) options.onDrop(target as TTarget);
+      if (ghost) {
+        const settleTo = options.settleTo;
+        const dropTarget = target as TTarget;
+        ghost.destroy(
+          dropped ? (settleTo ? () => settleTo(dropTarget) : null) : origin,
+        );
+      }
       options.onEnd?.({ dropped, cancelled });
     },
   });

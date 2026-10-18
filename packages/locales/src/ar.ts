@@ -617,13 +617,16 @@ export const ar: OgeLocalePack = {
       tileRoleDescription: 'بلاطة',
       untitledTile: 'البلاطة {position}',
       keyboardHint:
-        'اضغط Ctrl وسهمًا لنقل البلاطة، وCtrl وShift وسهمًا لتغيير حجمها.',
+        'اضغط مسافة لالتقاط البلاطة والأسهم لنقلها ومسافة لإفلاتها. {modifier} وسهم ينقلانها مباشرة؛ و{modifier} وShift وسهم تغيّر حجمها.',
       dragHint: 'اسحب للنقل',
       moved: 'نُقلت {title} إلى الموضع {position} من {count}',
       resized:
         '{title}: الحجم {colSpan, plural, zero {# أعمدة} one {عمود واحد} two {عمودان} few {# أعمدة} many {# عمودًا} other {# عمود}} × {rowSpan, plural, zero {# صفوف} one {صف واحد} two {صفان} few {# صفوف} many {# صفًا} other {# صف}}',
       unchanged: 'لا يمكن تغيير {title} أكثر',
       dragCancelled: 'أُلغي السحب',
+      pickedUp:
+        'التُقطت {title} في الموضع {position} من {count}. الأسهم تنقلها، والمسافة تُفلتها، وEscape يلغي.',
+      dropped: 'أُفلتت {title} في الموضع {position} من {count}',
     },
     dataView: {
       dataView: 'العناصر',

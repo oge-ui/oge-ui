@@ -616,13 +616,16 @@ export const it: OgeLocalePack = {
       tileRoleDescription: 'riquadro',
       untitledTile: 'Riquadro {position}',
       keyboardHint:
-        'Ctrl e una freccia spostano il riquadro; Ctrl, Maiusc e una freccia lo ridimensionano.',
+        'Spazio solleva il riquadro, le frecce lo spostano e Spazio lo rilascia. {modifier} e una freccia lo spostano subito; {modifier}, Maiusc e una freccia lo ridimensionano.',
       dragHint: 'Trascina per spostare',
       moved: '{title} spostato in posizione {position} di {count}',
       resized:
         '{title} ridimensionato a {colSpan, plural, one {# colonna} other {# colonne}} per {rowSpan, plural, one {# riga} other {# righe}}',
       unchanged: '{title} non può cambiare oltre',
       dragCancelled: 'Trascinamento annullato',
+      pickedUp:
+        '{title} sollevato, posizione {position} di {count}. Le frecce lo spostano, Spazio lo rilascia, Esc annulla.',
+      dropped: '{title} rilasciato in posizione {position} di {count}',
     },
     dataView: {
       dataView: 'Elementi',

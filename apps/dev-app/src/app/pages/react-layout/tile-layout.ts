@@ -254,7 +254,13 @@ function TemplatesDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
-      [chips]="['reorderable', 'onReordering', 'onReordered', 'Ctrl+Arrow']"
+      [chips]="[
+        'reorderable',
+        'onReordering',
+        'onReordered',
+        'Space',
+        'Ctrl+Arrow',
+      ]"
       heading="Reorder by drag & keyboard"
       description="Drag a tile by its header (touch drags start at once — the header is a dedicated handle), or focus a tile and press <kbd>Ctrl</kbd>+arrows. Both run the same commit, so <code>onReordering</code> (cancelable) → <code>onReordered</code> → <code>onLayoutChanged</code> fire identically, focus stays on the moved tile and the new position is announced. <kbd>Escape</kbd> cancels a drag."
       [code]="demos[1].source"

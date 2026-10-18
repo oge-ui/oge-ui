@@ -62,6 +62,11 @@
           "Move focus between tiles (one roving tab stop; ↑/↓ go to the closest tile in the row above / below). Content inside a tile keeps its own Tab order, and the tile keys only act while the tile itself is focused."
         ],
         [
+          "Space / Enter",
+          "grab",
+          "Picks the focused tile up: it lifts, and the arrows (or Home / End) move it with a live preview — the neighbours reflow around it. Space / Enter drops it (one `reordering` → `reordered`), Escape or moving focus away puts it back. Every step is announced."
+        ],
+        [
           "Ctrl+← / Ctrl+→",
           "move",
           "Move the focused tile one position earlier / later (mirrored in RTL). ⌘ works as Ctrl."
@@ -84,7 +89,7 @@
         [
           "Escape",
           "cancel",
-          "Cancels a pointer drag or resize in progress."
+          "Cancels a pointer drag or resize in progress, or puts a picked-up tile back."
         ]
       ]
     },

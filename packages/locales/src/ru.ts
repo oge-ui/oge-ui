@@ -620,13 +620,16 @@ export const ru: OgeLocalePack = {
       tileRoleDescription: 'плитка',
       untitledTile: 'Плитка {position}',
       keyboardHint:
-        'Нажмите Control и клавишу со стрелкой, чтобы переместить плитку; Control, Shift и стрелку — чтобы изменить размер.',
+        'Пробел поднимает плитку, стрелки перемещают её, Пробел опускает. {modifier} и стрелка перемещают её сразу; {modifier}, Shift и стрелка меняют размер.',
       dragHint: 'Перетащите для перемещения',
       moved: '«{title}» перемещён на позицию {position} из {count}',
       resized:
         '«{title}»: размер {colSpan, plural, one {# столбец} few {# столбца} many {# столбцов} other {# столбца}} на {rowSpan, plural, one {# строка} few {# строки} many {# строк} other {# строки}}',
       unchanged: '«{title}» больше нельзя изменить',
       dragCancelled: 'Перетаскивание отменено',
+      pickedUp:
+        '{title} поднята, позиция {position} из {count}. Стрелки перемещают, Пробел опускает, Escape отменяет.',
+      dropped: '{title} опущена на позицию {position} из {count}',
     },
     dataView: {
       dataView: 'Элементы',

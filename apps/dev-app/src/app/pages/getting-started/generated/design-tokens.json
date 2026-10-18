@@ -913,10 +913,50 @@
         "hc": "0 0 0 1px #000000"
       },
       "u": [
+        "@oge-ui/behavior",
         "@oge-ui/bpmn",
         "@oge-ui/layout",
         "@oge-ui/overlay",
         "@oge-ui/upload"
+      ]
+    },
+    {
+      "n": "--oge-shadow-card-hover",
+      "c": "elevation",
+      "d": "a raised card under the pointer — between card and popup",
+      "v": {
+        "light": "0 2px 6px rgba(15, 23, 42, 0.1), 0 10px 24px -8px rgba(15, 23, 42, 0.16)",
+        "dark": "0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 24px -8px rgba(0, 0, 0, 0.45)",
+        "hc": "0 0 0 2px #000000"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-shadow-drag",
+      "c": "elevation",
+      "d": "every lifted drag surface (ghosts, a carried tile) — above popups",
+      "v": {
+        "light": "0 18px 40px -10px rgba(15, 23, 42, 0.3), 0 6px 14px -6px rgba(15, 23, 42, 0.2)",
+        "dark": "0 18px 40px -10px rgba(0, 0, 0, 0.6), 0 6px 14px -6px rgba(0, 0, 0, 0.45)",
+        "hc": "0 0 0 2px #000000, 0 12px 28px -6px rgba(0, 0, 0, 0.4)"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-drag-scale",
+      "c": "color",
+      "d": "how much a lifted drag surface grows",
+      "v": {
+        "light": "1.02"
+      },
+      "u": [
+        "@oge-ui/behavior",
+        "@oge-ui/layout"
       ]
     },
     {
@@ -1021,6 +1061,7 @@
       },
       "u": [
         "@oge-ui/kanban",
+        "@oge-ui/layout",
         "@oge-ui/overlay"
       ]
     },
@@ -1242,6 +1283,33 @@
       "d": "leaving surfaces — gathers speed as it exits",
       "v": {
         "light": "cubic-bezier(0.3, 0, 1, 1)"
+      },
+      "u": []
+    },
+    {
+      "n": "--oge-motion-duration-layout",
+      "c": "motion",
+      "d": "layout moves — FLIP reflows, drop settles, sliding indicators",
+      "v": {
+        "light": "280ms"
+      },
+      "u": []
+    },
+    {
+      "n": "--oge-motion-easing-spring",
+      "c": "motion",
+      "d": "layout moves: a damped spring (about 1 % overshoot) sampled by ogeSpringEasing() in @oge-ui/behavior",
+      "v": {
+        "light": "linear(0, 0.017, 0.062, 0.124, 0.198, 0.277, 0.357, 0.436, 0.511, 0.581, 0.645, 0.702, 0.753, 0.798, 0.837, 0.87, 0.898, 0.921, 0.941, 0.957, 0.969, 0.98, 0.988, 0.994, 0.998, 1.002, 1.004, 1.006, 1.007, 1.007, 1.007, 1.007, 1)"
+      },
+      "u": []
+    },
+    {
+      "n": "--oge-motion-stagger",
+      "c": "color",
+      "d": "delay between siblings of a staggered enter (speed dial, list enters)",
+      "v": {
+        "light": "30ms"
       },
       "u": []
     },
@@ -2048,6 +2116,37 @@
       },
       "u": [
         "@oge-ui/kanban"
+      ]
+    },
+    {
+      "n": "--oge-drop-placeholder-border",
+      "c": "color",
+      "k": "d",
+      "d": "the slot a dragged item will land in (tile layout, sortable lists)",
+      "v": {
+        "light": "var(--oge-accent-25)",
+        "hc": "var(--oge-accent)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.25)",
+        "hc": "#0037b3"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-drop-placeholder-bg",
+      "c": "color",
+      "k": "d",
+      "v": {
+        "light": "var(--oge-accent-soft)"
+      },
+      "s": {
+        "light": "rgb(37 99 235 / 0.08)"
+      },
+      "u": [
+        "@oge-ui/layout"
       ]
     },
     {
