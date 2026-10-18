@@ -169,6 +169,11 @@ exactly the `inputs` fields it names, for the rows being shown, fenced as
 data in the prompt. Name only the fields the model needs; answers are
 validated against the column's type and choices before a cell shows them.
 
+The chat (`oge-chat` / `<OgeChat>`) sends the conversation the user typed,
+with your `instructions` as the system message. Replies are rendered as
+text — never as HTML or Markdown — so a model cannot inject markup into the
+page.
+
 The vendor transports (`createOgeOpenAiTransport`,
 `createOgeAnthropicTransport`) refuse to send an `apiKey` from a browser
 unless `dangerouslyAllowBrowser` is set: a key in client code is readable by

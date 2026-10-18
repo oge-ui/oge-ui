@@ -7,6 +7,20 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Chat — `@oge-ui/ai`, `@oge-ui/react-ai`, `@oge-ui/behavior`, `@oge-ui/locales`
+
+- **A conversation surface.** `<oge-chat [(conversation)]>` / `<OgeChat conversation onConversationChange>`:
+  a polite `role="log"` message list, a composer that grows with its text
+  (Enter sends, Shift+Enter adds a line, Escape stops a reply), suggestion
+  chips, a typing indicator, stop and retry. With a transport, replies come
+  from the model with the recent history (`historyLimit`) and your
+  `instructions`; with `transport: null` it is a plain chat whose replies the
+  host adds through `addMessage()`.
+- **Text, never HTML.** Messages render as text with preserved line breaks;
+  the cancelable `sending` event can veto a message.
+- `OgeChatCore` in `@oge-ui/behavior` is the shared machine — usable on its
+  own for a custom chat UI. Strings in all eleven locale packs.
+
 ### AI column — `@oge-ui/ai`, `@oge-ui/react-ai`, `@oge-ui/behavior`, `@oge-ui/locales`
 
 - **A column the model fills.** `createOgeAiColumn({ prompt, inputs, keyField, values? })`

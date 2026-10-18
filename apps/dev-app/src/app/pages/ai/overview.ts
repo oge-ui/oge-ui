@@ -10,9 +10,11 @@ import {
   createOgeOpenAiTransport,
   createOgeAiColumn,
   OgeAiCell,
+  OgeChat,
   OgeGridAssistant,
   OgeSmartPaste,
   type OgeAiGridColumn,
+  type OgeChatMessage,
   type OgeAiRequest,
   type OgeAiTransport,
   type OgeGridAssistantAppliedEvent,
@@ -43,6 +45,7 @@ import { SMART_PASTE_SAMPLE } from './ai-demo-smart-paste';
 import {
   AI_COLUMN_SNIPPET,
   APPLY_SNIPPET,
+  CHAT_SNIPPET,
   CONFIG_SNIPPET,
   EVENTS_SNIPPET,
   GETTING_STARTED_SNIPPET,
@@ -57,6 +60,7 @@ const SECTIONS = [
   'Events',
   'Smart paste',
   'AI column',
+  'Chat',
   'Transports and configuration',
 ] as const;
 
@@ -87,6 +91,7 @@ export function inspectingTransport(
     OgeForm,
     OgeAiCell,
     OgeCellTemplate,
+    OgeChat,
     ReactAiOverviewDemos,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -420,6 +425,24 @@ export function inspectingTransport(
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['oge-chat', '[(conversation)]', 'manual mode', 'role=log']"
+        heading="Chat"
+        description="Ask about pricing, models, frameworks or privacy. Enter sends, Shift+Enter adds a line, Escape stops a reply. Replies render as text, never HTML; with &lt;code&gt;transport: null&lt;/code&gt; the same component is a plain chat whose replies the host adds."
+        [code]="chatSnippet"
+        language="ts"
+      >
+        <oge-chat
+          [transport]="transport()"
+          instructions="You are the support assistant of Acme. Answer briefly."
+          [suggestions]="['How much does Pro cost?', 'Which models work?']"
+          [(conversation)]="history"
+        />
+        <p class="mt-2 text-sm opacity-70" data-testid="chat-count">
+          {{ history().length }} messages
+        </p>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="[
           'provideOgeAiConfig',
           'createOgeOpenAiTransport',
@@ -490,6 +513,8 @@ export class AiOverviewPage {
   protected readonly configSnippet = CONFIG_SNIPPET;
   protected readonly smartPasteSnippet = SMART_PASTE_SNIPPET;
   protected readonly aiColumnSnippet = AI_COLUMN_SNIPPET;
+  protected readonly chatSnippet = CHAT_SNIPPET;
+  protected readonly history = signal<readonly OgeChatMessage[]>([]);
 
   protected readonly reviews: AiReview[] = AI_DEMO_REVIEWS;
   protected readonly sentiment = createOgeAiColumn<AiReview>({

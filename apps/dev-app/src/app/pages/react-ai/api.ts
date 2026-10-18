@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ApiReference } from '../../shared/api-reference';
 import { OGE_REACT_AI_CELL_API } from '../ai/ai-column-api-data';
+import { OGE_REACT_CHAT_API } from '../ai/chat-api-data';
 import { OGE_REACT_SMART_PASTE_API } from '../ai/smart-paste-api-data';
 import { OGE_REACT_AI_API } from './react-ai-api-data';
 
@@ -23,10 +24,12 @@ import { OGE_REACT_AI_API } from './react-ai-api-data';
       [sections]="smartPasteApi"
     />
     <app-api-reference title="&lt;OgeAiCell&gt;" [sections]="aiCellApi" />
+    <app-api-reference title="&lt;OgeChat&gt;" [sections]="chatApi" />
   `,
 })
 export class ReactAiApiSections {
   protected readonly aiApi = OGE_REACT_AI_API;
   protected readonly smartPasteApi = OGE_REACT_SMART_PASTE_API;
   protected readonly aiCellApi = OGE_REACT_AI_CELL_API;
+  protected readonly chatApi = OGE_REACT_CHAT_API;
 }

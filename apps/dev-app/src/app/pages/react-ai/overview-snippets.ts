@@ -311,6 +311,23 @@ const columns: OgeGridColumnProps<Review>[] = [
     }),
   },
   {
+    title: 'Chat',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-ai': ['OgeChat'] },
+      types: { '@oge-ui/react-ai': ['OgeChatMessage'] },
+      name: 'SupportChat',
+      body: `// The log is a polite live region; messages are text, never HTML.
+const [history, setHistory] = useState<readonly OgeChatMessage[]>([]);`,
+      jsx: `<OgeChat
+  instructions="You are the support assistant of Acme. Answer briefly."
+  suggestions={['How much does Pro cost?', 'Which models work?']}
+  conversation={history}
+  onConversationChange={setHistory}
+/>`,
+    }),
+  },
+  {
     title: 'Transports and configuration',
     source: reactDemoSource({
       use: {
