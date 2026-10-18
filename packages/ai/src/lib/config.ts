@@ -12,7 +12,9 @@ import {
 // exact same strings, defaults and wire format (ADR 0001); re-exported so
 // `@oge-ui/ai` is the Angular import path.
 export {
+  createOgeAiColumn,
   createOgeAiHttpTransport,
+  OgeAiColumn,
   createOgeAnthropicTransport,
   createOgeOpenAiTransport,
   OGE_DEFAULT_AI_CONFIG,
@@ -68,6 +70,10 @@ export {
   type OgeSmartPasteUndoneEvent,
   type OgeSmartPasteWarning,
   type OgeSmartPasteWarningKind,
+  type OgeAiCellMessages,
+  type OgeAiCellState,
+  type OgeAiCellStatus,
+  type OgeAiColumnOptions,
 } from '@oge-ui/behavior';
 
 /** Injection token every AI component reads its defaults from. */

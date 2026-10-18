@@ -2,7 +2,9 @@
 // single-sourced in `@oge-ui/behavior`, so the two render layers cannot drift
 // (ADR 0001); re-exported so React consumers import one package.
 export {
+  createOgeAiColumn,
   createOgeAiHttpTransport,
+  OgeAiColumn,
   createOgeAnthropicTransport,
   createOgeOpenAiTransport,
   OGE_DEFAULT_AI_CONFIG,
@@ -58,7 +60,12 @@ export {
   type OgeSmartPasteUndoneEvent,
   type OgeSmartPasteWarning,
   type OgeSmartPasteWarningKind,
+  type OgeAiCellMessages,
+  type OgeAiCellState,
+  type OgeAiCellStatus,
+  type OgeAiColumnOptions,
 } from '@oge-ui/behavior';
+export { OgeAiCell, type OgeAiCellProps } from './lib/ai-cell';
 export { OgeAiConfigProvider, useOgeAiConfig } from './lib/ai-config';
 export {
   OgeGridAssistant,

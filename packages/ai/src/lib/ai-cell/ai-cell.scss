@@ -1,0 +1,137 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// One row's AI value inside a grid cell: a shimmer bar while the model works,
+// the value when it lands (a soft fade), a muted note + retry when it failed.
+.oge-ai-cell {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  vertical-align: middle;
+
+  .oge-sr-only {
+    position: absolute;
+    overflow: hidden;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+.oge-ai-cell-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: oge-ai-cell-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
+}
+
+@keyframes oge-ai-cell-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.oge-ai-cell-skeleton {
+  display: inline-block;
+  inline-size: 6em;
+  max-inline-size: 100%;
+  block-size: 0.8em;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--oge-skeleton-color) 0%,
+    color-mix(in srgb, var(--oge-accent) 22%, var(--oge-skeleton-color)) 50%,
+    var(--oge-skeleton-color) 100%
+  );
+  background-size: 200% 100%;
+  animation: oge-ai-cell-shimmer 1.4s linear infinite;
+}
+
+@keyframes oge-ai-cell-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.oge-ai-cell-error {
+  color: var(--oge-muted-color);
+  font-style: italic;
+}
+
+.oge-ai-cell-retry {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 22px;
+  block-size: 22px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  transition:
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
+
+  @include tokens.hit-area;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-ai-cell-value {
+    animation: none;
+  }
+
+  // the shimmer slows to a gentle pulse instead of a sweep
+  .oge-ai-cell-skeleton {
+    background: var(--oge-skeleton-color);
+    animation: oge-ai-cell-pulse 2.4s ease-in-out infinite;
+  }
+
+  .oge-ai-cell-retry {
+    transition: none;
+  }
+}
+
+@keyframes oge-ai-cell-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-ai-cell-skeleton {
+    background: GrayText;
+  }
+
+  .oge-ai-cell-retry {
+    border-color: ButtonText;
+  }
+}
