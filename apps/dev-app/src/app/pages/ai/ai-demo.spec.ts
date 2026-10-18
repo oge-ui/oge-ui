@@ -1,6 +1,11 @@
-import { buildOgeGridAiRequest, type OgeAiGridColumn } from '@oge-ui/behavior';
+import {
+  buildOgeGridAiRequest,
+  buildOgeSmartPasteRequest,
+  type OgeAiGridColumn,
+} from '@oge-ui/behavior';
 import { describe, expect, it } from 'vitest';
 import { AI_DEMO_STATUSES, demoReply } from './ai-demo';
+import { demoSmartPasteReply } from './ai-demo-smart-paste';
 
 const COLUMNS: OgeAiGridColumn[] = [
   {
@@ -132,5 +137,59 @@ describe('the docs demo model', () => {
 
   it('asks back when it does not understand', () => {
     expect(ask('what is the meaning of life')['status']).toBe('clarify');
+  });
+});
+
+describe('the docs demo model — smart paste', () => {
+  const fields = [
+    { field: 'name', label: 'Full name', dataType: 'string', required: true },
+    { field: 'email', label: 'Email', dataType: 'string' },
+    { field: 'phone', label: 'Phone', dataType: 'string' },
+    { field: 'company', label: 'Company', dataType: 'string' },
+    { field: 'seats', label: 'Seats', dataType: 'number' },
+    { field: 'start', label: 'Start date', dataType: 'date' },
+    {
+      field: 'plan',
+      label: 'Plan',
+      dataType: 'string',
+      values: [
+        { value: 'free', text: 'Free' },
+        { value: 'pro', text: 'Pro' },
+      ],
+    },
+  ];
+  const ask = (text: string) => {
+    const request = buildOgeSmartPasteRequest(text, { fields, now: TODAY });
+    return demoSmartPasteReply(text, request.messages[0].content);
+  };
+
+  it('maps a signature block onto the form', () => {
+    expect(
+      ask(
+        'Hi, we would like 12 seats on the Pro plan from 01.11.2026.\n\nAda Lovelace\nAnalytical Engines Ltd\nada@engines.example\n+44 20 7946 0958',
+      ),
+    ).toEqual({
+      status: 'apply',
+      summary: 'Read 7 fields from the text.',
+      values: {
+        name: 'Ada Lovelace',
+        email: 'ada@engines.example',
+        phone: '+44 20 7946 0958',
+        company: 'Analytical Engines Ltd',
+        seats: 12,
+        start: '2026-11-01',
+        plan: 'pro',
+      },
+    });
+  });
+
+  it('prefers labelled lines and says when nothing fits', () => {
+    expect(
+      ask('Company: Kaya Mimarlık\nEmail: info@kaya.example')['values'],
+    ).toEqual({
+      company: 'Kaya Mimarlık',
+      email: 'info@kaya.example',
+    });
+    expect(ask('roses are red')['status']).toBe('unsupported');
   });
 });

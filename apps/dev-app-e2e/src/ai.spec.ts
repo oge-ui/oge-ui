@@ -101,6 +101,65 @@ for (const layer of LAYERS) {
       // a row value from the grid never appears in the prompt
       await expect(request).not.toContainText('Acme Corp');
     });
+
+    test('smart paste proposes Now → New values and Apply fills the form, Undo restores it', async ({
+      page,
+    }) => {
+      await page.goto(route);
+      const demo = card(page, 'smart-paste');
+      const paste = demo.getByRole('group', { name: 'Smart paste' });
+      const name = demo.getByRole('textbox', { name: 'Full name' });
+      await expect(name).toHaveValue('');
+
+      await demo.getByRole('button', { name: 'Try the sample text' }).click();
+      const proposal = paste.getByRole('group', { name: 'Proposed values' });
+      await expect(proposal).toBeVisible();
+      const rows = proposal.locator('tbody tr');
+      await expect(rows).toHaveCount(7);
+      await expect(rows.first()).toContainText('Full name');
+      await expect(rows.first()).toContainText('Ada Lovelace');
+      // nothing reaches the form before Apply
+      await expect(name).toHaveValue('');
+
+      await proposal.getByRole('button', { name: 'Apply' }).click();
+      await expect(name).toHaveValue('Ada Lovelace');
+      await expect(demo.getByRole('textbox', { name: 'Email' })).toHaveValue(
+        'ada@engines.example',
+      );
+      await expect(paste.getByRole('status')).toHaveText('7 fields filled.');
+
+      await paste.getByRole('button', { name: 'Undo' }).click();
+      await expect(name).toHaveValue('');
+      await expect(paste.getByRole('status')).toHaveText('Values restored.');
+    });
+
+    test('smart paste falls back to a text box when the clipboard is unreadable', async ({
+      page,
+    }) => {
+      await page.goto(route);
+      const paste = card(page, 'smart-paste').getByRole('group', {
+        name: 'Smart paste',
+      });
+      // no clipboard permission is granted, so the read is refused
+      await page.evaluate(() => {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: { readText: () => Promise.reject(new Error('denied')) },
+        });
+      });
+      await paste.getByRole('button', { name: 'Smart paste' }).click();
+      await expect(paste.getByRole('status')).toContainText(
+        'clipboard could not be read',
+      );
+      const box = paste.getByRole('textbox', {
+        name: 'Text to fill the form from',
+      });
+      await box.fill('Company: Kaya Mimarlık');
+      await paste.getByRole('button', { name: 'Fill the form' }).click();
+      await expect(
+        paste.getByRole('group', { name: 'Proposed values' }),
+      ).toContainText('Kaya Mimarlık');
+    });
   });
 }
 

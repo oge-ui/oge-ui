@@ -9,12 +9,14 @@ import { RouterLink } from '@angular/router';
 import {
   createOgeOpenAiTransport,
   OgeGridAssistant,
+  OgeSmartPaste,
   type OgeAiGridColumn,
   type OgeAiRequest,
   type OgeAiTransport,
   type OgeGridAssistantAppliedEvent,
   type OgeGridAssistantApplyingEvent,
 } from '@oge-ui/ai';
+import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -30,12 +32,14 @@ import {
   makeAiOrders,
   type AiOrder,
 } from './ai-demo';
+import { SMART_PASTE_SAMPLE } from './ai-demo-smart-paste';
 import {
   APPLY_SNIPPET,
   CONFIG_SNIPPET,
   EVENTS_SNIPPET,
   GETTING_STARTED_SNIPPET,
   PRIVACY_SNIPPET,
+  SMART_PASTE_SNIPPET,
 } from './overview-snippets';
 
 const SECTIONS = [
@@ -43,6 +47,7 @@ const SECTIONS = [
   'Apply at once and undo',
   'What the model sees',
   'Events',
+  'Smart paste',
   'Transports and configuration',
 ] as const;
 
@@ -69,6 +74,8 @@ export function inspectingTransport(
     OgeColumn,
     OgeGrid,
     OgeGridAssistant,
+    OgeSmartPaste,
+    OgeForm,
     ReactAiOverviewDemos,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -340,6 +347,42 @@ export function inspectingTransport(
 
       <app-demo-card
         [chips]="[
+          'oge-smart-paste',
+          '[target]',
+          'describeFields()',
+          'clipboard',
+        ]"
+        heading="Smart paste"
+        description="Copy a signature block or an email and press Smart paste — or use the sample. The table shows each field’s value now and the value from the text; Apply writes them, Undo puts the old ones back. When the clipboard cannot be read, a text box takes the paste."
+        [code]="smartPasteSnippet"
+        language="ts"
+      >
+        <pre
+          class="mb-3 overflow-x-auto rounded-md bg-gray-50 p-3 text-xs whitespace-pre-wrap dark:bg-gray-900"
+          data-testid="smart-paste-sample"
+          >{{ sample }}</pre>
+        <oge-smart-paste
+          #smartPaste
+          [target]="customerForm"
+          [transport]="transport()"
+        />
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="button" (click)="smartPaste.paste(sample)">
+            Try the sample text
+          </button>
+        </div>
+        <div class="mt-3">
+          <oge-form
+            #customerForm
+            [(formData)]="customer"
+            [items]="customerFields"
+            [colCount]="2"
+          />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
           'provideOgeAiConfig',
           'createOgeOpenAiTransport',
           'createOgeAiHttpTransport',
@@ -407,6 +450,40 @@ export class AiOverviewPage {
   protected readonly privacySnippet = PRIVACY_SNIPPET;
   protected readonly eventsSnippet = EVENTS_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
+  protected readonly smartPasteSnippet = SMART_PASTE_SNIPPET;
+
+  protected readonly sample = SMART_PASTE_SAMPLE;
+  protected readonly customer = signal({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    seats: null as number | null,
+    start: null as Date | null,
+    plan: 'free',
+  });
+  protected readonly customerFields: OgeFormItemData[] = [
+    { field: 'name', label: 'Full name', isRequired: true },
+    { field: 'email', label: 'Email' },
+    { field: 'phone', label: 'Phone' },
+    { field: 'company', label: 'Company' },
+    { field: 'seats', label: 'Seats', dataType: 'number' },
+    { field: 'start', label: 'Start date', dataType: 'date' },
+    {
+      field: 'plan',
+      label: 'Plan',
+      editorType: 'selectBox',
+      editorOptions: {
+        items: [
+          { id: 'free', label: 'Free' },
+          { id: 'pro', label: 'Pro' },
+          { id: 'enterprise', label: 'Enterprise' },
+        ],
+        valueExpr: 'id',
+        displayExpr: 'label',
+      },
+    },
+  ];
 
   protected readonly orders: AiOrder[] = makeAiOrders();
   protected readonly statusLookup = {

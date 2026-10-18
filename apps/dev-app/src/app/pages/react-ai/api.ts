@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ApiReference } from '../../shared/api-reference';
+import { OGE_REACT_SMART_PASTE_API } from '../ai/smart-paste-api-data';
 import { OGE_REACT_AI_API } from './react-ai-api-data';
 
 /**
@@ -16,8 +17,13 @@ import { OGE_REACT_AI_API } from './react-ai-api-data';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-api-reference title="&lt;OgeGridAssistant&gt;" [sections]="aiApi" />
+    <app-api-reference
+      title="&lt;OgeSmartPaste&gt;"
+      [sections]="smartPasteApi"
+    />
   `,
 })
 export class ReactAiApiSections {
   protected readonly aiApi = OGE_REACT_AI_API;
+  protected readonly smartPasteApi = OGE_REACT_SMART_PASTE_API;
 }

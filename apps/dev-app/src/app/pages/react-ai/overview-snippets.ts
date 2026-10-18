@@ -184,6 +184,77 @@ const [log, setLog] = useState<string[]>([]);`,
     }),
   },
   {
+    title: 'Smart paste',
+    source: reactDemoSource({
+      react: ['useRef', 'useState'],
+      use: {
+        '@oge-ui/react-ai': ['OgeSmartPaste'],
+        '@oge-ui/react-forms': ['OgeForm'],
+      },
+      types: {
+        '@oge-ui/react-ai': ['OgeSmartPasteHandle'],
+        '@oge-ui/react-forms': ['OgeFormHandle', 'OgeFormItemDefinition'],
+      },
+      name: 'SmartPasteForm',
+      before: `interface Customer {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  seats: number | null;
+  start: Date | null;
+  plan: string;
+}
+
+const sample = 'Ada Lovelace\\nAnalytical Engines Ltd\\nada@engines.example';
+
+const fields: OgeFormItemDefinition[] = [
+  { field: 'name', label: 'Full name', isRequired: true },
+  { field: 'email', label: 'Email' },
+  { field: 'phone', label: 'Phone' },
+  { field: 'company', label: 'Company' },
+  { field: 'seats', label: 'Seats', dataType: 'number' },
+  { field: 'start', label: 'Start date', dataType: 'date' },
+  {
+    field: 'plan',
+    label: 'Plan',
+    editorType: 'selectBox',
+    editorOptions: {
+      items: [
+        { id: 'free', label: 'Free' },
+        { id: 'pro', label: 'Pro' },
+        { id: 'enterprise', label: 'Enterprise' },
+      ],
+      valueExpr: 'id',
+      displayExpr: 'label',
+    },
+  },
+];`,
+      body: `// The model maps the copied text onto the form's fields; every value is
+// checked against the field's type and choices, and the table shows
+// Now → New before anything is written. The request carries the field
+// catalog and the pasted text — never the form's current values.
+const form = useRef<OgeFormHandle<Customer>>(null);
+const paste = useRef<OgeSmartPasteHandle>(null);
+const [customer, setCustomer] = useState<Customer>({
+  name: '', email: '', phone: '', company: '', seats: null, start: null, plan: 'free',
+});`,
+      jsx: `<>
+  <OgeSmartPaste ref={paste} target={form} />
+  <button type="button" onClick={() => paste.current?.paste(sample)}>
+    Try the sample text
+  </button>
+  <OgeForm<Customer>
+    ref={form}
+    formData={customer}
+    onFormDataChange={setCustomer}
+    colCount={2}
+    items={fields}
+  />
+</>`,
+    }),
+  },
+  {
     title: 'Transports and configuration',
     source: reactDemoSource({
       use: {
