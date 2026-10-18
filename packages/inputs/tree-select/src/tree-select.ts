@@ -138,6 +138,7 @@ let nextTreeSelectId = 0;
           [attr.name]="name() || null"
           [attr.title]="tooltip() ?? null"
           [attr.tabindex]="tabIndex()"
+          aria-expanded="false"
           [attr.aria-expanded]="opened()"
           [attr.aria-controls]="opened() ? treeId : null"
           [attr.aria-label]="

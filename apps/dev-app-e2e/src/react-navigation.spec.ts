@@ -196,13 +196,19 @@ test.describe('React navigation docs', () => {
       // (`page-has-heading-one` was the tell).
       await expect(page.locator('h1').first()).toBeVisible();
       await expect(page.getByRole('status')).toHaveCount(0);
-      // the header's deferred selects get their bindings a tick after they
-      // are created; axe must not catch a combobox in between
+      // The header's selects are `@defer (on idle)`: wait until both have
+      // replaced their placeholders (an empty combobox list made the check
+      // below pass vacuously, so axe met a select created mid-audit), then
+      // until their bindings have run — `id` is binding-only, unlike the
+      // static `aria-expanded="false"` the closed combobox now ships with.
+      await expect(
+        page.locator('.app-theme-placeholder, .app-version-placeholder'),
+      ).toHaveCount(0);
       await expect
         .poll(() =>
           page.evaluate(() =>
-            [...document.querySelectorAll('[role="combobox"]')].every((el) =>
-              el.hasAttribute('aria-expanded'),
+            [...document.querySelectorAll('[role="combobox"]')].every(
+              (el) => el.id !== '' && el.hasAttribute('aria-expanded'),
             ),
           ),
         )

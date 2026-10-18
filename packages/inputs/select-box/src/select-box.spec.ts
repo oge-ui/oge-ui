@@ -86,6 +86,18 @@ describe('OgeSelectBox', () => {
     ).toBeTruthy();
   });
 
+  it('is a valid closed combobox before its first change detection', () => {
+    // A view created by `@defer` (the docs header selects) is attached a tick
+    // before its bindings run; axe auditing in between must still see a
+    // complete closed combobox, so `aria-expanded` cannot be binding-only.
+    const fixture = TestBed.createComponent(OgeSelectBox);
+    const input = inputEl(fixture);
+    expect(input.getAttribute('role')).toBe('combobox');
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    // closed: no popup exists yet, so nothing for aria-controls to name
+    expect(input.hasAttribute('aria-controls')).toBe(false);
+  });
+
   it('opens on chevron click and renders listbox options', async () => {
     const fixture = TestBed.createComponent(Host);
     await settle(fixture);

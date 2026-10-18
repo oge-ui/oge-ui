@@ -5,7 +5,8 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { useState } from 'react';
+import { StrictMode, useState } from 'react';
+import { renderToString } from 'react-dom/server';
 import { OgeSelectBox } from './select-box';
 
 const CITIES = [
@@ -34,6 +35,26 @@ function Host(extra: Partial<Parameters<typeof OgeSelectBox>[0]> = {}) {
 }
 
 describe('<OgeSelectBox>', () => {
+  it('is a complete closed combobox on the first render, server included', () => {
+    // The first paint is what axe judges: aria-expanded and the useId-derived
+    // ids must come from render, never from an effect.
+    const html = renderToString(<Host />);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const ssr = doc.querySelector('[role="combobox"]');
+    expect(ssr?.getAttribute('aria-haspopup')).toBe('listbox');
+    expect(ssr?.getAttribute('aria-expanded')).toBe('false');
+    expect(ssr?.hasAttribute('aria-controls')).toBe(false);
+    expect(ssr?.id).not.toMatch(/^oge-input-\d+$/);
+
+    render(
+      <StrictMode>
+        <Host />
+      </StrictMode>,
+    );
+    expect(combo()).toHaveAttribute('aria-expanded', 'false');
+    expect(combo().id).not.toMatch(/^oge-input-\d+$/);
+  });
+
   it('renders the combobox pattern closed by default', () => {
     render(<Host />);
     expect(combo()).toHaveAttribute('aria-haspopup', 'listbox');
