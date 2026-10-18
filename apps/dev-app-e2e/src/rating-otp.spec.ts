@@ -169,13 +169,16 @@ for (const layer of LAYERS) {
       await cells.first().evaluate((el) => {
         const data = new DataTransfer();
         data.setData('text/plain', '98 76 54');
-        el.dispatchEvent(
-          new ClipboardEvent('paste', {
-            clipboardData: data,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
+        const paste = new ClipboardEvent('paste', {
+          clipboardData: data,
+          bubbles: true,
+          cancelable: true,
+        });
+        // Firefox hands a script-dispatched (untrusted) paste event an empty
+        // `clipboardData` whatever the constructor was given; shadow the
+        // getter on the instance so every engine reads the same payload.
+        Object.defineProperty(paste, 'clipboardData', { value: data });
+        el.dispatchEvent(paste);
       });
       await expect(page.getByTestId('otp-value')).toHaveText('987654');
       await expect(cells.nth(5)).toHaveValue('4');

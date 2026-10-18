@@ -2187,7 +2187,10 @@ Angular CDK harnesses (`@oge-ui/<pkg>/testing`) and React Testing Library helper
 - **Engine-only tests say so.** CDP (`newCDPSession`), clipboard permissions (Playwright grants
   `clipboard-read` in Chromium only) and synthetic `ClipboardEvent` data (Firefox empties it)
   are Chromium- or not-Firefox-only: `test.skip(browserName !== 'chromium', reason)` with the
-  reason spelled out, never a silent skip. Everything else must pass everywhere; a failure in
+  reason spelled out, never a silent skip. A plain-text paste does not need the skip: build
+  the `ClipboardEvent`, then `Object.defineProperty(event, 'clipboardData', { value: data })`
+  before dispatching it, and Firefox reads the same `DataTransfer` as Chromium (see the OTP
+  paste test in `rating-otp.spec.ts`). Everything else must pass everywhere; a failure in
   one engine is a bug in the library or in the test, fixed rather than skipped.
 - **Cross-engine test hygiene.** Engines differ in how far `scrollIntoViewIfNeeded()` scrolls a
   tall card and how far a click scrolls a scroll container: scroll the element you are about
