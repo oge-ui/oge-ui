@@ -408,6 +408,42 @@ export const it: OgeLocalePack = {
     },
   },
 
+  ai: {
+    gridAssistant: {
+      label: 'Chiedi alla tabella',
+      placeholder:
+        'Descrivi la vista che vuoi, ad es. "i 10 ordini più grandi del mese"',
+      submit: 'Chiedi',
+      stop: 'Interrompi',
+      apply: 'Applica',
+      discard: 'Scarta',
+      undo: 'Annulla',
+      suggestions: 'Suggerimenti',
+      proposal: 'Modifica proposta',
+      thinking: 'Sto pensando…',
+      applied: 'Applicato: {summary}',
+      proposed: 'Proposta: {summary}',
+      unchanged: 'La tabella mostra già questo.',
+      clarify: '{summary}',
+      unsupported: 'Non è possibile con queste colonne. {summary}',
+      invalid:
+        'La risposta non è adatta a questa tabella. Prova a riformulare.',
+      error: 'L’assistente non è disponibile al momento.',
+      noTransport: 'Nessun servizio di IA configurato.',
+      aborted: 'Interrotto.',
+      discarded: 'Proposta scartata.',
+      undone: 'Modifica annullata.',
+      ignored:
+        '{count, plural, one {# parte della risposta non corrispondeva alle colonne ed è stata ignorata.} other {# parti della risposta non corrispondevano alle colonne e sono state ignorate.}}',
+      slices: {
+        sort: 'Ordinamento',
+        group: 'Raggruppamento',
+        filter: 'Filtro',
+        search: 'Ricerca',
+        columns: 'Colonne',
+      },
+    },
+  },
   editor: {
     editorLabel: 'Editor di testo formattato',
     toolbarLabel: 'Formattazione del testo',

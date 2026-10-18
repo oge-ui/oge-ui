@@ -407,6 +407,41 @@ export const ptBR: OgeLocalePack = {
     },
   },
 
+  ai: {
+    gridAssistant: {
+      label: 'Perguntar à tabela',
+      placeholder:
+        'Descreva a visualização desejada, ex.: "os 10 maiores pedidos deste mês"',
+      submit: 'Perguntar',
+      stop: 'Parar',
+      apply: 'Aplicar',
+      discard: 'Descartar',
+      undo: 'Desfazer',
+      suggestions: 'Sugestões',
+      proposal: 'Alteração proposta',
+      thinking: 'Pensando…',
+      applied: 'Aplicado: {summary}',
+      proposed: 'Proposta: {summary}',
+      unchanged: 'A tabela já mostra isso.',
+      clarify: '{summary}',
+      unsupported: 'Não é possível com estas colunas. {summary}',
+      invalid: 'A resposta não se encaixa nesta tabela. Tente reformular.',
+      error: 'O assistente não está disponível no momento.',
+      noTransport: 'Nenhum serviço de IA configurado.',
+      aborted: 'Interrompido.',
+      discarded: 'Proposta descartada.',
+      undone: 'Alteração desfeita.',
+      ignored:
+        '{count, plural, one {# parte da resposta não correspondia às colunas e foi ignorada.} other {# partes da resposta não correspondiam às colunas e foram ignoradas.}}',
+      slices: {
+        sort: 'Ordenação',
+        group: 'Agrupamento',
+        filter: 'Filtro',
+        search: 'Pesquisa',
+        columns: 'Colunas',
+      },
+    },
+  },
   editor: {
     editorLabel: 'Editor de texto formatado',
     toolbarLabel: 'Formatação de texto',

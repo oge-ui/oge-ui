@@ -42,6 +42,7 @@
     "@oge-ui/behavior": "1.1.4",
     "@oge-ui/locales": "1.1.4",
     "@oge-ui/react-buttons": "1.1.4",
+    "@oge-ui/react-ai": "1.1.4",
     "@oge-ui/react-editor": "1.1.4",
     "@oge-ui/react-forms": "1.1.4",
     "@oge-ui/react-grid": "1.1.4",
