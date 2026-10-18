@@ -6,8 +6,7 @@ components, the same features, the same docs pages with the same demo
 sections showing the same example content, and the same machine-readable
 docs. Buttons set the template; every family that follows holds the same bar.
 
-This file is the checklist. [`ROADMAP-REACT.md`](../ROADMAP-REACT.md) owns the
-schedule, [ADR 0001](adr/0001-multi-framework-strategy.md) /
+This file is the checklist. [ADR 0001](adr/0001-multi-framework-strategy.md) /
 [ADR 0002](adr/0002-framework-aware-docs.md) own the rationale, and the gates
 below enforce what can be enforced mechanically.
 

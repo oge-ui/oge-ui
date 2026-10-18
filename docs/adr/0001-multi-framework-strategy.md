@@ -145,9 +145,8 @@ This replaces the `bannedExternalImports` that used to hang off `scope:core`.
 
 ## Phased plan
 
-> The living execution schedule of these fazlar — per-family phases, the parity
-> principle and the per-family definition of done — is
-> [`ROADMAP-REACT.md`](../../ROADMAP-REACT.md). This table records the original
+> The parity principle and the per-family definition of done live in
+> [`docs/REACT-PARITY.md`](../REACT-PARITY.md). This table records the original
 > decision and its rationale.
 
 | Faz | Scope                                                                                                                                                                                                                                                                                                                                          | Why in this order                                                                                                                                                                                                                                                                                                                                               |
