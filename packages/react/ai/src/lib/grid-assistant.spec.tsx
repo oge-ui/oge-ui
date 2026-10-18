@@ -98,7 +98,7 @@ function setup(
 describe('<OgeGridAssistant>', () => {
   it('renders the same labelled region, field and status as the Angular one', () => {
     const { input } = setup();
-    const region = screen.getByRole('region', { name: 'Ask the grid' });
+    const region = screen.getByRole('group', { name: 'Ask the grid' });
     expect(region).toHaveClass('oge-grid-assistant');
     const status = screen.getByRole('status');
     expect(input()).toHaveAttribute('aria-describedby', status.id);
@@ -110,7 +110,10 @@ describe('<OgeGridAssistant>', () => {
     const { grid, input, transport } = setup({ onApplied });
     fireEvent.change(input(), { target: { value: 'by city' } });
     fireEvent.submit(input().form!);
-    expect(screen.getByRole('region')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('group', { name: 'Ask the grid' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
     expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
     expect(transport.requests[0].messages.at(-1)?.content).toBe('by city');
 
@@ -155,9 +158,11 @@ describe('<OgeGridAssistant>', () => {
     fireEvent.submit(input().form!);
     await transport.reply({ status: 'clarify', summary: 'first' });
     await transport.reply(SORT);
-    expect(screen.getByRole('group')).toBeInTheDocument();
+    expect(
+      screen.getByRole('group', { name: 'Proposed change' }),
+    ).toBeInTheDocument();
     fireEvent.keyDown(input(), { key: 'Escape' });
-    expect(screen.queryByRole('group')).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Proposed change' })).toBeNull();
   });
 
   it('accepts a ref object as target and exposes the handle', async () => {

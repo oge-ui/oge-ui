@@ -68,7 +68,7 @@ let nextId = 0;
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'oge-grid-assistant',
-    role: 'region',
+    role: 'group',
     '[attr.aria-label]': 'msg().label',
     '[class.oge-grid-assistant-busy]': 'core.busy()',
     '[class.oge-grid-assistant-disabled]': 'disabled()',

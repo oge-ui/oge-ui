@@ -122,7 +122,7 @@ describe('OgeGridAssistant', () => {
   it('renders a labelled region, field, submit button and status region', () => {
     const { q } = setup();
     const region = q('.oge-grid-assistant')!;
-    expect(region.getAttribute('role')).toBe('region');
+    expect(region.getAttribute('role')).toBe('group');
     expect(region.getAttribute('aria-label')).toBe('Ask the grid');
     const input = q<HTMLInputElement>('.oge-grid-assistant-input')!;
     expect(input.getAttribute('aria-label')).toBe('Ask the grid');

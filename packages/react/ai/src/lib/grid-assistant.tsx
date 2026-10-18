@@ -265,7 +265,7 @@ export const OgeGridAssistant = forwardRef<
     <div
       className={className}
       style={props.style}
-      role="region"
+      role="group"
       aria-label={msg.label}
       aria-busy={busy || undefined}
     >
