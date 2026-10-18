@@ -219,6 +219,10 @@ for (const fw of FRAMEWORKS) {
       await page.keyboard.press('Control+Shift+ArrowRight');
       await expect(log).toHaveText('revenue: 3 × 1 (keyboard)');
       await expect(revenue).toContainText('3 × 1');
+      // the neighbours glide out of the way — measure them once they landed
+      await expect(demo.locator('.oge-tile-layout-list')).not.toHaveAttribute(
+        'data-oge-animating',
+      );
 
       const orders = tile(demo, 'Orders');
       const box = await orders.boundingBox();
