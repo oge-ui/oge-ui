@@ -286,3 +286,100 @@ describe('OgeGrid header drag (pointer)', () => {
     expect(chips()).toEqual(['Region', 'City']);
   });
 });
+
+describe('OgeGrid drop settle (pointer)', () => {
+  let calls: { el: Element; keyframes: Keyframe[] }[];
+  let original: unknown;
+
+  beforeEach(() => {
+    calls = [];
+    const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+    original = proto.animate;
+    proto.animate = function (this: Element, keyframes: Keyframe[]) {
+      calls.push({ el: this, keyframes });
+      return {
+        finished: new Promise(() => undefined),
+        cancel: () => undefined,
+      };
+    };
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      setTimeout(() => cb(0), 0),
+    );
+  });
+
+  afterEach(() => {
+    const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+    if (original === undefined) delete proto.animate;
+    else proto.animate = original;
+    vi.unstubAllGlobals();
+    document.querySelectorAll('.oge-drag-ghost').forEach((g) => g.remove());
+  });
+
+  function place(el: Element, left: number, top: number): void {
+    (el as HTMLElement).getBoundingClientRect = () =>
+      ({
+        left,
+        top,
+        width: 300,
+        height: 30,
+        right: left + 300,
+        bottom: top + 30,
+      }) as DOMRect;
+  }
+
+  /** The glides that land a ghost (they end on the resting card shadow). */
+  const settles = () =>
+    calls.filter(
+      (call) =>
+        call.el.classList.contains('oge-drag-ghost') &&
+        (call.keyframes.at(-1) as { boxShadow?: string }).boxShadow ===
+          'var(--oge-shadow-card)',
+    );
+
+  it('the row ghost settles onto the dropped row in its new place', async () => {
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', [
+      { id: 1, name: 'Ada' },
+      { id: 2, name: 'Grace' },
+      { id: 3, name: 'Erin' },
+    ]);
+    fixture.componentRef.setInput('columns', ['name']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('rowDragging', true);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const rows = el.querySelectorAll('.oge-row');
+    pointer('pointerdown', el.querySelectorAll('.oge-drag-handle')[2], 5, 90);
+    pointer('pointermove', rows[0], 5, 10);
+    // the row is keyed: Erin's element moves with it
+    place(rows[2], 0, 40);
+    pointer('pointerup', rows[0], 5, 10);
+    await settle(fixture);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(el.querySelector('.oge-row[data-rowindex="0"]')).toBe(rows[2]);
+    expect(settles()).toHaveLength(1);
+    expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
+      'translate(0px, 40px)',
+    );
+  });
+
+  it('a dragged header settles onto its own cell at the new position', async () => {
+    const fixture = TestBed.createComponent(HeaderHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const header = (id: string) =>
+      el.querySelector<HTMLElement>(
+        `.oge-header-row > .oge-header-cell[data-colid="${id}"]`,
+      )!;
+    pointer('pointerdown', header('city'), 300, 10);
+    pointer('pointermove', header('region'), 150, 10);
+    pointer('pointerup', header('region'), 150, 10);
+    fixture.detectChanges();
+    place(header('city'), 120, 0);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(settles()).toHaveLength(1);
+    expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
+      'translate(120px, 0px)',
+    );
+  });
+});

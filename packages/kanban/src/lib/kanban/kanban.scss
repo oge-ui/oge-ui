@@ -884,6 +884,32 @@
   }
 }
 
+/* the drop settle: the preview's clone glides into the card's slot (script
+   motion), straightening and setting down on the way */
+.oge-kanban-drag-settling {
+  > .oge-kanban-card {
+    rotate: 0deg;
+    box-shadow:
+      var(--oge-kanban-card-shadow),
+      inset 0 0 0 1px var(--oge-kanban-card-ring);
+    transition:
+      rotate var(--oge-motion-duration-base) var(--oge-motion-easing-emphasized),
+      box-shadow var(--oge-motion-duration-base)
+        var(--oge-motion-easing-emphasized);
+
+    &:dir(rtl) {
+      rotate: 0deg;
+    }
+  }
+
+  > .oge-kanban-drag-stack,
+  > .oge-kanban-drag-count {
+    opacity: 0;
+    transition: opacity var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-accelerate);
+  }
+}
+
 .oge-kanban-column-header-draggable {
   cursor: grab;
 }
@@ -1073,7 +1099,10 @@
 
 @include tokens.reduced-motion {
   .oge-kanban-add-column,
-  .oge-kanban-card-shifted {
+  .oge-kanban-card-shifted,
+  .oge-kanban-drag-settling > .oge-kanban-card,
+  .oge-kanban-drag-settling > .oge-kanban-drag-stack,
+  .oge-kanban-drag-settling > .oge-kanban-drag-count {
     transition: none;
   }
 }

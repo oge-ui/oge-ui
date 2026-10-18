@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   isOgeDragExcludedTarget,
+  ogeGridHeaderSettleElement,
+  ogeGridRowElement,
   ogeMoveGroupingTo,
   ogeOwnedClosest,
+  ogeOwnedElement,
   resolveOgeAttributeTarget,
   resolveOgeHeaderDropTarget,
   resolveOgeRowDropIndex,
@@ -101,6 +104,59 @@ describe('grid pointer-drag targets', () => {
     expect(isOgeDragExcludedTarget(q('.oge-resize-handle'), cell)).toBe(true);
     expect(isOgeDragExcludedTarget(cell, cell)).toBe(false);
     expect(isOgeDragExcludedTarget(null, cell)).toBe(false);
+  });
+
+  it('finds the settle element by attribute value, skipping nested hosts', () => {
+    const host = grid();
+    const inner = q('#inner');
+    expect(ogeOwnedElement(host, '.oge-row', 'data-rowindex', 3)).toBe(
+      q('.oge-row'),
+    );
+    expect(
+      ogeOwnedElement(host, '.oge-row', 'data-rowindex', 0, '.oge-grid'),
+    ).toBeNull();
+    expect(
+      ogeOwnedElement(inner, '.oge-row', 'data-rowindex', '0', '.oge-grid'),
+    ).toBe(q('#inner .oge-row'));
+  });
+
+  it('resolves the row and header settle elements of the host only', () => {
+    const host = grid();
+    expect(ogeGridRowElement(host, 3)).toBe(q('.oge-row'));
+    expect(ogeGridRowElement(host, 0)).toBeNull();
+    expect(ogeGridRowElement(host, -1)).toBeNull();
+    expect(
+      ogeGridHeaderSettleElement(
+        host,
+        { kind: 'column', id: 'city' },
+        { id: 'name', field: 'name' },
+      ),
+    ).toBe(q('[data-colid="name"]'));
+    expect(
+      ogeGridHeaderSettleElement(
+        host,
+        { kind: 'group' },
+        { id: 'c', field: 'city' },
+      ),
+    ).toBe(q('[data-group-chip]'));
+    expect(
+      ogeGridHeaderSettleElement(
+        host,
+        { kind: 'column', id: 'name' },
+        { id: 'sub' },
+      ),
+    ).toBeNull();
+  });
+
+  it('compares settle values literally and tolerates missing inputs', () => {
+    const host = grid();
+    const chip = q('[data-group-chip]');
+    chip.setAttribute('data-group-chip', 'a"b.c');
+    expect(
+      ogeOwnedElement(host, '[data-group-chip]', 'data-group-chip', 'a"b.c'),
+    ).toBe(chip);
+    expect(ogeOwnedElement(null, '.oge-row', 'data-rowindex', 3)).toBeNull();
+    expect(ogeOwnedElement(host, '.oge-row', 'data-rowindex', null)).toBeNull();
   });
 });
 

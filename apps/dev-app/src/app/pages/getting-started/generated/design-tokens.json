@@ -1203,6 +1203,7 @@
         "@oge-ui/ai",
         "@oge-ui/buttons",
         "@oge-ui/inputs",
+        "@oge-ui/kanban",
         "@oge-ui/layout",
         "@oge-ui/overlay",
         "@oge-ui/tabs",
@@ -1256,6 +1257,7 @@
       },
       "u": [
         "@oge-ui/inputs",
+        "@oge-ui/kanban",
         "@oge-ui/layout",
         "@oge-ui/overlay",
         "@oge-ui/tabs"
@@ -1284,7 +1286,9 @@
       "v": {
         "light": "cubic-bezier(0.3, 0, 1, 1)"
       },
-      "u": []
+      "u": [
+        "@oge-ui/kanban"
+      ]
     },
     {
       "n": "--oge-motion-duration-layout",

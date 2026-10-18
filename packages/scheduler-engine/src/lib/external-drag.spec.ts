@@ -88,6 +88,94 @@ describe('scheduler drop targets', () => {
     expect(drops).toEqual([{ text: 'Item' }]);
     expect(ended).toEqual([true]);
   });
+
+  describe('the drop settle', () => {
+    let calls: { el: Element; keyframes: Keyframe[] }[];
+    let original: unknown;
+
+    beforeEach(() => {
+      calls = [];
+      const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+      original = proto.animate;
+      proto.animate = function (this: Element, keyframes: Keyframe[]) {
+        calls.push({ el: this, keyframes });
+        return {
+          finished: new Promise(() => undefined),
+          cancel: () => undefined,
+        };
+      };
+      vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+        setTimeout(() => cb(0), 0),
+      );
+    });
+
+    afterEach(() => {
+      const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+      if (original === undefined) delete proto.animate;
+      else proto.animate = original;
+      vi.unstubAllGlobals();
+      document.body.innerHTML = '';
+    });
+
+    function place(el: Element, left: number, top: number): void {
+      (el as HTMLElement).getBoundingClientRect = () =>
+        ({ left, top, width: 120, height: 40 }) as DOMRect;
+    }
+
+    const settles = () =>
+      calls.filter(
+        (call) =>
+          call.el.classList.contains('oge-drag-ghost') &&
+          (call.keyframes.at(-1) as { boxShadow?: string }).boxShadow ===
+            'var(--oge-shadow-card)',
+      );
+
+    function drag(accept: boolean): void {
+      const host = document.createElement('div');
+      const preview = document.createElement('div');
+      preview.className = 'oge-scheduler-drop-preview';
+      host.appendChild(preview);
+      const source = document.createElement('div');
+      document.body.append(host, source);
+      place(preview, 200, 300);
+      place(source, 10, 20);
+      const off = registerOgeSchedulerDropTarget({
+        element: host,
+        resolve: () => ({
+          startDate: new Date(2026, 7, 6, 9),
+          allDay: false,
+          resources: {},
+        }),
+        over: () => undefined,
+        drop: () => accept,
+      });
+      beginOgeSchedulerExternalDrag(pointer('pointerdown', 0, 0), {
+        source,
+        payload: { data: { text: 'Item' } },
+      });
+      host.dispatchEvent(pointer('pointermove', 40, 40));
+      host.dispatchEvent(pointer('pointerup', 40, 40));
+      off();
+    }
+
+    it('an accepted drop lands the ghost on the slot preview', async () => {
+      drag(true);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(settles()).toHaveLength(1);
+      expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
+        'translate(200px, 300px)',
+      );
+    });
+
+    it('a refused drop glides the ghost home', async () => {
+      drag(false);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(settles()).toHaveLength(1);
+      expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
+        'translate(10px, 20px)',
+      );
+    });
+  });
 });
 
 describe('the keyboard / single-pointer twin', () => {

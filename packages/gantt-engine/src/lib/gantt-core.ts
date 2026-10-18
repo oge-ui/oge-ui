@@ -17,7 +17,12 @@
  * inputs change and `syncRenderedRange()` after each change of the data.
  */
 import type { OgeReactivityAdapter } from '@oge-ui/behavior';
-import { observeDirection, ogeIsRtl } from '@oge-ui/behavior';
+import {
+  createOgeLayoutAnimator,
+  observeDirection,
+  ogeIsRtl,
+  type OgeLayoutAnimator,
+} from '@oge-ui/behavior';
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
 import {
   ogeDateTimeFormat,
@@ -558,6 +563,16 @@ export class OgeGanttCore<
   readonly contextMenu;
   /** The document direction last read from the host (`connectDirection`). */
   private readonly detectedRtl;
+  /**
+   * Bumped when a bar commit (drag or keyboard) captured the bar boxes —
+   * both layers call {@link playBars} after the render that follows.
+   */
+  readonly barMotion;
+  private barMotionCount = 0;
+  private barAnimator: {
+    root: HTMLElement;
+    animator: OgeLayoutAnimator<string>;
+  } | null = null;
   /** The active column sort, or `null`. */
   readonly sort;
   /** Filter-row texts per field. */
@@ -704,6 +719,7 @@ export class OgeGanttCore<
     this.selectedDependencyKey = rx.cell<RowKey | null>(null);
     this.announcement = rx.cell('');
     this.dragKey = rx.cell<RowKey | null>(null);
+    this.barMotion = rx.cell(0);
     this.tooltipKey = rx.cell<RowKey | null>(null);
     this.dragTip = rx.cell<{ x: number; y: number; text: string } | null>(null);
     this.linkPreview = rx.cell<{ path: string; valid: boolean } | null>(null);
@@ -3875,11 +3891,47 @@ export class OgeGanttCore<
 
   /* ---------------- CRUD ---------------- */
 
+  /**
+   * "First" of a bar commit: snapshots the rendered bars, so the dragged bar
+   * and every successor the commit reschedules glide to their new dates
+   * (translate only — a resize's new width applies at once).
+   */
+  private captureBars(): void {
+    const canvas = this.host.canvasElement();
+    if (canvas === null) return;
+    if (this.barAnimator?.root !== canvas) {
+      this.barAnimator?.animator.cancel();
+      this.barAnimator = {
+        root: canvas,
+        animator: createOgeLayoutAnimator<string>({
+          root: canvas,
+          enter: false,
+          exit: false,
+          query: () =>
+            Array.from(
+              canvas.querySelectorAll<HTMLElement>(
+                '.oge-gantt-target[data-task-key]',
+              ),
+              (el) => [el.getAttribute('data-task-key') ?? '', el] as const,
+            ),
+        }),
+      };
+    }
+    this.barAnimator.animator.capture();
+    this.barMotion.set(++this.barMotionCount);
+  }
+
+  /** "Play" of a bar commit — the layers call it after the render a {@link barMotion} bump caused. */
+  playBars(): void {
+    void this.barAnimator?.animator.play();
+  }
+
   private commitProposal(
     task: GanttTask<T>,
     proposal: GanttTaskProposal,
     kind: 'moved' | 'resized',
   ): void {
+    this.captureBars();
     const format = ogeDateTimeFormat(this.effectiveLocale(), {
       dateStyle: 'medium',
     });

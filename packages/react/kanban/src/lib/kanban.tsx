@@ -42,6 +42,7 @@ import {
   type KanbanChecklistItem,
   type KanbanColumnDef,
   type OgeKanbanSortField,
+  kanbanLayoutSignature,
   ogeCheckKanbanLicense,
 } from '@oge-ui/kanban-engine';
 import { OgeKanbanCardDialog } from './kanban-card-dialog';
@@ -90,6 +91,14 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
     ctl.host = hostRef.current;
     ctl.afterRender();
   });
+
+  // layout motion: the cards FLIP when (and only when) the layout changes —
+  // the controller captured the old boxes before its state write
+  const layoutSignature = kanbanLayoutSignature(ctl.view().lanes);
+  useIsomorphicLayoutEffect(() => {
+    ctl.host = hostRef.current;
+    ctl.playLayout();
+  }, [ctl, layoutSignature]);
 
   // the lifecycle: a ResizeObserver keeps the virtual windows honest, and
   // teardown stops a running auto-scroll loop. Both sides re-run cleanly

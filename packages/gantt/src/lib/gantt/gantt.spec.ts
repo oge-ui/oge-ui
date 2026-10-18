@@ -223,6 +223,57 @@ describe('<oge-gantt>', () => {
     expect(updated?.end).toEqual(new Date(2026, 0, 10));
   });
 
+  it('a bar commit glides the bars it moved from their old boxes', async () => {
+    // a Web Animations stub (jsdom has none) and bar boxes read per key
+    const calls: { el: Element; keyframes: Keyframe[] }[] = [];
+    const left = new Map<string, number>([
+      ['a', 100],
+      ['b', 300],
+    ]);
+    const proto = HTMLElement.prototype as unknown as {
+      animate?: unknown;
+      getBoundingClientRect: () => DOMRect;
+    };
+    const originalAnimate = proto.animate;
+    const originalRect = proto.getBoundingClientRect;
+    proto.animate = function (this: Element, keyframes: Keyframe[]) {
+      calls.push({ el: this, keyframes });
+      return {
+        finished: new Promise(() => undefined),
+        cancel: () => undefined,
+      };
+    };
+    proto.getBoundingClientRect = function (this: HTMLElement) {
+      const x = left.get(this.getAttribute('data-task-key') ?? '') ?? 0;
+      return { left: x, top: 0, width: 40, height: 20 } as DOMRect;
+    };
+    try {
+      rows()[1].click();
+      await settle(fixture);
+      rows()[1].dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'ArrowRight',
+          ctrlKey: true,
+          bubbles: true,
+        }),
+      );
+      left.set('a', 140);
+      await settle(fixture);
+      const glide = calls.find(
+        (call) => call.el.getAttribute('data-task-key') === 'a',
+      );
+      expect(glide?.keyframes[0].transform).toBe('translate(-40px, 0px)');
+      // a bar that kept its date does not move
+      expect(
+        calls.some((call) => call.el.getAttribute('data-task-key') === 'b'),
+      ).toBe(false);
+    } finally {
+      if (originalAnimate === undefined) delete proto.animate;
+      else proto.animate = originalAnimate;
+      proto.getBoundingClientRect = originalRect;
+    }
+  });
+
   it('string dates round-trip their storage shape through edits', async () => {
     fixture.componentInstance.tasks.set([
       {

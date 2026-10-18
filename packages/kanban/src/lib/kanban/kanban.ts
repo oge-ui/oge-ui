@@ -23,7 +23,12 @@ import {
   KANBAN_CARD_GAP,
   KANBAN_DEFAULT_CARD_HEIGHT,
   beginKanbanGesture,
+  createKanbanCardAnimator,
+  kanbanCardElement,
+  kanbanLayoutSignature,
   prepareKanbanTouchDrag,
+  settleKanbanDragPreview,
+  type KanbanCardAnimator,
   buildKanbanEditorChoices,
   buildKanbanItem,
   columnReorderIndex,
@@ -1635,6 +1640,23 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
         focusKanbanCard(this.hostEl.nativeElement, pending);
       }
     });
+    // layout motion (FLIP): a component effect runs before this board's
+    // template refreshes, so the capture still reads the old layout; the
+    // play runs after the render. Only a layout change plays.
+    effect(() => {
+      this.layoutSignature();
+      untracked(() => this.cardAnimator?.capture());
+    });
+    afterRenderEffect(() => {
+      this.layoutSignature();
+      this.cardAnimator ??= createKanbanCardAnimator(this.hostEl.nativeElement);
+      // the dropped card is under its settling preview — it does not glide
+      const settling = this.settleKey;
+      void this.cardAnimator.play({
+        exclude: settling === null ? [] : [settling],
+      });
+    });
+    destroyRef.onDestroy(() => this.cardAnimator?.cancel());
     // one Tab stop per column: card content is tabbable only in the stop
     afterRenderEffect(() => {
       this.focusableKeys();
@@ -2409,6 +2431,15 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   private dragGeometry: KanbanDragGeometry | null = null;
   private stopFrameLoop: (() => void) | null = null;
 
+  /** FLIP of the cards between layouts (created after the first render). */
+  private cardAnimator: KanbanCardAnimator | null = null;
+  /** The card a drop preview is settling onto (kept out of the FLIP). */
+  private settleKey: string | null = null;
+  /** What the card layout looks like — the animator plays when it changes. */
+  private readonly layoutSignature = computed(() =>
+    kanbanLayoutSignature(this.lanes()),
+  );
+
   protected isDraggedCard(card: KanbanCard<T>): boolean {
     return this.drag()?.card.key === card.key;
   }
@@ -2510,6 +2541,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
         const external = this.externalDrop;
         this.externalDrop = null;
         external?.peer.preview(null);
+        if (state !== null) this.settleDragPreview(state, external);
         this.drag.set(null);
         this.dragCarried.set([]);
         if (state === null) return;
@@ -2540,6 +2572,28 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
           state.target.lane,
         );
       },
+    });
+  }
+
+  /**
+   * The drop settle: the lifted preview glides onto the dragged card
+   * wherever it rendered — its new slot (on a peer board after a transfer),
+   * or back at its origin after a cancelled, missed or vetoed drop.
+   */
+  private settleDragPreview(
+    state: KanbanDragState<T>,
+    external: { peer: KanbanBoardPeer; target: KanbanDragTarget | null } | null,
+  ): void {
+    const host = this.hostEl.nativeElement;
+    const key = this.keyOf(state.card);
+    const peerHost = external?.target ? external.peer.host : null;
+    this.settleKey = key;
+    settleKanbanDragPreview(host, () => {
+      if (this.settleKey === key) this.settleKey = null;
+      return (
+        (peerHost ? kanbanCardElement(peerHost, key) : null) ??
+        kanbanCardElement(host, key)
+      );
     });
   }
 

@@ -258,6 +258,53 @@ describe('<OgeGantt>', () => {
     expect(updated.end).toEqual(new Date(2026, 0, 10));
   });
 
+  it('a bar commit glides the bars it moved from their old boxes', () => {
+    // a Web Animations stub (jsdom has none); a bar's box follows its
+    // inline start offset, so the render that moves it moves the box
+    const calls: { el: Element; keyframes: Keyframe[] }[] = [];
+    const proto = HTMLElement.prototype as unknown as {
+      animate?: unknown;
+      getBoundingClientRect: () => DOMRect;
+    };
+    const originalAnimate = proto.animate;
+    const originalRect = proto.getBoundingClientRect;
+    proto.animate = function (this: Element, keyframes: Keyframe[]) {
+      calls.push({ el: this, keyframes });
+      return {
+        finished: new Promise(() => undefined),
+        cancel: () => undefined,
+      };
+    };
+    proto.getBoundingClientRect = function (this: HTMLElement) {
+      const x = parseFloat(
+        this.style.getPropertyValue('inset-inline-start') || '0',
+      );
+      return { left: x, top: 0, width: 40, height: 20 } as DOMRect;
+    };
+    try {
+      render(<Harness />);
+      const bar = () =>
+        document.querySelector<HTMLElement>('[data-task-key="a"]');
+      const before = parseFloat(
+        bar()?.style.getPropertyValue('inset-inline-start') ?? '0',
+      );
+      fireEvent.click(rows()[1]);
+      fireEvent.keyDown(rows()[1], { key: 'ArrowRight', ctrlKey: true });
+      const after = parseFloat(
+        bar()?.style.getPropertyValue('inset-inline-start') ?? '0',
+      );
+      expect(after).toBeGreaterThan(before);
+      const glide = calls.find((call) => call.el === bar());
+      expect(glide?.keyframes[0].transform).toBe(
+        `translate(${before - after}px, 0px)`,
+      );
+    } finally {
+      if (originalAnimate === undefined) delete proto.animate;
+      else proto.animate = originalAnimate;
+      proto.getBoundingClientRect = originalRect;
+    }
+  });
+
   it('string dates round-trip their storage shape through edits', () => {
     const onTaskUpdated = vi.fn();
     render(

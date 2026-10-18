@@ -278,6 +278,11 @@ function OgeGanttInner<
   useEffect(() => {
     core.syncConflicts();
   });
+  // a bar commit captured the bars: they glide after this commit
+  const barMotion = core.barMotion();
+  useIsomorphicLayoutEffect(() => {
+    if (barMotion > 0) core.playBars();
+  }, [core, barMotion]);
 
   // the core's announcements go through the document's shared live region
   const liveAnnouncer = useOgeLiveAnnouncer();

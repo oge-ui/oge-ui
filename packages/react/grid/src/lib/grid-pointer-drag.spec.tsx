@@ -223,3 +223,69 @@ describe('<OgeGrid> pointer drags (no HTML5 drag and drop)', () => {
     );
   });
 });
+
+describe('<OgeGrid> drop settle', () => {
+  let calls: { el: Element; keyframes: Keyframe[] }[];
+  let original: unknown;
+
+  beforeEach(() => {
+    calls = [];
+    const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+    original = proto.animate;
+    proto.animate = function (this: Element, keyframes: Keyframe[]) {
+      calls.push({ el: this, keyframes });
+      return {
+        finished: new Promise(() => undefined),
+        cancel: () => undefined,
+      };
+    };
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      setTimeout(() => cb(0), 0),
+    );
+  });
+
+  afterEach(() => {
+    const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+    if (original === undefined) delete proto.animate;
+    else proto.animate = original;
+    vi.unstubAllGlobals();
+    document.querySelectorAll('.oge-drag-ghost').forEach((g) => g.remove());
+  });
+
+  function place(el: Element, left: number, top: number): void {
+    (el as HTMLElement).getBoundingClientRect = () =>
+      ({
+        left,
+        top,
+        width: 300,
+        height: 30,
+        right: left + 300,
+        bottom: top + 30,
+      }) as DOMRect;
+  }
+
+  /** The glides that land a ghost (they end on the resting card shadow). */
+  const settles = () =>
+    calls.filter(
+      (call) =>
+        call.el.classList.contains('oge-drag-ghost') &&
+        (call.keyframes.at(-1) as { boxShadow?: string }).boxShadow ===
+          'var(--oge-shadow-card)',
+    );
+
+  it('the row ghost settles onto the dropped row in its new place', async () => {
+    const { container } = await renderGrid({ rowDragging: true });
+    const handles = container.querySelectorAll('.oge-drag-handle');
+    const erin = dataRows()[2];
+    place(erin, 0, 40);
+    pointer('pointerdown', handles[2], 5, 90, 'touch');
+    pointer('pointermove', dataRows()[0], 5, 10, 'touch');
+    pointer('pointerup', dataRows()[0], 5, 10, 'touch');
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    expect(container.querySelector('.oge-row[data-rowindex="0"]')).toBe(erin);
+    expect(settles()).toHaveLength(1);
+    expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
+      'translate(0px, 40px)',
+    );
+  });
+});

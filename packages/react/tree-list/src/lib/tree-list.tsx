@@ -103,6 +103,9 @@ import {
 import {
   beginPointerDragDrop,
   isOgeDragExcludedTarget,
+  ogeGridHeaderSettleElement,
+  ogeGridRowElement,
+  ogeOwnedElement,
   resolveOgeAttributeTarget,
   resolveOgeHeaderDropTarget,
   resolveOgeRowDropIndex,
@@ -1551,6 +1554,7 @@ function OgeTreeListInner<T extends object>(
           target.id,
         );
       },
+      settleTo: (target) => ogeGridHeaderSettleElement(host, target, column),
       onEnd: () => model.headerDropTargetId.set(null),
     });
   }
@@ -1611,9 +1615,20 @@ function OgeTreeListInner<T extends object>(
           );
           if (moved) latest.current.onRowReparented?.(moved);
         },
+        // a row dropped inside a collapsed parent settles onto that parent
+        settleTo: (target) =>
+          rowElementOf(draggedKey) ?? rowElementOf(target.key),
         onEnd: () => model.dropTarget.set(null),
       },
     );
+  }
+
+  /** The rendered body row of `key` — where a dropped row settles. */
+  function rowElementOf(key: RowKey): HTMLElement | null {
+    const index = core
+      .renderNodes()
+      .findIndex((n) => n.kind === 'data' && n.key === key);
+    return ogeGridRowElement(hostRef.current, index);
   }
 
   // --- keyboard alternatives to the drag gestures (WCAG 2.1.1 / 2.5.7) ---
@@ -2355,6 +2370,8 @@ function OgeTreeListInner<T extends object>(
           targetId,
         );
       },
+      settleTo: () =>
+        ogeOwnedElement(list, '[data-chooser-id]', 'data-chooser-id', id),
       onEnd: () => model.chooserDropTargetId.set(null),
     });
   }

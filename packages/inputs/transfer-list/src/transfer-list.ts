@@ -18,6 +18,7 @@ import {
 import type { FormValueControl } from '@angular/forms/signals';
 import {
   beginPointerDragDrop,
+  ogeTransferOptionElement,
   choiceIncludes,
   ogeIsRtl,
   ogeSelectSearchFilter,
@@ -777,6 +778,15 @@ export class OgeTransferList<TItem = unknown>
         if (over !== undefined) {
           box?.reorderItem(item, over, target.position, 'drag');
         }
+      },
+      // the item under the pointer lands in its new slot (a move carries
+      // the whole selection; the grabbed item leads it)
+      settleTo: (target) => {
+        const side = target.kind === 'move' ? target.side : from;
+        const index = this.shownItems(side).findIndex((entry) =>
+          Object.is(this.itemValueOf(entry), value),
+        );
+        return ogeTransferOptionElement(host, side, index);
       },
       onEnd: () => {
         this.dropSide.set(null);

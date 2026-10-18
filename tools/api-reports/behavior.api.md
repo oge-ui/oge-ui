@@ -6960,6 +6960,12 @@ export function ogeGridHeaderKeyShortcuts(options: {
 }): string | null;
 
 // @public
+export function ogeGridHeaderSettleElement(host: Element | null | undefined, target: OgeGridHeaderDropTarget, column: {
+    readonly id: string;
+    readonly field?: string | null;
+}): HTMLElement | null;
+
+// @public
 export interface OgeGridInvalidEditor {
     // (undocumented)
     field: string;
@@ -7330,6 +7336,9 @@ export interface OgeGridResolvedColumn<T = unknown, TSlot = unknown, S = unknown
     // (undocumented)
     width: number | string | undefined;
 }
+
+// @public
+export function ogeGridRowElement(host: Element | null | undefined, index: number): HTMLElement | null;
 
 // @public
 export interface OgeGridRowToggleEvent<T = unknown> {
@@ -9198,6 +9207,9 @@ export interface OgeOverlayTimings {
 
 // @public
 export function ogeOwnedClosest(hit: Element | null, selector: string, container: Element | null, hostSelector?: string): HTMLElement | null;
+
+// @public
+export function ogeOwnedElement(container: Element | null | undefined, selector: string, attribute: string, value: string | number | null | undefined, hostSelector?: string): HTMLElement | null;
 
 // @public
 export interface OgePageChangedEvent {
@@ -12319,6 +12331,9 @@ export function ogeTransferMove(value: readonly unknown[], moved: readonly unkno
 
 // @public
 export function ogeTransferOpposite(side: OgeTransferListSide): OgeTransferListSide;
+
+// @public
+export function ogeTransferOptionElement(host: Element | null | undefined, side: OgeTransferListSide, index: number): HTMLElement | null;
 
 // @public
 export function ogeTransferReorderable(allow: OgeTransferListReorderSides, side: OgeTransferListSide): boolean;

@@ -196,6 +196,21 @@ export function ogeTreeLocateDrop(
   return null;
 }
 
+/**
+ * The rendered row of `key` in `peer` (matched through `rowInfo`, so the
+ * `data-key` encoding stays the peer's) — where a dropped node settles.
+ */
+export function ogeTreeDragRowElement(
+  peer: OgeTreeDragPeer,
+  key: RowKey,
+): Element | null {
+  for (const element of peer.rows()) {
+    const dataKey = element.getAttribute('data-key');
+    if (dataKey !== null && peer.rowInfo(dataKey)?.key === key) return element;
+  }
+  return null;
+}
+
 /** Describes `key` of `peer` as a move source; `null` when unknown. */
 export function ogeTreeDragSourceOf(
   peer: OgeTreeDragPeer,
@@ -409,6 +424,7 @@ export function beginOgeTreeDrag(
   let hoverTreeId: string | null = null;
   let hoverTimer: ReturnType<typeof setTimeout> | null = null;
   let lastEvent: PointerEvent | undefined;
+  let committed = false;
 
   const clearHover = (): void => {
     if (hoverTimer !== null) clearTimeout(hoverTimer);
@@ -463,7 +479,7 @@ export function beginOgeTreeDrag(
       armHover(spot);
     },
     onDrop(spot) {
-      ogeTreeCommitMove({
+      committed = ogeTreeCommitMove({
         source: self,
         target: spot.peer,
         dragKey: source.key,
@@ -473,6 +489,13 @@ export function beginOgeTreeDrag(
         event: lastEvent,
       });
     },
+    // the consumer moves the data: the node settles where it rendered (its
+    // new parent's row while that stays collapsed), a vetoed move back home
+    settleTo: (spot) =>
+      committed
+        ? (ogeTreeDragRowElement(spot.peer, source.key) ??
+          ogeTreeDragRowElement(spot.peer, spot.target.key))
+        : ogeTreeDragRowElement(self, source.key),
     onEnd(result) {
       clearHover();
       shown?.preview(null);

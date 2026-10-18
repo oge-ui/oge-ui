@@ -14,6 +14,7 @@ import {
   ogeTreeDragGroupOf,
   ogeTreeDragPeerAt,
   ogeTreeDragPeerCount,
+  ogeTreeDragRowElement,
   ogeTreeHasCut,
   ogeTreeLocateDrop,
   ogeTreePaste,
@@ -410,6 +411,13 @@ describe('beginOgeTreeDrag', () => {
     pointer(a.rows[0], 'pointerup', 10);
     expect(a.events).toEqual([]);
     expect(a.previews.at(-1)).toBeNull();
+  });
+
+  it('finds the settle row of a key through the peer', () => {
+    const a = fakeTree('a', [1, 2]);
+    expect(ogeTreeDragRowElement(a.peer, 2)).toBe(a.rows[1]);
+    expect(ogeTreeDragRowElement(a.peer, '2')).toBeNull();
+    expect(ogeTreeDragRowElement(a.peer, 9)).toBeNull();
   });
 
   it('returns null for an unknown key', () => {

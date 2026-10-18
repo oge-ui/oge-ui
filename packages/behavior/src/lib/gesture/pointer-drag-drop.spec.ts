@@ -197,6 +197,117 @@ describe('beginPointerDragDrop', () => {
   });
 });
 
+describe('beginPointerDragDrop settle', () => {
+  /** A Web Animations stub (jsdom has none — the motion-off case). */
+  function stubMotion() {
+    const calls: { keyframes: Keyframe[]; finish(): void }[] = [];
+    const proto = HTMLElement.prototype as unknown as { animate?: unknown };
+    const original = proto.animate;
+    proto.animate = function (keyframes: Keyframe[]) {
+      let finish!: () => void;
+      const finished = new Promise<void>((resolve) => (finish = resolve));
+      calls.push({ keyframes, finish });
+      return { finished, cancel: () => undefined };
+    };
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
+    return {
+      calls,
+      /** The settle glides: the ones that land on the resting card shadow. */
+      settles: () =>
+        calls.filter(
+          (call) =>
+            (call.keyframes.at(-1) as { boxShadow?: string }).boxShadow ===
+            'var(--oge-shadow-card)',
+        ),
+      restore() {
+        if (original === undefined) delete proto.animate;
+        else proto.animate = original;
+        vi.unstubAllGlobals();
+      },
+    };
+  }
+
+  function place(el: HTMLElement, top: number): void {
+    el.getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top,
+        width: 100,
+        height: 20,
+        right: 100,
+        bottom: top + 20,
+      }) as DOMRect;
+  }
+
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it('settles the ghost onto settleTo(target) once the drop rendered', async () => {
+    const motion = stubMotion();
+    try {
+      const { items } = fixture();
+      items.forEach((item, index) => place(item, index * 100));
+      const settleTo = vi.fn((target: string) =>
+        document.querySelector(`[data-key="${target}"]`),
+      );
+      begin(items[0], { settleTo });
+      moveOn(items[2], 10, 70);
+      document.dispatchEvent(pointer('pointerup', 10, 70));
+      await flush();
+      expect(settleTo).toHaveBeenCalledWith('c');
+      const [settle] = motion.settles();
+      expect(String(settle.keyframes.at(-1)?.transform)).toContain(
+        'translate(0px, 200px)',
+      );
+      expect(document.querySelector('.oge-drag-ghost')).not.toBeNull();
+      settle.finish();
+      await flush();
+      expect(document.querySelector('.oge-drag-ghost')).toBeNull();
+    } finally {
+      motion.restore();
+    }
+  });
+
+  it('a cancelled drag glides back to the origin without asking settleTo', async () => {
+    const motion = stubMotion();
+    try {
+      const { items } = fixture();
+      items.forEach((item, index) => place(item, 50 + index * 100));
+      const settleTo = vi.fn(() => items[2]);
+      begin(items[0], { settleTo });
+      moveOn(items[2], 10, 70);
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+      );
+      await flush();
+      expect(settleTo).not.toHaveBeenCalled();
+      const [settle] = motion.settles();
+      expect(String(settle.keyframes.at(-1)?.transform)).toContain(
+        'translate(0px, 50px)',
+      );
+    } finally {
+      motion.restore();
+    }
+  });
+
+  it('a settleTo answering null just removes the ghost', async () => {
+    const motion = stubMotion();
+    try {
+      const { items } = fixture();
+      begin(items[0], { settleTo: () => null });
+      moveOn(items[1], 10, 40);
+      document.dispatchEvent(pointer('pointerup', 10, 40));
+      await flush();
+      expect(motion.settles()).toHaveLength(0);
+      expect(document.querySelector('.oge-drag-ghost')).toBeNull();
+    } finally {
+      motion.restore();
+    }
+  });
+});
+
 describe('createDragGhost', () => {
   it('is an aria-hidden, inert, pointer-transparent clone without ids', () => {
     const { items } = fixture();

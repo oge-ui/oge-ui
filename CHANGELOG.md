@@ -41,6 +41,35 @@ are versioned independently, which is the case here.
   `--oge-drag-scale` and `--oge-drop-placeholder-border` / `-bg`, with
   dark and high-contrast values.
 
+### Drop settle everywhere — `@oge-ui/behavior`, grids, tree lists, inputs, pivot, scheduler, kanban, gantt (Angular + React)
+
+- **Every pointer drag now lands.** On release the floating preview glides
+  into the dropped item's new place instead of vanishing, and a cancelled
+  or missed drop glides it back: grid row and header drags, group chips and
+  the column chooser (`@oge-ui/grid` / `@oge-ui/react-grid`), tree-list row
+  reparenting, header and chooser drags (`@oge-ui/tree-list` /
+  `@oge-ui/react-tree-list`), tree-view node moves (a vetoed move returns
+  home; a node dropped inside a collapsed parent lands on that parent), list
+  box reorder and transfer-list moves (`@oge-ui/inputs` /
+  `@oge-ui/react-inputs`), pivot field chips (`@oge-ui/pivot-engine`) and
+  external scheduler drops (an accepted drop lands on the slot preview, a
+  refused one returns home). A row dropped on another grid of a
+  `rowDragGroup` still just disappears — that grid's consumer decides where
+  it goes.
+- **Kanban** (`@oge-ui/kanban`, `@oge-ui/react-kanban`): the lifted card
+  settles into its new slot — straightening and setting down on the way —
+  or back to its origin on Escape, a missed drop or a vetoed `cardMoving`;
+  a transfer lands it on the other board. Cards glide when a keyboard move,
+  the menu, a peer transfer, a search, a filter chip or a sort reshapes
+  the board, and reappearing cards fade in.
+- **Gantt** (`@oge-ui/gantt`, `@oge-ui/react-gantt`): after a bar drag or a
+  `Ctrl+Arrow` move, the bar and every successor the commit rescheduled
+  glide to their new dates.
+- New `@oge-ui/behavior` helpers for the lookups: `ogeOwnedElement`,
+  `ogeGridRowElement`, `ogeGridHeaderSettleElement`,
+  `ogeTransferOptionElement`. All motion no-ops under reduced motion and
+  without the Web Animations API.
+
 ### AI grid assistant — new `@oge-ui/ai` and `@oge-ui/react-ai` (MIT), `@oge-ui/behavior`, `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/locales`
 
 - **Ask the grid in plain language.** `<oge-grid-assistant [target]="grid">` /
