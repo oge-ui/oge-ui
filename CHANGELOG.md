@@ -7,6 +7,35 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Expand/collapse motion — `@oge-ui/behavior`, `@oge-ui/navigation`, `@oge-ui/react-navigation`, `@oge-ui/tree-list`, `@oge-ui/react-tree-list`, `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/layout`
+
+- **Tree view.** Expanding a node glides the rows below it down and slides
+  the revealed children in with a small stagger (`--oge-motion-stagger` per
+  row, at most six steps); collapsing glides the rows below up while the
+  hidden children fade out as ghosts. A drop, a reparent and a search filter
+  glide too; scrolling a virtualized tree never animates. Both render
+  layers, through `OgeRowMotionCore`.
+- **Row motion, all grid families.** Rows joining the window now slide in
+  (fade + 4px) staggered instead of scaling in, and rows leaving it (a
+  collapse, a filter) fade out as an inert ghost cloned into the rows' own
+  container — under the sticky header, inside the themed subtree, with no
+  id, role, row index, key or test id — while the real row is removed at once.
+  On-screen rows are now clipped to the window as well as the scroll box,
+  so a grid without a height still animates. New `OgeRowMotionOptions.order`
+  (`'dom'` maps the n-th element to the n-th node) and
+  `OgeLayoutAnimatorOptions.enterKeyframes` / `enterStagger`.
+- **Grid detail rows** open from `0fr` to their content height with a fade
+  (`grid-template-rows`, no measuring); closing removes the row while its
+  ghost fades and the rows below glide up. The detail padding moved to a new
+  `.oge-detail-content` wrapper inside `.oge-detail-cell`. Virtualized grids
+  skip the height reveal (their rows are measured right after rendering).
+  Group expand/collapse glides through the row motion.
+- **`tokens.collapse(...)` SCSS mixin** — the accordion's height technique,
+  shared: `closed` / `open` / `transition` / `enter` (`@starting-style` for a
+  node rendered only while open), with `$duration`, `$easing`, `$fade` and
+  `$clip` (`block` lets content overflow sideways). The accordion and the
+  grid detail row use it; reduced motion drops the transition.
+
 ### Grid motion — `@oge-ui/behavior`, `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/tree-list`, `@oge-ui/react-tree-list`, token hygiene across packages
 
 - **Animated rows** (`animateRows`, default `true`, same name in Angular and

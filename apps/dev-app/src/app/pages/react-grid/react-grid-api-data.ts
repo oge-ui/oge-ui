@@ -318,7 +318,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           type: 'boolean',
           default: 'true',
           description:
-            'Glides the rows on screen to their new slots when a sort, a filter, grouping, an expand/collapse or a row drop re-orders them (FLIP keyed by row key, at most 60 on-screen rows, rows joining the window fade in). Scrolling, a page change, an entirely new row set and remote (windowed) scrolling never animate; under <code>prefers-reduced-motion</code> the change applies at once. Timing comes from <code>--oge-motion-duration-layout</code> / <code>--oge-motion-easing-spring</code>. <code>false</code> turns it off.',
+            'Glides the rows on screen to their new slots when a sort, a filter, grouping, an expand/collapse or a row drop re-orders them (FLIP keyed by row key, at most 60 on-screen rows; rows joining the window — expanded children, a detail row — slide in staggered by <code>--oge-motion-stagger</code>, rows leaving it fade out as an inert ghost). Scrolling, a page change, an entirely new row set and remote (windowed) scrolling never animate; under <code>prefers-reduced-motion</code> the change applies at once. Timing comes from <code>--oge-motion-duration-layout</code> / <code>--oge-motion-easing-spring</code>. <code>false</code> turns it off.',
         },
         {
           name: 'renderRow',

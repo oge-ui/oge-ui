@@ -746,12 +746,19 @@ input.oge-filter-input {
   position: sticky;
   inset-inline-start: 0;
   max-width: 100%;
+  // opens from 0fr to its content height with a fade; closing removes the
+  // row at once (the row motion fades its ghost while the rows below glide up)
+  @include tokens.collapse(enter, $clip: block);
 }
 
 .oge-detail-cell {
   // stay inside the visible viewport even when the columns scroll horizontally
   position: sticky;
   inset-inline-start: 0;
+}
+
+// the padding lives inside the clipping cell, so a collapsed row is 0 tall
+.oge-detail-content {
   padding: 12px 16px;
 }
 
@@ -1301,6 +1308,11 @@ input.oge-filter-input {
   .oge-row,
   .oge-detail-row {
     overflow: hidden;
+  }
+
+  // virtual rows are measured right after they render: no height reveal
+  .oge-detail-row {
+    transition: none;
   }
 }
 

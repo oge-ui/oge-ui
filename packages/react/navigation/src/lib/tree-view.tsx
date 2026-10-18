@@ -7,6 +7,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -17,6 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  OgeRowMotionCore,
   beginOgeTreeDrag,
   buildTreeViewModel,
   createTypeAheadBuffer,
@@ -98,6 +100,10 @@ import {
 import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
 import { useOgeTreeViewConfig } from './navigation-config';
 import { useTreeVirtualizer } from './use-tree-virtualizer';
+
+/** `useLayoutEffect` in the browser, `useEffect` on the server (SSR-safe). */
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /** Context handed to `renderItem` — the React face of `ogeTreeItemTemplate`. */
 export interface OgeTreeItemRenderContext<T> {
@@ -1495,6 +1501,30 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
   const renderedNodes = virtualActive
     ? nodes.slice(virtualWindow.start, virtualWindow.end)
     : nodes;
+  const renderedStart = virtualActive ? virtualWindow.start : 0;
+  // Expand/collapse, a drop and a filter glide the rows on screen (FLIP of
+  // the stamped window, keyed by node id); scrolling re-creates the window at
+  // a new start and never animates. The render body still sees the old rows
+  // in the DOM, so the snapshot is taken here (idempotent under StrictMode);
+  // the layout effect plays once the new ones are in.
+  const [rowMotion] = useState(
+    () =>
+      new OgeRowMotionCore<OgeTreeViewNode<T>, string>({
+        keyOf: (node) => node.id,
+        viewport: () => scrollElRef.current,
+        root: () => listElRef.current,
+        rows: (root) =>
+          root.querySelectorAll<HTMLElement>(
+            ':scope > .oge-tree-view-viewport > .oge-tree-view-item',
+          ),
+        order: 'dom',
+      }),
+  );
+  rowMotion.prepare({ nodes: renderedNodes, start: renderedStart });
+  useIsomorphicLayoutEffect(() => {
+    void rowMotion.commit();
+  });
+  useEffect(() => () => rowMotion.cancel(), [rowMotion]);
 
   const hostClasses = ['oge-tree-view', disabled && 'oge-disabled', className]
     .filter(Boolean)

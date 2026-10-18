@@ -246,24 +246,22 @@
   padding-inline-end: var(--oge-accordion-pad-x);
 }
 
-// Height animation via grid-template-rows: unlike a measured block-size this
-// needs no JS and keeps working when the content resizes while open.
+// Height animation via grid-template-rows (tokens.collapse): unlike a
+// measured block-size this needs no JS and keeps working when the content
+// resizes while open.
 .oge-accordion-panel {
-  display: grid;
-  grid-template-rows: 0fr;
+  @include tokens.collapse(closed, $transition: false);
 }
 
 .oge-accordion-panel-animated {
-  transition:
-    grid-template-rows var(--oge-accordion-transition)
-      var(--oge-motion-easing-standard),
-    opacity var(--oge-accordion-transition) var(--oge-motion-easing-standard);
-  opacity: 0;
+  @include tokens.collapse(
+    transition,
+    $duration: var(--oge-accordion-transition)
+  );
 }
 
 .oge-accordion-panel-open {
-  grid-template-rows: 1fr;
-  opacity: 1;
+  @include tokens.collapse(open);
 }
 
 .oge-accordion-panel-inner {

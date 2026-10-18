@@ -5,14 +5,25 @@
  *
  * The core decides *whether* a change animates (pure, see
  * {@link ogeRowMotionDecision}) and drives one {@link createOgeLayoutAnimator}
- * over the rows that intersect the viewport. Hosts call `prepare()` while
+ * over the rows that intersect the viewport: moved rows glide, rows that join
+ * the window (an expanded node's children, a detail row) slide in with a
+ * small stagger, and rows that leave it (a collapse, a filter) fade out as a
+ * ghost cloned into the rows' own container — under the sticky header and
+ * inside the themed subtree, while the real row is removed synchronously. Hosts call `prepare()` while
  * the DOM still shows the old rows (Angular: a component `effect`, which
  * runs before the template refresh; React: the render body) and `commit()`
  * once it shows the new ones (Angular: `afterRenderEffect`; React: a layout
  * effect). Like every motion primitive it no-ops under reduced motion,
  * without the Web Animations API (SSR, jsdom) and in a hidden tab.
  */
-import { createOgeLayoutAnimator, type OgeLayoutAnimator } from './motion';
+import {
+  createOgeLayoutAnimator,
+  ogeMotionEnabled,
+  ogeMotionTiming,
+  ogeRectOf,
+  type OgeLayoutAnimator,
+  type OgeRect,
+} from './motion';
 
 /** Most on-screen rows one change animates — beyond it the change just applies. */
 export const OGE_ROW_MOTION_LIMIT = 60;
@@ -66,8 +77,17 @@ export interface OgeRowMotionOptions<N, K> {
    * scroll clamp between prepare and commit is not a move).
    */
   root(): HTMLElement | null;
-  /** The rendered row elements, in DOM order, each carrying `data-rowindex`. */
+  /**
+   * The rendered row elements, in DOM order — each carrying `data-rowindex`,
+   * or with `order: 'dom'` one element per window node.
+   */
   rows(root: HTMLElement): Iterable<HTMLElement>;
+  /**
+   * How a row element maps onto the window: `'rowindex'` (default) reads its
+   * absolute `data-rowindex`; `'dom'` takes the n-th element as the n-th
+   * node (a flat list such as the tree view, which renders every node).
+   */
+  order?: 'rowindex' | 'dom';
   /** Most on-screen rows per change (default {@link OGE_ROW_MOTION_LIMIT}). */
   limit?: number;
 }
@@ -95,6 +115,12 @@ export class OgeRowMotionCore<N, K> {
   } | null = null;
   /** The window the DOM currently shows — what `query` maps row indexes against. */
   private domWindow: OgeRowMotionWindow<K> | null = null;
+  /** The on-screen rows at `prepare`, for the exit ghosts of the ones that leave. */
+  private leaving: {
+    readonly origin: OgeRect;
+    readonly rows: readonly LeavingRow<K>[];
+  } | null = null;
+  private readonly ghosts = new Set<HTMLElement>();
 
   constructor(private readonly options: OgeRowMotionOptions<N, K>) {
     this.limit = options.limit ?? OGE_ROW_MOTION_LIMIT;
@@ -102,7 +128,7 @@ export class OgeRowMotionCore<N, K> {
 
   /** `true` while rows glide. */
   get animating(): boolean {
-    return this.animator?.animating ?? false;
+    return (this.animator?.animating ?? false) || this.ghosts.size > 0;
   }
 
   /**
@@ -130,9 +156,11 @@ export class OgeRowMotionCore<N, K> {
       : null;
     const decision = ogeRowMotionDecision(shown, window);
     this.pending = { window, decision };
+    this.leaving = null;
     if (decision === 'animate') {
       this.domWindow = shown;
       this.ensureAnimator()?.capture();
+      this.recordLeaving();
     }
     return decision;
   }
@@ -151,14 +179,75 @@ export class OgeRowMotionCore<N, K> {
       // a scroll re-created the rows: settle anything in flight, forget the boxes
       animator.cancel();
       animator.reset();
+      this.leaving = null;
       return Promise.resolve();
     }
-    return animator.play();
+    const played = animator.play();
+    this.ghostLeaving(pending.window);
+    return played;
   }
 
-  /** Stops running glides (destroy, a remote reload). */
+  /** Stops running glides and exit ghosts (destroy, a remote reload). */
   cancel(): void {
     this.animator?.cancel();
+    this.leaving = null;
+    for (const ghost of this.ghosts) ghost.remove();
+    this.ghosts.clear();
+  }
+
+  /** Remembers where the on-screen rows are, while the DOM still shows them. */
+  private recordLeaving(): void {
+    const root = this.options.root();
+    if (!root || !ogeMotionEnabled(root)) return;
+    const rows: LeavingRow<K>[] = [];
+    for (const [key, el] of this.visibleRows(root)) {
+      if (rows.length >= this.limit) return;
+      rows.push({ key, el, rect: ogeRectOf(el), parent: el.parentElement });
+    }
+    this.leaving = { origin: ogeRectOf(root), rows };
+  }
+
+  /**
+   * Fades a clone of every recorded row that left the window, at its old
+   * slot inside its old container — the container stays the clip and the
+   * stacking context, so the ghost never floats over a sticky header.
+   */
+  private ghostLeaving(next: OgeRowMotionWindow<K> | null): void {
+    const leaving = this.leaving;
+    this.leaving = null;
+    const root = this.options.root();
+    if (!leaving || !next || !root || !ogeMotionEnabled(root)) return;
+    const kept = new Set(next.keys);
+    const gone = leaving.rows.filter(
+      (row) =>
+        !kept.has(row.key) && !row.el.isConnected && !!row.parent?.isConnected,
+    );
+    if (gone.length === 0) return;
+    // a scroll clamp between prepare and commit moves the content: follow it
+    const now = ogeRectOf(root);
+    const shiftX = now.left - leaving.origin.left;
+    const shiftY = now.top - leaving.origin.top;
+    const timing = ogeMotionTiming(root, 'fast', 'accelerate');
+    for (const row of gone) {
+      const parent = row.parent as HTMLElement;
+      const ghost = rowGhost(row.el, row.rect);
+      // first in its container: rows gliding over the slot paint above it
+      parent.insertBefore(ghost, parent.firstChild);
+      const at = ogeRectOf(ghost);
+      ghost.style.left = `${row.rect.left + shiftX - at.left}px`;
+      ghost.style.top = `${row.rect.top + shiftY - at.top}px`;
+      this.ghosts.add(ghost);
+      const animation = ghost.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: timing.duration,
+        easing: timing.easing,
+        fill: 'forwards',
+      });
+      const done = (): void => {
+        ghost.remove();
+        this.ghosts.delete(ghost);
+      };
+      animation.finished.then(done, done);
+    }
   }
 
   private ensureAnimator(): OgeLayoutAnimator<K> | null {
@@ -170,9 +259,11 @@ export class OgeRowMotionCore<N, K> {
     this.animator = createOgeLayoutAnimator<K>({
       root,
       limit: this.limit,
-      // rows leaving the window are simply gone: a ghost would float over
-      // the sticky header and lose the grid's themed subtree
+      // the animator's ghosts live in <body> (over the sticky header,
+      // outside the themed subtree): leaving rows ghost in place instead
       exit: false,
+      enterKeyframes: ROW_ENTER_KEYFRAMES,
+      enterStagger: true,
       query: () => this.visibleRows(root),
     });
     return this.animator;
@@ -182,21 +273,90 @@ export class OgeRowMotionCore<N, K> {
   private *visibleRows(root: HTMLElement): Iterable<readonly [K, HTMLElement]> {
     const window = this.domWindow;
     if (!window) return;
-    const viewport = this.options.viewport();
-    const frame = viewport?.getBoundingClientRect();
+    const frame = visibleFrame(this.options.viewport());
+    const byOrder = this.options.order === 'dom';
+    let position = 0;
     for (const el of this.options.rows(root)) {
-      const index = Number(el.getAttribute('data-rowindex'));
-      if (!Number.isInteger(index)) continue;
-      const offset = index - window.start;
+      if (el.classList.contains(GHOST_CLASS)) continue;
+      const offset = byOrder
+        ? position++
+        : Number(el.getAttribute('data-rowindex')) - window.start;
+      if (!Number.isInteger(offset)) continue;
       if (offset < 0 || offset >= window.keys.length) continue;
       if (frame) {
         const box = el.getBoundingClientRect();
         if (box.bottom <= frame.top) continue;
         // DOM order is visual order: everything after the first row below
         // the fold is off screen too
-        if (box.top >= frame.bottom && frame.bottom > frame.top) return;
+        if (box.top >= frame.bottom) return;
       }
       yield [window.keys[offset] as K, el] as const;
     }
   }
+}
+
+interface LeavingRow<K> {
+  readonly key: K;
+  readonly el: HTMLElement;
+  readonly rect: OgeRect;
+  readonly parent: HTMLElement | null;
+}
+
+/** Revealed rows slide down a few pixels into place while they fade in. */
+const ROW_ENTER_KEYFRAMES: Keyframe[] = [
+  { opacity: 0, transform: 'translateY(-4px)' },
+  { opacity: 1, transform: 'none' },
+];
+
+const GHOST_CLASS = 'oge-row-ghost';
+
+/**
+ * The vertical band rows count as on screen in: the scroll container's box,
+ * clipped to the window (a grid without a height is as tall as its rows).
+ */
+function visibleFrame(
+  viewport: HTMLElement | null,
+): { top: number; bottom: number } | null {
+  if (!viewport) return null;
+  const box = viewport.getBoundingClientRect();
+  let top = box.top;
+  let bottom = box.bottom;
+  const height = typeof window === 'undefined' ? 0 : window.innerHeight;
+  if (height > 0) {
+    top = Math.max(top, 0);
+    bottom = Math.min(bottom, height);
+  }
+  return bottom > top ? { top, bottom } : null;
+}
+
+/**
+ * An inert, unaddressable clone of a row that just left: no ids, no row
+ * index, key, role or test id (virtualizers, the motion core and specs never
+ * count it), out of flow at the row's old size.
+ */
+function rowGhost(row: HTMLElement, rect: OgeRect): HTMLElement {
+  const ghost = row.cloneNode(true) as HTMLElement;
+  for (const node of [ghost, ...ghost.querySelectorAll<HTMLElement>('*')]) {
+    node.removeAttribute('id');
+    node.removeAttribute('data-rowindex');
+    node.removeAttribute('data-key');
+    node.removeAttribute('tabindex');
+    node.removeAttribute('data-testid');
+    node.removeAttribute('role');
+  }
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.setAttribute('inert', '');
+  ghost.classList.add(GHOST_CLASS);
+  Object.assign(ghost.style, {
+    position: 'absolute',
+    left: '0px',
+    top: '0px',
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    margin: '0',
+    boxSizing: 'border-box',
+    pointerEvents: 'none',
+    transform: 'none',
+  } satisfies Partial<CSSStyleDeclaration>);
+  return ghost;
 }

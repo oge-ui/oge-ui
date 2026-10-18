@@ -26,6 +26,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 interface Call {
   el: HTMLElement;
   keyframes: Keyframe[];
+  options?: KeyframeAnimationOptions;
 }
 
 /** Rows placed by `data-rowindex` in a 300px viewport; `animate` records. */
@@ -37,8 +38,12 @@ function stubLayout(): { calls: Call[]; restore(): void } {
   };
   const originalAnimate = proto.animate;
   const originalRect = proto.getBoundingClientRect;
-  proto.animate = function (this: HTMLElement, keyframes: Keyframe[]) {
-    calls.push({ el: this, keyframes });
+  proto.animate = function (
+    this: HTMLElement,
+    keyframes: Keyframe[],
+    options?: KeyframeAnimationOptions,
+  ) {
+    calls.push({ el: this, keyframes, options });
     return { finished: new Promise(() => undefined), cancel: () => undefined };
   };
   proto.getBoundingClientRect = function (this: HTMLElement) {
@@ -109,6 +114,42 @@ describe('OgeTreeList animateRows', () => {
     expect(byEl.get(rows[1])?.[0].opacity).toBe(0);
     expect(byEl.get(rows[2])?.[0].opacity).toBe(0);
     expect(byEl.has(rows[0])).toBe(false);
+  });
+
+  it('slides the revealed children in with a stagger', async () => {
+    const { fixture, tree } = await render();
+    tree.expandRow(1);
+    await settle(fixture);
+    const enters = stub.calls.filter((call) => call.keyframes[0].opacity === 0);
+    expect(enters).toHaveLength(2);
+    expect(enters[0].keyframes[0].transform).toBe('translateY(-4px)');
+    expect(enters.map((call) => call.options?.delay ?? 0)).toEqual([0, 30]);
+  });
+
+  it('glides the rows below up on collapse and ghosts the hidden children', async () => {
+    const { fixture, el, tree } = await render();
+    tree.expandRow(1);
+    await settle(fixture);
+    stub.calls.length = 0;
+    tree.collapseRow(1);
+    await settle(fixture);
+    const container = el.querySelector<HTMLElement>('.oge-rows');
+    const ghosts = Array.from(
+      container?.querySelectorAll<HTMLElement>(':scope > .oge-row-ghost') ?? [],
+    );
+    expect(ghosts).toHaveLength(2);
+    expect(ghosts.every((ghost) => ghost.textContent?.includes('Child'))).toBe(
+      true,
+    );
+    expect(ghosts.every((ghost) => !ghost.hasAttribute('data-rowindex'))).toBe(
+      true,
+    );
+    const rows = Array.from(
+      el.querySelectorAll<HTMLElement>('.oge-rows > [data-rowindex]'),
+    );
+    expect(rows).toHaveLength(2);
+    const glide = stub.calls.find((call) => call.el === rows[1]);
+    expect(glide?.keyframes[0].transform).toBe(`translate(0px, ${2 * ROW}px)`);
   });
 
   it('applies the change at once with animateRows off', async () => {

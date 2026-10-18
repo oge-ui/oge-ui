@@ -7945,6 +7945,8 @@ export interface OgeLayoutAnimator<K> {
 // @public
 export interface OgeLayoutAnimatorOptions<K> {
     enter?: boolean;
+    enterKeyframes?: Keyframe[];
+    enterStagger?: boolean;
     exit?: boolean;
     limit?: number;
     query(): Iterable<readonly [K, HTMLElement]>;
@@ -10302,6 +10304,7 @@ export interface OgeRowMotionInput<N> {
 export interface OgeRowMotionOptions<N, K> {
     keyOf(node: N): K;
     limit?: number;
+    order?: 'rowindex' | 'dom';
     root(): HTMLElement | null;
     rows(root: HTMLElement): Iterable<HTMLElement>;
     viewport(): HTMLElement | null;
