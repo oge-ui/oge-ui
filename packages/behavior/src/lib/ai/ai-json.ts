@@ -10,8 +10,7 @@ import { parseStateJson } from '@oge-ui/core';
  * way it rejects a tampered state snapshot. `undefined` when no object is found.
  */
 export function extractOgeAiJson(text: string): unknown {
-  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
-  const source = (fenced ? fenced[1] : text) ?? '';
+  const source = fencedBody(text) ?? text;
   const start = source.indexOf('{');
   if (start < 0) return undefined;
   const end = matchingBrace(source, start);
@@ -20,6 +19,19 @@ export function extractOgeAiJson(text: string): unknown {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? value
     : undefined;
+}
+
+/**
+ * The body of the first Markdown code fence, or `undefined`. Found with
+ * `indexOf` rather than a lazy regex, which backtracks polynomially on a reply
+ * that opens a fence and never closes it. The language tag (```json) needs no
+ * stripping: the object starts at the first brace.
+ */
+function fencedBody(text: string): string | undefined {
+  const open = text.indexOf('```');
+  if (open < 0) return undefined;
+  const close = text.indexOf('```', open + 3);
+  return close < 0 ? undefined : text.slice(open + 3, close);
 }
 
 /** Index of the `}` closing the `{` at `start`, skipping string literals. */

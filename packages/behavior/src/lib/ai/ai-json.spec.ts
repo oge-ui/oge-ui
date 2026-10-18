@@ -33,4 +33,11 @@ describe('extractOgeAiJson', () => {
     expect(extractOgeAiJson('{"a":1,}')).toBeUndefined();
     expect(extractOgeAiJson('[1,2]')).toBeUndefined();
   });
+
+  it('stays linear on an unclosed fence (no regex backtracking)', () => {
+    const hostile = '```' + ' '.repeat(200_000) + 'x';
+    const started = Date.now();
+    expect(extractOgeAiJson(hostile)).toBeUndefined();
+    expect(Date.now() - started).toBeLessThan(500);
+  });
 });
