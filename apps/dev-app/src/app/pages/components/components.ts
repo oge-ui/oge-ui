@@ -1577,7 +1577,7 @@ export class ComponentsIndexPage {
     },
     {
       key: 'ai',
-      name: 'AI',
+      name: 'AI Assistants',
       icon: 'sparkles',
       path: '/components/ai',
       description:
