@@ -408,6 +408,23 @@ export const ar: OgeLocalePack = {
   },
 
   ai: {
+    chat: {
+      label: 'محادثة',
+      logLabel: 'المحادثة',
+      composerLabel: 'رسالة',
+      placeholder: 'اكتب رسالة…',
+      send: 'إرسال',
+      stop: 'إيقاف',
+      retry: 'أعد المحاولة',
+      clear: 'مسح المحادثة',
+      you: 'أنت:',
+      assistant: 'المساعد:',
+      thinking: 'يكتب…',
+      error: 'تعذّر تحميل الرد.',
+      emptyReply: '(لا يوجد رد)',
+      empty: 'ابدأ المحادثة.',
+      suggestions: 'اقتراحات',
+    },
     aiCell: {
       generating: 'جارٍ الإنشاء…',
       error: 'غير متاح',

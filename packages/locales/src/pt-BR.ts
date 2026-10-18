@@ -408,6 +408,23 @@ export const ptBR: OgeLocalePack = {
   },
 
   ai: {
+    chat: {
+      label: 'Chat',
+      logLabel: 'Conversa',
+      composerLabel: 'Mensagem',
+      placeholder: 'Digite uma mensagem…',
+      send: 'Enviar',
+      stop: 'Parar',
+      retry: 'Tentar novamente',
+      clear: 'Limpar a conversa',
+      you: 'Você:',
+      assistant: 'Assistente:',
+      thinking: 'Digitando…',
+      error: 'Não foi possível carregar a resposta.',
+      emptyReply: '(sem resposta)',
+      empty: 'Comece a conversa.',
+      suggestions: 'Sugestões',
+    },
     aiCell: {
       generating: 'Gerando…',
       error: 'Indisponível',

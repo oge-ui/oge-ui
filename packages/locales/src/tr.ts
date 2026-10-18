@@ -401,6 +401,23 @@ export const tr: OgeLocalePack = {
   },
 
   ai: {
+    chat: {
+      label: 'Sohbet',
+      logLabel: 'Konuşma',
+      composerLabel: 'Mesaj',
+      placeholder: 'Bir mesaj yazın…',
+      send: 'Gönder',
+      stop: 'Durdur',
+      retry: 'Tekrar dene',
+      clear: 'Konuşmayı temizle',
+      you: 'Siz:',
+      assistant: 'Asistan:',
+      thinking: 'Yazıyor…',
+      error: 'Yanıt yüklenemedi.',
+      emptyReply: '(yanıt yok)',
+      empty: 'Konuşmayı başlatın.',
+      suggestions: 'Öneriler',
+    },
     aiCell: {
       generating: 'Oluşturuluyor…',
       error: 'Kullanılamıyor',

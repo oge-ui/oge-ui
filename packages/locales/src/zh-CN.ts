@@ -397,6 +397,23 @@ export const zhCN: OgeLocalePack = {
   },
 
   ai: {
+    chat: {
+      label: '聊天',
+      logLabel: '对话',
+      composerLabel: '消息',
+      placeholder: '输入消息…',
+      send: '发送',
+      stop: '停止',
+      retry: '重试',
+      clear: '清空对话',
+      you: '你：',
+      assistant: '助手：',
+      thinking: '正在输入…',
+      error: '无法加载回复。',
+      emptyReply: '（无回复）',
+      empty: '开始对话吧。',
+      suggestions: '建议',
+    },
     aiCell: {
       generating: '正在生成…',
       error: '不可用',
