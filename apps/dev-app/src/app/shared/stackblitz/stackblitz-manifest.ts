@@ -43,6 +43,13 @@ export const STACKBLITZ_TOOLCHAIN = {
 export const STACKBLITZ_PACKAGES: Readonly<
   Record<string, StackblitzPackageInfo>
 > = {
+  "@oge-ui/ai": {
+    "deps": [
+      "@oge-ui/behavior"
+    ],
+    "commercial": false,
+    "styles": false
+  },
   "@oge-ui/behavior": {
     "deps": [
       "@oge-ui/core"
@@ -226,6 +233,7 @@ export const STACKBLITZ_PACKAGES: Readonly<
     "deps": [
       "@oge-ui/behavior",
       "@oge-ui/locales",
+      "@oge-ui/react-ai",
       "@oge-ui/react-buttons",
       "@oge-ui/react-editor",
       "@oge-ui/react-forms",
@@ -237,6 +245,13 @@ export const STACKBLITZ_PACKAGES: Readonly<
       "@oge-ui/react-tabs",
       "@oge-ui/react-tree-list",
       "@oge-ui/react-upload"
+    ],
+    "commercial": false,
+    "styles": true
+  },
+  "@oge-ui/react-ai": {
+    "deps": [
+      "@oge-ui/behavior"
     ],
     "commercial": false,
     "styles": true
@@ -457,6 +472,7 @@ export const STACKBLITZ_PACKAGES: Readonly<
   },
   "oge-ui": {
     "deps": [
+      "@oge-ui/ai",
       "@oge-ui/behavior",
       "@oge-ui/buttons",
       "@oge-ui/core",

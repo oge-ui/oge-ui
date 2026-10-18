@@ -62,6 +62,7 @@
       "react-forms",
       "react-upload",
       "react-editor",
+      "react-ai",
       "react-grid",
       "react-kanban",
       "react-tree-list",
@@ -94,6 +95,7 @@
       "forms",
       "upload",
       "editor",
+      "ai",
       "ui"
     ],
     "projectsRelationship": "independent",

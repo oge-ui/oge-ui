@@ -692,6 +692,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE Rich Text Editor API reference: every input, output and method of oge-editor, the toolbar tools, the command vocabulary, the sanitizer and config.',
   ],
   [
+    '/components/ai',
+    'AI grid assistant for Angular and React: ask a data grid in plain language to sort, filter and group. Any model, validated changes, preview and undo.',
+  ],
+  [
+    '/components/ai/api',
+    'AI API reference: every input, output and method of oge-grid-assistant, the OpenAI-compatible, Anthropic and HTTP transports, config and shared types.',
+  ],
+  [
     '/components/kanban',
     'Kanban board for Angular and React: columns, swimlanes and WIP limits, virtualized cards, drag and drop with Escape-cancel, keyboard moving and an edit dialog.',
   ],

@@ -220,6 +220,7 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-editor',
+                'scope:react-ai',
                 'scope:react-grid',
                 'scope:react-tree-list',
                 'scope:react-overlay',
@@ -303,6 +304,14 @@ export default [
               // edges: the toolbar (react-layout), the popups and the link /
               // image prompts (react-overlay), the colour palette
               // (react-inputs); the editor machine itself lives in behavior
+              sourceTag: 'scope:react-ai',
+              onlyDependOnLibsWithTags: [
+                'scope:react-ai',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
               sourceTag: 'scope:react-editor',
               onlyDependOnLibsWithTags: [
                 'scope:react-editor',
@@ -655,6 +664,18 @@ export default [
               ],
             },
             {
+              // the AI components: the transports, the prompt builders, the
+              // reply validator and the assistant machines live in behavior
+              // (shared with the React AI package). They drive a grid through
+              // its public state API, structurally — no grid import.
+              sourceTag: 'scope:ai',
+              onlyDependOnLibsWithTags: [
+                'scope:ai',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
               sourceTag: 'scope:forms',
               onlyDependOnLibsWithTags: [
                 'scope:forms',
@@ -689,6 +710,7 @@ export default [
                 'scope:forms',
                 'scope:upload',
                 'scope:editor',
+                'scope:ai',
                 // provideOgeLocale(): the MIT translation packs (their
                 // type-only references to commercial engines are erased) and
                 // the default catalogs a pack is merged over
@@ -711,6 +733,7 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-editor',
+                'scope:react-ai',
                 'scope:react-grid',
                 'scope:react-kanban',
                 'scope:react-tree-list',
@@ -745,6 +768,7 @@ export default [
                 'scope:forms',
                 'scope:upload',
                 'scope:editor',
+                'scope:ai',
                 'scope:locales',
                 // the localization page's demo runs provideOgeLocale itself
                 'scope:ui',

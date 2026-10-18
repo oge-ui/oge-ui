@@ -1339,6 +1339,22 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/ai',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/ai/overview').then((m) => m.AiOverviewPage),
+        title: 'OGE — AI Grid Assistant',
+      },
+      {
+        path: 'api',
+        loadComponent: () => import('./pages/ai/api').then((m) => m.AiApiPage),
+        title: 'OGE — AI API',
+      },
+    ],
+  },
+  {
     path: 'components/kanban',
     children: [
       {

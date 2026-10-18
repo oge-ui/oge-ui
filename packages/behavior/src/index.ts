@@ -2491,3 +2491,74 @@ export {
   type OgeListViewVirtualSettings,
   type OgeListViewWindow,
 } from './lib/layout/list-view-core';
+export {
+  ogeDescribeGridColumns,
+  type OgeGridColumnDescription,
+  type OgeGridColumnDescriptionValue,
+} from './lib/grid/grid-column-description';
+export {
+  createOgeAiHttpTransport,
+  createOgeAnthropicTransport,
+  createOgeOpenAiTransport,
+  OgeAiError,
+  type OgeAiAnthropicTransportOptions,
+  type OgeAiCallOptions,
+  type OgeAiErrorCode,
+  type OgeAiFetch,
+  type OgeAiHttpTransportOptions,
+  type OgeAiJsonSchema,
+  type OgeAiMessage,
+  type OgeAiOpenAiTransportOptions,
+  type OgeAiRequest,
+  type OgeAiResponse,
+  type OgeAiRole,
+  type OgeAiTransport,
+  type OgeAiTransportBaseOptions,
+  type OgeAiUsage,
+} from './lib/ai/ai-transport';
+export { extractOgeAiJson } from './lib/ai/ai-json';
+export {
+  buildOgeGridAiRequest,
+  OGE_GRID_AI_ALL_CAPABILITIES,
+  OGE_GRID_AI_RESPONSE_SCHEMA,
+  type OgeAiGridColumn,
+  type OgeAiGridColumnValue,
+  type OgeGridAiCapabilities,
+  type OgeGridAiRequestOptions,
+  type OgeGridAiTurn,
+} from './lib/ai/grid-ai-context';
+export {
+  resolveOgeGridAiReply,
+  type OgeGridAiResult,
+  type OgeGridAiSlice,
+  type OgeGridAiWarning,
+  type OgeGridAiWarningKind,
+} from './lib/ai/grid-ai-response';
+export {
+  formatOgeAiMessage,
+  mergeOgeAiMessages,
+  mergeOgeGridAssistantMessages,
+  OGE_DEFAULT_AI_CONFIG,
+  OGE_DEFAULT_AI_MESSAGES,
+  OGE_GRID_ASSISTANT_ICON_PATH,
+  resolveOgeAiConfig,
+  type OgeAiConfig,
+  type OgeAiConfigInput,
+  type OgeAiMessages,
+  type OgeAiMessagesInput,
+  type OgeGridAssistantConfig,
+  type OgeGridAssistantMessages,
+  type OgeGridAssistantMessagesInput,
+  type OgeGridAssistantMode,
+} from './lib/ai/ai-config';
+export {
+  OgeGridAssistantCore,
+  type OgeGridAssistantAppliedEvent,
+  type OgeGridAssistantApplyingEvent,
+  type OgeGridAssistantCoreOptions,
+  type OgeGridAssistantErrorEvent,
+  type OgeGridAssistantProposal,
+  type OgeGridAssistantStatus,
+  type OgeGridAssistantTarget,
+  type OgeGridAssistantUndoneEvent,
+} from './lib/ai/grid-assistant-core';

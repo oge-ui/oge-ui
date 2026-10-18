@@ -1,0 +1,517 @@
+# @oge-ui/react-ai
+
+> React AI components that work with any model — <OgeGridAssistant> turns a sentence into validated sort, filter, grouping, search and column changes on an <OgeGrid> with preview, apply and undo — running the same assistant machine, transports and stylesheet as the Angular AI package.
+
+Part of OGE UI v1.1.4.
+Docs and live demos: https://www.ogeui.com/components/ai
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-ai
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages and ship in
+`@oge-ui/core` (installed with every package; add it directly under pnpm):
+`@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
+`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
+`prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeGridAssistant>
+
+#### Properties
+
+_Target and transport_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `target` | `OgeGridAssistantTarget \| RefObject<OgeGridAssistantTarget \| null> \| null` | `undefined` | The grid to drive — the `<OgeGrid>` ref (`target={grid}`) or its handle, or any object with `state()`, `applyState()` and `describeColumns()`. A ref is read when a prompt is sent. |
+| `transport` | `OgeAiTransport \| null` | `undefined` | Replaces the transport from `<OgeAiConfigProvider>` for this assistant. Without either, a request ends in the `noTransport` error. |
+
+_Behaviour (undefined = config)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `OgeGridAssistantMode` | `'preview'` | `"preview"` asks before applying (Apply / Discard), `"apply"` applies at once. |
+| `suggestions` | `readonly string[]` | `[]` | One-click prompts shown as chips until the first change is applied. |
+| `capabilities` | `Partial<OgeGridAiCapabilities>` | `undefined` | Turns parts of the state off for the model (`{ columns: false }`), merged over the config. |
+| `instructions` | `string` | `undefined` | Domain vocabulary appended to the system prompt (““open” means status 1”). |
+| `columns` | `readonly OgeAiGridColumn[]` | `undefined` | Column descriptions to send instead of the grid’s own — add `description`s, or leave a column out to keep it from the model. |
+| `locale` | `string` | `undefined` | BCP 47 locale of plurals, passed to the model as the user’s locale; falls back to the config, then the runtime default. |
+| `messages` | `OgeGridAssistantMessagesInput` | `undefined` | Per-instance string overrides, merged over the catalog. |
+| `disabled` | `boolean` | `false` | Disables the field, the chips and every action. |
+| `className / style` | `string / CSSProperties` | `undefined` | Added to the root `.oge-grid-assistant` element. |
+
+#### Methods
+
+_Ref handle (OgeGridAssistantHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `submit(text?)` | `(text?: string) => Promise<void>` | Sends the prompt — or `text`, which also becomes the prompt. Resolves when the reply is handled; never rejects (failures land in the status). |
+| `apply()` | `void` | Applies the pending proposal (the Apply button). |
+| `discard()` | `void` | Drops the pending proposal; the grid stays as it is. |
+| `undo()` | `void` | Reverts the latest applied change, one step per call (up to `undoLimit`). |
+| `cancel()` | `void` | Aborts the request in flight (the Stop button, Escape). |
+| `reset()` | `void` | Clears the prompt, the proposal, the conversation and the undo history. |
+| `focus()` | `void` | Moves focus to the prompt field. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onApplying` | `(event: OgeGridAssistantApplyingEvent) => void` | A change is about to reach the grid — set `cancel` to veto it. |
+| `onApplied` | `(event: OgeGridAssistantAppliedEvent) => void` | A change was applied: `{ prompt, summary, snapshot, previousSnapshot, slices }`. |
+| `onUndone` | `(event: OgeGridAssistantUndoneEvent) => void` | Undo restored the previous state. |
+| `onErrorOccurred` | `(event: OgeGridAssistantErrorEvent) => void` | A request failed: `"no-transport"`, an `OgeAiError` code, or `"invalid-reply"`. |
+
+#### Types
+
+_Providers_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<OgeAiConfigProvider config>` | `(props: { config?: OgeAiConfigInput; children }) => JSX.Element` | Sets the transport and the AI defaults for a subtree; nested providers merge over the outer one. |
+| `useOgeAiConfig()` | `() => OgeAiConfig` | The resolved AI defaults for the current subtree. |
+
+_Transports_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `createOgeAiHttpTransport(options)` | `(options: OgeAiHttpTransportOptions) => OgeAiTransport` | Posts every `OgeAiRequest` as JSON to your endpoint (`{ url, headers?, credentials?, fetch? }`), which calls the model with a key the browser never sees and answers `{ "text": "…" }` or plain text. The production shape. |
+| `createOgeOpenAiTransport(options)` | `(options: OgeAiOpenAiTransportOptions) => OgeAiTransport` | OpenAI Chat Completions and every compatible server — Azure OpenAI (`query: { "api-version": … }` + an `api-key` header), Ollama (`baseUrl: "http://localhost:11434/v1"`), vLLM, LM Studio, OpenRouter. `structuredOutput`: `"json_schema"` (default), `"json_object"` or `"none"`. |
+| `createOgeAnthropicTransport(options)` | `(options: OgeAiAnthropicTransportOptions) => OgeAiTransport` | The Anthropic Messages API (Claude): system messages go to `system`, text blocks are joined. `{ model, baseUrl?, apiKey?, apiVersion?, maxTokens? }`. |
+| `dangerouslyAllowBrowser` | `boolean` | Required by the vendor transports to send an `apiKey` from a browser — without it they reject with `code: "browser-key"`. A key in client code is readable by every visitor: prototypes and internal tools only. |
+| `OgeAiTransport` | `{ complete(request: OgeAiRequest, options?: { signal?: AbortSignal }): Promise<OgeAiResponse> }` | The whole contract — implement it to plug in any provider or SDK. Requests are abortable; the assistant aborts on Stop and when a newer prompt supersedes an older one. |
+| `OgeAiRequest` | `{ feature; messages: readonly OgeAiMessage[]; responseSchema?; responseName?; temperature?; maxTokens? }` | What a feature sends: `feature` (`"grid-assistant"`) lets a backend route or rate-limit, `responseSchema` is the JSON Schema of the reply. |
+| `OgeAiResponse` | `{ text: string; usage?: { inputTokens?; outputTokens? } }` | The model’s reply as text (JSON text for a schema). |
+| `OgeAiMessage` | `{ role: 'system' \| 'user' \| 'assistant'; content: string }` | One message of the conversation. |
+| `OgeAiError` | `Error & { code: 'aborted' \| 'network' \| 'http' \| 'invalid-response' \| 'browser-key'; status? }` | What every built-in transport rejects with; `status` carries the HTTP status of `"http"` errors. |
+| `OgeAiFetch` | `(input: string, init) => Promise<{ ok; status; headers; text() }>` | The `fetch` shape the adapters call — pass `fetch` in the options for tests or a custom client. |
+
+_Grid assistant_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridAssistantTarget` | `{ state(): GridStateSnapshot; applyState(snapshot): void; describeColumns(): readonly OgeAiGridColumn[] }` | What the assistant drives — the grid’s own state API. The Angular `OgeGrid` and the React grid handle both satisfy it. |
+| `OgeAiGridColumn` | `{ field; caption; dataType; sortable; filterable; groupable; visible; values?; description? }` | What the model is told about a column — never row data. `values` are a lookup’s items (texts map back to values); `description` adds meaning (“net amount in EUR”). |
+| `OgeGridAiCapabilities` | `{ sort; filter; group; search; columns: boolean }` | Which parts of the state the assistant may change; a reply touching a switched-off part is dropped with a `not-allowed` warning. |
+| `OgeGridAssistantMode` | `'preview' \| 'apply'` | `"preview"` shows the proposed change with Apply / Discard; `"apply"` applies at once. Undo works in both. |
+| `OgeGridAssistantStatus` | `'idle' \| 'thinking' \| 'preview' \| 'applied' \| 'unchanged' \| 'clarify' \| 'unsupported' \| 'invalid' \| 'error' \| 'aborted'` | Where the assistant is; the status line renders the matching message and is a polite live region. |
+| `OgeGridAssistantProposal` | `{ prompt; summary; snapshot: GridStateSnapshot; slices: readonly OgeGridAiSlice[]; warnings }` | A validated change: the complete next state, already through `sanitizeGridStateSnapshot`, and the parts that differ. |
+| `OgeGridAiSlice` | `'sort' \| 'group' \| 'filter' \| 'search' \| 'columns'` | A part of the grid state; shown as chips on a proposal. |
+| `OgeGridAiWarning` | `{ kind: 'unknown-field' \| 'not-allowed' \| 'invalid-operator' \| 'invalid-value' \| 'too-complex'; slice; field? }` | A part of the reply that was dropped instead of applied (the `ignored` message counts them). |
+| `OgeGridAssistantApplyingEvent` | `{ prompt; summary; snapshot; slices; cancel: boolean }` | Cancelable: set `cancel` to keep the grid as it is. |
+| `OgeGridAssistantAppliedEvent` | `{ prompt; summary; snapshot; previousSnapshot; slices }` | A change reached the grid. |
+| `OgeGridAssistantUndoneEvent` | `{ summary; snapshot }` | Undo restored `snapshot`. |
+| `OgeGridAssistantErrorEvent` | `{ prompt; code: OgeAiErrorCode \| 'no-transport' \| 'invalid-reply'; error }` | A request failed — no transport configured, a transport error, or a reply that was not a usable object. |
+
+_Config and messages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAiConfig` | `{ transport: OgeAiTransport \| null; locale; gridAssistant: OgeGridAssistantConfig; messages: OgeAiMessages }` | Package defaults. `OGE_DEFAULT_AI_CONFIG` has no transport — the application configures one. |
+| `OgeGridAssistantConfig` | `{ mode; suggestions; historyLimit; undoLimit; capabilities; instructions }` | Assistant defaults: `"preview"`, no suggestions, the last 4 exchanges replayed, 20 undo steps, every capability on. |
+| `OgeAiMessages` | `{ gridAssistant: OgeGridAssistantMessages }` | Every string, grouped per component. `OGE_DEFAULT_AI_MESSAGES` is the English catalog; `@oge-ui/locales` packs carry an `ai` slice to merge into your config. |
+| `OgeGridAssistantMessages` | `{ label; placeholder; submit; stop; apply; discard; undo; suggestions; proposal; thinking; applied; proposed; unchanged; clarify; unsupported; invalid; error; noTransport; aborted; discarded; undone; ignored; slices }` | `applied` / `proposed` / `clarify` / `unsupported` take `{summary}`; `ignored` is an ICU plural over `{count}`. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeAiConfigProvider, OgeGridAssistant, createOgeAiHttpTransport } from '@oge-ui/react-ai';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+
+interface Order {
+  id: number;
+  customer: string;
+  city: string;
+  status: number;
+  amount: number;
+  ordered: Date;
+}
+
+const statuses = [
+  { id: 1, label: 'Open' },
+  { id: 2, label: 'Shipped' },
+  { id: 3, label: 'Delivered' },
+  { id: 4, label: 'Cancelled' },
+];
+
+const orders: Order[] = [
+  { id: 1001, customer: 'Acme Corp', city: 'İzmir', status: 2, amount: 1240.5, ordered: new Date(2026, 9, 3) },
+  { id: 1002, customer: 'Ege Textiles', city: 'İstanbul', status: 1, amount: 310, ordered: new Date(2026, 9, 11) },
+  { id: 1003, customer: 'Fjord Media', city: 'Berlin', status: 4, amount: 980, ordered: new Date(2026, 8, 21) },
+];
+
+const columns: OgeGridColumnProps<Order>[] = [
+  { field: 'id', caption: 'Order', dataType: 'number', width: 90 },
+  { field: 'customer', caption: 'Customer' },
+  { field: 'city', caption: 'City' },
+  {
+    field: 'status',
+    caption: 'Status',
+    dataType: 'number',
+    lookup: { dataSource: statuses, valueExpr: 'id', displayExpr: 'label' },
+  },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: { type: 'currency', currency: 'EUR' } },
+  { field: 'ordered', caption: 'Ordered', dataType: 'date', format: { type: 'date' } },
+];
+
+// Requests go to YOUR endpoint; the API key stays on the server. The model
+// sees the column names, types and lookup values — never a row.
+const transport = createOgeAiHttpTransport({ url: '/api/ai' });
+
+export function OrdersWithAssistant() {
+  const grid = useRef<OgeGridHandle<Order>>(null);
+  return (
+    <OgeAiConfigProvider config={{ transport }}>
+      <OgeGridAssistant
+        target={grid}
+        suggestions={['Orders over 500 this month', 'Group by status', 'Newest first']}
+      />
+      <OgeGrid ref={grid} data={orders} keyField="id" columns={columns} groupPanel paging={{ pageSize: 10 }} />
+    </OgeAiConfigProvider>
+  );
+}
+```
+
+### Apply at once and undo
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeGridAssistant } from '@oge-ui/react-ai';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+import type { OgeGridAssistantHandle } from '@oge-ui/react-ai';
+
+interface Order {
+  id: number;
+  customer: string;
+  city: string;
+  status: number;
+  amount: number;
+  ordered: Date;
+}
+
+const statuses = [
+  { id: 1, label: 'Open' },
+  { id: 2, label: 'Shipped' },
+  { id: 3, label: 'Delivered' },
+  { id: 4, label: 'Cancelled' },
+];
+
+const orders: Order[] = [
+  { id: 1001, customer: 'Acme Corp', city: 'İzmir', status: 2, amount: 1240.5, ordered: new Date(2026, 9, 3) },
+  { id: 1002, customer: 'Ege Textiles', city: 'İstanbul', status: 1, amount: 310, ordered: new Date(2026, 9, 11) },
+  { id: 1003, customer: 'Fjord Media', city: 'Berlin', status: 4, amount: 980, ordered: new Date(2026, 8, 21) },
+];
+
+const columns: OgeGridColumnProps<Order>[] = [
+  { field: 'id', caption: 'Order', dataType: 'number', width: 90 },
+  { field: 'customer', caption: 'Customer' },
+  { field: 'city', caption: 'City' },
+  {
+    field: 'status',
+    caption: 'Status',
+    dataType: 'number',
+    lookup: { dataSource: statuses, valueExpr: 'id', displayExpr: 'label' },
+  },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: { type: 'currency', currency: 'EUR' } },
+  { field: 'ordered', caption: 'Ordered', dataType: 'date', format: { type: 'date' } },
+];
+
+export function ApplyAtOnce() {
+  // mode="apply" skips the proposal: the change lands at once and Undo steps
+  // back through every applied change. Follow-ups build on the current state.
+  const grid = useRef<OgeGridHandle<Order>>(null);
+  const assistant = useRef<OgeGridAssistantHandle>(null);
+  return (
+    <>
+      <OgeGridAssistant ref={assistant} target={grid} mode="apply" />
+      <button type="button" onClick={() => assistant.current?.submit('Newest first')}>
+        Ask from code
+      </button>
+      <OgeGrid ref={grid} data={orders} keyField="id" columns={columns} groupPanel />
+    </>
+  );
+}
+```
+
+### What the model sees
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeGridAssistant } from '@oge-ui/react-ai';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+import type { OgeAiGridColumn } from '@oge-ui/react-ai';
+
+interface Order {
+  id: number;
+  customer: string;
+  city: string;
+  status: number;
+  amount: number;
+  ordered: Date;
+}
+
+const statuses = [
+  { id: 1, label: 'Open' },
+  { id: 2, label: 'Shipped' },
+  { id: 3, label: 'Delivered' },
+  { id: 4, label: 'Cancelled' },
+];
+
+const orders: Order[] = [
+  { id: 1001, customer: 'Acme Corp', city: 'İzmir', status: 2, amount: 1240.5, ordered: new Date(2026, 9, 3) },
+  { id: 1002, customer: 'Ege Textiles', city: 'İstanbul', status: 1, amount: 310, ordered: new Date(2026, 9, 11) },
+  { id: 1003, customer: 'Fjord Media', city: 'Berlin', status: 4, amount: 980, ordered: new Date(2026, 8, 21) },
+];
+
+const columns: OgeGridColumnProps<Order>[] = [
+  { field: 'id', caption: 'Order', dataType: 'number', width: 90 },
+  { field: 'customer', caption: 'Customer' },
+  { field: 'city', caption: 'City' },
+  {
+    field: 'status',
+    caption: 'Status',
+    dataType: 'number',
+    lookup: { dataSource: statuses, valueExpr: 'id', displayExpr: 'label' },
+  },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: { type: 'currency', currency: 'EUR' } },
+  { field: 'ordered', caption: 'Ordered', dataType: 'date', format: { type: 'date' } },
+];
+
+// `columns` replaces what the model is told: add descriptions, or leave a
+// column out entirely ("customer" never reaches the model below).
+const described: OgeAiGridColumn[] = [
+  { field: 'city', caption: 'City', dataType: 'string', sortable: true, filterable: true, groupable: true, visible: true },
+  {
+    field: 'status', caption: 'Status', dataType: 'number', sortable: true, filterable: true, groupable: true, visible: true,
+    values: statuses.map((s) => ({ value: s.id, text: s.label })),
+  },
+  {
+    field: 'amount', caption: 'Amount', dataType: 'number', sortable: true, filterable: true, groupable: true, visible: true,
+    description: 'Net order value in EUR',
+  },
+  { field: 'ordered', caption: 'Ordered', dataType: 'date', sortable: true, filterable: true, groupable: true, visible: true },
+];
+
+export function PrivateAssistant() {
+  const grid = useRef<OgeGridHandle<Order>>(null);
+  return (
+    <>
+      {/* capabilities switches whole parts of the state off */}
+      <OgeGridAssistant
+        target={grid}
+        columns={described}
+        capabilities={{ columns: false }}
+        instructions="Amounts are net, in EUR. 'Open' orders are not shipped yet."
+      />
+      <OgeGrid ref={grid} data={orders} keyField="id" columns={columns} />
+    </>
+  );
+}
+```
+
+### Events
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeGridAssistant } from '@oge-ui/react-ai';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+import type { OgeGridAssistantApplyingEvent } from '@oge-ui/react-ai';
+
+interface Order {
+  id: number;
+  customer: string;
+  city: string;
+  status: number;
+  amount: number;
+  ordered: Date;
+}
+
+const statuses = [
+  { id: 1, label: 'Open' },
+  { id: 2, label: 'Shipped' },
+  { id: 3, label: 'Delivered' },
+  { id: 4, label: 'Cancelled' },
+];
+
+const orders: Order[] = [
+  { id: 1001, customer: 'Acme Corp', city: 'İzmir', status: 2, amount: 1240.5, ordered: new Date(2026, 9, 3) },
+  { id: 1002, customer: 'Ege Textiles', city: 'İstanbul', status: 1, amount: 310, ordered: new Date(2026, 9, 11) },
+  { id: 1003, customer: 'Fjord Media', city: 'Berlin', status: 4, amount: 980, ordered: new Date(2026, 8, 21) },
+];
+
+const columns: OgeGridColumnProps<Order>[] = [
+  { field: 'id', caption: 'Order', dataType: 'number', width: 90 },
+  { field: 'customer', caption: 'Customer' },
+  { field: 'city', caption: 'City' },
+  {
+    field: 'status',
+    caption: 'Status',
+    dataType: 'number',
+    lookup: { dataSource: statuses, valueExpr: 'id', displayExpr: 'label' },
+  },
+  { field: 'amount', caption: 'Amount', dataType: 'number', format: { type: 'currency', currency: 'EUR' } },
+  { field: 'ordered', caption: 'Ordered', dataType: 'date', format: { type: 'date' } },
+];
+
+// onApplying is cancelable — here, a change that would hide columns needs
+// a confirmation. onApplied carries the full snapshot: save it as a view.
+function guard(event: OgeGridAssistantApplyingEvent): void {
+  if (event.slices.includes('columns')) {
+    event.cancel = !confirm(`Apply "${event.summary}"?`);
+  }
+}
+
+export function AssistantEvents() {
+  const grid = useRef<OgeGridHandle<Order>>(null);
+  const [log, setLog] = useState<string[]>([]);
+  return (
+    <>
+      <OgeGridAssistant
+        target={grid}
+        mode="apply"
+        onApplying={guard}
+        onApplied={(e) => setLog((l) => [`${e.prompt} → ${e.slices.join(', ')}`, ...l])}
+      />
+      <OgeGrid ref={grid} data={orders} keyField="id" columns={columns} />
+      <ol>
+        {log.map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ol>
+    </>
+  );
+}
+```
+
+### Transports and configuration
+
+```ts
+'use client';
+
+import { OgeAiConfigProvider, OgeGridAssistant, createOgeAiHttpTransport, createOgeAnthropicTransport, createOgeOpenAiTransport } from '@oge-ui/react-ai';
+
+// A local model through Ollama's OpenAI-compatible API — nothing leaves the machine.
+const local = createOgeOpenAiTransport({ baseUrl: 'http://localhost:11434/v1', model: 'llama3.1' });
+
+// Claude through your own proxy route.
+export const claude = createOgeAnthropicTransport({ baseUrl: '/api/anthropic', model: 'claude-haiku-5-5' });
+
+// Production: your backend calls the model; the browser never holds a key.
+const production = createOgeAiHttpTransport({ url: '/api/ai' });
+
+// Your endpoint, e.g. in Node: forward the OgeAiRequest, return { text }.
+//
+// app.post('/api/ai', async (req, res) => {
+//   const { messages, responseSchema, temperature } = req.body;
+//   const answer = await openai.chat.completions.create({
+//     model: 'gpt-4.1-mini',
+//     messages,
+//     temperature,
+//     response_format: { type: 'json_schema', json_schema: { name: 'oge', schema: responseSchema } },
+//   });
+//   res.json({ text: answer.choices[0].message.content });
+// });
+
+export function AiTransports() {
+  return (
+    <OgeAiConfigProvider
+      config={{
+        transport: production,
+        gridAssistant: { mode: 'preview', undoLimit: 50 },
+        messages: { gridAssistant: { placeholder: 'Ask about your orders…' } },
+      }}
+    >
+      {/* pick the transport per environment; nothing else changes */}
+      <OgeGridAssistant transport={local} />
+    </OgeAiConfigProvider>
+  );
+}
+```
+

@@ -140,6 +140,30 @@ absurd nesting is refused. They never throw. `parseStateJson()` is the
 matching `JSON.parse` replacement — it returns `undefined` for invalid JSON or
 a prototype key — so restore your own stored state through the same pair.
 
+### AI requests carry no row data, and replies are validated
+
+`@oge-ui/ai` and `@oge-ui/react-ai` never ship a hosted service: requests go
+only to the transport the application configures. A grid-assistant request
+contains the column catalog (field, caption, type, lookup values and any
+`description` the host adds), the grid's current sort / filter / grouping /
+search / hidden-column state and the user's prompt — **never a row**. Pass
+`columns` to leave a column out entirely, or `capabilities` to switch parts
+of the state off.
+
+The reply is untrusted input. It is parsed through `parseStateJson()`
+(prototype keys rejected at any depth); every field must exist and allow the
+operation, operators must fit the column type, values are coerced to it,
+filter trees are bounded, and the merged state still passes
+`sanitizeGridStateSnapshot` before it reaches the grid. The model's summary is
+rendered as text. Parts that do not fit are dropped, never applied.
+
+The vendor transports (`createOgeOpenAiTransport`,
+`createOgeAnthropicTransport`) refuse to send an `apiKey` from a browser
+unless `dangerouslyAllowBrowser` is set: a key in client code is readable by
+every visitor. In production use `createOgeAiHttpTransport` against your own
+endpoint and keep the key on the server, where you can also authenticate and
+rate-limit.
+
 ### Uploads validate on the client only
 
 `@oge-ui/upload` enforces `accept`, `allowedFileExtensions` and the size

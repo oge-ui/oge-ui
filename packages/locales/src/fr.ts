@@ -412,6 +412,42 @@ export const fr: OgeLocalePack = {
     },
   },
 
+  ai: {
+    gridAssistant: {
+      label: 'Interroger la grille',
+      placeholder:
+        'Décrivez la vue souhaitée, p. ex. « les 10 plus grosses commandes du mois »',
+      submit: 'Demander',
+      stop: 'Arrêter',
+      apply: 'Appliquer',
+      discard: 'Ignorer',
+      undo: 'Annuler',
+      suggestions: 'Suggestions',
+      proposal: 'Modification proposée',
+      thinking: 'Réflexion…',
+      applied: 'Appliqué : {summary}',
+      proposed: 'Proposition : {summary}',
+      unchanged: 'La grille affiche déjà cela.',
+      clarify: '{summary}',
+      unsupported: 'Impossible avec ces colonnes. {summary}',
+      invalid:
+        'La réponse ne correspond pas à cette grille. Reformulez votre demande.',
+      error: 'L’assistant est indisponible pour le moment.',
+      noTransport: 'Aucun service d’IA n’est configuré.',
+      aborted: 'Arrêté.',
+      discarded: 'Proposition ignorée.',
+      undone: 'Modification annulée.',
+      ignored:
+        '{count, plural, one {# partie de la réponse ne correspondait pas aux colonnes et a été ignorée.} other {# parties de la réponse ne correspondaient pas aux colonnes et ont été ignorées.}}',
+      slices: {
+        sort: 'Tri',
+        group: 'Regroupement',
+        filter: 'Filtre',
+        search: 'Recherche',
+        columns: 'Colonnes',
+      },
+    },
+  },
   editor: {
     editorLabel: 'Éditeur de texte enrichi',
     toolbarLabel: 'Mise en forme du texte',

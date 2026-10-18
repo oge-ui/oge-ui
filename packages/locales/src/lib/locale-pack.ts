@@ -8,6 +8,7 @@
 // reference silent.
 import type {
   OgeAccordionMessages,
+  OgeAiMessages,
   OgeDataViewMessages,
   OgeTileLayoutMessages,
   OgeListViewMessages,
@@ -116,6 +117,12 @@ export interface OgeLocalePack {
   readonly forms?: OgeDeepPartial<OgeFormsMessages>;
   /** File uploader (`provideOgeUploadConfig`). */
   readonly upload?: OgeDeepPartial<OgeUploadMessages>;
+  /**
+   * AI components (`provideOgeAiConfig`). Not wired by `provideOgeLocale()`:
+   * the AI config also carries the transport, so the app merges this slice
+   * into its own `provideOgeAiConfig({ transport, messages })` call.
+   */
+  readonly ai?: OgeDeepPartial<OgeAiMessages>;
   /** Rich-text editor (`provideOgeEditorConfig`). */
   readonly editor?: OgeDeepPartial<OgeEditorMessages>;
   /** Accordion, progress bar, load indicator, splitter, toolbar, avatar, badge, chip, alert. */

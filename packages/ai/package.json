@@ -1,0 +1,38 @@
+{
+  "name": "@oge-ui/ai",
+  "version": "1.1.4",
+  "description": "Signal-based Angular AI components that work with any model: a natural-language grid assistant that turns \"orders over 500 from last month, newest first\" into validated sort, filter, grouping and column changes, with preview, apply and undo. Bring your own model — OpenAI-compatible (OpenAI, Azure, Ollama, vLLM), Anthropic, or your own backend; no hosted service, no row data sent.",
+  "keywords": [
+    "angular",
+    "ai",
+    "llm",
+    "natural-language",
+    "data-grid",
+    "ai-assistant",
+    "openai",
+    "anthropic",
+    "ollama",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/core": ">=22.0.0 <24.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "1.1.4"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://www.ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/ai"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

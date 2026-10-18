@@ -158,6 +158,8 @@ import {
   type OgeGridCellSpan,
   type OgeGridCellValueWrite,
   type OgeGridColumnInfo,
+  ogeDescribeGridColumns,
+  type OgeGridColumnDescription,
   type OgeGridRangeBounds,
   type OgeGridRangeEdges,
   type OgeGridSpanExtent,
@@ -310,6 +312,7 @@ export type {
   OgeRowPreparedEvent,
   OgeCellPreparedEvent,
   OgeGridColumnInfo,
+  OgeGridColumnDescription,
   OgeClassValue,
   OgeConditionalFormat,
   OgeGridCellSpan,
@@ -1336,6 +1339,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         const field = column.field();
         if (field) column.visible.set(!hidden.has(field));
       }
+    });
+  }
+
+  /**
+   * Plain descriptions of every column with a data field: caption, data type,
+   * visibility, sort / filter abilities and lookup values. What a saved-view
+   * editor or `oge-grid-assistant` reads — no templates, no accessors.
+   */
+  describeColumns(): OgeGridColumnDescription[] {
+    return untracked(() => {
+      const visible = new Set(
+        this.columnModel.exportColumns(false).map((column) => column.id),
+      );
+      return ogeDescribeGridColumns(
+        this.columnModel.exportColumns(true),
+        visible,
+        this.firstDataRow(),
+      );
     });
   }
 

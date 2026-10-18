@@ -400,6 +400,41 @@ export const tr: OgeLocalePack = {
     },
   },
 
+  ai: {
+    gridAssistant: {
+      label: 'Tabloya sor',
+      placeholder:
+        'İstediğiniz görünümü yazın, ör. "bu ayın en büyük 10 siparişi"',
+      submit: 'Sor',
+      stop: 'Durdur',
+      apply: 'Uygula',
+      discard: 'Vazgeç',
+      undo: 'Geri al',
+      suggestions: 'Öneriler',
+      proposal: 'Önerilen değişiklik',
+      thinking: 'Düşünüyor…',
+      applied: 'Uygulandı: {summary}',
+      proposed: 'Öneri: {summary}',
+      unchanged: 'Tablo zaten bunu gösteriyor.',
+      clarify: '{summary}',
+      unsupported: 'Bu sütunlarla yapılamıyor. {summary}',
+      invalid: 'Yanıt bu tabloya uymadı. Farklı ifade etmeyi deneyin.',
+      error: 'Asistan şu anda kullanılamıyor.',
+      noTransport: 'Yapılandırılmış bir yapay zekâ hizmeti yok.',
+      aborted: 'Durduruldu.',
+      discarded: 'Öneri iptal edildi.',
+      undone: 'Değişiklik geri alındı.',
+      ignored:
+        '{count, plural, one {Yanıtın # bölümü sütunlarla eşleşmediği için yok sayıldı.} other {Yanıtın # bölümü sütunlarla eşleşmediği için yok sayıldı.}}',
+      slices: {
+        sort: 'Sıralama',
+        group: 'Gruplama',
+        filter: 'Filtre',
+        search: 'Arama',
+        columns: 'Sütunlar',
+      },
+    },
+  },
   editor: {
     editorLabel: 'Zengin metin düzenleyici',
     toolbarLabel: 'Metin biçimlendirme',

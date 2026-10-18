@@ -7,6 +7,34 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### AI grid assistant — new `@oge-ui/ai` and `@oge-ui/react-ai` (MIT), `@oge-ui/behavior`, `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/locales`
+
+- **Ask the grid in plain language.** `<oge-grid-assistant [target]="grid">` /
+  `<OgeGridAssistant target={gridRef}>` turns a sentence — "orders over 500
+  from İzmir this month, newest first" — into a sort, filter, grouping,
+  search or column-visibility change. `mode: 'preview'` (default) shows the
+  proposal with Apply / Discard, `mode: 'apply'` applies at once; Undo steps
+  back; follow-ups build on the current state; the model may ask back.
+  Cancelable `applying`, plus `applied`, `undone` and `errorOccurred`.
+- **Any model, no surcharge, no hosted service.** Transports for your own
+  backend (`createOgeAiHttpTransport`), every OpenAI-compatible server —
+  OpenAI, Azure OpenAI, Ollama, vLLM, LM Studio (`createOgeOpenAiTransport`) —
+  and Anthropic (`createOgeAnthropicTransport`); any object with
+  `complete(request, { signal })` works. Sending a key from a browser needs
+  `dangerouslyAllowBrowser`.
+- **Private and validated.** The model sees column names, types and lookup
+  values, never rows; `columns` and `capabilities` narrow it further. Every
+  reply is checked against the columns and passes
+  `sanitizeGridStateSnapshot` before it reaches the grid; dropped parts are
+  reported.
+- The engine (`OgeGridAssistantCore`, the request builder, the reply
+  validator, the transports and the message catalog) lives in
+  `@oge-ui/behavior`, so both layers run one copy. New grid method
+  `describeColumns()` in both layers. Every `@oge-ui/locales` pack carries an
+  `ai` slice (merge it into `provideOgeAiConfig` / `<OgeAiConfigProvider>`;
+  `provideOgeLocale()` leaves the AI config alone because it carries the
+  transport). Docs at `/components/ai` run on an offline demo model.
+
 ### OGE UI Pro licensing — `@oge-ui/core`, the six commercial families (Angular, React, engines)
 
 - **Buy and register a license.** OGE UI Pro — Pivot Grid, Gantt, Scheduler,

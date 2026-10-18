@@ -792,6 +792,22 @@ const FAMILIES = [
     },
   },
   {
+    // G6a: both assistants are thin layers over behavior's OgeGridAssistantCore
+    family: 'ai',
+    angularApiPage: 'apps/dev-app/src/app/pages/ai/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-ai/api.ts',
+    exceptions: {
+      pairs: {
+        provideogeaiconfig: 'ogeaiconfigprovider', // DI provider ↔ context provider
+        ogeaiconfig: 'useogeaiconfig', // DI token ↔ hook reading the resolved config
+      },
+      reactOnly: {
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+      },
+    },
+  },
+  {
     family: 'kanban',
     angularApiPage: 'apps/dev-app/src/app/pages/kanban/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-kanban/api.ts',

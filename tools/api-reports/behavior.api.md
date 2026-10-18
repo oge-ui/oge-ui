@@ -144,6 +144,9 @@ export function buildOgeEditorToolbar(entries: readonly OgeEditorToolbarEntry[],
 export function buildOgeExportItems<T>(rows: readonly T[], options: OgeExportStructureOptions<T>): OgeExportItem<T>[];
 
 // @public
+export function buildOgeGridAiRequest(prompt: string, options: OgeGridAiRequestOptions): OgeAiRequest;
+
+// @public
 export function buildOgeRangeTsv(lattice: OgeGridRangeLattice, text: (row: number, col: number) => string, caption: (col: number) => string, options?: OgeRangeTsvOptions): string;
 
 // @public
@@ -270,6 +273,15 @@ export function createNumberFormatter(locale: string, options?: Intl.NumberForma
 export function createNumberTypingGrouper(locale: string | undefined): (digits: string) => string;
 
 // @public
+export function createOgeAiHttpTransport(options: OgeAiHttpTransportOptions): OgeAiTransport;
+
+// @public
+export function createOgeAnthropicTransport(options: OgeAiAnthropicTransportOptions): OgeAiTransport;
+
+// @public
+export function createOgeOpenAiTransport(options: OgeAiOpenAiTransportOptions): OgeAiTransport;
+
+// @public
 export function createTreeSearchPredicate<T>(text: string, mode: OgeTreeSearchMode, accessors: readonly ((row: T) => unknown)[]): ((row: T) => boolean) | null;
 
 // @public
@@ -382,6 +394,9 @@ export function expandedIdsAfterExpand(current: ReadonlySet<string>, id: string,
 export function exprToBuilder(expr: FilterExpr | null, fields: readonly OgeFilterBuilderField[]): OgeBuilderGroup;
 
 // @public
+export function extractOgeAiJson(text: string): unknown;
+
+// @public
 export function fileExtension(name: string): string;
 
 // @public
@@ -428,6 +443,9 @@ export function formatFileSize(bytes: number, options?: OgeFormatFileSizeOptions
 
 // @public
 export function formatNumberWhileTyping(text: string, caret: number, options: OgeNumberTypingOptions): OgeNumberTypingResult;
+
+// @public
+export function formatOgeAiMessage(template: string, tokens: Record<string, string | number>, locale?: string): string;
 
 // @public
 export function formatPaginationMessage(template: string, params: Record<string, string | number>): string;
@@ -721,10 +739,16 @@ export function menuMoveIndex(items: readonly OgeMenuItem[], activeIndex: number
 export function menuRetainedActiveIndex(previous: readonly OgeMenuItem[], next: readonly OgeMenuItem[], activeIndex: number): number;
 
 // @public
+export function mergeOgeAiMessages(base: OgeAiMessages, input: OgeAiMessagesInput | undefined): OgeAiMessages;
+
+// @public
 export function mergeOgeEditorMessages(base: OgeEditorMessages, input: OgeEditorMessagesInput | undefined): OgeEditorMessages;
 
 // @public
 export function mergeOgeExportStyles(...styles: readonly (OgeExportCellStyle | undefined | void)[]): OgeExportCellStyle;
+
+// @public
+export function mergeOgeGridAssistantMessages(base: OgeGridAssistantMessages, input: OgeGridAssistantMessagesInput | undefined): OgeGridAssistantMessages;
 
 // @public
 export function mergeUploadMessages(base: OgeUploadMessages, input: OgeUploadMessagesInput | undefined): OgeUploadMessages;
@@ -889,6 +913,12 @@ export const OGE_DEFAULT_ADAPTIVE_BREAKPOINT = 600;
 
 // @public (undocumented)
 export const OGE_DEFAULT_ADAPTIVE_CONFIG: OgeAdaptiveConfig;
+
+// @public
+export const OGE_DEFAULT_AI_CONFIG: OgeAiConfig;
+
+// @public
+export const OGE_DEFAULT_AI_MESSAGES: OgeAiMessages;
 
 // @public (undocumented)
 export const OGE_DEFAULT_ALERT_CONFIG: OgeAlertConfig;
@@ -1116,6 +1146,15 @@ export const OGE_FAB_PLUS_PATH = "M12 5v14M5 12h14";
 
 // @public
 export const OGE_GESTURE_THRESHOLD = 3;
+
+// @public
+export const OGE_GRID_AI_ALL_CAPABILITIES: OgeGridAiCapabilities;
+
+// @public
+export const OGE_GRID_AI_RESPONSE_SCHEMA: OgeAiJsonSchema;
+
+// @public
+export const OGE_GRID_ASSISTANT_ICON_PATH = "M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9L12 2.5zm6.5 11l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z";
 
 // @public
 export const OGE_GRID_HOST_SELECTOR = ".oge-grid, .oge-tree-list";
@@ -1619,6 +1658,171 @@ export function ogeAddDescribedBy(el: Element, id: string): void;
 //
 // @public
 export function ogeAdjacentDataRow<T>(nodes: readonly RowNode<T>[], from: number, direction: 1 | -1): number;
+
+// @public
+export interface OgeAiAnthropicTransportOptions extends OgeAiTransportBaseOptions {
+    readonly apiKey?: string;
+    readonly apiVersion?: string;
+    readonly baseUrl?: string;
+    readonly dangerouslyAllowBrowser?: boolean;
+    readonly maxTokens?: number;
+    readonly model: string;
+}
+
+// @public
+export interface OgeAiCallOptions {
+    readonly signal?: AbortSignal;
+}
+
+// @public
+export interface OgeAiConfig {
+    // (undocumented)
+    readonly gridAssistant: OgeGridAssistantConfig;
+    readonly locale: string | undefined;
+    // (undocumented)
+    readonly messages: OgeAiMessages;
+    readonly transport: OgeAiTransport | null;
+}
+
+// @public
+export type OgeAiConfigInput = Partial<Omit<OgeAiConfig, 'messages' | 'gridAssistant'>> & {
+    gridAssistant?: Partial<Omit<OgeGridAssistantConfig, 'capabilities'>> & {
+        capabilities?: Partial<OgeGridAiCapabilities>;
+    };
+    messages?: OgeAiMessagesInput;
+};
+
+// @public
+export class OgeAiError extends Error {
+    constructor(code: OgeAiErrorCode, message: string, status?: number);
+    readonly code: OgeAiErrorCode;
+    readonly status: number | undefined;
+}
+
+// @public
+export type OgeAiErrorCode = 'aborted' | 'network' | 'http' | 'invalid-response' | 'browser-key';
+
+// @public
+export type OgeAiFetch = (input: string, init: {
+    method: string;
+    headers: Record<string, string>;
+    body: string;
+    signal?: AbortSignal;
+    credentials?: 'omit' | 'same-origin' | 'include';
+}) => Promise<{
+    readonly ok: boolean;
+    readonly status: number;
+    readonly headers: {
+        get(name: string): string | null;
+    };
+    text(): Promise<string>;
+}>;
+
+// @public
+export interface OgeAiGridColumn {
+    readonly caption: string;
+    // (undocumented)
+    readonly dataType: OgeDataType;
+    readonly description?: string;
+    readonly field: string;
+    // (undocumented)
+    readonly filterable: boolean;
+    // (undocumented)
+    readonly groupable: boolean;
+    // (undocumented)
+    readonly sortable: boolean;
+    readonly values?: readonly OgeAiGridColumnValue[];
+    readonly visible: boolean;
+}
+
+// @public
+export interface OgeAiGridColumnValue {
+    // (undocumented)
+    readonly text?: string;
+    // (undocumented)
+    readonly value: string | number | boolean;
+}
+
+// @public
+export interface OgeAiHttpTransportOptions extends OgeAiTransportBaseOptions {
+    readonly credentials?: 'omit' | 'same-origin' | 'include';
+    readonly url: string;
+}
+
+// @public
+export type OgeAiJsonSchema = {
+    readonly [key: string]: unknown;
+};
+
+// @public
+export interface OgeAiMessage {
+    // (undocumented)
+    readonly content: string;
+    // (undocumented)
+    readonly role: OgeAiRole;
+}
+
+// @public
+export interface OgeAiMessages {
+    // (undocumented)
+    readonly gridAssistant: OgeGridAssistantMessages;
+}
+
+// @public
+export type OgeAiMessagesInput = {
+    gridAssistant?: OgeGridAssistantMessagesInput;
+};
+
+// @public
+export interface OgeAiOpenAiTransportOptions extends OgeAiTransportBaseOptions {
+    readonly apiKey?: string;
+    readonly baseUrl?: string;
+    readonly dangerouslyAllowBrowser?: boolean;
+    readonly model: string;
+    readonly query?: Readonly<Record<string, string>>;
+    readonly structuredOutput?: 'json_schema' | 'json_object' | 'none';
+}
+
+// @public
+export interface OgeAiRequest {
+    readonly feature: string;
+    readonly maxTokens?: number;
+    readonly messages: readonly OgeAiMessage[];
+    readonly responseName?: string;
+    readonly responseSchema?: OgeAiJsonSchema;
+    readonly temperature?: number;
+}
+
+// @public
+export interface OgeAiResponse {
+    // (undocumented)
+    readonly text: string;
+    // (undocumented)
+    readonly usage?: OgeAiUsage;
+}
+
+// @public
+export type OgeAiRole = 'system' | 'user' | 'assistant';
+
+// @public
+export interface OgeAiTransport {
+    // (undocumented)
+    complete(request: OgeAiRequest, options?: OgeAiCallOptions): Promise<OgeAiResponse>;
+}
+
+// @public
+export interface OgeAiTransportBaseOptions {
+    readonly fetch?: OgeAiFetch;
+    readonly headers?: Readonly<Record<string, string>>;
+}
+
+// @public
+export interface OgeAiUsage {
+    // (undocumented)
+    readonly inputTokens?: number;
+    // (undocumented)
+    readonly outputTokens?: number;
+}
 
 // @public
 export type OgeAlertBaseOptions<TIcon = never> = OgeDialogBaseOptions<TIcon>;
@@ -3355,6 +3559,9 @@ export type OgeDateSegmentState = 'empty' | 'incomplete' | 'invalid' | 'complete
 
 // @public
 export type OgeDeferredBaseOptions = Omit<LoadOptions, 'skip' | 'take' | 'signal'>;
+
+// @public
+export function ogeDescribeGridColumns<T>(all: readonly OgeGridResolvedColumn<T>[], visibleIds: ReadonlySet<string>, sample?: T): OgeGridColumnDescription[];
 
 // @public
 export function ogeDialogAutoFocusSelector(focus: OgeDialogInitialFocus): string;
@@ -5715,6 +5922,75 @@ export interface OgeGridAdaptiveHidingInput {
 }
 
 // @public
+export interface OgeGridAiCapabilities {
+    // (undocumented)
+    readonly columns: boolean;
+    // (undocumented)
+    readonly filter: boolean;
+    // (undocumented)
+    readonly group: boolean;
+    // (undocumented)
+    readonly search: boolean;
+    // (undocumented)
+    readonly sort: boolean;
+}
+
+// @public
+export interface OgeGridAiRequestOptions {
+    // (undocumented)
+    readonly capabilities?: OgeGridAiCapabilities;
+    // (undocumented)
+    readonly columns: readonly OgeAiGridColumn[];
+    readonly history?: readonly OgeGridAiTurn[];
+    readonly instructions?: string;
+    readonly locale?: string;
+    readonly now?: Date;
+    // Warning: (ae-forgotten-export) The symbol "GridStateSnapshot" needs to be exported by the entry point index.d.ts
+    readonly state: GridStateSnapshot;
+}
+
+// @public
+export type OgeGridAiResult = {
+    readonly kind: 'change';
+    readonly snapshot: GridStateSnapshot;
+    readonly summary: string;
+    readonly slices: readonly OgeGridAiSlice[];
+    readonly warnings: readonly OgeGridAiWarning[];
+} | {
+    readonly kind: 'clarify';
+    readonly summary: string;
+} | {
+    readonly kind: 'unsupported';
+    readonly summary: string;
+} | {
+    readonly kind: 'invalid';
+    readonly warnings: readonly OgeGridAiWarning[];
+};
+
+// @public
+export type OgeGridAiSlice = 'sort' | 'group' | 'filter' | 'search' | 'columns';
+
+// @public
+export interface OgeGridAiTurn {
+    // (undocumented)
+    readonly prompt: string;
+    // (undocumented)
+    readonly summary: string;
+}
+
+// @public
+export interface OgeGridAiWarning {
+    readonly field?: string;
+    // (undocumented)
+    readonly kind: OgeGridAiWarningKind;
+    // (undocumented)
+    readonly slice: OgeGridAiSlice;
+}
+
+// @public
+export type OgeGridAiWarningKind = 'unknown-field' | 'not-allowed' | 'invalid-operator' | 'invalid-value' | 'too-complex';
+
+// @public
 export class OgeGridAnnouncements {
     constructor(deps: OgeGridAnnouncementsDeps);
     cellsWritten(kind: 'paste' | 'fill' | 'undo' | 'redo', count: number): void;
@@ -5759,6 +6035,197 @@ export interface OgeGridApplyValuesOptions {
     newRows?: readonly Readonly<Record<string, unknown>>[];
     record?: boolean;
     source?: OgeGridEditSource;
+}
+
+// @public
+export interface OgeGridAssistantAppliedEvent {
+    // (undocumented)
+    readonly previousSnapshot: GridStateSnapshot;
+    // (undocumented)
+    readonly prompt: string;
+    // (undocumented)
+    readonly slices: readonly OgeGridAiSlice[];
+    // (undocumented)
+    readonly snapshot: GridStateSnapshot;
+    // (undocumented)
+    readonly summary: string;
+}
+
+// @public
+export interface OgeGridAssistantApplyingEvent {
+    cancel: boolean;
+    // (undocumented)
+    readonly prompt: string;
+    // (undocumented)
+    readonly slices: readonly OgeGridAiSlice[];
+    // (undocumented)
+    readonly snapshot: GridStateSnapshot;
+    // (undocumented)
+    readonly summary: string;
+}
+
+// @public
+export interface OgeGridAssistantConfig {
+    // (undocumented)
+    readonly capabilities: OgeGridAiCapabilities;
+    readonly historyLimit: number;
+    readonly instructions: string | undefined;
+    // (undocumented)
+    readonly mode: OgeGridAssistantMode;
+    readonly suggestions: readonly string[];
+    readonly undoLimit: number;
+}
+
+// @public
+export class OgeGridAssistantCore {
+    constructor(options: OgeGridAssistantCoreOptions);
+    apply(): void;
+    readonly busy: () => boolean;
+    cancel(): void;
+    readonly canSubmit: () => boolean;
+    readonly canUndo: () => boolean;
+    destroy(): void;
+    discard(): void;
+    readonly errorCode: OgeReactiveCell<OgeGridAssistantErrorEvent['code'] | null>;
+    readonly prompt: OgeReactiveCell<string>;
+    readonly proposal: OgeReactiveCell<OgeGridAssistantProposal | null>;
+    reset(): void;
+    revive(): void;
+    setPrompt(text: string): void;
+    // (undocumented)
+    readonly status: OgeReactiveCell<OgeGridAssistantStatus>;
+    readonly statusText: () => string;
+    submit(text?: string): Promise<void>;
+    readonly summary: OgeReactiveCell<string>;
+    undo(): void;
+    readonly warnings: OgeReactiveCell<readonly OgeGridAiWarning[]>;
+    readonly warningText: () => string;
+}
+
+// @public
+export interface OgeGridAssistantCoreOptions {
+    // (undocumented)
+    readonly adapter: OgeReactivityAdapter;
+    // (undocumented)
+    readonly applied?: (event: OgeGridAssistantAppliedEvent) => void;
+    // (undocumented)
+    readonly applying?: (event: OgeGridAssistantApplyingEvent) => void;
+    // (undocumented)
+    readonly capabilities: () => OgeGridAiCapabilities;
+    readonly columns?: () => readonly OgeAiGridColumn[] | undefined;
+    // (undocumented)
+    readonly errorOccurred?: (event: OgeGridAssistantErrorEvent) => void;
+    // (undocumented)
+    readonly historyLimit: () => number;
+    // (undocumented)
+    readonly instructions: () => string | undefined;
+    // (undocumented)
+    readonly locale: () => string | undefined;
+    // (undocumented)
+    readonly messages: () => OgeGridAssistantMessages;
+    // (undocumented)
+    readonly mode: () => OgeGridAssistantMode;
+    readonly now?: () => Date;
+    // (undocumented)
+    readonly target: () => OgeGridAssistantTarget | null | undefined;
+    // (undocumented)
+    readonly transport: () => OgeAiTransport | null | undefined;
+    // (undocumented)
+    readonly undoLimit: () => number;
+    // (undocumented)
+    readonly undone?: (event: OgeGridAssistantUndoneEvent) => void;
+}
+
+// @public
+export interface OgeGridAssistantErrorEvent {
+    readonly code: OgeAiErrorCode | 'no-transport' | 'invalid-reply';
+    // (undocumented)
+    readonly error: unknown;
+    // (undocumented)
+    readonly prompt: string;
+}
+
+// @public
+export interface OgeGridAssistantMessages {
+    // (undocumented)
+    readonly aborted: string;
+    readonly applied: string;
+    // (undocumented)
+    readonly apply: string;
+    readonly clarify: string;
+    // (undocumented)
+    readonly discard: string;
+    // (undocumented)
+    readonly discarded: string;
+    // (undocumented)
+    readonly error: string;
+    readonly ignored: string;
+    // (undocumented)
+    readonly invalid: string;
+    readonly label: string;
+    // (undocumented)
+    readonly noTransport: string;
+    // (undocumented)
+    readonly placeholder: string;
+    readonly proposal: string;
+    readonly proposed: string;
+    readonly slices: Readonly<Record<OgeGridAiSlice, string>>;
+    readonly stop: string;
+    // (undocumented)
+    readonly submit: string;
+    readonly suggestions: string;
+    // (undocumented)
+    readonly thinking: string;
+    // (undocumented)
+    readonly unchanged: string;
+    // (undocumented)
+    readonly undo: string;
+    // (undocumented)
+    readonly undone: string;
+    readonly unsupported: string;
+}
+
+// @public
+export type OgeGridAssistantMessagesInput = Partial<Omit<OgeGridAssistantMessages, 'slices'>> & {
+    slices?: Partial<Record<OgeGridAiSlice, string>>;
+};
+
+// @public
+export type OgeGridAssistantMode = 'preview' | 'apply';
+
+// @public
+export interface OgeGridAssistantProposal {
+    // (undocumented)
+    readonly prompt: string;
+    // (undocumented)
+    readonly slices: readonly OgeGridAiSlice[];
+    // (undocumented)
+    readonly snapshot: GridStateSnapshot;
+    // (undocumented)
+    readonly summary: string;
+    // (undocumented)
+    readonly warnings: readonly OgeGridAiWarning[];
+}
+
+// @public
+export type OgeGridAssistantStatus = 'idle' | 'thinking' | 'preview' | 'applied' | 'unchanged' | 'clarify' | 'unsupported' | 'invalid' | 'error' | 'aborted';
+
+// @public
+export interface OgeGridAssistantTarget {
+    // (undocumented)
+    applyState(snapshot: GridStateSnapshot): void;
+    // (undocumented)
+    describeColumns(): readonly OgeAiGridColumn[];
+    // (undocumented)
+    state(): GridStateSnapshot;
+}
+
+// @public
+export interface OgeGridAssistantUndoneEvent {
+    // (undocumented)
+    readonly snapshot: GridStateSnapshot;
+    // (undocumented)
+    readonly summary: string;
 }
 
 // @public
@@ -5824,6 +6291,31 @@ export interface OgeGridColumnDef {
     caption?: string;
     // (undocumented)
     field: string;
+}
+
+// @public
+export interface OgeGridColumnDescription {
+    // (undocumented)
+    readonly caption: string;
+    // (undocumented)
+    readonly dataType: OgeDataType;
+    // (undocumented)
+    readonly field: string;
+    // (undocumented)
+    readonly filterable: boolean;
+    readonly groupable: boolean;
+    // (undocumented)
+    readonly sortable: boolean;
+    readonly values?: readonly OgeGridColumnDescriptionValue[];
+    readonly visible: boolean;
+}
+
+// @public
+export interface OgeGridColumnDescriptionValue {
+    // (undocumented)
+    readonly text: string;
+    // (undocumented)
+    readonly value: string | number | boolean;
 }
 
 // @public
@@ -6991,7 +7483,6 @@ export class OgeGridStateCore {
     reconcile(): boolean;
     // (undocumented)
     readonly selection: OgeGridSelectionState;
-    // Warning: (ae-forgotten-export) The symbol "GridStateSnapshot" needs to be exported by the entry point index.d.ts
     readonly snapshot: () => GridStateSnapshot;
     // (undocumented)
     readonly sort: OgeGridSortState;
@@ -13985,6 +14476,9 @@ export function resolveModalInitialFocus(panel: HTMLElement, mode: OgeModalAutoF
 // @public
 export function resolveOgeAccordionConfig(input: OgeAccordionConfigInput | undefined): OgeAccordionConfig;
 
+// @public
+export function resolveOgeAiConfig(input: OgeAiConfigInput | undefined, base?: OgeAiConfig): OgeAiConfig;
+
 // @public (undocumented)
 export function resolveOgeAlertConfig(input: OgeAlertConfigInput | undefined): OgeAlertConfig;
 
@@ -14038,6 +14532,9 @@ export function resolveOgeFormsConfig(input: OgeFormsConfigInput | undefined): O
 
 // @public
 export function resolveOgeGridAdaptiveHiddenColumns<T, TSlot, S>(input: OgeGridColumnResolveInput<T, TSlot, S>): OgeGridResolvedColumn<T, TSlot, S>[];
+
+// @public
+export function resolveOgeGridAiReply(reply: unknown, columns: readonly OgeAiGridColumn[], current: GridStateSnapshot, capabilities?: OgeGridAiCapabilities): OgeGridAiResult;
 
 // @public
 export function resolveOgeGridColumns<T, TSlot, S>(input: OgeGridColumnResolveInput<T, TSlot, S>): OgeGridResolvedColumn<T, TSlot, S>[];

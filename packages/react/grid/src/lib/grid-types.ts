@@ -11,6 +11,7 @@ import type {
 } from '@oge-ui/core';
 import type {
   OgeColumnFormat,
+  OgeGridColumnDescription,
   OgeGridColumnHidingMode,
   OgeColumnAlignment,
   OgeColumnLookup,
@@ -685,6 +686,12 @@ export interface OgeGridHandle<T extends object = Record<string, unknown>> {
   state(): GridStateSnapshot;
   /** Applies a previously captured state snapshot. */
   applyState(snapshot: GridStateSnapshot): void;
+  /**
+   * Plain descriptions of every column with a data field: caption, data type,
+   * visibility, sort / filter abilities and lookup values. What a saved-view
+   * editor or `<OgeGridAssistant>` reads — no render props, no accessors.
+   */
+  describeColumns(): OgeGridColumnDescription[];
   /** Rows and column metadata of the current view — the shared source for exporters. */
   getExportData(options?: OgeExportOptions<T>): Promise<OgeExportData<T>>;
   /** Builds CSV of the current view; `scope` narrows to the page or selection. */

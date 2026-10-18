@@ -181,6 +181,17 @@ export const PACKAGES = [
     tier: 'mit',
   },
   {
+    dir: 'ai',
+    npm: '@oge-ui/ai',
+    label: 'AI',
+    summary:
+      'AI components that work with any model — a natural-language grid assistant that turns a sentence into validated sort, filter, grouping, search and column changes with preview, apply and undo; transports for your own backend, OpenAI-compatible servers (OpenAI, Azure, Ollama, vLLM) and Anthropic. No hosted service, no row data sent.',
+    docsRoot: '/components/ai',
+    pageDirs: ['ai'],
+    apiPage: 'apps/dev-app/src/app/pages/ai/api.ts',
+    tier: 'mit',
+  },
+  {
     dir: 'navigation',
     npm: '@oge-ui/navigation',
     label: 'Navigation',
@@ -456,6 +467,19 @@ export const PACKAGES = [
     docsRoot: '/components/editor',
     pageDirs: ['react-editor'],
     apiPage: 'apps/dev-app/src/app/pages/react-editor/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/ai',
+    npm: '@oge-ui/react-ai',
+    label: 'AI (React)',
+    summary:
+      'React AI components that work with any model — <OgeGridAssistant> turns a sentence into validated sort, filter, grouping, search and column changes on an <OgeGrid> with preview, apply and undo — running the same assistant machine, transports and stylesheet as the Angular AI package.',
+    // The React content renders inside the single AI routes (ADR 0002).
+    docsRoot: '/components/ai',
+    pageDirs: ['react-ai'],
+    apiPage: 'apps/dev-app/src/app/pages/react-ai/api.ts',
     tier: 'mit',
     platform: 'react',
   },
