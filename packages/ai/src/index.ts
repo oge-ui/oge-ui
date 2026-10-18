@@ -63,7 +63,16 @@ export {
   type OgeAiCellState,
   type OgeAiCellStatus,
   type OgeAiColumnOptions,
+  type OgeChatConfig,
+  type OgeChatErrorEvent,
+  type OgeChatMessage,
+  type OgeChatMessages,
+  type OgeChatReplyEvent,
+  type OgeChatRole,
+  type OgeChatSendingEvent,
+  type OgeChatSentEvent,
 } from './lib/config';
 export { OgeGridAssistant } from './lib/grid-assistant/grid-assistant';
 export { OgeSmartPaste } from './lib/smart-paste/smart-paste';
 export { OgeAiCell } from './lib/ai-cell/ai-cell';
+export { OgeChat } from './lib/chat/chat';
