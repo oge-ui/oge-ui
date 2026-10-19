@@ -136,7 +136,10 @@ import {
   ogeIsTextTruncated,
   ogeKeyboardFillPlan,
   ogeMeasureAutoWidth,
+  ogeGridHeaderSettleElement,
+  ogeGridRowElement,
   ogeOwnedClosest,
+  ogeOwnedElement,
   ogeRangeAnnouncementCounts,
   ogeRangeBounds,
   ogeRangeLattice,
@@ -2885,6 +2888,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       onDrop: (target) => {
         if (target.key !== node.key) this.commitRowMove(node.key, target.key);
       },
+      settleTo: () => this.rowElementOf(node.key),
       onEnd: ({ dropped }) => {
         this.dropTargetKey.set(null);
         this.rowDragEnd.emit({
@@ -2938,6 +2942,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         current?.over(source, hit?.target ?? null);
       },
       onDrop: (hit) => hit.participant.drop(source, hit.target),
+      // a drop on another component lands wherever its consumer puts the row
+      settleTo: (hit) =>
+        hit.participant.componentId === source.componentId
+          ? this.rowElementOf(node.key)
+          : null,
       onEnd: ({ dropped }) => {
         current?.over(source, null);
         const targetId = dropped ? (current?.componentId ?? null) : null;
@@ -2950,6 +2959,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         });
       },
     });
+  }
+
+  /** The rendered body row of `key` — where a dropped row settles. */
+  private rowElementOf(key: RowKey): HTMLElement | null {
+    const index = untracked(this.flatNodes).findIndex(
+      (n) => n.kind === 'data' && n.key === key,
+    );
+    return ogeGridRowElement(this.hostRef.nativeElement, index);
   }
 
   /** Row the focus follows once a keyboard move re-renders the rows. */
@@ -4109,6 +4126,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           target.id,
         );
       },
+      settleTo: (target) => ogeGridHeaderSettleElement(host, target, column),
       onEnd: () => {
         this.headerDropTargetId.set(null);
         this.groupPanelDropActive.set(false);
@@ -4151,6 +4169,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           }),
         );
       },
+      settleTo: () =>
+        ogeOwnedElement(
+          this.hostRef.nativeElement,
+          '.oge-group-panel [data-group-chip]',
+          'data-group-chip',
+          field,
+          OGE_GRID_HOST_SELECTOR,
+        ),
       onEnd: () => this.groupChipDropTarget.set(null),
     });
   }
@@ -4331,6 +4357,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           targetId,
         );
       },
+      settleTo: () =>
+        ogeOwnedElement(list, '[data-chooser-id]', 'data-chooser-id', id),
       onEnd: () => this.chooserDropTargetId.set(null),
     });
   }

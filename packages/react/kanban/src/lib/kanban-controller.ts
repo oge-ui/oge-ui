@@ -9,6 +9,10 @@ import {
   KANBAN_CARD_GAP,
   KANBAN_DEFAULT_CARD_HEIGHT,
   beginKanbanGesture,
+  createKanbanCardAnimator,
+  kanbanCardElement,
+  settleKanbanDragPreview,
+  type KanbanCardAnimator,
   buildKanbanEditorChoices,
   buildKanbanEditorItems,
   buildKanbanItem,
@@ -243,6 +247,18 @@ const EMPTY_KEYS: readonly string[] = [];
  * is state plumbing: controlled/uncontrolled models, callbacks instead of
  * outputs, and synchronous reads of the latest state for imperative calls.
  */
+/** State whose change reshapes the card layout (captured for the FLIP). */
+const LAYOUT_KEYS = [
+  'items',
+  'searchQuery',
+  'filterValue',
+  'columnSort',
+  'collapsedColumns',
+  'collapsedSwimlanes',
+  'columnOrder',
+  'runtimeColumns',
+] as const;
+
 export class KanbanController<T extends object> {
   props!: OgeKanbanProps<T>;
   config!: OgeKanbanConfig;
@@ -293,6 +309,10 @@ export class KanbanController<T extends object> {
 
   private dragGeometry: KanbanDragGeometry | null = null;
   private stopFrameLoop: (() => void) | null = null;
+  /** FLIP of the cards between layouts (created on the first play). */
+  private cardAnimator: KanbanCardAnimator | null = null;
+  /** The card a drop preview is settling onto (kept out of the FLIP). */
+  private settleKey: string | null = null;
   /** The source item being edited; `null` while creating. */
   private editedSource: T | null = null;
   /** Session-unique keys for created cards whose data has no key yet. */
@@ -352,6 +372,8 @@ export class KanbanController<T extends object> {
       // the input array is copied and never mutated — hosts persist
       // through the CRUD events (same as Angular's store effect)
       this.lastDataSource = props.dataSource;
+      // render runs before the commit: the DOM still shows the old layout
+      this.captureLayout();
       this.st.items = [...(props.dataSource ?? [])];
     }
   }
@@ -362,6 +384,7 @@ export class KanbanController<T extends object> {
   }
 
   private set(patch: Partial<KanbanInternalState<T>>): void {
+    if (LAYOUT_KEYS.some((key) => key in patch)) this.captureLayout();
     Object.assign(this.st, patch);
     this.version++;
     for (const listener of this.listeners) listener();
@@ -369,6 +392,50 @@ export class KanbanController<T extends object> {
 
   get state(): Readonly<KanbanInternalState<T>> {
     return this.st;
+  }
+
+  // ---------------- layout motion ----------------
+
+  /** "First" of a card-layout change: snapshots the rendered cards. */
+  private captureLayout(): void {
+    this.cardAnimator?.capture();
+  }
+
+  /**
+   * "Play": the board's layout effect calls it after a commit whose layout
+   * signature changed — the cards glide from the captured boxes, the one a
+   * drop preview settles onto excepted.
+   */
+  playLayout(): void {
+    if (this.host === null) return;
+    this.cardAnimator ??= createKanbanCardAnimator(this.host);
+    const settling = this.settleKey;
+    void this.cardAnimator.play({
+      exclude: settling === null ? [] : [settling],
+    });
+  }
+
+  /**
+   * The drop settle: the lifted preview glides onto the dragged card
+   * wherever it rendered — its new slot (on a peer board after a transfer),
+   * or back at its origin after a cancelled, missed or vetoed drop.
+   */
+  private settleDragPreview(
+    state: KanbanDragState<T>,
+    external: { peer: KanbanBoardPeer; target: KanbanDragTarget | null } | null,
+  ): void {
+    const host = this.host;
+    if (host === null) return;
+    const key = String(state.card.key);
+    const peerHost = external?.target ? external.peer.host : null;
+    this.settleKey = key;
+    settleKanbanDragPreview(host, () => {
+      if (this.settleKey === key) this.settleKey = null;
+      return (
+        (peerHost ? kanbanCardElement(peerHost, key) : null) ??
+        kanbanCardElement(host, key)
+      );
+    });
   }
 
   // ---------------- controlled models ----------------
@@ -423,10 +490,12 @@ export class KanbanController<T extends object> {
   }
 
   private setFilterValue(next: OgeKanbanFilterExpression): void {
+    this.captureLayout();
     if (this.props.filterValue === undefined) this.set({ filterValue: next });
     this.props.onFilterValueChange?.(next);
   }
   private setColumnSort(next: OgeKanbanColumnSort<T>): void {
+    this.captureLayout();
     if (this.props.columnSort === undefined) this.set({ columnSort: next });
     this.props.onColumnSortChange?.(next);
   }
@@ -689,6 +758,8 @@ export class KanbanController<T extends object> {
   /** Unmount side of the lifecycle effect; StrictMode re-mounts cleanly. */
   teardown(): void {
     this.stopAutoScroll();
+    this.cardAnimator?.cancel();
+    this.cardAnimator = null;
     this.unregisterPeer?.();
     this.unregisterPeer = null;
   }
@@ -1180,6 +1251,7 @@ export class KanbanController<T extends object> {
         const external = this.externalDrop;
         this.externalDrop = null;
         external?.peer.preview(null);
+        if (state !== null) this.settleDragPreview(state, external);
         this.set({ drag: null, dragCarried: EMPTY_KEYS });
         if (state === null) return;
         if (cancelled) {

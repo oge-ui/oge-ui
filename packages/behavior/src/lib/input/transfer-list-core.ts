@@ -1,6 +1,7 @@
 import { ogeFormatMessage } from '@oge-ui/core';
 import { choiceIncludes } from './choice-group-core';
 import { ogeListBoxDropTarget } from './list-box-core';
+import { ogeOwnedElement } from '../grid/grid-pointer-drag';
 
 /**
  * The transfer list's framework-free rules (the dual list box: an
@@ -189,6 +190,26 @@ export function ogeTransferDropSide(
   const side = pane.getAttribute('data-oge-transfer-side');
   if (side !== 'source' && side !== 'target') return null;
   return side === from ? null : side;
+}
+
+/**
+ * The option at `index` (`data-index`) of `side`'s list in the transfer
+ * list `host` — where a dragged item settles after a move or a reorder.
+ */
+export function ogeTransferOptionElement(
+  host: Element | null | undefined,
+  side: OgeTransferListSide,
+  index: number,
+): HTMLElement | null {
+  if (index < 0) return null;
+  const pane = ogeOwnedElement(
+    host,
+    '[data-oge-transfer-side]',
+    'data-oge-transfer-side',
+    side,
+    '.oge-transfer-list',
+  );
+  return ogeOwnedElement(pane, '.oge-list-box-option', 'data-index', index);
 }
 
 /** The header's item count — the `transferItemCount` ICU plural. */

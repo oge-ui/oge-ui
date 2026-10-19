@@ -161,7 +161,10 @@ import {
   ogeIsTextTruncated,
   ogeKeyboardFillPlan,
   ogeMeasureAutoWidth,
+  ogeGridHeaderSettleElement,
+  ogeGridRowElement,
   ogeOwnedClosest,
+  ogeOwnedElement,
   ogeRangeAnnouncementCounts,
   ogeRangeBounds,
   ogeRangeLattice,
@@ -2614,6 +2617,7 @@ function OgeGridInner<T extends object>(
           target.id,
         );
       },
+      settleTo: (target) => ogeGridHeaderSettleElement(host, target, column),
       onEnd: () => {
         model.headerDropTargetId.set(null);
         model.groupPanelDropActive.set(false);
@@ -2653,6 +2657,14 @@ function OgeGridInner<T extends object>(
           }),
         );
       },
+      settleTo: () =>
+        ogeOwnedElement(
+          hostRef.current,
+          '.oge-group-panel [data-group-chip]',
+          'data-group-chip',
+          field,
+          OGE_GRID_HOST_SELECTOR,
+        ),
       onEnd: () => model.groupChipDropTarget.set(null),
     });
   }
@@ -2700,6 +2712,7 @@ function OgeGridInner<T extends object>(
       onDrop: (target) => {
         if (target.key !== node.key) commitRowMove(node.key, target);
       },
+      settleTo: () => rowElementOf(node.key),
       onEnd: ({ dropped }) => {
         model.dropTargetKey.set(null);
         latest.current.onRowDragEnd?.({
@@ -2710,6 +2723,14 @@ function OgeGridInner<T extends object>(
         });
       },
     });
+  }
+
+  /** The rendered body row of `key` — where a dropped row settles. */
+  function rowElementOf(key: RowKey): HTMLElement | null {
+    const index = model
+      .flatNodes()
+      .findIndex((n) => n.kind === 'data' && n.key === key);
+    return ogeGridRowElement(hostRef.current, index);
   }
 
   /** Moves `fromKey` onto `target`'s position and fires `onRowReordered`. */
@@ -3553,6 +3574,8 @@ function OgeGridInner<T extends object>(
           targetId,
         );
       },
+      settleTo: () =>
+        ogeOwnedElement(list, '[data-chooser-id]', 'data-chooser-id', id),
       onEnd: () => model.chooserDropTargetId.set(null),
     });
   }
@@ -4493,6 +4516,11 @@ function OgeGridInner<T extends object>(
         current?.over(source, hit?.target ?? null);
       },
       onDrop: (hit) => hit.participant.drop(source, hit.target),
+      // a drop on another component lands wherever its consumer puts the row
+      settleTo: (hit) =>
+        hit.participant.componentId === source.componentId
+          ? rowElementOf(node.key)
+          : null,
       onEnd: ({ dropped }) => {
         current?.over(source, null);
         const targetId = dropped ? (current?.componentId ?? null) : null;

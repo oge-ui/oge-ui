@@ -10,6 +10,7 @@ import {
   ogeTransferOpposite,
   ogeTransferSplit,
   ogeTransferDropTarget,
+  ogeTransferOptionElement,
   ogeTransferReorderable,
   ogeTransferReorderLine,
   ogeTransferReorderSource,
@@ -210,6 +211,10 @@ describe('transfer list reordering', () => {
       left: 4,
       width: 80,
     });
+    expect(ogeTransferOptionElement(host, 'source', 1)).toBe(option);
+    expect(ogeTransferOptionElement(host, 'target', 1)).toBeNull();
+    expect(ogeTransferOptionElement(host, 'source', -1)).toBeNull();
+    expect(ogeTransferOptionElement(null, 'source', 1)).toBeNull();
     document.body.innerHTML = '';
   });
 });

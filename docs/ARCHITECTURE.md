@@ -866,6 +866,17 @@ var(--oge-motion-duration-…) var(--oge-motion-easing-…)`, keyframe `from { �
     scrolling parent. Never use `enter` on a row a virtualizer measures right after it renders
     (`.oge-virtual .oge-detail-row` turns the transition off). The mixin drops the transition
     under reduced motion.
+
+    onto the drop and glide them back on a cancel. **Every `beginPointerDragDrop` consumer passes
+    `settleTo`**, answering the dragged item's element as rendered after the drop — looked up by
+    the item's key / `data-*` attribute, never kept from before (the node may be re-created):
+    `ogeOwnedElement(container, selector, attribute, value, hostSelector?)` is the lookup (values
+    compared literally, nested hosts skipped), `ogeGridRowElement` / `ogeGridHeaderSettleElement` /
+    `ogeTransferOptionElement` the family helpers (`beginOgeTreeDrag` settles on its own). Answer `null` where the
+    item lands outside the component (a cross-component row drop) — the ghost then just goes. A
+    hand-rolled drag preview (kanban) settles through the same `ogeSettleGhost` on a clone kept
+    inside the host (it needs the host's tokens), and its exits do not use `ogeExitGhost` for the
+    same reason (that clone lives on `document.body`).
   - Each animation is switched off in the file's `@include tokens.reduced-motion` block, and the
     final (non-animated) state is what the visual baselines capture — `animations: 'disabled'`
     must not change a pixel.

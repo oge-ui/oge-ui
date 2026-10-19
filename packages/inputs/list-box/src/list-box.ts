@@ -23,6 +23,7 @@ import {
   OGE_LIST_BOX_REORDER_SHORTCUTS,
   OgeListBoxCore,
   beginPointerDragDrop,
+  ogeOwnedElement,
   ogeListBoxDropTarget,
   ogeListBoxReorderAnnouncement,
   ogeListBoxSections,
@@ -644,6 +645,14 @@ export class OgeListBox<TItem = unknown>
           event,
         );
       },
+      settleTo: () =>
+        ogeOwnedElement(
+          list,
+          '.oge-list-box-option',
+          'data-index',
+          this.core.visibleItems().indexOf(item),
+          '[role="listbox"]',
+        ),
       onEnd: () => this.dropIndicator.set(null),
     });
   }

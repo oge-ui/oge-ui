@@ -44,6 +44,13 @@ export {
   type KanbanGestureCallbacks,
 } from './lib/gesture';
 export {
+  createKanbanCardAnimator,
+  kanbanCardElement,
+  kanbanLayoutSignature,
+  settleKanbanDragPreview,
+  type KanbanCardAnimator,
+} from './lib/motion';
+export {
   OGE_DEFAULT_KANBAN_CONFIG,
   OGE_DEFAULT_KANBAN_MESSAGES,
   fillKanbanMessages,

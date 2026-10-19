@@ -1,5 +1,6 @@
 import {
   beginPointerDragDrop,
+  ogeOwnedElement,
   formatCellValue,
   isOgeDragExcludedTarget,
   observeDirection,
@@ -1054,6 +1055,14 @@ export class OgePivotGridCore<T = unknown> {
           target.beforeId === null ? -1 : order.indexOf(target.beforeId);
         this.moveFieldTo(field.id, target.area, at < 0 ? Infinity : at);
       },
+      // the chip lands in its new slot (none when the panel hides the area)
+      settleTo: () =>
+        ogeOwnedElement(
+          container,
+          '.oge-pivot-field-chip[data-field-id]',
+          'data-field-id',
+          field.id,
+        ),
       onEnd: () => this.fieldDropTarget.set(null),
     });
   }

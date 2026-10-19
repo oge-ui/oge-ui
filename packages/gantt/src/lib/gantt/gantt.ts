@@ -5,6 +5,7 @@ import {
   ElementRef,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   computed,
   contentChild,
   effect,
@@ -1532,6 +1533,10 @@ export class OgeGantt<
     ogeCheckGanttLicense();
     // direction is read in the browser only, after the first render
     afterNextRender(() => this.core.connectDirection());
+    // a bar commit captured the bars: they glide after this render
+    afterRenderEffect(() => {
+      if (this.core.barMotion() > 0) untracked(() => this.core.playBars());
+    });
     effect(() => this.core.syncRenderedRange());
     // `schedulingConflict` fires when the conflict set changes
     effect(() => this.core.syncConflicts());

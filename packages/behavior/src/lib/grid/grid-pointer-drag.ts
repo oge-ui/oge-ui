@@ -36,6 +36,33 @@ export function ogeOwnedClosest(
 }
 
 /**
+ * The first `selector` match inside `container` whose `attribute` equals
+ * `value` — the lookup a drop settle runs to find where the dropped item
+ * rendered (`settleTo` of `beginPointerDragDrop`). The value is compared
+ * as a string, never interpolated into a selector, so ids with quotes or
+ * dots need no escaping. With `hostSelector`, the match must have
+ * `container` as its nearest such host (rows of a nested grid are skipped).
+ */
+export function ogeOwnedElement(
+  container: Element | null | undefined,
+  selector: string,
+  attribute: string,
+  value: string | number | null | undefined,
+  hostSelector?: string,
+): HTMLElement | null {
+  if (!container || value === null || value === undefined) return null;
+  const wanted = String(value);
+  for (const el of Array.from(
+    container.querySelectorAll<HTMLElement>(selector),
+  )) {
+    if (el.getAttribute(attribute) !== wanted) continue;
+    if (hostSelector && el.closest(hostSelector) !== container) continue;
+    return el;
+  }
+  return null;
+}
+
+/**
  * True when a `pointerdown` on `target` belongs to a control nested inside
  * the draggable `source` (a chip's remove button, a header's filter button,
  * the resize separator) rather than to the source itself.
@@ -89,6 +116,52 @@ export function resolveOgeRowDropIndex(
   if (!row) return null;
   const index = Number(row.dataset['rowindex']);
   return Number.isInteger(index) ? index : null;
+}
+
+/**
+ * The body row rendered at flat index `index` (`data-rowindex`) of `host`
+ * — where a dropped row settles once the grid re-rendered; `null` when it
+ * is scrolled out of the virtual window.
+ */
+export function ogeGridRowElement(
+  host: Element | null | undefined,
+  index: number,
+): HTMLElement | null {
+  if (index < 0) return null;
+  return ogeOwnedElement(
+    host,
+    '.oge-row[data-rowindex]',
+    'data-rowindex',
+    index,
+    OGE_GRID_HOST_SELECTOR,
+  );
+}
+
+/**
+ * Where a dragged header settles after a drop on `target`: its own header
+ * cell at the new column position, or the group chip the drop on the group
+ * panel created.
+ */
+export function ogeGridHeaderSettleElement(
+  host: Element | null | undefined,
+  target: OgeGridHeaderDropTarget,
+  column: { readonly id: string; readonly field?: string | null },
+): HTMLElement | null {
+  if (target.kind === 'group')
+    return ogeOwnedElement(
+      host,
+      '.oge-group-panel [data-group-chip]',
+      'data-group-chip',
+      column.field,
+      OGE_GRID_HOST_SELECTOR,
+    );
+  return ogeOwnedElement(
+    host,
+    '.oge-header-row > .oge-header-cell[data-colid]',
+    'data-colid',
+    column.id,
+    OGE_GRID_HOST_SELECTOR,
+  );
 }
 
 /**

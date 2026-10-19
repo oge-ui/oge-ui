@@ -106,6 +106,9 @@ import {
 import {
   beginPointerDragDrop,
   isOgeDragExcludedTarget,
+  ogeGridHeaderSettleElement,
+  ogeGridRowElement,
+  ogeOwnedElement,
   resolveOgeAttributeTarget,
   resolveOgeHeaderDropTarget,
   resolveOgeRowDropIndex,
@@ -1676,6 +1679,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
           target.id,
         );
       },
+      settleTo: (target) => ogeGridHeaderSettleElement(host, target, column),
       onEnd: () => this.headerDropTargetId.set(null),
     });
   }
@@ -1779,6 +1783,8 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
           targetId,
         );
       },
+      settleTo: () =>
+        ogeOwnedElement(list, '[data-chooser-id]', 'data-chooser-id', id),
       onEnd: () => this.chooserDropTargetId.set(null),
     });
   }
@@ -2096,9 +2102,20 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
           );
           if (moved) this.rowReparented.emit(moved);
         },
+        // a row dropped inside a collapsed parent settles onto that parent
+        settleTo: (target) =>
+          this.rowElementOf(draggedKey) ?? this.rowElementOf(target.key),
         onEnd: () => this.dropTarget.set(null),
       },
     );
+  }
+
+  /** The rendered body row of `key` — where a dropped row settles. */
+  private rowElementOf(key: RowKey): HTMLElement | null {
+    const index = untracked(this.renderNodes).findIndex(
+      (n) => n.kind === 'data' && n.key === key,
+    );
+    return ogeGridRowElement(this.hostRef.nativeElement, index);
   }
 
   // --- keyboard alternatives to the drag gestures (WCAG 2.1.1 / 2.5.7) --------

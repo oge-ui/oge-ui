@@ -17,6 +17,8 @@ import {
   OGE_LONG_PRESS_DELAY,
   beginPointerDragDrop,
   getOgeLiveAnnouncer,
+  ogeRectOf,
+  type OgeRect,
   type OgePointerGestureHandle,
   type OgePointerGestureInput,
 } from '@oge-ui/behavior';
@@ -187,6 +189,7 @@ export function beginOgeSchedulerExternalDrag(
 ): OgePointerGestureHandle {
   let current: OgeSchedulerDropTarget | null = null;
   let dropped = false;
+  let landing: OgeRect | null = null;
   const clear = (): void => {
     current?.over(null, null);
     current = null;
@@ -211,9 +214,17 @@ export function beginOgeSchedulerExternalDrag(
       }
     },
     onDrop: (hit) => {
+      // the slot preview (day / week, timeline) is where the new
+      // appointment renders: measure it before the drop clears it
+      const preview = hit.target.element.querySelector(
+        '.oge-scheduler-drop-preview',
+      );
+      landing = preview ? ogeRectOf(preview) : null;
       clear();
       dropped = hit.target.drop(options.payload, hit.slot);
     },
+    // a refused drop glides home; an accepted one lands on the slot
+    settleTo: () => (dropped ? landing : options.source),
     onEnd: (result) => {
       clear();
       options.onEnd?.({

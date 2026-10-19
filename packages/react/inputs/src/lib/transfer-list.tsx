@@ -16,6 +16,7 @@ import {
 } from 'react';
 import {
   beginPointerDragDrop,
+  ogeTransferOptionElement,
   choiceIncludes,
   ogeIsRtl,
   ogeSelectSearchFilter,
@@ -562,6 +563,15 @@ export const OgeTransferList = forwardRef(function OgeTransferListRender<TItem>(
         if (over !== undefined) {
           box?.reorderItem(item, over, target.position, 'drag');
         }
+      },
+      // the item under the pointer lands in its new slot (a move carries
+      // the whole selection; the grabbed item leads it)
+      settleTo: (target) => {
+        const side = target.kind === 'move' ? target.side : from;
+        const index = shownItems(side).findIndex((entry) =>
+          Object.is(valueOf(entry), itemValue),
+        );
+        return ogeTransferOptionElement(host, side, index);
       },
       onEnd: () => {
         setDropSide(null);
