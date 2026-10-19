@@ -970,7 +970,7 @@
   }
 
   .oge-bpmn-pool-header {
-    fill: var(--oge-header-bg, var(--oge-row-hover-bg));
+    fill: var(--oge-header-bg);
     stroke: var(--oge-border-color);
     stroke-width: 1.5;
     cursor: move;

@@ -58,6 +58,7 @@
   --oge-shadow-card: 0 0 0 1px #000000;
   --oge-shadow-card-hover: 0 0 0 2px #000000;
   --oge-shadow-drag: 0 0 0 2px #000000, 0 12px 28px -6px rgba(0, 0, 0, 0.4);
+  --oge-shadow-pinned-color: rgba(0, 0, 0, 0.55);
   --oge-skeleton-color: #bfbfbf;
   --oge-switch-thumb: #ffffff;
   --oge-scrollbar-thumb: #404040;

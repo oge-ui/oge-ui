@@ -55,6 +55,13 @@ import { SNIPPET } from './sorting-snippets';
           relative order, so multi-sort chains behave predictably.
         </li>
         <li>
+          Re-ordered rows <strong>glide</strong> to their new slots
+          (<code>animateRows</code>, on by default): the rows on screen move by
+          key, rows joining the view fade in, and scrolling or a page change
+          never animates. Reduced motion applies the sort at once;
+          <code>[animateRows]="false"</code> turns it off.
+        </li>
+        <li>
           <code>null</code>/<code>undefined</code> values always sort last in
           ascending order; string comparison is case-insensitive and
           numeric-aware ("item2" &lt; "item10").

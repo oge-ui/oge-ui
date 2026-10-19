@@ -100,6 +100,8 @@ import {
   type OgeGridColumnHidingMode,
   ogeIsRtl,
   observeDirection,
+  OgeRowMotionCore,
+  ogeSyncPinnedShadows,
 } from '@oge-ui/behavior';
 import {
   beginPointerDragDrop,
@@ -504,6 +506,14 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Fires after a row is dropped onto a new parent. */
   readonly rowReparented = output<OgeTreeRowReparentEvent<T>>();
+
+  /**
+   * Glides the rows on screen to their new slots when a sort, a filter, an
+   * expand/collapse or a row drop re-orders them (FLIP, at most 60 rows).
+   * Scrolling and a page change never animate; reduced motion switches it
+   * off. `false` applies changes at once.
+   */
+  readonly animateRows = input(true);
 
   /** Enables editing: `{ mode: 'cell' | 'row' | 'batch', allow… }`. */
   readonly editing = input<false | OgeEditingOptions>(false);
@@ -916,6 +926,19 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return this.layoutModel.pinnedRightOf(column);
   }
 
+  /** The pinned column bordering the scrolling content carries the edge shadow. */
+  protected pinEdgeOf(column: ResolvedColumn<T>): 'start' | 'end' | null {
+    return this.layoutModel.pinnedEdgeOf(column);
+  }
+
+  /** Pinned-edge shadows follow the scroll position and the scroll width. */
+  private readonly pinShadowEffect = afterRenderEffect(() => {
+    this.scrollLeft();
+    this.hostWidth();
+    this.gridTemplateColumns();
+    ogeSyncPinnedShadows(this.viewportRef()?.nativeElement ?? null);
+  });
+
   // --- virtualization -------------------------------------------------------
 
   private readonly virtualizer = new RowVirtualizerModel<T>({
@@ -933,6 +956,41 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected readonly viewWindow = this.virtualizer.viewWindow;
   protected readonly viewStart = this.virtualizer.viewStart;
   protected readonly viewNodes = this.virtualizer.viewNodes;
+
+  /** `animateRows`: row FLIP keyed by row key over the on-screen window. */
+  private readonly rowMotion = new OgeRowMotionCore<RowNode<T>, RowKey>({
+    keyOf: (node) => node.key,
+    viewport: () => this.viewportRef()?.nativeElement ?? null,
+    root: () =>
+      this.viewportRef()?.nativeElement.querySelector<HTMLElement>(
+        ':scope > .oge-body',
+      ) ?? null,
+    rows: (root) =>
+      root.querySelectorAll<HTMLElement>(
+        ':scope > .oge-rows > [data-rowindex]',
+      ),
+  });
+
+  /**
+   * A component effect runs before this view's template refresh, so the
+   * snapshot sees the old rows; the render effect below plays the change.
+   */
+  private readonly rowMotionPrepareEffect = effect(() => {
+    const nodes = this.viewNodes();
+    const start = this.viewStart();
+    const on = this.animateRows();
+    untracked(() => this.rowMotion.prepare(on ? { nodes, start } : null));
+  });
+
+  private readonly rowMotionCommitEffect = afterRenderEffect(() => {
+    this.viewNodes();
+    this.viewStart();
+    untracked(() => void this.rowMotion.commit());
+  });
+
+  private readonly rowMotionDestroy = this.destroyRef.onDestroy(() =>
+    this.rowMotion.cancel(),
+  );
   protected readonly bodyHeight = this.virtualizer.bodyHeight;
   protected readonly rowsTransform = this.virtualizer.rowsTransform;
 

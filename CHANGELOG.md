@@ -61,6 +61,30 @@ are versioned independently, which is the case here.
   in behavior); `coerceOgeAiValue` is now the one coercion rule both AI
   features share. Strings in all eleven locale packs.
 
+### Grid motion — `@oge-ui/behavior`, `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/tree-list`, `@oge-ui/react-tree-list`, token hygiene across packages
+
+- **Animated rows** (`animateRows`, default `true`, same name in Angular and
+  React; grid and tree list). When a sort, a filter, grouping, an
+  expand/collapse, a row drop or a keyboard row move re-orders the rendered
+  rows, the rows on screen glide to their new slots (FLIP keyed by row key,
+  at most 60 on-screen rows) and rows joining the view fade in. Scrolling,
+  a virtual jump, a page change, an entirely new row set and remote
+  (windowed) scrolling never animate, and reduced motion applies every
+  change at once. The decision logic is `ogeRowMotionDecision` /
+  `OgeRowMotionCore` in `@oge-ui/behavior`, shared by both render layers.
+- **Pinned-column edge shadow.** While content scrolls under a pinned
+  group, the column bordering it casts a separator shadow (new
+  `--oge-shadow-pinned-color` token with dark and high-contrast values;
+  mirrored in RTL; a solid `CanvasText` rule under forced colors). The
+  viewport carries `oge-pin-shadow-start` / `-end` from the scroll position
+  (`ogeSyncPinnedShadows`), the bordering cells `oge-pin-edge-start` /
+  `-end` (`OgeGridColumnLayoutCore.pinnedEdgeOf`).
+- **Token fallbacks removed.** 24 `var(--oge-<shared token>, …)` fallbacks
+  in grid, pivot, tree list, calendar, switch, gantt, BPMN and the overlay
+  layers are gone — the shared tokens are always declared, so the
+  fallbacks only misled; `themes.spec.ts` now fails on a new one. The FAB
+  speed-dial stagger reads `--oge-motion-stagger` instead of a raw `30ms`.
+
 ### Layout motion — `@oge-ui/behavior`, `@oge-ui/layout`, `@oge-ui/react-layout`, `@oge-ui/grid` (tokens), `@oge-ui/locales`
 
 - **Nothing teleports in the tile layout any more.** Dragging a tile lifts it

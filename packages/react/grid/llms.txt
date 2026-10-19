@@ -161,6 +161,7 @@ _Editing & rows_
 | `commandButtons` | `readonly OgeCommandButton<T>[]` | `undefined` | Customizes the trailing command column: reorder or mix the built-in `'edit'` / `'delete'` buttons with your own. Omitted, the column shows the built-ins the `editing` permissions allow. |
 | `highlightChanges` | `boolean` | `false` | Briefly flashes cells whose value changed under a live-updating source; consecutive updates to one cell restart the animation. |
 | `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. With plain-array data the array is mutated in place; DataSource consumers handle `onRowReordered` instead. Keyboard: Ctrl+↑/↓ on a focused cell moves the row onto its neighbour through the same drop path (same event), announced via `messages.rowMoved`. |
+| `animateRows` | `boolean` | `true` | Glides the rows on screen to their new slots when a sort, a filter, grouping, an expand/collapse or a row drop re-orders them (FLIP keyed by row key, at most 60 on-screen rows, rows joining the window fade in). Scrolling, a page change, an entirely new row set and remote (windowed) scrolling never animate; under `prefers-reduced-motion` the change applies at once. Timing comes from `--oge-motion-duration-layout` / `--oge-motion-easing-spring`. `false` turns it off. |
 | `renderRow` | `(context: OgeGridRowRenderContext<T>) => ReactNode` | `undefined` | Replaces the whole data row — the React form of `*ogeRowTemplate`. Group, detail and summary rows keep their built-in rendering. |
 | `renderDetail` | `(context: OgeGridDetailRenderContext<T>) => ReactNode` | `undefined` | Master-detail content under an expanded row — the React form of `*ogeDetailTemplate`. Its presence adds the expander column and switches the role to `treegrid`. |
 
@@ -366,7 +367,7 @@ _Basics_
 | `lookup` | `OgeColumnLookup` | `undefined` | Maps stored values to display texts (cells, filters, exports): `{ dataSource, valueExpr, displayExpr }`. |
 | `calculateCellValue` | `(row: T) => unknown` | `undefined` | Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). |
 | `hidingPriority` | `number` | `undefined` | Responsive hiding: lower priorities hide first when the grid runs out of width; the hidden values stay reachable through the row toggle unless `columnHidingMode` is `'hide'`. |
-| `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge (requires a numeric `width`). |
+| `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge (requires a numeric `width`). `left` / `right` are the logical start / end edge (mirrored in RTL). While content scrolls under the pinned group, the column bordering it casts a separator shadow (`--oge-shadow-pinned-color`; a solid rule under forced colors). |
 
 _Sort, filter & group_
 

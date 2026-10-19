@@ -106,10 +106,14 @@ export type { OgeReactiveCell, OgeReactivityAdapter } from './lib/reactivity';
 // --- grid ---
 export {
   OgeGridColumnLayoutCore,
+  ogePinnedEdgeClass,
+  ogePinnedScrollShadows,
+  ogeSyncPinnedShadows,
   resizedColumnWidth,
   type OgeGridColumnLayoutDeps,
   type OgeGridColumnRange,
   type OgeGridLayoutColumn,
+  type OgeGridPinnedEdges,
 } from './lib/grid/grid-column-layout';
 export {
   OGE_MAX_SCROLL_HEIGHT,
@@ -2094,6 +2098,16 @@ export {
   type OgeMotionEasing,
   type OgeMotionTiming,
 } from './lib/motion/motion';
+// animated rows — the grid families' `animateRows` (row FLIP on re-order)
+export {
+  OGE_ROW_MOTION_LIMIT,
+  OgeRowMotionCore,
+  ogeRowMotionDecision,
+  type OgeRowMotionDecision,
+  type OgeRowMotionInput,
+  type OgeRowMotionOptions,
+  type OgeRowMotionWindow,
+} from './lib/motion/row-motion';
 export {
   ogeIsRtl,
   ogeResolveDirection,

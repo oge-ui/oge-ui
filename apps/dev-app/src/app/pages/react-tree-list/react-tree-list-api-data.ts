@@ -247,6 +247,13 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
             'BCP 47 locale of the formatted text — default date cells, declarative column <code>format</code>s (<code>OgeValueFormat</code>), summaries, header-filter values, the filter row’s number parsing and editors, the pager info and exported text — and of the plural-aware announcements. <code>undefined</code> falls back to <code>&lt;OgeGridConfigProvider config={{ locale }}&gt;</code>, then <code>navigator.language</code>.',
         },
         {
+          name: 'animateRows',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Same as the grid: rows on screen glide to their new slots when a sort, a filter, an expand/collapse or a row drop re-orders them (at most 60 rows; scrolling and page changes never animate, reduced motion applies changes at once). <code>false</code> turns it off.',
+        },
+        {
           name: 'commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey',
           type: 'various',
           description:

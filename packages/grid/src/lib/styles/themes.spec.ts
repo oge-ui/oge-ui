@@ -422,4 +422,20 @@ describe('token references', () => {
       ),
     ).toEqual([]);
   });
+
+  it('never gives a shared token a fallback (it is always declared, so the fallback only misleads)', () => {
+    const shared = new Set([
+      ...mixinDeclarations('literal-tokens').keys(),
+      ...mixinDeclarations('derived-tokens').keys(),
+    ]);
+    const offenders: string[] = [];
+    for (const file of walk(packagesDir)) {
+      if (!/\.scss$/.test(file)) continue;
+      const text = readFileSync(file, 'utf8');
+      for (const m of text.matchAll(/var\(\s*(--oge-[a-z0-9-]+)\s*,/g))
+        if (shared.has(m[1]))
+          offenders.push(`${m[1]} (${file.slice(packagesDir.length)})`);
+    }
+    expect(offenders).toEqual([]);
+  });
 });

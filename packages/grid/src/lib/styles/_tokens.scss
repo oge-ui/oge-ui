@@ -81,6 +81,8 @@
     0 6px 14px -6px rgba(15, 23, 42, 0.2);
   /* how much a lifted drag surface grows */
   --oge-drag-scale: 1.02;
+  /* the separator shadow a pinned (frozen) column casts while content scrolls under it */
+  --oge-shadow-pinned-color: rgba(15, 23, 42, 0.16);
   /* loading placeholders (skeleton bones, grid skeleton rows) */
   --oge-skeleton-color: rgba(148, 163, 184, 0.25);
   /* switch knob — stays light on both themes, like the platform controls */

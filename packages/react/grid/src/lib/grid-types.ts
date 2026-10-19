@@ -524,6 +524,14 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
    * is mutated in place; DataSource consumers handle `onRowReordered` instead.
    */
   rowDragging?: boolean;
+  /**
+   * Glides the rows on screen to their new slots when a sort, a filter,
+   * grouping, an expand/collapse or a row drop re-orders them (FLIP, at most
+   * 60 rows). Scrolling, a page change and remote (windowed) scrolling never
+   * animate; reduced motion switches it off. `false` applies changes at
+   * once. Default `true`.
+   */
+  animateRows?: boolean;
   /** Spinner overlay while a load is in flight. */
   loadPanel?: boolean;
   /**

@@ -99,6 +99,9 @@ import {
   type OgeTreeInitNewRowEvent,
   ogeIsRtl,
   observeDirection,
+  OgeRowMotionCore,
+  ogePinnedEdgeClass,
+  ogeSyncPinnedShadows,
 } from '@oge-ui/behavior';
 import {
   beginPointerDragDrop,
@@ -2388,6 +2391,30 @@ function OgeTreeListInner<T extends object>(
   const gridTemplateColumns = model.layout.gridTemplateColumns();
   const viewNodes = model.virtualizer.viewNodes();
   const viewStart = model.virtualizer.viewStart();
+  // animateRows: the render body still sees the old rows in the DOM, so the
+  // snapshot is taken here; the layout effect plays once the new ones are in
+  const [rowMotion] = useState(
+    () =>
+      new OgeRowMotionCore<RowNode<T>, RowKey>({
+        keyOf: (node) => node.key,
+        viewport: () => viewportRef.current,
+        root: () =>
+          viewportRef.current?.querySelector<HTMLElement>(
+            ':scope > .oge-body',
+          ) ?? null,
+        rows: (root) =>
+          root.querySelectorAll<HTMLElement>(
+            ':scope > .oge-rows > [data-rowindex]',
+          ),
+      }),
+  );
+  rowMotion.prepare(
+    (props.animateRows ?? true) ? { nodes: viewNodes, start: viewStart } : null,
+  );
+  useIsomorphicLayoutEffect(() => {
+    void rowMotion.commit();
+  });
+  useEffect(() => () => rowMotion.cancel(), [rowMotion]);
   const bodyHeight = model.virtualizer.bodyHeight();
   const rowsTransform = model.virtualizer.rowsTransform();
   const virtualized = model.virtualized();
@@ -2422,6 +2449,17 @@ function OgeTreeListInner<T extends object>(
     insetInlineStart: model.layout.pinnedLeftOf(column) ?? undefined,
     insetInlineEnd: model.layout.pinnedRightOf(column) ?? undefined,
   });
+  /** `oge-pinned`, plus the edge class on the column bordering the scrolling content. */
+  const pinnedClass = (column: ResolvedColumn<T>): string =>
+    column.pinned === false
+      ? ''
+      : `oge-pinned ${ogePinnedEdgeClass(model.layout.pinnedEdgeOf(column))}`.trimEnd();
+  // pinned-edge shadows follow the scroll width (columns, resize); the scroll
+  // handler covers the scroll position
+  const scrollHostWidth = model.hostWidth();
+  useIsomorphicLayoutEffect(() => {
+    ogeSyncPinnedShadows(viewportRef.current);
+  }, [gridTemplateColumns, scrollHostWidth]);
 
   const alignClass = (column: ResolvedColumn<T>): string | null =>
     column.alignment === 'center'
@@ -2817,7 +2855,7 @@ function OgeTreeListInner<T extends object>(
           if (column.dataType === 'number') classes.push('oge-cell-number');
           if (column.alignment === 'center') classes.push('oge-align-center');
           if (column.alignment === 'end') classes.push('oge-align-end');
-          if (column.pinned !== false) classes.push('oge-pinned');
+          if (column.pinned !== false) classes.push(pinnedClass(column));
           return (
             <div
               key={column.id}
@@ -2966,7 +3004,7 @@ function OgeTreeListInner<T extends object>(
           if (column.dataType === 'number') cellClasses.push('oge-cell-number');
           const align = alignClass(column);
           if (align) cellClasses.push(align);
-          if (column.pinned !== false) cellClasses.push('oge-pinned');
+          if (column.pinned !== false) cellClasses.push(pinnedClass(column));
           if (model.editing.isCellDirty(node, column))
             cellClasses.push('oge-cell-dirty');
           if (model.editing.isCellEditorOpen(node, column))
@@ -3372,6 +3410,7 @@ function OgeTreeListInner<T extends object>(
           const target = event.currentTarget;
           model.scrollTop.set(target.scrollTop);
           model.scrollLeft.set(target.scrollLeft);
+          ogeSyncPinnedShadows(target);
         }}
         onKeyDown={onTreeKeydown}
       >
@@ -3453,7 +3492,8 @@ function OgeTreeListInner<T extends object>(
               const align = alignClass(column);
               if (align) headerClasses.push(align);
               if (sortable) headerClasses.push('oge-header-sortable');
-              if (column.pinned !== false) headerClasses.push('oge-pinned');
+              if (column.pinned !== false)
+                headerClasses.push(pinnedClass(column));
               if (headerDropTargetId === column.id)
                 headerClasses.push('oge-col-drop-target');
               const sort = column.field
@@ -3600,11 +3640,7 @@ function OgeTreeListInner<T extends object>(
               {renderColumns.map((column) => (
                 <div
                   key={column.id}
-                  className={
-                    column.pinned !== false
-                      ? 'oge-filter-cell oge-pinned'
-                      : 'oge-filter-cell'
-                  }
+                  className={`oge-filter-cell ${pinnedClass(column)}`.trimEnd()}
                   role="gridcell"
                   style={pinnedStyle(column)}
                 >
