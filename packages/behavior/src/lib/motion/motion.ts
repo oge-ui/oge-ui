@@ -255,8 +255,6 @@ export interface OgeLayoutAnimatorOptions<K> {
   limit?: number;
   /** Animate appearing elements (default `true`). */
   enter?: boolean;
-  /** Keyframes of an appearing element (default: fade in from 96 %). */
-  enterKeyframes?: Keyframe[];
   /**
    * Stagger the enters of one play in DOM order by `--oge-motion-stagger`
    * each, spread over at most six steps (default `false`).

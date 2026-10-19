@@ -105,6 +105,13 @@ export function beginOgeCarouselSwipe(event: OgePointerGestureInput & {
 export function beginOgeDrawerSwipe(event: OgePointerGestureInput, options: OgeDrawerSwipeOptions): OgePointerGestureHandle | null;
 
 // @public
+export function beginOgeToastSwipe(event: OgePointerGestureInput & {
+    readonly button?: number;
+}, options: OgeToastSwipeOptions): {
+    cancel(): void;
+} | null;
+
+// @public
 export function beginOgeTreeDrag(event: OgePointerGestureInput, options: OgeTreeDragOptions): OgePointerGestureHandle | null;
 
 // @public
@@ -185,6 +192,12 @@ export interface CalendarCell {
     // (undocumented)
     text: string;
 }
+
+// @public
+export function calendarViewKey(anchor: Date, zoom: OgeCalendarZoomLevel): string;
+
+// @public
+export function calendarViewMotion(previous: OgeCalendarView | null, next: OgeCalendarView): OgeCalendarViewMotion | null;
 
 // @public
 export function canCollapseAccordionPanel(expanded: ReadonlySet<string>, id: string, collapsible: boolean): boolean;
@@ -288,6 +301,9 @@ export function createOgeAiHttpTransport(options: OgeAiHttpTransportOptions): Og
 export function createOgeAnthropicTransport(options: OgeAiAnthropicTransportOptions): OgeAiTransport;
 
 // @public
+export function createOgeFormItemMotion(root: HTMLElement): OgeFormItemMotion;
+
+// @public
 export function createOgeIndicatorGlide(root: HTMLElement, options?: OgeIndicatorGlideOptions): OgeIndicatorGlide;
 
 // @public
@@ -295,6 +311,9 @@ export function createOgeLayoutAnimator<K>(options: OgeLayoutAnimatorOptions<K>)
 
 // @public
 export function createOgeOpenAiTransport(options: OgeAiOpenAiTransportOptions): OgeAiTransport;
+
+// @public
+export function createOgeTrackAnimator(root: HTMLElement, options: OgeTrackAnimatorOptions): OgeTrackAnimator;
 
 // @public
 export function createTreeSearchPredicate<T>(text: string, mode: OgeTreeSearchMode, accessors: readonly ((row: T) => unknown)[]): ((row: T) => boolean) | null;
@@ -488,6 +507,9 @@ export function getOgePdfDefaultFont(): OgePdfFont | null;
 
 // @public
 export function getTabbableElements(root: HTMLElement): HTMLElement[];
+
+// @public
+export function glideButtonGroupPill(glide: OgeIndicatorGlide, root: HTMLElement, previous: HTMLElement | null, target: HTMLElement | null): boolean;
 
 // @public
 export function graphemeCount(text: string): number;
@@ -888,6 +910,9 @@ export const OGE_BADGE_DEFAULT_MAX = 99;
 export const OGE_BREADCRUMB_ELLIPSIS_FALLBACK = 44;
 
 // @public
+export const OGE_BUTTON_GROUP_PILL_CLASS = "oge-button-group-pill";
+
+// @public
 export const OGE_CAROUSEL_DEFAULT_INTERVAL = 5000;
 
 // @public
@@ -1169,6 +1194,9 @@ export const OGE_EXIT_FADE: readonly Keyframe[];
 export const OGE_FAB_PLUS_PATH = "M12 5v14M5 12h14";
 
 // @public
+export const OGE_FORM_ITEM_ATTR = "data-oge-form-item";
+
+// @public
 export const OGE_GESTURE_THRESHOLD = 3;
 
 // @public
@@ -1321,6 +1349,12 @@ export const OGE_TOAST_EXIT_MS = 150;
 
 // @public
 export const OGE_TOAST_POSITIONS: readonly OgeToastPosition[];
+
+// @public
+export const OGE_TOAST_STACK_VISIBLE = 3;
+
+// @public
+export const OGE_TOAST_SWIPE_DISMISS = 48;
 
 // @public
 export const OGE_TOOLBAR_STOP_SELECTOR = "button, [href], input, select, textarea, [tabindex]";
@@ -1603,6 +1637,9 @@ export interface OgeActionSheetCoreOptions {
 
 // @public
 export function ogeActionSheetDividerIndex(ordered: readonly OgeActionSheetItem[]): number;
+
+// @public
+export function ogeActionSheetExitGhost(layer: HTMLElement | null): void;
 
 // @public
 export interface OgeActionSheetItem {
@@ -2581,6 +2618,17 @@ export type OgeCalendarRange = readonly [Date | null, Date | null];
 
 // @public
 export type OgeCalendarSelectionMode = 'single' | 'multiple' | 'range';
+
+// @public
+export interface OgeCalendarView {
+    // (undocumented)
+    readonly anchor: Date;
+    // (undocumented)
+    readonly zoom: OgeCalendarZoomLevel;
+}
+
+// @public
+export type OgeCalendarViewMotion = 'next' | 'prev' | 'zoom-in' | 'zoom-out';
 
 // @public
 export interface OgeCalendarWeekNumberOptions {
@@ -5267,6 +5315,10 @@ export function ogeExitGhost(element: Element, options?: OgeExitGhostOptions): v
 export interface OgeExitGhostOptions {
     keyframes?: readonly Keyframe[];
     parent?: Element | null;
+    parts?: ReadonlyArray<{
+        readonly selector: string;
+        readonly keyframes: readonly Keyframe[];
+    }>;
     rect?: OgeRect;
 }
 
@@ -6184,6 +6236,12 @@ export interface OgeFormItemDataBase {
     readonly visible?: boolean;
     readonly visibleIndex?: number;
     readonly visibleWhen?: OgeFormCondition;
+}
+
+// @public
+export interface OgeFormItemMotion {
+    destroy(): void;
+    update(visibleChanged: boolean): void;
 }
 
 // @public
@@ -8024,6 +8082,7 @@ export interface OgeIndicatorGlide {
 // @public
 export interface OgeIndicatorGlideOptions {
     className?: string;
+    shape?: OgeIndicatorShape;
 }
 
 // @public
@@ -8033,6 +8092,9 @@ export interface OgeIndicatorMoveOptions {
 
 // @public
 export function ogeIndicatorRect(box: OgeRect, edge: OgeIndicatorEdge, inset?: readonly [number, number]): OgeRect;
+
+// @public
+export type OgeIndicatorShape = 'edge' | 'box';
 
 // @public
 export type OgeIndicatorSide = 'top' | 'right' | 'bottom' | 'left';
@@ -8271,9 +8333,11 @@ export interface OgeLayoutAnimator<K> {
 // @public
 export interface OgeLayoutAnimatorOptions<K> {
     enter?: boolean;
-    enterKeyframes?: Keyframe[];
+    enterKeyframes?: readonly Keyframe[];
     enterStagger?: boolean;
     exit?: boolean;
+    exitKeyframes?: readonly Keyframe[];
+    exitParent?: () => Element | null;
     limit?: number;
     query(): Iterable<readonly [K, HTMLElement]>;
     root: HTMLElement;
@@ -8288,6 +8352,9 @@ export interface OgeLayoutPlayOptions<K> {
     exclude?: Iterable<K>;
     scale?: boolean;
 }
+
+// @public
+export function ogeLayoutToastStack(region: HTMLElement): void;
 
 // @public
 export interface OgeListBoxClickInput {
@@ -9495,6 +9562,7 @@ export interface OgeOverlayConfig extends OgeOverlayTimings {
     toastMaxVisible: number;
     toastPosition: OgeToastPosition;
     toastProgressBar: boolean;
+    toastStacked: boolean;
 }
 
 // @public
@@ -12439,7 +12507,7 @@ export interface OgeToastClosedEvent {
 }
 
 // @public
-export type OgeToastCloseReason = 'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear';
+export type OgeToastCloseReason = 'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear' | 'swipe';
 
 // @public
 export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
@@ -12452,11 +12520,13 @@ export class OgeToastCore<O extends AnyToastOptions = OgeToastBaseOptions> {
     error(message: string, options?: Omit<O, 'message' | 'severity'>): OgeToastRef;
     // (undocumented)
     info(message: string, options?: Omit<O, 'message' | 'severity'>): OgeToastRef;
+    isExpanded(position: OgeToastPosition): boolean;
     markReady(entries: readonly OgeToastEntry<O>[]): void;
     pause(entry: OgeToastEntry<O>): void;
     promise<T>(promise: Promise<T>, options: OgeToastPromiseBaseOptions<T, O>): OgeToastRef;
     regions(): OgeToastRegion<O>[];
     resume(entry: OgeToastEntry<O>): void;
+    setRegionExpanded(position: OgeToastPosition, cause: OgeToastExpandCause, on: boolean): void;
     show(toast: string | O): OgeToastRef;
     success(message: string, options?: Omit<O, 'message' | 'severity'>): OgeToastRef;
     // (undocumented)
@@ -12477,6 +12547,7 @@ export interface OgeToastDefaults {
     maxVisible: number;
     position: OgeToastPosition;
     progressBar: boolean;
+    stacked?: boolean;
 }
 
 // @public
@@ -12497,6 +12568,8 @@ export interface OgeToastEntry<O extends AnyToastOptions = OgeToastBaseOptions> 
     remaining: number;
     // @internal (undocumented)
     resolveClosed: (event: OgeToastClosedEvent) => void;
+    // @internal
+    stackPaused: boolean;
     // @internal (undocumented)
     startedAt: number;
     // @internal (undocumented)
@@ -12504,6 +12577,9 @@ export interface OgeToastEntry<O extends AnyToastOptions = OgeToastBaseOptions> 
     // @internal (undocumented)
     total: number;
 }
+
+// @public
+export type OgeToastExpandCause = 'hover' | 'focus';
 
 // @public
 export type OgeToastPosition = 'top-start' | 'top-center' | 'top-end' | 'bottom-start' | 'bottom-center' | 'bottom-end';
@@ -12537,13 +12613,24 @@ export class OgeToastRef<D = unknown> {
 
 // @public (undocumented)
 export interface OgeToastRegion<O extends AnyToastOptions> {
+    readonly expanded: boolean;
     // (undocumented)
     readonly position: OgeToastPosition;
+    readonly stacked: boolean;
     readonly visible: readonly OgeToastEntry<O>[];
 }
 
 // @public
 export type OgeToastSeverity = 'info' | 'success' | 'warning' | 'error';
+
+// @public
+export function ogeToastSwipeDismisses(deltaX: number): boolean;
+
+// @public
+export interface OgeToastSwipeOptions {
+    onFinish: (dismiss: boolean) => void;
+    toast: HTMLElement;
+}
 
 // @public
 export function ogeToggleAllValues<TItem>(current: readonly unknown[], items: readonly TItem[], valueOf: (item: TItem) => unknown, isDisabled: (item: TItem) => boolean, select: boolean, maxSelected?: number): readonly unknown[];
@@ -12888,6 +12975,24 @@ export interface OgeTooltipCoreOptions {
 export type OgeTooltipShowMode = 'hover' | 'focus' | 'click' | 'manual';
 
 // @public
+export interface OgeTrackAnimator {
+    readonly animating: boolean;
+    cancel(): void;
+    capture(): void;
+    play(): Promise<void>;
+}
+
+// @public
+export interface OgeTrackAnimatorOptions {
+    duration?: OgeMotionDuration;
+    easing?: OgeMotionEasing;
+    property(): OgeTrackProperty;
+}
+
+// @public
+export type OgeTrackProperty = 'grid-template-columns' | 'grid-template-rows';
+
+// @public
 export function ogeTransferAnnouncement(template: string, count: number, list: string, locale?: string): string;
 
 // @public
@@ -12961,6 +13066,12 @@ export function ogeTransferOpposite(side: OgeTransferListSide): OgeTransferListS
 
 // @public
 export function ogeTransferOptionElement(host: Element | null | undefined, side: OgeTransferListSide, index: number): HTMLElement | null;
+
+// @public
+export function ogeTransferOptionEntries<TItem>(root: Element, shown: {
+    readonly source: readonly TItem[];
+    readonly target: readonly TItem[];
+}, valueOf: (item: TItem) => unknown, grouped: boolean): (readonly [unknown, HTMLElement])[];
 
 // @public
 export function ogeTransferReorderable(allow: OgeTransferListReorderSides, side: OgeTransferListSide): boolean;
@@ -14838,6 +14949,9 @@ export interface OgeWindowCoreProps {
     // (undocumented)
     readonly resizable: boolean;
 }
+
+// @public
+export function ogeWindowExitGhost(panel: HTMLElement | null, parent: Element | null, rect?: OgeRect): void;
 
 // @public
 export type OgeWindowKeyCommand = {
