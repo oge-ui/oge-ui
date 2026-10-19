@@ -1,4 +1,11 @@
 {
   "$comment": "Findings of tools/package-check.mjs that are correct by design. Each entry matches by tool + package name (or layout: apf | react | rollup, or \"*\") + a substring of the finding, and must say why. Unused entries are reported.",
-  "entries": []
+  "entries": [
+    {
+      "tool": "attw",
+      "package": "@oge-ui/mcp",
+      "match": "CJSResolvesToESM",
+      "reason": "An ESM-only Node CLI (`npx @oge-ui/mcp`) with a small programmatic export. It ships no CJS build on purpose: Node >=18 imports it, and Node >=22 also require()s ESM."
+    }
+  ]
 }

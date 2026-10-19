@@ -7,6 +7,15 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### MCP server — new `@oge-ui/mcp` (MIT)
+
+- **The suite's docs inside your coding assistant.** `claude mcp add oge-ui -- npx -y @oge-ui/mcp`
+  (or one `mcpServers` entry in Cursor, VS Code, Windsurf, Zed) and the
+  assistant can call `list_packages`, `get_package_docs`, `search_docs` and
+  `get_setup`. Every package's generated `llms.txt` is bundled, so answers
+  are offline and match the installed version. Dependency-free Node over
+  stdio; `createOgeMcpServer()` is exported for embedding.
+
 ### Chat — `@oge-ui/ai`, `@oge-ui/react-ai`, `@oge-ui/behavior`, `@oge-ui/locales`
 
 - **A conversation surface.** `<oge-chat [(conversation)]>` / `<OgeChat conversation onConversationChange>`:

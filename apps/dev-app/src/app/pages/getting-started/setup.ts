@@ -12,6 +12,7 @@ import { PageToc } from '../../shared/page-toc';
 import {
   INSTALL,
   INSTALL_REACT,
+  MCP,
   NG_ADD,
   OPTIONAL,
   PROVIDERS,
@@ -25,6 +26,7 @@ const SECTIONS = [
   'Requirements',
   'Install the packages',
   'ng add',
+  'AI coding assistants',
   'Optional dependencies',
   'Application providers',
   'Verify the setup',
@@ -34,6 +36,7 @@ const SECTIONS_REACT = [
   'Requirements',
   'Install the packages',
   'Import the stylesheet',
+  'AI coding assistants',
   'Optional dependencies',
   'Application providers',
   'Verify the setup',
@@ -164,6 +167,24 @@ const SECTIONS_REACT = [
       </p>
     }
 
+    <h2 id="ai-coding-assistants" class="scroll-mt-20">AI coding assistants</h2>
+    <p>
+      <code>&#64;oge-ui/mcp</code> is a free MCP server that hands Claude Code,
+      Cursor, Copilot and any MCP client the suite's own reference — every
+      package's API, rules and examples for both frameworks — bundled, offline
+      and matching the version you install. It answers four tools:
+      <code>list_packages</code>, <code>get_package_docs</code>,
+      <code>search_docs</code> and <code>get_setup</code>.
+    </p>
+    <app-code-block [code]="mcp" language="bash" />
+    <p>
+      Every package also ships its <code>llms.txt</code> in
+      <code>node_modules</code>, and the site publishes
+      <a href="/llms.txt">llms.txt</a> and
+      <a href="/llms-full.txt">llms-full.txt</a> for assistants that read the
+      web.
+    </p>
+
     <h2 id="optional-dependencies" class="scroll-mt-20">
       Optional dependencies
     </h2>
@@ -269,5 +290,6 @@ export class GettingStartedSetupPage {
 
   protected readonly ngAdd = NG_ADD;
   protected readonly optional = OPTIONAL;
+  protected readonly mcp = MCP;
   protected readonly stylesReact = STYLES_REACT;
 }

@@ -192,6 +192,7 @@
 {"p":2,"a":"install-the-packages","t":"Install the packages"},
 {"p":2,"a":"import-the-stylesheet","t":"Import the stylesheet"},
 {"p":2,"a":"ng-add","t":"ng add"},
+{"p":2,"a":"ai-coding-assistants","t":"AI coding assistants"},
 {"p":2,"a":"optional-dependencies","t":"Optional dependencies"},
 {"p":2,"a":"application-providers","t":"Application providers"},
 {"p":2,"a":"verify-the-setup","t":"Verify the setup"},

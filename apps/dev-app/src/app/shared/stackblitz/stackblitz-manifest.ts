@@ -195,6 +195,11 @@ export const STACKBLITZ_PACKAGES: Readonly<
     "commercial": false,
     "styles": false
   },
+  "@oge-ui/mcp": {
+    "deps": [],
+    "commercial": false,
+    "styles": false
+  },
   "@oge-ui/navigation": {
     "deps": [
       "@oge-ui/behavior",

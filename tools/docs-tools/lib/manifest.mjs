@@ -316,6 +316,17 @@ export const PACKAGES = [
     tier: 'mit',
   },
   {
+    dir: 'mcp',
+    npm: '@oge-ui/mcp',
+    label: 'MCP server',
+    summary:
+      "Free MCP (Model Context Protocol) server for coding assistants — Claude Code, Cursor, Copilot, Windsurf, Zed: `claude mcp add oge-ui -- npx -y @oge-ui/mcp`. Bundles every package's llms.txt (offline, version-exact) behind four tools: list_packages, get_package_docs, search_docs and get_setup. Dependency-free Node over stdio.",
+    docsRoot: '/getting-started/setup',
+    pageDirs: [],
+    tier: 'mit',
+    platform: 'agnostic',
+  },
+  {
     dir: 'locales',
     npm: '@oge-ui/locales',
     label: 'Locales',
