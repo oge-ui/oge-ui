@@ -409,6 +409,23 @@ export const ru: OgeLocalePack = {
     },
   },
   ai: {
+    chat: {
+      label: 'Чат',
+      logLabel: 'Беседа',
+      composerLabel: 'Сообщение',
+      placeholder: 'Введите сообщение…',
+      send: 'Отправить',
+      stop: 'Остановить',
+      retry: 'Повторить',
+      clear: 'Очистить беседу',
+      you: 'Вы:',
+      assistant: 'Ассистент:',
+      thinking: 'Печатает…',
+      error: 'Не удалось загрузить ответ.',
+      emptyReply: '(нет ответа)',
+      empty: 'Начните беседу.',
+      suggestions: 'Подсказки',
+    },
     aiCell: {
       generating: 'Генерация…',
       error: 'Недоступно',

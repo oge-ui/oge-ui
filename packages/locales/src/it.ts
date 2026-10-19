@@ -409,6 +409,23 @@ export const it: OgeLocalePack = {
   },
 
   ai: {
+    chat: {
+      label: 'Chat',
+      logLabel: 'Conversazione',
+      composerLabel: 'Messaggio',
+      placeholder: 'Scrivi un messaggio…',
+      send: 'Invia',
+      stop: 'Interrompi',
+      retry: 'Riprova',
+      clear: 'Cancella la conversazione',
+      you: 'Tu:',
+      assistant: 'Assistente:',
+      thinking: 'Sta scrivendo…',
+      error: 'Impossibile caricare la risposta.',
+      emptyReply: '(nessuna risposta)',
+      empty: 'Inizia la conversazione.',
+      suggestions: 'Suggerimenti',
+    },
     aiCell: {
       generating: 'Generazione…',
       error: 'Non disponibile',

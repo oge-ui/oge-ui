@@ -66,6 +66,14 @@ validated against the column's type and choices, values are cached per row,
 and a failed cell offers a retry. **It sends row data**: exactly the `inputs`
 fields the column names, nothing else.
 
+## Chat
+
+`<oge-chat [(conversation)]="history" />` is a conversation surface: a polite live-region log, a composer
+(Enter sends, Shift+Enter adds a line, Escape stops), suggestions, typing
+indicator, stop and retry. With a transport the model answers with your
+`instructions`; with `transport: null` it is a plain chat whose replies you
+add with `addMessage()`. Messages render as text, never HTML.
+
 ## Transports
 
 | Transport                     | Use it for                                                              |

@@ -64,9 +64,18 @@ export {
   type OgeAiCellState,
   type OgeAiCellStatus,
   type OgeAiColumnOptions,
+  type OgeChatConfig,
+  type OgeChatErrorEvent,
+  type OgeChatMessage,
+  type OgeChatMessages,
+  type OgeChatReplyEvent,
+  type OgeChatRole,
+  type OgeChatSendingEvent,
+  type OgeChatSentEvent,
 } from '@oge-ui/behavior';
 export { OgeAiCell, type OgeAiCellProps } from './lib/ai-cell';
 export { OgeAiConfigProvider, useOgeAiConfig } from './lib/ai-config';
+export { OgeChat, type OgeChatHandle, type OgeChatProps } from './lib/chat';
 export {
   OgeGridAssistant,
   type OgeGridAssistantHandle,

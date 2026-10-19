@@ -13,6 +13,7 @@ import {
   type OgeAiTransport,
 } from '@oge-ui/behavior';
 import { demoAiColumnReply } from './ai-demo-ai-column';
+import { demoChatReply } from './ai-demo-chat';
 import { demoSmartPasteReply, unfencePastedText } from './ai-demo-smart-paste';
 
 export interface AiOrder {
@@ -404,13 +405,17 @@ export function createDemoAiTransport(
       const prompt =
         [...request.messages].reverse().find((m) => m.role === 'user')
           ?.content ?? '';
-      const text = JSON.stringify(
-        request.feature === 'smart-paste'
-          ? demoSmartPasteReply(unfencePastedText(prompt), system)
-          : request.feature === 'ai-column'
-            ? demoAiColumnReply(prompt, system)
-            : demoReply(prompt, system, options.now?.() ?? new Date()),
-      );
+      // the chat answers in plain text; every other feature in JSON
+      const text =
+        request.feature === 'chat'
+          ? demoChatReply(request.messages)
+          : JSON.stringify(
+              request.feature === 'smart-paste'
+                ? demoSmartPasteReply(unfencePastedText(prompt), system)
+                : request.feature === 'ai-column'
+                  ? demoAiColumnReply(prompt, system)
+                  : demoReply(prompt, system, options.now?.() ?? new Date()),
+            );
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => resolve({ text }), options.delay ?? 650);
         call?.signal?.addEventListener('abort', () => {

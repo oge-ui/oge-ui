@@ -190,6 +190,30 @@ for (const layer of LAYERS) {
       await demo.getByRole('button', { name: 'Recompute' }).click();
       await expect(cells.nth(0)).toHaveText('Positive');
     });
+
+    test('the chat sends on Enter, shows the reply as text and keeps Shift+Enter for new lines', async ({
+      page,
+    }) => {
+      await page.goto(route);
+      const demo = card(page, 'chat');
+      const chat = demo.getByRole('group', { name: 'Chat' });
+      const log = chat.getByRole('log', { name: 'Conversation' });
+      await expect(log).toHaveAttribute('aria-live', 'polite', FIRST_PAINT);
+      const field = chat.getByRole('textbox', { name: 'Message' });
+      await field.fill('Which models work?');
+      await field.press('Shift+Enter');
+      await expect(field).toHaveValue('Which models work?\n');
+      await field.press('Enter');
+      await expect(log.locator('.oge-chat-message-user')).toHaveText(
+        /Which models work\?/,
+      );
+      await expect(log.locator('.oge-chat-message-assistant')).toContainText(
+        'Ollama',
+      );
+      await expect(field).toHaveValue('');
+      await expect(demo.getByTestId('chat-count')).toHaveText('2 messages');
+      await expect(field).toBeFocused();
+    });
   });
 }
 

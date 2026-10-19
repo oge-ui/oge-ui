@@ -17,9 +17,11 @@ import {
   createOgeOpenAiTransport,
   createOgeAiColumn,
   OgeAiCell,
+  OgeChat,
   OgeGridAssistant,
   OgeSmartPaste,
   type OgeAiGridColumn,
+  type OgeChatMessage,
   type OgeAiRequest,
   type OgeAiTransport,
   type OgeGridAssistantHandle,
@@ -63,6 +65,7 @@ export const REACT_AI_OVERVIEW_SECTIONS = [
   'Events',
   'Smart paste',
   'AI column',
+  'Chat',
   'Transports and configuration',
 ] as const;
 
@@ -452,6 +455,26 @@ function AiColumnDemo(): ReactNode {
   );
 }
 
+function ChatDemo(): ReactNode {
+  const [history, setHistory] = useState<readonly OgeChatMessage[]>([]);
+  return createElement(
+    'div',
+    null,
+    createElement(OgeChat, {
+      transport: SHARED,
+      instructions: 'You are the support assistant of Acme. Answer briefly.',
+      suggestions: ['How much does Pro cost?', 'Which models work?'],
+      conversation: history,
+      onConversationChange: setHistory,
+    }),
+    createElement(
+      'p',
+      { className: 'mt-2 text-sm opacity-70', 'data-testid': 'chat-count' },
+      `${history.length} messages`,
+    ),
+  );
+}
+
 function ConfigDemo(): ReactNode {
   const label = useTransportLabel();
   const baseUrl = useRef<HTMLInputElement>(null);
@@ -604,6 +627,16 @@ function ConfigDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['OgeChat', 'conversation', 'manual mode', 'role=log']"
+      heading="Chat"
+      description="Ask about pricing, models, frameworks or privacy. Enter sends, Shift+Enter adds a line, Escape stops a reply. Replies render as text, never HTML; with &lt;code&gt;transport: null&lt;/code&gt; the same component is a plain chat whose replies the host adds."
+      [code]="demos[6].source"
+      language="tsx"
+    >
+      <app-react-host [render]="chat" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="[
         'OgeAiConfigProvider',
         'createOgeOpenAiTransport',
@@ -611,7 +644,7 @@ function ConfigDemo(): ReactNode {
       ]"
       heading="Transports and configuration"
       description="Point every demo on this page at a real OpenAI-compatible endpoint — a local Ollama needs no key. The key is held in this tab’s memory only and sent straight to the URL you enter; in production use your own backend so the key never reaches the browser."
-      [code]="demos[6].source"
+      [code]="demos[7].source"
       language="tsx"
     >
       <app-react-host [render]="config" />
@@ -626,5 +659,6 @@ export class ReactAiOverviewDemos {
   protected readonly events = () => createElement(EventsDemo);
   protected readonly smartPaste = () => createElement(SmartPasteDemo);
   protected readonly aiColumn = () => createElement(AiColumnDemo);
+  protected readonly chat = () => createElement(ChatDemo);
   protected readonly config = () => createElement(ConfigDemo);
 }

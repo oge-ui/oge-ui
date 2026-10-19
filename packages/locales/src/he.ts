@@ -406,6 +406,23 @@ export const he: OgeLocalePack = {
   },
 
   ai: {
+    chat: {
+      label: 'צ׳אט',
+      logLabel: 'שיחה',
+      composerLabel: 'הודעה',
+      placeholder: 'כתוב הודעה…',
+      send: 'שלח',
+      stop: 'עצור',
+      retry: 'נסה שוב',
+      clear: 'נקה את השיחה',
+      you: 'אתה:',
+      assistant: 'העוזר:',
+      thinking: 'מקליד…',
+      error: 'לא ניתן היה לטעון את התשובה.',
+      emptyReply: '(אין תשובה)',
+      empty: 'התחל את השיחה.',
+      suggestions: 'הצעות',
+    },
     aiCell: {
       generating: 'יוצר…',
       error: 'לא זמין',

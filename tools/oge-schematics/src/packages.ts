@@ -231,6 +231,10 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: "`sentiment = createOgeAiColumn({ prompt, inputs: ['review'], keyField: 'id', values })` and `<oge-ai-cell [column]=\"sentiment\" [row]=\"row\" />` inside the column's `*ogeCellTemplate` — it sends only the `inputs` fields of the visible rows, batched and cached; `sentiment.values()` returns the results",
     },
     {
+      need: 'an AI chat / support assistant / conversation UI',
+      use: '`<oge-chat instructions="…" [suggestions]="[…]" [(conversation)]="history" />` — replies come from the configured transport with the recent history; `[transport]="null"` makes it a plain chat whose replies you add with `chat.addMessage({ role: \'assistant\', text })`; messages render as text, never HTML',
+    },
+    {
       need: 'keep a column or data away from the AI model',
       use: 'the model never receives rows — only column names, types and lookup values; pass `[columns]` to add `description`s or omit a column, `[capabilities]="{ columns: false }"` to switch a part of the state off',
     },

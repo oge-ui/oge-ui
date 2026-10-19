@@ -6,6 +6,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { AI_DEMO_STATUSES, demoReply } from './ai-demo';
 import { demoAiColumnReply } from './ai-demo-ai-column';
+import { demoChatReply } from './ai-demo-chat';
 import { demoSmartPasteReply } from './ai-demo-smart-paste';
 
 const COLUMNS: OgeAiGridColumn[] = [
@@ -210,5 +211,24 @@ describe('the docs demo model — AI column', () => {
         { key: 3, value: 'neutral' },
       ],
     });
+  });
+});
+
+describe('the docs demo model — chat', () => {
+  it('answers the FAQ topics in the language of the question', () => {
+    expect(
+      demoChatReply([{ role: 'user', content: 'How much does Pro cost?' }]),
+    ).toContain('$299');
+    expect(
+      demoChatReply([
+        { role: 'user', content: 'Fiyatı nedir? Lisans ücreti?' },
+      ]),
+    ).toContain('299$');
+    expect(
+      demoChatReply([{ role: 'user', content: 'Which models work?' }]),
+    ).toContain('Ollama');
+    expect(demoChatReply([{ role: 'user', content: 'hello' }])).toContain(
+      'offline demo model',
+    );
   });
 });

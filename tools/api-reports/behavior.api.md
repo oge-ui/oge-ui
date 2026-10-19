@@ -1757,6 +1757,8 @@ export interface OgeAiColumnOptions<T> {
 // @public
 export interface OgeAiConfig {
     // (undocumented)
+    readonly chat: OgeChatConfig;
+    // (undocumented)
     readonly gridAssistant: OgeGridAssistantConfig;
     readonly locale: string | undefined;
     // (undocumented)
@@ -1767,8 +1769,9 @@ export interface OgeAiConfig {
 }
 
 // @public
-export type OgeAiConfigInput = Partial<Omit<OgeAiConfig, 'messages' | 'gridAssistant' | 'smartPaste'>> & {
+export type OgeAiConfigInput = Partial<Omit<OgeAiConfig, 'messages' | 'gridAssistant' | 'smartPaste' | 'chat'>> & {
     smartPaste?: Partial<OgeSmartPasteConfig>;
+    chat?: Partial<OgeChatConfig>;
     gridAssistant?: Partial<Omit<OgeGridAssistantConfig, 'capabilities'>> & {
         capabilities?: Partial<OgeGridAiCapabilities>;
     };
@@ -1878,6 +1881,8 @@ export interface OgeAiMessages {
     // (undocumented)
     readonly aiCell: OgeAiCellMessages;
     // (undocumented)
+    readonly chat: OgeChatMessages;
+    // (undocumented)
     readonly gridAssistant: OgeGridAssistantMessages;
     // (undocumented)
     readonly smartPaste: OgeSmartPasteMessages;
@@ -1888,6 +1893,7 @@ export type OgeAiMessagesInput = {
     gridAssistant?: OgeGridAssistantMessagesInput;
     smartPaste?: Partial<OgeSmartPasteMessages>;
     aiCell?: Partial<OgeAiCellMessages>;
+    chat?: Partial<OgeChatMessages>;
 };
 
 // @public
@@ -2813,6 +2819,125 @@ export type OgeCellTextParse = {
 } | {
     readonly ok: false;
 };
+
+// @public
+export interface OgeChatConfig {
+    readonly historyLimit: number;
+    readonly instructions: string | undefined;
+    readonly suggestions: readonly string[];
+}
+
+// @public
+export class OgeChatCore {
+    constructor(options: OgeChatCoreOptions);
+    addMessage(message: Omit<OgeChatMessage, 'id'> & {
+        id?: string;
+    }): OgeChatMessage;
+    // (undocumented)
+    readonly canSend: () => boolean;
+    clear(): void;
+    destroy(): void;
+    readonly draft: OgeReactiveCell<string>;
+    // (undocumented)
+    readonly list: OgeReactiveCell<readonly OgeChatMessage[]>;
+    retry(): Promise<void>;
+    revive(): void;
+    send(text?: string): Promise<void>;
+    setDraft(text: string): void;
+    setMessages(messages: readonly OgeChatMessage[]): void;
+    stop(): void;
+    readonly thinking: OgeReactiveCell<boolean>;
+}
+
+// @public
+export interface OgeChatCoreOptions {
+    // (undocumented)
+    readonly adapter: OgeReactivityAdapter;
+    readonly changed?: (messages: readonly OgeChatMessage[]) => void;
+    // (undocumented)
+    readonly errorOccurred?: (event: OgeChatErrorEvent) => void;
+    readonly historyLimit: () => number;
+    readonly idPrefix?: string;
+    readonly instructions: () => string | undefined;
+    // (undocumented)
+    readonly messages: () => OgeChatMessages;
+    // (undocumented)
+    readonly now?: () => number;
+    // (undocumented)
+    readonly replied?: (event: OgeChatReplyEvent) => void;
+    // (undocumented)
+    readonly sending?: (event: OgeChatSendingEvent) => void;
+    // (undocumented)
+    readonly sent?: (event: OgeChatSentEvent) => void;
+    readonly transport: () => OgeAiTransport | null | undefined;
+}
+
+// @public
+export interface OgeChatErrorEvent {
+    // (undocumented)
+    readonly code: OgeAiErrorCode | 'no-transport';
+    // (undocumented)
+    readonly error: unknown;
+}
+
+// @public
+export interface OgeChatMessage {
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly role: OgeChatRole;
+    readonly status?: 'error';
+    // (undocumented)
+    readonly text: string;
+    readonly time?: number;
+}
+
+// @public
+export interface OgeChatMessages {
+    // (undocumented)
+    readonly assistant: string;
+    // (undocumented)
+    readonly clear: string;
+    readonly composerLabel: string;
+    readonly empty: string;
+    readonly emptyReply: string;
+    readonly error: string;
+    readonly label: string;
+    readonly logLabel: string;
+    // (undocumented)
+    readonly placeholder: string;
+    // (undocumented)
+    readonly retry: string;
+    // (undocumented)
+    readonly send: string;
+    // (undocumented)
+    readonly stop: string;
+    readonly suggestions: string;
+    readonly thinking: string;
+    readonly you: string;
+}
+
+// @public
+export interface OgeChatReplyEvent {
+    // (undocumented)
+    readonly message: OgeChatMessage;
+}
+
+// @public
+export type OgeChatRole = 'user' | 'assistant';
+
+// @public
+export interface OgeChatSendingEvent {
+    cancel: boolean;
+    // (undocumented)
+    readonly text: string;
+}
+
+// @public
+export interface OgeChatSentEvent {
+    // (undocumented)
+    readonly message: OgeChatMessage;
+}
 
 // @public
 export type OgeCheckBoxGroupLayout = 'horizontal' | 'vertical' | 'columns';

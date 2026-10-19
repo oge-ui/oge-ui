@@ -784,6 +784,7 @@
         "bootstrap": "rgb(220 53 69 / 0.12)"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
         "@oge-ui/editor",

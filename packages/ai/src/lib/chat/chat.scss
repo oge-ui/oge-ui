@@ -1,0 +1,303 @@
+@use '../../../../grid/src/lib/styles/tokens';
+@use '../styles/ai-button' as ai;
+
+// A conversation: a scrolling log of bubbles (user on the inline end, the
+// assistant on the inline start), a typing indicator, and a composer whose
+// text area grows with its content. Messages are text with preserved breaks.
+.oge-chat {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  block-size: var(--oge-chat-height, 420px);
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  line-height: 1.5;
+  overflow: hidden;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  .oge-sr-only {
+    position: absolute;
+    overflow: hidden;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+.oge-chat-log {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-block-size: 0;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  @include tokens.scrollbar;
+
+  &:focus-visible {
+    @include tokens.focus-ring($inset: true);
+  }
+}
+
+.oge-chat-empty {
+  margin: auto 0 0;
+  color: var(--oge-muted-color);
+  text-align: center;
+}
+
+.oge-chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-chat-chip {
+  position: relative;
+  padding-block: 4px;
+  padding-inline: 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 999px;
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 0.92em;
+  cursor: pointer;
+  transition:
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+
+  @include tokens.hit-area;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(
+      in srgb,
+      var(--oge-accent) 45%,
+      var(--oge-border-color)
+    );
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  max-inline-size: 82%;
+  animation: oge-chat-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
+}
+
+.oge-chat-message-user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+@keyframes oge-chat-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.oge-chat-bubble {
+  padding-block: 8px;
+  padding-inline: 12px;
+  border-radius: 16px;
+  border-end-start-radius: 4px;
+  background: var(--oge-header-bg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  .oge-chat-message-user & {
+    border-end-start-radius: 16px;
+    border-end-end-radius: 4px;
+    background: var(--oge-accent);
+    color: var(--oge-severity-contrast);
+  }
+
+  .oge-chat-message-error & {
+    background: var(--oge-danger-soft);
+    color: var(--oge-danger);
+  }
+}
+
+.oge-chat-dots {
+  display: inline-flex;
+  gap: 4px;
+  padding-block: 4px;
+
+  span {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: 50%;
+    background: var(--oge-muted-color);
+    animation: oge-chat-dot 1.2s var(--oge-motion-easing-standard) infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+  }
+}
+
+@keyframes oge-chat-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.oge-chat-composer {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  border-block-start: 1px solid var(--oge-border-color);
+  background: var(--oge-bg);
+}
+
+.oge-chat-input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 36px;
+  max-block-size: 160px;
+  padding-block: 7px;
+  padding-inline: 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 18px;
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+  resize: none;
+  // grows with its content where supported; scrolls past the max height
+  field-sizing: content;
+  transition: border-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
+
+  &::placeholder {
+    color: var(--oge-muted-color);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    border-color: var(--oge-accent);
+
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    background: var(--oge-header-bg);
+    cursor: not-allowed;
+  }
+}
+
+.oge-chat-button {
+  @include ai.button;
+}
+
+.oge-chat-icon-button {
+  inline-size: 36px;
+  min-block-size: 36px;
+  padding: 0;
+
+  svg {
+    fill: currentColor;
+  }
+}
+
+.oge-chat-send {
+  @include ai.primary;
+}
+
+.oge-chat-stop {
+  @include ai.outlined;
+}
+
+.oge-chat-retry {
+  min-block-size: 26px;
+  font-size: 0.9em;
+
+  @include ai.outlined;
+}
+
+@include tokens.reduced-motion {
+  .oge-chat-message {
+    animation: none;
+  }
+
+  .oge-chat-dots span {
+    animation-name: oge-chat-fade;
+    animation-duration: 2.4s;
+  }
+
+  .oge-chat-chip,
+  .oge-chat-input {
+    transition: none;
+  }
+}
+
+@keyframes oge-chat-fade {
+  50% {
+    opacity: 1;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-chat,
+  .oge-chat-input,
+  .oge-chat-chip {
+    border-color: ButtonText;
+  }
+
+  .oge-chat-bubble {
+    border: 1px solid CanvasText;
+  }
+
+  .oge-chat-message-user .oge-chat-bubble {
+    border-color: Highlight;
+  }
+
+  .oge-chat-dots span {
+    background: CanvasText;
+  }
+}

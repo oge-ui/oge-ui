@@ -407,6 +407,23 @@ export const ja: OgeLocalePack = {
   },
 
   ai: {
+    chat: {
+      label: 'チャット',
+      logLabel: '会話',
+      composerLabel: 'メッセージ',
+      placeholder: 'メッセージを入力…',
+      send: '送信',
+      stop: '停止',
+      retry: '再試行',
+      clear: '会話を消去',
+      you: 'あなた：',
+      assistant: 'アシスタント：',
+      thinking: '入力中…',
+      error: '返信を読み込めませんでした。',
+      emptyReply: '（返信なし）',
+      empty: '会話を始めましょう。',
+      suggestions: '候補',
+    },
     aiCell: {
       generating: '生成中…',
       error: '利用できません',

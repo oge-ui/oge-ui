@@ -2545,6 +2545,8 @@ export {
   type OgeSmartPasteConfig,
   type OgeSmartPasteMessages,
   type OgeAiCellMessages,
+  type OgeChatConfig,
+  type OgeChatMessages,
   type OgeAiConfig,
   type OgeAiConfigInput,
   type OgeAiMessages,
@@ -2606,3 +2608,13 @@ export {
   type OgeAiCellStatus,
   type OgeAiColumnOptions,
 } from './lib/ai/ai-column';
+export {
+  OgeChatCore,
+  type OgeChatCoreOptions,
+  type OgeChatErrorEvent,
+  type OgeChatMessage,
+  type OgeChatReplyEvent,
+  type OgeChatRole,
+  type OgeChatSendingEvent,
+  type OgeChatSentEvent,
+} from './lib/ai/chat-core';

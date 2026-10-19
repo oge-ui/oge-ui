@@ -255,6 +255,19 @@ protected readonly sentiment = createOgeAiColumn<Review>({
 });`,
 });
 
+export const CHAT_SNIPPET = demoSource({
+  use: { '@oge-ui/ai': ['OgeChat'] },
+  types: { '@oge-ui/ai': ['OgeChatMessage'] },
+  template: `<!-- The log is a polite live region; messages are text, never HTML.
+     [(conversation)] restores and persists the history. -->
+<oge-chat
+  instructions="You are the support assistant of Acme. Answer briefly."
+  [suggestions]="['How much does Pro cost?', 'Which models work?']"
+  [(conversation)]="history"
+/>`,
+  body: `protected readonly history = signal<readonly OgeChatMessage[]>([]);`,
+});
+
 export const CONFIG_SNIPPET = demoSource({
   use: { '@oge-ui/ai': ['OgeGridAssistant'] },
   helpers: {

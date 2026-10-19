@@ -74,6 +74,14 @@ export {
   type OgeAiCellState,
   type OgeAiCellStatus,
   type OgeAiColumnOptions,
+  type OgeChatConfig,
+  type OgeChatErrorEvent,
+  type OgeChatMessage,
+  type OgeChatMessages,
+  type OgeChatReplyEvent,
+  type OgeChatRole,
+  type OgeChatSendingEvent,
+  type OgeChatSentEvent,
 } from '@oge-ui/behavior';
 
 /** Injection token every AI component reads its defaults from. */
