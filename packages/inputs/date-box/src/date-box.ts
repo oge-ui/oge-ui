@@ -117,6 +117,7 @@ interface TimeColumn {
         [attr.name]="name() || null"
         [attr.title]="tooltip() ?? null"
         [attr.tabindex]="tabIndex()"
+        aria-expanded="false"
         [attr.aria-expanded]="opened()"
         [attr.aria-controls]="opened() ? panel.panelId : null"
         [attr.aria-label]="labelMode() === 'hidden' && label() ? label() : null"

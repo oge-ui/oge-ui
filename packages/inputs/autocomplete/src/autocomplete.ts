@@ -114,6 +114,7 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
         [attr.name]="name() || null"
         [attr.title]="tooltip() ?? null"
         [attr.tabindex]="tabIndex()"
+        aria-expanded="false"
         [attr.aria-expanded]="opened()"
         [attr.aria-controls]="opened() ? listboxId : null"
         [attr.aria-activedescendant]="activeDescendant()"

@@ -186,6 +186,7 @@ export class OgeMentionItemTemplate<T = any> {
           [attr.maxlength]="maxLength() ?? null"
           [attr.title]="tooltip() ?? null"
           [attr.tabindex]="tabIndex()"
+          aria-expanded="false"
           [attr.aria-expanded]="opened()"
           [attr.aria-controls]="opened() ? listboxId : null"
           [attr.aria-activedescendant]="activeDescendant()"
