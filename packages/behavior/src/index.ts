@@ -2544,6 +2544,7 @@ export {
   resolveOgeAiConfig,
   type OgeSmartPasteConfig,
   type OgeSmartPasteMessages,
+  type OgeAiCellMessages,
   type OgeAiConfig,
   type OgeAiConfigInput,
   type OgeAiMessages,
@@ -2597,3 +2598,11 @@ export {
   type OgeSmartPasteTarget,
   type OgeSmartPasteUndoneEvent,
 } from './lib/ai/smart-paste-core';
+export { formatOgeAiValue, type OgeAiFormatOptions } from './lib/ai/ai-format';
+export {
+  createOgeAiColumn,
+  OgeAiColumn,
+  type OgeAiCellState,
+  type OgeAiCellStatus,
+  type OgeAiColumnOptions,
+} from './lib/ai/ai-column';

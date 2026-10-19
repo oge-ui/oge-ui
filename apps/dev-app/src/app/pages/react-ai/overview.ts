@@ -15,6 +15,8 @@ import {
 } from 'react';
 import {
   createOgeOpenAiTransport,
+  createOgeAiColumn,
+  OgeAiCell,
   OgeGridAssistant,
   OgeSmartPaste,
   type OgeAiGridColumn,
@@ -41,6 +43,11 @@ import {
   makeAiOrders,
   type AiOrder,
 } from '../ai/ai-demo';
+import {
+  AI_DEMO_REVIEWS,
+  AI_DEMO_SENTIMENTS,
+  type AiReview,
+} from '../ai/ai-demo-ai-column';
 import { SMART_PASTE_SAMPLE } from '../ai/ai-demo-smart-paste';
 import { ReactAiSmartPasteStyles } from './smart-paste-styles';
 import { AI_OVERVIEW_DEMOS } from './overview-snippets';
@@ -55,6 +62,7 @@ export const REACT_AI_OVERVIEW_SECTIONS = [
   'What the model sees',
   'Events',
   'Smart paste',
+  'AI column',
   'Transports and configuration',
 ] as const;
 
@@ -398,6 +406,52 @@ function SmartPasteDemo(): ReactNode {
   );
 }
 
+function AiColumnDemo(): ReactNode {
+  const sentiment = useMemo(
+    () =>
+      createOgeAiColumn<AiReview>({
+        prompt: "Classify the review's sentiment",
+        inputs: ['review'],
+        keyField: 'id',
+        values: AI_DEMO_SENTIMENTS,
+        transport: SHARED,
+      }),
+    [],
+  );
+  const columns = useMemo<OgeGridColumnProps<AiReview>[]>(
+    () => [
+      { field: 'product', caption: 'Product', width: 140 },
+      { field: 'review', caption: 'Review' },
+      { field: 'stars', caption: 'Stars', dataType: 'number', width: 80 },
+      {
+        caption: 'Sentiment',
+        width: 140,
+        renderCell: ({ row }) =>
+          createElement(OgeAiCell<AiReview>, { column: sentiment, row }),
+      },
+    ],
+    [sentiment],
+  );
+  return createElement(
+    'div',
+    null,
+    createElement(OgeGrid<AiReview>, {
+      data: AI_DEMO_REVIEWS,
+      keyField: 'id',
+      columns,
+    }),
+    createElement(
+      'div',
+      { className: 'mt-3 flex flex-wrap gap-2' },
+      createElement(
+        'button',
+        { type: 'button', onClick: () => sentiment.refresh() },
+        'Recompute',
+      ),
+    ),
+  );
+}
+
 function ConfigDemo(): ReactNode {
   const label = useTransportLabel();
   const baseUrl = useRef<HTMLInputElement>(null);
@@ -540,6 +594,16 @@ function ConfigDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['createOgeAiColumn', 'OgeAiCell', 'inputs', 'batching']"
+      heading="AI column"
+      description="Each Sentiment cell is computed by the model from the row’s review text — and only that field: the column names it in &lt;code&gt;inputs&lt;/code&gt;. The visible rows go out in one batched request, the values are cached per row, a failed cell offers a retry."
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="aiColumn" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="[
         'OgeAiConfigProvider',
         'createOgeOpenAiTransport',
@@ -547,7 +611,7 @@ function ConfigDemo(): ReactNode {
       ]"
       heading="Transports and configuration"
       description="Point every demo on this page at a real OpenAI-compatible endpoint — a local Ollama needs no key. The key is held in this tab’s memory only and sent straight to the URL you enter; in production use your own backend so the key never reaches the browser."
-      [code]="demos[5].source"
+      [code]="demos[6].source"
       language="tsx"
     >
       <app-react-host [render]="config" />
@@ -561,5 +625,6 @@ export class ReactAiOverviewDemos {
   protected readonly privacy = () => createElement(PrivacyDemo);
   protected readonly events = () => createElement(EventsDemo);
   protected readonly smartPaste = () => createElement(SmartPasteDemo);
+  protected readonly aiColumn = () => createElement(AiColumnDemo);
   protected readonly config = () => createElement(ConfigDemo);
 }

@@ -95,10 +95,25 @@ export interface OgeSmartPasteMessages {
   readonly ignored: string;
 }
 
+/** Strings of an AI cell (one row's computed value). */
+export interface OgeAiCellMessages {
+  /** Screen-reader text of the loading skeleton. */
+  readonly generating: string;
+  /** Shown when the value could not be computed. */
+  readonly error: string;
+  /** Accessible name of the retry button. */
+  readonly retry: string;
+  /** Shown when the model had no answer for the row. */
+  readonly empty: string;
+  readonly yes: string;
+  readonly no: string;
+}
+
 /** Every AI string, grouped per component. */
 export interface OgeAiMessages {
   readonly gridAssistant: OgeGridAssistantMessages;
   readonly smartPaste: OgeSmartPasteMessages;
+  readonly aiCell: OgeAiCellMessages;
 }
 
 /** The shipped English catalog. */
@@ -171,6 +186,14 @@ export const OGE_DEFAULT_AI_MESSAGES: OgeAiMessages = {
     ignored:
       '{count, plural, one {# value did not fit its field and was ignored.} other {# values did not fit their fields and were ignored.}}',
   },
+  aiCell: {
+    generating: 'Generating…',
+    error: 'Not available',
+    retry: 'Try again',
+    empty: '—',
+    yes: 'Yes',
+    no: 'No',
+  },
 };
 
 /**
@@ -233,6 +256,7 @@ export const OGE_DEFAULT_AI_CONFIG: OgeAiConfig = {
 export type OgeAiMessagesInput = {
   gridAssistant?: OgeGridAssistantMessagesInput;
   smartPaste?: Partial<OgeSmartPasteMessages>;
+  aiCell?: Partial<OgeAiCellMessages>;
 };
 
 /** A partial grid-assistant catalog (`slices` merged key by key). */
@@ -275,6 +299,7 @@ export function mergeOgeAiMessages(
       input.gridAssistant,
     ),
     smartPaste: { ...base.smartPaste, ...input.smartPaste },
+    aiCell: { ...base.aiCell, ...input.aiCell },
   };
 }
 

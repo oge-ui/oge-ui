@@ -12,6 +12,7 @@ import {
   type OgeAiResponse,
   type OgeAiTransport,
 } from '@oge-ui/behavior';
+import { demoAiColumnReply } from './ai-demo-ai-column';
 import { demoSmartPasteReply, unfencePastedText } from './ai-demo-smart-paste';
 
 export interface AiOrder {
@@ -406,7 +407,9 @@ export function createDemoAiTransport(
       const text = JSON.stringify(
         request.feature === 'smart-paste'
           ? demoSmartPasteReply(unfencePastedText(prompt), system)
-          : demoReply(prompt, system, options.now?.() ?? new Date()),
+          : request.feature === 'ai-column'
+            ? demoAiColumnReply(prompt, system)
+            : demoReply(prompt, system, options.now?.() ?? new Date()),
       );
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => resolve({ text }), options.delay ?? 650);

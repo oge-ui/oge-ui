@@ -5,6 +5,7 @@ import {
 } from '@oge-ui/behavior';
 import { describe, expect, it } from 'vitest';
 import { AI_DEMO_STATUSES, demoReply } from './ai-demo';
+import { demoAiColumnReply } from './ai-demo-ai-column';
 import { demoSmartPasteReply } from './ai-demo-smart-paste';
 
 const COLUMNS: OgeAiGridColumn[] = [
@@ -191,5 +192,23 @@ describe('the docs demo model — smart paste', () => {
       email: 'info@kaya.example',
     });
     expect(ask('roses are red')['status']).toBe('unsupported');
+  });
+});
+
+describe('the docs demo model — AI column', () => {
+  it('classifies each row from its input fields, within the listed values', () => {
+    const system =
+      'Value type: string, one of: "positive" (Positive), "neutral" (Neutral), "negative" (Negative).';
+    const reply = demoAiColumnReply(
+      'Rows: [{"key":1,"review":"Loved it"},{"key":2,"review":"Arrived damaged"},{"key":3,"review":"It is a lamp"}]',
+      system,
+    );
+    expect(reply).toEqual({
+      values: [
+        { key: 1, value: 'positive' },
+        { key: 2, value: 'negative' },
+        { key: 3, value: 'neutral' },
+      ],
+    });
   });
 });

@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/ai`
 
-- values: `OGE_AI_CONFIG`, `OGE_DEFAULT_AI_CONFIG`, `OGE_DEFAULT_AI_MESSAGES`, `OGE_GRID_AI_ALL_CAPABILITIES`, `OgeAiError`, `OgeGridAssistant`, `OgeSmartPaste`, `createOgeAiHttpTransport`, `createOgeAnthropicTransport`, `createOgeOpenAiTransport`, `provideOgeAiConfig`
-- types: `OgeAiAnthropicTransportOptions`, `OgeAiCallOptions`, `OgeAiConfig`, `OgeAiConfigInput`, `OgeAiErrorCode`, `OgeAiFetch`, `OgeAiFormField`, `OgeAiGridColumn`, `OgeAiGridColumnValue`, `OgeAiHttpTransportOptions`, `OgeAiJsonSchema`, `OgeAiMessage`, `OgeAiMessages`, `OgeAiMessagesInput`, `OgeAiOpenAiTransportOptions`, `OgeAiRequest`, `OgeAiResponse`, `OgeAiRole`, `OgeAiTransport`, `OgeAiTransportBaseOptions`, `OgeAiUsage`, `OgeGridAiCapabilities`, `OgeGridAiSlice`, `OgeGridAiWarning`, `OgeGridAiWarningKind`, `OgeGridAssistantAppliedEvent`, `OgeGridAssistantApplyingEvent`, `OgeGridAssistantConfig`, `OgeGridAssistantErrorEvent`, `OgeGridAssistantMessages`, `OgeGridAssistantMessagesInput`, `OgeGridAssistantMode`, `OgeGridAssistantProposal`, `OgeGridAssistantStatus`, `OgeGridAssistantTarget`, `OgeGridAssistantUndoneEvent`, `OgeSmartPasteAppliedEvent`, `OgeSmartPasteApplyingEvent`, `OgeSmartPasteChange`, `OgeSmartPasteConfig`, `OgeSmartPasteErrorEvent`, `OgeSmartPasteField`, `OgeSmartPasteMessages`, `OgeSmartPasteProposal`, `OgeSmartPasteStatus`, `OgeSmartPasteTarget`, `OgeSmartPasteUndoneEvent`, `OgeSmartPasteWarning`, `OgeSmartPasteWarningKind`
+- values: `OGE_AI_CONFIG`, `OGE_DEFAULT_AI_CONFIG`, `OGE_DEFAULT_AI_MESSAGES`, `OGE_GRID_AI_ALL_CAPABILITIES`, `OgeAiCell`, `OgeAiColumn`, `OgeAiError`, `OgeGridAssistant`, `OgeSmartPaste`, `createOgeAiColumn`, `createOgeAiHttpTransport`, `createOgeAnthropicTransport`, `createOgeOpenAiTransport`, `provideOgeAiConfig`
+- types: `OgeAiAnthropicTransportOptions`, `OgeAiCallOptions`, `OgeAiCellMessages`, `OgeAiCellState`, `OgeAiCellStatus`, `OgeAiColumnOptions`, `OgeAiConfig`, `OgeAiConfigInput`, `OgeAiErrorCode`, `OgeAiFetch`, `OgeAiFormField`, `OgeAiGridColumn`, `OgeAiGridColumnValue`, `OgeAiHttpTransportOptions`, `OgeAiJsonSchema`, `OgeAiMessage`, `OgeAiMessages`, `OgeAiMessagesInput`, `OgeAiOpenAiTransportOptions`, `OgeAiRequest`, `OgeAiResponse`, `OgeAiRole`, `OgeAiTransport`, `OgeAiTransportBaseOptions`, `OgeAiUsage`, `OgeGridAiCapabilities`, `OgeGridAiSlice`, `OgeGridAiWarning`, `OgeGridAiWarningKind`, `OgeGridAssistantAppliedEvent`, `OgeGridAssistantApplyingEvent`, `OgeGridAssistantConfig`, `OgeGridAssistantErrorEvent`, `OgeGridAssistantMessages`, `OgeGridAssistantMessagesInput`, `OgeGridAssistantMode`, `OgeGridAssistantProposal`, `OgeGridAssistantStatus`, `OgeGridAssistantTarget`, `OgeGridAssistantUndoneEvent`, `OgeSmartPasteAppliedEvent`, `OgeSmartPasteApplyingEvent`, `OgeSmartPasteChange`, `OgeSmartPasteConfig`, `OgeSmartPasteErrorEvent`, `OgeSmartPasteField`, `OgeSmartPasteMessages`, `OgeSmartPasteProposal`, `OgeSmartPasteStatus`, `OgeSmartPasteTarget`, `OgeSmartPasteUndoneEvent`, `OgeSmartPasteWarning`, `OgeSmartPasteWarningKind`
 
 ## API reference
 
@@ -254,9 +254,91 @@ _Smart paste_
 | `OgeSmartPasteConfig` | `{ mode; undoLimit; instructions }` | Defaults under `smartPaste` in the AI config: `"preview"`, 10 undo steps. |
 | `OgeSmartPasteMessages` | `{ label; textLabel; textPlaceholder; fill; pasteText; …; proposed; applied; ignored }` | `proposed`, `applied` and `ignored` are ICU plurals over `{count}`; `unsupported` takes `{summary}`. |
 
+### OgeAiCell — `<oge-ai-cell>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `column` | `OgeAiColumn<T>` | `—` | The column’s shared machine from `createOgeAiColumn()` — one per column, shared by every cell, so the visible rows batch into a few requests and values are cached per row. |
+| `row` | `T` | `—` | The row this cell shows; the column reads its key (`keyField`) and its `inputs` fields. |
+| `locale` | `string` | `undefined` | BCP 47 locale of number and date values; falls back to the config, then `LOCALE_ID`. |
+| `messages` | `Partial<OgeAiCellMessages>` | `undefined` | Per-instance string overrides, merged over the catalog. |
+
+#### Types
+
+_AI column_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `createOgeAiColumn(options)` | `<T>(options: OgeAiColumnOptions<T>) => OgeAiColumn<T>` | Creates the machine of one AI column. **It sends row data** — exactly the `inputs` fields of the rows being shown, nothing else. |
+| `OgeAiColumn` | `class OgeAiColumn<T> { options; key(row); request(row); state(key); valueOf(key); values(); fill(rows); refresh(key?); subscribe(key, listener); useTransport(t); destroy() }` | The machine itself (what `createOgeAiColumn()` returns): queues and batches cell requests, validates replies with `coerceOgeAiValue` (a choice column accepts only its listed values) and caches them per row key. |
+| `OgeAiColumnOptions` | `{ prompt; inputs: readonly string[]; keyField; dataType?: 'string' \| 'number' \| 'boolean' \| 'date'; values?; transport?; batchSize?; maxConcurrent?; maxLength?; instructions? }` | `values` restricts the answer to listed choices; `batchSize` (20) rows per request, `maxConcurrent` (2) requests at once, `maxLength` (200) characters per string value. Without `transport` the cells use the provider’s. |
+| `OgeAiColumn.request(row) / state(key) / valueOf(key)` | `(row: T) => void · (key: RowKey) => OgeAiCellState · (key: RowKey) => unknown` | Asks for a row once (until refreshed); reads its state (`idle` · `pending` · `done` · `error`) or its value. |
+| `OgeAiColumn.values() / fill(rows)` | `() => ReadonlyMap<RowKey, unknown> · (rows: readonly T[]) => Promise<ReadonlyMap<RowKey, unknown>>` | Every value computed so far, or compute some rows and await them — write them into your data to sort, filter, export or persist. |
+| `OgeAiColumn.refresh(key?) / subscribe(key, listener) / destroy()` | `(key?: RowKey) => void · (key, () => void) => () => void · () => void` | Forgets one or all values (shown cells ask again), watches a row, aborts everything. |
+| `OgeAiCellMessages` | `{ generating; error; retry; empty; yes; no }` | Under `messages.aiCell` in the AI config; every `@oge-ui/locales` pack carries them. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Ai column
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeAiCell, createOgeAiColumn } from '@oge-ui/ai';
+import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+interface Review {
+  id: number;
+  product: string;
+  review: string;
+  stars: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeAiCell, OgeCellTemplate, OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The AI column sends exactly the fields it names in \`inputs\` — here the
+         review text of the visible rows, in one batched request. Values are
+         validated against the listed choices and cached per row. -->
+    <oge-grid [data]="reviews" keyField="id">
+      <oge-column field="product" caption="Product" />
+      <oge-column field="review" caption="Review" />
+      <oge-column field="stars" caption="Stars" dataType="number" [width]="80" />
+      <oge-column caption="Sentiment" [width]="140">
+        <ng-container *ogeCellTemplate="let value; let row = row">
+          <oge-ai-cell [column]="sentiment" [row]="row" />
+        </ng-container>
+      </oge-column>
+    </oge-grid>
+
+    <button type="button" (click)="sentiment.refresh()">Recompute</button>
+  `,
+})
+export class Demo {
+  protected readonly reviews: Review[] = [
+    { id: 1, product: 'Desk lamp', review: 'Loved it — bright, sturdy and arrived fast.', stars: 5 },
+    { id: 2, product: 'Office chair', review: 'Arrived damaged and support was rude.', stars: 1 },
+    { id: 3, product: 'Keyboard', review: 'Does the job. Keys are a bit loud.', stars: 3 },
+  ];
+
+  /** One machine per column, shared by every cell (uses the provider's transport). */
+  protected readonly sentiment = createOgeAiColumn<Review>({
+    prompt: "Classify the review's sentiment",
+    inputs: ['review'],
+    keyField: 'id',
+    values: [
+      { value: 'positive', text: 'Positive' },
+      { value: 'neutral', text: 'Neutral' },
+      { value: 'negative', text: 'Negative' },
+    ],
+  });
+}
+```
 
 ### Apply
 

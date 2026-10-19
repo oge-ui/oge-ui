@@ -227,6 +227,10 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-smart-paste [target]="form" />` next to `<oge-form #form>` — reads the clipboard (falls back to a text box), shows Now → New values, Apply / Undo; values are validated against each field\'s type and choices, current values are never sent',
     },
     {
+      need: 'an AI-computed grid column (sentiment, category, summary per row)',
+      use: "`sentiment = createOgeAiColumn({ prompt, inputs: ['review'], keyField: 'id', values })` and `<oge-ai-cell [column]=\"sentiment\" [row]=\"row\" />` inside the column's `*ogeCellTemplate` — it sends only the `inputs` fields of the visible rows, batched and cached; `sentiment.values()` returns the results",
+    },
+    {
       need: 'keep a column or data away from the AI model',
       use: 'the model never receives rows — only column names, types and lookup values; pass `[columns]` to add `description`s or omit a column, `[capabilities]="{ columns: false }"` to switch a part of the state off',
     },

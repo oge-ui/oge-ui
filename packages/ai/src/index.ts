@@ -1,5 +1,7 @@
 export {
+  createOgeAiColumn,
   createOgeAiHttpTransport,
+  OgeAiColumn,
   createOgeAnthropicTransport,
   createOgeOpenAiTransport,
   OGE_AI_CONFIG,
@@ -57,6 +59,11 @@ export {
   type OgeSmartPasteUndoneEvent,
   type OgeSmartPasteWarning,
   type OgeSmartPasteWarningKind,
+  type OgeAiCellMessages,
+  type OgeAiCellState,
+  type OgeAiCellStatus,
+  type OgeAiColumnOptions,
 } from './lib/config';
 export { OgeGridAssistant } from './lib/grid-assistant/grid-assistant';
 export { OgeSmartPaste } from './lib/smart-paste/smart-paste';
+export { OgeAiCell } from './lib/ai-cell/ai-cell';

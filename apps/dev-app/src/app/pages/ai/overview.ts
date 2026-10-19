@@ -8,6 +8,8 @@ import {
 import { RouterLink } from '@angular/router';
 import {
   createOgeOpenAiTransport,
+  createOgeAiColumn,
+  OgeAiCell,
   OgeGridAssistant,
   OgeSmartPaste,
   type OgeAiGridColumn,
@@ -17,7 +19,7 @@ import {
   type OgeGridAssistantApplyingEvent,
 } from '@oge-ui/ai';
 import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
-import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
@@ -32,8 +34,14 @@ import {
   makeAiOrders,
   type AiOrder,
 } from './ai-demo';
+import {
+  AI_DEMO_REVIEWS,
+  AI_DEMO_SENTIMENTS,
+  type AiReview,
+} from './ai-demo-ai-column';
 import { SMART_PASTE_SAMPLE } from './ai-demo-smart-paste';
 import {
+  AI_COLUMN_SNIPPET,
   APPLY_SNIPPET,
   CONFIG_SNIPPET,
   EVENTS_SNIPPET,
@@ -48,6 +56,7 @@ const SECTIONS = [
   'What the model sees',
   'Events',
   'Smart paste',
+  'AI column',
   'Transports and configuration',
 ] as const;
 
@@ -76,6 +85,8 @@ export function inspectingTransport(
     OgeGridAssistant,
     OgeSmartPaste,
     OgeForm,
+    OgeAiCell,
+    OgeCellTemplate,
     ReactAiOverviewDemos,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -382,6 +393,33 @@ export function inspectingTransport(
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['createOgeAiColumn', 'oge-ai-cell', 'inputs', 'batching']"
+        heading="AI column"
+        description="Each Sentiment cell is computed by the model from the row’s review text — and only that field: the column names it in &lt;code&gt;inputs&lt;/code&gt;. The visible rows go out in one batched request, the values are cached per row, a failed cell offers a retry."
+        [code]="aiColumnSnippet"
+        language="ts"
+      >
+        <oge-grid [data]="reviews" keyField="id">
+          <oge-column field="product" caption="Product" [width]="140" />
+          <oge-column field="review" caption="Review" />
+          <oge-column
+            field="stars"
+            caption="Stars"
+            dataType="number"
+            [width]="80"
+          />
+          <oge-column caption="Sentiment" [width]="140">
+            <ng-container *ogeCellTemplate="let value; let row = row">
+              <oge-ai-cell [column]="sentiment" [row]="row" />
+            </ng-container>
+          </oge-column>
+        </oge-grid>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="button" (click)="sentiment.refresh()">Recompute</button>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="[
           'provideOgeAiConfig',
           'createOgeOpenAiTransport',
@@ -451,6 +489,19 @@ export class AiOverviewPage {
   protected readonly eventsSnippet = EVENTS_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
   protected readonly smartPasteSnippet = SMART_PASTE_SNIPPET;
+  protected readonly aiColumnSnippet = AI_COLUMN_SNIPPET;
+
+  protected readonly reviews: AiReview[] = AI_DEMO_REVIEWS;
+  protected readonly sentiment = createOgeAiColumn<AiReview>({
+    prompt: "Classify the review's sentiment",
+    inputs: ['review'],
+    keyField: 'id',
+    values: AI_DEMO_SENTIMENTS,
+    transport: {
+      complete: (request, options) =>
+        this.transport().complete(request, options),
+    },
+  });
 
   protected readonly sample = SMART_PASTE_SAMPLE;
   protected readonly customer = signal({

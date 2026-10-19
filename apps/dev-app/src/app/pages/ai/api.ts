@@ -6,12 +6,17 @@ import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
 import { ReactAiApiSections } from '../react-ai/api';
 import { OGE_AI_API } from './ai-api-data';
+import { OGE_AI_CELL_API } from './ai-column-api-data';
 import { OGE_SMART_PASTE_API } from './smart-paste-api-data';
 
-const SECTIONS = ['OgeGridAssistant', 'OgeSmartPaste'] as const;
+const SECTIONS = ['OgeGridAssistant', 'OgeSmartPaste', 'OgeAiCell'] as const;
 
 /** TOC of the React view — must mirror `ReactAiApiSections`' titles. */
-const SECTIONS_REACT = ['<OgeGridAssistant>', '<OgeSmartPaste>'] as const;
+const SECTIONS_REACT = [
+  '<OgeGridAssistant>',
+  '<OgeSmartPaste>',
+  '<OgeAiCell>',
+] as const;
 
 @Component({
   selector: 'app-ai-api',
@@ -53,6 +58,11 @@ const SECTIONS_REACT = ['<OgeGridAssistant>', '<OgeSmartPaste>'] as const;
         selector="oge-smart-paste"
         [sections]="smartPasteApi"
       />
+      <app-api-reference
+        title="OgeAiCell"
+        selector="oge-ai-cell"
+        [sections]="aiCellApi"
+      />
     }
   `,
 })
@@ -62,4 +72,5 @@ export class AiApiPage {
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly aiApi = OGE_AI_API;
   protected readonly smartPasteApi = OGE_SMART_PASTE_API;
+  protected readonly aiCellApi = OGE_AI_CELL_API;
 }

@@ -164,6 +164,11 @@ data in the prompt, so instructions inside it are not followed; read-only
 fields are never offered, and every value is validated against its field
 before the Now → New table shows it.
 
+An AI column (`createOgeAiColumn`) is the one AI feature that sends row data:
+exactly the `inputs` fields it names, for the rows being shown, fenced as
+data in the prompt. Name only the fields the model needs; answers are
+validated against the column's type and choices before a cell shows them.
+
 The vendor transports (`createOgeOpenAiTransport`,
 `createOgeAnthropicTransport`) refuse to send an `apiKey` from a browser
 unless `dangerouslyAllowBrowser` is set: a key in client code is readable by

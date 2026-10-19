@@ -409,6 +409,14 @@ export const de: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'Wird erzeugt…',
+      error: 'Nicht verfügbar',
+      retry: 'Erneut versuchen',
+      empty: '—',
+      yes: 'Ja',
+      no: 'Nein',
+    },
     smartPaste: {
       label: 'Intelligent einfügen',
       textLabel: 'Text, aus dem das Formular gefüllt wird',

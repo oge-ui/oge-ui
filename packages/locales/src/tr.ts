@@ -401,6 +401,14 @@ export const tr: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'Oluşturuluyor…',
+      error: 'Kullanılamıyor',
+      retry: 'Tekrar dene',
+      empty: '—',
+      yes: 'Evet',
+      no: 'Hayır',
+    },
     smartPaste: {
       label: 'Akıllı yapıştır',
       textLabel: 'Formun doldurulacağı metin',

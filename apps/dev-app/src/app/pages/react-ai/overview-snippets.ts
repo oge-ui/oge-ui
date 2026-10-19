@@ -255,6 +255,62 @@ const [customer, setCustomer] = useState<Customer>({
     }),
   },
   {
+    title: 'AI column',
+    source: reactDemoSource({
+      react: ['useMemo'],
+      use: {
+        '@oge-ui/react-ai': ['OgeAiCell', 'createOgeAiColumn'],
+        '@oge-ui/react-grid': ['OgeGrid'],
+      },
+      types: { '@oge-ui/react-grid': ['OgeGridColumnProps'] },
+      name: 'ReviewsWithSentiment',
+      before: `interface Review {
+  id: number;
+  product: string;
+  review: string;
+  stars: number;
+}
+
+const reviews: Review[] = [
+  { id: 1, product: 'Desk lamp', review: 'Loved it — bright, sturdy and arrived fast.', stars: 5 },
+  { id: 2, product: 'Office chair', review: 'Arrived damaged and support was rude.', stars: 1 },
+  { id: 3, product: 'Keyboard', review: 'Does the job. Keys are a bit loud.', stars: 3 },
+];`,
+      body: `// One machine per column, shared by every cell. It sends exactly the fields
+// named in \`inputs\` — here the review text of the visible rows, batched.
+const sentiment = useMemo(
+  () =>
+    createOgeAiColumn<Review>({
+      prompt: "Classify the review's sentiment",
+      inputs: ['review'],
+      keyField: 'id',
+      values: [
+        { value: 'positive', text: 'Positive' },
+        { value: 'neutral', text: 'Neutral' },
+        { value: 'negative', text: 'Negative' },
+      ],
+    }),
+  [],
+);
+const columns: OgeGridColumnProps<Review>[] = [
+  { field: 'product', caption: 'Product' },
+  { field: 'review', caption: 'Review' },
+  { field: 'stars', caption: 'Stars', dataType: 'number', width: 80 },
+  {
+    caption: 'Sentiment',
+    width: 140,
+    renderCell: ({ row }) => <OgeAiCell column={sentiment} row={row} />,
+  },
+];`,
+      jsx: `<>
+  <OgeGrid data={reviews} keyField="id" columns={columns} />
+  <button type="button" onClick={() => sentiment.refresh()}>
+    Recompute
+  </button>
+</>`,
+    }),
+  },
+  {
     title: 'Transports and configuration',
     source: reactDemoSource({
       use: {

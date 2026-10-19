@@ -427,6 +427,7 @@
         "bootstrap": "var(--bs-border-radius, 6px)"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/behavior",
         "@oge-ui/bpmn",
         "@oge-ui/buttons",
@@ -934,6 +935,7 @@
         "hc": "#bfbfbf"
       },
       "u": [
+        "@oge-ui/ai",
         "@oge-ui/grid",
         "@oge-ui/layout"
       ]

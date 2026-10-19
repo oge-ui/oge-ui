@@ -408,6 +408,14 @@ export const ptBR: OgeLocalePack = {
   },
 
   ai: {
+    aiCell: {
+      generating: 'Gerando…',
+      error: 'Indisponível',
+      retry: 'Tentar novamente',
+      empty: '—',
+      yes: 'Sim',
+      no: 'Não',
+    },
     smartPaste: {
       label: 'Colar inteligente',
       textLabel: 'Texto para preencher o formulário',

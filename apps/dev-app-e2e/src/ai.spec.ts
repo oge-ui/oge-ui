@@ -18,6 +18,13 @@ const LAYERS = [
 const card = (page: Page, id: string) =>
   page.locator(`app-demo-card:has(#${id})`);
 
+/**
+ * The AI page renders five grids and a form in both layers; under a parallel
+ * run the first demo can take a few seconds to mount, so the first wait on a
+ * page gets more than the default 5 s.
+ */
+const FIRST_PAINT = { timeout: 15_000 };
+
 for (const layer of LAYERS) {
   test.describe(`${layer.name}: AI grid assistant`, () => {
     const route = `/components/ai${layer.query}`;
@@ -29,7 +36,7 @@ for (const layer of LAYERS) {
         await page.goto(route);
         const demo = card(page, 'getting-started');
         const assistant = demo.getByRole('group', { name: 'Ask the grid' });
-        await expect(assistant).toBeVisible();
+        await expect(assistant).toBeVisible(FIRST_PAINT);
         const ordered = demo.locator('.oge-header-cell', {
           hasText: 'Ordered',
         });
@@ -109,7 +116,7 @@ for (const layer of LAYERS) {
       const demo = card(page, 'smart-paste');
       const paste = demo.getByRole('group', { name: 'Smart paste' });
       const name = demo.getByRole('textbox', { name: 'Full name' });
-      await expect(name).toHaveValue('');
+      await expect(name).toHaveValue('', FIRST_PAINT);
 
       await demo.getByRole('button', { name: 'Try the sample text' }).click();
       const proposal = paste.getByRole('group', { name: 'Proposed values' });
@@ -119,7 +126,7 @@ for (const layer of LAYERS) {
       await expect(rows.first()).toContainText('Full name');
       await expect(rows.first()).toContainText('Ada Lovelace');
       // nothing reaches the form before Apply
-      await expect(name).toHaveValue('');
+      await expect(name).toHaveValue('', FIRST_PAINT);
 
       await proposal.getByRole('button', { name: 'Apply' }).click();
       await expect(name).toHaveValue('Ada Lovelace');
@@ -129,7 +136,7 @@ for (const layer of LAYERS) {
       await expect(paste.getByRole('status')).toHaveText('7 fields filled.');
 
       await paste.getByRole('button', { name: 'Undo' }).click();
-      await expect(name).toHaveValue('');
+      await expect(name).toHaveValue('', FIRST_PAINT);
       await expect(paste.getByRole('status')).toHaveText('Values restored.');
     });
 
@@ -159,6 +166,29 @@ for (const layer of LAYERS) {
       await expect(
         paste.getByRole('group', { name: 'Proposed values' }),
       ).toContainText('Kaya Mimarlık');
+    });
+
+    test('the AI column fills every visible row and recomputes on demand', async ({
+      page,
+    }) => {
+      await page.goto(route);
+      const demo = card(page, 'ai-column');
+      const cells = demo.locator('.oge-ai-cell');
+      await expect(cells).toHaveCount(8, FIRST_PAINT);
+      await expect(demo.locator('.oge-ai-cell[aria-busy="true"]')).toHaveCount(
+        0,
+        FIRST_PAINT,
+      );
+      await expect(cells.nth(0)).toHaveText('Positive');
+      await expect(cells.nth(1)).toHaveText('Negative');
+      await expect(cells.nth(2)).toHaveText('Neutral');
+      await expect(cells.nth(6)).toHaveText('Positive');
+      await expect(demo.locator('.oge-ai-cell[aria-busy="true"]')).toHaveCount(
+        0,
+      );
+
+      await demo.getByRole('button', { name: 'Recompute' }).click();
+      await expect(cells.nth(0)).toHaveText('Positive');
     });
   });
 }
