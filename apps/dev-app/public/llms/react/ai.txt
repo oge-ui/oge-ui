@@ -2,7 +2,7 @@
 
 > React AI components that work with any model — <OgeGridAssistant> turns a sentence into validated sort, filter, grouping, search and column changes on an <OgeGrid>, <OgeSmartPaste> fills an <OgeForm> from copied text, both with preview, apply and undo — running the same machines, transports and stylesheet as the Angular AI package.
 
-Part of OGE UI v1.1.4.
+Part of OGE UI v1.1.5.
 Docs and live demos: https://www.ogeui.com/components/ai
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

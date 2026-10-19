@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-ai",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "React AI components from the OGE UI suite that work with any model: a natural-language grid assistant that turns \"orders over 500 from last month, newest first\" into validated sort, filter, grouping and column changes, with preview, apply and undo — running the same assistant machine, transports and stylesheet as the Angular @oge-ui/ai package. Bring your own model: OpenAI-compatible (OpenAI, Azure, Ollama, vLLM), Anthropic or your own backend; no hosted service, no row data sent.",
   "keywords": [
     "react",
@@ -43,7 +43,7 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.4"
+    "@oge-ui/behavior": "1.1.5"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {
