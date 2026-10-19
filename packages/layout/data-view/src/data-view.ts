@@ -6,8 +6,10 @@ import {
   Injector,
   LOCALE_ID,
   PLATFORM_ID,
+  DestroyRef,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   computed,
   contentChild,
   inject,
@@ -37,6 +39,7 @@ import {
   ogeDataViewTabStop,
   ogeDataViewToggleSelection,
   ogeIsRtl,
+  createOgeLayoutAnimator,
   OGE_DATA_VIEW_DEFAULT_MIN_ITEM_WIDTH,
   type OgeDataViewPagerEntry,
 } from '@oge-ui/behavior';
@@ -245,6 +248,7 @@ const SKELETON_COUNT = 6;
               [class.oge-data-view-item-selected]="isSelected(i)"
               [attr.aria-selected]="isSelected(i)"
               [attr.data-oge-data-view-index]="i"
+              [attr.data-oge-data-view-key]="keys()[i]"
               [tabindex]="i === tabStop() ? 0 : -1"
               (keydown)="onOptionKeydown($event, i)"
               (focus)="focusIndex.set(i)"
@@ -278,6 +282,7 @@ const SKELETON_COUNT = 6;
               role="listitem"
               class="oge-data-view-item"
               [attr.data-oge-data-view-index]="i"
+              [attr.data-oge-data-view-key]="keys()[i]"
             >
               <ng-container
                 *ngTemplateOutlet="body; context: { item: item, index: i }"
@@ -550,6 +555,31 @@ export class OgeDataView<T = unknown> {
       ogeDataViewKey(item, keyExpr, offset + i),
     );
   });
+  /**
+   * FLIPs the items on a filter, sort or page change: kept items glide to
+   * their new slot, new ones fade in and leaving ones fade out through exit
+   * ghosts (the real nodes go at once). The first render only records.
+   */
+  private readonly itemLayout = createOgeLayoutAnimator<string>({
+    root: this.host.nativeElement,
+    query: () =>
+      Array.from(
+        this.host.nativeElement.querySelectorAll<HTMLElement>(
+          '.oge-data-view-items > [data-oge-data-view-key]',
+        ),
+        (el) => [el.getAttribute('data-oge-data-view-key') ?? '', el] as const,
+      ),
+    exitParent: () => this.host.nativeElement.parentElement,
+  });
+
+  constructor() {
+    afterRenderEffect(() => {
+      this.keys();
+      void this.itemLayout.play();
+    });
+    inject(DestroyRef).onDestroy(() => this.itemLayout.cancel());
+  }
+
   protected readonly filtered = computed(
     () => this.items().length > 0 && this.total() === 0,
   );

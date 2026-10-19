@@ -43,6 +43,8 @@ import {
   splitterTracks,
   splitterTracksToSizes,
   startSplitterDrag,
+  createOgeTrackAnimator,
+  type OgeTrackAnimator,
   type OgeSplitTrack,
   type OgeSplitterDataSourceLike,
   type OgeSplitterDescriptorCore,
@@ -247,6 +249,24 @@ export const OgeSplitter: ForwardRefExoticComponent<
     const separatorRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const horizontal = orientation === 'horizontal';
+
+    /**
+     * Animates the grid tracks on a collapse / expand toggle (base duration,
+     * standard curve) — never during a drag, which follows the pointer.
+     */
+    const trackMotion = useRef<OgeTrackAnimator | null>(null);
+    const trackMotionPending = useRef(false);
+    const tracksAnimator = (): OgeTrackAnimator | null => {
+      const host = hostRef.current;
+      if (!host) return null;
+      trackMotion.current ??= createOgeTrackAnimator(host, {
+        property: () =>
+          latest.current.props.orientation === 'vertical'
+            ? 'grid-template-rows'
+            : 'grid-template-columns',
+      });
+      return trackMotion.current;
+    };
     const flippedOrientation: OgeSplitterOrientation = horizontal
       ? 'vertical'
       : 'horizontal';
@@ -437,6 +457,14 @@ export const OgeSplitter: ForwardRefExoticComponent<
       // decides which axis is measured.
     }, [tracks, separatorSize, orientation, resizingIndex, syncMeasurement]);
 
+    // A collapse / expand captured the old tracks; glide to the new ones.
+    useLayoutEffect(() => {
+      if (!trackMotionPending.current) return;
+      trackMotionPending.current = false;
+      void trackMotion.current?.play();
+    }, [gridTemplate]);
+    useEffect(() => () => trackMotion.current?.cancel(), []);
+
     const separatorRanges = useMemo(() => {
       // Before the first measurement lands the host size is unknown. A
       // splitter of share panes is unit-free, so the same fallback the
@@ -539,6 +567,9 @@ export const OgeSplitter: ForwardRefExoticComponent<
         restoreSizes.current.set(d.id, snapshotSizes()[index]);
         blurInside(index);
       }
+      // snapshot the tracks before the write; the next commit animates them
+      tracksAnimator()?.capture();
+      trackMotionPending.current = true;
       const next = new Set(latest.current.collapsedIds);
       if (collapse) next.add(d.id);
       else next.delete(d.id);
@@ -650,6 +681,8 @@ export const OgeSplitter: ForwardRefExoticComponent<
       }
 
       p.onResizeStarted?.({ separatorIndex, sizes: startSizes, event });
+      // a resize lands at once: stop a collapse animation still running
+      trackMotion.current?.cancel();
       applyTracks(next);
       commitSizes();
       const sizes = snapshotSizes();
@@ -682,6 +715,8 @@ export const OgeSplitter: ForwardRefExoticComponent<
       if (flexiblePx <= 0) return;
 
       event.preventDefault();
+      // a drag follows the pointer: stop a collapse animation still running
+      trackMotion.current?.cancel();
       const startTracks = latest.current.tracks;
       const startSizes = snapshotSizes();
       const bounds = boundsAt(flexiblePx);

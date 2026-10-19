@@ -2,6 +2,7 @@
 
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -22,8 +23,10 @@ import {
   ogeChipRemoveLabel,
   ogeChipTabStop,
   ogeChipToggleSelection,
+  createOgeLayoutAnimator,
   ogeIsRtl,
   type OgeChipGridStop,
+  type OgeLayoutAnimator,
   type OgeChipItem,
   type OgeChipItemClickEvent,
   type OgeChipItemRemovedEvent,
@@ -204,6 +207,33 @@ export const OgeChipList = forwardRef<OgeChipListHandle, OgeChipListProps>(
       index: number;
       then: 'next' | 'prev';
     } | null>(null);
+    /**
+     * FLIPs the chips: on a removal the rest glide into the gap and the
+     * removed chip fades out through an exit ghost (the real node goes at
+     * once). Chips enter through their own CSS keyframe.
+     */
+    const layout = useRef<OgeLayoutAnimator<string> | null>(null);
+    const chipLayout = (): OgeLayoutAnimator<string> | null => {
+      const host = hostRef.current;
+      if (!host) return null;
+      layout.current ??= createOgeLayoutAnimator<string>({
+        root: host,
+        query: () =>
+          Array.from(
+            host.querySelectorAll<HTMLElement>(':scope > [data-oge-chip-key]'),
+            (el) => [el.getAttribute('data-oge-chip-key') ?? '', el] as const,
+          ),
+        enter: false,
+        exitParent: () => host.parentElement,
+      });
+      return layout.current;
+    };
+    // the first commit only records the boxes
+    useIsomorphicLayoutEffect(() => {
+      void chipLayout()?.play();
+      // chipLayout only reads refs
+    }, [items]);
+    useEffect(() => () => layout.current?.cancel(), []);
     useIsomorphicLayoutEffect(() => {
       const p = pending.current;
       if (!p) return;
@@ -257,6 +287,8 @@ export const OgeChipList = forwardRef<OgeChipListHandle, OgeChipListProps>(
       };
       latest.current.onItemRemoving?.(removing);
       if (removing.cancel) return;
+      // snapshot before the app drops the chip; the next commit plays it
+      chipLayout()?.capture();
       pending.current = { count: items.length, index, then };
       latest.current.onItemRemoved?.({ item, index, event });
     };
@@ -378,6 +410,7 @@ export const OgeChipList = forwardRef<OgeChipListHandle, OgeChipListProps>(
             return (
               <div
                 key={item.key}
+                data-oge-chip-key={item.key}
                 role="option"
                 className={chipClass(item, selected)}
                 aria-selected={selected}
@@ -407,6 +440,7 @@ export const OgeChipList = forwardRef<OgeChipListHandle, OgeChipListProps>(
           items.map((item, i) => (
             <div
               key={item.key}
+              data-oge-chip-key={item.key}
               role="row"
               className={chipClass(item)}
               aria-disabled={isDisabled(item) ? true : undefined}
@@ -450,7 +484,12 @@ export const OgeChipList = forwardRef<OgeChipListHandle, OgeChipListProps>(
           ))}
         {role === 'list' &&
           items.map((item, i) => (
-            <div key={item.key} role="listitem" className={chipClass(item)}>
+            <div
+              key={item.key}
+              data-oge-chip-key={item.key}
+              role="listitem"
+              className={chipClass(item)}
+            >
               <span className="oge-chip-main">{body(item, i)}</span>
             </div>
           ))}

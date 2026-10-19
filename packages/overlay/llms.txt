@@ -329,10 +329,10 @@ _OgeToastRef_
 | --- | --- | --- |
 | `OgeToastSeverity` | `'info' \| 'success' \| 'warning' \| 'error'` | Toast severity. |
 | `OgeToastPosition` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | Logical, RTL-aware region positions. |
-| `OgeToastCloseReason` | `'timeout' \| 'closeButton' \| 'click' \| 'action' \| 'api' \| 'clear'` | Why a toast closed. |
+| `OgeToastCloseReason` | `'timeout' \| 'closeButton' \| 'click' \| 'action' \| 'api' \| 'clear' \| 'swipe'` | Why a toast closed — `'swipe'` when stack mode's swipe-to-dismiss sent it away. |
 | `OgeToastAction<D>` | `{ text: string; handler?: (event: OgeToastActionEvent<D>) => void }` | Inline action button. |
 | `OgeToastSlotContext<D>` | `{ $implicit: () => void; data?: D }` | Context of a `template` toast body. |
-| `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates` | Defaults via `provideOgeOverlayConfig()`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
+| `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates · toastStacked` | Defaults via `provideOgeOverlayConfig()`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
 
 ### OgeLiveAnnouncer
 
@@ -721,6 +721,7 @@ _OgeOverlayConfig_
 | `tooltipShowDelayMs / tooltipHideDelayMs` | `number` | `400 / 100` | Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides. |
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn: 'hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
+| `toastStacked` | `boolean` | `false` | Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason `'swipe'`). The moves glide on transforms; reduced motion switches at once. |
 | `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover and the action sheet: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose` and the action sheet’s `actionSheetCancel` / `actionSheetLabel` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
@@ -1671,6 +1672,39 @@ export class Demo {
     return fetch('/api/publish').then((response) => response.json());
   }
 }
+```
+
+### Stack
+
+```ts
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+import { OgeToastService, provideOgeOverlayConfig } from '@oge-ui/overlay';
+import type { ApplicationConfig } from '@angular/core';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Sync 4 folders" (clicked)="sync()" />
+  `,
+})
+export class Demo {
+  private readonly toasts = inject(OgeToastService);
+
+  // a collapsed deck: hover or focus expands it into a list (and pauses
+  // every timer in it); swipe a toast sideways to dismiss it
+  protected sync(): void {
+    for (const folder of ['Inbox', 'Drafts', 'Archive', 'Sent']) {
+      this.toasts.success(`${folder} synced`);
+    }
+  }
+}
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideOgeOverlayConfig({ toastStacked: true })],
+};
 ```
 
 ### Context delegation

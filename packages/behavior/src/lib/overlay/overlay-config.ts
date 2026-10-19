@@ -102,6 +102,11 @@ export interface OgeOverlayConfig extends OgeOverlayTimings {
   toastProgressBar: boolean;
   /** Coalesce identical toasts into one with a count badge by default. */
   toastCoalesceDuplicates: boolean;
+  /**
+   * Stack mode: each toast region collapses into a deck that expands on
+   * hover / focus-within; toasts swipe away sideways. Default `false`.
+   */
+  toastStacked: boolean;
   /** User-facing strings (modal/toast buttons and labels). */
   messages: OgeOverlayMessages;
 }
@@ -113,6 +118,7 @@ export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig = {
   toastMaxVisible: OGE_DEFAULT_TOAST_DEFAULTS.maxVisible,
   toastProgressBar: OGE_DEFAULT_TOAST_DEFAULTS.progressBar,
   toastCoalesceDuplicates: OGE_DEFAULT_TOAST_DEFAULTS.coalesceDuplicates,
+  toastStacked: OGE_DEFAULT_TOAST_DEFAULTS.stacked ?? false,
   messages: OGE_DEFAULT_OVERLAY_MESSAGES,
 };
 

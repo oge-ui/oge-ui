@@ -680,8 +680,9 @@ export const OGE_REACT_TOAST_API: ApiSections = {
         },
         {
           name: 'OgeToastCloseReason',
-          type: "'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear'",
-          description: 'Why a toast closed.',
+          type: "'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear' | 'swipe'",
+          description:
+            "Why a toast closed — <code>'swipe'</code> when stack mode's swipe-to-dismiss sent it away.",
         },
         {
           name: 'OgeToastAction&lt;D&gt;',
@@ -695,7 +696,7 @@ export const OGE_REACT_TOAST_API: ApiSections = {
         },
         {
           name: 'Config keys',
-          type: 'toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates',
+          type: 'toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates · toastStacked',
           description:
             'Defaults via <code>&lt;OgeOverlayConfigProvider&gt;</code>; strings via <code>messages.toastClose/toastRegionLabel/toastCountBadge</code>.',
         },
@@ -1810,6 +1811,13 @@ export const OGE_REACT_OVERLAY_CONFIG_API: ApiSections = {
           type: 'OgeToastPosition / number / number / boolean / boolean',
           default: "'bottom-end' / 4000 / 5 / false / false",
           description: 'Toast defaults.',
+        },
+        {
+          name: 'toastStacked',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason <code>'swipe'</code>). The moves glide on transforms; reduced motion switches at once.",
         },
         {
           name: 'messages',

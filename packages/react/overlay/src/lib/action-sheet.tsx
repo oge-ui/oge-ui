@@ -19,6 +19,7 @@ import {
   OGE_ACTION_SHEET_FOCUS_ATTR,
   OgeActionSheetCore,
   ogeActionSheetDividerIndex,
+  ogeActionSheetExitGhost,
   ogeActionSheetKeyIntent,
   ogeActionSheetOrder,
   ogeActionSheetTabStop,
@@ -200,10 +201,16 @@ export const OgeActionSheet = forwardRef<
   // activation follows the rendered layer; StrictMode's cleanup / remount
   // releases and re-takes the same modal state
   const wasOpen = useRef(false);
+  /** The rendered layer — unmounted (and its ref cleared) before the close's effect. */
+  const exitLayer = useRef<HTMLElement | null>(null);
   useIsomorphicLayoutEffect(() => {
     if (!isOpen) {
       if (wasOpen.current) {
         wasOpen.current = false;
+        // the layer is already gone: its ghost fades the backdrop and
+        // slides the sheet down
+        ogeActionSheetExitGhost(exitLayer.current);
+        exitLayer.current = null;
         setReady(false);
         setFocused(-1);
         settleRef.current(true);
@@ -211,6 +218,7 @@ export const OgeActionSheet = forwardRef<
       return;
     }
     wasOpen.current = true;
+    exitLayer.current = layerRef.current;
     core.activate();
     const frame = requestAnimationFrame(() => setReady(true));
     return () => {

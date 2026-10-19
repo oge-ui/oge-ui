@@ -29,7 +29,10 @@ async function openFrom(page: Page, cardId: string, label: string) {
 
 /** Waits until the sheet finished sliding in (geometry polled, never read once). */
 async function settled(page: Page) {
-  const sheet = page.locator('.oge-action-sheet-ready .oge-action-sheet');
+  // the closing sheet's exit ghost carries the same classes for a moment
+  const sheet = page.locator(
+    '.oge-action-sheet-ready:not(.oge-exit-ghost) .oge-action-sheet',
+  );
   await expect(sheet).toBeVisible();
   let previous = Number.NaN;
   await expect

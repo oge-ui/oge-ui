@@ -252,6 +252,21 @@ export const OgeStepper = forwardRef<OgeStepperHandle, OgeStepperProps>(
       keyIndex !== -1 ? keyIndex : (props.activeIndex ?? uncontrolledIndex);
     const activeKey = descriptors[activeIndex]?.key;
 
+    // Replays the panel fade on a step change (never on the first render):
+    // the phase alternates 1 ↔ 2, swapping between two identical keyframes —
+    // the tab-panel approach. Derived during render, so the class lands in
+    // the same commit as the newly shown panel (no unanimated first frame).
+    const [panelMotion, setPanelMotion] = useState<{
+      index: number;
+      phase: 0 | 1 | 2;
+    }>({ index: activeIndex, phase: 0 });
+    if (panelMotion.index !== activeIndex) {
+      setPanelMotion({
+        index: activeIndex,
+        phase: panelMotion.phase === 1 ? 2 : 1,
+      });
+    }
+
     const [changePending, setChangePendingState] = useState(false);
     const changePendingRef = useRef(false);
 
@@ -456,6 +471,8 @@ export const OgeStepper = forwardRef<OgeStepperHandle, OgeStepperProps>(
     const hostClassName = [
       'oge-stepper',
       orientation === 'vertical' && 'oge-stepper-vertical',
+      panelMotion.phase === 1 && 'oge-stepper-anim-a',
+      panelMotion.phase === 2 && 'oge-stepper-anim-b',
       linear && 'oge-stepper-linear',
       disabled && 'oge-disabled',
       className,

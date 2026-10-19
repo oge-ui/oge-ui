@@ -4,16 +4,20 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type FocusEvent as ReactFocusEvent,
   type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import {
   OgeToastCore,
   OgeToastRef,
+  beginOgeToastSwipe,
+  ogeLayoutToastStack,
   type OgeToastAction,
   type OgeToastBaseOptions,
   type OgeToastBasePatch,
@@ -21,6 +25,7 @@ import {
   type OgeToastEntry,
   type OgeToastPosition,
   type OgeToastPromiseBaseOptions,
+  type OgeToastRegion,
 } from '@oge-ui/behavior';
 import { useOgeLiveAnnouncer } from './live-announcer';
 import { useOgeOverlayConfig } from './overlay-config';
@@ -101,8 +106,12 @@ export interface OgeToastsHandle {
 }
 
 type Entry = OgeToastEntry<OgeToastOptions>;
+type Region = OgeToastRegion<OgeToastOptions>;
 
 const ToastsContext = createContext<OgeToastsHandle | null>(null);
+
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /** An inert handle for SSR / outside a provider: nothing renders. */
 function inertRef<D>(): OgeToastRef<D> {
@@ -143,6 +152,7 @@ export function OgeToastProvider({ children }: { children?: ReactNode }) {
       maxVisible: configRef.current.toastMaxVisible,
       progressBar: configRef.current.toastProgressBar,
       coalesceDuplicates: configRef.current.toastCoalesceDuplicates,
+      stacked: configRef.current.toastStacked ?? false,
     }),
     onChange: () => setVersion((v) => v + 1),
     // The core already waits before it writes, so the shared announcer
@@ -211,6 +221,53 @@ export function OgeToastProvider({ children }: { children?: ReactNode }) {
 
   const messages = config.messages;
 
+  // Stack mode: after every commit, give each live cell its depth and
+  // expanded offset (the stylesheet turns them into gliding transforms).
+  const regionEls = useRef(new Map<string, HTMLDivElement>());
+  useIsomorphicLayoutEffect(() => {
+    for (const region of regions) {
+      if (!region.stacked) continue;
+      const el = regionEls.current.get(region.position);
+      if (el) ogeLayoutToastStack(el);
+    }
+  });
+
+  const onRegionPointer = (
+    region: Region,
+    event: ReactPointerEvent<HTMLDivElement>,
+    entering: boolean,
+  ): void => {
+    if (!region.stacked) return;
+    // moves between the region's own toasts (and the gaps) change nothing
+    if (event.currentTarget.contains(event.relatedTarget as Node | null))
+      return;
+    core.setRegionExpanded(region.position, 'hover', entering);
+  };
+  const onRegionFocus = (
+    region: Region,
+    event: ReactFocusEvent<HTMLDivElement>,
+    entering: boolean,
+  ): void => {
+    if (!region.stacked) return;
+    if (event.currentTarget.contains(event.relatedTarget as Node | null))
+      return;
+    core.setRegionExpanded(region.position, 'focus', entering);
+  };
+  /** Stack mode: a sideways swipe dismisses the toast (reason `'swipe'`). */
+  const onToastPointerDown = (
+    region: Region,
+    entry: Entry,
+    event: ReactPointerEvent<HTMLDivElement>,
+  ): void => {
+    if (!region.stacked || !entry.options.closable || entry.closing) return;
+    beginOgeToastSwipe(event.nativeEvent, {
+      toast: event.currentTarget,
+      onFinish: (dismiss) => {
+        if (dismiss) core.dismiss(entry, 'swipe');
+      },
+    });
+  };
+
   const onToastClick = (entry: Entry, event: ReactMouseEvent): void => {
     if (!entry.options.closeOnClick) return;
     if ((event.target as HTMLElement).closest('button')) return;
@@ -244,9 +301,24 @@ export function OgeToastProvider({ children }: { children?: ReactNode }) {
       {regions.map((region) => (
         <div
           key={region.position}
-          className={`oge-toast-region oge-toast-region-${region.position}`}
+          ref={(el) => {
+            if (el) regionEls.current.set(region.position, el);
+            else regionEls.current.delete(region.position);
+          }}
+          className={[
+            'oge-toast-region',
+            `oge-toast-region-${region.position}`,
+            region.stacked && 'oge-toast-region-stacked',
+            region.expanded && 'oge-toast-region-expanded',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           role="region"
           aria-label={messages.toastRegionLabel}
+          onPointerOver={(event) => onRegionPointer(region, event, true)}
+          onPointerOut={(event) => onRegionPointer(region, event, false)}
+          onFocus={(event) => onRegionFocus(region, event, true)}
+          onBlur={(event) => onRegionFocus(region, event, false)}
         >
           {region.visible.map((entry) => {
             const options = entry.options;
@@ -272,6 +344,9 @@ export function OgeToastProvider({ children }: { children?: ReactNode }) {
                     .filter(Boolean)
                     .join(' ')}
                   onClick={(event) => onToastClick(entry, event)}
+                  onPointerDown={(event) =>
+                    onToastPointerDown(region, entry, event)
+                  }
                   onMouseEnter={() => core.pause(entry)}
                   onMouseLeave={() => core.resume(entry)}
                   onFocus={(event) => onFocusIn(entry, event)}

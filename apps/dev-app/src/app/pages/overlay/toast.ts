@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
@@ -26,7 +27,9 @@ import {
   COALESCE_SNIPPET,
   POSITION_SNIPPET,
   PROMISE_SNIPPET,
+  STACK_SNIPPET,
 } from './toast-snippets';
+import { TOAST_STACK_DEMO } from './toast-stack-demo';
 
 const SECTIONS = [
   'Severities',
@@ -34,6 +37,7 @@ const SECTIONS = [
   'Sticky, action & undo',
   'Promise toasts',
   'Coalescing & progress',
+  'Stack mode',
   'Live announcements without a toast',
 ] as const;
 
@@ -179,6 +183,24 @@ const SECTIONS = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['toastStacked', 'hover / focus expands', 'swipe']"
+        heading="Stack mode"
+        description="With <code>toastStacked</code> each region collapses into a deck: the newest toast in front, two more peeking behind it. Hovering it or moving focus into it expands the deck into a list and pauses every timer in it; a toast swipes away sideways (reason <code>'swipe'</code>). Every move glides on transforms — nothing reflows — and reduced motion just switches."
+        [code]="stackSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-center gap-3">
+          <oge-button
+            [text]="stacked() ? 'Stack mode: on' : 'Stack mode: off'"
+            stylingMode="outlined"
+            [attr.aria-pressed]="stacked()"
+            (clicked)="toggleStack()"
+          />
+          <oge-button text="Sync 4 folders" (clicked)="stackDemo()" />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['OgeLiveAnnouncer', 'polite / assertive', 'debounced']"
         heading="Live announcements without a toast"
         description="Toasts, the grid, the tree list, the Gantt and the uploader all speak through <code>OgeLiveAnnouncer</code> — one polite and one assertive visually hidden region per document, created on first use. Inject it for your own status messages: identical messages within a second are dropped, a newer one inside the write delay wins, and the region clears after a few seconds so a repeat is heard again. A no-op on the server."
@@ -204,7 +226,7 @@ const SECTIONS = [
           <code
             >&lt;OgeOverlayConfigProvider config={{ '{{' }} toastPosition,
             toastDisplayTime, toastMaxVisible, toastProgressBar,
-            toastCoalesceDuplicates {{ "}}" }}&gt;</code
+            toastCoalesceDuplicates, toastStacked {{ "}}" }}&gt;</code
           >; the ✕ label, region label and count badge localize via the
           <code>messages</code> block.
         </li>
@@ -213,8 +235,8 @@ const SECTIONS = [
           Defaults live in
           <code
             >provideOgeOverlayConfig(&#123; toastPosition, toastDisplayTime,
-            toastMaxVisible, toastProgressBar, toastCoalesceDuplicates
-            &#125;)</code
+            toastMaxVisible, toastProgressBar, toastCoalesceDuplicates,
+            toastStacked &#125;)</code
           >; the ✕ label, region label and count badge localize via the
           <code>messages</code> block.
         </li>
@@ -332,10 +354,31 @@ export class OverlayToastPage {
     });
   }
 
+  /** The root service's stack mode (a live config) — reset when the page goes. */
+  protected readonly stacked = TOAST_STACK_DEMO.asReadonly();
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => TOAST_STACK_DEMO.set(false));
+  }
+
+  protected toggleStack(): void {
+    // the regions re-read the mode on the next change — clear the old ones
+    this.toasts.clear();
+    TOAST_STACK_DEMO.update((on) => !on);
+  }
+
+  protected stackDemo(): void {
+    TOAST_STACK_DEMO.set(true);
+    for (const folder of ['Inbox', 'Drafts', 'Archive', 'Sent']) {
+      this.toasts.success(`${folder} synced`);
+    }
+  }
+
   protected readonly basicSnippet = BASIC_SNIPPET;
   protected readonly positionSnippet = POSITION_SNIPPET;
   protected readonly actionSnippet = ACTION_SNIPPET;
   protected readonly promiseSnippet = PROMISE_SNIPPET;
   protected readonly coalesceSnippet = COALESCE_SNIPPET;
   protected readonly announcerSnippet = ANNOUNCER_SNIPPET;
+  protected readonly stackSnippet = STACK_SNIPPET;
 }

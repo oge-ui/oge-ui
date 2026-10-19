@@ -20,6 +20,7 @@ import {
 import {
   OgeActionSheetCore,
   ogeActionSheetDividerIndex,
+  ogeActionSheetExitGhost,
   ogeActionSheetKeyIntent,
   ogeActionSheetOrder,
   ogeActionSheetTabStop,
@@ -296,6 +297,9 @@ export class OgeActionSheet {
           }
         } else if (wasOpen) {
           wasOpen = false;
+          // the layer is already gone: its ghost fades the backdrop and
+          // slides the sheet down
+          ogeActionSheetExitGhost(portaled);
           portaled = null;
           this.ready.set(false);
           this.focused.set(-1);

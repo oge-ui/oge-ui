@@ -27,6 +27,7 @@ import type { DataSource } from '@oge-ui/core';
 import {
   OGE_SPLITTER_GRIP_SIDES,
   canResizeSplitterAt,
+  createOgeTrackAnimator,
   isSplitterPaneCollapsed,
   isSplitterPaneCollapsible,
   loadSplitterPanes,
@@ -50,6 +51,7 @@ import {
   splitterTracksToSizes,
   startSplitterDrag,
   type OgeSplitTrack,
+  type OgeTrackAnimator,
   type OgeSplitterGripSide,
   type OgeSplitterMessages,
   type OgeSplitterOrientation,
@@ -215,6 +217,21 @@ export class OgeSplitter {
   private readonly config = inject(OGE_SPLITTER_CONFIG);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * Animates the grid tracks on a collapse / expand toggle (base duration,
+   * standard curve) — never during a drag, which follows the pointer.
+   */
+  private readonly trackMotion: OgeTrackAnimator = createOgeTrackAnimator(
+    this.host.nativeElement,
+    {
+      property: () =>
+        untracked(this.horizontal)
+          ? 'grid-template-columns'
+          : 'grid-template-rows',
+    },
+  );
+  private trackMotionPending = false;
 
   /** Unique DOM id prefix of this component instance. */
   protected readonly uid = `oge-splitter-${nextComponentId++}`;
@@ -501,9 +518,18 @@ export class OgeSplitter {
       untracked(() => this.syncMeasurement());
     });
 
+    // A collapse / expand captured the old tracks; glide to the new ones.
+    afterRenderEffect(() => {
+      this.gridTemplate();
+      if (!this.trackMotionPending) return;
+      this.trackMotionPending = false;
+      void this.trackMotion.play();
+    });
+
     this.destroyRef.onDestroy(() => {
       this.cancelHold();
       this.activeGestureCleanup?.();
+      this.trackMotion.cancel();
     });
   }
 
@@ -606,6 +632,8 @@ export class OgeSplitter {
     if (flexiblePx <= 0) return;
 
     event.preventDefault();
+    // a drag follows the pointer: stop a collapse animation still running
+    this.trackMotion.cancel();
     const startTracks = this.tracks();
     const startSizes = this.snapshotSizes();
     const bounds = this.boundsAt(flexiblePx);
@@ -800,6 +828,8 @@ export class OgeSplitter {
     }
 
     this.resizeStarted.emit({ separatorIndex, sizes: startSizes, event });
+    // a resize lands at once: stop a collapse animation still running
+    this.trackMotion.cancel();
     this.applyTracks(next);
     this.commitSizes();
     const sizes = this.snapshotSizes();
@@ -864,6 +894,9 @@ export class OgeSplitter {
       this.restoreSizes.set(d.id, this.snapshotSizes()[index]);
       this.blurInside(index);
     }
+    // snapshot the tracks before the write; the next render animates them
+    this.trackMotion.capture();
+    this.trackMotionPending = true;
     const next = new Set(this._collapsedIds());
     if (collapse) next.add(d.id);
     else next.delete(d.id);

@@ -44,15 +44,25 @@
   min-inline-size: 0;
 }
 
-// The connector between two steps. A pseudo-element rather than an extra node,
-// so the list stays one <li> per step for assistive tech. Its offset is
-// derived from the header padding and the indicator size, so it runs exactly
-// through the indicator's centre — including on two-line headers, where the
-// item's own centre would sit visibly lower.
-.oge-stepper-item + .oge-stepper-item::before {
+// The connector between two steps: `::before` draws the track and `::after`
+// the fill over it (both pseudo-elements rather than extra nodes, so the list
+// stays one <li> per step for assistive tech). A following item is a grid so
+// the two share the connector's cell. Their offset is derived from the header
+// padding and the indicator size, so the line runs exactly through the
+// indicator's centre — including on two-line headers, where the item's own
+// centre would sit visibly lower.
+.oge-stepper-item + .oge-stepper-item {
+  display: grid;
+  // the connector keeps its 12px minimum (+ 2 × 4px margin) and grows; the
+  // header takes its natural width and may shrink (its label ellipsises)
+  grid-template-columns: minmax(20px, 1fr) minmax(0, max-content);
+}
+
+.oge-stepper-item + .oge-stepper-item::before,
+.oge-stepper-item + .oge-stepper-item::after {
   content: '';
-  flex: 1 1 auto;
-  align-self: flex-start;
+  grid-area: 1 / 1;
+  align-self: start;
   block-size: 2px;
   min-inline-size: 12px;
   margin-inline: 4px;
@@ -61,14 +71,31 @@
     var(--oge-stepper-header-pad-y) + var(--oge-stepper-indicator-size) / 2
   );
   border-radius: 1px;
-  background: var(--oge-border-color);
-  transition: background-color var(--oge-stepper-transition);
 }
 
-// The line out of a completed step turns accent, so the rail itself shows how
-// far the process has come.
-.oge-stepper-item-done + .oge-stepper-item::before {
+.oge-stepper-item + .oge-stepper-item::before {
+  background: var(--oge-border-color);
+}
+
+// The line out of a completed step fills with accent towards the next step,
+// so the rail itself shows how far the process has come. A transform keeps
+// the fill on the compositor; the origin is the previous step's side.
+.oge-stepper-item + .oge-stepper-item::after {
   background: var(--oge-accent-25);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--oge-motion-duration-slow)
+    var(--oge-motion-easing-emphasized);
+}
+
+// transform has no logical axis — fill from the right under RTL.
+[dir='rtl'] .oge-stepper-item + .oge-stepper-item::after,
+.oge-stepper-item + .oge-stepper-item:dir(rtl)::after {
+  transform-origin: right center;
+}
+
+.oge-stepper-item-done + .oge-stepper-item::after {
+  transform: none;
 }
 
 .oge-stepper-vertical {
@@ -83,17 +110,37 @@
     flex: none;
   }
 
-  .oge-stepper-item + .oge-stepper-item::before {
-    align-self: auto;
+  .oge-stepper-item + .oge-stepper-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .oge-stepper-item + .oge-stepper-item::before,
+  .oge-stepper-item + .oge-stepper-item::after {
+    justify-self: start;
     inline-size: 2px;
     block-size: 14px;
     min-inline-size: 0;
     // Same derivation on the inline axis: header padding + half the
     // indicator, so the rail is flush with the indicator column in RTL too.
-    margin-inline-start: calc(
-      var(--oge-stepper-header-pad-x) + var(--oge-stepper-indicator-size) / 2
-    );
+    margin-inline: calc(
+        var(--oge-stepper-header-pad-x) + var(--oge-stepper-indicator-size) / 2
+      )
+      0;
     margin-block: 2px;
+  }
+
+  // a vertical rail fills downwards, in either direction
+  .oge-stepper-item + .oge-stepper-item::after {
+    transform: scaleY(0);
+  }
+
+  .oge-stepper-item + .oge-stepper-item::after,
+  .oge-stepper-item + .oge-stepper-item:dir(rtl)::after {
+    transform-origin: center top;
+  }
+
+  .oge-stepper-item-done + .oge-stepper-item::after {
+    transform: none;
   }
 }
 
@@ -244,6 +291,31 @@
   padding-block: 4px 12px;
 }
 
+// Step content fades in on every step change (not on the first render). Two
+// identical keyframes alternate on the host, the tab-panel approach:
+// re-assigning animation-name is what replays a CSS animation.
+@keyframes oge-stepper-panel-a {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes oge-stepper-panel-b {
+  from {
+    opacity: 0;
+  }
+}
+
+.oge-stepper-anim-a .oge-stepper-panel:not([hidden]) {
+  animation: oge-stepper-panel-a var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
+}
+
+.oge-stepper-anim-b .oge-stepper-panel:not([hidden]) {
+  animation: oge-stepper-panel-b var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
+}
+
 // --- the built-in nav bar -----------------------------------------------------
 
 .oge-stepper-nav {
@@ -304,7 +376,22 @@
 }
 
 @include tokens.reduced-motion {
-  .oge-stepper-item + .oge-stepper-item::before {
+  .oge-stepper-item + .oge-stepper-item::after {
     transition: none;
+  }
+
+  .oge-stepper-anim-a .oge-stepper-panel:not([hidden]),
+  .oge-stepper-anim-b .oge-stepper-panel:not([hidden]) {
+    animation: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-stepper-item + .oge-stepper-item::before {
+    background: GrayText;
+  }
+
+  .oge-stepper-item + .oge-stepper-item::after {
+    background: Highlight;
   }
 }

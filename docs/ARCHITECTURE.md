@@ -878,7 +878,16 @@ parent)` after their teardown (it takes the viewport box when a controlled close
     see an animation) and in a hidden tab; feedback that is not decoration (placeholders, the live
     preview) stays and just jumps. Drag ghosts lift (`--oge-drag-scale`, `--oge-shadow-drag`)
     and `createDragGhost(...).destroy(to)` / `beginPointerDragDrop({ settleTo })` settle them
-    onto the drop and glide them back on a cancel.
+    onto the drop and glide them back on a cancel. **Every `beginPointerDragDrop` consumer passes
+    `settleTo`**, answering the dragged item's element as rendered after the drop — looked up by
+    the item's key / `data-*` attribute, never kept from before (the node may be re-created):
+    `ogeOwnedElement(container, selector, attribute, value, hostSelector?)` is the lookup (values
+    compared literally, nested hosts skipped), `ogeGridRowElement` / `ogeGridHeaderSettleElement` /
+    `ogeTransferOptionElement` the family helpers (`beginOgeTreeDrag` settles on its own). Answer `null` where the
+    item lands outside the component (a cross-component row drop) — the ghost then just goes. A
+    hand-rolled drag preview (kanban) settles through the same `ogeSettleGhost` on a clone kept
+    inside the host (it needs the host's tokens), and its exits do not use `ogeExitGhost` for the
+    same reason (that clone lives on `document.body`).
   - **Row motion (grid families).** `animateRows` (default `true`, both layers) runs through
     `OgeRowMotionCore` (`@oge-ui/behavior`), not a hand-wired animator: the host calls
     `prepare({ nodes, start })` while the DOM still shows the old rows — Angular from a component
@@ -908,17 +917,28 @@ parent)` after their teardown (it takes the viewport box when a controlled close
     scrolling parent. Never use `enter` on a row a virtualizer measures right after it renders
     (`.oge-virtual .oge-detail-row` turns the transition off). The mixin drops the transition
     under reduced motion.
-
-    onto the drop and glide them back on a cancel. **Every `beginPointerDragDrop` consumer passes
-    `settleTo`**, answering the dragged item's element as rendered after the drop — looked up by
-    the item's key / `data-*` attribute, never kept from before (the node may be re-created):
-    `ogeOwnedElement(container, selector, attribute, value, hostSelector?)` is the lookup (values
-    compared literally, nested hosts skipped), `ogeGridRowElement` / `ogeGridHeaderSettleElement` /
-    `ogeTransferOptionElement` the family helpers (`beginOgeTreeDrag` settles on its own). Answer `null` where the
-    item lands outside the component (a cross-component row drop) — the ghost then just goes. A
-    hand-rolled drag preview (kanban) settles through the same `ogeSettleGhost` on a clone kept
-    inside the host (it needs the host's tokens), and its exits do not use `ogeExitGhost` for the
-    same reason (that clone lives on `document.body`).
+  - **Who uses which primitive.** Chip list, list view (non-virtualized) and data view FLIP their
+    keyed items with `createOgeLayoutAnimator` (`data-oge-*-key` attributes, `play()` after every
+    change of the rendered set — the first render only records) and pass
+    `exitParent: () => host.parentElement`: the ghost keeps the theme but never lands inside the
+    host, whose own `querySelector`s (and the animator's `query()`) would otherwise find it.
+    Chips enter through their CSS keyframe, so their animator runs `enter: false`. A component
+    that only appends (timeline) marks the keys new since the last render with an
+    `*-entering` class — memoised on `items`, so an unrelated re-render keeps it — instead of
+    animating the first render. Grid track sizes on a discrete toggle (splitter collapse /
+    expand) go through `createOgeTrackAnimator`: it animates between the _resolved_ pixel
+    tracks, so `fr` / `minmax()` templates interpolate, and is cancelled by any drag or keyboard
+    resize. Step / panel content fades in by alternating two identical keyframes on the host
+    (`*-anim-a` / `*-anim-b`) after the first render — the tab-panel approach. Connector or
+    progress fills are a `scaleX` / `scaleY` pseudo-element over the track pseudo (origin
+    mirrored under RTL, top in vertical layouts) with `-emphasized`.
+  - **Stacked toasts glide on transforms, not FLIP.** With `toastStacked` the cells of a region
+    share one grid area; `ogeLayoutToastStack(region)` writes each live cell's
+    `--oge-toast-depth` and `--oge-toast-stack-offset` after every render and the stylesheet
+    turns them into transitioned transforms (collapsed deck ↔ expanded list), so nothing
+    reflows. Expansion is engine state (`setRegionExpanded(position, 'hover' | 'focus', on)`),
+    which also pauses every toast in the region; swipe-to-dismiss is `beginOgeToastSwipe` on
+    the shared gesture machine (reason `'swipe'`).
   - Each animation is switched off in the file's `@include tokens.reduced-motion` block, and the
     final (non-animated) state is what the visual baselines capture — `animations: 'disabled'`
     must not change a pixel.

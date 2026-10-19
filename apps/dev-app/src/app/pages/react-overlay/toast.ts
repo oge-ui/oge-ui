@@ -6,6 +6,7 @@ import {
 import { createElement, useState, type ReactNode } from 'react';
 import { OgeButton } from '@oge-ui/react-buttons';
 import {
+  OgeOverlayConfigProvider,
   OgeToastProvider,
   useOgeLiveAnnouncer,
   useOgeToasts,
@@ -17,7 +18,7 @@ import { ReactHost } from '../../shared/react-host';
 import { OVERLAY_TOAST_DEMOS } from './toast-snippets';
 
 /**
- * TOC of the React view — the same six sections as the Angular toast page
+ * TOC of the React view — the same seven sections as the Angular toast page
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_OVERLAY_TOAST_SECTIONS = [
@@ -26,6 +27,7 @@ export const REACT_OVERLAY_TOAST_SECTIONS = [
   'Sticky, action & undo',
   'Promise toasts',
   'Coalescing & progress',
+  'Stack mode',
   'Live announcements without a toast',
 ] as const;
 
@@ -186,6 +188,21 @@ function CoalesceDemo(): ReactNode {
   );
 }
 
+function StackDemo(): ReactNode {
+  const toasts = useOgeToasts();
+  return row(
+    createElement(OgeButton, {
+      key: 'sync',
+      text: 'Sync 4 folders',
+      onClick: () => {
+        for (const folder of ['Inbox', 'Drafts', 'Archive', 'Sent']) {
+          toasts.success(`${folder} synced`);
+        }
+      },
+    }),
+  );
+}
+
 function AnnouncerDemo(): ReactNode {
   const announcer = useOgeLiveAnnouncer();
   const [announced, setAnnounced] = useState('');
@@ -208,7 +225,7 @@ function AnnouncerDemo(): ReactNode {
 }
 
 /**
- * The React half of the toast page — the same six demo sections as the
+ * The React half of the toast page — the same seven demo sections as the
  * Angular page, with the same example content, rendered as real React trees
  * inside `/components/overlay/toast` when the reader has chosen React
  * (ADR 0002).
@@ -274,10 +291,20 @@ function AnnouncerDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['toastStacked', 'hover / focus expands', 'swipe']"
+      heading="Stack mode"
+      description="With <code>toastStacked</code> each region collapses into a deck: the newest toast in front, two more peeking behind it. Hovering it or moving focus into it expands the deck into a list and pauses every timer in it; a toast swipes away sideways (reason <code>'swipe'</code>). Every move glides on transforms — nothing reflows — and reduced motion just switches."
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="stack" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['useOgeLiveAnnouncer', 'polite / assertive', 'debounced']"
       heading="Live announcements without a toast"
       description="Toasts, the grid, the tree list, the Gantt and the uploader all speak through <code>useOgeLiveAnnouncer()</code> — one polite and one assertive visually hidden region per document, created on first use, no provider needed. Use it for your own status messages: identical messages within a second are dropped, a newer one inside the write delay wins, and the region clears after a few seconds so a repeat is heard again. SSR-safe — call it from handlers or effects."
-      [code]="demos[5].source"
+      [code]="demos[6].source"
       language="tsx"
     >
       <app-react-host [render]="announcer" />
@@ -291,5 +318,11 @@ export class ReactOverlayToastDemos {
   protected readonly undo = () => withProvider(UndoDemo);
   protected readonly promise = () => withProvider(PromiseDemo);
   protected readonly coalesce = () => withProvider(CoalesceDemo);
+  protected readonly stack = () =>
+    createElement(
+      OgeOverlayConfigProvider,
+      { config: { toastStacked: true } },
+      withProvider(StackDemo),
+    );
   protected readonly announcer = () => createElement(AnnouncerDemo);
 }

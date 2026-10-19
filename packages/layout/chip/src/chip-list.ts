@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
   afterRenderEffect,
@@ -25,8 +26,10 @@ import {
   ogeChipRemoveLabel,
   ogeChipTabStop,
   ogeChipToggleSelection,
+  createOgeLayoutAnimator,
   ogeIsRtl,
   type OgeChipGridStop,
+  type OgeLayoutAnimator,
 } from '@oge-ui/behavior';
 import { OgeChipLead } from './chip-lead';
 import { OGE_CHIP_CONFIG, type OgeChipMessages } from './config';
@@ -42,6 +45,16 @@ import type {
   OgeChipSize,
   OgeChipStylingMode,
 } from './chip-types';
+
+/** The keyed chip elements of a list — the layout animator's set. */
+function chipElements(
+  root: HTMLElement,
+): Array<readonly [string, HTMLElement]> {
+  return Array.from(
+    root.querySelectorAll<HTMLElement>(':scope > [data-oge-chip-key]'),
+    (el) => [el.getAttribute('data-oge-chip-key') ?? '', el] as const,
+  );
+}
 
 interface PendingFocus {
   count: number;
@@ -103,6 +116,7 @@ interface PendingFocus {
         @for (item of items(); track item.key; let i = $index) {
           <div
             role="option"
+            [attr.data-oge-chip-key]="item.key"
             [class]="chipClass(item)"
             [class.oge-chip-selected]="isSelected(item)"
             [attr.aria-selected]="isSelected(item)"
@@ -141,6 +155,7 @@ interface PendingFocus {
         @for (item of items(); track item.key; let i = $index) {
           <div
             role="row"
+            [attr.data-oge-chip-key]="item.key"
             [class]="chipClass(item)"
             [attr.aria-disabled]="isDisabled(item) ? true : null"
           >
@@ -178,7 +193,11 @@ interface PendingFocus {
       }
       @default {
         @for (item of items(); track item.key; let i = $index) {
-          <div role="listitem" [class]="chipClass(item)">
+          <div
+            role="listitem"
+            [attr.data-oge-chip-key]="item.key"
+            [class]="chipClass(item)"
+          >
             <span class="oge-chip-main">
               <ng-container
                 *ngTemplateOutlet="body; context: { item: item, index: i }"
@@ -316,7 +335,27 @@ export class OgeChipList {
 
   private pending: PendingFocus | null = null;
 
+  /**
+   * FLIPs the chips: on a removal the rest glide into the gap and the removed
+   * chip fades out through an exit ghost (the real node goes at once).
+   */
+  private readonly layout: OgeLayoutAnimator<string> =
+    createOgeLayoutAnimator<string>({
+      root: this.host.nativeElement,
+      query: () => chipElements(this.host.nativeElement),
+      // chips enter through their own CSS keyframe (oge-chip-in)
+      enter: false,
+      exitParent: () => this.host.nativeElement.parentElement,
+    });
+
   constructor() {
+    // Glide the chips after every change of `items` — the first render only
+    // records the boxes, so nothing animates on load.
+    afterRenderEffect(() => {
+      this.items();
+      void this.layout.play();
+    });
+    inject(DestroyRef).onDestroy(() => this.layout.cancel());
     // After the app dropped a removed chip, move focus onto its neighbour.
     afterRenderEffect(() => {
       const count = this.items().length;
@@ -522,6 +561,8 @@ export class OgeChipList {
     };
     this.itemRemoving.emit(removing);
     if (removing.cancel) return;
+    // snapshot before the app drops the chip; the next render plays it
+    this.layout.capture();
     this.pending = { count: this.items().length, index, then };
     this.itemRemoved.emit({ item, index, event });
   }

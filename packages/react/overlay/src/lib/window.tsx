@@ -5,6 +5,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useReducer,
   useRef,
   useState,
@@ -21,8 +22,11 @@ import {
   isModalFocusOrphaned,
   modalCssSize,
   ogeOverlayMessage,
+  ogeRectOf,
+  ogeWindowExitGhost,
   ogeWindowZIndex,
   resolveOgeWindowInitialFocus,
+  type OgeRect,
   type OgeOverlayMessages,
   type OgeReactiveCell,
   type OgeReactivityAdapter,
@@ -42,6 +46,8 @@ import {
 } from '@oge-ui/behavior';
 import { useOgeOverlayConfig } from './overlay-config';
 
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
 /** Imperative handle, mirroring the Angular component's public methods. */
 export interface OgeWindowHandle {
   /** Whether the window is open right now. */
@@ -241,6 +247,12 @@ export const OgeWindow = forwardRef(function OgeWindowRender(
   latest.current = { props, opened, messages };
 
   const shown = useRef(false);
+  /** The rendered panel, its parent and box after the last commit — the exit ghost's source. */
+  const exitPanel = useRef<{
+    panel: HTMLElement;
+    parent: Element | null;
+    rect: OgeRect;
+  } | null>(null);
   const pendingFocus = useRef(false);
   const previouslyFocused = useRef<HTMLElement | null>(null);
   const actions = useRef({
@@ -311,7 +323,14 @@ export const OgeWindow = forwardRef(function OgeWindowRender(
   const finalizeClose = (reason: OgeWindowCloseReason): void => {
     if (!shown.current) return;
     const panel = panelRef.current;
+    // a controlled close (`opened` → false) unmounted the panel before this
+    // effect: the ghost then starts from the box of the last commit
+    const exit = exitPanel.current;
+    exitPanel.current = null;
     teardown();
+    // the fade-out runs on a ghost — the real panel still goes synchronously
+    if (panel) ogeWindowExitGhost(panel, panel.parentElement);
+    else if (exit) ogeWindowExitGhost(exit.panel, exit.parent, exit.rect);
     if (
       (latest.current.props.restoreFocus ?? true) &&
       previouslyFocused.current
@@ -331,6 +350,17 @@ export const OgeWindow = forwardRef(function OgeWindowRender(
     finalizeClose(reason);
   };
   actions.current.requestClose = requestClose;
+
+  useIsomorphicLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (panel) {
+      exitPanel.current = {
+        panel,
+        parent: panel.parentElement,
+        rect: ogeRectOf(panel),
+      };
+    }
+  });
 
   // `opened` prop ↔ DOM-side state; StrictMode's cleanup → remount re-opens.
   useEffect(() => {

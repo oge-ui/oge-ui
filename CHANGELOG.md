@@ -151,6 +151,44 @@ are versioned independently, which is the case here.
   `OGE_BUTTON_GROUP_PILL_CLASS`, `ogeTransferOptionEntries`,
   `createOgeFormItemMotion`, `OgeFormItemMotion`, `OGE_FORM_ITEM_ATTR`.
 
+### Layout, navigation and overlay motion — `@oge-ui/behavior`, `@oge-ui/layout`, `@oge-ui/react-layout`, `@oge-ui/navigation`, `@oge-ui/react-navigation`, `@oge-ui/overlay`, `@oge-ui/react-overlay`
+
+- **Chip list:** removing a chip glides the rest into the gap while the
+  removed one fades out (an exit ghost — the real node still goes at once,
+  so focus moves on exactly as before).
+- **Timeline:** entries appended after the first render fade in (keyed by
+  `key`, else their index); the first render and re-renders of known
+  entries never animate.
+- **Stepper:** the connector out of a completed step fills towards the next
+  one (a `scaleX` pseudo-element over the track, `scaleY` in the vertical
+  layout, mirrored under RTL) and the step content fades in on every step
+  change. The connector is now two pseudo-elements in a grid item; its
+  geometry is unchanged.
+- **Splitter:** collapsing or expanding a pane animates the grid tracks
+  (`--oge-motion-duration-base` + `-easing-standard`) between the resolved
+  sizes; drags and keyboard resizes never animate and stop a running one.
+- **List view / data view:** a filter, a sort, a load-more or a page change
+  glides the kept items to their new places, fades new ones in and leaving
+  ones out — the non-virtualized list only; virtual rows never animate.
+- **Overlays:** closing a floating window (`OgeWindow`) fades it out, and
+  closing the action sheet fades its backdrop while the sheet slides back
+  down — both through exit ghosts, with the real surface removed
+  synchronously.
+- **Toast stack mode — new `toastStacked` config (both layers, default
+  `false`).** Each toast region collapses into a deck — the newest toast in
+  front, two more peeking behind it — that expands into a list while the
+  pointer or focus is in it (pausing every timer in the region), and toasts
+  swipe away sideways (new close reason `'swipe'`). Every move glides on
+  transforms; reduced motion switches at once.
+- **Behavior API (additive):** `createOgeTrackAnimator`,
+  `ogeActionSheetExitGhost`, `ogeWindowExitGhost`, `ogeLayoutToastStack`,
+  `beginOgeToastSwipe`, `ogeToastSwipeDismisses`, `OGE_TOAST_STACK_VISIBLE`,
+  `OGE_TOAST_SWIPE_DISMISS`, `OgeToastCore.setRegionExpanded()` /
+  `isExpanded()`, `OgeToastRegion.stacked` / `.expanded`,
+  `OgeToastDefaults.stacked`; `createOgeLayoutAnimator` takes
+  `exitParent`, `enterKeyframes` and `exitKeyframes`; `ogeExitGhost` takes
+  `parts` (descendants of the ghost with their own keyframes).
+
 ### Tab and overlay motion — `@oge-ui/behavior`, `@oge-ui/tabs`, `@oge-ui/react-tabs`, `@oge-ui/overlay`, `@oge-ui/react-overlay`
 
 - **The tab ink slides.** Selecting another tab moves the underline from the

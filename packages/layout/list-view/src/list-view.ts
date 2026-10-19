@@ -26,6 +26,7 @@ import {
   beginPointerGesture,
   getOgeLiveAnnouncer,
   ogeIsRtl,
+  createOgeLayoutAnimator,
   ogeListViewActionFromTarget,
   ogeListViewActionShortcuts,
   ogeListViewActionsText,
@@ -333,6 +334,7 @@ interface SwipeState {
         [attr.role]="role() === 'listbox' ? 'option' : 'listitem'"
         [id]="itemId(row.key)"
         [attr.data-oge-list-index]="row.index"
+        [attr.data-oge-list-key]="settings() ? null : row.key"
         [attr.aria-selected]="role() === 'listbox' ? isSelected(row.key) : null"
         [attr.aria-disabled]="isDisabledAt(row.index) ? true : null"
         [attr.aria-setsize]="model().items.length"
@@ -621,6 +623,24 @@ export class OgeListView<T = unknown> {
 
   protected readonly loadMoreFn = () => this.requestMore('button');
 
+  /**
+   * FLIPs the rows of a non-virtualized list on a filter (search), sort or
+   * load-more: kept rows glide to their new place, new ones fade in and
+   * leaving ones fade out through exit ghosts (the real nodes go at once).
+   * Virtualized rows are re-created by scrolling, so they never animate.
+   */
+  private readonly rowLayout = createOgeLayoutAnimator<string>({
+    root: this.host.nativeElement,
+    query: () =>
+      Array.from(
+        this.host.nativeElement.querySelectorAll<HTMLElement>(
+          '[data-oge-list-key]',
+        ),
+        (el) => [el.getAttribute('data-oge-list-key') ?? '', el] as const,
+      ),
+    exitParent: () => this.host.nativeElement.parentElement,
+  });
+
   constructor() {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
@@ -634,6 +654,17 @@ export class OgeListView<T = unknown> {
       destroyRef.onDestroy(() => observer.disconnect());
     });
     destroyRef.onDestroy(() => this.gesture?.cancel());
+
+    // the rows' layout motion — the first render only records
+    afterRenderEffect(() => {
+      this.model();
+      if (this.settings()) {
+        untracked(() => this.rowLayout.reset());
+        return;
+      }
+      untracked(() => void this.rowLayout.play());
+    });
+    destroyRef.onDestroy(() => this.rowLayout.cancel());
 
     // announce what a load-more brought in, once it arrived
     effect(() => {

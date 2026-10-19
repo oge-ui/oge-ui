@@ -112,7 +112,8 @@
       var(
         --oge-toast-transition,
         var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate)
-      );
+      ),
+    translate var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
 
   .oge-toast-region-top-start &,
   .oge-toast-region-top-center &,
@@ -127,6 +128,11 @@
 
   .oge-toast-cell-closing & {
     opacity: 0;
+  }
+
+  // a released swipe that did not dismiss glides back
+  &.oge-toast-swiping {
+    transition: none;
   }
 
   &.oge-toast-success {
@@ -291,12 +297,104 @@
 
 @media (prefers-reduced-motion: reduce) {
   .oge-toast,
-  .oge-toast-cell {
+  .oge-toast-cell,
+  .oge-toast-region-stacked > .oge-toast-cell {
     transition: none;
   }
 
   .oge-toast-spinner {
     animation: none;
+  }
+}
+
+// --- stack mode (config `toastStacked`) -------------------------------------
+// The cells share one grid area, so the region is a deck: the newest toast
+// (last in the chronological DOM) paints in front, older ones peek behind it
+// — smaller and offset away from the edge — and from the fourth on they are
+// buried. Hover / focus-within expands the deck into a list. Script writes
+// each cell's `--oge-toast-depth` (0 = front) and `--oge-toast-stack-offset`
+// (the newer toasts' height plus the gaps) after every render
+// (`ogeLayoutToastStack`); everything else is these transforms, which glide,
+// so nothing moves layout.
+.oge-toast-region-stacked {
+  --oge-toast-stack-peek: 10px;
+  --oge-toast-stack-shrink: 0.05;
+  --oge-toast-stack-dir: -1;
+
+  display: grid;
+
+  &.oge-toast-region-top-start,
+  &.oge-toast-region-top-center,
+  &.oge-toast-region-top-end {
+    --oge-toast-stack-dir: 1;
+
+    > .oge-toast-cell {
+      align-self: start;
+      transform-origin: center top;
+    }
+  }
+
+  > .oge-toast-cell {
+    position: relative;
+    grid-area: 1 / 1;
+    align-self: end;
+    transform-origin: center bottom;
+    transform: translateY(
+        calc(
+          var(--oge-toast-depth, 0) * var(--oge-toast-stack-peek) *
+            var(--oge-toast-stack-dir)
+        )
+      )
+      scale(calc(1 - var(--oge-toast-depth, 0) * var(--oge-toast-stack-shrink)));
+    transition:
+      grid-template-rows
+        var(
+          --oge-toast-transition,
+          var(--oge-motion-duration-fast) var(--oge-motion-easing-decelerate)
+        ),
+      transform var(--oge-motion-duration-layout)
+        var(--oge-motion-easing-spring),
+      opacity var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
+
+    // the whole toast stays one target while the pointer crosses the gap
+    // between two expanded toasts
+    &::after {
+      content: '';
+      position: absolute;
+      inset: calc(-1 * var(--oge-toast-gap, 8px)) 0;
+      z-index: -1;
+      pointer-events: auto;
+    }
+  }
+
+  > .oge-toast-cell[data-oge-toast-buried] {
+    opacity: 0;
+    pointer-events: none;
+
+    &::after {
+      pointer-events: none;
+    }
+  }
+
+  // expanded: the list, each toast at its offset from the edge
+  &.oge-toast-region-expanded > .oge-toast-cell {
+    transform: translateY(
+      calc(var(--oge-toast-stack-offset, 0px) * var(--oge-toast-stack-dir))
+    );
+  }
+
+  &.oge-toast-region-expanded > .oge-toast-cell[data-oge-toast-buried] {
+    opacity: 1;
+    pointer-events: auto;
+
+    &::after {
+      pointer-events: auto;
+    }
+  }
+
+  // sideways swipes belong to the toast; vertical ones still scroll the page
+  .oge-toast {
+    touch-action: pan-y;
   }
 }
 

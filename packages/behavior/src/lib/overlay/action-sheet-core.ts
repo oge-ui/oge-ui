@@ -21,6 +21,7 @@ import { edgeEnabledIndex, stepEnabledIndex } from '@oge-ui/core';
 import { prefersReducedMotion } from '../a11y/motion';
 import { beginPointerGesture } from '../gesture/pointer-gesture';
 import type { OgePointerGestureInput } from '../gesture/pointer-gesture';
+import { ogeExitGhost } from '../motion/motion';
 import { OGE_SHEET_SWIPE_DISMISS } from './adaptive';
 import { getTabbableElements, trapTabKey } from './focus-trap';
 import { inertModalBackground, isModalFocusOrphaned } from './modal-core';
@@ -335,6 +336,30 @@ export interface OgeActionSheetSwipeOptions {
   sheet: HTMLElement;
   /** Called once: `true` when the drag passed the dismiss distance. */
   onFinish: (dismiss: boolean) => void;
+}
+
+/**
+ * The close's exit motion: an `ogeExitGhost` of the layer — its backdrop
+ * fades while the sheet slides back down (from wherever a swipe left it) —
+ * so the real layer is still removed synchronously. Call it with the layer
+ * the sheet rendered, before or after its removal; a layer whose entrance
+ * never ran (no `oge-action-sheet-ready`) has nothing to fade. A no-op under
+ * reduced motion and without the Web Animations API.
+ */
+export function ogeActionSheetExitGhost(layer: HTMLElement | null): void {
+  if (!layer?.classList.contains('oge-action-sheet-ready')) return;
+  const view = layer.ownerDocument.defaultView;
+  if (!view) return;
+  ogeExitGhost(layer, {
+    parent: layer.ownerDocument.body,
+    // the layer is the viewport (`inset: 0`); detached, it has no box
+    rect: { left: 0, top: 0, width: view.innerWidth, height: view.innerHeight },
+    // one keyframe: from the clone's own (ready) look to the closed one
+    keyframes: [{ backgroundColor: 'transparent' }],
+    parts: [
+      { selector: '.oge-action-sheet', keyframes: [{ translate: '0 100%' }] },
+    ],
+  });
 }
 
 /** Whether a vertical drag of `deltaY` px dismisses the sheet. */

@@ -264,6 +264,16 @@ export interface OgeLayoutAnimatorOptions<K> {
   enterStagger?: boolean;
   /** Fade out a ghost of leaving elements (default `true`). */
   exit?: boolean;
+  /**
+   * Where exit ghosts are appended (default `document.body`). Return the
+   * root's own parent so a ghost keeps the theme and direction it inherited
+   * — never the root itself, whose `query()` would pick the clone up.
+   */
+  exitParent?: () => Element | null;
+  /** Keyframes of appearing elements (default: fade in from 96 %). */
+  enterKeyframes?: readonly Keyframe[];
+  /** Keyframes of exit ghosts (default: fade out to 96 %, see {@link ogeExitGhost}). */
+  exitKeyframes?: readonly Keyframe[];
 }
 
 interface Snapshot<K> {
@@ -370,12 +380,16 @@ export function createOgeLayoutAnimator<K>(
           moves.push(
             track(
               el,
-              el.animate(options.enterKeyframes ?? ENTER_KEYFRAMES, {
-                duration: enter.duration,
-                easing: enter.easing,
-                // hidden until its turn, so a staggered row never flashes in
-                ...(delay > 0 ? { delay, fill: 'backwards' as const } : {}),
-              }),
+              el.animate(
+                (options.enterKeyframes as Keyframe[] | undefined) ??
+                  ENTER_KEYFRAMES,
+                {
+                  duration: enter.duration,
+                  easing: enter.easing,
+                  // hidden until its turn, so a staggered row never flashes in
+                  ...(delay > 0 ? { delay, fill: 'backwards' as const } : {}),
+                },
+              ),
             ),
           );
           continue;
@@ -396,9 +410,12 @@ export function createOgeLayoutAnimator<K>(
       }
       if (options.exit !== false) {
         const origin = ogeRectOf(root);
+        const parent = options.exitParent?.() ?? null;
         for (const [key, { rect, el }] of before.boxes) {
           if (after.boxes.has(key) || el.isConnected) continue;
           ogeExitGhost(el, {
+            parent,
+            keyframes: options.exitKeyframes,
             rect: {
               left: rect.left + origin.left,
               top: rect.top + origin.top,
@@ -471,6 +488,15 @@ export interface OgeExitGhostOptions {
    * subtree or a modal layer. Falls back to `body` when detached.
    */
   parent?: Element | null;
+  /**
+   * Descendants of the ghost that run their own keyframes alongside the
+   * root's, with the same timing — a sheet sliding out while its backdrop
+   * fades. `selector` is matched inside the clone.
+   */
+  parts?: ReadonlyArray<{
+    readonly selector: string;
+    readonly keyframes: readonly Keyframe[];
+  }>;
 }
 
 /** Opacity-only exit keyframes — for surfaces whose geometry must stay put. */
@@ -596,6 +622,147 @@ export function ogeExitGhost(
       easing: timing.easing,
       fill: 'forwards',
     });
+    for (const part of options.parts ?? []) {
+      clone
+        .querySelector(part.selector)
+        ?.animate(part.keyframes as Keyframe[], {
+          duration: timing.duration,
+          easing: timing.easing,
+          fill: 'forwards',
+        });
+    }
     void finished(animation).then(() => clone.remove());
   });
+}
+
+/** The grid track property a {@link OgeTrackAnimator} animates. */
+export type OgeTrackProperty = 'grid-template-columns' | 'grid-template-rows';
+
+/** Animates a grid's track sizes between two states — see {@link createOgeTrackAnimator}. */
+export interface OgeTrackAnimator {
+  /**
+   * Snapshots the resolved track sizes. Call just before the state write
+   * (a collapse, an expand); during a running animation it reads the
+   * in-flight sizes, so an interrupted toggle continues from where it is.
+   */
+  capture(): void;
+  /**
+   * After the render, animates from the snapshot to the new resolved sizes.
+   * Resolves when it settled; with motion off, without a snapshot or when
+   * the track count changed it does nothing.
+   */
+  play(): Promise<void>;
+  /** Stops a running animation at once (a drag starts). */
+  cancel(): void;
+  /** `true` while tracks animate (the root also carries `data-oge-animating`). */
+  readonly animating: boolean;
+}
+
+/** Options of {@link createOgeTrackAnimator}. */
+export interface OgeTrackAnimatorOptions {
+  /** The track property to animate, read at each capture (the orientation may change). */
+  property(): OgeTrackProperty;
+  /** Duration step (default `base`). */
+  duration?: OgeMotionDuration;
+  /** Curve (default `standard`). */
+  easing?: OgeMotionEasing;
+}
+
+/** Splits a resolved track list (`"120px 6px 300px"`) into its sizes. */
+function trackSizes(value: string): string[] | null {
+  const parts = value.trim().split(/\s+/);
+  return parts.length > 0 && parts.every((part) => /^-?[\d.]+px$/.test(part))
+    ? parts
+    : null;
+}
+
+/**
+ * Animates `grid-template-columns` / `-rows` of `root` between two layouts:
+ * `capture()` before the change, `play()` after the render. Both ends are the
+ * *resolved* pixel tracks (`getComputedStyle`), so `fr`, `minmax()` and
+ * percentages interpolate — the authored template takes over again when the
+ * animation ends. Meant for discrete toggles (collapse, expand), never for a
+ * drag, which must follow the pointer. A no-op under reduced motion, without
+ * the Web Animations API (SSR, jsdom) and in a hidden tab.
+ */
+export function createOgeTrackAnimator(
+  root: HTMLElement,
+  options: OgeTrackAnimatorOptions,
+): OgeTrackAnimator {
+  let before: { property: OgeTrackProperty; value: string } | null = null;
+  let running: Animation | null = null;
+
+  const read = (property: OgeTrackProperty): string => {
+    try {
+      return getComputedStyle(root).getPropertyValue(property);
+    } catch {
+      return '';
+    }
+  };
+
+  const cancel = (): void => {
+    running?.cancel();
+    running = null;
+    root.removeAttribute('data-oge-animating');
+  };
+
+  return {
+    get animating() {
+      return running !== null;
+    },
+    capture() {
+      if (!ogeMotionEnabled(root)) {
+        before = null;
+        return;
+      }
+      const property = options.property();
+      before = { property, value: read(property) };
+    },
+    play() {
+      const from = before;
+      before = null;
+      // drop an in-flight animation so "last" is the authored layout
+      running?.cancel();
+      running = null;
+      if (!from || !ogeMotionEnabled(root)) {
+        root.removeAttribute('data-oge-animating');
+        return Promise.resolve();
+      }
+      const property = options.property();
+      const to = read(property);
+      const first = trackSizes(from.value);
+      const last = trackSizes(to);
+      if (
+        from.property !== property ||
+        !first ||
+        !last ||
+        first.length !== last.length ||
+        from.value.trim() === to.trim()
+      ) {
+        root.removeAttribute('data-oge-animating');
+        return Promise.resolve();
+      }
+      const timing = ogeMotionTiming(
+        root,
+        options.duration ?? 'base',
+        options.easing ?? 'standard',
+      );
+      const name =
+        property === 'grid-template-columns'
+          ? 'gridTemplateColumns'
+          : 'gridTemplateRows';
+      const animation = root.animate(
+        [{ [name]: first.join(' ') }, { [name]: last.join(' ') }],
+        { duration: timing.duration, easing: timing.easing },
+      );
+      running = animation;
+      root.setAttribute('data-oge-animating', '');
+      return finished(animation).then(() => {
+        if (running !== animation) return;
+        running = null;
+        root.removeAttribute('data-oge-animating');
+      });
+    },
+    cancel,
+  };
 }
