@@ -20,6 +20,34 @@ async function open(page: Page): Promise<void> {
   await expect(page.locator('html')).toHaveAttribute('data-framework', 'react');
 }
 
+/**
+ * Samples the first bar's height every frame for `ms` after `act` —
+ * a tween shows several intermediate heights, a jump shows one.
+ */
+async function sampleBarHeights(
+  host: Locator,
+  act: () => Promise<void>,
+  ms = 900,
+): Promise<number[]> {
+  const sampling = host.evaluate(
+    (el, duration) =>
+      new Promise<number[]>((resolve) => {
+        const seen: number[] = [];
+        const start = performance.now();
+        const step = (): void => {
+          const bar = el.querySelector('rect.oge-chart-bar');
+          seen.push(Number(bar?.getAttribute('height') ?? 0));
+          if (performance.now() - start < duration) requestAnimationFrame(step);
+          else resolve(seen);
+        };
+        requestAnimationFrame(step);
+      }),
+    ms,
+  );
+  await act();
+  return sampling;
+}
+
 test.describe('React charts docs', () => {
   test('the overview mounts the React charts without the coverage notice', async ({
     page,
@@ -314,5 +342,43 @@ test.describe('React charts depth', () => {
       .disableRules(['color-contrast'])
       .analyze();
     expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+
+  test('live data tweens between values instead of jumping', async ({
+    page,
+  }) => {
+    await open(page);
+    const host = card(page, 'live-data');
+    await host.scrollIntoViewIfNeeded();
+    await expect(host.locator('rect.oge-chart-bar')).toHaveCount(6);
+    // let the first-render draw-in finish
+    await page.waitForTimeout(800);
+    const button = page
+      .locator('app-demo-card:has(#live-data)')
+      .getByRole('button', { name: 'New values' });
+    const heights = await sampleBarHeights(host, () => button.click());
+    const distinct = new Set(heights.map((h) => h.toFixed(1)));
+    expect(distinct.size).toBeGreaterThan(3);
+    // a month shift: one bar leaves, one enters, and it settles on six
+    await page
+      .locator('app-demo-card:has(#live-data)')
+      .getByRole('button', { name: 'Next month' })
+      .click();
+    await expect(host.locator('rect.oge-chart-bar')).toHaveCount(6);
+  });
+
+  test('live data jumps under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await open(page);
+    const host = card(page, 'live-data');
+    await host.scrollIntoViewIfNeeded();
+    await expect(host.locator('rect.oge-chart-bar')).toHaveCount(6);
+    const button = page
+      .locator('app-demo-card:has(#live-data)')
+      .getByRole('button', { name: 'New values' });
+    const heights = await sampleBarHeights(host, () => button.click(), 400);
+    expect(new Set(heights.map((h) => h.toFixed(1))).size).toBeLessThanOrEqual(
+      2,
+    );
   });
 });

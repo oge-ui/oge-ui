@@ -44,6 +44,7 @@ class CartesianHost {
     <oge-pie-chart
       [dataSource]="data"
       argumentField="k"
+      [animation]="false"
       valueField="v"
       type="doughnut"
       [series]="rings()"

@@ -40,6 +40,7 @@ function Host({
       <OgePieChart
         dataSource={DATA}
         argumentField="country"
+        animation={false}
         valueField="share"
         type={type}
         smallValuesGrouping={grouping}
@@ -70,7 +71,7 @@ describe('<OgePieChart>', () => {
       container.querySelector('.oge-chart-svg')?.getAttribute('aria-label'),
     ).toBe('Share pie chart with 5 slices');
     expect(container.firstElementChild?.className).toBe(
-      'oge-chart oge-pie-chart',
+      'oge-chart oge-pie-chart oge-chart-static',
     );
   });
 
@@ -126,6 +127,7 @@ describe('<OgePieChart>', () => {
       <OgePieChart
         dataSource={DATA}
         argumentField="country"
+        animation={false}
         valueField="share"
         defaultSelectedSlices={[]}
         onLegendClick={vetoed}
@@ -154,6 +156,7 @@ describe('<OgePieChart>', () => {
       <OgePieChart
         dataSource={DATA}
         argumentField="country"
+        animation={false}
         valueField="share"
         tooltipEnabled={false}
       />,
@@ -169,6 +172,7 @@ describe('<OgePieChart>', () => {
         ref={ref}
         dataSource={DATA}
         argumentField="country"
+        animation={false}
         valueField="share"
         renderLegendItem={(item) => <i className="custom">{item.name}</i>}
       />,

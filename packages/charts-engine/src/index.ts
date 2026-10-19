@@ -204,12 +204,34 @@ export {
 } from './lib/chart-frame';
 export {
   CHART_DRAW_IN_MS,
+  chartAnimationEasing,
   chartAnimationVars,
+  chartEasingFunction,
   chartPrefersReducedMotion,
   chartSeriesEnterOrigin,
+  chartValueBaselinePx,
   resolveChartAnimation,
   type OgeChartResolvedAnimation,
 } from './lib/chart-animation';
+export { interpolateChartPath } from './lib/chart-path-tween';
+export {
+  CHART_TWEEN_MAX_MARKS,
+  cartesianShouldTween,
+  cartesianTweenFrame,
+  chartArgumentKey,
+  createChartTweenDriver,
+  interpolateChartFrames,
+  interpolatePieFrames,
+  pieShouldTween,
+  pieTweenFrame,
+  type OgeChartTweenClock,
+  type OgeChartTweenDriver,
+  type OgeChartTweenFrame,
+  type OgeChartTweenSeries,
+  type OgeChartTweenTiming,
+  type OgePieTweenFrame,
+  type OgePieTweenSlice,
+} from './lib/chart-tween';
 export {
   buildPieScene,
   pieAriaLabel,

@@ -30,9 +30,17 @@ import {
   cartesianSeriesEnterOrigin,
   cartesianSeriesPane,
   cartesianZoomRect,
+  cartesianShouldTween,
+  cartesianTweenFrame,
+  chartAnimationEasing,
   chartAnimationVars,
+  chartEasingFunction,
   chartPrefersReducedMotion,
   chartTouchAction,
+  createChartTweenDriver,
+  interpolateChartFrames,
+  type OgeCartesianScene,
+  type OgeChartTweenFrame,
   chartTouchGestures,
   createChartPinchTracker,
   detectChartRtl,
@@ -240,6 +248,7 @@ export { OGE_CHART_PALETTE };
               <line
                 class="oge-chart-grid"
                 [class.oge-chart-grid-minor]="line.minor"
+                [attr.opacity]="line.opacity ?? null"
                 [attr.x1]="line.x1"
                 [attr.x2]="line.x2"
                 [attr.y1]="line.y1"
@@ -258,7 +267,9 @@ export { OGE_CHART_PALETTE };
                     class="oge-chart-series"
                     [class.oge-chart-series-enter]="drawingIn()"
                     [style.transform-origin]="enterOrigin(rs.seriesIndex)"
-                    [attr.opacity]="seriesGroupOpacity(rs.seriesIndex)"
+                    [attr.opacity]="
+                      seriesGroupOpacity(rs.seriesIndex) * (rs.fade ?? 1)
+                    "
                   >
                     @if (rs.areaPathD !== null) {
                       <path
@@ -535,6 +546,7 @@ export { OGE_CHART_PALETTE };
             <text
               class="oge-chart-axis-label"
               [class.oge-chart-arg-label]="label.axis === 'argument'"
+              [attr.opacity]="label.opacity ?? null"
               [attr.x]="label.x"
               [attr.y]="label.y"
               [attr.text-anchor]="label.anchor"
@@ -752,9 +764,18 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       );
     });
     effect(() => {
-      this.renderSeries();
+      // the scene's series, not the tween frames: one `drawn` per update
+      void this.scene().renderSeries;
       this.drawn.emit();
     });
+    // data-change / legend-toggle tweens: glide from the frame on screen
+    effect(() => {
+      const next = this.scene();
+      const prev = this.tweenedScene;
+      this.tweenedScene = next;
+      untracked(() => this.startTween(prev, next));
+    });
+    this.destroyRef.onDestroy(() => this.tween.cancel());
     // the draw-in runs once: from the first render with data, for `duration`
     effect((onCleanup) => {
       if (!this.isBrowser || !untracked(this.entering)) return;
@@ -789,6 +810,42 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   protected readonly drawingIn = computed(
     () => this.entering() && this.resolvedAnimation().drawIn,
   );
+
+  /** The frame on screen while a tween runs; `null` = the scene itself. */
+  private readonly tweenFrame = signal<OgeChartTweenFrame | null>(null);
+  private readonly tween = createChartTweenDriver(
+    interpolateChartFrames,
+    (frame) => this.tweenFrame.set(frame),
+  );
+  /** The scene the last tween decision saw. */
+  private tweenedScene: OgeCartesianScene<T> | null = null;
+
+  private startTween(
+    prev: OgeCartesianScene<T> | null,
+    next: OgeCartesianScene<T>,
+  ): void {
+    const animation = this.resolvedAnimation();
+    if (
+      !this.isBrowser ||
+      !animation.tweens ||
+      this.drawingIn() ||
+      !cartesianShouldTween(prev, next)
+    ) {
+      // a resize / zoom mid-tween lands on the new scene at once
+      this.tween.cancel();
+      return;
+    }
+    this.tween.run(
+      cartesianTweenFrame(prev as OgeCartesianScene<T>),
+      cartesianTweenFrame(next),
+      {
+        duration: animation.duration,
+        easing: chartEasingFunction(
+          chartAnimationEasing(animation, this.hostEl.nativeElement),
+        ),
+      },
+    );
+  }
 
   /* ---------------- the engine's view model (ADR 0003) ---------------- */
 
@@ -836,7 +893,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   protected readonly plotH = computed(() => this.scene().plot.h);
   protected readonly sortedArgs = computed(() => this.data().sortedArgs);
   protected readonly renderSeries = computed<readonly OgeChartRenderSeries[]>(
-    () => this.scene().renderSeries,
+    () => this.tweenFrame()?.renderSeries ?? this.scene().renderSeries,
   );
   protected readonly argGrid = computed(() => this.scene().argGrid);
   protected readonly argAxisTitle = computed(() => this.scene().argAxisTitle);
@@ -844,15 +901,23 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   protected readonly argTicksVm = computed(() => this.scene().argTicks);
   protected readonly valueTicksVm = computed(() => this.scene().valueGridTicks);
   protected readonly valueAxesVm = computed(() => this.scene().valueAxes);
-  protected readonly annotationVms = computed(() => this.scene().annotations);
+  protected readonly annotationVms = computed(
+    () => this.tweenFrame()?.annotations ?? this.scene().annotations,
+  );
   protected readonly legendItems = computed(() => this.scene().legendItems);
   protected readonly paneVms = computed(() => this.scene().panes);
-  protected readonly guides = computed(() => this.scene().guides);
-  protected readonly gridLines = computed(() => this.scene().gridLines);
+  protected readonly guides = computed(
+    () => this.tweenFrame()?.guides ?? this.scene().guides,
+  );
+  protected readonly gridLines = computed(
+    () => this.tweenFrame()?.gridLines ?? this.scene().gridLines,
+  );
   protected readonly axisLines = computed(() => this.scene().axisLines);
   protected readonly tickMarks = computed(() => this.scene().tickMarks);
   protected readonly breakMarkers = computed(() => this.scene().breakMarkers);
-  protected readonly axisLabels = computed(() => this.scene().axisLabels);
+  protected readonly axisLabels = computed(
+    () => this.tweenFrame()?.axisLabels ?? this.scene().axisLabels,
+  );
   protected readonly axisTitles = computed(() => this.scene().axisTitles);
   protected readonly frameTransform = computed(
     () => this.scene().frame.transform,

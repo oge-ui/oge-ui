@@ -169,7 +169,8 @@ describe('animation', () => {
   it('exposes the CSS variables and the baseline origin', () => {
     expect(chartAnimationVars(resolveChartAnimation(true, false))).toEqual({
       '--oge-chart-anim-duration': '600ms',
-      '--oge-chart-anim-easing': 'cubic-bezier(0, 0, 0.2, 1)',
+      '--oge-chart-anim-easing':
+        'var(--oge-motion-easing-decelerate, cubic-bezier(0, 0, 0.2, 1))',
     });
     const scale = createLinearScale({
       min: -10,

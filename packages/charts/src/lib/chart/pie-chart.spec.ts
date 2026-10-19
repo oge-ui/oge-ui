@@ -13,6 +13,7 @@ interface Slice {
     <oge-pie-chart
       [dataSource]="data()"
       argumentField="country"
+      [animation]="false"
       valueField="share"
       [type]="type()"
       [smallValuesGrouping]="grouping()"

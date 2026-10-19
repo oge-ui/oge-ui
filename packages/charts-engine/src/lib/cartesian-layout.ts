@@ -584,6 +584,14 @@ export function chartBreakMarker(
 
 export interface OgeChartGridLineVm extends OgeChartLineVm {
   readonly minor: boolean;
+  /** The axis whose tick the line marks. */
+  readonly axis?: 'argument' | 'value';
+  /** The tick value (tweens slide a line to its new place). */
+  readonly value?: number;
+  /** The pane index. */
+  readonly pane?: number;
+  /** Tween frames only: a line fading in or out; unset = 1. */
+  readonly opacity?: number;
 }
 
 /** Value-axis grid lines of one pane (major + minor), screen px. */
@@ -598,12 +606,24 @@ export function chartValueGridLines(
   for (const tick of scale.ticks) {
     const px = scale.toPx(tick);
     if (!inPane(px)) continue;
-    lines.push({ ...frameLine(frame, 0, px, frame.argLen, px), minor: false });
+    lines.push({
+      ...frameLine(frame, 0, px, frame.argLen, px),
+      minor: false,
+      axis: 'value',
+      value: tick,
+      pane: pane.index,
+    });
   }
   for (const tick of scale.minorTicks ?? []) {
     const px = scale.toPx(tick);
     if (!inPane(px)) continue;
-    lines.push({ ...frameLine(frame, 0, px, frame.argLen, px), minor: true });
+    lines.push({
+      ...frameLine(frame, 0, px, frame.argLen, px),
+      minor: true,
+      axis: 'value',
+      value: tick,
+      pane: pane.index,
+    });
   }
   return lines;
 }
@@ -623,6 +643,9 @@ export function chartArgumentGridLines(
       lines.push({
         ...frameLine(frame, px, pane.start, px, pane.start + pane.size),
         minor,
+        axis: 'argument',
+        value,
+        pane: pane.index,
       });
     }
   };

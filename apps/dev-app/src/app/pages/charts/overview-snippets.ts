@@ -385,3 +385,63 @@ protected readonly miniSeries: OgeChartSeriesInput[] = [
   { type: 'area', argumentField: 'date', valueField: 'sales', name: 'Sales' },
 ];`,
 });
+
+export const LIVE_DATA_SNIPPET = demoSource({
+  use: { '@oge-ui/charts': ['OgeChart'] },
+  types: { '@oge-ui/charts': ['OgeChartSeriesInput'] },
+  template: `<!-- Updates glide instead of jumping: marks are matched by series
+     name and category, so changed values tween, a new month grows from the
+     baseline and a dropped one shrinks into it, and the line morphs point by
+     point. Clicking a legend item fades that series out while the value axis
+     re-scales. New data mid-tween continues from the frame on screen; the
+     animation input times it, and prefers-reduced-motion turns it off. -->
+<div class="mb-2 flex gap-2">
+  <button type="button" (click)="shuffle()">New values</button>
+  <button type="button" (click)="shift()">Next month</button>
+</div>
+<oge-chart
+  [dataSource]="data()"
+  [series]="series"
+  [animation]="{ duration: 600, easing: 'easeOut' }"
+  title="Live data"
+  style="height: 340px"
+/>`,
+  body: `private static readonly MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+private tick = 0;
+private start = 0;
+
+protected readonly data = signal(this.rows());
+
+protected readonly series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'month', valueField: 'orders', name: 'Orders' },
+  { type: 'spline', argumentField: 'month', valueField: 'returns', name: 'Returns' },
+];
+
+/** Fresh values for the same months: every bar and point glides. */
+protected shuffle(): void {
+  this.tick++;
+  this.data.set(this.rows());
+}
+
+/** Drops the first month and appends the next: enter and exit together. */
+protected shift(): void {
+  this.start++;
+  this.data.set(this.rows());
+}
+
+private rows(): { month: string; orders: number; returns: number }[] {
+  const months = Demo.MONTHS;
+  return Array.from({ length: 6 }, (_, i) => {
+    const n = this.start + i;
+    const wave = Math.sin(n * 1.3 + this.tick * 2.1);
+    return {
+      month: months[n % months.length],
+      orders: Math.round(60 + wave * 35 + ((n * 17 + this.tick * 11) % 20)),
+      returns: Math.round(18 + Math.cos(n + this.tick) * 10),
+    };
+  });
+}`,
+});

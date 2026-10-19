@@ -28395,7 +28395,7 @@ _Appearance & i18n_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `title / subtitle` | `string` | `''` | Headings above the plot. |
-| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions plus a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation. `{ enabled?, duration? (ms, 600), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; `false` turns both off and `prefers-reduced-motion: reduce` always does. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions, a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation — and tweens on every later data change: marks are matched by series name and category and glide to their new geometry, new marks grow from the baseline, removed ones shrink to it, line and area paths morph point by point; a legend toggle fades the series out (or in) while the value axis re-scales. New data arriving mid-tween continues from the frame on screen. Resizes, zoom and pan stay immediate. `{ enabled?, duration? (ms, 600 — draw-in and tweens), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; the presets follow the motion tokens (`easeOut` → `--oge-motion-easing-decelerate`, `easeIn` → `-accelerate`, `ease`/`easeInOut` → `-standard`). `false` turns everything off and `prefers-reduced-motion: reduce` always does. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
 | `messages` | `Partial<OgeChartsMessages>` | `{}` | Per-instance message overrides, merged over the DI config per top-level block. |
 
@@ -28470,6 +28470,7 @@ _Analytics (pure functions)_
 | `colorField / customizePoint` | `field / (info: OgeChartPointInfo) => OgeChartPointStyle` | `—` | Per-slice colour from the data, or per-slice `{ color?, label?, description? }` overrides; the legend follows, and `description` is spoken in the tooltip and the sr table. |
 | `series` | `readonly OgePieSeriesInput[]` | `[]` | Nested doughnut: one ring per entry, inner → outer (`{ name?, dataSource?, argumentField?, valueField?, colorField?, customizePoint?, label? }` — unset fields fall back to the chart inputs). Slices of the same argument share a colour and one legend button across rings; the sr table gets a column per ring, the tooltip prefixes the ring name, `sliceClick` carries `ringIndex`/`ringName`. Small-value grouping does not apply to rings. |
 | `selectedSlices` | `readonly number[]` | `[]` | Selected slice indexes — selected slices explode. Two-way (`[(selectedSlices)]`). |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover transitions plus an arc tween on data changes: slices matched by ring and argument sweep to their new angles, a new slice opens from the seam where it appears and a removed one closes onto its neighbours' seam; new data mid-tween continues from the frame on screen. `{ enabled?, duration? (ms, 600), easing? }` as on the cartesian chart; `false` turns it off and `prefers-reduced-motion: reduce` always does. |
 | `legend / tooltipEnabled / palette / title / locale / messages` | `see OgeChart` | `—` | Shared options with the cartesian chart. |
 
 #### Methods
@@ -30231,6 +30232,79 @@ export class Demo {
 }
 ```
 
+#### Live data
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Updates glide instead of jumping: marks are matched by series
+         name and category, so changed values tween, a new month grows from the
+         baseline and a dropped one shrinks into it, and the line morphs point by
+         point. Clicking a legend item fades that series out while the value axis
+         re-scales. New data mid-tween continues from the frame on screen; the
+         animation input times it, and prefers-reduced-motion turns it off. -->
+    <div class="mb-2 flex gap-2">
+      <button type="button" (click)="shuffle()">New values</button>
+      <button type="button" (click)="shift()">Next month</button>
+    </div>
+    <oge-chart
+      [dataSource]="data()"
+      [series]="series"
+      [animation]="{ duration: 600, easing: 'easeOut' }"
+      title="Live data"
+      style="height: 340px"
+    />
+  `,
+})
+export class Demo {
+  private static readonly MONTHS = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  private tick = 0;
+  private start = 0;
+
+  protected readonly data = signal(this.rows());
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'bar', argumentField: 'month', valueField: 'orders', name: 'Orders' },
+    { type: 'spline', argumentField: 'month', valueField: 'returns', name: 'Returns' },
+  ];
+
+  /** Fresh values for the same months: every bar and point glides. */
+  protected shuffle(): void {
+    this.tick++;
+    this.data.set(this.rows());
+  }
+
+  /** Drops the first month and appends the next: enter and exit together. */
+  protected shift(): void {
+    this.start++;
+    this.data.set(this.rows());
+  }
+
+  private rows(): { month: string; orders: number; returns: number }[] {
+    const months = Demo.MONTHS;
+    return Array.from({ length: 6 }, (_, i) => {
+      const n = this.start + i;
+      const wave = Math.sin(n * 1.3 + this.tick * 2.1);
+      return {
+        month: months[n % months.length],
+        orders: Math.round(60 + wave * 35 + ((n * 17 + this.tick * 11) % 20)),
+        returns: Math.round(18 + Math.cos(n + this.tick) * 10),
+      };
+    });
+  }
+}
+```
+
 #### Pie
 
 ```ts
@@ -30873,8 +30947,8 @@ Framework-free charts engine shared by the Angular and React charts: scales, ser
 
 `@oge-ui/charts-engine`
 
-- values: `CHART_AXIS_LABEL_LINE_H`, `CHART_AXIS_LABEL_MAX_LINES`, `CHART_BREAK_GAP_PX`, `CHART_DRAW_IN_MS`, `CHART_PANE_GAP`, `GAUGE_BAR_LENGTH`, `OGE_CHART_EMPTY_COLOR`, `OGE_CHART_HEAT_COLORS`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OGE_GAUGE_RANGE_COLORS`, `OGE_MAP_HOME_VIEW`, `addChartDateInterval`, `angleForIndex`, `applyChartLabelTemplate`, `applyChartTickOptions`, `areaPath`, `baselineAreaPath`, `beginChartGesture`, `bindChartPaneAxes`, `buildArgumentIndex`, `buildBulletScene`, `buildCartesianData`, `buildCartesianScene`, `buildChartHierarchy`, `buildCircularGaugeScene`, `buildFunnelScene`, `buildHeatmapScene`, `buildLinearGaugeScene`, `buildMapScene`, `buildPieScene`, `buildPieSlices`, `buildPolarData`, `buildPolarScene`, `buildRangeSelectorData`, `buildRangeSelectorScene`, `buildSankeyScene`, `buildSeries`, `buildSparklineScene`, `buildSunburstScene`, `buildTreemapScene`, `bulletRangeShade`, `candleGeometry`, `cartesianActivePoints`, `cartesianAriaLabel`, `cartesianCrosshair`, `cartesianDataLabelAnchor`, `cartesianDragArgDelta`, `cartesianExportData`, `cartesianHoverAt`, `cartesianKeyCommand`, `cartesianLabelTransform`, `cartesianNearestSeries`, `cartesianPanRange`, `cartesianPinchRange`, `cartesianPlotArgPx`, `cartesianPointAnnouncement`, `cartesianPointEventColor`, `cartesianSelectionRange`, `cartesianSeriesEnterOrigin`, `cartesianSeriesPane`, `cartesianSrRows`, `cartesianTooltip`, `cartesianTooltipRowText`, `cartesianWheelRange`, `cartesianZoomRect`, `cartesianZoomTo`, `categoryBandPx`, `chartAnimationVars`, `chartArgumentLabelFormatter`, `chartArgumentText`, `chartAxisLabelBox`, `chartBarLabelAnchor`, `chartColumnsKeyCommand`, `chartContrastText`, `chartDateIntervalUnit`, `chartDragMode`, `chartFieldAccessor`, `chartGridKeyCommand`, `chartHierarchyColor`, `chartHierarchyDescendants`, `chartHierarchyDrillFocus`, `chartHierarchyEvent`, `chartHierarchyKeyCommand`, `chartHierarchyPath`, `chartHierarchySrTable`, `chartHierarchyValueText`, `chartLabelBox`, `chartLabelOptions`, `chartLabelTemplateBox`, `chartLabelText`, `chartLegendSwatch`, `chartListKeyCommand`, `chartMapKeyCommand`, `chartMarkerRadius`, `chartMinorTicks`, `chartMixColor`, `chartNumber`, `chartPaneAt`, `chartPaneList`, `chartPointColor`, `chartPointHasLabel`, `chartPointLabelAnchor`, `chartPrefersReducedMotion`, `chartPrintDocument`, `chartRampColor`, `chartSeriesColor`, `chartSeriesEnterOrigin`, `chartSeriesGroupOpacity`, `chartTouchAction`, `chartTouchGestures`, `chartTrendlineOptions`, `chartValueAxesList`, `chartValueAxisSlots`, `chartValueLabelFormatter`, `chartValueText`, `chartWheelZoomEnabled`, `chartZoomSelectionRect`, `clampMapView`, `clampRange`, `collectCategories`, `commitRangeSelection`, `computeBarSlots`, `computeStacks`, `createBrokenLinearScale`, `createCategoryScale`, `createChartFrame`, `createChartLabelMeasure`, `createChartPinchTracker`, `createLinearScale`, `createLogScale`, `createTimeScale`, `decideLabelLayout`, `deriveChartSeries`, `detectArgumentKind`, `detectChartRtl`, `detectRangeSelectorKind`, `downsamplePath`, `estimateChartLabelWidth`, `fitChartText`, `formatOgeChartMessage`, `frameLabelAnchor`, `frameLabelBaseline`, `frameLine`, `frameLogical`, `framePoint`, `frameRect`, `frameTextTransform`, `funnelAnnouncement`, `funnelSrTable`, `funnelTooltip`, `gaugeArcBounds`, `gaugeArcPath`, `gaugeBandPath`, `gaugeBarDash`, `gaugeFraction`, `geoPolygons`, `groupSmallValues`, `heatmapAnnouncement`, `heatmapCell`, `heatmapSrTable`, `heatmapTooltip`, `hideOverlappingLabels`, `isBarType`, `isChartDateInterval`, `isChartPointSelected`, `isFinancialType`, `isStackedType`, `isZeroBasedType`, `layoutChartGuides`, `layoutChartPanes`, `layoutFunnel`, `layoutPieLabels`, `layoutSankey`, `linePath`, `logTicks`, `mapEnsureVisible`, `mapPanBy`, `mapRegionLabel`, `mapSrTable`, `mapViewTransform`, `mapZoomAt`, `measureChartElement`, `mergeChartSeriesInputs`, `mergeOgeChartsMessages`, `mirrorTreemapRect`, `nearestIndex`, `nextChartSelection`, `nextPolarSelection`, `niceStep`, `niceTicks`, `normalizeChartBreaks`, `numberFormat`, `numericArgument`, `observeChartRtl`, `observeChartSize`, `offsetChartScale`, `ogeBollingerBands`, `ogeBoxStats`, `ogeCheckChartsLicense`, `ogeEma`, `ogeHistogramBins`, `ogeMacd`, `ogeQuantile`, `ogeRsi`, `ogeSma`, `ogeTrendline`, `panRange`, `paretoCategoryOrder`, `pickTimeUnit`, `pieAriaLabel`, `pieLabelText`, `pieSelectedAnnouncement`, `pieSliceAt`, `pieSrTable`, `pieTooltip`, `pieValueText`, `polarKeyCommand`, `polarPointAnnouncement`, `polarPointIndex`, `polarSrRows`, `polarToCartesian`, `polarTooltip`, `printOgeChart`, `projectGeoPoint`, `radarGridPath`, `radarLoopPath`, `rangeCenteredAt`, `rangeFromSelection`, `rangeHandleDragRange`, `rangeHandleKeyRange`, `rangeSelectorAnnouncement`, `rangeSelectorDeltaValue`, `rangeSelectorEffective`, `rangeSelectorLabel`, `rangeSelectorPeriodRange`, `rangeSelectorPeriods`, `rangeSelectorWindowPx`, `rangeWindowDragRange`, `resolveChartAnimation`, `resolveChartColorScale`, `resolveChartLabels`, `resolveGaugeScale`, `resolveOgeChartsConfig`, `sankeyHighlight`, `sankeyLinkPath`, `sankeyNodeText`, `sankeySrTable`, `sankeyTooltip`, `seriesValueExtent`, `siFormat`, `sliceAndDice`, `sliceArcPath`, `sparklineIndexAt`, `sparklineTooltip`, `splinePath`, `squarify`, `steppedPoints`, `sunburstSegmentAt`, `sunburstTooltip`, `timeTickFormatter`, `timeTicks`, `toggleChartIndex`, `togglePieSlice`, `treemapTooltip`, `worstAspectRatio`, `zoomRangeAt`
-- types: `ArgumentIndex`, `BarSlot`, `CandleGeometry`, `ChartAxisLabelBox`, `ChartDeriveContext`, `ChartDerived`, `ChartFieldExpr`, `ChartGestureCallbacks`, `ChartGestureHandle`, `ChartIndicatorOptions`, `ChartLabelCandidate`, `ChartLabelInfo`, `ChartLabelOptions`, `ChartLabelPosition`, `ChartPinchCallbacks`, `ChartPinchPoint`, `ChartPinchTracker`, `ChartPoint`, `ChartPointCustomizer`, `ChartPointExtra`, `ChartPointInfo`, `ChartPointStyle`, `ChartRange`, `ChartScale`, `ChartScaleBreak`, `ChartScaleKind`, `ChartSeries`, `ChartSeriesInput`, `ChartSeriesType`, `ChartTickOptions`, `ChartTrendlineOptions`, `FunnelLayoutInput`, `FunnelStageGeometry`, `GroupedPieValue`, `LabelLayoutDecision`, `LabelOverlapMode`, `OgeAnalyticsInput`, `OgeBollingerBand`, `OgeBoxStats`, `OgeBulletRangeVm`, `OgeBulletRect`, `OgeBulletScene`, `OgeBulletSceneInput`, `OgeCartesianData`, `OgeCartesianDataInput`, `OgeCartesianHoverState`, `OgeCartesianScene`, `OgeCartesianSceneInput`, `OgeChartAnimationEasing`, `OgeChartAnimationOptions`, `OgeChartAnnotation`, `OgeChartAnnotationVm`, `OgeChartAxisBinding`, `OgeChartAxisBreak`, `OgeChartAxisLabelOptions`, `OgeChartAxisLabelVm`, `OgeChartAxisOptions`, `OgeChartAxisSlots`, `OgeChartAxisStrip`, `OgeChartAxisTick`, `OgeChartAxisTitleVm`, `OgeChartAxisType`, `OgeChartBreakMarkerVm`, `OgeChartColorScale`, `OgeChartColorScaleLegend`, `OgeChartColorScaleSegment`, `OgeChartColorScaleTick`, `OgeChartConstantLine`, `OgeChartCrosshairOptions`, `OgeChartCrosshairVm`, `OgeChartCustomPeriod`, `OgeChartDateInterval`, `OgeChartExportData`, `OgeChartFieldExpr`, `OgeChartFrame`, `OgeChartFunnelItemEvent`, `OgeChartGridCommand`, `OgeChartGridLineVm`, `OgeChartGuideLabelVm`, `OgeChartGuideVm`, `OgeChartHeatmapCellEvent`, `OgeChartHierarchy`, `OgeChartHierarchyCommand`, `OgeChartHierarchyInput`, `OgeChartHierarchyNode`, `OgeChartHierarchyNodeEvent`, `OgeChartIndicatorOptions`, `OgeChartKeyCommand`, `OgeChartKeyContext`, `OgeChartLabelFormat`, `OgeChartLabelInfo`, `OgeChartLabelOptions`, `OgeChartLabelOverlap`, `OgeChartLabelPosition`, `OgeChartLegendClickEvent`, `OgeChartLegendEntry`, `OgeChartLegendItem`, `OgeChartLegendOptions`, `OgeChartLineVm`, `OgeChartListCommand`, `OgeChartMapCommand`, `OgeChartMapRegionEvent`, `OgeChartMinorTickOptions`, `OgeChartPane`, `OgeChartPaneVm`, `OgeChartPeriod`, `OgeChartPieSliceEvent`, `OgeChartPlotRect`, `OgeChartPoint`, `OgeChartPointCustomizer`, `OgeChartPointEvent`, `OgeChartPointExtra`, `OgeChartPointInfo`, `OgeChartPointRef`, `OgeChartPointStyle`, `OgeChartPrintOptions`, `OgeChartRange`, `OgeChartRectVm`, `OgeChartRenderBar`, `OgeChartRenderCandle`, `OgeChartRenderDot`, `OgeChartRenderLabel`, `OgeChartRenderMarker`, `OgeChartRenderPath`, `OgeChartRenderSegment`, `OgeChartRenderSeries`, `OgeChartResolvedAnimation`, `OgeChartResolvedColorScale`, `OgeChartSankeyLinkEvent`, `OgeChartSankeyNodeEvent`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSize`, `OgeChartSmallValuesGrouping`, `OgeChartSrRow`, `OgeChartStripLine`, `OgeChartStripRect`, `OgeChartTextMeasure`, `OgeChartTickInterval`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipVm`, `OgeChartTrendlineOptions`, `OgeChartValueAxisVm`, `OgeChartValueRange`, `OgeChartXY`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgeChartsPeriodMessages`, `OgeChartsValueMessages`, `OgeChartsVisualMessages`, `OgeCircularGaugeIndicator`, `OgeCircularGaugeScene`, `OgeCircularGaugeSceneInput`, `OgeFunnelAlgorithm`, `OgeFunnelItemVm`, `OgeFunnelLabelVm`, `OgeFunnelLegendItemVm`, `OgeFunnelScene`, `OgeFunnelSceneInput`, `OgeFunnelTooltipVm`, `OgeFunnelType`, `OgeGaugeAria`, `OgeGaugeLabelVm`, `OgeGaugeOrientation`, `OgeGaugeRangeVm`, `OgeGaugeScaleOptions`, `OgeGaugeSrRow`, `OgeGaugeTickVm`, `OgeGeoJsonFeature`, `OgeGeoJsonFeatureCollection`, `OgeGeoJsonGeometry`, `OgeHeatmapAxisLabelVm`, `OgeHeatmapCellVm`, `OgeHeatmapScene`, `OgeHeatmapSceneInput`, `OgeHeatmapTooltipVm`, `OgeHistogramBin`, `OgeHistogramBinning`, `OgeLinearGaugeIndicator`, `OgeLinearGaugeScene`, `OgeLinearGaugeSceneInput`, `OgeMacdPoint`, `OgeMapProjection`, `OgeMapRegionVm`, `OgeMapScene`, `OgeMapSceneInput`, `OgeMapView`, `OgePieGeometry`, `OgePieLabelVm`, `OgePieLegendItemVm`, `OgePieRingVm`, `OgePieScene`, `OgePieSceneInput`, `OgePieSeriesInput`, `OgePieSliceVm`, `OgePieTooltipVm`, `OgePolarData`, `OgePolarDataInput`, `OgePolarHover`, `OgePolarMarkerVm`, `OgePolarRingVm`, `OgePolarScene`, `OgePolarSceneInput`, `OgePolarSectorVm`, `OgePolarSeriesVm`, `OgePolarSpokeVm`, `OgePolarTooltipVm`, `OgeRangeSelectorData`, `OgeRangeSelectorDataInput`, `OgeRangeSelectorPeriodVm`, `OgeRangeSelectorScene`, `OgeRangeSelectorSceneInput`, `OgeRangeSelectorSeriesVm`, `OgeSankeyLinkColor`, `OgeSankeyLinkVm`, `OgeSankeyNode`, `OgeSankeyNodeAlign`, `OgeSankeyNodeVm`, `OgeSankeyScene`, `OgeSankeySceneInput`, `OgeSankeyTooltipVm`, `OgeSparklineBarVm`, `OgeSparklineMarkerVm`, `OgeSparklineMarkers`, `OgeSparklinePointVm`, `OgeSparklineScene`, `OgeSparklineSceneInput`, `OgeSparklineTooltipVm`, `OgeSparklineType`, `OgeSunburstScene`, `OgeSunburstSceneInput`, `OgeSunburstSegmentVm`, `OgeSunburstTooltipVm`, `OgeTreemapLayoutAlgorithm`, `OgeTreemapScene`, `OgeTreemapSceneInput`, `OgeTreemapTileVm`, `OgeTreemapTooltipVm`, `OgeTrendlineFit`, `OgeTrendlineFitOptions`, `OgeTrendlineType`, `PathPoint`, `PieLabelPosition`, `PieSlice`, `PieSmallValuesGrouping`, `PolarXY`, `SankeyLayout`, `SankeyLayoutInput`, `SankeyLinkInput`, `SankeyLinkLayout`, `SankeyNodeLayout`, `StackedValue`, `TimeTickUnit`, `TreemapRect`
+- values: `CHART_AXIS_LABEL_LINE_H`, `CHART_AXIS_LABEL_MAX_LINES`, `CHART_BREAK_GAP_PX`, `CHART_DRAW_IN_MS`, `CHART_PANE_GAP`, `CHART_TWEEN_MAX_MARKS`, `GAUGE_BAR_LENGTH`, `OGE_CHART_EMPTY_COLOR`, `OGE_CHART_HEAT_COLORS`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OGE_GAUGE_RANGE_COLORS`, `OGE_MAP_HOME_VIEW`, `addChartDateInterval`, `angleForIndex`, `applyChartLabelTemplate`, `applyChartTickOptions`, `areaPath`, `baselineAreaPath`, `beginChartGesture`, `bindChartPaneAxes`, `buildArgumentIndex`, `buildBulletScene`, `buildCartesianData`, `buildCartesianScene`, `buildChartHierarchy`, `buildCircularGaugeScene`, `buildFunnelScene`, `buildHeatmapScene`, `buildLinearGaugeScene`, `buildMapScene`, `buildPieScene`, `buildPieSlices`, `buildPolarData`, `buildPolarScene`, `buildRangeSelectorData`, `buildRangeSelectorScene`, `buildSankeyScene`, `buildSeries`, `buildSparklineScene`, `buildSunburstScene`, `buildTreemapScene`, `bulletRangeShade`, `candleGeometry`, `cartesianActivePoints`, `cartesianAriaLabel`, `cartesianCrosshair`, `cartesianDataLabelAnchor`, `cartesianDragArgDelta`, `cartesianExportData`, `cartesianHoverAt`, `cartesianKeyCommand`, `cartesianLabelTransform`, `cartesianNearestSeries`, `cartesianPanRange`, `cartesianPinchRange`, `cartesianPlotArgPx`, `cartesianPointAnnouncement`, `cartesianPointEventColor`, `cartesianSelectionRange`, `cartesianSeriesEnterOrigin`, `cartesianSeriesPane`, `cartesianShouldTween`, `cartesianSrRows`, `cartesianTooltip`, `cartesianTooltipRowText`, `cartesianTweenFrame`, `cartesianWheelRange`, `cartesianZoomRect`, `cartesianZoomTo`, `categoryBandPx`, `chartAnimationEasing`, `chartAnimationVars`, `chartArgumentKey`, `chartArgumentLabelFormatter`, `chartArgumentText`, `chartAxisLabelBox`, `chartBarLabelAnchor`, `chartColumnsKeyCommand`, `chartContrastText`, `chartDateIntervalUnit`, `chartDragMode`, `chartEasingFunction`, `chartFieldAccessor`, `chartGridKeyCommand`, `chartHierarchyColor`, `chartHierarchyDescendants`, `chartHierarchyDrillFocus`, `chartHierarchyEvent`, `chartHierarchyKeyCommand`, `chartHierarchyPath`, `chartHierarchySrTable`, `chartHierarchyValueText`, `chartLabelBox`, `chartLabelOptions`, `chartLabelTemplateBox`, `chartLabelText`, `chartLegendSwatch`, `chartListKeyCommand`, `chartMapKeyCommand`, `chartMarkerRadius`, `chartMinorTicks`, `chartMixColor`, `chartNumber`, `chartPaneAt`, `chartPaneList`, `chartPointColor`, `chartPointHasLabel`, `chartPointLabelAnchor`, `chartPrefersReducedMotion`, `chartPrintDocument`, `chartRampColor`, `chartSeriesColor`, `chartSeriesEnterOrigin`, `chartSeriesGroupOpacity`, `chartTouchAction`, `chartTouchGestures`, `chartTrendlineOptions`, `chartValueAxesList`, `chartValueAxisSlots`, `chartValueBaselinePx`, `chartValueLabelFormatter`, `chartValueText`, `chartWheelZoomEnabled`, `chartZoomSelectionRect`, `clampMapView`, `clampRange`, `collectCategories`, `commitRangeSelection`, `computeBarSlots`, `computeStacks`, `createBrokenLinearScale`, `createCategoryScale`, `createChartFrame`, `createChartLabelMeasure`, `createChartPinchTracker`, `createChartTweenDriver`, `createLinearScale`, `createLogScale`, `createTimeScale`, `decideLabelLayout`, `deriveChartSeries`, `detectArgumentKind`, `detectChartRtl`, `detectRangeSelectorKind`, `downsamplePath`, `estimateChartLabelWidth`, `fitChartText`, `formatOgeChartMessage`, `frameLabelAnchor`, `frameLabelBaseline`, `frameLine`, `frameLogical`, `framePoint`, `frameRect`, `frameTextTransform`, `funnelAnnouncement`, `funnelSrTable`, `funnelTooltip`, `gaugeArcBounds`, `gaugeArcPath`, `gaugeBandPath`, `gaugeBarDash`, `gaugeFraction`, `geoPolygons`, `groupSmallValues`, `heatmapAnnouncement`, `heatmapCell`, `heatmapSrTable`, `heatmapTooltip`, `hideOverlappingLabels`, `interpolateChartFrames`, `interpolateChartPath`, `interpolatePieFrames`, `isBarType`, `isChartDateInterval`, `isChartPointSelected`, `isFinancialType`, `isStackedType`, `isZeroBasedType`, `layoutChartGuides`, `layoutChartPanes`, `layoutFunnel`, `layoutPieLabels`, `layoutSankey`, `linePath`, `logTicks`, `mapEnsureVisible`, `mapPanBy`, `mapRegionLabel`, `mapSrTable`, `mapViewTransform`, `mapZoomAt`, `measureChartElement`, `mergeChartSeriesInputs`, `mergeOgeChartsMessages`, `mirrorTreemapRect`, `nearestIndex`, `nextChartSelection`, `nextPolarSelection`, `niceStep`, `niceTicks`, `normalizeChartBreaks`, `numberFormat`, `numericArgument`, `observeChartRtl`, `observeChartSize`, `offsetChartScale`, `ogeBollingerBands`, `ogeBoxStats`, `ogeCheckChartsLicense`, `ogeEma`, `ogeHistogramBins`, `ogeMacd`, `ogeQuantile`, `ogeRsi`, `ogeSma`, `ogeTrendline`, `panRange`, `paretoCategoryOrder`, `pickTimeUnit`, `pieAriaLabel`, `pieLabelText`, `pieSelectedAnnouncement`, `pieShouldTween`, `pieSliceAt`, `pieSrTable`, `pieTooltip`, `pieTweenFrame`, `pieValueText`, `polarKeyCommand`, `polarPointAnnouncement`, `polarPointIndex`, `polarSrRows`, `polarToCartesian`, `polarTooltip`, `printOgeChart`, `projectGeoPoint`, `radarGridPath`, `radarLoopPath`, `rangeCenteredAt`, `rangeFromSelection`, `rangeHandleDragRange`, `rangeHandleKeyRange`, `rangeSelectorAnnouncement`, `rangeSelectorDeltaValue`, `rangeSelectorEffective`, `rangeSelectorLabel`, `rangeSelectorPeriodRange`, `rangeSelectorPeriods`, `rangeSelectorWindowPx`, `rangeWindowDragRange`, `resolveChartAnimation`, `resolveChartColorScale`, `resolveChartLabels`, `resolveGaugeScale`, `resolveOgeChartsConfig`, `sankeyHighlight`, `sankeyLinkPath`, `sankeyNodeText`, `sankeySrTable`, `sankeyTooltip`, `seriesValueExtent`, `siFormat`, `sliceAndDice`, `sliceArcPath`, `sparklineIndexAt`, `sparklineTooltip`, `splinePath`, `squarify`, `steppedPoints`, `sunburstSegmentAt`, `sunburstTooltip`, `timeTickFormatter`, `timeTicks`, `toggleChartIndex`, `togglePieSlice`, `treemapTooltip`, `worstAspectRatio`, `zoomRangeAt`
+- types: `ArgumentIndex`, `BarSlot`, `CandleGeometry`, `ChartAxisLabelBox`, `ChartDeriveContext`, `ChartDerived`, `ChartFieldExpr`, `ChartGestureCallbacks`, `ChartGestureHandle`, `ChartIndicatorOptions`, `ChartLabelCandidate`, `ChartLabelInfo`, `ChartLabelOptions`, `ChartLabelPosition`, `ChartPinchCallbacks`, `ChartPinchPoint`, `ChartPinchTracker`, `ChartPoint`, `ChartPointCustomizer`, `ChartPointExtra`, `ChartPointInfo`, `ChartPointStyle`, `ChartRange`, `ChartScale`, `ChartScaleBreak`, `ChartScaleKind`, `ChartSeries`, `ChartSeriesInput`, `ChartSeriesType`, `ChartTickOptions`, `ChartTrendlineOptions`, `FunnelLayoutInput`, `FunnelStageGeometry`, `GroupedPieValue`, `LabelLayoutDecision`, `LabelOverlapMode`, `OgeAnalyticsInput`, `OgeBollingerBand`, `OgeBoxStats`, `OgeBulletRangeVm`, `OgeBulletRect`, `OgeBulletScene`, `OgeBulletSceneInput`, `OgeCartesianData`, `OgeCartesianDataInput`, `OgeCartesianHoverState`, `OgeCartesianScene`, `OgeCartesianSceneInput`, `OgeChartAnimationEasing`, `OgeChartAnimationOptions`, `OgeChartAnnotation`, `OgeChartAnnotationVm`, `OgeChartAxisBinding`, `OgeChartAxisBreak`, `OgeChartAxisLabelOptions`, `OgeChartAxisLabelVm`, `OgeChartAxisOptions`, `OgeChartAxisSlots`, `OgeChartAxisStrip`, `OgeChartAxisTick`, `OgeChartAxisTitleVm`, `OgeChartAxisType`, `OgeChartBreakMarkerVm`, `OgeChartColorScale`, `OgeChartColorScaleLegend`, `OgeChartColorScaleSegment`, `OgeChartColorScaleTick`, `OgeChartConstantLine`, `OgeChartCrosshairOptions`, `OgeChartCrosshairVm`, `OgeChartCustomPeriod`, `OgeChartDateInterval`, `OgeChartExportData`, `OgeChartFieldExpr`, `OgeChartFrame`, `OgeChartFunnelItemEvent`, `OgeChartGridCommand`, `OgeChartGridLineVm`, `OgeChartGuideLabelVm`, `OgeChartGuideVm`, `OgeChartHeatmapCellEvent`, `OgeChartHierarchy`, `OgeChartHierarchyCommand`, `OgeChartHierarchyInput`, `OgeChartHierarchyNode`, `OgeChartHierarchyNodeEvent`, `OgeChartIndicatorOptions`, `OgeChartKeyCommand`, `OgeChartKeyContext`, `OgeChartLabelFormat`, `OgeChartLabelInfo`, `OgeChartLabelOptions`, `OgeChartLabelOverlap`, `OgeChartLabelPosition`, `OgeChartLegendClickEvent`, `OgeChartLegendEntry`, `OgeChartLegendItem`, `OgeChartLegendOptions`, `OgeChartLineVm`, `OgeChartListCommand`, `OgeChartMapCommand`, `OgeChartMapRegionEvent`, `OgeChartMinorTickOptions`, `OgeChartPane`, `OgeChartPaneVm`, `OgeChartPeriod`, `OgeChartPieSliceEvent`, `OgeChartPlotRect`, `OgeChartPoint`, `OgeChartPointCustomizer`, `OgeChartPointEvent`, `OgeChartPointExtra`, `OgeChartPointInfo`, `OgeChartPointRef`, `OgeChartPointStyle`, `OgeChartPrintOptions`, `OgeChartRange`, `OgeChartRectVm`, `OgeChartRenderBar`, `OgeChartRenderCandle`, `OgeChartRenderDot`, `OgeChartRenderLabel`, `OgeChartRenderMarker`, `OgeChartRenderPath`, `OgeChartRenderSegment`, `OgeChartRenderSeries`, `OgeChartResolvedAnimation`, `OgeChartResolvedColorScale`, `OgeChartSankeyLinkEvent`, `OgeChartSankeyNodeEvent`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSize`, `OgeChartSmallValuesGrouping`, `OgeChartSrRow`, `OgeChartStripLine`, `OgeChartStripRect`, `OgeChartTextMeasure`, `OgeChartTickInterval`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipVm`, `OgeChartTrendlineOptions`, `OgeChartTweenClock`, `OgeChartTweenDriver`, `OgeChartTweenFrame`, `OgeChartTweenSeries`, `OgeChartTweenTiming`, `OgeChartValueAxisVm`, `OgeChartValueRange`, `OgeChartXY`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgeChartsPeriodMessages`, `OgeChartsValueMessages`, `OgeChartsVisualMessages`, `OgeCircularGaugeIndicator`, `OgeCircularGaugeScene`, `OgeCircularGaugeSceneInput`, `OgeFunnelAlgorithm`, `OgeFunnelItemVm`, `OgeFunnelLabelVm`, `OgeFunnelLegendItemVm`, `OgeFunnelScene`, `OgeFunnelSceneInput`, `OgeFunnelTooltipVm`, `OgeFunnelType`, `OgeGaugeAria`, `OgeGaugeLabelVm`, `OgeGaugeOrientation`, `OgeGaugeRangeVm`, `OgeGaugeScaleOptions`, `OgeGaugeSrRow`, `OgeGaugeTickVm`, `OgeGeoJsonFeature`, `OgeGeoJsonFeatureCollection`, `OgeGeoJsonGeometry`, `OgeHeatmapAxisLabelVm`, `OgeHeatmapCellVm`, `OgeHeatmapScene`, `OgeHeatmapSceneInput`, `OgeHeatmapTooltipVm`, `OgeHistogramBin`, `OgeHistogramBinning`, `OgeLinearGaugeIndicator`, `OgeLinearGaugeScene`, `OgeLinearGaugeSceneInput`, `OgeMacdPoint`, `OgeMapProjection`, `OgeMapRegionVm`, `OgeMapScene`, `OgeMapSceneInput`, `OgeMapView`, `OgePieGeometry`, `OgePieLabelVm`, `OgePieLegendItemVm`, `OgePieRingVm`, `OgePieScene`, `OgePieSceneInput`, `OgePieSeriesInput`, `OgePieSliceVm`, `OgePieTooltipVm`, `OgePieTweenFrame`, `OgePieTweenSlice`, `OgePolarData`, `OgePolarDataInput`, `OgePolarHover`, `OgePolarMarkerVm`, `OgePolarRingVm`, `OgePolarScene`, `OgePolarSceneInput`, `OgePolarSectorVm`, `OgePolarSeriesVm`, `OgePolarSpokeVm`, `OgePolarTooltipVm`, `OgeRangeSelectorData`, `OgeRangeSelectorDataInput`, `OgeRangeSelectorPeriodVm`, `OgeRangeSelectorScene`, `OgeRangeSelectorSceneInput`, `OgeRangeSelectorSeriesVm`, `OgeSankeyLinkColor`, `OgeSankeyLinkVm`, `OgeSankeyNode`, `OgeSankeyNodeAlign`, `OgeSankeyNodeVm`, `OgeSankeyScene`, `OgeSankeySceneInput`, `OgeSankeyTooltipVm`, `OgeSparklineBarVm`, `OgeSparklineMarkerVm`, `OgeSparklineMarkers`, `OgeSparklinePointVm`, `OgeSparklineScene`, `OgeSparklineSceneInput`, `OgeSparklineTooltipVm`, `OgeSparklineType`, `OgeSunburstScene`, `OgeSunburstSceneInput`, `OgeSunburstSegmentVm`, `OgeSunburstTooltipVm`, `OgeTreemapLayoutAlgorithm`, `OgeTreemapScene`, `OgeTreemapSceneInput`, `OgeTreemapTileVm`, `OgeTreemapTooltipVm`, `OgeTrendlineFit`, `OgeTrendlineFitOptions`, `OgeTrendlineType`, `PathPoint`, `PieLabelPosition`, `PieSlice`, `PieSmallValuesGrouping`, `PolarXY`, `SankeyLayout`, `SankeyLayoutInput`, `SankeyLinkInput`, `SankeyLinkLayout`, `SankeyNodeLayout`, `StackedValue`, `TimeTickUnit`, `TreemapRect`
 
 `@oge-ui/charts-engine/export-pdf`
 
@@ -55645,7 +55719,7 @@ _Appearance & i18n_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `title / subtitle` | `string` | `''` | Headings above the plot. |
-| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions plus a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation. `{ enabled?, duration? (ms, 600), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; `false` turns both off and `prefers-reduced-motion: reduce` always does. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions, a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation — and tweens on every later data change: marks are matched by series name and category and glide to their new geometry, new marks grow from the baseline, removed ones shrink to it, line and area paths morph point by point; a legend toggle fades the series out (or in) while the value axis re-scales. New data arriving mid-tween continues from the frame on screen. Resizes, zoom and pan stay immediate. `{ enabled?, duration? (ms, 600 — draw-in and tweens), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; the presets follow the motion tokens (`easeOut` → `--oge-motion-easing-decelerate`, `easeIn` → `-accelerate`, `ease`/`easeInOut` → `-standard`). `false` turns everything off and `prefers-reduced-motion: reduce` always does. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
 | `messages` | `Partial<OgeChartsMessages>` | `{}` | Per-instance message overrides, merged over the provider config per top-level block. |
 | `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-chart` host element — give it a height (`style={{ height: 380 }}`). |
@@ -55729,6 +55803,7 @@ _Template directives (render props)_
 | `colorField / customizePoint` | `field / (info: OgeChartPointInfo) => OgeChartPointStyle` | `—` | Per-slice colour from the data, or per-slice `{ color?, label?, description? }` overrides; the legend follows, and `description` is spoken in the tooltip and the sr table. |
 | `series` | `readonly OgePieSeriesInput[]` | `[]` | Nested doughnut: one ring per entry, inner → outer (`{ name?, dataSource?, argumentField?, valueField?, colorField?, customizePoint?, label? }` — unset fields fall back to the chart props). Slices of the same argument share a colour and one legend button across rings; the sr table gets a column per ring, the tooltip prefixes the ring name, `onSliceClick` carries `ringIndex`/`ringName`. Small-value grouping does not apply to rings. |
 | `selectedSlices / defaultSelectedSlices` | `readonly number[]` | `undefined / []` | Selected slice indexes — selected slices explode. Controlled when `selectedSlices` is provided. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover transitions plus an arc tween on data changes: slices matched by ring and argument sweep to their new angles, a new slice opens from the seam where it appears and a removed one closes onto its neighbours' seam; new data mid-tween continues from the frame on screen. `{ enabled?, duration? (ms, 600), easing? }` as on the cartesian chart; `false` turns it off and `prefers-reduced-motion: reduce` always does. |
 | `legend / tooltipEnabled / palette / title / locale / messages` | `see OgeChart` | `—` | Shared options with the cartesian chart. |
 | `renderLegendItem / renderLabel / className / style` | `see OgeChart` | `—` | The legend and data-label render props (`*ogeChartLegendTemplate` / `*ogeChartLabelTemplate`) and the host styling props. |
 
@@ -57410,6 +57485,68 @@ export function SelectableChart() {
         onPointClick={(event) => {
           lastPoint.current = event;
         }}
+        style={{ height: 340 }}
+      />
+    </>
+  );
+}
+```
+
+#### Live data
+
+```ts
+'use client';
+
+import { useMemo, useState } from 'react';
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/** Six months from `start`; `tick` reshuffles the values. */
+function rows(start: number, tick: number) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const n = start + i;
+    const wave = Math.sin(n * 1.3 + tick * 2.1);
+    return {
+      month: MONTHS[n % MONTHS.length],
+      orders: Math.round(60 + wave * 35 + ((n * 17 + tick * 11) % 20)),
+      returns: Math.round(18 + Math.cos(n + tick) * 10),
+    };
+  });
+}
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'month', valueField: 'orders', name: 'Orders' },
+  { type: 'spline', argumentField: 'month', valueField: 'returns', name: 'Returns' },
+];
+
+export function LiveData() {
+  const [start, setStart] = useState(0);
+  const [tick, setTick] = useState(0);
+  // a stable array per update: the chart tweens on each new one
+  const data = useMemo(() => rows(start, tick), [start, tick]);
+  return (
+    <>
+      {/* Updates glide instead of jumping: marks are matched by series name
+          and category, so changed values tween, a new month grows from the
+          baseline and a dropped one shrinks into it, and the line morphs point
+          by point. Clicking a legend item fades that series out while the value
+          axis re-scales. New data mid-tween continues from the frame on
+          screen; the animation prop times it, and prefers-reduced-motion turns
+          it off. */}
+      <div className="mb-2 flex gap-2">
+        <button type="button" onClick={() => setTick(tick + 1)}>New values</button>
+        <button type="button" onClick={() => setStart(start + 1)}>Next month</button>
+      </div>
+      <OgeChart
+        dataSource={data}
+        series={series}
+        animation={{ duration: 600, easing: 'easeOut' }}
+        title="Live data"
         style={{ height: 340 }}
       />
     </>

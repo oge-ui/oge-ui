@@ -1485,7 +1485,27 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   `duration` after the first render with data, with `transform-origin` from
   `cartesianSeriesEnterOrigin` (the value baseline in logical space), and the keyframes scale
   `y` — which grows columns up and rotated bars sideways alike. The timer only runs in the
-  browser.
+  browser. The easing presets map to the motion tokens (`easeOut` →
+  `--oge-motion-easing-decelerate`, `easeIn` → `-accelerate`, `ease`/`easeInOut` → `-standard`):
+  `--oge-chart-anim-easing` is `var(<token>, <raw curve>)`, the raw curve only the SSR fallback.
+- **After the draw-in, updates tween in script, keyed by the engine.** `chart-tween.ts` turns a
+  scene into a keyed frame (`cartesianTweenFrame` / `pieTweenFrame`: series by name, marks by
+  `chartArgumentKey(argument)`, value ticks and grid lines by tick value) and
+  `interpolateChartFrames` / `interpolatePieFrames` return `t → frame`: matched marks lerp, new
+  ones grow from the value baseline, removed ones shrink to it (kept with a negative
+  `pointIndex`, so `track` keys never collide), line/area paths morph through
+  `interpolateChartPath` (number-by-number when the structure matches, else flattened and
+  resampled — closed outlines edge by edge), a series a legend hides fades out
+  (`OgeChartRenderSeries.fade`) and value ticks slide along an affine fit of the old/new axis.
+  `cartesianShouldTween` / `pieShouldTween` only accept data or visibility changes at the same
+  size — resizes, zoom and pan stay immediate. Both render layers drive one
+  `createChartTweenDriver` (rAF; the first frame is emitted synchronously, React runs it from a
+  layout effect, so the target never paints first) and draw the frame's `renderSeries` /
+  `axisLabels` / `gridLines` / `guides` / `annotations` instead of the scene's while it runs;
+  hit-testing, the sr table and `drawn` stay on the scene. A retarget starts from the frame on
+  screen, so new data mid-tween never jumps. The JS curve is the token's computed value
+  (`chartAnimationEasing` → `chartEasingFunction`, which reads `cubic-bezier()` and `linear()`
+  springs). Off with `animation: false`, under reduced motion and above `CHART_TWEEN_MAX_MARKS`.
 
 ### Charts: gauges, sparkline and the non-cartesian charts (W8c)
 
