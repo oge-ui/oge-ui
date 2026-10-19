@@ -2,6 +2,7 @@ import {
   OGE_EXIT_FADE,
   OGE_MOTION_DEFAULTS,
   createOgeLayoutAnimator,
+  ogeDropExitGhosts,
   ogeExitGhost,
   ogeFlipDelta,
   ogeMotionEnabled,
@@ -363,6 +364,19 @@ describe('ghost helpers', () => {
     stub.calls[0].finish();
     await Promise.resolve();
     await Promise.resolve();
+    expect(document.querySelector('.oge-exit-ghost')).toBeNull();
+  });
+
+  it('ogeDropExitGhosts ends the ghosts of one group only', () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    ogeExitGhost(a, { rect: rect(0, 0), group: 'panel' });
+    ogeExitGhost(b, { rect: rect(0, 0), group: 'other' });
+    expect(document.querySelectorAll('.oge-exit-ghost')).toHaveLength(2);
+    ogeDropExitGhosts('panel');
+    expect(document.querySelectorAll('.oge-exit-ghost')).toHaveLength(1);
+    ogeDropExitGhosts('missing');
+    ogeDropExitGhosts('other');
     expect(document.querySelector('.oge-exit-ghost')).toBeNull();
   });
 

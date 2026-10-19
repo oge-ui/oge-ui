@@ -1,5 +1,9 @@
 import { ogeIsRtl } from '../a11y/direction';
-import { OGE_EXIT_FADE, ogeExitGhost } from '../motion/motion';
+import {
+  OGE_EXIT_FADE,
+  ogeDropExitGhosts,
+  ogeExitGhost,
+} from '../motion/motion';
 import { resolvePopupArrow } from './arrow';
 import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
 import {
@@ -93,6 +97,9 @@ export interface OgeAnchoredPanelCoreOptions {
 
 let nextPanelId = 0;
 
+/** The exit-ghost group every anchored panel's close joins. */
+const PANEL_GHOSTS = 'anchored-panel';
+
 /**
  * The close's exit motion: an `ogeExitGhost` of the panel fades out
  * (opacity only — `--oge-motion-duration-fast`, `-easing-accelerate`) in the
@@ -105,6 +112,7 @@ function exitPanel(panel: HTMLElement | null): void {
   ogeExitGhost(panel, {
     parent: panel.parentElement,
     keyframes: OGE_EXIT_FADE,
+    group: PANEL_GHOSTS,
   });
 }
 
@@ -167,6 +175,8 @@ export class OgeAnchoredPanelCore {
   open(): void {
     if (typeof window === 'undefined') return; // SSR: nothing to anchor to
     if (this.open_) return;
+    // a panel opening ends any panel still fading out, so one never shows twice
+    ogeDropExitGhosts(PANEL_GHOSTS);
     this.setOpen(true);
     this.setPosition(null);
     this.measureRetries = 0;

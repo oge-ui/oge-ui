@@ -1,9 +1,9 @@
 import { signal } from '@angular/core';
 
 /**
- * Whether the docs app's root toast service runs in stack mode — a live
- * `provideOgeOverlayConfig(() => ({ toastStacked: … }))` in `app.config.ts`
- * reads it, so the toast page can switch the mode for its "Stack mode" demo.
- * Off by default, so every other page (and its e2e) sees plain toasts.
+ * Whether the toast page's service runs in stack mode — the live
+ * `provideOgeOverlayConfig(() => ({ toastStacked: … }))` in `toast.routes.ts`
+ * reads it, so the page can switch the mode for its "Stack mode" demo. Off by
+ * default, and reset when the page goes.
  */
 export const TOAST_STACK_DEMO = signal(false);

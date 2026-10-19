@@ -4198,6 +4198,9 @@ export interface OgeDropDownOpeningEvent {
 }
 
 // @public
+export function ogeDropExitGhosts(group: string): void;
+
+// @public
 export function ogeEdgeScrollVelocity(pos: number, min: number, max: number, edge?: number, maxSpeed?: number): number;
 
 // @public
@@ -5313,6 +5316,7 @@ export function ogeExitGhost(element: Element, options?: OgeExitGhostOptions): v
 
 // @public
 export interface OgeExitGhostOptions {
+    group?: string;
     keyframes?: readonly Keyframe[];
     parent?: Element | null;
     parts?: ReadonlyArray<{

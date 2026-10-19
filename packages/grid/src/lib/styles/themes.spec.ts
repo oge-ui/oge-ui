@@ -360,6 +360,7 @@ describe.each([
  * the literal forever (`--oge-text-muted` did, on every theme).
  */
 const OPTIONAL_HOOKS = new Set([
+  '--oge-chat-height',
   '--oge-form-cols-xs',
   '--oge-form-cols-sm',
   '--oge-form-cols-md',

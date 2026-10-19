@@ -354,7 +354,7 @@ export class OverlayToastPage {
     });
   }
 
-  /** The root service's stack mode (a live config) — reset when the page goes. */
+  /** The page service's stack mode (a live config) — reset when the page goes. */
   protected readonly stacked = TOAST_STACK_DEMO.asReadonly();
 
   constructor() {

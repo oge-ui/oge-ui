@@ -1126,8 +1126,8 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'toast',
-        loadComponent: () =>
-          import('./pages/overlay/toast').then((m) => m.OverlayToastPage),
+        loadChildren: () =>
+          import('./pages/overlay/toast.routes').then((m) => m.TOAST_ROUTES),
         title: 'OGE — Toast',
       },
       {

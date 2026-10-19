@@ -495,6 +495,26 @@ export interface OgeExitGhostOptions {
     readonly selector: string;
     readonly keyframes: readonly Keyframe[];
   }>;
+  /**
+   * Names the ghost's group so {@link ogeDropExitGhosts} can end it early —
+   * an overlay re-opening while its previous ghost still fades would
+   * otherwise show (and expose to queries) two copies for a moment.
+   */
+  group?: string;
+}
+
+const ghostGroups = new Map<string, Set<HTMLElement>>();
+
+/**
+ * Removes every exit ghost of `group` still fading — call it where a new
+ * instance of the surface opens (the anchored panel's `open()`), so the
+ * fresh one never appears next to the clone of the last.
+ */
+export function ogeDropExitGhosts(group: string): void {
+  const ghosts = ghostGroups.get(group);
+  if (!ghosts) return;
+  ghostGroups.delete(group);
+  for (const ghost of ghosts) ghost.remove();
 }
 
 /** Opacity-only exit keyframes — for surfaces whose geometry must stay put. */
@@ -629,7 +649,16 @@ export function ogeExitGhost(
           fill: 'forwards',
         });
     }
-    void finished(animation).then(() => clone.remove());
+    const group = options.group;
+    if (group !== undefined) {
+      let ghosts = ghostGroups.get(group);
+      if (!ghosts) ghostGroups.set(group, (ghosts = new Set()));
+      ghosts.add(clone);
+    }
+    void finished(animation).then(() => {
+      clone.remove();
+      if (group !== undefined) ghostGroups.get(group)?.delete(clone);
+    });
   });
 }
 

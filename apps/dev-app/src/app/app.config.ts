@@ -12,9 +12,7 @@ import {
   provideRouter,
   withInMemoryScrolling,
 } from '@angular/router';
-import { provideOgeOverlayConfig } from '@oge-ui/overlay';
 import { appRoutes } from './app.routes';
-import { TOAST_STACK_DEMO } from './pages/overlay/toast-stack-demo';
 import { OgeTitleStrategy } from './shared/title.strategy';
 
 export const appConfig: ApplicationConfig = {
@@ -32,9 +30,6 @@ export const appConfig: ApplicationConfig = {
     ...(isDevMode() ? [] : [provideClientHydration(withEventReplay())]),
     // Search-friendly document titles derived from the short route titles.
     { provide: TitleStrategy, useClass: OgeTitleStrategy },
-    // live, so the toast page's "Stack mode" demo can switch the root
-    // service between plain and stacked regions
-    provideOgeOverlayConfig(() => ({ toastStacked: TOAST_STACK_DEMO() })),
     provideRouter(
       appRoutes,
       // A new page starts at its top; back/forward restores where you were.

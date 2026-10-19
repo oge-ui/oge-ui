@@ -2112,6 +2112,7 @@ export {
   OGE_MOTION_DEFAULTS,
   createOgeLayoutAnimator,
   createOgeTrackAnimator,
+  ogeDropExitGhosts,
   ogeExitGhost,
   ogeFlipDelta,
   ogeMotionEnabled,
