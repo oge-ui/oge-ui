@@ -5647,10 +5647,12 @@ function OgeGridInner<T extends object>(
               aria-colspan={colSpan}
               style={{ maxWidth: model.hostWidth() || undefined }}
             >
-              {latest.current.renderDetail?.({
-                row: node.data,
-                key: node.parentKey,
-              })}
+              <div className="oge-detail-content">
+                {latest.current.renderDetail?.({
+                  row: node.data,
+                  key: node.parentKey,
+                })}
+              </div>
             </div>
           </div>
         );

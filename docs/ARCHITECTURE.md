@@ -845,9 +845,27 @@ var(--oge-motion-duration-…) var(--oge-motion-easing-…)`, keyframe `from { �
     are in (`afterRenderEffect` / a layout effect). `ogeRowMotionDecision` animates only a change of
     the same window: a different `start` (scroll re-creation, a virtual jump), a first render or an
     entirely new key set just records. Only rows intersecting the viewport animate (cap
-    `OGE_ROW_MOTION_LIMIT`, 60), rows are keyed through `data-rowindex` against the window's keys
-    (no key attribute in the DOM), there are no exit ghosts (they would float over the sticky
-    header), and remote windowed scrolling passes `null` (off).
+    `OGE_ROW_MOTION_LIMIT`, 60; "on screen" is the scroll box clipped to the window), rows are
+    keyed through `data-rowindex` against the window's keys (no key attribute in the DOM) or, with
+    `order: 'dom'`, by DOM position (the tree view's flat list, keyed by node id), and remote
+    windowed scrolling passes `null` (off). Rows joining the window (an expand, a detail row) slide
+    in — fade + 4px, staggered by `--oge-motion-stagger`, at most six steps; rows leaving it (a
+    collapse, a filter) fade out as an `oge-row-ghost`: an inert clone prepended to the rows' **own
+    container**, never `<body>`, so it stays under the sticky header and inside the themed subtree.
+    Ghosts carry no id, `role`, `data-rowindex`, `data-key` or `data-testid`, so virtualizers, the core and
+    specs never count them; a row query that is not keyed that way must skip `.oge-row-ghost`.
+    The tree view uses the same core (both layers, no input — reduced motion is the switch).
+  - **Height reveals use `tokens.collapse(...)`** (`_tokens.scss`), the `grid-template-rows:
+0fr → 1fr` technique: a one-track grid whose only child clips (`min-block-size: 0`), so nothing
+    is measured and content may resize while open. Padding goes on a wrapper inside the clipping
+    child. States: `closed` (base rule, includes the transition unless `$transition: false`),
+    `open` (the modifier), `transition` (just the transition, for a class that gates it — the
+    accordion's `-animated`) and `enter` (open, starting closed through `@starting-style`, for a
+    node rendered only while open — the grid detail row; its removal is not animated, the row
+    ghost covers it). `$clip: block` clips only the height so content may overflow sideways into a
+    scrolling parent. Never use `enter` on a row a virtualizer measures right after it renders
+    (`.oge-virtual .oge-detail-row` turns the transition off). The mixin drops the transition
+    under reduced motion.
   - Each animation is switched off in the file's `@include tokens.reduced-motion` block, and the
     final (non-animated) state is what the visual baselines capture — `animations: 'disabled'`
     must not change a pixel.

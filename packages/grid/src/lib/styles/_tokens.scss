@@ -361,6 +361,80 @@
   }
 }
 
+/// Height reveal without measuring — the `grid-template-rows: 0fr → 1fr`
+/// technique: the element is a one-track grid whose only child clips
+/// (`overflow: hidden; min-block-size: 0`), so the track animates between
+/// nothing and the content's own height, and keeps working when the content
+/// resizes while open. Put padding on a wrapper *inside* the clipping child.
+///   $state — `closed` (0fr, faded: the base rule), `open` (1fr, opaque: the
+///            open modifier), `transition` (just the transition, for a class
+///            that gates it) or `enter` (open, starting closed on insertion
+///            through `@starting-style`, for a node rendered only while open —
+///            its removal is not animated);
+///   $transition — `closed` / `enter` also emit the transition (default);
+///   $duration / $easing — motion tokens (or a component's own knob);
+///   $fade — fade the content with the height;
+///   $clip — `both` (default) or `block`: clip the height only and let the
+///           content overflow sideways into a scrolling parent.
+/// The transition is dropped under reduced motion; the end state stays.
+@mixin collapse(
+  $state: closed,
+  $transition: true,
+  $duration: var(--oge-motion-duration-base),
+  $easing: var(--oge-motion-easing-standard),
+  $fade: true,
+  $clip: both
+) {
+  @if $state == closed or $state == enter {
+    display: grid;
+  }
+
+  @if $state == closed {
+    grid-template-rows: 0fr;
+    @if $fade {
+      opacity: 0;
+    }
+  } @else if $state == open or $state == enter {
+    grid-template-rows: 1fr;
+    @if $fade {
+      opacity: 1;
+    }
+  }
+
+  @if $state == transition or ($transition and $state != open) {
+    transition:
+      grid-template-rows $duration $easing,
+      opacity $duration $easing;
+  }
+
+  @if $state == closed or $state == enter {
+    > * {
+      min-block-size: 0;
+      @if $clip == block {
+        overflow-x: visible;
+        overflow-y: clip;
+      } @else {
+        overflow: hidden;
+      }
+    }
+  }
+
+  @if $state == enter {
+    @starting-style {
+      grid-template-rows: 0fr;
+      @if $fade {
+        opacity: 0;
+      }
+    }
+  }
+
+  @if $state == transition or ($transition and $state != open) {
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}
+
 /// Grows a small control's pointer target without changing what it draws:
 /// a transparent `::before` centred on the element makes the hit area at
 /// least `$min` square (WCAG 2.5.8 — 24px) and `$coarse` square on touch

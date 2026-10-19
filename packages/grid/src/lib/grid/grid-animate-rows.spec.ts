@@ -1,4 +1,7 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { OgeColumn } from '../columns/column';
+import { OgeDetailTemplate } from '../templates/detail-template';
 import { OgeGrid } from './grid';
 
 interface Row {
@@ -126,5 +129,108 @@ describe('OgeGrid animateRows', () => {
     fixture.componentRef.setInput('rowAlternation', true);
     await settle(fixture);
     expect(stub.calls).toHaveLength(0);
+  });
+});
+
+interface Sale {
+  id: number;
+  region: string;
+  city: string;
+}
+
+const SALES: Sale[] = [
+  { id: 1, region: 'EU', city: 'Berlin' },
+  { id: 2, region: 'EU', city: 'Paris' },
+  { id: 3, region: 'US', city: 'NYC' },
+];
+
+@Component({
+  imports: [OgeGrid, OgeColumn, OgeDetailTemplate],
+  template: `
+    <oge-grid [data]="data" keyField="id">
+      <oge-column field="city" />
+      <div *ogeDetailTemplate="let sale">Detail of {{ sale.id }}</div>
+    </oge-grid>
+  `,
+})
+class DetailHost {
+  readonly data = SALES;
+}
+
+@Component({
+  imports: [OgeGrid, OgeColumn],
+  template: `
+    <oge-grid [data]="data" keyField="id" [groupBy]="['region']">
+      <oge-column field="region" />
+      <oge-column field="city" />
+    </oge-grid>
+  `,
+})
+class GroupHost {
+  readonly data = SALES;
+}
+
+describe('OgeGrid expand/collapse motion', () => {
+  let stub: ReturnType<typeof stubLayout>;
+  beforeEach(() => (stub = stubLayout()));
+  afterEach(() => stub.restore());
+
+  const rowEls = (el: HTMLElement) =>
+    Array.from(el.querySelectorAll<HTMLElement>('.oge-rows > [data-rowindex]'));
+
+  it('opens a detail row inside its clipping cell, gliding the rows below', async () => {
+    const fixture = TestBed.createComponent(DetailHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    (el.querySelectorAll('.oge-expander-btn')[0] as HTMLButtonElement).click();
+    await settle(fixture);
+    const detail = el.querySelector<HTMLElement>('.oge-detail-row');
+    // the CSS height reveal needs the padding inside the clipping cell
+    expect(
+      detail?.querySelector(':scope > .oge-detail-cell > .oge-detail-content')
+        ?.textContent,
+    ).toContain('Detail of 1');
+    const enter = stub.calls.find((call) => call.el === detail);
+    expect(enter?.keyframes[0].opacity).toBe(0);
+    const [, , paris] = rowEls(el);
+    const glide = stub.calls.find((call) => call.el === paris);
+    expect(glide?.keyframes[0].transform).toBe(`translate(0px, ${-ROW}px)`);
+
+    stub.calls.length = 0;
+    (el.querySelectorAll('.oge-expander-btn')[0] as HTMLButtonElement).click();
+    await settle(fixture);
+    expect(
+      el.querySelectorAll('.oge-detail-row:not(.oge-row-ghost)'),
+    ).toHaveLength(0);
+    // closing removes the row at once; its ghost fades where it was
+    const ghost = el.querySelector<HTMLElement>('.oge-rows > .oge-row-ghost');
+    expect(ghost?.classList.contains('oge-detail-row')).toBe(true);
+    expect(ghost?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('glides the rows below a collapsed group up and ghosts its rows', async () => {
+    const fixture = TestBed.createComponent(GroupHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    // EU, Berlin, Paris, US, NYC
+    expect(rowEls(el)).toHaveLength(5);
+    const groupRow = el.querySelector<HTMLElement>('.oge-group-row');
+    groupRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await settle(fixture);
+    const rows = rowEls(el);
+    expect(rows).toHaveLength(3);
+    const glide = stub.calls.find((call) => call.el === rows[1]);
+    expect(glide?.keyframes[0].transform).toBe(`translate(0px, ${2 * ROW}px)`);
+    expect(el.querySelectorAll('.oge-rows > .oge-row-ghost')).toHaveLength(2);
+
+    stub.calls.length = 0;
+    el.querySelector<HTMLElement>('.oge-group-row')?.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    );
+    await settle(fixture);
+    const revealed = stub.calls.filter(
+      (call) => call.keyframes[0].opacity === 0,
+    );
+    expect(revealed).toHaveLength(2);
   });
 });

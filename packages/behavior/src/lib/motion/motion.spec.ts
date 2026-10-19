@@ -294,6 +294,37 @@ describe('createOgeLayoutAnimator', () => {
     root.remove();
   });
 
+  it('staggers enters by --oge-motion-stagger with custom keyframes, capped', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    root.style.setProperty('--oge-motion-stagger', '10ms');
+    place(root, rect(0, 0, 400, 400));
+    const items = new Map<string, HTMLElement>();
+    const keyframes: Keyframe[] = [{ opacity: 0 }, { opacity: 1 }];
+    const animator = createOgeLayoutAnimator<string>({
+      root,
+      query: () => items.entries(),
+      enterKeyframes: keyframes,
+      enterStagger: true,
+    });
+    animator.capture();
+    for (let i = 0; i < 9; i++) {
+      const el = document.createElement('div');
+      root.append(el);
+      place(el, rect(0, i * 20));
+      items.set(`n${i}`, el);
+    }
+    void animator.play();
+    expect(stub.calls).toHaveLength(9);
+    expect(stub.calls[0].keyframes).toBe(keyframes);
+    expect(stub.calls.map((call) => call.options.delay ?? 0)).toEqual([
+      0, 10, 20, 30, 40, 50, 60, 60, 60,
+    ]);
+    expect(stub.calls[1].options.fill).toBe('backwards');
+    animator.cancel();
+    root.remove();
+  });
+
   it('gives up over its element limit', () => {
     const { root, a, animator } = setup(2);
     place(a, rect(0, 0));

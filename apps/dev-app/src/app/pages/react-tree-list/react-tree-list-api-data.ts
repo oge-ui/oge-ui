@@ -251,7 +251,7 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
           type: 'boolean',
           default: 'true',
           description:
-            'Same as the grid: rows on screen glide to their new slots when a sort, a filter, an expand/collapse or a row drop re-orders them (at most 60 rows; scrolling and page changes never animate, reduced motion applies changes at once). <code>false</code> turns it off.',
+            'Same as the grid: rows on screen glide to their new slots when a sort, a filter, an expand/collapse or a row drop re-orders them (at most 60 rows; revealed children slide in staggered, collapsed ones fade out; scrolling and page changes never animate, reduced motion applies changes at once). <code>false</code> turns it off.',
         },
         {
           name: 'commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey',

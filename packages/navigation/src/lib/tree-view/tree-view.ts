@@ -7,6 +7,7 @@ import {
   Injector,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   computed,
   contentChild,
   effect,
@@ -25,6 +26,7 @@ import {
 // shared verbatim with `<OgeTreeView>` in `@oge-ui/react-navigation` (ADR
 // 0001). What is left here is the Angular render shell and its signal wiring.
 import {
+  OgeRowMotionCore,
   beginOgeTreeDrag,
   buildTreeViewModel,
   createTypeAheadBuffer,
@@ -809,6 +811,45 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     return all.slice(window.start, window.end);
   });
 
+  /** Index of the first stamped node — a different one means scrolling. */
+  private readonly renderedStart = computed(() =>
+    this.virtualEnabled() ? this.virtualizer.window().start : 0,
+  );
+
+  /**
+   * Expand/collapse, a drop and a filter glide the rows on screen (FLIP of
+   * the stamped window, keyed by node id): revealed children slide in
+   * staggered, hidden ones fade out as ghosts. Scrolling re-creates the
+   * window at a new start and never animates; reduced motion switches it off.
+   */
+  private readonly rowMotion = new OgeRowMotionCore<OgeTreeNode<T>, string>({
+    keyOf: (node) => node.id,
+    viewport: () => this.scrollEl()?.nativeElement ?? null,
+    root: () =>
+      this.scrollEl()?.nativeElement.querySelector<HTMLElement>(
+        ':scope > .oge-tree-view-list',
+      ) ?? null,
+    rows: (root) =>
+      root.querySelectorAll<HTMLElement>(
+        ':scope > .oge-tree-view-viewport > .oge-tree-view-item',
+      ),
+    order: 'dom',
+  });
+
+  // a component effect runs before this view's template refresh, so the
+  // snapshot sees the old rows; the render effect plays the change
+  private readonly rowMotionPrepare = effect(() => {
+    const nodes = this.renderedNodes();
+    const start = this.renderedStart();
+    untracked(() => this.rowMotion.prepare({ nodes, start }));
+  });
+
+  private readonly rowMotionCommit = afterRenderEffect(() => {
+    this.renderedNodes();
+    this.renderedStart();
+    untracked(() => void this.rowMotion.commit());
+  });
+
   constructor() {
     // search debounce
     effect(() => {
@@ -890,6 +931,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
 
     inject(DestroyRef).onDestroy(() => {
       clearTimeout(this.searchTimer);
+      this.rowMotion.cancel();
       this.dragHandle?.cancel();
     });
   }

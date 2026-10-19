@@ -131,6 +131,24 @@ export function ogeMotionTiming(
   };
 }
 
+/** `--oge-motion-stagger` default (ms), used where no stylesheet is reachable. */
+const STAGGER_DEFAULT = 30;
+/** Most stagger steps one play spreads its enters over. */
+const STAGGER_STEPS = 6;
+
+/** The `--oge-motion-stagger` step (ms) as `element` sees it. */
+function motionStagger(element: Element | null): number {
+  try {
+    const value =
+      element && typeof getComputedStyle === 'function'
+        ? getComputedStyle(element).getPropertyValue('--oge-motion-stagger')
+        : '';
+    return parseDuration(value ?? '') ?? STAGGER_DEFAULT;
+  } catch {
+    return STAGGER_DEFAULT;
+  }
+}
+
 /**
  * `true` when script motion may run for `element`: the Web Animations API
  * exists, the user did not ask for reduced motion and the document is
@@ -237,6 +255,13 @@ export interface OgeLayoutAnimatorOptions<K> {
   limit?: number;
   /** Animate appearing elements (default `true`). */
   enter?: boolean;
+  /** Keyframes of an appearing element (default: fade in from 96 %). */
+  enterKeyframes?: Keyframe[];
+  /**
+   * Stagger the enters of one play in DOM order by `--oge-motion-stagger`
+   * each, spread over at most six steps (default `false`).
+   */
+  enterStagger?: boolean;
   /** Fade out a ghost of leaving elements (default `true`). */
   exit?: boolean;
 }
@@ -331,6 +356,8 @@ export function createOgeLayoutAnimator<K>(
       );
       const moves: Promise<void>[] = [];
       const id = ++generation;
+      const stagger = options.enterStagger ? motionStagger(root) : 0;
+      let entered = 0;
       for (const [key, el] of elements) {
         if (exclude.has(key)) continue;
         const last = after.boxes.get(key);
@@ -339,12 +366,15 @@ export function createOgeLayoutAnimator<K>(
         if (!first) {
           if (options.enter === false) continue;
           const enter = ogeMotionTiming(root, 'base', 'emphasized');
+          const delay = Math.min(entered++, STAGGER_STEPS) * stagger;
           moves.push(
             track(
               el,
-              el.animate(ENTER_KEYFRAMES, {
+              el.animate(options.enterKeyframes ?? ENTER_KEYFRAMES, {
                 duration: enter.duration,
                 easing: enter.easing,
+                // hidden until its turn, so a staggered row never flashes in
+                ...(delay > 0 ? { delay, fill: 'backwards' as const } : {}),
               }),
             ),
           );
