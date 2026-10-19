@@ -49,9 +49,56 @@ export interface OgeGridAssistantMessages {
   readonly slices: Readonly<Record<OgeGridAiSlice, string>>;
 }
 
+/** Strings of smart paste. ICU plurals over `{count}` where noted. */
+export interface OgeSmartPasteMessages {
+  /** The button text and the accessible name of the component. */
+  readonly label: string;
+  /** Label of the fallback text area (clipboard unreadable, or opened by hand). */
+  readonly textLabel: string;
+  readonly textPlaceholder: string;
+  /** Sends the text-area contents. */
+  readonly fill: string;
+  /** Opens the text area instead of reading the clipboard. */
+  readonly pasteText: string;
+  readonly stop: string;
+  readonly apply: string;
+  readonly discard: string;
+  readonly undo: string;
+  /** Heading of the proposed-values panel. */
+  readonly proposal: string;
+  /** Column headers of the proposal table. */
+  readonly field: string;
+  readonly current: string;
+  readonly next: string;
+  /** Shown for an empty current value. */
+  readonly emptyValue: string;
+  readonly yes: string;
+  readonly no: string;
+  readonly reading: string;
+  readonly thinking: string;
+  /** ICU plural over `{count}`: fields a proposal would fill. */
+  readonly proposed: string;
+  /** ICU plural over `{count}`: fields that were filled. */
+  readonly applied: string;
+  readonly unchanged: string;
+  /** `{summary}` is the model's reason. */
+  readonly unsupported: string;
+  readonly invalid: string;
+  readonly error: string;
+  readonly noTransport: string;
+  readonly clipboardDenied: string;
+  readonly empty: string;
+  readonly aborted: string;
+  readonly discarded: string;
+  readonly undone: string;
+  /** ICU plural over `{count}`: values that were dropped. */
+  readonly ignored: string;
+}
+
 /** Every AI string, grouped per component. */
 export interface OgeAiMessages {
   readonly gridAssistant: OgeGridAssistantMessages;
+  readonly smartPaste: OgeSmartPasteMessages;
 }
 
 /** The shipped English catalog. */
@@ -88,6 +135,42 @@ export const OGE_DEFAULT_AI_MESSAGES: OgeAiMessages = {
       columns: 'Columns',
     },
   },
+  smartPaste: {
+    label: 'Smart paste',
+    textLabel: 'Text to fill the form from',
+    textPlaceholder: 'Paste an email, a signature or a note…',
+    fill: 'Fill the form',
+    pasteText: 'Paste text instead',
+    stop: 'Stop',
+    apply: 'Apply',
+    discard: 'Discard',
+    undo: 'Undo',
+    proposal: 'Proposed values',
+    field: 'Field',
+    current: 'Now',
+    next: 'New',
+    emptyValue: '(empty)',
+    yes: 'Yes',
+    no: 'No',
+    reading: 'Reading the clipboard…',
+    thinking: 'Reading the text…',
+    proposed:
+      '{count, plural, one {# field to fill from the text.} other {# fields to fill from the text.}}',
+    applied: '{count, plural, one {# field filled.} other {# fields filled.}}',
+    unchanged: 'The form already holds these values.',
+    unsupported: 'Nothing in the text fits this form. {summary}',
+    invalid: 'The answer did not fit this form. Try again.',
+    error: 'Smart paste is not available right now.',
+    noTransport: 'No AI service is configured.',
+    clipboardDenied:
+      'The clipboard could not be read — paste the text into the box instead.',
+    empty: 'There is no text to read.',
+    aborted: 'Stopped.',
+    discarded: 'Proposal discarded.',
+    undone: 'Values restored.',
+    ignored:
+      '{count, plural, one {# value did not fit its field and was ignored.} other {# values did not fit their fields and were ignored.}}',
+  },
 };
 
 /**
@@ -110,6 +193,15 @@ export interface OgeGridAssistantConfig {
   readonly instructions: string | undefined;
 }
 
+/** Defaults of every smart paste under a provider. */
+export interface OgeSmartPasteConfig {
+  readonly mode: OgeGridAssistantMode;
+  /** How many applied pastes Undo can step back through. */
+  readonly undoLimit: number;
+  /** Domain vocabulary appended to the system prompt. */
+  readonly instructions: string | undefined;
+}
+
 /** Package-wide defaults for every AI component under a provider. */
 export interface OgeAiConfig {
   /** Where requests go. `null` until the application configures one. */
@@ -117,6 +209,7 @@ export interface OgeAiConfig {
   /** Locale of message plurals and of the model's summaries. */
   readonly locale: string | undefined;
   readonly gridAssistant: OgeGridAssistantConfig;
+  readonly smartPaste: OgeSmartPasteConfig;
   readonly messages: OgeAiMessages;
 }
 
@@ -132,12 +225,14 @@ export const OGE_DEFAULT_AI_CONFIG: OgeAiConfig = {
     capabilities: OGE_GRID_AI_ALL_CAPABILITIES,
     instructions: undefined,
   },
+  smartPaste: { mode: 'preview', undoLimit: 10, instructions: undefined },
   messages: OGE_DEFAULT_AI_MESSAGES,
 };
 
 /** A deep-partial message override, as the providers and `messages` inputs take. */
 export type OgeAiMessagesInput = {
   gridAssistant?: OgeGridAssistantMessagesInput;
+  smartPaste?: Partial<OgeSmartPasteMessages>;
 };
 
 /** A partial grid-assistant catalog (`slices` merged key by key). */
@@ -149,8 +244,9 @@ export type OgeGridAssistantMessagesInput = Partial<
 
 /** What the providers accept: everything optional, nested objects partial. */
 export type OgeAiConfigInput = Partial<
-  Omit<OgeAiConfig, 'messages' | 'gridAssistant'>
+  Omit<OgeAiConfig, 'messages' | 'gridAssistant' | 'smartPaste'>
 > & {
+  smartPaste?: Partial<OgeSmartPasteConfig>;
   gridAssistant?: Partial<Omit<OgeGridAssistantConfig, 'capabilities'>> & {
     capabilities?: Partial<OgeGridAiCapabilities>;
   };
@@ -178,6 +274,7 @@ export function mergeOgeAiMessages(
       base.gridAssistant,
       input.gridAssistant,
     ),
+    smartPaste: { ...base.smartPaste, ...input.smartPaste },
   };
 }
 
@@ -186,7 +283,7 @@ export function resolveOgeAiConfig(
   input: OgeAiConfigInput | undefined,
   base: OgeAiConfig = OGE_DEFAULT_AI_CONFIG,
 ): OgeAiConfig {
-  const { messages, gridAssistant, ...rest } = input ?? {};
+  const { messages, gridAssistant, smartPaste, ...rest } = input ?? {};
   return {
     ...base,
     ...rest,
@@ -198,6 +295,7 @@ export function resolveOgeAiConfig(
         ...gridAssistant?.capabilities,
       },
     },
+    smartPaste: { ...base.smartPaste, ...smartPaste },
     messages: mergeOgeAiMessages(base.messages, messages),
   };
 }

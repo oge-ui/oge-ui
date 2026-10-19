@@ -49,6 +49,8 @@ export {
   type OgeFormSubmittedEvent,
   type OgeFormSubmittingEvent,
   type OgeFormValidatedEvent,
+  type OgeFormFieldDescription,
+  type OgeFormFieldValue,
   type OgeResolvedFormItem,
   type OgeValidationContext,
   type OgeValidationRule,

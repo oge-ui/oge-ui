@@ -1,0 +1,246 @@
+@use '../../../../grid/src/lib/styles/tokens';
+@use '../styles/ai-button' as ai;
+
+// Smart paste: a pill button with the AI sparkle, an optional text area for
+// when the clipboard cannot be read, and a proposal table — field, value now,
+// value from the text — that settles in under the bar.
+.oge-smart-paste {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  line-height: 1.45;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.oge-smart-paste-bar,
+.oge-smart-paste-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.oge-smart-paste-button {
+  @include ai.button;
+}
+
+.oge-smart-paste-trigger,
+.oge-smart-paste-apply,
+.oge-smart-paste-fill {
+  @include ai.primary;
+}
+
+.oge-smart-paste-stop,
+.oge-smart-paste-discard {
+  @include ai.outlined;
+}
+
+.oge-smart-paste-toggle,
+.oge-smart-paste-undo {
+  color: var(--oge-muted-color);
+
+  &:hover:not(:disabled) {
+    color: var(--oge-text-color);
+  }
+}
+
+.oge-smart-paste-icon {
+  fill: currentColor;
+
+  .oge-smart-paste-busy & {
+    animation: oge-smart-paste-pulse 1.2s var(--oge-motion-easing-standard)
+      infinite;
+  }
+}
+
+@keyframes oge-smart-paste-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82) rotate(18deg);
+  }
+}
+
+.oge-smart-paste-text {
+  display: grid;
+  gap: 6px;
+  animation: oge-smart-paste-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
+}
+
+.oge-smart-paste-text-label {
+  font-weight: 500;
+}
+
+.oge-smart-paste-area {
+  inline-size: 100%;
+  min-block-size: 96px;
+  padding-block: 8px;
+  padding-inline: 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+  transition:
+    border-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    box-shadow var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
+
+  &::placeholder {
+    color: var(--oge-muted-color);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    border-color: var(--oge-accent);
+
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    background: var(--oge-header-bg);
+    cursor: not-allowed;
+  }
+}
+
+.oge-smart-paste-proposal {
+  display: grid;
+  gap: 8px;
+  padding-block: 12px;
+  padding-inline: 14px;
+  border: 1px solid
+    color-mix(in srgb, var(--oge-accent) 30%, var(--oge-border-color));
+  border-inline-start: 4px solid var(--oge-accent);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-accent-soft);
+  animation: oge-smart-paste-in var(--oge-motion-duration-base)
+    var(--oge-motion-easing-decelerate);
+}
+
+@keyframes oge-smart-paste-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.oge-smart-paste-proposal-title {
+  font-weight: 600;
+}
+
+.oge-smart-paste-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+
+  th,
+  td {
+    padding-block: 4px;
+    padding-inline: 8px;
+    border-block-end: 1px solid var(--oge-border-color);
+    text-align: start;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  thead th {
+    color: var(--oge-muted-color);
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+
+  tbody th {
+    font-weight: 500;
+  }
+}
+
+.oge-smart-paste-previous {
+  color: var(--oge-muted-color);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--oge-muted-color) 60%,
+    transparent
+  );
+}
+
+.oge-smart-paste-next {
+  color: var(--oge-text-color);
+  font-weight: 600;
+}
+
+.oge-smart-paste-warning {
+  margin: 0;
+  color: var(--oge-warning);
+  font-size: 0.92em;
+}
+
+.oge-smart-paste-status {
+  margin: 0;
+  color: var(--oge-muted-color);
+  font-size: 0.92em;
+}
+
+.oge-smart-paste-status-error {
+  color: var(--oge-danger);
+}
+
+// visually hidden but still a live region, so the next text is announced
+.oge-smart-paste-status-hidden {
+  position: absolute;
+  overflow: hidden;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@include tokens.reduced-motion {
+  .oge-smart-paste-text,
+  .oge-smart-paste-proposal,
+  .oge-smart-paste-area {
+    animation: none;
+    transition: none;
+  }
+
+  .oge-smart-paste-busy .oge-smart-paste-icon {
+    animation-duration: 2.4s;
+    animation-name: oge-smart-paste-fade;
+  }
+}
+
+@keyframes oge-smart-paste-fade {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-smart-paste-proposal,
+  .oge-smart-paste-area {
+    border-color: ButtonText;
+  }
+
+  .oge-smart-paste-previous {
+    color: GrayText;
+  }
+
+  .oge-smart-paste-icon {
+    fill: currentColor;
+  }
+}

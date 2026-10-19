@@ -51,6 +51,20 @@ groups, searches and shows or hides columns accordingly.
 Works with the `<OgeGrid>` ref — or anything with
 `state()`, `applyState()` and `describeColumns()`.
 
+## Smart paste
+
+`<OgeSmartPaste target={formRef} />` fills a form from text the user copied — an email, a signature, a table
+row. One click reads the clipboard; the model maps the text onto the form's
+fields; a Now → New table shows every value before it is written (or
+`mode="apply"` writes at once), and Undo puts the old values back.
+
+- Values must name a writable field, coerce to its type and — for choice
+  fields — be one of the listed values; read-only fields are never offered.
+- The request carries the field catalog and the pasted text, never the
+  form's current values. The text is labelled as data, so instructions inside
+  it are not followed.
+- No clipboard permission (or an insecure origin)? A text box takes the paste.
+
 ## Transports
 
 | Transport                     | Use it for                                                              |

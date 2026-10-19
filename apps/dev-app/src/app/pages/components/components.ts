@@ -1577,11 +1577,11 @@ export class ComponentsIndexPage {
     },
     {
       key: 'ai',
-      name: 'AI Grid Assistant',
+      name: 'AI Assistants',
       icon: 'sparkles',
       path: '/components/ai',
       description:
-        'Ask a data grid in plain language — “orders over 500 this month, newest first” — and get a validated sort, filter and grouping change with preview and undo. Works with any model; rows never leave the page.',
+        'Ask a data grid in plain language — “orders over 500 this month, newest first” — or fill a form from a pasted email. Validated changes with preview and undo, any model; rows never leave the page.',
     },
     {
       key: 'kanban',

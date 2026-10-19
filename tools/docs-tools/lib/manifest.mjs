@@ -185,7 +185,7 @@ export const PACKAGES = [
     npm: '@oge-ui/ai',
     label: 'AI',
     summary:
-      'AI components that work with any model — a natural-language grid assistant that turns a sentence into validated sort, filter, grouping, search and column changes with preview, apply and undo; transports for your own backend, OpenAI-compatible servers (OpenAI, Azure, Ollama, vLLM) and Anthropic. No hosted service, no row data sent.',
+      'AI components that work with any model — a natural-language grid assistant that turns a sentence into validated sort, filter, grouping, search and column changes, and smart paste that fills a form from copied text, both with preview, apply and undo; transports for your own backend, OpenAI-compatible servers (OpenAI, Azure, Ollama, vLLM) and Anthropic. No hosted service, no row data sent.',
     docsRoot: '/components/ai',
     pageDirs: ['ai'],
     apiPage: 'apps/dev-app/src/app/pages/ai/api.ts',
@@ -475,7 +475,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-ai',
     label: 'AI (React)',
     summary:
-      'React AI components that work with any model — <OgeGridAssistant> turns a sentence into validated sort, filter, grouping, search and column changes on an <OgeGrid> with preview, apply and undo — running the same assistant machine, transports and stylesheet as the Angular AI package.',
+      'React AI components that work with any model — <OgeGridAssistant> turns a sentence into validated sort, filter, grouping, search and column changes on an <OgeGrid>, <OgeSmartPaste> fills an <OgeForm> from copied text, both with preview, apply and undo — running the same machines, transports and stylesheet as the Angular AI package.',
     // The React content renders inside the single AI routes (ADR 0002).
     docsRoot: '/components/ai',
     pageDirs: ['react-ai'],

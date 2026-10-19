@@ -409,6 +409,45 @@ export const de: OgeLocalePack = {
   },
 
   ai: {
+    smartPaste: {
+      label: 'Intelligent einfügen',
+      textLabel: 'Text, aus dem das Formular gefüllt wird',
+      textPlaceholder:
+        'Fügen Sie eine E-Mail, eine Signatur oder eine Notiz ein…',
+      fill: 'Formular füllen',
+      pasteText: 'Stattdessen Text einfügen',
+      stop: 'Stopp',
+      apply: 'Übernehmen',
+      discard: 'Verwerfen',
+      undo: 'Rückgängig',
+      proposal: 'Vorgeschlagene Werte',
+      field: 'Feld',
+      current: 'Jetzt',
+      next: 'Neu',
+      emptyValue: '(leer)',
+      yes: 'Ja',
+      no: 'Nein',
+      reading: 'Zwischenablage wird gelesen…',
+      thinking: 'Text wird gelesen…',
+      proposed:
+        '{count, plural, one {# Feld wird aus dem Text gefüllt.} other {# Felder werden aus dem Text gefüllt.}}',
+      applied:
+        '{count, plural, one {# Feld gefüllt.} other {# Felder gefüllt.}}',
+      unchanged: 'Das Formular enthält diese Werte bereits.',
+      unsupported: 'Nichts im Text passt zu diesem Formular. {summary}',
+      invalid:
+        'Die Antwort passt nicht zu diesem Formular. Bitte erneut versuchen.',
+      error: 'Intelligentes Einfügen ist gerade nicht verfügbar.',
+      noTransport: 'Kein KI-Dienst konfiguriert.',
+      clipboardDenied:
+        'Die Zwischenablage konnte nicht gelesen werden — fügen Sie den Text stattdessen in das Feld ein.',
+      empty: 'Es gibt keinen Text zum Lesen.',
+      aborted: 'Gestoppt.',
+      discarded: 'Vorschlag verworfen.',
+      undone: 'Werte wiederhergestellt.',
+      ignored:
+        '{count, plural, one {# Wert passte nicht zu seinem Feld und wurde ignoriert.} other {# Werte passten nicht zu ihren Feldern und wurden ignoriert.}}',
+    },
     gridAssistant: {
       label: 'Tabelle fragen',
       placeholder:

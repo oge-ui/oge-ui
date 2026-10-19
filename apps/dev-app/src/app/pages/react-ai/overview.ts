@@ -16,11 +16,18 @@ import {
 import {
   createOgeOpenAiTransport,
   OgeGridAssistant,
+  OgeSmartPaste,
   type OgeAiGridColumn,
   type OgeAiRequest,
   type OgeAiTransport,
   type OgeGridAssistantHandle,
+  type OgeSmartPasteHandle,
 } from '@oge-ui/react-ai';
+import {
+  OgeForm,
+  type OgeFormHandle,
+  type OgeFormItemDefinition,
+} from '@oge-ui/react-forms';
 import {
   OgeGrid,
   type OgeGridColumnProps,
@@ -34,6 +41,8 @@ import {
   makeAiOrders,
   type AiOrder,
 } from '../ai/ai-demo';
+import { SMART_PASTE_SAMPLE } from '../ai/ai-demo-smart-paste';
+import { ReactAiSmartPasteStyles } from './smart-paste-styles';
 import { AI_OVERVIEW_DEMOS } from './overview-snippets';
 
 /**
@@ -45,6 +54,7 @@ export const REACT_AI_OVERVIEW_SECTIONS = [
   'Apply at once and undo',
   'What the model sees',
   'Events',
+  'Smart paste',
   'Transports and configuration',
 ] as const;
 
@@ -300,6 +310,94 @@ function EventsDemo(): ReactNode {
   );
 }
 
+interface Customer {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  seats: number | null;
+  start: Date | null;
+  plan: string;
+}
+
+const CUSTOMER_FIELDS: OgeFormItemDefinition[] = [
+  { field: 'name', label: 'Full name', isRequired: true },
+  { field: 'email', label: 'Email' },
+  { field: 'phone', label: 'Phone' },
+  { field: 'company', label: 'Company' },
+  { field: 'seats', label: 'Seats', dataType: 'number' },
+  { field: 'start', label: 'Start date', dataType: 'date' },
+  {
+    field: 'plan',
+    label: 'Plan',
+    editorType: 'selectBox',
+    editorOptions: {
+      items: [
+        { id: 'free', label: 'Free' },
+        { id: 'pro', label: 'Pro' },
+        { id: 'enterprise', label: 'Enterprise' },
+      ],
+      valueExpr: 'id',
+      displayExpr: 'label',
+    },
+  },
+];
+
+function SmartPasteDemo(): ReactNode {
+  const form = useRef<OgeFormHandle<Customer>>(null);
+  const paste = useRef<OgeSmartPasteHandle>(null);
+  const [customer, setCustomer] = useState<Customer>({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    seats: null,
+    start: null,
+    plan: 'free',
+  });
+  return createElement(
+    'div',
+    null,
+    createElement(
+      'pre',
+      {
+        className:
+          'mb-3 overflow-x-auto rounded-md bg-gray-50 p-3 text-xs whitespace-pre-wrap dark:bg-gray-900',
+        'data-testid': 'smart-paste-sample',
+      },
+      SMART_PASTE_SAMPLE,
+    ),
+    createElement(OgeSmartPaste, {
+      ref: paste,
+      target: form,
+      transport: SHARED,
+    }),
+    createElement(
+      'div',
+      { className: 'mt-3 flex flex-wrap gap-2' },
+      createElement(
+        'button',
+        {
+          type: 'button',
+          onClick: () => void paste.current?.paste(SMART_PASTE_SAMPLE),
+        },
+        'Try the sample text',
+      ),
+    ),
+    createElement(
+      'div',
+      { className: 'mt-3' },
+      createElement(OgeForm<Customer>, {
+        ref: form,
+        formData: customer,
+        onFormDataChange: setCustomer,
+        colCount: 2,
+        items: CUSTOMER_FIELDS,
+      }),
+    ),
+  );
+}
+
 function ConfigDemo(): ReactNode {
   const label = useTransportLabel();
   const baseUrl = useRef<HTMLInputElement>(null);
@@ -380,7 +478,7 @@ function ConfigDemo(): ReactNode {
  */
 @Component({
   selector: 'app-react-ai-overview-demos',
-  imports: [DemoCard, ReactHost],
+  imports: [DemoCard, ReactHost, ReactAiSmartPasteStyles],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // The React packages carry class names but no styles of their own — the
   // docs pull the same SCSS the package builds compile.
@@ -430,6 +528,17 @@ function ConfigDemo(): ReactNode {
       <app-react-host [render]="events" />
     </app-demo-card>
 
+    <app-react-ai-smart-paste-styles />
+    <app-demo-card
+      [chips]="['OgeSmartPaste', 'target', 'describeFields()', 'clipboard']"
+      heading="Smart paste"
+      description="Copy a signature block or an email and press Smart paste — or use the sample. The table shows each field’s value now and the value from the text; Apply writes them, Undo puts the old ones back. When the clipboard cannot be read, a text box takes the paste."
+      [code]="demos[4].source"
+      language="tsx"
+    >
+      <app-react-host [render]="smartPaste" />
+    </app-demo-card>
+
     <app-demo-card
       [chips]="[
         'OgeAiConfigProvider',
@@ -438,7 +547,7 @@ function ConfigDemo(): ReactNode {
       ]"
       heading="Transports and configuration"
       description="Point every demo on this page at a real OpenAI-compatible endpoint — a local Ollama needs no key. The key is held in this tab’s memory only and sent straight to the URL you enter; in production use your own backend so the key never reaches the browser."
-      [code]="demos[4].source"
+      [code]="demos[5].source"
       language="tsx"
     >
       <app-react-host [render]="config" />
@@ -451,5 +560,6 @@ export class ReactAiOverviewDemos {
   protected readonly apply = () => createElement(ApplyDemo);
   protected readonly privacy = () => createElement(PrivacyDemo);
   protected readonly events = () => createElement(EventsDemo);
+  protected readonly smartPaste = () => createElement(SmartPasteDemo);
   protected readonly config = () => createElement(ConfigDemo);
 }

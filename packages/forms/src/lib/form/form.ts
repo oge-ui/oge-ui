@@ -36,7 +36,11 @@ import {
   type OgeInputStylingMode,
   type OgeInputSubscriptSizing,
 } from '@oge-ui/inputs/field';
-import { motionScrollBehavior } from '@oge-ui/behavior';
+import {
+  motionScrollBehavior,
+  ogeDescribeFormFields,
+  type OgeFormFieldDescription,
+} from '@oge-ui/behavior';
 import { OGE_FORMS_CONFIG, type OgeFormsMessages } from '../config';
 import { OgeValidationSummary } from '../validation-summary/validation-summary';
 import { OgeFormField } from './form-field';
@@ -970,6 +974,17 @@ export class OgeForm<T extends object = Record<string, unknown>> {
   /** The resolved configuration of one item, as the form renders it. */
   itemOption(field: string): OgeResolvedFormItem | undefined {
     return this.resolvedItems().find((item) => item.field === field);
+  }
+
+  /**
+   * Plain descriptions of every visible field — label, data and editor type,
+   * required / read-only, choice values and the value the form holds now.
+   * What smart paste (`oge-smart-paste`) and autofill helpers read.
+   */
+  describeFields(): OgeFormFieldDescription[] {
+    return untracked(() =>
+      ogeDescribeFormFields(this.resolvedItems(), this.currentData()),
+    );
   }
 
   /**

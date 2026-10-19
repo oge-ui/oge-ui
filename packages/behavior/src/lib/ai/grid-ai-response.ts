@@ -1,7 +1,6 @@
 import {
   isGroupInterval,
   sanitizeGridStateSnapshot,
-  toLocalDate,
   type FilterExpr,
   type FilterOperator,
   type GridStateSnapshot,
@@ -9,6 +8,7 @@ import {
   type SortDescriptor,
 } from '@oge-ui/core';
 import type { OgeDataType } from '../grid/grid-columns';
+import { coerceOgeAiValue } from './ai-coerce';
 import type { OgeAiGridColumn, OgeGridAiCapabilities } from './grid-ai-context';
 import { OGE_GRID_AI_ALL_CAPABILITIES } from './grid-ai-context';
 
@@ -238,34 +238,7 @@ class Validator {
   }
 
   private scalar(column: OgeAiGridColumn, raw: unknown): unknown {
-    if (column.values?.length) {
-      const match = column.values.find(
-        (v) =>
-          v.value === raw ||
-          (typeof raw === 'string' &&
-            (String(v.value).toLowerCase() === raw.toLowerCase() ||
-              v.text?.toLowerCase() === raw.toLowerCase())),
-      );
-      if (match) return match.value;
-    }
-    switch (column.dataType) {
-      case 'number': {
-        const n = typeof raw === 'string' ? Number(raw) : raw;
-        return typeof n === 'number' && Number.isFinite(n) ? n : undefined;
-      }
-      case 'boolean':
-        if (typeof raw === 'boolean') return raw;
-        if (raw === 'true') return true;
-        if (raw === 'false') return false;
-        return undefined;
-      case 'date':
-      case 'datetime':
-        return toLocalDate(raw) ?? undefined;
-      default:
-        return typeof raw === 'string' || typeof raw === 'number'
-          ? String(raw)
-          : undefined;
-    }
+    return coerceOgeAiValue(column.dataType, raw, column.values);
   }
 }
 

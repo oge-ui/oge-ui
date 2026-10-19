@@ -249,6 +249,12 @@ const FORM_METHOD_GROUPS: readonly ApiGroup[] = [
           'The resolved configuration of one item, as the form actually renders it.',
       },
       {
+        name: 'describeFields()',
+        type: 'OgeFormFieldDescription[]',
+        description:
+          'Plain descriptions of every visible field — <code>{ field, label, dataType, editorType, required, readOnly, multiple, values?, value }</code>, choice items as <code>values</code>, the current value as <code>value</code>. What smart paste and autofill helpers read; file and signature fields are skipped.',
+      },
+      {
         name: 'updateData(field: string, value: unknown)',
         type: 'void',
         description:

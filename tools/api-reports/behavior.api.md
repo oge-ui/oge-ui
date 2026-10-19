@@ -152,6 +152,9 @@ export function buildOgeRangeTsv(lattice: OgeGridRangeLattice, text: (row: numbe
 // @public
 export function buildOgeSignatureSvg(strokes: readonly OgeSignatureStroke[], options: OgeSignatureRenderOptions): string;
 
+// @public
+export function buildOgeSmartPasteRequest(text: string, options: OgeSmartPasteRequestOptions): OgeAiRequest;
+
 // Warning: (ae-forgotten-export) The symbol "FilterOperator" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -235,6 +238,9 @@ export function clampPaginationIndex(page: number, pageCount: number | undefined
 
 // @public
 export function clampValue(value: number, min: number, max: number): number;
+
+// @public
+export function coerceOgeAiValue(dataType: string, raw: unknown, choices?: readonly OgeAiChoice[]): unknown;
 
 // @public
 export function colorPaletteNavIndex(key: string, index: number, count: number, columns: number, rtl: boolean, ctrlKey: boolean): number | null;
@@ -583,6 +589,9 @@ export function isOgeRangeExtendKey(event: {
     shiftKey?: boolean;
     altKey?: boolean;
 }): boolean;
+
+// @public
+export function isOgeSmartPasteFillable(field: OgeAiFormField): boolean;
 
 // @public
 export function isPreviewable(type: string): boolean;
@@ -1256,6 +1265,9 @@ export const OGE_SHEET_SWIPE_DISMISS = 72;
 export const OGE_SLIDER_MAX_TICKS = 200;
 
 // @public
+export const OGE_SMART_PASTE_MAX_TEXT = 20000;
+
+// @public
 export const OGE_SPLITTER_FULL_TRAVEL = 1000000000;
 
 // @public
@@ -1675,17 +1687,28 @@ export interface OgeAiCallOptions {
 }
 
 // @public
+export interface OgeAiChoice {
+    // (undocumented)
+    readonly text?: string;
+    // (undocumented)
+    readonly value: string | number | boolean;
+}
+
+// @public
 export interface OgeAiConfig {
     // (undocumented)
     readonly gridAssistant: OgeGridAssistantConfig;
     readonly locale: string | undefined;
     // (undocumented)
     readonly messages: OgeAiMessages;
+    // (undocumented)
+    readonly smartPaste: OgeSmartPasteConfig;
     readonly transport: OgeAiTransport | null;
 }
 
 // @public
-export type OgeAiConfigInput = Partial<Omit<OgeAiConfig, 'messages' | 'gridAssistant'>> & {
+export type OgeAiConfigInput = Partial<Omit<OgeAiConfig, 'messages' | 'gridAssistant' | 'smartPaste'>> & {
+    smartPaste?: Partial<OgeSmartPasteConfig>;
     gridAssistant?: Partial<Omit<OgeGridAssistantConfig, 'capabilities'>> & {
         capabilities?: Partial<OgeGridAiCapabilities>;
     };
@@ -1717,6 +1740,20 @@ export type OgeAiFetch = (input: string, init: {
     };
     text(): Promise<string>;
 }>;
+
+// @public
+export interface OgeAiFormField {
+    readonly dataType: string;
+    readonly description?: string;
+    readonly field: string;
+    // (undocumented)
+    readonly label: string;
+    readonly multiple?: boolean;
+    readonly readOnly?: boolean;
+    // (undocumented)
+    readonly required?: boolean;
+    readonly values?: readonly OgeAiChoice[];
+}
 
 // @public
 export interface OgeAiGridColumn {
@@ -1766,11 +1803,14 @@ export interface OgeAiMessage {
 export interface OgeAiMessages {
     // (undocumented)
     readonly gridAssistant: OgeGridAssistantMessages;
+    // (undocumented)
+    readonly smartPaste: OgeSmartPasteMessages;
 }
 
 // @public
 export type OgeAiMessagesInput = {
     gridAssistant?: OgeGridAssistantMessagesInput;
+    smartPaste?: Partial<OgeSmartPasteMessages>;
 };
 
 // @public
@@ -3559,6 +3599,9 @@ export type OgeDateSegmentState = 'empty' | 'incomplete' | 'invalid' | 'complete
 
 // @public
 export type OgeDeferredBaseOptions = Omit<LoadOptions, 'skip' | 'take' | 'signal'>;
+
+// @public
+export function ogeDescribeFormFields(items: readonly OgeResolvedFormItem[], data: unknown): OgeFormFieldDescription[];
 
 // @public
 export function ogeDescribeGridColumns<T>(all: readonly OgeGridResolvedColumn<T>[], visibleIds: ReadonlySet<string>, sample?: T): OgeGridColumnDescription[];
@@ -5809,6 +5852,31 @@ export interface OgeFormFieldChangedEvent {
     readonly previousValue: unknown;
     // (undocumented)
     readonly value: unknown;
+}
+
+// @public
+export interface OgeFormFieldDescription {
+    // (undocumented)
+    readonly dataType: OgeFormDataType;
+    // (undocumented)
+    readonly editorType: OgeFormEditorType;
+    readonly field: string;
+    // (undocumented)
+    readonly label: string;
+    readonly multiple: boolean;
+    readonly readOnly: boolean;
+    // (undocumented)
+    readonly required: boolean;
+    readonly value: unknown;
+    readonly values?: readonly OgeFormFieldValue[];
+}
+
+// @public
+export interface OgeFormFieldValue {
+    // (undocumented)
+    readonly text: string;
+    // (undocumented)
+    readonly value: string | number | boolean;
 }
 
 // @public
@@ -10613,6 +10681,243 @@ export interface OgeSliderTrackRect {
 }
 
 // @public
+export interface OgeSmartPasteAppliedEvent {
+    // (undocumented)
+    readonly changes: readonly OgeSmartPasteChange[];
+    // (undocumented)
+    readonly values: Readonly<Record<string, unknown>>;
+}
+
+// @public
+export interface OgeSmartPasteApplyingEvent {
+    cancel: boolean;
+    // (undocumented)
+    readonly changes: readonly OgeSmartPasteChange[];
+    // (undocumented)
+    readonly values: Readonly<Record<string, unknown>>;
+}
+
+// @public
+export interface OgeSmartPasteChange {
+    // (undocumented)
+    readonly field: string;
+    // (undocumented)
+    readonly label: string;
+    readonly next: unknown;
+    readonly previous: unknown;
+}
+
+// @public
+export interface OgeSmartPasteConfig {
+    readonly instructions: string | undefined;
+    // (undocumented)
+    readonly mode: OgeGridAssistantMode;
+    readonly undoLimit: number;
+}
+
+// @public
+export class OgeSmartPasteCore {
+    constructor(options: OgeSmartPasteCoreOptions);
+    readonly appliedCount: OgeReactiveCell<number>;
+    apply(): void;
+    // (undocumented)
+    readonly busy: () => boolean;
+    cancel(): void;
+    // (undocumented)
+    readonly canUndo: () => boolean;
+    destroy(): void;
+    discard(): void;
+    // (undocumented)
+    readonly errorCode: OgeReactiveCell<OgeSmartPasteErrorEvent['code'] | null>;
+    fillFromText(): Promise<void>;
+    formatValue(field: string, value: unknown): string;
+    paste(text?: string): Promise<void>;
+    readonly proposal: OgeReactiveCell<OgeSmartPasteProposal | null>;
+    reset(): void;
+    revive(): void;
+    setText(text: string): void;
+    setTextOpen(open: boolean): void;
+    // (undocumented)
+    readonly status: OgeReactiveCell<OgeSmartPasteStatus>;
+    // (undocumented)
+    readonly statusText: () => string;
+    // (undocumented)
+    readonly summary: OgeReactiveCell<string>;
+    readonly text: OgeReactiveCell<string>;
+    readonly textOpen: OgeReactiveCell<boolean>;
+    undo(): void;
+    // (undocumented)
+    readonly warnings: OgeReactiveCell<readonly OgeSmartPasteWarning[]>;
+    // (undocumented)
+    readonly warningText: () => string;
+}
+
+// @public
+export interface OgeSmartPasteCoreOptions {
+    // (undocumented)
+    readonly adapter: OgeReactivityAdapter;
+    // (undocumented)
+    readonly applied?: (event: OgeSmartPasteAppliedEvent) => void;
+    // (undocumented)
+    readonly applying?: (event: OgeSmartPasteApplyingEvent) => void;
+    // (undocumented)
+    readonly errorOccurred?: (event: OgeSmartPasteErrorEvent) => void;
+    readonly fields?: () => readonly OgeAiFormField[] | undefined;
+    // (undocumented)
+    readonly instructions: () => string | undefined;
+    // (undocumented)
+    readonly locale: () => string | undefined;
+    // (undocumented)
+    readonly messages: () => OgeSmartPasteMessages;
+    // (undocumented)
+    readonly mode: () => OgeGridAssistantMode;
+    // (undocumented)
+    readonly now?: () => Date;
+    readonly readClipboard?: () => Promise<string>;
+    // (undocumented)
+    readonly target: () => OgeSmartPasteTarget | null | undefined;
+    // (undocumented)
+    readonly transport: () => OgeAiTransport | null | undefined;
+    // (undocumented)
+    readonly undoLimit: () => number;
+    // (undocumented)
+    readonly undone?: (event: OgeSmartPasteUndoneEvent) => void;
+}
+
+// @public
+export interface OgeSmartPasteErrorEvent {
+    readonly code: OgeAiErrorCode | 'clipboard' | 'empty' | 'no-transport' | 'invalid-reply';
+    // (undocumented)
+    readonly error: unknown;
+}
+
+// @public
+export type OgeSmartPasteField = OgeAiFormField & {
+    readonly value?: unknown;
+};
+
+// @public
+export interface OgeSmartPasteMessages {
+    // (undocumented)
+    readonly aborted: string;
+    readonly applied: string;
+    // (undocumented)
+    readonly apply: string;
+    // (undocumented)
+    readonly clipboardDenied: string;
+    // (undocumented)
+    readonly current: string;
+    // (undocumented)
+    readonly discard: string;
+    // (undocumented)
+    readonly discarded: string;
+    // (undocumented)
+    readonly empty: string;
+    readonly emptyValue: string;
+    // (undocumented)
+    readonly error: string;
+    readonly field: string;
+    readonly fill: string;
+    readonly ignored: string;
+    // (undocumented)
+    readonly invalid: string;
+    readonly label: string;
+    // (undocumented)
+    readonly next: string;
+    // (undocumented)
+    readonly no: string;
+    // (undocumented)
+    readonly noTransport: string;
+    readonly pasteText: string;
+    readonly proposal: string;
+    readonly proposed: string;
+    // (undocumented)
+    readonly reading: string;
+    // (undocumented)
+    readonly stop: string;
+    readonly textLabel: string;
+    // (undocumented)
+    readonly textPlaceholder: string;
+    // (undocumented)
+    readonly thinking: string;
+    // (undocumented)
+    readonly unchanged: string;
+    // (undocumented)
+    readonly undo: string;
+    // (undocumented)
+    readonly undone: string;
+    readonly unsupported: string;
+    // (undocumented)
+    readonly yes: string;
+}
+
+// @public
+export interface OgeSmartPasteProposal {
+    // (undocumented)
+    readonly changes: readonly OgeSmartPasteChange[];
+    // (undocumented)
+    readonly summary: string;
+    // (undocumented)
+    readonly values: Readonly<Record<string, unknown>>;
+    // (undocumented)
+    readonly warnings: readonly OgeSmartPasteWarning[];
+}
+
+// @public
+export interface OgeSmartPasteRequestOptions {
+    // (undocumented)
+    readonly fields: readonly OgeAiFormField[];
+    readonly instructions?: string;
+    readonly locale?: string;
+    readonly now?: Date;
+}
+
+// @public
+export function ogeSmartPasteResponseSchema(fields: readonly OgeAiFormField[]): OgeAiJsonSchema;
+
+// @public
+export type OgeSmartPasteResult = {
+    readonly kind: 'change';
+    readonly summary: string;
+    readonly values: Readonly<Record<string, unknown>>;
+    readonly changes: readonly OgeSmartPasteChange[];
+    readonly warnings: readonly OgeSmartPasteWarning[];
+} | {
+    readonly kind: 'unsupported';
+    readonly summary: string;
+} | {
+    readonly kind: 'invalid';
+};
+
+// @public
+export type OgeSmartPasteStatus = 'idle' | 'reading' | 'thinking' | 'preview' | 'applied' | 'unchanged' | 'unsupported' | 'invalid' | 'error' | 'aborted';
+
+// @public
+export interface OgeSmartPasteTarget {
+    // (undocumented)
+    describeFields(): readonly OgeSmartPasteField[];
+    // (undocumented)
+    updateData(values: Record<string, unknown>): void;
+}
+
+// @public
+export interface OgeSmartPasteUndoneEvent {
+    // (undocumented)
+    readonly values: Readonly<Record<string, unknown>>;
+}
+
+// @public
+export interface OgeSmartPasteWarning {
+    // (undocumented)
+    readonly field: string;
+    // (undocumented)
+    readonly kind: OgeSmartPasteWarningKind;
+}
+
+// @public
+export type OgeSmartPasteWarningKind = 'unknown-field' | 'not-allowed' | 'invalid-value';
+
+// @public
 export interface OgeSortChangedEvent {
     // (undocumented)
     previousSort: readonly SortDescriptor[];
@@ -14573,6 +14878,11 @@ export function resolveOgeRowDropIndex(hit: Element | null, host: Element | null
 
 // @public (undocumented)
 export function resolveOgeSkeletonConfig(input: OgeSkeletonConfigInput | undefined): OgeSkeletonConfig;
+
+// @public
+export function resolveOgeSmartPasteReply(reply: unknown, fields: readonly (OgeAiFormField & {
+    readonly value?: unknown;
+})[]): OgeSmartPasteResult;
 
 // @public
 export function resolveOgeSplitterConfig(input: OgeSplitterConfigInput | undefined): OgeSplitterConfig;

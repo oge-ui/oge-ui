@@ -1,6 +1,6 @@
 # @oge-ui/react-ai
 
-> React AI components that work with any model — <OgeGridAssistant> turns a sentence into validated sort, filter, grouping, search and column changes on an <OgeGrid> with preview, apply and undo — running the same assistant machine, transports and stylesheet as the Angular AI package.
+> React AI components that work with any model — <OgeGridAssistant> turns a sentence into validated sort, filter, grouping, search and column changes on an <OgeGrid>, <OgeSmartPaste> fills an <OgeForm> from copied text, both with preview, apply and undo — running the same machines, transports and stylesheet as the Angular AI package.
 
 Part of OGE UI v1.1.4.
 Docs and live demos: https://www.ogeui.com/components/ai
@@ -181,6 +181,71 @@ _Config and messages_
 | `OgeGridAssistantConfig` | `{ mode; suggestions; historyLimit; undoLimit; capabilities; instructions }` | Assistant defaults: `"preview"`, no suggestions, the last 4 exchanges replayed, 20 undo steps, every capability on. |
 | `OgeAiMessages` | `{ gridAssistant: OgeGridAssistantMessages }` | Every string, grouped per component. `OGE_DEFAULT_AI_MESSAGES` is the English catalog; `@oge-ui/locales` packs carry an `ai` slice to merge into your config. |
 | `OgeGridAssistantMessages` | `{ label; placeholder; submit; stop; apply; discard; undo; suggestions; proposal; thinking; applied; proposed; unchanged; clarify; unsupported; invalid; error; noTransport; aborted; discarded; undone; ignored; slices }` | `applied` / `proposed` / `clarify` / `unsupported` take `{summary}`; `ignored` is an ICU plural over `{count}`. |
+
+### <OgeSmartPaste>
+
+#### Properties
+
+_Target and transport_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `target` | `OgeSmartPasteTarget \| RefObject<OgeSmartPasteTarget \| null> \| null` | `undefined` | The form to fill — the `<OgeForm>` ref (`target={form}`) or its handle, or any object with `describeFields()` and `updateData(values)`. |
+| `transport` | `OgeAiTransport \| null` | `undefined` | Replaces the transport from `<OgeAiConfigProvider>` for this smart paste. |
+
+_Behaviour (undefined = config)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `OgeGridAssistantMode` | `'preview'` | `"preview"` shows the values in a Now → New table before writing them, `"apply"` writes them at once. |
+| `instructions` | `string` | `undefined` | Domain vocabulary appended to the system prompt (“seats are licences”). |
+| `fields` | `readonly OgeAiFormField[]` | `undefined` | Field descriptions merged over the form’s own (by `field`) — add a `description`, or set `readOnly: true` to keep a field out of reach of the model. |
+| `locale` | `string` | `undefined` | BCP 47 locale of value formatting and the text; falls back to the config, then the runtime default. |
+| `messages` | `Partial<OgeSmartPasteMessages>` | `undefined` | Per-instance string overrides, merged over the catalog. |
+| `disabled` | `boolean` | `false` | Disables every control. |
+| `className / style` | `string / CSSProperties` | `undefined` | Added to the root `.oge-smart-paste` element. |
+
+#### Methods
+
+_Ref handle (OgeSmartPasteHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `paste(text?)` | `(text?: string) => Promise<void>` | Fills the form from `text`, or from the clipboard (`navigator.clipboard.readText`) when called without one; an unreadable clipboard opens the text area. Never rejects. |
+| `fillFromText()` | `() => Promise<void>` | Fills the form from the text area. |
+| `apply()` | `void` | Writes the pending values into the form (the Apply button). |
+| `discard()` | `void` | Drops the pending values; the form stays as it is. |
+| `undo()` | `void` | Restores the values the latest paste replaced, one paste per call (up to `undoLimit`). |
+| `cancel()` | `void` | Aborts the clipboard read or the request in flight. |
+| `reset()` | `void` | Clears the proposal, the text area and the undo history. |
+| `focus()` | `void` | Moves focus to the Smart paste button. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onApplying` | `(event: OgeSmartPasteApplyingEvent) => void` | Values are about to reach the form — set `cancel` to keep it as it is. |
+| `onApplied` | `(event: OgeSmartPasteAppliedEvent) => void` | Values were written into the form. |
+| `onUndone` | `(event: OgeSmartPasteUndoneEvent) => void` | Undo restored the values the latest paste replaced. |
+| `onErrorOccurred` | `(event: OgeSmartPasteErrorEvent) => void` | A paste failed: `"clipboard"`, `"empty"`, `"no-transport"`, an `OgeAiError` code, or `"invalid-reply"`. |
+
+#### Types
+
+_Smart paste_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSmartPasteTarget` | `{ describeFields(): readonly OgeSmartPasteField[]; updateData(values): void }` | What smart paste fills — the form’s own API. The Angular `OgeForm` and the React form handle both satisfy it. |
+| `OgeAiFormField` | `{ field; label; dataType; required?; readOnly?; multiple?; values?; description? }` | What the model is told about a field. Read-only fields are never offered; choice fields only accept their listed values (texts map back to values). `OgeSmartPasteField` adds the current `value`, which stays on the page. |
+| `OgeSmartPasteChange` | `{ field; label; previous; next }` | One row of the Now → New table. |
+| `OgeSmartPasteWarning` | `{ kind: 'unknown-field' \| 'not-allowed' \| 'invalid-value'; field }` | A value the reply carried that was dropped instead of written. |
+| `OgeSmartPasteStatus` | `'idle' \| 'reading' \| 'thinking' \| 'preview' \| 'applied' \| 'unchanged' \| 'unsupported' \| 'invalid' \| 'error' \| 'aborted'` | Where smart paste is; the status line renders the matching message and is a polite live region. |
+| `OgeSmartPasteApplyingEvent` | `{ values; changes; cancel: boolean }` | Cancelable: set `cancel` to keep the form as it is. |
+| `OgeSmartPasteAppliedEvent` | `{ values; changes }` | Values were written. |
+| `OgeSmartPasteUndoneEvent` | `{ values }` | Undo restored `values`. |
+| `OgeSmartPasteErrorEvent` | `{ code: OgeAiErrorCode \| 'clipboard' \| 'empty' \| 'no-transport' \| 'invalid-reply'; error }` | A paste failed — the clipboard could not be read, the text was empty, no transport, a transport error, or an unusable reply. |
+| `OgeSmartPasteConfig` | `{ mode; undoLimit; instructions }` | Defaults under `smartPaste` in the AI config: `"preview"`, 10 undo steps. |
+| `OgeSmartPasteMessages` | `{ label; textLabel; textPlaceholder; fill; pasteText; …; proposed; applied; ignored }` | `proposed`, `applied` and `ignored` are ICU plurals over `{count}`; `unsupported` takes `{summary}`. |
 
 ## Demos
 
@@ -465,6 +530,80 @@ export function AssistantEvents() {
           <li key={i}>{line}</li>
         ))}
       </ol>
+    </>
+  );
+}
+```
+
+### Smart paste
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeSmartPaste } from '@oge-ui/react-ai';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeSmartPasteHandle } from '@oge-ui/react-ai';
+import type { OgeFormHandle, OgeFormItemDefinition } from '@oge-ui/react-forms';
+
+interface Customer {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  seats: number | null;
+  start: Date | null;
+  plan: string;
+}
+
+const sample = 'Ada Lovelace\nAnalytical Engines Ltd\nada@engines.example';
+
+const fields: OgeFormItemDefinition[] = [
+  { field: 'name', label: 'Full name', isRequired: true },
+  { field: 'email', label: 'Email' },
+  { field: 'phone', label: 'Phone' },
+  { field: 'company', label: 'Company' },
+  { field: 'seats', label: 'Seats', dataType: 'number' },
+  { field: 'start', label: 'Start date', dataType: 'date' },
+  {
+    field: 'plan',
+    label: 'Plan',
+    editorType: 'selectBox',
+    editorOptions: {
+      items: [
+        { id: 'free', label: 'Free' },
+        { id: 'pro', label: 'Pro' },
+        { id: 'enterprise', label: 'Enterprise' },
+      ],
+      valueExpr: 'id',
+      displayExpr: 'label',
+    },
+  },
+];
+
+export function SmartPasteForm() {
+  // The model maps the copied text onto the form's fields; every value is
+  // checked against the field's type and choices, and the table shows
+  // Now → New before anything is written. The request carries the field
+  // catalog and the pasted text — never the form's current values.
+  const form = useRef<OgeFormHandle<Customer>>(null);
+  const paste = useRef<OgeSmartPasteHandle>(null);
+  const [customer, setCustomer] = useState<Customer>({
+    name: '', email: '', phone: '', company: '', seats: null, start: null, plan: 'free',
+  });
+  return (
+    <>
+      <OgeSmartPaste ref={paste} target={form} />
+      <button type="button" onClick={() => paste.current?.paste(sample)}>
+        Try the sample text
+      </button>
+      <OgeForm<Customer>
+        ref={form}
+        formData={customer}
+        onFormDataChange={setCustomer}
+        colCount={2}
+        items={fields}
+      />
     </>
   );
 }

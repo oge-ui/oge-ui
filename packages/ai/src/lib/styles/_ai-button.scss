@@ -1,0 +1,82 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The pill button every AI component draws — one look for the prompt bar,
+// smart paste and their proposal panels. `primary` is the accent fill.
+@mixin button {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-block-size: 30px;
+  padding-inline: 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard),
+    color var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    transform var(--oge-motion-duration-fast) var(--oge-motion-easing-standard);
+
+  @include tokens.hit-area;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @include tokens.reduced-motion {
+    transition: none;
+  }
+
+  @include tokens.forced-colors {
+    border-color: ButtonText;
+
+    &:disabled {
+      color: GrayText;
+    }
+  }
+}
+
+@mixin primary {
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+
+  &:hover:not(:disabled) {
+    background: color-mix(
+      in srgb,
+      var(--oge-accent) 86%,
+      var(--oge-text-color)
+    );
+  }
+
+  @include tokens.forced-colors {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+@mixin outlined {
+  border-color: var(--oge-border-color);
+  background: var(--oge-bg);
+}

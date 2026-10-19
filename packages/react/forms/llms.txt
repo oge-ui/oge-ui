@@ -141,6 +141,7 @@ _OgeFormHandle — via ref_
 | `focus(field?: string)` | `void` | Focuses a named field, or the first one when called with no argument. |
 | `focusFirstInvalid()` | `boolean` | Reveals the section holding the first invalid field, focuses it — and, with `scrollToFirstInvalid`, scrolls to it. Returns `false` when the form is valid. |
 | `itemOption(field: string)` | `OgeResolvedFormItem \| undefined` | The resolved configuration of one item, as the form actually renders it. |
+| `describeFields()` | `OgeFormFieldDescription[]` | Plain descriptions of every visible field — `{ field, label, dataType, editorType, required, readOnly, multiple, values?, value }`, choice items as `values`, the current value as `value`. What smart paste and autofill helpers read; file and signature fields are skipped. |
 | `updateData(field: string, value: unknown)` | `void` | Writes one field. The overload `updateData(partial)` merges an object into the bound data. |
 | `setErrors(errors: OgeFormServerErrors)` | `void` | Applies server-side errors — `{ email: ['Already registered'] }` (a string or a list per field). Each field shows its first message at once, in the field and in the validation summary, and the error clears as soon as that field is edited. Replaces every previous server error; `{}` clears them. |
 | `setFieldErrors(field, messages)` | `void` | Sets (or, with `null` / `[]`, clears) the server errors of one field. |

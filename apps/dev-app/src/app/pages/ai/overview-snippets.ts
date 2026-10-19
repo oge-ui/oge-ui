@@ -158,6 +158,57 @@ protected event(event: OgeGridAssistantAppliedEvent): string {
 }`,
 });
 
+export const SMART_PASTE_SNIPPET = demoSource({
+  use: {
+    '@oge-ui/ai': ['OgeSmartPaste'],
+    '@oge-ui/forms': ['OgeForm'],
+  },
+  types: { '@oge-ui/forms': ['OgeFormItemData'] },
+  template: `<!-- Copy a signature block or an email, press Smart paste. The model maps
+     the text onto the form's fields; every value is checked against the
+     field's type and choices, and the table shows Now → New before anything
+     is written. The request carries the field catalog and the pasted text —
+     never the form's current values. -->
+<oge-smart-paste #paste [target]="form" />
+<button type="button" (click)="paste.paste(sample)">Try the sample text</button>
+
+<oge-form #form [(formData)]="customer" [items]="fields" [colCount]="2" />`,
+  body: `protected readonly sample = 'Ada Lovelace\\nAnalytical Engines Ltd\\nada@engines.example';
+
+protected readonly customer = signal({
+  name: '',
+  email: '',
+  phone: '',
+  company: '',
+  seats: null as number | null,
+  start: null as Date | null,
+  plan: 'free',
+});
+
+protected readonly fields: OgeFormItemData[] = [
+  { field: 'name', label: 'Full name', isRequired: true },
+  { field: 'email', label: 'Email' },
+  { field: 'phone', label: 'Phone' },
+  { field: 'company', label: 'Company' },
+  { field: 'seats', label: 'Seats', dataType: 'number' },
+  { field: 'start', label: 'Start date', dataType: 'date' },
+  {
+    field: 'plan',
+    label: 'Plan',
+    editorType: 'selectBox',
+    editorOptions: {
+      items: [
+        { id: 'free', label: 'Free' },
+        { id: 'pro', label: 'Pro' },
+        { id: 'enterprise', label: 'Enterprise' },
+      ],
+      valueExpr: 'id',
+      displayExpr: 'label',
+    },
+  },
+];`,
+});
+
 export const CONFIG_SNIPPET = demoSource({
   use: { '@oge-ui/ai': ['OgeGridAssistant'] },
   helpers: {

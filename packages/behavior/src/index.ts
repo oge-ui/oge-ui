@@ -2542,6 +2542,8 @@ export {
   OGE_DEFAULT_AI_MESSAGES,
   OGE_GRID_ASSISTANT_ICON_PATH,
   resolveOgeAiConfig,
+  type OgeSmartPasteConfig,
+  type OgeSmartPasteMessages,
   type OgeAiConfig,
   type OgeAiConfigInput,
   type OgeAiMessages,
@@ -2562,3 +2564,36 @@ export {
   type OgeGridAssistantTarget,
   type OgeGridAssistantUndoneEvent,
 } from './lib/ai/grid-assistant-core';
+export {
+  ogeDescribeFormFields,
+  type OgeFormFieldDescription,
+  type OgeFormFieldValue,
+} from './lib/forms/form-field-description';
+export { coerceOgeAiValue, type OgeAiChoice } from './lib/ai/ai-coerce';
+export {
+  buildOgeSmartPasteRequest,
+  isOgeSmartPasteFillable,
+  OGE_SMART_PASTE_MAX_TEXT,
+  ogeSmartPasteResponseSchema,
+  type OgeAiFormField,
+  type OgeSmartPasteRequestOptions,
+} from './lib/ai/smart-paste-context';
+export {
+  resolveOgeSmartPasteReply,
+  type OgeSmartPasteChange,
+  type OgeSmartPasteResult,
+  type OgeSmartPasteWarning,
+  type OgeSmartPasteWarningKind,
+} from './lib/ai/smart-paste-response';
+export {
+  OgeSmartPasteCore,
+  type OgeSmartPasteAppliedEvent,
+  type OgeSmartPasteApplyingEvent,
+  type OgeSmartPasteCoreOptions,
+  type OgeSmartPasteErrorEvent,
+  type OgeSmartPasteField,
+  type OgeSmartPasteProposal,
+  type OgeSmartPasteStatus,
+  type OgeSmartPasteTarget,
+  type OgeSmartPasteUndoneEvent,
+} from './lib/ai/smart-paste-core';

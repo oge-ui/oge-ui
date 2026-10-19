@@ -1933,6 +1933,15 @@ application configures. Rules every AI feature follows:
   newer prompt aborts the older one and a late reply is ignored by request id.
   `destroy()` / `revive()` for StrictMode. Both layers are seams: Angular
   wraps option reads in `untracked()`, React reads a `latest` ref.
+- **One coercion rule.** `coerceOgeAiValue(dataType, raw, choices)` turns a
+  model's value into the field's type for every feature (grid filters, smart
+  paste); a feature adds only its own constraints on top (smart paste: a
+  choice field accepts only its listed values). Targets describe themselves
+  through `describeColumns()` (grids) and `describeFields()` (forms) —
+  structural contracts, so `@oge-ui/ai` imports neither family.
+- **Pasted text is data.** Smart paste fences the text (`<<< … >>>`) and the
+  system prompt says it is never instructions; current form values stay on
+  the page (they only feed the Now → New table and Undo).
 - **Preview by default, undo always.** A change reaches the host only through
   the cancelable `applying` event; `'apply'` mode skips the proposal, not the
   event. Undo restores the snapshot captured before the change.

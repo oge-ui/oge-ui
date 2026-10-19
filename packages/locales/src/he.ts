@@ -406,6 +406,42 @@ export const he: OgeLocalePack = {
   },
 
   ai: {
+    smartPaste: {
+      label: 'הדבקה חכמה',
+      textLabel: 'הטקסט שממנו ימולא הטופס',
+      textPlaceholder: 'הדבק דוא״ל, חתימה או הערה…',
+      fill: 'מלא את הטופס',
+      pasteText: 'הדבק טקסט במקום זאת',
+      stop: 'עצור',
+      apply: 'החל',
+      discard: 'בטל',
+      undo: 'בטל פעולה',
+      proposal: 'ערכים מוצעים',
+      field: 'שדה',
+      current: 'כעת',
+      next: 'חדש',
+      emptyValue: '(ריק)',
+      yes: 'כן',
+      no: 'לא',
+      reading: 'קורא את הלוח…',
+      thinking: 'קורא את הטקסט…',
+      proposed:
+        '{count, plural, one {שדה אחד ימולא מהטקסט.} other {# שדות ימולאו מהטקסט.}}',
+      applied: '{count, plural, one {שדה אחד מולא.} other {# שדות מולאו.}}',
+      unchanged: 'הטופס כבר מכיל ערכים אלה.',
+      unsupported: 'אין בטקסט דבר שמתאים לטופס זה. {summary}',
+      invalid: 'התשובה אינה מתאימה לטופס זה. נסה שוב.',
+      error: 'הדבקה חכמה אינה זמינה כרגע.',
+      noTransport: 'לא הוגדר שירות בינה מלאכותית.',
+      clipboardDenied:
+        'לא ניתן היה לקרוא את הלוח — הדבק את הטקסט בתיבה במקום זאת.',
+      empty: 'אין טקסט לקריאה.',
+      aborted: 'נעצר.',
+      discarded: 'ההצעה נדחתה.',
+      undone: 'הערכים שוחזרו.',
+      ignored:
+        '{count, plural, one {ערך אחד לא התאים לשדה שלו ולכן התעלמו ממנו.} other {# ערכים לא התאימו לשדות שלהם ולכן התעלמו מהם.}}',
+    },
     gridAssistant: {
       label: 'שאל את הטבלה',
       placeholder: 'תאר את התצוגה הרצויה, למשל "10 ההזמנות הגדולות החודש"',

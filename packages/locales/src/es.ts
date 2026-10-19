@@ -409,6 +409,44 @@ export const es: OgeLocalePack = {
   },
 
   ai: {
+    smartPaste: {
+      label: 'Pegado inteligente',
+      textLabel: 'Texto con el que rellenar el formulario',
+      textPlaceholder: 'Pegue un correo, una firma o una nota…',
+      fill: 'Rellenar el formulario',
+      pasteText: 'Pegar texto en su lugar',
+      stop: 'Detener',
+      apply: 'Aplicar',
+      discard: 'Descartar',
+      undo: 'Deshacer',
+      proposal: 'Valores propuestos',
+      field: 'Campo',
+      current: 'Ahora',
+      next: 'Nuevo',
+      emptyValue: '(vacío)',
+      yes: 'Sí',
+      no: 'No',
+      reading: 'Leyendo el portapapeles…',
+      thinking: 'Leyendo el texto…',
+      proposed:
+        '{count, plural, one {# campo por rellenar a partir del texto.} other {# campos por rellenar a partir del texto.}}',
+      applied:
+        '{count, plural, one {# campo rellenado.} other {# campos rellenados.}}',
+      unchanged: 'El formulario ya tiene estos valores.',
+      unsupported: 'Nada del texto encaja con este formulario. {summary}',
+      invalid:
+        'La respuesta no encaja con este formulario. Inténtelo de nuevo.',
+      error: 'El pegado inteligente no está disponible en este momento.',
+      noTransport: 'No hay ningún servicio de IA configurado.',
+      clipboardDenied:
+        'No se pudo leer el portapapeles: pegue el texto en el cuadro.',
+      empty: 'No hay texto que leer.',
+      aborted: 'Detenido.',
+      discarded: 'Propuesta descartada.',
+      undone: 'Valores restaurados.',
+      ignored:
+        '{count, plural, one {# valor no encajaba en su campo y se ignoró.} other {# valores no encajaban en sus campos y se ignoraron.}}',
+    },
     gridAssistant: {
       label: 'Preguntar a la tabla',
       placeholder:
