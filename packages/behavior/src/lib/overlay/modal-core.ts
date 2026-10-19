@@ -7,6 +7,7 @@
  */
 
 import { OGE_LIVE_ANNOUNCER_ATTR } from '../a11y/live-announcer';
+import { OGE_EXIT_FADE, ogeExitGhost } from '../motion/motion';
 import { getTabbableElements } from './focus-trap';
 
 // --- vocabulary -------------------------------------------------------------
@@ -177,6 +178,40 @@ export function inertModalBackground(layer: HTMLElement): () => void {
   return () => {
     for (const el of inerted) el.removeAttribute('inert');
   };
+}
+
+// --- exit motion ------------------------------------------------------------
+
+/**
+ * The modal's exit motion: an opacity-only `ogeExitGhost` of the whole layer
+ * (backdrop and panel fade together — `--oge-motion-duration-fast`,
+ * `-easing-accelerate`) while the real layer is still removed synchronously,
+ * so focus return, `inert` release and the specs see an immediate close.
+ * Call it from the close step, after the teardown. `layer` may already be
+ * detached (a controlled close the framework rendered away first): the
+ * layer covers the viewport (`position: fixed; inset: 0`), so the ghost
+ * takes the viewport box. `parent` is where the layer lived (the ghost keeps
+ * its theme and stacking context there); it falls back to `body`.
+ */
+export function ogeModalExitGhost(
+  layer: HTMLElement | null,
+  parent: Element | null = layer?.parentElement ?? null,
+): void {
+  // before the entrance ran the layer is still transparent: nothing to fade
+  if (!layer?.classList.contains('oge-modal-layer-ready')) return;
+  if (typeof window === 'undefined') return;
+  ogeExitGhost(layer, {
+    parent,
+    keyframes: OGE_EXIT_FADE,
+    rect: layer.isConnected
+      ? undefined
+      : {
+          left: 0,
+          top: 0,
+          width: window.innerWidth,
+          height: window.innerHeight,
+        },
+  });
 }
 
 // --- drag & resize arithmetic ----------------------------------------------

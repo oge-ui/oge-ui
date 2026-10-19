@@ -13,6 +13,8 @@ import {
 } from 'react';
 import {
   OGE_TAB_DRAG_THRESHOLD,
+  createOgeIndicatorGlide,
+  createOgeLayoutAnimator,
   edgeEnabledIndex,
   stepEnabledIndex,
   type OgeTabsActivation,
@@ -23,6 +25,8 @@ import {
   type OgeTabsOrientation,
   type OgeTabsSize,
   type OgeTabsStylingMode,
+  type OgeIndicatorGlide,
+  type OgeLayoutAnimator,
   motionScrollBehavior,
   ogeIsRtl,
   scrollTabIntoStrip,
@@ -104,6 +108,14 @@ export function OgeTabStrip(props: OgeTabStripProps) {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const tabEls = useRef(new Map<string, HTMLDivElement>());
+  const listRef = useRef<HTMLDivElement>(null);
+  /** The sliding ink (created on the first selection move). */
+  const inkGlide = useRef<OgeIndicatorGlide | null>(null);
+  /** The tab the ink sat on after the last commit — the glide's origin. */
+  const inkTabId = useRef<string | null>(null);
+  /** FLIPs the tabs after a drag reorder. */
+  const layoutAnimator = useRef<OgeLayoutAnimator<string> | null>(null);
+  const reorderFlipPending = useRef(false);
 
   const latest = useRef(props);
   latest.current = props;
@@ -153,6 +165,18 @@ export function OgeTabStrip(props: OgeTabStripProps) {
 
   const isRtl = (): boolean => !!hostRef.current && ogeIsRtl(hostRef.current);
 
+  const tabLayout = (): OgeLayoutAnimator<string> | null => {
+    const list = listRef.current;
+    if (!list) return null;
+    layoutAnimator.current ??= createOgeLayoutAnimator<string>({
+      root: list,
+      query: () => tabEls.current.entries(),
+      enter: false,
+      exit: false,
+    });
+    return layoutAnimator.current;
+  };
+
   // --- measurement ---------------------------------------------------------
 
   const measure = useCallback((): void => {
@@ -189,9 +213,39 @@ export function OgeTabStrip(props: OgeTabStripProps) {
   // Re-measure and keep the selected tab visible whenever tabs or selection
   // change — the Angular `afterRenderEffect`.
   useLayoutEffect(() => {
+    // a drag reorder captured the old slots; glide the tabs from them
+    if (reorderFlipPending.current) {
+      reorderFlipPending.current = false;
+      void tabLayout()?.play();
+    }
+    // slide the ink from the tab it sat on (a no-op on the first commit,
+    // under reduced motion and for pill strips — the CSS ink then just moves)
+    const id = descriptors[selectedIndex]?.id ?? null;
+    const previous = inkTabId.current;
+    inkTabId.current = id;
+    const list = listRef.current;
+    if (previous !== null && id !== null && previous !== id && list) {
+      inkGlide.current ??= createOgeIndicatorGlide(list, {
+        className: 'oge-tab-ink-glide',
+      });
+      inkGlide.current.move(
+        tabEls.current.get(previous) ?? null,
+        tabEls.current.get(id) ?? null,
+        { fit: latest.current.indicatorFit === 'content' ? 'content' : 'item' },
+      );
+    }
     measure();
     scrollToIndex(selectedIndex);
+    // tabLayout only reads refs
   }, [descriptors, selectedIndex, measure, scrollToIndex]);
+
+  useEffect(
+    () => () => {
+      inkGlide.current?.cancel();
+      layoutAnimator.current?.cancel();
+    },
+    [],
+  );
 
   const focusActiveTab = useCallback((): void => {
     const id = focusTargetIdRef.current;
@@ -331,6 +385,9 @@ export function OgeTabStrip(props: OgeTabStripProps) {
     if (!wasDragging) return;
     drag.current.suppressClick = true;
     if (to !== null && to !== from) {
+      // snapshot before the owner writes the new order; the commit plays it
+      tabLayout()?.capture();
+      reorderFlipPending.current = true;
       latest.current.onReorderRequest(from, to);
     }
   };
@@ -507,6 +564,7 @@ export function OgeTabStrip(props: OgeTabStripProps) {
         onScroll={measure}
       >
         <div
+          ref={listRef}
           className="oge-tab-strip-list"
           role="tablist"
           aria-orientation={orientation === 'vertical' ? 'vertical' : undefined}

@@ -24,6 +24,7 @@ import {
   lockBodyScroll,
   modalCssSize,
   modalPlacementClass,
+  ogeModalExitGhost,
   pushOverlay,
   removeOverlay,
   resolveModalInitialFocus,
@@ -261,6 +262,14 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
   const backdropPress = useRef(false);
   const activeGestureCleanup = useRef<(() => void) | null>(null);
   const releaseInert = useRef<(() => void) | null>(null);
+  /**
+   * The rendered layer and its parent, kept for the exit ghost: a controlled
+   * close (`opened` → false) unmounts the layer before the effect runs.
+   */
+  const exitLayer = useRef<{
+    layer: HTMLElement;
+    parent: Element | null;
+  } | null>(null);
   /** Identity this modal holds in the shared overlay stack. */
   const overlayToken = useRef({});
 
@@ -344,6 +353,8 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
     requestAnimationFrame(() => {
       if (!shown.current) return;
       setReady(true);
+      const layer = layerRef.current;
+      exitLayer.current = layer ? { layer, parent: layer.parentElement } : null;
       applyInitialFocus();
       if (latest.current.props.inertBackground ?? false) {
         const layer = layerRef.current;
@@ -355,7 +366,13 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
   const finalizeClose = (reason: OgeModalCloseReason, result?: R): void => {
     if (!shown.current) return;
     const panelEl = panelRef.current;
+    const layerEl = layerRef.current ?? exitLayer.current?.layer ?? null;
+    const layerParent =
+      layerRef.current?.parentElement ?? exitLayer.current?.parent ?? null;
     teardown();
+    // the fade-out runs on a ghost — the real layer still goes synchronously
+    ogeModalExitGhost(layerEl, layerParent);
+    exitLayer.current = null;
     if (
       (latest.current.props.restoreFocus ?? true) &&
       previouslyFocused.current

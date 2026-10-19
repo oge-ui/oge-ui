@@ -1,4 +1,5 @@
 import {
+  OGE_EXIT_FADE,
   OGE_MOTION_DEFAULTS,
   createOgeLayoutAnimator,
   ogeExitGhost,
@@ -350,7 +351,10 @@ describe('ghost helpers', () => {
     document.body.appendChild(el);
     place(el, rect(10, 10));
     ogeExitGhost(el);
+    // the ghost waits for the real node to go — the two never coexist
+    expect(document.querySelector('.oge-exit-ghost')).toBeNull();
     el.remove();
+    await Promise.resolve();
     const ghost = document.querySelector<HTMLElement>('.oge-exit-ghost');
     expect(ghost?.getAttribute('aria-hidden')).toBe('true');
     expect(ghost?.hasAttribute('inert')).toBe(true);
@@ -368,6 +372,75 @@ describe('ghost helpers', () => {
     const ghost = document.querySelector<HTMLElement>('.oge-exit-ghost');
     expect(ghost?.style.top).toBe('50px');
     ghost?.remove();
+  });
+
+  it('ogeExitGhost appends into the given parent and keeps its z-index', async () => {
+    const parent = document.createElement('section');
+    const el = document.createElement('div');
+    el.style.zIndex = '1100';
+    parent.appendChild(el);
+    document.body.appendChild(parent);
+    place(el, rect(0, 0));
+    ogeExitGhost(el, { parent, keyframes: OGE_EXIT_FADE });
+    el.remove();
+    await Promise.resolve();
+    const ghost = parent.querySelector<HTMLElement>('.oge-exit-ghost');
+    expect(ghost?.style.zIndex).toBe('1100');
+    expect(ghost?.style.transition).toBe('none');
+    expect(stub.calls[0].keyframes).toEqual([{ opacity: 1 }, { opacity: 0 }]);
+    parent.remove();
+  });
+
+  it('ogeExitGhost falls back to body for a detached parent', () => {
+    const parent = document.createElement('section');
+    const el = document.createElement('div');
+    ogeExitGhost(el, { parent, rect: rect(0, 0) });
+    const ghost = document.body.querySelector<HTMLElement>(
+      ':scope > .oge-exit-ghost',
+    );
+    expect(ghost).not.toBeNull();
+    expect(ghost?.style.zIndex).toBe('10000');
+    ghost?.remove();
+  });
+
+  it('gives a node its owner keeps no ghost', async () => {
+    vi.useFakeTimers();
+    try {
+      const el = document.createElement('div');
+      document.body.appendChild(el);
+      place(el, rect(0, 0));
+      ogeExitGhost(el);
+      vi.advanceTimersByTime(300);
+      el.remove();
+      await Promise.resolve();
+      expect(document.querySelector('.oge-exit-ghost')).toBeNull();
+      expect(stub.calls).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ogeExitGhost finishes the CSS animations the clone would replay', () => {
+    const el = document.createElement('div');
+    place(el, rect(0, 0));
+    const finish = vi.fn();
+    const loop = vi.fn(() => {
+      throw new DOMException('infinite', 'InvalidStateError');
+    });
+    const proto = HTMLElement.prototype as unknown as {
+      getAnimations?: unknown;
+    };
+    const original = proto.getAnimations;
+    proto.getAnimations = () => [{ finish }, { finish: loop }];
+    try {
+      expect(() => ogeExitGhost(el)).not.toThrow();
+      expect(finish).toHaveBeenCalledTimes(1);
+      expect(loop).toHaveBeenCalledTimes(1);
+    } finally {
+      if (original === undefined) delete proto.getAnimations;
+      else proto.getAnimations = original;
+      document.querySelector('.oge-exit-ghost')?.remove();
+    }
   });
 
   it('ogeSettleGhost glides onto the destination', async () => {

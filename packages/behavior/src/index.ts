@@ -1098,6 +1098,7 @@ export {
   resolveModalInitialFocus,
   isModalFocusOrphaned,
   inertModalBackground,
+  ogeModalExitGhost,
   clampModalDrag,
   clampModalResize,
   trackPointerGesture,
@@ -2101,6 +2102,7 @@ export {
   type OgeMotionDuration,
   type OgeMotionEasing,
   type OgeMotionTiming,
+  OGE_EXIT_FADE,
 } from './lib/motion/motion';
 // animated rows — the grid families' `animateRows` (row FLIP on re-order)
 export {
@@ -2112,6 +2114,21 @@ export {
   type OgeRowMotionOptions,
   type OgeRowMotionWindow,
 } from './lib/motion/row-motion';
+
+// the sliding selection indicator (tab ink) — FLIPs a transient bar between
+// the old and the new item's CSS-drawn ink
+export {
+  OGE_INDICATOR_GLIDE_ATTR,
+  createOgeIndicatorGlide,
+  ogeIndicatorEdge,
+  ogeIndicatorRect,
+  type OgeIndicatorEdge,
+  type OgeIndicatorFit,
+  type OgeIndicatorGlide,
+  type OgeIndicatorGlideOptions,
+  type OgeIndicatorMoveOptions,
+  type OgeIndicatorSide,
+} from './lib/motion/indicator-glide';
 export {
   ogeIsRtl,
   ogeResolveDirection,

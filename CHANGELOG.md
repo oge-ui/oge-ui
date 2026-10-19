@@ -114,6 +114,33 @@ are versioned independently, which is the case here.
   fallbacks only misled; `themes.spec.ts` now fails on a new one. The FAB
   speed-dial stagger reads `--oge-motion-stagger` instead of a raw `30ms`.
 
+### Tab and overlay motion — `@oge-ui/behavior`, `@oge-ui/tabs`, `@oge-ui/react-tabs`, `@oge-ui/overlay`, `@oge-ui/react-overlay`
+
+- **The tab ink slides.** Selecting another tab moves the underline from the
+  old tab to the new one (`--oge-motion-duration-layout` +
+  `--oge-motion-easing-spring`) instead of swapping it in place — for the
+  default and the content-fitted (`indicatorFit: 'content'`) ink, horizontal
+  and vertical strips, start and end placements and RTL. The first render,
+  reduced motion and forced colors keep the plain CSS ink (which is also
+  what the visual baselines capture); pill (`secondary`) strips are
+  unchanged. No new inputs or props.
+- **Drag-reordered tabs glide** to their new slots (`createOgeLayoutAnimator`)
+  instead of jumping.
+- **Overlays fade out on close.** Popups, dropdown editors, menus and
+  submenus, context menus, popovers, tooltips and modal dialogs (including
+  the alert / confirm / prompt dialogs) leave with a short opacity fade
+  (`--oge-motion-duration-fast` + `--oge-motion-easing-accelerate`) instead
+  of vanishing. The fade runs on an `aria-hidden`, inert clone: the real
+  surface is still removed synchronously, so focus return, `inert` release,
+  `closed` events and tests see the same immediate close. Toasts and the
+  drawer keep their own exits.
+- **Behavior API (additive):** `createOgeIndicatorGlide`, `ogeIndicatorEdge`,
+  `ogeIndicatorRect`, `OGE_INDICATOR_GLIDE_ATTR`, `ogeModalExitGhost`,
+  `OGE_EXIT_FADE`; `ogeExitGhost` takes a `parent` (the ghost keeps the
+  theme and stacking context it lived in), keeps the element's own
+  `z-index` and starts from the settled look (the clone's CSS enter
+  animations are finished at once).
+
 ### Layout motion — `@oge-ui/behavior`, `@oge-ui/layout`, `@oge-ui/react-layout`, `@oge-ui/grid` (tokens), `@oge-ui/locales`
 
 - **Nothing teleports in the tile layout any more.** Dragging a tile lifts it

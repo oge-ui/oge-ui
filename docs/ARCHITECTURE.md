@@ -812,6 +812,31 @@ var(--oge-motion-duration-…) var(--oge-motion-easing-…)`, keyframe `from { �
     `*-ready` class transition the script already toggles. Exit animations are added only where
     the component already delays removal (drawer, toast, accordion); never hold a node in the DOM
     for an exit — focus return, `inert` and the specs expect synchronous removal.
+  - **Closing surfaces exit through a ghost.** Where a surface would otherwise vanish, its close
+    step calls `ogeExitGhost` just before the synchronous removal: an `aria-hidden`, `inert`,
+    id-free clone fades out (`OGE_EXIT_FADE`, opacity only, `--oge-motion-duration-fast` +
+    `-easing-accelerate`) while the real node goes at once. Pass `parent` (the node it lived in)
+    so the ghost keeps its theme, direction and stacking context; the ghost keeps the element's
+    own `z-index` and its CSS enter animations are finished at once, so it leaves from the
+    settled look. `OgeAnchoredPanelCore.close()` does this for every anchored panel (popups,
+    dropdown editors, menus, context menus, popovers, tooltips — a panel still transparent
+    before its first measure is skipped), and both modal layers call `ogeModalExitGhost(layer,
+parent)` after their teardown (it takes the viewport box when a controlled close already
+    rendered the layer away). Surfaces with their own exit (toast, drawer) never get a ghost too.
+    The box and the clone are taken at the close, but the ghost is appended only once the real
+    node has left the document (the framework's next render, seen through a `MutationObserver`
+    — still before the paint), so the two never coexist and a strict test locator never
+    resolves two matches; a node the owner keeps gets no ghost. An E2E step that reopens a
+    surface right after closing it waits for the old one to go first
+    (`await expect(page.locator('.oge-menu-item')).toHaveCount(0)`); role queries already skip
+    the `aria-hidden` ghost.
+  - **Selection indicators slide, the CSS ink stays the truth.** A tab strip's ink is drawn by
+    CSS on the selected tab; on a selection change `createOgeIndicatorGlide(list)` FLIPs one
+    transient bar from the old tab's ink box to the new one's (`-layout` + `-spring`) while the
+    list carries `data-oge-indicator-glide` (the stylesheet hides the real ink and stops its
+    border-colour transition, so it reappears at once where the bar lands). The ink edge is
+    read from the item's single bordered side, so RTL, vertical strips and end placements need
+    no configuration; pills (no single edge), the first render and reduced motion just jump.
   - **Geometry stays honest.** A surface that tests, drags or positioning code measure right after
     it appears (floating windows) fades with opacity only; small transforms (`scale` ≥ 0.85,
     `translate` ≤ 4px) are fine on popups, chips, tags and glyphs.
