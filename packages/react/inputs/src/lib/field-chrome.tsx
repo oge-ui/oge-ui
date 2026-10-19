@@ -421,7 +421,19 @@ export function OgeFieldChrome({
             .filter(Boolean)
             .join(' ')}
         >
-          <span className="oge-input-subscript-text" aria-live="polite">
+          <span
+            className={[
+              'oge-input-subscript-text',
+              host.showError &&
+                !!host.resolvedErrorText &&
+                !host.hint &&
+                host.subscriptSizing === 'dynamic' &&
+                'oge-input-subscript-expand',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            aria-live="polite"
+          >
             {host.showError && host.resolvedErrorText ? (
               <span className="oge-input-error" id={host.errorId}>
                 {host.resolvedErrorText}

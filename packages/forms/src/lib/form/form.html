@@ -155,6 +155,7 @@
   <fieldset
     class="oge-form-group"
     [class]="node.cssClass ?? ''"
+    [attr.data-oge-form-item]="node.id"
     [style.grid-column]="node.colSpan > 1 ? 'span ' + node.colSpan : null"
   >
     @if (node.caption) {
@@ -180,6 +181,7 @@
   } @else {
   <oge-form-field
     [class]="nodeOf(node).cssClass ?? ''"
+    [attr.data-oge-form-item]="node.id"
     [item]="nodeOf(node)"
     [field]="fieldNodeFor(nodeOf(node))"
     [control]="controlFor(nodeOf(node))"

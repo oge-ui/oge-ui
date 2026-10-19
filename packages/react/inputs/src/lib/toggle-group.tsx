@@ -2,7 +2,9 @@
 
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -14,10 +16,12 @@ import {
   applyToggleGroupPress,
   buttonGroupNavIndex,
   buttonGroupRole,
+  createOgeIndicatorGlide,
   resolveDisabled,
   resolveDisplay,
   resolveValue,
   toggleGroupSelectedIndices,
+  type OgeIndicatorGlide,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
   type OgeSelectValueExpr,
@@ -130,6 +134,35 @@ export const OgeToggleGroup = forwardRef(function OgeToggleGroupRender<TItem>(
   const selected = new Set(
     toggleGroupSelectedIndices(selectionMode, itemValues, field.value),
   );
+
+  // --- sliding selection pill (single mode) ---------------------------------
+  const trackRef = useRef<HTMLDivElement>(null);
+  const pillGlide = useRef<OgeIndicatorGlide | null>(null);
+  /** The segment the pill sat on after the last commit — the glide's origin. */
+  const pillIndex = useRef(-1);
+  const singleIndex =
+    selectionMode === 'single' ? ([...selected][0] ?? -1) : -1;
+  // slide the pill from the old segment (a no-op on the first commit, in
+  // multiple mode and under reduced motion — the CSS pill then just moves)
+  useLayoutEffect(() => {
+    const previous = pillIndex.current;
+    pillIndex.current = singleIndex;
+    const track = trackRef.current;
+    if (previous < 0 || singleIndex < 0 || previous === singleIndex || !track)
+      return;
+    pillGlide.current ??= createOgeIndicatorGlide(track, {
+      shape: 'box',
+      className: 'oge-toggle-group-pill',
+    });
+    const segments = track.querySelectorAll<HTMLElement>(
+      '.oge-toggle-group-item',
+    );
+    pillGlide.current.move(
+      segments[previous] ?? null,
+      segments[singleIndex] ?? null,
+    );
+  }, [singleIndex]);
+  useEffect(() => () => pillGlide.current?.cancel(), []);
 
   /** Last segment that held focus — the roving-tabindex anchor. */
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -244,6 +277,7 @@ export const OgeToggleGroup = forwardRef(function OgeToggleGroupRender<TItem>(
         </span>
       )}
       <div
+        ref={trackRef}
         className="oge-toggle-group-track"
         role={role}
         aria-labelledby={visibleLabel ? field.ids.labelId : undefined}

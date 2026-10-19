@@ -321,7 +321,16 @@ import { OGE_INPUT_HOST, type OgeInputCounterState } from './input-host';
         class="oge-input-subscript"
         [class.oge-input-subscript-fixed]="host.subscriptSizing() === 'fixed'"
       >
-        <span class="oge-input-subscript-text" aria-live="polite">
+        <span
+          class="oge-input-subscript-text"
+          [class.oge-input-subscript-expand]="
+            host.showError() &&
+            !!host.resolvedErrorText() &&
+            !host.hint() &&
+            host.subscriptSizing() === 'dynamic'
+          "
+          aria-live="polite"
+        >
           @if (host.showError() && host.resolvedErrorText(); as errorMessage) {
             <span class="oge-input-error" [id]="host.errorId">{{
               errorMessage

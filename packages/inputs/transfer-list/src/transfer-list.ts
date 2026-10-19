@@ -3,8 +3,10 @@ import {
   Component,
   ElementRef,
   TemplateRef,
+  DestroyRef,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   computed,
   contentChild,
   inject,
@@ -20,6 +22,7 @@ import {
   beginPointerDragDrop,
   ogeTransferOptionElement,
   choiceIncludes,
+  createOgeLayoutAnimator,
   ogeIsRtl,
   ogeSelectSearchFilter,
   ogeSelectSearchStrings,
@@ -31,6 +34,7 @@ import {
   ogeTransferMovableValues,
   ogeTransferMove,
   ogeTransferOpposite,
+  ogeTransferOptionEntries,
   ogeTransferReorderLine,
   ogeTransferReorderSource,
   ogeTransferReorderTarget,
@@ -39,6 +43,7 @@ import {
   prepareTouchDrag,
   resolveDisabled,
   resolveValue,
+  type OgeLayoutAnimator,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
   type OgeSelectGroupExpr,
@@ -499,8 +504,39 @@ export class OgeTransferList<TItem = unknown>
   });
   protected readonly describedBy = computed(() => this.subscript()?.id ?? null);
 
+  /** FLIPs the options of a move between the lists (created on the first one). */
+  private layoutAnimator: OgeLayoutAnimator<unknown> | null = null;
+  /** A move captured the old boxes; the next render plays them. */
+  private moveFlipPending = false;
+
+  private optionLayout(): OgeLayoutAnimator<unknown> {
+    const root = this.hostEl.nativeElement;
+    // keyed by item value across both panes: a moved item glides from its
+    // slot in one list to its slot in the other, the neighbours close up
+    this.layoutAnimator ??= createOgeLayoutAnimator<unknown>({
+      root,
+      enter: false,
+      exit: false,
+      query: () =>
+        ogeTransferOptionEntries(
+          root,
+          this.shownSides(),
+          (item) => this.itemValueOf(item),
+          this.groupBy() !== undefined,
+        ),
+    });
+    return this.layoutAnimator;
+  }
+
   constructor() {
     super();
+    afterRenderEffect(() => {
+      this.split();
+      if (!this.moveFlipPending) return;
+      this.moveFlipPending = false;
+      void this.optionLayout().play();
+    });
+    inject(DestroyRef).onDestroy(() => this.layoutAnimator?.cancel());
     afterNextRender(() => {
       prepareTouchDrag();
       this.rtl.set(ogeIsRtl(this.hostEl.nativeElement));
@@ -620,6 +656,9 @@ export class OgeTransferList<TItem = unknown>
     this.moving.emit(moving);
     if (moving.cancel) return;
     const next = ogeTransferMove(this.value() ?? [], values, to);
+    // snapshot before the write; the render plays the glide
+    this.optionLayout().capture();
+    this.moveFlipPending = true;
     this.commitNow(next, event);
     const remaining = this.selectionOf(from).filter(
       (value) => !choiceIncludes(values, value),

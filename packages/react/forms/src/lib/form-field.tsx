@@ -116,6 +116,7 @@ export const OgeFormField = forwardRef<OgeFormFieldHandle, OgeFormFieldProps>(
       <div
         ref={hostRef}
         className={classes}
+        data-oge-form-item={item.id}
         style={span > 1 ? { gridColumn: `span ${span}` } : undefined}
       >
         {props.renderItem ? (

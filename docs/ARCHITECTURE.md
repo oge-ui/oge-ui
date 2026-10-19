@@ -837,6 +837,23 @@ parent)` after their teardown (it takes the viewport box when a controlled close
     border-colour transition, so it reappears at once where the bar lands). The ink edge is
     read from the item's single bordered side, so RTL, vertical strips and end placements need
     no configuration; pills (no single edge), the first render and reduced motion just jump.
+    Segmented selections (single-select toggle group and button group) pass `shape: 'box'`: a
+    translucent pill (tint + border, painted over the items with `pointer-events: none`) covers
+    the whole item box, and the stylesheet hides the real selected fill while it runs.
+  - **View changes are keyed panes.** A component whose content swaps wholesale (the calendar's
+    month / year / decade) renders it in one pane keyed by the visible view (`calendarViewKey`;
+    Angular flips an `@if` branch, React changes the `key`) and puts the direction on a data
+    attribute (`calendarViewMotion`) that picks the enter keyframe; the first view has no
+    attribute and never animates, and a focus move inside the view keeps the pane.
+  - **Content that grows in place opens its row.** Text appearing where it would push the
+    layout (the field-chrome error under an empty dynamic subscript) sits in a
+    `grid-template-rows: 1fr` box whose enter keyframe starts at `0fr`; a swap that keeps the row
+    (an error replacing a hint) only fades.
+  - **Nested grids get one animator each.** Where keyed items nest (form groups inside form
+    grids — `createOgeFormItemMotion`), run one layout animator per container, measured against
+    it and querying only its direct children, so a moving group carries its contents instead of
+    every descendant gliding twice. Index-tracked lists (list box, transfer list) key the
+    animator by the item an element shows, not by the element.
   - **Geometry stays honest.** A surface that tests, drags or positioning code measure right after
     it appears (floating windows) fades with opacity only; small transforms (`scale` ≥ 0.85,
     `translate` ≤ 4px) are fine on popups, chips, tags and glyphs.

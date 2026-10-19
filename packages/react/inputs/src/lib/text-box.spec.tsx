@@ -98,6 +98,33 @@ describe('<OgeTextBox>', () => {
     expect(native()).toHaveAccessibleDescription('This field is required');
   });
 
+  it('opens the subscript row for an error only where it would shift the layout', () => {
+    const text = () =>
+      document.querySelector('.oge-input-subscript-text') as HTMLElement;
+    const { rerender } = render(
+      <OgeTextBox subscriptSizing="dynamic" errorDisplay="always" />,
+    );
+    expect(text()).not.toHaveClass('oge-input-subscript-expand');
+    rerender(
+      <OgeTextBox
+        subscriptSizing="dynamic"
+        errorDisplay="always"
+        errors={[{ kind: 'required' }]}
+      />,
+    );
+    expect(text()).toHaveClass('oge-input-subscript-expand');
+    // replacing a hint keeps the row — fade only
+    rerender(
+      <OgeTextBox
+        subscriptSizing="dynamic"
+        errorDisplay="always"
+        hint="Helper"
+        errors={[{ kind: 'required' }]}
+      />,
+    );
+    expect(text()).not.toHaveClass('oge-input-subscript-expand');
+  });
+
   it('the grapheme counter counts user-perceived characters', () => {
     render(<OgeTextBox defaultValue="👨‍👩‍👧" showCounter maxLength={5} />);
     expect(screen.getByText('1/5')).toBeInTheDocument();

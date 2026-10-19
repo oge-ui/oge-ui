@@ -238,4 +238,29 @@ describe('createOgeIndicatorGlide', () => {
     expect(root.hasAttribute(OGE_INDICATOR_GLIDE_ATTR)).toBe(false);
     expect(root.querySelector('.oge-indicator-glide')).toBeNull();
   });
+
+  it("slides a pill over the whole item box with shape: 'box'", async () => {
+    stub = stubAnimate();
+    const { root, a, b } = setup();
+    // pills have no single bordered edge — the box shape does not need one
+    for (const item of [a, b]) item.style.border = '1px solid transparent';
+    const glide = createOgeIndicatorGlide(root, {
+      shape: 'box',
+      className: 'pill',
+    });
+    expect(glide.move(a, b)).toBe(true);
+    const bar = root.querySelector<HTMLElement>('.pill')!;
+    expect(bar.getAttribute('aria-hidden')).toBe('true');
+    expect(bar.style.left).toBe('100px');
+    expect(bar.style.top).toBe('0px');
+    expect(bar.style.width).toBe('60px');
+    expect(bar.style.height).toBe('40px');
+    expect(stub.calls[0].keyframes[0].transform).toBe(
+      `translate(-100px, 0px) scale(${100 / 60}, 1)`,
+    );
+    stub.calls[0].finish();
+    await flush();
+    expect(root.querySelector('.pill')).toBeNull();
+    expect(root.hasAttribute(OGE_INDICATOR_GLIDE_ATTR)).toBe(false);
+  });
 });

@@ -431,6 +431,29 @@
   }
 }
 
+// An error appearing in an empty dynamic subscript would push the content
+// below down in one jump: it opens its row instead (grid-template-rows
+// 0fr → 1fr) while it fades in. Replacing a hint keeps the row, so it only
+// fades. The class is set while such an error shows, so the keyframe runs
+// each time one appears; the settled state is the plain one-row layout.
+.oge-input-subscript-expand {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: oge-input-subscript-expand var(--oge-motion-duration-base)
+    var(--oge-motion-easing-standard);
+
+  > .oge-input-error {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+@keyframes oge-input-subscript-expand {
+  from {
+    grid-template-rows: 0fr;
+  }
+}
+
 .oge-input-counter {
   flex: none;
   color: var(--oge-input-muted);
@@ -1066,6 +1089,7 @@
   }
 
   .oge-input-error,
+  .oge-input-subscript-expand,
   .oge-tag {
     animation: none;
   }

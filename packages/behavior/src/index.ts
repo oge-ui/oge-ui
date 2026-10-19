@@ -5,6 +5,10 @@ export {
   type OgeButtonGroupSelectionChange,
 } from './lib/button/button-group-selection';
 export {
+  OGE_BUTTON_GROUP_PILL_CLASS,
+  glideButtonGroupPill,
+} from './lib/button/button-group-pill';
+export {
   resolveClickGuard,
   resolveHoldToConfirm,
   resolveAutoRepeat,
@@ -600,6 +604,10 @@ export {
   weekdayNames,
   viewLabel,
   navigate,
+  calendarViewKey,
+  calendarViewMotion,
+  type OgeCalendarView,
+  type OgeCalendarViewMotion,
   type CalendarCell,
   type OgeCalendarZoomLevel,
   type OgeCalendarSelectionMode,
@@ -720,6 +728,7 @@ export {
   ogeTransferMovableValues,
   ogeTransferMove,
   ogeTransferOpposite,
+  ogeTransferOptionEntries,
   ogeTransferSplit,
   ogeTransferDropTarget,
   ogeTransferOptionElement,
@@ -2043,6 +2052,12 @@ export {
   formColumnsCss,
   formColumnsCount,
 } from './lib/forms/form-model';
+// visibleWhen motion — appearing items fade in, the ones below glide
+export {
+  OGE_FORM_ITEM_ATTR,
+  createOgeFormItemMotion,
+  type OgeFormItemMotion,
+} from './lib/forms/form-motion';
 export {
   evaluateOgeValidationRules,
   evaluateOgeFormCondition,
@@ -2127,6 +2142,7 @@ export {
   type OgeIndicatorGlide,
   type OgeIndicatorGlideOptions,
   type OgeIndicatorMoveOptions,
+  type OgeIndicatorShape,
   type OgeIndicatorSide,
 } from './lib/motion/indicator-glide';
 export {
