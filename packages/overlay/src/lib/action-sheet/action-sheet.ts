@@ -371,11 +371,19 @@ export class OgeActionSheet {
       return;
     }
     this.focused.set(intent.index);
-    this.sheetEl()
-      ?.nativeElement.querySelector<HTMLElement>(
-        `[data-oge-action-sheet-index="${intent.index}"]`,
-      )
-      ?.focus();
+    const sheet = this.sheetEl()?.nativeElement;
+    const next = sheet?.querySelector<HTMLElement>(
+      `[data-oge-action-sheet-index="${intent.index}"]`,
+    );
+    if (!sheet || !next) return;
+    // move the tab stop now, not at the next render: a Tab pressed before
+    // change detection runs would otherwise wrap to the stale stop
+    for (const item of sheet.querySelectorAll<HTMLElement>(
+      '[data-oge-action-sheet-index]',
+    )) {
+      item.tabIndex = item === next ? 0 : -1;
+    }
+    next.focus();
   }
 
   protected requestClose(

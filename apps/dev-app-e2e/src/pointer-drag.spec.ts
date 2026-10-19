@@ -312,10 +312,13 @@ for (const fw of FRAMEWORKS) {
         await expect(
           doing.locator('.oge-kanban-card-title', { hasText: title }),
         ).toHaveCount(0);
+        // that swipe may have panned the board on a phone: measure again
+        const from = (await card.boundingBox())!;
+        const to = (await doing.boundingBox())!;
         await touchDrag(
           page,
-          { x: box.x + 40, y: box.y + 10 },
-          { x: target.x + target.width / 2, y: target.y + 60 },
+          { x: from.x + 40, y: from.y + 10 },
+          { x: to.x + to.width / 2, y: to.y + 60 },
         );
         await expect(
           doing.locator('.oge-kanban-card-title', { hasText: title }),

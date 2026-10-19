@@ -189,6 +189,16 @@ describe('OgeActionSheet', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
+  it('moves the tab stop with the key, before the next render', async () => {
+    await openSheet();
+    key(menuItems()[0], 'End');
+    // no change detection yet: a Tab right now must wrap to the new stop
+    expect(document.activeElement).toBe(menuItems()[3]);
+    expect(menuItems().map((i) => i.tabIndex)).toEqual([-1, -1, -1, 0]);
+    await settle(fixture);
+    expect(menuItems().map((i) => i.tabIndex)).toEqual([-1, -1, -1, 0]);
+  });
+
   it('keeps the sheet open when itemClick sets keepOpen, ignores disabled', async () => {
     host.keepOpen = true;
     await openSheet();

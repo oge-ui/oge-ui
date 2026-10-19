@@ -5,6 +5,8 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## Unreleased
+
 ## 1.1.5 — 2026-10-19
 
 The AI wave and the motion layer. AI: the grid assistant, smart paste, AI columns, a chat surface and a free MCP server (`@oge-ui/mcp`) for coding assistants. Motion: a shared layout-motion layer drives animated grid rows, expand/collapse, sliding tab ink, overlay exit fades, a drop settle for every pointer drag, calendar and list transitions, and chart data tweens. All of it honours reduced motion. Also in this release: OGE UI Pro license keys, a Russian locale pack, and pricing and comparison pages on the docs site.
