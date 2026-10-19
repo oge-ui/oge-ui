@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
+import AxeBuilder from './axe';
 import { test, expect } from '@playwright/test';
 
 test.describe('buttons overview', () => {

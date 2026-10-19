@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
+import AxeBuilder from './axe';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
 async function rectOf(locator: Locator) {

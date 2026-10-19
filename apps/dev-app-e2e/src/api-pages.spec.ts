@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
+import AxeBuilder from './axe';
 import { test, expect, type Page } from '@playwright/test';
 
 const scan = (page: Page, include: string) =>
