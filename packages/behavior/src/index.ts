@@ -2073,6 +2073,27 @@ export {
   type OgeSanitizeUrlOptions,
 } from './lib/security/sanitize-url';
 export { prefersReducedMotion, motionScrollBehavior } from './lib/a11y/motion';
+// layout motion — FLIP animator, drop settle, exit ghosts (no-ops under
+// reduced motion and without the Web Animations API)
+export {
+  OGE_MOTION_DEFAULTS,
+  createOgeLayoutAnimator,
+  ogeExitGhost,
+  ogeFlipDelta,
+  ogeMotionEnabled,
+  ogeMotionTiming,
+  ogeRectOf,
+  ogeSettleGhost,
+  ogeSpringEasing,
+  type OgeExitGhostOptions,
+  type OgeFlipDelta,
+  type OgeLayoutAnimator,
+  type OgeLayoutAnimatorOptions,
+  type OgeLayoutPlayOptions,
+  type OgeMotionDuration,
+  type OgeMotionEasing,
+  type OgeMotionTiming,
+} from './lib/motion/motion';
 export {
   ogeIsRtl,
   ogeResolveDirection,
@@ -2096,6 +2117,7 @@ export {
   OGE_AUTO_SCROLL_MAX_SPEED,
   createAutoScroller,
   ogeEdgeScrollVelocity,
+  ogeScrollParent,
   type OgeAutoScrollOptions,
   type OgeAutoScroller,
 } from './lib/gesture/auto-scroll';
@@ -2104,6 +2126,8 @@ export {
   createDragGhost,
   ogeElementAtPoint,
   type OgeDragGhost,
+  type OgeDragGhostDestination,
+  type OgeDragGhostOptions,
   type OgePointerDragDropOptions,
 } from './lib/gesture/pointer-drag-drop';
 
@@ -2340,14 +2364,21 @@ export {
   ogeTileLayoutClampResize,
   ogeTileLayoutClampSpan,
   ogeTileLayoutDropIndex,
+  ogeTileLayoutGrabIntent,
+  ogeTileLayoutGrabText,
   ogeTileLayoutKeyIntent,
+  ogeTileLayoutKeyboardHint,
+  ogeTileLayoutLiveTarget,
+  ogeTileLayoutModifier,
   ogeTileLayoutMoveState,
   ogeTileLayoutMovedText,
   ogeTileLayoutResizeSpan,
   ogeTileLayoutResizeState,
+  ogeTileLayoutPreviewOrder,
   ogeTileLayoutResizedText,
   ogeTileLayoutResolve,
   ogeTileLayoutShortcuts,
+  ogeTileLayoutSizeText,
   ogeTileLayoutStep,
   ogeTileLayoutTabStop,
   ogeTileLayoutTemplateColumns,
@@ -2361,6 +2392,7 @@ export {
   type OgeTileLayoutConfig,
   type OgeTileLayoutConfigInput,
   type OgeTileLayoutDirection,
+  type OgeTileLayoutGrabIntent,
   type OgeTileLayoutItemData,
   type OgeTileLayoutKey,
   type OgeTileLayoutKeyInput,

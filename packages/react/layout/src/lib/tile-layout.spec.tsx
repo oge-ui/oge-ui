@@ -130,8 +130,9 @@ describe('<OgeTileLayout>', () => {
       <OgeTileLayout items={ITEMS} onLayoutChanged={(e) => changes.push(e)} />,
     );
     const all = tiles();
+    // cells are what the live drag hit-tests (tiles may be mid-glide)
     [0, 220, 330, 440].forEach((left, i) => {
-      all[i].getBoundingClientRect = () =>
+      (all[i].parentElement as HTMLElement).getBoundingClientRect = () =>
         ({ left, top: 0, width: 100, height: 100 }) as DOMRect;
     });
     const header = all[0].querySelector('.oge-tile-layout-header')!;
@@ -148,10 +149,55 @@ describe('<OgeTileLayout>', () => {
     pointer(header, 'pointerdown', 10, 10);
     pointer(header, 'pointermove', 240, 20);
     expect(all[0].className).toContain('oge-tile-layout-tile-dragged');
-    expect(all[1].className).toContain('oge-tile-layout-tile-drop-target');
+    expect(all[0].style.left).toBe('230px');
+    const cells = all.map((t) => t.parentElement as HTMLElement);
+    expect(cells[0].className).toContain('oge-tile-layout-cell-placeholder');
+    // the layout previews the drop live without moving DOM nodes
+    expect(cells.map((c) => c.style.order)).toEqual(['1', '0', '2', '3']);
+    expect(keysOf()).toEqual(['a', 'b', 'c', 'd']);
     pointer(header, 'pointerup', 240, 20);
     expect(keysOf()).toEqual(['b', 'a', 'c', 'd']);
     expect(changes.at(-1)?.source).toBe('pointer');
+    expect(
+      document.querySelector('.oge-tile-layout-cell-placeholder'),
+    ).toBeNull();
+  });
+
+  it('Space picks a tile up, arrows preview, Space drops; Escape and blur cancel', () => {
+    const moves: number[] = [];
+    render(
+      <OgeTileLayout
+        items={ITEMS}
+        locale="en-US"
+        onReordered={(e) => moves.push(e.toIndex)}
+      />,
+    );
+    const [a] = tiles();
+    a.focus();
+    fireEvent.keyDown(a, { key: ' ' });
+    expect(a.className).toContain('oge-tile-layout-tile-grabbed');
+    fireEvent.keyDown(a, { key: 'ArrowRight' });
+    fireEvent.keyDown(a, { key: 'ArrowRight' });
+    const orders = () =>
+      tiles().map((t) => (t.parentElement as HTMLElement).style.order);
+    expect(orders()).toEqual(['2', '0', '1', '3']);
+    expect(document.activeElement).toBe(a);
+    expect(moves).toEqual([]);
+    fireEvent.keyDown(a, { key: ' ' });
+    expect(keysOf()).toEqual(['b', 'c', 'a', 'd']);
+    expect(moves).toEqual([2]);
+    expect(document.querySelector('.oge-tile-layout-tile-grabbed')).toBeNull();
+    const moved = tiles()[2];
+    moved.focus();
+    fireEvent.keyDown(moved, { key: 'Enter' });
+    fireEvent.keyDown(moved, { key: 'Home' });
+    expect(orders()[2]).toBe('0');
+    fireEvent.keyDown(moved, { key: 'Escape' });
+    expect(orders()).toEqual(['0', '1', '2', '3']);
+    fireEvent.keyDown(moved, { key: ' ' });
+    act(() => moved.blur());
+    expect(document.querySelector('.oge-tile-layout-tile-grabbed')).toBeNull();
+    expect(moves).toEqual([2]);
   });
 
   it('resizes with the corner handle', () => {
@@ -175,7 +221,13 @@ describe('<OgeTileLayout>', () => {
         '--oge-tile-col-span',
       ),
     ).toBe('3');
+    const frame = document.querySelector<HTMLElement>(
+      '.oge-tile-layout-resize-frame',
+    );
+    expect(frame?.style.width).toBe('330px');
+    expect(frame?.textContent).toBe('3 × 2');
     pointer(handle, 'pointerup', 330, 340);
+    expect(document.querySelector('.oge-tile-layout-resize-frame')).toBeNull();
     expect(resized[0]).toMatchObject({
       source: 'pointer',
       next: { colSpan: 3, rowSpan: 2 },

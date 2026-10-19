@@ -1429,7 +1429,7 @@ export class ComponentsIndexPage {
       icon: 'dashboard',
       path: '/components/tile-layout',
       description:
-        'Drag-and-drop dashboard tiles with column and row spans, resize handles, Ctrl+Arrow keyboard moves with announcements and a serializable layout to save and restore.',
+        'Drag-and-drop dashboard tiles with live reflow, spring-settled drops, column and row spans, resize handles, keyboard pick-up and Ctrl+Arrow moves with announcements and a serializable layout.',
     },
     {
       key: 'data-view',

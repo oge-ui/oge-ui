@@ -270,7 +270,7 @@ export function contrastRatio(foreground: OgeRgba, background: OgeRgba): number;
 export function createAutoScroller(container: HTMLElement, options?: OgeAutoScrollOptions): OgeAutoScroller;
 
 // @public
-export function createDragGhost(element: Element, startX: number, startY: number): OgeDragGhost;
+export function createDragGhost(element: Element, startX: number, startY: number, options?: OgeDragGhostOptions): OgeDragGhost;
 
 // @public (undocumented)
 export function createNumberFormatter(locale: string, options?: Intl.NumberFormatOptions): OgeNumberFormatter;
@@ -286,6 +286,9 @@ export function createOgeAiHttpTransport(options: OgeAiHttpTransportOptions): Og
 
 // @public
 export function createOgeAnthropicTransport(options: OgeAiAnthropicTransportOptions): OgeAiTransport;
+
+// @public
+export function createOgeLayoutAnimator<K>(options: OgeLayoutAnimatorOptions<K>): OgeLayoutAnimator<K>;
 
 // @public
 export function createOgeOpenAiTransport(options: OgeAiOpenAiTransportOptions): OgeAiTransport;
@@ -1224,6 +1227,12 @@ export const OGE_MODAL_MIN_RESIZE: {
 
 // @public
 export const OGE_MODAL_PLACEMENTS: readonly OgeModalPlacement[];
+
+// @public
+export const OGE_MOTION_DEFAULTS: {
+    readonly durations: Readonly<Record<OgeMotionDuration, number>>;
+    readonly easings: Readonly<Record<OgeMotionEasing, string>>;
+};
 
 // @public
 export const OGE_NO_SPANS: OgeGridSpanLayout;
@@ -3900,10 +3909,17 @@ export type OgeDirectionInput = boolean | OgeDirection | null | undefined;
 
 // @public
 export interface OgeDragGhost {
-    // (undocumented)
-    destroy(): void;
+    destroy(to?: OgeDragGhostDestination): void;
     // (undocumented)
     move(clientX: number, clientY: number): void;
+}
+
+// @public
+export type OgeDragGhostDestination = Element | OgeRect | (() => Element | OgeRect | null) | null;
+
+// @public
+export interface OgeDragGhostOptions {
+    lift?: boolean;
 }
 
 // @public
@@ -5233,6 +5249,15 @@ export function ogeEditorWriteSelection(root: HTMLElement, selection: OgeEditorS
 export function ogeElementAtPoint(clientX: number, clientY: number, fallback?: EventTarget | null): Element | null;
 
 // @public
+export function ogeExitGhost(element: Element, options?: OgeExitGhostOptions): void;
+
+// @public
+export interface OgeExitGhostOptions {
+    keyframes?: Keyframe[];
+    rect?: OgeRect;
+}
+
+// @public
 export interface OgeExpansionPanelCollapsingEvent {
     cancel: boolean;
     readonly event?: Event;
@@ -5908,6 +5933,23 @@ export function ogeFindMentionQuery(text: string, caret: number, triggers: reado
 
 // @public
 export function ogeFirstVisibleRow(rows: readonly Element[], top: number, rowIndex: (row: Element) => number): number;
+
+// @public
+export interface OgeFlipDelta {
+    // (undocumented)
+    readonly dx: number;
+    // (undocumented)
+    readonly dy: number;
+    // (undocumented)
+    readonly sx: number;
+    // (undocumented)
+    readonly sy: number;
+}
+
+// @public
+export function ogeFlipDelta(first: OgeRect, last: OgeRect, options?: {
+    scale?: boolean;
+}): OgeFlipDelta | null;
 
 // @public
 export interface OgeFocusedCellChangedEvent<T = unknown> {
@@ -8149,6 +8191,34 @@ export interface OgeKeyInput {
 }
 
 // @public
+export interface OgeLayoutAnimator<K> {
+    readonly animating: boolean;
+    cancel(): void;
+    capture(): void;
+    play(options?: OgeLayoutPlayOptions<K>): Promise<void>;
+    reset(): void;
+}
+
+// @public
+export interface OgeLayoutAnimatorOptions<K> {
+    enter?: boolean;
+    exit?: boolean;
+    limit?: number;
+    query(): Iterable<readonly [K, HTMLElement]>;
+    root: HTMLElement;
+}
+
+// @public
+export interface OgeLayoutPlayOptions<K> {
+    // (undocumented)
+    duration?: OgeMotionDuration;
+    // (undocumented)
+    easing?: OgeMotionEasing;
+    exclude?: Iterable<K>;
+    scale?: boolean;
+}
+
+// @public
 export interface OgeListBoxClickInput {
     // (undocumented)
     readonly ctrlKey?: boolean;
@@ -9250,6 +9320,26 @@ export type OgeModalRole = 'dialog' | 'alertdialog';
 export function ogeMoreTagsText(template: string, count: number, locale?: string): string;
 
 // @public
+export type OgeMotionDuration = 'fast' | 'base' | 'slow' | 'layout';
+
+// @public
+export type OgeMotionEasing = 'standard' | 'emphasized' | 'decelerate' | 'accelerate' | 'spring';
+
+// @public
+export function ogeMotionEnabled(element?: Element | null): boolean;
+
+// @public
+export interface OgeMotionTiming {
+    // (undocumented)
+    readonly duration: number;
+    // (undocumented)
+    readonly easing: string;
+}
+
+// @public
+export function ogeMotionTiming(element: Element | null, duration?: OgeMotionDuration, easing?: OgeMotionEasing): OgeMotionTiming;
+
+// @public
 export interface OgeMovableColumn {
     // (undocumented)
     readonly bandCaption: string | undefined;
@@ -9746,6 +9836,7 @@ export interface OgePointerDragDropOptions<TTarget> {
     onStart?(): void;
     preventDefault?: boolean;
     resolve(hit: Element | null, event: PointerEvent): TTarget | null;
+    settleTo?(target: TTarget): Element | OgeRect | null;
     source?: Element | null;
     threshold?: number;
 }
@@ -10133,6 +10224,9 @@ export interface OgeRect {
 }
 
 // @public
+export function ogeRectOf(element: Element): OgeRect;
+
+// @public
 export class OgeRemoteListCore<TItem> {
     constructor(deps: OgeRemoteListCoreDeps<TItem>, rx: OgeReactivityAdapter);
     get active(): boolean;
@@ -10517,6 +10611,9 @@ export interface OgeScrollingOptions {
 }
 
 // @public
+export function ogeScrollParent(element: Element): HTMLElement | null;
+
+// @public
 export interface OgeScrollScale {
     readonly physicalTotal: number;
     readonly ratio: number;
@@ -10669,6 +10766,9 @@ export type OgeSelectValueExpr<TItem> = string | ((item: TItem) => unknown);
 
 // @public
 export function ogeSeparatorTargetWidth(command: OgeColumnSeparatorKeyCommand, current: number, bounds: OgeColumnWidthBounds): number | null;
+
+// @public
+export function ogeSettleGhost(ghost: HTMLElement, to: OgeRect, timing?: Partial<OgeMotionTiming>): Promise<void>;
 
 // @public
 export function ogeShiftMentions<T>(tokens: readonly OgeMentionToken<T>[], previous: string, next: string): OgeMentionToken<T>[];
@@ -11422,6 +11522,14 @@ export interface OgeSplitTrack {
 }
 
 // @public
+export function ogeSpringEasing(options?: {
+    stiffness?: number;
+    damping?: number;
+    mass?: number;
+    samples?: number;
+}): string;
+
+// @public
 export interface OgeStateStorage {
     // (undocumented)
     get(key: string): string | null | Promise<string | null>;
@@ -11828,6 +11936,22 @@ export type OgeTileLayoutDirection = 'prev' | 'next' | 'up' | 'down';
 export function ogeTileLayoutDropIndex(rects: readonly OgeTileLayoutRect[], x: number, y: number, dragIndex: number): number;
 
 // @public
+export type OgeTileLayoutGrabIntent = {
+    type: 'drop';
+} | {
+    type: 'cancel';
+} | {
+    type: 'move';
+    to: OgeTileLayoutDirection | 'first' | 'last';
+};
+
+// @public
+export function ogeTileLayoutGrabIntent(event: OgeTileLayoutKeyInput, rtl: boolean): OgeTileLayoutGrabIntent | null;
+
+// @public
+export function ogeTileLayoutGrabText(messages: OgeTileLayoutMessages, which: 'pickedUp' | 'dropped', title: string, position: number, count: number, locale?: string): string;
+
+// @public
 export interface OgeTileLayoutItemData {
     colSpan?: number;
     key: OgeTileLayoutKey;
@@ -11846,6 +11970,9 @@ export interface OgeTileLayoutItemData {
 export type OgeTileLayoutKey = string | number;
 
 // @public
+export function ogeTileLayoutKeyboardHint(messages: OgeTileLayoutMessages, apple: boolean, locale?: string): string;
+
+// @public
 export interface OgeTileLayoutKeyInput {
     // (undocumented)
     readonly altKey?: boolean;
@@ -11861,6 +11988,8 @@ export interface OgeTileLayoutKeyInput {
 
 // @public
 export type OgeTileLayoutKeyIntent = {
+    type: 'grab';
+} | {
     type: 'focus';
     to: OgeTileLayoutDirection | 'first' | 'last';
 } | {
@@ -11876,12 +12005,17 @@ export type OgeTileLayoutKeyIntent = {
 export function ogeTileLayoutKeyIntent(event: OgeTileLayoutKeyInput, rtl: boolean): OgeTileLayoutKeyIntent | null;
 
 // @public
+export function ogeTileLayoutLiveTarget(cells: readonly OgeTileLayoutRect[], x: number, y: number, current: number): number;
+
+// @public
 export interface OgeTileLayoutMessages {
     dragCancelled: string;
     dragHint: string;
+    dropped: string;
     keyboardHint: string;
     layoutLabel: string;
     moved: string;
+    pickedUp: string;
     resized: string;
     tileRoleDescription: string;
     unchanged: string;
@@ -11889,10 +12023,16 @@ export interface OgeTileLayoutMessages {
 }
 
 // @public
+export function ogeTileLayoutModifier(apple: boolean): string;
+
+// @public
 export function ogeTileLayoutMovedText(messages: OgeTileLayoutMessages, title: string, position: number, count: number, locale?: string): string;
 
 // @public
 export function ogeTileLayoutMoveState(tiles: readonly OgeTileLayoutResolvedTile[], fromIndex: number, toIndex: number): OgeTileLayoutState;
+
+// @public
+export function ogeTileLayoutPreviewOrder<T>(items: readonly T[], from: number, to: number): T[];
 
 // @public
 export interface OgeTileLayoutRect {
@@ -12008,7 +12148,10 @@ export interface OgeTileLayoutResolveOptions {
 }
 
 // @public
-export function ogeTileLayoutShortcuts(reorderable: boolean, resizable: boolean): string | null;
+export function ogeTileLayoutShortcuts(reorderable: boolean, resizable: boolean, apple?: boolean): string | null;
+
+// @public
+export function ogeTileLayoutSizeText(span: OgeTileLayoutSpan, locale?: string): string;
 
 // @public
 export interface OgeTileLayoutSpan {

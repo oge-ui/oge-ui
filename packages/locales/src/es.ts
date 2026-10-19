@@ -679,13 +679,16 @@ export const es: OgeLocalePack = {
       tileRoleDescription: 'mosaico',
       untitledTile: 'Mosaico {position}',
       keyboardHint:
-        'Control y una flecha mueven el mosaico; Control, Mayús y una flecha cambian su tamaño.',
+        'Espacio levanta el mosaico, las flechas lo mueven y Espacio lo suelta. {modifier} y una flecha lo mueven al instante; {modifier}, Mayús y una flecha cambian su tamaño.',
       dragHint: 'Arrastre para mover',
       moved: '{title} movido a la posición {position} de {count}',
       resized:
         '{title} redimensionado a {colSpan, plural, one {# columna} other {# columnas}} por {rowSpan, plural, one {# fila} other {# filas}}',
       unchanged: '{title} no puede cambiar más',
       dragCancelled: 'Arrastre cancelado',
+      pickedUp:
+        '{title} levantado en la posición {position} de {count}. Las flechas lo mueven, Espacio lo suelta, Escape cancela.',
+      dropped: '{title} soltado en la posición {position} de {count}',
     },
     dataView: {
       dataView: 'Elementos',

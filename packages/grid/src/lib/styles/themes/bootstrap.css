@@ -60,6 +60,8 @@
   --oge-kanban-card-fg: var(--oge-text-color);
   --oge-kanban-placeholder-border: var(--oge-accent-25);
   --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-drop-placeholder-border: var(--oge-accent-25);
+  --oge-drop-placeholder-bg: var(--oge-accent-soft);
   --oge-kanban-lane-border: var(--oge-border-color);
   --oge-chart-axis-line: var(--oge-border-color);
   --oge-chart-axis-fg: var(--oge-muted-color);

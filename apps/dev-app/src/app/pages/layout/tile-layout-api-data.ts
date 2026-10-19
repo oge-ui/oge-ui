@@ -96,6 +96,12 @@ export const TILE_KEYBOARD: ApiGroup = {
         'Move focus between tiles (one roving tab stop; ↑/↓ go to the closest tile in the row above / below). Content inside a tile keeps its own Tab order, and the tile keys only act while the tile itself is focused.',
     },
     {
+      name: 'Space / Enter',
+      type: 'grab',
+      description:
+        'Picks the focused tile up: it lifts, and the arrows (or Home / End) move it with a live preview — the neighbours reflow around it. Space / Enter drops it (one <code>reordering</code> → <code>reordered</code>), Escape or moving focus away puts it back. Every step is announced.',
+    },
+    {
       name: 'Ctrl+← / Ctrl+→',
       type: 'move',
       description:
@@ -121,7 +127,8 @@ export const TILE_KEYBOARD: ApiGroup = {
     {
       name: 'Escape',
       type: 'cancel',
-      description: 'Cancels a pointer drag or resize in progress.',
+      description:
+        'Cancels a pointer drag or resize in progress, or puts a picked-up tile back.',
     },
   ],
 };
@@ -396,7 +403,7 @@ export const TILE_MESSAGES: ApiGroup = {
       name: 'OgeTileLayoutMessages',
       type: 'interface',
       description:
-        '<code>layoutLabel</code>, <code>tileRoleDescription</code>, <code>untitledTile</code> (<code>{position}</code>), <code>keyboardHint</code>, <code>dragHint</code>, <code>moved</code> (<code>{title}</code>, <code>{position}</code>, <code>{count}</code>), <code>resized</code> (ICU plurals over <code>{colSpan}</code> / <code>{rowSpan}</code>), <code>unchanged</code>, <code>dragCancelled</code>. Translated in every <code>&#64;oge-ui/locales</code> pack (<code>layout.tileLayout</code>).',
+        '<code>layoutLabel</code>, <code>tileRoleDescription</code>, <code>untitledTile</code> (<code>{position}</code>), <code>keyboardHint</code>, <code>dragHint</code>, <code>moved</code> (<code>{title}</code>, <code>{position}</code>, <code>{count}</code>), <code>resized</code> (ICU plurals over <code>{colSpan}</code> / <code>{rowSpan}</code>), <code>unchanged</code>, <code>dragCancelled</code>, <code>pickedUp</code> / <code>dropped</code> (<code>{title}</code>, <code>{position}</code>, <code>{count}</code>). <code>keyboardHint</code> interpolates <code>{modifier}</code> (<code>Ctrl</code>, or <code>⌘</code> on Apple platforms). Translated in every <code>&#64;oge-ui/locales</code> pack (<code>layout.tileLayout</code>).',
     },
     {
       name: 'OgeTileLayoutConfig / OgeTileLayoutConfigInput',

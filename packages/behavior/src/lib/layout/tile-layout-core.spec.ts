@@ -11,6 +11,12 @@ import {
   ogeTileLayoutResizedText,
   ogeTileLayoutResolve,
   ogeTileLayoutShortcuts,
+  ogeTileLayoutGrabIntent,
+  ogeTileLayoutGrabText,
+  ogeTileLayoutKeyboardHint,
+  ogeTileLayoutLiveTarget,
+  ogeTileLayoutPreviewOrder,
+  ogeTileLayoutSizeText,
   ogeTileLayoutStep,
   ogeTileLayoutTabStop,
   ogeTileLayoutTemplateColumns,
@@ -193,7 +199,10 @@ describe('tile layout core', () => {
       ogeTileLayoutResizedText(m, 'Sales', { colSpan: 1, rowSpan: 2 }, 'en-US'),
     ).toBe('Sales resized to 1 column by 2 rows');
     expect(ogeTileLayoutShortcuts(true, false)).toBe(
-      'Control+ArrowLeft Control+ArrowRight Control+ArrowUp Control+ArrowDown',
+      'Space Control+ArrowLeft Control+ArrowRight Control+ArrowUp Control+ArrowDown',
+    );
+    expect(ogeTileLayoutShortcuts(false, true, true)).toBe(
+      'Meta+Shift+ArrowLeft Meta+Shift+ArrowRight Meta+Shift+ArrowUp Meta+Shift+ArrowDown',
     );
     expect(ogeTileLayoutShortcuts(false, false)).toBe(null);
     expect(ogeTileLayoutTabStop([{ key: 'x' }, { key: 'y' }], 'y')).toBe('y');
@@ -318,5 +327,75 @@ describe('sanitizeOgeTileLayoutState', () => {
         }
       }
     }
+  });
+
+  it('maps grab mode: Space picks up, arrows move, Space drops, Escape cancels', () => {
+    expect(ogeTileLayoutKeyIntent({ key: ' ' }, false)).toEqual({
+      type: 'grab',
+    });
+    expect(ogeTileLayoutKeyIntent({ key: 'Enter' }, false)).toEqual({
+      type: 'grab',
+    });
+    expect(ogeTileLayoutGrabIntent({ key: ' ' }, false)).toEqual({
+      type: 'drop',
+    });
+    expect(ogeTileLayoutGrabIntent({ key: 'Escape' }, false)).toEqual({
+      type: 'cancel',
+    });
+    expect(ogeTileLayoutGrabIntent({ key: 'ArrowLeft' }, true)).toEqual({
+      type: 'move',
+      to: 'next',
+    });
+    expect(
+      ogeTileLayoutGrabIntent({ key: 'ArrowDown', ctrlKey: true }, false),
+    ).toEqual({ type: 'move', to: 'down' });
+    expect(ogeTileLayoutGrabIntent({ key: 'End' }, false)).toEqual({
+      type: 'move',
+      to: 'last',
+    });
+    expect(ogeTileLayoutGrabIntent({ key: 'Tab' }, false)).toBeNull();
+    expect(
+      ogeTileLayoutGrabIntent({ key: 'ArrowUp', shiftKey: true }, false),
+    ).toBeNull();
+  });
+
+  it('targets the cell under the pointer while the layout reflows', () => {
+    const cells = [
+      { left: 0, top: 0, width: 100, height: 100 },
+      { left: 110, top: 0, width: 210, height: 100 },
+      { left: 0, top: 110, width: 100, height: 100 },
+    ];
+    expect(ogeTileLayoutLiveTarget(cells, 200, 50, 0)).toBe(1);
+    expect(ogeTileLayoutLiveTarget(cells, 50, 150, 1)).toBe(2);
+    // a gap or outside keeps the current target
+    expect(ogeTileLayoutLiveTarget(cells, 105, 50, 2)).toBe(2);
+    expect(ogeTileLayoutLiveTarget(cells, 900, 900, 1)).toBe(1);
+  });
+
+  it('reorders a preview and formats the grab texts and size badge', () => {
+    expect(ogeTileLayoutPreviewOrder(['a', 'b', 'c', 'd'], 0, 2)).toEqual([
+      'b',
+      'c',
+      'a',
+      'd',
+    ]);
+    expect(ogeTileLayoutPreviewOrder(['a', 'b', 'c'], 2, 0)).toEqual([
+      'c',
+      'a',
+      'b',
+    ]);
+    expect(ogeTileLayoutPreviewOrder(['a', 'b'], 5, 0)).toEqual(['a', 'b']);
+    const m = OGE_DEFAULT_TILE_LAYOUT_MESSAGES;
+    expect(ogeTileLayoutGrabText(m, 'dropped', 'Sales', 3, 6)).toBe(
+      'Sales dropped at position 3 of 6',
+    );
+    expect(ogeTileLayoutGrabText(m, 'pickedUp', 'Sales', 1, 6)).toContain(
+      'Sales picked up at position 1 of 6.',
+    );
+    expect(ogeTileLayoutSizeText({ colSpan: 2, rowSpan: 1 })).toBe('2 × 1');
+    expect(ogeTileLayoutKeyboardHint(m, true)).toContain(
+      '⌘ and an arrow key move it at once',
+    );
+    expect(ogeTileLayoutKeyboardHint(m, false)).toContain('Ctrl, Shift');
   });
 });

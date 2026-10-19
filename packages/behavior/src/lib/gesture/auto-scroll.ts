@@ -82,8 +82,22 @@ export function createAutoScroller(
   let y = 0;
   let frame: number | null = null;
 
+  const doc = container.ownerDocument;
+  // the page scroller's own box is the whole document — its edges are the viewport's
+  const isPage =
+    !!doc &&
+    (container === doc.scrollingElement ||
+      container === doc.documentElement ||
+      container === doc.body);
   const velocity = (): { vx: number; vy: number } => {
-    const rect = container.getBoundingClientRect();
+    const rect = isPage
+      ? {
+          left: 0,
+          top: 0,
+          right: doc.defaultView?.innerWidth ?? 0,
+          bottom: doc.defaultView?.innerHeight ?? 0,
+        }
+      : container.getBoundingClientRect();
     return {
       vx:
         axis === 'y'
@@ -122,4 +136,29 @@ export function createAutoScroller(
       frame = null;
     },
   };
+}
+
+/**
+ * The element that scrolls `element` — the nearest ancestor whose overflow
+ * scrolls and that has something to scroll, else the page scroller. Feed it
+ * to {@link createAutoScroller} for drags that may leave the visible area.
+ */
+export function ogeScrollParent(element: Element): HTMLElement | null {
+  const doc = element.ownerDocument;
+  const view = doc?.defaultView;
+  if (!doc || !view) return null;
+  for (
+    let node = element.parentElement;
+    node && node !== doc.body && node !== doc.documentElement;
+    node = node.parentElement
+  ) {
+    const style = view.getComputedStyle(node);
+    const scrolls = (value: string) => value === 'auto' || value === 'scroll';
+    if (
+      (scrolls(style.overflowY) && node.scrollHeight > node.clientHeight) ||
+      (scrolls(style.overflowX) && node.scrollWidth > node.clientWidth)
+    )
+      return node;
+  }
+  return (doc.scrollingElement as HTMLElement | null) ?? doc.documentElement;
 }

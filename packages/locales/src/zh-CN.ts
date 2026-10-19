@@ -657,13 +657,16 @@ export const zhCN: OgeLocalePack = {
       tileRoleDescription: '磁贴',
       untitledTile: '磁贴 {position}',
       keyboardHint:
-        '按 Ctrl 和方向键移动磁贴，按 Ctrl、Shift 和方向键调整大小。',
+        '按空格键拿起磁贴，方向键移动，再按空格键放下。{modifier} 和方向键直接移动；{modifier}、Shift 和方向键调整大小。',
       dragHint: '拖动以移动',
       moved: '已将 {title} 移至第 {position} 个位置（共 {count} 个）',
       resized:
         '已将 {title} 调整为 {colSpan, plural, other {# 列}} × {rowSpan, plural, other {# 行}}',
       unchanged: '{title} 无法再更改',
       dragCancelled: '已取消拖动',
+      pickedUp:
+        '已拿起{title}，位置 {position}/{count}。方向键移动，空格键放下，Escape 取消。',
+      dropped: '已将{title}放到位置 {position}/{count}',
     },
     dataView: {
       dataView: '项目',

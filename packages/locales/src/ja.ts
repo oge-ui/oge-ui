@@ -671,13 +671,16 @@ export const ja: OgeLocalePack = {
       tileRoleDescription: 'タイル',
       untitledTile: 'タイル {position}',
       keyboardHint:
-        'Ctrl と矢印キーでタイルを移動、Ctrl と Shift と矢印キーでサイズを変更します。',
+        'スペースでタイルを持ち上げ、矢印キーで移動し、スペースで置きます。{modifier} と矢印キーですぐに移動、{modifier} と Shift と矢印キーでサイズを変更します。',
       dragHint: 'ドラッグして移動',
       moved: '{title} を {count} 件中 {position} 番目に移動しました',
       resized:
         '{title} のサイズを {colSpan, plural, other {# 列}} × {rowSpan, plural, other {# 行}} に変更しました',
       unchanged: '{title} はこれ以上変更できません',
       dragCancelled: 'ドラッグをキャンセルしました',
+      pickedUp:
+        '{title} を持ち上げました（{count} 中 {position} 番目）。矢印キーで移動、スペースで配置、Escape でキャンセル。',
+      dropped: '{title} を {count} 中 {position} 番目に配置しました',
     },
     dataView: {
       dataView: 'アイテム',

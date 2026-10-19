@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createAutoScroller, ogeEdgeScrollVelocity } from './auto-scroll';
+import {
+  createAutoScroller,
+  ogeEdgeScrollVelocity,
+  ogeScrollParent,
+} from './auto-scroll';
 
 describe('ogeEdgeScrollVelocity', () => {
   it('is zero in the neutral zone and ramps toward each edge', () => {
@@ -100,5 +104,27 @@ describe('createAutoScroller', () => {
     raf.shift()?.(0);
     expect(onScroll).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
+  });
+});
+
+describe('ogeScrollParent', () => {
+  it('finds the nearest scrolling ancestor, else the page scroller', () => {
+    const outer = document.createElement('div');
+    const inner = document.createElement('div');
+    const leaf = document.createElement('span');
+    outer.style.overflowY = 'auto';
+    let height = 500;
+    Object.defineProperty(outer, 'scrollHeight', { get: () => height });
+    Object.defineProperty(outer, 'clientHeight', { value: 100 });
+    outer.appendChild(inner);
+    inner.appendChild(leaf);
+    document.body.appendChild(outer);
+    expect(ogeScrollParent(leaf)).toBe(outer);
+    // nothing to scroll: not a scroll parent
+    height = 100;
+    expect(ogeScrollParent(leaf)).toBe(
+      document.scrollingElement ?? document.documentElement,
+    );
+    outer.remove();
   });
 });

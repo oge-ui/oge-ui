@@ -54,7 +54,7 @@ export const LAYOUT_TILE_LAYOUT_DEMOS: readonly ReactDemo[] = [
   {
     title: 'Reorder by drag & keyboard',
     description:
-      'Drag a tile by its header or press Ctrl+Arrow keys on a focused tile — the same commit, the same onReordering (cancelable) → onReordered → onLayoutChanged sequence, an announcement, and focus stays on the moved tile. Escape cancels a drag.',
+      'Drag a tile by its header — the neighbours reflow live and the tile settles into its slot — or pick a focused tile up with Space, move it with the arrows and drop it with Space (Ctrl+Arrow moves it at once). The same commit, the same onReordering (cancelable) → onReordered → onLayoutChanged sequence, an announcement, and focus stays on the moved tile. Escape cancels and the tile glides back.',
     source: reactDemoSource({
       react: ['useState'],
       use: { '@oge-ui/react-layout': ['OgeTileLayout'] },

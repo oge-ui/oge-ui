@@ -672,13 +672,17 @@ export const he: OgeLocalePack = {
       layoutLabel: 'לוח מחוונים',
       tileRoleDescription: 'אריח',
       untitledTile: 'אריח {position}',
-      keyboardHint: 'Ctrl וחץ מזיזים את האריח; Ctrl, Shift וחץ משנים את גודלו.',
+      keyboardHint:
+        'רווח מרים את האריח, החצים מזיזים אותו ורווח משחרר אותו. {modifier} וחץ מזיזים אותו מיד; {modifier}, Shift וחץ משנים את גודלו.',
       dragHint: 'גררו כדי להזיז',
       moved: '{title} הוזז למיקום {position} מתוך {count}',
       resized:
         '{title} שונה ל־{colSpan, plural, one {עמודה אחת} two {שתי עמודות} other {# עמודות}} על {rowSpan, plural, one {שורה אחת} two {שתי שורות} other {# שורות}}',
       unchanged: 'לא ניתן לשנות עוד את {title}',
       dragCancelled: 'הגרירה בוטלה',
+      pickedUp:
+        '{title} הורם, מיקום {position} מתוך {count}. החצים מזיזים, רווח משחרר, Escape מבטל.',
+      dropped: '{title} שוחרר במיקום {position} מתוך {count}',
     },
     dataView: {
       dataView: 'פריטים',

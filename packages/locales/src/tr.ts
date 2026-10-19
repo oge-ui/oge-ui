@@ -667,13 +667,16 @@ export const tr: OgeLocalePack = {
       tileRoleDescription: 'kutucuk',
       untitledTile: 'Kutucuk {position}',
       keyboardHint:
-        'Ctrl ve bir ok tuşu kutucuğu taşır; Ctrl, Shift ve bir ok tuşu boyutunu değiştirir.',
+        'Boşluk kutucuğu kaldırır, ok tuşları taşır, Boşluk bırakır. {modifier} ve bir ok tuşu kutucuğu hemen taşır; {modifier}, Shift ve bir ok tuşu boyutunu değiştirir.',
       dragHint: 'Taşımak için sürükleyin',
       moved: '{title}, {count} konum içinde {position}. konuma taşındı',
       resized:
         '{title} boyutu {colSpan, plural, one {# sütun} other {# sütun}} × {rowSpan, plural, one {# satır} other {# satır}} oldu',
       unchanged: '{title} daha fazla değiştirilemez',
       dragCancelled: 'Sürükleme iptal edildi',
+      pickedUp:
+        '{title} kaldırıldı, {count} konum içinde {position}. konum. Ok tuşları taşır, Boşluk bırakır, Escape iptal eder.',
+      dropped: '{title}, {count} konum içinde {position}. konuma bırakıldı',
     },
     dataView: {
       dataView: 'Öğeler',

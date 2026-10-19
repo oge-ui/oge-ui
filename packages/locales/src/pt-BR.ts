@@ -676,13 +676,16 @@ export const ptBR: OgeLocalePack = {
       tileRoleDescription: 'bloco',
       untitledTile: 'Bloco {position}',
       keyboardHint:
-        'Ctrl e uma seta movem o bloco; Ctrl, Shift e uma seta o redimensionam.',
+        'Espaço levanta o bloco, as setas o movem e Espaço o solta. {modifier} e uma seta o movem na hora; {modifier}, Shift e uma seta o redimensionam.',
       dragHint: 'Arraste para mover',
       moved: '{title} movido para a posição {position} de {count}',
       resized:
         '{title} redimensionado para {colSpan, plural, one {# coluna} other {# colunas}} por {rowSpan, plural, one {# linha} other {# linhas}}',
       unchanged: '{title} não pode mudar mais',
       dragCancelled: 'Arraste cancelado',
+      pickedUp:
+        '{title} levantado na posição {position} de {count}. As setas movem, Espaço solta, Escape cancela.',
+      dropped: '{title} solto na posição {position} de {count}',
     },
     dataView: {
       dataView: 'Itens',

@@ -45,6 +45,7 @@
 }
 
 .oge-tile-layout-cell {
+  position: relative;
   display: flex;
   min-width: 0;
   min-height: 0;
@@ -69,7 +70,13 @@
     border-color var(--oge-motion-duration-fast)
       var(--oge-motion-easing-standard),
     background-color var(--oge-motion-duration-fast)
-      var(--oge-motion-easing-standard);
+      var(--oge-motion-easing-standard),
+    scale var(--oge-motion-duration-fast) var(--oge-motion-easing-emphasized);
+
+  // resting depth: the tile under the pointer rises a step
+  &:hover {
+    box-shadow: var(--oge-shadow-card-hover);
+  }
 
   &:focus {
     outline: 2px solid transparent;
@@ -101,17 +108,28 @@
   // the header is a dedicated drag handle: touch drags start at once
   touch-action: none;
 
-  &:hover {
+  &:hover,
+  &:active {
     background: var(--oge-row-hover-bg);
   }
 }
 
+// a quiet grip at rest, full strength where the tile is being reached for
 .oge-tile-layout-grip {
   flex: 0 0 auto;
   fill: none;
   stroke: var(--oge-muted-color);
   stroke-width: 3;
   stroke-linecap: round;
+  opacity: 0.5;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
+}
+
+.oge-tile-layout-tile:hover .oge-tile-layout-grip,
+.oge-tile-layout-tile:focus-within .oge-tile-layout-grip,
+.oge-tile-layout-tile-grabbed .oge-tile-layout-grip {
+  opacity: 1;
 }
 
 .oge-tile-layout-title {
@@ -140,9 +158,15 @@
   inset-inline-end: 2px;
   width: 14px;
   height: 14px;
-  border-inline-end: 2px solid var(--oge-muted-color);
-  border-block-end: 2px solid var(--oge-muted-color);
-  border-end-end-radius: var(--oge-radius);
+  // two diagonal strokes in the corner
+  background: linear-gradient(
+    135deg,
+    transparent 0 46%,
+    var(--oge-muted-color) 46% 56%,
+    transparent 56% 72%,
+    var(--oge-muted-color) 72% 82%,
+    transparent 82%
+  );
   cursor: nwse-resize;
   opacity: 0.6;
   touch-action: none;
@@ -150,6 +174,14 @@
     var(--oge-motion-easing-standard);
 
   &:dir(rtl) {
+    background: linear-gradient(
+      225deg,
+      transparent 0 46%,
+      var(--oge-muted-color) 46% 56%,
+      transparent 56% 72%,
+      var(--oge-muted-color) 72% 82%,
+      transparent 82%
+    );
     cursor: nesw-resize;
   }
 }
@@ -182,12 +214,15 @@
   }
 }
 
-// the dragged tile follows the pointer above its neighbours
+// the carried tile floats under the pointer (the script positions it
+// `fixed`), lifted above the page while its cell stays behind as the slot
 .oge-tile-layout-tile-dragged {
-  z-index: 2;
+  position: fixed;
+  z-index: var(--oge-z-popup);
   border-color: var(--oge-accent);
-  box-shadow: var(--oge-shadow-popup);
+  box-shadow: var(--oge-shadow-drag);
   cursor: grabbing;
+  scale: var(--oge-drag-scale);
   transition: none;
 
   .oge-tile-layout-header-draggable {
@@ -195,11 +230,50 @@
   }
 }
 
-// where it lands: an accent ring + tint
-.oge-tile-layout-tile-drop-target {
+// the slot the carried tile lands in — the layout reflows around it live
+.oge-tile-layout-cell-placeholder {
+  border: 2px dashed var(--oge-drop-placeholder-border);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-drop-placeholder-bg);
+}
+
+// picked up with Space: lifted in place while the arrows move it
+.oge-tile-layout-tile-grabbed {
+  z-index: 2;
   border-color: var(--oge-accent);
-  background: var(--oge-accent-soft);
-  box-shadow: 0 0 0 2px var(--oge-accent-25);
+  box-shadow: var(--oge-shadow-drag);
+  scale: var(--oge-drag-scale);
+
+  &:hover {
+    box-shadow: var(--oge-shadow-drag);
+  }
+}
+
+// a pointer resize: the outline follows the pointer, the cell snaps under it
+.oge-tile-layout-resize-frame {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border: 2px dashed var(--oge-accent);
+  border-radius: var(--oge-radius-lg);
+  pointer-events: none;
+}
+
+.oge-tile-layout-size-badge {
+  position: absolute;
+  inset-block-end: 8px;
+  inset-inline-end: 8px;
+  padding-block: 2px;
+  padding-inline: 8px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-accent);
+  box-shadow: var(--oge-shadow-btn);
+  color: var(--oge-severity-contrast);
+  font-size: var(--oge-font-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .oge-tile-layout-tile-resized {
@@ -210,6 +284,10 @@
 .oge-tile-layout-dragging,
 .oge-tile-layout-resizing {
   user-select: none;
+}
+
+.oge-tile-layout-dragging {
+  cursor: grabbing;
 }
 
 @container (max-width: 480px) {
@@ -224,6 +302,7 @@
 
 @include tokens.reduced-motion {
   .oge-tile-layout-tile,
+  .oge-tile-layout-grip,
   .oge-tile-layout-resize {
     transition: none;
   }
@@ -244,17 +323,28 @@
     stroke: CanvasText;
   }
 
-  .oge-tile-layout-resize {
-    border-color: CanvasText;
+  .oge-tile-layout-resize,
+  .oge-tile-layout-resize:dir(rtl) {
+    border-inline-end: 2px solid CanvasText;
+    border-block-end: 2px solid CanvasText;
+    background: none;
     opacity: 1;
   }
 
-  .oge-tile-layout-tile-dragged {
+  .oge-tile-layout-tile-dragged,
+  .oge-tile-layout-tile-grabbed {
     outline: 3px solid Highlight;
   }
 
-  .oge-tile-layout-tile-drop-target {
+  .oge-tile-layout-cell-placeholder,
+  .oge-tile-layout-resize-frame {
     border: 2px dashed Highlight;
+    background: Canvas;
+  }
+
+  .oge-tile-layout-size-badge {
+    background: Highlight;
+    color: HighlightText;
   }
 
   .oge-tile-layout-tile-resized {

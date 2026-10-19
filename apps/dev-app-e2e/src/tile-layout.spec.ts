@@ -126,6 +126,10 @@ for (const fw of FRAMEWORKS) {
       await expect(demo.getByTestId('tile-reorder-log')).toHaveText(
         'Drag a header or press Ctrl+Arrow on a tile.',
       );
+      // the tile glides back to its slot before it can be picked up there again
+      await expect(demo.locator('.oge-tile-layout-list')).not.toHaveAttribute(
+        'data-oge-animating',
+      );
 
       await drag(page, start, end);
       await expect(demo.getByTestId('tile-reorder-log')).toHaveText(
@@ -134,6 +138,70 @@ for (const fw of FRAMEWORKS) {
       await expect
         .poll(async () => (await tileKeys(demo)).slice(0, 3))
         .toEqual(['revenue', 'visitors', 'orders']);
+    });
+
+    test('Space picks a tile up, arrows move it live, Space drops it', async ({
+      page,
+    }) => {
+      await page.goto(`/components/tile-layout${fw.query}`);
+      const demo = card(page, 'reorder-by-drag-keyboard');
+      const orders = tile(demo, 'Orders');
+      await orders.scrollIntoViewIfNeeded();
+      await orders.focus();
+      await page.keyboard.press('Space');
+      await expect(orders).toHaveClass(/oge-tile-layout-tile-grabbed/);
+      await page.keyboard.press('ArrowRight');
+      // a live preview: nothing committed yet, focus stays on the tile
+      await expect(demo.getByTestId('tile-reorder-log')).toHaveText(
+        'Drag a header or press Ctrl+Arrow on a tile.',
+      );
+      await expect.poll(() => focusedTileKey(page)).toBe('orders');
+      await page.keyboard.press('Space');
+      await expect(demo.getByTestId('tile-reorder-log')).toHaveText(
+        'Moved orders from 2 to 3 (keyboard)',
+      );
+      await expect.poll(() => focusedTileKey(page)).toBe('orders');
+      // Escape puts a picked-up tile back
+      await page.keyboard.press('Enter');
+      await page.keyboard.press('Home');
+      await page.keyboard.press('Escape');
+      await expect(orders).not.toHaveClass(/oge-tile-layout-tile-grabbed/);
+      await expect
+        .poll(async () => (await tileKeys(demo)).slice(0, 3))
+        .toEqual(['revenue', 'visitors', 'orders']);
+    });
+
+    test('moves glide with motion on and run no animation under reduced motion', async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.goto(`/components/tile-layout${fw.query}`);
+      const demo = card(page, 'reorder-by-drag-keyboard');
+      const list = demo.locator('.oge-tile-layout-list');
+      const revenue = tile(demo, 'Revenue');
+      await revenue.scrollIntoViewIfNeeded();
+      await revenue.focus();
+      await page.keyboard.press('Control+ArrowRight');
+      await expect(list).toHaveAttribute('data-oge-animating', '');
+      await expect(list).not.toHaveAttribute('data-oge-animating');
+
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.keyboard.press('Control+ArrowLeft');
+      await expect(demo.getByTestId('tile-reorder-log')).toHaveText(
+        'Moved revenue from 2 to 1 (keyboard)',
+      );
+      expect(
+        await page.evaluate(
+          () =>
+            document
+              .getAnimations()
+              .filter((a) =>
+                (a.effect as KeyframeEffect | null)?.target?.closest?.(
+                  '.oge-tile-layout',
+                ),
+              ).length,
+        ),
+      ).toBe(0);
     });
 
     test('Ctrl+Shift+Arrow and the corner handle resize within bounds', async ({
@@ -151,6 +219,10 @@ for (const fw of FRAMEWORKS) {
       await page.keyboard.press('Control+Shift+ArrowRight');
       await expect(log).toHaveText('revenue: 3 × 1 (keyboard)');
       await expect(revenue).toContainText('3 × 1');
+      // the neighbours glide out of the way — measure them once they landed
+      await expect(demo.locator('.oge-tile-layout-list')).not.toHaveAttribute(
+        'data-oge-animating',
+      );
 
       const orders = tile(demo, 'Orders');
       const box = await orders.boundingBox();

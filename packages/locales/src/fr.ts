@@ -684,13 +684,16 @@ export const fr: OgeLocalePack = {
       tileRoleDescription: 'vignette',
       untitledTile: 'Vignette {position}',
       keyboardHint:
-        'Contrôle et une flèche déplacent la vignette ; Contrôle, Maj et une flèche la redimensionnent.',
+        'Espace soulève la vignette, les flèches la déplacent et Espace la dépose. {modifier} et une flèche la déplacent aussitôt ; {modifier}, Maj et une flèche la redimensionnent.',
       dragHint: 'Faire glisser pour déplacer',
       moved: '{title} déplacée en position {position} sur {count}',
       resized:
         '{title} redimensionnée à {colSpan, plural, one {# colonne} other {# colonnes}} sur {rowSpan, plural, one {# ligne} other {# lignes}}',
       unchanged: '{title} ne peut plus être modifiée',
       dragCancelled: 'Glissement annulé',
+      pickedUp:
+        '{title} soulevée, position {position} sur {count}. Les flèches la déplacent, Espace la dépose, Échap annule.',
+      dropped: '{title} déposée en position {position} sur {count}',
     },
     dataView: {
       dataView: 'Éléments',

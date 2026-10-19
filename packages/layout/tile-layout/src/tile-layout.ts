@@ -8,6 +8,7 @@ import {
   PLATFORM_ID,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   booleanAttribute,
   computed,
   contentChild,
@@ -17,24 +18,34 @@ import {
   model,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import {
   OGE_TILE_LAYOUT_DEFAULTS,
   beginPointerGesture,
+  createAutoScroller,
+  createOgeLayoutAnimator,
   getOgeLiveAnnouncer,
+  ogeEditorIsMac,
   ogeIsRtl,
+  ogeScrollParent,
   ogeTileLayoutAutoRows,
   ogeTileLayoutClampResize,
-  ogeTileLayoutDropIndex,
+  ogeTileLayoutGrabIntent,
+  ogeTileLayoutGrabText,
   ogeTileLayoutKeyIntent,
+  ogeTileLayoutKeyboardHint,
+  ogeTileLayoutLiveTarget,
   ogeTileLayoutMoveState,
   ogeTileLayoutMovedText,
+  ogeTileLayoutPreviewOrder,
   ogeTileLayoutResizeSpan,
   ogeTileLayoutResizeState,
   ogeTileLayoutResizedText,
   ogeTileLayoutResolve,
   ogeTileLayoutShortcuts,
+  ogeTileLayoutSizeText,
   ogeTileLayoutStep,
   ogeTileLayoutTabStop,
   ogeTileLayoutTemplateColumns,
@@ -42,7 +53,10 @@ import {
   ogeTileLayoutToState,
   ogeTileLayoutUnchangedText,
   sanitizeOgeTileLayoutState,
+  type OgeAutoScroller,
+  type OgeLayoutAnimator,
   type OgePointerGestureHandle,
+  type OgeRect,
   type OgeTileLayoutRect,
   type OgeTileLayoutResolvedTile,
 } from '@oge-ui/behavior';
@@ -84,11 +98,16 @@ interface TileRow {
   readonly colSpan: number;
   readonly rowSpan: number;
   readonly shortcuts: string | null;
+  /** Display position — differs from the committed index while a drag previews. */
+  readonly order: number;
   readonly context: OgeTileLayoutTemplateContext;
 }
 
 const DRAG_EXCLUDED =
   'button, a[href], input, select, textarea, [contenteditable=""], [contenteditable="true"], [data-oge-no-drag]';
+
+/** Pointer travel (px) needed before a live drag re-targets again. */
+const RETARGET_TRAVEL = 8;
 
 /**
  * A dashboard of tiles on a CSS grid: column and row spans, drag to reorder
@@ -114,11 +133,17 @@ const DRAG_EXCLUDED =
  * `aria-roledescription` ("tile"), labelled by its header. The tiles share one
  * roving tab stop (arrows / Home / End move between them); content inside a
  * tile keeps its own place in the Tab order, and the tile's keys only act
- * while the tile itself is focused. `Ctrl+Arrow` moves the focused tile,
+ * while the tile itself is focused. Space picks the focused tile up (arrows
+ * move it with a live preview, Space drops it, Escape cancels),
+ * `Ctrl+Arrow` (`⌘` on Apple platforms) moves it at once and
  * `Ctrl+Shift+Arrow` resizes it (horizontal arrows mirror in RTL); the
  * pointer drop runs the same commit, so `reordering` / `resizing` (cancelable)
  * → `reordered` / `resized` → `layoutChanged` fire identically for both, and
  * every change is announced through the shared live region.
+ *
+ * Layout changes glide: neighbours reflow live under a drag, the dropped
+ * tile settles into its slot, added tiles fade in and removed ones fade out
+ * (the shared `createOgeLayoutAnimator`; off under reduced motion).
  */
 @Component({
   selector: 'oge-tile-layout',
@@ -133,11 +158,13 @@ const DRAG_EXCLUDED =
     ngSkipHydration: 'true',
     class: 'oge-tile-layout',
     '[class.oge-tile-layout-dragging]': 'dragKey() !== null',
+    '[class.oge-tile-layout-grabbing]': 'grabKey() !== null',
     '[class.oge-tile-layout-resizing]': 'resizePreview() !== null',
   },
   styleUrl: './tile-layout.scss',
   template: `
     <div
+      #list
       class="oge-tile-layout-list"
       role="list"
       [attr.aria-label]="ariaLabel() ?? msg().layoutLabel"
@@ -149,14 +176,16 @@ const DRAG_EXCLUDED =
         <div
           role="listitem"
           class="oge-tile-layout-cell"
+          [class.oge-tile-layout-cell-placeholder]="dragKey() === row.key"
           [style.--oge-tile-col-span]="row.colSpan"
           [style.--oge-tile-row-span]="row.rowSpan"
+          [style.order]="row.order"
         >
           <div
             role="group"
             class="oge-tile-layout-tile"
             [class.oge-tile-layout-tile-dragged]="dragKey() === row.key"
-            [class.oge-tile-layout-tile-drop-target]="dropKey() === row.key"
+            [class.oge-tile-layout-tile-grabbed]="grabKey() === row.key"
             [class.oge-tile-layout-tile-resized]="
               resizePreview()?.key === row.key
             "
@@ -166,18 +195,14 @@ const DRAG_EXCLUDED =
             [attr.aria-label]="row.hasTitle ? null : row.label"
             [attr.aria-describedby]="hintId"
             [attr.aria-keyshortcuts]="row.shortcuts"
-            [style.transform]="
-              dragKey() === row.key
-                ? 'translate(' +
-                  dragOffset().x +
-                  'px, ' +
-                  dragOffset().y +
-                  'px)'
-                : null
-            "
+            [style.left.px]="dragKey() === row.key ? dragBox().left : null"
+            [style.top.px]="dragKey() === row.key ? dragBox().top : null"
+            [style.width.px]="dragKey() === row.key ? dragBox().width : null"
+            [style.height.px]="dragKey() === row.key ? dragBox().height : null"
             [tabindex]="tabStop() === row.key ? 0 : -1"
             (keydown)="onTileKeydown($event, row)"
             (focus)="focusKey.set(row.key)"
+            (focusout)="onTileFocusOut(row)"
           >
             <div
               class="oge-tile-layout-header"
@@ -237,10 +262,23 @@ const DRAG_EXCLUDED =
               ></span>
             }
           </div>
+          @if (resizeFrame(); as frame) {
+            @if (frame.key === row.key) {
+              <!-- follows the pointer; the cell snaps to whole tracks under it -->
+              <span
+                class="oge-tile-layout-resize-frame"
+                aria-hidden="true"
+                [style.width.px]="frame.width"
+                [style.height.px]="frame.height"
+              >
+                <span class="oge-tile-layout-size-badge">{{ frame.text }}</span>
+              </span>
+            }
+          }
         </div>
       }
     </div>
-    <span class="oge-sr-only" [id]="hintId">{{ msg().keyboardHint }}</span>
+    <span class="oge-sr-only" [id]="hintId">{{ keyboardHint() }}</span>
   `,
 })
 export class OgeTileLayout {
@@ -349,21 +387,67 @@ export class OgeTileLayout {
     ogeTileLayoutTabStop(this.tiles(), this.focusKey()),
   );
 
+  private readonly apple = ogeEditorIsMac();
+  protected readonly keyboardHint = computed(() =>
+    ogeTileLayoutKeyboardHint(this.msg(), this.apple, this.resolvedLocale()),
+  );
+
+  /** The tile the pointer carries (it floats `position: fixed` meanwhile). */
   protected readonly dragKey = signal<OgeTileLayoutKey | null>(null);
-  protected readonly dragOffset = signal({ x: 0, y: 0 });
-  protected readonly dropKey = signal<OgeTileLayoutKey | null>(null);
+  /** The carried tile's viewport box. */
+  protected readonly dragBox = signal<OgeRect>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  });
+  /** The tile Space picked up (keyboard grab mode). */
+  protected readonly grabKey = signal<OgeTileLayoutKey | null>(null);
+  /** Where the carried / picked-up tile would land — the layout previews it live. */
+  private readonly previewIndex = signal<number | null>(null);
   protected readonly resizePreview = signal<{
     key: OgeTileLayoutKey;
     span: OgeTileLayoutSpan;
   } | null>(null);
+  /** The pointer-following outline of a resize, with its "2 × 1" badge. */
+  protected readonly resizeFrame = signal<{
+    key: OgeTileLayoutKey;
+    width: number;
+    height: number;
+    text: string;
+  } | null>(null);
   private gesture: OgePointerGestureHandle | null = null;
+  private scroller: OgeAutoScroller | null = null;
+
+  private readonly list = viewChild.required<ElementRef<HTMLElement>>('list');
+  private animator: OgeLayoutAnimator<string> | null = null;
+
+  /** Display position of every committed index while a drag or grab previews. */
+  private readonly displayOrder = computed<number[] | null>(() => {
+    const key = this.dragKey() ?? this.grabKey();
+    const to = this.previewIndex();
+    if (key === null || to === null) return null;
+    const tiles = this.tiles();
+    const from = tiles.findIndex((t) => t.key === key);
+    if (from < 0) return null;
+    const order = ogeTileLayoutPreviewOrder(
+      tiles.map((_, i) => i),
+      from,
+      to,
+    );
+    const position: number[] = [];
+    order.forEach((index, pos) => (position[index] = pos));
+    return position;
+  });
 
   protected readonly rows = computed<TileRow[]>(() => {
     const messages = this.msg();
     const locale = this.resolvedLocale();
     const preview = this.resizePreview();
+    const order = this.displayOrder();
     return this.tiles().map((tile, index) => {
       const span = preview && preview.key === tile.key ? preview.span : tile;
+      const position = order?.[index] ?? index;
       return {
         tile,
         key: tile.key,
@@ -378,11 +462,13 @@ export class OgeTileLayout {
         shortcuts: ogeTileLayoutShortcuts(
           tile.reorderable,
           tile.resizeColumns || tile.resizeRows,
+          this.apple,
         ),
+        order: position,
         context: {
           $implicit: tile.item,
           key: tile.key,
-          index,
+          index: position,
           colSpan: span.colSpan,
           rowSpan: span.rowSpan,
         },
@@ -391,7 +477,39 @@ export class OgeTileLayout {
   });
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.gesture?.cancel());
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => {
+      this.gesture?.cancel();
+      this.scroller?.stop();
+      this.animator?.cancel();
+    });
+    if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
+    // a track change (columns, gap, row height) re-lays everything out — not a move
+    let tracks = '';
+    afterRenderEffect(() => {
+      const rows = this.rows();
+      const carried = this.dragKey();
+      const nextTracks = `${this.templateColumns()}|${this.autoRows()}|${this.resolvedGap()}`;
+      const animator = this.ensureAnimator();
+      if (nextTracks !== tracks) {
+        tracks = nextTracks;
+        animator.reset();
+      }
+      void rows;
+      void animator.play({
+        exclude: carried === null ? [] : [String(carried)],
+      });
+    });
+    afterNextRender(() => {
+      // a container resize re-flows the tiles — record it so the next change
+      // animates from the real layout
+      if (typeof ResizeObserver !== 'function') return;
+      const observer = new ResizeObserver(() => {
+        if (!this.animator?.animating) this.animator?.capture();
+      });
+      observer.observe(this.list().nativeElement);
+      destroyRef.onDestroy(() => observer.disconnect());
+    });
   }
 
   /** Focuses the tile with `key` (default: the current tab stop). */
@@ -417,6 +535,7 @@ export class OgeTileLayout {
       this.sources().map((s) => s.key),
     );
     if (!clean) return false;
+    this.capture();
     this.state.set(clean);
     this.layoutChanged.emit({ state: this.getState(), source: 'api' });
     return true;
@@ -439,6 +558,7 @@ export class OgeTileLayout {
     toIndex: number,
     source: OgeTileLayoutChangeSource,
     event?: Event,
+    dropped = false,
   ): boolean {
     const tiles = this.tiles();
     const tile = tiles.find((t) => t.key === key);
@@ -463,6 +583,7 @@ export class OgeTileLayout {
       if (source !== 'api') this.announce(this.unchanged(label));
       return false;
     }
+    this.capture();
     this.state.set(ogeTileLayoutMoveState(tiles, tile.index, to));
     const done: OgeTileLayoutReorderedEvent = {
       item: reordering.item,
@@ -475,13 +596,22 @@ export class OgeTileLayout {
     this.reordered.emit(done);
     this.layoutChanged.emit({ state: this.getState(), source });
     this.announce(
-      ogeTileLayoutMovedText(
-        this.msg(),
-        label,
-        to + 1,
-        tiles.length,
-        this.resolvedLocale(),
-      ),
+      dropped
+        ? ogeTileLayoutGrabText(
+            this.msg(),
+            'dropped',
+            label,
+            to + 1,
+            tiles.length,
+            this.resolvedLocale(),
+          )
+        : ogeTileLayoutMovedText(
+            this.msg(),
+            label,
+            to + 1,
+            tiles.length,
+            this.resolvedLocale(),
+          ),
     );
     if (source !== 'api') this.refocus(key);
     return true;
@@ -520,6 +650,7 @@ export class OgeTileLayout {
       if (source !== 'api') this.announce(this.unchanged(label));
       return false;
     }
+    this.capture();
     this.state.set(ogeTileLayoutResizeState(tiles, tile.index, next));
     const done: OgeTileLayoutResizedEvent = {
       item: resizing.item,
@@ -543,10 +674,32 @@ export class OgeTileLayout {
   protected onTileKeydown(event: KeyboardEvent, row: TileRow): void {
     // keys only act on the tile itself — a field inside keeps its arrows
     if (event.target !== event.currentTarget) return;
+    if (this.grabKey() === row.key) {
+      this.onGrabKeydown(event, row);
+      return;
+    }
     const intent = ogeTileLayoutKeyIntent(event, this.isRtl());
     // the committed tile, not the rendered row — two keys can arrive before a render
     const tile = this.tiles().find((t) => t.key === row.key);
     if (!intent || !tile) return;
+    if (intent.type === 'grab') {
+      if (!tile.reorderable || this.gesture) return;
+      event.preventDefault();
+      this.capture();
+      this.grabKey.set(tile.key);
+      this.previewIndex.set(tile.index);
+      this.announce(
+        ogeTileLayoutGrabText(
+          this.msg(),
+          'pickedUp',
+          this.labelOf(tile),
+          tile.index + 1,
+          this.tiles().length,
+          this.resolvedLocale(),
+        ),
+      );
+      return;
+    }
     if (intent.type === 'focus') {
       event.preventDefault();
       const to = ogeTileLayoutStep(
@@ -593,6 +746,76 @@ export class OgeTileLayout {
     );
   }
 
+  /** Keyboard grab mode: arrows move the preview, Space drops, Escape cancels. */
+  private onGrabKeydown(event: KeyboardEvent, row: TileRow): void {
+    const intent = ogeTileLayoutGrabIntent(event, this.isRtl());
+    const tile = this.tiles().find((t) => t.key === row.key);
+    const at = this.previewIndex();
+    if (!intent || !tile || at === null) return;
+    event.preventDefault();
+    if (intent.type === 'cancel') {
+      this.endGrab();
+      this.announce(this.msg().dragCancelled);
+      return;
+    }
+    if (intent.type === 'drop') {
+      this.endGrab();
+      if (at === tile.index)
+        this.announce(
+          ogeTileLayoutGrabText(
+            this.msg(),
+            'dropped',
+            this.labelOf(tile),
+            at + 1,
+            this.tiles().length,
+            this.resolvedLocale(),
+          ),
+        );
+      else this.commitMove(tile.key, at, 'keyboard', event, true);
+      return;
+    }
+    const count = this.tiles().length;
+    const to =
+      intent.to === 'prev'
+        ? at - 1
+        : intent.to === 'next'
+          ? at + 1
+          : ogeTileLayoutStep(
+              this.measureDisplay(),
+              at,
+              intent.to,
+              this.resolvedColumns(),
+            );
+    if (to < 0 || to >= count || to === at) {
+      this.announce(this.unchanged(this.labelOf(tile)));
+      return;
+    }
+    this.capture();
+    this.previewIndex.set(to);
+    this.announce(
+      ogeTileLayoutMovedText(
+        this.msg(),
+        this.labelOf(tile),
+        to + 1,
+        count,
+        this.resolvedLocale(),
+      ),
+    );
+  }
+
+  /** Focus leaving a picked-up tile puts it back. */
+  protected onTileFocusOut(row: TileRow): void {
+    if (this.grabKey() !== row.key) return;
+    this.endGrab();
+    this.announce(this.msg().dragCancelled);
+  }
+
+  private endGrab(): void {
+    this.capture();
+    this.grabKey.set(null);
+    this.previewIndex.set(null);
+  }
+
   // --- pointer --------------------------------------------------------------
 
   protected onHeaderPointerDown(event: PointerEvent, row: TileRow): void {
@@ -600,35 +823,67 @@ export class OgeTileLayout {
     if (!tile.reorderable || event.button !== 0 || this.gesture) return;
     const target = event.target as Element | null;
     if (target?.closest?.(DRAG_EXCLUDED)) return;
-    const rects = this.measure();
+    if (this.grabKey() !== null) this.endGrab();
+    const element = this.tileElement(tile.key);
+    const origin = this.cellElement(tile.key)?.getBoundingClientRect();
     const startX = event.clientX;
     const startY = event.clientY;
     const header = event.currentTarget as HTMLElement;
-    this.tileElement(tile.key)?.focus({ preventScroll: true });
-    let to = tile.index;
+    element?.focus({ preventScroll: true });
+    let x = startX;
+    let y = startY;
+    let anchor = { x: startX, y: startY };
+    const retarget = (): void => {
+      const current = this.previewIndex() ?? tile.index;
+      const to = ogeTileLayoutLiveTarget(this.measureDisplay(), x, y, current);
+      // after a re-target the reflow may slide another tile under a still
+      // pointer — wait for real travel before following it
+      if (
+        to === current ||
+        Math.hypot(x - anchor.x, y - anchor.y) < RETARGET_TRAVEL
+      )
+        return;
+      anchor = { x, y };
+      this.capture();
+      this.previewIndex.set(to);
+    };
     this.gesture = beginPointerGesture(event, {
       longPress: 0,
       source: header,
       suppressClick: true,
       onMove: (dx, dy) => {
-        if (this.dragKey() === null) this.dragKey.set(tile.key);
-        this.dragOffset.set({ x: dx, y: dy });
-        to = ogeTileLayoutDropIndex(
-          rects,
-          startX + dx,
-          startY + dy,
-          tile.index,
-        );
-        const over = this.tiles()[to];
-        this.dropKey.set(over && to !== tile.index ? over.key : null);
+        x = startX + dx;
+        y = startY + dy;
+        if (this.dragKey() === null) {
+          this.capture();
+          this.dragKey.set(tile.key);
+          this.previewIndex.set(tile.index);
+          const scrollParent = element ? ogeScrollParent(element) : null;
+          if (scrollParent)
+            this.scroller = createAutoScroller(scrollParent, {
+              onScroll: retarget,
+            });
+        }
+        this.dragBox.set({
+          left: (origin?.left ?? 0) + dx,
+          top: (origin?.top ?? 0) + dy,
+          width: origin?.width ?? 0,
+          height: origin?.height ?? 0,
+        });
+        this.scroller?.update(x, y);
+        retarget();
       },
       onFinish: (commit, cancelled) => {
         this.gesture = null;
+        this.scroller?.stop();
+        this.scroller = null;
+        const to = this.previewIndex();
+        // the carried tile glides from under the pointer into its slot
+        this.capture();
         this.dragKey.set(null);
-        this.dropKey.set(null);
-        this.dragOffset.set({ x: 0, y: 0 });
+        this.previewIndex.set(null);
         if (cancelled) this.announce(this.msg().dragCancelled);
-        else if (commit && to !== tile.index)
+        else if (commit && to !== null && to !== tile.index)
           this.commitMove(tile.key, to, 'pointer');
       },
     });
@@ -638,17 +893,24 @@ export class OgeTileLayout {
     const tile = row.tile;
     if (event.button !== 0 || this.gesture) return;
     event.stopPropagation();
+    if (this.grabKey() !== null) this.endGrab();
     const element = this.tileElement(tile.key);
     const rect = element?.getBoundingClientRect();
     const rtl = this.isRtl();
     const gap = this.resolvedGap();
     const start = { colSpan: tile.colSpan, rowSpan: tile.rowSpan };
+    const locale = this.resolvedLocale();
     element?.focus({ preventScroll: true });
+    const scrollParent = element ? ogeScrollParent(element) : null;
+    let last = start;
     this.gesture = beginPointerGesture(event, {
       longPress: 0,
       source: event.currentTarget as Element,
       suppressClick: true,
       onMove: (dx, dy) => {
+        if (!this.scroller && scrollParent)
+          this.scroller = createAutoScroller(scrollParent);
+        this.scroller?.update(event.clientX + dx, event.clientY + dy);
         const span = ogeTileLayoutClampResize(
           tile,
           ogeTileLayoutResizeSpan({
@@ -661,12 +923,26 @@ export class OgeTileLayout {
             rtl,
           }),
         );
+        this.resizeFrame.set({
+          key: tile.key,
+          width: Math.max(48, (rect?.width ?? 0) + (rtl ? -dx : dx)),
+          height: Math.max(48, (rect?.height ?? 0) + dy),
+          text: ogeTileLayoutSizeText(span, locale),
+        });
+        if (span.colSpan !== last.colSpan || span.rowSpan !== last.rowSpan) {
+          this.capture();
+          last = span;
+        }
         this.resizePreview.set({ key: tile.key, span });
       },
       onFinish: (commit, cancelled) => {
         this.gesture = null;
+        this.scroller?.stop();
+        this.scroller = null;
         const preview = this.resizePreview();
+        this.capture();
         this.resizePreview.set(null);
+        this.resizeFrame.set(null);
         if (cancelled) this.announce(this.msg().dragCancelled);
         else if (commit && preview)
           this.commitResize(tile.key, preview.span, 'pointer');
@@ -697,6 +973,22 @@ export class OgeTileLayout {
     return ogeIsRtl(this.host.nativeElement);
   }
 
+  private ensureAnimator(): OgeLayoutAnimator<string> {
+    this.animator ??= createOgeLayoutAnimator<string>({
+      root: this.list().nativeElement,
+      query: () =>
+        this.tileElements().map(
+          (el) => [el.getAttribute('data-oge-tile-key') ?? '', el] as const,
+        ),
+    });
+    return this.animator;
+  }
+
+  /** "First" of a layout change the component makes itself. */
+  private capture(): void {
+    this.animator?.capture();
+  }
+
   private tileElements(): HTMLElement[] {
     return Array.from(
       this.host.nativeElement.querySelectorAll<HTMLElement>(
@@ -713,11 +1005,29 @@ export class OgeTileLayout {
     );
   }
 
+  private cellElement(key: OgeTileLayoutKey): HTMLElement | null {
+    return this.tileElement(key)?.parentElement ?? null;
+  }
+
+  /**
+   * The cells' boxes in committed order. Cells never animate (the tiles in
+   * them do), so these are honest layout boxes even mid-glide.
+   */
   private measure(): OgeTileLayoutRect[] {
     return this.tileElements().map((el) => {
-      const r = el.getBoundingClientRect();
+      const r = (el.parentElement ?? el).getBoundingClientRect();
       return { left: r.left, top: r.top, width: r.width, height: r.height };
     });
+  }
+
+  /** The cells' boxes in display (preview) order. */
+  private measureDisplay(): OgeTileLayoutRect[] {
+    const rects = this.measure();
+    const order = this.displayOrder();
+    if (!order) return rects;
+    const out: OgeTileLayoutRect[] = [];
+    rects.forEach((r, i) => (out[order[i] ?? i] = r));
+    return out;
   }
 
   private refocus(key: OgeTileLayoutKey): void {
