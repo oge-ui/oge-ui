@@ -28,13 +28,16 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../../coverage/packages/charts',
       provider: 'v8' as const,
+      // this package's own code — the engine sources it imports through the
+      // path aliases are measured (and ratcheted) by charts-engine itself
+      exclude: ['**/charts-engine/**'],
       // ratchet floor: measured level − 1, rounded down. Raise it when
       // coverage grows (docs/ARCHITECTURE.md → Testing → coverage ratchet)
       thresholds: {
-        statements: 75,
+        statements: 79,
         branches: 56,
         functions: 78,
-        lines: 78,
+        lines: 83,
       },
     },
   },

@@ -106,6 +106,12 @@ test('useButtons drafts until OK and discards on Cancel', async ({ page }) => {
   const hue = page.locator(
     '.oge-color-slider:not(.oge-color-slider-alpha) .oge-color-slider-thumb',
   );
+  // the panel moves focus to its initial target a tick after opening — wait
+  // for that before taking focus, or the move steals it from the hue thumb
+  const opened = page
+    .locator('.oge-color-box-panel [data-focus-target]')
+    .first();
+  await expect(opened).toBeFocused();
   await hue.focus();
   await page.keyboard.press('PageUp');
   await expect(input).toHaveValue(before); // drafted only
@@ -113,6 +119,7 @@ test('useButtons drafts until OK and discards on Cancel', async ({ page }) => {
   await expect(input).toHaveValue(before); // cancelled
 
   await page.locator(`${BUTTONS} .oge-input-dropdown`).click();
+  await expect(opened).toBeFocused();
   await hue.focus();
   await page.keyboard.press('PageUp');
   await page.locator('.oge-color-box-ok').click();
