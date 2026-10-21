@@ -6,8 +6,8 @@
 const ANSWERS: readonly [RegExp, string, string][] = [
   [
     /price|pricing|cost|licen[cs]e|fiyat|lisans|ücret/i,
-    'The MIT tier is free forever. OGE UI Pro — pivot, charts, scheduler, Gantt, Kanban and BPMN — is $299 per developer per year, with a perpetual fallback for the releases you were licensed for.',
-    'MIT katmanı sonsuza dek ücretsiz. OGE UI Pro (pivot, grafikler, scheduler, Gantt, Kanban, BPMN) geliştirici başına yıllık 299$; lisanslı olduğunuz sürümler için kalıcı kullanım hakkı vardır.',
+    'The MIT tier is free forever. OGE UI Pro — pivot, charts, scheduler, Gantt, Kanban, BPMN and the spreadsheet — is $299 per developer per year, with a perpetual fallback for the releases you were licensed for.',
+    'MIT katmanı sonsuza dek ücretsiz. OGE UI Pro (pivot, grafikler, scheduler, Gantt, Kanban, BPMN, tablo görüntüleyici) geliştirici başına yıllık 299$; lisanslı olduğunuz sürümler için kalıcı kullanım hakkı vardır.',
   ],
   [
     /model|openai|ollama|claude|anthropic|azure|transport|key|anahtar/i,

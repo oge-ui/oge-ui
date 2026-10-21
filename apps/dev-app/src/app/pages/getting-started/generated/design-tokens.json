@@ -443,6 +443,7 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
         "@oge-ui/tree-list",
         "@oge-ui/upload"
@@ -601,7 +602,8 @@
         "@oge-ui/navigation",
         "@oge-ui/overlay",
         "@oge-ui/pivot",
-        "@oge-ui/scheduler"
+        "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet"
       ]
     },
     {
@@ -727,7 +729,8 @@
         "@oge-ui/buttons",
         "@oge-ui/kanban",
         "@oge-ui/layout",
-        "@oge-ui/overlay"
+        "@oge-ui/overlay",
+        "@oge-ui/spreadsheet"
       ]
     },
     {
@@ -763,6 +766,7 @@
         "@oge-ui/navigation",
         "@oge-ui/overlay",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/upload"
       ]
     },
@@ -1205,6 +1209,7 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
         "@oge-ui/upload"
       ]
@@ -1263,6 +1268,7 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
         "@oge-ui/upload"
       ]
@@ -1824,6 +1830,611 @@
       },
       "u": [
         "@oge-ui/charts-engine"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-sheet-bg",
+      "c": "component",
+      "d": "spreadsheet (ADR 0005): the sheet itself looks as in Excel in every theme — white cells, Excel's gridline grey and green selection, measured on screen in Excel 16.0 — and the chrome around it follows the theme",
+      "v": {
+        "light": "#ffffff"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-sheet-fg",
+      "c": "component",
+      "v": {
+        "light": "#444444",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#444444",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-gridline",
+      "c": "component",
+      "d": "spreadsheet: black-on-white chrome, stronger gridlines",
+      "v": {
+        "light": "#e0e0e0",
+        "hc": "#767676"
+      },
+      "s": {
+        "light": "#e0e0e0",
+        "hc": "#767676"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-accent",
+      "c": "component",
+      "v": {
+        "light": "#217346"
+      },
+      "s": {
+        "light": "#217346"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-accent-fg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-freeze-line",
+      "c": "component",
+      "v": {
+        "light": "#9b9b9b",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#9b9b9b",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-selection-overlay",
+      "c": "component",
+      "v": {
+        "light": "rgba(0, 0, 0, 0.22)"
+      },
+      "s": {
+        "light": "rgb(0 0 0 / 0.22)"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-spill",
+      "c": "component",
+      "v": {
+        "light": "#326ac7"
+      },
+      "s": {
+        "light": "#326ac7"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-spill-shadow",
+      "c": "component",
+      "v": {
+        "light": "0 0 8px rgba(0, 0, 0, 0.17)"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-note-marker",
+      "c": "component",
+      "v": {
+        "light": "#ff0000"
+      },
+      "s": {
+        "light": "#ff0000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-note-bg",
+      "c": "component",
+      "v": {
+        "light": "#ffffe1"
+      },
+      "s": {
+        "light": "#ffffe1"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-note-fg",
+      "c": "component",
+      "v": {
+        "light": "#000000"
+      },
+      "s": {
+        "light": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-note-border",
+      "c": "component",
+      "v": {
+        "light": "#000000"
+      },
+      "s": {
+        "light": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-note-shadow",
+      "c": "component",
+      "v": {
+        "light": "2px 2px 3px rgba(0, 0, 0, 0.35)"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-filter-bg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-filter-border",
+      "c": "component",
+      "v": {
+        "light": "#a6a6a6",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#a6a6a6",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-filter-fg",
+      "c": "component",
+      "v": {
+        "light": "#444444",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#444444",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-chrome-bg",
+      "c": "component",
+      "d": "spreadsheet chrome: Excel's dark (\"Black\") Office theme, measured; the sheet stays white with Excel's gridlines, as Excel keeps it",
+      "v": {
+        "light": "#f3f3f3",
+        "dark": "#090909",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#f3f3f3",
+        "dark": "#090909",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-chrome-fg",
+      "c": "component",
+      "v": {
+        "light": "#262626",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#262626",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-status-bg",
+      "c": "component",
+      "v": {
+        "light": "#f3f3f3",
+        "dark": "#141414",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#f3f3f3",
+        "dark": "#141414",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-muted-fg",
+      "c": "component",
+      "v": {
+        "light": "#6e6e6e",
+        "dark": "#b0b0b0",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#6e6e6e",
+        "dark": "#b0b0b0",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-field-bg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-field-border",
+      "c": "component",
+      "v": {
+        "light": "#c6c6c6",
+        "dark": "#666666",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#c6c6c6",
+        "dark": "#666666",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-field-fg",
+      "c": "component",
+      "v": {
+        "light": "#262626",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#262626",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-bg",
+      "c": "component",
+      "v": {
+        "light": "#f5f5f5",
+        "dark": "#0a0a0a",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#f5f5f5",
+        "dark": "#0a0a0a",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-fg",
+      "c": "component",
+      "v": {
+        "light": "#444444",
+        "dark": "#dadada",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#444444",
+        "dark": "#dadada",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-line",
+      "c": "component",
+      "v": {
+        "light": "#bdbdbd",
+        "dark": "#999999",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#bdbdbd",
+        "dark": "#999999",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-separator-from",
+      "c": "component",
+      "v": {
+        "light": "#f0f0f0",
+        "dark": "#333333",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#f0f0f0",
+        "dark": "#333333",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-separator-to",
+      "c": "component",
+      "v": {
+        "light": "#d0d0d0",
+        "dark": "#68686f",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#d0d0d0",
+        "dark": "#68686f",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-selected-bg",
+      "c": "component",
+      "v": {
+        "light": "#d2d2d2",
+        "dark": "#646464",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#d2d2d2",
+        "dark": "#646464",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-selected-fg",
+      "c": "component",
+      "v": {
+        "light": "#217346",
+        "dark": "#ffffff",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#217346",
+        "dark": "#ffffff",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-header-selected-separator",
+      "c": "component",
+      "v": {
+        "light": "#ababab",
+        "dark": "#b6b6b6",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#ababab",
+        "dark": "#b6b6b6",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-corner-mark",
+      "c": "component",
+      "v": {
+        "light": "#b9b9b9",
+        "dark": "#646464",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#b9b9b9",
+        "dark": "#646464",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-strip-bg",
+      "c": "component",
+      "v": {
+        "light": "#f3f3f3",
+        "dark": "#090909",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#f3f3f3",
+        "dark": "#090909",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-bg",
+      "c": "component",
+      "v": {
+        "light": "#e8e8e8",
+        "dark": "#262626",
+        "hc": "#ffffff"
+      },
+      "s": {
+        "light": "#e8e8e8",
+        "dark": "#262626",
+        "hc": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-fg",
+      "c": "component",
+      "v": {
+        "light": "#262626",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#262626",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-separator",
+      "c": "component",
+      "v": {
+        "light": "#bdbdbd",
+        "dark": "#999999",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#bdbdbd",
+        "dark": "#999999",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-active-bg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-active-fg",
+      "c": "component",
+      "v": {
+        "light": "#217346"
+      },
+      "s": {
+        "light": "#217346"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-colored-fg",
+      "c": "component",
+      "v": {
+        "light": "#000000"
+      },
+      "s": {
+        "light": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
       ]
     },
     {

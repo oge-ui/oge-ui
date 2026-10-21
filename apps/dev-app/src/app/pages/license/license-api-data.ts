@@ -136,8 +136,8 @@ export const OGE_LICENSE_API: ApiSections = {
         },
         {
           name: 'OgeCommercialFamily',
-          type: "'pivot' | 'bpmn' | 'scheduler' | 'gantt' | 'kanban' | 'charts'",
-          description: 'The six families OGE UI Pro covers.',
+          type: "'pivot' | 'bpmn' | 'scheduler' | 'gantt' | 'kanban' | 'charts' | 'spreadsheet'",
+          description: 'The seven families OGE UI Pro covers.',
         },
         {
           name: 'OgeDecodedLicenseKey',

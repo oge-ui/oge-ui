@@ -277,10 +277,11 @@ interface ComponentCard {
             <code>&#64;oge-ui/react-charts</code>,
             <code>&#64;oge-ui/react-gantt</code>,
             <code>&#64;oge-ui/react-kanban</code>,
-            <code>&#64;oge-ui/react-scheduler</code>
+            <code>&#64;oge-ui/react-scheduler</code>,
+            <code>&#64;oge-ui/react-spreadsheet</code>
           </td>
           <td>
-            <strong>React.</strong> The six commercial families, each on the
+            <strong>React.</strong> The seven commercial families, each on the
             same framework-free engine package as its Angular twin (commercial —
             free for evaluation and development).
           </td>
@@ -342,6 +343,14 @@ interface ComponentCard {
           <td>
             Kanban board with columns, swimlanes, WIP limits and drag &amp; drop
             (commercial — free for evaluation and development).
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/spreadsheet</code></td>
+          <td>
+            Spreadsheet viewer that shows <code>.xlsx</code> workbooks the way
+            Excel does — read in the browser, without a dependency (commercial —
+            free for evaluation and development).
           </td>
         </tr>
         <tr>
@@ -411,7 +420,8 @@ interface ComponentCard {
             <code>&#64;oge-ui/charts-engine</code>,
             <code>&#64;oge-ui/gantt-engine</code>,
             <code>&#64;oge-ui/kanban-engine</code>,
-            <code>&#64;oge-ui/scheduler-engine</code>
+            <code>&#64;oge-ui/scheduler-engine</code>,
+            <code>&#64;oge-ui/spreadsheet-engine</code>
           </td>
           <td>
             Framework-free engines of the commercial families, shared by their

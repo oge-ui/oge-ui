@@ -134,7 +134,7 @@ _Engine hooks (commercial families)_
 | --- | --- | --- |
 | `OgeLicenseInfo` | `{ id; licensee; seats; families; issued; expires }` | The decoded key payload. `expires` is the last day of the update window: every release dated on or before it stays licensed forever. |
 | `OgeLicenseStatus` | `'licensed' \| 'development' \| 'missing' \| 'invalid' \| 'expired' \| 'not-covered'` | Result of `ogeLicenseStatus()`. |
-| `OgeCommercialFamily` | `'pivot' \| 'bpmn' \| 'scheduler' \| 'gantt' \| 'kanban' \| 'charts'` | The six families OGE UI Pro covers. |
+| `OgeCommercialFamily` | `'pivot' \| 'bpmn' \| 'scheduler' \| 'gantt' \| 'kanban' \| 'charts' \| 'spreadsheet'` | The seven families OGE UI Pro covers. |
 | `OgeDecodedLicenseKey` | `{ info: OgeLicenseInfo; signed: string; signature: Uint8Array }` | A parsed key before verification. |
 | `OGE_LICENSE_PUBLIC_KEY` | `string` | The Ed25519 public key (raw, base64url) that verifies issued keys. |
 | `OGE_LICENSE_KEY_PREFIX` | `'OGE1'` | Key format prefix. |

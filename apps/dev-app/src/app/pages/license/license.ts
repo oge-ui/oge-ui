@@ -26,8 +26,8 @@ import { ANGULAR_KEY, CHECK_KEY, ENV_KEY, REACT_KEY } from './license-snippets';
     >
       <p>
         OGE UI is <strong>open-core</strong>: the suite is MIT-licensed and free
-        for any use. Six enterprise families — the Pivot Grid, Gantt, Scheduler,
-        Kanban, Charts and the BPMN Editor — make up
+        for any use. Seven enterprise families — the Pivot Grid, Gantt,
+        Scheduler, Kanban, Charts, the BPMN Editor and the Spreadsheet — make up
         <strong>OGE UI Pro</strong>, which is free to evaluate and develop with
         and needs a license in production.
       </p>

@@ -49,6 +49,7 @@ import {
   PATHS,
   REPO_URL,
   SITE_ORIGIN,
+  UNRELEASED_PACKAGES,
 } from './lib/manifest.mjs';
 import { sectionsToMarkdown } from './lib/markdown.mjs';
 import {
@@ -639,7 +640,25 @@ function reportGaps() {
             .map((nested) => `${entry.name}/${nested.name}`)
             .filter((dir) => existsSync(abs('packages', dir, 'package.json'))),
     );
-  const missing = onDisk.filter((dir) => !docs.has(dir));
+  const heldBack = onDisk.filter((dir) =>
+    Object.hasOwn(UNRELEASED_PACKAGES, dir),
+  );
+  for (const dir of heldBack) {
+    console.log(
+      `· ${dir}: not released yet, not documented — ${UNRELEASED_PACKAGES[dir]}`,
+    );
+  }
+  // a listed package that also has a manifest entry was released: drop the listing
+  for (const dir of Object.keys(UNRELEASED_PACKAGES)) {
+    if (docs.has(dir)) {
+      console.warn(
+        `! ${dir} is in PACKAGES and UNRELEASED_PACKAGES — remove it from UNRELEASED_PACKAGES`,
+      );
+    }
+  }
+  const missing = onDisk.filter(
+    (dir) => !docs.has(dir) && !heldBack.includes(dir),
+  );
   if (missing.length) {
     console.warn(
       `! packages with no manifest entry (not documented): ${missing.join(', ')}\n  add them to tools/docs-tools/lib/manifest.mjs`,

@@ -589,6 +589,18 @@ export class App {
       ],
     },
     {
+      title: 'Spreadsheet',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/spreadsheet', label: 'Overview', icon: 'table' },
+        {
+          path: '/components/spreadsheet/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Scheduler',
       group: COMPONENTS_GROUP,
       items: [

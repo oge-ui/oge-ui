@@ -83,7 +83,7 @@ export const PRICING_FAQ: readonly FaqEntry[] = [
   {
     id: 'what-does-pro-cost',
     question: 'How much does OGE UI Pro cost?',
-    answer: `$${PRO_PRICE_USD} per developer per year. It covers the six commercial families — ${PRO_NAMES.join(', ')} — in both Angular and React with one key. For invoices, purchase orders or volume pricing, write to the sales address on the licensing page.`,
+    answer: `$${PRO_PRICE_USD} per developer per year. It covers the seven commercial families — ${PRO_NAMES.join(', ')} — in both Angular and React with one key. For invoices, purchase orders or volume pricing, write to the sales address on the licensing page.`,
   },
   {
     id: 'free-to-evaluate',

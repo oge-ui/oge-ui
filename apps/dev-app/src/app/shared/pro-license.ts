@@ -15,7 +15,7 @@ export const PRO_CHECKOUT_URL = '';
 /** Where buyers write for invoices, volume pricing or offline purchase. */
 export const PRO_SALES_EMAIL = 'license@ogeui.com';
 
-/** The six families an OGE UI Pro license covers. */
+/** The seven families an OGE UI Pro license covers. */
 export const PRO_FAMILIES = [
   { name: 'Pivot Grid', pkg: 'pivot' },
   { name: 'Gantt', pkg: 'gantt' },
@@ -23,4 +23,5 @@ export const PRO_FAMILIES = [
   { name: 'Kanban', pkg: 'kanban' },
   { name: 'Charts', pkg: 'charts' },
   { name: 'BPMN Editor', pkg: 'bpmn' },
+  { name: 'Spreadsheet', pkg: 'spreadsheet' },
 ] as const;

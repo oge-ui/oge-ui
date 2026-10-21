@@ -15,6 +15,7 @@ body:
         - '@oge-ui/gantt (Gantt)'
         - '@oge-ui/upload (Upload)'
         - '@oge-ui/kanban (Kanban)'
+        - '@oge-ui/spreadsheet (Spreadsheet)'
         - '@oge-ui/charts (Charts)'
         - '@oge-ui/inputs (TextBox / SelectBox / TagBox / …)'
         - '@oge-ui/buttons'

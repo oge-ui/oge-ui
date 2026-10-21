@@ -105,11 +105,11 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components',
-    'Browse every OGE UI component family with live previews: data grid, tree list, pivot grid, charts, scheduler, gantt, kanban, inputs, forms and navigation.',
+    'Browse every OGE UI component family with live previews: data grid, tree list, pivot grid, charts, scheduler, gantt, kanban, spreadsheet, inputs and forms.',
   ],
   [
     '/license',
-    'OGE UI licensing and pricing: the suite is MIT forever; OGE UI Pro — Pivot, Gantt, Scheduler, Kanban, Charts and BPMN — is $299 per developer per year.',
+    'OGE UI licensing: the suite is MIT forever; OGE UI Pro — Pivot, Gantt, Scheduler, Kanban, Charts, BPMN and Spreadsheet — is $299 per developer per year.',
   ],
   [
     '/license/claim',
@@ -117,7 +117,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/pricing',
-    'OGE UI pricing: the core suite of Angular and React components is MIT and free forever; OGE UI Pro adds six enterprise families for $299 per developer per year.',
+    'OGE UI pricing: the core Angular and React suite is MIT and free forever; OGE UI Pro adds seven enterprise families for $299 per developer per year.',
   ],
   [
     '/compare',
@@ -714,6 +714,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/components/kanban/api',
     'OGE Kanban API reference: every input, output, method and type of oge-kanban — card field mapping, columns, swimlanes, templates and config provider.',
+  ],
+  [
+    '/components/spreadsheet',
+    'Excel viewer for Angular and React: shows .xlsx workbooks as Excel does, with measured fonts, formats, borders, frozen panes and pictures, read in the browser.',
+  ],
+  [
+    '/components/spreadsheet/api',
+    'OGE Spreadsheet API reference: every input, output, method and type of oge-spreadsheet — sources, two-way sheet and zoom, find, copy, print and config.',
   ],
   [
     '/components/scheduler',

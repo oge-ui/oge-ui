@@ -52,6 +52,7 @@ const COMPONENT_PREFIXES = [
   'scheduler',
   'gantt',
   'kanban',
+  'spreadsheet',
   'chart',
   'editor',
   'avatar',

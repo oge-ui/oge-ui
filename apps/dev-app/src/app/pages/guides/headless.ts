@@ -115,7 +115,7 @@ const SECTIONS = [
         MIT, and will stay MIT.
       </li>
       <li>
-        The six <code>&#64;oge-ui/&lt;family&gt;-engine</code> packages carry
+        The seven <code>&#64;oge-ui/&lt;family&gt;-engine</code> packages carry
         their family's commercial licence, exactly like the family's Angular and
         React packages: free for evaluation, development and testing; production
         use needs a paid licence — using the engine without the components is

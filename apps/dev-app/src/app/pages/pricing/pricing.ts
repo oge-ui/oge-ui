@@ -44,7 +44,7 @@ const SECTIONS = ['Plans', 'Compare plans', 'Questions'] as const;
       <p>
         OGE UI is open-core. The Data Grid, Tree List, form editors and the rest
         of the core suite for Angular and React are MIT-licensed and free
-        forever. Six enterprise families make up
+        forever. Seven enterprise families make up
         <strong>OGE UI Pro</strong>: free to evaluate and develop with, licensed
         per developer for production.
       </p>

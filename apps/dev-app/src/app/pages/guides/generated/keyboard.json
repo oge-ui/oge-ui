@@ -223,6 +223,48 @@
           "Tab cycles elements (never trapped on an empty selection — leave with Escape then Tab, announced in the canvas hint), arrows move the selection by one grid step, `C` arms the connect tool (Tab/arrows walk candidate targets, Enter commits), `A` appends a connected task, `H`/`L`/`S` switch to the hand / lasso / space tool (edit mode only), `F` zooms to fit, `F2`/Enter edit the label, Ctrl+C/X/V copy/cut/paste via the internal clipboard, Ctrl+A selects all, Ctrl+F opens the element search overlay, Escape cancels the active tool or drag. The selected element is exposed via `aria-activedescendant` and every action is narrated in a polite live region."
         ]
       ]
+    },
+    {
+      "family": "OgeSpreadsheet",
+      "npm": "@oge-ui/spreadsheet",
+      "title": "Keyboard",
+      "rows": [
+        [
+          "Arrows / Ctrl+arrows / Shift",
+          "move",
+          "Move the active cell over hidden rows, hidden columns and merges; Ctrl jumps to the data edge as `Range.End` does; Shift extends from the anchor."
+        ],
+        [
+          "Home / Ctrl+Home / Ctrl+End / Page Up / Page Down / Alt+Page",
+          "move",
+          "Start of the row, the first cell below the frozen panes, the last used cell, a screen up or down, a screen sideways."
+        ],
+        [
+          "Tab / Enter (Shift)",
+          "move",
+          "Step right / down — inside a multi-cell selection they cycle within it."
+        ],
+        [
+          "Shift+Space / Ctrl+Space / Ctrl+A / Shift+F8",
+          "select",
+          "Whole rows, whole columns, the current region then everything, add mode (arrows move, clicks add ranges)."
+        ],
+        [
+          "Ctrl+C / Ctrl+F / F5 or Ctrl+G / Shift+F2 / Alt+Enter",
+          "act",
+          "Copy as text and Excel HTML, find, go to (the name box), show the active cell's note, open its link."
+        ],
+        [
+          "Ctrl+Page Up / Ctrl+Page Down / Ctrl+= / Ctrl+− / Ctrl+wheel",
+          "view",
+          "Previous / next sheet, zoom in and out on Excel's steps."
+        ],
+        [
+          "Escape",
+          "close",
+          "Closes the find bar, add mode or an open note — and when nothing is open the key stays the page's (a dialog around the viewer still closes)."
+        ]
+      ]
     }
   ]
 }

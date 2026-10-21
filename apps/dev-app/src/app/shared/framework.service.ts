@@ -71,6 +71,9 @@ const COVERAGE: Readonly<
     ai: '*',
     // commercial family (ADR 0003): overview and api both branch
     kanban: '*',
+    // commercial (ADR 0005): @oge-ui/react-spreadsheet over
+    // @oge-ui/spreadsheet-engine; overview and api both branch
+    spreadsheet: '*',
     // commercial: @oge-ui/react-bpmn over @oge-ui/bpmn-engine (ADR 0003);
     // overview and api both branch
     bpmn: '*',

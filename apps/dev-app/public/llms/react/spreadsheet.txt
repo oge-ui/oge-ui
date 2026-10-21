@@ -1,0 +1,254 @@
+# @oge-ui/react-spreadsheet
+
+> React spreadsheet viewer that shows .xlsx workbooks the way Excel does: Excel-measured column widths, row heights, fonts, number formats, borders, fills, conditional formats, frozen panes, merges, pictures, notes and links, with the Excel selection, keyboard map, find, copy and status bar — running the same engine and stylesheet as the Angular spreadsheet.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
+
+Part of OGE UI v1.1.5.
+Docs and live demos: https://www.ogeui.com/components/spreadsheet
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-spreadsheet
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages and ship in
+`@oge-ui/core` (installed with every package; add it directly under pnpm):
+`@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
+`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
+`prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeSpreadsheet>
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgeSpreadsheetSource \| null` | `null` | The workbook to open: bytes, a `Blob` / `File`, or a URL. A new value opens it, cancelling a read still running. Read in the browser by the dependency-free reader; nothing is uploaded. |
+| `workbook` | `OgeWorkbook \| null` | `null` | A workbook built or read elsewhere; wins over `source` when both change. |
+| `locale` | `string \| undefined` | `undefined` | BCP 47 locale of the built-in number formats, separators and month names — Excel takes them from the reader's region. Default: the provider's locale, else the browser's. Pass it in server-rendered apps. |
+| `messages` | `Partial<OgeSpreadsheetMessages>` | `{}` | Per-instance overrides of the message catalog, merged over the provider's. Every user-facing string lives there — aria labels and live-region announcements included. |
+
+_Chrome_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `showFormulaBar` | `boolean` | `true` | The name box (type a reference or a defined name, Enter goes there) and the read-only formula bar (a dynamic array's followers show the anchor's formula in grey). |
+| `showSheetTabs` | `boolean \| undefined` | `undefined` | The sheet tabs, with tab colours. Default: the workbook's own setting. |
+| `showStatusBar` | `boolean` | `true` | The status bar: the selection's Average, Count and Sum in the active cell's number format (Excel's rules), and the zoom slider. |
+| `showHeaders` | `boolean \| undefined` | `undefined` | Row and column headers. Default: each sheet's own setting. |
+| `showGridLines` | `boolean \| undefined` | `undefined` | Gridlines. Default: each sheet's own setting. |
+
+_State (controlled / uncontrolled)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `activeSheet / defaultActiveSheet` | `number \| undefined` | `undefined` | The active sheet's index (controlled), or the first one (uncontrolled). A value given before the workbook opens is held until it does, and wins over the file's own active sheet; hidden sheets are refused. Each sheet keeps its selection, zoom and scroll position. |
+| `onActiveSheetChange` | `(index: number) => void` | `—` | The active sheet changed — a tab, Ctrl+Page Down, find, a link. |
+| `zoom / defaultZoom` | `number \| undefined` | `undefined` | The active sheet's zoom in percent (10–400; controlled), or the first one (uncontrolled); each sheet keeps its own. Geometry stays in whole pixels per row and column, as Excel draws it. |
+| `onZoomChange` | `(zoom: number) => void` | `—` | The zoom changed — the status bar, Ctrl+wheel, Ctrl+= / Ctrl+−, a sheet switch. |
+
+_Host_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className / style` | `string / CSSProperties` | Classes and styles of the root element — give it a height. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `core` | `OgeSpreadsheetCore` | The framework-free controller from `@oge-ui/spreadsheet-engine` (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures and announcements. The Angular viewer runs the same class. |
+| `open(source)` | `(source: OgeSpreadsheetSource) => Promise<void>` | Opens a workbook; resolves once it is shown (or failed) and `onLoaded` / `onLoadError` ran. |
+| `getWorkbook()` | `() => OgeWorkbook \| null` | The open workbook. |
+| `selectSheet(index)` | `(index: number) => boolean` | Shows a sheet; `false` for a hidden or missing one. |
+| `goTo(reference)` | `(reference: string) => boolean` | Goes to `B4`, `Sheet2!A1:C3`, `C:C`, `3:3` or a defined name — as the name box does; `false` when unknown. |
+| `setZoom(percent)` | `(percent: number) => void` | Sets the zoom (clamped to 10–400%). |
+| `find(query, options?)` | `(query: string, options?: OgeFindOptions) => void` | Opens the find bar on `query` and selects the first match after the active cell. |
+| `copy()` | `() => Promise<boolean>` | Copies the active range through the async clipboard API: what the cells show as text, plus Excel-compatible HTML. A whole row or column copies its used part. |
+| `print()` | `() => void` | Prints the active sheet's used range as a table (the sheet's page setup decides the gridlines) from a hidden frame built node by node, never from markup. |
+| `focus()` | `() => void` | Focuses the grid. |
+
+#### Events
+
+_Callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onLoaded` | `(event: OgeSpreadsheetLoadedEvent) => void` | A workbook opened from `source` or `open()`. |
+| `onLoadError` | `(event: OgeSpreadsheetLoadErrorEvent) => void` | Opening failed; the placeholder shows the error's message. |
+| `onSelectionChange` | `(event: OgeSpreadsheetSelectionChangeEvent) => void` | The selection changed — keys, pointer, find, go to, a sheet switch. |
+| `onHyperlinkClick` | `(event: OgeSpreadsheetHyperlinkClickEvent) => void` | An external link is about to open (a click, or Alt+Enter); set `event.cancel` to keep it. It opens in a new browsing context without an opener. |
+| `onCellClick` | `(event: OgeSpreadsheetCellClickEvent) => void` | A cell was clicked (`event.event` is the native pointer event). |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSpreadsheetSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the workbook's bytes, a `Blob` / `File`, or a URL it fetches with same-origin credentials. A URL that cannot be fetched fails with `fetch-failed`. |
+| `OgeSpreadsheetLoadedEvent` | `interface` | `{ workbook, issues }` — the open `OgeWorkbook` and what the reader could not show as Excel does, aggregated per code and place. |
+| `OgeSpreadsheetLoadErrorEvent` | `interface` | `{ error }` — an `OgeXlsxError`. |
+| `OgeSpreadsheetSelectionChangeEvent` | `interface` | `{ sheet, ranges, active, address }` — the active sheet's index, the selected ranges (zero-based, inclusive), the active cell and its address (`B4`). |
+| `OgeSpreadsheetHyperlinkClickEvent` | `interface` | `{ href, link, cancel }` — an external link about to open (the target is sanitised; `javascript:` and friends never reach it). Set `cancel = true` to open it yourself, or not at all. Internal links (`Sheet2!A1`, a defined name) navigate without the event. |
+| `OgeSpreadsheetCellClickEvent` | `interface` | `{ row, col, address, text, event }` — a click: down and up on one cell without a drag. `text` is what the cell shows. |
+| `OgeFindOptions` | `interface` | `{ matchCase?, entireCell?, formulas?, workbook? }` — Excel's Find options: case, the whole cell, formulas instead of what cells show, every visible sheet. Queries take Excel's `*` and `?` wildcards (`~` escapes them). |
+| `OgeImportIssue` | `interface` | `{ code, severity, count, sheet?, part?, ref?, detail? }` — one kind of thing shown differently from Excel (or kept without being shown), counted per sheet and part; `ref` is the first occurrence, `detail` an English note for logs. |
+| `OgeImportIssueCode` | `string union` | What the reader reports, e.g. `'macros-kept'` (a `vbaProject.bin` is kept and never run — the viewer shows a message bar), `'drawing-not-shown'` (charts and shapes, kept for saving), `'uncalculated-formulas'`, `'external-link'` (kept, never fetched), `'truncated'`, `'strict-conformance'`. |
+| `OgeWorkbook` | `class` | The engine's workbook model (`@oge-ui/spreadsheet-engine`): sheets, styles, names, opaque parts. Build one in code and pass it to `workbook`, or read it from `loaded`. |
+| `OgeXlsxError` | `class` | Why a file could not be read: `code` is `'not-xlsx'`, `'encrypted-or-legacy'` (a password-protected workbook or an old `.xls`), `'xlsb'`, `'corrupt'`, `'too-large'`, `'aborted'` or `'fetch-failed'`. |
+
+_Keyboard_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Arrows / Ctrl+arrows / Shift` | `move` | Move the active cell over hidden rows, hidden columns and merges; Ctrl jumps to the data edge as `Range.End` does; Shift extends from the anchor. |
+| `Home / Ctrl+Home / Ctrl+End / Page Up / Page Down / Alt+Page` | `move` | Start of the row, the first cell below the frozen panes, the last used cell, a screen up or down, a screen sideways. |
+| `Tab / Enter (Shift)` | `move` | Step right / down — inside a multi-cell selection they cycle within it. |
+| `Shift+Space / Ctrl+Space / Ctrl+A / Shift+F8` | `select` | Whole rows, whole columns, the current region then everything, add mode (arrows move, clicks add ranges). |
+| `Ctrl+C / Ctrl+F / F5 or Ctrl+G / Shift+F2 / Alt+Enter` | `act` | Copy as text and Excel HTML, find, go to (the name box), show the active cell's note, open its link. |
+| `Ctrl+Page Up / Ctrl+Page Down / Ctrl+= / Ctrl+− / Ctrl+wheel` | `view` | Previous / next sheet, zoom in and out on Excel's steps. |
+| `Escape` | `close` | Closes the find bar, add mode or an open note — and when nothing is open the key stays the page's (a dialog around the viewer still closes). |
+
+_Configuration_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSpreadsheetConfigProvider` | `({ config?: OgeSpreadsheetConfigInput; children }) => JSX.Element` | Configures every viewer below: `messages` (merged over the defaults) and `locale`. Nested providers merge over the outer one; a new `config` object re-resolves the subtree (switching the UI language is a state change). |
+| `useOgeSpreadsheetConfig()` | `() => OgeSpreadsheetConfig` | The resolved config of the current subtree. |
+| `OGE_DEFAULT_SPREADSHEET_CONFIG / OGE_DEFAULT_SPREADSHEET_MESSAGES` | `OgeSpreadsheetConfig / OgeSpreadsheetMessages` | The English defaults a partial config or catalog merges over (from the engine, shared with Angular). |
+| `OgeSpreadsheetConfig / OgeSpreadsheetConfigInput` | `interface` | `{ messages, locale? }`; the input takes every field optionally and `messages` partially. |
+| `OgeSpreadsheetMessages` | `interface` | Every user-facing string, as templates with `{name}` placeholders and ICU plurals (filled by `ogeFormatMessage` in the viewer's locale): grid, tab, name box, formula bar and status bar labels, the find bar, the placeholders, the `errors` and `issues` blocks (one text per error and import-issue code), and the live-region announcements (`cellAnnouncement`, `selectionAnnouncement`, `sheetAnnouncement`, `copied`, `zoomLabel`, …). A partial override replaces a nested block whole; `@oge-ui/locales` ships translated packs (`ogeMergeMessages(OGE_DEFAULT_SPREADSHEET_MESSAGES, tr.spreadsheet)`). |
+| `OgeSpreadsheetProps / OgeSpreadsheetHandle` | `interface` | The props above, and what a `ref` receives. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { OgeSpreadsheet } from '@oge-ui/react-spreadsheet';
+
+export function WorkbookViewer() {
+  return (
+    <>
+      {/* One element shows an .xlsx file the way Excel does: its fonts,
+          number formats, borders, fills, conditional formats, frozen panes,
+          merges, notes, links and pictures. source takes a URL, the file's
+          bytes or a File; reading happens in the browser, with no dependency. */}
+      <OgeSpreadsheet
+        source="/demo/spreadsheet/structure.xlsx"
+        style={{ height: 520 }}
+      />
+    </>
+  );
+}
+```
+
+### Open your own file
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSpreadsheet } from '@oge-ui/react-spreadsheet';
+
+export function OpenWorkbook() {
+  const [file, setFile] = useState<File | null>(null);
+  const [issues, setIssues] = useState(0);
+  return (
+    <>
+      {/* Pick or drop any workbook: nothing leaves the browser. What the
+          reader could not show as Excel does arrives in onLoaded's issues. */}
+      <input
+        type="file"
+        accept=".xlsx,.xlsm"
+        onChange={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
+      />
+      <OgeSpreadsheet
+        source={file}
+        onLoaded={(event) => setIssues(event.issues.length)}
+        style={{ height: 520 }}
+      />
+      <p>{issues} things shown differently from Excel</p>
+    </>
+  );
+}
+```
+

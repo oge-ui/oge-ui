@@ -47,7 +47,7 @@ const OGE_FRAMEWORKS =
 const OGE_ANGULAR =
   'Signal inputs, outputs and models; standalone components; zoneless apps supported';
 const OGE_LICENSE =
-  'MIT core suite (grid, tree list, inputs, forms, editor, upload, navigation, layout, overlay); Pivot, Gantt, Scheduler, Kanban, Charts and BPMN are OGE UI Pro';
+  'MIT core suite (grid, tree list, inputs, forms, editor, upload, navigation, layout, overlay); Pivot, Gantt, Scheduler, Kanban, Charts, BPMN and Spreadsheet are OGE UI Pro';
 const OGE_PRICE =
   'Free (MIT); OGE UI Pro $' +
   PRO_PRICE_USD +
@@ -79,7 +79,7 @@ export const COMPETITORS: readonly Competitor[] = [
       'You need grouping, range selection, Excel/PDF export, master-detail or server-side data without buying a license — they are MIT in OGE UI.',
       'You want more than a grid: inputs, forms, rich-text editor, upload, navigation, layout and overlays from the same suite, on the same engine and theme tokens.',
       'You want Angular components written natively with signals rather than a wrapper around a framework-agnostic core.',
-      `You also need a Pivot Grid, Gantt, Scheduler, Kanban or charts: OGE UI Pro covers all six commercial families for $${PRO_PRICE_USD} per developer per year.`,
+      `You also need a Pivot Grid, Gantt, Scheduler, Kanban, charts or an Excel viewer: OGE UI Pro covers all seven commercial families for $${PRO_PRICE_USD} per developer per year.`,
     ],
     rows: [
       [
@@ -198,7 +198,7 @@ export const COMPETITORS: readonly Competitor[] = [
       {
         id: 'ag-grid-price',
         question: 'How does the price compare with AG Grid Enterprise?',
-        answer: `The OGE UI Data Grid costs nothing. AG Grid lists Enterprise at $999 per developer as a perpetual license with one year of updates. OGE UI Pro, needed only for the Pivot Grid, Gantt, Scheduler, Kanban, Charts and BPMN families, is $${PRO_PRICE_USD} per developer per year.`,
+        answer: `The OGE UI Data Grid costs nothing. AG Grid lists Enterprise at $999 per developer as a perpetual license with one year of updates. OGE UI Pro, needed only for the Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN and Spreadsheet families, is $${PRO_PRICE_USD} per developer per year.`,
       },
     ],
     sources: [

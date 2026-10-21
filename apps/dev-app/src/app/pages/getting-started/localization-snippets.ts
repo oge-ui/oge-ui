@@ -311,7 +311,8 @@ providers: [
     messages: ogeMergeMessages(OGE_DEFAULT_GANTT_MESSAGES, tr.gantt),
   }),
   // pivot: provideOgePivotMessages(ogeMergeMessages(OGE_DEFAULT_PIVOT_MESSAGES, tr.pivot))
-  // kanban / bpmn / charts: the same shape with tr.kanban / tr.bpmn / tr.charts
+  // kanban / bpmn / charts / spreadsheet: the same shape with tr.kanban /
+  // tr.bpmn / tr.charts / tr.spreadsheet
 ]
 
 // React: <OgeSchedulerConfigProvider config={{ locale: tr.locale,

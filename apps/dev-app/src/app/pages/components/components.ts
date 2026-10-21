@@ -96,6 +96,7 @@ type FamilyKey =
   | 'editor'
   | 'ai'
   | 'kanban'
+  | 'spreadsheet'
   | 'charts'
   | 'overlay';
 
@@ -719,6 +720,85 @@ interface OrgNode {
                       height="20"
                       rx="4"
                       opacity="0.7"
+                    />
+                  </svg>
+                }
+                @case ('spreadsheet') {
+                  <!-- illustrative sketch; the live viewer renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="spreadsheet"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                  >
+                    <rect
+                      x="10"
+                      y="10"
+                      width="260"
+                      height="100"
+                      rx="6"
+                      stroke-width="1.6"
+                    />
+                    <rect
+                      x="10"
+                      y="10"
+                      width="260"
+                      height="16"
+                      rx="6"
+                      fill="currentColor"
+                      opacity="0.12"
+                      stroke="none"
+                    />
+                    <rect
+                      x="10"
+                      y="10"
+                      width="22"
+                      height="100"
+                      rx="6"
+                      fill="currentColor"
+                      opacity="0.12"
+                      stroke="none"
+                    />
+                    <path
+                      d="M32 26h238M32 42h238M32 58h238M32 74h238M32 90h238"
+                      opacity="0.35"
+                    />
+                    <path
+                      d="M32 26v84M84 26v84M136 26v84M188 26v84M240 26v84"
+                      opacity="0.35"
+                    />
+                    <rect
+                      x="84"
+                      y="42"
+                      width="104"
+                      height="32"
+                      fill="currentColor"
+                      opacity="0.18"
+                      stroke="none"
+                    />
+                    <rect
+                      x="84"
+                      y="42"
+                      width="104"
+                      height="32"
+                      stroke-width="2.4"
+                    />
+                    <rect
+                      x="185"
+                      y="71"
+                      width="6"
+                      height="6"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                    <path
+                      d="M182 26l6 0 0 6z"
+                      fill="currentColor"
+                      stroke="none"
+                      opacity="0.6"
                     />
                   </svg>
                 }
@@ -1590,6 +1670,14 @@ export class ComponentsIndexPage {
       path: '/components/kanban',
       description:
         'Task board with columns, swimlanes and WIP limits: virtualized card lists, polished drag & drop with Escape-cancel, keyboard card moving, built-in dialog and menu.',
+    },
+    {
+      key: 'spreadsheet',
+      name: 'Spreadsheet',
+      icon: 'table',
+      path: '/components/spreadsheet',
+      description:
+        'Shows .xlsx workbooks the way Excel does: widths, fonts, number formats, borders, conditional formats, frozen panes, pictures — measured on Excel, read in the browser.',
     },
     {
       key: 'scheduler',

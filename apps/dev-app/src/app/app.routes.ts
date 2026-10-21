@@ -1386,6 +1386,25 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/spreadsheet',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/spreadsheet/overview').then(
+            (m) => m.SpreadsheetOverviewPage,
+          ),
+        title: 'OGE — Spreadsheet',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/spreadsheet/api').then((m) => m.SpreadsheetApiPage),
+        title: 'OGE — Spreadsheet API',
+      },
+    ],
+  },
+  {
     path: 'components/scheduler',
     children: [
       {

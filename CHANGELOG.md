@@ -7,6 +7,41 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Spreadsheet — new `@oge-ui/spreadsheet`, `@oge-ui/react-spreadsheet`, `@oge-ui/spreadsheet-engine` (commercial, ADR 0005)
+
+- **An Excel viewer that looks like Excel.** `<oge-spreadsheet [source]="file">` /
+  `<OgeSpreadsheet source={file}>` shows `.xlsx` and `.xlsm` workbooks read in
+  the browser by a dependency-free reader. Column widths, row heights and
+  header sizes come from Excel's own font metrics (26 fonts, every size); text
+  fitting, `####`, spill over empty neighbours and General's digit budget were
+  checked against 37,774 Excel samples, number formats against 258 recorded
+  cases; borders, fills (all 17 patterns), gridlines and the selection were
+  diffed against Excel's screen pixel by pixel.
+- **What a workbook carries:** themes and tints, rich text, conditional formats
+  (colour scales, data bars, all twenty icon sets, the value rules), frozen
+  panes, merges, hidden rows and columns, right-to-left sheets, notes with
+  Excel's marker, hyperlinks (sanitised; a cancelable `hyperlinkClick`),
+  AutoFilter buttons, pictures (cropped, rotated, flipped) and dynamic-array
+  spills with their blue frame and greyed follower formulas.
+- **Works like Excel:** the keyboard map (Ctrl+arrows to the data edge, Shift
+  to extend, Shift+F8 add mode, Ctrl+A region then all, Ctrl+Page Up/Down),
+  find with wildcards, the name box (references and defined names), copy as
+  text and Excel HTML, zoom with whole-pixel geometry, the status bar's
+  Average / Count / Sum in the active cell's format, sheet tabs with colours,
+  print of the used range.
+- **Accessible:** a `role="grid"` whose active cell is its
+  `aria-activedescendant`; selections, sheet switches, copies, zoom and find
+  results are announced. Every string is in `OgeSpreadsheetMessages`
+  (templates with ICU plurals), translated in all eleven locale packs.
+- **Safe with untrusted files:** macros are kept and never run (the viewer says
+  so); external links are never fetched; what the reader cannot show as Excel
+  does is listed in `loaded`'s `issues`. A strict CSP needs
+  `img-src 'self' data: blob:`.
+- **One engine, two render layers.** The engine is DOM-free (it runs in Web
+  Workers and Node) and holds the whole viewer — the React component only
+  binds, StrictMode- and SSR-safe. Part of OGE UI Pro, which now covers seven
+  families at the same price.
+
 ## 1.1.5 — 2026-10-19
 
 The AI wave and the motion layer. AI: the grid assistant, smart paste, AI columns, a chat surface and a free MCP server (`@oge-ui/mcp`) for coding assistants. Motion: a shared layout-motion layer drives animated grid rows, expand/collapse, sliding tab ink, overlay exit fades, a drop settle for every pointer drag, calendar and list transitions, and chart data tweens. All of it honours reduced motion. Also in this release: OGE UI Pro license keys, a Russian locale pack, and pricing and comparison pages on the docs site.

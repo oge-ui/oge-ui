@@ -2003,6 +2003,7 @@ export class HomePage {
     '@oge-ui/upload',
     '@oge-ui/editor',
     '@oge-ui/kanban',
+    '@oge-ui/spreadsheet',
     '@oge-ui/charts',
     '@oge-ui/buttons',
     '@oge-ui/inputs',
@@ -2027,12 +2028,14 @@ export class HomePage {
     '@oge-ui/react-scheduler',
     '@oge-ui/react-gantt',
     '@oge-ui/react-kanban',
+    '@oge-ui/react-spreadsheet',
     '@oge-ui/react-charts',
     '@oge-ui/pivot-engine',
     '@oge-ui/bpmn-engine',
     '@oge-ui/scheduler-engine',
     '@oge-ui/gantt-engine',
     '@oge-ui/kanban-engine',
+    '@oge-ui/spreadsheet-engine',
     '@oge-ui/charts-engine',
   ];
 
@@ -2146,6 +2149,12 @@ export class HomePage {
       name: 'Kanban',
       desc: 'Columns, swimlanes and WIP limits with drag & drop and keyboard moving.',
       path: '/components/kanban',
+    },
+    {
+      icon: 'table',
+      name: 'Spreadsheet',
+      desc: 'Shows .xlsx workbooks as Excel does — measured on Excel, read in the browser.',
+      path: '/components/spreadsheet',
     },
     {
       icon: 'calendar',

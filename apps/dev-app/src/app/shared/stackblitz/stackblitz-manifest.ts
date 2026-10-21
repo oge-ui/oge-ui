@@ -394,6 +394,13 @@ export const STACKBLITZ_PACKAGES: Readonly<
     "commercial": true,
     "styles": true
   },
+  "@oge-ui/react-spreadsheet": {
+    "deps": [
+      "@oge-ui/spreadsheet-engine"
+    ],
+    "commercial": true,
+    "styles": true
+  },
   "@oge-ui/react-tabs": {
     "deps": [
       "@oge-ui/behavior",
@@ -437,6 +444,22 @@ export const STACKBLITZ_PACKAGES: Readonly<
     "styles": false
   },
   "@oge-ui/scheduler-engine": {
+    "deps": [
+      "@oge-ui/behavior",
+      "@oge-ui/core"
+    ],
+    "commercial": true,
+    "styles": false
+  },
+  "@oge-ui/spreadsheet": {
+    "deps": [
+      "@oge-ui/core",
+      "@oge-ui/spreadsheet-engine"
+    ],
+    "commercial": true,
+    "styles": false
+  },
+  "@oge-ui/spreadsheet-engine": {
     "deps": [
       "@oge-ui/behavior",
       "@oge-ui/core"

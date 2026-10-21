@@ -34,6 +34,7 @@ const FAMILIES = [
   { name: 'Rich Text Editor', preview: '[data-preview="editor"]' },
   { name: 'AI Assistants', preview: '[data-preview="ai"]' },
   { name: 'Kanban', preview: '[data-preview="kanban"]' },
+  { name: 'Spreadsheet', preview: '[data-preview="spreadsheet"]' },
   { name: 'Charts', preview: '[data-preview="charts"]' },
   { name: 'Overlay', preview: 'oge-button' },
 ] as const;

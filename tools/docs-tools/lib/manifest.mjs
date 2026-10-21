@@ -24,6 +24,17 @@ export const PATHS = {
  */
 export const GUIDE_DIRS = ['getting-started', 'guides', 'ai'];
 
+/**
+ * Package folders that exist on disk but are deliberately not documented yet,
+ * because they are not released yet — `dir` → why, and when that changes. A
+ * package listed here gets no `llms.txt` and does not appear in
+ * `llms-full.txt` (an assistant would otherwise tell users to install a
+ * package npm does not have); the gap report names it as held back instead of
+ * warning that it was forgotten. Move it to `PACKAGES` in the change that
+ * releases it.
+ */
+export const UNRELEASED_PACKAGES = {};
+
 export const SITE_ORIGIN = 'https://www.ogeui.com';
 export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
 
@@ -294,6 +305,29 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'spreadsheet',
+    npm: '@oge-ui/spreadsheet',
+    label: 'Spreadsheet',
+    summary:
+      'Spreadsheet viewer that shows .xlsx workbooks the way Excel does: Excel-measured column widths, row heights, fonts, number formats, borders, fills, conditional formats, frozen panes, merges, pictures, notes and links, with the Excel selection, keyboard map, find, copy and status bar. Dependency-free xlsx reading in the browser; macros are kept and never run.',
+    docsRoot: '/components/spreadsheet',
+    pageDirs: ['spreadsheet'],
+    apiPage: 'apps/dev-app/src/app/pages/spreadsheet/api.ts',
+    tier: 'commercial',
+  },
+  {
+    dir: 'spreadsheet-engine',
+    npm: '@oge-ui/spreadsheet-engine',
+    label: 'Spreadsheet engine',
+    summary:
+      'Framework-free, DOM-free engine both spreadsheet render layers run (it also runs in Web Workers and Node): the workbook model, the dependency-free xlsx reader (ZIP, XML, styles, themes, shared and array formulas, notes, pictures), Excel number formats, Excel-measured font metrics and layout, the paint and render model, the viewer controller and the message catalog. Installed automatically with @oge-ui/spreadsheet or @oge-ui/react-spreadsheet.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    platform: 'agnostic',
+  },
+  {
     dir: 'scheduler',
     npm: '@oge-ui/scheduler',
     label: 'Scheduler',
@@ -504,6 +538,19 @@ export const PACKAGES = [
     docsRoot: '/components/kanban',
     pageDirs: ['react-kanban'],
     apiPage: 'apps/dev-app/src/app/pages/react-kanban/api.ts',
+    tier: 'commercial',
+    platform: 'react',
+  },
+  {
+    dir: 'react/spreadsheet',
+    npm: '@oge-ui/react-spreadsheet',
+    label: 'Spreadsheet (React)',
+    summary:
+      'React spreadsheet viewer that shows .xlsx workbooks the way Excel does: Excel-measured column widths, row heights, fonts, number formats, borders, fills, conditional formats, frozen panes, merges, pictures, notes and links, with the Excel selection, keyboard map, find, copy and status bar — running the same engine and stylesheet as the Angular spreadsheet.',
+    // The React content renders inside the single Spreadsheet routes (ADR 0002).
+    docsRoot: '/components/spreadsheet',
+    pageDirs: ['react-spreadsheet'],
+    apiPage: 'apps/dev-app/src/app/pages/react-spreadsheet/api.ts',
     tier: 'commercial',
     platform: 'react',
   },

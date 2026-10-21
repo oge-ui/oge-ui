@@ -839,6 +839,23 @@ const FAMILIES = [
     },
   },
   {
+    // commercial (ADR 0005): @oge-ui/spreadsheet ↔ @oge-ui/react-spreadsheet,
+    // both thin templates over @oge-ui/spreadsheet-engine's viewer core
+    family: 'spreadsheet',
+    angularApiPage: 'apps/dev-app/src/app/pages/spreadsheet/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-spreadsheet/api.ts',
+    exceptions: {
+      reactOnly: {
+        activesheetchange:
+          'The controlled half of `activeSheet`; Angular’s [(activeSheet)] model is both halves at once.',
+        zoomchange:
+          'The controlled half of `zoom`; Angular’s [(zoom)] model is both halves at once.',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+      },
+    },
+  },
+  {
     // commercial: @oge-ui/bpmn ↔ @oge-ui/react-bpmn, both thin templates over
     // @oge-ui/bpmn-engine's editor core (ADR 0003)
     family: 'bpmn',

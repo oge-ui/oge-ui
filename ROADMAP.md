@@ -2425,3 +2425,145 @@ them, which is exactly the `partial` state this document forbids.
 | PrimeNG `chooseButtonProps` / `uploadButtonProps` / `cancelButtonProps`                                                                                             | PrimeNG   | Skipped | Pass-through prop bags for its own Button. Here the labels are messages and the whole row or toolbar is replaceable through a template, which is strictly more                                                                    |
 | Ant `progress` config, `classNames`, `styles`                                                                                                                       | Ant       | Skipped | Styling escape hatches for a library with no global class names. This suite's `.oge-*` classes are the escape hatch, and the progress visual is `<oge-progress-bar>`                                                              |
 | Ant controlled `fileList`                                                                                                                                           | Ant       | covered | `[(value)]` plus the read-only `files` signal; a fully controlled list would mean re-deriving upload state from outside on every keystroke                                                                                        |
+
+## Spreadsheet (`@oge-ui/spreadsheet`, commercial) — Plan
+
+An Excel-faithful workbook viewer/editor with zero runtime dependencies:
+`@oge-ui/spreadsheet-engine` (framework-free: workbook model, ZIP + SpreadsheetML
+codec, number formats, formula engine, paint model, commands, clipboard codecs,
+keyboard map, messages) under `oge-spreadsheet` and `<OgeSpreadsheet>`.
+Decisions and rationale: [ADR 0005](docs/adr/0005-spreadsheet.md); evidence:
+[`docs/research/spreadsheet-2026-10.md`](docs/research/spreadsheet-2026-10.md).
+
+**References for the parity sweep:** Syncfusion EJ2 Spreadsheet (the only
+Angular-native workbook with a full feature list), Kendo UI Spreadsheet (VPAT,
+RTL), SpreadJS (the feature ceiling), Handsontable (accessibility and clipboard
+behaviour), Excel itself (keyboard map, fill-handle rules, number formats, calc
+semantics) and the WAI-ARIA APG grid pattern. Honest absences: **DevExtreme has
+no spreadsheet** (DevExpress' is ASP.NET-only), **Angular Material, CDK and
+PrimeNG have none**.
+
+**Structural decisions** (ADR 0005): commercial engine package; DOM rendering
+over a renderer-agnostic paint model; every mutation a command on one undo
+stack and one command log (the future Worker transport); opaque passthrough of
+unmodelled parts; Excel semantics as a tested checklist; a consumer of the MIT
+suite for toolbar, menus, dialogs, pickers and the sheet strip.
+
+**Owner direction (2026-10-20, mid-P1).** "It must look exactly as in Excel —
+that is what sets us apart": every visual rule is measured on a real Excel
+(COM-driven captures, pixel diffs of borders, fills, gridlines, selection and
+text positions; `packages/spreadsheet-engine/testing`), never approximated.
+Re-planned with it:
+
+- **Macros** are never run: `vbaProject.bin` is kept as an opaque part, the
+  reader reports `macros-kept` and the viewer shows a message bar. A
+  `macroRequested` hook for hosts that run macros server-side comes later.
+- **Pictures** (drawing anchors, crop, rotation, flips) moved **into P1**;
+  in-cell images follow with them.
+- **Charts** come **right after P1** (P1b), drawn with `@oge-ui/charts` from
+  the kept chart parts — before the editor.
+- **Dynamic arrays:** P1 shows the cached spill values, Excel's blue spill
+  frame and the anchor's formula greyed in the followers' formula bar;
+  recalculating FILTER / SORT / UNIQUE / SEQUENCE moves from P4 to P3.
+
+### Phases
+
+P0 ships nothing (ADR 0005 → Consequences); from P1 on each phase is a
+shippable patch release (the house versioning) and lands with its
+docs/llms/locales/schematics/parity entries. Sizes are rough engineer-weeks —
+estimates, not commitments.
+
+| Phase                                 | Scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Exit gate                                                                                                                                                                                                                                                                                                                                               | Size  |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| **P0 — foundation** (done 2026-10-20) | Engine package scaffold (ADR 0003 shape, LICENSE, lint tags, DOM-free lint rule, license hook); workbook model (sparse rows, interned styles, sheets, names, views, merges, column spans); A1/R1C1 address + range math; column-width/row-height arithmetic (MDW); theme colours + tint; number-format compiler + renderer with the built-in id table, General and Intl-derived locales; date serial math (1900/1904); ZIP reader/writer (CRC-32, stored + deflate, caps) with the TS inflate fallback; **XML pull parser + `_xHHHH_` string escaping** (moved in from P1 when ADR 0005 dropped `DOMParser`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Met: property specs for formats, addresses, XML, ZIP and inflate (zlib as the reference encoder); a 176-row number-format fixture set from Microsoft's documented examples and Excel-derived test data — capturing rows from a real Excel instance moves to P1's golden corpus                                                                          | 2 w   |
+| **P1 — viewer** (done 2026-10-21)     | Release wiring (`release.projects`, the docs manifest, size budgets, the root README, `tools/commercial-families.json`, schematics, the locales slice); SpreadsheetML reader (workbook, sheets, SST + rich runs, styles, theme, cols/rows, merges, hyperlinks, names, views + frozen panes, autofilter state, CF rules, comments as notes, cached values, shared/array/dynamic formulas, drawings with pictures); opaque part capture; `importIssues`; paint model measured on Excel (style resolution, border precedence and pixel placement, dash and pattern anchoring, the 17 pattern masks, text fitting, merges, gridlines, hidden rows/cols, CF colour scales / data bars / icon sets / value rules, zoom with per-index rounding, header sizes); Angular + React render over one engine controller (`OgeSpreadsheetCore`: grid frame, pointer gestures, keyboard map, find, copy, notes, scroll memory): virtualized frozen quadrants, Excel's chrome (name box, formula bar with greyed spill followers, sheet tabs with colours, status bar Average / Count / Sum, zoom slider), multi-range selection, copy (TSV + Excel HTML), find, hyperlinks, notes on hover / Shift+F2, print of the used range, `role="grid"` + live announcements, RTL sheets, forced colours, the macros message bar. Not yet: outline symbols, pinned notes at their VML anchor, print area / titles | Met: the golden corpus opens with Excel-identical geometry (header sizes 187/187, text fitting 37,774 samples, number formats 258/258), borders and fills pixel-diffed against Excel's screen (55,744 / 55,746 and 100%); axe clean in both themes, both layers (e2e); `importIssues` empty on the corpus. Open: an automated 100k-row scroll benchmark | 5–6 w |
+| **P1b — charts** (next)               | Charts drawn with `@oge-ui/charts` from the kept chart parts (bar, line, pie, area, scatter, combo; titles, legends, axes, number formats from the source cells), anchored like pictures; in-cell images; outline symbols; pinned notes at their VML anchor                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Corpus charts match Excel screenshots within tolerance; axe clean                                                                                                                                                                                                                                                                                       | 2–3 w |
+| **P2 — editor**                       | Cell editor (F2/Enter/typing, Alt+Enter, Esc, IME), undo/redo command stack, insert/delete/resize/hide rows + cols with reference and anchor shifting, merge/unmerge, fill handle + autofill (copy, linear, dates, weekday/month, custom lists, Ctrl toggle), Ctrl+D/R/Enter, paste (TSV, Excel HTML with `x:num`/`mso-number-format`, Google Sheets attrs, lossless internal), paste special (values/formats/transpose), clear contents/formats, formatting toolbar (font, size, B/I/U/strike, text + fill colour, borders, align, indent, wrap, merge, number-format presets + custom dialog), sort, autofilter dropdown, freeze panes, context menus, sheet add/rename/delete/reorder/hide/colour, protection honoured (locked cells, sheet protection with hash write), data validation enforcement (list dropdown, whole/decimal/date/textLength), hyperlinks edit, notes edit, locale separators, xlsx writer with passthrough + SST + style dedupe, CSV in/out (guarded), change-log event stream (`cellsChanged` batches with before/after), state API + persistence snapshot (sanitized)                                                                                                                                                                                                                                                                                        | Round-trip gate: every corpus file opens in Excel after a no-op save with no repair and no lost part; keyboard parity checklist e2e; axe clean in edit mode                                                                                                                                                                                             | 6–8 w |
+| **P3 — formulas**                     | Tokenizer + parser (A1/R1C1, `$`, sheet + 3-D refs, whole row/col, names, structured refs parse-only, implicit intersection, precedence incl. unary minus and `%`), dependency graph with range vertices, dirty/topological recalc, SCC cycles + iterative option, volatile set, shared-formula expansion, error values + propagation, coercion + criteria matching, 15-digit rounding, calc modes (auto/manual, F9); dynamic arrays recalculated (spill, `#SPILL!`, FILTER / SORT / UNIQUE / SEQUENCE — moved from P4); function tier 1 (research top 60) and tier 2 (~200: SUMIFS/COUNTIFS/AVERAGEIFS, XLOOKUP/INDEX/MATCH family, text, date, financial PMT/FV/PV/NPV/IRR, statistical, information, logical IFS/SWITCH, SUBTOTAL/AGGREGATE); formula bar with reference colouring, F4 anchor toggle, pointing mode, function autocomplete + signature tooltip; CF `expression`/`cellIs`/colorScale/dataBar/iconSet evaluated; custom-formula validation; cached values written on save                                                                                                                                                                                                                                                                                                                                                                                               | Golden corpus: every cached value equals our evaluation (tolerance 1e-9 relative, 15-digit text compare); cold recalc 100k formulas < 1 s; edit < 16 ms; HyperFormula's published Excel-compatibility checklist passes                                                                                                                                  | 6–8 w |
+| **P4 — depth** (several releases)     | Function tier 3 (300+), Web Worker calc adapter over the command log, sparklines, threaded comments, group/outline editing, find & replace, go-to, split view, page setup + print titles + page breaks, `/export-pdf` (optional `jspdf` peer), names manager, tables (ListObject basics, structured refs evaluated), `@oge-ui/ai` sheet assistant over the public state API, VPAT document                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Per-feature parity rows below flip to covered; VPAT published with the docs                                                                                                                                                                                                                                                                             | 8 w + |
+
+**Not planned:** real-time collaboration (the command log keeps the door open),
+pivot-table authoring (preserved on round-trip only), chart authoring, macro
+execution (`vbaProject.bin` preserved), legacy `.xls`/`.xlsb` (import only if
+demand appears), ODS.
+
+### Feature parity (Syncfusion / Kendo / SpreadJS / Handsontable / Excel)
+
+| Feature                                                       | Phase      | Demand | Notes                                                                                  |
+| ------------------------------------------------------------- | ---------- | ------ | -------------------------------------------------------------------------------------- |
+| Open xlsx/xlsm client-side, no backend                        | P1         | High   | **OGE extra** vs Univer (backend) and DHTMLX (server module)                           |
+| Values, number formats, fonts, fills, borders, alignment      | P1         | High   | paint model; border precedence per Excel                                               |
+| Merged cells, frozen panes, hidden rows/cols, zoom            | P1         | High   | merges work under virtualization                                                       |
+| Rich-text runs, wrapped text, indent, rotation                | P1         | Medium | rotation rendered, not edited until P4                                                 |
+| Multiple sheets, tab colours, hidden sheets                   | P1         | High   | sheet strip on `@oge-ui/tabs`                                                          |
+| Hyperlinks, notes (legacy comments)                           | P1         | Medium | `sanitizeUrl` on every href                                                            |
+| Conditional formatting rendered                               | P1/P3      | Medium | stored `dxf`s applied in P1 where no formula is needed; evaluated in P3                |
+| Excel keyboard parity (navigation, selection)                 | P1         | High   | checklist in the research notes; `aria-keyshortcuts` documented                        |
+| Copy as TSV + Excel HTML                                      | P1         | High   | formula-guarded TSV, `x:num` + `mso-number-format` HTML                                |
+| Find                                                          | P1         | Medium |                                                                                        |
+| Print (CSS)                                                   | P1         | Medium | print area, print titles, fit-to-width via `zoom`                                      |
+| Accessibility: `role="grid"`, SR announcements, VPAT          | P1/P4      | High   | **OGE extra** vs every canvas product; VPAT in P4                                      |
+| RTL sheets, forced colours, reduced motion                    | P1         | Low    | `sheetView@rightToLeft`                                                                |
+| `importIssues` diagnostics, no silent truncation              | P1         | High   | **OGE extra**                                                                          |
+| Cell editing, undo/redo                                       | P2         | High   | one command stack for values, formats and structure                                    |
+| Insert/delete/resize/hide rows + columns                      | P2         | High   | shifts references, merges, CF ranges, validations, names, anchors                      |
+| Fill handle + autofill series, Ctrl+D/R/Enter                 | P2         | Medium | Excel's series rules, custom lists                                                     |
+| Paste from Excel / Sheets with formats; paste special         | P2         | High   | the #1 complaint in the market                                                         |
+| Formatting toolbar + number-format dialog                     | P2         | High   | `layout` toolbar, `inputs` pickers, `forms` dialogs                                    |
+| Sort, autofilter dropdown                                     | P2         | Medium | filter state round-trips (`autoFilter`, `_FilterDatabase`)                             |
+| Protection: locked cells, sheet/workbook protection           | P2         | High   | hashes written per spec; UI honours `locked`/`hidden`                                  |
+| Data validation (list, whole, decimal, date, text length)     | P2         | High   | custom formulas in P3                                                                  |
+| Save xlsx with opaque passthrough                             | P2         | High   | **OGE extra** vs ExcelJS/SheetJS-based competitors                                     |
+| CSV import/export                                             | P2         | Medium | locale separators, formula guard                                                       |
+| Change-log events (`cellsChanged` with before/after)          | P2         | Medium | SOX-style audit trail is the host's to persist                                         |
+| State persistence (view state, sanitized)                     | P2         | Low    | `stateKey` like the grid                                                               |
+| Formula engine, tiers 1–2, formula bar, F4, pointing mode     | P3         | High   |                                                                                        |
+| Calc modes, iterative calc, circular diagnostics              | P3         | Medium |                                                                                        |
+| CF evaluated, custom validation formulas                      | P3         | Medium |                                                                                        |
+| Dynamic arrays: cached spill values, spill frame              | P1 ✓       | Medium | recalculation (FILTER, SORT, UNIQUE, SEQUENCE) in P3                                   |
+| Tier 3 functions                                              | P4         | Medium |                                                                                        |
+| Worker calculation                                            | P4         | Medium | same engine bundle, command-log replay                                                 |
+| Pictures (crop, rotation, flips), charts via `@oge-ui/charts` | P1 ✓ / P1b | High   | charts drawn from the kept chart parts; sparklines in P4                               |
+| Threaded comments, find & replace, go-to, split view          | P4         | Medium |                                                                                        |
+| Group/outline editing, page setup, PDF export                 | P4         | Medium | `jspdf` optional peer, as charts/Gantt                                                 |
+| Names manager, tables + structured references                 | P4         | Low    |                                                                                        |
+| AI sheet assistant                                            | P4         | Low    | `@oge-ui/ai` pattern over the state API                                                |
+| Collaboration, pivot/chart authoring, xls/xlsb, ODS           | —          | Low    | Skipped — preserved on round-trip where applicable                                     |
+| Macros                                                        | P1 ✓       | Medium | kept (`vbaProject.bin`), never run; a message bar says so; `macroRequested` hook later |
+
+### Function tiers
+
+Tier 1 (P3, corpus-backed order): SUM, IF, AVERAGE, VLOOKUP, ROUND, SUBTOTAL,
+CONCATENATE/CONCAT, COUNTIF, AND, OR, OFFSET, SUMIF, INDEX, MATCH, MIN, MAX,
+NOW, TODAY, MONTH, YEAR, LOOKUP, HYPERLINK, INDIRECT, ISNUMBER, ISBLANK,
+COUNT, COUNTA, IFERROR, SUMIFS, COUNTIFS, AVERAGEIF, XLOOKUP, ROUNDUP,
+ROUNDDOWN, ABS, INT, MOD, SUMPRODUCT, TEXT, LEFT, RIGHT, MID, LEN, TRIM, UPPER,
+LOWER, FIND, SEARCH, SUBSTITUTE, DATE, DAY, EOMONTH, DATEDIF, NETWORKDAYS,
+WEEKDAY, ISERROR, NOT, IFS, PMT, RANK. Tier 2 (P3): the remaining math,
+statistical, text, date/time, logical, information, lookup and core financial
+functions (~200 total). Tier 3 (P4): engineering, database, cube-free
+remainder, dynamic-array functions (FILTER, SORT, UNIQUE, SEQUENCE, LET,
+LAMBDA where feasible). The registry is tree-shakable: tier 1 ships in the
+primary entry, `@oge-ui/spreadsheet-engine/functions` adds the rest.
+
+### Acceptance targets
+
+| Target                                           | Value                                   |
+| ------------------------------------------------ | --------------------------------------- |
+| Open 1M-cell xlsx (Worker)                       | < 3 s                                   |
+| First paint after parse                          | < 100 ms                                |
+| Scroll                                           | 60 fps over the full 1,048,576 × 16,384 |
+| Cold recalc, 100k formulas                       | < 1 s                                   |
+| Typical edit (recalc + paint)                    | < 16 ms                                 |
+| Memory per populated cell                        | ≤ ~60 B                                 |
+| Engine bundle (tier 1 functions, codec, painter) | budget set in P1, enforced by CI        |
+
+### Test strategy
+
+Golden-workbook corpus (hand-authored in Excel, committed with their cached
+values) for codec round-trip, number-format text and formula results;
+property-based specs for the format renderer, address math, ZIP and the
+clipboard codecs (the grid's `*.property.spec.ts` idiom); keyboard-parity e2e
+driven from a checklist table; visual regression against Excel screenshots;
+axe on every demo in view and edit mode; a Safari run for the ZIP fallback;
+the existing packaging, docs, parity and llms gates.
