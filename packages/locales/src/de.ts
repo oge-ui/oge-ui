@@ -1706,4 +1706,98 @@ export const de: OgeLocalePack = {
     },
     noData: 'Keine Daten',
   },
+  spreadsheet: {
+    gridLabel: 'Kalkulationstabelle',
+    sheetTabsLabel: 'Blätter',
+    nameBoxLabel: 'Namenfeld',
+    formulaBarLabel: 'Bearbeitungsleiste',
+    selectAllLabel: 'Alles auswählen',
+    loading: 'Arbeitsmappe wird geöffnet…',
+    empty: 'Keine Arbeitsmappe',
+    errors: {
+      'not-xlsx': 'Dies ist keine Excel-Arbeitsmappe (.xlsx, .xlsm).',
+      'encrypted-or-legacy':
+        'Die Arbeitsmappe ist kennwortgeschützt oder liegt im alten .xls-Format vor.',
+      xlsb: 'Excel-Binärarbeitsmappen (.xlsb) können nicht geöffnet werden.',
+      corrupt:
+        'Die Arbeitsmappe ist beschädigt und kann nicht geöffnet werden.',
+      'too-large': 'Die Arbeitsmappe ist zu groß zum Öffnen.',
+      aborted: 'Das Öffnen der Arbeitsmappe wurde abgebrochen.',
+      'fetch-failed': 'Die Arbeitsmappe konnte nicht heruntergeladen werden.',
+    },
+    issues: {
+      'missing-part': 'Ein Teil der Datei fehlt',
+      'malformed-part': 'Ein beschädigter Teil der Datei wurde übersprungen',
+      'invalid-reference': 'Unlesbare Zellbezüge wurden übersprungen',
+      'invalid-style':
+        'Unbekannte Zellformate werden im Standardformat angezeigt',
+      'invalid-shared-string':
+        'Fehlende gemeinsam genutzte Texte werden leer angezeigt',
+      'invalid-value': 'Unlesbare Werte wurden übersprungen',
+      'invalid-sheet-name': 'Blätter mit ungültigen Namen wurden umbenannt',
+      'invalid-defined-name': 'Ungültige definierte Namen wurden entfernt',
+      'overlapping-merge':
+        'Bei überlappenden verbundenen Zellen wurde der Zellverbund aufgehoben',
+      'orphan-shared-formula':
+        'Einige Formeln haben keine Quelle und zeigen nur Werte an',
+      'uncalculated-formulas':
+        'Formeln ohne gespeichertes Ergebnis werden leer angezeigt',
+      'drawing-not-shown': 'Diagramme und Formen werden noch nicht angezeigt',
+      'picture-format-not-shown':
+        'EMF/WMF-Bilder können nicht angezeigt werden',
+      'table-style-not-shown':
+        'Tabellenformatvorlagen werden noch nicht angezeigt',
+      'pivot-style-not-shown':
+        'PivotTable-Formatvorlagen werden noch nicht angezeigt',
+      'extension-not-shown': 'Sparklines werden noch nicht angezeigt',
+      'conditional-format-needs-formulas':
+        'Bedingte Formatierungen mit Formeln werden noch nicht angewendet',
+      'threaded-comments-as-notes':
+        'Kommentarthreads werden als Notizen angezeigt',
+      'split-pane-ignored': 'Das geteilte Fenster wird ungeteilt angezeigt',
+      'external-link':
+        'Verknüpfungen zu anderen Arbeitsmappen bleiben erhalten, werden aber nicht aktualisiert',
+      'macros-kept': 'Makros bleiben erhalten, werden aber nie ausgeführt',
+      truncated: 'Die Arbeitsmappe ist zu groß und wurde nur teilweise geladen',
+      'strict-conformance': 'Strict Open XML-Arbeitsmappe',
+    },
+    issuesSummary:
+      '{count, plural, one {# Element wird nicht wie in Excel angezeigt} other {# Elemente werden nicht wie in Excel angezeigt}}',
+    find: 'Suchen',
+    findPlaceholder: 'Im Blatt suchen',
+    findNext: 'Weitersuchen',
+    findPrevious: 'Vorheriges suchen',
+    matchCase: 'Groß-/Kleinschreibung beachten',
+    matchEntireCell: 'Gesamten Zellinhalt vergleichen',
+    searchWorkbook: 'Alle Blätter durchsuchen',
+    close: 'Schließen',
+    findResult: '{index} von {total}',
+    noMatches: 'Keine Treffer',
+    zoomIn: 'Vergrößern',
+    zoomOut: 'Verkleinern',
+    zoomLabel: 'Zoom {percent} %',
+    copied: '{cells, plural, one {# Zelle kopiert} other {# Zellen kopiert}}',
+    multipleSelectionCopy:
+      'Kopieren ist jeweils nur für einen ausgewählten Bereich möglich',
+    cellAnnouncement: '{address}, {text}',
+    announcementSeparator: ', ',
+    emptyCell: 'leer',
+    hasNote: 'Notiz: {text}',
+    hasNoteBy: 'Notiz von {author}: {text}',
+    hasLink: 'Link zu {target}, Alt+Eingabetaste zum Öffnen',
+    mergedCell: 'verbundene Zellen {range}',
+    hasFormula: 'Formel {formula}',
+    selectionAnnouncement:
+      '{range} ausgewählt, {cells, plural, one {# Zelle} other {# Zellen}}',
+    sheetAnnouncement: 'Blatt {name}, {index} von {total}',
+    notePopupLabel: 'Notiz',
+    macrosNotice:
+      'Diese Arbeitsmappe enthält Makros. Sie bleiben erhalten und werden nie ausgeführt.',
+    statusBarLabel: 'Statusleiste',
+    statusAverage: 'Mittelwert: {value}',
+    statusCount: 'Anzahl: {count}',
+    statusSum: 'Summe: {value}',
+    previousSheets: 'Zu den vorherigen Blättern scrollen',
+    nextSheets: 'Zu den nächsten Blättern scrollen',
+  },
 };

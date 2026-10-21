@@ -1711,4 +1711,96 @@ export const it: OgeLocalePack = {
     },
     noData: 'Nessun dato',
   },
+  spreadsheet: {
+    gridLabel: 'Foglio di calcolo',
+    sheetTabsLabel: 'Fogli',
+    nameBoxLabel: 'Casella Nome',
+    formulaBarLabel: 'Barra della formula',
+    selectAllLabel: 'Seleziona tutto',
+    loading: 'Apertura della cartella di lavoro…',
+    empty: 'Nessuna cartella di lavoro',
+    errors: {
+      'not-xlsx':
+        'Il file non è una cartella di lavoro di Excel (.xlsx, .xlsm).',
+      'encrypted-or-legacy':
+        'La cartella di lavoro è protetta da password o salvata nel vecchio formato .xls.',
+      xlsb: 'Impossibile aprire le cartelle di lavoro binarie (.xlsb).',
+      corrupt: 'La cartella di lavoro è danneggiata e non può essere aperta.',
+      'too-large': 'La cartella di lavoro è troppo grande per essere aperta.',
+      aborted: 'L’apertura della cartella di lavoro è stata annullata.',
+      'fetch-failed': 'Impossibile scaricare la cartella di lavoro.',
+    },
+    issues: {
+      'missing-part': 'Manca una parte del file',
+      'malformed-part': 'Una parte del file è danneggiata ed è stata ignorata',
+      'invalid-reference':
+        'I riferimenti di cella illeggibili sono stati ignorati',
+      'invalid-style':
+        'Le celle con stili sconosciuti appaiono con lo stile predefinito',
+      'invalid-shared-string': 'I testi condivisi mancanti appaiono vuoti',
+      'invalid-value': 'I valori illeggibili sono stati ignorati',
+      'invalid-sheet-name': 'I fogli con nomi non validi sono stati rinominati',
+      'invalid-defined-name': 'I nomi definiti non validi sono stati rimossi',
+      'overlapping-merge': 'Le celle unite sovrapposte sono state separate',
+      'orphan-shared-formula':
+        'Alcune formule non hanno un’origine e mostrano solo i valori',
+      'uncalculated-formulas':
+        'Le formule senza un risultato salvato appaiono vuote',
+      'drawing-not-shown': 'Grafici e forme non sono ancora visualizzati',
+      'picture-format-not-shown':
+        'Le immagini EMF/WMF non possono essere visualizzate',
+      'table-style-not-shown': 'Gli stili tabella non sono ancora visualizzati',
+      'pivot-style-not-shown':
+        'Gli stili tabella pivot non sono ancora visualizzati',
+      'extension-not-shown': 'I grafici sparkline non sono ancora visualizzati',
+      'conditional-format-needs-formulas':
+        'La formattazione condizionale basata su formule non è ancora applicata',
+      'threaded-comments-as-notes': 'I commenti in thread appaiono come note',
+      'split-pane-ignored': 'La divisione della finestra viene ignorata',
+      'external-link':
+        'I collegamenti ad altre cartelle di lavoro vengono mantenuti, ma non aggiornati',
+      'macros-kept': 'Le macro vengono mantenute, ma mai eseguite',
+      truncated:
+        'La cartella di lavoro è troppo grande ed è stata letta solo in parte',
+      'strict-conformance': 'File Strict Open XML',
+    },
+    issuesSummary:
+      '{count, plural, one {# elemento non è visualizzato come in Excel} other {# elementi non sono visualizzati come in Excel}}',
+    find: 'Trova',
+    findPlaceholder: 'Trova nel foglio',
+    findNext: 'Trova successivo',
+    findPrevious: 'Trova precedente',
+    matchCase: 'Maiuscole/minuscole',
+    matchEntireCell: 'Confronta intero contenuto della cella',
+    searchWorkbook: 'Cerca in tutti i fogli',
+    close: 'Chiudi',
+    findResult: '{index} di {total}',
+    noMatches: 'Nessuna corrispondenza',
+    zoomIn: 'Aumenta zoom',
+    zoomOut: 'Riduci zoom',
+    zoomLabel: 'Zoom {percent}%',
+    copied: '{cells, plural, one {# cella copiata} other {# celle copiate}}',
+    multipleSelectionCopy:
+      'È possibile copiare un solo intervallo selezionato alla volta',
+    cellAnnouncement: '{address}, {text}',
+    announcementSeparator: ', ',
+    emptyCell: 'vuota',
+    hasNote: 'Nota: {text}',
+    hasNoteBy: 'Nota di {author}: {text}',
+    hasLink: 'Collegamento a {target}, Alt+Invio per aprirlo',
+    mergedCell: 'celle unite {range}',
+    hasFormula: 'formula {formula}',
+    selectionAnnouncement:
+      'Intervallo {range} selezionato, {cells, plural, one {# cella} other {# celle}}',
+    sheetAnnouncement: 'Foglio {name}, {index} di {total}',
+    notePopupLabel: 'Nota',
+    macrosNotice:
+      'Questa cartella di lavoro contiene macro. Vengono mantenute, ma non vengono mai eseguite.',
+    statusBarLabel: 'Barra di stato',
+    statusAverage: 'Media: {value}',
+    statusCount: 'Conteggio: {count}',
+    statusSum: 'Somma: {value}',
+    previousSheets: 'Scorri verso i fogli precedenti',
+    nextSheets: 'Scorri verso i fogli successivi',
+  },
 };

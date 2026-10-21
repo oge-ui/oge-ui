@@ -43,6 +43,7 @@ import type { OgeGanttMessages } from '@oge-ui/gantt-engine';
 import type { OgeKanbanMessages } from '@oge-ui/kanban-engine';
 import type { OgePivotMessages } from '@oge-ui/pivot-engine';
 import type { OgeSchedulerMessages } from '@oge-ui/scheduler-engine';
+import type { OgeSpreadsheetMessages } from '@oge-ui/spreadsheet-engine';
 
 /**
  * A catalog with every key optional, nested blocks included. Packs are deep
@@ -141,4 +142,6 @@ export interface OgeLocalePack {
   readonly bpmn?: OgeDeepPartial<OgeBpmnMessages>;
   /** Commercial: charts (`provideOgeChartsConfig`). */
   readonly charts?: OgeDeepPartial<OgeChartsMessages>;
+  /** Commercial: spreadsheet viewer (`provideOgeSpreadsheetConfig`). */
+  readonly spreadsheet?: OgeDeepPartial<OgeSpreadsheetMessages>;
 }

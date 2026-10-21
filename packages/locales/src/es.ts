@@ -1708,4 +1708,95 @@ export const es: OgeLocalePack = {
     },
     noData: 'No hay datos',
   },
+  spreadsheet: {
+    gridLabel: 'Hoja de cálculo',
+    sheetTabsLabel: 'Hojas',
+    nameBoxLabel: 'Cuadro de nombres',
+    formulaBarLabel: 'Barra de fórmulas',
+    selectAllLabel: 'Seleccionar todo',
+    loading: 'Abriendo el libro…',
+    empty: 'No hay ningún libro',
+    errors: {
+      'not-xlsx': 'Este archivo no es un libro de Excel (.xlsx, .xlsm).',
+      'encrypted-or-legacy':
+        'El libro está protegido con contraseña o tiene el antiguo formato .xls.',
+      xlsb: 'No se pueden abrir libros binarios de Excel (.xlsb).',
+      corrupt: 'El libro está dañado y no se puede abrir.',
+      'too-large': 'El libro es demasiado grande para abrirlo.',
+      aborted: 'Se canceló la apertura del libro.',
+      'fetch-failed': 'No se pudo descargar el libro.',
+    },
+    issues: {
+      'missing-part': 'Falta una parte del archivo',
+      'malformed-part': 'Se omitió una parte dañada del archivo',
+      'invalid-reference': 'Se omitieron las referencias de celda ilegibles',
+      'invalid-style':
+        'Los estilos de celda desconocidos se muestran con el estilo predeterminado',
+      'invalid-shared-string':
+        'Los textos compartidos que faltan se muestran vacíos',
+      'invalid-value': 'Se omitieron los valores ilegibles',
+      'invalid-sheet-name':
+        'Se cambió el nombre de las hojas con nombres no válidos',
+      'invalid-defined-name': 'Se quitaron los nombres definidos no válidos',
+      'overlapping-merge': 'Se separaron las celdas combinadas superpuestas',
+      'orphan-shared-formula':
+        'Algunas fórmulas no tienen origen y solo muestran valores',
+      'uncalculated-formulas':
+        'Las fórmulas sin resultado guardado se muestran vacías',
+      'drawing-not-shown': 'Los gráficos y las formas aún no se muestran',
+      'picture-format-not-shown': 'Las imágenes EMF/WMF no se pueden mostrar',
+      'table-style-not-shown': 'Los estilos de tabla aún no se muestran',
+      'pivot-style-not-shown':
+        'Los estilos de tabla dinámica aún no se muestran',
+      'extension-not-shown': 'Los minigráficos aún no se muestran',
+      'conditional-format-needs-formulas':
+        'Los formatos condicionales con fórmulas aún no se aplican',
+      'threaded-comments-as-notes':
+        'Los comentarios encadenados se muestran como notas',
+      'split-pane-ignored': 'La ventana dividida se muestra sin dividir',
+      'external-link':
+        'Los vínculos a otros libros se conservan, pero no se actualizan',
+      'macros-kept': 'Las macros se conservan, pero nunca se ejecutan',
+      truncated: 'El libro es demasiado grande y solo se cargó en parte',
+      'strict-conformance': 'Hoja de cálculo Open XML estricta',
+    },
+    issuesSummary:
+      '{count, plural, one {# elemento no se muestra como en Excel} other {# elementos no se muestran como en Excel}}',
+    find: 'Buscar',
+    findPlaceholder: 'Buscar en la hoja',
+    findNext: 'Buscar siguiente',
+    findPrevious: 'Buscar anterior',
+    matchCase: 'Coincidir mayúsculas y minúsculas',
+    matchEntireCell: 'Coincidir con el contenido de toda la celda',
+    searchWorkbook: 'Buscar en todas las hojas',
+    close: 'Cerrar',
+    findResult: '{index} de {total}',
+    noMatches: 'No hay coincidencias',
+    zoomIn: 'Acercar',
+    zoomOut: 'Alejar',
+    zoomLabel: 'Zoom {percent} %',
+    copied: '{cells, plural, one {# celda copiada} other {# celdas copiadas}}',
+    multipleSelectionCopy:
+      'Solo se puede copiar un rango seleccionado a la vez',
+    cellAnnouncement: '{address}, {text}',
+    announcementSeparator: ', ',
+    emptyCell: 'en blanco',
+    hasNote: 'Nota: {text}',
+    hasNoteBy: 'Nota de {author}: {text}',
+    hasLink: 'Vínculo a {target}, Alt+Entrar para abrirlo',
+    mergedCell: 'celdas combinadas {range}',
+    hasFormula: 'fórmula {formula}',
+    selectionAnnouncement:
+      'Rango {range} seleccionado, {cells, plural, one {# celda} other {# celdas}}',
+    sheetAnnouncement: 'Hoja {name}, {index} de {total}',
+    notePopupLabel: 'Nota',
+    macrosNotice:
+      'Este libro contiene macros. Se conservan, pero nunca se ejecutan.',
+    statusBarLabel: 'Barra de estado',
+    statusAverage: 'Promedio: {value}',
+    statusCount: 'Recuento: {count}',
+    statusSum: 'Suma: {value}',
+    previousSheets: 'Desplazarse a las hojas anteriores',
+    nextSheets: 'Desplazarse a las hojas siguientes',
+  },
 };

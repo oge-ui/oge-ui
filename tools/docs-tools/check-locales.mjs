@@ -72,6 +72,7 @@ const SLICES = {
   kanban: 'OGE_DEFAULT_KANBAN_MESSAGES',
   bpmn: 'OGE_DEFAULT_BPMN_MESSAGES',
   charts: 'OGE_DEFAULT_CHARTS_MESSAGES',
+  spreadsheet: 'OGE_DEFAULT_SPREADSHEET_MESSAGES',
 };
 const COMMERCIAL = {
   pivot: '@oge-ui/pivot-engine',
@@ -80,6 +81,7 @@ const COMMERCIAL = {
   kanban: '@oge-ui/kanban-engine',
   bpmn: '@oge-ui/bpmn-engine',
   charts: '@oge-ui/charts-engine',
+  spreadsheet: '@oge-ui/spreadsheet-engine',
 };
 
 const codes = readdirSync(localesSrc)

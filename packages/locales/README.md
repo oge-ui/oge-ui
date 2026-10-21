@@ -66,7 +66,7 @@ document.documentElement.dir = pack().dir; // components follow the page's dir
 ## Commercial families
 
 The MIT umbrellas never depend on the commercial packages, so the pivot,
-scheduler, Gantt, Kanban, BPMN and charts slices go to their own providers —
+scheduler, Gantt, Kanban, BPMN, charts and spreadsheet slices go to their own providers —
 merged over the English catalog with `ogeMergeMessages`, so a key a newer
 release adds stays English rather than going blank:
 

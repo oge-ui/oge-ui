@@ -92,7 +92,8 @@
     "@oge-ui/gantt-engine": "1.1.5",
     "@oge-ui/kanban-engine": "1.1.5",
     "@oge-ui/pivot-engine": "1.1.5",
-    "@oge-ui/scheduler-engine": "1.1.5"
+    "@oge-ui/scheduler-engine": "1.1.5",
+    "@oge-ui/spreadsheet-engine": "1.1.5"
   },
   "peerDependenciesMeta": {
     "@oge-ui/behavior": {
@@ -114,6 +115,9 @@
       "optional": true
     },
     "@oge-ui/scheduler-engine": {
+      "optional": true
+    },
+    "@oge-ui/spreadsheet-engine": {
       "optional": true
     }
   },

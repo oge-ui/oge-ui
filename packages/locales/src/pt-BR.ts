@@ -1702,4 +1702,97 @@ export const ptBR: OgeLocalePack = {
     },
     noData: 'Nenhum dado',
   },
+  spreadsheet: {
+    gridLabel: 'Planilha',
+    sheetTabsLabel: 'Planilhas',
+    nameBoxLabel: 'Caixa de Nome',
+    formulaBarLabel: 'Barra de fórmulas',
+    selectAllLabel: 'Selecionar tudo',
+    loading: 'Abrindo a pasta de trabalho…',
+    empty: 'Nenhuma pasta de trabalho',
+    errors: {
+      'not-xlsx':
+        'Este arquivo não é uma pasta de trabalho do Excel (.xlsx, .xlsm).',
+      'encrypted-or-legacy':
+        'A pasta de trabalho está protegida por senha ou salva no antigo formato .xls.',
+      xlsb: 'Não é possível abrir pastas de trabalho binárias (.xlsb).',
+      corrupt: 'A pasta de trabalho está corrompida e não pode ser aberta.',
+      'too-large': 'A pasta de trabalho é grande demais para ser aberta.',
+      aborted: 'A abertura da pasta de trabalho foi cancelada.',
+      'fetch-failed': 'Não foi possível baixar a pasta de trabalho.',
+    },
+    issues: {
+      'missing-part': 'Falta uma parte do arquivo',
+      'malformed-part': 'Uma parte do arquivo está corrompida e foi ignorada',
+      'invalid-reference': 'Referências de célula ilegíveis foram ignoradas',
+      'invalid-style':
+        'Células com estilos desconhecidos aparecem com o estilo padrão',
+      'invalid-shared-string':
+        'Textos compartilhados ausentes aparecem em branco',
+      'invalid-value': 'Valores ilegíveis foram ignorados',
+      'invalid-sheet-name': 'Planilhas com nomes inválidos foram renomeadas',
+      'invalid-defined-name': 'Nomes definidos inválidos foram removidos',
+      'overlapping-merge': 'Mesclagens sobrepostas foram desfeitas',
+      'orphan-shared-formula':
+        'Algumas fórmulas não têm origem e mostram apenas os valores',
+      'uncalculated-formulas':
+        'Fórmulas sem resultado salvo aparecem em branco',
+      'drawing-not-shown': 'Gráficos e formas ainda não são exibidos',
+      'picture-format-not-shown': 'Imagens EMF/WMF não podem ser exibidas',
+      'table-style-not-shown': 'Estilos de tabela ainda não são exibidos',
+      'pivot-style-not-shown':
+        'Estilos de Tabela Dinâmica ainda não são exibidos',
+      'extension-not-shown': 'Minigráficos ainda não são exibidos',
+      'conditional-format-needs-formulas':
+        'A formatação condicional baseada em fórmulas ainda não é aplicada',
+      'threaded-comments-as-notes':
+        'Comentários encadeados aparecem como anotações',
+      'split-pane-ignored': 'A divisão da janela é ignorada',
+      'external-link':
+        'Links para outras pastas de trabalho são mantidos, mas não atualizados',
+      'macros-kept': 'As macros são mantidas, mas nunca executadas',
+      truncated:
+        'A pasta de trabalho é grande demais e foi lida apenas em parte',
+      'strict-conformance': 'Arquivo Strict Open XML',
+    },
+    issuesSummary:
+      '{count, plural, one {# item não é exibido como no Excel} other {# itens não são exibidos como no Excel}}',
+    find: 'Localizar',
+    findPlaceholder: 'Localizar na planilha',
+    findNext: 'Localizar próximo',
+    findPrevious: 'Localizar anterior',
+    matchCase: 'Diferenciar maiúsculas de minúsculas',
+    matchEntireCell: 'Corresponder ao conteúdo inteiro da célula',
+    searchWorkbook: 'Pesquisar em todas as planilhas',
+    close: 'Fechar',
+    findResult: '{index} de {total}',
+    noMatches: 'Nenhuma correspondência',
+    zoomIn: 'Ampliar',
+    zoomOut: 'Reduzir',
+    zoomLabel: 'Zoom de {percent}%',
+    copied:
+      '{cells, plural, one {# célula copiada} other {# células copiadas}}',
+    multipleSelectionCopy:
+      'Só é possível copiar um intervalo selecionado por vez',
+    cellAnnouncement: '{address}, {text}',
+    announcementSeparator: ', ',
+    emptyCell: 'em branco',
+    hasNote: 'Anotação: {text}',
+    hasNoteBy: 'Anotação de {author}: {text}',
+    hasLink: 'Link para {target}, Alt+Enter para abrir',
+    mergedCell: 'células mescladas {range}',
+    hasFormula: 'fórmula {formula}',
+    selectionAnnouncement:
+      'Intervalo {range} selecionado, {cells, plural, one {# célula} other {# células}}',
+    sheetAnnouncement: 'Planilha {name}, {index} de {total}',
+    notePopupLabel: 'Anotação',
+    macrosNotice:
+      'Esta pasta de trabalho contém macros. Elas são mantidas, mas nunca executadas.',
+    statusBarLabel: 'Barra de status',
+    statusAverage: 'Média: {value}',
+    statusCount: 'Contagem: {count}',
+    statusSum: 'Soma: {value}',
+    previousSheets: 'Rolar para as planilhas anteriores',
+    nextSheets: 'Rolar para as próximas planilhas',
+  },
 };

@@ -1719,4 +1719,104 @@ export const fr: OgeLocalePack = {
     },
     noData: 'Aucune donnée',
   },
+  spreadsheet: {
+    gridLabel: 'Feuille de calcul',
+    sheetTabsLabel: 'Feuilles',
+    nameBoxLabel: 'Zone Nom',
+    formulaBarLabel: 'Barre de formule',
+    selectAllLabel: 'Sélectionner tout',
+    loading: 'Ouverture du classeur…',
+    empty: 'Aucun classeur',
+    errors: {
+      'not-xlsx': 'Ce fichier n’est pas un classeur Excel (.xlsx, .xlsm).',
+      'encrypted-or-legacy':
+        'Le classeur est protégé par mot de passe ou enregistré dans l’ancien format .xls.',
+      xlsb: 'Les classeurs Excel binaires (.xlsb) ne peuvent pas être ouverts.',
+      corrupt: 'Le classeur est endommagé et ne peut pas être ouvert.',
+      'too-large': 'Le classeur est trop volumineux pour être ouvert.',
+      aborted: 'L’ouverture du classeur a été annulée.',
+      'fetch-failed': 'Le classeur n’a pas pu être téléchargé.',
+    },
+    issues: {
+      'missing-part': 'Une partie du fichier est manquante',
+      'malformed-part': 'Une partie endommagée du fichier a été ignorée',
+      'invalid-reference':
+        'Les références de cellule illisibles ont été ignorées',
+      'invalid-style':
+        'Les styles de cellules inconnus s’affichent avec le style par défaut',
+      'invalid-shared-string':
+        'Les textes partagés manquants s’affichent vides',
+      'invalid-value': 'Les valeurs illisibles ont été ignorées',
+      'invalid-sheet-name':
+        'Les feuilles aux noms non valides ont été renommées',
+      'invalid-defined-name': 'Les noms définis non valides ont été supprimés',
+      'overlapping-merge':
+        'Les fusions de cellules qui se chevauchent ont été annulées',
+      'orphan-shared-formula':
+        'Certaines formules n’ont pas de source et n’affichent que leur valeur',
+      'uncalculated-formulas':
+        'Les formules sans résultat enregistré s’affichent vides',
+      'drawing-not-shown':
+        'Les graphiques et les formes ne sont pas encore affichés',
+      'picture-format-not-shown':
+        'Les images EMF/WMF ne peuvent pas être affichées',
+      'table-style-not-shown':
+        'Les styles de tableau ne sont pas encore affichés',
+      'pivot-style-not-shown':
+        'Les styles de tableau croisé dynamique ne sont pas encore affichés',
+      'extension-not-shown':
+        'Les graphiques sparkline ne sont pas encore affichés',
+      'conditional-format-needs-formulas':
+        'Les mises en forme conditionnelles avec formules ne sont pas encore appliquées',
+      'threaded-comments-as-notes':
+        'Les commentaires à thread s’affichent comme des notes',
+      'split-pane-ignored':
+        'La fenêtre fractionnée s’affiche sans fractionnement',
+      'external-link':
+        'Les liaisons vers d’autres classeurs sont conservées mais pas mises à jour',
+      'macros-kept': 'Les macros sont conservées mais jamais exécutées',
+      truncated:
+        'Le classeur est trop volumineux et n’a été chargé qu’en partie',
+      'strict-conformance': 'Feuille de calcul Open XML Strict',
+    },
+    issuesSummary:
+      '{count, plural, one {# élément ne s’affiche pas comme dans Excel} other {# éléments ne s’affichent pas comme dans Excel}}',
+    find: 'Rechercher',
+    findPlaceholder: 'Rechercher dans la feuille',
+    findNext: 'Rechercher le suivant',
+    findPrevious: 'Rechercher le précédent',
+    matchCase: 'Respecter la casse',
+    matchEntireCell: 'Totalité du contenu de la cellule',
+    searchWorkbook: 'Rechercher dans toutes les feuilles',
+    close: 'Fermer',
+    findResult: '{index} sur {total}',
+    noMatches: 'Aucun résultat',
+    zoomIn: 'Zoom avant',
+    zoomOut: 'Zoom arrière',
+    zoomLabel: 'Zoom {percent} %',
+    copied:
+      '{cells, plural, one {# cellule copiée} other {# cellules copiées}}',
+    multipleSelectionCopy:
+      'La copie ne fonctionne que sur une plage sélectionnée à la fois',
+    cellAnnouncement: '{address}, {text}',
+    announcementSeparator: ', ',
+    emptyCell: 'vide',
+    hasNote: 'Note : {text}',
+    hasNoteBy: 'Note de {author} : {text}',
+    hasLink: 'Lien vers {target}, Alt+Entrée pour l’ouvrir',
+    mergedCell: 'cellules fusionnées {range}',
+    hasFormula: 'formule {formula}',
+    selectionAnnouncement:
+      'Plage {range} sélectionnée, {cells, plural, one {# cellule} other {# cellules}}',
+    sheetAnnouncement: 'Feuille {name}, {index} sur {total}',
+    notePopupLabel: 'Note',
+    macrosNotice:
+      'Ce classeur contient des macros. Elles sont conservées mais jamais exécutées.',
+    statusBarLabel: 'Barre d’état',
+    statusAverage: 'Moyenne : {value}',
+    statusCount: 'Nombre : {count}',
+    statusSum: 'Somme : {value}',
+    previousSheets: 'Faire défiler vers les feuilles précédentes',
+    nextSheets: 'Faire défiler vers les feuilles suivantes',
+  },
 };
