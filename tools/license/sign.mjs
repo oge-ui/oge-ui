@@ -19,6 +19,7 @@ const FAMILIES = [
   'gantt',
   'kanban',
   'charts',
+  'spreadsheet',
 ];
 
 const b64url = (buffer) => Buffer.from(buffer).toString('base64url');

@@ -697,7 +697,7 @@ export function ogeCheckLicense(family: OgeCommercialFamily): void;
 export type OgeColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl';
 
 // @public
-export type OgeCommercialFamily = 'pivot' | 'bpmn' | 'scheduler' | 'gantt' | 'kanban' | 'charts';
+export type OgeCommercialFamily = 'pivot' | 'bpmn' | 'scheduler' | 'gantt' | 'kanban' | 'charts' | 'spreadsheet';
 
 // @public
 export function ogeConvertWallClock(wall: Date, from: string | undefined, to: string | undefined): Date;

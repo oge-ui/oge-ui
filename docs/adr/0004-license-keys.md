@@ -4,6 +4,8 @@
 - **Date:** 2026-10-10
 - **Decided by:** product owner (payment provider, pricing model, enforcement level, price, packaging), implementation by the maintainers
 - **Related:** ADR 0003 (commercial engine packages), `docs/ARCHITECTURE.md` → Licensing
+- **Amended by:** ADR 0005 (2026-10-20) — the bundle covers a seventh family,
+  the spreadsheet, at the same price
 
 ## Context
 

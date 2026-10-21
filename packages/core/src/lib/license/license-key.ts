@@ -9,9 +9,15 @@
  * with the private half kept outside the repository.
  */
 
-/** The six source-available families a Pro license covers. */
+/** The seven source-available families a Pro license covers. */
 export type OgeCommercialFamily =
-  'pivot' | 'bpmn' | 'scheduler' | 'gantt' | 'kanban' | 'charts';
+  | 'pivot'
+  | 'bpmn'
+  | 'scheduler'
+  | 'gantt'
+  | 'kanban'
+  | 'charts'
+  | 'spreadsheet';
 
 /** What a license key states — the decoded payload. */
 export interface OgeLicenseInfo {
@@ -49,6 +55,7 @@ const FAMILIES: readonly string[] = [
   'gantt',
   'kanban',
   'charts',
+  'spreadsheet',
 ];
 
 /** base64url → bytes, or `null` for anything that is not base64url. */

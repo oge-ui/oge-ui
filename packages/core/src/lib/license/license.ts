@@ -1,7 +1,7 @@
 /**
  * OGE UI Pro license check — the runtime half.
  *
- * The six commercial families call {@link ogeCheckLicense} when a component
+ * The seven commercial families call {@link ogeCheckLicense} when a component
  * starts. Without a valid key on a production host the component still works
  * in full; the page gets one console warning per family and a single small
  * "unlicensed" link pinned to the corner. Development hosts (localhost,
