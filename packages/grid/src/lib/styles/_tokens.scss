@@ -203,6 +203,49 @@
   /* heatmap / map colour scale ends (W8c) */
   --oge-chart-heat-low: #e0e7ff;
   --oge-chart-heat-high: #4338ca;
+  /* spreadsheet (ADR 0005): the sheet itself looks as in Excel in every
+     theme — white cells, Excel's gridline grey and green selection, measured
+     on screen in Excel 16.0 — and the chrome around it follows the theme */
+  --oge-spreadsheet-sheet-bg: #ffffff;
+  --oge-spreadsheet-sheet-fg: #444444;
+  --oge-spreadsheet-gridline: #e0e0e0;
+  --oge-spreadsheet-accent: #217346;
+  --oge-spreadsheet-accent-fg: #ffffff;
+  --oge-spreadsheet-freeze-line: #9b9b9b;
+  --oge-spreadsheet-selection-overlay: rgba(0, 0, 0, 0.22);
+  --oge-spreadsheet-spill: #326ac7;
+  --oge-spreadsheet-spill-shadow: 0 0 8px rgba(0, 0, 0, 0.17);
+  --oge-spreadsheet-note-marker: #ff0000;
+  --oge-spreadsheet-note-bg: #ffffe1;
+  --oge-spreadsheet-note-fg: #000000;
+  --oge-spreadsheet-note-border: #000000;
+  --oge-spreadsheet-note-shadow: 2px 2px 3px rgba(0, 0, 0, 0.35);
+  --oge-spreadsheet-filter-bg: #ffffff;
+  --oge-spreadsheet-filter-border: #a6a6a6;
+  --oge-spreadsheet-filter-fg: #444444;
+  --oge-spreadsheet-chrome-bg: #f3f3f3;
+  --oge-spreadsheet-chrome-fg: #262626;
+  --oge-spreadsheet-status-bg: #f3f3f3;
+  --oge-spreadsheet-muted-fg: #6e6e6e;
+  --oge-spreadsheet-field-bg: #ffffff;
+  --oge-spreadsheet-field-border: #c6c6c6;
+  --oge-spreadsheet-field-fg: #262626;
+  --oge-spreadsheet-header-bg: #f5f5f5;
+  --oge-spreadsheet-header-fg: #444444;
+  --oge-spreadsheet-header-line: #bdbdbd;
+  --oge-spreadsheet-header-separator-from: #f0f0f0;
+  --oge-spreadsheet-header-separator-to: #d0d0d0;
+  --oge-spreadsheet-header-selected-bg: #d2d2d2;
+  --oge-spreadsheet-header-selected-fg: #217346;
+  --oge-spreadsheet-header-selected-separator: #ababab;
+  --oge-spreadsheet-corner-mark: #b9b9b9;
+  --oge-spreadsheet-tab-strip-bg: #f3f3f3;
+  --oge-spreadsheet-tab-bg: #e8e8e8;
+  --oge-spreadsheet-tab-fg: #262626;
+  --oge-spreadsheet-tab-separator: #bdbdbd;
+  --oge-spreadsheet-tab-active-bg: #ffffff;
+  --oge-spreadsheet-tab-active-fg: #217346;
+  --oge-spreadsheet-tab-colored-fg: #000000;
 }
 
 // Tokens computed from other tokens. Keep this list in sync with the

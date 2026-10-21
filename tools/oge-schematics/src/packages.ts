@@ -63,6 +63,12 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-kanban [dataSource]="cards" columnExpr="status" titleExpr="title" [columns]="cols" />` — field mapping via `keyExpr`/`columnExpr`/`orderExpr`/`swimlaneExpr`, drag with Escape-cancel, Ctrl+Arrow keyboard moving, cancelable `cardMoving`-style events, built-in dialog/menu/toolbar',
     },
   ],
+  '@oge-ui/spreadsheet': [
+    {
+      need: 'show an Excel workbook (.xlsx / .xlsm) the way Excel does — read-only viewer',
+      use: '`<oge-spreadsheet [source]="fileOrUrl" (loaded)="issues = $event.issues" />` — `source` takes a URL, bytes or a `File`; two-way `[(activeSheet)]` / `[(zoom)]`, `goTo()`, `find()`, `copy()`, `print()`; Excel keyboard map, find bar, status-bar sums; macros are kept and never run; strict CSP needs `img-src data: blob:`',
+    },
+  ],
   '@oge-ui/buttons': [
     {
       need: 'button, async action button',
@@ -256,6 +262,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/scheduler',
   '@oge-ui/gantt',
   '@oge-ui/kanban',
+  '@oge-ui/spreadsheet',
   '@oge-ui/charts',
   '@oge-ui/inputs',
   '@oge-ui/buttons',

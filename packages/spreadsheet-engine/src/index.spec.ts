@@ -1,0 +1,214 @@
+import * as engine from './index';
+
+// The barrel is the render layers' whole import surface: an export that
+// quietly disappears breaks the Angular or the React spreadsheet without
+// failing one of the engine's own specs. Guard every value it exports.
+describe('@oge-ui/spreadsheet-engine barrel', () => {
+  it.each([
+    'OGE_CELL_ERROR_CODES',
+    'OGE_DEFAULT_BASE_COLUMN_WIDTH',
+    'OGE_DEFAULT_CELL_STYLE',
+    'OGE_DEFAULT_FONT',
+    'OGE_DEFAULT_MAX_DIGIT_WIDTH',
+    'OGE_DEFAULT_ROW_HEIGHT_POINTS',
+    'OGE_DEFAULT_SHEET_FORMAT',
+    'OGE_DEFAULT_SHEET_VIEW',
+    'OGE_DEFAULT_SPREADSHEET_CONFIG',
+    'OGE_DEFAULT_SPREADSHEET_MESSAGES',
+    'OGE_DEFINED_NAME_MAX_LENGTH',
+    'OGE_EN_US_FORMAT_LOCALE',
+    'OGE_ESTIMATING_MEASURER',
+    'OGE_GENERAL_MAX_CHARS',
+    'OGE_ICON_SETS',
+    'OGE_INDEXED_COLORS',
+    'OGE_MAX_DATE_SERIAL',
+    'OGE_OFFICE_THEME_COLORS',
+    'OGE_SHEET_MAX_COLUMNS',
+    'OGE_SHEET_MAX_ROWS',
+    'OGE_SHEET_NAME_MAX_LENGTH',
+    'OGE_THEME_COLOR_SLOTS',
+    'OgeAxis',
+    'OgeConditionalFormatter',
+    'OgeObjectUrls',
+    'OgeSheetLayout',
+    'OgeSpreadsheetCore',
+    'OgeStyleRegistry',
+    'OgeStyleResolver',
+    'OgeWorkbook',
+    'OgeWorksheet',
+    'OgeXlsxError',
+    'compileOgeNumberFormat',
+    'createOgeWorkbook',
+    'createPlainSpreadsheetReactivity',
+    'formatOgeCellAddress',
+    'formatOgeCellValue',
+    'formatOgeGeneral',
+    'formatOgeR1C1Address',
+    'formatOgeRangeAddress',
+    'isOgeCellEmpty',
+    'isOgeCellError',
+    'isOgeCellInSheet',
+    'isOgeDateFormat',
+    'isOgeRichText',
+    'ogeApplyTint',
+    'ogeBorderRank',
+    'ogeBorderStrokes',
+    'ogeBuiltinNumberFormat',
+    'ogeCellAt',
+    'ogeCellBox',
+    'ogeCellDisplay',
+    'ogeCellError',
+    'ogeCellKey',
+    'ogeCellRange',
+    'ogeCellSelection',
+    'ogeCellText',
+    'ogeCellValueType',
+    'ogeCheckSpreadsheetLicense',
+    'ogeCivilFromDays',
+    'ogeColumnCharactersToWidth',
+    'ogeColumnIndex',
+    'ogeColumnName',
+    'ogeColumnPadding',
+    'ogeColumnWidthToCharacters',
+    'ogeColumnWidthToPixels',
+    'ogeConditionalConstant',
+    'ogeConditionalRuleSupported',
+    'ogeCopyRange',
+    'ogeCreateCanvasMeasurer',
+    'ogeCurrentRegion',
+    'ogeDataEdge',
+    'ogeDatePartsToSerial',
+    'ogeDateToSerial',
+    'ogeDaysFromCivil',
+    'ogeDefaultColumnWidthPixels',
+    'ogeDisplayFormula',
+    'ogeExpandToMerges',
+    'ogeFetchWorkbook',
+    'ogeFindAll',
+    'ogeFindPattern',
+    'ogeFontCss',
+    'ogeFontDescent',
+    'ogeFontFamily',
+    'ogeFontLine',
+    'ogeFontMetrics',
+    'ogeFontPixelSize',
+    'ogeFormatLocale',
+    'ogeGridHeaderAt',
+    'ogeGridPoint',
+    'ogeGridView',
+    'ogeGridlinePath',
+    'ogeHasFontMetrics',
+    'ogeHashFill',
+    'ogeHeaderCells',
+    'ogeHeaderStrips',
+    'ogeIconParts',
+    'ogeIndentPixels',
+    'ogeLastCell',
+    'ogeLcidToLocaleTag',
+    'ogeLineTop',
+    'ogeMoveCell',
+    'ogeNoteBoxes',
+    'ogeOffsetCellAddress',
+    'ogeOpenLink',
+    'ogeOwnerCell',
+    'ogePaintWindow',
+    'ogePanePictures',
+    'ogePaneStyle',
+    'ogePatternTile',
+    'ogePixelsToColumnCharacters',
+    'ogePixelsToColumnWidth',
+    'ogePixelsToPoints',
+    'ogePlacePictures',
+    'ogePointerCell',
+    'ogePointsToPixels',
+    'ogePrintSheetTable',
+    'ogePrintTable',
+    'ogeQuoteSheetName',
+    'ogeRangeBoundingBox',
+    'ogeRangeBox',
+    'ogeRangeContains',
+    'ogeRangeContainsRange',
+    'ogeRangeFromCorners',
+    'ogeRangeIntersection',
+    'ogeRangeSize',
+    'ogeRangesIntersect',
+    'ogeRenderPane',
+    'ogeRevealScroll',
+    'ogeRichText',
+    'ogeRichTextToString',
+    'ogeScrollToCell',
+    'ogeSelectionContains',
+    'ogeSelectionShapes',
+    'ogeSelectionSummary',
+    'ogeSerialToDate',
+    'ogeSerialToDateParts',
+    'ogeSerialWeekday',
+    'ogeSheetHeaders',
+    'ogeSheetNameNeedsQuotes',
+    'ogeShiftFormula',
+    'ogeSliderToZoom',
+    'ogeSpanRange',
+    'ogeTabKeyTarget',
+    'ogeTextMargin',
+    'ogeViewportPanes',
+    'ogeWrapText',
+    'ogeWriteClipboard',
+    'ogeZoomFont',
+    'ogeZoomOffset',
+    'ogeZoomPaint',
+    'ogeZoomPictures',
+    'ogeZoomToSlider',
+    'parseOgeCellAddress',
+    'parseOgeCellErrorCode',
+    'parseOgeR1C1Address',
+    'parseOgeRangeAddress',
+    'readOgeXlsx',
+    'readOgeXlsxSync',
+    'resolveOgeColor',
+    'resolveOgeSpreadsheetConfig',
+    'resolveOgeSpreadsheetMessages',
+    'validateOgeDefinedName',
+    'validateOgeSheetName',
+  ])('exports %s', (name) => {
+    expect((engine as Record<string, unknown>)[name]).toBeDefined();
+  });
+
+  it('exports nothing it does not guard', () => {
+    // a new export lands in the list above in the same change
+    expect(Object.keys(engine)).toHaveLength(164);
+  });
+
+  it('keeps the internal ZIP and XML layers out of the public surface', () => {
+    for (const internal of [
+      'parseOgeXml',
+      'readOgeZip',
+      'writeOgeZip',
+      'ogeInflateRaw',
+      'ogeCrc32',
+    ]) {
+      expect((engine as Record<string, unknown>)[internal]).toBeUndefined();
+    }
+  });
+
+  it('checks the spreadsheet family license through core', () => {
+    // a test runtime is a development host: the check returns quietly
+    expect(() => engine.ogeCheckSpreadsheetLicense()).not.toThrow();
+  });
+
+  it('works end to end: a workbook, a styled cell and its display text', () => {
+    const workbook = engine.createOgeWorkbook();
+    const sheet = workbook.sheets[0];
+    const style = workbook.styles.intern({ numberFormat: '#,##0.00 "TL"' });
+    sheet.setCell(0, 0, { value: 1234.5, style });
+    const cell = sheet.getCell(0, 0);
+    const format = workbook.styles.get(cell?.style).numberFormat ?? 'General';
+    const shown = engine.formatOgeCellValue(cell?.value as number, format, {
+      locale: engine.ogeFormatLocale('tr-TR'),
+    });
+    expect(shown.text).toBe('1.234,50 TL');
+    const range = engine.parseOgeRangeAddress("'Satış 2026'!b2:d9");
+    expect(range && engine.formatOgeRangeAddress(range)).toBe(
+      "'Satış 2026'!B2:D9",
+    );
+  });
+});

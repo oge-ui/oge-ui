@@ -130,6 +130,7 @@ export default [
                 'scope:kanban-engine',
                 'scope:bpmn-engine',
                 'scope:charts-engine',
+                'scope:spreadsheet-engine',
               ],
             },
             {
@@ -497,6 +498,38 @@ export default [
               ],
             },
             {
+              // the commercial spreadsheet engine (ADR 0005): workbook model,
+              // xlsx codec, number formats and later the formula engine and
+              // paint model. Framework-free and DOM-free (it runs in Workers);
+              // it may take the MIT substrate, never the reverse
+              sourceTag: 'scope:spreadsheet-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:spreadsheet-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the commercial spreadsheet (Angular): a template over the engine
+              // package, core for the live config — nothing else
+              sourceTag: 'scope:spreadsheet',
+              onlyDependOnLibsWithTags: [
+                'scope:spreadsheet',
+                'scope:spreadsheet-engine',
+                'scope:core',
+              ],
+            },
+            {
+              // the commercial spreadsheet (React): the same engine as the
+              // Angular package, and nothing else — config, messages and every
+              // decision come from the engine (ADR 0003)
+              sourceTag: 'scope:react-spreadsheet',
+              onlyDependOnLibsWithTags: [
+                'scope:react-spreadsheet',
+                'scope:spreadsheet-engine',
+              ],
+            },
+            {
               // the React kanban mirrors the Angular package's edges: the card
               // dialog is the React form, the modal comes from react-overlay
               sourceTag: 'scope:react-kanban',
@@ -743,6 +776,9 @@ export default [
                 'scope:react-scheduler',
                 'scope:behavior',
                 'scope:kanban-engine',
+                'scope:spreadsheet-engine',
+                'scope:spreadsheet',
+                'scope:react-spreadsheet',
                 'scope:react-charts',
                 'scope:react-pivot',
                 'scope:charts-engine',

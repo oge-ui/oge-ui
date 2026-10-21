@@ -1,0 +1,750 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The sheet is drawn the way Excel draws it (numbers measured on screen in
+// Excel 16.0 — see the engine's `draw.ts`, `render.ts` and `viewport.ts`):
+// the geometry, gridlines, borders, fills and the selection come from the
+// engine's render model in whole pixels; this sheet only colours them.
+
+.oge-spreadsheet {
+  @include tokens.core-tokens;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--oge-spreadsheet-header-line);
+  background: var(--oge-spreadsheet-chrome-bg);
+  color: var(--oge-spreadsheet-chrome-fg);
+  font:
+    12px / 1.4 'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+
+  // ── the message bar (macros kept, never run) ──
+  .oge-spreadsheet-message-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: var(--oge-warning-soft);
+    color: var(--oge-spreadsheet-chrome-fg);
+    border-block-end: 1px solid var(--oge-spreadsheet-header-line);
+  }
+
+  .oge-spreadsheet-message-text {
+    flex: 1;
+  }
+
+  // ── name box and formula bar ──
+  .oge-spreadsheet-formula-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding: 5px 8px;
+    border-block-end: 1px solid var(--oge-spreadsheet-header-line);
+  }
+
+  .oge-spreadsheet-name-box,
+  .oge-spreadsheet-formula {
+    box-sizing: border-box;
+    min-height: 26px;
+    border: 1px solid var(--oge-spreadsheet-field-border);
+    border-radius: 4px;
+    background: var(--oge-spreadsheet-field-bg);
+    color: var(--oge-spreadsheet-field-fg);
+    font: inherit;
+    font-size: 13px;
+  }
+
+  .oge-spreadsheet-name-box {
+    flex: 0 0 102px;
+    width: 102px;
+    padding: 0 6px;
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true);
+    }
+  }
+
+  .oge-spreadsheet-fx {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    color: var(--oge-spreadsheet-muted-fg);
+    font:
+      italic 600 14px / 1 Cambria,
+      Georgia,
+      serif;
+  }
+
+  .oge-spreadsheet-formula {
+    flex: 1;
+    min-width: 0;
+    padding: 3px 8px;
+    overflow: hidden;
+    white-space: pre;
+    text-overflow: ellipsis;
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true);
+    }
+  }
+
+  .oge-spreadsheet-formula-ghost {
+    color: var(--oge-spreadsheet-muted-fg);
+  }
+
+  // ── the grid ──
+  .oge-spreadsheet-body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+  }
+
+  .oge-spreadsheet-grid {
+    @include tokens.scrollbar;
+
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    background: var(--oge-spreadsheet-sheet-bg);
+    outline: none;
+    // the drawing is in whole pixels; let nothing smooth it
+    contain: strict;
+    touch-action: pan-x pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true, $width: 2px);
+    }
+  }
+
+  .oge-spreadsheet-sizer {
+    display: grid;
+    position: relative;
+  }
+
+  .oge-spreadsheet-pane {
+    position: relative;
+    overflow: hidden;
+    background: var(--oge-spreadsheet-sheet-bg);
+    z-index: 1;
+  }
+
+  // frozen panes: the freeze line replaces the last gridline they draw, so
+  // it paints over the pane's content
+  .oge-spreadsheet-pane[data-pane='top']::after,
+  .oge-spreadsheet-pane[data-pane='left']::after,
+  .oge-spreadsheet-pane[data-pane='corner']::after,
+  .oge-spreadsheet-headers-frozen::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .oge-spreadsheet-pane[data-pane='top']::after,
+  .oge-spreadsheet-row-headers.oge-spreadsheet-headers-frozen::after {
+    inset: auto 0 0;
+    height: 1px;
+    background: var(--oge-spreadsheet-freeze-line);
+  }
+
+  .oge-spreadsheet-pane[data-pane='left']::after,
+  .oge-spreadsheet-column-headers.oge-spreadsheet-headers-frozen::after {
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: 1px;
+    background: var(--oge-spreadsheet-freeze-line);
+  }
+
+  .oge-spreadsheet-pane[data-pane='corner']::after {
+    inset: 0;
+    box-shadow:
+      inset 0 -1px 0 var(--oge-spreadsheet-freeze-line),
+      inset -1px 0 0 var(--oge-spreadsheet-freeze-line);
+  }
+
+  .oge-spreadsheet-pane-flip {
+    position: absolute;
+    inset: 0;
+  }
+
+  .oge-spreadsheet-layer {
+    position: absolute;
+    inset-block-start: 0;
+    left: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .oge-spreadsheet-gridlines {
+    fill: none;
+    stroke: var(--oge-spreadsheet-gridline);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+  }
+
+  .oge-spreadsheet-fill,
+  .oge-spreadsheet-underline,
+  .oge-spreadsheet-clip,
+  .oge-spreadsheet-data-bar,
+  .oge-spreadsheet-note-mark,
+  .oge-spreadsheet-icon,
+  .oge-spreadsheet-filter-button,
+  .oge-spreadsheet-picture,
+  .oge-spreadsheet-selection-frame,
+  .oge-spreadsheet-selection-inner,
+  .oge-spreadsheet-selection-active,
+  .oge-spreadsheet-selection-moat,
+  .oge-spreadsheet-selection-handle,
+  .oge-spreadsheet-spill-frame {
+    position: absolute;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .oge-spreadsheet-clip {
+    overflow: hidden;
+  }
+
+  .oge-spreadsheet-text {
+    // a line box as tall as the font's row; the text is not selectable
+    text-rendering: optimizeLegibility;
+    font-kerning: normal;
+    > span {
+      white-space: pre;
+    }
+  }
+
+  .oge-spreadsheet-repeat {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .oge-spreadsheet-note-mark {
+    overflow: visible;
+    fill: var(--oge-spreadsheet-note-marker);
+  }
+
+  .oge-spreadsheet-filter-button {
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--oge-spreadsheet-filter-border);
+    border-radius: 2px;
+    background: var(--oge-spreadsheet-filter-bg);
+    color: var(--oge-spreadsheet-filter-fg);
+
+    svg {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+  }
+
+  // ── selection (Excel's: 22% overlay, 2 px green border, white inner line, fill handle) ──
+  .oge-spreadsheet-selection-overlay {
+    fill: var(--oge-spreadsheet-selection-overlay);
+    fill-rule: nonzero;
+    shape-rendering: crispEdges;
+  }
+
+  .oge-spreadsheet-selection-frame {
+    border: 2px solid var(--oge-spreadsheet-accent);
+  }
+
+  // a dynamic array's spill range: Excel's thin blue frame and soft shadow
+  .oge-spreadsheet-spill-frame {
+    border: 1px solid var(--oge-spreadsheet-spill);
+    box-shadow: var(--oge-spreadsheet-spill-shadow);
+  }
+
+  .oge-spreadsheet-selection-inner {
+    border: 1px solid var(--oge-spreadsheet-sheet-bg);
+  }
+
+  .oge-spreadsheet-selection-active {
+    border: 1px solid var(--oge-spreadsheet-accent);
+  }
+
+  .oge-spreadsheet-selection-moat {
+    background: var(--oge-spreadsheet-sheet-bg);
+  }
+
+  .oge-spreadsheet-selection-handle {
+    background: var(--oge-spreadsheet-accent);
+  }
+
+  .oge-spreadsheet-picture {
+    overflow: hidden;
+
+    img {
+      position: absolute;
+      max-width: none;
+      user-select: none;
+    }
+  }
+
+  // ── headers ──
+  .oge-spreadsheet-column-headers,
+  .oge-spreadsheet-row-headers {
+    position: relative;
+    overflow: hidden;
+    background: var(--oge-spreadsheet-header-bg);
+    color: var(--oge-spreadsheet-header-fg);
+  }
+
+  // the line between headers and cells
+  .oge-spreadsheet-column-headers {
+    box-shadow: inset 0 -1px 0 var(--oge-spreadsheet-header-line);
+  }
+
+  .oge-spreadsheet-row-headers {
+    box-shadow: inset -1px 0 0 var(--oge-spreadsheet-header-line);
+  }
+
+  .oge-spreadsheet-column-header,
+  .oge-spreadsheet-row-header {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: default;
+    white-space: nowrap;
+  }
+
+  .oge-spreadsheet-column-header {
+    inset-block: 0;
+    // each header's last pixel: a separator darkening toward the cells
+    background: linear-gradient(
+        to bottom,
+        var(--oge-spreadsheet-header-separator-from),
+        var(--oge-spreadsheet-header-separator-to)
+      )
+      right / 1px calc(100% - 1px) no-repeat;
+  }
+
+  // row numbers sit at the bottom of tall rows, like a bottom-aligned cell
+  .oge-spreadsheet-row-header {
+    align-items: flex-end;
+    inset-inline: 0;
+    background: linear-gradient(
+        to right,
+        var(--oge-spreadsheet-header-separator-from),
+        var(--oge-spreadsheet-header-separator-to)
+      )
+      bottom / calc(100% - 1px) 1px no-repeat;
+  }
+
+  // the selection's rows and columns: lighter, with a 2 px green edge toward the cells
+  .oge-spreadsheet-header-selected {
+    background-color: var(--oge-spreadsheet-header-selected-bg);
+    background-image: linear-gradient(
+      var(--oge-spreadsheet-header-selected-separator),
+      var(--oge-spreadsheet-header-selected-separator)
+    );
+    color: var(--oge-spreadsheet-header-selected-fg);
+  }
+
+  .oge-spreadsheet-column-header.oge-spreadsheet-header-selected {
+    box-shadow: inset 0 -2px 0 var(--oge-spreadsheet-accent);
+  }
+
+  .oge-spreadsheet-row-header.oge-spreadsheet-header-selected {
+    box-shadow: inset -2px 0 0 var(--oge-spreadsheet-accent);
+  }
+
+  // a whole row or column: green, white label
+  .oge-spreadsheet-header-full {
+    background: var(--oge-spreadsheet-accent);
+    color: var(--oge-spreadsheet-accent-fg);
+  }
+
+  .oge-spreadsheet-header-label {
+    display: inline-block;
+    pointer-events: none;
+  }
+
+  // the freeze line runs through the headers too (the ::after rules above)
+
+  .oge-spreadsheet-select-all {
+    position: relative;
+    box-sizing: border-box;
+    background: var(--oge-spreadsheet-header-bg);
+    box-shadow:
+      inset 0 -1px 0 var(--oge-spreadsheet-header-line),
+      inset -1px 0 0 var(--oge-spreadsheet-header-line);
+    cursor: default;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-inline-end: 3px;
+      inset-block-end: 3px;
+      width: 45%;
+      height: 70%;
+      max-width: 12px;
+      max-height: 12px;
+      background: var(--oge-spreadsheet-corner-mark);
+      clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    }
+
+    &:hover::after {
+      background: var(--oge-spreadsheet-header-fg);
+    }
+  }
+
+  // right-to-left sheets: the panes are mirrored, their text is not
+  .oge-spreadsheet-grid-rtl {
+    .oge-spreadsheet-pane-flip {
+      transform: scaleX(-1);
+    }
+
+    .oge-spreadsheet-text,
+    .oge-spreadsheet-header-label,
+    .oge-spreadsheet-icon,
+    .oge-spreadsheet-filter-button svg {
+      transform: scaleX(-1);
+    }
+
+    .oge-spreadsheet-select-all::after {
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+    }
+  }
+
+  // assistive tech's active cell: in the accessibility tree, not on screen
+  .oge-spreadsheet-a11y-row,
+  .oge-spreadsheet-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  &.oge-spreadsheet-link-hover .oge-spreadsheet-grid {
+    cursor: pointer;
+  }
+
+  // ── placeholder (loading, empty, error) ──
+  .oge-spreadsheet-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--oge-spreadsheet-sheet-bg);
+    color: var(--oge-spreadsheet-sheet-fg);
+    font-size: 14px;
+  }
+
+  .oge-spreadsheet-placeholder-error {
+    color: var(--oge-danger);
+  }
+
+  .oge-spreadsheet-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--oge-spreadsheet-gridline);
+    border-block-start-color: var(--oge-spreadsheet-accent);
+    border-radius: 50%;
+    animation: oge-spreadsheet-spin 0.8s linear infinite;
+
+    @include tokens.reduced-motion {
+      animation-duration: 2.4s;
+    }
+  }
+
+  // ── find bar ──
+  .oge-spreadsheet-find {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-end: 24px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--oge-spreadsheet-field-border);
+    border-radius: var(--oge-radius);
+    background: var(--oge-spreadsheet-chrome-bg);
+    box-shadow: var(--oge-shadow-popup);
+  }
+
+  .oge-spreadsheet-find-input {
+    width: 180px;
+    height: 26px;
+    box-sizing: border-box;
+    padding: 0 6px;
+    border: 1px solid var(--oge-spreadsheet-field-border);
+    border-radius: 4px;
+    background: var(--oge-spreadsheet-field-bg);
+    color: var(--oge-spreadsheet-field-fg);
+    font: inherit;
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true);
+    }
+  }
+
+  .oge-spreadsheet-find-count {
+    min-width: 56px;
+    color: var(--oge-spreadsheet-muted-fg);
+    text-align: center;
+  }
+
+  .oge-spreadsheet-icon-button,
+  .oge-spreadsheet-toggle,
+  .oge-spreadsheet-zoom-step,
+  .oge-spreadsheet-tab-nav {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+
+    &:hover {
+      background: var(--oge-spreadsheet-selection-overlay);
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring;
+    }
+
+    @include tokens.reduced-motion {
+      transition: none;
+    }
+  }
+
+  .oge-spreadsheet-toggle[aria-pressed='true'] {
+    background: var(--oge-spreadsheet-accent);
+    color: var(--oge-spreadsheet-accent-fg);
+  }
+
+  // ── notes ──
+  .oge-spreadsheet-notes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .oge-spreadsheet-note {
+    position: absolute;
+    z-index: 9;
+    box-sizing: border-box;
+    width: 144px;
+    min-height: 79px;
+    padding: 2px 4px;
+    border: 1px solid var(--oge-spreadsheet-note-border);
+    background: var(--oge-spreadsheet-note-bg);
+    color: var(--oge-spreadsheet-note-fg);
+    box-shadow: var(--oge-spreadsheet-note-shadow);
+    font:
+      12px / 1.25 'Segoe UI',
+      Tahoma,
+      system-ui,
+      sans-serif;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .oge-spreadsheet-note-bold {
+    font-weight: 700;
+  }
+
+  .oge-spreadsheet-note-italic {
+    font-style: italic;
+  }
+
+  // ── sheet tabs ──
+  .oge-spreadsheet-tab-strip {
+    display: flex;
+    align-items: stretch;
+    height: 28px;
+    background: var(--oge-spreadsheet-tab-strip-bg);
+    border-block-start: 1px solid var(--oge-spreadsheet-header-line);
+  }
+
+  .oge-spreadsheet-tab-scroll {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-inline: 6px;
+    color: var(--oge-spreadsheet-muted-fg);
+
+    svg {
+      fill: currentColor;
+    }
+  }
+
+  .oge-spreadsheet-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    min-width: 0;
+    padding-block-end: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .oge-spreadsheet-tab {
+    position: relative;
+    flex: 0 0 auto;
+    margin-block-start: 2px;
+    padding: 0 12px;
+    border: 0;
+    border-inline-end: 1px solid var(--oge-spreadsheet-tab-separator);
+    background: var(--oge-spreadsheet-tab-bg);
+    color: var(--oge-spreadsheet-tab-fg);
+    font: inherit;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+
+    &:hover:not(.oge-spreadsheet-tab-active) {
+      background-image: linear-gradient(
+        color-mix(in srgb, var(--oge-spreadsheet-tab-fg) 10%, transparent),
+        color-mix(in srgb, var(--oge-spreadsheet-tab-fg) 10%, transparent)
+      );
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true, $width: 2px);
+    }
+
+    @include tokens.reduced-motion {
+      transition: none;
+    }
+  }
+
+  // a tab colour fills an inactive tab (dark text on it, as Excel draws it)
+  .oge-spreadsheet-tab-colored {
+    background: var(--oge-spreadsheet-tab-color);
+    color: var(--oge-spreadsheet-tab-colored-fg);
+  }
+
+  // the active tab joins the sheet: white, bold green label, green underline
+  .oge-spreadsheet-tab-active {
+    margin-block-start: -1px;
+    background: var(--oge-spreadsheet-tab-active-bg);
+    color: var(--oge-spreadsheet-tab-active-fg);
+    font-weight: 700;
+    box-shadow: inset 0 -2px 0 var(--oge-spreadsheet-accent);
+  }
+
+  // an active coloured tab fades from white into its colour
+  .oge-spreadsheet-tab-active.oge-spreadsheet-tab-colored {
+    background: linear-gradient(
+      to bottom,
+      var(--oge-spreadsheet-tab-active-bg) 35%,
+      color-mix(
+        in srgb,
+        var(--oge-spreadsheet-tab-color) 45%,
+        var(--oge-spreadsheet-tab-active-bg)
+      )
+    );
+  }
+
+  // ── status bar ──
+  .oge-spreadsheet-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    min-height: 22px;
+    padding: 0 8px;
+    background: var(--oge-spreadsheet-status-bg);
+    color: var(--oge-spreadsheet-chrome-fg);
+    border-block-start: 1px solid var(--oge-spreadsheet-header-line);
+  }
+
+  .oge-spreadsheet-status-items {
+    display: flex;
+    gap: 22px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .oge-spreadsheet-zoom {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .oge-spreadsheet-zoom-slider {
+    width: 100px;
+    accent-color: var(--oge-spreadsheet-muted-fg);
+  }
+
+  .oge-spreadsheet-zoom-value {
+    min-width: 40px;
+    text-align: end;
+  }
+
+  // ── Windows High Contrast ──
+  @include tokens.forced-colors {
+    .oge-spreadsheet-gridlines {
+      stroke: GrayText;
+    }
+
+    .oge-spreadsheet-selection-frame,
+    .oge-spreadsheet-selection-active {
+      border-color: Highlight;
+    }
+
+    .oge-spreadsheet-selection-handle {
+      background: Highlight;
+    }
+
+    .oge-spreadsheet-selection-overlay {
+      fill: Highlight;
+      fill-opacity: 0.25;
+    }
+
+    .oge-spreadsheet-header-selected,
+    .oge-spreadsheet-header-full,
+    .oge-spreadsheet-tab-active {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .oge-spreadsheet-tab {
+      border: 1px solid ButtonText;
+    }
+  }
+}
+
+@keyframes oge-spreadsheet-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

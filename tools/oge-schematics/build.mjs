@@ -26,6 +26,7 @@ const PACKAGES = [
   { dir: 'scheduler', npm: '@oge-ui/scheduler' },
   { dir: 'gantt', npm: '@oge-ui/gantt' },
   { dir: 'kanban', npm: '@oge-ui/kanban' },
+  { dir: 'spreadsheet', npm: '@oge-ui/spreadsheet' },
   { dir: 'charts', npm: '@oge-ui/charts' },
   { dir: 'inputs', npm: '@oge-ui/inputs' },
   { dir: 'buttons', npm: '@oge-ui/buttons' },

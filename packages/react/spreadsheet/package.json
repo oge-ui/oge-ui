@@ -1,0 +1,55 @@
+{
+  "name": "@oge-ui/react-spreadsheet",
+  "version": "1.1.5",
+  "description": "React spreadsheet viewer from the OGE UI suite that shows .xlsx workbooks the way Excel does: Excel-measured column widths, row heights, fonts, number formats, borders, fills, conditional formats, frozen panes, merges, pictures, notes and hyperlinks, with Excel's selection, keyboard map, find, copy and status-bar summary — running the same engine and the same stylesheet as the Angular spreadsheet. Dependency-free xlsx reading in the browser. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "react",
+    "spreadsheet",
+    "excel",
+    "xlsx",
+    "excel-viewer",
+    "workbook",
+    "viewer",
+    "accessibility",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      }
+    },
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/spreadsheet-engine": "1.1.5"
+  },
+  "homepage": "https://www.ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/spreadsheet"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

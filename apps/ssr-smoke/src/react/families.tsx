@@ -39,6 +39,8 @@ import {
 import { OgeModal, OgePopover, OgeTooltip } from '@oge-ui/react-overlay';
 import { OgePivotGrid } from '@oge-ui/react-pivot';
 import { OgeScheduler } from '@oge-ui/react-scheduler';
+import { OgeSpreadsheet } from '@oge-ui/react-spreadsheet';
+import { createOgeWorkbook } from '@oge-ui/spreadsheet-engine';
 import { OgeTabPanel, OgeTabs } from '@oge-ui/react-tabs';
 import { OgeTreeList } from '@oge-ui/react-tree-list';
 import { OgeFileUploader } from '@oge-ui/react-upload';
@@ -230,6 +232,23 @@ export const REACT_FAMILIES: readonly ReactSsrFamily[] = [
     name: 'react-bpmn',
     tree: () => <OgeBpmnEditor style={{ height: 480 }} />,
     expect: ['oge-bpmn'],
+  },
+  {
+    // the server cannot lay a sheet out (no size): it paints the chrome, and
+    // the client fills the grid in its layout effects, after hydrating
+    name: 'react-spreadsheet',
+    tree: () => {
+      const workbook = createOgeWorkbook();
+      workbook.sheets[0].setCell(0, 0, { value: 'Revenue' });
+      return (
+        <OgeSpreadsheet
+          workbook={workbook}
+          locale="en-US"
+          style={{ height: 420 }}
+        />
+      );
+    },
+    expect: ['oge-spreadsheet', 'role="grid"', 'Name box'],
   },
   {
     name: 'react-inputs',

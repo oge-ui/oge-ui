@@ -143,4 +143,30 @@
     transparent
   );
   --oge-editor-quote-border: var(--oge-text-color);
+  /* spreadsheet: black-on-white chrome, stronger gridlines */
+  --oge-spreadsheet-gridline: #767676;
+  --oge-spreadsheet-sheet-fg: #000000;
+  --oge-spreadsheet-freeze-line: #000000;
+  --oge-spreadsheet-chrome-bg: #ffffff;
+  --oge-spreadsheet-chrome-fg: #000000;
+  --oge-spreadsheet-status-bg: #ffffff;
+  --oge-spreadsheet-muted-fg: #000000;
+  --oge-spreadsheet-field-bg: #ffffff;
+  --oge-spreadsheet-field-border: #000000;
+  --oge-spreadsheet-field-fg: #000000;
+  --oge-spreadsheet-header-bg: #ffffff;
+  --oge-spreadsheet-header-fg: #000000;
+  --oge-spreadsheet-header-line: #000000;
+  --oge-spreadsheet-header-separator-from: #000000;
+  --oge-spreadsheet-header-separator-to: #000000;
+  --oge-spreadsheet-header-selected-bg: #000000;
+  --oge-spreadsheet-header-selected-fg: #ffffff;
+  --oge-spreadsheet-header-selected-separator: #ffffff;
+  --oge-spreadsheet-corner-mark: #000000;
+  --oge-spreadsheet-tab-strip-bg: #ffffff;
+  --oge-spreadsheet-tab-bg: #ffffff;
+  --oge-spreadsheet-tab-fg: #000000;
+  --oge-spreadsheet-tab-separator: #000000;
+  --oge-spreadsheet-filter-border: #000000;
+  --oge-spreadsheet-filter-fg: #000000;
 }

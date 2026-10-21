@@ -3,8 +3,8 @@
  * MIT ↔ commercial boundary gate (docs/ARCHITECTURE.md → "Licensing",
  * ADR 0003).
  *
- * The commercial tier is six families — pivot, bpmn, scheduler, gantt,
- * kanban, charts — each in three packages: the Angular package, its
+ * The commercial tier is seven families — pivot, bpmn, scheduler, gantt,
+ * kanban, charts, spreadsheet — each in three packages: the Angular package, its
  * framework-free `@oge-ui/<family>-engine` and its `@oge-ui/react-<family>`
  * render layer. Everything else is MIT and carries a public "will remain
  * MIT" commitment, so an MIT package must never pull a commercial one in.

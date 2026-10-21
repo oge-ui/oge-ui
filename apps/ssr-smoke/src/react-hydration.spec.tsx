@@ -97,6 +97,7 @@ describe('React SSR: renderToString in Node → hydrateRoot (StrictMode)', () =>
     'react-gantt',
     'react-kanban',
     'react-bpmn',
+    'react-spreadsheet',
     'react-inputs',
     'react-overlay',
     'react-navigation',
