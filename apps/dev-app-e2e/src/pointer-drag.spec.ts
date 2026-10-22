@@ -65,7 +65,14 @@ async function touchDrag(
       { type, point },
     );
   await fire('pointerdown', from);
-  if (hold > 0) await page.waitForTimeout(hold);
+  // the hold runs on the page's clock: a page timer due later fires after
+  // the long-press timer however busy the page is, where a test-side wait
+  // let the first move overtake a long-press timer the page ran late
+  if (hold > 0)
+    await page.evaluate(
+      (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+      hold,
+    );
   const steps = 8;
   for (let i = 1; i <= steps; i++) {
     await fire('pointermove', {

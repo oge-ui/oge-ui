@@ -21,31 +21,51 @@ async function open(page: Page): Promise<void> {
 }
 
 /**
- * Samples the first bar's height every frame for `ms` after `act` —
- * a tween shows several intermediate heights, a jump shows one.
+ * Clicks `button` from inside the page and samples the first bar's height
+ * every frame for `ms` from that click. The click is dispatched in the page
+ * so the window starts with it: a Playwright click takes WebKit a few
+ * hundred milliseconds — on a slow runner, most of the tween.
  */
 async function sampleBarHeights(
   host: Locator,
-  act: () => Promise<void>,
-  ms = 900,
+  button: Locator,
+  ms = 1500,
 ): Promise<number[]> {
-  const sampling = host.evaluate(
-    (el, duration) =>
+  const target = await button.elementHandle();
+  return host.evaluate(
+    (el, [target, duration]) =>
       new Promise<number[]>((resolve) => {
-        const seen: number[] = [];
+        const height = (): number =>
+          Number(
+            el.querySelector('rect.oge-chart-bar')?.getAttribute('height') ?? 0,
+          );
+        const seen = [height()];
+        (target as HTMLElement).click();
         const start = performance.now();
         const step = (): void => {
-          const bar = el.querySelector('rect.oge-chart-bar');
-          seen.push(Number(bar?.getAttribute('height') ?? 0));
+          seen.push(height());
           if (performance.now() - start < duration) requestAnimationFrame(step);
           else resolve(seen);
         };
         requestAnimationFrame(step);
       }),
-    ms,
+    [target, ms] as const,
   );
-  await act();
-  return sampling;
+}
+
+/**
+ * How many distinct heights lie strictly between the first and the last
+ * sample — a tween passes through some, a jump through none. Counting them
+ * instead of frames keeps the check free of the runner's frame rate.
+ */
+function heightsBetween(heights: readonly number[]): number {
+  const from = heights[0];
+  const to = heights[heights.length - 1];
+  const low = Math.min(from, to) + 0.5;
+  const high = Math.max(from, to) - 0.5;
+  return new Set(
+    heights.filter((h) => h > low && h < high).map((h) => h.toFixed(1)),
+  ).size;
 }
 
 test.describe('React charts docs', () => {
@@ -356,9 +376,12 @@ test.describe('React charts depth', () => {
     const button = page
       .locator('app-demo-card:has(#live-data)')
       .getByRole('button', { name: 'New values' });
-    const heights = await sampleBarHeights(host, () => button.click());
-    const distinct = new Set(heights.map((h) => h.toFixed(1)));
-    expect(distinct.size).toBeGreaterThan(3);
+    const heights = await sampleBarHeights(host, button);
+    // the bar moved, through heights on the way
+    expect(Math.abs(heights[heights.length - 1] - heights[0])).toBeGreaterThan(
+      10,
+    );
+    expect(heightsBetween(heights)).toBeGreaterThan(0);
     // a month shift: one bar leaves, one enters, and it settles on six
     await page
       .locator('app-demo-card:has(#live-data)')
@@ -376,9 +399,11 @@ test.describe('React charts depth', () => {
     const button = page
       .locator('app-demo-card:has(#live-data)')
       .getByRole('button', { name: 'New values' });
-    const heights = await sampleBarHeights(host, () => button.click(), 400);
-    expect(new Set(heights.map((h) => h.toFixed(1))).size).toBeLessThanOrEqual(
-      2,
+    const heights = await sampleBarHeights(host, button);
+    // the bar moved, straight to its new height
+    expect(Math.abs(heights[heights.length - 1] - heights[0])).toBeGreaterThan(
+      10,
     );
+    expect(heightsBetween(heights)).toBe(0);
   });
 });

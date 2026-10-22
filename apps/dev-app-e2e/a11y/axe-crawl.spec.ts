@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
+import AxeBuilder from '../src/axe';
 import { test, expect, type Page } from '@playwright/test';
 import { expectHydrated, prerenderedRoutes } from '../ssr/routes';
 
@@ -32,20 +32,9 @@ function summarise(
 }
 
 async function scan(page: Page): Promise<string[]> {
-  // The header's theme / version selects are `@defer (on idle)` blocks: a
-  // deferred view is created (static attributes only) and gets its bindings
-  // on the next change-detection tick. A scan in between saw a combobox with
-  // no aria-expanded and no name — on the heavy pages, where idle comes
-  // late. Wait for every combobox to be bound.
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        [...document.querySelectorAll('[role="combobox"]')].every((el) =>
-          el.hasAttribute('aria-expanded'),
-        ),
-      ),
-    )
-    .toBe(true);
+  // the shared builder (../src/axe) first waits for the header's deferred
+  // selects to get their id, name and aria-expanded — a scan on a heavy page,
+  // where idle comes late, otherwise caught one mid-creation
   const structure = await new AxeBuilder({ page })
     .withTags(TAGS)
     .disableRules(['color-contrast'])
