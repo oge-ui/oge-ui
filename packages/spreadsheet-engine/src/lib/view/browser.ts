@@ -24,7 +24,7 @@ export function ogeGridPoint(
   };
 }
 
-/** The header a pointer event's target is in — select-all, a row or a column header — read from the grid's markup. */
+/** The header a pointer event's target is in — select-all, a row or a column header, an outline button — read from the grid's markup. */
 export function ogeGridHeaderAt(
   target: EventTarget | null,
 ): OgeGridHeaderTarget | null {
@@ -32,6 +32,18 @@ export function ogeGridHeaderAt(
   if (!element || typeof element.closest !== 'function') return null;
   if (element.closest('.oge-spreadsheet-select-all'))
     return { kind: 'select-all' };
+  const outline = element.closest(
+    '.oge-spreadsheet-outline-button, .oge-spreadsheet-outline-level',
+  );
+  if (outline) {
+    const axis =
+      outline.getAttribute('data-axis') === 'columns' ? 'columns' : 'rows';
+    const group = outline.getAttribute('data-group');
+    if (group != null) return { kind: 'outline', axis, group: Number(group) };
+    const level = outline.getAttribute('data-level');
+    if (level != null)
+      return { kind: 'outline-level', axis, level: Number(level) };
+  }
   const header = element.closest(
     '.oge-spreadsheet-column-header, .oge-spreadsheet-row-header',
   );

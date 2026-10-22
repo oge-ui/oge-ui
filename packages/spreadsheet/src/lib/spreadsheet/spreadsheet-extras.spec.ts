@@ -92,6 +92,7 @@ function richBook(): OgeWorkbook {
       [source]="source()"
       [activeSheet]="sheet()"
       [showGridLines]="grid()"
+      [showOutlineSymbols]="outlines()"
       (hyperlinkClick)="links.push($event)"
       (loadError)="errors.push($event)"
       style="display: block; width: 800px; height: 400px"
@@ -103,6 +104,7 @@ class Host {
   readonly source = signal<string | null>(null);
   readonly sheet = signal<number | undefined>(undefined);
   readonly grid = signal<boolean | undefined>(undefined);
+  readonly outlines = signal<boolean | undefined>(undefined);
   readonly links: OgeSpreadsheetHyperlinkClickEvent[] = [];
   readonly errors: OgeSpreadsheetLoadErrorEvent[] = [];
 }
@@ -717,5 +719,86 @@ describe('OgeSpreadsheet — drawing and chrome', () => {
         .querySelector('.oge-spreadsheet-tab-label')
         ?.getAttribute('data-label'),
     ).toBe('Sheet1');
+  });
+
+  it('draws the outline gutters and collapses groups from their buttons, levels and keys', async () => {
+    const workbook = richBook();
+    const sheet = workbook.sheets[0];
+    sheet.view = { ...sheet.view, frozenRows: 0, frozenColumns: 0 };
+    for (const row of [5, 6, 7]) sheet.setRow(row, { outlineLevel: 1 });
+    sheet.setColumns(3, 4, { outlineLevel: 1 });
+    fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.workbook.set(workbook);
+    await settle();
+    host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelectorAll('.oge-spreadsheet-row-outline')).toHaveLength(
+      1,
+    );
+    expect(
+      host.querySelectorAll('.oge-spreadsheet-column-outline'),
+    ).toHaveLength(1);
+    expect(
+      [...host.querySelectorAll('.oge-spreadsheet-outline-level')].map((b) => [
+        b.getAttribute('data-axis'),
+        b.textContent,
+      ]),
+    ).toEqual([
+      ['rows', '1'],
+      ['rows', '2'],
+      ['columns', '1'],
+      ['columns', '2'],
+    ]);
+    expect(
+      host.querySelector(
+        '.oge-spreadsheet-row-outline .oge-spreadsheet-outline-bracket',
+      ),
+    ).not.toBeNull();
+    mouse(
+      host.querySelector(
+        '.oge-spreadsheet-row-outline .oge-spreadsheet-outline-button',
+      ) as Element,
+      'pointerdown',
+    );
+    await settle();
+    expect(sheet.getRow(5)?.hidden).toBe(true);
+    expect(
+      host
+        .querySelector(
+          '.oge-spreadsheet-row-outline .oge-spreadsheet-outline-button',
+        )
+        ?.classList.contains('oge-spreadsheet-outline-collapsed'),
+    ).toBe(true);
+    // the headers mark the hidden rows
+    expect(
+      host.querySelector('.oge-spreadsheet-header-mark[data-kind="hidden"]'),
+    ).not.toBeNull();
+    mouse(
+      host.querySelector(
+        '.oge-spreadsheet-outline-level[data-axis="rows"][data-level="2"]',
+      ) as Element,
+      'pointerdown',
+    );
+    await settle();
+    expect(sheet.getRow(5)?.hidden).toBeUndefined();
+    viewer().core.selectCell(6, 0);
+    grid().dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowUp',
+        altKey: true,
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await settle();
+    expect(sheet.getRow(6)?.hidden).toBe(true);
+    expect(
+      host.querySelector('.oge-spreadsheet-live')?.textContent?.trim(),
+    ).toBe('Rows 6 to 8 hidden');
+    // the host turns the symbols off
+    fixture.componentInstance.outlines.set(false);
+    await settle();
+    expect(host.querySelector('.oge-spreadsheet-outline')).toBeNull();
+    expect(host.querySelector('.oge-spreadsheet-outline-corner')).toBeNull();
   });
 });

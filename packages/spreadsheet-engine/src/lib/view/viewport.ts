@@ -25,6 +25,11 @@ import {
 import type { OgeWorksheet } from '../model/worksheet';
 import type { OgeAxis } from '../paint/axis';
 import type { OgeSheetLayout, OgeZoomedAxes } from '../paint/sheet-layout';
+import {
+  ogeAxisOutline,
+  ogeOutlineGutter,
+  type OgeAxisOutline,
+} from './outline';
 
 /** An inclusive index span; `last < first` when empty. */
 export interface OgeIndexSpan {
@@ -73,6 +78,16 @@ export function ogeSheetHeaders(
   };
 }
 
+/** The outline (grouping) gutters beside the headers. */
+export interface OgeOutlineGutters {
+  readonly rows: OgeAxisOutline;
+  readonly columns: OgeAxisOutline;
+  /** The rows' gutter, left of the row headers, px (0 without row groups or with the symbols off). */
+  readonly width: number;
+  /** The columns' gutter, above the column headers, px. */
+  readonly height: number;
+}
+
 /** The panes of a viewport. */
 export interface OgeViewportPanes {
   /** Zoom in percent. */
@@ -81,7 +96,12 @@ export interface OgeViewportPanes {
   readonly axes: OgeZoomedAxes;
   /** Header sizes (zero when hidden). */
   readonly headers: OgeSheetHeaders;
-  /** The cell area: the grid without its headers. */
+  /** The outline gutters (zero when there are none or the symbols are off). */
+  readonly outline: OgeOutlineGutters;
+  /** Where the cells start in the grid: the gutter plus the headers, px. */
+  readonly startX: number;
+  readonly startY: number;
+  /** The cell area: the grid without its headers and gutters. */
   readonly cellWidth: number;
   readonly cellHeight: number;
   /** Frozen rows and columns (counts) and their size. */
@@ -120,6 +140,13 @@ export interface OgeViewportInput {
   readonly active: OgeCellRef;
   /** Show the headers. Default: the sheet's own setting. */
   readonly headers?: boolean;
+  /** Show the outline symbols. Default: the sheet's own setting. */
+  readonly outline?: boolean;
+  /** The sheet's outlines, when the caller keeps them (`ogeAxisOutline`); made here otherwise. */
+  readonly outlines?: {
+    readonly rows: OgeAxisOutline;
+    readonly columns: OgeAxisOutline;
+  };
   /** Extra rows/columns rendered beyond each edge. Default 4 / 2. */
   readonly overscanRows?: number;
   readonly overscanCols?: number;
@@ -151,10 +178,21 @@ export function ogeViewportPanes(
   const originX = cols.offset(frozenColumns);
   const overRows = input.overscanRows ?? 4;
   const overCols = input.overscanCols ?? 2;
+  const showOutline = input.outline ?? sheet.view.showOutlineSymbols !== false;
+  const rowOutline = input.outlines?.rows ?? ogeAxisOutline(sheet, 'rows');
+  const columnOutline =
+    input.outlines?.columns ?? ogeAxisOutline(sheet, 'columns');
+  const outline: OgeOutlineGutters = {
+    rows: rowOutline,
+    columns: columnOutline,
+    width: showOutline ? ogeOutlineGutter(rowOutline) : 0,
+    height: showOutline ? ogeOutlineGutter(columnOutline) : 0,
+  };
   // rows first: the last row in view sets the row-number column's width
   const probe = ogeSheetHeaders(layout.normalFont, input.zoom, 0);
   const columnHeaderHeight = showHeaders ? probe.columnHeaderHeight : 0;
-  const cellHeight = Math.max(0, input.height - columnHeaderHeight);
+  const startY = outline.height + columnHeaderHeight;
+  const cellHeight = Math.max(0, input.height - startY);
   const top = originY + Math.max(0, input.scrollTop);
   const bottom = top + Math.max(0, cellHeight - originY);
   const topRow = rows.indexAt(top);
@@ -162,7 +200,8 @@ export function ogeViewportPanes(
   const headers = showHeaders
     ? ogeSheetHeaders(layout.normalFont, input.zoom, lastVisibleRow)
     : { rowHeaderWidth: 0, columnHeaderHeight: 0, fontPx: probe.fontPx };
-  const cellWidth = Math.max(0, input.width - headers.rowHeaderWidth);
+  const startX = outline.width + headers.rowHeaderWidth;
+  const cellWidth = Math.max(0, input.width - startX);
   const left = originX + Math.abs(input.scrollLeft);
   const right = left + Math.max(0, cellWidth - originX);
   const leftCol = cols.indexAt(left);
@@ -185,6 +224,9 @@ export function ogeViewportPanes(
     zoom: input.zoom,
     axes,
     headers,
+    outline,
+    startX,
+    startY,
     cellWidth,
     cellHeight,
     frozenRows,

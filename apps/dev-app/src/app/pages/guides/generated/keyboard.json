@@ -260,6 +260,11 @@
           "Previous / next sheet, zoom in and out on Excel's steps."
         ],
         [
+          "Alt+Shift+Down / Alt+Shift+Up",
+          "outline",
+          "Shows the details of the collapsed group the active cell sums up, or hides those of the innermost group it is in — rows first, then columns; the active cell says when its group's details are hidden. The gutter's group and level buttons do the same with the pointer."
+        ],
+        [
           "Ctrl+Shift+U",
           "view",
           "Expands the formula bar to the whole text, up to five lines, and back — as its chevron button does."

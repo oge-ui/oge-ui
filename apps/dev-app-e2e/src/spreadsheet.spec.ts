@@ -152,6 +152,42 @@ for (const layer of LAYERS) {
       await expect(expand).toHaveAttribute('aria-expanded', 'false');
     });
 
+    test('collapses groups from the outline gutter and the keyboard', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      // exact labels: hasText alone matches "13" inside "113"
+      const row = (label: string) =>
+        host.locator('.oge-spreadsheet-row-header', {
+          hasText: new RegExp(`^${label}$`),
+        });
+      const live = host.locator('.oge-spreadsheet-live');
+      await expect(row('13')).toHaveCount(1);
+      await host
+        .locator('.oge-spreadsheet-row-outline .oge-spreadsheet-outline-button')
+        .first()
+        .click();
+      await expect(row('13')).toHaveCount(0);
+      await expect(live).toHaveText('Rows 13 to 18 hidden');
+      await host
+        .locator(
+          '.oge-spreadsheet-outline-level[data-axis="rows"][data-level="3"]',
+        )
+        .click();
+      await expect(row('15')).toHaveCount(1);
+      await expect(live).toHaveText('Level 3 shown');
+      // the keyboard: Alt+Shift+Up in the inner group hides it, Down on its summary shows it
+      await nameBox(host).fill('A15');
+      await nameBox(host).press('Enter');
+      await page.keyboard.press('Alt+Shift+ArrowUp');
+      await expect(row('15')).toHaveCount(0);
+      await nameBox(host).fill('A17');
+      await nameBox(host).press('Enter');
+      await page.keyboard.press('Alt+Shift+ArrowDown');
+      await expect(row('15')).toHaveCount(1);
+      await expect(live).toHaveText('Rows 15 to 16 shown');
+    });
+
     test('the api page renders the reference', async ({ page }) => {
       await page.goto(`/components/spreadsheet/api${layer.query}`);
       await expect(page.locator('.api-table').first()).toBeVisible();

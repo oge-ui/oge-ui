@@ -320,6 +320,7 @@ export const OgeSpreadsheet = forwardRef<
     showStatusBar = true,
     showHeaders,
     showGridLines,
+    showOutlineSymbols,
     className,
     style,
   } = props;
@@ -394,6 +395,9 @@ export const OgeSpreadsheet = forwardRef<
             scrollTop: scroll.top,
             scrollLeft: scroll.left,
             ...(showHeaders !== undefined ? { headers: showHeaders } : {}),
+            ...(showOutlineSymbols !== undefined
+              ? { outline: showOutlineSymbols }
+              : {}),
           })
         : null,
     // the active cell widens the extent; version covers geometry and paint inputs
@@ -403,6 +407,7 @@ export const OgeSpreadsheet = forwardRef<
       size,
       scroll,
       showHeaders,
+      showOutlineSymbols,
       zoom,
       version,
       active.row,
@@ -949,7 +954,9 @@ export const OgeSpreadsheet = forwardRef<
             <svg className="oge-spreadsheet-enter-icon" viewBox="0 0 16 12">
               <path d="M.5 6.5L5 11 15.5.5" />
             </svg>
-            <span className="oge-spreadsheet-fx">fx</span>
+            <svg className="oge-spreadsheet-fx" viewBox="0 0 16 14">
+              <path d="M6.5 1.5c-1.2-.4-2 .2-2.3 1.4L2.5 12.5M2 5.5h3.8M8.5 6l4.5 6M13 6l-4.5 6" />
+            </svg>
             <svg className="oge-spreadsheet-fx-chevron" viewBox="0 0 8 8">
               <path d="M1.5 3L4 5.5 6.5 3" />
             </svg>
@@ -1076,6 +1083,83 @@ export const OgeSpreadsheet = forwardRef<
                   </div>
                 </div>
               ))}
+              {view.rowOutline.map((strip) => (
+                <div
+                  key={strip.key}
+                  className="oge-spreadsheet-outline oge-spreadsheet-row-outline"
+                  style={css(strip.style)}
+                  aria-hidden="true"
+                >
+                  <div className="oge-spreadsheet-pane-flip">
+                    {strip.marks.map((mark) =>
+                      mark.kind === 'bracket' ? (
+                        <div
+                          key={mark.key}
+                          className="oge-spreadsheet-outline-bracket"
+                          data-tick={mark.tick}
+                          style={css(mark.style)}
+                        />
+                      ) : (
+                        <div
+                          key={mark.key}
+                          className={`oge-spreadsheet-outline-button${mark.collapsed ? ' oge-spreadsheet-outline-collapsed' : ''}`}
+                          data-axis="rows"
+                          data-group={mark.group}
+                          style={css(mark.style)}
+                        />
+                      ),
+                    )}
+                  </div>
+                </div>
+              ))}
+              {view.columnOutline.map((strip) => (
+                <div
+                  key={strip.key}
+                  className="oge-spreadsheet-outline oge-spreadsheet-column-outline"
+                  style={css(strip.style)}
+                  aria-hidden="true"
+                >
+                  <div className="oge-spreadsheet-pane-flip">
+                    {strip.marks.map((mark) =>
+                      mark.kind === 'bracket' ? (
+                        <div
+                          key={mark.key}
+                          className="oge-spreadsheet-outline-bracket"
+                          data-tick={mark.tick}
+                          style={css(mark.style)}
+                        />
+                      ) : (
+                        <div
+                          key={mark.key}
+                          className={`oge-spreadsheet-outline-button${mark.collapsed ? ' oge-spreadsheet-outline-collapsed' : ''}`}
+                          data-axis="columns"
+                          data-group={mark.group}
+                          style={css(mark.style)}
+                        />
+                      ),
+                    )}
+                  </div>
+                </div>
+              ))}
+              {view.outlineCorner ? (
+                <div
+                  className="oge-spreadsheet-outline-corner"
+                  style={css(view.outlineCorner)}
+                  aria-hidden="true"
+                >
+                  {view.outlineLevels.map((button) => (
+                    <div
+                      key={button.axis + button.level}
+                      className="oge-spreadsheet-outline-level"
+                      data-axis={button.axis}
+                      data-level={button.level}
+                      style={css(button.style)}
+                    >
+                      {button.level}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
               {view.panes.headers.rowHeaderWidth > 0 ? (
                 <div
                   className="oge-spreadsheet-select-all"

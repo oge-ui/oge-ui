@@ -36,6 +36,11 @@ are versioned independently, which is the case here.
   beside the tabs, the name box lists the defined names, and the formula bar
   expands to the whole text (Ctrl+Shift+U); a header click makes the band's
   first cell active, as Excel does.
+- **Outline symbols:** grouped rows and columns show Excel's brackets, plus
+  and minus buttons and level buttons beside the headers; hidden rows and
+  columns get Excel's double line. Groups collapse and expand from the
+  buttons and from the keyboard (Alt+Shift+Up / Down), announced for screen
+  readers; `showOutlineSymbols` turns the symbols off.
 - **Accessible:** a `role="grid"` whose active cell is its
   `aria-activedescendant`; selections, sheet switches, copies, zoom and find
   results are announced. Every string is in `OgeSpreadsheetMessages`

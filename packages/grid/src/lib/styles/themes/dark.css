@@ -112,6 +112,11 @@
   --oge-spreadsheet-header-selected-fg: #ffffff;
   --oge-spreadsheet-header-selected-separator: #b6b6b6;
   --oge-spreadsheet-corner-mark: #646464;
+  --oge-spreadsheet-outline-line: #b0b0b0;
+  --oge-spreadsheet-outline-level-bg: #292929;
+  --oge-spreadsheet-outline-level-border: #666666;
+  --oge-spreadsheet-hidden-line: #8a8a8a;
+  --oge-spreadsheet-hidden-gap: #0a0a0a;
   --oge-spreadsheet-tab-strip-bg: #090909;
   --oge-spreadsheet-tab-fg: #ffffff;
   --oge-spreadsheet-tab-hover-bg: #262626;
@@ -269,6 +274,11 @@
     --oge-spreadsheet-header-selected-fg: #ffffff;
     --oge-spreadsheet-header-selected-separator: #b6b6b6;
     --oge-spreadsheet-corner-mark: #646464;
+    --oge-spreadsheet-outline-line: #b0b0b0;
+    --oge-spreadsheet-outline-level-bg: #292929;
+    --oge-spreadsheet-outline-level-border: #666666;
+    --oge-spreadsheet-hidden-line: #8a8a8a;
+    --oge-spreadsheet-hidden-gap: #0a0a0a;
     --oge-spreadsheet-tab-strip-bg: #090909;
     --oge-spreadsheet-tab-fg: #ffffff;
     --oge-spreadsheet-tab-hover-bg: #262626;

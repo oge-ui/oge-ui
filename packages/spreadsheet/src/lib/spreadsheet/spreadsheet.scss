@@ -86,13 +86,15 @@
     }
   }
 
-  // the chevrons inside the fields
+  // the chevrons inside the fields: 24 px targets, over the field's border
   .oge-spreadsheet-field-button {
     display: inline-grid;
     flex: 0 0 auto;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
+    margin-block: -1px;
+    margin-inline-end: -1px;
     padding: 0;
     border: 0;
     border-radius: 3px;
@@ -155,10 +157,8 @@
   }
 
   .oge-spreadsheet-fx {
-    font:
-      italic 15px / 1 Cambria,
-      Georgia,
-      serif;
+    width: 16px;
+    height: 14px;
   }
 
   .oge-spreadsheet-formula-field {
@@ -502,6 +502,113 @@
 
     &[data-kind='separator'] {
       background: var(--oge-spreadsheet-header-selected-separator);
+    }
+
+    &[data-kind='hidden'] {
+      box-sizing: border-box;
+      border: 0 solid var(--oge-spreadsheet-hidden-line);
+      background: var(--oge-spreadsheet-hidden-gap);
+    }
+  }
+
+  .oge-spreadsheet-row-headers
+    .oge-spreadsheet-header-mark[data-kind='hidden'] {
+    border-block-width: 1px;
+  }
+
+  .oge-spreadsheet-column-headers
+    .oge-spreadsheet-header-mark[data-kind='hidden'] {
+    border-left-width: 1px;
+    border-right-width: 1px;
+  }
+
+  // ── outline: the gutters' brackets and group buttons, and the level
+  // buttons in their corner (Excel for the web: 1 px brackets with a tick,
+  // 11 px buttons, 13 px level buttons sharing their borders) ──
+  .oge-spreadsheet-outline,
+  .oge-spreadsheet-outline-corner {
+    position: relative;
+    overflow: hidden;
+    background: var(--oge-spreadsheet-header-bg);
+  }
+
+  .oge-spreadsheet-outline-bracket,
+  .oge-spreadsheet-outline-button,
+  .oge-spreadsheet-outline-level {
+    position: absolute;
+    box-sizing: border-box;
+  }
+
+  // drawn in the strip's own (mirrored) pixels, so the sides are physical
+  .oge-spreadsheet-row-outline .oge-spreadsheet-outline-bracket {
+    border-left: 1px solid var(--oge-spreadsheet-outline-line);
+
+    &[data-tick='start'] {
+      border-top: 1px solid var(--oge-spreadsheet-outline-line);
+    }
+
+    &[data-tick='end'] {
+      border-bottom: 1px solid var(--oge-spreadsheet-outline-line);
+    }
+  }
+
+  .oge-spreadsheet-column-outline .oge-spreadsheet-outline-bracket {
+    border-top: 1px solid var(--oge-spreadsheet-outline-line);
+
+    &[data-tick='start'] {
+      border-left: 1px solid var(--oge-spreadsheet-outline-line);
+    }
+
+    &[data-tick='end'] {
+      border-right: 1px solid var(--oge-spreadsheet-outline-line);
+    }
+  }
+
+  // a minus; a collapsed group's plus adds the upright
+  .oge-spreadsheet-outline-button {
+    border: 1px solid var(--oge-spreadsheet-outline-line);
+    background: var(--oge-spreadsheet-header-bg);
+    cursor: pointer;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      background: var(--oge-spreadsheet-outline-line);
+    }
+
+    &::before {
+      inset: 4px 1px;
+    }
+
+    &::after {
+      display: none;
+      inset: 1px 4px;
+    }
+  }
+
+  .oge-spreadsheet-outline-collapsed::after {
+    display: block;
+  }
+
+  .oge-spreadsheet-outline-level {
+    width: 13px;
+    height: 13px;
+    border: 1px solid var(--oge-spreadsheet-outline-level-border);
+    background: var(--oge-spreadsheet-outline-level-bg);
+    color: var(--oge-spreadsheet-muted-fg);
+    font:
+      9px / 11px 'Segoe UI',
+      system-ui,
+      sans-serif;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .oge-spreadsheet-outline-level:hover,
+    .oge-spreadsheet-outline-button:hover {
+      background: var(--oge-spreadsheet-header-hover-bg);
     }
   }
 
@@ -1094,6 +1201,17 @@
 
     .oge-spreadsheet-tab-nav:disabled {
       color: GrayText;
+    }
+
+    .oge-spreadsheet-outline-bracket,
+    .oge-spreadsheet-outline-button,
+    .oge-spreadsheet-outline-level {
+      border-color: CanvasText;
+    }
+
+    .oge-spreadsheet-outline-button::before,
+    .oge-spreadsheet-outline-button::after {
+      background: CanvasText;
     }
   }
 }

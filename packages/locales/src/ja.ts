@@ -1771,5 +1771,11 @@ export const ja: OgeLocalePack = {
     allSheets: 'すべてのシート',
     definedNames: '定義された名前',
     expandFormulaBar: '数式バーを展開',
+    outlineLevelShown: 'レベル {level} を表示しました',
+    rowsShown: '行 {first} から {last} を表示しました',
+    rowsHidden: '行 {first} から {last} を非表示にしました',
+    columnsShown: '列 {first} から {last} を表示しました',
+    columnsHidden: '列 {first} から {last} を非表示にしました',
+    hasCollapsedDetail: '詳細は非表示です。Alt+Shift+↓ キーで表示します',
   },
 };

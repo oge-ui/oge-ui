@@ -1797,5 +1797,12 @@ export const ptBR: OgeLocalePack = {
     allSheets: 'Todas as planilhas',
     definedNames: 'Nomes definidos',
     expandFormulaBar: 'Expandir a barra de fórmulas',
+    outlineLevelShown: 'Nível {level} exibido',
+    rowsShown: 'Linhas {first} a {last} exibidas',
+    rowsHidden: 'Linhas {first} a {last} ocultas',
+    columnsShown: 'Colunas {first} a {last} exibidas',
+    columnsHidden: 'Colunas {first} a {last} ocultas',
+    hasCollapsedDetail:
+      'detalhes ocultos, Alt+Shift+Seta para baixo para mostrar',
   },
 };

@@ -1803,5 +1803,11 @@ export const ru: OgeLocalePack = {
     allSheets: 'Все листы',
     definedNames: 'Определенные имена',
     expandFormulaBar: 'Развернуть строку формул',
+    outlineLevelShown: 'Показан уровень {level}',
+    rowsShown: 'Строки с {first} по {last} показаны',
+    rowsHidden: 'Строки с {first} по {last} скрыты',
+    columnsShown: 'Столбцы с {first} по {last} показаны',
+    columnsHidden: 'Столбцы с {first} по {last} скрыты',
+    hasCollapsedDetail: 'подробности скрыты, Alt+Shift+Стрелка вниз — показать',
   },
 };

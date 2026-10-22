@@ -10,6 +10,7 @@ import {
   ogeHeaderMarks,
   ogeHeaderStrips,
   ogeNoteBoxes,
+  ogeOutlineStrips,
   ogePanePictures,
   ogePaneStyle,
   ogePointerCell,
@@ -119,7 +120,7 @@ describe('ogeHeaderStrips', () => {
     expect(two.rows[1].cells.map((c) => c.label)).toEqual(['1', '2']);
     expect(two.rows[1].style).toMatchObject({
       top: '20px',
-      insetInlineStart: '0',
+      insetInlineStart: '0px',
       zIndex: '5',
     });
   });
@@ -254,8 +255,12 @@ describe('ogeGridView', () => {
     expect(view.corner).toMatchObject({
       width: '26px',
       height: '20px',
-      zIndex: '6',
+      zIndex: '7',
     });
+    // no groups: no outline gutter
+    expect(view.outlineCorner).toBeNull();
+    expect(view.rowOutline).toEqual([]);
+    expect(view.outlineLevels).toEqual([]);
     expect(view.headerFont).toEqual({
       fontFamily: 'Calibri, Carlito, sans-serif',
       fontSize: '15px',
@@ -545,5 +550,130 @@ describe('ogeTabKeyTarget', () => {
   it('leaves other keys and an empty strip alone', () => {
     expect(ogeTabKeyTarget(tabs, 0, 'Enter', false)).toBeNull();
     expect(ogeTabKeyTarget([], 0, 'Home', false)).toBeNull();
+  });
+});
+
+describe('the outline gutters', () => {
+  // rows 13–18 at level 1 with 15–16 at level 2, columns E:F at level 1 — the corpus's Main sheet
+  const grouped = (sheet: OgeWorksheet) => {
+    for (const row of [12, 13, 14, 15, 16, 17])
+      sheet.setRow(row, { outlineLevel: row === 14 || row === 15 ? 2 : 1 });
+    sheet.setColumns(4, 5, { outlineLevel: 1 });
+  };
+
+  it('widens the grid by the gutters and moves the panes, headers and corner past them', () => {
+    const { sheet, panes } = setup((s) => {
+      grouped(s);
+      frozen(s);
+    });
+    const p = panes();
+    // 3 row levels: 38 px; 2 column levels: 26 px
+    expect([p.outline.width, p.outline.height]).toEqual([38, 26]);
+    expect([p.startX, p.startY]).toEqual([38 + 26, 26 + 20]);
+    expect(p.cellWidth).toBe(666 - 64);
+    const view = ogeGridView({
+      panes: p,
+      render: [],
+      sheet,
+      selection: ogeCellSelection(0, 0),
+      spill: null,
+      pictures: new Map(),
+      fontFamily: 'Calibri',
+    });
+    expect(view.sizer['gridTemplateColumns']).toMatch(/^64px /);
+    expect(view.columnHeaders[0].style).toMatchObject({
+      marginBlockStart: '26px',
+      top: '26px',
+    });
+    expect(view.rowHeaders[0].style).toMatchObject({
+      marginInlineStart: '38px',
+      insetInlineStart: '38px',
+    });
+    expect(view.corner).toMatchObject({
+      top: '26px',
+      insetInlineStart: '38px',
+    });
+    expect(ogePaneStyle('left', p)).toMatchObject({ insetInlineStart: '64px' });
+    expect(ogePaneStyle('top', p)).toMatchObject({ top: '46px' });
+    expect(view.outlineCorner).toMatchObject({ width: '64px', height: '46px' });
+    expect(view.rowOutline.map((s) => s.key)).toEqual(['scrolling', 'frozen']);
+    expect(view.columnOutline.map((s) => s.key)).toEqual([
+      'scrolling',
+      'frozen',
+    ]);
+    // the level buttons: the rows' along the letter row, the columns' over the row numbers
+    expect(view.outlineLevels.map((b) => [b.axis, b.level, b.style])).toEqual([
+      ['rows', 1, { insetInlineStart: '0px', top: '32px' }],
+      ['rows', 2, { insetInlineStart: '12px', top: '32px' }],
+      ['rows', 3, { insetInlineStart: '24px', top: '32px' }],
+      ['columns', 1, { insetInlineStart: '50px', top: '0px' }],
+      ['columns', 2, { insetInlineStart: '50px', top: '12px' }],
+    ]);
+  });
+
+  it('draws each expanded group’s bracket and every group’s button', () => {
+    const { panes } = setup(grouped);
+    const p = panes();
+    const rows = ogeOutlineStrips(p).rows[0].marks;
+    // level 1: from the pixel before row 13 (240) to the button on row 19 (360 + 4)
+    expect(rows).toEqual([
+      {
+        key: 'bracket-0',
+        kind: 'bracket',
+        tick: 'start',
+        style: { left: '6px', top: '239px', width: '5px', height: '125px' },
+      },
+      {
+        key: 'button-0',
+        kind: 'button',
+        group: 0,
+        collapsed: false,
+        style: { left: '1px', top: '364px', width: '11px', height: '11px' },
+      },
+      {
+        key: 'bracket-1',
+        kind: 'bracket',
+        tick: 'start',
+        style: { left: '18px', top: '279px', width: '5px', height: '45px' },
+      },
+      {
+        key: 'button-1',
+        kind: 'button',
+        group: 1,
+        collapsed: false,
+        style: { left: '13px', top: '324px', width: '11px', height: '11px' },
+      },
+    ]);
+    const columns = ogeOutlineStrips(p).columns[0].marks;
+    expect(
+      columns.map((m) => [m.kind, m.style['left'], m.style['top']]),
+    ).toEqual([
+      ['bracket', '255px', '6px'],
+      ['button', '410px', '1px'],
+    ]);
+  });
+
+  it('shows a collapsed group’s button alone, puts summaries before their details, and hides with the symbols', () => {
+    const { panes } = setup((sheet) => {
+      grouped(sheet);
+      for (const row of [12, 13, 14, 15, 16, 17])
+        sheet.setRow(row, { ...sheet.getRow(row), hidden: true });
+      sheet.setRow(18, { collapsed: true });
+    });
+    const marks = ogeOutlineStrips(panes()).rows[0].marks;
+    expect(marks.map((m) => [m.kind, m.collapsed])).toEqual([['button', true]]);
+    const above = setup((sheet) => {
+      grouped(sheet);
+      sheet.outline = { summaryBelow: false, summaryRight: true };
+    });
+    const first = ogeOutlineStrips(above.panes()).rows[0].marks;
+    // the button on row 12, the bracket from just below it down the details, ticked at their end
+    expect(
+      first.slice(0, 2).map((m) => [m.kind, m.tick, m.style['top']]),
+    ).toEqual([
+      ['bracket', 'end', '235px'],
+      ['button', undefined, '224px'],
+    ]);
+    expect(above.panes({ outline: false }).outline.width).toBe(0);
   });
 });

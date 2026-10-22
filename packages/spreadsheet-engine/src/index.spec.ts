@@ -23,6 +23,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'OGE_INDEXED_COLORS',
     'OGE_MAX_DATE_SERIAL',
     'OGE_OFFICE_THEME_COLORS',
+    'OGE_OUTLINE_LEVEL_SIZE',
     'OGE_SHEET_MAX_COLUMNS',
     'OGE_SHEET_MAX_ROWS',
     'OGE_SHEET_NAME_MAX_LENGTH',
@@ -50,7 +51,9 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'isOgeCellInSheet',
     'isOgeDateFormat',
     'isOgeRichText',
+    'ogeApplyOutlineEdit',
     'ogeApplyTint',
+    'ogeAxisOutline',
     'ogeBorderRank',
     'ogeBorderStrokes',
     'ogeBuiltinNumberFormat',
@@ -111,6 +114,12 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeNoteBoxes',
     'ogeOffsetCellAddress',
     'ogeOpenLink',
+    'ogeOutlineGutter',
+    'ogeOutlineLevel',
+    'ogeOutlineLevelButtons',
+    'ogeOutlineMarks',
+    'ogeOutlineStrips',
+    'ogeOutlineToggle',
     'ogeOwnerCell',
     'ogePaintWindow',
     'ogePanePictures',
@@ -177,7 +186,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
 
   it('exports nothing it does not guard', () => {
     // a new export lands in the list above in the same change
-    expect(Object.keys(engine)).toHaveLength(166);
+    expect(Object.keys(engine)).toHaveLength(175);
   });
 
   it('keeps the internal ZIP and XML layers out of the public surface', () => {

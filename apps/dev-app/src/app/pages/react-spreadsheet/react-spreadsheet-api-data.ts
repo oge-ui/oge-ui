@@ -82,6 +82,13 @@ export const OGE_REACT_SPREADSHEET_API: ApiSections = {
           default: 'undefined',
           description: 'Gridlines. Default: each sheet&#39;s own setting.',
         },
+        {
+          name: 'showOutlineSymbols',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            'The outline&#39;s brackets, group buttons and level buttons beside the headers (Excel&#39;s Show outline symbols). Default: each sheet&#39;s own setting.',
+        },
       ],
     },
     {

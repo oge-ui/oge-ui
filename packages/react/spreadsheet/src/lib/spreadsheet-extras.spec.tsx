@@ -133,6 +133,7 @@ interface HostState {
   source: (source: OgeSpreadsheetSource | null) => void;
   sheet: (index: number | undefined) => void;
   grid: (show: boolean | undefined) => void;
+  outlines: (show: boolean | undefined) => void;
 }
 let set: HostState;
 
@@ -151,11 +152,13 @@ function Host({
   const [source, setSource] = useState<OgeSpreadsheetSource | null>(null);
   const [sheet, setSheet] = useState<number | undefined>(undefined);
   const [grid, setGrid] = useState<boolean | undefined>(undefined);
+  const [outlines, setOutlines] = useState<boolean | undefined>(undefined);
   set = {
     workbook: setWorkbook,
     source: setSource,
     sheet: setSheet,
     grid: setGrid,
+    outlines: setOutlines,
   };
   return (
     <OgeSpreadsheet
@@ -164,6 +167,7 @@ function Host({
       source={source}
       activeSheet={sheet}
       showGridLines={grid}
+      showOutlineSymbols={outlines}
       onHyperlinkClick={(event) => links.push(event)}
       onLoadError={(event) => errors.push(event)}
       style={{ display: 'block', width: 800, height: 400 }}
@@ -653,5 +657,75 @@ describe('OgeSpreadsheet (React) — drawing and chrome', () => {
         .querySelector('.oge-spreadsheet-tab-label')
         ?.getAttribute('data-label'),
     ).toBe('Sheet1');
+  });
+
+  it('draws the outline gutters and collapses groups from their buttons, levels and keys', () => {
+    mount();
+    const workbook = richBook();
+    const sheet = workbook.sheets[0];
+    sheet.view = { ...sheet.view, frozenRows: 0, frozenColumns: 0 };
+    for (const row of [5, 6, 7]) sheet.setRow(row, { outlineLevel: 1 });
+    sheet.setColumns(3, 4, { outlineLevel: 1 });
+    act(() => set.workbook(workbook));
+    expect(
+      host().querySelectorAll('.oge-spreadsheet-row-outline'),
+    ).toHaveLength(1);
+    expect(
+      host().querySelectorAll('.oge-spreadsheet-column-outline'),
+    ).toHaveLength(1);
+    expect(
+      [...host().querySelectorAll('.oge-spreadsheet-outline-level')].map(
+        (b) => [b.getAttribute('data-axis'), b.textContent],
+      ),
+    ).toEqual([
+      ['rows', '1'],
+      ['rows', '2'],
+      ['columns', '1'],
+      ['columns', '2'],
+    ]);
+    expect(
+      host().querySelector(
+        '.oge-spreadsheet-row-outline .oge-spreadsheet-outline-bracket',
+      ),
+    ).not.toBeNull();
+    act(() =>
+      mouse(
+        host().querySelector(
+          '.oge-spreadsheet-row-outline .oge-spreadsheet-outline-button',
+        ) as Element,
+        'pointerdown',
+      ),
+    );
+    expect(sheet.getRow(5)?.hidden).toBe(true);
+    expect(
+      host()
+        .querySelector(
+          '.oge-spreadsheet-row-outline .oge-spreadsheet-outline-button',
+        )
+        ?.classList.contains('oge-spreadsheet-outline-collapsed'),
+    ).toBe(true);
+    // the headers mark the hidden rows
+    expect(
+      host().querySelector('.oge-spreadsheet-header-mark[data-kind="hidden"]'),
+    ).not.toBeNull();
+    act(() =>
+      mouse(
+        host().querySelector(
+          '.oge-spreadsheet-outline-level[data-axis="rows"][data-level="2"]',
+        ) as Element,
+        'pointerdown',
+      ),
+    );
+    expect(sheet.getRow(5)?.hidden).toBeUndefined();
+    act(() => viewer().core.selectCell(6, 0));
+    fireEvent.keyDown(grid(), { key: 'ArrowUp', altKey: true, shiftKey: true });
+    expect(sheet.getRow(6)?.hidden).toBe(true);
+    expect(
+      host().querySelector('.oge-spreadsheet-live')?.textContent?.trim(),
+    ).toBe('Rows 6 to 8 hidden');
+    // the host turns the symbols off
+    act(() => set.outlines(false));
+    expect(host().querySelector('.oge-spreadsheet-outline')).toBeNull();
+    expect(host().querySelector('.oge-spreadsheet-outline-corner')).toBeNull();
   });
 });

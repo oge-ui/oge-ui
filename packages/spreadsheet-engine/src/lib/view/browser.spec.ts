@@ -267,6 +267,22 @@ describe('grid pointer readers', () => {
     ).toEqual({ kind: 'row-header', row: 7 });
     expect(ogeGridHeaderAt(element('oge-spreadsheet-row-header'))).toBeNull();
     expect(ogeGridHeaderAt(element('oge-spreadsheet-pane'))).toBeNull();
+    expect(
+      ogeGridHeaderAt(
+        element('oge-spreadsheet-outline-button', {
+          axis: 'columns',
+          group: '2',
+        }),
+      ),
+    ).toEqual({ kind: 'outline', axis: 'columns', group: 2 });
+    expect(
+      ogeGridHeaderAt(
+        element('oge-spreadsheet-outline-level', { axis: 'rows', level: '3' }),
+      ),
+    ).toEqual({ kind: 'outline-level', axis: 'rows', level: 3 });
+    expect(
+      ogeGridHeaderAt(element('oge-spreadsheet-outline-level')),
+    ).toBeNull();
     expect(ogeGridHeaderAt(null)).toBeNull();
     expect(ogeGridHeaderAt(window)).toBeNull();
   });

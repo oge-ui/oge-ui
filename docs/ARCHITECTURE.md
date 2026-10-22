@@ -2255,6 +2255,22 @@ the editor and the formula engine build on these rules.
   browser move on from the opener. The opener cancels `mousedown` (focus stays
   in the list, so a click on it while open closes), and focus leaving for
   anything but the opener closes the list.
+- **The outline gutter** (P1b, measured in Excel for the web): rows' groups
+  take `12 × buttons + 2` px left of the row headers, columns' the same above
+  the column headers (`ogeAxisOutline`, `ogeOutlineGutter`); the panes,
+  headers, corner, notes and the pointer start at `panes.startX/startY`. A
+  group's bracket runs on the centre of its level button from the pixel
+  before its details to its 11 px button on the summary, ticked at the far
+  end; collapsed groups show only a plus. A group is collapsed by its
+  summary's `collapsed` flag, or — for a file that only hid the rows — by all
+  its details hidden outside any collapsed group (Excel's Show Detail keeps
+  an inner collapsed group collapsed). Hidden rows and columns get Excel's
+  5 px double line in the headers. The gutter's buttons are pointer targets
+  like the headers — 13 px buttons in a row could never meet WCAG 2.2's
+  target size as real buttons — so the keyboard has Alt+Shift+Down / Up, the
+  active cell says when a group's details are hidden, and each change is
+  announced. Edits write `hidden` / `collapsed` into the sheet's rows and
+  columns, as Excel saves them, and lay the sheet out again.
 - **A tab keeps its width when it turns bold**: the label's `::after` is a
   zero-height bold copy, `content: attr(data-label) / ''` — the empty
   alternative text keeps it out of the tab's name, and no second text node

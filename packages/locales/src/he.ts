@@ -1779,5 +1779,12 @@ export const he: OgeLocalePack = {
     allSheets: 'כל הגיליונות',
     definedNames: 'שמות מוגדרים',
     expandFormulaBar: 'הרחבת שורת הנוסחאות',
+    outlineLevelShown: 'רמה {level} מוצגת',
+    rowsShown: 'השורות {first} עד {last} מוצגות',
+    rowsHidden: 'השורות {first} עד {last} מוסתרות',
+    columnsShown: 'העמודות {first} עד {last} מוצגות',
+    columnsHidden: 'העמודות {first} עד {last} מוסתרות',
+    hasCollapsedDetail:
+      'הפרטים מוסתרים, יש להקיש Alt+Shift+חץ למטה כדי להציג אותם',
   },
 };

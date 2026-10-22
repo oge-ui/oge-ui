@@ -332,10 +332,25 @@ export {
   ogeViewportPanes,
   type OgeBox,
   type OgeIndexSpan,
+  type OgeOutlineGutters,
   type OgeSheetHeaders,
   type OgeViewportInput,
   type OgeViewportPanes,
 } from './lib/view/viewport';
+
+export {
+  OGE_OUTLINE_LEVEL_SIZE,
+  ogeApplyOutlineEdit,
+  ogeAxisOutline,
+  ogeOutlineGutter,
+  ogeOutlineLevel,
+  ogeOutlineToggle,
+  type OgeAxisOutline,
+  type OgeOutlineChange,
+  type OgeOutlineEdit,
+  type OgeOutlineGroup,
+  type OgeOutlineSummaryChange,
+} from './lib/view/outline';
 
 export {
   ogeSelectionSummary,
@@ -376,6 +391,9 @@ export {
   ogeGridView,
   ogeHeaderMarks,
   ogeHeaderStrips,
+  ogeOutlineLevelButtons,
+  ogeOutlineMarks,
+  ogeOutlineStrips,
   ogeNoteBoxes,
   ogePanePictures,
   ogePaneStyle,
@@ -390,6 +408,9 @@ export {
   type OgeGridViewInput,
   type OgeHeaderMark,
   type OgeHeaderStrip,
+  type OgeOutlineLevelButton,
+  type OgeOutlineMark,
+  type OgeOutlineStrip,
   type OgeNoteBox,
   type OgeNoteRun,
   type OgePanePicture,

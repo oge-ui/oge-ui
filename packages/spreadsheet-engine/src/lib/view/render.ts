@@ -700,6 +700,8 @@ export interface OgeHeaderCell {
   readonly size: number;
   /** `selected`: part of the selection; `full`: the whole row or column is selected. */
   readonly state: 'none' | 'selected' | 'full';
+  /** Hidden rows or columns lie just before it — Excel's double line marks them. */
+  readonly afterHidden?: true;
 }
 
 /** The header cells of a span of rows or columns. */
@@ -735,6 +737,9 @@ export function ogeHeaderCells(
       offset: axis.offset(index) - origin,
       size,
       state,
+      ...(index > 0 && axis.size(index - 1) === 0
+        ? { afterHidden: true as const }
+        : {}),
     });
   }
   return out;

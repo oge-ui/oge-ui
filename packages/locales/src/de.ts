@@ -1802,5 +1802,12 @@ export const de: OgeLocalePack = {
     allSheets: 'Alle Blätter',
     definedNames: 'Definierte Namen',
     expandFormulaBar: 'Bearbeitungsleiste erweitern',
+    outlineLevelShown: 'Ebene {level} angezeigt',
+    rowsShown: 'Zeilen {first} bis {last} eingeblendet',
+    rowsHidden: 'Zeilen {first} bis {last} ausgeblendet',
+    columnsShown: 'Spalten {first} bis {last} eingeblendet',
+    columnsHidden: 'Spalten {first} bis {last} ausgeblendet',
+    hasCollapsedDetail:
+      'Details ausgeblendet, Alt+Umschalt+Nach-unten zum Einblenden',
   },
 };

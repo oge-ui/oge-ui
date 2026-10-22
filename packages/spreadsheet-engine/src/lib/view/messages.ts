@@ -82,6 +82,15 @@ export interface OgeSpreadsheetMessages {
   readonly definedNames: string;
   /** The formula bar's button (and Ctrl+Shift+U) that shows the whole text on several lines, and one line again. */
   readonly expandFormulaBar: string;
+  /** After an outline level button: `{level}` (1 shows only the outermost summaries). */
+  readonly outlineLevelShown: string;
+  /** After a group's details show or hide (its button, Alt+Shift+Down / Up): `{first}`, `{last}`. */
+  readonly rowsShown: string;
+  readonly rowsHidden: string;
+  readonly columnsShown: string;
+  readonly columnsHidden: string;
+  /** The active cell sums a collapsed group: how to show its details. */
+  readonly hasCollapsedDetail: string;
 }
 
 /** English defaults. */
@@ -169,6 +178,12 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
   allSheets: 'All sheets',
   definedNames: 'Defined names',
   expandFormulaBar: 'Expand formula bar',
+  outlineLevelShown: 'Level {level} shown',
+  rowsShown: 'Rows {first} to {last} shown',
+  rowsHidden: 'Rows {first} to {last} hidden',
+  columnsShown: 'Columns {first} to {last} shown',
+  columnsHidden: 'Columns {first} to {last} hidden',
+  hasCollapsedDetail: 'details hidden, Alt+Shift+Down to show',
 };
 
 /** Merges a partial catalog over the defaults (a nested block replaces the default block whole). */

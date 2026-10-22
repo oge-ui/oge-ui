@@ -861,3 +861,70 @@ describe('OgeSpreadsheetCore — the chrome’s lists', () => {
     expect(tabs[2].ink).toBeUndefined();
   });
 });
+
+describe('OgeSpreadsheetCore — outline', () => {
+  /** Rows 13–18 grouped (15–16 one level deeper) under the summary on row 19; columns E:F under G. */
+  function grouped(): OgeWorkbook {
+    const workbook = sample();
+    const sheet = workbook.sheets[0];
+    for (const row of [12, 13, 14, 15, 16, 17])
+      sheet.setRow(row, { outlineLevel: row === 14 || row === 15 ? 2 : 1 });
+    sheet.setColumns(4, 5, { outlineLevel: 1 });
+    return workbook;
+  }
+  const hidden = (c: OgeSpreadsheetCore) =>
+    [12, 13, 14, 15, 16, 17].filter((row) => c.sheet()?.getRow(row)?.hidden);
+
+  it('toggles a group from its button and says which rows went', () => {
+    const c = core(grouped());
+    const version = c.version();
+    expect(c.toggleOutlineGroup('rows', 0)).toBe(true);
+    expect(hidden(c)).toEqual([12, 13, 14, 15, 16, 17]);
+    expect(c.announcement()).toBe('Rows 13 to 18 hidden');
+    expect(c.version()).toBeGreaterThan(version);
+    expect(c.outline()?.rows.groups[0].collapsed).toBe(true);
+    c.toggleOutlineGroup('rows', 0);
+    expect(hidden(c)).toEqual([]);
+    expect(c.announcement()).toBe('Rows 13 to 18 shown');
+    c.toggleOutlineGroup('columns', 0);
+    expect(c.announcement()).toBe('Columns E to F hidden');
+    expect(c.toggleOutlineGroup('rows', 9)).toBe(false);
+  });
+
+  it('shows a level from its button', () => {
+    const c = core(grouped());
+    expect(c.showOutlineLevel('rows', 2)).toBe(true);
+    expect(hidden(c)).toEqual([14, 15]);
+    expect(c.announcement()).toBe('Level 2 shown');
+    c.showOutlineLevel('rows', 1);
+    expect(hidden(c)).toEqual([12, 13, 14, 15, 16, 17]);
+    expect(c.showOutlineLevel('rows', 4)).toBe(false);
+    expect(c.showOutlineLevel('rows', 0)).toBe(false);
+  });
+
+  it('hides and shows details from the keyboard, rows before columns', () => {
+    const c = core(grouped());
+    c.selectCell(14, 0);
+    // Alt+Shift+Up in the inner group hides it
+    expect(
+      c.keydown(key('ArrowUp', { altKey: true, shiftKey: true }), page),
+    ).toBe('none');
+    expect(hidden(c)).toEqual([14, 15]);
+    // on its summary, Alt+Shift+Down shows it again — and the cell says how
+    c.selectCell(16, 0);
+    expect(c.describeCell(16, 0)).toContain(
+      'details hidden, Alt+Shift+Down to show',
+    );
+    c.keydown(key('ArrowDown', { altKey: true, shiftKey: true }), page);
+    expect(hidden(c)).toEqual([]);
+    // outside every row group: the columns' group
+    c.selectCell(2, 4);
+    c.keydown(key('ArrowUp', { altKey: true, shiftKey: true }), page);
+    expect(c.sheet()?.getColumn(4)?.hidden).toBe(true);
+    // nothing to show here: the key stays the page's
+    c.selectCell(30, 10);
+    expect(
+      c.keydown(key('ArrowDown', { altKey: true, shiftKey: true }), page),
+    ).toBeNull();
+  });
+});

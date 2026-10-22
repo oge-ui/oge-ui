@@ -36,6 +36,8 @@ export interface OgeSpreadsheetProps {
   showHeaders?: boolean;
   /** Gridlines. Default: each sheet's own setting. */
   showGridLines?: boolean;
+  /** The outline's brackets and buttons beside the headers. Default: each sheet's own setting. */
+  showOutlineSymbols?: boolean;
   /** The active sheet's index; the viewer shows a sheet when it changes. */
   activeSheet?: number;
   /** The first active sheet (uncontrolled); default: the workbook's own. */

@@ -108,6 +108,7 @@ _Chrome_
 | `showStatusBar` | `boolean` | `true` | The status bar: the selection's Average, Count and Sum in the active cell's number format (Excel's rules), and the zoom slider. |
 | `showHeaders` | `boolean \| undefined` | `undefined` | Row and column headers. Default: each sheet's own setting. |
 | `showGridLines` | `boolean \| undefined` | `undefined` | Gridlines. Default: each sheet's own setting. |
+| `showOutlineSymbols` | `boolean \| undefined` | `undefined` | The outline's brackets, group buttons and level buttons beside the headers (Excel's Show outline symbols). Default: each sheet's own setting. |
 
 _State (controlled / uncontrolled)_
 
@@ -181,6 +182,7 @@ _Keyboard_
 | `Shift+Space / Ctrl+Space / Ctrl+A / Shift+F8` | `select` | Whole rows, whole columns, the current region then everything, add mode (arrows move, clicks add ranges). |
 | `Ctrl+C / Ctrl+F / F5 or Ctrl+G / Shift+F2 / Alt+Enter` | `act` | Copy as text and Excel HTML, find, go to (the name box), show the active cell's note, open its link. |
 | `Ctrl+Page Up / Ctrl+Page Down / Ctrl+= / Ctrl+− / Ctrl+wheel` | `view` | Previous / next sheet, zoom in and out on Excel's steps. |
+| `Alt+Shift+Down / Alt+Shift+Up` | `outline` | Shows the details of the collapsed group the active cell sums up, or hides those of the innermost group it is in — rows first, then columns; the active cell says when its group's details are hidden. The gutter's group and level buttons do the same with the pointer. |
 | `Ctrl+Shift+U` | `view` | Expands the formula bar to the whole text, up to five lines, and back — as its chevron button does. |
 | `All sheets / Defined names lists` | `menu` | The button beside the sheet tabs lists every visible sheet, the active one checked; the name box's chevron lists the defined names Excel's name box shows. Down or Up on the button opens a list; arrows, Home, End and a first letter move, Enter or Space pick (the sheet shows, or the name is gone to), Escape gives focus back to the button and Tab moves on. |
 | `Escape` | `close` | Closes the find bar, add mode or an open note — and when nothing is open the key stays the page's (a dialog around the viewer still closes). |

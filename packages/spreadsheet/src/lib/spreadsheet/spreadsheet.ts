@@ -169,7 +169,11 @@ let nextId = 0;
           <svg class="oge-spreadsheet-enter-icon" viewBox="0 0 16 12">
             <path d="M.5 6.5L5 11 15.5.5" />
           </svg>
-          <span class="oge-spreadsheet-fx">fx</span>
+          <svg class="oge-spreadsheet-fx" viewBox="0 0 16 14">
+            <path
+              d="M6.5 1.5c-1.2-.4-2 .2-2.3 1.4L2.5 12.5M2 5.5h3.8M8.5 6l4.5 6M13 6l-4.5 6"
+            />
+          </svg>
           <svg class="oge-spreadsheet-fx-chevron" viewBox="0 0 8 8">
             <path d="M1.5 3L4 5.5 6.5 3" />
           </svg>
@@ -509,6 +513,84 @@ let nextId = 0;
                     ></div>
                   }
                 </div>
+              </div>
+            }
+            @for (strip of v.rowOutline; track strip.key) {
+              <div
+                class="oge-spreadsheet-outline oge-spreadsheet-row-outline"
+                [style]="strip.style"
+                aria-hidden="true"
+              >
+                <div class="oge-spreadsheet-pane-flip">
+                  @for (mark of strip.marks; track mark.key) {
+                    @if (mark.kind === 'bracket') {
+                      <div
+                        class="oge-spreadsheet-outline-bracket"
+                        [attr.data-tick]="mark.tick"
+                        [style]="mark.style"
+                      ></div>
+                    } @else {
+                      <div
+                        class="oge-spreadsheet-outline-button"
+                        [class.oge-spreadsheet-outline-collapsed]="
+                          mark.collapsed
+                        "
+                        data-axis="rows"
+                        [attr.data-group]="mark.group"
+                        [style]="mark.style"
+                      ></div>
+                    }
+                  }
+                </div>
+              </div>
+            }
+            @for (strip of v.columnOutline; track strip.key) {
+              <div
+                class="oge-spreadsheet-outline oge-spreadsheet-column-outline"
+                [style]="strip.style"
+                aria-hidden="true"
+              >
+                <div class="oge-spreadsheet-pane-flip">
+                  @for (mark of strip.marks; track mark.key) {
+                    @if (mark.kind === 'bracket') {
+                      <div
+                        class="oge-spreadsheet-outline-bracket"
+                        [attr.data-tick]="mark.tick"
+                        [style]="mark.style"
+                      ></div>
+                    } @else {
+                      <div
+                        class="oge-spreadsheet-outline-button"
+                        [class.oge-spreadsheet-outline-collapsed]="
+                          mark.collapsed
+                        "
+                        data-axis="columns"
+                        [attr.data-group]="mark.group"
+                        [style]="mark.style"
+                      ></div>
+                    }
+                  }
+                </div>
+              </div>
+            }
+            @if (v.outlineCorner; as outlineCorner) {
+              <div
+                class="oge-spreadsheet-outline-corner"
+                [style]="outlineCorner"
+                aria-hidden="true"
+              >
+                @for (
+                  button of v.outlineLevels;
+                  track button.axis + button.level
+                ) {
+                  <div
+                    class="oge-spreadsheet-outline-level"
+                    [attr.data-axis]="button.axis"
+                    [attr.data-level]="button.level"
+                    [style]="button.style"
+                    [textContent]="button.level"
+                  ></div>
+                }
               </div>
             }
             @if (v.panes.headers.rowHeaderWidth > 0) {
@@ -856,6 +938,8 @@ export class OgeSpreadsheet {
   readonly showHeaders = input<boolean | undefined>(undefined);
   /** Gridlines. Default: each sheet's own setting. */
   readonly showGridLines = input<boolean | undefined>(undefined);
+  /** The outline's brackets and buttons beside the headers. Default: each sheet's own setting. */
+  readonly showOutlineSymbols = input<boolean | undefined>(undefined);
   /** The active sheet's index (two-way). */
   readonly activeSheet = model<number | undefined>(undefined);
   /** The active sheet's zoom in percent (two-way); each sheet keeps its own. */
@@ -997,6 +1081,9 @@ export class OgeSpreadsheet {
       scrollLeft: this.scrollLeft(),
       ...(this.showHeaders() !== undefined
         ? { headers: this.showHeaders() }
+        : {}),
+      ...(this.showOutlineSymbols() !== undefined
+        ? { outline: this.showOutlineSymbols() }
         : {}),
     });
   });

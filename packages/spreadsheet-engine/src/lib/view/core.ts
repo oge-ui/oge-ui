@@ -89,6 +89,15 @@ import {
   type OgeSpreadsheetMessages,
 } from './messages';
 import {
+  ogeApplyOutlineEdit,
+  ogeAxisOutline,
+  ogeOutlineLevel,
+  ogeOutlineToggle,
+  type OgeAxisOutline,
+  type OgeOutlineEdit,
+  type OgeOutlineGroup,
+} from './outline';
+import {
   ogeCellSelection,
   ogeCurrentRegion,
   ogeDataEdge,
@@ -293,6 +302,10 @@ export class OgeSpreadsheetCore {
     OgeConditionalFormatter
   >();
   private readonly arrays = new Map<OgeWorksheet, OgeCell[]>();
+  private readonly outlines = new Map<
+    OgeWorksheet,
+    { readonly rows: OgeAxisOutline; readonly columns: OgeAxisOutline }
+  >();
   private readonly selections = new Map<number, OgeSheetSelection>();
   private readonly zooms = new Map<number, number>();
   private readonly scrolls = new Map<number, OgeScrollPosition>();
@@ -519,7 +532,25 @@ export class OgeSpreadsheetCore {
     this.layouts.clear();
     this.formatters.clear();
     this.arrays.clear();
+    this.outlines.clear();
     this.bump();
+  }
+
+  /** The sheet's row and column outlines, made once per sheet and edit. */
+  outline(sheet: OgeWorksheet | null = this.sheet()): {
+    readonly rows: OgeAxisOutline;
+    readonly columns: OgeAxisOutline;
+  } | null {
+    if (!sheet) return null;
+    let known = this.outlines.get(sheet);
+    if (!known) {
+      known = {
+        rows: ogeAxisOutline(sheet, 'rows'),
+        columns: ogeAxisOutline(sheet, 'columns'),
+      };
+      this.outlines.set(sheet, known);
+    }
+    return known;
   }
 
   private bump(): void {
@@ -676,6 +707,7 @@ export class OgeSpreadsheetCore {
       ...input,
       zoom: this.zoom(),
       active: this.selection().active,
+      outlines: this.outline(sheet) ?? undefined,
     });
   }
 
@@ -756,8 +788,8 @@ export class OgeSpreadsheetCore {
               resolver.font({ ...cell.font.source, ...run.font }),
               zoom,
             ),
-          dashOriginX: panes.headers.rowHeaderWidth,
-          dashOriginY: panes.headers.columnHeaderHeight,
+          dashOriginX: panes.startX,
+          dashOriginY: panes.startY,
         }),
       );
     };
@@ -1131,6 +1163,16 @@ export class OgeSpreadsheetCore {
       this.selectAll();
       return true;
     }
+    if (header?.kind === 'outline') {
+      this.drag = null;
+      this.toggleOutlineGroup(header.axis, header.group);
+      return true;
+    }
+    if (header?.kind === 'outline-level') {
+      this.drag = null;
+      this.showOutlineLevel(header.axis, header.level);
+      return true;
+    }
     // a header click makes the band's first visible cell active, as Excel
     // does (measured in Excel for the web: D1 after a click on column D's
     // header far down the sheet, A90 on row 90's), without scrolling to it
@@ -1353,6 +1395,12 @@ export class OgeSpreadsheetCore {
           : this.formatMessage(this.messages.hasNote, { text: noteText }),
       );
     }
+    // a collapsed group's summary: its details are hidden, and how to show them
+    if (
+      this.outlineGroupAt('rows', row, true) >= 0 ||
+      this.outlineGroupAt('columns', col, true) >= 0
+    )
+      parts.push(this.messages.hasCollapsedDetail);
     return parts.join(this.messages.announcementSeparator);
   }
 
@@ -1552,6 +1600,14 @@ export class OgeSpreadsheetCore {
       ArrowLeft: [0, sheet.view.rightToLeft ? 1 : -1],
       ArrowRight: [0, sheet.view.rightToLeft ? -1 : 1],
     };
+    // Alt+Shift+Down / Up: a group's details show / hide
+    if (
+      event.altKey &&
+      shift &&
+      !ctrl &&
+      (key === 'ArrowDown' || key === 'ArrowUp')
+    )
+      return this.outlineKey(key === 'ArrowDown') ? 'none' : null;
     if (arrow[key] && !event.altKey) {
       const [dr, dc] = arrow[key];
       return move(
@@ -1835,6 +1891,104 @@ export class OgeSpreadsheetCore {
       ogePrintTable(workbook, sheet, layout, this.resolver, used, this.locale),
       sheet.name,
     );
+  }
+
+  // ── outline ────────────────────────────────────────────────────────────
+
+  /**
+   * A group's button in the outline gutter (`group`: its index in the axis
+   * outline's groups): an expanded group hides its details, a collapsed one
+   * shows them again — Excel's Hide and Show Detail. `false` for no group.
+   */
+  toggleOutlineGroup(axis: 'rows' | 'columns', group: number): boolean {
+    const sheet = this.sheet();
+    const outline = this.outline(sheet)?.[axis];
+    const target = outline?.groups[group];
+    if (!sheet || !outline || !target) return false;
+    this.applyOutline(sheet, axis, ogeOutlineToggle(outline, target));
+    const label = (index: number) =>
+      axis === 'rows' ? String(index + 1) : ogeColumnName(index);
+    const message =
+      axis === 'rows'
+        ? target.collapsed
+          ? this.messages.rowsShown
+          : this.messages.rowsHidden
+        : target.collapsed
+          ? this.messages.columnsShown
+          : this.messages.columnsHidden;
+    this.announcement.set(
+      this.formatMessage(message, {
+        first: label(target.first),
+        last: label(target.last),
+      }),
+    );
+    return true;
+  }
+
+  /**
+   * Alt+Shift+Down / Up: shows the details of the collapsed group the active
+   * cell sums up, or hides those of the innermost expanded group it is in —
+   * rows first, then columns. `false` when there is none.
+   */
+  private outlineKey(show: boolean): boolean {
+    const { row, col } = this.selection().active;
+    for (const axis of ['rows', 'columns'] as const) {
+      const index = axis === 'rows' ? row : col;
+      const group = this.outlineGroupAt(axis, index, show);
+      if (group >= 0) return this.toggleOutlineGroup(axis, group);
+    }
+    return false;
+  }
+
+  /** The deepest group a row or column belongs to: collapsed with it as summary (`collapsed`), else expanded around it. */
+  private outlineGroupAt(
+    axis: 'rows' | 'columns',
+    index: number,
+    collapsed: boolean,
+  ): number {
+    const groups = this.outline()?.[axis].groups ?? [];
+    let best = -1;
+    groups.forEach((g: OgeOutlineGroup, i) => {
+      const fits = collapsed
+        ? g.collapsed && g.summary === index
+        : !g.collapsed &&
+          ((index >= g.first && index <= g.last) || g.summary === index);
+      if (fits && (best < 0 || g.level > groups[best].level)) best = i;
+    });
+    return best;
+  }
+
+  /**
+   * A level button: shows the rows (columns) down to `level` — 1 leaves only
+   * the outermost summaries, the last shows every detail — and says so.
+   */
+  showOutlineLevel(axis: 'rows' | 'columns', level: number): boolean {
+    const sheet = this.sheet();
+    const outline = this.outline(sheet)?.[axis];
+    if (!sheet || !outline) return false;
+    if (!Number.isInteger(level) || level < 1 || level > outline.buttons)
+      return false;
+    this.applyOutline(
+      sheet,
+      axis,
+      ogeOutlineLevel(sheet, axis, outline, level),
+    );
+    this.announcement.set(
+      this.formatMessage(this.messages.outlineLevelShown, { level }),
+    );
+    return true;
+  }
+
+  /** Writes an outline edit into the sheet and lays it out again. */
+  private applyOutline(
+    sheet: OgeWorksheet,
+    axis: 'rows' | 'columns',
+    edit: OgeOutlineEdit,
+  ): void {
+    ogeApplyOutlineEdit(sheet, axis, edit);
+    this.layouts.delete(sheet);
+    this.outlines.delete(sheet);
+    this.bump();
   }
 
   // ── the chrome's popup lists ───────────────────────────────────────────

@@ -1765,5 +1765,11 @@ export const tr: OgeLocalePack = {
     allSheets: 'Tüm sayfalar',
     definedNames: 'Tanımlı adlar',
     expandFormulaBar: 'Formül çubuğunu genişlet',
+    outlineLevelShown: 'Düzey {level} gösterildi',
+    rowsShown: '{first}-{last} arası satırlar gösterildi',
+    rowsHidden: '{first}-{last} arası satırlar gizlendi',
+    columnsShown: '{first}-{last} arası sütunlar gösterildi',
+    columnsHidden: '{first}-{last} arası sütunlar gizlendi',
+    hasCollapsedDetail: 'ayrıntılar gizli, göstermek için Alt+Shift+Aşağı ok',
   },
 };

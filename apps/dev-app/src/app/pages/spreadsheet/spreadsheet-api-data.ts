@@ -118,6 +118,12 @@ export const SPREADSHEET_TYPE_BLOCKS: NonNullable<ApiSections['types']> = [
           'Previous / next sheet, zoom in and out on Excel&#39;s steps.',
       },
       {
+        name: 'Alt+Shift+Down / Alt+Shift+Up',
+        type: 'outline',
+        description:
+          'Shows the details of the collapsed group the active cell sums up, or hides those of the innermost group it is in — rows first, then columns; the active cell says when its group&#39;s details are hidden. The gutter&#39;s group and level buttons do the same with the pointer.',
+      },
+      {
         name: 'Ctrl+Shift+U',
         type: 'view',
         description:
@@ -210,6 +216,13 @@ export const OGE_SPREADSHEET_API: ApiSections = {
           type: 'boolean | undefined',
           default: 'undefined',
           description: 'Gridlines. Default: each sheet&#39;s own setting.',
+        },
+        {
+          name: 'showOutlineSymbols',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            'The outline&#39;s brackets, group buttons and level buttons beside the headers (Excel&#39;s Show outline symbols). Default: each sheet&#39;s own setting.',
         },
       ],
     },

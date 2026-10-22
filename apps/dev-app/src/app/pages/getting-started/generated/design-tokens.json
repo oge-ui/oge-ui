@@ -2370,6 +2370,89 @@
       ]
     },
     {
+      "n": "--oge-spreadsheet-outline-line",
+      "c": "component",
+      "d": "the outline gutters: brackets and group buttons, and the level buttons",
+      "v": {
+        "light": "#616161",
+        "dark": "#b0b0b0",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#616161",
+        "dark": "#b0b0b0",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-outline-level-bg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-outline-level-border",
+      "c": "component",
+      "v": {
+        "light": "#dedfe0",
+        "dark": "#666666",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#dedfe0",
+        "dark": "#666666",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-hidden-line",
+      "c": "component",
+      "d": "where hidden rows or columns are: a double line in the headers",
+      "v": {
+        "light": "#969696",
+        "dark": "#8a8a8a",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#969696",
+        "dark": "#8a8a8a",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-hidden-gap",
+      "c": "component",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#0a0a0a"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#0a0a0a"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
       "n": "--oge-spreadsheet-tab-strip-bg",
       "c": "component",
       "v": {

@@ -372,7 +372,15 @@ describe('ogeHeaderCells', () => {
       ogeHeaderCells('columns', axes, { first: 0, last: 3 }, 0, selection),
     ).toEqual([
       { index: 0, label: 'A', offset: 0, size: 64, state: 'selected' },
-      { index: 2, label: 'C', offset: 64, size: 64, state: 'full' },
+      // B is hidden: C carries Excel's double line before it
+      {
+        index: 2,
+        label: 'C',
+        offset: 64,
+        size: 64,
+        state: 'full',
+        afterHidden: true,
+      },
       { index: 3, label: 'D', offset: 128, size: 64, state: 'none' },
     ]);
     expect(

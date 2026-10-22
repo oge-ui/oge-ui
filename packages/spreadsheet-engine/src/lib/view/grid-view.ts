@@ -18,7 +18,16 @@ import {
   type OgeRenderPane,
   type OgeSelectionShapes,
 } from './render';
-import { ogeCellAt, type OgeViewportPanes } from './viewport';
+import {
+  OGE_OUTLINE_LEVEL_SIZE,
+  type OgeAxisOutline,
+  type OgeOutlineGroup,
+} from './outline';
+import {
+  ogeCellAt,
+  type OgeIndexSpan,
+  type OgeViewportPanes,
+} from './viewport';
 
 /** A strip of row or column headers: the scrolling part, or the frozen part over it. */
 export interface OgeHeaderStrip {
@@ -35,9 +44,44 @@ export interface OgeHeaderMark {
   readonly key: string;
   /**
    * `edge`: the 2 px line toward the cells under a run of selected headers;
-   * `separator`: the line just before the run, in the selected colour.
+   * `separator`: the line just before the run, in the selected colour;
+   * `hidden`: the double line where hidden rows or columns are.
    */
-  readonly kind: 'edge' | 'separator';
+  readonly kind: 'edge' | 'separator' | 'hidden';
+  readonly style: OgeCss;
+}
+
+/** A strip of the outline gutter beside the row or column headers: the scrolling part, or the frozen part over it. */
+export interface OgeOutlineStrip {
+  readonly key: 'scrolling' | 'frozen';
+  readonly frozen: boolean;
+  readonly style: OgeCss;
+  readonly marks: readonly OgeOutlineMark[];
+}
+
+/**
+ * A mark in the outline gutter, in the strip's pixels: a group's bracket — a
+ * line along its details with a tick at their far end from the summary — or
+ * the button on its summary row or column, a minus to collapse, a plus to
+ * expand.
+ */
+export interface OgeOutlineMark {
+  readonly key: string;
+  readonly kind: 'bracket' | 'button';
+  /** A bracket's tick: before its details (summary after them) or after them. */
+  readonly tick?: 'start' | 'end';
+  /** A button's group: its index in the axis outline's `groups`. */
+  readonly group?: number;
+  /** A button's group is collapsed: it shows a plus. */
+  readonly collapsed?: boolean;
+  readonly style: OgeCss;
+}
+
+/** One of the outline's level buttons in the grid's top corner, placed from the grid's start corner. */
+export interface OgeOutlineLevelButton {
+  readonly axis: 'rows' | 'columns';
+  /** 1 shows only the outermost summaries; the last shows every detail. */
+  readonly level: number;
   readonly style: OgeCss;
 }
 
@@ -66,6 +110,17 @@ export interface OgeGridView {
   readonly sizer: OgeCss;
   readonly columnHeaders: readonly OgeHeaderStrip[];
   readonly rowHeaders: readonly OgeHeaderStrip[];
+  /** The outline gutters' strips (empty without groups). */
+  readonly rowOutline: readonly OgeOutlineStrip[];
+  readonly columnOutline: readonly OgeOutlineStrip[];
+  /** The gutters' top corner, `null` without a gutter. */
+  readonly outlineCorner: OgeCss | null;
+  /**
+   * The level buttons, placed in the gutters' corner. Like the headers they
+   * are pointer targets; the keyboard shows and hides a group's details with
+   * Alt+Shift+Down and Up.
+   */
+  readonly outlineLevels: readonly OgeOutlineLevelButton[];
   /** The select-all corner. */
   readonly corner: OgeCss;
   /** The header labels' font: the Normal style's, one Normal row tall (longhands). */
@@ -111,7 +166,19 @@ export interface OgeNoteRun {
 export type OgeGridHeaderTarget =
   | { readonly kind: 'select-all' }
   | { readonly kind: 'row-header'; readonly row: number }
-  | { readonly kind: 'column-header'; readonly col: number };
+  | { readonly kind: 'column-header'; readonly col: number }
+  /** A group's button in the outline gutter (`group`: its index in the axis outline's groups). */
+  | {
+      readonly kind: 'outline';
+      readonly axis: 'rows' | 'columns';
+      readonly group: number;
+    }
+  /** One of the outline's level buttons. */
+  | {
+      readonly kind: 'outline-level';
+      readonly axis: 'rows' | 'columns';
+      readonly level: number;
+    };
 
 /** A scroller's scroll offsets (`scrollLeft` may be negative in a right-to-left scroller). */
 export interface OgeScrollPosition {
@@ -135,7 +202,7 @@ const px = (value: number) => `${value}px`;
 
 /** Where a pane sits in the sizer's 3 × 3 grid, and how it sticks. */
 export function ogePaneStyle(key: OgePaneKey, panes: OgeViewportPanes): OgeCss {
-  const { rowHeaderWidth, columnHeaderHeight } = panes.headers;
+  const { startX, startY } = panes;
   switch (key) {
     case 'main':
       return {
@@ -152,7 +219,7 @@ export function ogePaneStyle(key: OgePaneKey, panes: OgeViewportPanes): OgeCss {
         width: px(panes.scrollWidth),
         height: px(panes.frozenHeight),
         position: 'sticky',
-        top: px(columnHeaderHeight),
+        top: px(startY),
         zIndex: '2',
       };
     case 'left':
@@ -163,7 +230,7 @@ export function ogePaneStyle(key: OgePaneKey, panes: OgeViewportPanes): OgeCss {
         width: px(panes.frozenWidth),
         height: px(panes.scrollHeight),
         position: 'sticky',
-        insetInlineStart: px(rowHeaderWidth),
+        insetInlineStart: px(startX),
         zIndex: '2',
       };
     case 'corner':
@@ -175,11 +242,231 @@ export function ogePaneStyle(key: OgePaneKey, panes: OgeViewportPanes): OgeCss {
         width: px(panes.frozenWidth),
         height: px(panes.frozenHeight),
         position: 'sticky',
-        top: px(columnHeaderHeight),
-        insetInlineStart: px(rowHeaderWidth),
+        top: px(startY),
+        insetInlineStart: px(startX),
         zIndex: '3',
       };
   }
+}
+
+/**
+ * The outline marks of a strip's span along an axis (`origin`: the strip's
+ * first pixel as a sheet offset): each expanded group's bracket from the
+ * pixel before its details to its button, and every group's button centred
+ * on its summary — on the centre of the group's level button across the
+ * gutter (measured in Excel for the web).
+ */
+export function ogeOutlineMarks(
+  kind: 'rows' | 'columns',
+  outline: OgeAxisOutline,
+  axis: { offset(index: number): number; size(index: number): number },
+  span: OgeIndexSpan,
+  origin: number,
+): OgeOutlineMark[] {
+  const marks: OgeOutlineMark[] = [];
+  const along = (
+    start: number,
+    length: number,
+    across: number,
+    depth: number,
+  ) =>
+    kind === 'rows'
+      ? {
+          left: px(across),
+          top: px(start),
+          width: px(depth),
+          height: px(length),
+        }
+      : {
+          left: px(start),
+          top: px(across),
+          width: px(length),
+          height: px(depth),
+        };
+  outline.groups.forEach((group: OgeOutlineGroup, index) => {
+    const first =
+      group.summary >= 0 ? Math.min(group.first, group.summary) : group.first;
+    const last =
+      group.summary >= 0 ? Math.max(group.last, group.summary) : group.last;
+    if (last < span.first || first > span.last) return;
+    const line = (group.level - 1) * OGE_OUTLINE_LEVEL_SIZE + 6;
+    const summarySize = group.summary >= 0 ? axis.size(group.summary) : 0;
+    // the 11 px button, centred on the summary (none on a hidden summary)
+    const button =
+      summarySize > 0
+        ? axis.offset(group.summary) -
+          origin +
+          Math.floor((summarySize - 12) / 2)
+        : null;
+    // no bracket over details hidden by a collapsed group around this one
+    const shown = axis.offset(group.last + 1) > axis.offset(group.first);
+    if (!group.collapsed && shown) {
+      const detailStart = axis.offset(group.first) - origin - 1;
+      const detailEnd = axis.offset(group.last + 1) - origin - 1;
+      const after = group.summary < 0 || group.summary > group.last;
+      const from = after ? detailStart : (button ?? detailStart) + 11;
+      const to = after ? (button ?? detailEnd + 1) : detailEnd + 1;
+      if (to > from)
+        marks.push({
+          key: `bracket-${index}`,
+          kind: 'bracket',
+          tick: after ? 'start' : 'end',
+          style: along(from, to - from, line, 5),
+        });
+    }
+    if (button !== null)
+      marks.push({
+        key: `button-${index}`,
+        kind: 'button',
+        group: index,
+        collapsed: group.collapsed,
+        style: along(button, 11, line - 5, 11),
+      });
+  });
+  return marks;
+}
+
+/** The outline gutters' strips: the scrolling ones and, over frozen panes, the frozen ones. */
+export function ogeOutlineStrips(panes: OgeViewportPanes): {
+  readonly rows: readonly OgeOutlineStrip[];
+  readonly columns: readonly OgeOutlineStrip[];
+} {
+  const { outline, startX, startY } = panes;
+  const rows: OgeOutlineStrip[] = [];
+  const columns: OgeOutlineStrip[] = [];
+  if (outline.width > 0) {
+    rows.push({
+      key: 'scrolling',
+      frozen: false,
+      style: {
+        gridRow: '3',
+        gridColumn: '1 / 4',
+        justifySelf: 'start',
+        width: px(outline.width),
+        height: px(panes.scrollHeight),
+        position: 'sticky',
+        insetInlineStart: '0',
+        zIndex: '4',
+      },
+      marks: ogeOutlineMarks(
+        'rows',
+        outline.rows,
+        panes.axes.rows,
+        panes.rows,
+        panes.originY,
+      ),
+    });
+    if (panes.frozenRows > 0) {
+      rows.push({
+        key: 'frozen',
+        frozen: true,
+        style: {
+          gridRow: '2 / 4',
+          gridColumn: '1 / 4',
+          alignSelf: 'start',
+          justifySelf: 'start',
+          width: px(outline.width),
+          height: px(panes.frozenHeight),
+          position: 'sticky',
+          top: px(startY),
+          insetInlineStart: '0',
+          zIndex: '5',
+        },
+        marks: ogeOutlineMarks(
+          'rows',
+          outline.rows,
+          panes.axes.rows,
+          panes.frozenRowSpan,
+          0,
+        ),
+      });
+    }
+  }
+  if (outline.height > 0) {
+    columns.push({
+      key: 'scrolling',
+      frozen: false,
+      style: {
+        gridRow: '1 / 4',
+        gridColumn: '3',
+        alignSelf: 'start',
+        width: px(panes.scrollWidth),
+        height: px(outline.height),
+        position: 'sticky',
+        top: '0',
+        zIndex: '4',
+      },
+      marks: ogeOutlineMarks(
+        'columns',
+        outline.columns,
+        panes.axes.cols,
+        panes.cols,
+        panes.originX,
+      ),
+    });
+    if (panes.frozenColumns > 0) {
+      columns.push({
+        key: 'frozen',
+        frozen: true,
+        style: {
+          gridRow: '1 / 4',
+          gridColumn: '2 / 4',
+          alignSelf: 'start',
+          justifySelf: 'start',
+          width: px(panes.frozenWidth),
+          height: px(outline.height),
+          position: 'sticky',
+          top: '0',
+          insetInlineStart: px(startX),
+          zIndex: '5',
+        },
+        marks: ogeOutlineMarks(
+          'columns',
+          outline.columns,
+          panes.axes.cols,
+          panes.frozenColSpan,
+          0,
+        ),
+      });
+    }
+  }
+  return { rows, columns };
+}
+
+/**
+ * The level buttons, from the grid's start corner (measured in Excel for the
+ * web): the rows' buttons along the column-header row in the rows' gutter,
+ * one pixel above the cells; the columns' stacked in the row-number column
+ * above the corner, one pixel from it.
+ */
+export function ogeOutlineLevelButtons(
+  panes: OgeViewportPanes,
+): OgeOutlineLevelButton[] {
+  const { outline } = panes;
+  const size = OGE_OUTLINE_LEVEL_SIZE;
+  const out: OgeOutlineLevelButton[] = [];
+  if (outline.width > 0) {
+    const top = Math.max(0, panes.startY - 14);
+    for (let level = 1; level <= outline.rows.buttons; level++)
+      out.push({
+        axis: 'rows',
+        level,
+        style: { insetInlineStart: px((level - 1) * size), top: px(top) },
+      });
+  }
+  if (outline.height > 0) {
+    const start = Math.max(0, panes.startX - 14);
+    for (let level = 1; level <= outline.columns.buttons; level++)
+      out.push({
+        axis: 'columns',
+        level,
+        style: {
+          insetInlineStart: px(start),
+          top: px((level - 1) * size),
+        },
+      });
+  }
+  return out;
 }
 
 /**
@@ -197,6 +484,29 @@ export function ogeHeaderMarks(
   depth: number,
 ): OgeHeaderMark[] {
   const marks: OgeHeaderMark[] = [];
+  // hidden rows or columns: a 5 px double line across the strip, centred on
+  // the last pixel before the next shown one (measured in Excel for the web)
+  for (const cell of cells) {
+    if (!cell.afterHidden) continue;
+    marks.push({
+      key: `hidden-${cell.index}`,
+      kind: 'hidden',
+      style:
+        kind === 'columns'
+          ? {
+              left: px(cell.offset - 3),
+              top: '0',
+              width: '5px',
+              height: px(depth),
+            }
+          : {
+              left: '0',
+              top: px(cell.offset - 3),
+              width: px(depth),
+              height: '5px',
+            },
+    });
+  }
   for (let i = 0; i < cells.length; i++) {
     if (cells[i].state !== 'selected') continue;
     const first = cells[i];
@@ -260,6 +570,7 @@ export function ogeHeaderStrips(
   readonly rows: readonly OgeHeaderStrip[];
 } {
   const { rowHeaderWidth, columnHeaderHeight } = panes.headers;
+  const { outline, startX, startY } = panes;
   const columns: OgeHeaderStrip[] = [];
   const rows: OgeHeaderStrip[] = [];
   const strip = (
@@ -289,8 +600,9 @@ export function ogeHeaderStrips(
           alignSelf: 'start',
           width: px(panes.scrollWidth),
           height: px(columnHeaderHeight),
+          marginBlockStart: px(outline.height),
           position: 'sticky',
-          top: '0',
+          top: px(outline.height),
           zIndex: '4',
         },
         ogeHeaderCells(
@@ -314,9 +626,10 @@ export function ogeHeaderStrips(
             justifySelf: 'start',
             width: px(panes.frozenWidth),
             height: px(columnHeaderHeight),
+            marginBlockStart: px(outline.height),
             position: 'sticky',
-            top: '0',
-            insetInlineStart: px(rowHeaderWidth),
+            top: px(outline.height),
+            insetInlineStart: px(startX),
             zIndex: '5',
           },
           ogeHeaderCells(
@@ -341,8 +654,9 @@ export function ogeHeaderStrips(
           justifySelf: 'start',
           width: px(rowHeaderWidth),
           height: px(panes.scrollHeight),
+          marginInlineStart: px(outline.width),
           position: 'sticky',
-          insetInlineStart: '0',
+          insetInlineStart: px(outline.width),
           zIndex: '4',
         },
         ogeHeaderCells(
@@ -366,9 +680,10 @@ export function ogeHeaderStrips(
             justifySelf: 'start',
             width: px(rowHeaderWidth),
             height: px(panes.frozenHeight),
+            marginInlineStart: px(outline.width),
             position: 'sticky',
-            top: px(columnHeaderHeight),
-            insetInlineStart: '0',
+            top: px(startY),
+            insetInlineStart: px(outline.width),
             zIndex: '5',
           },
           ogeHeaderCells('rows', panes.axes, panes.frozenRowSpan, 0, selection),
@@ -383,7 +698,9 @@ export function ogeHeaderStrips(
 export function ogeGridView(input: OgeGridViewInput): OgeGridView {
   const { panes, sheet, selection, spill } = input;
   const { rowHeaderWidth, columnHeaderHeight, fontPx } = panes.headers;
+  const { outline, startX, startY } = panes;
   const strips = ogeHeaderStrips(panes, selection);
+  const gutters = ogeOutlineStrips(panes);
   return {
     panes,
     render: input.render.map((pane) => ({
@@ -395,13 +712,31 @@ export function ogeGridView(input: OgeGridViewInput): OgeGridView {
       pictures: input.pictures.get(pane.key) ?? [],
     })),
     sizer: {
-      width: px(rowHeaderWidth + panes.frozenWidth + panes.scrollWidth),
-      height: px(columnHeaderHeight + panes.frozenHeight + panes.scrollHeight),
-      gridTemplateColumns: `${rowHeaderWidth}px ${panes.frozenWidth}px ${panes.scrollWidth}px`,
-      gridTemplateRows: `${columnHeaderHeight}px ${panes.frozenHeight}px ${panes.scrollHeight}px`,
+      width: px(startX + panes.frozenWidth + panes.scrollWidth),
+      height: px(startY + panes.frozenHeight + panes.scrollHeight),
+      gridTemplateColumns: `${startX}px ${panes.frozenWidth}px ${panes.scrollWidth}px`,
+      gridTemplateRows: `${startY}px ${panes.frozenHeight}px ${panes.scrollHeight}px`,
     },
     columnHeaders: strips.columns,
     rowHeaders: strips.rows,
+    rowOutline: gutters.rows,
+    columnOutline: gutters.columns,
+    outlineCorner:
+      outline.width > 0 || outline.height > 0
+        ? {
+            gridRow: '1 / 4',
+            gridColumn: '1 / 4',
+            alignSelf: 'start',
+            justifySelf: 'start',
+            width: px(startX),
+            height: px(startY),
+            position: 'sticky',
+            top: '0',
+            insetInlineStart: '0',
+            zIndex: '6',
+          }
+        : null,
+    outlineLevels: ogeOutlineLevelButtons(panes),
     corner: {
       gridRow: '1 / 4',
       gridColumn: '1 / 4',
@@ -409,10 +744,12 @@ export function ogeGridView(input: OgeGridViewInput): OgeGridView {
       justifySelf: 'start',
       width: px(rowHeaderWidth),
       height: px(columnHeaderHeight),
+      marginBlockStart: px(outline.height),
+      marginInlineStart: px(outline.width),
       position: 'sticky',
-      top: '0',
-      insetInlineStart: '0',
-      zIndex: '6',
+      top: px(outline.height),
+      insetInlineStart: px(outline.width),
+      zIndex: '7',
     },
     // a label's line box is one Normal-font row, as a cell's
     headerFont: {
@@ -517,12 +854,12 @@ export function ogeNoteBoxes(
       (frozenCol
         ? 0
         : panes.originX + Math.abs(scroll.scrollLeft) - panes.frozenWidth) +
-      panes.headers.rowHeaderWidth +
+      panes.startX +
       10;
     const y =
       rows.offset(row) -
       (frozenRow ? 0 : panes.originY + scroll.scrollTop - panes.frozenHeight) +
-      panes.headers.columnHeaderHeight -
+      panes.startY -
       6;
     const runs =
       typeof note.text === 'string'
@@ -557,8 +894,8 @@ export function ogePointerCell(
   const fromStart = sheet.view.rightToLeft
     ? pointer.rect.right - pointer.clientX
     : pointer.clientX - pointer.rect.left;
-  let x = fromStart - panes.headers.rowHeaderWidth;
-  let y = pointer.clientY - pointer.rect.top - panes.headers.columnHeaderHeight;
+  let x = fromStart - panes.startX;
+  let y = pointer.clientY - pointer.rect.top - panes.startY;
   if (panes.cellWidth <= 0 || panes.cellHeight <= 0) return null;
   if (nearest) {
     x = Math.max(0, Math.min(panes.cellWidth - 1, x));

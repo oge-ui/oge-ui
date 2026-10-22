@@ -455,3 +455,34 @@ describe('OgeSpreadsheetCore — header clicks', () => {
     expect(c.selection().active).toEqual({ row: 4, col: 1 });
   });
 });
+
+describe('OgeSpreadsheetCore — outline buttons', () => {
+  it('toggles a group and shows a level from the gutter, without selecting', () => {
+    const workbook = book();
+    const sheet = workbook.sheets[0];
+    for (const row of [3, 4, 5]) sheet.setRow(row, { outlineLevel: 1 });
+    const { c, panes } = setup(workbook);
+    c.selectCell(1, 1);
+    expect(
+      c.pointerDown(
+        panes(),
+        at(5, 5),
+        { kind: 'outline', axis: 'rows', group: 0 },
+        input(),
+      ),
+    ).toBe(true);
+    expect(sheet.getRow(3)?.hidden).toBe(true);
+    expect(c.selection().active).toEqual({ row: 1, col: 1 });
+    expect(c.pointerUp(panes(), at(5, 5), input())).toBeNull();
+    c.pointerDown(
+      panes(),
+      at(5, 5),
+      { kind: 'outline-level', axis: 'rows', level: 2 },
+      input(),
+    );
+    expect(sheet.getRow(3)?.hidden).toBeUndefined();
+    // a gutter takes the grid's start: the cell under a point moves with it
+    expect(panes().startX).toBe(26 + 26);
+    expect(c.pointerDown(panes(), at(30, 30), null, input())).toBe(false);
+  });
+});

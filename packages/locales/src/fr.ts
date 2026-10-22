@@ -1821,5 +1821,11 @@ export const fr: OgeLocalePack = {
     allSheets: 'Toutes les feuilles',
     definedNames: 'Noms définis',
     expandFormulaBar: 'Développer la barre de formule',
+    outlineLevelShown: 'Niveau {level} affiché',
+    rowsShown: 'Lignes {first} à {last} affichées',
+    rowsHidden: 'Lignes {first} à {last} masquées',
+    columnsShown: 'Colonnes {first} à {last} affichées',
+    columnsHidden: 'Colonnes {first} à {last} masquées',
+    hasCollapsedDetail: 'détails masqués, Alt+Maj+Bas pour les afficher',
   },
 };

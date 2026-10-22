@@ -1726,5 +1726,11 @@ export const zhCN: OgeLocalePack = {
     allSheets: '所有工作表',
     definedNames: '定义的名称',
     expandFormulaBar: '展开编辑栏',
+    outlineLevelShown: '已显示级别 {level}',
+    rowsShown: '已显示第 {first} 至 {last} 行',
+    rowsHidden: '已隐藏第 {first} 至 {last} 行',
+    columnsShown: '已显示第 {first} 至 {last} 列',
+    columnsHidden: '已隐藏第 {first} 至 {last} 列',
+    hasCollapsedDetail: '明细已隐藏，按 Alt+Shift+向下键显示',
   },
 };

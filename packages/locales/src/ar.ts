@@ -1787,5 +1787,11 @@ export const ar: OgeLocalePack = {
     allSheets: 'كل الأوراق',
     definedNames: 'الأسماء المعرّفة',
     expandFormulaBar: 'توسيع شريط الصيغة',
+    outlineLevelShown: 'تم عرض المستوى {level}',
+    rowsShown: 'تم إظهار الصفوف من {first} إلى {last}',
+    rowsHidden: 'تم إخفاء الصفوف من {first} إلى {last}',
+    columnsShown: 'تم إظهار الأعمدة من {first} إلى {last}',
+    columnsHidden: 'تم إخفاء الأعمدة من {first} إلى {last}',
+    hasCollapsedDetail: 'التفاصيل مخفية، اضغط Alt+Shift+سهم لأسفل لإظهارها',
   },
 };

@@ -246,6 +246,13 @@
   --oge-spreadsheet-header-selected-fg: #0f703b;
   --oge-spreadsheet-header-selected-separator: #a0d8b9;
   --oge-spreadsheet-corner-mark: #b7b7b7;
+  /* the outline gutters: brackets and group buttons, and the level buttons */
+  --oge-spreadsheet-outline-line: #616161;
+  --oge-spreadsheet-outline-level-bg: #ffffff;
+  --oge-spreadsheet-outline-level-border: #dedfe0;
+  /* where hidden rows or columns are: a double line in the headers */
+  --oge-spreadsheet-hidden-line: #969696;
+  --oge-spreadsheet-hidden-gap: #ffffff;
   --oge-spreadsheet-tab-strip-bg: #f5f5f5;
   --oge-spreadsheet-tab-fg: #444444;
   --oge-spreadsheet-tab-hover-bg: #e1dfdd;

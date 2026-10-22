@@ -1805,5 +1805,12 @@ export const it: OgeLocalePack = {
     allSheets: 'Tutti i fogli',
     definedNames: 'Nomi definiti',
     expandFormulaBar: 'Espandi la barra della formula',
+    outlineLevelShown: 'Livello {level} visualizzato',
+    rowsShown: 'Righe da {first} a {last} visualizzate',
+    rowsHidden: 'Righe da {first} a {last} nascoste',
+    columnsShown: 'Colonne da {first} a {last} visualizzate',
+    columnsHidden: 'Colonne da {first} a {last} nascoste',
+    hasCollapsedDetail:
+      'dettagli nascosti, Alt+Maiusc+Freccia giù per mostrarli',
   },
 };
