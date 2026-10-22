@@ -219,12 +219,13 @@ describe('OgeSpreadsheet (React)', () => {
       ),
     ).toEqual(['Sheet1', 'Second']);
     expect(root().querySelector('.oge-spreadsheet-note-mark')).not.toBeNull();
+    // A1 is selected: a frame, and no fill handle — a viewer has none, as Excel's own
     expect(
       root().querySelector('.oge-spreadsheet-selection-frame'),
     ).not.toBeNull();
     expect(
       root().querySelector('.oge-spreadsheet-selection-handle'),
-    ).not.toBeNull();
+    ).toBeNull();
     expect(nameBox()).toBe('A1');
   });
 

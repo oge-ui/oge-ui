@@ -260,6 +260,16 @@
           "Previous / next sheet, zoom in and out on Excel's steps."
         ],
         [
+          "Ctrl+Shift+U",
+          "view",
+          "Expands the formula bar to the whole text, up to five lines, and back — as its chevron button does."
+        ],
+        [
+          "All sheets / Defined names lists",
+          "menu",
+          "The button beside the sheet tabs lists every visible sheet, the active one checked; the name box's chevron lists the defined names Excel's name box shows. Down or Up on the button opens a list; arrows, Home, End and a first letter move, Enter or Space pick (the sheet shows, or the name is gone to), Escape gives focus back to the button and Tab moves on."
+        ],
+        [
           "Escape",
           "close",
           "Closes the find bar, add mode or an open note — and when nothing is open the key stays the page's (a dialog around the viewer still closes)."

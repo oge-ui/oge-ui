@@ -1800,5 +1800,8 @@ export const ru: OgeLocalePack = {
     statusSum: 'Сумма: {value}',
     previousSheets: 'Прокрутить к предыдущим листам',
     nextSheets: 'Прокрутить к следующим листам',
+    allSheets: 'Все листы',
+    definedNames: 'Определенные имена',
+    expandFormulaBar: 'Развернуть строку формул',
   },
 };

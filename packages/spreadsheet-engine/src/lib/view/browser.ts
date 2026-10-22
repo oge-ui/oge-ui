@@ -41,6 +41,21 @@ export function ogeGridHeaderAt(
   return row != null ? { kind: 'row-header', row: Number(row) } : null;
 }
 
+/** Whether a list that scrolls sideways can scroll back and forward. */
+export interface OgeScrollEdges {
+  readonly back: boolean;
+  readonly forward: boolean;
+}
+
+/** Where a sideways-scrolling list (the sheet tabs) can still go — `scrollLeft` is negative in a right-to-left one. */
+export function ogeScrollEdges(
+  list: Pick<Element, 'scrollLeft' | 'scrollWidth' | 'clientWidth'>,
+): OgeScrollEdges {
+  const offset = Math.abs(list.scrollLeft);
+  const room = list.scrollWidth - list.clientWidth;
+  return { back: offset > 1, forward: offset < room - 1 };
+}
+
 /** Fetches a workbook from a URL (same-origin credentials); `null` when it cannot be fetched. */
 export async function ogeFetchWorkbook(
   url: string,

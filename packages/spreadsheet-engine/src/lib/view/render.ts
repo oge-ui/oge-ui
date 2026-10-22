@@ -540,13 +540,13 @@ function renderText(
 
 /** The selection's shapes in a pane (pane pixels; `null` when not shown). */
 export interface OgeSelectionShapes {
-  /** SVG path data of the grey overlay; the active cell is a hole (draw with `fill-rule: nonzero`). */
+  /** SVG path data of the tinted overlay; the active cell is a hole (draw with `fill-rule: nonzero`). */
   readonly overlay: string;
   /** The 2 px border's outer box (a single range only). */
   readonly frame: OgeCss | null;
   /** The 1 px white line inside the border. */
   readonly inner: OgeCss | null;
-  /** The fill handle, and the white moat that cuts the border around it. */
+  /** The fill handle, and the white moat that cuts the border around it (only when asked for). */
   readonly handle: OgeCss | null;
   readonly moat: OgeCss | null;
   /** Several ranges: a thin line around the active cell instead. */
@@ -556,10 +556,11 @@ export interface OgeSelectionShapes {
 }
 
 /**
- * The selection as Excel draws it (measured): a 22% black overlay over the
+ * The selection as Excel draws it (measured): a tinted overlay over the
  * ranges except inside the active cell; for one range, a 2 px border over
- * the boundary gridlines and one pixel out, a 1 px white line inside it, and
- * a 5 × 5 fill handle on the bottom-right corner with a white moat.
+ * the boundary gridlines and one pixel out and a 1 px white line inside it.
+ * An editor asks for the 5 × 5 fill handle on the bottom-right corner, with
+ * its white moat (`fillHandle`); a viewer has none, as Excel's own viewer.
  * Boxes are clamped to the pane (plus a margin), so a whole column at 400%
  * never asks for a box taller than browsers draw.
  */
@@ -574,6 +575,7 @@ export function ogeSelectionShapes(
     readonly height: number;
   },
   spill: OgeSheetRange | null = null,
+  options: { readonly fillHandle?: boolean } = {},
 ): OgeSelectionShapes {
   const { rows, cols } = axes;
   const lowX = -8;
@@ -644,17 +646,20 @@ export function ogeSelectionShapes(
   }
   const range = selection.ranges[0];
   const b = boxOf(range);
-  const whole =
-    (range.top === 0 && range.bottom === OGE_SHEET_MAX_ROWS - 1) ||
-    (range.left === 0 && range.right === OGE_SHEET_MAX_COLUMNS - 1);
+  const handle =
+    options.fillHandle === true &&
+    !(
+      (range.top === 0 && range.bottom === OGE_SHEET_MAX_ROWS - 1) ||
+      (range.left === 0 && range.right === OGE_SHEET_MAX_COLUMNS - 1)
+    );
   return {
     overlay,
     frame: box(b.left - 2, b.top - 2, b.width + 3, b.height + 3),
     inner: box(b.left, b.top, b.width - 1, b.height - 1),
-    handle: whole
-      ? null
-      : box(b.left + b.width - 3, b.top + b.height - 3, 5, 5),
-    moat: whole ? null : box(b.left + b.width - 4, b.top + b.height - 4, 6, 6),
+    handle: handle
+      ? box(b.left + b.width - 3, b.top + b.height - 3, 5, 5)
+      : null,
+    moat: handle ? box(b.left + b.width - 4, b.top + b.height - 4, 6, 6) : null,
     active: null,
     spill: spillFrame,
   };

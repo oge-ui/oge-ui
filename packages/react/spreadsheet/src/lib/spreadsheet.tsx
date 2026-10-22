@@ -11,6 +11,7 @@ import {
   useState,
   type ClipboardEvent as ReactClipboardEvent,
   type CSSProperties,
+  type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
@@ -27,14 +28,18 @@ import {
   ogeIconParts,
   ogeOpenLink,
   ogeRevealScroll,
+  ogeScrollEdges,
   ogeSliderToZoom,
   ogeZoomToSlider,
   type OgeCss,
   type OgeFindOptions,
   type OgeGridPane,
+  type OgeHeaderMark,
   type OgeRenderMark,
   type OgeRenderText,
+  type OgeScrollEdges,
   type OgeSpreadsheetHyperlinkClickEvent,
+  type OgeSpreadsheetMenuKind,
   type OgeSpreadsheetMessages,
   type OgeSpreadsheetSource,
   type OgeWorkbook,
@@ -148,6 +153,22 @@ function Mark({ mark }: { mark: OgeRenderMark }) {
     default:
       return null;
   }
+}
+
+/** The selection's marks on a header strip: the edge toward the cells and the separator before a run. */
+function HeaderMarks({ marks }: { marks: readonly OgeHeaderMark[] }) {
+  return (
+    <>
+      {marks.map((mark) => (
+        <div
+          key={mark.key}
+          className="oge-spreadsheet-header-mark"
+          data-kind={mark.kind}
+          style={css(mark.style)}
+        />
+      ))}
+    </>
+  );
 }
 
 /** A pane: gridlines, fills, data bars, text, borders, marks, the selection and pictures. */
@@ -309,12 +330,20 @@ export const OgeSpreadsheet = forwardRef<
   const [scroll, setScroll] = useState({ top: 0, left: 0 });
   const [macroDismissedFor, setMacroDismissedFor] =
     useState<OgeWorkbook | null>(null);
+  // where the sheet tabs can still scroll: the scroll buttons are off otherwise
+  const [tabScroll, setTabScroll] = useState<OgeScrollEdges>({
+    back: false,
+    forward: false,
+  });
 
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const nameBoxRef = useRef<HTMLInputElement>(null);
   const findInputRef = useRef<HTMLInputElement>(null);
   const tabListRef = useRef<HTMLDivElement>(null);
+  const sheetMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const namesButtonRef = useRef<HTMLButtonElement>(null);
+  const menuId = `oge-spreadsheet-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}-menu`;
   // the callbacks are read live, so inline handlers stay current
   const latest = useRef(props);
   latest.current = props;
@@ -351,6 +380,10 @@ export const OgeSpreadsheet = forwardRef<
   const sheet = core.sheet();
   const rtl = sheet?.view.rightToLeft ?? false;
   const findState = core.findState();
+  const formulaExpanded = core.formulaExpanded();
+  const menuKind = core.menu().kind;
+  const menuItems = core.menuItems();
+  const hasNames = core.definedNames().length > 0;
 
   const panes = useMemo(
     () =>
@@ -730,6 +763,88 @@ export const OgeSpreadsheet = forwardRef<
   const scrollTabs = (direction: 1 | -1) =>
     tabListRef.current?.scrollBy({ left: direction * 120, behavior: 'smooth' });
 
+  const updateTabScroll = () => {
+    const list = tabListRef.current;
+    if (!list) return;
+    const edges = ogeScrollEdges(list);
+    setTabScroll((was) =>
+      was.back === edges.back && was.forward === edges.forward ? was : edges,
+    );
+  };
+  // the scroll buttons follow what the strip can still show
+  const tabNames = tabs.map((tab) => tab.name).join('\n');
+  useEffect(() => {
+    const list = tabListRef.current;
+    if (!list) return;
+    updateTabScroll();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(updateTabScroll);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [showTabs, tabNames]);
+
+  const menuOpener = (kind: OgeSpreadsheetMenuKind | null) =>
+    kind === 'names' ? namesButtonRef.current : sheetMenuButtonRef.current;
+
+  /** Focuses the open list's focused item once it is drawn. */
+  const focusMenuItem = () =>
+    setTimeout(() => {
+      const { kind, focus: at } = core.menu();
+      if (kind === null) return;
+      rootRef.current
+        ?.querySelector<HTMLElement>(`#${menuId} [data-item="${at}"]`)
+        ?.focus();
+    });
+
+  /** The opener keeps focus where it is on a press (`mousedown` is cancelled), so a click on it while open closes the list. */
+  const toggleMenu = (kind: OgeSpreadsheetMenuKind) => {
+    if (core.menu().kind === kind) {
+      core.closeMenu();
+      menuOpener(kind)?.focus();
+      return;
+    }
+    core.openMenu(kind);
+    focusMenuItem();
+  };
+
+  const onMenuButtonKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    kind: OgeSpreadsheetMenuKind,
+  ) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    core.openMenu(kind, event.key === 'ArrowUp' ? 'last' : 'checked');
+    focusMenuItem();
+  };
+
+  const onMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const kind = core.menu().kind;
+    const action = core.menuKeydown(event.key);
+    if (action === null) return;
+    // Tab closes the list and lets the browser move on from the opener
+    if (action !== 'leave') event.preventDefault();
+    if (action === 'focus') focusMenuItem();
+    else if (action === 'picked') focus();
+    else menuOpener(kind)?.focus();
+  };
+
+  /** Focus leaving the list for anything but its opener closes it. */
+  const onMenuBlur = (event: ReactFocusEvent<HTMLDivElement>) => {
+    const next = event.relatedTarget as Node | null;
+    if (
+      next &&
+      (event.currentTarget.contains(next) ||
+        next === menuOpener(core.menu().kind))
+    )
+      return;
+    core.closeMenu();
+  };
+
+  const pickMenuItem = (position: number) => {
+    core.pickMenuItem(position);
+    focus();
+  };
+
   // ── markup (the Angular template, element for element) ────────────────────
 
   const rootClass = [
@@ -762,32 +877,112 @@ export const OgeSpreadsheet = forwardRef<
         </div>
       ) : null}
       {showFormulaBar ? (
-        <div className="oge-spreadsheet-formula-bar">
-          <input
-            ref={nameBoxRef}
-            className="oge-spreadsheet-name-box"
-            type="text"
-            spellCheck={false}
-            autoComplete="off"
-            aria-label={text.nameBoxLabel}
-            defaultValue={nameBox}
-            onFocus={(event) => event.currentTarget.select()}
-            onKeyDown={onNameBoxKeyDown}
-            onBlur={(event) => {
-              event.currentTarget.value = nameBox;
-            }}
-          />
-          <span className="oge-spreadsheet-fx" aria-hidden="true">
-            fx
+        <div
+          className={`oge-spreadsheet-formula-bar${formulaExpanded ? ' oge-spreadsheet-formula-expanded' : ''}`}
+        >
+          <div className="oge-spreadsheet-name-field">
+            <input
+              ref={nameBoxRef}
+              className="oge-spreadsheet-name-box"
+              type="text"
+              spellCheck={false}
+              autoComplete="off"
+              aria-label={text.nameBoxLabel}
+              defaultValue={nameBox}
+              onFocus={(event) => event.currentTarget.select()}
+              onKeyDown={onNameBoxKeyDown}
+              onBlur={(event) => {
+                event.currentTarget.value = nameBox;
+              }}
+            />
+            {hasNames ? (
+              <button
+                ref={namesButtonRef}
+                type="button"
+                className="oge-spreadsheet-field-button"
+                aria-haspopup="menu"
+                aria-expanded={menuKind === 'names'}
+                aria-controls={menuKind === 'names' ? menuId : undefined}
+                aria-label={text.definedNames}
+                title={text.definedNames}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => toggleMenu('names')}
+                onKeyDown={(event) => onMenuButtonKeyDown(event, 'names')}
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M3.5 6l4.5 4.5L12.5 6" />
+                </svg>
+              </button>
+            ) : null}
+            {menuKind === 'names' ? (
+              <div
+                className="oge-spreadsheet-menu oge-spreadsheet-name-list"
+                role="menu"
+                tabIndex={-1}
+                id={menuId}
+                aria-label={text.definedNames}
+                onKeyDown={onMenuKeyDown}
+                onBlur={onMenuBlur}
+              >
+                {menuItems.map((item, i) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="oge-spreadsheet-menu-item"
+                    role="menuitem"
+                    tabIndex={-1}
+                    data-item={i}
+                    onClick={() => pickMenuItem(i)}
+                  >
+                    <span className="oge-spreadsheet-menu-label">
+                      {item.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <span className="oge-spreadsheet-formula-tools" aria-hidden="true">
+            <svg className="oge-spreadsheet-cancel-icon" viewBox="0 0 12 12">
+              <path d="M.5.5l11 11M11.5.5l-11 11" />
+            </svg>
+            <svg className="oge-spreadsheet-enter-icon" viewBox="0 0 16 12">
+              <path d="M.5 6.5L5 11 15.5.5" />
+            </svg>
+            <span className="oge-spreadsheet-fx">fx</span>
+            <svg className="oge-spreadsheet-fx-chevron" viewBox="0 0 8 8">
+              <path d="M1.5 3L4 5.5 6.5 3" />
+            </svg>
           </span>
-          <div
-            className={`oge-spreadsheet-formula${formula.ghost ? ' oge-spreadsheet-formula-ghost' : ''}`}
-            role="textbox"
-            aria-readonly="true"
-            tabIndex={0}
-            aria-label={text.formulaBarLabel}
-          >
-            {formula.text}
+          <div className="oge-spreadsheet-formula-field">
+            <div
+              className={`oge-spreadsheet-formula${formula.ghost ? ' oge-spreadsheet-formula-ghost' : ''}`}
+              role="textbox"
+              aria-readonly="true"
+              tabIndex={0}
+              aria-label={text.formulaBarLabel}
+              aria-multiline={formulaExpanded ? true : undefined}
+            >
+              {formula.text}
+            </div>
+            <button
+              type="button"
+              className="oge-spreadsheet-field-button"
+              aria-expanded={formulaExpanded}
+              aria-label={text.expandFormulaBar}
+              title={text.expandFormulaBar}
+              onClick={() => core.toggleFormulaBar()}
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  d={
+                    formulaExpanded
+                      ? 'M3.5 10.5L8 6l4.5 4.5'
+                      : 'M3.5 6l4.5 4.5L12.5 6'
+                  }
+                />
+              </svg>
+            </button>
           </div>
         </div>
       ) : null}
@@ -847,6 +1042,7 @@ export const OgeSpreadsheet = forwardRef<
                         </span>
                       </div>
                     ))}
+                    <HeaderMarks marks={strip.marks} />
                   </div>
                 </div>
               ))}
@@ -876,6 +1072,7 @@ export const OgeSpreadsheet = forwardRef<
                         </span>
                       </div>
                     ))}
+                    <HeaderMarks marks={strip.marks} />
                   </div>
                 </div>
               ))}
@@ -1058,10 +1255,11 @@ export const OgeSpreadsheet = forwardRef<
               tabIndex={-1}
               className="oge-spreadsheet-tab-nav"
               title={text.previousSheets}
+              disabled={!tabScroll.back}
               onClick={() => scrollTabs(-1)}
             >
-              <svg viewBox="0 0 16 16" width="10" height="10">
-                <path d="M10 3L5 8l5 5z" />
+              <svg viewBox="0 0 16 16">
+                <path d="M10 3.5L5.5 8l4.5 4.5" />
               </svg>
             </button>
             <button
@@ -1069,25 +1267,81 @@ export const OgeSpreadsheet = forwardRef<
               tabIndex={-1}
               className="oge-spreadsheet-tab-nav"
               title={text.nextSheets}
+              disabled={!tabScroll.forward}
               onClick={() => scrollTabs(1)}
             >
-              <svg viewBox="0 0 16 16" width="10" height="10">
-                <path d="M6 3l5 5-5 5z" />
+              <svg viewBox="0 0 16 16">
+                <path d="M6 3.5l4.5 4.5L6 12.5" />
               </svg>
             </button>
+          </div>
+          <div className="oge-spreadsheet-sheet-menu">
+            <button
+              ref={sheetMenuButtonRef}
+              type="button"
+              className="oge-spreadsheet-sheet-menu-button"
+              aria-haspopup="menu"
+              aria-expanded={menuKind === 'sheets'}
+              aria-controls={menuKind === 'sheets' ? menuId : undefined}
+              aria-label={text.allSheets}
+              title={text.allSheets}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => toggleMenu('sheets')}
+              onKeyDown={(event) => onMenuButtonKeyDown(event, 'sheets')}
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" />
+              </svg>
+            </button>
+            {menuKind === 'sheets' ? (
+              <div
+                className="oge-spreadsheet-menu oge-spreadsheet-sheet-list"
+                role="menu"
+                tabIndex={-1}
+                id={menuId}
+                aria-label={text.allSheets}
+                onKeyDown={onMenuKeyDown}
+                onBlur={onMenuBlur}
+              >
+                {menuItems.map((item, i) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="oge-spreadsheet-menu-item"
+                    role="menuitemradio"
+                    tabIndex={-1}
+                    aria-checked={item.checked}
+                    data-item={i}
+                    onClick={() => pickMenuItem(i)}
+                  >
+                    <svg
+                      className="oge-spreadsheet-menu-check"
+                      viewBox="0 0 16 16"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 8.5l3.2 3.2L13 5" />
+                    </svg>
+                    <span className="oge-spreadsheet-menu-label">
+                      {item.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div
             ref={tabListRef}
             className="oge-spreadsheet-tabs"
             role="tablist"
             aria-label={text.sheetTabsLabel}
+            onScroll={updateTabScroll}
           >
             {tabs.map((tab) => (
               <button
                 key={tab.index}
                 type="button"
                 role="tab"
-                className={`oge-spreadsheet-tab${tab.index === activeIndex ? ' oge-spreadsheet-tab-active' : ''}${tab.color ? ' oge-spreadsheet-tab-colored' : ''}`}
+                className={`oge-spreadsheet-tab${tab.index === activeIndex ? ' oge-spreadsheet-tab-active' : ''}${tab.color ? ' oge-spreadsheet-tab-colored' : ''}${tab.ink === 'light' ? ' oge-spreadsheet-tab-colored-light' : ''}`}
                 style={
                   tab.color
                     ? ({
@@ -1101,7 +1355,12 @@ export const OgeSpreadsheet = forwardRef<
                 onClick={() => core.selectSheet(tab.index)}
                 onKeyDown={onTabKeyDown}
               >
-                {tab.name}
+                <span
+                  className="oge-spreadsheet-tab-label"
+                  data-label={tab.name}
+                >
+                  {tab.name}
+                </span>
               </button>
             ))}
           </div>

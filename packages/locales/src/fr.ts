@@ -1818,5 +1818,8 @@ export const fr: OgeLocalePack = {
     statusSum: 'Somme : {value}',
     previousSheets: 'Faire défiler vers les feuilles précédentes',
     nextSheets: 'Faire défiler vers les feuilles suivantes',
+    allSheets: 'Toutes les feuilles',
+    definedNames: 'Noms définis',
+    expandFormulaBar: 'Développer la barre de formule',
   },
 };

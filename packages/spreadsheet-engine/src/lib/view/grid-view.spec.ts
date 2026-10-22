@@ -7,6 +7,7 @@ import { OgeStyleResolver } from '../paint/resolve-style';
 import { OgeSheetLayout } from '../paint/sheet-layout';
 import {
   ogeGridView,
+  ogeHeaderMarks,
   ogeHeaderStrips,
   ogeNoteBoxes,
   ogePanePictures,
@@ -128,6 +129,88 @@ describe('ogeHeaderStrips', () => {
     expect(
       ogeHeaderStrips(panes({ headers: false }), ogeCellSelection(0, 0)),
     ).toEqual({ columns: [], rows: [] });
+  });
+
+  it('marks the selection on both strips, as long as its frame', () => {
+    const { panes } = setup();
+    // C4:D5 — the frame below runs 126..256 × 58..100
+    const strips = ogeHeaderStrips(panes(), {
+      ranges: [{ top: 3, left: 2, bottom: 4, right: 3 }],
+      active: { row: 3, col: 2 },
+      anchor: { row: 3, col: 2 },
+    });
+    expect(strips.columns[0].marks).toEqual([
+      {
+        key: 'edge-2',
+        kind: 'edge',
+        style: { left: '126px', top: '18px', width: '131px', height: '2px' },
+      },
+      {
+        key: 'separator-2',
+        kind: 'separator',
+        style: { left: '127px', top: '0', width: '1px', height: '18px' },
+      },
+    ]);
+    expect(strips.rows[0].marks).toEqual([
+      {
+        key: 'edge-3',
+        kind: 'edge',
+        style: { left: '24px', top: '58px', width: '2px', height: '43px' },
+      },
+      {
+        key: 'separator-3',
+        kind: 'separator',
+        style: { left: '0', top: '59px', width: '24px', height: '1px' },
+      },
+    ]);
+  });
+});
+
+describe('ogeHeaderMarks', () => {
+  const cell = (
+    index: number,
+    offset: number,
+    state: 'none' | 'selected' | 'full',
+    size = 64,
+  ) => ({ index, label: String(index), offset, size, state });
+
+  it('gives each run of selected headers its own edge and separator', () => {
+    const marks = ogeHeaderMarks(
+      'columns',
+      [
+        cell(0, 0, 'selected'),
+        cell(1, 64, 'none'),
+        cell(2, 128, 'selected'),
+        cell(3, 192, 'selected'),
+      ],
+      20,
+    );
+    expect(
+      marks.map((m) => [m.key, m.style['left'], m.style['width']]),
+    ).toEqual([
+      ['edge-0', '-2px', '67px'],
+      ['separator-0', '-1px', '1px'],
+      ['edge-2', '126px', '131px'],
+      ['separator-2', '127px', '1px'],
+    ]);
+  });
+
+  it('runs across a hidden header, and leaves whole rows and columns to their fill', () => {
+    // column 1 hidden: 0 and 2 touch
+    const across = ogeHeaderMarks(
+      'columns',
+      [cell(0, 0, 'selected'), cell(2, 64, 'selected')],
+      20,
+    );
+    expect(across.filter((m) => m.kind === 'edge')).toHaveLength(1);
+    expect(across[0].style['width']).toBe('131px');
+    expect(
+      ogeHeaderMarks(
+        'rows',
+        [cell(0, 0, 'full', 20), cell(1, 20, 'full', 20)],
+        26,
+      ),
+    ).toEqual([]);
   });
 });
 

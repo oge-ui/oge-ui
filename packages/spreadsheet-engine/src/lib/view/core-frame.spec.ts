@@ -414,3 +414,44 @@ describe('OgeSpreadsheetCore — worded state', () => {
     expect(c.findCount()).toBe('Eşleşme yok');
   });
 });
+
+describe('OgeSpreadsheetCore — header clicks', () => {
+  it('make the band’s first visible cell active, as Excel does, and never scroll', () => {
+    const { c, panes } = setup();
+    c.selectCell(6, 2);
+    const reveal = c.reveal().token;
+    c.pointerDown(
+      panes(),
+      at(0, 0),
+      { kind: 'column-header', col: 3 },
+      input(),
+    );
+    expect(c.selection().active).toEqual({ row: 0, col: 3 });
+    c.pointerUp(panes(), at(0, 0), input());
+    c.pointerDown(panes(), at(0, 0), { kind: 'row-header', row: 89 }, input());
+    expect(c.selection().active).toEqual({ row: 89, col: 0 });
+    c.pointerUp(panes(), at(0, 0), input());
+    expect(c.reveal().token).toBe(reveal);
+    // the keyboard keeps the active cell: Ctrl+Space selects its column
+    c.selectCell(6, 2);
+    c.keydown(key(' ', { ctrlKey: true }), page);
+    expect(c.selection().active).toEqual({ row: 6, col: 2 });
+  });
+
+  it('skip a hidden first row or column', () => {
+    const workbook = book();
+    workbook.sheets[0].setRow(0, { hidden: true });
+    workbook.sheets[0].setColumns(0, 0, { hidden: true });
+    const { c, panes } = setup(workbook);
+    c.pointerDown(
+      panes(),
+      at(0, 0),
+      { kind: 'column-header', col: 2 },
+      input(),
+    );
+    expect(c.selection().active).toEqual({ row: 1, col: 2 });
+    c.pointerUp(panes(), at(0, 0), input());
+    c.pointerDown(panes(), at(0, 0), { kind: 'row-header', row: 4 }, input());
+    expect(c.selection().active).toEqual({ row: 4, col: 1 });
+  });
+});

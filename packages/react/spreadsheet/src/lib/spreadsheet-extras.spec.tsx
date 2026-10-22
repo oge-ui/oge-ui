@@ -336,12 +336,30 @@ describe('OgeSpreadsheet (React) — drawing and chrome', () => {
       '.oge-spreadsheet-tabs',
     ) as HTMLElement & { scrollBy: (o: ScrollToOptions) => void };
     list.scrollBy = vi.fn();
-    fireEvent.click(host().querySelectorAll('.oge-spreadsheet-tab-nav')[1]);
+    const [back, forward] = [
+      ...host().querySelectorAll('.oge-spreadsheet-tab-nav'),
+    ] as HTMLButtonElement[];
+    // nothing to scroll: both buttons are off
+    expect([back.disabled, forward.disabled]).toEqual([true, true]);
+    // a strip wider than its room: forward on at the start, back once scrolled
+    const box = (scrollLeft: number) =>
+      Object.defineProperties(list, {
+        scrollWidth: { value: 600, configurable: true },
+        clientWidth: { value: 300, configurable: true },
+        scrollLeft: { value: scrollLeft, configurable: true },
+      });
+    box(0);
+    fireEvent.scroll(list);
+    expect([back.disabled, forward.disabled]).toEqual([true, false]);
+    fireEvent.click(forward);
     expect(list.scrollBy).toHaveBeenCalledWith({
       left: 120,
       behavior: 'smooth',
     });
-    fireEvent.click(host().querySelectorAll('.oge-spreadsheet-tab-nav')[0]);
+    box(300);
+    fireEvent.scroll(list);
+    expect([back.disabled, forward.disabled]).toEqual([false, true]);
+    fireEvent.click(back);
     expect(list.scrollBy).toHaveBeenLastCalledWith({
       left: -120,
       behavior: 'smooth',
@@ -514,5 +532,126 @@ describe('OgeSpreadsheet (React) — drawing and chrome', () => {
     });
     expect(errors[0].error.code).toBe('fetch-failed');
     expect(viewer().getWorkbook()).toBeNull();
+  });
+
+  it('lists every sheet from the strip’s button, as a menu takes keys', async () => {
+    mount();
+    const tick = () => act(() => new Promise<void>((done) => setTimeout(done)));
+    const button = host().querySelector(
+      '.oge-spreadsheet-sheet-menu-button',
+    ) as HTMLButtonElement;
+    expect(button.getAttribute('aria-haspopup')).toBe('menu');
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(button);
+    await tick();
+    const menu = () =>
+      host().querySelector('.oge-spreadsheet-sheet-list') as HTMLElement | null;
+    expect(menu()?.getAttribute('role')).toBe('menu');
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.getAttribute('aria-controls')).toBe(menu()?.id);
+    const items = () =>
+      [
+        ...(menu()?.querySelectorAll('[role="menuitemradio"]') ?? []),
+      ] as HTMLElement[];
+    expect(items().map((item) => item.textContent?.trim())).toEqual([
+      'Sheet1',
+      'Two',
+      'Three',
+    ]);
+    expect(items()[0].getAttribute('aria-checked')).toBe('true');
+    expect(document.activeElement).toBe(items()[0]);
+    fireEvent.keyDown(items()[0], { key: 'ArrowDown' });
+    await tick();
+    expect(document.activeElement).toBe(items()[1]);
+    fireEvent.keyDown(items()[1], { key: 'Enter' });
+    expect(viewer().core.activeSheet()).toBe(1);
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(grid());
+    // the opener's Up opens on the last sheet; Escape gives focus back to it
+    fireEvent.keyDown(button, { key: 'ArrowUp' });
+    await tick();
+    expect(document.activeElement?.textContent?.trim()).toBe('Three');
+    fireEvent.keyDown(document.activeElement as Element, { key: 'Escape' });
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(button);
+    // focus going elsewhere closes it
+    fireEvent.click(button);
+    await tick();
+    fireEvent.blur(menu() as HTMLElement, { relatedTarget: grid() });
+    expect(menu()).toBeNull();
+  });
+
+  it('lists the defined names from the name box and goes to one', () => {
+    mount();
+    const workbook = richBook();
+    workbook.defineName({ name: 'Heading', formula: 'Sheet1!$B$1' });
+    act(() => set.workbook(workbook));
+    const button = host().querySelector(
+      '.oge-spreadsheet-name-field .oge-spreadsheet-field-button',
+    ) as HTMLButtonElement;
+    expect(button.getAttribute('aria-label')).toBe('Defined names');
+    fireEvent.click(button);
+    const items = [
+      ...host().querySelectorAll(
+        '.oge-spreadsheet-name-list [role="menuitem"]',
+      ),
+    ] as HTMLElement[];
+    expect(items.map((item) => item.textContent?.trim())).toEqual(['Heading']);
+    fireEvent.click(items[0]);
+    expect(viewer().core.selection().active).toEqual({ row: 0, col: 1 });
+    expect(
+      (host().querySelector('.oge-spreadsheet-name-box') as HTMLInputElement)
+        .value,
+    ).toBe('Heading');
+    // a workbook without names has no list button
+    act(() => set.workbook(createOgeWorkbook()));
+    expect(
+      host().querySelector(
+        '.oge-spreadsheet-name-field .oge-spreadsheet-field-button',
+      ),
+    ).toBeNull();
+  });
+
+  it('expands the formula bar, marks the selected headers and inks coloured tabs', () => {
+    mount();
+    const workbook = richBook();
+    workbook.sheets[1].tabColor = { rgb: 'FF002060' };
+    workbook.sheets[2].tabColor = { rgb: 'FFFFC000' };
+    act(() => set.workbook(workbook));
+    const expand = host().querySelector(
+      '.oge-spreadsheet-formula-field .oge-spreadsheet-field-button',
+    ) as HTMLButtonElement;
+    expect(expand.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(expand);
+    expect(
+      host().querySelector('.oge-spreadsheet-formula-bar')?.classList,
+    ).toContain('oge-spreadsheet-formula-expanded');
+    expect(expand.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      host()
+        .querySelector('.oge-spreadsheet-formula')
+        ?.getAttribute('aria-multiline'),
+    ).toBe('true');
+    act(() =>
+      viewer().core.selectRange({ top: 1, left: 1, bottom: 2, right: 2 }),
+    );
+    const marks = [
+      ...host().querySelectorAll('.oge-spreadsheet-header-mark'),
+    ].map((mark) => mark.getAttribute('data-kind'));
+    expect(marks).toContain('edge');
+    expect(marks).toContain('separator');
+    const tabs = [
+      ...host().querySelectorAll('.oge-spreadsheet-tab'),
+    ] as HTMLElement[];
+    expect(tabs[1].classList).toContain('oge-spreadsheet-tab-colored-light');
+    expect(tabs[2].classList).toContain('oge-spreadsheet-tab-colored');
+    expect(tabs[2].classList).not.toContain(
+      'oge-spreadsheet-tab-colored-light',
+    );
+    expect(
+      tabs[0]
+        .querySelector('.oge-spreadsheet-tab-label')
+        ?.getAttribute('data-label'),
+    ).toBe('Sheet1');
   });
 });

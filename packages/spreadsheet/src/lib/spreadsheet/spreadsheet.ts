@@ -29,12 +29,15 @@ import {
   ogeIconParts,
   ogeOpenLink,
   ogeRevealScroll,
+  ogeScrollEdges,
   ogeSliderToZoom,
   ogeZoomToSlider,
   type OgeFindOptions,
   type OgeGridView,
   type OgeIconPart,
   type OgeRenderMark,
+  type OgeScrollEdges,
+  type OgeSpreadsheetMenuKind,
   type OgeSpreadsheetMessages,
   type OgeViewportPanes,
   type OgeWorkbook,
@@ -95,29 +98,112 @@ let nextId = 0;
       </div>
     }
     @if (showFormulaBar()) {
-      <div class="oge-spreadsheet-formula-bar">
-        <input
-          #nameBoxInput
-          class="oge-spreadsheet-name-box"
-          type="text"
-          spellcheck="false"
-          autocomplete="off"
-          [attr.aria-label]="text().nameBoxLabel"
-          [value]="nameBox()"
-          (focus)="selectText($event)"
-          (keydown)="onNameBoxKeydown($event)"
-          (blur)="restoreNameBox($event)"
-        />
-        <span class="oge-spreadsheet-fx" aria-hidden="true">fx</span>
-        <div
-          class="oge-spreadsheet-formula"
-          role="textbox"
-          aria-readonly="true"
-          tabindex="0"
-          [attr.aria-label]="text().formulaBarLabel"
-          [class.oge-spreadsheet-formula-ghost]="formula().ghost"
-          [textContent]="formula().text"
-        ></div>
+      <div
+        class="oge-spreadsheet-formula-bar"
+        [class.oge-spreadsheet-formula-expanded]="formulaExpanded()"
+      >
+        <div class="oge-spreadsheet-name-field">
+          <input
+            #nameBoxInput
+            class="oge-spreadsheet-name-box"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            [attr.aria-label]="text().nameBoxLabel"
+            [value]="nameBox()"
+            (focus)="selectText($event)"
+            (keydown)="onNameBoxKeydown($event)"
+            (blur)="restoreNameBox($event)"
+          />
+          @if (hasNames()) {
+            <button
+              #namesButton
+              type="button"
+              class="oge-spreadsheet-field-button"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="menuKind() === 'names'"
+              [attr.aria-controls]="menuKind() === 'names' ? menuId : null"
+              [attr.aria-label]="text().definedNames"
+              [attr.title]="text().definedNames"
+              (mousedown)="$event.preventDefault()"
+              (click)="toggleMenu('names')"
+              (keydown)="onMenuButtonKeydown($event, 'names')"
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3.5 6l4.5 4.5L12.5 6" />
+              </svg>
+            </button>
+          }
+          @if (menuKind() === 'names') {
+            <div
+              class="oge-spreadsheet-menu oge-spreadsheet-name-list"
+              role="menu"
+              tabindex="-1"
+              [id]="menuId"
+              [attr.aria-label]="text().definedNames"
+              (keydown)="onMenuKeydown($event)"
+              (focusout)="onMenuFocusOut($event)"
+            >
+              @for (item of menuItems(); track item.key; let i = $index) {
+                <button
+                  type="button"
+                  class="oge-spreadsheet-menu-item"
+                  role="menuitem"
+                  tabindex="-1"
+                  [attr.data-item]="i"
+                  (click)="pickMenuItem(i)"
+                >
+                  <span
+                    class="oge-spreadsheet-menu-label"
+                    [textContent]="item.label"
+                  ></span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <span class="oge-spreadsheet-formula-tools" aria-hidden="true">
+          <svg class="oge-spreadsheet-cancel-icon" viewBox="0 0 12 12">
+            <path d="M.5.5l11 11M11.5.5l-11 11" />
+          </svg>
+          <svg class="oge-spreadsheet-enter-icon" viewBox="0 0 16 12">
+            <path d="M.5 6.5L5 11 15.5.5" />
+          </svg>
+          <span class="oge-spreadsheet-fx">fx</span>
+          <svg class="oge-spreadsheet-fx-chevron" viewBox="0 0 8 8">
+            <path d="M1.5 3L4 5.5 6.5 3" />
+          </svg>
+        </span>
+        <div class="oge-spreadsheet-formula-field">
+          <div
+            class="oge-spreadsheet-formula"
+            role="textbox"
+            aria-readonly="true"
+            tabindex="0"
+            [attr.aria-label]="text().formulaBarLabel"
+            [attr.aria-multiline]="formulaExpanded() ? 'true' : null"
+            [class.oge-spreadsheet-formula-ghost]="formula().ghost"
+            [textContent]="formula().text"
+          ></div>
+          <button
+            type="button"
+            class="oge-spreadsheet-field-button"
+            [attr.aria-expanded]="formulaExpanded()"
+            [attr.aria-label]="text().expandFormulaBar"
+            [attr.title]="text().expandFormulaBar"
+            (click)="core.toggleFormulaBar()"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                [attr.d]="
+                  formulaExpanded()
+                    ? 'M3.5 10.5L8 6l4.5 4.5'
+                    : 'M3.5 6l4.5 4.5L12.5 6'
+                "
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     }
     <div class="oge-spreadsheet-body">
@@ -379,6 +465,13 @@ let nextId = 0;
                       }}</span>
                     </div>
                   }
+                  @for (mark of strip.marks; track mark.key) {
+                    <div
+                      class="oge-spreadsheet-header-mark"
+                      [attr.data-kind]="mark.kind"
+                      [style]="mark.style"
+                    ></div>
+                  }
                 </div>
               </div>
             }
@@ -407,6 +500,13 @@ let nextId = 0;
                         header.label
                       }}</span>
                     </div>
+                  }
+                  @for (mark of strip.marks; track mark.key) {
+                    <div
+                      class="oge-spreadsheet-header-mark"
+                      [attr.data-kind]="mark.kind"
+                      [style]="mark.style"
+                    ></div>
                   }
                 </div>
               </div>
@@ -579,29 +679,82 @@ let nextId = 0;
             tabindex="-1"
             class="oge-spreadsheet-tab-nav"
             [attr.title]="text().previousSheets"
+            [disabled]="!tabScroll().back"
             (click)="scrollTabs(-1)"
           >
-            <svg viewBox="0 0 16 16" width="10" height="10">
-              <path d="M10 3L5 8l5 5z" />
-            </svg>
+            <svg viewBox="0 0 16 16"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg>
           </button>
           <button
             type="button"
             tabindex="-1"
             class="oge-spreadsheet-tab-nav"
             [attr.title]="text().nextSheets"
+            [disabled]="!tabScroll().forward"
             (click)="scrollTabs(1)"
           >
-            <svg viewBox="0 0 16 16" width="10" height="10">
-              <path d="M6 3l5 5-5 5z" />
+            <svg viewBox="0 0 16 16"><path d="M6 3.5l4.5 4.5L6 12.5" /></svg>
+          </button>
+        </div>
+        <div class="oge-spreadsheet-sheet-menu">
+          <button
+            #sheetMenuButton
+            type="button"
+            class="oge-spreadsheet-sheet-menu-button"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="menuKind() === 'sheets'"
+            [attr.aria-controls]="menuKind() === 'sheets' ? menuId : null"
+            [attr.aria-label]="text().allSheets"
+            [attr.title]="text().allSheets"
+            (mousedown)="$event.preventDefault()"
+            (click)="toggleMenu('sheets')"
+            (keydown)="onMenuButtonKeydown($event, 'sheets')"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" />
             </svg>
           </button>
+          @if (menuKind() === 'sheets') {
+            <div
+              class="oge-spreadsheet-menu oge-spreadsheet-sheet-list"
+              role="menu"
+              tabindex="-1"
+              [id]="menuId"
+              [attr.aria-label]="text().allSheets"
+              (keydown)="onMenuKeydown($event)"
+              (focusout)="onMenuFocusOut($event)"
+            >
+              @for (item of menuItems(); track item.key; let i = $index) {
+                <button
+                  type="button"
+                  class="oge-spreadsheet-menu-item"
+                  role="menuitemradio"
+                  tabindex="-1"
+                  [attr.aria-checked]="item.checked"
+                  [attr.data-item]="i"
+                  (click)="pickMenuItem(i)"
+                >
+                  <svg
+                    class="oge-spreadsheet-menu-check"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 8.5l3.2 3.2L13 5" />
+                  </svg>
+                  <span
+                    class="oge-spreadsheet-menu-label"
+                    [textContent]="item.label"
+                  ></span>
+                </button>
+              }
+            </div>
+          }
         </div>
         <div
           #tabList
           class="oge-spreadsheet-tabs"
           role="tablist"
           [attr.aria-label]="text().sheetTabsLabel"
+          (scroll)="updateTabScroll()"
         >
           @for (tab of tabs(); track tab.index) {
             <button
@@ -610,6 +763,7 @@ let nextId = 0;
               class="oge-spreadsheet-tab"
               [class.oge-spreadsheet-tab-active]="tab.index === activeIndex()"
               [class.oge-spreadsheet-tab-colored]="!!tab.color"
+              [class.oge-spreadsheet-tab-colored-light]="tab.ink === 'light'"
               [style.--oge-spreadsheet-tab-color]="tab.color ?? null"
               [attr.aria-selected]="tab.index === activeIndex()"
               [attr.tabindex]="tab.index === activeIndex() ? 0 : -1"
@@ -617,7 +771,11 @@ let nextId = 0;
               (click)="selectSheet(tab.index)"
               (keydown)="onTabKeydown($event)"
             >
-              {{ tab.name }}
+              <span
+                class="oge-spreadsheet-tab-label"
+                [attr.data-label]="tab.name"
+                [textContent]="tab.name"
+              ></span>
             </button>
           }
         </div>
@@ -723,6 +881,7 @@ export class OgeSpreadsheet {
   protected readonly maxRows = OGE_SHEET_MAX_ROWS;
   protected readonly maxColumns = OGE_SHEET_MAX_COLUMNS;
   protected readonly cellId = `oge-spreadsheet-${++nextId}-active`;
+  protected readonly menuId = `oge-spreadsheet-${nextId}-menu`;
 
   private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
   private readonly nameBoxInput =
@@ -730,12 +889,21 @@ export class OgeSpreadsheet {
   private readonly findInput =
     viewChild<ElementRef<HTMLInputElement>>('findInput');
   private readonly tabList = viewChild<ElementRef<HTMLElement>>('tabList');
+  private readonly sheetMenuButton =
+    viewChild<ElementRef<HTMLElement>>('sheetMenuButton');
+  private readonly namesButton =
+    viewChild<ElementRef<HTMLElement>>('namesButton');
 
   private readonly scrollTop = signal(0);
   private readonly scrollLeft = signal(0);
   private readonly gridWidth = signal(0);
   private readonly gridHeight = signal(0);
   protected readonly macroDismissed = signal(false);
+  /** Where the sheet tabs can still scroll: the scroll buttons are off otherwise. */
+  protected readonly tabScroll = signal<OgeScrollEdges>({
+    back: false,
+    forward: false,
+  });
   /** Set after the first browser render: a server render never fetches or reads a source. */
   private readonly inBrowser = signal(false);
   private sheetEcho: number | undefined;
@@ -778,6 +946,21 @@ export class OgeSpreadsheet {
     this.core.selection();
     this.core.version();
     return this.core.statusItems();
+  });
+  protected readonly formulaExpanded = computed(() =>
+    this.core.formulaExpanded(),
+  );
+  protected readonly menuKind = computed(() => this.core.menu().kind);
+  protected readonly menuItems = computed(() => {
+    this.core.menu();
+    this.core.activeSheet();
+    this.core.version();
+    return this.core.menuItems();
+  });
+  protected readonly hasNames = computed(() => {
+    this.core.activeSheet();
+    this.core.version();
+    return this.core.definedNames().length > 0;
   });
   protected readonly findState = computed(() => this.core.findState());
   protected readonly findOptions = computed<OgeFindOptions>(
@@ -939,6 +1122,17 @@ export class OgeSpreadsheet {
     effect(() => {
       this.core.workbook();
       untracked(() => this.macroDismissed.set(false));
+    });
+    // the sheet tabs' scroll buttons follow what the strip can still show
+    effect((onCleanup) => {
+      const list = this.tabList()?.nativeElement;
+      this.tabs();
+      if (!list) return;
+      untracked(() => this.updateTabScroll());
+      if (typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(() => this.updateTabScroll());
+      observer.observe(list);
+      onCleanup(() => observer.disconnect());
     });
     afterNextRender(() => {
       this.inBrowser.set(true);
@@ -1203,6 +1397,80 @@ export class OgeSpreadsheet {
   protected scrollTabs(direction: 1 | -1): void {
     const list = this.tabList()?.nativeElement;
     list?.scrollBy({ left: direction * 120, behavior: 'smooth' });
+  }
+
+  protected updateTabScroll(): void {
+    const list = this.tabList()?.nativeElement;
+    if (!list) return;
+    const edges = ogeScrollEdges(list);
+    const was = this.tabScroll();
+    if (was.back !== edges.back || was.forward !== edges.forward)
+      this.tabScroll.set(edges);
+  }
+
+  /** The opener keeps focus where it is on a press (`mousedown` is cancelled), so a click on it while open closes the list. */
+  protected toggleMenu(kind: OgeSpreadsheetMenuKind): void {
+    if (this.menuKind() === kind) {
+      this.core.closeMenu();
+      this.menuOpener(kind)?.focus();
+      return;
+    }
+    this.core.openMenu(kind);
+    this.focusMenuItem();
+  }
+
+  protected onMenuButtonKeydown(
+    event: KeyboardEvent,
+    kind: OgeSpreadsheetMenuKind,
+  ): void {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    this.core.openMenu(kind, event.key === 'ArrowUp' ? 'last' : 'checked');
+    this.focusMenuItem();
+  }
+
+  protected onMenuKeydown(event: KeyboardEvent): void {
+    const kind = this.menuKind();
+    const action = this.core.menuKeydown(event.key);
+    if (action === null) return;
+    // Tab closes the list and lets the browser move on from the opener
+    if (action !== 'leave') event.preventDefault();
+    if (action === 'focus') this.focusMenuItem();
+    else if (action === 'picked') this.focus();
+    else this.menuOpener(kind)?.focus();
+  }
+
+  /** Focus leaving the list for anything but its opener closes it. */
+  protected onMenuFocusOut(event: FocusEvent): void {
+    const menu = event.currentTarget as HTMLElement;
+    const next = event.relatedTarget as Node | null;
+    if (
+      next &&
+      (menu.contains(next) || next === this.menuOpener(this.menuKind()))
+    )
+      return;
+    this.core.closeMenu();
+  }
+
+  protected pickMenuItem(position: number): void {
+    this.core.pickMenuItem(position);
+    this.focus();
+  }
+
+  private menuOpener(kind: OgeSpreadsheetMenuKind | null): HTMLElement | null {
+    const ref = kind === 'names' ? this.namesButton() : this.sheetMenuButton();
+    return ref?.nativeElement ?? null;
+  }
+
+  /** Focuses the open list's focused item once it is drawn. */
+  private focusMenuItem(): void {
+    setTimeout(() => {
+      const { kind, focus } = this.core.menu();
+      if (kind === null) return;
+      this.hostEl.nativeElement
+        .querySelector<HTMLElement>(`#${this.menuId} [data-item="${focus}"]`)
+        ?.focus();
+    });
   }
 
   protected stepZoom(direction: 1 | -1): void {

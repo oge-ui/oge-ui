@@ -374,6 +374,7 @@ export {
 
 export {
   ogeGridView,
+  ogeHeaderMarks,
   ogeHeaderStrips,
   ogeNoteBoxes,
   ogePanePictures,
@@ -387,6 +388,7 @@ export {
   type OgeGridPointerPoint,
   type OgeGridView,
   type OgeGridViewInput,
+  type OgeHeaderMark,
   type OgeHeaderStrip,
   type OgeNoteBox,
   type OgeNoteRun,
@@ -401,7 +403,9 @@ export {
   ogeGridPoint,
   ogeOpenLink,
   ogePrintSheetTable,
+  ogeScrollEdges,
   ogeWriteClipboard,
+  type OgeScrollEdges,
 } from './lib/view/browser';
 
 export type {
@@ -424,6 +428,10 @@ export {
   type OgeSpreadsheetCoreOptions,
   type OgeSpreadsheetKeyAction,
   type OgeSpreadsheetKeyInput,
+  type OgeSpreadsheetMenuItem,
+  type OgeSpreadsheetMenuKeyAction,
+  type OgeSpreadsheetMenuKind,
+  type OgeSpreadsheetMenuState,
   type OgeSpreadsheetPage,
   type OgeSpreadsheetStatus,
   type OgeSpreadsheetTab,

@@ -3,7 +3,9 @@
 // The sheet is drawn the way Excel draws it (numbers measured on screen in
 // Excel 16.0 — see the engine's `draw.ts`, `render.ts` and `viewport.ts`):
 // the geometry, gridlines, borders, fills and the selection come from the
-// engine's render model in whole pixels; this sheet only colours them.
+// engine's render model in whole pixels; this sheet only colours them. The
+// chrome around it — formula bar, headers, sheet tabs, status bar — is the
+// current Excel's, measured in Excel for the web (16.0.20611, 2026-10-22).
 
 .oge-spreadsheet {
   @include tokens.core-tokens;
@@ -14,7 +16,7 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  border: 1px solid var(--oge-spreadsheet-header-line);
+  border: 1px solid var(--oge-border-color);
   background: var(--oge-spreadsheet-chrome-bg);
   color: var(--oge-spreadsheet-chrome-fg);
   font:
@@ -38,59 +40,157 @@
     flex: 1;
   }
 
-  // ── name box and formula bar ──
+  // ── name box and formula bar: outlined 24 px fields on the chrome, the
+  // name box with its list of names, the formula bar's (inactive) cancel,
+  // enter and fx, and its expand button ──
   .oge-spreadsheet-formula-bar {
     display: flex;
-    align-items: stretch;
-    gap: 6px;
-    padding: 5px 8px;
-    border-block-end: 1px solid var(--oge-spreadsheet-header-line);
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 8px;
   }
 
-  .oge-spreadsheet-name-box,
-  .oge-spreadsheet-formula {
+  .oge-spreadsheet-name-field,
+  .oge-spreadsheet-formula-tools,
+  .oge-spreadsheet-formula-field {
     box-sizing: border-box;
-    min-height: 26px;
+    display: flex;
+    align-items: center;
+    min-height: 24px;
     border: 1px solid var(--oge-spreadsheet-field-border);
     border-radius: 4px;
     background: var(--oge-spreadsheet-field-bg);
     color: var(--oge-spreadsheet-field-fg);
-    font: inherit;
-    font-size: 13px;
+    font-size: 14px;
+  }
+
+  .oge-spreadsheet-name-field {
+    position: relative;
+    flex: 0 0 124px;
+    width: 124px;
   }
 
   .oge-spreadsheet-name-box {
-    flex: 0 0 102px;
-    width: 102px;
+    flex: 1;
+    min-width: 0;
+    height: 22px;
     padding: 0 6px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
 
     &:focus-visible {
       @include tokens.focus-ring($inset: true);
     }
   }
 
-  .oge-spreadsheet-fx {
-    display: inline-flex;
-    align-items: center;
-    padding: 0 8px;
+  // the chevrons inside the fields
+  .oge-spreadsheet-field-button {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
     color: var(--oge-spreadsheet-muted-fg);
+    cursor: pointer;
+    transition: background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+
+    &:hover {
+      background: var(--oge-spreadsheet-tab-hover-bg);
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1;
+    }
+
+    @include tokens.reduced-motion {
+      transition: none;
+    }
+  }
+
+  // Excel's cancel, enter and fx — inactive in a viewer, as in Excel's own
+  .oge-spreadsheet-formula-tools {
+    flex: 0 0 auto;
+    gap: 12px;
+    padding-inline: 8px 5px;
+    color: var(--oge-spreadsheet-disabled-fg);
+
+    svg {
+      flex: 0 0 auto;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1;
+    }
+  }
+
+  .oge-spreadsheet-cancel-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .oge-spreadsheet-enter-icon {
+    width: 16px;
+    height: 12px;
+  }
+
+  .oge-spreadsheet-fx-chevron {
+    width: 8px;
+    height: 8px;
+    margin-inline-start: -6px;
+  }
+
+  .oge-spreadsheet-fx {
     font:
-      italic 600 14px / 1 Cambria,
+      italic 15px / 1 Cambria,
       Georgia,
       serif;
+  }
+
+  .oge-spreadsheet-formula-field {
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
   }
 
   .oge-spreadsheet-formula {
     flex: 1;
     min-width: 0;
-    padding: 3px 8px;
+    min-height: 22px;
+    box-sizing: border-box;
+    padding: 2px 8px;
+    border-radius: 3px;
     overflow: hidden;
     white-space: pre;
     text-overflow: ellipsis;
+    line-height: 18px;
 
     &:focus-visible {
       @include tokens.focus-ring($inset: true);
     }
+  }
+
+  // Ctrl+Shift+U / the expand button: the whole text, up to five lines
+  .oge-spreadsheet-formula-expanded .oge-spreadsheet-formula {
+    max-height: calc(5 * 18px + 4px);
+    overflow-y: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
   }
 
   .oge-spreadsheet-formula-ghost {
@@ -138,8 +238,9 @@
     z-index: 1;
   }
 
-  // frozen panes: the freeze line replaces the last gridline they draw, so
-  // it paints over the pane's content
+  // frozen panes: the freeze line covers the last two pixels of the frozen
+  // rows and columns — their last gridline and the pixel before it — so it
+  // paints over the pane's content; through the headers it is their line
   .oge-spreadsheet-pane[data-pane='top']::after,
   .oge-spreadsheet-pane[data-pane='left']::after,
   .oge-spreadsheet-pane[data-pane='corner']::after,
@@ -147,29 +248,35 @@
     content: '';
     position: absolute;
     pointer-events: none;
-    z-index: 1;
+    z-index: 3;
   }
 
   .oge-spreadsheet-pane[data-pane='top']::after,
   .oge-spreadsheet-row-headers.oge-spreadsheet-headers-frozen::after {
     inset: auto 0 0;
-    height: 1px;
-    background: var(--oge-spreadsheet-freeze-line);
+    height: 2px;
   }
 
   .oge-spreadsheet-pane[data-pane='left']::after,
   .oge-spreadsheet-column-headers.oge-spreadsheet-headers-frozen::after {
     inset-block: 0;
     inset-inline-end: 0;
-    width: 1px;
+    width: 2px;
+  }
+
+  .oge-spreadsheet-pane[data-pane='top']::after,
+  .oge-spreadsheet-pane[data-pane='left']::after {
     background: var(--oge-spreadsheet-freeze-line);
+  }
+
+  .oge-spreadsheet-headers-frozen::after {
+    background: var(--oge-spreadsheet-header-line);
   }
 
   .oge-spreadsheet-pane[data-pane='corner']::after {
     inset: 0;
-    box-shadow:
-      inset 0 -1px 0 var(--oge-spreadsheet-freeze-line),
-      inset -1px 0 0 var(--oge-spreadsheet-freeze-line);
+    border-block-end: 2px solid var(--oge-spreadsheet-freeze-line);
+    border-inline-end: 2px solid var(--oge-spreadsheet-freeze-line);
   }
 
   .oge-spreadsheet-pane-flip {
@@ -325,11 +432,10 @@
 
   .oge-spreadsheet-column-header {
     inset-block: 0;
-    // each header's last pixel: a separator darkening toward the cells
+    // each header's last pixel: a flat separator
     background: linear-gradient(
-        to bottom,
-        var(--oge-spreadsheet-header-separator-from),
-        var(--oge-spreadsheet-header-separator-to)
+        var(--oge-spreadsheet-header-separator),
+        var(--oge-spreadsheet-header-separator)
       )
       right / 1px calc(100% - 1px) no-repeat;
   }
@@ -339,14 +445,25 @@
     align-items: flex-end;
     inset-inline: 0;
     background: linear-gradient(
-        to right,
-        var(--oge-spreadsheet-header-separator-from),
-        var(--oge-spreadsheet-header-separator-to)
+        var(--oge-spreadsheet-header-separator),
+        var(--oge-spreadsheet-header-separator)
       )
       bottom / calc(100% - 1px) 1px no-repeat;
   }
 
-  // the selection's rows and columns: lighter, with a 2 px green edge toward the cells
+  @media (hover: hover) {
+    .oge-spreadsheet-column-header,
+    .oge-spreadsheet-row-header {
+      &:hover:not(.oge-spreadsheet-header-selected):not(
+          .oge-spreadsheet-header-full
+        ) {
+        background-color: var(--oge-spreadsheet-header-hover-bg);
+      }
+    }
+  }
+
+  // the selection's rows and columns: Excel's green tint; the 2 px edge
+  // toward the cells and the separator before a run are marks over them
   .oge-spreadsheet-header-selected {
     background-color: var(--oge-spreadsheet-header-selected-bg);
     background-image: linear-gradient(
@@ -356,18 +473,36 @@
     color: var(--oge-spreadsheet-header-selected-fg);
   }
 
-  .oge-spreadsheet-column-header.oge-spreadsheet-header-selected {
-    box-shadow: inset 0 -2px 0 var(--oge-spreadsheet-accent);
-  }
-
-  .oge-spreadsheet-row-header.oge-spreadsheet-header-selected {
-    box-shadow: inset -2px 0 0 var(--oge-spreadsheet-accent);
-  }
-
-  // a whole row or column: green, white label
+  // a whole row or column: green with a bold white label, as wide as the
+  // selection frame below it (2 px before, 1 px after)
   .oge-spreadsheet-header-full {
+    z-index: 1;
     background: var(--oge-spreadsheet-accent);
     color: var(--oge-spreadsheet-accent-fg);
+    font-weight: 700;
+  }
+
+  .oge-spreadsheet-column-header.oge-spreadsheet-header-full {
+    box-shadow:
+      -2px 0 0 var(--oge-spreadsheet-accent),
+      1px 0 0 var(--oge-spreadsheet-accent);
+  }
+
+  .oge-spreadsheet-row-header.oge-spreadsheet-header-full {
+    box-shadow:
+      0 -2px 0 var(--oge-spreadsheet-accent),
+      0 1px 0 var(--oge-spreadsheet-accent);
+  }
+
+  .oge-spreadsheet-header-mark {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    background: var(--oge-spreadsheet-accent);
+
+    &[data-kind='separator'] {
+      background: var(--oge-spreadsheet-header-selected-separator);
+    }
   }
 
   .oge-spreadsheet-header-label {
@@ -507,8 +642,7 @@
 
   .oge-spreadsheet-icon-button,
   .oge-spreadsheet-toggle,
-  .oge-spreadsheet-zoom-step,
-  .oge-spreadsheet-tab-nav {
+  .oge-spreadsheet-zoom-step {
     position: relative;
     display: inline-grid;
     place-items: center;
@@ -578,33 +712,96 @@
     font-style: italic;
   }
 
-  // ── sheet tabs ──
+  // ── sheet tabs: flat, 14 px labels on a 32 px strip; the active one bold
+  // with a 3 px underline under its label, a tab colour a rounded fill ──
   .oge-spreadsheet-tab-strip {
+    position: relative;
     display: flex;
     align-items: stretch;
-    height: 28px;
+    height: 32px;
     background: var(--oge-spreadsheet-tab-strip-bg);
-    border-block-start: 1px solid var(--oge-spreadsheet-header-line);
   }
 
   .oge-spreadsheet-tab-scroll {
     display: flex;
-    align-items: center;
-    gap: 2px;
-    padding-inline: 6px;
+    align-items: stretch;
+  }
+
+  .oge-spreadsheet-tab-nav {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--oge-spreadsheet-muted-fg);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--oge-spreadsheet-tab-hover-bg);
+    }
+
+    &:disabled {
+      color: var(--oge-spreadsheet-disabled-fg);
+      cursor: default;
+    }
 
     svg {
-      fill: currentColor;
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1;
+    }
+  }
+
+  .oge-spreadsheet-sheet-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-inline: 4px;
+  }
+
+  .oge-spreadsheet-sheet-menu-button {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--oge-spreadsheet-tab-fg);
+    cursor: pointer;
+    transition: background-color var(--oge-motion-duration-fast)
+      var(--oge-motion-easing-standard);
+
+    &:hover,
+    &[aria-expanded='true'] {
+      background: var(--oge-spreadsheet-tab-hover-bg);
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.2;
+    }
+
+    @include tokens.reduced-motion {
+      transition: none;
     }
   }
 
   .oge-spreadsheet-tabs {
     display: flex;
     align-items: stretch;
-    gap: 0;
     min-width: 0;
-    padding-block-end: 3px;
     overflow-x: auto;
     scrollbar-width: none;
 
@@ -615,25 +812,24 @@
 
   .oge-spreadsheet-tab {
     position: relative;
+    // the colour fill below sits inside the tab, over its hover background
+    z-index: 0;
+    display: inline-grid;
     flex: 0 0 auto;
-    margin-block-start: 2px;
-    padding: 0 12px;
+    place-items: center;
+    padding: 0 8px;
     border: 0;
-    border-inline-end: 1px solid var(--oge-spreadsheet-tab-separator);
-    background: var(--oge-spreadsheet-tab-bg);
+    background: transparent;
     color: var(--oge-spreadsheet-tab-fg);
     font: inherit;
-    font-size: 12px;
+    font-size: 14px;
     white-space: nowrap;
     cursor: pointer;
     transition: background-color var(--oge-motion-duration-fast)
       var(--oge-motion-easing-standard);
 
-    &:hover:not(.oge-spreadsheet-tab-active) {
-      background-image: linear-gradient(
-        color-mix(in srgb, var(--oge-spreadsheet-tab-fg) 10%, transparent),
-        color-mix(in srgb, var(--oge-spreadsheet-tab-fg) 10%, transparent)
-      );
+    &:hover {
+      background-color: var(--oge-spreadsheet-tab-hover-bg);
     }
 
     &:focus-visible {
@@ -645,32 +841,136 @@
     }
   }
 
-  // a tab colour fills an inactive tab (dark text on it, as Excel draws it)
-  .oge-spreadsheet-tab-colored {
-    background: var(--oge-spreadsheet-tab-color);
-    color: var(--oge-spreadsheet-tab-colored-fg);
+  // a hidden, zero-height bold copy under the label keeps the tab as wide
+  // inactive as active; its empty alternative text keeps it out of the
+  // tab's name (the first declaration is for browsers without that syntax)
+  .oge-spreadsheet-tab-label {
+    display: inline-flex;
+    flex-direction: column;
+
+    &::after {
+      content: attr(data-label);
+      content: attr(data-label) / '';
+      height: 0;
+      overflow: hidden;
+      font-weight: 700;
+      visibility: hidden;
+    }
   }
 
-  // the active tab joins the sheet: white, bold green label, green underline
   .oge-spreadsheet-tab-active {
-    margin-block-start: -1px;
-    background: var(--oge-spreadsheet-tab-active-bg);
-    color: var(--oge-spreadsheet-tab-active-fg);
     font-weight: 700;
-    box-shadow: inset 0 -2px 0 var(--oge-spreadsheet-accent);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-inline: 9px;
+      inset-block-end: 0;
+      height: 3px;
+      background: var(--oge-spreadsheet-tab-underline);
+    }
   }
 
-  // an active coloured tab fades from white into its colour
-  .oge-spreadsheet-tab-active.oge-spreadsheet-tab-colored {
-    background: linear-gradient(
-      to bottom,
-      var(--oge-spreadsheet-tab-active-bg) 35%,
-      color-mix(
-        in srgb,
-        var(--oge-spreadsheet-tab-color) 45%,
-        var(--oge-spreadsheet-tab-active-bg)
-      )
+  .oge-spreadsheet-tab-colored {
+    color: var(--oge-spreadsheet-tab-colored-fg);
+
+    &::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: 2px 3px 6px;
+      border-radius: 4px;
+      background: var(--oge-spreadsheet-tab-color);
+    }
+  }
+
+  .oge-spreadsheet-tab-colored-light:not(.oge-spreadsheet-tab-active) {
+    color: var(--oge-spreadsheet-tab-colored-light-fg);
+  }
+
+  // an active coloured tab: its colour half-mixed with the tint base
+  .oge-spreadsheet-tab-active.oge-spreadsheet-tab-colored::before {
+    background: color-mix(
+      in srgb,
+      var(--oge-spreadsheet-tab-color) 50%,
+      var(--oge-spreadsheet-tab-tint-base)
     );
+  }
+
+  // ── the sheet list and the name box's list ──
+  .oge-spreadsheet-menu {
+    position: absolute;
+    z-index: 20;
+    box-sizing: border-box;
+    min-width: 180px;
+    max-width: 320px;
+    max-height: 288px;
+    overflow-y: auto;
+    border-radius: 4px;
+    background: var(--oge-spreadsheet-menu-bg);
+    color: var(--oge-spreadsheet-menu-fg);
+    box-shadow: var(--oge-shadow-popup);
+    font-size: 14px;
+  }
+
+  .oge-spreadsheet-sheet-list {
+    inset-block-end: 100%;
+    inset-inline-start: 0;
+  }
+
+  .oge-spreadsheet-name-list {
+    inset-block-start: calc(100% + 2px);
+    inset-inline-start: -1px;
+  }
+
+  .oge-spreadsheet-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 36px;
+    padding: 0 16px 0 10px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      background: var(--oge-spreadsheet-menu-hover-bg);
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true);
+    }
+  }
+
+  .oge-spreadsheet-name-list .oge-spreadsheet-menu-item {
+    padding-inline-start: 12px;
+  }
+
+  .oge-spreadsheet-menu-check {
+    flex: 0 0 14px;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    visibility: hidden;
+  }
+
+  .oge-spreadsheet-menu-item[aria-checked='true'] .oge-spreadsheet-menu-check {
+    visibility: visible;
+  }
+
+  .oge-spreadsheet-menu-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   // ── status bar ──
@@ -683,7 +983,7 @@
     padding: 0 8px;
     background: var(--oge-spreadsheet-status-bg);
     color: var(--oge-spreadsheet-chrome-fg);
-    border-block-start: 1px solid var(--oge-spreadsheet-header-line);
+    border-block-start: 1px solid var(--oge-spreadsheet-status-border);
   }
 
   .oge-spreadsheet-status-items {
@@ -699,9 +999,46 @@
     gap: 4px;
   }
 
+  // a thin track with a small upright thumb
   .oge-spreadsheet-zoom-slider {
     width: 100px;
-    accent-color: var(--oge-spreadsheet-muted-fg);
+    height: 16px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+
+    &::-webkit-slider-runnable-track {
+      height: 1px;
+      background: var(--oge-spreadsheet-muted-fg);
+    }
+
+    &::-webkit-slider-thumb {
+      width: 4px;
+      height: 12px;
+      margin-block-start: -6px;
+      border: 0;
+      border-radius: 2px;
+      background: var(--oge-spreadsheet-muted-fg);
+      appearance: none;
+    }
+
+    &::-moz-range-track {
+      height: 1px;
+      background: var(--oge-spreadsheet-muted-fg);
+    }
+
+    &::-moz-range-thumb {
+      width: 4px;
+      height: 12px;
+      border: 0;
+      border-radius: 2px;
+      background: var(--oge-spreadsheet-muted-fg);
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring;
+    }
   }
 
   .oge-spreadsheet-zoom-value {
@@ -731,14 +1068,32 @@
 
     .oge-spreadsheet-header-selected,
     .oge-spreadsheet-header-full,
-    .oge-spreadsheet-tab-active {
+    .oge-spreadsheet-tab-active,
+    .oge-spreadsheet-menu-item:focus {
       forced-color-adjust: none;
       background: Highlight;
       color: HighlightText;
     }
 
+    .oge-spreadsheet-header-mark,
+    .oge-spreadsheet-tab-active::after {
+      background: HighlightText;
+    }
+
     .oge-spreadsheet-tab {
       border: 1px solid ButtonText;
+    }
+
+    .oge-spreadsheet-tab-colored::before {
+      display: none;
+    }
+
+    .oge-spreadsheet-menu {
+      border: 1px solid CanvasText;
+    }
+
+    .oge-spreadsheet-tab-nav:disabled {
+      color: GrayText;
     }
   }
 }

@@ -1794,5 +1794,8 @@ export const ptBR: OgeLocalePack = {
     statusSum: 'Soma: {value}',
     previousSheets: 'Rolar para as planilhas anteriores',
     nextSheets: 'Rolar para as próximas planilhas',
+    allSheets: 'Todas as planilhas',
+    definedNames: 'Nomes definidos',
+    expandFormulaBar: 'Expandir a barra de fórmulas',
   },
 };

@@ -2230,6 +2230,36 @@ the editor and the formula engine build on these rules.
   17 pattern fills are anchored to sheet coordinates plus the header sizes;
   each zoomed row and column is rounded on its own; row-header width and
   column-header height follow the Normal font at the zoom.
+- **The chrome is the current Excel's** (owner direction 2026-10-22: "look
+  like the latest Excel"). The sheet — geometry, gridlines, fonts, borders,
+  fills — is measured on desktop Excel; the chrome around it is measured in
+  Excel for the web (16.0.20611), opened through `view.officeapps.live.com`
+  on a corpus workbook from the public repository, so nothing new leaves the
+  machine: outlined 24 px formula-bar fields, flat header separators, the
+  selection's 10% green tint, selected headers in green with a 2 px edge as
+  long as the selection frame and the separator before the run in the selected
+  colour (`ogeHeaderMarks`, drawn over the header cells), a whole row or
+  column in green with a bold white label as wide as the frame (box-shadows
+  on a raised header), a 2 px freeze line on the frozen side, flat 14 px sheet
+  tabs on a 32 px strip with a 3 px underline and rounded tab colours, a white
+  status bar. The dark theme keeps the desktop Black theme's measured colours
+  in these shapes. A viewer draws no fill handle — Excel's own viewer has none
+  (`fillHandle` is the editor's). A header click makes the band's first
+  visible cell active without scrolling (D1 for column D's header, A90 for
+  row 90's); Ctrl+Space keeps the active cell.
+- **Popup lists** — the strip's sheet list and the name box's defined names
+  — are one core state (`menu`, `openMenu`, `menuKeydown`, `pickMenuItem`)
+  that both layers bind as `role="menu"` with `menuitemradio` / `menuitem`
+  buttons: focus moves to the focused item on a timer after the render,
+  Escape returns it to the opener, a pick to the grid, and Tab lets the
+  browser move on from the opener. The opener cancels `mousedown` (focus stays
+  in the list, so a click on it while open closes), and focus leaving for
+  anything but the opener closes the list.
+- **A tab keeps its width when it turns bold**: the label's `::after` is a
+  zero-height bold copy, `content: attr(data-label) / ''` — the empty
+  alternative text keeps it out of the tab's name, and no second text node
+  breaks a consumer's `getByText`. A label on a tab colour is black or white
+  by contrast (`OgeSpreadsheetTab.ink`), never a fixed grey.
 - **Two-way state without echoes.** The Angular `activeSheet` / `zoom` models
   ignore the value they wrote back themselves; React's controlled props do the
   same with a ref. A sheet or zoom requested before a workbook opens is held by

@@ -2466,6 +2466,14 @@ Re-planned with it:
   frame and the anchor's formula greyed in the followers' formula bar;
   recalculating FILTER / SORT / UNIQUE / SEQUENCE moves from P4 to P3.
 
+**Owner direction (2026-10-22).** "It should look like the latest Excel —
+it looks like the old ones": the chrome around the sheet (formula bar,
+headers, selection tint, freeze line, sheet tabs, status bar) is now the
+current Excel's, measured in Excel for the web (16.0.20611), with Excel's
+"All Sheets" list beside the tabs, the name box's list of defined names and
+the expanding formula bar (Ctrl+Shift+U). The sheet itself stays measured on
+desktop Excel.
+
 ### Phases
 
 P0 ships nothing (ADR 0005 → Consequences); from P1 on each phase is a

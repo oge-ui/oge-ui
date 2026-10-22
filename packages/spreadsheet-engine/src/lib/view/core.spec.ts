@@ -747,3 +747,117 @@ describe('OgeSpreadsheetCore — dynamic arrays', () => {
     expect(core().spillRange()).toBeNull();
   });
 });
+
+describe('OgeSpreadsheetCore — the chrome’s lists', () => {
+  function sheets(): OgeWorkbook {
+    const workbook = sample();
+    workbook.addSheet('Budget');
+    workbook.addSheet('Archive').state = 'hidden';
+    workbook.addSheet('Notes');
+    return workbook;
+  }
+
+  it('lists the visible sheets, opens on the active one and moves like a menu', () => {
+    const c = core(sheets());
+    c.selectSheet(1);
+    c.openMenu('sheets');
+    expect(c.menu()).toEqual({ kind: 'sheets', focus: 1 });
+    expect(c.menuItems().map((item) => [item.label, item.checked])).toEqual([
+      ['Sheet1', false],
+      ['Budget', true],
+      ['Notes', false],
+    ]);
+    expect(c.menuKeydown('ArrowDown')).toBe('focus');
+    expect(c.menu().focus).toBe(2);
+    c.menuKeydown('ArrowDown');
+    expect(c.menu().focus).toBe(0); // round to the first
+    c.menuKeydown('ArrowUp');
+    expect(c.menu().focus).toBe(2);
+    c.menuKeydown('Home');
+    expect(c.menu().focus).toBe(0);
+    c.menuKeydown('End');
+    expect(c.menu().focus).toBe(2);
+    // a character goes to the next item it starts, round the end
+    c.menuKeydown('b');
+    expect(c.menu().focus).toBe(1);
+    expect(c.menuKeydown('z')).toBe('focus');
+    expect(c.menu().focus).toBe(1);
+    expect(c.menuKeydown('Shift')).toBeNull();
+    c.menuKeydown('n');
+    expect(c.menuKeydown('Enter')).toBe('picked');
+    expect(c.menu().kind).toBeNull();
+    expect(c.activeSheet()).toBe(3);
+    expect(c.announcement()).toBe('Sheet Notes, 3 of 3');
+  });
+
+  it('opens at an end from the opener’s arrows, and closes on Escape and Tab', () => {
+    const c = core(sheets());
+    c.openMenu('sheets', 'last');
+    expect(c.menu().focus).toBe(2);
+    expect(c.menuKeydown('Escape')).toBe('close');
+    expect(c.menu().kind).toBeNull();
+    c.openMenu('sheets', 'first');
+    expect(c.menu().focus).toBe(0);
+    expect(c.menuKeydown('Tab')).toBe('leave');
+    expect(c.menuKeydown('ArrowDown')).toBeNull(); // nothing open
+    c.openMenu('sheets');
+    c.setWorkbook(sample()); // a new workbook closes it
+    expect(c.menu().kind).toBeNull();
+  });
+
+  it('lists the names Excel’s name box does, sorted, and goes to the one picked', () => {
+    const workbook = sheets();
+    workbook.defineName({ name: 'zeta', formula: 'Sheet1!$B$2' });
+    workbook.defineName({ name: 'Alpha', formula: 'Budget!$A$1:$B$2' });
+    workbook.defineName({ name: 'Rate', formula: '0.07' });
+    workbook.defineName({
+      name: 'Hidden',
+      formula: 'Sheet1!$A$1',
+      hidden: true,
+    });
+    workbook.defineName({
+      name: '_xlnm.Print_Area',
+      formula: 'Sheet1!$A$1:$C$3',
+      sheet: 0,
+    });
+    workbook.defineName({ name: 'Local', formula: 'Budget!$C$3', sheet: 1 });
+    const c = core(workbook);
+    expect(c.definedNames()).toEqual(['Alpha', 'zeta']);
+    c.selectSheet(1);
+    expect(c.definedNames()).toEqual(['Alpha', 'Local', 'zeta']);
+    c.openMenu('names');
+    // nothing is checked: the first item takes focus
+    expect(c.menu()).toEqual({ kind: 'names', focus: 0 });
+    c.pickMenuItem(2);
+    expect(c.activeSheet()).toBe(0);
+    expect(at(c)).toEqual({ row: 1, col: 1 });
+    expect(c.nameBox()).toBe('zeta');
+    // a workbook without names opens no list
+    const plain = core(sample());
+    plain.openMenu('names');
+    expect(plain.menu().kind).toBeNull();
+    expect(plain.menuItems()).toEqual([]);
+  });
+
+  it('expands the formula bar with its button and Ctrl+Shift+U', () => {
+    const c = core(sample());
+    expect(c.formulaExpanded()).toBe(false);
+    c.toggleFormulaBar();
+    expect(c.formulaExpanded()).toBe(true);
+    expect(c.keydown(key('U', { ctrlKey: true, shiftKey: true }), page)).toBe(
+      'none',
+    );
+    expect(c.formulaExpanded()).toBe(false);
+    expect(c.keydown(key('u', { ctrlKey: true }), page)).toBeNull();
+  });
+
+  it('says which label reads on a tab colour', () => {
+    const workbook = sheets();
+    workbook.sheets[0].tabColor = { rgb: 'FF70AD47' };
+    workbook.sheets[1].tabColor = { rgb: 'FF002060' };
+    const tabs = core(workbook).tabs();
+    expect(tabs[0]).toMatchObject({ color: '#70AD47', ink: 'dark' });
+    expect(tabs[1]).toMatchObject({ color: '#002060', ink: 'light' });
+    expect(tabs[2].ink).toBeUndefined();
+  });
+});

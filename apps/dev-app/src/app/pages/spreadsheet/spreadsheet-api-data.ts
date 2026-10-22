@@ -118,6 +118,18 @@ export const SPREADSHEET_TYPE_BLOCKS: NonNullable<ApiSections['types']> = [
           'Previous / next sheet, zoom in and out on Excel&#39;s steps.',
       },
       {
+        name: 'Ctrl+Shift+U',
+        type: 'view',
+        description:
+          'Expands the formula bar to the whole text, up to five lines, and back — as its chevron button does.',
+      },
+      {
+        name: 'All sheets / Defined names lists',
+        type: 'menu',
+        description:
+          'The button beside the sheet tabs lists every visible sheet, the active one checked; the name box&#39;s chevron lists the defined names Excel&#39;s name box shows. Down or Up on the button opens a list; arrows, Home, End and a first letter move, Enter or Space pick (the sheet shows, or the name is gone to), Escape gives focus back to the button and Tab moves on.',
+      },
+      {
         name: 'Escape',
         type: 'close',
         description:

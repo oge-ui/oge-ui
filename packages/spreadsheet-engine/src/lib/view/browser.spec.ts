@@ -7,6 +7,7 @@ import {
   ogeGridPoint,
   ogeOpenLink,
   ogePrintSheetTable,
+  ogeScrollEdges,
   ogeWriteClipboard,
 } from './browser';
 
@@ -268,5 +269,23 @@ describe('grid pointer readers', () => {
     expect(ogeGridHeaderAt(element('oge-spreadsheet-pane'))).toBeNull();
     expect(ogeGridHeaderAt(null)).toBeNull();
     expect(ogeGridHeaderAt(window)).toBeNull();
+  });
+});
+
+describe('ogeScrollEdges', () => {
+  it('says where a sideways list can still scroll, either direction', () => {
+    const list = (scrollLeft: number) => ({
+      scrollLeft,
+      scrollWidth: 600,
+      clientWidth: 400,
+    });
+    expect(ogeScrollEdges(list(0))).toEqual({ back: false, forward: true });
+    expect(ogeScrollEdges(list(100))).toEqual({ back: true, forward: true });
+    expect(ogeScrollEdges(list(200))).toEqual({ back: true, forward: false });
+    // a right-to-left list scrolls to negative offsets
+    expect(ogeScrollEdges(list(-200))).toEqual({ back: true, forward: false });
+    expect(
+      ogeScrollEdges({ scrollLeft: 0, scrollWidth: 300, clientWidth: 400 }),
+    ).toEqual({ back: false, forward: false });
   });
 });

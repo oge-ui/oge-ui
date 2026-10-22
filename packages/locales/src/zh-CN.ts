@@ -1723,5 +1723,8 @@ export const zhCN: OgeLocalePack = {
     statusSum: '求和：{value}',
     previousSheets: '滚动到前面的工作表',
     nextSheets: '滚动到后面的工作表',
+    allSheets: '所有工作表',
+    definedNames: '定义的名称',
+    expandFormulaBar: '展开编辑栏',
   },
 };

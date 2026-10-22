@@ -1798,5 +1798,8 @@ export const es: OgeLocalePack = {
     statusSum: 'Suma: {value}',
     previousSheets: 'Desplazarse a las hojas anteriores',
     nextSheets: 'Desplazarse a las hojas siguientes',
+    allSheets: 'Todas las hojas',
+    definedNames: 'Nombres definidos',
+    expandFormulaBar: 'Expandir la barra de fórmulas',
   },
 };

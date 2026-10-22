@@ -1776,5 +1776,8 @@ export const he: OgeLocalePack = {
     statusSum: 'סכום: {value}',
     previousSheets: 'גלילה לגיליונות הקודמים',
     nextSheets: 'גלילה לגיליונות הבאים',
+    allSheets: 'כל הגיליונות',
+    definedNames: 'שמות מוגדרים',
+    expandFormulaBar: 'הרחבת שורת הנוסחאות',
   },
 };

@@ -29,6 +29,13 @@ are versioned independently, which is the case here.
   text and Excel HTML, zoom with whole-pixel geometry, the status bar's
   Average / Count / Sum in the active cell's format, sheet tabs with colours,
   print of the used range.
+- **The current Excel's chrome:** the formula bar, headers, selection tint,
+  freeze line, sheet tabs and status bar are measured in today's Excel (for
+  the web, 16.0.20611) — flat tabs with an underline, green-tinted selected
+  headers, outlined fields — in light and dark. Excel's "All sheets" list sits
+  beside the tabs, the name box lists the defined names, and the formula bar
+  expands to the whole text (Ctrl+Shift+U); a header click makes the band's
+  first cell active, as Excel does.
 - **Accessible:** a `role="grid"` whose active cell is its
   `aria-activedescendant`; selections, sheet switches, copies, zoom and find
   results are announced. Every string is in `OgeSpreadsheetMessages`

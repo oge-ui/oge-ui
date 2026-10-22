@@ -163,6 +163,7 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
         "@oge-ui/tree-list",
         "@oge-ui/upload"
@@ -1835,7 +1836,7 @@
     {
       "n": "--oge-spreadsheet-sheet-bg",
       "c": "component",
-      "d": "spreadsheet (ADR 0005): the sheet itself looks as in Excel in every theme — white cells, Excel's gridline grey and green selection, measured on screen in Excel 16.0 — and the chrome around it follows the theme",
+      "d": "spreadsheet (ADR 0005): the sheet itself looks as in Excel in every theme — white cells and Excel's gridline grey, measured on screen in Excel 16.0 — and the chrome around it is the current Excel's (Excel for the web 16.0.20611, measured 2026-10-22), following the theme",
       "v": {
         "light": "#ffffff"
       },
@@ -1880,11 +1881,12 @@
     {
       "n": "--oge-spreadsheet-accent",
       "c": "component",
+      "d": "the selection frame, the selected headers' edge, a whole row's or column's header",
       "v": {
-        "light": "#217346"
+        "light": "#107c41"
       },
       "s": {
-        "light": "#217346"
+        "light": "#107c41"
       },
       "u": [
         "@oge-ui/spreadsheet"
@@ -1906,12 +1908,13 @@
     {
       "n": "--oge-spreadsheet-freeze-line",
       "c": "component",
+      "d": "the freeze line over the cells, 2 px on the frozen side",
       "v": {
-        "light": "#9b9b9b",
+        "light": "#949494",
         "hc": "#000000"
       },
       "s": {
-        "light": "#9b9b9b",
+        "light": "#949494",
         "hc": "#000000"
       },
       "u": [
@@ -1921,11 +1924,12 @@
     {
       "n": "--oge-spreadsheet-selection-overlay",
       "c": "component",
+      "d": "the selected cells' tint: the accent at 10%",
       "v": {
-        "light": "rgba(0, 0, 0, 0.22)"
+        "light": "rgba(16, 124, 65, 0.1)"
       },
       "s": {
-        "light": "rgb(0 0 0 / 0.22)"
+        "light": "rgb(16 124 65 / 0.1)"
       },
       "u": [
         "@oge-ui/spreadsheet"
@@ -2062,14 +2066,14 @@
     {
       "n": "--oge-spreadsheet-chrome-bg",
       "c": "component",
-      "d": "spreadsheet chrome: Excel's dark (\"Black\") Office theme, measured; the sheet stays white with Excel's gridlines, as Excel keeps it",
+      "d": "spreadsheet chrome: Excel's dark (\"Black\") Office theme, measured, in the current Excel's shapes; the sheet stays white with Excel's gridlines, as Excel keeps it",
       "v": {
-        "light": "#f3f3f3",
+        "light": "#f5f5f5",
         "dark": "#090909",
         "hc": "#ffffff"
       },
       "s": {
-        "light": "#f3f3f3",
+        "light": "#f5f5f5",
         "dark": "#090909",
         "hc": "#ffffff"
       },
@@ -2081,12 +2085,12 @@
       "n": "--oge-spreadsheet-chrome-fg",
       "c": "component",
       "v": {
-        "light": "#262626",
+        "light": "#444444",
         "dark": "#ffffff",
         "hc": "#000000"
       },
       "s": {
-        "light": "#262626",
+        "light": "#444444",
         "dark": "#ffffff",
         "hc": "#000000"
       },
@@ -2098,14 +2102,29 @@
       "n": "--oge-spreadsheet-status-bg",
       "c": "component",
       "v": {
-        "light": "#f3f3f3",
-        "dark": "#141414",
-        "hc": "#ffffff"
+        "light": "#ffffff",
+        "dark": "#141414"
       },
       "s": {
-        "light": "#f3f3f3",
-        "dark": "#141414",
-        "hc": "#ffffff"
+        "light": "#ffffff",
+        "dark": "#141414"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-status-border",
+      "c": "component",
+      "v": {
+        "light": "#e1e1e1",
+        "dark": "#262626",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#e1e1e1",
+        "dark": "#262626",
+        "hc": "#000000"
       },
       "u": [
         "@oge-ui/spreadsheet"
@@ -2115,14 +2134,32 @@
       "n": "--oge-spreadsheet-muted-fg",
       "c": "component",
       "v": {
-        "light": "#6e6e6e",
+        "light": "#616161",
         "dark": "#b0b0b0",
         "hc": "#000000"
       },
       "s": {
-        "light": "#6e6e6e",
+        "light": "#616161",
         "dark": "#b0b0b0",
         "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-disabled-fg",
+      "c": "component",
+      "d": "the chrome's inactive icons: the formula bar's cancel and enter, a sheet scroll button with nothing to scroll",
+      "v": {
+        "light": "#bdbdbd",
+        "dark": "#5c5c5c",
+        "hc": "#767676"
+      },
+      "s": {
+        "light": "#bdbdbd",
+        "dark": "#5c5c5c",
+        "hc": "#767676"
       },
       "u": [
         "@oge-ui/spreadsheet"
@@ -2132,12 +2169,14 @@
       "n": "--oge-spreadsheet-field-bg",
       "c": "component",
       "v": {
-        "light": "#ffffff",
-        "dark": "#292929"
+        "light": "#f5f5f5",
+        "dark": "#292929",
+        "hc": "#ffffff"
       },
       "s": {
-        "light": "#ffffff",
-        "dark": "#292929"
+        "light": "#f5f5f5",
+        "dark": "#292929",
+        "hc": "#ffffff"
       },
       "u": [
         "@oge-ui/spreadsheet"
@@ -2147,12 +2186,12 @@
       "n": "--oge-spreadsheet-field-border",
       "c": "component",
       "v": {
-        "light": "#c6c6c6",
+        "light": "#d1d1d1",
         "dark": "#666666",
         "hc": "#000000"
       },
       "s": {
-        "light": "#c6c6c6",
+        "light": "#d1d1d1",
         "dark": "#666666",
         "hc": "#000000"
       },
@@ -2164,12 +2203,12 @@
       "n": "--oge-spreadsheet-field-fg",
       "c": "component",
       "v": {
-        "light": "#262626",
+        "light": "#242424",
         "dark": "#ffffff",
         "hc": "#000000"
       },
       "s": {
-        "light": "#262626",
+        "light": "#242424",
         "dark": "#ffffff",
         "hc": "#000000"
       },
@@ -2198,12 +2237,12 @@
       "n": "--oge-spreadsheet-header-fg",
       "c": "component",
       "v": {
-        "light": "#444444",
+        "light": "#616161",
         "dark": "#dadada",
         "hc": "#000000"
       },
       "s": {
-        "light": "#444444",
+        "light": "#616161",
         "dark": "#dadada",
         "hc": "#000000"
       },
@@ -2229,15 +2268,15 @@
       ]
     },
     {
-      "n": "--oge-spreadsheet-header-separator-from",
+      "n": "--oge-spreadsheet-header-separator",
       "c": "component",
       "v": {
-        "light": "#f0f0f0",
+        "light": "#e0e0e0",
         "dark": "#333333",
         "hc": "#000000"
       },
       "s": {
-        "light": "#f0f0f0",
+        "light": "#e0e0e0",
         "dark": "#333333",
         "hc": "#000000"
       },
@@ -2246,17 +2285,17 @@
       ]
     },
     {
-      "n": "--oge-spreadsheet-header-separator-to",
+      "n": "--oge-spreadsheet-header-hover-bg",
       "c": "component",
       "v": {
-        "light": "#d0d0d0",
-        "dark": "#68686f",
-        "hc": "#000000"
+        "light": "#ebebeb",
+        "dark": "#262626",
+        "hc": "#e6e6e6"
       },
       "s": {
-        "light": "#d0d0d0",
-        "dark": "#68686f",
-        "hc": "#000000"
+        "light": "#ebebeb",
+        "dark": "#262626",
+        "hc": "#e6e6e6"
       },
       "u": [
         "@oge-ui/spreadsheet"
@@ -2266,12 +2305,12 @@
       "n": "--oge-spreadsheet-header-selected-bg",
       "c": "component",
       "v": {
-        "light": "#d2d2d2",
+        "light": "#caead8",
         "dark": "#646464",
         "hc": "#000000"
       },
       "s": {
-        "light": "#d2d2d2",
+        "light": "#caead8",
         "dark": "#646464",
         "hc": "#000000"
       },
@@ -2283,12 +2322,12 @@
       "n": "--oge-spreadsheet-header-selected-fg",
       "c": "component",
       "v": {
-        "light": "#217346",
+        "light": "#0f703b",
         "dark": "#ffffff",
         "hc": "#ffffff"
       },
       "s": {
-        "light": "#217346",
+        "light": "#0f703b",
         "dark": "#ffffff",
         "hc": "#ffffff"
       },
@@ -2300,12 +2339,12 @@
       "n": "--oge-spreadsheet-header-selected-separator",
       "c": "component",
       "v": {
-        "light": "#ababab",
+        "light": "#a0d8b9",
         "dark": "#b6b6b6",
         "hc": "#ffffff"
       },
       "s": {
-        "light": "#ababab",
+        "light": "#a0d8b9",
         "dark": "#b6b6b6",
         "hc": "#ffffff"
       },
@@ -2317,12 +2356,12 @@
       "n": "--oge-spreadsheet-corner-mark",
       "c": "component",
       "v": {
-        "light": "#b9b9b9",
+        "light": "#b7b7b7",
         "dark": "#646464",
         "hc": "#000000"
       },
       "s": {
-        "light": "#b9b9b9",
+        "light": "#b7b7b7",
         "dark": "#646464",
         "hc": "#000000"
       },
@@ -2334,30 +2373,13 @@
       "n": "--oge-spreadsheet-tab-strip-bg",
       "c": "component",
       "v": {
-        "light": "#f3f3f3",
+        "light": "#f5f5f5",
         "dark": "#090909",
         "hc": "#ffffff"
       },
       "s": {
-        "light": "#f3f3f3",
+        "light": "#f5f5f5",
         "dark": "#090909",
-        "hc": "#ffffff"
-      },
-      "u": [
-        "@oge-ui/spreadsheet"
-      ]
-    },
-    {
-      "n": "--oge-spreadsheet-tab-bg",
-      "c": "component",
-      "v": {
-        "light": "#e8e8e8",
-        "dark": "#262626",
-        "hc": "#ffffff"
-      },
-      "s": {
-        "light": "#e8e8e8",
-        "dark": "#262626",
         "hc": "#ffffff"
       },
       "u": [
@@ -2368,12 +2390,12 @@
       "n": "--oge-spreadsheet-tab-fg",
       "c": "component",
       "v": {
-        "light": "#262626",
+        "light": "#444444",
         "dark": "#ffffff",
         "hc": "#000000"
       },
       "s": {
-        "light": "#262626",
+        "light": "#444444",
         "dark": "#ffffff",
         "hc": "#000000"
       },
@@ -2382,16 +2404,32 @@
       ]
     },
     {
-      "n": "--oge-spreadsheet-tab-separator",
+      "n": "--oge-spreadsheet-tab-hover-bg",
       "c": "component",
       "v": {
-        "light": "#bdbdbd",
-        "dark": "#999999",
+        "light": "#e1dfdd",
+        "dark": "#262626",
+        "hc": "#e6e6e6"
+      },
+      "s": {
+        "light": "#e1dfdd",
+        "dark": "#262626",
+        "hc": "#e6e6e6"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-underline",
+      "c": "component",
+      "d": "the active sheet tab's underline",
+      "v": {
+        "light": "#217346",
         "hc": "#000000"
       },
       "s": {
-        "light": "#bdbdbd",
-        "dark": "#999999",
+        "light": "#217346",
         "hc": "#000000"
       },
       "u": [
@@ -2399,26 +2437,14 @@
       ]
     },
     {
-      "n": "--oge-spreadsheet-tab-active-bg",
+      "n": "--oge-spreadsheet-tab-tint-base",
       "c": "component",
+      "d": "an active coloured tab shows its colour half-mixed with this",
       "v": {
         "light": "#ffffff"
       },
       "s": {
         "light": "#ffffff"
-      },
-      "u": [
-        "@oge-ui/spreadsheet"
-      ]
-    },
-    {
-      "n": "--oge-spreadsheet-tab-active-fg",
-      "c": "component",
-      "v": {
-        "light": "#217346"
-      },
-      "s": {
-        "light": "#217346"
       },
       "u": [
         "@oge-ui/spreadsheet"
@@ -2427,11 +2453,75 @@
     {
       "n": "--oge-spreadsheet-tab-colored-fg",
       "c": "component",
+      "d": "labels on a tab colour: dark on a light colour, light on a dark one",
       "v": {
         "light": "#000000"
       },
       "s": {
         "light": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tab-colored-light-fg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-menu-bg",
+      "c": "component",
+      "d": "the sheet list and the name box's list",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-menu-fg",
+      "c": "component",
+      "v": {
+        "light": "#323130",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#323130",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-menu-hover-bg",
+      "c": "component",
+      "v": {
+        "light": "#f5f5f5",
+        "dark": "#3d3d3d",
+        "hc": "#e6e6e6"
+      },
+      "s": {
+        "light": "#f5f5f5",
+        "dark": "#3d3d3d",
+        "hc": "#e6e6e6"
       },
       "u": [
         "@oge-ui/spreadsheet"

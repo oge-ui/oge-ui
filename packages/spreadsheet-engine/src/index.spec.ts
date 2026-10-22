@@ -100,6 +100,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeHasFontMetrics',
     'ogeHashFill',
     'ogeHeaderCells',
+    'ogeHeaderMarks',
     'ogeHeaderStrips',
     'ogeIconParts',
     'ogeIndentPixels',
@@ -136,6 +137,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeRevealScroll',
     'ogeRichText',
     'ogeRichTextToString',
+    'ogeScrollEdges',
     'ogeScrollToCell',
     'ogeSelectionContains',
     'ogeSelectionShapes',
@@ -175,7 +177,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
 
   it('exports nothing it does not guard', () => {
     // a new export lands in the list above in the same change
-    expect(Object.keys(engine)).toHaveLength(164);
+    expect(Object.keys(engine)).toHaveLength(166);
   });
 
   it('keeps the internal ZIP and XML layers out of the public surface', () => {

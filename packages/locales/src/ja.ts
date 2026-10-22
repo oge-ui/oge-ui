@@ -1768,5 +1768,8 @@ export const ja: OgeLocalePack = {
     statusSum: '合計: {value}',
     previousSheets: '前のシートへスクロール',
     nextSheets: '次のシートへスクロール',
+    allSheets: 'すべてのシート',
+    definedNames: '定義された名前',
+    expandFormulaBar: '数式バーを展開',
   },
 };

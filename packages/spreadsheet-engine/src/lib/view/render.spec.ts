@@ -260,15 +260,27 @@ describe('ogeSelectionShapes', () => {
   };
   const pane = { originX: 0, originY: 0, width: 640, height: 400 };
 
-  it('draws one cell as a 2 px border with a white inner line and the fill handle', () => {
+  it('draws one cell as a 2 px border with a white inner line, and the fill handle when asked', () => {
     const { sheet, axes } = setup();
     // C4 at 128..191 × 60..79, as measured on Excel's C4
-    const shapes = ogeSelectionShapes(
+    const viewer = ogeSelectionShapes(
       sheet,
       axes,
       ogeCellSelection(3, 2),
       pane,
     );
+    // a viewer has no fill handle, as Excel's own viewer
+    expect(viewer.handle).toBeNull();
+    expect(viewer.moat).toBeNull();
+    const shapes = ogeSelectionShapes(
+      sheet,
+      axes,
+      ogeCellSelection(3, 2),
+      pane,
+      null,
+      { fillHandle: true },
+    );
+    expect(viewer.frame).toEqual(shapes.frame);
     expect(shapes.overlay).toBe('');
     expect(shapes.frame).toEqual({
       left: '126px',
@@ -314,7 +326,9 @@ describe('ogeSelectionShapes', () => {
       active: { row: 0, col: 1 },
       anchor: { row: 0, col: 1 },
     };
-    const shapes = ogeSelectionShapes(sheet, axes, column, pane);
+    const shapes = ogeSelectionShapes(sheet, axes, column, pane, null, {
+      fillHandle: true,
+    });
     expect(shapes.frame?.['height']).toBe('411px');
     expect(shapes.handle).toBeNull();
     const two = {

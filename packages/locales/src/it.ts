@@ -1802,5 +1802,8 @@ export const it: OgeLocalePack = {
     statusSum: 'Somma: {value}',
     previousSheets: 'Scorri verso i fogli precedenti',
     nextSheets: 'Scorri verso i fogli successivi',
+    allSheets: 'Tutti i fogli',
+    definedNames: 'Nomi definiti',
+    expandFormulaBar: 'Espandi la barra della formula',
   },
 };

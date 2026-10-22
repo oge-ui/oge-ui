@@ -26,6 +26,19 @@ export interface OgeHeaderStrip {
   readonly frozen: boolean;
   readonly style: OgeCss;
   readonly cells: readonly OgeHeaderCell[];
+  /** The selection's marks over the cells (`ogeHeaderMarks`). */
+  readonly marks: readonly OgeHeaderMark[];
+}
+
+/** A mark of the selection on a header strip, in the strip's pixels. */
+export interface OgeHeaderMark {
+  readonly key: string;
+  /**
+   * `edge`: the 2 px line toward the cells under a run of selected headers;
+   * `separator`: the line just before the run, in the selected colour.
+   */
+  readonly kind: 'edge' | 'separator';
+  readonly style: OgeCss;
 }
 
 /** A picture placed in a pane: its frame (the crop window, turned and flipped) and the image inside it. */
@@ -72,6 +85,8 @@ export interface OgeGridViewInput {
   readonly pictures: ReadonlyMap<OgePaneKey, readonly OgePanePicture[]>;
   /** The Normal style's CSS font family. */
   readonly fontFamily: string;
+  /** Draws the selection's fill handle (an editor); a viewer has none. */
+  readonly fillHandle?: boolean;
 }
 
 /** A note shown over the grid. */
@@ -167,6 +182,75 @@ export function ogePaneStyle(key: OgePaneKey, panes: OgeViewportPanes): OgeCss {
   }
 }
 
+/**
+ * The selection's marks on a header strip, as the current Excel draws them
+ * (measured in Excel for the web, 16.0.20611): under each run of selected
+ * headers the 2 px edge toward the cells, as long as the selection frame
+ * below it — one pixel past the separator on either end — and the separator
+ * just before the run in the selected headers' colour. Whole rows and
+ * columns draw their own fill. `depth` is the strip's height (columns) or
+ * width (rows).
+ */
+export function ogeHeaderMarks(
+  kind: 'rows' | 'columns',
+  cells: readonly OgeHeaderCell[],
+  depth: number,
+): OgeHeaderMark[] {
+  const marks: OgeHeaderMark[] = [];
+  for (let i = 0; i < cells.length; i++) {
+    if (cells[i].state !== 'selected') continue;
+    const first = cells[i];
+    let last = first;
+    while (
+      i + 1 < cells.length &&
+      cells[i + 1].state === 'selected' &&
+      cells[i + 1].offset === last.offset + last.size
+    ) {
+      last = cells[++i];
+    }
+    const start = first.offset - 2;
+    const length = last.offset + last.size - first.offset + 3;
+    const columns = kind === 'columns';
+    marks.push(
+      {
+        key: `edge-${first.index}`,
+        kind: 'edge',
+        style: columns
+          ? {
+              left: px(start),
+              top: px(depth - 2),
+              width: px(length),
+              height: '2px',
+            }
+          : {
+              left: px(depth - 2),
+              top: px(start),
+              width: '2px',
+              height: px(length),
+            },
+      },
+      {
+        key: `separator-${first.index}`,
+        kind: 'separator',
+        style: columns
+          ? {
+              left: px(first.offset - 1),
+              top: '0',
+              width: '1px',
+              height: px(depth - 2),
+            }
+          : {
+              left: '0',
+              top: px(first.offset - 1),
+              width: px(depth - 2),
+              height: '1px',
+            },
+      },
+    );
+  }
+  return marks;
+}
+
 /** The column and row header strips: the scrolling ones and, over frozen panes, the frozen ones. */
 export function ogeHeaderStrips(
   panes: OgeViewportPanes,
@@ -178,100 +262,118 @@ export function ogeHeaderStrips(
   const { rowHeaderWidth, columnHeaderHeight } = panes.headers;
   const columns: OgeHeaderStrip[] = [];
   const rows: OgeHeaderStrip[] = [];
+  const strip = (
+    kind: 'rows' | 'columns',
+    key: OgeHeaderStrip['key'],
+    style: OgeCss,
+    cells: OgeHeaderCell[],
+  ): OgeHeaderStrip => ({
+    key,
+    frozen: key === 'frozen',
+    style,
+    cells,
+    marks: ogeHeaderMarks(
+      kind,
+      cells,
+      kind === 'columns' ? columnHeaderHeight : rowHeaderWidth,
+    ),
+  });
   if (columnHeaderHeight > 0) {
-    columns.push({
-      key: 'scrolling',
-      frozen: false,
-      style: {
-        gridRow: '1 / 4',
-        gridColumn: '3',
-        alignSelf: 'start',
-        width: px(panes.scrollWidth),
-        height: px(columnHeaderHeight),
-        position: 'sticky',
-        top: '0',
-        zIndex: '4',
-      },
-      cells: ogeHeaderCells(
+    columns.push(
+      strip(
         'columns',
-        panes.axes,
-        panes.cols,
-        panes.originX,
-        selection,
-      ),
-    });
-    if (panes.frozenColumns > 0) {
-      columns.push({
-        key: 'frozen',
-        frozen: true,
-        style: {
+        'scrolling',
+        {
           gridRow: '1 / 4',
-          gridColumn: '2 / 4',
+          gridColumn: '3',
           alignSelf: 'start',
-          justifySelf: 'start',
-          width: px(panes.frozenWidth),
+          width: px(panes.scrollWidth),
           height: px(columnHeaderHeight),
           position: 'sticky',
           top: '0',
-          insetInlineStart: px(rowHeaderWidth),
-          zIndex: '5',
+          zIndex: '4',
         },
-        cells: ogeHeaderCells(
+        ogeHeaderCells(
           'columns',
           panes.axes,
-          panes.frozenColSpan,
-          0,
+          panes.cols,
+          panes.originX,
           selection,
         ),
-      });
+      ),
+    );
+    if (panes.frozenColumns > 0) {
+      columns.push(
+        strip(
+          'columns',
+          'frozen',
+          {
+            gridRow: '1 / 4',
+            gridColumn: '2 / 4',
+            alignSelf: 'start',
+            justifySelf: 'start',
+            width: px(panes.frozenWidth),
+            height: px(columnHeaderHeight),
+            position: 'sticky',
+            top: '0',
+            insetInlineStart: px(rowHeaderWidth),
+            zIndex: '5',
+          },
+          ogeHeaderCells(
+            'columns',
+            panes.axes,
+            panes.frozenColSpan,
+            0,
+            selection,
+          ),
+        ),
+      );
     }
   }
   if (rowHeaderWidth > 0) {
-    rows.push({
-      key: 'scrolling',
-      frozen: false,
-      style: {
-        gridRow: '3',
-        gridColumn: '1 / 4',
-        justifySelf: 'start',
-        width: px(rowHeaderWidth),
-        height: px(panes.scrollHeight),
-        position: 'sticky',
-        insetInlineStart: '0',
-        zIndex: '4',
-      },
-      cells: ogeHeaderCells(
+    rows.push(
+      strip(
         'rows',
-        panes.axes,
-        panes.rows,
-        panes.originY,
-        selection,
-      ),
-    });
-    if (panes.frozenRows > 0) {
-      rows.push({
-        key: 'frozen',
-        frozen: true,
-        style: {
-          gridRow: '2 / 4',
+        'scrolling',
+        {
+          gridRow: '3',
           gridColumn: '1 / 4',
-          alignSelf: 'start',
           justifySelf: 'start',
           width: px(rowHeaderWidth),
-          height: px(panes.frozenHeight),
+          height: px(panes.scrollHeight),
           position: 'sticky',
-          top: px(columnHeaderHeight),
           insetInlineStart: '0',
-          zIndex: '5',
+          zIndex: '4',
         },
-        cells: ogeHeaderCells(
+        ogeHeaderCells(
           'rows',
           panes.axes,
-          panes.frozenRowSpan,
-          0,
+          panes.rows,
+          panes.originY,
           selection,
         ),
-      });
+      ),
+    );
+    if (panes.frozenRows > 0) {
+      rows.push(
+        strip(
+          'rows',
+          'frozen',
+          {
+            gridRow: '2 / 4',
+            gridColumn: '1 / 4',
+            alignSelf: 'start',
+            justifySelf: 'start',
+            width: px(rowHeaderWidth),
+            height: px(panes.frozenHeight),
+            position: 'sticky',
+            top: px(columnHeaderHeight),
+            insetInlineStart: '0',
+            zIndex: '5',
+          },
+          ogeHeaderCells('rows', panes.axes, panes.frozenRowSpan, 0, selection),
+        ),
+      );
     }
   }
   return { columns, rows };
@@ -287,7 +389,9 @@ export function ogeGridView(input: OgeGridViewInput): OgeGridView {
     render: input.render.map((pane) => ({
       pane,
       style: ogePaneStyle(pane.key, panes),
-      selection: ogeSelectionShapes(sheet, panes.axes, selection, pane, spill),
+      selection: ogeSelectionShapes(sheet, panes.axes, selection, pane, spill, {
+        fillHandle: input.fillHandle === true,
+      }),
       pictures: input.pictures.get(pane.key) ?? [],
     })),
     sizer: {

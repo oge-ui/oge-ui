@@ -1799,5 +1799,8 @@ export const de: OgeLocalePack = {
     statusSum: 'Summe: {value}',
     previousSheets: 'Zu den vorherigen Blättern scrollen',
     nextSheets: 'Zu den nächsten Blättern scrollen',
+    allSheets: 'Alle Blätter',
+    definedNames: 'Definierte Namen',
+    expandFormulaBar: 'Bearbeitungsleiste erweitern',
   },
 };

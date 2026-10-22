@@ -76,6 +76,12 @@ export interface OgeSpreadsheetMessages {
   /** The sheet strip's scroll buttons. */
   readonly previousSheets: string;
   readonly nextSheets: string;
+  /** The sheet strip's list of every sheet (Excel's "All Sheets" button) and its menu. */
+  readonly allSheets: string;
+  /** The name box's list of the workbook's defined names and its menu. */
+  readonly definedNames: string;
+  /** The formula bar's button (and Ctrl+Shift+U) that shows the whole text on several lines, and one line again. */
+  readonly expandFormulaBar: string;
 }
 
 /** English defaults. */
@@ -160,6 +166,9 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
   statusSum: 'Sum: {value}',
   previousSheets: 'Scroll to the previous sheets',
   nextSheets: 'Scroll to the next sheets',
+  allSheets: 'All sheets',
+  definedNames: 'Defined names',
+  expandFormulaBar: 'Expand formula bar',
 };
 
 /** Merges a partial catalog over the defaults (a nested block replaces the default block whole). */

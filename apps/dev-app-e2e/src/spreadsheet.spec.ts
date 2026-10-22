@@ -112,6 +112,46 @@ for (const layer of LAYERS) {
       ]);
     });
 
+    test('lists every sheet beside the tabs and the defined names in the name box', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      await host.getByRole('button', { name: 'All sheets' }).click();
+      const sheets = host.getByRole('menu', { name: 'All sheets' });
+      await expect(sheets.getByRole('menuitemradio')).toHaveText([
+        'Main',
+        'Data',
+        'RTL',
+        'CF',
+      ]);
+      const main = sheets.getByRole('menuitemradio', { name: 'Main' });
+      await expect(main).toBeFocused();
+      await expect(main).toHaveAttribute('aria-checked', 'true');
+      const results = await new AxeBuilder({ page })
+        .include('.oge-spreadsheet')
+        .disableRules(['color-contrast'])
+        .analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      await expect(host.locator('.oge-spreadsheet-tab-active')).toHaveText(
+        'Data',
+      );
+      await expect(sheets).toHaveCount(0);
+      await expect(host.getByRole('grid')).toBeFocused();
+      await host.getByRole('button', { name: 'Defined names' }).click();
+      const names = host.getByRole('menu', { name: 'Defined names' });
+      await names.getByRole('menuitem', { name: 'Target' }).click();
+      await expect(nameBox(host)).toHaveValue('Target');
+      // the formula bar shows the whole text on several lines, and one again
+      const expand = host.getByRole('button', { name: 'Expand formula bar' });
+      await expand.click();
+      await expect(expand).toHaveAttribute('aria-expanded', 'true');
+      await host.getByRole('grid').focus();
+      await page.keyboard.press('Control+Shift+U');
+      await expect(expand).toHaveAttribute('aria-expanded', 'false');
+    });
+
     test('the api page renders the reference', async ({ page }) => {
       await page.goto(`/components/spreadsheet/api${layer.query}`);
       await expect(page.locator('.api-table').first()).toBeVisible();

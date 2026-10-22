@@ -1784,5 +1784,8 @@ export const ar: OgeLocalePack = {
     statusSum: 'المجموع: {value}',
     previousSheets: 'تمرير إلى الأوراق السابقة',
     nextSheets: 'تمرير إلى الأوراق التالية',
+    allSheets: 'كل الأوراق',
+    definedNames: 'الأسماء المعرّفة',
+    expandFormulaBar: 'توسيع شريط الصيغة',
   },
 };

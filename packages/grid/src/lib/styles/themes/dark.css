@@ -91,28 +91,33 @@
   --oge-chart-heat-high: #a5b4fc;
   --oge-scrollbar-thumb: rgba(148, 163, 184, 0.4);
   --oge-scrollbar-thumb-hover: rgba(148, 163, 184, 0.62);
-  /* spreadsheet chrome: Excel's dark ("Black") Office theme, measured; the
-     sheet stays white with Excel's gridlines, as Excel keeps it */
+  /* spreadsheet chrome: Excel's dark ("Black") Office theme, measured, in
+     the current Excel's shapes; the sheet stays white with Excel's
+     gridlines, as Excel keeps it */
   --oge-spreadsheet-chrome-bg: #090909;
   --oge-spreadsheet-chrome-fg: #ffffff;
   --oge-spreadsheet-status-bg: #141414;
+  --oge-spreadsheet-status-border: #262626;
   --oge-spreadsheet-muted-fg: #b0b0b0;
+  --oge-spreadsheet-disabled-fg: #5c5c5c;
   --oge-spreadsheet-field-bg: #292929;
   --oge-spreadsheet-field-border: #666666;
   --oge-spreadsheet-field-fg: #ffffff;
   --oge-spreadsheet-header-bg: #0a0a0a;
   --oge-spreadsheet-header-fg: #dadada;
   --oge-spreadsheet-header-line: #999999;
-  --oge-spreadsheet-header-separator-from: #333333;
-  --oge-spreadsheet-header-separator-to: #68686f;
+  --oge-spreadsheet-header-separator: #333333;
+  --oge-spreadsheet-header-hover-bg: #262626;
   --oge-spreadsheet-header-selected-bg: #646464;
   --oge-spreadsheet-header-selected-fg: #ffffff;
   --oge-spreadsheet-header-selected-separator: #b6b6b6;
   --oge-spreadsheet-corner-mark: #646464;
   --oge-spreadsheet-tab-strip-bg: #090909;
-  --oge-spreadsheet-tab-bg: #262626;
   --oge-spreadsheet-tab-fg: #ffffff;
-  --oge-spreadsheet-tab-separator: #999999;
+  --oge-spreadsheet-tab-hover-bg: #262626;
+  --oge-spreadsheet-menu-bg: #292929;
+  --oge-spreadsheet-menu-fg: #ffffff;
+  --oge-spreadsheet-menu-hover-bg: #3d3d3d;
   /* derived tokens, re-resolved inside this scope so a dark subtree gets
      dark tints (keep in sync with derived-tokens in _tokens.scss) */
   --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 10%, transparent);
@@ -243,28 +248,33 @@
     --oge-chart-heat-high: #a5b4fc;
     --oge-scrollbar-thumb: rgba(148, 163, 184, 0.4);
     --oge-scrollbar-thumb-hover: rgba(148, 163, 184, 0.62);
-    /* spreadsheet chrome: Excel's dark ("Black") Office theme, measured; the
-       sheet stays white with Excel's gridlines, as Excel keeps it */
+    /* spreadsheet chrome: Excel's dark ("Black") Office theme, measured, in
+       the current Excel's shapes; the sheet stays white with Excel's
+       gridlines, as Excel keeps it */
     --oge-spreadsheet-chrome-bg: #090909;
     --oge-spreadsheet-chrome-fg: #ffffff;
     --oge-spreadsheet-status-bg: #141414;
+    --oge-spreadsheet-status-border: #262626;
     --oge-spreadsheet-muted-fg: #b0b0b0;
+    --oge-spreadsheet-disabled-fg: #5c5c5c;
     --oge-spreadsheet-field-bg: #292929;
     --oge-spreadsheet-field-border: #666666;
     --oge-spreadsheet-field-fg: #ffffff;
     --oge-spreadsheet-header-bg: #0a0a0a;
     --oge-spreadsheet-header-fg: #dadada;
     --oge-spreadsheet-header-line: #999999;
-    --oge-spreadsheet-header-separator-from: #333333;
-    --oge-spreadsheet-header-separator-to: #68686f;
+    --oge-spreadsheet-header-separator: #333333;
+    --oge-spreadsheet-header-hover-bg: #262626;
     --oge-spreadsheet-header-selected-bg: #646464;
     --oge-spreadsheet-header-selected-fg: #ffffff;
     --oge-spreadsheet-header-selected-separator: #b6b6b6;
     --oge-spreadsheet-corner-mark: #646464;
     --oge-spreadsheet-tab-strip-bg: #090909;
-    --oge-spreadsheet-tab-bg: #262626;
     --oge-spreadsheet-tab-fg: #ffffff;
-    --oge-spreadsheet-tab-separator: #999999;
+    --oge-spreadsheet-tab-hover-bg: #262626;
+    --oge-spreadsheet-menu-bg: #292929;
+    --oge-spreadsheet-menu-fg: #ffffff;
+    --oge-spreadsheet-menu-hover-bg: #3d3d3d;
     /* derived tokens, re-resolved inside this scope so a dark subtree gets
        dark tints (keep in sync with derived-tokens in _tokens.scss) */
     --oge-row-focused-bg: color-mix(

@@ -181,6 +181,8 @@ _Keyboard_
 | `Shift+Space / Ctrl+Space / Ctrl+A / Shift+F8` | `select` | Whole rows, whole columns, the current region then everything, add mode (arrows move, clicks add ranges). |
 | `Ctrl+C / Ctrl+F / F5 or Ctrl+G / Shift+F2 / Alt+Enter` | `act` | Copy as text and Excel HTML, find, go to (the name box), show the active cell's note, open its link. |
 | `Ctrl+Page Up / Ctrl+Page Down / Ctrl+= / Ctrl+− / Ctrl+wheel` | `view` | Previous / next sheet, zoom in and out on Excel's steps. |
+| `Ctrl+Shift+U` | `view` | Expands the formula bar to the whole text, up to five lines, and back — as its chevron button does. |
+| `All sheets / Defined names lists` | `menu` | The button beside the sheet tabs lists every visible sheet, the active one checked; the name box's chevron lists the defined names Excel's name box shows. Down or Up on the button opens a list; arrows, Home, End and a first letter move, Enter or Space pick (the sheet shows, or the name is gone to), Escape gives focus back to the button and Tab moves on. |
 | `Escape` | `close` | Closes the find bar, add mode or an open note — and when nothing is open the key stays the page's (a dialog around the viewer still closes). |
 
 _Configuration_

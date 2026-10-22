@@ -1762,5 +1762,8 @@ export const tr: OgeLocalePack = {
     statusSum: 'Toplam: {value}',
     previousSheets: 'Önceki sayfalara kaydır',
     nextSheets: 'Sonraki sayfalara kaydır',
+    allSheets: 'Tüm sayfalar',
+    definedNames: 'Tanımlı adlar',
+    expandFormulaBar: 'Formül çubuğunu genişlet',
   },
 };

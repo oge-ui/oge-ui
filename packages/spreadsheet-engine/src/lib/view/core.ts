@@ -9,7 +9,12 @@
  * links and printing go through `browser.ts`, which is guarded off the browser.
  */
 import { sanitizeUrl } from '@oge-ui/behavior';
-import { ogeFormatMessage, type OgeMessageValues } from '@oge-ui/core';
+import {
+  contrastForeground,
+  ogeFormatMessage,
+  parseColor,
+  type OgeMessageValues,
+} from '@oge-ui/core';
 import {
   OGE_SHEET_MAX_COLUMNS,
   OGE_SHEET_MAX_ROWS,
@@ -157,7 +162,36 @@ export interface OgeSpreadsheetTab {
   readonly name: string;
   /** `#RRGGBB` tab colour, if any. */
   readonly color?: string;
+  /** The label that reads on the tab colour: dark or light (WCAG contrast). */
+  readonly ink?: 'dark' | 'light';
 }
+
+/** A popup list of the chrome: every sheet (the strip's), or the defined names (the name box's). */
+export type OgeSpreadsheetMenuKind = 'sheets' | 'names';
+
+/** The chrome's popup list. */
+export interface OgeSpreadsheetMenuState {
+  /** The open list; `null` while none is. */
+  readonly kind: OgeSpreadsheetMenuKind | null;
+  /** The focused item's position in `menuItems()`. */
+  readonly focus: number;
+}
+
+/** An item of the open popup list. */
+export interface OgeSpreadsheetMenuItem {
+  readonly key: string;
+  readonly label: string;
+  /** The sheet list's active sheet. */
+  readonly checked: boolean;
+}
+
+/**
+ * What the render layer does after a key in a popup list: focus the focused
+ * item, give focus back to the opener (`close`; on Tab, `leave`, the browser
+ * then moves on), or to the grid once an item was picked.
+ */
+export type OgeSpreadsheetMenuKeyAction =
+  'focus' | 'close' | 'leave' | 'picked';
 
 /** The formula bar's content. */
 export interface OgeFormulaBarContent {
@@ -244,6 +278,10 @@ export class OgeSpreadsheetCore {
   readonly hover: OgeSpreadsheetReactiveCell<OgeCellRef | null>;
   /** The cell whose note Shift+F2 opened, until Escape. */
   readonly openNote: OgeSpreadsheetReactiveCell<OgeCellRef | null>;
+  /** The chrome's open popup list: the sheet list or the name box's names. */
+  readonly menu: OgeSpreadsheetReactiveCell<OgeSpreadsheetMenuState>;
+  /** The formula bar shows its whole text, on several lines. */
+  readonly formulaExpanded: OgeSpreadsheetReactiveCell<boolean>;
 
   private readonly catalog: OgeSpreadsheetReactiveCell<OgeSpreadsheetMessages>;
   private locale: OgeFormatLocale;
@@ -295,6 +333,8 @@ export class OgeSpreadsheetCore {
     this.addMode = r.cell(false);
     this.hover = r.cell<OgeCellRef | null>(null);
     this.openNote = r.cell<OgeCellRef | null>(null);
+    this.menu = r.cell<OgeSpreadsheetMenuState>({ kind: null, focus: 0 });
+    this.formulaExpanded = r.cell(false);
     this.catalog = r.cell(resolveOgeSpreadsheetMessages(options.messages));
     this.locale = options.locale ?? OGE_EN_US_FORMAT_LOCALE;
     this.measurer = options.measurer ?? OGE_ESTIMATING_MEASURER;
@@ -427,6 +467,7 @@ export class OgeSpreadsheetCore {
     this.scrolls.clear();
     this.lastScroll = { scrollTop: 0, scrollLeft: 0 };
     this.drag = null;
+    this.closeMenu();
     this.workbook.set(workbook);
     this.issues.set(issues);
     this.error.set(null);
@@ -503,7 +544,11 @@ export class OgeSpreadsheetCore {
         sheet.tabColor && resolver
           ? resolver.color(sheet.tabColor, null)
           : null;
-      return [{ index, name: sheet.name, ...(color ? { color } : {}) }];
+      const rgba = color ? parseColor(color) : null;
+      if (!color || !rgba) return [{ index, name: sheet.name }];
+      const ink: OgeSpreadsheetTab['ink'] =
+        contrastForeground(rgba) === 'white' ? 'light' : 'dark';
+      return [{ index, name: sheet.name, color, ink }];
     });
   }
 
@@ -1003,6 +1048,7 @@ export class OgeSpreadsheetCore {
     top: number,
     bottom: number,
     mode: 'replace' | 'extend' | 'add' = 'replace',
+    active?: OgeCellRef,
   ): void {
     this.selectBand(
       {
@@ -1012,6 +1058,7 @@ export class OgeSpreadsheetCore {
         right: OGE_SHEET_MAX_COLUMNS - 1,
       },
       mode,
+      active,
     );
   }
 
@@ -1020,6 +1067,7 @@ export class OgeSpreadsheetCore {
     left: number,
     right: number,
     mode: 'replace' | 'extend' | 'add' = 'replace',
+    active?: OgeCellRef,
   ): void {
     this.selectBand(
       {
@@ -1029,6 +1077,7 @@ export class OgeSpreadsheetCore {
         right: Math.max(left, right),
       },
       mode,
+      active,
     );
   }
 
@@ -1082,11 +1131,21 @@ export class OgeSpreadsheetCore {
       this.selectAll();
       return true;
     }
+    // a header click makes the band's first visible cell active, as Excel
+    // does (measured in Excel for the web: D1 after a click on column D's
+    // header far down the sheet, A90 on row 90's), without scrolling to it
+    const layout = this.layout(sheet);
     if (header?.kind === 'column-header') {
       this.selectColumns(
         mode === 'extend' ? active.col : header.col,
         header.col,
         mode,
+        layout && mode !== 'extend'
+          ? ogeOwnerCell(sheet, {
+              row: layout.rows.firstVisibleFrom(0),
+              col: header.col,
+            })
+          : undefined,
       );
       return start('columns', { row: 0, col: header.col });
     }
@@ -1095,6 +1154,12 @@ export class OgeSpreadsheetCore {
         mode === 'extend' ? active.row : header.row,
         header.row,
         mode,
+        layout && mode !== 'extend'
+          ? ogeOwnerCell(sheet, {
+              row: header.row,
+              col: layout.cols.firstVisibleFrom(0),
+            })
+          : undefined,
       );
       return start('rows', { row: header.row, col: 0 });
     }
@@ -1167,12 +1232,13 @@ export class OgeSpreadsheetCore {
   private selectBand(
     range: OgeSheetRange,
     mode: 'replace' | 'extend' | 'add',
+    at?: OgeCellRef,
   ): void {
     const current = this.selection();
     const active =
       mode === 'extend'
         ? current.active
-        : {
+        : (at ?? {
             row:
               range.top === 0 && range.bottom === OGE_SHEET_MAX_ROWS - 1
                 ? current.active.row
@@ -1181,7 +1247,7 @@ export class OgeSpreadsheetCore {
               range.left === 0 && range.right === OGE_SHEET_MAX_COLUMNS - 1
                 ? current.active.col
                 : range.left,
-          };
+          });
     const ranges =
       mode === 'add'
         ? [...current.ranges, range]
@@ -1619,6 +1685,11 @@ export class OgeSpreadsheetCore {
           return 'find';
         case 'g':
           return 'goto';
+        case 'u':
+          // Ctrl+Shift+U: the formula bar shows its whole text, or one line
+          if (!shift) return null;
+          this.toggleFormulaBar();
+          return 'none';
         case '+':
         case '=':
           this.stepZoom(1);
@@ -1764,6 +1835,148 @@ export class OgeSpreadsheetCore {
       ogePrintTable(workbook, sheet, layout, this.resolver, used, this.locale),
       sheet.name,
     );
+  }
+
+  // ── the chrome's popup lists ───────────────────────────────────────────
+
+  /**
+   * The names the name box lists, as Excel's does: the workbook's and the
+   * active sheet's visible names that refer to a range, sorted.
+   */
+  definedNames(): readonly string[] {
+    const workbook = this.workbook();
+    if (!workbook) return [];
+    const sheet = this.activeSheet();
+    const names = new Set<string>();
+    for (const n of workbook.names) {
+      if (n.hidden || n.name.startsWith('_xlnm.')) continue;
+      if (n.sheet !== undefined && n.sheet !== sheet) continue;
+      if (parseOgeRangeAddress(n.formula.replace(/^=/, ''))) names.add(n.name);
+    }
+    return [...names].sort((a, b) =>
+      a.localeCompare(b, 'en', { sensitivity: 'base' }),
+    );
+  }
+
+  /** The open popup list's items (none while it is closed). */
+  menuItems(): readonly OgeSpreadsheetMenuItem[] {
+    return this.itemsOf(this.menu().kind);
+  }
+
+  /**
+   * Opens a popup list on its checked item — the sheet list on the active
+   * sheet — else on its first; `first` / `last` start at an end (the opener's
+   * Down and Up keys). A list with no items stays closed.
+   */
+  openMenu(
+    kind: OgeSpreadsheetMenuKind,
+    focus: 'checked' | 'first' | 'last' = 'checked',
+  ): void {
+    const items = this.itemsOf(kind);
+    if (!items.length) {
+      this.closeMenu();
+      return;
+    }
+    const checked = items.findIndex((item) => item.checked);
+    this.menu.set({
+      kind,
+      focus:
+        focus === 'last'
+          ? items.length - 1
+          : focus === 'first'
+            ? 0
+            : Math.max(0, checked),
+    });
+  }
+
+  /** Closes the open popup list. */
+  closeMenu(): void {
+    if (this.menu().kind !== null) this.menu.set({ kind: null, focus: 0 });
+  }
+
+  /**
+   * A key in the open popup list, as a menu takes it (WAI-ARIA APG): the
+   * arrows move round, Home and End go to the ends, a character to the next
+   * item it starts, Enter and Space pick, Escape and Tab close. `null` for a
+   * key the list leaves alone.
+   */
+  menuKeydown(key: string): OgeSpreadsheetMenuKeyAction | null {
+    const state = this.menu();
+    const items = this.menuItems();
+    if (state.kind === null || !items.length) return null;
+    const kind = state.kind;
+    const move = (focus: number): OgeSpreadsheetMenuKeyAction => {
+      this.menu.set({ kind, focus });
+      return 'focus';
+    };
+    const count = items.length;
+    switch (key) {
+      case 'ArrowDown':
+        return move((state.focus + 1) % count);
+      case 'ArrowUp':
+        return move((state.focus - 1 + count) % count);
+      case 'Home':
+        return move(0);
+      case 'End':
+        return move(count - 1);
+      case 'Enter':
+      case ' ':
+        this.pickMenuItem(state.focus);
+        return 'picked';
+      case 'Escape':
+        this.closeMenu();
+        return 'close';
+      case 'Tab':
+        this.closeMenu();
+        return 'leave';
+    }
+    if (Array.from(key).length !== 1 || !key.trim()) return null;
+    const start = key.toUpperCase();
+    for (let step = 1; step <= count; step++) {
+      const at = (state.focus + step) % count;
+      if (items[at].label.toUpperCase().startsWith(start)) return move(at);
+    }
+    return 'focus';
+  }
+
+  /** Picks an item of the open popup list — shows that sheet, or goes to that name — and closes the list. */
+  pickMenuItem(position: number): void {
+    const kind = this.menu().kind;
+    const item = this.menuItems()[position];
+    this.closeMenu();
+    if (!item) return;
+    if (kind === 'sheets') {
+      const tab = this.tabs()[position];
+      if (tab) this.selectSheet(tab.index);
+    } else if (kind === 'names') {
+      this.goTo(item.label);
+    }
+  }
+
+  private itemsOf(
+    kind: OgeSpreadsheetMenuKind | null,
+  ): readonly OgeSpreadsheetMenuItem[] {
+    if (kind === 'sheets') {
+      const active = this.activeSheet();
+      return this.tabs().map((tab) => ({
+        key: `sheet-${tab.index}`,
+        label: tab.name,
+        checked: tab.index === active,
+      }));
+    }
+    if (kind === 'names') {
+      return this.definedNames().map((name) => ({
+        key: `name-${name}`,
+        label: name,
+        checked: false,
+      }));
+    }
+    return [];
+  }
+
+  /** Shows the formula bar's whole text on several lines, or one line again. */
+  toggleFormulaBar(): void {
+    this.formulaExpanded.set(!this.formulaExpanded());
   }
 
   // ── find ───────────────────────────────────────────────────────────────
