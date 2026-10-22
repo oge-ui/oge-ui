@@ -66,6 +66,8 @@ export interface OgeSpreadsheetMessages {
   readonly sheetAnnouncement: string;
   /** Accessible name of a note shown over the grid. */
   readonly notePopupLabel: string;
+  /** Accessible name of the list that names the sheet's charts for assistive tech. */
+  readonly chartListLabel: string;
   readonly macrosNotice: string;
   /** Accessible name of the status bar. */
   readonly statusBarLabel: string;
@@ -125,7 +127,9 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
     'orphan-shared-formula':
       'Some formulas have no source and show values only',
     'uncalculated-formulas': 'Formulas without a saved result show empty',
-    'drawing-not-shown': 'Charts and shapes are not shown yet',
+    'drawing-not-shown': 'Shapes and chart sheets are not shown yet',
+    'chart-type-not-shown':
+      'Radar, stock, surface, pie-of-pie and Excel 2016 charts are not shown yet',
     'picture-format-not-shown': 'EMF/WMF pictures cannot be shown',
     'table-style-not-shown': 'Table styles are not shown yet',
     'pivot-style-not-shown': 'Pivot table styles are not shown yet',
@@ -168,6 +172,7 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
     '{range} selected, {cells, plural, one {# cell} other {# cells}}',
   sheetAnnouncement: 'Sheet {name}, {index} of {total}',
   notePopupLabel: 'Note',
+  chartListLabel: 'Charts on this sheet',
   macrosNotice: 'This workbook has macros. They are kept and never run.',
   statusBarLabel: 'Status bar',
   statusAverage: 'Average: {value}',

@@ -33,6 +33,7 @@ import { readOgeStyleSheet } from './read-styles';
 import { readOgeTheme } from './read-theme';
 import { readOgeWorksheet } from './read-worksheet';
 import { readOgeDrawing } from './read-drawing';
+import type { OgeChartReadContext } from './read-chart';
 import {
   ogeXmlAttribute,
   ogeXmlBool,
@@ -383,6 +384,11 @@ function readParts(
       issues,
       budget,
       consume,
+      charts: {
+        theme: themeData?.colors ?? OGE_OFFICE_THEME_COLORS,
+        ...(themeData?.majorFont ? { majorFont: themeData.majorFont } : {}),
+        ...(themeData?.minorFont ? { minorFont: themeData.minorFont } : {}),
+      },
     });
   });
   if (workbook.sheets.length === 0) {
@@ -475,6 +481,8 @@ interface SheetPartContext {
   readonly issues: OgeImportIssueLog;
   readonly budget: { remaining: number };
   readonly consume: (path: string) => void;
+  /** The theme's colours and fonts, for the charts' parts. */
+  readonly charts: OgeChartReadContext;
 }
 
 /** Relationship types of a sheet the reader turns into model content. */
@@ -524,13 +532,20 @@ function readSheetPart(
   )) {
     const root = treeOf(pkg, drawing.target, issues);
     if (!root) continue;
-    const content = readOgeDrawing(root, drawing.target, pkg);
+    const content = readOgeDrawing(root, drawing.target, pkg, context.charts);
     sheet.pictures.push(...content.pictures);
+    sheet.charts.push(...content.charts);
     if (content.others > 0)
       issues.add('drawing-not-shown', {
         sheet: sheet.name,
         part: drawing.target,
-        detail: `${content.others} charts, shapes or linked pictures`,
+        detail: `${content.others} shapes or linked pictures`,
+      });
+    if (content.undrawnCharts.length > 0)
+      issues.add('chart-type-not-shown', {
+        sheet: sheet.name,
+        part: drawing.target,
+        detail: content.undrawnCharts.join(', '),
       });
     if (content.unshowable > 0)
       issues.add('picture-format-not-shown', {

@@ -1,8 +1,9 @@
 import { ogeRichText } from '../model/cell';
+import type { OgeChartModel } from '../model/chart';
 import type { OgePicture } from '../model/sheet-features';
 import { createOgeWorkbook } from '../model/workbook';
 import type { OgeWorksheet } from '../model/worksheet';
-import type { OgePaintPicture } from '../paint/pictures';
+import type { OgePaintChart, OgePaintPicture } from '../paint/pictures';
 import { OgeStyleResolver } from '../paint/resolve-style';
 import { OgeSheetLayout } from '../paint/sheet-layout';
 import {
@@ -11,6 +12,7 @@ import {
   ogeHeaderStrips,
   ogeNoteBoxes,
   ogeOutlineStrips,
+  ogePaneCharts,
   ogePanePictures,
   ogePaneStyle,
   ogePointerCell,
@@ -675,5 +677,69 @@ describe('the outline gutters', () => {
       ['button', undefined, '224px'],
     ]);
     expect(above.panes({ outline: false }).outline.width).toBe(0);
+  });
+});
+
+describe('ogePaneCharts', () => {
+  const model: OgeChartModel = {
+    part: 'xl/charts/chart1.xml',
+    groups: [],
+    axes: [],
+    plotVisibleOnly: true,
+    blanksAs: 'gap',
+    area: {},
+    plotArea: {},
+    font: {},
+    roundedCorners: false,
+    style: 2,
+  };
+  const chartAt = (x: number, y: number): OgePaintChart => ({
+    chart: {
+      anchor: { kind: 'absolute', x, y, width: 100, height: 60 },
+      chart: model,
+    },
+    x,
+    y,
+    width: 100,
+    height: 60,
+  });
+  const view = () => ({
+    width: 100,
+    height: 60,
+    paths: [],
+    texts: [],
+    label: '',
+  });
+
+  it('places a chart in the pane of its top-left corner, and only the ones that reach the rendered window', () => {
+    const { panes } = setup(frozen);
+    const p = panes();
+    const placed = ogePaneCharts(
+      [
+        chartAt(10, 10),
+        chartAt(100, 100),
+        chartAt(5000, 100),
+        chartAt(100, 20000),
+      ],
+      p,
+      { rtl: false, view },
+    );
+    expect([...placed.keys()]).toEqual(['corner', 'main']);
+    expect(placed.get('main')).toHaveLength(1);
+    expect(placed.get('main')?.[0]?.frame).toEqual({
+      left: `${100 - p.originX}px`,
+      top: `${100 - p.originY}px`,
+      width: '100px',
+      height: '60px',
+    });
+  });
+
+  it('mirrors a chart back in a right-to-left pane', () => {
+    const { panes } = setup();
+    const placed = ogePaneCharts([chartAt(0, 0)], panes(), {
+      rtl: true,
+      view,
+    });
+    expect(placed.get('main')?.[0]?.frame['transform']).toBe('scaleX(-1)');
   });
 });

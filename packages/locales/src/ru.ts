@@ -1746,7 +1746,9 @@ export const ru: OgeLocalePack = {
         'У некоторых формул нет источника — отображаются только значения',
       'uncalculated-formulas':
         'Формулы без сохранённого результата отображаются пустыми',
-      'drawing-not-shown': 'Диаграммы и фигуры пока не отображаются',
+      'drawing-not-shown': 'Фигуры и листы диаграмм пока не отображаются',
+      'chart-type-not-shown':
+        'Лепестковые, биржевые, поверхностные, вторичные круговые диаграммы и диаграммы Excel 2016 пока не отображаются',
       'picture-format-not-shown': 'Рисунки EMF/WMF отобразить нельзя',
       'table-style-not-shown': 'Стили таблиц пока не отображаются',
       'pivot-style-not-shown': 'Стили сводных таблиц пока не отображаются',
@@ -1792,6 +1794,7 @@ export const ru: OgeLocalePack = {
       'Выделен диапазон {range}, {cells, plural, one {# ячейка} few {# ячейки} many {# ячеек} other {# ячейки}}',
     sheetAnnouncement: 'Лист «{name}», {index} из {total}',
     notePopupLabel: 'Заметка',
+    chartListLabel: 'Диаграммы на этом листе',
     macrosNotice:
       'В этой книге есть макросы. Они сохраняются, но никогда не запускаются.',
     statusBarLabel: 'Строка состояния',

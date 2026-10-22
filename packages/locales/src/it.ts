@@ -1746,7 +1746,9 @@ export const it: OgeLocalePack = {
         'Alcune formule non hanno un’origine e mostrano solo i valori',
       'uncalculated-formulas':
         'Le formule senza un risultato salvato appaiono vuote',
-      'drawing-not-shown': 'Grafici e forme non sono ancora visualizzati',
+      'drawing-not-shown': 'Forme e fogli grafico non sono ancora visualizzati',
+      'chart-type-not-shown':
+        'I grafici radar, azionari, a superficie, a torta della torta e di Excel 2016 non sono ancora visualizzati',
       'picture-format-not-shown':
         'Le immagini EMF/WMF non possono essere visualizzate',
       'table-style-not-shown': 'Gli stili tabella non sono ancora visualizzati',
@@ -1794,6 +1796,7 @@ export const it: OgeLocalePack = {
       'Intervallo {range} selezionato, {cells, plural, one {# cella} other {# celle}}',
     sheetAnnouncement: 'Foglio {name}, {index} di {total}',
     notePopupLabel: 'Nota',
+    chartListLabel: 'Grafici in questo foglio',
     macrosNotice:
       'Questa cartella di lavoro contiene macro. Vengono mantenute, ma non vengono mai eseguite.',
     statusBarLabel: 'Barra di stato',

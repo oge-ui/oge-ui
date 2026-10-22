@@ -51,6 +51,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'isOgeCellInSheet',
     'isOgeDateFormat',
     'isOgeRichText',
+    'ogeAnchorBox',
     'ogeApplyOutlineEdit',
     'ogeApplyTint',
     'ogeAxisOutline',
@@ -66,6 +67,10 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeCellSelection',
     'ogeCellText',
     'ogeCellValueType',
+    'ogeChartLabel',
+    'ogeChartPalette',
+    'ogeChartScale',
+    'ogeChartView',
     'ogeCheckSpreadsheetLicense',
     'ogeCivilFromDays',
     'ogeColumnCharactersToWidth',
@@ -122,12 +127,14 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeOutlineToggle',
     'ogeOwnerCell',
     'ogePaintWindow',
+    'ogePaneCharts',
     'ogePanePictures',
     'ogePaneStyle',
     'ogePatternTile',
     'ogePixelsToColumnCharacters',
     'ogePixelsToColumnWidth',
     'ogePixelsToPoints',
+    'ogePlaceCharts',
     'ogePlacePictures',
     'ogePointerCell',
     'ogePointsToPixels',
@@ -186,7 +193,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
 
   it('exports nothing it does not guard', () => {
     // a new export lands in the list above in the same change
-    expect(Object.keys(engine)).toHaveLength(175);
+    expect(Object.keys(engine)).toHaveLength(182);
   });
 
   it('keeps the internal ZIP and XML layers out of the public surface', () => {

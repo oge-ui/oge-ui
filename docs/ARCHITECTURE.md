@@ -2271,6 +2271,26 @@ the editor and the formula engine build on these rules.
   active cell says when a group's details are hidden, and each change is
   announced. Edits write `hidden` / `collapsed` into the sheet's rows and
   columns, as Excel saves them, and lay the sheet out again.
+- **Charts are drawn by the engine, laid out as Excel lays them out** (P1b,
+  ADR 0005 decision 7). `readOgeChart` reads a kept chart part into an
+  `OgeChartModel`; `ogeChartView` lays the title, legend, plot and axes out
+  with Excel's spacing (`LAYOUT` in `chart-view.ts`, measured on Excel's
+  pictures of the corpus charts — the plot lands within 2 px of Excel's on all
+  sixteen, `chart-view.corpus.spec.ts`), Excel's automatic scale
+  (`ogeChartScale`) and bar geometry (`width = band / (n − (n − 1) · overlap +
+gap)`), and draws the series — bars, lines with Excel's smoothing
+  (Catmull-Rom, controls a sixth of the span away) and markers, areas, scatter,
+  bubbles, pies and doughnuts whose percent labels are rounded to add up to
+  100% — into SVG paths and texts the layers bind as they are. A part without
+  formatting takes Excel's style-2 look (black text and lines, an 18 pt Arial
+  title); COM reports a chart's parts 5 px inside its box, which the corpus
+  spec allows for. A chart is mounted only while it reaches the rendered
+  window (`ogePaneCharts`), its view is cached per size and zoom in the
+  core, it passes the pointer to the cells under it like a picture, and
+  assistive tech hears each chart's alt text, title or name in a list under
+  the grid (`chartLabels`) — the panes are hidden from it. Radar, stock,
+  surface, pie-of-pie and Excel 2016 (`cx:`) charts are kept and reported
+  (`chart-type-not-shown`).
 - **A tab keeps its width when it turns bold**: the label's `::after` is a
   zero-height bold copy, `content: attr(data-label) / ''` — the empty
   alternative text keeps it out of the tab's name, and no second text node

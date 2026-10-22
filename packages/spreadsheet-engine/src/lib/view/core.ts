@@ -33,6 +33,7 @@ import {
   type OgeXlsxReadOptions,
   type OgeXlsxSource,
 } from '../codec/read-xlsx';
+import { OGE_OFFICE_THEME_COLORS } from '../color/color';
 import { OGE_GENERAL_MAX_CHARS, formatOgeGeneral } from '../format/general';
 import { formatOgeCellValue } from '../format/number-format';
 import {
@@ -45,6 +46,7 @@ import {
   ogeRichTextToString,
   type OgeCell,
 } from '../model/cell';
+import type { OgeSheetChart } from '../model/chart';
 import type { OgeHyperlink } from '../model/sheet-features';
 import type { OgeWorkbook } from '../model/workbook';
 import type { OgeWorksheet } from '../model/worksheet';
@@ -54,7 +56,12 @@ import {
 } from '../paint/cell-text';
 import { OgeConditionalFormatter } from '../paint/conditional';
 import { ogePaintWindow, type OgePaintCell } from '../paint/paint-window';
-import { ogePlacePictures, type OgePaintPicture } from '../paint/pictures';
+import {
+  ogePlaceCharts,
+  ogePlacePictures,
+  type OgePaintChart,
+  type OgePaintPicture,
+} from '../paint/pictures';
 import { OgeStyleResolver } from '../paint/resolve-style';
 import { OgeSheetLayout } from '../paint/sheet-layout';
 import { ogeZoomFont, ogeZoomPaint, ogeZoomPictures } from '../paint/zoom';
@@ -64,6 +71,11 @@ import {
   ogePrintSheetTable,
   ogeWriteClipboard,
 } from './browser';
+import {
+  ogeChartLabel,
+  ogeChartView,
+  type OgeSpreadsheetChartView,
+} from './chart-view';
 import {
   ogeCopyRange,
   ogeCellText,
@@ -75,6 +87,7 @@ import { ogeFindAll, type OgeFindMatch, type OgeFindOptions } from './find';
 import {
   ogeGridView,
   ogeNoteBoxes,
+  ogePaneCharts,
   ogePanePictures,
   ogePointerCell,
   ogeTabKeyTarget,
@@ -302,6 +315,10 @@ export class OgeSpreadsheetCore {
     OgeConditionalFormatter
   >();
   private readonly arrays = new Map<OgeWorksheet, OgeCell[]>();
+  private readonly chartViews = new Map<
+    OgeSheetChart,
+    { readonly key: string; readonly view: OgeSpreadsheetChartView }
+  >();
   private readonly outlines = new Map<
     OgeWorksheet,
     { readonly rows: OgeAxisOutline; readonly columns: OgeAxisOutline }
@@ -418,6 +435,7 @@ export class OgeSpreadsheetCore {
   setMeasurer(measurer: OgeTextMeasurer): void {
     this.measurer = measurer;
     this.layouts.clear();
+    this.chartViews.clear();
     this.bump();
   }
 
@@ -533,6 +551,7 @@ export class OgeSpreadsheetCore {
     this.formatters.clear();
     this.arrays.clear();
     this.outlines.clear();
+    this.chartViews.clear();
     this.bump();
   }
 
@@ -841,9 +860,56 @@ export class OgeSpreadsheetCore {
       : [];
   }
 
+  /** What assistive tech hears for each of the active sheet's charts (`ogeChartLabel`). */
+  chartLabels(): readonly string[] {
+    return (this.sheet()?.charts ?? [])
+      .filter((chart) => !chart.hidden)
+      .map(ogeChartLabel)
+      .filter((label) => label !== '');
+  }
+
+  /** The active sheet's charts, placed at the zoom. */
+  charts(zoom: number = this.zoom()): readonly OgePaintChart[] {
+    const sheet = this.sheet();
+    const layout = this.layout(sheet);
+    return sheet && layout
+      ? ogeZoomPictures(ogePlaceCharts(sheet, layout), layout, zoom)
+      : [];
+  }
+
+  /**
+   * A placed chart drawn as Excel draws it (`ogeChartView`) — made once per
+   * chart, size and zoom, so a scroll redraws nothing.
+   */
+  chartView(
+    placed: OgePaintChart,
+    zoom: number = this.zoom(),
+  ): OgeSpreadsheetChartView {
+    const width = Math.round(placed.width);
+    const height = Math.round(placed.height);
+    const key = `${zoom}|${width}|${height}`;
+    const known = this.chartViews.get(placed.chart);
+    if (known?.key === key) return known.view;
+    const workbook = this.workbook();
+    const view = ogeChartView({
+      chart: placed.chart.chart,
+      width,
+      height,
+      zoom,
+      theme: workbook?.theme ?? OGE_OFFICE_THEME_COLORS,
+      ...(workbook?.themeFonts.minor
+        ? { bodyFont: workbook.themeFonts.minor }
+        : {}),
+      locale: this.locale,
+      measurer: this.measurer,
+    });
+    this.chartViews.set(placed.chart, { key, view });
+    return view;
+  }
+
   /**
    * The grid frame for the panes: the render models with their selection
-   * shapes and pictures, the header strips, the sizer and the corner.
+   * shapes, pictures and charts, the header strips, the sizer and the corner.
    */
   gridView(
     panes: OgeViewportPanes,
@@ -861,6 +927,10 @@ export class OgeSpreadsheetCore {
       pictures: ogePanePictures(this.pictures(panes.zoom), panes, {
         rtl: sheet.view.rightToLeft,
         url: (placed) => this.pictureUrl(placed.picture.image),
+      }),
+      charts: ogePaneCharts(this.charts(panes.zoom), panes, {
+        rtl: sheet.view.rightToLeft,
+        view: (placed) => this.chartView(placed, panes.zoom),
       }),
       fontFamily: layout.normalFont.family,
     });

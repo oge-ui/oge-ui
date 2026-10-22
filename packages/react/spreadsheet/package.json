@@ -1,7 +1,7 @@
 {
   "name": "@oge-ui/react-spreadsheet",
   "version": "1.1.5",
-  "description": "React spreadsheet viewer from the OGE UI suite that shows .xlsx workbooks the way Excel does: Excel-measured column widths, row heights, fonts, number formats, borders, fills, conditional formats, frozen panes, merges, pictures, notes and hyperlinks, with Excel's selection, keyboard map, find, copy and status-bar summary — running the same engine and the same stylesheet as the Angular spreadsheet. Dependency-free xlsx reading in the browser. Source-available commercial license (free for evaluation and development).",
+  "description": "React spreadsheet viewer from the OGE UI suite that shows .xlsx workbooks the way Excel does: Excel-measured column widths, row heights, fonts, number formats, borders, fills, conditional formats, frozen panes, merges, pictures, charts, notes and hyperlinks, with Excel's selection, keyboard map, find, copy and status-bar summary — running the same engine and the same stylesheet as the Angular spreadsheet. Dependency-free xlsx reading in the browser. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "react",
     "spreadsheet",

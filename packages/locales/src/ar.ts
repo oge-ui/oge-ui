@@ -1732,7 +1732,9 @@ export const ar: OgeLocalePack = {
       'overlapping-merge': 'تم إلغاء دمج الخلايا المدمجة المتداخلة',
       'orphan-shared-formula': 'بعض الصيغ ليس لها مصدر، لذا تُعرض قيمها فقط',
       'uncalculated-formulas': 'تُعرض الصيغ التي ليس لها نتيجة محفوظة فارغة',
-      'drawing-not-shown': 'لا تُعرض المخططات والأشكال بعد',
+      'drawing-not-shown': 'لا تُعرض الأشكال وأوراق المخططات بعد',
+      'chart-type-not-shown':
+        'لا تُعرض المخططات النسيجية ومخططات الأسهم والسطح والدائري من دائري ومخططات Excel 2016 بعد',
       'picture-format-not-shown': 'لا يمكن عرض صور EMF/WMF',
       'table-style-not-shown': 'لا تُعرض أنماط الجدول بعد',
       'pivot-style-not-shown': 'لا تُعرض أنماط PivotTable بعد',
@@ -1776,6 +1778,7 @@ export const ar: OgeLocalePack = {
       'تم تحديد {range}، {cells, plural, zero {لا توجد خلايا} one {خلية واحدة} two {خليتان} few {# خلايا} many {# خلية} other {# خلية}}',
     sheetAnnouncement: 'الورقة {name}، {index} من {total}',
     notePopupLabel: 'ملاحظة',
+    chartListLabel: 'المخططات في هذه الورقة',
     macrosNotice:
       'يحتوي هذا المصنف على وحدات ماكرو. يُحتفظ بها ولا تُشغَّل أبدًا.',
     statusBarLabel: 'شريط المعلومات',

@@ -15,7 +15,7 @@ import {
   ogeTextMargin,
   type OgePaintCell,
 } from './paint-window';
-import type { OgePaintPicture } from './pictures';
+import type { OgePaintBox, OgePaintPicture } from './pictures';
 import type { OgePaintFont } from './resolve-style';
 import type { OgeSheetLayout } from './sheet-layout';
 
@@ -129,11 +129,11 @@ export function ogeZoomPaint(
 }
 
 /** Pictures (from `ogePlacePictures`) at a zoom (percent): their corners follow the zoomed cells. */
-export function ogeZoomPictures(
-  pictures: readonly OgePaintPicture[],
+export function ogeZoomPictures<T extends OgePaintBox = OgePaintPicture>(
+  pictures: readonly T[],
   layout: OgeSheetLayout,
   zoom: number,
-): readonly OgePaintPicture[] {
+): readonly T[] {
   if (zoom === 100) return pictures;
   const { rows, cols } = layout.zoomed(zoom);
   return pictures.map((placed) => {

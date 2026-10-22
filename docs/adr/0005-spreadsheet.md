@@ -240,6 +240,17 @@ added to or departed from the plan above.
 6. **A P0 rule corrected by the corpus:** a date-only number format rounds the
    serial to the second exactly as a time format does (45292.9999999 shows the
    next day), which P0's renderer truncated.
+7. **Charts are drawn by the engine as Excel lays them out, not with
+   `@oge-ui/charts`** (departs from 1's plan, 2026-10-22). Measured against
+   Excel's own pictures of the corpus charts, `@oge-ui/charts` could only
+   approach them by bending its public API: its plot, legend and title layout,
+   bar spacing, axis lines and tick marks are its own, and it has no notion of
+   a file's manual layout. The engine's `ogeChartView` lays a chart out with
+   Excel's spacing, scale and bar geometry (the plot lands within 2 px of
+   Excel's on all sixteen corpus charts) into SVG paths and texts both layers
+   draw as they are — no chart package, no lazy chunk, nothing focusable in
+   the panes. `@oge-ui/charts` stays the product for charts an app draws from
+   its own data.
 
 ## Consequences
 

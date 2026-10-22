@@ -1121,4 +1121,264 @@ function png(
   );
 }
 
+/**
+ * charts.xlsx: one chart of each kind the viewer draws, over a small table —
+ * columns, stacked bars, lines with markers and smoothed, a pie, a doughnut,
+ * stacked areas, an XY scatter and a combo with a secondary axis. The parts
+ * carry references only: Excel fills the caches and its own formatting when
+ * it saves the corpus copy, and the capture records its automatic scales.
+ */
+{
+  const C = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
+  const A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+  const R =
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+  const regions = ['North', 'South', 'East', 'West'];
+  const sales = [
+    [120, 95, 60, 80],
+    [135, 102, 75, 90],
+    [150, 98, 90, 70],
+    [160, 110, 105, 95],
+  ];
+  const growth = [0.04, 0.125, 0.085, 0.16];
+  const points: readonly (readonly [number, number])[] = [
+    [1.5, 12],
+    [2.2, 18],
+    [3.1, 15],
+    [4.8, 26],
+    [5.5, 24],
+    [7.2, 33],
+  ];
+  const dataRows = [
+    row(1, [
+      [0, 'Quarter'],
+      ...regions.map((r, i) => [i + 1, r] as const),
+      [5, 'Growth'],
+      [7, 'Hours'],
+      [8, 'Output'],
+    ]),
+    ...quarters.map((q, i) =>
+      row(i + 2, [
+        [0, q],
+        ...sales[i].map((v, j) => [j + 1, v] as const),
+        [5, growth[i], 1],
+        [7, points[i][0]],
+        [8, points[i][1]],
+      ]),
+    ),
+    ...points.slice(4).map(([x, y], i) =>
+      row(i + 6, [
+        [7, x],
+        [8, y],
+      ]),
+    ),
+  ];
+  const text = (value: string) =>
+    `<c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${value}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/>`;
+  const title = (value: string) => `<c:title>${text(value)}</c:title>`;
+  const ref = (range: string) => `<c:f>Data!${range}</c:f>`;
+  const series = (
+    i: number,
+    name: string,
+    values: string,
+    extra = '',
+    categories = '$A$2:$A$5',
+  ) =>
+    `<c:ser><c:idx val="${i}"/><c:order val="${i}"/><c:tx><c:strRef>${ref(name)}</c:strRef></c:tx>${extra}` +
+    `<c:cat><c:strRef>${ref(categories)}</c:strRef></c:cat><c:val><c:numRef>${ref(values)}</c:numRef></c:val></c:ser>`;
+  const regionSeries = (extra = '') =>
+    regions
+      .map((_, i) => {
+        const col = String.fromCharCode(66 + i);
+        return series(i, `$${col}$1`, `$${col}$2:$${col}$5`, extra);
+      })
+      .join('');
+  const catAx = (id: number, cross: number, position = 'b') =>
+    `<c:catAx><c:axId val="${id}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${position}"/>` +
+    `<c:numFmt formatCode="General" sourceLinked="1"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>` +
+    `<c:crossAx val="${cross}"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/></c:catAx>`;
+  const valAx = (
+    id: number,
+    cross: number,
+    position = 'l',
+    { crosses = 'autoZero', grid = true, format = 'General', name = '' } = {},
+  ) =>
+    `<c:valAx><c:axId val="${id}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${position}"/>` +
+    `${grid ? '<c:majorGridlines/>' : ''}${name ? title(name) : ''}<c:numFmt formatCode="${format}" sourceLinked="${format === 'General' ? 1 : 0}"/>` +
+    `<c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="${cross}"/>` +
+    `<c:crosses val="${crosses}"/><c:crossBetween val="between"/></c:valAx>`;
+  const legend = (position = 'b') =>
+    `<c:legend><c:legendPos val="${position}"/><c:overlay val="0"/></c:legend>`;
+  const chartSpace = (plot: string, extra = '') =>
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<c:chartSpace xmlns:c="${C}" xmlns:a="${A}" xmlns:r="${R}"><c:roundedCorners val="0"/>` +
+    `<c:chart>${extra}<c:autoTitleDeleted val="0"/><c:plotArea><c:layout/>${plot}</c:plotArea>${legend()}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
+  const charts = [
+    {
+      name: 'Columns',
+      descr: 'Sales by quarter, clustered columns',
+      xml: chartSpace(
+        `<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>${regionSeries()}<c:gapWidth val="219"/><c:overlap val="-27"/><c:axId val="10"/><c:axId val="20"/></c:barChart>${catAx(10, 20)}${valAx(20, 10)}`,
+        title('Sales by quarter'),
+      ),
+    },
+    {
+      name: 'Stacked bars',
+      descr: 'Sales by quarter, stacked bars',
+      xml: chartSpace(
+        `<c:barChart><c:barDir val="bar"/><c:grouping val="stacked"/><c:varyColors val="0"/>${regionSeries()}<c:gapWidth val="150"/><c:overlap val="100"/><c:axId val="11"/><c:axId val="21"/></c:barChart>${catAx(11, 21, 'l')}${valAx(21, 11, 'b')}`,
+        title('Stacked sales'),
+      ),
+    },
+    {
+      name: 'Lines',
+      descr: 'North and South with markers, East smoothed',
+      xml: chartSpace(
+        `<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>` +
+          series(
+            0,
+            '$B$1',
+            '$B$2:$B$5',
+            '<c:marker><c:symbol val="circle"/><c:size val="5"/></c:marker>',
+          ) +
+          series(
+            1,
+            '$C$1',
+            '$C$2:$C$5',
+            '<c:marker><c:symbol val="square"/><c:size val="5"/></c:marker>',
+          ) +
+          series(
+            2,
+            '$D$1',
+            '$D$2:$D$5',
+            '<c:marker><c:symbol val="none"/></c:marker>',
+          ).replace('</c:ser>', '<c:smooth val="1"/></c:ser>') +
+          `<c:marker val="1"/><c:axId val="12"/><c:axId val="22"/></c:lineChart>${catAx(12, 22)}${valAx(22, 12)}`,
+        title('Trend'),
+      ),
+    },
+    {
+      name: 'Pie',
+      descr: 'Q1 sales by region',
+      xml: chartSpace(
+        `<c:pieChart><c:varyColors val="1"/>` +
+          `<c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:strRef>${ref('$A$2')}</c:strRef></c:tx>` +
+          `<c:dLbls><c:numFmt formatCode="0%" sourceLinked="0"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr><c:dLblPos val="outEnd"/><c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="1"/><c:showBubbleSize val="0"/><c:showLeaderLines val="1"/></c:dLbls>` +
+          `<c:cat><c:strRef>${ref('$B$1:$E$1')}</c:strRef></c:cat><c:val><c:numRef>${ref('$B$2:$E$2')}</c:numRef></c:val></c:ser>` +
+          `<c:firstSliceAng val="0"/></c:pieChart>`,
+        title('Q1 by region'),
+      ),
+    },
+    {
+      name: 'Doughnut',
+      descr: 'Q4 sales by region, doughnut',
+      xml: chartSpace(
+        `<c:doughnutChart><c:varyColors val="1"/>` +
+          `<c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:strRef>${ref('$A$5')}</c:strRef></c:tx>` +
+          `<c:cat><c:strRef>${ref('$B$1:$E$1')}</c:strRef></c:cat><c:val><c:numRef>${ref('$B$5:$E$5')}</c:numRef></c:val></c:ser>` +
+          `<c:firstSliceAng val="0"/><c:holeSize val="60"/></c:doughnutChart>`,
+        title('Q4 by region'),
+      ),
+    },
+    {
+      name: 'Areas',
+      descr: 'Sales by quarter, stacked areas',
+      xml: chartSpace(
+        `<c:areaChart><c:grouping val="stacked"/><c:varyColors val="0"/>${regionSeries()}<c:axId val="13"/><c:axId val="23"/></c:areaChart>${catAx(13, 23)}${valAx(23, 13)}`,
+        title('Stacked areas'),
+      ),
+    },
+    {
+      name: 'Scatter',
+      descr: 'Output against hours',
+      xml: chartSpace(
+        `<c:scatterChart><c:scatterStyle val="lineMarker"/><c:varyColors val="0"/>` +
+          `<c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:strRef>${ref('$I$1')}</c:strRef></c:tx>` +
+          `<c:spPr><a:ln w="19050"><a:noFill/></a:ln></c:spPr><c:marker><c:symbol val="circle"/><c:size val="6"/></c:marker>` +
+          `<c:xVal><c:numRef>${ref('$H$2:$H$7')}</c:numRef></c:xVal><c:yVal><c:numRef>${ref('$I$2:$I$7')}</c:numRef></c:yVal><c:smooth val="0"/></c:ser>` +
+          `<c:axId val="14"/><c:axId val="24"/></c:scatterChart>` +
+          valAx(14, 24, 'b', { grid: false, name: 'Hours' }) +
+          valAx(24, 14, 'l', { name: 'Output' }),
+        title('Output by hours'),
+      ),
+    },
+    {
+      name: 'Combo',
+      descr: 'North sales in columns, growth on a secondary axis',
+      xml: chartSpace(
+        `<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>${series(0, '$B$1', '$B$2:$B$5')}<c:gapWidth val="219"/><c:overlap val="-27"/><c:axId val="15"/><c:axId val="25"/></c:barChart>` +
+          `<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>${series(1, '$F$1', '$F$2:$F$5', '<c:marker><c:symbol val="circle"/><c:size val="5"/></c:marker>')}<c:marker val="1"/><c:axId val="16"/><c:axId val="26"/></c:lineChart>` +
+          catAx(15, 25) +
+          valAx(25, 15) +
+          valAx(26, 16, 'r', { crosses: 'max', grid: false, format: '0%' }) +
+          catAx(16, 26).replace('<c:delete val="0"/>', '<c:delete val="1"/>'),
+        title('North and growth'),
+      ),
+    },
+  ];
+  const DRAWING_NS =
+    'xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const corner = (tag: string, col: number, row: number) =>
+    `<xdr:${tag}><xdr:col>${col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${row}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:${tag}>`;
+  // two charts a row, each 6 columns × 15 rows, under the table
+  const anchors = charts
+    .map((chart, i) => {
+      const col = (i % 2) * 7;
+      const row = 9 + Math.floor(i / 2) * 16;
+      return (
+        `<xdr:twoCellAnchor editAs="oneCell">${corner('from', col, row)}${corner('to', col + 6, row + 15)}` +
+        `<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${i + 2}" name="${chart.name}" descr="${chart.descr}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>` +
+        `<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="${C}"><c:chart xmlns:c="${C}" r:id="rId${i + 1}"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor>`
+      );
+    })
+    .join('');
+  write(
+    'charts.xlsx',
+    buildXlsxFixture({
+      theme: true,
+      styles: corpusStyleSheet([{ numFmt: '0.0%' }]),
+      sheets: [
+        {
+          name: 'Data',
+          xml: `${cols([[0, 0, 'width="10" customWidth="1"']])}<sheetData>${dataRows.join('')}</sheetData><drawing r:id="rId1"/>`,
+          rels: [
+            { id: 'rId1', type: 'drawing', target: '../drawings/drawing1.xml' },
+          ],
+        },
+        // Excel inserts its own charts here (capture.ps1)
+        {
+          name: 'Styled',
+          xml: `${cols([[0, 0, 'width="10" customWidth="1"']])}<sheetData>${dataRows.join('')}</sheetData>`,
+        },
+      ],
+      extraParts: [
+        {
+          path: 'xl/drawings/drawing1.xml',
+          data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr ${DRAWING_NS}>${anchors}</xdr:wsDr>`,
+          contentType:
+            'application/vnd.openxmlformats-officedocument.drawing+xml',
+        },
+        {
+          path: 'xl/drawings/_rels/drawing1.xml.rels',
+          data:
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            charts
+              .map(
+                (_, i) =>
+                  `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart${i + 1}.xml"/>`,
+              )
+              .join('') +
+            '</Relationships>',
+        },
+        ...charts.map((chart, i) => ({
+          path: `xl/charts/chart${i + 1}.xml`,
+          data: chart.xml,
+          contentType:
+            'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+        })),
+      ],
+    }),
+  );
+}
+
 console.log(`corpus sources written to ${out}`);

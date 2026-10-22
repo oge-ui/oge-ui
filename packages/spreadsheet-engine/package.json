@@ -1,7 +1,7 @@
 {
   "name": "@oge-ui/spreadsheet-engine",
   "version": "1.1.5",
-  "description": "Framework-free engine of the OGE UI Spreadsheet, shared by its Angular and React render layers: a dependency-free xlsx reader (styles, merges, links, notes, pictures, conditional formats, opaque passthrough, import issues), Excel number formats, the paint model (Excel-measured column widths, row heights, border precedence and text fitting) and the viewer core (selection, Excel keyboard map, find, copy). Runs without a DOM (Node, Web Workers). Source-available commercial license (free for evaluation and development).",
+  "description": "Framework-free engine of the OGE UI Spreadsheet, shared by its Angular and React render layers: a dependency-free xlsx reader (styles, merges, links, notes, pictures, charts, conditional formats, opaque passthrough, import issues), Excel number formats, the paint model (Excel-measured column widths, row heights, border precedence and text fitting) and the viewer core (selection, Excel keyboard map, find, copy). Runs without a DOM (Node, Web Workers). Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "spreadsheet",
     "excel",

@@ -1742,7 +1742,10 @@ export const de: OgeLocalePack = {
         'Einige Formeln haben keine Quelle und zeigen nur Werte an',
       'uncalculated-formulas':
         'Formeln ohne gespeichertes Ergebnis werden leer angezeigt',
-      'drawing-not-shown': 'Diagramme und Formen werden noch nicht angezeigt',
+      'drawing-not-shown':
+        'Formen und Diagrammblätter werden noch nicht angezeigt',
+      'chart-type-not-shown':
+        'Netz-, Kurs-, Oberflächen-, Kreis-aus-Kreis- und Excel 2016-Diagramme werden noch nicht angezeigt',
       'picture-format-not-shown':
         'EMF/WMF-Bilder können nicht angezeigt werden',
       'table-style-not-shown':
@@ -1791,6 +1794,7 @@ export const de: OgeLocalePack = {
       '{range} ausgewählt, {cells, plural, one {# Zelle} other {# Zellen}}',
     sheetAnnouncement: 'Blatt {name}, {index} von {total}',
     notePopupLabel: 'Notiz',
+    chartListLabel: 'Diagramme auf diesem Blatt',
     macrosNotice:
       'Diese Arbeitsmappe enthält Makros. Sie bleiben erhalten und werden nie ausgeführt.',
     statusBarLabel: 'Statusleiste',

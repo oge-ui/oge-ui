@@ -1737,7 +1737,10 @@ export const ptBR: OgeLocalePack = {
         'Algumas fórmulas não têm origem e mostram apenas os valores',
       'uncalculated-formulas':
         'Fórmulas sem resultado salvo aparecem em branco',
-      'drawing-not-shown': 'Gráficos e formas ainda não são exibidos',
+      'drawing-not-shown':
+        'Formas e planilhas de gráfico ainda não são exibidas',
+      'chart-type-not-shown':
+        'Gráficos de radar, de ações, de superfície, de pizza de pizza e do Excel 2016 ainda não são exibidos',
       'picture-format-not-shown': 'Imagens EMF/WMF não podem ser exibidas',
       'table-style-not-shown': 'Estilos de tabela ainda não são exibidos',
       'pivot-style-not-shown':
@@ -1786,6 +1789,7 @@ export const ptBR: OgeLocalePack = {
       'Intervalo {range} selecionado, {cells, plural, one {# célula} other {# células}}',
     sheetAnnouncement: 'Planilha {name}, {index} de {total}',
     notePopupLabel: 'Anotação',
+    chartListLabel: 'Gráficos desta planilha',
     macrosNotice:
       'Esta pasta de trabalho contém macros. Elas são mantidas, mas nunca executadas.',
     statusBarLabel: 'Barra de status',

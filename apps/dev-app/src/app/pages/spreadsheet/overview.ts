@@ -29,6 +29,7 @@ const SAMPLES = [
   { file: 'styles.xlsx', label: 'Fonts, fills, borders, alignment, formats' },
   { file: 'formulas.xlsx', label: 'Formulas and dynamic arrays' },
   { file: 'pictures.xlsx', label: 'Pictures' },
+  { file: 'charts.xlsx', label: 'Charts' },
 ] as const;
 
 @Component({

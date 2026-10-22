@@ -440,6 +440,40 @@ let nextId = 0;
                       />
                     </div>
                   }
+                  @for (chart of item.charts; track chart.key) {
+                    <svg
+                      class="oge-spreadsheet-chart"
+                      [style]="chart.frame"
+                      [attr.width]="chart.view.width"
+                      [attr.height]="chart.view.height"
+                    >
+                      @for (mark of chart.view.paths; track $index) {
+                        <path
+                          [attr.d]="mark.d"
+                          [attr.fill]="mark.fill ?? 'none'"
+                          [attr.fill-opacity]="mark.fillOpacity ?? null"
+                          [attr.stroke]="mark.stroke ?? null"
+                          [attr.stroke-width]="mark.strokeWidth ?? null"
+                          [attr.stroke-dasharray]="mark.dash ?? null"
+                          [attr.stroke-linejoin]="mark.round ? 'round' : null"
+                          [attr.stroke-linecap]="mark.round ? 'round' : null"
+                          [attr.shape-rendering]="
+                            mark.crisp ? 'crispEdges' : null
+                          "
+                        />
+                      }
+                      @for (mark of chart.view.texts; track $index) {
+                        <text
+                          [attr.x]="mark.x"
+                          [attr.y]="mark.y"
+                          [attr.text-anchor]="mark.anchor"
+                          [attr.transform]="mark.transform ?? null"
+                          [style]="mark.style"
+                          [textContent]="mark.text"
+                        ></text>
+                      }
+                    </svg>
+                  }
                 </div>
               </div>
             }
@@ -751,6 +785,16 @@ let nextId = 0;
             </div>
           }
         </div>
+      }
+      @if (chartLabels().length) {
+        <ul
+          class="oge-spreadsheet-chart-list"
+          [attr.aria-label]="text().chartListLabel"
+        >
+          @for (label of chartLabels(); track $index) {
+            <li>{{ label }}</li>
+          }
+        </ul>
       }
     </div>
     @if (showTabs()) {
@@ -1100,6 +1144,13 @@ export class OgeSpreadsheet {
       panes,
       showGridLines === undefined ? {} : { showGridLines },
     );
+  });
+
+  /** The active sheet's charts as assistive tech hears them (the panes they draw in are hidden from it). */
+  protected readonly chartLabels = computed(() => {
+    this.core.activeSheet();
+    this.core.version();
+    return this.core.workbook() ? this.core.chartLabels() : [];
   });
 
   /** Notes shown: those pinned open in the file, and the one under the pointer (or opened with Shift+F2). */

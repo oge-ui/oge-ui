@@ -1709,7 +1709,9 @@ export const tr: OgeLocalePack = {
         'Bazı formüllerin kaynağı yok; yalnızca değerleri gösteriliyor',
       'uncalculated-formulas':
         'Kayıtlı sonucu olmayan formüller boş gösteriliyor',
-      'drawing-not-shown': 'Grafikler ve şekiller henüz gösterilmiyor',
+      'drawing-not-shown': 'Şekiller ve grafik sayfaları henüz gösterilmiyor',
+      'chart-type-not-shown':
+        'Radar, hisse senedi, yüzey, pastanın pastası ve Excel 2016 grafikleri henüz gösterilmiyor',
       'picture-format-not-shown': 'EMF/WMF resimleri gösterilemiyor',
       'table-style-not-shown': 'Tablo stilleri henüz gösterilmiyor',
       'pivot-style-not-shown': 'PivotTable stilleri henüz gösterilmiyor',
@@ -1754,6 +1756,7 @@ export const tr: OgeLocalePack = {
     selectionAnnouncement: '{range} seçildi, {cells, plural, other {# hücre}}',
     sheetAnnouncement: '{name} sayfası, {index} / {total}',
     notePopupLabel: 'Not',
+    chartListLabel: 'Bu sayfadaki grafikler',
     macrosNotice:
       'Bu çalışma kitabında makrolar var. Korunuyorlar, hiçbir zaman çalıştırılmıyorlar.',
     statusBarLabel: 'Durum çubuğu',

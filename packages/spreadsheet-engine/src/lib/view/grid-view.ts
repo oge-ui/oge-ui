@@ -7,7 +7,8 @@
  */
 import type { OgeCellRef, OgeSheetRange } from '../address/address';
 import type { OgeWorksheet } from '../model/worksheet';
-import type { OgePaintPicture } from '../paint/pictures';
+import type { OgePaintChart, OgePaintPicture } from '../paint/pictures';
+import type { OgeSpreadsheetChartView } from './chart-view';
 import type { OgeSheetSelection } from './navigation';
 import {
   ogeHeaderCells,
@@ -94,12 +95,20 @@ export interface OgePanePicture {
   readonly image: OgeCss;
 }
 
+/** A chart placed in a pane: where it sits and what it draws. */
+export interface OgePaneChart {
+  readonly key: string;
+  readonly frame: OgeCss;
+  readonly view: OgeSpreadsheetChartView;
+}
+
 /** A pane with what is drawn over its cells. */
 export interface OgeGridPane {
   readonly pane: OgeRenderPane;
   readonly style: OgeCss;
   readonly selection: OgeSelectionShapes;
   readonly pictures: readonly OgePanePicture[];
+  readonly charts: readonly OgePaneChart[];
 }
 
 /** The grid's layout for one frame: the panes with their render models, the headers and the corner. */
@@ -138,6 +147,8 @@ export interface OgeGridViewInput {
   readonly spill: OgeSheetRange | null;
   /** The pictures of each pane (`ogePanePictures`). */
   readonly pictures: ReadonlyMap<OgePaneKey, readonly OgePanePicture[]>;
+  /** The charts of each pane (`ogePaneCharts`). */
+  readonly charts?: ReadonlyMap<OgePaneKey, readonly OgePaneChart[]>;
   /** The Normal style's CSS font family. */
   readonly fontFamily: string;
   /** Draws the selection's fill handle (an editor); a viewer has none. */
@@ -710,6 +721,7 @@ export function ogeGridView(input: OgeGridViewInput): OgeGridView {
         fillHandle: input.fillHandle === true,
       }),
       pictures: input.pictures.get(pane.key) ?? [],
+      charts: input.charts?.get(pane.key) ?? [],
     })),
     sizer: {
       width: px(startX + panes.frozenWidth + panes.scrollWidth),
@@ -817,6 +829,61 @@ export function ogePanePictures(
         left: px(-(crop?.left ?? 0) * imageWidth),
         top: px(-(crop?.top ?? 0) * imageHeight),
       },
+    });
+    byPane.set(key, list);
+  });
+  return byPane;
+}
+
+/**
+ * Places charts in the pane holding their top-left corner, as pictures are;
+ * a right-to-left pane is mirrored, so a chart is mirrored back. Only the
+ * charts reaching into the rendered window are kept: a chart is a whole
+ * drawing, mounted when it scrolls in.
+ */
+export function ogePaneCharts(
+  charts: readonly OgePaintChart[],
+  panes: OgeViewportPanes,
+  options: {
+    readonly rtl: boolean;
+    readonly view: (placed: OgePaintChart) => OgeSpreadsheetChartView;
+  },
+): ReadonlyMap<OgePaneKey, readonly OgePaneChart[]> {
+  const byPane = new Map<OgePaneKey, OgePaneChart[]>();
+  const { rows, cols } = panes.axes;
+  const left = cols.offset(panes.cols.first);
+  const right = cols.offset(panes.cols.last + 1);
+  const top = rows.offset(panes.rows.first);
+  const bottom = rows.offset(panes.rows.last + 1);
+  charts.forEach((placed, index) => {
+    const inTop = placed.y < panes.originY;
+    const inLeft = placed.x < panes.originX;
+    const shownX =
+      inLeft || (placed.x < right && placed.x + placed.width > left);
+    const shownY =
+      inTop || (placed.y < bottom && placed.y + placed.height > top);
+    if (!shownX || !shownY) return;
+    const key: OgePaneKey = inTop
+      ? inLeft
+        ? 'corner'
+        : 'top'
+      : inLeft
+        ? 'left'
+        : 'main';
+    const originX = key === 'main' || key === 'top' ? panes.originX : 0;
+    const originY = key === 'main' || key === 'left' ? panes.originY : 0;
+    const view = options.view(placed);
+    const list = byPane.get(key) ?? [];
+    list.push({
+      key: `${index}:${placed.chart.chart.part}`,
+      frame: {
+        left: px(placed.x - originX),
+        top: px(placed.y - originY),
+        width: px(placed.width),
+        height: px(placed.height),
+        ...(options.rtl ? { transform: 'scaleX(-1)' } : {}),
+      },
+      view,
     });
     byPane.set(key, list);
   });

@@ -1757,7 +1757,9 @@ export const fr: OgeLocalePack = {
       'uncalculated-formulas':
         'Les formules sans résultat enregistré s’affichent vides',
       'drawing-not-shown':
-        'Les graphiques et les formes ne sont pas encore affichés',
+        'Les formes et les feuilles de graphique ne sont pas encore affichées',
+      'chart-type-not-shown':
+        'Les graphiques en radar, boursiers, en surface, en secteurs de secteur et Excel 2016 ne sont pas encore affichés',
       'picture-format-not-shown':
         'Les images EMF/WMF ne peuvent pas être affichées',
       'table-style-not-shown':
@@ -1810,6 +1812,7 @@ export const fr: OgeLocalePack = {
       'Plage {range} sélectionnée, {cells, plural, one {# cellule} other {# cellules}}',
     sheetAnnouncement: 'Feuille {name}, {index} sur {total}',
     notePopupLabel: 'Note',
+    chartListLabel: 'Graphiques de cette feuille',
     macrosNotice:
       'Ce classeur contient des macros. Elles sont conservées mais jamais exécutées.',
     statusBarLabel: 'Barre d’état',

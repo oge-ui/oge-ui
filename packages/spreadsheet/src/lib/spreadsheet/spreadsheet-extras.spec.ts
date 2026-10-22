@@ -74,6 +74,68 @@ function richBook(): OgeWorkbook {
     crop: { left: 0.1, top: 0, right: 0, bottom: 0.2 },
     rotation: 90,
   });
+  sheet.charts.push({
+    name: 'Chart 1',
+    description: 'Sales chart',
+    anchor: { kind: 'absolute', x: 300, y: 60, width: 240, height: 160 },
+    chart: {
+      part: 'xl/charts/chart1.xml',
+      title: { text: { text: 'Sales' }, font: {}, overlay: false },
+      groups: [
+        {
+          kind: 'bar',
+          direction: 'column',
+          grouping: 'clustered',
+          varyColors: false,
+          axes: [1, 2],
+          series: [
+            {
+              index: 0,
+              order: 0,
+              name: { text: 'North' },
+              categories: { labels: ['Q1', 'Q2'] },
+              values: { values: [3, 5] },
+              shape: {},
+            },
+          ],
+        },
+      ],
+      axes: [
+        {
+          id: 1,
+          kind: 'category',
+          position: 'b',
+          deleted: false,
+          crossAxis: 2,
+          reversed: false,
+          shape: {},
+          labelPosition: 'nextTo',
+          majorTicks: 'none',
+          font: {},
+        },
+        {
+          id: 2,
+          kind: 'value',
+          position: 'l',
+          deleted: false,
+          crossAxis: 1,
+          reversed: false,
+          majorGridlines: {},
+          shape: {},
+          labelPosition: 'nextTo',
+          majorTicks: 'none',
+          font: {},
+        },
+      ],
+      plotVisibleOnly: true,
+      blanksAs: 'gap',
+      area: {},
+      plotArea: {},
+      font: {},
+      roundedCorners: false,
+      style: 2,
+    },
+  });
   workbook.opaqueParts.push({
     path: 'xl/media/image1.png',
     data: PNG,
@@ -234,6 +296,23 @@ describe('OgeSpreadsheet — drawing and chrome', () => {
     fixture.componentInstance.workbook.set(createOgeWorkbook());
     await settle();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:picture');
+  });
+
+  it('draws a chart as Excel does, and names it for assistive tech', async () => {
+    await render();
+    const chart = host.querySelector('svg.oge-spreadsheet-chart') as SVGElement;
+    expect(chart.getAttribute('width')).toBe('240');
+    expect(chart.style.left).toBe(`${300 - 64}px`);
+    expect(chart.querySelectorAll('path').length).toBeGreaterThan(5);
+    const texts = [...chart.querySelectorAll('text')].map((t) => t.textContent);
+    expect(texts).toContain('Sales');
+    expect(texts).toContain('Q2');
+    // the panes are hidden from assistive tech: it hears the list instead
+    const list = host.querySelector(
+      '.oge-spreadsheet-chart-list',
+    ) as HTMLElement;
+    expect(list.getAttribute('aria-label')).toBe('Charts on this sheet');
+    expect(list.textContent).toBe('Sales chart');
   });
 
   it('can hide gridlines, follows a link (opening it), and hovers a note open', async () => {

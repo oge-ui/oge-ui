@@ -336,6 +336,33 @@ describe('OgeSpreadsheetCore — frame, media and browser work', () => {
     }
   });
 
+  it("draws the active sheet's charts in the frame, once a zoom, and names them for assistive tech", async () => {
+    const { c, panes } = setup(null);
+    await c.open(
+      new Uint8Array(
+        readFileSync(resolve(__dirname, '../../../testing/corpus/charts.xlsx')),
+      ),
+    );
+    expect(c.chartLabels()).toHaveLength(8);
+    expect(c.chartLabels()[0]).toBe('Sales by quarter, clustered columns');
+    const placed = c.charts();
+    expect(placed).toHaveLength(8);
+    const first = placed[0];
+    if (!first) throw new Error('no chart');
+    const view = c.chartView(first);
+    expect(c.chartView(first)).toBe(view);
+    expect(view.paths.length).toBeGreaterThan(10);
+    // the first row of charts reaches the 420 px window; the others wait
+    const shown =
+      c.gridView(panes())?.render.flatMap((pane) => pane.charts) ?? [];
+    expect(shown.map((chart) => chart.view.label)).toEqual([
+      'Sales by quarter',
+      'Stacked sales',
+    ]);
+    c.setZoom(150);
+    expect(c.chartView(c.charts()[0] ?? first)).not.toBe(view);
+  });
+
   it('opens a URL, and reports one it cannot fetch', async () => {
     const fetch = vi
       .spyOn(globalThis, 'fetch')

@@ -1103,8 +1103,128 @@ describe('readOgeXlsx — pictures', () => {
       to: { col: 3, row: 4, colOffset: 0, rowOffset: 0 },
     });
     expect(issues.map((i) => [i.code, i.detail])).toEqual([
-      ['drawing-not-shown', '3 charts, shapes or linked pictures'],
+      ['drawing-not-shown', '3 shapes or linked pictures'],
       ['picture-format-not-shown', '1 EMF/WMF pictures'],
+    ]);
+  });
+});
+
+describe('readOgeXlsx — charts', () => {
+  const frame = (id: string, uri: string, name: string) =>
+    `<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="${name}" descr="Sales by month"/></xdr:nvGraphicFramePr><a:graphic><a:graphicData uri="${uri}"><c:chart r:id="${id}"/></a:graphicData></a:graphic></xdr:graphicFrame>`;
+  const anchor = (inner: string) =>
+    `<xdr:twoCellAnchor><xdr:from><xdr:col>1</xdr:col><xdr:row>1</xdr:row></xdr:from><xdr:to><xdr:col>6</xdr:col><xdr:row>12</xdr:row></xdr:to>${inner}<xdr:clientData/></xdr:twoCellAnchor>`;
+  const CHART = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
+  const CHARTEX = 'http://schemas.microsoft.com/office/drawing/2014/chartex';
+  const series =
+    '<c:ser><c:idx val="0"/><c:order val="0"/><c:val><c:numRef><c:f>S!$A$1:$A$2</c:f><c:numCache><c:ptCount val="2"/><c:pt idx="0"><c:v>1</c:v></c:pt><c:pt idx="1"><c:v>2</c:v></c:pt></c:numCache></c:numRef></c:val></c:ser>';
+  const chartPart = (group: string) =>
+    `<c:chartSpace xmlns:c="c" xmlns:a="a"><c:chart><c:plotArea><c:${group}>${series}<c:axId val="1"/><c:axId val="2"/></c:${group}><c:catAx><c:axId val="1"/><c:crossAx val="2"/></c:catAx><c:valAx><c:axId val="2"/><c:crossAx val="1"/></c:valAx></c:plotArea></c:chart></c:chartSpace>`;
+  const fixture: XlsxFixture = {
+    sheets: [
+      {
+        name: 'S',
+        xml: '<sheetData/><drawing r:id="rId1"/>',
+        rels: [
+          { id: 'rId1', type: 'drawing', target: '../drawings/drawing1.xml' },
+        ],
+      },
+    ],
+    extraParts: [
+      {
+        path: 'xl/drawings/drawing1.xml',
+        data:
+          '<xdr:wsDr xmlns:xdr="d" xmlns:a="a" xmlns:r="r" xmlns:c="c" xmlns:mc="m">' +
+          anchor(frame('rId1', CHART, 'Chart 1')) +
+          anchor(frame('rId2', CHART, 'Chart 2')) +
+          // Excel 2016's charts come as a choice with a shape to fall back on
+          anchor(
+            `<mc:AlternateContent><mc:Choice Requires="cx1">${frame('rId3', CHARTEX, 'Chart 3')}</mc:Choice><mc:Fallback><xdr:sp/></mc:Fallback></mc:AlternateContent>`,
+          ) +
+          '</xdr:wsDr>',
+        contentType:
+          'application/vnd.openxmlformats-officedocument.drawing+xml',
+      },
+      {
+        path: 'xl/drawings/_rels/drawing1.xml.rels',
+        data:
+          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+          '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml"/>' +
+          '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart2.xml"/>' +
+          '<Relationship Id="rId3" Type="http://schemas.microsoft.com/office/2014/relationships/chartEx" Target="../charts/chartEx1.xml"/>' +
+          '</Relationships>',
+      },
+      {
+        path: 'xl/charts/chart1.xml',
+        data: chartPart('barChart'),
+        contentType:
+          'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+      },
+      {
+        path: 'xl/charts/chart2.xml',
+        data: chartPart('radarChart'),
+        contentType:
+          'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+      },
+      {
+        path: 'xl/charts/chartEx1.xml',
+        data: '<cx:chartSpace xmlns:cx="x"><cx:chart><cx:plotArea><cx:plotAreaRegion><cx:series layoutId="waterfall"/></cx:plotAreaRegion></cx:plotArea></cx:chart></cx:chartSpace>',
+        contentType: 'application/vnd.ms-office.chartex+xml',
+      },
+    ],
+  };
+
+  it('reads the charts it draws, with their anchor, name and alt text', () => {
+    const { workbook } = read(fixture);
+    const [chart] = workbook.sheets[0].charts;
+    expect(workbook.sheets[0].charts).toHaveLength(1);
+    expect(chart).toMatchObject({
+      name: 'Chart 1',
+      description: 'Sales by month',
+      anchor: {
+        kind: 'twoCell',
+        from: { col: 1, row: 1 },
+        to: { col: 6, row: 12 },
+      },
+    });
+    expect(chart.chart.groups.map((g) => g.kind)).toEqual(['bar']);
+    expect(chart.chart.groups[0].series[0].values.values).toEqual([1, 2]);
+  });
+
+  it('reads where the file lays the plot out, the crossings and the smoothing Excel assumes', () => {
+    const line =
+      '<c:chartSpace xmlns:c="c" xmlns:a="a"><c:chart><c:plotArea>' +
+      '<c:layout><c:manualLayout><c:layoutTarget val="inner"/><c:xMode val="edge"/><c:yMode val="edge"/><c:x val="0.1"/><c:y val="0.2"/><c:w val="0.7"/><c:h val="0.6"/></c:manualLayout></c:layout>' +
+      `<c:lineChart>${series}<c:axId val="1"/><c:axId val="2"/></c:lineChart>` +
+      '<c:catAx><c:axId val="1"/><c:crossAx val="2"/></c:catAx><c:valAx><c:axId val="2"/><c:crossAx val="1"/><c:crossBetween val="midCat"/></c:valAx>' +
+      '</c:plotArea></c:chart></c:chartSpace>';
+    const { workbook } = read({
+      ...fixture,
+      extraParts: (fixture.extraParts ?? []).map((part) =>
+        part.path === 'xl/charts/chart1.xml' ? { ...part, data: line } : part,
+      ),
+    });
+    const model = workbook.sheets[0]?.charts[0]?.chart;
+    expect(model?.plotLayout).toEqual({
+      x: 0.1,
+      y: 0.2,
+      w: 0.7,
+      h: 0.6,
+      xMode: 'edge',
+      yMode: 'edge',
+      target: 'inner',
+    });
+    expect(model?.axes.find((a) => a.kind === 'value')?.crossBetween).toBe(
+      'midCat',
+    );
+    // a line series without c:smooth: Excel smooths it (and saves smooth="1")
+    expect(model?.groups[0]?.series[0]?.smooth).toBe(true);
+  });
+
+  it('counts the chart types it does not draw, Excel 2016 charts by layout', () => {
+    const { issues } = read(fixture);
+    expect(issues.map((i) => [i.code, i.detail])).toEqual([
+      ['chart-type-not-shown', 'radar, waterfall'],
     ]);
   });
 });

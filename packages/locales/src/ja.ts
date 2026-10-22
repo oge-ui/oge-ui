@@ -1716,7 +1716,9 @@ export const ja: OgeLocalePack = {
         '一部の数式は元の数式が見つからないため、値のみ表示されます',
       'uncalculated-formulas':
         '計算結果が保存されていない数式は空白で表示されます',
-      'drawing-not-shown': 'グラフと図形はまだ表示されません',
+      'drawing-not-shown': '図形とグラフ シートはまだ表示されません',
+      'chart-type-not-shown':
+        'レーダー、株価、等高線、補助円グラフ付き円、Excel 2016 のグラフはまだ表示されません',
       'picture-format-not-shown': 'EMF/WMF 画像は表示できません',
       'table-style-not-shown': 'テーブル スタイルはまだ表示されません',
       'pivot-style-not-shown': 'ピボットテーブル スタイルはまだ表示されません',
@@ -1760,6 +1762,7 @@ export const ja: OgeLocalePack = {
       '{range} の {cells, plural, other {# 個のセル}}を選択しました',
     sheetAnnouncement: 'シート {name}、{total} 枚中 {index} 枚目',
     notePopupLabel: 'メモ',
+    chartListLabel: 'このシートのグラフ',
     macrosNotice:
       'このブックにはマクロが含まれています。マクロは保持されますが、実行されることはありません。',
     statusBarLabel: 'ステータス バー',

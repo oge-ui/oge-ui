@@ -400,6 +400,17 @@
     }
   }
 
+  // ── charts: the engine lays them out and colours them as Excel does
+  // (`chart-view.ts`); a sheet's charts keep the file's look under any
+  // theme, as its cells do. Like a picture, a chart passes the pointer to
+  // the cells under it.
+  .oge-spreadsheet-chart {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
+
   // ── headers ──
   .oge-spreadsheet-column-headers,
   .oge-spreadsheet-row-headers {
@@ -666,6 +677,7 @@
 
   // assistive tech's active cell: in the accessibility tree, not on screen
   .oge-spreadsheet-a11y-row,
+  .oge-spreadsheet-chart-list,
   .oge-spreadsheet-live {
     position: absolute;
     width: 1px;

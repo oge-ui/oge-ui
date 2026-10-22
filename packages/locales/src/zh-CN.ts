@@ -1675,7 +1675,9 @@ export const zhCN: OgeLocalePack = {
       'overlapping-merge': '重叠的合并单元格已取消合并',
       'orphan-shared-formula': '部分公式缺少来源，仅显示值',
       'uncalculated-formulas': '未保存计算结果的公式显示为空白',
-      'drawing-not-shown': '图表和形状暂不显示',
+      'drawing-not-shown': '形状和图表工作表暂不显示',
+      'chart-type-not-shown':
+        '雷达图、股价图、曲面图、子母饼图和 Excel 2016 图表暂不显示',
       'picture-format-not-shown': '无法显示 EMF/WMF 图片',
       'table-style-not-shown': '表格样式暂不显示',
       'pivot-style-not-shown': '数据透视表样式暂不显示',
@@ -1716,6 +1718,7 @@ export const zhCN: OgeLocalePack = {
       '已选择 {range}，{cells, plural, other {共 # 个单元格}}',
     sheetAnnouncement: '工作表 {name}，第 {index} 张，共 {total} 张',
     notePopupLabel: '注释',
+    chartListLabel: '此工作表中的图表',
     macrosNotice: '此工作簿包含宏。这些宏会保留，但绝不会运行。',
     statusBarLabel: '状态栏',
     statusAverage: '平均值：{value}',

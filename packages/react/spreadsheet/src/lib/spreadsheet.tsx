@@ -35,6 +35,7 @@ import {
   type OgeFindOptions,
   type OgeGridPane,
   type OgeHeaderMark,
+  type OgePaneChart,
   type OgeRenderMark,
   type OgeRenderText,
   type OgeScrollEdges,
@@ -171,7 +172,47 @@ function HeaderMarks({ marks }: { marks: readonly OgeHeaderMark[] }) {
   );
 }
 
-/** A pane: gridlines, fills, data bars, text, borders, marks, the selection and pictures. */
+/** A chart, as the engine draws it (`ogeChartView`): plain SVG paths and texts. */
+function PaneChart({ chart }: { chart: OgePaneChart }) {
+  const { view } = chart;
+  return (
+    <svg
+      className="oge-spreadsheet-chart"
+      style={css(chart.frame)}
+      width={view.width}
+      height={view.height}
+    >
+      {view.paths.map((mark, i) => (
+        <path
+          key={i}
+          d={mark.d}
+          fill={mark.fill ?? 'none'}
+          fillOpacity={mark.fillOpacity}
+          stroke={mark.stroke}
+          strokeWidth={mark.strokeWidth}
+          strokeDasharray={mark.dash}
+          strokeLinejoin={mark.round ? 'round' : undefined}
+          strokeLinecap={mark.round ? 'round' : undefined}
+          shapeRendering={mark.crisp ? 'crispEdges' : undefined}
+        />
+      ))}
+      {view.texts.map((mark, i) => (
+        <text
+          key={i}
+          x={mark.x}
+          y={mark.y}
+          textAnchor={mark.anchor}
+          transform={mark.transform}
+          style={css(mark.style)}
+        >
+          {mark.text}
+        </text>
+      ))}
+    </svg>
+  );
+}
+
+/** A pane: gridlines, fills, data bars, text, borders, marks, the selection, pictures and charts. */
 function Pane({ item }: { item: OgeGridPane }) {
   const { pane, selection: s } = item;
   return (
@@ -291,6 +332,9 @@ function Pane({ item }: { item: OgeGridPane }) {
               draggable={false}
             />
           </div>
+        ))}
+        {item.charts.map((chart) => (
+          <PaneChart key={chart.key} chart={chart} />
         ))}
       </div>
     </div>
@@ -427,6 +471,8 @@ export const OgeSpreadsheet = forwardRef<
   const notes = panes
     ? core.notes(panes, { scrollTop: scroll.top, scrollLeft: scroll.left })
     : [];
+  // the panes the charts draw in are hidden from assistive tech: it hears this list
+  const chartLabels = workbook ? core.chartLabels() : [];
   const tabs = workbook ? core.tabs() : [];
   const showTabs =
     !!workbook && (props.showSheetTabs ?? workbook.showSheetTabs) !== false;
@@ -1329,6 +1375,16 @@ export const OgeSpreadsheet = forwardRef<
               </div>
             ))}
           </div>
+        ) : null}
+        {chartLabels.length ? (
+          <ul
+            className="oge-spreadsheet-chart-list"
+            aria-label={text.chartListLabel}
+          >
+            {chartLabels.map((label, i) => (
+              <li key={i}>{label}</li>
+            ))}
+          </ul>
         ) : null}
       </div>
       {showTabs ? (

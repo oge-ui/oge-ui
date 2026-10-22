@@ -168,6 +168,24 @@ export type {
   OgeSheetProtection,
 } from './lib/model/sheet-features';
 
+export type {
+  OgeChartAxis,
+  OgeChartCategories,
+  OgeChartDataLabels,
+  OgeChartFont,
+  OgeChartGroup,
+  OgeChartKind,
+  OgeChartLegend,
+  OgeChartMarker,
+  OgeChartModel,
+  OgeChartNumbers,
+  OgeChartSeries,
+  OgeChartShape,
+  OgeChartText,
+  OgeChartTitle,
+  OgeSheetChart,
+} from './lib/model/chart';
+
 export {
   OGE_DEFAULT_FONT,
   OGE_DEFINED_NAME_MAX_LENGTH,
@@ -263,7 +281,14 @@ export {
   type OgeConditionalFormatterOptions,
 } from './lib/paint/conditional';
 
-export { ogePlacePictures, type OgePaintPicture } from './lib/paint/pictures';
+export {
+  ogeAnchorBox,
+  ogePlaceCharts,
+  ogePlacePictures,
+  type OgePaintBox,
+  type OgePaintChart,
+  type OgePaintPicture,
+} from './lib/paint/pictures';
 
 export { ogeCreateCanvasMeasurer } from './lib/paint/canvas-measurer';
 
@@ -381,6 +406,18 @@ export {
 } from './lib/view/icons';
 
 export {
+  ogeChartLabel,
+  ogeChartPalette,
+  ogeChartScale,
+  ogeChartView,
+  type OgeChartPathMark,
+  type OgeChartScale,
+  type OgeChartTextMark,
+  type OgeChartViewInput,
+  type OgeSpreadsheetChartView,
+} from './lib/view/chart-view';
+
+export {
   ogeFindAll,
   ogeFindPattern,
   type OgeFindMatch,
@@ -395,6 +432,7 @@ export {
   ogeOutlineMarks,
   ogeOutlineStrips,
   ogeNoteBoxes,
+  ogePaneCharts,
   ogePanePictures,
   ogePaneStyle,
   ogePointerCell,
@@ -413,6 +451,7 @@ export {
   type OgeOutlineStrip,
   type OgeNoteBox,
   type OgeNoteRun,
+  type OgePaneChart,
   type OgePanePicture,
   type OgeScrollPosition,
 } from './lib/view/grid-view';

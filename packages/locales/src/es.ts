@@ -1743,7 +1743,10 @@ export const es: OgeLocalePack = {
         'Algunas fórmulas no tienen origen y solo muestran valores',
       'uncalculated-formulas':
         'Las fórmulas sin resultado guardado se muestran vacías',
-      'drawing-not-shown': 'Los gráficos y las formas aún no se muestran',
+      'drawing-not-shown':
+        'Las formas y las hojas de gráfico aún no se muestran',
+      'chart-type-not-shown':
+        'Los gráficos radiales, de cotizaciones, de superficie, circulares con subgráfico y de Excel 2016 aún no se muestran',
       'picture-format-not-shown': 'Las imágenes EMF/WMF no se pueden mostrar',
       'table-style-not-shown': 'Los estilos de tabla aún no se muestran',
       'pivot-style-not-shown':
@@ -1790,6 +1793,7 @@ export const es: OgeLocalePack = {
       'Rango {range} seleccionado, {cells, plural, one {# celda} other {# celdas}}',
     sheetAnnouncement: 'Hoja {name}, {index} de {total}',
     notePopupLabel: 'Nota',
+    chartListLabel: 'Gráficos de esta hoja',
     macrosNotice:
       'Este libro contiene macros. Se conservan, pero nunca se ejecutan.',
     statusBarLabel: 'Barra de estado',

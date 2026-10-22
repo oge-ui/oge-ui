@@ -7,7 +7,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  * with `?framework=react`, in the React `<OgeSpreadsheet>` — the same engine,
  * markup and stylesheet — and both pass the same suite: the saved view
  * (frozen panes, tabs, the active cell), Excel's keyboard and status bar,
- * find, pictures, the API page and axe in both themes.
+ * find, pictures, charts, the API page and axe in both themes.
  */
 const LAYERS = [
   { name: 'Angular', query: '', host: '' },
@@ -110,6 +110,38 @@ for (const layer of LAYERS) {
       await expect(host.locator('.oge-spreadsheet-tab')).toHaveText([
         'Pictures',
       ]);
+    });
+
+    test('draws the charts as Excel does, and lists them for assistive tech', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      await page.locator(BASIC).getByRole('button', { name: 'Charts' }).click();
+      const charts = host.locator('svg.oge-spreadsheet-chart');
+      // the first row of charts is in view: columns and stacked bars
+      await expect(charts).toHaveCount(2, { timeout: 30_000 });
+      await expect(
+        charts.first().locator('text', { hasText: 'Sales by quarter' }),
+      ).toBeVisible();
+      await expect(charts.nth(1).locator('text').first()).toHaveText(
+        'Stacked sales',
+      );
+      // the panes are hidden from assistive tech, which hears the list
+      const list = host.getByRole('list', { name: 'Charts on this sheet' });
+      await expect(list.getByRole('listitem')).toHaveCount(8);
+      await expect(list.getByRole('listitem').first()).toHaveText(
+        'Sales by quarter, clustered columns',
+      );
+      // a chart passes the pointer to the cells under it, as a picture does
+      const box = await charts.first().boundingBox();
+      if (!box) throw new Error('no chart box');
+      await page.mouse.click(box.x + 4, box.y + 4);
+      await expect(nameBox(host)).toHaveValue('A10');
+      const results = await new AxeBuilder({ page })
+        .include('.oge-spreadsheet')
+        .disableRules(['color-contrast'])
+        .analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
     });
 
     test('lists every sheet beside the tabs and the defined names in the name box', async ({

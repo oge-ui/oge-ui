@@ -1724,7 +1724,9 @@ export const he: OgeLocalePack = {
       'orphan-shared-formula':
         'לחלק מהנוסחאות אין מקור, ולכן מוצגים רק הערכים שלהן',
       'uncalculated-formulas': 'נוסחאות ללא תוצאה שמורה מוצגות ריקות',
-      'drawing-not-shown': 'תרשימים וצורות עדיין לא מוצגים',
+      'drawing-not-shown': 'צורות וגיליונות תרשים עדיין לא מוצגים',
+      'chart-type-not-shown':
+        'תרשימי רדאר, מניות, משטח, עוגה של עוגה ותרשימי Excel 2016 עדיין לא מוצגים',
       'picture-format-not-shown': 'לא ניתן להציג תמונות EMF/WMF',
       'table-style-not-shown': 'סגנונות טבלה עדיין לא מוצגים',
       'pivot-style-not-shown': 'סגנונות PivotTable עדיין לא מוצגים',
@@ -1768,6 +1770,7 @@ export const he: OgeLocalePack = {
       'נבחר {range}, {cells, plural, one {תא אחד} two {שני תאים} other {# תאים}}',
     sheetAnnouncement: 'גיליון {name}, {index} מתוך {total}',
     notePopupLabel: 'הערה',
+    chartListLabel: 'תרשימים בגיליון זה',
     macrosNotice:
       'חוברת עבודה זו מכילה פקודות מאקרו. הן נשמרות ולעולם אינן מופעלות.',
     statusBarLabel: 'שורת המצב',

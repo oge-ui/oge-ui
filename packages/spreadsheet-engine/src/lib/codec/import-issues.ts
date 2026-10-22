@@ -28,8 +28,13 @@ export type OgeImportIssueCode =
   | 'orphan-shared-formula'
   /** Formulas saved without a calculated value show empty until the formula engine (P3). */
   | 'uncalculated-formulas'
-  /** Charts, shapes and linked pictures are kept for saving but not shown yet. */
+  /** Shapes, linked pictures and chart sheets are kept for saving but not shown yet. */
   | 'drawing-not-shown'
+  /**
+   * Charts of a kind the viewer does not draw yet — radar, stock, surface,
+   * pie of pie, and Excel 2016's (waterfall, treemap, …) — are kept for saving.
+   */
+  | 'chart-type-not-shown'
   /** Pictures in a format browsers cannot show (EMF, WMF) are kept but not shown. */
   | 'picture-format-not-shown'
   /** Table (ListObject) styling is kept but not shown yet. */
@@ -84,6 +89,7 @@ const SEVERITY: Readonly<Record<OgeImportIssueCode, OgeImportIssueSeverity>> = {
   'orphan-shared-formula': 'warning',
   'uncalculated-formulas': 'warning',
   'drawing-not-shown': 'warning',
+  'chart-type-not-shown': 'warning',
   'picture-format-not-shown': 'warning',
   'table-style-not-shown': 'warning',
   'pivot-style-not-shown': 'info',

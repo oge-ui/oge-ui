@@ -21,7 +21,7 @@ are versioned independently, which is the case here.
   (colour scales, data bars, all twenty icon sets, the value rules), frozen
   panes, merges, hidden rows and columns, right-to-left sheets, notes with
   Excel's marker, hyperlinks (sanitised; a cancelable `hyperlinkClick`),
-  AutoFilter buttons, pictures (cropped, rotated, flipped) and dynamic-array
+  AutoFilter buttons, pictures (cropped, rotated, flipped), charts and dynamic-array
   spills with their blue frame and greyed follower formulas.
 - **Works like Excel:** the keyboard map (Ctrl+arrows to the data edge, Shift
   to extend, Shift+F8 add mode, Ctrl+A region then all, Ctrl+Page Up/Down),
@@ -36,6 +36,15 @@ are versioned independently, which is the case here.
   beside the tabs, the name box lists the defined names, and the formula bar
   expands to the whole text (Ctrl+Shift+U); a header click makes the band's
   first cell active, as Excel does.
+- **Charts, as Excel lays them out:** bar, column, line, area, pie, doughnut,
+  scatter and bubble charts and their combinations (a secondary axis
+  included) are drawn from the workbook's own chart parts — titles, legends,
+  axes with Excel's automatic scale, gridlines, markers, smoothed lines, data
+  labels, number formats and the file's manual layout. Measured on Excel's
+  pictures of the corpus charts, the plot lands within 2 px of Excel's; pie
+  percentages add up to 100% as Excel rounds them. Screen readers hear each
+  chart's alt text or title. Radar, stock, surface, pie-of-pie and Excel 2016
+  charts are kept and reported (`chart-type-not-shown`).
 - **Outline symbols:** grouped rows and columns show Excel's brackets, plus
   and minus buttons and level buttons beside the headers; hidden rows and
   columns get Excel's double line. Groups collapse and expand from the

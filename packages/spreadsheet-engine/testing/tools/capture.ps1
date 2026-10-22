@@ -13,7 +13,10 @@ param(
   [Parameter(Mandatory = $true)][string]$Corpus,
   [Parameter(Mandatory = $true)][string]$Captures,
   # comma-separated: environment, numfmt, fit, borders, metrics, corpus; empty = all
-  [string]$Only = ''
+  [string]$Only = '',
+  # comma-separated corpus workbooks to capture (styles, structure, formulas, dates1904,
+  # pictures, charts); empty = all — the others keep their committed copies
+  [string]$Workbooks = ''
 )
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -145,8 +148,44 @@ try {
 
   # ── the corpus workbooks ──
   if (Wants 'corpus') {
-    foreach ($name in @('styles', 'structure', 'formulas', 'dates1904', 'pictures')) {
+    $books = @('styles', 'structure', 'formulas', 'dates1904', 'pictures', 'charts')
+    $chosen = @($Workbooks.Split(',') | Where-Object { $_ })
+    if ($chosen.Count -gt 0) { $books = @($books | Where-Object { $chosen -contains $_ }) }
+    foreach ($name in $books) {
       $wb = $xl.Workbooks.Open((Join-Path $Sources "$name.xlsx"))
+      if ($name -eq 'charts') {
+        # the Styled sheet's charts are Excel's own, inserted the way the
+        # ribbon does (AddChart2, the default style) — the Data sheet's come
+        # from bare parts, as libraries write them. Ranges are A1 addresses
+        # and titles plain text: nothing Excel would parse in a locale.
+        $ws = $wb.Worksheets.Item('Styled')
+        $made = @(
+          @{ type = 51; range = 'A1:E5'; title = 'Sales by quarter' },
+          @{ type = 58; range = 'A1:E5'; title = 'Stacked sales' },
+          @{ type = 65; range = 'A1:D5'; title = 'Trend' },
+          @{ type = 5; range = 'A1:E2'; rows = $true; title = 'Q1 by region' },
+          @{ type = -4120; range = 'A1:E2'; rows = $true; title = 'Q1 doughnut' },
+          @{ type = 76; range = 'A1:E5'; title = 'Stacked areas' },
+          @{ type = -4169; range = 'H1:I7'; title = 'Output by hours' },
+          @{ type = 51; range = 'A1:C5'; combo = $true; title = 'North and South' }
+        )
+        for ($i = 0; $i -lt $made.Count; $i++) {
+          $spec = $made[$i]
+          $left = ($i % 2) * 7 + 1; $top = 10 + [math]::Floor($i / 2) * 16
+          $from = $ws.Cells.Item($top, $left); $to = $ws.Cells.Item($top + 15, $left + 6)
+          $shape = $ws.Shapes.AddChart2(-1, $spec.type, $from.Left, $from.Top, $to.Left - $from.Left, $to.Top - $from.Top)
+          $source = $ws.Range($spec.range)
+          if ($spec.rows) { $shape.Chart.SetSourceData($source, 1) } else { $shape.Chart.SetSourceData($source, 2) }
+          if ($spec.combo) {
+            $line = $shape.Chart.SeriesCollection(2)
+            $line.ChartType = 65
+            $line.AxisGroup = 2
+          }
+          $shape.Chart.HasTitle = $true
+          $shape.Chart.ChartTitle.Text = $spec.title
+          $shape.Name = "Styled $($i + 1)"
+        }
+      }
       $book = [ordered]@{ name = $name; date1904 = $wb.Date1904; sheets = (New-Object System.Collections.ArrayList); names = (New-Object System.Collections.ArrayList) }
       foreach ($n in $wb.Names) { [void]$book.names.Add([ordered]@{ name = $n.Name; refersTo = $n.RefersTo; visible = $n.Visible }) }
       foreach ($ws in $wb.Worksheets) {
@@ -223,6 +262,61 @@ try {
             })
         }
         $sheet.shapes = $shapes
+        # charts: where Excel put them, what it shows and the scales it chose
+        $charts = New-Object System.Collections.ArrayList
+        foreach ($co in $ws.ChartObjects()) {
+          $ch = $co.Chart
+          $entry = [ordered]@{
+            name = $co.Name; left = Px $co.Left; top = Px $co.Top; width = Px $co.Width; height = Px $co.Height
+            type = $ch.ChartType; hasTitle = $ch.HasTitle; hasLegend = $ch.HasLegend
+            plot = [ordered]@{ left = Px $ch.PlotArea.InsideLeft; top = Px $ch.PlotArea.InsideTop; width = Px $ch.PlotArea.InsideWidth; height = Px $ch.PlotArea.InsideHeight }
+          }
+          if ($ch.HasTitle) {
+            $entry.title = $ch.ChartTitle.Text
+            $entry.titleSize = $ch.ChartTitle.Font.Size
+            $entry.titleColor = Hex $ch.ChartTitle.Font.Color
+            $entry.titleBox = [ordered]@{ left = Px $ch.ChartTitle.Left; top = Px $ch.ChartTitle.Top }
+          }
+          if ($ch.HasLegend) {
+            $lg = $ch.Legend
+            $entry.legend = [ordered]@{ position = $lg.Position; left = Px $lg.Left; top = Px $lg.Top; width = Px $lg.Width; height = Px $lg.Height; size = $lg.Font.Size; color = Hex $lg.Font.Color }
+          }
+          $axes = New-Object System.Collections.ArrayList
+          foreach ($group in 1, 2) {
+            foreach ($kind in 1, 2) {
+              $has = $false
+              try { $has = $ch.HasAxis($kind, $group) } catch { }
+              if (-not $has) { continue }
+              $ax = $ch.Axes($kind, $group)
+              $axis = [ordered]@{ group = $group; kind = $kind; left = Px $ax.Left; top = Px $ax.Top; width = Px $ax.Width; height = Px $ax.Height }
+              try { $axis.min = $ax.MinimumScale; $axis.max = $ax.MaximumScale; $axis.major = $ax.MajorUnit; $axis.minAuto = $ax.MinimumScaleIsAuto; $axis.maxAuto = $ax.MaximumScaleIsAuto; $axis.majorAuto = $ax.MajorUnitIsAuto } catch { }
+              try { $axis.format = $ax.TickLabels.NumberFormat } catch { }
+              try { $axis.labelSize = $ax.TickLabels.Font.Size; $axis.labelColor = Hex $ax.TickLabels.Font.Color } catch { }
+              try { $axis.grid = $ax.HasMajorGridlines; if ($ax.HasMajorGridlines) { $axis.gridColor = Hex $ax.MajorGridlines.Format.Line.ForeColor.RGB; $axis.gridWeight = $ax.MajorGridlines.Format.Line.Weight } } catch { }
+              try { $axis.line = $ax.Format.Line.Visible; if ($ax.Format.Line.Visible) { $axis.lineColor = Hex $ax.Format.Line.ForeColor.RGB } } catch { }
+              try { $axis.reversed = $ax.ReversePlotOrder } catch { }
+              try { if ($ax.HasTitle) { $axis.title = $ax.AxisTitle.Text } } catch { }
+              [void]$axes.Add($axis)
+            }
+          }
+          $entry.axes = $axes
+          try { $entry.areaFill = Hex $ch.ChartArea.Format.Fill.ForeColor.RGB; $entry.areaLine = $ch.ChartArea.Format.Line.Visible; if ($ch.ChartArea.Format.Line.Visible) { $entry.areaLineColor = Hex $ch.ChartArea.Format.Line.ForeColor.RGB } } catch { }
+          try { $entry.font = $ch.ChartArea.Font.Name; $entry.fontSize = $ch.ChartArea.Font.Size } catch { }
+          $list = New-Object System.Collections.ArrayList
+          foreach ($series in $ch.SeriesCollection()) {
+            $item = [ordered]@{ name = $series.Name; type = $series.ChartType; group = $series.AxisGroup; formula = $series.Formula }
+            try { $item.values = @($series.Values) } catch { }
+            try { $item.categories = @($series.XValues | ForEach-Object { [string]$_ }) } catch { }
+            try { $item.fill = Hex $series.Format.Fill.ForeColor.RGB } catch { }
+            try { $item.line = Hex $series.Format.Line.ForeColor.RGB; $item.lineWeight = $series.Format.Line.Weight } catch { }
+            try { $item.marker = $series.MarkerStyle; $item.markerSize = $series.MarkerSize } catch { }
+            try { $item.labels = $series.HasDataLabels } catch { }
+            [void]$list.Add($item)
+          }
+          $entry.series = $list
+          [void]$charts.Add($entry)
+        }
+        $sheet.charts = $charts
         [void]$book.sheets.Add($sheet)
       }
       $wb.Worksheets.Item(1).Activate()
@@ -250,6 +344,18 @@ try {
           $sheet.picture = "$name.$($ws.Name).png"
           $sheet.pictureRange = $range.Address($false, $false)
         } catch { $sheet.pictureError = $_.Exception.Message }
+        $i = 0
+        foreach ($co in $ws.ChartObjects()) {
+          $i++
+          $file = "$name.$($ws.Name).chart$i.png"
+          try {
+            $win = $wb.Windows.Item(1)
+            $win.ScrollRow = [math]::Max(1, $co.TopLeftCell.Row)
+            $win.ScrollColumn = [math]::Max(1, $co.TopLeftCell.Column)
+            [void]$co.Chart.Export((Join-Path $Corpus $file))
+            $sheet.charts[$i - 1].picture = $file
+          } catch { $sheet.charts[$i - 1].pictureError = $_.Exception.Message }
+        }
       }
       $wb.Close($false)
       $xl.ScreenUpdating = $false
