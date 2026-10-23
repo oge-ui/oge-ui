@@ -74,9 +74,25 @@ function run(command, argv, cwd, encoding) {
 }
 
 // ── the packages ────────────────────────────────────────────────────────────
-const packages = publishablePackages({ requireDist: true }).filter(
-  (pkg) => pkg.layout === 'apf' || pkg.layout === 'rollup',
-);
+// the ones the Nx target builds first (its dependsOn: the Angular and
+// framework-free projects) — the React packages' dist need not exist
+const platformOf = (pkg) =>
+  JSON.parse(readFileSync(join(ROOT, pkg.root, 'project.json'), 'utf8')).tags ??
+  [];
+const packages = publishablePackages()
+  .filter((pkg) =>
+    platformOf(pkg).some(
+      (tag) => tag === 'platform:angular' || tag === 'platform:agnostic',
+    ),
+  )
+  .map((pkg) => {
+    if (!pkg.manifest)
+      fail(
+        `${pkg.name}: ${pkg.dist} is missing — build it first (npx nx run ${pkg.project}:build)`,
+      );
+    return pkg;
+  })
+  .filter((pkg) => pkg.layout === 'apf' || pkg.layout === 'rollup');
 const angularPackages = packages.filter((pkg) => pkg.layout === 'apf');
 
 // every Angular peer range must start at the version `floor` builds with
