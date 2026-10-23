@@ -926,6 +926,53 @@ describe('OgeSpreadsheetCore — outline', () => {
     expect(striped()).toEqual([18]);
   });
 
+  it('draws a sparkline without the rows a group hides, again after it closes', () => {
+    const workbook = grouped();
+    const sheet = workbook.sheets[0];
+    for (let row = 12; row <= 19; row++) sheet.setValue(row, 7, row);
+    sheet.sparklineGroups.push({
+      type: 'line',
+      sparklines: [{ cell: { row: 20, col: 0 }, ref: 'H13:H20' }],
+      colors: {},
+      lineWeight: 0.75,
+      markers: false,
+      high: false,
+      low: false,
+      first: false,
+      last: false,
+      negative: false,
+      displayXAxis: false,
+      displayHidden: false,
+      displayEmptyCellsAs: 'gap',
+      minAxisType: 'individual',
+      maxAxisType: 'individual',
+      rightToLeft: false,
+    });
+    const c = core(workbook);
+    const points = () =>
+      c
+        .paint({ top: 20, left: 0, bottom: 20, right: 0 })
+        .find((cell) => cell.sparkline)?.sparkline?.values;
+    expect(points()).toEqual([12, 13, 14, 15, 16, 17, 18, 19]);
+    c.toggleOutlineGroup('rows', 0);
+    expect(points()).toEqual([18, 19]);
+    // the panes are hidden from assistive tech: the cell names its sparkline
+    expect(c.describeCell(20, 0)).toBe('A21, blank, line sparkline of H13:H20');
+    sheet.sparklineGroups.push({
+      ...sheet.sparklineGroups[0],
+      type: 'stacked',
+      sparklines: [
+        { cell: { row: 20, col: 0 }, ref: "'Other sheet'!B1:B9" },
+        { cell: { row: 21, col: 0 } },
+      ],
+    });
+    // a later group's sparkline in the same cell is the one drawn; one without data none
+    expect(c.describeCell(20, 0)).toBe(
+      "A21, blank, win/loss sparkline of 'Other sheet'!B1:B9",
+    );
+    expect(c.describeCell(21, 0)).toBe('A22, blank');
+  });
+
   it('shows a level from its button', () => {
     const c = core(grouped());
     expect(c.showOutlineLevel('rows', 2)).toBe(true);

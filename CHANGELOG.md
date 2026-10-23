@@ -66,6 +66,16 @@ are versioned independently, which is the case here.
   filter buttons and the resize handle — laid under each cell's own formatting
   as Excel lays them. Checked against Excel on 81 tables: every cell's fill and
   font and every pixel of the 3,157 lines between their cells.
+- **Sparklines, pixel for pixel:** the line, column and win/loss sparklines a
+  sheet carries are drawn in their cells — merged ones across the merge —
+  over the fill and under the text, from data on any sheet: markers and the
+  high, low, first, last and negative points in the group's colours, the
+  axis, empty cells as gaps, zeros or joined, hidden data left out or shown,
+  individual, group and custom axis ends, date axes, right-to-left groups and
+  sheets. Read off Excel's screen on 1,699 corpus sparklines at 75–150% zoom,
+  1,694 match pixel for pixel and the other five land a pixel apart on
+  half-pixel ties. Screen readers hear a sparkline cell's kind and data. A
+  "Sparklines" sample joins the docs.
 - **Tints exactly as Excel paints them:** theme colours lighter or darker by a
   tint now match Excel to the bit (190 of 190 measured), not within 2/255.
 - **Outline symbols:** grouped rows and columns show Excel's brackets, plus

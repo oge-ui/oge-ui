@@ -261,6 +261,15 @@ added to or departed from the plan above.
    corrected a P0 rule: tints are Excel's integer HLS arithmetic, not the
    specification's floating-point formula, which was a step off in a quarter
    of the colours.
+9. **Sparklines move from P4 into P1b, drawn by the engine** (2026-10-23).
+   They are cell content, and a workbook with them showed empty cells. Like
+   charts (7), they follow Excel's rules rather than `@oge-ui/charts`'
+   sparkline: a plot inset by 2 and 4 px of zoom, an axis end moved a hair
+   under 1/99 of the span, half-pixel rules that differ by direction, columns
+   that touch under a 2 px gap, markers that step with the line weight — read
+   off Excel's screen, 1,694 of 1,699 corpus sparklines pixel-exact. The
+   `extension-not-shown` issue code, which only ever meant sparklines, is gone
+   before the first release.
 
 ## Consequences
 

@@ -16,6 +16,7 @@ import {
 } from '../../src/testing/xlsx-fixture';
 import { NUMBER_FORMAT_CASES } from './number-format-cases';
 import { box, corpusStyleSheet, solid, type CorpusXf } from './style-sheet';
+import { sparklinesWorkbook } from './sparkline-sources';
 import { tablesWorkbook } from './table-sources';
 
 const out = process.argv[2];
@@ -1384,5 +1385,8 @@ function png(
 
 // tables: custom and built-in table styles, cells' own formatting (table-sources.ts)
 write('tables.xlsx', tablesWorkbook());
+
+// sparklines: every part in its own colour, read off the screen (sparkline-sources.ts)
+write('sparklines.xlsx', sparklinesWorkbook());
 
 console.log(`corpus sources written to ${out}`);

@@ -30,6 +30,11 @@ import type {
   OgeConditionalValue,
   OgeDataValidation,
 } from '../model/sheet-features';
+import type {
+  OgeSparkline,
+  OgeSparklineAxisScale,
+  OgeSparklineColors,
+} from '../model/sparkline';
 import type { OgeSheetView, OgeWorksheet } from '../model/worksheet';
 import { ogeXmlLocalName, parseOgeXml } from '../xml/xml';
 import { ogeConditionalRuleSupported } from '../paint/conditional';
@@ -64,6 +69,18 @@ export interface OgeSheetReadContext {
 }
 
 /** Elements read into the model; anything else at the top level is passed through. */
+/** A sparkline group's colour elements (`x14:color*`), by part. */
+const SPARKLINE_COLORS = [
+  ['series', 'colorSeries'],
+  ['negative', 'colorNegative'],
+  ['axis', 'colorAxis'],
+  ['markers', 'colorMarkers'],
+  ['first', 'colorFirst'],
+  ['last', 'colorLast'],
+  ['high', 'colorHigh'],
+  ['low', 'colorLow'],
+] as const;
+
 const MODELLED = new Set([
   'sheetPr',
   'dimension',
@@ -543,7 +560,9 @@ export function readOgeWorksheet(
   function readTopLevel(local: string, source: string): void {
     if (!MODELLED.has(local)) {
       sheet.passthrough.push({ name: local, xml: source });
-      noteUnshown(local, source);
+      // the extensions stay as written; the sparklines among them are also read
+      if (local === 'extLst') readSparklines(parseOgeXmlTree(source));
+      noteUnshown(local);
       return;
     }
     const node = parseOgeXmlTree(source);
@@ -668,15 +687,13 @@ export function readOgeWorksheet(
     }
   }
 
-  function noteUnshown(local: string, source: string): void {
-    // drawings and tables are read by the workbook reader, which knows the parts
+  function noteUnshown(local: string): void {
+    // drawings and tables are read by the workbook reader, which knows the
+    // parts. Excel 2010's extensions (extLst) refine rules the model already
+    // shows — data bar gradients, list validations on other sheets — or are
+    // sparklines, which readSparklines reads
     if (local === 'picture') issues.add('drawing-not-shown', where());
-    else if (local === 'extLst') {
-      // Excel 2010 extensions refine rules the model already shows (data bar
-      // gradients, list validations on other sheets); sparklines are new content
-      if (/sparklineGroup/.test(source))
-        issues.add('extension-not-shown', where());
-    } else if (
+    else if (
       local === 'oleObjects' ||
       local === 'controls' ||
       local === 'AlternateContent'
@@ -827,6 +844,70 @@ export function readOgeWorksheet(
         ...(style ? { style } : {}),
       });
     }
+  }
+
+  /** Excel 2010's sparkline groups (`extLst` → `ext` → `x14:sparklineGroups`). */
+  function readSparklines(node: OgeXmlNode): void {
+    for (const ext of ogeXmlChildren(node, 'ext'))
+      for (const groups of ogeXmlChildren(ext, 'sparklineGroups'))
+        for (const group of ogeXmlChildren(groups, 'sparklineGroup')) {
+          const sparklines: OgeSparkline[] = [];
+          const list = ogeXmlChild(group, 'sparklines');
+          for (const item of ogeXmlChildren(list, 'sparkline')) {
+            const at = parseOgeRangeAddress(
+              ogeXmlChild(item, 'sqref')?.text.trim() ?? '',
+            );
+            if (!at) continue;
+            const ref = ogeXmlChild(item, 'f')?.text.trim();
+            sparklines.push({
+              cell: { row: at.top, col: at.left },
+              ...(ref ? { ref } : {}),
+            });
+          }
+          if (!sparklines.length) continue;
+          const a = group.attributes;
+          const colors: {
+            -readonly [P in keyof OgeSparklineColors]: OgeSparklineColors[P];
+          } = {};
+          for (const [part, name] of SPARKLINE_COLORS) {
+            const color = readOgeColor(ogeXmlChild(group, name));
+            if (color) colors[part] = color;
+          }
+          const scale = (value: string | undefined): OgeSparklineAxisScale =>
+            value === 'group' || value === 'custom' ? value : 'individual';
+          const empty = a['displayEmptyCellsAs'];
+          const manualMin = ogeXmlNumber(a['manualMin']);
+          const manualMax = ogeXmlNumber(a['manualMax']);
+          // the group's own `xm:f` is the date range of a date axis
+          const dateRef = ogeXmlBool(a['dateAxis'], false)
+            ? ogeXmlChild(group, 'f')?.text.trim()
+            : undefined;
+          sheet.sparklineGroups.push({
+            type:
+              a['type'] === 'column' || a['type'] === 'stacked'
+                ? a['type']
+                : 'line',
+            sparklines,
+            colors,
+            lineWeight: ogeXmlNumber(a['lineWeight']) ?? 0.75,
+            markers: ogeXmlBool(a['markers'], false),
+            high: ogeXmlBool(a['high'], false),
+            low: ogeXmlBool(a['low'], false),
+            first: ogeXmlBool(a['first'], false),
+            last: ogeXmlBool(a['last'], false),
+            negative: ogeXmlBool(a['negative'], false),
+            displayXAxis: ogeXmlBool(a['displayXAxis'], false),
+            displayHidden: ogeXmlBool(a['displayHidden'], false),
+            displayEmptyCellsAs:
+              empty === 'gap' || empty === 'span' ? empty : 'zero',
+            minAxisType: scale(a['minAxisType']),
+            maxAxisType: scale(a['maxAxisType']),
+            ...(manualMin !== undefined ? { manualMin } : {}),
+            ...(manualMax !== undefined ? { manualMax } : {}),
+            rightToLeft: ogeXmlBool(a['rightToLeft'], false),
+            ...(dateRef ? { dateRef } : {}),
+          });
+        }
   }
 
   function readHyperlinks(node: OgeXmlNode): void {

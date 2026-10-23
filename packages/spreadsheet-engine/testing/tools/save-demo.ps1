@@ -1,7 +1,8 @@
 <#
-  Has Excel open the docs' "Tables" sample (built by table-demo.ts) and save
-  it, so the sample the site offers is Excel-written. No Excel option is
-  changed. Usage: powershell -File table-demo.ps1 -Source <built.xlsx> -Out <tables.xlsx>
+  Has Excel open a docs sample built from SpreadsheetML (table-demo.ts,
+  sparkline-demo.ts) and save it, so the sample the site offers is
+  Excel-written. No Excel option is changed.
+  Usage: powershell -File save-demo.ps1 -Source <built.xlsx> -Out <sample.xlsx>
 #>
 param(
   [Parameter(Mandatory = $true)][string]$Source,

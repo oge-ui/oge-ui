@@ -1716,7 +1716,6 @@ export const tr: OgeLocalePack = {
       'table-style-not-shown':
         'Bilinmeyen stildeki tablolar biçimsiz gösterilir',
       'pivot-style-not-shown': 'PivotTable stilleri henüz gösterilmiyor',
-      'extension-not-shown': 'Mini grafikler henüz gösterilmiyor',
       'conditional-format-needs-formulas':
         'Formül içeren koşullu biçimlendirmeler henüz uygulanmıyor',
       'threaded-comments-as-notes':
@@ -1754,6 +1753,8 @@ export const tr: OgeLocalePack = {
     hasLink: '{target} bağlantısı, açmak için Alt+Enter',
     mergedCell: 'birleştirilmiş {range}',
     hasFormula: 'formül {formula}',
+    hasSparkline:
+      '{range} için {type, select, column {sütun mini grafiği} stacked {kazanç/kayıp mini grafiği} other {çizgi mini grafiği}}',
     selectionAnnouncement: '{range} seçildi, {cells, plural, other {# hücre}}',
     sheetAnnouncement: '{name} sayfası, {index} / {total}',
     notePopupLabel: 'Not',

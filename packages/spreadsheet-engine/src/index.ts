@@ -187,6 +187,15 @@ export type {
 } from './lib/model/chart';
 
 export type {
+  OgeSparkline,
+  OgeSparklineAxisScale,
+  OgeSparklineColors,
+  OgeSparklineEmptyCells,
+  OgeSparklineGroup,
+  OgeSparklineType,
+} from './lib/model/sparkline';
+
+export type {
   OgeTable,
   OgeTableColumn,
   OgeTableStyle,
@@ -290,11 +299,25 @@ export {
   type OgeConditionalPainter,
   type OgePaintCell,
   type OgePaintWindowOptions,
+  type OgeSparklinePainter,
   type OgeTableCellStyle,
   type OgeTablePainter,
 } from './lib/paint/paint-window';
 
 export { OgeTableFormatter } from './lib/paint/table-format';
+
+export {
+  ogeDrawSparkline,
+  ogeSparklineAxis,
+  type OgeSparklineDrawing,
+  type OgeSparklineMarker,
+  type OgeSparklinePaintColors,
+  type OgeSparklineRect,
+  type OgeSparklineSpec,
+  type OgeSparklineValue,
+} from './lib/paint/sparkline';
+
+export { OgeSparklineFormatter } from './lib/paint/sparkline-format';
 
 export {
   OgeConditionalFormatter,

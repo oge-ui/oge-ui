@@ -60,6 +60,8 @@ export interface OgeSpreadsheetMessages {
   readonly mergedCell: string;
   /** The cell's formula: `{formula}`. */
   readonly hasFormula: string;
+  /** The cell's sparkline: its `{type}` (`line`, `column`, or `stacked` for win/loss) and its data `{range}`. */
+  readonly hasSparkline: string;
   /** A range selection: `{range}`, `{cells}`. */
   readonly selectionAnnouncement: string;
   /** A sheet switch: `{name}`, `{index}` of `{total}` visible sheets. */
@@ -133,7 +135,6 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
     'picture-format-not-shown': 'EMF/WMF pictures cannot be shown',
     'table-style-not-shown': 'Tables with an unknown style show unformatted',
     'pivot-style-not-shown': 'Pivot table styles are not shown yet',
-    'extension-not-shown': 'Sparklines are not shown yet',
     'conditional-format-needs-formulas':
       'Conditional formats with formulas are not applied yet',
     'threaded-comments-as-notes': 'Threaded comments show as notes',
@@ -168,6 +169,8 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
   hasLink: 'Link to {target}, Alt+Enter to open',
   mergedCell: 'merged {range}',
   hasFormula: 'formula {formula}',
+  hasSparkline:
+    '{type, select, column {column sparkline} stacked {win/loss sparkline} other {line sparkline}} of {range}',
   selectionAnnouncement:
     '{range} selected, {cells, plural, one {# cell} other {# cells}}',
   sheetAnnouncement: 'Sheet {name}, {index} of {total}',

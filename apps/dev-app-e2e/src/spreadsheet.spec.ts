@@ -7,7 +7,8 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  * with `?framework=react`, in the React `<OgeSpreadsheet>` — the same engine,
  * markup and stylesheet — and both pass the same suite: the saved view
  * (frozen panes, tabs, the active cell), Excel's keyboard and status bar,
- * find, pictures, charts, tables, the API page and axe in both themes.
+ * find, pictures, charts, tables, sparklines, the API page and axe in both
+ * themes.
  */
 const LAYERS = [
   { name: 'Angular', query: '', host: '' },
@@ -166,6 +167,47 @@ for (const layer of LAYERS) {
       await expect(
         host.locator('.oge-spreadsheet-text', { hasText: 'Total' }),
       ).toBeVisible();
+      const results = await new AxeBuilder({ page })
+        .include('.oge-spreadsheet')
+        .disableRules(['color-contrast'])
+        .analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+    });
+
+    test('draws sparklines in their cells: lines with their marked points, columns, win/loss', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      await page
+        .locator(BASIC)
+        .getByRole('button', { name: 'Sparklines' })
+        .click();
+      await expect(host.locator('.oge-spreadsheet-tab')).toHaveText(
+        ['Sales', 'Growth'],
+        { timeout: 30_000 },
+      );
+      // five regions and the total: a trend line and the months as columns each
+      const sparklines = host.locator('svg.oge-spreadsheet-sparkline');
+      await expect(sparklines).toHaveCount(12);
+      // the trends: a line each; North's best and weakest months marked over it
+      const lines = host.locator(
+        'svg.oge-spreadsheet-sparkline:has(path[stroke])',
+      );
+      await expect(lines).toHaveCount(6);
+      await expect(lines.first().locator('path:not([stroke])')).toHaveCount(2);
+      // the months: crisp columns, the best one in its own colour
+      const columns = host.locator(
+        'svg.oge-spreadsheet-sparkline:not(:has(path[stroke]))',
+      );
+      await expect(columns).toHaveCount(6);
+      await expect(
+        columns.first().locator('path[shape-rendering="crispEdges"]'),
+      ).toHaveCount(2);
+      // in the frozen columns beside the names
+      await expect(lines.first()).toBeVisible();
+      await host.locator('.oge-spreadsheet-tab', { hasText: 'Growth' }).click();
+      // win/loss and columns around an axis, for each region
+      await expect(sparklines).toHaveCount(10);
       const results = await new AxeBuilder({ page })
         .include('.oge-spreadsheet')
         .disableRules(['color-contrast'])

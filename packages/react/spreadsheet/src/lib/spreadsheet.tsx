@@ -31,6 +31,7 @@ import {
   ogeScrollEdges,
   ogeSliderToZoom,
   ogeZoomToSlider,
+  type OgeChartPathMark,
   type OgeCss,
   type OgeFindOptions,
   type OgeGridPane,
@@ -178,6 +179,24 @@ function HeaderMarks({ marks }: { marks: readonly OgeHeaderMark[] }) {
   );
 }
 
+/** SVG paths as the engine draws them: a chart's or a sparkline's. */
+function paths(marks: readonly OgeChartPathMark[]) {
+  return marks.map((mark, i) => (
+    <path
+      key={i}
+      d={mark.d}
+      fill={mark.fill ?? 'none'}
+      fillOpacity={mark.fillOpacity}
+      stroke={mark.stroke}
+      strokeWidth={mark.strokeWidth}
+      strokeDasharray={mark.dash}
+      strokeLinejoin={mark.round ? 'round' : undefined}
+      strokeLinecap={mark.round ? 'round' : undefined}
+      shapeRendering={mark.crisp ? 'crispEdges' : undefined}
+    />
+  ));
+}
+
 /** A chart, as the engine draws it (`ogeChartView`): plain SVG paths and texts. */
 function PaneChart({ chart }: { chart: OgePaneChart }) {
   const { view } = chart;
@@ -188,20 +207,7 @@ function PaneChart({ chart }: { chart: OgePaneChart }) {
       width={view.width}
       height={view.height}
     >
-      {view.paths.map((mark, i) => (
-        <path
-          key={i}
-          d={mark.d}
-          fill={mark.fill ?? 'none'}
-          fillOpacity={mark.fillOpacity}
-          stroke={mark.stroke}
-          strokeWidth={mark.strokeWidth}
-          strokeDasharray={mark.dash}
-          strokeLinejoin={mark.round ? 'round' : undefined}
-          strokeLinecap={mark.round ? 'round' : undefined}
-          shapeRendering={mark.crisp ? 'crispEdges' : undefined}
-        />
-      ))}
+      {paths(view.paths)}
       {view.texts.map((mark, i) => (
         <text
           key={i}
@@ -218,7 +224,7 @@ function PaneChart({ chart }: { chart: OgePaneChart }) {
   );
 }
 
-/** A pane: gridlines, fills, data bars, text, borders, marks, the selection, pictures and charts. */
+/** A pane: gridlines, fills, data bars and sparklines, text, borders, marks, the selection, pictures and charts. */
 function Pane({ item }: { item: OgeGridPane }) {
   const { pane, selection: s } = item;
   return (
@@ -252,6 +258,14 @@ function Pane({ item }: { item: OgeGridPane }) {
               className="oge-spreadsheet-data-bar"
               style={css(mark.style)}
             />
+          ) : mark.kind === 'sparkline' ? (
+            <svg
+              key={mark.key}
+              className="oge-spreadsheet-sparkline"
+              style={css(mark.style)}
+            >
+              {paths(mark.paths ?? [])}
+            </svg>
           ) : null,
         )}
         {pane.texts.map((cell) => (
@@ -284,7 +298,9 @@ function Pane({ item }: { item: OgeGridPane }) {
           </svg>
         ) : null}
         {pane.marks.map((mark) =>
-          mark.kind === 'dataBar' ? null : <Mark key={mark.key} mark={mark} />,
+          mark.kind === 'dataBar' || mark.kind === 'sparkline' ? null : (
+            <Mark key={mark.key} mark={mark} />
+          ),
         )}
         {s.overlay ? (
           <svg

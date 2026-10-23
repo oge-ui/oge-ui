@@ -9,9 +9,11 @@ import {
   ogePaintWindow,
   ogeTextMargin,
   type OgePaintCell,
+  type OgeSparklinePainter,
 } from './paint-window';
 import { OgeStyleResolver } from './resolve-style';
 import { OgeSheetLayout } from './sheet-layout';
+import type { OgeSparklineSpec } from './sparkline';
 import { OgeTableFormatter } from './table-format';
 
 /** Every character 7 px wide — widths are easy to reason about. */
@@ -501,6 +503,64 @@ describe('ogePaintWindow — tables', () => {
     expect(find(cells, 1, 0)).toMatchObject({
       fill: { color: '#D9D9D9' },
       font: { italic: true },
+    });
+  });
+});
+
+describe('ogePaintWindow — sparklines', () => {
+  /** The painter's spec, by identity: the window passes it on as it is. */
+  const SPEC = { type: 'line' } as OgeSparklineSpec;
+  const painter = (at: readonly [number, number][]): OgeSparklinePainter => ({
+    at: (row, col) =>
+      at.some(([r, c]) => r === row && c === col) ? SPEC : undefined,
+    columns: (row) => at.filter(([r]) => r === row).map(([, c]) => c),
+  });
+  const paintSparklines = (
+    workbook: OgeWorkbook,
+    sparklines: OgeSparklinePainter,
+  ) => {
+    const sheet = workbook.sheets[0];
+    const resolver = new OgeStyleResolver(workbook);
+    const layout = new OgeSheetLayout(sheet, resolver, { measurer: fixed });
+    return ogePaintWindow(
+      sheet,
+      layout,
+      resolver,
+      { top: 0, left: 0, bottom: 20, right: 10 },
+      {
+        measurer: fixed,
+        locale: OGE_EN_US_FORMAT_LOCALE,
+        dateSystem: '1900',
+        sparklines,
+      },
+    );
+  };
+
+  it('paints the cells with a sparkline, empty or not, inside the window', () => {
+    const cells = paintSparklines(
+      book([[2, 2, 'x']]),
+      painter([
+        [1, 1],
+        [2, 2],
+        [1, 15],
+      ]),
+    );
+    expect(find(cells, 1, 1)?.sparkline).toBe(SPEC);
+    // the text stays, drawn over it
+    expect(find(cells, 2, 2)).toMatchObject({ sparkline: SPEC });
+    expect(find(cells, 2, 2)?.display?.text).toBe('x');
+    expect(find(cells, 1, 15)).toBeUndefined();
+    expect(cells).toHaveLength(2);
+  });
+
+  it('draws a merged cell’s sparkline across the merge', () => {
+    const workbook = createOgeWorkbook();
+    workbook.sheets[0].addMerge({ top: 4, left: 1, bottom: 5, right: 2 });
+    const cells = paintSparklines(workbook, painter([[4, 1]]));
+    expect(find(cells, 4, 1)).toMatchObject({
+      sparkline: SPEC,
+      width: 128,
+      height: 40,
     });
   });
 });

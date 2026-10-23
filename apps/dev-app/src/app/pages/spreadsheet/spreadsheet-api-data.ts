@@ -77,6 +77,12 @@ export const SPREADSHEET_TYPE_BLOCKS: NonNullable<ApiSections['types']> = [
           'An Excel table on a sheet (<code>sheet.tables</code>): its <code>range</code>, header and totals rows, <code>columns</code>, filter buttons (<code>autoFilter</code>) and <code>style</code> — a built-in name such as <code>TableStyleMedium2</code> with its first-column, last-column and stripe options. The viewer formats tables as Excel does: all 60 built-in styles (<code>ogeBuiltinTableStyle</code>) and the workbook&#39;s own (<code>workbook.tableStyles</code>), under each cell&#39;s own formatting, with the header&#39;s filter buttons and the resize handle.',
       },
       {
+        name: 'OgeSparklineGroup',
+        type: 'interface',
+        description:
+          'A group of sparklines on a sheet (<code>sheet.sparklineGroups</code>, read from Excel 2010&#39;s <code>extLst</code>): its <code>type</code> (<code>line</code>, <code>column</code> or <code>stacked</code> win/loss), <code>sparklines</code> (each a <code>cell</code> and its data <code>ref</code>), <code>colors</code>, <code>lineWeight</code>, the marked points (<code>markers</code>, <code>high</code>, <code>low</code>, <code>first</code>, <code>last</code>, <code>negative</code>), <code>displayXAxis</code>, <code>displayHidden</code>, <code>displayEmptyCellsAs</code>, axis ends (<code>minAxisType</code> / <code>maxAxisType</code>, <code>manualMin</code> / <code>manualMax</code>), <code>rightToLeft</code> and a date axis (<code>dateRef</code>). The viewer draws them in their cells pixel for pixel as Excel does.',
+      },
+      {
         name: 'OgeWorkbook',
         type: 'class',
         description:

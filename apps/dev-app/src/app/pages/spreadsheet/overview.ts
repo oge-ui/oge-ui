@@ -33,6 +33,7 @@ const SAMPLES = [
   { file: 'pictures.xlsx', label: 'Pictures' },
   { file: 'charts.xlsx', label: 'Charts' },
   { file: 'tables.xlsx', label: 'Tables' },
+  { file: 'sparklines.xlsx', label: 'Sparklines' },
 ] as const;
 
 @Component({

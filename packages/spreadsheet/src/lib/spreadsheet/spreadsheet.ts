@@ -271,6 +271,25 @@ let nextId = 0;
                         class="oge-spreadsheet-data-bar"
                         [style]="mark.style"
                       ></div>
+                    } @else if (mark.kind === 'sparkline') {
+                      <svg
+                        class="oge-spreadsheet-sparkline"
+                        [style]="mark.style"
+                      >
+                        @for (path of mark.paths; track $index) {
+                          <path
+                            [attr.d]="path.d"
+                            [attr.fill]="path.fill ?? 'none'"
+                            [attr.stroke]="path.stroke ?? null"
+                            [attr.stroke-width]="path.strokeWidth ?? null"
+                            [attr.stroke-linejoin]="path.round ? 'round' : null"
+                            [attr.stroke-linecap]="path.round ? 'round' : null"
+                            [attr.shape-rendering]="
+                              path.crisp ? 'crispEdges' : null
+                            "
+                          />
+                        }
+                      </svg>
                     }
                   }
                   @for (cell of pane.texts; track cell.key) {

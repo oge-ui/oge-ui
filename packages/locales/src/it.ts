@@ -1755,7 +1755,6 @@ export const it: OgeLocalePack = {
         'Le tabelle con uno stile sconosciuto appaiono senza formattazione',
       'pivot-style-not-shown':
         'Gli stili tabella pivot non sono ancora visualizzati',
-      'extension-not-shown': 'I grafici sparkline non sono ancora visualizzati',
       'conditional-format-needs-formulas':
         'La formattazione condizionale basata su formule non è ancora applicata',
       'threaded-comments-as-notes': 'I commenti in thread appaiono come note',
@@ -1793,6 +1792,8 @@ export const it: OgeLocalePack = {
     hasLink: 'Collegamento a {target}, Alt+Invio per aprirlo',
     mergedCell: 'celle unite {range}',
     hasFormula: 'formula {formula}',
+    hasSparkline:
+      '{type, select, column {grafico sparkline a istogramma} stacked {grafico sparkline positivi/negativi} other {grafico sparkline a linee}} di {range}',
     selectionAnnouncement:
       'Intervallo {range} selezionato, {cells, plural, one {# cella} other {# celle}}',
     sheetAnnouncement: 'Foglio {name}, {index} di {total}',

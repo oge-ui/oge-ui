@@ -44,8 +44,6 @@ export type OgeImportIssueCode =
   | 'table-style-not-shown'
   /** Pivot table styling is kept but not shown yet. */
   | 'pivot-style-not-shown'
-  /** Sparklines, extended data bars and other `extLst` formatting are kept but not shown. */
-  | 'extension-not-shown'
   /** Conditional-format rules that need the formula engine (P3) are kept but not applied. */
   | 'conditional-format-needs-formulas'
   /** Threaded comments are shown as notes (their legacy copy). */
@@ -96,7 +94,6 @@ const SEVERITY: Readonly<Record<OgeImportIssueCode, OgeImportIssueSeverity>> = {
   'picture-format-not-shown': 'warning',
   'table-style-not-shown': 'warning',
   'pivot-style-not-shown': 'info',
-  'extension-not-shown': 'info',
   'conditional-format-needs-formulas': 'info',
   'threaded-comments-as-notes': 'info',
   'split-pane-ignored': 'info',

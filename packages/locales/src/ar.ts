@@ -1738,7 +1738,6 @@ export const ar: OgeLocalePack = {
       'picture-format-not-shown': 'لا يمكن عرض صور EMF/WMF',
       'table-style-not-shown': 'تظهر الجداول ذات النمط غير المعروف بلا تنسيق',
       'pivot-style-not-shown': 'لا تُعرض أنماط PivotTable بعد',
-      'extension-not-shown': 'لا تُعرض خطوط المؤشرات بعد',
       'conditional-format-needs-formulas':
         'لا يُطبَّق التنسيق الشرطي القائم على الصيغ بعد',
       'threaded-comments-as-notes': 'تُعرض التعليقات المترابطة كملاحظات',
@@ -1774,6 +1773,8 @@ export const ar: OgeLocalePack = {
     hasLink: 'ارتباط إلى {target}، اضغط Alt+Enter لفتحه',
     mergedCell: 'مدمجة ضمن {range}',
     hasFormula: 'الصيغة {formula}',
+    hasSparkline:
+      '{type, select, column {خط مؤشر من نوع عمود} stacked {خط مؤشر من نوع ربح/خسارة} other {خط مؤشر من نوع خط}} للبيانات {range}',
     selectionAnnouncement:
       'تم تحديد {range}، {cells, plural, zero {لا توجد خلايا} one {خلية واحدة} two {خليتان} few {# خلايا} many {# خلية} other {# خلية}}',
     sheetAnnouncement: 'الورقة {name}، {index} من {total}',

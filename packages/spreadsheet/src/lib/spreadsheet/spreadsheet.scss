@@ -303,6 +303,7 @@
   .oge-spreadsheet-underline,
   .oge-spreadsheet-clip,
   .oge-spreadsheet-data-bar,
+  .oge-spreadsheet-sparkline,
   .oge-spreadsheet-note-mark,
   .oge-spreadsheet-table-handle,
   .oge-spreadsheet-icon,
@@ -403,6 +404,12 @@
       max-width: none;
       user-select: none;
     }
+  }
+
+  // ── sparklines: the engine draws them inside their cell as Excel does
+  // (`sparkline.ts`), in the file's colours under any theme
+  .oge-spreadsheet-sparkline {
+    overflow: hidden;
   }
 
   // ── charts: the engine lays them out and colours them as Excel does

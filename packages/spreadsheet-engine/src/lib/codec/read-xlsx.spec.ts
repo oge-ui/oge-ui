@@ -681,9 +681,89 @@ describe('readOgeXlsx — sheets', () => {
     expect(opaque.map(([path]) => path)).not.toContain('xl/styles.xml');
     expect(codes(issues).sort()).toEqual([
       'drawing-not-shown',
-      'extension-not-shown',
       'table-style-not-shown',
     ]);
+  });
+
+  it('reads sparkline groups from the sheet’s extensions, which stay as written', () => {
+    const sparkline = (f: string | null, at: string) =>
+      `<x14:sparkline>${f === null ? '' : `<xm:f>${f}</xm:f>`}<xm:sqref>${at}</xm:sqref></x14:sparkline>`;
+    const { workbook, issues } = read(
+      sheet(
+        '<sheetData><row r="1"><c r="B1"><v>1</v></c><c r="C1"><v>2</v></c></row></sheetData>' +
+          '<extLst><ext uri="{05C60535-1F16-4fd2-B633-F4F36F0B64E0}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">' +
+          '<x14:sparklineGroups xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
+          '<x14:sparklineGroup displayEmptyCellsAs="gap" markers="1"><x14:colorSeries theme="4" tint="-0.5"/><x14:colorNegative rgb="FFFF0000"/>' +
+          `<x14:sparklines>${sparkline('Sheet1!B1:C1', 'A1')}${sparkline(null, 'A2')}${sparkline('B1:C1', '??')}</x14:sparklines></x14:sparklineGroup>` +
+          '<x14:sparklineGroup type="column" lineWeight="2.25" high="1" low="1" first="1" last="1" negative="1" displayXAxis="1" displayHidden="1" displayEmptyCellsAs="span" minAxisType="custom" manualMin="-1" maxAxisType="group" rightToLeft="1" dateAxis="1">' +
+          `<xm:f>Sheet1!B2:C2</xm:f><x14:sparklines>${sparkline('Sheet1!B1:C1', 'D4')}</x14:sparklines></x14:sparklineGroup>` +
+          `<x14:sparklineGroup type="bogus" displayEmptyCellsAs="bogus" minAxisType="bogus"><x14:sparklines>${sparkline('B1:C1', 'E5')}</x14:sparklines></x14:sparklineGroup>` +
+          '<x14:sparklineGroup type="stacked"><x14:sparklines/></x14:sparklineGroup>' +
+          '</x14:sparklineGroups></ext><ext uri="{78C0D931-6437-407d-A8EE-F0AAD7539E65}"><x14:conditionalFormattings/></ext></extLst>',
+      ),
+    );
+    const flags = {
+      lineWeight: 0.75,
+      markers: false,
+      high: false,
+      low: false,
+      first: false,
+      last: false,
+      negative: false,
+      displayXAxis: false,
+      displayHidden: false,
+      displayEmptyCellsAs: 'zero',
+      minAxisType: 'individual',
+      maxAxisType: 'individual',
+      rightToLeft: false,
+    };
+    const s = workbook.sheets[0];
+    expect(s.sparklineGroups).toEqual([
+      {
+        ...flags,
+        type: 'line',
+        // a sparkline without data still has its cell; one without a cell is dropped
+        sparklines: [
+          { cell: { row: 0, col: 0 }, ref: 'Sheet1!B1:C1' },
+          { cell: { row: 1, col: 0 } },
+        ],
+        colors: {
+          series: { theme: 4, tint: -0.5 },
+          negative: { rgb: 'FFFF0000' },
+        },
+        markers: true,
+        displayEmptyCellsAs: 'gap',
+      },
+      {
+        type: 'column',
+        sparklines: [{ cell: { row: 3, col: 3 }, ref: 'Sheet1!B1:C1' }],
+        colors: {},
+        lineWeight: 2.25,
+        markers: false,
+        high: true,
+        low: true,
+        first: true,
+        last: true,
+        negative: true,
+        displayXAxis: true,
+        displayHidden: true,
+        displayEmptyCellsAs: 'span',
+        minAxisType: 'custom',
+        maxAxisType: 'group',
+        manualMin: -1,
+        rightToLeft: true,
+        dateRef: 'Sheet1!B2:C2',
+      },
+      {
+        ...flags,
+        type: 'line',
+        sparklines: [{ cell: { row: 4, col: 4 }, ref: 'B1:C1' }],
+        colors: {},
+      },
+    ]);
+    // the extensions are kept for saving, and nothing is reported
+    expect(s.passthrough.map((p) => p.name)).toContain('extLst');
+    expect(codes(issues)).toEqual([]);
   });
 
   it('reads notes and which ones are pinned open', () => {

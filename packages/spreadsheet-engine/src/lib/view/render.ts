@@ -5,10 +5,10 @@
  * objects of camelCase CSS properties with string values, which Angular's
  * `[style]` and React's `style` both take as they are.
  *
- * Layers, bottom to top: gridlines, fills, text, borders, marks (data bars,
- * icons, note markers, AutoFilter buttons), then the selection and pictures.
- * Text paints above every fill, so text spilling over an empty neighbour
- * that has a fill shows on it, as in Excel.
+ * Layers, bottom to top: gridlines, fills, data bars and sparklines, text,
+ * borders, the other marks (icons, note markers, AutoFilter buttons), then
+ * the selection and pictures. Text paints above every fill, so text
+ * spilling over an empty neighbour that has a fill shows on it, as in Excel.
  */
 import {
   OGE_SHEET_MAX_COLUMNS,
@@ -27,6 +27,8 @@ import {
 import type { OgePaintCell } from '../paint/paint-window';
 import type { OgePaintFont } from '../paint/resolve-style';
 import type { OgeZoomedAxes } from '../paint/sheet-layout';
+import { ogeDrawSparkline, type OgeSparklineDrawing } from '../paint/sparkline';
+import type { OgeChartPathMark } from './chart-view';
 import type { OgeSheetSelection } from './navigation';
 import type { OgeIndexSpan } from './viewport';
 
@@ -75,7 +77,13 @@ export interface OgeRenderText {
 export interface OgeRenderMark {
   readonly key: string;
   readonly kind:
-    'note' | 'filter' | 'icon' | 'dataBar' | 'underline' | 'tableHandle';
+    | 'note'
+    | 'filter'
+    | 'icon'
+    | 'dataBar'
+    | 'sparkline'
+    | 'underline'
+    | 'tableHandle';
   readonly row: number;
   readonly col: number;
   /** The mark's box. */
@@ -89,6 +97,8 @@ export interface OgeRenderMark {
   readonly filtered?: boolean;
   /** `icon`: the icon set and the icon's index (0 = lowest). */
   readonly icon?: { readonly set: string; readonly index: number };
+  /** `sparkline`: its shapes in its box (the cell's), in paint order. */
+  readonly paths?: readonly OgeChartPathMark[];
 }
 
 /** What a pane draws. */
@@ -283,6 +293,31 @@ export function ogeRenderPane(input: OgeRenderPaneInput): OgeRenderPane {
         },
       });
     }
+    if (cell.sparkline) {
+      const drawing = ogeDrawSparkline(
+        cell.sparkline,
+        cell.width,
+        cell.height,
+        input.zoom,
+      );
+      // a right-to-left sheet's panes are mirrored, its sparklines are not:
+      // Excel draws them as on a left-to-right sheet, from the cell's inside
+      // edge (measured), so they are drawn mirrored here
+      const paths = ogeSparklinePaths(
+        input.sheet.view.rightToLeft
+          ? mirrorSparkline(drawing, cell.width - 1)
+          : drawing,
+      );
+      if (paths.length)
+        marks.push({
+          key: `${id}:sparkline`,
+          kind: 'sparkline',
+          row: cell.row,
+          col: cell.col,
+          style: box(x, y, cell.width, cell.height),
+          paths,
+        });
+    }
     if (cell.icon) {
       const size = Math.max(8, Math.round(16 * scale));
       marks.push({
@@ -387,6 +422,64 @@ export function ogeRenderPane(input: OgeRenderPaneInput): OgeRenderPane {
     borders: ogeBorderStrokes(cells, pane),
     marks,
   };
+}
+
+const r2 = (value: number) => Math.round(value * 100) / 100;
+
+/** A drawing mirrored about x = at / 2. */
+function mirrorSparkline(
+  drawing: OgeSparklineDrawing,
+  at: number,
+): OgeSparklineDrawing {
+  const { axis } = drawing;
+  return {
+    ...drawing,
+    bars: drawing.bars.map((bar) => ({
+      ...bar,
+      x0: at - bar.x1,
+      x1: at - bar.x0,
+    })),
+    axis: axis ? { ...axis, x0: at - axis.x1, x1: at - axis.x0 } : null,
+    lines: drawing.lines.map((line) => line.map(([x, y]) => [at - x, y])),
+    markers: drawing.markers.map((m) => ({ ...m, cx: at - m.cx })),
+  };
+}
+
+/**
+ * A sparkline's shapes as SVG paths, in paint order: the bars (one path per
+ * colour, on whole pixels), the axis, the line's runs, the markers.
+ */
+export function ogeSparklinePaths(
+  drawing: OgeSparklineDrawing,
+): OgeChartPathMark[] {
+  const out: OgeChartPathMark[] = [];
+  const bars = new Map<string, string>();
+  for (const bar of drawing.bars)
+    bars.set(
+      bar.color,
+      `${bars.get(bar.color) ?? ''}M${bar.x0} ${bar.y0}H${bar.x1}V${bar.y1}H${bar.x0}Z`,
+    );
+  for (const [fill, d] of bars) out.push({ d, fill, crisp: true });
+  const axis = drawing.axis;
+  // an odd-width axis ends on half pixels, which Excel paints half: not crisp
+  if (axis)
+    out.push({
+      d: `M${axis.x0} ${axis.y0}H${axis.x1}V${axis.y1}H${axis.x0}Z`,
+      fill: axis.color,
+    });
+  for (const line of drawing.lines)
+    out.push({
+      d: line.map(([x, y], i) => `${i ? 'L' : 'M'}${r2(x)} ${r2(y)}`).join(''),
+      stroke: drawing.lineColor,
+      strokeWidth: drawing.lineWidth,
+      round: true,
+    });
+  for (const { cx, cy, d, color } of drawing.markers)
+    out.push({
+      d: `M${cx - d} ${cy}L${cx} ${cy - d}L${cx + d} ${cy}L${cx} ${cy + d}Z`,
+      fill: color,
+    });
+  return out;
 }
 
 function renderText(

@@ -1753,7 +1753,6 @@ export const ru: OgeLocalePack = {
       'table-style-not-shown':
         'Таблицы с неизвестным стилем отображаются без форматирования',
       'pivot-style-not-shown': 'Стили сводных таблиц пока не отображаются',
-      'extension-not-shown': 'Спарклайны пока не отображаются',
       'conditional-format-needs-formulas':
         'Условное форматирование на основе формул пока не применяется',
       'threaded-comments-as-notes':
@@ -1791,6 +1790,8 @@ export const ru: OgeLocalePack = {
     hasLink: 'Гиперссылка на {target}, Alt+Enter — открыть',
     mergedCell: 'объединённые ячейки {range}',
     hasFormula: 'формула {formula}',
+    hasSparkline:
+      '{type, select, column {спарклайн-гистограмма} stacked {спарклайн выигрышей/проигрышей} other {спарклайн-график}} по {range}',
     selectionAnnouncement:
       'Выделен диапазон {range}, {cells, plural, one {# ячейка} few {# ячейки} many {# ячеек} other {# ячейки}}',
     sheetAnnouncement: 'Лист «{name}», {index} из {total}',

@@ -27,6 +27,7 @@ const SAMPLES = [
   { file: 'pictures.xlsx', label: 'Pictures' },
   { file: 'charts.xlsx', label: 'Charts' },
   { file: 'tables.xlsx', label: 'Tables' },
+  { file: 'sparklines.xlsx', label: 'Sparklines' },
 ] as const;
 
 const BUTTON = 'rounded border px-2 py-1 text-sm';

@@ -1746,7 +1746,6 @@ export const ptBR: OgeLocalePack = {
         'Tabelas com estilo desconhecido são exibidas sem formatação',
       'pivot-style-not-shown':
         'Estilos de Tabela Dinâmica ainda não são exibidos',
-      'extension-not-shown': 'Minigráficos ainda não são exibidos',
       'conditional-format-needs-formulas':
         'A formatação condicional baseada em fórmulas ainda não é aplicada',
       'threaded-comments-as-notes':
@@ -1786,6 +1785,8 @@ export const ptBR: OgeLocalePack = {
     hasLink: 'Link para {target}, Alt+Enter para abrir',
     mergedCell: 'células mescladas {range}',
     hasFormula: 'fórmula {formula}',
+    hasSparkline:
+      '{type, select, column {minigráfico de coluna} stacked {minigráfico de ganhos/perdas} other {minigráfico de linha}} de {range}',
     selectionAnnouncement:
       'Intervalo {range} selecionado, {cells, plural, one {# célula} other {# células}}',
     sheetAnnouncement: 'Planilha {name}, {index} de {total}',

@@ -1730,7 +1730,6 @@ export const he: OgeLocalePack = {
       'picture-format-not-shown': 'לא ניתן להציג תמונות EMF/WMF',
       'table-style-not-shown': 'טבלאות בסגנון לא ידוע מוצגות ללא עיצוב',
       'pivot-style-not-shown': 'סגנונות PivotTable עדיין לא מוצגים',
-      'extension-not-shown': 'תרשימים זעירים עדיין לא מוצגים',
       'conditional-format-needs-formulas':
         'עיצוב מותנה המבוסס על נוסחאות עדיין לא מוחל',
       'threaded-comments-as-notes': 'תגובות משורשרות מוצגות כהערות',
@@ -1766,6 +1765,8 @@ export const he: OgeLocalePack = {
     hasLink: 'קישור אל {target}, יש להקיש Alt+Enter כדי לפתוח אותו',
     mergedCell: 'ממוזג בטווח {range}',
     hasFormula: 'נוסחה {formula}',
+    hasSparkline:
+      '{type, select, column {תרשים זעיר מסוג עמודה} stacked {תרשים זעיר מסוג רווח/הפסד} other {תרשים זעיר מסוג קו}} של {range}',
     selectionAnnouncement:
       'נבחר {range}, {cells, plural, one {תא אחד} two {שני תאים} other {# תאים}}',
     sheetAnnouncement: 'גיליון {name}, {index} מתוך {total}',

@@ -1752,7 +1752,6 @@ export const de: OgeLocalePack = {
         'Tabellen mit unbekannter Formatvorlage erscheinen unformatiert',
       'pivot-style-not-shown':
         'PivotTable-Formatvorlagen werden noch nicht angezeigt',
-      'extension-not-shown': 'Sparklines werden noch nicht angezeigt',
       'conditional-format-needs-formulas':
         'Bedingte Formatierungen mit Formeln werden noch nicht angewendet',
       'threaded-comments-as-notes':
@@ -1790,6 +1789,8 @@ export const de: OgeLocalePack = {
     hasLink: 'Link zu {target}, Alt+Eingabetaste zum Öffnen',
     mergedCell: 'verbundene Zellen {range}',
     hasFormula: 'Formel {formula}',
+    hasSparkline:
+      '{type, select, column {Säulen-Sparkline} stacked {Gewinn/Verlust-Sparkline} other {Linien-Sparkline}} aus {range}',
     selectionAnnouncement:
       '{range} ausgewählt, {cells, plural, one {# Zelle} other {# Zellen}}',
     sheetAnnouncement: 'Blatt {name}, {index} von {total}',

@@ -1766,8 +1766,6 @@ export const fr: OgeLocalePack = {
         'Les tableaux au style inconnu s’affichent sans mise en forme',
       'pivot-style-not-shown':
         'Les styles de tableau croisé dynamique ne sont pas encore affichés',
-      'extension-not-shown':
-        'Les graphiques sparkline ne sont pas encore affichés',
       'conditional-format-needs-formulas':
         'Les mises en forme conditionnelles avec formules ne sont pas encore appliquées',
       'threaded-comments-as-notes':
@@ -1808,6 +1806,8 @@ export const fr: OgeLocalePack = {
     hasLink: 'Lien vers {target}, Alt+Entrée pour l’ouvrir',
     mergedCell: 'cellules fusionnées {range}',
     hasFormula: 'formule {formula}',
+    hasSparkline:
+      '{type, select, column {graphique sparkline en histogramme} stacked {graphique sparkline positif/négatif} other {graphique sparkline en courbe}} de {range}',
     selectionAnnouncement:
       'Plage {range} sélectionnée, {cells, plural, one {# cellule} other {# cellules}}',
     sheetAnnouncement: 'Feuille {name}, {index} sur {total}',

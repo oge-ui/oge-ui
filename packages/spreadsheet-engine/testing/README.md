@@ -30,13 +30,23 @@ node packages/spreadsheet-engine/testing/tools/run.mjs --only metrics,corpus
 `run.mjs` bundles and writes the source workbooks, runs `capture.ps1` (Excel
 opens, measures and re-saves them; sections: `environment`, `numfmt`, `fit`,
 `borders`, `metrics`, `corpus`) and `gdi-advances.ps1`, then regenerates
-`src/lib/metrics/font-metrics-data.ts` with `font-metrics.mjs`.
+`src/lib/metrics/font-metrics-data.ts` with `font-metrics.mjs`. It also reads
+what COM cannot report off Excel's screen: the tables' lines
+(`table-lines.ps1` → `corpus/tables.lines.json`) and every sparkline's
+pixels (`sparkline-capture.ps1` renders each sheet of `sparklines.xlsx`, its
+window captures kept in a temporary folder; `sparkline-boxes.mjs` writes the
+runs of the corpus's pure part colours in each cell to
+`corpus/sparklines.boxes.json`).
 
 Two scripts measure Excel's own window and run on their own:
 
 - `chrome-capture.ps1 -Out <folder>` — gridlines, the selection, headers, the
   freeze line, the sheet tabs. Their numbers live in the render layers' tokens
   and in the engine's render model; the screenshots stay in `<folder>`.
+- `table-demo.ts` and `sparkline-demo.ts` build the docs' "Tables" and
+  "Sparklines" samples; `save-demo.ps1 -Source <built> -Out <sample>` has
+  Excel save them into `apps/dev-app/public/demo/spreadsheet/`, so the site
+  offers Excel-written files.
 - `header-capture.ps1` — row-header width and column-header height per Normal
   font, zoom and row count, into `captures/headers.json`.
 

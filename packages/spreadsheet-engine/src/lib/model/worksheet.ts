@@ -23,6 +23,7 @@ import {
 import { isOgeCellEmpty, type OgeCell, type OgeCellValue } from './cell';
 import type { OgeColor } from '../color/color';
 import type { OgeSheetChart } from './chart';
+import type { OgeSparklineGroup } from './sparkline';
 import type { OgeTable } from './table';
 import {
   OGE_DEFAULT_BASE_COLUMN_WIDTH,
@@ -234,6 +235,8 @@ export class OgeWorksheet {
   charts: OgeSheetChart[] = [];
   /** Excel tables on the sheet (their parts stay opaque). */
   tables: OgeTable[] = [];
+  /** Sparkline groups (read from the sheet's `extLst`, which is also kept as written). */
+  sparklineGroups: OgeSparklineGroup[] = [];
   /**
    * Relationships of the sheet part to parts the engine keeps opaque
    * (drawings, tables, printer settings) — what passed-through elements' `r:id`s mean.

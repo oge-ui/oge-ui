@@ -1,7 +1,7 @@
 /**
  * The docs' "Tables" sample: Excel tables in built-in styles over everyday
  * data — sales with a totals row, an inventory, teams, and a gallery of
- * styles. Built from raw SpreadsheetML; `table-demo.ps1` has Excel open and
+ * styles. Built from raw SpreadsheetML; `save-demo.ps1` has Excel open and
  * save it into apps/dev-app/public/demo/spreadsheet/tables.xlsx, so the
  * sample is Excel-written. Corpus tooling only.
  *

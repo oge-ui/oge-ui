@@ -49,12 +49,14 @@ import {
 import type { OgeSheetChart } from '../model/chart';
 import type { OgeHyperlink } from '../model/sheet-features';
 import type { OgeWorkbook } from '../model/workbook';
+import type { OgeSparklineType } from '../model/sparkline';
 import type { OgeWorksheet } from '../model/worksheet';
 import {
   OGE_ESTIMATING_MEASURER,
   type OgeTextMeasurer,
 } from '../paint/cell-text';
 import { OgeConditionalFormatter } from '../paint/conditional';
+import { OgeSparklineFormatter } from '../paint/sparkline-format';
 import { OgeTableFormatter } from '../paint/table-format';
 import { ogePaintWindow, type OgePaintCell } from '../paint/paint-window';
 import {
@@ -316,6 +318,10 @@ export class OgeSpreadsheetCore {
     OgeConditionalFormatter
   >();
   private readonly tableFormatters = new Map<OgeWorksheet, OgeTableFormatter>();
+  private readonly sparklineFormatters = new Map<
+    OgeWorksheet,
+    OgeSparklineFormatter
+  >();
   private readonly arrays = new Map<OgeWorksheet, OgeCell[]>();
   private readonly chartViews = new Map<
     OgeSheetChart,
@@ -559,6 +565,7 @@ export class OgeSpreadsheetCore {
     this.layouts.clear();
     this.formatters.clear();
     this.tableFormatters.clear();
+    this.sparklineFormatters.clear();
     this.arrays.clear();
     this.outlines.clear();
     this.chartViews.clear();
@@ -766,12 +773,18 @@ export class OgeSpreadsheetCore {
       tables = new OgeTableFormatter(workbook, sheet, this.resolver);
       this.tableFormatters.set(sheet, tables);
     }
+    let sparklines = this.sparklineFormatters.get(sheet);
+    if (!sparklines && sheet.sparklineGroups.length) {
+      sparklines = new OgeSparklineFormatter(workbook, sheet, this.resolver);
+      this.sparklineFormatters.set(sheet, sparklines);
+    }
     const cells = ogePaintWindow(sheet, layout, this.resolver, range, {
       measurer: this.measurer,
       locale: this.locale,
       dateSystem: workbook.dateSystem,
       ...(formatter ? { conditional: formatter } : {}),
       ...(tables?.active ? { tables } : {}),
+      ...(sparklines?.active ? { sparklines } : {}),
     });
     return ogeZoomPaint(cells, layout, zoom);
   }
@@ -1464,6 +1477,15 @@ export class OgeSpreadsheetCore {
           range: this.rangeLabel(merge),
         }),
       );
+    // the panes are hidden from assistive tech: a sparkline is named here
+    const sparkline = sparklineAt(sheet, row, col);
+    if (sparkline?.ref)
+      parts.push(
+        this.formatMessage(this.messages.hasSparkline, {
+          type: sparkline.type,
+          range: sparkline.ref,
+        }),
+      );
     const link = sheet.hyperlinkAt(row, col);
     if (link)
       parts.push(
@@ -2079,8 +2101,10 @@ export class OgeSpreadsheetCore {
     ogeApplyOutlineEdit(sheet, axis, edit);
     this.layouts.delete(sheet);
     this.outlines.delete(sheet);
-    // table stripes count the visible rows and columns
+    // table stripes count the visible rows and columns; sparklines leave out
+    // hidden data, on any sheet
     this.tableFormatters.delete(sheet);
+    this.sparklineFormatters.clear();
     this.bump();
   }
 
@@ -2352,6 +2376,20 @@ function sameRange(a: OgeSheetRange, b: OgeSheetRange): boolean {
     a.bottom === b.bottom &&
     a.right === b.right
   );
+}
+
+/** The sparkline drawn in a cell: the last group's that places one there, as the formatter takes it. */
+function sparklineAt(
+  sheet: OgeWorksheet,
+  row: number,
+  col: number,
+): { readonly type: OgeSparklineType; readonly ref?: string } | undefined {
+  let found: { type: OgeSparklineType; ref?: string } | undefined;
+  for (const group of sheet.sparklineGroups)
+    for (const { cell, ref } of group.sparklines)
+      if (cell.row === row && cell.col === col)
+        found = { type: group.type, ref };
+  return found;
 }
 
 /** A reference without `$`, quotes or case, for comparing a name with a selection. */

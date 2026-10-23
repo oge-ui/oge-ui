@@ -1752,7 +1752,6 @@ export const es: OgeLocalePack = {
         'Las tablas con un estilo desconocido se muestran sin formato',
       'pivot-style-not-shown':
         'Los estilos de tabla dinámica aún no se muestran',
-      'extension-not-shown': 'Los minigráficos aún no se muestran',
       'conditional-format-needs-formulas':
         'Los formatos condicionales con fórmulas aún no se aplican',
       'threaded-comments-as-notes':
@@ -1790,6 +1789,8 @@ export const es: OgeLocalePack = {
     hasLink: 'Vínculo a {target}, Alt+Entrar para abrirlo',
     mergedCell: 'celdas combinadas {range}',
     hasFormula: 'fórmula {formula}',
+    hasSparkline:
+      '{type, select, column {minigráfico de columnas} stacked {minigráfico de ganancia o pérdida} other {minigráfico de línea}} de {range}',
     selectionAnnouncement:
       'Rango {range} seleccionado, {cells, plural, one {# celda} other {# celdas}}',
     sheetAnnouncement: 'Hoja {name}, {index} de {total}',

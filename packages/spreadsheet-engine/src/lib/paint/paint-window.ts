@@ -27,6 +27,8 @@
  *   empty neighbours — right of a left-aligned cell, left of a right-aligned
  *   one, both ways when centred — up to the first cell with a value. Numbers
  *   never spill.
+ * - **Sparklines** are drawn in their cell, merged or not, under its text
+ *   (`OgeSparklinePainter`); an empty cell with one paints.
  */
 import type { OgeSheetRange } from '../address/address';
 import { isOgeRichText, type OgeCell } from '../model/cell';
@@ -49,6 +51,7 @@ import type {
   OgeStyleResolver,
 } from './resolve-style';
 import { ogeWrapText, type OgeSheetLayout } from './sheet-layout';
+import type { OgeSparklineSpec } from './sparkline';
 
 /** A cell's conditional-format overrides (from `OgeConditionalPainter`). */
 export interface OgeConditionalPaint {
@@ -109,6 +112,14 @@ export interface OgeTablePainter {
   spans(row: number): readonly (readonly [number, number])[];
 }
 
+/** Supplies sparklines per cell (`OgeSparklineFormatter`). */
+export interface OgeSparklinePainter {
+  /** What the sparkline in a cell draws, or `undefined` when it has none. */
+  at(row: number, col: number): OgeSparklineSpec | undefined;
+  /** The columns of a row that hold a sparkline. */
+  columns(row: number): readonly number[];
+}
+
 /** Options of {@link ogePaintWindow}. */
 export interface OgePaintWindowOptions {
   readonly measurer: OgeTextMeasurer;
@@ -117,6 +128,8 @@ export interface OgePaintWindowOptions {
   readonly conditional?: OgeConditionalPainter;
   /** Table styles; without it tables show unformatted. */
   readonly tables?: OgeTablePainter;
+  /** Sparklines; without it none is drawn. */
+  readonly sparklines?: OgeSparklinePainter;
   /** Columns scanned beyond the window for text spilling into it. Default 32. */
   readonly spillScan?: number;
 }
@@ -174,6 +187,8 @@ export interface OgePaintCell {
   readonly note?: OgeNote;
   readonly dataBar?: OgeConditionalPaint['dataBar'];
   readonly icon?: OgeConditionalPaint['icon'];
+  /** The sparkline drawn in the cell, under its text. */
+  readonly sparkline?: OgeSparklineSpec;
 }
 
 /** Pixels per indent level at a maximum digit width (9 for Calibri 11, measured). */
@@ -363,6 +378,7 @@ export function ogePaintWindow(
     });
     const link = sheet.hyperlinkAt(row, col);
     const note = sheet.getNote(row, col);
+    const sparkline = options.sparklines?.at(row, col);
     if (
       !display &&
       !style.visibleWhenEmpty &&
@@ -370,7 +386,8 @@ export function ogePaintWindow(
       !conditional?.dataBar &&
       !note &&
       !merge &&
-      !table
+      !table &&
+      !sparkline
     )
       return;
 
@@ -561,6 +578,7 @@ export function ogePaintWindow(
       ...(note ? { note } : {}),
       ...(conditional?.dataBar ? { dataBar: conditional.dataBar } : {}),
       ...(conditional?.icon ? { icon: conditional.icon } : {}),
+      ...(sparkline ? { sparkline } : {}),
     });
   };
 
@@ -646,7 +664,7 @@ export function ogePaintWindow(
       Math.max(0, range.left - scan),
       Math.min(cols.count - 1, range.right + scan),
     );
-    // empty cells formatted by their row or column, or inside a table
+    // empty cells formatted by their row or column, inside a table, or with a sparkline
     const candidates = rowStyled(row)
       ? Array.from(
           { length: range.right - range.left + 1 },
@@ -661,6 +679,8 @@ export function ogePaintWindow(
       )
         candidates.push(c);
     }
+    for (const c of options.sparklines?.columns(row) ?? [])
+      if (c >= range.left && c <= range.right) candidates.push(c);
     for (const col of new Set(candidates)) {
       if (seen.has(col) || mergeOf(row, col) || cols.size(col) === 0) continue;
       emit(row, col, undefined, undefined);

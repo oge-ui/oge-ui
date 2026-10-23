@@ -7,6 +7,8 @@ import type { OgeTextMeasurer } from '../paint/cell-text';
 import { ogePaintWindow, type OgePaintCell } from '../paint/paint-window';
 import { OgeStyleResolver } from '../paint/resolve-style';
 import { OgeSheetLayout } from '../paint/sheet-layout';
+import { OgeSparklineFormatter } from '../paint/sparkline-format';
+import type { OgeSparklineGroup } from '../model/sparkline';
 import { ogeCellSelection } from './navigation';
 import {
   ogeFontCss,
@@ -548,5 +550,111 @@ describe('ogeRenderPane — super- and subscript cells', () => {
       style: { verticalAlign: 'super' },
     });
     expect(cell.runs?.[0].style['fontSize']).toBe('9.9px');
+  });
+});
+
+describe('ogeRenderPane — sparklines', () => {
+  /** B2 draws F1:H1 (1, 3, 2) in a 64 × 20 px box; `type` and the sheet's direction vary. */
+  function sparkline(
+    type: OgeSparklineGroup['type'],
+    options: {
+      readonly rightToLeft?: boolean;
+      readonly markers?: boolean;
+    } = {},
+  ) {
+    const workbook = createOgeWorkbook();
+    const sheet = workbook.sheets[0];
+    [1, 3, 2].forEach((v, i) => sheet.setValue(0, 5 + i, v));
+    if (options.rightToLeft) sheet.view = { ...sheet.view, rightToLeft: true };
+    sheet.sparklineGroups.push({
+      type,
+      sparklines: [{ cell: { row: 1, col: 1 }, ref: 'F1:H1' }],
+      colors: { series: { rgb: 'FF0000FF' }, markers: { rgb: 'FFFF00FF' } },
+      lineWeight: 0.75,
+      markers: !!options.markers,
+      high: false,
+      low: false,
+      first: false,
+      last: false,
+      negative: false,
+      displayXAxis: false,
+      displayHidden: false,
+      displayEmptyCellsAs: 'gap',
+      minAxisType: 'individual',
+      maxAxisType: 'individual',
+      rightToLeft: false,
+    });
+    const resolver = new OgeStyleResolver(workbook);
+    const layout = new OgeSheetLayout(sheet, resolver, { measurer: fixed });
+    const cells = ogePaintWindow(
+      sheet,
+      layout,
+      resolver,
+      { top: 0, left: 0, bottom: 4, right: 3 },
+      {
+        measurer: fixed,
+        locale: OGE_EN_US_FORMAT_LOCALE,
+        dateSystem: '1900',
+        sparklines: new OgeSparklineFormatter(workbook, sheet, resolver),
+      },
+    );
+    const pane = ogeRenderPane({
+      key: 'main',
+      sheet,
+      axes: layout.zoomed(100),
+      cells,
+      rows: { first: 0, last: 4 },
+      cols: { first: 0, last: 3 },
+      originX: 0,
+      originY: 0,
+      width: 256,
+      height: 100,
+      showGridLines: true,
+      zoom: 100,
+      runFont: (cell, run) =>
+        resolver.font({ ...cell.font.source, ...run.font }),
+    });
+    return pane.marks.filter((m) => m.kind === 'sparkline');
+  }
+
+  it('draws a sparkline in its cell’s box, columns as one crisp path per colour', () => {
+    const [mark] = sparkline('column');
+    expect(mark).toMatchObject({
+      key: '1:1:sparkline',
+      row: 1,
+      col: 1,
+      style: { left: '64px', top: '20px', width: '64px', height: '20px' },
+    });
+    expect(mark.paths).toEqual([
+      {
+        d: 'M5 15H19V16H5ZM24 4H39V16H24ZM44 10H58V16H44Z',
+        fill: '#0000FF',
+        crisp: true,
+      },
+    ]);
+  });
+
+  it('draws a line through pixel centres with round ends, its markers as diamonds over it', () => {
+    const [mark] = sparkline('line', { markers: true });
+    expect(mark.paths?.[0]).toEqual({
+      // the top point's half-pixel tie rounds toward the middle row
+      d: 'M11.5 15.5L31.5 4.5L51.5 9.5',
+      stroke: '#0000FF',
+      strokeWidth: 1,
+      round: true,
+    });
+    expect(mark.paths?.slice(1).map((p) => [p.d, p.fill])).toEqual([
+      ['M10 16L12 14L14 16L12 18Z', '#FF00FF'],
+      ['M30 4L32 2L34 4L32 6Z', '#FF00FF'],
+      ['M49 10L51 8L53 10L51 12Z', '#FF00FF'],
+    ]);
+  });
+
+  it('mirrors it on a right-to-left sheet, whose mirrored pane shows it as Excel does', () => {
+    const [mark] = sparkline('column', { rightToLeft: true });
+    // about the cell's inside: 63 − x, the gridline staying on the far side
+    expect(mark.paths?.[0].d).toBe(
+      'M44 15H58V16H44ZM24 4H39V16H24ZM5 10H19V16H5Z',
+    );
   });
 });

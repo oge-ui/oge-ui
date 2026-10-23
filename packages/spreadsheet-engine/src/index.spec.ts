@@ -34,6 +34,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'OgeConditionalFormatter',
     'OgeObjectUrls',
     'OgeSheetLayout',
+    'OgeSparklineFormatter',
     'OgeSpreadsheetCore',
     'OgeStyleRegistry',
     'OgeStyleResolver',
@@ -94,6 +95,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeDaysFromCivil',
     'ogeDefaultColumnWidthPixels',
     'ogeDisplayFormula',
+    'ogeDrawSparkline',
     'ogeExpandToMerges',
     'ogeFetchWorkbook',
     'ogeFindAll',
@@ -170,6 +172,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeShiftFormula',
     'ogeSliderToZoom',
     'ogeSpanRange',
+    'ogeSparklineAxis',
     'ogeTabKeyTarget',
     'ogeTableStyleFormats',
     'ogeTextMargin',
@@ -198,7 +201,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
 
   it('exports nothing it does not guard', () => {
     // a new export lands in the list above in the same change
-    expect(Object.keys(engine)).toHaveLength(187);
+    expect(Object.keys(engine)).toHaveLength(190);
   });
 
   it('keeps the internal ZIP and XML layers out of the public surface', () => {

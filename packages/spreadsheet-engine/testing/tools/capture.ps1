@@ -15,7 +15,7 @@ param(
   # comma-separated: environment, numfmt, fit, borders, metrics, corpus; empty = all
   [string]$Only = '',
   # comma-separated corpus workbooks to capture (styles, structure, formulas, dates1904,
-  # pictures, charts, tables); empty = all — the others keep their committed copies
+  # pictures, charts, tables, sparklines); empty = all — the others keep their committed copies
   [string]$Workbooks = ''
 )
 $ErrorActionPreference = 'Stop'
@@ -148,7 +148,7 @@ try {
 
   # ── the corpus workbooks ──
   if (Wants 'corpus') {
-    $books = @('styles', 'structure', 'formulas', 'dates1904', 'pictures', 'charts', 'tables')
+    $books = @('styles', 'structure', 'formulas', 'dates1904', 'pictures', 'charts', 'tables', 'sparklines')
     $chosen = @($Workbooks.Split(',') | Where-Object { $_ })
     if ($chosen.Count -gt 0) { $books = @($books | Where-Object { $chosen -contains $_ }) }
     foreach ($name in $books) {

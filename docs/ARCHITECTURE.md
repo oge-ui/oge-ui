@@ -2322,6 +2322,31 @@ gap)`), and draws the series — bars, lines with Excel's smoothing
   A header row gets the filter buttons of its table's `autoFilter`, the last
   cell Excel's 4 px resize handle (one colour on every style). A table in a
   style nobody defines shows unformatted (`table-style-not-shown`).
+- **Sparklines are drawn by the engine, pixel for pixel as Excel draws them**
+  (P1b, ADR 0005 decision 9). The worksheet reader reads Excel 2010's
+  sparkline groups out of the sheet's `extLst` — kept as written for saving —
+  into `sheet.sparklineGroups`. `OgeSparklineFormatter` reads each
+  sparkline's points from any sheet (not a 3-D reference) as Excel plots
+  them — text 0, TRUE 1, `#N/A` left out and joined, an empty cell a gap, a
+  zero or joined, hidden rows and columns dropped unless the group shows
+  hidden data — with its own, the group's or a custom axis and the group's
+  theme colours. `ogeDrawSparkline` lays it out on Excel's pixel rules: the
+  plot inset 2 and 4 px of zoom, the axis end moved a hair under 1/99 of the
+  span past data that stays off zero, horizontal edges rounded half up and
+  vertical ones half toward the cell's middle row, columns 5/7 of their band
+  until the gap between n evenly spaced ones would drop under 2 px (on a date
+  axis too), line vertices on pixel centres, highlighted markers half a pixel
+  up and left of plain ones, marker sizes stepped by the line weight. All of
+  it is read off Excel's screen (`testing/corpus/sparklines.*`, 1,699
+  sparklines at 75–150%: `sparkline.corpus.spec.ts` matches 1,694 pixel for
+  pixel and lists the five half-pixel ties Excel breaks the other way). A
+  sparkline paints in its cell, a merged one across the merge, over the fill
+  and under the text (`OgePaintCell.sparkline`, a `sparkline` render mark of
+  SVG paths). Excel does not mirror sparklines on a right-to-left sheet, so the
+  render model mirrors their paths about the cell's inside and the mirrored
+  pane shows them as Excel does — a CSS counter-flip would put them a pixel
+  off, against the gridline. The panes are hidden from assistive tech, so the
+  active cell names its sparkline and data (`hasSparkline`).
 - **A tab keeps its width when it turns bold**: the label's `::after` is a
   zero-height bold copy, `content: attr(data-label) / ''` — the empty
   alternative text keeps it out of the tab's name, and no second text node

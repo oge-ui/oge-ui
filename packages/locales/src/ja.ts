@@ -1723,7 +1723,6 @@ export const ja: OgeLocalePack = {
       'table-style-not-shown':
         '不明なスタイルのテーブルは書式なしで表示されます',
       'pivot-style-not-shown': 'ピボットテーブル スタイルはまだ表示されません',
-      'extension-not-shown': 'スパークラインはまだ表示されません',
       'conditional-format-needs-formulas':
         '数式を使用する条件付き書式はまだ適用されません',
       'threaded-comments-as-notes':
@@ -1759,6 +1758,8 @@ export const ja: OgeLocalePack = {
     hasLink: '{target} へのリンク、Alt+Enter キーで開きます',
     mergedCell: '結合セル {range}',
     hasFormula: '数式 {formula}',
+    hasSparkline:
+      '{range} の{type, select, column {縦棒スパークライン} stacked {勝敗スパークライン} other {折れ線スパークライン}}',
     selectionAnnouncement:
       '{range} の {cells, plural, other {# 個のセル}}を選択しました',
     sheetAnnouncement: 'シート {name}、{total} 枚中 {index} 枚目',

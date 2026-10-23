@@ -1,6 +1,7 @@
 // Rebuilds the golden corpus: builds the source workbooks, has Excel open,
-// measure and re-save them (capture.ps1), reads the tables' lines off the
-// screen (table-lines.ps1), then regenerates the font-metrics and built-in
+// measure and re-save them (capture.ps1), reads the tables' lines and the
+// sparklines' pixels off the screen (table-lines.ps1, sparkline-capture.ps1
+// with sparkline-boxes.mjs), then regenerates the font-metrics and built-in
 // table-style tables the engine embeds. Windows with Microsoft Excel only.
 //
 //   node packages/spreadsheet-engine/testing/tools/run.mjs [--only metrics,corpus]
@@ -92,6 +93,28 @@ try {
   execFileSync(process.execPath, [join(here, 'table-styles.mjs')], {
     stdio: 'inherit',
   });
+  // the window captures stay in the work folder, which is removed below
+  const pictures = join(work, 'sparklines');
+  execFileSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      join(here, 'sparkline-capture.ps1'),
+      '-Corpus',
+      corpus,
+      '-Pictures',
+      pictures,
+    ],
+    { stdio: 'inherit' },
+  );
+  execFileSync(
+    process.execPath,
+    [join(here, 'sparkline-boxes.mjs'), pictures, corpus],
+    { stdio: 'inherit' },
+  );
 } finally {
   rmSync(work, { recursive: true, force: true });
 }

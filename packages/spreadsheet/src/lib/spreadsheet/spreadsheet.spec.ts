@@ -484,6 +484,46 @@ describe('OgeSpreadsheet', () => {
     ).toBe(true);
   });
 
+  it('draws a sparkline in its cell, under the text layer', async () => {
+    const book = sampleBook();
+    const sheet = book.sheets[0];
+    [1, 3, 2].forEach((v, i) => sheet.setValue(9, i, v));
+    sheet.sparklineGroups.push({
+      type: 'column',
+      sparklines: [{ cell: { row: 10, col: 0 }, ref: 'A10:C10' }],
+      colors: { series: { rgb: 'FF0000FF' } },
+      lineWeight: 0.75,
+      markers: false,
+      high: false,
+      low: false,
+      first: false,
+      last: false,
+      negative: false,
+      displayXAxis: false,
+      displayHidden: false,
+      displayEmptyCellsAs: 'gap',
+      minAxisType: 'individual',
+      maxAxisType: 'individual',
+      rightToLeft: false,
+    });
+    await render();
+    fixture.componentInstance.workbook.set(book);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const svg = host.querySelector('.oge-spreadsheet-sparkline') as Element;
+    const bars = svg.querySelector('path') as Element;
+    expect(bars.getAttribute('fill')).toBe('#0000FF');
+    expect(bars.getAttribute('shape-rendering')).toBe('crispEdges');
+    expect(bars.getAttribute('d')).toMatch(/^M\d+ \d+H/);
+    const layers = [...(svg.parentElement?.children ?? [])];
+    expect(layers.indexOf(svg)).toBeLessThan(
+      layers.findIndex((layer) =>
+        layer.classList.contains('oge-spreadsheet-clip'),
+      ),
+    );
+  });
+
   it('mirrors right-to-left sheets', async () => {
     const book = sampleBook();
     book.sheets[0].view = { ...book.sheets[0].view, rightToLeft: true };

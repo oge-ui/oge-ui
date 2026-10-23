@@ -1681,7 +1681,6 @@ export const zhCN: OgeLocalePack = {
       'picture-format-not-shown': '无法显示 EMF/WMF 图片',
       'table-style-not-shown': '样式未知的表格以无格式显示',
       'pivot-style-not-shown': '数据透视表样式暂不显示',
-      'extension-not-shown': '迷你图暂不显示',
       'conditional-format-needs-formulas': '使用公式的条件格式暂不应用',
       'threaded-comments-as-notes': '线程批注显示为注释',
       'split-pane-ignored': '拆分的窗口以未拆分状态显示',
@@ -1714,6 +1713,8 @@ export const zhCN: OgeLocalePack = {
     hasLink: '指向 {target} 的链接，按 Alt+Enter 键打开',
     mergedCell: '合并单元格 {range}',
     hasFormula: '公式 {formula}',
+    hasSparkline:
+      '{range} 的{type, select, column {柱形迷你图} stacked {盈亏迷你图} other {折线迷你图}}',
     selectionAnnouncement:
       '已选择 {range}，{cells, plural, other {共 # 个单元格}}',
     sheetAnnouncement: '工作表 {name}，第 {index} 张，共 {total} 张',
