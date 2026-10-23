@@ -7,6 +7,21 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Angular 21.2 support — every Angular package
+
+- **The Angular packages run on Angular 21.2 as well as 22 and 23**: peer ranges are
+  `>=21.2.0 <24.0.0` (were `>=22.0.0`). 21.2 is the floor because Signal Forms only gained
+  `FormField` and the `Field` type then, and the forms package — which the grid builds on — uses
+  both.
+- **A new gate proves it on every CI run and before every release**
+  (`npx nx run @oge/source:angular-compat-check`): each package is packed as npm installs it,
+  installed without `--legacy-peer-deps` in a fresh app on Angular 21.2.0 and 21.2.25 with
+  TypeScript 5.9, every component, directive and pipe compiled with strict templates and
+  `skipLibCheck` off, and every family rendered in Chromium without a console error.
+- `OgeDateBox` and `OgeCalendar` no longer declare `implements FormValueControl` — Angular 21
+  types the contract's `min`/`max` as numbers. They still bind through `[formField]` by the
+  contract's member names, now covered by a spec.
+
 ### Spreadsheet — new `@oge-ui/spreadsheet`, `@oge-ui/react-spreadsheet`, `@oge-ui/spreadsheet-engine` (commercial, ADR 0005)
 
 - **An Excel viewer that looks like Excel.** `<oge-spreadsheet [source]="file">` /

@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import { FormField, form } from '@angular/forms/signals';
 import { OgeCalendar } from './calendar';
 
 @Component({
@@ -182,5 +183,37 @@ describe('OgeCalendar', () => {
     expect(
       fixture.nativeElement.querySelector('[aria-current="date"]'),
     ).toBeTruthy();
+  });
+});
+
+describe('OgeCalendar with Signal Forms', () => {
+  it('binds a field by the contract’s member names', async () => {
+    @Component({
+      imports: [OgeCalendar, FormField],
+      template: `<oge-calendar locale="en-US" [formField]="f.day" />`,
+    })
+    class SignalHost {
+      readonly data = signal<{ day: Date | null }>({
+        day: new Date(2026, 7, 15),
+      });
+      readonly f = form(this.data);
+    }
+    const fixture = TestBed.createComponent(SignalHost);
+    await settle(fixture);
+    expect(
+      fixture.nativeElement
+        .querySelector('.oge-calendar-cell-selected')
+        ?.textContent?.trim(),
+    ).toBe('15');
+    const day20 = cells(fixture).find(
+      (cell) =>
+        cell.textContent?.trim() === '20' &&
+        !cell.classList.contains('oge-calendar-cell-other'),
+    );
+    day20?.click();
+    await settle(fixture);
+    expect(fixture.componentInstance.f.day().value()).toEqual(
+      new Date(2026, 7, 20),
+    );
   });
 });

@@ -43,7 +43,7 @@ export interface Competitor {
 }
 
 const OGE_FRAMEWORKS =
-  'Angular 22+ and React 18+ — two native render layers over one framework-free engine';
+  'Angular 21.2+ and React 18+ — two native render layers over one framework-free engine';
 const OGE_ANGULAR =
   'Signal inputs, outputs and models; standalone components; zoneless apps supported';
 const OGE_LICENSE =

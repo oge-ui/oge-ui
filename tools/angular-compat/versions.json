@@ -1,0 +1,8 @@
+{
+  "$comment": "The oldest Angular the packages' peer ranges allow — `floor` is exactly the ranges' lower bound (the check fails otherwise), `latest` that minor's newest patches — with the TypeScript that Angular supports. tools/angular-compat/check.mjs builds and runs the suite on both. Bump `latest` when the minor ships new patches.",
+  "floor": { "angular": "21.2.0", "cli": "21.2.0", "cdk": "21.2.0" },
+  "latest": { "angular": "21.2.25", "cli": "21.2.28", "cdk": "21.2.14" },
+  "typescript": "5.9.3",
+  "rxjs": "7.8.2",
+  "tslib": "2.8.1"
+}

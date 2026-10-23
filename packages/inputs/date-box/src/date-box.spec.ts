@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import { FormField, disabled, form } from '@angular/forms/signals';
 import { OgeDateBox } from './date-box';
 import type { OgeDateBoxType } from './date-box-types';
 
@@ -323,5 +324,42 @@ describe('OgeDateBox timeView columns', () => {
     expect(fixture.componentInstance.value()).toEqual(
       new Date(2026, 7, 6, 14, 45),
     );
+  });
+});
+
+describe('OgeDateBox with Signal Forms', () => {
+  it('binds a field by the contract’s member names', async () => {
+    @Component({
+      imports: [OgeDateBox, FormField],
+      template: `<oge-date-box
+        label="Due"
+        locale="en-US"
+        [formField]="f.due"
+      />`,
+    })
+    class SignalHost {
+      readonly locked = signal(false);
+      readonly data = signal<{ due: Date | null }>({
+        due: new Date(2026, 7, 6),
+      });
+      readonly f = form(this.data, (p) => {
+        disabled(p.due, () => this.locked());
+      });
+    }
+    const fixture = TestBed.createComponent(SignalHost);
+    await settle(fixture);
+    // the field's value shows…
+    expect(inputEl(fixture).value).toBe('8/6/26');
+    // …a commit writes back to it and touches it…
+    type(fixture, '8/9/2026');
+    blur(fixture);
+    await settle(fixture);
+    const field = fixture.componentInstance.f.due();
+    expect(field.value()).toEqual(new Date(2026, 7, 9));
+    expect(field.touched()).toBe(true);
+    // …and the field's disabled state reaches the input
+    fixture.componentInstance.locked.set(true);
+    await settle(fixture);
+    expect(inputEl(fixture).disabled).toBe(true);
   });
 });

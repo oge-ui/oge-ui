@@ -86,6 +86,9 @@ jobs:
       - run: node tools/license-boundary-check.mjs
       - run: node tools/package-check.mjs
       - run: node tools/size-check.mjs
+      # the oldest Angular the peer ranges admit must build and run the suite
+      - run: npx playwright install --with-deps chromium
+      - run: node tools/angular-compat/check.mjs
 
       # pack first and publish the tarball itself, so the bytes on npm are the
       # bytes the SLSA provenance below attests

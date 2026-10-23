@@ -27,7 +27,7 @@
   <a href="https://github.com/oge-ui/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/oge-ui/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/oge-ui/oge-ui"><img src="https://api.securityscorecards.dev/projects/github.com/oge-ui/oge-ui/badge" alt="OpenSSF Scorecard" /></a>
   <a href="#licensing"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial-22d3ee" alt="MIT license with commercial pivot, bpmn, scheduler, gantt, kanban, charts and spreadsheet" /></a>
-  <img src="https://img.shields.io/badge/Angular-22%E2%80%9323-dd0031" alt="Angular 22–23" />
+  <img src="https://img.shields.io/badge/Angular-21.2%E2%80%9323-dd0031" alt="Angular 21.2–23" />
   <img src="https://img.shields.io/badge/React-18%E2%80%9319-087ea4" alt="React 18–19" />
 </p>
 

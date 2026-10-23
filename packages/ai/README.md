@@ -1,6 +1,6 @@
 # @oge-ui/ai
 
-AI components for Angular 22 that work with **your** model — OpenAI,
+AI components for Angular (21.2+) that work with **your** model — OpenAI,
 Azure OpenAI, Anthropic, a local Ollama, or your own backend. No hosted
 service, no extra subscription, no row data leaves the page. Signal-based,
 standalone, MIT.

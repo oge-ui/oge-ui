@@ -38,6 +38,20 @@
       },
       "dependsOn": [{ "projects": ["core", "behavior"], "target": "build" }]
     },
+    "angular-compat-check": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/angular-compat/check.mjs",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": [
+        {
+          "projects": ["tag:platform:angular", "tag:platform:agnostic"],
+          "target": "build"
+        }
+      ]
+    },
     "license-boundary-check": {
       "executor": "nx:run-commands",
       "outputs": [],

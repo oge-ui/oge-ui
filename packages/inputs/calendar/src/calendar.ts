@@ -15,7 +15,6 @@ import {
   output,
   signal,
 } from '@angular/core';
-import type { FormValueControl } from '@angular/forms/signals';
 import {
   addDays,
   addMonths,
@@ -297,10 +296,10 @@ const ZOOM_ORDER: OgeCalendarZoomLevel[] = ['month', 'year', 'decade'];
   `,
   styleUrl: './calendar.scss',
 })
-export class OgeCalendar
-  extends OgeControlBase<Date | null>
-  implements FormValueControl<Date | null>
-{
+// Signal Forms binds a control by the FormValueControl member names. This one
+// does not declare the contract: Angular 21 types its min/max as numbers, 22
+// as the value (a Date here); the spec checks the shape against the current one.
+export class OgeCalendar extends OgeControlBase<Date | null> {
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** The selected day (`selectionMode: 'single'`) — two-way. */

@@ -1,0 +1,29 @@
+{
+  "$comment": "An application as strict as ours, with skipLibCheck off so the oldest supported TypeScript reads every declaration file the packages ship.",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": false,
+    "isolatedModules": true,
+    "experimentalDecorators": false,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "types": []
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "extendedDiagnostics": {
+      "defaultCategory": "error",
+      "checks": { "unusedStandaloneImports": "suppress" }
+    }
+  },
+  "files": ["src/main.ts"]
+}

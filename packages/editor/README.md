@@ -1,6 +1,6 @@
 # @oge-ui/editor
 
-Rich-text editor for Angular 22 — a `contenteditable` editing surface driven
+Rich-text editor for Angular (21.2+) — a `contenteditable` editing surface driven
 by a document model of its own, with a sanitized HTML value. Signal-based,
 standalone, dependency-free, MIT.
 

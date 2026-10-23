@@ -75,7 +75,7 @@ interface ComponentCard {
           component for component and feature for feature, on the same engines
           and stylesheets.
         } @else {
-          Requires Angular 22 or 23.
+          Requires Angular 21.2, 22 or 23.
         }
       </p>
     </div>

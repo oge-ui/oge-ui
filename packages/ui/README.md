@@ -16,7 +16,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/oge-ui"><img src="https://img.shields.io/npm/v/oge-ui?color=6366f1" alt="npm version" /></a>
   <img src="https://img.shields.io/badge/license-MIT-22d3ee" alt="MIT license" />
-  <img src="https://img.shields.io/badge/Angular-%E2%89%A522-dd0031" alt="Angular 22+" />
+  <img src="https://img.shields.io/badge/Angular-%E2%89%A521.2-dd0031" alt="Angular 21.2+" />
 </p>
 
 ---

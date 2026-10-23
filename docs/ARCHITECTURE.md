@@ -6,7 +6,8 @@ New to the codebase? Start here — this page answers most "where does X live
 
 ## Stack
 
-Nx 23 / Angular 22 / TypeScript 6 / npm. Tests: **vitest** (no Jest/Karma). E2e: Playwright + axe.
+Nx 23 / Angular 22 / TypeScript 6 / npm (the published Angular packages also run on Angular 21.2 —
+see `angular-compat-check` under "Packaging gates"). Tests: **vitest** (no Jest/Karma). E2e: Playwright + axe.
 CI (`.github/workflows/ci.yml`): `npx nx run-many -t lint test build typecheck e2e` + `nx format:check`.
 
 ## Packages
@@ -65,7 +66,7 @@ CI (`.github/workflows/ci.yml`): `npx nx run-many -t lint test build typecheck e
 | `dev-app-e2e`        | `apps/dev-app-e2e`            | —                            | Playwright (chromium) + `@axe-core/playwright`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 All component libs are buildable + publishable (ng-packagr via `@nx/angular:package`, APF partial-Ivy),
-`publishConfig.access: public`, Angular `>=22.0.0 <24.0.0` peers, `sideEffects: false`. Versions are
+`publishConfig.access: public`, Angular `>=21.2.0 <24.0.0` peers, `sideEffects: false`. Versions are
 tag-driven (`nx release`); don't hardcode them in docs.
 
 ## Platform layering (Angular + React)
@@ -3258,6 +3259,26 @@ Nx targets build first.
   reports and say why in the PR — documenting a member changes its `(undocumented)` marker too.
   The bundled compiler is older than the workspace's TypeScript and says so; declarations
   are plain enough that it does not matter.
+- `npx nx run @oge/source:angular-compat-check` — the **oldest-Angular gate**
+  (`tools/angular-compat/check.mjs`, own CI job, and the release workflow). Every Angular and engine
+  package is `npm pack`ed and installed — without `--legacy-peer-deps`, so the peer ranges must
+  admit it — in a throwaway app on the peer ranges' lower bound (`floor`, exactly the `>=` version)
+  and on that minor's newest patches (`latest`), pinned in `tools/angular-compat/versions.json` with
+  that Angular's TypeScript (5.9 for 21.2). The app imports every component, directive and pipe of
+  every entry point (generated from the dist declarations; abstract bases skipped), renders
+  `apps/ssr-smoke`'s family hosts plus spreadsheet and AI hosts, builds with strict templates and
+  `skipLibCheck` off (TypeScript reads every shipped `.d.ts`), and runs in Chromium: no console
+  errors, every family's markup present. What it found when Angular 21 support landed:
+  - Angular **21.0** has no `FormField` and 21.0/21.1 no `Field` type in `@angular/forms/signals` —
+    hence the 21.2 floor (one floor for the whole suite: the grid depends on the forms package).
+  - Angular 21's `FormUiControl` types `min`/`max` as numbers, 22's as the control's value. A
+    control whose `min`/`max` are not numbers (`OgeDateBox`, `OgeCalendar`) keeps the
+    `FormValueControl` member names without an `implements` clause; a spec binds it through
+    `[formField]` instead (Signal Forms binds by member names).
+  - The ssr-smoke hosts are only type-checked by `tsc`, not as templates: a host bound
+    `[(selectedKeys)]` to a `signal<readonly unknown[]>` and only this AOT build caught it.
+    Raising the floor (dropping a minor) is a major-only change; bump `floor` and the peer ranges
+    together. `--with angular=…,cli=…,cdk=…` tries other patches without editing the file.
 - Commit messages: `commitlint.config.mjs`, checked on pull requests only.
 
 Exports-map shapes the gates enforce: rollup packages (`core`, `behavior`, `locales`, engines) use

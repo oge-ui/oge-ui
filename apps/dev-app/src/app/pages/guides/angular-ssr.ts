@@ -143,8 +143,8 @@ const SECTIONS = [
     <p>
       The packages make no <code>NgZone</code> assumptions: signal inputs,
       <code>OnPush</code>, and state changes that schedule their own render. An
-      Angular 22 app that does not load <code>zone.js</code> is zoneless with
-      nothing to configure — this site has no <code>zone.js</code>
+      Angular 21 or later app that does not load <code>zone.js</code> is
+      zoneless with nothing to configure — this site has no <code>zone.js</code>
       installed at all.
     </p>
     <app-code-block [code]="zoneless" language="ts" />

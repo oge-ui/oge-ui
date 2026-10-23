@@ -134,7 +134,7 @@ export class GuideBuildToolsPage {
   protected readonly shared = [
     [
       'Peer range',
-      '`@angular/core >=22.0.0 <24.0.0`',
+      '`@angular/core >=21.2.0 <24.0.0`',
       '`react ^18.0.0 || ^19.0.0`',
     ],
     [

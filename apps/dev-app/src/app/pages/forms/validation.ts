@@ -247,7 +247,7 @@ const SECTIONS = [
       <app-demo-card
         [chips]="['metadata()', 'OGE_FORM_LABEL', 'OGE_FORM_GROUP']"
         heading="Schema-carried layout"
-        description="Angular 22's <code>createMetadataKey()</code> lets a schema carry more than validation. Attach a label, a hint, a group, a column span or an editor next to the rules, and <code>&amp;lt;oge-form [fieldTree]&amp;gt;</code> generates the entire layout — no items array, no template children. Angular's own <code>REQUIRED</code>/<code>MIN</code>/<code>MAX</code>/<code>PATTERN</code> metadata already reaches the editors, so none of it is duplicated."
+        description="Signal Forms' <code>createMetadataKey()</code> lets a schema carry more than validation. Attach a label, a hint, a group, a column span or an editor next to the rules, and <code>&amp;lt;oge-form [fieldTree]&amp;gt;</code> generates the entire layout — no items array, no template children. Angular's own <code>REQUIRED</code>/<code>MIN</code>/<code>MAX</code>/<code>PATTERN</code> metadata already reaches the editors, so none of it is duplicated."
         [code]="metadataSnippet"
         language="ts"
       >

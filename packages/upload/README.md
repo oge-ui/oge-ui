@@ -1,6 +1,6 @@
 # @oge-ui/upload
 
-File uploader for Angular 22 — a drop zone, a real file input, and a list of
+File uploader for Angular (21.2+) — a drop zone, a real file input, and a list of
 what was chosen. Signal-based, standalone, MIT.
 
 ```bash

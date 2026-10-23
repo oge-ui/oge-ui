@@ -75,7 +75,7 @@ constructor() {
 }`,
 });
 
-export const ZONELESS = `// main.ts — Angular 22 bootstraps zoneless when zone.js is not loaded;
+export const ZONELESS = `// main.ts — Angular 21 and later bootstrap zoneless when zone.js is not loaded;
 // leave "zone.js" out of the polyfills in angular.json and that is all
 import { bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';

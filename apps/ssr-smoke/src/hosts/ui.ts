@@ -273,7 +273,7 @@ export const TABS: SsrFamily = {
   `,
 })
 class ButtonsHost {
-  protected readonly kind = signal<readonly unknown[]>(['person']);
+  protected readonly kind = signal<readonly string[]>(['person']);
   protected readonly exports = [{ text: 'CSV' }, { text: 'Excel' }];
 }
 

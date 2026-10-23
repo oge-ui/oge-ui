@@ -12,7 +12,6 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type { FormValueControl } from '@angular/forms/signals';
 import { sameDay, startOfDay, toLocalDate } from '@oge-ui/core';
 import {
   OgeDateSegmentCore,
@@ -266,10 +265,10 @@ interface TimeColumn {
   `,
   styleUrl: './date-box.scss',
 })
-export class OgeDateBox
-  extends OgeInputBase<Date | null>
-  implements FormValueControl<Date | null>
-{
+// Signal Forms binds a control by the FormValueControl member names. This one
+// does not declare the contract: Angular 21 types its min/max as numbers, 22
+// as the value (a Date here); the spec checks the shape against the current one.
+export class OgeDateBox extends OgeInputBase<Date | null> {
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly overlayConfig = inject(OGE_OVERLAY_CONFIG);
 

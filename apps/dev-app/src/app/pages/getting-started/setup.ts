@@ -83,8 +83,8 @@ const SECTIONS_REACT = [
         </li>
       } @else {
         <li>
-          <strong>Angular 22 or 23</strong> — components use signal inputs, the
-          new control flow and Signal Forms interop.
+          <strong>Angular 21.2, 22 or 23</strong> — components use signal
+          inputs, the new control flow and Signal Forms interop.
         </li>
         <li>
           <strong>Node.js 22.22+</strong> — the minimum the Angular CLI itself

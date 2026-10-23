@@ -130,10 +130,12 @@ const SECTIONS = [
       </li>
       <li>
         Peer ranges are declared, not implied: Angular packages accept
-        <code>&#64;angular/core &gt;=22.0.0 &lt;24.0.0</code>, React packages
+        <code>&#64;angular/core &gt;=21.2.0 &lt;24.0.0</code>, React packages
         <code>react ^18.0.0 || ^19.0.0</code>. A new framework major is added to
         the range once the suite passes on it; dropping one is a major-only
-        change.
+        change. The oldest Angular in the range is tested on every CI run: each
+        package is packed, installed in a fresh Angular 21.2 app, compiled with
+        strict templates and run in a browser.
       </li>
       <li>
         Browsers: the last two versions of Chrome, Edge, Firefox and Safari,
