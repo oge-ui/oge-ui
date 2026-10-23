@@ -116,6 +116,35 @@ describe('OgeSheetLayout', () => {
     expect(layout.rows.size(5)).toBe(20);
   });
 
+  it('snaps row heights down to whole pixels, as Excel shows them', () => {
+    const workbook = createOgeWorkbook();
+    const sheet = workbook.sheets[0];
+    // heights other tools save off the pixel grid, and the px Excel 2024 shows
+    const measured: [number, number][] = [
+      [0.6, 0],
+      [1.2, 1],
+      [12.6, 16],
+      [13.8, 18],
+      [15.6, 20],
+      [18.6, 24],
+      [33.6, 44],
+      [408.95, 545],
+    ];
+    measured.forEach(([height], row) =>
+      sheet.setRow(row, { height, customHeight: true }),
+    );
+    sheet.format = {
+      ...sheet.format,
+      defaultRowHeight: 12.6,
+      customHeight: true,
+    };
+    const layout = new OgeSheetLayout(sheet, new OgeStyleResolver(workbook));
+    expect(measured.map((_, row) => layout.rows.size(row))).toEqual(
+      measured.map(([, px]) => px),
+    );
+    expect(layout.defaultRowHeight).toBe(16);
+  });
+
   it('wraps by words, breaks long words, keeps line breaks', () => {
     const font = new OgeStyleResolver(createOgeWorkbook()).normalFont;
     const measure = { measure: (text: string) => text.length * 7 };

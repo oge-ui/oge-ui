@@ -39,7 +39,11 @@ import type {
   OgeResolvedStyle,
   OgeStyleResolver,
 } from './resolve-style';
-import { ogeWrapText, type OgeSheetLayout } from './sheet-layout';
+import {
+  ogeRowHeightPixels,
+  ogeWrapText,
+  type OgeSheetLayout,
+} from './sheet-layout';
 
 /** Options of {@link ogeAutofitColumnWidth} and {@link ogeAutofitRowHeight}. */
 export interface OgeAutofitOptions {
@@ -237,7 +241,7 @@ export function ogeAutofitRowHeight(
   options: OgeAutofitOptions,
 ): number {
   const { measurer } = options;
-  const base = Math.round((sheet.format.defaultRowHeight * 4) / 3);
+  const base = ogeRowHeightPixels(sheet.format.defaultRowHeight);
   const normalLine = layout.normalFont.lineHeight;
   const indentStep = ogeIndentPixels(layout.maxDigitWidth);
   let tallest = base;

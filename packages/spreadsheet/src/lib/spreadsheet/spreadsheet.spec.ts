@@ -451,6 +451,181 @@ describe('OgeSpreadsheet', () => {
     expect(viewer.classList).not.toContain('oge-spreadsheet-resize-columns');
   });
 
+  it('sizes a column from its header’s menu and dialog, opened by a right-click or Shift+F10', async () => {
+    await render();
+    grid().getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 360,
+        width: 800,
+        height: 360,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    const menu = () =>
+      host.querySelector('.oge-spreadsheet-header-menu') as HTMLElement | null;
+    const items = () => [
+      ...(menu()?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []),
+    ];
+    // a right-click on B's header selects B and opens its menu there
+    const click = new MouseEvent('contextmenu', {
+      clientX: 120,
+      clientY: 10,
+      button: 2,
+      bubbles: true,
+      cancelable: true,
+    });
+    host
+      .querySelectorAll('.oge-spreadsheet-column-header')[1]
+      .dispatchEvent(click);
+    fixture.detectChanges();
+    expect(click.defaultPrevented).toBe(true);
+    expect(nameBox()).toBe('B1');
+    expect(menu()?.getAttribute('aria-label')).toBe('Column');
+    expect(menu()?.getAttribute('style')).toContain('top: 10px');
+    expect(items().map((item) => item.textContent?.trim())).toEqual([
+      'Column width…',
+      'AutoFit column width',
+      'Hide',
+      'Unhide',
+    ]);
+    // Column width… asks in characters, from B's own width
+    items()[0].click();
+    fixture.detectChanges();
+    expect(menu()).toBeNull();
+    const field = host.querySelector(
+      '[role="dialog"] input',
+    ) as HTMLInputElement;
+    expect(field.value).toBe('8.43');
+    const enter = () => {
+      field.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      fixture.detectChanges();
+    };
+    // a width Excel refuses keeps the dialog open, saying why
+    field.value = '300';
+    enter();
+    expect(host.querySelector('[role="alert"]')?.textContent).toBe(
+      'Enter a width from 0 to 255.',
+    );
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    // 12.5 characters is 93 px, as Excel makes it
+    field.value = '12.5';
+    enter();
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(component().core.layout()?.cols.size(1)).toBe(93);
+    // Shift+F10 on the selected column: the same menu; Hide hides it
+    await key('F10', { shiftKey: true });
+    expect(menu()?.getAttribute('aria-label')).toBe('Column');
+    items()[2].click();
+    fixture.detectChanges();
+    expect(component().core.layout()?.cols.size(1)).toBe(0);
+    // Escape drops the dialog without a change
+    await key('F10', { shiftKey: true });
+    items()[0].click();
+    fixture.detectChanges();
+    (
+      host.querySelector('[role="dialog"] input') as HTMLInputElement
+    ).dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    fixture.detectChanges();
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(component().core.layout()?.cols.size(1)).toBe(0);
+  });
+
+  it('keeps the size dialog modal and leaves a cell’s right-click to the browser', async () => {
+    await render();
+    grid().getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 360,
+        width: 800,
+        height: 360,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    const contextMenu = (target: Element, clientX: number, clientY: number) => {
+      const event = new MouseEvent('contextmenu', {
+        clientX,
+        clientY,
+        button: 2,
+        bubbles: true,
+        cancelable: true,
+      });
+      target.dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+    const menu = () => host.querySelector('.oge-spreadsheet-header-menu');
+    // a cell has no menu of ours: the browser shows its own
+    expect(contextMenu(grid(), 120, 50).defaultPrevented).toBe(false);
+    expect(menu()).toBeNull();
+    // once a header's menu is open, a second contextmenu does not reopen it
+    contextMenu(
+      host.querySelectorAll('.oge-spreadsheet-column-header')[1],
+      120,
+      10,
+    );
+    expect(contextMenu(grid(), 300, 200).defaultPrevented).toBe(true);
+    expect(menu()?.getAttribute('style')).toContain('top: 10px');
+    (menu()?.querySelector('[role="menuitem"]') as HTMLElement).click();
+    fixture.detectChanges();
+    const dialog = host.querySelector('[role="dialog"]') as HTMLElement;
+    const [field, ok, cancel] = [
+      ...dialog.querySelectorAll<HTMLElement>('input, button'),
+    ];
+    const tab = (from: HTMLElement, shiftKey = false) => {
+      from.focus();
+      const event = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+      });
+      from.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+      return host.ownerDocument.activeElement;
+    };
+    // Tab and Shift+Tab go round the dialog's field and buttons
+    expect(tab(field)).toBe(ok);
+    expect(tab(ok)).toBe(cancel);
+    expect(tab(cancel)).toBe(field);
+    expect(tab(field, true)).toBe(cancel);
+    expect(tab(ok, true)).toBe(field);
+    // a press beside the dialog keeps the focus; one on it does not
+    const press = (target: Element) => {
+      const event = new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+      });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(
+      press(host.querySelector('.oge-spreadsheet-dialog-layer') as HTMLElement),
+    ).toBe(true);
+    expect(press(dialog)).toBe(false);
+    cancel.click();
+    fixture.detectChanges();
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+  });
+
   it('shows a note on Shift+F2 and hides it with Escape', async () => {
     await render();
     await key('ArrowDown');

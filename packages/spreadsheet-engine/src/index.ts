@@ -540,6 +540,7 @@ export {
   type OgeResizeGuide,
   type OgeResizeTarget,
   type OgeRevealRequest,
+  type OgeSizeDialog,
   type OgeSpreadsheetCoreOptions,
   type OgeSpreadsheetKeyAction,
   type OgeSpreadsheetKeyInput,

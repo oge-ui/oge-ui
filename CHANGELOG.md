@@ -87,6 +87,14 @@ are versioned independently, which is the case here.
   counted. A protected sheet keeps its sizes unless it allows formatting them.
   The core exposes it all (`resizeColumns`, `resizeRows`, `autofitColumns`,
   `autofitRows`), and every change is announced.
+- **Sizes from the keyboard too:** Shift+F10 (or the menu key) on whole
+  columns or rows — or a right-click on a header — opens the header's menu:
+  Column width… / Row height…, AutoFit, Hide, Unhide. Its dialog takes
+  characters or points and converts them as Excel does (12.5 characters are
+  93 px, 0.5 are 6), keeping a width to Excel's 1/256 of a digit.
+- **Row heights rounded as Excel rounds them:** a height off the pixel grid
+  now shows rounded down, as Excel shows it — 15.6 pt is 20 px, 13.8 pt 18 px
+  (27 heights measured).
 - **Tints exactly as Excel paints them:** theme colours lighter or darker by a
   tint now match Excel to the bit (190 of 190 measured), not within 2/255.
 - **Outline symbols:** grouped rows and columns show Excel's brackets, plus

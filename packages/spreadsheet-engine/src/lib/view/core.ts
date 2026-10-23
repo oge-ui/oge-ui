@@ -60,11 +60,7 @@ import { OgeSparklineFormatter } from '../paint/sparkline-format';
 import { OgeTableFormatter } from '../paint/table-format';
 import { ogeAutofitColumnWidth, ogeAutofitRowHeight } from '../paint/autofit';
 import { ogeColumnPadding } from '../metrics/font-metrics';
-import {
-  ogePixelsToColumnCharacters,
-  ogePixelsToColumnWidth,
-  ogePixelsToPoints,
-} from '../metrics/sheet-metrics';
+import { ogePixelsToPoints } from '../metrics/sheet-metrics';
 import { ogePaintWindow, type OgePaintCell } from '../paint/paint-window';
 import {
   ogePlaceCharts,
@@ -73,7 +69,7 @@ import {
   type OgePaintPicture,
 } from '../paint/pictures';
 import { OgeStyleResolver } from '../paint/resolve-style';
-import { OgeSheetLayout } from '../paint/sheet-layout';
+import { OgeSheetLayout, ogeRowHeightPixels } from '../paint/sheet-layout';
 import { ogeZoomFont, ogeZoomPaint, ogeZoomPictures } from '../paint/zoom';
 import {
   OgeObjectUrls,
@@ -162,7 +158,7 @@ export interface OgeSpreadsheetKeyInput {
  * focus the name box, or follow the active cell's link.
  */
 export type OgeSpreadsheetKeyAction =
-  'none' | 'copy' | 'find' | 'goto' | 'open-link';
+  'none' | 'copy' | 'find' | 'goto' | 'open-link' | 'header-menu';
 
 /** The fields of a pointer event the gestures read (a DOM or React event fits). */
 export interface OgeGridPointerInput {
@@ -219,8 +215,11 @@ export interface OgeSpreadsheetTab {
   readonly ink?: 'dark' | 'light';
 }
 
-/** A popup list of the chrome: every sheet (the strip's), or the defined names (the name box's). */
-export type OgeSpreadsheetMenuKind = 'sheets' | 'names';
+/**
+ * A popup list: every sheet (the strip's), the defined names (the name
+ * box's), or the whole selected columns' or rows' header menu.
+ */
+export type OgeSpreadsheetMenuKind = 'sheets' | 'names' | 'columns' | 'rows';
 
 /** The chrome's popup list. */
 export interface OgeSpreadsheetMenuState {
@@ -228,6 +227,19 @@ export interface OgeSpreadsheetMenuState {
   readonly kind: OgeSpreadsheetMenuKind | null;
   /** The focused item's position in `menuItems()`. */
   readonly focus: number;
+  /** A header menu's place, from the grid's start corner (`insetInlineStart`, `top`). */
+  readonly style?: OgeCss;
+}
+
+/** The column width or row height dialog (`openSizeDialog`), as Excel's asks. */
+export interface OgeSizeDialog {
+  readonly axis: 'rows' | 'columns';
+  /** The columns or rows it sizes. */
+  readonly targets: readonly number[];
+  /** The field's text: the first one's width in characters, or height in points. */
+  readonly value: string;
+  /** The text last tried is not a size: 0–255 characters, 0–409 points. */
+  readonly invalid: boolean;
 }
 
 /** An item of the open popup list. */
@@ -341,6 +353,8 @@ export class OgeSpreadsheetCore {
   readonly resizing: OgeSpreadsheetReactiveCell<
     (OgeResizeTarget & { readonly pixels: number }) | null
   >;
+  /** The column width or row height dialog, while it is open. */
+  readonly sizeDialog: OgeSpreadsheetReactiveCell<OgeSizeDialog | null>;
 
   private readonly catalog: OgeSpreadsheetReactiveCell<OgeSpreadsheetMessages>;
   private locale: OgeFormatLocale;
@@ -388,6 +402,8 @@ export class OgeSpreadsheetCore {
       readonly zoom: number;
     };
   } | null = null;
+  /** The columns or rows the open header menu acts on. */
+  private headerTargets: readonly number[] = [];
   private loading: AbortController | null = null;
   private revealToken = 0;
   private selectAllStage = 0;
@@ -417,6 +433,7 @@ export class OgeSpreadsheetCore {
     this.menu = r.cell<OgeSpreadsheetMenuState>({ kind: null, focus: 0 });
     this.formulaExpanded = r.cell(false);
     this.resizeHover = r.cell<OgeResizeTarget | null>(null);
+    this.sizeDialog = r.cell<OgeSizeDialog | null>(null);
     this.resizing = r.cell<
       (OgeResizeTarget & { readonly pixels: number }) | null
     >(null);
@@ -1554,6 +1571,135 @@ export class OgeSpreadsheetCore {
     return null;
   }
 
+  /**
+   * A right-click on the grid: on a column or row header it selects that
+   * column or row — unless it is selected already, as Excel does — and opens
+   * its header menu at the pointer. `true` when it did (the layer keeps the
+   * browser's own menu away).
+   */
+  contextMenu(
+    panes: OgeViewportPanes,
+    point: OgeGridPointerPoint,
+    header: OgeGridHeaderTarget | null,
+    scroll: OgeScrollPosition,
+  ): boolean {
+    const target = header ?? this.headerAt(panes, point);
+    if (target?.kind !== 'column-header' && target?.kind !== 'row-header')
+      return false;
+    const axis = target.kind === 'column-header' ? 'columns' : 'rows';
+    if (!this.canResize(axis)) return false;
+    const index = target.kind === 'column-header' ? target.col : target.row;
+    if (!this.wholeSelected(axis, index)) this.selectHeader(axis, index);
+    return this.openHeaderMenu(panes, scroll, point);
+  }
+
+  /**
+   * Opens the header menu of the whole selected columns or rows the active
+   * cell is in — Column width…, AutoFit, Hide, Unhide — under the active
+   * cell's header, as Shift+F10 does (`keydown` says `header-menu`), or at
+   * a right-click's `point`. `false` when there is no such selection.
+   */
+  openHeaderMenu(
+    panes: OgeViewportPanes,
+    scroll: OgeScrollPosition,
+    point?: OgeGridPointerPoint,
+  ): boolean {
+    const sheet = this.sheet();
+    const axis = this.wholeAxis();
+    if (!sheet || !axis || !this.canResize(axis)) return false;
+    const active = this.selection().active;
+    const index = axis === 'columns' ? active.col : active.row;
+    this.headerTargets = this.resizeTargets({ axis, index });
+    let x: number;
+    let y: number;
+    if (point) {
+      x = sheet.view.rightToLeft
+        ? point.rect.right - point.clientX
+        : point.clientX - point.rect.left;
+      y = point.clientY - point.rect.top;
+    } else if (axis === 'columns') {
+      // under the active column's header
+      x =
+        panes.axes.cols.offset(index) -
+        (index < panes.frozenColumns
+          ? 0
+          : panes.originX + Math.abs(scroll.scrollLeft) - panes.frozenWidth) +
+        panes.startX;
+      y = panes.startY;
+    } else {
+      x = panes.startX;
+      y =
+        panes.axes.rows.offset(index + 1) -
+        (index < panes.frozenRows
+          ? 0
+          : panes.originY + scroll.scrollTop - panes.frozenHeight) +
+        panes.startY;
+    }
+    this.menu.set({
+      kind: axis,
+      focus: 0,
+      style: {
+        insetInlineStart: `${Math.round(x)}px`,
+        top: `${Math.round(y)}px`,
+      },
+    });
+    return true;
+  }
+
+  /** Which whole selected columns or rows the active cell is in: their header menu's axis. */
+  private wholeAxis(): 'rows' | 'columns' | null {
+    const { active } = this.selection();
+    if (this.wholeSelected('columns', active.col)) return 'columns';
+    if (this.wholeSelected('rows', active.row)) return 'rows';
+    return null;
+  }
+
+  /** Whether a column or row is selected whole. */
+  private wholeSelected(axis: 'rows' | 'columns', index: number): boolean {
+    return this.selection().ranges.some((r) =>
+      axis === 'columns'
+        ? r.top === 0 &&
+          r.bottom === OGE_SHEET_MAX_ROWS - 1 &&
+          index >= r.left &&
+          index <= r.right
+        : r.left === 0 &&
+          r.right === OGE_SHEET_MAX_COLUMNS - 1 &&
+          index >= r.top &&
+          index <= r.bottom,
+    );
+  }
+
+  /** Selects a column or row as a click on its header does: the band's first visible cell active. */
+  private selectHeader(axis: 'rows' | 'columns', index: number): void {
+    const sheet = this.sheet();
+    const layout = this.layout(sheet);
+    if (!sheet) return;
+    if (axis === 'columns')
+      this.selectColumns(
+        index,
+        index,
+        'replace',
+        layout
+          ? ogeOwnerCell(sheet, {
+              row: layout.rows.firstVisibleFrom(0),
+              col: index,
+            })
+          : undefined,
+      );
+    else
+      this.selectRows(
+        index,
+        index,
+        'replace',
+        layout
+          ? ogeOwnerCell(sheet, {
+              row: index,
+              col: layout.cols.firstVisibleFrom(0),
+            })
+          : undefined,
+      );
+  }
+
   /** The row or column header under a point, found by where it is. */
   private headerAt(
     panes: OgeViewportPanes,
@@ -1965,6 +2111,15 @@ export class OgeSpreadsheetCore {
       this.drag = null;
       this.resizing.set(null);
       return 'none';
+    }
+    // Shift+F10 or the menu key on whole columns or rows: their header's
+    // menu (the layer opens it where it belongs, `openHeaderMenu`)
+    if (
+      (key === 'F10' && shift && !ctrl && !event.altKey) ||
+      key === 'ContextMenu'
+    ) {
+      const axis = this.wholeAxis();
+      return axis && this.canResize(axis) ? 'header-menu' : null;
     }
     const selection = this.selection();
     // Shift extends from the anchor's opposite corner: track the moving end
@@ -2405,7 +2560,7 @@ export class OgeSpreadsheetCore {
       0,
       Math.min(this.maxSize('columns'), Math.round(pixels)),
     );
-    const width = px ? ogePixelsToColumnWidth(px, layout.maxDigitWidth) : 0;
+    const width = px ? columnWidthOf(px, layout.maxDigitWidth) : 0;
     let changed = false;
     for (const [first, last] of runs(cols)) {
       // span by span, keeping what else a column carries (style, outline)
@@ -2513,7 +2668,7 @@ export class OgeSpreadsheetCore {
       };
       sheet.setColumns(col, col, {
         ...info,
-        width: ogePixelsToColumnWidth(px, layout.maxDigitWidth),
+        width: columnWidthOf(px, layout.maxDigitWidth),
       });
       changed = true;
     }
@@ -2566,12 +2721,109 @@ export class OgeSpreadsheetCore {
     };
   }
 
+  /**
+   * Shows the hidden columns or rows among some, at their own size, as
+   * Excel's Unhide does; announced. `false` when none of them was hidden.
+   */
+  unhide(axis: 'rows' | 'columns', targets: readonly number[]): boolean {
+    const sheet = this.sheet();
+    if (!sheet || !this.canResize(axis)) return false;
+    const shown: number[] = [];
+    for (const i of targets) {
+      if (axis === 'columns') {
+        const info = sheet.getColumn(i);
+        if (!info?.hidden && info?.width !== 0) continue;
+        // a column hidden by a zero width gets the default one back
+        const { hidden: _h, width, ...rest } = info;
+        sheet.setColumns(i, i, width ? { ...rest, width } : rest);
+      } else {
+        const info = sheet.getRow(i);
+        if (!info?.hidden && info?.height !== 0) continue;
+        const { hidden: _h, height, ...rest } = info;
+        sheet.setRow(i, height ? { ...rest, height } : rest);
+      }
+      shown.push(i);
+    }
+    if (!shown.length) return false;
+    this.sizesChanged(sheet);
+    const m = this.messages;
+    this.announcement.set(
+      this.formatMessage(
+        axis === 'columns' ? m.columnsShown : m.rowsShown,
+        this.ends(axis, shown),
+      ),
+    );
+    return true;
+  }
+
+  /**
+   * Opens the column width or row height dialog for some columns or rows —
+   * the header menu's first item — on the first one's size, in characters
+   * or points as Excel's dialog shows it.
+   */
+  openSizeDialog(axis: 'rows' | 'columns', targets: readonly number[]): void {
+    const layout = this.layout(this.sheet());
+    if (!layout || !targets.length || !this.canResize(axis)) return;
+    const px = (axis === 'columns' ? layout.cols : layout.rows).size(
+      targets[0],
+    );
+    const value =
+      axis === 'columns'
+        ? columnCharacters(px, layout.maxDigitWidth)
+        : ogePixelsToPoints(px);
+    this.sizeDialog.set({
+      axis,
+      targets,
+      value: String(value).replace('.', this.locale.decimal),
+      invalid: false,
+    });
+  }
+
+  /**
+   * Takes the size dialog's text: a size in range — 0–255 characters,
+   * 0–409 points, either decimal mark — resizes and closes it (`true`);
+   * anything else marks it invalid and keeps it open.
+   */
+  submitSizeDialog(text: string): boolean {
+    const dialog = this.sizeDialog();
+    const layout = this.layout(this.sheet());
+    if (!dialog || !layout) return false;
+    const trimmed = text.trim();
+    const value = Number(
+      trimmed.replace(this.locale.decimal, '.').replace(',', '.'),
+    );
+    const max = dialog.axis === 'columns' ? 255 : 409;
+    if (!trimmed || !Number.isFinite(value) || value < 0 || value > max) {
+      this.sizeDialog.set({ ...dialog, value: text, invalid: true });
+      return false;
+    }
+    this.sizeDialog.set(null);
+    if (dialog.axis === 'columns') {
+      // measured: a width of at least one character is chars × MDW plus the
+      // padding, rounded; under one, chars × (MDW + padding) (0.5 is 6 px)
+      const mdw = layout.maxDigitWidth;
+      const padding = ogeColumnPadding(mdw);
+      this.resizeColumns(
+        dialog.targets,
+        Math.round(
+          value >= 1 ? value * mdw + padding : value * (mdw + padding),
+        ),
+      );
+    } else this.resizeRows(dialog.targets, ogeRowHeightPixels(value));
+    return true;
+  }
+
+  /** Closes the size dialog without a change. */
+  closeSizeDialog(): void {
+    if (this.sizeDialog()) this.sizeDialog.set(null);
+  }
+
   /** Excel's tooltip for a size, px at 100%: `Width: 8.43 (64 pixels)`, `Height: 15.00 (20 pixels)`. */
   sizeTip(axis: 'rows' | 'columns', pixels: number): string {
     const mdw = this.layout(this.sheet())?.maxDigitWidth ?? 7;
     const value =
       axis === 'columns'
-        ? ogePixelsToColumnCharacters(pixels, mdw)
+        ? columnCharacters(pixels, mdw)
         : ogePixelsToPoints(pixels);
     const text = value.toFixed(2).replace('.', this.locale.decimal);
     return axis === 'columns'
@@ -2766,6 +3018,16 @@ export class OgeSpreadsheetCore {
       if (tab) this.selectSheet(tab.index);
     } else if (kind === 'names') {
       this.goTo(item.label);
+    } else if (kind === 'columns' || kind === 'rows') {
+      const targets = this.headerTargets;
+      if (item.key === 'size') this.openSizeDialog(kind, targets);
+      else if (item.key === 'autofit') {
+        if (kind === 'columns') this.autofitColumns(targets);
+        else this.autofitRows(targets);
+      } else if (item.key === 'hide') {
+        if (kind === 'columns') this.resizeColumns(targets, 0);
+        else this.resizeRows(targets, 0);
+      } else this.unhide(kind, targets);
     }
   }
 
@@ -2786,6 +3048,19 @@ export class OgeSpreadsheetCore {
         label: name,
         checked: false,
       }));
+    }
+    if (kind === 'columns' || kind === 'rows') {
+      const m = this.messages;
+      const columns = kind === 'columns';
+      return [
+        { key: 'size', label: columns ? m.columnWidthItem : m.rowHeightItem },
+        {
+          key: 'autofit',
+          label: columns ? m.autofitColumnsItem : m.autofitRowsItem,
+        },
+        { key: 'hide', label: m.hideItem },
+        { key: 'unhide', label: m.unhideItem },
+      ].map((item) => ({ ...item, checked: false }));
     }
     return [];
   }
@@ -2935,6 +3210,25 @@ function sparklineAt(
       if (cell.row === row && cell.col === col)
         found = { type: group.type, ref };
   return found;
+}
+
+/**
+ * The characters Excel's dialog and tooltip give a column width: past one
+ * character, the digit widths after the padding; under it, the part of a
+ * one-character column (measured: 6 px is 0.50, 11 px 0.92).
+ */
+function columnCharacters(pixels: number, mdw: number): number {
+  const padding = ogeColumnPadding(mdw);
+  const value =
+    pixels < mdw + padding
+      ? pixels / (mdw + padding)
+      : (pixels - padding) / mdw;
+  return Math.round(value * 100) / 100;
+}
+
+/** The `width` Excel stores for a column of `pixels`: px / MDW, cut to 1/256 (measured). */
+function columnWidthOf(pixels: number, mdw: number): number {
+  return Math.trunc((pixels / mdw) * 256) / 256;
 }
 
 /** Sorted indices as runs of consecutive ones, `[first, last]`. */

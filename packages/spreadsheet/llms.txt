@@ -134,7 +134,7 @@ _Controller_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `core` | `OgeSpreadsheetCore` | The framework-free controller from `@oge-ui/spreadsheet-engine` (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures, column widths and row heights (`resizeColumns`, `resizeRows`, `autofitColumns`, `autofitRows`, as dragging and double-clicking a header's edge do) and announcements. The React viewer runs the same class. |
+| `core` | `OgeSpreadsheetCore` | The framework-free controller from `@oge-ui/spreadsheet-engine` (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures, column widths and row heights (`resizeColumns`, `resizeRows`, `autofitColumns`, `autofitRows`, as dragging and double-clicking a header's edge do; `contextMenu`, `openHeaderMenu`, `openSizeDialog`, `submitSizeDialog` and `unhide` behind a header's menu) and announcements. The React viewer runs the same class. |
 
 #### Methods
 
@@ -194,6 +194,7 @@ _Keyboard_
 | `Tab / Enter (Shift)` | `move` | Step right / down — inside a multi-cell selection they cycle within it. |
 | `Shift+Space / Ctrl+Space / Ctrl+A / Shift+F8` | `select` | Whole rows, whole columns, the current region then everything, add mode (arrows move, clicks add ranges). |
 | `Ctrl+C / Ctrl+F / F5 or Ctrl+G / Shift+F2 / Alt+Enter` | `act` | Copy as text and Excel HTML, find, go to (the name box), show the active cell's note, open its link. |
+| `Shift+F10 / the menu key` | `act` | On whole selected columns or rows, their header's menu, as a right-click on a header opens it: Column width… or Row height… (a dialog in characters or points, as Excel's asks), AutoFit, Hide and Unhide. |
 | `Ctrl+Page Up / Ctrl+Page Down / Ctrl+= / Ctrl+− / Ctrl+wheel` | `view` | Previous / next sheet, zoom in and out on Excel's steps. |
 | `Alt+Shift+Down / Alt+Shift+Up` | `outline` | Shows the details of the collapsed group the active cell sums up, or hides those of the innermost group it is in — rows first, then columns; the active cell says when its group's details are hidden. The gutter's group and level buttons do the same with the pointer. |
 | `Ctrl+Shift+U` | `view` | Expands the formula bar to the whole text, up to five lines, and back — as its chevron button does. |

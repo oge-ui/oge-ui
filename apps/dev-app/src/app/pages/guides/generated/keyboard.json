@@ -255,6 +255,11 @@
           "Copy as text and Excel HTML, find, go to (the name box), show the active cell's note, open its link."
         ],
         [
+          "Shift+F10 / the menu key",
+          "act",
+          "On whole selected columns or rows, their header's menu, as a right-click on a header opens it: Column width… or Row height… (a dialog in characters or points, as Excel's asks), AutoFit, Hide and Unhide."
+        ],
+        [
           "Ctrl+Page Up / Ctrl+Page Down / Ctrl+= / Ctrl+− / Ctrl+wheel",
           "view",
           "Previous / next sheet, zoom in and out on Excel's steps."

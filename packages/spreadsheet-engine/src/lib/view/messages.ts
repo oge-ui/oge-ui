@@ -70,6 +70,31 @@ export interface OgeSpreadsheetMessages {
   readonly columnsResized: string;
   /** Rows resized: `{count}`, `{first}`, `{last}` and the new `{size}` (the tooltip's text). */
   readonly rowsResized: string;
+  /** The header menu's item that opens the column width dialog. */
+  readonly columnWidthItem: string;
+  /** The header menu's item that opens the row height dialog. */
+  readonly rowHeightItem: string;
+  /** The header menu's AutoFit items (Excel's ribbon commands). */
+  readonly autofitColumnsItem: string;
+  readonly autofitRowsItem: string;
+  /** The header menu's Hide and Unhide items. */
+  readonly hideItem: string;
+  readonly unhideItem: string;
+  /** Accessible names of the column and row header menus. */
+  readonly columnMenuLabel: string;
+  readonly rowMenuLabel: string;
+  /** The column width dialog's title and its field's label (characters). */
+  readonly columnWidthDialog: string;
+  readonly columnWidthField: string;
+  /** The row height dialog's title and its field's label (points). */
+  readonly rowHeightDialog: string;
+  readonly rowHeightField: string;
+  /** The size dialog's buttons. */
+  readonly dialogOk: string;
+  readonly dialogCancel: string;
+  /** What the size dialog says when its field is not a size. */
+  readonly columnWidthInvalid: string;
+  readonly rowHeightInvalid: string;
   /** Columns AutoFitted to their contents: `{count}`, `{first}`, `{last}`. */
   readonly columnsFitted: string;
   /** Rows AutoFitted to their contents: `{count}`, `{first}`, `{last}`. */
@@ -181,6 +206,22 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
   hasLink: 'Link to {target}, Alt+Enter to open',
   mergedCell: 'merged {range}',
   hasFormula: 'formula {formula}',
+  columnWidthItem: 'Column width…',
+  rowHeightItem: 'Row height…',
+  autofitColumnsItem: 'AutoFit column width',
+  autofitRowsItem: 'AutoFit row height',
+  hideItem: 'Hide',
+  unhideItem: 'Unhide',
+  columnMenuLabel: 'Column',
+  rowMenuLabel: 'Row',
+  columnWidthDialog: 'Column width',
+  columnWidthField: 'Column width:',
+  rowHeightDialog: 'Row height',
+  rowHeightField: 'Row height:',
+  dialogOk: 'OK',
+  dialogCancel: 'Cancel',
+  columnWidthInvalid: 'Enter a width from 0 to 255.',
+  rowHeightInvalid: 'Enter a height from 0 to 409.',
   columnWidthTip:
     'Width: {width} ({pixels, plural, one {# pixel} other {# pixels}})',
   rowHeightTip:

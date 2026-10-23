@@ -877,10 +877,10 @@ describe('OgeSpreadsheetCore — column widths and row heights', () => {
     expect(sheet.getColumn(2)).toEqual({
       style: bold,
       outlineLevel: 1,
-      width: 14.28125,
+      width: 14.28515625,
     });
     expect(sheet.getColumn(1)).toEqual({ style: bold, outlineLevel: 1 });
-    expect(sheet.getColumn(5)?.width).toBe(14.28125);
+    expect(sheet.getColumn(5)?.width).toBe(14.28515625);
     expect(c.layout(sheet)?.cols.size(2)).toBe(100);
     // the same width again changes nothing
     expect(c.resizeColumns([2, 5], 100)).toBe(false);

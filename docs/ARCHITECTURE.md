@@ -2369,6 +2369,22 @@ gap)`), and draws the series — bars, lines with Excel's smoothing
   click finds its header from the point: the grid captured the pointer at
   the first press. A protected sheet resizes only when it allows formatting
   (`formatColumns="0"`), and every change is announced.
+- **The keyboard path to the same sizes is a header menu and a dialog**
+  (`core.contextMenu`, `openHeaderMenu`, `openSizeDialog`, `submitSizeDialog`,
+  `unhide`). Shift+F10 or the menu key on whole selected columns or rows
+  (`keydown` → `'header-menu'`), or a right-click on a header, opens a
+  `role="menu"` list (`menu().kind` `'columns'` / `'rows'`, placed by
+  `menu().style`): Column width… / Row height…, AutoFit, Hide, Unhide. The
+  dialog is modal over the viewer (a press beside it keeps the focus, Tab
+  stays inside, Escape drops it) and converts as Excel does, measured with
+  `Range.ColumnWidth` / `RowHeight` on a read-only copy: `c` characters are
+  `round(c·MDW + padding)` px from one character up and
+  `round(c·(MDW + padding))` below it; a width is stored as
+  `trunc(px / MDW · 256) / 256` (Excel's `9.140625` for 64 px); and the
+  characters shown are `(px − padding) / MDW`, or `px / (MDW + padding)`
+  under one character. A row height in points shows as `floor(pt · 4 / 3)`
+  px (`ogeRowHeightPixels`; 15.6 pt is 20 px) — the layout uses the same
+  rounding for heights other tools save off the pixel grid.
 - **A tab keeps its width when it turns bold**: the label's `::after` is a
   zero-height bold copy, `content: attr(data-label) / ''` — the empty
   alternative text keeps it out of the tab's name, and no second text node

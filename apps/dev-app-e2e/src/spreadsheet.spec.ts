@@ -253,6 +253,76 @@ for (const layer of LAYERS) {
         .toBeLessThan(wide.width);
     });
 
+    test('sizes columns and rows from the keyboard: Ctrl+Space or Shift+Space, Shift+F10, the size dialog', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      await page.locator(BASIC).getByRole('button', { name: 'Tables' }).click();
+      await expect(host.locator('.oge-spreadsheet-tab').first()).toHaveText(
+        'Sales',
+        { timeout: 30_000 },
+      );
+      const axe = async () =>
+        (
+          await new AxeBuilder({ page })
+            .include('.oge-spreadsheet')
+            .disableRules(['color-contrast'])
+            .analyze()
+        ).violations.map((v) => v.id);
+      const header = host
+        .locator('.oge-spreadsheet-column-header')
+        .filter({ hasText: /^C$/ });
+      const live = host.locator('.oge-spreadsheet-live');
+      await nameBox(host).fill('C3');
+      await nameBox(host).press('Enter');
+      await page.keyboard.press('Control+Space');
+      await page.keyboard.press('Shift+F10');
+      const menu = host.getByRole('menu', { name: 'Column' });
+      await expect(menu.getByRole('menuitem')).toHaveText([
+        'Column width…',
+        'AutoFit column width',
+        'Hide',
+        'Unhide',
+      ]);
+      await expect(menu.getByRole('menuitem').first()).toBeFocused();
+      expect(await axe()).toEqual([]);
+      await page.keyboard.press('Enter');
+      const dialog = host.getByRole('dialog', { name: 'Column width' });
+      const field = dialog.getByRole('textbox', { name: 'Column width:' });
+      await expect(field).toBeFocused();
+      expect(await axe()).toEqual([]);
+      // a width Excel refuses keeps the dialog, saying why
+      await field.fill('256');
+      await field.press('Enter');
+      await expect(dialog.getByRole('alert')).toHaveText(
+        'Enter a width from 0 to 255.',
+      );
+      await field.fill('20');
+      await field.press('Enter');
+      await expect(dialog).toHaveCount(0);
+      await expect(host.getByRole('grid')).toBeFocused();
+      // 20 characters of Calibri 11 are 145 px; the sample is at 100%
+      await expect(live).toHaveText('Column C: Width: 20.00 (145 pixels)');
+      await expect
+        .poll(async () => (await header.boundingBox())?.width ?? 0)
+        .toBeCloseTo(145, 0);
+      // rows the same way, in points (from a cell: Shift+Space on a whole
+      // column would select the whole sheet, as in Excel)
+      await nameBox(host).fill('C3');
+      await nameBox(host).press('Enter');
+      await page.keyboard.press('Shift+Space');
+      await page.keyboard.press('Shift+F10');
+      await expect(
+        host.getByRole('menu', { name: 'Row' }).getByRole('menuitem').first(),
+      ).toHaveText('Row height…');
+      await page.keyboard.press('Enter');
+      const rows = host.getByRole('dialog', { name: 'Row height' });
+      await rows.getByRole('textbox', { name: 'Row height:' }).fill('30');
+      await page.keyboard.press('Enter');
+      await expect(rows).toHaveCount(0);
+      await expect(live).toHaveText('Row 3: Height: 30.00 (40 pixels)');
+    });
+
     test('opens the reader’s own workbook from the uploader, without uploading it', async ({
       page,
     }) => {

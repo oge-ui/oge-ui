@@ -842,6 +842,106 @@
     border-block-start: 1px dashed var(--oge-spreadsheet-resize-line);
   }
 
+  // ── a header's menu (a right-click, Shift+F10) and the size dialog ──
+  .oge-spreadsheet-header-menus {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .oge-spreadsheet-header-menu {
+    pointer-events: auto;
+  }
+
+  // modal over the spreadsheet, as Excel's: nothing behind it takes a press
+  .oge-spreadsheet-dialog-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+  }
+
+  .oge-spreadsheet-dialog {
+    display: grid;
+    gap: 10px;
+    min-width: 220px;
+    padding: 16px;
+    border: 1px solid var(--oge-spreadsheet-field-border);
+    border-radius: var(--oge-radius);
+    background: var(--oge-spreadsheet-menu-bg);
+    color: var(--oge-spreadsheet-menu-fg);
+    box-shadow: var(--oge-shadow-popup);
+    font-size: 14px;
+  }
+
+  .oge-spreadsheet-dialog-title {
+    font-weight: 600;
+  }
+
+  .oge-spreadsheet-dialog-field {
+    display: grid;
+    gap: 4px;
+  }
+
+  .oge-spreadsheet-dialog-input {
+    height: 28px;
+    box-sizing: border-box;
+    padding: 0 6px;
+    border: 1px solid var(--oge-spreadsheet-field-border);
+    border-radius: 4px;
+    background: var(--oge-spreadsheet-field-bg);
+    color: var(--oge-spreadsheet-field-fg);
+    font: inherit;
+
+    &[aria-invalid='true'] {
+      border-color: var(--oge-danger);
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring($inset: true);
+    }
+  }
+
+  .oge-spreadsheet-dialog-error {
+    color: var(--oge-danger);
+    font-size: 12px;
+  }
+
+  .oge-spreadsheet-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .oge-spreadsheet-dialog-button {
+    min-width: 72px;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--oge-spreadsheet-field-border);
+    border-radius: 4px;
+    background: var(--oge-spreadsheet-field-bg);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--oge-spreadsheet-menu-hover-bg);
+    }
+
+    &:focus-visible {
+      @include tokens.focus-ring;
+    }
+  }
+
+  .oge-spreadsheet-dialog-default,
+  .oge-spreadsheet-dialog-default:hover {
+    border-color: var(--oge-spreadsheet-accent);
+    background: var(--oge-spreadsheet-accent);
+    color: var(--oge-spreadsheet-accent-fg);
+  }
+
   .oge-spreadsheet-resize-tip {
     position: absolute;
     padding: 2px 6px;

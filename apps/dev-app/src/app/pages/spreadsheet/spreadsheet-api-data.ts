@@ -130,6 +130,12 @@ export const SPREADSHEET_TYPE_BLOCKS: NonNullable<ApiSections['types']> = [
           'Copy as text and Excel HTML, find, go to (the name box), show the active cell&#39;s note, open its link.',
       },
       {
+        name: 'Shift+F10 / the menu key',
+        type: 'act',
+        description:
+          'On whole selected columns or rows, their header&#39;s menu, as a right-click on a header opens it: Column width… or Row height… (a dialog in characters or points, as Excel&#39;s asks), AutoFit, Hide and Unhide.',
+      },
+      {
         name: 'Ctrl+Page Up / Ctrl+Page Down / Ctrl+= / Ctrl+− / Ctrl+wheel',
         type: 'view',
         description:
@@ -270,7 +276,7 @@ export const OGE_SPREADSHEET_API: ApiSections = {
           name: 'core',
           type: 'OgeSpreadsheetCore',
           description:
-            'The framework-free controller from <code>@oge-ui/spreadsheet-engine</code> (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures, column widths and row heights (<code>resizeColumns</code>, <code>resizeRows</code>, <code>autofitColumns</code>, <code>autofitRows</code>, as dragging and double-clicking a header&#39;s edge do) and announcements. The React viewer runs the same class.',
+            'The framework-free controller from <code>@oge-ui/spreadsheet-engine</code> (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures, column widths and row heights (<code>resizeColumns</code>, <code>resizeRows</code>, <code>autofitColumns</code>, <code>autofitRows</code>, as dragging and double-clicking a header&#39;s edge do; <code>contextMenu</code>, <code>openHeaderMenu</code>, <code>openSizeDialog</code>, <code>submitSizeDialog</code> and <code>unhide</code> behind a header&#39;s menu) and announcements. The React viewer runs the same class.',
         },
       ],
     },

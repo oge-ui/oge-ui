@@ -408,10 +408,12 @@ export const OgeSpreadsheet = forwardRef<
   const scrollerRef = useRef<HTMLDivElement>(null);
   const nameBoxRef = useRef<HTMLInputElement>(null);
   const findInputRef = useRef<HTMLInputElement>(null);
+  const sizeFieldRef = useRef<HTMLInputElement>(null);
   const tabListRef = useRef<HTMLDivElement>(null);
   const sheetMenuButtonRef = useRef<HTMLButtonElement>(null);
   const namesButtonRef = useRef<HTMLButtonElement>(null);
   const menuId = `oge-spreadsheet-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}-menu`;
+  const dialogId = `oge-spreadsheet-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}-dialog`;
   // the callbacks are read live, so inline handlers stay current
   const latest = useRef(props);
   latest.current = props;
@@ -500,6 +502,7 @@ export const OgeSpreadsheet = forwardRef<
         scrollLeft: scroll.left,
       })
     : null;
+  const sizeDialog = core.sizeDialog();
   // a header edge under the pointer or being dragged: the grid's resize cursor
   const resizeCursor =
     core.resizing()?.axis ?? core.resizeHover()?.axis ?? null;
@@ -738,6 +741,83 @@ export const OgeSpreadsheet = forwardRef<
     if (action === 'find') setTimeout(() => findInputRef.current?.focus());
     else if (action === 'goto') nameBoxRef.current?.focus();
     else if (action === 'open-link') followLink(active.row, active.col);
+    else if (
+      action === 'header-menu' &&
+      panes &&
+      // Shift+F10 on whole columns or rows: their menu, under the header
+      core.openHeaderMenu(panes, {
+        scrollTop: scroll.top,
+        scrollLeft: scroll.left,
+      })
+    )
+      focusMenuItem();
+  };
+
+  /** A right-click on a header: its menu, as Excel's; the browser's own elsewhere. */
+  const onContextMenu = (event: ReactMouseEvent<HTMLDivElement>) => {
+    // Shift+F10 opened it already (some browsers fire contextmenu too)
+    const kind = core.menu().kind;
+    if (kind === 'columns' || kind === 'rows') {
+      event.preventDefault();
+      return;
+    }
+    const scroller = scrollerRef.current;
+    if (
+      !panes ||
+      !scroller ||
+      !core.contextMenu(
+        panes,
+        ogeGridPoint(event, scroller),
+        ogeGridHeaderAt(event.target),
+        { scrollTop: scroller.scrollTop, scrollLeft: scroller.scrollLeft },
+      )
+    )
+      return;
+    event.preventDefault();
+    focusMenuItem();
+  };
+
+  /** Focuses the size dialog's field, its text selected, once it is drawn. */
+  const focusSizeField = () =>
+    setTimeout(() => {
+      sizeFieldRef.current?.focus();
+      sizeFieldRef.current?.select();
+    });
+
+  const submitSize = () => {
+    if (core.submitSizeDialog(sizeFieldRef.current?.value ?? '')) focus();
+    else focusSizeField();
+  };
+
+  const cancelSize = () => {
+    core.closeSizeDialog();
+    focus();
+  };
+
+  /** The size dialog's keys: Enter in the field takes it, Escape drops it, Tab stays inside. */
+  const onDialogKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelSize();
+    } else if (event.key === 'Enter' && target.tagName === 'INPUT') {
+      event.preventDefault();
+      submitSize();
+    } else if (event.key === 'Tab') {
+      const stops = [
+        ...event.currentTarget.querySelectorAll<HTMLElement>('input, button'),
+      ];
+      const at = stops.indexOf(target);
+      const next = event.shiftKey
+        ? at <= 0
+          ? stops.length - 1
+          : at - 1
+        : at === stops.length - 1
+          ? 0
+          : at + 1;
+      event.preventDefault();
+      stops[next]?.focus();
+    }
   };
 
   const onCopy = (event: ReactClipboardEvent<HTMLDivElement>) => {
@@ -889,8 +969,13 @@ export const OgeSpreadsheet = forwardRef<
     return () => observer.disconnect();
   }, [showTabs, tabNames]);
 
+  // a header menu came from the grid
   const menuOpener = (kind: OgeSpreadsheetMenuKind | null) =>
-    kind === 'names' ? namesButtonRef.current : sheetMenuButtonRef.current;
+    kind === 'columns' || kind === 'rows'
+      ? scrollerRef.current
+      : kind === 'names'
+        ? namesButtonRef.current
+        : sheetMenuButtonRef.current;
 
   /** Focuses the open list's focused item once it is drawn. */
   const focusMenuItem = () =>
@@ -930,7 +1015,7 @@ export const OgeSpreadsheet = forwardRef<
     // Tab closes the list and lets the browser move on from the opener
     if (action !== 'leave') event.preventDefault();
     if (action === 'focus') focusMenuItem();
-    else if (action === 'picked') focus();
+    else if (action === 'picked') afterPick();
     else menuOpener(kind)?.focus();
   };
 
@@ -948,8 +1033,14 @@ export const OgeSpreadsheet = forwardRef<
 
   const pickMenuItem = (position: number) => {
     core.pickMenuItem(position);
-    focus();
+    afterPick();
   };
+
+  /** After a pick the grid has focus again — or the size dialog its field. */
+  function afterPick() {
+    if (core.sizeDialog()) focusSizeField();
+    else focus();
+  }
 
   // ── markup (the Angular template, element for element) ────────────────────
 
@@ -1117,6 +1208,7 @@ export const OgeSpreadsheet = forwardRef<
           onPointerCancel={() => core.pointerCancel()}
           onMouseLeave={() => core.pointerLeave()}
           onDoubleClick={onDoubleClick}
+          onContextMenu={onContextMenu}
         >
           {view ? (
             <div
@@ -1449,6 +1541,116 @@ export const OgeSpreadsheet = forwardRef<
               style={css(resizeGuide.tipStyle)}
             >
               {resizeGuide.tip}
+            </div>
+          </div>
+        ) : null}
+        {menuKind === 'columns' || menuKind === 'rows' ? (
+          <div
+            className="oge-spreadsheet-header-menus"
+            dir={rtl ? 'rtl' : 'ltr'}
+          >
+            <div
+              className="oge-spreadsheet-menu oge-spreadsheet-header-menu"
+              role="menu"
+              tabIndex={-1}
+              id={menuId}
+              aria-label={
+                menuKind === 'columns'
+                  ? text.columnMenuLabel
+                  : text.rowMenuLabel
+              }
+              style={css(core.menu().style ?? {})}
+              onKeyDown={onMenuKeyDown}
+              onBlur={onMenuBlur}
+            >
+              {menuItems.map((item, i) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className="oge-spreadsheet-menu-item"
+                  role="menuitem"
+                  tabIndex={-1}
+                  data-item={i}
+                  onClick={() => pickMenuItem(i)}
+                >
+                  <span className="oge-spreadsheet-menu-label">
+                    {item.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {sizeDialog ? (
+          <div
+            className="oge-spreadsheet-dialog-layer"
+            onMouseDown={(event) => {
+              // a press beside the modal dialog leaves the focus where it is
+              if (event.target === event.currentTarget) event.preventDefault();
+            }}
+          >
+            <div
+              className="oge-spreadsheet-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`${dialogId}-title`}
+              onKeyDown={onDialogKeyDown}
+            >
+              <div
+                className="oge-spreadsheet-dialog-title"
+                id={`${dialogId}-title`}
+              >
+                {sizeDialog.axis === 'columns'
+                  ? text.columnWidthDialog
+                  : text.rowHeightDialog}
+              </div>
+              <label className="oge-spreadsheet-dialog-field">
+                <span>
+                  {sizeDialog.axis === 'columns'
+                    ? text.columnWidthField
+                    : text.rowHeightField}
+                </span>
+                <input
+                  ref={sizeFieldRef}
+                  className="oge-spreadsheet-dialog-input"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  spellCheck={false}
+                  defaultValue={sizeDialog.value}
+                  aria-invalid={sizeDialog.invalid ? 'true' : undefined}
+                  aria-describedby={
+                    sizeDialog.invalid ? `${dialogId}-error` : undefined
+                  }
+                />
+              </label>
+              {sizeDialog.invalid ? (
+                <div
+                  className="oge-spreadsheet-dialog-error"
+                  role="alert"
+                  id={`${dialogId}-error`}
+                >
+                  {sizeDialog.axis === 'columns'
+                    ? text.columnWidthInvalid
+                    : text.rowHeightInvalid}
+                </div>
+              ) : null}
+              <div className="oge-spreadsheet-dialog-buttons">
+                <button
+                  type="button"
+                  className="oge-spreadsheet-dialog-button oge-spreadsheet-dialog-default"
+                  onClick={submitSize}
+                >
+                  {text.dialogOk}
+                </button>
+                <button
+                  type="button"
+                  className="oge-spreadsheet-dialog-button"
+                  onClick={cancelSize}
+                >
+                  {text.dialogCancel}
+                </button>
+              </div>
             </div>
           </div>
         ) : null}

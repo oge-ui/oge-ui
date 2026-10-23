@@ -713,6 +713,108 @@ describe('OgeSpreadsheetCore — header edges', () => {
     expect(c.canResize('rows')).toBe(false);
   });
 
+  it('opens the whole selected columns’ menu on Shift+F10, under the header, and acts on them', () => {
+    const { c, panes } = setup();
+    // a cell selection has no header menu
+    expect(c.keydown(key('F10', { shiftKey: true }), page)).toBeNull();
+    c.selectColumns(1, 2, 'replace');
+    expect(c.keydown(key('F10', { shiftKey: true }), page)).toBe('header-menu');
+    expect(c.keydown(key('ContextMenu'), page)).toBe('header-menu');
+    expect(c.openHeaderMenu(panes(), scroll)).toBe(true);
+    expect(c.menu()).toEqual({
+      kind: 'columns',
+      focus: 0,
+      style: { insetInlineStart: '90px', top: '20px' },
+    });
+    expect(c.menuItems().map((item) => item.label)).toEqual([
+      'Column width…',
+      'AutoFit column width',
+      'Hide',
+      'Unhide',
+    ]);
+    c.pickMenuItem(2);
+    expect(c.menu().kind).toBeNull();
+    expect([1, 2].map((col) => c.sheet()?.getColumn(col)?.hidden)).toEqual([
+      true,
+      true,
+    ]);
+    expect(c.announcement()).toBe('Columns B to C hidden');
+    c.openHeaderMenu(panes(), scroll);
+    c.pickMenuItem(3);
+    expect([1, 2].map((col) => panes().axes.cols.size(col))).toEqual([64, 64]);
+    expect(c.announcement()).toBe('Columns B to C shown');
+    // nothing hidden: Unhide changes nothing
+    expect(c.unhide('columns', [1, 2])).toBe(false);
+    c.openHeaderMenu(panes(), scroll);
+    c.pickMenuItem(1);
+    expect(c.announcement()).toBe('Columns B to C fitted to their contents');
+  });
+
+  it('asks a column width in characters and a row height in points, as Excel’s dialogs do', () => {
+    const { c, panes } = setup();
+    c.selectColumns(1, 1, 'replace');
+    c.openHeaderMenu(panes(), scroll);
+    c.pickMenuItem(0);
+    expect(c.sizeDialog()).toEqual({
+      axis: 'columns',
+      targets: [1],
+      value: '8.43',
+      invalid: false,
+    });
+    expect(c.submitSizeDialog('300')).toBe(false);
+    expect(c.sizeDialog()).toMatchObject({ value: '300', invalid: true });
+    expect(c.submitSizeDialog('wide')).toBe(false);
+    expect(c.submitSizeDialog('')).toBe(false);
+    expect(c.submitSizeDialog(' 12,5 ')).toBe(true);
+    expect(c.sizeDialog()).toBeNull();
+    expect(panes().axes.cols.size(1)).toBe(93);
+    expect(c.announcement()).toBe('Column B: Width: 12.57 (93 pixels)');
+    // rows: points
+    c.selectRows(3, 3, 'replace');
+    expect(c.keydown(key('F10', { shiftKey: true }), page)).toBe('header-menu');
+    c.openHeaderMenu(panes(), scroll);
+    expect(c.menu().style).toEqual({ insetInlineStart: '26px', top: '100px' });
+    expect(c.menuItems()[0].label).toBe('Row height…');
+    c.pickMenuItem(0);
+    expect(c.sizeDialog()?.value).toBe('15');
+    expect(c.submitSizeDialog('410')).toBe(false);
+    expect(c.submitSizeDialog('30')).toBe(true);
+    expect(panes().axes.rows.size(3)).toBe(40);
+    // closing changes nothing
+    c.openSizeDialog('rows', [3]);
+    c.closeSizeDialog();
+    expect(c.sizeDialog()).toBeNull();
+    expect(panes().axes.rows.size(3)).toBe(40);
+  });
+
+  it('opens a header’s menu on a right-click, selecting the column first unless it is selected', () => {
+    const { c, panes } = setup();
+    expect(c.contextMenu(panes(), at(60, 60), null, scroll)).toBe(false);
+    expect(c.contextMenu(panes(), at(180, 10), columnC, scroll)).toBe(true);
+    expect(c.selection().ranges).toEqual([
+      { top: 0, left: 2, bottom: 1048575, right: 2 },
+    ]);
+    expect(c.menu()).toMatchObject({
+      kind: 'columns',
+      style: { insetInlineStart: '180px', top: '10px' },
+    });
+    // a right-click inside the selection keeps it
+    c.closeMenu();
+    c.selectColumns(1, 3, 'replace');
+    c.contextMenu(panes(), at(180, 10), null, scroll);
+    expect(c.selection().ranges[0]).toMatchObject({ left: 1, right: 3 });
+    // rows
+    c.contextMenu(panes(), at(10, 70), null, scroll);
+    expect(c.menu().kind).toBe('rows');
+    expect(c.selection().ranges[0]).toMatchObject({ top: 2, bottom: 2 });
+    // a protected sheet keeps the browser's own menu
+    const sheet = c.sheet();
+    if (!sheet) throw new Error('no sheet');
+    sheet.protection = { attributes: { sheet: '1' } };
+    expect(c.contextMenu(panes(), at(180, 10), columnC, scroll)).toBe(false);
+    expect(c.keydown(key('F10', { shiftKey: true }), page)).toBeNull();
+  });
+
   it('follows the pointer the mirrored way on a right-to-left sheet', () => {
     const workbook = book();
     workbook.sheets[0].view = { ...workbook.sheets[0].view, rightToLeft: true };

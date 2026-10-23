@@ -28,9 +28,14 @@ export interface OgeSheetLayoutOptions {
   readonly measurer?: OgeTextMeasurer;
 }
 
-/** Points to pixels the way Excel snaps row heights (to whole pixels). */
-function rowPixels(points: number): number {
-  return Math.round((points * 4) / 3);
+/**
+ * A row height in points as Excel shows it: whole pixels, rounded down
+ * (measured on Excel 2024 for heights other tools save off the pixel grid:
+ * 15.6 pt is 20 px, 18.6 pt 24 px, 0.6 pt 0 px; the heights Excel saves are
+ * whole pixels already).
+ */
+export function ogeRowHeightPixels(points: number): number {
+  return Math.max(0, Math.floor((points * 4) / 3 + 1e-6));
 }
 
 /**
@@ -159,7 +164,7 @@ export class OgeSheetLayout {
   private refreshRows(): void {
     const { sheet } = this;
     const format = sheet.format;
-    const base = rowPixels(format.defaultRowHeight);
+    const base = ogeRowHeightPixels(format.defaultRowHeight);
     this.rows.setDefault(format.zeroHeight ? 0 : base);
     this.rows.clear();
     const stored = new Set<number>();
@@ -169,7 +174,7 @@ export class OgeSheetLayout {
         this.rows.set(row, 0);
         stored.add(row);
       } else if (info?.height !== undefined) {
-        this.rows.set(row, rowPixels(info.height));
+        this.rows.set(row, ogeRowHeightPixels(info.height));
         stored.add(row);
       } else if (format.zeroHeight) {
         // a formatted row of a zeroHeight sheet shows at the default height
