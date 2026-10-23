@@ -37,7 +37,7 @@ export const STACKBLITZ_TOOLCHAIN = {
   "rxjs": "~7.8.0",
   "tslib": "^2.3.0",
   "typescript": "6.0.3",
-  "vite": "8.2.2"
+  "vite": "8.3.5"
 } as const;
 
 export const STACKBLITZ_PACKAGES: Readonly<
