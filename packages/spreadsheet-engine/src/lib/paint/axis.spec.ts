@@ -8,8 +8,8 @@ import {
 import { ogePlacePictures } from './pictures';
 import { createOgeWorkbook } from '../model/workbook';
 import { OgeStyleResolver } from './resolve-style';
-import { OgeSheetLayout, ogeWrapText } from './sheet-layout';
-import { OGE_ESTIMATING_MEASURER } from './cell-text';
+import { OgeSheetLayout } from './sheet-layout';
+import { OGE_ESTIMATING_MEASURER, ogeWrapText } from './cell-text';
 
 describe('OgeAxis', () => {
   it('sums sparse overrides over a default size', () => {
@@ -98,22 +98,93 @@ describe('OgeSheetLayout', () => {
     expect(layout.defaultRowHeight).toBe(20);
   });
 
-  it('hides rows of a zero-height sheet but keeps formatted ones, and honours customHeight', () => {
+  it('fits the rows a sheet lists and gives the others its default, as Excel shows them on open', () => {
     const workbook = createOgeWorkbook();
     const sheet = workbook.sheets[0];
-    sheet.format = { ...sheet.format, zeroHeight: true };
-    sheet.setRow(2, { style: 1 });
-    sheet.setRow(3, { height: 30 });
-    const tall = workbook.styles.intern({ font: { size: 24 } });
-    sheet.setCell(5, 0, { value: 'big', style: tall });
+    const big = workbook.styles.intern({ font: { size: 20 } });
+    const small = workbook.styles.intern({ font: { size: 9 } });
+    const sizes = (...rows: number[]) => {
+      const layout = new OgeSheetLayout(sheet, new OgeStyleResolver(workbook));
+      return rows.map((row) => layout.rows.size(row));
+    };
+    // a height without customHeight is a fit Excel makes again
+    sheet.setRow(0, { height: 30 });
+    sheet.setValue(0, 0, 1);
+    sheet.setRow(1, { height: 10 });
+    sheet.setCell(1, 0, { value: 1, style: big });
+    // a custom height holds; without one, the sheet's defaultRowHeight
+    sheet.setRow(2, { height: 30, customHeight: true });
+    sheet.setRow(3, { customHeight: true });
+    // a row style is its empty cells' — below Normal too
+    sheet.setRow(4, { style: small });
+    sheet.setCell(4, 0, { value: 1, style: small });
+    sheet.setRow(5, { style: big });
+    expect(sizes(0, 1, 2, 3, 4, 5, 6)).toEqual([20, 35, 40, 20, 16, 35, 20]);
+    // a custom default holds for the rows the sheet does not list only
+    sheet.format = {
+      ...sheet.format,
+      defaultRowHeight: 30,
+      customHeight: true,
+    };
+    expect(sizes(0, 3, 6)).toEqual([20, 40, 40]);
+    // a zero-height sheet hides the rows it does not list, and no others
+    sheet.format = {
+      ...sheet.format,
+      defaultRowHeight: 15,
+      customHeight: false,
+      zeroHeight: true,
+    };
+    sheet.setRow(7, { customHeight: false });
+    expect(sizes(0, 3, 6, 7, 8)).toEqual([20, 20, 0, 20, 0]);
+  });
+
+  it('counts column styles for the cells a row leaves empty', () => {
+    const workbook = createOgeWorkbook();
+    const sheet = workbook.sheets[0];
+    const big = workbook.styles.intern({ font: { size: 20 } });
+    const small = workbook.styles.intern({ font: { size: 9 } });
+    sheet.setColumns(1, 1, { style: big });
+    // A1 alone: B1 is an empty 20 pt cell; A2 and B2 are Normal cells
+    sheet.setValue(0, 0, 1);
+    sheet.setValue(1, 0, 1);
+    sheet.setValue(1, 1, 1);
+    // a Normal row style wins over the column's
+    sheet.setRow(2, { style: 0 });
+    sheet.setValue(2, 0, 1);
     let layout = new OgeSheetLayout(sheet, new OgeStyleResolver(workbook));
-    expect(layout.rows.size(0)).toBe(0);
-    expect(layout.rows.size(2)).toBe(20);
-    expect(layout.rows.size(3)).toBe(40);
-    expect(layout.rows.size(5)).toBe(42);
-    sheet.format = { ...sheet.format, customHeight: true, zeroHeight: false };
+    expect([0, 1, 2, 3].map((row) => layout.rows.size(row))).toEqual([
+      35, 20, 20, 35,
+    ]);
+    // every column 9 pt: an empty row is 12 pt
+    sheet.setColumns(0, 16383, { style: small });
     layout = new OgeSheetLayout(sheet, new OgeStyleResolver(workbook));
-    expect(layout.rows.size(5)).toBe(20);
+    expect(layout.defaultRowHeight).toBe(16);
+    expect(layout.rows.size(0)).toBe(20);
+  });
+
+  it('keeps the height a file stores where the fit hangs on measuring text', () => {
+    const workbook = createOgeWorkbook();
+    const sheet = workbook.sheets[0];
+    const wrap = workbook.styles.intern({ alignment: { wrapText: true } });
+    const unknown = workbook.styles.intern({ font: { name: 'Nonesuch' } });
+    const text = 'one two three four five six seven eight';
+    sheet.setCell(0, 0, { value: text, style: wrap });
+    sheet.setCell(1, 0, { value: text, style: wrap });
+    sheet.setRow(1, { height: 45 });
+    sheet.setCell(2, 0, { value: 'x', style: unknown });
+    sheet.setRow(2, { height: 30 });
+    const resolver = new OgeStyleResolver(workbook);
+    const layout = new OgeSheetLayout(sheet, resolver);
+    const lines = ogeWrapText(
+      text,
+      64 - 5,
+      resolver.get(wrap).font,
+      OGE_ESTIMATING_MEASURER,
+    ).length;
+    expect(lines).toBeGreaterThan(1);
+    expect(layout.rows.size(0)).toBe(lines * 20);
+    expect(layout.rows.size(1)).toBe(60);
+    expect(layout.rows.size(2)).toBe(40);
   });
 
   it('snaps row heights down to whole pixels, as Excel shows them', () => {

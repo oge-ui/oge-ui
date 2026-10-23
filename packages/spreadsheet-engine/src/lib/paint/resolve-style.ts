@@ -388,16 +388,16 @@ export class OgeStyleResolver {
 
   /** The paint font for a font patch over the Normal font. */
   font(patch: OgeFont | undefined): OgePaintFont {
-    const base = this.workbook.defaultFont;
-    const merged: OgeFont = { ...base, ...patch };
+    const { scheme: _scheme, ...face } = this.workbook.defaultFont;
+    // a font that names its face is not a theme font, whatever the Normal font is
+    const merged: OgeFont =
+      patch?.name !== undefined && patch.scheme === undefined
+        ? { ...face, ...patch }
+        : { ...this.workbook.defaultFont, ...patch };
     const key = JSON.stringify(merged);
     const known = this.fontCache.get(key);
     if (known) return known;
-    // a font that names its face is not a theme font, whatever the Normal font is
-    const scheme =
-      patch?.name !== undefined && patch.scheme === undefined
-        ? undefined
-        : merged.scheme;
+    const scheme = merged.scheme;
     const themed =
       scheme === 'minor'
         ? this.workbook.themeFonts.minor
@@ -411,7 +411,7 @@ export class OgeStyleResolver {
     const bold = merged.bold === true;
     const italic = merged.italic === true;
     const family = ogeFontFamily(name);
-    // vertAlign shrinks the glyphs; the row keeps the full size
+    // vertAlign shrinks the glyphs (a row fitted to them grows: see autofit.ts)
     const drawn = merged.vertAlign
       ? Math.round(sizePx * 0.66 * 100) / 100
       : sizePx;
@@ -434,6 +434,20 @@ export class OgeStyleResolver {
     };
     this.fontCache.set(key, font);
     return font;
+  }
+
+  /**
+   * A rich-text run's paint font: the run's font over its cell's. A run that
+   * names its face is that face — the cell's theme font does not carry over
+   * (Excel writes a run's `rFont`, and its `scheme` when it has one).
+   */
+  runFont(cell: OgePaintFont, run: OgeFont): OgePaintFont {
+    const { scheme: _scheme, ...face } = cell.source;
+    return this.font(
+      run.name !== undefined && run.scheme === undefined
+        ? { ...face, ...run }
+        : { ...cell.source, ...run },
+    );
   }
 
   /** The paint fill of a fill; `null` for none. */

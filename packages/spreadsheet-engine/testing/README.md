@@ -38,7 +38,9 @@ window captures kept in a temporary folder; `sparkline-boxes.mjs` writes the
 runs of the corpus's pure part colours in each cell to
 `corpus/sparklines.boxes.json`) — and what Excel's AutoFit does
 (`autofit-capture.ps1` AutoFits every case column and row of
-`autofit.xlsx` and writes `corpus/autofit.fit.json`).
+`autofit.xlsx` and writes `corpus/autofit.fit.json`) — and the height every
+case row of `rows.xlsx` opens at, then AutoFits to (`rows-capture.ps1` →
+`corpus/rows.heights.json`).
 
 Two scripts measure Excel's own window and run on their own:
 

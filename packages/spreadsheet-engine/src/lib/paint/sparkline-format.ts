@@ -257,10 +257,13 @@ export class OgeSparklineFormatter implements OgeSparklinePainter {
   }
 }
 
-/** A row hides when its record says so, or on a zeroHeight sheet when it has none. */
+/**
+ * A row hides when its record says so, or on a zeroHeight sheet when the
+ * sheet does not list it (no record, no cell).
+ */
 function rowHidden(sheet: OgeWorksheet, row: number): boolean {
   const info = sheet.getRow(row);
-  return info ? !!info.hidden : !!sheet.format.zeroHeight;
+  return info ? !!info.hidden : !!sheet.format.zeroHeight && !sheet.hasRow(row);
 }
 
 /** A data cell as Excel plots it. */

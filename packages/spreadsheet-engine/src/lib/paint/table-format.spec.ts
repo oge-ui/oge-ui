@@ -226,7 +226,7 @@ describe('OgeTableFormatter — cells', () => {
     );
     const sheet = workbook.sheets[0];
     sheet.setRow(3, { hidden: true });
-    sheet.setRow(6, { height: 0 });
+    sheet.setRow(6, { height: 0, customHeight: true });
     sheet.setColumns(12, 12, { hidden: true });
     const f = formatter(
       workbook,

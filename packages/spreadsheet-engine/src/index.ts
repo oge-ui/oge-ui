@@ -274,6 +274,7 @@ export {
   OGE_ESTIMATING_MEASURER,
   ogeCellDisplay,
   ogeHashFill,
+  ogeWrapText,
   type OgeCellDisplay,
   type OgeCellDisplayOptions,
   type OgeDisplayKind,
@@ -283,7 +284,6 @@ export {
 
 export {
   OgeSheetLayout,
-  ogeWrapText,
   type OgeSheetLayoutOptions,
   type OgeZoomedAxes,
 } from './lib/paint/sheet-layout';

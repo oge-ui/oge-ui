@@ -902,7 +902,10 @@ describe('OgeSpreadsheetCore — column widths and row heights', () => {
       defaultRowHeight: 30,
       customHeight: true,
     });
-    expect(sheet.getRow(3)?.height).toBeUndefined();
+    // the rows the sheet lists take the height as a custom one, as Excel writes them
+    expect(sheet.getRow(3)).toEqual({ height: 30, customHeight: true });
+    expect(sheet.getRow(0)).toEqual({ height: 30, customHeight: true });
+    expect(c.layout(sheet)?.rows.size(0)).toBe(40);
     expect(c.layout(sheet)?.rows.size(900000)).toBe(40);
     expect(c.announcement()).toBe(
       'Rows 1 to 1048576: Height: 30.00 (40 pixels)',
@@ -911,6 +914,35 @@ describe('OgeSpreadsheetCore — column widths and row heights', () => {
     c.resizeRows([6], 0);
     expect(sheet.getRow(6)?.hidden).toBe(true);
     expect(c.autofitRows([6])).toBe(false);
+  });
+
+  it('fits rows again when a column their wrapped text breaks in is resized', () => {
+    const workbook = sample();
+    const sheet = workbook.sheets[0];
+    const wrap = workbook.styles.intern({ alignment: { wrapText: true } });
+    sheet.setCell(20, 5, { value: 'one two three four five', style: wrap });
+    sheet.setCell(21, 6, { value: 'one two three four five', style: wrap });
+    // the heights Excel stored when it saved the file hold while nothing moves
+    sheet.setRow(20, { height: 75 });
+    sheet.setRow(21, { height: 75 });
+    const c = core(workbook);
+    expect(c.layout(sheet)?.rows.size(20)).toBe(100);
+    // column F wide enough for one line: row 21 fits again, row 22 keeps its own
+    expect(c.resizeColumns([5], 400)).toBe(true);
+    expect(sheet.getRow(20)).toBeUndefined();
+    expect(c.layout(sheet)?.rows.size(20)).toBe(20);
+    expect(c.layout(sheet)?.rows.size(21)).toBe(100);
+    // AutoFit gives a row its fit, never a custom default height
+    sheet.format = {
+      ...sheet.format,
+      defaultRowHeight: 30,
+      customHeight: true,
+    };
+    sheet.setRow(22, { height: 30, customHeight: true });
+    sheet.setValue(22, 0, 1);
+    expect(c.autofitRows([22])).toBe(true);
+    expect(c.layout(sheet)?.rows.size(22)).toBe(20);
+    expect(sheet.getRow(22)?.customHeight).toBeUndefined();
   });
 
   it('AutoFits columns to their text and leaves an empty one as it is', () => {

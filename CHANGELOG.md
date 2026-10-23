@@ -95,6 +95,20 @@ are versioned independently, which is the case here.
 - **Row heights rounded as Excel rounds them:** a height off the pixel grid
   now shows rounded down, as Excel shows it — 15.6 pt is 20 px, 13.8 pt 18 px
   (27 heights measured).
+- **Rows open as Excel opens them:** Excel fits every row it has no custom
+  height for when it opens a file, whatever height the file stores, and so
+  does the viewer now — so a workbook another tool wrote shows Excel's rows,
+  not the tool's. A row style, a column style and an empty styled cell count;
+  so do an accounting underline and raised or lowered text, which make a row
+  taller; a merge within a row counts its font only; a sheet's custom default
+  holds only for the rows the file does not list, and a hidden-by-default
+  (`zeroHeight`) sheet shows every row it lists. 205 rows read off Excel, on
+  open and after AutoFit, are the new corpus; AutoFit gives the same heights.
+  A height Excel saved stays where the fit would hang on measuring text
+  (wrapped or rotated text) until the column is resized.
+- **Rich text in its own fonts:** a run that names its face in a cell whose
+  font is the theme's (Calibri, Aptos) now shows in that face, as in Excel,
+  instead of the theme font.
 - **Tints exactly as Excel paints them:** theme colours lighter or darker by a
   tint now match Excel to the bit (190 of 190 measured), not within 2/255.
 - **Outline symbols:** grouped rows and columns show Excel's brackets, plus

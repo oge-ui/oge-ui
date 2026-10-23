@@ -39,6 +39,7 @@ import type { OgeFormatLocale } from '../format/format-locale';
 import type { OgeDateSystem } from '../date/date-serial';
 import {
   ogeCellDisplay,
+  ogeWrapText,
   type OgeCellDisplay,
   type OgePaintAlignment,
   type OgeTextMeasurer,
@@ -50,7 +51,7 @@ import type {
   OgeResolvedStyle,
   OgeStyleResolver,
 } from './resolve-style';
-import { ogeWrapText, type OgeSheetLayout } from './sheet-layout';
+import type { OgeSheetLayout } from './sheet-layout';
 import type { OgeSparklineSpec } from './sparkline';
 
 /** A cell's conditional-format overrides (from `OgeConditionalPainter`). */
@@ -312,9 +313,7 @@ export function ogePaintWindow(
   ): OgePaintFont[] =>
     cell?.value !== undefined && isOgeRichText(cell.value)
       ? cell.value.runs.map((run) =>
-          run.font
-            ? resolver.font({ ...style.font.source, ...run.font })
-            : style.font,
+          run.font ? resolver.runFont(style.font, run.font) : style.font,
         )
       : [style.font];
   // each row's common baseline for bottom-aligned one-line text: its largest descent

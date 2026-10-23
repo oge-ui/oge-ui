@@ -276,3 +276,45 @@ export function ogeCellDisplay(
     align: resolveAlign(style, 'error'),
   };
 }
+
+/**
+ * Lines `text` wraps into within `width` px: greedy by words, a word longer
+ * than the line broken by characters, explicit line breaks kept.
+ */
+export function ogeWrapText(
+  text: string,
+  width: number,
+  font: OgePaintFont,
+  measurer: OgeTextMeasurer,
+): string[] {
+  const lines: string[] = [];
+  const room = Math.max(1, width);
+  for (const paragraph of text.split(/\r\n|\r|\n/)) {
+    if (paragraph === '') {
+      lines.push('');
+      continue;
+    }
+    let line = '';
+    for (const word of paragraph.split(/(?<= )/)) {
+      const candidate = line + word;
+      if (measurer.measure(candidate.trimEnd(), font) <= room) {
+        line = candidate;
+        continue;
+      }
+      if (line) lines.push(line.trimEnd());
+      // a word wider than the line: break it by characters
+      let rest = word;
+      line = '';
+      while (measurer.measure(rest.trimEnd(), font) > room && rest.length > 1) {
+        let cut = rest.length - 1;
+        while (cut > 1 && measurer.measure(rest.slice(0, cut), font) > room)
+          cut--;
+        lines.push(rest.slice(0, cut));
+        rest = rest.slice(cut);
+      }
+      line = rest;
+    }
+    lines.push(line.trimEnd());
+  }
+  return lines;
+}

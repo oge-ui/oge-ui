@@ -242,7 +242,7 @@ describe('ogeRevealScroll', () => {
   it('never scrolls for a frozen cell; a cell taller than the view shows its top', () => {
     const { sheet, layout } = setup();
     sheet.view = { ...sheet.view, frozenRows: 1, frozenColumns: 1 };
-    sheet.setRow(20, { height: 600 });
+    sheet.setRow(20, { height: 600, customHeight: true });
     const geometry = layout();
     const panes = ogeViewportPanes(sheet, geometry, at());
     const current = { scrollTop: 100, scrollLeft: 100 };

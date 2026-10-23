@@ -312,9 +312,13 @@ for (const layer of LAYERS) {
       await nameBox(host).press('Enter');
       await page.keyboard.press('Shift+Space');
       await page.keyboard.press('Shift+F10');
-      await expect(
-        host.getByRole('menu', { name: 'Row' }).getByRole('menuitem').first(),
-      ).toHaveText('Row height…');
+      const rowItem = host
+        .getByRole('menu', { name: 'Row' })
+        .getByRole('menuitem')
+        .first();
+      await expect(rowItem).toHaveText('Row height…');
+      // the menu takes the focus a frame after it opens: Enter waits for it
+      await expect(rowItem).toBeFocused();
       await page.keyboard.press('Enter');
       const rows = host.getByRole('dialog', { name: 'Row height' });
       await rows.getByRole('textbox', { name: 'Row height:' }).fill('30');

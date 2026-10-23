@@ -427,14 +427,32 @@ export function readOgeWorksheet(
             )
           : 0;
         const customHeight = ogeXmlBool(attributes['customHeight'], false);
-        if (height !== undefined || hidden || outline || collapsed || style) {
+        const recorded =
+          height !== undefined ||
+          hidden ||
+          !!outline ||
+          collapsed ||
+          customFormat ||
+          customHeight;
+        // Excel fits every row the file lists without a custom height, a
+        // bare one too — which shows where unlisted rows are hidden or keep
+        // a custom default
+        const bare =
+          !recorded &&
+          (sheet.format.zeroHeight === true ||
+            sheet.format.customHeight === true);
+        if (recorded || bare) {
           sheet.setRow(rowIndex, {
             ...(height !== undefined && height >= 0 ? { height } : {}),
-            ...(customHeight ? { customHeight: true } : {}),
+            ...(customHeight
+              ? { customHeight: true }
+              : bare
+                ? { customHeight: false }
+                : {}),
             ...(hidden ? { hidden: true } : {}),
             ...(outline ? { outlineLevel: Math.min(outline, 7) } : {}),
             ...(collapsed ? { collapsed: true } : {}),
-            ...(style ? { style } : {}),
+            ...(customFormat ? { style } : {}),
           });
         }
         return;

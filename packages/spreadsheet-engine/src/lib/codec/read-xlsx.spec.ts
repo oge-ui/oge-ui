@@ -341,6 +341,32 @@ describe('readOgeXlsx — styles', () => {
 });
 
 describe('readOgeXlsx — sheets', () => {
+  it('lists the rows Excel fits where it hides or sizes the others, and a Normal row style', () => {
+    const { workbook } = read(
+      sheet(
+        '<sheetFormatPr defaultRowHeight="15" zeroHeight="1"/><sheetData>' +
+          '<row r="1"/><row r="2" spans="1:1"><c r="A2"><v>1</v></c></row>' +
+          '<row r="3" customHeight="1"/><row r="4" s="0" customFormat="1"/>' +
+          '<row r="5" ht="20" customHeight="1"/></sheetData>',
+      ),
+    );
+    expect([0, 1, 2, 3, 4].map((r) => workbook.sheets[0].getRow(r))).toEqual([
+      { customHeight: false },
+      { customHeight: false },
+      { customHeight: true },
+      { style: 0 },
+      { height: 20, customHeight: true },
+    ]);
+    // where unlisted rows are as tall as the others, a bare row needs no record
+    const plain = read(
+      sheet(
+        '<sheetData><row r="1"/><row r="2" s="0" customFormat="1"/></sheetData>',
+      ),
+    ).workbook.sheets[0];
+    expect(plain.getRow(0)).toBeUndefined();
+    expect(plain.getRow(1)).toEqual({ style: 0 });
+  });
+
   it('reads sheet properties, views, sizes and print settings', () => {
     const { workbook, issues } = read(
       sheet(

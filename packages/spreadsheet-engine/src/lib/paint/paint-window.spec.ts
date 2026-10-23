@@ -351,7 +351,8 @@ describe('ogePaintWindow — wrapped lines', () => {
       [3, 0, 'one line'],
     ]);
     const sheet = workbook.sheets[0];
-    for (let row = 0; row < 3; row++) sheet.setRow(row, { height: 60 });
+    for (let row = 0; row < 3; row++)
+      sheet.setRow(row, { height: 60, customHeight: true });
     const cells = paint(workbook);
     // 59 px of room at 7 px a character: one word per line
     expect(find(cells, 0, 0)?.lines).toEqual(['aaa bbb', 'ccc']);
@@ -373,8 +374,8 @@ describe('ogePaintWindow — a row’s baseline', () => {
       [2, 0, 'plain'],
     ]);
     const sheet = workbook.sheets[0];
-    sheet.setRow(0, { height: 34.5 });
-    sheet.setRow(1, { height: 17.25 });
+    sheet.setRow(0, { height: 34.5, customHeight: true });
+    sheet.setRow(1, { height: 17.25, customHeight: true });
     const cells = paint(workbook);
     const big = find(cells, 0, 1) as OgePaintCell;
     const small = find(cells, 0, 0) as OgePaintCell;

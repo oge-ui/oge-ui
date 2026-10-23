@@ -46,15 +46,27 @@ export type OgeSheetState = 'visible' | 'hidden' | 'veryHidden';
 
 /** Formatting of one row. */
 export interface OgeRowInfo {
-  /** Height in points; omitted = the sheet's default height. */
+  /**
+   * Height in points. Excel keeps it only with `customHeight`; a row without
+   * one is fitted to its cells when the file opens, whatever height it
+   * stores (the height Excel fitted when it saved the file).
+   */
   readonly height?: number;
-  /** The height was set by hand; otherwise Excel recorded the height it fitted. */
+  /**
+   * The height was set by hand: the row keeps `height` — or, without one,
+   * the sheet's `defaultRowHeight`. `false` marks a row the file lists
+   * without a custom height on a sheet whose unlisted rows are hidden
+   * (`zeroHeight`) or keep a custom default: Excel fits it all the same.
+   */
   readonly customHeight?: boolean;
   readonly hidden?: boolean;
   /** Outline (grouping) level, 1–7. */
   readonly outlineLevel?: number;
   readonly collapsed?: boolean;
-  /** Style id applied to the row's empty cells. */
+  /**
+   * Style id applied to the row's empty cells (`customFormat`) — 0 too, the
+   * Normal style, which then wins over the columns' styles.
+   */
   readonly style?: number;
 }
 
@@ -125,9 +137,13 @@ export interface OgeSheetFormat {
   readonly baseColumnWidth: number;
   /** `defaultColWidth`: a stored width that overrides `baseColumnWidth`. */
   readonly defaultColumnWidth?: number;
-  /** `customHeight`: rows without a height keep `defaultRowHeight` instead of fitting their content. */
+  /**
+   * `customHeight`: rows the file does not list keep `defaultRowHeight`;
+   * without it Excel ignores `defaultRowHeight` and gives them the height of
+   * an empty row (the Normal font's line, or a taller column style's).
+   */
   readonly customHeight?: boolean;
-  /** `zeroHeight`: rows without a record are hidden. */
+  /** `zeroHeight`: rows the file does not list are hidden. */
   readonly zeroHeight?: boolean;
   /** Deepest row / column outline level (`outlineLevelRow` / `outlineLevelCol`). */
   readonly outlineLevelRow?: number;
@@ -427,7 +443,11 @@ export class OgeWorksheet {
     return [...this.rowInfo.keys()].sort((a, b) => a - b);
   }
 
-  /** The row's height in points as painted: 0 when hidden. */
+  /**
+   * The row's stored height in points: 0 when hidden, else its `height`,
+   * else the sheet's `defaultRowHeight`. The height it shows comes from
+   * `OgeSheetLayout`, which fits rows as Excel does.
+   */
   rowHeight(row: number): number {
     const info = this.rowInfo.get(row);
     if (info?.hidden) return 0;

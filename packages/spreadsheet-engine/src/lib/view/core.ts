@@ -69,7 +69,11 @@ import {
   type OgePaintPicture,
 } from '../paint/pictures';
 import { OgeStyleResolver } from '../paint/resolve-style';
-import { OgeSheetLayout, ogeRowHeightPixels } from '../paint/sheet-layout';
+import {
+  OgeSheetLayout,
+  ogeListedRows,
+  ogeRowHeightPixels,
+} from '../paint/sheet-layout';
 import { ogeZoomFont, ogeZoomPaint, ogeZoomPictures } from '../paint/zoom';
 import {
   OgeObjectUrls,
@@ -911,10 +915,7 @@ export class OgeSpreadsheetCore {
           showGridLines,
           zoom,
           runFont: (cell, run) =>
-            ogeZoomFont(
-              resolver.font({ ...cell.font.source, ...run.font }),
-              zoom,
-            ),
+            ogeZoomFont(resolver.runFont(cell.font, run.font ?? {}), zoom),
           dashOriginX: panes.startX,
           dashOriginY: panes.startY,
         }),
@@ -2586,6 +2587,7 @@ export class OgeSpreadsheetCore {
       if (at <= last) set(at, last, {});
     }
     if (!changed) return false;
+    if (px > 0) this.refitWrapped(sheet, cols);
     this.sizesChanged(sheet);
     this.announceSize('columns', cols, px);
     return true;
@@ -2603,20 +2605,22 @@ export class OgeSpreadsheetCore {
     const points = ogePixelsToPoints(px);
     let changed = false;
     if (rows.length === OGE_SHEET_MAX_ROWS && px > 0) {
-      // all of them: the sheet's default height, as Excel writes it
+      // all of them: the sheet's default height and every row it lists,
+      // custom and shown, as Excel writes it
+      const { zeroHeight: _z, ...format } = sheet.format;
       sheet.format = {
-        ...sheet.format,
+        ...format,
         defaultRowHeight: points,
         customHeight: true,
       };
-      for (const row of sheet.formattedRows()) {
+      for (const row of ogeListedRows(sheet)) {
         const {
           height: _h,
           customHeight: _c,
           hidden: _x,
           ...rest
         } = sheet.getRow(row) ?? {};
-        sheet.setRow(row, rest);
+        sheet.setRow(row, { ...rest, height: points, customHeight: true });
       }
       changed = true;
     } else {
@@ -2673,6 +2677,7 @@ export class OgeSpreadsheetCore {
       changed = true;
     }
     if (!changed) return false;
+    this.refitWrapped(sheet, cols);
     this.sizesChanged(sheet);
     this.announceFit('columns', cols);
     return true;
@@ -2738,9 +2743,11 @@ export class OgeSpreadsheetCore {
         sheet.setColumns(i, i, width ? { ...rest, width } : rest);
       } else {
         const info = sheet.getRow(i);
-        if (!info?.hidden && info?.height !== 0) continue;
-        const { hidden: _h, height, ...rest } = info;
-        sheet.setRow(i, height ? { ...rest, height } : rest);
+        const zero = info?.height === 0 && info.customHeight === true;
+        if (!info?.hidden && !zero) continue;
+        // a row hidden by a zero height fits again
+        const { hidden: _h, height, customHeight, ...rest } = info;
+        sheet.setRow(i, zero ? rest : { ...rest, height, customHeight });
       }
       shown.push(i);
     }
@@ -2835,6 +2842,34 @@ export class OgeSpreadsheetCore {
           height: text,
           pixels,
         });
+  }
+
+  /**
+   * Rows with wrapped text in resized columns fit again, as Excel refits
+   * them: they drop the height the file stored, which the layout keeps
+   * while a row's fit hangs on measuring text.
+   */
+  private refitWrapped(sheet: OgeWorksheet, cols: readonly number[]): void {
+    const resolver = this.resolver;
+    if (!resolver) return;
+    const resized = new Set(cols);
+    const rows = new Set<number>();
+    sheet.forEachCell((cell, row, col) => {
+      if (!resized.has(col) || rows.has(row)) return;
+      const info = sheet.getRow(row);
+      if (info?.height === undefined || info.customHeight) return;
+      const style = resolver.get(cell.style ?? 0);
+      if (
+        style.wrap ||
+        style.horizontal === 'justify' ||
+        style.horizontal === 'distributed'
+      )
+        rows.add(row);
+    });
+    for (const row of rows) {
+      const { height: _h, ...rest } = sheet.getRow(row) ?? {};
+      sheet.setRow(row, rest);
+    }
   }
 
   /** Sizes changed: the sheet lays out again, and what counts visible rows and columns redraws. */

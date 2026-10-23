@@ -4,20 +4,27 @@
  *
  * - Column widths come from the stored width and the Normal font's maximum
  *   digit width; a column without a width is the sheet's default width.
- * - A row with a stored height (`ht`) keeps it — Excel stores the heights it
- *   fitted, so an Excel-saved file needs no measuring. A row without one is
- *   fitted the way Excel fits it on load: the tallest one-line font in the
- *   row, a wrapped cell's line count × its line height, never below the
- *   sheet's default.
+ * - Rows are as tall as Excel shows them on open (measured on Excel 2024).
+ *   A row with a custom height (`customHeight`) keeps it — its `ht`, else
+ *   the sheet's `defaultRowHeight`. Excel fits every other row the file
+ *   lists to its cells, whatever `ht` it stores (`OgeRowFitter`); where that
+ *   fit hangs on measuring text — wrapped or rotated text, a font without
+ *   Excel's metrics — a stored `ht` is kept instead: it is the height Excel
+ *   measured when it saved the file, where a browser can break a line
+ *   elsewhere.
+ * - A row the file does not list is hidden on a `zeroHeight` sheet, keeps a
+ *   custom default (`customHeight` on the sheet), and is otherwise as tall
+ *   as an empty row: the Normal font's line, or a taller column style's.
+ * - A height in points shows rounded down to whole pixels (15.6 pt is 20 px).
  */
 import { OGE_SHEET_MAX_COLUMNS, OGE_SHEET_MAX_ROWS } from '../address/address';
-import { isOgeRichText, ogeRichTextToString } from '../model/cell';
 import type { OgeWorksheet } from '../model/worksheet';
 import { ogeColumnPadding } from '../metrics/font-metrics';
 import {
   ogeColumnWidthToPixels,
   ogeDefaultColumnWidthPixels,
 } from '../metrics/sheet-metrics';
+import { OgeRowFitter } from './autofit';
 import { OgeAxis } from './axis';
 import { OGE_ESTIMATING_MEASURER, type OgeTextMeasurer } from './cell-text';
 import type { OgePaintFont, OgeStyleResolver } from './resolve-style';
@@ -38,46 +45,14 @@ export function ogeRowHeightPixels(points: number): number {
   return Math.max(0, Math.floor((points * 4) / 3 + 1e-6));
 }
 
-/**
- * Lines `text` wraps into within `width` px: greedy by words, a word longer
- * than the line broken by characters, explicit line breaks kept.
- */
-export function ogeWrapText(
-  text: string,
-  width: number,
-  font: OgePaintFont,
-  measurer: OgeTextMeasurer,
-): string[] {
-  const lines: string[] = [];
-  const room = Math.max(1, width);
-  for (const paragraph of text.split(/\r\n|\r|\n/)) {
-    if (paragraph === '') {
-      lines.push('');
-      continue;
-    }
-    let line = '';
-    for (const word of paragraph.split(/(?<= )/)) {
-      const candidate = line + word;
-      if (measurer.measure(candidate.trimEnd(), font) <= room) {
-        line = candidate;
-        continue;
-      }
-      if (line) lines.push(line.trimEnd());
-      // a word wider than the line: break it by characters
-      let rest = word;
-      line = '';
-      while (measurer.measure(rest.trimEnd(), font) > room && rest.length > 1) {
-        let cut = rest.length - 1;
-        while (cut > 1 && measurer.measure(rest.slice(0, cut), font) > room)
-          cut--;
-        lines.push(rest.slice(0, cut));
-        rest = rest.slice(cut);
-      }
-      line = rest;
-    }
-    lines.push(line.trimEnd());
-  }
-  return lines;
+/** The rows a sheet lists — a record or a cell — ascending. */
+export function ogeListedRows(sheet: OgeWorksheet): number[] {
+  const listed = new Set(sheet.formattedRows());
+  const used = sheet.usedRange();
+  if (used)
+    for (let row = used.top; row <= used.bottom; row++)
+      if (sheet.hasRow(row)) listed.add(row);
+  return [...listed].sort((a, b) => a - b);
 }
 
 /** Row and column axes at one zoom. */
@@ -98,8 +73,6 @@ export class OgeSheetLayout {
   /** Column padding (margins + gridline), px. */
   readonly padding: number;
   private readonly measurer: OgeTextMeasurer;
-  /** Row height of one line of the Normal font, px. */
-  private readonly normalLine: number;
   private zoomCache: OgeZoomedAxes | null = null;
 
   constructor(
@@ -111,7 +84,6 @@ export class OgeSheetLayout {
     this.normalFont = resolver.normalFont;
     this.maxDigitWidth = resolver.normalFont.maxDigitWidth;
     this.padding = ogeColumnPadding(this.maxDigitWidth);
-    this.normalLine = resolver.normalFont.lineHeight;
     this.refresh();
   }
 
@@ -164,70 +136,33 @@ export class OgeSheetLayout {
   private refreshRows(): void {
     const { sheet } = this;
     const format = sheet.format;
-    const base = ogeRowHeightPixels(format.defaultRowHeight);
-    this.rows.setDefault(format.zeroHeight ? 0 : base);
+    const fitter = new OgeRowFitter(
+      sheet,
+      this.resolver,
+      (col) => this.cols.size(col),
+      { measurer: this.measurer },
+    );
+    const base = format.zeroHeight
+      ? 0
+      : format.customHeight
+        ? ogeRowHeightPixels(format.defaultRowHeight)
+        : fitter.standard();
+    this.rows.setDefault(base);
     this.rows.clear();
-    const stored = new Set<number>();
-    for (const row of sheet.formattedRows()) {
+    for (const row of ogeListedRows(sheet)) {
       const info = sheet.getRow(row);
-      if (info?.hidden) {
-        this.rows.set(row, 0);
-        stored.add(row);
-      } else if (info?.height !== undefined) {
-        this.rows.set(row, ogeRowHeightPixels(info.height));
-        stored.add(row);
-      } else if (format.zeroHeight) {
-        // a formatted row of a zeroHeight sheet shows at the default height
-        this.rows.set(row, base);
+      let height: number;
+      if (info?.hidden) height = 0;
+      else if (info?.customHeight)
+        height = ogeRowHeightPixels(info.height ?? format.defaultRowHeight);
+      else {
+        const fit = fitter.fit(row);
+        height =
+          fit.measured && info?.height !== undefined
+            ? ogeRowHeightPixels(info.height)
+            : fit.height;
       }
+      if (height !== base) this.rows.set(row, height);
     }
-    if (format.customHeight) return;
-    // rows Excel would fit: the tallest font, or a wrapped cell's lines
-    const fitted = new Map<number, number>();
-    sheet.forEachCell((cell, row, col) => {
-      if (stored.has(row) || (!cell.style && !isOgeRichText(cell.value)))
-        return;
-      const style = this.resolver.get(cell.style);
-      let height = style.font.lineHeight;
-      // rich text: the tallest run sets the line
-      if (isOgeRichText(cell.value)) {
-        for (const run of cell.value.runs) {
-          if (run.font)
-            height = Math.max(
-              height,
-              this.resolver.font({ ...style.font.source, ...run.font })
-                .lineHeight,
-            );
-        }
-      }
-      // justify and distributed wrap like wrapText does
-      const wraps =
-        style.wrap ||
-        style.horizontal === 'justify' ||
-        style.horizontal === 'distributed';
-      if (wraps && cell.value !== undefined && !sheet.mergeAt(row, col)) {
-        const text =
-          typeof cell.value === 'string'
-            ? cell.value
-            : isOgeRichText(cell.value)
-              ? ogeRichTextToString(cell.value)
-              : null;
-        if (text !== null) {
-          const width = this.cols.size(col) - this.padding;
-          const lines = ogeWrapText(
-            text,
-            width,
-            style.font,
-            this.measurer,
-          ).length;
-          // measured: lines of a font shorter than the Normal font's row add
-          // one pixel once they wrap (Arial 10 under Calibri 11: 17, 35, 52 …)
-          height =
-            height * lines + (lines > 1 && height < this.normalLine ? 1 : 0);
-        }
-      }
-      if (height > (fitted.get(row) ?? base)) fitted.set(row, height);
-    });
-    for (const [row, height] of fitted) this.rows.set(row, height);
   }
 }

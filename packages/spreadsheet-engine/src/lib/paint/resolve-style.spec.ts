@@ -239,5 +239,31 @@ describe('OgeStyleResolver — named faces over a theme Normal font', () => {
     expect(resolver.font({ name: 'Calibri', scheme: 'minor' }).name).toBe(
       'Aptos Narrow',
     );
+    // the same face with and without a scheme are two fonts, not one cached
+    expect(resolver.font({ name: 'Cambria', scheme: 'minor' }).name).toBe(
+      'Aptos Narrow',
+    );
+    expect(resolver.font({ name: 'Cambria' }).name).toBe('Cambria');
+  });
+
+  it('gives a rich-text run that names its face that face, over a theme cell font', async () => {
+    const { createOgeWorkbook } = await import('../model/workbook');
+    const workbook = createOgeWorkbook();
+    workbook.defaultFont = { ...workbook.defaultFont, scheme: 'minor' };
+    workbook.themeFonts = { ...workbook.themeFonts, minor: 'Aptos Narrow' };
+    const resolver = new OgeStyleResolver(workbook);
+    const cell = resolver.font({ size: 12 });
+    expect(cell.name).toBe('Aptos Narrow');
+    // Excel writes rFont per run: the cell's theme does not carry over
+    const run = resolver.runFont(cell, { name: 'Cambria', italic: true });
+    expect([run.name, run.sizePt, run.italic]).toEqual(['Cambria', 12, true]);
+    // a run with its own scheme, or no face, keeps the theme's
+    expect(
+      resolver.runFont(cell, { name: 'Calibri', scheme: 'minor' }).name,
+    ).toBe('Aptos Narrow');
+    expect(resolver.runFont(cell, { bold: true }).name).toBe('Aptos Narrow');
+    // and a run over a cell in a named face keeps that face
+    const arial = resolver.font({ name: 'Arial' });
+    expect(resolver.runFont(arial, { bold: true }).name).toBe('Arial');
   });
 });

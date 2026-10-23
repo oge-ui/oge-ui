@@ -150,7 +150,7 @@ describe('ogeRenderPane', () => {
   it('wraps lines, justifies them and repeats fill characters', () => {
     const { pane } = render((workbook) => {
       const sheet = workbook.sheets[0];
-      sheet.setRow(0, { height: 45 });
+      sheet.setRow(0, { height: 45, customHeight: true });
       sheet.setCell(0, 0, {
         value: 'aaa bbb ccc',
         style: intern(workbook, { alignment: { horizontal: 'justify' } }),
@@ -512,7 +512,8 @@ describe('ogeRenderPane — underlines', () => {
       textDecorationStyle: 'double',
       textUnderlineOffset: '1px',
     });
-    // accounting: no text decoration, a line across the text area 3 px above the gridline
+    // accounting: no text decoration, a line across the text area 3 px above
+    // the gridline of a row Excel fits 23 px tall for it
     expect(text(pane, 2, 0).style['textDecorationLine']).toBeUndefined();
     const single = pane.marks.filter(
       (m) => m.kind === 'underline' && m.row === 2,
@@ -520,7 +521,7 @@ describe('ogeRenderPane — underlines', () => {
     expect(single.map((m) => m.style)).toEqual([
       {
         left: '2px',
-        top: '56px',
+        top: '59px',
         width: '59px',
         height: '1px',
         background: '#000000',
@@ -529,7 +530,7 @@ describe('ogeRenderPane — underlines', () => {
     const double = pane.marks.filter(
       (m) => m.kind === 'underline' && m.row === 3,
     );
-    expect(double.map((m) => m.style['top'])).toEqual(['75px', '77px']);
+    expect(double.map((m) => m.style['top'])).toEqual(['81px', '83px']);
     expect(text(pane, 3, 0).style['textDecorationLine']).toBe('line-through');
   });
 });

@@ -2385,6 +2385,30 @@ gap)`), and draws the series — bars, lines with Excel's smoothing
   under one character. A row height in points shows as `floor(pt · 4 / 3)`
   px (`ogeRowHeightPixels`; 15.6 pt is 20 px) — the layout uses the same
   rounding for heights other tools save off the pixel grid.
+- **Rows open at the heights Excel gives them** (`OgeSheetLayout`, with the
+  row fit AutoFit uses: `OgeRowFitter` in `paint/autofit.ts`), measured on
+  Excel 2024 and kept as a corpus (`testing/corpus/rows.*`, 205 rows read on
+  open and after AutoFit, `rows.corpus.spec.ts`). A row with
+  `customHeight` keeps its `ht` — without one, the sheet's
+  `defaultRowHeight`. Every other row the file lists (a record or a cell) is
+  fitted, whatever `ht` it stores: its cells' font lines (a rich text's
+  tallest run — a run naming its face is that face, not the cell's theme
+  font: `OgeStyleResolver.runFont`), wrapped lines, rotated text, plus an
+  accounting underline's and raised text's extra; its empty cells in the row
+  style (`customFormat`, Normal too), else their column's, else Normal; a
+  merge within the row counts its font only, one over more rows nothing.
+  Unlisted rows are hidden on a `zeroHeight` sheet, keep a custom default,
+  and are otherwise as tall as an empty row — so the default the file states
+  without `customHeight` plays no part, and a 20 pt column style lifts the
+  standard height. One deliberate difference: where a fit hangs on measuring
+  text (wrapped or rotated text, raised text, an accounting underline, a font
+  without Excel's metrics), a stored `ht` is kept — Excel measured it when it
+  saved the file, and a browser's fonts can break a line elsewhere. A column
+  resize drops that height for the rows with wrapped text in it, so they fit
+  again as in Excel. The reader marks bare rows on `zeroHeight` and
+  custom-default sheets (`customHeight: false`) and keeps a Normal row
+  style (`style: 0`); resizing every row makes each listed row custom, as
+  Excel writes it.
 - **A tab keeps its width when it turns bold**: the label's `::after` is a
   zero-height bold copy, `content: attr(data-label) / ''` — the empty
   alternative text keeps it out of the tab's name, and no second text node

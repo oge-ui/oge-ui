@@ -114,7 +114,7 @@ describe('render model — the rarer text', () => {
   it('aligns wrapped lines right or centred, centres across a run, fills', () => {
     const { pane } = setup((workbook) => {
       const sheet = workbook.sheets[0];
-      sheet.setRow(0, { height: 45 });
+      sheet.setRow(0, { height: 45, customHeight: true });
       sheet.setCell(0, 0, {
         value: 'aaa bbb ccc',
         style: style(workbook, {
@@ -154,7 +154,7 @@ describe('render model — the rarer text', () => {
   it('hides values under value-less bars and icons, draws reversed bars and icons by alignment', () => {
     const { pane } = setup((workbook) => {
       const sheet = workbook.sheets[0];
-      sheet.setRow(7, { height: 45 });
+      sheet.setRow(7, { height: 45, customHeight: true });
       for (const col of [0, 1, 2])
         sheet.setCell(7, col, {
           value: 5,
@@ -210,8 +210,9 @@ describe('render model — the rarer text', () => {
       lineHeight: '0',
     });
     expect(rich.runs?.[0].style['lineHeight']).toBe('20px');
+    // rows 1 and 2 fit 23 px, an accounting underline and a raised run, as Excel fits them
     expect(pane.fills[0].style['background']).toMatch(
-      /^url\("data:image\/svg\+xml,.*"\) -7px -7px \/ 8px 8px repeat, #/,
+      /^url\("data:image\/svg\+xml,.*"\) -7px -5px \/ 8px 8px repeat, #/,
     );
   });
 

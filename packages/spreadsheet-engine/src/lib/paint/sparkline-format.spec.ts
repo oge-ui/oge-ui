@@ -106,11 +106,12 @@ describe('OgeSparklineFormatter', () => {
     const workbook = createOgeWorkbook();
     const sheet = workbook.sheets[0];
     sheet.format = { ...sheet.format, zeroHeight: true };
-    for (let row = 0; row < 3; row++) sheet.setValue(row, 1, row + 1);
-    sheet.setRow(0, { height: 15 });
-    sheet.setRow(2, { height: 15 });
-    expect(formatter(workbook, group('B1:B3')).at(0, 0)?.values).toEqual([
-      1, 3,
+    // B1 and B3 hold values, B2 and B4 none; only row 4 is listed among those
+    sheet.setValue(0, 1, 1);
+    sheet.setValue(2, 1, 3);
+    sheet.setRow(3, { customHeight: false });
+    expect(formatter(workbook, group('B1:B4')).at(0, 0)?.values).toEqual([
+      1, 3, 0,
     ]);
   });
 

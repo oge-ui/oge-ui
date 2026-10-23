@@ -186,7 +186,11 @@ export class OgeTableFormatter implements OgeTablePainter {
       sheet.formattedRows().filter((row) => {
         if (row < top || row > bottom) return false;
         const info = sheet.getRow(row);
-        return info?.hidden === true || info?.height === 0;
+        // a zero height hides only as a custom one: Excel fits the others
+        return (
+          info?.hidden === true ||
+          (info?.height === 0 && info.customHeight === true)
+        );
       });
     const hiddenColumnsOf = (left: number, right: number) => {
       const out: number[] = [];

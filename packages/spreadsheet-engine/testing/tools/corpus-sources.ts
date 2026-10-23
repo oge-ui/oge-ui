@@ -17,6 +17,7 @@ import {
 import { NUMBER_FORMAT_CASES } from './number-format-cases';
 import { box, corpusStyleSheet, solid, type CorpusXf } from './style-sheet';
 import { AUTOFIT_CASES, autofitWorkbook } from './autofit-sources';
+import { ROWS_CASES, rowsWorkbook } from './rows-sources';
 import { sparklinesWorkbook } from './sparkline-sources';
 import { tablesWorkbook } from './table-sources';
 
@@ -1393,5 +1394,9 @@ write('sparklines.xlsx', sparklinesWorkbook());
 // AutoFit: a case per column or row, AutoFitted by autofit-capture.ps1 (autofit-sources.ts)
 write('autofit.xlsx', autofitWorkbook());
 write('autofit.cases.json', JSON.stringify(AUTOFIT_CASES));
+
+// rows: a case per row, its height on open and after AutoFit read by rows-capture.ps1 (rows-sources.ts)
+write('rows.xlsx', rowsWorkbook());
+write('rows.cases.json', JSON.stringify(ROWS_CASES));
 
 console.log(`corpus sources written to ${out}`);

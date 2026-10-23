@@ -18,7 +18,14 @@ import {
   ogeRichTextToString,
 } from '../model/cell';
 import type { OgeWorksheet } from '../model/worksheet';
-import { ogeColumnWidthToPixels } from '../metrics/sheet-metrics';
+import { OgeStyleResolver } from '../paint/resolve-style';
+import { OgeSheetLayout } from '../paint/sheet-layout';
+import {
+  captureLocale,
+  gdiCalibriMeasurer,
+  readCapture,
+  type CaptureEnvironment,
+} from '../../testing/excel-capture';
 import { ogeDisplayFormula } from './formula-text';
 import { readOgeXlsxSync } from './read-xlsx';
 
@@ -84,21 +91,11 @@ const corpus = (file: string) =>
 
 const BOOKS = ['styles', 'structure', 'formulas', 'dates1904'];
 
-/** Calibri 11, the corpus's Normal font: 7 px digits, 64 px columns, 20 px rows. */
-const MDW = 7;
-
-function columnPixels(sheet: OgeWorksheet, col: number): number {
-  const info = sheet.getColumn(col);
-  if (info?.hidden) return 0;
-  const width = info?.width ?? sheet.format.defaultColumnWidth;
-  return width === undefined ? 64 : ogeColumnWidthToPixels(width, MDW);
-}
-
-function rowPixels(sheet: OgeWorksheet, row: number): number {
-  const info = sheet.getRow(row);
-  if (info?.hidden) return 0;
-  return Math.round(((info?.height ?? sheet.format.defaultRowHeight) * 4) / 3);
-}
+const locale = captureLocale(
+  readCapture<CaptureEnvironment>('captures', 'environment.json'),
+);
+/** Text measured as Windows GDI measures Calibri 11, as Excel's cells do. */
+const measurer = gdiCalibriMeasurer();
 
 describe.each(BOOKS)('corpus %s.xlsx', (name) => {
   const captured = JSON.parse(
@@ -278,15 +275,17 @@ describe.each(BOOKS)('corpus %s.xlsx', (name) => {
     );
   });
 
-  it('sizes columns and rows like Excel', () => {
+  it('sizes columns and rows like Excel — rows fitted as Excel fits them on open', () => {
+    const resolver = new OgeStyleResolver(workbook, { locale });
     for (const expected of captured.sheets) {
       const sheet = workbook.sheet(expected.name) as OgeWorksheet;
+      const layout = new OgeSheetLayout(sheet, resolver, { measurer });
       expected.columns.forEach((entry, col) => {
         const [px, hidden] = entry.split('|');
         expect({
           sheet: expected.name,
           col,
-          px: columnPixels(sheet, col),
+          px: layout.cols.size(col),
         }).toEqual({
           sheet: expected.name,
           col,
@@ -298,7 +297,7 @@ describe.each(BOOKS)('corpus %s.xlsx', (name) => {
         expect({
           sheet: expected.name,
           row,
-          px: rowPixels(sheet, row),
+          px: layout.rows.size(row),
         }).toEqual({
           sheet: expected.name,
           row,
