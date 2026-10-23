@@ -142,7 +142,7 @@ export const OGE_REACT_SPREADSHEET_API: ApiSections = {
           name: 'core',
           type: 'OgeSpreadsheetCore',
           description:
-            'The framework-free controller from <code>@oge-ui/spreadsheet-engine</code> (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures and announcements. The Angular viewer runs the same class.',
+            'The framework-free controller from <code>@oge-ui/spreadsheet-engine</code> (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures, column widths and row heights (<code>resizeColumns</code>, <code>resizeRows</code>, <code>autofitColumns</code>, <code>autofitRows</code>, as dragging and double-clicking a header&#39;s edge do) and announcements. The Angular viewer runs the same class.',
         },
         {
           name: 'open(source)',

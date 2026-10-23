@@ -952,6 +952,74 @@ export function ogeNoteBoxes(
  * headers or past the cells — or, with `nearest` (a drag), the closest
  * visible cell. A right-to-left sheet's grid starts at the scroller's right edge.
  */
+/**
+ * Where a pointer is on the sheet, px at the zoom from the sheet's top-left
+ * — over the headers too, so it can be off the cells (negative before them).
+ */
+export function ogePointerSheetPoint(
+  sheet: OgeWorksheet,
+  panes: OgeViewportPanes,
+  pointer: OgeGridPointerPoint,
+): { readonly x: number; readonly y: number } {
+  const fromStart = sheet.view.rightToLeft
+    ? pointer.rect.right - pointer.clientX
+    : pointer.clientX - pointer.rect.left;
+  const x = fromStart - panes.startX;
+  const y = pointer.clientY - pointer.rect.top - panes.startY;
+  return {
+    x:
+      x < panes.frozenWidth
+        ? x
+        : x - panes.frozenWidth + panes.originX + Math.abs(pointer.scrollLeft),
+    y:
+      y < panes.frozenHeight
+        ? y
+        : y - panes.frozenHeight + panes.originY + pointer.scrollTop,
+  };
+}
+
+/**
+ * The guide line of a header edge being dragged, from the grid's start
+ * corner (`insetInlineStart`, `top`): across the headers and the visible
+ * cells where row or column `index`, `size` px at the zoom, would end.
+ */
+export function ogeResizeLine(
+  panes: OgeViewportPanes,
+  axis: 'rows' | 'columns',
+  index: number,
+  size: number,
+  scroll: OgeScrollPosition,
+): OgeCss {
+  if (axis === 'columns') {
+    const edge = panes.axes.cols.offset(index) + size;
+    const x =
+      edge -
+      (index < panes.frozenColumns
+        ? 0
+        : panes.originX + Math.abs(scroll.scrollLeft) - panes.frozenWidth) +
+      panes.startX;
+    return {
+      insetInlineStart: px(x - 1),
+      top: '0',
+      width: '1px',
+      height: px(panes.startY + panes.cellHeight),
+    };
+  }
+  const edge = panes.axes.rows.offset(index) + size;
+  const y =
+    edge -
+    (index < panes.frozenRows
+      ? 0
+      : panes.originY + scroll.scrollTop - panes.frozenHeight) +
+    panes.startY;
+  return {
+    insetInlineStart: '0',
+    top: px(y - 1),
+    width: px(panes.startX + panes.cellWidth),
+    height: '1px',
+  };
+}
+
 export function ogePointerCell(
   sheet: OgeWorksheet,
   panes: OgeViewportPanes,

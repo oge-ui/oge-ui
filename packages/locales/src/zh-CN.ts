@@ -1715,6 +1715,16 @@ export const zhCN: OgeLocalePack = {
     hasFormula: '公式 {formula}',
     hasSparkline:
       '{range} 的{type, select, column {柱形迷你图} stacked {盈亏迷你图} other {折线迷你图}}',
+    columnWidthTip: '宽度: {width} ({pixels, plural, other {# 像素}})',
+    rowHeightTip: '高度: {height} ({pixels, plural, other {# 像素}})',
+    columnsResized:
+      '{count, plural, =1 {列 {first}} other {列 {first} 至 {last}}}: {size}',
+    rowsResized:
+      '{count, plural, =1 {行 {first}} other {行 {first} 至 {last}}}: {size}',
+    columnsFitted:
+      '{count, plural, =1 {列 {first} 已适应内容} other {列 {first} 至 {last} 已适应内容}}',
+    rowsFitted:
+      '{count, plural, =1 {行 {first} 已适应内容} other {行 {first} 至 {last} 已适应内容}}',
     selectionAnnouncement:
       '已选择 {range}，{cells, plural, other {共 # 个单元格}}',
     sheetAnnouncement: '工作表 {name}，第 {index} 张，共 {total} 张',

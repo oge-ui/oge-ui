@@ -2625,6 +2625,71 @@
       ]
     },
     {
+      "n": "--oge-spreadsheet-resize-line",
+      "c": "component",
+      "d": "a header edge being dragged: the guide over the (always white) cells, and the size tooltip",
+      "v": {
+        "light": "#444444",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#444444",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tip-bg",
+      "c": "component",
+      "v": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "s": {
+        "light": "#ffffff",
+        "dark": "#292929"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tip-fg",
+      "c": "component",
+      "v": {
+        "light": "#242424",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#242424",
+        "dark": "#ffffff",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
+      "n": "--oge-spreadsheet-tip-border",
+      "c": "component",
+      "v": {
+        "light": "#bdbdbd",
+        "dark": "#666666",
+        "hc": "#000000"
+      },
+      "s": {
+        "light": "#bdbdbd",
+        "dark": "#666666",
+        "hc": "#000000"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
       "n": "--oge-accent-soft",
       "c": "color",
       "k": "d",

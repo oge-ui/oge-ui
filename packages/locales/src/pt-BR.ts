@@ -1787,6 +1787,18 @@ export const ptBR: OgeLocalePack = {
     hasFormula: 'fórmula {formula}',
     hasSparkline:
       '{type, select, column {minigráfico de coluna} stacked {minigráfico de ganhos/perdas} other {minigráfico de linha}} de {range}',
+    columnWidthTip:
+      'Largura: {width} ({pixels, plural, one {# pixel} other {# pixels}})',
+    rowHeightTip:
+      'Altura: {height} ({pixels, plural, one {# pixel} other {# pixels}})',
+    columnsResized:
+      '{count, plural, one {Coluna {first}} other {Colunas {first} a {last}}}: {size}',
+    rowsResized:
+      '{count, plural, one {Linha {first}} other {Linhas {first} a {last}}}: {size}',
+    columnsFitted:
+      '{count, plural, one {Coluna {first} ajustada ao conteúdo} other {Colunas {first} a {last} ajustadas ao conteúdo}}',
+    rowsFitted:
+      '{count, plural, one {Linha {first} ajustada ao conteúdo} other {Linhas {first} a {last} ajustadas ao conteúdo}}',
     selectionAnnouncement:
       'Intervalo {range} selecionado, {cells, plural, one {# célula} other {# células}}',
     sheetAnnouncement: 'Planilha {name}, {index} de {total}',

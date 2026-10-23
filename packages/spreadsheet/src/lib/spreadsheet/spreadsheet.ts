@@ -73,6 +73,8 @@ let nextId = 0;
     class: 'oge-spreadsheet',
     '[attr.aria-busy]': "status() === 'loading' ? 'true' : null",
     '[class.oge-spreadsheet-link-hover]': 'linkHover()',
+    '[class.oge-spreadsheet-resize-columns]': "resizeCursor() === 'columns'",
+    '[class.oge-spreadsheet-resize-rows]': "resizeCursor() === 'rows'",
   },
   styleUrl: './spreadsheet.scss',
   template: `
@@ -231,6 +233,7 @@ let nextId = 0;
         (pointerup)="onPointerUp($event)"
         (pointercancel)="onPointerCancel()"
         (mouseleave)="onPointerLeave()"
+        (dblclick)="onDoubleClick($event)"
       >
         @if (view(); as v) {
           <div
@@ -813,6 +816,24 @@ let nextId = 0;
           }
         </div>
       }
+      @if (resizeGuide(); as guide) {
+        <div
+          class="oge-spreadsheet-resize"
+          aria-hidden="true"
+          [attr.dir]="rtl() ? 'rtl' : 'ltr'"
+        >
+          <div
+            class="oge-spreadsheet-resize-line"
+            [class.oge-spreadsheet-resize-line-rows]="guide.axis === 'rows'"
+            [style]="guide.line"
+          ></div>
+          <div
+            class="oge-spreadsheet-resize-tip"
+            [style]="guide.tipStyle"
+            [textContent]="guide.tip"
+          ></div>
+        </div>
+      }
       @if (chartLabels().length) {
         <ul
           class="oge-spreadsheet-chart-list"
@@ -1143,6 +1164,19 @@ export class OgeSpreadsheet {
     return said === this.activeDescription() ? '' : said;
   });
   protected readonly linkHover = computed(() => this.core.hoverLink());
+  /** A header edge under the pointer or being dragged: the grid's resize cursor. */
+  protected readonly resizeCursor = computed(
+    () => this.core.resizing()?.axis ?? this.core.resizeHover()?.axis ?? null,
+  );
+  protected readonly resizeGuide = computed(() => {
+    const panes = this.panes();
+    return panes
+      ? this.core.resizeGuide(panes, {
+          scrollTop: this.scrollTop(),
+          scrollLeft: this.scrollLeft(),
+        })
+      : null;
+  });
 
   /** The panes for the current scroll position, size and zoom. */
   private readonly panes = computed<OgeViewportPanes | null>(() => {
@@ -1468,7 +1502,28 @@ export class OgeSpreadsheet {
     const panes = this.panes();
     const scroller = this.scroller()?.nativeElement;
     if (panes && scroller)
-      this.core.pointerMove(panes, ogeGridPoint(event, scroller), event);
+      this.core.pointerMove(
+        panes,
+        ogeGridPoint(event, scroller),
+        event,
+        ogeGridHeaderAt(event.target),
+      );
+  }
+
+  /** A double-click on a header's edge AutoFits its row or column. */
+  protected onDoubleClick(event: MouseEvent): void {
+    const panes = this.panes();
+    const scroller = this.scroller()?.nativeElement;
+    if (
+      panes &&
+      scroller &&
+      this.core.doubleClick(
+        panes,
+        ogeGridPoint(event, scroller),
+        ogeGridHeaderAt(event.target),
+      )
+    )
+      event.preventDefault();
   }
 
   protected onPointerUp(event: PointerEvent): void {

@@ -50,7 +50,7 @@ import type { OgeSheetChart } from '../model/chart';
 import type { OgeHyperlink } from '../model/sheet-features';
 import type { OgeWorkbook } from '../model/workbook';
 import type { OgeSparklineType } from '../model/sparkline';
-import type { OgeWorksheet } from '../model/worksheet';
+import type { OgeColumnInfo, OgeWorksheet } from '../model/worksheet';
 import {
   OGE_ESTIMATING_MEASURER,
   type OgeTextMeasurer,
@@ -58,6 +58,13 @@ import {
 import { OgeConditionalFormatter } from '../paint/conditional';
 import { OgeSparklineFormatter } from '../paint/sparkline-format';
 import { OgeTableFormatter } from '../paint/table-format';
+import { ogeAutofitColumnWidth, ogeAutofitRowHeight } from '../paint/autofit';
+import { ogeColumnPadding } from '../metrics/font-metrics';
+import {
+  ogePixelsToColumnCharacters,
+  ogePixelsToColumnWidth,
+  ogePixelsToPoints,
+} from '../metrics/sheet-metrics';
 import { ogePaintWindow, type OgePaintCell } from '../paint/paint-window';
 import {
   ogePlaceCharts,
@@ -93,6 +100,8 @@ import {
   ogePaneCharts,
   ogePanePictures,
   ogePointerCell,
+  ogePointerSheetPoint,
+  ogeResizeLine,
   ogeTabKeyTarget,
   type OgeGridHeaderTarget,
   type OgeGridPointerPoint,
@@ -129,7 +138,7 @@ import type {
   OgeSpreadsheetReactiveCell,
   OgeSpreadsheetReactivity,
 } from './reactivity';
-import { ogeRenderPane, type OgeRenderPane } from './render';
+import { ogeRenderPane, type OgeCss, type OgeRenderPane } from './render';
 import { ogeSelectionSummary } from './summary';
 import {
   ogeScrollToCell,
@@ -162,6 +171,25 @@ export interface OgeGridPointerInput {
   readonly shiftKey: boolean;
   readonly ctrlKey: boolean;
   readonly metaKey: boolean;
+  /** `mouse`, `pen` or `touch`: a finger gets a wider header edge to grab. */
+  readonly pointerType?: string;
+}
+
+/** A row's or column's far edge, which a drag on its header resizes. */
+export interface OgeResizeTarget {
+  readonly axis: 'rows' | 'columns';
+  readonly index: number;
+}
+
+/** A header edge being dragged, as the grid shows it (`OgeSpreadsheetCore.resizeGuide`). */
+export interface OgeResizeGuide {
+  readonly axis: 'rows' | 'columns';
+  /** The line where the edge will be, from the grid's start corner. */
+  readonly line: OgeCss;
+  /** Excel's tooltip: `Width: 8.43 (64 pixels)`, `Height: 15.00 (20 pixels)`. */
+  readonly tip: string;
+  /** Where the tooltip sits, from the grid's start corner. */
+  readonly tipStyle: OgeCss;
 }
 
 /** A click on a cell: down and up on it without a drag. */
@@ -307,6 +335,12 @@ export class OgeSpreadsheetCore {
   readonly menu: OgeSpreadsheetReactiveCell<OgeSpreadsheetMenuState>;
   /** The formula bar shows its whole text, on several lines. */
   readonly formulaExpanded: OgeSpreadsheetReactiveCell<boolean>;
+  /** The header edge under the pointer, which a drag resizes (the grid shows a resize cursor). */
+  readonly resizeHover: OgeSpreadsheetReactiveCell<OgeResizeTarget | null>;
+  /** The header edge being dragged, and its size so far in px at 100% zoom. */
+  readonly resizing: OgeSpreadsheetReactiveCell<
+    (OgeResizeTarget & { readonly pixels: number }) | null
+  >;
 
   private readonly catalog: OgeSpreadsheetReactiveCell<OgeSpreadsheetMessages>;
   private locale: OgeFormatLocale;
@@ -339,11 +373,20 @@ export class OgeSpreadsheetCore {
   private pendingSheet: number | undefined;
   private pendingZoom: number | undefined;
   private drag: {
-    kind: 'cells' | 'rows' | 'columns';
+    kind: 'cells' | 'rows' | 'columns' | 'resize';
     pointer: number;
     moved: boolean;
     start: OgeCellRef;
     last: OgeCellRef;
+    /** A header edge's drag: what it resizes, where the pointer and the size started (px at the zoom). */
+    resize?: {
+      readonly axis: 'rows' | 'columns';
+      readonly index: number;
+      readonly targets: readonly number[];
+      readonly origin: number;
+      readonly size: number;
+      readonly zoom: number;
+    };
   } | null = null;
   private loading: AbortController | null = null;
   private revealToken = 0;
@@ -373,6 +416,10 @@ export class OgeSpreadsheetCore {
     this.openNote = r.cell<OgeCellRef | null>(null);
     this.menu = r.cell<OgeSpreadsheetMenuState>({ kind: null, focus: 0 });
     this.formulaExpanded = r.cell(false);
+    this.resizeHover = r.cell<OgeResizeTarget | null>(null);
+    this.resizing = r.cell<
+      (OgeResizeTarget & { readonly pixels: number }) | null
+    >(null);
     this.catalog = r.cell(resolveOgeSpreadsheetMessages(options.messages));
     this.locale = options.locale ?? OGE_EN_US_FORMAT_LOCALE;
     this.measurer = options.measurer ?? OGE_ESTIMATING_MEASURER;
@@ -768,11 +815,7 @@ export class OgeSpreadsheetCore {
       });
       this.formatters.set(sheet, formatter);
     }
-    let tables = this.tableFormatters.get(sheet);
-    if (!tables && sheet.tables.length) {
-      tables = new OgeTableFormatter(workbook, sheet, this.resolver);
-      this.tableFormatters.set(sheet, tables);
-    }
+    const tables = this.tableFormatter(sheet, workbook, this.resolver);
     let sparklines = this.sparklineFormatters.get(sheet);
     if (!sparklines && sheet.sparklineGroups.length) {
       sparklines = new OgeSparklineFormatter(workbook, sheet, this.resolver);
@@ -787,6 +830,20 @@ export class OgeSpreadsheetCore {
       ...(sparklines?.active ? { sparklines } : {}),
     });
     return ogeZoomPaint(cells, layout, zoom);
+  }
+
+  /** The sheet's table styles, made once per sheet; `undefined` without tables. */
+  private tableFormatter(
+    sheet: OgeWorksheet,
+    workbook: OgeWorkbook,
+    resolver: OgeStyleResolver,
+  ): OgeTableFormatter | undefined {
+    let tables = this.tableFormatters.get(sheet);
+    if (!tables && sheet.tables.length) {
+      tables = new OgeTableFormatter(workbook, sheet, resolver);
+      this.tableFormatters.set(sheet, tables);
+    }
+    return tables;
   }
 
   /**
@@ -1251,6 +1308,30 @@ export class OgeSpreadsheetCore {
       : input.ctrlKey || input.metaKey
         ? 'add'
         : 'replace';
+    // a header's edge: the drag resizes its row or column
+    const edge = this.edgeAt(panes, point, header, input.pointerType);
+    const sized = this.layout(sheet);
+    if (edge && sized) {
+      const at = ogePointerSheetPoint(sheet, panes, point);
+      const axes = edge.axis === 'columns' ? panes.axes.cols : panes.axes.rows;
+      this.drag = {
+        kind: 'resize',
+        pointer: input.pointerId,
+        moved: false,
+        start: { row: 0, col: 0 },
+        last: { row: 0, col: 0 },
+        resize: {
+          ...edge,
+          targets: this.resizeTargets(edge),
+          origin: edge.axis === 'columns' ? at.x : at.y,
+          size: axes.size(edge.index),
+          zoom: panes.zoom,
+        },
+      };
+      const lengths = edge.axis === 'columns' ? sized.cols : sized.rows;
+      this.resizing.set({ ...edge, pixels: lengths.size(edge.index) });
+      return true;
+    }
     const active = this.selection().active;
     const start = (kind: 'cells' | 'rows' | 'columns', cell: OgeCellRef) => {
       this.drag = {
@@ -1323,10 +1404,35 @@ export class OgeSpreadsheetCore {
   pointerMove(
     panes: OgeViewportPanes,
     point: OgeGridPointerPoint,
-    input: Pick<OgeGridPointerInput, 'pointerId'>,
+    input: Pick<OgeGridPointerInput, 'pointerId' | 'pointerType'>,
+    header: OgeGridHeaderTarget | null = null,
   ): void {
     const sheet = this.sheet();
     if (!sheet) return;
+    const resize = this.drag?.resize;
+    if (resize) {
+      // an edge follows the pointer; Excel's tooltip says the size
+      if (this.drag?.pointer !== input.pointerId) return;
+      const at = ogePointerSheetPoint(sheet, panes, point);
+      const size = Math.max(
+        0,
+        resize.size + (resize.axis === 'columns' ? at.x : at.y) - resize.origin,
+      );
+      const pixels = Math.min(
+        this.maxSize(resize.axis),
+        Math.round((size * 100) / resize.zoom),
+      );
+      (this.drag as { moved: boolean }).moved = true;
+      if (pixels !== this.resizing()?.pixels)
+        this.resizing.set({ axis: resize.axis, index: resize.index, pixels });
+      return;
+    }
+    const edge = this.drag
+      ? null
+      : this.edgeAt(panes, point, header, input.pointerType);
+    const over = this.resizeHover();
+    if (edge?.axis !== over?.axis || edge?.index !== over?.index)
+      this.resizeHover.set(edge);
     const cell = ogePointerCell(sheet, panes, point);
     const hovered = this.hover();
     if (cell?.row !== hovered?.row || cell?.col !== hovered?.col)
@@ -1351,6 +1457,21 @@ export class OgeSpreadsheetCore {
   ): OgeGridClick | null {
     const drag = this.drag;
     this.drag = null;
+    if (drag?.resize) {
+      // the edge lands: the row or column, and the selected ones with it, take the size
+      const done = this.resizing();
+      this.resizing.set(null);
+      const layout = this.layout(this.sheet());
+      if (drag.moved && done && layout) {
+        const lengths = done.axis === 'columns' ? layout.cols : layout.rows;
+        if (done.pixels !== lengths.size(done.index)) {
+          if (done.axis === 'columns')
+            this.resizeColumns(drag.resize.targets, done.pixels);
+          else this.resizeRows(drag.resize.targets, done.pixels);
+        }
+      }
+      return null;
+    }
     const sheet = this.sheet();
     if (!sheet || !drag || drag.kind !== 'cells' || drag.moved) return null;
     const cell = ogePointerCell(sheet, panes, point);
@@ -1365,14 +1486,155 @@ export class OgeSpreadsheetCore {
     };
   }
 
-  /** The pointer was taken away (`pointercancel`): the drag ends where it is. */
+  /** The pointer was taken away (`pointercancel`): the drag ends where it is, an edge where it was. */
   pointerCancel(): void {
     this.drag = null;
+    if (this.resizing()) this.resizing.set(null);
   }
 
   /** The pointer left the grid. */
   pointerLeave(): void {
     if (this.hover()) this.hover.set(null);
+    if (this.resizeHover() && !this.drag) this.resizeHover.set(null);
+  }
+
+  /**
+   * A double-click on the grid: on a header's edge it AutoFits the row or
+   * column, and the selected ones with it, as Excel does. `true` when it did.
+   */
+  doubleClick(
+    panes: OgeViewportPanes,
+    point: OgeGridPointerPoint,
+    header: OgeGridHeaderTarget | null,
+    input: Pick<OgeGridPointerInput, 'pointerType'> = {},
+  ): boolean {
+    // the grid captured the pointer at the first press: the double-click
+    // targets the grid, so its header comes from where it is
+    const edge = this.edgeAt(
+      panes,
+      point,
+      header ?? this.headerAt(panes, point),
+      input.pointerType,
+    );
+    if (!edge) return false;
+    const targets = this.resizeTargets(edge);
+    return edge.axis === 'columns'
+      ? this.autofitColumns(targets)
+      : this.autofitRows(targets);
+  }
+
+  /**
+   * The header edge a pointer is on: a column header's far edge, or its near
+   * edge — the visible column before it — within a few pixels; the same for
+   * rows. `null` elsewhere, and on a sheet protected against it.
+   */
+  private edgeAt(
+    panes: OgeViewportPanes,
+    point: OgeGridPointerPoint,
+    header: OgeGridHeaderTarget | null,
+    pointerType: string | undefined,
+  ): OgeResizeTarget | null {
+    const sheet = this.sheet();
+    if (!sheet || !header) return null;
+    if (header.kind !== 'column-header' && header.kind !== 'row-header')
+      return null;
+    const axis = header.kind === 'column-header' ? 'columns' : 'rows';
+    if (!this.canResize(axis)) return null;
+    // a finger gets more room than a mouse
+    const slop = pointerType && pointerType !== 'mouse' ? 8 : 3;
+    const at = ogePointerSheetPoint(sheet, panes, point);
+    const lengths = axis === 'columns' ? panes.axes.cols : panes.axes.rows;
+    const index = header.kind === 'column-header' ? header.col : header.row;
+    const position = axis === 'columns' ? at.x : at.y;
+    if (Math.abs(position - lengths.offset(index + 1)) <= slop)
+      return { axis, index };
+    if (Math.abs(position - lengths.offset(index)) <= slop)
+      for (let i = index - 1; i >= 0; i--)
+        if (lengths.size(i) > 0) return { axis, index: i };
+    return null;
+  }
+
+  /** The row or column header under a point, found by where it is. */
+  private headerAt(
+    panes: OgeViewportPanes,
+    point: OgeGridPointerPoint,
+  ): OgeGridHeaderTarget | null {
+    const sheet = this.sheet();
+    if (!sheet) return null;
+    const x = sheet.view.rightToLeft
+      ? point.rect.right - point.clientX
+      : point.clientX - point.rect.left;
+    const y = point.clientY - point.rect.top;
+    const at = ogePointerSheetPoint(sheet, panes, point);
+    const { rowHeaderWidth, columnHeaderHeight } = panes.headers;
+    if (
+      y >= panes.startY - columnHeaderHeight &&
+      y < panes.startY &&
+      x >= panes.startX
+    )
+      return { kind: 'column-header', col: panes.axes.cols.indexAt(at.x) };
+    if (
+      x >= panes.startX - rowHeaderWidth &&
+      x < panes.startX &&
+      y >= panes.startY
+    )
+      return { kind: 'row-header', row: panes.axes.rows.indexAt(at.y) };
+    return null;
+  }
+
+  /** What dragging an edge resizes: its row or column, or every selected one when it is selected whole. */
+  private resizeTargets({ axis, index }: OgeResizeTarget): number[] {
+    const whole = this.selection().ranges.filter((r) =>
+      axis === 'columns'
+        ? r.top === 0 && r.bottom === OGE_SHEET_MAX_ROWS - 1
+        : r.left === 0 && r.right === OGE_SHEET_MAX_COLUMNS - 1,
+    );
+    const span = (r: OgeSheetRange) =>
+      axis === 'columns' ? [r.left, r.right] : [r.top, r.bottom];
+    if (!whole.some((r) => index >= span(r)[0] && index <= span(r)[1]))
+      return [index];
+    const out = new Set<number>();
+    for (const r of whole) {
+      const [first, last] = span(r);
+      for (let i = first; i <= last; i++) out.add(i);
+    }
+    return [...out].sort((a, b) => a - b);
+  }
+
+  /** Excel's largest column (255 characters) or row (409.5 pt), px at 100%. */
+  private maxSize(axis: 'rows' | 'columns'): number {
+    const mdw = this.layout(this.sheet())?.maxDigitWidth ?? 7;
+    return axis === 'columns' ? 255 * mdw + ogeColumnPadding(mdw) : 546;
+  }
+
+  /**
+   * The edge being dragged as the grid shows it: the line where it will be
+   * and Excel's tooltip beside it; `null` when none is.
+   */
+  resizeGuide(
+    panes: OgeViewportPanes,
+    scroll: OgeScrollPosition,
+  ): OgeResizeGuide | null {
+    const state = this.resizing();
+    if (!state) return null;
+    const size = Math.round((state.pixels * panes.zoom) / 100);
+    const line = ogeResizeLine(panes, state.axis, state.index, size, scroll);
+    return {
+      axis: state.axis,
+      line,
+      tip: this.sizeTip(state.axis, state.pixels),
+      // past the line's far side, along the headers
+      tipStyle:
+        state.axis === 'columns'
+          ? {
+              insetInlineStart: `${parseFloat(line['insetInlineStart']) + 6}px`,
+              top: '2px',
+            }
+          : {
+              insetInlineStart: `${panes.startX + 2}px`,
+              top: `${parseFloat(line['top']) + 4}px`,
+            },
+    };
   }
 
   private selectBand(
@@ -1698,6 +1960,12 @@ export class OgeSpreadsheetCore {
     const ctrl = event.ctrlKey || event.metaKey;
     const shift = event.shiftKey;
     const key = event.key;
+    // Escape drops an edge being dragged, where it was
+    if (key === 'Escape' && this.drag?.resize) {
+      this.drag = null;
+      this.resizing.set(null);
+      return 'none';
+    }
     const selection = this.selection();
     // Shift extends from the anchor's opposite corner: track the moving end
     const moving = shift ? this.movingEnd(selection) : selection.active;
@@ -2108,6 +2376,283 @@ export class OgeSpreadsheetCore {
     this.bump();
   }
 
+  // ── column widths and row heights ──────────────────────────────────────
+
+  /**
+   * Whether the sheet lets its columns or rows be resized: a protected sheet
+   * only when it allows formatting them (`formatColumns="0"`).
+   */
+  canResize(axis: 'rows' | 'columns'): boolean {
+    const attributes = this.sheet()?.protection?.attributes;
+    const on = (value: string | undefined) => value === '1' || value === 'true';
+    if (!attributes || !on(attributes['sheet'])) return true;
+    const allowed =
+      attributes[axis === 'columns' ? 'formatColumns' : 'formatRows'];
+    return allowed === '0' || allowed === 'false';
+  }
+
+  /**
+   * Gives columns of the active sheet a width, px at 100% zoom — 0 hides
+   * them — as dragging a column header's edge does; announced. `false` when
+   * nothing changed.
+   */
+  resizeColumns(cols: readonly number[], pixels: number): boolean {
+    const sheet = this.sheet();
+    const layout = this.layout(sheet);
+    if (!sheet || !layout || !cols.length || !this.canResize('columns'))
+      return false;
+    const px = Math.max(
+      0,
+      Math.min(this.maxSize('columns'), Math.round(pixels)),
+    );
+    const width = px ? ogePixelsToColumnWidth(px, layout.maxDigitWidth) : 0;
+    let changed = false;
+    for (const [first, last] of runs(cols)) {
+      // span by span, keeping what else a column carries (style, outline)
+      let at = first;
+      const set = (from: number, to: number, info: OgeColumnInfo) => {
+        const { hidden, width: old, ...rest } = info;
+        if (px === 0 ? hidden : !hidden && old === width) return;
+        sheet.setColumns(
+          from,
+          to,
+          px === 0 ? { ...info, hidden: true } : { ...rest, width },
+        );
+        changed = true;
+      };
+      for (const span of sheet.columnSpans()) {
+        if (span.last < at || span.first > last) continue;
+        if (span.first > at) set(at, span.first - 1, {});
+        const { first: _f, last: _l, ...info } = span;
+        set(Math.max(at, span.first), Math.min(last, span.last), info);
+        at = Math.min(last, span.last) + 1;
+        if (at > last) break;
+      }
+      if (at <= last) set(at, last, {});
+    }
+    if (!changed) return false;
+    this.sizesChanged(sheet);
+    this.announceSize('columns', cols, px);
+    return true;
+  }
+
+  /**
+   * Gives rows of the active sheet a height, px at 100% zoom — 0 hides them
+   * — as dragging a row header's edge does; announced. Every row selected
+   * changes the sheet's default height. `false` when nothing changed.
+   */
+  resizeRows(rows: readonly number[], pixels: number): boolean {
+    const sheet = this.sheet();
+    if (!sheet || !rows.length || !this.canResize('rows')) return false;
+    const px = Math.max(0, Math.min(this.maxSize('rows'), Math.round(pixels)));
+    const points = ogePixelsToPoints(px);
+    let changed = false;
+    if (rows.length === OGE_SHEET_MAX_ROWS && px > 0) {
+      // all of them: the sheet's default height, as Excel writes it
+      sheet.format = {
+        ...sheet.format,
+        defaultRowHeight: points,
+        customHeight: true,
+      };
+      for (const row of sheet.formattedRows()) {
+        const {
+          height: _h,
+          customHeight: _c,
+          hidden: _x,
+          ...rest
+        } = sheet.getRow(row) ?? {};
+        sheet.setRow(row, rest);
+      }
+      changed = true;
+    } else {
+      for (const row of rows) {
+        const info = sheet.getRow(row) ?? {};
+        if (px === 0) {
+          if (info.hidden) continue;
+          sheet.setRow(row, { ...info, hidden: true });
+        } else {
+          if (!info.hidden && info.height === points && info.customHeight)
+            continue;
+          const { hidden: _h, ...rest } = info;
+          sheet.setRow(row, { ...rest, height: points, customHeight: true });
+        }
+        changed = true;
+      }
+    }
+    if (!changed) return false;
+    this.sizesChanged(sheet);
+    this.announceSize('rows', rows, px);
+    return true;
+  }
+
+  /**
+   * Fits columns of the active sheet to their contents, as Excel's AutoFit
+   * does (a double-click on a column header's edge); a column with nothing
+   * to fit, or hidden, keeps its width. `false` when nothing changed.
+   */
+  autofitColumns(cols: readonly number[]): boolean {
+    const sheet = this.sheet();
+    const layout = this.layout(sheet);
+    const workbook = this.workbook();
+    const resolver = this.resolver;
+    if (!sheet || !layout || !workbook || !resolver) return false;
+    if (!this.canResize('columns')) return false;
+    const options = this.autofitOptions(sheet, workbook, resolver);
+    let changed = false;
+    for (const col of cols) {
+      if (layout.cols.size(col) === 0) continue;
+      const px = ogeAutofitColumnWidth(sheet, layout, resolver, col, options);
+      if (px === null || px === layout.cols.size(col)) continue;
+      const {
+        first: _f,
+        last: _l,
+        ...info
+      } = sheet.columnSpans().find((s) => col >= s.first && col <= s.last) ?? {
+        first: 0,
+        last: 0,
+      };
+      sheet.setColumns(col, col, {
+        ...info,
+        width: ogePixelsToColumnWidth(px, layout.maxDigitWidth),
+      });
+      changed = true;
+    }
+    if (!changed) return false;
+    this.sizesChanged(sheet);
+    this.announceFit('columns', cols);
+    return true;
+  }
+
+  /**
+   * Fits rows of the active sheet to their contents, as Excel's AutoFit
+   * does (a double-click on a row header's edge); the height is no longer a
+   * custom one. A hidden row keeps its height. `false` when nothing changed.
+   */
+  autofitRows(rows: readonly number[]): boolean {
+    const sheet = this.sheet();
+    const layout = this.layout(sheet);
+    const workbook = this.workbook();
+    const resolver = this.resolver;
+    if (!sheet || !layout || !workbook || !resolver) return false;
+    if (!this.canResize('rows')) return false;
+    const options = this.autofitOptions(sheet, workbook, resolver);
+    let changed = false;
+    for (const row of rows) {
+      if (layout.rows.size(row) === 0) continue;
+      const px = ogeAutofitRowHeight(sheet, layout, resolver, row, options);
+      const info = sheet.getRow(row) ?? {};
+      if (px === layout.rows.size(row) && !info.customHeight) continue;
+      const { customHeight: _c, ...rest } = info;
+      sheet.setRow(row, { ...rest, height: ogePixelsToPoints(px) });
+      changed = true;
+    }
+    if (!changed) return false;
+    this.sizesChanged(sheet);
+    this.announceFit('rows', rows);
+    return true;
+  }
+
+  private autofitOptions(
+    sheet: OgeWorksheet,
+    workbook: OgeWorkbook,
+    resolver: OgeStyleResolver,
+  ) {
+    const tables = this.tableFormatter(sheet, workbook, resolver);
+    return {
+      measurer: this.measurer,
+      locale: this.locale,
+      dateSystem: workbook.dateSystem,
+      ...(tables?.active ? { tables } : {}),
+    };
+  }
+
+  /** Excel's tooltip for a size, px at 100%: `Width: 8.43 (64 pixels)`, `Height: 15.00 (20 pixels)`. */
+  sizeTip(axis: 'rows' | 'columns', pixels: number): string {
+    const mdw = this.layout(this.sheet())?.maxDigitWidth ?? 7;
+    const value =
+      axis === 'columns'
+        ? ogePixelsToColumnCharacters(pixels, mdw)
+        : ogePixelsToPoints(pixels);
+    const text = value.toFixed(2).replace('.', this.locale.decimal);
+    return axis === 'columns'
+      ? this.formatMessage(this.messages.columnWidthTip, {
+          width: text,
+          pixels,
+        })
+      : this.formatMessage(this.messages.rowHeightTip, {
+          height: text,
+          pixels,
+        });
+  }
+
+  /** Sizes changed: the sheet lays out again, and what counts visible rows and columns redraws. */
+  private sizesChanged(sheet: OgeWorksheet): void {
+    this.layouts.delete(sheet);
+    this.outlines.delete(sheet);
+    this.tableFormatters.delete(sheet);
+    this.sparklineFormatters.clear();
+    this.bump();
+  }
+
+  private label(axis: 'rows' | 'columns', index: number): string {
+    return axis === 'columns' ? ogeColumnName(index) : String(index + 1);
+  }
+
+  /** The first and last of some rows or columns, labelled (a million of them too). */
+  private ends(
+    axis: 'rows' | 'columns',
+    indices: readonly number[],
+  ): { first: string; last: string } {
+    let low = Infinity;
+    let high = -Infinity;
+    for (const i of indices) {
+      if (i < low) low = i;
+      if (i > high) high = i;
+    }
+    return { first: this.label(axis, low), last: this.label(axis, high) };
+  }
+
+  private announceSize(
+    axis: 'rows' | 'columns',
+    indices: readonly number[],
+    pixels: number,
+  ): void {
+    const { first, last } = this.ends(axis, indices);
+    const m = this.messages;
+    this.announcement.set(
+      pixels === 0
+        ? this.formatMessage(
+            axis === 'columns' ? m.columnsHidden : m.rowsHidden,
+            {
+              first,
+              last,
+            },
+          )
+        : this.formatMessage(
+            axis === 'columns' ? m.columnsResized : m.rowsResized,
+            {
+              count: indices.length,
+              first,
+              last,
+              size: this.sizeTip(axis, pixels),
+            },
+          ),
+    );
+  }
+
+  private announceFit(
+    axis: 'rows' | 'columns',
+    indices: readonly number[],
+  ): void {
+    const m = this.messages;
+    this.announcement.set(
+      this.formatMessage(axis === 'columns' ? m.columnsFitted : m.rowsFitted, {
+        count: indices.length,
+        ...this.ends(axis, indices),
+      }),
+    );
+  }
+
   // ── the chrome's popup lists ───────────────────────────────────────────
 
   /**
@@ -2390,6 +2935,18 @@ function sparklineAt(
       if (cell.row === row && cell.col === col)
         found = { type: group.type, ref };
   return found;
+}
+
+/** Sorted indices as runs of consecutive ones, `[first, last]`. */
+function runs(indices: readonly number[]): [number, number][] {
+  const sorted = [...new Set(indices)].sort((a, b) => a - b);
+  const out: [number, number][] = [];
+  for (const i of sorted) {
+    const last = out[out.length - 1];
+    if (last && i === last[1] + 1) last[1] = i;
+    else out.push([i, i]);
+  }
+  return out;
 }
 
 /** A reference without `$`, quotes or case, for comparing a name with a selection. */

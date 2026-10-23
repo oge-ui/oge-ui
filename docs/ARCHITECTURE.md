@@ -2347,6 +2347,28 @@ gap)`), and draws the series — bars, lines with Excel's smoothing
   pane shows them as Excel does — a CSS counter-flip would put them a pixel
   off, against the gridline. The panes are hidden from assistive tech, so the
   active cell names its sparkline and data (`hasSparkline`).
+- **Columns and rows resize from their headers, as in Excel**
+  (`core.resizeColumns/resizeRows/autofitColumns/autofitRows`). A pointer
+  within 3 px of a header's edge (8 px for a finger) grabs it — the near
+  edge of a header grabs the visible row or column before it — and the grid
+  shows a resize cursor; the drag shows a dashed guide and Excel's
+  `Width: 8.43 (64 pixels)` / `Height: 15.00 (20 pixels)` tooltip
+  (`resizeGuide`, placed on the grid like the notes), lands on pointer up
+  for the dragged row or column and every whole one selected with it, hides
+  at 0 and stops at Excel's limits (255 characters, 409.5 pt); Escape drops
+  it. All rows at once set the sheet's default height. A double-click on an
+  edge AutoFits (`paint/autofit.ts`), by rules measured on Excel's
+  `Range.AutoFit` (`testing/corpus/autofit.*`, `autofit.corpus.spec.ts`): a
+  cell needs its text's GDI width (whole pixels per character, no kerning) +
+  its own font's padding + 2 px, plus `round(w / 28 − 2.43)` past ~70 px;
+  General numbers a digit slot per character; an indent 9 px a level;
+  rotated text its projection; vertical and stacked text their font's line
+  and padding; wrapped text its longest line at the current width (Excel's
+  own wrap differs at narrow widths — the one known case). Hidden rows
+  count, merged cells do not, an empty column keeps its width. The double
+  click finds its header from the point: the grid captured the pointer at
+  the first press. A protected sheet resizes only when it allows formatting
+  (`formatColumns="0"`), and every change is announced.
 - **A tab keeps its width when it turns bold**: the label's `::after` is a
   zero-height bold copy, `content: attr(data-label) / ''` — the empty
   alternative text keeps it out of the tab's name, and no second text node

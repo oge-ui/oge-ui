@@ -177,6 +177,9 @@
   --oge-spreadsheet-menu-bg: #ffffff;
   --oge-spreadsheet-menu-fg: #000000;
   --oge-spreadsheet-menu-hover-bg: #e6e6e6;
+  --oge-spreadsheet-resize-line: #000000;
+  --oge-spreadsheet-tip-fg: #000000;
+  --oge-spreadsheet-tip-border: #000000;
   --oge-spreadsheet-filter-border: #000000;
   --oge-spreadsheet-filter-fg: #000000;
 }

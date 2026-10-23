@@ -866,6 +866,68 @@ describe('OgeSpreadsheetCore — the chrome’s lists', () => {
   });
 });
 
+describe('OgeSpreadsheetCore — column widths and row heights', () => {
+  it('keeps what else a column carries when it gives it a width', () => {
+    const workbook = sample();
+    const sheet = workbook.sheets[0];
+    const bold = workbook.styles.intern({ font: { bold: true } });
+    sheet.setColumns(1, 3, { style: bold, outlineLevel: 1 });
+    const c = core(workbook);
+    expect(c.resizeColumns([2, 5], 100)).toBe(true);
+    expect(sheet.getColumn(2)).toEqual({
+      style: bold,
+      outlineLevel: 1,
+      width: 14.28125,
+    });
+    expect(sheet.getColumn(1)).toEqual({ style: bold, outlineLevel: 1 });
+    expect(sheet.getColumn(5)?.width).toBe(14.28125);
+    expect(c.layout(sheet)?.cols.size(2)).toBe(100);
+    // the same width again changes nothing
+    expect(c.resizeColumns([2, 5], 100)).toBe(false);
+    expect(c.resizeColumns([], 100)).toBe(false);
+    // wider than Excel's 255 characters: held there
+    c.resizeColumns([7], 5000);
+    expect(c.layout(sheet)?.cols.size(7)).toBe(1790);
+  });
+
+  it('gives rows a height, and every row the sheet’s default when all are resized', () => {
+    const workbook = sample();
+    const sheet = workbook.sheets[0];
+    const c = core(workbook);
+    expect(c.resizeRows([3, 4], 30)).toBe(true);
+    expect(sheet.getRow(3)).toEqual({ height: 22.5, customHeight: true });
+    const every = Array.from({ length: 1048576 }, (_, i) => i);
+    expect(c.resizeRows(every, 40)).toBe(true);
+    expect(sheet.format).toMatchObject({
+      defaultRowHeight: 30,
+      customHeight: true,
+    });
+    expect(sheet.getRow(3)?.height).toBeUndefined();
+    expect(c.layout(sheet)?.rows.size(900000)).toBe(40);
+    expect(c.announcement()).toBe(
+      'Rows 1 to 1048576: Height: 30.00 (40 pixels)',
+    );
+    // hidden rows keep their height; a hidden one is no AutoFit target
+    c.resizeRows([6], 0);
+    expect(sheet.getRow(6)?.hidden).toBe(true);
+    expect(c.autofitRows([6])).toBe(false);
+  });
+
+  it('AutoFits columns to their text and leaves an empty one as it is', () => {
+    const workbook = sample();
+    const sheet = workbook.sheets[0];
+    const c = core(workbook);
+    const before = c.layout(sheet)?.cols.size(0) ?? 0;
+    expect(c.autofitColumns([0, 40])).toBe(true);
+    expect(c.layout(sheet)?.cols.size(0)).not.toBe(before);
+    expect(c.layout(sheet)?.cols.size(40)).toBe(64);
+    expect(c.announcement()).toBe('Columns A to AO fitted to their contents');
+    expect(c.autofitColumns([40])).toBe(false);
+    expect(c.sizeTip('columns', 64)).toBe('Width: 8.43 (64 pixels)');
+    expect(c.sizeTip('rows', 1)).toBe('Height: 0.75 (1 pixel)');
+  });
+});
+
 describe('OgeSpreadsheetCore — outline', () => {
   /** Rows 13–18 grouped (15–16 one level deeper) under the summary on row 19; columns E:F under G. */
   function grouped(): OgeWorkbook {

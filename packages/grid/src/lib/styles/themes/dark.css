@@ -123,6 +123,9 @@
   --oge-spreadsheet-menu-bg: #292929;
   --oge-spreadsheet-menu-fg: #ffffff;
   --oge-spreadsheet-menu-hover-bg: #3d3d3d;
+  --oge-spreadsheet-tip-bg: #292929;
+  --oge-spreadsheet-tip-fg: #ffffff;
+  --oge-spreadsheet-tip-border: #666666;
   /* derived tokens, re-resolved inside this scope so a dark subtree gets
      dark tints (keep in sync with derived-tokens in _tokens.scss) */
   --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 10%, transparent);
@@ -285,6 +288,9 @@
     --oge-spreadsheet-menu-bg: #292929;
     --oge-spreadsheet-menu-fg: #ffffff;
     --oge-spreadsheet-menu-hover-bg: #3d3d3d;
+    --oge-spreadsheet-tip-bg: #292929;
+    --oge-spreadsheet-tip-fg: #ffffff;
+    --oge-spreadsheet-tip-border: #666666;
     /* derived tokens, re-resolved inside this scope so a dark subtree gets
        dark tints (keep in sync with derived-tokens in _tokens.scss) */
     --oge-row-focused-bg: color-mix(

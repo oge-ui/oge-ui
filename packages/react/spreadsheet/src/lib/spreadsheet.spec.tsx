@@ -492,6 +492,52 @@ describe('OgeSpreadsheet (React)', () => {
     );
   });
 
+  it('resizes a column from its header’s edge with Excel’s tooltip, and AutoFits one on a double-click', () => {
+    mount({ workbook: sampleBook() });
+    grid().getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 360,
+        width: 800,
+        height: 360,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    const headers = root().querySelectorAll('.oge-spreadsheet-column-header');
+    // B ends 26 + 128 px in: the edge is under the pointer
+    const edge = { clientX: 153, clientY: 10, button: 0 };
+    pointer(headers[1], 'pointermove', edge);
+    const viewer = () =>
+      root().querySelector('.oge-spreadsheet') as HTMLElement;
+    expect(viewer().classList).toContain('oge-spreadsheet-resize-columns');
+    pointer(headers[1], 'pointerdown', edge);
+    pointer(grid(), 'pointermove', { ...edge, clientX: 189 });
+    expect(
+      root().querySelector('.oge-spreadsheet-resize-tip')?.textContent,
+    ).toBe('Width: 13.57 (100 pixels)');
+    expect(
+      root()
+        .querySelector('.oge-spreadsheet-resize-line')
+        ?.getAttribute('style'),
+    ).toContain('inset-inline-start: 189px');
+    pointer(grid(), 'pointerup', { ...edge, clientX: 189 });
+    expect(root().querySelector('.oge-spreadsheet-resize')).toBeNull();
+    const core = handle.current?.core;
+    expect(core?.layout()?.cols.size(1)).toBe(100);
+    // a double-click on A's edge fits it to its contents
+    act(() => {
+      headers[0].dispatchEvent(
+        new MouseEvent('dblclick', { clientX: 89, clientY: 10, bubbles: true }),
+      );
+    });
+    expect(core?.announcement()).toBe('Column A fitted to its contents');
+    pointer(grid(), 'pointermove', { clientX: 60, clientY: 60 });
+    expect(viewer().classList).not.toContain('oge-spreadsheet-resize-columns');
+  });
+
   it('mirrors right-to-left sheets', () => {
     const book = sampleBook();
     book.sheets[0].view = { ...book.sheets[0].view, rightToLeft: true };

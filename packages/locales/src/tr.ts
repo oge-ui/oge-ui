@@ -1755,6 +1755,16 @@ export const tr: OgeLocalePack = {
     hasFormula: 'formül {formula}',
     hasSparkline:
       '{range} için {type, select, column {sütun mini grafiği} stacked {kazanç/kayıp mini grafiği} other {çizgi mini grafiği}}',
+    columnWidthTip: 'Genişlik: {width} ({pixels, plural, other {# piksel}})',
+    rowHeightTip: 'Yükseklik: {height} ({pixels, plural, other {# piksel}})',
+    columnsResized:
+      '{count, plural, one {{first} sütunu} other {{first}–{last} sütunları}}: {size}',
+    rowsResized:
+      '{count, plural, one {{first}. satır} other {{first}–{last} satırları}}: {size}',
+    columnsFitted:
+      '{count, plural, one {{first} sütunu içeriğine sığdırıldı} other {{first}–{last} sütunları içeriklerine sığdırıldı}}',
+    rowsFitted:
+      '{count, plural, one {{first}. satır içeriğine sığdırıldı} other {{first}–{last} satırları içeriklerine sığdırıldı}}',
     selectionAnnouncement: '{range} seçildi, {cells, plural, other {# hücre}}',
     sheetAnnouncement: '{name} sayfası, {index} / {total}',
     notePopupLabel: 'Not',

@@ -404,6 +404,53 @@ describe('OgeSpreadsheet', () => {
     ).toBe('B');
   });
 
+  it('resizes a column from its header’s edge with Excel’s tooltip, and AutoFits one on a double-click', async () => {
+    await render();
+    const rect = {
+      left: 0,
+      top: 0,
+      right: 800,
+      bottom: 360,
+      width: 800,
+      height: 360,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    };
+    grid().getBoundingClientRect = () => rect as DOMRect;
+    const headers = host.querySelectorAll('.oge-spreadsheet-column-header');
+    // B ends 26 + 128 px in: the edge is under the pointer
+    const edge = { clientX: 153, clientY: 10, button: 0 };
+    headers[1].dispatchEvent(pointer('pointermove', edge));
+    fixture.detectChanges();
+    const viewer = host.querySelector('oge-spreadsheet') as HTMLElement;
+    expect(viewer.classList).toContain('oge-spreadsheet-resize-columns');
+    headers[1].dispatchEvent(pointer('pointerdown', edge));
+    grid().dispatchEvent(pointer('pointermove', { ...edge, clientX: 189 }));
+    fixture.detectChanges();
+    expect(host.querySelector('.oge-spreadsheet-resize-tip')?.textContent).toBe(
+      'Width: 13.57 (100 pixels)',
+    );
+    expect(
+      host.querySelector('.oge-spreadsheet-resize-line')?.getAttribute('style'),
+    ).toContain('inset-inline-start: 189px');
+    grid().dispatchEvent(pointer('pointerup', { ...edge, clientX: 189 }));
+    fixture.detectChanges();
+    expect(host.querySelector('.oge-spreadsheet-resize')).toBeNull();
+    expect(component().core.layout()?.cols.size(1)).toBe(100);
+    // a double-click on A's edge fits it to its contents
+    headers[0].dispatchEvent(
+      new MouseEvent('dblclick', { clientX: 89, clientY: 10, bubbles: true }),
+    );
+    fixture.detectChanges();
+    expect(component().core.announcement()).toBe(
+      'Column A fitted to its contents',
+    );
+    grid().dispatchEvent(pointer('pointermove', { clientX: 60, clientY: 60 }));
+    fixture.detectChanges();
+    expect(viewer.classList).not.toContain('oge-spreadsheet-resize-columns');
+  });
+
   it('shows a note on Shift+F2 and hides it with Escape', async () => {
     await render();
     await key('ArrowDown');

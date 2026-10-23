@@ -1,8 +1,9 @@
 // Rebuilds the golden corpus: builds the source workbooks, has Excel open,
 // measure and re-save them (capture.ps1), reads the tables' lines and the
 // sparklines' pixels off the screen (table-lines.ps1, sparkline-capture.ps1
-// with sparkline-boxes.mjs), then regenerates the font-metrics and built-in
-// table-style tables the engine embeds. Windows with Microsoft Excel only.
+// with sparkline-boxes.mjs), records what AutoFit does (autofit-capture.ps1),
+// then regenerates the font-metrics and built-in table-style tables the
+// engine embeds. Windows with Microsoft Excel only.
 //
 //   node packages/spreadsheet-engine/testing/tools/run.mjs [--only metrics,corpus]
 //
@@ -113,6 +114,21 @@ try {
   execFileSync(
     process.execPath,
     [join(here, 'sparkline-boxes.mjs'), pictures, corpus],
+    { stdio: 'inherit' },
+  );
+  execFileSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      join(here, 'autofit-capture.ps1'),
+      '-Sources',
+      sources,
+      '-Corpus',
+      corpus,
+    ],
     { stdio: 'inherit' },
   );
 } finally {

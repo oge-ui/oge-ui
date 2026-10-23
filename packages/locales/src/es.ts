@@ -1791,6 +1791,18 @@ export const es: OgeLocalePack = {
     hasFormula: 'fórmula {formula}',
     hasSparkline:
       '{type, select, column {minigráfico de columnas} stacked {minigráfico de ganancia o pérdida} other {minigráfico de línea}} de {range}',
+    columnWidthTip:
+      'Ancho: {width} ({pixels, plural, one {# píxel} other {# píxeles}})',
+    rowHeightTip:
+      'Alto: {height} ({pixels, plural, one {# píxel} other {# píxeles}})',
+    columnsResized:
+      '{count, plural, one {Columna {first}} other {Columnas {first} a {last}}}: {size}',
+    rowsResized:
+      '{count, plural, one {Fila {first}} other {Filas {first} a {last}}}: {size}',
+    columnsFitted:
+      '{count, plural, one {Columna {first} ajustada a su contenido} other {Columnas {first} a {last} ajustadas a su contenido}}',
+    rowsFitted:
+      '{count, plural, one {Fila {first} ajustada a su contenido} other {Filas {first} a {last} ajustadas a su contenido}}',
     selectionAnnouncement:
       'Rango {range} seleccionado, {cells, plural, one {# celda} other {# celdas}}',
     sheetAnnouncement: 'Hoja {name}, {index} de {total}',

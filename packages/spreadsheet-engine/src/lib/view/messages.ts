@@ -62,6 +62,18 @@ export interface OgeSpreadsheetMessages {
   readonly hasFormula: string;
   /** The cell's sparkline: its `{type}` (`line`, `column`, or `stacked` for win/loss) and its data `{range}`. */
   readonly hasSparkline: string;
+  /** Excel's tooltip while a column header's edge is dragged: `{width}` in characters, `{pixels}`. */
+  readonly columnWidthTip: string;
+  /** Excel's tooltip while a row header's edge is dragged: `{height}` in points, `{pixels}`. */
+  readonly rowHeightTip: string;
+  /** Columns resized: `{count}`, `{first}`, `{last}` and the new `{size}` (the tooltip's text). */
+  readonly columnsResized: string;
+  /** Rows resized: `{count}`, `{first}`, `{last}` and the new `{size}` (the tooltip's text). */
+  readonly rowsResized: string;
+  /** Columns AutoFitted to their contents: `{count}`, `{first}`, `{last}`. */
+  readonly columnsFitted: string;
+  /** Rows AutoFitted to their contents: `{count}`, `{first}`, `{last}`. */
+  readonly rowsFitted: string;
   /** A range selection: `{range}`, `{cells}`. */
   readonly selectionAnnouncement: string;
   /** A sheet switch: `{name}`, `{index}` of `{total}` visible sheets. */
@@ -169,6 +181,18 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
   hasLink: 'Link to {target}, Alt+Enter to open',
   mergedCell: 'merged {range}',
   hasFormula: 'formula {formula}',
+  columnWidthTip:
+    'Width: {width} ({pixels, plural, one {# pixel} other {# pixels}})',
+  rowHeightTip:
+    'Height: {height} ({pixels, plural, one {# pixel} other {# pixels}})',
+  columnsResized:
+    '{count, plural, one {Column {first}} other {Columns {first} to {last}}}: {size}',
+  rowsResized:
+    '{count, plural, one {Row {first}} other {Rows {first} to {last}}}: {size}',
+  columnsFitted:
+    '{count, plural, one {Column {first} fitted to its contents} other {Columns {first} to {last} fitted to their contents}}',
+  rowsFitted:
+    '{count, plural, one {Row {first} fitted to its contents} other {Rows {first} to {last} fitted to their contents}}',
   hasSparkline:
     '{type, select, column {column sparkline} stacked {win/loss sparkline} other {line sparkline}} of {range}',
   selectionAnnouncement:

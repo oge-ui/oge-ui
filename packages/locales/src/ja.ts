@@ -1760,6 +1760,16 @@ export const ja: OgeLocalePack = {
     hasFormula: '数式 {formula}',
     hasSparkline:
       '{range} の{type, select, column {縦棒スパークライン} stacked {勝敗スパークライン} other {折れ線スパークライン}}',
+    columnWidthTip: '幅: {width} ({pixels, plural, other {# ピクセル}})',
+    rowHeightTip: '高さ: {height} ({pixels, plural, other {# ピクセル}})',
+    columnsResized:
+      '{count, plural, =1 {列 {first}} other {列 {first}～{last}}}: {size}',
+    rowsResized:
+      '{count, plural, =1 {行 {first}} other {行 {first}～{last}}}: {size}',
+    columnsFitted:
+      '{count, plural, =1 {列 {first} を内容に合わせました} other {列 {first}～{last} を内容に合わせました}}',
+    rowsFitted:
+      '{count, plural, =1 {行 {first} を内容に合わせました} other {行 {first}～{last} を内容に合わせました}}',
     selectionAnnouncement:
       '{range} の {cells, plural, other {# 個のセル}}を選択しました',
     sheetAnnouncement: 'シート {name}、{total} 枚中 {index} 枚目',

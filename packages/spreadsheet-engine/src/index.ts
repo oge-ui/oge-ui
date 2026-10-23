@@ -320,6 +320,12 @@ export {
 export { OgeSparklineFormatter } from './lib/paint/sparkline-format';
 
 export {
+  ogeAutofitColumnWidth,
+  ogeAutofitRowHeight,
+  type OgeAutofitOptions,
+} from './lib/paint/autofit';
+
+export {
   OgeConditionalFormatter,
   ogeConditionalConstant,
   ogeConditionalRuleSupported,
@@ -481,6 +487,8 @@ export {
   ogePanePictures,
   ogePaneStyle,
   ogePointerCell,
+  ogePointerSheetPoint,
+  ogeResizeLine,
   ogeSliderToZoom,
   ogeTabKeyTarget,
   ogeZoomToSlider,
@@ -529,6 +537,8 @@ export {
   type OgeGridClick,
   type OgeGridPointerInput,
   type OgeHyperlinkAction,
+  type OgeResizeGuide,
+  type OgeResizeTarget,
   type OgeRevealRequest,
   type OgeSpreadsheetCoreOptions,
   type OgeSpreadsheetKeyAction,

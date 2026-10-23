@@ -215,6 +215,44 @@ for (const layer of LAYERS) {
       expect(results.violations.map((v) => v.id)).toEqual([]);
     });
 
+    test('resizes a column by dragging its header’s edge, with Excel’s tooltip, and AutoFits it on a double-click', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      await page.locator(BASIC).getByRole('button', { name: 'Tables' }).click();
+      await expect(host.locator('.oge-spreadsheet-tab').first()).toHaveText(
+        'Sales',
+        { timeout: 30_000 },
+      );
+      const header = host
+        .locator('.oge-spreadsheet-column-header')
+        .filter({ hasText: /^C$/ });
+      const box = await header.boundingBox();
+      if (!box) throw new Error('no header box');
+      const edge = { x: box.x + box.width - 1, y: box.y + box.height / 2 };
+      await page.mouse.move(edge.x, edge.y);
+      await expect(host).toHaveClass(/oge-spreadsheet-resize-columns/);
+      await page.mouse.down();
+      await page.mouse.move(edge.x + 40, edge.y, { steps: 4 });
+      const tip = host.locator('.oge-spreadsheet-resize-tip');
+      await expect(tip).toHaveText(/^Width: \d+[.,]\d\d \(\d+ pixels\)$/);
+      await page.mouse.up();
+      await expect(tip).toHaveCount(0);
+      await expect
+        .poll(async () => (await header.boundingBox())?.width ?? 0)
+        .toBeCloseTo(box.width + 40, 0);
+      const live = host.locator('.oge-spreadsheet-live');
+      await expect(live).toHaveText(/Column C: Width: /);
+      // a double-click on the edge fits the column to its contents
+      const wide = await header.boundingBox();
+      if (!wide) throw new Error('no header box');
+      await page.mouse.dblclick(wide.x + wide.width - 1, edge.y);
+      await expect(live).toHaveText('Column C fitted to its contents');
+      await expect
+        .poll(async () => (await header.boundingBox())?.width ?? 0)
+        .toBeLessThan(wide.width);
+    });
+
     test('opens the reader’s own workbook from the uploader, without uploading it', async ({
       page,
     }) => {

@@ -1775,6 +1775,16 @@ export const ar: OgeLocalePack = {
     hasFormula: 'الصيغة {formula}',
     hasSparkline:
       '{type, select, column {خط مؤشر من نوع عمود} stacked {خط مؤشر من نوع ربح/خسارة} other {خط مؤشر من نوع خط}} للبيانات {range}',
+    columnWidthTip: 'العرض: {width} ({pixels, plural, other {# بكسل}})',
+    rowHeightTip: 'الارتفاع: {height} ({pixels, plural, other {# بكسل}})',
+    columnsResized:
+      '{count, plural, one {العمود {first}} other {الأعمدة من {first} إلى {last}}}: {size}',
+    rowsResized:
+      '{count, plural, one {الصف {first}} other {الصفوف من {first} إلى {last}}}: {size}',
+    columnsFitted:
+      '{count, plural, one {تمت ملاءمة العمود {first} لمحتواه} other {تمت ملاءمة الأعمدة من {first} إلى {last} لمحتواها}}',
+    rowsFitted:
+      '{count, plural, one {تمت ملاءمة الصف {first} لمحتواه} other {تمت ملاءمة الصفوف من {first} إلى {last} لمحتواها}}',
     selectionAnnouncement:
       'تم تحديد {range}، {cells, plural, zero {لا توجد خلايا} one {خلية واحدة} two {خليتان} few {# خلايا} many {# خلية} other {# خلية}}',
     sheetAnnouncement: 'الورقة {name}، {index} من {total}',

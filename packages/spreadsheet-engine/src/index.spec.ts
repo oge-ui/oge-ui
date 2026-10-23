@@ -56,6 +56,8 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'isOgeDateFormat',
     'isOgeRichText',
     'ogeAnchorBox',
+    'ogeAutofitColumnWidth',
+    'ogeAutofitRowHeight',
     'ogeApplyOutlineEdit',
     'ogeApplyTint',
     'ogeAxisOutline',
@@ -143,6 +145,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogePlaceCharts',
     'ogePlacePictures',
     'ogePointerCell',
+    'ogePointerSheetPoint',
     'ogePointsToPixels',
     'ogePrintSheetTable',
     'ogePrintTable',
@@ -156,6 +159,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeRangeSize',
     'ogeRangesIntersect',
     'ogeRenderPane',
+    'ogeResizeLine',
     'ogeRevealScroll',
     'ogeRichText',
     'ogeRichTextToString',
@@ -201,7 +205,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
 
   it('exports nothing it does not guard', () => {
     // a new export lands in the list above in the same change
-    expect(Object.keys(engine)).toHaveLength(190);
+    expect(Object.keys(engine)).toHaveLength(194);
   });
 
   it('keeps the internal ZIP and XML layers out of the public surface', () => {

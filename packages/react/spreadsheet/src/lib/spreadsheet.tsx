@@ -13,6 +13,7 @@ import {
   type CSSProperties,
   type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import {
@@ -493,6 +494,15 @@ export const OgeSpreadsheet = forwardRef<
   const notes = panes
     ? core.notes(panes, { scrollTop: scroll.top, scrollLeft: scroll.left })
     : [];
+  const resizeGuide = panes
+    ? core.resizeGuide(panes, {
+        scrollTop: scroll.top,
+        scrollLeft: scroll.left,
+      })
+    : null;
+  // a header edge under the pointer or being dragged: the grid's resize cursor
+  const resizeCursor =
+    core.resizing()?.axis ?? core.resizeHover()?.axis ?? null;
   // the panes the charts draw in are hidden from assistive tech: it hears this list
   const chartLabels = workbook ? core.chartLabels() : [];
   const tabs = workbook ? core.tabs() : [];
@@ -764,7 +774,27 @@ export const OgeSpreadsheet = forwardRef<
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const scroller = scrollerRef.current;
     if (panes && scroller)
-      core.pointerMove(panes, ogeGridPoint(event, scroller), event);
+      core.pointerMove(
+        panes,
+        ogeGridPoint(event, scroller),
+        event,
+        ogeGridHeaderAt(event.target),
+      );
+  };
+
+  /** A double-click on a header's edge AutoFits its row or column. */
+  const onDoubleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const scroller = scrollerRef.current;
+    if (
+      panes &&
+      scroller &&
+      core.doubleClick(
+        panes,
+        ogeGridPoint(event, scroller),
+        ogeGridHeaderAt(event.target),
+      )
+    )
+      event.preventDefault();
   };
 
   const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -926,6 +956,8 @@ export const OgeSpreadsheet = forwardRef<
   const rootClass = [
     'oge-spreadsheet',
     core.hoverLink() ? 'oge-spreadsheet-link-hover' : '',
+    resizeCursor === 'columns' ? 'oge-spreadsheet-resize-columns' : '',
+    resizeCursor === 'rows' ? 'oge-spreadsheet-resize-rows' : '',
     className ?? '',
   ]
     .filter(Boolean)
@@ -1084,6 +1116,7 @@ export const OgeSpreadsheet = forwardRef<
           onPointerUp={onPointerUp}
           onPointerCancel={() => core.pointerCancel()}
           onMouseLeave={() => core.pointerLeave()}
+          onDoubleClick={onDoubleClick}
         >
           {view ? (
             <div
@@ -1399,6 +1432,24 @@ export const OgeSpreadsheet = forwardRef<
                 ))}
               </div>
             ))}
+          </div>
+        ) : null}
+        {resizeGuide ? (
+          <div
+            className="oge-spreadsheet-resize"
+            aria-hidden="true"
+            dir={rtl ? 'rtl' : 'ltr'}
+          >
+            <div
+              className={`oge-spreadsheet-resize-line${resizeGuide.axis === 'rows' ? ' oge-spreadsheet-resize-line-rows' : ''}`}
+              style={css(resizeGuide.line)}
+            />
+            <div
+              className="oge-spreadsheet-resize-tip"
+              style={css(resizeGuide.tipStyle)}
+            >
+              {resizeGuide.tip}
+            </div>
           </div>
         ) : null}
         {chartLabels.length ? (

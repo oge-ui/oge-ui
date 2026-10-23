@@ -1808,6 +1808,18 @@ export const fr: OgeLocalePack = {
     hasFormula: 'formule {formula}',
     hasSparkline:
       '{type, select, column {graphique sparkline en histogramme} stacked {graphique sparkline positif/négatif} other {graphique sparkline en courbe}} de {range}',
+    columnWidthTip:
+      'Largeur : {width} ({pixels, plural, one {# pixel} other {# pixels}})',
+    rowHeightTip:
+      'Hauteur : {height} ({pixels, plural, one {# pixel} other {# pixels}})',
+    columnsResized:
+      '{count, plural, one {Colonne {first}} other {Colonnes {first} à {last}}} : {size}',
+    rowsResized:
+      '{count, plural, one {Ligne {first}} other {Lignes {first} à {last}}} : {size}',
+    columnsFitted:
+      '{count, plural, one {Colonne {first} ajustée au contenu} other {Colonnes {first} à {last} ajustées au contenu}}',
+    rowsFitted:
+      '{count, plural, one {Ligne {first} ajustée au contenu} other {Lignes {first} à {last} ajustées au contenu}}',
     selectionAnnouncement:
       'Plage {range} sélectionnée, {cells, plural, one {# cellule} other {# cellules}}',
     sheetAnnouncement: 'Feuille {name}, {index} sur {total}',

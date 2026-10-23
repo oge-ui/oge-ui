@@ -131,7 +131,7 @@ _Handle (ref)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `core` | `OgeSpreadsheetCore` | The framework-free controller from `@oge-ui/spreadsheet-engine` (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures and announcements. The Angular viewer runs the same class. |
+| `core` | `OgeSpreadsheetCore` | The framework-free controller from `@oge-ui/spreadsheet-engine` (ADR 0003) — selection, keyboard map, find, copy, the grid frame, pointer gestures, column widths and row heights (`resizeColumns`, `resizeRows`, `autofitColumns`, `autofitRows`, as dragging and double-clicking a header's edge do) and announcements. The Angular viewer runs the same class. |
 | `open(source)` | `(source: OgeSpreadsheetSource) => Promise<void>` | Opens a workbook; resolves once it is shown (or failed) and `onLoaded` / `onLoadError` ran. |
 | `getWorkbook()` | `() => OgeWorkbook \| null` | The open workbook. |
 | `selectSheet(index)` | `(index: number) => boolean` | Shows a sheet; `false` for a hidden or missing one. |

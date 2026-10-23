@@ -1767,6 +1767,18 @@ export const he: OgeLocalePack = {
     hasFormula: 'נוסחה {formula}',
     hasSparkline:
       '{type, select, column {תרשים זעיר מסוג עמודה} stacked {תרשים זעיר מסוג רווח/הפסד} other {תרשים זעיר מסוג קו}} של {range}',
+    columnWidthTip:
+      'רוחב: {width} ({pixels, plural, one {פיקסל #} other {# פיקסלים}})',
+    rowHeightTip:
+      'גובה: {height} ({pixels, plural, one {פיקסל #} other {# פיקסלים}})',
+    columnsResized:
+      '{count, plural, one {עמודה {first}} other {עמודות {first} עד {last}}}: {size}',
+    rowsResized:
+      '{count, plural, one {שורה {first}} other {שורות {first} עד {last}}}: {size}',
+    columnsFitted:
+      '{count, plural, one {עמודה {first} הותאמה לתוכן} other {עמודות {first} עד {last} הותאמו לתוכן}}',
+    rowsFitted:
+      '{count, plural, one {שורה {first} הותאמה לתוכן} other {שורות {first} עד {last} הותאמו לתוכן}}',
     selectionAnnouncement:
       'נבחר {range}, {cells, plural, one {תא אחד} two {שני תאים} other {# תאים}}',
     sheetAnnouncement: 'גיליון {name}, {index} מתוך {total}',

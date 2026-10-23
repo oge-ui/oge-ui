@@ -1794,6 +1794,16 @@ export const it: OgeLocalePack = {
     hasFormula: 'formula {formula}',
     hasSparkline:
       '{type, select, column {grafico sparkline a istogramma} stacked {grafico sparkline positivi/negativi} other {grafico sparkline a linee}} di {range}',
+    columnWidthTip: 'Larghezza: {width} ({pixels, plural, other {# pixel}})',
+    rowHeightTip: 'Altezza: {height} ({pixels, plural, other {# pixel}})',
+    columnsResized:
+      '{count, plural, one {Colonna {first}} other {Colonne da {first} a {last}}}: {size}',
+    rowsResized:
+      '{count, plural, one {Riga {first}} other {Righe da {first} a {last}}}: {size}',
+    columnsFitted:
+      '{count, plural, one {Colonna {first} adattata al contenuto} other {Colonne da {first} a {last} adattate al contenuto}}',
+    rowsFitted:
+      '{count, plural, one {Riga {first} adattata al contenuto} other {Righe da {first} a {last} adattate al contenuto}}',
     selectionAnnouncement:
       'Intervallo {range} selezionato, {cells, plural, one {# cella} other {# celle}}',
     sheetAnnouncement: 'Foglio {name}, {index} di {total}',

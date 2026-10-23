@@ -269,6 +269,11 @@
   --oge-spreadsheet-menu-bg: #ffffff;
   --oge-spreadsheet-menu-fg: #323130;
   --oge-spreadsheet-menu-hover-bg: #f5f5f5;
+  /* a header edge being dragged: the guide over the (always white) cells, and the size tooltip */
+  --oge-spreadsheet-resize-line: #444444;
+  --oge-spreadsheet-tip-bg: #ffffff;
+  --oge-spreadsheet-tip-fg: #242424;
+  --oge-spreadsheet-tip-border: #bdbdbd;
 }
 
 // Tokens computed from other tokens. Keep this list in sync with the

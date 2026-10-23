@@ -76,6 +76,17 @@ are versioned independently, which is the case here.
   1,694 match pixel for pixel and the other five land a pixel apart on
   half-pixel ties. Screen readers hear a sparkline cell's kind and data. A
   "Sparklines" sample joins the docs.
+- **Columns and rows resize as in Excel:** drag a header's edge — Excel's
+  `Width: 8.43 (64 pixels)` tooltip and a guide line follow the pointer, every
+  selected column or row takes the size, dragging past the start hides it,
+  Escape drops the drag — and double-click it to AutoFit, sized by the rules
+  read off Excel's own AutoFit — 225 of the 226 corpus cases the engine can
+  measure match it to the pixel: the measured text, General numbers' digit
+  slots, a long text's extra margin, indents, rotated, vertical
+  and stacked text, wrapped lines, merged cells left out and hidden rows
+  counted. A protected sheet keeps its sizes unless it allows formatting them.
+  The core exposes it all (`resizeColumns`, `resizeRows`, `autofitColumns`,
+  `autofitRows`), and every change is announced.
 - **Tints exactly as Excel paints them:** theme colours lighter or darker by a
   tint now match Excel to the bit (190 of 190 measured), not within 2/255.
 - **Outline symbols:** grouped rows and columns show Excel's brackets, plus

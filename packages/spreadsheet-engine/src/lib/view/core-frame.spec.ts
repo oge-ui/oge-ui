@@ -574,3 +574,155 @@ describe('OgeSpreadsheetCore — outline buttons', () => {
     expect(c.pointerDown(panes(), at(30, 30), null, input())).toBe(false);
   });
 });
+
+describe('OgeSpreadsheetCore — header edges', () => {
+  const scroll = { scrollTop: 0, scrollLeft: 0 };
+  // column B ends at sheet x 128 (client 154), row 2 at sheet y 40 (client 60)
+  const columnB = { kind: 'column-header', col: 1 } as const;
+  const columnC = { kind: 'column-header', col: 2 } as const;
+  const row2 = { kind: 'row-header', row: 1 } as const;
+
+  it('drags a column header’s edge: Excel’s tooltip follows it, the column takes the width', () => {
+    const { c, panes } = setup();
+    c.pointerMove(panes(), at(152, 10), input(), columnB);
+    expect(c.resizeHover()).toEqual({ axis: 'columns', index: 1 });
+    c.pointerMove(panes(), at(140, 10), input(), columnB);
+    expect(c.resizeHover()).toBeNull();
+    // just past the edge, over C's header: still B's edge
+    expect(c.pointerDown(panes(), at(155, 10), columnC, input())).toBe(true);
+    expect(c.resizing()).toEqual({ axis: 'columns', index: 1, pixels: 64 });
+    expect(c.selection().active).toEqual({ row: 0, col: 0 });
+    c.pointerMove(panes(), at(191, 10), input());
+    expect(c.resizing()?.pixels).toBe(100);
+    expect(c.resizeGuide(panes(), scroll)).toEqual({
+      axis: 'columns',
+      line: {
+        insetInlineStart: '189px',
+        top: '0',
+        width: '1px',
+        height: `${20 + panes().cellHeight}px`,
+      },
+      tip: 'Width: 13.57 (100 pixels)',
+      tipStyle: { insetInlineStart: '195px', top: '2px' },
+    });
+    expect(c.pointerUp(panes(), at(191, 10), input())).toBeNull();
+    expect(c.resizing()).toBeNull();
+    expect(c.resizeGuide(panes(), scroll)).toBeNull();
+    expect(panes().axes.cols.size(1)).toBe(100);
+    expect(c.announcement()).toBe('Column B: Width: 13.57 (100 pixels)');
+  });
+
+  it('resizes the selected columns with the one dragged, hides them at zero, and Escape drops a drag', () => {
+    const { c, panes } = setup();
+    c.selectColumns(1, 3, 'replace');
+    c.pointerDown(panes(), at(154, 10), columnB, input());
+    c.pointerMove(panes(), at(164, 10), input());
+    c.pointerUp(panes(), at(164, 10), input());
+    expect([1, 2, 3].map((col) => panes().axes.cols.size(col))).toEqual([
+      74, 74, 74,
+    ]);
+    expect(c.announcement()).toBe('Columns B to D: Width: 9.86 (74 pixels)');
+    // dragged back past the column's start: hidden, as Excel hides it
+    c.pointerDown(panes(), at(164, 10), columnB, input());
+    c.pointerMove(panes(), at(60, 10), input());
+    expect(c.resizeGuide(panes(), scroll)?.tip).toBe('Width: 0.00 (0 pixels)');
+    c.pointerUp(panes(), at(60, 10), input());
+    expect(c.sheet()?.getColumn(2)?.hidden).toBe(true);
+    expect(c.announcement()).toBe('Columns B to D hidden');
+    // Escape: the edge stays where it was
+    c.pointerDown(
+      panes(),
+      at(90, 10),
+      { kind: 'column-header', col: 0 },
+      input(),
+    );
+    expect(c.resizing()).not.toBeNull();
+    expect(c.keydown(key('Escape'), page)).toBe('none');
+    expect(c.resizing()).toBeNull();
+    c.pointerMove(panes(), at(200, 10), input());
+    c.pointerUp(panes(), at(200, 10), input());
+    expect(panes().axes.cols.size(0)).toBe(64);
+  });
+
+  it('AutoFits a column or row on a double-click on its edge, and nothing elsewhere', () => {
+    const { c, panes } = setup();
+    // A holds one-digit numbers: one General slot, the padding and 2 px
+    expect(
+      c.doubleClick(panes(), at(89, 10), { kind: 'column-header', col: 0 }),
+    ).toBe(true);
+    expect(panes().axes.cols.size(0)).toBe(14);
+    expect(c.announcement()).toBe('Column A fitted to its contents');
+    expect(c.doubleClick(panes(), at(60, 10), columnB)).toBe(false);
+    expect(c.doubleClick(panes(), at(60, 10), null)).toBe(false);
+    // the grid captured the pointer: the header comes from the point
+    c.resizeColumns([1], 64);
+    // (A is 14 px now: B ends 26 + 14 + 64 px in)
+    expect(c.doubleClick(panes(), at(104, 10), null)).toBe(true);
+    expect(panes().axes.cols.size(1)).toBe(14);
+    expect(c.doubleClick(panes(), at(104, 300), null)).toBe(false);
+    // a row's edge
+    c.resizeRows([1], 40);
+    expect(c.doubleClick(panes(), at(10, 80), row2)).toBe(true);
+    expect(panes().axes.rows.size(1)).toBe(20);
+    expect(c.sheet()?.getRow(1)?.customHeight).toBeUndefined();
+  });
+
+  it('drags a row header’s edge to a height in points', () => {
+    const { c, panes } = setup();
+    c.pointerMove(panes(), at(10, 59), input(), row2);
+    expect(c.resizeHover()).toEqual({ axis: 'rows', index: 1 });
+    expect(c.pointerDown(panes(), at(10, 60), row2, input())).toBe(true);
+    c.pointerMove(panes(), at(10, 70), input());
+    expect(c.resizeGuide(panes(), scroll)).toMatchObject({
+      axis: 'rows',
+      line: { top: '69px', height: '1px' },
+      tip: 'Height: 22.50 (30 pixels)',
+    });
+    c.pointerUp(panes(), at(10, 70), input());
+    expect(c.sheet()?.getRow(1)).toMatchObject({
+      height: 22.5,
+      customHeight: true,
+    });
+    expect(c.announcement()).toBe('Row 2: Height: 22.50 (30 pixels)');
+  });
+
+  it('gives a finger more room, and leaves a protected sheet alone unless it allows formatting', () => {
+    const { c, panes } = setup();
+    c.pointerMove(panes(), at(160, 10), input(), columnC);
+    expect(c.resizeHover()).toBeNull();
+    c.pointerMove(
+      panes(),
+      at(160, 10),
+      input({ pointerType: 'touch' }),
+      columnC,
+    );
+    expect(c.resizeHover()).toEqual({ axis: 'columns', index: 1 });
+    const sheet = c.sheet();
+    if (!sheet) throw new Error('no sheet');
+    sheet.protection = { attributes: { sheet: '1' } };
+    c.pointerMove(panes(), at(154, 10), input(), columnB);
+    expect(c.resizeHover()).toBeNull();
+    expect(c.canResize('columns')).toBe(false);
+    expect(c.resizeColumns([1], 80)).toBe(false);
+    expect(c.autofitRows([0])).toBe(false);
+    // a header click on the edge selects the column instead
+    c.pointerDown(panes(), at(154, 10), columnB, input());
+    expect(c.resizing()).toBeNull();
+    sheet.protection = { attributes: { sheet: '1', formatColumns: '0' } };
+    expect(c.canResize('columns')).toBe(true);
+    expect(c.canResize('rows')).toBe(false);
+  });
+
+  it('follows the pointer the mirrored way on a right-to-left sheet', () => {
+    const workbook = book();
+    workbook.sheets[0].view = { ...workbook.sheets[0].view, rightToLeft: true };
+    const { c, panes } = setup(workbook);
+    // B ends 26 + 128 px from the right edge
+    expect(c.pointerDown(panes(), at(666 - 154, 10), columnB, input())).toBe(
+      true,
+    );
+    c.pointerMove(panes(), at(666 - 164, 10), input());
+    c.pointerUp(panes(), at(666 - 164, 10), input());
+    expect(panes().axes.cols.size(1)).toBe(74);
+  });
+});

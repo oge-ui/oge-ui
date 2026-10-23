@@ -1792,6 +1792,18 @@ export const ru: OgeLocalePack = {
     hasFormula: 'формула {formula}',
     hasSparkline:
       '{type, select, column {спарклайн-гистограмма} stacked {спарклайн выигрышей/проигрышей} other {спарклайн-график}} по {range}',
+    columnWidthTip:
+      'Ширина: {width} ({pixels, plural, one {# пиксель} few {# пикселя} many {# пикселей} other {# пикселя}})',
+    rowHeightTip:
+      'Высота: {height} ({pixels, plural, one {# пиксель} few {# пикселя} many {# пикселей} other {# пикселя}})',
+    columnsResized:
+      '{count, plural, one {Столбец {first}} other {Столбцы {first}–{last}}}: {size}',
+    rowsResized:
+      '{count, plural, one {Строка {first}} other {Строки {first}–{last}}}: {size}',
+    columnsFitted:
+      '{count, plural, one {Ширина столбца {first} подобрана по содержимому} other {Ширина столбцов {first}–{last} подобрана по содержимому}}',
+    rowsFitted:
+      '{count, plural, one {Высота строки {first} подобрана по содержимому} other {Высота строк {first}–{last} подобрана по содержимому}}',
     selectionAnnouncement:
       'Выделен диапазон {range}, {cells, plural, one {# ячейка} few {# ячейки} many {# ячеек} other {# ячейки}}',
     sheetAnnouncement: 'Лист «{name}», {index} из {total}',

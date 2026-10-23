@@ -1791,6 +1791,16 @@ export const de: OgeLocalePack = {
     hasFormula: 'Formel {formula}',
     hasSparkline:
       '{type, select, column {Säulen-Sparkline} stacked {Gewinn/Verlust-Sparkline} other {Linien-Sparkline}} aus {range}',
+    columnWidthTip: 'Breite: {width} ({pixels, plural, other {# Pixel}})',
+    rowHeightTip: 'Höhe: {height} ({pixels, plural, other {# Pixel}})',
+    columnsResized:
+      '{count, plural, one {Spalte {first}} other {Spalten {first} bis {last}}}: {size}',
+    rowsResized:
+      '{count, plural, one {Zeile {first}} other {Zeilen {first} bis {last}}}: {size}',
+    columnsFitted:
+      '{count, plural, one {Spalte {first} an den Inhalt angepasst} other {Spalten {first} bis {last} an den Inhalt angepasst}}',
+    rowsFitted:
+      '{count, plural, one {Zeile {first} an den Inhalt angepasst} other {Zeilen {first} bis {last} an den Inhalt angepasst}}',
     selectionAnnouncement:
       '{range} ausgewählt, {cells, plural, one {# Zelle} other {# Zellen}}',
     sheetAnnouncement: 'Blatt {name}, {index} von {total}',

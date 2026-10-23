@@ -36,7 +36,9 @@ what COM cannot report off Excel's screen: the tables' lines
 pixels (`sparkline-capture.ps1` renders each sheet of `sparklines.xlsx`, its
 window captures kept in a temporary folder; `sparkline-boxes.mjs` writes the
 runs of the corpus's pure part colours in each cell to
-`corpus/sparklines.boxes.json`).
+`corpus/sparklines.boxes.json`) — and what Excel's AutoFit does
+(`autofit-capture.ps1` AutoFits every case column and row of
+`autofit.xlsx` and writes `corpus/autofit.fit.json`).
 
 Two scripts measure Excel's own window and run on their own:
 
