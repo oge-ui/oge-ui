@@ -45,6 +45,14 @@ are versioned independently, which is the case here.
   percentages add up to 100% as Excel rounds them. Screen readers hear each
   chart's alt text or title. Radar, stock, surface, pie-of-pie and Excel 2016
   charts are kept and reported (`chart-type-not-shown`).
+- **Excel tables, in their styles:** all 60 built-in table styles (embedded as
+  Excel defines them) and the workbook's own — header and totals rows, banded
+  rows and columns over the visible ones, first and last columns, the header's
+  filter buttons and the resize handle — laid under each cell's own formatting
+  as Excel lays them. Checked against Excel on 81 tables: every cell's fill and
+  font and every pixel of the 3,157 lines between their cells.
+- **Tints exactly as Excel paints them:** theme colours lighter or darker by a
+  tint now match Excel to the bit (190 of 190 measured), not within 2/255.
 - **Outline symbols:** grouped rows and columns show Excel's brackets, plus
   and minus buttons and level buttons beside the headers; hidden rows and
   columns get Excel's double line. Groups collapse and expand from the

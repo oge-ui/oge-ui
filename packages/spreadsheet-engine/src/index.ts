@@ -186,6 +186,24 @@ export type {
   OgeSheetChart,
 } from './lib/model/chart';
 
+export type {
+  OgeTable,
+  OgeTableColumn,
+  OgeTableStyle,
+  OgeTableStyleElement,
+  OgeTableStyleElementType,
+  OgeTableStyleInfo,
+} from './lib/model/table';
+
+export {
+  OGE_BUILTIN_TABLE_STYLE_NAMES,
+  OGE_TABLE_STYLE_ELEMENT_TYPES,
+  ogeBuiltinTableStyle,
+  ogeTableStyleFormats,
+  type OgeTableStyleFormat,
+  type OgeTableStyleFormats,
+} from './lib/model/table-styles';
+
 export {
   OGE_DEFAULT_FONT,
   OGE_DEFINED_NAME_MAX_LENGTH,
@@ -272,7 +290,11 @@ export {
   type OgeConditionalPainter,
   type OgePaintCell,
   type OgePaintWindowOptions,
+  type OgeTableCellStyle,
+  type OgeTablePainter,
 } from './lib/paint/paint-window';
+
+export { OgeTableFormatter } from './lib/paint/table-format';
 
 export {
   OgeConditionalFormatter,

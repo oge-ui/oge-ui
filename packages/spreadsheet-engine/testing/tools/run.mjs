@@ -1,6 +1,7 @@
 // Rebuilds the golden corpus: builds the source workbooks, has Excel open,
-// measure and re-save them (capture.ps1), then regenerates the font-metrics
-// table the engine embeds. Windows with Microsoft Excel only.
+// measure and re-save them (capture.ps1), reads the tables' lines off the
+// screen (table-lines.ps1), then regenerates the font-metrics and built-in
+// table-style tables the engine embeds. Windows with Microsoft Excel only.
 //
 //   node packages/spreadsheet-engine/testing/tools/run.mjs [--only metrics,corpus]
 //
@@ -68,6 +69,27 @@ try {
     { stdio: 'inherit' },
   );
   execFileSync(process.execPath, [join(here, 'font-metrics.mjs')], {
+    stdio: 'inherit',
+  });
+  for (const [script, folder, target] of [
+    ['table-lines.ps1', '-Corpus', corpus],
+    ['table-styles.ps1', '-Captures', captures],
+  ]) {
+    execFileSync(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        join(here, script),
+        folder,
+        target,
+      ],
+      { stdio: 'inherit' },
+    );
+  }
+  execFileSync(process.execPath, [join(here, 'table-styles.mjs')], {
     stdio: 'inherit',
   });
 } finally {

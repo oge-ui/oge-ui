@@ -7,7 +7,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  * with `?framework=react`, in the React `<OgeSpreadsheet>` — the same engine,
  * markup and stylesheet — and both pass the same suite: the saved view
  * (frozen panes, tabs, the active cell), Excel's keyboard and status bar,
- * find, pictures, charts, the API page and axe in both themes.
+ * find, pictures, charts, tables, the API page and axe in both themes.
  */
 const LAYERS = [
   { name: 'Angular', query: '', host: '' },
@@ -137,6 +137,35 @@ for (const layer of LAYERS) {
       if (!box) throw new Error('no chart box');
       await page.mouse.click(box.x + 4, box.y + 4);
       await expect(nameBox(host)).toHaveValue('A10');
+      const results = await new AxeBuilder({ page })
+        .include('.oge-spreadsheet')
+        .disableRules(['color-contrast'])
+        .analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+    });
+
+    test('draws Excel tables in their styles, with filter buttons and the resize handle', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      await page.locator(BASIC).getByRole('button', { name: 'Tables' }).click();
+      await expect(host.locator('.oge-spreadsheet-tab')).toHaveText(
+        ['Sales', 'Inventory', 'Teams', 'Styles'],
+        { timeout: 30_000 },
+      );
+      // TableStyleMedium2: the header row in accent 1, a button on each of its six cells
+      await expect(
+        host.locator('.oge-spreadsheet-fill[style*="68, 114, 196"]'),
+      ).toHaveCount(6);
+      await expect(host.locator('.oge-spreadsheet-filter-button')).toHaveCount(
+        6,
+      );
+      await expect(host.locator('.oge-spreadsheet-table-handle')).toHaveCount(
+        1,
+      );
+      await expect(
+        host.locator('.oge-spreadsheet-text', { hasText: 'Total' }),
+      ).toBeVisible();
       const results = await new AxeBuilder({ page })
         .include('.oge-spreadsheet')
         .disableRules(['color-contrast'])

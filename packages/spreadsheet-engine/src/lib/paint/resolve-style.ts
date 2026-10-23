@@ -515,9 +515,21 @@ export class OgeStyleResolver {
     return resolved;
   }
 
-  /** A style merged with a differential format (a conditional format's dxf). */
-  withPatch(id: number | undefined, patch: OgeCellStyle): OgeResolvedStyle {
-    const base = this.workbook.styles.get(id ?? 0);
+  /** A style that is not in the registry (a table cell's layers), resolved; the caller caches it. */
+  resolveStyle(style: OgeCellStyle): OgeResolvedStyle {
+    return this.resolve(-1, style);
+  }
+
+  /**
+   * A style merged with a differential format (a conditional format's dxf):
+   * the style of an id, or a style already composed (a table cell's).
+   */
+  withPatch(
+    id: number | OgeCellStyle | undefined,
+    patch: OgeCellStyle,
+  ): OgeResolvedStyle {
+    const base =
+      typeof id === 'object' ? id : this.workbook.styles.get(id ?? 0);
     const font = patch.font ? { ...base.font, ...patch.font } : base.font;
     return this.resolve(-1, {
       ...base,

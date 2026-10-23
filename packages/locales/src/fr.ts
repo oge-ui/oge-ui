@@ -1763,7 +1763,7 @@ export const fr: OgeLocalePack = {
       'picture-format-not-shown':
         'Les images EMF/WMF ne peuvent pas être affichées',
       'table-style-not-shown':
-        'Les styles de tableau ne sont pas encore affichés',
+        'Les tableaux au style inconnu s’affichent sans mise en forme',
       'pivot-style-not-shown':
         'Les styles de tableau croisé dynamique ne sont pas encore affichés',
       'extension-not-shown':

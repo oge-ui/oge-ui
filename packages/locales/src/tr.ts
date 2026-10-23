@@ -1713,7 +1713,8 @@ export const tr: OgeLocalePack = {
       'chart-type-not-shown':
         'Radar, hisse senedi, yüzey, pastanın pastası ve Excel 2016 grafikleri henüz gösterilmiyor',
       'picture-format-not-shown': 'EMF/WMF resimleri gösterilemiyor',
-      'table-style-not-shown': 'Tablo stilleri henüz gösterilmiyor',
+      'table-style-not-shown':
+        'Bilinmeyen stildeki tablolar biçimsiz gösterilir',
       'pivot-style-not-shown': 'PivotTable stilleri henüz gösterilmiyor',
       'extension-not-shown': 'Mini grafikler henüz gösterilmiyor',
       'conditional-format-needs-formulas':

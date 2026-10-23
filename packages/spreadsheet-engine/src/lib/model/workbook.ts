@@ -5,6 +5,7 @@
 import { OGE_OFFICE_THEME_COLORS, type OgeThemeColors } from '../color/color';
 import type { OgeDateSystem } from '../date/date-serial';
 import { OgeStyleRegistry, type OgeCellStyle, type OgeFont } from './style';
+import type { OgeTableStyle } from './table';
 import { OgeWorksheet } from './worksheet';
 
 /** A defined name (`definedNames/definedName`). */
@@ -179,8 +180,13 @@ export class OgeWorkbook {
   themeFonts: { readonly major?: string; readonly minor?: string } = {};
   /** A custom legacy palette (`styles.xml` → `colors/indexedColors`), `RRGGBB`. */
   indexedColors: readonly string[] | undefined;
-  /** Differential formats conditional-format rules point at (`dxfs`). */
+  /** Differential formats conditional-format rules and table styles point at (`dxfs`). */
   dxfs: readonly OgeCellStyle[] = [];
+  /** The workbook's own table styles (`tableStyles`); Excel's built-in ones are only named. */
+  tableStyles: readonly OgeTableStyle[] = [];
+  /** The style new tables and PivotTables get (`defaultTableStyle`, `defaultPivotStyle`). */
+  defaultTableStyle: string | undefined;
+  defaultPivotStyle: string | undefined;
   /** The Normal style's font — what style id 0 paints with. */
   defaultFont: OgeFont;
   /** Index of the sheet shown first. */

@@ -116,6 +116,10 @@ export interface OgeBorder {
   readonly diagonal?: OgeBorderEdge;
   readonly diagonalUp?: boolean;
   readonly diagonalDown?: boolean;
+  /** The lines between the columns of a range — a table style's differential formats only. */
+  readonly vertical?: OgeBorderEdge;
+  /** The lines between the rows of a range — a table style's differential formats only. */
+  readonly horizontal?: OgeBorderEdge;
 }
 
 /** Horizontal alignment; `'general'` aligns by value type (numbers right). */

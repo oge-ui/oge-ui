@@ -1749,7 +1749,7 @@ export const de: OgeLocalePack = {
       'picture-format-not-shown':
         'EMF/WMF-Bilder können nicht angezeigt werden',
       'table-style-not-shown':
-        'Tabellenformatvorlagen werden noch nicht angezeigt',
+        'Tabellen mit unbekannter Formatvorlage erscheinen unformatiert',
       'pivot-style-not-shown':
         'PivotTable-Formatvorlagen werden noch nicht angezeigt',
       'extension-not-shown': 'Sparklines werden noch nicht angezeigt',

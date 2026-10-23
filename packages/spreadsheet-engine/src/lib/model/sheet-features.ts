@@ -170,6 +170,8 @@ export interface OgeAutoFilter {
   readonly columns: readonly {
     readonly offset: number;
     readonly xml: string;
+    /** The column shows no filter button (`hiddenButton`, or `showButton="0"`). */
+    readonly hiddenButton?: boolean;
   }[];
 }
 

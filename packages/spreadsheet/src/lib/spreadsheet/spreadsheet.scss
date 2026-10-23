@@ -304,6 +304,7 @@
   .oge-spreadsheet-clip,
   .oge-spreadsheet-data-bar,
   .oge-spreadsheet-note-mark,
+  .oge-spreadsheet-table-handle,
   .oge-spreadsheet-icon,
   .oge-spreadsheet-filter-button,
   .oge-spreadsheet-picture,
@@ -340,6 +341,10 @@
   .oge-spreadsheet-note-mark {
     overflow: visible;
     fill: var(--oge-spreadsheet-note-marker);
+  }
+
+  .oge-spreadsheet-table-handle {
+    fill: var(--oge-spreadsheet-table-handle);
   }
 
   .oge-spreadsheet-filter-button {

@@ -143,69 +143,96 @@ export function resolveOgeColor(
   return `#${tint === 0 ? hex : ogeApplyTint(hex, tint)}`;
 }
 
+/** Windows' integer HLS: hue, lightness and saturation each 0–240. */
+const HLS_MAX = 240;
+const RGB_MAX = 255;
+
 /**
- * Lightens or darkens an `RRGGBB` colour the way SpreadsheetML's `tint` does
- * (ECMA-376 §18.8.19): in HLS space, a negative tint scales the luminance
- * down (`L × (1 + tint)`), a positive one moves it towards white
- * (`L × (1 − tint) + tint`). Returns `RRGGBB`.
- *
- * Excel's own integer rounding is not published; this, the spec's formula,
- * lands within 2/255 per channel of every colour Excel's theme picker shows
- * (checked against 50 of them) — below what a screen can show apart. The
- * writer keeps the `tint` itself, so a round trip loses nothing.
+ * Lightens or darkens an `RRGGBB` colour as Excel paints SpreadsheetML's
+ * `tint` (ECMA-376 §18.8.19) — measured: all 190 colours Excel showed for 8
+ * theme colours and 22 tints, read through COM. Excel works in Windows'
+ * integer HLS (each 0–240, the RGB ↔ HLS conversion of Microsoft's KB 29240):
+ * a negative tint scales the lightness down, `trunc(L × (1 + tint))`; a
+ * positive one moves it towards white, `trunc(L × (1 − tint)) + 240 −
+ * trunc(240 × (1 − tint))` — each part cut to a whole step. Returns `RRGGBB`.
  */
 export function ogeApplyTint(hex: string, tint: number): string {
   const rgb = hexOf(hex);
   if (rgb === null) return hex;
   const t = Math.max(-1, Math.min(1, tint));
-  const r = parseInt(rgb.slice(0, 2), 16) / 255;
-  const g = parseInt(rgb.slice(2, 4), 16) / 255;
-  const b = parseInt(rgb.slice(4, 6), 16) / 255;
-  const [h, l, s] = rgbToHls(r, g, b);
-  const lum = t < 0 ? l * (1 + t) : l * (1 - t) + t;
-  const [r2, g2, b2] = hlsToRgb(h, lum, s);
-  return [r2, g2, b2]
-    .map((channel) =>
-      Math.round(Math.max(0, Math.min(1, channel)) * 255)
-        .toString(16)
-        .padStart(2, '0'),
-    )
+  const [h, l, s] = rgbToHls(
+    parseInt(rgb.slice(0, 2), 16),
+    parseInt(rgb.slice(2, 4), 16),
+    parseInt(rgb.slice(4, 6), 16),
+  );
+  const lum =
+    t < 0
+      ? Math.trunc(l * (1 + t))
+      : Math.trunc(l * (1 - t)) + HLS_MAX - Math.trunc(HLS_MAX * (1 - t));
+  return hlsToRgb(h, Math.max(0, Math.min(HLS_MAX, lum)), s)
+    .map((channel) => channel.toString(16).padStart(2, '0'))
     .join('')
     .toUpperCase();
 }
 
-/** RGB (0–1) → hue (0–1), lightness, saturation. */
+/** Integer division as C does it (the operands are never negative here). */
+const div = (a: number, b: number) => Math.trunc(a / b);
+
+/** RGB (0–255) → hue, lightness, saturation (0–240), KB 29240's integer way. */
 function rgbToHls(r: number, g: number, b: number): [number, number, number] {
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  if (max === min) return [0, l, 0];
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h: number;
-  if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
-  else if (max === g) h = (b - r) / d + 2;
-  else h = (r - g) / d + 4;
-  return [h / 6, l, s];
+  const l = div((max + min) * HLS_MAX + RGB_MAX, 2 * RGB_MAX);
+  // grey: no saturation; the hue is undefined (KB 29240 sets two thirds)
+  if (max === min) return [div(HLS_MAX * 2, 3), l, 0];
+  const sum = max + min;
+  const s =
+    l <= HLS_MAX / 2
+      ? div((max - min) * HLS_MAX + div(sum, 2), sum)
+      : div(
+          (max - min) * HLS_MAX + div(2 * RGB_MAX - sum, 2),
+          2 * RGB_MAX - sum,
+        );
+  const delta = (c: number) =>
+    div((max - c) * (HLS_MAX / 6) + div(max - min, 2), max - min);
+  let h =
+    r === max
+      ? delta(b) - delta(g)
+      : g === max
+        ? HLS_MAX / 3 + delta(r) - delta(b)
+        : (2 * HLS_MAX) / 3 + delta(g) - delta(r);
+  if (h < 0) h += HLS_MAX;
+  if (h > HLS_MAX) h -= HLS_MAX;
+  return [h, l, s];
 }
 
+/** Hue, lightness, saturation (0–240) → RGB (0–255), KB 29240's integer way. */
 function hlsToRgb(h: number, l: number, s: number): [number, number, number] {
-  if (s === 0) return [l, l, l];
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-  return [
-    hueToRgb(p, q, h + 1 / 3),
-    hueToRgb(p, q, h),
-    hueToRgb(p, q, h - 1 / 3),
-  ];
+  // a grey rounds to the nearest level (measured: black lighter by 50% is 808080)
+  if (s === 0) {
+    const grey = div(l * RGB_MAX + HLS_MAX / 2, HLS_MAX);
+    return [grey, grey, grey];
+  }
+  const high =
+    l <= HLS_MAX / 2
+      ? div(l * (HLS_MAX + s) + HLS_MAX / 2, HLS_MAX)
+      : l + s - div(l * s + HLS_MAX / 2, HLS_MAX);
+  const low = 2 * l - high;
+  const channel = (hue: number) =>
+    div(hueToRgb(low, high, hue) * RGB_MAX + HLS_MAX / 2, HLS_MAX);
+  return [channel(h + HLS_MAX / 3), channel(h), channel(h - HLS_MAX / 3)];
 }
 
-function hueToRgb(p: number, q: number, t: number): number {
-  let x = t;
-  if (x < 0) x += 1;
-  if (x > 1) x -= 1;
-  if (x < 1 / 6) return p + (q - p) * 6 * x;
-  if (x < 1 / 2) return q;
-  if (x < 2 / 3) return p + (q - p) * (2 / 3 - x) * 6;
-  return p;
+function hueToRgb(low: number, high: number, hue: number): number {
+  let x = hue;
+  if (x < 0) x += HLS_MAX;
+  if (x > HLS_MAX) x -= HLS_MAX;
+  const sixth = HLS_MAX / 6;
+  if (x < sixth) return low + div((high - low) * x + HLS_MAX / 12, sixth);
+  if (x < HLS_MAX / 2) return high;
+  if (x < (HLS_MAX * 2) / 3)
+    return (
+      low + div((high - low) * ((HLS_MAX * 2) / 3 - x) + HLS_MAX / 12, sixth)
+    );
+  return low;
 }

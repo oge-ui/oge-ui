@@ -342,6 +342,14 @@ let nextId = 0;
                           <polygon [attr.points]="mark.points" />
                         </svg>
                       }
+                      @case ('tableHandle') {
+                        <svg
+                          class="oge-spreadsheet-table-handle"
+                          [style]="mark.style"
+                        >
+                          <polygon [attr.points]="mark.points" />
+                        </svg>
+                      }
                       @case ('icon') {
                         <svg
                           class="oge-spreadsheet-icon"

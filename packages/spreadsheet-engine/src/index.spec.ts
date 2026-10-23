@@ -5,6 +5,7 @@ import * as engine from './index';
 // failing one of the engine's own specs. Guard every value it exports.
 describe('@oge-ui/spreadsheet-engine barrel', () => {
   it.each([
+    'OGE_BUILTIN_TABLE_STYLE_NAMES',
     'OGE_CELL_ERROR_CODES',
     'OGE_DEFAULT_BASE_COLUMN_WIDTH',
     'OGE_DEFAULT_CELL_STYLE',
@@ -27,6 +28,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'OGE_SHEET_MAX_COLUMNS',
     'OGE_SHEET_MAX_ROWS',
     'OGE_SHEET_NAME_MAX_LENGTH',
+    'OGE_TABLE_STYLE_ELEMENT_TYPES',
     'OGE_THEME_COLOR_SLOTS',
     'OgeAxis',
     'OgeConditionalFormatter',
@@ -35,6 +37,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'OgeSpreadsheetCore',
     'OgeStyleRegistry',
     'OgeStyleResolver',
+    'OgeTableFormatter',
     'OgeWorkbook',
     'OgeWorksheet',
     'OgeXlsxError',
@@ -58,6 +61,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeBorderRank',
     'ogeBorderStrokes',
     'ogeBuiltinNumberFormat',
+    'ogeBuiltinTableStyle',
     'ogeCellAt',
     'ogeCellBox',
     'ogeCellDisplay',
@@ -167,6 +171,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
     'ogeSliderToZoom',
     'ogeSpanRange',
     'ogeTabKeyTarget',
+    'ogeTableStyleFormats',
     'ogeTextMargin',
     'ogeViewportPanes',
     'ogeWrapText',
@@ -193,7 +198,7 @@ describe('@oge-ui/spreadsheet-engine barrel', () => {
 
   it('exports nothing it does not guard', () => {
     // a new export lands in the list above in the same change
-    expect(Object.keys(engine)).toHaveLength(182);
+    expect(Object.keys(engine)).toHaveLength(187);
   });
 
   it('keeps the internal ZIP and XML layers out of the public surface', () => {

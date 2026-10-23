@@ -131,7 +131,7 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
     'chart-type-not-shown':
       'Radar, stock, surface, pie-of-pie and Excel 2016 charts are not shown yet',
     'picture-format-not-shown': 'EMF/WMF pictures cannot be shown',
-    'table-style-not-shown': 'Table styles are not shown yet',
+    'table-style-not-shown': 'Tables with an unknown style show unformatted',
     'pivot-style-not-shown': 'Pivot table styles are not shown yet',
     'extension-not-shown': 'Sparklines are not shown yet',
     'conditional-format-needs-formulas':

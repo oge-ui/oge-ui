@@ -1748,7 +1748,8 @@ export const es: OgeLocalePack = {
       'chart-type-not-shown':
         'Los gráficos radiales, de cotizaciones, de superficie, circulares con subgráfico y de Excel 2016 aún no se muestran',
       'picture-format-not-shown': 'Las imágenes EMF/WMF no se pueden mostrar',
-      'table-style-not-shown': 'Los estilos de tabla aún no se muestran',
+      'table-style-not-shown':
+        'Las tablas con un estilo desconocido se muestran sin formato',
       'pivot-style-not-shown':
         'Los estilos de tabla dinámica aún no se muestran',
       'extension-not-shown': 'Los minigráficos aún no se muestran',

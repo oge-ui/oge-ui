@@ -1972,6 +1972,20 @@
       ]
     },
     {
+      "n": "--oge-spreadsheet-table-handle",
+      "c": "component",
+      "d": "a table's resize handle in its last cell, one colour on every table style",
+      "v": {
+        "light": "#485db1"
+      },
+      "s": {
+        "light": "#485db1"
+      },
+      "u": [
+        "@oge-ui/spreadsheet"
+      ]
+    },
+    {
       "n": "--oge-spreadsheet-note-bg",
       "c": "component",
       "v": {

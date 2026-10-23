@@ -218,6 +218,55 @@ describe('ogeRenderPane', () => {
     });
   });
 
+  it('marks a table’s filter buttons, but hidden ones, and its resize handle', () => {
+    const table = (
+      top: number,
+      left: number,
+      bottom: number,
+      right: number,
+      filter: boolean,
+    ) => ({
+      id: 1,
+      name: 'T',
+      displayName: 'T',
+      range: { top, left, bottom, right },
+      headerRowCount: 1,
+      totalsRowCount: 0,
+      columns: [],
+      ...(filter
+        ? {
+            autoFilter: {
+              range: { top, left, bottom, right },
+              columns: [{ offset: 1, xml: '', hiddenButton: true }],
+            },
+          }
+        : {}),
+    });
+    const { pane } = render((workbook) => {
+      const sheet = workbook.sheets[0];
+      // one inside the pane, one past its bottom, one without buttons
+      sheet.tables.push(
+        table(0, 0, 2, 2),
+        table(3, 3, 9, 4, true),
+        table(1, 3, 2, 3, false),
+      );
+      sheet.setRow(0, { hidden: true });
+    });
+    const filters = pane.marks.filter((m) => m.kind === 'filter');
+    // the first table's header row is hidden; the second's has a hidden button
+    expect(filters.map((f) => [f.row, f.col])).toEqual([[3, 3]]);
+    const handles = pane.marks.filter((m) => m.kind === 'tableHandle');
+    expect(handles.map((h) => [h.row, h.col])).toEqual([
+      [2, 2],
+      [2, 3],
+    ]);
+    // a 4 px step inside the last cell's gridlines
+    expect(handles[0]).toMatchObject({
+      points: '2,0 4,0 4,4 0,4 0,2 2,2',
+      style: { left: '187px', top: '35px', width: '4px', height: '4px' },
+    });
+  });
+
   it('works in pane pixels', () => {
     const { pane } = render(
       (workbook) => workbook.sheets[0].setCell(2, 2, { value: 'x' }),

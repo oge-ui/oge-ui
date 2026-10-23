@@ -15,7 +15,7 @@ param(
   # comma-separated: environment, numfmt, fit, borders, metrics, corpus; empty = all
   [string]$Only = '',
   # comma-separated corpus workbooks to capture (styles, structure, formulas, dates1904,
-  # pictures, charts); empty = all — the others keep their committed copies
+  # pictures, charts, tables); empty = all — the others keep their committed copies
   [string]$Workbooks = ''
 )
 $ErrorActionPreference = 'Stop'
@@ -148,7 +148,7 @@ try {
 
   # ── the corpus workbooks ──
   if (Wants 'corpus') {
-    $books = @('styles', 'structure', 'formulas', 'dates1904', 'pictures', 'charts')
+    $books = @('styles', 'structure', 'formulas', 'dates1904', 'pictures', 'charts', 'tables')
     $chosen = @($Workbooks.Split(',') | Where-Object { $_ })
     if ($chosen.Count -gt 0) { $books = @($books | Where-Object { $chosen -contains $_ }) }
     foreach ($name in $books) {
@@ -239,6 +239,42 @@ try {
         }
         $sheet.cells = $cells
         $sheet.merges = $merges
+        if ($ws.ListObjects.Count -gt 0) {
+          # the tables, and what Excel shows in every cell in and around them:
+          # DisplayFormat applies table styles (its borders are unreliable on
+          # shared lines; table-lines.ps1 reads those off the screen)
+          $tables = New-Object System.Collections.ArrayList
+          $extentRow = $lastRow; $extentCol = $lastCol
+          foreach ($lo in $ws.ListObjects) {
+            $style = $null; try { $style = $lo.TableStyle.Name } catch { }
+            $extentRow = [math]::Max($extentRow, $lo.Range.Row + $lo.Range.Rows.Count - 1)
+            $extentCol = [math]::Max($extentCol, $lo.Range.Column + $lo.Range.Columns.Count - 1)
+            [void]$tables.Add([ordered]@{
+                name = $lo.Name; range = $lo.Range.Address($false, $false); style = $style
+                headers = $lo.ShowHeaders; totals = $lo.ShowTotals; filter = $lo.ShowAutoFilter
+                first = $lo.ShowTableStyleFirstColumn; last = $lo.ShowTableStyleLastColumn
+                rowStripes = $lo.ShowTableStyleRowStripes; columnStripes = $lo.ShowTableStyleColumnStripes
+              })
+          }
+          $sheet.tables = $tables
+          $display = New-Object System.Collections.ArrayList
+          for ($r = 1; $r -le $extentRow + 1; $r++) {
+            for ($c = 1; $c -le $extentCol + 1; $c++) {
+              $cell = $ws.Cells.Item($r, $c)
+              $shown = $cell.DisplayFormat
+              $item = [ordered]@{ a = $cell.Address($false, $false) }
+              if ($shown.Interior.Pattern -ne -4142) { $item.fill = Hex $shown.Interior.Color }
+              $font = Hex $shown.Font.Color
+              if ($font -ne '000000') { $item.font = $font }
+              if ($shown.Font.Bold) { $item.b = $true }
+              if ($shown.Font.Italic) { $item.i = $true }
+              if ($shown.Font.Underline -ne -4142) { $item.u = $shown.Font.Underline }
+              if ($shown.Font.Strikethrough) { $item.s = $true }
+              if ($item.Count -gt 1) { [void]$display.Add($item) }
+            }
+          }
+          $sheet.display = $display
+        }
         $columns = @(); for ($c = 1; $c -le $lastCol + 3; $c++) { $col = $ws.Columns.Item($c); $columns += ('{0}|{1}|{2}' -f (Px $col.Width), $col.Hidden, $col.OutlineLevel) }
         $sheet.columns = $columns
         $rowsInfo = @(); for ($r = 1; $r -le $lastRow + 3; $r++) { $row = $ws.Rows.Item($r); $rowsInfo += ('{0}|{1}|{2}' -f (Px $row.RowHeight), $row.Hidden, $row.OutlineLevel) }

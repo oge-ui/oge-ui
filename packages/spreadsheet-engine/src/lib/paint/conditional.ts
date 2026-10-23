@@ -266,6 +266,7 @@ export class OgeConditionalFormatter implements OgeConditionalPainter {
     row: number,
     col: number,
     cell: OgeCell | undefined,
+    base?: OgeCellStyle,
   ): OgeConditionalPaint | undefined {
     const formats = this.buckets.get(Math.floor(row / 256));
     if (!formats) return undefined;
@@ -357,7 +358,9 @@ export class OgeConditionalFormatter implements OgeConditionalPainter {
     }
     if (!patch && !fill && !dataBar && !icon) return undefined;
     return {
-      ...(patch ? { style: this.resolver.withPatch(cell?.style, patch) } : {}),
+      ...(patch
+        ? { style: this.resolver.withPatch(base ?? cell?.style, patch) }
+        : {}),
       ...(fill ? { fill } : {}),
       ...(dataBar ? { dataBar } : {}),
       ...(icon ? { icon } : {}),

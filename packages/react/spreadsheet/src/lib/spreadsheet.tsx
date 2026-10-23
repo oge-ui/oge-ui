@@ -99,7 +99,7 @@ function CellText({ cell }: { cell: OgeRenderText }) {
   );
 }
 
-/** A mark over the cells: an underline, a note marker, an icon or an AutoFilter button. */
+/** A mark over the cells: an underline, a note marker, a table's resize handle, an icon or an AutoFilter button. */
 function Mark({ mark }: { mark: OgeRenderMark }) {
   switch (mark.kind) {
     case 'underline':
@@ -109,6 +109,12 @@ function Mark({ mark }: { mark: OgeRenderMark }) {
     case 'note':
       return (
         <svg className="oge-spreadsheet-note-mark" style={css(mark.style)}>
+          <polygon points={mark.points} />
+        </svg>
+      );
+    case 'tableHandle':
+      return (
+        <svg className="oge-spreadsheet-table-handle" style={css(mark.style)}>
           <polygon points={mark.points} />
         </svg>
       );

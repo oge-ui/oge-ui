@@ -1750,7 +1750,8 @@ export const ru: OgeLocalePack = {
       'chart-type-not-shown':
         'Лепестковые, биржевые, поверхностные, вторичные круговые диаграммы и диаграммы Excel 2016 пока не отображаются',
       'picture-format-not-shown': 'Рисунки EMF/WMF отобразить нельзя',
-      'table-style-not-shown': 'Стили таблиц пока не отображаются',
+      'table-style-not-shown':
+        'Таблицы с неизвестным стилем отображаются без форматирования',
       'pivot-style-not-shown': 'Стили сводных таблиц пока не отображаются',
       'extension-not-shown': 'Спарклайны пока не отображаются',
       'conditional-format-needs-formulas':

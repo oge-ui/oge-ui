@@ -23,6 +23,7 @@ import {
 import { isOgeCellEmpty, type OgeCell, type OgeCellValue } from './cell';
 import type { OgeColor } from '../color/color';
 import type { OgeSheetChart } from './chart';
+import type { OgeTable } from './table';
 import {
   OGE_DEFAULT_BASE_COLUMN_WIDTH,
   OGE_DEFAULT_ROW_HEIGHT_POINTS,
@@ -231,6 +232,8 @@ export class OgeWorksheet {
   pictures: OgePicture[] = [];
   /** Charts over the sheet (the drawing part stays opaque). */
   charts: OgeSheetChart[] = [];
+  /** Excel tables on the sheet (their parts stay opaque). */
+  tables: OgeTable[] = [];
   /**
    * Relationships of the sheet part to parts the engine keeps opaque
    * (drawings, tables, printer settings) — what passed-through elements' `r:id`s mean.

@@ -24,6 +24,7 @@ const SAMPLES = [
   { file: 'formulas.xlsx', label: 'Formulas and dynamic arrays' },
   { file: 'pictures.xlsx', label: 'Pictures' },
   { file: 'charts.xlsx', label: 'Charts' },
+  { file: 'tables.xlsx', label: 'Tables' },
 ] as const;
 
 const BUTTON = 'rounded border px-2 py-1 text-sm';

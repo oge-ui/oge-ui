@@ -1728,7 +1728,7 @@ export const he: OgeLocalePack = {
       'chart-type-not-shown':
         'תרשימי רדאר, מניות, משטח, עוגה של עוגה ותרשימי Excel 2016 עדיין לא מוצגים',
       'picture-format-not-shown': 'לא ניתן להציג תמונות EMF/WMF',
-      'table-style-not-shown': 'סגנונות טבלה עדיין לא מוצגים',
+      'table-style-not-shown': 'טבלאות בסגנון לא ידוע מוצגות ללא עיצוב',
       'pivot-style-not-shown': 'סגנונות PivotTable עדיין לא מוצגים',
       'extension-not-shown': 'תרשימים זעירים עדיין לא מוצגים',
       'conditional-format-needs-formulas':

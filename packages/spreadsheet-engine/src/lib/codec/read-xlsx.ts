@@ -33,6 +33,8 @@ import { readOgeStyleSheet } from './read-styles';
 import { readOgeTheme } from './read-theme';
 import { readOgeWorksheet } from './read-worksheet';
 import { readOgeDrawing } from './read-drawing';
+import { readOgeTable } from './read-table';
+import { ogeTableStyleFormats } from '../model/table-styles';
 import type { OgeChartReadContext } from './read-chart';
 import {
   ogeXmlAttribute,
@@ -304,6 +306,9 @@ function readParts(
   };
   workbook.indexedColors = styleSheet?.indexedColors;
   workbook.dxfs = styleSheet?.differential ?? [];
+  workbook.tableStyles = styleSheet?.tableStyles ?? [];
+  workbook.defaultTableStyle = styleSheet?.defaultTableStyle;
+  workbook.defaultPivotStyle = styleSheet?.defaultPivotStyle;
   const styleIds = (styleSheet?.cellFormats ?? []).map((style) =>
     workbook.styles.intern(style),
   );
@@ -554,6 +559,11 @@ function readSheetPart(
         detail: `${content.unshowable} EMF/WMF pictures`,
       });
   }
+  for (const rel of rels.filter(
+    (rel) => rel.type === 'table' && !rel.external,
+  )) {
+    readSheetTable(pkg, rel.target, sheet, context);
+  }
   if (rels.some((rel) => rel.type === 'threadedComment')) {
     issues.add('threaded-comments-as-notes', { sheet: sheet.name, part: path });
   }
@@ -568,6 +578,45 @@ function readSheetPart(
       target: rel.target,
       external: rel.external,
     }));
+}
+
+/** A table part → `sheet.tables`; a style neither the workbook nor Excel knows is reported. */
+function readSheetTable(
+  pkg: OgePackageParts,
+  part: string,
+  sheet: OgeWorksheet,
+  context: SheetPartContext,
+): void {
+  const { issues, workbook } = context;
+  const xml = pkg.text(part);
+  if (xml === undefined) {
+    issues.add('missing-part', { sheet: sheet.name, part });
+    return;
+  }
+  let table: ReturnType<typeof readOgeTable>;
+  try {
+    table = readOgeTable(xml, part);
+  } catch (error) {
+    if (!(error instanceof OgeXmlError)) throw error;
+    issues.add('malformed-part', {
+      sheet: sheet.name,
+      part,
+      detail: error.message,
+    });
+    return;
+  }
+  if (!table) {
+    issues.add('invalid-reference', { sheet: sheet.name, part });
+    return;
+  }
+  sheet.tables.push(table);
+  const name = table.style?.name;
+  if (name && !ogeTableStyleFormats(workbook, name))
+    issues.add('table-style-not-shown', {
+      sheet: sheet.name,
+      part,
+      detail: name,
+    });
 }
 
 /** Legacy comments → notes; their VML shapes say which ones are pinned open. */

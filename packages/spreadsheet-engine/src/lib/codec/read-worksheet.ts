@@ -24,6 +24,7 @@ import {
   type OgeRichText,
 } from '../model/cell';
 import type {
+  OgeAutoFilter,
   OgeConditionalRule,
   OgeConditionalRuleType,
   OgeConditionalValue,
@@ -83,6 +84,34 @@ const MODELLED = new Set([
   'rowBreaks',
   'colBreaks',
 ]);
+
+/**
+ * An `autoFilter` element (a sheet's, or a table's) parsed from `source`
+ * (whose offsets the node's are):
+ * its range and each `filterColumn` kept verbatim, with whether the column
+ * hides its button; `undefined` without a readable range.
+ */
+export function ogeReadAutoFilter(
+  node: OgeXmlNode,
+  source: string,
+): OgeAutoFilter | undefined {
+  const range = ogeReadSqref(node.attributes['ref'])[0];
+  if (!range) return undefined;
+  return {
+    range,
+    columns: ogeXmlChildren(node, 'filterColumn').map((column) => {
+      const a = column.attributes;
+      const hidden =
+        ogeXmlBool(a['hiddenButton'], false) ||
+        !ogeXmlBool(a['showButton'], true);
+      return {
+        offset: ogeXmlIndex(a['colId']) ?? 0,
+        xml: source.slice(column.start, column.end),
+        ...(hidden ? { hiddenButton: true } : {}),
+      };
+    }),
+  };
+}
 
 /** `A1` → zero-based row/col without allocating; `null` when it is not a cell. */
 function cellPosition(ref: string): { row: number; col: number } | null {
@@ -550,22 +579,9 @@ export function readOgeWorksheet(
         for (const rule of ogeXmlChildren(node, 'dataValidation'))
           readValidation(rule);
         break;
-      case 'autoFilter': {
-        const range = ogeReadSqref(node.attributes['ref'])[0];
-        if (range) {
-          sheet.autoFilter = {
-            range,
-            columns: ogeXmlChildren(node, 'filterColumn').map((column) => ({
-              offset: ogeXmlIndex(column.attributes['colId']) ?? 0,
-              xml: source.slice(
-                column.start - node.start,
-                column.end - node.start,
-              ),
-            })),
-          };
-        }
+      case 'autoFilter':
+        sheet.autoFilter = ogeReadAutoFilter(node, source);
         break;
-      }
       case 'sheetProtection':
         sheet.protection = { attributes: { ...node.attributes } };
         break;
@@ -653,10 +669,8 @@ export function readOgeWorksheet(
   }
 
   function noteUnshown(local: string, source: string): void {
-    // drawings are read by the workbook reader, which knows the parts
+    // drawings and tables are read by the workbook reader, which knows the parts
     if (local === 'picture') issues.add('drawing-not-shown', where());
-    else if (local === 'tableParts')
-      issues.add('table-style-not-shown', where());
     else if (local === 'extLst') {
       // Excel 2010 extensions refine rules the model already shows (data bar
       // gradients, list validations on other sheets); sparklines are new content

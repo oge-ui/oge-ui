@@ -891,6 +891,37 @@ describe('OgeSpreadsheetCore — outline', () => {
     expect(c.toggleOutlineGroup('rows', 9)).toBe(false);
   });
 
+  it('stripes a table over its visible rows, again after a group closes', () => {
+    const workbook = grouped();
+    workbook.sheets[0].tables.push({
+      id: 1,
+      name: 'Grouped',
+      displayName: 'Grouped',
+      range: { top: 11, left: 0, bottom: 19, right: 1 },
+      headerRowCount: 1,
+      totalsRowCount: 0,
+      columns: [],
+      style: {
+        name: 'TableStyleMedium2',
+        showFirstColumn: false,
+        showLastColumn: false,
+        showRowStripes: true,
+        showColumnStripes: false,
+      },
+    });
+    const c = core(workbook);
+    const striped = () =>
+      c
+        .paint({ top: 12, left: 0, bottom: 19, right: 0 })
+        .filter((cell) => cell.fill)
+        .map((cell) => cell.row);
+    // data rows 12–19: the first, third … rows are striped
+    expect(striped()).toEqual([12, 14, 16, 18]);
+    c.toggleOutlineGroup('rows', 0);
+    // 12–17 hidden: 18 is the first visible data row, 19 the second
+    expect(striped()).toEqual([18]);
+  });
+
   it('shows a level from its button', () => {
     const c = core(grouped());
     expect(c.showOutlineLevel('rows', 2)).toBe(true);

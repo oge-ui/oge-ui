@@ -1720,7 +1720,8 @@ export const ja: OgeLocalePack = {
       'chart-type-not-shown':
         'レーダー、株価、等高線、補助円グラフ付き円、Excel 2016 のグラフはまだ表示されません',
       'picture-format-not-shown': 'EMF/WMF 画像は表示できません',
-      'table-style-not-shown': 'テーブル スタイルはまだ表示されません',
+      'table-style-not-shown':
+        '不明なスタイルのテーブルは書式なしで表示されます',
       'pivot-style-not-shown': 'ピボットテーブル スタイルはまだ表示されません',
       'extension-not-shown': 'スパークラインはまだ表示されません',
       'conditional-format-needs-formulas':

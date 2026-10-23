@@ -1736,7 +1736,7 @@ export const ar: OgeLocalePack = {
       'chart-type-not-shown':
         'لا تُعرض المخططات النسيجية ومخططات الأسهم والسطح والدائري من دائري ومخططات Excel 2016 بعد',
       'picture-format-not-shown': 'لا يمكن عرض صور EMF/WMF',
-      'table-style-not-shown': 'لا تُعرض أنماط الجدول بعد',
+      'table-style-not-shown': 'تظهر الجداول ذات النمط غير المعروف بلا تنسيق',
       'pivot-style-not-shown': 'لا تُعرض أنماط PivotTable بعد',
       'extension-not-shown': 'لا تُعرض خطوط المؤشرات بعد',
       'conditional-format-needs-formulas':

@@ -1679,7 +1679,7 @@ export const zhCN: OgeLocalePack = {
       'chart-type-not-shown':
         '雷达图、股价图、曲面图、子母饼图和 Excel 2016 图表暂不显示',
       'picture-format-not-shown': '无法显示 EMF/WMF 图片',
-      'table-style-not-shown': '表格样式暂不显示',
+      'table-style-not-shown': '样式未知的表格以无格式显示',
       'pivot-style-not-shown': '数据透视表样式暂不显示',
       'extension-not-shown': '迷你图暂不显示',
       'conditional-format-needs-formulas': '使用公式的条件格式暂不应用',

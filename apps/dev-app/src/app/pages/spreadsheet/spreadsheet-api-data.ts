@@ -62,13 +62,19 @@ export const SPREADSHEET_TYPE_BLOCKS: NonNullable<ApiSections['types']> = [
         name: 'OgeImportIssueCode',
         type: 'string union',
         description:
-          "What the reader reports, e.g. <code>'macros-kept'</code> (a <code>vbaProject.bin</code> is kept and never run — the viewer shows a message bar), <code>'drawing-not-shown'</code> (shapes and chart sheets, kept for saving), <code>'chart-type-not-shown'</code> (radar, stock, surface, pie-of-pie and Excel 2016 charts, kept for saving), <code>'uncalculated-formulas'</code>, <code>'external-link'</code> (kept, never fetched), <code>'truncated'</code>, <code>'strict-conformance'</code>.",
+          "What the reader reports, e.g. <code>'macros-kept'</code> (a <code>vbaProject.bin</code> is kept and never run — the viewer shows a message bar), <code>'drawing-not-shown'</code> (shapes and chart sheets, kept for saving), <code>'chart-type-not-shown'</code> (radar, stock, surface, pie-of-pie and Excel 2016 charts, kept for saving), <code>'table-style-not-shown'</code> (a table style neither the workbook nor Excel defines), <code>'uncalculated-formulas'</code>, <code>'external-link'</code> (kept, never fetched), <code>'truncated'</code>, <code>'strict-conformance'</code>.",
       },
       {
         name: 'OgeSheetChart',
         type: 'interface',
         description:
           'A chart floating over a sheet (<code>sheet.charts</code>): its <code>anchor</code>, <code>name</code>, alt text (<code>description</code>) and the chart part read into an <code>OgeChartModel</code> — chart groups with their series and cached values, axes, legend, title and formatting. The viewer draws bar, column, line, area, pie, doughnut, scatter and bubble charts the way Excel lays them out and colours them (3-D ones flat); assistive tech hears each chart&#39;s alt text, title or name in a list under the grid.',
+      },
+      {
+        name: 'OgeTable',
+        type: 'interface',
+        description:
+          'An Excel table on a sheet (<code>sheet.tables</code>): its <code>range</code>, header and totals rows, <code>columns</code>, filter buttons (<code>autoFilter</code>) and <code>style</code> — a built-in name such as <code>TableStyleMedium2</code> with its first-column, last-column and stripe options. The viewer formats tables as Excel does: all 60 built-in styles (<code>ogeBuiltinTableStyle</code>) and the workbook&#39;s own (<code>workbook.tableStyles</code>), under each cell&#39;s own formatting, with the header&#39;s filter buttons and the resize handle.',
       },
       {
         name: 'OgeWorkbook',

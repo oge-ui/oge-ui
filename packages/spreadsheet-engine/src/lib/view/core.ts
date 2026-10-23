@@ -55,6 +55,7 @@ import {
   type OgeTextMeasurer,
 } from '../paint/cell-text';
 import { OgeConditionalFormatter } from '../paint/conditional';
+import { OgeTableFormatter } from '../paint/table-format';
 import { ogePaintWindow, type OgePaintCell } from '../paint/paint-window';
 import {
   ogePlaceCharts,
@@ -314,6 +315,7 @@ export class OgeSpreadsheetCore {
     OgeWorksheet,
     OgeConditionalFormatter
   >();
+  private readonly tableFormatters = new Map<OgeWorksheet, OgeTableFormatter>();
   private readonly arrays = new Map<OgeWorksheet, OgeCell[]>();
   private readonly chartViews = new Map<
     OgeSheetChart,
@@ -549,6 +551,7 @@ export class OgeSpreadsheetCore {
       : null;
     this.layouts.clear();
     this.formatters.clear();
+    this.tableFormatters.clear();
     this.arrays.clear();
     this.outlines.clear();
     this.chartViews.clear();
@@ -746,11 +749,17 @@ export class OgeSpreadsheetCore {
       });
       this.formatters.set(sheet, formatter);
     }
+    let tables = this.tableFormatters.get(sheet);
+    if (!tables && sheet.tables.length) {
+      tables = new OgeTableFormatter(workbook, sheet, this.resolver);
+      this.tableFormatters.set(sheet, tables);
+    }
     const cells = ogePaintWindow(sheet, layout, this.resolver, range, {
       measurer: this.measurer,
       locale: this.locale,
       dateSystem: workbook.dateSystem,
       ...(formatter ? { conditional: formatter } : {}),
+      ...(tables?.active ? { tables } : {}),
     });
     return ogeZoomPaint(cells, layout, zoom);
   }
@@ -2058,6 +2067,8 @@ export class OgeSpreadsheetCore {
     ogeApplyOutlineEdit(sheet, axis, edit);
     this.layouts.delete(sheet);
     this.outlines.delete(sheet);
+    // table stripes count the visible rows and columns
+    this.tableFormatters.delete(sheet);
     this.bump();
   }
 

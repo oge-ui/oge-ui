@@ -51,6 +51,33 @@ function sampleBook(): OgeWorkbook {
   return workbook;
 }
 
+/** The sample with an Excel table over A1:B3 in Excel's default style, filter buttons on. */
+function tableBook(): OgeWorkbook {
+  const book = sampleBook();
+  const range = { top: 0, left: 0, bottom: 2, right: 1 };
+  book.sheets[0].tables.push({
+    id: 1,
+    name: 'People',
+    displayName: 'People',
+    range,
+    headerRowCount: 1,
+    totalsRowCount: 0,
+    columns: [
+      { id: 1, name: 'Name' },
+      { id: 2, name: 'Salary' },
+    ],
+    style: {
+      name: 'TableStyleMedium2',
+      showFirstColumn: false,
+      showLastColumn: false,
+      showRowStripes: true,
+      showColumnStripes: false,
+    },
+    autoFilter: { range, columns: [] },
+  });
+  return book;
+}
+
 const restore: (() => void)[] = [];
 
 /** jsdom lays nothing out: give the grid a size. */
@@ -409,6 +436,24 @@ describe('OgeSpreadsheet (React)', () => {
       result.container.querySelector('.oge-spreadsheet-placeholder-error')
         ?.textContent,
     ).toContain('not an Excel workbook');
+  });
+
+  it('draws an Excel table: its style, filter buttons and resize handle', () => {
+    mount({ workbook: tableBook() });
+    expect(
+      root().querySelectorAll('.oge-spreadsheet-filter-button'),
+    ).toHaveLength(2);
+    expect(
+      root()
+        .querySelector('.oge-spreadsheet-table-handle polygon')
+        ?.getAttribute('points'),
+    ).toBe('2,0 4,0 4,4 0,4 0,2 2,2');
+    // the header row's accent fill
+    expect(
+      [...root().querySelectorAll('.oge-spreadsheet-fill')].some((fill) =>
+        fill.getAttribute('style')?.includes('rgb(68, 114, 196)'),
+      ),
+    ).toBe(true);
   });
 
   it('mirrors right-to-left sheets', () => {

@@ -2230,6 +2230,13 @@ the editor and the formula engine build on these rules.
   17 pattern fills are anchored to sheet coordinates plus the header sizes;
   each zoomed row and column is rounded on its own; row-header width and
   column-header height follow the Normal font at the zoom.
+- **Tints are Excel's integer arithmetic.** `ogeApplyTint` works in Windows'
+  0–240 HLS (the RGB ↔ HLS conversion of KB 29240) and cuts each part of the
+  lightness to a whole step — `trunc(L × (1 + t))` darker,
+  `trunc(L × (1 − t)) + 240 − trunc(240 × (1 − t))` lighter; a grey rounds to
+  the nearest level.
+  All 190 colours Excel showed for 8 theme colours and 22 tints match exactly
+  (the spec formula in floating point was off by one in a quarter of them).
 - **The chrome is the current Excel's** (owner direction 2026-10-22: "look
   like the latest Excel"). The sheet — geometry, gridlines, fonts, borders,
   fills — is measured on desktop Excel; the chrome around it is measured in
@@ -2291,6 +2298,29 @@ gap)`), and draws the series — bars, lines with Excel's smoothing
   the grid (`chartLabels`) — the panes are hidden from it. Radar, stock,
   surface, pie-of-pie and Excel 2016 (`cx:`) charts are kept and reported
   (`chart-type-not-shown`).
+- **Excel tables are formatted by the engine** (P1b). `readOgeTable` reads
+  each table part — kept opaque for saving — into `sheet.tables`;
+  `styles.xml`'s `tableStyles` land in `workbook.tableStyles`, and Excel's 60
+  built-in styles, which files only name, are embedded as Excel defines them
+  (`model/table-styles-data.ts`, generated from `table-styles.ps1`'s COM
+  capture). `OgeTableFormatter` lays a table's style under each cell's own
+  formatting by rules measured on Excel's `DisplayFormat` and screen
+  (`testing/corpus/tables.*`: 81 tables, every fill, font and line matched by
+  `table-format.corpus.spec.ts`). Elements apply in the order whole table,
+  column stripes, row stripes, last column, first column, header row, totals
+  row, first and last header and total cells; each font property comes from
+  the latest element that sets it, an explicit "not italic" too. Stripes
+  cover the data rows and count the visible rows and columns. A cell's own
+  fill wins, and each font property that differs from the Normal font's (a
+  cell in theme colour 1 takes the table's colour; the same black as RGB keeps
+  its own). A table's line between two cells shows only where neither has a
+  border of its own — which wins whatever its weight — and is the latest
+  element's of either cell that draws it: an element draws its region's outer
+  edges with left, right, top and bottom and the lines inside it with vertical
+  and horizontal (`OgeBorder.vertical/horizontal`, differential formats only).
+  A header row gets the filter buttons of its table's `autoFilter`, the last
+  cell Excel's 4 px resize handle (one colour on every style). A table in a
+  style nobody defines shows unformatted (`table-style-not-shown`).
 - **A tab keeps its width when it turns bold**: the label's `::after` is a
   zero-height bold copy, `content: attr(data-label) / ''` — the empty
   alternative text keeps it out of the tab's name, and no second text node

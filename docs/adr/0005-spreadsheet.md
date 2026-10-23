@@ -251,6 +251,16 @@ added to or departed from the plan above.
    draw as they are — no chart package, no lazy chunk, nothing focusable in
    the panes. `@oge-ui/charts` stays the product for charts an app draws from
    its own data.
+8. **Excel tables are formatted by the engine, Excel's 60 built-in styles
+   embedded** (2026-10-23). Files only name a built-in table style, so the
+   engine carries Excel's own definitions — read through COM, 7.4 kB as
+   generated data — and lays a style under each cell's own formatting by the
+   rules measured on Excel's `DisplayFormat` and screen (element order,
+   stripes over visible rows, a cell's own fill, borders and non-Normal font
+   properties winning, lines decided per line). The tables corpus also
+   corrected a P0 rule: tints are Excel's integer HLS arithmetic, not the
+   specification's floating-point formula, which was a step off in a quarter
+   of the colours.
 
 ## Consequences
 

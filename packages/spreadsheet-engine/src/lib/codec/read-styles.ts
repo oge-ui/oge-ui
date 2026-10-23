@@ -1,7 +1,8 @@
 /**
  * `xl/styles.xml`: number formats, fonts, fills, borders, the cell formats
  * (`cellXfs`) cells point at, the differential formats (`dxfs`) conditional
- * formatting applies, and a custom legacy palette.
+ * formatting and table styles apply, the workbook's table styles and a custom
+ * legacy palette.
  *
  * Rendering follows what Excel does, measured: a cell paints with its own
  * `cellXfs` entry's font, fill and border — the `apply*` flags and the parent
@@ -23,6 +24,7 @@ import type {
   OgeUnderline,
   OgeVerticalAlignment,
 } from '../model/style';
+import type { OgeTableStyle } from '../model/table';
 import {
   ogeXmlBool,
   ogeXmlChild,
@@ -42,6 +44,10 @@ export interface OgeStyleSheet {
   readonly normalFont: OgeFont | undefined;
   /** A custom indexed palette, `RRGGBB`. */
   readonly indexedColors: readonly string[] | undefined;
+  /** The workbook's table styles (`tableStyles`). */
+  readonly tableStyles: readonly OgeTableStyle[];
+  readonly defaultTableStyle: string | undefined;
+  readonly defaultPivotStyle: string | undefined;
 }
 
 /** A colour element (`color`, `fgColor`, `bgColor`, `tabColor`). */
@@ -74,8 +80,12 @@ function flag(node: OgeXmlNode | undefined): boolean | undefined {
   return node ? ogeXmlBool(node.attributes['val'], true) : undefined;
 }
 
-/** A font (`font`, or a rich-text run's `rPr` where the name is `rFont`). */
-export function readOgeFont(node: OgeXmlNode): OgeFont {
+/**
+ * A font (`font`, or a rich-text run's `rPr` where the name is `rFont`).
+ * A differential format's font keeps an explicit `<b val="0"/>`: it turns
+ * off what a format under it turned on (a table style's elements do).
+ */
+export function readOgeFont(node: OgeXmlNode, differential = false): OgeFont {
   const font: {
     -readonly [K in keyof OgeFont]: OgeFont[K];
   } = {};
@@ -136,7 +146,7 @@ export function readOgeFont(node: OgeXmlNode): OgeFont {
     'outline',
     'shadow',
   ] as const) {
-    if (!font[key]) delete font[key];
+    if (!font[key] && !(differential && font[key] === false)) delete font[key];
   }
   return font;
 }
@@ -247,8 +257,15 @@ function edge(node: OgeXmlNode | undefined): OgeBorderEdge | undefined {
     : { style: style as OgeBorderStyle };
 }
 
-/** A border; `start`/`end` (Strict, right-to-left aware) read as left/right. */
-export function readOgeBorder(node: OgeXmlNode): OgeBorder | undefined {
+/**
+ * A border; `start`/`end` (Strict, right-to-left aware) read as left/right.
+ * A differential format's border also has the lines inside a range
+ * (`vertical`, `horizontal`), which table styles use.
+ */
+export function readOgeBorder(
+  node: OgeXmlNode,
+  differential = false,
+): OgeBorder | undefined {
   const border: { -readonly [K in keyof OgeBorder]: OgeBorder[K] } = {};
   const left = edge(ogeXmlChild(node, 'left') ?? ogeXmlChild(node, 'start'));
   const right = edge(ogeXmlChild(node, 'right') ?? ogeXmlChild(node, 'end'));
@@ -259,6 +276,12 @@ export function readOgeBorder(node: OgeXmlNode): OgeBorder | undefined {
   if (right) border.right = right;
   if (top) border.top = top;
   if (bottom) border.bottom = bottom;
+  if (differential) {
+    const vertical = edge(ogeXmlChild(node, 'vertical'));
+    const horizontal = edge(ogeXmlChild(node, 'horizontal'));
+    if (vertical) border.vertical = vertical;
+    if (horizontal) border.horizontal = horizontal;
+  }
   if (diagonal) {
     const up = ogeXmlBool(node.attributes['diagonalUp'], false);
     const down = ogeXmlBool(node.attributes['diagonalDown'], false);
@@ -354,14 +377,14 @@ export function readOgeStyleSheet(root: OgeXmlNode): OgeStyleSheet {
     const code = numFmt.attributes['formatCode'];
     if (id !== undefined && code !== undefined) formats.set(id, code);
   }
-  const fonts = ogeXmlChildren(ogeXmlChild(root, 'fonts'), 'font').map(
-    readOgeFont,
+  const fonts = ogeXmlChildren(ogeXmlChild(root, 'fonts'), 'font').map((font) =>
+    readOgeFont(font),
   );
   const fills = ogeXmlChildren(ogeXmlChild(root, 'fills'), 'fill').map((fill) =>
     readOgeFill(fill),
   );
   const borders = ogeXmlChildren(ogeXmlChild(root, 'borders'), 'border').map(
-    readOgeBorder,
+    (border) => readOgeBorder(border),
   );
 
   // the Normal style: the cell style with builtinId 0, else the first one
@@ -421,9 +444,9 @@ export function readOgeStyleSheet(root: OgeXmlNode): OgeStyleSheet {
         ...(numFmt?.attributes['formatCode'] !== undefined
           ? { numberFormat: numFmt.attributes['formatCode'] }
           : {}),
-        ...(font ? { font: readOgeFont(font) } : {}),
+        ...(font ? { font: readOgeFont(font, true) } : {}),
         ...(fill ? { fill: readOgeFill(fill, true) } : {}),
-        ...(border ? { border: readOgeBorder(border) } : {}),
+        ...(border ? { border: readOgeBorder(border, true) } : {}),
         ...(alignment ? { alignment } : {}),
       };
       return style;
@@ -437,10 +460,33 @@ export function readOgeStyleSheet(root: OgeXmlNode): OgeStyleSheet {
     .map((color) => color.attributes['rgb'] ?? '')
     .map((rgb) => (rgb.length === 8 ? rgb.slice(2) : rgb).toUpperCase());
 
+  const tableStyles = ogeXmlChild(root, 'tableStyles');
   return {
     cellFormats,
     differential,
     normalFont,
     indexedColors: palette.length ? palette : undefined,
+    tableStyles: ogeXmlChildren(tableStyles, 'tableStyle').map(readTableStyle),
+    defaultTableStyle: tableStyles?.attributes['defaultTableStyle'],
+    defaultPivotStyle: tableStyles?.attributes['defaultPivotStyle'],
+  };
+}
+
+/** A table style: its elements' types, differential formats and stripe sizes. */
+function readTableStyle(node: OgeXmlNode): OgeTableStyle {
+  const a = node.attributes;
+  return {
+    name: a['name'] ?? '',
+    pivot: ogeXmlBool(a['pivot'], true),
+    table: ogeXmlBool(a['table'], true),
+    elements: ogeXmlChildren(node, 'tableStyleElement').map((element) => {
+      const dxf = ogeXmlIndex(element.attributes['dxfId']);
+      const size = ogeXmlIndex(element.attributes['size']);
+      return {
+        type: element.attributes['type'] ?? '',
+        ...(dxf !== undefined ? { dxf } : {}),
+        ...(size !== undefined && size > 1 ? { size: Math.min(size, 9) } : {}),
+      };
+    }),
   };
 }

@@ -17,6 +17,7 @@ import {
   type OgeSheetRange,
 } from '../address/address';
 import type { OgeTextRun } from '../model/cell';
+import type { OgeAutoFilter } from '../model/sheet-features';
 import type { OgeWorksheet } from '../model/worksheet';
 import {
   ogeBorderStrokes,
@@ -73,12 +74,16 @@ export interface OgeRenderText {
 /** Something drawn over a cell. */
 export interface OgeRenderMark {
   readonly key: string;
-  readonly kind: 'note' | 'filter' | 'icon' | 'dataBar' | 'underline';
+  readonly kind:
+    'note' | 'filter' | 'icon' | 'dataBar' | 'underline' | 'tableHandle';
   readonly row: number;
   readonly col: number;
   /** The mark's box. */
   readonly style: OgeCss;
-  /** `note`: the red triangle as SVG polygon points in its box. */
+  /**
+   * `note`: the red triangle as SVG polygon points in its box;
+   * `tableHandle`: a table's resize handle, the little step in its last cell.
+   */
   readonly points?: string;
   /** `filter`: the column has criteria (a funnel instead of the arrow). */
   readonly filtered?: boolean;
@@ -309,22 +314,21 @@ export function ogeRenderPane(input: OgeRenderPaneInput): OgeRenderPane {
     const text = renderText(cell, textInput, x, y);
     if (text) texts.push(text);
   }
-  // AutoFilter buttons on the filter range's header row
-  const filter = input.sheet.autoFilter;
-  if (
-    filter &&
-    filter.range.top >= pane.top &&
-    filter.range.top <= pane.bottom
-  ) {
-    const { rows, cols } = input.axes;
+  // AutoFilter buttons on the filter range's header row: the sheet's and the tables'
+  const { rows, cols } = input.axes;
+  const filterButtons = (filter: OgeAutoFilter) => {
     const row = filter.range.top;
+    if (row < pane.top || row > pane.bottom || rows.size(row) === 0) return;
     const size = Math.max(10, Math.round(17 * scale));
     for (
       let col = Math.max(filter.range.left, pane.left);
       col <= Math.min(filter.range.right, pane.right);
       col++
     ) {
-      if (cols.size(col) === 0 || rows.size(row) === 0) continue;
+      const column = filter.columns.find(
+        (c) => c.offset === col - filter.range.left,
+      );
+      if (cols.size(col) === 0 || column?.hiddenButton) continue;
       const right = cols.offset(col + 1) - 1 - originX;
       const bottom = rows.offset(row + 1) - 1 - originY;
       marks.push({
@@ -333,11 +337,39 @@ export function ogeRenderPane(input: OgeRenderPaneInput): OgeRenderPane {
         row,
         col,
         style: box(right - size, bottom - size, size, size),
-        filtered: filter.columns.some(
-          (c) => c.offset === col - filter.range.left,
-        ),
+        filtered: column !== undefined,
       });
     }
+  };
+  if (input.sheet.autoFilter) filterButtons(input.sheet.autoFilter);
+  for (const table of input.sheet.tables) {
+    if (table.autoFilter && table.headerRowCount > 0)
+      filterButtons(table.autoFilter);
+    // the resize handle: a 4 px step in the last cell's corner, inside its
+    // gridlines, in one colour on every style (measured)
+    const { bottom: row, right: col } = table.range;
+    if (
+      row < pane.top ||
+      row > pane.bottom ||
+      col < pane.left ||
+      col > pane.right ||
+      rows.size(row) === 0 ||
+      cols.size(col) === 0
+    )
+      continue;
+    marks.push({
+      key: `${row}:${col}:table`,
+      kind: 'tableHandle',
+      row,
+      col,
+      style: box(
+        cols.offset(col + 1) - 5 - originX,
+        rows.offset(row + 1) - 5 - originY,
+        4,
+        4,
+      ),
+      points: '2,0 4,0 4,4 0,4 0,2 2,2',
+    });
   }
   return {
     key: input.key,

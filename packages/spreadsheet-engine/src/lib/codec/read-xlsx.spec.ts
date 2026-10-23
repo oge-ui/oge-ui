@@ -625,7 +625,8 @@ describe('readOgeXlsx — sheets', () => {
         { path: 'xl/media/image1.png', data: png },
         {
           path: 'xl/tables/table1.xml',
-          data: '<table/>',
+          // a table in a style nobody defines: read, shown unformatted
+          data: '<table id="1" name="T" displayName="T" ref="A1:B3"><tableStyleInfo name="NoSuchStyle"/></table>',
           contentType:
             'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml',
         },
@@ -633,6 +634,9 @@ describe('readOgeXlsx — sheets', () => {
       defaults: { png: 'image/png' },
     });
     const s = workbook.sheets[0];
+    expect(s.tables.map((t) => [t.name, t.style?.name])).toEqual([
+      ['T', 'NoSuchStyle'],
+    ]);
     expect(s.protection).toEqual({
       attributes: { sheet: '1', objects: '1', password: 'CC3D' },
     });

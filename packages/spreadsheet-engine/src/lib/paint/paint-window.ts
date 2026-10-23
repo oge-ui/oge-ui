@@ -11,6 +11,9 @@
  *   cell. Each edge is drawn once, by the cell that wins it.
  * - **Gridlines** run under everything; a fill hides the gridlines on all four
  *   sides of its cell, and a merge hides the ones inside it.
+ * - **Tables** format their cells under the cells' own formatting
+ *   (`OgeTablePainter`); a table's line between two cells shows only where
+ *   neither cell has a border of its own, which wins whatever its weight.
  * - **Text** starts a margin (`ceil(MDW / 4)`, 2 px for Calibri 11) inside the
  *   cell, 9 px further per indent level; a line box as tall as the font's row
  *   height sits at the top, the middle `floor((h − line) / 2)` or the bottom
@@ -28,6 +31,7 @@
 import type { OgeSheetRange } from '../address/address';
 import { isOgeRichText, type OgeCell } from '../model/cell';
 import type { OgeHyperlink, OgeNote } from '../model/sheet-features';
+import type { OgeCellStyle } from '../model/style';
 import type { OgeWorksheet } from '../model/worksheet';
 import type { OgeFormatLocale } from '../format/format-locale';
 import type { OgeDateSystem } from '../date/date-serial';
@@ -70,11 +74,39 @@ export interface OgeConditionalPaint {
 
 /** Supplies conditional formatting per cell. */
 export interface OgeConditionalPainter {
+  /** `base`: the style the rules patch when it is not the cell's own (a table cell's). */
   paint(
     row: number,
     col: number,
     cell: OgeCell | undefined,
+    base?: OgeCellStyle,
   ): OgeConditionalPaint | undefined;
+}
+
+/** A table cell's style: the model style (a table's formatting under the cell's) and its resolution. */
+export interface OgeTableCellStyle {
+  readonly model: OgeCellStyle;
+  readonly resolved: OgeResolvedStyle;
+}
+
+/** Supplies table formatting per cell (`OgeTableFormatter`). */
+export interface OgeTablePainter {
+  /** The style of a cell inside a table, or `undefined` outside every table. */
+  style(
+    row: number,
+    col: number,
+    styleId: number,
+  ): OgeTableCellStyle | undefined;
+  /**
+   * The table line between a cell and the one above it (`'top'`) or to its
+   * left (`'left'`) — what Excel draws there when neither cell has a border
+   * of its own on it; `null` when no table draws one.
+   */
+  line(row: number, col: number, side: 'top' | 'left'): OgePaintEdge | null;
+  /** Whether a cell is inside a table. */
+  covers(row: number, col: number): boolean;
+  /** The column spans tables cover on a row, first to last column. */
+  spans(row: number): readonly (readonly [number, number])[];
 }
 
 /** Options of {@link ogePaintWindow}. */
@@ -83,6 +115,8 @@ export interface OgePaintWindowOptions {
   readonly locale: OgeFormatLocale;
   readonly dateSystem: OgeDateSystem;
   readonly conditional?: OgeConditionalPainter;
+  /** Table styles; without it tables show unformatted. */
+  readonly tables?: OgeTablePainter;
   /** Columns scanned beyond the window for text spilling into it. Default 32. */
   readonly spillScan?: number;
 }
@@ -214,8 +248,11 @@ export function ogePaintWindow(
     if (stored) return stored.style ?? 0;
     return sheet.getRow(row)?.style ?? sheet.getColumn(col)?.style ?? 0;
   };
-  const styleAt = (row: number, col: number, cell?: OgeCell) =>
-    resolver.get(styleIdAt(row, col, cell));
+  const tables = options.tables;
+  const styleAt = (row: number, col: number, cell?: OgeCell) => {
+    const id = styleIdAt(row, col, cell);
+    return tables?.style(row, col, id)?.resolved ?? resolver.get(id);
+  };
   const hasValue = (row: number, col: number) => {
     const cell = sheet.getCell(row, col);
     return (
@@ -306,8 +343,15 @@ export function ogePaintWindow(
     const width = merge ? cols.offset(merge.right + 1) - x : cols.size(col);
     const height = merge ? rows.offset(merge.bottom + 1) - y : rows.size(row);
     if (width <= 0 || height <= 0) return;
-    const conditional = options.conditional?.paint(row, col, cell);
-    let style = styleAt(row, col, cell);
+    const id = styleIdAt(row, col, cell);
+    const table = tables?.style(row, col, id);
+    const conditional = options.conditional?.paint(
+      row,
+      col,
+      cell,
+      table?.model,
+    );
+    let style = table?.resolved ?? resolver.get(id);
     if (conditional?.style) style = conditional.style;
     const display = ogeCellDisplay(cell, style, {
       width,
@@ -325,23 +369,54 @@ export function ogePaintWindow(
       !conditional?.fill &&
       !conditional?.dataBar &&
       !note &&
-      !merge
+      !merge &&
+      !table
     )
       return;
 
-    // edges: this cell's against each neighbour's opposite edge
+    // edges: this cell's against each neighbour's opposite edge; where
+    // neither has one, a table's line — drawn by the cell inside a table,
+    // the lower or right one when both are
     const lastRow = merge ? merge.bottom : row;
     const lastCol = merge ? merge.right : col;
-    const top =
-      row > 0
-        ? wins(style.top, styleAt(row - 1, col).bottom, false)
-        : style.top;
-    const left =
-      col > 0
-        ? wins(style.left, styleAt(row, col - 1).right, false)
-        : style.left;
-    const bottom = wins(style.bottom, styleAt(lastRow + 1, col).top, true);
-    const right = wins(style.right, styleAt(row, lastCol + 1).left, true);
+    const edge = (
+      mine: OgePaintEdge | null,
+      theirs: OgePaintEdge | null,
+      mineIsFirst: boolean,
+      tableLine: (() => OgePaintEdge | null) | null,
+    ) =>
+      mine || theirs
+        ? wins(mine, theirs, mineIsFirst)
+        : (tableLine?.() ?? null);
+    const inTable = !!table && !merge && tables !== undefined;
+    const top = edge(
+      style.top,
+      row > 0 ? styleAt(row - 1, col).bottom : null,
+      false,
+      inTable ? () => tables.line(row, col, 'top') : null,
+    );
+    const left = edge(
+      style.left,
+      col > 0 ? styleAt(row, col - 1).right : null,
+      false,
+      inTable ? () => tables.line(row, col, 'left') : null,
+    );
+    const bottom = edge(
+      style.bottom,
+      styleAt(lastRow + 1, col).top,
+      true,
+      inTable && !tables.covers(lastRow + 1, col)
+        ? () => tables.line(lastRow + 1, col, 'top')
+        : null,
+    );
+    const right = edge(
+      style.right,
+      styleAt(row, lastCol + 1).left,
+      true,
+      inTable && !tables.covers(row, lastCol + 1)
+        ? () => tables.line(row, lastCol + 1, 'left')
+        : null,
+    );
 
     // text placement
     let clipLeft = x;
@@ -571,13 +646,21 @@ export function ogePaintWindow(
       Math.max(0, range.left - scan),
       Math.min(cols.count - 1, range.right + scan),
     );
-    // empty cells formatted by their row or column
+    // empty cells formatted by their row or column, or inside a table
     const candidates = rowStyled(row)
       ? Array.from(
           { length: range.right - range.left + 1 },
           (_, i) => range.left + i,
         )
       : [...styledColumns, ...(notedEmpty.get(row) ?? [])];
+    for (const [first, last] of tables?.spans(row) ?? []) {
+      for (
+        let c = Math.max(first, range.left);
+        c <= Math.min(last, range.right);
+        c++
+      )
+        candidates.push(c);
+    }
     for (const col of new Set(candidates)) {
       if (seen.has(col) || mergeOf(row, col) || cols.size(col) === 0) continue;
       emit(row, col, undefined, undefined);

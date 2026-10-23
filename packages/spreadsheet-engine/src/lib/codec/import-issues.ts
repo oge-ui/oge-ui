@@ -37,7 +37,10 @@ export type OgeImportIssueCode =
   | 'chart-type-not-shown'
   /** Pictures in a format browsers cannot show (EMF, WMF) are kept but not shown. */
   | 'picture-format-not-shown'
-  /** Table (ListObject) styling is kept but not shown yet. */
+  /**
+   * A table (ListObject) names a style neither the workbook nor Excel's
+   * built-ins define; it shows without the style.
+   */
   | 'table-style-not-shown'
   /** Pivot table styling is kept but not shown yet. */
   | 'pivot-style-not-shown'

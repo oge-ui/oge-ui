@@ -12,6 +12,7 @@ import {
 } from './paint-window';
 import { OgeStyleResolver } from './resolve-style';
 import { OgeSheetLayout } from './sheet-layout';
+import { OgeTableFormatter } from './table-format';
 
 /** Every character 7 px wide — widths are easy to reason about. */
 const fixed: OgeTextMeasurer = { measure: (text) => text.length * 7 };
@@ -388,5 +389,118 @@ describe('ogePaintWindow — a row’s baseline', () => {
     expect(find(cells, 1, 0)?.lineTop).toBe(0);
     // a row of one size keeps h − line
     expect(find(cells, 2, 0)?.lineTop).toBe(0);
+  });
+});
+
+describe('ogePaintWindow — tables', () => {
+  function tableBook(): OgeWorkbook {
+    const workbook = book([
+      [0, 0, 'a'],
+      [
+        0,
+        1,
+        'b',
+        { border: { bottom: { style: 'thin', color: { rgb: 'FFFF0000' } } } },
+      ],
+      [0, 2, 'c'],
+      [2, 1, 7],
+    ]);
+    const table = (top: number, bottom: number) => ({
+      id: 1,
+      name: `T${top}`,
+      displayName: `T${top}`,
+      range: { top, left: 0, bottom, right: 2 },
+      headerRowCount: 1,
+      totalsRowCount: 0,
+      columns: [],
+      style: {
+        name: 'TableStyleLight15',
+        showFirstColumn: false,
+        showLastColumn: false,
+        showRowStripes: true,
+        showColumnStripes: false,
+      },
+    });
+    // a second table right under the first
+    workbook.sheets[0].tables.push(table(0, 3), table(4, 5));
+    return workbook;
+  }
+
+  function paintTables(
+    workbook: OgeWorkbook,
+    conditional?: Parameters<typeof ogePaintWindow>[4]['conditional'],
+  ) {
+    const sheet = workbook.sheets[0];
+    const resolver = new OgeStyleResolver(workbook);
+    const layout = new OgeSheetLayout(sheet, resolver, { measurer: fixed });
+    return {
+      resolver,
+      cells: ogePaintWindow(
+        sheet,
+        layout,
+        resolver,
+        { top: 0, left: 0, bottom: 8, right: 4 },
+        {
+          measurer: fixed,
+          locale: OGE_EN_US_FORMAT_LOCALE,
+          dateSystem: '1900',
+          tables: new OgeTableFormatter(workbook, sheet, resolver),
+          ...(conditional ? { conditional } : {}),
+        },
+      ),
+    };
+  }
+
+  it('paints every cell of a table, empty ones too, and nothing around it', () => {
+    const { cells } = paintTables(tableBook());
+    const table = cells.filter((c) => c.row <= 5 && c.col <= 2);
+    expect(table).toHaveLength(18);
+    expect(cells.filter((c) => c.row > 5 || c.col > 2)).toEqual([]);
+    // the first stripe (white lighter by... darker 15%), the second unfilled
+    expect(find(cells, 1, 0)?.fill?.color).toBe('#D9D9D9');
+    expect(find(cells, 2, 0)?.fill).toBeNull();
+    // the header is bold
+    expect(find(cells, 0, 0)?.font.bold).toBe(true);
+  });
+
+  it('draws a table’s lines from the cells inside it, a cell’s own edge winning', () => {
+    const { cells } = paintTables(tableBook());
+    // the header's medium bottom, drawn by the row under it
+    expect(find(cells, 1, 0)?.top).toMatchObject({ style: 'medium' });
+    expect(find(cells, 0, 0)?.bottom).toBeNull();
+    // the cell's own thin red edge over the table's medium line
+    expect(find(cells, 0, 1)?.bottom).toMatchObject({
+      style: 'thin',
+      color: '#FF0000',
+    });
+    expect(find(cells, 1, 1)?.top).toBeNull();
+    // the table's outer edges: the cells inside draw them
+    expect(find(cells, 0, 0)?.top).toMatchObject({ style: 'thin' });
+    expect(find(cells, 0, 0)?.left).toMatchObject({ style: 'thin' });
+    expect(find(cells, 1, 2)?.right).toMatchObject({ style: 'thin' });
+    // between two tables the lower one's cells draw the line
+    expect(find(cells, 3, 1)?.bottom).toBeNull();
+    expect(find(cells, 4, 1)?.top).toMatchObject({ style: 'thin' });
+    expect(find(cells, 5, 1)?.bottom).toMatchObject({ style: 'thin' });
+  });
+
+  it('applies conditional formats over the table’s formatting', () => {
+    const seen: unknown[] = [];
+    const workbook = tableBook();
+    const resolver = new OgeStyleResolver(workbook);
+    const { cells } = paintTables(workbook, {
+      paint: (row, col, _cell, base) => {
+        if (row !== 1 || col !== 0) return undefined;
+        seen.push(base?.fill);
+        return {
+          style: resolver.withPatch(base, { font: { italic: true } }),
+        };
+      },
+    });
+    expect(seen[0]).toMatchObject({ type: 'pattern', pattern: 'solid' });
+    expect(find(cells, 1, 0)).toMatchObject({
+      fill: { color: '#D9D9D9' },
+      font: { italic: true },
+    });
   });
 });

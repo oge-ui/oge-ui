@@ -1751,7 +1751,8 @@ export const it: OgeLocalePack = {
         'I grafici radar, azionari, a superficie, a torta della torta e di Excel 2016 non sono ancora visualizzati',
       'picture-format-not-shown':
         'Le immagini EMF/WMF non possono essere visualizzate',
-      'table-style-not-shown': 'Gli stili tabella non sono ancora visualizzati',
+      'table-style-not-shown':
+        'Le tabelle con uno stile sconosciuto appaiono senza formattazione',
       'pivot-style-not-shown':
         'Gli stili tabella pivot non sono ancora visualizzati',
       'extension-not-shown': 'I grafici sparkline non sono ancora visualizzati',

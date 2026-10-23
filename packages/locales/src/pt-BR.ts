@@ -1742,7 +1742,8 @@ export const ptBR: OgeLocalePack = {
       'chart-type-not-shown':
         'Gráficos de radar, de ações, de superfície, de pizza de pizza e do Excel 2016 ainda não são exibidos',
       'picture-format-not-shown': 'Imagens EMF/WMF não podem ser exibidas',
-      'table-style-not-shown': 'Estilos de tabela ainda não são exibidos',
+      'table-style-not-shown':
+        'Tabelas com estilo desconhecido são exibidas sem formatação',
       'pivot-style-not-shown':
         'Estilos de Tabela Dinâmica ainda não são exibidos',
       'extension-not-shown': 'Minigráficos ainda não são exibidos',
