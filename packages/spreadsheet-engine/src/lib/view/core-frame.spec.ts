@@ -363,6 +363,65 @@ describe('OgeSpreadsheetCore — frame, media and browser work', () => {
     expect(c.chartView(c.charts()[0] ?? first)).not.toBe(view);
   });
 
+  it('leaves hidden and empty charts out, and draws in the theme’s body font', () => {
+    const workbook = createOgeWorkbook();
+    workbook.themeFonts = { minor: 'Aptos' };
+    const sheet = workbook.sheets[0];
+    const model = {
+      part: 'xl/charts/chart1.xml',
+      groups: [
+        {
+          kind: 'bar' as const,
+          grouping: 'clustered' as const,
+          varyColors: false,
+          axes: [],
+          series: [
+            {
+              index: 0,
+              order: 0,
+              categories: { labels: ['A'] },
+              values: { values: [1] },
+              shape: {},
+            },
+          ],
+        },
+      ],
+      axes: [],
+      legend: { position: 'b' as const, overlay: false, font: {}, hidden: [] },
+      plotVisibleOnly: true,
+      blanksAs: 'gap' as const,
+      area: {},
+      plotArea: {},
+      font: {},
+      roundedCorners: false,
+      style: 2,
+    };
+    const box = {
+      kind: 'absolute' as const,
+      x: 10,
+      y: 10,
+      width: 200,
+      height: 120,
+    };
+    sheet?.charts.push(
+      { anchor: box, chart: model, name: 'Shown' },
+      { anchor: box, chart: model, name: 'Hidden', hidden: true },
+      { anchor: { ...box, width: 0 }, chart: model, name: 'Flat' },
+      { anchor: box, chart: model },
+    );
+    const { c } = setup(workbook);
+    expect(c.chartLabels()).toEqual(['Shown', 'Flat']);
+    expect(c.charts().map((placed) => placed.chart.name)).toEqual([
+      'Shown',
+      undefined,
+    ]);
+    const first = c.charts()[0];
+    if (!first) throw new Error('no chart');
+    const label = c.chartView(first).texts.find((t) => t.text === 'Series1');
+    expect(label?.style['fontFamily']).toContain('Aptos');
+    expect(setup(null).c.charts()).toEqual([]);
+  });
+
   it('opens a URL, and reports one it cannot fetch', async () => {
     const fetch = vi
       .spyOn(globalThis, 'fetch')

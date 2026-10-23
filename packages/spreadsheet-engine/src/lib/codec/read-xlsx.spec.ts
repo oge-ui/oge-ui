@@ -1221,6 +1221,85 @@ describe('readOgeXlsx — charts', () => {
     expect(model?.groups[0]?.series[0]?.smooth).toBe(true);
   });
 
+  it('reads charts in every anchor kind, and counts the frames it cannot read as shapes', () => {
+    const chartFrame = (id: string, attrs = '') =>
+      `<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="C"${attrs}/></xdr:nvGraphicFramePr><a:graphic><a:graphicData uri="${CHART}"><c:chart r:id="${id}"/></a:graphicData></a:graphic></xdr:graphicFrame>`;
+    const from =
+      '<xdr:from><xdr:col>1</xdr:col><xdr:row>1</xdr:row></xdr:from>';
+    const drawing =
+      '<xdr:wsDr xmlns:xdr="d" xmlns:a="a" xmlns:r="r" xmlns:c="c" xmlns:mc="m">' +
+      `<xdr:absoluteAnchor><xdr:pos x="9525" y="19050"/><xdr:ext cx="952500" cy="476250"/>${chartFrame('rId1', ' hidden="1"')}</xdr:absoluteAnchor>` +
+      `<xdr:oneCellAnchor>${from}<xdr:ext cx="952500" cy="476250"/>${chartFrame('rId1')}</xdr:oneCellAnchor>` +
+      `<xdr:twoCellAnchor editAs="absolute">${from}<xdr:to><xdr:col>4</xdr:col><xdr:row>9</xdr:row></xdr:to>${chartFrame('rId1')}</xdr:twoCellAnchor>` +
+      // a chart only a fallback carries
+      `<xdr:twoCellAnchor>${from}<xdr:to><xdr:col>4</xdr:col><xdr:row>9</xdr:row></xdr:to><mc:AlternateContent><mc:Fallback>${chartFrame('rId1')}</mc:Fallback></mc:AlternateContent></xdr:twoCellAnchor>` +
+      // shapes to the reader: no id, an external part, a missing one, a broken one, no placement
+      `<xdr:twoCellAnchor>${from}<xdr:to><xdr:col>4</xdr:col><xdr:row>9</xdr:row></xdr:to><xdr:graphicFrame><a:graphic><a:graphicData uri="${CHART}"><c:chart/></a:graphicData></a:graphic></xdr:graphicFrame></xdr:twoCellAnchor>` +
+      `<xdr:twoCellAnchor>${from}<xdr:to><xdr:col>4</xdr:col><xdr:row>9</xdr:row></xdr:to>${chartFrame('rId2')}</xdr:twoCellAnchor>` +
+      `<xdr:twoCellAnchor>${from}<xdr:to><xdr:col>4</xdr:col><xdr:row>9</xdr:row></xdr:to>${chartFrame('rId3')}</xdr:twoCellAnchor>` +
+      `<xdr:twoCellAnchor>${from}<xdr:to><xdr:col>4</xdr:col><xdr:row>9</xdr:row></xdr:to>${chartFrame('rId4')}</xdr:twoCellAnchor>` +
+      `<xdr:absoluteAnchor>${chartFrame('rId1')}</xdr:absoluteAnchor>` +
+      // a chart with nothing in its plot area
+      `<xdr:twoCellAnchor>${from}<xdr:to><xdr:col>4</xdr:col><xdr:row>9</xdr:row></xdr:to>${chartFrame('rId5')}</xdr:twoCellAnchor>` +
+      '</xdr:wsDr>';
+    const rel = (id: string, target: string, external = false) =>
+      `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="${target}"${external ? ' TargetMode="External"' : ''}/>`;
+    const anchors = read({
+      ...fixture,
+      extraParts: [
+        ...(fixture.extraParts ?? []).filter(
+          (p) => !p.path.startsWith('xl/drawings/'),
+        ),
+        {
+          path: 'xl/drawings/drawing1.xml',
+          data: drawing,
+          contentType:
+            'application/vnd.openxmlformats-officedocument.drawing+xml',
+        },
+        {
+          path: 'xl/drawings/_rels/drawing1.xml.rels',
+          data:
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            rel('rId1', '../charts/chart1.xml') +
+            rel('rId2', 'https://example.com/chart.xml', true) +
+            rel('rId3', '../charts/missing.xml') +
+            rel('rId4', '../charts/broken.xml') +
+            rel('rId5', '../charts/empty.xml') +
+            '</Relationships>',
+        },
+        {
+          path: 'xl/charts/broken.xml',
+          data: '<c:chartSpace xmlns:c="c"><c:chart>',
+          contentType:
+            'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+        },
+        {
+          path: 'xl/charts/empty.xml',
+          data: '<c:chartSpace xmlns:c="c"><c:chart><c:plotArea/></c:chart></c:chartSpace>',
+          contentType:
+            'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+        },
+      ],
+    });
+    const charts = anchors.workbook.sheets[0]?.charts ?? [];
+    expect(charts.map((c) => c.anchor.kind)).toEqual([
+      'absolute',
+      'oneCell',
+      'absolute',
+      'twoCell',
+    ]);
+    expect(charts[0]).toMatchObject({
+      hidden: true,
+      anchor: { x: 1, y: 2, width: 100, height: 50 },
+    });
+    expect(charts[1]?.anchor).toMatchObject({ width: 100, height: 50 });
+    expect(charts[1]?.description).toBeUndefined();
+    expect(anchors.issues.map((i) => [i.code, i.detail])).toEqual([
+      ['drawing-not-shown', '5 shapes or linked pictures'],
+      ['chart-type-not-shown', 'empty'],
+    ]);
+  });
+
   it('counts the chart types it does not draw, Excel 2016 charts by layout', () => {
     const { issues } = read(fixture);
     expect(issues.map((i) => [i.code, i.detail])).toEqual([

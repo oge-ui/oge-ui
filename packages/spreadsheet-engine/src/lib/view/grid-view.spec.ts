@@ -726,6 +726,16 @@ describe('ogePaneCharts', () => {
     );
     expect([...placed.keys()]).toEqual(['corner', 'main']);
     expect(placed.get('main')).toHaveLength(1);
+    // the frozen rows' and columns' own panes
+    const frozenPanes = ogePaneCharts([chartAt(100, 10), chartAt(10, 100)], p, {
+      rtl: false,
+      view,
+    });
+    expect([...frozenPanes.keys()]).toEqual(['top', 'left']);
+    expect(frozenPanes.get('top')?.[0]?.frame).toMatchObject({
+      left: `${100 - p.originX}px`,
+      top: '10px',
+    });
     expect(placed.get('main')?.[0]?.frame).toEqual({
       left: `${100 - p.originX}px`,
       top: `${100 - p.originY}px`,

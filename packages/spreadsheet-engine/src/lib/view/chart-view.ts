@@ -1309,7 +1309,9 @@ export function ogeChartView(
       for (const g of chart.groups)
         for (const x of g.series)
           x.values.values.forEach((_, i) => {
-            const v = x.categories?.numbers?.[i] ?? i + 1;
+            // x values, or 1, 2, 3 … without them; a blank x is a gap
+            const numbers = x.categories?.numbers;
+            const v = numbers ? (numbers[i] ?? null) : i + 1;
             if (v === null) return;
             lo = Math.min(lo, v);
             hi = Math.max(hi, v);
@@ -1336,7 +1338,9 @@ export function ogeChartView(
       const full = chart.groups.some(
         (g, gi) => onAxis(gi, axis) && g.grouping === 'percentStacked',
       );
+      // a 100% stack runs from 0 (or -100%) to 100% exactly, unless the file fixes it
       const fixed = {
+        ...(full ? { min: range[0] < 0 ? -1 : 0, max: 1 } : {}),
         ...(axis?.min !== undefined ? { min: axis.min } : {}),
         ...(axis?.max !== undefined ? { max: axis.max } : {}),
         ...(axis?.majorUnit !== undefined ? { majorUnit: axis.majorUnit } : {}),
@@ -1857,7 +1861,8 @@ export function ogeChartView(
             if (v >= 0) pos[i] = from + v;
             else neg[i] = from + v;
           }
-          const to = from + v;
+          // a clustered bar runs from the crossing to its value; a stacked one adds on
+          const to = clustered ? v : from + v;
           const start =
             i * band +
             (gap * width) / 2 +
@@ -1897,14 +1902,14 @@ export function ogeChartView(
                 raw,
                 {
                   x: (left + right) / 2,
-                  y: v >= 0 ? topY : bottomY,
+                  y: to >= from ? topY : bottomY,
                   left,
                   right,
                   top: topY,
                   bottom: bottomY,
                 },
                 clustered,
-                v < 0,
+                to < from,
               ),
             );
         });
@@ -2154,7 +2159,8 @@ export function ogeChartView(
         const pts: (Point | null)[] = [];
         const kept: { point: Point; at: number; value: number }[] = [];
         series.values.values.forEach((v, i) => {
-          const xValue = series.categories?.numbers?.[i] ?? i + 1;
+          const numbers = series.categories?.numbers;
+          const xValue = numbers ? (numbers[i] ?? null) : i + 1;
           if (v === null || xValue === null) {
             if (chart.blanksAs === 'gap') pts.push(null);
             return;

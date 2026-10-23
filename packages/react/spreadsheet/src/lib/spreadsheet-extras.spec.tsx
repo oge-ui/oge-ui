@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { createRef, useState } from 'react';
 import {
   act,
@@ -7,9 +9,11 @@ import {
 } from '@testing-library/react';
 import {
   createOgeWorkbook,
+  ogeRichText,
   type OgeImportIssue,
   type OgeSpreadsheetHyperlinkClickEvent,
   type OgeSpreadsheetLoadErrorEvent,
+  type OgeSpreadsheetLoadedEvent,
   type OgeSpreadsheetSource,
   type OgeWorkbook,
 } from '@oge-ui/spreadsheet-engine';
@@ -808,5 +812,165 @@ describe('OgeSpreadsheet (React) — drawing and chrome', () => {
     act(() => set.outlines(false));
     expect(host().querySelector('.oge-spreadsheet-outline')).toBeNull();
     expect(host().querySelector('.oge-spreadsheet-outline-corner')).toBeNull();
+  });
+  it('draws wrapped lines, rich and underlined runs, and borders', () => {
+    mount();
+    const workbook = createOgeWorkbook();
+    const sheet = workbook.sheets[0];
+    const wrapped = workbook.styles.intern({
+      alignment: { wrapText: true },
+      border: { bottom: { style: 'thick', color: { rgb: 'FFFF0000' } } },
+    });
+    const underlined = workbook.styles.intern({
+      // the accounting underline is drawn as a mark under the text area
+      font: { underline: 'singleAccounting' },
+    });
+    sheet.setCell(0, 0, {
+      value: 'one two three four five six seven eight nine ten',
+      style: wrapped,
+    });
+    sheet.setCell(1, 0, {
+      value: ogeRichText([
+        { text: 'Bold', font: { bold: true } },
+        { text: ' plain' },
+      ]),
+    });
+    sheet.setCell(2, 0, { value: 'link-like', style: underlined });
+    act(() => set.workbook(workbook));
+    const texts = [...host().querySelectorAll('.oge-spreadsheet-text')];
+    // the wrapped cell's lines and the rich cell's runs are spans
+    expect(
+      texts.filter((text) => text.querySelectorAll('span').length > 1),
+    ).toHaveLength(2);
+    expect(host().querySelector('.oge-spreadsheet-underline')).not.toBeNull();
+    const border = host().querySelector(
+      'svg.oge-spreadsheet-layer[fill="none"] path',
+    );
+    expect(border?.getAttribute('stroke')).toBe('#FF0000');
+  });
+
+  it('measures text with a canvas, and again once web fonts are ready', async () => {
+    const measured: string[] = [];
+    class FakeCanvas {
+      getContext() {
+        return {
+          font: '',
+          measureText: (text: string) => {
+            measured.push(text);
+            return { width: text.length * 7 };
+          },
+        };
+      }
+    }
+    const disconnected: string[] = [];
+    class FakeResizeObserver {
+      observe() {
+        return undefined;
+      }
+      disconnect() {
+        disconnected.push('observer');
+      }
+    }
+    stub(globalThis, 'OffscreenCanvas', FakeCanvas);
+    stub(globalThis, 'ResizeObserver', FakeResizeObserver);
+    let ready = () => undefined as void;
+    stub(document, 'fonts', {
+      ready: new Promise<void>((resolve) => {
+        ready = resolve;
+      }),
+    });
+    mount();
+    const setMeasurer = vi.spyOn(viewer().core, 'setMeasurer');
+    await act(async () => {
+      ready();
+      await Promise.resolve();
+    });
+    expect(setMeasurer).toHaveBeenCalledTimes(1);
+    expect(measured.length).toBeGreaterThan(0);
+    view.unmount();
+    expect(disconnected.length).toBeGreaterThan(0);
+  });
+
+  it('follows its own scroll, and copies nothing without a clipboard', () => {
+    mount();
+    const values = () =>
+      [...host().querySelectorAll('.oge-spreadsheet-text')].map(
+        (text) => text.textContent,
+      );
+    expect(values()).toContain('40');
+    const g = grid();
+    g.scrollTop = 600;
+    fireEvent.scroll(g);
+    expect(values()).not.toContain('40');
+    // a copy event without a clipboard (an old engine) is left alone
+    expect(fireEvent.copy(g)).toBe(true);
+  });
+
+  it('opens a source from its handle, says it loaded, and switches sheets from it', async () => {
+    const loaded: OgeSpreadsheetLoadedEvent[] = [];
+    const ref = createRef<OgeSpreadsheetHandle>();
+    view = render(
+      <OgeSpreadsheet
+        ref={ref}
+        onLoaded={(event) => loaded.push(event)}
+        style={{ display: 'block', width: 800, height: 400 }}
+      />,
+    );
+    const bytes = readFileSync(
+      resolve(
+        __dirname,
+        '../../../../spreadsheet-engine/testing/corpus/structure.xlsx',
+      ),
+    );
+    await act(async () => {
+      await ref.current?.open(new Uint8Array(bytes));
+    });
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0]?.workbook.sheets.length).toBeGreaterThan(1);
+    act(() => ref.current?.selectSheet(1));
+    expect(ref.current?.core.activeSheet()).toBe(1);
+  });
+
+  it('keeps focus on an opener press, closes an open list from its button, and picks a sheet by click', async () => {
+    mount();
+    const tick = () => act(() => new Promise<void>((done) => setTimeout(done)));
+    const button = host().querySelector(
+      '.oge-spreadsheet-sheet-menu-button',
+    ) as HTMLButtonElement;
+    const menu = () =>
+      host().querySelector('.oge-spreadsheet-sheet-list') as HTMLElement | null;
+    // a press does not take focus from where it is
+    expect(fireEvent.mouseDown(button)).toBe(false);
+    // keys other than the arrows leave the opener to the browser
+    fireEvent.keyDown(button, { key: 'F2' });
+    expect(menu()).toBeNull();
+    fireEvent.click(button);
+    await tick();
+    // a key the list does not know changes nothing
+    fireEvent.keyDown(menu() as HTMLElement, { key: 'F5' });
+    expect(menu()).not.toBeNull();
+    // the opener closes its own open list and keeps the focus
+    fireEvent.click(button);
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(button);
+    fireEvent.click(button);
+    await tick();
+    const items = [
+      ...(menu()?.querySelectorAll('[role="menuitemradio"]') ?? []),
+    ] as HTMLElement[];
+    fireEvent.click(items[2] as HTMLElement);
+    expect(viewer().core.activeSheet()).toBe(2);
+    expect(menu()).toBeNull();
+    // the name box's list button, likewise
+    const workbook = richBook();
+    workbook.defineName({ name: 'Heading', formula: 'Sheet1!$B$1' });
+    act(() => set.workbook(workbook));
+    const names = host().querySelector(
+      '.oge-spreadsheet-name-field .oge-spreadsheet-field-button',
+    ) as HTMLButtonElement;
+    expect(fireEvent.mouseDown(names)).toBe(false);
+    fireEvent.keyDown(names, { key: 'ArrowDown' });
+    await tick();
+    expect(host().querySelector('.oge-spreadsheet-name-list')).not.toBeNull();
   });
 });
