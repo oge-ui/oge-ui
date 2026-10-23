@@ -94,7 +94,7 @@ _Content_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `source` | `OgeSpreadsheetSource \| null` | `null` | The workbook to open: bytes, a `Blob` / `File`, or a URL. A new value opens it, cancelling a read still running. Read in the browser by the dependency-free reader; nothing is uploaded. |
+| `source` | `OgeSpreadsheetSource \| null` | `null` | The workbook to open: bytes, a `Blob` / `File`, or a URL. A new value opens it, cancelling a read still running; back to `null`, it closes what it opened (a `workbook` given directly stays). Read in the browser by the dependency-free reader; nothing is uploaded. |
 | `workbook` | `OgeWorkbook \| null` | `null` | A workbook built or read elsewhere; wins over `source` when both change. |
 | `locale` | `string \| undefined` | `undefined` | BCP 47 locale of the built-in number formats, separators and month names — Excel takes them from the reader's region. Default: the provider's locale, else the browser's. Pass it in server-rendered apps. |
 | `messages` | `Partial<OgeSpreadsheetMessages>` | `{}` | Per-instance overrides of the message catalog, merged over the provider's. Every user-facing string lives there — aria labels and live-region announcements included. |
@@ -234,21 +234,30 @@ export function WorkbookViewer() {
 
 import { useState } from 'react';
 import { OgeSpreadsheet } from '@oge-ui/react-spreadsheet';
+import { OgeFileUploader } from '@oge-ui/react-upload';
 
 export function OpenWorkbook() {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<readonly File[]>([]);
   const [issues, setIssues] = useState(0);
+  const messages = {
+    empty: 'No workbook open',
+    buttons: { selectSingle: 'Choose a workbook' },
+    dropZone: { labelSingle: 'Drop a workbook here or {browse}' },
+  };
   return (
     <>
-      {/* Pick or drop any workbook: nothing leaves the browser. What the
-          reader could not show as Excel does arrives in onLoaded's issues. */}
-      <input
-        type="file"
+      {/* Pick or drop any workbook: nothing leaves the browser — the
+          uploader only collects the File. What the reader could not show as
+          Excel does arrives in onLoaded's issues. */}
+      <OgeFileUploader
         accept=".xlsx,.xlsm"
-        onChange={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
+        multiple={false}
+        value={files}
+        onValueChange={setFiles}
+        messages={messages}
       />
       <OgeSpreadsheet
-        source={file}
+        source={files[0] ?? null}
         onLoaded={(event) => setIssues(event.issues.length)}
         style={{ height: 520 }}
       />

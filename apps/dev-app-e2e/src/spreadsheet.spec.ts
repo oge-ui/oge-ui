@@ -173,6 +173,52 @@ for (const layer of LAYERS) {
       expect(results.violations.map((v) => v.id)).toEqual([]);
     });
 
+    test('opens the reader’s own workbook from the uploader, without uploading it', async ({
+      page,
+    }) => {
+      // the picked file is read in the page: nothing may be sent anywhere
+      const sent: string[] = [];
+      page.on('request', (request) => {
+        if (request.method() !== 'GET')
+          sent.push(`${request.method()} ${request.url()}`);
+      });
+      await page.goto(`/components/spreadsheet${layer.query}`);
+      const card = page.locator('app-demo-card:has(#open-your-own-file)');
+      await card.scrollIntoViewIfNeeded();
+      // the uploader is a real control, not the browser's bare file input
+      await expect(
+        card.getByRole('button', { name: 'Choose a workbook' }),
+      ).toBeVisible();
+      const bytes = await (
+        await page.request.get('/demo/spreadsheet/tables.xlsx')
+      ).body();
+      await card.locator('.oge-upload-input').setInputFiles({
+        name: 'tables.xlsx',
+        mimeType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer: bytes,
+      });
+      await expect(card.locator('.oge-spreadsheet-tab')).toHaveText(
+        ['Sales', 'Inventory', 'Teams', 'Styles'],
+        { timeout: 30_000 },
+      );
+      await expect(
+        card.getByRole('listitem', { name: 'tables.xlsx' }),
+      ).toBeVisible();
+      expect(sent).toEqual([]);
+      const results = await new AxeBuilder({ page })
+        .include('app-demo-card:has(#open-your-own-file)')
+        .disableRules(['color-contrast'])
+        .analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+      // taking the file away closes it in the viewer too
+      await card.getByRole('button', { name: 'Remove: tables.xlsx' }).click();
+      await expect(card.locator('.oge-spreadsheet-tab')).toHaveCount(0);
+      await expect(card.locator('.oge-spreadsheet-placeholder')).toHaveText(
+        'No workbook',
+      );
+    });
+
     test('lists every sheet beside the tabs and the defined names in the name box', async ({
       page,
     }) => {

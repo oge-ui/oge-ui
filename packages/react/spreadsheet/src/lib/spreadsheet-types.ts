@@ -14,7 +14,10 @@ import type {
 
 /** Props of `<OgeSpreadsheet>` — the Angular `<oge-spreadsheet>` inputs, models and outputs. */
 export interface OgeSpreadsheetProps {
-  /** The workbook to open: bytes, a `Blob` / `File`, or a URL. */
+  /**
+   * The workbook to open: bytes, a `Blob` / `File`, or a URL. Back to `null`,
+   * it closes what it opened (a `workbook` given directly stays).
+   */
   source?: OgeSpreadsheetSource | null;
   /** A workbook built or read elsewhere (wins over `source` when both change). */
   workbook?: OgeWorkbook | null;

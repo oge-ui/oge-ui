@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import {
@@ -426,6 +428,38 @@ describe('OgeSpreadsheet', () => {
     expect(
       host.querySelector('.oge-spreadsheet-placeholder-error')?.textContent,
     ).toContain('not an Excel workbook');
+  });
+
+  it('says which sheet it opened, and closes it when the source goes back to null', async () => {
+    await render();
+    const live = () =>
+      host.querySelector('.oge-spreadsheet-live')?.textContent?.trim();
+    fixture.componentInstance.workbook.set(null);
+    fixture.componentInstance.source.set(
+      new Uint8Array(
+        readFileSync(
+          resolve(
+            __dirname,
+            '../../../../spreadsheet-engine/testing/corpus/structure.xlsx',
+          ),
+        ),
+      ),
+    );
+    fixture.detectChanges();
+    // the sheet it opens at replaces "Opening workbook…"
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(live()).toBe('Sheet Main, 1 of 4');
+    });
+    fixture.componentInstance.source.set(null);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(component().getWorkbook()).toBeNull();
+    expect(
+      host.querySelector('.oge-spreadsheet-placeholder')?.textContent?.trim(),
+    ).toBe('No workbook');
+    expect(live()).toBe('');
   });
 
   it('draws an Excel table: its style, filter buttons and resize handle', async () => {

@@ -34,20 +34,31 @@ export const SPREADSHEET_OVERVIEW_DEMOS: readonly ReactDemo[] = [
     title: 'Open your own file',
     source: reactDemoSource({
       react: ['useState'],
-      use: { '@oge-ui/react-spreadsheet': ['OgeSpreadsheet'] },
+      use: {
+        '@oge-ui/react-spreadsheet': ['OgeSpreadsheet'],
+        '@oge-ui/react-upload': ['OgeFileUploader'],
+      },
       name: 'OpenWorkbook',
-      body: `const [file, setFile] = useState<File | null>(null);
-const [issues, setIssues] = useState(0);`,
+      body: `const [files, setFiles] = useState<readonly File[]>([]);
+const [issues, setIssues] = useState(0);
+const messages = {
+  empty: 'No workbook open',
+  buttons: { selectSingle: 'Choose a workbook' },
+  dropZone: { labelSingle: 'Drop a workbook here or {browse}' },
+};`,
       jsx: `<>
-  {/* Pick or drop any workbook: nothing leaves the browser. What the
-      reader could not show as Excel does arrives in onLoaded's issues. */}
-  <input
-    type="file"
+  {/* Pick or drop any workbook: nothing leaves the browser — the
+      uploader only collects the File. What the reader could not show as
+      Excel does arrives in onLoaded's issues. */}
+  <OgeFileUploader
     accept=".xlsx,.xlsm"
-    onChange={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
+    multiple={false}
+    value={files}
+    onValueChange={setFiles}
+    messages={messages}
   />
   <OgeSpreadsheet
-    source={file}
+    source={files[0] ?? null}
     onLoaded={(event) => setIssues(event.issues.length)}
     style={{ height: 520 }}
   />

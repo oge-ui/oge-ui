@@ -261,6 +261,8 @@ describe('OgeSpreadsheetCore — requests and scroll memory', () => {
     c.setWorkbook(book());
     expect(c.activeSheet()).toBe(2);
     expect(c.zoom()).toBe(150);
+    // the sheet it opens at is said last, not the zoom
+    expect(c.announcement()).toBe('Sheet Three, 3 of 3');
     // only once: the next workbook opens at its own sheet
     c.setWorkbook(book());
     expect(c.activeSheet()).toBe(0);

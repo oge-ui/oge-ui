@@ -167,7 +167,7 @@ export const OGE_SPREADSHEET_API: ApiSections = {
           type: 'OgeSpreadsheetSource | null',
           default: 'null',
           description:
-            'The workbook to open: bytes, a <code>Blob</code> / <code>File</code>, or a URL. A newer value cancels a read still running. Read in the browser by the dependency-free reader; nothing is uploaded.',
+            'The workbook to open: bytes, a <code>Blob</code> / <code>File</code>, or a URL. A newer value cancels a read still running; back to <code>null</code>, it closes what it opened (a <code>workbook</code> given directly stays). Read in the browser by the dependency-free reader; nothing is uploaded.',
         },
         {
           name: 'workbook',

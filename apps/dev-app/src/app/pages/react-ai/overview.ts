@@ -54,6 +54,9 @@ import { SMART_PASTE_SAMPLE } from '../ai/ai-demo-smart-paste';
 import { ReactAiSmartPasteStyles } from './smart-paste-styles';
 import { AI_OVERVIEW_DEMOS } from './overview-snippets';
 
+/** The docs' demo button: a classless <button> is plain text under Tailwind's preflight. */
+const DEMO_BUTTON = 'rounded border px-3 py-1 text-sm';
+
 /**
  * TOC of the React view — the same sections as the Angular overview
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
@@ -219,6 +222,7 @@ function ApplyDemo(): ReactNode {
         'button',
         {
           type: 'button',
+          className: DEMO_BUTTON,
           onClick: () => void assistant.current?.submit('Newest first'),
         },
         'Ask “Newest first” from code',
@@ -390,6 +394,7 @@ function SmartPasteDemo(): ReactNode {
         'button',
         {
           type: 'button',
+          className: DEMO_BUTTON,
           onClick: () => void paste.current?.paste(SMART_PASTE_SAMPLE),
         },
         'Try the sample text',
@@ -448,7 +453,11 @@ function AiColumnDemo(): ReactNode {
       { className: 'mt-3 flex flex-wrap gap-2' },
       createElement(
         'button',
-        { type: 'button', onClick: () => sentiment.refresh() },
+        {
+          type: 'button',
+          className: DEMO_BUTTON,
+          onClick: () => sentiment.refresh(),
+        },
         'Recompute',
       ),
     ),
@@ -528,11 +537,16 @@ function ConfigDemo(): ReactNode {
     createElement(
       'div',
       { className: 'flex flex-wrap gap-2' },
-      createElement('button', { type: 'submit' }, 'Use this model'),
+      createElement(
+        'button',
+        { type: 'submit', className: DEMO_BUTTON },
+        'Use this model',
+      ),
       createElement(
         'button',
         {
           type: 'button',
+          className: DEMO_BUTTON,
           onClick: () => {
             current = DEMO;
             announce('the offline demo model');

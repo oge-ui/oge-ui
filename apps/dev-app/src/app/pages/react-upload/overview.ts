@@ -17,6 +17,9 @@ import { FakeUploadServer } from '../../shared/fake-upload-server';
 import { ReactHost } from '../../shared/react-host';
 import { UPLOAD_OVERVIEW_DEMOS } from './overview-snippets';
 
+/** The docs' demo button: a classless <button> is plain text under Tailwind's preflight. */
+const DEMO_BUTTON = 'rounded border px-3 py-1 text-sm';
+
 /**
  * TOC of the React view — the same eight sections as the Angular overview
  * (`docs/REACT-PARITY.md`: pages mirror section for section); the forms
@@ -100,7 +103,7 @@ function ExternalZoneDemo(): ReactNode {
     ),
     createElement(
       OgeUploadTrigger,
-      { zone: 'react-demo-attachments' },
+      { zone: 'react-demo-attachments', className: DEMO_BUTTON },
       'Attach files…',
     ),
     createElement(OgeFileUploader, {
@@ -183,7 +186,13 @@ function TemplatesDemo(): ReactNode {
       language="tsx"
     >
       <app-react-host [render]="uploading" />
-      <button type="button" (click)="server.clearLog()">Clear log</button>
+      <button
+        class="rounded border px-3 py-1 text-sm"
+        type="button"
+        (click)="server.clearLog()"
+      >
+        Clear log
+      </button>
       <pre class="app-request-log">{{ log() }}</pre>
     </app-demo-card>
 

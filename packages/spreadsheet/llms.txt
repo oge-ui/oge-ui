@@ -107,7 +107,7 @@ _Content_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `source` | `OgeSpreadsheetSource \| null` | `null` | The workbook to open: bytes, a `Blob` / `File`, or a URL. A newer value cancels a read still running. Read in the browser by the dependency-free reader; nothing is uploaded. |
+| `source` | `OgeSpreadsheetSource \| null` | `null` | The workbook to open: bytes, a `Blob` / `File`, or a URL. A newer value cancels a read still running; back to `null`, it closes what it opened (a `workbook` given directly stays). Read in the browser by the dependency-free reader; nothing is uploaded. |
 | `workbook` | `OgeWorkbook \| null` | `null` | A workbook built or read elsewhere; wins over `source` when both change. |
 | `locale` | `string \| undefined` | `undefined` | BCP 47 locale of the built-in number formats, separators and month names — Excel takes them from the reader's region. Default: the configured locale, else the browser's. |
 | `messages` | `Partial<OgeSpreadsheetMessages>` | `{}` | Per-instance overrides of the message catalog, merged over the configured one. Every user-facing string lives there — aria labels and live-region announcements included. |
@@ -242,17 +242,24 @@ export class Demo {}
 ```ts
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { OgeSpreadsheet } from '@oge-ui/spreadsheet';
+import { OgeFileUploader } from '@oge-ui/upload';
 
 @Component({
   selector: 'demo-root',
-  imports: [OgeSpreadsheet],
+  imports: [OgeSpreadsheet, OgeFileUploader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Pick or drop any workbook: nothing leaves the browser. What the
-         reader could not show as Excel does arrives in (loaded)'s issues. -->
-    <input type="file" accept=".xlsx,.xlsm" (change)="pick($event)" />
+    <!-- Pick or drop any workbook: nothing leaves the browser — the
+         uploader only collects the File. What the reader could not show as
+         Excel does arrives in (loaded)'s issues. -->
+    <oge-file-uploader
+      accept=".xlsx,.xlsm"
+      [multiple]="false"
+      [(value)]="files"
+      [messages]="messages"
+    />
     <oge-spreadsheet
-      [source]="file()"
+      [source]="files()[0] ?? null"
       (loaded)="issues.set($event.issues.length)"
       style="height: 520px"
     />
@@ -260,12 +267,13 @@ import { OgeSpreadsheet } from '@oge-ui/spreadsheet';
   `,
 })
 export class Demo {
-  protected readonly file = signal<File | null>(null);
+  protected readonly files = signal<readonly File[]>([]);
   protected readonly issues = signal(0);
-
-  protected pick(event: Event): void {
-    this.file.set((event.target as HTMLInputElement).files?.[0] ?? null);
-  }
+  protected readonly messages = {
+    empty: 'No workbook open',
+    buttons: { selectSingle: 'Choose a workbook' },
+    dropZone: { labelSingle: 'Drop a workbook here or {browse}' },
+  };
 }
 ```
 

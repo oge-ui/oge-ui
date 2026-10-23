@@ -931,6 +931,38 @@ describe('OgeSpreadsheet (React) — drawing and chrome', () => {
     expect(ref.current?.core.activeSheet()).toBe(1);
   });
 
+  it('says which sheet it opened, and closes it when the source goes back to null', async () => {
+    const bytes = new Uint8Array(
+      readFileSync(
+        resolve(
+          __dirname,
+          '../../../../spreadsheet-engine/testing/corpus/structure.xlsx',
+        ),
+      ),
+    );
+    const style = { display: 'block', width: 800, height: 400 };
+    const loaded: OgeSpreadsheetLoadedEvent[] = [];
+    view = render(
+      <OgeSpreadsheet
+        source={bytes}
+        onLoaded={(event) => loaded.push(event)}
+        style={style}
+      />,
+    );
+    await act(async () => {
+      await vi.waitFor(() => expect(loaded).toHaveLength(1));
+    });
+    const live = () =>
+      host().querySelector('.oge-spreadsheet-live')?.textContent?.trim();
+    // the sheet it opens at replaces "Opening workbook…"
+    expect(live()).toBe('Sheet Main, 1 of 4');
+    view.rerender(<OgeSpreadsheet source={null} style={style} />);
+    expect(
+      host().querySelector('.oge-spreadsheet-placeholder')?.textContent,
+    ).toBe('No workbook');
+    expect(live()).toBe('');
+  });
+
   it('keeps focus on an opener press, closes an open list from its button, and picks a sheet by click', async () => {
     mount();
     const tick = () => act(() => new Promise<void>((done) => setTimeout(done)));

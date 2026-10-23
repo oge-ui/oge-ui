@@ -165,7 +165,13 @@ const SECTIONS = [
           [uploadAdapter]="server.adapter()"
           [concurrency]="2"
         />
-        <button type="button" (click)="server.clearLog()">Clear log</button>
+        <button
+          class="rounded border px-3 py-1 text-sm"
+          type="button"
+          (click)="server.clearLog()"
+        >
+          Clear log
+        </button>
         <pre class="app-request-log">{{ log() }}</pre>
       </app-demo-card>
 
@@ -224,7 +230,11 @@ const SECTIONS = [
         <div class="app-drop-panel" [ogeUploadDropZone]="'demo-attachments'">
           Drop files anywhere in this panel
         </div>
-        <button type="button" [ogeUploadTrigger]="'demo-attachments'">
+        <button
+          class="rounded border px-3 py-1 text-sm"
+          type="button"
+          [ogeUploadTrigger]="'demo-attachments'"
+        >
           Attach files…
         </button>
         <oge-file-uploader dropZone="demo-attachments" displayMode="compact" />

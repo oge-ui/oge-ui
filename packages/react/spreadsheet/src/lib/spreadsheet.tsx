@@ -566,6 +566,9 @@ export const OgeSpreadsheet = forwardRef<
   const source = props.source ?? null;
   useIsomorphicLayoutEffect(() => {
     if (source !== null) void open(source);
+    // a source taken away closes what it opened; a workbook given stays
+    else if (!latest.current.workbook && core.status() !== 'empty')
+      core.setWorkbook(null);
     // a new source is a new open
   }, [core, source]);
   const workbookProp = props.workbook ?? null;

@@ -193,7 +193,11 @@ export function inspectingTransport(
           mode="apply"
         />
         <div class="mt-3 flex flex-wrap gap-2">
-          <button type="button" (click)="assistant2.submit('Newest first')">
+          <button
+            class="rounded border px-3 py-1 text-sm"
+            type="button"
+            (click)="assistant2.submit('Newest first')"
+          >
             Ask “Newest first” from code
           </button>
         </div>
@@ -383,7 +387,11 @@ export function inspectingTransport(
           [transport]="transport()"
         />
         <div class="mt-3 flex flex-wrap gap-2">
-          <button type="button" (click)="smartPaste.paste(sample)">
+          <button
+            class="rounded border px-3 py-1 text-sm"
+            type="button"
+            (click)="smartPaste.paste(sample)"
+          >
             Try the sample text
           </button>
         </div>
@@ -420,7 +428,13 @@ export function inspectingTransport(
           </oge-column>
         </oge-grid>
         <div class="mt-3 flex flex-wrap gap-2">
-          <button type="button" (click)="sentiment.refresh()">Recompute</button>
+          <button
+            class="rounded border px-3 py-1 text-sm"
+            type="button"
+            (click)="sentiment.refresh()"
+          >
+            Recompute
+          </button>
         </div>
       </app-demo-card>
 
@@ -484,12 +498,17 @@ export function inspectingTransport(
           </label>
           <div class="flex flex-wrap gap-2">
             <button
+              class="rounded border px-3 py-1 text-sm"
               type="submit"
               (click)="connectTo(baseUrl.value, model.value, apiKey.value)"
             >
               Use this model
             </button>
-            <button type="button" (click)="useDemo()">
+            <button
+              class="rounded border px-3 py-1 text-sm"
+              type="button"
+              (click)="useDemo()"
+            >
               Back to the demo model
             </button>
           </div>

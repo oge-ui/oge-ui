@@ -968,7 +968,10 @@ export class OgeSpreadsheet {
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly document = inject(DOCUMENT);
 
-  /** The workbook to open: bytes, a `Blob` / `File`, or a URL. */
+  /**
+   * The workbook to open: bytes, a `Blob` / `File`, or a URL. Back to `null`,
+   * it closes what it opened (a `workbook` given directly stays).
+   */
   readonly source = input<OgeSpreadsheetSource | null>(null);
   /** A workbook built or read elsewhere (wins over `source` when both change). */
   readonly workbook = input<OgeWorkbook | null>(null);
@@ -1190,8 +1193,13 @@ export class OgeSpreadsheet {
     // given with a source wins (setWorkbook cancels the read)
     effect(() => {
       const source = this.source();
-      if (source !== null && this.inBrowser())
-        untracked(() => void this.open(source));
+      if (!this.inBrowser()) return;
+      untracked(() => {
+        if (source !== null) void this.open(source);
+        // a source taken away closes what it opened; a workbook given stays
+        else if (!this.workbook() && this.core.status() !== 'empty')
+          this.core.setWorkbook(null);
+      });
     });
     effect(() => {
       const workbook = this.workbook();

@@ -487,8 +487,9 @@ export class OgeSpreadsheetCore {
   }
 
   /**
-   * Shows a workbook built or read elsewhere. A sheet or zoom requested
-   * before it opened (`requestSheet`, `requestZoom`) wins over the file's.
+   * Shows a workbook built or read elsewhere, or none (`null`). A sheet or
+   * zoom requested before it opened (`requestSheet`, `requestZoom`) wins
+   * over the file's; the sheet it opens at is announced.
    */
   setWorkbook(
     workbook: OgeWorkbook | null,
@@ -508,12 +509,18 @@ export class OgeSpreadsheetCore {
     this.selections.clear();
     this.zooms.clear();
     this.rebuild();
-    if (!workbook) return;
+    if (!workbook) {
+      // nothing open: no "Opening workbook…" or old sheet left to be read
+      this.announcement.set('');
+      return;
+    }
     this.enterSheet(workbook.activeSheet, false);
     if (this.pendingSheet !== undefined) this.selectSheet(this.pendingSheet);
     if (this.pendingZoom !== undefined) this.setZoom(this.pendingZoom);
     this.pendingSheet = undefined;
     this.pendingZoom = undefined;
+    // the sheet it opens at replaces "Opening workbook…"
+    this.announceSheet(this.activeSheet());
   }
 
   /** Shows a sheet now, or — before a workbook is open — once one opens. */
@@ -682,17 +689,22 @@ export class OgeSpreadsheetCore {
     this.zoom.set(this.zooms.get(index) ?? view.zoom);
     this.selectAllStage = 0;
     this.requestReveal(selection.active);
-    if (announce) {
-      const tabs = this.tabs();
-      const position = tabs.findIndex((t) => t.index === index);
-      this.announcement.set(
-        this.formatMessage(this.messages.sheetAnnouncement, {
-          name: sheet.name,
-          index: position + 1,
-          total: tabs.length,
-        }),
-      );
-    }
+    if (announce) this.announceSheet(index);
+  }
+
+  /** "Sheet {name}, {index} of {total}" for the sheet now shown. */
+  private announceSheet(index: number): void {
+    const sheet = this.workbook()?.sheets[index];
+    if (!sheet) return;
+    const tabs = this.tabs();
+    const position = tabs.findIndex((t) => t.index === index);
+    this.announcement.set(
+      this.formatMessage(this.messages.sheetAnnouncement, {
+        name: sheet.name,
+        index: position + 1,
+        total: tabs.length,
+      }),
+    );
   }
 
   // ── geometry and paint ─────────────────────────────────────────────────

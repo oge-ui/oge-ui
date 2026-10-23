@@ -9,6 +9,7 @@ import {
   OgeSpreadsheet,
   type OgeSpreadsheetLoadedEvent,
 } from '@oge-ui/spreadsheet';
+import { OgeFileUploader } from '@oge-ui/upload';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
@@ -19,6 +20,7 @@ import {
 } from '../react-spreadsheet/overview';
 import {
   GETTING_STARTED_SNIPPET,
+  OPEN_FILE_MESSAGES,
   OPEN_FILE_SNIPPET,
 } from './overview-snippets';
 
@@ -38,6 +40,7 @@ const SAMPLES = [
   imports: [
     DemoCard,
     DocHeader,
+    OgeFileUploader,
     OgeSpreadsheet,
     PageToc,
     ReactSpreadsheetOverviewDemos,
@@ -124,15 +127,15 @@ const SAMPLES = [
         [code]="openFileSnippet"
         language="ts"
       >
-        <input
-          type="file"
+        <oge-file-uploader
+          class="mb-3 block"
           accept=".xlsx,.xlsm"
-          class="mb-3 block text-sm"
-          aria-label="Workbook"
-          (change)="pick($event)"
+          [multiple]="false"
+          [(value)]="files"
+          [messages]="uploadMessages"
         />
         <oge-spreadsheet
-          [source]="file()"
+          [source]="files()[0] ?? null"
           (loaded)="onLoaded($event)"
           style="height: 520px"
         />
@@ -153,14 +156,12 @@ export class SpreadsheetOverviewPage {
   protected readonly reactSections = REACT_SPREADSHEET_OVERVIEW_SECTIONS;
   protected readonly samples = SAMPLES;
   protected readonly current = signal<string>(SAMPLES[0].file);
-  protected readonly file = signal<File | null>(null);
+  protected readonly files = signal<readonly File[]>([]);
   protected readonly issues = signal<string[]>([]);
   protected readonly gettingStartedSnippet = GETTING_STARTED_SNIPPET;
   protected readonly openFileSnippet = OPEN_FILE_SNIPPET;
-
-  protected pick(event: Event): void {
-    this.file.set((event.target as HTMLInputElement).files?.[0] ?? null);
-  }
+  /** The file is opened here, never sent anywhere. */
+  protected readonly uploadMessages = OPEN_FILE_MESSAGES;
 
   protected onLoaded(event: OgeSpreadsheetLoadedEvent): void {
     this.issues.set(

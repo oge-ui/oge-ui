@@ -220,18 +220,24 @@ const SECTIONS = [
         <oge-editor #editor label="Article" [(value)]="article" />
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <button
+            class="rounded border px-3 py-1 text-sm"
             type="button"
             (click)="editor.insertLink('https://www.ogeui.com', 'OGE UI')"
           >
             Insert a link
           </button>
           <button
+            class="rounded border px-3 py-1 text-sm"
             type="button"
             (click)="editor.insertImage('/favicon.ico', 'OGE logo')"
           >
             Insert an image
           </button>
-          <button type="button" (click)="editor.openLinkDialog()">
+          <button
+            class="rounded border px-3 py-1 text-sm"
+            type="button"
+            (click)="editor.openLinkDialog()"
+          >
             Open the link dialog
           </button>
         </div>

@@ -18,6 +18,9 @@ import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { EDITOR_OVERVIEW_DEMOS } from './overview-snippets';
 
+/** The docs' demo button: a classless <button> is plain text under Tailwind's preflight. */
+const DEMO_BUTTON = 'rounded border px-3 py-1 text-sm';
+
 /**
  * TOC of the React view — the same sections as the Angular overview
  * (`docs/REACT-PARITY.md`: pages mirror section for section); the forms
@@ -120,6 +123,7 @@ function LinksDemo(): ReactNode {
         'button',
         {
           type: 'button',
+          className: DEMO_BUTTON,
           onClick: () =>
             editor.current?.insertLink('https://www.ogeui.com', 'OGE UI'),
         },
@@ -129,6 +133,7 @@ function LinksDemo(): ReactNode {
         'button',
         {
           type: 'button',
+          className: DEMO_BUTTON,
           onClick: () =>
             editor.current?.insertImage('/favicon.ico', 'OGE logo'),
         },
@@ -138,6 +143,7 @@ function LinksDemo(): ReactNode {
         'button',
         {
           type: 'button',
+          className: DEMO_BUTTON,
           onClick: () => void editor.current?.openLinkDialog(),
         },
         'Open the link dialog',

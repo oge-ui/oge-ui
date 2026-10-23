@@ -410,8 +410,11 @@ describe('OgeSpreadsheetCore — opening and painting', () => {
     );
     const pending = c.open(bytes);
     expect(c.status()).toBe('loading');
+    expect(c.announcement()).toBe('Opening workbook…');
     await pending;
     expect(c.status()).toBe('ready');
+    // the sheet it opens at replaces "Opening workbook…"
+    expect(c.announcement()).toBe('Sheet Main, 1 of 4');
     expect(c.issues()).toEqual([]);
     expect(c.tabs().map((t) => t.name)).toEqual(['Main', 'Data', 'RTL', 'CF']);
     expect(c.tabs()[1].color).toBe('#70AD47');
@@ -539,6 +542,7 @@ describe('OgeSpreadsheetCore — configuration and edge cases', () => {
     expect(c.announcement()).toBe('No matches');
     c.setWorkbook(null);
     expect(c.status()).toBe('empty');
+    expect(c.announcement()).toBe('');
   });
 
   it('remembers each sheet’s selection and zoom', () => {

@@ -5,8 +5,10 @@ import {
 } from '@angular/core';
 import { createElement, useState, type ReactNode } from 'react';
 import { OgeSpreadsheet } from '@oge-ui/react-spreadsheet';
+import { OgeFileUploader } from '@oge-ui/react-upload';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
+import { OPEN_FILE_MESSAGES } from '../spreadsheet/overview-snippets';
 import { SPREADSHEET_OVERVIEW_DEMOS } from './overview-snippets';
 
 /**
@@ -59,21 +61,24 @@ function GettingStartedDemo(): ReactNode {
 }
 
 function OpenFileDemo(): ReactNode {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<readonly File[]>([]);
   const [issues, setIssues] = useState<string[]>([]);
   return createElement(
     'div',
     null,
-    createElement('input', {
-      type: 'file',
-      accept: '.xlsx,.xlsm',
-      className: 'mb-3 block text-sm',
-      'aria-label': 'Workbook',
-      onChange: (event: { currentTarget: HTMLInputElement }) =>
-        setFile(event.currentTarget.files?.[0] ?? null),
-    }),
+    createElement(
+      'div',
+      { className: 'mb-3' },
+      createElement(OgeFileUploader, {
+        accept: '.xlsx,.xlsm',
+        multiple: false,
+        value: files,
+        onValueChange: setFiles,
+        messages: OPEN_FILE_MESSAGES,
+      }),
+    ),
     createElement(OgeSpreadsheet, {
-      source: file,
+      source: files[0] ?? null,
       onLoaded: (event) =>
         setIssues(
           event.issues.map(
