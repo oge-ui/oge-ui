@@ -16,15 +16,22 @@ const codeChars = fc.constantFrom(
   'General',
   'AM/PM',
 );
+/**
+ * Free text, minus the letters that spell `NaN`, `undefined` and `[object`:
+ * a code prints its letters as written and `@` prints the text, so with
+ * them a code like `NaN` would trip the leak check below by itself.
+ */
+const freeText = (maxLength: number) =>
+  fc.string({ maxLength }).filter((text) => !/[Nuo]/.test(text));
 const formatCode = fc.oneof(
   fc.array(codeChars, { maxLength: 24 }).map((parts) => parts.join('')),
-  fc.string({ maxLength: 24 }),
+  freeText(24),
 );
 const cellValue = fc.oneof(
   fc.double({ noNaN: true }),
   fc.integer({ min: -1e6, max: 3e6 }),
   fc.double({ min: 0, max: 2958465, noNaN: true }),
-  fc.string({ maxLength: 8 }),
+  freeText(8),
   fc.boolean(),
 );
 
