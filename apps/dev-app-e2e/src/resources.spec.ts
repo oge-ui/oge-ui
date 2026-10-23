@@ -12,7 +12,11 @@ test.describe('changelog page', () => {
   }) => {
     await page.goto('/changelog');
     await expect(page.locator('h1')).toHaveText('Changelog');
-    await expect(page.locator('h2#unreleased')).toBeVisible();
+    // the newest section — "Unreleased" between releases, the version itself
+    // on a release commit, where CHANGELOG.md has no Unreleased section
+    const newest = page.locator('h2[id]').first();
+    await expect(newest).toBeVisible();
+    await expect(newest).toHaveAttribute('id', /^(unreleased|v\d+-\d+-\d+)$/);
     await expect(page.locator('h2#v1-1-2')).toContainText('2026-10-04');
     await expect(
       page.getByRole('navigation', { name: 'On this page' }).getByRole('link', {

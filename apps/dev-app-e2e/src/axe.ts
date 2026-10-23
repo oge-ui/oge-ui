@@ -9,22 +9,32 @@ import type { Page } from '@playwright/test';
  * audit one in that window (`label`, `aria-required-attr`). Pages without the
  * header settle at once; a header that never settles is left for axe to
  * report.
+ *
+ * Only the shell header's own controls count. A page's comboboxes need not
+ * carry an id — an open adaptive sheet's search field has none — and
+ * waiting on them held every audit of such a page for the full timeout,
+ * which ate a slow WebKit run's whole test budget.
  */
 export async function settleDocsHeader(page: Page): Promise<void> {
   await page
     .waitForFunction(
-      () =>
-        !document.querySelector(
-          '.app-theme-placeholder, .app-version-placeholder',
-        ) &&
-        [...document.querySelectorAll('[role="combobox"]')].every(
-          (el) =>
-            el.id !== '' &&
-            el.hasAttribute('aria-expanded') &&
-            (el.hasAttribute('aria-label') ||
-              el.hasAttribute('aria-labelledby') ||
-              (el as HTMLInputElement).labels?.length),
-        ),
+      () => {
+        const header = document.querySelector('app-root > header');
+        if (!header) return true;
+        return (
+          !header.querySelector(
+            '.app-theme-placeholder, .app-version-placeholder',
+          ) &&
+          [...header.querySelectorAll('[role="combobox"]')].every(
+            (el) =>
+              el.id !== '' &&
+              el.hasAttribute('aria-expanded') &&
+              (el.hasAttribute('aria-label') ||
+                el.hasAttribute('aria-labelledby') ||
+                (el as HTMLInputElement).labels?.length),
+          )
+        );
+      },
       undefined,
       { timeout: 10_000 },
     )
