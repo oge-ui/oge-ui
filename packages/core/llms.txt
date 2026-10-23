@@ -2,7 +2,7 @@
 
 > Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math, and the OGE UI Pro license check (`ogeSetLicenseKey`). Installed automatically — you rarely import it directly, except to register a Pro license key.
 
-Part of OGE UI v1.1.5.
+Part of OGE UI v1.1.6.
 Docs and live demos: https://www.ogeui.com/license
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

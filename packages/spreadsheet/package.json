@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/spreadsheet",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Signal-based Angular spreadsheet viewer that shows .xlsx workbooks the way Excel does: Excel-measured column widths, row heights, fonts, number formats, borders, fills, conditional formats, frozen panes, merges, pictures, charts, notes and hyperlinks, with Excel's selection, keyboard map, find, copy and status-bar summary. Dependency-free xlsx reading in the browser. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "angular",
@@ -21,8 +21,8 @@
     "@angular/core": ">=21.2.0 <24.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "1.1.5",
-    "@oge-ui/spreadsheet-engine": "1.1.5"
+    "@oge-ui/core": "1.1.6",
+    "@oge-ui/spreadsheet-engine": "1.1.6"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

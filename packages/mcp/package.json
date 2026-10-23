@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/mcp",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Free MCP (Model Context Protocol) server for the OGE UI component suite: gives Claude Code, Cursor, Copilot and any MCP client the suite's own machine-readable docs — every package's API, rules and examples for Angular and React — offline and matching the installed version. Dependency-free, stdio.",
   "keywords": [
     "mcp",

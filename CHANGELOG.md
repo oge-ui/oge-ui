@@ -7,6 +7,10 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+## 1.1.6 — 2026-10-24
+
+The spreadsheet wave and Angular 21. A new commercial family — `@oge-ui/spreadsheet` and `@oge-ui/react-spreadsheet` over the dependency-free `@oge-ui/spreadsheet-engine` — shows `.xlsx` workbooks as Excel shows them, measured against Excel itself: fonts and row heights, number formats, borders and fills, charts, tables, sparklines and outline symbols, with columns and rows that resize and AutoFit as in Excel. Every Angular package now also runs on Angular 21.2, proven on every CI run by a new gate.
+
 ### Angular 21.2 support — every Angular package
 
 - **The Angular packages run on Angular 21.2 as well as 22 and 23**: peer ranges are
@@ -128,6 +132,12 @@ are versioned independently, which is the case here.
   Workers and Node) and holds the whole viewer — the React component only
   binds, StrictMode- and SSR-safe. Part of OGE UI Pro, which now covers seven
   families at the same price.
+
+### Fixes — `@oge-ui/overlay`
+
+- **Action sheet keys move the tab stop at once**: an arrow, Home or End key
+  in the action sheet moves the roving tab stop as it moves the focus, so a
+  Tab pressed before the next render no longer lands on the item the key left.
 
 ## 1.1.5 — 2026-10-19
 
