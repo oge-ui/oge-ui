@@ -1,0 +1,38 @@
+{
+  "name": "erp-suite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "prestart": "node scripts/write-license.mjs",
+    "predev": "node scripts/write-license.mjs",
+    "prebuild": "node scripts/write-license.mjs"
+  },
+  "dependencies": {
+    "@oge-ui/react": "1.1.6",
+    "@oge-ui/react-bpmn": "1.1.6",
+    "@oge-ui/react-charts": "1.1.6",
+    "@oge-ui/react-gantt": "1.1.6",
+    "@oge-ui/react-kanban": "1.1.6",
+    "@oge-ui/react-pivot": "1.1.6",
+    "@oge-ui/react-scheduler": "1.1.6",
+    "@oge-ui/react-spreadsheet": "1.1.6",
+    "exceljs": "^4.4.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.88.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.4"
+  }
+}
