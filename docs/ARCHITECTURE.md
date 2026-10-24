@@ -288,7 +288,10 @@ the same price, ADR 0005). A key is
 `OGE1.<payload>.<signature>` — Ed25519 over base64url JSON — verified
 **offline** in `@oge-ui/core` (`packages/core/src/lib/license/`) against the
 embedded public key; the private key lives outside the repo
-(`~/.oge-license/private-key.pem` locally, `OGE_LICENSE_PRIVATE_KEY` on Vercel).
+(`~/.oge-license/private-key.pem` locally, `OGE_LICENSE_PRIVATE_KEY` on Vercel). The store side —
+product shape (single payment; subscription renewals create no order the claim endpoint can see),
+Vercel variables and the go-live steps — is `docs/LEMON-SQUEEZY-SETUP.md`;
+`node tools/license/check-store.mjs` verifies the setup and can run a real claim before deploying.
 Rules:
 
 - Every root component of a commercial family calls its engine's
