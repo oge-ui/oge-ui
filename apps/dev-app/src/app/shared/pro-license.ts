@@ -15,7 +15,10 @@ export const PRO_PRICE_USD = 299;
  */
 export const PRO_STORE_CHECKOUT =
   'https://ogeui.lemonsqueezy.com/checkout/buy/437f37e9-e642-4db9-9c14-42149be003f0';
-export const PRO_CHECKOUT_URL = '';
+// Switched on 2026-10-24 while the store is still in test mode, so the
+// owner can test the checkout end to end; test-mode orders carry no key
+// (api/license/_order.mjs), so this exposes nothing.
+export const PRO_CHECKOUT_URL: string = PRO_STORE_CHECKOUT;
 
 /**
  * The checkout link for a number of seats — Lemon Squeezy reads `quantity`
