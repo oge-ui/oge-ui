@@ -11,6 +11,7 @@ import { PageToc } from '../../shared/page-toc';
 import {
   PRO_CHECKOUT_URL,
   PRO_FAMILIES,
+  proCheckoutUrl,
   PRO_PRICE_USD,
   PRO_SALES_EMAIL,
 } from '../../shared/pro-license';
@@ -172,12 +173,10 @@ function cellKind(cell: string): 'yes' | 'none' | 'pro' | 'text' {
         <div class="app-plan-cta">
           <a
             class="app-btn app-btn-primary"
-            [href]="checkoutUrl"
-            [attr.target]="checkoutUrl.startsWith('http') ? '_blank' : null"
+            [href]="checkoutUrl()"
+            [attr.target]="storeOpen ? '_blank' : null"
             rel="noopener"
-            >{{
-              checkoutUrl.startsWith('http') ? 'Buy OGE UI Pro' : 'Get a quote'
-            }}</a
+            >{{ storeOpen ? 'Buy OGE UI Pro' : 'Get a quote' }}</a
           >
           <a routerLink="/license/claim" class="app-plan-link"
             >Already bought? Get your key</a
@@ -246,6 +245,15 @@ function cellKind(cell: string): 'yes' | 'none' | 'pro' | 'text' {
           }}
           a month for the whole team, every Pro family in both frameworks
         </p>
+        @if (storeOpen) {
+          <a
+            class="app-btn app-btn-primary app-calc-buy"
+            [href]="checkoutUrl()"
+            target="_blank"
+            rel="noopener"
+            >Buy {{ seats() }} {{ seats() === 1 ? 'seat' : 'seats' }}</a
+          >
+        }
         <p class="app-calc-detail">
           Invoices, purchase orders and volume pricing —
           <a [href]="'mailto:' + salesEmail">{{ salesEmail }}</a>
@@ -751,6 +759,10 @@ function cellKind(cell: string): 'yes' | 'none' | 'pro' | 'text' {
       color: var(--color-gray-500);
     }
 
+    .app-calc-buy {
+      margin-top: 0.875rem;
+    }
+
     .app-calc-detail {
       margin: 0.5rem 0 0;
       font-size: 0.8125rem;
@@ -948,9 +960,12 @@ export class PricingPage {
   protected readonly planRows = PLAN_ROWS;
   protected readonly faq = PRICING_FAQ;
   protected readonly salesEmail = PRO_SALES_EMAIL;
-  protected readonly checkoutUrl =
-    PRO_CHECKOUT_URL ||
-    `mailto:${PRO_SALES_EMAIL}?subject=${encodeURIComponent('OGE UI Pro license')}`;
+  protected readonly mailUrl = `mailto:${PRO_SALES_EMAIL}?subject=${encodeURIComponent('OGE UI Pro license')}`;
+  /** The store link for the calculator's seat count, or email until the store is live. */
+  protected readonly checkoutUrl = computed(
+    () => proCheckoutUrl(this.seats()) || this.mailUrl,
+  );
+  protected readonly storeOpen = PRO_CHECKOUT_URL !== '';
 
   protected readonly seats = signal(5);
   protected readonly yearly = computed(() => this.seats() * PRO_PRICE_USD);
