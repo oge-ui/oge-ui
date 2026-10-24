@@ -40,6 +40,12 @@ export interface Competitor {
   readonly migration: readonly LinkedText[];
   readonly faq: readonly FaqEntry[];
   readonly sources: readonly { readonly label: string; readonly url: string }[];
+  /**
+   * The cheapest published per-developer price of the commercial tier, as the
+   * `Price` row states it — drawn in the price comparison bars. `basis` says
+   * what the money buys (perpetual or subscription), since the models differ.
+   */
+  readonly entryPrice: { readonly usd: number; readonly basis: string };
 }
 
 const OGE_FRAMEWORKS =
@@ -60,6 +66,10 @@ const VENDOR_A11Y =
 export const COMPETITORS: readonly Competitor[] = [
   {
     slug: 'ag-grid',
+    entryPrice: {
+      usd: 999,
+      basis: 'Enterprise, perpetual with one year of updates',
+    },
     name: 'AG Grid',
     keyword: 'AG Grid alternative for Angular and React',
     summary:
@@ -222,6 +232,7 @@ export const COMPETITORS: readonly Competitor[] = [
   },
   {
     slug: 'kendo-ui',
+    entryPrice: { usd: 799, basis: 'Yearly subscription, Lite support' },
     name: 'Kendo UI',
     keyword: 'Kendo UI alternative for Angular and React',
     summary:
@@ -356,6 +367,10 @@ export const COMPETITORS: readonly Competitor[] = [
   },
   {
     slug: 'devextreme',
+    entryPrice: {
+      usd: 900,
+      basis: 'DevExtreme Complete, renewal about $450 a year',
+    },
     name: 'DevExtreme',
     keyword: 'DevExtreme alternative for Angular and React',
     summary:
@@ -457,6 +472,10 @@ export const COMPETITORS: readonly Competitor[] = [
   },
   {
     slug: 'primeng',
+    entryPrice: {
+      usd: 599,
+      basis: 'Commercial, perpetual with one year of updates',
+    },
     name: 'PrimeNG',
     keyword: 'PrimeNG alternative for Angular',
     summary:

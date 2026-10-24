@@ -185,6 +185,7 @@
 {"p":"/bundle-size","t":"Bundle size","c":"Resources","d":"OGE UI bundle size: the gzip size of every published Angular, React and engine entry point, grouped by package and license, and how CI enforces each budget."}
 ],
 "sections":[
+{"p":0,"a":"showcase-title","t":"Four real apps. One component suite."},
 {"p":1,"a":"installation","t":"Installation"},
 {"p":1,"a":"quick-start","t":"Quick start"},
 {"p":1,"a":"components","t":"Components"},
@@ -1290,8 +1291,11 @@
 {"p":175,"a":"plans","t":"Plans"},
 {"p":175,"a":"plan-free","t":"OGE UI — MIT"},
 {"p":175,"a":"plan-pro","t":"OGE UI Pro"},
+{"p":175,"a":"your-team","t":"Your team"},
 {"p":175,"a":"compare-plans","t":"Compare plans"},
+{"p":175,"a":"against-other-suites","t":"Against other suites"},
 {"p":175,"a":"questions","t":"Questions"},
+{"p":176,"a":"prices","t":"Prices"},
 {"p":176,"a":"at-a-glance","t":"At a glance"},
 {"p":177,"a":"when-to-pick-which","t":"When to pick which"},
 {"p":177,"a":"pick-oge","t":"Pick OGE UI if…"},

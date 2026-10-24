@@ -45,6 +45,178 @@ interface OrgNode {
   title: string;
 }
 
+interface ShowcaseView {
+  key: string;
+  label: string;
+  pkg: string;
+}
+
+interface ShowcaseApp {
+  id: 'vantage' | 'astra' | 'pulse' | 'atlas';
+  name: string;
+  kind: string;
+  framework: FrameworkLogoName;
+  frameworkLabel: string;
+  mark: string;
+  host: string;
+  source: string;
+  pitch: string;
+  views: readonly ShowcaseView[];
+}
+
+interface BentoTile {
+  key: string;
+  name: string;
+  desc: string;
+  path: string;
+  span: 2 | 3 | 4 | 6;
+  pro: boolean;
+}
+
+/** Projects known to ship with OGE UI (GitHub "Used by" + npm dependents). */
+const SHIPPED_PROJECTS = 700;
+
+const EXAMPLES_SRC = 'https://github.com/oge-ui/oge-ui/tree/main/examples/';
+
+/** The four example apps under `examples/`, deployed on Vercel. */
+const SHOWCASE: readonly ShowcaseApp[] = [
+  {
+    id: 'vantage',
+    name: 'Vantage ERP',
+    kind: 'Manufacturing & operations',
+    framework: 'react',
+    frameworkLabel: 'React 19',
+    mark: '/showcase/vantage-mark.svg',
+    host: 'erp-suite-tau.vercel.app',
+    source: EXAMPLES_SRC + 'erp-suite',
+    pitch:
+      'Inventory, procurement, production and finance for a three-plant manufacturer: 2,000 editable stock items, a requisition board, a production plan and actuals against budget.',
+    views: [
+      { key: 'dashboard', label: 'Dashboard', pkg: 'react-charts' },
+      { key: 'procurement', label: 'Procurement board', pkg: 'react-kanban' },
+      { key: 'production', label: 'Production plan', pkg: 'react-gantt' },
+    ],
+  },
+  {
+    id: 'astra',
+    name: 'AstraCRM',
+    kind: 'Revenue operations',
+    framework: 'angular',
+    frameworkLabel: 'Angular 21',
+    mark: '/showcase/astra-mark.svg',
+    host: 'sales-dashboard-beta-bice.vercel.app',
+    source: EXAMPLES_SRC + 'sales-dashboard',
+    pitch:
+      'Pipeline, delivery and revenue for an enterprise sales team: a 10,000-order ledger, a delivery board, a revenue cube, a rollout roadmap and executable BPMN.',
+    views: [
+      { key: 'overview', label: 'Overview', pkg: 'charts' },
+      { key: 'projects', label: 'Delivery board', pkg: 'kanban' },
+      { key: 'workflows', label: 'Approval workflow', pkg: 'bpmn' },
+    ],
+  },
+  {
+    id: 'pulse',
+    name: 'PulseCRM',
+    kind: 'Customer success',
+    framework: 'react',
+    frameworkLabel: 'React 19',
+    mark: '/showcase/pulse-mark.svg',
+    host: 'customer-manager-psi.vercel.app',
+    source: EXAMPLES_SRC + 'customer-manager',
+    pitch:
+      'Accounts, renewals and onboarding for a customer-success team: an inline-editable directory, retention analytics, a success calendar and an AI copilot.',
+    views: [
+      { key: 'accounts', label: 'Accounts', pkg: 'react-grid' },
+      { key: 'revenue', label: 'Revenue', pkg: 'react-charts' },
+      { key: 'calendar', label: 'Success calendar', pkg: 'react-scheduler' },
+    ],
+  },
+  {
+    id: 'atlas',
+    name: 'AtlasDocs',
+    kind: 'Bilingual knowledge base',
+    framework: 'angular',
+    frameworkLabel: 'Angular 21',
+    mark: '/showcase/atlas-mark.svg',
+    host: 'knowledge-base-eta-one.vercel.app',
+    source: EXAMPLES_SRC + 'knowledge-base',
+    pitch:
+      'A documentation workspace that switches every component between English and Türkçe at runtime: a tree of articles, a rich-text editor, guides and readership telemetry.',
+    views: [
+      { key: 'articles', label: 'Articles', pkg: 'editor' },
+      { key: 'guides', label: 'Guides', pkg: 'navigation' },
+      { key: 'telemetry', label: 'Telemetry', pkg: 'grid' },
+    ],
+  },
+];
+
+const BENTO: readonly BentoTile[] = [
+  {
+    key: 'kanban',
+    name: 'Kanban',
+    path: '/components/kanban',
+    span: 4,
+    pro: true,
+    desc: 'Swimlanes, WIP limits, filter chips, checklists and keyboard moves.',
+  },
+  {
+    key: 'charts',
+    name: 'Charts',
+    path: '/components/charts',
+    span: 2,
+    pro: true,
+    desc: 'Cartesian, pie, funnel, gauges and sparklines on one engine.',
+  },
+  {
+    key: 'gantt',
+    name: 'Gantt',
+    path: '/components/gantt',
+    span: 3,
+    pro: true,
+    desc: 'Dependencies, critical path, workload and MS Project import.',
+  },
+  {
+    key: 'scheduler',
+    name: 'Scheduler',
+    path: '/components/scheduler',
+    span: 3,
+    pro: true,
+    desc: 'Day to timeline views, resources, time zones and iCal.',
+  },
+  {
+    key: 'pivot',
+    name: 'Pivot Grid',
+    path: '/components/pivot-grid',
+    span: 2,
+    pro: true,
+    desc: 'Drag-and-drop OLAP with calculated measures.',
+  },
+  {
+    key: 'spreadsheet',
+    name: 'Spreadsheet',
+    path: '/components/spreadsheet',
+    span: 2,
+    pro: true,
+    desc: 'Opens real .xlsx files — formulas, tables, sparklines.',
+  },
+  {
+    key: 'bpmn',
+    name: 'BPMN',
+    path: '/components/bpmn',
+    span: 2,
+    pro: true,
+    desc: 'A BPMN 2.0 modeler with live validation.',
+  },
+  {
+    key: 'grid',
+    name: 'Data Grid',
+    path: '/components/data-grid',
+    span: 6,
+    pro: false,
+    desc: 'The MIT grid underneath it all: virtualized, editable, groupable — 10,000 rows without a stutter.',
+  },
+];
+
 interface ComponentTile {
   icon: IconName;
   name: string;
@@ -388,6 +560,176 @@ const ORG: OrgNode[] = [
       </div>
     </section>
 
+    <!-- ═══ Showcase: four real apps, each built only with oge ═══ -->
+    <section class="og-showcase" id="showcase" aria-labelledby="showcase-title">
+      <div class="mx-auto max-w-6xl px-6 py-16">
+        <div class="home-reveal text-center">
+          <p class="og-eyebrow">Showcase</p>
+          <h2 id="showcase-title" class="og-h2 mt-3">
+            Four real apps. <span class="og-gilded">One component suite.</span>
+          </h2>
+          <p class="og-p mx-auto mt-3 max-w-2xl text-[14.5px]">
+            An ERP, two CRMs and a bilingual knowledge base — in Angular and in
+            React, every screen built from OGE components alone. Open any of
+            them and click around: it is all live.
+          </p>
+        </div>
+
+        <div
+          class="home-reveal og-sc-apps mt-10"
+          role="tablist"
+          aria-label="Example apps"
+        >
+          @for (app of showcase; track app.id) {
+            <button
+              type="button"
+              role="tab"
+              class="og-sc-app"
+              [id]="'sc-tab-' + app.id"
+              [class.is-active]="app.id === scApp().id"
+              [attr.aria-selected]="app.id === scApp().id"
+              [attr.aria-controls]="'sc-panel'"
+              [attr.tabindex]="app.id === scApp().id ? 0 : -1"
+              (click)="pickShowcase(app.id)"
+              (keydown)="onShowcaseKey($event)"
+            >
+              <img
+                class="og-sc-app-mark"
+                [src]="app.mark"
+                alt=""
+                width="32"
+                height="32"
+              />
+              <span class="og-sc-app-copy">
+                <span class="og-sc-app-name">{{ app.name }}</span>
+                <span class="og-sc-app-kind">{{ app.kind }}</span>
+              </span>
+              <span
+                class="og-sc-app-fw"
+                [attr.title]="app.frameworkLabel"
+                [attr.aria-label]="app.frameworkLabel"
+              >
+                <app-framework-logo
+                  [name]="app.framework"
+                  [size]="15"
+                  [brand]="true"
+                />
+              </span>
+            </button>
+          }
+        </div>
+
+        <div
+          class="og-sc-stage mt-6"
+          id="sc-panel"
+          role="tabpanel"
+          [attr.aria-labelledby]="'sc-tab-' + scApp().id"
+        >
+          <figure class="home-reveal-fade og-sc-frame">
+            <div class="og-sc-bar" aria-hidden="true">
+              <span class="og-sc-dots"><i></i><i></i><i></i></span>
+              <span class="og-sc-url">
+                <app-icon name="shield" [size]="11" />
+                {{ scApp().host }}
+              </span>
+            </div>
+            <div class="og-sc-shot">
+              @for (view of scApp().views; track view.key; let i = $index) {
+                <div class="og-sc-layer" [class.is-on]="i === scViewIndex()">
+                  <img
+                    class="og-sc-img og-sc-img-light"
+                    [src]="
+                      '/showcase/' + scApp().id + '-' + view.key + '-light.webp'
+                    "
+                    [alt]="scApp().name + ' — ' + view.label"
+                    width="1440"
+                    height="900"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <img
+                    class="og-sc-img og-sc-img-dark"
+                    [src]="
+                      '/showcase/' + scApp().id + '-' + view.key + '-dark.webp'
+                    "
+                    [alt]="scApp().name + ' — ' + view.label"
+                    width="1440"
+                    height="900"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              }
+            </div>
+            <figcaption class="sr-only">
+              {{ scApp().name }}: {{ scView().label }}
+            </figcaption>
+          </figure>
+
+          <div class="og-sc-info">
+            <div class="flex items-center gap-3">
+              <img
+                [src]="scApp().mark"
+                alt=""
+                width="44"
+                height="44"
+                class="og-sc-info-mark"
+              />
+              <div class="min-w-0">
+                <h3 class="og-sc-info-name">{{ scApp().name }}</h3>
+                <p class="og-sc-info-fw">
+                  <app-framework-logo [name]="scApp().framework" [size]="13" />
+                  {{ scApp().frameworkLabel }}
+                </p>
+              </div>
+            </div>
+            <p class="og-p mt-4">{{ scApp().pitch }}</p>
+
+            <p class="og-sc-label mt-5">Screens</p>
+            <div
+              class="og-sc-views"
+              role="group"
+              [attr.aria-label]="scApp().name + ' screens'"
+            >
+              @for (view of scApp().views; track view.key; let i = $index) {
+                <button
+                  type="button"
+                  class="og-sc-view"
+                  [class.is-active]="i === scViewIndex()"
+                  [attr.aria-pressed]="i === scViewIndex()"
+                  (click)="scViewIndex.set(i)"
+                >
+                  <span class="og-sc-view-label">{{ view.label }}</span>
+                  <code class="og-sc-view-pkg">{{ view.pkg }}</code>
+                </button>
+              }
+            </div>
+
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+              <a
+                class="og-btn-gold"
+                [href]="'https://' + scApp().host"
+                target="_blank"
+                rel="noopener"
+              >
+                Open live demo
+                <app-icon name="arrow-right" [size]="14" />
+              </a>
+              <a
+                class="og-btn-stone"
+                [href]="scApp().source"
+                target="_blank"
+                rel="noopener"
+              >
+                <app-icon name="github" [size]="14" />
+                Source
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══ Features as a compact numbered grid ═══ -->
     <section class="og-body">
       <div class="mx-auto max-w-6xl px-6 py-14">
@@ -506,6 +848,71 @@ const ORG: OrgNode[] = [
                 <span class="text-[color:var(--og-turk)]">// forever</span>
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ The heavy lifters: Pro families, captured from the showcase apps ═══ -->
+      <div id="families">
+        <div class="mx-auto max-w-6xl px-6 py-14">
+          <div
+            class="home-reveal flex flex-wrap items-end justify-between gap-4"
+          >
+            <div>
+              <p class="og-eyebrow">OGE UI Pro</p>
+              <h2 class="og-h2 mt-3">
+                The components
+                <span class="og-gilded">others make you build</span>
+              </h2>
+              <p class="og-p mt-3 max-w-2xl text-[14.5px]">
+                Kanban, Gantt, scheduler, pivot, spreadsheet, BPMN and charts —
+                the same engine under Angular and React, free to evaluate,
+                licensed per developer for production.
+              </p>
+            </div>
+            <a routerLink="/pricing" class="og-btn-stone shrink-0">
+              See pricing
+              <app-icon name="arrow-right" [size]="13" />
+            </a>
+          </div>
+
+          <div class="og-bento mt-10">
+            @for (tile of bento; track tile.key) {
+              <a
+                [routerLink]="tile.path"
+                class="home-reveal og-bento-tile"
+                [class]="'og-bento-' + tile.span"
+              >
+                <span class="og-bento-media">
+                  <img
+                    class="og-bento-img og-sc-img-light"
+                    [src]="'/showcase/bento-' + tile.key + '-light.webp'"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <img
+                    class="og-bento-img og-sc-img-dark"
+                    [src]="'/showcase/bento-' + tile.key + '-dark.webp'"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </span>
+                <span class="og-bento-copy">
+                  <span class="og-bento-head">
+                    <span class="og-bento-name">{{ tile.name }}</span>
+                    @if (tile.pro) {
+                      <span class="og-bento-tier">Pro</span>
+                    }
+                    <span class="og-bento-arrow" aria-hidden="true">
+                      <app-icon name="arrow-right" [size]="13" />
+                    </span>
+                  </span>
+                  <span class="og-bento-desc">{{ tile.desc }}</span>
+                </span>
+              </a>
+            }
           </div>
         </div>
       </div>
@@ -670,56 +1077,88 @@ const ORG: OrgNode[] = [
         </div>
       </div>
 
-      <!-- ═══ Live npm downloads ═══ -->
+      <!-- ═══ In the wild: adoption, the suite in numbers, where it runs ═══ -->
       <div>
         <div class="mx-auto max-w-5xl px-6 py-14">
           <div class="home-reveal text-center">
-            <p class="og-eyebrow">On npm</p>
+            <p class="og-eyebrow">In production</p>
             <h2 class="og-h2 mt-3">
               Open source, <span class="og-gilded">in the wild</span>
             </h2>
           </div>
 
-          <!-- one headline number in a medallion; the per-package rows were
-               noise — the breakdown lives on npmjs.com itself -->
-          <div
-            class="home-reveal og-npm mx-auto mt-10 max-w-2xl"
-            aria-live="polite"
-          >
-            <span class="og-npm-eyelet" aria-hidden="true">
-              <app-icon name="package" [size]="15" />
-            </span>
-            <span class="og-total-value">{{ npmTotal() }}</span>
-            <span class="og-total-label">total downloads</span>
-            <span class="og-npm-rule" aria-hidden="true"></span>
-            <span class="og-npm-sub"
-              >across {{ npmCounted() || packages.length }} open-source packages
-              · live from npm, since the first release</span
-            >
+          <div class="home-reveal og-wild mt-10">
+            <span class="og-wild-orbit" aria-hidden="true"></span>
+            <p class="og-wild-count">
+              <span class="og-wild-value" aria-hidden="true"
+                >{{ projectsShown() }}+</span
+              >
+              <span class="sr-only">{{ shippedProjects }}+</span>
+              <span class="og-wild-label">projects ship with OGE UI</span>
+            </p>
+            <p class="og-wild-sub">
+              From internal admin panels to regulated ERPs — on Angular and on
+              React, over the same engine.
+            </p>
 
-            <!-- endless package strip: two identical halves, translated by
-                 -50% for a seamless CSS-only loop; pauses on hover and falls
-                 back to a plain scrollable row under reduced motion -->
-            <div class="og-npm-marquee">
-              <div class="og-npm-track">
-                @for (stat of npmStats(); track stat.pkg) {
-                  <a
-                    [href]="'https://www.npmjs.com/package/' + stat.pkg"
-                    target="_blank"
-                    rel="noopener"
-                    class="og-npm-chip"
-                  >
-                    <span class="og-npm-pkg">{{ stat.pkg }}</span>
-                    <span class="og-npm-count">{{ stat.downloads }}</span>
-                  </a>
-                }
-                @for (stat of npmStats(); track stat.pkg + '-dup') {
-                  <span class="og-npm-chip" aria-hidden="true">
-                    <span class="og-npm-pkg">{{ stat.pkg }}</span>
-                    <span class="og-npm-count">{{ stat.downloads }}</span>
-                  </span>
-                }
+            <dl class="og-wild-stats">
+              <div class="og-wild-stat">
+                <dt>Packages</dt>
+                <dd>{{ packages.length }}</dd>
               </div>
+              <div class="og-wild-stat">
+                <dt>Component families</dt>
+                <dd>{{ tiles.length }}</dd>
+              </div>
+              <div class="og-wild-stat">
+                <dt>Render layers, one engine</dt>
+                <dd>2</dd>
+              </div>
+              <div class="og-wild-stat">
+                <dt>Core license</dt>
+                <dd>MIT</dd>
+              </div>
+            </dl>
+
+            <!-- where it runs: an endless strip of sectors (no customer
+                 logos — the count speaks for itself); pauses on hover and
+                 becomes a plain scrollable row under reduced motion -->
+            <div class="og-npm-marquee" aria-label="Where OGE UI runs">
+              <ul class="og-npm-track og-wild-track">
+                @for (sector of sectors; track sector.label) {
+                  <li class="og-npm-chip og-wild-chip">
+                    <app-icon [name]="sector.icon" [size]="13" />
+                    {{ sector.label }}
+                  </li>
+                }
+                @for (sector of sectors; track sector.label + '-dup') {
+                  <li class="og-npm-chip og-wild-chip" aria-hidden="true">
+                    <app-icon [name]="sector.icon" [size]="13" />
+                    {{ sector.label }}
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <div class="og-wild-actions">
+              <a
+                class="og-btn-stone"
+                href="https://github.com/oge-ui/oge-ui"
+                target="_blank"
+                rel="noopener"
+              >
+                <app-icon name="github" [size]="14" />
+                Star on GitHub
+              </a>
+              <a
+                class="og-btn-stone"
+                href="https://www.npmjs.com/package/oge-ui"
+                target="_blank"
+                rel="noopener"
+              >
+                <app-icon name="package" [size]="14" />
+                Browse on npm
+              </a>
             </div>
           </div>
         </div>
@@ -816,6 +1255,7 @@ const ORG: OrgNode[] = [
               <li>
                 <a routerLink="/components/data-grid/playground">Playground</a>
               </li>
+              <li><a href="/#showcase">Example apps</a></li>
               <li><a routerLink="/pricing">Pricing</a></li>
               <li><a routerLink="/compare">Compare</a></li>
             </ul>
@@ -1555,91 +1995,6 @@ const ORG: OrgNode[] = [
     }
 
     /* ═══ npm downloads band: a medallion total over an endless chip strip ═══ */
-    app-home .og-npm {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      overflow: hidden;
-      padding: 40px 0 28px;
-      text-align: center;
-      border: 1px solid var(--og-line);
-      border-radius: 20px;
-      background: var(--og-stone-2);
-    }
-
-    /* a quiet radial halo behind the number */
-    app-home .og-npm::before {
-      content: '';
-      position: absolute;
-      inset: -55% 15% auto;
-      height: 120%;
-      background: radial-gradient(
-        closest-side,
-        color-mix(in srgb, var(--og-gold) 12%, transparent),
-        transparent 72%
-      );
-      pointer-events: none;
-    }
-
-    app-home .og-npm-eyelet {
-      position: relative;
-      display: flex;
-      height: 34px;
-      width: 34px;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 10px;
-      border: 1px solid color-mix(in srgb, var(--og-gold) 35%, transparent);
-      border-radius: 999px;
-      color: var(--og-gold);
-      background: color-mix(in srgb, var(--og-gold) 9%, transparent);
-    }
-
-    app-home .og-npm-rule {
-      display: block;
-      height: 1px;
-      width: 72px;
-      margin-block: 10px 8px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        var(--og-gold),
-        transparent
-      );
-      opacity: 0.55;
-    }
-
-    app-home .og-total-value {
-      position: relative;
-      font-size: 54px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      font-variant-numeric: tabular-nums;
-      background-image: linear-gradient(
-        90deg,
-        var(--og-turk),
-        var(--og-gold),
-        var(--og-magenta)
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    app-home .og-total-label {
-      font-size: 13.5px;
-      font-weight: 600;
-      color: var(--og-bone);
-    }
-
-    app-home .og-npm-sub {
-      position: relative;
-      font-size: 11.5px;
-      color: var(--og-faint);
-    }
 
     /* the endless strip: edges dissolve, motion pauses under the pointer */
     app-home .og-npm-marquee {
@@ -1700,20 +2055,7 @@ const ORG: OrgNode[] = [
       background: color-mix(in srgb, var(--og-gold) 9%, transparent);
     }
 
-    app-home .og-npm-pkg {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 12px;
-      color: var(--og-mut);
-    }
-
     app-home a.og-npm-chip:hover .og-npm-pkg {
-      color: var(--og-bone);
-    }
-
-    app-home .og-npm-count {
-      font-size: 13px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
       color: var(--og-bone);
     }
 
@@ -1953,6 +2295,636 @@ const ORG: OrgNode[] = [
       }
     }
 
+    /* ═══ in the wild: adoption counter, numbers row, sector strip ═══ */
+    app-home .og-wild {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+      padding: 48px 0 30px;
+      text-align: center;
+      border: 1px solid var(--og-line);
+      border-radius: 22px;
+      background:
+        radial-gradient(
+          70% 60% at 50% -10%,
+          color-mix(in srgb, var(--og-gold) 14%, transparent),
+          transparent 70%
+        ),
+        var(--og-stone-2);
+    }
+
+    /* two slow concentric rings behind the number */
+    app-home .og-wild-orbit,
+    app-home .og-wild-orbit::after {
+      position: absolute;
+      top: 54px;
+      left: 50%;
+      width: 360px;
+      height: 360px;
+      border: 1px dashed color-mix(in srgb, var(--og-gold) 22%, transparent);
+      border-radius: 50%;
+      transform: translate(-50%, -30%);
+      pointer-events: none;
+    }
+
+    app-home .og-wild-orbit::after {
+      content: '';
+      top: 50%;
+      width: 520px;
+      height: 520px;
+      border-style: solid;
+      border-color: color-mix(in srgb, var(--og-turk) 12%, transparent);
+      transform: translate(-50%, -50%);
+    }
+
+    app-home .og-wild-orbit {
+      animation: og-wild-spin 60s linear infinite;
+    }
+
+    @keyframes og-wild-spin {
+      to {
+        transform: translate(-50%, -30%) rotate(360deg);
+      }
+    }
+
+    app-home .og-wild-count {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      margin: 0;
+    }
+
+    app-home .og-wild-value {
+      font-size: 88px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.045em;
+      font-variant-numeric: tabular-nums;
+      background-image: linear-gradient(
+        100deg,
+        var(--og-turk),
+        var(--og-gold) 55%,
+        var(--og-magenta)
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    @media (max-width: 40rem) {
+      app-home .og-wild-value {
+        font-size: 64px;
+      }
+    }
+
+    app-home .og-wild-label {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--og-bone);
+    }
+
+    app-home .og-wild-sub {
+      position: relative;
+      max-width: 30rem;
+      margin: 10px 24px 0;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--og-mut);
+    }
+
+    app-home .og-wild-stats {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      width: calc(100% - 48px);
+      max-width: 720px;
+      margin: 30px 24px 0;
+      border: 1px solid var(--og-line);
+      border-radius: 14px;
+      background: var(--og-stone);
+    }
+
+    @media (max-width: 40rem) {
+      app-home .og-wild-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    app-home .og-wild-stat {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 2px;
+      padding: 14px 10px;
+    }
+
+    app-home .og-wild-stat + .og-wild-stat {
+      border-inline-start: 1px solid var(--og-line);
+    }
+
+    @media (max-width: 40rem) {
+      app-home .og-wild-stat:nth-child(3) {
+        border-inline-start: 0;
+      }
+
+      app-home .og-wild-stat:nth-child(n + 3) {
+        border-top: 1px solid var(--og-line);
+      }
+    }
+
+    app-home .og-wild-stat dt {
+      font-size: 11.5px;
+      color: var(--og-mut);
+    }
+
+    app-home .og-wild-stat dd {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--og-bone);
+    }
+
+    app-home .og-wild-track {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    app-home .og-wild-chip {
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--og-mut);
+    }
+
+    app-home .og-wild-chip app-icon {
+      color: var(--og-gold);
+    }
+
+    app-home .og-wild-actions {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      app-home .og-wild-orbit {
+        animation: none;
+      }
+    }
+
+    /* ═══ showcase: app switcher, browser frame, info rail ═══ */
+    app-home .og-showcase {
+      background:
+        radial-gradient(
+          60% 50% at 50% 0%,
+          color-mix(in srgb, var(--og-gold) 9%, transparent),
+          transparent 70%
+        ),
+        var(--og-stone-2);
+      border-block: 1px solid var(--og-line);
+    }
+
+    app-home .og-sc-apps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 64rem) {
+      app-home .og-sc-apps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    app-home .og-sc-app {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      border: 1px solid var(--og-line);
+      border-radius: 12px;
+      background: var(--og-stone);
+      padding: 12px 14px;
+      text-align: start;
+      cursor: pointer;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    app-home .og-sc-app:hover {
+      border-color: color-mix(in srgb, var(--og-gold) 45%, transparent);
+      transform: translateY(-1px);
+    }
+
+    app-home .og-sc-app.is-active {
+      border-color: color-mix(in srgb, var(--og-gold) 70%, transparent);
+      box-shadow:
+        0 0 0 3px color-mix(in srgb, var(--og-gold) 14%, transparent),
+        0 16px 36px -22px color-mix(in srgb, var(--og-gold) 60%, transparent);
+    }
+
+    app-home .og-sc-app:focus-visible,
+    app-home .og-sc-view:focus-visible,
+    app-home .og-bento-tile:focus-visible {
+      outline: 2px solid transparent;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--og-gold) 55%, transparent);
+    }
+
+    app-home .og-sc-app-mark {
+      flex: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    app-home .og-sc-app-copy {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1 1 auto;
+      line-height: 1.25;
+    }
+
+    app-home .og-sc-app-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--og-bone);
+    }
+
+    app-home .og-sc-app-kind {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      color: var(--og-mut);
+    }
+
+    @media (max-width: 40rem) {
+      app-home .og-sc-app-kind {
+        display: none;
+      }
+    }
+
+    app-home .og-sc-app-fw {
+      flex: none;
+      display: inline-flex;
+    }
+
+    app-home .og-sc-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 64rem) {
+      app-home .og-sc-stage {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    app-home .og-sc-frame {
+      margin: 0;
+      overflow: hidden;
+      border: 1px solid var(--og-line);
+      border-radius: 14px;
+      background: var(--og-stone);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.5) inset,
+        0 40px 80px -40px rgba(15, 23, 42, 0.45),
+        0 0 0 1px color-mix(in srgb, var(--og-gold) 6%, transparent);
+    }
+
+    .dark app-home .og-sc-frame {
+      box-shadow:
+        0 40px 90px -40px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    app-home .og-sc-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 38px;
+      padding-inline: 14px;
+      border-bottom: 1px solid var(--og-line);
+      background: var(--og-stone-2);
+    }
+
+    app-home .og-sc-dots {
+      display: inline-flex;
+      gap: 6px;
+    }
+
+    app-home .og-sc-dots i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--og-bone) 14%, transparent);
+    }
+
+    app-home .og-sc-url {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-inline: auto;
+      max-width: 60%;
+      overflow: hidden;
+      border-radius: 6px;
+      background: var(--og-stone);
+      padding: 3px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11.5px;
+      color: var(--og-mut);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    app-home .og-sc-shot {
+      position: relative;
+      aspect-ratio: 1440 / 900;
+      background: var(--og-stone-2);
+    }
+
+    app-home .og-sc-layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    app-home .og-sc-layer.is-on {
+      opacity: 1;
+    }
+
+    app-home .og-sc-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top left;
+    }
+
+    app-home .og-sc-img-dark,
+    .dark app-home .og-sc-img-light {
+      display: none;
+    }
+
+    .dark app-home .og-sc-img-dark {
+      display: block;
+    }
+
+    app-home .og-sc-info {
+      padding-top: 4px;
+    }
+
+    app-home .og-sc-info-mark {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      box-shadow: 0 10px 24px -14px rgba(15, 23, 42, 0.6);
+    }
+
+    app-home .og-sc-info-name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--og-bone);
+    }
+
+    app-home .og-sc-info-fw {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--og-mut);
+    }
+
+    app-home .og-sc-label {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--og-faint);
+    }
+
+    app-home .og-sc-views {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    app-home .og-sc-view {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--og-line);
+      border-radius: 9px;
+      background: var(--og-stone);
+      padding: 9px 12px;
+      text-align: start;
+      cursor: pointer;
+      transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+    }
+
+    app-home .og-sc-view:hover {
+      border-color: color-mix(in srgb, var(--og-gold) 40%, transparent);
+    }
+
+    app-home .og-sc-view.is-active {
+      border-color: color-mix(in srgb, var(--og-gold) 65%, transparent);
+      background: color-mix(in srgb, var(--og-gold) 7%, var(--og-stone));
+    }
+
+    app-home .og-sc-view-label {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--og-bone);
+    }
+
+    app-home .og-sc-view-pkg {
+      font-size: 11px;
+      color: var(--og-faint);
+    }
+
+    /* ═══ bento: the Pro families, captured from the showcase apps ═══ */
+    app-home .og-bento {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    app-home .og-bento-2 {
+      grid-column: span 2;
+    }
+    app-home .og-bento-3 {
+      grid-column: span 3;
+    }
+    app-home .og-bento-4 {
+      grid-column: span 4;
+    }
+    app-home .og-bento-6 {
+      grid-column: span 6;
+    }
+
+    @media (max-width: 64rem) {
+      app-home .og-bento-2,
+      app-home .og-bento-3,
+      app-home .og-bento-4 {
+        grid-column: span 3;
+      }
+    }
+
+    @media (max-width: 40rem) {
+      app-home .og-bento-2,
+      app-home .og-bento-3,
+      app-home .og-bento-4,
+      app-home .og-bento-6 {
+        grid-column: span 6;
+      }
+    }
+
+    app-home .og-bento-tile {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--og-line);
+      border-radius: 14px;
+      background: var(--og-stone);
+      transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    app-home .og-bento-tile:hover {
+      border-color: color-mix(in srgb, var(--og-gold) 45%, transparent);
+      transform: translateY(-2px);
+      box-shadow: 0 24px 50px -30px
+        color-mix(in srgb, var(--og-gold) 55%, transparent);
+    }
+
+    app-home .og-bento-media {
+      position: relative;
+      display: block;
+      height: 230px;
+      overflow: hidden;
+      border-bottom: 1px solid var(--og-line);
+      background: var(--og-stone-2);
+    }
+
+    app-home .og-bento-6 .og-bento-media {
+      height: 260px;
+    }
+
+    /* the screenshot fades into the card instead of being cut */
+    app-home .og-bento-media::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 44px;
+      background: linear-gradient(to bottom, transparent, var(--og-stone));
+      pointer-events: none;
+    }
+
+    app-home .og-bento-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top left;
+      transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    app-home .og-bento-img.og-sc-img-dark {
+      display: none;
+    }
+
+    .dark app-home .og-bento-img.og-sc-img-light {
+      display: none;
+    }
+
+    .dark app-home .og-bento-img.og-sc-img-dark {
+      display: block;
+    }
+
+    app-home .og-bento-tile:hover .og-bento-img {
+      transform: scale(1.025);
+    }
+
+    app-home .og-bento-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 14px 16px 16px;
+    }
+
+    app-home .og-bento-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    app-home .og-bento-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--og-bone);
+    }
+
+    app-home .og-bento-tier {
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--og-gold) 12%, transparent);
+      padding: 1px 8px;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--og-gold);
+    }
+
+    app-home .og-bento-arrow {
+      margin-inline-start: auto;
+      color: var(--og-faint);
+      transition:
+        transform 0.2s ease,
+        color 0.2s ease;
+    }
+
+    app-home .og-bento-tile:hover .og-bento-arrow {
+      transform: translateX(2px);
+      color: var(--og-gold);
+    }
+
+    app-home .og-bento-desc {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--og-mut);
+    }
+
+    @media (forced-colors: active) {
+      app-home .og-sc-app.is-active,
+      app-home .og-sc-view.is-active {
+        outline: 2px solid Highlight;
+      }
+    }
+
     /* ═══ reduced motion: settle instantly ═══ */
     @media (prefers-reduced-motion: reduce) {
       app-home *,
@@ -1967,6 +2939,38 @@ const ORG: OrgNode[] = [
 })
 export class HomePage {
   private readonly fwService = inject(FrameworkService);
+
+  protected readonly showcase = SHOWCASE;
+  protected readonly bento = BENTO;
+  protected readonly scApp = signal<ShowcaseApp>(SHOWCASE[0]);
+  protected readonly scViewIndex = signal(0);
+  protected readonly scView = computed(
+    () => this.scApp().views[this.scViewIndex()] ?? this.scApp().views[0],
+  );
+
+  protected pickShowcase(id: ShowcaseApp['id']): void {
+    const app = SHOWCASE.find((entry) => entry.id === id);
+    if (!app || app.id === this.scApp().id) return;
+    this.scApp.set(app);
+    this.scViewIndex.set(0);
+  }
+
+  /** APG tabs: arrows move between apps, Home/End jump to the ends. */
+  protected onShowcaseKey(event: KeyboardEvent): void {
+    const index = SHOWCASE.findIndex((entry) => entry.id === this.scApp().id);
+    let next = index;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown')
+      next = (index + 1) % SHOWCASE.length;
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
+      next = (index - 1 + SHOWCASE.length) % SHOWCASE.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = SHOWCASE.length - 1;
+    else return;
+    event.preventDefault();
+    this.pickShowcase(SHOWCASE[next].id);
+    const host = this.hostRef.nativeElement;
+    host.querySelector<HTMLElement>(`#sc-tab-${SHOWCASE[next].id}`)?.focus();
+  }
 
   /** Render layers a family ships in, derived from its docs route. */
   protected readonly layersOf = (path: string): FrameworkLogoName[] => {
@@ -2038,21 +3042,6 @@ export class HomePage {
     '@oge-ui/spreadsheet-engine',
     '@oge-ui/charts-engine',
   ];
-
-  /**
-   * All-time npm downloads per package; '—' until the fetch lands. Derived
-   * from `packages`, so registering a new package there is the only step —
-   * the chip strip and the total both follow.
-   */
-  protected readonly npmStats = signal(
-    this.packages.map((pkg) => ({ pkg, downloads: '—' })),
-  );
-
-  /** All-time downloads summed across every package that reported; '—' until fetched. */
-  protected readonly npmTotal = signal('—');
-
-  /** How many packages actually contributed to the total (0 until fetched). */
-  protected readonly npmCounted = signal(0);
 
   /** Selected demo tab key — two-way with the oge-tab-panel chrome. */
   protected readonly demoKey = signal<string | undefined>('grid');
@@ -2457,49 +3446,67 @@ export class HomePage {
     this.destroyRef.onDestroy(() => clearInterval(id));
     afterNextRender(() => {
       this.setupPointerFx();
-      this.loadNpmStats();
+      this.setupCounter();
     });
   }
 
   /**
-   * All-time npm download counts, collected at build time into
-   * `/npm-downloads.json` by `tools/docs-tools/npm-downloads.mjs` (run by the
-   * Vercel build). One same-origin request: calling api.npmjs.org from the
-   * browser per package hit npm's rate limit, whose 429s carry no CORS
-   * header, and the site CSP does not allow that origin. A package missing
-   * from the file shows the '—' placeholder.
+   * Projects known to ship with OGE UI — updated by hand from the dependents
+   * figures (GitHub "Used by" + npm). The counter renders this value on the
+   * server and counts up to it once, the first time it scrolls into view.
    */
-  private loadNpmStats(): void {
-    const format = (n: number): string =>
-      n >= 1_000_000
-        ? `${(n / 1_000_000).toFixed(1)}M`
-        : n >= 1_000
-          ? `${(n / 1_000).toFixed(1)}k`
-          : String(n);
-    void fetch('/npm-downloads.json')
-      .then((res) => (res.ok ? res.json() : null))
-      .catch(() => null)
-      .then((body: { packages?: Record<string, number> } | null) => {
-        const counts = body?.packages ?? {};
-        const known = this.packages.filter(
-          (pkg) => typeof counts[pkg] === 'number',
-        );
-        this.npmStats.set(
-          this.packages.map((pkg) => {
-            const count = counts[pkg];
-            return {
-              pkg,
-              downloads: typeof count === 'number' ? format(count) : '—',
-            };
-          }),
-        );
-        if (known.length > 0) {
-          this.npmTotal.set(
-            format(known.reduce((sum, pkg) => sum + (counts[pkg] ?? 0), 0)),
-          );
-          this.npmCounted.set(known.length);
-        }
-      });
+  protected readonly shippedProjects = SHIPPED_PROJECTS;
+  protected readonly projectsShown = signal(SHIPPED_PROJECTS);
+
+  /** Where the suite runs — the sector strip under the numbers. */
+  protected readonly sectors: readonly { icon: IconName; label: string }[] = [
+    { icon: 'package', label: 'ERP & manufacturing' },
+    { icon: 'user', label: 'CRM & sales operations' },
+    { icon: 'activity', label: 'Fintech dashboards' },
+    { icon: 'globe', label: 'Logistics & fleet' },
+    { icon: 'shield', label: 'Healthcare portals' },
+    { icon: 'zap', label: 'Energy & utilities' },
+    { icon: 'book', label: 'Education platforms' },
+    { icon: 'layout', label: 'SaaS admin panels' },
+    { icon: 'gauge', label: 'Analytics & BI' },
+    { icon: 'calendar', label: 'Project management' },
+    { icon: 'workflow', label: 'Workflow automation' },
+    { icon: 'layers', label: 'Internal tools' },
+  ];
+
+  /** Counts 0 → SHIPPED_PROJECTS once when the number scrolls into view. */
+  private setupCounter(): void {
+    const el =
+      this.hostRef.nativeElement.querySelector<HTMLElement>('.og-wild-value');
+    if (
+      !el ||
+      typeof IntersectionObserver === 'undefined' ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return;
+    }
+    this.projectsShown.set(0);
+    let raf = 0;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        const start = performance.now();
+        const step = (now: number): void => {
+          const t = Math.min(1, (now - start) / 1400);
+          const eased = 1 - Math.pow(1 - t, 3);
+          this.projectsShown.set(Math.round(SHIPPED_PROJECTS * eased));
+          if (t < 1) raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+      },
+      { threshold: 0.6 },
+    );
+    observer.observe(el);
+    this.destroyRef.onDestroy(() => {
+      observer.disconnect();
+      cancelAnimationFrame(raf);
+    });
   }
 
   protected copyInstall(): void {

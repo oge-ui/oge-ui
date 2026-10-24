@@ -2780,7 +2780,7 @@ Angular CDK harnesses (`@oge-ui/<pkg>/testing`) and React Testing Library helper
    landing page index (`pages/home/home.ts` — `tiles`, 4 / 3 / 2 / 1 columns so
    the page does not grow; the closing "Browse all components" tile spans what
    the last row leaves free at each column count, `restOf()`, so adding a family
-   never leaves a ragged row), and the landing page's npm band (`packages`).
+   never leaves a ragged row), and the landing page's package marquee and "in the wild" numbers (`packages`, `tiles`; the adoption figure is `SHIPPED_PROJECTS` in `home.ts`, updated by hand).
 6. API members in the family's `*-api-data.ts`, rendered from its `api.ts` page — this is what
    `llms.txt` reads, so an undocumented member is invisible to every coding assistant.
 7. `npx nx run docs-tools:llms`, and commit the regenerated artifacts.
@@ -2832,6 +2832,32 @@ The landing page (`pages/home/home.ts`, route `''`) is the one full-bleed page: 
 hides the sidebar shell and the `doc-shell` wrapper for it. Its canvas wave / pointer-parallax
 effects run on native listeners + rAF outside change detection and must stay dependency-free
 (no 3D/animation libraries) and disabled under `prefers-reduced-motion`.
+
+**Showcase and bento** (`#showcase`, `#families` on the landing page) are screenshots of the four
+example apps under `examples/` (Vantage ERP, AstraCRM, PulseCRM, AtlasDocs — each deployed on
+Vercel from its own folder). The WebP files in `apps/dev-app/public/showcase/` are generated, never
+hand-edited: build the examples (`npm run build` in each folder), then run
+`node tools/docs-tools/capture-showcase.mjs`. Every image ships in a light and a dark variant; the
+template renders both and CSS shows the one matching `.dark`, so `loading="lazy"` fetches only the
+visible one. The app switcher is an APG tablist (arrows/Home/End on the tab buttons —
+`interactive-supports-focus` rejects a handler on the tablist itself). Adding an app means one
+`SHOWCASE` entry in `home.ts`, its mark in `public/showcase/`, and an `APPS`/`SHOTS` entry in the
+capture script.
+
+**Example apps (`examples/`).** Standalone apps that install the published packages from npm (own
+`package.json`, `node_modules`, `vercel.json`) — not Nx projects, so no workspace gate builds them.
+`.nxignore` keeps them out of the project graph (the Vite and Angular plugins would otherwise infer
+build targets that CI cannot run without their `node_modules`) and `.prettierignore` out of
+`format:check`.
+They share one shell (app bar with the product mark, 250px grouped sidebar with a 64px rail, page
+header with title, description and the `@oge-ui/<pkg>` chip, an "About this demo" dialog on the first
+visit, "Built with OGE UI" credit with the OGE mark in the sidebar foot) and register the Pro
+license key with `ogeSetLicenseKey` before bootstrapping. The key never enters git:
+`scripts/write-license.mjs` writes the git-ignored `src/license.ts` from `OGE_LICENSE_KEY` before
+`start`/`dev`/`build`, and each Vercel project carries that variable (production and preview). Two traps found there:
+never override `display` on an OGE host (spreadsheet and BPMN lay out with a column flex box; size
+them with `height` only), and call an editor's `importXml()` from an Angular `effect()` only inside
+`untracked()` (the import writes the editor's own signals and re-triggers the effect forever).
 
 ### AI-facing docs are per-framework
 

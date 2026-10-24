@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="AtlasDocs">
+  <defs>
+    <linearGradient id="atlas-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#atlas-g)"/>
+  <path d="M14 19.5c6-2.2 12-2 17 1.5 5-3.5 11-3.7 17-1.5v26c-6-2.2-12-2-17 1.5-5-3.5-11-3.7-17-1.5v-26Z" fill="#ffffff"/>
+  <path d="M31 21v26" fill="none" stroke="#047857" stroke-opacity="0.55" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M19.5 27.5c3.3-.9 6.5-.8 8 .2M19.5 33c3.3-.9 6.5-.8 8 .2M19.5 38.5c3.3-.9 6.5-.8 8 .2M35 27.7c1.5-1 4.7-1.1 8-.2M35 33.2c1.5-1 4.7-1.1 8-.2M35 38.7c1.5-1 4.7-1.1 8-.2" fill="none" stroke="#047857" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round"/>
+</svg>

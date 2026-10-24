@@ -81,6 +81,39 @@ test.describe('home / landing page', () => {
     await expect(page.getByPlaceholder('Filter pages…')).toBeVisible();
   });
 
+  test('showcase tabs switch the example app and its screens', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const tabs = page.getByRole('tablist', { name: 'Example apps' });
+    const panel = page.locator('#sc-panel');
+    await expect(tabs.getByRole('tab')).toHaveCount(4);
+    await expect(tabs.getByRole('tab', { selected: true })).toContainText(
+      'Vantage ERP',
+    );
+
+    await tabs.getByRole('tab', { name: /AstraCRM/ }).click();
+    await expect(panel).toContainText('AstraCRM');
+    await expect(
+      panel.getByRole('link', { name: /Open live demo/ }),
+    ).toHaveAttribute('href', /sales-dashboard/);
+
+    // APG tabs: arrows move the selection and the focus together
+    await page.keyboard.press('ArrowRight');
+    await expect(tabs.getByRole('tab', { selected: true })).toContainText(
+      'PulseCRM',
+    );
+    await expect(tabs.getByRole('tab', { selected: true })).toBeFocused();
+
+    // screen buttons swap the visible screenshot
+    const screens = panel.getByRole('button', { name: /Revenue/ });
+    await screens.click();
+    await expect(screens).toHaveAttribute('aria-pressed', 'true');
+    await expect(
+      panel.locator('.og-sc-layer.is-on img').first(),
+    ).toHaveAttribute('src', /pulse-revenue-light\.webp$/);
+  });
+
   test('has no axe violations (light and dark)', async ({ page }) => {
     test.slow();
     const scan = () =>
