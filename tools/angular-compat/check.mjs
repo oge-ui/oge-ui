@@ -27,6 +27,7 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
+  mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -44,7 +45,10 @@ const flag = (name) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const keep = args.includes('--keep');
-const WORK = flag('--work') ?? join(tmpdir(), 'oge-angular-compat');
+const given = flag('--work');
+// a folder of its own, made fresh, unless one is given: a fixed name in the
+// shared temp folder could be a link someone else planted
+const WORK = given ?? mkdtempSync(join(tmpdir(), 'oge-angular-compat-'));
 const HERE = join(ROOT, 'tools', 'angular-compat');
 const config = JSON.parse(readFileSync(join(HERE, 'versions.json'), 'utf8'));
 const only = args.find((a) => a === 'floor' || a === 'latest');
@@ -113,7 +117,7 @@ if (config.floor.angular !== floor)
     `versions.json's floor is Angular ${config.floor.angular}, but the peer ranges start at ${floor} — update tools/angular-compat/versions.json`,
   );
 
-rmSync(WORK, { recursive: true, force: true });
+if (given) rmSync(WORK, { recursive: true, force: true });
 const PACKS = join(WORK, 'packs');
 mkdirSync(PACKS, { recursive: true });
 const tarballs = new Map();

@@ -101,6 +101,9 @@ export class OgeXlsxError extends Error {
 
 const DEFAULT_MAX_CELLS = 5_000_000;
 
+/** Where ISO/IEC 29500 Strict names its relationship types. */
+const STRICT_NAMESPACES = 'http://purl.oclc.org/ooxml/';
+
 async function bytesOf(source: OgeXlsxSource): Promise<Uint8Array> {
   if (source instanceof Uint8Array) return source;
   if (source instanceof ArrayBuffer) return new Uint8Array(source);
@@ -238,7 +241,7 @@ function readParts(
       'Binary workbooks (.xlsb) are not supported',
     );
   }
-  if (office?.typeUri.includes('purl.oclc.org'))
+  if (office?.typeUri.startsWith(STRICT_NAMESPACES))
     issues.add('strict-conformance', { part: workbookPath });
   consume(workbookPath);
   consume('_rels/.rels');

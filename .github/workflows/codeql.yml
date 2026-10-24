@@ -32,6 +32,12 @@ jobs:
         with:
           languages: javascript-typescript
           queries: security-extended
+          # the specs never ship: data flows that start in a test fixture
+          # (a corpus file read from disk) are not the library's
+          config: |
+            paths-ignore:
+              - '**/*.spec.ts'
+              - '**/*.spec.tsx'
 
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:

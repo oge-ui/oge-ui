@@ -63,6 +63,20 @@ describe('ogeConditionalConstant', () => {
     expect(ogeConditionalConstant('A1*2')).toBeUndefined();
   });
 
+  it('reads every form of a number, and rejects a long digit run without backtracking', () => {
+    expect(
+      ['12', '12.', '12.5', '.5', '+3', '-0.25e-3', '7E+2'].map(
+        ogeConditionalConstant,
+      ),
+    ).toEqual([12, 12, 12.5, 0.5, 3, -0.00025, 700]);
+    expect(
+      ['.', '1.2.3', '1e', 'e5', '--1'].map(ogeConditionalConstant),
+    ).toEqual([undefined, undefined, undefined, undefined, undefined]);
+    // the old pattern split the digits every way before failing: this ran
+    // for seconds
+    expect(ogeConditionalConstant(`${'0'.repeat(50_000)}x`)).toBeUndefined();
+  });
+
   it('knows which rules need the formula engine', () => {
     expect(
       ogeConditionalRuleSupported({

@@ -48,7 +48,10 @@ export function ogeConditionalConstant(
   formula: string,
 ): number | string | boolean | undefined {
   const text = formula.trim();
-  if (/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(text)) return Number(text);
+  // one way to split a number's digits, so a long run that fails to match
+  // fails in linear time (`\d+\.?\d*` backtracks quadratically)
+  if (/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$/.test(text))
+    return Number(text);
   if (/^"(?:[^"]|"")*"$/.test(text))
     return text.slice(1, -1).replace(/""/g, '"');
   const upper = text.toUpperCase();
