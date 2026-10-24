@@ -12,19 +12,15 @@
  * - `LEMONSQUEEZY_STORE_ID` — the store whose orders count.
  * - `LEMONSQUEEZY_PRODUCT_ID` — optional; when set, only that product counts.
  * - `OGE_LICENSE_PRIVATE_KEY` — the Ed25519 PKCS#8 PEM that signs keys.
+ * - `LEMONSQUEEZY_ACCEPT_TEST_ORDERS` — `1` to let test-mode orders carry a
+ *   key while testing; unset in production.
  *
  * A key covers releases up to one year after the purchase day (plus a short
  * grace period); it never stops working for those releases.
  */
-import {
-  day,
-  issueLicenseKey,
-  loadPrivateKey,
-  oneYearAfter,
-} from '../../tools/license/sign.mjs';
+import { licenseForOrder, signLicense } from './_order.mjs';
 
 const API = 'https://api.lemonsqueezy.com/v1';
-const GRACE_DAYS = 14;
 
 function reply(res, status, body) {
   res.status(status).setHeader('Cache-Control', 'no-store').json(body);
@@ -95,29 +91,17 @@ export default async function handler(req, res) {
   if (order === undefined) {
     return reply(res, 404, { error: 'No order with that number and email.' });
   }
-  const a = order.attributes;
-  if (a.status !== 'paid') {
-    return reply(res, 409, {
-      error: `This order is ${a.status}; only paid orders carry a license.`,
-    });
+  const result = licenseForOrder(
+    order.id,
+    order.attributes,
+    process.env.LEMONSQUEEZY_PRODUCT_ID,
+  );
+  if (result.error) {
+    return reply(res, result.status, { error: result.error });
   }
-  const item = a.first_order_item ?? {};
-  const product = process.env.LEMONSQUEEZY_PRODUCT_ID;
-  if (product && String(item.product_id) !== String(product)) {
-    return reply(res, 404, { error: 'That order is not for OGE UI Pro.' });
-  }
-
-  const purchased = new Date(a.created_at);
-  const info = {
-    id: `ls-${order.id}`,
-    licensee: a.user_name || email,
-    seats: Math.max(1, Number(item.quantity) || 1),
-    families: ['all'],
-    issued: day(purchased),
-    expires: oneYearAfter(purchased, GRACE_DAYS),
-  };
+  const info = result.info;
   try {
-    const key = issueLicenseKey(loadPrivateKey(OGE_LICENSE_PRIVATE_KEY), info);
+    const key = signLicense(info);
     return reply(res, 200, { key, ...info });
   } catch {
     return reply(res, 500, {

@@ -5,7 +5,8 @@
 - **Decided by:** product owner (payment provider, pricing model, enforcement level, price, packaging), implementation by the maintainers
 - **Related:** ADR 0003 (commercial engine packages), `docs/ARCHITECTURE.md` → Licensing
 - **Amended by:** ADR 0005 (2026-10-20) — the bundle covers a seventh family,
-  the spreadsheet, at the same price
+  the spreadsheet, at the same price; 2026-10-24 — the key is also emailed
+  on purchase (decision 6)
 
 ## Context
 
@@ -36,8 +37,10 @@ noticing the terms.
 6. **Key delivery: self-service claim.** `/license/claim` sends the order
    number and email to `api/license/claim.mjs`, which reads the order from the
    Lemon Squeezy API and signs the key. The same order always yields an
-   equivalent key, so a lost key is claimed again; no email provider or
-   database is needed.
+   equivalent key, so a lost key is claimed again; no database is needed.
+   _Amended 2026-10-24:_ a signed `order_created` webhook also emails the key
+   through Resend at purchase, sharing the claim endpoint's order logic; the
+   claim page stays the way to get it again.
 
 ## Options considered
 

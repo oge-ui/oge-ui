@@ -1,8 +1,9 @@
 # Selling OGE UI Pro on Lemon Squeezy — setup runbook
 
 ADR 0004 picked Lemon Squeezy as merchant of record and a self-service claim page for keys. The
-code side is done: `api/license/claim.mjs` turns a paid order into a signed key, `/license/claim` is
-the page buyers use, and `PRO_CHECKOUT_URL` in `apps/dev-app/src/app/shared/pro-license.ts` switches
+code side is done: `api/license/webhook.mjs` emails the key to the buyer the moment an order is
+paid (through Resend), `api/license/claim.mjs` turns the same order into the same key on demand,
+`/license/claim` is the page buyers use to get it again, and `PRO_CHECKOUT_URL` in `apps/dev-app/src/app/shared/pro-license.ts` switches
 the pricing button from "Get a quote" to "Buy OGE UI Pro". This runbook is what is left to do in the
 Lemon Squeezy and Vercel dashboards, in order, with a check after each step.
 
@@ -58,10 +59,19 @@ key with 2 seats.
 1. In the Vercel project that serves www.ogeui.com, add (Production and Preview):
    `LEMONSQUEEZY_API_KEY`, `LEMONSQUEEZY_STORE_ID`, `LEMONSQUEEZY_PRODUCT_ID` and
    `OGE_LICENSE_PRIVATE_KEY` (the full PEM from `~/.oge-license/private-key.pem`, newlines kept or
-   written as `\n` — `loadPrivateKey` accepts both). Never commit any of them.
-2. Set `PRO_CHECKOUT_URL` in `apps/dev-app/src/app/shared/pro-license.ts` to the checkout link,
-   push, and wait for the deploy.
-3. Open `/license/claim`, enter the test order number and email: a key must appear. A wrong email
+   written as `\n` — `loadPrivateKey` accepts both), `LEMONSQUEEZY_WEBHOOK_SECRET`,
+   `RESEND_API_KEY` and optionally `LICENSE_EMAIL_FROM` (default `OGE UI <license@ogeui.com>`;
+   `ogeui.com` must be a verified Resend domain). Never commit any of them.
+2. Lemon Squeezy → Settings → Webhooks → add `https://www.ogeui.com/api/license/webhook`, event
+   **order_created**, signing secret = `LEMONSQUEEZY_WEBHOOK_SECRET`.
+3. **Test-mode orders carry no key** — anyone holding a checkout link can place one with a test
+   card. To test end to end, set `LEMONSQUEEZY_ACCEPT_TEST_ORDERS=1` (Preview only, or briefly)
+   and remove it before going live. `check-store.mjs --order` needs the same variable for a test
+   order.
+4. Set `PRO_CHECKOUT_URL` in `apps/dev-app/src/app/shared/pro-license.ts` to the checkout link
+   (`PRO_STORE_CHECKOUT` holds it) once the store is live, push, and wait for the deploy.
+5. With testing on, place a test order: the license email must arrive, and `/license/claim` with
+   the order number and email must show the same key. A wrong email
    answers "No order with that number and email."; a refunded order answers that only paid orders
    carry a license.
 
@@ -78,7 +88,9 @@ key with 2 seats.
 
 ## 7. Day to day
 
-- **New sale:** nothing to do; the buyer claims the key. A buyer who lost the key claims it again.
+- **New sale:** nothing to do; the key is emailed automatically. A buyer who lost it claims it
+  again on `/license/claim`. A failed email is retried by Lemon Squeezy; Resend's idempotency key
+  keeps a retry from mailing twice.
 - **Renewal:** the buyer buys again; the new order yields a key dated from the new purchase.
 - **More seats:** a new order with the extra quantity, or a manual key with the total
   (`node tools/license/issue.mjs --licensee … --seats …`).

@@ -292,6 +292,10 @@ embedded public key; the private key lives outside the repo
 product shape (single payment; subscription renewals create no order the claim endpoint can see),
 Vercel variables and the go-live steps — is `docs/LEMON-SQUEEZY-SETUP.md`;
 `node tools/license/check-store.mjs` verifies the setup and can run a real claim before deploying.
+`api/license/webhook.mjs` (Lemon Squeezy `order_created`, `X-Signature` HMAC) emails the key through
+Resend the moment an order is paid; it and `claim.mjs` share `api/license/_order.mjs`, so both issue
+the same key for the same order, and both refuse test-mode orders unless
+`LEMONSQUEEZY_ACCEPT_TEST_ORDERS=1`.
 Rules:
 
 - Every root component of a commercial family calls its engine's
