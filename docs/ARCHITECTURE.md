@@ -2995,6 +2995,11 @@ and Search Console reported the whole site as "redirected / discovered – not i
   `max-age=31536000, immutable` by a `vercel.json` header rule; HTML stays revalidated.
 - `robots.txt` explicitly allows the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, …) — the
   `llms.txt` pipeline exists for them.
+- **IndexNow** pings Bing & co. with every sitemap URL at the end of each _production_ Vercel
+  build (`tools/docs-tools/indexnow.mjs`, last step of `buildCommand`; skipped when `VERCEL_ENV`
+  is not `production`, never fails the build). Bing's index feeds ChatGPT search and Copilot, so
+  this is the AI-visibility lever. The key is public by design and is proven by
+  `apps/dev-app/public/<key>.txt` — keep the file name and the script's `KEY` in sync.
 - **Security headers live in `vercel.json`** — CSP, HSTS, `frame-ancestors`, Permissions-Policy,
   COOP/CORP — and `/.well-known/security.txt` (RFC 9116) points at `SECURITY.md`. A static host
   cannot mint a per-request nonce, so the CSP admits the one inline snippet the build emits

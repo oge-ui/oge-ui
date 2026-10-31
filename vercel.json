@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node tools/docs-tools/npm-downloads.mjs && npx nx build dev-app && node tools/docs-tools/not-found-page.mjs",
+  "buildCommand": "node tools/docs-tools/npm-downloads.mjs && npx nx build dev-app && node tools/docs-tools/not-found-page.mjs && node tools/docs-tools/indexnow.mjs",
   "outputDirectory": "dist/apps/dev-app/browser",
   "installCommand": "npm ci",
   "trailingSlash": false,
