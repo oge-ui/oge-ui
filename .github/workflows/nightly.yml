@@ -61,7 +61,7 @@ jobs:
           OGE_E2E_BROWSERS: ${{ matrix.project }}
 
       - if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nightly-${{ matrix.project }}-${{ matrix.shard }}
           path: |
@@ -99,7 +99,7 @@ jobs:
       - run: npx nx run dev-app-e2e:e2e-a11y -- --shard=${{ matrix.shard }}/2
 
       - if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nightly-a11y-crawl-${{ matrix.shard }}
           path: |
