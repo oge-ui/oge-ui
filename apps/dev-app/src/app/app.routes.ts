@@ -1524,6 +1524,20 @@ export const appRoutes: Route[] = [
     title: 'OGE — OGE UI vs PrimeNG',
   },
   {
+    path: 'compare/mui-x',
+    loadComponent: () =>
+      import('./pages/compare/compare-page').then((m) => m.ComparePage),
+    data: { competitor: 'mui-x' },
+    title: 'OGE — OGE UI vs MUI X',
+  },
+  {
+    path: 'compare/syncfusion',
+    loadComponent: () =>
+      import('./pages/compare/compare-page').then((m) => m.ComparePage),
+    data: { competitor: 'syncfusion' },
+    title: 'OGE — OGE UI vs Syncfusion',
+  },
+  {
     path: 'changelog',
     loadComponent: () =>
       import('./pages/resources/changelog').then((m) => m.ChangelogPage),

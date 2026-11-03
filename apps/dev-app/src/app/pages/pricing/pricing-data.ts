@@ -11,6 +11,7 @@ export interface FaqEntry {
 export const MIT_PACKAGES = [
   'oge-ui',
   '@oge-ui/core',
+  '@oge-ui/behavior',
   '@oge-ui/grid',
   '@oge-ui/tree-list',
   '@oge-ui/inputs',
@@ -21,8 +22,10 @@ export const MIT_PACKAGES = [
   '@oge-ui/tabs',
   '@oge-ui/forms',
   '@oge-ui/editor',
+  '@oge-ui/ai',
   '@oge-ui/upload',
   '@oge-ui/locales',
+  '@oge-ui/mcp',
 ] as const;
 
 const PRO_NAMES = PRO_FAMILIES.map((family) => family.name);
@@ -35,12 +38,12 @@ export const PLAN_ROWS: readonly (readonly string[])[] = [
   ['Price', 'Free', `$${PRO_PRICE_USD} per developer per year`],
   ['License', 'MIT', 'OGE UI Commercial License (source-available)'],
   [
-    'Data Grid, Tree List, inputs, forms, editor, upload, buttons, overlay, layout, navigation, tabs, locales',
+    'Data Grid, Tree List, inputs, forms, editor, AI assistant, upload, buttons, overlay, layout, navigation, tabs, locales',
     'Included, any use',
     'Included, any use (MIT)',
   ],
   [
-    'Grid Excel/PDF export, master-detail, range selection, server-side operations',
+    'Grid Excel/PDF export, master-detail, range selection, server-side operations, AI grid assistant & smart paste',
     'Included, any use',
     'Included, any use (MIT)',
   ],
@@ -78,7 +81,7 @@ export const PRICING_FAQ: readonly FaqEntry[] = [
     id: 'is-oge-ui-free',
     question: 'Is OGE UI free for commercial use?',
     answer:
-      'Yes. The Data Grid, Tree List, inputs, buttons, overlay, layout, navigation, tabs, forms, editor and upload packages and their React counterparts are MIT-licensed and free for any use, commercial included. These packages and every feature currently in them will remain MIT; no feature that is free today will move behind a paid license.',
+      'Yes. The Data Grid, Tree List, inputs, buttons, overlay, layout, navigation, tabs, forms, editor, AI assistant and upload packages and their React counterparts are MIT-licensed and free for any use, commercial included. These packages and every feature currently in them will remain MIT; no feature that is free today will move behind a paid license.',
   },
   {
     id: 'what-does-pro-cost',

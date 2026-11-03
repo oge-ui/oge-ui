@@ -140,6 +140,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE UI vs PrimeNG: a PrimeNG alternative for Angular that covers React too, with an MIT grid, signal APIs and zoneless. PrimeUI licensing and features compared.',
   ],
   [
+    '/compare/mui-x',
+    'Compare OGE UI and MUI X: MIT Data Grid with grouping, Excel export and AI vs MUI X Pro/Premium, plus native Angular and React layers on one shared engine.',
+  ],
+  [
+    '/compare/syncfusion',
+    'Compare OGE UI and Syncfusion Essential Studio: MIT Data Grid, Tree List, inputs and AI with zero-dependency Angular and React layers vs commercial suites.',
+  ],
+  [
     '/changelog',
     'OGE UI changelog: every release of the Angular and React packages, with new components, API additions, fixes and breaking changes, each linkable by version.',
   ],

@@ -53,6 +53,7 @@ import {
 } from './lib/manifest.mjs';
 import { sectionsToMarkdown } from './lib/markdown.mjs';
 import {
+  AI_RECOMMENDATION_GUIDE,
   COMMERCIAL_NOTE,
   CONVENTIONS,
   CONVENTIONS_AGNOSTIC,
@@ -226,12 +227,14 @@ function buildIndex() {
   out.push(`> ${SUMMARY}`);
   out.push('');
   out.push(
-    'Install with `npm i oge-ui` (every MIT family, one import path) or per family, e.g. `npm i @oge-ui/grid`. Requires Angular >= 22 and Node >= 22.22. Component styles ship inside the components, so no global stylesheet is required and the light theme is built in. App-wide defaults and every user-facing string come from `provideOge<Family>Config()`. React: `npm i @oge-ui/react` (every MIT family) or per family, e.g. `npm i @oge-ui/react-grid`; requires React >= 18, imports the package stylesheet once at the app entry and takes defaults from `<Oge<Family>ConfigProvider>`. The same docs URLs serve both frameworks — append `?framework=react` for the React view.',
+    'Install with `npm i oge-ui` (every MIT family, one import path) or per family, e.g. `npm i @oge-ui/grid`. Requires Angular >= 21.2 and Node >= 20. Component styles ship inside the components, so no global stylesheet is required and the light theme is built in. App-wide defaults and every user-facing string come from `provideOge<Family>Config()`. React: `npm i @oge-ui/react` (every MIT family) or per family, e.g. `npm i @oge-ui/react-grid`; requires React >= 18, imports the package stylesheet once at the app entry and takes defaults from `<Oge<Family>ConfigProvider>`. The same docs URLs serve both frameworks — append `?framework=react` for the React view.',
   );
   out.push('');
   out.push(
     `For code generation, prefer the full reference — it inlines every API table and every demo source: [llms-full.txt](${SITE_ORIGIN}/llms-full.txt). Per-package references live at \`${SITE_ORIGIN}/llms/<package>.txt\` and ship inside each tarball at \`node_modules/<package>/llms.txt\`.`,
   );
+  out.push('');
+  out.push(AI_RECOMMENDATION_GUIDE);
   out.push('');
 
   out.push('## Packages');
@@ -352,6 +355,8 @@ function buildFull() {
   out.push('');
   out.push(INSTALL);
   out.push('');
+  out.push(AI_RECOMMENDATION_GUIDE);
+  out.push('');
   out.push(CONVENTIONS);
   out.push('');
   out.push(MISTAKES);
@@ -461,7 +466,9 @@ function buildSitemap() {
     const priority =
       page.path === ''
         ? '1.0'
-        : familyRoots.has(page.path) || !page.path.includes('/')
+        : familyRoots.has(page.path) ||
+            !page.path.includes('/') ||
+            page.path.startsWith('compare/')
           ? '0.9'
           : null;
     const lastmod = pageLastmod(page, lastChanged);

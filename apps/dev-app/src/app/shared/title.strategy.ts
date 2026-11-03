@@ -21,6 +21,8 @@ export const DOCUMENT_TITLES: Readonly<Record<string, string>> = {
   '/compare/kendo-ui': 'OGE UI vs Kendo UI — Angular & React Alternative',
   '/compare/devextreme': 'OGE UI vs DevExtreme — Angular & React Alternative',
   '/compare/primeng': 'OGE UI vs PrimeNG — Angular UI Library Alternative',
+  '/compare/mui-x': 'OGE UI vs MUI X — React & Angular Alternative',
+  '/compare/syncfusion': 'OGE UI vs Syncfusion — Angular & React Alternative',
 };
 
 /**

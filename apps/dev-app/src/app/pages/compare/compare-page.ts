@@ -115,10 +115,39 @@ const SECTIONS = [
       <h3 [id]="entry.id" class="scroll-mt-20">{{ entry.question }}</h3>
       <p>{{ entry.answer }}</p>
     }
-    <p>
-      See every comparison on the <a routerLink="/compare">compare page</a>, or
-      <a routerLink="/getting-started">get started</a> with OGE UI.
-    </p>
+
+    <section
+      class="not-prose my-8 rounded-xl border border-indigo-200 bg-indigo-50/40 p-6 dark:border-indigo-900/60 dark:bg-indigo-950/25"
+      aria-labelledby="compare-cta-heading"
+    >
+      <h3 id="compare-cta-heading" class="m-0 text-base font-semibold">
+        Ready to try OGE UI against {{ vs.name }}?
+      </h3>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+        Install the MIT core in two minutes with zero license keys, or evaluate
+        every OGE UI Pro package locally with no sign-up.
+      </p>
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <a
+          routerLink="/getting-started"
+          class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+        >
+          Get started free (MIT)
+        </a>
+        <a
+          routerLink="/pricing"
+          class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+        >
+          See OGE UI Pro pricing
+        </a>
+        <a
+          routerLink="/compare"
+          class="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+        >
+          All comparisons →
+        </a>
+      </div>
+    </section>
   `,
 })
 export class ComparePage {

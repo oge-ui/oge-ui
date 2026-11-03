@@ -27,6 +27,7 @@ import {
 import { FrameworkSwitch } from '../../shared/framework-switch';
 import { FrameworkService } from '../../shared/framework.service';
 import { SITE_VERSION } from '../../shared/site-version';
+import { track } from '@vercel/analytics';
 
 interface TickerRow {
   id: number;
@@ -327,9 +328,10 @@ const ORG: OrgNode[] = [
             class="home-in home-d3 mt-5 max-w-lg text-[15.5px] leading-relaxed text-[color:var(--og-mut)]"
           >
             A virtualized data grid, tree list and pivot table, charts,
-            scheduler, gantt and kanban, forms and 20+ editors. Signal APIs end
-            to end, zoneless by default, themed with CSS tokens — over a
-            framework-free engine both render layers share.
+            scheduler, gantt, kanban and spreadsheet, AI assistant, forms and
+            25+ editors. Signal APIs end to end, zoneless by default, themed
+            with CSS tokens — over a framework-free engine both render layers
+            share.
           </p>
 
           <div class="home-in home-d4 mt-7 flex flex-wrap items-center gap-4">
@@ -359,9 +361,9 @@ const ORG: OrgNode[] = [
                 aria-label="Package to install"
                 class="og-install-select"
                 [value]="installPkg()"
-                (change)="installPkg.set($any($event.target).value)"
+                (change)="installOverride.set($any($event.target).value)"
               >
-                @for (pkg of installablePkgs; track pkg) {
+                @for (pkg of installablePkgs(); track pkg) {
                   <option [value]="pkg">{{ pkg }}</option>
                 }
               </select>
@@ -386,6 +388,16 @@ const ORG: OrgNode[] = [
               }
             </button>
           </div>
+          <p
+            class="home-in home-d5 mt-3 text-[12.5px] text-[color:var(--og-mut)]"
+          >
+            MIT core forever · Zero runtime dependencies · 37 locales ·
+            <a
+              routerLink="/pricing"
+              class="underline decoration-[color:var(--og-line)] underline-offset-4 hover:text-[color:var(--og-bone)]"
+              >Pro families $299/dev/yr</a
+            >
+          </p>
         </div>
 
         <!-- Right: the tilted live window. The tilt's perspective transform
@@ -1174,6 +1186,12 @@ const ORG: OrgNode[] = [
             <a routerLink="/getting-started/setup" class="og-btn-gold">
               Set up your project
               <app-icon name="arrow-right" [size]="14" />
+            </a>
+            <a routerLink="/pricing" class="og-btn-stone">
+              Pricing &amp; Pro
+            </a>
+            <a routerLink="/compare" class="og-btn-stone">
+              Compare vs AG Grid &amp; Kendo
             </a>
             <a
               href="https://github.com/oge-ui/oge-ui"
@@ -3038,9 +3056,12 @@ export class HomePage {
     '@oge-ui/bpmn-engine',
     '@oge-ui/scheduler-engine',
     '@oge-ui/gantt-engine',
-    '@oge-ui/kanban-engine',
     '@oge-ui/spreadsheet-engine',
     '@oge-ui/charts-engine',
+    '@oge-ui/ai',
+    '@oge-ui/react-ai',
+    '@oge-ui/mcp',
+    '@oge-ui/locales',
   ];
 
   /** Selected demo tab key — two-way with the oge-tab-panel chrome. */
@@ -3132,6 +3153,12 @@ export class HomePage {
       name: 'Rich Text Editor',
       desc: 'Headings, lists, links and images, markdown shortcuts, sanitized HTML out.',
       path: '/components/editor',
+    },
+    {
+      icon: 'sparkles',
+      name: 'AI Assistant',
+      desc: 'Natural-language grid filter/sort/group, AI computed columns, smart paste and streaming chat.',
+      path: '/components/ai',
     },
     {
       icon: 'columns',
@@ -3408,17 +3435,36 @@ export class HomePage {
     },
   ];
 
-  /** Installable packages: the umbrella first, then à-la-carte scopes. */
-  protected readonly installablePkgs = [
-    'oge-ui',
-    '@oge-ui/grid',
-    '@oge-ui/tree-list',
-    '@oge-ui/pivot',
-    '@oge-ui/buttons',
-    '@oge-ui/inputs',
-  ];
+  /** Installable packages: the umbrella first, then à-la-carte scopes for the active framework. */
+  protected readonly installablePkgs = computed(() =>
+    this.fwService.isReact()
+      ? [
+          '@oge-ui/react',
+          '@oge-ui/react-grid',
+          '@oge-ui/react-tree-list',
+          '@oge-ui/react-pivot',
+          '@oge-ui/react-buttons',
+          '@oge-ui/react-inputs',
+          '@oge-ui/react-ai',
+        ]
+      : [
+          'oge-ui',
+          '@oge-ui/grid',
+          '@oge-ui/tree-list',
+          '@oge-ui/pivot',
+          '@oge-ui/buttons',
+          '@oge-ui/inputs',
+          '@oge-ui/ai',
+        ],
+  );
 
-  protected readonly installPkg = signal('oge-ui');
+  protected readonly installOverride = signal<string | null>(null);
+
+  protected readonly installPkg = computed(() => {
+    const pkgs = this.installablePkgs();
+    const override = this.installOverride();
+    return override && pkgs.includes(override) ? override : pkgs[0];
+  });
 
   protected readonly fakeSave = (): Promise<void> =>
     new Promise((resolve) => setTimeout(resolve, 1200));
@@ -3510,8 +3556,10 @@ export class HomePage {
   }
 
   protected copyInstall(): void {
+    const pkg = this.installPkg();
+    track('copy_install', { pkg, framework: this.fwService.framework() });
     void navigator.clipboard
-      ?.writeText(`npm install ${this.installPkg()}`)
+      ?.writeText(`npm install ${pkg}`)
       .then(() => {
         this.copied.set(true);
         setTimeout(() => this.copied.set(false), 2000);

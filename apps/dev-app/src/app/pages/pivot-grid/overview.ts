@@ -4,6 +4,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
   OgePivotField,
   OgePivotGrid,
@@ -19,6 +20,7 @@ import { makeOverviewSales, money } from './pivot-demo-data';
 @Component({
   selector: 'app-pivot-overview',
   imports: [
+    RouterLink,
     OgePivotGrid,
     OgePivotField,
     DemoCard,
@@ -40,9 +42,34 @@ import { makeOverviewSales, money } from './pivot-demo-data';
         Multi-dimensional summaries over flat data: drop fields into the row,
         column, value and filter areas, expand headers on both axes, and read
         sub / grand totals — all computed by the pure engine in
-        <code>&#64;oge-ui/core</code>. Drag the field chips between areas to
-        re-pivot instantly — or, without a drag, open a chip's menu (Enter or
-        right-click) and pick an area, and reorder with Ctrl+Arrow keys.
+        <code>&#64;oge-ui/pivot-engine</code>. Drag the field chips between
+        areas to re-pivot instantly — or, without a drag, open a chip's menu
+        (Enter or right-click) and pick an area, and reorder with Ctrl+Arrow
+        keys.
+      </p>
+      <p>
+        @if (fw.isReact()) {
+          <code>&#64;oge-ui/react-pivot</code> is a commercial package — free
+          for evaluation and development, with no notice on development hosts;
+          production use needs a license key, and it is not part of the MIT
+          <code>&#64;oge-ui/react</code> umbrella. See
+          <a
+            routerLink="/license"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >licensing</a
+          >
+          for the terms.
+        } @else {
+          <code>&#64;oge-ui/pivot</code> is a commercial package — free for
+          evaluation and development, with no notice on development hosts;
+          production use needs a license key. See
+          <a
+            routerLink="/license"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >licensing</a
+          >
+          for the terms.
+        }
       </p>
     </app-doc-header>
 

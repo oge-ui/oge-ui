@@ -181,6 +181,8 @@
 {"p":"/compare/kendo-ui","t":"OGE UI vs Kendo UI","c":"Resources","d":"OGE UI vs Kendo UI: a Kendo UI alternative for Angular and React with an MIT data grid, signal APIs and zoneless support. License, price and features compared."},
 {"p":"/compare/devextreme","t":"OGE UI vs DevExtreme","c":"Resources","d":"OGE UI vs DevExtreme: a DevExtreme alternative for Angular and React with an MIT data grid and familiar remote load options. License, price, features compared."},
 {"p":"/compare/primeng","t":"OGE UI vs PrimeNG","c":"Resources","d":"OGE UI vs PrimeNG: a PrimeNG alternative for Angular that covers React too, with an MIT grid, signal APIs and zoneless. PrimeUI licensing and features compared."},
+{"p":"/compare/mui-x","t":"OGE UI vs MUI X","c":"Resources","d":"Compare OGE UI and MUI X: MIT Data Grid with grouping, Excel export and AI vs MUI X Pro/Premium, plus native Angular and React layers on one shared engine."},
+{"p":"/compare/syncfusion","t":"OGE UI vs Syncfusion","c":"Resources","d":"Compare OGE UI and Syncfusion Essential Studio: MIT Data Grid, Tree List, inputs and AI with zero-dependency Angular and React layers vs commercial suites."},
 {"p":"/changelog","t":"Changelog","c":"Resources","d":"OGE UI changelog: every release of the Angular and React packages, with new components, API additions, fixes and breaking changes, each linkable by version."},
 {"p":"/bundle-size","t":"Bundle size","c":"Resources","d":"OGE UI bundle size: the gzip size of every published Angular, React and engine entry point, grouped by package and license, and how CI enforces each budget."}
 ],
@@ -1313,8 +1315,16 @@
 {"p":180,"a":"pick-oge","t":"Pick OGE UI if…"},
 {"p":180,"a":"feature-comparison","t":"Feature comparison"},
 {"p":180,"a":"questions","t":"Questions"},
-{"p":182,"a":"sizes","t":"Size per entry point"},
-{"p":182,"a":"how-budgets-are-enforced","t":"How the budgets are enforced"}
+{"p":181,"a":"when-to-pick-which","t":"When to pick which"},
+{"p":181,"a":"pick-oge","t":"Pick OGE UI if…"},
+{"p":181,"a":"feature-comparison","t":"Feature comparison"},
+{"p":181,"a":"questions","t":"Questions"},
+{"p":182,"a":"when-to-pick-which","t":"When to pick which"},
+{"p":182,"a":"pick-oge","t":"Pick OGE UI if…"},
+{"p":182,"a":"feature-comparison","t":"Feature comparison"},
+{"p":182,"a":"questions","t":"Questions"},
+{"p":184,"a":"sizes","t":"Size per entry point"},
+{"p":184,"a":"how-budgets-are-enforced","t":"How the budgets are enforced"}
 ],
 "api":[
 {"p":41,"a":"ogegrid","t":"OgeGrid","o":"@oge-ui/grid","f":"angular","m":{"properties":["data","columns","keyField","sortable","sorting","filterRow","headerFilter","searchPanel","filterPanel","filterValue","filterDebounce","announcements","paging","virtualScroll","scrolling","rowHeight","autoRowHeight","detailRowHeight","overscan","groupPanel","groupBy","grouping","selectionMode","selectedKeys","selectAllMode","selectionDeferred","selectionFilter","focusedRowEnabled","focusedRowKey","editing","commandButtons","rowDragging","animateRows","columnChooser","columnResize","columnReorder","columnMinWidth","columnHidingMode","stateKey","messages","locale","loadPanel","wordWrap","rowAlternation","highlightChanges","rtlEnabled","rangeSelection","selectedRanges","pinnedTopRows","pinnedBottomRows","stickyGroupRows","cellSpan","columnAutoWidth","cellHintEnabled","rowClass","cellClass","rowDragGroup","allowDropInsideRow"],"methods":["refresh(): void","getVisibleRows(): readonly T[]","getRowByKey(key: RowKey): T | undefined","totalCount(): number","scrollToRow(target: number | RowKey): void","navigateToRow(key: RowKey): void","expandRow(key) / collapseRow(key)","isRowExpanded(key): boolean","expandAllGroups() / collapseAllGroups()","selectAll(): void","deselectAll() / clearSelection()","isRowSelected(key): boolean","getSelectedRowsData(): T[]","copyToClipboard(): Promise<void>","addRow(): void","editRow(key: RowKey): void","deleteRow(key: RowKey): void","saveChanges(): void","discardChanges(): void","hasChanges(): boolean","pageIndex(): number / setPageIndex(index)","pageSize(): number / setPageSize(size)","pageCount(): number","showColumnChooser(anchor?) / hideColumnChooser()","getTotalSummaryValue(field, type?)","beginCustomLoading(message?) / endCustomLoading()","state(): GridStateSnapshot / applyState(snapshot)","describeColumns()","clearFilters() / clearSorting()","getExportData(options?): Promise<OgeExportData<T>>","getCsv(options?): Promise<string>","exportCsv(filename = 'grid.csv', options?): Promise<void>","selectRange(range, add?)","clearRangeSelection()","getSelectedRangeData()","pasteText(text)","fillDown() / fillRight()","undo() / redo()","canUndo() / canRedo()","autoFitColumn(field) / autoFitColumns()"],"events":["rowClick / rowDblClick","cellClick / cellDblClick","rowContextMenu","headerContextMenu","rowReordered","selectionChanged","focusedRowChanged","focusedCellChanged","sortChanged","pageChanged","rowExpanding","rowExpanded","rowCollapsing","rowCollapsed","selectedKeysChange / focusedRowKeyChange / filterValueChange / selectionFilterChange","editingStart","initNewRow","rowInserting / rowInserted","rowUpdating / rowUpdated","rowRemoving / rowRemoved","savingChanges / savedChanges","editCanceled","contentReady","stateChange","exporting","dataErrorOccurred","rangeSelectionChanged","rowPrepared","cellPrepared","rowDragStart","rowDragOver","rowDrop","rowDragEnd"]}},

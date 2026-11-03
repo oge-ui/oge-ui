@@ -1,16 +1,23 @@
 {
   "name": "oge-ui",
   "version": "1.1.6",
-  "description": "Umbrella package for the MIT-licensed OGE Angular UI suite — installs and re-exports the open-source @oge-ui/* packages: Data Grid, Tree List, Select Box, Buttons, Inputs and Overlay. The commercial Pivot Grid (@oge-ui/pivot) is installed separately.",
+  "description": "Free, open-source MIT UI component suite and Data Grid for Angular and React — zero-dependency AG Grid and Kendo alternative with signals, zoneless support, virtual scrolling, tree list, 25+ editors, forms and AI assistant.",
   "keywords": [
     "angular",
+    "react",
     "ui-components",
     "component-library",
     "data-grid",
+    "free-data-grid",
+    "open-source-data-grid",
+    "ag-grid-alternative",
+    "kendo-alternative",
     "tree-list",
     "forms",
     "signals",
-    "standalone-components"
+    "zoneless",
+    "standalone-components",
+    "virtual-scroll"
   ],
   "author": "kaya2m",
   "publishConfig": {

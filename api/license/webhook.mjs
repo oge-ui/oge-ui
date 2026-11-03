@@ -76,6 +76,10 @@ export function licenseEmail({ key, info, orderNumber }) {
     `Lost it? Get it again at ${CLAIM_URL} with order #${orderNumber} and this email address.`,
     `Full terms: ${SETUP_URL}`,
     ``,
+    `Using an AI coding assistant (Claude Code, Cursor, Copilot, Windsurf)?`,
+    `Run the official MCP server: npx -y @oge-ui/mcp`,
+    `Docs reference for LLMs: https://www.ogeui.com/llms.txt`,
+    ``,
     `Questions, invoices, more seats: reply to this email.`,
     `— OGE UI`,
   ].join('\n');
@@ -95,6 +99,7 @@ export function licenseEmail({ key, info, orderNumber }) {
 <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#475569">Register it once, before the first Pro component renders</p>
 <pre style="margin:0;padding:12px 14px;border-radius:10px;background:#0f172a;color:#e2e8f0;font-family:JetBrains Mono,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-all">${escapeHtml(setup)}</pre>
 <p style="margin:10px 0 0;font-size:13px;line-height:1.6;color:#475569">The key is checked offline and is safe to ship in your bundle.</p>
+<p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#64748b">AI assistant tip: Run <code>npx -y &#64;oge-ui/mcp</code> in Cursor or Claude Code for accurate code generation.</p>
 </td></tr>
 <tr><td style="padding:16px 32px 28px">
 <a href="${SETUP_URL}" style="display:inline-block;padding:10px 18px;border-radius:9px;background:#4f46e5;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">Read the license guide</a>

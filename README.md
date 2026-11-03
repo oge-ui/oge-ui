@@ -143,6 +143,32 @@ Commercial families are free for evaluation and development — see [Licensing](
   OGE's own framework-free core. Export libraries (`exceljs`, `jspdf`) are
   optional peers: never installed, bundled or executed unless you opt in.
 
+## Free Open-Source Alternative to Commercial Suites
+
+When teams evaluate high-performance data grids and enterprise components, OGE UI offers the most generous unconditional MIT core:
+
+| Feature / Capability | OGE UI | AG Grid Enterprise | Kendo UI | DevExtreme | MUI X Premium |
+| -------------------- | :----: | :----------------: | :------: | :--------: | :-----------: |
+| **Data Grid Core** | **MIT ($0)** | MIT | Paid | Paid | MIT |
+| **Row Grouping & Aggregation** | **MIT ($0)** | $999/dev | Paid | Paid | $588/dev |
+| **Excel (.xlsx) & PDF Export** | **MIT ($0)** | $999/dev | Paid | Paid | $588/dev |
+| **Cell Range Selection & Fill** | **MIT ($0)** | $999/dev | Paid | Paid | $588/dev |
+| **Master-Detail Rows** | **MIT ($0)** | $999/dev | Paid | Paid | $180/dev |
+| **Server-Side Data Operations** | **MIT ($0)** | $999/dev | Paid | Paid | Paid |
+| **AI Grid Assistant & Smart Paste** | **MIT ($0)** | Paid Toolkit | Paid | Paid | Paid |
+| **Angular Signals (Native)** | **✅ Full** | ❌ Wrapper | ⚠️ Partial | ❌ Wrapper | ❌ None |
+| **React 19 Native Layer** | **✅ Full** | ❌ Wrapper | ⚠️ Separate | ❌ Wrapper | ✅ Native |
+| **CI / Build Agent Fees** | **$0 (Free)** | Paid | Paid | Paid | Paid |
+| **Commercial Pro Suite Price** | **$299/dev/yr** | $999+/dev | $799–$1,299 | ~$900/dev | $588/dev |
+
+Detailed head-to-head comparisons: [AG Grid](https://www.ogeui.com/compare/ag-grid) · [Kendo UI](https://www.ogeui.com/compare/kendo-ui) · [DevExtreme](https://www.ogeui.com/compare/devextreme) · [PrimeNG](https://www.ogeui.com/compare/primeng) · [MUI X](https://www.ogeui.com/compare/mui-x) · [Syncfusion](https://www.ogeui.com/compare/syncfusion)
+
+## AI Coding Assistants & MCP Integration
+
+OGE UI is engineered to be first-class for AI coding assistants:
+- **Model Context Protocol (MCP)**: Run `npx -y @oge-ui/mcp` in Claude Code, Cursor, Copilot, or Windsurf to give your agent 6 native tools for package discovery, component API lookups, and verified code scaffolding.
+- **Machine-Readable Docs**: Full llmstxt.org reference index at [`/llms.txt`](https://www.ogeui.com/llms.txt) and inlined API catalog at [`/llms-full.txt`](https://www.ogeui.com/llms-full.txt).
+
 ## Installation
 
 Everything at once:

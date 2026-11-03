@@ -98,7 +98,7 @@ const BADGE_HTML = (count: number): string =>
         </p>
         <p>
           <code>&#64;oge-ui/react-bpmn</code> is a commercial package — free for
-          evaluation and non-commercial use, with no notice on development
+          evaluation and development, with no notice on development
           hosts; production use needs a license key, and not part of the MIT
           <code>&#64;oge-ui/react</code> umbrella. See
           <a
@@ -128,7 +128,7 @@ const BADGE_HTML = (count: number): string =>
         </p>
         <p>
           <code>&#64;oge-ui/bpmn</code> is a commercial package — free for
-          evaluation and non-commercial use, with no notice on development
+          evaluation and development, with no notice on development
           hosts; production use needs a license key. See
           <a
             routerLink="/license"

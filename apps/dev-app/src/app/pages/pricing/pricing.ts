@@ -17,6 +17,7 @@ import {
 } from '../../shared/pro-license';
 import { pageJsonLd } from '../../shared/seo.service';
 import { PriceBars } from '../compare/price-bars';
+import { track } from '@vercel/analytics';
 import {
   MIT_PACKAGES,
   PLAN_ROWS,
@@ -36,8 +37,8 @@ const SECTIONS = [
 /** What the MIT plan carries, as plan-card bullets. */
 const MIT_POINTS = [
   'Data Grid with Excel/PDF export, master-detail, range selection and server-side operations',
-  'Tree List, inputs, forms, rich-text editor and upload',
-  'Buttons, overlay, layout, navigation, tabs and locales',
+  'Tree List, inputs, forms, rich-text editor, AI assistant and upload',
+  'Buttons, overlay, layout, navigation, tabs and locales (37 languages)',
   'Angular and React, the same engine underneath',
   'No feature that is free today will move behind a paid license',
 ] as const;
@@ -176,6 +177,7 @@ function cellKind(cell: string): 'yes' | 'none' | 'pro' | 'text' {
             [href]="checkoutUrl()"
             [attr.target]="storeOpen ? '_blank' : null"
             rel="noopener"
+            (click)="trackCheckout('plan-card')"
             >{{ storeOpen ? 'Buy OGE UI Pro' : 'Get a quote' }}</a
           >
           <a routerLink="/license/claim" class="app-plan-link"
@@ -245,17 +247,25 @@ function cellKind(cell: string): 'yes' | 'none' | 'pro' | 'text' {
           }}
           a month for the whole team, every Pro family in both frameworks
         </p>
+        <p class="app-calc-detail">
+          Saves \${{ agGridSavings().toLocaleString('en-US') }}/yr compared with
+          {{ seats() }} AG Grid Enterprise {{ seats() === 1 ? 'seat' : 'seats' }}
+          (\${{ (seats() * 999).toLocaleString('en-US') }}) — and includes Pivot
+          Grid, Gantt, Scheduler, Kanban, Charts, BPMN &amp; Spreadsheet.
+        </p>
         @if (storeOpen) {
           <a
             class="app-btn app-btn-primary app-calc-buy"
             [href]="checkoutUrl()"
             target="_blank"
             rel="noopener"
+            (click)="trackCheckout('calculator')"
             >Buy {{ seats() }} {{ seats() === 1 ? 'seat' : 'seats' }}</a
           >
         }
         <p class="app-calc-detail">
-          Invoices, purchase orders and volume pricing —
+          Instant <code>OGE1-…</code> key delivery · VAT/GST invoices via Lemon
+          Squeezy · Purchase orders &amp; volume pricing:
           <a [href]="'mailto:' + salesEmail">{{ salesEmail }}</a>
         </p>
       </div>
@@ -970,8 +980,15 @@ export class PricingPage {
   protected readonly seats = signal(5);
   protected readonly yearly = computed(() => this.seats() * PRO_PRICE_USD);
   protected readonly monthly = computed(() => Math.round(this.yearly() / 12));
+  protected readonly agGridSavings = computed(
+    () => this.seats() * (999 - PRO_PRICE_USD),
+  );
 
   protected readonly kindOf = cellKind;
+
+  protected trackCheckout(source: 'plan-card' | 'calculator'): void {
+    track('click_checkout', { seats: this.seats(), source });
+  }
 
   /** `bpmn` → `/components/bpmn`, `pivot` → `/components/pivot-grid`. */
   protected familyPath(pkg: string): string {

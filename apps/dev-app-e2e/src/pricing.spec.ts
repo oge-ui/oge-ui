@@ -43,7 +43,7 @@ test.describe('pricing and compare', () => {
   }) => {
     await page.goto('/compare');
     const bars = page.locator('.app-price-bar');
-    await expect(bars).toHaveCount(5);
+    await expect(bars).toHaveCount(7);
     await expect(bars.first()).toContainText('OGE UI Pro');
     await expect(
       page.locator('.app-price-bars').getByRole('link', { name: 'AG Grid' }),

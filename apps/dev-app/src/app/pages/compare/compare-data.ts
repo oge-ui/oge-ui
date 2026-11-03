@@ -53,7 +53,7 @@ const OGE_FRAMEWORKS =
 const OGE_ANGULAR =
   'Signal inputs, outputs and models; standalone components; zoneless apps supported';
 const OGE_LICENSE =
-  'MIT core suite (grid, tree list, inputs, forms, editor, upload, navigation, layout, overlay); Pivot, Gantt, Scheduler, Kanban, Charts, BPMN and Spreadsheet are OGE UI Pro';
+  'MIT core suite (grid, tree list, inputs, forms, buttons, tabs, editor, ai, upload, navigation, layout, overlay); Pivot, Gantt, Scheduler, Kanban, Charts, BPMN and Spreadsheet are OGE UI Pro';
 const OGE_PRICE =
   'Free (MIT); OGE UI Pro $' +
   PRO_PRICE_USD +
@@ -79,17 +79,16 @@ export const COMPETITORS: readonly Competitor[] = [
       'If you are looking for an AG Grid alternative for Angular and React, the main difference is where the paywall sits: features AG Grid sells in Enterprise — row grouping, range selection, clipboard, Excel export, master-detail, server-side operations — are part of the free OGE grid. The comparison below is meant to help you choose, so it starts with where AG Grid is the better pick.',
     ],
     pickThem: [
-      'You need a grid-only feature OGE UI does not have yet: integrated charting from a selected range, columns and filters tool panels, a status bar with range aggregates, row numbers, find-without-filtering, or spreadsheet formulas in cells.',
+      'You need a grid-only feature OGE UI does not have yet: integrated charting from a selected range, columns and filters tool panels, a status bar with range aggregates, row numbers, find-without-filtering, or spreadsheet formulas inside grid cells (OGE UI ships formulas in its separate Spreadsheet component).',
       'You want pivoting or tree data inside the same grid component; OGE UI keeps them in the separate Tree List and Pivot Grid components.',
       'You build with Vue or plain JavaScript; OGE UI targets Angular and React only.',
       'You value a very long track record and a large community over a younger library.',
-      'You want AI features in the grid today (AG Grid ships an AI toolkit); OGE UI has none in its components yet.',
     ],
     pickOge: [
-      'You need grouping, range selection, Excel/PDF export, master-detail or server-side data without buying a license — they are MIT in OGE UI.',
-      'You want more than a grid: inputs, forms, rich-text editor, upload, navigation, layout and overlays from the same suite, on the same engine and theme tokens.',
+      'You need grouping, range selection, Excel/PDF export, master-detail, server-side data or an AI grid assistant without buying a license — they are MIT in OGE UI.',
+      'You want more than a grid: inputs, forms, rich-text editor, AI assistant, upload, navigation, layout and overlays from the same suite, on the same engine and theme tokens.',
       'You want Angular components written natively with signals rather than a wrapper around a framework-agnostic core.',
-      `You also need a Pivot Grid, Gantt, Scheduler, Kanban, charts or an Excel viewer: OGE UI Pro covers all seven commercial families for $${PRO_PRICE_USD} per developer per year.`,
+      `You also need a Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN 2.0 modeler or Spreadsheet (230+ Excel formulas): OGE UI Pro covers all seven commercial families for $${PRO_PRICE_USD} per developer per year.`,
     ],
     rows: [
       [
@@ -132,6 +131,11 @@ export const COMPETITORS: readonly Competitor[] = [
         'Enterprise (Server-Side Row Model)',
       ],
       [
+        'AI grid assistant, smart paste and AI columns',
+        'MIT (`@oge-ui/ai` and `@oge-ui/react-ai`)',
+        'Enterprise (AI Toolkit)',
+      ],
+      [
         'Pivoting',
         'OGE UI Pro (separate Pivot Grid component)',
         'Enterprise (in the grid)',
@@ -139,7 +143,7 @@ export const COMPETITORS: readonly Competitor[] = [
       ['Integrated charts from a selection', 'Not available', 'Enterprise'],
       [
         'Other components',
-        'Full suite: inputs, forms, editor, upload, navigation, layout, overlay',
+        'Full suite: inputs, forms, editor, ai, upload, navigation, layout, overlay, plus 7 Pro families',
         'Grid and charts only',
       ],
     ],
@@ -246,14 +250,13 @@ export const COMPETITORS: readonly Competitor[] = [
       'You need guaranteed response times; Kendo licenses include technical support tiers.',
       'You need Material or Fluent look-alike themes; OGE UI ships its own themes plus Bootstrap and Tailwind bridges.',
       'You need an OLAP/XMLA data source for the pivot grid, or a stacked card layout for the grid on phones.',
-      'You want AI components and grid AI assistants today.',
       'You also build in Vue or jQuery.',
     ],
     pickOge: [
-      'You want a production-ready Data Grid, Tree List, inputs and forms with no license fee — they are MIT in OGE UI.',
+      'You want a production-ready Data Grid, Tree List, inputs, forms and AI assistant (`@oge-ui/ai`) with no license fee — they are MIT in OGE UI.',
       'You want Angular components built on signal inputs, outputs and models throughout, and zoneless apps supported across the suite.',
       'You ship both Angular and React apps and want the same engine, behaviour and design tokens in both.',
-      `You need the enterprise families (Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN) at $${PRO_PRICE_USD} per developer per year.`,
+      `You need the enterprise families (Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN, Spreadsheet) at $${PRO_PRICE_USD} per developer per year.`,
     ],
     rows: [
       [
@@ -287,10 +290,19 @@ export const COMPETITORS: readonly Competitor[] = [
         'MIT: virtualization, grouping, editing, range selection, Excel/PDF export, master-detail, server-side data',
         'Commercial',
       ],
-      ['Pivot Grid, Gantt, Scheduler', 'OGE UI Pro', 'Commercial'],
+      [
+        'AI grid assistant, smart paste and chat',
+        'MIT (`@oge-ui/ai` and `@oge-ui/react-ai`)',
+        'Commercial (AI Prompt and grid AI integration)',
+      ],
+      [
+        'Pivot Grid, Gantt, Scheduler, Spreadsheet, BPMN',
+        'OGE UI Pro',
+        'Commercial (no BPMN 2.0 modeler)',
+      ],
       [
         'Component count',
-        'A focused suite for data-heavy apps',
+        '95+ components across 35 families for data-heavy apps',
         '110+ Angular components',
       ],
     ],
@@ -382,14 +394,14 @@ export const COMPETITORS: readonly Competitor[] = [
     pickThem: [
       'You need breadth: DevExtreme ships many more components, plus a long-established vendor behind them.',
       'You use ASP.NET on the server and want DevExpress’s back-end data integration.',
-      'You need an OLAP/XMLA pivot data source, Material or Fluent look-alike themes, or AI columns and an AI assistant in the grid.',
+      'You need an OLAP/XMLA pivot data source or Material and Fluent look-alike themes.',
       'You also build in Vue or jQuery.',
     ],
     pickOge: [
-      'You want the grid, tree list, inputs and forms without a subscription — they are MIT in OGE UI.',
+      'You want the grid, tree list, inputs, forms, AI columns and AI grid assistant without a subscription — they are MIT in OGE UI.',
       'You want Angular components built on signals and a React layer that is native React, not a wrapper.',
       'You want to keep DevExtreme-style grid option names while moving to a modern Angular or React codebase.',
-      `You need Pivot Grid, Gantt, Scheduler, Kanban, Charts or BPMN at $${PRO_PRICE_USD} per developer per year.`,
+      `You need Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN or Spreadsheet at $${PRO_PRICE_USD} per developer per year.`,
     ],
     rows: [
       ['Frameworks', OGE_FRAMEWORKS, 'Angular, React, Vue and jQuery'],
@@ -412,11 +424,20 @@ export const COMPETITORS: readonly Competitor[] = [
       ['Data grid', 'MIT', 'Commercial'],
       ['Tree list', 'MIT', 'Commercial'],
       [
+        'AI grid assistant, AI columns and smart paste',
+        'MIT (`@oge-ui/ai` and `@oge-ui/react-ai`)',
+        'Commercial',
+      ],
+      [
         'Pivot grid',
         'OGE UI Pro (local and remote data; no OLAP/XMLA)',
         'Commercial (includes OLAP/XMLA)',
       ],
-      ['Scheduler, Gantt', 'OGE UI Pro', 'Commercial'],
+      [
+        'Scheduler, Gantt, Kanban, Charts, BPMN, Spreadsheet',
+        'OGE UI Pro',
+        'Commercial (no BPMN 2.0 modeler)',
+      ],
     ],
     migration: [
       {
@@ -492,9 +513,9 @@ export const COMPETITORS: readonly Competitor[] = [
     ],
     pickOge: [
       'You need an MIT-licensed, actively developed suite with no eligibility rules: the OGE UI core is free for organizations of any size.',
-      'You need a data-heavy grid: OGE UI’s MIT grid adds grouping with summaries, range selection, fill handle, Excel/PDF export, master-detail and server-side data.',
+      'You need a data-heavy grid: OGE UI’s MIT grid adds grouping with summaries, range selection, fill handle, Excel/PDF export, master-detail, server-side data and an AI assistant.',
       'You ship React too and want the same components, engine and design tokens there.',
-      `You need a Pivot Grid, Gantt, Scheduler, Kanban, Charts or BPMN editor (OGE UI Pro, $${PRO_PRICE_USD} per developer per year).`,
+      `You need a Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN editor or Spreadsheet (OGE UI Pro, $${PRO_PRICE_USD} per developer per year).`,
     ],
     rows: [
       [
@@ -529,7 +550,12 @@ export const COMPETITORS: readonly Competitor[] = [
         'Table component; see the vendor’s docs for its feature set',
       ],
       [
-        'Pivot Grid, Gantt, Scheduler, Kanban',
+        'AI grid assistant, smart paste and chat',
+        'MIT (`@oge-ui/ai` and `@oge-ui/react-ai`)',
+        'Not part of the PrimeNG library',
+      ],
+      [
+        'Pivot Grid, Gantt, Scheduler, Kanban, BPMN, Spreadsheet',
         'OGE UI Pro',
         'Not part of the PrimeNG library',
       ],
@@ -592,6 +618,239 @@ export const COMPETITORS: readonly Competitor[] = [
         url: 'https://github.com/primefaces/primeng',
       },
       { label: 'PrimeUI announcement', url: 'https://primeui.dev/nextchapter' },
+    ],
+  },
+  {
+    slug: 'mui-x',
+    entryPrice: {
+      usd: 588,
+      basis: 'MUI X Premium ($49/month billed annually per developer)',
+    },
+    name: 'MUI X',
+    keyword: 'MUI X Data Grid alternative for React and Angular',
+    summary:
+      'MUI’s advanced React components. OGE UI ships row grouping, Excel export, master-detail and AI under MIT, and adds an Angular layer on the same engine.',
+    intro: [
+      'MUI X is the advanced component line for React from MUI, split into a free MIT Community plan, a paid Pro plan ($15/month per developer billed annually) and a paid Premium plan ($49/month per developer billed annually). OGE UI is an open-core suite for React and Angular whose Data Grid, Tree List, inputs, forms and AI assistant are MIT-licensed in full.',
+      'If you are evaluating a MUI X alternative for React — or need the same components in both React and Angular — the main difference is where the paywall sits: row grouping, aggregation, Excel export, cell range selection, master-detail and the AI grid assistant are MIT in OGE UI, whereas MUI X places them in Pro or Premium.',
+    ],
+    pickThem: [
+      'Your app is already built on `@mui/material` and Emotion/Pigment CSS, and you want the Data Grid to share the exact MUI `ThemeProvider` and `sx` prop.',
+      'You want tree data and pivoting inside the same `DataGridPremium` component; OGE UI keeps them in the separate Tree List and Pivot Grid components.',
+      'You only target React and prefer the largest React-specific ecosystem.',
+    ],
+    pickOge: [
+      'You need row grouping, aggregation, Excel/PDF export, cell range selection, master-detail, server-side data or an AI grid assistant without a paid license — they are MIT in OGE UI.',
+      'You ship both React and Angular and want one framework-free engine, identical keyboard behavior and shared CSS `--oge-*` design tokens across both.',
+      'You prefer zero CSS-in-JS runtime overhead: OGE UI uses plain CSS custom properties with optional Tailwind and Bootstrap bridges.',
+      `You also need Gantt, BPMN 2.0, Kanban, Spreadsheet (230+ Excel formulas), Scheduler, Pivot Grid or Charts: OGE UI Pro covers all seven commercial families for $${PRO_PRICE_USD} per developer per year.`,
+    ],
+    rows: [
+      [
+        'Frameworks',
+        OGE_FRAMEWORKS,
+        'React only',
+      ],
+      [
+        'Styling & runtime',
+        'Plain CSS custom properties (`--oge-*`), zero CSS-in-JS runtime',
+        'MUI System / Emotion or Pigment CSS',
+      ],
+      [
+        'License',
+        OGE_LICENSE,
+        'Community: MIT. Pro and Premium: commercial per-developer subscription (perpetual fallback for versions released during the term)',
+      ],
+      [
+        'Price',
+        OGE_PRICE,
+        'Pro $180/year ($15/mo) per developer; Premium $588/year ($49/mo) per developer',
+      ],
+      ['Accessibility', OGE_A11Y, VENDOR_A11Y],
+      ['Row and column virtualization', 'MIT', 'Community (row) / Pro (column)'],
+      ['Multi-column sorting and filtering', 'MIT', 'Pro'],
+      ['Column pinning and row pinning', 'MIT', 'Pro'],
+      ['Master-detail rows', 'MIT', 'Pro'],
+      ['Row grouping and aggregation', 'MIT', 'Premium'],
+      ['Cell range selection and Excel export', 'MIT', 'Premium'],
+      [
+        'AI grid assistant, smart paste and AI columns',
+        'MIT (`@oge-ui/react-ai` and `@oge-ui/ai`)',
+        'Premium (AI Assistant)',
+      ],
+      [
+        'Gantt, Kanban, BPMN 2.0, Spreadsheet',
+        'OGE UI Pro',
+        'Not part of MUI X',
+      ],
+    ],
+    migration: [
+      {
+        text: 'Install `@oge-ui/react-grid` (or the `@oge-ui/react` umbrella). `<OgeGrid rows={rows} columns={columns} />` subscribes to the headless engine with `useSyncExternalStore` and requires no `ThemeProvider`.',
+        link: {
+          label: 'Set up your project',
+          path: '/getting-started/setup',
+        },
+      },
+      {
+        text: 'Server-side sorting, filtering, pagination and grouping map to `CustomDataSource` `load(options)`, replacing `paginationMode="server"`, `sortingMode="server"` and `filterMode="server"`.',
+        link: {
+          label: 'Remote data',
+          path: '/components/data-grid/remote-data',
+        },
+      },
+      {
+        text: 'Master-detail panels (`getDetailPanelContent`) map to the grid’s master-detail row template.',
+        link: {
+          label: 'Master-detail',
+          path: '/components/data-grid/master-detail',
+        },
+      },
+      {
+        text: 'Cell range selection, copy/paste and fill handle work out of the box under MIT via `selectionMode="cell"`.',
+        link: {
+          label: 'Range selection',
+          path: '/components/data-grid/range-selection',
+        },
+      },
+    ],
+    faq: [
+      {
+        id: 'is-oge-ui-a-free-mui-x-premium-alternative',
+        question: 'Is OGE UI a free MUI X Pro and Premium alternative for React?',
+        answer:
+          'For the Data Grid and Tree List, yes: multi-column sorting/filtering, column and row pinning, master-detail, row grouping, aggregation, cell range selection, Excel export and the AI assistant are all MIT-licensed in `@oge-ui/react-grid` and `@oge-ui/react-ai`.',
+      },
+      {
+        id: 'mui-x-angular',
+        question: 'Does OGE UI work in both React and Angular?',
+        answer:
+          'Yes. Every OGE UI component family ships both an idiomatic React layer (`@oge-ui/react-*`) and an Angular layer (`@oge-ui/*`) on top of the same framework-free TypeScript engine. MUI X is React-only.',
+      },
+      {
+        id: 'mui-x-price',
+        question: 'How does OGE UI Pro pricing compare with MUI X Premium?',
+        answer: `MUI X Premium is $588 per developer per year ($49/month billed annually). OGE UI’s Data Grid, Tree List, inputs, forms and AI assistant are free (MIT), and OGE UI Pro — covering Pivot Grid, Charts, Scheduler, Gantt, Kanban, BPMN and Spreadsheet — is $${PRO_PRICE_USD} per developer per year.`,
+      },
+    ],
+    sources: [
+      {
+        label: 'MUI pricing',
+        url: 'https://mui.com/pricing/',
+      },
+      {
+        label: 'MUI X Data Grid feature comparison',
+        url: 'https://mui.com/x/react-data-grid/#mit-vs-commercial',
+      },
+    ],
+  },
+  {
+    slug: 'syncfusion',
+    entryPrice: {
+      usd: 1188,
+      basis: 'Team license starting at $395/month ($4,740/yr for up to 5 devs)',
+    },
+    name: 'Syncfusion',
+    keyword: 'Syncfusion Essential Studio alternative for Angular and React',
+    summary:
+      'A sprawling commercial suite sold in team tiers. OGE UI ships a zero-dependency MIT core with clean per-developer Pro pricing and no license audits on MIT packages.',
+    intro: [
+      'Syncfusion Essential Studio is a very large commercial component suite covering Angular, React, Vue, Blazor, .NET and mobile platforms, sold as a monthly/yearly team subscription with a Community License for qualifying small businesses. OGE UI is an open-core Angular and React suite built on a single framework-free TypeScript engine.',
+      'If you are looking for a Syncfusion alternative for Angular and React, the main differences are licensing simplicity and architecture: OGE UI’s core (Data Grid, Tree List, 25+ inputs, forms, editor, upload, AI assistant) is unconditional MIT for companies of any size, and OGE UI components are written natively with Angular Signals and React hooks rather than wrapping an imperative ES5/ES6 base.',
+    ],
+    pickThem: [
+      'You need document-processing server libraries (Word, PowerPoint, PDF manipulation on .NET/Java) or Blazor/MAUI/Flutter controls from the same vendor.',
+      'You need a diagramming tool beyond BPMN 2.0, or an in-browser PDF viewer with annotation tools.',
+      'You qualify for Syncfusion’s Community License (under $1M annual revenue, 5 developers and 10 total employees) and accept its audit and verification terms.',
+    ],
+    pickOge: [
+      'You want an unconditional MIT license for the Data Grid, Tree List, inputs, forms, rich-text editor and AI assistant — with no revenue caps, headcount limits or compliance audits.',
+      'You want small, tree-shakable packages with zero external runtime dependencies and native Angular Signals + React `useSyncExternalStore` layers.',
+      `You want transparent, self-serve per-developer pricing ($${PRO_PRICE_USD}/dev/year) for Pivot Grid, Charts, Scheduler, Gantt, Kanban, BPMN and Spreadsheet without mandatory multi-seat team bundles.`,
+    ],
+    rows: [
+      [
+        'Frameworks',
+        OGE_FRAMEWORKS,
+        'Angular, React, Vue, JavaScript, Blazor and .NET',
+      ],
+      [
+        'Architecture',
+        'Headless TypeScript signal engine + native Angular and React render layers; zero runtime dependencies',
+        'Shared JavaScript control base wrapped per framework',
+      ],
+      [
+        'License',
+        OGE_LICENSE,
+        'Commercial subscription; Community License available for organizations under $1M revenue, 5 developers and 10 employees',
+      ],
+      [
+        'Price',
+        OGE_PRICE,
+        'Team tiers starting at $395/month ($4,740/year for up to 5 developers; ~$948–$1,188/dev/year)',
+      ],
+      ['Accessibility', OGE_A11Y, VENDOR_A11Y],
+      [
+        'Data Grid & Tree List',
+        'MIT (unconditional for any organization size)',
+        'Commercial (or Community if eligible)',
+      ],
+      [
+        'AI grid assistant, smart paste and chat',
+        'MIT (`@oge-ui/ai` and `@oge-ui/react-ai`)',
+        'Commercial',
+      ],
+      [
+        'Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN, Spreadsheet',
+        `OGE UI Pro ($${PRO_PRICE_USD}/dev/year, sold per single seat)`,
+        'Commercial (sold in team bundles)',
+      ],
+    ],
+    migration: [
+      {
+        text: '`ej2-angular-grids` / `ej2-react-grids` DataManager adapters map to OGE UI’s `ArrayDataSource`, `CustomDataSource` and `ODataDataSource`.',
+        link: {
+          label: 'Remote data',
+          path: '/components/data-grid/remote-data',
+        },
+      },
+      {
+        text: 'Unlike Syncfusion’s global `registerLicense()` requirement across every button and input, OGE UI’s MIT packages never check or require a license key; `registerLicense()` is only used if you adopt one of the 7 Pro families.',
+        link: {
+          label: 'Licensing',
+          path: '/license',
+        },
+      },
+      {
+        text: 'Syncfusion Spreadsheet formulas and `.xlsx` import/export map to `@oge-ui/spreadsheet` / `@oge-ui/react-spreadsheet` (230+ Excel formulas).',
+        link: {
+          label: 'Spreadsheet',
+          path: '/components/spreadsheet',
+        },
+      },
+    ],
+    faq: [
+      {
+        id: 'is-oge-ui-a-free-syncfusion-alternative',
+        question: 'Can OGE UI replace Syncfusion without revenue or headcount limits?',
+        answer:
+          'Yes for the core suite: OGE UI’s Data Grid, Tree List, 25+ inputs, forms, buttons, tabs, layout, navigation, overlays, upload, rich-text editor and AI assistant are MIT-licensed for organizations of any revenue or headcount.',
+      },
+      {
+        id: 'syncfusion-single-developer-seat',
+        question: 'Can I buy a single developer seat of OGE UI Pro?',
+        answer: `Yes. OGE UI Pro is sold per individual developer at $${PRO_PRICE_USD} per year with no minimum team bundle, and only developers importing from the 7 Pro families need a seat.`,
+      },
+    ],
+    sources: [
+      {
+        label: 'Syncfusion pricing',
+        url: 'https://www.syncfusion.com/sales/teamlicense',
+      },
+      {
+        label: 'Syncfusion Community License',
+        url: 'https://www.syncfusion.com/products/communitylicense',
+      },
     ],
   },
 ];

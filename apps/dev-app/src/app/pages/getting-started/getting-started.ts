@@ -271,6 +271,21 @@ interface ComponentCard {
           </td>
         </tr>
         <tr>
+          <td><code>&#64;oge-ui/react-editor</code></td>
+          <td>
+            <strong>React.</strong> The rich-text editor with headings, lists,
+            links, images, markdown shortcuts and sanitized HTML output.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/react-ai</code></td>
+          <td>
+            <strong>React.</strong> AI grid assistant, natural-language
+            filter/sort/group/pivot, AI computed columns, smart paste and
+            streaming chat UI (MIT).
+          </td>
+        </tr>
+        <tr>
           <td>
             <code>&#64;oge-ui/react-pivot</code>,
             <code>&#64;oge-ui/react-bpmn</code>,
@@ -414,12 +429,38 @@ interface ComponentCard {
           </td>
         </tr>
         <tr>
+          <td><code>&#64;oge-ui/editor</code></td>
+          <td>
+            Rich-text editor with headings, lists, links, images, markdown
+            shortcuts and sanitized HTML output.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/ai</code></td>
+          <td>
+            AI grid assistant, natural-language filter/sort/group/pivot, AI
+            computed columns, smart paste and streaming chat UI (MIT).
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/locales</code></td>
+          <td>
+            Built-in translations for 37 languages and RTL layout support.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/mcp</code></td>
+          <td>
+            Model Context Protocol server for AI coding assistants (Claude
+            Code, Cursor, Copilot, Windsurf).
+          </td>
+        </tr>
+        <tr>
           <td>
             <code>&#64;oge-ui/pivot-engine</code>,
             <code>&#64;oge-ui/bpmn-engine</code>,
             <code>&#64;oge-ui/charts-engine</code>,
             <code>&#64;oge-ui/gantt-engine</code>,
-            <code>&#64;oge-ui/kanban-engine</code>,
             <code>&#64;oge-ui/scheduler-engine</code>,
             <code>&#64;oge-ui/spreadsheet-engine</code>
           </td>

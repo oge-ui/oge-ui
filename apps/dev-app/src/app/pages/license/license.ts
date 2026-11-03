@@ -79,10 +79,12 @@ import { ANGULAR_KEY, CHECK_KEY, ENV_KEY, REACT_KEY } from './license-snippets';
     <h2 id="mit" class="scroll-mt-20">MIT — free forever</h2>
     <p>
       <code>oge-ui</code>, <code>&#64;oge-ui/core</code>,
-      <code>&#64;oge-ui/grid</code> (including Excel/PDF export, master-detail
-      and server-side operations), <code>&#64;oge-ui/tree-list</code>, the
-      inputs, buttons, overlay, layout, navigation, tabs, forms, editor and
-      upload packages and their React counterparts are released under the
+      <code>&#64;oge-ui/behavior</code>, <code>&#64;oge-ui/grid</code>
+      (including Excel/PDF export, master-detail and server-side operations),
+      <code>&#64;oge-ui/tree-list</code>, <code>&#64;oge-ui/ai</code>, the
+      inputs, buttons, overlay, layout, navigation, tabs, forms, editor, upload,
+      locales and MCP packages and their React counterparts are released under
+      the
       <a
         href="https://github.com/oge-ui/oge-ui/blob/main/LICENSE"
         target="_blank"
