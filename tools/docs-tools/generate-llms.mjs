@@ -450,10 +450,12 @@ function renderDemos(demos, heading = '##') {
   return out.join('\n');
 }
 
+/**
+ * `<loc>` and `<lastmod>` only: Google ignores `<priority>` and
+ * `<changefreq>`, and honours `<lastmod>` only while it stays accurate — so it
+ * comes from the last commit over the page's own sources, never the build date.
+ */
 function buildSitemap() {
-  const familyRoots = new Set(
-    PACKAGES.filter((pkg) => pkg.docsRoot).map((pkg) => pkg.docsRoot.slice(1)),
-  );
   const lastChanged = gitLastChanged(PATHS.pagesDir);
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -463,19 +465,10 @@ function buildSitemap() {
     // A page whose own URL is a redirect stub (routed tabs → …/overview) is
     // listed by where it lands — the URL that carries its canonical tag.
     const loc = `${SITE_ORIGIN}/${page.landing ?? page.path}`;
-    const priority =
-      page.path === ''
-        ? '1.0'
-        : familyRoots.has(page.path) ||
-            !page.path.includes('/') ||
-            page.path.startsWith('compare/')
-          ? '0.9'
-          : null;
     const lastmod = pageLastmod(page, lastChanged);
     lines.push(
       `  <url><loc>${loc}</loc>` +
         (lastmod ? `<lastmod>${lastmod}</lastmod>` : '') +
-        (priority ? `<priority>${priority}</priority>` : '') +
         '</url>',
     );
   }

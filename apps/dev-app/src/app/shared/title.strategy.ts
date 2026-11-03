@@ -23,6 +23,8 @@ export const DOCUMENT_TITLES: Readonly<Record<string, string>> = {
   '/compare/primeng': 'OGE UI vs PrimeNG — Angular UI Library Alternative',
   '/compare/mui-x': 'OGE UI vs MUI X — React & Angular Alternative',
   '/compare/syncfusion': 'OGE UI vs Syncfusion — Angular & React Alternative',
+  '/license': 'OGE UI Licensing — MIT Core & Pro Packages',
+  '/license/claim': 'Claim Your OGE UI Pro License Key | OGE UI',
 };
 
 /**
