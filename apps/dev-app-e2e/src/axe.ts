@@ -42,9 +42,36 @@ export async function settleDocsHeader(page: Page): Promise<void> {
 }
 
 /**
- * `@axe-core/playwright`'s builder, settling the docs header before every
- * audit. Specs import this instead of the package so no audit can race the
- * deferred header.
+ * Waits for every finite CSS animation and transition on the page to finish.
+ * An element that is still fading in (the search palette's 120 ms entrance,
+ * a menu's scale-in) is audited at partial opacity otherwise, and axe then
+ * reports `color-contrast` on every text node inside it — a slow WebKit run
+ * hit that window night after night. Infinite animations (spinners) are
+ * skipped, and the wait gives up after 5 s so a stuck one cannot hang a test.
+ */
+export async function settleAnimations(page: Page): Promise<void> {
+  await page
+    .evaluate(() =>
+      Promise.race([
+        Promise.all(
+          document
+            .getAnimations()
+            .filter(
+              (animation) =>
+                animation.effect?.getComputedTiming().iterations !== Infinity,
+            )
+            .map((animation) => animation.finished.catch(() => undefined)),
+        ),
+        new Promise((resolve) => setTimeout(resolve, 5_000)),
+      ]),
+    )
+    .catch(() => undefined);
+}
+
+/**
+ * `@axe-core/playwright`'s builder, settling the docs header and any running
+ * entrance animation before every audit. Specs import this instead of the
+ * package so no audit can race the deferred header or a fade-in.
  */
 export default class AxeBuilder extends Base {
   private readonly auditedPage: Page;
@@ -56,6 +83,7 @@ export default class AxeBuilder extends Base {
 
   override async analyze(): ReturnType<Base['analyze']> {
     await settleDocsHeader(this.auditedPage);
+    await settleAnimations(this.auditedPage);
     return super.analyze();
   }
 }
