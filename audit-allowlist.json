@@ -1,4 +1,11 @@
 {
   "$comment": "Advisories with NO patched release yet. Each entry: why it cannot reach consumers, and an expiry within weeks. tools/audit-check.mjs (CI audit job) enforces it.",
-  "advisories": []
+  "advisories": [
+    {
+      "id": "GHSA-g3hv-75wg-m249",
+      "package": "minimatch",
+      "reason": "Build tooling only (nx 24.0.4 and @nx/* pin minimatch 10.2.5 exactly; @swc/cli uses ^9). The fix exists only in minimatch 11, whose API nx cannot load (overriding to 11 breaks nx migrate with \"minimatch.makeRe is not a function\"). No published @oge-ui package depends on minimatch, and the patterns it sees are workspace globs, not user input.",
+      "expires": "2026-12-06"
+    }
+  ]
 }
