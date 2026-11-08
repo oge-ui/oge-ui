@@ -68,7 +68,8 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 }
 
 function schedulerOf(fixture: ComponentFixture<Host>): OgeScheduler<Appt> {
-  return fixture.debugElement.children[0].componentInstance as OgeScheduler<Appt>;
+  return fixture.debugElement.children[0]
+    .componentInstance as OgeScheduler<Appt>;
 }
 
 describe('<oge-scheduler> editing', () => {
@@ -134,9 +135,9 @@ describe('<oge-scheduler> editing', () => {
     await settle(fixture);
     const scheduler = schedulerOf(fixture);
     const item = fixture.componentInstance.data()[0];
-    (scheduler as unknown as { deleteBySource(item: Appt): void }).deleteBySource(
-      item,
-    );
+    (
+      scheduler as unknown as { deleteBySource(item: Appt): void }
+    ).deleteBySource(item);
     await settle(fixture);
     expect(fixture.componentInstance.deleted.length).toBe(0);
     expect(

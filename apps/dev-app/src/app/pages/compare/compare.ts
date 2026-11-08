@@ -42,7 +42,14 @@ function rowOf(aspect: string): { aspect: string; cells: string[] } {
       title="OGE UI compared"
       category="Getting Started"
       categoryLink="/getting-started"
-      [chips]="['AG Grid', 'Kendo UI', 'DevExtreme', 'PrimeNG', 'MUI X', 'Syncfusion']"
+      [chips]="[
+        'AG Grid',
+        'Kendo UI',
+        'DevExtreme',
+        'PrimeNG',
+        'MUI X',
+        'Syncfusion',
+      ]"
     >
       <p>
         How OGE UI stacks up against the component libraries Angular and React

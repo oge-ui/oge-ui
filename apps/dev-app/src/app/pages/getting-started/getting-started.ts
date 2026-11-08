@@ -451,8 +451,8 @@ interface ComponentCard {
         <tr>
           <td><code>&#64;oge-ui/mcp</code></td>
           <td>
-            Model Context Protocol server for AI coding assistants (Claude
-            Code, Cursor, Copilot, Windsurf).
+            Model Context Protocol server for AI coding assistants (Claude Code,
+            Cursor, Copilot, Windsurf).
           </td>
         </tr>
         <tr>

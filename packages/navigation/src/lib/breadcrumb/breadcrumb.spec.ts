@@ -17,7 +17,10 @@ const TRAIL: readonly OgeBreadcrumbItemData[] = [
 
 @Component({
   imports: [OgeBreadcrumb],
-  template: `<oge-breadcrumb [items]="items()" (itemClick)="clicks.push($event)" />`,
+  template: `<oge-breadcrumb
+    [items]="items()"
+    (itemClick)="clicks.push($event)"
+  />`,
 })
 class BreadcrumbHost {
   readonly items = signal<readonly OgeBreadcrumbItemData[]>(TRAIL);

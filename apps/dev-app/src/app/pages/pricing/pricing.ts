@@ -249,9 +249,11 @@ function cellKind(cell: string): 'yes' | 'none' | 'pro' | 'text' {
         </p>
         <p class="app-calc-detail">
           Saves \${{ agGridSavings().toLocaleString('en-US') }}/yr compared with
-          {{ seats() }} AG Grid Enterprise {{ seats() === 1 ? 'seat' : 'seats' }}
-          (\${{ (seats() * 999).toLocaleString('en-US') }}) — and includes Pivot
-          Grid, Gantt, Scheduler, Kanban, Charts, BPMN &amp; Spreadsheet.
+          {{ seats() }} AG Grid Enterprise
+          {{ seats() === 1 ? 'seat' : 'seats' }} (\${{
+            (seats() * 999).toLocaleString('en-US')
+          }}) — and includes Pivot Grid, Gantt, Scheduler, Kanban, Charts, BPMN
+          &amp; Spreadsheet.
         </p>
         @if (storeOpen) {
           <a

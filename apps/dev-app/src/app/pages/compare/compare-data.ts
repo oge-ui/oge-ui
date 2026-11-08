@@ -646,11 +646,7 @@ export const COMPETITORS: readonly Competitor[] = [
       `You also need Gantt, BPMN 2.0, Kanban, Spreadsheet (230+ Excel formulas), Scheduler, Pivot Grid or Charts: OGE UI Pro covers all seven commercial families for $${PRO_PRICE_USD} per developer per year.`,
     ],
     rows: [
-      [
-        'Frameworks',
-        OGE_FRAMEWORKS,
-        'React only',
-      ],
+      ['Frameworks', OGE_FRAMEWORKS, 'React only'],
       [
         'Styling & runtime',
         'Plain CSS custom properties (`--oge-*`), zero CSS-in-JS runtime',
@@ -667,7 +663,11 @@ export const COMPETITORS: readonly Competitor[] = [
         'Pro $180/year ($15/mo) per developer; Premium $588/year ($49/mo) per developer',
       ],
       ['Accessibility', OGE_A11Y, VENDOR_A11Y],
-      ['Row and column virtualization', 'MIT', 'Community (row) / Pro (column)'],
+      [
+        'Row and column virtualization',
+        'MIT',
+        'Community (row) / Pro (column)',
+      ],
       ['Multi-column sorting and filtering', 'MIT', 'Pro'],
       ['Column pinning and row pinning', 'MIT', 'Pro'],
       ['Master-detail rows', 'MIT', 'Pro'],
@@ -717,7 +717,8 @@ export const COMPETITORS: readonly Competitor[] = [
     faq: [
       {
         id: 'is-oge-ui-a-free-mui-x-premium-alternative',
-        question: 'Is OGE UI a free MUI X Pro and Premium alternative for React?',
+        question:
+          'Is OGE UI a free MUI X Pro and Premium alternative for React?',
         answer:
           'For the Data Grid and Tree List, yes: multi-column sorting/filtering, column and row pinning, master-detail, row grouping, aggregation, cell range selection, Excel export and the AI assistant are all MIT-licensed in `@oge-ui/react-grid` and `@oge-ui/react-ai`.',
       },
@@ -832,7 +833,8 @@ export const COMPETITORS: readonly Competitor[] = [
     faq: [
       {
         id: 'is-oge-ui-a-free-syncfusion-alternative',
-        question: 'Can OGE UI replace Syncfusion without revenue or headcount limits?',
+        question:
+          'Can OGE UI replace Syncfusion without revenue or headcount limits?',
         answer:
           'Yes for the core suite: OGE UI’s Data Grid, Tree List, 25+ inputs, forms, buttons, tabs, layout, navigation, overlays, upload, rich-text editor and AI assistant are MIT-licensed for organizations of any revenue or headcount.',
       },

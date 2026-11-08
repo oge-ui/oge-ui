@@ -88,9 +88,7 @@ describe('<oge-scheduler> recurrence', () => {
 
   it('expands a daily series into one occurrence per visible day', () => {
     expect(chips().length).toBe(7);
-    expect(
-      host.querySelectorAll('.oge-scheduler-chip-recur').length,
-    ).toBe(7);
+    expect(host.querySelectorAll('.oge-scheduler-chip-recur').length).toBe(7);
   });
 
   it('honors COUNT and exceptions in the view window', async () => {
@@ -182,9 +180,9 @@ describe('<oge-scheduler> recurrence', () => {
     scheduler.showAppointmentPopup(fixture.componentInstance.data()[0]);
     await settle(fixture);
     // drive the editor model directly (form plumbing is covered elsewhere)
-    const dialog = fixture.debugElement
-      .query((el) => el.name === 'oge-scheduler-appointment-dialog')
-      ?.componentInstance as {
+    const dialog = fixture.debugElement.query(
+      (el) => el.name === 'oge-scheduler-appointment-dialog',
+    )?.componentInstance as {
       model: { set(value: unknown): void; (): unknown };
       save(): void;
     } & Record<string, unknown>;

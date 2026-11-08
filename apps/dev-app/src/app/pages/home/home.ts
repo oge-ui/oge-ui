@@ -1223,7 +1223,13 @@ const ORG: OrgNode[] = [
           <!-- brand column -->
           <div class="max-lg:col-span-2 max-sm:col-span-1">
             <a routerLink="/" class="flex items-center gap-2.5">
-              <img src="favicon-192.png" alt="OGE logo" width="32" height="32" class="h-8 w-8" />
+              <img
+                src="favicon-192.png"
+                alt="OGE logo"
+                width="32"
+                height="32"
+                class="h-8 w-8"
+              />
               <span class="text-[16px] font-bold tracking-tight text-[#e6e9f3]"
                 >OGE</span
               >
@@ -3558,12 +3564,10 @@ export class HomePage {
   protected copyInstall(): void {
     const pkg = this.installPkg();
     track('copy_install', { pkg, framework: this.fwService.framework() });
-    void navigator.clipboard
-      ?.writeText(`npm install ${pkg}`)
-      .then(() => {
-        this.copied.set(true);
-        setTimeout(() => this.copied.set(false), 2000);
-      });
+    void navigator.clipboard?.writeText(`npm install ${pkg}`).then(() => {
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    });
   }
 
   /**
