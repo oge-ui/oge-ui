@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.ogeui.com/</loc><lastmod>2026-11-03</lastmod></url>
-  <url><loc>https://www.ogeui.com/getting-started</loc><lastmod>2026-11-03</lastmod></url>
+  <url><loc>https://www.ogeui.com/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.ogeui.com/getting-started</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/setup</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/styling</loc><lastmod>2026-10-03</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/tokens</loc><lastmod>2026-10-10</lastmod></url>
@@ -137,7 +137,7 @@
   <url><loc>https://www.ogeui.com/components/pivot-grid/chart-integration</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid/calculated-fields</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid/api</loc><lastmod>2026-10-07</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/bpmn</loc><lastmod>2026-11-03</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/bpmn</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/bpmn/validation</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/bpmn/extending</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/bpmn/camunda</loc><lastmod>2026-10-06</lastmod></url>
@@ -175,8 +175,8 @@
   <url><loc>https://www.ogeui.com/components/scheduler/remote-data</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/license</loc><lastmod>2026-11-03</lastmod></url>
   <url><loc>https://www.ogeui.com/license/claim</loc><lastmod>2026-10-10</lastmod></url>
-  <url><loc>https://www.ogeui.com/pricing</loc><lastmod>2026-11-03</lastmod></url>
-  <url><loc>https://www.ogeui.com/compare</loc><lastmod>2026-11-03</lastmod></url>
+  <url><loc>https://www.ogeui.com/pricing</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.ogeui.com/compare</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.ogeui.com/compare/ag-grid</loc><lastmod>2026-11-03</lastmod></url>
   <url><loc>https://www.ogeui.com/compare/kendo-ui</loc><lastmod>2026-11-03</lastmod></url>
   <url><loc>https://www.ogeui.com/compare/devextreme</loc><lastmod>2026-11-03</lastmod></url>
