@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "nx": {
+    "addTypecheckTarget": false
+  },
   "compilerOptions": {
     "allowJs": true,
     "outDir": "../../dist/out-tsc",

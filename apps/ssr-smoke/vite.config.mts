@@ -3,7 +3,8 @@ import { join } from 'node:path';
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
+import { workspaceAliases } from '../../tools/vite/workspace-aliases.mjs';
 
 /**
  * Server-render smoke specs for every Angular family (ARCHITECTURE → "SSR and
@@ -15,14 +16,13 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
  * jsdom, per file.
  */
 export default defineConfig(() => ({
+  resolve: { alias: workspaceAliases() },
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/ssr-smoke',
   plugins: [
     angular({ tsconfig: join(__dirname, 'tsconfig.spec.json') }),
-    // the React specs and the React packages' sources are .tsx; the Angular
-    // plugin owns every .ts file
     react({ include: /\.tsx$/ }),
-    nxViteTsPaths(),
+    nxReadySignal(),
   ],
   test: {
     name: 'ssr-smoke',

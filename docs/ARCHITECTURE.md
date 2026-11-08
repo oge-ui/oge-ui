@@ -342,6 +342,13 @@ Then register in **four** places:
 
 There is **no test target in project.json** — `@nx/vitest` infers it from `vite.config.mts`.
 
+Every `vite.config.mts` / `vitest.config.mts` resolves workspace imports with
+`resolve: { alias: workspaceAliases() }` from `tools/vite/workspace-aliases.mts`, which turns every
+`tsconfig.base.json` path into an alias. Do not use Vite's native `resolve.tsconfigPaths`: it only
+rewrites files some tsconfig `include`s, so secondary entry points (`packages/grid/foundation/src`, …)
+fail to resolve `@oge-ui/*` under vitest. (Nx 24 removed `nxViteTsPaths` and `nxCopyAssetsPlugin`;
+ng-packagr and the React `publishAssets` plugin copy README/LICENSE/llms.txt.)
+
 ### Per-component entry points (`@oge-ui/inputs/*`, `@oge-ui/layout/*`, `@oge-ui/buttons/*`)
 
 A family whose components are used independently ships one **secondary entry point per component**

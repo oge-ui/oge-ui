@@ -4,7 +4,7 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { ogeDualTypes } from '../../../tools/react-package/dual-types.mjs';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { workspaceAliases } from '../../../tools/vite/workspace-aliases.mjs';
 
 /**
  * ng-packagr assembles the Angular packages' npm payload (README, LICENSE and
@@ -22,11 +22,11 @@ const publishAssets = (outDir: string): Plugin => ({
 });
 
 export default defineConfig(() => ({
+  resolve: { alias: workspaceAliases() },
   root: __dirname,
   cacheDir: '../../../node_modules/.vite/packages/react/grid',
   plugins: [
     react(),
-    nxViteTsPaths(),
     publishAssets('../../../dist/packages/react/grid'),
     dts({
       entryRoot: 'src',

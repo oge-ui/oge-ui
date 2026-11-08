@@ -1,11 +1,10 @@
 import { defineConfig } from 'vitest/config';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { workspaceAliases } from '../../tools/vite/workspace-aliases.mjs';
 
 export default defineConfig(() => ({
+  resolve: { alias: workspaceAliases() },
   root: __dirname,
   cacheDir: '../../node_modules/.vite/packages/charts-engine',
-  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   test: {
     name: 'charts-engine',
     watch: false,
