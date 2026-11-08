@@ -7,10 +7,11 @@ import { ogeDualTypes } from '../../../tools/react-package/dual-types.mjs';
 import { workspaceAliases } from '../../../tools/vite/workspace-aliases.mjs';
 
 /**
- * ng-packagr assembles the Angular packages' npm payload (README, LICENSE and
- * the `assets: ["llms.txt"]` entry); Vite lib mode emits only the JS/CSS/d.ts,
- * so this package has to carry its own equivalent — without it the published
- * tarball has no README and no AI-facing docs.
+ * ng-packagr assembles the Angular packages' npm payload (package.json, README,
+ * LICENSE and the `assets: ["llms.txt"]` entry); Vite lib mode emits only the
+ * JS/CSS/d.ts, so this package has to carry its own equivalent — without it the
+ * published tarball has no manifest, no README and no AI-facing docs. (Nx's
+ * removed `nxViteTsPaths` used to copy package.json as a side effect.)
  */
 const publishAssets = (outDir: string): Plugin => ({
   name: 'oge:publish-assets',
@@ -18,7 +19,7 @@ const publishAssets = (outDir: string): Plugin => ({
     // The umbrella emits only re-export chunks, so make the folder rather
     // than assume an earlier write created it.
     mkdirSync(join(__dirname, outDir), { recursive: true });
-    for (const file of ['README.md', 'LICENSE', 'llms.txt']) {
+    for (const file of ['package.json', 'README.md', 'LICENSE', 'llms.txt']) {
       copyFileSync(join(__dirname, file), join(__dirname, outDir, file));
     }
   },

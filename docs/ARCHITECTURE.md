@@ -158,8 +158,9 @@ consumers:
   directives; the Vite config re-adds it via `output.banner`. Check the dist,
   not the sources — `npx nx run @oge/source:use-client-check` does, in CI
   (see "SSR and hydration").
-- **The dist must be publishable.** `@nx/vite` generates `package.json`; the
-  config's `publishAssets` plugin copies `README.md`, `LICENSE` and `llms.txt`.
+- **The dist must be publishable.** The Vite
+  config's `publishAssets` plugin copies `package.json`, `README.md`, `LICENSE`
+  and `llms.txt` into the dist (Nx 24 no longer copies the manifest).
   Peers are exactly what the code imports (`react` — not `react-dom` unless it
   is actually imported).
 - **SSR-safe by default.** `useIsomorphicLayoutEffect` instead of bare
@@ -347,7 +348,7 @@ Every `vite.config.mts` / `vitest.config.mts` resolves workspace imports with
 `tsconfig.base.json` path into an alias. Do not use Vite's native `resolve.tsconfigPaths`: it only
 rewrites files some tsconfig `include`s, so secondary entry points (`packages/grid/foundation/src`, …)
 fail to resolve `@oge-ui/*` under vitest. (Nx 24 removed `nxViteTsPaths` and `nxCopyAssetsPlugin`;
-ng-packagr and the React `publishAssets` plugin copy README/LICENSE/llms.txt.)
+ng-packagr and the React `publishAssets` plugin copy package.json/README/LICENSE/llms.txt.)
 
 ### Per-component entry points (`@oge-ui/inputs/*`, `@oge-ui/layout/*`, `@oge-ui/buttons/*`)
 
