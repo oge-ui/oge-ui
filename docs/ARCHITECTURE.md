@@ -3349,7 +3349,9 @@ Two constraints that are easy to break:
   dist `package.json`, and the schematics engine loads factories with `require`.
 - `schematics` must run **after** the package builds (ng-packagr wipes `dist/packages/<pkg>` first),
   which is why the target `dependsOn` every package `build` and declares
-  `dist/packages/*/schematics` as its outputs so a cache hit restores them.
+  `dist/packages/*/schematics` as its outputs so a cache hit restores them. A package added to
+  `build.mjs`'s `PACKAGES` must also join that `dependsOn` list in `tools/oge-schematics/project.json`:
+  spreadsheet was missing, which only surfaced on a CI run where spreadsheet was not otherwise affected.
 
 ```sh
 npx nx run oge-schematics:typecheck   # tsc over the schematic sources
