@@ -27,6 +27,7 @@ describe('@oge-ui/pivot-engine barrel', () => {
       'pivotChipKeyIntent',
       'pivotKeyboardPointer',
       'OGE_PIVOT_PANEL_AREA_ORDER',
+      'fitPivotPopup',
       'focusPivotChip',
       'pivotIsMenuKey',
       'pivotIsRtl',

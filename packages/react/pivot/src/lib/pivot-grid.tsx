@@ -5,6 +5,7 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
@@ -26,6 +27,7 @@ import type {
 } from '@oge-ui/core';
 import {
   OgePivotGridCore,
+  fitPivotPopup,
   focusPivotChip,
   pivotHeaderCellKey,
   pivotIsMenuKey,
@@ -466,6 +468,17 @@ function OgePivotGridInner<T>(
   const collapsed = core.store.fieldPanelCollapsed();
   const menu = core.menu();
   const popup = core.filterPopup();
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+  const filterPopupRef = useRef<HTMLDivElement>(null);
+  // the inline-fixed popups open at a pointer: keep them inside the viewport
+  useLayoutEffect(() => {
+    if (menu && contextMenuRef.current)
+      fitPivotPopup(contextMenuRef.current, menu);
+  }, [menu]);
+  useLayoutEffect(() => {
+    if (popup && filterPopupRef.current)
+      fitPivotPopup(filterPopupRef.current, popup);
+  }, [popup]);
   const chooserDraft = core.chooserDraft();
   const fieldPanel = props.fieldPanel ?? true;
 
@@ -809,6 +822,7 @@ function OgePivotGridInner<T>(
 
       {menu && (
         <div
+          ref={contextMenuRef}
           className="oge-context-menu"
           role="menu"
           tabIndex={-1}
@@ -838,6 +852,7 @@ function OgePivotGridInner<T>(
 
       {popup && (
         <div
+          ref={filterPopupRef}
           className="oge-header-filter-popup oge-pivot-filter-popup"
           role="listbox"
           style={{ top: `${String(popup.y)}px`, left: `${String(popup.x)}px` }}

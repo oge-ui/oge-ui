@@ -266,6 +266,7 @@
 
 @if (menu(); as contextMenu) {
 <div
+  #contextMenu
   class="oge-context-menu"
   role="menu"
   tabindex="-1"
@@ -291,6 +292,7 @@
 } @if (filterPopup(); as popup) {
 <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
 <div
+  #filterPopup
   class="oge-header-filter-popup oge-pivot-filter-popup"
   role="listbox"
   [style.top.px]="popup.y"

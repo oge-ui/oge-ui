@@ -1,4 +1,9 @@
-import { focusPivotChip, pivotIsMenuKey, pivotIsRtl } from './pivot-dom';
+import {
+  fitPivotPopup,
+  focusPivotChip,
+  pivotIsMenuKey,
+  pivotIsRtl,
+} from './pivot-dom';
 
 function panel(): HTMLElement {
   const host = document.createElement('div');
@@ -69,5 +74,48 @@ describe('pivot DOM readers', () => {
     expect(pivotIsMenuKey({ key: 'ContextMenu' })).toBe(true);
     expect(pivotIsMenuKey({ key: 'F10', shiftKey: true })).toBe(true);
     expect(pivotIsMenuKey({ key: 'F10' })).toBe(false);
+  });
+});
+
+describe('fitPivotPopup', () => {
+  const viewport = { width: 1000, height: 600 };
+  let popup: HTMLElement;
+
+  beforeEach(() => {
+    vi.stubGlobal('innerWidth', viewport.width);
+    vi.stubGlobal('innerHeight', viewport.height);
+    popup = document.createElement('div');
+    popup.getBoundingClientRect = () =>
+      ({ width: 180, height: 200 }) as DOMRect;
+    document.body.appendChild(popup);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.body.innerHTML = '';
+    document.documentElement.removeAttribute('dir');
+  });
+
+  it('keeps a popup that fits at its anchor point', () => {
+    fitPivotPopup(popup, { x: 100, y: 50 });
+    expect(popup.style.top).toBe('50px');
+    expect(popup.style.left).toBe('100px');
+  });
+
+  it('opens above an anchor near the bottom edge so every item stays reachable', () => {
+    fitPivotPopup(popup, { x: 100, y: 550 });
+    expect(popup.style.top).toBe('350px');
+  });
+
+  it('pulls a popup opened near the inline-end edge back into the viewport', () => {
+    fitPivotPopup(popup, { x: 950, y: 50 });
+    expect(popup.style.left).toBe('770px');
+  });
+
+  it('opens towards the inline start in RTL and drops the stylesheet translate', () => {
+    document.documentElement.setAttribute('dir', 'rtl');
+    fitPivotPopup(popup, { x: 500, y: 50 });
+    expect(popup.style.left).toBe('320px');
+    expect(popup.style.translate).toBe('none');
   });
 });

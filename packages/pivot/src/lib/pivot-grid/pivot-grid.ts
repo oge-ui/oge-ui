@@ -6,6 +6,7 @@ import {
   LOCALE_ID,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   computed,
   contentChild,
   contentChildren,
@@ -31,6 +32,7 @@ import {
 } from '@oge-ui/grid/foundation';
 import {
   OgePivotGridCore,
+  fitPivotPopup,
   focusPivotChip,
   pivotIsMenuKey as isMenuKey,
   pivotIsRtl as isRtl,
@@ -304,8 +306,22 @@ export class OgePivotGrid<T = unknown> {
   protected readonly viewportRef =
     viewChild<ElementRef<HTMLElement>>('pivotViewport');
 
+  private readonly contextMenuRef =
+    viewChild<ElementRef<HTMLElement>>('contextMenu');
+  private readonly filterPopupRef =
+    viewChild<ElementRef<HTMLElement>>('filterPopup');
+
   constructor() {
     ogeCheckPivotLicense();
+    // the inline-fixed popups open at a pointer: keep them inside the viewport
+    afterRenderEffect(() => {
+      const menu = this.menu();
+      const menuEl = this.contextMenuRef()?.nativeElement;
+      if (menu && menuEl) fitPivotPopup(menuEl, menu);
+      const popup = this.filterPopup();
+      const popupEl = this.filterPopupRef()?.nativeElement;
+      if (popup && popupEl) fitPivotPopup(popupEl, popup);
+    });
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(() => this.core.dispose());
     createStatePersistence<PivotGridStateSnapshot>({

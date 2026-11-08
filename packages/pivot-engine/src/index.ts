@@ -58,7 +58,12 @@ export {
   pivotRowHeaderSegments,
   type OgePivotRowHeaderLayout,
 } from './lib/pivot-row-header';
-export { focusPivotChip, pivotIsMenuKey, pivotIsRtl } from './lib/pivot-dom';
+export {
+  fitPivotPopup,
+  focusPivotChip,
+  pivotIsMenuKey,
+  pivotIsRtl,
+} from './lib/pivot-dom';
 export {
   OGE_DEFAULT_PIVOT_MESSAGES,
   resolvePivotMessages,

@@ -1,4 +1,8 @@
-import { ogeIsRtl } from '@oge-ui/behavior';
+import {
+  ogeIsRtl,
+  ogeVisibleViewport,
+  resolvePopupPosition,
+} from '@oge-ui/behavior';
 import type { PivotArea } from '@oge-ui/core';
 
 /**
@@ -61,4 +65,39 @@ export function focusPivotChip(
           chips[0] ??
           root.querySelector<HTMLElement>('.oge-pivot-panel-toggle'));
   target?.focus();
+}
+
+/**
+ * Keeps an inline-fixed popup (the context menu, the header filter popup) on
+ * screen. Both open at a pointer — or keyboard — anchor point and are
+ * `position: fixed`, so near the bottom or the inline-end edge of the viewport
+ * their last items sat outside it, unreachable without moving the page. Call
+ * it once the popup rendered: it measures the popup, flips it above the
+ * anchor when there is more room there, clamps it into the visible viewport,
+ * and writes the resolved `top` / `left`. RTL keeps opening towards the
+ * inline start, so the stylesheet's RTL `translate` is replaced here.
+ */
+export function fitPivotPopup(
+  popup: HTMLElement,
+  anchor: { readonly x: number; readonly y: number },
+): void {
+  const viewport = ogeVisibleViewport();
+  if (!(viewport.width > 0) || !(viewport.height > 0)) return;
+  const { width, height } = popup.getBoundingClientRect();
+  const resolved = resolvePopupPosition({
+    anchor: {
+      top: anchor.y - viewport.top,
+      left: anchor.x - viewport.left,
+      width: 0,
+      height: 0,
+    },
+    panel: { width, height },
+    viewport: { width: viewport.width, height: viewport.height },
+    placement: 'bottom-start',
+    offset: 0,
+    rtl: pivotIsRtl(popup),
+  });
+  popup.style.top = `${String(resolved.top + viewport.top)}px`;
+  popup.style.left = `${String(resolved.left + viewport.left)}px`;
+  popup.style.translate = 'none';
 }
