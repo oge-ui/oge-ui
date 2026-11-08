@@ -371,8 +371,9 @@ test.describe('React charts depth', () => {
     const host = card(page, 'live-data');
     await host.scrollIntoViewIfNeeded();
     await expect(host.locator('rect.oge-chart-bar')).toHaveCount(6);
-    // let the first-render draw-in finish
-    await page.waitForTimeout(800);
+    // let the first-render draw-in finish: a click while it runs lands on the
+    // new values at once by design, so a fixed sleep raced slow WebKit runs
+    await expect(host.locator('.oge-chart-series-enter')).toHaveCount(0);
     const button = page
       .locator('app-demo-card:has(#live-data)')
       .getByRole('button', { name: 'New values' });
