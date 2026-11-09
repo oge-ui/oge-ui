@@ -230,7 +230,9 @@ export function readOgeDrawing(
         others++;
         continue;
       }
-      const undrawn = model.groups.find((g) => !OGE_DRAWN_CHART_KINDS.has(g.kind));
+      const undrawn = model.groups.find(
+        (g) => !OGE_DRAWN_CHART_KINDS.has(g.kind),
+      );
       if (undrawn || !model.groups.length) {
         undrawnCharts.push(undrawn?.kind ?? 'empty');
         continue;
