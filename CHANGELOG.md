@@ -7,6 +7,37 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Word and PowerPoint preview — new entry points of the spreadsheet family (commercial, ADR 0006)
+
+- **`@oge-ui/spreadsheet/powerpoint` and `@oge-ui/react-spreadsheet/powerpoint`**: a read-only
+  `.pptx` viewer. Theme, master, layout and table-style inheritance, preset and free-form shapes,
+  charts, SmartArt, pictures, tables, shadows, gradients and vertical text.
+- **`@oge-ui/spreadsheet/word` and `@oge-ui/react-spreadsheet/word`**: a read-only `.docx` viewer
+  that lays documents out into pages: the style chain, numbering, tables whose rows run over pages,
+  pictures, charts, text boxes, headers and footers, footnotes and endnotes, columns and floating
+  objects with text on both sides.
+- Files are read in the browser with no dependency. Macros and embedded objects never run, external
+  targets are never fetched, and whatever is not drawn is listed in the `issues` of the `loaded`
+  event. Both entries are separate, so an application that only shows workbooks does not load them.
+- Layout is measured against PowerPoint and Word. Line and page breaks depend on the fonts the
+  browser has; where a font is missing, a metric-compatible face is used when one exists.
+
+### Overlay, buttons and inputs
+
+- **Surfaces under a `transform`, `filter` or containment ancestor are no longer misplaced or
+  clipped.** Popups, menus, popovers, tooltips and modals move to the browser's top layer when such
+  an ancestor exists, and stay where they are in the DOM.
+- **`--oge-control-height-xs/sm/md/lg` tokens and an `xs` size** for buttons and input fields;
+  override the tokens with `rem` values to scale the controls with the page.
+- **Fixed:** input fields were taller than their nominal height (35 px at `md`, 32 px at `sm`), and
+  a tag box with chips reached 41 px at `md`. All of them now match the button scale, so fields are
+  a few pixels shorter than before.
+
+### Search
+
+- **Fixed:** Turkish dotless `ı` now folds with `I` and `i`, so `ılık` finds `ILIK`. Select search,
+  type-ahead and autocomplete highlighting no longer depend on the host locale.
+
 ## 1.1.6 — 2026-10-24
 
 The spreadsheet wave and Angular 21. A new commercial family — `@oge-ui/spreadsheet` and `@oge-ui/react-spreadsheet` over the dependency-free `@oge-ui/spreadsheet-engine` — shows `.xlsx` workbooks as Excel shows them, measured against Excel itself: fonts and row heights, number formats, borders and fills, charts, tables, sparklines and outline symbols, with columns and rows that resize and AutoFit as in Excel. Every Angular package now also runs on Angular 21.2, proven on every CI run by a new gate.

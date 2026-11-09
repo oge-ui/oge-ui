@@ -729,11 +729,11 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/spreadsheet/word',
-    'Word preview for Angular and React: shows .docx documents as Word does, page by page, read in the browser with no dependency.',
+    'Word preview for Angular and React: shows .docx documents as Word does, page by page, read in the browser with no server and no dependencies.',
   ],
   [
     '/components/spreadsheet/powerpoint',
-    'PowerPoint preview for Angular and React: shows .pptx presentations as PowerPoint does, read in the browser with no dependency.',
+    'PowerPoint preview for Angular and React: shows .pptx decks as PowerPoint does, with charts and SmartArt, read in the browser with no dependency.',
   ],
   [
     '/components/spreadsheet/api',
