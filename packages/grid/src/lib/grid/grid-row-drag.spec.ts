@@ -355,9 +355,8 @@ describe('OgeGrid drop settle (pointer)', () => {
     place(rows[2], 0, 40);
     pointer('pointerup', rows[0], 5, 10);
     await settle(fixture);
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await vi.waitFor(() => expect(settles()).toHaveLength(1));
     expect(el.querySelector('.oge-row[data-rowindex="0"]')).toBe(rows[2]);
-    expect(settles()).toHaveLength(1);
     expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
       'translate(0px, 40px)',
     );
@@ -376,8 +375,7 @@ describe('OgeGrid drop settle (pointer)', () => {
     pointer('pointerup', header('region'), 150, 10);
     fixture.detectChanges();
     place(header('city'), 120, 0);
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(settles()).toHaveLength(1);
+    await vi.waitFor(() => expect(settles()).toHaveLength(1));
     expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
       'translate(120px, 0px)',
     );
