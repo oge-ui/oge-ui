@@ -9,6 +9,7 @@
 import { OGE_LIVE_ANNOUNCER_ATTR } from '../a11y/live-announcer';
 import { OGE_EXIT_FADE, ogeExitGhost } from '../motion/motion';
 import { getTabbableElements } from './focus-trap';
+import { OGE_TOP_LAYER_CLASS } from './top-layer';
 
 // --- vocabulary -------------------------------------------------------------
 
@@ -199,6 +200,8 @@ export function ogeModalExitGhost(
 ): void {
   // before the entrance ran the layer is still transparent: nothing to fade
   if (!layer?.classList.contains('oge-modal-layer-ready')) return;
+  // a promoted layer escaped a containing block its ghost would land back in
+  if (layer.classList.contains(OGE_TOP_LAYER_CLASS)) return;
   if (typeof window === 'undefined') return;
   ogeExitGhost(layer, {
     parent,

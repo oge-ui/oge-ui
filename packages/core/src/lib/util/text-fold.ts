@@ -8,6 +8,10 @@
  * behavior across platforms and makes matching accent-insensitive
  * ('e' matches 'é', 'izmir' matches 'İzmir').
  *
+ * The dotless 'ı' has no decomposition, so it is mapped to 'i' explicitly:
+ * the capital 'I' folds to 'i', and without the mapping 'ılık' would never
+ * find 'ILIK'.
+ *
  * The folded string can be shorter than the input — use {@link foldTextWithMap}
  * when match positions must be projected back onto the original text.
  */
@@ -15,7 +19,8 @@ export function foldText(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/\p{M}+/gu, '');
+    .replace(/\p{M}+/gu, '')
+    .replace(/ı/g, 'i');
 }
 
 export interface FoldedText {

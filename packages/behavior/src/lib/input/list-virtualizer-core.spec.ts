@@ -36,7 +36,12 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('OGE_SELECT_OPTION_HEIGHT', () => {
   it('carries one row height per field size', () => {
-    expect(OGE_SELECT_OPTION_HEIGHT).toEqual({ sm: 28, md: 34, lg: 40 });
+    expect(OGE_SELECT_OPTION_HEIGHT).toEqual({
+      xs: 24,
+      sm: 28,
+      md: 34,
+      lg: 40,
+    });
   });
 });
 

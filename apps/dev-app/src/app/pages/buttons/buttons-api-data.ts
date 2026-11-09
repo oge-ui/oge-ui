@@ -264,7 +264,7 @@ export const OGE_BUTTON_API: ApiSections = {
         },
         {
           name: 'OgeButtonSize',
-          type: "'sm' | 'md' | 'lg'",
+          type: "'xs' | 'sm' | 'md' | 'lg'",
           description: 'Height/padding preset.',
         },
         {
@@ -833,7 +833,7 @@ const FAB_LAYER_ENTRIES = [
   },
   {
     name: 'size',
-    type: "'sm' | 'md' | 'lg'",
+    type: "'xs' | 'sm' | 'md' | 'lg'",
     default: "'md'",
     description:
       'FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px).',

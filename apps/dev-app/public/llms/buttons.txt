@@ -169,7 +169,7 @@ _Accessibility_
 | `OgeButtonSelectedChangedEvent` | `{ selected: boolean; previousValue: boolean; event: MouseEvent \| KeyboardEvent }` | Payload of `selectedChanged`: the new and the previous pressed state, and the click (or Space/Enter of a gesture) that did it. |
 | `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text'` | Fill style. |
 | `OgeButtonSeverity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Semantic color mapped to the severity tokens. |
-| `OgeButtonSize` | `'sm' \| 'md' \| 'lg'` | Height/padding preset. |
+| `OgeButtonSize` | `'xs' \| 'sm' \| 'md' \| 'lg'` | Height/padding preset. |
 | `OgeButtonIconPosition` | `'before' \| 'after'` | Icon slot placement. |
 | `OgeButtonClickEvent` | `{ event: MouseEvent \| KeyboardEvent }` | `KeyboardEvent` when produced by Space/Enter during hold/repeat. |
 | `OgeButtonActionDoneEvent` | `{ result: unknown }` | Resolved value (or sync return) of `action`. |
@@ -295,7 +295,7 @@ _Drop-down panel_
 | `extended` | `boolean` | `false` | Shows the label as text beside the icon in a pill (Material's extended FAB); the label is then the button's content, not an `aria-label`. |
 | `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Corner or edge the FAB is pinned to; `start`/`end` are logical and mirror in RTL. Falls back to the config. |
 | `positionMode` | `'fixed' \| 'absolute' \| 'static'` | `'fixed'` | `fixed` pins to the viewport with `max(offset, env(safe-area-inset-*))` on the touched edges, `absolute` pins to the nearest positioned ancestor, `static` leaves it in the flow. Fixed and absolute layers sit on `--oge-z-fab` (below windows, popups and modals). |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
+| `size` | `'xs' \| 'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
 | `severity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill colour — the button severity vocabulary; `normal` is the page surface with a hairline. |
 | `offset` | `string \| undefined` | `'16px'` | Gap to the pinned edges (any CSS length), written to the `--oge-fab-offset` knob; the safe-area inset stays its floor. |
 | `disabled` | `boolean` | `false` | Disables the FAB. |
@@ -334,7 +334,7 @@ _Drop-down panel_
 | `opened` | `boolean` | `false` | Whether the actions are shown — a two-way `model()` (`[(opened)]`). The closed menu is not rendered. |
 | `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Corner or edge the FAB is pinned to; `start`/`end` are logical and mirror in RTL. Falls back to the config. |
 | `positionMode` | `'fixed' \| 'absolute' \| 'static'` | `'fixed'` | `fixed` pins to the viewport with `max(offset, env(safe-area-inset-*))` on the touched edges, `absolute` pins to the nearest positioned ancestor, `static` leaves it in the flow. Fixed and absolute layers sit on `--oge-z-fab` (below windows, popups and modals). |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
+| `size` | `'xs' \| 'sm' \| 'md' \| 'lg'` | `'md'` | FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px). |
 | `severity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill colour — the button severity vocabulary; `normal` is the page surface with a hairline. |
 | `offset` | `string \| undefined` | `'16px'` | Gap to the pinned edges (any CSS length), written to the `--oge-fab-offset` knob; the safe-area inset stays its floor. |
 | `disabled` | `boolean` | `false` | Disables the FAB. |
@@ -1077,6 +1077,7 @@ import { OgeButton } from '@oge-ui/buttons';
   imports: [OgeButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <oge-button text="Extra small" size="xs" />
     <oge-button text="Small" size="sm" />
     <oge-button text="Medium" />
     <oge-button text="Large" size="lg" />

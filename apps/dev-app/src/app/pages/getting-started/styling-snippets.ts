@@ -5,6 +5,7 @@ export const TOKENS = `/* One override restyles every component consistently. */
   --oge-accent: #4f46e5;      /* selection, focus, primary actions      */
   --oge-radius-lg: 10px;      /* cards, popups, buttons                 */
   --oge-row-height: 32px;     /* grid & tree-list row density           */
+  --oge-control-height-md: 2.125rem; /* buttons & inputs; -xs -sm -lg too */
   --oge-input-width: 240px;   /* default editor width                   */
   --oge-header-bg: #eef2f8;   /* grid header surface                    */
 }`;

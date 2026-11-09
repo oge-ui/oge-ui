@@ -30,6 +30,7 @@ import {
   modalCssSize,
   modalPlacementClass,
   ogeModalExitGhost,
+  ogePromoteToTopLayer,
   pushOverlay,
   removeOverlay,
   resolveModalInitialFocus,
@@ -77,8 +78,9 @@ let nextModalId = 0;
  * User gestures (Escape, backdrop, ✕) and `close()` run the full pipeline —
  * cancelable `closing` event, then the async `closeGuard` — while a direct
  * `opened.set(false)` model write closes immediately (the app already
- * decided). The modal renders inline where declared: keep it away from
- * `transform`ed ancestors, which break `position: fixed`.
+ * decided). The modal renders inline where declared; under a `transform`ed
+ * or filtered ancestor, which would capture `position: fixed`, it moves to
+ * the browser's top layer.
  */
 @Component({
   selector: 'oge-modal',
@@ -421,6 +423,7 @@ export class OgeModal<R = unknown> {
   /** Removes the document listeners of an in-flight drag/resize gesture. */
   private activeGestureCleanup: (() => void) | null = null;
   private releaseInert: (() => void) | null = null;
+  private releaseTopLayer: (() => void) | null = null;
   /** The rendered layer, kept for the exit ghost of a close that renders it away first. */
   private exitLayer: HTMLElement | null = null;
 
@@ -489,6 +492,9 @@ export class OgeModal<R = unknown> {
         // One frame after mount: play the entrance transition and move focus.
         this.ready.set(true);
         this.exitLayer = this.layerRef()?.nativeElement ?? null;
+        if (this.exitLayer) {
+          this.releaseTopLayer = ogePromoteToTopLayer(this.exitLayer);
+        }
         this.applyInitialFocus();
         if (this.inertBackground()) this.applyInertBackground();
       },
@@ -540,6 +546,8 @@ export class OgeModal<R = unknown> {
     this.activeGestureCleanup = null;
     this.releaseInert?.();
     this.releaseInert = null;
+    this.releaseTopLayer?.();
+    this.releaseTopLayer = null;
     removeOverlay(this);
     if (this.holdingScrollLock) {
       unlockBodyScroll();

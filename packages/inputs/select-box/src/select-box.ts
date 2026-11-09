@@ -35,6 +35,7 @@ import {
   type OgePopupCloseReason,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
+import { foldText } from '@oge-ui/core';
 import { OgeFieldChrome } from '@oge-ui/inputs/field';
 import { OGE_INPUT_HOST, type OgeInputDropDownApi } from '@oge-ui/inputs/field';
 import { OgeInputBase } from '@oge-ui/inputs/field';
@@ -1192,13 +1193,13 @@ export class OgeSelectBox<TItem = unknown>
       this.typeBuffer = '';
       this.typeTimer = null;
     }, this.overlayConfig.typeAheadMs);
-    const lower = char.toLocaleLowerCase();
+    const lower = foldText(char);
     // repeating one character cycles through its matches instead of matching "aa"
     const cycling =
       this.typeBuffer.length > 0 &&
-      Array.from(this.typeBuffer).every((c) => c.toLocaleLowerCase() === lower);
+      Array.from(this.typeBuffer).every((c) => foldText(c) === lower);
     this.typeBuffer += char;
-    const query = cycling ? lower : this.typeBuffer.toLocaleLowerCase();
+    const query = cycling ? lower : foldText(this.typeBuffer);
     const items = this.list.visibleItems();
     if (items.length === 0) return;
     const start = Math.max(this.list.activeIndex(), 0);
@@ -1206,7 +1207,7 @@ export class OgeSelectBox<TItem = unknown>
       const index = (start + offset) % items.length;
       const item = items[index];
       if (this.isItemDisabled(item)) continue;
-      if (this.displayOf(item).toLocaleLowerCase().startsWith(query)) {
+      if (foldText(this.displayOf(item)).startsWith(query)) {
         this.list.setActive(index);
         return;
       }

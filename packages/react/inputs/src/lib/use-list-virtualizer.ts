@@ -14,7 +14,7 @@ export const DEFAULT_LIST_MAX_HEIGHT = 320;
 export interface UseListVirtualizerInput {
   /** The `virtualScroll` prop value. */
   virtualScroll: boolean | OgeVirtualScrollOptions;
-  size: 'sm' | 'md' | 'lg';
+  size: 'xs' | 'sm' | 'md' | 'lg';
   dropdownMaxHeight: number | undefined;
   itemCount: () => number;
   listEl: RefObject<HTMLDivElement | null>;

@@ -138,7 +138,7 @@ const SECTIONS = [
       <app-demo-card
         [chips]="['stylingMode ×3', 'size: sm | md | lg']"
         heading="Styling modes & sizes"
-        description="<code>outlined</code> (default), <code>filled</code> and <code>underlined</code> cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes <code>sm</code>/<code>md</code>/<code>lg</code> (28/34/42px) match the button scale exactly, so mixed button-and-field rows align without manual tweaks."
+        description="<code>outlined</code> (default), <code>filled</code> and <code>underlined</code> cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes <code>xs</code>/<code>sm</code>/<code>md</code>/<code>lg</code> (24/28/34/42px, the <code>--oge-control-height-*</code> tokens) match the button scale exactly, so mixed button-and-field rows align without manual tweaks."
         [code]="stylingSnippet"
         language="ts"
       >
@@ -146,6 +146,7 @@ const SECTIONS = [
           <oge-text-box label="Outlined" stylingMode="outlined" />
           <oge-text-box label="Filled" stylingMode="filled" />
           <oge-text-box label="Underlined" stylingMode="underlined" />
+          <oge-text-box label="Extra small" size="xs" />
           <oge-text-box label="Small" size="sm" />
           <oge-text-box label="Large" size="lg" />
         </div>

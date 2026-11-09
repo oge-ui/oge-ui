@@ -527,6 +527,7 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
     field.isEmpty && 'oge-input-empty',
     fluid && 'oge-input-fluid',
     floatUp && 'oge-input-float-up',
+    props.size === 'xs' && 'oge-input-xs',
     props.size === 'sm' && 'oge-input-sm',
     props.size === 'lg' && 'oge-input-lg',
     stylingMode === 'filled' && 'oge-input-filled',

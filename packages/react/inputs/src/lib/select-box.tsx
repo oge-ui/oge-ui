@@ -35,6 +35,7 @@ import {
   type OgeSelectSearchExpr,
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
+  foldText,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -640,15 +641,13 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       typeBuffer.current = '';
       typeTimer.current = null;
     }, overlayConfig.typeAheadMs);
-    const lower = char.toLocaleLowerCase();
+    const lower = foldText(char);
     // repeating one character cycles through its matches instead of matching "aa"
     const cycling =
       typeBuffer.current.length > 0 &&
-      Array.from(typeBuffer.current).every(
-        (c) => c.toLocaleLowerCase() === lower,
-      );
+      Array.from(typeBuffer.current).every((c) => foldText(c) === lower);
     typeBuffer.current += char;
-    const query = cycling ? lower : typeBuffer.current.toLocaleLowerCase();
+    const query = cycling ? lower : foldText(typeBuffer.current);
     const visible = list.visibleItems();
     if (visible.length === 0) return;
     const start = Math.max(list.activeIndex(), 0);
@@ -656,7 +655,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
       const index = (start + offset) % visible.length;
       const item = visible[index];
       if (list.isItemDisabled(item)) continue;
-      if (list.displayOf(item).toLocaleLowerCase().startsWith(query)) {
+      if (foldText(list.displayOf(item)).startsWith(query)) {
         list.setActive(index);
         return;
       }
@@ -833,6 +832,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     field.isEmpty && 'oge-input-empty',
     fluid && 'oge-input-fluid',
     floatUp && 'oge-input-float-up',
+    props.size === 'xs' && 'oge-input-xs',
     props.size === 'sm' && 'oge-input-sm',
     props.size === 'lg' && 'oge-input-lg',
     stylingMode === 'filled' && 'oge-input-filled',

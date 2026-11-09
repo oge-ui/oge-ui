@@ -41,6 +41,7 @@ import type {
     '[class.oge-input-fluid]': 'fluid()',
     '[style.--oge-input-width]': 'widthCss()',
     '[class.oge-input-float-up]': 'floatUp()',
+    '[class.oge-input-xs]': "size() === 'xs'",
     '[class.oge-input-sm]': "size() === 'sm'",
     '[class.oge-input-lg]': "size() === 'lg'",
     '[class.oge-input-filled]': "stylingMode() === 'filled'",

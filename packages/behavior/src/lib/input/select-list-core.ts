@@ -1,3 +1,4 @@
+import { buildSearchHighlightSegments, foldText } from '@oge-ui/core';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 import {
   resolveDisabled,
@@ -97,14 +98,39 @@ export function ogeSelectSearchFilter<TItem>(
 ): readonly TItem[] {
   const typed = (term ?? '').trim();
   if (typed.length === 0) return items;
-  const needle = typed.toLocaleLowerCase();
+  const needle = foldText(typed);
   const startsWith = mode === 'startswith';
   return items.filter((item) =>
     searchStrings(item).some((text) => {
-      const lower = text.toLocaleLowerCase();
+      const lower = foldText(text);
       return startsWith ? lower.startsWith(needle) : lower.includes(needle);
     }),
   );
+}
+
+/**
+ * Splits `text` around the first locale-independent match of `term`, for
+ * editors that emphasize the typed part of an option. `null` when `term` is
+ * blank or does not occur.
+ */
+export function ogeSelectMatchParts(
+  text: string,
+  term: string,
+): { pre: string; match: string; post: string } | null {
+  const segments = buildSearchHighlightSegments(text, term.trim());
+  if (!segments) return null;
+  const first = segments.findIndex((segment) => segment.match);
+  if (first < 0) return null;
+  const join = (from: number, to?: number): string =>
+    segments
+      .slice(from, to)
+      .map((segment) => segment.text)
+      .join('');
+  return {
+    pre: join(0, first),
+    match: segments[first].text,
+    post: join(first + 1),
+  };
 }
 
 /**

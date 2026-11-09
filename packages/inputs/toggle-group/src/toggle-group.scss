@@ -7,7 +7,7 @@
 .oge-toggle-group {
   @include tokens.core-tokens;
 
-  --oge-toggle-group-height: 34px;
+  --oge-toggle-group-height: var(--oge-control-height-md);
 
   display: inline-flex;
   flex-direction: column;
@@ -17,13 +17,13 @@
 }
 
 .oge-toggle-group-sm {
-  --oge-toggle-group-height: 28px;
+  --oge-toggle-group-height: var(--oge-control-height-sm);
 
   font-size: calc(var(--oge-font-size) - 1px);
 }
 
 .oge-toggle-group-lg {
-  --oge-toggle-group-height: 42px;
+  --oge-toggle-group-height: var(--oge-control-height-lg);
 
   font-size: calc(var(--oge-font-size) + 1px);
 }

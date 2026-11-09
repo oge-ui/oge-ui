@@ -36,7 +36,7 @@ const [notes, setNotes] = useState('');`,
   {
     title: 'Styling modes & sizes',
     description:
-      'outlined (default), filled and underlined cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes sm/md/lg (28/34/42px) match the button scale exactly.',
+      'outlined (default), filled and underlined cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes xs/sm/md/lg (24/28/34/42px, the --oge-control-height-* tokens) match the button scale exactly.',
     source: reactDemoSource({
       use: { '@oge-ui/react-inputs': ['OgeTextBox'] },
       name: 'StylingDemo',
@@ -44,6 +44,7 @@ const [notes, setNotes] = useState('');`,
   <OgeTextBox label="Outlined" stylingMode="outlined" />
   <OgeTextBox label="Filled" stylingMode="filled" />
   <OgeTextBox label="Underlined" stylingMode="underlined" />
+  <OgeTextBox label="Extra small" size="xs" />
   <OgeTextBox label="Small" size="sm" />
   <OgeTextBox label="Large" size="lg" />
 </div>`,

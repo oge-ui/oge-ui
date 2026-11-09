@@ -865,6 +865,7 @@ export const OgeMultiColumnComboBox = forwardRef(
       field.isEmpty && 'oge-input-empty',
       fluid && 'oge-input-fluid',
       floatUp && 'oge-input-float-up',
+      size === 'xs' && 'oge-input-xs',
       size === 'sm' && 'oge-input-sm',
       size === 'lg' && 'oge-input-lg',
       stylingMode === 'filled' && 'oge-input-filled',

@@ -1735,6 +1735,17 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
 
 ### Overlay, navigation, layout and buttons depth (G5a)
 
+- **Surfaces under capturing ancestors (top layer).** A `transform`, `filter`, `backdrop-filter`,
+  containment or size container on an ancestor captures `position: fixed`: viewport coordinates land
+  in the wrong place and the ancestor's `overflow` clips the surface. `ogePromoteToTopLayer`
+  (`behavior/lib/overlay/top-layer.ts`) moves such a surface to the browser's top layer
+  (`popover="manual"`) **without moving it in the DOM**, so focus traps, `contains()` checks and
+  inherited theme tokens keep working. `OgeAnchoredPanelCore` calls it on the first measure (popup,
+  menu, popover, tooltip, context menu in both layers), the modals on open. It is conditional on
+  purpose: ordinary pages keep z-index stacking. Once one surface is promoted every later one follows,
+  because anything outside the top layer paints beneath it — toasts are the known exception. Promoted
+  surfaces skip the exit ghost, which would land back in the captured parent. A new `fixed` surface
+  rendered inline must call it too and include `top-layer.reset` in its stylesheet.
 - **Popover and callout arrow.** `OgePopoverCore` (`behavior/lib/overlay/popover-core.ts`)
   owns trigger timing (hover dwell + grace into the panel), open / close reasons, focus and the
   ARIA decisions. Both layers keep the anchored panel's own closes inside the pipeline

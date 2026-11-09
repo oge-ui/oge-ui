@@ -46,7 +46,7 @@ export interface OgeControlProps<T> {
   /** Base for the generated element ids (input/label/hint/error/counter). */
   id?: string;
   /** Control height preset — 28/34/42px, the button scale. */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   /** Native `title` attribute of the control element. */
   tooltip?: string;
   tabIndex?: number;

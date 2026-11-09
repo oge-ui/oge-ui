@@ -467,6 +467,9 @@ export function flattenHeaderDateTree(nodes: readonly OgeHeaderDateNode[], colla
 export function flattenOgePanelBarItems<T extends OgePanelBarItemLike>(items: readonly T[] | undefined): OgePanelBarNode<T>[];
 
 // @public
+export function foldText(text: string): string;
+
+// @public
 export function formatCellValue(value: unknown, dataType: OgeDataType, format?: OgeColumnFormat, locale?: string): string;
 
 // @public
@@ -520,6 +523,9 @@ locale?: string): readonly OgeHeaderDateNode[];
 
 // @public
 export function groupHeaderValuesByYear(values: readonly unknown[], search: string, textOf: (value: unknown) => string, yearOf: (value: unknown) => string): readonly OgeHeaderValueGroup[];
+
+// @public
+export function hasFixedContainingBlockAncestor(element: Element): boolean;
 
 // @public
 export function headerConditionExpr(field: string, dataType: OgeDataType, filter: OgeHeaderConditionFilter): FilterExpr | null;
@@ -2575,7 +2581,7 @@ export interface OgeButtonSelectionState {
 export type OgeButtonSeverity = 'normal' | 'accent' | 'success' | 'warning' | 'danger';
 
 // @public
-export type OgeButtonSize = 'sm' | 'md' | 'lg';
+export type OgeButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 // @public
 export interface OgeButtonsMessages {
@@ -8152,7 +8158,7 @@ export type OgeInputsConfigInput = Partial<Omit<OgeInputsConfig, 'messages'>> & 
 export type OgeInputShowSuccessIcon = false | 'touched' | 'always';
 
 // @public
-export type OgeInputSize = 'sm' | 'md' | 'lg';
+export type OgeInputSize = 'xs' | 'sm' | 'md' | 'lg';
 
 // @public
 export interface OgeInputsMessages {
@@ -10265,6 +10271,9 @@ export function ogeProgressRingGeometry(options: {
 }): OgeProgressRingGeometry;
 
 // @public
+export function ogePromoteToTopLayer(element: HTMLElement): () => void;
+
+// @public
 export interface OgePromptBaseOptions<TIcon = never> extends OgeConfirmBaseOptions<TIcon> {
     defaultValue?: string;
     inputType?: OgePromptInputType;
@@ -10949,6 +10958,13 @@ export type OgeSelectListRow<TItem> = {
     item: TItem;
     index: number;
 };
+
+// @public
+export function ogeSelectMatchParts(text: string, term: string): {
+    pre: string;
+    match: string;
+    post: string;
+} | null;
 
 // @public
 export type OgeSelectSearchExpr<TItem> = string | readonly string[] | ((item: TItem) => string);

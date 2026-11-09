@@ -270,7 +270,7 @@ export const OGE_REACT_BUTTON_API: ApiSections = {
         },
         {
           name: 'OgeButtonSize',
-          type: "'sm' | 'md' | 'lg'",
+          type: "'xs' | 'sm' | 'md' | 'lg'",
           description: 'Shared with the Angular package via @oge-ui/behavior.',
         },
         {
@@ -653,7 +653,7 @@ const REACT_FAB_LAYER_ENTRIES = [
   },
   {
     name: 'size',
-    type: "'sm' | 'md' | 'lg'",
+    type: "'xs' | 'sm' | 'md' | 'lg'",
     default: "'md'",
     description:
       'FAB diameter 40 / 56 / 72 px (speed-dial actions 32 / 40 / 48 px).',

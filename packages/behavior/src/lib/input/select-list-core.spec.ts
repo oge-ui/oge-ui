@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   OgeSelectListCore,
+  ogeSelectMatchParts,
   ogeSelectSearchFilter,
   ogeSelectSearchStrings,
   type OgeReactiveCell,
@@ -359,7 +360,36 @@ describe('active-option bookkeeping', () => {
   });
 });
 
+describe('ogeSelectMatchParts', () => {
+  it('splits around the first match, keeping the original casing', () => {
+    expect(ogeSelectMatchParts('ILIK SU', 'ılık')).toEqual({
+      pre: '',
+      match: 'ILIK',
+      post: ' SU',
+    });
+    expect(ogeSelectMatchParts('Yeni İzmir', 'izmir')).toEqual({
+      pre: 'Yeni ',
+      match: 'İzmir',
+      post: '',
+    });
+  });
+
+  it('is null without a match or a term', () => {
+    expect(ogeSelectMatchParts('Ankara', 'x')).toBeNull();
+    expect(ogeSelectMatchParts('Ankara', '  ')).toBeNull();
+  });
+});
+
 describe('ogeSelectSearchFilter / ogeSelectSearchStrings', () => {
+  it('matches every Turkish I spelling on any host locale', () => {
+    const items = ['ILIK', 'Istanbul', 'İstanbul', 'Ankara'];
+    const run = (term: string) =>
+      ogeSelectSearchFilter(items, term, 'contains', (item) => [item]);
+    expect(run('ılık')).toEqual(['ILIK']);
+    expect(run('ıstanbul')).toEqual(['Istanbul', 'İstanbul']);
+    expect(run('İSTANBUL')).toEqual(['Istanbul', 'İstanbul']);
+  });
+
   const items = [
     { name: 'Berlin', code: 'BER' },
     { name: 'Bern', code: 'BRN' },

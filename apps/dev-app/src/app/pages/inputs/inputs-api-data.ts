@@ -754,7 +754,7 @@ export const OGE_INPUTS_TYPES_API: ApiSections = {
         },
         {
           name: 'OgeInputSize',
-          type: "'sm' | 'md' | 'lg'",
+          type: "'xs' | 'sm' | 'md' | 'lg'",
           description: '28 / 34 / 42px heights.',
         },
         {

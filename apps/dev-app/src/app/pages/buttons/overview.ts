@@ -107,12 +107,13 @@ const SECTIONS = [
 
       <app-demo-card
         heading="Sizes"
-        description="Three presets — <code>sm</code> (28px), <code>md</code> (34px, default) and <code>lg</code> (42px). The scale is shared with the input editors, so a button placed next to a text box of the same size lines up pixel-perfect in form rows."
-        [chips]="['size: sm | md | lg']"
+        description="Four presets — <code>xs</code> (24px), <code>sm</code> (28px), <code>md</code> (34px, default) and <code>lg</code> (42px), each read from a <code>--oge-control-height-*</code> token you can override with <code>rem</code> values. The scale is shared with the input editors, so a button placed next to a text box of the same size lines up pixel-perfect in form rows."
+        [chips]="['size: xs | sm | md | lg']"
         [code]="sizesSnippet"
         language="ts"
       >
         <div class="flex flex-wrap items-center gap-3">
+          <oge-button text="Extra small" size="xs" />
           <oge-button text="Small" size="sm" />
           <oge-button text="Medium" />
           <oge-button text="Large" size="lg" />

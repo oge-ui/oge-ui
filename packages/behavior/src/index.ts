@@ -528,6 +528,7 @@ export {
 } from './lib/tree-list/tree-list-core';
 export {
   OgeSelectListCore,
+  ogeSelectMatchParts,
   ogeSelectSearchFilter,
   ogeSelectSearchStrings,
   type OgeSelectListCoreDeps,
@@ -1028,6 +1029,10 @@ export {
   removeOverlay,
   isTopOverlay,
 } from './lib/overlay/overlay-stack';
+export {
+  hasFixedContainingBlockAncestor,
+  ogePromoteToTopLayer,
+} from './lib/overlay/top-layer';
 export { getTabbableElements, trapTabKey } from './lib/overlay/focus-trap';
 export {
   OGE_DEFAULT_OVERLAY_MESSAGES,
@@ -2199,6 +2204,7 @@ export {
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core
 export { ogeLiveConfig } from '@oge-ui/core';
+export { foldText } from '@oge-ui/core';
 
 export {
   getOgePdfDefaultFont,

@@ -6,6 +6,13 @@ describe('foldText', () => {
     expect(foldText('İZMİR')).toBe('izmir');
   });
 
+  it('folds every Turkish I to the same letter', () => {
+    const forms = ['ılık', 'ILIK', 'Ilık', 'ilik', 'İLİK'];
+    expect(new Set(forms.map(foldText))).toEqual(new Set(['ilik']));
+    expect(foldText('Istanbul')).toBe(foldText('İstanbul'));
+    expect(foldText('ıstanbul')).toBe(foldText('Istanbul'));
+  });
+
   it('is accent-insensitive', () => {
     expect(foldText('Ayşe')).toBe('ayse');
     expect(foldText('café')).toBe('cafe');

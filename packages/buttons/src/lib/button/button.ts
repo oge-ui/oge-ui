@@ -81,6 +81,7 @@ declare const ngDevMode: boolean | undefined;
     '[class.oge-button-severity-success]': "effectiveSeverity() === 'success'",
     '[class.oge-button-severity-warning]': "effectiveSeverity() === 'warning'",
     '[class.oge-button-severity-danger]': "effectiveSeverity() === 'danger'",
+    '[class.oge-button-xs]': "effectiveSize() === 'xs'",
     '[class.oge-button-sm]': "effectiveSize() === 'sm'",
     '[class.oge-button-lg]': "effectiveSize() === 'lg'",
     '[class.oge-button-icon-after]': "iconPosition() === 'after'",

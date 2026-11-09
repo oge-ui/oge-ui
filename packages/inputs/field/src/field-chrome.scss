@@ -6,6 +6,8 @@
 .oge-input {
   @include tokens.core-tokens;
 
+  --oge-input-row-height: var(--oge-control-height-md);
+
   display: inline-flex;
   flex-direction: column;
   width: var(--oge-input-width, 240px);
@@ -59,7 +61,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 34px;
+  min-height: var(--oge-control-height-md);
   padding-inline: 10px;
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
@@ -155,21 +157,51 @@
 
 // --- sizes ------------------------------------------------------------------
 
-.oge-input-sm {
+.oge-input-xs {
+  --oge-input-row-height: var(--oge-control-height-xs);
+
   font-size: calc(var(--oge-font-size) - 2px);
 
   .oge-input-container {
-    min-height: 28px;
+    min-height: var(--oge-control-height-xs);
+    padding-inline: 6px;
+    gap: 4px;
+  }
+
+  .oge-tag-strip {
+    padding-block: 0;
+  }
+
+  .oge-input-rail-btn {
+    width: 20px;
+    height: 20px;
+  }
+
+  .oge-tag {
+    padding-block: 0;
+    font-size: calc(var(--oge-font-size) - 3px);
+  }
+}
+
+.oge-input-sm {
+  --oge-input-row-height: var(--oge-control-height-sm);
+
+  font-size: calc(var(--oge-font-size) - 2px);
+
+  .oge-input-container {
+    min-height: var(--oge-control-height-sm);
     padding-inline: 8px;
     gap: 4px;
   }
 }
 
 .oge-input-lg {
+  --oge-input-row-height: var(--oge-control-height-lg);
+
   font-size: calc(var(--oge-font-size) + 2px);
 
   .oge-input-container {
-    min-height: 42px;
+    min-height: var(--oge-control-height-lg);
     padding-inline: 12px;
   }
 }
@@ -187,7 +219,9 @@
   flex: 1 1 auto;
   width: 100%;
   min-width: 0;
-  padding-block: 6px;
+  // fills the row so the whole height stays clickable, without ever growing
+  // the control past its token (the 2px are the container borders)
+  padding-block: max(0px, calc((var(--oge-input-row-height) - 2px - 1lh) / 2));
   border: 0;
   background: none;
   color: inherit;
@@ -237,6 +271,10 @@
 
 .oge-input-label-floating .oge-input-container {
   min-height: 46px;
+}
+
+.oge-input-label-floating.oge-input-xs .oge-input-container {
+  min-height: 36px;
 }
 
 .oge-input-label-floating.oge-input-sm .oge-input-container {
@@ -787,6 +825,10 @@
   overflow: hidden;
 }
 
+.oge-input-xs .oge-select-list-virtual .oge-select-option {
+  height: 24px;
+}
+
 .oge-input-sm .oge-select-list-virtual .oge-select-option {
   height: 28px;
 }
@@ -911,19 +953,25 @@
 .oge-tree-select-chips .oge-input-container,
 .oge-multi-column-combo-box-multiple .oge-input-container {
   height: auto;
-  min-height: 34px;
+  min-height: var(--oge-control-height-md);
+}
+
+.oge-tag-box.oge-input-xs .oge-input-container,
+.oge-tree-select-chips.oge-input-xs .oge-input-container,
+.oge-multi-column-combo-box-multiple.oge-input-xs .oge-input-container {
+  min-height: var(--oge-control-height-xs);
 }
 
 .oge-tag-box.oge-input-sm .oge-input-container,
 .oge-tree-select-chips.oge-input-sm .oge-input-container,
 .oge-multi-column-combo-box-multiple.oge-input-sm .oge-input-container {
-  min-height: 28px;
+  min-height: var(--oge-control-height-sm);
 }
 
 .oge-tag-box.oge-input-lg .oge-input-container,
 .oge-tree-select-chips.oge-input-lg .oge-input-container,
 .oge-multi-column-combo-box-multiple.oge-input-lg .oge-input-container {
-  min-height: 42px;
+  min-height: var(--oge-control-height-lg);
 }
 
 .oge-tag-strip {
@@ -933,6 +981,16 @@
   gap: 4px;
   width: 100%;
   padding-block: 3px;
+
+  // the chips set the row height; the search field beside them must not
+  // out-grow a plain field of the same size
+  .oge-input-native {
+    padding-block: 0;
+  }
+}
+
+.oge-input-sm .oge-tag-strip {
+  padding-block: 1px;
 }
 
 .oge-tag {

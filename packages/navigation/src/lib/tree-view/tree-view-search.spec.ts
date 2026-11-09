@@ -20,6 +20,31 @@ describe('OgeTreeView search', () => {
     expect(labels()).toEqual(['Ödemeler']);
   });
 
+  it('finds every Turkish I spelling', async () => {
+    const { fixture, host, labels } = await render((h) =>
+      h.items.set([
+        { id: 1, parentId: null, name: 'ILIK SU' },
+        { id: 2, parentId: null, name: 'Raporlar' },
+      ]),
+    );
+    host.searchValue.set('ılık');
+    await settle(fixture);
+    expect(labels()).toEqual(['ILIK SU']);
+  });
+
+  it('keeps a markup-like node name as text while highlighting', async () => {
+    const name = '<img src=x onerror=alert(1)>';
+    const { fixture, host, labels } = await render((h) =>
+      h.items.set([{ id: 1, parentId: null, name }]),
+    );
+    host.searchValue.set('img');
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('img')).toBeNull();
+    expect(el.querySelector('mark')?.textContent).toBe('img');
+    expect(labels()).toEqual([name]);
+  });
+
   it('honors startsWith and equals modes', async () => {
     const { fixture, host, labels } = await render((h) =>
       h.searchMode.set('startsWith'),

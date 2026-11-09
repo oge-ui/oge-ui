@@ -1,5 +1,8 @@
 @use '../../../../grid/src/lib/styles/tokens';
+@use '../top-layer';
 @use '../popup/callout-arrow';
+
+@include top-layer.reset;
 
 // The `<oge-popover>` element is only the declaration point; the panel is
 // moved to `document.body` while open.

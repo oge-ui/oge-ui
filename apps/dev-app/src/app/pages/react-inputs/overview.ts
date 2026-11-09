@@ -145,7 +145,7 @@ function NumberEntryDemo(): ReactNode {
     <app-demo-card
       [chips]="['stylingMode ×3', 'size: sm | md | lg']"
       heading="Styling modes & sizes"
-      description="<code>outlined</code> (default), <code>filled</code> and <code>underlined</code> cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes <code>sm</code>/<code>md</code>/<code>lg</code> (28/34/42px) match the button scale exactly, so mixed button-and-field rows align without manual tweaks."
+      description="<code>outlined</code> (default), <code>filled</code> and <code>underlined</code> cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes <code>xs</code>/<code>sm</code>/<code>md</code>/<code>lg</code> (24/28/34/42px, the <code>--oge-control-height-*</code> tokens) match the button scale exactly, so mixed button-and-field rows align without manual tweaks."
       [code]="demos[1].source"
       language="tsx"
     >
@@ -205,6 +205,11 @@ export class ReactInputsOverviewDemos {
         key: 'u',
         label: 'Underlined',
         stylingMode: 'underlined',
+      }),
+      createElement(OgeTextBox, {
+        key: 'xs',
+        label: 'Extra small',
+        size: 'xs',
       }),
       createElement(OgeTextBox, { key: 's', label: 'Small', size: 'sm' }),
       createElement(OgeTextBox, { key: 'l', label: 'Large', size: 'lg' }),

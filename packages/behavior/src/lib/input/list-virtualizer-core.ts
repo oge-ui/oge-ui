@@ -15,6 +15,7 @@ export interface OgeVirtualScrollOptions {
  * `.oge-select-list-virtual` CSS in the field chrome stylesheet.
  */
 export const OGE_SELECT_OPTION_HEIGHT: Record<OgeInputSize, number> = {
+  xs: 24,
   sm: 28,
   md: 34,
   lg: 40,

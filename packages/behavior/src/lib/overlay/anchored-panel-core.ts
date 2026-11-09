@@ -6,6 +6,7 @@ import {
 } from '../motion/motion';
 import { resolvePopupArrow } from './arrow';
 import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
+import { OGE_TOP_LAYER_CLASS, ogePromoteToTopLayer } from './top-layer';
 import {
   ogeVisibleViewport,
   popupAvailableHeight,
@@ -109,6 +110,9 @@ const PANEL_GHOSTS = 'anchored-panel';
  */
 function exitPanel(panel: HTMLElement | null): void {
   if (!panel?.isConnected || panel.style.opacity === '0') return;
+  // A ghost re-enters the parent's containing block, the very thing the
+  // promotion escaped — it would flash at the wrong place.
+  if (panel.classList.contains(OGE_TOP_LAYER_CLASS)) return;
   ogeExitGhost(panel, {
     parent: panel.parentElement,
     keyframes: OGE_EXIT_FADE,
@@ -153,6 +157,8 @@ export class OgeAnchoredPanelCore {
   private listenersActive = false;
   private resizeObserver: ResizeObserver | null = null;
   private observedPanel: HTMLElement | null = null;
+  private topLayerPanel: HTMLElement | null = null;
+  private releaseTopLayer: (() => void) | null = null;
 
   /** The identity on the shared Escape stack — see `stackToken`. */
   private readonly stackHandle: object;
@@ -190,6 +196,7 @@ export class OgeAnchoredPanelCore {
     const panelEl = this.options.panel();
     const anchorEl = this.options.anchor();
     exitPanel(panelEl);
+    this.leaveTopLayer();
     removeOverlay(this.stackHandle);
     this.removeListeners();
     this.cancelFrame();
@@ -232,6 +239,7 @@ export class OgeAnchoredPanelCore {
 
   /** Removes every listener and pending frame; call on owner destroy. */
   destroy(): void {
+    this.leaveTopLayer();
     removeOverlay(this.stackHandle);
     this.removeListeners();
     this.cancelFrame();
@@ -250,6 +258,12 @@ export class OgeAnchoredPanelCore {
     if (this.position_ === position) return;
     this.position_ = position;
     this.options.onPositionChange?.(position);
+  }
+
+  private leaveTopLayer(): void {
+    this.releaseTopLayer?.();
+    this.releaseTopLayer = null;
+    this.topLayerPanel = null;
   }
 
   private disconnectResizeObserver(): void {
@@ -275,6 +289,12 @@ export class OgeAnchoredPanelCore {
       return;
     }
     this.measureRetries = 0;
+    // Before any measuring: the promotion decides what `fixed` resolves against.
+    if (this.topLayerPanel !== panelEl) {
+      this.leaveTopLayer();
+      this.releaseTopLayer = ogePromoteToTopLayer(panelEl);
+      this.topLayerPanel = panelEl;
+    }
     // Reposition when the panel content changes size (async menu items etc.).
     if (
       this.observedPanel !== panelEl &&

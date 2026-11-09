@@ -2745,7 +2745,7 @@ _Unions & contracts_
 | `OgeControlProps<T>` | `interface` | The base every editor extends: the `value`/`defaultValue`/`onValueChange` trio, `onValueCommitted`, the state and validation props, and the focus/blur/enter/cleared callbacks. The React counterpart of the Angular `OgeInputBase` class. |
 | `OgeInputLabelMode` | `'static' \| 'floating' \| 'hidden' \| 'outside'` | `hidden` renders the label as `aria-label` only. |
 | `OgeInputStylingMode` | `'outlined' \| 'filled' \| 'underlined'` | Container fill style. |
-| `OgeInputSize` | `'sm' \| 'md' \| 'lg'` | 28 / 34 / 42px heights. |
+| `OgeInputSize` | `'xs' \| 'sm' \| 'md' \| 'lg'` | 28 / 34 / 42px heights. |
 | `OgeInputSubscriptSizing` | `'fixed' \| 'dynamic' \| 'none'` | `fixed` reserves one line so errors never shift layout. |
 | `OgeInputErrorDisplay` | `'touched' \| 'dirty' \| 'always'` | When resolved errors become visible. |
 | `OgeInputCounterMode` | `'limit' \| 'soft'` | `soft` allows typing past `maxLength` and colors the counter danger. |
@@ -5155,6 +5155,7 @@ export function StylingDemo() {
       <OgeTextBox label="Outlined" stylingMode="outlined" />
       <OgeTextBox label="Filled" stylingMode="filled" />
       <OgeTextBox label="Underlined" stylingMode="underlined" />
+      <OgeTextBox label="Extra small" size="xs" />
       <OgeTextBox label="Small" size="sm" />
       <OgeTextBox label="Large" size="lg" />
     </div>

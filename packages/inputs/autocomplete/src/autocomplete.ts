@@ -21,6 +21,7 @@ import {
   isNearScrollEnd,
   type OgeListDataSource,
   type OgeListPageLoadedEvent,
+  ogeSelectMatchParts,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -828,13 +829,7 @@ export class OgeAutocomplete<TItem = unknown>
     const term = (this.list.searchText() ?? '').trim();
     if (!term) return null;
     const text = this.displayOf(item);
-    const index = text.toLocaleLowerCase().indexOf(term.toLocaleLowerCase());
-    if (index < 0) return null;
-    return {
-      pre: text.slice(0, index),
-      match: text.slice(index, index + term.length),
-      post: text.slice(index + term.length),
-    };
+    return ogeSelectMatchParts(text, term);
   }
 
   // --- selection & commit ----------------------------------------------------

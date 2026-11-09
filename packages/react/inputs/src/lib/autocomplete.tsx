@@ -27,6 +27,7 @@ import {
   type OgeSelectItemsFn,
   type OgeSelectSearchExpr,
   type OgeSelectSearchMode,
+  ogeSelectMatchParts,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -555,13 +556,7 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
     const term = (list.searchText() ?? '').trim();
     if (!term) return null;
     const text = list.displayOf(item);
-    const index = text.toLocaleLowerCase().indexOf(term.toLocaleLowerCase());
-    if (index < 0) return null;
-    return {
-      pre: text.slice(0, index),
-      match: text.slice(index, index + term.length),
-      post: text.slice(index + term.length),
-    };
+    return ogeSelectMatchParts(text, term);
   };
 
   const floatUp = field.focused || !field.isEmpty || opened;
@@ -600,6 +595,7 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
     field.isEmpty && 'oge-input-empty',
     fluid && 'oge-input-fluid',
     floatUp && 'oge-input-float-up',
+    props.size === 'xs' && 'oge-input-xs',
     props.size === 'sm' && 'oge-input-sm',
     props.size === 'lg' && 'oge-input-lg',
     stylingMode === 'filled' && 'oge-input-filled',

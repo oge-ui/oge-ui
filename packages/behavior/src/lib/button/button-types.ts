@@ -19,7 +19,7 @@ export type OgeButtonSeverity =
   'normal' | 'accent' | 'success' | 'warning' | 'danger';
 
 /** Height/padding preset of a button. */
-export type OgeButtonSize = 'sm' | 'md' | 'lg';
+export type OgeButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 /** Where icon content renders relative to the label. */
 export type OgeButtonIconPosition = 'before' | 'after';

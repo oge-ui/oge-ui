@@ -25,6 +25,7 @@ import {
   modalCssSize,
   modalPlacementClass,
   ogeModalExitGhost,
+  ogePromoteToTopLayer,
   pushOverlay,
   removeOverlay,
   resolveModalInitialFocus,
@@ -224,6 +225,7 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
   const titleId = `oge-modal-title-${reactId.replace(/:/g, '')}`;
 
   const layerRef = useRef<HTMLDivElement>(null);
+  const releaseTopLayer = useRef<(() => void) | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // --- opened / fullScreen (controlled/uncontrolled) -----------------------
@@ -321,6 +323,8 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
     activeGestureCleanup.current = null;
     releaseInert.current?.();
     releaseInert.current = null;
+    releaseTopLayer.current?.();
+    releaseTopLayer.current = null;
     removeOverlay(overlayToken.current);
     if (holdingScrollLock.current) {
       unlockBodyScroll();
@@ -355,6 +359,7 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
       setReady(true);
       const layer = layerRef.current;
       exitLayer.current = layer ? { layer, parent: layer.parentElement } : null;
+      if (layer) releaseTopLayer.current = ogePromoteToTopLayer(layer);
       applyInitialFocus();
       if (latest.current.props.inertBackground ?? false) {
         const layer = layerRef.current;

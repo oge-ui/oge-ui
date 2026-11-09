@@ -1,0 +1,16 @@
+// A surface promoted to the browser's top layer (`ogePromoteToTopLayer`) picks
+// up the user-agent `[popover]` box. These zero-specificity resets undo it and
+// lose to every component rule, so a surface looks the same promoted or not.
+@mixin reset {
+  :where(.oge-top-layer[popover]) {
+    inset: auto;
+    width: auto;
+    height: auto;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    overflow: visible;
+  }
+}

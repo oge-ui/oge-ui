@@ -2625,7 +2625,7 @@ _Unions & contracts_
 | --- | --- | --- |
 | `OgeInputLabelMode` | `'static' \| 'floating' \| 'hidden' \| 'outside'` | `hidden` renders the label as `aria-label` only. |
 | `OgeInputStylingMode` | `'outlined' \| 'filled' \| 'underlined'` | Container fill style. |
-| `OgeInputSize` | `'sm' \| 'md' \| 'lg'` | 28 / 34 / 42px heights. |
+| `OgeInputSize` | `'xs' \| 'sm' \| 'md' \| 'lg'` | 28 / 34 / 42px heights. |
 | `OgeInputSubscriptSizing` | `'fixed' \| 'dynamic' \| 'none'` | `fixed` reserves one line so errors never shift layout. |
 | `OgeInputErrorDisplay` | `'touched' \| 'dirty' \| 'always'` | When resolved errors become visible. |
 | `OgeInputCounterMode` | `'limit' \| 'soft'` | `soft` allows typing past `maxLength` and colors the counter danger. |
@@ -5144,7 +5144,8 @@ import { OgeTextBox } from '@oge-ui/inputs';
     <oge-text-box label="Filled" stylingMode="filled" />
     <oge-text-box label="Underlined" stylingMode="underlined" />
 
-    <!-- sizes match the button scale: 28 / 34 / 42px -->
+    <!-- sizes match the button scale: 24 / 28 / 34 / 42px -->
+    <oge-text-box label="Extra small" size="xs" />
     <oge-text-box label="Small" size="sm" />
     <oge-text-box label="Large" size="lg" />
   `,

@@ -10,8 +10,8 @@ export type OgeInputLabelMode = 'static' | 'floating' | 'hidden' | 'outside';
 /** Field container fill style. */
 export type OgeInputStylingMode = 'outlined' | 'filled' | 'underlined';
 
-/** Control height preset — 28/34/42px, the button scale. */
-export type OgeInputSize = 'sm' | 'md' | 'lg';
+/** Control height preset — 24/28/34/42px (`--oge-control-height-*`), the button scale. */
+export type OgeInputSize = 'xs' | 'sm' | 'md' | 'lg';
 
 /** Subscript region behavior: reserved height, grow-as-needed, or none. */
 export type OgeInputSubscriptSizing = 'fixed' | 'dynamic' | 'none';

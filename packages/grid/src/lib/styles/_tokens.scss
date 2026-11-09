@@ -42,6 +42,12 @@
   --oge-font-mono:
     ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   --oge-row-height: 36px;
+  /* outer height of buttons and input fields, per size — override them with
+     rem values to scale the controls with the page */
+  --oge-control-height-xs: 24px;
+  --oge-control-height-sm: 28px;
+  --oge-control-height-md: 34px;
+  --oge-control-height-lg: 42px;
   // ≥ 4.5:1 on every light surface (bg, header, group, hover, selected)
   --oge-muted-color: #636b78;
   --oge-radius: 6px;

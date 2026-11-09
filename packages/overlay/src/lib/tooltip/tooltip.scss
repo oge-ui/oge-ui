@@ -1,5 +1,8 @@
 @use '../../../../grid/src/lib/styles/tokens';
+@use '../top-layer';
 @use '../popup/callout-arrow';
+
+@include top-layer.reset;
 
 .oge-tooltip {
   @include tokens.core-tokens;

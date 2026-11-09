@@ -37,11 +37,12 @@ export const BUTTON_DEMOS: readonly ReactDemo[] = [
   {
     title: 'Sizes',
     description:
-      'Three presets — sm (28px), md (34px, default) and lg (42px). The scale is shared with the input editors, so a button placed next to a text box of the same size lines up pixel-perfect in form rows.',
+      'Four presets — xs (24px), sm (28px), md (34px, default) and lg (42px), each read from a --oge-control-height-* token you can override with rem values. The scale is shared with the input editors, so a button placed next to a text box of the same size lines up pixel-perfect in form rows.',
     source: reactDemoSource({
       use: { '@oge-ui/react-buttons': ['OgeButton'] },
       name: 'SizesDemo',
       jsx: `<div className="demo-row">
+  <OgeButton text="Extra small" size="xs" />
   <OgeButton text="Small" size="sm" />
   <OgeButton text="Medium" />
   <OgeButton text="Large" size="lg" />

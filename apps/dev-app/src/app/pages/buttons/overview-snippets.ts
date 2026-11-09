@@ -12,7 +12,8 @@ export const VARIANTS_SNIPPET = demoSource({
 
 export const SIZES_SNIPPET = demoSource({
   use: { '@oge-ui/buttons': ['OgeButton'] },
-  template: `<oge-button text="Small" size="sm" />
+  template: `<oge-button text="Extra small" size="xs" />
+<oge-button text="Small" size="sm" />
 <oge-button text="Medium" />
 <oge-button text="Large" size="lg" />`,
 });

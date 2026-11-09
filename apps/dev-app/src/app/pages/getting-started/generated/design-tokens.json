@@ -382,6 +382,51 @@
       ]
     },
     {
+      "n": "--oge-control-height-xs",
+      "c": "spacing",
+      "d": "outer height of buttons and input fields, per size — override them with rem values to scale the controls with the page",
+      "v": {
+        "light": "24px"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-control-height-sm",
+      "c": "spacing",
+      "v": {
+        "light": "28px"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-control-height-md",
+      "c": "spacing",
+      "v": {
+        "light": "34px"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/inputs"
+      ]
+    },
+    {
+      "n": "--oge-control-height-lg",
+      "c": "spacing",
+      "v": {
+        "light": "42px"
+      },
+      "u": [
+        "@oge-ui/buttons",
+        "@oge-ui/inputs"
+      ]
+    },
+    {
       "n": "--oge-muted-color",
       "c": "color",
       "d": "≥ 4.5:1 on every light surface (bg, header, group, hover, selected)",

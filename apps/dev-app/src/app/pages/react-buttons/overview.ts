@@ -155,7 +155,7 @@ function ToggleDemo(): ReactNode {
 
     <app-demo-card
       heading="Sizes"
-      description="Three presets — <code>sm</code> (28px), <code>md</code> (34px, default) and <code>lg</code> (42px). The scale is shared with the input editors, so a button placed next to a text box of the same size lines up pixel-perfect in form rows."
+      description="Four presets — <code>xs</code> (24px), <code>sm</code> (28px), <code>md</code> (34px, default) and <code>lg</code> (42px), each read from a <code>--oge-control-height-*</code> token you can override with <code>rem</code> values. The scale is shared with the input editors, so a button placed next to a text box of the same size lines up pixel-perfect in form rows."
       [chips]="['size: sm | md | lg']"
       [code]="demos[1].source"
       language="tsx"
@@ -249,6 +249,7 @@ export class ReactButtonsDemos {
 
   protected readonly sizes = () =>
     row(
+      createElement(OgeButton, { key: 'xs', text: 'Extra small', size: 'xs' }),
       createElement(OgeButton, { key: 's', text: 'Small', size: 'sm' }),
       createElement(OgeButton, { key: 'm', text: 'Medium' }),
       createElement(OgeButton, { key: 'l', text: 'Large', size: 'lg' }),

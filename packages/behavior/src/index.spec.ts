@@ -442,6 +442,7 @@ describe('the @oge-ui/behavior barrel', () => {
   it('re-exports the shared engine tables the two layers must agree on', () => {
     expect(behavior.OGE_DEFAULT_OVERLAY_TIMINGS.menuHideDelayMs).toBe(300);
     expect(behavior.OGE_SELECT_OPTION_HEIGHT).toEqual({
+      xs: 24,
       sm: 28,
       md: 34,
       lg: 40,

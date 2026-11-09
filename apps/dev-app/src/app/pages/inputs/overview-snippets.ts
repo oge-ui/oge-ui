@@ -19,7 +19,8 @@ export const STYLING_SNIPPET = demoSource({
 <oge-text-box label="Filled" stylingMode="filled" />
 <oge-text-box label="Underlined" stylingMode="underlined" />
 
-<!-- sizes match the button scale: 28 / 34 / 42px -->
+<!-- sizes match the button scale: 24 / 28 / 34 / 42px -->
+<oge-text-box label="Extra small" size="xs" />
 <oge-text-box label="Small" size="sm" />
 <oge-text-box label="Large" size="lg" />`,
 });

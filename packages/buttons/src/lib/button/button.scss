@@ -54,7 +54,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 34px;
+  min-height: var(--oge-control-height-md);
   padding: 6px 16px;
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
@@ -169,11 +169,21 @@
 
 // --- sizes ------------------------------------------------------------------
 
+.oge-button-xs {
+  font-size: calc(var(--oge-font-size) - 2px);
+
+  .oge-button-native {
+    min-height: var(--oge-control-height-xs);
+    padding: 1px 8px;
+    gap: 4px;
+  }
+}
+
 .oge-button-sm {
   font-size: calc(var(--oge-font-size) - 2px);
 
   .oge-button-native {
-    min-height: 28px;
+    min-height: var(--oge-control-height-sm);
     padding: 3px 10px;
     gap: 6px;
   }
@@ -183,7 +193,7 @@
   font-size: calc(var(--oge-font-size) + 2px);
 
   .oge-button-native {
-    min-height: 42px;
+    min-height: var(--oge-control-height-lg);
     padding: 10px 22px;
   }
 }

@@ -407,6 +407,7 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       effectiveStylingMode === 'text' && 'oge-button-text-mode',
       effectiveSeverity !== 'normal' &&
         `oge-button-severity-${effectiveSeverity}`,
+      effectiveSize === 'xs' && 'oge-button-xs',
       effectiveSize === 'sm' && 'oge-button-sm',
       effectiveSize === 'lg' && 'oge-button-lg',
       iconPosition === 'after' && 'oge-button-icon-after',
