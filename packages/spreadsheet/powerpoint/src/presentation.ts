@@ -54,6 +54,7 @@ let nextId = 0;
       <defs>
         @for (gradient of render().gradients; track gradient.id) {
           <linearGradient
+            color-interpolation="linearRGB"
             [attr.id]="gradient.id"
             [attr.gradientTransform]="gradient.transform"
           >
@@ -65,6 +66,26 @@ let nextId = 0;
               />
             }
           </linearGradient>
+        }
+        @for (pattern of render().patterns; track pattern.id) {
+          <pattern
+            patternUnits="userSpaceOnUse"
+            [attr.id]="pattern.id"
+            [attr.width]="pattern.size"
+            [attr.height]="pattern.size"
+          >
+            <rect
+              [attr.width]="pattern.size"
+              [attr.height]="pattern.size"
+              [attr.fill]="pattern.background"
+              [attr.fill-opacity]="pattern.backgroundOpacity"
+            />
+            <path
+              [attr.d]="pattern.d"
+              [attr.fill]="pattern.foreground"
+              [attr.fill-opacity]="pattern.foregroundOpacity"
+            />
+          </pattern>
         }
       </defs>
       @for (node of render().nodes; track $index) {
@@ -79,6 +100,7 @@ let nextId = 0;
             [attr.stroke-width]="node.strokeWidth"
             [attr.stroke-dasharray]="node.dash"
             [attr.stroke-linecap]="node.cap"
+            [style.filter]="node.filter"
           />
         } @else if (node.kind === 'image') {
           <svg
@@ -101,6 +123,7 @@ let nextId = 0;
         } @else if (node.link) {
           <a [attr.href]="node.link" target="_blank" rel="noopener noreferrer">
             <text
+              [attr.text-anchor]="node.anchor"
               [attr.x]="node.x"
               [attr.y]="node.y"
               [attr.transform]="node.transform || null"
@@ -116,6 +139,7 @@ let nextId = 0;
           </a>
         } @else {
           <text
+            [attr.text-anchor]="node.anchor"
             [attr.x]="node.x"
             [attr.y]="node.y"
             [attr.transform]="node.transform || null"

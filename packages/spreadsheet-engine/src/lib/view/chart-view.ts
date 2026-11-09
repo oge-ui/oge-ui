@@ -92,6 +92,11 @@ export interface OgeChartViewInput {
   readonly locale?: OgeFormatLocale;
   /** Measures the tick labels and legend entries the layout spaces. Default: an estimate. */
   readonly measurer?: OgeTextMeasurer;
+  /**
+   * How PowerPoint and Word pick a value axis's step, which is not Excel's:
+   * at most 10 intervals, gridlines at least 1.28 × the tick font apart.
+   */
+  readonly presentationScale?: boolean;
 }
 
 /**
@@ -294,6 +299,7 @@ export function ogeChartScale(
     readonly max?: number;
     readonly majorUnit?: number;
   } = {},
+  limits?: { readonly gap: number; readonly maxIntervals: number },
 ): OgeChartScale {
   let lo = Math.min(dataMin, dataMax);
   let hi = Math.max(dataMin, dataMax);
@@ -316,8 +322,11 @@ export function ogeChartScale(
   if (fixed.max !== undefined) end = fixed.max;
   else if (hi <= 0) end = span / -lo > 1 / 6 ? 0 : hi + span / 2;
   else end = hi + span * 0.05;
-  const gap = vertical ? 16 : 64;
-  const intervals = Math.max(1, Math.floor(Math.max(1, length) / gap));
+  const gap = limits?.gap ?? (vertical ? 16 : 64);
+  const intervals = Math.min(
+    limits?.maxIntervals ?? Infinity,
+    Math.max(1, Math.floor(Math.max(1, length) / gap)),
+  );
   const bounds = (unit: number) => {
     const snap = (value: number) => Math.round((value / unit) * 1e9) / 1e9;
     return {
@@ -1345,7 +1354,16 @@ export function ogeChartView(
         ...(axis?.max !== undefined ? { max: axis.max } : {}),
         ...(axis?.majorUnit !== undefined ? { majorUnit: axis.majorUnit } : {}),
       };
-      const scale = ogeChartScale(range[0], range[1], length, vertical, fixed);
+      const scale = ogeChartScale(
+        range[0],
+        range[1],
+        length,
+        vertical,
+        fixed,
+        input.presentationScale
+          ? { gap: labelFaceOf(axis).px * 1.28, maxIntervals: 10 }
+          : undefined,
+      );
       const ticks: number[] = [];
       const steps = Math.round((scale.max - scale.min) / scale.majorUnit);
       for (let i = 0; i <= Math.min(steps, 1000); i++)

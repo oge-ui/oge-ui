@@ -4,6 +4,11 @@
  * not listed here is reported by the reader and drawn as its bounding box.
  */
 
+import {
+  OGE_MORE_SLIDE_PRESETS,
+  OGE_OPEN_SLIDE_PRESETS,
+} from './geometry-more';
+
 type Adjust = Readonly<Record<string, number>>;
 
 /** Text rectangle of a preset, as insets from the box. */
@@ -30,6 +35,7 @@ const adj = (values: Adjust, name: string, fallback: number): number =>
 const PRESETS: Readonly<
   Record<string, (w: number, h: number, a: Adjust) => string>
 > = {
+  ...OGE_MORE_SLIDE_PRESETS,
   rect: (w, h) =>
     polygon([
       [0, 0],
@@ -254,7 +260,11 @@ export function ogeSlideGeometryPath(
 
 /** Whether a preset is open (a line): it has no fill. */
 export function ogeIsSlideGeometryOpen(name: string): boolean {
-  return name === 'line' || name === 'straightConnector1';
+  return (
+    name === 'line' ||
+    name === 'straightConnector1' ||
+    OGE_OPEN_SLIDE_PRESETS.has(name)
+  );
 }
 
 /** Where a preset's text goes, as insets from the box, in points. */

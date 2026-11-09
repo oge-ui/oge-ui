@@ -31,7 +31,7 @@ const CHART_URI = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const CHARTEX_URI = 'http://schemas.microsoft.com/office/drawing/2014/chartex';
 
 /** Chart kinds the viewer draws; the others are counted as not shown. */
-const DRAWN = new Set([
+export const OGE_DRAWN_CHART_KINDS: ReadonlySet<string> = new Set([
   'bar',
   'line',
   'area',
@@ -230,7 +230,7 @@ export function readOgeDrawing(
         others++;
         continue;
       }
-      const undrawn = model.groups.find((g) => !DRAWN.has(g.kind));
+      const undrawn = model.groups.find((g) => !OGE_DRAWN_CHART_KINDS.has(g.kind));
       if (undrawn || !model.groups.length) {
         undrawnCharts.push(undrawn?.kind ?? 'empty');
         continue;

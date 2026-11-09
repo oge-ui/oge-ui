@@ -5,11 +5,14 @@
  * `viewBox` to scale it.
  */
 import { sanitizeUrl } from '@oge-ui/behavior';
+import type { OgeTextMeasurer } from '../paint/cell-text';
+import { ogeChartView } from '../view/chart-view';
 import {
   ogeIsSlideGeometryOpen,
   ogeSlideGeometryPath,
   ogeSlideGeometryTextInsets,
 } from './geometry';
+import { ogeSlideGeometryFaces } from './geometry-more';
 import type {
   OgePresentation,
   OgeSlide,
@@ -17,8 +20,12 @@ import type {
   OgeSlideElement,
   OgeSlideFill,
   OgeSlideFrame,
+  OgeSlideChart,
+  OgeSlideCustomPath,
   OgeSlideLine,
   OgeSlidePictureRef,
+  OgeSlideShadow,
+  OgeSlideShape,
   OgeSlideTable,
   OgeSlideTextBody,
 } from './model';
@@ -50,6 +57,19 @@ export interface OgeSlideRenderGradient {
   }[];
 }
 
+/** A repeating pattern to declare in `<defs>`. */
+export interface OgeSlideRenderPattern {
+  readonly id: string;
+  /** The tile's side, points. */
+  readonly size: number;
+  readonly background: string;
+  readonly backgroundOpacity: number;
+  readonly foreground: string;
+  readonly foregroundOpacity: number;
+  /** Filled inside the tile. */
+  readonly d: string;
+}
+
 /** An outline or a filled area. */
 export interface OgeSlideRenderPath {
   readonly kind: 'path';
@@ -61,6 +81,8 @@ export interface OgeSlideRenderPath {
   /** `stroke-dasharray`, or `null` for a solid line. */
   readonly dash: string | null;
   readonly cap: 'butt' | 'round' | 'square';
+  /** CSS `filter` (an outer shadow), or `null`. */
+  readonly filter: string | null;
 }
 
 /** A picture: an `<svg>` window onto a unit-square `<image>`. */
@@ -88,6 +110,8 @@ export interface OgeSlideRenderText {
   readonly fontSize: number;
   readonly fontWeight: 'normal' | 'bold';
   readonly fontStyle: 'normal' | 'italic';
+  readonly anchor: 'start' | 'middle' | 'end';
+  readonly direction: 'ltr' | 'rtl';
   readonly fill: OgeSlidePaint;
   readonly decoration: string | null;
   /** Sanitized; `null` when the file's target is not a safe link. */
@@ -105,6 +129,7 @@ export interface OgeSlideRender {
   /** Points. */
   readonly height: number;
   readonly gradients: readonly OgeSlideRenderGradient[];
+  readonly patterns: readonly OgeSlideRenderPattern[];
   readonly nodes: readonly OgeSlideRenderNode[];
 }
 
@@ -112,6 +137,93 @@ export interface OgeSlideRender {
 export interface OgeSlideRenderOptions {
   /** Prefix of gradient ids; unique per viewer on the page. */
   readonly idPrefix: string;
+}
+
+/** The tile of a pattern preset, in points (PowerPoint's 8 px tiles). */
+export function ogeSlidePatternTile(preset: string): {
+  size: number;
+  d: string;
+} {
+  const s = 6;
+  // PowerPoint's diagonals repeat every 4 px of its picture, not every 8
+  const fine = 3;
+  const diagonal = (width: number, down: boolean): string => {
+    const s = fine;
+    const w = width;
+    return down
+      ? `M0 0 L${w} 0 L${s} ${s - w} L${s} ${s} L${s - w} ${s} L0 ${w} Z`
+      : `M${s - w} 0 L${s} 0 L${s} ${w} L${w} ${s} L0 ${s} L0 ${s - w} Z`;
+  };
+  const bars = (thick: number, horizontal: boolean): string =>
+    horizontal ? `M0 0 H${s} V${thick} H0 Z` : `M0 0 V${s} H${thick} V0 Z`;
+  const dots = (percent: number): string => {
+    const side = round(s * Math.sqrt(percent / 100));
+    return `M0 0 H${side} V${side} H0 Z`;
+  };
+  const percent = /^pct(\d+)$/.exec(preset);
+  if (percent) return { size: s, d: dots(Number(percent[1])) };
+  const named: Readonly<Record<string, string>> = {
+    ltDnDiag: diagonal(0.75, true),
+    dkDnDiag: diagonal(1.5, true),
+    wdDnDiag: diagonal(2.25, true),
+    ltUpDiag: diagonal(0.75, false),
+    dkUpDiag: diagonal(1.5, false),
+    wdUpDiag: diagonal(2.25, false),
+    ltHorz: bars(0.75, true),
+    narHorz: bars(0.75, true),
+    dkHorz: bars(1.5, true),
+    horz: bars(0.75, true),
+    ltVert: bars(0.75, false),
+    narVert: bars(0.75, false),
+    dkVert: bars(1.5, false),
+    vert: bars(0.75, false),
+    cross: `${bars(0.75, true)} ${bars(0.75, false)}`,
+    smGrid: `${bars(0.75, true)} ${bars(0.75, false)}`,
+    lgGrid: `${bars(0.75, true)} ${bars(0.75, false)}`,
+  };
+  return { size: s, d: named[preset] ?? dots(50) };
+}
+
+/** A custom outline scaled from its own coordinates into the shape's box. */
+export function ogeSlideCustomPath(
+  path: OgeSlideCustomPath,
+  width: number,
+  height: number,
+): string {
+  const sx = path.width > 0 ? width / path.width : 1 / EMU_PER_POINT;
+  const sy = path.height > 0 ? height / path.height : 1 / EMU_PER_POINT;
+  let x = 0;
+  let y = 0;
+  const out: string[] = [];
+  for (const command of path.commands) {
+    if (command.op === 'Z') {
+      out.push('Z');
+    } else if (command.op === 'M' || command.op === 'L') {
+      x = command.x;
+      y = command.y;
+      out.push(`${command.op}${round(x * sx)} ${round(y * sy)}`);
+    } else if (command.op === 'A') {
+      const start = (command.start * Math.PI) / 180;
+      const end = ((command.start + command.sweep) * Math.PI) / 180;
+      const cx = x - command.rx * Math.cos(start);
+      const cy = y - command.ry * Math.sin(start);
+      x = cx + command.rx * Math.cos(end);
+      y = cy + command.ry * Math.sin(end);
+      const large = Math.abs(command.sweep) > 180 ? 1 : 0;
+      const sweep = command.sweep >= 0 ? 1 : 0;
+      out.push(
+        `A${round(command.rx * sx)} ${round(command.ry * sy)} 0 ${large} ${sweep} ${round(x * sx)} ${round(y * sy)}`,
+      );
+    } else if (command.op === 'C' || command.op === 'Q') {
+      const scaled = command.points.map((value, i) =>
+        round(value * (i % 2 ? sy : sx)),
+      );
+      x = command.points[command.points.length - 2];
+      y = command.points[command.points.length - 1];
+      out.push(`${command.op}${scaled.join(' ')}`);
+    }
+  }
+  return out.join(' ');
 }
 
 /** Faces with the same metrics, for machines without Microsoft's fonts. */
@@ -166,6 +278,7 @@ function safeLink(target: string | undefined): string | null {
 
 class SlideRenderer {
   readonly gradients: OgeSlideRenderGradient[] = [];
+  readonly patterns: OgeSlideRenderPattern[] = [];
   readonly nodes: OgeSlideRenderNode[] = [];
 
   constructor(
@@ -185,6 +298,20 @@ class SlideRenderer {
           color: `#${stop.color.rgb}`,
           opacity: stop.color.alpha,
         })),
+      });
+      return { paint: `url(#${id})`, opacity: 1 };
+    }
+    if (fill.kind === 'pattern') {
+      const id = `${this.idPrefix}-p${this.patterns.length}`;
+      const tile = ogeSlidePatternTile(fill.preset);
+      this.patterns.push({
+        id,
+        size: tile.size,
+        background: `#${fill.background.rgb}`,
+        backgroundOpacity: fill.background.alpha,
+        foreground: `#${fill.foreground.rgb}`,
+        foregroundOpacity: fill.foreground.alpha,
+        d: tile.d,
       });
       return { paint: `url(#${id})`, opacity: 1 };
     }
@@ -226,6 +353,17 @@ class SlideRenderer {
     return parts.join(' ');
   }
 
+  /** A shape's CSS shadow, in the slide's points. */
+  private filterOf(shadow: OgeSlideShadow | null | undefined): string | null {
+    if (!shadow) return null;
+    const radians = (shadow.direction * Math.PI) / 180;
+    const dx = round(pt(shadow.distance) * Math.cos(radians));
+    const dy = round(pt(shadow.distance) * Math.sin(radians));
+    const { rgb, alpha } = shadow.color;
+    const channel = (at: number): number => parseInt(rgb.slice(at, at + 2), 16);
+    return `drop-shadow(${dx}px ${dy}px ${round(pt(shadow.blur) / 4)}px rgba(${channel(0)}, ${channel(2)}, ${channel(4)}, ${alpha}))`;
+  }
+
   /** Text is not mirrored by a flip; a vertical flip turns it over. */
   private textTransform(frame: OgeSlideFrame): string {
     const base = this.rotation(frame);
@@ -248,6 +386,7 @@ class SlideRenderer {
       strokeWidth: 0,
       dash: null,
       cap: 'butt',
+      filter: null,
     });
   }
 
@@ -279,6 +418,10 @@ class SlideRenderer {
       this.table(element);
       return;
     }
+    if (element.kind === 'chart') {
+      this.chart(element);
+      return;
+    }
     const width = pt(element.frame.width);
     const height = pt(element.frame.height);
     if (element.kind === 'picture') {
@@ -298,6 +441,7 @@ class SlideRenderer {
           transform: this.shapeTransform(element.frame),
           fill: null,
           ...this.strokeOf(element.line),
+          filter: null,
         });
       }
       return;
@@ -315,7 +459,9 @@ class SlideRenderer {
     }
     const open = ogeIsSlideGeometryOpen(element.geometry);
     const fill = open ? null : this.paint(element.fill);
-    if (fill || element.line) {
+    if (element.customPaths?.length) {
+      this.customShape(element, width, height, fill);
+    } else if (fill || element.line) {
       this.nodes.push({
         kind: 'path',
         d: ogeSlideGeometryPath(
@@ -327,7 +473,28 @@ class SlideRenderer {
         transform: this.shapeTransform(element.frame),
         fill,
         ...this.strokeOf(element.line),
+        filter: this.filterOf(element.shadow),
       });
+      if (fill) {
+        for (const face of ogeSlideGeometryFaces(
+          element.geometry,
+          width,
+          height,
+          element.adjust,
+        )) {
+          this.nodes.push({
+            kind: 'path',
+            d: face.d,
+            transform: this.shapeTransform(element.frame),
+            fill: {
+              paint: face.shade > 0 ? '#ffffff' : '#000000',
+              opacity: Math.abs(face.shade),
+            },
+            ...this.strokeOf(element.line),
+            filter: null,
+          });
+        }
+      }
     }
     if (element.text) {
       const insets = ogeSlideGeometryTextInsets(
@@ -336,18 +503,150 @@ class SlideRenderer {
         height,
         element.adjust,
       );
+      const own = element.textFrame;
+      const box = own
+        ? {
+            x: pt(own.x - element.frame.x),
+            y: pt(own.y - element.frame.y),
+            width: pt(own.width),
+            height: pt(own.height),
+          }
+        : {
+            x: insets.left,
+            y: insets.top,
+            width: width - insets.left - insets.right,
+            height: height - insets.top - insets.bottom,
+          };
       this.text(
         element.text,
-        insets.left,
-        insets.top,
-        width - insets.left - insets.right,
-        height - insets.top - insets.bottom,
+        box.x,
+        box.y,
+        box.width,
+        box.height,
         this.textTransform(element.frame),
       );
     }
   }
 
+  private customShape(
+    element: OgeSlideShape,
+    width: number,
+    height: number,
+    fill: OgeSlidePaint | null,
+  ): void {
+    const transform = this.shapeTransform(element.frame);
+    const filter = this.filterOf(element.shadow);
+    for (const path of element.customPaths ?? []) {
+      this.nodes.push({
+        kind: 'path',
+        d: ogeSlideCustomPath(path, width, height),
+        transform,
+        fill: path.filled ? fill : null,
+        ...(path.stroked ? this.strokeOf(element.line) : this.strokeOf(null)),
+        filter,
+      });
+    }
+  }
+
+  /** The workbook viewer's chart layout, in pixels, scaled onto the slide. */
+  private chart(element: OgeSlideChart): void {
+    const width = (pt(element.frame.width) * 4) / 3;
+    const height = (pt(element.frame.height) * 4) / 3;
+    const measure: OgeTextMeasurer = {
+      measure: (text, font) =>
+        this.measurer.width(text, {
+          family: font.name,
+          size: font.sizePx,
+          bold: font.bold,
+          italic: font.italic,
+        }),
+    };
+    const view = ogeChartView({
+      chart: element.chart,
+      width: Math.round(width),
+      height: Math.round(height),
+      zoom: 100,
+      theme: element.theme,
+      bodyFont: element.bodyFont,
+      measurer: measure,
+      presentationScale: true,
+    });
+    const base = `${this.rotation(element.frame)} scale(0.75)`;
+    for (const mark of view.paths) {
+      this.nodes.push({
+        kind: 'path',
+        d: mark.d,
+        transform: base,
+        fill: mark.fill
+          ? { paint: mark.fill, opacity: mark.fillOpacity ?? 1 }
+          : null,
+        stroke: mark.stroke ? { paint: mark.stroke, opacity: 1 } : null,
+        strokeWidth: mark.strokeWidth ?? 0,
+        dash: mark.dash ?? null,
+        cap: mark.round ? 'round' : 'butt',
+        filter: null,
+      });
+    }
+    for (const mark of view.texts) {
+      const style = mark.style;
+      this.nodes.push({
+        kind: 'text',
+        text: mark.text,
+        x: mark.x,
+        y: mark.y,
+        transform: mark.transform ? `${base} ${mark.transform}` : base,
+        fontFamily: style['fontFamily'] ?? 'sans-serif',
+        fontSize: parseFloat(style['fontSize'] ?? '12'),
+        fontWeight:
+          style['fontWeight'] === 'bold' || style['fontWeight'] === '700'
+            ? 'bold'
+            : 'normal',
+        fontStyle: style['fontStyle'] === 'italic' ? 'italic' : 'normal',
+        anchor: mark.anchor,
+        direction: 'ltr',
+        fill: {
+          paint: style['fill'] ?? style['color'] ?? '#000000',
+          opacity: 1,
+        },
+        decoration: null,
+        link: null,
+      });
+    }
+  }
+
   private text(
+    body: OgeSlideTextBody,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    transform: string,
+  ): void {
+    // Vertical text lays out across the box and is then turned as a whole.
+    if (body.vertical !== 'horz') {
+      const { left, top, right, bottom } = body.insets;
+      // The insets stay on their physical edges while the text turns.
+      const across: OgeSlideTextBody =
+        body.vertical === 'vert'
+          ? {
+              ...body,
+              insets: { left: top, top: right, right: bottom, bottom: left },
+            }
+          : {
+              ...body,
+              insets: { left: bottom, top: left, right: top, bottom: right },
+            };
+      const turned =
+        body.vertical === 'vert'
+          ? `${transform} translate(${round(x + width)} ${round(y)}) rotate(90)`
+          : `${transform} translate(${round(x)} ${round(y + height)}) rotate(-90)`;
+      this.lines(across, 0, 0, height, width, turned);
+      return;
+    }
+    this.lines(body, x, y, width, height, transform);
+  }
+
+  private lines(
     body: OgeSlideTextBody,
     x: number,
     y: number,
@@ -387,6 +686,8 @@ class SlideRenderer {
       fontSize: round(raised ? font.size * (2 / 3) : font.size),
       fontWeight: font.bold ? 'bold' : 'normal',
       fontStyle: font.italic ? 'italic' : 'normal',
+      anchor: 'start',
+      direction: 'ltr',
       fill: colorPaint(run.color),
       decoration,
       link: safeLink(run.link),
@@ -451,6 +752,7 @@ class SlideRenderer {
             strokeWidth: 0,
             dash: null,
             cap: 'butt',
+            filter: null,
           });
         }
         this.text(cell.text, 0, 0, width, height, local);
@@ -474,6 +776,7 @@ class SlideRenderer {
               transform: local,
               fill: null,
               ...this.strokeOf(line),
+              filter: null,
             });
           }
         }
@@ -500,6 +803,7 @@ export function ogeRenderSlide(
     width,
     height,
     gradients: renderer.gradients,
+    patterns: renderer.patterns,
     nodes: renderer.nodes,
   };
 }

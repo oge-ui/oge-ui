@@ -57,6 +57,7 @@ export function OgeSlideCanvas({
       <defs>
         {render.gradients.map((gradient) => (
           <linearGradient
+            colorInterpolation="linearRGB"
             key={gradient.id}
             id={gradient.id}
             gradientTransform={gradient.transform}
@@ -70,6 +71,27 @@ export function OgeSlideCanvas({
               />
             ))}
           </linearGradient>
+        ))}
+        {render.patterns.map((pattern) => (
+          <pattern
+            key={pattern.id}
+            id={pattern.id}
+            patternUnits="userSpaceOnUse"
+            width={pattern.size}
+            height={pattern.size}
+          >
+            <rect
+              width={pattern.size}
+              height={pattern.size}
+              fill={pattern.background}
+              fillOpacity={pattern.backgroundOpacity}
+            />
+            <path
+              d={pattern.d}
+              fill={pattern.foreground}
+              fillOpacity={pattern.foregroundOpacity}
+            />
+          </pattern>
         ))}
       </defs>
       {render.nodes.map((node, i) => {
@@ -86,6 +108,7 @@ export function OgeSlideCanvas({
               strokeWidth={node.strokeWidth}
               strokeDasharray={node.dash ?? undefined}
               strokeLinecap={node.cap}
+              style={node.filter ? { filter: node.filter } : undefined}
             />
           );
         }
@@ -114,6 +137,7 @@ export function OgeSlideCanvas({
         const text = (
           <text
             key={i}
+            textAnchor={node.anchor}
             x={node.x}
             y={node.y}
             transform={node.transform || undefined}

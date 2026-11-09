@@ -7,6 +7,8 @@
  */
 import { OgeImportIssueLog, type OgeImportIssue } from '../codec/import-issues';
 import { OgePackageParts } from '../codec/package';
+import { readOgeChart } from '../codec/read-chart';
+import { OGE_DRAWN_CHART_KINDS } from '../codec/read-drawing';
 import { readOgeTheme, type OgeTheme } from '../codec/read-theme';
 import {
   ogeXmlAttribute,
@@ -36,8 +38,11 @@ import type {
   OgeSlideElement,
   OgeSlideFill,
   OgeSlideFrame,
+  OgeSlideCustomPath,
   OgeSlideLine,
+  OgeSlidePathCommand,
   OgeSlideParagraph,
+  OgeSlideShadow,
   OgeSlidePictureRef,
   OgeSlideSpacing,
   OgeSlideTable,
@@ -578,9 +583,22 @@ class PptxReader {
         return picture ? { kind: 'picture', picture } : { kind: 'none' };
       }
       case 'pattFill': {
-        this.issues.add(NOT_SHOWN, { part, detail: 'pattern fill' });
-        const color = ogeFindSlideColor(ogeXmlChild(node, 'fgClr'), context);
-        return color ? { kind: 'solid', color } : { kind: 'none' };
+        const foreground = ogeFindSlideColor(
+          ogeXmlChild(node, 'fgClr'),
+          context,
+        );
+        const background = ogeFindSlideColor(
+          ogeXmlChild(node, 'bgClr'),
+          context,
+        );
+        return foreground && background
+          ? {
+              kind: 'pattern',
+              preset: node.attributes['prst'] ?? 'pct50',
+              foreground,
+              background,
+            }
+          : { kind: 'none' };
       }
       case 'grpFill':
         this.issues.add(NOT_SHOWN, { part, detail: 'group fill' });
@@ -823,18 +841,17 @@ class PptxReader {
       if (match && gd.attributes['name'])
         adjust[gd.attributes['name']] = Number(match[1]);
     }
-    const custom = properties.some((p) => ogeXmlChild(p, 'custGeom'));
+    const customNode = properties
+      .map((p) => ogeXmlChild(p, 'custGeom'))
+      .find((x) => x !== undefined);
+    const custom = customNode !== undefined;
     const presetName = preset?.attributes['prst'] ?? 'rect';
     if (!custom && !ogeIsSlideGeometryDrawn(presetName))
       this.issues.add(NOT_SHOWN, {
         part: scope.part,
         detail: `preset geometry ${presetName}`,
       });
-    if (custom)
-      this.issues.add(NOT_SHOWN, {
-        part: scope.part,
-        detail: 'custom geometry',
-      });
+
     const style = chain.map((n) => ogeXmlChild(n, 'style')).find(Boolean);
     const cNvPr = this.cNvPr(node);
     out.push({
@@ -848,6 +865,11 @@ class PptxReader {
       line: this.lineOf(properties, style, scope),
       text: this.shapeText(chain, style, key, scope),
       placeholder: key ? key.type || 'body' : undefined,
+      customPaths: customNode
+        ? this.customPaths(customNode, scope.part)
+        : undefined,
+      textFrame: this.frameOf(ogeXmlChild(node, 'txXfrm'), transform),
+      shadow: this.shadowOf(properties, style, scope),
     });
   }
 
@@ -913,6 +935,99 @@ class PptxReader {
       width: width ?? 9525,
       dash: dash ?? 'solid',
       cap: cap ?? 'flat',
+    };
+  }
+
+  private customPaths(
+    geometry: OgeXmlNode,
+    part: string,
+  ): OgeSlideCustomPath[] {
+    const point = (node: OgeXmlNode | undefined): [number, number] => {
+      const x = Number(node?.attributes['x']);
+      const y = Number(node?.attributes['y']);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        this.issues.add(NOT_SHOWN, { part, detail: 'custom geometry guide' });
+        return [0, 0];
+      }
+      return [x, y];
+    };
+    return ogeXmlChildren(ogeXmlChild(geometry, 'pathLst'), 'path').map(
+      (path) => {
+        const commands: OgeSlidePathCommand[] = [];
+        for (const step of path.children) {
+          const points = ogeXmlChildren(step, 'pt').flatMap(point);
+          if (step.name === 'moveTo' || step.name === 'lnTo') {
+            commands.push({
+              op: step.name === 'moveTo' ? 'M' : 'L',
+              x: points[0],
+              y: points[1],
+            });
+          } else if (step.name === 'cubicBezTo') {
+            commands.push({ op: 'C', points });
+          } else if (step.name === 'quadBezTo') {
+            commands.push({ op: 'Q', points });
+          } else if (step.name === 'arcTo') {
+            commands.push({
+              op: 'A',
+              rx: Number(step.attributes['wR'] ?? 0),
+              ry: Number(step.attributes['hR'] ?? 0),
+              start: Number(step.attributes['stAng'] ?? 0) / 60000,
+              sweep: Number(step.attributes['swAng'] ?? 0) / 60000,
+            });
+          } else if (step.name === 'close') {
+            commands.push({ op: 'Z' });
+          }
+        }
+        return {
+          width: Number(path.attributes['w'] ?? 0),
+          height: Number(path.attributes['h'] ?? 0),
+          filled: path.attributes['fill'] !== 'none',
+          stroked: ogeXmlBool(path.attributes['stroke'], true),
+          commands,
+        };
+      },
+    );
+  }
+
+  /** The shape's own effects, else its style's theme entry. */
+  private shadowOf(
+    properties: readonly (OgeXmlNode | undefined)[],
+    style: OgeXmlNode | undefined,
+    scope: ReadScope,
+  ): OgeSlideShadow | null {
+    let list = properties
+      .map((p) => ogeXmlChild(p, 'effectLst'))
+      .find((x) => x !== undefined);
+    let context = scope.context;
+    if (!list) {
+      const ref = ogeXmlChild(style, 'effectRef');
+      const idx = ogeXmlNumber(ref?.attributes['idx']) ?? 0;
+      if (idx > 0) {
+        const entry = ogeXmlChild(scope.master.formats, 'effectStyleLst')
+          ?.children[idx - 1];
+        list = ogeXmlChild(entry, 'effectLst');
+        context = {
+          ...context,
+          placeholder: ogeFindSlideColor(ref, context),
+        };
+      }
+    }
+    for (const effect of list?.children ?? []) {
+      if (effect.name !== 'outerShdw') {
+        this.issues.add(NOT_SHOWN, {
+          part: scope.part,
+          detail: `effect ${effect.name}`,
+        });
+      }
+    }
+    const shadow = ogeXmlChild(list, 'outerShdw');
+    const color = ogeFindSlideColor(shadow, context);
+    if (!shadow || !color) return null;
+    return {
+      blur: Number(shadow.attributes['blurRad'] ?? 0),
+      distance: Number(shadow.attributes['dist'] ?? 0),
+      direction: Number(shadow.attributes['dir'] ?? 0) / 60000,
+      color,
     };
   }
 
@@ -1069,6 +1184,11 @@ class PptxReader {
     );
     if (!paragraphs.some((p) => p.runs.length > 0)) return null;
     const merged: Record<string, string> = {};
+    if (paragraphs.some((p) => p.rtl))
+      this.issues.add(NOT_SHOWN, {
+        part: scope.part,
+        detail: 'right-to-left paragraph layout',
+      });
     let fontScale = 1;
     let lineSpacingReduction = 0;
     for (const props of bodyProps) {
@@ -1098,11 +1218,23 @@ class PptxReader {
       },
       anchor: merged['anchor'] ?? 't',
       wrap: merged['wrap'] !== 'none',
-      vertical: merged['vert'] ?? 'horz',
+      vertical: this.verticalOf(merged['vert'], scope.part),
       fontScale,
       lineSpacingReduction,
       paragraphs,
     };
+  }
+
+  private verticalOf(value: string | undefined, part: string): string {
+    const vertical = value ?? 'horz';
+    if (!['horz', 'vert', 'vert270'].includes(vertical)) {
+      this.issues.add(NOT_SHOWN, {
+        part,
+        detail: `text direction ${vertical}`,
+      });
+      return 'horz';
+    }
+    return vertical;
   }
 
   private paragraph(
@@ -1251,6 +1383,13 @@ class PptxReader {
     const table = ogeXmlChild(data, 'tbl');
     if (!table) {
       const kind = (data?.attributes['uri'] ?? '').split('/').pop() ?? '';
+      if (kind === 'chart' && this.readChart(node, data, scope, transform, out))
+        return;
+      if (
+        kind === 'diagram' &&
+        this.readDiagram(node, data, scope, transform, out)
+      )
+        return;
       this.issues.add(NOT_SHOWN, { part: scope.part, detail: kind });
       return;
     }
@@ -1268,6 +1407,114 @@ class PptxReader {
       rows: this.tableRows(table, scope, transform),
     };
     out.push(element);
+  }
+
+  private readChart(
+    node: OgeXmlNode,
+    data: OgeXmlNode | undefined,
+    scope: ReadScope,
+    transform: GroupTransform,
+    out: OgeSlideElement[],
+  ): boolean {
+    const reference = ogeXmlChild(data, 'chart');
+    const id = reference && ogeXmlAttribute(reference.attributes, 'id', true);
+    const rel = id
+      ? this.pkg.relationships(scope.part).find((r) => r.id === id)
+      : undefined;
+    const frame = this.frameOf(ogeXmlChild(node, 'xfrm'), transform);
+    const tree = rel && !rel.external ? this.tree(rel.target) : undefined;
+    if (!rel || !frame || !tree) return false;
+    const { theme } = scope.master;
+    let chart;
+    try {
+      chart = readOgeChart(tree, rel.target, {
+        theme: theme.colors,
+        majorFont: theme.majorFont,
+        minorFont: theme.minorFont,
+      });
+    } catch {
+      return false;
+    }
+    const undrawn = chart.groups.find(
+      (group) => !OGE_DRAWN_CHART_KINDS.has(group.kind),
+    );
+    if (undrawn || !chart.groups.length) {
+      this.issues.add('chart-type-not-shown', {
+        part: rel.target,
+        detail: undrawn?.kind ?? 'empty',
+      });
+      return true;
+    }
+    // a title with no text of its own shows Office's automatic one
+    if (chart.title && chart.title.text === undefined) {
+      const series = chart.groups.flatMap((group) => group.series);
+      chart = {
+        ...chart,
+        title: {
+          ...chart.title,
+          text: (series.length === 1 && series[0].name) || {
+            text: 'Chart Title',
+          },
+        },
+      };
+    }
+    const cNvPr = this.cNvPr(node);
+    out.push({
+      kind: 'chart',
+      name: cNvPr?.attributes['name'] ?? '',
+      description: cNvPr?.attributes['descr'] || undefined,
+      frame,
+      chart,
+      theme: theme.colors,
+      bodyFont: theme.minorFont,
+    });
+    return true;
+  }
+
+  /** SmartArt: the shapes PowerPoint cached for it, placed in its frame. */
+  private readDiagram(
+    node: OgeXmlNode,
+    data: OgeXmlNode | undefined,
+    scope: ReadScope,
+    transform: GroupTransform,
+    out: OgeSlideElement[],
+  ): boolean {
+    const ids = ogeXmlChild(data, 'relIds');
+    const model = ids && ogeXmlAttribute(ids.attributes, 'dm', true);
+    const rels = this.pkg.relationships(scope.part);
+    const dataRel = rels.find((r) => r.id === model);
+    const dataTree = dataRel ? this.tree(dataRel.target) : undefined;
+    const ext = this.descendant(dataTree, 'dataModelExt');
+    const drawingRel =
+      rels.find((r) => r.id === ext?.attributes['relId']) ??
+      rels.find((r) => r.type === 'diagramDrawing');
+    const frame = this.frameOf(ogeXmlChild(node, 'xfrm'), transform);
+    const drawing = drawingRel ? this.tree(drawingRel.target) : undefined;
+    const tree = ogeXmlChild(drawing, 'spTree');
+    if (!frame || !tree || !drawingRel) return false;
+    this.readTree(
+      tree,
+      { ...scope, part: drawingRel.target, ancestors: [], placeholders: false },
+      {
+        ...IDENTITY,
+        offsetX: frame.x,
+        offsetY: frame.y,
+      },
+      out,
+    );
+    return true;
+  }
+
+  private descendant(
+    node: OgeXmlNode | undefined,
+    name: string,
+  ): OgeXmlNode | undefined {
+    for (const child of node?.children ?? []) {
+      if (child.name === name) return child;
+      const found = this.descendant(child, name);
+      if (found) return found;
+    }
+    return undefined;
   }
 
   private tableRows(

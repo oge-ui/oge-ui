@@ -4,6 +4,9 @@
  * Lengths are EMU (914400 per inch, 12700 per point), as in the file.
  */
 
+import type { OgeThemeColors } from '../color/color';
+import type { OgeChartModel } from '../model/chart';
+
 /** A resolved colour. */
 export interface OgeSlideColor {
   /** `RRGGBB`. */
@@ -19,7 +22,7 @@ export interface OgeSlideGradientStop {
   readonly color: OgeSlideColor;
 }
 
-/** A fill. Patterns are reported as an import issue and not drawn. */
+/** A fill. */
 export type OgeSlideFill =
   | { readonly kind: 'none' }
   | { readonly kind: 'solid'; readonly color: OgeSlideColor }
@@ -29,7 +32,50 @@ export type OgeSlideFill =
       /** Degrees clockwise from left-to-right; `null` for a path gradient. */
       readonly angle: number | null;
     }
-  | { readonly kind: 'picture'; readonly picture: OgeSlidePictureRef };
+  | { readonly kind: 'picture'; readonly picture: OgeSlidePictureRef }
+  | {
+      readonly kind: 'pattern';
+      /** The preset name as written (`ltDnDiag`, `pct25`, …). */
+      readonly preset: string;
+      readonly foreground: OgeSlideColor;
+      readonly background: OgeSlideColor;
+    };
+
+/** An outer shadow. */
+export interface OgeSlideShadow {
+  /** EMU. */
+  readonly blur: number;
+  /** EMU. */
+  readonly distance: number;
+  /** Degrees clockwise from the x axis. */
+  readonly direction: number;
+  readonly color: OgeSlideColor;
+}
+
+/** One sub-path of a custom outline, in its own coordinate box. */
+export interface OgeSlideCustomPath {
+  readonly width: number;
+  readonly height: number;
+  /** `false` for an outline-only sub-path. */
+  readonly filled: boolean;
+  /** `false` for a fill-only sub-path. */
+  readonly stroked: boolean;
+  readonly commands: readonly OgeSlidePathCommand[];
+}
+
+/** A drawing command of a custom outline. */
+export type OgeSlidePathCommand =
+  | { readonly op: 'M' | 'L'; readonly x: number; readonly y: number }
+  | { readonly op: 'C' | 'Q'; readonly points: readonly number[] }
+  | {
+      readonly op: 'A';
+      readonly rx: number;
+      readonly ry: number;
+      /** Degrees. */
+      readonly start: number;
+      readonly sweep: number;
+    }
+  | { readonly op: 'Z' };
 
 /** A picture part and its crop. */
 export interface OgeSlidePictureRef {
@@ -165,6 +211,11 @@ export interface OgeSlideShape extends OgeSlideElementBase {
   readonly text: OgeSlideTextBody | null;
   /** The placeholder type, when it is one (`body` when untyped). */
   readonly placeholder?: string;
+  /** The outline of a `custom` geometry. */
+  readonly customPaths?: readonly OgeSlideCustomPath[];
+  /** Where the text goes, when it has its own box (SmartArt). */
+  readonly textFrame?: OgeSlideFrame;
+  readonly shadow?: OgeSlideShadow | null;
 }
 
 /** A picture. */
@@ -201,8 +252,17 @@ export interface OgeSlideTable extends OgeSlideElementBase {
   }[];
 }
 
+/** A chart, drawn by the same layout as the workbook viewer's. */
+export interface OgeSlideChart extends OgeSlideElementBase {
+  readonly kind: 'chart';
+  readonly chart: OgeChartModel;
+  readonly theme: OgeThemeColors;
+  readonly bodyFont?: string;
+}
+
 /** Anything drawn on a slide; groups are flattened in paint order. */
-export type OgeSlideElement = OgeSlideShape | OgeSlidePicture | OgeSlideTable;
+export type OgeSlideElement =
+  OgeSlideShape | OgeSlidePicture | OgeSlideTable | OgeSlideChart;
 
 /** A slide. */
 export interface OgeSlide {
