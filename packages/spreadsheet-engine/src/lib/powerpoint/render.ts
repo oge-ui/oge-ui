@@ -276,7 +276,8 @@ function safeLink(target: string | undefined): string | null {
   return safe === '' || safe === 'about:blank' ? null : safe;
 }
 
-class SlideRenderer {
+/** Collects drawing instructions; also used by the Word layout. */
+export class OgeSlideDrawing {
   readonly gradients: OgeSlideRenderGradient[] = [];
   readonly patterns: OgeSlideRenderPattern[] = [];
   readonly nodes: OgeSlideRenderNode[] = [];
@@ -795,7 +796,7 @@ export function ogeRenderSlide(
 ): OgeSlideRender {
   const width = pt(presentation.width);
   const height = pt(presentation.height);
-  const renderer = new SlideRenderer(measurer, options.idPrefix);
+  const renderer = new OgeSlideDrawing(measurer, options.idPrefix);
   renderer.background(slide.background, width, height);
   for (const element of slide.backdrop) renderer.element(element);
   for (const element of slide.elements) renderer.element(element);
