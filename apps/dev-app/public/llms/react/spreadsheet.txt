@@ -202,6 +202,42 @@ _Configuration_
 | `OgeSpreadsheetMessages` | `interface` | Every user-facing string, as templates with `{name}` placeholders and ICU plurals (filled by `ogeFormatMessage` in the viewer's locale): grid, tab, name box, formula bar and status bar labels, the find bar, the placeholders, the `errors` and `issues` blocks (one text per error and import-issue code), and the live-region announcements (`cellAnnouncement`, `selectionAnnouncement`, `sheetAnnouncement`, `copied`, `zoomLabel`, …). A partial override replaces a nested block whole; `@oge-ui/locales` ships translated packs (`ogeMergeMessages(OGE_DEFAULT_SPREADSHEET_MESSAGES, tr.spreadsheet)`). |
 | `OgeSpreadsheetProps / OgeSpreadsheetHandle` | `interface` | The props above, and what a `ref` receives. |
 
+### <OgePresentation>
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgePresentationSource \| null` | `null` | The presentation to open: bytes, a `Blob` / `File`, or a URL. |
+| `slideIndex` | `number` | `0` | 0-based current slide; with `onSlideIndexChange` it is controlled. |
+| `thumbnails` | `boolean` | `true` | Shows the slide rail. |
+| `messages` | `Partial<OgePresentationMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSlideIndexChange` | `(index: number) => void` | When the slide changes. |
+| `onLoaded` | `OgePresentationLoadedEvent` | After a presentation opened, with what could not be shown. |
+| `onLoadError` | `OgePresentationLoadErrorEvent` | When a presentation did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePresentationConfig / OgePresentationConfigInput` | `interface` | Defaults for viewers below `OgePresentationConfigProvider`: `{ messages }`, merged over the built-in text. |
+| `OgePresentationSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgePresentationLoadedEvent` | `interface` | `{ slideCount, issues }` — the number of slides and everything not shown as PowerPoint shows it. |
+| `OgePresentationLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgePresentationErrorCode` | `'not-pptx' \| 'encrypted-or-legacy' \| 'corrupt' \| 'too-large' \| 'aborted' \| 'fetch-failed'` | `encrypted-or-legacy` covers password-protected files and the old `.ppt` format. |
+| `OgePresentationMessages` | `interface` | The viewer's text: `viewerLabel`, `slideLabel` (with `{current}` and `{total}`), `previousSlide`, `nextSlide`, `thumbnails`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -264,6 +300,55 @@ export function OpenWorkbook() {
         style={{ height: 520 }}
       />
       <p>{issues} things shown differently from Excel</p>
+    </>
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { OgePresentation } from '@oge-ui/react-spreadsheet/powerpoint';
+
+export function PresentationViewer() {
+  return (
+    <>
+      {/* One element shows a .pptx file the way PowerPoint does. source takes
+          a URL, the file's bytes or a File; reading happens in the browser, with
+          no dependency. Arrow keys, Page Up/Down, Home and End move between
+          slides. */}
+      <OgePresentation
+        source="/demo/spreadsheet/slides.pptx"
+        style={{ height: 520 }}
+      />
+    </>
+  );
+}
+```
+
+### Controlled slide
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePresentation } from '@oge-ui/react-spreadsheet/powerpoint';
+
+export function ControlledPresentation() {
+  const [slide, setSlide] = useState(2);
+  return (
+    <>
+      {/* slideIndex keeps the current slide in your own state and
+          thumbnails={false} hides the slide rail. */}
+      <OgePresentation
+        source="/demo/spreadsheet/slides.pptx"
+        thumbnails={false}
+        slideIndex={slide}
+        onSlideIndexChange={setSlide}
+        style={{ height: 420 }}
+      />
     </>
   );
 }

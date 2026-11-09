@@ -278,3 +278,105 @@ export const OGE_REACT_SPREADSHEET_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_REACT_PRESENTATION_API: ApiSections = {
+  properties: [
+    {
+      title: 'Content',
+      entries: [
+        {
+          name: 'source',
+          type: 'OgePresentationSource | null',
+          default: 'null',
+          description:
+            'The presentation to open: bytes, a <code>Blob</code> / <code>File</code>, or a URL.',
+        },
+        {
+          name: 'slideIndex',
+          type: 'number',
+          default: '0',
+          description:
+            '0-based current slide; with <code>onSlideIndexChange</code> it is controlled.',
+        },
+        {
+          name: 'thumbnails',
+          type: 'boolean',
+          default: 'true',
+          description: 'Shows the slide rail.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgePresentationMessages&gt;',
+          default: '{}',
+          description: 'Overrides of the message catalog.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      title: 'Events',
+      entries: [
+        {
+          name: 'onSlideIndexChange',
+          type: '(index: number) =&gt; void',
+          description: 'When the slide changes.',
+        },
+        {
+          name: 'onLoaded',
+          type: 'OgePresentationLoadedEvent',
+          description:
+            'After a presentation opened, with what could not be shown.',
+        },
+        {
+          name: 'onLoadError',
+          type: 'OgePresentationLoadErrorEvent',
+          description: 'When a presentation did not open.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Types',
+      entries: [
+        {
+          name: 'OgePresentationConfig / OgePresentationConfigInput',
+          type: 'interface',
+          description:
+            'Defaults for viewers below <code>OgePresentationConfigProvider</code>: <code>{ messages }</code>, merged over the built-in text.',
+        },
+        {
+          name: 'OgePresentationSource',
+          type: 'ArrayBuffer | Uint8Array | Blob | string',
+          description:
+            'What the viewer opens: the file&#39;s bytes, a <code>Blob</code> / <code>File</code>, or a URL fetched with same-origin credentials.',
+        },
+        {
+          name: 'OgePresentationLoadedEvent',
+          type: 'interface',
+          description:
+            '<code>{ slideCount, issues }</code> — the number of slides and everything not shown as PowerPoint shows it.',
+        },
+        {
+          name: 'OgePresentationLoadErrorEvent',
+          type: 'interface',
+          description:
+            '<code>{ code, message }</code> — why the file did not open.',
+        },
+        {
+          name: 'OgePresentationErrorCode',
+          type: "'not-pptx' | 'encrypted-or-legacy' | 'corrupt' | 'too-large' | 'aborted' | 'fetch-failed'",
+          description:
+            '<code>encrypted-or-legacy</code> covers password-protected files and the old <code>.ppt</code> format.',
+        },
+        {
+          name: 'OgePresentationMessages',
+          type: 'interface',
+          description:
+            'The viewer&#39;s text: <code>viewerLabel</code>, <code>slideLabel</code> (with <code>{current}</code> and <code>{total}</code>), <code>previousSlide</code>, <code>nextSlide</code>, <code>thumbnails</code>, <code>loading</code>, <code>empty</code>, <code>loadError</code> and <code>encryptedOrLegacy</code>.',
+        },
+      ],
+    },
+  ],
+};

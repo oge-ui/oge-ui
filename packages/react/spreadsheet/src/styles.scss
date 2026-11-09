@@ -3,3 +3,4 @@
 // here into this package's own `styles.css`. No second stylesheet, no drift
 // (ADR 0001).
 @use '../../../spreadsheet/src/lib/spreadsheet/spreadsheet';
+@use '../../../spreadsheet/powerpoint/src/presentation';

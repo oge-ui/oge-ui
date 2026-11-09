@@ -33356,6 +33356,11 @@ Docs: https://www.ogeui.com/components/spreadsheet
 - values: `OGE_DEFAULT_SPREADSHEET_CONFIG`, `OGE_DEFAULT_SPREADSHEET_MESSAGES`, `OGE_SPREADSHEET_CONFIG`, `OgeSpreadsheet`, `provideOgeSpreadsheetConfig`
 - types: `OgeFindOptions`, `OgeImportIssue`, `OgeImportIssueCode`, `OgeSpreadsheetCellClickEvent`, `OgeSpreadsheetConfig`, `OgeSpreadsheetConfigInput`, `OgeSpreadsheetHyperlinkClickEvent`, `OgeSpreadsheetLoadErrorEvent`, `OgeSpreadsheetLoadedEvent`, `OgeSpreadsheetMessages`, `OgeSpreadsheetSelectionChangeEvent`, `OgeSpreadsheetSource`, `OgeWorkbook`, `OgeXlsxError`
 
+`@oge-ui/spreadsheet/powerpoint`
+
+- values: `OGE_DEFAULT_PRESENTATION_MESSAGES`, `OGE_PRESENTATION_CONFIG`, `OgePresentation`, `OgeSlideCanvas`, `provideOgePresentationConfig`
+- types: `OgePresentationConfig`, `OgePresentationConfigInput`, `OgePresentationErrorCode`, `OgePresentationLoadErrorEvent`, `OgePresentationLoadedEvent`, `OgePresentationMessages`, `OgePresentationSource`
+
 ### OgeSpreadsheet — `<oge-spreadsheet>`
 
 #### Properties
@@ -33468,6 +33473,41 @@ _Configuration_
 | `OgeSpreadsheetConfig / OgeSpreadsheetConfigInput` | `interface` | `{ messages, locale? }`; the input takes every field optionally and `messages` partially. |
 | `OgeSpreadsheetMessages` | `interface` | Every user-facing string, as templates with `{name}` placeholders and ICU plurals (filled by `ogeFormatMessage` in the viewer's locale): grid, tab, name box, formula bar and status bar labels, the find bar, the placeholders, the `errors` and `issues` blocks (one text per error and import-issue code), and the live-region announcements (`cellAnnouncement`, `selectionAnnouncement`, `sheetAnnouncement`, `copied`, `zoomLabel`, …). A partial override replaces a nested block whole; `@oge-ui/locales` ships translated packs (`ogeMergeMessages(OGE_DEFAULT_SPREADSHEET_MESSAGES, tr.spreadsheet)`). |
 
+### OgePresentation — `<oge-presentation>`
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgePresentationSource \| null` | `null` | The presentation to open: bytes, a `Blob` / `File`, or a URL. |
+| `slideIndex` | `number` | `0` | 0-based current slide; two-way with `[(slideIndex)]`. |
+| `thumbnails` | `boolean` | `true` | Shows the slide rail. |
+| `messages` | `Partial<OgePresentationMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `loaded` | `OgePresentationLoadedEvent` | After a presentation opened, with what could not be shown. |
+| `loadError` | `OgePresentationLoadErrorEvent` | When a presentation did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePresentationConfig / OgePresentationConfigInput` | `interface` | Defaults for viewers below `provideOgePresentationConfig()`: `{ messages }`, merged over the built-in text. |
+| `OgePresentationSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgePresentationLoadedEvent` | `interface` | `{ slideCount, issues }` — the number of slides and everything not shown as PowerPoint shows it. |
+| `OgePresentationLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgePresentationErrorCode` | `'not-pptx' \| 'encrypted-or-legacy' \| 'corrupt' \| 'too-large' \| 'aborted' \| 'fetch-failed'` | `encrypted-or-legacy` covers password-protected files and the old `.ppt` format. |
+| `OgePresentationMessages` | `interface` | The viewer's text: `viewerLabel`, `slideLabel` (with `{current}` and `{total}`), `previousSlide`, `nextSlide`, `thumbnails`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
+
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -33536,6 +33576,56 @@ export class Demo {
 }
 ```
 
+#### Presentation controlled
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePresentation } from '@oge-ui/spreadsheet/powerpoint';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePresentation],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [(slideIndex)] keeps the current slide in your own state and
+         [thumbnails]="false" hides the slide rail. -->
+    <oge-presentation
+      source="/demo/spreadsheet/slides.pptx"
+      [thumbnails]="false"
+      [(slideIndex)]="slide"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  readonly slide = signal(2);
+}
+```
+
+#### Presentation getting started
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgePresentation } from '@oge-ui/spreadsheet/powerpoint';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePresentation],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One element shows a .pptx file the way PowerPoint does. [source]
+         takes a URL, the file's bytes or a File; reading happens in the browser,
+         with no dependency. Arrow keys, Page Up/Down, Home and End move between
+         slides. -->
+    <oge-presentation
+      source="/demo/spreadsheet/slides.pptx"
+      style="height: 520px"
+    />
+  `,
+})
+export class Demo {}
+```
+
 ## @oge-ui/spreadsheet-engine
 
 Framework-free, DOM-free engine both spreadsheet render layers run (it also runs in Web Workers and Node): the workbook model, the dependency-free xlsx reader (ZIP, XML, styles, themes, shared and array formulas, notes, pictures), Excel number formats, Excel-measured font metrics and layout, the paint and render model, the viewer controller and the message catalog. Installed automatically with @oge-ui/spreadsheet or @oge-ui/react-spreadsheet.
@@ -33548,6 +33638,11 @@ Framework-free, DOM-free engine both spreadsheet render layers run (it also runs
 
 - values: `OGE_BUILTIN_TABLE_STYLE_NAMES`, `OGE_CELL_ERROR_CODES`, `OGE_DEFAULT_BASE_COLUMN_WIDTH`, `OGE_DEFAULT_CELL_STYLE`, `OGE_DEFAULT_FONT`, `OGE_DEFAULT_MAX_DIGIT_WIDTH`, `OGE_DEFAULT_ROW_HEIGHT_POINTS`, `OGE_DEFAULT_SHEET_FORMAT`, `OGE_DEFAULT_SHEET_VIEW`, `OGE_DEFAULT_SPREADSHEET_CONFIG`, `OGE_DEFAULT_SPREADSHEET_MESSAGES`, `OGE_DEFINED_NAME_MAX_LENGTH`, `OGE_EN_US_FORMAT_LOCALE`, `OGE_ESTIMATING_MEASURER`, `OGE_GENERAL_MAX_CHARS`, `OGE_ICON_SETS`, `OGE_INDEXED_COLORS`, `OGE_MAX_DATE_SERIAL`, `OGE_OFFICE_THEME_COLORS`, `OGE_OUTLINE_LEVEL_SIZE`, `OGE_SHEET_MAX_COLUMNS`, `OGE_SHEET_MAX_ROWS`, `OGE_SHEET_NAME_MAX_LENGTH`, `OGE_TABLE_STYLE_ELEMENT_TYPES`, `OGE_THEME_COLOR_SLOTS`, `OgeAxis`, `OgeConditionalFormatter`, `OgeObjectUrls`, `OgeSheetLayout`, `OgeSparklineFormatter`, `OgeSpreadsheetCore`, `OgeStyleRegistry`, `OgeStyleResolver`, `OgeTableFormatter`, `OgeWorkbook`, `OgeWorksheet`, `OgeXlsxError`, `compileOgeNumberFormat`, `createOgeWorkbook`, `createPlainSpreadsheetReactivity`, `formatOgeCellAddress`, `formatOgeCellValue`, `formatOgeGeneral`, `formatOgeR1C1Address`, `formatOgeRangeAddress`, `isOgeCellEmpty`, `isOgeCellError`, `isOgeCellInSheet`, `isOgeDateFormat`, `isOgeRichText`, `ogeAnchorBox`, `ogeApplyOutlineEdit`, `ogeApplyTint`, `ogeAutofitColumnWidth`, `ogeAutofitRowHeight`, `ogeAxisOutline`, `ogeBorderRank`, `ogeBorderStrokes`, `ogeBuiltinNumberFormat`, `ogeBuiltinTableStyle`, `ogeCellAt`, `ogeCellBox`, `ogeCellDisplay`, `ogeCellError`, `ogeCellKey`, `ogeCellRange`, `ogeCellSelection`, `ogeCellText`, `ogeCellValueType`, `ogeChartLabel`, `ogeChartPalette`, `ogeChartScale`, `ogeChartView`, `ogeCheckSpreadsheetLicense`, `ogeCivilFromDays`, `ogeColumnCharactersToWidth`, `ogeColumnIndex`, `ogeColumnName`, `ogeColumnPadding`, `ogeColumnWidthToCharacters`, `ogeColumnWidthToPixels`, `ogeConditionalConstant`, `ogeConditionalRuleSupported`, `ogeCopyRange`, `ogeCreateCanvasMeasurer`, `ogeCurrentRegion`, `ogeDataEdge`, `ogeDatePartsToSerial`, `ogeDateToSerial`, `ogeDaysFromCivil`, `ogeDefaultColumnWidthPixels`, `ogeDisplayFormula`, `ogeDrawSparkline`, `ogeExpandToMerges`, `ogeFetchWorkbook`, `ogeFindAll`, `ogeFindPattern`, `ogeFontCss`, `ogeFontDescent`, `ogeFontFamily`, `ogeFontLine`, `ogeFontMetrics`, `ogeFontPixelSize`, `ogeFormatLocale`, `ogeGridHeaderAt`, `ogeGridPoint`, `ogeGridView`, `ogeGridlinePath`, `ogeHasFontMetrics`, `ogeHashFill`, `ogeHeaderCells`, `ogeHeaderMarks`, `ogeHeaderStrips`, `ogeIconParts`, `ogeIndentPixels`, `ogeLastCell`, `ogeLcidToLocaleTag`, `ogeLineTop`, `ogeMoveCell`, `ogeNoteBoxes`, `ogeOffsetCellAddress`, `ogeOpenLink`, `ogeOutlineGutter`, `ogeOutlineLevel`, `ogeOutlineLevelButtons`, `ogeOutlineMarks`, `ogeOutlineStrips`, `ogeOutlineToggle`, `ogeOwnerCell`, `ogePaintWindow`, `ogePaneCharts`, `ogePanePictures`, `ogePaneStyle`, `ogePatternTile`, `ogePixelsToColumnCharacters`, `ogePixelsToColumnWidth`, `ogePixelsToPoints`, `ogePlaceCharts`, `ogePlacePictures`, `ogePointerCell`, `ogePointerSheetPoint`, `ogePointsToPixels`, `ogePrintSheetTable`, `ogePrintTable`, `ogeQuoteSheetName`, `ogeRangeBoundingBox`, `ogeRangeBox`, `ogeRangeContains`, `ogeRangeContainsRange`, `ogeRangeFromCorners`, `ogeRangeIntersection`, `ogeRangeSize`, `ogeRangesIntersect`, `ogeRenderPane`, `ogeResizeLine`, `ogeRevealScroll`, `ogeRichText`, `ogeRichTextToString`, `ogeScrollEdges`, `ogeScrollToCell`, `ogeSelectionContains`, `ogeSelectionShapes`, `ogeSelectionSummary`, `ogeSerialToDate`, `ogeSerialToDateParts`, `ogeSerialWeekday`, `ogeSheetHeaders`, `ogeSheetNameNeedsQuotes`, `ogeShiftFormula`, `ogeSliderToZoom`, `ogeSpanRange`, `ogeSparklineAxis`, `ogeTabKeyTarget`, `ogeTableStyleFormats`, `ogeTextMargin`, `ogeViewportPanes`, `ogeWrapText`, `ogeWriteClipboard`, `ogeZoomFont`, `ogeZoomOffset`, `ogeZoomPaint`, `ogeZoomPictures`, `ogeZoomToSlider`, `parseOgeCellAddress`, `parseOgeCellErrorCode`, `parseOgeR1C1Address`, `parseOgeRangeAddress`, `readOgeXlsx`, `readOgeXlsxSync`, `resolveOgeColor`, `resolveOgeSpreadsheetConfig`, `resolveOgeSpreadsheetMessages`, `validateOgeDefinedName`, `validateOgeSheetName`
 - types: `OgeAlignment`, `OgeAutoFilter`, `OgeAutofitOptions`, `OgeAxisOutline`, `OgeBorder`, `OgeBorderEdge`, `OgeBorderStyle`, `OgeBox`, `OgeCalculationSettings`, `OgeCell`, `OgeCellAddress`, `OgeCellDisplay`, `OgeCellDisplayOptions`, `OgeCellError`, `OgeCellErrorCode`, `OgeCellRef`, `OgeCellStyle`, `OgeCellValue`, `OgeCellValueType`, `OgeChartAxis`, `OgeChartCategories`, `OgeChartDataLabels`, `OgeChartFont`, `OgeChartGroup`, `OgeChartKind`, `OgeChartLegend`, `OgeChartMarker`, `OgeChartModel`, `OgeChartNumbers`, `OgeChartPathMark`, `OgeChartScale`, `OgeChartSeries`, `OgeChartShape`, `OgeChartText`, `OgeChartTextMark`, `OgeChartTitle`, `OgeChartViewInput`, `OgeClipboardContent`, `OgeColor`, `OgeColorContext`, `OgeColorScale`, `OgeColumnInfo`, `OgeColumnSpan`, `OgeConditionalFormat`, `OgeConditionalFormatterOptions`, `OgeConditionalPaint`, `OgeConditionalPainter`, `OgeConditionalRule`, `OgeConditionalRuleType`, `OgeConditionalValue`, `OgeCss`, `OgeDataBar`, `OgeDataValidation`, `OgeDateInput`, `OgeDateParts`, `OgeDateSystem`, `OgeDateZone`, `OgeDefinedName`, `OgeDefinedNameProblem`, `OgeDisplayKind`, `OgeDrawPane`, `OgeFill`, `OgeFindMatch`, `OgeFindOptions`, `OgeFindState`, `OgeFont`, `OgeFontMetrics`, `OgeFormatCondition`, `OgeFormatLocale`, `OgeFormattableValue`, `OgeFormattedValue`, `OgeFormulaBarContent`, `OgeGradientFill`, `OgeGradientStop`, `OgeGridClick`, `OgeGridHeaderTarget`, `OgeGridPane`, `OgeGridPointerInput`, `OgeGridPointerPoint`, `OgeGridView`, `OgeGridViewInput`, `OgeHeaderCell`, `OgeHeaderMark`, `OgeHeaderStrip`, `OgeHorizontalAlignment`, `OgeHyperlink`, `OgeHyperlinkAction`, `OgeIconPart`, `OgeIconSet`, `OgeImportIssue`, `OgeImportIssueCode`, `OgeImportIssueSeverity`, `OgeIndexSpan`, `OgeNote`, `OgeNoteBox`, `OgeNoteRun`, `OgeNumberFormat`, `OgeNumberFormatOptions`, `OgeOpaquePart`, `OgeOutlineChange`, `OgeOutlineEdit`, `OgeOutlineGroup`, `OgeOutlineGutters`, `OgeOutlineLevelButton`, `OgeOutlineMark`, `OgeOutlineStrip`, `OgeOutlineSummaryChange`, `OgePageSetup`, `OgePaintAlignment`, `OgePaintBox`, `OgePaintCell`, `OgePaintChart`, `OgePaintEdge`, `OgePaintFill`, `OgePaintFont`, `OgePaintPicture`, `OgePaintWindowOptions`, `OgePaneChart`, `OgePaneKey`, `OgePanePicture`, `OgePatternFill`, `OgePatternType`, `OgePicture`, `OgePictureAnchor`, `OgePictureCorner`, `OgePrintCell`, `OgePrintTable`, `OgeProtection`, `OgeRangeAddress`, `OgeReferenceKind`, `OgeRenderFill`, `OgeRenderMark`, `OgeRenderPane`, `OgeRenderPaneInput`, `OgeRenderSpan`, `OgeRenderText`, `OgeResizeGuide`, `OgeResizeTarget`, `OgeResolvedStyle`, `OgeRevealRequest`, `OgeRichText`, `OgeRowInfo`, `OgeScrollEdges`, `OgeScrollPosition`, `OgeSelectionShapes`, `OgeSelectionSummary`, `OgeSheetChart`, `OgeSheetFormat`, `OgeSheetHeaders`, `OgeSheetLayoutOptions`, `OgeSheetNameProblem`, `OgeSheetOutline`, `OgeSheetPassthrough`, `OgeSheetProtection`, `OgeSheetRange`, `OgeSheetSelection`, `OgeSheetState`, `OgeSheetView`, `OgeSizeDialog`, `OgeSparkline`, `OgeSparklineAxisScale`, `OgeSparklineColors`, `OgeSparklineDrawing`, `OgeSparklineEmptyCells`, `OgeSparklineGroup`, `OgeSparklineMarker`, `OgeSparklinePaintColors`, `OgeSparklinePainter`, `OgeSparklineRect`, `OgeSparklineSpec`, `OgeSparklineType`, `OgeSparklineValue`, `OgeSpreadsheetCellClickEvent`, `OgeSpreadsheetChartView`, `OgeSpreadsheetConfig`, `OgeSpreadsheetConfigInput`, `OgeSpreadsheetCoreOptions`, `OgeSpreadsheetHyperlinkClickEvent`, `OgeSpreadsheetKeyAction`, `OgeSpreadsheetKeyInput`, `OgeSpreadsheetLoadErrorEvent`, `OgeSpreadsheetLoadedEvent`, `OgeSpreadsheetMenuItem`, `OgeSpreadsheetMenuKeyAction`, `OgeSpreadsheetMenuKind`, `OgeSpreadsheetMenuState`, `OgeSpreadsheetMessages`, `OgeSpreadsheetPage`, `OgeSpreadsheetReactiveCell`, `OgeSpreadsheetReactivity`, `OgeSpreadsheetSelectionChangeEvent`, `OgeSpreadsheetSource`, `OgeSpreadsheetStatus`, `OgeSpreadsheetTab`, `OgeStatusItem`, `OgeStroke`, `OgeStyleResolverOptions`, `OgeTable`, `OgeTableCellStyle`, `OgeTableColumn`, `OgeTablePainter`, `OgeTableStyle`, `OgeTableStyleElement`, `OgeTableStyleElementType`, `OgeTableStyleFormat`, `OgeTableStyleFormats`, `OgeTableStyleInfo`, `OgeTextMeasurer`, `OgeTextRun`, `OgeThemeColorSlot`, `OgeThemeColors`, `OgeUnderline`, `OgeVerticalAlignment`, `OgeViewportInput`, `OgeViewportPanes`, `OgeWorkbookOptions`, `OgeWorkbookProperties`, `OgeXlsxErrorCode`, `OgeXlsxReadOptions`, `OgeXlsxReadResult`, `OgeXlsxSource`, `OgeZoomedAxes`
+
+`@oge-ui/spreadsheet-engine/powerpoint`
+
+- values: `OGE_DEFAULT_PRESENTATION_CONFIG`, `OGE_DEFAULT_PRESENTATION_MESSAGES`, `OGE_EMU_PER_POINT`, `OgePptxError`, `OgePresentationCore`, `ogeCheckSpreadsheetLicense`, `ogeCreateSlideCanvasMeasurer`, `ogeLayoutSlideText`, `ogeRenderSlide`, `ogeSlideFontFamily`, `readOgePptx`, `readOgePptxSync`, `resolveOgePresentationConfig`
+- types: `OgePptxErrorCode`, `OgePptxReadOptions`, `OgePptxReadResult`, `OgePptxSource`, `OgePresentation`, `OgePresentationConfig`, `OgePresentationConfigInput`, `OgePresentationCoreOptions`, `OgePresentationErrorCode`, `OgePresentationLoadErrorEvent`, `OgePresentationLoadedEvent`, `OgePresentationMessages`, `OgePresentationSource`, `OgeSlide`, `OgeSlideBullet`, `OgeSlideColor`, `OgeSlideElement`, `OgeSlideFill`, `OgeSlideFont`, `OgeSlideFrame`, `OgeSlideGradientStop`, `OgeSlideLaidFragment`, `OgeSlideLaidLine`, `OgeSlideLine`, `OgeSlidePaint`, `OgeSlideParagraph`, `OgeSlidePicture`, `OgeSlidePictureRef`, `OgeSlideRender`, `OgeSlideRenderGradient`, `OgeSlideRenderImage`, `OgeSlideRenderNode`, `OgeSlideRenderOptions`, `OgeSlideRenderPath`, `OgeSlideRenderText`, `OgeSlideShape`, `OgeSlideSpacing`, `OgeSlideTable`, `OgeSlideTableCell`, `OgeSlideTextBody`, `OgeSlideTextMeasurer`, `OgeSlideTextRun`
 
 ## @oge-ui/scheduler
 
@@ -56047,6 +56142,42 @@ _Configuration_
 | `OgeSpreadsheetMessages` | `interface` | Every user-facing string, as templates with `{name}` placeholders and ICU plurals (filled by `ogeFormatMessage` in the viewer's locale): grid, tab, name box, formula bar and status bar labels, the find bar, the placeholders, the `errors` and `issues` blocks (one text per error and import-issue code), and the live-region announcements (`cellAnnouncement`, `selectionAnnouncement`, `sheetAnnouncement`, `copied`, `zoomLabel`, …). A partial override replaces a nested block whole; `@oge-ui/locales` ships translated packs (`ogeMergeMessages(OGE_DEFAULT_SPREADSHEET_MESSAGES, tr.spreadsheet)`). |
 | `OgeSpreadsheetProps / OgeSpreadsheetHandle` | `interface` | The props above, and what a `ref` receives. |
 
+### <OgePresentation>
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgePresentationSource \| null` | `null` | The presentation to open: bytes, a `Blob` / `File`, or a URL. |
+| `slideIndex` | `number` | `0` | 0-based current slide; with `onSlideIndexChange` it is controlled. |
+| `thumbnails` | `boolean` | `true` | Shows the slide rail. |
+| `messages` | `Partial<OgePresentationMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSlideIndexChange` | `(index: number) => void` | When the slide changes. |
+| `onLoaded` | `OgePresentationLoadedEvent` | After a presentation opened, with what could not be shown. |
+| `onLoadError` | `OgePresentationLoadErrorEvent` | When a presentation did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePresentationConfig / OgePresentationConfigInput` | `interface` | Defaults for viewers below `OgePresentationConfigProvider`: `{ messages }`, merged over the built-in text. |
+| `OgePresentationSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgePresentationLoadedEvent` | `interface` | `{ slideCount, issues }` — the number of slides and everything not shown as PowerPoint shows it. |
+| `OgePresentationLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgePresentationErrorCode` | `'not-pptx' \| 'encrypted-or-legacy' \| 'corrupt' \| 'too-large' \| 'aborted' \| 'fetch-failed'` | `encrypted-or-legacy` covers password-protected files and the old `.ppt` format. |
+| `OgePresentationMessages` | `interface` | The viewer's text: `viewerLabel`, `slideLabel` (with `{current}` and `{total}`), `previousSlide`, `nextSlide`, `thumbnails`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
+
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -56109,6 +56240,55 @@ export function OpenWorkbook() {
         style={{ height: 520 }}
       />
       <p>{issues} things shown differently from Excel</p>
+    </>
+  );
+}
+```
+
+#### Getting started
+
+```ts
+'use client';
+
+import { OgePresentation } from '@oge-ui/react-spreadsheet/powerpoint';
+
+export function PresentationViewer() {
+  return (
+    <>
+      {/* One element shows a .pptx file the way PowerPoint does. source takes
+          a URL, the file's bytes or a File; reading happens in the browser, with
+          no dependency. Arrow keys, Page Up/Down, Home and End move between
+          slides. */}
+      <OgePresentation
+        source="/demo/spreadsheet/slides.pptx"
+        style={{ height: 520 }}
+      />
+    </>
+  );
+}
+```
+
+#### Controlled slide
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePresentation } from '@oge-ui/react-spreadsheet/powerpoint';
+
+export function ControlledPresentation() {
+  const [slide, setSlide] = useState(2);
+  return (
+    <>
+      {/* slideIndex keeps the current slide in your own state and
+          thumbnails={false} hides the slide rail. */}
+      <OgePresentation
+        source="/demo/spreadsheet/slides.pptx"
+        thumbnails={false}
+        slideIndex={slide}
+        onSlideIndexChange={setSlide}
+        style={{ height: 420 }}
+      />
     </>
   );
 }

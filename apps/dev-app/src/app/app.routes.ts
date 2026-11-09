@@ -1397,6 +1397,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Spreadsheet',
       },
       {
+        path: 'powerpoint',
+        loadComponent: () =>
+          import('./pages/spreadsheet/powerpoint').then(
+            (m) => m.PresentationPage,
+          ),
+        title: 'OGE — PowerPoint preview',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/spreadsheet/api').then((m) => m.SpreadsheetApiPage),

@@ -5,12 +5,15 @@ import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
 import { ReactSpreadsheetApiSections } from '../react-spreadsheet/api';
-import { OGE_SPREADSHEET_API } from './spreadsheet-api-data';
+import {
+  OGE_PRESENTATION_API,
+  OGE_SPREADSHEET_API,
+} from './spreadsheet-api-data';
 
-const SECTIONS = ['OgeSpreadsheet'] as const;
+const SECTIONS = ['OgeSpreadsheet', 'OgePresentation'] as const;
 
 /** TOC of the React view — must mirror `ReactSpreadsheetApiSections`' titles. */
-const SECTIONS_REACT = ['<OgeSpreadsheet>'] as const;
+const SECTIONS_REACT = ['<OgeSpreadsheet>', '<OgePresentation>'] as const;
 
 @Component({
   selector: 'app-spreadsheet-api',
@@ -71,6 +74,11 @@ const SECTIONS_REACT = ['<OgeSpreadsheet>'] as const;
         selector="oge-spreadsheet"
         [sections]="spreadsheetApi"
       />
+      <app-api-reference
+        title="OgePresentation"
+        selector="oge-presentation"
+        [sections]="presentationApi"
+      />
     }
 
     <h3>Notes</h3>
@@ -114,4 +122,5 @@ export class SpreadsheetApiPage {
   protected readonly sections = SECTIONS;
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly spreadsheetApi = OGE_SPREADSHEET_API;
+  protected readonly presentationApi = OGE_PRESENTATION_API;
 }

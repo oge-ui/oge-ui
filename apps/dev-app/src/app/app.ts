@@ -594,6 +594,11 @@ export class App {
       items: [
         { path: '/components/spreadsheet', label: 'Overview', icon: 'table' },
         {
+          path: '/components/spreadsheet/powerpoint',
+          label: 'PowerPoint preview',
+          icon: 'table',
+        },
+        {
           path: '/components/spreadsheet/api',
           label: 'API Reference',
           icon: 'code',

@@ -3,6 +3,9 @@ const { withNx } = require('@nx/rollup/with-nx');
 module.exports = withNx(
   {
     main: './src/index.ts',
+    // Its own entry so spreadsheet-only applications never load the pptx
+    // reader (ADR 0006). Workspace-relative; the file name is the entry name.
+    additionalEntryPoints: ['packages/spreadsheet-engine/src/powerpoint.ts'],
     outputPath: '../../dist/packages/spreadsheet-engine',
     tsConfig: './tsconfig.lib.json',
     compiler: 'swc',

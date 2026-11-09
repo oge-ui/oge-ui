@@ -2224,6 +2224,32 @@ the editor and the formula engine build on these rules.
   README, `tools/commercial-families.json` — lands in the change that releases
   it (the engine left the list with P1).
 
+### PowerPoint preview (ADR 0006)
+
+`@oge-ui/spreadsheet-engine/powerpoint` reads pptx into a resolved model, on
+the same ZIP, XML, OPC and theme layers as the xlsx reader. It is a separate
+entry so spreadsheet-only applications never load it.
+
+- **The model is resolved.** Theme and colour map, master, layout, placeholder
+  and table style are applied by the reader, so a renderer never walks an
+  inheritance chain. Lengths stay in EMU.
+- **Colour arithmetic is measured.** `shade` and `tint` work on linear light,
+  `lumMod` / `lumOff` on HSL over sRGB (`lib/powerpoint/color.ts`).
+- **Line height is 1.2 × the font size, whatever the typeface.** Measured on
+  12 faces, while a browser reports each face's own 1.107–1.33. A face's extents
+  only place the baseline inside that line. Bounding widths from COM carry a
+  fixed allowance per measured range, which the capture records and removes.
+- **The engine draws, the layers bind.** `ogeRenderSlide` turns a slide into
+  flat SVG instructions in points; `OgePresentationCore` holds loading, the
+  key map and the labels. Angular's `oge-slide-canvas` and React's
+  `OgeSlideCanvas` are element-for-element copies. Links are sanitized in the
+  engine, before either layer sees them.
+- **Not drawn yet, reported as issues:** charts, SmartArt, custom geometry and
+  presets outside `geometry.ts` (shown as their bounding box), pattern fills.
+- - **The corpus is PowerPoint's own.** `testing/tools/pptx-capture.ps1` makes
+    PowerPoint build and measure the deck; `read-pptx.corpus.spec.ts` compares
+    the model with those numbers.
+
 ### The viewer (P1)
 
 - **Measured, not approximated.** "It must look exactly as in Excel" is the

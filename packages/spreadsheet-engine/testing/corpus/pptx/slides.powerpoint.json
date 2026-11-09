@@ -1,0 +1,722 @@
+{
+    "version":  "16.0",
+    "build":  "17932",
+    "slideWidth":  960,
+    "slideHeight":  540,
+    "slides":  [
+                   {
+                       "index":  1,
+                       "layout":  "Title Slide",
+                       "hidden":  false,
+                       "background":  "FFFFFF",
+                       "shapes":  [
+                                      {
+                                          "name":  "Title 1",
+                                          "type":  14,
+                                          "autoType":  138,
+                                          "left":  120,
+                                          "top":  88.37504,
+                                          "width":  720,
+                                          "height":  188,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  false,
+                                          "lineVisible":  false,
+                                          "text":  {
+                                                       "anchor":  4,
+                                                       "marginLeft":  7.2,
+                                                       "marginTop":  3.6,
+                                                       "marginRight":  7.2,
+                                                       "marginBottom":  3.6,
+                                                       "wordWrap":  true,
+                                                       "paragraphs":  [
+                                                                          {
+                                                                              "text":  "Quarterly results",
+                                                                              "level":  1,
+                                                                              "font":  "Calibri Light",
+                                                                              "size":  60,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "000000",
+                                                                              "align":  2,
+                                                                              "bullet":  false,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "Quarterly results",
+                                                                                                "left":  278.6075,
+                                                                                                "top":  207.975037,
+                                                                                                "width":  402.79,
+                                                                                                "height":  64.8
+                                                                                            }
+                                                                                        ]
+                                                                          }
+                                                                      ]
+                                                   }
+                                      },
+                                      {
+                                          "name":  "Subtitle 2",
+                                          "type":  14,
+                                          "autoType":  138,
+                                          "left":  120,
+                                          "top":  283.625031,
+                                          "width":  720,
+                                          "height":  130.374954,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  false,
+                                          "lineVisible":  false,
+                                          "text":  {
+                                                       "anchor":  1,
+                                                       "marginLeft":  7.2,
+                                                       "marginTop":  3.6,
+                                                       "marginRight":  7.2,
+                                                       "marginBottom":  3.6,
+                                                       "wordWrap":  true,
+                                                       "paragraphs":  [
+                                                                          {
+                                                                              "text":  "Prepared by finance",
+                                                                              "level":  1,
+                                                                              "font":  "Calibri",
+                                                                              "size":  24,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "000000",
+                                                                              "align":  2,
+                                                                              "bullet":  false,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "Prepared by finance",
+                                                                                                "left":  382.435,
+                                                                                                "top":  287.225037,
+                                                                                                "width":  195.134964,
+                                                                                                "height":  25.92
+                                                                                            }
+                                                                                        ]
+                                                                          }
+                                                                      ]
+                                                   }
+                                      }
+                                  ]
+                   },
+                   {
+                       "index":  2,
+                       "layout":  "Title and Content",
+                       "hidden":  false,
+                       "background":  "FFFFFF",
+                       "shapes":  [
+                                      {
+                                          "name":  "Title 1",
+                                          "type":  14,
+                                          "autoType":  138,
+                                          "left":  66,
+                                          "top":  28.75,
+                                          "width":  828,
+                                          "height":  104.375038,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  false,
+                                          "lineVisible":  false,
+                                          "text":  {
+                                                       "anchor":  3,
+                                                       "marginLeft":  7.2,
+                                                       "marginTop":  3.6,
+                                                       "marginRight":  7.2,
+                                                       "marginBottom":  3.6,
+                                                       "wordWrap":  true,
+                                                       "paragraphs":  [
+                                                                          {
+                                                                              "text":  "Agenda",
+                                                                              "level":  1,
+                                                                              "font":  "Calibri Light",
+                                                                              "size":  44,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "000000",
+                                                                              "align":  1,
+                                                                              "bullet":  false,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "Agenda",
+                                                                                                "left":  73.2,
+                                                                                                "top":  57.17752,
+                                                                                                "width":  133.31,
+                                                                                                "height":  47.52
+                                                                                            }
+                                                                                        ]
+                                                                          }
+                                                                      ]
+                                                   }
+                                      },
+                                      {
+                                          "name":  "Content Placeholder 2",
+                                          "type":  14,
+                                          "autoType":  138,
+                                          "left":  66,
+                                          "top":  143.75,
+                                          "width":  828,
+                                          "height":  342.625031,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  false,
+                                          "lineVisible":  false,
+                                          "text":  {
+                                                       "anchor":  1,
+                                                       "marginLeft":  7.2,
+                                                       "marginTop":  3.6,
+                                                       "marginRight":  7.2,
+                                                       "marginBottom":  3.6,
+                                                       "wordWrap":  true,
+                                                       "paragraphs":  [
+                                                                          {
+                                                                              "text":  "First level",
+                                                                              "level":  1,
+                                                                              "font":  "Calibri",
+                                                                              "size":  28,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "000000",
+                                                                              "align":  1,
+                                                                              "bullet":  true,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "First level",
+                                                                                                "left":  91.2,
+                                                                                                "top":  147.35,
+                                                                                                "width":  114.045036,
+                                                                                                "height":  30.24
+                                                                                            }
+                                                                                        ]
+                                                                          },
+                                                                          {
+                                                                              "text":  "Second level",
+                                                                              "level":  2,
+                                                                              "font":  "Calibri",
+                                                                              "size":  24,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "000000",
+                                                                              "align":  1,
+                                                                              "bullet":  true,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "Second level",
+                                                                                                "left":  127.2,
+                                                                                                "top":  177.59,
+                                                                                                "width":  127.075043,
+                                                                                                "height":  30.92
+                                                                                            }
+                                                                                        ]
+                                                                          },
+                                                                          {
+                                                                              "text":  "Third level",
+                                                                              "level":  3,
+                                                                              "font":  "Calibri",
+                                                                              "size":  20,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "000000",
+                                                                              "align":  1,
+                                                                              "bullet":  true,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "Third level",
+                                                                                                "left":  163.2,
+                                                                                                "top":  208.51,
+                                                                                                "width":  89.05504,
+                                                                                                "height":  26.6
+                                                                                            }
+                                                                                        ]
+                                                                          },
+                                                                          {
+                                                                              "text":  "A first level paragraph long enough to wrap across more than one line of the placeholder so the line breaks can be compared with what PowerPoint chose for this text",
+                                                                              "level":  1,
+                                                                              "font":  "Calibri",
+                                                                              "size":  28,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "000000",
+                                                                              "align":  1,
+                                                                              "bullet":  true,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "A first level paragraph long enough to wrap across more than one line ",
+                                                                                                "left":  91.2,
+                                                                                                "top":  235.11,
+                                                                                                "width":  796.725037,
+                                                                                                "height":  40.24
+                                                                                            },
+                                                                                            {
+                                                                                                "text":  "of the placeholder so the line breaks can be compared with what ",
+                                                                                                "left":  91.2,
+                                                                                                "top":  275.35,
+                                                                                                "width":  743.28,
+                                                                                                "height":  30.24
+                                                                                            },
+                                                                                            {
+                                                                                                "text":  "PowerPoint chose for this text",
+                                                                                                "left":  91.2,
+                                                                                                "top":  305.59,
+                                                                                                "width":  340.66,
+                                                                                                "height":  30.24
+                                                                                            }
+                                                                                        ]
+                                                                          }
+                                                                      ]
+                                                   }
+                                      }
+                                  ]
+                   },
+                   {
+                       "index":  3,
+                       "layout":  "Blank",
+                       "hidden":  false,
+                       "background":  "FFFFFF",
+                       "shapes":  [
+                                      {
+                                          "name":  "solid",
+                                          "type":  1,
+                                          "autoType":  1,
+                                          "left":  40,
+                                          "top":  40,
+                                          "width":  200,
+                                          "height":  100,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  true,
+                                          "fill":  "C0392B",
+                                          "fillTransparency":  0,
+                                          "lineVisible":  false,
+                                          "text":  null
+                                      },
+                                      {
+                                          "name":  "themed",
+                                          "type":  1,
+                                          "autoType":  9,
+                                          "left":  280,
+                                          "top":  40,
+                                          "width":  180,
+                                          "height":  120,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  true,
+                                          "fill":  "F2AA84",
+                                          "fillTransparency":  0,
+                                          "lineVisible":  true,
+                                          "line":  "1F2937",
+                                          "lineWeight":  3,
+                                          "lineDash":  1,
+                                          "text":  null
+                                      },
+                                      {
+                                          "name":  "outline",
+                                          "type":  1,
+                                          "autoType":  5,
+                                          "left":  500,
+                                          "top":  40,
+                                          "width":  200,
+                                          "height":  100,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  false,
+                                          "lineVisible":  true,
+                                          "line":  "0E7490",
+                                          "lineWeight":  2,
+                                          "lineDash":  4,
+                                          "text":  null
+                                      },
+                                      {
+                                          "name":  "rotated",
+                                          "type":  1,
+                                          "autoType":  1,
+                                          "left":  60,
+                                          "top":  220,
+                                          "width":  160,
+                                          "height":  80,
+                                          "rotation":  330,
+                                          "flipH":  true,
+                                          "flipV":  false,
+                                          "fillVisible":  true,
+                                          "fill":  "7C3AED",
+                                          "fillTransparency":  0,
+                                          "lineVisible":  true,
+                                          "line":  "042433",
+                                          "lineWeight":  1.5,
+                                          "lineDash":  1,
+                                          "text":  null
+                                      },
+                                      {
+                                          "name":  "transparent",
+                                          "type":  1,
+                                          "autoType":  1,
+                                          "left":  280,
+                                          "top":  220,
+                                          "width":  160,
+                                          "height":  80,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  true,
+                                          "fill":  "16A34A",
+                                          "fillTransparency":  0.5,
+                                          "lineVisible":  true,
+                                          "line":  "042433",
+                                          "lineWeight":  1.5,
+                                          "lineDash":  1,
+                                          "text":  null
+                                      },
+                                      {
+                                          "name":  "textbox",
+                                          "type":  17,
+                                          "autoType":  1,
+                                          "left":  500,
+                                          "top":  220,
+                                          "width":  300,
+                                          "height":  36.3515739,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  false,
+                                          "lineVisible":  false,
+                                          "text":  {
+                                                       "anchor":  1,
+                                                       "marginLeft":  7.2,
+                                                       "marginTop":  3.6,
+                                                       "marginRight":  7.2,
+                                                       "marginBottom":  3.6,
+                                                       "wordWrap":  true,
+                                                       "paragraphs":  [
+                                                                          {
+                                                                              "text":  "Styled text box",
+                                                                              "level":  1,
+                                                                              "font":  "Calibri",
+                                                                              "size":  24,
+                                                                              "bold":  true,
+                                                                              "italic":  true,
+                                                                              "color":  "B45309",
+                                                                              "align":  2,
+                                                                              "bullet":  false,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "Styled text box",
+                                                                                                "left":  576.8825,
+                                                                                                "top":  223.6,
+                                                                                                "width":  146.24,
+                                                                                                "height":  28.8
+                                                                                            }
+                                                                                        ]
+                                                                          }
+                                                                      ]
+                                                   }
+                                      },
+                                      {
+                                          "name":  "labelled",
+                                          "type":  1,
+                                          "autoType":  1,
+                                          "left":  40,
+                                          "top":  360,
+                                          "width":  300,
+                                          "height":  120,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "fillVisible":  true,
+                                          "fill":  "156082",
+                                          "fillTransparency":  0,
+                                          "lineVisible":  true,
+                                          "line":  "042433",
+                                          "lineWeight":  1.5,
+                                          "lineDash":  1,
+                                          "text":  {
+                                                       "anchor":  3,
+                                                       "marginLeft":  7.2,
+                                                       "marginTop":  3.6,
+                                                       "marginRight":  7.2,
+                                                       "marginBottom":  3.6,
+                                                       "wordWrap":  true,
+                                                       "paragraphs":  [
+                                                                          {
+                                                                              "text":  "Centred label",
+                                                                              "level":  1,
+                                                                              "font":  "Calibri",
+                                                                              "size":  18,
+                                                                              "bold":  false,
+                                                                              "italic":  false,
+                                                                              "color":  "FFFFFF",
+                                                                              "align":  2,
+                                                                              "bullet":  false,
+                                                                              "lines":  [
+                                                                                            {
+                                                                                                "text":  "Centred label",
+                                                                                                "left":  141.012482,
+                                                                                                "top":  409.2,
+                                                                                                "width":  97.98,
+                                                                                                "height":  21.6
+                                                                                            }
+                                                                                        ]
+                                                                          }
+                                                                      ]
+                                                   }
+                                      }
+                                  ]
+                   },
+                   {
+                       "index":  4,
+                       "layout":  "Blank",
+                       "hidden":  false,
+                       "background":  "FFFFFF",
+                       "shapes":  [
+                                      {
+                                          "name":  "group",
+                                          "type":  6,
+                                          "autoType":  -2,
+                                          "left":  40,
+                                          "top":  40,
+                                          "width":  220,
+                                          "height":  100,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "text":  null,
+                                          "items":  [
+                                                        {
+                                                            "name":  "g1",
+                                                            "type":  1,
+                                                            "autoType":  1,
+                                                            "left":  40,
+                                                            "top":  40,
+                                                            "width":  100,
+                                                            "height":  60,
+                                                            "rotation":  0,
+                                                            "flipH":  false,
+                                                            "flipV":  false,
+                                                            "fillVisible":  true,
+                                                            "fill":  "156082",
+                                                            "fillTransparency":  0,
+                                                            "lineVisible":  true,
+                                                            "line":  "042433",
+                                                            "lineWeight":  1.5,
+                                                            "lineDash":  1,
+                                                            "text":  null
+                                                        },
+                                                        {
+                                                            "name":  "g2",
+                                                            "type":  1,
+                                                            "autoType":  9,
+                                                            "left":  160,
+                                                            "top":  80,
+                                                            "width":  100,
+                                                            "height":  60,
+                                                            "rotation":  0,
+                                                            "flipH":  false,
+                                                            "flipV":  false,
+                                                            "fillVisible":  true,
+                                                            "fill":  "156082",
+                                                            "fillTransparency":  0,
+                                                            "lineVisible":  true,
+                                                            "line":  "042433",
+                                                            "lineWeight":  1.5,
+                                                            "lineDash":  1,
+                                                            "text":  null
+                                                        }
+                                                    ]
+                                      },
+                                      {
+                                          "name":  "table",
+                                          "type":  19,
+                                          "autoType":  -2,
+                                          "left":  320,
+                                          "top":  40,
+                                          "width":  400,
+                                          "height":  120,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "text":  null,
+                                          "table":  {
+                                                        "columns":  [
+                                                                        200,
+                                                                        200
+                                                                    ],
+                                                        "rows":  [
+                                                                     {
+                                                                         "height":  40,
+                                                                         "cells":  [
+                                                                                       {
+                                                                                           "text":  "Region",
+                                                                                           "fill":  "156082",
+                                                                                           "font":  "FFFFFF",
+                                                                                           "bold":  true
+                                                                                       },
+                                                                                       {
+                                                                                           "text":  "Sales",
+                                                                                           "fill":  "156082",
+                                                                                           "font":  "FFFFFF",
+                                                                                           "bold":  true
+                                                                                       }
+                                                                                   ]
+                                                                     },
+                                                                     {
+                                                                         "height":  40,
+                                                                         "cells":  [
+                                                                                       {
+                                                                                           "text":  "North",
+                                                                                           "fill":  "CCD2D8",
+                                                                                           "font":  "000000",
+                                                                                           "bold":  false
+                                                                                       },
+                                                                                       {
+                                                                                           "text":  "120",
+                                                                                           "fill":  "CCD2D8",
+                                                                                           "font":  "000000",
+                                                                                           "bold":  false
+                                                                                       }
+                                                                                   ]
+                                                                     },
+                                                                     {
+                                                                         "height":  40,
+                                                                         "cells":  [
+                                                                                       {
+                                                                                           "text":  "South",
+                                                                                           "fill":  "E7EAED",
+                                                                                           "font":  "000000",
+                                                                                           "bold":  false
+                                                                                       },
+                                                                                       {
+                                                                                           "text":  "95",
+                                                                                           "fill":  "E7EAED",
+                                                                                           "font":  "000000",
+                                                                                           "bold":  false
+                                                                                       }
+                                                                                   ]
+                                                                     }
+                                                                 ]
+                                                    }
+                                      },
+                                      {
+                                          "name":  "picture",
+                                          "type":  13,
+                                          "autoType":  1,
+                                          "left":  40,
+                                          "top":  240,
+                                          "width":  320,
+                                          "height":  180,
+                                          "rotation":  0,
+                                          "flipH":  false,
+                                          "flipV":  false,
+                                          "text":  null
+                                      }
+                                  ]
+                   },
+                   {
+                       "index":  5,
+                       "layout":  "Blank",
+                       "hidden":  true,
+                       "background":  "FEF3C7",
+                       "shapes":  [
+
+                                  ]
+                   }
+               ],
+    "metrics":  {
+                    "Calibri Light|60|0|0":  {
+                                                 "overhead":  13.624961853027344,
+                                                 "space":  13.624961853027344,
+                                                 "height":  72,
+                                                 "words":  {
+                                                               "Quarterly":  242.78999328613281,
+                                                               "results":  173.6199951171875
+                                                           }
+                                             },
+                    "Calibri|24|0|0":  {
+                                           "overhead":  5.3749599456787109,
+                                           "space":  5.3749599456787109,
+                                           "height":  28.8,
+                                           "words":  {
+                                                         "Prepared":  94.620002746582031,
+                                                         "by":  28.760000228881836,
+                                                         "finance":  77.125038146972656,
+                                                         "Second":  76.175041198730469,
+                                                         "level":  50.900001525878906
+                                                     }
+                                       },
+                    "Calibri Light|44|0|0":  {
+                                                 "overhead":  10.000076293945313,
+                                                 "space":  10,
+                                                 "height":  52.8,
+                                                 "words":  {
+                                                               "Agenda":  143.30503845214844
+                                                           }
+                                             },
+                    "Calibri|28|0|0":  {
+                                           "overhead":  6.3750419616699219,
+                                           "space":  6.3749618530273438,
+                                           "height":  33.6,
+                                           "words":  {
+                                                         "First":  54.955039978027344,
+                                                         "level":  59.090000152587891,
+                                                         "A":  22.625040054321289,
+                                                         "first":  50.580001831054688,
+                                                         "paragraph":  122.22503662109375,
+                                                         "long":  55.375038146972656,
+                                                         "enough":  92.375038146972656,
+                                                         "to":  30.225038528442383,
+                                                         "wrap":  63.675041198730469,
+                                                         "across":  77.675041198730469,
+                                                         "more":  66.755043029785156,
+                                                         "than":  58.625038146972656,
+                                                         "one":  49.75,
+                                                         "line":  47.75,
+                                                         "of":  29.625040054321289,
+                                                         "the":  44.375038146972656,
+                                                         "placeholder":  140.87504577636719,
+                                                         "so":  32.125038146972656,
+                                                         "breaks":  81.245040893554688,
+                                                         "can":  46.145038604736328,
+                                                         "be":  35,
+                                                         "compared":  121.27503967285156,
+                                                         "with":  56.875038146972656,
+                                                         "what":  63.615039825439453,
+                                                         "PowerPoint":  137.26504516601563,
+                                                         "chose":  72.625038146972656,
+                                                         "for":  38.785037994384766,
+                                                         "this":  47.875038146972656,
+                                                         "text":  50.479999542236328
+                                                     }
+                                       },
+                    "Calibri|20|0|0":  {
+                                           "overhead":  4.5,
+                                           "space":  4.5,
+                                           "height":  24,
+                                           "words":  {
+                                                         "Third":  46.599998474121094,
+                                                         "level":  42.455039978027344
+                                                     }
+                                       },
+                    "Calibri|24|1|1":  {
+                                           "overhead":  5.3749599456787109,
+                                           "space":  5.3749599456787109,
+                                           "height":  28.8,
+                                           "words":  {
+                                                         "Styled":  66.375038146972656,
+                                                         "text":  44.115039825439453,
+                                                         "box":  41.119998931884766
+                                                     }
+                                       },
+                    "Calibri|18|0|0":  {
+                                           "overhead":  4.1250381469726563,
+                                           "space":  4.1249599456787109,
+                                           "height":  21.6,
+                                           "words":  {
+                                                         "Centred":  62.599998474121094,
+                                                         "label":  39.5
+                                                     }
+                                       }
+                }
+}

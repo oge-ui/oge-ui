@@ -97,6 +97,11 @@ Predictable wrong guesses, and what to write instead.
 - values: `OGE_DEFAULT_SPREADSHEET_CONFIG`, `OGE_DEFAULT_SPREADSHEET_MESSAGES`, `OGE_SPREADSHEET_CONFIG`, `OgeSpreadsheet`, `provideOgeSpreadsheetConfig`
 - types: `OgeFindOptions`, `OgeImportIssue`, `OgeImportIssueCode`, `OgeSpreadsheetCellClickEvent`, `OgeSpreadsheetConfig`, `OgeSpreadsheetConfigInput`, `OgeSpreadsheetHyperlinkClickEvent`, `OgeSpreadsheetLoadErrorEvent`, `OgeSpreadsheetLoadedEvent`, `OgeSpreadsheetMessages`, `OgeSpreadsheetSelectionChangeEvent`, `OgeSpreadsheetSource`, `OgeWorkbook`, `OgeXlsxError`
 
+`@oge-ui/spreadsheet/powerpoint`
+
+- values: `OGE_DEFAULT_PRESENTATION_MESSAGES`, `OGE_PRESENTATION_CONFIG`, `OgePresentation`, `OgeSlideCanvas`, `provideOgePresentationConfig`
+- types: `OgePresentationConfig`, `OgePresentationConfigInput`, `OgePresentationErrorCode`, `OgePresentationLoadErrorEvent`, `OgePresentationLoadedEvent`, `OgePresentationMessages`, `OgePresentationSource`
+
 ## API reference
 
 ### OgeSpreadsheet — `<oge-spreadsheet>`
@@ -211,6 +216,41 @@ _Configuration_
 | `OgeSpreadsheetConfig / OgeSpreadsheetConfigInput` | `interface` | `{ messages, locale? }`; the input takes every field optionally and `messages` partially. |
 | `OgeSpreadsheetMessages` | `interface` | Every user-facing string, as templates with `{name}` placeholders and ICU plurals (filled by `ogeFormatMessage` in the viewer's locale): grid, tab, name box, formula bar and status bar labels, the find bar, the placeholders, the `errors` and `issues` blocks (one text per error and import-issue code), and the live-region announcements (`cellAnnouncement`, `selectionAnnouncement`, `sheetAnnouncement`, `copied`, `zoomLabel`, …). A partial override replaces a nested block whole; `@oge-ui/locales` ships translated packs (`ogeMergeMessages(OGE_DEFAULT_SPREADSHEET_MESSAGES, tr.spreadsheet)`). |
 
+### OgePresentation — `<oge-presentation>`
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgePresentationSource \| null` | `null` | The presentation to open: bytes, a `Blob` / `File`, or a URL. |
+| `slideIndex` | `number` | `0` | 0-based current slide; two-way with `[(slideIndex)]`. |
+| `thumbnails` | `boolean` | `true` | Shows the slide rail. |
+| `messages` | `Partial<OgePresentationMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `loaded` | `OgePresentationLoadedEvent` | After a presentation opened, with what could not be shown. |
+| `loadError` | `OgePresentationLoadErrorEvent` | When a presentation did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePresentationConfig / OgePresentationConfigInput` | `interface` | Defaults for viewers below `provideOgePresentationConfig()`: `{ messages }`, merged over the built-in text. |
+| `OgePresentationSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgePresentationLoadedEvent` | `interface` | `{ slideCount, issues }` — the number of slides and everything not shown as PowerPoint shows it. |
+| `OgePresentationLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgePresentationErrorCode` | `'not-pptx' \| 'encrypted-or-legacy' \| 'corrupt' \| 'too-large' \| 'aborted' \| 'fetch-failed'` | `encrypted-or-legacy` covers password-protected files and the old `.ppt` format. |
+| `OgePresentationMessages` | `interface` | The viewer's text: `viewerLabel`, `slideLabel` (with `{current}` and `{total}`), `previousSlide`, `nextSlide`, `thumbnails`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -277,5 +317,55 @@ export class Demo {
     dropZone: { labelSingle: 'Drop a workbook here or {browse}' },
   };
 }
+```
+
+### Presentation controlled
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePresentation } from '@oge-ui/spreadsheet/powerpoint';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePresentation],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [(slideIndex)] keeps the current slide in your own state and
+         [thumbnails]="false" hides the slide rail. -->
+    <oge-presentation
+      source="/demo/spreadsheet/slides.pptx"
+      [thumbnails]="false"
+      [(slideIndex)]="slide"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  readonly slide = signal(2);
+}
+```
+
+### Presentation getting started
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgePresentation } from '@oge-ui/spreadsheet/powerpoint';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePresentation],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One element shows a .pptx file the way PowerPoint does. [source]
+         takes a URL, the file's bytes or a File; reading happens in the browser,
+         with no dependency. Arrow keys, Page Up/Down, Home and End move between
+         slides. -->
+    <oge-presentation
+      source="/demo/spreadsheet/slides.pptx"
+      style="height: 520px"
+    />
+  `,
+})
+export class Demo {}
 ```
 

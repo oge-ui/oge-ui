@@ -32,6 +32,16 @@
         "default": "./index.cjs"
       }
     },
+    "./powerpoint": {
+      "import": {
+        "types": "./powerpoint.d.ts",
+        "default": "./powerpoint.js"
+      },
+      "require": {
+        "types": "./powerpoint.d.cts",
+        "default": "./powerpoint.cjs"
+      }
+    },
     "./styles.css": "./styles.css",
     "./package.json": "./package.json"
   },

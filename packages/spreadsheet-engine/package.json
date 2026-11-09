@@ -24,6 +24,11 @@
       "module": "./index.esm.js",
       "default": "./index.cjs.js"
     },
+    "./powerpoint": {
+      "types": "./powerpoint.d.ts",
+      "module": "./powerpoint.esm.js",
+      "default": "./powerpoint.cjs.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

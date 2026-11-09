@@ -17,6 +17,19 @@ The specs that read them — `*.corpus.spec.ts` under `src/lib/` (reader,
 number formats, text fitting, paint, header sizes) and the view specs that open
 corpus workbooks — fail when the engine stops matching Excel.
 
+## PowerPoint
+
+`corpus/pptx/slides.pptx` is created and saved by PowerPoint itself, and
+`slides.powerpoint.json` holds what PowerPoint reports for it: positions,
+resolved colours, fonts, table styles and every line break. To regenerate on
+a Windows machine with PowerPoint, write to a temporary folder and copy the two
+files here (the per-slide PNGs are for looking at and stay out of the
+repository):
+
+```sh
+powershell -File packages/spreadsheet-engine/testing/tools/pptx-capture.ps1 -OutDir <folder>
+```
+
 ## Regenerating
 
 Windows with Microsoft Excel installed (the captures were taken with Excel

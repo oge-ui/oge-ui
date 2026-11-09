@@ -728,6 +728,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Excel viewer for Angular and React: shows .xlsx workbooks as Excel does, with measured fonts, formats, borders, frozen panes and pictures, read in the browser.',
   ],
   [
+    '/components/spreadsheet/powerpoint',
+    'PowerPoint preview for Angular and React: shows .pptx presentations as PowerPoint does, read in the browser with no dependency.',
+  ],
+  [
     '/components/spreadsheet/api',
     'OGE Spreadsheet API reference: every input, output, method and type of oge-spreadsheet — sources, two-way sheet and zoom, find, copy, print and config.',
   ],

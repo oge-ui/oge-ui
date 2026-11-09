@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ApiReference } from '../../shared/api-reference';
-import { OGE_REACT_SPREADSHEET_API } from './react-spreadsheet-api-data';
+import {
+  OGE_REACT_PRESENTATION_API,
+  OGE_REACT_SPREADSHEET_API,
+} from './react-spreadsheet-api-data';
 
 /**
  * The React half of the Spreadsheet API reference.
@@ -25,8 +28,13 @@ import { OGE_REACT_SPREADSHEET_API } from './react-spreadsheet-api-data';
       title="&lt;OgeSpreadsheet&gt;"
       [sections]="spreadsheetApi"
     />
+    <app-api-reference
+      title="&lt;OgePresentation&gt;"
+      [sections]="presentationApi"
+    />
   `,
 })
 export class ReactSpreadsheetApiSections {
   protected readonly spreadsheetApi = OGE_REACT_SPREADSHEET_API;
+  protected readonly presentationApi = OGE_REACT_PRESENTATION_API;
 }

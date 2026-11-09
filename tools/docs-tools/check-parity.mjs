@@ -846,6 +846,8 @@ const FAMILIES = [
     reactApiPage: 'apps/dev-app/src/app/pages/react-spreadsheet/api.ts',
     exceptions: {
       reactOnly: {
+        slideindexchange:
+          'The controlled half of `slideIndex`; Angular’s [(slideIndex)] model is both halves at once.',
         activesheetchange:
           'The controlled half of `activeSheet`; Angular’s [(activeSheet)] model is both halves at once.',
         zoomchange:
