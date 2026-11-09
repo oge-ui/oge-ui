@@ -3,6 +3,7 @@ import { ApiReference } from '../../shared/api-reference';
 import {
   OGE_REACT_PRESENTATION_API,
   OGE_REACT_SPREADSHEET_API,
+  OGE_REACT_WORD_DOCUMENT_API,
 } from './react-spreadsheet-api-data';
 
 /**
@@ -32,9 +33,11 @@ import {
       title="&lt;OgePresentation&gt;"
       [sections]="presentationApi"
     />
+    <app-api-reference title="&lt;OgeWordDocument&gt;" [sections]="wordApi" />
   `,
 })
 export class ReactSpreadsheetApiSections {
   protected readonly spreadsheetApi = OGE_REACT_SPREADSHEET_API;
   protected readonly presentationApi = OGE_REACT_PRESENTATION_API;
+  protected readonly wordApi = OGE_REACT_WORD_DOCUMENT_API;
 }

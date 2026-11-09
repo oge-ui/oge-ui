@@ -728,6 +728,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Excel viewer for Angular and React: shows .xlsx workbooks as Excel does, with measured fonts, formats, borders, frozen panes and pictures, read in the browser.',
   ],
   [
+    '/components/spreadsheet/word',
+    'Word preview for Angular and React: shows .docx documents as Word does, page by page, read in the browser with no dependency.',
+  ],
+  [
     '/components/spreadsheet/powerpoint',
     'PowerPoint preview for Angular and React: shows .pptx presentations as PowerPoint does, read in the browser with no dependency.',
   ],

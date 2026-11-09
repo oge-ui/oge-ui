@@ -380,3 +380,99 @@ export const OGE_REACT_PRESENTATION_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_REACT_WORD_DOCUMENT_API: ApiSections = {
+  properties: [
+    {
+      title: 'Content',
+      entries: [
+        {
+          name: 'source',
+          type: 'OgeWordDocumentSource | null',
+          default: 'null',
+          description:
+            'The document to open: bytes, a <code>Blob</code> / <code>File</code>, or a URL.',
+        },
+        {
+          name: 'pageIndex',
+          type: 'number',
+          default: '0',
+          description:
+            '0-based page to show; with <code>onPageIndexChange</code> it is controlled.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgeWordDocumentMessages&gt;',
+          default: '{}',
+          description: 'Overrides of the message catalog.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      title: 'Events',
+      entries: [
+        {
+          name: 'onPageIndexChange',
+          type: '(index: number) =&gt; void',
+          description:
+            'When the page nearest the viewport&#39;s middle changes.',
+        },
+        {
+          name: 'onLoaded',
+          type: 'OgeWordDocumentLoadedEvent',
+          description: 'After a document opened, with what could not be shown.',
+        },
+        {
+          name: 'onLoadError',
+          type: 'OgeWordDocumentLoadErrorEvent',
+          description: 'When a document did not open.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Types',
+      entries: [
+        {
+          name: 'OgeWordDocumentSource',
+          type: 'ArrayBuffer | Uint8Array | Blob | string',
+          description:
+            'What the viewer opens: the file&#39;s bytes, a <code>Blob</code> / <code>File</code>, or a URL fetched with same-origin credentials.',
+        },
+        {
+          name: 'OgeWordDocumentLoadedEvent',
+          type: 'interface',
+          description:
+            '<code>{ pageCount, issues }</code> — the number of pages and everything not shown as Word shows it.',
+        },
+        {
+          name: 'OgeWordDocumentLoadErrorEvent',
+          type: 'interface',
+          description:
+            '<code>{ code, message }</code> — why the file did not open.',
+        },
+        {
+          name: 'OgeWordDocumentErrorCode',
+          type: "'not-docx' | 'encrypted-or-legacy' | 'corrupt' | 'too-large' | 'aborted' | 'fetch-failed'",
+          description:
+            '<code>encrypted-or-legacy</code> covers password-protected files and the old <code>.doc</code> format.',
+        },
+        {
+          name: 'OgeWordDocumentMessages',
+          type: 'interface',
+          description:
+            'The viewer&#39;s text: <code>viewerLabel</code>, <code>pageLabel</code> (with <code>{current}</code> and <code>{total}</code>), <code>previousPage</code>, <code>nextPage</code>, <code>loading</code>, <code>empty</code>, <code>loadError</code> and <code>encryptedOrLegacy</code>.',
+        },
+        {
+          name: 'OgeWordDocumentConfig / OgeWordDocumentConfigInput',
+          type: 'interface',
+          description:
+            'Defaults for viewers below the config provider: <code>{ messages }</code>, merged over the built-in text.',
+        },
+      ],
+    },
+  ],
+};

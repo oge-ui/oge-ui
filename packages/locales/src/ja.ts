@@ -1809,4 +1809,27 @@ export const ja: OgeLocalePack = {
     columnsHidden: '列 {first} から {last} を非表示にしました',
     hasCollapsedDetail: '詳細は非表示です。Alt+Shift+↓ キーで表示します',
   },
+  presentation: {
+    viewerLabel: 'プレゼンテーション',
+    slideLabel: 'スライド {current} / {total}',
+    previousSlide: '前のスライド',
+    nextSlide: '次のスライド',
+    thumbnails: 'スライド',
+    loading: 'プレゼンテーションを開いています…',
+    empty: '表示するプレゼンテーションはありません',
+    loadError: 'プレゼンテーションを開けませんでした',
+    encryptedOrLegacy:
+      'このファイルはパスワードで保護されているか、プレビューできない古い .ppt 形式です',
+  },
+  wordDocument: {
+    viewerLabel: '文書',
+    pageLabel: 'ページ {current} / {total}',
+    previousPage: '前のページ',
+    nextPage: '次のページ',
+    loading: '文書を開いています…',
+    empty: '表示する文書はありません',
+    loadError: '文書を開けませんでした',
+    encryptedOrLegacy:
+      'このファイルはパスワードで保護されているか、プレビューできない古い .doc 形式です',
+  },
 };

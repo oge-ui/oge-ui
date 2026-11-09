@@ -1843,4 +1843,27 @@ export const ru: OgeLocalePack = {
     columnsHidden: 'Столбцы с {first} по {last} скрыты',
     hasCollapsedDetail: 'подробности скрыты, Alt+Shift+Стрелка вниз — показать',
   },
+  presentation: {
+    viewerLabel: 'Презентация',
+    slideLabel: 'Слайд {current} из {total}',
+    previousSlide: 'Предыдущий слайд',
+    nextSlide: 'Следующий слайд',
+    thumbnails: 'Слайды',
+    loading: 'Открытие презентации…',
+    empty: 'Нет презентации для показа',
+    loadError: 'Не удалось открыть презентацию',
+    encryptedOrLegacy:
+      'Файл защищён паролем или имеет старый формат .ppt, который нельзя просмотреть',
+  },
+  wordDocument: {
+    viewerLabel: 'Документ',
+    pageLabel: 'Страница {current} из {total}',
+    previousPage: 'Предыдущая страница',
+    nextPage: 'Следующая страница',
+    loading: 'Открытие документа…',
+    empty: 'Нет документа для показа',
+    loadError: 'Не удалось открыть документ',
+    encryptedOrLegacy:
+      'Файл защищён паролем или имеет старый формат .doc, который нельзя просмотреть',
+  },
 };

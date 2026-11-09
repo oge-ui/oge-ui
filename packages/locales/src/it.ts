@@ -1844,4 +1844,27 @@ export const it: OgeLocalePack = {
     hasCollapsedDetail:
       'dettagli nascosti, Alt+Maiusc+Freccia giù per mostrarli',
   },
+  presentation: {
+    viewerLabel: 'Presentazione',
+    slideLabel: 'Diapositiva {current} di {total}',
+    previousSlide: 'Diapositiva precedente',
+    nextSlide: 'Diapositiva successiva',
+    thumbnails: 'Diapositive',
+    loading: 'Apertura della presentazione…',
+    empty: 'Nessuna presentazione da mostrare',
+    loadError: 'Impossibile aprire la presentazione',
+    encryptedOrLegacy:
+      'Questo file è protetto da password o nel vecchio formato .ppt, che non può essere visualizzato',
+  },
+  wordDocument: {
+    viewerLabel: 'Documento',
+    pageLabel: 'Pagina {current} di {total}',
+    previousPage: 'Pagina precedente',
+    nextPage: 'Pagina successiva',
+    loading: 'Apertura del documento…',
+    empty: 'Nessun documento da mostrare',
+    loadError: 'Impossibile aprire il documento',
+    encryptedOrLegacy:
+      'Questo file è protetto da password o nel vecchio formato .doc, che non può essere visualizzato',
+  },
 };

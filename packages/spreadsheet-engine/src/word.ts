@@ -19,6 +19,24 @@ export {
   type OgeWordLayoutOptions,
 } from './lib/word/layout';
 
+export { ogeCheckSpreadsheetLicense } from './lib/license';
+
+export {
+  OGE_DEFAULT_WORD_DOCUMENT_CONFIG,
+  OGE_DEFAULT_WORD_DOCUMENT_MESSAGES,
+  OgeWordDocumentCore,
+  ogeVisibleWordPages,
+  resolveOgeWordDocumentConfig,
+  type OgeWordDocumentConfig,
+  type OgeWordDocumentConfigInput,
+  type OgeWordDocumentCoreOptions,
+  type OgeWordDocumentErrorCode,
+  type OgeWordDocumentLoadErrorEvent,
+  type OgeWordDocumentLoadedEvent,
+  type OgeWordDocumentMessages,
+  type OgeWordDocumentSource,
+} from './lib/word/viewer-core';
+
 export type {
   OgeWordBlock,
   OgeWordBorder,

@@ -1841,4 +1841,27 @@ export const de: OgeLocalePack = {
     hasCollapsedDetail:
       'Details ausgeblendet, Alt+Umschalt+Nach-unten zum Einblenden',
   },
+  presentation: {
+    viewerLabel: 'Präsentation',
+    slideLabel: 'Folie {current} von {total}',
+    previousSlide: 'Vorherige Folie',
+    nextSlide: 'Nächste Folie',
+    thumbnails: 'Folien',
+    loading: 'Präsentation wird geöffnet…',
+    empty: 'Keine Präsentation vorhanden',
+    loadError: 'Die Präsentation konnte nicht geöffnet werden',
+    encryptedOrLegacy:
+      'Diese Datei ist kennwortgeschützt oder im alten .ppt-Format, das nicht angezeigt werden kann',
+  },
+  wordDocument: {
+    viewerLabel: 'Dokument',
+    pageLabel: 'Seite {current} von {total}',
+    previousPage: 'Vorherige Seite',
+    nextPage: 'Nächste Seite',
+    loading: 'Dokument wird geöffnet…',
+    empty: 'Kein Dokument vorhanden',
+    loadError: 'Das Dokument konnte nicht geöffnet werden',
+    encryptedOrLegacy:
+      'Diese Datei ist kennwortgeschützt oder im alten .doc-Format, das nicht angezeigt werden kann',
+  },
 };

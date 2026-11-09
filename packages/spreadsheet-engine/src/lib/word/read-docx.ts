@@ -17,6 +17,8 @@ import {
   type OgeXmlNode,
 } from '../codec/xml-tree';
 import { OGE_OFFICE_THEME_COLORS } from '../color/color';
+import { ogeFindSlideColor } from '../powerpoint/color';
+import { ogeIsSlideGeometryDrawn } from '../powerpoint/geometry';
 import { OgeXmlError } from '../xml/xml';
 import {
   OgeZipError,
@@ -43,17 +45,14 @@ import type {
   OgeWordRow,
   OgeWordRunStyle,
   OgeWordSection,
+  OgeWordShape,
   OgeWordTab,
   OgeWordTable,
 } from './model';
 
 /** Why a package could not be read at all. */
 export type OgeDocxErrorCode =
-  | 'not-docx'
-  | 'encrypted-or-legacy'
-  | 'corrupt'
-  | 'too-large'
-  | 'aborted';
+  'not-docx' | 'encrypted-or-legacy' | 'corrupt' | 'too-large' | 'aborted';
 
 /** A package that could not be read. */
 export class OgeDocxError extends Error {
@@ -334,6 +333,7 @@ class DocxReader {
   private readonly overrides = new Map<string, Map<number, number>>();
   private readonly seenStart = new Set<string>();
   private readonly footnotes = new Map<string, readonly OgeWordBlock[]>();
+  private readonly endnotes = new Map<string, readonly OgeWordBlock[]>();
   private defaultP: OgeXmlNode | undefined;
   private defaultR: OgeXmlNode | undefined;
   private defaultParagraphStyle = 'Normal';
@@ -344,7 +344,10 @@ class DocxReader {
 
   read(): OgeDocxReadResult {
     const main = this.pkg.relationshipOfType('', 'officeDocument');
-    if (!main || !this.pkg.contentType(main.target)?.includes('wordprocessingml')) {
+    if (
+      !main ||
+      !this.pkg.contentType(main.target)?.includes('wordprocessingml')
+    ) {
       throw new OgeDocxError('not-docx', 'No document part in the package');
     }
     this.main = main.target;
@@ -366,7 +369,8 @@ class DocxReader {
       twips(val(ogeXmlChild(settings, 'defaultTabStop'))) ?? 36;
     const evenAndOddHeaders =
       onOff(ogeXmlChild(settings, 'evenAndOddHeaders')) ?? false;
-    this.readFootnotes(main.target);
+    this.readNotes(main.target, 'footnotes', 'footnote', this.footnotes);
+    this.readNotes(main.target, 'endnotes', 'endnote', this.endnotes);
 
     const body = ogeXmlChild(root, 'body');
     const sections = this.readSections(body, main.target);
@@ -376,6 +380,7 @@ class DocxReader {
         defaultTab,
         evenAndOddHeaders,
         footnotes: this.footnotes,
+        endnotes: this.endnotes,
         media: this.media,
       },
       issues: this.issues.list(),
@@ -392,7 +397,10 @@ class DocxReader {
       return parseOgeXmlTree(text);
     } catch (error) {
       if (error instanceof OgeXmlError) {
-        this.issues.add('malformed-part', { part: path, detail: error.message });
+        this.issues.add('malformed-part', {
+          part: path,
+          detail: error.message,
+        });
         return undefined;
       }
       throw error;
@@ -486,16 +494,21 @@ class DocxReader {
     };
   }
 
-  private readFootnotes(main: string): void {
-    const rel = this.pkg.relationshipOfType(main, 'footnotes');
+  private readNotes(
+    main: string,
+    relationship: string,
+    element: string,
+    into: Map<string, readonly OgeWordBlock[]>,
+  ): void {
+    const rel = this.pkg.relationshipOfType(main, relationship);
     const root = rel ? this.tree(rel.target) : undefined;
     if (!root || !rel) return;
-    for (const note of ogeXmlChildren(root, 'footnote')) {
+    for (const note of ogeXmlChildren(root, element)) {
       const id = attr(note, 'id');
       const type = attr(note, 'type');
       if (!id || type === 'separator' || type === 'continuationSeparator')
         continue;
-      this.footnotes.set(id, this.blocks(note, rel.target, NO_TABLE));
+      into.set(id, this.blocks(note, rel.target, NO_TABLE));
     }
   }
 
@@ -525,10 +538,7 @@ class DocxReader {
                 : undefined,
       left: twips(attr(ind, 'left') ?? attr(ind, 'start')),
       right: twips(attr(ind, 'right') ?? attr(ind, 'end')),
-      first:
-        hanging !== undefined
-          ? -hanging
-          : firstLine,
+      first: hanging !== undefined ? -hanging : firstLine,
       before: twips(attr(spacing, 'before')),
       after: twips(attr(spacing, 'after')),
       lineRule:
@@ -620,10 +630,7 @@ class DocxReader {
     return value === 'auto' ? '000000' : color(value);
   }
 
-  private style(
-    bag: RunBag,
-    link: string | undefined,
-  ): OgeWordRunStyle {
+  private style(bag: RunBag, link: string | undefined): OgeWordRunStyle {
     return {
       font: bag.font ?? this.theme.minorFont ?? 'Calibri',
       size: bag.size ?? 10,
@@ -1061,13 +1068,14 @@ class DocxReader {
           break;
         }
         case 'footnoteRef':
-          out.push({ kind: 'field', field: 'page', style: { ...style } });
-          out.pop();
+        case 'endnoteRef':
           out.push({ kind: 'text', text: '\u0001', style });
           break;
-        case 'endnoteReference':
-          this.issues.add(NOT_SHOWN, { part, detail: 'endnote' });
+        case 'endnoteReference': {
+          const id = attr(child, 'id');
+          if (id) out.push({ kind: 'endnote', id, style });
           break;
+        }
         case 'drawing':
           if (showing()) this.drawing(child, part, out);
           break;
@@ -1175,6 +1183,24 @@ class DocxReader {
       if (chart) out.push(chart);
       return;
     }
+    const wsp = ogeXmlChild(data, 'wsp');
+    if (wsp) {
+      if (!anchor) {
+        this.issues.add(NOT_SHOWN, { part, detail: 'inline shape' });
+        return;
+      }
+      out.push({
+        kind: 'float',
+        float: this.float(
+          anchor,
+          { shape: this.shape(wsp, part) },
+          width,
+          height,
+          description,
+        ),
+      });
+      return;
+    }
     const picture = this.picture(graphic, part);
     if (!picture) return;
     if (inline) {
@@ -1190,7 +1216,7 @@ class DocxReader {
     if (anchor) {
       out.push({
         kind: 'float',
-        float: this.float(anchor, picture, width, height, description),
+        float: this.float(anchor, { picture }, width, height, description),
       });
     }
   }
@@ -1257,15 +1283,74 @@ class DocxReader {
     const offset = ogeXmlChild(node, 'posOffset')?.text;
     return {
       from: attr(node, 'relativeFrom') ?? 'page',
-      offset:
-        offset === undefined ? null : Number(offset) / EMU_PER_POINT,
+      offset: offset === undefined ? null : Number(offset) / EMU_PER_POINT,
       align: ogeXmlChild(node, 'align')?.text ?? null,
+    };
+  }
+
+  /** A drawing-layer shape: outline, fill and its text box. */
+  private shape(wsp: OgeXmlNode, part: string): OgeWordShape {
+    const context = {
+      theme: this.theme.colors,
+      map: { bg1: 'lt1', tx1: 'dk1', bg2: 'lt2', tx2: 'dk2' },
+    };
+    const spPr = ogeXmlChild(wsp, 'spPr');
+    const style = ogeXmlChild(wsp, 'style');
+    const preset = ogeXmlChild(spPr, 'prstGeom');
+    const geometry = preset?.attributes['prst'] ?? 'rect';
+    if (!ogeIsSlideGeometryDrawn(geometry) || ogeXmlChild(spPr, 'custGeom'))
+      this.issues.add(NOT_SHOWN, { part, detail: `geometry ${geometry}` });
+    const adjust: Record<string, number> = {};
+    for (const gd of ogeXmlChildren(ogeXmlChild(preset, 'avLst'), 'gd')) {
+      const match = /^val\s+(-?\d+)$/.exec(gd.attributes['fmla'] ?? '');
+      if (match && gd.attributes['name'])
+        adjust[gd.attributes['name']] = Number(match[1]);
+    }
+    const reference = (name: string): string | null => {
+      const ref = ogeXmlChild(style, name);
+      if (Number(ref?.attributes['idx'] ?? 0) === 0) return null;
+      return ogeFindSlideColor(ref, context)?.rgb ?? null;
+    };
+    const fill = ogeXmlChild(spPr, 'noFill')
+      ? null
+      : (ogeFindSlideColor(ogeXmlChild(spPr, 'solidFill'), context)?.rgb ??
+        reference('fillRef'));
+    const ln = ogeXmlChild(spPr, 'ln');
+    const lineColor = ogeXmlChild(ln, 'noFill')
+      ? null
+      : (ogeFindSlideColor(ogeXmlChild(ln, 'solidFill'), context)?.rgb ??
+        reference('lnRef'));
+    const body = ogeXmlChild(wsp, 'bodyPr');
+    const inset = (name: string, fallback: number): number =>
+      Number(body?.attributes[name] ?? fallback) / EMU_PER_POINT;
+    const content = ogeXmlChild(ogeXmlChild(wsp, 'txbx'), 'txbxContent');
+    const anchor = body?.attributes['anchor'];
+    return {
+      geometry,
+      adjust,
+      fill,
+      line: lineColor
+        ? {
+            width: Number(ln?.attributes['w'] ?? 12700) / EMU_PER_POINT,
+            color: lineColor,
+            style: 'single',
+            space: 0,
+          }
+        : null,
+      blocks: content ? this.blocks(content, part, NO_TABLE) : [],
+      insets: {
+        left: inset('lIns', 91440),
+        top: inset('tIns', 45720),
+        right: inset('rIns', 91440),
+        bottom: inset('bIns', 45720),
+      },
+      anchor: anchor === 'ctr' ? 'center' : anchor === 'b' ? 'bottom' : 'top',
     };
   }
 
   private float(
     anchor: OgeXmlNode,
-    picture: OgeWordPicture,
+    content: Pick<OgeWordFloat, 'picture' | 'shape'>,
     width: number,
     height: number,
     description: string | undefined,
@@ -1280,7 +1365,7 @@ class DocxReader {
           ? 'topAndBottom'
           : 'none';
     return {
-      picture,
+      ...content,
       width,
       height,
       horizontal: this.floatPosition(ogeXmlChild(anchor, 'positionH')),
@@ -1404,7 +1489,12 @@ class DocxReader {
       kind: 'table',
       columns,
       indent: twips(attr(ind, 'w')) ?? 0,
-      align: jc === 'center' ? 'center' : jc === 'right' || jc === 'end' ? 'right' : 'left',
+      align:
+        jc === 'center'
+          ? 'center'
+          : jc === 'right' || jc === 'end'
+            ? 'right'
+            : 'left',
       rows,
     };
   }

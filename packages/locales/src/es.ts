@@ -1843,4 +1843,27 @@ export const es: OgeLocalePack = {
     hasCollapsedDetail:
       'detalles ocultos, Alt+Mayús+Flecha abajo para mostrarlos',
   },
+  presentation: {
+    viewerLabel: 'Presentación',
+    slideLabel: 'Diapositiva {current} de {total}',
+    previousSlide: 'Diapositiva anterior',
+    nextSlide: 'Diapositiva siguiente',
+    thumbnails: 'Diapositivas',
+    loading: 'Abriendo la presentación…',
+    empty: 'No hay ninguna presentación',
+    loadError: 'No se pudo abrir la presentación',
+    encryptedOrLegacy:
+      'Este archivo está protegido con contraseña o tiene el antiguo formato .ppt, que no se puede previsualizar',
+  },
+  wordDocument: {
+    viewerLabel: 'Documento',
+    pageLabel: 'Página {current} de {total}',
+    previousPage: 'Página anterior',
+    nextPage: 'Página siguiente',
+    loading: 'Abriendo el documento…',
+    empty: 'No hay ningún documento',
+    loadError: 'No se pudo abrir el documento',
+    encryptedOrLegacy:
+      'Este archivo está protegido con contraseña o tiene el antiguo formato .doc, que no se puede previsualizar',
+  },
 };

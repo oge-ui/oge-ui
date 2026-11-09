@@ -60,6 +60,14 @@ flow that Word breaks into lines and pages by rules it does not publish.
 PowerPoint comes first: it has no pagination problem, so it proves the shared
 layer and the corpus tooling while delivering a complete format.
 
+## Outcome
+
+All four phases are built. The corpus deck and document are created and
+measured by PowerPoint and Word themselves: every line break and page break of
+the corpus document matches Word, and the slides differ from PowerPoint's own
+pictures only in glyph rasterization. What a file uses and the viewer does not
+draw is reported through `issues`.
+
 ## Consequences
 
 - **Fonts cap the fidelity.** Line and page breaks depend on the font. Microsoft

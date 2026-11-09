@@ -979,6 +979,7 @@
         "@oge-ui/bpmn",
         "@oge-ui/layout",
         "@oge-ui/overlay",
+        "@oge-ui/spreadsheet",
         "@oge-ui/upload"
       ]
     },

@@ -86,22 +86,22 @@
                       "page":  1,
                       "y":  292.10000610351563,
                       "x":  70.6500015258789,
+                      "lastX":  311.10000610351563,
+                      "text":  "A centred para"
+                  },
+                  {
+                      "page":  1,
+                      "y":  292.10000610351563,
+                      "x":  135.85000610351563,
                       "lastX":  161.64999389648438,
-                      "text":  "A centred paragraph."
+                      "text":  "graph."
                   },
                   {
                       "page":  1,
                       "y":  315.85000610351563,
                       "x":  70.6500015258789,
-                      "lastX":  417.75,
-                      "text":  "A r"
-                  },
-                  {
-                      "page":  1,
-                      "y":  315.85000610351563,
-                      "x":  82.8499984741211,
                       "lastX":  183.39999389648438,
-                      "text":  "ight aligned paragraph."
+                      "text":  "A right aligned paragraph."
                   },
                   {
                       "page":  1,
@@ -149,15 +149,50 @@
                       "page":  1,
                       "y":  440.85000610351563,
                       "x":  70.6500015258789,
+                      "lastX":  343.70001220703125,
+                      "text":  "quarterly figures and prepares a detailed summary for"
+                  },
+                  {
+                      "page":  1,
+                      "y":  440.85000610351563,
+                      "x":  311.75,
+                      "lastX":  370.20001220703125,
+                      "text":  " every"
+                  },
+                  {
+                      "page":  1,
+                      "y":  440.85000610351563,
+                      "x":  338.95001220703125,
+                      "lastX":  386.5,
+                      "text":  " reg"
+                  },
+                  {
+                      "page":  1,
+                      "y":  440.85000610351563,
+                      "x":  355.89999389648438,
                       "lastX":  436.75,
-                      "text":  "quarterly figures and prepares a detailed summary for every regional office before "
+                      "text":  "ional office before "
                   },
                   {
                       "page":  1,
                       "y":  456.45001220703125,
                       "x":  70.6500015258789,
+                      "lastX":  385.79998779296875,
+                      "text":  "the end of the reporting period, so that nobody has to guess wh"
+                  },
+                  {
+                      "page":  1,
+                      "y":  456.45001220703125,
+                      "x":  355.89999389648438,
+                      "lastX":  413.64999389648438,
+                      "text":  "at cha"
+                  },
+                  {
+                      "page":  1,
+                      "y":  456.45001220703125,
+                      "x":  383.10000610351563,
                       "lastX":  407.54998779296875,
-                      "text":  "the end of the reporting period, so that nobody has to guess what changed. "
+                      "text":  "nged. "
                   },
                   {
                       "page":  1,
@@ -170,29 +205,36 @@
                       "page":  1,
                       "y":  495.14999389648438,
                       "x":  70.6500015258789,
-                      "lastX":  283.89999389648438,
-                      "text":  "and prepares a detailed summary for eve"
+                      "lastX":  152.14999389648438,
+                      "text":  "and prepar"
                   },
                   {
                       "page":  1,
                       "y":  495.14999389648438,
-                      "x":  254.05000305175781,
+                      "x":  119.55000305175781,
+                      "lastX":  310.39999389648438,
+                      "text":  "es a detailed summary for every reg"
+                  },
+                  {
+                      "page":  1,
+                      "y":  495.14999389648438,
+                      "x":  279.14999389648438,
+                      "lastX":  447.60000610351563,
+                      "text":  "ional office before the end of t"
+                  },
+                  {
+                      "page":  1,
+                      "y":  495.14999389648438,
+                      "x":  415,
                       "lastX":  470.70001220703125,
-                      "text":  "ry regional office before the end of the reporting "
+                      "text":  "he reporting "
                   },
                   {
                       "page":  1,
                       "y":  510.79998779296875,
                       "x":  70.6500015258789,
                       "lastX":  297.5,
-                      "text":  "period, so that nobody has to guess what ch"
-                  },
-                  {
-                      "page":  1,
-                      "y":  510.79998779296875,
-                      "x":  267.60000610351563,
-                      "lastX":  297.5,
-                      "text":  "anged. "
+                      "text":  "period, so that nobody has to guess what changed. "
                   },
                   {
                       "page":  1,
@@ -289,8 +331,15 @@
                       "page":  2,
                       "y":  157.60000610351563,
                       "x":  70.6500015258789,
+                      "lastX":  258.10000610351563,
+                      "text":  "reporting period, so that nobody has to"
+                  },
+                  {
+                      "page":  2,
+                      "y":  157.60000610351563,
+                      "x":  245.89999389648438,
                       "lastX":  341.64999389648438,
-                      "text":  "reporting period, so that nobody has to guess what changed. "
+                      "text":  " guess what changed. "
                   },
                   {
                       "page":  2,
@@ -471,57 +520,64 @@
                       "page":  2,
                       "y":  593,
                       "x":  70.6500015258789,
-                      "lastX":  513.5,
-                      "text":  "The quick brown fox jumps over the lazy dog while the committee reviews the quarterly figures and "
+                      "lastX":  313.14999389648438,
+                      "text":  "The quick brown fox jumps over the lazy dog while the "
                   },
                   {
                       "page":  2,
                       "y":  608.5999755859375,
                       "x":  70.6500015258789,
-                      "lastX":  518.95001220703125,
-                      "text":  "prepares a detailed summary for every regional office before the end of the reporting period, so that "
+                      "lastX":  357.29998779296875,
+                      "text":  "committee reviews the quarterly figures and prepares a detailed "
                   },
                   {
                       "page":  2,
                       "y":  624.25,
                       "x":  70.6500015258789,
-                      "lastX":  474.79998779296875,
-                      "text":  "nobody has to guess what changed. The quick brown fox jumps over the lazy dog while the "
+                      "lastX":  318.54998779296875,
+                      "text":  "summary for every regional office before the end of the "
                   },
                   {
                       "page":  2,
                       "y":  639.8499755859375,
                       "x":  70.6500015258789,
-                      "lastX":  509.45001220703125,
-                      "text":  "committee reviews the quarterly figures and prepares a detailed summary for every regional office "
+                      "lastX":  523.70001220703125,
+                      "text":  "reporting period, so that nobody has to guess what changed. The quick "
                   },
                   {
                       "page":  2,
                       "y":  655.45001220703125,
                       "x":  70.6500015258789,
-                      "lastX":  516.25,
-                      "text":  "before the end of the reporting period, so that nobody has to guess what changed. The quick brown "
+                      "lastX":  517.5999755859375,
+                      "text":  "brown fox jumps over the lazy dog while the committee reviews the quarterly figures and prepares a "
                   },
                   {
                       "page":  2,
-                      "y":  670.4000244140625,
-                      "x":  70.6500015258789,
-                      "lastX":  486.35000610351563,
-                      "text":  "fox jumps over the lazy dog while the committee reviews the quarterly figures and prepares a "
-                  },
-                  {
-                      "page":  2,
-                      "y":  686.04998779296875,
+                      "y":  671.0999755859375,
                       "x":  70.6500015258789,
                       "lastX":  523.70001220703125,
                       "text":  "detailed summary for every regional office before the end of the reporting period, so that nobody has "
                   },
                   {
                       "page":  2,
-                      "y":  701.6500244140625,
+                      "y":  686.70001220703125,
                       "x":  70.6500015258789,
-                      "lastX":  175.89999389648438,
-                      "text":  "to guess what changed. "
+                      "lastX":  508.10000610351563,
+                      "text":  "to guess what changed. The quick brown fox jumps over the lazy dog while the committee reviews "
+                  },
+                  {
+                      "page":  2,
+                      "y":  702.3499755859375,
+                      "x":  70.6500015258789,
+                      "lastX":  520.29998779296875,
+                      "text":  "the quarterly figures and prepares a detailed summary for every regional office before the end of the "
+                  },
+                  {
+                      "page":  2,
+                      "y":  717.95001220703125,
+                      "x":  70.6500015258789,
+                      "lastX":  341.64999389648438,
+                      "text":  "reporting period, so that nobody has to guess what changed. "
                   },
                   {
                       "page":  3,

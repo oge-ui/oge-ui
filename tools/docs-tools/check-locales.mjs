@@ -73,6 +73,8 @@ const SLICES = {
   bpmn: 'OGE_DEFAULT_BPMN_MESSAGES',
   charts: 'OGE_DEFAULT_CHARTS_MESSAGES',
   spreadsheet: 'OGE_DEFAULT_SPREADSHEET_MESSAGES',
+  presentation: 'OGE_DEFAULT_PRESENTATION_MESSAGES',
+  wordDocument: 'OGE_DEFAULT_WORD_DOCUMENT_MESSAGES',
 };
 const COMMERCIAL = {
   pivot: '@oge-ui/pivot-engine',
@@ -82,6 +84,8 @@ const COMMERCIAL = {
   bpmn: '@oge-ui/bpmn-engine',
   charts: '@oge-ui/charts-engine',
   spreadsheet: '@oge-ui/spreadsheet-engine',
+  presentation: '@oge-ui/spreadsheet-engine/powerpoint',
+  wordDocument: '@oge-ui/spreadsheet-engine/word',
 };
 
 const codes = readdirSync(localesSrc)

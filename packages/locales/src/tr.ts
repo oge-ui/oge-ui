@@ -1803,4 +1803,27 @@ export const tr: OgeLocalePack = {
     columnsHidden: '{first}-{last} arası sütunlar gizlendi',
     hasCollapsedDetail: 'ayrıntılar gizli, göstermek için Alt+Shift+Aşağı ok',
   },
+  presentation: {
+    viewerLabel: 'Sunu',
+    slideLabel: 'Slayt {current} / {total}',
+    previousSlide: 'Önceki slayt',
+    nextSlide: 'Sonraki slayt',
+    thumbnails: 'Slaytlar',
+    loading: 'Sunu açılıyor…',
+    empty: 'Gösterilecek sunu yok',
+    loadError: 'Sunu açılamadı',
+    encryptedOrLegacy:
+      'Bu dosya parola korumalı veya önizlenemeyen eski .ppt biçiminde',
+  },
+  wordDocument: {
+    viewerLabel: 'Belge',
+    pageLabel: 'Sayfa {current} / {total}',
+    previousPage: 'Önceki sayfa',
+    nextPage: 'Sonraki sayfa',
+    loading: 'Belge açılıyor…',
+    empty: 'Gösterilecek belge yok',
+    loadError: 'Belge açılamadı',
+    encryptedOrLegacy:
+      'Bu dosya parola korumalı veya önizlenemeyen eski .doc biçiminde',
+  },
 };

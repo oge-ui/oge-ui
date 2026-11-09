@@ -54,6 +54,7 @@ export default defineConfig(() => ({
         styles: 'src/styles.ts',
         // never loaded by spreadsheet-only applications (ADR 0006)
         powerpoint: 'src/powerpoint.ts',
+        word: 'src/word.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
@@ -68,6 +69,7 @@ export default defineConfig(() => ({
         'react/jsx-runtime',
         '@oge-ui/spreadsheet-engine',
         '@oge-ui/spreadsheet-engine/powerpoint',
+        '@oge-ui/spreadsheet-engine/word',
       ],
       output: {
         // Rollup strips module-level directives when it bundles, so the

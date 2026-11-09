@@ -12,12 +12,16 @@
  * - a line keeps its trailing spaces, which never force a break.
  */
 import { sanitizeUrl } from '@oge-ui/behavior';
+import { ogeSlideGeometryPath } from '../powerpoint/geometry';
 import {
   OgeSlideDrawing,
   type OgeSlidePaint,
   type OgeSlideRender,
 } from '../powerpoint/render';
-import type { OgeSlideFont, OgeSlideTextMeasurer } from '../powerpoint/text-layout';
+import type {
+  OgeSlideFont,
+  OgeSlideTextMeasurer,
+} from '../powerpoint/text-layout';
 import type {
   OgeWordBlock,
   OgeWordBorder,
@@ -58,11 +62,8 @@ const LINE_RATIOS: Readonly<Record<string, number>> = {
   corbel: 1.2207,
 };
 
-
 /** How far a justified line may squeeze its spaces to fit one more word. */
 const JUSTIFY_SHRINK = 0.25;
-
-
 
 /** The share of a line above the baseline, from the face's own extents. */
 function ascentShare(
@@ -148,6 +149,7 @@ interface LayoutContext {
   page: number;
   pages: number;
   footnoteNumbers: Map<string, number>;
+  endnoteNumbers: Map<string, number>;
 }
 
 function noteNumber(context: LayoutContext, id: string): number {
@@ -157,6 +159,35 @@ function noteNumber(context: LayoutContext, id: string): number {
     context.footnoteNumbers.set(id, number);
   }
   return number;
+}
+
+function endnoteNumber(context: LayoutContext, id: string): number {
+  let number = context.endnoteNumbers.get(id);
+  if (number === undefined) {
+    number = context.endnoteNumbers.size + 1;
+    context.endnoteNumbers.set(id, number);
+  }
+  return number;
+}
+
+/** Endnotes number in lower-case roman by default. */
+function romanLower(value: number): string {
+  const table: [number, string][] = [
+    [10, 'x'],
+    [9, 'ix'],
+    [5, 'v'],
+    [4, 'iv'],
+    [1, 'i'],
+  ];
+  let out = '';
+  let rest = value;
+  for (const [amount, text] of table) {
+    while (rest >= amount) {
+      out += text;
+      rest -= amount;
+    }
+  }
+  return out;
 }
 
 function piecesOf(
@@ -209,6 +240,17 @@ function piecesOf(
           height: inline.height,
         });
         break;
+      case 'endnote': {
+        const text = romanLower(endnoteNumber(context, inline.id));
+        out.push({
+          kind: 'footnote',
+          id: '',
+          text,
+          style: inline.style,
+          width: measurer.width(text, fontOf(inline.style)),
+        });
+        break;
+      }
       case 'footnote': {
         const text = String(noteNumber(context, inline.id));
         out.push({
@@ -254,7 +296,11 @@ class LineFlow {
   }
 
   /** The next line in `[start, end]` of the column; `null` when finished. */
-  next(start: number, end: number): LaidLine | null {
+  next(
+    start: number,
+    end: number,
+    more: readonly { start: number; end: number }[] = [],
+  ): LaidLine | null {
     if (this.done) return null;
     const p = this.paragraph;
     const { measurer } = this.context;
@@ -262,7 +308,8 @@ class LineFlow {
     const footnotes: string[] = [];
     let labelItems = 0;
     const lineStart = start + p.left + (this.first ? p.first : 0);
-    const right = end - p.right;
+    let right = end - p.right;
+    let hops = 0;
     let x = lineStart;
 
     if (this.first && p.label) {
@@ -329,7 +376,12 @@ class LineFlow {
           x = stop.position;
           if (stop.leader !== 'none' && x > leaderFrom) {
             const font = fontOf(piece.style);
-            const dot = stop.leader === 'hyphen' ? '-' : stop.leader === 'underscore' ? '_' : '.';
+            const dot =
+              stop.leader === 'hyphen'
+                ? '-'
+                : stop.leader === 'underscore'
+                  ? '_'
+                  : '.';
             const unit = Math.max(0.5, measurer.width(dot, font));
             const count = Math.floor((x - leaderFrom) / unit);
             items.push({
@@ -371,21 +423,30 @@ class LineFlow {
               break;
             } else break;
           }
-          const hasContent = items.some(
-            (item) => item.piece.kind !== 'space',
-          );
+          // Text continues on the far side of a floating object when the next
+          // word fits there, however narrow the gap.
+          if (x + width > right + 0.01 && hops < more.length && !group) {
+            const segment = more[hops++];
+            x = segment.start;
+            right = segment.end;
+            continue scan;
+          }
+          const hasContent = items.some((item) => item.piece.kind !== 'space');
           const slack =
             p.align === 'both'
-              ? items.filter((item) => item.piece.kind === 'space').reduce(
-                  (sum, item) => sum + item.width * JUSTIFY_SHRINK,
-                  0,
-                )
+              ? items
+                  .filter((item) => item.piece.kind === 'space')
+                  .reduce((sum, item) => sum + item.width * JUSTIFY_SHRINK, 0)
               : 0;
           if (x + width > right + slack + 0.01 && hasContent && !group) {
             end_ = 'wrap';
             break scan;
           }
-          if (x + width > right + 0.01 && !hasContent && piece.kind === 'word') {
+          if (
+            x + width > right + 0.01 &&
+            !hasContent &&
+            piece.kind === 'word'
+          ) {
             // a word wider than the line breaks at the character that fits
             const chars = Array.from(piece.text);
             const font = fontOf(piece.style);
@@ -425,7 +486,7 @@ class LineFlow {
               part.kind === 'chart'
                 ? part.width
                 : 0;
-            if (part.kind === 'footnote') footnotes.push(part.id);
+            if (part.kind === 'footnote' && part.id) footnotes.push(part.id);
             items.push({ piece: part, x, width: partWidth });
             x += partWidth;
           }
@@ -677,13 +738,7 @@ function drawLine(
     const style = piece.style;
     if (style.background) {
       const font = fontOf(style);
-      canvas.rect(
-        item.x,
-        top,
-        item.width,
-        line.height,
-        style.background,
-      );
+      canvas.rect(item.x, top, item.width, line.height, style.background);
       void font;
     }
     if (piece.kind === 'space' && !style.underline && !style.strike) continue;
@@ -723,9 +778,7 @@ function drawLine(
       y: num(baseline - raise),
       transform: '',
       fontFamily: family(style.font),
-      fontSize: num(
-        piece.kind === 'footnote' ? style.size * 0.65 : font.size,
-      ),
+      fontSize: num(piece.kind === 'footnote' ? style.size * 0.65 : font.size),
       fontWeight: style.bold ? 'bold' : 'normal',
       fontStyle: style.italic ? 'italic' : 'normal',
       anchor: 'start',
@@ -852,6 +905,8 @@ class Paginator {
   private explicitBreak = true;
   private previous: OgeWordParagraph | null = null;
   private section!: OgeWordSection;
+  /** The mark a note's own paragraph opens with, while notes are placed. */
+  private noteMark: string | undefined;
 
   constructor(
     private readonly context: LayoutContext,
@@ -976,7 +1031,33 @@ class Paginator {
         }
       });
     });
+    this.placeEndnotes(document);
     this.finishNotes();
+  }
+
+  /** Endnotes follow the last section, after a short rule. */
+  private placeEndnotes(document: OgeWordDocument): void {
+    const used = [...this.context.endnoteNumbers.entries()];
+    if (used.length === 0) return;
+    const { start } = this.columnBounds();
+    this.y += 10;
+    this.page.canvas.line(start, this.y, start + 144, this.y, {
+      width: 0.5,
+      color: '000000',
+      style: 'single',
+      space: 0,
+    });
+    this.y += 6;
+    this.previous = null;
+    for (const [id, number] of used) {
+      const blocks = document.endnotes.get(id) ?? [];
+      this.noteMark = romanLower(number);
+      blocks.forEach((block, index) => {
+        if (block.kind === 'paragraph')
+          this.placeParagraph(block, blocks, index);
+      });
+    }
+    this.noteMark = undefined;
   }
 
   // --- keep rules ----------------------------------------------------------
@@ -997,8 +1078,7 @@ class Paginator {
         ? Math.min(2, lines.length)
         : 1;
     return (
-      block.before +
-      lines.slice(0, count).reduce((sum, l) => sum + l.height, 0)
+      block.before + lines.slice(0, count).reduce((sum, l) => sum + l.height, 0)
     );
   }
 
@@ -1028,15 +1108,18 @@ class Paginator {
     end: number,
     y: number,
     height: number,
-  ): { start: number; end: number; y: number } {
+  ): {
+    start: number;
+    end: number;
+    y: number;
+    more: { start: number; end: number }[];
+  } {
     let top = y;
-    let left = start;
-    let right = end;
+    let free = [{ start, end }];
     let moved = true;
     while (moved) {
       moved = false;
-      left = start;
-      right = end;
+      free = [{ start, end }];
       for (const box of this.page.exclusions) {
         if (top + height <= box.top || top >= box.bottom) continue;
         if (box.right <= start || box.left >= end) continue;
@@ -1045,13 +1128,19 @@ class Paginator {
           moved = true;
           break;
         }
-        const roomLeft = box.left - start;
-        const roomRight = end - box.right;
-        if (roomLeft >= roomRight) right = Math.min(right, box.left);
-        else left = Math.max(left, box.right);
+        free = free.flatMap((part) => {
+          if (box.right <= part.start || box.left >= part.end) return [part];
+          const pieces: { start: number; end: number }[] = [];
+          if (box.left > part.start)
+            pieces.push({ start: part.start, end: box.left });
+          if (box.right < part.end)
+            pieces.push({ start: box.right, end: part.end });
+          return pieces;
+        });
       }
     }
-    return { start: left, end: right, y: top };
+    const [first, ...more] = free.length ? free : [{ start, end }];
+    return { ...first, y: top, more };
   }
 
   private placeFloats(paragraph: OgeWordParagraph, top: number): void {
@@ -1059,6 +1148,44 @@ class Paginator {
       if (inline.kind !== 'float') continue;
       this.placeFloat(inline.float, top);
     }
+  }
+
+  private drawShape(float: OgeWordFloat, x: number, y: number): void {
+    const shape = float.shape;
+    if (!shape) return;
+    const { canvas } = this.page;
+    canvas.drawing.nodes.push({
+      kind: 'path',
+      d: ogeSlideGeometryPath(
+        shape.geometry,
+        float.width,
+        float.height,
+        shape.adjust,
+      ),
+      transform: `translate(${num(x)} ${num(y)})`,
+      fill: shape.fill ? solid(shape.fill) : null,
+      stroke: shape.line ? solid(shape.line.color) : null,
+      strokeWidth: shape.line?.width ?? 0,
+      dash: null,
+      cap: 'butt',
+      filter: null,
+    });
+    const start = x + shape.insets.left;
+    const end = x + float.width - shape.insets.right;
+    const stack = stackBlocks(shape.blocks, start, end, this.context);
+    const room = float.height - shape.insets.top - shape.insets.bottom;
+    const shift =
+      shape.anchor === 'center'
+        ? (room - stack.height) / 2
+        : shape.anchor === 'bottom'
+          ? room - stack.height
+          : 0;
+    drawStack(
+      canvas,
+      stack.paragraphs,
+      y + shape.insets.top + Math.max(0, shift),
+      this.options.fontFamily,
+    );
   }
 
   private placeFloat(float: OgeWordFloat, paragraphTop: number): void {
@@ -1091,19 +1218,19 @@ class Paginator {
       originX(float.horizontal.from),
       float.width,
     );
-    const y = place(
-      float.vertical,
-      originY(float.vertical.from),
-      float.height,
-    );
-    this.page.canvas.picture(
-      float.picture,
-      x,
-      y,
-      float.width,
-      float.height,
-      float.description ?? '',
-    );
+    const y = place(float.vertical, originY(float.vertical.from), float.height);
+    if (float.picture) {
+      this.page.canvas.picture(
+        float.picture,
+        x,
+        y,
+        float.width,
+        float.height,
+        float.description ?? '',
+      );
+    } else {
+      this.drawShape(float, x, y);
+    }
     if (float.wrap === 'none') return;
     this.page.exclusions.push({
       left: x - float.distance.left,
@@ -1169,7 +1296,7 @@ class Paginator {
     this.explicitBreak = false;
 
     // the whole paragraph's lines, for the keep and widow decisions
-    const preview = new LineFlow(paragraph, this.context);
+    const preview = new LineFlow(paragraph, this.context, this.noteMark);
     const allLines: LaidLine[] = [];
     let previewLine: LaidLine | null;
     while ((previewLine = preview.next(start, end))) allLines.push(previewLine);
@@ -1208,13 +1335,13 @@ class Paginator {
     this.atTop = false;
     this.drawParagraphBox(paragraph, allLines, start, end);
 
-    const flow = new LineFlow(paragraph, this.context);
+    const flow = new LineFlow(paragraph, this.context, this.noteMark);
     let placed = 0;
     let line: LaidLine | null = null;
     for (;;) {
       const estimate = allLines[Math.min(placed, count - 1)]?.height ?? 14;
       const room = this.lineRoom(start, end, this.y, estimate);
-      line = flow.next(room.start, room.end);
+      line = flow.next(room.start, room.end, room.more);
       if (!line) break;
       this.y = room.y;
 
@@ -1226,10 +1353,7 @@ class Paginator {
       // widow control: never leave one line alone on either page
       if (!must && paragraph.widowControl && count - placed === 2) {
         const nextHeight = allLines[placed + 1]?.height ?? line.height;
-        if (
-          !fits(line.height + nextHeight, this.y, notes) &&
-          placed > 0
-        ) {
+        if (!fits(line.height + nextHeight, this.y, notes) && placed > 0) {
           must = true;
         }
       }
@@ -1265,18 +1389,45 @@ class Paginator {
       canvas.rect(left, this.y, right - left, height, paragraph.shading);
     }
     const b = paragraph.borders;
-    if (b.top) canvas.line(left, this.y - b.top.space, right, this.y - b.top.space, b.top);
+    if (b.top)
+      canvas.line(
+        left,
+        this.y - b.top.space,
+        right,
+        this.y - b.top.space,
+        b.top,
+      );
     const bottom = this.y + height;
-    if (b.bottom) canvas.line(left, bottom + b.bottom.space, right, bottom + b.bottom.space, b.bottom);
-    if (b.left) canvas.line(left - b.left.space, this.y, left - b.left.space, bottom, b.left);
-    if (b.right) canvas.line(right + b.right.space, this.y, right + b.right.space, bottom, b.right);
+    if (b.bottom)
+      canvas.line(
+        left,
+        bottom + b.bottom.space,
+        right,
+        bottom + b.bottom.space,
+        b.bottom,
+      );
+    if (b.left)
+      canvas.line(
+        left - b.left.space,
+        this.y,
+        left - b.left.space,
+        bottom,
+        b.left,
+      );
+    if (b.right)
+      canvas.line(
+        right + b.right.space,
+        this.y,
+        right + b.right.space,
+        bottom,
+        b.right,
+      );
   }
 
   private placeLine(line: LaidLine): void {
     drawLine(this.page.canvas, line, this.y, this.options.fontFamily);
     const textItems = line.items.filter(
-      (item) =>
-        item.piece.kind === 'word' || item.piece.kind === 'space',
+      (item) => item.piece.kind === 'word' || item.piece.kind === 'space',
     );
     this.laid[this.laid.length - 1].push({
       text: textItems
@@ -1381,8 +1532,7 @@ class Paginator {
         if (cell.verticalMerge === 'restart') {
           for (
             let r = rowIndex + 1;
-            r < table.rows.length &&
-            this.continuesMerge(table.rows[r], column);
+            r < table.rows.length && this.continuesMerge(table.rows[r], column);
             r++
           ) {
             height += heights[r];
@@ -1390,7 +1540,8 @@ class Paginator {
         }
         const left = xs[column];
         const right = xs[Math.min(column + span, table.columns.length)];
-        if (cell.shading) canvas.rect(left, top, right - left, height, cell.shading);
+        if (cell.shading)
+          canvas.rect(left, top, right - left, height, cell.shading);
         const { stack } = this.cellStack(table, row, cell, column);
         const free =
           height - stack.height - cell.margins.top - cell.margins.bottom;
@@ -1403,7 +1554,14 @@ class Paginator {
         const contentTop = top + cell.margins.top + Math.max(0, shift);
         drawStack(canvas, stack.paragraphs, contentTop, family);
         this.recordCell(stack.paragraphs, contentTop);
-        this.drawCellBorders(canvas, left, top, right, top + height, cell.borders);
+        this.drawCellBorders(
+          canvas,
+          left,
+          top,
+          right,
+          top + height,
+          cell.borders,
+        );
       }
       column += span;
     }
@@ -1436,9 +1594,114 @@ class Paginator {
     borders: Readonly<Partial<Record<OgeWordEdge, OgeWordBorder>>>,
   ): void {
     if (borders.top) canvas.line(left, top, right, top, borders.top);
-    if (borders.bottom) canvas.line(left, bottom, right, bottom, borders.bottom);
+    if (borders.bottom)
+      canvas.line(left, bottom, right, bottom, borders.bottom);
     if (borders.left) canvas.line(left, top, left, bottom, borders.left);
     if (borders.right) canvas.line(right, top, right, bottom, borders.right);
+  }
+
+  /**
+   * Lets a row run over the page: each cell keeps the lines that fit and the
+   * rest continue at the top of the next page. `false` when not even one
+   * line of any cell fits, so the caller moves the row whole.
+   */
+  private placeSplitRow(
+    table: OgeWordTable,
+    r: number,
+    headers: number,
+    heights: readonly number[],
+  ): boolean {
+    const row = table.rows[r];
+    const xs = this.columnsX(table);
+    let column = row.skipBefore;
+    const cells = row.cells.map((cell) => {
+      const at = column;
+      column += cell.columnSpan;
+      const { stack, left, right } = this.cellStack(table, row, cell, at);
+      const lines = stack.paragraphs.flatMap(({ lines: own, top }) => {
+        let y = top;
+        return own.map((line) => {
+          const entry = { line, y };
+          y += line.height;
+          return entry;
+        });
+      });
+      return { cell, left, right, lines, drawn: 0 };
+    });
+    void xs;
+    const firstFits = cells.some(
+      ({ cell, lines }) =>
+        lines.length > 0 &&
+        this.y + cell.margins.top + lines[0].line.height <= this.limit(),
+    );
+    if (!firstFits) return false;
+    for (;;) {
+      const room = this.limit() - this.y;
+      const top = this.y;
+      let used = 0;
+      let remaining = false;
+      for (const part of cells) {
+        const offset = part.lines[part.drawn]?.y ?? 0;
+        let n = part.drawn;
+        while (
+          n < part.lines.length &&
+          part.cell.margins.top +
+            part.lines[n].y -
+            offset +
+            part.lines[n].line.height <=
+            room
+        ) {
+          drawLine(
+            this.page.canvas,
+            part.lines[n].line,
+            top + part.cell.margins.top + part.lines[n].y - offset,
+            this.options.fontFamily,
+          );
+          n++;
+        }
+        if (n > part.drawn) {
+          const last = part.lines[n - 1];
+          used = Math.max(
+            used,
+            part.cell.margins.top + last.y - offset + last.line.height,
+          );
+        }
+        part.drawn = n;
+        if (n < part.lines.length) remaining = true;
+      }
+      const bottom = remaining ? top + room : top + used;
+      for (const part of cells) {
+        if (part.cell.shading) {
+          // the fill goes under the text already drawn on this page
+          this.page.canvas.drawing.nodes.unshift({
+            kind: 'path',
+            d: `M${num(part.left)} ${num(top)} H${num(part.right)} V${num(bottom)} H${num(part.left)} Z`,
+            transform: '',
+            fill: solid(part.cell.shading),
+            stroke: null,
+            strokeWidth: 0,
+            dash: null,
+            cap: 'butt',
+            filter: null,
+          });
+        }
+        this.drawCellBorders(
+          this.page.canvas,
+          part.left,
+          top,
+          part.right,
+          bottom,
+          part.cell.borders,
+        );
+      }
+      this.y = bottom;
+      if (!remaining) return true;
+      this.nextColumnOrPage();
+      for (let h = 0; h < headers; h++) {
+        this.drawRow(table, h, heights, new Map([[h, this.y]]));
+        this.y += heights[h];
+      }
+    }
   }
 
   private continuesMerge(
@@ -1463,6 +1726,16 @@ class Paginator {
     let onPage = 0;
     for (let r = 0; r < table.rows.length; r++) {
       const height = heights[r];
+      const breakable =
+        r >= headers &&
+        !table.rows[r].cantSplit &&
+        table.rows[r].heightRule !== 'exact';
+      if (this.y + height > this.limit() + 0.01 && breakable) {
+        if (this.placeSplitRow(table, r, headers, heights)) {
+          this.atTop = false;
+          continue;
+        }
+      }
       if (
         this.y + height > this.limit() + 0.01 &&
         !this.atTop &&
@@ -1526,6 +1799,7 @@ export function ogeLayoutWordDocument(
       page: 1,
       pages,
       footnoteNumbers: new Map(),
+      endnoteNumbers: new Map(),
     };
     const paginator = new Paginator(context, options);
     paginator.run(document);
@@ -1533,8 +1807,7 @@ export function ogeLayoutWordDocument(
   };
   // NUMPAGES is known only after a first pass.
   const first = run(1);
-  const paginator =
-    first.pages.length === 1 ? first : run(first.pages.length);
+  const paginator = first.pages.length === 1 ? first : run(first.pages.length);
   return paginator.pages.map((page, i) => ({
     width: page.section.page.width,
     height: page.section.page.height,

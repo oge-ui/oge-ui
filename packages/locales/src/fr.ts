@@ -1859,4 +1859,27 @@ export const fr: OgeLocalePack = {
     columnsHidden: 'Colonnes {first} à {last} masquées',
     hasCollapsedDetail: 'détails masqués, Alt+Maj+Bas pour les afficher',
   },
+  presentation: {
+    viewerLabel: 'Présentation',
+    slideLabel: 'Diapositive {current} sur {total}',
+    previousSlide: 'Diapositive précédente',
+    nextSlide: 'Diapositive suivante',
+    thumbnails: 'Diapositives',
+    loading: 'Ouverture de la présentation…',
+    empty: 'Aucune présentation à afficher',
+    loadError: 'Impossible d’ouvrir la présentation',
+    encryptedOrLegacy:
+      'Ce fichier est protégé par mot de passe ou au format .ppt ancien, qui ne peut pas être prévisualisé',
+  },
+  wordDocument: {
+    viewerLabel: 'Document',
+    pageLabel: 'Page {current} sur {total}',
+    previousPage: 'Page précédente',
+    nextPage: 'Page suivante',
+    loading: 'Ouverture du document…',
+    empty: 'Aucun document à afficher',
+    loadError: 'Impossible d’ouvrir le document',
+    encryptedOrLegacy:
+      'Ce fichier est protégé par mot de passe ou au format .doc ancien, qui ne peut pas être prévisualisé',
+  },
 };

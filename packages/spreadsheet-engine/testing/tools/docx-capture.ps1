@@ -144,14 +144,14 @@ try {
 
   Para 'A floating picture' -3
   Reset-Para
-  $anchor = $sel.Range
+  $sel.TypeText($filler + $filler + $filler); $sel.TypeParagraph()
+  $anchor = $doc.Paragraphs.Item($doc.Paragraphs.Count - 1).Range
   $float = $doc.Shapes.AddPicture($picture, $false, $true, 300, 0, 120, 60, $anchor)
   $float.WrapFormat.Type = 0
   $float.RelativeHorizontalPosition = 2
   $float.RelativeVerticalPosition = 2
   $float.Left = 300
   $float.Top = 0
-  $sel.TypeText($filler + $filler + $filler); $sel.TypeParagraph()
 
   Para 'Keeping lines together' -3
   Reset-Para

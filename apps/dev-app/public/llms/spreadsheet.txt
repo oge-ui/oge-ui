@@ -97,6 +97,11 @@ Predictable wrong guesses, and what to write instead.
 - values: `OGE_DEFAULT_SPREADSHEET_CONFIG`, `OGE_DEFAULT_SPREADSHEET_MESSAGES`, `OGE_SPREADSHEET_CONFIG`, `OgeSpreadsheet`, `provideOgeSpreadsheetConfig`
 - types: `OgeFindOptions`, `OgeImportIssue`, `OgeImportIssueCode`, `OgeSpreadsheetCellClickEvent`, `OgeSpreadsheetConfig`, `OgeSpreadsheetConfigInput`, `OgeSpreadsheetHyperlinkClickEvent`, `OgeSpreadsheetLoadErrorEvent`, `OgeSpreadsheetLoadedEvent`, `OgeSpreadsheetMessages`, `OgeSpreadsheetSelectionChangeEvent`, `OgeSpreadsheetSource`, `OgeWorkbook`, `OgeXlsxError`
 
+`@oge-ui/spreadsheet/word`
+
+- values: `OGE_DEFAULT_WORD_DOCUMENT_MESSAGES`, `OGE_WORD_DOCUMENT_CONFIG`, `OgeWordDocument`, `provideOgeWordDocumentConfig`
+- types: `OgeWordDocumentConfig`, `OgeWordDocumentConfigInput`, `OgeWordDocumentErrorCode`, `OgeWordDocumentLoadErrorEvent`, `OgeWordDocumentLoadedEvent`, `OgeWordDocumentMessages`, `OgeWordDocumentSource`
+
 `@oge-ui/spreadsheet/powerpoint`
 
 - values: `OGE_DEFAULT_PRESENTATION_MESSAGES`, `OGE_PRESENTATION_CONFIG`, `OgePresentation`, `OgeSlideCanvas`, `provideOgePresentationConfig`
@@ -251,6 +256,40 @@ _Types_
 | `OgePresentationErrorCode` | `'not-pptx' \| 'encrypted-or-legacy' \| 'corrupt' \| 'too-large' \| 'aborted' \| 'fetch-failed'` | `encrypted-or-legacy` covers password-protected files and the old `.ppt` format. |
 | `OgePresentationMessages` | `interface` | The viewer's text: `viewerLabel`, `slideLabel` (with `{current}` and `{total}`), `previousSlide`, `nextSlide`, `thumbnails`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
 
+### OgeWordDocument — `<oge-word-document>`
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgeWordDocumentSource \| null` | `null` | The document to open: bytes, a `Blob` / `File`, or a URL. |
+| `pageIndex` | `number` | `0` | 0-based page nearest the viewport's middle; two-way with `[(pageIndex)]`. |
+| `messages` | `Partial<OgeWordDocumentMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `loaded` | `OgeWordDocumentLoadedEvent` | After a document opened, with what could not be shown. |
+| `loadError` | `OgeWordDocumentLoadErrorEvent` | When a document did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeWordDocumentSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgeWordDocumentLoadedEvent` | `interface` | `{ pageCount, issues }` — the number of pages and everything not shown as Word shows it. |
+| `OgeWordDocumentLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgeWordDocumentErrorCode` | `'not-docx' \| 'encrypted-or-legacy' \| 'corrupt' \| 'too-large' \| 'aborted' \| 'fetch-failed'` | `encrypted-or-legacy` covers password-protected files and the old `.doc` format. |
+| `OgeWordDocumentMessages` | `interface` | The viewer's text: `viewerLabel`, `pageLabel` (with `{current}` and `{total}`), `previousPage`, `nextPage`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
+| `OgeWordDocumentConfig / OgeWordDocumentConfigInput` | `interface` | Defaults for viewers below the config provider: `{ messages }`, merged over the built-in text. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -363,6 +402,55 @@ import { OgePresentation } from '@oge-ui/spreadsheet/powerpoint';
     <oge-presentation
       source="/demo/spreadsheet/slides.pptx"
       style="height: 520px"
+    />
+  `,
+})
+export class Demo {}
+```
+
+### Word controlled
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeWordDocument } from '@oge-ui/spreadsheet/word';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeWordDocument],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [(pageIndex)] keeps the page in your own state: it follows the
+         scrolling and scrolls when you set it. -->
+    <oge-word-document
+      source="/demo/spreadsheet/document.docx"
+      [(pageIndex)]="page"
+      style="height: 480px"
+    />
+  `,
+})
+export class Demo {
+  readonly page = signal(1);
+}
+```
+
+### Word getting started
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeWordDocument } from '@oge-ui/spreadsheet/word';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeWordDocument],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One element shows a .docx file the way Word does, page by page.
+         [source] takes a URL, the file's bytes or a File; reading happens in the
+         browser, with no dependency. Page Up/Down, Home and End move between
+         pages. -->
+    <oge-word-document
+      source="/demo/spreadsheet/document.docx"
+      style="height: 640px"
     />
   `,
 })

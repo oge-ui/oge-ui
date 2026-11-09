@@ -8,12 +8,21 @@ import { ReactSpreadsheetApiSections } from '../react-spreadsheet/api';
 import {
   OGE_PRESENTATION_API,
   OGE_SPREADSHEET_API,
+  OGE_WORD_DOCUMENT_API,
 } from './spreadsheet-api-data';
 
-const SECTIONS = ['OgeSpreadsheet', 'OgePresentation'] as const;
+const SECTIONS = [
+  'OgeSpreadsheet',
+  'OgePresentation',
+  'OgeWordDocument',
+] as const;
 
 /** TOC of the React view — must mirror `ReactSpreadsheetApiSections`' titles. */
-const SECTIONS_REACT = ['<OgeSpreadsheet>', '<OgePresentation>'] as const;
+const SECTIONS_REACT = [
+  '<OgeSpreadsheet>',
+  '<OgePresentation>',
+  '<OgeWordDocument>',
+] as const;
 
 @Component({
   selector: 'app-spreadsheet-api',
@@ -79,6 +88,11 @@ const SECTIONS_REACT = ['<OgeSpreadsheet>', '<OgePresentation>'] as const;
         selector="oge-presentation"
         [sections]="presentationApi"
       />
+      <app-api-reference
+        title="OgeWordDocument"
+        selector="oge-word-document"
+        [sections]="wordApi"
+      />
     }
 
     <h3>Notes</h3>
@@ -123,4 +137,5 @@ export class SpreadsheetApiPage {
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly spreadsheetApi = OGE_SPREADSHEET_API;
   protected readonly presentationApi = OGE_PRESENTATION_API;
+  protected readonly wordApi = OGE_WORD_DOCUMENT_API;
 }

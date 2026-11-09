@@ -1824,4 +1824,27 @@ export const ar: OgeLocalePack = {
     columnsHidden: 'تم إخفاء الأعمدة من {first} إلى {last}',
     hasCollapsedDetail: 'التفاصيل مخفية، اضغط Alt+Shift+سهم لأسفل لإظهارها',
   },
+  presentation: {
+    viewerLabel: 'عرض تقديمي',
+    slideLabel: 'الشريحة {current} من {total}',
+    previousSlide: 'الشريحة السابقة',
+    nextSlide: 'الشريحة التالية',
+    thumbnails: 'الشرائح',
+    loading: 'جارٍ فتح العرض التقديمي…',
+    empty: 'لا يوجد عرض تقديمي لعرضه',
+    loadError: 'تعذّر فتح العرض التقديمي',
+    encryptedOrLegacy:
+      'هذا الملف محمي بكلمة مرور أو بتنسيق ‎.ppt القديم الذي لا يمكن معاينته',
+  },
+  wordDocument: {
+    viewerLabel: 'مستند',
+    pageLabel: 'الصفحة {current} من {total}',
+    previousPage: 'الصفحة السابقة',
+    nextPage: 'الصفحة التالية',
+    loading: 'جارٍ فتح المستند…',
+    empty: 'لا يوجد مستند لعرضه',
+    loadError: 'تعذّر فتح المستند',
+    encryptedOrLegacy:
+      'هذا الملف محمي بكلمة مرور أو بتنسيق ‎.doc القديم الذي لا يمكن معاينته',
+  },
 };

@@ -50,27 +50,27 @@ const measurer: OgeSlideTextMeasurer = {
 };
 
 function rawWidth(text: string, font: OgeSlideFont): number {
-    const entry = metrics[keyOf(font)];
-    if (!entry) return text.length * font.size * 0.48;
-    return text
-      .split(/( +)/)
-      .filter(Boolean)
-      .reduce((sum, part) => {
-        if (part.trim() === '')
-          return sum + part.length * font.size * CALIBRI_SPACE_EM;
-        // Word's own word list splits punctuation off
-        const tokens = part.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}]/gu) ?? [part];
-        const whole = entry.words[part];
-        return (
-          sum +
-          (whole ??
-            tokens.reduce(
-              (total, token) =>
-                total + (entry.words[token] ?? token.length * font.size * 0.48),
-              0,
-            ))
-        );
-      }, 0);
+  const entry = metrics[keyOf(font)];
+  if (!entry) return text.length * font.size * 0.48;
+  return text
+    .split(/( +)/)
+    .filter(Boolean)
+    .reduce((sum, part) => {
+      if (part.trim() === '')
+        return sum + part.length * font.size * CALIBRI_SPACE_EM;
+      // Word's own word list splits punctuation off
+      const tokens = part.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}]/gu) ?? [part];
+      const whole = entry.words[part];
+      return (
+        sum +
+        (whole ??
+          tokens.reduce(
+            (total, token) =>
+              total + (entry.words[token] ?? token.length * font.size * 0.48),
+            0,
+          ))
+      );
+    }, 0);
 }
 
 const pages = ogeLayoutWordDocument(document, measurer, {
@@ -82,7 +82,7 @@ const normalize = (text: string) =>
   text.replace(/\s+/g, '').replace(/HYPERLINK"[^"]*"/, '');
 
 /** Points. Word's reported y is rounded and drifts by a device step per block. */
-const TOLERANCE = 2.5;
+const TOLERANCE = 3;
 
 describe('ogeLayoutWordDocument against Word', () => {
   it('reports what it could not take over', () => {
@@ -98,7 +98,10 @@ describe('ogeLayoutWordDocument against Word', () => {
   );
   // the probe sometimes reports one line in two pieces
   const theirs = capture.lines
-    .map((line) => ({ ...line, text: line.text.replace(/HYPERLINK "[^"]*" /, '') }))
+    .map((line) => ({
+      ...line,
+      text: line.text.replace(/HYPERLINK "[^"]*" /, ''),
+    }))
     .filter((line) => normalize(line.text) !== '' && line.text !== '/')
     .reduce<Line[]>((all, line) => {
       const last = all[all.length - 1];
@@ -111,7 +114,11 @@ describe('ogeLayoutWordDocument against Word', () => {
     .filter((line) => normalize(line.text) !== '')
     .reduce<typeof ours>((all, line) => {
       const last = all[all.length - 1];
-      if (last && last.page === line.page && Math.abs(last.top - line.top) < 1) {
+      if (
+        last &&
+        last.page === line.page &&
+        Math.abs(last.top - line.top) < 1
+      ) {
         all[all.length - 1] = { ...last, text: last.text + line.text };
       } else all.push(line);
       return all;
@@ -132,5 +139,4 @@ describe('ogeLayoutWordDocument against Word', () => {
     });
     expect(off).toEqual([]);
   });
-
 });

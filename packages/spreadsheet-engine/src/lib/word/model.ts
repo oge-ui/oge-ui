@@ -38,9 +38,30 @@ export interface OgeWordPicture {
 /** How text flows around a floating object. */
 export type OgeWordWrap = 'square' | 'topAndBottom' | 'none';
 
-/** A floating picture. */
+/** A drawn shape, optionally holding text. */
+export interface OgeWordShape {
+  /** The preset geometry (`rect`, `ellipse`, …). */
+  readonly geometry: string;
+  readonly adjust: Readonly<Record<string, number>>;
+  /** `RRGGBB`, or `null` for no fill. */
+  readonly fill: string | null;
+  readonly line: OgeWordBorder | null;
+  readonly blocks: readonly OgeWordBlock[];
+  readonly insets: {
+    readonly left: number;
+    readonly top: number;
+    readonly right: number;
+    readonly bottom: number;
+  };
+  readonly anchor: 'top' | 'center' | 'bottom';
+}
+
+/** A floating picture or shape. */
 export interface OgeWordFloat {
-  readonly picture: OgeWordPicture;
+  /** The picture, when it is one. */
+  readonly picture?: OgeWordPicture;
+  /** The shape, when it is one. */
+  readonly shape?: OgeWordShape;
   readonly width: number;
   readonly height: number;
   readonly horizontal: OgeWordFloatPosition;
@@ -95,6 +116,11 @@ export type OgeWordInline =
       readonly height: number;
     }
   | { readonly kind: 'float'; readonly float: OgeWordFloat }
+  | {
+      readonly kind: 'endnote';
+      readonly id: string;
+      readonly style: OgeWordRunStyle;
+    }
   | {
       readonly kind: 'footnote';
       readonly id: string;
@@ -246,6 +272,7 @@ export interface OgeWordDocument {
   readonly defaultTab: number;
   readonly evenAndOddHeaders: boolean;
   readonly footnotes: ReadonlyMap<string, readonly OgeWordBlock[]>;
+  readonly endnotes: ReadonlyMap<string, readonly OgeWordBlock[]>;
   readonly media: ReadonlyMap<
     string,
     { readonly bytes: Uint8Array; readonly contentType: string }

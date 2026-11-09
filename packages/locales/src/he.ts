@@ -1819,4 +1819,27 @@ export const he: OgeLocalePack = {
     hasCollapsedDetail:
       'הפרטים מוסתרים, יש להקיש Alt+Shift+חץ למטה כדי להציג אותם',
   },
+  presentation: {
+    viewerLabel: 'מצגת',
+    slideLabel: 'שקופית {current} מתוך {total}',
+    previousSlide: 'השקופית הקודמת',
+    nextSlide: 'השקופית הבאה',
+    thumbnails: 'שקופיות',
+    loading: 'פותח את המצגת…',
+    empty: 'אין מצגת להצגה',
+    loadError: 'לא ניתן לפתוח את המצגת',
+    encryptedOrLegacy:
+      'הקובץ מוגן בסיסמה או בתבנית ‎.ppt הישנה, שלא ניתן להציג',
+  },
+  wordDocument: {
+    viewerLabel: 'מסמך',
+    pageLabel: 'עמוד {current} מתוך {total}',
+    previousPage: 'העמוד הקודם',
+    nextPage: 'העמוד הבא',
+    loading: 'פותח את המסמך…',
+    empty: 'אין מסמך להצגה',
+    loadError: 'לא ניתן לפתוח את המסמך',
+    encryptedOrLegacy:
+      'הקובץ מוגן בסיסמה או בתבנית ‎.doc הישנה, שלא ניתן להציג',
+  },
 };

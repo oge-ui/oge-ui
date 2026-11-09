@@ -1839,4 +1839,27 @@ export const ptBR: OgeLocalePack = {
     hasCollapsedDetail:
       'detalhes ocultos, Alt+Shift+Seta para baixo para mostrar',
   },
+  presentation: {
+    viewerLabel: 'Apresentação',
+    slideLabel: 'Slide {current} de {total}',
+    previousSlide: 'Slide anterior',
+    nextSlide: 'Próximo slide',
+    thumbnails: 'Slides',
+    loading: 'Abrindo a apresentação…',
+    empty: 'Nenhuma apresentação para exibir',
+    loadError: 'Não foi possível abrir a apresentação',
+    encryptedOrLegacy:
+      'Este arquivo está protegido por senha ou no antigo formato .ppt, que não pode ser visualizado',
+  },
+  wordDocument: {
+    viewerLabel: 'Documento',
+    pageLabel: 'Página {current} de {total}',
+    previousPage: 'Página anterior',
+    nextPage: 'Próxima página',
+    loading: 'Abrindo o documento…',
+    empty: 'Nenhum documento para exibir',
+    loadError: 'Não foi possível abrir o documento',
+    encryptedOrLegacy:
+      'Este arquivo está protegido por senha ou no antigo formato .doc, que não pode ser visualizado',
+  },
 };

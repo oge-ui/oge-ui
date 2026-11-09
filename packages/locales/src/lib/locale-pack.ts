@@ -44,6 +44,8 @@ import type { OgeKanbanMessages } from '@oge-ui/kanban-engine';
 import type { OgePivotMessages } from '@oge-ui/pivot-engine';
 import type { OgeSchedulerMessages } from '@oge-ui/scheduler-engine';
 import type { OgeSpreadsheetMessages } from '@oge-ui/spreadsheet-engine';
+import type { OgePresentationMessages } from '@oge-ui/spreadsheet-engine/powerpoint';
+import type { OgeWordDocumentMessages } from '@oge-ui/spreadsheet-engine/word';
 
 /**
  * A catalog with every key optional, nested blocks included. Packs are deep
@@ -144,4 +146,8 @@ export interface OgeLocalePack {
   readonly charts?: OgeDeepPartial<OgeChartsMessages>;
   /** Commercial: spreadsheet viewer (`provideOgeSpreadsheetConfig`). */
   readonly spreadsheet?: OgeDeepPartial<OgeSpreadsheetMessages>;
+  /** Commercial: PowerPoint preview (`provideOgePresentationConfig`). */
+  readonly presentation?: OgeDeepPartial<OgePresentationMessages>;
+  /** Commercial: Word preview (`provideOgeWordDocumentConfig`). */
+  readonly wordDocument?: OgeDeepPartial<OgeWordDocumentMessages>;
 }

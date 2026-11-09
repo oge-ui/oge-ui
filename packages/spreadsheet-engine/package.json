@@ -29,6 +29,11 @@
       "module": "./powerpoint.esm.js",
       "default": "./powerpoint.cjs.js"
     },
+    "./word": {
+      "types": "./word.d.ts",
+      "module": "./word.esm.js",
+      "default": "./word.cjs.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

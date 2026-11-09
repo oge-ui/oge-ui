@@ -2244,8 +2244,39 @@ entry so spreadsheet-only applications never load it.
   key map and the labels. Angular's `oge-slide-canvas` and React's
   `OgeSlideCanvas` are element-for-element copies. Links are sanitized in the
   engine, before either layer sees them.
-- **Not drawn yet, reported as issues:** charts, SmartArt, custom geometry and
-  presets outside `geometry.ts` (shown as their bounding box), pattern fills.
+- **Charts and SmartArt reuse what exists.** A chart goes through the workbook
+  viewer's `ogeChartView`, except that PowerPoint and Word pick a value axis's
+  step differently from Excel: at most 10 intervals, gridlines at least 1.28 ×
+  the tick font apart (`presentationScale`). SmartArt is drawn from the shapes
+  PowerPoint cached in its `dsp:drawing` part.
+- **Not drawn, reported as issues:** presets outside `geometry.ts` and
+  `geometry-more.ts` (shown as their bounding box), glow and reflection,
+  right-to-left paragraph layout, stacked text directions.
+
+### Word preview (ADR 0006)
+
+`@oge-ui/spreadsheet-engine/word` reads docx into a resolved model and lays it
+out into pages, drawn with the same SVG instructions and canvas component as a
+slide. The rules are Word's own, measured through
+`testing/tools/docx-capture.ps1` and `docx-line-heights.ps1`:
+
+- **Line height is per face.** Each face has its own ratio (`LINE_RATIOS` in
+  `lib/word/layout.ts`; a browser's font metrics omit the line gap, so Arial
+  reports 1.117 where Word uses 1.15). The ratio is multiplied by the size and
+  the spacing multiple and is not rounded: the positions Word reports are
+  rounded to its reference device (0.679 pt steps), the heights are not.
+- **Paragraph gaps collapse.** The gap is the larger of after and before, and
+  space-before is dropped at the top of a page reached by a natural break.
+- **A tall object takes the line's ascent only.** What the line adds below an
+  inline picture is what it would add below the text.
+- **Justified lines may squeeze.** A word still fits if the line's spaces can
+  shrink by a quarter (`JUSTIFY_SHRINK`).
+- **Text flows on both sides of a floating object** when the next word fits in
+  the gap, however narrow: a line can have several segments.
+- **Rows run over pages** unless marked `cantSplit`, each cell keeping the lines
+  that fit; header rows repeat.
+- **Reported as issues:** inline drawing-layer shapes, VML, right-to-left
+  paragraph layout. Bullets from symbol fonts are mapped to Unicode glyphs.
 - - **The corpus is PowerPoint's own.** `testing/tools/pptx-capture.ps1` makes
     PowerPoint build and measure the deck; `read-pptx.corpus.spec.ts` compares
     the model with those numbers.
