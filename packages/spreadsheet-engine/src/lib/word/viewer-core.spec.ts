@@ -61,6 +61,14 @@ describe('OgeWordDocumentCore', () => {
     expect(core.index()).toBe(0);
   });
 
+  it('goes back with Page Up', async () => {
+    const core = makeCore();
+    await core.load(file);
+    press(core, 'PageDown');
+    press(core, 'PageUp');
+    expect(core.index()).toBe(0);
+  });
+
   it('leaves arrows to native scrolling', async () => {
     const core = makeCore();
     await core.load(file);

@@ -67,6 +67,18 @@ describe('OgePresentationCore', () => {
     expect(onSlideChange).toHaveBeenLastCalledWith(0);
   });
 
+  it('takes every navigation key', async () => {
+    const core = makeCore();
+    await core.load(deck);
+    press(core, 'ArrowDown');
+    expect(core.index()).toBe(1);
+    press(core, 'ArrowUp');
+    expect(core.index()).toBe(0);
+    press(core, 'PageDown');
+    press(core, 'PageUp');
+    expect(core.index()).toBe(0);
+  });
+
   it('leaves other keys to the page', async () => {
     const core = makeCore();
     await core.load(deck);

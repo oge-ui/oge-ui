@@ -13,7 +13,7 @@ import { readOgeDocxSync } from './read-docx';
 
 const folder = resolve(__dirname, '../../../testing/corpus/docx');
 const json = (name: string) =>
-  JSON.parse(readFileSync(resolve(folder, name), 'utf8').replace(/^﻿/, ''));
+  JSON.parse(readFileSync(resolve(folder, name), 'utf8').trimStart());
 
 interface Line {
   page: number;

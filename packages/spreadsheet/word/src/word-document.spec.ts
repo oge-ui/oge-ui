@@ -91,6 +91,44 @@ describe('OgeWordDocument', () => {
     );
   });
 
+  it('takes live text from a function config', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideOgeWordDocumentConfig(() => ({
+          messages: { nextPage: 'Sonraki' },
+        })),
+      ],
+    });
+    const { fixture, el } = setup();
+    await open(fixture);
+    expect(
+      el.querySelectorAll('.oge-presentation-nav')[1].getAttribute('title'),
+    ).toBe('Sonraki');
+  });
+
+  it('goes back and reports a bad file', async () => {
+    const { fixture, host, el } = setup();
+    await open(fixture);
+    el.querySelectorAll<HTMLButtonElement>('.oge-presentation-nav')[1].click();
+    fixture.detectChanges();
+    el.querySelectorAll<HTMLButtonElement>('.oge-presentation-nav')[0].click();
+    fixture.detectChanges();
+    expect(host.page()).toBe(0);
+    el.querySelector('.oge-word-scroller')?.dispatchEvent(new Event('scroll'));
+    el.querySelector('.oge-word')?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'End', bubbles: true }),
+    );
+    fixture.detectChanges();
+    host.source.set(new Uint8Array(64));
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(
+        el.querySelector('.oge-presentation-status')?.textContent,
+      ).toContain('could not be opened');
+    });
+  });
+
   it('shows the empty state without a source', () => {
     const { fixture, host, el } = setup();
     host.source.set(null);
