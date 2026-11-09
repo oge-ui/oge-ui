@@ -5,7 +5,9 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
-## Unreleased
+## 1.1.7 — 2026-11-09
+
+Word and PowerPoint preview join the spreadsheet family, laid out to match what Office itself measures, and overlay popups stop being clipped by their ancestors.
 
 ### Word and PowerPoint preview — new entry points of the spreadsheet family (commercial, ADR 0006)
 
