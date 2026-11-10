@@ -23,7 +23,9 @@ import {
   ogeContextMenuPoint,
   ogeResolveContextMenuOpen,
   type OgeContextMenuOpeningEvent,
+  type OgeClassValue,
   type OgeContextMenuPoint,
+  type OgeHtmlAttributes,
   type OgeRect,
 } from '@oge-ui/behavior';
 import { OgeMenuList } from '../menu/menu-list';
@@ -50,7 +52,11 @@ export type { OgeContextMenuOpeningEvent } from '@oge-ui/behavior';
   imports: [OgePopup, OgeMenuList],
   template: `
     @if (panel().isOpen()) {
-      <oge-popup [panel]="panel()">
+      <oge-popup
+        [panel]="panel()"
+        [panelClass]="panelClass()"
+        [panelAttributes]="panelAttributes()"
+      >
         <oge-menu-list
           [items]="items()"
           [ariaLabel]="ariaLabel()"
@@ -65,6 +71,8 @@ export class OgeContextMenuPanel {
   readonly panel = input.required<OgeAnchoredPanel>();
   readonly items = input.required<readonly OgeMenuItem[]>();
   readonly ariaLabel = input<string | undefined>(undefined);
+  readonly panelClass = input<OgeClassValue>();
+  readonly panelAttributes = input<OgeHtmlAttributes>();
   readonly itemClick = output<OgeMenuListItemClickEvent>();
   readonly closeRequest = output<OgeMenuCloseRequestEvent>();
 
@@ -126,6 +134,13 @@ export class OgeContextMenu {
    * point. Unset: the host itself is the target.
    */
   readonly contextMenuTarget = input<string | undefined>(undefined);
+  /** Extra classes on the menu panel (a design system's own menu class). */
+  readonly contextMenuPanelClass = input<OgeClassValue>();
+  /**
+   * Extra attributes on the menu panel (`data-testid`, `aria-describedby`…).
+   * Event handlers, `style`, `class` and unsafe URLs are left out.
+   */
+  readonly contextMenuPanelAttributes = input<OgeHtmlAttributes>();
 
   /**
    * Cancelable, before every open (pointer, keyboard, `open()`): carries the
@@ -200,9 +215,13 @@ export class OgeContextMenu {
     effect(() => {
       const items = this.activeItems();
       const label = this.contextMenuAriaLabel();
+      const panelClass = this.contextMenuPanelClass();
+      const panelAttributes = this.contextMenuPanelAttributes();
       untracked(() => {
         this.componentRef?.setInput('items', items);
         this.componentRef?.setInput('ariaLabel', label);
+        this.componentRef?.setInput('panelClass', panelClass);
+        this.componentRef?.setInput('panelAttributes', panelAttributes);
       });
     });
   }
@@ -302,6 +321,11 @@ export class OgeContextMenu {
     this.componentRef.setInput('panel', this.panel);
     this.componentRef.setInput('items', this.activeItems());
     this.componentRef.setInput('ariaLabel', this.contextMenuAriaLabel());
+    this.componentRef.setInput('panelClass', this.contextMenuPanelClass());
+    this.componentRef.setInput(
+      'panelAttributes',
+      this.contextMenuPanelAttributes(),
+    );
     this.componentRef.instance.itemClick.subscribe((clickEvent) =>
       this.contextMenuItemClick.emit(clickEvent),
     );

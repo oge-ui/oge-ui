@@ -351,6 +351,37 @@
   );
 }
 
+// Component tokens: documented here, never declared. Components read each one
+// as `var(<name>, <value>)`, so an unset token follows the suite-wide token
+// in every theme and scope, and setting one restyles only that component.
+// NEVER `@include` this mixin — a declaration would freeze the fallback at
+// the declaring scope. The docs generator lists these in the token reference
+// and fails when a component stops reading one with exactly this fallback.
+@mixin component-tokens {
+  /* modal dialog panel */
+  --oge-modal-bg: var(--oge-popup-bg);
+  --oge-modal-border-color: var(--oge-border-color);
+  --oge-modal-radius: var(--oge-radius-lg);
+  --oge-modal-shadow: var(--oge-shadow-popup);
+  --oge-modal-body-padding: 18px;
+  /* popover panel */
+  --oge-popover-bg: var(--oge-popup-bg);
+  --oge-popover-border-color: var(--oge-border-color);
+  --oge-popover-radius: var(--oge-radius-lg);
+  --oge-popover-shadow: var(--oge-shadow-popup);
+  --oge-popover-body-padding: 10px 14px 12px;
+  /* anchored popups: menus, drop-downs, pickers */
+  --oge-popup-border-color: var(--oge-border-color);
+  --oge-popup-radius: var(--oge-radius-lg);
+  --oge-popup-shadow: var(--oge-shadow-popup);
+  /* menu lists (context menu, drop-down button, menubar) */
+  --oge-menu-padding: 4px;
+  --oge-menu-item-padding: 7px 10px;
+  /* buttons */
+  --oge-button-radius: var(--oge-radius);
+  --oge-button-font-weight: 500;
+}
+
 /// Included by every component at its host rule (`.oge-x { @include
 /// tokens.core-tokens; … }`); emits the default theme at zero specificity.
 @mixin core-tokens {

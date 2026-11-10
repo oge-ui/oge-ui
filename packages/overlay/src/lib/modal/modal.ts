@@ -29,6 +29,10 @@ import {
   lockBodyScroll,
   modalCssSize,
   modalPlacementClass,
+  OGE_PART_OWNED_ATTRIBUTES,
+  ogeApplyAttributes,
+  ogeClassNames,
+  ogeSafeAttributes,
   ogeModalExitGhost,
   ogePromoteToTopLayer,
   pushOverlay,
@@ -38,6 +42,8 @@ import {
   trackPointerGesture,
   trapTabKey,
   unlockBodyScroll,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import {
   OgeModalFooter,
@@ -96,7 +102,7 @@ let nextModalId = 0;
         #layer
         class="oge-modal-layer"
         [class.oge-modal-layer-ready]="ready()"
-        [class]="placementClass()"
+        [class]="layerClass()"
         [class.oge-modal-layer-unshaded]="!shading()"
         [class.oge-modal-layer-fullscreen]="fullScreen()"
         (pointerdown)="onLayerPointerDown($event)"
@@ -108,6 +114,7 @@ let nextModalId = 0;
           class="oge-modal"
           aria-modal="true"
           tabindex="-1"
+          [class]="panelClassText()"
           [attr.role]="dialogRole()"
           [class.oge-modal-fullscreen]="fullScreen()"
           [attr.aria-labelledby]="labelledBy()"
@@ -219,7 +226,12 @@ let nextModalId = 0;
               }
             </div>
           }
-          <div class="oge-modal-body" [class.oge-modal-body-flush]="!padding()">
+          <div
+            class="oge-modal-body"
+            [class]="bodyClassText()"
+            [style]="bodyStyle() ?? null"
+            [class.oge-modal-body-flush]="!padding()"
+          >
             <ng-content />
           </div>
           @if (footerTemplate(); as f) {
@@ -322,6 +334,21 @@ export class OgeModal<R = unknown> {
   readonly closeGuard = input<(() => boolean | Promise<boolean>) | undefined>();
   /** Per-instance message overrides (merged over the overlay config). */
   readonly messages = input<Partial<OgeOverlayMessages>>();
+  /** Extra classes on the dialog panel, next to `oge-modal`. */
+  readonly panelClass = input<OgeClassValue>();
+  /** Extra classes on the backdrop layer that wraps the panel. */
+  readonly backdropClass = input<OgeClassValue>();
+  /** Extra classes on the body (the projected content's container). */
+  readonly bodyClass = input<OgeClassValue>();
+  /** Inline styles on the body, e.g. `{ 'padding-block': '0' }`. */
+  readonly bodyStyle = input<Readonly<Record<string, string>>>();
+  /**
+   * Extra attributes on the dialog panel (`data-testid`, `aria-describedby`
+   * is better set through `ariaDescribedBy`). Event handlers, `style`,
+   * `class`, unsafe URLs and the attributes the modal sets itself (`role`,
+   * `aria-modal`, `aria-label*`, `tabindex`) are left out.
+   */
+  readonly panelAttributes = input<OgeHtmlAttributes>();
 
   /** Cancelable: fires before the modal opens (any open path). */
   readonly opening = output<OgeModalOpeningEvent>();
@@ -369,8 +396,17 @@ export class OgeModal<R = unknown> {
   protected readonly ariaLabelAttr = computed(() =>
     this.labelledBy() ? null : (this.ariaLabel() ?? this.title() ?? null),
   );
-  protected readonly placementClass = computed(() =>
-    modalPlacementClass(this.placement(), this.fullScreen()),
+  protected readonly layerClass = computed(() =>
+    ogeClassNames(
+      modalPlacementClass(this.placement(), this.fullScreen()),
+      this.backdropClass(),
+    ),
+  );
+  protected readonly panelClassText = computed(() =>
+    ogeClassNames(this.panelClass()),
+  );
+  protected readonly bodyClassText = computed(() =>
+    ogeClassNames(this.bodyClass()),
   );
   protected readonly mergedMessages = computed(() => ({
     ...this.config.messages,
@@ -428,6 +464,22 @@ export class OgeModal<R = unknown> {
   private exitLayer: HTMLElement | null = null;
 
   constructor() {
+    // Consumer attributes: re-applied to every new panel element.
+    let attributeTarget: HTMLElement | null = null;
+    let appliedAttributes: readonly string[] = [];
+    effect(() => {
+      const el = this.panelRef()?.nativeElement ?? null;
+      const next = ogeSafeAttributes(
+        this.panelAttributes(),
+        OGE_PART_OWNED_ATTRIBUTES.modal,
+      );
+      if (el !== attributeTarget) {
+        attributeTarget = el;
+        appliedAttributes = [];
+      }
+      if (el)
+        appliedAttributes = ogeApplyAttributes(el, next, appliedAttributes);
+    });
     // `opened` model ↔ DOM-side state, loop-guarded by comparing states first.
     effect(() => {
       const shouldOpen = this.opened();

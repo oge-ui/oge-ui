@@ -71,6 +71,15 @@ import {
           Keyboard navigation scrolls the focused row into view automatically,
           even across 100k rows.
         </li>
+        <li>
+          The grid takes the height its host is given — a fixed
+          <code>height</code>, a percentage, or the rest of a flex column. To
+          fill a flex parent (the PrimeNG
+          <code>scrollHeight="flex"</code> case), give the grid
+          <code>flex: 1</code> and <code>min-height: 0</code>; the host is
+          itself a flex column whose viewport takes the remaining space, so the
+          header, pager and summary stay put while the rows scroll.
+        </li>
       </ul>
 
       <h3>Column virtualization</h3>

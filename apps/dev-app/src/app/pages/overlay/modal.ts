@@ -30,6 +30,7 @@ import {
   DIALOG_HELPERS_SNIPPET,
   FORM_SNIPPET,
   PLACEMENT_SNIPPET,
+  PARTS_SNIPPET,
   GUARD_SNIPPET,
   RESULT_SNIPPET,
   SIZING_SNIPPET,
@@ -66,6 +67,7 @@ const SECTIONS = [
   'Typed result',
   'Dialog helpers',
   'Placements',
+  'Part styling',
 ] as const;
 
 /** Every modal placement, in the order the Placements demo lists them. */
@@ -449,6 +451,43 @@ export const MODAL_PLACEMENTS: readonly OgeModalPlacement[] = [
           </p>
         </oge-modal>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'panelClass',
+          'backdropClass',
+          'bodyClass',
+          'panelAttributes',
+          'component tokens',
+        ]"
+        heading="Part styling"
+        description="Bring a design system along without forking styles. <code>panelClass</code>, <code>backdropClass</code> and <code>bodyClass</code> add classes next to the modal's own (string, array or <code>{ name: boolean }</code>), <code>bodyStyle</code> sets inline body styles, and <code>panelAttributes</code> puts <code>data-*</code> / <code>aria-*</code> attributes on the panel — filtered, so event handlers, <code>style</code>, <code>class</code> and script URLs are never written. Component tokens (<code>--oge-modal-radius</code>, <code>--oge-modal-bg</code>, <code>--oge-modal-body-padding</code>…) restyle only modals inside the element that sets them; the popover, the popups and the buttons have the same pair of options and their own tokens."
+        [code]="partsSnippet"
+        language="ts"
+      >
+        <div style="--oge-modal-radius: 18px; --oge-modal-body-padding: 24px">
+          <oge-button
+            text="Open branded dialog"
+            stylingMode="outlined"
+            (clicked)="partsOpen.set(true)"
+          />
+          <oge-modal
+            title="Branded dialog"
+            [(opened)]="partsOpen"
+            panelClass="brand-dialog"
+            backdropClass="brand-backdrop"
+            [bodyClass]="['brand-body', 'scroll-y']"
+            [bodyStyle]="{ 'max-height': '60vh' }"
+            [panelAttributes]="{ 'data-testid': 'branded-dialog' }"
+            [width]="380"
+          >
+            <p class="m-0">
+              Classes join the modal's own; attributes are filtered, so an
+              <code>onclick</code> key is never written to the DOM.
+            </p>
+          </oge-modal>
+        </div>
+      </app-demo-card>
     }
 
     <h3>Notes</h3>
@@ -457,6 +496,23 @@ export const MODAL_PLACEMENTS: readonly OgeModalPlacement[] = [
         <code>autoFocus</code> picks the initial focus target:
         <code>'first-tabbable'</code> (default), <code>'panel'</code>, or any
         CSS selector; an <code>[autofocus]</code> element always wins.
+      </li>
+      <li>
+        The panel (<code>.oge-modal</code>) is a child of the backdrop layer
+        (<code>.oge-modal-layer</code>). A declared modal stays where it is
+        declared, so it inherits the theme tokens of its container; under a
+        <code>transform</code>, <code>filter</code>,
+        <code>backdrop-filter</code> or containment ancestor it moves to the
+        browser's top layer (<code>popover="manual"</code>) without leaving its
+        DOM position. Popups opened inside it (select box, date box, menus) do
+        the same, so none of them needs an <code>appendTo</code> option, and a
+        click inside a nested popup never counts as an outside click.
+      </li>
+      <li>
+        <code>busy</code> blocks Escape, backdrop clicks and the ✕ before
+        <code>closing</code> fires; <code>close()</code> still runs the
+        pipeline, and writing <code>opened</code> to <code>false</code> closes
+        at once with <code>closed</code> reason <code>'api'</code>.
       </li>
       @if (fw.isReact()) {
         <li>
@@ -521,6 +577,7 @@ export class OverlayModalPage {
   protected readonly busyOpen = signal(false);
   protected readonly confirmOpen = signal(false);
   protected readonly placedOpen = signal(false);
+  protected readonly partsOpen = signal(false);
   protected readonly placed = signal<OgeModalPlacement>('center');
   protected readonly placements = MODAL_PLACEMENTS;
   protected readonly dialogResult = signal('—');
@@ -614,4 +671,5 @@ export class OverlayModalPage {
   protected readonly resultSnippet = RESULT_SNIPPET;
   protected readonly dialogHelpersSnippet = DIALOG_HELPERS_SNIPPET;
   protected readonly placementSnippet = PLACEMENT_SNIPPET;
+  protected readonly partsSnippet = PARTS_SNIPPET;
 }

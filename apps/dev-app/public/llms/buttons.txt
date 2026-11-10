@@ -249,6 +249,8 @@ _Drop-down panel_
 | `opened` | `model<boolean>` | `false` | Panel visibility — two-way. |
 | `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred panel placement (flips/clamps automatically). |
 | `dropdownWidth` | `number \| 'anchor' \| undefined` | `—` | Fixed pixels or `'anchor'` to match the button width. |
+| `dropdownClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the drop-down panel (a design system’s own menu class). |
+| `dropdownAttributes` | `OgeHtmlAttributes \| undefined` | `—` | Extra attributes on the drop-down panel (`data-testid`…). Filtered by `ogeSafeAttributes`: event handlers, `srcdoc`, `style`, `class`, script URLs and the panel’s own `id` are dropped. |
 | `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` opens the menu as a modal bottom sheet (title from `text` / `hint`, close button, 44px rows, focus trap, Escape / backdrop / swipe dismiss) on viewports narrower than `adaptiveBreakpoint` px; `'none'` keeps the anchored menu. App-wide defaults come from `provideOgeButtonsConfig()`. |
 | `rememberLastAction` | `boolean` | `false` | Split mode: the last clicked item becomes the main button's label + action. |
 | `itemTemplate` | `TemplateRef<OgeMenuItemTemplateContext> \| undefined` | `—` | Custom rendering for menu items — see `OgeMenuList`. |

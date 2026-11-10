@@ -5,6 +5,47 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## Unreleased
+
+### Part styling — `@oge-ui/overlay`, `@oge-ui/buttons` and their React layers
+
+- **Classes and attributes on the parts you cannot reach from the host.** The
+  modal takes `panelClass`, `backdropClass`, `bodyClass`, `bodyStyle` and
+  `panelAttributes` (also as `OgeModalService.open()` / `useOgeModals().open()`
+  options); the popover and `OgePopup` take `panelClass` and `panelAttributes`;
+  the context menu takes `contextMenuPanelClass` / `contextMenuPanelAttributes`
+  (React: `panelClass` / `panelAttributes`); the drop-down button takes
+  `dropdownClass` / `dropdownAttributes`. Classes accept a string, an array or
+  a `{ name: boolean }` map and join the component's own.
+- **Component tokens.** `--oge-modal-bg / -border-color / -radius / -shadow /
+-body-padding`, the same five for `--oge-popover-*`, `--oge-popup-border-color /
+-radius / -shadow`, `--oge-menu-padding`, `--oge-menu-item-padding`,
+  `--oge-button-radius` and `--oge-button-font-weight`. Unset, each follows the
+  suite-wide token, so nothing changes until you set one; set on any element,
+  they restyle only that component below it. The token reference lists them.
+
+### Security
+
+- **Attribute bags are filtered.** Every free-form attribute input —
+  the new `*Attributes` inputs and the existing toolbar item / splitter pane
+  `htmlAttributes` — drops event handlers (`on*`), `srcdoc`, `style`,
+  `class`, script and markup URLs (`href`, `src`, `formaction`…) and the
+  attributes the part sets itself, with one dev-mode warning per key.
+  **Behaviour change:** a toolbar item or splitter pane `htmlAttributes` with a
+  `class` or `style` key no longer writes it — use `cssClass` instead.
+- Word and PowerPoint previews: a test now pins that only `http`, `https`,
+  `mailto`, `tel`, `ftp` and `sms` hyperlink targets become links; the
+  pages say so.
+
+### Docs
+
+- `llms-full.txt` carries the full design token table.
+- Documented what the source already did: a modal `opened` written to `false`
+  still fires `closed` (reason `'api'`); `busy` blocks user closes before
+  `closing`; the panel's place in the DOM and the top layer, so popups need no
+  `appendTo`; tree items carry `data-key`; filling a flex parent with the grid.
+- `OgeInputSize` lists the 24 / 28 / 34 / 42px heights.
+
 ## 1.1.7 — 2026-11-09
 
 Word and PowerPoint preview join the spreadsheet family, laid out to match what Office itself measures, and overlay popups stop being clipped by their ancestors.

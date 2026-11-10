@@ -4,7 +4,7 @@
   @include tokens.core-tokens;
 
   display: block;
-  padding: 4px;
+  padding: var(--oge-menu-padding, 4px);
   max-height: 320px;
   overflow-y: auto;
 
@@ -33,7 +33,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 7px 10px;
+  padding: var(--oge-menu-item-padding, 7px 10px);
   border: 0;
   border-radius: var(--oge-radius);
   background: none;

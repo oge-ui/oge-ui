@@ -19,6 +19,8 @@ import type {
   OgeButtonIconPosition,
   OgeButtonsMessages,
   OgeClickGuardOptions,
+  OgeClassValue,
+  OgeHtmlAttributes,
   OgeMenuItem,
   OgePopupPlacement,
 } from '@oge-ui/behavior';
@@ -116,6 +118,13 @@ export interface OgeDropDownButtonProps {
   dropdownPlacement?: OgePopupPlacement;
   /** Panel width: fixed pixels or `'anchor'` to match the button width. */
   dropdownWidth?: number | 'anchor';
+  /** Extra classes on the drop-down panel (a design system's own menu class). */
+  dropdownClass?: OgeClassValue;
+  /**
+   * Extra attributes on the drop-down panel (`data-testid`…). Event
+   * handlers, `style`, `class` and unsafe URLs are left out.
+   */
+  dropdownAttributes?: OgeHtmlAttributes;
   /**
    * Split mode: the last clicked menu item becomes the main button's label
    * and action for the session (IDE "Run" button pattern).
@@ -208,6 +217,8 @@ export const OgeDropDownButton = forwardRef<
     items,
     dropdownPlacement = 'bottom-start',
     dropdownWidth,
+    dropdownClass,
+    dropdownAttributes,
     rememberLastAction = false,
     renderItem,
     renderContent,
@@ -538,6 +549,8 @@ export const OgeDropDownButton = forwardRef<
         <OgePopup
           panel={panel}
           ref={popupRef}
+          panelClass={dropdownClass}
+          panelAttributes={dropdownAttributes}
           adaptive={presentation}
           adaptiveTitle={mainText || hint || msg.adaptiveTitle}
           closeLabel={msg.adaptiveClose}

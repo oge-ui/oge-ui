@@ -55,6 +55,7 @@ import {
   type OgeToolbarOverflowChangedEvent,
   type OgeToolbarSize,
   type OgeToolbarStylingMode,
+  ogeSafeAttributes,
 } from '@oge-ui/behavior';
 import { OgeMenuList, OgePopup, useAnchoredPanel } from '@oge-ui/react-overlay';
 import { useOgeToolbarConfig } from './layout-config';
@@ -931,7 +932,7 @@ export const OgeToolbar = forwardRef<OgeToolbarHandle, OgeToolbarProps>(
             .join(' ')}
           data-item-id={d.id}
           style={width === null ? undefined : { inlineSize: width }}
-          {...d.htmlAttributes}
+          {...ogeSafeAttributes(d.htmlAttributes)}
           onPointerDown={(event) => onItemPointerDown(d, event)}
           onPointerUp={cancelHold}
           onPointerLeave={cancelHold}

@@ -25,7 +25,8 @@ export const OGE_REACT_TREE_VIEW_API: ApiSections = {
           name: 'keyExpr',
           type: 'string | ((row: T) => RowKey)',
           default: "'id'",
-          description: "Field holding a node's stable key.",
+          description:
+            "Field holding a node's stable key. Each rendered item carries it as <code>data-key</code> (stringified), so tests and delegated handlers can find a node's element.",
         },
         {
           name: 'parentIdExpr',

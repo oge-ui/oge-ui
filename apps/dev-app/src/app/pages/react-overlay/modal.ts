@@ -3,7 +3,12 @@ import {
   Component,
   ViewEncapsulation,
 } from '@angular/core';
-import { createElement, useState, type ReactNode } from 'react';
+import {
+  createElement,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { OgeButton } from '@oge-ui/react-buttons';
 import { OgeSelectBox } from '@oge-ui/react-inputs';
 import {
@@ -34,6 +39,7 @@ export const REACT_OVERLAY_MODAL_SECTIONS = [
   'Typed result',
   'Dialog helpers',
   'Placements',
+  'Part styling',
 ] as const;
 
 /** Every modal placement, in the order the Placements demo lists them. */
@@ -478,6 +484,43 @@ function DialogHelpersDemo(): ReactNode {
   );
 }
 
+function PartsDemo(): ReactNode {
+  const [opened, setOpened] = useState(false);
+  return createElement(
+    'div',
+    {
+      style: {
+        '--oge-modal-radius': '18px',
+        '--oge-modal-body-padding': '24px',
+      } as CSSProperties,
+    },
+    createElement(OgeButton, {
+      text: 'Open branded dialog',
+      stylingMode: 'outlined',
+      onClick: () => setOpened(true),
+    }),
+    createElement(
+      OgeModal,
+      {
+        title: 'Branded dialog',
+        opened,
+        onOpenedChange: setOpened,
+        panelClass: 'brand-dialog',
+        backdropClass: 'brand-backdrop',
+        bodyClass: ['brand-body', 'scroll-y'],
+        bodyStyle: { maxHeight: '60vh' },
+        panelAttributes: { 'data-testid': 'branded-dialog' },
+        width: 380,
+      },
+      p(
+        "Classes join the modal's own; attributes are filtered, so an ",
+        createElement('code', null, 'onclick'),
+        ' key is never written to the DOM.',
+      ),
+    ),
+  );
+}
+
 function PlacementsDemo(): ReactNode {
   const [opened, setOpened] = useState(false);
   const [placement, setPlacement] = useState<OgeModalPlacement>('center');
@@ -620,6 +663,22 @@ function PlacementsDemo(): ReactNode {
     >
       <app-react-host [render]="placements" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="[
+        'panelClass',
+        'backdropClass',
+        'bodyClass',
+        'panelAttributes',
+        'component tokens',
+      ]"
+      heading="Part styling"
+      description="Bring a design system along without forking styles. <code>panelClass</code>, <code>backdropClass</code> and <code>bodyClass</code> add classes next to the modal's own (string, array or <code>{ name: boolean }</code>), <code>bodyStyle</code> sets inline body styles, and <code>panelAttributes</code> puts <code>data-*</code> / <code>aria-*</code> attributes on the panel — filtered, so event handlers, <code>style</code>, <code>class</code> and script URLs are never written. Component tokens (<code>--oge-modal-radius</code>, <code>--oge-modal-bg</code>, <code>--oge-modal-body-padding</code>…) restyle only modals inside the element that sets them; the popover, the popups and the buttons have the same pair of options and their own tokens."
+      [code]="demos[9].source"
+      language="tsx"
+    >
+      <app-react-host [render]="parts" />
+    </app-demo-card>
   `,
 })
 export class ReactOverlayModalDemos {
@@ -637,4 +696,5 @@ export class ReactOverlayModalDemos {
   protected readonly helpers = () =>
     createElement(OgeModalProvider, null, createElement(DialogHelpersDemo));
   protected readonly placements = () => createElement(PlacementsDemo);
+  protected readonly parts = () => createElement(PartsDemo);
 }

@@ -187,6 +187,29 @@ describe('OgeSplitter rendering', () => {
     );
   });
 
+  it('never spreads event handlers or script URLs from htmlAttributes', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(
+      <OgeSplitter
+        panes={[
+          {
+            key: 'a',
+            htmlAttributes: {
+              onclick: 'alert(1)',
+              href: 'javascript:alert(1)',
+              'data-ok': 'yes',
+            },
+          },
+          { key: 'b' },
+        ]}
+      />,
+    );
+    expect(panes()[0].hasAttribute('onclick')).toBe(false);
+    expect(panes()[0].hasAttribute('href')).toBe(false);
+    expect(panes()[0].getAttribute('data-ok')).toBe('yes');
+    vi.restoreAllMocks();
+  });
+
   it('renders a pane body from content, renderPane and text', () => {
     render(
       <OgeSplitter

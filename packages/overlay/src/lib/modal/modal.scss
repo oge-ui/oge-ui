@@ -93,11 +93,12 @@
   width: min(560px, 100%);
   max-width: 100%;
   max-height: 100%;
-  border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius-lg);
-  background: var(--oge-popup-bg);
+  // Component tokens: unset, each falls back to the suite-wide token.
+  border: 1px solid var(--oge-modal-border-color, var(--oge-border-color));
+  border-radius: var(--oge-modal-radius, var(--oge-radius-lg));
+  background: var(--oge-modal-bg, var(--oge-popup-bg));
   color: var(--oge-text-color);
-  box-shadow: var(--oge-shadow-popup);
+  box-shadow: var(--oge-modal-shadow, var(--oge-shadow-popup));
   font-size: var(--oge-font-size);
   transform: translateY(8px) scale(0.98);
   transition: transform
@@ -190,7 +191,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 18px;
+  padding: var(--oge-modal-body-padding, 18px);
 
   &.oge-modal-body-flush {
     padding: 0;
@@ -219,7 +220,7 @@
     transparent 0 3px,
     var(--oge-border-color) 3px 4px
   );
-  border-end-end-radius: var(--oge-radius-lg);
+  border-end-end-radius: var(--oge-modal-radius, var(--oge-radius-lg));
 }
 
 /* busy: translucent veil over the whole panel with a centered spinner */

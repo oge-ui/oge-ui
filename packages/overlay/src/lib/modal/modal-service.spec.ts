@@ -56,6 +56,29 @@ describe('OgeModalService', () => {
     );
   });
 
+  it('passes the part classes, body style and attributes to the modal', async () => {
+    const service = TestBed.inject(OgeModalService);
+    service.open(ServiceContent, {
+      title: 'Styled',
+      data: 'x',
+      panelClass: ['brand-dialog'],
+      backdropClass: 'brand-backdrop',
+      bodyClass: 'brand-body',
+      bodyStyle: { 'padding-block': '4px' },
+      panelAttributes: { 'data-testid': 'service-dialog' },
+    });
+    await flush();
+    const panel = document.querySelector('.oge-modal') as HTMLElement;
+    expect(panel.classList).toContain('brand-dialog');
+    expect(panel.getAttribute('data-testid')).toBe('service-dialog');
+    expect(document.querySelector('.oge-modal-layer')?.classList).toContain(
+      'brand-backdrop',
+    );
+    const body = document.querySelector('.oge-modal-body') as HTMLElement;
+    expect(body.classList).toContain('brand-body');
+    expect(body.style.paddingBlock).toBe('4px');
+  });
+
   it('resolves closed with the result from OgeModalRef.close and removes the host', async () => {
     const service = TestBed.inject(OgeModalService);
     const ref = service.open<string>(ServiceContent, { data: 'x' });

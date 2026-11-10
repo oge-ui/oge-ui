@@ -18,6 +18,8 @@ import {
   ogeResolveContextMenuOpen,
   type OgeContextMenuOpeningEvent,
   type OgeContextMenuPoint,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
   type OgeMenuItem,
   type OgeRect,
 } from '@oge-ui/behavior';
@@ -63,6 +65,13 @@ export interface OgeContextMenuProps {
   ariaLabel?: string;
   /** Disables the menu without detaching it. */
   disabled?: boolean;
+  /** Extra classes on the menu panel (a design system's own menu class). */
+  panelClass?: OgeClassValue;
+  /**
+   * Extra attributes on the menu panel (`data-testid`…). Event handlers,
+   * `style`, `class` and unsafe URLs are left out.
+   */
+  panelAttributes?: OgeHtmlAttributes;
   /** Replaces the default check+text item rendering (icons, badges…). */
   renderItem?: (item: OgeMenuItem, index: number) => ReactNode;
   /**
@@ -115,6 +124,8 @@ export const OgeContextMenu = forwardRef<
     target,
     ariaLabel,
     disabled = false,
+    panelClass,
+    panelAttributes,
     renderItem,
     onOpening,
     onItemClick,
@@ -293,7 +304,12 @@ export const OgeContextMenu = forwardRef<
       {panel.isOpen &&
         typeof document !== 'undefined' &&
         createPortal(
-          <OgePopup panel={panel} ref={popupRef}>
+          <OgePopup
+            panel={panel}
+            ref={popupRef}
+            panelClass={panelClass}
+            panelAttributes={panelAttributes}
+          >
             <OgeMenuList
               ref={listRef}
               items={activeItems}

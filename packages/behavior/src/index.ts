@@ -2110,6 +2110,13 @@ export {
   sanitizeResourceUrl,
   type OgeSanitizeUrlOptions,
 } from './lib/security/sanitize-url';
+export {
+  ogeSafeAttributes,
+  ogeClassNames,
+  ogeApplyAttributes,
+  OGE_PART_OWNED_ATTRIBUTES,
+  type OgeHtmlAttributes,
+} from './lib/security/safe-attributes';
 export { prefersReducedMotion, motionScrollBehavior } from './lib/a11y/motion';
 // layout motion — FLIP animator, drop settle, exit ghosts (no-ops under
 // reduced motion and without the Web Animations API)

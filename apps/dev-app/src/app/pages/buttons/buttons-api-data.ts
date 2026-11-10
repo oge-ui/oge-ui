@@ -562,6 +562,18 @@ export const OGE_DROP_DOWN_BUTTON_API: ApiSections = {
             "Fixed pixels or <code>'anchor'</code> to match the button width.",
         },
         {
+          name: 'dropdownClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the drop-down panel (a design system’s own menu class).',
+        },
+        {
+          name: 'dropdownAttributes',
+          type: 'OgeHtmlAttributes | undefined',
+          description:
+            'Extra attributes on the drop-down panel (<code>data-testid</code>…). Filtered by <code>ogeSafeAttributes</code>: event handlers, <code>srcdoc</code>, <code>style</code>, <code>class</code>, script URLs and the panel’s own <code>id</code> are dropped.',
+        },
+        {
           name: 'adaptiveMode / adaptiveBreakpoint',
           type: "'auto' | 'none' / number",
           default: "config: 'none' / 600",

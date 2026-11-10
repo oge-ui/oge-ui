@@ -57,11 +57,12 @@
   min-height: var(--oge-control-height-md);
   padding: 6px 16px;
   border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius);
+  // Component tokens: unset, each falls back to the suite-wide value.
+  border-radius: var(--oge-button-radius, var(--oge-radius));
   background: var(--oge-header-bg);
   color: var(--oge-text-color);
   font: inherit;
-  font-weight: 500;
+  font-weight: var(--oge-button-font-weight, 500);
   line-height: 1.2;
   cursor: pointer;
   user-select: none;

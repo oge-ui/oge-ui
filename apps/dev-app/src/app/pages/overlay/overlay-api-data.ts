@@ -319,6 +319,18 @@ export const OGE_POPUP_API: ApiSections = {
             "Aria label of the adaptive close button, from the owner's messages catalog.",
         },
         {
+          name: 'panelClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the panel element, next to <code>oge-popup</code>.',
+        },
+        {
+          name: 'panelAttributes',
+          type: 'OgeHtmlAttributes | undefined',
+          description:
+            'Extra attributes on the panel element. Filtered by <code>ogeSafeAttributes</code>: event handlers (<code>on*</code>), <code>srcdoc</code>, <code>style</code>, <code>class</code>, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key).',
+        },
+        {
           name: '[ogePopupSheetHeader] / [ogePopupSheetFooter]',
           type: 'content attribute',
           description:
@@ -600,7 +612,7 @@ export const OGE_MODAL_API: ApiSections = {
           type: 'model&lt;boolean&gt;',
           default: 'false',
           description:
-            'Two-way open state. Setting it <code>false</code> directly closes without the guard pipeline.',
+            "Two-way open state. Setting it <code>false</code> directly closes without the guard pipeline. It still fires <code>closed</code>, with <code>reason: 'api'</code> — only <code>closing</code> and <code>closeGuard</code> are skipped. <code>busy</code> never blocks it.",
         },
         {
           name: 'fullScreen',
@@ -758,6 +770,35 @@ export const OGE_MODAL_API: ApiSections = {
           name: 'messages',
           type: 'Partial&lt;OgeOverlayMessages&gt; | undefined',
           description: 'Per-instance message overrides.',
+        },
+        {
+          name: 'panelClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the dialog panel, next to <code>oge-modal</code> (string, array or <code>{ name: boolean }</code>).',
+        },
+        {
+          name: 'backdropClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the backdrop layer that wraps the panel.',
+        },
+        {
+          name: 'bodyClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the body, the container of the projected content.',
+        },
+        {
+          name: 'bodyStyle',
+          type: 'Record&lt;string, string&gt; | undefined',
+          description: 'Inline styles on the body.',
+        },
+        {
+          name: 'panelAttributes',
+          type: 'OgeHtmlAttributes | undefined',
+          description:
+            'Extra attributes on the dialog panel (<code>data-testid</code>…). Filtered by <code>ogeSafeAttributes</code>: event handlers (<code>on*</code>), <code>srcdoc</code>, <code>style</code>, <code>class</code>, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key).',
         },
         {
           name: 'closePending',
@@ -925,7 +966,7 @@ export const OGE_MODAL_SERVICE_API: ApiSections = {
           name: 'OgeModalOpenConfig&lt;D&gt;',
           type: 'object',
           description:
-            'The declarative inputs minus slots (<code>title</code>, sizing, <code>placement</code>, <code>closeGuard</code>, …) plus <code>data?: D</code>, made available to the content via <code>OGE_MODAL_DATA</code>.',
+            'The declarative inputs minus slots (<code>title</code>, sizing, <code>placement</code>, <code>closeGuard</code>, …) plus <code>data?: D</code>, made available to the content via <code>OGE_MODAL_DATA</code>. Part styling: <code>panelClass</code>, <code>backdropClass</code>, <code>bodyClass</code>, <code>bodyStyle</code>, <code>panelAttributes</code> (as on the modal).',
         },
         {
           name: 'OgeModalRef&lt;R&gt;',
@@ -1377,6 +1418,18 @@ export const OGE_CONTEXT_MENU_API: ApiSections = {
             'CSS selector delegating the menu to matching elements inside the host (<code>closest()</code> from the clicked / focused element): one menu serves many rows. Requests outside every match keep the browser menu; the match becomes the anchor, the <code>contextMenuOpening</code> target and the focus-return point.',
         },
         {
+          name: 'contextMenuPanelClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the menu panel (a design system’s own menu class).',
+        },
+        {
+          name: 'contextMenuPanelAttributes',
+          type: 'OgeHtmlAttributes | undefined',
+          description:
+            'Extra attributes on the menu panel. Filtered by <code>ogeSafeAttributes</code>: event handlers (<code>on*</code>), <code>srcdoc</code>, <code>style</code>, <code>class</code>, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key).',
+        },
+        {
           name: 'contextMenuAriaLabel',
           type: 'string | undefined',
           default: '—',
@@ -1609,6 +1662,18 @@ export const OGE_POPOVER_API: ApiSections = {
           type: 'Partial&lt;OgeOverlayMessages&gt; | undefined',
           description:
             'Per-instance message overrides — <code>popoverClose</code> labels the ✕.',
+        },
+        {
+          name: 'panelClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the panel element, next to <code>oge-popover</code>.',
+        },
+        {
+          name: 'panelAttributes',
+          type: 'OgeHtmlAttributes | undefined',
+          description:
+            'Extra attributes on the panel element. Filtered by <code>ogeSafeAttributes</code>: event handlers (<code>on*</code>), <code>srcdoc</code>, <code>style</code>, <code>class</code>, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key).',
         },
       ],
     },

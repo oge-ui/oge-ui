@@ -36,6 +36,12 @@ import {
   type OgePopoverShowOn,
   type OgePopoverTriggerAria,
   type OgePopupPlacement,
+  OGE_PART_OWNED_ATTRIBUTES,
+  ogeApplyAttributes,
+  ogeClassNames,
+  ogeSafeAttributes,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG } from '../config';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
@@ -95,6 +101,7 @@ let nextPopoverId = 0;
         tabindex="-1"
         [id]="panel.panelId"
         role="dialog"
+        [class]="panelClassText()"
         [attr.aria-modal]="modal() ? 'true' : null"
         [attr.aria-labelledby]="hasTitle() ? titleId : null"
         [attr.aria-label]="hasTitle() ? null : (ariaLabel() ?? null)"
@@ -232,6 +239,18 @@ export class OgePopover {
   readonly anchor = input<HTMLElement | null>(null);
   /** Per-instance message overrides (the close button's label). */
   readonly messages = input<Partial<OgeOverlayMessages>>();
+  /** Extra classes on the panel element, next to `oge-popover`. */
+  readonly panelClass = input<OgeClassValue>();
+  /**
+   * Extra attributes on the panel element (`data-testid`, `aria-describedby`…).
+   * Event handlers, `style`, `class`, unsafe URLs and the attributes the
+   * popover sets itself (`id`, `role`, `aria-*` naming) are left out.
+   */
+  readonly panelAttributes = input<OgeHtmlAttributes>();
+
+  protected readonly panelClassText = computed(() =>
+    ogeClassNames(this.panelClass()),
+  );
 
   /** Cancelable, before every open; carries the reason. */
   readonly opening = output<OgePopoverOpeningEvent>();
@@ -328,6 +347,22 @@ export class OgePopover {
     effect(() => {
       this.disabled();
       untracked(() => this.core.sync());
+    });
+    // Consumer attributes: re-applied to every new panel element.
+    let attributeTarget: HTMLElement | null = null;
+    let appliedAttributes: readonly string[] = [];
+    effect(() => {
+      const el = this.panelEl()?.nativeElement ?? null;
+      const next = ogeSafeAttributes(
+        this.panelAttributes(),
+        OGE_PART_OWNED_ATTRIBUTES.popover,
+      );
+      if (el !== attributeTarget) {
+        attributeTarget = el;
+        appliedAttributes = [];
+      }
+      if (el)
+        appliedAttributes = ogeApplyAttributes(el, next, appliedAttributes);
     });
     // Portal: the open panel moves to `document.body`, so transformed or
     // clipping ancestors of the declaration point never affect it. Angular

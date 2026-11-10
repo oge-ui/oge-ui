@@ -13,6 +13,8 @@ import { OgeContextMenu } from './context-menu';
       tabindex="0"
       [ogeContextMenu]="items()"
       contextMenuAriaLabel="Row actions"
+      [contextMenuPanelClass]="panelClass()"
+      [contextMenuPanelAttributes]="{ 'data-testid': 'row-menu' }"
       (contextMenuItemClick)="clicks.push($event)"
       (contextMenuOpened)="openedCount = openedCount + 1"
       (contextMenuClosed)="closedCount = closedCount + 1"
@@ -27,6 +29,7 @@ class ContextMenuHost {
     { separator: true, text: '' },
     { text: 'Delete', severity: 'danger' },
   ]);
+  readonly panelClass = signal('brand-menu');
   readonly clicks: OgeMenuListItemClickEvent[] = [];
   openedCount = 0;
   closedCount = 0;
@@ -88,6 +91,17 @@ describe('OgeContextMenu', () => {
     expect(menu()).not.toBeNull();
     expect(menu()?.getAttribute('aria-label')).toBe('Row actions');
     expect(fixture.componentInstance.openedCount).toBe(1);
+  });
+
+  it('puts the panel class and attributes on the menu panel', () => {
+    rightClick();
+    const panel = document.body.querySelector('.oge-popup') as HTMLElement;
+    expect(panel.classList).toContain('brand-menu');
+    expect(panel.getAttribute('data-testid')).toBe('row-menu');
+    fixture.componentInstance.panelClass.set('other-menu');
+    settle();
+    expect(panel.classList).toContain('other-menu');
+    expect(panel.classList).not.toContain('brand-menu');
   });
 
   it('activating an item emits contextMenuItemClick and closes', () => {

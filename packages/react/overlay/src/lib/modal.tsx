@@ -42,6 +42,11 @@ import {
   type OgeModalResizeEvent,
   type OgeModalRole,
   type OgeOverlayMessages,
+  OGE_PART_OWNED_ATTRIBUTES,
+  ogeClassNames,
+  ogeSafeAttributes,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import { useOgeOverlayConfig } from './overlay-config';
 
@@ -167,8 +172,24 @@ export interface OgeModalProps<R = unknown> {
   onResized?: (event: OgeModalResizeEvent) => void;
   /** Fires whenever the async `closeGuard` starts or settles. */
   onClosePendingChange?: (pending: boolean) => void;
+  /** Extra class on the backdrop layer (the outermost element). */
   className?: string;
+  /** Inline style on the backdrop layer. */
   style?: CSSProperties;
+  /** Extra classes on the dialog panel. */
+  panelClass?: OgeClassValue;
+  /**
+   * Extra attributes on the dialog panel (`data-testid`, `aria-describedby`…).
+   * Event handlers, `style`, `class`, unsafe URLs and the attributes the
+   * component sets itself are left out.
+   */
+  panelAttributes?: OgeHtmlAttributes;
+  /** Extra classes on the backdrop layer that wraps the panel. */
+  backdropClass?: OgeClassValue;
+  /** Extra classes on the body (the content's container). */
+  bodyClass?: OgeClassValue;
+  /** Inline styles on the body. */
+  bodyStyle?: CSSProperties;
 }
 
 /**
@@ -213,6 +234,11 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
     children,
     className,
     style,
+    panelClass,
+    panelAttributes,
+    backdropClass,
+    bodyClass,
+    bodyStyle,
   } = props;
 
   const config = useOgeOverlayConfig();
@@ -587,26 +613,28 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
   return (
     <div
       ref={layerRef}
-      className={[
+      className={ogeClassNames(
         'oge-modal-layer',
         ready && 'oge-modal-layer-ready',
         modalPlacementClass(placement, fullScreen),
         !shading && 'oge-modal-layer-unshaded',
         fullScreen && 'oge-modal-layer-fullscreen',
         className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
+        backdropClass,
+      )}
       style={style}
       onPointerDown={onLayerPointerDown}
       onClick={onLayerClick}
       onKeyDown={onLayerKeyDown}
     >
       <div
+        {...ogeSafeAttributes(panelAttributes, OGE_PART_OWNED_ATTRIBUTES.modal)}
         ref={panelRef}
-        className={['oge-modal', fullScreen && 'oge-modal-fullscreen']
-          .filter(Boolean)
-          .join(' ')}
+        className={ogeClassNames(
+          'oge-modal',
+          fullScreen && 'oge-modal-fullscreen',
+          panelClass,
+        )}
         role={props.dialogRole ?? 'dialog'}
         aria-modal="true"
         tabIndex={-1}
@@ -703,9 +731,12 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
           </div>
         )}
         <div
-          className={['oge-modal-body', !padding && 'oge-modal-body-flush']
-            .filter(Boolean)
-            .join(' ')}
+          className={ogeClassNames(
+            'oge-modal-body',
+            !padding && 'oge-modal-body-flush',
+            bodyClass,
+          )}
+          style={bodyStyle}
         >
           {children}
         </div>

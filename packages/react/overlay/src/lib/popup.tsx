@@ -11,8 +11,13 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  OGE_PART_OWNED_ATTRIBUTES,
   OgeAdaptiveSheetCore,
+  ogeClassNames,
+  ogeSafeAttributes,
   type OgeAdaptivePresentation,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import type { OgeAnchoredPanelHandle } from './use-anchored-panel';
 
@@ -39,6 +44,13 @@ export interface OgePopupProps {
   sheetHeader?: ReactNode;
   /** Pinned at the bottom of the adaptive surface (a Done action); ignored anchored. */
   sheetFooter?: ReactNode;
+  /**
+   * Extra attributes on the panel element, filtered by `ogeSafeAttributes`
+   * (no event handlers, `style`, `class`, unsafe URLs, `id`).
+   */
+  panelAttributes?: OgeHtmlAttributes;
+  /** Extra classes on the panel element — joins `className`. */
+  panelClass?: OgeClassValue;
 }
 
 /**
@@ -72,9 +84,15 @@ export const OgePopup = forwardRef<HTMLDivElement, OgePopupProps>(
       closeLabel = '',
       sheetHeader,
       sheetFooter,
+      panelAttributes,
+      panelClass,
     },
     ref,
   ) {
+    const extraAttributes = ogeSafeAttributes(
+      panelAttributes,
+      OGE_PART_OWNED_ATTRIBUTES.popup,
+    );
     const position = panel.position;
     const isAdaptive = adaptive !== 'popup';
     const titleId = `oge-popup-sheet-title-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -112,7 +130,7 @@ export const OgePopup = forwardRef<HTMLDivElement, OgePopupProps>(
       isAdaptive && 'oge-popup-adaptive',
       adaptive === 'sheet' && 'oge-popup-adaptive-sheet',
       adaptive === 'fullscreen' && 'oge-popup-adaptive-fullscreen',
-      className,
+      ogeClassNames(className, panelClass),
     ]
       .filter(Boolean)
       .join(' ');
@@ -120,6 +138,7 @@ export const OgePopup = forwardRef<HTMLDivElement, OgePopupProps>(
     if (!isAdaptive) {
       return (
         <div
+          {...extraAttributes}
           ref={setRefs}
           id={panel.panelId}
           className={classes}
@@ -141,7 +160,13 @@ export const OgePopup = forwardRef<HTMLDivElement, OgePopupProps>(
     }
 
     return (
-      <div ref={setRefs} id={panel.panelId} className={classes} style={style}>
+      <div
+        {...extraAttributes}
+        ref={setRefs}
+        id={panel.panelId}
+        className={classes}
+        style={style}
+      >
         <div
           className="oge-popup-sheet"
           role="dialog"

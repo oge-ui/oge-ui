@@ -273,4 +273,34 @@ const [placement] = useState<OgeModalPlacement>('bottom-end');`,
 </>`,
     }),
   },
+  {
+    title: 'Part styling',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: {
+        '@oge-ui/react-buttons': ['OgeButton'],
+        '@oge-ui/react-overlay': ['OgeModal'],
+      },
+      types: { react: ['CSSProperties'] },
+      name: 'BrandedModal',
+      body: `const [opened, setOpened] = useState(false);
+// component tokens restyle only the modals inside this wrapper
+const tokens = { '--oge-modal-radius': '18px', '--oge-modal-body-padding': '24px' } as CSSProperties;`,
+      jsx: `<div style={tokens}>
+  <OgeButton text="Open branded dialog" onClick={() => setOpened(true)} />
+  <OgeModal
+    title="Branded dialog"
+    opened={opened}
+    onOpenedChange={setOpened}
+    panelClass="brand-dialog"
+    backdropClass="brand-backdrop"
+    bodyClass={['brand-body', 'scroll-y']}
+    bodyStyle={{ maxHeight: '60vh' }}
+    panelAttributes={{ 'data-testid': 'branded-dialog' }}
+  >
+    <p>Classes join the modal's own; attributes are filtered, so an onclick key is never written to the DOM.</p>
+  </OgeModal>
+</div>`,
+    }),
+  },
 ];

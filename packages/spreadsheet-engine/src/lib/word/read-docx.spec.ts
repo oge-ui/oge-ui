@@ -977,6 +977,34 @@ describe('layout paths', () => {
     expect(nodes.some((n) => n.dash)).toBe(true);
   });
 
+  it('links only safe external targets; data: and script URLs stay text', () => {
+    const { document } = read(
+      p(
+        `<w:hyperlink r:id="a">${r(t('site'))}</w:hyperlink>` +
+          `<w:hyperlink r:id="b">${r(t('mail'))}</w:hyperlink>` +
+          `<w:hyperlink r:id="c">${r(t('page'))}</w:hyperlink>` +
+          `<w:hyperlink r:id="d">${r(t('vbs'))}</w:hyperlink>`,
+      ),
+      {
+        rels: [
+          ['a', 'hyperlink', 'https://ogeui.com/docs', true],
+          ['b', 'hyperlink', 'mailto:team@example.test', true],
+          ['c', 'hyperlink', 'data:text/html;base64,PHNjcmlwdD4=', true],
+          ['d', 'hyperlink', 'vbscript:msgbox(1)', true],
+        ],
+      },
+    );
+    const nodes = layout(document)[0].render.nodes as {
+      text?: string;
+      link?: string | null;
+    }[];
+    const link = (text: string) => nodes.find((n) => n.text === text)?.link;
+    expect(link('site')).toBe('https://ogeui.com/docs');
+    expect(link('mail')).toBe('mailto:team@example.test');
+    expect(link('page')).toBeNull();
+    expect(link('vbs')).toBeNull();
+  });
+
   it('keeps a heading with the next paragraph', () => {
     const filler = Array.from({ length: 200 }, () => p(r(t('x')))).join('');
     const { document } = read(

@@ -116,7 +116,7 @@ _Content slots (structural directives)_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `opened` | `model<boolean>` | `false` | Two-way open state. Setting it `false` directly closes without the guard pipeline. |
+| `opened` | `model<boolean>` | `false` | Two-way open state. Setting it `false` directly closes without the guard pipeline. It still fires `closed`, with `reason: 'api'` — only `closing` and `closeGuard` are skipped. `busy` never blocks it. |
 | `fullScreen` | `model<boolean>` | `false` | Two-way full-screen state; size inputs are ignored while `true`. Driven by the maximize button when shown. |
 | `title` | `string \| undefined` | `—` | Header text; also the aria-label fallback when the header is hidden. |
 | `ariaLabel` | `string \| undefined` | `—` | Accessible name override for headerless modals. |
@@ -141,6 +141,11 @@ _Content slots (structural directives)_
 | `busy` | `boolean` | `false` | Spinner veil + `aria-busy`; user-initiated closes are blocked, programmatic `close()` still works. |
 | `closeGuard` | `() => boolean \| Promise<boolean> \| undefined` | `—` | Veto hook run before every pipeline close; may be async (single-flight — see `closePending`). A rejected promise vetoes with a dev warning. |
 | `messages` | `Partial<OgeOverlayMessages> \| undefined` | `—` | Per-instance message overrides. |
+| `panelClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the dialog panel, next to `oge-modal` (string, array or `{ name: boolean }`). |
+| `backdropClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the backdrop layer that wraps the panel. |
+| `bodyClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the body, the container of the projected content. |
+| `bodyStyle` | `Record<string, string> \| undefined` | `—` | Inline styles on the body. |
+| `panelAttributes` | `OgeHtmlAttributes \| undefined` | `—` | Extra attributes on the dialog panel (`data-testid`…). Filtered by `ogeSafeAttributes`: event handlers (`on*`), `srcdoc`, `style`, `class`, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key). |
 | `closePending` | `Signal<boolean>` | `—` | `true` while an async `closeGuard` is pending — disable footer actions with it. |
 
 #### Methods
@@ -192,7 +197,7 @@ _Content slots (structural directives)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeModalOpenConfig<D>` | `object` | The declarative inputs minus slots (`title`, sizing, `placement`, `closeGuard`, …) plus `data?: D`, made available to the content via `OGE_MODAL_DATA`. |
+| `OgeModalOpenConfig<D>` | `object` | The declarative inputs minus slots (`title`, sizing, `placement`, `closeGuard`, …) plus `data?: D`, made available to the content via `OGE_MODAL_DATA`. Part styling: `panelClass`, `backdropClass`, `bodyClass`, `bodyStyle`, `panelAttributes` (as on the modal). |
 | `OgeModalRef<R>` | `{ close(result?: R): void; closed: Promise<OgeModalClosedEvent<R>> }` | Handle of a service-opened modal; content components can inject it to close themselves with a result. |
 | `OGE_MODAL_DATA` | `InjectionToken<unknown>` | The `config.data` payload, injectable in the content component. |
 | `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, a `TemplateRef` replaces it; `width` defaults to 400. |
@@ -387,6 +392,8 @@ _Trigger & content slots_
 | `disabled` | `boolean` | `false` | Prevents opening; closes an open popover. |
 | `anchor` | `HTMLElement \| null` | `null` | Element to anchor to when no trigger opened it (a popover opened from code); falls back to the first `[ogePopover]` trigger. |
 | `messages` | `Partial<OgeOverlayMessages> \| undefined` | `—` | Per-instance message overrides — `popoverClose` labels the ✕. |
+| `panelClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the panel element, next to `oge-popover`. |
+| `panelAttributes` | `OgeHtmlAttributes \| undefined` | `—` | Extra attributes on the panel element. Filtered by `ogeSafeAttributes`: event handlers (`on*`), `srcdoc`, `style`, `class`, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key). |
 
 #### Methods
 
@@ -517,6 +524,8 @@ _Template reference (exportAs: 'ogeTooltip')_
 | --- | --- | --- | --- |
 | `ogeContextMenu` | `readonly OgeMenuItem[] (required)` | `—` | Items of the menu opened on right-click or Shift+F10. An empty array falls back to the native browser menu — unless a `contextMenuOpening` handler builds the items per target. |
 | `contextMenuTarget` | `string \| undefined` | `—` | CSS selector delegating the menu to matching elements inside the host (`closest()` from the clicked / focused element): one menu serves many rows. Requests outside every match keep the browser menu; the match becomes the anchor, the `contextMenuOpening` target and the focus-return point. |
+| `contextMenuPanelClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the menu panel (a design system’s own menu class). |
+| `contextMenuPanelAttributes` | `OgeHtmlAttributes \| undefined` | `—` | Extra attributes on the menu panel. Filtered by `ogeSafeAttributes`: event handlers (`on*`), `srcdoc`, `style`, `class`, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key). |
 | `contextMenuAriaLabel` | `string \| undefined` | `—` | Accessible name of the menu. |
 | `contextMenuDisabled` | `boolean` | `false` | Leaves the browser menu in charge without removing the directive. |
 
@@ -635,6 +644,8 @@ _OgeAnchoredPanelOptions (constructor)_
 | `adaptive` | `'popup' \| 'sheet' \| 'fullscreen'` | `'popup'` | Presentation: anchored, a modal full-width bottom sheet, or a full-screen dialog — `role="dialog"` + `aria-modal`, titled, with a close button; the shared `OgeAdaptiveSheetCore` (`@oge-ui/behavior`) locks scroll, inerts the background, traps Tab, moves focus in (an element marked `data-oge-sheet-focus` first), restores it, follows `visualViewport` above the on-screen keyboard and dismisses on a backdrop tap or a swipe down the handle. Popup editors resolve it from their `adaptiveMode`. |
 | `adaptiveTitle` | `string` | `''` | Dialog title while adaptive (editors pass their field label). |
 | `closeLabel` | `string` | `''` | Aria label of the adaptive close button, from the owner's messages catalog. |
+| `panelClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the panel element, next to `oge-popup`. |
+| `panelAttributes` | `OgeHtmlAttributes \| undefined` | `—` | Extra attributes on the panel element. Filtered by `ogeSafeAttributes`: event handlers (`on*`), `srcdoc`, `style`, `class`, script URLs and the attributes the component sets itself are dropped (one dev-mode warning per key). |
 | `[ogePopupSheetHeader] / [ogePopupSheetFooter]` | `content attribute` | `—` | Projected under the adaptive title (a search field) and pinned at the bottom (a Done action); render them only while adaptive. |
 
 #### Methods
@@ -1092,6 +1103,42 @@ export class Demo {
   // may be async: the modal stays open until the promise resolves
   protected readonly confirmDiscard = (): boolean =>
     !this.dirty() || confirm('Discard unsaved changes?');
+}
+```
+
+### Parts
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+import { OgeModal } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton, OgeModal],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- component tokens restyle only the modals inside this wrapper;
+         unset ones keep following the suite-wide tokens -->
+    <div style="--oge-modal-radius: 18px; --oge-modal-body-padding: 24px">
+      <oge-button text="Open branded dialog" (clicked)="opened.set(true)" />
+      <oge-modal
+        title="Branded dialog"
+        [(opened)]="opened"
+        panelClass="brand-dialog"
+        backdropClass="brand-backdrop"
+        [bodyClass]="['brand-body', 'scroll-y']"
+        [bodyStyle]="{ 'max-height': '60vh' }"
+        [panelAttributes]="{ 'data-testid': 'branded-dialog' }"
+      >
+        <p>Classes join the modal's own; attributes are filtered, so an
+           <code>onclick</code> key is never written to the DOM.</p>
+      </oge-modal>
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(false);
 }
 ```
 

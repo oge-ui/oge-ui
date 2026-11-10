@@ -3370,6 +3370,225 @@
       ]
     },
     {
+      "n": "--oge-modal-bg",
+      "c": "component",
+      "k": "d",
+      "d": "modal dialog panel: component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-popup-bg)"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-modal-border-color",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-border-color)"
+      },
+      "s": {
+        "light": "#e6e9ef"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-modal-radius",
+      "c": "radius",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-radius-lg)"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-modal-shadow",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-shadow-popup)"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-modal-body-padding",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "18px"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popover-bg",
+      "c": "component",
+      "k": "d",
+      "d": "popover panel: component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-popup-bg)"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popover-border-color",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-border-color)"
+      },
+      "s": {
+        "light": "#e6e9ef"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popover-radius",
+      "c": "radius",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-radius-lg)"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popover-shadow",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-shadow-popup)"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popover-body-padding",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "10px 14px 12px"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popup-border-color",
+      "c": "color",
+      "k": "d",
+      "d": "anchored popups: menus, drop-downs, pickers: component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-border-color)"
+      },
+      "s": {
+        "light": "#e6e9ef"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popup-radius",
+      "c": "radius",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-radius-lg)"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-popup-shadow",
+      "c": "elevation",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-shadow-popup)"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-menu-padding",
+      "c": "component",
+      "k": "d",
+      "d": "menu lists (context menu, drop-down button, menubar): component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "4px"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-menu-item-padding",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "7px 10px"
+      },
+      "u": [
+        "@oge-ui/overlay"
+      ]
+    },
+    {
+      "n": "--oge-button-radius",
+      "c": "radius",
+      "k": "d",
+      "d": "buttons: component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-radius)"
+      },
+      "u": [
+        "@oge-ui/buttons"
+      ]
+    },
+    {
+      "n": "--oge-button-font-weight",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "500"
+      },
+      "u": [
+        "@oge-ui/buttons"
+      ]
+    },
+    {
       "n": "--oge-warning-contrast",
       "c": "color",
       "d": "Bootstrap's warning is a light amber — dark text, like Bootstrap itself",

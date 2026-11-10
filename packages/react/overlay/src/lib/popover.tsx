@@ -34,6 +34,11 @@ import {
   type OgePopoverOpeningEvent,
   type OgePopoverShowOn,
   type OgePopupPlacement,
+  OGE_PART_OWNED_ATTRIBUTES,
+  ogeClassNames,
+  ogeSafeAttributes,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import { useOgeOverlayConfig } from './overlay-config';
 import { useAnchoredPanel } from './use-anchored-panel';
@@ -129,6 +134,15 @@ export interface OgePopoverProps {
   onClosed?: (event: OgePopoverClosedEvent) => void;
   /** Extra class on the panel. */
   className?: string;
+  /** Extra classes on the panel element. */
+  panelClass?: OgeClassValue;
+  /**
+   * Extra attributes on the panel element (`data-testid`, `aria-describedby`…).
+   * Event handlers, `style`, `class`, unsafe URLs and the attributes the
+   * component sets itself are left out.
+   */
+  panelAttributes?: OgeHtmlAttributes;
+
   /** Extra inline style on the panel. */
   style?: CSSProperties;
   /** Body content, or a render function receiving the slot context. */
@@ -200,6 +214,8 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
       className,
       style,
       children,
+      panelClass,
+      panelAttributes,
     } = props;
     const config = useOgeOverlayConfig();
     const titleId = `oge-popover-title-${sanitizeId(useId())}`;
@@ -363,16 +379,19 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
 
     const panelNode = (
       <div
+        {...ogeSafeAttributes(
+          panelAttributes,
+          OGE_PART_OWNED_ATTRIBUTES.popover,
+        )}
         ref={panelElRef}
         id={panel.panelId}
-        className={[
+        className={ogeClassNames(
           'oge-popover',
           modal && 'oge-popover-modal',
           position && 'oge-popover-ready',
           className,
-        ]
-          .filter(Boolean)
-          .join(' ')}
+          panelClass,
+        )}
         tabIndex={-1}
         role={panelAria.role}
         aria-modal={panelAria['aria-modal'] ?? undefined}

@@ -24,13 +24,14 @@
   position: fixed;
   z-index: var(--oge-z-popup);
   display: block;
-  border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius-lg);
-  background: var(--oge-popup-bg);
+  // Component tokens: unset, each falls back to the suite-wide token.
+  border: 1px solid var(--oge-popover-border-color, var(--oge-border-color));
+  border-radius: var(--oge-popover-radius, var(--oge-radius-lg));
+  background: var(--oge-popover-bg, var(--oge-popup-bg));
   color: var(--oge-text-color);
   font-size: var(--oge-font-size);
   line-height: 1.5;
-  box-shadow: var(--oge-shadow-popup);
+  box-shadow: var(--oge-popover-shadow, var(--oge-shadow-popup));
 
   /* entrance: fades/scales in from the anchored edge once measured */
   transform: scale(0.97);
@@ -152,7 +153,7 @@
 .oge-popover-body {
   flex: 1;
   min-height: 0;
-  padding: 10px 14px 12px;
+  padding: var(--oge-popover-body-padding, 10px 14px 12px);
   overflow-y: auto;
   overflow-wrap: break-word;
   @include tokens.scrollbar;
@@ -177,7 +178,10 @@
 
 // --- callout arrow -----------------------------------------------------------
 .oge-popover-arrow {
-  @include callout-arrow.arrow(var(--oge-popup-bg), var(--oge-border-color));
+  @include callout-arrow.arrow(
+    var(--oge-popover-bg, var(--oge-popup-bg)),
+    var(--oge-popover-border-color, var(--oge-border-color))
+  );
 }
 
 // --- reduced motion ----------------------------------------------------------

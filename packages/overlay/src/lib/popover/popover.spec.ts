@@ -24,6 +24,8 @@ import { OgePopoverFooter, OgePopoverTitle } from './popover-templates';
       [modal]="modal()"
       [arrow]="true"
       [width]="260"
+      [panelClass]="panelClass()"
+      [panelAttributes]="panelAttributes()"
       [(visible)]="visible"
       (opening)="log.push('opening:' + $event.reason); onOpening($event)"
       (opened)="log.push('opened:' + $event.reason)"
@@ -42,6 +44,12 @@ class Host {
   readonly showOn = signal<OgePopoverShowOn>('click');
   readonly modal = signal(false);
   readonly visible = signal(false);
+  readonly panelClass = signal<string | string[]>(['brand-popover']);
+  readonly panelAttributes = signal<Record<string, string>>({
+    'data-testid': 'order-popover',
+    role: 'menu',
+    onmouseover: 'x',
+  });
   readonly log: string[] = [];
   vetoOpen = false;
   vetoClose = false;
@@ -129,6 +137,31 @@ describe('OgePopover', () => {
     expect(
       (el.querySelector('.oge-popover-content') as HTMLElement).style.width,
     ).toBe('260px');
+  });
+
+  it('puts panelClass and the safe panelAttributes on every opened panel', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    trigger().click();
+    settle();
+    let el = panel() as HTMLElement;
+    expect(el.classList).toContain('oge-popover');
+    expect(el.classList).toContain('brand-popover');
+    expect(el.getAttribute('data-testid')).toBe('order-popover');
+    expect(el.getAttribute('role')).toBe('dialog');
+    expect(el.hasAttribute('onmouseover')).toBe(false);
+    host().panelAttributes.set({ 'data-state': 'busy' });
+    host().panelClass.set('other');
+    settle();
+    expect(el.hasAttribute('data-testid')).toBe(false);
+    expect(el.getAttribute('data-state')).toBe('busy');
+    expect(el.classList).toContain('other');
+    trigger().click();
+    settle();
+    trigger().click();
+    settle();
+    el = panel() as HTMLElement;
+    expect(el.getAttribute('data-state')).toBe('busy');
+    vi.restoreAllMocks();
   });
 
   it('the close button and a footer close() close with focus back on the trigger', () => {

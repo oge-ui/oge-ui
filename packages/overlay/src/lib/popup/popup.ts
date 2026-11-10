@@ -6,12 +6,19 @@ import {
   ViewEncapsulation,
   afterRenderEffect,
   computed,
+  effect,
   inject,
   input,
 } from '@angular/core';
 import {
+  OGE_PART_OWNED_ATTRIBUTES,
   OgeAdaptiveSheetCore,
+  ogeApplyAttributes,
+  ogeClassNames,
+  ogeSafeAttributes,
   type OgeAdaptivePresentation,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import type { OgeAnchoredPanel } from '../panel/anchored-panel';
 
@@ -35,6 +42,11 @@ let nextSheetTitleId = 0;
  * marked `[ogePopupSheetHeader]` renders under the title (a search field),
  * `[ogePopupSheetFooter]` pinned at the bottom (a Done action); both are
  * projected only while adaptive matters to the owner.
+ *
+ * `panelClass` and `panelAttributes` put the consumer's own classes and
+ * attributes (`data-testid`, `aria-describedby`…) on the panel element; the
+ * attribute bag goes through `ogeSafeAttributes`, so event handlers and
+ * script URLs are never written.
  */
 @Component({
   selector: 'oge-popup',
@@ -42,6 +54,7 @@ let nextSheetTitleId = 0;
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'oge-popup',
+    '[class]': 'panelClassText()',
     '[id]': 'panel().panelId',
     '[class.oge-popup-adaptive]': 'isAdaptive()',
     '[class.oge-popup-adaptive-sheet]': "adaptive() === 'sheet'",
@@ -113,6 +126,18 @@ export class OgePopup {
   readonly adaptiveTitle = input('');
   /** Aria label of the adaptive close (✕) button — from the owner's messages. */
   readonly closeLabel = input('');
+  /** Extra classes on the panel element, next to `oge-popup`. */
+  readonly panelClass = input<OgeClassValue>();
+  /**
+   * Extra attributes on the panel element. Event handlers, `style`, `class`,
+   * unsafe URLs and the attributes the panel sets itself (`id`, `popover`,
+   * `data-placement`) are left out.
+   */
+  readonly panelAttributes = input<OgeHtmlAttributes>();
+
+  protected readonly panelClassText = computed(() =>
+    ogeClassNames(this.panelClass()),
+  );
 
   protected readonly titleId = `oge-popup-sheet-title-${nextSheetTitleId++}`;
   protected readonly isAdaptive = computed(() => this.adaptive() !== 'popup');
@@ -123,7 +148,19 @@ export class OgePopup {
     onDismiss: () => this.dismiss(),
   });
 
+  private appliedAttributes: readonly string[] = [];
+
   constructor() {
+    effect(() => {
+      this.appliedAttributes = ogeApplyAttributes(
+        this.host.nativeElement,
+        ogeSafeAttributes(
+          this.panelAttributes(),
+          OGE_PART_OWNED_ATTRIBUTES.popup,
+        ),
+        this.appliedAttributes,
+      );
+    });
     afterRenderEffect(() => {
       if (this.isAdaptive()) this.sheet.activate();
       else this.sheet.deactivate();

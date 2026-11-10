@@ -907,6 +907,8 @@ const FAMILIES = [
         contextmenuarialabel: 'arialabel',
         contextmenudisabled: 'disabled',
         contextmenutarget: 'target',
+        contextmenupanelclass: 'panelclass',
+        contextmenupanelattributes: 'panelattributes',
         contextmenuopening: 'opening',
         // popover: the trigger directive ↔ the trigger prop, structural
         // slots ↔ render props, the two-way model ↔ the controlled prop

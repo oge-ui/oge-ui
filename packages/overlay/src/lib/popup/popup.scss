@@ -15,12 +15,13 @@
   z-index: var(--oge-z-popup);
   display: block;
   min-width: 120px;
-  border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius-lg);
+  // Component tokens: unset, each falls back to the suite-wide token.
+  border: 1px solid var(--oge-popup-border-color, var(--oge-border-color));
+  border-radius: var(--oge-popup-radius, var(--oge-radius-lg));
   background: var(--oge-popup-bg);
   color: var(--oge-text-color);
   font-size: var(--oge-font-size);
-  box-shadow: var(--oge-shadow-popup);
+  box-shadow: var(--oge-popup-shadow, var(--oge-shadow-popup));
   overflow: hidden;
   /* the anchored panel writes the room left beside the anchor inside the
      visible viewport, so a popup shrinks above the on-screen keyboard

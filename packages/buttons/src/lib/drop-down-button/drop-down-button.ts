@@ -30,6 +30,7 @@ import {
   type OgeMenuListItemClickEvent,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
+import type { OgeClassValue, OgeHtmlAttributes } from '@oge-ui/behavior';
 import { OgeButton } from '../button/button';
 import { OGE_BUTTONS_CONFIG, type OgeButtonsMessages } from '../config';
 import type {
@@ -167,6 +168,8 @@ type ItemsState =
     @if (opened()) {
       <oge-popup
         [panel]="panel"
+        [panelClass]="dropdownClass()"
+        [panelAttributes]="dropdownAttributes()"
         [adaptive]="presentation()"
         [adaptiveTitle]="mainText() || hint() || msg().adaptiveTitle"
         [closeLabel]="msg().adaptiveClose"
@@ -254,6 +257,13 @@ export class OgeDropDownButton {
   readonly dropdownPlacement = input<OgePopupPlacement>('bottom-start');
   /** Panel width: fixed pixels or `'anchor'` to match the button width. */
   readonly dropdownWidth = input<number | 'anchor' | undefined>(undefined);
+  /** Extra classes on the drop-down panel (a design system's own menu class). */
+  readonly dropdownClass = input<OgeClassValue>();
+  /**
+   * Extra attributes on the drop-down panel (`data-testid`…). Event
+   * handlers, `style`, `class` and unsafe URLs are left out.
+   */
+  readonly dropdownAttributes = input<OgeHtmlAttributes>();
   /**
    * Split mode: the last clicked menu item becomes the main button's label
    * and action for the session (IDE "Run" button pattern).

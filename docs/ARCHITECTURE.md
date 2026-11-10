@@ -1746,6 +1746,25 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   because anything outside the top layer paints beneath it — toasts are the known exception. Promoted
   surfaces skip the exit ghost, which would land back in the captured parent. A new `fixed` surface
   rendered inline must call it too and include `top-layer.reset` in its stylesheet.
+- **Part styling: classes, attributes and component tokens.** A surface that renders a part the
+  consumer cannot reach with `class` on the host (a panel in the top layer or `<body>`, a backdrop,
+  a body) takes `<part>Class` (`OgeClassValue`: string, array or `{ name: boolean }`) and
+  `<part>Attributes` (`OgeHtmlAttributes`) — `panelClass` / `backdropClass` / `bodyClass` /
+  `bodyStyle` / `panelAttributes` on the modal (and its service options), `panelClass` /
+  `panelAttributes` on the popover and `OgePopup`, prefixed on directives
+  (`contextMenuPanelClass`), and the family's own prefix where one exists (`dropdownClass`). Same
+  names in both layers; React keeps `className` for the outermost element. Classes go through
+  `ogeClassNames` and join the component's own; attribute bags go through
+  `ogeSafeAttributes(bag, OGE_PART_OWNED_ATTRIBUTES.<part>)` (behavior `security/safe-attributes.ts`),
+  which drops invalid names, `on*` handlers, `srcdoc`, `style`, `class`, unsafe URLs and the
+  attributes the part binds itself, with one dev warning per key. Angular applies the bag with
+  `ogeApplyAttributes` (re-applied to every new element of an `@if`-rendered part); React spreads it
+  before its own props. Any new free-form attribute input — including the layout `htmlAttributes` —
+  must use the same filter. **Component tokens** (`--oge-modal-radius`, `--oge-popover-bg`,
+  `--oge-button-radius`…) are read as `var(<name>, <suite token or value>)` and never declared, so an
+  unset one follows the suite-wide token in every theme and scope; each is listed in
+  `_tokens.scss`'s `@mixin component-tokens` (never `@include`d), and the docs generator fails when a
+  listed token is not read with exactly that fallback.
 - **Popover and callout arrow.** `OgePopoverCore` (`behavior/lib/overlay/popover-core.ts`)
   owns trigger timing (hover dwell + grace into the panel), open / close reasons, focus and the
   ARIA decisions. Both layers keep the anchored panel's own closes inside the pipeline

@@ -362,6 +362,8 @@ function buildFull() {
   out.push(MISTAKES);
   out.push('');
   out.push(renderGuides());
+  out.push('');
+  out.push(renderTokens());
 
   for (const doc of docs.values()) {
     const { pkg, blocks, entries, demos } = doc;
@@ -385,6 +387,34 @@ function buildFull() {
     out.push(renderDemos(demos, '###'));
   }
   return `${out.join('\n').replace(/\n{3,}/g, '\n\n')}\n`;
+}
+
+/**
+ * Every design token in one table — the `/getting-started/tokens` page as
+ * text, so a model can theme without fetching the page or `tokens.json`.
+ */
+function renderTokens() {
+  const { tokens } = JSON.parse(buildTokenArtifacts(workspaceRoot).reference);
+  const cell = (text) =>
+    String(text ?? '')
+      .replace(/\|/g, '\\|')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const out = [
+    '## Design tokens',
+    '',
+    `Every \`--oge-*\` custom property, from \`packages/grid/src/lib/styles/_tokens.scss\` (also ${SITE_ORIGIN}/tokens.json in DTCG format, shipped as \`@oge-ui/core/tokens.json\`). Set a token on \`:root\` or on any element to restyle everything below it. Component tokens are never declared: each falls back to the value shown, so an unset one follows the suite-wide token in every theme.`,
+    '',
+    '| Token | Default | Dark | Category | Notes |',
+    '| --- | --- | --- | --- | --- |',
+  ];
+  const code = (value) => (value ? '`' + cell(value) + '`' : '');
+  for (const token of tokens) {
+    out.push(
+      `| ${code(token.n)} | ${code(token.v.light) || '—'} | ${code(token.v.dark)} | ${token.c} | ${cell(token.d)} |`,
+    );
+  }
+  return out.join('\n');
 }
 
 function renderEntryPoints(entries, heading = '##') {

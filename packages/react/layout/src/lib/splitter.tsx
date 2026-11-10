@@ -61,6 +61,7 @@ import {
   type OgeSplitterSize,
   type OgeSplitterView,
   ogeIsRtl,
+  ogeSafeAttributes,
 } from '@oge-ui/behavior';
 import { isDevMode } from './dev';
 import { useOgeSplitterConfig } from './layout-config';
@@ -1092,7 +1093,7 @@ export const OgeSplitter: ForwardRefExoticComponent<
                     .filter(Boolean)
                     .join(' ')}
                   inert={collapsed}
-                  {...d.htmlAttributes}
+                  {...ogeSafeAttributes(d.htmlAttributes)}
                 >
                   {d.panes?.length ? (
                     <OgeSplitter

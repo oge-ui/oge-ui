@@ -170,6 +170,30 @@ describe('OgeToolbar — reference-parity extras', () => {
     expect(items[0].hasAttribute('data-tour')).toBe(false);
   });
 
+  it('never writes event handlers or script URLs from htmlAttributes', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { el } = await render((h) =>
+      h.items.set([
+        {
+          key: 'a',
+          text: 'A',
+          htmlAttributes: {
+            onclick: 'alert(1)',
+            href: 'javascript:alert(1)',
+            style: 'color:red',
+            'data-ok': 'yes',
+          },
+        },
+      ]),
+    );
+    const item = el.querySelector<HTMLElement>('.oge-toolbar-item')!;
+    expect(item.hasAttribute('onclick')).toBe(false);
+    expect(item.hasAttribute('href')).toBe(false);
+    expect(item.getAttribute('style') ?? '').not.toContain('color');
+    expect(item.getAttribute('data-ok')).toBe('yes');
+    vi.restoreAllMocks();
+  });
+
   it('flips a toggle item and reports it, two-way on a declarative child', async () => {
     const { fixture, host, el } = await render((h) =>
       h.items.set([{ key: 'bold', text: 'Bold', active: false }]),

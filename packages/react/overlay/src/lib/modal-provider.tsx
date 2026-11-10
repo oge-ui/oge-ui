@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -22,6 +23,8 @@ import {
   type OgeModalAutoFocus,
   type OgeModalClosedEvent,
   type OgeModalPlacement,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
   type OgeModalRole,
   type OgeOverlayMessages,
 } from '@oge-ui/behavior';
@@ -66,6 +69,16 @@ export interface OgeModalOpenConfig<D = unknown> {
   inertBackground?: boolean;
   closeGuard?: () => boolean | Promise<boolean>;
   messages?: Partial<OgeOverlayMessages>;
+  /** Extra classes on the dialog panel. */
+  panelClass?: OgeClassValue;
+  /** Extra classes on the backdrop layer. */
+  backdropClass?: OgeClassValue;
+  /** Extra classes on the body. */
+  bodyClass?: OgeClassValue;
+  /** Inline styles on the body. */
+  bodyStyle?: CSSProperties;
+  /** Extra attributes on the dialog panel (filtered like the modal prop). */
+  panelAttributes?: OgeHtmlAttributes;
   /** Made available to the content via `useOgeModalData()`. */
   data?: D;
 }
@@ -312,6 +325,11 @@ function HostedModal({
           inertBackground={config.inertBackground}
           closeGuard={config.closeGuard}
           messages={config.messages}
+          panelClass={config.panelClass}
+          backdropClass={config.backdropClass}
+          bodyClass={config.bodyClass}
+          bodyStyle={config.bodyStyle}
+          panelAttributes={config.panelAttributes}
           onClosed={(event) => {
             modal.resolve(event);
             // Let the close finish its teardown before the tree goes away.

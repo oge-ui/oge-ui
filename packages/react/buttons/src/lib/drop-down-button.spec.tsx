@@ -38,6 +38,24 @@ describe('<OgeDropDownButton>', () => {
     expect(trigger()).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('puts dropdownClass and the safe dropdownAttributes on the panel', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(
+      <OgeDropDownButton
+        text="Export"
+        items={items}
+        dropdownClass="brand-menu"
+        dropdownAttributes={{ 'data-testid': 'export-menu', onclick: 'x' }}
+      />,
+    );
+    fireEvent.click(trigger());
+    const panel = document.querySelector('.oge-popup') as HTMLElement;
+    expect(panel).toHaveClass('brand-menu');
+    expect(panel).toHaveAttribute('data-testid', 'export-menu');
+    expect(panel).not.toHaveAttribute('onclick');
+    vi.restoreAllMocks();
+  });
+
   it('activating an item emits onItemClick and closes the panel', async () => {
     const onItemClick = vi.fn();
     render(

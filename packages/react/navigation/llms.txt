@@ -93,7 +93,7 @@ _Data & accessors_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `items` | `readonly T[] \| undefined` | `—` | Nodes to display — a flat parent-referencing list or nested children. |
-| `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Field holding a node's stable key. |
+| `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Field holding a node's stable key. Each rendered item carries it as `data-key` (stringified), so tests and delegated handlers can find a node's element. |
 | `parentIdExpr` | `string \| ((row: T) => unknown)` | `'parentId'` | Field holding a node's parent key (flat data). |
 | `itemsExpr` | `string \| ((row: T) => readonly T[]) \| undefined` | `—` | Field holding nested children. Setting it switches the tree to hierarchical data. |
 | `displayExpr` | `string \| ((row: T) => unknown)` | `'text'` | Field holding the display text. |

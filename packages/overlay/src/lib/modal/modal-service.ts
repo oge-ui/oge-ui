@@ -25,6 +25,8 @@ import {
   type OgeDialogKind,
   type OgeDialogOutcome,
   type OgePromptBaseOptions,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG, type OgeOverlayMessages } from '../config';
 import { OgeLiveAnnouncer } from '../live-announcer/live-announcer';
@@ -80,6 +82,16 @@ export interface OgeModalOpenConfig<D = unknown> {
   inertBackground?: boolean;
   closeGuard?: () => boolean | Promise<boolean>;
   messages?: Partial<OgeOverlayMessages>;
+  /** Extra classes on the dialog panel. */
+  panelClass?: OgeClassValue;
+  /** Extra classes on the backdrop layer. */
+  backdropClass?: OgeClassValue;
+  /** Extra classes on the body. */
+  bodyClass?: OgeClassValue;
+  /** Inline styles on the body. */
+  bodyStyle?: Readonly<Record<string, string>>;
+  /** Extra attributes on the dialog panel (filtered like the modal input). */
+  panelAttributes?: OgeHtmlAttributes;
   /** Made available to the content component via `OGE_MODAL_DATA`. */
   data?: D;
 }
@@ -146,6 +158,11 @@ export class OgeModalRef<R = unknown> {
       [inertBackground]="config().inertBackground ?? false"
       [closeGuard]="config().closeGuard"
       [messages]="config().messages"
+      [panelClass]="config().panelClass"
+      [backdropClass]="config().backdropClass"
+      [bodyClass]="config().bodyClass"
+      [bodyStyle]="config().bodyStyle"
+      [panelAttributes]="config().panelAttributes"
       (closed)="onClosed()($any($event))"
     >
       @if (componentType(); as component) {

@@ -196,3 +196,28 @@ protected readonly placement = signal<OgeModalPlacement>('bottom-end');
 // 'center' | 'top' | 'bottom' | 'start' | 'end'
 // | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end'`,
 });
+
+export const PARTS_SNIPPET = demoSource({
+  use: {
+    '@oge-ui/buttons': ['OgeButton'],
+    '@oge-ui/overlay': ['OgeModal'],
+  },
+  template: `<!-- component tokens restyle only the modals inside this wrapper;
+     unset ones keep following the suite-wide tokens -->
+<div style="--oge-modal-radius: 18px; --oge-modal-body-padding: 24px">
+  <oge-button text="Open branded dialog" (clicked)="opened.set(true)" />
+  <oge-modal
+    title="Branded dialog"
+    [(opened)]="opened"
+    panelClass="brand-dialog"
+    backdropClass="brand-backdrop"
+    [bodyClass]="['brand-body', 'scroll-y']"
+    [bodyStyle]="{ 'max-height': '60vh' }"
+    [panelAttributes]="{ 'data-testid': 'branded-dialog' }"
+  >
+    <p>Classes join the modal's own; attributes are filtered, so an
+       <code>onclick</code> key is never written to the DOM.</p>
+  </oge-modal>
+</div>`,
+  body: `protected readonly opened = signal(false);`,
+});

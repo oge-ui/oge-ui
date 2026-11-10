@@ -63,6 +63,9 @@ const COMPONENT_PREFIXES = [
   'badge',
   'toast',
   'modal',
+  'popover',
+  'menu',
+  'button',
   'input',
 ];
 
@@ -392,6 +395,7 @@ export function readTokenModel(workspaceRoot) {
       ...d,
       derived: true,
     })),
+    ...readComponentTokens(workspaceRoot, scss),
   ];
   /** @type {Map<string, Map<string, string>>} */
   const themes = new Map();
@@ -408,6 +412,48 @@ export function readTokenModel(workspaceRoot) {
     );
   }
   return { base, themes, themeNotes, usedBy: readUsages(workspaceRoot) };
+}
+
+/**
+ * The documented component tokens (`@mixin component-tokens`): never
+ * declared, read by components as `var(<name>, <value>)`. Throws when no
+ * package stylesheet reads one with exactly the documented fallback, so the
+ * reference cannot drift from the components.
+ */
+function readComponentTokens(workspaceRoot, scss) {
+  if (!scss.includes('@mixin component-tokens {')) return [];
+  const tokens = readDeclarations(mixinBody(scss, 'component-tokens'));
+  const reads = new Set();
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(scss|css)$/.test(entry.name)) {
+        const text = readFileSync(full, 'utf8').replace(/\s+/g, ' ');
+        for (const token of tokens) {
+          if (text.includes(`var(${token.name}, ${token.value})`)) {
+            reads.add(token.name);
+          }
+        }
+      }
+    }
+  };
+  walk(path.join(workspaceRoot, 'packages'));
+  const unread = tokens.filter((token) => !reads.has(token.name));
+  if (unread.length) {
+    throw new Error(
+      `component tokens not read as var(<name>, <fallback>) by any package: ${unread
+        .map((token) => `${token.name} (${token.value})`)
+        .join(', ')}`,
+    );
+  }
+  return tokens.map((token) => ({
+    ...token,
+    note: `${token.note ? `${token.note}: ` : ''}component token — never declared; components read it with this fallback`,
+    derived: true,
+    component: true,
+  }));
 }
 
 /** token → sorted npm names of the packages whose sources read it. */

@@ -1290,6 +1290,13 @@ export const OGE_PAGINATION_DEFAULT_COMPACT_BELOW = 480;
 export const OGE_PAGINATION_DEFAULT_MAX_BUTTONS = 7;
 
 // @public
+export const OGE_PART_OWNED_ATTRIBUTES: {
+    readonly popup: readonly ["id", "popover", "data-placement"];
+    readonly popover: readonly ["id", "role", "tabindex", "popover", "aria-modal", "aria-label", "aria-labelledby", "data-placement"];
+    readonly modal: readonly ["role", "tabindex", "popover", "aria-modal", "aria-label", "aria-labelledby", "aria-describedby", "aria-busy"];
+};
+
+// @public
 export const OGE_POPUP_ARROW_SIZE = 7;
 
 // @public
@@ -2148,6 +2155,9 @@ export function ogeAppBarRole(landmark: OgeAppBarLandmark | null | undefined): E
 
 // @public
 export type OgeAppBarSize = 'sm' | 'md' | 'lg';
+
+// @public
+export function ogeApplyAttributes(element: Element, next: Readonly<Record<string, string>>, previous: readonly string[]): string[];
 
 // @public
 export type OgeAsyncGuard = () => boolean | Promise<boolean>;
@@ -3181,6 +3191,9 @@ export function ogeChooserMoveDirection(event: OgeKeyInput): 1 | -1 | null;
 
 // @public
 export function ogeClassList(value: OgeClassValue): string[];
+
+// @public
+export function ogeClassNames(...values: readonly (OgeClassValue | false)[]): string;
 
 // @public
 export type OgeClassValue = string | readonly string[] | Readonly<Record<string, boolean | null | undefined>> | null | undefined;
@@ -8061,6 +8074,9 @@ export interface OgeHsva {
 }
 
 // @public
+export type OgeHtmlAttributes = Readonly<Record<string, string>>;
+
+// @public
 export interface OgeIconSetFormat {
     icons?: 'arrows' | 'circles' | 'flags';
     thresholds?: readonly [number, number];
@@ -10789,6 +10805,9 @@ export interface OgeRowUpdatingEvent<T = unknown> {
     // (undocumented)
     values: Record<string, unknown>;
 }
+
+// @public
+export function ogeSafeAttributes(attributes: OgeHtmlAttributes | null | undefined, reserved?: readonly string[]): Record<string, string>;
 
 // @public
 export function ogeSanitizeEditorHtml(html: string | null | undefined, options?: OgeEditorParseOptions): string;

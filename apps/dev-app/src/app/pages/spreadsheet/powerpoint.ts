@@ -45,7 +45,13 @@ const SECTIONS = ['Getting started', 'Controlled slide'] as const;
         arithmetic, table styles, line breaks and line spacing are measured
         against PowerPoint itself. The file is read in the browser by a
         dependency-free reader; macros and embedded objects never run and
-        external links are never fetched.
+        external links are never fetched. Hyperlinks to external targets are
+        drawn as links that open in a new tab (<code
+          >rel="noopener noreferrer"</code
+        >); only <code>http</code>, <code>https</code>, <code>mailto</code>,
+        <code>tel</code>, <code>ftp</code> and <code>sms</code> targets become
+        links, so a <code>javascript:</code> or <code>data:</code> target stays
+        plain text.
       </p>
       <p>
         It ships as its own entry point of the spreadsheet packages, so an

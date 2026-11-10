@@ -41,6 +41,8 @@ const ITEMS: readonly OgeMenuItem[] = [
       [items]="items()"
       [disabled]="disabled()"
       [rememberLastAction]="remember()"
+      dropdownClass="brand-menu"
+      [dropdownAttributes]="{ 'data-testid': 'export-menu', onclick: 'x' }"
       [action]="action()"
       [(opened)]="opened"
       (itemClick)="itemClicks.push($event)"
@@ -144,6 +146,18 @@ describe('OgeDropDownButton', () => {
     host.opened.set(false);
     await settle(fixture);
     expect(popup()).toBeNull();
+  });
+
+  it('puts dropdownClass and the safe dropdownAttributes on the panel', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { fixture, host, popup } = await render();
+    host.opened.set(true);
+    await settle(fixture);
+    const panel = popup() as HTMLElement;
+    expect(panel.classList).toContain('brand-menu');
+    expect(panel.getAttribute('data-testid')).toBe('export-menu');
+    expect(panel.hasAttribute('onclick')).toBe(false);
+    vi.restoreAllMocks();
   });
 
   it('split: main click emits clicked without opening; the chevron toggles', async () => {
