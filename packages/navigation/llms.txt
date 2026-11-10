@@ -93,7 +93,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/navigation`
 
 - values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_PAGINATION_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeDrawerItemTemplate`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgePagination`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgePaginationConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
-- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerItem`, `OgeDrawerItemClickEvent`, `OgeDrawerItemTemplateContext`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeDrawerSelectionChangedEvent`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemOverflow`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarOverflowMode`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeAllowEditing`, `OgeTreeCheckBoxesMode`, `OgeTreeChildPageEvent`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeEditStartingEvent`, `OgeTreeEditValidator`, `OgeTreeEditedEvent`, `OgeTreeEditingEvent`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeMoveSource`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeTransferredEvent`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerItem`, `OgeDrawerItemClickEvent`, `OgeDrawerItemTemplateContext`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeDrawerSelectionChangedEvent`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemOverflow`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarOverflowMode`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeAllowEditing`, `OgeTreeCheckBoxesMode`, `OgeTreeChildPageEvent`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeEditStartingEvent`, `OgeTreeEditValidator`, `OgeTreeEditedEvent`, `OgeTreeEditingEvent`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemContextMenuEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeMoveSource`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeTransferredEvent`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
 
 ## API reference
 
@@ -217,6 +217,7 @@ _Presentation_
 | `selectionChanged` | `OgeTreeSelectionChangedEvent<T>` | Emitted after the selection committed, with `previousKeys`. |
 | `itemSelectionChanged` | `OgeTreeItemSelectionChangedEvent<T>` | Emitted for the single node whose own state flipped. |
 | `itemClick / itemDblClick` | `OgeTreeItemClickEvent<T>` | Emitted when a node row is clicked or double-clicked. |
+| `itemContextMenu` | `OgeTreeItemContextMenuEvent<T>` | Right-click, touch long-press, or the Menu key / Shift+F10 on the focused item — the grid’s `rowContextMenu` model. Carries `key`, `item`, `clientX/Y` (the pointer, or the item’s start/bottom corner from the keyboard), a mutable `items: OgeMenuItem[]`, `source` (`'pointer'` \| `'touch'` \| `'keyboard'`) and the originating `event`. Push items and the tree opens its own menu there — labelled by the item, focus back on the item when it closes; leave it empty and the browser menu stays. Filler and “load more” rows and a label being edited keep the native menu. |
 | `childrenLoaded / childrenLoadFailed` | `OgeTreeChildrenLoadedEvent<T> / OgeTreeChildrenFailedEvent<T>` | Emitted after a lazy `loadChildren` settled; the failure carries the original error. |
 | `selectAllChanged` | `OgeTreeSelectAllChangedEvent` | Emitted when the "select all" row is toggled. |
 | `itemReordering / itemReordered` | `OgeTreeReorderingEvent<T> / OgeTreeReorderedEvent<T>` | Cancelable pre-event and result of a move onto this tree, carrying `position: 'inside' \| 'before' \| 'after'`, `sourceTreeId` / `targetTreeId` (different for a drop from another tree of the `dragGroup`) and `trigger: 'pointer' \| 'keyboard' \| 'api'`. The tree does not mutate your data. |
@@ -521,6 +522,8 @@ _Behavior_
 | `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the whole bar collapses into a hamburger button opening the full tree as one nested menu. Measured against the menubar's own box, never the window. |
 | `overflowMode` | `'hamburger' \| 'more' \| 'none'` | `'hamburger'` | What happens when the top-level items stop fitting. `'hamburger'` — the `compactBelow` collapse, unchanged; `'more'` — only the items that do not fit move into a trailing _More_ item (label `messages.more`) whose submenu holds them, own submenus included; the last `'auto'` item yields first (see the item's `overflow`), More joins the roving tabindex and reads as current when the `activeKey` item moved into it, and item-click paths stay the items' real paths. Horizontal bars only; `compactBelow` still applies below it. `'none'` — nothing collapses, `compactBelow` included. |
 | `disabled` | `boolean` | `false` | Disables the whole bar: every item goes inert and the bar leaves the Tab sequence. |
+| `submenuClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the submenu panel (a design system’s own menu class). |
+| `submenuAttributes` | `OgeHtmlAttributes \| undefined` | `—` | Extra attributes on the submenu panel (`data-testid`…). Filtered by `ogeSafeAttributes`: event handlers, `srcdoc`, `style`, `class`, script URLs and the panel’s own `id` are dropped. |
 | `submenuItemTemplate` | `TemplateRef<OgeMenuItemTemplateContext> \| undefined` | `—` | Custom rendering for submenu rows at **every depth** — the shared `oge-menu-list` context. Top-level bar items use `[ogeMenubarItemTemplate]` instead. |
 
 #### Methods
@@ -1728,6 +1731,52 @@ export class Demo {
   ];
 
   protected readonly picked = signal<RowKey[]>([]);
+}
+```
+
+### Context menu
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { OgeTreeItemContextMenuEvent } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- right-click, Menu key / Shift+F10, or a touch long-press -->
+    <oge-tree-view
+      [items]="folders"
+      displayExpr="name"
+      (itemContextMenu)="menuFor($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly folders: Folder[] = [
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+    { id: 3, parentId: 2, name: 'Q1.pdf' },
+  ];
+
+  // fill items to open the tree's menu; leave it empty for the native one
+  protected menuFor(e: OgeTreeItemContextMenuEvent<Folder>): void {
+    e.items.push(
+      { text: 'Rename', action: () => console.log('rename', e.item.name) },
+      { text: 'Duplicate', action: () => console.log('duplicate', e.key) },
+      { separator: true, text: '' },
+      { text: 'Delete', severity: 'danger', disabled: e.item.parentId === null },
+    );
+  }
 }
 ```
 

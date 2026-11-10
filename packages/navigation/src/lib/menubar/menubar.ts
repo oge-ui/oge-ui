@@ -45,6 +45,8 @@ import {
   type OgeMenubarDescriptorCore,
   type OgeMenubarOverflowMode,
   ogeIsRtl,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -305,7 +307,11 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
       }
     </ng-template>
     @if (panelItems().length) {
-      <oge-popup [panel]="panel">
+      <oge-popup
+        [panel]="panel"
+        [panelClass]="submenuClass()"
+        [panelAttributes]="submenuAttributes()"
+      >
         <oge-menu-list
           [items]="panelItems()"
           [ariaLabel]="panelLabel()"
@@ -358,6 +364,13 @@ export class OgeMenubar {
   >(undefined);
   /** Per-instance overrides of user-facing strings. */
   readonly messages = input<Partial<OgeMenubarMessages> | undefined>(undefined);
+  /** Extra classes on the submenu panel (a design system's own menu class). */
+  readonly submenuClass = input<OgeClassValue>();
+  /**
+   * Extra attributes on the submenu panel (`data-testid`…). Event handlers,
+   * `style`, `class` and unsafe URLs are left out.
+   */
+  readonly submenuAttributes = input<OgeHtmlAttributes>();
 
   /** Fires when a leaf item is activated, at any depth. */
   readonly itemClick = output<OgeMenubarItemClickEvent>();

@@ -221,6 +221,9 @@ export function choiceIncludes(list: readonly unknown[], value: unknown): boolea
 export function chunkedLoaded(plan: readonly OgeUploadChunk[], doneCount: number, currentLoaded?: number): number;
 
 // @public
+export function claimOverlayEscape(event: Event, surface: object): boolean;
+
+// @public
 export function clampColumnWidth(width: number, bounds: OgeColumnWidthBounds): number;
 
 // @public
@@ -632,6 +635,9 @@ export function isOgeRangeExtendKey(event: {
 
 // @public
 export function isOgeSmartPasteFillable(field: OgeAiFormField): boolean;
+
+// @public
+export function isOverlayEscapeClaimed(event: Event): boolean;
 
 // @public
 export function isPreviewable(type: string): boolean;
@@ -3397,6 +3403,12 @@ export interface OgeConfirmBaseOptions<TIcon = never> extends OgeDialogBaseOptio
 export function ogeConfirmResult(outcome: OgeDialogOutcome | undefined): boolean;
 
 // @public
+export function ogeContextMenuAnchorPoint(element: Element): {
+    readonly x: number;
+    readonly y: number;
+};
+
+// @public
 export function ogeContextMenuApiTarget(host: Element, candidate: EventTarget | null, point: OgeContextMenuPoint | null): EventTarget;
 
 // @public
@@ -3467,7 +3479,10 @@ export function ogeContextMenuPoint(event: {
 }): OgeContextMenuPoint | null;
 
 // @public
-export type OgeContextMenuSource = 'pointer' | 'keyboard';
+export type OgeContextMenuSource = 'pointer' | 'touch' | 'keyboard';
+
+// @public
+export function ogeContextMenuSourceOf(event: object): 'pointer' | 'touch';
 
 // @public
 export function ogeContextMenuTarget(host: Element, eventTarget: EventTarget | null, selector: string | null | undefined): Element | null;
@@ -3901,9 +3916,12 @@ export function ogeDialogAutoFocusSelector(focus: OgeDialogInitialFocus): string
 
 // @public
 export interface OgeDialogBaseOptions<TIcon = never> {
+    backdropClass?: OgeClassValue;
     icon?: boolean | TIcon;
     message?: string;
     okText?: string;
+    panelAttributes?: OgeHtmlAttributes;
+    panelClass?: OgeClassValue;
     severity?: OgeDialogSeverity;
     title?: string;
     width?: number | string;
@@ -8276,6 +8294,7 @@ export interface OgeInputsMessages {
     segmentSecond: string;
     segmentYear: string;
     selectAllText: string;
+    selectedCount: string;
     showPassword: string;
     signatureClear: string;
     signatureDrawMode: string;
@@ -10107,6 +10126,7 @@ export class OgePopoverCore {
 // @public (undocumented)
 export interface OgePopoverCoreOptions {
     closeOnEscape?: () => boolean;
+    closeOnFocusOut?: () => boolean;
     closeOnOutsideClick?: () => boolean;
     commitClose: (reason: OgePopoverCloseReason) => void;
     commitOpen: (reason: OgePopoverOpenReason) => void;
@@ -10144,6 +10164,9 @@ export interface OgePopoverOpeningEvent {
 export type OgePopoverOpenReason = 'api' | 'click' | 'hover' | 'focus';
 
 // @public
+export type OgePopoverPadding = 'none' | 'sm' | 'md';
+
+// @public
 export interface OgePopoverPanelAria {
     readonly 'aria-modal': 'true' | null;
     readonly role: 'dialog';
@@ -10151,6 +10174,9 @@ export interface OgePopoverPanelAria {
 
 // @public
 export type OgePopoverShowOn = 'click' | 'hover' | 'focus' | 'manual';
+
+// @public
+export function ogePopoverTargetElement(target: Event | Element | null | undefined): HTMLElement | null;
 
 // @public
 export interface OgePopoverTriggerAria {
@@ -12134,6 +12160,15 @@ export type OgeTabsSize = 'sm' | 'md' | 'lg';
 export type OgeTabsStylingMode = 'primary' | 'secondary';
 
 // @public
+export type OgeTagBoxDisplayMode = 'chips' | 'text' | 'count';
+
+// @public
+export type OgeTagBoxSummary = 'none' | 'chips' | 'text' | 'count';
+
+// @public
+export function ogeTagBoxSummary(count: number, mode: OgeTagBoxDisplayMode, countThreshold?: number): OgeTagBoxSummary;
+
+// @public
 export function ogeTileLayoutAutoRows(rowHeight: number | 'auto'): string;
 
 // @public
@@ -13484,6 +13519,17 @@ export interface OgeTreeItemClickEvent<T = unknown> {
     readonly item: T;
     // (undocumented)
     readonly key: RowKey;
+}
+
+// @public
+export interface OgeTreeItemContextMenuEvent<T = unknown> {
+    readonly clientX: number;
+    readonly clientY: number;
+    readonly event: MouseEvent | KeyboardEvent;
+    readonly item: T;
+    readonly items: OgeMenuItem[];
+    readonly key: RowKey;
+    readonly source: OgeContextMenuSource;
 }
 
 // @public
@@ -15229,6 +15275,9 @@ export function planTreeTransferKey(event: {
 
 // @public
 export function planTreeViewKey<T>(input: OgeTreeKeyInput<T>): OgeTreeKeyPlan<T> | null;
+
+// @public
+export function popoverPaddingClass(padding: OgePopoverPadding): string | null;
 
 // @public
 export function popoverPanelAria(modal: boolean): OgePopoverPanelAria;

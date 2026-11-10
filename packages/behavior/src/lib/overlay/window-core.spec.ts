@@ -329,6 +329,69 @@ describe('OgeWindowCore', () => {
     return { core, panel, header, close, events, state };
   }
 
+  it('moves to the top layer under a transformed ancestor, and back to the top of it on activation', () => {
+    const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
+    const shown: Element[] = [];
+    proto['showPopover'] = function (this: Element) {
+      shown.splice(shown.indexOf(this) >>> 0, shown.includes(this) ? 1 : 0);
+      shown.push(this);
+    };
+    proto['hidePopover'] = function (this: Element) {
+      shown.splice(shown.indexOf(this), 1);
+    };
+    const matches = Element.prototype.matches;
+    vi.spyOn(Element.prototype, 'matches').mockImplementation(function (
+      this: Element,
+      selector: string,
+    ) {
+      return selector === ':popover-open'
+        ? shown.includes(this)
+        : matches.call(this, selector);
+    });
+    const transformed = document.createElement('div');
+    document.body.append(transformed);
+    const computed = window.getComputedStyle;
+    vi.spyOn(window, 'getComputedStyle').mockImplementation(
+      (element, pseudo) =>
+        element === transformed
+          ? ({ transform: 'translateX(1px)' } as CSSStyleDeclaration)
+          : computed(element, pseudo),
+    );
+    try {
+      const first = make();
+      const second = make();
+      transformed.append(first.panel);
+      first.core.attach();
+      first.core.place();
+      expect(first.panel.getAttribute('popover')).toBe('manual');
+      expect(shown).toEqual([first.panel]);
+      // once one surface is promoted, every later one follows
+      second.core.attach();
+      second.core.place();
+      expect(shown).toEqual([first.panel, second.panel]);
+      // bringing the first back to the front re-promotes it above the second
+      first.core.bringToFront();
+      expect(shown.at(-1)).toBe(first.panel);
+      first.core.detach();
+      expect(first.panel.hasAttribute('popover')).toBe(false);
+      // the second, now in front and with nothing capturing it or promoted
+      // around it, no longer needs the top layer
+      expect(shown).toEqual([]);
+      expect(second.panel.hasAttribute('popover')).toBe(false);
+    } finally {
+      vi.restoreAllMocks();
+      delete proto['showPopover'];
+      delete proto['hidePopover'];
+    }
+  });
+
+  it('stays out of the top layer on an ordinary page', () => {
+    const { core, panel } = make();
+    core.attach();
+    core.place();
+    expect(panel.hasAttribute('popover')).toBe(false);
+  });
+
   it('touches nothing until attached; attach puts it on top and activates it', () => {
     const { core, events } = make();
     expect(core.layer()).toBe(-1);

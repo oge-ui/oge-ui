@@ -28,7 +28,7 @@ import {
   type OgeDrawerSelectionChangedEvent,
   type OgePointerGestureHandle,
   getTabbableElements,
-  isTopOverlay,
+  claimOverlayEscape,
   lockBodyScroll,
   pushOverlay,
   removeOverlay,
@@ -328,7 +328,7 @@ export const OgeDrawer = forwardRef<OgeDrawerHandle, OgeDrawerProps>(
       if (event.key !== 'Escape') return;
       // Only the topmost surface reacts, so a popup opened inside the drawer
       // closes before the drawer does.
-      if (!isTopOverlay(overlayToken.current)) return;
+      if (!claimOverlayEscape(event, overlayToken.current)) return;
       if ((latest.current.props.closeOnEscape ?? true) === false) return;
       event.stopPropagation();
       requestClose('escape');

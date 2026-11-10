@@ -68,6 +68,25 @@ describe('OgeModalService dialog helpers', () => {
     await expect(result).resolves.toBe(true);
   });
 
+  it('confirm takes the modal part options (panel/backdrop classes, attributes)', async () => {
+    const service = TestBed.inject(OgeModalService);
+    const result = service.confirm({
+      message: 'Archive?',
+      panelClass: 'brand-dialog',
+      backdropClass: 'brand-backdrop',
+      panelAttributes: { 'data-testid': 'archive-confirm', role: 'dialog' },
+    });
+    await flush();
+    const panel = $('.oge-modal')!;
+    expect(panel.classList).toContain('brand-dialog');
+    expect(panel.getAttribute('data-testid')).toBe('archive-confirm');
+    // the dialog keeps its own role
+    expect(panel.getAttribute('role')).toBe('alertdialog');
+    expect($('.oge-modal-layer')?.classList).toContain('brand-backdrop');
+    $('.oge-dialog-ok')!.click();
+    await expect(result).resolves.toBe(true);
+  });
+
   it('confirm: Cancel and Escape resolve false; danger focuses Cancel', async () => {
     const service = TestBed.inject(OgeModalService);
     const cancelled = service.confirm('Delete?');

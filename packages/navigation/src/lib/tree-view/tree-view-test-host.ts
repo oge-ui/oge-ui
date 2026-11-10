@@ -5,6 +5,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import type { OgeMenuItem } from '@oge-ui/overlay';
 import { OgeTreeView } from './tree-view';
 import type {
   OgeTreeCheckBoxesMode,
@@ -12,6 +13,7 @@ import type {
   OgeTreeExpandingEvent,
   OgeTreeLoadChildren,
   OgeTreeReorderedEvent,
+  OgeTreeItemContextMenuEvent,
   OgeTreeSearchMode,
   OgeTreeSelectedKeysMode,
   OgeTreeSelectionChangedEvent,
@@ -101,6 +103,7 @@ export async function settle(
       (itemExpanding)="expanding.push($event)"
       (selectionChanged)="selectionChanged.push($event)"
       (itemReordered)="reordered.push($event)"
+      (itemContextMenu)="onItemContextMenu($event)"
     />
   `,
 })
@@ -131,6 +134,14 @@ export class Host {
   readonly expanding: OgeTreeExpandingEvent<Node>[] = [];
   readonly selectionChanged: OgeTreeSelectionChangedEvent<Node>[] = [];
   readonly reordered: OgeTreeReorderedEvent<Node>[] = [];
+  readonly contextMenus: OgeTreeItemContextMenuEvent<Node>[] = [];
+  /** Items the context menu handler adds; empty keeps the native menu. */
+  menuItems: OgeMenuItem[] = [];
+
+  onItemContextMenu(event: OgeTreeItemContextMenuEvent<Node>): void {
+    this.contextMenus.push(event);
+    event.items.push(...this.menuItems);
+  }
 }
 
 /** Creates the host, applies `setup` before the first render, and settles. */

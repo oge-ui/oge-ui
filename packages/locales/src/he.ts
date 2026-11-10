@@ -248,6 +248,7 @@ export const he: OgeLocalePack = {
     adaptiveSearch: 'חיפוש',
     adaptiveTitle: 'בחירה',
     moreTags: '+{count} נוספים',
+    selectedCount: '{count, plural, other {נבחרו #}}',
     maxSelectedItemsMessage: 'ניתן לבחור עד {max} פריטים',
     compareError: 'הערכים אינם תואמים',
     ratingLabel: 'דירוג',

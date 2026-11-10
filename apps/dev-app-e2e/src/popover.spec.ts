@@ -174,6 +174,45 @@ for (const layer of LAYERS) {
       await expect(status).toContainText('visible: false');
     });
 
+    test('one popover follows the header that showed it; an editor inside keeps it open', async ({
+      page,
+    }) => {
+      await go(page);
+      const demo = page.getByTestId('popover-shared');
+      await demo.getByRole('button', { name: 'Name' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Name filter' });
+      await expect(dialog).toBeVisible();
+      const nameBox = await dialog.boundingBox();
+
+      // another header: the same panel moves there instead of closing
+      const city = demo.getByRole('button', { name: 'City' });
+      await city.click();
+      const cityDialog = page.getByRole('dialog', { name: 'City filter' });
+      await expect(cityDialog).toBeVisible();
+      await expect(page.locator('.oge-popover')).toHaveCount(1);
+      await expect
+        .poll(async () => (await cityDialog.boundingBox())?.x)
+        .not.toBe(nameBox?.x);
+
+      // the select box popup inside counts as inside: picking keeps it open
+      await cityDialog.getByRole('combobox', { name: 'Show' }).click();
+      await page.getByRole('option', { name: 'Only blanks' }).click();
+      await expect(cityDialog).toBeVisible();
+      await expect(demo.getByTestId('popover-shared-state')).toContainText(
+        'City: Only blanks',
+      );
+
+      // Escape closes the open select popup first, then the popover
+      await cityDialog.getByRole('combobox', { name: 'Show' }).click();
+      await expect(page.getByRole('listbox')).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('listbox')).toHaveCount(0);
+      await expect(cityDialog).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(cityDialog).toHaveCount(0);
+      await expect(city).toBeFocused();
+    });
+
     test('has no axe violations with a popover open', async ({ page }) => {
       test.slow();
       await go(page);

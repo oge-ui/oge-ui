@@ -241,6 +241,7 @@ export const zhCN: OgeLocalePack = {
     adaptiveSearch: '搜索',
     adaptiveTitle: '选择',
     moreTags: '另外 {count} 项',
+    selectedCount: '{count, plural, other {已选 # 项}}',
     maxSelectedItemsMessage: '最多可选择 {max} 项',
     compareError: '值不匹配',
     ratingLabel: '评分',

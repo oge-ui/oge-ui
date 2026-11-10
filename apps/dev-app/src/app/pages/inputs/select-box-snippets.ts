@@ -296,6 +296,19 @@ protected onClosing(event: OgeDropDownClosingEvent): void {
 }`,
 });
 
+export const TAGBOX_COMPACT_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeTagBox'] },
+  template: `<!-- chips up to countThreshold, then "3 selected" -->
+<oge-tag-box label="Cities" [items]="cities" displayMode="count"
+             [countThreshold]="2" [(value)]="picked" />
+
+<!-- one comma-separated line, cut with an ellipsis -->
+<oge-tag-box label="Cities" [items]="cities" displayMode="text"
+             [(value)]="picked" />`,
+  body: `protected readonly cities = ['Ankara', 'Berlin', 'Cairo', 'Dublin', 'Lisbon'];
+protected readonly picked = signal<readonly unknown[]>(['Ankara', 'Berlin', 'Cairo']);`,
+});
+
 export const TAGBOX_FEATURES_SNIPPET = demoSource({
   use: { '@oge-ui/inputs': ['OgeTagBox'] },
   types: { '@oge-ui/inputs': ['OgeSelectBoxCustomItemEvent'] },

@@ -247,6 +247,7 @@ export const ja: OgeLocalePack = {
     adaptiveSearch: '検索',
     adaptiveTitle: '選択',
     moreTags: '他 {count} 件',
+    selectedCount: '{count, plural, other {# 件選択}}',
     maxSelectedItemsMessage: '最大 {max} 項目まで選択できます',
     compareError: '値が一致しません',
     ratingLabel: '評価',

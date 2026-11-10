@@ -248,6 +248,7 @@ export const ar: OgeLocalePack = {
     adaptiveSearch: 'بحث',
     adaptiveTitle: 'تحديد',
     moreTags: '+{count} أخرى',
+    selectedCount: '{count, plural, other {المحدد: #}}',
     maxSelectedItemsMessage: 'يمكنك تحديد {max} عنصر كحد أقصى',
     compareError: 'القيمتان غير متطابقتين',
     ratingLabel: 'التقييم',

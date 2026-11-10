@@ -150,6 +150,16 @@
 }
 
 // --- body / footer ---------------------------------------------------------
+// `padding` presets set the component token on the panel, so they win over
+// a token inherited from an ancestor; `md` (default) leaves it alone.
+.oge-popover-padding-none {
+  --oge-popover-body-padding: 0;
+}
+
+.oge-popover-padding-sm {
+  --oge-popover-body-padding: 6px 10px 8px;
+}
+
 .oge-popover-body {
   flex: 1;
   min-height: 0;

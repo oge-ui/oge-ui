@@ -280,6 +280,9 @@ export class OgeModalService {
       showCloseButton: false,
       closeOnBackdropClick: false,
       padding: false,
+      panelClass: options.panelClass,
+      backdropClass: options.backdropClass,
+      panelAttributes: options.panelAttributes,
       data,
     });
     // Escape closes the modal without a result, which the mappers read as Cancel

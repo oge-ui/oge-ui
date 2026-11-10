@@ -69,6 +69,26 @@ describe('useOgeModals() dialog helpers', () => {
     await expect(result).resolves.toBe(true);
   });
 
+  it('confirm takes the modal part options (panel/backdrop classes, attributes)', async () => {
+    mount();
+    let result!: Promise<boolean>;
+    act(() => {
+      result = modals.confirm({
+        message: 'Archive?',
+        panelClass: 'brand-dialog',
+        backdropClass: 'brand-backdrop',
+        panelAttributes: { 'data-testid': 'archive-confirm', role: 'dialog' },
+      });
+    });
+    await frame();
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog).toHaveClass('brand-dialog');
+    expect(dialog).toHaveAttribute('data-testid', 'archive-confirm');
+    expect(dialog.closest('.oge-modal-layer')).toHaveClass('brand-backdrop');
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    await expect(result).resolves.toBe(true);
+  });
+
   it('confirm danger: Cancel focused, destructive OK, Escape resolves false', async () => {
     mount(true);
     let result!: Promise<boolean>;

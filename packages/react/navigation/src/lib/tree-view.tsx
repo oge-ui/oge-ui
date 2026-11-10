@@ -18,8 +18,15 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  OgeContextMenuEcho,
   OgeRowMotionCore,
   beginOgeTreeDrag,
+  isOgeContextMenuKey,
+  ogeContextMenuAnchorPoint,
+  ogeContextMenuSourceOf,
+  type OgeContextMenuSource,
+  type OgeMenuItem,
+  type OgeTreeItemContextMenuEvent,
   buildTreeViewModel,
   createTypeAheadBuffer,
   fillTreeViewMessages,
@@ -97,7 +104,12 @@ import {
   type SearchHighlightSegment,
   type TreeFilterMode,
 } from '@oge-ui/behavior';
-import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
+import {
+  OgeMenuList,
+  OgePopup,
+  useAnchoredPanel,
+  useOgeLiveAnnouncer,
+} from '@oge-ui/react-overlay';
 import { useOgeTreeViewConfig } from './navigation-config';
 import { useTreeVirtualizer } from './use-tree-virtualizer';
 
@@ -368,6 +380,13 @@ export interface OgeTreeViewProps<T extends object = Record<string, unknown>> {
   onItemEdited?: (event: OgeTreeEditedEvent<T>) => void;
   /** Fires after a "Load more" row revealed the next page of children. */
   onChildPageShown?: (event: OgeTreeChildPageEvent<T>) => void;
+  /**
+   * A context menu was asked for on an item — right-click, touch long-press,
+   * the Menu key or Shift+F10 on the focused item. Push `OgeMenuItem`s into
+   * `items` and the tree opens its menu there (focus returns to the item on
+   * close); leave it empty and the browser's menu stays.
+   */
+  onItemContextMenu?: (event: OgeTreeItemContextMenuEvent<T>) => void;
 
   /** Replaces a node's label — the React face of `ogeTreeItemTemplate`. */
   renderItem?: (context: OgeTreeItemRenderContext<T>) => ReactNode;
@@ -1055,6 +1074,16 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     const native = event.nativeEvent;
     const node = list[current];
 
+    // the Menu key / Shift+F10: the item menu at the focused item
+    if (isOgeContextMenuKey(native)) {
+      const row = event.currentTarget as Element | null;
+      if (node.more || !row) return;
+      const { x, y } = ogeContextMenuAnchorPoint(row);
+      contextMenuEcho.current.mark(native.timeStamp);
+      requestItemContextMenu(node, x, y, native, 'keyboard');
+      return;
+    }
+
     // F2 renames (the desktop-tree convention; APG leaves it to the author)
     if (isTreeEditKey(event)) {
       if (startEdit(node, native)) event.preventDefault();
@@ -1306,6 +1335,94 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
   const [cutKey, setCutKey] = useState<RowKey | null>(null);
   const dragHandle = useRef<OgePointerGestureHandle | null>(null);
   const hostRef = useRef<HTMLDivElement>(null);
+
+  // --- item context menu (the grid's rowContextMenu model) -------------------
+  type ItemMenu = {
+    x: number;
+    y: number;
+    key: RowKey;
+    label: string;
+    items: OgeMenuItem[];
+  };
+  const [contextMenu, setContextMenu] = useState<ItemMenu | null>(null);
+  /** Read by the panel synchronously, before the state update renders. */
+  const contextMenuRef = useRef<ItemMenu | null>(null);
+  const contextMenuPopupRef = useRef<HTMLDivElement>(null);
+  /** Swallows the native `contextmenu` a browser may send after a keyboard-opened menu. */
+  const contextMenuEcho = useRef(new OgeContextMenuEcho());
+  const itemElement = (key: RowKey): HTMLElement | null => {
+    const value = String(key).replace(/["\\]/g, '\\$&');
+    return (
+      hostRef.current?.querySelector<HTMLElement>(
+        `[role="treeitem"][data-key="${value}"]`,
+      ) ?? null
+    );
+  };
+  const contextMenuPanel = useAnchoredPanel({
+    anchor: () => hostRef.current,
+    anchorRect: () => {
+      const menu = contextMenuRef.current;
+      return menu ? { top: menu.y, left: menu.x, width: 0, height: 0 } : null;
+    },
+    panel: () => contextMenuPopupRef.current,
+    placement: () => 'bottom-start',
+    onClosed: () => {
+      const key = contextMenuRef.current?.key;
+      contextMenuRef.current = null;
+      setContextMenu(null);
+      if (key !== undefined) itemElement(key)?.focus({ preventScroll: true });
+    },
+  });
+
+  const requestItemContextMenu = (
+    node: OgeTreeViewNode<T>,
+    x: number,
+    y: number,
+    event: MouseEvent | KeyboardEvent,
+    source: OgeContextMenuSource,
+  ): void => {
+    const items: OgeMenuItem[] = [];
+    latest.current.props.onItemContextMenu?.({
+      key: node.key,
+      item: node.item,
+      clientX: x,
+      clientY: y,
+      items,
+      source,
+      event,
+    });
+    if (!items.length) return; // the browser menu stays
+    event.preventDefault();
+    setFocusedKey(node.key);
+    const menu = { x, y, key: node.key, label: node.text, items };
+    contextMenuRef.current = menu;
+    setContextMenu(menu);
+    contextMenuPanel.open();
+    contextMenuPanel.updatePosition();
+    // the WAI-ARIA menu keyboard lives on the focused menu-list container
+    setTimeout(() =>
+      contextMenuPopupRef.current
+        ?.querySelector<HTMLElement>('.oge-menu-list')
+        ?.focus(),
+    );
+  };
+
+  const onRowContextMenu = (
+    node: OgeTreeViewNode<T>,
+    event: ReactMouseEvent,
+  ): void => {
+    const native = event.nativeEvent;
+    if (contextMenuEcho.current.swallow(native)) return;
+    if (latest.current.disabled || node.filler || node.more) return;
+    if (editingKey === node.key) return; // the editor keeps the native menu
+    requestItemContextMenu(
+      node,
+      native.clientX,
+      native.clientY,
+      native,
+      ogeContextMenuSourceOf(native),
+    );
+  };
 
   /**
    * This tree as a participant in moves — its own reorders and its
@@ -1711,6 +1828,7 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
                     onClick={(event) => onRowClick(node, event)}
                     onKeyDown={onKeyDown}
                     onDoubleClick={(event) => onRowDblClick(node, event)}
+                    onContextMenu={(event) => onRowContextMenu(node, event)}
                     onFocus={() => {
                       if (!node.filler) setFocusedKey(node.key);
                     }}
@@ -1881,6 +1999,20 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
             </div>
           </div>
         </div>
+      )}
+      {contextMenu && (
+        <OgePopup
+          ref={contextMenuPopupRef}
+          panel={contextMenuPanel}
+          className="oge-context-menu"
+        >
+          <OgeMenuList
+            items={contextMenu.items}
+            ariaLabel={contextMenu.label}
+            onItemClick={() => contextMenuPanel.close('select')}
+            onCloseRequest={(event) => contextMenuPanel.close(event.reason)}
+          />
+        </OgePopup>
       )}
     </div>
   );

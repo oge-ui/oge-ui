@@ -30,6 +30,7 @@ import {
   REMOTE_SNIPPET,
   STATES_SNIPPET,
   TAGBOX_FEATURES_SNIPPET,
+  TAGBOX_COMPACT_SNIPPET,
   TAGBOX_REMOTE_SNIPPET,
   TAGBOX_SNIPPET,
   TEMPLATES_SNIPPET,
@@ -44,6 +45,7 @@ const SECTIONS = [
   'Templates & cancelable events',
   'Tag Box — multi-select',
   'Tag Box — select all, custom tags & limits',
+  'Tag Box — compact display',
   'Tag Box — remote data',
   'Item states & templates',
   'Field chrome',
@@ -362,6 +364,32 @@ interface DemoPlan {
       </app-demo-card>
 
       <app-demo-card
+        heading="Tag Box — compact display"
+        description="For narrow places — a grid filter cell, a toolbar — <code>displayMode</code> swaps the chips for a single line. <code>'count'</code> keeps chips up to <code>countThreshold</code> and then shows the localized <code>selectedCount</code> message (“3 selected”, an ICU plural in the locale packs); <code>'text'</code> joins the labels and cuts them with an ellipsis. Either way the full list is the line's tooltip, screen readers hear the summary through <code>aria-describedby</code>, and Backspace never removes a value that is not visible."
+        [chips]="['displayMode', 'countThreshold', 'selectedCount']"
+        [code]="tagBoxCompactSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6" data-demo="tag-compact">
+          <oge-tag-box
+            class="w-56"
+            label="Count"
+            [items]="compactCities"
+            displayMode="count"
+            [countThreshold]="2"
+            [(value)]="compactPicked"
+          />
+          <oge-tag-box
+            class="w-56"
+            label="Text"
+            [items]="compactCities"
+            displayMode="text"
+            [(value)]="compactPicked"
+          />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         heading="Tag Box — remote data"
         description="The same <code>[dataSource]</code> contract on the tag box: 2,000 cities paged 30 at a time, server-side search, and chips that stay resolved while the list shows another search."
         [chips]="['dataSource', 'virtualScroll']"
@@ -498,6 +526,19 @@ export class InputsSelectBoxPage {
   protected readonly remoteSnippet = REMOTE_SNIPPET;
   protected readonly templatesSnippet = TEMPLATES_SNIPPET;
   protected readonly tagBoxFeaturesSnippet = TAGBOX_FEATURES_SNIPPET;
+  protected readonly tagBoxCompactSnippet = TAGBOX_COMPACT_SNIPPET;
+  protected readonly compactCities = [
+    'Ankara',
+    'Berlin',
+    'Cairo',
+    'Dublin',
+    'Lisbon',
+  ];
+  protected readonly compactPicked = signal<readonly unknown[]>([
+    'Ankara',
+    'Berlin',
+    'Cairo',
+  ]);
   protected readonly tagBoxRemoteSnippet = TAGBOX_REMOTE_SNIPPET;
 
   // --- remote data ---------------------------------------------------------

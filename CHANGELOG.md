@@ -7,6 +7,46 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Popover — one panel for many triggers (`@oge-ui/overlay`, `@oge-ui/react-overlay`)
+
+- `show(target)` and `toggle(target)` take an event or an element and anchor the
+  panel there — `(click)="menu.show($event)"` from any number of column headers.
+  An open popover given another target moves instead of closing; focus returns to
+  the target it was shown for.
+- `closeOnFocusOut` (default `true`) for panels hosting editors whose popups take
+  focus elsewhere, and `padding: 'none' | 'sm' | 'md'`.
+- Angular `<ng-template ogePopoverContent>`: a body created only while open —
+  projected content was instantiated with the host even while closed.
+
+### Tag box summaries — `@oge-ui/inputs`, `@oge-ui/react-inputs`
+
+- `displayMode: 'chips' | 'text' | 'count'` and `countThreshold`: a comma line or
+  a localized "3 selected" for narrow places such as filter cells, read by screen
+  readers through `aria-describedby`. New `selectedCount` message (ICU plural) in
+  every locale pack; the tree select's `count` mode uses it instead of a bare
+  number.
+
+### Shared Escape stack — every overlay family
+
+- `claimOverlayEscape(event, surface)` (and `isOverlayEscapeClaimed`) make one key
+  press close exactly one layer. **Fix:** an application overlay whose Escape
+  listener was registered before an OGE surface opened closed the OGE surface
+  underneath in the same key press; modals, drawers, popups, popovers, menus and
+  action sheets now claim the event.
+
+### Tree view item context menu — `@oge-ui/navigation`, `@oge-ui/react-navigation`
+
+- `itemContextMenu` / `onItemContextMenu` on the grid's `rowContextMenu` model:
+  right-click, touch long-press, the Menu key or Shift+F10; push `items` and the
+  tree opens its menu at the item and returns focus to it.
+- `OgeContextMenuSource` gains `'touch'`: grid, tree list and tree view report a
+  long-press as such.
+
+### Floating windows in the top layer
+
+- A window under a `transform`, `filter` or containment ancestor moves to the top
+  layer like every other surface, and to the top of it when brought to the front.
+
 ### Part styling — `@oge-ui/overlay`, `@oge-ui/buttons` and their React layers
 
 - **Classes and attributes on the parts you cannot reach from the host.** The
@@ -15,7 +55,9 @@ are versioned independently, which is the case here.
   options); the popover and `OgePopup` take `panelClass` and `panelAttributes`;
   the context menu takes `contextMenuPanelClass` / `contextMenuPanelAttributes`
   (React: `panelClass` / `panelAttributes`); the drop-down button takes
-  `dropdownClass` / `dropdownAttributes`. Classes accept a string, an array or
+  `dropdownClass` / `dropdownAttributes`; the menubar takes `submenuClass` /
+  `submenuAttributes`; `confirm()`, `alert()` and `prompt()` take `panelClass`,
+  `backdropClass` and `panelAttributes`. Classes accept a string, an array or
   a `{ name: boolean }` map and join the component's own.
 - **Component tokens.** `--oge-modal-bg / -border-color / -radius / -shadow /
 -body-padding`, the same five for `--oge-popover-*`, `--oge-popup-border-color /

@@ -808,7 +808,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           name: 'onRowContextMenu',
           type: '(event: OgeContextMenuEvent&lt;T&gt;) =&gt; void',
           description:
-            "Right-click on a data row — and the Menu key / Shift+F10 in a focused cell. Push entries into <code>items</code> to open the grid’s own menu; leave it empty and the browser’s native menu is left alone. <code>source</code> is <code>'pointer'</code> or <code>'keyboard'</code> (then <code>clientX/Y</code> is the cell’s start/bottom corner); <code>event</code> is the originating React event.",
+            "Right-click on a data row — and the Menu key / Shift+F10 in a focused cell. Push entries into <code>items</code> to open the grid’s own menu; leave it empty and the browser’s native menu is left alone. <code>source</code> is <code>'pointer'</code>, <code>'touch'</code> (a long-press) or <code>'keyboard'</code> (then <code>clientX/Y</code> is the cell’s start/bottom corner); <code>event</code> is the originating React event.",
         },
         {
           name: 'onHeaderContextMenu',

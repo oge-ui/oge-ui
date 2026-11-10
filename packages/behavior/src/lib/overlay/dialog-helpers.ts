@@ -9,6 +9,8 @@
 import { getOgeLiveAnnouncer } from '../a11y/live-announcer';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 import { ogeOverlayMessage, type OgeOverlayMessages } from './overlay-config';
+import type { OgeClassValue } from '../dom/class-value';
+import type { OgeHtmlAttributes } from '../security/safe-attributes';
 
 // --- vocabulary -------------------------------------------------------------
 
@@ -47,6 +49,12 @@ export interface OgeDialogBaseOptions<TIcon = never> {
   okText?: string;
   /** Panel width — number = px, string passed through. Default `400`. */
   width?: number | string;
+  /** Extra classes on the dialog panel (as on the modal). */
+  panelClass?: OgeClassValue;
+  /** Extra classes on the backdrop layer. */
+  backdropClass?: OgeClassValue;
+  /** Extra attributes on the dialog panel, filtered like the modal's. */
+  panelAttributes?: OgeHtmlAttributes;
 }
 
 /** Options of `confirm()`. */

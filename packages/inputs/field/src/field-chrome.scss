@@ -993,6 +993,32 @@
   padding-block: 1px;
 }
 
+// text / count summary: one line that never grows the field
+.oge-tag-strip-summary {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.oge-tag-summary {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--oge-text-color);
+}
+
+// the count reads as a value, not as a placeholder
+.oge-tag-summary-count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-tag-strip-summary .oge-tag-input {
+  flex: 1 1 2ch;
+  min-width: 2ch;
+}
+
 .oge-tag {
   display: inline-flex;
   align-items: center;

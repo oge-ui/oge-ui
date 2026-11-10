@@ -217,6 +217,9 @@ export function OgeModalProvider({ children }: { children?: ReactNode }) {
           showCloseButton: false,
           closeOnBackdropClick: false,
           padding: false,
+          panelClass: options.panelClass,
+          backdropClass: options.backdropClass,
+          panelAttributes: options.panelAttributes,
         },
       );
       // Escape closes the modal without a result, which the mappers read as Cancel

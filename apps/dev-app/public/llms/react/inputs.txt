@@ -675,7 +675,7 @@ _Selection_
 | `showCheckBoxes` | `'none' \| 'normal' \| 'selectAll'` | `'none'` | Checkbox column inside the popup. |
 | `selectNodesRecursive` | `boolean` | `true` | Cascades selection down to descendants and up to fully-selected parents. |
 | `selectedKeysMode` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` | `'all'` | Projection applied to the committed keys — `leavesOnly` is usually what you want to store from a cascade. |
-| `displayMode` | `'text' \| 'count'` | `'text'` | Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. |
+| `displayMode` | `'text' \| 'count'` | `'text'` | Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. The count is `messages.selectedCount` (“2 selected”), localized and ICU-plural capable. |
 | `showSelectionAs` | `'text' \| 'chips'` | `'text'` | `'chips'` renders the selected nodes as removable chips in the field (Backspace removes the last one); `'text'` keeps the comma list / `displayMode`. |
 | `maxDisplayedTags` | `number` | `—` | In chips mode, folds chips past the cap into `+N more`. |
 
@@ -753,6 +753,8 @@ _OgeTagBox_
 | `showSelectionControls` | `boolean` | `true` | Renders checkboxes in front of the options. |
 | `hideSelectedItems` | `boolean` | `false` | Hides already-selected items from the popup list. |
 | `maxDisplayedTags` | `number` | `—` | Caps the rendered chips; the rest collapse into a `+N more` chip (`messages.moreTags`). |
+| `displayMode` | `'chips' \| 'text' \| 'count'` | `'chips'` | Closed-field rendering of the selection: `'chips'`, `'text'` (one comma-separated line, cut with an ellipsis; the full list is the `title`) or `'count'` (chips up to `countThreshold`, then `messages.selectedCount`, e.g. “3 selected”) — for narrow places such as a filter cell. A text or count summary is added to the field's `aria-describedby`, and Backspace only removes visible chips. |
+| `countThreshold` | `number` | `1` | In `'count'` mode, how many values still show as chips before the count replaces them. |
 | `opened / defaultOpened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick` | `shared with OgeSelectBox` | `—` | Popup configuration and the controlled/uncontrolled visibility pair. |
 | `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `provider: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet (search field when `searchEnabled`, picks keep it open, a Done action closes it) on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from the `<OgeInputsConfigProvider>`. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
@@ -5503,6 +5505,30 @@ export function TagBoxRemoteDemo() {
       value={cityIds}
       onValueChange={setCityIds}
     />
+  );
+}
+```
+
+### Tag Box — compact display
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTagBox } from '@oge-ui/react-inputs';
+
+export function CompactTagBoxes() {
+  const cities = ['Ankara', 'Berlin', 'Cairo', 'Dublin', 'Lisbon'];
+  const [picked, setPicked] = useState<readonly unknown[]>(['Ankara', 'Berlin', 'Cairo']);
+  return (
+    <>
+      {/* chips up to countThreshold, then "3 selected" */}
+      <OgeTagBox label="Count" items={cities} displayMode="count" countThreshold={2}
+        value={picked} onValueChange={setPicked} />
+      {/* one comma-separated line, cut with an ellipsis */}
+      <OgeTagBox label="Text" items={cities} displayMode="text"
+        value={picked} onValueChange={setPicked} />
+    </>
   );
 }
 ```

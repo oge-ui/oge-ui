@@ -113,6 +113,33 @@ export function ogeCanSelectMore(
   return maxSelected === undefined || count < maxSelected;
 }
 
+/**
+ * How a multi-select field shows its selection while closed:
+ * `'chips'` — one removable chip per value (`maxDisplayedTags` folds the rest
+ * into `+N more`); `'text'` — the labels as one comma-separated line, cut
+ * with an ellipsis; `'count'` — chips up to `countThreshold` values, then a
+ * single "N selected" text from the `selectedCount` message.
+ */
+export type OgeTagBoxDisplayMode = 'chips' | 'text' | 'count';
+
+/** What the closed field renders for `count` selected values. */
+export type OgeTagBoxSummary = 'none' | 'chips' | 'text' | 'count';
+
+/**
+ * Resolves the closed-field presentation of a multi-select: nothing for an
+ * empty selection, chips in `count` mode until the selection exceeds
+ * `countThreshold` (default 1, so a single value still shows its chip).
+ */
+export function ogeTagBoxSummary(
+  count: number,
+  mode: OgeTagBoxDisplayMode,
+  countThreshold = 1,
+): OgeTagBoxSummary {
+  if (count <= 0) return 'none';
+  if (mode === 'count') return count > countThreshold ? 'count' : 'chips';
+  return mode;
+}
+
 /** How many chips render and how many fold into the `+N more` chip. */
 export function ogeChipOverflow(
   count: number,

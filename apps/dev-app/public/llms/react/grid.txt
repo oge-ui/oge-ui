@@ -295,7 +295,7 @@ _Interaction_
 | `onRowClick / onRowDblClick` | `(event: OgeRowClickEvent<T>) => void` | A data row was clicked / double-clicked: `{ row, key, event }`. |
 | `onCellClick / onCellDblClick` | `(event: OgeCellClickEvent<T>) => void` | A data cell was clicked / double-clicked: `{ row, key, field, value, event }`. |
 | `onRowReordered` | `(event: OgeRowReorderedEvent<T>) => void` | After a dragged row was dropped: the moved key, the target key and the from/to view positions. |
-| `onRowContextMenu` | `(event: OgeContextMenuEvent<T>) => void` | Right-click on a data row — and the Menu key / Shift+F10 in a focused cell. Push entries into `items` to open the grid’s own menu; leave it empty and the browser’s native menu is left alone. `source` is `'pointer'` or `'keyboard'` (then `clientX/Y` is the cell’s start/bottom corner); `event` is the originating React event. |
+| `onRowContextMenu` | `(event: OgeContextMenuEvent<T>) => void` | Right-click on a data row — and the Menu key / Shift+F10 in a focused cell. Push entries into `items` to open the grid’s own menu; leave it empty and the browser’s native menu is left alone. `source` is `'pointer'`, `'touch'` (a long-press) or `'keyboard'` (then `clientX/Y` is the cell’s start/bottom corner); `event` is the originating React event. |
 | `onHeaderContextMenu` | `(event: OgeHeaderContextMenuEvent) => void` | Right-click on a header — or the Menu key / Shift+F10 on a focused header — with the built-in items (sort / group / pin / hide) prebuilt: add, remove or reorder them before the menu opens. Carries `source` and `event` like `onRowContextMenu`. |
 
 _Selection & focus_

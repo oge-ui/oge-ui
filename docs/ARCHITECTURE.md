@@ -1741,7 +1741,8 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   (`behavior/lib/overlay/top-layer.ts`) moves such a surface to the browser's top layer
   (`popover="manual"`) **without moving it in the DOM**, so focus traps, `contains()` checks and
   inherited theme tokens keep working. `OgeAnchoredPanelCore` calls it on the first measure (popup,
-  menu, popover, tooltip, context menu in both layers), the modals on open. It is conditional on
+  menu, popover, tooltip, context menu in both layers), the modals on open. Floating windows (`OgeWindowCore`) promote on their first placement and again whenever
+  they come to the front: the top layer stacks by promotion order, not by `z-index`. It is conditional on
   purpose: ordinary pages keep z-index stacking. Once one surface is promoted every later one follows,
   because anything outside the top layer paints beneath it — toasts are the known exception. Promoted
   surfaces skip the exit ghost, which would land back in the captured parent. A new `fixed` surface
@@ -1765,6 +1766,15 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   unset one follows the suite-wide token in every theme and scope; each is listed in
   `_tokens.scss`'s `@mixin component-tokens` (never `@include`d), and the docs generator fails when a
   listed token is not read with exactly that fallback.
+- **One Escape per layer: `claimOverlayEscape`.** Every surface on the overlay stack listens for
+  Escape on `document` and gates the close on `claimOverlayEscape(event, surface)`
+  (`behavior/lib/overlay/overlay-stack.ts`), never on `isTopOverlay` alone: all listeners on one node
+  run whatever `stopPropagation()` does, so the surface below the one that just closed would find
+  itself on top in the same key press and close too. The claim is per event (a `WeakSet`), so
+  listener registration order stops mattering — an application overlay that registered its handler
+  at startup and `pushOverlay`s later behaves like an OGE one. A surface that ignores Escape
+  (`closeOnEscape: false`) still claims it, so nothing beneath closes instead. Page-level shortcuts
+  check `isOverlayEscapeClaimed(event)`.
 - **Popover and callout arrow.** `OgePopoverCore` (`behavior/lib/overlay/popover-core.ts`)
   owns trigger timing (hover dwell + grace into the panel), open / close reasons, focus and the
   ARIA decisions. Both layers keep the anchored panel's own closes inside the pipeline
@@ -1778,6 +1788,25 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   `popup/_callout-arrow.scss` with physical sides (the geometry is measured, so RTL is already
   resolved); under forced colors it draws a `CanvasText` chevron, because forced colors repaint
   transparent borders.
+- **One popover, many targets.** `show(target)` / `toggle(target)` take an event or an element
+  (`ogePopoverTargetElement`: the event's `currentTarget`). An open popover given another target
+  re-anchors instead of closing, and focus returns to the target it was shown for. React resolves a
+  native event — React delegates to the root, so its `currentTarget` is the root container, and
+  `<OgeButton onClick>` passes the native event — to the closest interactive element around its
+  `target`. `closeOnFocusOut: false` keeps a panel open while an editor's own popup holds focus;
+  `padding` sets `--oge-popover-body-padding` on the panel. Angular projected `<ng-content>` is
+  instantiated with the host even while closed, so heavy bodies go in `<ng-template
+ogePopoverContent>` (created per open); React children already render only while open.
+- **Multi-select summaries.** `ogeTagBoxSummary(count, displayMode, countThreshold)` decides what a
+  closed tag box shows: `chips`, a `text` line or the `selectedCount` message (`count` mode, past
+  the threshold). A text or count summary joins the field's `aria-describedby`, carries the full
+  label list as `title`, and Backspace only removes visible chips. Tree select's `count` mode uses
+  the same message — never a bare number.
+- **Item context menus follow the grid's model.** `itemContextMenu` (TreeView) and
+  `rowContextMenu` emit a mutable `items` array: filled, the component opens its own point-anchored
+  menu and returns focus to the item on close; empty, the browser menu stays. Keyboard requests
+  (Menu key, Shift+F10) anchor at `ogeContextMenuAnchorPoint(row)` and mark `OgeContextMenuEcho`;
+  `source` comes from `ogeContextMenuSourceOf(event)` — `'touch'` for a long-press.
 - **Tooltips stay non-interactive.** Template / render-prop content and the click / focus /
   manual `showMode`s route through `OgeTooltipCore`; nothing in the bubble is focusable and it
   never joins the Escape stack. Interactive content belongs in a popover. The bubble _is_ a pointer

@@ -5,7 +5,11 @@ import {
   ogeExitGhost,
 } from '../motion/motion';
 import { resolvePopupArrow } from './arrow';
-import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
+import {
+  claimOverlayEscape,
+  pushOverlay,
+  removeOverlay,
+} from './overlay-stack';
 import { OGE_TOP_LAYER_CLASS, ogePromoteToTopLayer } from './top-layer';
 import {
   ogeVisibleViewport,
@@ -408,7 +412,7 @@ export class OgeAnchoredPanelCore {
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (event.key !== 'Escape') return;
     // With stacked overlays (popup inside popup/modal) only the topmost closes.
-    if (!isTopOverlay(this.stackHandle)) return;
+    if (!claimOverlayEscape(event, this.stackHandle)) return;
     event.stopPropagation();
     this.selfClose('escape');
   };

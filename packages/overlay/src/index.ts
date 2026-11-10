@@ -37,6 +37,8 @@ export {
   pushOverlay,
   removeOverlay,
   isTopOverlay,
+  claimOverlayEscape,
+  isOverlayEscapeClaimed,
   getTabbableElements,
   trapTabKey,
   lockBodyScroll,
@@ -77,6 +79,7 @@ export {
 export {
   OgePopoverTitle,
   OgePopoverFooter,
+  OgePopoverContent,
   type OgePopoverSlotContext,
 } from './lib/popover/popover-templates';
 export { OgeActionSheet } from './lib/action-sheet/action-sheet';

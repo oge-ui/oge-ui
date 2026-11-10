@@ -36,6 +36,33 @@ export class OgePopoverTitle {
 }
 
 /**
+ * Lazy body slot of an `oge-popover`: the template is instantiated only
+ * while the popover is open and destroyed when it closes, so heavy content
+ * (a grid, a chart, components that fetch) costs nothing while closed.
+ * Projected `<ng-content>` children, by contrast, are created with the host.
+ *
+ * ```html
+ * <oge-popover #pop title="Filter">
+ *   <ng-template ogePopoverContent let-close>
+ *     <app-filter-form (applied)="close()" />
+ *   </ng-template>
+ * </oge-popover>
+ * ```
+ */
+@Directive({ selector: '[ogePopoverContent]' })
+export class OgePopoverContent {
+  /** The template rendered inside the popover body while it is open. */
+  readonly templateRef = inject(TemplateRef<OgePopoverSlotContext>);
+
+  static ngTemplateContextGuard(
+    _dir: OgePopoverContent,
+    _ctx: unknown,
+  ): _ctx is OgePopoverSlotContext {
+    return true;
+  }
+}
+
+/**
  * Footer (actions) slot of an `oge-popover`; `$implicit` closes it:
  *
  * ```html

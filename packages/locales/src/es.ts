@@ -248,6 +248,8 @@ export const es: OgeLocalePack = {
     adaptiveSearch: 'Buscar',
     adaptiveTitle: 'Seleccionar',
     moreTags: '{count} más',
+    selectedCount:
+      '{count, plural, one {# seleccionado} other {# seleccionados}}',
     maxSelectedItemsMessage: 'Puede seleccionar hasta {max} elementos',
     compareError: 'Los valores no coinciden',
     ratingLabel: 'Valoración',

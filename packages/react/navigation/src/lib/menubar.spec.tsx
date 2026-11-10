@@ -67,6 +67,24 @@ describe('<OgeMenubar>', () => {
     ]);
   });
 
+  it('puts submenuClass and the safe submenuAttributes on the panel', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(
+      <OgeMenubar
+        items={MENU}
+        submenuClass="brand-menu"
+        submenuAttributes={{ 'data-testid': 'app-menu', onclick: 'x' }}
+      />,
+    );
+    click(barItems()[0]);
+    settle();
+    const panel = document.querySelector('.oge-popup') as HTMLElement;
+    expect(panel).toHaveClass('brand-menu');
+    expect(panel).toHaveAttribute('data-testid', 'app-menu');
+    expect(panel).not.toHaveAttribute('onclick');
+    vi.restoreAllMocks();
+  });
+
   it('clicking a parent item toggles its submenu', () => {
     const closed: OgeMenubarSubmenuClosedEvent[] = [];
     const opened: OgeMenubarSubmenuOpenedEvent[] = [];

@@ -16,6 +16,8 @@ import {
   stepEnabledIndex,
   toggleTreeSelection,
 } from '@oge-ui/core';
+import type { OgeMenuItem } from '../menu/menu-types';
+import type { OgeContextMenuSource } from '../grid/grid-options';
 import type {
   CheckState,
   RowKey,
@@ -148,6 +150,29 @@ export interface OgeTreeItemClickEvent<T = unknown> {
   readonly key: RowKey;
   readonly item: T;
   readonly event: Event;
+}
+
+/**
+ * Emitted when a context menu is asked for on a tree item — right-click,
+ * touch long-press, the Menu key or Shift+F10 on the focused item. Push
+ * `OgeMenuItem`s into `items` and the tree opens its menu at
+ * `clientX` / `clientY`; leave it empty and the browser menu stays.
+ */
+export interface OgeTreeItemContextMenuEvent<T = unknown> {
+  /** Key of the item the menu is for. */
+  readonly key: RowKey;
+  /** The item's data row. */
+  readonly item: T;
+  /** Where the menu opens horizontally: the pointer, or the item's inline-start edge. */
+  readonly clientX: number;
+  /** Where the menu opens vertically: the pointer, or the item's bottom edge. */
+  readonly clientY: number;
+  /** Fill to open the tree's menu; an empty array keeps the native one. */
+  readonly items: OgeMenuItem[];
+  /** `'pointer'`, `'touch'` (long-press) or `'keyboard'`. */
+  readonly source: OgeContextMenuSource;
+  /** The originating event. */
+  readonly event: MouseEvent | KeyboardEvent;
 }
 
 /** Emitted after a lazy `loadChildren` resolved. */

@@ -301,7 +301,7 @@ describe('<OgeTreeSelect>', () => {
         value={[1, 2]}
       />,
     );
-    expect(combo().value).toBe('2');
+    expect(combo().value).toBe('2 selected');
   });
 
   it('filters the popup tree through the shared search predicate', async () => {

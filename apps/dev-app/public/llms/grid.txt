@@ -107,7 +107,7 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/grid/foundation`
 
-- values: `CHECKBOX_WIDTH`, `COMMAND_WIDTH`, `ColumnLayoutModel`, `ColumnModel`, `DRAG_WIDTH`, `DeferredChildrenLoader`, `EXPANDER_WIDTH`, `EditingModel`, `KeyboardNavModel`, `OGE_STATE_STORAGE`, `OgeContextMenuEcho`, `OgeEditingSlice`, `RowVirtualizerModel`, `buildRowFilterExpr`, `createStatePersistence`, `dateFilterExpr`, `defaultOperatorFor`, `humanize`, `isDataSource`, `isOgeContextMenuKey`, `lookupTextOf`, `mapLookupItems`, `ogeContextMenuKeyTarget`, `resolveLookupItems`
+- values: `CHECKBOX_WIDTH`, `COMMAND_WIDTH`, `ColumnLayoutModel`, `ColumnModel`, `DRAG_WIDTH`, `DeferredChildrenLoader`, `EXPANDER_WIDTH`, `EditingModel`, `KeyboardNavModel`, `OGE_STATE_STORAGE`, `OgeContextMenuEcho`, `OgeEditingSlice`, `RowVirtualizerModel`, `buildRowFilterExpr`, `createStatePersistence`, `dateFilterExpr`, `defaultOperatorFor`, `humanize`, `isDataSource`, `isOgeContextMenuKey`, `lookupTextOf`, `mapLookupItems`, `ogeContextMenuKeyTarget`, `ogeContextMenuSourceOf`, `resolveLookupItems`
 - types: `ColumnDefLike`, `ColumnLayoutModelDeps`, `ColumnModelDeps`, `ColumnSource`, `DeferredBaseOptions`, `DeferredChildrenLoaderDeps`, `EditingModelDeps`, `KeyboardNavModelDeps`, `KeyboardNavTreeHooks`, `LookupItem`, `OgeColumnAlignment`, `OgeColumnLookup`, `OgeContextMenuKeyTarget`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataType`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeStateStorage`, `PendingChildRequest`, `ResolvedColumn`, `RowVirtualizerModelDeps`, `RowVirtualizerWindowAdapter`, `StatePersistenceOptions`
 
 `@oge-ui/grid/export-excel`
@@ -319,7 +319,7 @@ _Interaction_
 | --- | --- | --- |
 | `rowClick / rowDblClick` | `OgeRowClickEvent<T>` | `{ row, key, event }`. |
 | `cellClick / cellDblClick` | `OgeCellClickEvent<T>` | `{ row, key, field, value, event }`. |
-| `rowContextMenu` | `OgeContextMenuEvent<T>` | Row right-click — and the Menu key / Shift+F10 in a focused cell; push into `items` to open the built-in menu. `source` is `'pointer'` or `'keyboard'` (then `clientX/Y` is the cell's start/bottom corner); `event` is the originating event. |
+| `rowContextMenu` | `OgeContextMenuEvent<T>` | Row right-click — and the Menu key / Shift+F10 in a focused cell; push into `items` to open the built-in menu. `source` is `'pointer'`, `'touch'` (a long-press) or `'keyboard'` (then `clientX/Y` is the cell's start/bottom corner); `event` is the originating event. |
 | `headerContextMenu` | `OgeHeaderContextMenuEvent` | Prebuilt, mutable header menu items (sort/group/pin/hide); also opened by the Menu key / Shift+F10 on a focused header. Carries `source` and `event` like `rowContextMenu`. |
 | `rowReordered` | `OgeRowReorderedEvent<T>` | A row was dropped in a new position (`rowDragging`). |
 

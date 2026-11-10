@@ -368,4 +368,34 @@ ${FOLDERS}`,
 </>`,
     }),
   },
+  {
+    title: 'Item context menu',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-navigation': ['OgeTreeView'] },
+      types: { '@oge-ui/react-navigation': ['OgeTreeItemContextMenuEvent'] },
+      before: `${FOLDER}
+
+const FOLDERS: Folder[] = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+// fill items to open the tree's menu; leave it empty for the native one
+function menuFor(e: OgeTreeItemContextMenuEvent<Folder>): void {
+  e.items.push(
+    { text: 'Rename', action: () => console.log('rename', e.item.name) },
+    { text: 'Duplicate', action: () => console.log('duplicate', e.key) },
+    { separator: true, text: '' },
+    { text: 'Delete', severity: 'danger', disabled: e.item.parentId === null },
+  );
+}`,
+      name: 'TreeContextMenu',
+      jsx: `<>
+  {/* right-click, Menu key / Shift+F10, or a touch long-press */}
+  <OgeTreeView items={FOLDERS} displayExpr="name" rootValue={null}
+    onItemContextMenu={menuFor} />
+</>`,
+    }),
+  },
 ];

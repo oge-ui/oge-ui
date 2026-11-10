@@ -5,8 +5,10 @@ import {
   signal,
 } from '@angular/core';
 import { OgeButton } from '@oge-ui/buttons';
+import { OgeSelectBox } from '@oge-ui/inputs';
 import {
   OgePopover,
+  OgePopoverContent,
   OgePopoverFooter,
   OgePopoverTrigger,
   type OgePopoverClosingEvent,
@@ -24,6 +26,7 @@ import {
   POPOVER_EVENTS_SNIPPET,
   POPOVER_MODAL_SNIPPET,
   POPOVER_PLACEMENT_SNIPPET,
+  POPOVER_SHARED_SNIPPET,
   POPOVER_TRIGGERS_SNIPPET,
 } from './popover-snippets';
 
@@ -33,6 +36,7 @@ const SECTIONS = [
   'Placement & arrow',
   'Modal vs non-modal',
   'Events & imperative API',
+  'Shared popover & editors inside',
 ] as const;
 
 const FIELD_CLASS =
@@ -44,7 +48,9 @@ const FIELD_CLASS =
     OgeButton,
     OgePopover,
     OgePopoverFooter,
+    OgePopoverContent,
     OgePopoverTrigger,
+    OgeSelectBox,
     DemoCard,
     DocHeader,
     PageToc,
@@ -299,6 +305,53 @@ const FIELD_CLASS =
           >
         </div>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'show(event)',
+          'toggle(event)',
+          'ogePopoverContent',
+          'closeOnFocusOut',
+          'padding',
+        ]"
+        heading="Shared popover & editors inside"
+        description="One popover can serve many triggers: <code>show(event)</code> anchors it to the event's <code>currentTarget</code> (the header cell, not the icon inside it) and <code>toggle(event)</code> closes it on the same target — on another target an open popover moves instead of closing, and focus returns to the target it was shown for. An <code>ogePopoverContent</code> template is created only while the popover is open, so heavy content costs nothing closed. Editors inside work: a select box popup opened in the panel counts as inside, Escape closes it first, and <code>closeOnFocusOut</code> can be turned off for editors whose popups take focus elsewhere. <code>padding</code> picks <code>'none'</code>, <code>'sm'</code> or <code>'md'</code>."
+        [code]="sharedSnippet"
+        language="ts"
+      >
+        <div
+          class="flex flex-wrap items-center gap-3"
+          data-testid="popover-shared"
+        >
+          @for (column of columns; track column) {
+            <oge-button
+              [text]="column"
+              stylingMode="outlined"
+              (clicked)="activeColumn.set(column); shared.show($event.event)"
+            />
+          }
+          <oge-popover
+            #shared
+            [title]="activeColumn() + ' filter'"
+            padding="sm"
+            [width]="260"
+          >
+            <ng-template ogePopoverContent let-close>
+              <oge-select-box
+                label="Show"
+                [items]="filterModes"
+                [(value)]="filterMode"
+              />
+              <div class="mt-3 flex justify-end">
+                <oge-button text="Apply" (clicked)="close()" />
+              </div>
+            </ng-template>
+          </oge-popover>
+          <span class="text-sm opacity-70" data-testid="popover-shared-state"
+            >{{ activeColumn() }}: {{ filterMode() }}</span
+          >
+        </div>
+      </app-demo-card>
     }
 
     <h3>Notes</h3>
@@ -336,6 +389,10 @@ export class OverlayPopoverPage {
   protected readonly visible = signal(false);
   protected readonly pinned = signal(false);
   protected readonly lastEvent = signal('—');
+  protected readonly columns = ['Name', 'City', 'Status'];
+  protected readonly filterModes = ['All', 'Only blanks', 'Only non-blanks'];
+  protected readonly activeColumn = signal('Name');
+  protected readonly filterMode = signal<unknown>('All');
   protected readonly placements = [
     { label: 'Top', placement: 'top' as const },
     { label: 'Right start', placement: 'right-start' as const },
@@ -352,4 +409,5 @@ export class OverlayPopoverPage {
   protected readonly placementSnippet = POPOVER_PLACEMENT_SNIPPET;
   protected readonly modalSnippet = POPOVER_MODAL_SNIPPET;
   protected readonly eventsSnippet = POPOVER_EVENTS_SNIPPET;
+  protected readonly sharedSnippet = POPOVER_SHARED_SNIPPET;
 }

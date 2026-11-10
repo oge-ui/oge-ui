@@ -9,6 +9,7 @@ import {
   OgeTreeView,
   type OgeTreeChildPageEvent,
   type OgeTreeEditedEvent,
+  type OgeTreeItemContextMenuEvent,
   type OgeTreeReorderedEvent,
   type OgeTreeSelectionChangedEvent,
   type OgeTreeTransferredEvent,
@@ -26,6 +27,7 @@ import {
   CHECK_SNIPPET,
   DND_SNIPPET,
   EDITING_SNIPPET,
+  CONTEXT_MENU_SNIPPET,
   PAGING_SNIPPET,
   FLAT_SNIPPET,
   LAZY_SNIPPET,
@@ -59,6 +61,7 @@ const SECTIONS = [
   'Drag & drop reparenting',
   'Drag between trees',
   'Label editing (F2)',
+  'Item context menu',
   'Load more paging',
   'Custom node template',
 ] as const;
@@ -423,6 +426,30 @@ const MANY: Folder[] = Array.from({ length: 10000 }, (_, i) => ({
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['itemContextMenu', 'Shift+F10', 'source']"
+        heading="Item context menu"
+        description="Right-click an item — or press the Menu key / Shift+F10 on the focused one, or long-press it on touch — and <code>itemContextMenu</code> reports the item with an empty <code>items</code> array: push menu items and the tree opens its own menu at the item, labelled by it, with the focus back on the item when it closes. Leave the array empty for an item and the browser menu stays. <code>source</code> tells pointer, touch and keyboard apart."
+        [code]="contextMenuSnippet"
+        language="ts"
+      >
+        <oge-tree-view
+          [items]="folders"
+          displayExpr="name"
+          [rootValue]="null"
+          [expandedKeys]="[1]"
+          ariaLabel="Folders with a context menu"
+          (itemContextMenu)="menuFor($event)"
+          height="220px"
+          data-testid="tree-context-menu"
+        />
+        @if (lastMenu(); as action) {
+          <p class="mt-2 text-sm opacity-70" data-testid="tree-menu-log">
+            {{ action }}
+          </p>
+        }
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['childPageSize', 'Load more', 'aria-setsize']"
         heading="Load more paging"
         description="With <code>childPageSize</code> a parent renders its first page of children and a “Show N more items” row, which Enter, Space or a click expands by one more page — the focus lands on the first new child. The row is in the arrow-key order, <code>aria-setsize</code> keeps reporting the real total, and paging pauses while searching. Works with <code>virtualScroll</code> too."
@@ -486,6 +513,24 @@ export class NavigationOverviewPage {
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly betweenSnippet = BETWEEN_SNIPPET;
   protected readonly editingSnippet = EDITING_SNIPPET;
+  protected readonly contextMenuSnippet = CONTEXT_MENU_SNIPPET;
+  protected readonly lastMenu = signal<string | null>(null);
+
+  protected menuFor(e: OgeTreeItemContextMenuEvent<Folder>): void {
+    const log = (verb: string) => () =>
+      this.lastMenu.set(`${verb} “${e.item.name}” (${e.source})`);
+    e.items.push(
+      { text: 'Rename', action: log('Rename') },
+      { text: 'Duplicate', action: log('Duplicate') },
+      { separator: true, text: '' },
+      {
+        text: 'Delete',
+        severity: 'danger',
+        disabled: e.item.parentId === null,
+        action: log('Delete'),
+      },
+    );
+  }
   protected readonly pagingSnippet = PAGING_SNIPPET;
 
   protected readonly folders = FOLDERS;

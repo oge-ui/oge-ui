@@ -4,6 +4,7 @@ import {
   type RowNode,
 } from '@oge-ui/core';
 import type { OgeDataType } from './grid-columns';
+import { ogeClassList, type OgeClassValue } from '../dom/class-value';
 
 /**
  * Row / cell styling hooks and declarative conditional formatting, shared by
@@ -15,29 +16,8 @@ import type { OgeDataType } from './grid-columns';
  * dark mode and forced colours keep working on formatted cells.
  */
 
-/** What a class hook may return — the shapes Angular's `[class]` accepts. */
-export type OgeClassValue =
-  | string
-  | readonly string[]
-  | Readonly<Record<string, boolean | null | undefined>>
-  | null
-  | undefined;
-
-/**
- * Normalizes a class hook's result into a list of class names: strings split
- * on whitespace, arrays flattened, records keep their truthy keys.
- */
-export function ogeClassList(value: OgeClassValue): string[] {
-  if (!value) return [];
-  if (typeof value === 'string') return value.split(/\s+/).filter(Boolean);
-  if (Array.isArray(value))
-    return (value as readonly string[]).flatMap((entry) =>
-      typeof entry === 'string' ? entry.split(/\s+/).filter(Boolean) : [],
-    );
-  return Object.entries(value)
-    .filter(([, on]) => !!on)
-    .map(([name]) => name);
-}
+// re-exported where they were first published
+export { ogeClassList, type OgeClassValue };
 
 /** What `cellClass` / `cellSpan` callbacks learn about a column. */
 export interface OgeGridColumnInfo {

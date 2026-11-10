@@ -256,6 +256,29 @@ protected rename(e: OgeTreeEditedEvent<Folder>): void {
 }`,
 });
 
+export const CONTEXT_MENU_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeTreeView'] },
+  types: { '@oge-ui/navigation': ['OgeTreeItemContextMenuEvent'] },
+  before: FOLDER,
+  template: `<!-- right-click, Menu key / Shift+F10, or a touch long-press -->
+<oge-tree-view
+  [items]="folders"
+  displayExpr="name"
+  (itemContextMenu)="menuFor($event)"
+/>`,
+  body: `${FOLDERS}
+
+// fill items to open the tree's menu; leave it empty for the native one
+protected menuFor(e: OgeTreeItemContextMenuEvent<Folder>): void {
+  e.items.push(
+    { text: 'Rename', action: () => console.log('rename', e.item.name) },
+    { text: 'Duplicate', action: () => console.log('duplicate', e.key) },
+    { separator: true, text: '' },
+    { text: 'Delete', severity: 'danger', disabled: e.item.parentId === null },
+  );
+}`,
+});
+
 export const PAGING_SNIPPET = demoSource({
   use: { '@oge-ui/navigation': ['OgeTreeView'] },
   types: { '@oge-ui/navigation': ['OgeTreeChildPageEvent'] },

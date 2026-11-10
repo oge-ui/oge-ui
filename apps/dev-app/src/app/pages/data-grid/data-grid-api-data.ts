@@ -711,7 +711,7 @@ export const OGE_GRID_API: ApiSections = {
           name: 'rowContextMenu',
           type: 'OgeContextMenuEvent&lt;T&gt;',
           description:
-            "Row right-click — and the Menu key / Shift+F10 in a focused cell; push into <code>items</code> to open the built-in menu. <code>source</code> is <code>'pointer'</code> or <code>'keyboard'</code> (then <code>clientX/Y</code> is the cell's start/bottom corner); <code>event</code> is the originating event.",
+            "Row right-click — and the Menu key / Shift+F10 in a focused cell; push into <code>items</code> to open the built-in menu. <code>source</code> is <code>'pointer'</code>, <code>'touch'</code> (a long-press) or <code>'keyboard'</code> (then <code>clientX/Y</code> is the cell's start/bottom corner); <code>event</code> is the originating event.",
         },
         {
           name: 'headerContextMenu',

@@ -116,6 +116,7 @@ import {
 } from '@oge-ui/behavior';
 import {
   OgeContextMenuEcho,
+  ogeContextMenuSourceOf,
   isOgeContextMenuKey,
   ogeContextMenuKeyTarget,
   type OgeContextMenuSource,
@@ -1838,7 +1839,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       event.clientX,
       event.clientY,
       event,
-      'pointer',
+      ogeContextMenuSourceOf(event),
     );
   }
 
@@ -1902,7 +1903,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       event.clientX,
       event.clientY,
       event,
-      'pointer',
+      ogeContextMenuSourceOf(event),
     );
   }
 

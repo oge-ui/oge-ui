@@ -355,7 +355,7 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
   const inputText = (() => {
     if (selectedKeys.length === 0) return '';
     if (displayMode === 'count' && selectedKeys.length > 1) {
-      return `${selectedKeys.length}`;
+      return ogeMoreTagsText(field.msg.selectedCount, selectedKeys.length);
     }
     return selectedKeys
       .map((key) => labelByKey.get(key) ?? String(key))

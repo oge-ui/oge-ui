@@ -447,7 +447,7 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
           name: 'onRowContextMenu / onHeaderContextMenu',
           type: 'context-menu callbacks',
           description:
-            'Mutable <code>items</code>; also opened by the Menu key / Shift+F10 on a focused cell or header (<code>source: &#39;keyboard&#39;</code>, anchored at the cell).',
+            'Mutable <code>items</code>; also opened by the Menu key / Shift+F10 on a focused cell or header (<code>source: &#39;keyboard&#39;</code>, anchored at the cell); a touch long-press reports <code>source: &#39;touch&#39;</code>.',
         },
         {
           name: 'onSelectionChanged / onFocusedRowChanged',

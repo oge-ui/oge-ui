@@ -72,6 +72,7 @@ export {
 // component (the tree list reaches behavior through this entry point).
 export {
   OgeContextMenuEcho,
+  ogeContextMenuSourceOf,
   isOgeContextMenuKey,
   ogeContextMenuKeyTarget,
   type OgeContextMenuKeyTarget,

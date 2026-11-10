@@ -1083,6 +1083,13 @@ export const OGE_INPUTS_CONFIG_API: ApiSections = {
             'Overflow chip of <code>maxDisplayedTags</code> (tag box, tree select chips, multi-column combo box). Rendered by <code>ogeMoreTagsText</code> / <code>ogeFormatMessage</code>, so it may be an ICU plural (<code>{count, plural, one {+# weiteres} other {+# weitere}}</code>).',
         },
         {
+          name: 'selectedCount',
+          type: 'string',
+          default: "'{count, plural, one {# selected} other {# selected}}'",
+          description:
+            "Closed-field summary of a tag box or tree select in <code>displayMode: 'count'</code>; may be an ICU plural over <code>count</code>.",
+        },
+        {
           name: 'maxSelectedItemsMessage',
           type: 'string',
           default: "'You can select up to {max} items'",
@@ -2365,6 +2372,20 @@ export const OGE_TAG_BOX_API: ApiSections = {
             'Caps the rendered chips; the rest collapse into a <code>+N more</code> chip (<code>messages.moreTags</code>).',
         },
         {
+          name: 'displayMode',
+          type: "'chips' | 'text' | 'count'",
+          default: "'chips'",
+          description:
+            "Closed-field rendering of the selection: <code>'chips'</code>, <code>'text'</code> (one comma-separated line, cut with an ellipsis; the full list is the <code>title</code>) or <code>'count'</code> (chips up to <code>countThreshold</code>, then <code>messages.selectedCount</code>, e.g. “3 selected”) — for narrow places such as a filter cell. A text or count summary is added to the field's <code>aria-describedby</code>, and Backspace only removes visible chips.",
+        },
+        {
+          name: 'countThreshold',
+          type: 'number',
+          default: '1',
+          description:
+            "In <code>'count'</code> mode, how many values still show as chips before the count replaces them.",
+        },
+        {
           name: 'opened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick',
           type: 'shared with OgeSelectBox',
           description: 'Popup configuration and two-way visibility.',
@@ -2564,7 +2585,7 @@ export const OGE_TREE_SELECT_API: ApiSections = {
           type: "'text' | 'count'",
           default: "'text'",
           description:
-            'Closed-field rendering for a multiple selection: the joined labels, or just how many are picked.',
+            'Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. The count is <code>messages.selectedCount</code> (“2 selected”), localized and ICU-plural capable.',
         },
         {
           name: 'showSelectionAs',

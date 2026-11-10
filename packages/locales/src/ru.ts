@@ -250,6 +250,8 @@ export const ru: OgeLocalePack = {
     adaptiveSearch: 'Поиск',
     adaptiveTitle: 'Выбрать',
     moreTags: '+ещё {count}',
+    selectedCount:
+      '{count, plural, one {Выбран #} few {Выбрано #} many {Выбрано #} other {Выбрано #}}',
     maxSelectedItemsMessage: 'Можно выбрать не более {max} элементов',
     compareError: 'Значения не совпадают',
     ratingLabel: 'Оценка',

@@ -220,6 +220,11 @@ export interface OgeInputsMessages {
   adaptiveTitle: string;
   /** Overflow chip of `maxDisplayedTags` — `{count}`, or an ICU plural over it. */
   moreTags: string;
+  /**
+   * Closed-field summary of a multi-select in `displayMode: 'count'` (tag box,
+   * tree select) — `{count}`, or an ICU plural over it.
+   */
+  selectedCount: string;
   /** Status shown once `maxSelectedItems` is reached — placeholder `{max}`. */
   maxSelectedItemsMessage: string;
   /** `compare` validation rule failure (forms). */
@@ -393,6 +398,7 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   adaptiveSearch: 'Search',
   adaptiveTitle: 'Select',
   moreTags: '+{count} more',
+  selectedCount: '{count, plural, one {# selected} other {# selected}}',
   maxSelectedItemsMessage: 'You can select up to {max} items',
   compareError: 'The values do not match',
   ratingLabel: 'Rating',

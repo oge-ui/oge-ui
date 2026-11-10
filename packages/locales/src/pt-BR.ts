@@ -249,6 +249,8 @@ export const ptBR: OgeLocalePack = {
     adaptiveSearch: 'Pesquisar',
     adaptiveTitle: 'Selecionar',
     moreTags: '+{count} mais',
+    selectedCount:
+      '{count, plural, one {# selecionado} other {# selecionados}}',
     maxSelectedItemsMessage: 'Você pode selecionar até {max} itens',
     compareError: 'Os valores não coincidem',
     ratingLabel: 'Avaliação',

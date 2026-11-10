@@ -23,6 +23,7 @@ export const REACT_INPUTS_SELECT_BOX_SECTIONS = [
   'Templates & cancelable events',
   'Tag Box — multi-select',
   'Tag Box — select all, custom tags & limits',
+  'Tag Box — compact display',
   'Tag Box — remote data',
   'Item states & templates',
   'Field chrome',
@@ -322,6 +323,40 @@ const INITIAL_SKILLS: DemoSkill[] = [
 ];
 let nextSkillId = 100;
 
+const COMPACT_CITIES = ['Ankara', 'Berlin', 'Cairo', 'Dublin', 'Lisbon'];
+
+function TagBoxCompactDemo(): ReactNode {
+  const [picked, setPicked] = useState<readonly unknown[]>([
+    'Ankara',
+    'Berlin',
+    'Cairo',
+  ]);
+  return createElement(
+    'div',
+    {
+      className: 'flex flex-wrap items-start gap-6',
+      'data-demo': 'tag-compact',
+    },
+    createElement(OgeTagBox, {
+      className: 'w-56',
+      label: 'Count',
+      items: COMPACT_CITIES,
+      displayMode: 'count',
+      countThreshold: 2,
+      value: picked,
+      onValueChange: setPicked,
+    }),
+    createElement(OgeTagBox, {
+      className: 'w-56',
+      label: 'Text',
+      items: COMPACT_CITIES,
+      displayMode: 'text',
+      value: picked,
+      onValueChange: setPicked,
+    }),
+  );
+}
+
 function TagBoxFeaturesDemo(): ReactNode {
   const [skills, setSkills] = useState(INITIAL_SKILLS);
   const [skillIds, setSkillIds] = useState<readonly unknown[]>([1, 4]);
@@ -580,6 +615,16 @@ function AdaptiveDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      heading="Tag Box — compact display"
+      description="For narrow places — a grid filter cell, a toolbar — <code>displayMode</code> swaps the chips for a single line. <code>'count'</code> keeps chips up to <code>countThreshold</code> and then shows the localized <code>selectedCount</code> message (“3 selected”, an ICU plural in the locale packs); <code>'text'</code> joins the labels and cuts them with an ellipsis. Either way the full list is the line's tooltip, screen readers hear the summary through <code>aria-describedby</code>, and Backspace never removes a value that is not visible."
+      [chips]="['displayMode', 'countThreshold', 'selectedCount']"
+      [code]="demos[12].source"
+      language="tsx"
+    >
+      <app-react-host [render]="tagCompact" />
+    </app-demo-card>
+
+    <app-demo-card
       heading="Tag Box — remote data"
       description="The same <code>dataSource</code> contract on the tag box: 2,000 cities paged 30 at a time, server-side search, and chips that stay resolved while the list shows another search."
       [chips]="['dataSource', 'virtualScroll']"
@@ -634,5 +679,6 @@ export class ReactInputsSelectBoxDemos {
   protected readonly remote = () => createElement(RemoteDemo);
   protected readonly templates = () => createElement(TemplatesDemo);
   protected readonly tagFeatures = () => createElement(TagBoxFeaturesDemo);
+  protected readonly tagCompact = () => createElement(TagBoxCompactDemo);
   protected readonly tagRemote = () => createElement(TagBoxRemoteDemo);
 }

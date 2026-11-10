@@ -74,6 +74,18 @@ export const OGE_MENUBAR_API: ApiSections = {
             'Disables the whole bar: every item goes inert and the bar leaves the Tab sequence.',
         },
         {
+          name: 'submenuClass',
+          type: 'OgeClassValue | undefined',
+          description:
+            'Extra classes on the submenu panel (a design system’s own menu class).',
+        },
+        {
+          name: 'submenuAttributes',
+          type: 'OgeHtmlAttributes | undefined',
+          description:
+            'Extra attributes on the submenu panel (<code>data-testid</code>…). Filtered by <code>ogeSafeAttributes</code>: event handlers, <code>srcdoc</code>, <code>style</code>, <code>class</code>, script URLs and the panel’s own <code>id</code> are dropped.',
+        },
+        {
           name: 'submenuItemTemplate',
           type: 'TemplateRef<OgeMenuItemTemplateContext> | undefined',
           description:

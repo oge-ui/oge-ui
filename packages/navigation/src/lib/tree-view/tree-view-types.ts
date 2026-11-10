@@ -27,6 +27,7 @@ export type {
   OgeTreeSelectionChangedEvent,
   OgeTreeItemSelectionChangedEvent,
   OgeTreeItemClickEvent,
+  OgeTreeItemContextMenuEvent,
   OgeTreeChildrenLoadedEvent,
   OgeTreeChildrenFailedEvent,
   OgeTreeSelectAllChangedEvent,

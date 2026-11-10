@@ -72,3 +72,31 @@ test.describe('select box page', () => {
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });
+
+for (const layer of [
+  { name: 'Angular', query: '' },
+  { name: 'React', query: '?framework=react' },
+] as const) {
+  test(`tag box compact display (${layer.name}): count and text summaries`, async ({
+    page,
+  }) => {
+    await page.goto(`/components/inputs/select-box${layer.query}`);
+    const demo = page.locator('[data-demo="tag-compact"]');
+    const [count, text] = [
+      demo.locator('.oge-tag-summary').nth(0),
+      demo.locator('.oge-tag-summary').nth(1),
+    ];
+    await expect(count).toHaveText('3 selected');
+    await expect(count).toHaveAttribute('title', 'Ankara, Berlin, Cairo');
+    await expect(text).toHaveText('Ankara, Berlin, Cairo');
+    const combo = demo.getByRole('combobox', { name: 'Count' });
+    const id = await count.getAttribute('id');
+    await expect(combo).toHaveAttribute(
+      'aria-describedby',
+      new RegExp(`(^| )${id}( |$)`),
+    );
+    // the field keeps its one-line height
+    const height = (await combo.boundingBox())?.height ?? 0;
+    expect(height).toBeLessThan(40);
+  });
+}

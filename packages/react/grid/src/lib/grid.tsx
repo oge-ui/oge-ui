@@ -41,6 +41,7 @@ import {
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
+  ogeContextMenuSourceOf,
   isOgeContextMenuKey,
   ogeContextMenuKeyTarget,
   dateRangeFilterExpr,
@@ -3362,7 +3363,13 @@ function OgeGridInner<T extends object>(
     event: React.MouseEvent,
   ): void {
     if (contextMenuEcho.current.swallow(event)) return;
-    openRowContextMenu(node, event.clientX, event.clientY, event, 'pointer');
+    openRowContextMenu(
+      node,
+      event.clientX,
+      event.clientY,
+      event,
+      ogeContextMenuSourceOf(event),
+    );
   }
 
   function openRowContextMenu(
@@ -3426,7 +3433,7 @@ function OgeGridInner<T extends object>(
       event.clientX,
       event.clientY,
       event,
-      'pointer',
+      ogeContextMenuSourceOf(event),
     );
   }
 

@@ -25,7 +25,11 @@ import { ogeExitGhost } from '../motion/motion';
 import { OGE_SHEET_SWIPE_DISMISS } from './adaptive';
 import { getTabbableElements, trapTabKey } from './focus-trap';
 import { inertModalBackground, isModalFocusOrphaned } from './modal-core';
-import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
+import {
+  claimOverlayEscape,
+  pushOverlay,
+  removeOverlay,
+} from './overlay-stack';
 import { lockBodyScroll, unlockBodyScroll } from './scroll-lock';
 
 /** One action of the sheet. */
@@ -274,7 +278,7 @@ export class OgeActionSheetCore {
   }
 
   private readonly onArmedKeyDown = (event: KeyboardEvent): void => {
-    if (event.key !== 'Escape' || !isTopOverlay(this)) return;
+    if (event.key !== 'Escape' || !claimOverlayEscape(event, this)) return;
     event.preventDefault();
     event.stopPropagation();
     this.options.onDismiss('escape');
@@ -293,7 +297,7 @@ export class OgeActionSheetCore {
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (!this.active) return;
     if (event.key === 'Escape') {
-      if (!isTopOverlay(this)) return;
+      if (!claimOverlayEscape(event, this)) return;
       event.preventDefault();
       event.stopPropagation();
       this.options.onDismiss('escape');

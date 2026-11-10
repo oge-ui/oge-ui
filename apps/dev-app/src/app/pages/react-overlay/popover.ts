@@ -5,6 +5,7 @@ import {
 } from '@angular/core';
 import { createElement, useRef, useState, type ReactNode } from 'react';
 import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
 import {
   OgePopover,
   type OgePopoverClosingEvent,
@@ -25,6 +26,7 @@ export const REACT_OVERLAY_POPOVER_SECTIONS = [
   'Placement & arrow',
   'Modal vs non-modal',
   'Events & imperative API',
+  'Shared popover & editors inside',
 ] as const;
 
 const ROW = 'flex flex-wrap items-center gap-3';
@@ -213,6 +215,62 @@ function ModalDemo(): ReactNode {
   );
 }
 
+const SHARED_COLUMNS = ['Name', 'City', 'Status'];
+const SHARED_MODES = ['All', 'Only blanks', 'Only non-blanks'];
+
+function SharedDemo(): ReactNode {
+  const menu = useRef<OgePopoverHandle>(null);
+  const [active, setActive] = useState('Name');
+  const [mode, setMode] = useState<unknown>('All');
+  return createElement(
+    'div',
+    { className: ROW, 'data-testid': 'popover-shared' },
+    ...SHARED_COLUMNS.map((column) =>
+      createElement(OgeButton, {
+        key: column,
+        text: column,
+        stylingMode: 'outlined',
+        onClick: (event: MouseEvent | KeyboardEvent) => {
+          setActive(column);
+          menu.current?.show(event);
+        },
+      }),
+    ),
+    createElement(OgePopover, {
+      key: 'popover',
+      ref: menu,
+      title: `${active} filter`,
+      padding: 'sm',
+      width: 260,
+      children: ({ close }: OgePopoverSlotContext) =>
+        createElement(
+          'div',
+          null,
+          createElement(OgeSelectBox, {
+            label: 'Show',
+            items: SHARED_MODES,
+            value: mode,
+            onValueChange: setMode,
+          }),
+          createElement(
+            'div',
+            { className: 'mt-3 flex justify-end' },
+            createElement(OgeButton, { text: 'Apply', onClick: close }),
+          ),
+        ),
+    }),
+    createElement(
+      'span',
+      {
+        key: 'state',
+        className: 'text-sm opacity-70',
+        'data-testid': 'popover-shared-state',
+      },
+      `${active}: ${String(mode)}`,
+    ),
+  );
+}
+
 function EventsDemo(): ReactNode {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -279,6 +337,7 @@ function EventsDemo(): ReactNode {
   styleUrls: [
     '../../../../../../packages/react/overlay/src/styles.scss',
     '../../../../../../packages/react/buttons/src/styles.scss',
+    '../../../../../../packages/react/inputs/src/styles.scss',
   ],
   template: `
     <app-demo-card
@@ -335,6 +394,16 @@ function EventsDemo(): ReactNode {
     >
       <app-react-host [render]="events" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['show(event)', 'toggle(event)', 'closeOnFocusOut', 'padding']"
+      heading="Shared popover & editors inside"
+      description="One popover can serve many triggers: the handle's <code>show(event)</code> anchors it to the event's <code>currentTarget</code> (the header cell, not the icon inside it) and <code>toggle(event)</code> closes it on the same target — on another target an open popover moves instead of closing, and focus returns to the target it was shown for. Its children render only while it is open, so heavy content costs nothing closed. Editors inside work: a select box popup opened in the panel counts as inside, Escape closes it first, and <code>closeOnFocusOut</code> can be turned off for editors whose popups take focus elsewhere. <code>padding</code> picks <code>'none'</code>, <code>'sm'</code> or <code>'md'</code>."
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="shared" />
+    </app-demo-card>
   `,
 })
 export class ReactOverlayPopoverDemos {
@@ -344,4 +413,5 @@ export class ReactOverlayPopoverDemos {
   protected readonly placement = () => createElement(PlacementDemo);
   protected readonly modal = () => createElement(ModalDemo);
   protected readonly events = () => createElement(EventsDemo);
+  protected readonly shared = () => createElement(SharedDemo);
 }

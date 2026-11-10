@@ -1296,7 +1296,7 @@ export const OGE_REACT_TREE_SELECT_API: ApiSections = {
           type: "'text' | 'count'",
           default: "'text'",
           description:
-            'Closed-field rendering for a multiple selection: the joined labels, or just how many are picked.',
+            'Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. The count is <code>messages.selectedCount</code> (“2 selected”), localized and ICU-plural capable.',
         },
         {
           name: 'showSelectionAs',
@@ -1586,6 +1586,20 @@ export const OGE_REACT_TAG_BOX_API: ApiSections = {
           type: 'number',
           description:
             'Caps the rendered chips; the rest collapse into a <code>+N more</code> chip (<code>messages.moreTags</code>).',
+        },
+        {
+          name: 'displayMode',
+          type: "'chips' | 'text' | 'count'",
+          default: "'chips'",
+          description:
+            "Closed-field rendering of the selection: <code>'chips'</code>, <code>'text'</code> (one comma-separated line, cut with an ellipsis; the full list is the <code>title</code>) or <code>'count'</code> (chips up to <code>countThreshold</code>, then <code>messages.selectedCount</code>, e.g. “3 selected”) — for narrow places such as a filter cell. A text or count summary is added to the field's <code>aria-describedby</code>, and Backspace only removes visible chips.",
+        },
+        {
+          name: 'countThreshold',
+          type: 'number',
+          default: '1',
+          description:
+            "In <code>'count'</code> mode, how many values still show as chips before the count replaces them.",
         },
         {
           name: 'opened / defaultOpened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick',

@@ -26,6 +26,7 @@ import {
   ogeCanSelectMore,
   ogeChipOverflow,
   ogeSelectAllState,
+  ogeTagBoxSummary,
   ogeToggleAllValues,
   type OgeDropDownCloseReason,
   type OgeDropDownClosingEvent,
@@ -33,6 +34,7 @@ import {
   type OgeListDataSource,
   type OgeListPageLoadedEvent,
   type OgeSelectAllState,
+  type OgeTagBoxDisplayMode,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -119,8 +121,25 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
   template: `
     <oge-field-chrome>
       <ng-content select="[ogeInputPrefix]" ngProjectAs="[ogeInputPrefix]" />
-      <div class="oge-tag-strip">
-        @for (chip of visibleChips(); track $index) {
+      <div
+        class="oge-tag-strip"
+        [class.oge-tag-strip-summary]="
+          summary() === 'text' || summary() === 'count'
+        "
+      >
+        @if (summary() === 'text' || summary() === 'count') {
+          <span
+            class="oge-tag-summary"
+            [class.oge-tag-summary-count]="summary() === 'count'"
+            [id]="summaryId"
+            [attr.title]="summaryTitle()"
+            >{{ summaryText() }}</span
+          >
+        }
+        @for (
+          chip of summary() === 'chips' ? visibleChips() : [];
+          track $index
+        ) {
           <span class="oge-tag">
             @if (tagTemplate(); as tagTpl) {
               <ng-container
@@ -162,7 +181,7 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
             </button>
           </span>
         }
-        @if (overflowCount() > 0) {
+        @if (summary() === 'chips' && overflowCount() > 0) {
           <span class="oge-tag oge-tag-more">{{ moreText() }}</span>
         }
         <input
@@ -192,7 +211,7 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
           [attr.aria-labelledby]="
             labelMode() !== 'hidden' && label() ? labelId : null
           "
-          [attr.aria-describedby]="describedBy()"
+          [attr.aria-describedby]="tagDescribedBy()"
           [attr.aria-invalid]="showError() ? 'true' : null"
           [attr.aria-required]="required() ? 'true' : null"
           (input)="onNativeInput($event)"
@@ -552,6 +571,16 @@ export class OgeTagBox<TItem = unknown>
   /** Caps the rendered chips; the rest collapse into a `+N more` chip. */
   readonly maxDisplayedTags = input<number | undefined>(undefined);
   /**
+   * How the closed field shows the selection: `'chips'` (default), `'text'`
+   * (one comma-separated line, cut with an ellipsis) or `'count'` (chips up to
+   * `countThreshold`, then the localized `selectedCount` text, e.g. "3
+   * selected") — for narrow places such as a filter cell. The summary is
+   * read by screen readers through `aria-describedby`.
+   */
+  readonly displayMode = input<OgeTagBoxDisplayMode>('chips');
+  /** In `'count'` mode, how many values still show as chips. Default `1`. */
+  readonly countThreshold = input(1);
+  /**
    * Caps how many items can be selected. At the cap, unselected options turn
    * inert and the popup shows `maxSelectedItemsMessage`.
    */
@@ -811,6 +840,47 @@ export class OgeTagBox<TItem = unknown>
   );
 
   protected readonly overflowCount = computed(() => this.overflow().hidden);
+
+  protected readonly summaryId = `${this.inputId}-summary`;
+
+  /** What the closed field renders for the selection (`displayMode`). */
+  protected readonly summary = computed(() =>
+    ogeTagBoxSummary(
+      this.selectedItems().length,
+      this.displayMode(),
+      this.countThreshold(),
+    ),
+  );
+
+  private readonly selectedLabels = computed(() =>
+    this.selectedItems()
+      .map((item) => this.displayOf(item))
+      .join(', '),
+  );
+
+  /** The summary line: the labels (`text`) or the selected count (`count`). */
+  protected readonly summaryText = computed(() =>
+    this.summary() === 'count'
+      ? ogeMoreTagsText(
+          this.msg().selectedCount,
+          this.selectedItems().length,
+          this.config.locale,
+        )
+      : this.selectedLabels(),
+  );
+
+  /** Full list on hover — the summary may be cut or only a count. */
+  protected readonly summaryTitle = computed(() => this.selectedLabels());
+
+  /** `aria-describedby`: the field's hint / error plus a visible summary. */
+  protected readonly tagDescribedBy = computed(() => {
+    const summary =
+      this.summary() === 'text' || this.summary() === 'count'
+        ? this.summaryId
+        : null;
+    const parts = [this.describedBy(), summary].filter(Boolean);
+    return parts.length ? parts.join(' ') : null;
+  });
 
   protected readonly moreText = computed(() =>
     ogeMoreTagsText(
@@ -1258,7 +1328,12 @@ export class OgeTagBox<TItem = unknown>
         return;
       }
       case 'Backspace': {
-        if ((this.list.searchText() ?? '') === '' && this.value().length > 0) {
+        // only a visible chip may be removed from the keyboard
+        if (
+          this.summary() === 'chips' &&
+          (this.list.searchText() ?? '') === '' &&
+          this.value().length > 0
+        ) {
           event.preventDefault();
           this.removeAt(this.value().length - 1, event);
         }

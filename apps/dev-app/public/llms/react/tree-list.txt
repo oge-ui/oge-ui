@@ -204,7 +204,7 @@ _Shared with the grid_
 | Name | Type | Description |
 | --- | --- | --- |
 | `onRowClick / onRowDblClick / onCellClick / onCellDblClick` | `OgeRowClickEvent / OgeCellClickEvent` | Flat payloads with the originating React event. |
-| `onRowContextMenu / onHeaderContextMenu` | `context-menu callbacks` | Mutable `items`; also opened by the Menu key / Shift+F10 on a focused cell or header (`source: 'keyboard'`, anchored at the cell). |
+| `onRowContextMenu / onHeaderContextMenu` | `context-menu callbacks` | Mutable `items`; also opened by the Menu key / Shift+F10 on a focused cell or header (`source: 'keyboard'`, anchored at the cell); a touch long-press reports `source: 'touch'`. |
 | `onSelectionChanged / onFocusedRowChanged` | `diff / focus callbacks` | Same payloads as the grid. |
 | `onEditingStart / onRowInserting / onRowInserted / onRowUpdating / onRowUpdated / onRowRemoving / onRowRemoved / onSavingChanges / onSavedChanges / onEditCanceled` | `editing lifecycle` | Same shared editing pipeline as the grid; `-ing` callbacks are cancelable. |
 | `onExpandedRowKeysChange / onSelectedKeysChange / onFocusedRowKeyChange / onFilterValueChange` | `controlled-value callbacks` | The change halves of the controlled `expandedRowKeys`, `selectedKeys`, `focusedRowKey` and `filterValue` props. |

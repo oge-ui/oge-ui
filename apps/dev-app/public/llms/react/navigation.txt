@@ -207,6 +207,7 @@ _OgeTreeViewHandle (via ref)_
 | `onSelectionChanged` | `(event: OgeTreeSelectionChangedEvent<T>) => void` | Called after the selection committed, with `previousKeys`. |
 | `onItemSelectionChanged` | `(event: OgeTreeItemSelectionChangedEvent<T>) => void` | Called for the single node whose own state flipped. |
 | `onItemClick / onItemDblClick` | `(event: OgeTreeItemClickEvent<T>) => void` | Called when a node row is clicked or double-clicked. |
+| `onItemContextMenu` | `(event: OgeTreeItemContextMenuEvent<T>) => void` | Right-click, touch long-press, or the Menu key / Shift+F10 on the focused item — the grid’s `rowContextMenu` model. Carries `key`, `item`, `clientX/Y` (the pointer, or the item’s start/bottom corner from the keyboard), a mutable `items: OgeMenuItem[]`, `source` (`'pointer'` \| `'touch'` \| `'keyboard'`) and the originating `event`. Push items and the tree opens its own menu there — labelled by the item, focus back on the item when it closes; leave it empty and the browser menu stays. Filler and “load more” rows and a label being edited keep the native menu. |
 | `onChildrenLoaded / onChildrenLoadFailed` | `(event: OgeTreeChildrenLoadedEvent<T>) => void / (event: OgeTreeChildrenFailedEvent<T>) => void` | Called after a lazy `loadChildren` settled; the failure carries the original error. |
 | `onSelectAllChanged` | `(event: OgeTreeSelectAllChangedEvent) => void` | Called when the "select all" row is toggled. |
 | `onItemReordering / onItemReordered` | `(event: OgeTreeReorderingEvent<T>) => void / (event: OgeTreeReorderedEvent<T>) => void` | Cancelable pre-event and result of a move onto this tree, carrying `position: 'inside' \| 'before' \| 'after'`, `sourceTreeId` / `targetTreeId` (different for a drop from another tree of the `dragGroup`) and `trigger: 'pointer' \| 'keyboard' \| 'api'`. The tree does not mutate your data. |
@@ -524,6 +525,8 @@ _Behavior_
 | `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the whole bar collapses into a hamburger button opening the full tree as one nested menu. Measured against the menubar's own box, never the window. |
 | `overflowMode` | `'hamburger' \| 'more' \| 'none'` | `'hamburger'` | What happens when the top-level items stop fitting. `'hamburger'` — the `compactBelow` collapse, unchanged; `'more'` — only the items that do not fit move into a trailing _More_ item (label `messages.more`) whose submenu holds them, own submenus included; the last `'auto'` item yields first (see the item's `overflow`), More joins the roving tabindex and reads as current when the `activeKey` item moved into it, and item-click paths stay the items' real paths. Horizontal bars only; `compactBelow` still applies below it. `'none'` — nothing collapses, `compactBelow` included. |
 | `disabled` | `boolean` | `false` | Disables the whole bar: every item goes inert and the bar leaves the Tab sequence. |
+| `submenuClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the submenu panel (a design system’s own menu class). |
+| `submenuAttributes` | `OgeHtmlAttributes \| undefined` | `—` | Extra attributes on the submenu panel (`data-testid`…). Filtered by `ogeSafeAttributes`: event handlers, `srcdoc`, `style`, `class`, script URLs and the panel’s own `id` are dropped. |
 | `renderSubmenuItem` | `(item: OgeMenuItem, index: number) => ReactNode` | `—` | Custom rendering for submenu rows at **every depth** — the shared menu-list renderer, the React face of `[submenuItemTemplate]`. Top-level bar items use `renderItem` instead. |
 | `renderItem` | `(item: OgeMenubarItemData, index: number) => ReactNode` | `—` | Replaces the interior of the **top-level** bar items — the React face of `[ogeMenubarItemTemplate]` (documented in the Angular block&rsquo;s types table). The caret, roles and roving tabindex stay with the component. |
 
@@ -1737,6 +1740,48 @@ export function TreeViewRenderItemDemo() {
       />
       {/* the render prop renders inside role="treeitem", so it must not contain
           focusable controls — that would be a nested-interactive violation */}
+    </>
+  );
+}
+```
+
+### Item context menu
+
+```ts
+'use client';
+
+import { OgeTreeView } from '@oge-ui/react-navigation';
+import type { OgeTreeItemContextMenuEvent } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const FOLDERS: Folder[] = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+// fill items to open the tree's menu; leave it empty for the native one
+function menuFor(e: OgeTreeItemContextMenuEvent<Folder>): void {
+  e.items.push(
+    { text: 'Rename', action: () => console.log('rename', e.item.name) },
+    { text: 'Duplicate', action: () => console.log('duplicate', e.key) },
+    { separator: true, text: '' },
+    { text: 'Delete', severity: 'danger', disabled: e.item.parentId === null },
+  );
+}
+
+export function TreeContextMenu() {
+  return (
+    <>
+      {/* right-click, Menu key / Shift+F10, or a touch long-press */}
+      <OgeTreeView items={FOLDERS} displayExpr="name" rootValue={null}
+        onItemContextMenu={menuFor} />
     </>
   );
 }

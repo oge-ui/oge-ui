@@ -174,11 +174,13 @@ export interface OgeFocusedCellChangedEvent<T = unknown> {
 }
 
 /**
- * How a context menu was asked for: a right-click / long-press (`'pointer'`) or
- * the keyboard — the Menu key or Shift+F10 on a focused cell (`'keyboard'`,
- * positioned at the cell rather than at a pointer).
+ * How a context menu was asked for: a mouse or pen right-click (`'pointer'`),
+ * a touch long-press (`'touch'` — where the browser reports one, so a menu
+ * can grow larger targets) or the keyboard — the Menu key or Shift+F10 on a
+ * focused cell or item (`'keyboard'`, positioned at it rather than at a
+ * pointer).
  */
-export type OgeContextMenuSource = 'pointer' | 'keyboard';
+export type OgeContextMenuSource = 'pointer' | 'touch' | 'keyboard';
 
 /** Fires after the focused row changed. */
 export interface OgeFocusedRowChangedEvent<T = unknown> {

@@ -468,4 +468,24 @@ const cities = new CustomDataSource<City>({
 />`,
     }),
   },
+  {
+    title: 'Tag Box — compact display',
+    description:
+      "For narrow places, displayMode swaps the chips for one line: 'count' keeps chips up to countThreshold, then shows the localized selectedCount message; 'text' joins the labels with an ellipsis.",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeTagBox'] },
+      name: 'CompactTagBoxes',
+      body: `const cities = ['Ankara', 'Berlin', 'Cairo', 'Dublin', 'Lisbon'];
+const [picked, setPicked] = useState<readonly unknown[]>(['Ankara', 'Berlin', 'Cairo']);`,
+      jsx: `<>
+  {/* chips up to countThreshold, then "3 selected" */}
+  <OgeTagBox label="Count" items={cities} displayMode="count" countThreshold={2}
+    value={picked} onValueChange={setPicked} />
+  {/* one comma-separated line, cut with an ellipsis */}
+  <OgeTagBox label="Text" items={cities} displayMode="text"
+    value={picked} onValueChange={setPicked} />
+</>`,
+    }),
+  },
 ];

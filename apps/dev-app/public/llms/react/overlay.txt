@@ -194,8 +194,8 @@ _Handle (ref)_
 | `OgeModalRef<R>` | `{ close(result?: R): void; closed: Promise<OgeModalClosedEvent<R>> }` | Handle of an imperatively opened modal; content reads it via `useOgeModalRef()` to close itself with a result. |
 | `useOgeModalData<D>()` | `D` | The `config.data` payload — the counterpart of injecting `OGE_MODAL_DATA`. |
 | `useOgeModalRef<R>()` | `OgeModalRef<R>` | The enclosing modal’s handle — the counterpart of injecting `OgeModalRef`. |
-| `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, any React node replaces it; `width` defaults to 400. |
-| `OgeAlertOptions` | `{ title?; message?; severity?; icon?; okText?; width? }` | Options of `alert()` (no Cancel button; the title defaults to `dialogAlertTitle`). |
+| `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width?; panelClass?; backdropClass?; panelAttributes? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, any React node replaces it; `width` defaults to 400. |
+| `OgeAlertOptions` | `{ title?; message?; severity?; icon?; okText?; width?; panelClass?; backdropClass?; panelAttributes? }` | Options of `alert()` (no Cancel button; the title defaults to `dialogAlertTitle`). Every dialog helper also takes the modal part options `panelClass`, `backdropClass` and `panelAttributes` (filtered; the dialog keeps its own `role`). |
 | `OgePromptOptions` | `OgeConfirmOptions & { defaultValue?; placeholder?; label?; inputType?; required?; validate? }` | Options of `prompt()`: the field’s initial text, placeholder, visible label (without one the field is labelled by the message or title), native type, the required rule (`dialogRequired` message) and the custom validator; the title defaults to `dialogPromptTitle`. |
 | `OgeDialogSeverity` | `'info' \| 'success' \| 'warning' \| 'danger'` | Tone of a helper dialog — picks the built-in icon and its colour. |
 | `OgePromptInputType` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel' \| 'url' \| 'search'` | Native `type` of the prompt field. |
@@ -374,7 +374,7 @@ _Trigger & content slots (render props)_
 | `trigger` | `ReactElement` | The trigger, rendered in place inside a `display: contents` wrapper carrying the listeners — the React face of Angular’s `[ogePopover]`. Its focusable control (the inner `<button>` of an `<OgeButton>`) gets the trigger ARIA: `aria-haspopup="dialog"` for click / manual, `aria-expanded`, `aria-controls` while open. |
 | `renderTitle` | `(context: OgePopoverSlotContext) => ReactNode` | Rich title, replacing the plain `title` text (still labels the dialog). |
 | `renderFooter` | `(context: OgePopoverSlotContext) => ReactNode` | Footer (actions) bar; `close` closes the popover with reason `closeButton`. |
-| `children` | `ReactNode \| ((context: OgePopoverSlotContext) => ReactNode)` | Body content, or a render function receiving the slot context. |
+| `children` | `ReactNode \| ((context: OgePopoverSlotContext) => ReactNode)` | Body content, or a render function receiving the slot context. Rendered only while the popover is open. |
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -395,6 +395,8 @@ _Trigger & content slots (render props)_
 | `restoreFocus` | `boolean` | `true` | Returns focus to the trigger when a close would lose it (never after an outside click or a focus move). |
 | `closeOnEscape` | `boolean` | `true` | Escape closes it — through the shared overlay stack, so a select box open inside closes first. |
 | `closeOnOutsideClick` | `boolean` | `true` | A pointer-down outside trigger and panel closes it. |
+| `closeOnFocusOut` | `boolean` | `true` | Focus moving outside trigger and panel closes a non-modal popover. Turn it off when the panel hosts editors whose popups take focus elsewhere. |
+| `padding` | `'none' \| 'sm' \| 'md'` | `'md'` | Body padding preset: `'none'` (flush — lists, menus, grids), `'sm'` or `'md'`. Sets `--oge-popover-body-padding` on the panel. |
 | `disabled` | `boolean` | `false` | Prevents opening; closes an open popover. |
 | `anchor` | `HTMLElement \| RefObject<HTMLElement \| null> \| null` | `—` | Element (or ref) to anchor to when there is no `trigger` — a popover driven only from code. |
 | `messages` | `Partial<OgeOverlayMessages> \| undefined` | `—` | Per-instance message overrides — `popoverClose` labels the ✕. |
@@ -410,7 +412,8 @@ _Handle (ref)_
 | --- | --- | --- |
 | `open(): void` | `void` | Opens it (reason `api`; runs `onOpening`). |
 | `close(): void` | `void` | Closes it (reason `api`; runs `onClosing`). |
-| `toggle(): void` | `void` | Opens a closed popover, closes an open one. |
+| `toggle(target?): void` | `void` | Opens a closed popover, closes an open one. With a `target` (a React or DOM event, or an element — for a DOM event, such as the one `<OgeButton onClick>` passes, the closest interactive element around its target) the panel anchors to it; an open popover given a different target moves there instead of closing. |
+| `show(target): void` | `void` | Opens the popover anchored to `target` (a React or DOM event, or an element — for a DOM event, such as the one `<OgeButton onClick>` passes, the closest interactive element around its target); already open, it moves there. Focus returns to that element on close — one popover serves many triggers (column headers, row actions). |
 
 #### Events
 
@@ -772,7 +775,9 @@ _Escape stack_
 | --- | --- | --- |
 | `pushOverlay(surface: object): void` | `void` | Registers a surface as the new topmost overlay. No-op if it is already in the stack. |
 | `removeOverlay(surface: object): void` | `void` | Removes a surface from the stack; tolerates surfaces that were never pushed. |
-| `isTopOverlay(surface: object): boolean` | `boolean` | True only for the topmost surface. Gate your Escape handler on this and a popup opened inside a modal or a drawer closes before its host does. |
+| `isTopOverlay(surface: object): boolean` | `boolean` | True only for the topmost surface. For Escape handling use `claimOverlayEscape` instead: it also makes sure one key press closes one layer. |
+| `claimOverlayEscape(event: Event, surface: object): boolean` | `boolean` | Claims an Escape key event for `surface`: true only when it is the topmost overlay and no surface acted on this event yet. Gate your own overlay’s Escape handler on it (after `pushOverlay`): every listener on `document` runs regardless of `stopPropagation()`, so with `isTopOverlay` alone the layer below the one that just closed would close in the same key press. Every OGE modal, drawer, popup, popover, menu and action sheet uses it, so app layers and OGE layers close one per Escape, top first. |
+| `isOverlayEscapeClaimed(event: Event): boolean` | `boolean` | Whether a surface already acted on this Escape event — for handlers outside the stack (a page-level shortcut) that must ignore an Escape an overlay consumed. |
 
 _Focus trap_
 
@@ -1542,6 +1547,43 @@ export function PopoverEventsDemo() {
       </OgePopover>
       {/* the controlled state opens it through the same pipeline */}
       <OgeButton text="Open from code" stylingMode="outlined" onClick={() => setOpen(true)} />
+    </>
+  );
+}
+```
+
+### Shared popover & editors inside
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+import { OgePopover } from '@oge-ui/react-overlay';
+import type { OgePopoverHandle } from '@oge-ui/react-overlay';
+
+export function SharedPopover() {
+  const menu = useRef<OgePopoverHandle>(null);
+  const [active, setActive] = useState('Name');
+  const [mode, setMode] = useState<unknown>('All');
+  const columns = ['Name', 'City', 'Status'];
+  return (
+    <>
+      {/* one popover, many column headers */}
+      {columns.map((column) => (
+        <OgeButton key={column} text={column} stylingMode="outlined"
+          onClick={(e) => { setActive(column); menu.current?.show(e); }} />
+      ))}
+      <OgePopover ref={menu} title={`${active} filter`} padding="sm">
+        {({ close }) => (
+          <>
+            <OgeSelectBox label="Show" items={['All', 'Only blanks', 'Only non-blanks']}
+              value={mode} onValueChange={setMode} />
+            <OgeButton text="Apply" onClick={close} />
+          </>
+        )}
+      </OgePopover>
     </>
   );
 }

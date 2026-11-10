@@ -396,7 +396,11 @@ export class OgeTreeSelect<TItem extends object = Record<string, unknown>>
     const keys = this.selectedKeys();
     if (keys.length === 0) return '';
     if (this.displayMode() === 'count' && keys.length > 1) {
-      return `${keys.length}`;
+      return ogeMoreTagsText(
+        this.msg().selectedCount,
+        keys.length,
+        this.config.locale,
+      );
     }
     const labels = this.labelByKey();
     return keys.map((key) => labels.get(key) ?? String(key)).join(', ');

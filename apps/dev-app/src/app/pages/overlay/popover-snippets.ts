@@ -121,3 +121,28 @@ protected log(message: string): void {
   console.log(message);
 }`,
 });
+
+export const POPOVER_SHARED_SNIPPET = demoSource({
+  use: {
+    '@oge-ui/buttons': ['OgeButton'],
+    '@oge-ui/inputs': ['OgeSelectBox'],
+    '@oge-ui/overlay': ['OgePopover', 'OgePopoverContent'],
+  },
+  template: `<!-- one popover, many column headers -->
+@for (column of columns; track column) {
+  <oge-button [text]="column" stylingMode="outlined"
+              (clicked)="active.set(column); menu.show($event.event)" />
+}
+
+<oge-popover #menu [title]="active() + ' filter'" padding="sm">
+  <!-- created only while open; destroyed on close -->
+  <ng-template ogePopoverContent let-close>
+    <oge-select-box label="Show" [items]="modes" [(value)]="mode" />
+    <oge-button text="Apply" (clicked)="close()" />
+  </ng-template>
+</oge-popover>`,
+  body: `protected readonly columns = ['Name', 'City', 'Status'];
+protected readonly modes = ['All', 'Only blanks', 'Only non-blanks'];
+protected readonly active = signal('Name');
+protected readonly mode = signal<unknown>('All');`,
+});

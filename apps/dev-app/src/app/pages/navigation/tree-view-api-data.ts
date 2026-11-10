@@ -461,6 +461,12 @@ export const OGE_TREE_VIEW_API: ApiSections = {
           description: 'Emitted when a node row is clicked or double-clicked.',
         },
         {
+          name: 'itemContextMenu',
+          type: 'OgeTreeItemContextMenuEvent&lt;T&gt;',
+          description:
+            "Right-click, touch long-press, or the Menu key / Shift+F10 on the focused item — the grid’s <code>rowContextMenu</code> model. Carries <code>key</code>, <code>item</code>, <code>clientX/Y</code> (the pointer, or the item’s start/bottom corner from the keyboard), a mutable <code>items: OgeMenuItem[]</code>, <code>source</code> (<code>'pointer'</code> | <code>'touch'</code> | <code>'keyboard'</code>) and the originating <code>event</code>. Push items and the tree opens its own menu there — labelled by the item, focus back on the item when it closes; leave it empty and the browser menu stays. Filler and “load more” rows and a label being edited keep the native menu.",
+        },
+        {
           name: 'childrenLoaded / childrenLoadFailed',
           type: 'OgeTreeChildrenLoadedEvent&lt;T&gt; / OgeTreeChildrenFailedEvent&lt;T&gt;',
           description:

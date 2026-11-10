@@ -982,15 +982,15 @@ export const OGE_MODAL_SERVICE_API: ApiSections = {
         },
         {
           name: 'OgeConfirmOptions',
-          type: '{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width? }',
+          type: '{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width?; panelClass?; backdropClass?; panelAttributes? }',
           description:
             'Options of <code>confirm()</code>. <code>title</code> defaults to the localized <code>dialogConfirmTitle</code>, <code>okText</code> / <code>cancelText</code> to <code>dialogOk</code> / <code>dialogCancel</code>; <code>icon</code>: <code>false</code> hides the severity icon, a <code>TemplateRef</code> replaces it; <code>width</code> defaults to 400.',
         },
         {
           name: 'OgeAlertOptions',
-          type: '{ title?; message?; severity?; icon?; okText?; width? }',
+          type: '{ title?; message?; severity?; icon?; okText?; width?; panelClass?; backdropClass?; panelAttributes? }',
           description:
-            'Options of <code>alert()</code> (no Cancel button; the title defaults to <code>dialogAlertTitle</code>).',
+            'Options of <code>alert()</code> (no Cancel button; the title defaults to <code>dialogAlertTitle</code>). Every dialog helper also takes the modal part options <code>panelClass</code>, <code>backdropClass</code> and <code>panelAttributes</code> (filtered; the dialog keeps its own <code>role</code>).',
         },
         {
           name: 'OgePromptOptions',
@@ -1535,6 +1535,12 @@ export const OGE_POPOVER_API: ApiSections = {
           description:
             'Footer (actions) bar; <code>$implicit</code> closes the popover with reason <code>closeButton</code> — <code>&lt;div *ogePopoverFooter="let close"&gt;</code>.',
         },
+        {
+          name: 'ogePopoverContent',
+          type: 'OgePopoverContent',
+          description:
+            'Lazy body: <code>&lt;ng-template ogePopoverContent let-close&gt;</code> is instantiated only while the popover is open and destroyed on close. Projected <code>&lt;ng-content&gt;</code> children are created with the host even while closed, so put heavy content here.',
+        },
       ],
     },
     {
@@ -1645,6 +1651,20 @@ export const OGE_POPOVER_API: ApiSections = {
           description: 'A pointer-down outside trigger and panel closes it.',
         },
         {
+          name: 'closeOnFocusOut',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Focus moving outside trigger and panel closes a non-modal popover. Turn it off when the panel hosts editors whose popups take focus elsewhere.',
+        },
+        {
+          name: 'padding',
+          type: "'none' | 'sm' | 'md'",
+          default: "'md'",
+          description:
+            "Body padding preset: <code>'none'</code> (flush — lists, menus, grids), <code>'sm'</code> or <code>'md'</code>. Sets <code>--oge-popover-body-padding</code> on the panel.",
+        },
+        {
           name: 'disabled',
           type: 'boolean',
           default: 'false',
@@ -1695,9 +1715,16 @@ export const OGE_POPOVER_API: ApiSections = {
             'Closes it (reason <code>api</code>; runs <code>closing</code>).',
         },
         {
-          name: 'toggle(): void',
+          name: 'toggle(target?): void',
           type: 'void',
-          description: 'Opens a closed popover, closes an open one.',
+          description:
+            'Opens a closed popover, closes an open one. With a <code>target</code> (an event — its <code>currentTarget</code> — or an element) the panel anchors to it; an open popover given a different target moves there instead of closing.',
+        },
+        {
+          name: 'show(target): void',
+          type: 'void',
+          description:
+            'Opens the popover anchored to <code>target</code> (an event — its <code>currentTarget</code> — or an element); already open, it moves there. Focus returns to that element on close — one popover serves many triggers (column headers, row actions).',
         },
       ],
     },
@@ -1807,7 +1834,19 @@ export const OVERLAY_PRIMITIVES_API: ApiSections = {
           name: 'isTopOverlay(surface: object): boolean',
           type: 'boolean',
           description:
-            'True only for the topmost surface. Gate your Escape handler on this and a popup opened inside a modal or a drawer closes before its host does.',
+            'True only for the topmost surface. For Escape handling use <code>claimOverlayEscape</code> instead: it also makes sure one key press closes one layer.',
+        },
+        {
+          name: 'claimOverlayEscape(event: Event, surface: object): boolean',
+          type: 'boolean',
+          description:
+            'Claims an Escape key event for <code>surface</code>: true only when it is the topmost overlay and no surface acted on this event yet. Gate your own overlay’s Escape handler on it (after <code>pushOverlay</code>): every listener on <code>document</code> runs regardless of <code>stopPropagation()</code>, so with <code>isTopOverlay</code> alone the layer below the one that just closed would close in the same key press. Every OGE modal, drawer, popup, popover, menu and action sheet uses it, so app layers and OGE layers close one per Escape, top first.',
+        },
+        {
+          name: 'isOverlayEscapeClaimed(event: Event): boolean',
+          type: 'boolean',
+          description:
+            'Whether a surface already acted on this Escape event — for handlers outside the stack (a page-level shortcut) that must ignore an Escape an overlay consumed.',
         },
       ],
     },

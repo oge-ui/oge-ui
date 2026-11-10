@@ -119,6 +119,12 @@ export interface OgePopoverCoreOptions {
   closeOnEscape?: () => boolean;
   /** Whether a pointer-down outside trigger and panel closes it. Default `true`. */
   closeOnOutsideClick?: () => boolean;
+  /**
+   * Whether focus moving outside trigger and panel closes a non-modal
+   * popover. Default `true`; turn it off for panels that host editors whose
+   * own popups take focus outside the panel's subtree.
+   */
+  closeOnFocusOut?: () => boolean;
   /** The anchored panel's open state. */
   isOpen: () => boolean;
   /** Opens the anchored panel and the host's open state. */
@@ -428,6 +434,7 @@ export class OgePopoverCore {
   private handleFocusOut(event: FocusEventLike): void {
     if (!this.options.isOpen() || this.showOn() === 'manual') return;
     if (this.options.modal()) return; // the trap keeps focus inside
+    if (this.options.closeOnFocusOut?.() === false) return;
     const next = event.relatedTarget as Node | null;
     // Focus going nowhere (a click on non-focusable content, the window
     // losing focus) is not a decision to leave — outside clicks have their
@@ -569,6 +576,34 @@ export function resolvePopoverInitialFocus(
     if (match) return match;
   }
   return getTabbableElements(panel)[0] ?? panel;
+}
+
+/**
+ * The element a `show(target)` / `toggle(target)` call anchors to: the
+ * element itself, or the event's `currentTarget` (falling back to its
+ * `target`) — so `(click)="pop.show($event)"` anchors to the clicked header
+ * cell, not to the icon inside it.
+ */
+export function ogePopoverTargetElement(
+  target: Event | Element | null | undefined,
+): HTMLElement | null {
+  if (!target) return null;
+  if (typeof Element !== 'undefined' && target instanceof Element) {
+    return target as HTMLElement;
+  }
+  const event = target as Event;
+  const candidate = event.currentTarget ?? event.target;
+  return typeof Element !== 'undefined' && candidate instanceof Element
+    ? (candidate as HTMLElement)
+    : null;
+}
+
+/** Body padding presets of a popover (`padding` input / prop). */
+export type OgePopoverPadding = 'none' | 'sm' | 'md';
+
+/** The class the panel carries for a padding preset (`md` is the default, no class). */
+export function popoverPaddingClass(padding: OgePopoverPadding): string | null {
+  return padding === 'md' ? null : `oge-popover-padding-${padding}`;
 }
 
 /**

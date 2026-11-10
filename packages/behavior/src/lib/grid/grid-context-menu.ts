@@ -20,6 +20,32 @@ export function isOgeContextMenuKey(event: {
   return event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
 }
 
+/**
+ * The source of a pointer-opened context menu: `'touch'` for a long-press
+ * (the `contextmenu` event is a `PointerEvent` with `pointerType: 'touch'`
+ * in Chromium and Firefox), `'pointer'` otherwise. Accepts a DOM event or a
+ * React synthetic one.
+ */
+export function ogeContextMenuSourceOf(event: object): 'pointer' | 'touch' {
+  const native =
+    (event as { nativeEvent?: object }).nativeEvent ?? (event as object);
+  return (native as { pointerType?: string }).pointerType === 'touch'
+    ? 'touch'
+    : 'pointer';
+}
+
+/**
+ * Where a keyboard-opened menu anchors on `element`: its inline-start /
+ * bottom corner (the right edge under `dir="rtl"`).
+ */
+export function ogeContextMenuAnchorPoint(element: Element): {
+  readonly x: number;
+  readonly y: number;
+} {
+  const rect = element.getBoundingClientRect();
+  return { x: ogeIsRtl(element) ? rect.right : rect.left, y: rect.bottom };
+}
+
 /** What a keyboard context-menu request landed on inside a grid-like host. */
 export interface OgeContextMenuKeyTarget {
   /** Where the menu opens: the cell's inline-start/bottom corner. */
@@ -43,9 +69,7 @@ export function ogeContextMenuKeyTarget(
   const header = target.closest('.oge-header-cell');
   const anchor = header ?? target.closest('[role="gridcell"]');
   if (!anchor) return null;
-  const rect = anchor.getBoundingClientRect();
-  const rtl = ogeIsRtl(anchor);
-  const point = { x: rtl ? rect.right : rect.left, y: rect.bottom };
+  const point = ogeContextMenuAnchorPoint(anchor);
   if (header) {
     const id = header.getAttribute('data-colid');
     return id === null

@@ -29,6 +29,7 @@ import {
 } from './modal-core';
 import { ogeOverlayMessage, type OgeOverlayMessages } from './overlay-config';
 import { overlayStackSize } from './overlay-stack';
+import { OGE_TOP_LAYER_CLASS, ogePromoteToTopLayer } from './top-layer';
 import { OGE_EXIT_FADE, ogeExitGhost, type OgeRect } from '../motion/motion';
 import {
   bringOgeWindowToFront,
@@ -484,6 +485,13 @@ export class OgeWindowCore {
 
   private attached = false;
   private unsubscribe: (() => void) | null = null;
+  /**
+   * Top-layer release of the panel. A window under a transformed or filtered
+   * ancestor (which captures `position: fixed`) moves to the top layer on its
+   * first placement, like every other surface; `null` until then.
+   */
+  private releaseTopLayer: (() => void) | null = null;
+  private promoted = false;
   private gesture: OgePointerGestureHandle | null = null;
   private lastPosition: OgeWindowPosition | null | undefined = undefined;
   private placedWith: OgeWindowPlacement | undefined = undefined;
@@ -513,6 +521,9 @@ export class OgeWindowCore {
   detach(): void {
     if (!this.attached) return;
     this.attached = false;
+    this.releaseTopLayer?.();
+    this.releaseTopLayer = null;
+    this.promoted = false;
     this.gesture?.cancel();
     this.gesture = null;
     this.unsubscribe?.();
@@ -533,6 +544,9 @@ export class OgeWindowCore {
     this.layer.set(ogeWindowLayer(this));
     const active = isOgeFrontWindow(this);
     this.active.set(active);
+    // the top layer stacks by promotion order, not z-index: a promoted
+    // window brought to the front is promoted again to move above the rest
+    if (active && !wasActive && this.promoted) this.promote();
     if (active && !wasActive && this.attached) this.options.onActivated?.();
   };
 
@@ -614,6 +628,7 @@ export class OgeWindowCore {
    * `center()` uses).
    */
   place(force?: OgeWindowPlacement): void {
+    if (!this.releaseTopLayer && this.attached) this.promote();
     const props = this.options.props();
     const size = this.measured();
     const previous = this.rect();
@@ -724,6 +739,16 @@ export class OgeWindowCore {
   }
 
   // --- z-order ---------------------------------------------------------------
+
+  private promote(): void {
+    const panel = this.options.panel();
+    if (!panel) return;
+    this.releaseTopLayer?.();
+    this.releaseTopLayer = ogePromoteToTopLayer(panel);
+    this.promoted =
+      panel.hasAttribute('popover') &&
+      panel.classList.contains(OGE_TOP_LAYER_CLASS);
+  }
 
   /** Raises the window above the other windows (focus / press do this too). */
   bringToFront(): void {

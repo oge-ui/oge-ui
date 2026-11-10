@@ -51,6 +51,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
       displayExpr="name"
       [rootValue]="null"
       [selectionMode]="selectionMode()"
+      [displayMode]="displayMode()"
       [showCheckBoxes]="showCheckBoxes()"
       [disabled]="disabled()"
       [readonly]="readonly()"
@@ -66,6 +67,7 @@ class Host {
   readonly select = viewChild.required(OgeTreeSelect<Folder>);
   readonly items = signal<readonly Folder[]>(FOLDERS);
   readonly selectionMode = signal<OgeTreeSelectSelectionMode>('single');
+  readonly displayMode = signal<'text' | 'count'>('text');
   readonly showCheckBoxes = signal<'none' | 'normal' | 'selectAll'>('none');
   readonly disabled = signal(false);
   readonly readonly = signal(false);
@@ -170,6 +172,15 @@ describe('OgeTreeSelect', () => {
     // `selectedKeysMode="leavesOnly"` is the projection that hides that
     expect(host.value()).toEqual([6, 4, 5]);
     expect(input()?.value).toBe('Notes, Photos, Holiday');
+  });
+
+  it('shows the localized selected count in displayMode="count"', async () => {
+    const { input } = await render((h) => {
+      h.selectionMode.set('multiple');
+      h.displayMode.set('count');
+      h.value.set([5, 6]);
+    });
+    expect(input()?.value).toBe('2 selected');
   });
 
   it('carries the tri-state cascade into the committed value', async () => {

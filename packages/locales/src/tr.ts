@@ -241,6 +241,7 @@ export const tr: OgeLocalePack = {
     adaptiveSearch: 'Ara',
     adaptiveTitle: 'Seçin',
     moreTags: '+{count} daha',
+    selectedCount: '{count, plural, one {# seçildi} other {# seçildi}}',
     maxSelectedItemsMessage: 'En fazla {max} öğe seçebilirsiniz',
     compareError: 'Değerler eşleşmiyor',
     ratingLabel: 'Puan',

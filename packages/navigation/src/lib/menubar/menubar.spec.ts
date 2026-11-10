@@ -36,6 +36,8 @@ const MENU: readonly OgeMenubarItemData[] = [
   template: `
     <oge-menubar
       [items]="items()"
+      submenuClass="brand-menu"
+      [submenuAttributes]="{ 'data-testid': 'app-menu', onclick: 'x' }"
       (itemClick)="clicks.push($event)"
       (submenuOpening)="openings.push($event)"
       (submenuOpened)="opened.push($event)"
@@ -98,6 +100,19 @@ describe('OgeMenubar', () => {
       'Edit',
       'Help',
     ]);
+  });
+
+  it('puts submenuClass and the safe submenuAttributes on the panel', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    barItems()[0].dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail: 1 }),
+    );
+    settle();
+    const panel = document.querySelector('.oge-popup') as HTMLElement;
+    expect(panel.classList).toContain('brand-menu');
+    expect(panel.getAttribute('data-testid')).toBe('app-menu');
+    expect(panel.hasAttribute('onclick')).toBe(false);
+    vi.restoreAllMocks();
   });
 
   it('clicking a parent item toggles its submenu', () => {

@@ -249,6 +249,8 @@ export const fr: OgeLocalePack = {
     adaptiveSearch: 'Rechercher',
     adaptiveTitle: 'Sélectionner',
     moreTags: '+{count} de plus',
+    selectedCount:
+      '{count, plural, one {# sélectionné} other {# sélectionnés}}',
     maxSelectedItemsMessage: 'Vous pouvez sélectionner jusqu’à {max} éléments',
     compareError: 'Les valeurs ne correspondent pas',
     ratingLabel: 'Note',

@@ -653,7 +653,7 @@ _Selection_
 | `showCheckBoxes` | `'none' \| 'normal' \| 'selectAll'` | `'none'` | Checkbox column inside the popup. |
 | `selectNodesRecursive` | `boolean` | `true` | Cascades selection down to descendants and up to fully-selected parents. |
 | `selectedKeysMode` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` | `'all'` | Projection applied to the committed keys — `leavesOnly` is usually what you want to store from a cascade. |
-| `displayMode` | `'text' \| 'count'` | `'text'` | Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. |
+| `displayMode` | `'text' \| 'count'` | `'text'` | Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. The count is `messages.selectedCount` (“2 selected”), localized and ICU-plural capable. |
 | `showSelectionAs` | `'text' \| 'chips'` | `'text'` | `'chips'` renders the selected nodes as removable chips inside the field (each ✕ is labelled `removeTagButton` + the node text; Backspace removes the last one); `'text'` keeps the comma list / `displayMode`. |
 | `maxDisplayedTags` | `number \| undefined` | `—` | In chips mode, caps the rendered chips; the rest fold into a `+N more` chip. |
 
@@ -721,6 +721,8 @@ _OgeTagBox_
 | `showSelectionControls` | `boolean` | `true` | Renders checkboxes in front of the options. |
 | `hideSelectedItems` | `boolean` | `false` | Hides already-selected items from the popup list. |
 | `maxDisplayedTags` | `number \| undefined` | `—` | Caps the rendered chips; the rest collapse into a `+N more` chip (`messages.moreTags`). |
+| `displayMode` | `'chips' \| 'text' \| 'count'` | `'chips'` | Closed-field rendering of the selection: `'chips'`, `'text'` (one comma-separated line, cut with an ellipsis; the full list is the `title`) or `'count'` (chips up to `countThreshold`, then `messages.selectedCount`, e.g. “3 selected”) — for narrow places such as a filter cell. A text or count summary is added to the field's `aria-describedby`, and Backspace only removes visible chips. |
+| `countThreshold` | `number` | `1` | In `'count'` mode, how many values still show as chips before the count replaces them. |
 | `opened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick` | `shared with OgeSelectBox` | `—` | Popup configuration and two-way visibility. |
 | `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet (search field when `searchEnabled`, picks keep it open, a Done action closes it) on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
@@ -2709,6 +2711,7 @@ _OgeInputsMessages_
 | `invalidNumberError` | `string` | `'Enter a valid number'` | Number box parse failure (reverts on blur). |
 | `invalidError` | `string` | `'Invalid value'` | Fallback for unknown validation error kinds. |
 | `moreTags` | `string` | `'+{count} more'` | Overflow chip of `maxDisplayedTags` (tag box, tree select chips, multi-column combo box). Rendered by `ogeMoreTagsText` / `ogeFormatMessage`, so it may be an ICU plural (`{count, plural, one {+# weiteres} other {+# weitere}}`). |
+| `selectedCount` | `string` | `'{count, plural, one {# selected} other {# selected}}'` | Closed-field summary of a tag box or tree select in `displayMode: 'count'`; may be an ICU plural over `count`. |
 | `maxSelectedItemsMessage` | `string` | `'You can select up to {max} items'` | Status shown once `maxSelectedItems` is reached. |
 | `compareError` | `string` | `'The values do not match'` | Resolved message for the forms `compare` rule. |
 | `nowButton` | `string` | `'Now'` | Date box footer button of `showNowButton`. |
@@ -5591,6 +5594,32 @@ export class Demo {
   ];
 
   protected readonly planId = signal<unknown>('free');
+}
+```
+
+### Tagbox compact
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTagBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTagBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- chips up to countThreshold, then "3 selected" -->
+    <oge-tag-box label="Cities" [items]="cities" displayMode="count"
+                 [countThreshold]="2" [(value)]="picked" />
+
+    <!-- one comma-separated line, cut with an ellipsis -->
+    <oge-tag-box label="Cities" [items]="cities" displayMode="text"
+                 [(value)]="picked" />
+  `,
+})
+export class Demo {
+  protected readonly cities = ['Ankara', 'Berlin', 'Cairo', 'Dublin', 'Lisbon'];
+  protected readonly picked = signal<readonly unknown[]>(['Ankara', 'Berlin', 'Cairo']);
 }
 ```
 

@@ -54,6 +54,8 @@ import {
   type OgeMenuItem,
   sanitizeUrl,
   ogeIsRtl,
+  type OgeClassValue,
+  type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
 import {
   OgeMenuList,
@@ -118,6 +120,13 @@ export interface OgeMenubarProps {
    * renderer, the counterpart of `[submenuItemTemplate]`.
    */
   renderSubmenuItem?: (item: OgeMenuItem, index: number) => ReactNode;
+  /** Extra classes on the submenu panel (a design system's own menu class). */
+  submenuClass?: OgeClassValue;
+  /**
+   * Extra attributes on the submenu panel (`data-testid`…). Event handlers,
+   * `style`, `class` and unsafe URLs are left out.
+   */
+  submenuAttributes?: OgeHtmlAttributes;
   /** Fires when a leaf item is activated, at any depth. */
   onItemClick?: (event: OgeMenubarItemClickEvent) => void;
   /** Cancelable — set `cancel` to keep the submenu closed. */
@@ -164,6 +173,8 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
       disabled = false,
       renderItem,
       renderSubmenuItem,
+      submenuClass,
+      submenuAttributes,
       className,
       style,
     } = props;
@@ -1121,7 +1132,12 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
           </div>
         )}
         {panelItems.length > 0 && (
-          <OgePopup panel={panel} ref={popupRef}>
+          <OgePopup
+            panel={panel}
+            ref={popupRef}
+            panelClass={submenuClass}
+            panelAttributes={submenuAttributes}
+          >
             <OgeMenuList
               ref={menuListRef}
               items={panelItems}

@@ -30,6 +30,7 @@ import {
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
+  ogeContextMenuSourceOf,
   OgeGridAnnouncements,
   OgeGridColumnLayoutCore,
   OgeGridDataCore,
@@ -2211,7 +2212,13 @@ function OgeTreeListInner<T extends object>(
     event: React.MouseEvent,
   ): void {
     if (contextMenuEcho.current.swallow(event)) return;
-    openRowContextMenu(node, event.clientX, event.clientY, event, 'pointer');
+    openRowContextMenu(
+      node,
+      event.clientX,
+      event.clientY,
+      event,
+      ogeContextMenuSourceOf(event),
+    );
   }
 
   /** The Menu key / Shift+F10 open the row or header menu at the focused cell. */
@@ -2249,7 +2256,7 @@ function OgeTreeListInner<T extends object>(
       event.clientX,
       event.clientY,
       event,
-      'pointer',
+      ogeContextMenuSourceOf(event),
     );
   }
 

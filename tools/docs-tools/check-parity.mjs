@@ -930,6 +930,8 @@ const FAMILIES = [
       },
       angularOnly: {
         ...HARNESS_ANGULAR_ONLY,
+        ogepopovercontent:
+          'Lazy body template: Angular creates projected <ng-content> children with the host, so a template is the only way to defer them. React children (and its render function) already render only while the popover is open.',
         getharness:
           'The CDK `ContentContainerComponentHarness` API: harnesses of the content inside the open modal. React scopes Testing Library queries with `within(modal.element)` instead (see `element`).',
         getharnessornull:

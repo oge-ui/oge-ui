@@ -24,6 +24,8 @@ import {
   ogeCanSelectMore,
   ogeChipOverflow,
   ogeSelectAllState,
+  ogeTagBoxSummary,
+  type OgeTagBoxDisplayMode,
   ogeToggleAllValues,
   type OgeDropDownCloseReason,
   type OgeDropDownClosingEvent,
@@ -145,6 +147,15 @@ export interface OgeTagBoxProps<TItem = unknown>
   showSelectAll?: boolean;
   /** Caps the rendered chips; the rest collapse into a `+N more` chip. */
   maxDisplayedTags?: number;
+  /**
+   * How the closed field shows the selection: `'chips'` (default), `'text'`
+   * (one comma-separated line, cut with an ellipsis) or `'count'` (chips up to
+   * `countThreshold`, then the localized `selectedCount` text). The summary is
+   * read by screen readers through `aria-describedby`.
+   */
+  displayMode?: OgeTagBoxDisplayMode;
+  /** In `'count'` mode, how many values still show as chips. Default `1`. */
+  countThreshold?: number;
   /** Caps how many items can be selected; at the cap the popup says so. */
   maxSelectedItems?: number;
   /** Renders the chevron toggle in the field rail. */
@@ -266,6 +277,8 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
     searchEnabled = false,
     showSelectionControls = true,
     maxDisplayedTags,
+    displayMode = 'chips',
+    countThreshold = 1,
     maxSelectedItems,
     showSelectAll = false,
     acceptCustomValue = false,
@@ -434,6 +447,17 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
     .slice(0, overflow.shown)
     .map((item, valueIndex) => ({ item, valueIndex }));
   const overflowCount = overflow.hidden;
+  const summary = ogeTagBoxSummary(
+    selectedItems.length,
+    displayMode,
+    countThreshold,
+  );
+  const summaryShown = summary === 'text' || summary === 'count';
+  const summaryRef = useRef(summary);
+  summaryRef.current = summary;
+  const selectedLabels = selectedItems
+    .map((item) => list.displayOf(item))
+    .join(', ');
 
   // --- panel -----------------------------------------------------------------
 
@@ -759,7 +783,9 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
         return;
       }
       case 'Backspace': {
+        // only a visible chip may be removed from the keyboard
         if (
+          summaryRef.current === 'chips' &&
           (list.searchText() ?? '') === '' &&
           latest.current.field.value.length > 0
         ) {
@@ -912,6 +938,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
         parts.push(field.ids.errorId);
       } else if (hint) parts.push(field.ids.hintId);
     }
+    if (summaryShown) parts.push(`${field.ids.inputId}-summary`);
     return parts.length ? parts.join(' ') : undefined;
   })();
 
@@ -984,8 +1011,29 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
         prefix={prefix}
         suffix={suffix}
       >
-        <div className="oge-tag-strip">
-          {visibleChips.map((chip) => (
+        <div
+          className={
+            summaryShown
+              ? 'oge-tag-strip oge-tag-strip-summary'
+              : 'oge-tag-strip'
+          }
+        >
+          {summaryShown && (
+            <span
+              className={
+                summary === 'count'
+                  ? 'oge-tag-summary oge-tag-summary-count'
+                  : 'oge-tag-summary'
+              }
+              id={`${field.ids.inputId}-summary`}
+              title={selectedLabels}
+            >
+              {summary === 'count'
+                ? ogeMoreTagsText(field.msg.selectedCount, selectedItems.length)
+                : selectedLabels}
+            </span>
+          )}
+          {(summary === 'chips' ? visibleChips : []).map((chip) => (
             <span key={chip.valueIndex} className="oge-tag">
               {props.renderTag ? (
                 props.renderTag(chip.item, {
@@ -1031,7 +1079,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
               </button>
             </span>
           ))}
-          {overflowCount > 0 && (
+          {summary === 'chips' && overflowCount > 0 && (
             <span className="oge-tag oge-tag-more">
               {ogeMoreTagsText(field.msg.moreTags, overflowCount)}
             </span>

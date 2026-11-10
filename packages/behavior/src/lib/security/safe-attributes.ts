@@ -24,7 +24,7 @@
 import {
   ogeClassList,
   type OgeClassValue,
-} from '../grid/grid-conditional-format';
+} from '../dom/class-value';
 import { sanitizeResourceUrl, sanitizeUrl } from './sanitize-url';
 
 declare const ngDevMode: boolean | undefined;

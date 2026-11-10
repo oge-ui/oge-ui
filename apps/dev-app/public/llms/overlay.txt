@@ -92,7 +92,7 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/overlay`
 
-- values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeWindow`, `applyMenuItemCheck`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
+- values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverContent`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeWindow`, `applyMenuItemCheck`, `claimOverlayEscape`, `getTabbableElements`, `isOverlayEscapeClaimed`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
 - types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
 
 `@oge-ui/overlay/testing`
@@ -200,8 +200,8 @@ _Content slots (structural directives)_
 | `OgeModalOpenConfig<D>` | `object` | The declarative inputs minus slots (`title`, sizing, `placement`, `closeGuard`, …) plus `data?: D`, made available to the content via `OGE_MODAL_DATA`. Part styling: `panelClass`, `backdropClass`, `bodyClass`, `bodyStyle`, `panelAttributes` (as on the modal). |
 | `OgeModalRef<R>` | `{ close(result?: R): void; closed: Promise<OgeModalClosedEvent<R>> }` | Handle of a service-opened modal; content components can inject it to close themselves with a result. |
 | `OGE_MODAL_DATA` | `InjectionToken<unknown>` | The `config.data` payload, injectable in the content component. |
-| `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, a `TemplateRef` replaces it; `width` defaults to 400. |
-| `OgeAlertOptions` | `{ title?; message?; severity?; icon?; okText?; width? }` | Options of `alert()` (no Cancel button; the title defaults to `dialogAlertTitle`). |
+| `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width?; panelClass?; backdropClass?; panelAttributes? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, a `TemplateRef` replaces it; `width` defaults to 400. |
+| `OgeAlertOptions` | `{ title?; message?; severity?; icon?; okText?; width?; panelClass?; backdropClass?; panelAttributes? }` | Options of `alert()` (no Cancel button; the title defaults to `dialogAlertTitle`). Every dialog helper also takes the modal part options `panelClass`, `backdropClass` and `panelAttributes` (filtered; the dialog keeps its own `role`). |
 | `OgePromptOptions` | `OgeConfirmOptions & { defaultValue?; placeholder?; label?; inputType?; required?; validate? }` | Options of `prompt()`: the field’s initial text, placeholder, visible label (without one the field is labelled by the message or title), native type, the required rule (`dialogRequired` message) and the custom validator; the title defaults to `dialogPromptTitle`. |
 | `OgeDialogSeverity` | `'info' \| 'success' \| 'warning' \| 'danger'` | Tone of a helper dialog — picks the built-in icon and its colour. |
 | `OgePromptInputType` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel' \| 'url' \| 'search'` | Native `type` of the prompt field. |
@@ -370,6 +370,7 @@ _Trigger & content slots_
 | `[ogePopover]` | `OgePopoverTrigger — input: OgePopover (required)` | Trigger directive: `<button [ogePopover]="pop">` opens the `<oge-popover #pop>` per its `showOn` and carries the trigger ARIA (`aria-haspopup="dialog"` for click / manual, `aria-expanded`, `aria-controls` while open) on its focusable control — the inner `<button>` of an `oge-button`. Several triggers may share one popover; the panel anchors to the one that opened it. |
 | `*ogePopoverTitle` | `OgePopoverTitle` | Rich title slot, replacing the plain `title` text (still labels the dialog). Context: `OgePopoverSlotContext`. |
 | `*ogePopoverFooter` | `OgePopoverFooter` | Footer (actions) bar; `$implicit` closes the popover with reason `closeButton` — `<div *ogePopoverFooter="let close">`. |
+| `ogePopoverContent` | `OgePopoverContent` | Lazy body: `<ng-template ogePopoverContent let-close>` is instantiated only while the popover is open and destroyed on close. Projected `<ng-content>` children are created with the host even while closed, so put heavy content here. |
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -389,6 +390,8 @@ _Trigger & content slots_
 | `restoreFocus` | `boolean` | `true` | Returns focus to the trigger when a close would lose it (never after an outside click or a focus move). |
 | `closeOnEscape` | `boolean` | `true` | Escape closes it — through the shared overlay stack, so a select box open inside closes first. |
 | `closeOnOutsideClick` | `boolean` | `true` | A pointer-down outside trigger and panel closes it. |
+| `closeOnFocusOut` | `boolean` | `true` | Focus moving outside trigger and panel closes a non-modal popover. Turn it off when the panel hosts editors whose popups take focus elsewhere. |
+| `padding` | `'none' \| 'sm' \| 'md'` | `'md'` | Body padding preset: `'none'` (flush — lists, menus, grids), `'sm'` or `'md'`. Sets `--oge-popover-body-padding` on the panel. |
 | `disabled` | `boolean` | `false` | Prevents opening; closes an open popover. |
 | `anchor` | `HTMLElement \| null` | `null` | Element to anchor to when no trigger opened it (a popover opened from code); falls back to the first `[ogePopover]` trigger. |
 | `messages` | `Partial<OgeOverlayMessages> \| undefined` | `—` | Per-instance message overrides — `popoverClose` labels the ✕. |
@@ -403,7 +406,8 @@ _Template reference (exportAs: 'ogePopover')_
 | --- | --- | --- |
 | `open(): void` | `void` | Opens it (reason `api`; runs `opening`). |
 | `close(): void` | `void` | Closes it (reason `api`; runs `closing`). |
-| `toggle(): void` | `void` | Opens a closed popover, closes an open one. |
+| `toggle(target?): void` | `void` | Opens a closed popover, closes an open one. With a `target` (an event — its `currentTarget` — or an element) the panel anchors to it; an open popover given a different target moves there instead of closing. |
+| `show(target): void` | `void` | Opens the popover anchored to `target` (an event — its `currentTarget` — or an element); already open, it moves there. Focus returns to that element on close — one popover serves many triggers (column headers, row actions). |
 
 #### Events
 
@@ -746,7 +750,9 @@ _Escape stack_
 | --- | --- | --- |
 | `pushOverlay(surface: object): void` | `void` | Registers a surface as the new topmost overlay. No-op if it is already in the stack. |
 | `removeOverlay(surface: object): void` | `void` | Removes a surface from the stack; tolerates surfaces that were never pushed. |
-| `isTopOverlay(surface: object): boolean` | `boolean` | True only for the topmost surface. Gate your Escape handler on this and a popup opened inside a modal or a drawer closes before its host does. |
+| `isTopOverlay(surface: object): boolean` | `boolean` | True only for the topmost surface. For Escape handling use `claimOverlayEscape` instead: it also makes sure one key press closes one layer. |
+| `claimOverlayEscape(event: Event, surface: object): boolean` | `boolean` | Claims an Escape key event for `surface`: true only when it is the topmost overlay and no surface acted on this event yet. Gate your own overlay’s Escape handler on it (after `pushOverlay`): every listener on `document` runs regardless of `stopPropagation()`, so with `isTopOverlay` alone the layer below the one that just closed would close in the same key press. Every OGE modal, drawer, popup, popover, menu and action sheet uses it, so app layers and OGE layers close one per Escape, top first. |
+| `isOverlayEscapeClaimed(event: Event): boolean` | `boolean` | Whether a surface already acted on this Escape event — for handlers outside the stack (a page-level shortcut) that must ignore an Escape an overlay consumed. |
 
 _Focus trap_
 
@@ -1497,6 +1503,42 @@ import { OgePopover, OgePopoverTrigger } from '@oge-ui/overlay';
   `,
 })
 export class Demo {}
+```
+
+### Popover shared
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+import { OgeSelectBox } from '@oge-ui/inputs';
+import { OgePopover, OgePopoverContent } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton, OgeSelectBox, OgePopover, OgePopoverContent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- one popover, many column headers -->
+    @for (column of columns; track column) {
+      <oge-button [text]="column" stylingMode="outlined"
+                  (clicked)="active.set(column); menu.show($event.event)" />
+    }
+
+    <oge-popover #menu [title]="active() + ' filter'" padding="sm">
+      <!-- created only while open; destroyed on close -->
+      <ng-template ogePopoverContent let-close>
+        <oge-select-box label="Show" [items]="modes" [(value)]="mode" />
+        <oge-button text="Apply" (clicked)="close()" />
+      </ng-template>
+    </oge-popover>
+  `,
+})
+export class Demo {
+  protected readonly columns = ['Name', 'City', 'Status'];
+  protected readonly modes = ['All', 'Only blanks', 'Only non-blanks'];
+  protected readonly active = signal('Name');
+  protected readonly mode = signal<unknown>('All');
+}
 ```
 
 ### Popover triggers

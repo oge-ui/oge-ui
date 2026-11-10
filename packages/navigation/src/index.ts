@@ -153,6 +153,7 @@ export type {
   OgeTreeExpandingEvent,
   OgeTreeExpr,
   OgeTreeItemClickEvent,
+  OgeTreeItemContextMenuEvent,
   OgeTreeItemSelectionChangedEvent,
   OgeTreeItemTemplateContext,
   OgeTreeLoadChildren,

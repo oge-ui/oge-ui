@@ -8,6 +8,7 @@ import {
   OgeTreeView,
   type OgeTreeChildPageEvent,
   type OgeTreeEditedEvent,
+  type OgeTreeItemContextMenuEvent,
   type OgeTreeItemRenderContext,
   type OgeTreeReorderedEvent,
   type OgeTreeTransferredEvent,
@@ -31,6 +32,7 @@ export const REACT_NAVIGATION_TREE_VIEW_SECTIONS = [
   'Drag & drop reparenting',
   'Drag between trees',
   'Label editing (F2)',
+  'Item context menu',
   'Load more paging',
   'Custom node template',
 ] as const;
@@ -78,6 +80,48 @@ const NESTED_TREE: NestedFolder[] = [
   },
   { id: 6, name: 'package.json' },
 ];
+
+function ContextMenuDemo(): ReactNode {
+  const [last, setLast] = useState<string | null>(null);
+  const menuFor = (e: OgeTreeItemContextMenuEvent<Folder>): void => {
+    const log = (verb: string) => () =>
+      setLast(`${verb} “${e.item.name}” (${e.source})`);
+    e.items.push(
+      { text: 'Rename', action: log('Rename') },
+      { text: 'Duplicate', action: log('Duplicate') },
+      { separator: true, text: '' },
+      {
+        text: 'Delete',
+        severity: 'danger',
+        disabled: e.item.parentId === null,
+        action: log('Delete'),
+      },
+    );
+  };
+  return createElement(
+    'div',
+    null,
+    createElement(FolderTreeView, {
+      items: FOLDERS,
+      displayExpr: 'name',
+      rootValue: null,
+      defaultExpandedKeys: [1],
+      ariaLabel: 'Folders with a context menu',
+      onItemContextMenu: menuFor,
+      height: '220px',
+    }),
+    last
+      ? createElement(
+          'p',
+          {
+            className: 'mt-2 text-sm opacity-70',
+            'data-testid': 'tree-menu-log',
+          },
+          last,
+        )
+      : null,
+  );
+}
 
 const LAZY_ROOTS: Folder[] = [
   { id: 1, parentId: null, name: 'Server root', hasItems: true },
@@ -138,6 +182,7 @@ function subtreeOf(rows: readonly Folder[], id: number): Folder[] {
 /** Instantiation expressions, so the demos keep their row type end to end. */
 const FolderTree = OgeTreeView<Folder>;
 const NestedTreeView = OgeTreeView<NestedFolder>;
+const FolderTreeView = OgeTreeView<Folder>;
 
 const loadChildren = (parent: Folder): Promise<Folder[]> =>
   new Promise<Folder[]>((resolve) =>
@@ -559,6 +604,16 @@ function PagingDemo(): ReactNode {
     >
       <app-react-host [render]="renderItem" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['onItemContextMenu', 'Shift+F10', 'source']"
+      heading="Item context menu"
+      description="Right-click an item — or press the Menu key / Shift+F10 on the focused one, or long-press it on touch — and <code>onItemContextMenu</code> reports the item with an empty <code>items</code> array: push menu items and the tree opens its own menu at the item, labelled by it, with the focus back on the item when it closes. Leave the array empty for an item and the browser menu stays. <code>source</code> tells pointer, touch and keyboard apart."
+      [code]="demos[11].source"
+      language="tsx"
+    >
+      <app-react-host [render]="contextMenu" />
+    </app-demo-card>
   `,
 })
 export class ReactNavigationTreeViewDemos {
@@ -570,6 +625,7 @@ export class ReactNavigationTreeViewDemos {
   protected readonly between = () => createElement(BetweenDemo);
   protected readonly editing = () => createElement(EditingDemo);
   protected readonly paging = () => createElement(PagingDemo);
+  protected readonly contextMenu = () => createElement(ContextMenuDemo);
 
   protected readonly nested = () =>
     createElement(NestedTreeView, {

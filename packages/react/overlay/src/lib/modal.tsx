@@ -20,7 +20,7 @@ import {
   clampModalResize,
   inertModalBackground,
   isModalFocusOrphaned,
-  isTopOverlay,
+  claimOverlayEscape,
   lockBodyScroll,
   modalCssSize,
   modalPlacementClass,
@@ -334,7 +334,8 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
 
   const onDocumentKeydown = useRef((event: KeyboardEvent): void => {
     if (event.key !== 'Escape') return;
-    if (!isTopOverlay(overlayToken.current)) return;
+    // a modal that ignores Escape still claims it: nothing below may close
+    if (!claimOverlayEscape(event, overlayToken.current)) return;
     if ((latest.current.props.closeOnEscape ?? true) === false) return;
     event.stopPropagation();
     requestClose('escape');

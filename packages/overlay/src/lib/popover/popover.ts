@@ -36,6 +36,8 @@ import {
   type OgePopoverShowOn,
   type OgePopoverTriggerAria,
   type OgePopupPlacement,
+  ogePopoverTargetElement,
+  type OgePopoverPadding,
   OGE_PART_OWNED_ATTRIBUTES,
   ogeApplyAttributes,
   ogeClassNames,
@@ -46,6 +48,7 @@ import {
 import { OGE_OVERLAY_CONFIG } from '../config';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
 import {
+  OgePopoverContent,
   OgePopoverFooter,
   OgePopoverTitle,
   type OgePopoverSlotContext,
@@ -106,6 +109,8 @@ let nextPopoverId = 0;
         [attr.aria-labelledby]="hasTitle() ? titleId : null"
         [attr.aria-label]="hasTitle() ? null : (ariaLabel() ?? null)"
         [class.oge-popover-modal]="modal()"
+        [class.oge-popover-padding-none]="padding() === 'none'"
+        [class.oge-popover-padding-sm]="padding() === 'sm'"
         [class.oge-popover-ready]="panel.position() !== null"
         [attr.data-placement]="panel.position()?.placement ?? null"
         [style.top.px]="panel.position()?.top ?? 0"
@@ -161,7 +166,15 @@ let nextPopoverId = 0;
               }
             </div>
           }
-          <div class="oge-popover-body"><ng-content /></div>
+          <div class="oge-popover-body">
+            @if (contentTemplate(); as c) {
+              <ng-container
+                [ngTemplateOutlet]="c.templateRef"
+                [ngTemplateOutletContext]="slotContext"
+              />
+            }
+            <ng-content />
+          </div>
           @if (footerTemplate(); as f) {
             <div class="oge-popover-footer">
               <ng-container
@@ -230,6 +243,14 @@ export class OgePopover {
   readonly closeOnEscape = input(true);
   /** A pointer-down outside trigger and panel closes it. Default `true`. */
   readonly closeOnOutsideClick = input(true);
+  /**
+   * Focus moving outside trigger and panel closes a non-modal popover.
+   * Default `true`; turn it off when the panel hosts editors whose popups
+   * take focus elsewhere.
+   */
+  readonly closeOnFocusOut = input(true);
+  /** Body padding: `'none'` (flush, for lists and menus), `'sm'` or `'md'` (default). */
+  readonly padding = input<OgePopoverPadding>('md');
   /** Prevents opening; closes an open popover. Default `false`. */
   readonly disabled = input(false);
   /**
@@ -263,6 +284,7 @@ export class OgePopover {
 
   protected readonly titleTemplate = contentChild(OgePopoverTitle);
   protected readonly footerTemplate = contentChild(OgePopoverFooter);
+  protected readonly contentTemplate = contentChild(OgePopoverContent);
   private readonly panelEl = viewChild<ElementRef<HTMLElement>>('panelEl');
 
   protected readonly titleId = `oge-popover-title-${nextPopoverId++}`;
@@ -317,6 +339,7 @@ export class OgePopover {
     restoreFocus: () => this.restoreFocus(),
     closeOnEscape: () => this.closeOnEscape(),
     closeOnOutsideClick: () => this.closeOnOutsideClick(),
+    closeOnFocusOut: () => this.closeOnFocusOut(),
     isOpen: () => this.panel.isOpen(),
     commitOpen: () => {
       this.panel.open();
@@ -402,9 +425,44 @@ export class OgePopover {
     this.core.close('api');
   }
 
-  /** Opens a closed popover, closes an open one. */
-  toggle(): void {
+  /**
+   * Opens a closed popover, closes an open one. With a `target` (an event or
+   * an element) the panel anchors to it; an open popover given a different
+   * target moves there instead of closing — one popover serves many
+   * triggers (column header menus, row actions).
+   */
+  toggle(target?: Event | Element): void {
+    const element = ogePopoverTargetElement(target);
+    if (element && this.panel.isOpen() && element !== this.anchorElement()) {
+      this.reanchor(element);
+      return;
+    }
+    if (element && !this.panel.isOpen()) this.activeTrigger.set(element);
     this.core.toggle();
+  }
+
+  /**
+   * Opens the popover anchored to `target` (an event — its `currentTarget` —
+   * or an element). Already open: moves to the new target. Focus returns to
+   * that element on close.
+   */
+  show(target: Event | Element): void {
+    const element = ogePopoverTargetElement(target);
+    if (!element) {
+      this.open();
+      return;
+    }
+    if (this.panel.isOpen()) {
+      this.reanchor(element);
+      return;
+    }
+    this.activeTrigger.set(element);
+    this.core.open('api');
+  }
+
+  private reanchor(element: HTMLElement): void {
+    this.activeTrigger.set(element);
+    this.panel.updatePosition();
   }
 
   /**

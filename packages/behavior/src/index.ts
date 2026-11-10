@@ -295,6 +295,8 @@ export {
 export {
   OgeContextMenuEcho,
   isOgeContextMenuKey,
+  ogeContextMenuSourceOf,
+  ogeContextMenuAnchorPoint,
   ogeContextMenuKeyTarget,
   type OgeContextMenuKeyTarget,
 } from './lib/grid/grid-context-menu';
@@ -549,6 +551,9 @@ export {
   ogeToggleAllValues,
   ogeCanSelectMore,
   ogeChipOverflow,
+  ogeTagBoxSummary,
+  type OgeTagBoxDisplayMode,
+  type OgeTagBoxSummary,
   type OgeDropDownCloseReason,
   type OgeDropDownOpeningEvent,
   type OgeDropDownClosingEvent,
@@ -1028,6 +1033,8 @@ export {
   pushOverlay,
   removeOverlay,
   isTopOverlay,
+  claimOverlayEscape,
+  isOverlayEscapeClaimed,
 } from './lib/overlay/overlay-stack';
 export {
   hasFixedContainingBlockAncestor,
@@ -1064,6 +1071,9 @@ export {
   supportsAriaExpanded,
   resolvePopoverInitialFocus,
   nextTabbableAfter,
+  ogePopoverTargetElement,
+  popoverPaddingClass,
+  type OgePopoverPadding,
   type OgePopoverCoreOptions,
   type OgePopoverShowOn,
   type OgePopoverOpenReason,
@@ -1758,6 +1768,7 @@ export {
   type OgeTreeSelectionChangedEvent,
   type OgeTreeItemSelectionChangedEvent,
   type OgeTreeItemClickEvent,
+  type OgeTreeItemContextMenuEvent,
   type OgeTreeChildrenLoadedEvent,
   type OgeTreeChildrenFailedEvent,
   type OgeTreeSelectAllChangedEvent,

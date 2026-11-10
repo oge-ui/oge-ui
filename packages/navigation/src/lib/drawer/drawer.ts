@@ -38,7 +38,7 @@ import {
 import {
   OgeTooltip,
   getTabbableElements,
-  isTopOverlay,
+  claimOverlayEscape,
   lockBodyScroll,
   pushOverlay,
   removeOverlay,
@@ -704,8 +704,8 @@ export class OgeDrawer {
     if (event.key !== 'Escape') return;
     // Only the topmost surface reacts, so a popup opened inside the drawer
     // closes before the drawer does.
-    if (!isTopOverlay(this)) return;
-    if (!this.closeOnEscape()) return;
+    // a drawer that ignores Escape still claims it: nothing below may close
+    if (!claimOverlayEscape(event, this) || !this.closeOnEscape()) return;
     event.stopPropagation();
     this.requestClose('escape');
   };

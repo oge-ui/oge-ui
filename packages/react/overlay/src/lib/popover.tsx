@@ -36,7 +36,10 @@ import {
   type OgePopupPlacement,
   OGE_PART_OWNED_ATTRIBUTES,
   ogeClassNames,
+  ogePopoverTargetElement,
   ogeSafeAttributes,
+  popoverPaddingClass,
+  type OgePopoverPadding,
   type OgeClassValue,
   type OgeHtmlAttributes,
 } from '@oge-ui/behavior';
@@ -55,8 +58,17 @@ export interface OgePopoverHandle {
   open(): void;
   /** Closes the popover (reason `'api'`; runs `onClosing`). */
   close(): void;
-  /** Opens a closed popover, closes an open one. */
-  toggle(): void;
+  /**
+   * Opens a closed popover, closes an open one. With a `target` (an event —
+   * its `currentTarget` — or an element) the panel anchors to it; an open
+   * popover given a different target moves there instead of closing.
+   */
+  toggle(target?: Event | { nativeEvent: Event } | Element): void;
+  /**
+   * Opens the popover anchored to `target` (an event or an element); already
+   * open, it moves there. Focus returns to that element on close.
+   */
+  show(target: Event | { nativeEvent: Event } | Element): void;
 }
 
 export interface OgePopoverProps {
@@ -120,6 +132,14 @@ export interface OgePopoverProps {
   closeOnEscape?: boolean;
   /** A pointer-down outside trigger and panel closes it. Default `true`. */
   closeOnOutsideClick?: boolean;
+  /**
+   * Focus moving outside trigger and panel closes a non-modal popover.
+   * Default `true`; turn it off when the panel hosts editors whose popups
+   * take focus elsewhere.
+   */
+  closeOnFocusOut?: boolean;
+  /** Body padding: `'none'` (flush), `'sm'` or `'md'` (default). */
+  padding?: OgePopoverPadding;
   /** Prevents opening; closes an open popover. Default `false`. */
   disabled?: boolean;
   /** Per-instance message overrides (the close button's label). */
@@ -153,6 +173,35 @@ const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const sanitizeId = (id: string) => id.replace(/[^a-zA-Z0-9_-]/g, '');
+
+/** The interactive element a click lands on — the anchor of a `show(event)`. */
+const INTERACTIVE =
+  'button, a[href], input, select, textarea, summary, [tabindex], [role="button"], [role="columnheader"], [role="menuitem"]';
+
+/**
+ * Resolves what `show()` / `toggle()` receive to an element. A React
+ * synthetic event carries the right `currentTarget`. A native event does not
+ * (React delegates listeners to the root, so its `currentTarget` is the root
+ * container, and `<OgeButton onClick>` hands over the native event), so the
+ * anchor is the closest interactive element around its `target`.
+ */
+function eventOf(
+  target: Event | { nativeEvent: Event } | Element | undefined,
+): Element | undefined {
+  if (!target || typeof Element === 'undefined') return undefined;
+  if (target instanceof Element) return target;
+  if ('nativeEvent' in target) {
+    const synthetic = target as unknown as {
+      currentTarget: EventTarget | null;
+      target: EventTarget | null;
+    };
+    const element = synthetic.currentTarget ?? synthetic.target;
+    return element instanceof Element ? element : undefined;
+  }
+  const hit = (target as Event).target;
+  if (!(hit instanceof Element)) return undefined;
+  return hit.closest(INTERACTIVE) ?? hit;
+}
 
 const resolveAnchor = (
   anchor: OgePopoverProps['anchor'],
@@ -216,10 +265,13 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
       children,
       panelClass,
       panelAttributes,
+      padding = 'md',
     } = props;
     const config = useOgeOverlayConfig();
     const titleId = `oge-popover-title-${sanitizeId(useId())}`;
     const wrapperRef = useRef<HTMLSpanElement>(null);
+    /** Element a `show(target)` / `toggle(target)` call anchored the panel to. */
+    const targetRef = useRef<HTMLElement | null>(null);
     const panelElRef = useRef<HTMLDivElement>(null);
 
     const controlled = open !== undefined;
@@ -234,6 +286,7 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
     controlledRef.current = controlled;
 
     const anchorElement = (): HTMLElement | null => {
+      if (targetRef.current) return targetRef.current;
       if (latest.current.trigger) {
         const el = wrapperRef.current?.firstElementChild as HTMLElement | null;
         return el ? tooltipDescribedByTarget(el) : null;
@@ -280,6 +333,7 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
       restoreFocus: () => latest.current.restoreFocus ?? true,
       closeOnEscape: () => latest.current.closeOnEscape ?? true,
       closeOnOutsideClick: () => latest.current.closeOnOutsideClick ?? true,
+      closeOnFocusOut: () => latest.current.closeOnFocusOut ?? true,
       isOpen: () => openRef.current,
       commitOpen: () => {
         openRef.current = true;
@@ -337,7 +391,29 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
         close: () => {
           core.close('api');
         },
-        toggle: () => core.toggle(),
+        toggle: (target) => {
+          const element = ogePopoverTargetElement(eventOf(target));
+          if (element && openRef.current && element !== anchorElement()) {
+            targetRef.current = element;
+            panelRef.current.updatePosition();
+            return;
+          }
+          if (element && !openRef.current) targetRef.current = element;
+          core.toggle();
+        },
+        show: (target) => {
+          const element = ogePopoverTargetElement(eventOf(target));
+          if (!element) {
+            core.open('api');
+            return;
+          }
+          targetRef.current = element;
+          if (openRef.current) {
+            panelRef.current.updatePosition();
+            return;
+          }
+          core.open('api');
+        },
       }),
       [core],
     );
@@ -388,6 +464,7 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
         className={ogeClassNames(
           'oge-popover',
           modal && 'oge-popover-modal',
+          popoverPaddingClass(padding),
           position && 'oge-popover-ready',
           className,
           panelClass,
@@ -478,7 +555,11 @@ export const OgePopover = forwardRef<OgePopoverHandle, OgePopoverProps>(
           <span
             ref={wrapperRef}
             style={{ display: 'contents' }}
-            onClick={() => core.triggerClick()}
+            onClick={() => {
+              // the own trigger takes the anchor back from a show(target)
+              if (!openRef.current) targetRef.current = null;
+              core.triggerClick();
+            }}
             onPointerEnter={() => core.triggerPointerEnter()}
             onPointerLeave={() => core.triggerPointerLeave()}
             onFocus={() => core.triggerFocusIn()}

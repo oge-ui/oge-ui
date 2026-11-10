@@ -131,3 +131,36 @@ test('tree view overview has no axe violations', async ({ page }) => {
     ),
   ).toEqual([]);
 });
+
+for (const layer of [
+  { name: 'Angular', query: '' },
+  { name: 'React', query: '?framework=react' },
+] as const) {
+  test(`item context menu (${layer.name}): right-click and Shift+F10 open it at the item`, async ({
+    page,
+  }) => {
+    await page.goto(`/components/tree-view${layer.query}`);
+    const tree = page.getByRole('tree', {
+      name: 'Folders with a context menu',
+    });
+    const reports = tree.getByRole('treeitem', { name: 'Reports' });
+    await reports.click({ button: 'right' });
+    const menu = page.getByRole('menu', { name: 'Reports' });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitem')).toHaveCount(3);
+    await page.getByRole('menuitem', { name: 'Duplicate' }).click();
+    await expect(menu).toHaveCount(0);
+    await expect(page.getByTestId('tree-menu-log')).toHaveText(
+      'Duplicate “Reports” (pointer)',
+    );
+    await expect(reports).toBeFocused();
+
+    await page.keyboard.press('Shift+F10');
+    await expect(menu).toBeVisible();
+    // the menu takes the focus; Escape closes it and returns to the item
+    await expect(menu).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(reports).toBeFocused();
+  });
+}

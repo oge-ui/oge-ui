@@ -1,4 +1,7 @@
 @use '../../../../grid/src/lib/styles/tokens';
+@use '../top-layer';
+
+@include top-layer.reset;
 
 // Non-modal floating window. Geometry (left/top/size/z-index) is written
 // inline by the shared OgeWindowCore; everything visual lives here.

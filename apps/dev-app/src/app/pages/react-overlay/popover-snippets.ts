@@ -171,4 +171,37 @@ const guard = (event: OgePopoverClosingEvent) => {
 </>`,
     }),
   },
+  {
+    title: 'Shared popover & editors inside',
+    source: reactDemoSource({
+      react: ['useRef', 'useState'],
+      use: {
+        '@oge-ui/react-buttons': ['OgeButton'],
+        '@oge-ui/react-inputs': ['OgeSelectBox'],
+        '@oge-ui/react-overlay': ['OgePopover'],
+      },
+      types: { '@oge-ui/react-overlay': ['OgePopoverHandle'] },
+      name: 'SharedPopover',
+      body: `const menu = useRef<OgePopoverHandle>(null);
+const [active, setActive] = useState('Name');
+const [mode, setMode] = useState<unknown>('All');
+const columns = ['Name', 'City', 'Status'];`,
+      jsx: `<>
+  {/* one popover, many column headers */}
+  {columns.map((column) => (
+    <OgeButton key={column} text={column} stylingMode="outlined"
+      onClick={(e) => { setActive(column); menu.current?.show(e); }} />
+  ))}
+  <OgePopover ref={menu} title={\`\${active} filter\`} padding="sm">
+    {({ close }) => (
+      <>
+        <OgeSelectBox label="Show" items={['All', 'Only blanks', 'Only non-blanks']}
+          value={mode} onValueChange={setMode} />
+        <OgeButton text="Apply" onClick={close} />
+      </>
+    )}
+  </OgePopover>
+</>`,
+    }),
+  },
 ];
