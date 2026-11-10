@@ -21,10 +21,7 @@
  * Dropped keys raise one dev-mode warning each, so a typo or an unsafe key is
  * visible during development and silent in production.
  */
-import {
-  ogeClassList,
-  type OgeClassValue,
-} from '../dom/class-value';
+import { ogeClassList, type OgeClassValue } from '../dom/class-value';
 import { sanitizeResourceUrl, sanitizeUrl } from './sanitize-url';
 
 declare const ngDevMode: boolean | undefined;
