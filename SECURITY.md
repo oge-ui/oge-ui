@@ -2,11 +2,19 @@
 
 ## Supported versions
 
-| Version | Status                                                        |
-| ------- | ------------------------------------------------------------- |
-| 1.x     | Supported — fixes land on the latest 1.x minor                |
-| 0.13.x  | Security fixes only, until **2027-04-01**; then end of life   |
-| < 0.13  | End of life — upgrade (migration notes are in `CHANGELOG.md`) |
+<!-- generated: support-table -->
+
+| OGE    | Angular   | React   | Node (tooling) | Status                                                   |
+| ------ | --------- | ------- | -------------- | -------------------------------------------------------- |
+| 1.x    | 21.2 – 23 | 18 – 19 | ≥ 22.22        | Supported — fixes land on the latest 1.1.x               |
+| 0.13.x | 22        | —       | ≥ 22.22        | Security fixes only, until 2027-04-01                    |
+| < 0.13 | —         | —       | —              | End of life — upgrade (migration notes in the changelog) |
+
+<!-- /generated: support-table -->
+
+The table is generated from the versioning guide
+(`apps/dev-app/src/app/pages/guides/versioning-data.ts`) by
+`npx nx run docs-tools:llms`; edit it there.
 
 Fixes are released as a patch of the latest minor; we do not back-port to
 older minors of the same major.

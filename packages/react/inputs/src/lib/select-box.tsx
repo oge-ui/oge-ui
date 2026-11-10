@@ -36,6 +36,7 @@ import {
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
   foldText,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -45,7 +46,6 @@ import {
 } from '@oge-ui/react-overlay';
 import { OgeFieldChrome } from './field-chrome';
 import { createBumpAdapter } from './rx-adapter';
-import { isDevMode } from './dev';
 import { useListVirtualizer } from './use-list-virtualizer';
 import {
   nativeInputAttrs,
@@ -323,14 +323,16 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
   virtualRef.current = virtual;
 
   useEffect(() => {
-    if (!isDevMode() || !virtual.active) return;
+    if (!virtual.active) return;
     if (props.groupBy !== undefined) {
-      console.warn(
+      ogeDevWarn(
+        'OGE3101',
         'OgeSelectBox: virtualScroll ignores groupBy — group headers are not rendered in virtual mode.',
       );
     }
     if (wrapItemText) {
-      console.warn(
+      ogeDevWarn(
+        'OGE3102',
         'OgeSelectBox: virtualScroll forces fixed-height rows — wrapItemText is ignored.',
       );
     }

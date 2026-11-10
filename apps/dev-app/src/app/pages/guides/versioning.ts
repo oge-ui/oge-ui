@@ -6,6 +6,12 @@ import { PageToc } from '../../shared/page-toc';
 import { SITE_VERSION } from '../../shared/site-version';
 import { GuideTable } from './guide-table';
 import { DEPRECATED_MEMBER, LOCKSTEP } from './versioning-snippets';
+import {
+  DEPRECATED,
+  DEPRECATED_HEAD,
+  SUPPORT,
+  SUPPORT_HEAD,
+} from './versioning-data';
 
 const REPO = 'https://github.com/oge-ui/oge-ui/blob/main';
 
@@ -107,14 +113,14 @@ const SECTIONS = [
     </p>
     <app-guide-table
       caption="Deprecated members and their replacements"
-      [head]="['Deprecated', 'Since', 'Use instead']"
+      [head]="deprecatedHead"
       [rows]="deprecated"
     />
 
     <h2 id="supported-versions" class="scroll-mt-20">Supported versions</h2>
     <app-guide-table
       caption="Release lines, platforms and support status"
-      [head]="['OGE', 'Angular', 'React', 'Node (tooling)', 'Status']"
+      [head]="supportHead"
       [rows]="support"
     />
     <ul>
@@ -216,47 +222,10 @@ export class GuideVersioningPage {
     ['API reference', 'The member stays documented until it is removed.'],
   ];
 
-  protected readonly deprecated = [
-    [
-      '`rowCountOneAnnouncement` (grid, tree list messages)',
-      '1.1.2',
-      'An ICU `one {…}` branch in `rowCountAnnouncement`',
-    ],
-    ['`rowsSuffix` (grid, tree list messages)', '1.1.2', '`pagerInfo`'],
-    [
-      '`validationSummaryTitleOne` (forms messages)',
-      '1.1.2',
-      'An ICU `one {…}` branch in `validationSummaryTitle`',
-    ],
-    [
-      '`OGE_PIVOT_FIELD_DRAG_TYPE`, `OgePivotDragLike`',
-      '1.1.2',
-      'Nothing — field chips use a pointer drag; kept so imports compile',
-    ],
-    [
-      '`buildSearchHighlightHtml` (`@oge-ui/core`)',
-      '0.13.1',
-      '`buildSearchHighlightSegments` — real text nodes and `<mark>` elements',
-    ],
-  ];
-
-  protected readonly support = [
-    [
-      '1.x',
-      '22 – 23',
-      '18 – 19',
-      '≥ 22.22',
-      'Supported — fixes land on the latest 1.1.x',
-    ],
-    ['0.13.x', '22', '—', '≥ 22.22', 'Security fixes only, until 2027-04-01'],
-    [
-      '< 0.13',
-      '—',
-      '—',
-      '—',
-      'End of life — upgrade (migration notes in the changelog)',
-    ],
-  ];
+  protected readonly deprecated = DEPRECATED;
+  protected readonly deprecatedHead = DEPRECATED_HEAD;
+  protected readonly support = SUPPORT;
+  protected readonly supportHead = SUPPORT_HEAD;
 
   protected readonly gates = [
     [

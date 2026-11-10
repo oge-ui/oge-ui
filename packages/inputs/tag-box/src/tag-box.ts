@@ -35,6 +35,8 @@ import {
   type OgeListPageLoadedEvent,
   type OgeSelectAllState,
   type OgeTagBoxDisplayMode,
+  ogeDevWarn,
+  ogeIsDevMode,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -75,8 +77,6 @@ import type {
   OgeTagBoxSelectionChangedEvent,
   OgeTagBoxTagTemplateContext,
 } from './tag-box-types';
-
-declare const ngDevMode: boolean | undefined;
 
 /** CSS default of `.oge-select-list { max-height }` — the virtual viewport budget. */
 const DEFAULT_LIST_MAX_HEIGHT = 320;
@@ -954,10 +954,11 @@ export class OgeTagBox<TItem = unknown>
 
   constructor() {
     super();
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+    if (ogeIsDevMode()) {
       effect(() => {
         if (this.virtualActive() && this.groupBy() !== undefined) {
-          console.warn(
+          ogeDevWarn(
+            'OGE3101',
             'oge-tag-box: virtualScroll ignores groupBy — group headers are not rendered in virtual mode.',
           );
         }

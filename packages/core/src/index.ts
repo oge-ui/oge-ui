@@ -42,6 +42,7 @@ export * from './lib/util/intl-cache';
 export * from './lib/util/time-zone';
 export * from './lib/util/value-format';
 export * from './lib/util/format-message';
+export * from './lib/util/dev-warnings';
 export * from './lib/util/date-utils';
 export * from './lib/util/async-guard';
 export * from './lib/util/nav-index';

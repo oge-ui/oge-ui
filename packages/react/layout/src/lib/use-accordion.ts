@@ -32,8 +32,8 @@ import {
   type OgeAccordionSize,
   type OgeAccordionStylingMode,
   type OgeAccordionTogglePosition,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
-import { isDevMode } from './dev';
 import { useOgeAccordionConfig } from './layout-config';
 
 // --- render-prop contexts --------------------------------------------------
@@ -695,11 +695,10 @@ export function useOgeAccordion(props: OgeAccordionBehaviorProps) {
 
   const expandAll = useCallback((): void => {
     if (!latest.current.multiple) {
-      if (isDevMode()) {
-        console.warn(
-          '[oge-accordion] expandAll() requires multiple — ignored.',
-        );
-      }
+      ogeDevWarn(
+        'OGE3301',
+        'OgeAccordion: expandAll() requires multiple — ignored.',
+      );
       return;
     }
     latest.current.descriptors.forEach((d, index) => {

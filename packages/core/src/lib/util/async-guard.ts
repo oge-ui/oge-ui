@@ -1,4 +1,4 @@
-declare const ngDevMode: boolean | undefined;
+import { ogeDevWarn } from './dev-warnings';
 
 /**
  * User-supplied veto for a pending state change. Returning (or resolving to)
@@ -76,9 +76,8 @@ export function runAsyncGuard(
 
 function failGuard(handlers: OgeGuardHandlers): void {
   handlers.deny?.('failed');
-  if (typeof ngDevMode === 'undefined' || ngDevMode) {
-    console.warn(
-      `[${handlers.label ?? 'oge'}] guard threw or rejected — treating it as a veto.`,
-    );
-  }
+  ogeDevWarn(
+    'OGE1001',
+    `${handlers.label ?? 'oge'}: guard threw or rejected — treating it as a veto.`,
+  );
 }

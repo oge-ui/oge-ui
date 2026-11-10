@@ -44,6 +44,7 @@ import {
   ogeDescribeFormFields,
   type OgeFormFieldDescription,
   createOgeFormItemMotion,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
 import { OGE_FORMS_CONFIG, type OgeFormsMessages } from '../config';
 import { OgeValidationSummary } from '../validation-summary/validation-summary';
@@ -780,8 +781,9 @@ export class OgeForm<T extends object = Record<string, unknown>> {
             item.readOnly !== undefined,
         );
         if (!declared) return;
-        console.warn(
-          '[oge-form] validationRules / isRequired / disabled / readOnly on an ' +
+        ogeDevWarn(
+          'OGE3201',
+          'oge-form: validationRules / isRequired / disabled / readOnly on an ' +
             'item are ignored when the form is bound with [fieldTree] or ' +
             '[formGroup] — the bound form owns that state. Express it in the ' +
             'schema (required(), disabled(), readonly()) or on the control.',

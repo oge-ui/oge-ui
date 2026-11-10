@@ -62,8 +62,8 @@ import {
   type OgeSplitterView,
   ogeIsRtl,
   ogeSafeAttributes,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
-import { isDevMode } from './dev';
 import { useOgeSplitterConfig } from './layout-config';
 
 /**
@@ -1125,7 +1125,5 @@ export const OgeSplitter: ForwardRefExoticComponent<
 );
 
 function warn(message: string): void {
-  if (isDevMode()) {
-    console.warn(`[oge-splitter] ${message}`);
-  }
+  ogeDevWarn('OGE3302', `OgeSplitter: ${message}`);
 }

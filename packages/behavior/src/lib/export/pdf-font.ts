@@ -1,3 +1,4 @@
+import { ogeDevWarn } from '@oge-ui/core';
 /**
  * Unicode font support for every OGE PDF export (grid, tree list, pivot,
  * Gantt — both render layers). Framework-free and jsPDF-agnostic at runtime:
@@ -119,11 +120,11 @@ export function warnOgePdfUnicode(texts: Iterable<string>): void {
   for (const text of texts) {
     if (!isOgePdfWinAnsi(text)) {
       warnedUnicode = true;
-      console.warn(
-        '[oge-ui] PDF export: the text contains characters the built-in ' +
-          'PDF fonts cannot draw (for example Turkish ğ ş ı İ). Pass a ' +
-          'Unicode TrueType font via the `font` option or ' +
-          'setOgePdfDefaultFont() — see the export docs.',
+      ogeDevWarn(
+        'OGE2003',
+        'PDF export: the text contains characters the built-in PDF fonts ' +
+          'cannot draw (for example Turkish ğ ş ı İ). Pass a Unicode ' +
+          'TrueType font via the `font` option or setOgePdfDefaultFont().',
       );
       return;
     }

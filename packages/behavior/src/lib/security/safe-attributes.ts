@@ -23,8 +23,7 @@
  */
 import { ogeClassList, type OgeClassValue } from '../dom/class-value';
 import { sanitizeResourceUrl, sanitizeUrl } from './sanitize-url';
-
-declare const ngDevMode: boolean | undefined;
+import { ogeDevWarn } from '@oge-ui/core';
 
 /** A free-form attribute bag for a component part (`data-*`, `aria-*`, `id`…). */
 export type OgeHtmlAttributes = Readonly<Record<string, string>>;
@@ -54,14 +53,10 @@ const LOADING: ReadonlySet<string> = new Set([
   'dynsrc',
 ]);
 
-const warned = new Set<string>();
-
 function warnDropped(name: string, reason: string): void {
-  if (typeof ngDevMode !== 'undefined' && !ngDevMode) return;
-  const key = `${name}|${reason}`;
-  if (warned.has(key)) return;
-  warned.add(key);
-  console.warn(`[oge] attribute "${name}" was not applied: ${reason}.`);
+  ogeDevWarn('OGE2001', `attribute "${name}" was not applied: ${reason}.`, {
+    once: `${name}|${reason}`,
+  });
 }
 
 /**

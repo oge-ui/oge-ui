@@ -6,7 +6,7 @@ import { OgePopoverContent } from './popover-templates';
 let created = 0;
 
 @Component({
-  selector: 'app-heavy',
+  selector: 'oge-test-heavy',
   template: `<span class="heavy">heavy</span>`,
 })
 class Heavy {
@@ -31,7 +31,7 @@ class Heavy {
       (closed)="closedReasons.push($event.reason)"
     >
       <ng-template ogePopoverContent let-close>
-        <app-heavy />
+        <oge-test-heavy />
         <button type="button" class="inside" (click)="close()">Done</button>
       </ng-template>
     </oge-popover>

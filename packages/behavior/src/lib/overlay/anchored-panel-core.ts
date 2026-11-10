@@ -19,6 +19,7 @@ import {
   type OgeRect,
   type OgeResolvedPopupPosition,
 } from './position';
+import { ogeDevWarn } from '@oge-ui/core';
 
 /**
  * Why an anchored panel closed. `'back'` is a nested submenu closing toward
@@ -286,8 +287,9 @@ export class OgeAnchoredPanelCore {
         this.updatePosition();
       } else {
         // An integration bug in any environment: open, but nothing rendered.
-        console.warn(
-          '[oge-overlay] anchored panel is open but its anchor/panel element never appeared — render the popup while the panel is open.',
+        ogeDevWarn(
+          'OGE2002',
+          'anchored panel is open but its anchor/panel element never appeared — render the popup while the panel is open.',
         );
       }
       return;

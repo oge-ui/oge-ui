@@ -881,4 +881,23 @@ export default [
     files: ['tools/oge-schematics/src/**/*.spec.ts'],
     rules: { '@nx/enforce-module-boundaries': 'off' },
   },
+  {
+    // Library code prints nothing on its own: development warnings go through
+    // `ogeDevWarn(code, …)` (@oge-ui/core), which adds the OGE#### code and
+    // the docs link and stays silent in production. The registry itself and
+    // the license notices (shown in production on purpose) are the only
+    // direct console users. Patterns resolve per project, so the docs app's
+    // own code (`src/app`, `main.ts`) is left out explicitly.
+    files: ['**/src/**/*.ts', '**/src/**/*.tsx'],
+    ignores: [
+      '**/src/app/**',
+      '**/src/main.ts',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+      '**/testing/**',
+      '**/util/dev-warnings.ts',
+      '**/lib/license/**',
+    ],
+    rules: { 'no-console': 'error' },
+  },
 ];

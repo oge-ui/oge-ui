@@ -52,6 +52,11 @@ const GUIDES = [
     title: 'Versioning and deprecation',
     heading: 'deprecations',
   },
+  {
+    path: '/guides/dev-warnings',
+    title: 'Development warnings',
+    heading: 'how-warnings-work',
+  },
 ] as const;
 
 /** Every "On this page" link points at a heading the page renders. */
@@ -77,6 +82,16 @@ test.describe('guides', () => {
       if (guide.path !== '/guides') await expectTocResolves(page);
     });
   }
+
+  test('a warning link from the console lands on its code', async ({
+    page,
+  }) => {
+    await page.goto('/guides/dev-warnings#oge3101');
+    const entry = page.locator('h3#oge3101');
+    await expect(entry).toBeVisible();
+    await expect(entry).toContainText('virtualScroll');
+    await expect(page.locator('h3[id^="oge"]')).not.toHaveCount(0);
+  });
 
   test('the sidebar lists the guides and the index links to each', async ({
     page,
@@ -168,6 +183,7 @@ test.describe('guides', () => {
   for (const path of [
     '/guides/security',
     '/guides/accessibility/conformance',
+    '/guides/dev-warnings',
   ]) {
     test(`${path} has no axe violations`, async ({ page }) => {
       test.slow();

@@ -37,6 +37,7 @@ import {
   type OgePanelBarItemToggleEvent,
   type OgePanelBarNode,
   type OgePanelBarSelectionChangedEvent,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
 import { OGE_ACCORDION_CONFIG } from '@oge-ui/layout/accordion';
 
@@ -100,8 +101,6 @@ export class OgePanelBarHeaderTemplate {
     return true;
   }
 }
-
-declare const ngDevMode: boolean | undefined;
 
 type Node = OgePanelBarNode<OgePanelBarItem>;
 
@@ -418,11 +417,10 @@ export class OgePanelBar {
    */
   expandAll(): void {
     if (this.expandMode() !== 'multiple') {
-      if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        console.warn(
-          '[oge-panel-bar] expandAll() requires expandMode="multiple" — ignored.',
-        );
-      }
+      ogeDevWarn(
+        'OGE3301',
+        'oge-panel-bar: expandAll() requires expandMode="multiple" — ignored.',
+      );
       return;
     }
     for (const n of this.nodes()) {

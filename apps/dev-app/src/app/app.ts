@@ -235,6 +235,11 @@ export class App {
           icon: 'check',
         },
         { path: '/guides/versioning', label: 'Versioning policy', icon: 'tag' },
+        {
+          path: '/guides/dev-warnings',
+          label: 'Development warnings',
+          icon: 'code',
+        },
       ],
     },
     {

@@ -96,6 +96,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE UI accessibility conformance report (ACR) in the VPAT 2.5 format: self-assessed WCAG 2.2 level A and AA criteria with support levels and honest remarks.',
   ],
   [
+    '/guides/dev-warnings',
+    'OGE UI development warnings: every coded OGE#### console message with its cause and fix, silent in production, in Angular and React render layers.',
+  ],
+  [
     '/guides/versioning',
     'OGE UI versioning policy: semantic versions, small 1.1.x patch releases, how deprecations are announced, supported Angular and React ranges, LTS and EOL.',
   ],

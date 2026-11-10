@@ -27,8 +27,8 @@ import {
   type OgeButtonsMessages,
   type OgeClickGuardOptions,
   type OgeHoldToConfirmOptions,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
-import { isDevMode } from './dev';
 import { useOgeButtonsConfig } from './buttons-config';
 import { useOgeButtonGroup } from './button-group-context';
 
@@ -359,9 +359,11 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
     const holdRequested = !!holdToConfirm;
     const repeatRequested = !!autoRepeat;
     useEffect(() => {
-      if (isDevMode() && holdRequested && repeatRequested) {
-        console.error(
-          '[OgeButton] `holdToConfirm` and `autoRepeat` are mutually exclusive; `holdToConfirm` wins.',
+      if (holdRequested && repeatRequested) {
+        ogeDevWarn(
+          'OGE3001',
+          'OgeButton: `holdToConfirm` and `autoRepeat` are mutually exclusive; `holdToConfirm` wins.',
+          { level: 'error' },
         );
       }
     }, [holdRequested, repeatRequested]);

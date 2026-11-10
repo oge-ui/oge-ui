@@ -1,5 +1,6 @@
 import type { RowKey, RowNode } from '../rows/row-node';
 import type { TreeIndex } from './tree-index';
+import { ogeDevWarn } from '../util/dev-warnings';
 
 export interface FlattenTreeConfig<T> {
   /** Adjacency index built by `buildTreeIndex`. */
@@ -104,8 +105,9 @@ export function flattenTreeData<T>(config: FlattenTreeConfig<T>): RowNode<T>[] {
       if (path.has(key)) {
         if (!warnedCycle) {
           warnedCycle = true;
-          console.warn(
-            `[oge] flattenTreeData: cycle detected at key "${String(key)}" — subtree skipped`,
+          ogeDevWarn(
+            'OGE1003',
+            `flattenTreeData: cycle detected at key "${String(key)}" — subtree skipped`,
           );
         }
         continue;

@@ -150,6 +150,13 @@ export class GuidesIndexPage {
           summary:
             'What a release may change, how deprecations are announced, supported versions and end of life.',
         },
+        {
+          path: '/guides/dev-warnings',
+          title: 'Development warnings',
+          icon: 'code',
+          summary:
+            'Every coded OGE#### console warning: what causes it and what to change. Silent in production builds.',
+        },
       ],
     },
   ];

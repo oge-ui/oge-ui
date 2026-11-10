@@ -39,6 +39,7 @@ import {
   shouldRenderAccordionPanel,
   stepEnabledIndex,
   type OgeAccordionLoadState,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
 import type { OgeAccordionDescriptor } from './accordion-descriptor';
 import { OgeAccordionItem } from './accordion-item';
@@ -66,8 +67,6 @@ import {
   OgeAccordionHeaderTemplate,
   OgeAccordionToggleIconTemplate,
 } from './templates';
-
-declare const ngDevMode: boolean | undefined;
 
 let nextComponentId = 0;
 
@@ -719,7 +718,10 @@ export class OgeAccordion {
    */
   expandAll(): void {
     if (!this.multiple()) {
-      this.warn('expandAll() requires [multiple]="true" — ignored.');
+      ogeDevWarn(
+        'OGE3301',
+        'oge-accordion: expandAll() requires [multiple]="true" — ignored.',
+      );
       return;
     }
     this.descriptors().forEach((d, index) => {
@@ -1199,11 +1201,5 @@ export class OgeAccordion {
 
   private resolveIndex(target: number | string): number {
     return resolveAccordionIndex(this.descriptors(), target);
-  }
-
-  private warn(message: string): void {
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-      console.warn(`[oge-accordion] ${message}`);
-    }
   }
 }

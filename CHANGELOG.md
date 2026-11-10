@@ -7,6 +7,29 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Development warnings get codes — every family
+
+- Every development warning now reads `[OGE####] … — https://www.ogeui.com/guides/dev-warnings#oge####`,
+  and the new **Development warnings** guide explains each code (cause and fix).
+  `ogeDevWarn`, `ogeIsDevMode` and the `OGE_DEV_WARNINGS` registry are public in
+  `@oge-ui/core` (and re-exported by `@oge-ui/behavior`).
+- **Behaviour change:** warnings follow one rule in both render layers — Angular's
+  `ngDevMode`, otherwise `NODE_ENV` `development` or `test`. A few that used to
+  print in production (an anchored panel that never rendered, PDF text the
+  built-in fonts cannot draw, deprecated message keys in non-Angular apps) are
+  now development-only; React tests (`NODE_ENV=test`) now see the warnings too.
+
+### Docs — policies for machine readers
+
+- `llms-full.txt` gains a **Policies** section generated from the pages that
+  publish them: the support matrix and deprecations, the security reporting
+  process, the WCAG 2.2 conformance summary (and every criterion that is not
+  fully supported), the development warning codes, locale coverage and each
+  package's gzip size.
+- The support matrix now lists **Angular 21.2 – 23** (it said 22 – 23 although
+  the packages accept `>=21.2.0`), and `SECURITY.md`'s support table is
+  generated from the same data, so the three copies cannot drift.
+
 ### Popover — one panel for many triggers (`@oge-ui/overlay`, `@oge-ui/react-overlay`)
 
 - `show(target)` and `toggle(target)` take an event or an element and anchor the

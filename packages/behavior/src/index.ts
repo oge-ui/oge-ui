@@ -2223,6 +2223,17 @@ export {
 // packages that depend on behavior but not on core
 export { ogeLiveConfig } from '@oge-ui/core';
 export { foldText } from '@oge-ui/core';
+// Coded development warnings: one registry (core), one helper, re-exported so
+// packages that depend only on behavior print them the same way.
+export {
+  OGE_DEV_WARNINGS,
+  OGE_DEV_WARNINGS_URL,
+  ogeDevWarn,
+  ogeIsDevMode,
+  type OgeDevWarnOptions,
+  type OgeDevWarningCode,
+  type OgeDevWarningInfo,
+} from '@oge-ui/core';
 
 export {
   getOgePdfDefaultFont,

@@ -24,6 +24,8 @@ import {
   glideButtonGroupPill,
   ogeIsRtl,
   type OgeIndicatorGlide,
+  ogeDevWarn,
+  ogeIsDevMode,
 } from '@oge-ui/behavior';
 import { OgeButton } from '../button/button';
 import {
@@ -41,8 +43,6 @@ import type {
   OgeButtonSize,
   OgeButtonStylingMode,
 } from '../button/button-types';
-
-declare const ngDevMode: boolean | undefined;
 
 /**
  * Segmented group of buttons with optional single/multiple selection.
@@ -178,12 +178,13 @@ export class OgeButtonGroup implements OgeButtonGroupContext {
       glideButtonGroupPill(this.pillGlide, root, previous, target);
     });
     inject(DestroyRef).onDestroy(() => this.pillGlide?.cancel());
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+    if (ogeIsDevMode()) {
       effect(() => {
         if (this.selectionMode() === 'none') return;
         if (this.allButtons().some((b) => b.value() === undefined)) {
-          console.warn(
-            '[oge-button-group] selectionMode is on but some buttons have no `value`; they cannot be selected.',
+          ogeDevWarn(
+            'OGE3002',
+            'oge-button-group: selectionMode is on but some buttons have no `value`; they cannot be selected.',
           );
         }
       });

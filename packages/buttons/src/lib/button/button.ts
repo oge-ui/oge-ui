@@ -21,6 +21,8 @@ import {
   resolveButtonSelectionState,
   resolveClickGuard,
   resolveHoldToConfirm,
+  ogeDevWarn,
+  ogeIsDevMode,
 } from '@oge-ui/behavior';
 import { OGE_BUTTONS_CONFIG, type OgeButtonsMessages } from '../config';
 import { OGE_BUTTON_GROUP } from '../button-group/button-group-context';
@@ -37,8 +39,6 @@ import type {
   OgeClickGuardOptions,
   OgeHoldToConfirmOptions,
 } from './button-types';
-
-declare const ngDevMode: boolean | undefined;
 
 /**
  * Action button with severity/styling variants, async single-flight `action`
@@ -379,11 +379,13 @@ export class OgeButton {
     effect(() => {
       if (this.isDisabled()) untracked(() => this.pressMachine.cancel());
     });
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+    if (ogeIsDevMode()) {
       effect(() => {
         if (this.holdToConfirm() && this.autoRepeat()) {
-          console.error(
-            '[oge-button] `holdToConfirm` and `autoRepeat` are mutually exclusive; `holdToConfirm` wins.',
+          ogeDevWarn(
+            'OGE3001',
+            'oge-button: `holdToConfirm` and `autoRepeat` are mutually exclusive; `holdToConfirm` wins.',
+            { level: 'error' },
           );
         }
       });

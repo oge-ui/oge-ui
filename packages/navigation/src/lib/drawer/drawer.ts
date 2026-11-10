@@ -34,6 +34,7 @@ import {
   type OgeDrawerItemView,
   type OgeDrawerSelectionChangedEvent,
   type OgePointerGestureHandle,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
 import {
   OgeTooltip,
@@ -796,10 +797,9 @@ export class OgeDrawer {
   }
 
   private warnGuardFailure(): void {
-    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
-      console.warn(
-        '[oge-navigation] drawer closeGuard threw or rejected — treating it as a veto.',
-      );
-    }
+    ogeDevWarn(
+      'OGE1001',
+      'oge-drawer: closeGuard threw or rejected — treating it as a veto.',
+    );
   }
 }

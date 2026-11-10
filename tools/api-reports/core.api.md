@@ -667,6 +667,97 @@ export class OffsetTree {
 }
 
 // @public
+export const OGE_DEV_WARNINGS: {
+    readonly OGE1001: {
+        readonly title: "A close guard threw or rejected";
+        readonly packages: readonly ["@oge-ui/overlay", "@oge-ui/navigation", "@oge-ui/core"];
+        readonly cause: "A `closeGuard` (modal, drawer, window, popover…) threw or returned a rejected promise.";
+        readonly fix: "The close is treated as vetoed. Return `false` (or resolve to `false`) to keep the surface open on purpose, and catch errors inside the guard.";
+    };
+    readonly OGE1002: {
+        readonly title: "A deprecated message key is in use";
+        readonly packages: readonly ["every family"];
+        readonly cause: "A messages catalog or locale override supplies a key that is deprecated; it is still honoured for one minor release.";
+        readonly fix: "Supply the replacement key named in the warning (usually an ICU plural branch) and drop the old one.";
+    };
+    readonly OGE1003: {
+        readonly title: "A cycle in hierarchical data";
+        readonly packages: readonly ["@oge-ui/core", "tree view, tree list, tree select"];
+        readonly cause: "A row is its own ancestor through the parent / children fields (`parentIdExpr`, `itemsExpr`).";
+        readonly fix: "The cyclic subtree is skipped. Fix the data so every parent chain ends at the root value.";
+    };
+    readonly OGE2001: {
+        readonly title: "An attribute was not applied";
+        readonly packages: readonly ["@oge-ui/overlay", "@oge-ui/buttons", "@oge-ui/navigation", "@oge-ui/layout"];
+        readonly cause: "An attribute bag (`panelAttributes`, `dropdownAttributes`, `htmlAttributes`…) had an event handler, `srcdoc`, `style`, `class`, an unsafe URL, an invalid name or an attribute the component sets itself.";
+        readonly fix: "Use the class and style inputs of the part for classes and styles, the component inputs for ARIA it owns, and never pass handlers as attributes.";
+    };
+    readonly OGE2002: {
+        readonly title: "An open popup never rendered";
+        readonly packages: readonly ["@oge-ui/overlay", "every popup editor"];
+        readonly cause: "An anchored panel was opened but its anchor or panel element never appeared in the DOM.";
+        readonly fix: "Render the popup while the panel model is open (`@if (panel.isOpen())` / `{panel.isOpen && …}`) and hand the element to the panel.";
+    };
+    readonly OGE2003: {
+        readonly title: "PDF text the built-in fonts cannot draw";
+        readonly packages: readonly ["grid, tree list, pivot, gantt, scheduler PDF export"];
+        readonly cause: "The exported text contains characters outside WinAnsi (for example Turkish ğ ş ı İ), which the built-in PDF fonts cannot draw.";
+        readonly fix: "Pass a Unicode TrueType font through the `font` option or `setOgePdfDefaultFont()`.";
+    };
+    readonly OGE3001: {
+        readonly title: "`holdToConfirm` and `autoRepeat` together";
+        readonly packages: readonly ["@oge-ui/buttons", "@oge-ui/react-buttons"];
+        readonly cause: "A button sets both press behaviours; they are mutually exclusive.";
+        readonly fix: "`holdToConfirm` wins. Remove one of the two inputs.";
+    };
+    readonly OGE3002: {
+        readonly title: "Selectable buttons without a value";
+        readonly packages: readonly ["@oge-ui/buttons", "@oge-ui/react-buttons"];
+        readonly cause: "A button group has a `selectionMode` but some buttons carry no `value`.";
+        readonly fix: "Give every button a `value`; buttons without one cannot be selected.";
+    };
+    readonly OGE3101: {
+        readonly title: "`virtualScroll` ignores `groupBy`";
+        readonly packages: readonly ["select box, tag box, autocomplete (both layers)"];
+        readonly cause: "Group headers are not rendered in virtual mode.";
+        readonly fix: "Drop `groupBy`, or turn virtual scrolling off for grouped lists.";
+    };
+    readonly OGE3102: {
+        readonly title: "`virtualScroll` ignores `wrapItemText`";
+        readonly packages: readonly ["select box, autocomplete (both layers)"];
+        readonly cause: "Virtual mode needs fixed-height rows, so long items cannot wrap.";
+        readonly fix: "Drop `wrapItemText`, or turn virtual scrolling off.";
+    };
+    readonly OGE3201: {
+        readonly title: "Item rules ignored on a bound form";
+        readonly packages: readonly ["@oge-ui/forms"];
+        readonly cause: "`validationRules`, `isRequired`, `disabled` or `readOnly` sit on an item of a form bound with `[fieldTree]` or `[formGroup]`, which owns that state.";
+        readonly fix: "Express the rule in the schema (`required()`, `disabled()`, `readonly()`) or on the control.";
+    };
+    readonly OGE3301: {
+        readonly title: "`expandAll()` needs multiple expansion";
+        readonly packages: readonly ["accordion, panel bar (both layers)"];
+        readonly cause: "`expandAll()` was called while only one item may be expanded at a time.";
+        readonly fix: "Set `multiple` (accordion) or `expandMode=\"multiple\"` (panel bar), or expand items one by one.";
+    };
+    readonly OGE3302: {
+        readonly title: "An unreadable splitter pane size";
+        readonly packages: readonly ["@oge-ui/layout", "@oge-ui/react-layout"];
+        readonly cause: "A pane `size` is neither a share number, a `\"<n>%\"` nor a `\"<n>px\"` value.";
+        readonly fix: "The size is ignored. Use a number, a percentage or a pixel value.";
+    };
+    readonly OGE3401: {
+        readonly title: "A stepper button without a stepper";
+        readonly packages: readonly ["@oge-ui/navigation"];
+        readonly cause: "An `ogeStepperNext` / `ogeStepperPrevious` button is neither inside an `<oge-stepper>` nor bound to one.";
+        readonly fix: "Place the button inside the stepper or bind it with `[ogeStepperTarget]`.";
+    };
+};
+
+// @public
+export const OGE_DEV_WARNINGS_URL = "https://www.ogeui.com/guides/dev-warnings";
+
+// @public
 export const OGE_LICENSE_KEY_PREFIX = "OGE1";
 
 // @public
@@ -719,6 +810,26 @@ export function ogeDecodeLicenseKey(key: string | null | undefined): OgeDecodedL
 
 // @public
 export function ogeDefaultLocale(): string | undefined;
+
+// @public
+export function ogeDevWarn(code: OgeDevWarningCode, detail: string, options?: OgeDevWarnOptions): void;
+
+// @public
+export type OgeDevWarningCode = keyof typeof OGE_DEV_WARNINGS;
+
+// @public
+export interface OgeDevWarningInfo {
+    readonly cause: string;
+    readonly fix: string;
+    readonly packages: readonly string[];
+    readonly title: string;
+}
+
+// @public
+export interface OgeDevWarnOptions {
+    readonly level?: 'warn' | 'error';
+    readonly once?: string;
+}
 
 // @public
 export type OgeDrawerLayoutMode = 'overlay' | 'push' | 'side';
@@ -781,6 +892,9 @@ export function ogeIntlCacheSize(): {
     relativeTime: number;
     plural: number;
 };
+
+// @public
+export function ogeIsDevMode(): boolean;
 
 // @public
 export function ogeIsLicenseExemptHost(location?: {

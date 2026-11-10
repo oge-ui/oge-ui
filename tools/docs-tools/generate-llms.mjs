@@ -73,6 +73,11 @@ import { readSnippets } from './lib/snippets.mjs';
 import { buildStackblitzManifestFile } from './lib/stackblitz.mjs';
 import { buildTokenArtifacts } from './lib/tokens.mjs';
 import { buildKeyboardMaps } from './lib/keyboard.mjs';
+import {
+  buildSecurityMd,
+  loadPolicyData,
+  renderPolicies,
+} from './lib/policies.mjs';
 
 const workspaceRoot = process.cwd();
 const checkOnly = process.argv.includes('--check');
@@ -86,6 +91,7 @@ const routes = readRoutes(abs(PATHS.routes));
 const seoDescriptions = readSeoDescriptions(abs(PATHS.seo));
 const entryPoints = readEntryPoints(workspaceRoot);
 const snippets = await readSnippets(abs(PATHS.pagesDir), workspaceRoot);
+const policies = await loadPolicyData(workspaceRoot);
 
 /** @type {Map<string, { pkg: object, blocks: any[], entries: any[], demos: any[] }>} */
 const docs = new Map();
@@ -123,6 +129,11 @@ for (const pkg of PACKAGES) {
 const artifacts = new Map();
 artifacts.set(`${PATHS.publicDir}/llms.txt`, buildIndex());
 artifacts.set(`${PATHS.publicDir}/llms-full.txt`, buildFull());
+// SECURITY.md's support table is the versioning guide's, generated.
+artifacts.set(
+  'SECURITY.md',
+  buildSecurityMd(policies.security, policies.versioning),
+);
 for (const [dir, doc] of docs) {
   const contents = buildPackageDoc(doc);
   artifacts.set(`${PATHS.publicDir}/llms/${dir}.txt`, contents);
@@ -364,6 +375,8 @@ function buildFull() {
   out.push(renderGuides());
   out.push('');
   out.push(renderTokens());
+  out.push('');
+  out.push(renderPolicies(policies, SITE_ORIGIN));
 
   for (const doc of docs.values()) {
     const { pkg, blocks, entries, demos } = doc;

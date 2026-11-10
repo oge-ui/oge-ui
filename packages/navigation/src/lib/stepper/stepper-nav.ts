@@ -6,6 +6,7 @@ import {
   type InputSignal,
 } from '@angular/core';
 import { OgeStepper } from './stepper';
+import { ogeDevWarn } from '@oge-ui/behavior';
 
 /**
  * Shared plumbing of the two navigation directives: use the stepper the button
@@ -36,9 +37,10 @@ abstract class OgeStepperNavBase {
     // it would make the bare form (`<button ogeStepperNext>`) assign the empty
     // string to a typed input, which fails under strictTemplates.
     const stepper = this.ogeStepperTarget() ?? this.ambient;
-    if (!stepper && typeof ngDevMode !== 'undefined' && ngDevMode) {
-      console.warn(
-        '[oge-navigation] a stepper navigation button is neither inside an <oge-stepper> nor bound to one.',
+    if (!stepper) {
+      ogeDevWarn(
+        'OGE3401',
+        'oge-stepper: a stepper navigation button is neither inside an <oge-stepper> nor bound to one.',
       );
     }
     return stepper;

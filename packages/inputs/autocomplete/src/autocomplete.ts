@@ -22,6 +22,8 @@ import {
   type OgeListDataSource,
   type OgeListPageLoadedEvent,
   ogeSelectMatchParts,
+  ogeDevWarn,
+  ogeIsDevMode,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -56,8 +58,6 @@ import type {
   OgeAutocompleteItemClickEvent,
   OgeAutocompleteSelectionChangedEvent,
 } from './autocomplete-types';
-
-declare const ngDevMode: boolean | undefined;
 
 /** CSS default of `.oge-select-list { max-height }` — the virtual viewport budget. */
 const DEFAULT_LIST_MAX_HEIGHT = 320;
@@ -617,16 +617,18 @@ export class OgeAutocomplete<TItem = unknown>
   constructor() {
     super();
     // Dev-mode warnings for inputs the virtual mode ignores.
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+    if (ogeIsDevMode()) {
       effect(() => {
         if (!this.virtualActive()) return;
         if (this.groupBy() !== undefined) {
-          console.warn(
+          ogeDevWarn(
+            'OGE3101',
             'oge-autocomplete: virtualScroll ignores groupBy — group headers are not rendered in virtual mode.',
           );
         }
         if (this.wrapItemText()) {
-          console.warn(
+          ogeDevWarn(
+            'OGE3102',
             'oge-autocomplete: virtualScroll forces fixed-height rows — wrapItemText is ignored.',
           );
         }

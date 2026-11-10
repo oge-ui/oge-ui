@@ -662,6 +662,16 @@ smallest complete example):
   signal and read it inside the computed (`packages/forms`' `controlRevision`, and the grid's
   editing model hit the same thing).
 
+- **Development warnings are coded.** Library code never calls `console.*` (the root ESLint
+  `no-console` rule enforces it outside `util/dev-warnings.ts` and the license notices). A warning
+  is an entry in `@oge-ui/core`'s `OGE_DEV_WARNINGS` (`OGE####`: title, packages, cause, fix — 1xxx
+  core, 2xxx overlay/security/export, 3xxx component configuration) plus an
+  `ogeDevWarn(code, detail, { once?, level? })` call (re-exported by `@oge-ui/behavior`). The helper
+  prefixes the code, appends `https://www.ogeui.com/guides/dev-warnings#<code>` and stays silent in
+  production (`ngDevMode`, else `NODE_ENV` `development` / `test`). The guide page and the
+  `llms-full.txt` table render the registry; gate effects that exist only to warn on
+  `ogeIsDevMode()`.
+
 ### Public API language
 
 - Outputs are past-tense/noun names **without `on` prefix** (`rowClick`, `selectionChanged`, `contentReady`).

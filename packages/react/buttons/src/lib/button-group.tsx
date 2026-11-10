@@ -26,9 +26,10 @@ import {
   type OgeButtonSize,
   type OgeButtonStylingMode,
   ogeIsRtl,
+  ogeDevWarn,
+  ogeIsDevMode,
 } from '@oge-ui/behavior';
 import { OgeButton } from './button';
-import { isDevMode } from './dev';
 import {
   OgeButtonGroupContext,
   type OgeButtonGroupContextValue,
@@ -284,14 +285,15 @@ export const OgeButtonGroup = forwardRef<
   useEffect(() => () => pillGlide.current?.cancel(), []);
 
   useEffect(() => {
-    if (!isDevMode()) return;
+    if (!ogeIsDevMode()) return;
     if (selectionMode === 'none') return;
     const missing = Array.from(
       rootRef.current?.querySelectorAll<HTMLButtonElement>(NATIVE) ?? [],
     ).some((el) => el.dataset['ogeValue'] === undefined);
     if (missing) {
-      console.warn(
-        '[OgeButtonGroup] selectionMode is on but some buttons have no `value`; they cannot be selected.',
+      ogeDevWarn(
+        'OGE3002',
+        'OgeButtonGroup: selectionMode is on but some buttons have no `value`; they cannot be selected.',
       );
     }
   }, [selectionMode, items, children]);

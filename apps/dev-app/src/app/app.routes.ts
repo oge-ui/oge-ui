@@ -154,6 +154,12 @@ export const appRoutes: Route[] = [
     title: 'OGE — Versioning and deprecation',
   },
   {
+    path: 'guides/dev-warnings',
+    loadComponent: () =>
+      import('./pages/guides/dev-warnings').then((m) => m.GuideDevWarningsPage),
+    title: 'OGE — Development warnings',
+  },
+  {
     path: 'ai',
     loadComponent: () =>
       import('./pages/ai/overview').then((m) => m.AiOverviewPage),

@@ -4,6 +4,7 @@ import {
   ogePluralRules,
   type OgeLocaleInput,
 } from './intl-cache';
+import { ogeDevWarn } from './dev-warnings';
 
 /** A value a message argument can take. */
 export type OgeMessageValue =
@@ -356,9 +357,6 @@ export function isOgeIcuMessage(template: string): boolean {
   );
 }
 
-declare const ngDevMode: boolean | undefined;
-const warnedKeys = new Set<string>();
-
 /**
  * Dev-mode console warning for a deprecated message key a consumer still
  * supplies — once per key per page. Silent in production Angular builds.
@@ -371,12 +369,11 @@ export function warnOgeDeprecatedMessage(
   replacement: string,
   advice?: string,
 ): void {
-  if (typeof ngDevMode !== 'undefined' && !ngDevMode) return;
-  if (warnedKeys.has(key)) return;
-  warnedKeys.add(key);
-  console.warn(
-    `[oge] the "${key}" message is deprecated and will be removed in the next minor; ` +
+  ogeDevWarn(
+    'OGE1002',
+    `the "${key}" message is deprecated and will be removed in the next minor; ` +
       `supply "${replacement}" instead` +
       (advice ? ` — ${advice}` : '.'),
+    { once: key },
   );
 }

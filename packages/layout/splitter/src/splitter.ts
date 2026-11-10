@@ -65,14 +65,13 @@ import {
   type OgeSplitterSize,
   type OgeSplitterView,
   ogeIsRtl,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
 import { OgeElementAttrs } from '@oge-ui/layout/element-attrs';
 import { OGE_SPLITTER_CONFIG } from './config';
 import type { OgeSplitterDescriptor } from './splitter-descriptor';
 import { OgeSplitterPane } from './splitter-pane';
 import { OgeSplitterPaneTemplate } from './templates';
-
-declare const ngDevMode: boolean | undefined;
 
 let nextComponentId = 0;
 
@@ -1020,9 +1019,7 @@ export class OgeSplitter {
   }
 
   private warn(message: string): void {
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-      console.warn(`[oge-splitter] ${message}`);
-    }
+    ogeDevWarn('OGE3302', `oge-splitter: ${message}`);
   }
 
   // --- public API -----------------------------------------------------------

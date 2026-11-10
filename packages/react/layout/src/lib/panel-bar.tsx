@@ -29,8 +29,8 @@ import {
   type OgePanelBarItemToggleEvent,
   type OgePanelBarNode,
   type OgePanelBarSelectionChangedEvent,
+  ogeDevWarn,
 } from '@oge-ui/behavior';
-import { isDevMode } from './dev';
 import { useOgeAccordionConfig } from './layout-config';
 
 /**
@@ -358,11 +358,10 @@ export const OgePanelBar = forwardRef<OgePanelBarHandle, OgePanelBarProps>(
       },
       expandAll: () => {
         if ((live.current.props.expandMode ?? 'multiple') !== 'multiple') {
-          if (isDevMode()) {
-            console.warn(
-              '[OgePanelBar] expandAll() requires expandMode="multiple" — ignored.',
-            );
-          }
+          ogeDevWarn(
+            'OGE3301',
+            'OgePanelBar: expandAll() requires expandMode="multiple" — ignored.',
+          );
           return;
         }
         for (const n of live.current.nodes) {
