@@ -52,6 +52,26 @@ protected onReordered(event: OgeRowReorderedEvent<unknown>): void {
 }`,
 });
 
+export const DRAG_OUT_SNIPPET = demoSource({
+  use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
+  types: { '@oge-ui/grid': ['OgeRowDragStartEvent'] },
+  dataset: 'employees',
+  template: `<!-- the browser's own drag: rows leave the grid as TSV and JSON -->
+<oge-grid [data]="employees" keyField="id" selectionMode="multiple"
+          [rowDragging]="true" [rowDragExternal]="true"
+          (rowDragStart)="onDragOut($event)">
+  <oge-column field="firstName" />
+</oge-grid>
+<textarea placeholder="Drop rows here"></textarea>`,
+  body: `protected onDragOut(event: OgeRowDragStartEvent<{ id: number }>): void {
+  // text/plain and application/json are already set — add your own types
+  event.dataTransfer?.setData(
+    'text/uri-list',
+    (event.rows ?? [event.row]).map((row) => \`https://example.com/employees/\${row.id}\`).join('\\r\\n'),
+  );
+}`,
+});
+
 export const NODATA_SNIPPET = demoSource({
   use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid', 'OgeNoDataTemplate'] },
   dataset: 'employees',

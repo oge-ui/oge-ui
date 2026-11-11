@@ -40,6 +40,8 @@ import {
   type SortDescriptor,
   sanitizeGridStateSnapshot,
   ogeDefaultLocale,
+  ogeMigrateState,
+  ogeValueComparer,
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
@@ -164,6 +166,11 @@ import {
   OgeHeaderValuesLoader,
   OgeSavedViewsCore,
   ogeAutoListFields,
+  ogeColumnFilterValues,
+  ogeRowDragOutRows,
+  ogeSortHeaderValuesByText,
+  ogeWriteRowDragData,
+  resolveLookupItems,
   ogeDatePresetExpr,
   ogeFilterCellExpr,
   ogeFilterRangeExpr,
@@ -468,6 +475,10 @@ function OgeGridInner<T extends object>(
     /** The locale in force: the prop, the provider, then `navigator.language`. */
     const effLocale = rx.derived(
       () => p().locale ?? cfg().locale ?? ogeDefaultLocale(),
+    );
+    /** Text sort locale: `sorting.locale`, else an explicitly set locale. */
+    const sortLocale = rx.derived(
+      () => p().sorting?.locale ?? p().locale ?? cfg().locale,
     );
     /**
      * Whether an adaptive-detail toggle can appear — from the declarations
@@ -1011,12 +1022,20 @@ function OgeGridInner<T extends object>(
         )
         .map((column) => column.field)
         .filter((field): field is string => field != null);
-      return { ...base, columns: { ...base.columns, hidden } };
+      const version = p().stateMigrations?.length;
+      return {
+        ...base,
+        columns: { ...base.columns, hidden },
+        ...(version ? { version } : {}),
+      };
     });
 
     function applyState(snapshot: GridStateSnapshot): void {
-      // public API fed from storage, URLs or the host: validate the shape first
-      const safe = sanitizeGridStateSnapshot(snapshot);
+      // public API fed from storage, URLs or the host: upgrade an older
+      // format (stateMigrations), then validate the shape
+      const safe = sanitizeGridStateSnapshot(
+        ogeMigrateState(snapshot, p().stateMigrations),
+      );
       if (safe === null) return;
       state.applySnapshot(safe);
       hiddenOverrides.set(new Set(safe.columns?.hidden ?? []));
@@ -1029,7 +1048,11 @@ function OgeGridInner<T extends object>(
       },
       snapshot: () => persistedSnapshot(),
       stateKey: () => latest.current.stateKey,
-      sanitize: sanitizeGridStateSnapshot,
+      // stored entries of an older format run the missing stateMigrations
+      sanitize: (value) =>
+        sanitizeGridStateSnapshot(
+          ogeMigrateState(value, latest.current.stateMigrations),
+        ),
       // a bound groupBy is controlled: the page decides the grouping, so a
       // stored grouping from an earlier visit must not replace it
       apply: (snapshot) =>
@@ -1347,6 +1370,7 @@ function OgeGridInner<T extends object>(
     return {
       rx,
       effLocale,
+      sortLocale,
       state,
       data,
       scrollTop,
@@ -1511,10 +1535,13 @@ function OgeGridInner<T extends object>(
 
   // --- effects -----------------------------------------------------------
   const keyField = props.keyField;
+  const sortLocale = model.sortLocale();
+  const sortCompare = props.sorting?.compare;
   const columnSelectors = useMemo(() => {
     const sortValues: Record<string, (row: T) => unknown> = {};
     const customSummaries: Record<string, (rows: readonly T[]) => unknown> = {};
-    for (const column of normalizeColumns<T>(props.columns) ?? []) {
+    const columns = normalizeColumns<T>(props.columns) ?? [];
+    for (const column of columns) {
       if (!column.field) continue;
       if (column.calculateSortValue)
         sortValues[column.field] = column.calculateSortValue;
@@ -1526,8 +1553,22 @@ function OgeGridInner<T extends object>(
       customSummaries: Object.keys(customSummaries).length
         ? customSummaries
         : undefined,
+      // calculateFilterValue, lookup search text, filterField redirects
+      ...ogeColumnFilterValues<T>(
+        columns.map((column) => ({
+          field: column.field,
+          calculateFilterValue: column.calculateFilterValue,
+          filterField: column.filterField,
+          lookupItems: column.lookup
+            ? resolveLookupItems(column.lookup)
+            : undefined,
+        })),
+      ),
     };
   }, [props.columns]);
+  useEffect(() => {
+    state.filter.setFieldMap(columnSelectors.fieldMap);
+  }, [state, columnSelectors]);
 
   const createSource = (): DataSource<T> => {
     const source = props.data ?? [];
@@ -1537,6 +1578,10 @@ function OgeGridInner<T extends object>(
           key: keyField,
           sortValues: columnSelectors.sortValues,
           customSummaries: columnSelectors.customSummaries,
+          filterValues: columnSelectors.filterValues,
+          searchValues: columnSelectors.searchValues,
+          locale: sortLocale,
+          compare: sortCompare,
         });
   };
   /** The source the first render loaded from, adopted by the effect below. */
@@ -1546,7 +1591,7 @@ function OgeGridInner<T extends object>(
     primedSource.current = null;
     data.setSource(source);
     return () => data.setSource(null);
-  }, [data, props.data, keyField, columnSelectors]);
+  }, [data, props.data, keyField, columnSelectors, sortLocale, sortCompare]);
 
   useEffect(() => () => data.destroy(), [data]);
 
@@ -2695,6 +2740,60 @@ function OgeGridInner<T extends object>(
     });
   }
 
+  // --- rows dragged out (rowDragExternal) ---
+  /** The handle's native `dragstart`: the rows travel as TSV and JSON. */
+  function onRowHandleDragStart(
+    node: DataRowNode<T>,
+    event: React.DragEvent<HTMLElement>,
+  ): void {
+    const transfer = event.dataTransfer;
+    if (!latest.current.rowDragExternal || !transfer) {
+      event.preventDefault();
+      return;
+    }
+    const data = model
+      .flatNodes()
+      .filter(
+        (candidate): candidate is DataRowNode<T> => candidate.kind === 'data',
+      );
+    const selected = new Set(
+      data
+        .filter((candidate) => isRowSelected(candidate.key))
+        .map((candidate) => candidate.key),
+    );
+    const nodes = ogeRowDragOutRows(
+      node,
+      node.key,
+      selected,
+      data,
+      (candidate) => candidate.key,
+    );
+    const rows = nodes.map((candidate) => candidate.data);
+    ogeWriteRowDragData(
+      transfer,
+      nodes,
+      model
+        .resolvedColumns()
+        .filter((column) => column.field)
+        .map((column) => ({
+          caption: column.caption,
+          text: (candidate: DataRowNode<T>) => cellText(candidate, column),
+        })),
+      rows,
+    );
+    const rowEl = event.currentTarget.closest('.oge-row');
+    if (rowEl) transfer.setDragImage(rowEl, 16, 16);
+    const start: OgeRowDragStartEvent<T> = {
+      key: node.key,
+      row: node.data,
+      cancel: false,
+      dataTransfer: transfer,
+      rows,
+    };
+    latest.current.onRowDragStart?.(start);
+    if (start.cancel) event.preventDefault();
+  }
+
   // --- row drag reordering ---
   /**
    * Pointer drag on a row's handle (touch drags at once — the handle is
@@ -2706,6 +2805,8 @@ function OgeGridInner<T extends object>(
     event: React.PointerEvent<HTMLElement>,
   ): void {
     if (event.button !== 0) return;
+    // rowDragExternal: the browser's own drag runs (onRowHandleDragStart)
+    if (latest.current.rowDragExternal) return;
     const start: OgeRowDragStartEvent<T> = {
       key: node.key,
       row: node.data,
@@ -3486,6 +3587,7 @@ function OgeGridInner<T extends object>(
       new OgeSavedViewsCore({
         storage: () => latest.current.stateStorage ?? contextStorageRef.current,
         stateKey: () => latest.current.stateKey,
+        migrations: () => latest.current.stateMigrations,
         onChange: (next) => setViews(next),
       }),
     [],
@@ -3844,6 +3946,7 @@ function OgeGridInner<T extends object>(
             ogeHeaderConditionKey(field),
           ]),
         searchText: () => state.filter.searchText(),
+        fieldMap: () => state.filter.fieldMap(),
         limit: () => model.effHeaderFilterLimit(),
         remoteSearch: (field) => {
           const type = model.columnsByField().get(field)?.dataType;
@@ -4950,11 +5053,27 @@ function OgeGridInner<T extends object>(
             : model.headerDateCollapsed(),
         )
       : null;
-  const visibleHeaderValues = headerFilterRawValues
-    ? headerSearchRemote
-      ? headerFilterRawValues // the server already searched these
-      : filterHeaderValues(
+  // a lookup column lists its labels in order, not its stored codes
+  const orderedHeaderValues =
+    headerFilterRawValues && headerFilterColumn?.lookupItems
+      ? ogeSortHeaderValuesByText(
           headerFilterRawValues,
+          (value) => headerValueTextOf(value),
+          (() => {
+            const compare = ogeValueComparer({
+              locale: model.sortLocale(),
+              compare: props.sorting?.compare,
+            });
+            const field = headerFilterColumn.field ?? '';
+            return (a: string, b: string) => compare(a, b, field);
+          })(),
+        )
+      : headerFilterRawValues;
+  const visibleHeaderValues = orderedHeaderValues
+    ? headerSearchRemote
+      ? orderedHeaderValues // the server already searched these
+      : filterHeaderValues(
+          orderedHeaderValues,
           model.headerFilterSearch(),
           (value) => headerValueTextOf(value),
         )
@@ -5391,7 +5510,9 @@ function OgeGridInner<T extends object>(
             <span
               className="oge-drag-handle"
               aria-label={msg.reorderRow}
+              draggable={props.rowDragExternal ? true : undefined}
               onPointerDown={(event) => onRowHandlePointerDown(node, event)}
+              onDragStart={(event) => onRowHandleDragStart(node, event)}
               onClick={(event) => event.stopPropagation()}
             >
               <svg

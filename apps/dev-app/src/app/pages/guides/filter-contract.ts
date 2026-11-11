@@ -31,11 +31,20 @@ const OPERATOR_ROWS = (
   `\`${info.sql}\``,
 ]);
 
+/** Measured with `ArrayDataSource` (Node 24, one laptop core). */
+const PERF_ROWS = [
+  ['10 000', '≈ 6 ms', '≈ 20 ms', '≈ 6 ms', '≈ 1 ms'],
+  ['100 000', '≈ 55 ms', '≈ 200 ms', '≈ 50 ms', '≈ 6 ms'],
+];
+
 const SECTIONS = [
   'Rules for every operator',
   'Operators',
   'What the grid sends',
   'Value lists',
+  'Display values and server fields',
+  'Sorting and locales',
+  'Performance',
   'Test vectors',
 ];
 
@@ -163,6 +172,80 @@ const SECTIONS = [
     </ul>
     <app-code-block [code]="distinctEndpoint" language="ts" />
 
+    <h2 id="display-values-and-server-fields" class="scroll-mt-20">
+      Display values and server fields
+    </h2>
+    <p>
+      A filter is written against a column's <code>field</code>. What it is
+      compared with can differ from the stored value:
+    </p>
+    <ul>
+      <li>
+        <strong>Lookup columns</strong> (a static <code>lookup</code>) are
+        searched by their labels as well as their stored codes, list their
+        labels alphabetically, and filter by code from the filter row and value
+        list — <em>leave</em> finds the row whose status code means
+        <em>On leave</em>.
+      </li>
+      <li>
+        <strong><code>calculateFilterValue</code></strong> sets the value a
+        column filters, lists and searches by on the client — the full name
+        behind two fields, the translated text of an enum. Every operator then
+        compares that value.
+      </li>
+      <li>
+        <strong><code>filterField</code></strong> sends a column's filters and
+        its <code>distinct()</code> request to the server under another field: a
+        derived <code>customerName</code> column filtered as
+        <code>customer.lastName</code>. The saved state and the filter chips
+        keep the column's own field.
+      </li>
+    </ul>
+
+    <h2 id="sorting-and-locales" class="scroll-mt-20">Sorting and locales</h2>
+    <p>
+      Text sorts numeric-aware and case-insensitively under a collator for
+      <code>sorting.locale</code>, which is set apart from the
+      <code>locale</code> that formats numbers and dates and defaults to it.
+      With <code>'tr'</code>, <code>I</code> is the capital of <code>ı</code>,
+      which sorts before <code>i</code> and <code>İ</code>: Isparta comes before
+      İnegöl, where an English sort puts İnegöl first.
+      <code>sorting.compare</code> replaces the comparison outright; blank cells
+      sort last either way. Both apply to rows the grid sorts itself and to its
+      value lists — a server sorts with its own collation (<code
+        >COLLATE "tr-TR-x-icu"</code
+      >
+      in PostgreSQL, <code>Turkish_CI_AS</code> in SQL Server). Search and text
+      filters fold case and accents the same way in every locale, so
+      <em>izmir</em>, <em>IZMIR</em> and <em>İzmir</em> all match.
+    </p>
+
+    <h2 id="performance" class="scroll-mt-20">Performance</h2>
+    <p>
+      An in-memory source compiles the filter tree once per load, not per row:
+      folded needles, the <code>Set</code> behind an <code>in</code> list and
+      the epoch of a date bound are prepared up front, and a search formats each
+      distinct date once. A value list is read once when its popup opens; typing
+      in its search box narrows that list without touching the rows. Measured on
+      a laptop with the suite's own data source (five columns, one with Turkish
+      text):
+    </p>
+    <app-guide-table
+      caption="In-memory timings"
+      [head]="[
+        'Rows',
+        'Filter (in + between + contains)',
+        'Search',
+        'Sort',
+        'Value list',
+      ]"
+      [rows]="perfRows"
+    />
+    <p>
+      The grid renders only the rows in view, so these costs — not the row count
+      — decide how quickly a menu opens or a filter applies.
+    </p>
+
     <h2 id="test-vectors" class="scroll-mt-20">Test vectors</h2>
     <p>
       <code>&#64;oge-ui/core/filter-vectors.json</code> holds rows, expressions
@@ -179,4 +262,5 @@ export class GuideFilterContractPage {
   protected readonly operatorRows = OPERATOR_ROWS;
   protected readonly distinctEndpoint = DISTINCT_ENDPOINT;
   protected readonly serverVectors = SERVER_VECTORS;
+  protected readonly perfRows = PERF_ROWS;
 }

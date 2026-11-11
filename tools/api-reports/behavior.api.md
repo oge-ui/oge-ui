@@ -1327,6 +1327,9 @@ export const OGE_GRID_ASSISTANT_ICON_PATH = "M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 
 export const OGE_GRID_HOST_SELECTOR = ".oge-grid, .oge-tree-list";
 
 // @public
+export const OGE_GRID_ROWS_MIME = "application/x-oge-grid-rows+json";
+
+// @public
 export const OGE_GRID_WINDOW_BLOCK_SIZE = 100;
 
 // @public
@@ -3370,6 +3373,16 @@ export interface OgeColorScaleFormat {
 
 // @public
 export type OgeColumnAlignment = 'start' | 'center' | 'end';
+
+// @public
+export interface OgeColumnFilterValues<T> {
+    readonly fieldMap: Readonly<Record<string, string>>;
+    readonly filterValues: Readonly<Record<string, (row: T) => unknown>> | undefined;
+    readonly searchValues: Readonly<Record<string, (row: T) => unknown>> | undefined;
+}
+
+// @public
+export function ogeColumnFilterValues<T>(columns: readonly OgeFilterValueColumn<T>[]): OgeColumnFilterValues<T>;
 
 // Warning: (ae-forgotten-export) The symbol "OgeValueFormat" needs to be exported by the entry point index.d.ts
 //
@@ -6224,6 +6237,15 @@ export interface OgeFilterRowOptions {
 }
 
 // @public
+export interface OgeFilterValueColumn<T> {
+    readonly calculateFilterValue?: ((row: T) => unknown) | undefined;
+    // (undocumented)
+    readonly field: string | undefined;
+    readonly filterField?: string | undefined;
+    readonly lookupItems?: readonly LookupItem[] | undefined;
+}
+
+// @public
 export function ogeFindMentionQuery(text: string, caret: number, triggers: readonly string[], options?: OgeMentionQueryOptions): OgeMentionQuery | null;
 
 // @public
@@ -7478,16 +7500,20 @@ export class OgeGridFilterState {
     clearAll(): void;
     readonly combinedExpr: () => FilterExpr | null;
     combinedExprExcept(field: string, rowKeys?: readonly string[]): FilterExpr | null;
+    readonly fieldMap: () => Readonly<Record<string, string>>;
     headerExpr(field: string, values: readonly unknown[]): FilterExpr;
     // (undocumented)
     headerFilterOf(field: string): readonly unknown[] | null;
+    readonly loadExpr: () => FilterExpr | null;
     readonly pending: () => boolean;
     rowFilterOf(field: string): FilterExpr | null;
     // (undocumented)
     readonly searchText: () => string;
+    // (undocumented)
     setApplyMode(mode: 'auto' | 'manual'): void;
     // (undocumented)
     setBuilderFilter(expr: FilterExpr | null): void;
+    setFieldMap(map: Readonly<Record<string, string>>): void;
     setHeaderFilter(field: string, values: readonly unknown[] | null): void;
     // (undocumented)
     setRowFilter(field: string, expr: FilterExpr | null): void;
@@ -8333,6 +8359,7 @@ export class OgeHeaderValuesLoader {
 // @public
 export interface OgeHeaderValuesLoaderOptions {
     readonly debounceMs?: number;
+    readonly fieldMap?: () => Readonly<Record<string, string>>;
     readonly filterFor: (field: string) => FilterExpr | null;
     readonly limit: () => number;
     // (undocumented)
@@ -10265,8 +10292,10 @@ export function ogePanelBarVisibleIds<T extends OgePanelBarItemLike>(nodes: read
 // @public
 export function ogeParsePageInput(text: string, pageCount: number): number | null;
 
+// Warning: (ae-forgotten-export) The symbol "OgeStateMigration" needs to be exported by the entry point index.d.ts
+//
 // @public
-export function ogeParseSavedViews(raw: string | null): OgeSavedView[];
+export function ogeParseSavedViews(raw: string | null, migrations?: readonly OgeStateMigration[]): OgeSavedView[];
 
 // @public
 export interface OgePdfFont {
@@ -10923,6 +10952,16 @@ export interface OgeRowDragEndEvent<T = unknown> {
 }
 
 // @public
+export interface OgeRowDragOutColumn<T> {
+    // (undocumented)
+    readonly caption: string;
+    readonly text: (row: T) => string;
+}
+
+// @public
+export function ogeRowDragOutRows<T, K>(grabbed: T, grabbedKey: K, selected: ReadonlySet<K>, rows: readonly T[], keyOf: (row: T, index: number) => K): readonly T[];
+
+// @public
 export interface OgeRowDragOverEvent {
     // (undocumented)
     cancel: boolean;
@@ -10964,10 +11003,12 @@ export interface OgeRowDragSource {
 export interface OgeRowDragStartEvent<T = unknown> {
     // (undocumented)
     cancel: boolean;
+    dataTransfer?: DataTransfer;
     // (undocumented)
     key: RowKey;
     // (undocumented)
     row: T;
+    rows?: readonly T[];
 }
 
 // @public
@@ -11174,6 +11215,7 @@ export function ogeSavedViewsKey(stateKey: string): string;
 
 // @public
 export interface OgeSavedViewsOptions {
+    readonly migrations?: () => readonly OgeStateMigration[] | undefined;
     readonly onChange: (views: readonly OgeSavedView[]) => void;
     readonly stateKey: () => string | undefined;
     // (undocumented)
@@ -11884,9 +11926,14 @@ export interface OgeSortChangedEvent {
     sort: readonly SortDescriptor[];
 }
 
+// @public
+export function ogeSortHeaderValuesByText(values: readonly unknown[], textOf: (value: unknown) => string, compare: (a: string, b: string) => number): readonly unknown[];
+
 // @public (undocumented)
 export interface OgeSortingOptions {
     allowUnsorting?: boolean;
+    compare?: (a: unknown, b: unknown, field: string) => number;
+    locale?: string;
     // (undocumented)
     mode?: 'none' | 'single' | 'multi';
 }
@@ -15582,6 +15629,9 @@ export function ogeWithoutSavedView(views: readonly OgeSavedView[], name: string
 
 // @public
 export function ogeWithSavedView(views: readonly OgeSavedView[], name: string, state: GridStateSnapshot, now?: Date): OgeSavedView[];
+
+// @public
+export function ogeWriteRowDragData<I>(transfer: DataTransfer, items: readonly I[], columns: readonly OgeRowDragOutColumn<I>[], rows?: readonly unknown[]): void;
 
 // @public
 export function operatorsFor(dataType: OgeDataType): FilterOperator[];

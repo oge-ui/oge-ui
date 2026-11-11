@@ -8,6 +8,7 @@ import type {
   SortDescriptor,
   SummaryDescriptor,
 } from '@oge-ui/core';
+import { ogeRemapFilterFields } from '@oge-ui/core';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 
 /**
@@ -152,7 +153,18 @@ export class OgeGridFilterState {
   readonly applyMode: () => 'auto' | 'manual';
   /** Whether manual mode holds edits that are not applied yet. */
   readonly pending: () => boolean;
+  /**
+   * Column field → the field its filters go to the data source under
+   * (`filterField`). Empty when no column redirects its filter.
+   */
+  readonly fieldMap: () => Readonly<Record<string, string>>;
+  /**
+   * {@link appliedExpr} with the fields of {@link fieldMap} renamed — what
+   * `LoadOptions.filter` carries.
+   */
+  readonly loadExpr: () => FilterExpr | null;
 
+  private readonly _fieldMap: OgeReactiveCell<Readonly<Record<string, string>>>;
   private readonly _applyMode: OgeReactiveCell<'auto' | 'manual'>;
   private readonly _applied: OgeReactiveCell<{
     readonly expr: FilterExpr | null;
@@ -204,6 +216,12 @@ export class OgeGridFilterState {
         ? this._applied().searchText
         : this._searchText(),
     );
+    this._fieldMap = rx.cell<Readonly<Record<string, string>>>({});
+    this.fieldMap = () => this._fieldMap();
+    this.loadExpr = rx.derived(() => {
+      const expr = this.appliedExpr();
+      return expr ? ogeRemapFilterFields(expr, this._fieldMap()) : null;
+    });
     this.pending = rx.derived(
       () =>
         this._applyMode() === 'manual' &&
@@ -218,6 +236,12 @@ export class OgeGridFilterState {
    * applyPending} — for heavy server queries. Entering manual mode applies
    * the current filter; leaving it applies whatever is pending.
    */
+  /** Sets the `filterField` redirects; equal maps change nothing. */
+  setFieldMap(map: Readonly<Record<string, string>>): void {
+    if (JSON.stringify(map) === JSON.stringify(this._fieldMap())) return;
+    this._fieldMap.set(map);
+  }
+
   setApplyMode(mode: 'auto' | 'manual'): void {
     if (this._applyMode() === mode) return;
     this.applyPending();

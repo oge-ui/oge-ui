@@ -69,6 +69,39 @@ export const TOOLS_SNIPPET = demoSource({
 </oge-grid>`,
 });
 
+export const DISPLAY_SNIPPET = demoSource({
+  use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
+  before: `interface Person {
+  id: number;
+  firstName: string;
+  lastName: string;
+  status: number;
+  city: string;
+}`,
+  template: `<!-- search and filters match what the cells show; text sorts the Turkish way -->
+<oge-grid [data]="people" keyField="id" [filterRow]="true" [searchPanel]="true"
+          [sorting]="{ locale: 'tr' }">
+  <oge-column field="name" caption="Name"
+              [calculateCellValue]="fullName" [calculateFilterValue]="fullName" />
+  <oge-column field="status" caption="Status"
+              [lookup]="{ dataSource: statuses, valueExpr: 'value', displayExpr: 'text' }" />
+  <oge-column field="city" caption="City" />
+  <!-- a server filters a derived column on another field:
+       <oge-column field="customerName" filterField="customer.lastName" /> -->
+</oge-grid>`,
+  body: `readonly statuses = [
+  { value: 0, text: 'Active' },
+  { value: 1, text: 'On leave' },
+  { value: 2, text: 'Former' },
+];
+readonly people: Person[] = [
+  { id: 1, firstName: 'Ada', lastName: 'Kaya', status: 0, city: 'İzmir' },
+  { id: 2, firstName: 'Can', lastName: 'Işık', status: 1, city: 'Iğdır' },
+  { id: 3, firstName: 'Ece', lastName: 'Öz', status: 2, city: 'Isparta' },
+];
+readonly fullName = (row: Person) => \`\${row.firstName} \${row.lastName}\`;`,
+});
+
 export const MENU_SNIPPET = demoSource({
   use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
   dataset: 'employees',

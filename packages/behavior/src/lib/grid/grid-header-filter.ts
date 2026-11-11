@@ -134,6 +134,24 @@ export interface OgeHeaderValueGroup {
   values: readonly unknown[];
 }
 
+/**
+ * Orders a value list by the text it shows — a lookup column lists its
+ * labels alphabetically, not its stored codes. The blank item stays last.
+ */
+export function ogeSortHeaderValuesByText(
+  values: readonly unknown[],
+  textOf: (value: unknown) => string,
+  compare: (a: string, b: string) => number,
+): readonly unknown[] {
+  const blanks = values.filter((value) => value == null || value === '');
+  const rest = values
+    .filter((value) => !(value == null || value === ''))
+    .map((value) => ({ value, text: textOf(value) }))
+    .sort((a, b) => compare(a.text, b.text))
+    .map((entry) => entry.value);
+  return blanks.length ? [...rest, ...blanks] : rest;
+}
+
 /** The distinct values left after the popup's search box. */
 export function filterHeaderValues(
   values: readonly unknown[],

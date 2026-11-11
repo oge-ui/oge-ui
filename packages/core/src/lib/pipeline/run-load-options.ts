@@ -3,6 +3,7 @@ import type { LoadResult } from '../data/data-source';
 import { buildSearchFilter } from '../filtering/filter-evaluator';
 import { groupRows } from '../grouping/group-rows';
 import { computeSummaries, type CustomSummaryMap } from '../grouping/summaries';
+import type { ValueAccessor } from '../util/value-accessor';
 import { applyFilter } from './steps/filter.step';
 import { applyPaging } from './steps/paginate.step';
 import { applySort } from './steps/sort.step';
@@ -14,6 +15,56 @@ export interface RunLoadOptionsConfig<T = unknown> {
   sortValues?: Readonly<Record<string, (row: T) => unknown>>;
   /** Custom summary reducers keyed by descriptor `name ?? field`; client-side only. */
   customSummaries?: CustomSummaryMap<T>;
+  /**
+   * Per-field values filters compare instead of the property
+   * (`calculateFilterValue`); client-side only. The global search matches
+   * them too, even for fields the rows do not carry.
+   */
+  filterValues?: Readonly<Record<string, ValueAccessor<T>>>;
+  /**
+   * Extra text the global search matches per field, beside the property —
+   * a lookup column's display text. Fields named here are searched even
+   * when `searchFields` leaves them out.
+   */
+  searchValues?: Readonly<Record<string, ValueAccessor<T>>>;
+  /** The sort comparison (`ogeValueComparer`); default `compareValues`. */
+  compare?: (a: unknown, b: unknown, field: string) => number;
+}
+
+/**
+ * The global search over rows: an or-of-contains across `fields`, where a
+ * field with a filter value is matched on it and a field with search text
+ * is matched on its property and that text together.
+ */
+export function ogeSearchRows<T>(
+  rows: readonly T[],
+  searchText: string | undefined,
+  config: RunLoadOptionsConfig<T>,
+): readonly T[] {
+  if (!searchText?.trim() || !rows.length) return rows;
+  const base = config.searchFields ?? Object.keys(rows[0] as object);
+  const extra = config.searchValues ?? {};
+  const fields = [
+    ...new Set([
+      ...base,
+      ...Object.keys(config.filterValues ?? {}),
+      ...Object.keys(extra),
+    ]),
+  ];
+  const accessors: Record<string, ValueAccessor<T>> = {
+    ...config.filterValues,
+  };
+  for (const [field, text] of Object.entries(extra)) {
+    const own = accessors[field];
+    accessors[field] = (row) => {
+      const value = own
+        ? own(row)
+        : (row as Record<string, unknown> | null)?.[field];
+      const label = text(row);
+      return `${value ?? ''}\u0000${label ?? ''}`;
+    };
+  }
+  return applyFilter(rows, buildSearchFilter(fields, searchText), accessors);
 }
 
 /**
@@ -27,13 +78,8 @@ export function runLoadOptions<T>(
   options: LoadOptions,
   config: RunLoadOptionsConfig<T> = {},
 ): LoadResult<T> {
-  const filtered = applyFilter(rows, options.filter);
-  const searchFields =
-    config.searchFields ?? (rows.length ? Object.keys(rows[0] as object) : []);
-  const searchFilter = options.searchText
-    ? buildSearchFilter(searchFields, options.searchText)
-    : null;
-  const searched = applyFilter(filtered, searchFilter);
+  const filtered = applyFilter(rows, options.filter, config.filterValues);
+  const searched = ogeSearchRows(filtered, options.searchText, config);
 
   const summary = options.totalSummary?.length
     ? {
@@ -57,6 +103,7 @@ export function runLoadOptions<T>(
         ...(options.sort ?? []),
       ],
       config.sortValues,
+      config.compare,
     );
     const grouped = groupRows(
       sorted,
@@ -72,7 +119,12 @@ export function runLoadOptions<T>(
     };
   }
 
-  const sorted = applySort(searched, options.sort, config.sortValues);
+  const sorted = applySort(
+    searched,
+    options.sort,
+    config.sortValues,
+    config.compare,
+  );
   const paged = applyPaging(sorted, options.skip, options.take);
   return { data: paged, ...totalCount, ...summary };
 }

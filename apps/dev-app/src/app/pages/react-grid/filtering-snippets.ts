@@ -159,4 +159,45 @@ declare const employees: Employee[];`,
 />`,
     }),
   },
+  {
+    title: 'Display values and Turkish sorting',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-grid': ['OgeGrid'] },
+      name: 'DisplayValuesGrid',
+      before: `interface Person {
+  id: number;
+  firstName: string;
+  lastName: string;
+  status: number;
+  city: string;
+}
+
+declare const people: Person[];
+
+const statuses = [
+  { value: 0, text: 'Active' },
+  { value: 1, text: 'On leave' },
+  { value: 2, text: 'Former' },
+];
+const fullName = (row: Person) => \`\${row.firstName} \${row.lastName}\`;`,
+      jsx: `<OgeGrid
+  data={people}
+  keyField="id"
+  filterRow
+  searchPanel
+  sorting={{ locale: 'tr' }}       // Isparta before İnegöl (dotless I first)
+  columns={[
+    // filters and the search match the shown full name
+    { field: 'name', caption: 'Name',
+      calculateCellValue: fullName, calculateFilterValue: fullName },
+    // the search also matches the lookup labels
+    { field: 'status', caption: 'Status',
+      lookup: { dataSource: statuses, valueExpr: 'value', displayExpr: 'text' } },
+    { field: 'city', caption: 'City' },
+    // a server filters a derived column on another field:
+    // { field: 'customerName', filterField: 'customer.lastName' }
+  ]}
+/>`,
+    }),
+  },
 ];

@@ -1,5 +1,8 @@
 import type { FilterExpr } from '../data/load-options';
-import { createFieldAccessor } from '../util/value-accessor';
+import {
+  createFieldAccessor,
+  type ValueAccessor,
+} from '../util/value-accessor';
 import { foldText } from '../util/text-fold';
 import { isOgeBlank } from './filter-contract';
 
@@ -107,6 +110,96 @@ function asText(value: unknown): string | null {
 }
 
 /**
+ * Folded cell text for the text operators, with Date cells memoized per
+ * instant: a search across a date column formats each distinct day once, not
+ * once per row (`String(date)` is one of the costliest steps of a search).
+ */
+function cellText(): (value: unknown) => string | null {
+  let dates: Map<number, string> | null = null;
+  return (value) => {
+    if (value == null) return null;
+    if (!(value instanceof Date)) return foldText(String(value));
+    const time = value.getTime();
+    dates ??= new Map();
+    let text = dates.get(time);
+    if (text === undefined) {
+      text = foldText(String(value));
+      dates.set(time, text);
+    }
+    return text;
+  };
+}
+
+/**
+ * The epoch a constant compares as against Date cells, read once per
+ * predicate: a Date filter value is not re-read and an ISO string is not
+ * re-parsed for each of 10 000 rows.
+ */
+function constantEpoch(value: unknown): unknown {
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'string') return Date.parse(value);
+  return value;
+}
+
+/**
+ * {@link orderedCompare} against a constant, with the constant's folded text
+ * and epoch prepared once. Same results, fewer allocations per row.
+ */
+function orderedAgainst(value: unknown): (cell: unknown) => number | null {
+  if (value == null) return () => null;
+  const folded = typeof value === 'string' ? foldText(value) : null;
+  const epoch = constantEpoch(value);
+  const isDate = value instanceof Date;
+  return (cell) => {
+    if (cell == null) return null;
+    if (cell instanceof Date) {
+      const a = cell.getTime();
+      const b = epoch as number;
+      if (typeof b !== 'number' || Number.isNaN(a) || Number.isNaN(b)) {
+        return null;
+      }
+      return a < b ? -1 : a > b ? 1 : 0;
+    }
+    if (isDate) return orderedCompare(cell, value);
+    if (folded !== null && typeof cell === 'string') {
+      const a = foldText(cell);
+      return a < folded ? -1 : a > folded ? 1 : 0;
+    }
+    return orderedCompare(cell, value);
+  };
+}
+
+/** {@link looseEquals} against a constant, prepared once per predicate. */
+function equalsTo(value: unknown): (cell: unknown) => boolean {
+  if (value == null) return (cell) => cell == null;
+  if (value instanceof Date) {
+    const epoch = value.getTime();
+    return (cell) =>
+      cell instanceof Date
+        ? cell.getTime() === epoch
+        : looseEquals(cell, value);
+  }
+  if (typeof value === 'string') {
+    const folded = foldText(value);
+    return (cell) =>
+      typeof cell === 'string'
+        ? foldText(cell) === folded
+        : looseEquals(cell, value);
+  }
+  return (cell) => looseEquals(cell, value);
+}
+
+/** Options of {@link createFilterPredicate}. */
+export interface OgeFilterPredicateOptions<T = unknown> {
+  /**
+   * Per-field value readers that replace the plain property path — what a
+   * column's `calculateFilterValue` (or a lookup's display text) compares
+   * as on the client. Fields without one read the row's property.
+   */
+  readonly accessors?: Readonly<Record<string, ValueAccessor<T>>>;
+}
+
+/**
  * Compiles a FilterExpr tree into a row predicate, following the published
  * filter contract (`OGE_FILTER_OPERATORS`): two-valued logic, folded
  * case- and accent-insensitive text, negations that keep null cells. Every
@@ -114,68 +207,86 @@ function asText(value: unknown): string | null {
  */
 export function createFilterPredicate<T = unknown>(
   expr: FilterExpr,
+  options?: OgeFilterPredicateOptions<T>,
 ): (row: T) => boolean {
   switch (expr.type) {
     case 'and': {
       const predicates = expr.operands.map((operand) =>
-        createFilterPredicate<T>(operand),
+        createFilterPredicate<T>(operand, options),
       );
       return (row) => predicates.every((p) => p(row));
     }
     case 'or': {
       const predicates = expr.operands.map((operand) =>
-        createFilterPredicate<T>(operand),
+        createFilterPredicate<T>(operand, options),
       );
       return (row) => predicates.some((p) => p(row));
     }
     case 'not': {
-      const inner = createFilterPredicate<T>(expr.operand);
+      const inner = createFilterPredicate<T>(expr.operand, options);
       return (row) => !inner(row);
     }
   }
 
-  const accessor = createFieldAccessor<T>(expr.field);
+  const accessor =
+    options?.accessors?.[expr.field] ?? createFieldAccessor<T>(expr.field);
   const { op, value } = expr;
   switch (op) {
-    case 'eq':
-      return (row) => looseEquals(accessor(row), value);
-    case 'ne':
-      return (row) => !looseEquals(accessor(row), value);
-    case 'gt':
-      return (row) => (orderedCompare(accessor(row), value) ?? -1) > 0;
-    case 'ge':
-      return (row) => (orderedCompare(accessor(row), value) ?? -1) >= 0;
-    case 'lt':
-      return (row) => (orderedCompare(accessor(row), value) ?? 1) < 0;
-    case 'le':
-      return (row) => (orderedCompare(accessor(row), value) ?? 1) <= 0;
+    case 'eq': {
+      const equals = equalsTo(value);
+      return (row) => equals(accessor(row));
+    }
+    case 'ne': {
+      const equals = equalsTo(value);
+      return (row) => !equals(accessor(row));
+    }
+    case 'gt': {
+      const order = orderedAgainst(value);
+      return (row) => (order(accessor(row)) ?? -1) > 0;
+    }
+    case 'ge': {
+      const order = orderedAgainst(value);
+      return (row) => (order(accessor(row)) ?? -1) >= 0;
+    }
+    case 'lt': {
+      const order = orderedAgainst(value);
+      return (row) => (order(accessor(row)) ?? 1) < 0;
+    }
+    case 'le': {
+      const order = orderedAgainst(value);
+      return (row) => (order(accessor(row)) ?? 1) <= 0;
+    }
     // The needle is constant per predicate — fold it once at compile time,
     // not once per row (matters when filtering large sets).
     case 'contains': {
       const needle = asText(value);
+      const textOf = cellText();
       return (row) => {
-        const cell = asText(accessor(row));
+        const cell = textOf(accessor(row));
         return cell != null && needle != null && cell.includes(needle);
       };
     }
     case 'notcontains': {
       const needle = asText(value);
+      const textOf = cellText();
       return (row) => {
-        const cell = asText(accessor(row));
+        const cell = textOf(accessor(row));
         return cell == null || needle == null || !cell.includes(needle);
       };
     }
     case 'startswith': {
       const needle = asText(value);
+      const textOf = cellText();
       return (row) => {
-        const cell = asText(accessor(row));
+        const cell = textOf(accessor(row));
         return cell != null && needle != null && cell.startsWith(needle);
       };
     }
     case 'endswith': {
       const needle = asText(value);
+      const textOf = cellText();
       return (row) => {
-        const cell = asText(accessor(row));
+        const cell = textOf(accessor(row));
         return cell != null && needle != null && cell.endsWith(needle);
       };
     }
@@ -189,11 +300,13 @@ export function createFilterPredicate<T = unknown>(
     }
     case 'between': {
       const [min, max] = Array.isArray(value) ? value : [undefined, undefined];
+      const fromMin = min == null ? null : orderedAgainst(min);
+      const toMax = max == null ? null : orderedAgainst(max);
       return (row) => {
         const cell = accessor(row);
         if (cell == null) return false;
-        const lower = min == null || (orderedCompare(cell, min) ?? -1) >= 0;
-        const upper = max == null || (orderedCompare(cell, max) ?? 1) <= 0;
+        const lower = fromMin === null || (fromMin(cell) ?? -1) >= 0;
+        const upper = toMax === null || (toMax(cell) ?? 1) <= 0;
         return lower && upper;
       };
     }

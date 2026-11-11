@@ -1,7 +1,9 @@
 import {
+  ogeMigrateState,
   parseStateJson,
   sanitizeGridStateSnapshot,
   type GridStateSnapshot,
+  type OgeStateMigration,
 } from '@oge-ui/core';
 import type { OgeStateStorage } from './grid-state-persistence';
 
@@ -38,8 +40,15 @@ export function ogeNormalizeViewName(name: string): string {
   return name.replace(/\s+/g, ' ').trim().slice(0, OGE_SAVED_VIEW_NAME_MAX);
 }
 
-/** Parses stored views, dropping anything that is not a valid view. */
-export function ogeParseSavedViews(raw: string | null): OgeSavedView[] {
+/**
+ * Parses stored views, dropping anything that is not a valid view. Each
+ * view's state runs through the grid's `stateMigrations` first, so a view
+ * saved before a format change opens in the new format.
+ */
+export function ogeParseSavedViews(
+  raw: string | null,
+  migrations?: readonly OgeStateMigration[],
+): OgeSavedView[] {
   const parsed = raw ? parseStateJson(raw) : null;
   if (!Array.isArray(parsed)) return [];
   const out: OgeSavedView[] = [];
@@ -48,7 +57,9 @@ export function ogeParseSavedViews(raw: string | null): OgeSavedView[] {
     const { name, state, savedAt } = item as Record<string, unknown>;
     if (typeof name !== 'string') continue;
     const clean = ogeNormalizeViewName(name);
-    const snapshot = sanitizeGridStateSnapshot(state);
+    const snapshot = sanitizeGridStateSnapshot(
+      ogeMigrateState(state, migrations),
+    );
     if (!clean || !snapshot) continue;
     out.push({
       name: clean,
@@ -92,6 +103,8 @@ export interface OgeSavedViewsOptions {
   readonly stateKey: () => string | undefined;
   /** Called whenever the list changes (to re-render). */
   readonly onChange: (views: readonly OgeSavedView[]) => void;
+  /** The grid's `stateMigrations`, run over every stored view. */
+  readonly migrations?: () => readonly OgeStateMigration[] | undefined;
 }
 
 /** Loads, saves and deletes a grid's views. */
@@ -115,7 +128,7 @@ export class OgeSavedViewsCore {
     const token = ++this.token;
     const set = (raw: string | null) => {
       if (token !== this.token) return; // a newer key took over
-      this.views = ogeParseSavedViews(raw);
+      this.views = ogeParseSavedViews(raw, this.options.migrations?.());
       this.options.onChange(this.views);
     };
     try {

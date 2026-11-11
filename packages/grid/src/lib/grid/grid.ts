@@ -49,6 +49,9 @@ import {
   type SummaryDescriptor,
   type SummaryRowNode,
   type SummaryType,
+  type OgeStateMigration,
+  ogeMigrateState,
+  ogeValueComparer,
   sanitizeGridStateSnapshot,
 } from '@oge-ui/core';
 import {
@@ -139,6 +142,11 @@ import {
   OgeHeaderValuesLoader,
   OgeSavedViewsCore,
   ogeAutoListFields,
+  ogeColumnFilterValues,
+  ogeSortHeaderValuesByText,
+  ogeRowDragOutRows,
+  ogeWriteRowDragData,
+  resolveLookupItems,
   ogeDatePresetExpr,
   ogeFilterCellExpr,
   ogeFilterRangeExpr,
@@ -686,6 +694,18 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    */
   readonly stateKey = input<string | undefined>(undefined);
 
+  /**
+   * One upgrade step per change of your stored state's format: step `n`
+   * turns a state of version `n` into `n + 1`. Snapshots record their
+   * version, and a restored state, an `applyState()` argument or a saved
+   * view runs the steps it missed — an old entry is converted instead of
+   * dropped. A failing step keeps the column layout (widths, order, pins,
+   * hidden) and drops the rest.
+   */
+  readonly stateMigrations = input<readonly OgeStateMigration[] | undefined>(
+    undefined,
+  );
+
   /** Shows the filter panel bar with the filter-builder entry point. */
   readonly filterPanel = input(false);
 
@@ -1045,6 +1065,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const keyField = this.keyField();
       const sortValues = this.sortValueSelectors();
       const customSummaries = this.customSummarySelectors();
+      const { filterValues, searchValues } = this.columnFilterValues();
+      const sorting = this.sorting();
       this.adapter.setSource(
         isDataSource(data)
           ? data
@@ -1052,8 +1074,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
               key: keyField,
               sortValues,
               customSummaries,
+              filterValues,
+              searchValues,
+              locale: this.sortLocale(),
+              compare: sorting?.compare,
             }),
       );
+    });
+    // filterField: the load options and value lists ask for the server field
+    effect(() => {
+      const { fieldMap } = this.columnFilterValues();
+      untracked(() => this.store.filter.setFieldMap(fieldMap));
     });
     // Inline object/array bindings produce a fresh reference on every change
     // detection pass; these effects must react to *content* changes only,
@@ -1308,7 +1339,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       prefix: 'oge-grid',
       storage: this.stateStorage,
       snapshot: this.persistedSnapshot,
-      sanitize: sanitizeGridStateSnapshot,
+      // stored entries of an older format run the missing stateMigrations
+      sanitize: (value) =>
+        sanitizeGridStateSnapshot(
+          ogeMigrateState(value, untracked(this.stateMigrations)),
+        ),
       // a bound [groupBy] is controlled: the page decides the grouping, so a
       // stored grouping from an earlier visit must not replace it
       apply: (snapshot) =>
@@ -1404,7 +1439,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       .filter((column) => !column.visible())
       .map((column) => column.field())
       .filter((field): field is string => field != null);
-    return { ...base, columns: { ...base.columns, hidden } };
+    const version = this.stateMigrations()?.length;
+    return {
+      ...base,
+      columns: { ...base.columns, hidden },
+      ...(version ? { version } : {}),
+    };
   });
 
   /** Current persistable UI state: sort, filters, grouping, column layout. */
@@ -1414,8 +1454,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Applies a previously captured state snapshot (see `state()` / `stateChange`). */
   applyState(snapshot: GridStateSnapshot): void {
-    // public API fed from storage, URLs or the host: validate the shape first
-    const safe = sanitizeGridStateSnapshot(snapshot);
+    // public API fed from storage, URLs or the host: upgrade an older
+    // format (stateMigrations), then validate the shape
+    const safe = sanitizeGridStateSnapshot(
+      ogeMigrateState(snapshot, untracked(this.stateMigrations)),
+    );
     if (safe === null) return;
     untracked(() => {
       this.store.applySnapshot(safe);
@@ -1752,6 +1795,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly viewsCore = new OgeSavedViewsCore({
     storage: () => this.stateStorage,
     stateKey: () => untracked(this.stateKey),
+    migrations: () => untracked(this.stateMigrations),
     onChange: (views) => this.views.set(views),
   });
   protected readonly viewsOpen = signal(false);
@@ -2341,6 +2385,37 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
     return fields;
   });
+
+  /** Text sort locale: `sorting.locale`, else an explicitly set grid locale. */
+  private readonly sortLocale = computed(
+    () => this.sorting()?.locale ?? this.locale() ?? this.config.locale,
+  );
+
+  /** The sort comparison of value lists (`sorting.locale` / `compare`). */
+  protected readonly valueComparer = computed(() =>
+    ogeValueComparer({
+      locale: this.sortLocale(),
+      compare: this.sorting()?.compare,
+    }),
+  );
+
+  /**
+   * `calculateFilterValue` readers, lookup search text and `filterField`
+   * redirects of the declared columns.
+   */
+  private readonly columnFilterValues = computed(() =>
+    ogeColumnFilterValues<T>(
+      this.declaredColumns().map((column) => {
+        const lookup = column.lookup();
+        return {
+          field: column.field(),
+          calculateFilterValue: column.calculateFilterValue(),
+          filterField: column.filterField(),
+          lookupItems: lookup ? resolveLookupItems(lookup) : undefined,
+        };
+      }),
+    ),
+  );
 
   /** Per-field `calculateCustomSummary` reducers (array data only). */
   private readonly customSummarySelectors = computed<
@@ -3264,6 +3339,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     event: PointerEvent,
   ): void {
     if (event.button !== 0) return;
+    // rowDragExternal: the browser's own drag runs (onRowHandleDragStart)
+    if (this.rowDragExternal()) return;
     const start: OgeRowDragStartEvent<T> = {
       key: node.key,
       row: node.data,
@@ -5069,6 +5146,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         ogeHeaderConditionKey(field),
       ]),
     searchText: () => this.store.filter.searchText(),
+    fieldMap: () => this.store.filter.fieldMap(),
     limit: () => this.effHeaderFilterLimit(),
     remoteSearch: (field) => {
       const type = this.columnByField(field)?.dataType;
@@ -5106,8 +5184,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected readonly visibleHeaderValues = computed<readonly unknown[] | null>(
     () => {
-      const values = this.headerFilterValues();
-      if (!values) return null;
+      const raw = this.headerFilterValues();
+      if (!raw) return null;
+      // a lookup column lists its labels in order, not its stored codes
+      const field = this.headerFilterField();
+      const compare = this.valueComparer();
+      const values =
+        field != null && this.columnByField(field)?.lookupItems
+          ? ogeSortHeaderValuesByText(
+              raw,
+              (value) => this.headerValueText(value),
+              (a, b) => compare(a, b, field),
+            )
+          : raw;
       // the server already searched these
       if (this.headerSearchRemote()) return values;
       return filterHeaderValues(values, this.headerFilterSearch(), (value) =>
@@ -6292,6 +6381,69 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * the source row — move the data in the handler.
    */
   readonly rowDragGroup = input<string | undefined>(undefined);
+
+  /**
+   * Drags rows out of the grid with the browser's own drag and drop — onto
+   * a chat box, an editor, another app — instead of reordering them by
+   * pointer. The drag carries the rows as TSV and JSON; `rowDragStart`
+   * gets the `dataTransfer` to add your own types. Ctrl+ArrowUp/Down still
+   * reorder from the keyboard.
+   */
+  readonly rowDragExternal = input(false);
+
+  /** The handle's native `dragstart` (`rowDragExternal`). */
+  protected onRowHandleDragStart(node: DataRowNode<T>, event: DragEvent): void {
+    const transfer = event.dataTransfer;
+    if (!this.rowDragExternal() || !transfer) {
+      event.preventDefault();
+      return;
+    }
+    const nodes = untracked(() => {
+      const data = this.flatNodes().filter(
+        (candidate): candidate is DataRowNode<T> => candidate.kind === 'data',
+      );
+      const selected = new Set(
+        data
+          .filter((candidate) => this.isRowSelected(candidate.key))
+          .map((candidate) => candidate.key),
+      );
+      return ogeRowDragOutRows(
+        node,
+        node.key,
+        selected,
+        data,
+        (candidate) => candidate.key,
+      );
+    });
+    const rows = nodes.map((candidate) => candidate.data);
+    const columns = untracked(this.resolvedColumns).filter(
+      (column) => column.field,
+    );
+    ogeWriteRowDragData(
+      transfer,
+      nodes,
+      columns.map((column) => ({
+        caption: column.caption,
+        text: (candidate: DataRowNode<T>) =>
+          untracked(() => this.cellDisplayText(candidate, column)),
+      })),
+      rows,
+    );
+    const rowEl =
+      event.currentTarget instanceof Element
+        ? event.currentTarget.closest('.oge-row')
+        : null;
+    if (rowEl) transfer.setDragImage(rowEl, 16, 16);
+    const start: OgeRowDragStartEvent<T> = {
+      key: node.key,
+      row: node.data,
+      cancel: false,
+      dataTransfer: transfer,
+      rows,
+    };
+    this.rowDragStart.emit(start);
+    if (start.cancel) event.preventDefault();
+  }
 
   /** A drop on the middle of a row means "inside" it (`position: 'inside'`). */
   readonly allowDropInsideRow = input(false);

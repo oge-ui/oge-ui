@@ -89,6 +89,19 @@ export class OgeColumn<T = unknown> {
   readonly calculateCellValue = input<(row: T) => unknown>();
   /** Custom sort key for this column (client-side array data only). */
   readonly calculateSortValue = input<(row: T) => unknown>();
+  /**
+   * The value this column filters, lists and searches by on the client —
+   * the text a translated or enum column shows, a full name built from two
+   * fields. Filters stay written against `field`; the grid compares this
+   * value instead (array data only — a server applies its own logic).
+   */
+  readonly calculateFilterValue = input<(row: T) => unknown>();
+  /**
+   * The field this column's filters and header value list go to the data
+   * source under, when the server filters a derived column on another one
+   * (`LoadOptions.filter` and `distinct()` use it; the state keeps `field`).
+   */
+  readonly filterField = input<string>();
   /** Custom filter expression for filter-row/operator-menu input on this column. */
   readonly calculateFilterExpression =
     input<(value: unknown, operator: FilterOperator) => FilterExpr | null>();

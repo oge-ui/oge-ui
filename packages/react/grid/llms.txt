@@ -175,6 +175,7 @@ _Appearance & misc_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `stateKey` | `string` | `undefined` | Persists user state (sort, filters, column layout, page size) under this key via the state storage (default `localStorage`) and restores it on mount. |
+| `stateMigrations` | `readonly OgeStateMigration[]` | `undefined` | One upgrade step per change of your stored state’s format: step `n` turns a state of version `n` into `n + 1`. Snapshots record their `version`; a restored state, an `applyState()` argument or a saved view runs the steps it missed. A failing step keeps the column layout and drops the rest. |
 | `stateStorage` | `OgeStateStorage` | `context storage` | Per-grid storage backend; overrides `<OgeGridStateStorageProvider>`. |
 | `messages` | `Partial<OgeGridMessages>` | `undefined` | Per-grid overrides of the UI strings (see `<OgeGridConfigProvider>` for app-wide). |
 | `locale` | `string` | `undefined` | BCP 47 locale of the grid’s formatted text — default date cells, declarative column `format`s, summaries, group captions, header-filter values, the filter row’s number parsing and editors, clipboard parsing and exported text — and of its plural-aware messages. `undefined` falls back to `<OgeGridConfigProvider config={{ locale }}>`, then `navigator.language`. |
@@ -204,6 +205,7 @@ _Styling & drag groups_
 | --- | --- | --- | --- |
 | `rowClass` | `(row: T, key: RowKey) => OgeClassValue` | `—` | Classes for a data row — string, array or `{ class: condition }` record. |
 | `cellClass` | `(row: T, column: OgeGridColumnInfo) => OgeClassValue` | `—` | Classes for a data cell, per row and column. |
+| `rowDragExternal` | `boolean` | `false` | Drags rows out of the grid with the browser’s own drag and drop — onto a chat box, an editor, another app — instead of reordering by pointer. The drag carries the rows as TSV (`text/plain`) and JSON (`application/json`, `application/x-oge-grid-rows+json`) — the selection when the grabbed row is selected; `onRowDragStart` gets the `dataTransfer` to add your own types. Needs `rowDragging`; Ctrl+ArrowUp/Down still reorder. |
 | `rowDragGroup` | `string` | `—` | Grids sharing a group name accept each other’s dragged rows; the target’s `onRowDrop` carries the source row. The source needs `rowDragging`. |
 | `allowDropInsideRow` | `boolean` | `false` | A drop on the middle half of a row reports `position: 'inside'`. |
 | `renderPagerInfo` | `(context: OgePagerInfoContext) => ReactNode` | `—` | Renders the pager’s info text — the React form of `*ogePagerInfoTemplate`. |
@@ -383,6 +385,8 @@ _Sort, filter & group_
 | `sortable` | `boolean` | `true` | Whether the header sorts on click. |
 | `sortOrder / sortIndex` | `'asc' \| 'desc' / number` | `undefined` | Initial sort direction applied on first render, ordered by `sortIndex` for multi-sort chains. |
 | `calculateSortValue` | `(row: T) => unknown` | `undefined` | Custom sort key for this column (client-side array data only). |
+| `calculateFilterValue` | `(row: T) => unknown` | `undefined` | The value this column filters, lists and searches by on the client — the label a translated or enum column shows, a full name built from two fields. Filters stay written against `field` (array data only). |
+| `filterField` | `string` | `undefined` | The field this column’s filters and header value list go to the data source under — a derived column the server filters on another field. `LoadOptions.filter` and `distinct()` use it; the saved state keeps `field`. |
 | `filterable` | `boolean` | `true` | Whether the filter row offers an editor for this column. |
 | `headerFilter` | `boolean \| undefined` | `—` | This column's value list: `false` hides its funnel, `true` shows it even when `headerFilter.auto` would not; unset follows the grid. |
 | `filterRange` | `OgeFilterRange \| undefined` | `—` | A two-handle range slider as the filter-row cell of a number column (`{ min, max, step? }`); the pair filters with `between`, the full range filters nothing. |
@@ -435,7 +439,7 @@ _Option objects (boolean shorthands stay valid)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean }` | The same object the Angular grid accepts. |
+| `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean; locale?: string; compare?: (a, b, field) => number }` | The same object the Angular grid accepts. `locale` is the text sort locale, apart from the formatting `locale` (`'tr'` sorts `ı` before `i`); default: the grid’s `locale`. `compare` replaces the comparison of non-null values. Both apply to rows the grid sorts itself and to value lists. |
 | `OgePagingOptions` | `{ pageSize: number; pageSizes?: (number \| 'all')[]; showInfo?: boolean; displayMode?: 'full' \| 'compact' \| 'adaptive' }` | The same object the Angular grid accepts. |
 | `OgeScrollingOptions` | `{ mode?: 'standard' \| 'virtual' \| 'infinite'; remote?: boolean; columnRenderingMode?: 'standard' \| 'virtual' }` | The same object the Angular grid accepts. |
 | `OgeGroupingOptions` | `{ autoExpandAll?: boolean; contextMenuEnabled?: boolean }` | The same object the Angular grid accepts. |
@@ -489,7 +493,7 @@ _Ranges, formats, spans & drag_
 | `OgeConditionalFormat` | `type` | A rule or a data bar / colour scale / icon set (see `conditionalFormats`). |
 | `OgeGridCellSpan` | `interface` | `{ rowSpan?, colSpan? }`. |
 | `OgeRowPreparedEvent / OgeCellPreparedEvent` | `interfaces` | Payloads of `rowPrepared` / `cellPrepared`. |
-| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. |
+| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. With `rowDragExternal`, `OgeRowDragStartEvent` also carries `dataTransfer` and `rows`. |
 | `OgeHeaderFilterMode` | `type` | `headerFilter.mode`: `'list'` (default) the value checklist, `'conditions'` two operator + value conditions joined by And / Or, `'both'` the Excel-style menu (conditions above the list). Date columns list their values as a year → month → day tree. |
 | `OgePagerInfoContext` | `interface` | What `renderPagerInfo` / `<OgePager renderInfo>` receive: `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` (and the pager’s `showFirstLast` / `showPageInput`) add first/last buttons and a go-to-page input. |
 | `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
@@ -1454,6 +1458,54 @@ export function FilterMenuGrid() {
 }
 ```
 
+### Display values and Turkish sorting
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Person {
+  id: number;
+  firstName: string;
+  lastName: string;
+  status: number;
+  city: string;
+}
+
+declare const people: Person[];
+
+const statuses = [
+  { value: 0, text: 'Active' },
+  { value: 1, text: 'On leave' },
+  { value: 2, text: 'Former' },
+];
+const fullName = (row: Person) => `${row.firstName} ${row.lastName}`;
+
+export function DisplayValuesGrid() {
+  return (
+    <OgeGrid
+      data={people}
+      keyField="id"
+      filterRow
+      searchPanel
+      sorting={{ locale: 'tr' }}       // Isparta before İnegöl (dotless I first)
+      columns={[
+        // filters and the search match the shown full name
+        { field: 'name', caption: 'Name',
+          calculateCellValue: fullName, calculateFilterValue: fullName },
+        // the search also matches the lookup labels
+        { field: 'status', caption: 'Status',
+          lookup: { dataSource: statuses, valueExpr: 'value', displayExpr: 'text' } },
+        { field: 'city', caption: 'City' },
+        // a server filters a derived column on another field:
+        // { field: 'customerName', filterField: 'customer.lastName' }
+      ]}
+    />
+  );
+}
+```
+
 ### Group panel
 
 ```ts
@@ -1998,6 +2050,47 @@ export function ImperativeState() {
 }
 ```
 
+### Versioned state
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeStateMigration } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+// step n upgrades a state of version n to n + 1; append, never edit
+const migrations: OgeStateMigration[] = [
+  (state) => JSON.parse(JSON.stringify(state).replaceAll('"dept"', '"department"')),
+];
+
+export function VersionedStateGrid() {
+  return (
+    // states saved before "dept" became "department" still restore
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      stateKey="employees"
+      stateMigrations={migrations}
+      columns={[
+        { field: 'firstName', caption: 'First Name' },
+        { field: 'department', caption: 'Department' },
+      ]}
+    />
+  );
+}
+```
+
 ### Pinned rows & pager options
 
 ```ts
@@ -2526,6 +2619,44 @@ export function EmptyEmployees() {
           </div>
         )}
       />
+    </>
+  );
+}
+```
+
+### Drag rows out of the grid
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+}
+
+declare const employees: Employee[];
+
+export function DragOutEmployees() {
+  return (
+    <>
+      <OgeGrid
+        data={employees}
+        keyField="id"
+        columns={[{ field: 'firstName' }]}
+        selectionMode="multiple"
+        rowDragging
+        rowDragExternal   // the browser's own drag: rows leave as TSV and JSON
+        onRowDragStart={(event) =>
+          // text/plain and application/json are already set — add your own types
+          event.dataTransfer?.setData(
+            'text/uri-list',
+            (event.rows ?? [event.row]).map((row) => `https://example.com/employees/${row.id}`).join('\r\n'),
+          )
+        }
+      />
+      <textarea placeholder="Drop rows here" />
     </>
   );
 }

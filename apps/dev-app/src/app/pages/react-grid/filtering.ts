@@ -8,11 +8,20 @@ import { createElement, type ReactNode } from 'react';
 import { toLocalDate, type FilterExpr } from '@oge-ui/core';
 import { OgeGrid, type OgeGridColumnProps } from '@oge-ui/react-grid';
 import { DemoCard } from '../../shared/demo-card';
-import { makeEmployees, type Employee } from '../../shared/demo-data';
+import {
+  DEMO_STATUSES,
+  makeEmployees,
+  makeTurkishPeople,
+  type Employee,
+  type TurkishPerson,
+} from '../../shared/demo-data';
 import { ReactHost } from '../../shared/react-host';
 import { GRID_FILTERING_DEMOS } from './filtering-snippets';
 
 const employees = makeEmployees(2000, 5);
+
+const people = makeTurkishPeople(20);
+const fullName = (row: TurkishPerson) => `${row.firstName} ${row.lastName}`;
 
 /** 60 rows, every seventh city left blank — the value list shows "(Blank)". */
 const chipEmployees: Employee[] = makeEmployees(60, 21).map((row, i) =>
@@ -106,6 +115,21 @@ const datedEmployees: DatedEmployee[] = makeEmployees(80, 13).map((row) => ({
       language="tsx"
     >
       <app-react-host class="demo-filter-tools" [render]="tools" />
+    </app-demo-card>
+
+    <h3>Display values and Turkish sorting</h3>
+    <app-demo-card
+      [chips]="[
+        'calculateFilterValue',
+        'lookup search',
+        'sorting.locale',
+        'filterField',
+      ]"
+      description="The search box and the Name filter match what the cells show: <em>leave</em> finds the Status label behind code 1 (a static <code>lookup</code>), <em>ada k</em> finds a full name built by <code>calculateFilterValue</code>. Sort City: <code>sorting.locale: 'tr'</code> puts Isparta (dotless I) before İnegöl, where an English sort would not. On a server source, <code>filterField</code> sends a column's filters under another field."
+      [code]="demos[4].source"
+      language="tsx"
+    >
+      <app-react-host class="demo-display-values" [render]="display" />
     </app-demo-card>
 
     <h3>Excel-style filter menu</h3>
@@ -227,6 +251,35 @@ export class ReactGridFilteringDemos {
           dataType: 'date',
           headerFilter: true,
         },
+      ],
+    });
+
+  protected readonly display = (): ReactNode =>
+    createElement(OgeGrid<TurkishPerson>, {
+      data: people,
+      keyField: 'id',
+      filterRow: true,
+      filterDebounce: 0,
+      searchPanel: true,
+      sorting: { locale: 'tr' },
+      paging: { pageSize: 20 },
+      columns: [
+        {
+          field: 'name',
+          caption: 'Name',
+          calculateCellValue: fullName,
+          calculateFilterValue: fullName,
+        },
+        {
+          field: 'status',
+          caption: 'Status',
+          lookup: {
+            dataSource: DEMO_STATUSES,
+            valueExpr: 'value',
+            displayExpr: 'text',
+          },
+        },
+        { field: 'city', caption: 'City' },
       ],
     });
 

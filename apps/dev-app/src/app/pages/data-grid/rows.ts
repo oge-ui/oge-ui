@@ -11,6 +11,7 @@ import {
   OgeGrid,
   OgeNoDataTemplate,
   OgeRowTemplate,
+  type OgeRowDragStartEvent,
   type OgeRowReorderedEvent,
 } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
@@ -19,6 +20,7 @@ import { FrameworkService } from '../../shared/framework.service';
 import { ReactGridRowsDemos } from '../react-grid/rows';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 import {
+  DRAG_OUT_SNIPPET,
   DRAG_SNIPPET,
   NODATA_SNIPPET,
   ROW_TEMPLATE_SNIPPET,
@@ -189,6 +191,33 @@ import {
         </oge-grid>
       </app-demo-card>
 
+      <h3>Drag rows out of the grid</h3>
+      <app-demo-card
+        [chips]="['rowDragExternal', 'rowDragStart.dataTransfer']"
+        description="Grab a handle and drop the row on the box: it arrives as tab-separated text, the way a chat box or a spreadsheet takes it. Select several rows first to drag them together. <code>rowDragStart</code> receives the <code>dataTransfer</code> (here it adds a <code>text/uri-list</code> link); page drop zones read the rows as JSON."
+        [code]="dragOutSnippet"
+        language="ts"
+      >
+        <oge-grid
+          class="demo-drag-out"
+          [data]="dragRows"
+          keyField="id"
+          [rowDragging]="true"
+          [rowDragExternal]="true"
+          selectionMode="multiple"
+          (rowDragStart)="onDragOut($event)"
+        >
+          <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="department" caption="Department" />
+        </oge-grid>
+        <textarea
+          class="demo-drop-target mt-2 block h-24 w-full rounded-md border border-dashed border-gray-300 p-2 font-mono text-xs dark:border-gray-600 dark:bg-gray-900"
+          aria-label="Drop rows here"
+          placeholder="Drop rows here"
+        ></textarea>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -220,6 +249,7 @@ export class RowsPage {
   protected readonly fw = inject(FrameworkService);
   protected readonly rowTemplateSnippet = ROW_TEMPLATE_SNIPPET;
   protected readonly dragSnippet = DRAG_SNIPPET;
+  protected readonly dragOutSnippet = DRAG_OUT_SNIPPET;
   protected readonly noDataSnippet = NODATA_SNIPPET;
 
   protected readonly cards = makeEmployees(18, 21);
@@ -250,6 +280,16 @@ export class RowsPage {
     typeof value === 'number'
       ? `$${value.toLocaleString('en-US')}`
       : String(value ?? '');
+
+  /** Adds a link per dragged row beside the default TSV and JSON. */
+  protected onDragOut(event: OgeRowDragStartEvent<Employee>): void {
+    event.dataTransfer?.setData(
+      'text/uri-list',
+      (event.rows ?? [event.row])
+        .map((row) => `https://example.com/employees/${row.id}`)
+        .join('\r\n'),
+    );
+  }
 
   protected onReordered(event: OgeRowReorderedEvent<Employee>): void {
     this.lastReorder.set(`#${String(event.key)} → index ${event.toIndex}`);

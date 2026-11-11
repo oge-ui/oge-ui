@@ -88,3 +88,43 @@ export function makeEmployees(count: number, seed = 42): Employee[] {
     };
   });
 }
+
+/** Status codes and the labels a lookup column shows for them. */
+export const DEMO_STATUSES: readonly { value: number; text: string }[] = [
+  { value: 0, text: 'Active' },
+  { value: 1, text: 'On leave' },
+  { value: 2, text: 'Former' },
+];
+
+/** A person with a status code and a Turkish city (dotted and dotless I). */
+export interface TurkishPerson {
+  id: number;
+  firstName: string;
+  lastName: string;
+  status: number;
+  city: string;
+}
+
+const TURKISH_CITIES = [
+  'İzmir',
+  'Iğdır',
+  'İstanbul',
+  'Isparta',
+  'İnegöl',
+  'Ankara',
+  'Çanakkale',
+  'Ödemiş',
+  'Şanlıurfa',
+  'Uşak',
+];
+
+/** Deterministic Turkish people for the display-value demos. */
+export function makeTurkishPeople(count: number): TurkishPerson[] {
+  return makeEmployees(count, 17).map((row, i) => ({
+    id: row.id,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    status: (i * 7) % 3,
+    city: TURKISH_CITIES[(i * 3) % TURKISH_CITIES.length],
+  }));
+}

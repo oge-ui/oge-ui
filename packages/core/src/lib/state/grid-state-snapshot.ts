@@ -39,4 +39,9 @@ export interface GridStateSnapshot {
    * field; they replace that column’s declared `totalSummary`.
    */
   summaries?: readonly (readonly [string, OgeUserSummaryType])[];
+  /**
+   * How many of the host's `stateMigrations` the snapshot has been through;
+   * present only while the grid declares some (see `ogeMigrateState`).
+   */
+  version?: number;
 }

@@ -204,6 +204,7 @@ _Appearance & misc_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `stateKey` | `string \| undefined` | `—` | Persists user state (sort, filters, grouping, layout) via `OGE_STATE_STORAGE`. |
+| `stateMigrations` | `readonly OgeStateMigration[] \| undefined` | `—` | One upgrade step per change of your stored state’s format: step `n` turns a state of version `n` into `n + 1`. Snapshots record their `version`; a restored state, an `applyState()` argument or a saved view runs the steps it missed. A failing step keeps the column layout and drops the rest. |
 | `messages` | `Partial<OgeGridMessages> \| undefined` | `—` | Per-grid overrides of the UI strings. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale of the grid’s formatted text — default date cells, declarative column `format`s, summaries, group captions, header-filter values, the filter row’s number parsing and editors, clipboard parsing and exported text — and of its plural-aware messages. `undefined` falls back to `provideOgeGridConfig({ locale })`, then Angular’s `LOCALE_ID`. Live: changing it re-renders. |
 | `loadPanel` | `boolean` | `false` | Spinner overlay while a load is in flight. |
@@ -231,6 +232,7 @@ _Styling & drag groups_
 | --- | --- | --- | --- |
 | `rowClass` | `((row: T, key: RowKey) => OgeClassValue) \| undefined` | `—` | Classes for a data row — a string, an array or a `{ class: condition }` record. |
 | `cellClass` | `((row: T, column: OgeGridColumnInfo) => OgeClassValue) \| undefined` | `—` | Classes for a data cell, per row and column (`{ field, caption, dataType, index }`). |
+| `rowDragExternal` | `boolean` | `false` | Drags rows out of the grid with the browser’s own drag and drop — onto a chat box, an editor, another app — instead of reordering by pointer. The drag carries the rows as TSV (`text/plain`) and JSON (`application/json`, `application/x-oge-grid-rows+json`) — the selection when the grabbed row is selected; `rowDragStart` gets the `dataTransfer` to add your own types. Needs `rowDragging`; Ctrl+ArrowUp/Down still reorder. |
 | `rowDragGroup` | `string \| undefined` | `—` | Grids (and other components) sharing a group name accept each other’s dragged rows; the target fires `rowDrop` with the source row — move the data in the handler. The source needs `rowDragging`. |
 | `allowDropInsideRow` | `boolean` | `false` | A drop on the middle half of a row reports `position: 'inside'` (and moves nothing by itself) instead of before / after. |
 
@@ -418,6 +420,8 @@ _Sort, filter & group_
 | `filterRange` | `OgeFilterRange \| undefined` | `—` | A two-handle range slider as the filter-row cell of a number column (`{ min, max, step? }`); the pair filters with `between`, the full range filters nothing. |
 | `calculateCellValue` | `(row: T) => unknown` | `—` | Calculated column value. |
 | `calculateSortValue` | `(row: T) => unknown` | `—` | Custom sort key. |
+| `calculateFilterValue` | `(row: T) => unknown` | `—` | The value this column filters, lists and searches by on the client — the label a translated or enum column shows, a full name built from two fields. Filters stay written against `field` (array data only). |
+| `filterField` | `string` | `—` | The field this column’s filters and header value list go to the data source under — a derived column the server filters on another field. `LoadOptions.filter` and `distinct()` use it; the saved state keeps `field`. |
 | `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `—` | Custom filter expression builder. |
 
 _Summaries & editing_
@@ -480,7 +484,7 @@ _Option objects (boolean shorthands stay valid)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgePagingOptions` | `{ pageSize: number; pageSizes?: readonly (number \| 'all')[]; showInfo?; displayMode?: 'full' \| 'compact' \| 'adaptive' }` | Pager configuration. |
-| `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean }` | Sorting behavior. |
+| `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean; locale?: string; compare?: (a, b, field) => number }` | Sorting behavior. `locale` is the text sort locale, apart from the formatting `locale` (`'tr'` sorts `ı` before `i`); default: the grid’s `locale`. `compare` replaces the comparison of non-null values. Both apply to rows the grid sorts itself and to value lists. |
 | `OgeFilterRowOptions` | `{ visible?: boolean; debounce?: number }` | Filter row. |
 | `OgeHeaderFilterOptions` | `{ visible?: boolean; valueLimit?: number; mode?: 'list' \| 'conditions' \| 'both'; auto?: boolean }` | Header filter. `auto` shows the value list only on columns whose values repeat — at least 8 rows, at most 25 distinct values, each appearing more than twice on average — judged on an in-memory source; a column's `headerFilter` overrides it. |
 | `OgeSearchPanelOptions` | `{ visible?: boolean; placeholder?: string; width?: number }` | Search panel. |
@@ -546,7 +550,7 @@ _Ranges, formats, spans & drag_
 | `OgeConditionalFormat` | `type` | A rule or a data bar / colour scale / icon set (see `conditionalFormats`). |
 | `OgeGridCellSpan` | `interface` | `{ rowSpan?, colSpan? }`. |
 | `OgeRowPreparedEvent / OgeCellPreparedEvent` | `interfaces` | Payloads of `rowPrepared` / `cellPrepared`. |
-| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. |
+| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. With `rowDragExternal`, `OgeRowDragStartEvent` also carries `dataTransfer` and `rows`. |
 | `OgeHeaderFilterMode` | `type` | `headerFilter.mode`: `'list'` (default) the value checklist, `'conditions'` two operator + value conditions joined by And / Or, `'both'` the Excel-style menu (conditions above the list). Date columns list their values as a year → month → day tree. |
 | `OgePagerInfoTemplate` | `directive` | `*ogePagerInfoTemplate="let info"` replaces the pager’s info text; `info` is `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` add first/last buttons and a go-to-page input. |
 | `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
@@ -1219,6 +1223,53 @@ export class Demo {
 }
 ```
 
+### Display
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+interface Person {
+  id: number;
+  firstName: string;
+  lastName: string;
+  status: number;
+  city: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- search and filters match what the cells show; text sorts the Turkish way -->
+    <oge-grid [data]="people" keyField="id" [filterRow]="true" [searchPanel]="true"
+              [sorting]="{ locale: 'tr' }">
+      <oge-column field="name" caption="Name"
+                  [calculateCellValue]="fullName" [calculateFilterValue]="fullName" />
+      <oge-column field="status" caption="Status"
+                  [lookup]="{ dataSource: statuses, valueExpr: 'value', displayExpr: 'text' }" />
+      <oge-column field="city" caption="City" />
+      <!-- a server filters a derived column on another field:
+           <oge-column field="customerName" filterField="customer.lastName" /> -->
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly statuses = [
+    { value: 0, text: 'Active' },
+    { value: 1, text: 'On leave' },
+    { value: 2, text: 'Former' },
+  ];
+  readonly people: Person[] = [
+    { id: 1, firstName: 'Ada', lastName: 'Kaya', status: 0, city: 'İzmir' },
+    { id: 2, firstName: 'Can', lastName: 'Işık', status: 1, city: 'Iğdır' },
+    { id: 3, firstName: 'Ece', lastName: 'Öz', status: 2, city: 'Isparta' },
+  ];
+  readonly fullName = (row: Person) => `${row.firstName} ${row.lastName}`;
+}
+```
+
 ### Menu
 
 ```ts
@@ -1641,6 +1692,42 @@ export class Demo {
 }
 ```
 
+### Migrations
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeStateMigration } from '@oge-ui/core';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- states saved before "dept" became "department" still restore -->
+    <oge-grid [data]="employees" keyField="id" stateKey="employees"
+              [stateMigrations]="migrations">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="department" caption="Department" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  // step n upgrades a state of version n to n + 1; append, never edit
+  protected readonly migrations: OgeStateMigration[] = [
+    (state) => JSON.parse(JSON.stringify(state).replaceAll('"dept"', '"department"')),
+  ];
+}
+```
+
 ### State key
 
 ```ts
@@ -1883,6 +1970,46 @@ export class Demo {
 
   protected onRanges(event: OgeRangeSelectionChangedEvent): void {
     this.summary.set(`${event.cellCount} cells in ${event.ranges.length} range(s)`);
+  }
+}
+```
+
+### Drag out
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeRowDragStartEvent } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- the browser's own drag: rows leave the grid as TSV and JSON -->
+    <oge-grid [data]="employees" keyField="id" selectionMode="multiple"
+              [rowDragging]="true" [rowDragExternal]="true"
+              (rowDragStart)="onDragOut($event)">
+      <oge-column field="firstName" />
+    </oge-grid>
+    <textarea placeholder="Drop rows here"></textarea>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected onDragOut(event: OgeRowDragStartEvent<{ id: number }>): void {
+    // text/plain and application/json are already set — add your own types
+    event.dataTransfer?.setData(
+      'text/uri-list',
+      (event.rows ?? [event.row]).map((row) => `https://example.com/employees/${row.id}`).join('\r\n'),
+    );
   }
 }
 ```

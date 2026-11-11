@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { createElement, createRef, type ReactNode } from 'react';
-import type { GridStateSnapshot } from '@oge-ui/core';
+import type { GridStateSnapshot, OgeStateMigration } from '@oge-ui/core';
 import {
   OgeGrid,
   OgeGridStateStorageProvider,
@@ -167,6 +167,36 @@ const IMPERATIVE_COLUMNS: OgeGridColumnProps<Employee>[] = [
       </div>
     </app-demo-card>
 
+    <h3>Versioned state (stateMigrations)</h3>
+    <p>
+      Saved states outlive releases. When their format changes — a column
+      renamed, a filter rewritten — list one upgrade step per change in
+      <code>stateMigrations</code>: snapshots record their <code>version</code>,
+      and a restored state, an <code>applyState()</code> argument or a saved
+      view runs the steps it missed instead of being dropped. A failing step
+      keeps the column widths and drops the rest. The button applies a snapshot
+      from before <em>dept</em> was renamed <em>department</em>.
+    </p>
+    <app-demo-card
+      [chips]="['stateMigrations', 'version']"
+      [code]="demos[3].source"
+      language="tsx"
+    >
+      <div class="mb-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="demo-apply-old-state rounded-md border border-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          (click)="applyOldState()"
+        >
+          Apply a version-0 snapshot
+        </button>
+        <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{{
+          migratedSort()
+        }}</span>
+      </div>
+      <app-react-host class="demo-state-migrations" [render]="migrated" />
+    </app-demo-card>
+
     <h3>Notes</h3>
     <ul>
       <li>
@@ -194,6 +224,40 @@ export class ReactGridPersistenceDemos {
   protected readonly captured = signal<GridStateSnapshot | null>(null);
   protected readonly lastState = signal<GridStateSnapshot | null>(null);
   protected readonly changeCount = signal(0);
+  protected readonly migratedSort = signal('');
+  private readonly migratedRef = createRef<OgeGridHandle<Employee>>();
+  /** v0 → v1: the "dept" column became "department". */
+  private readonly migrations: OgeStateMigration[] = [
+    (state) =>
+      JSON.parse(JSON.stringify(state).replaceAll('"dept"', '"department"')),
+  ];
+
+  protected applyOldState(): void {
+    const grid = this.migratedRef.current;
+    if (!grid) return;
+    grid.applyState({
+      sort: [{ field: 'dept', dir: 'desc' }],
+      columns: { widths: [['dept', 240]] },
+    });
+    const state = grid.state();
+    this.migratedSort.set(
+      `version ${state.version} · sort ${JSON.stringify(state.sort)}`,
+    );
+  }
+
+  protected readonly migrated = (): ReactNode =>
+    createElement(OgeGrid<Employee>, {
+      ref: this.migratedRef,
+      data: employees,
+      keyField: 'id',
+      stateMigrations: this.migrations,
+      paging: { pageSize: 6 },
+      columns: [
+        { field: 'firstName', caption: 'First Name' },
+        { field: 'department', caption: 'Department' },
+        { field: 'salary', caption: 'Salary', dataType: 'number' },
+      ],
+    });
 
   private readonly handle = createRef<OgeGridHandle<Employee>>();
 

@@ -16,11 +16,21 @@
  * when match positions must be projected back onto the original text.
  */
 export function foldText(text: string): string {
-  return text
-    .toLowerCase()
+  const lower = text.toLowerCase();
+  // plain ASCII has nothing to decompose: skip the costly normalization — a
+  // search runs this for every cell of every row
+  if (isAscii(lower)) return lower;
+  return lower
     .normalize('NFD')
     .replace(/\p{M}+/gu, '')
     .replace(/ı/g, 'i');
+}
+
+function isAscii(text: string): boolean {
+  for (let i = 0; i < text.length; i++) {
+    if (text.charCodeAt(i) > 127) return false;
+  }
+  return true;
 }
 
 export interface FoldedText {

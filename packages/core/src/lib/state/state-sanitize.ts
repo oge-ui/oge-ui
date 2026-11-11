@@ -315,6 +315,14 @@ export function sanitizeGridStateSnapshot(
   if (group !== undefined) out.group = group;
   const summaries = arrayOf(value['summaries'], sanitizeUserSummary);
   if (summaries !== undefined) out.summaries = summaries;
+  const version = value['version'];
+  if (
+    typeof version === 'number' &&
+    Number.isInteger(version) &&
+    version >= 0
+  ) {
+    out.version = version;
+  }
   return out;
 }
 

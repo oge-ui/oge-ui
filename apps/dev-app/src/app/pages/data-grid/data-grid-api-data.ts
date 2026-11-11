@@ -329,6 +329,12 @@ export const OGE_GRID_API: ApiSections = {
             'Persists user state (sort, filters, grouping, layout) via <code>OGE_STATE_STORAGE</code>.',
         },
         {
+          name: 'stateMigrations',
+          type: 'readonly OgeStateMigration[] | undefined',
+          description:
+            'One upgrade step per change of your stored state’s format: step <code>n</code> turns a state of version <code>n</code> into <code>n + 1</code>. Snapshots record their <code>version</code>; a restored state, an <code>applyState()</code> argument or a saved view runs the steps it missed. A failing step keeps the column layout and drops the rest.',
+        },
+        {
           name: 'messages',
           type: 'Partial&lt;OgeGridMessages&gt; | undefined',
           description: 'Per-grid overrides of the UI strings.',
@@ -441,6 +447,13 @@ export const OGE_GRID_API: ApiSections = {
           type: '((row: T, column: OgeGridColumnInfo) =&gt; OgeClassValue) | undefined',
           description:
             'Classes for a data cell, per row and column (<code>{ field, caption, dataType, index }</code>).',
+        },
+        {
+          name: 'rowDragExternal',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Drags rows out of the grid with the browser’s own drag and drop — onto a chat box, an editor, another app — instead of reordering by pointer. The drag carries the rows as TSV (<code>text/plain</code>) and JSON (<code>application/json</code>, <code>application/x-oge-grid-rows+json</code>) — the selection when the grabbed row is selected; <code>rowDragStart</code> gets the <code>dataTransfer</code> to add your own types. Needs <code>rowDragging</code>; Ctrl+ArrowUp/Down still reorder.',
         },
         {
           name: 'rowDragGroup',
@@ -1104,6 +1117,18 @@ export const OGE_COLUMN_API: ApiSections = {
           description: 'Custom sort key.',
         },
         {
+          name: 'calculateFilterValue',
+          type: '(row: T) =&gt; unknown',
+          description:
+            'The value this column filters, lists and searches by on the client — the label a translated or enum column shows, a full name built from two fields. Filters stay written against <code>field</code> (array data only).',
+        },
+        {
+          name: 'filterField',
+          type: 'string',
+          description:
+            'The field this column’s filters and header value list go to the data source under — a derived column the server filters on another field. <code>LoadOptions.filter</code> and <code>distinct()</code> use it; the saved state keeps <code>field</code>.',
+        },
+        {
           name: 'calculateFilterExpression',
           type: '(value, operator) =&gt; FilterExpr | null',
           description: 'Custom filter expression builder.',
@@ -1302,8 +1327,9 @@ export const OGE_GRID_TYPES_API: ApiSections = {
         },
         {
           name: 'OgeSortingOptions',
-          type: "{ mode?: 'none' | 'single' | 'multi'; allowUnsorting?: boolean }",
-          description: 'Sorting behavior.',
+          type: "{ mode?: 'none' | 'single' | 'multi'; allowUnsorting?: boolean; locale?: string; compare?: (a, b, field) =&gt; number }",
+          description:
+            "Sorting behavior. <code>locale</code> is the text sort locale, apart from the formatting <code>locale</code> (<code>'tr'</code> sorts <code>ı</code> before <code>i</code>); default: the grid’s <code>locale</code>. <code>compare</code> replaces the comparison of non-null values. Both apply to rows the grid sorts itself and to value lists.",
         },
         {
           name: 'OgeFilterRowOptions',
@@ -1566,7 +1592,7 @@ export const OGE_GRID_TYPES_API: ApiSections = {
           name: 'OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition',
           type: 'interfaces',
           description:
-            "Cross-component row drag payloads; <code>position</code> is <code>'before' | 'after' | 'inside'</code>.",
+            "Cross-component row drag payloads; <code>position</code> is <code>'before' | 'after' | 'inside'</code>. With <code>rowDragExternal</code>, <code>OgeRowDragStartEvent</code> also carries <code>dataTransfer</code> and <code>rows</code>.",
         },
         {
           name: 'OgeHeaderFilterMode',

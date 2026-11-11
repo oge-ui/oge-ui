@@ -136,6 +136,34 @@ function DragDemo(): ReactNode {
   );
 }
 
+function DragOutDemo(): ReactNode {
+  return createElement(
+    'div',
+    null,
+    createElement(OgeGrid<Employee>, {
+      data: dragRows,
+      keyField: 'id',
+      columns: DRAG_COLUMNS,
+      rowDragging: true,
+      rowDragExternal: true,
+      selectionMode: 'multiple',
+      onRowDragStart: (event) =>
+        event.dataTransfer?.setData(
+          'text/uri-list',
+          (event.rows ?? [event.row])
+            .map((row) => `https://example.com/employees/${row.id}`)
+            .join('\r\n'),
+        ),
+    }),
+    createElement('textarea', {
+      className:
+        'demo-drop-target mt-2 block h-24 w-full rounded-md border border-dashed border-gray-300 p-2 font-mono text-xs dark:border-gray-600 dark:bg-gray-900',
+      'aria-label': 'Drop rows here',
+      placeholder: 'Drop rows here',
+    }),
+  );
+}
+
 function EmptyDemo(): ReactNode {
   const grid = useRef<OgeGridHandle<Employee>>(null);
   return createElement(
@@ -238,6 +266,16 @@ function EmptyDemo(): ReactNode {
       <app-react-host [render]="empty" />
     </app-demo-card>
 
+    <h3>Drag rows out of the grid</h3>
+    <app-demo-card
+      [chips]="['rowDragExternal', 'onRowDragStart.dataTransfer']"
+      description="Grab a handle and drop the row on the box: it arrives as tab-separated text, the way a chat box or a spreadsheet takes it. Select several rows first to drag them together. <code>onRowDragStart</code> receives the <code>dataTransfer</code> (here it adds a <code>text/uri-list</code> link); page drop zones read the rows as JSON."
+      [code]="demos[3].source"
+      language="tsx"
+    >
+      <app-react-host class="demo-drag-out" [render]="dragOut" />
+    </app-demo-card>
+
     <h3>Notes</h3>
     <ul>
       <li>
@@ -269,4 +307,5 @@ export class ReactGridRowsDemos {
   protected readonly rowTemplate = () => createElement(RowTemplateDemo);
   protected readonly drag = () => createElement(DragDemo);
   protected readonly empty = () => createElement(EmptyDemo);
+  protected readonly dragOut = () => createElement(DragOutDemo);
 }

@@ -332,6 +332,7 @@ export {
   allHeaderValuesSelected,
   booleanCellLabel,
   filterHeaderValues,
+  ogeSortHeaderValuesByText,
   formatCellValue,
   groupHeaderValuesByYear,
   headerGroupState,
@@ -368,6 +369,7 @@ export {
   OGE_AUTO_LIST_RULE,
   OGE_DATE_PRESETS,
   ogeAutoListFields,
+  ogeColumnFilterValues,
   ogeDatePresetExpr,
   ogeDatePresetRange,
   ogeFilterCellExpr,
@@ -375,10 +377,18 @@ export {
   ogeQualifiesForAutoList,
   ogeResolveDatePresets,
   type OgeAutoListRule,
+  type OgeColumnFilterValues,
   type OgeDatePreset,
   type OgeFilterCellColumn,
   type OgeFilterRange,
+  type OgeFilterValueColumn,
 } from './lib/grid/grid-filter-extras';
+export {
+  OGE_GRID_ROWS_MIME,
+  ogeRowDragOutRows,
+  ogeWriteRowDragData,
+  type OgeRowDragOutColumn,
+} from './lib/grid/grid-row-drag-out';
 export {
   OGE_SAVED_VIEWS_MAX,
   OGE_SAVED_VIEW_NAME_MAX,

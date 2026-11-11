@@ -6,7 +6,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { JsonPipe } from '@angular/common';
-import type { GridStateSnapshot } from '@oge-ui/core';
+import type { GridStateSnapshot, OgeStateMigration } from '@oge-ui/core';
 import {
   OGE_STATE_STORAGE,
   OgeColumn,
@@ -22,6 +22,7 @@ import { makeEmployees } from '../../shared/demo-data';
 import {
   CUSTOM_STORAGE_SNIPPET,
   IMPERATIVE_SNIPPET,
+  MIGRATIONS_SNIPPET,
   STATE_KEY_SNIPPET,
 } from './persistence-snippets';
 
@@ -245,6 +246,48 @@ export class PersistenceApiDemo {
         </div>
       </app-demo-card>
 
+      <h3>Versioned state (stateMigrations)</h3>
+      <p>
+        Saved states outlive releases. When their format changes — a column
+        renamed, a filter rewritten — list one upgrade step per change in
+        <code>stateMigrations</code>: snapshots record their
+        <code>version</code>, and a restored state, an
+        <code>applyState()</code> argument or a saved view runs the steps it
+        missed instead of being dropped. A failing step keeps the column widths
+        and drops the rest. The button applies a snapshot from before
+        <em>dept</em> was renamed <em>department</em>.
+      </p>
+      <app-demo-card
+        [chips]="['stateMigrations', 'version']"
+        [code]="migrationsSnippet"
+        language="ts"
+      >
+        <div class="mb-2 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="demo-apply-old-state rounded-md border border-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+            (click)="applyOldState()"
+          >
+            Apply a version-0 snapshot
+          </button>
+          <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{{
+            migratedSort()
+          }}</span>
+        </div>
+        <oge-grid
+          #migratedGrid
+          class="demo-state-migrations"
+          [data]="employees"
+          keyField="id"
+          [stateMigrations]="migrations"
+          [paging]="{ pageSize: 6 }"
+        >
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="department" caption="Department" />
+          <oge-column field="salary" caption="Salary" dataType="number" />
+        </oge-grid>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -273,6 +316,29 @@ export class PersistencePage {
   protected readonly stateKeySnippet = STATE_KEY_SNIPPET;
   protected readonly customStorageSnippet = CUSTOM_STORAGE_SNIPPET;
   protected readonly imperativeSnippet = IMPERATIVE_SNIPPET;
+  protected readonly migrationsSnippet = MIGRATIONS_SNIPPET;
+
+  /** v0 → v1: the "dept" column became "department". */
+  protected readonly migrations: OgeStateMigration[] = [
+    (state) =>
+      JSON.parse(JSON.stringify(state).replaceAll('"dept"', '"department"')),
+  ];
+  protected readonly migratedGrid =
+    viewChild<OgeGrid<{ id: number }>>('migratedGrid');
+  protected readonly migratedSort = signal('');
+
+  protected applyOldState(): void {
+    const grid = this.migratedGrid();
+    if (!grid) return;
+    grid.applyState({
+      sort: [{ field: 'dept', dir: 'desc' }],
+      columns: { widths: [['dept', 240]] },
+    });
+    const state = grid.state();
+    this.migratedSort.set(
+      `version ${state.version} · sort ${JSON.stringify(state.sort)}`,
+    );
+  }
 
   protected readonly imperativeGrid =
     viewChild<OgeGrid<{ id: number }>>('imperativeGrid');

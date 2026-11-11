@@ -76,3 +76,19 @@ protected saveToBackend(snapshot: GridStateSnapshot): void {
   });
 }`,
 });
+
+export const MIGRATIONS_SNIPPET = demoSource({
+  use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
+  types: { '@oge-ui/core': ['OgeStateMigration'] },
+  dataset: 'employees',
+  template: `<!-- states saved before "dept" became "department" still restore -->
+<oge-grid [data]="employees" keyField="id" stateKey="employees"
+          [stateMigrations]="migrations">
+  <oge-column field="firstName" caption="First Name" />
+  <oge-column field="department" caption="Department" />
+</oge-grid>`,
+  body: `// step n upgrades a state of version n to n + 1; append, never edit
+protected readonly migrations: OgeStateMigration[] = [
+  (state) => JSON.parse(JSON.stringify(state).replaceAll('"dept"', '"department"')),
+];`,
+});

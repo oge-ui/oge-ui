@@ -1,13 +1,17 @@
-import { buildSearchFilter } from '../filtering/filter-evaluator';
 import { applyFilter } from '../pipeline/steps/filter.step';
-import { runLoadOptions } from '../pipeline/run-load-options';
+import {
+  ogeSearchRows,
+  runLoadOptions,
+  type RunLoadOptionsConfig,
+} from '../pipeline/run-load-options';
 import type { CustomSummaryMap } from '../grouping/summaries';
 import type { RowKey } from '../rows/row-node';
-import { compareValues } from '../util/comparators';
+import { ogeValueComparer, type OgeValueCompare } from '../util/comparators';
 import { foldText } from '../util/text-fold';
 import {
   createFieldAccessor,
   resolveKeySelector,
+  type ValueAccessor,
 } from '../util/value-accessor';
 import type {
   DataChange,
@@ -28,6 +32,20 @@ export interface ArrayDataSourceOptions<T> {
   sortValues?: Readonly<Record<string, (row: T) => unknown>>;
   /** Custom summary reducers keyed by descriptor `name ?? field`. */
   customSummaries?: CustomSummaryMap<T>;
+  /**
+   * Per-field values filters, value lists and the search compare instead of
+   * the property (a column's `calculateFilterValue`).
+   */
+  filterValues?: Readonly<Record<string, ValueAccessor<T>>>;
+  /**
+   * Extra text the search matches per field beside the property — a lookup
+   * column's display text.
+   */
+  searchValues?: Readonly<Record<string, ValueAccessor<T>>>;
+  /** BCP 47 locale text sorts in (`tr` puts `ı` before `i`). */
+  locale?: string;
+  /** Replaces the sort comparison of non-null values. */
+  compare?: OgeValueCompare;
 }
 
 /**
@@ -47,10 +65,8 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
   private readonly getRows: () => readonly T[];
   private readonly keySelector: ((row: T) => RowKey) | null;
-  private readonly searchFields: readonly string[] | undefined;
-  private readonly sortValues:
-    Readonly<Record<string, (row: T) => unknown>> | undefined;
-  private readonly customSummaries: CustomSummaryMap<T> | undefined;
+  private readonly config: RunLoadOptionsConfig<T>;
+  private readonly compare: (a: unknown, b: unknown, field: string) => number;
   /** Present only when constructed with a mutable array (enables CRUD). */
   private readonly mutableRows: T[] | null;
 
@@ -62,9 +78,18 @@ export class ArrayDataSource<T> implements DataSource<T> {
     this.mutableRows = typeof data === 'function' ? null : (data as T[]);
     this.keySelector =
       options.key != null ? resolveKeySelector(options.key) : null;
-    this.searchFields = options.searchFields;
-    this.sortValues = options.sortValues;
-    this.customSummaries = options.customSummaries;
+    this.compare = ogeValueComparer({
+      locale: options.locale,
+      compare: options.compare,
+    });
+    this.config = {
+      searchFields: options.searchFields,
+      sortValues: options.sortValues,
+      customSummaries: options.customSummaries,
+      filterValues: options.filterValues,
+      searchValues: options.searchValues,
+      compare: this.compare,
+    };
   }
 
   private requireMutable(): T[] {
@@ -160,25 +185,20 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
   /** {@link load} without the promise — the rows are already in memory. */
   loadSync(options: LoadOptions): LoadResult<T> {
-    return runLoadOptions(this.getRows(), options, {
-      searchFields: this.searchFields,
-      sortValues: this.sortValues,
-      customSummaries: this.customSummaries,
-    });
+    return runLoadOptions(this.getRows(), options, this.config);
   }
 
   distinct(
     field: string,
     options: DistinctOptions = {},
   ): Promise<readonly unknown[]> {
-    const accessor = createFieldAccessor<T>(field);
-    const all = this.getRows();
-    let rows = applyFilter(all, options.filter);
-    if (options.searchText?.trim()) {
-      const fields =
-        this.searchFields ?? (all.length ? Object.keys(all[0] as object) : []);
-      rows = applyFilter(rows, buildSearchFilter(fields, options.searchText));
-    }
+    const accessor =
+      this.config.filterValues?.[field] ?? createFieldAccessor<T>(field);
+    const rows = ogeSearchRows(
+      applyFilter(this.getRows(), options.filter, this.config.filterValues),
+      options.searchText,
+      this.config,
+    );
     const needle = options.search?.trim()
       ? foldText(options.search.trim())
       : '';
@@ -196,7 +216,9 @@ export class ArrayDataSource<T> implements DataSource<T> {
         if (!dates.has(value.getTime())) dates.set(value.getTime(), value);
       } else seen.add(value);
     }
-    const sorted = [...seen, ...dates.values()].sort(compareValues);
+    const sorted = [...seen, ...dates.values()].sort((a, b) =>
+      this.compare(a, b, field),
+    );
     return Promise.resolve(
       options.take !== undefined ? sorted.slice(0, options.take) : sorted,
     );

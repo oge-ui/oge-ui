@@ -1,5 +1,6 @@
 import {
   addDays,
+  createFieldAccessor,
   isOgeBlank,
   startOfDay,
   startOfMonth,
@@ -7,14 +8,20 @@ import {
   type FilterExpr,
   type FilterOperator,
 } from '@oge-ui/core';
-import { dateRangeFilterExpr, type OgeDataType } from './grid-columns';
+import {
+  dateRangeFilterExpr,
+  lookupTextOf,
+  type LookupItem,
+  type OgeDataType,
+} from './grid-columns';
 
 /**
  * Filter helpers shared by both grid render layers: the automatic value list
  * for repetitive columns (`headerFilter.auto`), the date presets of the
  * header menu (`dateFilterPresets`), and the expressions behind a custom
- * filter cell (`filterCellTemplate` / `renderFilterCell`) and a range-slider
- * filter cell (`filterRange`).
+ * filter cell (`filterCellTemplate` / `renderFilterCell`), a range-slider
+ * filter cell (`filterRange`), and the display values and server fields a
+ * column filters by (`calculateFilterValue`, `filterField`).
  */
 
 // --- automatic value lists ---------------------------------------------------
@@ -207,4 +214,62 @@ export function ogeFilterRangeExpr(
   const [from, to] = pair;
   if (from <= range.min && to >= range.max) return null;
   return { type: 'binary', field, op: 'between', value: [from, to] };
+}
+
+// --- display values and server fields ------------------------------------------
+
+/** What {@link ogeColumnFilterValues} reads from a column. */
+export interface OgeFilterValueColumn<T> {
+  readonly field: string | undefined;
+  /** Client-side value the column filters, lists and searches by. */
+  readonly calculateFilterValue?: ((row: T) => unknown) | undefined;
+  /** The field the column's filters go to the data source under. */
+  readonly filterField?: string | undefined;
+  /** A static lookup's items: the search also matches their display text. */
+  readonly lookupItems?: readonly LookupItem[] | undefined;
+}
+
+/** The per-field readers and redirects a grid hands its data layer. */
+export interface OgeColumnFilterValues<T> {
+  /** `ArrayDataSource` `filterValues` — `undefined` when no column has one. */
+  readonly filterValues:
+    Readonly<Record<string, (row: T) => unknown>> | undefined;
+  /** `ArrayDataSource` `searchValues` (lookup display text). */
+  readonly searchValues:
+    Readonly<Record<string, (row: T) => unknown>> | undefined;
+  /** Filter-state `fieldMap` (`filterField`). */
+  readonly fieldMap: Readonly<Record<string, string>>;
+}
+
+/**
+ * Collects the columns' display-value options in one pass, for both grid
+ * layers: `calculateFilterValue` (what filters, value lists and the search
+ * compare on the client), the lookup display text the search also matches,
+ * and the `filterField` redirects of the load options.
+ */
+export function ogeColumnFilterValues<T>(
+  columns: readonly OgeFilterValueColumn<T>[],
+): OgeColumnFilterValues<T> {
+  const filterValues: Record<string, (row: T) => unknown> = {};
+  const searchValues: Record<string, (row: T) => unknown> = {};
+  const fieldMap: Record<string, string> = {};
+  for (const column of columns) {
+    const field = column.field;
+    if (!field) continue;
+    if (column.calculateFilterValue) {
+      filterValues[field] = column.calculateFilterValue;
+    } else if (column.lookupItems?.length) {
+      const items = column.lookupItems;
+      const read = createFieldAccessor<T>(field);
+      searchValues[field] = (row) => lookupTextOf(items, read(row));
+    }
+    if (column.filterField && column.filterField !== field) {
+      fieldMap[field] = column.filterField;
+    }
+  }
+  return {
+    filterValues: Object.keys(filterValues).length ? filterValues : undefined,
+    searchValues: Object.keys(searchValues).length ? searchValues : undefined,
+    fieldMap,
+  };
 }

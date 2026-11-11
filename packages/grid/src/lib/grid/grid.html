@@ -758,7 +758,9 @@ canAdd() || editMode() === 'batch' || toolbarItems().length > 0 ) {
           <span
             class="oge-drag-handle"
             [attr.aria-label]="msg().reorderRow"
+            [attr.draggable]="rowDragExternal() ? 'true' : null"
             (pointerdown)="onRowHandlePointerDown(node, $event)"
+            (dragstart)="onRowHandleDragStart(node, $event)"
             (click)="$event.stopPropagation()"
           >
             <svg

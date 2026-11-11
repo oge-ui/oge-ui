@@ -1,4 +1,9 @@
-import { isOgeBlank, type DataSource, type FilterExpr } from '@oge-ui/core';
+import {
+  isOgeBlank,
+  ogeRemapFilterFields,
+  type DataSource,
+  type FilterExpr,
+} from '@oge-ui/core';
 
 /**
  * Loads the value list of an Excel-style header filter popup — shared by both
@@ -43,6 +48,11 @@ export interface OgeHeaderValuesLoaderOptions {
   readonly onError?: (error: unknown) => void;
   /** Debounce of a server search, in ms. Default 250. */
   readonly debounceMs?: number;
+  /**
+   * Column field → the field the source knows it by (`filterField`): the
+   * list is asked for that field, under a filter written in those fields.
+   */
+  readonly fieldMap?: () => Readonly<Record<string, string>>;
 }
 
 /**
@@ -147,9 +157,14 @@ export class OgeHeaderValuesLoader {
     const searchText = this.options.searchText().trim();
     const limit = this.options.limit();
     this.options.onValues(field, null, false);
+    const map = this.options.fieldMap?.() ?? {};
+    const asked = Object.prototype.hasOwnProperty.call(map, field)
+      ? map[field]
+      : field;
     source
-      .distinct(field, {
-        filter: this.options.filterFor(field),
+      .distinct(asked, {
+        filter:
+          ogeRemapFilterFields(this.options.filterFor(field), map) ?? null,
         ...(searchText ? { searchText } : {}),
         ...(search ? { search } : {}),
         take: limit + 1,

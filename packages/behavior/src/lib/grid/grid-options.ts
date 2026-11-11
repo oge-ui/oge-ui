@@ -81,6 +81,20 @@ export interface OgeSortingOptions {
   mode?: 'none' | 'single' | 'multi';
   /** Whether a third header click clears the sort. Defaults from global config. */
   allowUnsorting?: boolean;
+  /**
+   * BCP 47 locale text sorts in, apart from the `locale` numbers and dates
+   * are formatted in — `'tr'` sorts `ı` before `i` and `I` as the capital
+   * of `ı`. Default: the grid's `locale`, else the runtime's. Applies to
+   * rows the grid sorts itself (an array `data`; an `ArrayDataSource`
+   * takes its own `locale` option) and to header-filter value lists.
+   * Grid only: the tree list sorts siblings without it.
+   */
+  locale?: string;
+  /**
+   * Replaces the comparison of two non-null values of `field` for rows the
+   * grid sorts itself; blank cells keep sorting last.
+   */
+  compare?: (a: unknown, b: unknown, field: string) => number;
 }
 
 export interface OgeGroupingOptions {
@@ -388,6 +402,18 @@ export interface OgeRowDragStartEvent<T = unknown> {
   key: RowKey;
   row: T;
   cancel: boolean;
+  /**
+   * `rowDragExternal` only: the browser drag's data, already holding the
+   * rows as TSV (`text/plain`) and JSON (`application/json`,
+   * `application/x-oge-grid-rows+json`). Set your own types here — a chat
+   * box reads `text/plain`, a page drop zone whatever you put.
+   */
+  dataTransfer?: DataTransfer;
+  /**
+   * `rowDragExternal` only: every row the drag carries — the selection when
+   * the grabbed row is selected, else `[row]`.
+   */
+  rows?: readonly T[];
 }
 
 /**

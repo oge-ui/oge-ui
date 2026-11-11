@@ -120,4 +120,29 @@ const [captured, setCaptured] = useState<GridStateSnapshot | null>(null);`,
 </>`,
     }),
   },
+  {
+    title: 'Versioned state',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-grid': ['OgeGrid'] },
+      types: { '@oge-ui/core': ['OgeStateMigration'] },
+      name: 'VersionedStateGrid',
+      before: `${EMPLOYEE}
+
+// step n upgrades a state of version n to n + 1; append, never edit
+const migrations: OgeStateMigration[] = [
+  (state) => JSON.parse(JSON.stringify(state).replaceAll('"dept"', '"department"')),
+];`,
+      jsx: `// states saved before "dept" became "department" still restore
+<OgeGrid
+  data={employees}
+  keyField="id"
+  stateKey="employees"
+  stateMigrations={migrations}
+  columns={[
+    { field: 'firstName', caption: 'First Name' },
+    { field: 'department', caption: 'Department' },
+  ]}
+/>`,
+    }),
+  },
 ];

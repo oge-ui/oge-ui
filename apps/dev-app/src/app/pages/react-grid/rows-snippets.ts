@@ -156,4 +156,35 @@ const source = useMemo(
 </>`,
     }),
   },
+  {
+    title: 'Drag rows out of the grid',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-grid': ['OgeGrid'] },
+      name: 'DragOutEmployees',
+      before: `interface Employee {
+  id: number;
+  firstName: string;
+}
+
+declare const employees: Employee[];`,
+      jsx: `<>
+  <OgeGrid
+    data={employees}
+    keyField="id"
+    columns={[{ field: 'firstName' }]}
+    selectionMode="multiple"
+    rowDragging
+    rowDragExternal   // the browser's own drag: rows leave as TSV and JSON
+    onRowDragStart={(event) =>
+      // text/plain and application/json are already set — add your own types
+      event.dataTransfer?.setData(
+        'text/uri-list',
+        (event.rows ?? [event.row]).map((row) => \`https://example.com/employees/\${row.id}\`).join('\\r\\n'),
+      )
+    }
+  />
+  <textarea placeholder="Drop rows here" />
+</>`,
+    }),
+  },
 ];

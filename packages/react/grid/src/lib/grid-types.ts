@@ -6,6 +6,7 @@ import type {
   FilterOperator,
   GridStateSnapshot,
   GroupInterval,
+  OgeStateMigration,
   RowKey,
   SummaryType,
 } from '@oge-ui/core';
@@ -218,6 +219,19 @@ export interface OgeGridColumnProps<T = unknown> {
   calculateCellValue?: (row: T) => unknown;
   /** Custom sort key for this column (client-side array data only). */
   calculateSortValue?: (row: T) => unknown;
+  /**
+   * The value this column filters, lists and searches by on the client —
+   * the text a translated or enum column shows, a full name built from two
+   * fields. Filters stay written against `field`; the grid compares this
+   * value instead (array data only — a server applies its own logic).
+   */
+  calculateFilterValue?: (row: T) => unknown;
+  /**
+   * The field this column's filters and header value list go to the data
+   * source under, when the server filters a derived column on another one
+   * (`LoadOptions.filter` and `distinct()` use it; the state keeps `field`).
+   */
+  filterField?: string;
   /** Custom filter expression for filter-row input on this column. */
   calculateFilterExpression?: (
     value: unknown,
@@ -474,6 +488,15 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
    * it on mount.
    */
   stateKey?: string;
+  /**
+   * One upgrade step per change of your stored state's format: step `n`
+   * turns a state of version `n` into `n + 1`. Snapshots record their
+   * version, and a restored state, an `applyState()` argument or a saved
+   * view runs the steps it missed — an old entry is converted instead of
+   * dropped. A failing step keeps the column layout (widths, order, pins,
+   * hidden) and drops the rest.
+   */
+  stateMigrations?: readonly OgeStateMigration[];
   /** Per-grid storage backend; overrides `OgeGridStateStorageProvider`. */
   stateStorage?: OgeStateStorage;
   /**
@@ -532,6 +555,14 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
    * dragged rows; the target grid's `onRowDrop` carries the source row.
    */
   rowDragGroup?: string;
+  /**
+   * Drags rows out of the grid with the browser's own drag and drop — onto
+   * a chat box, an editor, another app — instead of reordering them by
+   * pointer. The drag carries the rows as TSV and JSON; `onRowDragStart`
+   * gets the `dataTransfer` to add your own types. Ctrl+ArrowUp/Down still
+   * reorder from the keyboard.
+   */
+  rowDragExternal?: boolean;
   /** A drop on the middle of a row means "inside" it. */
   allowDropInsideRow?: boolean;
   /** Cancelable: a row drag is about to start. */

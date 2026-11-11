@@ -29,13 +29,13 @@ export function ancestorsOf(index: Pick<TreeIndex<unknown>, 'parentOf'>, key: Ro
 export function applyDisplayModes(values: unknown[][][], rowSlots: readonly PivotSlot[], columnSlots: readonly PivotSlot[], measures: readonly PivotFieldConfig[]): void;
 
 // @public
-export function applyFilter<T>(rows: readonly T[], filter: FilterExpr | null | undefined): readonly T[];
+export function applyFilter<T>(rows: readonly T[], filter: FilterExpr | null | undefined, accessors?: Readonly<Record<string, ValueAccessor<T>>>): readonly T[];
 
 // @public
 export function applyPaging<T>(rows: readonly T[], skip?: number, take?: number): readonly T[];
 
 // @public
-export function applySort<T>(rows: readonly T[], sort: readonly SortDescriptor[] | undefined, sortValues?: Readonly<Record<string, ValueAccessor<T>>>): readonly T[];
+export function applySort<T>(rows: readonly T[], sort: readonly SortDescriptor[] | undefined, sortValues?: Readonly<Record<string, ValueAccessor<T>>>, compare?: (a: unknown, b: unknown, field: string) => number): readonly T[];
 
 // @public
 export class ArrayDataSource<T> implements DataSource<T> {
@@ -61,9 +61,13 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
 // @public (undocumented)
 export interface ArrayDataSourceOptions<T> {
+    compare?: OgeValueCompare;
     customSummaries?: CustomSummaryMap<T>;
+    filterValues?: Readonly<Record<string, ValueAccessor<T>>>;
     key?: keyof T | ((row: T) => RowKey);
+    locale?: string;
     searchFields?: readonly string[];
+    searchValues?: Readonly<Record<string, ValueAccessor<T>>>;
     sortValues?: Readonly<Record<string, (row: T) => unknown>>;
 }
 
@@ -107,7 +111,7 @@ export function clearOgeTimeZoneCache(): void;
 export function colorsEqual(a: OgeRgba, b: OgeRgba): boolean;
 
 // @public
-export function compareValues(a: unknown, b: unknown): number;
+export function compareValues(a: unknown, b: unknown, collator?: Intl.Collator): number;
 
 // @public
 export function computePivot<T>(input: PivotComputeOptions<T>): PivotResult;
@@ -134,7 +138,7 @@ export function createAcc(): PivotAcc;
 export function createFieldAccessor<T = unknown>(field: string): ValueAccessor<T>;
 
 // @public
-export function createFilterPredicate<T = unknown>(expr: FilterExpr): (row: T) => boolean;
+export function createFilterPredicate<T = unknown>(expr: FilterExpr, options?: OgeFilterPredicateOptions<T>): (row: T) => boolean;
 
 // @public
 export function createTypeAheadBuffer(timeoutMs?: number): OgeTypeAheadBuffer;
@@ -461,6 +465,7 @@ export interface GridStateSnapshot {
     // (undocumented)
     sort?: readonly SortDescriptor[];
     summaries?: readonly (readonly [string, OgeUserSummaryType])[];
+    version?: number;
 }
 
 // @public (undocumented)
@@ -900,6 +905,9 @@ export function ogeBase64UrlToBytes(text: string): Uint8Array | null;
 export function ogeCheckLicense(family: OgeCommercialFamily): void;
 
 // @public
+export function ogeCollator(locale?: string): Intl.Collator;
+
+// @public
 export type OgeColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl';
 
 // @public
@@ -978,6 +986,11 @@ export interface OgeFilterOperatorInfo {
 
 // @public
 export function ogeFilterOperatorTakesValue(op: FilterOperator): boolean;
+
+// @public
+export interface OgeFilterPredicateOptions<T = unknown> {
+    readonly accessors?: Readonly<Record<string, ValueAccessor<T>>>;
+}
 
 // @public
 export function ogeFormatMessage(template: string, values?: OgeMessageValues, locale?: OgeLocaleInput): string;
@@ -1086,6 +1099,9 @@ export type OgeMessageValue = string | number | bigint | boolean | Date | null |
 export type OgeMessageValues = Readonly<Record<string, OgeMessageValue>>;
 
 // @public
+export function ogeMigrateState(value: unknown, migrations: readonly OgeStateMigration[] | undefined): unknown;
+
+// @public
 export type OgeNavDirection = 1 | -1;
 
 // @public
@@ -1148,6 +1164,12 @@ export type OgeRangeThumb = 'start' | 'end';
 export function ogeRelativeTimeFormat(locale?: OgeLocaleInput, options?: Intl.RelativeTimeFormatOptions): Intl.RelativeTimeFormat;
 
 // @public
+export function ogeRemapFilterFields(expr: FilterExpr, map: Readonly<Record<string, string>>): FilterExpr;
+
+// @public (undocumented)
+export function ogeRemapFilterFields(expr: FilterExpr | null | undefined, map: Readonly<Record<string, string>>): FilterExpr | null | undefined;
+
+// @public
 export interface OgeRgba {
     // (undocumented)
     a: number;
@@ -1158,6 +1180,9 @@ export interface OgeRgba {
     // (undocumented)
     r: number;
 }
+
+// @public
+export function ogeSearchRows<T>(rows: readonly T[], searchText: string | undefined, config: RunLoadOptionsConfig<T>): readonly T[];
 
 // @public
 export function ogeSetLicenseKey(key: string): void;
@@ -1182,6 +1207,15 @@ export interface OgeSplitTrack {
     readonly kind: 'share' | 'fixed';
     readonly value: number;
 }
+
+// @public
+export type OgeStateMigration = (state: OgeStoredState) => OgeStoredState;
+
+// @public
+export function ogeStateVersion(value: unknown): number;
+
+// @public
+export type OgeStoredState = Record<string, unknown>;
 
 // @public
 export function ogeTimeZoneLabel(timeZone: string, at?: Date | number): string;
@@ -1233,6 +1267,18 @@ export function ogeTzOffset(instant: Date | number, timeZone?: string): number;
 
 // @public
 export type OgeUserSummaryType = Exclude<SummaryType, 'custom'> | 'none';
+
+// @public
+export type OgeValueCompare = (a: unknown, b: unknown, field: string) => number;
+
+// @public
+export function ogeValueComparer(options?: OgeValueComparerOptions): (a: unknown, b: unknown, field: string) => number;
+
+// @public
+export interface OgeValueComparerOptions {
+    readonly compare?: OgeValueCompare | undefined;
+    readonly locale?: string | undefined;
+}
 
 // @public
 export interface OgeValueFormat {
@@ -1649,8 +1695,11 @@ export function runLoadOptions<T>(rows: readonly T[], options: LoadOptions, conf
 
 // @public (undocumented)
 export interface RunLoadOptionsConfig<T = unknown> {
+    compare?: (a: unknown, b: unknown, field: string) => number;
     customSummaries?: CustomSummaryMap<T>;
+    filterValues?: Readonly<Record<string, ValueAccessor<T>>>;
     searchFields?: readonly string[];
+    searchValues?: Readonly<Record<string, ValueAccessor<T>>>;
     sortValues?: Readonly<Record<string, (row: T) => unknown>>;
 }
 

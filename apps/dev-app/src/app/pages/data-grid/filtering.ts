@@ -11,9 +11,15 @@ import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { ReactGridFilteringDemos } from '../react-grid/filtering';
-import { makeEmployees } from '../../shared/demo-data';
+import {
+  DEMO_STATUSES,
+  makeEmployees,
+  makeTurkishPeople,
+  type TurkishPerson,
+} from '../../shared/demo-data';
 import {
   CHIPS_SNIPPET,
+  DISPLAY_SNIPPET,
   MENU_SNIPPET,
   SNIPPET,
   TOOLS_SNIPPET,
@@ -214,6 +220,47 @@ import { toLocalDate } from '@oge-ui/core';
         </oge-grid>
       </app-demo-card>
 
+      <h3>Display values and Turkish sorting</h3>
+      <app-demo-card
+        [chips]="[
+          'calculateFilterValue',
+          'lookup search',
+          'sorting.locale',
+          'filterField',
+        ]"
+        description="The search box and the Name filter match what the cells show: <em>leave</em> finds the Status label behind code 1 (a static <code>lookup</code>), <em>ada k</em> finds a full name built by <code>calculateFilterValue</code>. Sort City: <code>sorting.locale: 'tr'</code> puts Isparta (dotless I) before İnegöl, where an English sort would not. On a server source, <code>filterField</code> sends a column's filters under another field."
+        [code]="displaySnippet"
+        language="ts"
+      >
+        <oge-grid
+          class="demo-display-values"
+          [data]="people"
+          keyField="id"
+          [filterRow]="true"
+          [filterDebounce]="0"
+          [searchPanel]="true"
+          [sorting]="{ locale: 'tr' }"
+          [paging]="{ pageSize: 20 }"
+        >
+          <oge-column
+            field="name"
+            caption="Name"
+            [calculateCellValue]="fullName"
+            [calculateFilterValue]="fullName"
+          />
+          <oge-column
+            field="status"
+            caption="Status"
+            [lookup]="{
+              dataSource: statuses,
+              valueExpr: 'value',
+              displayExpr: 'text',
+            }"
+          />
+          <oge-column field="city" caption="City" />
+        </oge-grid>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -267,6 +314,11 @@ export class FilteringPage {
   protected readonly menuSnippet = MENU_SNIPPET;
   protected readonly chipsSnippet = CHIPS_SNIPPET;
   protected readonly toolsSnippet = TOOLS_SNIPPET;
+  protected readonly displaySnippet = DISPLAY_SNIPPET;
+  protected readonly people = makeTurkishPeople(20);
+  protected readonly statuses = DEMO_STATUSES;
+  protected readonly fullName = (row: TurkishPerson) =>
+    `${row.firstName} ${row.lastName}`;
   protected readonly departments = [
     ...new Set(this.employees.map((e) => e.department)),
   ].sort();

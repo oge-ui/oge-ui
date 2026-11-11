@@ -45,6 +45,10 @@ export interface OgeColumnDef<T = unknown> {
   lookup?: OgeColumnLookup;
   calculateCellValue?: (row: T) => unknown;
   calculateSortValue?: (row: T) => unknown;
+  /** The value the column filters, lists and searches by on the client. */
+  calculateFilterValue?: (row: T) => unknown;
+  /** The field its filters and value list go to the data source under. */
+  filterField?: string;
   calculateFilterExpression?: (
     value: unknown,
     operator: FilterOperator,
@@ -105,6 +109,8 @@ export function ogeColumnFromDef<T>(def: OgeColumnDef<T>): OgeColumn<T> {
     lookup: value('lookup'),
     calculateCellValue: value('calculateCellValue'),
     calculateSortValue: value('calculateSortValue'),
+    calculateFilterValue: value('calculateFilterValue'),
+    filterField: value('filterField'),
     calculateFilterExpression: value('calculateFilterExpression'),
     sortOrder: value('sortOrder'),
     sortIndex: value('sortIndex'),

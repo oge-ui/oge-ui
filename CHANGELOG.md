@@ -7,6 +7,36 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Display values, locale sorting, versioned state, rows dragged out — `@oge-ui/core`, `@oge-ui/grid`, `@oge-ui/react-grid`
+
+- Display values: the global search also matches a static lookup column's labels,
+  and a lookup's value list is ordered by label. New column options
+  `calculateFilterValue` (the value a column filters, lists and searches by on
+  the client) and `filterField` (the field its filters and `distinct()` request
+  go to the server under; the state keeps `field`).
+- `sorting: { locale, compare }`: text sorts under a collator for its own locale,
+  apart from the formatting `locale` and defaulting to it — `'tr'` sorts `ı`
+  before `i` and treats `I` as the capital of `ı`; `compare` replaces the
+  comparison of non-null values. Applies to rows the grid sorts itself and to
+  value lists.
+- `stateMigrations`: one upgrade step per change of a stored state's format.
+  Snapshots record a `version`; a restored state, an `applyState()` argument or a
+  saved view runs the steps it missed. A failing step keeps the column layout.
+- `rowDragExternal`: drags rows out with the browser's drag and drop — as TSV
+  (`text/plain`) and JSON (`application/json`, `application/x-oge-grid-rows+json`),
+  the whole selection when the grabbed row is selected. `rowDragStart` /
+  `onRowDragStart` gets `dataTransfer` and `rows`.
+- `@oge-ui/core`: `ogeValueComparer`, `ogeCollator`, `ogeRemapFilterFields`,
+  `ogeMigrateState`, `ogeStateVersion`; `ArrayDataSource` options `filterValues`,
+  `searchValues`, `locale` and `compare`; `createFilterPredicate` and
+  `applyFilter` take per-field accessors; `GridStateSnapshot.version`.
+- Performance: the filter compiler prepares date bounds and folded needles once,
+  `foldText` skips Unicode normalization for ASCII text, and a search formats each
+  distinct date once — a search over 10 000 rows went from about 60 ms to 20 ms.
+  Measurements are on the filter contract guide.
+- Excel, CSV and PDF exports already apply every active filter and the search
+  text; now covered by tests in both layers.
+
 ### Filter tools — `@oge-ui/grid`, `@oge-ui/react-grid`
 
 - `headerFilter: { auto: true }` puts the value list only on columns whose values

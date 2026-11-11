@@ -113,7 +113,8 @@ export class GridStateStore {
     () => {
       const window = this.paging.window();
       // the applied filter: manual mode holds edits until they are applied
-      const filter = this.filter.appliedExpr();
+      // `filterField` redirects included
+      const filter = this.filter.loadExpr();
       const searchText = this.filter.appliedSearchText().trim();
       const groups = this.grouping.loadDescriptors();
       const groupSummary = this.grouping.groupSummary();
