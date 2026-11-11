@@ -382,6 +382,18 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   highlightChanges?: boolean;
   /** Global search box above the grid. */
   searchPanel?: boolean | OgeSearchPanelOptions;
+  /**
+   * A bar of removable chips above the grid, one per filter that narrows
+   * the rows ("Column · operator · value"), with a clear-all button.
+   */
+  filterChips?: boolean;
+  /**
+   * Adds a "Summary" submenu to the header context menu: Count for every
+   * column, Sum / Avg / Min / Max for numbers. The pick replaces the
+   * column's `totalSummary`, persists with `stateKey` / `state()` and is
+   * computed over the whole filtered set (by the server in remote mode).
+   */
+  summaryMenu?: boolean;
   /** Debounce for text filter inputs, in ms. Set to 0 in tests. */
   filterDebounce?: number;
   /**

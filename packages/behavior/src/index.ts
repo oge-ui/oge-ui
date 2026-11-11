@@ -349,8 +349,21 @@ export {
 } from './lib/grid/grid-header-filter';
 export {
   OgeHeaderValuesLoader,
+  ogeCollapseBlankValues,
   type OgeHeaderValuesLoaderOptions,
 } from './lib/grid/grid-header-values';
+export {
+  ogeSummaryMenuChoices,
+  ogeSummaryMenuItem,
+  type OgeSummaryMenuOptions,
+} from './lib/grid/grid-summary-menu';
+export {
+  ogeFilterChipText,
+  ogeGridFilterChips,
+  type OgeGridFilterChip,
+  type OgeGridFilterChipColumn,
+  type OgeGridFilterChipKind,
+} from './lib/grid/grid-filter-chips';
 export {
   buildOgeExportItems,
   mergeOgeExportStyles,

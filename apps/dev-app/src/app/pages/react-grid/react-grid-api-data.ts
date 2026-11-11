@@ -90,6 +90,20 @@ export const OGE_REACT_GRID_API: ApiSections = {
           description: 'Global search box above the grid.',
         },
         {
+          name: 'filterChips',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A bar of removable chips above the grid, one per filter that narrows the rows — filter-row cells, header condition menus, value-list selections (<code>in</code>), the filter builder and the search text — reading <em>Column · operator · value</em>, plus a clear-all button. Removing a chip also empties its filter-row editor.',
+        },
+        {
+          name: 'summaryMenu',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Adds a <em>Summary</em> submenu to the header context menu: Count for every column, Sum / Avg / Min / Max for numbers, None, or the column default. The pick replaces the column&#39;s <code>totalSummary</code>, persists with <code>stateKey</code> / <code>state()</code> (<code>summaries</code>) and travels as <code>LoadOptions.totalSummary</code>, so a server computes it over the whole filtered set.',
+        },
+        {
           name: 'filterDebounce',
           type: 'number',
           default: 'config.filterDebounce (300)',

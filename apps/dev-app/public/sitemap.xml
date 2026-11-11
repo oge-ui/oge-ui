@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.ogeui.com/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.ogeui.com/</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/setup</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/styling</loc><lastmod>2026-11-09</lastmod></url>
@@ -20,9 +20,9 @@
   <url><loc>https://www.ogeui.com/guides/dev-warnings</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/filter-contract</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/ai</loc><lastmod>2026-10-23</lastmod></url>
-  <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-10-21</lastmod></url>
-  <url><loc>https://www.ogeui.com/getting-started/localization/api</loc><lastmod>2026-10-15</lastmod></url>
-  <url><loc>https://www.ogeui.com/components</loc><lastmod>2026-10-21</lastmod></url>
+  <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://www.ogeui.com/getting-started/localization/api</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://www.ogeui.com/components</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/playground</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/sorting</loc><lastmod>2026-10-18</lastmod></url>
@@ -67,36 +67,36 @@
   <url><loc>https://www.ogeui.com/components/forms/validation</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/components/forms/api</loc><lastmod>2026-10-18</lastmod></url>
   <url><loc>https://www.ogeui.com/components/accordion</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/accordion/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/accordion/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/progress</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/progress/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/progress/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/progress/load-panel</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/avatar</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/avatar/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/avatar/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/chip</loc><lastmod>2026-10-08</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/chip/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/chip/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/alert</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/alert/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/alert/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/timeline</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/timeline/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/timeline/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/carousel</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/carousel/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/carousel/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tile-layout</loc><lastmod>2026-10-18</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/tile-layout/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/tile-layout/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-view</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/data-view/api</loc><lastmod>2026-10-18</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/simple-table</loc></url>
-  <url><loc>https://www.ogeui.com/components/simple-table/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-view/api</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/simple-table</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/simple-table/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/list-view</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/list-view/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/list-view/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/app-bar</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/app-bar/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/app-bar/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/card</loc><lastmod>2026-08-14</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/card/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/card/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/splitter</loc><lastmod>2026-08-14</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/splitter/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/splitter/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/toolbar</loc><lastmod>2026-08-14</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/toolbar/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/toolbar/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/stepper</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/drawer</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/breadcrumb</loc><lastmod>2026-10-08</lastmod></url>
@@ -190,5 +190,5 @@
   <url><loc>https://www.ogeui.com/compare/mui-x</loc><lastmod>2026-11-03</lastmod></url>
   <url><loc>https://www.ogeui.com/compare/syncfusion</loc><lastmod>2026-11-03</lastmod></url>
   <url><loc>https://www.ogeui.com/changelog</loc><lastmod>2026-10-07</lastmod></url>
-  <url><loc>https://www.ogeui.com/bundle-size</loc><lastmod>2026-10-07</lastmod></url>
+  <url><loc>https://www.ogeui.com/bundle-size</loc><lastmod>2026-11-11</lastmod></url>
 </urlset>

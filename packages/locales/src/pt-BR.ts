@@ -117,6 +117,16 @@ export const ptBR: OgeLocalePack = {
     },
     groupSummaryPattern: '{label} de {column}: {value}',
     totalSummaryPattern: '{label}: {value}',
+    summaryMenu: 'Resumo',
+    summaryNone: 'Nenhum',
+    summaryDefault: 'Padrão da coluna',
+    filterChipsLabel: 'Filtros ativos',
+    clearAllFilters: 'Limpar tudo',
+    removeFilter: 'Remover filtro: {filter}',
+    searchChip: 'Pesquisa',
+    builderChip: 'Filtro personalizado',
+    headerFilterTruncated:
+      'Mostrando os primeiros {count} valores — digite para restringir a lista.',
     sortAscendingAnnouncement: 'Classificado por {column}, em ordem crescente',
     sortDescendingAnnouncement:
       'Classificado por {column}, em ordem decrescente',

@@ -38,6 +38,7 @@ describe('OgeHeaderValuesLoader', () => {
   let calls: Call[];
   let shown: (readonly unknown[] | null)[];
   let errors: unknown[];
+  let cut: boolean[];
 
   function loader(local = false, remoteSearch?: (field: string) => boolean) {
     return new OgeHeaderValuesLoader({
@@ -45,7 +46,10 @@ describe('OgeHeaderValuesLoader', () => {
       filterFor: (field) => (field === 'name' ? OTHER : null),
       searchText: () => ' ali ',
       limit: () => 3,
-      onValues: (_field, values) => shown.push(values),
+      onValues: (_field, values, truncated) => {
+        shown.push(values);
+        cut.push(truncated);
+      },
       onError: (error) => errors.push(error),
       ...(remoteSearch ? { remoteSearch } : {}),
     });
@@ -55,6 +59,7 @@ describe('OgeHeaderValuesLoader', () => {
     calls = [];
     shown = [];
     errors = [];
+    cut = [];
     vi.useFakeTimers();
   });
   afterEach(() => vi.useRealTimers());
@@ -66,12 +71,13 @@ describe('OgeHeaderValuesLoader', () => {
     expect(calls[0].field).toBe('name');
     expect(calls[0].options.filter).toBe(OTHER);
     expect(calls[0].options.searchText).toBe('ali');
-    expect(calls[0].options.take).toBe(3);
+    expect(calls[0].options.take).toBe(4); // one more, to detect a cut list
     expect(calls[0].options.search).toBeUndefined();
     expect(calls[0].options.signal).toBeInstanceOf(AbortSignal);
     calls[0].resolve(['a', 'b', 'c', 'd']);
     await Promise.resolve();
     expect(shown).toEqual([null, ['a', 'b', 'c']]);
+    expect(cut.at(-1)).toBe(true);
   });
 
   it('debounces a server search by 250 ms and sends the typed text', () => {
@@ -149,5 +155,15 @@ describe('OgeHeaderValuesLoader', () => {
     await Promise.resolve();
     expect(shown.at(-1)).toEqual([]);
     expect(errors).toHaveLength(1);
+  });
+
+  it('folds blank values into one trailing null and reports a full list', async () => {
+    const l = loader();
+    l.open('name');
+    calls[0].resolve([null, 'Ali', '', '  ']);
+    await Promise.resolve();
+    expect(shown.at(-1)).toEqual(['Ali', null]);
+    expect(cut.at(-1)).toBe(false);
+    expect(l.universe()).toEqual(['Ali', null]);
   });
 });

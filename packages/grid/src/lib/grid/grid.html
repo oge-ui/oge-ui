@@ -169,6 +169,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     [placeholder]="searchPanelOptions().placeholder ?? msg().search"
     [attr.aria-label]="searchPanelOptions().placeholder ?? msg().search"
     [style.width.px]="searchPanelOptions().width ?? null"
+    [value]="searchBoxText()"
     (input)="onSearchInput($any($event.target).value)"
   />
   }
@@ -211,6 +212,42 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     </svg>
   </button>
   }
+</div>
+} @if (filterChips() && activeFilterChips().length) {
+<div
+  class="oge-filter-chips"
+  role="group"
+  [attr.aria-label]="msg().filterChipsLabel"
+>
+  @for (chip of activeFilterChips(); track chip.id) {
+  <span class="oge-filter-chip" [attr.data-chip]="chip.id">
+    <span class="oge-filter-chip-label">{{ chip.label }} ·</span>
+    <span class="oge-filter-chip-text">{{ chip.text }}</span>
+    <button
+      type="button"
+      class="oge-filter-chip-remove"
+      [attr.aria-label]="removeChipLabel(chip)"
+      [attr.title]="removeChipLabel(chip)"
+      (click)="removeFilterChip(chip)"
+    >
+      <svg
+        viewBox="0 0 16 16"
+        width="10"
+        height="10"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="m4 4 8 8M12 4l-8 8" />
+      </svg>
+    </button>
+  </span>
+  }
+  <button type="button" class="oge-filter-chips-clear" (click)="clearFilters()">
+    {{ msg().clearAllFilters }}
+  </button>
 </div>
 }
 <!-- Delegated keyboard handler: focus lives on the grid cells inside (roving tabindex). -->
@@ -425,7 +462,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         [style.inset-inline-start.px]="pinnedLeftOf(column)"
         [style.inset-inline-end.px]="pinnedRightOf(column)"
       >
-        @if (column.filterable && column.lookupItems; as items) {
+        @for (epoch of [filterCellEpoch(column)]; track epoch) { @if
+        (column.filterable && column.lookupItems; as items) {
         <oge-select-box
           class="oge-filter-input"
           size="sm"
@@ -507,7 +545,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           [label]="msg().filterPrefix + ' ' + column.caption"
           (inputChange)="onFilterInput(column, $event.text)"
         />
-        } } }
+        } } } }
       </div>
       } @if (colSpacerRight() > 0) {
       <div
@@ -1456,6 +1494,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       />
       <span>{{ headerValueText(value) }}</span>
     </label>
+    } @if (headerFilterTruncated()) {
+    <p class="oge-hf-note" role="note">{{ headerTruncatedText() }}</p>
     } } @else {
     <div class="oge-hf-loading">{{ msg().loading }}</div>
     } }

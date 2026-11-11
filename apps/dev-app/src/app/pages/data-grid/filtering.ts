@@ -12,7 +12,7 @@ import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { ReactGridFilteringDemos } from '../react-grid/filtering';
 import { makeEmployees } from '../../shared/demo-data';
-import { MENU_SNIPPET, SNIPPET } from './filtering-snippets';
+import { CHIPS_SNIPPET, MENU_SNIPPET, SNIPPET } from './filtering-snippets';
 import { toLocalDate } from '@oge-ui/core';
 
 @Component({
@@ -122,6 +122,35 @@ import { toLocalDate } from '@oge-ui/core';
         </oge-grid>
       </app-demo-card>
 
+      <h3>Filter chips and column summaries</h3>
+      <app-demo-card
+        [chips]="['filterChips', 'summaryMenu', '(Blank)']"
+        description="<code>filterChips</code> shows every filter that narrows the rows as a removable chip — <em>Column · operator · value</em> — with a clear-all button; removing a chip also empties its editor. <code>summaryMenu</code> adds a <em>Summary</em> submenu to the header context menu (right-click a header): Count for any column, Sum / Avg / Min / Max for numbers. The pick persists with the grid state. In a value list, empty and missing values are one <em>(Blank)</em> item."
+        [code]="chipsSnippet"
+        language="ts"
+      >
+        <oge-grid
+          class="demo-filter-chips"
+          [data]="chipEmployees"
+          keyField="id"
+          [filterRow]="true"
+          [headerFilter]="true"
+          [searchPanel]="true"
+          [filterChips]="true"
+          [summaryMenu]="true"
+          [paging]="{ pageSize: 8 }"
+        >
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="city" caption="City" />
+          <oge-column
+            field="salary"
+            caption="Salary"
+            dataType="number"
+            totalSummary="sum"
+          />
+        </oge-grid>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -167,8 +196,13 @@ import { toLocalDate } from '@oge-ui/core';
 export class FilteringPage {
   protected readonly fw = inject(FrameworkService);
   protected readonly employees = makeEmployees(2000, 5);
+  /** 60 rows, every seventh city left blank — the value list shows "(Blank)". */
+  protected readonly chipEmployees = makeEmployees(60, 21).map((row, i) =>
+    i % 7 === 3 ? { ...row, city: '' } : row,
+  );
   protected readonly snippet = SNIPPET;
   protected readonly menuSnippet = MENU_SNIPPET;
+  protected readonly chipsSnippet = CHIPS_SNIPPET;
   protected readonly datedEmployees = makeEmployees(80, 13).map((row) => ({
     ...row,
     hireDate: toLocalDate(row.hireDate),

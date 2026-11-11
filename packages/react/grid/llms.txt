@@ -107,6 +107,8 @@ _Sorting, filtering & search_
 | `filterPanel` | `boolean` | `false` | Filter summary bar above the grid; clicking it opens the visual filter builder (arbitrary and/or condition trees). |
 | `filterValue / defaultFilterValue` | `FilterExpr \| null` | `null` | The filter-builder expression — controlled with `onFilterValueChange`. Combines with the filter row, the header filters and the search panel. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
+| `filterChips` | `boolean` | `false` | A bar of removable chips above the grid, one per filter that narrows the rows — filter-row cells, header condition menus, value-list selections (`in`), the filter builder and the search text — reading _Column · operator · value_, plus a clear-all button. Removing a chip also empties its filter-row editor. |
+| `summaryMenu` | `boolean` | `false` | Adds a _Summary_ submenu to the header context menu: Count for every column, Sum / Avg / Min / Max for numbers, None, or the column default. The pick replaces the column's `totalSummary`, persists with `stateKey` / `state()` (`summaries`) and travels as `LoadOptions.totalSummary`, so a server computes it over the whole filtered set. |
 | `filterDebounce` | `number` | `config.filterDebounce (300)` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
 | `announcements` | `boolean` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, group expansion, select-all and blocked-save validation changes through the shared `useOgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
 
@@ -1312,6 +1314,42 @@ export function FilteredGrid() {
       filterValue={filter}
       onFilterValueChange={setFilter}
       paging={{ pageSize: 12 }}
+    />
+  );
+}
+```
+
+### Filter chips and column summaries
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+export function FilterChipsGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      filterRow
+      headerFilter
+      searchPanel
+      filterChips   // one removable chip per active filter, plus "Clear all"
+      summaryMenu   // right-click a header → Summary → Count / Sum / Avg / Min / Max
+      columns={[
+        { field: 'firstName', caption: 'First Name' },
+        { field: 'city', caption: 'City' },
+        { field: 'salary', caption: 'Salary', dataType: 'number', totalSummary: 'sum' },
+      ]}
     />
   );
 }

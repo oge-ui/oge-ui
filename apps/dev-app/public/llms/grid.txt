@@ -138,6 +138,8 @@ _Sorting, filtering & search_
 | `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header. |
 | `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style filter button in headers. The value list comes from `source.distinct()` under every other active filter and the search text, never the column's own; a server source is asked once per opening and again 250 ms after typing in the list's search box (value lists). Without `distinct` there is no list. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
+| `filterChips` | `boolean` | `false` | A bar of removable chips above the grid, one per filter that narrows the rows — filter-row cells, header condition menus, value-list selections (`in`), the filter builder and the search text — reading _Column · operator · value_, plus a clear-all button. Removing a chip also empties its filter-row editor. |
+| `summaryMenu` | `boolean` | `false` | Adds a _Summary_ submenu to the header context menu: Count for every column, Sum / Avg / Min / Max for numbers, None, or the column default. The pick replaces the column's `totalSummary`, persists with `stateKey` / `state()` (`summaries`) and travels as `LoadOptions.totalSummary`, so a server computes it over the whole filtered set. |
 | `filterPanel` | `boolean` | `false` | Filter panel bar with the filter-builder entry point. |
 | `filterValue` | `model<FilterExpr \| null>` | `null` | Two-way binding of the builder/programmatic filter expression. |
 | `filterDebounce` | `number \| undefined` | `—` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
@@ -1172,6 +1174,40 @@ export class Demo {
       },
     });
   }
+}
+```
+
+### Chips
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- filterChips: one removable chip per active filter, plus "Clear all".
+         summaryMenu: right-click a header → Summary → Count / Sum / Avg / Min / Max;
+         the pick is part of state() and is computed over the filtered set -->
+    <oge-grid [data]="employees" keyField="id"
+              [filterRow]="true" [headerFilter]="true" [searchPanel]="true"
+              [filterChips]="true" [summaryMenu]="true">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="city" caption="City" />
+      <oge-column field="salary" caption="Salary" dataType="number" totalSummary="sum" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
 }
 ```
 

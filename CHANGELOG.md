@@ -7,6 +7,29 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Column summaries, filter chips and value lists — `@oge-ui/grid`, `@oge-ui/react-grid`
+
+- `summaryMenu`: a "Summary" submenu in the header context menu — Count for every
+  column, Sum / Avg / Min / Max for numbers, None, or the column default. The pick
+  replaces the column's `totalSummary`, persists in the grid state (new
+  `GridStateSnapshot.summaries`, validated by `sanitizeGridStateSnapshot`) and
+  travels as `LoadOptions.totalSummary`, so a server computes it over the whole
+  filtered set; `LoadResult.summary` is what the total row shows (documented and
+  now covered by tests in both layers).
+- `filterChips`: a chip bar above the grid with one removable chip per filter that
+  narrows the rows — filter-row cells, header condition menus, value lists, the
+  builder and the search text — reading "Column · operator · value", plus Clear
+  all. Shared as `ogeGridFilterChips` / `ogeFilterChipText` in `@oge-ui/behavior`.
+- Value lists show one "(Blank)" item for null, empty and whitespace-only values;
+  checking it filters with `isblank` (`isnull` on typed columns), so boolean columns
+  filter yes / no / blank. A list cut at `valueLimit` now says so
+  (`headerFilterTruncated`); the grid asks `distinct()` for `take: valueLimit + 1`.
+- **Fix:** `clearFilters()` (and a removed chip) left the old text in the filter-row
+  editors and the search box; they are emptied now.
+- New grid messages `summaryMenu`, `summaryNone`, `summaryDefault`,
+  `filterChipsLabel`, `clearAllFilters`, `removeFilter`, `searchChip`,
+  `builderChip` and `headerFilterTruncated`, translated in every locale pack.
+
 ### Simple table — `@oge-ui/layout`, `@oge-ui/react-layout`
 
 - New `oge-simple-table` / `<OgeSimpleTable>`: a native `<table>` for small lists

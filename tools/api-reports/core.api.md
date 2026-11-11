@@ -460,6 +460,7 @@ export interface GridStateSnapshot {
     };
     // (undocumented)
     sort?: readonly SortDescriptor[];
+    summaries?: readonly (readonly [string, OgeUserSummaryType])[];
 }
 
 // @public (undocumented)
@@ -1229,6 +1230,9 @@ export interface OgeTypeAheadBuffer {
 
 // @public
 export function ogeTzOffset(instant: Date | number, timeZone?: string): number;
+
+// @public
+export type OgeUserSummaryType = Exclude<SummaryType, 'custom'> | 'none';
 
 // @public
 export interface OgeValueFormat {

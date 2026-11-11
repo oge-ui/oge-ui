@@ -28,6 +28,21 @@ protected readonly filter = signal<FilterExpr | null>({
 });`,
 });
 
+export const CHIPS_SNIPPET = demoSource({
+  use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
+  dataset: 'employees',
+  template: `<!-- filterChips: one removable chip per active filter, plus "Clear all".
+     summaryMenu: right-click a header → Summary → Count / Sum / Avg / Min / Max;
+     the pick is part of state() and is computed over the filtered set -->
+<oge-grid [data]="employees" keyField="id"
+          [filterRow]="true" [headerFilter]="true" [searchPanel]="true"
+          [filterChips]="true" [summaryMenu]="true">
+  <oge-column field="firstName" caption="First Name" />
+  <oge-column field="city" caption="City" />
+  <oge-column field="salary" caption="Salary" dataType="number" totalSummary="sum" />
+</oge-grid>`,
+});
+
 export const MENU_SNIPPET = demoSource({
   use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
   dataset: 'employees',

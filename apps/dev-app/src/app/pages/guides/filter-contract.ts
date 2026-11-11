@@ -145,6 +145,22 @@ const SECTIONS = [
       <code>distinct</code> shows no value list — the current page is never
       passed off as every value.
     </p>
+    <ul>
+      <li>
+        <strong>One "(Blank)" item.</strong> Null, empty and whitespace-only
+        values list as a single <em>(Blank)</em> entry at the end. Checking it
+        adds an <code>isblank</code> condition (<code>isnull</code> on number,
+        date and boolean columns) next to the <code>in</code> list, so a boolean
+        column filters yes / no / blank.
+      </li>
+      <li>
+        <strong>A cut list says so.</strong> The grid asks for one value more
+        than <code>valueLimit</code> (<code>take</code>); when the source
+        returns more, the popup lists the first <code>valueLimit</code> values
+        and notes that typing narrows the list. A server should honour
+        <code>take</code>.
+      </li>
+    </ul>
     <app-code-block [code]="distinctEndpoint" language="ts" />
 
     <h2 id="test-vectors" class="scroll-mt-20">Test vectors</h2>

@@ -1,7 +1,9 @@
 import type {
   FilterExpr,
+  FilterOperator,
   GroupDescriptor,
   GroupInterval,
+  OgeUserSummaryType,
   RowKey,
   SortDescriptor,
   SummaryDescriptor,
@@ -162,7 +164,7 @@ export class OgeGridFilterState {
     this.combinedExpr = rx.derived<FilterExpr | null>(() => {
       const operands: FilterExpr[] = [...this._rowFilters().values()];
       for (const [field, values] of this._headerFilters()) {
-        operands.push({ type: 'binary', field, op: 'in', value: values });
+        operands.push(this.headerExpr(field, values));
       }
       const builder = this._builderFilter();
       if (builder) operands.push(builder);
@@ -187,14 +189,41 @@ export class OgeGridFilterState {
       if (!rowKeys.includes(key)) operands.push(expr);
     }
     for (const [key, values] of this._headerFilters()) {
-      if (key !== field) {
-        operands.push({ type: 'binary', field: key, op: 'in', value: values });
-      }
+      if (key !== field) operands.push(this.headerExpr(key, values));
     }
     const builder = this._builderFilter();
     if (builder) operands.push(builder);
     if (!operands.length) return null;
     return operands.length === 1 ? operands[0] : { type: 'and', operands };
+  }
+
+  /**
+   * The operator the value list's "(Blank)" item becomes for a field —
+   * the host sets it from the column's data type (`isnull` for typed
+   * columns, the default `isblank` for text; see `ogeWireFilterOperator`).
+   */
+  blankOperatorOf: (field: string) => FilterOperator = () => 'isblank';
+
+  /**
+   * A value-list selection as an expression: the checked values as `in`,
+   * and the "(Blank)" item (`null`) as a blank check, so it also matches
+   * empty and whitespace-only text. An empty selection matches nothing.
+   */
+  headerExpr(field: string, values: readonly unknown[]): FilterExpr {
+    const present = values.filter((value) => value != null);
+    const list: FilterExpr = {
+      type: 'binary',
+      field,
+      op: 'in',
+      value: present,
+    };
+    if (present.length === values.length) return list;
+    const blank: FilterExpr = {
+      type: 'binary',
+      field,
+      op: this.blankOperatorOf(field),
+    };
+    return present.length ? { type: 'or', operands: [list, blank] } : blank;
   }
 
   setBuilderFilter(expr: FilterExpr | null): void {
@@ -278,15 +307,37 @@ export class OgeGridGroupingState {
     Readonly<Record<string, GroupInterval>>
   >;
   private readonly _groupSummary: OgeReactiveCell<readonly SummaryDescriptor[]>;
-  private readonly _totalSummary: OgeReactiveCell<readonly SummaryDescriptor[]>;
+  private readonly _declaredTotal: OgeReactiveCell<
+    readonly SummaryDescriptor[]
+  >;
+  private readonly _userTotals: OgeReactiveCell<
+    ReadonlyMap<string, OgeUserSummaryType>
+  >;
+  /** Total summaries picked from the column menus, per field. */
+  readonly userTotals: () => ReadonlyMap<string, OgeUserSummaryType>;
 
   constructor(rx: OgeReactivityAdapter) {
     this._descriptors = rx.cell<readonly GroupDescriptor[]>([]);
     this._groupSummary = rx.cell<readonly SummaryDescriptor[]>([]);
-    this._totalSummary = rx.cell<readonly SummaryDescriptor[]>([]);
+    this._declaredTotal = rx.cell<readonly SummaryDescriptor[]>([]);
+    this._userTotals = rx.cell<ReadonlyMap<string, OgeUserSummaryType>>(
+      new Map(),
+    );
     this.descriptors = () => this._descriptors();
     this.groupSummary = () => this._groupSummary();
-    this.totalSummary = () => this._totalSummary();
+    this.userTotals = () => this._userTotals();
+    // the columns' declared totals, with each user pick replacing its
+    // column's (`'none'` hides them); picks for undeclared columns follow
+    this.totalSummary = rx.derived<readonly SummaryDescriptor[]>(() => {
+      const picks = this._userTotals();
+      const declared = this._declaredTotal();
+      if (!picks.size) return declared;
+      const out = declared.filter((d) => !picks.has(d.field));
+      for (const [field, type] of picks) {
+        if (type !== 'none') out.push({ field, type });
+      }
+      return out;
+    });
     this._intervals = rx.cell<Readonly<Record<string, GroupInterval>>>({});
     this.intervals = () => this._intervals();
     this.loadDescriptors = rx.derived(() => {
@@ -354,9 +405,34 @@ export class OgeGridGroupingState {
     if (JSON.stringify(group) !== JSON.stringify(this._groupSummary())) {
       this._groupSummary.set(group);
     }
-    if (JSON.stringify(total) !== JSON.stringify(this._totalSummary())) {
-      this._totalSummary.set(total);
+    if (JSON.stringify(total) !== JSON.stringify(this._declaredTotal())) {
+      this._declaredTotal.set(total);
     }
+  }
+
+  /**
+   * The column menu's pick for `field`: an aggregate, `'none'` (hide the
+   * declared totals), or `null` to go back to the declared ones.
+   */
+  setUserTotal(field: string, type: OgeUserSummaryType | null): void {
+    const next = new Map(this._userTotals());
+    if (type === null) {
+      if (!next.delete(field)) return;
+    } else if (next.get(field) === type) return;
+    else next.set(field, type);
+    this._userTotals.set(next);
+  }
+
+  /** The pick for `field`, or `undefined` when it follows its column. */
+  userTotalOf(field: string): OgeUserSummaryType | undefined {
+    return this._userTotals().get(field);
+  }
+
+  /** Restores the picks (persisted state). */
+  applyUserTotals(
+    pairs: readonly (readonly [string, OgeUserSummaryType])[],
+  ): void {
+    this._userTotals.set(new Map(pairs));
   }
 }
 

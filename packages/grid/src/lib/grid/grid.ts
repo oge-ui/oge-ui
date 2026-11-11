@@ -15,6 +15,7 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   model,
   output,
   signal,
@@ -135,6 +136,10 @@ import {
   ogeGroupValueText,
   ogeHeaderConditionKey,
   OgeHeaderValuesLoader,
+  ogeGridFilterChips,
+  ogeSummaryMenuItem,
+  ogeWireFilterOperator,
+  type OgeGridFilterChip,
   ogeIsTextTruncated,
   ogeKeyboardFillPlan,
   ogeMeasureAutoWidth,
@@ -605,6 +610,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Global search box above the grid. */
   readonly searchPanel = input<boolean | OgeSearchPanelOptions>(false);
 
+  /**
+   * A bar of removable chips above the grid, one per filter that narrows
+   * the rows ("Column · operator · value"), with a clear-all button.
+   */
+  readonly filterChips = input(false);
+
+  /**
+   * Adds a "Summary" submenu to the header context menu: Count for every
+   * column, Sum / Avg / Min / Max for numbers. The pick replaces the
+   * column's `totalSummary`, persists with `stateKey` / `state()` and is
+   * computed over the whole filtered set (by the server in remote mode).
+   */
+  readonly summaryMenu = input(false);
+
   /** Per-grid overrides of the UI strings (see `provideOgeGridConfig` for app-wide). */
   readonly messages = input<Partial<OgeGridMessages> | undefined>(undefined);
 
@@ -929,6 +948,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly toolbarItems = contentChildren(OgeGridToolbarItem);
 
   constructor() {
+    // the value list's "(Blank)" item: `isnull` for typed columns (an operator
+    // every server knows), `isblank` for text
+    this.store.filter.blankOperatorOf = (field) =>
+      ogeWireFilterOperator(
+        'isblank',
+        this.columnByField(field)?.dataType ?? 'string',
+      );
     this.destroyRef.onDestroy(() => {
       this.contextMenuPanel.destroy();
       this.operatorPanel.destroy();
@@ -1428,6 +1454,89 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Clears every filter: row filters, header filters, builder filter and search. */
   clearFilters(): void {
     this.store.filter.clearAll();
+    this.resetFilterInputs();
+  }
+
+  // --- active filter chips --------------------------------------------------
+
+  /** One chip per filter that narrows the rows (`filterChips`). */
+  protected readonly activeFilterChips = computed<readonly OgeGridFilterChip[]>(
+    () => {
+      if (!this.filterChips()) return [];
+      return ogeGridFilterChips(
+        this.store.filter.toState(),
+        (field) => this.columnByField(field),
+        this.msg(),
+        this.builderFields(),
+      );
+    },
+  );
+
+  protected removeChipLabel(chip: OgeGridFilterChip): string {
+    return formatPattern(this.msg().removeFilter, {
+      filter: `${chip.label} · ${chip.text}`,
+    });
+  }
+
+  /** Removes the one filter a chip stands for. */
+  protected removeFilterChip(chip: OgeGridFilterChip): void {
+    switch (chip.kind) {
+      case 'row':
+        this.store.filter.setRowFilter(chip.slot, null);
+        this.resetFilterInputs(chip.slot);
+        break;
+      case 'header':
+        this.store.filter.setHeaderFilter(chip.slot, null);
+        break;
+      case 'builder':
+        this.store.filter.setBuilderFilter(null);
+        this.filterValue.set(null);
+        break;
+      case 'search':
+        this.store.filter.setSearchText('');
+        break;
+    }
+  }
+
+  /**
+   * The search box text: follows the store (a restored state, a removed
+   * chip, `clearFilters()` empty it) and the keystrokes typed before the
+   * debounced write lands.
+   */
+  protected readonly searchBoxText = linkedSignal(() =>
+    this.store.filter.searchText(),
+  );
+  /** Bumped per field to recreate (empty) a filter-row cell. */
+  private readonly filterCellEpochs = signal<ReadonlyMap<string, number>>(
+    new Map(),
+  );
+
+  protected filterCellEpoch(column: ResolvedColumn<T>): number {
+    return column.field ? (this.filterCellEpochs().get(column.field) ?? 0) : 0;
+  }
+
+  /**
+   * Empties the filter-row editors (all, or one field) and the search box
+   * after their filters were removed elsewhere — they are uncontrolled, so
+   * they are recreated rather than written to.
+   */
+  private resetFilterInputs(slot?: string): void {
+    if (slot?.startsWith('hf:')) return; // a header menu condition: no editor
+    const fields =
+      slot !== undefined
+        ? [slot]
+        : this.resolvedColumns()
+            .map((column) => column.field)
+            .filter((field): field is string => !!field);
+    const next = new Map(this.filterCellEpochs());
+    for (const field of fields) {
+      this.rowFilterRaw.delete(field);
+      const timer = this.filterTimers.get(`f:${field}`);
+      if (timer !== undefined) clearTimeout(timer);
+      this.filterTimers.delete(`f:${field}`);
+      next.set(field, (next.get(field) ?? 0) + 1);
+    }
+    this.filterCellEpochs.set(next);
   }
 
   /** Clears the sort order. */
@@ -3633,6 +3742,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         action: () => this.store.columns.setPinned(column.id, false),
       });
     }
+    if (this.summaryMenu()) {
+      items.push(
+        ogeSummaryMenuItem({
+          dataType: column.dataType,
+          current: this.store.grouping.userTotalOf(field),
+          messages,
+          select: (type) => this.store.grouping.setUserTotal(field, type),
+        }),
+      );
+    }
     items.push({
       text: messages.autoFitColumn,
       action: () => this.fitColumn(column),
@@ -4422,6 +4541,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected onSearchInput(raw: string): void {
+    this.searchBoxText.set(raw);
     this.debounced('search', () => this.store.filter.setSearchText(raw));
   }
 
@@ -4656,15 +4776,23 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const type = this.columnByField(field)?.dataType;
       return type === undefined || !isOgeDateType(type);
     },
-    onValues: (field, values) => {
+    onValues: (field, values, truncated) => {
       if (this.headerFilterField() === field) {
         this.headerFilterValues.set(values);
+        this.headerFilterTruncated.set(truncated);
       }
     },
     onError: (err) => this.adapter.error.set(err),
   });
   /** Whether the open list's search box is answered by the server. */
   private readonly headerSearchRemote = signal(false);
+  /** Whether the open list was cut at `valueLimit`. */
+  protected readonly headerFilterTruncated = signal(false);
+  protected readonly headerTruncatedText = computed(() =>
+    formatPattern(this.msg().headerFilterTruncated, {
+      count: String(this.effHeaderFilterLimit()),
+    }),
+  );
 
   /** Anchored header-filter popup below its funnel button. */
   readonly headerFilterPanel = new OgeAnchoredPanel({

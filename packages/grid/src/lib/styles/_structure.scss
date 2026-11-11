@@ -187,6 +187,93 @@ input.oge-filter-input,
   }
 }
 
+// --- active filter chips (filterChips) ---------------------------------------
+
+.oge-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  font-size: 12px;
+}
+
+.oge-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-inline-size: 100%;
+  padding-block: 2px;
+  padding-inline: 8px 2px;
+  border: 1px solid var(--oge-accent-25);
+  border-radius: 999px;
+  background: var(--oge-accent-soft);
+  color: var(--oge-text-color);
+}
+
+.oge-filter-chip-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.oge-filter-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-filter-chip-remove {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-header-color);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (pointer: coarse) {
+    inline-size: 32px;
+    block-size: 32px;
+  }
+}
+
+.oge-filter-chips-clear {
+  padding: 2px 6px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-accent);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-filter-chip {
+    border-color: CanvasText;
+  }
+}
+
 .oge-filter-op-btn {
   flex-shrink: 0;
   min-width: 26px;
@@ -1410,6 +1497,15 @@ input.oge-filter-input {
 .oge-hf-loading {
   padding: 12px;
   color: var(--oge-muted-color);
+}
+
+// the value list was cut at valueLimit
+.oge-hf-note {
+  margin: 4px 0 0;
+  padding: 6px 8px;
+  border-top: 1px solid var(--oge-border-color);
+  color: var(--oge-muted-color);
+  font-size: 12px;
 }
 
 // context/operator menus render an <oge-menu-list> inside an <oge-popup> —

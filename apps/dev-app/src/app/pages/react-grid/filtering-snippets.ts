@@ -54,6 +54,35 @@ const [filter, setFilter] = useState<FilterExpr | null>(null);`,
     }),
   },
   {
+    title: 'Filter chips and column summaries',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-grid': ['OgeGrid'] },
+      name: 'FilterChipsGrid',
+      before: `interface Employee {
+  id: number;
+  firstName: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];`,
+      jsx: `<OgeGrid
+  data={employees}
+  keyField="id"
+  filterRow
+  headerFilter
+  searchPanel
+  filterChips   // one removable chip per active filter, plus "Clear all"
+  summaryMenu   // right-click a header → Summary → Count / Sum / Avg / Min / Max
+  columns={[
+    { field: 'firstName', caption: 'First Name' },
+    { field: 'city', caption: 'City' },
+    { field: 'salary', caption: 'Salary', dataType: 'number', totalSummary: 'sum' },
+  ]}
+/>`,
+    }),
+  },
+  {
     title: 'Excel-style filter menu',
     source: reactDemoSource({
       use: { '@oge-ui/react-grid': ['OgeGrid'] },

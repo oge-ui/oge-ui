@@ -1,4 +1,4 @@
-import type { DataSource, FilterExpr } from '@oge-ui/core';
+import { isOgeBlank, type DataSource, type FilterExpr } from '@oge-ui/core';
 
 /**
  * Loads the value list of an Excel-style header filter popup — shared by both
@@ -14,6 +14,11 @@ import type { DataSource, FilterExpr } from '@oge-ui/core';
  * - Every request supersedes the previous one: the previous request is
  *   aborted and a late answer to it is dropped, so an old response never
  *   overwrites a newer one.
+ * - Blank values (null, undefined, empty or whitespace-only text) list as
+ *   one `null` entry at the end — the "(Blank)" item, which the filter
+ *   state turns into an `isblank` condition.
+ * - One value more than the limit is asked for, so the host can say the
+ *   list was cut (`truncated`) instead of passing it off as complete.
  */
 export interface OgeHeaderValuesLoaderOptions {
   /** The grid's data source; no `distinct()` means no value list. */
@@ -26,11 +31,29 @@ export interface OgeHeaderValuesLoaderOptions {
   readonly limit: () => number;
   /** Whether typed text is sent to the server for this column (not for dates). */
   readonly remoteSearch?: (field: string) => boolean;
-  /** Receives the values to list; `null` while a request is in flight. */
-  readonly onValues: (field: string, values: readonly unknown[] | null) => void;
+  /**
+   * Receives the values to list (`null` while a request is in flight) and
+   * whether the source had more than the limit.
+   */
+  readonly onValues: (
+    field: string,
+    values: readonly unknown[] | null,
+    truncated: boolean,
+  ) => void;
   readonly onError?: (error: unknown) => void;
   /** Debounce of a server search, in ms. Default 250. */
   readonly debounceMs?: number;
+}
+
+/**
+ * Folds every blank value (null, undefined, empty or whitespace-only text)
+ * into one `null` at the end of the list — the single "(Blank)" item.
+ */
+export function ogeCollapseBlankValues(
+  values: readonly unknown[],
+): readonly unknown[] {
+  const kept = values.filter((value) => !isOgeBlank(value));
+  return kept.length === values.length ? values : [...kept, null];
 }
 
 export class OgeHeaderValuesLoader {
@@ -123,30 +146,31 @@ export class OgeHeaderValuesLoader {
     this.abort = abort;
     const searchText = this.options.searchText().trim();
     const limit = this.options.limit();
-    this.options.onValues(field, null);
+    this.options.onValues(field, null, false);
     source
       .distinct(field, {
         filter: this.options.filterFor(field),
         ...(searchText ? { searchText } : {}),
         ...(search ? { search } : {}),
-        take: limit,
+        take: limit + 1,
         ...(abort ? { signal: abort.signal } : {}),
       })
       .then(
         (values) => {
           if (token !== this.token || this.field !== field) return;
-          const list = values.slice(0, limit);
+          const all = ogeCollapseBlankValues(values);
+          const list = all.slice(0, limit);
           for (const value of list) {
             if (!this.knownSet.has(value)) {
               this.knownSet.add(value);
               this.known.push(value);
             }
           }
-          this.options.onValues(field, list);
+          this.options.onValues(field, list, all.length > limit);
         },
         (error: unknown) => {
           if (token !== this.token) return; // superseded or aborted on purpose
-          this.options.onValues(field, []);
+          this.options.onValues(field, [], false);
           this.options.onError?.(error);
         },
       );

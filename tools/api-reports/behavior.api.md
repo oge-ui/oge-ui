@@ -3311,6 +3311,9 @@ export interface OgeClickGuardOptions {
 }
 
 // @public
+export function ogeCollapseBlankValues(values: readonly unknown[]): readonly unknown[];
+
+// @public
 export type OgeColorBoxApplyValueMode = 'instantly' | 'useButtons';
 
 // @public
@@ -6127,6 +6130,11 @@ export interface OgeFilterBuilderField {
     field: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "ChipMessages" needs to be exported by the entry point index.d.ts
+//
+// @public
+export function ogeFilterChipText(expr: FilterExpr, column: OgeGridFilterChipColumn | undefined, messages: ChipMessages): string;
+
 // @public
 export interface OgeFilterDescribeMessages {
     // (undocumented)
@@ -7361,6 +7369,37 @@ export interface OgeGridExportStructureInput<T> {
 }
 
 // @public
+export interface OgeGridFilterChip {
+    readonly id: string;
+    // (undocumented)
+    readonly kind: OgeGridFilterChipKind;
+    readonly label: string;
+    readonly slot: string;
+    readonly text: string;
+}
+
+// @public
+export interface OgeGridFilterChipColumn {
+    // (undocumented)
+    readonly caption: string;
+    // (undocumented)
+    readonly dataType: OgeDataType;
+    // (undocumented)
+    readonly format?: OgeHeaderValueTextOptions['format'];
+    // (undocumented)
+    readonly locale?: string;
+    // (undocumented)
+    readonly lookupItems?: OgeHeaderValueTextOptions['lookupItems'];
+}
+
+// @public
+export type OgeGridFilterChipKind = 'row' | 'header' | 'builder' | 'search';
+
+// @public
+export function ogeGridFilterChips(state: OgeGridFilterStateSnapshot, columnOf: (field: string) => OgeGridFilterChipColumn | undefined, messages: ChipMessages,
+builderFields?: readonly OgeFilterBuilderField[]): OgeGridFilterChip[];
+
+// @public
 export class OgeGridFilterState {
     constructor(rx: OgeReactivityAdapter);
     // (undocumented)
@@ -7370,12 +7409,14 @@ export class OgeGridFilterState {
         builder?: FilterExpr | null;
         searchText?: string;
     }): void;
+    blankOperatorOf: (field: string) => FilterOperator;
     // (undocumented)
     readonly builderFilter: () => FilterExpr | null;
     // (undocumented)
     clearAll(): void;
     readonly combinedExpr: () => FilterExpr | null;
     combinedExprExcept(field: string, rowKeys?: readonly string[]): FilterExpr | null;
+    headerExpr(field: string, values: readonly unknown[]): FilterExpr;
     // (undocumented)
     headerFilterOf(field: string): readonly unknown[] | null;
     rowFilterOf(field: string): FilterExpr | null;
@@ -7414,6 +7455,7 @@ export interface OgeGridFocusedCell {
 // @public
 export class OgeGridGroupingState {
     constructor(rx: OgeReactivityAdapter);
+    applyUserTotals(pairs: readonly (readonly [string, OgeUserSummaryType])[]): void;
     // (undocumented)
     clear(): void;
     // Warning: (ae-forgotten-export) The symbol "GroupDescriptor" needs to be exported by the entry point index.d.ts
@@ -7431,12 +7473,16 @@ export class OgeGridGroupingState {
     set(descriptors: readonly GroupDescriptor[]): void;
     setIntervals(intervals: Readonly<Record<string, GroupInterval>>): void;
     setSummaries(group: readonly SummaryDescriptor[], total: readonly SummaryDescriptor[]): void;
+    setUserTotal(field: string, type: OgeUserSummaryType | null): void;
     // (undocumented)
     toggleDirection(field: string): void;
     // (undocumented)
     readonly totalSummary: () => readonly SummaryDescriptor[];
     // (undocumented)
     ungroup(field: string): void;
+    userTotalOf(field: string): OgeUserSummaryType | undefined;
+    // Warning: (ae-forgotten-export) The symbol "OgeUserSummaryType" needs to be exported by the entry point index.d.ts
+    readonly userTotals: () => ReadonlyMap<string, OgeUserSummaryType>;
 }
 
 // @public
@@ -7547,10 +7593,12 @@ export interface OgeGridMessages {
     booleanFalseLabel: string;
     booleanTrue: string;
     booleanTrueLabel: string;
+    builderChip: string;
     // (undocumented)
     cancelEdit: string;
     cellsFilledAnnouncement: string;
     cellsPastedAnnouncement: string;
+    clearAllFilters: string;
     // (undocumented)
     clearFilter: string;
     // (undocumented)
@@ -7585,6 +7633,7 @@ export interface OgeGridMessages {
     filterBuilderTitle: string;
     filterByCondition: string;
     filterByValues: string;
+    filterChipsLabel: string;
     // (undocumented)
     filterPrefix: string;
     // (undocumented)
@@ -7606,6 +7655,7 @@ export interface OgeGridMessages {
     groupRemoved: string;
     groupSummaryPattern: string;
     groupWeekPattern: string;
+    headerFilterTruncated: string;
     // (undocumented)
     hideColumn: string;
     // (undocumented)
@@ -7636,6 +7686,7 @@ export interface OgeGridMessages {
     previousPage: string;
     rangeSelectedAnnouncement: string;
     redoAnnouncement: string;
+    removeFilter: string;
     // (undocumented)
     removeItem: string;
     reorderColumnHeader: string;
@@ -7661,6 +7712,7 @@ export interface OgeGridMessages {
     saveRow: string;
     // (undocumented)
     search: string;
+    searchChip: string;
     secondCondition: string;
     selectAllColumnHeader: string;
     // (undocumented)
@@ -7677,8 +7729,11 @@ export interface OgeGridMessages {
     // (undocumented)
     sortDescending: string;
     sortDescendingAnnouncement: string;
+    summaryDefault: string;
     // (undocumented)
     summaryLabels: Record<SummaryType, string>;
+    summaryMenu: string;
+    summaryNone: string;
     toggleAdaptiveDetail: string;
     // (undocumented)
     toggleDetail: string;
@@ -8203,7 +8258,7 @@ export interface OgeHeaderValuesLoaderOptions {
     readonly limit: () => number;
     // (undocumented)
     readonly onError?: (error: unknown) => void;
-    readonly onValues: (field: string, values: readonly unknown[] | null) => void;
+    readonly onValues: (field: string, values: readonly unknown[] | null, truncated: boolean) => void;
     readonly remoteSearch?: (field: string) => boolean;
     readonly searchText: () => string;
     readonly source: () => DataSource<never> | null | undefined;
@@ -12195,6 +12250,22 @@ export type OgeStepState = 'number' | 'active' | 'done' | 'error';
 //
 // @public
 export function ogeStickyGroupChain<T>(nodes: readonly RowNode<T>[], firstVisible: number): GroupRowNode[];
+
+// @public
+export function ogeSummaryMenuChoices(dataType: OgeDataType): readonly Exclude<SummaryType, 'custom'>[];
+
+// @public
+export function ogeSummaryMenuItem(options: OgeSummaryMenuOptions): OgeMenuItem;
+
+// @public
+export interface OgeSummaryMenuOptions {
+    readonly current: OgeUserSummaryType | undefined;
+    // (undocumented)
+    readonly dataType: OgeDataType;
+    // (undocumented)
+    readonly messages: Pick<OgeGridMessages, 'summaryMenu' | 'summaryNone' | 'summaryDefault' | 'summaryLabels'>;
+    readonly select: (type: OgeUserSummaryType | null) => void;
+}
 
 // @public
 export function ogeSummaryText(summary: SummaryValue, column: OgeGridExportFieldInfo | undefined, messages: Pick<OgeGridExportMessages, 'summaryLabels' | 'totalSummaryPattern'>): string;

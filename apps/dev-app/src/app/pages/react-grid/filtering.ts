@@ -14,6 +14,11 @@ import { GRID_FILTERING_DEMOS } from './filtering-snippets';
 
 const employees = makeEmployees(2000, 5);
 
+/** 60 rows, every seventh city left blank — the value list shows "(Blank)". */
+const chipEmployees: Employee[] = makeEmployees(60, 21).map((row, i) =>
+  i % 7 === 3 ? { ...row, city: '' } : row,
+);
+
 const COLUMNS: OgeGridColumnProps<Employee>[] = [
   {
     field: 'id',
@@ -73,6 +78,16 @@ const datedEmployees: DatedEmployee[] = makeEmployees(80, 13).map((row) => ({
       <app-react-host [render]="filtering" />
     </app-demo-card>
 
+    <h3>Filter chips and column summaries</h3>
+    <app-demo-card
+      [chips]="['filterChips', 'summaryMenu', '(Blank)']"
+      description="<code>filterChips</code> shows every filter that narrows the rows as a removable chip — <em>Column · operator · value</em> — with a clear-all button; removing a chip also empties its editor. <code>summaryMenu</code> adds a <em>Summary</em> submenu to the header context menu (right-click a header): Count for any column, Sum / Avg / Min / Max for numbers. The pick persists with the grid state. In a value list, empty and missing values are one <em>(Blank)</em> item."
+      [code]="demos[1].source"
+      language="tsx"
+    >
+      <app-react-host class="demo-filter-chips" [render]="chips" />
+    </app-demo-card>
+
     <h3>Excel-style filter menu</h3>
     <p>
       <code>headerFilter.mode</code>: <code>'list'</code> (default),
@@ -82,7 +97,7 @@ const datedEmployees: DatedEmployee[] = makeEmployees(80, 13).map((row) => ({
     </p>
     <app-demo-card
       [chips]="['headerFilter.mode', 'date tree']"
-      [code]="demos[1].source"
+      [code]="demos[2].source"
       language="tsx"
     >
       <app-react-host class="demo-filter-menu" [render]="menu" />
@@ -123,6 +138,28 @@ export class ReactGridFilteringDemos {
   protected filterJson(): string {
     return JSON.stringify(this.filter());
   }
+
+  protected readonly chips = (): ReactNode =>
+    createElement(OgeGrid<Employee>, {
+      data: chipEmployees,
+      keyField: 'id',
+      filterRow: true,
+      headerFilter: true,
+      searchPanel: true,
+      filterChips: true,
+      summaryMenu: true,
+      paging: { pageSize: 8 },
+      columns: [
+        { field: 'firstName', caption: 'First Name' },
+        { field: 'city', caption: 'City' },
+        {
+          field: 'salary',
+          caption: 'Salary',
+          dataType: 'number',
+          totalSummary: 'sum',
+        },
+      ],
+    });
 
   protected readonly menu = (): ReactNode =>
     createElement(OgeGrid<DatedEmployee>, {

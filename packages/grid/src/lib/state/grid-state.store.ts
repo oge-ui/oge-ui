@@ -77,6 +77,9 @@ export class GridStateStore {
         widths: [...this.columns.widthOverrides().entries()],
         pins: [...this.columns.pinOverrides().entries()],
       },
+      ...(this.grouping.userTotals().size
+        ? { summaries: [...this.grouping.userTotals().entries()] }
+        : {}),
     };
   });
 
@@ -89,6 +92,9 @@ export class GridStateStore {
       if (snapshot.sort) this.sort.set(snapshot.sort);
       if (snapshot.group) this.grouping.set(snapshot.group);
       if (snapshot.filter) this.filter.applyState(snapshot.filter);
+      if (snapshot.summaries) {
+        this.grouping.applyUserTotals(snapshot.summaries);
+      }
       if (snapshot.columns) {
         this.columns.applyState({
           order: snapshot.columns.order,

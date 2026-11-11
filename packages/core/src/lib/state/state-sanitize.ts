@@ -6,7 +6,10 @@ import {
   type SortDescriptor,
 } from '../data/load-options';
 import type { RowKey } from '../rows/row-node';
-import type { GridStateSnapshot } from './grid-state-snapshot';
+import type {
+  GridStateSnapshot,
+  OgeUserSummaryType,
+} from './grid-state-snapshot';
 import type {
   PivotFieldStateEntry,
   PivotGridStateSnapshot,
@@ -309,7 +312,30 @@ export function sanitizeGridStateSnapshot(
   if (!isPlainObject(value) || hasUnsafeKey(value)) return null;
   const out: GridStateSnapshot = sanitizeGridSlices(value);
   const group = arrayOf(value['group'], sanitizeGroup);
-  return group === undefined ? out : { ...out, group };
+  if (group !== undefined) out.group = group;
+  const summaries = arrayOf(value['summaries'], sanitizeUserSummary);
+  if (summaries !== undefined) out.summaries = summaries;
+  return out;
+}
+
+const USER_SUMMARY_TYPES: ReadonlySet<string> = new Set([
+  'sum',
+  'avg',
+  'min',
+  'max',
+  'count',
+  'none',
+]);
+
+/** One `[field, type]` pair of a column-menu summary pick. */
+function sanitizeUserSummary(
+  item: unknown,
+): readonly [string, OgeUserSummaryType] | undefined {
+  if (!Array.isArray(item) || item.length !== 2) return undefined;
+  const [field, type] = item as unknown[];
+  return isString(field) && isString(type) && USER_SUMMARY_TYPES.has(type)
+    ? [field, type as OgeUserSummaryType]
+    : undefined;
 }
 
 /** Validates an untrusted tree-list state snapshot (grid slices + expansion). */

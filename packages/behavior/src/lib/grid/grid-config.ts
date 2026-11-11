@@ -149,6 +149,24 @@ export interface OgeGridMessages {
   groupSummaryPattern: string;
   /** Pattern for the total row; placeholders: {label} {value} */
   totalSummaryPattern: string;
+  /** Header menu entry of the column summary picker (`summaryMenu`). */
+  summaryMenu: string;
+  /** Summary picker choice that hides the column's totals. */
+  summaryNone: string;
+  /** Summary picker choice that returns to the column's declared totals. */
+  summaryDefault: string;
+  /** Accessible name of the active-filter chip bar (`filterChips`). */
+  filterChipsLabel: string;
+  /** The chip bar's button removing every filter. */
+  clearAllFilters: string;
+  /** Accessible name of a chip's remove button; placeholder: {filter}. */
+  removeFilter: string;
+  /** Chip label of the global search text. */
+  searchChip: string;
+  /** Chip label of the filter builder's expression. */
+  builderChip: string;
+  /** Note under a value list cut at `valueLimit`; placeholder: {count}. */
+  headerFilterTruncated: string;
   /** Live announcement after an ascending sort; placeholder: {column}. */
   sortAscendingAnnouncement: string;
   /** Live announcement after a descending sort; placeholder: {column}. */
@@ -329,6 +347,16 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   },
   groupSummaryPattern: '{label} of {column}: {value}',
   totalSummaryPattern: '{label}: {value}',
+  summaryMenu: 'Summary',
+  summaryNone: 'None',
+  summaryDefault: 'Column default',
+  filterChipsLabel: 'Active filters',
+  clearAllFilters: 'Clear all',
+  removeFilter: 'Remove filter: {filter}',
+  searchChip: 'Search',
+  builderChip: 'Custom filter',
+  headerFilterTruncated:
+    'Showing the first {count} values — type to narrow the list.',
   sortAscendingAnnouncement: 'Sorted by {column}, ascending',
   sortDescendingAnnouncement: 'Sorted by {column}, descending',
   sortClearedAnnouncement: 'Sort cleared',

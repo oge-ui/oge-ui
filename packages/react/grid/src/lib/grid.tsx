@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   forwardRef,
   useEffect,
   useId,
@@ -160,6 +161,10 @@ import {
   ogeGroupValueText,
   ogeHeaderConditionKey,
   OgeHeaderValuesLoader,
+  ogeGridFilterChips,
+  ogeSummaryMenuItem,
+  ogeWireFilterOperator,
+  type OgeGridFilterChip,
   ogeIsTextTruncated,
   ogeKeyboardFillPlan,
   ogeMeasureAutoWidth,
@@ -2408,7 +2413,10 @@ function OgeGridInner<T extends object>(
       model.deferredLoader.reset();
       data.reload();
     },
-    clearFilters: () => state.filter.clearAll(),
+    clearFilters: () => {
+      state.filter.clearAll();
+      resetFilterInputs();
+    },
     clearSorting: () => state.sort.clear(),
     scrollToRow,
     navigateToRow: (key) => {
@@ -3241,6 +3249,59 @@ function OgeGridInner<T extends object>(
   }
 
   const rowFilterRaw = useRef(new Map<string, string>());
+  /** Bumped to recreate (empty) the search box. */
+  const [searchEpoch, setSearchEpoch] = useState(0);
+  /** Bumped per field to recreate (empty) a filter-row cell. */
+  const [filterCellEpochs, setFilterCellEpochs] = useState<
+    ReadonlyMap<string, number>
+  >(() => new Map());
+
+  /**
+   * Empties the filter-row editors (all, or one field) and the search box
+   * after their filters were removed elsewhere — they are uncontrolled, so
+   * they are remounted rather than written to.
+   */
+  function resetFilterInputs(slot?: string): void {
+    if (slot?.startsWith('hf:')) return; // a header menu condition: no editor
+    const fields =
+      slot !== undefined
+        ? [slot]
+        : (model.resolvedColumns() as readonly ResolvedColumn<T>[])
+            .map((column) => column.field)
+            .filter((field): field is string => !!field);
+    for (const field of fields) {
+      rowFilterRaw.current.delete(field);
+      const timer = timers.current.get(`f:${field}`);
+      if (timer) clearTimeout(timer);
+      timers.current.delete(`f:${field}`);
+    }
+    setFilterCellEpochs((previous) => {
+      const next = new Map(previous);
+      for (const field of fields) next.set(field, (next.get(field) ?? 0) + 1);
+      return next;
+    });
+    if (slot === undefined) setSearchEpoch((n) => n + 1);
+  }
+
+  /** Removes the one filter a chip stands for. */
+  function removeFilterChip(chip: OgeGridFilterChip): void {
+    switch (chip.kind) {
+      case 'row':
+        state.filter.setRowFilter(chip.slot, null);
+        resetFilterInputs(chip.slot);
+        break;
+      case 'header':
+        state.filter.setHeaderFilter(chip.slot, null);
+        break;
+      case 'builder':
+        state.filter.setBuilderFilter(null);
+        break;
+      case 'search':
+        state.filter.setSearchText('');
+        setSearchEpoch((n) => n + 1);
+        break;
+    }
+  }
 
   function applyRowFilter(column: ResolvedColumn<T>, raw: string): void {
     const field = column.field;
@@ -3302,6 +3363,16 @@ function OgeGridInner<T extends object>(
     const expr = state.filter.builderFilter();
     return expr ? describeExpr(expr, model.builderFields(), msg) : null;
   };
+
+  /** One chip per filter that narrows the rows (`filterChips`). */
+  const activeFilterChips: readonly OgeGridFilterChip[] = props.filterChips
+    ? ogeGridFilterChips(
+        state.filter.toState(),
+        (field) => model.columnsByField().get(field),
+        msg,
+        model.builderFields(),
+      )
+    : [];
 
   function openFilterBuilder(): void {
     const tree = exprToBuilder(
@@ -3497,6 +3568,16 @@ function OgeGridInner<T extends object>(
         action: () => state.columns.setPinned(column.id, false),
       });
     }
+    if (latest.current.summaryMenu) {
+      items.push(
+        ogeSummaryMenuItem({
+          dataType: column.dataType,
+          current: state.grouping.userTotalOf(field),
+          messages: msg,
+          select: (type) => state.grouping.setUserTotal(field, type),
+        }),
+      );
+    }
     items.push({
       text: msg.autoFitColumn,
       action: () => fitColumn(column),
@@ -3609,9 +3690,10 @@ function OgeGridInner<T extends object>(
           const type = model.columnsByField().get(field)?.dataType;
           return type === undefined || !isOgeDateType(type);
         },
-        onValues: (field, values) => {
+        onValues: (field, values, truncated) => {
           if (model.headerFilterField() === field) {
             model.headerFilterValues.set(values);
+            setHeaderTruncated(truncated);
           }
         },
         onError: (err) => data.error.set(err),
@@ -3621,6 +3703,15 @@ function OgeGridInner<T extends object>(
   useEffect(() => () => headerValues.close(), [headerValues]);
   /** Whether the open list's search box is answered by the server. */
   const [headerSearchRemote, setHeaderSearchRemote] = useState(false);
+  /** Whether the open list was cut at `valueLimit`. */
+  const [headerTruncated, setHeaderTruncated] = useState(false);
+  // the value list's "(Blank)" item: `isnull` for typed columns (an operator
+  // every server knows), `isblank` for text
+  state.filter.blankOperatorOf = (field) =>
+    ogeWireFilterOperator(
+      'isblank',
+      model.columnsByField().get(field)?.dataType ?? 'string',
+    );
   const headerFilterPanel = useAnchoredPanel({
     anchor: () => model.headerFilterAnchor() ?? hostRef.current,
     panel: () => headerFilterPopupRef.current,
@@ -5909,6 +6000,7 @@ function OgeGridInner<T extends object>(
               ) : null}
               {model.searchPanelVisible() ? (
                 <input
+                  key={searchEpoch}
                   className="oge-search-input"
                   type="search"
                   placeholder={
@@ -5973,6 +6065,59 @@ function OgeGridInner<T extends object>(
               </svg>
             </button>
           ) : null}
+        </div>
+      ) : null}
+      {activeFilterChips.length ? (
+        <div
+          className="oge-filter-chips"
+          role="group"
+          aria-label={msg.filterChipsLabel}
+        >
+          {activeFilterChips.map((chip) => {
+            const name = formatPattern(msg.removeFilter, {
+              filter: `${chip.label} · ${chip.text}`,
+            });
+            return (
+              <span
+                key={chip.id}
+                className="oge-filter-chip"
+                data-chip={chip.id}
+              >
+                <span className="oge-filter-chip-label">{chip.label} ·</span>
+                <span className="oge-filter-chip-text">{chip.text}</span>
+                <button
+                  type="button"
+                  className="oge-filter-chip-remove"
+                  aria-label={name}
+                  title={name}
+                  onClick={() => removeFilterChip(chip)}
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="10"
+                    height="10"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m4 4 8 8M12 4l-8 8" />
+                  </svg>
+                </button>
+              </span>
+            );
+          })}
+          <button
+            type="button"
+            className="oge-filter-chips-clear"
+            onClick={() => {
+              state.filter.clearAll();
+              resetFilterInputs();
+            }}
+          >
+            {msg.clearAllFilters}
+          </button>
         </div>
       ) : null}
       {/* Delegated keyboard handler: focus lives on the grid cells inside (roving tabindex). */}
@@ -6202,7 +6347,13 @@ function OgeGridInner<T extends object>(
                   role="gridcell"
                   style={pinnedStyle(column)}
                 >
-                  {filterEditor(column)}
+                  <Fragment
+                    key={
+                      (column.field && filterCellEpochs.get(column.field)) || 0
+                    }
+                  >
+                    {filterEditor(column)}
+                  </Fragment>
                 </div>
               ))}
               {spacer('right', 'oge-filter-cell')}
@@ -6769,6 +6920,13 @@ function OgeGridInner<T extends object>(
                         <span>{headerValueTextOf(value)}</span>
                       </label>
                     ))}
+                    {headerTruncated ? (
+                      <p className="oge-hf-note" role="note">
+                        {formatPattern(msg.headerFilterTruncated, {
+                          count: String(model.effHeaderFilterLimit()),
+                        })}
+                      </p>
+                    ) : null}
                   </>
                 ) : (
                   <div className="oge-hf-loading">{msg.loading}</div>
