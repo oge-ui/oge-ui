@@ -92,9 +92,12 @@ const FILTER_OPERATORS = [
   'startswith',
   'endswith',
   'in',
+  'notin',
   'between',
   'isnull',
   'isnotnull',
+  'isblank',
+  'isnotblank',
 ] as const;
 
 /**
@@ -191,7 +194,9 @@ export const OGE_GRID_AI_RESPONSE_SCHEMA: OgeAiJsonSchema = {
             value: {
               description:
                 'Number, string, boolean, "YYYY-MM-DD" date, an array for ' +
-                '"in", or [from, to] for "between". Omit for isnull/isnotnull.',
+                '"in" / "notin", or [from, to] for "between". Omit for ' +
+                'isnull / isnotnull / isblank / isnotblank (blank = null or ' +
+                'whitespace-only text).',
             },
           },
         },

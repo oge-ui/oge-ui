@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CustomDataSource } from '@oge-ui/core';
 import { OgeColumn } from '../columns/column';
 import { OgeGrid } from './grid';
 
@@ -176,5 +177,114 @@ describe('OgeGrid header filter', () => {
     document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     await settle(fixture);
     expect(el.querySelector('.oge-header-filter-popup')).toBeFalsy();
+  });
+
+  it('cascades: lists values under the other filters, not its own', async () => {
+    const { fixture, el } = await render({ headerFilter: true });
+    const grid = fixture.componentInstance;
+    grid.applyState({
+      filter: {
+        row: [],
+        header: [
+          ['city', ['Ankara']],
+          ['name', ['Ali Kaya']],
+        ],
+        builder: null,
+        searchText: '',
+      },
+    } as never);
+    await settle(fixture);
+    (
+      el.querySelectorAll('.oge-header-filter-btn')[3] as HTMLButtonElement
+    ).click(); // city: its own Ankara selection does not narrow its list
+    await settle(fixture);
+    const items = Array.from(
+      el.querySelectorAll('.oge-hf-item:not(.oge-hf-all) > span'),
+    ).map((s) => s.textContent?.trim());
+    // name = Ali Kaya leaves Ankara only; İzmir's row is filtered out by name
+    expect(items).toEqual(['Ankara']);
+  });
+});
+
+describe('OgeGrid header filter on a server source', () => {
+  type Distinct = { field: string; options: Record<string, unknown> };
+
+  async function renderRemote() {
+    const calls: Distinct[] = [];
+    const source = new CustomDataSource<Person>({
+      key: 'id',
+      load: async () => ({ data: PEOPLE, totalCount: PEOPLE.length }),
+      distinct: async (field, options = {}) => {
+        calls.push({ field, options: { ...options } });
+        const search = String(options.search ?? '').toLowerCase();
+        return ['Ankara', 'İzmir', 'Kayseri'].filter((city) =>
+          city.toLowerCase().includes(search),
+        );
+      },
+    });
+    const fixture = TestBed.createComponent(OgeGrid<Person>);
+    fixture.componentRef.setInput('data', source);
+    fixture.componentRef.setInput('columns', ['id', 'name', 'age', 'city']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('filterDebounce', 0);
+    fixture.componentRef.setInput('searchPanel', true);
+    fixture.componentRef.setInput('headerFilter', true);
+    await settle(fixture);
+    return { fixture, el: fixture.nativeElement as HTMLElement, calls };
+  }
+
+  it('asks once on open with the other filters and the search text', async () => {
+    const { fixture, el, calls } = await renderRemote();
+    fixture.componentInstance.applyState({
+      filter: {
+        row: [],
+        header: [
+          ['city', ['Ankara']],
+          ['name', ['Ali Kaya']],
+        ],
+        builder: null,
+        searchText: 'ali',
+      },
+    } as never);
+    await settle(fixture);
+    (
+      el.querySelectorAll('.oge-header-filter-btn')[3] as HTMLButtonElement
+    ).click();
+    await settle(fixture);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].field).toBe('city');
+    expect(calls[0].options['filter']).toEqual({
+      type: 'binary',
+      field: 'name',
+      op: 'in',
+      value: ['Ali Kaya'],
+    });
+    expect(calls[0].options['searchText']).toBe('ali');
+    expect(calls[0].options['search']).toBeUndefined();
+  });
+
+  it('sends typed text to the server after 250 ms and shows its answer', async () => {
+    const { fixture, el, calls } = await renderRemote();
+    (
+      el.querySelectorAll('.oge-header-filter-btn')[3] as HTMLButtonElement
+    ).click();
+    await settle(fixture);
+    vi.useFakeTimers();
+    try {
+      setInput(el, '.oge-hf-search', 'k');
+      setInput(el, '.oge-hf-search', 'kay');
+      vi.advanceTimersByTime(249);
+      expect(calls).toHaveLength(1);
+      vi.advanceTimersByTime(1);
+      expect(calls).toHaveLength(2);
+      expect(calls[1].options['search']).toBe('kay');
+    } finally {
+      vi.useRealTimers();
+    }
+    await settle(fixture);
+    const items = Array.from(
+      el.querySelectorAll('.oge-hf-item:not(.oge-hf-all) > span'),
+    ).map((s) => s.textContent?.trim());
+    expect(items).toEqual(['Kayseri']);
   });
 });

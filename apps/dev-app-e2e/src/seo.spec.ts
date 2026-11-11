@@ -20,6 +20,7 @@ const PAGES = [
   '/guides/security',
   '/guides/accessibility/conformance',
   '/guides/dev-warnings',
+  '/guides/filter-contract',
   '/components/data-grid',
   '/components/data-grid/filtering',
   '/components/data-grid/editing',

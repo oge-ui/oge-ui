@@ -4116,6 +4116,9 @@ export type OgeDirection = 'ltr' | 'rtl';
 export type OgeDirectionInput = boolean | OgeDirection | null | undefined;
 
 // @public
+export function ogeDisplayFilterOperator(op: FilterOperator): FilterOperator;
+
+// @public
 export interface OgeDragGhost {
     destroy(to?: OgeDragGhostDestination): void;
     // (undocumented)
@@ -7363,6 +7366,7 @@ export class OgeGridFilterState {
     // (undocumented)
     clearAll(): void;
     readonly combinedExpr: () => FilterExpr | null;
+    combinedExprExcept(field: string, rowKeys?: readonly string[]): FilterExpr | null;
     // (undocumented)
     headerFilterOf(field: string): readonly unknown[] | null;
     rowFilterOf(field: string): FilterExpr | null;
@@ -8170,6 +8174,30 @@ export interface OgeHeaderValueGroup {
     label: string;
     // (undocumented)
     values: readonly unknown[];
+}
+
+// @public (undocumented)
+export class OgeHeaderValuesLoader {
+    constructor(options: OgeHeaderValuesLoaderOptions);
+    close(): void;
+    isLocal(): boolean;
+    open(field: string): void;
+    search(text: string): boolean;
+    searchesRemotely(): boolean;
+    universe(): readonly unknown[];
+}
+
+// @public
+export interface OgeHeaderValuesLoaderOptions {
+    readonly debounceMs?: number;
+    readonly filterFor: (field: string) => FilterExpr | null;
+    readonly limit: () => number;
+    // (undocumented)
+    readonly onError?: (error: unknown) => void;
+    readonly onValues: (field: string, values: readonly unknown[] | null) => void;
+    readonly remoteSearch?: (field: string) => boolean;
+    readonly searchText: () => string;
+    readonly source: () => DataSource<never> | null | undefined;
 }
 
 // @public
@@ -15276,6 +15304,9 @@ export function ogeWindowStateStep(state: OgeWindowState, direction: 'up' | 'dow
 
 // @public
 export function ogeWindowZIndex(base: number | undefined, layer: number): string;
+
+// @public
+export function ogeWireFilterOperator(op: FilterOperator, dataType: OgeDataType): FilterOperator;
 
 // @public
 export function operatorsFor(dataType: OgeDataType): FilterOperator[];

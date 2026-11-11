@@ -348,6 +348,10 @@ export {
   type OgeHeaderValueTextOptions,
 } from './lib/grid/grid-header-filter';
 export {
+  OgeHeaderValuesLoader,
+  type OgeHeaderValuesLoaderOptions,
+} from './lib/grid/grid-header-values';
+export {
   buildOgeExportItems,
   mergeOgeExportStyles,
   ogeExportCellStyle,
@@ -377,6 +381,8 @@ export {
   exprToBuilder,
   filterOperatorSymbol,
   filterRowOperatorChoices,
+  ogeDisplayFilterOperator,
+  ogeWireFilterOperator,
   operatorsFor,
   rowFilterExpr,
   type OgeBuilderCondition,

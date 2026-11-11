@@ -57,6 +57,11 @@ const GUIDES = [
     title: 'Development warnings',
     heading: 'how-warnings-work',
   },
+  {
+    path: '/guides/filter-contract',
+    title: 'Filter contract',
+    heading: 'operators',
+  },
 ] as const;
 
 /** Every "On this page" link points at a heading the page renders. */
@@ -82,6 +87,15 @@ test.describe('guides', () => {
       if (guide.path !== '/guides') await expectTocResolves(page);
     });
   }
+
+  test('the filter contract lists every operator', async ({ page }) => {
+    await page.goto('/guides/filter-contract');
+    const table = page.getByRole('region', { name: 'Filter operators' });
+    await expect(table.getByRole('row')).toHaveCount(18); // header + 17
+    await expect(table.getByRole('row', { name: /notin/ })).toContainText(
+      'Null cells are included unless the list contains null',
+    );
+  });
 
   test('a warning link from the console lands on its code', async ({
     page,
@@ -184,6 +198,7 @@ test.describe('guides', () => {
     '/guides/security',
     '/guides/accessibility/conformance',
     '/guides/dev-warnings',
+    '/guides/filter-contract',
   ]) {
     test(`${path} has no axe violations`, async ({ page }) => {
       test.slow();

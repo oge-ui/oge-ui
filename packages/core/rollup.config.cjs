@@ -18,6 +18,9 @@ module.exports = withNx(
       // the light / dark / high-contrast tokens in the DTCG format — generated
       // by `nx run docs-tools:llms` from _tokens.scss and themes/*.css
       { input: 'packages/core', output: '.', glob: 'tokens.json' },
+      // the filter contract's test vectors, for server implementations to run
+      // (`@oge-ui/core/filter-vectors.json`, /guides/filter-contract)
+      { input: 'packages/core', output: '.', glob: 'filter-vectors.json' },
       // the suite's theme stylesheets (dark, high-contrast, bootstrap,
       // tailwind). Their source sits next to the token mixin in grid; core
       // ships them because

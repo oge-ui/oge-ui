@@ -78,3 +78,43 @@ describe('ArrayDataSource', () => {
     expect(source.keyOf(ROWS[2])).toBe(2);
   });
 });
+
+describe('ArrayDataSource.distinct', () => {
+  const people = [
+    { id: 1, name: 'Ali', city: 'İzmir', at: new Date(2026, 0, 2) },
+    { id: 2, name: 'Ayşe', city: 'Ankara', at: new Date(2026, 0, 2) },
+    { id: 3, name: 'Kaya, Mehmet', city: 'izmir', at: null },
+    { id: 4, name: 'Ali', city: 'Bursa', at: new Date(2026, 0, 3) },
+  ];
+  const source = new ArrayDataSource(people, { key: 'id' });
+
+  it('lists each value once, sorted, dates by instant', async () => {
+    expect(await source.distinct('name')).toEqual([
+      'Ali',
+      'Ayşe',
+      'Kaya, Mehmet',
+    ]);
+    const days = await source.distinct('at');
+    expect(days).toHaveLength(3); // two equal Date objects list once, plus null
+  });
+
+  it('narrows by the filter, the global search text and the typed text', async () => {
+    expect(
+      await source.distinct('name', {
+        filter: {
+          type: 'binary',
+          field: 'city',
+          op: 'contains',
+          value: 'IZMIR',
+        },
+      }),
+    ).toEqual(['Ali', 'Kaya, Mehmet']);
+    expect(await source.distinct('city', { searchText: 'ayse' })).toEqual([
+      'Ankara',
+    ]);
+    expect(
+      [...(await source.distinct('city', { search: 'izm' }))].sort(),
+    ).toEqual(['izmir', 'İzmir'].sort());
+    expect(await source.distinct('name', { take: 2 })).toEqual(['Ali', 'Ayşe']);
+  });
+});

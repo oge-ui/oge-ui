@@ -1386,7 +1386,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       [placeholder]="msg().search"
       [attr.aria-label]="msg().search"
       [value]="headerFilterSearch()"
-      (input)="headerFilterSearch.set($any($event.target).value)"
+      (input)="setHeaderFilterSearch($any($event.target).value)"
     />
     @if (headerDateRows(); as dateRows) {
     <label class="oge-hf-item oge-hf-all">

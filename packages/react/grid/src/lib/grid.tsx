@@ -159,6 +159,7 @@ import {
   ogeGridEditShortcut,
   ogeGroupValueText,
   ogeHeaderConditionKey,
+  OgeHeaderValuesLoader,
   ogeIsTextTruncated,
   ogeKeyboardFillPlan,
   ogeMeasureAutoWidth,
@@ -3589,11 +3590,43 @@ function OgeGridInner<T extends object>(
 
   // --- header filter (Excel-style distinct values) ---
   const headerFilterPopupRef = useRef<HTMLDivElement>(null);
+  /**
+   * Loads the open column's value list: under every other filter and the
+   * search text, searched on the server (debounced) for remote sources.
+   */
+  const headerValues = useMemo(
+    () =>
+      new OgeHeaderValuesLoader({
+        source: () => data.source() as never,
+        filterFor: (field) =>
+          state.filter.combinedExprExcept(field, [
+            field,
+            ogeHeaderConditionKey(field),
+          ]),
+        searchText: () => state.filter.searchText(),
+        limit: () => model.effHeaderFilterLimit(),
+        remoteSearch: (field) => {
+          const type = model.columnsByField().get(field)?.dataType;
+          return type === undefined || !isOgeDateType(type);
+        },
+        onValues: (field, values) => {
+          if (model.headerFilterField() === field) {
+            model.headerFilterValues.set(values);
+          }
+        },
+        onError: (err) => data.error.set(err),
+      }),
+    [model, state, data],
+  );
+  useEffect(() => () => headerValues.close(), [headerValues]);
+  /** Whether the open list's search box is answered by the server. */
+  const [headerSearchRemote, setHeaderSearchRemote] = useState(false);
   const headerFilterPanel = useAnchoredPanel({
     anchor: () => model.headerFilterAnchor() ?? hostRef.current,
     panel: () => headerFilterPopupRef.current,
     placement: () => 'bottom-start',
     onClosed: () => {
+      headerValues.close();
       model.headerFilterField.set(null);
       model.headerFilterValues.set(null);
     },
@@ -3638,6 +3671,7 @@ function OgeGridInner<T extends object>(
         column.dataType,
       ),
     );
+    setHeaderSearchRemote(false);
     headerFilterPanel.open();
     headerFilterPanel.updatePosition();
     if (
@@ -3645,16 +3679,7 @@ function OgeGridInner<T extends object>(
       latest.current.headerFilter.mode === 'conditions'
     )
       return;
-    void data
-      .source()
-      ?.distinct?.(field)
-      .then((values) => {
-        if (model.headerFilterField() === field) {
-          model.headerFilterValues.set(
-            values.slice(0, model.effHeaderFilterLimit()),
-          );
-        }
-      });
+    headerValues.open(field);
   }
 
   function toggleHeaderValue(value: unknown): void {
@@ -3663,7 +3688,11 @@ function OgeGridInner<T extends object>(
     if (field == null || all == null) return;
     state.filter.setHeaderFilter(
       field,
-      toggleHeaderValueSelection(all, headerSelection(), value),
+      toggleHeaderValueSelection(
+        headerValues.universe(),
+        headerSelection(),
+        value,
+      ),
     );
   }
 
@@ -3673,7 +3702,11 @@ function OgeGridInner<T extends object>(
     if (field == null || all == null) return;
     state.filter.setHeaderFilter(
       field,
-      toggleHeaderGroupSelection(all, headerSelection(), group.values),
+      toggleHeaderGroupSelection(
+        headerValues.universe(),
+        headerSelection(),
+        group.values,
+      ),
     );
   }
 
@@ -4668,11 +4701,13 @@ function OgeGridInner<T extends object>(
         )
       : null;
   const visibleHeaderValues = headerFilterRawValues
-    ? filterHeaderValues(
-        headerFilterRawValues,
-        model.headerFilterSearch(),
-        (value) => headerValueTextOf(value),
-      )
+    ? headerSearchRemote
+      ? headerFilterRawValues // the server already searched these
+      : filterHeaderValues(
+          headerFilterRawValues,
+          model.headerFilterSearch(),
+          (value) => headerValueTextOf(value),
+        )
     : null;
   const totalCount = model.totalCount();
   const pagingOptions = model.pagingOptions();
@@ -6623,9 +6658,12 @@ function OgeGridInner<T extends object>(
                   placeholder={msg.search}
                   aria-label={msg.search}
                   value={model.headerFilterSearch()}
-                  onChange={(event) =>
-                    model.headerFilterSearch.set(event.target.value)
-                  }
+                  onChange={(event) => {
+                    model.headerFilterSearch.set(event.target.value);
+                    setHeaderSearchRemote(
+                      headerValues.search(event.target.value),
+                    );
+                  }}
                 />
                 {headerDateRows ? (
                   <>

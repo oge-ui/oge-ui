@@ -1,8 +1,10 @@
+import { buildSearchFilter } from '../filtering/filter-evaluator';
 import { applyFilter } from '../pipeline/steps/filter.step';
 import { runLoadOptions } from '../pipeline/run-load-options';
 import type { CustomSummaryMap } from '../grouping/summaries';
 import type { RowKey } from '../rows/row-node';
 import { compareValues } from '../util/comparators';
+import { foldText } from '../util/text-fold';
 import {
   createFieldAccessor,
   resolveKeySelector,
@@ -11,10 +13,11 @@ import type {
   DataChange,
   DataSource,
   DataSourceCapabilities,
+  DistinctOptions,
   LoadResult,
   SubscribableLike,
 } from './data-source';
-import type { FilterExpr, LoadOptions } from './load-options';
+import type { LoadOptions } from './load-options';
 
 export interface ArrayDataSourceOptions<T> {
   /** Field name or selector producing a stable row key. Falls back to identity-based indices. */
@@ -166,13 +169,37 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
   distinct(
     field: string,
-    options?: { filter?: FilterExpr | null },
+    options: DistinctOptions = {},
   ): Promise<readonly unknown[]> {
     const accessor = createFieldAccessor<T>(field);
-    const rows = applyFilter(this.getRows(), options?.filter);
+    const all = this.getRows();
+    let rows = applyFilter(all, options.filter);
+    if (options.searchText?.trim()) {
+      const fields =
+        this.searchFields ?? (all.length ? Object.keys(all[0] as object) : []);
+      rows = applyFilter(rows, buildSearchFilter(fields, options.searchText));
+    }
+    const needle = options.search?.trim()
+      ? foldText(options.search.trim())
+      : '';
+    // keyed so equal dates held in different Date objects list once
     const seen = new Set<unknown>();
-    for (const row of rows) seen.add(accessor(row));
-    return Promise.resolve([...seen].sort(compareValues));
+    const dates = new Map<number, Date>();
+    for (const row of rows) {
+      const value = accessor(row);
+      if (
+        needle &&
+        (value == null || !foldText(String(value)).includes(needle))
+      )
+        continue;
+      if (value instanceof Date) {
+        if (!dates.has(value.getTime())) dates.set(value.getTime(), value);
+      } else seen.add(value);
+    }
+    const sorted = [...seen, ...dates.values()].sort(compareValues);
+    return Promise.resolve(
+      options.take !== undefined ? sorted.slice(0, options.take) : sorted,
+    );
   }
 
   keyOf(item: T): RowKey {

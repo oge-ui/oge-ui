@@ -6,7 +6,7 @@ import {
   input,
   output,
 } from '@angular/core';
-import type { FilterOperator } from '@oge-ui/core';
+import { ogeFilterOperatorTakesValue, type FilterOperator } from '@oge-ui/core';
 import {
   operatorsFor,
   type OgeBuilderCondition,
@@ -107,7 +107,7 @@ export type {
                 <option [value]="op">{{ messages().operators[op] }}</option>
               }
             </select>
-            @if (item.op !== 'isnull' && item.op !== 'isnotnull') {
+            @if (takesValue(item.op)) {
               @if (dataTypeOf(item) === 'boolean') {
                 <oge-select-box
                   class="oge-fb-input"
@@ -209,6 +209,9 @@ export class OgeFilterBuilderGroup {
   protected textValueOf(condition: OgeBuilderCondition): string {
     return condition.value == null ? '' : String(condition.value);
   }
+
+  /** Whether the operator has a value editor (the blank checks do not). */
+  protected readonly takesValue = ogeFilterOperatorTakesValue;
 
   protected operatorsOf(condition: OgeBuilderCondition): FilterOperator[] {
     return operatorsFor(this.dataTypeOf(condition));

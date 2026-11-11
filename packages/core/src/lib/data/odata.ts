@@ -21,6 +21,18 @@ function literal(value: unknown): string {
   return `'${String(value).replace(/'/g, "''")}'`;
 }
 
+/** `(f eq a) or (f eq b)…`; `false` for an empty list. */
+function anyOf(field: string, values: readonly unknown[]): string {
+  if (!values.length) return 'false';
+  return values.map((v) => `(${field} eq ${literal(v)})`).join(' or ');
+}
+
+/**
+ * Translates a filter into `$filter`, following the filter contract
+ * (`OGE_FILTER_OPERATORS`): OData's `not` propagates null, so every
+ * negation that keeps null cells spells the null branch out. Text folding is
+ * the server's collation — pair it with a case-insensitive one.
+ */
 function filterToOData(expr: FilterExpr): string {
   switch (expr.type) {
     case 'and':
@@ -45,24 +57,42 @@ function filterToOData(expr: FilterExpr): string {
         case 'contains':
           return `contains(${field},${literal(value)})`;
         case 'notcontains':
-          return `not contains(${field},${literal(value)})`;
+          return `(${field} eq null) or not contains(${field},${literal(value)})`;
         case 'startswith':
           return `startswith(${field},${literal(value)})`;
         case 'endswith':
           return `endswith(${field},${literal(value)})`;
-        case 'in': {
+        case 'in':
+          return anyOf(field, (value as readonly unknown[]) ?? []);
+        case 'notin': {
           const values = (value as readonly unknown[]) ?? [];
-          if (!values.length) return 'false';
-          return values.map((v) => `(${field} eq ${literal(v)})`).join(' or ');
+          if (!values.length) return 'true';
+          const hasNull = values.some((v) => v == null);
+          const rest = values.filter((v) => v != null);
+          if (!rest.length) return `${field} ne null`;
+          const none = `not (${anyOf(field, rest)})`;
+          // null listed: drop null cells; otherwise keep them explicitly
+          return hasNull
+            ? `(${field} ne null) and (${none})`
+            : `(${field} eq null) or (${none})`;
         }
         case 'between': {
           const [from, to] = (value as readonly unknown[]) ?? [];
-          return `(${field} ge ${literal(from)}) and (${field} le ${literal(to)})`;
+          // a null end leaves that side open (the contract), it is not "eq null"
+          const ends = [
+            ...(from == null ? [] : [`(${field} ge ${literal(from)})`]),
+            ...(to == null ? [] : [`(${field} le ${literal(to)})`]),
+          ];
+          return ends.length ? ends.join(' and ') : `${field} ne null`;
         }
         case 'isnull':
           return `${field} eq null`;
         case 'isnotnull':
           return `${field} ne null`;
+        case 'isblank':
+          return `(${field} eq null) or (trim(${field}) eq '')`;
+        case 'isnotblank':
+          return `(${field} ne null) and (trim(${field}) ne '')`;
       }
     }
   }

@@ -14,7 +14,8 @@ import { createJiti } from 'jiti';
  * - `pages/guides/conformance-data.ts` — the WCAG 2.2 report (VPAT 2.5);
  * - `SECURITY.md` — the reporting process (its support table is generated);
  * - `tools/size-budgets.json` — the gzip baselines the size gate enforces;
- * - `@oge-ui/core`'s `OGE_DEV_WARNINGS` — the coded development warnings.
+ * - `@oge-ui/core`'s `OGE_DEV_WARNINGS` — the coded development warnings;
+ * - `@oge-ui/core`'s `OGE_FILTER_OPERATORS` — the filter contract.
  */
 
 const jiti = createJiti(import.meta.url, { interopDefault: true });
@@ -31,10 +32,14 @@ export async function loadPolicyData(workspaceRoot) {
   const warnings = await jiti.import(
     abs('packages/core/src/lib/util/dev-warnings.ts'),
   );
+  const filterContract = await jiti.import(
+    abs('packages/core/src/lib/filtering/filter-contract.ts'),
+  );
   return {
     versioning,
     criteria: conformance.CRITERIA,
     devWarnings: warnings.OGE_DEV_WARNINGS,
+    filterOperators: filterContract.OGE_FILTER_OPERATORS,
     security: readFileSync(abs('SECURITY.md'), 'utf8'),
     budgets: JSON.parse(readFileSync(abs('tools/size-budgets.json'), 'utf8')),
   };
@@ -94,7 +99,14 @@ export function buildSecurityMd(security, versioning) {
 
 /** The `## Policies` section of `llms-full.txt`. */
 export function renderPolicies(data, siteOrigin) {
-  const { versioning, criteria, security, budgets, devWarnings } = data;
+  const {
+    versioning,
+    criteria,
+    security,
+    budgets,
+    devWarnings,
+    filterOperators,
+  } = data;
   const code = (text) => '`' + text + '`';
   const out = ['## Policies', ''];
 
@@ -173,6 +185,34 @@ export function renderPolicies(data, siteOrigin) {
         info.title,
         info.cause,
         info.fix,
+      ]),
+    ),
+    '',
+  );
+
+  out.push('### Filter contract', '');
+  out.push(
+    [
+      `What every ${code('FilterExpr')} operator means, so a server returns the rows the in-memory engine does.`,
+      'Logic is two-valued (`not` is the plain complement; SQL spells null branches out).',
+      'Text compares case- and accent-insensitively after a locale-independent fold (İzmir = IZMIR = izmir, ı = i).',
+      'Days are half-open local ranges [00:00, next 00:00).',
+      `${code('in')} / ${code('notin')} take arrays and never split on commas; an empty ${code('in')} list matches nothing.`,
+      'Blank = null, undefined or whitespace-only text.',
+      `Test vectors: ${code('@oge-ui/core/filter-vectors.json')}. Value lists: ${code('distinct(field, { filter, searchText, search, take, signal })')} gets every filter but the column's own; server sources are re-asked 250 ms after typing.`,
+      `Details: ${siteOrigin}/guides/filter-contract.`,
+    ].join(' '),
+    '',
+  );
+  out.push(
+    table(
+      ['Operator', 'Value', 'Matches', 'Blank cells', 'Reference SQL'],
+      Object.entries(filterOperators).map(([op, info]) => [
+        code(op),
+        info.arity,
+        info.meaning,
+        info.blanks,
+        code(info.sql),
       ]),
     ),
     '',

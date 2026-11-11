@@ -160,6 +160,14 @@ export const appRoutes: Route[] = [
     title: 'OGE — Development warnings',
   },
   {
+    path: 'guides/filter-contract',
+    loadComponent: () =>
+      import('./pages/guides/filter-contract').then(
+        (m) => m.GuideFilterContractPage,
+      ),
+    title: 'OGE — Filter contract',
+  },
+  {
     path: 'ai',
     loadComponent: () =>
       import('./pages/ai/overview').then((m) => m.AiOverviewPage),

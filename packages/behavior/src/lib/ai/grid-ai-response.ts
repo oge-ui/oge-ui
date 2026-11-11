@@ -1,5 +1,6 @@
 import {
   isGroupInterval,
+  ogeFilterOperatorTakesValue,
   sanitizeGridStateSnapshot,
   type FilterExpr,
   type FilterOperator,
@@ -68,8 +69,11 @@ const STRING_OPS: ReadonlySet<FilterOperator> = new Set<FilterOperator>([
   'startswith',
   'endswith',
   'in',
+  'notin',
   'isnull',
   'isnotnull',
+  'isblank',
+  'isnotblank',
 ]);
 const ORDERED_OPS: ReadonlySet<FilterOperator> = new Set<FilterOperator>([
   'eq',
@@ -79,15 +83,20 @@ const ORDERED_OPS: ReadonlySet<FilterOperator> = new Set<FilterOperator>([
   'lt',
   'le',
   'in',
+  'notin',
   'between',
   'isnull',
   'isnotnull',
+  'isblank',
+  'isnotblank',
 ]);
 const BOOLEAN_OPS: ReadonlySet<FilterOperator> = new Set<FilterOperator>([
   'eq',
   'ne',
   'isnull',
   'isnotnull',
+  'isblank',
+  'isnotblank',
 ]);
 
 function opsFor(dataType: OgeDataType): ReadonlySet<FilterOperator> {
@@ -205,7 +214,7 @@ class Validator {
       this.warn('invalid-operator', 'filter', column.field);
       return undefined;
     }
-    if (op === 'isnull' || op === 'isnotnull') {
+    if (!ogeFilterOperatorTakesValue(op)) {
       return { type: 'binary', field: column.field, op };
     }
     const operand = this.operand(column, op, value['value']);
@@ -221,7 +230,7 @@ class Validator {
     op: FilterOperator,
     raw: unknown,
   ): unknown {
-    if (op === 'in') {
+    if (op === 'in' || op === 'notin') {
       if (!Array.isArray(raw) || raw.length === 0) return undefined;
       const values = raw.map((v) => this.scalar(column, v));
       return values.some((v) => v === undefined) ? undefined : values;

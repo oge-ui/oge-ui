@@ -29,6 +29,7 @@
     "./themes/*": "./themes/*",
     "./llms.txt": "./llms.txt",
     "./tokens.json": "./tokens.json",
+    "./filter-vectors.json": "./filter-vectors.json",
     "./package.json": "./package.json"
   },
   "sideEffects": [

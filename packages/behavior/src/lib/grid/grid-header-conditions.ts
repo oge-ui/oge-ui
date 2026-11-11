@@ -2,6 +2,7 @@ import {
   foldText,
   nextDay,
   ogeDateTimeFormat,
+  ogeFilterOperatorTakesValue,
   startOfDay,
   toLocalDate,
   type FilterExpr,
@@ -9,6 +10,10 @@ import {
 } from '@oge-ui/core';
 import { isOgeDateType, type OgeDataType } from './grid-columns';
 import { parseLocaleNumber } from './grid-clipboard';
+import {
+  ogeDisplayFilterOperator,
+  ogeWireFilterOperator,
+} from './grid-filtering';
 
 /**
  * The Excel-style column filter menu (`headerFilter.mode: 'conditions' |
@@ -50,12 +55,11 @@ export function headerConditionOperators(
 ): FilterOperator[] {
   switch (dataType) {
     case 'number':
-      return ['eq', 'ne', 'gt', 'ge', 'lt', 'le', 'isnull', 'isnotnull'];
     case 'date':
     case 'datetime':
-      return ['eq', 'ne', 'gt', 'ge', 'lt', 'le', 'isnull', 'isnotnull'];
+      return ['eq', 'ne', 'gt', 'ge', 'lt', 'le', 'isblank', 'isnotblank'];
     case 'boolean':
-      return ['eq', 'ne', 'isnull', 'isnotnull'];
+      return ['eq', 'ne', 'isblank', 'isnotblank'];
     default:
       return [
         'contains',
@@ -64,15 +68,15 @@ export function headerConditionOperators(
         'endswith',
         'eq',
         'ne',
-        'isnull',
-        'isnotnull',
+        'isblank',
+        'isnotblank',
       ];
   }
 }
 
-/** Whether an operator takes a value (the null checks do not). */
+/** Whether an operator takes a value (the blank / null checks do not). */
 export function headerConditionNeedsValue(operator: FilterOperator): boolean {
-  return operator !== 'isnull' && operator !== 'isnotnull';
+  return ogeFilterOperatorTakesValue(operator);
 }
 
 /** A fresh, inactive condition state for a data type. */
@@ -94,7 +98,9 @@ function conditionExpr(
   condition: OgeHeaderCondition,
 ): FilterExpr | null {
   const op = condition.operator;
-  if (!headerConditionNeedsValue(op)) return { type: 'binary', field, op };
+  if (!headerConditionNeedsValue(op)) {
+    return { type: 'binary', field, op: ogeWireFilterOperator(op, dataType) };
+  }
   const raw = condition.value;
   if (raw == null || raw === '') return null;
   if (isOgeDateType(dataType)) {
@@ -104,11 +110,13 @@ function conditionExpr(
     const end = nextDay(day);
     switch (op) {
       case 'ne':
+        // "not on that day" keeps blank cells (the filter contract)
         return {
           type: 'or',
           operands: [
             { type: 'binary', field, op: 'lt', value: start },
             { type: 'binary', field, op: 'ge', value: end },
+            { type: 'binary', field, op: 'isnull' },
           ],
         };
       case 'lt':
@@ -164,12 +172,21 @@ export function headerConditionExpr(
 /** Reads one condition back from the expression {@link conditionExpr} built. */
 function readCondition(expr: FilterExpr): OgeHeaderCondition | null {
   if (expr.type === 'binary') {
-    return { operator: expr.op, value: expr.value ?? null };
+    return {
+      operator: ogeDisplayFilterOperator(expr.op),
+      value: expr.value ?? null,
+    };
   }
-  // a whole-day date range: [start, nextDay) → eq, (< start | >= end) → ne
+  // a whole-day date range: [start, nextDay) → eq, (< start | >= end |
+  // blank) → ne (states saved before 1.1.10 lack the blank branch)
+  const isNullBranch = (node: FilterExpr | undefined) =>
+    node?.type === 'binary' && node.op === 'isnull';
   if (
     (expr.type === 'and' || expr.type === 'or') &&
-    expr.operands.length === 2
+    (expr.operands.length === 2 ||
+      (expr.type === 'or' &&
+        expr.operands.length === 3 &&
+        isNullBranch(expr.operands[2])))
   ) {
     const [a, b] = expr.operands;
     if (

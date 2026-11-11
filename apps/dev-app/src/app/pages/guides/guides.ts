@@ -157,6 +157,13 @@ export class GuidesIndexPage {
           summary:
             'Every coded OGE#### console warning: what causes it and what to change. Silent in production builds.',
         },
+        {
+          path: '/guides/filter-contract',
+          title: 'Filter contract',
+          icon: 'filter',
+          summary:
+            'What every filter operator means, blanks included, and test vectors that prove a server returns the same rows.',
+        },
       ],
     },
   ];

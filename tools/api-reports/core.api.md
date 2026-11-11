@@ -44,9 +44,7 @@ export class ArrayDataSource<T> implements DataSource<T> {
     readonly capabilities: DataSourceCapabilities;
     readonly changes: SubscribableLike<readonly DataChange<T>[]>;
     // (undocumented)
-    distinct(field: string, options?: {
-        filter?: FilterExpr | null;
-    }): Promise<readonly unknown[]>;
+    distinct(field: string, options?: DistinctOptions): Promise<readonly unknown[]>;
     // (undocumented)
     insert(item: T): Promise<T>;
     // (undocumented)
@@ -242,10 +240,7 @@ export class CustomDataSource<T> implements DataSource<T> {
 export interface CustomDataSourceOptions<T> {
     capabilities?: Partial<DataSourceCapabilities>;
     changes?: SubscribableLike<readonly DataChange<T>[]>;
-    // (undocumented)
-    distinct?: (field: string, options?: {
-        filter?: FilterExpr | null;
-    }) => Promise<readonly unknown[]>;
+    distinct?: (field: string, options?: DistinctOptions) => Promise<readonly unknown[]>;
     // (undocumented)
     insert?: (item: T) => Promise<T>;
     // (undocumented)
@@ -298,9 +293,7 @@ export interface DataSource<T = unknown> {
     // (undocumented)
     readonly capabilities: DataSourceCapabilities;
     readonly changes?: SubscribableLike<readonly DataChange<T>[]>;
-    distinct?(field: string, options?: {
-        filter?: FilterExpr | null;
-    }): Promise<readonly unknown[]>;
+    distinct?(field: string, options?: DistinctOptions): Promise<readonly unknown[]>;
     insert?(item: T): Promise<T>;
     // (undocumented)
     keyOf(item: T): RowKey;
@@ -340,6 +333,15 @@ export interface DetailRowNode<T = unknown> {
 }
 
 // @public
+export interface DistinctOptions {
+    readonly filter?: FilterExpr | null;
+    readonly search?: string;
+    readonly searchText?: string;
+    readonly signal?: AbortSignal;
+    readonly take?: number;
+}
+
+// @public
 export function drillDownFilter(rowFields: readonly PivotFieldConfig[], columnFields: readonly PivotFieldConfig[], args: PivotDrillDownArgs): FilterExpr | null;
 
 // @public
@@ -375,8 +377,8 @@ export type FilterExpr = {
     readonly operand: FilterExpr;
 };
 
-// @public (undocumented)
-export type FilterOperator = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le' | 'contains' | 'notcontains' | 'startswith' | 'endswith' | 'in' | 'between' | 'isnull' | 'isnotnull';
+// @public
+export type FilterOperator = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le' | 'contains' | 'notcontains' | 'startswith' | 'endswith' | 'in' | 'notin' | 'between' | 'isnull' | 'isnotnull' | 'isblank' | 'isnotblank';
 
 // @public
 export function filterTreeKeys<T>(index: TreeIndex<T>, predicate: (row: T) => boolean, mode: TreeFilterMode): Set<RowKey>;
@@ -531,6 +533,9 @@ export function intervalRange(bucket: unknown, interval: PivotGroupInterval | un
 
 // @public
 export function isGroupInterval(value: unknown): value is GroupInterval;
+
+// @public
+export function isOgeBlank(value: unknown): boolean;
 
 // @public
 export function isOgeDateFormatType(type: OgeValueFormatType): boolean;
@@ -758,6 +763,112 @@ export const OGE_DEV_WARNINGS: {
 export const OGE_DEV_WARNINGS_URL = "https://www.ogeui.com/guides/dev-warnings";
 
 // @public
+export const OGE_FILTER_OPERATORS: {
+    readonly eq: {
+        readonly arity: "one";
+        readonly meaning: "The cell equals the value (text folded, dates by instant).";
+        readonly blanks: "A null cell matches only a null value.";
+        readonly sql: "f = v  (f IS NULL when v is null)";
+    };
+    readonly ne: {
+        readonly arity: "one";
+        readonly meaning: "The cell does not equal the value.";
+        readonly blanks: "Null cells are included (they are not equal to the value).";
+        readonly sql: "(f <> v OR f IS NULL)";
+    };
+    readonly gt: {
+        readonly arity: "one";
+        readonly meaning: "The cell is greater than the value.";
+        readonly blanks: "Null cells never match an ordering comparison.";
+        readonly sql: "f > v";
+    };
+    readonly ge: {
+        readonly arity: "one";
+        readonly meaning: "The cell is greater than or equal to the value.";
+        readonly blanks: "Null cells never match an ordering comparison.";
+        readonly sql: "f >= v";
+    };
+    readonly lt: {
+        readonly arity: "one";
+        readonly meaning: "The cell is less than the value.";
+        readonly blanks: "Null cells never match an ordering comparison.";
+        readonly sql: "f < v";
+    };
+    readonly le: {
+        readonly arity: "one";
+        readonly meaning: "The cell is less than or equal to the value.";
+        readonly blanks: "Null cells never match an ordering comparison.";
+        readonly sql: "f <= v";
+    };
+    readonly contains: {
+        readonly arity: "one";
+        readonly meaning: "The cell text contains the value text.";
+        readonly blanks: "Null cells never match.";
+        readonly sql: "f LIKE '%' || v || '%'";
+    };
+    readonly notcontains: {
+        readonly arity: "one";
+        readonly meaning: "The cell text does not contain the value text.";
+        readonly blanks: "Null cells are included.";
+        readonly sql: "(f NOT LIKE '%' || v || '%' OR f IS NULL)";
+    };
+    readonly startswith: {
+        readonly arity: "one";
+        readonly meaning: "The cell text starts with the value text.";
+        readonly blanks: "Null cells never match.";
+        readonly sql: "f LIKE v || '%'";
+    };
+    readonly endswith: {
+        readonly arity: "one";
+        readonly meaning: "The cell text ends with the value text.";
+        readonly blanks: "Null cells never match.";
+        readonly sql: "f LIKE '%' || v";
+    };
+    readonly in: {
+        readonly arity: "list";
+        readonly meaning: "The cell equals one of the listed values. An empty list matches no row: \"nothing selected\" is not \"no filter\".";
+        readonly blanks: "A null cell matches when the list contains null.";
+        readonly sql: "f IN (…)  (OR f IS NULL when the list holds null; FALSE when empty)";
+    };
+    readonly notin: {
+        readonly arity: "list";
+        readonly meaning: "The cell equals none of the listed values. An empty list matches every row.";
+        readonly blanks: "Null cells are included unless the list contains null.";
+        readonly sql: "(f NOT IN (…) OR f IS NULL)  (AND f IS NOT NULL when the list holds null)";
+    };
+    readonly between: {
+        readonly arity: "pair";
+        readonly meaning: "The cell lies within [from, to], both ends included; a null end leaves that side open. Grid day ranges are sent as ge / lt pairs instead (half-open by day).";
+        readonly blanks: "Null cells never match.";
+        readonly sql: "f >= from AND f <= to";
+    };
+    readonly isnull: {
+        readonly arity: "none";
+        readonly meaning: "The cell is null or undefined.";
+        readonly blanks: "An empty string is not null.";
+        readonly sql: "f IS NULL";
+    };
+    readonly isnotnull: {
+        readonly arity: "none";
+        readonly meaning: "The cell is neither null nor undefined.";
+        readonly blanks: "An empty string is not null, so it matches.";
+        readonly sql: "f IS NOT NULL";
+    };
+    readonly isblank: {
+        readonly arity: "none";
+        readonly meaning: "The cell is null, undefined, or text that is empty after trimming.";
+        readonly blanks: "Matches exactly the blank cells.";
+        readonly sql: "(f IS NULL OR TRIM(f) = '')";
+    };
+    readonly isnotblank: {
+        readonly arity: "none";
+        readonly meaning: "The cell has a value other than empty or whitespace-only text.";
+        readonly blanks: "Blank cells never match.";
+        readonly sql: "(f IS NOT NULL AND TRIM(f) <> '')";
+    };
+};
+
+// @public
 export const OGE_LICENSE_KEY_PREFIX = "OGE1";
 
 // @public
@@ -846,6 +957,23 @@ export interface OgeDrawerModeResult {
     readonly compact: boolean;
     readonly mode: OgeDrawerLayoutMode;
 }
+
+// @public
+export type OgeFilterOperatorArity = 'none' | 'one' | 'list' | 'pair';
+
+// @public
+export function ogeFilterOperatorArity(op: FilterOperator): OgeFilterOperatorArity;
+
+// @public
+export interface OgeFilterOperatorInfo {
+    readonly arity: OgeFilterOperatorArity;
+    readonly blanks: string;
+    readonly meaning: string;
+    readonly sql: string;
+}
+
+// @public
+export function ogeFilterOperatorTakesValue(op: FilterOperator): boolean;
 
 // @public
 export function ogeFormatMessage(template: string, values?: OgeMessageValues, locale?: OgeLocaleInput): string;

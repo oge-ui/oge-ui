@@ -100,6 +100,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE UI development warnings: every coded OGE#### console message with its cause and fix, silent in production, in Angular and React render layers.',
   ],
   [
+    '/guides/filter-contract',
+    'OGE UI filter contract: what every FilterExpr operator means, how blanks and days are treated, value lists, and JSON test vectors for server parity.',
+  ],
+  [
     '/guides/versioning',
     'OGE UI versioning policy: semantic versions, small 1.1.x patch releases, how deprecations are announced, supported Angular and React ranges, LTS and EOL.',
   ],

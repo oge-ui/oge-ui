@@ -103,7 +103,7 @@ _Sorting, filtering & search_
 | `sortable` | `boolean \| 'single' \| 'multi'` | `'multi'` | `false` disables sorting entirely; `'single'` restricts to one column (no shift+click chains). |
 | `sorting` | `OgeSortingOptions` | `undefined` | Sorting options (`mode`, `allowUnsorting`); overrides the `sortable` shorthand. |
 | `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header — text, number, date, boolean and lookup editors with a per-column operator menu. |
-| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style distinct-value filter button in the headers. Needs a DataSource that implements `distinct()`; date columns list their values grouped by year. |
+| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style filter button in the headers. The value list comes from `source.distinct()` under every other active filter and the search text, never the column's own; a server source is asked once per opening and again 250 ms after typing in the list's search box (value lists). Without `distinct` there is no list; date columns list their values grouped by year. |
 | `filterPanel` | `boolean` | `false` | Filter summary bar above the grid; clicking it opens the visual filter builder (arbitrary and/or condition trees). |
 | `filterValue / defaultFilterValue` | `FilterExpr \| null` | `null` | The filter-builder expression — controlled with `onFilterValueChange`. Combines with the filter row, the header filters and the search panel. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |

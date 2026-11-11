@@ -67,7 +67,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           type: 'boolean | OgeHeaderFilterOptions',
           default: 'false',
           description:
-            'Excel-style distinct-value filter button in the headers. Needs a DataSource that implements <code>distinct()</code>; date columns list their values grouped by year.',
+            'Excel-style filter button in the headers. The value list comes from <code>source.distinct()</code> under every other active filter and the search text, never the column&#39;s own; a server source is asked once per opening and again 250&nbsp;ms after typing in the list&#39;s search box (<a href="/guides/filter-contract#value-lists">value lists</a>). Without <code>distinct</code> there is no list; date columns list their values grouped by year.',
         },
         {
           name: 'filterPanel',

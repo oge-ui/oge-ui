@@ -6,7 +6,7 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { createRef } from 'react';
-import { ArrayDataSource } from '@oge-ui/core';
+import { ArrayDataSource, CustomDataSource } from '@oge-ui/core';
 import { OgeGrid } from './grid';
 import type { OgeGridHandle } from './grid-types';
 
@@ -455,6 +455,81 @@ describe('<OgeGrid> header filter', () => {
     fireEvent.click(london.querySelector('input') as HTMLInputElement);
     await settle();
     expect(document.querySelector('.oge-header-filter-active')).not.toBeNull();
+  });
+
+  it('cascades the list and asks a server source with the other filters', async () => {
+    const calls: { field: string; options: Record<string, unknown> }[] = [];
+    const remote = new CustomDataSource<Person>({
+      key: 'id',
+      load: async () => ({ data: seed(), totalCount: 3 }),
+      distinct: async (field, options = {}) => {
+        calls.push({ field, options: { ...options } });
+        const search = String(options.search ?? '').toLowerCase();
+        return ['London', 'New York', 'Paris'].filter((city) =>
+          city.toLowerCase().includes(search),
+        );
+      },
+    });
+    const ref = createRef<OgeGridHandle<Person>>();
+    render(
+      <OgeGrid
+        ref={ref}
+        data={remote}
+        keyField="id"
+        columns={columns}
+        headerFilter
+      />,
+    );
+    await waitFor(() => expect(dataRows().length).toBe(3));
+    act(() =>
+      ref.current?.applyState({
+        filter: {
+          row: [],
+          header: [
+            ['city', ['London']],
+            ['name', ['Ada']],
+          ],
+          builder: null,
+          searchText: 'ad',
+        },
+      } as never),
+    );
+    await settle();
+    fireEvent.click(
+      document.querySelectorAll<HTMLElement>('.oge-header-filter-btn')[1],
+    );
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].field).toBe('city');
+    expect(calls[0].options['filter']).toEqual({
+      type: 'binary',
+      field: 'name',
+      op: 'in',
+      value: ['Ada'],
+    });
+    expect(calls[0].options['searchText']).toBe('ad');
+
+    vi.useFakeTimers();
+    try {
+      const search = document.querySelector(
+        '.oge-hf-search',
+      ) as HTMLInputElement;
+      fireEvent.change(search, { target: { value: 'p' } });
+      fireEvent.change(search, { target: { value: 'par' } });
+      act(() => vi.advanceTimersByTime(249));
+      expect(calls).toHaveLength(1);
+      act(() => vi.advanceTimersByTime(1));
+      expect(calls).toHaveLength(2);
+      expect(calls[1].options['search']).toBe('par');
+    } finally {
+      vi.useRealTimers();
+    }
+    await waitFor(() =>
+      expect(
+        Array.from(
+          document.querySelectorAll('.oge-hf-item:not(.oge-hf-all)'),
+        ).map((item) => item.textContent?.trim()),
+      ).toEqual(['Paris']),
+    );
   });
 
   it('no funnel without headerFilter', async () => {

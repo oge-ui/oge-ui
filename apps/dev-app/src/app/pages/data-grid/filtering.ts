@@ -4,6 +4,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { FilterExpr } from '@oge-ui/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
@@ -16,7 +17,14 @@ import { toLocalDate } from '@oge-ui/core';
 
 @Component({
   selector: 'app-filtering',
-  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader, ReactGridFilteringDemos],
+  imports: [
+    OgeGrid,
+    OgeColumn,
+    DemoCard,
+    DocHeader,
+    ReactGridFilteringDemos,
+    RouterLink,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -124,7 +132,20 @@ import { toLocalDate } from '@oge-ui/core';
         <li>
           Every surface produces the same serializable
           <code>FilterExpr</code> tree — combined with AND and sent to your
-          backend unchanged in remote mode.
+          backend unchanged in remote mode. What each operator means, blank
+          cells included, is the
+          <a routerLink="/guides/filter-contract">filter contract</a>; its JSON
+          test vectors let a server prove it returns the same rows.
+        </li>
+        <li>
+          A value list cascades like Excel's: it lists the values left by the
+          other columns' filters and the search text, ignoring the column's own
+          selection. On a server source the list's search box asks
+          <code>distinct()</code> again 250&nbsp;ms after typing stops.
+        </li>
+        <li>
+          "Is blank" matches null, empty and whitespace-only cells, and "does
+          not equal" or "not on that day" keep blank rows.
         </li>
         <li>
           The operator button in each filter cell offers dataType-appropriate

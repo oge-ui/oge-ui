@@ -240,6 +240,11 @@ export class App {
           label: 'Development warnings',
           icon: 'code',
         },
+        {
+          path: '/guides/filter-contract',
+          label: 'Filter contract',
+          icon: 'filter',
+        },
       ],
     },
     {

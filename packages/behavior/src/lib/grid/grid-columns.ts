@@ -237,9 +237,15 @@ export function dateFilterExpr(
   const end = nextDay(day);
   switch (op) {
     case 'ne':
+      // "not on that day" keeps blank cells (the filter contract), spelled
+      // out rather than a `not` a SQL / OData server would evaluate to null
       return {
-        type: 'not',
-        operand: dateFilterExpr(field, 'eq', day),
+        type: 'or',
+        operands: [
+          { type: 'binary', field, op: 'lt', value: start },
+          { type: 'binary', field, op: 'ge', value: end },
+          { type: 'binary', field, op: 'isnull' },
+        ],
       };
     case 'lt':
       return { type: 'binary', field, op: 'lt', value: start };

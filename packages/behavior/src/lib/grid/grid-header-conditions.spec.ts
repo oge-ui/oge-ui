@@ -81,6 +81,70 @@ describe('header filter conditions', () => {
       emptyHeaderConditionFilter('number'),
     );
   });
+
+  it('offers "is blank" on every type and sends isnull for typed columns', () => {
+    for (const type of ['string', 'number', 'date', 'boolean'] as const) {
+      expect(headerConditionOperators(type)).toContain('isblank');
+      expect(headerConditionOperators(type)).not.toContain('isnull');
+    }
+    const blank = (type: 'string' | 'number') =>
+      headerConditionExpr('f', type, {
+        first: { operator: 'isblank', value: null },
+        second: { operator: 'eq', value: null },
+        logic: 'and',
+      });
+    expect(blank('string')).toEqual({
+      type: 'binary',
+      field: 'f',
+      op: 'isblank',
+    });
+    expect(blank('number')).toEqual({
+      type: 'binary',
+      field: 'f',
+      op: 'isnull',
+    });
+    // and reads both back as "is blank"
+    expect(
+      parseHeaderConditionExpr(blank('number'), 'number').first.operator,
+    ).toBe('isblank');
+    const text = createFilterPredicate<{ f: string | null }>(blank('string')!);
+    expect(['', '  ', null, 'x'].map((f) => text({ f }))).toEqual([
+      true,
+      true,
+      true,
+      false,
+    ]);
+  });
+
+  it('keeps blank cells in "not on that day" and reads it back', () => {
+    const day = new Date(2026, 2, 14);
+    const expr = headerConditionExpr('d', 'date', {
+      first: { operator: 'ne', value: day },
+      second: { operator: 'eq', value: null },
+      logic: 'and',
+    })!;
+    const test = createFilterPredicate<{ d: Date | null }>(expr);
+    expect(test({ d: null })).toBe(true);
+    expect(test({ d: new Date(2026, 2, 14, 23, 59) })).toBe(false);
+    expect(test({ d: new Date(2026, 2, 15) })).toBe(true);
+    // the explicit null branch survives a server translation (no `not`)
+    expect(JSON.stringify(expr)).not.toContain('"not"');
+    expect(parseHeaderConditionExpr(expr, 'date').first.operator).toBe('ne');
+    // a state saved before the blank branch still reads back
+    const legacy = {
+      type: 'or' as const,
+      operands: [
+        { type: 'binary' as const, field: 'd', op: 'lt' as const, value: day },
+        {
+          type: 'binary' as const,
+          field: 'd',
+          op: 'ge' as const,
+          value: new Date(2026, 2, 15),
+        },
+      ],
+    };
+    expect(parseHeaderConditionExpr(legacy, 'date').first.operator).toBe('ne');
+  });
 });
 
 describe('header filter date tree', () => {

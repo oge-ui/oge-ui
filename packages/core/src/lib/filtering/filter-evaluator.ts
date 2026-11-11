@@ -1,6 +1,7 @@
 import type { FilterExpr } from '../data/load-options';
 import { createFieldAccessor } from '../util/value-accessor';
 import { foldText } from '../util/text-fold';
+import { isOgeBlank } from './filter-contract';
 
 /**
  * Normalizes a value for comparison:
@@ -56,14 +57,60 @@ function orderedCompare(a: unknown, b: unknown): number | null {
   return 0;
 }
 
+/**
+ * A hashable key a cell or list value compares under, so `in` / `notin`
+ * look a cell up in a `Set` instead of scanning the list per row. Text is
+ * folded like {@link looseEquals}; `undefined` and `null` share a key.
+ * Dates and ISO strings cross-compare by instant in {@link looseEquals}, so a
+ * list holding a Date takes the scanning path instead.
+ */
+function listKey(value: unknown): string | null {
+  if (value == null) return 'z';
+  switch (typeof value) {
+    case 'string':
+      return 's' + foldText(value);
+    case 'number':
+      return Number.isNaN(value) ? null : 'n' + value;
+    case 'boolean':
+      return 'b' + value;
+    case 'bigint':
+      return 'g' + value.toString();
+    default:
+      return null;
+  }
+}
+
+/** Compiles a list membership test once per predicate (`in` / `notin`). */
+function listMatcher(value: unknown): (cell: unknown) => boolean {
+  const values = Array.isArray(value) ? value : [value];
+  const keys = new Set<string>();
+  for (const candidate of values) {
+    const key = listKey(candidate);
+    if (key === null) {
+      // a Date (or another object) in the list: compare like eq does
+      return (cell) => values.some((item) => looseEquals(cell, item));
+    }
+    keys.add(key);
+  }
+  return (cell) => {
+    if (cell instanceof Date) {
+      return values.some((item) => looseEquals(cell, item));
+    }
+    const key = listKey(cell);
+    return key !== null && keys.has(key);
+  };
+}
+
 function asText(value: unknown): string | null {
   if (value == null) return null;
   return foldText(String(value));
 }
 
 /**
- * Compiles a FilterExpr tree into a row predicate. String matching is
- * case-insensitive.
+ * Compiles a FilterExpr tree into a row predicate, following the published
+ * filter contract (`OGE_FILTER_OPERATORS`): two-valued logic, folded
+ * case- and accent-insensitive text, negations that keep null cells. Every
+ * constant (folded needles, list sets) is prepared once here, not per row.
  */
 export function createFilterPredicate<T = unknown>(
   expr: FilterExpr,
@@ -133,16 +180,18 @@ export function createFilterPredicate<T = unknown>(
       };
     }
     case 'in': {
-      const values = Array.isArray(value) ? value : [value];
-      return (row) => {
-        const cell = accessor(row);
-        return values.some((candidate) => looseEquals(cell, candidate));
-      };
+      const matches = listMatcher(value);
+      return (row) => matches(accessor(row));
+    }
+    case 'notin': {
+      const matches = listMatcher(value);
+      return (row) => !matches(accessor(row));
     }
     case 'between': {
       const [min, max] = Array.isArray(value) ? value : [undefined, undefined];
       return (row) => {
         const cell = accessor(row);
+        if (cell == null) return false;
         const lower = min == null || (orderedCompare(cell, min) ?? -1) >= 0;
         const upper = max == null || (orderedCompare(cell, max) ?? 1) <= 0;
         return lower && upper;
@@ -152,6 +201,10 @@ export function createFilterPredicate<T = unknown>(
       return (row) => accessor(row) == null;
     case 'isnotnull':
       return (row) => accessor(row) != null;
+    case 'isblank':
+      return (row) => isOgeBlank(accessor(row));
+    case 'isnotblank':
+      return (row) => !isOgeBlank(accessor(row));
   }
 }
 

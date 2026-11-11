@@ -136,7 +136,7 @@ _Sorting, filtering & search_
 | `sortable` | `boolean \| 'single' \| 'multi'` | `'multi'` | `false` disables sorting; `'single'` restricts to one column. |
 | `sorting` | `OgeSortingOptions \| undefined` | `—` | Sorting options; overrides the `sortable` shorthand. |
 | `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header. |
-| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style distinct-value filter button in headers. |
+| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style filter button in headers. The value list comes from `source.distinct()` under every other active filter and the search text, never the column's own; a server source is asked once per opening and again 250 ms after typing in the list's search box (value lists). Without `distinct` there is no list. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
 | `filterPanel` | `boolean` | `false` | Filter panel bar with the filter-builder entry point. |
 | `filterValue` | `model<FilterExpr \| null>` | `null` | Two-way binding of the builder/programmatic filter expression. |

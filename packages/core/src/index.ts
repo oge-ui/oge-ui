@@ -28,6 +28,7 @@ export * from './lib/data/custom-data-source';
 export * from './lib/data/cursor-data-source';
 export * from './lib/data/odata';
 export * from './lib/filtering/filter-evaluator';
+export * from './lib/filtering/filter-contract';
 export * from './lib/pipeline/run-load-options';
 export * from './lib/pipeline/steps/filter.step';
 export * from './lib/pipeline/steps/sort.step';

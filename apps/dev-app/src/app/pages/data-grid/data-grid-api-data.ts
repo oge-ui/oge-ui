@@ -57,7 +57,8 @@ export const OGE_GRID_API: ApiSections = {
           name: 'headerFilter',
           type: 'boolean | OgeHeaderFilterOptions',
           default: 'false',
-          description: 'Excel-style distinct-value filter button in headers.',
+          description:
+            'Excel-style filter button in headers. The value list comes from <code>source.distinct()</code> under every other active filter and the search text, never the column&#39;s own; a server source is asked once per opening and again 250&nbsp;ms after typing in the list&#39;s search box (<a href="/guides/filter-contract#value-lists">value lists</a>). Without <code>distinct</code> there is no list.',
         },
         {
           name: 'searchPanel',

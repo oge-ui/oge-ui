@@ -672,6 +672,15 @@ smallest complete example):
   `llms-full.txt` table render the registry; gate effects that exist only to warn on
   `ogeIsDevMode()`.
 
+- **Filters follow the published contract.** `@oge-ui/core`'s `OGE_FILTER_OPERATORS` defines every
+  `FilterOperator` (operand shape, meaning, blank-cell rule, reference SQL); `/guides/filter-contract`
+  and `llms-full.txt` render it and `@oge-ui/core/filter-vectors.json` carries the test vectors a
+  server can run. A new operator is a registry entry, an evaluator case, an OData case, vector cases
+  (the spec fails while an operator has none) and labels in every locale pack. Never test for
+  "valueless" operators by name — use `ogeFilterOperatorTakesValue`. Expressions a UI builds avoid
+  `not` over nullable fields (spell the `isnull` branch out) so SQL / OData servers return the same
+  rows; menus offer `isblank` and send `isnull` for typed columns (`ogeWireFilterOperator`).
+
 ### Public API language
 
 - Outputs are past-tense/noun names **without `on` prefix** (`rowClick`, `selectionChanged`, `contentReady`).

@@ -134,6 +134,7 @@ import {
   ogeGridEditShortcut,
   ogeGroupValueText,
   ogeHeaderConditionKey,
+  OgeHeaderValuesLoader,
   ogeIsTextTruncated,
   ogeKeyboardFillPlan,
   ogeMeasureAutoWidth,
@@ -4638,12 +4639,40 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     read: ElementRef,
   });
 
+  /**
+   * Loads the open column's value list: under every other filter and the
+   * search text, searched on the server (debounced) for remote sources.
+   */
+  private readonly headerValues = new OgeHeaderValuesLoader({
+    source: () => this.adapter.source() as never,
+    filterFor: (field) =>
+      this.store.filter.combinedExprExcept(field, [
+        field,
+        ogeHeaderConditionKey(field),
+      ]),
+    searchText: () => this.store.filter.searchText(),
+    limit: () => this.effHeaderFilterLimit(),
+    remoteSearch: (field) => {
+      const type = this.columnByField(field)?.dataType;
+      return type === undefined || !isOgeDateType(type);
+    },
+    onValues: (field, values) => {
+      if (this.headerFilterField() === field) {
+        this.headerFilterValues.set(values);
+      }
+    },
+    onError: (err) => this.adapter.error.set(err),
+  });
+  /** Whether the open list's search box is answered by the server. */
+  private readonly headerSearchRemote = signal(false);
+
   /** Anchored header-filter popup below its funnel button. */
   readonly headerFilterPanel = new OgeAnchoredPanel({
     anchor: () => this.headerFilterAnchor() ?? this.hostRef.nativeElement,
     panel: () => this.headerFilterPopupRef()?.nativeElement ?? null,
     placement: () => 'bottom-start',
     onClosed: () => {
+      this.headerValues.close();
       this.headerFilterField.set(null);
       this.headerFilterValues.set(null);
     },
@@ -4653,11 +4682,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     () => {
       const values = this.headerFilterValues();
       if (!values) return null;
+      // the server already searched these
+      if (this.headerSearchRemote()) return values;
       return filterHeaderValues(values, this.headerFilterSearch(), (value) =>
         this.headerValueText(value),
       );
     },
   );
+
+  /** The popup's search box changed. */
+  protected setHeaderFilterSearch(text: string): void {
+    this.headerFilterSearch.set(text);
+    this.headerSearchRemote.set(this.headerValues.search(text));
+  }
 
   private headerYearOf(value: unknown): string {
     return headerYearLabel(value, this.msg().blankValue);
@@ -4688,7 +4725,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (field == null || all == null) return;
     this.store.filter.setHeaderFilter(
       field,
-      toggleHeaderGroupSelection(all, this.headerSelection(), group.values),
+      toggleHeaderGroupSelection(
+        this.headerValues.universe(),
+        this.headerSelection(),
+        group.values,
+      ),
     );
   }
 
@@ -4717,19 +4758,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         column.dataType,
       ),
     );
+    this.headerSearchRemote.set(false);
     this.headerFilterPanel.open();
     this.headerFilterPanel.updatePosition();
     if (this.headerFilterMode() === 'conditions') return;
-    this.adapter
-      .source()
-      ?.distinct?.(field)
-      .then((values) => {
-        if (this.headerFilterField() === field) {
-          this.headerFilterValues.set(
-            values.slice(0, this.effHeaderFilterLimit()),
-          );
-        }
-      });
+    this.headerValues.open(field);
   }
 
   protected closeHeaderFilter(): void {
@@ -4767,7 +4800,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (field == null || all == null) return;
     this.store.filter.setHeaderFilter(
       field,
-      toggleHeaderValueSelection(all, this.headerSelection(), value),
+      toggleHeaderValueSelection(
+        this.headerValues.universe(),
+        this.headerSelection(),
+        value,
+      ),
     );
   }
 

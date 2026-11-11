@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { FilterOperator } from '@oge-ui/core';
+import { ogeFilterOperatorTakesValue, type FilterOperator } from '@oge-ui/core';
 import {
   OGE_DEFAULT_GRID_MESSAGES,
   operatorsFor,
@@ -131,7 +131,7 @@ export function OgeFilterBuilderGroup(
   };
 
   const valueEditor = (item: OgeBuilderCondition, index: number): ReactNode => {
-    if (item.op === 'isnull' || item.op === 'isnotnull') return null;
+    if (!ogeFilterOperatorTakesValue(item.op)) return null;
     const dataType = dataTypeOf(item);
     if (dataType === 'boolean') {
       return (

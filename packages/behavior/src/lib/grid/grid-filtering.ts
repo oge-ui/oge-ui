@@ -1,4 +1,8 @@
-import type { FilterExpr, FilterOperator } from '@oge-ui/core';
+import {
+  ogeFilterOperatorTakesValue,
+  type FilterExpr,
+  type FilterOperator,
+} from '@oge-ui/core';
 import {
   buildRowFilterExpr,
   defaultOperatorFor,
@@ -25,15 +29,19 @@ export interface OgeBuilderGroup {
   items: (OgeBuilderGroup | OgeBuilderCondition)[];
 }
 
-/** Operators offered for a column's data type. */
+/**
+ * Operators offered for a column's data type. Every type offers "is blank" /
+ * "is not blank" (`isblank` / `isnotblank`); see {@link ogeWireFilterOperator}
+ * for what a typed column sends.
+ */
 export function operatorsFor(dataType: OgeDataType): FilterOperator[] {
   switch (dataType) {
     case 'number':
     case 'date':
     case 'datetime':
-      return ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'isnull', 'isnotnull'];
+      return ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'isblank', 'isnotblank'];
     case 'boolean':
-      return ['eq', 'ne'];
+      return ['eq', 'ne', 'isblank', 'isnotblank'];
     default:
       return [
         'contains',
@@ -42,10 +50,34 @@ export function operatorsFor(dataType: OgeDataType): FilterOperator[] {
         'endswith',
         'eq',
         'ne',
-        'isnull',
-        'isnotnull',
+        'isblank',
+        'isnotblank',
       ];
   }
+}
+
+/**
+ * The operator a condition is sent with. A number, date or boolean cell can
+ * only be blank by being null, so "is blank" travels as `isnull` there —
+ * the same rows, and an operator every server translation (OData included)
+ * already understands; text columns send `isblank`, which also matches
+ * empty and whitespace-only strings.
+ */
+export function ogeWireFilterOperator(
+  op: FilterOperator,
+  dataType: OgeDataType,
+): FilterOperator {
+  if (dataType === 'string') return op;
+  if (op === 'isblank') return 'isnull';
+  if (op === 'isnotblank') return 'isnotnull';
+  return op;
+}
+
+/** The operator a stored condition is shown with in the builder / menu. */
+export function ogeDisplayFilterOperator(op: FilterOperator): FilterOperator {
+  if (op === 'isnull') return 'isblank';
+  if (op === 'isnotnull') return 'isnotblank';
+  return op;
 }
 
 function typedValue(raw: string, dataType: OgeDataType): unknown {
@@ -71,12 +103,12 @@ export function builderToExpr(
     }
     const meta = fields.find((candidate) => candidate.field === item.field);
     if (!meta) continue;
-    const needsValue = item.op !== 'isnull' && item.op !== 'isnotnull';
+    const needsValue = ogeFilterOperatorTakesValue(item.op);
     if (needsValue && item.value.trim() === '') continue;
     operands.push({
       type: 'binary',
       field: item.field,
-      op: item.op,
+      op: ogeWireFilterOperator(item.op, meta.dataType),
       ...(needsValue
         ? { value: typedValue(item.value.trim(), meta.dataType) }
         : {}),
@@ -99,7 +131,7 @@ export function exprToBuilder(
     return {
       kind: 'condition',
       field: node.field,
-      op: node.op,
+      op: ogeDisplayFilterOperator(node.op),
       value: node.value == null ? '' : String(node.value),
     };
   };
@@ -129,6 +161,12 @@ export interface OgeFilterDescribeMessages {
   logicOr: string;
 }
 
+/** A quoted operand; list items are quoted one by one so "Kaya, Mehmet" reads as one value. */
+function describeValue(value: unknown): string {
+  const quote = (item: unknown) => `'${String(item ?? '')}'`;
+  return Array.isArray(value) ? value.map(quote).join(', ') : quote(value);
+}
+
 /** Human-readable summary of a FilterExpr for the filter panel. */
 export function describeExpr(
   expr: FilterExpr,
@@ -139,10 +177,8 @@ export function describeExpr(
     const caption =
       fields.find((f) => f.field === expr.field)?.caption ?? expr.field;
     const op = messages.operators[expr.op] ?? expr.op;
-    const needsValue = expr.op !== 'isnull' && expr.op !== 'isnotnull';
-    return needsValue
-      ? `[${caption}] ${op} '${String(expr.value ?? '')}'`
-      : `[${caption}] ${op}`;
+    if (!ogeFilterOperatorTakesValue(expr.op)) return `[${caption}] ${op}`;
+    return `[${caption}] ${op} ${describeValue(expr.value)}`;
   }
   if (expr.type === 'not') {
     return `NOT (${describeExpr(expr.operand, fields, messages)})`;
@@ -239,9 +275,7 @@ export function filterOperatorSymbol(operator: FilterOperator): string {
 export function filterRowOperatorChoices(
   dataType: OgeDataType,
 ): FilterOperator[] {
-  const choices = operatorsFor(dataType).filter(
-    (op) => op !== 'isnull' && op !== 'isnotnull',
-  );
+  const choices = operatorsFor(dataType).filter(ogeFilterOperatorTakesValue);
   // a date column's "between" swaps the filter cell to a date-range picker
   return dataType === 'date' || dataType === 'datetime'
     ? [...choices, 'between']

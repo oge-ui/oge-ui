@@ -129,10 +129,10 @@ async function publint(pkg) {
 function attwEntrypoints(pkg) {
   const exportsField = pkg.manifest.exports;
   if (!exportsField || typeof exportsField !== 'object') return [];
-  // data files (`./tokens.json`) have no types either; `./package.json` is
-  // still analysed
+  // data files (`./tokens.json`, `./filter-vectors.json`) have no types
+  // either; `./package.json` is still analysed
   return Object.keys(exportsField).filter(
-    (key) => /\.(css|txt)$/.test(key) || key === './tokens.json',
+    (key) => /\.(css|txt|json)$/.test(key) && key !== './package.json',
   );
 }
 

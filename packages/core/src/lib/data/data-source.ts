@@ -19,6 +19,29 @@ export interface LoadResult<T = unknown> {
   readonly summary?: readonly unknown[];
 }
 
+/**
+ * What `DataSource.distinct()` is asked for. The grids send the filter of
+ * every other column plus the global search text — never the column's own
+ * filter — so the list cascades like Excel's. A server should apply them with
+ * the same meaning as in `load()` (the filter contract,
+ * `/guides/filter-contract`).
+ */
+export interface DistinctOptions {
+  /** Rows to collect values from; `null` / absent = every row. */
+  readonly filter?: FilterExpr | null;
+  /** The grid's global search text, applied as in `LoadOptions.searchText`. */
+  readonly searchText?: string;
+  /**
+   * Text typed in the popup's search box: only values whose text contains it
+   * (case- and accent-insensitive). Sent to server sources only, debounced.
+   */
+  readonly search?: string;
+  /** Maximum values wanted (the column's `valueLimit`). */
+  readonly take?: number;
+  /** Aborted when a newer request supersedes this one. */
+  readonly signal?: AbortSignal;
+}
+
 /** Which operations a DataSource performs itself (vs. the grid doing them client-side). */
 export interface DataSourceCapabilities {
   readonly sort: boolean;
@@ -61,12 +84,13 @@ export interface DataSource<T = unknown> {
   loadSync?(options: LoadOptions): LoadResult<T>;
   keyOf(item: T): RowKey;
   /**
-   * Distinct values of a field (for Excel-style header filters), optionally
-   * narrowed by the current filter. Header filter UI is hidden when absent.
+   * Distinct values of a field, sorted (for Excel-style header filters),
+   * narrowed by {@link DistinctOptions}. The header filter list is hidden
+   * when absent — the current page is never passed off as "all values".
    */
   distinct?(
     field: string,
-    options?: { filter?: FilterExpr | null },
+    options?: DistinctOptions,
   ): Promise<readonly unknown[]>;
   /** CRUD write-back used by the editing feature. Optional. */
   insert?(item: T): Promise<T>;

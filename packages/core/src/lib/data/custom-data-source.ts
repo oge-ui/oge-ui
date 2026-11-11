@@ -4,10 +4,11 @@ import type {
   DataChange,
   DataSource,
   DataSourceCapabilities,
+  DistinctOptions,
   LoadResult,
   SubscribableLike,
 } from './data-source';
-import type { FilterExpr, LoadOptions } from './load-options';
+import type { LoadOptions } from './load-options';
 
 export interface CustomDataSourceOptions<T> {
   key: keyof T | ((row: T) => RowKey);
@@ -15,9 +16,13 @@ export interface CustomDataSourceOptions<T> {
   load: (options: LoadOptions) => Promise<LoadResult<T>>;
   /** Defaults to "the server does everything". */
   capabilities?: Partial<DataSourceCapabilities>;
+  /**
+   * Distinct values of a field for the header filter list (see
+   * {@link DistinctOptions}: other columns' filters, search text, typed text).
+   */
   distinct?: (
     field: string,
-    options?: { filter?: FilterExpr | null },
+    options?: DistinctOptions,
   ) => Promise<readonly unknown[]>;
   insert?: (item: T) => Promise<T>;
   update?: (key: RowKey, patch: Partial<T>) => Promise<T>;

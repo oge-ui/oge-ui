@@ -36,6 +36,12 @@ export interface GroupDescriptor {
   readonly interval?: GroupInterval;
 }
 
+/**
+ * Leaf operators of a {@link FilterExpr}. Their meaning — including how each
+ * treats null and blank cells — is the published contract in
+ * `OGE_FILTER_OPERATORS` (`/guides/filter-contract`), which every server
+ * implementation should follow so a filter returns the same rows on both sides.
+ */
 export type FilterOperator =
   | 'eq'
   | 'ne'
@@ -48,9 +54,12 @@ export type FilterOperator =
   | 'startswith'
   | 'endswith'
   | 'in'
+  | 'notin'
   | 'between'
   | 'isnull'
-  | 'isnotnull';
+  | 'isnotnull'
+  | 'isblank'
+  | 'isnotblank';
 
 /**
  * Filter expression tree. Closed and intentionally small so it serializes

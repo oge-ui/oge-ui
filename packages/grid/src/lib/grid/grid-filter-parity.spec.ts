@@ -95,6 +95,51 @@ describe('filter builder converters', () => {
     );
     expect(text).toBe("[Name] Contains 'ali' And [Age] Greater than '30'");
   });
+
+  it('quotes list values one by one, so a comma stays inside its value', () => {
+    expect(
+      describeExpr(
+        {
+          type: 'binary',
+          field: 'name',
+          op: 'notin',
+          value: ['Kaya, Mehmet', 'Ali'],
+        },
+        FIELDS,
+        OGE_DEFAULT_MESSAGES,
+      ),
+    ).toBe("[Name] Is none of 'Kaya, Mehmet', 'Ali'");
+    expect(
+      describeExpr(
+        { type: 'binary', field: 'name', op: 'isblank' },
+        FIELDS,
+        OGE_DEFAULT_MESSAGES,
+      ),
+    ).toBe('[Name] Is blank');
+  });
+
+  it('builds "is blank" as isnull on typed fields and reads it back', () => {
+    const tree: OgeBuilderGroup = {
+      kind: 'group',
+      logic: 'and',
+      items: [
+        { kind: 'condition', field: 'age', op: 'isblank', value: '' },
+        { kind: 'condition', field: 'name', op: 'isnotblank', value: '' },
+      ],
+    };
+    const expr = builderToExpr(tree, FIELDS);
+    expect(expr).toEqual({
+      type: 'and',
+      operands: [
+        { type: 'binary', field: 'age', op: 'isnull' },
+        { type: 'binary', field: 'name', op: 'isnotblank' },
+      ],
+    });
+    const back = exprToBuilder(expr, FIELDS);
+    expect(
+      back.items.map((item) => item.kind === 'condition' && item.op),
+    ).toEqual(['isblank', 'isnotblank']);
+  });
 });
 
 @Component({

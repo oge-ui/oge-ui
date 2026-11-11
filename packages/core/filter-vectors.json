@@ -1,0 +1,424 @@
+{
+  "$comment": "OGE UI filter contract test vectors. Run each case's filter over rows and expect exactly the listed ids (any order). Fields listed in dateFields hold ISO instants: revive them (in rows and in filter values on those fields) as timestamps. Day filters are written as half-open ge/lt ranges in UTC so the vectors are timezone-free. Contract: https://www.ogeui.com/guides/filter-contract",
+  "version": 1,
+  "key": "id",
+  "dateFields": ["at"],
+  "rows": [
+    {
+      "id": 1,
+      "name": "Kaya, Mehmet",
+      "city": "İzmir",
+      "qty": 5,
+      "at": "2026-01-31T17:30:00Z",
+      "note": "urgent"
+    },
+    {
+      "id": 2,
+      "name": "Ali",
+      "city": "izmir",
+      "qty": 0,
+      "at": "2026-02-01T00:00:00Z",
+      "note": ""
+    },
+    {
+      "id": 3,
+      "name": "Ayşe",
+      "city": "Ankara",
+      "qty": null,
+      "at": null,
+      "note": "   "
+    },
+    {
+      "id": 4,
+      "name": "ILIK",
+      "city": null,
+      "qty": 12,
+      "at": "2026-01-30T09:00:00Z",
+      "note": null
+    },
+    {
+      "id": 5,
+      "name": "Kaya",
+      "city": "Istanbul",
+      "qty": -3,
+      "at": "2026-01-31T00:00:00Z",
+      "note": "not urgent"
+    }
+  ],
+  "cases": [
+    {
+      "name": "eq folds case",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "eq",
+        "value": "kaya"
+      },
+      "expect": [5]
+    },
+    {
+      "name": "eq folds the dotted capital İ",
+      "filter": {
+        "type": "binary",
+        "field": "city",
+        "op": "eq",
+        "value": "IZMIR"
+      },
+      "expect": [1, 2]
+    },
+    {
+      "name": "eq null matches only null (number)",
+      "filter": { "type": "binary", "field": "qty", "op": "eq", "value": null },
+      "expect": [3]
+    },
+    {
+      "name": "eq null matches only null (text)",
+      "filter": {
+        "type": "binary",
+        "field": "city",
+        "op": "eq",
+        "value": null
+      },
+      "expect": [4]
+    },
+    {
+      "name": "ne keeps null cells (text)",
+      "filter": {
+        "type": "binary",
+        "field": "city",
+        "op": "ne",
+        "value": "izmir"
+      },
+      "expect": [3, 4, 5]
+    },
+    {
+      "name": "ne keeps null cells (number)",
+      "filter": { "type": "binary", "field": "qty", "op": "ne", "value": 5 },
+      "expect": [2, 3, 4, 5]
+    },
+    {
+      "name": "gt skips null cells",
+      "filter": { "type": "binary", "field": "qty", "op": "gt", "value": 0 },
+      "expect": [1, 4]
+    },
+    {
+      "name": "ge skips null cells",
+      "filter": { "type": "binary", "field": "qty", "op": "ge", "value": 0 },
+      "expect": [1, 2, 4]
+    },
+    {
+      "name": "lt skips null cells",
+      "filter": { "type": "binary", "field": "qty", "op": "lt", "value": 5 },
+      "expect": [2, 5]
+    },
+    {
+      "name": "le skips null cells",
+      "filter": { "type": "binary", "field": "qty", "op": "le", "value": 5 },
+      "expect": [1, 2, 5]
+    },
+    {
+      "name": "contains folds case",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "contains",
+        "value": "KAYA"
+      },
+      "expect": [1, 5]
+    },
+    {
+      "name": "contains matches a comma literally",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "contains",
+        "value": ", "
+      },
+      "expect": [1]
+    },
+    {
+      "name": "contains folds the dotless ı",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "contains",
+        "value": "ılık"
+      },
+      "expect": [4]
+    },
+    {
+      "name": "notcontains keeps null and blank cells",
+      "filter": {
+        "type": "binary",
+        "field": "note",
+        "op": "notcontains",
+        "value": "urgent"
+      },
+      "expect": [2, 3, 4]
+    },
+    {
+      "name": "startswith folds accents",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "startswith",
+        "value": "ays"
+      },
+      "expect": [3]
+    },
+    {
+      "name": "startswith folds the capital I",
+      "filter": {
+        "type": "binary",
+        "field": "city",
+        "op": "startswith",
+        "value": "is"
+      },
+      "expect": [5]
+    },
+    {
+      "name": "endswith",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "endswith",
+        "value": "mehmet"
+      },
+      "expect": [1]
+    },
+    {
+      "name": "in keeps a comma value whole",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "in",
+        "value": ["Kaya, Mehmet", "Ali"]
+      },
+      "expect": [1, 2]
+    },
+    {
+      "name": "in compares whole values",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "in",
+        "value": ["Kaya"]
+      },
+      "expect": [5]
+    },
+    {
+      "name": "in with an empty list matches nothing",
+      "filter": { "type": "binary", "field": "name", "op": "in", "value": [] },
+      "expect": []
+    },
+    {
+      "name": "in with null matches null cells",
+      "filter": {
+        "type": "binary",
+        "field": "city",
+        "op": "in",
+        "value": [null, "Ankara"]
+      },
+      "expect": [3, 4]
+    },
+    {
+      "name": "notin keeps a comma value whole",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "notin",
+        "value": ["Kaya, Mehmet"]
+      },
+      "expect": [2, 3, 4, 5]
+    },
+    {
+      "name": "notin keeps null cells",
+      "filter": {
+        "type": "binary",
+        "field": "city",
+        "op": "notin",
+        "value": ["izmir"]
+      },
+      "expect": [3, 4, 5]
+    },
+    {
+      "name": "notin with null drops null cells",
+      "filter": {
+        "type": "binary",
+        "field": "city",
+        "op": "notin",
+        "value": [null]
+      },
+      "expect": [1, 2, 3, 5]
+    },
+    {
+      "name": "notin with an empty list matches everything",
+      "filter": {
+        "type": "binary",
+        "field": "name",
+        "op": "notin",
+        "value": []
+      },
+      "expect": [1, 2, 3, 4, 5]
+    },
+    {
+      "name": "between includes both ends",
+      "filter": {
+        "type": "binary",
+        "field": "qty",
+        "op": "between",
+        "value": [0, 5]
+      },
+      "expect": [1, 2]
+    },
+    {
+      "name": "between with an open start",
+      "filter": {
+        "type": "binary",
+        "field": "qty",
+        "op": "between",
+        "value": [null, 0]
+      },
+      "expect": [2, 5]
+    },
+    {
+      "name": "between with both ends open skips null cells",
+      "filter": {
+        "type": "binary",
+        "field": "qty",
+        "op": "between",
+        "value": [null, null]
+      },
+      "expect": [1, 2, 4, 5]
+    },
+    {
+      "name": "isnull: empty text is not null",
+      "filter": { "type": "binary", "field": "note", "op": "isnull" },
+      "expect": [4]
+    },
+    {
+      "name": "isnotnull: empty text is not null",
+      "filter": { "type": "binary", "field": "note", "op": "isnotnull" },
+      "expect": [1, 2, 3, 5]
+    },
+    {
+      "name": "isblank: null, empty and whitespace-only text",
+      "filter": { "type": "binary", "field": "note", "op": "isblank" },
+      "expect": [2, 3, 4]
+    },
+    {
+      "name": "isnotblank",
+      "filter": { "type": "binary", "field": "note", "op": "isnotblank" },
+      "expect": [1, 5]
+    },
+    {
+      "name": "isblank on a number: zero is not blank",
+      "filter": { "type": "binary", "field": "qty", "op": "isblank" },
+      "expect": [3]
+    },
+    {
+      "name": "isnotblank on a number",
+      "filter": { "type": "binary", "field": "qty", "op": "isnotblank" },
+      "expect": [1, 2, 4, 5]
+    },
+    {
+      "name": "a day is half-open: 17:30 is inside, next midnight is not",
+      "filter": {
+        "type": "and",
+        "operands": [
+          {
+            "type": "binary",
+            "field": "at",
+            "op": "ge",
+            "value": "2026-01-31T00:00:00Z"
+          },
+          {
+            "type": "binary",
+            "field": "at",
+            "op": "lt",
+            "value": "2026-02-01T00:00:00Z"
+          }
+        ]
+      },
+      "expect": [1, 5]
+    },
+    {
+      "name": "not on a day keeps null cells",
+      "filter": {
+        "type": "or",
+        "operands": [
+          {
+            "type": "binary",
+            "field": "at",
+            "op": "lt",
+            "value": "2026-01-31T00:00:00Z"
+          },
+          {
+            "type": "binary",
+            "field": "at",
+            "op": "ge",
+            "value": "2026-02-01T00:00:00Z"
+          },
+          { "type": "binary", "field": "at", "op": "isnull" }
+        ]
+      },
+      "expect": [2, 3, 4]
+    },
+    {
+      "name": "a day range includes its whole last day",
+      "filter": {
+        "type": "and",
+        "operands": [
+          {
+            "type": "binary",
+            "field": "at",
+            "op": "ge",
+            "value": "2026-01-30T00:00:00Z"
+          },
+          {
+            "type": "binary",
+            "field": "at",
+            "op": "lt",
+            "value": "2026-02-01T00:00:00Z"
+          }
+        ]
+      },
+      "expect": [1, 4, 5]
+    },
+    {
+      "name": "not is a two-valued complement",
+      "filter": {
+        "type": "not",
+        "operand": {
+          "type": "binary",
+          "field": "note",
+          "op": "contains",
+          "value": "urgent"
+        }
+      },
+      "expect": [2, 3, 4]
+    },
+    {
+      "name": "and / or nesting",
+      "filter": {
+        "type": "or",
+        "operands": [
+          { "type": "binary", "field": "city", "op": "eq", "value": "ankara" },
+          {
+            "type": "and",
+            "operands": [
+              { "type": "binary", "field": "qty", "op": "gt", "value": 0 },
+              {
+                "type": "binary",
+                "field": "name",
+                "op": "contains",
+                "value": "kaya"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [1, 3]
+    }
+  ]
+}

@@ -7,6 +7,39 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Filter contract — `@oge-ui/core`, both grid render layers
+
+- A published contract for every `FilterExpr` operator — meaning, blank cells and
+  reference SQL — in `OGE_FILTER_OPERATORS` and the new **Filter contract** guide,
+  with test vectors shipped as `@oge-ui/core/filter-vectors.json` so a server can
+  prove it returns the rows the in-memory engine does. The evaluator runs the
+  same vectors on every build.
+- New operators `notin`, `isblank` and `isnotblank` (blank = null, undefined or
+  whitespace-only text); `ogeFilterOperatorTakesValue` / `ogeFilterOperatorArity`
+  replace hand-written "is it a null check" tests. `in` / `notin` look values up
+  in a set compiled once per filter.
+- **Behaviour changes:** "Is blank" in the filter menus and builder now matches
+  empty and whitespace-only text — text columns send `isblank`, number, date and
+  boolean columns still send `isnull` (custom server translations should accept
+  the three new operators). "Not on that day" keeps rows without a date and is
+  sent as `lt` / `ge` / `isnull` instead of a `not` a SQL or OData server would
+  evaluate to unknown. `between` no longer matches null cells when both ends are
+  open. `buildODataQuery` spells out the null branch of `notcontains` and
+  `notin`, and an open `between` end is no longer sent as `eq null`.
+- The filter panel quotes list values one by one (`'Kaya, Mehmet', 'Ali'`), and
+  `ArrayDataSource.distinct()` lists equal dates held in different `Date`
+  objects once.
+
+### Header filter value lists — `@oge-ui/grid`, `@oge-ui/react-grid`
+
+- The value list cascades like Excel's: it is taken under every other active
+  filter and the global search text, never the column's own selection.
+- `distinct(field, options)` receives `DistinctOptions`: `filter`, `searchText`,
+  `search` (the popup's typed text), `take` and an abort `signal`. A server source
+  is asked once per opening and again 250 ms after typing stops; each request
+  aborts the previous one and a late answer never replaces a newer one. In-memory
+  sources keep searching in the browser.
+
 ### Development warnings get codes — every family
 
 - Every development warning now reads `[OGE####] … — https://www.ogeui.com/guides/dev-warnings#oge####`,

@@ -171,6 +171,32 @@ export class OgeGridFilterState {
     });
   }
 
+  /**
+   * The AND of every active filter except one column's own: its header-filter
+   * selection and the row-filter slots named in `rowKeys` (its filter-row
+   * cell and its condition menu). A header filter's value list is taken
+   * under this, so the list cascades like Excel's. The filter builder's
+   * expression is kept whole — it cannot be split per column.
+   */
+  combinedExprExcept(
+    field: string,
+    rowKeys: readonly string[] = [field],
+  ): FilterExpr | null {
+    const operands: FilterExpr[] = [];
+    for (const [key, expr] of this._rowFilters()) {
+      if (!rowKeys.includes(key)) operands.push(expr);
+    }
+    for (const [key, values] of this._headerFilters()) {
+      if (key !== field) {
+        operands.push({ type: 'binary', field: key, op: 'in', value: values });
+      }
+    }
+    const builder = this._builderFilter();
+    if (builder) operands.push(builder);
+    if (!operands.length) return null;
+    return operands.length === 1 ? operands[0] : { type: 'and', operands };
+  }
+
   setBuilderFilter(expr: FilterExpr | null): void {
     this._builderFilter.set(expr);
   }
