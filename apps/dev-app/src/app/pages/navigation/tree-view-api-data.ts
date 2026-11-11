@@ -251,6 +251,13 @@ export const OGE_TREE_VIEW_API: ApiSections = {
             'Allows dropping *into* a node (reparenting), not just between siblings.',
         },
         {
+          name: 'allowDropBetween',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Allows dropping <em>between</em> nodes (before / after a sibling). <code>false</code> leaves only drops into a node — a tree whose order is fixed (sorted by name) but whose nesting may change. The keyboard twin follows it too.',
+        },
+        {
           name: 'dragGroup',
           type: 'string | undefined',
           description:
@@ -476,6 +483,18 @@ export const OGE_TREE_VIEW_API: ApiSections = {
           name: 'selectAllChanged',
           type: 'OgeTreeSelectAllChangedEvent',
           description: 'Emitted when the "select all" row is toggled.',
+        },
+        {
+          name: 'itemDragStarting',
+          type: 'OgeTreeDragStartingEvent&lt;T&gt;',
+          description:
+            'Cancelable: a node is about to be moved, by pointer drag or Ctrl+X (<code>trigger</code>). Set <code>cancel</code> to keep a locked or system node in place.',
+        },
+        {
+          name: 'itemDragOver',
+          type: 'OgeTreeDragOverEvent&lt;T&gt;',
+          description:
+            'Cancelable: a dragged node reached another drop spot (row or <code>position</code>) on this tree — set <code>cancel</code> to refuse it; no indicator shows and a drop there does nothing. Fires once per spot, not per pointer move.',
         },
         {
           name: 'itemReordering / itemReordered',

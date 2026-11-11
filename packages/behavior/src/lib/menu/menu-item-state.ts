@@ -229,3 +229,54 @@ export function menuRetainedActiveIndex(
   if (!before || !after || before.text !== after.text) return -1;
   return isMenuItemNavigable(after) ? activeIndex : -1;
 }
+
+// `/* @__PURE__ */` keeps the module tree-shakable
+const shownCache = /* @__PURE__ */ new WeakMap<
+  readonly OgeMenuItem[],
+  readonly OgeMenuItem[]
+>();
+
+/**
+ * The items a menu shows: rows with `visible: false` dropped at every level,
+ * and the separators that would then lead, trail or double up removed. The
+ * input array comes back unchanged when nothing is hidden, and the result is
+ * cached per array, so a re-render keeps the same identity. Menus render and
+ * report indexes over this list.
+ */
+export function ogeShownMenuItems<I extends OgeMenuItem>(
+  items: readonly I[],
+): readonly I[] {
+  const cached = shownCache.get(items);
+  if (cached) return cached as readonly I[];
+  let changed = false;
+  const kept: I[] = [];
+  for (const item of items) {
+    if (item.visible === false) {
+      changed = true;
+      continue;
+    }
+    if (item.separator) {
+      // no separator first or twice in a row
+      if (!kept.length || kept[kept.length - 1].separator) {
+        changed = true;
+        continue;
+      }
+      kept.push(item);
+      continue;
+    }
+    const children = item.items
+      ? ogeShownMenuItems(item.items as readonly I[])
+      : undefined;
+    if (children && children !== item.items) {
+      changed = true;
+      kept.push({ ...item, items: children });
+    } else kept.push(item);
+  }
+  while (kept.length && kept[kept.length - 1].separator) {
+    kept.pop();
+    changed = true;
+  }
+  const result = changed ? kept : items;
+  shownCache.set(items, result);
+  return result;
+}

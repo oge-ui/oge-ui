@@ -325,6 +325,7 @@ export const zhCN: OgeLocalePack = {
     dialogAlertTitle: '提示',
     dialogPromptTitle: '请输入值',
     dialogRequired: '此字段为必填项。',
+    dialogTypeToConfirm: '请输入 {text} 以确认',
     windowMinimize: '最小化',
     windowMoved: '窗口已移动到 {x}, {y}',
     windowResized: '窗口大小已调整为 {width} × {height}',

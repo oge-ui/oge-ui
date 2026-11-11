@@ -25,6 +25,7 @@ import {
   menuItemKeepsOpen,
   menuItemNextChecked,
   menuItemRole,
+  ogeShownMenuItems,
   menuItemSegments,
   menuMoveIndex,
   menuRetainedActiveIndex,
@@ -41,7 +42,10 @@ import { useAnchoredPanel } from './use-anchored-panel';
 /** Payload of `onItemClick`. */
 export interface OgeMenuListItemClickEvent {
   item: OgeMenuItem;
-  /** Index within the `items` prop (separators included). */
+  /**
+   * Index among the rows shown (separators included, `visible: false` rows
+   * left out) — the index within `items` when nothing is hidden.
+   */
   index: number;
   /**
    * The checked state the activation moves a checkbox/radio row to (a
@@ -127,7 +131,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
   // the forwardRef component.
   function OgeMenuListRender(
     {
-      items,
+      items: itemsProp,
       menuId,
       ariaLabel,
       renderItem,
@@ -137,6 +141,9 @@ export const OgeMenuList: ForwardRefExoticComponent<
     },
     ref,
   ) {
+    // `visible: false` rows and the separators they strand are not drawn;
+    // indexes count the rows shown (stable identity: cached per array)
+    const items = ogeShownMenuItems(itemsProp);
     const config = useOgeOverlayConfig();
     const hostRef = useRef<HTMLDivElement>(null);
     const childPopupRef = useRef<HTMLDivElement>(null);
@@ -563,6 +570,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
             'oge-menu-item',
             index === activeIndex && 'oge-menu-item-active',
             item.severity === 'danger' && 'oge-menu-item-danger',
+            item.cssClass,
             (item.disabled ?? false) && 'oge-menu-item-disabled',
           ]
             .filter(Boolean)
@@ -587,6 +595,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
             'oge-menu-item',
             index === activeIndex && 'oge-menu-item-active',
             item.severity === 'danger' && 'oge-menu-item-danger',
+            item.cssClass,
             menuItemAriaChecked(item) === 'true' && 'oge-menu-item-checked',
           ]
             .filter(Boolean)

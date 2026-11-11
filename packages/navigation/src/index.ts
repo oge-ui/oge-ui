@@ -158,6 +158,8 @@ export type {
   OgeTreeItemTemplateContext,
   OgeTreeLoadChildren,
   OgeTreeReorderedEvent,
+  OgeTreeDragOverEvent,
+  OgeTreeDragStartingEvent,
   OgeTreeReorderingEvent,
   OgeTreeSearchMode,
   OgeTreeSelectAllChangedEvent,

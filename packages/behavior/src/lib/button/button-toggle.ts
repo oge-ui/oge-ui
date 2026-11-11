@@ -13,6 +13,11 @@ export interface OgeButtonSelectionRequest {
   readonly toggle: boolean;
   /** The button's own `selected` state (used only for a standalone toggle). */
   readonly selected: boolean;
+  /**
+   * The host-controlled pressed state (`pressed`): renders `aria-pressed`
+   * from it and never flips it on click. `undefined` leaves it out.
+   */
+  readonly pressed?: boolean;
 }
 
 /** The selection semantics a button renders. */
@@ -36,8 +41,9 @@ export interface OgeButtonSelectionState {
  * `'multiple'` → `aria-pressed`) always wins, so the group behaviour is
  * unchanged; outside one — standalone, or in a `'none'` group (a plain
  * toolbar) — a `toggle` button is a WAI-ARIA toggle button with
- * `aria-pressed` reflecting its own `selected`. A non-toggle standalone
- * button renders no state at all.
+ * `aria-pressed` reflecting its own `selected`, and a defined `pressed`
+ * renders a toggle button whose state the host controls (a click does not
+ * flip it). A non-toggle standalone button renders no state at all.
  */
 export function resolveButtonSelectionState(
   request: OgeButtonSelectionRequest,
@@ -59,6 +65,16 @@ export function resolveButtonSelectionState(
       role: null,
       ariaChecked: null,
       ariaPressed: String(groupSelected) as 'true' | 'false',
+    };
+  }
+  if (request.pressed !== undefined) {
+    // one-way: the host owns the state, a click only reports itself
+    return {
+      selected: request.pressed,
+      standaloneToggle: false,
+      role: null,
+      ariaChecked: null,
+      ariaPressed: request.pressed ? 'true' : 'false',
     };
   }
   if (toggle) {

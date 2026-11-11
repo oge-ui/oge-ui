@@ -2702,6 +2702,7 @@ export type OgeButtonsConfigInput = Partial<Omit<OgeButtonsConfig, 'messages'>> 
 export interface OgeButtonSelectionRequest {
     readonly groupMode?: OgeButtonGroupSelectionMode | null;
     readonly groupSelected: boolean;
+    readonly pressed?: boolean;
     readonly selected: boolean;
     readonly toggle: boolean;
 }
@@ -2721,6 +2722,9 @@ export interface OgeButtonSelectionState {
 export type OgeButtonSeverity = 'normal' | 'accent' | 'success' | 'warning' | 'danger';
 
 // @public
+export type OgeButtonShape = 'default' | 'pill';
+
+// @public
 export type OgeButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 // @public
@@ -2736,7 +2740,7 @@ export interface OgeButtonsMessages {
 }
 
 // @public
-export type OgeButtonStylingMode = 'contained' | 'outlined' | 'text';
+export type OgeButtonStylingMode = 'contained' | 'outlined' | 'text' | 'link';
 
 // @public
 export interface OgeButtonToggleChange {
@@ -3531,9 +3535,24 @@ export interface OgeConditionalStyle {
 export type OgeConditionalTone = 'success' | 'warning' | 'danger' | 'info' | 'accent' | 'muted';
 
 // @public
+export function ogeConfirmAccepts(dialog: Pick<OgeResolvedDialog, 'typeToConfirm' | 'acknowledgeLabel'>, state: OgeConfirmGateState, canAccept?: (state: OgeConfirmGateState) => boolean): boolean;
+
+// @public
 export interface OgeConfirmBaseOptions<TIcon = never> extends OgeDialogBaseOptions<TIcon> {
+    acknowledgeLabel?: string;
+    canAccept?: (state: OgeConfirmGateState) => boolean;
     cancelText?: string;
     danger?: boolean;
+    details?: string | readonly string[];
+    typeToConfirm?: string;
+}
+
+// @public
+export interface OgeConfirmGateState {
+    // (undocumented)
+    readonly acknowledged: boolean;
+    // (undocumented)
+    readonly typed: string;
 }
 
 // @public
@@ -4099,12 +4118,15 @@ export interface OgeDialogBaseOptions<TIcon = never> {
 // @public
 export class OgeDialogCore {
     constructor(options: OgeDialogCoreOptions);
+    readonly accepts: () => boolean;
+    readonly acknowledged: OgeReactiveCell<boolean>;
     cancel(): void;
     readonly error: OgeReactiveCell<string | null>;
     input(value: string): void;
     get isSettled(): boolean;
     readonly pending: OgeReactiveCell<boolean>;
     submit(): void;
+    readonly typed: OgeReactiveCell<string>;
     readonly value: OgeReactiveCell<string>;
 }
 
@@ -4113,6 +4135,7 @@ export interface OgeDialogCoreOptions {
     // (undocumented)
     readonly adapter: OgeReactivityAdapter;
     readonly announce?: (message: string) => void;
+    readonly canAccept?: (state: OgeConfirmGateState) => boolean;
     // (undocumented)
     readonly dialog: OgeResolvedDialog;
     // (undocumented)
@@ -4121,6 +4144,9 @@ export interface OgeDialogCoreOptions {
     // (undocumented)
     readonly validate?: OgePromptValidator;
 }
+
+// @public
+export function ogeDialogDescribedBy(dialog: Pick<OgeResolvedDialog, 'message' | 'details'>, id: string): string | undefined;
 
 // @public
 export function ogeDialogEnterIsPrimary(event: OgeDialogKeyInput): boolean;
@@ -9692,6 +9718,7 @@ export interface OgeMenuItem<T = unknown> {
     action?: () => void;
     badge?: string | number;
     checked?: boolean;
+    cssClass?: string;
     // (undocumented)
     disabled?: boolean;
     group?: string;
@@ -9708,6 +9735,7 @@ export interface OgeMenuItem<T = unknown> {
     type?: OgeMenuItemType;
     url?: string;
     value?: T;
+    visible?: boolean;
 }
 
 // @public
@@ -9737,7 +9765,16 @@ export class OgeMenuTypeAhead {
 }
 
 // @public
-export type OgeModalAutoFocus = 'first-tabbable' | 'panel' | (string & {});
+export type OgeModalAutoFocus = 'first-tabbable' | 'panel' | false | (string & {});
+
+// @public
+export interface OgeModalCloseBlockedEvent {
+    readonly blockedBy: OgeModalCloseBlocker;
+    readonly reason: OgeModalCloseReason;
+}
+
+// @public
+export type OgeModalCloseBlocker = 'busy' | 'closing' | 'guard';
 
 // @public
 export interface OgeModalClosedEvent<R = unknown> {
@@ -9943,6 +9980,7 @@ export interface OgeOverlayMessages {
     dialogOk?: string;
     dialogPromptTitle?: string;
     dialogRequired?: string;
+    dialogTypeToConfirm?: string;
     modalClose: string;
     modalMaximize: string;
     modalRestore: string;
@@ -10826,8 +10864,10 @@ export interface OgeResolvedChunkOptions {
 
 // @public
 export interface OgeResolvedDialog {
+    readonly acknowledgeLabel: string | null;
     readonly cancelText: string | null;
     readonly danger: boolean;
+    readonly details: string | readonly string[] | null;
     readonly icon: 'builtin' | 'custom' | 'none';
     // (undocumented)
     readonly initialFocus: OgeDialogInitialFocus;
@@ -10849,6 +10889,10 @@ export interface OgeResolvedDialog {
     readonly severity: OgeDialogSeverity | undefined;
     // (undocumented)
     readonly title: string;
+    readonly typeToConfirm: {
+        readonly text: string;
+        readonly label: string;
+    } | null;
     // (undocumented)
     readonly width: number | string;
 }
@@ -11406,6 +11450,9 @@ export function ogeSettleGhost(ghost: HTMLElement, to: OgeRect, timing?: Partial
 
 // @public
 export function ogeShiftMentions<T>(tokens: readonly OgeMentionToken<T>[], previous: string, next: string): OgeMentionToken<T>[];
+
+// @public
+export function ogeShownMenuItems<I extends OgeMenuItem>(items: readonly I[]): readonly I[];
 
 // @public
 export interface OgeSignatureCanvasContext {
@@ -13710,7 +13757,7 @@ export function ogeTreeCommitMove(input: {
 export function ogeTreeCsv<T>(data: OgeTreeExportData<T>, options?: CsvOptions): string;
 
 // @public
-export function ogeTreeCut(peer: OgeTreeDragPeer, key: RowKey): boolean;
+export function ogeTreeCut(peer: OgeTreeDragPeer, key: RowKey, event?: Event): boolean;
 
 // @public
 export function ogeTreeCutKey(peer: OgeTreeDragPeer): RowKey | null;
@@ -13741,11 +13788,31 @@ export interface OgeTreeDragOptions {
 }
 
 // @public
+export interface OgeTreeDragOverEvent<T = unknown> {
+    cancel: boolean;
+    // (undocumented)
+    readonly dragItem: T;
+    // (undocumented)
+    readonly dragKey: RowKey;
+    // (undocumented)
+    readonly dropItem: T;
+    // (undocumented)
+    readonly dropKey: RowKey;
+    // (undocumented)
+    readonly position: OgeTreeDropPosition;
+    readonly sourceTreeId: string;
+    readonly targetTreeId: string;
+}
+
+// @public
 export interface OgeTreeDragPeer {
+    allowDropBetween(): boolean;
     allowDropInside(): boolean;
     announce(text: string): void;
     canDrop(source: OgeTreeDragSource, dropKey: RowKey): boolean;
     element(): Element | null;
+    emitDragOver(event: OgeTreeDragOverEvent<unknown>): void;
+    emitDragStarting(event: OgeTreeDragStartingEvent<unknown>): void;
     emitReordered(event: OgeTreeReorderedEvent<unknown>): void;
     emitReordering(event: OgeTreeReorderingEvent<unknown>): void;
     emitTransferred(event: OgeTreeTransferredEvent<unknown>): void;
@@ -13789,6 +13856,20 @@ export interface OgeTreeDragSource {
 
 // @public
 export function ogeTreeDragSourceOf(peer: OgeTreeDragPeer, key: RowKey): OgeTreeDragSource | null;
+
+// @public
+export function ogeTreeDragStarting(peer: OgeTreeDragPeer, source: OgeTreeDragSource, trigger: OgeTreeMoveSource, event?: Event): boolean;
+
+// @public
+export interface OgeTreeDragStartingEvent<T = unknown> {
+    cancel: boolean;
+    readonly event?: Event;
+    // (undocumented)
+    readonly item: T;
+    // (undocumented)
+    readonly key: RowKey;
+    readonly trigger: OgeTreeMoveSource;
+}
 
 // @public
 export interface OgeTreeDragTarget {
@@ -14333,7 +14414,7 @@ export interface OgeTreeReorderedEvent<T = unknown> {
     readonly trigger: OgeTreeMoveSource;
 }
 
-// @public
+// @public (undocumented)
 export interface OgeTreeReorderingEvent<T = unknown> {
     cancel: boolean;
     // (undocumented)
@@ -16112,7 +16193,7 @@ export function resolveTreeChildPageSize(value: number | undefined): number;
 export function resolveTreeDropPosition(clientY: number, rect: {
     top: number;
     height: number;
-}, allowInside: boolean): OgeTreeDropPosition;
+}, allowInside: boolean, allowBetween?: boolean): OgeTreeDropPosition;
 
 // @public
 export function resolveTreeItemHeight(virtualScroll: boolean | OgeTreeVirtualScrollOptions, configured: number | undefined): number;

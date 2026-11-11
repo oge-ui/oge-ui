@@ -118,6 +118,8 @@ export {
 export {
   type OgeModalCloseReason,
   type OgeModalOpeningEvent,
+  type OgeModalCloseBlockedEvent,
+  type OgeModalCloseBlocker,
   type OgeModalClosingEvent,
   type OgeModalClosedEvent,
   type OgeModalResizeEvent,

@@ -8,8 +8,14 @@
  * is the set of severities, sizes and styling modes, which is what lives here.
  */
 
-/** Fill style of a button. */
-export type OgeButtonStylingMode = 'contained' | 'outlined' | 'text';
+/**
+ * Fill style of a button. `'link'` looks like inline link text — no fill,
+ * no border, underlined on hover — and stays a `<button>`.
+ */
+export type OgeButtonStylingMode = 'contained' | 'outlined' | 'text' | 'link';
+
+/** Corner shape of a button: the theme radius, or fully rounded ends. */
+export type OgeButtonShape = 'default' | 'pill';
 
 /**
  * Semantic color of a button, mapped to the `--oge-accent` /

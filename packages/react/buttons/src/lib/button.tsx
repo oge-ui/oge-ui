@@ -23,6 +23,7 @@ import {
   type OgeButtonIconPosition,
   type OgeButtonSeverity,
   type OgeButtonSize,
+  type OgeButtonShape,
   type OgeButtonStylingMode,
   type OgeButtonsMessages,
   type OgeClickGuardOptions,
@@ -81,6 +82,16 @@ export interface OgeButtonProps {
    * `single`/`multiple` `<OgeButtonGroup>`, which owns the selection.
    */
   toggle?: boolean;
+  /** Host-controlled pressed state: renders `aria-pressed` and the pressed look, and a click never flips it (unlike `toggle`) — update it from your own state. */
+  pressed?: boolean;
+  /** Corner shape: `'default'` (the theme radius) or `'pill'` (fully rounded ends; circular when icon-only). */
+  shape?: OgeButtonShape;
+  /** Stretches the button to the full width of its container. */
+  fluid?: boolean;
+  /** Label shown (and announced) while `loading` — "Saving…" instead of "Save". */
+  loadingText?: string;
+  /** Class(es) for a leading icon rendered as an empty `<i>` — the hook for an icon font the app already ships; no projected icon needed. */
+  iconClass?: string;
   /**
    * Pressed state of a `toggle` button (controlled). Pair with
    * `onSelectedChange`; use `defaultSelected` for an uncontrolled button.
@@ -198,6 +209,11 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       ariaLabel,
       value,
       toggle = false,
+      pressed,
+      shape = 'default',
+      fluid = false,
+      loadingText,
+      iconClass,
       selected: selectedProp,
       defaultSelected = false,
       onSelectedChange,
@@ -248,6 +264,7 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       groupSelected: group ? group.isSelected(value) : false,
       toggle,
       selected: selectedProp ?? uncontrolledSelected,
+      pressed,
     });
     const selected = selection.selected;
 
@@ -403,7 +420,11 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
       hold.holding && 'oge-button-holding',
       hold.ready && 'oge-button-hold-ready',
       selected && 'oge-button-selected',
-      selection.standaloneToggle && 'oge-button-toggle',
+      (selection.standaloneToggle || pressed !== undefined) &&
+        'oge-button-toggle',
+      effectiveStylingMode === 'link' && 'oge-button-link-mode',
+      shape === 'pill' && 'oge-button-pill',
+      fluid && 'oge-button-fluid',
       (effectiveSeverity !== 'normal' || !!color) && 'oge-button-colored',
       effectiveStylingMode === 'outlined' && 'oge-button-outlined',
       effectiveStylingMode === 'text' && 'oge-button-text-mode',
@@ -483,11 +504,25 @@ export const OgeButton = forwardRef<OgeButtonHandle, OgeButtonProps>(
               >
                 <path d="M8 1.5 A 6.5 6.5 0 1 1 1.5 8" />
               </svg>
-              <span className="oge-button-sr">{msg.loading}</span>
+              {!loadingText && (
+                <span className="oge-button-sr">{msg.loading}</span>
+              )}
             </>
           )}
-          <span className="oge-button-icon">{icon}</span>
-          {text && <span className="oge-button-text">{text}</span>}
+          <span className="oge-button-icon">
+            {iconClass && (
+              <i
+                className={`oge-button-icon-font ${iconClass}`}
+                aria-hidden="true"
+              />
+            )}
+            {icon}
+          </span>
+          {(loading && loadingText ? loadingText : text) && (
+            <span className="oge-button-text">
+              {loading && loadingText ? loadingText : text}
+            </span>
+          )}
           {children}
           {badgeText !== null && (
             <span className="oge-button-sr">{badgeText}</span>

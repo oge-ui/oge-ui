@@ -327,6 +327,7 @@ export const tr: OgeLocalePack = {
     dialogAlertTitle: 'Bilgi',
     dialogPromptTitle: 'Bir değer girin',
     dialogRequired: 'Bu alan zorunludur.',
+    dialogTypeToConfirm: 'Onaylamak için {text} yazın',
     windowMinimize: 'Simge durumuna küçült',
     windowMoved: 'Pencere {x}, {y} konumuna taşındı',
     windowResized: 'Pencere {width} × {height} boyutuna getirildi',

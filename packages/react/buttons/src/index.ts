@@ -32,6 +32,7 @@ export {
 // The variant vocabulary is single-sourced in `@oge-ui/behavior` — re-exported
 // so consumers import it from the package they installed.
 export type {
+  OgeButtonShape,
   OgeButtonStylingMode,
   OgeButtonSeverity,
   OgeButtonSize,

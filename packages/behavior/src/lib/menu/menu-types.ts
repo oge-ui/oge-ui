@@ -22,6 +22,14 @@ export interface OgeMenuItem<T = unknown> {
   hint?: string;
   disabled?: boolean;
   /**
+   * `false` leaves the row out — a conditional item without filtering the
+   * array. Separators left leading, trailing or doubled are dropped with it.
+   * Default `true`.
+   */
+  visible?: boolean;
+  /** Extra class(es) on the row, e.g. to style one item apart. */
+  cssClass?: string;
+  /**
    * The row's kind. Unset keeps the historical rule: a defined `checked`
    * renders a `menuitemcheckbox`, otherwise a plain `menuitem`. `'checkbox'`
    * and `'radio'` render `menuitemcheckbox` / `menuitemradio` with

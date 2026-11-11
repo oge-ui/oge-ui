@@ -338,6 +338,7 @@ export const ru: OgeLocalePack = {
     dialogAlertTitle: 'Уведомление',
     dialogPromptTitle: 'Введите значение',
     dialogRequired: 'Обязательное поле.',
+    dialogTypeToConfirm: 'Введите {text} для подтверждения',
     windowMinimize: 'Свернуть',
     windowMoved: 'Окно перемещено в {x}, {y}',
     windowResized: 'Размер окна изменён на {width}×{height}',

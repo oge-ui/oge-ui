@@ -28,6 +28,8 @@ import {
   BASIC_SNIPPET,
   BUSY_SNIPPET,
   DIALOG_HELPERS_SNIPPET,
+  GATES_SNIPPET,
+  LOADING_SNIPPET,
   FORM_SNIPPET,
   PLACEMENT_SNIPPET,
   PARTS_SNIPPET,
@@ -354,6 +356,44 @@ export const MODAL_PLACEMENTS: readonly OgeModalPlacement[] = [
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['loading', 'closeBlocked', 'autoFocus: false']"
+        heading="Loading and blocked closes"
+        description="<code>loading</code> veils the body while content arrives but, unlike <code>busy</code>, leaves Escape, the backdrop and ✕ working. When a close does not go through, <code>closeBlocked</code> says why — <code>busy</code>, a cancelled <code>closing</code>, or <code>closeGuard</code> — so the page can explain it. <code>autoFocus: false</code> focuses the panel and no control, so no on-screen keyboard pops up for the first field."
+        [code]="loadingSnippet"
+        language="ts"
+      >
+        <oge-button
+          text="Open with a lock"
+          stylingMode="outlined"
+          (clicked)="openLoadingDemo()"
+        />
+        <oge-modal
+          title="Order details"
+          [(opened)]="loadingOpen"
+          [loading]="loadingBody()"
+          [busy]="locked()"
+          [autoFocus]="false"
+          (closeBlocked)="blockedWhy.set($event.blockedBy)"
+        >
+          <label class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              [checked]="locked()"
+              (change)="lockBriefly()"
+            />
+            Lock for 2 seconds (busy)
+          </label>
+          <p
+            class="m-0 mt-2 text-sm"
+            data-testid="blocked-why"
+            aria-live="polite"
+          >
+            {{ blockedWhy() ? 'Close blocked by: ' + blockedWhy() : '' }}
+          </p>
+        </oge-modal>
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['close(result)', 'OgeModalClosedEvent', 'reason']"
         heading="Typed result"
         description="<code>close(result)</code> — from code or the footer slot — carries a typed value into <code>closed</code>, alongside the close <code>reason</code>. Declarative confirm/prompt flows no longer need side-channel component state."
@@ -418,6 +458,25 @@ export const MODAL_PLACEMENTS: readonly OgeModalPlacement[] = [
           />
           <span class="text-sm opacity-70" data-testid="dialog-result"
             >result: {{ dialogResult() }}</span
+          >
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['details', 'typeToConfirm', 'acknowledgeLabel', 'canAccept']"
+        heading="Irreversible actions"
+        description="For an action that cannot be undone, <code>confirm()</code> takes gates: <code>details</code> lists what will go (a text, or bullets), <code>typeToConfirm</code> asks for an exact text — the project name here — and <code>acknowledgeLabel</code> a ticked box; <code>canAccept(state)</code> adds a rule of your own. The primary button stays disabled until every gate passes, the field gets the initial focus, and its label comes from the localized <code>dialogTypeToConfirm</code> message."
+        [code]="gatesSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-center gap-3">
+          <oge-button
+            text="Delete project…"
+            severity="danger"
+            (clicked)="confirmProjectDelete()"
+          />
+          <span class="text-sm opacity-70" data-testid="gates-result"
+            >result: {{ gatesResult() }}</span
           >
         </div>
       </app-demo-card>
@@ -581,6 +640,39 @@ export class OverlayModalPage {
   protected readonly placed = signal<OgeModalPlacement>('center');
   protected readonly placements = MODAL_PLACEMENTS;
   protected readonly dialogResult = signal('—');
+  protected readonly gatesResult = signal('—');
+  protected readonly loadingOpen = signal(false);
+  protected readonly loadingBody = signal(false);
+  protected readonly locked = signal(false);
+  protected readonly blockedWhy = signal('');
+  protected readonly gatesSnippet = GATES_SNIPPET;
+  protected readonly loadingSnippet = LOADING_SNIPPET;
+
+  /** busy blocks every user close; the demo lifts it after two seconds. */
+  protected lockBriefly(): void {
+    this.locked.set(true);
+    setTimeout(() => this.locked.set(false), 2000);
+  }
+
+  protected openLoadingDemo(): void {
+    this.blockedWhy.set('');
+    this.loadingOpen.set(true);
+    this.loadingBody.set(true);
+    setTimeout(() => this.loadingBody.set(false), 1200);
+  }
+
+  protected async confirmProjectDelete(): Promise<void> {
+    const ok = await this.modals.confirm({
+      title: 'Delete project?',
+      message: 'acme-web and everything in it will be deleted.',
+      details: ['128 files', '3 shared links', '2 deploy hooks'],
+      typeToConfirm: 'acme-web',
+      acknowledgeLabel: 'I understand this cannot be undone',
+      severity: 'danger',
+      okText: 'Delete project',
+    });
+    this.gatesResult.set(`confirm → ${ok}`);
+  }
 
   protected readonly statuses = ['Open', 'In progress', 'Done'];
   protected readonly assignees = ['Ada', 'Grace', 'Linus', 'Margaret'];

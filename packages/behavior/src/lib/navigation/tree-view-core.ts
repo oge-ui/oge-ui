@@ -200,6 +200,37 @@ export interface OgeTreeSelectAllChangedEvent {
  * `sourceTreeId !== targetTreeId` and `dragItem` belongs to the source tree's
  * data.
  */
+export interface OgeTreeDragStartingEvent<T = unknown> {
+  readonly key: RowKey;
+  readonly item: T;
+  /** A pointer drag, or the Ctrl+X keyboard twin. */
+  readonly trigger: OgeTreeMoveSource;
+  /** The originating DOM event, when there is one. */
+  readonly event?: Event;
+  /** Set to `true` to keep this node in place. */
+  cancel: boolean;
+}
+
+/**
+ * Cancelable: fires on the tree under the pointer each time a dragged node
+ * reaches another drop spot (row or position) — set `cancel` to refuse that
+ * spot, and the indicator does not show. Drops still pass
+ * `itemReordering`.
+ */
+export interface OgeTreeDragOverEvent<T = unknown> {
+  readonly dragKey: RowKey;
+  readonly dragItem: T;
+  readonly dropKey: RowKey;
+  readonly dropItem: T;
+  readonly position: OgeTreeDropPosition;
+  /** Id of the tree the node was dragged from. */
+  readonly sourceTreeId: string;
+  /** Id of the tree under the pointer. */
+  readonly targetTreeId: string;
+  /** Set to `true` to refuse this spot. */
+  cancel: boolean;
+}
+
 export interface OgeTreeReorderingEvent<T = unknown> {
   readonly dragKey: RowKey;
   readonly dragItem: T;
@@ -411,13 +442,16 @@ const DROP_EDGE_FRACTION = 0.25;
  *
  * With `allowInside`, the top and bottom quarters mean `before` / `after` and
  * the middle half means `inside`. Without it the row splits at the midpoint
- * into `before` / `after` only.
+ * into `before` / `after` only. With `allowBetween` off the whole row means
+ * `inside` (`allowDropBetween: false`).
  */
 export function resolveTreeDropPosition(
   clientY: number,
   rect: { top: number; height: number },
   allowInside: boolean,
+  allowBetween = true,
 ): OgeTreeDropPosition {
+  if (!allowBetween) return 'inside';
   const offset = clientY - rect.top;
   if (!allowInside) {
     return offset < rect.height / 2 ? 'before' : 'after';

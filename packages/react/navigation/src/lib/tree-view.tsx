@@ -89,6 +89,8 @@ import {
   type OgeTreeLoadChildren,
   type OgeTreeLoadState,
   type OgeTreeReorderedEvent,
+  type OgeTreeDragOverEvent,
+  type OgeTreeDragStartingEvent,
   type OgeTreeReorderingEvent,
   type OgeTreeSearchMode,
   type OgeTreeSelectAllChangedEvent,
@@ -294,6 +296,12 @@ export interface OgeTreeViewProps<T extends object = Record<string, unknown>> {
   /** Allows dropping *into* a node (reparenting), not just between siblings. */
   allowDropInside?: boolean;
   /**
+   * Allows dropping *between* nodes (before / after a sibling). `false`
+   * leaves only drops into a node — a tree whose order is fixed (sorted by
+   * name, by date) but whose nesting may change. Default `true`.
+   */
+  allowDropBetween?: boolean;
+  /**
    * Trees sharing a group accept each other's nodes — by pointer drag and by
    * the Ctrl+X / Ctrl+V keyboard twin. Both trees need `allowDragging`. The
    * target fires `onItemReordering` / `onItemReordered` (with `sourceTreeId`
@@ -363,6 +371,17 @@ export interface OgeTreeViewProps<T extends object = Record<string, unknown>> {
   onChildrenLoadFailed?: (event: OgeTreeChildrenFailedEvent<T>) => void;
   /** Fires when the "select all" row is toggled. */
   onSelectAllChanged?: (event: OgeTreeSelectAllChangedEvent) => void;
+  /**
+   * Cancelable: a node is about to be moved — by pointer drag or Ctrl+X. Set
+   * `cancel` to keep that node in place (a locked or system node).
+   */
+  onItemDragStarting?: (event: OgeTreeDragStartingEvent<T>) => void;
+  /**
+   * Cancelable: a dragged node reached another drop spot (row or position)
+   * on this tree. Set `cancel` to refuse it — no indicator shows and a drop
+   * there does nothing. Fires once per spot, not per pointer move.
+   */
+  onItemDragOver?: (event: OgeTreeDragOverEvent<T>) => void;
   /** Cancelable pre-event of a drag & drop reparent. */
   onItemReordering?: (event: OgeTreeReorderingEvent<T>) => void;
   /** Fires after a drop passed `onItemReordering`; apply it to your own data. */
@@ -424,6 +443,15 @@ const EMPTY_KEYS: readonly RowKey[] = [];
  * />
  * ```
  */
+/** Where a paste lands by default: inside, unless only between is allowed. */
+function defaultPastePosition(
+  allowInside: boolean,
+  allowBetween: boolean,
+): OgeTreeDropPosition {
+  if (!allowBetween) return 'inside';
+  return allowInside ? 'inside' : 'after';
+}
+
 export const OgeTreeView = forwardRef(function OgeTreeViewRender<
   T extends object,
 >(props: OgeTreeViewProps<T>, ref: React.ForwardedRef<OgeTreeViewHandle>) {
@@ -456,6 +484,7 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     height,
     allowDragging = false,
     allowDropInside = true,
+    allowDropBetween = true,
     dragGroup,
     allowEditing = false,
     editOnDblClick = false,
@@ -648,6 +677,7 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     disabled,
     loadChildren,
     allowDropInside,
+    allowDropBetween,
     allowExpandAll,
     selectOnRowClick,
     expandEvent,
@@ -670,6 +700,7 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
     disabled,
     loadChildren,
     allowDropInside,
+    allowDropBetween,
     allowExpandAll,
     selectOnRowClick,
     expandEvent,
@@ -1094,13 +1125,15 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
       const transfer = planTreeTransferKey(event);
       if (transfer === 'cut') {
         event.preventDefault();
-        ogeTreeCut(peer, node.key);
+        ogeTreeCut(peer, node.key, native);
         return;
       }
       if (transfer !== null) {
         event.preventDefault();
         const position =
-          transfer === 'paste' && view.allowDropInside ? 'inside' : 'after';
+          transfer === 'paste'
+            ? defaultPastePosition(view.allowDropInside, view.allowDropBetween)
+            : 'after';
         ogeTreePaste(peer, node.key, position, native);
         return;
       }
@@ -1472,6 +1505,13 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
         : treeCanDrop(view.index, source.key, dropKey);
     },
     allowDropInside: () => latest.current.allowDropInside,
+    allowDropBetween: () => latest.current.allowDropBetween,
+    emitDragStarting: (event) =>
+      latest.current.props.onItemDragStarting?.(
+        event as OgeTreeDragStartingEvent<T>,
+      ),
+    emitDragOver: (event) =>
+      latest.current.props.onItemDragOver?.(event as OgeTreeDragOverEvent<T>),
     preview: (target) => {
       setDropTargetKey(target?.key ?? null);
       setDropPosition(target?.position ?? null);
@@ -1607,7 +1647,11 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
       return ogeTreePaste(
         peer,
         targetKey,
-        position ?? (latest.current.allowDropInside ? 'inside' : 'after'),
+        position ??
+          defaultPastePosition(
+            latest.current.allowDropInside,
+            latest.current.allowDropBetween,
+          ),
       );
     },
   }));

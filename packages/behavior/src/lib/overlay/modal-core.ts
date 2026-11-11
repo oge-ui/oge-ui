@@ -40,6 +40,23 @@ export interface OgeModalClosingEvent {
   cancel: boolean;
 }
 
+/** What stopped a close the user asked for. */
+export type OgeModalCloseBlocker = 'busy' | 'closing' | 'guard';
+
+/**
+ * Fired when a user's close (Escape, backdrop, ✕, a slot close) did not go
+ * through — say why in the UI ("Saving…", "Unsaved changes").
+ */
+export interface OgeModalCloseBlockedEvent {
+  /** The close that was asked for. */
+  readonly reason: OgeModalCloseReason;
+  /**
+   * `'busy'`: the modal is `busy`; `'closing'`: a `closing` handler
+   * cancelled it; `'guard'`: `closeGuard` refused (or threw).
+   */
+  readonly blockedBy: OgeModalCloseBlocker;
+}
+
 /** Fired after the modal closed. */
 export interface OgeModalClosedEvent<R = unknown> {
   /** What triggered the close. */
@@ -50,9 +67,12 @@ export interface OgeModalClosedEvent<R = unknown> {
 
 /**
  * Initial-focus strategy: the first tabbable element, the panel itself, or a
- * CSS selector resolved inside the panel.
+ * CSS selector resolved inside the panel. `false` (as on `OgeWindow`) moves
+ * focus to the panel and to no control — no on-screen keyboard pops up for a
+ * first text field; focus still enters the dialog, as a modal must.
  */
-export type OgeModalAutoFocus = 'first-tabbable' | 'panel' | (string & {});
+export type OgeModalAutoFocus =
+  'first-tabbable' | 'panel' | false | (string & {});
 
 /**
  * Where the panel sits in the viewport. `start` / `end` are logical — the
@@ -128,6 +148,7 @@ export function resolveModalInitialFocus(
   panel: HTMLElement,
   mode: OgeModalAutoFocus,
 ): HTMLElement {
+  if (mode === false) return panel;
   let target: HTMLElement | null = panel.querySelector('[autofocus]');
   if (!target && mode !== 'first-tabbable' && mode !== 'panel') {
     target = panel.querySelector(mode);

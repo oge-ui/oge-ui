@@ -221,3 +221,43 @@ export const PARTS_SNIPPET = demoSource({
 </div>`,
   body: `protected readonly opened = signal(false);`,
 });
+
+export const GATES_SNIPPET = demoSource({
+  use: { '@oge-ui/buttons': ['OgeButton'] },
+  helpers: { '@oge-ui/overlay': ['OgeModalService'] },
+  template: `<oge-button text="Delete project…" severity="danger" (clicked)="remove()" />`,
+  body: `private readonly modals = inject(OgeModalService);
+
+// OK stays disabled until the name is typed exactly and the box is ticked
+protected async remove(): Promise<void> {
+  const ok = await this.modals.confirm({
+    title: 'Delete project?',
+    message: 'acme-web and everything in it will be deleted.',
+    details: ['128 files', '3 shared links', '2 deploy hooks'],
+    typeToConfirm: 'acme-web',
+    acknowledgeLabel: 'I understand this cannot be undone',
+    severity: 'danger',
+    okText: 'Delete project',
+  });
+  if (ok) console.log('deleted');
+}`,
+});
+
+export const LOADING_SNIPPET = demoSource({
+  use: { '@oge-ui/overlay': ['OgeModal'] },
+  types: { '@oge-ui/overlay': ['OgeModalCloseBlockedEvent'] },
+  template: `<!-- loading veils the body but closes still work; busy blocks them -->
+<oge-modal title="Order details" [(opened)]="open"
+           [loading]="loading()" [busy]="saving()" [autoFocus]="false"
+           (closeBlocked)="explain($event)">
+  …
+</oge-modal>`,
+  body: `protected readonly open = signal(false);
+protected readonly loading = signal(false);
+protected readonly saving = signal(false);
+
+protected explain(event: OgeModalCloseBlockedEvent): void {
+  // 'busy' | 'closing' | 'guard'
+  console.log(\`\${event.reason} close blocked by \${event.blockedBy}\`);
+}`,
+});

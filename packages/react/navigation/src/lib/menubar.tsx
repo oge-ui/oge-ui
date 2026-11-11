@@ -1067,6 +1067,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
                   key={d.id}
                   className={[
                     'oge-menubar-item',
+                    d.item.cssClass,
                     isActive(d.item) && 'oge-menubar-item-active',
                     renderHidden(i) && 'oge-menubar-item-overflowed',
                   ]
@@ -1095,6 +1096,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
                   type="button"
                   className={[
                     'oge-menubar-item',
+                    d.item.cssClass,
                     isActive(d.item) && 'oge-menubar-item-active',
                     renderHidden(i) && 'oge-menubar-item-overflowed',
                     d.id === OGE_MENUBAR_MORE_KEY && 'oge-menubar-more',

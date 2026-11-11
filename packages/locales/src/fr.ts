@@ -337,6 +337,7 @@ export const fr: OgeLocalePack = {
     dialogAlertTitle: 'Information',
     dialogPromptTitle: 'Saisissez une valeur',
     dialogRequired: 'Ce champ est obligatoire.',
+    dialogTypeToConfirm: 'Saisissez {text} pour confirmer',
     windowMinimize: 'Réduire',
     windowMoved: 'Fenêtre déplacée en {x}, {y}',
     windowResized: 'Fenêtre redimensionnée à {width} × {height}',

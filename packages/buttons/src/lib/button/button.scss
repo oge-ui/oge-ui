@@ -104,7 +104,9 @@
 }
 
 // contained + severity/custom color: solid fill with a subtle elevation
-.oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode) {
+.oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode):not(
+    .oge-button-link-mode
+  ) {
   .oge-button-native {
     border-color: transparent;
     background: var(--oge-btn-main);
@@ -168,6 +170,52 @@
   }
 }
 
+// link: inline link text that stays a <button> — accent by default
+.oge-button-link-mode {
+  &:not(.oge-button-colored) {
+    --oge-btn-main: var(--oge-accent);
+  }
+
+  .oge-button-native {
+    padding-inline: 2px;
+    border-color: transparent;
+    background: transparent;
+    color: var(--oge-btn-main);
+    box-shadow: none;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: from-font;
+
+    &:hover:not(:disabled) {
+      background: transparent;
+      text-decoration-color: currentColor;
+    }
+
+    &:active:not(:disabled) {
+      background: transparent;
+      transform: none;
+    }
+
+    &:focus-visible {
+      border-color: transparent;
+      box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--oge-btn-main) 40%, transparent);
+    }
+  }
+}
+
+// pill: fully rounded ends (a circle when the button is icon-only)
+.oge-button-pill .oge-button-native {
+  border-radius: 999px;
+}
+
+// fluid: the full width of the container
+.oge-button-fluid {
+  display: flex;
+  width: 100%;
+}
+
 // --- sizes ------------------------------------------------------------------
 
 .oge-button-xs {
@@ -212,6 +260,13 @@
   svg {
     display: block;
   }
+}
+
+// an icon-font glyph (iconClass): sized and coloured like the label
+.oge-button-icon-font {
+  display: inline-block;
+  font-size: 1.15em;
+  line-height: 1;
 }
 
 .oge-button-icon-after .oge-button-icon {
@@ -360,7 +415,7 @@
 // Contained severity/custom colour: the fill stays, just darker.
 .oge-button-toggle.oge-button-selected.oge-button-colored:not(
     .oge-button-outlined
-  ):not(.oge-button-text-mode)
+  ):not(.oge-button-text-mode):not(.oge-button-link-mode)
   .oge-button-native {
   border-color: transparent;
   background: color-mix(in srgb, var(--oge-btn-main) 78%, #000 22%);
@@ -406,7 +461,9 @@
   // every mode keeps a visible frame: contained fills vanish under forced
   // colors, the border is what is left of the button
   .oge-button-native,
-  .oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode)
+  .oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode):not(
+      .oge-button-link-mode
+    )
     .oge-button-native {
     border-color: ButtonText;
     color: ButtonText;
@@ -429,7 +486,7 @@
   .oge-button-toggle.oge-button-selected .oge-button-native,
   .oge-button-toggle.oge-button-selected.oge-button-colored:not(
       .oge-button-outlined
-    ):not(.oge-button-text-mode)
+    ):not(.oge-button-text-mode):not(.oge-button-link-mode)
     .oge-button-native {
     border-color: Highlight;
     background: Highlight;

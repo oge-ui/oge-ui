@@ -272,6 +272,43 @@ function CheckBoxesDemo(): ReactNode {
   );
 }
 
+/** allowDropBetween off, a locked node, and refused drop spots. */
+function RulesDemo(): ReactNode {
+  const [rows, setRows] = useState<readonly Folder[]>([
+    { id: 1, parentId: null, name: 'Projects' },
+    { id: 2, parentId: 1, name: 'Website' },
+    { id: 3, parentId: 2, name: 'brief.pdf' },
+    { id: 4, parentId: null, name: 'Shared' },
+    { id: 5, parentId: null, name: 'System' },
+    { id: 6, parentId: 5, name: 'config.json' },
+  ]);
+  const isFile = (name: string) => name.includes('.');
+  return createElement(FolderTree, {
+    className: 'demo-tree-rules',
+    items: rows,
+    displayExpr: 'name',
+    rootValue: null,
+    allowDragging: true,
+    allowDropBetween: false,
+    defaultExpandedKeys: [1, 2, 5],
+    onItemDragStarting: (event) => {
+      if (event.item.name === 'System') event.cancel = true;
+    },
+    onItemDragOver: (event) => {
+      if (isFile(event.dropItem.name)) event.cancel = true;
+    },
+    onItemReordered: (event) =>
+      setRows((current) =>
+        current.map((row) =>
+          row.id === event.dragKey
+            ? { ...row, parentId: event.dropKey as number }
+            : row,
+        ),
+      ),
+    height: '220px',
+  });
+}
+
 function DragDemo(): ReactNode {
   const [rows, setRows] = useState<readonly Folder[]>(FOLDERS);
   const [lastMove, setLastMove] = useState<string | null>(null);
@@ -566,6 +603,16 @@ function PagingDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['allowDropBetween', 'onItemDragStarting', 'onItemDragOver']"
+      heading="Drag rules"
+      description="Rules for what may move where. <code>allowDropBetween: false</code> keeps a sorted tree sorted: nodes go <em>into</em> folders, never between them. <code>onItemDragStarting</code> keeps the locked <em>System</em> folder in place, and <code>onItemDragOver</code> refuses a spot — files take no children here — so no indicator shows and a drop does nothing. Both are cancelable and also cover the Ctrl+X / Ctrl+V twin."
+      [code]="demos[12].source"
+      language="tsx"
+    >
+      <app-react-host [render]="rules" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['dragGroup', 'onItemTransferred', 'Ctrl+X / Ctrl+V']"
       heading="Drag between trees"
       description="Trees that share a <code>dragGroup</code> accept each other's nodes. The target previews the drop zone and fires the cancelable <code>onItemReordering</code> and <code>onItemReordered</code> with <code>sourceTreeId</code> / <code>targetTreeId</code>; the source fires <code>onItemTransferred</code>. Neither tree moves data. The keyboard twin is Ctrl+X on a node and Ctrl+V on the target (Ctrl+Shift+V places it after), announced through the live region; <code>cutItem()</code> / <code>pasteItem()</code> on the handle wire the same move to buttons."
@@ -622,6 +669,7 @@ export class ReactNavigationTreeViewDemos {
   protected readonly flat = () => createElement(FlatDemo);
   protected readonly checkBoxes = () => createElement(CheckBoxesDemo);
   protected readonly drag = () => createElement(DragDemo);
+  protected readonly rules = () => createElement(RulesDemo);
   protected readonly between = () => createElement(BetweenDemo);
   protected readonly editing = () => createElement(EditingDemo);
   protected readonly paging = () => createElement(PagingDemo);

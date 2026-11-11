@@ -188,6 +188,48 @@ export function OgeDialogContent({
               )}
             </div>
           )}
+          {Array.isArray(dialog.details) ? (
+            <ul className="oge-dialog-details" id={`${id}-details`}>
+              {(dialog.details as readonly string[]).map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          ) : dialog.details ? (
+            <p className="oge-dialog-details" id={`${id}-details`}>
+              {dialog.details as string}
+            </p>
+          ) : null}
+          {dialog.typeToConfirm && (
+            <div className="oge-dialog-field">
+              <label className="oge-dialog-label" htmlFor={`${id}-input`}>
+                {dialog.typeToConfirm.label}
+              </label>
+              <input
+                ref={field}
+                className="oge-dialog-input oge-dialog-type-confirm"
+                id={`${id}-input`}
+                type="text"
+                autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                value={core.typed()}
+                onChange={(event) => core.typed.set(event.target.value)}
+              />
+            </div>
+          )}
+          {dialog.acknowledgeLabel && (
+            <label className="oge-dialog-acknowledge">
+              <input
+                type="checkbox"
+                className="oge-dialog-checkbox"
+                checked={core.acknowledged()}
+                onChange={(event) =>
+                  core.acknowledged.set(event.target.checked)
+                }
+              />
+              <span>{dialog.acknowledgeLabel}</span>
+            </label>
+          )}
         </div>
       </div>
       <div className="oge-dialog-actions">
@@ -209,7 +251,7 @@ export function OgeDialogContent({
           ]
             .filter(Boolean)
             .join(' ')}
-          aria-disabled={core.pending() || undefined}
+          aria-disabled={core.pending() || !core.accepts() || undefined}
           onClick={submit}
         >
           {dialog.okText}

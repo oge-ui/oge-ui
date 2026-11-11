@@ -7,6 +7,32 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Component hardening — buttons, menus, modal, confirm, tree view (both layers)
+
+- Button: `stylingMode: 'link'`, `shape: 'pill'`, `fluid`, `loadingText` (the label
+  while `loading`), `iconClass` (an icon-font glyph without projected markup) and
+  `pressed` — a host-controlled pressed state that renders `aria-pressed` and never
+  flips on click. New `OgeButtonShape` type.
+- `OgeMenuItem`: `visible: false` leaves a row out at any depth (stranded separators
+  go with it; event indexes count the rows shown) and `cssClass` styles one row —
+  in every menu built on the menu list, the menubar's bar items included. `hint`
+  and `severity: 'danger'` already cover the tooltip and the destructive look.
+  Shared `ogeShownMenuItems` in `@oge-ui/behavior`.
+- Modal: `loading` (spinner veil and `aria-busy` while closes still work — `busy`
+  keeps blocking them), `closeBlocked` / `onCloseBlocked` with
+  `{ reason, blockedBy: 'busy' | 'closing' | 'guard' }`, and `autoFocus: false`
+  (focus the panel, no control). Escape with a hidden ✕ was already configurable
+  through `closeOnEscape`; the docs now say so.
+- `confirm()`: `details` (a text or a bullet list), `typeToConfirm` (an exact text
+  to type, labelled by the new `dialogTypeToConfirm` message in all 11 locale
+  packs), `acknowledgeLabel` (a checkbox) and `canAccept(state)`; the primary
+  button stays disabled until every gate passes. Shared `ogeConfirmAccepts` and
+  `ogeDialogDescribedBy`.
+- Tree view: `allowDropBetween` (`false` = drops into nodes only, for sorted
+  trees; the keyboard twin follows it), cancelable `itemDragStarting` /
+  `onItemDragStarting` (pointer and Ctrl+X) and `itemDragOver` /
+  `onItemDragOver` (once per drop spot).
+
 ### Display values, locale sorting, versioned state, rows dragged out — `@oge-ui/core`, `@oge-ui/grid`, `@oge-ui/react-grid`
 
 - Display values: the global search also matches a static lookup column's labels,

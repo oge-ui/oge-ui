@@ -110,6 +110,11 @@ _Behavior_
 | `disabled` | `boolean` | `false` | Disables the button. |
 | `value` | `string` | `—` | Selection key within an enclosing `<OgeButtonGroup>`; also stamped as `data-oge-value` so the group resolves clicks and arrow-selection off the DOM. |
 | `toggle` | `boolean` | `false` | Makes the button a toggle button: each accepted click flips `selected` and the native button renders `aria-pressed`. Ignored inside a `single`/`multiple` `<OgeButtonGroup>`, which owns the selection. |
+| `pressed` | `boolean` | `undefined` | Host-controlled pressed state: renders `aria-pressed` and the pressed look, and a click never flips it (unlike `toggle`) — update it from your own state. |
+| `shape` | `OgeButtonShape` | `'default'` | `'default'` (the theme radius) or `'pill'` (fully rounded ends; circular when icon-only). |
+| `fluid` | `boolean` | `false` | Stretches the button to the full width of its container. |
+| `loadingText` | `string` | `undefined` | Label shown (and announced) while `loading` — _Saving…_ instead of _Save_. |
+| `iconClass` | `string` | `undefined` | Class(es) for a leading icon rendered as an empty `<i>` — the hook for an icon font the app already ships; no `icon` node needed. |
 | `selected` | `boolean` | `—` | Pressed state of a `toggle` button (controlled). Pair with `onSelectedChange`; use `defaultSelected` for an uncontrolled button. |
 | `defaultSelected` | `boolean` | `false` | Initial pressed state of an uncontrolled `toggle` button. |
 | `loading` | `boolean` | `—` | Busy state. Omit it to let the component own the flag while an `action` is pending; pass it to control the flag yourself. |
@@ -153,7 +158,8 @@ _Accessibility_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeButtonSelectedChangeEvent` | `{ selected: boolean; previousValue: boolean; event: MouseEvent \| KeyboardEvent }` | Payload of `onSelectedChange`: the new and the previous pressed state, and the click (or Space/Enter of a gesture) that did it. |
-| `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text'` | Shared with the Angular package via @oge-ui/behavior. |
+| `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text' \| 'link'` | Shared with the Angular package via @oge-ui/behavior. |
+| `OgeButtonShape` | `'default' \| 'pill'` | Corner shape of a button. |
 | `OgeButtonSeverity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Shared with the Angular package via @oge-ui/behavior. |
 | `OgeButtonSize` | `'xs' \| 'sm' \| 'md' \| 'lg'` | Shared with the Angular package via @oge-ui/behavior. |
 | `OgeButtonHandle` | `{ focus(): void }` | Imperative handle exposed through `ref`. |
@@ -719,6 +725,38 @@ export function ToggleButtonDemo() {
       {/* uncontrolled: defaultSelected seeds it, the button keeps the state */}
       <OgeButton text="Pinned" stylingMode="text" toggle defaultSelected />
       <OgeButton text="Locked" toggle selected disabled />
+    </div>
+  );
+}
+```
+
+### Link, pill, fluid and pressed
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+
+export function ButtonShapesDemo() {
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [saving, setSaving] = useState(false);
+
+  const save = () => {
+    setSaving(true);
+    setTimeout(() => setSaving(false), 1200);
+  };
+  return (
+    <div className="demo-row">
+      <OgeButton text="Read the guide" stylingMode="link" />
+      <OgeButton text="Pill" shape="pill" severity="accent" />
+      {/* an icon font the app ships, no icon node */}
+      <OgeButton text="Print" iconClass="fa-solid fa-print" />
+      <OgeButton text="Save" loadingText="Saving…" loading={saving} onClick={save} />
+      {/* pressed: the page owns the state; a click reports, it never flips by itself */}
+      <OgeButton text="Grid" pressed={view === 'grid'} onClick={() => setView('grid')} />
+      <OgeButton text="List" pressed={view === 'list'} onClick={() => setView('list')} />
+      <OgeButton text="Continue" severity="accent" fluid />
     </div>
   );
 }

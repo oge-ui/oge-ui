@@ -303,4 +303,55 @@ const tokens = { '--oge-modal-radius': '18px', '--oge-modal-body-padding': '24px
 </div>`,
     }),
   },
+  {
+    title: 'Irreversible actions',
+    source: reactDemoSource({
+      use: {
+        '@oge-ui/react-buttons': ['OgeButton'],
+        '@oge-ui/react-overlay': ['useOgeModals'],
+      },
+      name: 'DeleteProject',
+      body: `const modals = useOgeModals();
+
+// OK stays disabled until the name is typed exactly and the box is ticked
+const remove = async () => {
+  const ok = await modals.confirm({
+    title: 'Delete project?',
+    message: 'acme-web and everything in it will be deleted.',
+    details: ['128 files', '3 shared links', '2 deploy hooks'],
+    typeToConfirm: 'acme-web',
+    acknowledgeLabel: 'I understand this cannot be undone',
+    severity: 'danger',
+    okText: 'Delete project',
+  });
+  if (ok) console.log('deleted');
+};`,
+      jsx: `<OgeButton text="Delete project…" severity="danger" onClick={remove} />`,
+    }),
+  },
+  {
+    title: 'Loading and blocked closes',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-overlay': ['OgeModal'] },
+      name: 'OrderDetails',
+      body: `const [open, setOpen] = useState(false);
+// set loading while the body fetches, saving while a request runs
+const [loading] = useState(false);
+const [saving] = useState(false);
+const [why, setWhy] = useState('');`,
+      jsx: `// loading veils the body but closes still work; busy blocks them
+<OgeModal
+  title="Order details"
+  opened={open}
+  onOpenedChange={setOpen}
+  loading={loading}
+  busy={saving}
+  autoFocus={false}
+  onCloseBlocked={(event) => setWhy(event.blockedBy)} // 'busy' | 'closing' | 'guard'
+>
+  {why && <p>Close blocked by: {why}</p>}
+</OgeModal>`,
+    }),
+  },
 ];

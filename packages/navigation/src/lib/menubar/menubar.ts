@@ -181,6 +181,7 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
           } @else if (d.item.url && !d.item.items?.length) {
             <a
               class="oge-menubar-item"
+              [class]="d.item.cssClass ?? ''"
               role="menuitem"
               [class.oge-menubar-item-overflowed]="isHidden(i)"
               [id]="itemDomId(i)"
@@ -206,6 +207,7 @@ type MenubarDescriptor = OgeMenubarDescriptorCore;
             <button
               type="button"
               class="oge-menubar-item"
+              [class]="d.item.cssClass ?? ''"
               role="menuitem"
               [class.oge-menubar-item-overflowed]="isHidden(i)"
               [class.oge-menubar-more]="d.id === moreKey"

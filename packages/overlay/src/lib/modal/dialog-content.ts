@@ -117,6 +117,46 @@ export interface OgeDialogContentData {
             }
           </div>
         }
+        @if (detailList; as items) {
+          <ul class="oge-dialog-details" [id]="data.id + '-details'">
+            @for (item of items; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        } @else if (dialog.details) {
+          <p class="oge-dialog-details" [id]="data.id + '-details'">
+            {{ dialog.details }}
+          </p>
+        }
+        @if (dialog.typeToConfirm; as gate) {
+          <div class="oge-dialog-field">
+            <label class="oge-dialog-label" [for]="data.id + '-input'">{{
+              gate.label
+            }}</label>
+            <input
+              #field
+              class="oge-dialog-input oge-dialog-type-confirm"
+              [id]="data.id + '-input'"
+              type="text"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              [value]="core.typed()"
+              (input)="core.typed.set($any($event.target).value)"
+            />
+          </div>
+        }
+        @if (dialog.acknowledgeLabel; as acknowledge) {
+          <label class="oge-dialog-acknowledge">
+            <input
+              type="checkbox"
+              class="oge-dialog-checkbox"
+              [checked]="core.acknowledged()"
+              (change)="core.acknowledged.set($any($event.target).checked)"
+            />
+            <span>{{ acknowledge }}</span>
+          </label>
+        }
       </div>
     </div>
     <div class="oge-dialog-actions">
@@ -133,7 +173,7 @@ export interface OgeDialogContentData {
         type="button"
         class="oge-dialog-button oge-dialog-ok"
         [class.oge-dialog-button-danger]="dialog.danger"
-        [attr.aria-disabled]="core.pending() || null"
+        [attr.aria-disabled]="core.pending() || !core.accepts() || null"
         (click)="submit()"
       >
         {{ dialog.okText }}
@@ -148,6 +188,10 @@ export class OgeDialogContent {
   protected readonly glyph = OGE_DIALOG_ICONS[this.dialog.severity ?? 'info'];
   protected readonly trianglePath = OGE_DIALOG_TRIANGLE_PATH;
   private readonly field = viewChild<ElementRef<HTMLInputElement>>('field');
+  /** The `details` list, `null` when they are one paragraph (or absent). */
+  protected readonly detailList = Array.isArray(this.dialog.details)
+    ? (this.dialog.details as readonly string[])
+    : null;
 
   protected submit(): void {
     this.core.submit();

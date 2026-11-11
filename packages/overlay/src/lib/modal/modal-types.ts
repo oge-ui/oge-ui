@@ -5,6 +5,8 @@ export type {
   OgeModalCloseReason,
   OgeModalOpeningEvent,
   OgeModalResizeEvent,
+  OgeModalCloseBlockedEvent,
+  OgeModalCloseBlocker,
   OgeModalClosingEvent,
   OgeModalClosedEvent,
   OgeModalAutoFocus,

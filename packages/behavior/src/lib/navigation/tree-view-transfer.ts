@@ -34,6 +34,8 @@ import {
   type OgeTreeDropPosition,
   type OgeTreeMoveSource,
   type OgeTreeReorderedEvent,
+  type OgeTreeDragOverEvent,
+  type OgeTreeDragStartingEvent,
   type OgeTreeReorderingEvent,
   type OgeTreeTransferredEvent,
   type OgeTreeViewResolvedMessages,
@@ -84,6 +86,12 @@ export interface OgeTreeDragPeer {
   canDrop(source: OgeTreeDragSource, dropKey: RowKey): boolean;
   /** Whether `inside` drops are allowed (`allowDropInside`). */
   allowDropInside(): boolean;
+  /** Whether `before` / `after` drops are allowed (`allowDropBetween`). */
+  allowDropBetween(): boolean;
+  /** Fire the cancelable `itemDragStarting` on this tree (the source). */
+  emitDragStarting(event: OgeTreeDragStartingEvent<unknown>): void;
+  /** Fire the cancelable `itemDragOver` on this tree (under the pointer). */
+  emitDragOver(event: OgeTreeDragOverEvent<unknown>): void;
   /** Draw (`target`) or clear (`null`) this tree's drop indicator. */
   preview(target: OgeTreeDragTarget | null): void;
   /** Expands a node — the hover-to-expand while dragging. */
@@ -186,10 +194,13 @@ export function ogeTreeLocateDrop(
     if (dataKey === null) return null;
     const row = peer.rowInfo(dataKey);
     if (!row || !peer.canDrop(source, row.key)) return null;
+    const inside = peer.allowDropInside();
+    const between = peer.allowDropBetween();
+    if (!inside && !between) return null;
     return {
       treeId: peer.treeId(),
       key: row.key,
-      position: resolveTreeDropPosition(clientY, rect, peer.allowDropInside()),
+      position: resolveTreeDropPosition(clientY, rect, inside, between),
       row,
     };
   }
@@ -239,6 +250,14 @@ export function ogeTreeCommitMove(input: {
   announce?: boolean;
 }): boolean {
   const { source, target, dragKey, dropKey, position } = input;
+  // the target's drop rules hold for every trigger, keyboard twin included
+  if (
+    position === 'inside'
+      ? !target.allowDropInside()
+      : !target.allowDropBetween()
+  ) {
+    return false;
+  }
   const dragItem = source.itemOf(dragKey);
   const dropItem = target.itemOf(dropKey);
   if (dragItem === undefined || dropItem === undefined) return false;
@@ -312,9 +331,15 @@ export function ogeTreeHasCut(peer: OgeTreeDragPeer): boolean {
 }
 
 /** Ctrl+X: marks `key` as the node the next paste in the group moves. */
-export function ogeTreeCut(peer: OgeTreeDragPeer, key: RowKey): boolean {
+export function ogeTreeCut(
+  peer: OgeTreeDragPeer,
+  key: RowKey,
+  event?: Event,
+): boolean {
   const source = ogeTreeDragSourceOf(peer, key);
-  if (!source) return false;
+  if (!source || !ogeTreeDragStarting(peer, source, 'keyboard', event)) {
+    return false;
+  }
   const group = peer.group();
   const previous = clipboards.get(group);
   if (previous) peerById(group, previous.treeId)?.setCut(null);
@@ -382,6 +407,27 @@ export function ogeTreePaste(
   });
 }
 
+/**
+ * Fires the source tree's cancelable `itemDragStarting`; `false` when the
+ * handler kept the node in place.
+ */
+export function ogeTreeDragStarting(
+  peer: OgeTreeDragPeer,
+  source: OgeTreeDragSource,
+  trigger: OgeTreeMoveSource,
+  event?: Event,
+): boolean {
+  const starting: OgeTreeDragStartingEvent<unknown> = {
+    key: source.key,
+    item: source.item,
+    trigger,
+    event,
+    cancel: false,
+  };
+  peer.emitDragStarting(starting);
+  return !starting.cancel;
+}
+
 // --- pointer session ---------------------------------------------------------
 
 /** Options of {@link beginOgeTreeDrag}. */
@@ -418,7 +464,36 @@ export function beginOgeTreeDrag(
 ): OgePointerGestureHandle | null {
   const self = options.peer;
   const source = ogeTreeDragSourceOf(self, options.key);
-  if (!source) return null;
+  if (
+    !source ||
+    !ogeTreeDragStarting(self, source, 'pointer', event as unknown as Event)
+  ) {
+    return null;
+  }
+  // itemDragOver asks once per spot, not once per pointer move
+  let overSpot = '';
+  let overAllowed = true;
+  const allowedAt = (
+    peer: OgeTreeDragPeer,
+    target: OgeTreeDragTarget,
+  ): boolean => {
+    const spot = `${target.treeId}\u0000${String(target.key)}\u0000${target.position}`;
+    if (spot === overSpot) return overAllowed;
+    overSpot = spot;
+    const over: OgeTreeDragOverEvent<unknown> = {
+      dragKey: source.key,
+      dragItem: source.item,
+      dropKey: target.key,
+      dropItem: peer.itemOf(target.key),
+      position: target.position,
+      sourceTreeId: source.treeId,
+      targetTreeId: target.treeId,
+      cancel: false,
+    };
+    peer.emitDragOver(over);
+    overAllowed = !over.cancel;
+    return overAllowed;
+  };
   let shown: OgeTreeDragPeer | null = null;
   let hoverKey: RowKey | null = null;
   let hoverTreeId: string | null = null;
@@ -468,7 +543,7 @@ export function beginOgeTreeDrag(
       const peer = ogeTreeDragPeerAt(self, hit);
       if (!peer) return null;
       const target = ogeTreeLocateDrop(peer, source, moveEvent.clientY);
-      return target ? { peer, target } : null;
+      return target && allowedAt(peer, target) ? { peer, target } : null;
     },
     onStart: () => options.onStart?.(),
     onOver(spot) {

@@ -333,6 +333,7 @@ export const ja: OgeLocalePack = {
     dialogAlertTitle: 'お知らせ',
     dialogPromptTitle: '値を入力してください',
     dialogRequired: 'この項目は必須です。',
+    dialogTypeToConfirm: '確認のため {text} と入力してください',
     windowMinimize: '最小化',
     windowMoved: 'ウィンドウを {x}, {y} に移動しました',
     windowResized: 'ウィンドウのサイズを {width} × {height} に変更しました',

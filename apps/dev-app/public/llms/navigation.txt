@@ -93,7 +93,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/navigation`
 
 - values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_PAGINATION_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeDrawerItemTemplate`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgePagination`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgePaginationConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
-- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerItem`, `OgeDrawerItemClickEvent`, `OgeDrawerItemTemplateContext`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeDrawerSelectionChangedEvent`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemOverflow`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarOverflowMode`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeAllowEditing`, `OgeTreeCheckBoxesMode`, `OgeTreeChildPageEvent`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeEditStartingEvent`, `OgeTreeEditValidator`, `OgeTreeEditedEvent`, `OgeTreeEditingEvent`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemContextMenuEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeMoveSource`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeTransferredEvent`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerItem`, `OgeDrawerItemClickEvent`, `OgeDrawerItemTemplateContext`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeDrawerSelectionChangedEvent`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemOverflow`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarOverflowMode`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeAllowEditing`, `OgeTreeCheckBoxesMode`, `OgeTreeChildPageEvent`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDragOverEvent`, `OgeTreeDragStartingEvent`, `OgeTreeDropPosition`, `OgeTreeEditStartingEvent`, `OgeTreeEditValidator`, `OgeTreeEditedEvent`, `OgeTreeEditingEvent`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemContextMenuEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeMoveSource`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeTransferredEvent`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
 
 ## API reference
 
@@ -164,6 +164,7 @@ _Lazy loading, virtualization & drag_
 | `height` | `string \| undefined` | `—` | Height of the scroll container (any CSS length) — required for virtual scrolling to have a viewport. |
 | `allowDragging` | `boolean` | `false` | Enables pointer drag reordering. |
 | `allowDropInside` | `boolean` | `true` | Allows dropping *into* a node (reparenting), not just between siblings. |
+| `allowDropBetween` | `boolean` | `true` | Allows dropping _between_ nodes (before / after a sibling). `false` leaves only drops into a node — a tree whose order is fixed (sorted by name) but whose nesting may change. The keyboard twin follows it too. |
 | `dragGroup` | `string \| undefined` | `—` | Trees sharing a group accept each other's nodes — by pointer drag and by the Ctrl+X / Ctrl+V keyboard twin. Both trees need `allowDragging`. The target fires `itemReordering` / `itemReordered` (with `sourceTreeId` / `targetTreeId`), the source `itemTransferred`; neither moves data. |
 | `childPageSize` | `number \| undefined` | `—` | Children rendered per parent (roots included) before a "Load more" row — Kendo's node page size. `aria-setsize` keeps reporting the real total. `0` / unset renders every child. Paging pauses while searching. |
 
@@ -220,6 +221,8 @@ _Presentation_
 | `itemContextMenu` | `OgeTreeItemContextMenuEvent<T>` | Right-click, touch long-press, or the Menu key / Shift+F10 on the focused item — the grid’s `rowContextMenu` model. Carries `key`, `item`, `clientX/Y` (the pointer, or the item’s start/bottom corner from the keyboard), a mutable `items: OgeMenuItem[]`, `source` (`'pointer'` \| `'touch'` \| `'keyboard'`) and the originating `event`. Push items and the tree opens its own menu there — labelled by the item, focus back on the item when it closes; leave it empty and the browser menu stays. Filler and “load more” rows and a label being edited keep the native menu. |
 | `childrenLoaded / childrenLoadFailed` | `OgeTreeChildrenLoadedEvent<T> / OgeTreeChildrenFailedEvent<T>` | Emitted after a lazy `loadChildren` settled; the failure carries the original error. |
 | `selectAllChanged` | `OgeTreeSelectAllChangedEvent` | Emitted when the "select all" row is toggled. |
+| `itemDragStarting` | `OgeTreeDragStartingEvent<T>` | Cancelable: a node is about to be moved, by pointer drag or Ctrl+X (`trigger`). Set `cancel` to keep a locked or system node in place. |
+| `itemDragOver` | `OgeTreeDragOverEvent<T>` | Cancelable: a dragged node reached another drop spot (row or `position`) on this tree — set `cancel` to refuse it; no indicator shows and a drop there does nothing. Fires once per spot, not per pointer move. |
 | `itemReordering / itemReordered` | `OgeTreeReorderingEvent<T> / OgeTreeReorderedEvent<T>` | Cancelable pre-event and result of a move onto this tree, carrying `position: 'inside' \| 'before' \| 'after'`, `sourceTreeId` / `targetTreeId` (different for a drop from another tree of the `dragGroup`) and `trigger: 'pointer' \| 'keyboard' \| 'api'`. The tree does not mutate your data. |
 | `itemTransferred` | `OgeTreeTransferredEvent<T>` | Fired by the source tree after one of its nodes moved to another tree of the same `dragGroup` — remove it from this tree's data. |
 | `itemEditStarting` | `OgeTreeEditStartingEvent<T>` | Cancelable pre-event of the label editor opening, with the current `value`. |
@@ -2037,6 +2040,67 @@ export class Demo {
 
   protected pageShown(e: OgeTreeChildPageEvent<Folder>): void {
     this.progress.set(`${e.shown} of ${e.total} shown`);
+  }
+}
+```
+
+### Rules
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { OgeTreeDragOverEvent, OgeTreeDragStartingEvent, OgeTreeReorderedEvent } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- a sorted tree: nodes go into folders, never between them -->
+    <oge-tree-view
+      [items]="folders()"
+      displayExpr="name"
+      [allowDragging]="true"
+      [allowDropBetween]="false"
+      (itemDragStarting)="keepSystem($event)"
+      (itemDragOver)="noFileTargets($event)"
+      (itemReordered)="move($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly folders = signal<Folder[]>([
+    { id: 1, parentId: null, name: 'Projects' },
+    { id: 2, parentId: 1, name: 'Website' },
+    { id: 3, parentId: 2, name: 'brief.pdf' },
+    { id: 4, parentId: null, name: 'Shared' },
+    { id: 5, parentId: null, name: 'System' },
+    { id: 6, parentId: 5, name: 'config.json' },
+  ]);
+
+  // a locked node never starts moving (pointer or Ctrl+X)
+  protected keepSystem(event: OgeTreeDragStartingEvent<Folder>): void {
+    if (event.item.name === 'System') event.cancel = true;
+  }
+
+  // refuse a spot: files take no children
+  protected noFileTargets(event: OgeTreeDragOverEvent<Folder>): void {
+    if (event.dropItem.name.includes('.')) event.cancel = true;
+  }
+
+  protected move(event: OgeTreeReorderedEvent<Folder>): void {
+    this.folders.update((rows) =>
+      rows.map((row) =>
+        row.id === event.dragKey ? { ...row, parentId: event.dropKey as number } : row,
+      ),
+    );
   }
 }
 ```

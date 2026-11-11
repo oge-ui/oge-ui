@@ -18,6 +18,7 @@ import {
   COLOR_SNIPPET,
   ICON_SNIPPET,
   SIZES_SNIPPET,
+  SHAPES_SNIPPET,
   TOGGLE_SNIPPET,
   VARIANTS_SNIPPET,
 } from './overview-snippets';
@@ -265,6 +266,47 @@ const SECTIONS = [
         </p>
       </app-demo-card>
 
+      <app-demo-card
+        [chips]="[
+          'stylingMode: link',
+          'shape: pill',
+          'fluid',
+          'loadingText',
+          'iconClass',
+          'pressed',
+        ]"
+        heading="Link, pill, fluid and pressed"
+        description='<code>stylingMode="link"</code> looks like inline link text and stays a button; <code>shape="pill"</code> rounds the ends; <code>fluid</code> fills the row. <code>loadingText</code> replaces the label while <code>loading</code>, and <code>iconClass</code> draws an icon-font glyph without projected markup. <code>pressed</code> is a pressed state the page owns: the view switch below sets it from its own state — a click reports, it never flips by itself.'
+        [code]="shapesSnippet"
+        language="ts"
+      >
+        <div class="flex flex-col gap-3" data-testid="shapes-demo">
+          <div class="flex flex-wrap items-center gap-4">
+            <oge-button text="Read the guide" stylingMode="link" />
+            <oge-button text="Pill" shape="pill" severity="accent" />
+            <oge-button
+              text="Save"
+              loadingText="Saving…"
+              [loading]="saving()"
+              (clicked)="save()"
+            />
+            <span role="group" aria-label="View" class="flex gap-1">
+              <oge-button
+                text="Grid"
+                [pressed]="view() === 'grid'"
+                (clicked)="view.set('grid')"
+              />
+              <oge-button
+                text="List"
+                [pressed]="view() === 'list'"
+                (clicked)="view.set('list')"
+              />
+            </span>
+          </div>
+          <oge-button text="Continue" severity="accent" [fluid]="true" />
+        </div>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -299,6 +341,14 @@ export class ButtonsOverviewPage {
   protected readonly colorSnippet = COLOR_SNIPPET;
   protected readonly badgeSnippet = BADGE_SNIPPET;
   protected readonly toggleSnippet = TOGGLE_SNIPPET;
+  protected readonly shapesSnippet = SHAPES_SNIPPET;
+  protected readonly view = signal<'grid' | 'list'>('grid');
+  protected readonly saving = signal(false);
+
+  protected save(): void {
+    this.saving.set(true);
+    setTimeout(() => this.saving.set(false), 1200);
+  }
 
   protected readonly bold = signal(true);
   protected readonly italic = signal(false);

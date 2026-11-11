@@ -93,7 +93,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/overlay`
 
 - values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverContent`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeWindow`, `applyMenuItemCheck`, `claimOverlayEscape`, `getTabbableElements`, `isOverlayEscapeClaimed`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
-- types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
+- types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseBlockedEvent`, `OgeModalCloseBlocker`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
 
 `@oge-ui/overlay/testing`
 
@@ -125,7 +125,7 @@ _Content slots (structural directives)_
 | `dialogRole` | `OgeModalRole` | `'dialog'` | ARIA role of the panel; `'alertdialog'` for urgent confirmations (APG alert dialog) — what `confirm()` / `alert()` use. |
 | `ariaDescribedBy` | `string \| undefined` | `—` | Id(s) of the element(s) describing the dialog — wired to `aria-describedby`. |
 | `shading` | `boolean` | `true` | Dims the page behind the modal. `false` keeps the backdrop transparent while staying fully modal. |
-| `showCloseButton` | `boolean` | `true` | Shows the header ✕ button. |
+| `showCloseButton` | `boolean` | `true` | Shows the header ✕ button. Hiding it leaves Escape working — set `closeOnEscape` to `false` as well for a dialog the user must answer. |
 | `showMaximizeButton` | `boolean` | `false` | Shows a maximize/restore toggle in the header, driving `fullScreen`. |
 | `dragEnabled` | `boolean` | `false` | Lets the user drag the panel by its header (viewport-clamped unless `dragOutsideBoundary`). |
 | `dragOutsideBoundary` | `boolean` | `false` | Allows dragging the panel beyond the viewport edges. |
@@ -135,10 +135,11 @@ _Content slots (structural directives)_
 | `closeOnEscape` | `boolean` | `true` | Escape closes the modal when it is the topmost overlay (popups inside close first). |
 | `closeOnBackdropClick` | `boolean` | `true` | A click that starts _and_ ends on the backdrop closes the modal — a text-selection drag released outside never does. |
 | `scrollLock` | `boolean` | `true` | Locks body scroll while open (scrollbar-width compensated, ref-counted across stacked modals). |
-| `autoFocus` | `OgeModalAutoFocus` | `'first-tabbable'` | Initial focus target; an `[autofocus]` element inside the panel always wins. |
+| `autoFocus` | `OgeModalAutoFocus` | `'first-tabbable'` | Initial focus target; an `[autofocus]` element inside the panel always wins. `false` (as on the window) focuses the panel itself and no control — no on-screen keyboard pops up for a first text field. |
 | `restoreFocus` | `boolean` | `true` | Restores focus to the opener on close — only when focus would otherwise be lost. |
 | `padding` | `boolean` | `true` | `false` makes the body flush for grids and custom layouts. |
 | `busy` | `boolean` | `false` | Spinner veil + `aria-busy`; user-initiated closes are blocked, programmatic `close()` still works. |
+| `loading` | `boolean` | `false` | Spinner veil and `aria-busy` over the body while content loads — unlike `busy`, closes still work. |
 | `closeGuard` | `() => boolean \| Promise<boolean> \| undefined` | `—` | Veto hook run before every pipeline close; may be async (single-flight — see `closePending`). A rejected promise vetoes with a dev warning. |
 | `messages` | `Partial<OgeOverlayMessages> \| undefined` | `—` | Per-instance message overrides. |
 | `panelClass` | `OgeClassValue \| undefined` | `—` | Extra classes on the dialog panel, next to `oge-modal` (string, array or `{ name: boolean }`). |
@@ -164,6 +165,7 @@ _Content slots (structural directives)_
 | --- | --- | --- |
 | `opening` | `OgeModalOpeningEvent` | Cancelable: fires before the modal opens (any open path). Set `cancel = true` to keep it closed. |
 | `closing` | `OgeModalClosingEvent` | Cancelable: fires before any pipeline close (Escape, backdrop, ✕, `close()`). Set `cancel = true` to keep the modal open. |
+| `closeBlocked` | `OgeModalCloseBlockedEvent` | A close did not go through — `{ reason, blockedBy: 'busy' \| 'closing' \| 'guard' }` says why, so the UI can explain it ("Saving…", "Unsaved changes"). |
 | `closed` | `OgeModalClosedEvent<R>` | Fires after the modal closed, with the reason and the optional result. |
 | `resizeStarted / resized` | `OgeModalResizeEvent` | Fire when a resize gesture starts (starting size) and ends (final size). |
 
@@ -200,7 +202,7 @@ _Content slots (structural directives)_
 | `OgeModalOpenConfig<D>` | `object` | The declarative inputs minus slots (`title`, sizing, `placement`, `closeGuard`, …) plus `data?: D`, made available to the content via `OGE_MODAL_DATA`. Part styling: `panelClass`, `backdropClass`, `bodyClass`, `bodyStyle`, `panelAttributes` (as on the modal). |
 | `OgeModalRef<R>` | `{ close(result?: R): void; closed: Promise<OgeModalClosedEvent<R>> }` | Handle of a service-opened modal; content components can inject it to close themselves with a result. |
 | `OGE_MODAL_DATA` | `InjectionToken<unknown>` | The `config.data` payload, injectable in the content component. |
-| `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width?; panelClass?; backdropClass?; panelAttributes? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, a `TemplateRef` replaces it; `width` defaults to 400. |
+| `OgeConfirmOptions` | `{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; details?; typeToConfirm?; acknowledgeLabel?; canAccept?; width?; panelClass?; backdropClass?; panelAttributes? }` | Options of `confirm()`. `title` defaults to the localized `dialogConfirmTitle`, `okText` / `cancelText` to `dialogOk` / `dialogCancel`; `icon`: `false` hides the severity icon, a `TemplateRef` replaces it; `width` defaults to 400. Gates of an irreversible action: `details` (a text, or a list shown as bullets), `typeToConfirm` (text the user must type exactly; the field is labelled by the localized `dialogTypeToConfirm`), `acknowledgeLabel` (a checkbox to tick) and `canAccept(state)` (your own rule) — the primary button stays disabled until all pass. |
 | `OgeAlertOptions` | `{ title?; message?; severity?; icon?; okText?; width?; panelClass?; backdropClass?; panelAttributes? }` | Options of `alert()` (no Cancel button; the title defaults to `dialogAlertTitle`). Every dialog helper also takes the modal part options `panelClass`, `backdropClass` and `panelAttributes` (filtered; the dialog keeps its own `role`). |
 | `OgePromptOptions` | `OgeConfirmOptions & { defaultValue?; placeholder?; label?; inputType?; required?; validate? }` | Options of `prompt()`: the field’s initial text, placeholder, visible label (without one the field is labelled by the message or title), native type, the required rule (`dialogRequired` message) and the custom validator; the title defaults to `dialogPromptTitle`. |
 | `OgeDialogSeverity` | `'info' \| 'success' \| 'warning' \| 'danger'` | Tone of a helper dialog — picks the built-in icon and its colour. |
@@ -584,7 +586,8 @@ _Template reference (exportAs: 'ogeTooltip')_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; type?: OgeMenuItemType; checked?; group?: string; keepOpen?: boolean; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite. `separator: true` ignores every other field. `type` picks the row kind: `'checkbox'` renders `menuitemcheckbox` and `'radio'` `menuitemradio`, both with `aria-checked` from `checked` (a check mark / an accent dot); radios of one `group` render inside a `role="group"`, and checking one unchecks the rest of the group (see `applyMenuItemCheck`). `'header'` is a non-focusable caption that labels the rows after it — up to the next separator or header — as a `role="group"`; the arrow keys and type-ahead skip it. The menu never mutates `checked`: the item-click event carries the next state. Space toggles a `checkbox`/`radio` row without closing the menu (APG); `keepOpen` keeps the menu open on any activation. Without `type` the historical rule holds: a defined `checked` renders `menuitemcheckbox`. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. `url` renders the row as a real `<a href>` with `role="menuitem"` — keyboard activation clicks the link, so `preventDefault()` in `itemClick` hands navigation to a router exactly like a pointer click. `badge` renders a trailing counter pill; `shortcut` renders a right-aligned accelerator hint and is announced via `aria-keyshortcuts` (display only — the application owns the binding). `items` makes the row a **submenu parent** (trailing chevron, `aria-haspopup="menu"`, `aria-expanded`): activation or ArrowRight opens a nested `oge-menu-list`, hover opens after a dwell, and `checked`/`action`/`url` are ignored on it. |
+| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; visible?; cssClass?; type?: OgeMenuItemType; checked?; group?: string; keepOpen?: boolean; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite. `separator: true` ignores every other field. `type` picks the row kind: `'checkbox'` renders `menuitemcheckbox` and `'radio'` `menuitemradio`, both with `aria-checked` from `checked` (a check mark / an accent dot); radios of one `group` render inside a `role="group"`, and checking one unchecks the rest of the group (see `applyMenuItemCheck`). `'header'` is a non-focusable caption that labels the rows after it — up to the next separator or header — as a `role="group"`; the arrow keys and type-ahead skip it. The menu never mutates `checked`: the item-click event carries the next state. Space toggles a `checkbox`/`radio` row without closing the menu (APG); `keepOpen` keeps the menu open on any activation. Without `type` the historical rule holds: a defined `checked` renders `menuitemcheckbox`. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. `url` renders the row as a real `<a href>` with `role="menuitem"` — keyboard activation clicks the link, so `preventDefault()` in `itemClick` hands navigation to a router exactly like a pointer click. `badge` renders a trailing counter pill; `shortcut` renders a right-aligned accelerator hint and is announced via `aria-keyshortcuts` (display only — the application owns the binding). `items` makes the row a **submenu parent** (trailing chevron, `aria-haspopup="menu"`, `aria-expanded`): activation or ArrowRight opens a nested `oge-menu-list`, hover opens after a dwell, and `checked`/`action`/`url` are ignored on it. |
+| `OgeMenuItem.visible / cssClass` | `boolean / string` | `visible: false` leaves a row out (no array filtering) — separators it strands are dropped, and event indexes count the rows shown. `cssClass` adds classes to one row. `hint` is the native tooltip, e.g. why a row is disabled; `severity: 'danger'` marks a destructive one. |
 | `OgeMenuItemType` | `'normal' \| 'checkbox' \| 'radio' \| 'header'` | Row kind of an `OgeMenuItem`: a command, a `menuitemcheckbox`, a `menuitemradio` (grouped by `group`) or a non-focusable section caption. |
 | `applyMenuItemCheck` | `(items: readonly I[], target: OgeMenuItem) => readonly I[]` | Returns `items` with the activation of `target` applied — immutably and at any depth: a checkbox toggles, a radio becomes checked and every other radio of its `group` on the same level is unchecked. Untouched rows keep their references; pass the item the click event carried. Framework-free (`@oge-ui/behavior`), re-exported here. |
 | `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
@@ -1085,6 +1088,40 @@ export class Demo {
 }
 ```
 
+### Gates
+
+```ts
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+import { OgeModalService } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Delete project…" severity="danger" (clicked)="remove()" />
+  `,
+})
+export class Demo {
+  private readonly modals = inject(OgeModalService);
+
+  // OK stays disabled until the name is typed exactly and the box is ticked
+  protected async remove(): Promise<void> {
+    const ok = await this.modals.confirm({
+      title: 'Delete project?',
+      message: 'acme-web and everything in it will be deleted.',
+      details: ['128 files', '3 shared links', '2 deploy hooks'],
+      typeToConfirm: 'acme-web',
+      acknowledgeLabel: 'I understand this cannot be undone',
+      severity: 'danger',
+      okText: 'Delete project',
+    });
+    if (ok) console.log('deleted');
+  }
+}
+```
+
 ### Guard
 
 ```ts
@@ -1109,6 +1146,38 @@ export class Demo {
   // may be async: the modal stays open until the promise resolves
   protected readonly confirmDiscard = (): boolean =>
     !this.dirty() || confirm('Discard unsaved changes?');
+}
+```
+
+### Loading
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeModal } from '@oge-ui/overlay';
+import type { OgeModalCloseBlockedEvent } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeModal],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- loading veils the body but closes still work; busy blocks them -->
+    <oge-modal title="Order details" [(opened)]="open"
+               [loading]="loading()" [busy]="saving()" [autoFocus]="false"
+               (closeBlocked)="explain($event)">
+      …
+    </oge-modal>
+  `,
+})
+export class Demo {
+  protected readonly open = signal(false);
+  protected readonly loading = signal(false);
+  protected readonly saving = signal(false);
+
+  protected explain(event: OgeModalCloseBlockedEvent): void {
+    // 'busy' | 'closing' | 'guard'
+    console.log(`${event.reason} close blocked by ${event.blockedBy}`);
+  }
 }
 ```
 

@@ -69,9 +69,15 @@ export const OGE_MENU_LIST_API: ApiSections = {
       entries: [
         {
           name: 'OgeMenuItem&lt;T&gt;',
-          type: '{ text: string; value?: T; hint?; disabled?; type?: OgeMenuItemType; checked?; group?: string; keepOpen?: boolean; icon?; iconClass?; severity?; separator?; action?: () =&gt; void; url?; badge?; shortcut?; items?: readonly OgeMenuItem&lt;T&gt;[] }',
+          type: '{ text: string; value?: T; hint?; disabled?; visible?; cssClass?; type?: OgeMenuItemType; checked?; group?: string; keepOpen?: boolean; icon?; iconClass?; severity?; separator?; action?: () =&gt; void; url?; badge?; shortcut?; items?: readonly OgeMenuItem&lt;T&gt;[] }',
           description:
             'Canonical menu item of the suite. <code>separator: true</code> ignores every other field. <code>type</code> picks the row kind: <code>\'checkbox\'</code> renders <code>menuitemcheckbox</code> and <code>\'radio\'</code> <code>menuitemradio</code>, both with <code>aria-checked</code> from <code>checked</code> (a check mark / an accent dot); radios of one <code>group</code> render inside a <code>role="group"</code>, and checking one unchecks the rest of the group (see <code>applyMenuItemCheck</code>). <code>\'header\'</code> is a non-focusable caption that labels the rows after it — up to the next separator or header — as a <code>role="group"</code>; the arrow keys and type-ahead skip it. The menu never mutates <code>checked</code>: the item-click event carries the next state. Space toggles a <code>checkbox</code>/<code>radio</code> row without closing the menu (APG); <code>keepOpen</code> keeps the menu open on any activation. Without <code>type</code> the historical rule holds: a defined <code>checked</code> renders <code>menuitemcheckbox</code>. <code>icon</code> takes SVG path data and <code>iconClass</code> hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. <code>url</code> renders the row as a real <code>&lt;a href&gt;</code> with <code>role="menuitem"</code> — keyboard activation clicks the link, so <code>preventDefault()</code> in <code>itemClick</code> hands navigation to a router exactly like a pointer click. <code>badge</code> renders a trailing counter pill; <code>shortcut</code> renders a right-aligned accelerator hint and is announced via <code>aria-keyshortcuts</code> (display only — the application owns the binding). <code>items</code> makes the row a <strong>submenu parent</strong> (trailing chevron, <code>aria-haspopup="menu"</code>, <code>aria-expanded</code>): activation or ArrowRight opens a nested <code>oge-menu-list</code>, hover opens after a dwell, and <code>checked</code>/<code>action</code>/<code>url</code> are ignored on it.',
+        },
+        {
+          name: 'OgeMenuItem.visible / cssClass',
+          type: 'boolean / string',
+          description:
+            "<code>visible: false</code> leaves a row out (no array filtering) — separators it strands are dropped, and event indexes count the rows shown. <code>cssClass</code> adds classes to one row. <code>hint</code> is the native tooltip, e.g. why a row is disabled; <code>severity: 'danger'</code> marks a destructive one.",
         },
         {
           name: 'OgeMenuItemType',
@@ -669,7 +675,8 @@ export const OGE_MODAL_API: ApiSections = {
           name: 'showCloseButton',
           type: 'boolean',
           default: 'true',
-          description: 'Shows the header ✕ button.',
+          description:
+            'Shows the header ✕ button. Hiding it leaves Escape working — set <code>closeOnEscape</code> to <code>false</code> as well for a dialog the user must answer.',
         },
         {
           name: 'showMaximizeButton',
@@ -737,7 +744,7 @@ export const OGE_MODAL_API: ApiSections = {
           type: 'OgeModalAutoFocus',
           default: "'first-tabbable'",
           description:
-            'Initial focus target; an <code>[autofocus]</code> element inside the panel always wins.',
+            'Initial focus target; an <code>[autofocus]</code> element inside the panel always wins. <code>false</code> (as on the window) focuses the panel itself and no control — no on-screen keyboard pops up for a first text field.',
         },
         {
           name: 'restoreFocus',
@@ -759,6 +766,13 @@ export const OGE_MODAL_API: ApiSections = {
           default: 'false',
           description:
             'Spinner veil + <code>aria-busy</code>; user-initiated closes are blocked, programmatic <code>close()</code> still works.',
+        },
+        {
+          name: 'loading',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Spinner veil and <code>aria-busy</code> over the body while content loads — unlike <code>busy</code>, closes still work.',
         },
         {
           name: 'closeGuard',
@@ -849,6 +863,12 @@ export const OGE_MODAL_API: ApiSections = {
           type: 'OgeModalClosingEvent',
           description:
             'Cancelable: fires before any pipeline close (Escape, backdrop, ✕, <code>close()</code>). Set <code>cancel = true</code> to keep the modal open.',
+        },
+        {
+          name: 'closeBlocked',
+          type: 'OgeModalCloseBlockedEvent',
+          description:
+            "A close did not go through — <code>{ reason, blockedBy: 'busy' | 'closing' | 'guard' }</code> says why, so the UI can explain it (\"Saving…\", \"Unsaved changes\").",
         },
         {
           name: 'closed',
@@ -982,9 +1002,9 @@ export const OGE_MODAL_SERVICE_API: ApiSections = {
         },
         {
           name: 'OgeConfirmOptions',
-          type: '{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; width?; panelClass?; backdropClass?; panelAttributes? }',
+          type: '{ title?; message?; severity?; icon?; okText?; cancelText?; danger?; details?; typeToConfirm?; acknowledgeLabel?; canAccept?; width?; panelClass?; backdropClass?; panelAttributes? }',
           description:
-            'Options of <code>confirm()</code>. <code>title</code> defaults to the localized <code>dialogConfirmTitle</code>, <code>okText</code> / <code>cancelText</code> to <code>dialogOk</code> / <code>dialogCancel</code>; <code>icon</code>: <code>false</code> hides the severity icon, a <code>TemplateRef</code> replaces it; <code>width</code> defaults to 400.',
+            'Options of <code>confirm()</code>. <code>title</code> defaults to the localized <code>dialogConfirmTitle</code>, <code>okText</code> / <code>cancelText</code> to <code>dialogOk</code> / <code>dialogCancel</code>; <code>icon</code>: <code>false</code> hides the severity icon, a <code>TemplateRef</code> replaces it; <code>width</code> defaults to 400. Gates of an irreversible action: <code>details</code> (a text, or a list shown as bullets), <code>typeToConfirm</code> (text the user must type exactly; the field is labelled by the localized <code>dialogTypeToConfirm</code>), <code>acknowledgeLabel</code> (a checkbox to tick) and <code>canAccept(state)</code> (your own rule) — the primary button stays disabled until all pass.',
         },
         {
           name: 'OgeAlertOptions',

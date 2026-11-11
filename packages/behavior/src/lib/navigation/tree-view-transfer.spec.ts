@@ -52,6 +52,12 @@ function fakeTree(
     cancel?: boolean;
     parentOf?: Record<number, number>;
     register?: boolean;
+    between?: boolean;
+    inside?: boolean;
+    /** Refuse `itemDragStarting` for these keys. */
+    lockedKeys?: number[];
+    /** Refuse `itemDragOver` on these drop keys. */
+    refuseOver?: number[];
   } = {},
 ): FakeTree {
   const host = document.createElement('div');
@@ -116,7 +122,18 @@ function fakeTree(
       source.treeId !== id ||
       (source.key !== dropKey &&
         !ancestors(Number(dropKey)).includes(Number(source.key))),
-    allowDropInside: () => true,
+    allowDropInside: () => options.inside ?? true,
+    allowDropBetween: () => options.between ?? true,
+    emitDragStarting: (event) => {
+      tree.events.push({ kind: 'dragStarting', payload: { ...event } });
+      if (options.lockedKeys?.includes(Number(event.key))) event.cancel = true;
+    },
+    emitDragOver: (event) => {
+      tree.events.push({ kind: 'dragOver', payload: { ...event } });
+      if (options.refuseOver?.includes(Number(event.dropKey))) {
+        event.cancel = true;
+      }
+    },
     preview: (target) => tree.previews.push(target),
     expand: (key) => tree.expanded.push(key),
     setCut: (key) => (tree.cut = key),
@@ -309,7 +326,10 @@ describe('keyboard twin', () => {
       sourceTreeId: 'a',
       targetTreeId: 'b',
     });
-    expect(a.events.map((e) => e.kind)).toEqual(['transferred']);
+    expect(a.events.map((e) => e.kind)).toEqual([
+      'dragStarting',
+      'transferred',
+    ]);
   });
 
   it('keeps the cut and announces when the target cannot take it', () => {
@@ -374,8 +394,15 @@ describe('beginOgeTreeDrag', () => {
     expect(onStart).toHaveBeenCalled();
     expect(b.previews.at(-1)).toMatchObject({ key: 8, position: 'inside' });
     pointer(b.rows[1], 'pointerup', 130);
-    expect(b.events.map((e) => e.kind)).toEqual(['reordering', 'reordered']);
-    expect(a.events.map((e) => e.kind)).toEqual(['transferred']);
+    expect(b.events.map((e) => e.kind)).toEqual([
+      'dragOver',
+      'reordering',
+      'reordered',
+    ]);
+    expect(a.events.map((e) => e.kind)).toEqual([
+      'dragStarting',
+      'transferred',
+    ]);
     expect(b.previews.at(-1)).toBeNull();
   });
 
@@ -409,7 +436,7 @@ describe('beginOgeTreeDrag', () => {
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
     );
     pointer(a.rows[0], 'pointerup', 10);
-    expect(a.events).toEqual([]);
+    expect(a.events.map((e) => e.kind)).toEqual(['dragStarting', 'dragOver']);
     expect(a.previews.at(-1)).toBeNull();
   });
 
@@ -430,6 +457,66 @@ describe('beginOgeTreeDrag', () => {
         key: 42,
         row: null,
       }),
+    ).toBeNull();
+  });
+});
+
+describe('drag rules (itemDragStarting, itemDragOver, allowDropBetween)', () => {
+  it('a cancelled itemDragStarting keeps the node in place', () => {
+    const a = fakeTree('a', [1, 2], { lockedKeys: [2] });
+    expect(ogeTreeCut(a.peer, 2)).toBe(false);
+    expect(a.cut).toBeNull();
+    const down = new MouseEvent('pointerdown', { clientX: 10, clientY: 30 });
+    Object.defineProperty(down, 'pointerId', { value: 1 });
+    Object.defineProperty(down, 'target', { value: a.rows[1] });
+    expect(
+      beginOgeTreeDrag(down as unknown as PointerEvent, {
+        peer: a.peer,
+        key: 2,
+        row: a.rows[1],
+      }),
+    ).toBeNull();
+    expect(a.events[0]).toMatchObject({
+      kind: 'dragStarting',
+      payload: { key: 2, trigger: 'keyboard' },
+    });
+  });
+
+  it('asks itemDragOver once per spot and honours a refusal', () => {
+    const a = fakeTree('a', [1, 2, 3], { refuseOver: [1] });
+    startDrag(a, 1, 30);
+    pointer(a.rows[0], 'pointermove', 10); // refused
+    pointer(a.rows[0], 'pointermove', 11); // same spot: not asked again
+    expect(
+      a.previews.some((t) => (t as { key?: number } | null)?.key === 1),
+    ).toBe(false);
+    pointer(a.rows[2], 'pointermove', 50);
+    expect(a.previews.at(-1)).toMatchObject({ key: 3, position: 'inside' });
+    pointer(a.rows[2], 'pointerup', 50);
+    const kinds = a.events.map((e) => e.kind);
+    expect(kinds.filter((k) => k === 'dragOver')).toHaveLength(2);
+    expect(kinds.slice(-2)).toEqual(['reordering', 'reordered']);
+  });
+
+  it('allowDropBetween: false turns every spot into inside', () => {
+    const a = fakeTree('a', [1, 2, 3], { between: false });
+    startDrag(a, 1, 30);
+    pointer(a.rows[0], 'pointermove', 1); // the top edge would be "before"
+    expect(a.previews.at(-1)).toMatchObject({ key: 1, position: 'inside' });
+    pointer(a.rows[0], 'pointerup', 1);
+    // the keyboard twin cannot drop between either
+    expect(ogeTreeCut(a.peer, 3)).toBe(true);
+    expect(ogeTreePaste(a.peer, 1, 'after')).toBe(false);
+  });
+
+  it('no drop spot at all when both kinds are off', () => {
+    const a = fakeTree('a', [1, 2], { between: false, inside: false });
+    expect(
+      ogeTreeLocateDrop(
+        a.peer,
+        { treeId: 'a', key: 2, item: {}, text: '' },
+        10,
+      ),
     ).toBeNull();
   });
 });

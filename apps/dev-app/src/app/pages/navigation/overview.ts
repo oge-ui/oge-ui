@@ -10,6 +10,8 @@ import {
   type OgeTreeChildPageEvent,
   type OgeTreeEditedEvent,
   type OgeTreeItemContextMenuEvent,
+  type OgeTreeDragOverEvent,
+  type OgeTreeDragStartingEvent,
   type OgeTreeReorderedEvent,
   type OgeTreeSelectionChangedEvent,
   type OgeTreeTransferredEvent,
@@ -26,6 +28,7 @@ import {
   BETWEEN_SNIPPET,
   CHECK_SNIPPET,
   DND_SNIPPET,
+  RULES_SNIPPET,
   EDITING_SNIPPET,
   CONTEXT_MENU_SNIPPET,
   PAGING_SNIPPET,
@@ -350,6 +353,28 @@ const MANY: Folder[] = Array.from({ length: 10000 }, (_, i) => ({
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['allowDropBetween', 'itemDragStarting', 'itemDragOver']"
+        heading="Drag rules"
+        description="Rules for what may move where. <code>allowDropBetween: false</code> keeps a sorted tree sorted: nodes go <em>into</em> folders, never between them. <code>itemDragStarting</code> keeps the locked <em>System</em> folder in place, and <code>itemDragOver</code> refuses a spot — files take no children here — so no indicator shows and a drop does nothing. Both are cancelable and also cover the Ctrl+X / Ctrl+V twin."
+        [code]="rulesSnippet"
+        language="ts"
+      >
+        <oge-tree-view
+          class="demo-tree-rules"
+          [items]="ruled()"
+          displayExpr="name"
+          [rootValue]="null"
+          [allowDragging]="true"
+          [allowDropBetween]="false"
+          [expandedKeys]="[1, 2, 5]"
+          (itemDragStarting)="keepSystem($event)"
+          (itemDragOver)="noFileTargets($event)"
+          (itemReordered)="moveRuled($event)"
+          height="220px"
+        />
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['dragGroup', 'itemTransferred', 'Ctrl+X / Ctrl+V']"
         heading="Drag between trees"
         description="Trees that share a <code>dragGroup</code> accept each other's nodes. The target previews the drop zone and fires the cancelable <code>itemReordering</code> and <code>itemReordered</code> with <code>sourceTreeId</code> / <code>targetTreeId</code>; the source fires <code>itemTransferred</code>. Neither tree moves data. The keyboard twin is Ctrl+X on a node and Ctrl+V on the target (Ctrl+Shift+V places it after), announced through the live region; <code>cutItem()</code> / <code>pasteItem()</code> wire the same move to buttons."
@@ -510,6 +535,34 @@ export class NavigationOverviewPage {
   protected readonly lazySnippet = LAZY_SNIPPET;
   protected readonly virtualSnippet = VIRTUAL_SNIPPET;
   protected readonly dndSnippet = DND_SNIPPET;
+  protected readonly rulesSnippet = RULES_SNIPPET;
+  protected readonly ruled = signal<readonly Folder[]>([
+    { id: 1, parentId: null, name: 'Projects' },
+    { id: 2, parentId: 1, name: 'Website' },
+    { id: 3, parentId: 2, name: 'brief.pdf' },
+    { id: 4, parentId: null, name: 'Shared' },
+    { id: 5, parentId: null, name: 'System' },
+    { id: 6, parentId: 5, name: 'config.json' },
+  ]);
+
+  protected keepSystem(event: OgeTreeDragStartingEvent<Folder>): void {
+    if (event.item.name === 'System') event.cancel = true;
+  }
+
+  protected noFileTargets(event: OgeTreeDragOverEvent<Folder>): void {
+    if (((name: string) => name.includes('.'))(event.dropItem.name))
+      event.cancel = true;
+  }
+
+  protected moveRuled(event: OgeTreeReorderedEvent<Folder>): void {
+    this.ruled.update((rows) =>
+      rows.map((row) =>
+        row.id === event.dragKey
+          ? { ...row, parentId: event.dropKey as number }
+          : row,
+      ),
+    );
+  }
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly betweenSnippet = BETWEEN_SNIPPET;
   protected readonly editingSnippet = EDITING_SNIPPET;

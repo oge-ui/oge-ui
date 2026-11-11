@@ -126,6 +126,40 @@
   font-size: 0.88em;
 }
 
+// what a confirm's action will do: a paragraph or a bullet list
+.oge-dialog-details {
+  margin: 0;
+  color: var(--oge-input-muted);
+  font-size: 0.92em;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+ul.oge-dialog-details {
+  padding-inline-start: 1.25em;
+}
+
+// the "I understand" gate of an irreversible confirm
+.oge-dialog-acknowledge {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.oge-dialog-checkbox {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--oge-accent);
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
 .oge-dialog-actions {
   display: flex;
   flex-wrap: wrap;

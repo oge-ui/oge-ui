@@ -334,6 +334,7 @@ export const ar: OgeLocalePack = {
     dialogAlertTitle: 'تنبيه',
     dialogPromptTitle: 'أدخل قيمة',
     dialogRequired: 'هذا الحقل مطلوب.',
+    dialogTypeToConfirm: 'اكتب {text} للتأكيد',
     windowMinimize: 'تصغير',
     windowMoved: 'تم نقل النافذة إلى {x}، {y}',
     windowResized: 'تم تغيير حجم النافذة إلى {width} × {height}',

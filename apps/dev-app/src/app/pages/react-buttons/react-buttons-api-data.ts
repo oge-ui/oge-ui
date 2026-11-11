@@ -99,6 +99,41 @@ export const OGE_REACT_BUTTON_API: ApiSections = {
             'Makes the button a toggle button: each accepted click flips <code>selected</code> and the native button renders <code>aria-pressed</code>. Ignored inside a <code>single</code>/<code>multiple</code> <code>&lt;OgeButtonGroup&gt;</code>, which owns the selection.',
         },
         {
+          name: 'pressed',
+          type: 'boolean',
+          default: 'undefined',
+          description:
+            'Host-controlled pressed state: renders <code>aria-pressed</code> and the pressed look, and a click never flips it (unlike <code>toggle</code>) — update it from your own state.',
+        },
+        {
+          name: 'shape',
+          type: 'OgeButtonShape',
+          default: "'default'",
+          description:
+            "<code>'default'</code> (the theme radius) or <code>'pill'</code> (fully rounded ends; circular when icon-only).",
+        },
+        {
+          name: 'fluid',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Stretches the button to the full width of its container.',
+        },
+        {
+          name: 'loadingText',
+          type: 'string',
+          default: 'undefined',
+          description:
+            'Label shown (and announced) while <code>loading</code> — <em>Saving…</em> instead of <em>Save</em>.',
+        },
+        {
+          name: 'iconClass',
+          type: 'string',
+          default: 'undefined',
+          description:
+            'Class(es) for a leading icon rendered as an empty <code>&lt;i&gt;</code> — the hook for an icon font the app already ships; no <code>icon</code> node needed.',
+        },
+        {
           name: 'selected',
           type: 'boolean',
           description:
@@ -260,8 +295,13 @@ export const OGE_REACT_BUTTON_API: ApiSections = {
         },
         {
           name: 'OgeButtonStylingMode',
-          type: "'contained' | 'outlined' | 'text'",
+          type: "'contained' | 'outlined' | 'text' | 'link'",
           description: 'Shared with the Angular package via @oge-ui/behavior.',
+        },
+        {
+          name: 'OgeButtonShape',
+          type: "'default' | 'pill'",
+          description: 'Corner shape of a button.',
         },
         {
           name: 'OgeButtonSeverity',

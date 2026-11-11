@@ -114,6 +114,8 @@ export type {
   OgeActionSheetResult,
   OgeModalCloseReason,
   OgeModalOpeningEvent,
+  OgeModalCloseBlockedEvent,
+  OgeModalCloseBlocker,
   OgeModalClosingEvent,
   OgeModalClosedEvent,
   OgeModalResizeEvent,

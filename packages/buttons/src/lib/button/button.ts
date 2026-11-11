@@ -35,6 +35,7 @@ import type {
   OgeButtonSelectedChangedEvent,
   OgeButtonSeverity,
   OgeButtonSize,
+  OgeButtonShape,
   OgeButtonStylingMode,
   OgeClickGuardOptions,
   OgeHoldToConfirmOptions,
@@ -70,7 +71,11 @@ import type {
     '[class.oge-button-holding]': 'holding()',
     '[class.oge-button-hold-ready]': 'holdReady()',
     '[class.oge-button-selected]': 'selection().selected',
-    '[class.oge-button-toggle]': 'selection().standaloneToggle',
+    '[class.oge-button-toggle]':
+      'selection().standaloneToggle || pressed() !== undefined',
+    '[class.oge-button-link-mode]': "effectiveStylingMode() === 'link'",
+    '[class.oge-button-pill]': "shape() === 'pill'",
+    '[class.oge-button-fluid]': 'fluid()',
     '[class.oge-button-colored]':
       "effectiveSeverity() !== 'normal' || !!color()",
     '[style.--oge-btn-main]': 'color() ?? null',
@@ -128,13 +133,18 @@ import type {
         >
           <path d="M8 1.5 A 6.5 6.5 0 1 1 1.5 8" />
         </svg>
-        <span class="oge-button-sr">{{ msg().loading }}</span>
+        @if (!loadingText()) {
+          <span class="oge-button-sr">{{ msg().loading }}</span>
+        }
       }
-      <span class="oge-button-icon"
-        ><ng-content select="[ogeButtonIcon]"
+      <span class="oge-button-icon">
+        @if (iconClass(); as icon) {
+          <i class="oge-button-icon-font" [class]="icon" aria-hidden="true"></i>
+        }
+        <ng-content select="[ogeButtonIcon]"
       /></span>
-      @if (text()) {
-        <span class="oge-button-text">{{ text() }}</span>
+      @if (labelText(); as label) {
+        <span class="oge-button-text">{{ label }}</span>
       }
       <ng-content />
       @if (badgeText(); as badgeValue) {
@@ -198,6 +208,16 @@ export class OgeButton {
    * `single`/`multiple` `<oge-button-group>`, which owns the selection.
    */
   readonly toggle = input(false);
+  /** Host-controlled pressed state: renders `aria-pressed` and the pressed look, and a click never flips it (unlike `toggle`) — update it from your own state. */
+  readonly pressed = input<boolean | undefined>(undefined);
+  /** Corner shape: `'default'` (the theme radius) or `'pill'` (fully rounded ends; circular when icon-only). */
+  readonly shape = input<OgeButtonShape>('default');
+  /** Stretches the button to the full width of its container. */
+  readonly fluid = input(false);
+  /** Label shown (and announced) while `loading` — "Saving…" instead of "Save". */
+  readonly loadingText = input<string | undefined>(undefined);
+  /** Class(es) for a leading icon rendered as an empty `<i>` — the hook for an icon font the app already ships; no projected icon needed. */
+  readonly iconClass = input<string | undefined>(undefined);
   /**
    * Pressed state of a `toggle` button — two-way (`[(selected)]`). Unused
    * without `toggle` and inside a selection group.
@@ -291,7 +311,12 @@ export class OgeButton {
       groupSelected: this.group ? this.group.isSelected(this.value()) : false,
       toggle: this.toggle(),
       selected: this.selected(),
+      pressed: this.pressed(),
     }),
+  );
+  /** The visible label: `loadingText` while loading, else `text`. */
+  protected readonly labelText = computed(() =>
+    this.loading() && this.loadingText() ? this.loadingText() : this.text(),
   );
   protected readonly ariaExpandedAttr = computed(() => {
     const expanded = this.ariaExpanded();

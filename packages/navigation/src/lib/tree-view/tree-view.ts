@@ -115,6 +115,8 @@ import type {
   OgeTreeItemTemplateContext,
   OgeTreeLoadChildren,
   OgeTreeReorderedEvent,
+  OgeTreeDragOverEvent,
+  OgeTreeDragStartingEvent,
   OgeTreeReorderingEvent,
   OgeTreeSearchMode,
   OgeTreeSelectAllChangedEvent,
@@ -529,6 +531,12 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   /** Allows dropping *into* a node (reparenting), not just between siblings. */
   readonly allowDropInside = input(true);
   /**
+   * Allows dropping *between* nodes (before / after a sibling). `false`
+   * leaves only drops into a node — a tree whose order is fixed (sorted by
+   * name, by date) but whose nesting may change. Default `true`.
+   */
+  readonly allowDropBetween = input(true);
+  /**
    * Trees sharing a group accept each other's nodes — by pointer drag and by
    * the Ctrl+X / Ctrl+V keyboard twin. Both trees need `allowDragging`. The
    * target fires `itemReordering` / `itemReordered` (with `sourceTreeId` /
@@ -600,6 +608,17 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   readonly childrenLoadFailed = output<OgeTreeChildrenFailedEvent<T>>();
   /** Emitted when the "select all" row is toggled. */
   readonly selectAllChanged = output<OgeTreeSelectAllChangedEvent>();
+  /**
+   * Cancelable: a node is about to be moved — by pointer drag or Ctrl+X. Set
+   * `cancel` to keep that node in place (a locked or system node).
+   */
+  readonly itemDragStarting = output<OgeTreeDragStartingEvent<T>>();
+  /**
+   * Cancelable: a dragged node reached another drop spot (row or position)
+   * on this tree. Set `cancel` to refuse it — no indicator shows and a drop
+   * there does nothing. Fires once per spot, not per pointer move.
+   */
+  readonly itemDragOver = output<OgeTreeDragOverEvent<T>>();
   /** Cancelable pre-event of a drag & drop reparent. */
   readonly itemReordering = output<OgeTreeReorderingEvent<T>>();
   /** Emitted after a drop passed `itemReordering`; apply it to your own data. */
@@ -748,6 +767,11 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
         : treeCanDrop(this.treeIndex(), source.key, dropKey);
     },
     allowDropInside: () => this.allowDropInside(),
+    allowDropBetween: () => this.allowDropBetween(),
+    emitDragStarting: (event) =>
+      this.itemDragStarting.emit(event as OgeTreeDragStartingEvent<T>),
+    emitDragOver: (event) =>
+      this.itemDragOver.emit(event as OgeTreeDragOverEvent<T>),
     preview: (target) => {
       this._dropTargetKey.set(target?.key ?? null);
       this._dropPosition.set(target?.position ?? null);
@@ -1141,8 +1165,14 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     return ogeTreePaste(
       this.peer,
       targetKey,
-      position ?? (this.allowDropInside() ? 'inside' : 'after'),
+      position ?? this.defaultPastePosition(),
     );
+  }
+
+  /** Where a paste lands by default: inside, unless only between is allowed. */
+  private defaultPastePosition(): OgeTreeDropPosition {
+    if (!this.allowDropBetween()) return 'inside';
+    return this.allowDropInside() ? 'inside' : 'after';
   }
 
   // ---- template helpers ----------------------------------------------------
@@ -1353,13 +1383,13 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       const transfer = planTreeTransferKey(event);
       if (transfer === 'cut') {
         event.preventDefault();
-        ogeTreeCut(this.peer, node.key);
+        ogeTreeCut(this.peer, node.key, event);
         return;
       }
       if (transfer !== null) {
         event.preventDefault();
         const position =
-          transfer === 'paste' && this.allowDropInside() ? 'inside' : 'after';
+          transfer === 'paste' ? this.defaultPastePosition() : 'after';
         ogeTreePaste(this.peer, node.key, position, event);
         return;
       }

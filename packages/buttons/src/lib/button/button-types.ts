@@ -3,6 +3,7 @@
 // severities or a different default guard window (ADR 0001). Re-exported here
 // so `@oge-ui/buttons` consumers keep importing them from this package.
 export type {
+  OgeButtonShape,
   OgeButtonStylingMode,
   OgeButtonSeverity,
   OgeButtonSize,

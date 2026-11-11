@@ -1,6 +1,7 @@
 export { OgeButton } from './lib/button/button';
 export { OgeButtonIcon } from './lib/button/button-icon';
 export {
+  type OgeButtonShape,
   type OgeButtonStylingMode,
   type OgeButtonSeverity,
   type OgeButtonSize,

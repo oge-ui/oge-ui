@@ -307,3 +307,51 @@ protected pageShown(e: OgeTreeChildPageEvent<Folder>): void {
   this.progress.set(\`\${e.shown} of \${e.total} shown\`);
 }`,
 });
+
+export const RULES_SNIPPET = demoSource({
+  use: { '@oge-ui/navigation': ['OgeTreeView'] },
+  types: {
+    '@oge-ui/navigation': [
+      'OgeTreeDragOverEvent',
+      'OgeTreeDragStartingEvent',
+      'OgeTreeReorderedEvent',
+    ],
+  },
+  before: FOLDER,
+  template: `<!-- a sorted tree: nodes go into folders, never between them -->
+<oge-tree-view
+  [items]="folders()"
+  displayExpr="name"
+  [allowDragging]="true"
+  [allowDropBetween]="false"
+  (itemDragStarting)="keepSystem($event)"
+  (itemDragOver)="noFileTargets($event)"
+  (itemReordered)="move($event)"
+/>`,
+  body: `protected readonly folders = signal<Folder[]>([
+  { id: 1, parentId: null, name: 'Projects' },
+  { id: 2, parentId: 1, name: 'Website' },
+  { id: 3, parentId: 2, name: 'brief.pdf' },
+  { id: 4, parentId: null, name: 'Shared' },
+  { id: 5, parentId: null, name: 'System' },
+  { id: 6, parentId: 5, name: 'config.json' },
+]);
+
+// a locked node never starts moving (pointer or Ctrl+X)
+protected keepSystem(event: OgeTreeDragStartingEvent<Folder>): void {
+  if (event.item.name === 'System') event.cancel = true;
+}
+
+// refuse a spot: files take no children
+protected noFileTargets(event: OgeTreeDragOverEvent<Folder>): void {
+  if (event.dropItem.name.includes('.')) event.cancel = true;
+}
+
+protected move(event: OgeTreeReorderedEvent<Folder>): void {
+  this.folders.update((rows) =>
+    rows.map((row) =>
+      row.id === event.dragKey ? { ...row, parentId: event.dropKey as number } : row,
+    ),
+  );
+}`,
+});

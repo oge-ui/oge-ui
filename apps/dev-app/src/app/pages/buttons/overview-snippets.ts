@@ -88,3 +88,23 @@ protected log(event: OgeButtonSelectedChangedEvent): void {
   console.log(event.previousValue, '→', event.selected);
 }`,
 });
+
+export const SHAPES_SNIPPET = demoSource({
+  use: { '@oge-ui/buttons': ['OgeButton'] },
+  template: `<oge-button text="Read the guide" stylingMode="link" />
+<oge-button text="Pill" shape="pill" severity="accent" />
+<!-- an icon font the app ships, no projected markup -->
+<oge-button text="Print" iconClass="fa-solid fa-print" />
+<oge-button text="Save" loadingText="Saving…" [loading]="saving()" (clicked)="save()" />
+<!-- pressed: the page owns the state; a click reports, it never flips by itself -->
+<oge-button text="Grid" [pressed]="view() === 'grid'" (clicked)="view.set('grid')" />
+<oge-button text="List" [pressed]="view() === 'list'" (clicked)="view.set('list')" />
+<oge-button text="Continue" severity="accent" [fluid]="true" />`,
+  body: `protected readonly view = signal<'grid' | 'list'>('grid');
+protected readonly saving = signal(false);
+
+protected save(): void {
+  this.saving.set(true);
+  setTimeout(() => this.saving.set(false), 1200);
+}`,
+});

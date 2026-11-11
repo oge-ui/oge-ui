@@ -333,6 +333,7 @@ export const he: OgeLocalePack = {
     dialogAlertTitle: 'הודעה',
     dialogPromptTitle: 'הזינו ערך',
     dialogRequired: 'שדה זה הוא חובה.',
+    dialogTypeToConfirm: 'הקלד {text} לאישור',
     windowMinimize: 'מזעור',
     windowMoved: 'החלון הועבר אל {x}, {y}',
     windowResized: 'גודל החלון שונה ל-{width} × {height}',

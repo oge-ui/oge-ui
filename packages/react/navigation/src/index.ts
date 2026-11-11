@@ -70,6 +70,8 @@ export type {
   OgeTreeChildrenLoadedEvent,
   OgeTreeChildrenFailedEvent,
   OgeTreeSelectAllChangedEvent,
+  OgeTreeDragOverEvent,
+  OgeTreeDragStartingEvent,
   OgeTreeReorderingEvent,
   OgeTreeReorderedEvent,
   OgeTreeViewMessages,

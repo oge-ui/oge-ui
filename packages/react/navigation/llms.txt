@@ -151,6 +151,7 @@ _Lazy loading, virtualization & drag_
 | `height` | `string \| undefined` | `—` | Height of the scroll container (any CSS length) — required for virtual scrolling to have a viewport. |
 | `allowDragging` | `boolean` | `false` | Enables pointer drag reordering. |
 | `allowDropInside` | `boolean` | `true` | Allows dropping *into* a node (reparenting), not just between siblings. |
+| `allowDropBetween` | `boolean` | `true` | Allows dropping _between_ nodes (before / after a sibling). `false` leaves only drops into a node — a tree whose order is fixed (sorted by name) but whose nesting may change. The keyboard twin follows it too. |
 | `dragGroup` | `string \| undefined` | `—` | Trees sharing a group accept each other's nodes — by pointer drag and by the Ctrl+X / Ctrl+V keyboard twin. Both trees need `allowDragging`. The target fires `onItemReordering` / `onItemReordered` (with `sourceTreeId` / `targetTreeId`), the source `onItemTransferred`; neither moves data. |
 | `childPageSize` | `number \| undefined` | `—` | Children rendered per parent (roots included) before a "Load more" row — Kendo's node page size. `aria-setsize` keeps reporting the real total. `0` / unset renders every child. Paging pauses while searching. |
 
@@ -210,6 +211,8 @@ _OgeTreeViewHandle (via ref)_
 | `onItemContextMenu` | `(event: OgeTreeItemContextMenuEvent<T>) => void` | Right-click, touch long-press, or the Menu key / Shift+F10 on the focused item — the grid’s `rowContextMenu` model. Carries `key`, `item`, `clientX/Y` (the pointer, or the item’s start/bottom corner from the keyboard), a mutable `items: OgeMenuItem[]`, `source` (`'pointer'` \| `'touch'` \| `'keyboard'`) and the originating `event`. Push items and the tree opens its own menu there — labelled by the item, focus back on the item when it closes; leave it empty and the browser menu stays. Filler and “load more” rows and a label being edited keep the native menu. |
 | `onChildrenLoaded / onChildrenLoadFailed` | `(event: OgeTreeChildrenLoadedEvent<T>) => void / (event: OgeTreeChildrenFailedEvent<T>) => void` | Called after a lazy `loadChildren` settled; the failure carries the original error. |
 | `onSelectAllChanged` | `(event: OgeTreeSelectAllChangedEvent) => void` | Called when the "select all" row is toggled. |
+| `onItemDragStarting` | `(event: OgeTreeDragStartingEvent<T>) => void` | Cancelable: a node is about to be moved, by pointer drag or Ctrl+X (`trigger`). Set `cancel` to keep a locked or system node in place. |
+| `onItemDragOver` | `(event: OgeTreeDragOverEvent<T>) => void` | Cancelable: a dragged node reached another drop spot (row or `position`) on this tree — set `cancel` to refuse it; no indicator shows and a drop there does nothing. Fires once per spot, not per pointer move. |
 | `onItemReordering / onItemReordered` | `(event: OgeTreeReorderingEvent<T>) => void / (event: OgeTreeReorderedEvent<T>) => void` | Cancelable pre-event and result of a move onto this tree, carrying `position: 'inside' \| 'before' \| 'after'`, `sourceTreeId` / `targetTreeId` (different for a drop from another tree of the `dragGroup`) and `trigger: 'pointer' \| 'keyboard' \| 'api'`. The tree does not mutate your data. |
 | `onItemTransferred` | `(event: OgeTreeTransferredEvent<T>) => void` | Fired by the source tree after one of its nodes moved to another tree of the same `dragGroup` — remove it from this tree's data. |
 | `onItemEditStarting` | `(event: OgeTreeEditStartingEvent<T>) => void` | Cancelable pre-event of the label editor opening, with the current `value`. |
@@ -1783,6 +1786,59 @@ export function TreeContextMenu() {
       <OgeTreeView items={FOLDERS} displayExpr="name" rootValue={null}
         onItemContextMenu={menuFor} />
     </>
+  );
+}
+```
+
+### Drag rules
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeView } from '@oge-ui/react-navigation';
+import type { OgeTreeReorderedEvent } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+export function TreeViewDragRules() {
+  const [folders, setFolders] = useState<Folder[]>([
+    { id: 1, parentId: null, name: 'Projects' },
+    { id: 2, parentId: 1, name: 'Website' },
+    { id: 3, parentId: 2, name: 'brief.pdf' },
+    { id: 4, parentId: null, name: 'Shared' },
+    { id: 5, parentId: null, name: 'System' },
+    { id: 6, parentId: 5, name: 'config.json' },
+  ]);
+
+  const move = (event: OgeTreeReorderedEvent<Folder>): void =>
+    setFolders((rows) =>
+      rows.map((row) =>
+        row.id === event.dragKey ? { ...row, parentId: event.dropKey as number } : row,
+      ),
+    );
+  return (
+    // a sorted tree: nodes go into folders, never between them
+    <OgeTreeView
+      items={folders}
+      displayExpr="name"
+      allowDragging
+      allowDropBetween={false}
+      // a locked node never starts moving (pointer or Ctrl+X)
+      onItemDragStarting={(event) => {
+        if (event.item.name === 'System') event.cancel = true;
+      }}
+      // refuse a spot: files take no children
+      onItemDragOver={(event) => {
+        if (event.dropItem.name.includes('.')) event.cancel = true;
+      }}
+      onItemReordered={move}
+    />
   );
 }
 ```

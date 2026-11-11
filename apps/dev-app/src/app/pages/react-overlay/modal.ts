@@ -372,6 +372,93 @@ function BusyDemo(): ReactNode {
   );
 }
 
+function LoadingDemo(): ReactNode {
+  const [opened, setOpened] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [why, setWhy] = useState('');
+  const open = (): void => {
+    setWhy('');
+    setOpened(true);
+    setLoading(true);
+    setTimeout(() => setLoading(false), 1200);
+  };
+  return createElement(
+    'div',
+    null,
+    outlined('open', 'Open with a lock', open),
+    createElement(
+      OgeModal,
+      {
+        title: 'Order details',
+        opened,
+        onOpenedChange: setOpened,
+        loading,
+        busy: locked,
+        autoFocus: false,
+        onCloseBlocked: (event) => setWhy(event.blockedBy),
+      },
+      createElement(
+        'label',
+        { className: 'flex items-center gap-2' },
+        createElement('input', {
+          type: 'checkbox',
+          checked: locked,
+          // busy blocks every user close; the demo lifts it after two seconds
+          onChange: () => {
+            setLocked(true);
+            setTimeout(() => setLocked(false), 2000);
+          },
+        }),
+        'Lock for 2 seconds (busy)',
+      ),
+      createElement(
+        'p',
+        {
+          className: 'm-0 mt-2 text-sm',
+          'data-testid': 'blocked-why',
+          'aria-live': 'polite',
+        },
+        why ? `Close blocked by: ${why}` : '',
+      ),
+    ),
+  );
+}
+
+function GatesDemo(): ReactNode {
+  const modals = useOgeModals();
+  const [result, setResult] = useState('—');
+  const remove = async (): Promise<void> => {
+    const ok = await modals.confirm({
+      title: 'Delete project?',
+      message: 'acme-web and everything in it will be deleted.',
+      details: ['128 files', '3 shared links', '2 deploy hooks'],
+      typeToConfirm: 'acme-web',
+      acknowledgeLabel: 'I understand this cannot be undone',
+      severity: 'danger',
+      okText: 'Delete project',
+    });
+    setResult(`confirm → ${ok}`);
+  };
+  return row(
+    createElement(OgeButton, {
+      key: 'delete',
+      text: 'Delete project…',
+      severity: 'danger',
+      onClick: () => void remove(),
+    }),
+    createElement(
+      'span',
+      {
+        key: 'result',
+        className: 'text-sm opacity-70',
+        'data-testid': 'gates-result',
+      },
+      `result: ${result}`,
+    ),
+  );
+}
+
 function ResultDemo(): ReactNode {
   const [opened, setOpened] = useState(false);
   const [outcome, setOutcome] = useState('—');
@@ -655,6 +742,26 @@ function PlacementsDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['details', 'typeToConfirm', 'acknowledgeLabel', 'canAccept']"
+      heading="Irreversible actions"
+      description="For an action that cannot be undone, <code>confirm()</code> takes gates: <code>details</code> lists what will go (a text, or bullets), <code>typeToConfirm</code> asks for an exact text — the project name here — and <code>acknowledgeLabel</code> a ticked box; <code>canAccept(state)</code> adds a rule of your own. The primary button stays disabled until every gate passes, the field gets the initial focus, and its label comes from the localized <code>dialogTypeToConfirm</code> message."
+      [code]="demos[10].source"
+      language="tsx"
+    >
+      <app-react-host [render]="gates" />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['loading', 'onCloseBlocked', 'autoFocus: false']"
+      heading="Loading and blocked closes"
+      description="<code>loading</code> veils the body while content arrives but, unlike <code>busy</code>, leaves Escape, the backdrop and ✕ working. When a close does not go through, <code>onCloseBlocked</code> says why — <code>busy</code>, a cancelled <code>closing</code>, or <code>closeGuard</code> — so the page can explain it. <code>autoFocus: false</code> focuses the panel and no control, so no on-screen keyboard pops up for the first field."
+      [code]="demos[11].source"
+      language="tsx"
+    >
+      <app-react-host [render]="loadingDemo" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['placement', 'start / end', 'corners', 'RTL']"
       heading="Placements"
       description='<code>placement</code> pins the panel to the centre, an edge — <code>top</code>, <code>bottom</code>, <code>start</code>, <code>end</code> — or a corner (<code>top-start</code> … <code>bottom-end</code>). <code>start</code> and <code>end</code> are logical: they follow the reading direction, so a <code>dir="rtl"</code> page mirrors them without extra configuration. <code>useOgeModals().open()</code> and the dialog helpers take the same option.'
@@ -696,5 +803,9 @@ export class ReactOverlayModalDemos {
   protected readonly helpers = () =>
     createElement(OgeModalProvider, null, createElement(DialogHelpersDemo));
   protected readonly placements = () => createElement(PlacementsDemo);
+  /** The gates need the provider above them — their own React root. */
+  protected readonly gates = () =>
+    createElement(OgeModalProvider, null, createElement(GatesDemo));
+  protected readonly loadingDemo = () => createElement(LoadingDemo);
   protected readonly parts = () => createElement(PartsDemo);
 }

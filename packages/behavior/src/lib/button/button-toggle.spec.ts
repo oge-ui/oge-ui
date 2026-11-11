@@ -104,3 +104,33 @@ describe('applyButtonToggle', () => {
     ).toBeNull();
   });
 });
+
+describe('pressed (host-controlled)', () => {
+  it('renders aria-pressed and never flips on click', () => {
+    const on = resolveButtonSelectionState({
+      groupSelected: false,
+      toggle: false,
+      selected: false,
+      pressed: true,
+    });
+    expect(on).toMatchObject({ selected: true, ariaPressed: 'true' });
+    expect(applyButtonToggle(on)).toBeNull();
+    const off = resolveButtonSelectionState({
+      groupSelected: false,
+      toggle: true,
+      selected: true,
+      pressed: false,
+    });
+    expect(off).toMatchObject({ selected: false, ariaPressed: 'false' });
+    // a selection group still owns the state
+    expect(
+      resolveButtonSelectionState({
+        groupMode: 'single',
+        groupSelected: true,
+        toggle: false,
+        selected: false,
+        pressed: false,
+      }).ariaChecked,
+    ).toBe('true');
+  });
+});

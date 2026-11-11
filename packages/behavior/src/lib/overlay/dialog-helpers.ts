@@ -8,6 +8,7 @@
 
 import { getOgeLiveAnnouncer } from '../a11y/live-announcer';
 import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
+import { ogeFormatMessage } from '@oge-ui/core';
 import { ogeOverlayMessage, type OgeOverlayMessages } from './overlay-config';
 import type { OgeClassValue } from '../dom/class-value';
 import type { OgeHtmlAttributes } from '../security/safe-attributes';
@@ -65,6 +66,33 @@ export interface OgeConfirmBaseOptions<
   danger?: boolean;
   /** Cancel button text; defaults to the localized `dialogCancel`. */
   cancelText?: string;
+  /**
+   * `confirm()` only: what the action will do, under the message — a text,
+   * or a list (each entry one bullet: "12 files", "3 shared links").
+   */
+  details?: string | readonly string[];
+  /**
+   * `confirm()` only: a text the user must type exactly (a project name,
+   * `DELETE`) before the primary button enables — the gate of an
+   * irreversible action.
+   */
+  typeToConfirm?: string;
+  /**
+   * `confirm()` only: a checkbox the user must tick before the primary
+   * button enables ("I understand this cannot be undone").
+   */
+  acknowledgeLabel?: string;
+  /**
+   * `confirm()` only: decides when the primary button enables, after the
+   * `typeToConfirm` and `acknowledgeLabel` gates passed.
+   */
+  canAccept?: (state: OgeConfirmGateState) => boolean;
+}
+
+/** What the confirm gates read: the typed text and the checkbox. */
+export interface OgeConfirmGateState {
+  readonly typed: string;
+  readonly acknowledged: boolean;
 }
 
 /** Options of `alert()`. */
@@ -108,6 +136,16 @@ export interface OgeResolvedDialog {
   readonly cancelText: string | null;
   readonly initialFocus: OgeDialogInitialFocus;
   readonly width: number | string;
+  /** `confirm()` details: a paragraph, a bullet list, or `null`. */
+  readonly details: string | readonly string[] | null;
+  /** `confirm()` type-to-confirm gate, `null` without one. */
+  readonly typeToConfirm: {
+    readonly text: string;
+    /** The localized field label (`dialogTypeToConfirm`). */
+    readonly label: string;
+  } | null;
+  /** `confirm()` acknowledge checkbox label, `null` without one. */
+  readonly acknowledgeLabel: string | null;
   /** Prompt field settings; `null` for confirm/alert. */
   readonly prompt: {
     readonly defaultValue: string;
@@ -159,8 +197,27 @@ export function resolveOgeDialog<TIcon>(
         : severity
           ? 'builtin'
           : 'none';
+  const confirm = kind === 'confirm';
+  const typeText = confirm ? options.typeToConfirm : undefined;
+  const typeToConfirm = typeText
+    ? {
+        text: typeText,
+        label: ogeFormatMessage(
+          ogeOverlayMessage(messages, 'dialogTypeToConfirm'),
+          { text: typeText },
+        ),
+      }
+    : null;
+  const details =
+    confirm &&
+    options.details !== undefined &&
+    (typeof options.details === 'string'
+      ? options.details.trim() !== ''
+      : options.details.length > 0)
+      ? options.details
+      : null;
   const initialFocus: OgeDialogInitialFocus =
-    kind === 'prompt'
+    kind === 'prompt' || typeToConfirm
       ? 'input'
       : kind === 'confirm' && danger
         ? 'cancel'
@@ -180,6 +237,9 @@ export function resolveOgeDialog<TIcon>(
         : (options.cancelText ?? ogeOverlayMessage(messages, 'dialogCancel')),
     initialFocus,
     width: options.width ?? OGE_DIALOG_DEFAULT_WIDTH,
+    details,
+    typeToConfirm,
+    acknowledgeLabel: (confirm && options.acknowledgeLabel) || null,
     prompt:
       kind === 'prompt'
         ? {
@@ -306,6 +366,25 @@ export interface OgeDialogCoreOptions {
   readonly settle: (outcome: OgeDialogOutcome, value: string) => void;
   /** Announces validation errors; default: the document's shared live announcer. */
   readonly announce?: (message: string) => void;
+  /** `confirm()`'s own gate, run after the typed-text and checkbox gates. */
+  readonly canAccept?: (state: OgeConfirmGateState) => boolean;
+}
+
+/**
+ * Whether a confirm's primary button may run: the typed text matches
+ * `typeToConfirm` exactly, the acknowledge box is ticked, and `canAccept`
+ * agrees. A confirm without gates always may.
+ */
+export function ogeConfirmAccepts(
+  dialog: Pick<OgeResolvedDialog, 'typeToConfirm' | 'acknowledgeLabel'>,
+  state: OgeConfirmGateState,
+  canAccept?: (state: OgeConfirmGateState) => boolean,
+): boolean {
+  if (dialog.typeToConfirm && state.typed !== dialog.typeToConfirm.text) {
+    return false;
+  }
+  if (dialog.acknowledgeLabel && !state.acknowledged) return false;
+  return canAccept ? canAccept(state) : true;
 }
 
 /**
@@ -324,6 +403,12 @@ export class OgeDialogCore {
   readonly error: OgeReactiveCell<string | null>;
   /** `true` while an async validator runs. */
   readonly pending: OgeReactiveCell<boolean>;
+  /** Text typed into a confirm's `typeToConfirm` field. */
+  readonly typed: OgeReactiveCell<string>;
+  /** Whether a confirm's acknowledge box is ticked. */
+  readonly acknowledged: OgeReactiveCell<boolean>;
+  /** Whether the primary button may run (see {@link ogeConfirmAccepts}). */
+  readonly accepts: () => boolean;
 
   private settled = false;
   private attempted = false;
@@ -334,6 +419,17 @@ export class OgeDialogCore {
     this.value = adapter.cell(dialog.prompt?.defaultValue ?? '');
     this.error = adapter.cell<string | null>(null);
     this.pending = adapter.cell(false);
+    this.typed = adapter.cell('');
+    this.acknowledged = adapter.cell(false);
+    this.accepts = adapter.derived(() =>
+      dialog.kind !== 'confirm'
+        ? true
+        : ogeConfirmAccepts(
+            dialog,
+            { typed: this.typed(), acknowledged: this.acknowledged() },
+            options.canAccept,
+          ),
+    );
   }
 
   /** `true` once OK or Cancel ended the dialog. */
@@ -349,7 +445,7 @@ export class OgeDialogCore {
 
   /** The primary action: validates a prompt first, then settles `'ok'`. */
   submit(): void {
-    if (this.settled || this.pending()) return;
+    if (this.settled || this.pending() || !this.accepts()) return;
     if (this.options.dialog.kind !== 'prompt') {
       this.finish('ok');
       return;
@@ -413,4 +509,19 @@ export class OgeDialogCore {
     this.run++;
     this.options.settle(outcome, this.value());
   }
+}
+
+/**
+ * The dialog's `aria-describedby`: its message and its `details`, the ids
+ * both render layers give them (`<id>-message`, `<id>-details`).
+ */
+export function ogeDialogDescribedBy(
+  dialog: Pick<OgeResolvedDialog, 'message' | 'details'>,
+  id: string,
+): string | undefined {
+  const ids = [
+    dialog.message ? `${id}-message` : '',
+    dialog.details ? `${id}-details` : '',
+  ].filter(Boolean);
+  return ids.length ? ids.join(' ') : undefined;
 }

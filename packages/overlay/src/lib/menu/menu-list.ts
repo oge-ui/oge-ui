@@ -26,6 +26,7 @@ import {
   menuItemNextChecked,
   menuItemRole,
   menuItemSegments,
+  ogeShownMenuItems,
   menuMoveIndex,
   menuRetainedActiveIndex,
   ogeIsRtl,
@@ -103,14 +104,14 @@ let nextMenuId = 0;
               role="presentation"
               [id]="itemId(segment.headerIndex)"
             >
-              {{ items()[segment.headerIndex].text }}
+              {{ shown()[segment.headerIndex].text }}
             </div>
           }
           @for (index of segment.indexes; track index) {
             <ng-container
               *ngTemplateOutlet="
                 row;
-                context: { $implicit: items()[index], index: index }
+                context: { $implicit: shown()[index], index: index }
               "
             />
           }
@@ -120,7 +121,7 @@ let nextMenuId = 0;
           <ng-container
             *ngTemplateOutlet="
               row;
-              context: { $implicit: items()[index], index: index }
+              context: { $implicit: shown()[index], index: index }
             "
           />
         }
@@ -132,6 +133,7 @@ let nextMenuId = 0;
       } @else if (item.url && !item.items?.length) {
         <a
           class="oge-menu-item"
+          [class]="item.cssClass ?? ''"
           role="menuitem"
           tabindex="-1"
           [id]="itemId(index)"
@@ -156,6 +158,7 @@ let nextMenuId = 0;
         <button
           type="button"
           class="oge-menu-item"
+          [class]="item.cssClass ?? ''"
           tabindex="-1"
           [id]="itemId(index)"
           [class.oge-menu-item-active]="index === activeIndex()"
@@ -298,6 +301,11 @@ export class OgeMenuList {
   private readonly generatedId = `oge-menu-${nextMenuId++}`;
 
   readonly items = input.required<readonly OgeMenuItem[]>();
+  /**
+   * The rows drawn: `visible: false` items and the separators they strand
+   * left out. Event indexes count these rows.
+   */
+  protected readonly shown = computed(() => ogeShownMenuItems(this.items()));
   /** id of the `role="menu"` element; defaults to a generated unique id. */
   readonly menuId = input<string | undefined>(undefined);
   /** Accessible name of the menu. */
@@ -328,13 +336,13 @@ export class OgeMenuList {
    * single left edge instead of stepping in and out down the menu.
    */
   protected readonly hasIcons = computed(() =>
-    this.items().some(
+    this.shown().some(
       (item) =>
         !item.separator && !isMenuHeader(item) && (item.icon || item.iconClass),
     ),
   );
   /** Header-labelled sections and radio sets, each rendered as a group. */
-  protected readonly segments = computed(() => menuItemSegments(this.items()));
+  protected readonly segments = computed(() => menuItemSegments(this.shown()));
   /**
    * Resets whenever the items themselves change (async reloads etc.) — but
    * survives a same-rows re-render, which is what a kept-open checkbox or
@@ -358,12 +366,12 @@ export class OgeMenuList {
   protected readonly openChildIndex = signal(-1);
   protected readonly childItems = computed<readonly OgeMenuItem[]>(() => {
     const index = this.openChildIndex();
-    return index >= 0 ? (this.items()[index]?.items ?? []) : [];
+    return index >= 0 ? (this.shown()[index]?.items ?? []) : [];
   });
   /** APG: a submenu is named by its parent item. */
   protected readonly childLabel = computed(() => {
     const index = this.openChildIndex();
-    return index >= 0 ? this.items()[index]?.text : undefined;
+    return index >= 0 ? this.shown()[index]?.text : undefined;
   });
 
   private readonly childPopup = viewChild(OgePopup, { read: ElementRef });
@@ -413,7 +421,7 @@ export class OgeMenuList {
   /** Focuses the menu container and activates the first/last enabled item. */
   focus(position: 'first' | 'last' = 'first'): void {
     this.host.nativeElement.focus({ preventScroll: true });
-    const index = menuEdgeIndex(this.items(), position);
+    const index = menuEdgeIndex(this.shown(), position);
     if (index >= 0) this.setActive(index);
   }
 
@@ -516,7 +524,7 @@ export class OgeMenuList {
     const rtl = ogeIsRtl(this.host.nativeElement);
     if (key === (rtl ? 'ArrowLeft' : 'ArrowRight')) {
       const index = this.activeIndex();
-      const item = this.items()[index];
+      const item = this.shown()[index];
       if (item?.items?.length && !item.disabled) {
         event.preventDefault();
         event.stopPropagation();
@@ -545,7 +553,7 @@ export class OgeMenuList {
       event.preventDefault();
       event.stopPropagation();
       const index = menuEdgeIndex(
-        this.items(),
+        this.shown(),
         key === 'Home' ? 'first' : 'last',
       );
       if (index >= 0) this.setActive(index);
@@ -555,7 +563,7 @@ export class OgeMenuList {
       event.preventDefault();
       event.stopPropagation();
       const index = this.activeIndex();
-      const item = this.items()[index];
+      const item = this.shown()[index];
       if (!item) return;
       if (item.url && !item.items?.length && !item.disabled) {
         // Activate the real link, so navigation keeps native anchor
@@ -577,7 +585,7 @@ export class OgeMenuList {
   private typeAhead(key: string): void {
     const index = this.typeAheadMachine.next(
       key,
-      this.items(),
+      this.shown(),
       this.activeIndex(),
       performance.now(),
     );
@@ -625,7 +633,7 @@ export class OgeMenuList {
   }
 
   private move(delta: 1 | -1): void {
-    const next = menuMoveIndex(this.items(), this.activeIndex(), delta);
+    const next = menuMoveIndex(this.shown(), this.activeIndex(), delta);
     if (next >= 0) this.setActive(next);
   }
 

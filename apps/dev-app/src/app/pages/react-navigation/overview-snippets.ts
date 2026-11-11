@@ -398,4 +398,45 @@ function menuFor(e: OgeTreeItemContextMenuEvent<Folder>): void {
 </>`,
     }),
   },
+  {
+    title: 'Drag rules',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-navigation': ['OgeTreeView'] },
+      types: { '@oge-ui/react-navigation': ['OgeTreeReorderedEvent'] },
+      name: 'TreeViewDragRules',
+      before: `${FOLDER}`,
+      body: `const [folders, setFolders] = useState<Folder[]>([
+  { id: 1, parentId: null, name: 'Projects' },
+  { id: 2, parentId: 1, name: 'Website' },
+  { id: 3, parentId: 2, name: 'brief.pdf' },
+  { id: 4, parentId: null, name: 'Shared' },
+  { id: 5, parentId: null, name: 'System' },
+  { id: 6, parentId: 5, name: 'config.json' },
+]);
+
+const move = (event: OgeTreeReorderedEvent<Folder>): void =>
+  setFolders((rows) =>
+    rows.map((row) =>
+      row.id === event.dragKey ? { ...row, parentId: event.dropKey as number } : row,
+    ),
+  );`,
+      jsx: `// a sorted tree: nodes go into folders, never between them
+<OgeTreeView
+  items={folders}
+  displayExpr="name"
+  allowDragging
+  allowDropBetween={false}
+  // a locked node never starts moving (pointer or Ctrl+X)
+  onItemDragStarting={(event) => {
+    if (event.item.name === 'System') event.cancel = true;
+  }}
+  // refuse a spot: files take no children
+  onItemDragOver={(event) => {
+    if (event.dropItem.name.includes('.')) event.cancel = true;
+  }}
+  onItemReordered={move}
+/>`,
+    }),
+  },
 ];

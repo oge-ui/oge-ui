@@ -35,6 +35,11 @@ export interface OgeOverlayMessages {
   dialogPromptTitle?: string;
   /** Error shown when a `required` prompt is submitted empty. */
   dialogRequired?: string;
+  /**
+   * Label of a confirm's `typeToConfirm` field; `{text}` is the text to
+   * type. Optional for older catalogs — filled from English.
+   */
+  dialogTypeToConfirm?: string;
   /** Aria label of a window's minimize button. */
   windowMinimize?: string;
   /** Announced after a keyboard move; `{x}` / `{y}` are the new position in px. */
@@ -66,6 +71,7 @@ export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
   dialogAlertTitle: 'Notice',
   dialogPromptTitle: 'Enter a value',
   dialogRequired: 'This field is required.',
+  dialogTypeToConfirm: 'Type {text} to confirm',
   windowMinimize: 'Minimize',
   windowMoved: 'Window moved to {x}, {y}',
   windowResized: 'Window resized to {width} by {height}',

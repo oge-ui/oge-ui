@@ -12,7 +12,10 @@ export type {
 /** Payload of `OgeMenuList.itemClick`. */
 export interface OgeMenuListItemClickEvent {
   item: OgeMenuItem;
-  /** Index within the `items` input (separators included). */
+  /**
+   * Index among the rows shown (separators included, `visible: false` rows
+   * left out) — the index within `items` when nothing is hidden.
+   */
   index: number;
   /**
    * The checked state the activation moves a checkbox/radio row to (a

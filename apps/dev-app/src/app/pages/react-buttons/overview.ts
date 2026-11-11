@@ -134,6 +134,54 @@ function ToggleDemo(): ReactNode {
  * Angular page, with the same example content, rendered as real React trees
  * inside `/components/buttons` when the reader has chosen React (ADR 0002).
  */
+/** Link, pill, fluid, loading text and a page-owned pressed state. */
+function ShapesDemo() {
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [saving, setSaving] = useState(false);
+  return createElement(
+    'div',
+    { className: 'flex flex-col gap-3' },
+    createElement(
+      'div',
+      { className: 'flex flex-wrap items-center gap-4' },
+      createElement(OgeButton, { text: 'Read the guide', stylingMode: 'link' }),
+      createElement(OgeButton, {
+        text: 'Pill',
+        shape: 'pill',
+        severity: 'accent',
+      }),
+      createElement(OgeButton, {
+        text: 'Save',
+        loadingText: 'Saving…',
+        loading: saving,
+        onClick: () => {
+          setSaving(true);
+          setTimeout(() => setSaving(false), 1200);
+        },
+      }),
+      createElement(
+        'span',
+        { role: 'group', 'aria-label': 'View', className: 'flex gap-1' },
+        createElement(OgeButton, {
+          text: 'Grid',
+          pressed: view === 'grid',
+          onClick: () => setView('grid'),
+        }),
+        createElement(OgeButton, {
+          text: 'List',
+          pressed: view === 'list',
+          onClick: () => setView('list'),
+        }),
+      ),
+    ),
+    createElement(OgeButton, {
+      text: 'Continue',
+      severity: 'accent',
+      fluid: true,
+    }),
+  );
+}
+
 @Component({
   selector: 'app-react-buttons-demos',
   imports: [DemoCard, ReactHost],
@@ -202,12 +250,30 @@ function ToggleDemo(): ReactNode {
     >
       <app-react-host [render]="toggles" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="[
+        'stylingMode: link',
+        'shape: pill',
+        'fluid',
+        'loadingText',
+        'iconClass',
+        'pressed',
+      ]"
+      heading="Link, pill, fluid and pressed"
+      description='<code>stylingMode="link"</code> looks like inline link text and stays a button; <code>shape="pill"</code> rounds the ends; <code>fluid</code> fills the row. <code>loadingText</code> replaces the label while <code>loading</code>, and <code>iconClass</code> draws an icon-font glyph without projected markup. <code>pressed</code> is a pressed state the page owns: the view switch below sets it from its own state — a click reports, it never flips by itself.'
+      [code]="demos[6].source"
+      language="tsx"
+    >
+      <app-react-host data-testid="shapes-demo" [render]="shapes" />
+    </app-demo-card>
   `,
 })
 export class ReactButtonsDemos {
   protected readonly demos = BUTTON_DEMOS;
 
   protected readonly toggles = () => createElement(ToggleDemo);
+  protected readonly shapes = () => createElement(ShapesDemo);
 
   protected readonly severities = () =>
     row(

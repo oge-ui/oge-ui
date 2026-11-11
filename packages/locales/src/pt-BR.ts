@@ -336,6 +336,7 @@ export const ptBR: OgeLocalePack = {
     dialogAlertTitle: 'Aviso',
     dialogPromptTitle: 'Digite um valor',
     dialogRequired: 'Este campo é obrigatório.',
+    dialogTypeToConfirm: 'Digite {text} para confirmar',
     windowMinimize: 'Minimizar',
     windowMoved: 'Janela movida para {x}, {y}',
     windowResized: 'Janela redimensionada para {width} × {height}',

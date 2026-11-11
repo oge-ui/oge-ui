@@ -36,6 +36,8 @@ import {
   type OgeModalAutoFocus,
   type OgeModalClosedEvent,
   type OgeModalCloseReason,
+  type OgeModalCloseBlockedEvent,
+  type OgeModalCloseBlocker,
   type OgeModalClosingEvent,
   type OgeModalOpeningEvent,
   type OgeModalPlacement,
@@ -148,6 +150,8 @@ export interface OgeModalProps<R = unknown> {
   padding?: boolean;
   /** Busy state: spinner veil, `aria-busy`, user-initiated closes blocked. */
   busy?: boolean;
+  /** Loading state: spinner veil and `aria-busy` over the body while content loads — unlike `busy`, closes still work. */
+  loading?: boolean;
   /** Veto hook run before every close in the pipeline; may be async (single-flight). */
   closeGuard?: () => boolean | Promise<boolean>;
   /** Per-instance message overrides (merged over the overlay config). */
@@ -164,6 +168,8 @@ export interface OgeModalProps<R = unknown> {
   onOpening?: (event: OgeModalOpeningEvent) => void;
   /** Cancelable: fires before any pipeline close (escape/backdrop/✕/`close()`). */
   onClosing?: (event: OgeModalClosingEvent) => void;
+  /** Fires when a close did not go through — `blockedBy` says why (`busy`, a cancelled `closing`, or `closeGuard`), so the UI can explain it. */
+  onCloseBlocked?: (event: OgeModalCloseBlockedEvent) => void;
   /** Fires after the modal closed, with reason and optional result. */
   onClosed?: (event: OgeModalClosedEvent<R>) => void;
   /** Fires when a resize gesture starts, with the starting size. */
@@ -228,6 +234,7 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
     resizeEnabled = false,
     padding = true,
     busy = false,
+    loading = false,
     renderTitle,
     renderHeaderActions,
     renderFooter,
@@ -421,14 +428,23 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
   /** Runs the close pipeline for user gestures and `close()`. */
   const requestClose = (reason: OgeModalCloseReason, result?: R): void => {
     if (!shown.current || closePendingRef.current) return;
-    if ((latest.current.props.busy ?? false) && reason !== 'api') return;
+    const blocked = (blockedBy: OgeModalCloseBlocker): void =>
+      latest.current.props.onCloseBlocked?.({ reason, blockedBy });
+    if ((latest.current.props.busy ?? false) && reason !== 'api') {
+      blocked('busy');
+      return;
+    }
     const closing: OgeModalClosingEvent = { reason, cancel: false };
     latest.current.props.onClosing?.(closing);
-    if (closing.cancel) return;
+    if (closing.cancel) {
+      blocked('closing');
+      return;
+    }
     runAsyncGuard(latest.current.props.closeGuard, {
       allow: () => {
         if (shown.current) finalizeClose(reason, result);
       },
+      deny: () => blocked('guard'),
       pending: (active) => setClosePending(active),
       label: 'oge-overlay modal closeGuard',
     });
@@ -642,7 +658,7 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
         aria-labelledby={labelledBy}
         aria-describedby={props.ariaDescribedBy}
         aria-label={ariaLabelAttr}
-        aria-busy={busy || undefined}
+        aria-busy={busy || loading || undefined}
         style={panelStyle}
       >
         {hasHeader && (
@@ -744,7 +760,7 @@ export const OgeModal = forwardRef(function OgeModalRender<R = unknown>(
         {renderFooter && (
           <div className="oge-modal-footer">{renderFooter(slot)}</div>
         )}
-        {busy && (
+        {(busy || loading) && (
           <div className="oge-modal-busy-veil" aria-hidden="true">
             <span className="oge-modal-spinner"></span>
           </div>

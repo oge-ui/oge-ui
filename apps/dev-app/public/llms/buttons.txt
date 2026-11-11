@@ -93,7 +93,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/buttons`
 
 - values: `OGE_BUTTONS_CONFIG`, `OGE_BUTTON_GROUP`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_FAB_CONFIG`, `OGE_DEFAULT_FAB_MESSAGES`, `OGE_FAB_CONFIG`, `OgeButton`, `OgeButtonGroup`, `OgeButtonIcon`, `OgeDropDownButton`, `OgeDropDownContent`, `OgeFab`, `OgeSpeedDial`, `provideOgeButtonsConfig`, `provideOgeFabConfig`
-- types: `OgeAutoRepeatOptions`, `OgeButtonActionDoneEvent`, `OgeButtonActionFailedEvent`, `OgeButtonClickEvent`, `OgeButtonGroupContext`, `OgeButtonGroupItem`, `OgeButtonGroupItemClickEvent`, `OgeButtonGroupSelectionChangedEvent`, `OgeButtonGroupSelectionMode`, `OgeButtonIconPosition`, `OgeButtonSelectedChangedEvent`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeClickGuardOptions`, `OgeDropDownButtonItemClickEvent`, `OgeDropDownContentContext`, `OgeDropDownItemsFn`, `OgeDropDownSelectionChangedEvent`, `OgeFabClickEvent`, `OgeFabConfig`, `OgeFabConfigInput`, `OgeFabMessages`, `OgeFabPosition`, `OgeFabPositionMode`, `OgeFabSeverity`, `OgeFabSize`, `OgeHoldToConfirmOptions`, `OgeSpeedDialDirection`, `OgeSpeedDialItem`, `OgeSpeedDialItemClickEvent`, `OgeSpeedDialLabelMode`, `OgeSpeedDialOpenMode`
+- types: `OgeAutoRepeatOptions`, `OgeButtonActionDoneEvent`, `OgeButtonActionFailedEvent`, `OgeButtonClickEvent`, `OgeButtonGroupContext`, `OgeButtonGroupItem`, `OgeButtonGroupItemClickEvent`, `OgeButtonGroupSelectionChangedEvent`, `OgeButtonGroupSelectionMode`, `OgeButtonIconPosition`, `OgeButtonSelectedChangedEvent`, `OgeButtonSeverity`, `OgeButtonShape`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeClickGuardOptions`, `OgeDropDownButtonItemClickEvent`, `OgeDropDownContentContext`, `OgeDropDownItemsFn`, `OgeDropDownSelectionChangedEvent`, `OgeFabClickEvent`, `OgeFabConfig`, `OgeFabConfigInput`, `OgeFabMessages`, `OgeFabPosition`, `OgeFabPositionMode`, `OgeFabSeverity`, `OgeFabSize`, `OgeHoldToConfirmOptions`, `OgeSpeedDialDirection`, `OgeSpeedDialItem`, `OgeSpeedDialItemClickEvent`, `OgeSpeedDialLabelMode`, `OgeSpeedDialOpenMode`
 
 `@oge-ui/buttons/*`
 
@@ -130,6 +130,11 @@ _Behavior_
 | `buttonType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type; `useSubmitBehavior` is sugar for `submit`. |
 | `value` | `string \| undefined` | `—` | Selection key inside an `<oge-button-group>`; unused standalone. |
 | `toggle` | `boolean` | `false` | Makes the button a toggle button: each accepted click flips `selected` and the native button renders `aria-pressed`. Ignored inside a `single`/`multiple` `<oge-button-group>`, which owns the selection. |
+| `pressed` | `boolean \| undefined` | `undefined` | Host-controlled pressed state: renders `aria-pressed` and the pressed look, and a click never flips it (unlike `toggle`) — update it from your own state. |
+| `shape` | `OgeButtonShape` | `'default'` | `'default'` (the theme radius) or `'pill'` (fully rounded ends; circular when icon-only). |
+| `fluid` | `boolean` | `false` | Stretches the button to the full width of its container. |
+| `loadingText` | `string` | `undefined` | Label shown (and announced) while `loading` — _Saving…_ instead of _Save_. |
+| `iconClass` | `string` | `undefined` | Class(es) for a leading icon rendered as an empty `<i>` — the hook for an icon font the app already ships; no projected `[ogeButtonIcon]` needed. |
 | `selected` | `model<boolean>` | `false` | Pressed state of a `toggle` button — two-way (`[(selected)]`). Unused without `toggle` and inside a selection group. |
 | `tabIndex` | `number` | `0` | Tab order of the native button. |
 | `accessKey` | `string \| undefined` | `—` | Native `accesskey` of the inner button. |
@@ -167,7 +172,8 @@ _Accessibility_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeButtonSelectedChangedEvent` | `{ selected: boolean; previousValue: boolean; event: MouseEvent \| KeyboardEvent }` | Payload of `selectedChanged`: the new and the previous pressed state, and the click (or Space/Enter of a gesture) that did it. |
-| `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text'` | Fill style. |
+| `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text' \| 'link'` | Fill style. |
+| `OgeButtonShape` | `'default' \| 'pill'` | Corner shape of a button. |
 | `OgeButtonSeverity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Semantic color mapped to the severity tokens. |
 | `OgeButtonSize` | `'xs' \| 'sm' \| 'md' \| 'lg'` | Height/padding preset. |
 | `OgeButtonIconPosition` | `'before' \| 'after'` | Icon slot placement. |
@@ -1066,6 +1072,39 @@ import { OgeButton, OgeButtonIcon } from '@oge-ui/buttons';
   `,
 })
 export class Demo {}
+```
+
+### Shapes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Read the guide" stylingMode="link" />
+    <oge-button text="Pill" shape="pill" severity="accent" />
+    <!-- an icon font the app ships, no projected markup -->
+    <oge-button text="Print" iconClass="fa-solid fa-print" />
+    <oge-button text="Save" loadingText="Saving…" [loading]="saving()" (clicked)="save()" />
+    <!-- pressed: the page owns the state; a click reports, it never flips by itself -->
+    <oge-button text="Grid" [pressed]="view() === 'grid'" (clicked)="view.set('grid')" />
+    <oge-button text="List" [pressed]="view() === 'list'" (clicked)="view.set('list')" />
+    <oge-button text="Continue" severity="accent" [fluid]="true" />
+  `,
+})
+export class Demo {
+  protected readonly view = signal<'grid' | 'list'>('grid');
+  protected readonly saving = signal(false);
+
+  protected save(): void {
+    this.saving.set(true);
+    setTimeout(() => this.saving.set(false), 1200);
+  }
+}
 ```
 
 ### Sizes

@@ -150,6 +150,32 @@ const onItalic = (event: OgeButtonSelectedChangeEvent) => {
 </div>`,
     }),
   },
+  {
+    title: 'Link, pill, fluid and pressed',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-buttons': ['OgeButton'] },
+      name: 'ButtonShapesDemo',
+      body: `const [view, setView] = useState<'grid' | 'list'>('grid');
+const [saving, setSaving] = useState(false);
+
+const save = () => {
+  setSaving(true);
+  setTimeout(() => setSaving(false), 1200);
+};`,
+      jsx: `<div className="demo-row">
+  <OgeButton text="Read the guide" stylingMode="link" />
+  <OgeButton text="Pill" shape="pill" severity="accent" />
+  {/* an icon font the app ships, no icon node */}
+  <OgeButton text="Print" iconClass="fa-solid fa-print" />
+  <OgeButton text="Save" loadingText="Saving…" loading={saving} onClick={save} />
+  {/* pressed: the page owns the state; a click reports, it never flips by itself */}
+  <OgeButton text="Grid" pressed={view === 'grid'} onClick={() => setView('grid')} />
+  <OgeButton text="List" pressed={view === 'list'} onClick={() => setView('list')} />
+  <OgeButton text="Continue" severity="accent" fluid />
+</div>`,
+    }),
+  },
 ];
 
 // ── Interactions (mirrors buttons/interactions.ts) ─────────────────────────
