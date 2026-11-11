@@ -3589,6 +3589,75 @@
       ]
     },
     {
+      "n": "--oge-simple-table-bg",
+      "c": "component",
+      "k": "d",
+      "d": "simple table: component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-bg)"
+      },
+      "s": {
+        "light": "#ffffff"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-simple-table-border-color",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-border-color)"
+      },
+      "s": {
+        "light": "#e6e9ef"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-simple-table-radius",
+      "c": "radius",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-radius-lg)"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-simple-table-header-bg",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "var(--oge-header-bg)"
+      },
+      "s": {
+        "light": "#fafbfc"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
+      "n": "--oge-simple-table-cell-padding",
+      "c": "component",
+      "k": "d",
+      "d": "component token — never declared; components read it with this fallback",
+      "v": {
+        "light": "8px 12px"
+      },
+      "u": [
+        "@oge-ui/layout"
+      ]
+    },
+    {
       "n": "--oge-warning-contrast",
       "c": "color",
       "d": "Bootstrap's warning is a light amber — dark text, like Bootstrap itself",

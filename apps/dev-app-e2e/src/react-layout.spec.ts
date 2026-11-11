@@ -18,6 +18,7 @@ const FAMILIES = [
   'carousel',
   'list-view',
   'data-view',
+  'simple-table',
   'tile-layout',
 ] as const;
 

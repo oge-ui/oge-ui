@@ -436,6 +436,54 @@ const FAMILIES = [
     },
   },
   {
+    family: 'layout-simple-table',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/simple-table-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/simple-table-api.ts',
+    exceptions: {
+      pairs: {
+        provideogesimpletableconfig: 'ogesimpletableconfigprovider', // DI provider ↔ context provider
+      },
+      angularOnly: {
+        ogesimpletableconfig:
+          'The `OGE_SIMPLE_TABLE_CONFIG` InjectionToken behind provideOgeSimpleTableConfig(); React resolves the same defaults through the provider’s context, which has no token.',
+        ogesimpletablerow:
+          'Structural directive; React passes the renderRow render prop instead.',
+        ogesimpletableheader:
+          'Structural directive; React passes the renderHeader render prop instead.',
+        ogesimpletablefooter:
+          'Structural directive; React passes the renderFooter render prop instead.',
+        ogesimpletableempty:
+          'Structural directive; React passes the renderEmpty render prop instead.',
+        ogesimpletablerowcontext:
+          'Template context of [ogeSimpleTableRow]; React types renderRow with OgeSimpleTableRowRenderContext.',
+        ogesimpletablesectioncontext:
+          'Template context of the header / footer slots; React types them with OgeSimpleTableSectionRenderContext.',
+      },
+      reactOnly: {
+        renderrow:
+          'Render prop replacing the [ogeSimpleTableRow] structural directive (documented in the Angular types table).',
+        renderheader:
+          'Render prop replacing the [ogeSimpleTableHeader] structural directive (documented in the Angular types table).',
+        renderfooter:
+          'Render prop replacing the [ogeSimpleTableFooter] structural directive (documented in the Angular types table).',
+        renderempty:
+          'Render prop replacing the [ogeSimpleTableEmpty] structural directive (documented in the Angular types table).',
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+        useogesimpletableconfig:
+          'Hook reading the resolved config; the Angular counterpart is the OGE_SIMPLE_TABLE_CONFIG token (excepted above).',
+        ogesimpletableprops:
+          'The React props interface; Angular documents the same members as inputs.',
+        ogesimpletablehandle:
+          'The React ref handle; Angular exposes goToPage() on the component instance.',
+        ogesimpletablerowrendercontext:
+          'Context of renderRow; the Angular counterpart is OgeSimpleTableRowContext (excepted above).',
+        ogesimpletablesectionrendercontext:
+          'Context of renderHeader / renderFooter; the Angular counterpart is OgeSimpleTableSectionContext (excepted above).',
+      },
+    },
+  },
+  {
     family: 'layout-list-view',
     angularApiPage: 'apps/dev-app/src/app/pages/layout/list-view-api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-layout/list-view-api.ts',
@@ -1181,6 +1229,17 @@ const FAMILIES = [
       },
       pairs: {
         provideogelocale: 'ogelocaleprovider', // DI provider ↔ context provider
+        // the per-family slices, same pairing
+        provideogegridlocale: 'ogegridlocaleprovider',
+        provideogeinputslocale: 'ogeinputslocaleprovider',
+        provideogebuttonslocale: 'ogebuttonslocaleprovider',
+        provideogeoverlaylocale: 'ogeoverlaylocaleprovider',
+        provideogetabslocale: 'ogetabslocaleprovider',
+        provideogeformslocale: 'ogeformslocaleprovider',
+        provideogeuploadlocale: 'ogeuploadlocaleprovider',
+        provideogeeditorlocale: 'ogeeditorlocaleprovider',
+        provideogelayoutlocale: 'ogelayoutlocaleprovider',
+        provideogenavigationlocale: 'ogenavigationlocaleprovider',
       },
       reactOnly: {
         children:

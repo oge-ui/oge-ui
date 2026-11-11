@@ -10,6 +10,7 @@ import type {
   OgeAccordionMessages,
   OgeAiMessages,
   OgeDataViewMessages,
+  OgeSimpleTableMessages,
   OgeTileLayoutMessages,
   OgeListViewMessages,
   OgeAlertMessages,
@@ -74,6 +75,7 @@ export interface OgeLocaleLayoutMessages {
   readonly alert?: OgeDeepPartial<OgeAlertMessages>;
   readonly carousel?: OgeDeepPartial<OgeCarouselMessages>;
   readonly dataView?: OgeDeepPartial<OgeDataViewMessages>;
+  readonly simpleTable?: OgeDeepPartial<OgeSimpleTableMessages>;
   readonly tileLayout?: OgeDeepPartial<OgeTileLayoutMessages>;
   readonly listView?: OgeDeepPartial<OgeListViewMessages>;
 }

@@ -8,7 +8,7 @@
  */
 
 import {
-  OGE_DEFAULT_ADAPTIVE_CONFIG,
+  OGE_DEFAULT_ADAPTIVE_BREAKPOINT,
   type OgeAdaptiveMode,
 } from '../overlay/adaptive';
 
@@ -68,8 +68,10 @@ export const OGE_DEFAULT_BUTTONS_CONFIG: OgeButtonsConfig = {
   holdToConfirmMs: 800,
   autoRepeatDelayMs: 400,
   autoRepeatIntervalMs: 80,
-  adaptiveMode: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveMode,
-  adaptiveBreakpoint: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveBreakpoint,
+  // spelled out, not read from OGE_DEFAULT_ADAPTIVE_CONFIG: a property read
+  // at module scope keeps this object in every bundle (tree-shake-check)
+  adaptiveMode: 'none',
+  adaptiveBreakpoint: OGE_DEFAULT_ADAPTIVE_BREAKPOINT,
   messages: OGE_DEFAULT_BUTTONS_MESSAGES,
 };
 

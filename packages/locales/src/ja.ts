@@ -708,6 +708,13 @@ export const ja: OgeLocalePack = {
       results: '{count, plural, =0 {結果なし} other {# 件の結果}}',
       loading: '読み込み中…',
     },
+    simpleTable: {
+      pager: 'テーブルのページ',
+      previousPage: '前のページ',
+      nextPage: '次のページ',
+      pageInfo: '{count} 件中 {from}–{to} 件',
+      noData: '表示する行がありません',
+    },
     listView: {
       listLabel: 'リスト',
       searchLabel: '検索',

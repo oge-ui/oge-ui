@@ -360,6 +360,29 @@ export {
   useOgeDataViewConfig,
 } from './lib/layout-config';
 export {
+  OgeSimpleTable,
+  type OgeSimpleTableHandle,
+  type OgeSimpleTableProps,
+  type OgeSimpleTableRowRenderContext,
+  type OgeSimpleTableSectionRenderContext,
+} from './lib/simple-table';
+export {
+  OgeSimpleTableConfigProvider,
+  useOgeSimpleTableConfig,
+} from './lib/layout-config';
+export {
+  OGE_DEFAULT_SIMPLE_TABLE_CONFIG,
+  OGE_DEFAULT_SIMPLE_TABLE_MESSAGES,
+} from '@oge-ui/behavior';
+export type {
+  OgeSimpleTableAlign,
+  OgeSimpleTableColumn,
+  OgeSimpleTableConfig,
+  OgeSimpleTableConfigInput,
+  OgeSimpleTableMessages,
+  OgeSimpleTableResolvedColumn,
+} from '@oge-ui/behavior';
+export {
   OGE_DEFAULT_DATA_VIEW_CONFIG,
   OGE_DEFAULT_DATA_VIEW_MESSAGES,
 } from '@oge-ui/behavior';

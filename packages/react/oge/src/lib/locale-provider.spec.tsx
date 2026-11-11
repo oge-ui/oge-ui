@@ -7,7 +7,12 @@ import { tr } from '@oge-ui/locales/tr';
 import { OgeGridConfigProvider, useOgeGridConfig } from '@oge-ui/react-grid';
 import { useOgeInputsConfig } from '@oge-ui/react-inputs';
 import { useOgePaginationConfig } from '@oge-ui/react-navigation';
-import { OgeLocaleProvider } from './locale-provider';
+import { useOgeSimpleTableConfig } from '@oge-ui/react-layout';
+import {
+  OgeGridLocaleProvider,
+  OgeLayoutLocaleProvider,
+  OgeLocaleProvider,
+} from './locale-provider';
 
 function Probe() {
   const grid = useOgeGridConfig();
@@ -75,5 +80,25 @@ describe('<OgeLocaleProvider>', () => {
     );
     expect(text('noData')).toBe(de.grid?.noData);
     expect(text('rowHeight')).toBe('28');
+  });
+
+  it('applies one family slice without touching the others', () => {
+    function SliceProbe() {
+      const table = useOgeSimpleTableConfig();
+      return <span data-testid="tableNoData">{table.messages.noData}</span>;
+    }
+    render(
+      <OgeGridLocaleProvider pack={tr}>
+        <OgeLayoutLocaleProvider pack={tr}>
+          <Probe />
+          <SliceProbe />
+        </OgeLayoutLocaleProvider>
+      </OgeGridLocaleProvider>,
+    );
+    expect(text('noData')).toBe(tr.grid?.noData);
+    expect(text('tableNoData')).toBe(tr.layout?.simpleTable?.noData);
+    // inputs and navigation were not asked for: English defaults
+    expect(text('inputsLocale')).toBe('');
+    expect(text('next')).toBe('Next page');
   });
 });

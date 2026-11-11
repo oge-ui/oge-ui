@@ -416,6 +416,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Data View for Angular and React: templated items in responsive grid or list layouts via container queries, with search, sorting, paging and listbox selection.',
   ],
   [
+    '/components/simple-table',
+    'Simple Table for Angular and React: a native table with free row templates, header cells aligned with your cells, typed contexts and optional paging.',
+  ],
+  [
+    '/components/simple-table/api',
+    'OGE Simple Table API reference: every input, model, method and type of oge-simple-table, its row, header, footer and empty slots and the config provider.',
+  ],
+  [
     '/components/data-view/api',
     'OGE Data View API reference: every input, model, output, method and type of oge-data-view, its item, list-item and empty slots, and the config provider.',
   ],

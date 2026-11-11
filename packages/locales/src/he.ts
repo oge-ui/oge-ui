@@ -711,6 +711,13 @@ export const he: OgeLocalePack = {
         '{count, plural, =0 {אין תוצאות} one {תוצאה אחת} two {שתי תוצאות} other {# תוצאות}}',
       loading: 'טוען…',
     },
+    simpleTable: {
+      pager: 'דפי הטבלה',
+      previousPage: 'העמוד הקודם',
+      nextPage: 'העמוד הבא',
+      pageInfo: '{from}–{to} מתוך {count}',
+      noData: 'אין שורות להצגה',
+    },
     listView: {
       listLabel: 'רשימה',
       searchLabel: 'חיפוש',

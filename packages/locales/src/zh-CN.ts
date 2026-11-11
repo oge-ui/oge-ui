@@ -694,6 +694,13 @@ export const zhCN: OgeLocalePack = {
       results: '{count, plural, =0 {无结果} other {# 个结果}}',
       loading: '正在加载…',
     },
+    simpleTable: {
+      pager: '表格分页',
+      previousPage: '上一页',
+      nextPage: '下一页',
+      pageInfo: '第 {from}–{to} 项，共 {count} 项',
+      noData: '没有可显示的行',
+    },
     listView: {
       listLabel: '列表',
       searchLabel: '搜索',

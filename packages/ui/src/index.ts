@@ -50,7 +50,19 @@ export {
 // ready-made translations (@oge-ui/locales, MIT): the one-call wiring for
 // every family above, plus the pack vocabulary. The packs themselves are
 // imported from their own entry points (`@oge-ui/locales/tr`).
-export { provideOgeLocale } from './lib/locale';
+export {
+  provideOgeButtonsLocale,
+  provideOgeEditorLocale,
+  provideOgeFormsLocale,
+  provideOgeGridLocale,
+  provideOgeInputsLocale,
+  provideOgeLayoutLocale,
+  provideOgeLocale,
+  provideOgeNavigationLocale,
+  provideOgeOverlayLocale,
+  provideOgeTabsLocale,
+  provideOgeUploadLocale,
+} from './lib/locale';
 export {
   OGE_LOCALE_NAMES,
   ogeLocalePacks,

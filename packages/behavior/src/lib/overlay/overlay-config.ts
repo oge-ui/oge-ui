@@ -111,16 +111,19 @@ export interface OgeOverlayConfig extends OgeOverlayTimings {
   messages: OgeOverlayMessages;
 }
 
-export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig = {
-  ...OGE_DEFAULT_OVERLAY_TIMINGS,
-  toastPosition: OGE_DEFAULT_TOAST_DEFAULTS.position,
-  toastDisplayTime: OGE_DEFAULT_TOAST_DEFAULTS.displayTime,
-  toastMaxVisible: OGE_DEFAULT_TOAST_DEFAULTS.maxVisible,
-  toastProgressBar: OGE_DEFAULT_TOAST_DEFAULTS.progressBar,
-  toastCoalesceDuplicates: OGE_DEFAULT_TOAST_DEFAULTS.coalesceDuplicates,
-  toastStacked: OGE_DEFAULT_TOAST_DEFAULTS.stacked ?? false,
-  messages: OGE_DEFAULT_OVERLAY_MESSAGES,
-};
+// a pure IIFE: the spread and the property reads would otherwise keep this
+// object (and everything it names) in every bundle (tree-shake-check)
+export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig =
+  /* @__PURE__ */ (() => ({
+    ...OGE_DEFAULT_OVERLAY_TIMINGS,
+    toastPosition: OGE_DEFAULT_TOAST_DEFAULTS.position,
+    toastDisplayTime: OGE_DEFAULT_TOAST_DEFAULTS.displayTime,
+    toastMaxVisible: OGE_DEFAULT_TOAST_DEFAULTS.maxVisible,
+    toastProgressBar: OGE_DEFAULT_TOAST_DEFAULTS.progressBar,
+    toastCoalesceDuplicates: OGE_DEFAULT_TOAST_DEFAULTS.coalesceDuplicates,
+    toastStacked: OGE_DEFAULT_TOAST_DEFAULTS.stacked ?? false,
+    messages: OGE_DEFAULT_OVERLAY_MESSAGES,
+  }))();
 
 /** Partial config with a partial `messages` block, as both providers accept. */
 export type OgeOverlayConfigInput = Partial<

@@ -197,6 +197,19 @@ type TierFilter = 'all' | LicenseTier;
         >.
       </li>
       <li>
+        <strong>Importing one component bundles one component.</strong> The
+        numbers above are whole entry points; an app pays only for what it
+        imports. <code>npx nx run &#64;oge/source:tree-shake-check</code>
+        proves it in CI: it bundles one-line imports — a modal from
+        <code>&#64;oge-ui/overlay</code>, a button, a menubar, the simple table,
+        their React twins, a single filter helper, the license API — with
+        esbuild (through Angular's own optimizer for Angular packages) and with
+        Rolldown, and fails when the bundle still contains a sibling component
+        or grows past its ceiling. A family therefore needs no per-component
+        entry point to stay small, and registering a license key pulls in about
+        3 kB of <code>&#64;oge-ui/core</code>, not the engine.
+      </li>
+      <li>
         <strong>License marker.</strong> Commercial packages are the six
         families on the ADR 0003 list — the same list the license-boundary gate
         checks every <code>license</code> field and import against. See

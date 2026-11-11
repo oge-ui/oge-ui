@@ -43,6 +43,8 @@ import {
   PER_COMPONENT,
   PLURAL_MESSAGES,
   READY_MADE_ANGULAR,
+  READY_MADE_SLICES_ANGULAR,
+  READY_MADE_SLICES_REACT,
   READY_MADE_COMMERCIAL,
   READY_MADE_DEMO,
   READY_MADE_INSTALL,
@@ -421,6 +423,23 @@ const SECTIONS = [
       </p>
       <app-code-block [code]="readyMadeAngular" language="ts" />
     }
+    <p>
+      An app that ships only some families can apply just their slices —
+      @if (fw.isReact()) {
+        <code>&lt;OgeGridLocaleProvider&gt;</code>,
+        <code>&lt;OgeInputsLocaleProvider&gt;</code> and so on, one per family —
+      } @else {
+        <code>provideOgeGridLocale()</code>,
+        <code>provideOgeInputsLocale()</code> and so on, one per family —
+      }
+      so the other families’ catalogs and config never reach its bundle (the
+      one-call form pulls in every family’s English catalog, about 16 kB gzip; a
+      single slice is a fraction of that).
+    </p>
+    <app-code-block
+      [code]="fw.isReact() ? readyMadeSlicesReact : readyMadeSlicesAngular"
+      [language]="fw.isReact() ? 'tsx' : 'ts'"
+    />
     <app-demo-card
       title="Language switcher"
       description="Pick a language: the date box (open its calendar), the select box (search it, clear it) and the grid's filter row, pager and empty texts switch at once; Arabic and Hebrew mirror the layout. Each pack is downloaded the first time it is picked."
@@ -647,6 +666,8 @@ export class GettingStartedLocalizationPage {
   protected readonly readyMadeInstall = READY_MADE_INSTALL;
   protected readonly readyMadeAngular = READY_MADE_ANGULAR;
   protected readonly readyMadeReact = READY_MADE_REACT;
+  protected readonly readyMadeSlicesAngular = READY_MADE_SLICES_ANGULAR;
+  protected readonly readyMadeSlicesReact = READY_MADE_SLICES_REACT;
   protected readonly readyMadeRuntime = READY_MADE_RUNTIME;
   protected readonly readyMadeCommercial = READY_MADE_COMMERCIAL;
   protected readonly readyMadeDemo = READY_MADE_DEMO;

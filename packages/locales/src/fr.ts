@@ -723,6 +723,13 @@ export const fr: OgeLocalePack = {
         '{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}',
       loading: 'Chargement…',
     },
+    simpleTable: {
+      pager: 'Pages du tableau',
+      previousPage: 'Page précédente',
+      nextPage: 'Page suivante',
+      pageInfo: '{from}–{to} sur {count}',
+      noData: 'Aucune ligne à afficher',
+    },
     listView: {
       listLabel: 'Liste',
       searchLabel: 'Rechercher',

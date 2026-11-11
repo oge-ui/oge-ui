@@ -2463,6 +2463,23 @@ export {
   type OgeDataViewSortOption,
 } from './lib/layout/data-view-core';
 export {
+  OGE_DEFAULT_SIMPLE_TABLE_CONFIG,
+  OGE_DEFAULT_SIMPLE_TABLE_MESSAGES,
+  OGE_SIMPLE_TABLE_DEFAULT_PAGE_SIZE,
+  ogeSimpleTableCellText,
+  ogeSimpleTablePage,
+  ogeSimpleTablePageInfo,
+  resolveOgeSimpleTableColumns,
+  resolveOgeSimpleTableConfig,
+  type OgeSimpleTableAlign,
+  type OgeSimpleTableColumn,
+  type OgeSimpleTableConfig,
+  type OgeSimpleTableConfigInput,
+  type OgeSimpleTableMessages,
+  type OgeSimpleTablePage,
+  type OgeSimpleTableResolvedColumn,
+} from './lib/layout/simple-table-core';
+export {
   OGE_DEFAULT_TILE_LAYOUT_CONFIG,
   OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
   OGE_TILE_LAYOUT_DEFAULTS,

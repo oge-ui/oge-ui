@@ -267,11 +267,11 @@ const LAYERS: readonly Layer[] = [
         : [...children];
     },
   },
-  simple('strong', (m) => m.bold === true),
-  simple('em', (m) => m.italic === true),
-  simple('u', (m) => m.underline === true),
-  simple('s', (m) => m.strike === true),
-  simple('code', (m) => m.code === true),
+  /* @__PURE__ */ simple('strong', (m) => m.bold === true),
+  /* @__PURE__ */ simple('em', (m) => m.italic === true),
+  /* @__PURE__ */ simple('u', (m) => m.underline === true),
+  /* @__PURE__ */ simple('s', (m) => m.strike === true),
+  /* @__PURE__ */ simple('code', (m) => m.code === true),
   {
     key: (m) => m.script ?? null,
     build: (m, children) => [el(m.script === 'sub' ? 'sub' : 'sup', children)],

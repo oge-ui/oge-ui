@@ -89,7 +89,7 @@ export const OGE_MOTION_DEFAULTS: {
     emphasized: 'cubic-bezier(0.05, 0.7, 0.1, 1)',
     decelerate: 'cubic-bezier(0, 0, 0, 1)',
     accelerate: 'cubic-bezier(0.3, 0, 1, 1)',
-    spring: ogeSpringEasing(),
+    spring: /* @__PURE__ */ ogeSpringEasing(),
   },
 };
 

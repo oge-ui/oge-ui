@@ -16,6 +16,7 @@ const FAMILIES = [
   { name: 'App Bar', preview: 'oge-app-bar' },
   { name: 'List View', preview: 'oge-list-view' },
   { name: 'Data View', preview: 'oge-data-view' },
+  { name: 'Simple Table', preview: 'oge-simple-table' },
   { name: 'Tile Layout', preview: 'oge-tile-layout' },
   { name: 'Carousel', preview: 'oge-carousel' },
   { name: 'Progress & Loading', preview: 'oge-progress-bar' },

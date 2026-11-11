@@ -717,6 +717,13 @@ export const ar: OgeLocalePack = {
         '{count, plural, zero {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}',
       loading: 'جارٍ التحميل…',
     },
+    simpleTable: {
+      pager: 'صفحات الجدول',
+      previousPage: 'الصفحة السابقة',
+      nextPage: 'الصفحة التالية',
+      pageInfo: '{from}–{to} من {count}',
+      noData: 'لا توجد صفوف لعرضها',
+    },
     listView: {
       listLabel: 'قائمة',
       searchLabel: 'بحث',

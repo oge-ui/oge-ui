@@ -704,6 +704,13 @@ export const tr: OgeLocalePack = {
       results: '{count, plural, =0 {Sonuç yok} one {# sonuç} other {# sonuç}}',
       loading: 'Yükleniyor…',
     },
+    simpleTable: {
+      pager: 'Tablo sayfaları',
+      previousPage: 'Önceki sayfa',
+      nextPage: 'Sonraki sayfa',
+      pageInfo: '{from}–{to} / {count}',
+      noData: 'Gösterilecek satır yok',
+    },
     listView: {
       listLabel: 'Liste',
       searchLabel: 'Ara',

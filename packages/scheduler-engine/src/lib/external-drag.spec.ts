@@ -160,8 +160,9 @@ describe('scheduler drop targets', () => {
 
     it('an accepted drop lands the ghost on the slot preview', async () => {
       drag(true);
-      await new Promise((resolve) => setTimeout(resolve, 20));
-      expect(settles()).toHaveLength(1);
+      // the settle runs a few animation frames later — wait for it rather than a
+      // fixed delay, which a loaded CI machine can outrun
+      await vi.waitFor(() => expect(settles()).toHaveLength(1));
       expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
         'translate(200px, 300px)',
       );
@@ -169,8 +170,9 @@ describe('scheduler drop targets', () => {
 
     it('a refused drop glides the ghost home', async () => {
       drag(false);
-      await new Promise((resolve) => setTimeout(resolve, 20));
-      expect(settles()).toHaveLength(1);
+      // the settle runs a few animation frames later — wait for it rather than a
+      // fixed delay, which a loaded CI machine can outrun
+      await vi.waitFor(() => expect(settles()).toHaveLength(1));
       expect(String(settles()[0].keyframes.at(-1)?.transform)).toContain(
         'translate(10px, 20px)',
       );

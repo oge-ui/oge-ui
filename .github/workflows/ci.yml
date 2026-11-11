@@ -69,6 +69,9 @@ jobs:
       - run: npx nx run @oge/source:license-boundary-check
       - run: npx nx run @oge/source:package-check
       - run: npx nx run @oge/source:size-check
+      # importing one component must not bundle its family (esbuild with Angular's
+      # optimizer, and Rolldown, over the built packages)
+      - run: npx nx run @oge/source:tree-shake-check
       # public API snapshots of the MIT substrate (core, behavior) — an
       # intended change: node tools/api-report.mjs --update, commit the report
       - run: npx nx run @oge/source:api-check

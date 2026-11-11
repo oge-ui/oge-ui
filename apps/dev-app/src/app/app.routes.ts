@@ -707,6 +707,27 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/simple-table',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/simple-table').then(
+            (m) => m.LayoutSimpleTablePage,
+          ),
+        title: 'OGE — Simple Table',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/simple-table-api').then(
+            (m) => m.LayoutSimpleTableApiPage,
+          ),
+        title: 'OGE — Simple Table API',
+      },
+    ],
+  },
+  {
     path: 'components/list-view',
     children: [
       {

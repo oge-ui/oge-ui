@@ -763,6 +763,9 @@ export const OGE_DEV_WARNINGS: {
 export const OGE_DEV_WARNINGS_URL = "https://www.ogeui.com/guides/dev-warnings";
 
 // @public
+export const OGE_FILTER_OPERATOR_ARITY: Readonly<Record<FilterOperator, OgeFilterOperatorArity>>;
+
+// @public
 export const OGE_FILTER_OPERATORS: {
     readonly eq: {
         readonly arity: "one";

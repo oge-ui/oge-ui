@@ -779,6 +779,18 @@ export class App {
       ],
     },
     {
+      title: 'Simple Table',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/simple-table', label: 'Overview', icon: 'table' },
+        {
+          path: '/components/simple-table/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'List View',
       group: COMPONENTS_GROUP,
       items: [

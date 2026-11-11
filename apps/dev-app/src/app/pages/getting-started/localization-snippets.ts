@@ -279,6 +279,30 @@ export const appConfig: ApplicationConfig = {
 };
 // right-to-left packs (ar, he) carry dir: 'rtl' — set <html dir> from pack.dir`;
 
+/** Angular: only the families the app ships — the other catalogs stay out of the bundle. */
+export const READY_MADE_SLICES_ANGULAR = `// app.config.ts — an app that uses the grid and the inputs only
+import { provideOgeGridLocale, provideOgeInputsLocale } from 'oge-ui';
+import { tr } from '@oge-ui/locales/tr';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideOgeGridLocale(tr), provideOgeInputsLocale(tr)],
+};
+// provideOgeLocale(tr) is these slices for every MIT family at once`;
+
+/** React: only the families the app ships. */
+export const READY_MADE_SLICES_REACT = `import { OgeGridLocaleProvider, OgeInputsLocaleProvider } from '@oge-ui/react';
+import { tr } from '@oge-ui/locales/tr';
+
+export function Root() {
+  return (
+    <OgeGridLocaleProvider pack={tr}>
+      <OgeInputsLocaleProvider pack={tr}>
+        <App />
+      </OgeInputsLocaleProvider>
+    </OgeGridLocaleProvider>
+  );
+}`;
+
 /** React: one provider component around the app. */
 export const READY_MADE_REACT = `import { OgeLocaleProvider } from '@oge-ui/react';
 import { de } from '@oge-ui/locales/de';

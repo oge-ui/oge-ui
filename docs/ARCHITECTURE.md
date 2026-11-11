@@ -140,6 +140,22 @@ consumers:
   which is the per-package ESM build with its own `sideEffects: false`. Do not
   "fix" a budget breach by moving shared code out of the barrel — the barrel
   is the React layer's whole import surface (ADR 0001).
+- **Published packages must tree-shake statement by statement.**
+  `tools/tree-shake-check.mjs` (`@oge/source:tree-shake-check`, in CI and the
+  release) bundles one-line imports from `dist/` with esbuild — through Angular's
+  `JavaScriptTransformer` with `ngDevMode: false`, as `ng build` does — and with
+  Rolldown, and fails when a sibling component survives or a probe passes its
+  gzip ceiling. Module scope must stay free of anything a bundler cannot prove
+  pure: no property reads of other constants (`X.adaptiveMode` → spell the
+  value), no spreads or method calls (`[...].join()`, `Object.freeze()`) without
+  `/* @__PURE__ */`, no `static` class fields (they compile to `static {}`
+  blocks — use a module constant). React packages get their top-level
+  `forwardRef` / `memo` / `createContext` calls annotated at build time by
+  `tools/react-package/pure-annotations.mts` (in every React `vite.config.mts`);
+  without it one imported component bundled the whole family. The engines build
+  for ES2022 (`.swcrc`): lower targets turn spreads into `_extends()` calls and
+  Unicode regexes into `RegExp()` calls, both of which pin their module. Add a
+  probe when a family gains a component worth guarding.
 - **Extract by the narrowest contract the concern needs.** The grid's column
   layout takes a four-field `OgeGridLayoutColumn`, not the host's full resolved
   column — the full column carries per-framework content slots (`TemplateRef`s,

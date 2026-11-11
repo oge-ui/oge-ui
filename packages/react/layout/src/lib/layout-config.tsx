@@ -18,6 +18,10 @@ import {
   resolveOgeDataViewConfig,
   type OgeDataViewConfig,
   type OgeDataViewConfigInput,
+  OGE_DEFAULT_SIMPLE_TABLE_CONFIG,
+  resolveOgeSimpleTableConfig,
+  type OgeSimpleTableConfig,
+  type OgeSimpleTableConfigInput,
   OGE_DEFAULT_ACCORDION_CONFIG,
   OGE_DEFAULT_CARD_CONFIG,
   OGE_DEFAULT_LOAD_INDICATOR_CONFIG,
@@ -360,6 +364,29 @@ export function OgeDataViewConfigProvider({
 
 export const useOgeDataViewConfig = (): OgeDataViewConfig =>
   useContext(DataViewContext);
+
+const SimpleTableContext = createContext<OgeSimpleTableConfig>(
+  OGE_DEFAULT_SIMPLE_TABLE_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeSimpleTableConfig()`. */
+export function OgeSimpleTableConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeSimpleTableConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeSimpleTableConfig(config), [config]);
+  return (
+    <SimpleTableContext.Provider value={value}>
+      {children}
+    </SimpleTableContext.Provider>
+  );
+}
+
+export const useOgeSimpleTableConfig = (): OgeSimpleTableConfig =>
+  useContext(SimpleTableContext);
 
 const TileLayoutContext = createContext<OgeTileLayoutConfig>(
   OGE_DEFAULT_TILE_LAYOUT_CONFIG,

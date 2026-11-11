@@ -12,7 +12,7 @@ import type {
   PivotGridStateSnapshot,
 } from './pivot-grid-state-snapshot';
 import type { TreeListStateSnapshot } from './tree-list-state-snapshot';
-import { OGE_FILTER_OPERATORS } from '../filtering/filter-contract';
+import { OGE_FILTER_OPERATOR_ARITY } from '../filtering/filter-contract';
 
 /**
  * Shape validation for persisted UI-state snapshots.
@@ -144,7 +144,7 @@ function arrayOf<T>(
 // every operator of the published contract — one list, so a new operator
 // cannot be accepted by the evaluator and dropped from persisted state
 const FILTER_OPERATORS: ReadonlySet<FilterOperator> = new Set(
-  Object.keys(OGE_FILTER_OPERATORS) as FilterOperator[],
+  Object.keys(OGE_FILTER_OPERATOR_ARITY) as FilterOperator[],
 );
 
 function sanitizeFilterExpr(value: unknown, depth = 0): FilterExpr | undefined {

@@ -1594,6 +1594,98 @@ _Vocabulary_
 | `OgeDataViewMessages` | `interface` | Every user-facing string, aria labels included: `dataView`, `layoutSwitch`, `gridLayout`, `listLayout`, `sortBy`, `sortNone`, `ascending`, `descending`, `search`, `searchPlaceholder`, `pager`, `previousPage`, `nextPage`, `page` (`{page}`), `pageInfo` (`{from}` `{to}` `{itemCount}`), `pageAnnouncement`, `noData`, `noResults`, `results` (ICU plural over `{count}`) and `loading`. Translated in every `@oge-ui/locales` pack (`layout.dataView`). |
 | `OGE_DEFAULT_DATA_VIEW_MESSAGES` | `OgeDataViewMessages` | The English catalog. |
 
+### <OgeSimpleTable>
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `readonly T[]` | `[]` | The rows. |
+| `columns` | `readonly OgeSimpleTableColumn[] \| undefined` | `—` | Header cells and default cells. Unset: one column per own key of the first row. |
+
+_Paging_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `paging` | `boolean` | `false` | Shows `pageSize` rows at a time with a previous / next pager and a `{from}–{to} of {count}` text (announced politely). |
+| `pageSize` | `number \| undefined` | `config ?? 10` | Rows per page with `paging`. |
+| `pageIndex` | `number` | `0` | 0-based page shown (controlled; `defaultPageIndex` uncontrolled), clamped into range. |
+
+_Presentation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `compact` | `boolean \| undefined` | `config ?? false` | Denser rows (4px 8px cell padding instead of the token). |
+| `caption` | `string \| undefined` | `—` | A visible `<caption>` — the table’s accessible name. |
+| `ariaLabel` | `string \| undefined` | `—` | The accessible name when there is no visible caption. |
+| `scrollable` | `boolean` | `true` | Wraps the table in a focusable, labelled scroll region, so a wide table scrolls inside itself on a narrow screen instead of widening the page. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the pager’s numbers; falls back to the config, then the application locale. |
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderRow` | `(context: OgeSimpleTableRowRenderContext<T>) => ReactNode` | Returns the whole `<tr>` of a row with free `<td>`s; `row` is typed from `value`. |
+| `renderHeader` | `(context: OgeSimpleTableSectionRenderContext<T>) => ReactNode` | Replaces the header row(s) inside `<thead>` — grouped headers, `colSpan`. |
+| `renderFooter` | `(context: OgeSimpleTableSectionRenderContext<T>) => ReactNode` | Rows of a `<tfoot>` — totals, notes. |
+| `renderEmpty` | `() => ReactNode` | Content of the full-width cell shown when `value` is empty (default: the `noData` message). |
+| `className` | `string` | Extra classes on the host element. |
+| `style` | `CSSProperties` | Inline style of the host element. |
+
+#### Methods
+
+_Ref handle (OgeSimpleTableHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `goToPage(index)` | `(index: number) => void` | Shows a page, clamped into range. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onPageIndexChange` | `(pageIndex: number) => void` | The page the pager (or `goToPage`) moved to — the controlled half of `pageIndex`. |
+
+#### Types
+
+_Component types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSimpleTableProps` | `interface` | Props of `<OgeSimpleTable>` (generic over the row type). |
+| `OgeSimpleTableHandle` | `{ goToPage }` | The ref handle. |
+| `OgeSimpleTableRowRenderContext` | `{ row: T; columns: readonly OgeSimpleTableResolvedColumn[]; rowIndex: number }` | Context of `renderRow`; `rowIndex` counts in `value`, not in the page. |
+| `OgeSimpleTableSectionRenderContext` | `{ columns: readonly OgeSimpleTableResolvedColumn[]; rows: readonly T[] }` | Context of `renderHeader` / `renderFooter`. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSimpleTableColumn` | `{ field?: string; caption?: string; align?: OgeSimpleTableAlign; width?: string; cssClass?: string }` | One column: its header cell, and the default cell when no row template is given. `field` takes dot paths; `caption` defaults to the field, humanized; `width` goes on the column’s `<col>`. |
+| `OgeSimpleTableAlign` | `'start' \| 'center' \| 'end'` | Alignment of a column’s header and cells (logical: `end` is the left edge in a right-to-left page). |
+| `OgeSimpleTableResolvedColumn` | `OgeSimpleTableColumn & { caption: string; align: OgeSimpleTableAlign; cellClass: string }` | A column as templates receive it. `cellClass` carries the alignment and `cssClass`: put it on a `<td>` of your own row to line it up with its header. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSimpleTableConfigProvider` | `(props: { config?: OgeSimpleTableConfigInput; children?: ReactNode }) => JSX.Element` | Subtree defaults for `pageSize`, `compact`, `locale` and the `messages` — the React counterpart of `provideOgeSimpleTableConfig()`. |
+| `useOgeSimpleTableConfig()` | `() => OgeSimpleTableConfig` | Reads the resolved config of the nearest provider, merged over `OGE_DEFAULT_SIMPLE_TABLE_CONFIG`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSimpleTableConfig` | `interface` | The resolved config (`messages`, `pageSize?`, `compact?`, `locale?`). |
+| `OgeSimpleTableConfigInput` | `interface` | The partial input both providers accept (messages merged one level deep). |
+| `OGE_DEFAULT_SIMPLE_TABLE_CONFIG` | `OgeSimpleTableConfig` | The resolved defaults. |
+| `OgeSimpleTableMessages` | `interface` | Every user-facing string: `pager` (the pager group’s name), `previousPage`, `nextPage`, `pageInfo` (`{from}` `{to}` `{count}`) and `noData`. Translated in every `@oge-ui/locales` pack (`layout.simpleTable`). |
+| `OGE_DEFAULT_SIMPLE_TABLE_MESSAGES` | `OgeSimpleTableMessages` | The English catalog. |
+
 ### <OgeTileLayout>
 
 #### Properties
@@ -4532,6 +4624,151 @@ export function ProgressCircularDemo() {
 
       {/* value omitted: the ring spins and aria-valuenow is omitted */}
       <OgeProgressBar type="circular" size={32} ariaLabel="Syncing" />
+    </>
+  );
+}
+```
+
+### Basics
+
+```ts
+'use client';
+
+import { OgeSimpleTable } from '@oge-ui/react-layout';
+import type { OgeSimpleTableColumn } from '@oge-ui/react-layout';
+
+interface OrderLine {
+  sku: string;
+  product: { name: string };
+  qty: number;
+  price: number;
+  status: 'shipped' | 'pending' | 'backordered';
+}
+
+const lines: OrderLine[] = [
+  { sku: 'DSK-01', product: { name: 'Oak desk' }, qty: 2, price: 420, status: 'shipped' },
+  { sku: 'CHR-07', product: { name: 'Mesh office chair' }, qty: 4, price: 260, status: 'pending' },
+  { sku: 'LMP-12', product: { name: 'Desk lamp' }, qty: 6, price: 45, status: 'backordered' },
+  { sku: 'SHF-03', product: { name: 'Wall shelf' }, qty: 3, price: 89, status: 'shipped' },
+];
+
+const columns: OgeSimpleTableColumn[] = [
+  { field: 'sku', caption: 'SKU', width: '7rem' },
+  { field: 'product.name', caption: 'Product' },
+  { field: 'qty', caption: 'Qty', align: 'end', width: '5rem' },
+  { field: 'price', caption: 'Unit price', align: 'end' },
+];
+
+export function SimpleTableBasicsDemo() {
+  return (
+    <OgeSimpleTable value={lines} columns={columns} caption="Order lines" />
+  );
+}
+```
+
+### Row templates
+
+```ts
+'use client';
+
+import { OgeSimpleTable } from '@oge-ui/react-layout';
+import type { OgeSimpleTableColumn } from '@oge-ui/react-layout';
+
+interface OrderLine {
+  sku: string;
+  product: { name: string };
+  qty: number;
+  price: number;
+  status: 'shipped' | 'pending' | 'backordered';
+}
+
+const lines: OrderLine[] = [
+  { sku: 'DSK-01', product: { name: 'Oak desk' }, qty: 2, price: 420, status: 'shipped' },
+  { sku: 'CHR-07', product: { name: 'Mesh office chair' }, qty: 4, price: 260, status: 'pending' },
+  { sku: 'LMP-12', product: { name: 'Desk lamp' }, qty: 6, price: 45, status: 'backordered' },
+  { sku: 'SHF-03', product: { name: 'Wall shelf' }, qty: 3, price: 89, status: 'shipped' },
+];
+
+const columns: OgeSimpleTableColumn[] = [
+  { field: 'sku', caption: 'SKU', width: '7rem' },
+  { field: 'product.name', caption: 'Product' },
+  { field: 'qty', caption: 'Qty', align: 'end', width: '5rem' },
+  { field: 'price', caption: 'Unit price', align: 'end' },
+];
+
+export function SimpleTableRowDemo() {
+  return (
+    <OgeSimpleTable
+      value={lines}
+      columns={columns}
+      ariaLabel="Order lines with status"
+      renderRow={({ row, columns: cols }) => (
+        <tr>
+          <td>
+            <code>{row.sku}</code>
+          </td>
+          <td>
+            {row.product.name}
+            {row.status !== 'shipped' ? (
+              <span className="status">{row.status}</span>
+            ) : null}
+          </td>
+          <td className={cols[2].cellClass}>{row.qty}</td>
+          <td className={cols[3].cellClass}>
+            {(row.price * row.qty).toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'USD',
+            })}
+          </td>
+        </tr>
+      )}
+    />
+  );
+}
+```
+
+### Paging, footer and empty state
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSimpleTable } from '@oge-ui/react-layout';
+import type { OgeSimpleTableColumn } from '@oge-ui/react-layout';
+
+const events = Array.from({ length: 12 }, (_, i) => ({
+  at: `09:${String(i * 4).padStart(2, '0')}`,
+  user: ['ayse', 'mehmet', 'ali'][i % 3],
+  action: ['signed in', 'exported a report', 'changed a role'][i % 3],
+}));
+
+const columns: OgeSimpleTableColumn[] = [
+  { field: 'at', caption: 'Time', width: '6rem' },
+  { field: 'user', caption: 'User' },
+  { field: 'action', caption: 'Action' },
+];
+
+export function SimpleTablePagingDemo() {
+  const [page, setPage] = useState(0);
+  return (
+    <>
+      <OgeSimpleTable
+        value={events}
+        columns={columns}
+        paging
+        pageSize={5}
+        pageIndex={page}
+        onPageIndexChange={setPage}
+        compact
+        caption="Audit log"
+        renderFooter={({ rows }) => (
+          <tr>
+            <td colSpan={3}>{rows.length} events</td>
+          </tr>
+        )}
+        renderEmpty={() => 'No events yet'}
+      />
+      <p>Page {page + 1}</p>
     </>
   );
 }

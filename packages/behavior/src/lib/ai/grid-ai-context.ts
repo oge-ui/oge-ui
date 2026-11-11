@@ -190,7 +190,7 @@ export const OGE_GRID_AI_RESPONSE_SCHEMA: OgeAiJsonSchema = {
           properties: {
             type: { const: 'binary' },
             field: { type: 'string' },
-            op: { type: 'string', enum: [...FILTER_OPERATORS] },
+            op: { type: 'string', enum: FILTER_OPERATORS },
             value: {
               description:
                 'Number, string, boolean, "YYYY-MM-DD" date, an array for ' +

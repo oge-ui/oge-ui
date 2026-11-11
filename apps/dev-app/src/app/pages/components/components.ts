@@ -24,6 +24,7 @@ import {
   OgeListView,
   OgeDataView,
   OgeDataViewItemTemplate,
+  OgeSimpleTable,
   OgeTileLayout,
   OgeCarousel,
   OgeSplitter,
@@ -77,6 +78,7 @@ type FamilyKey =
   | 'app-bar'
   | 'list-view'
   | 'data-view'
+  | 'simple-table'
   | 'tile-layout'
   | 'carousel'
   | 'progress'
@@ -153,6 +155,7 @@ interface OrgNode {
     OgeListView,
     OgeDataView,
     OgeDataViewItemTemplate,
+    OgeSimpleTable,
     OgeTileLayout,
     OgeCarousel,
     OgeProgressBar,
@@ -1023,6 +1026,16 @@ interface OrgNode {
                     </oge-data-view>
                   </div>
                 }
+                @case ('simple-table') {
+                  <div class="w-full self-start">
+                    <oge-simple-table
+                      [value]="galleryProducts"
+                      [columns]="galleryTableColumns"
+                      [compact]="true"
+                      ariaLabel="Products"
+                    />
+                  </div>
+                }
                 @case ('list-view') {
                   <div class="w-full self-start">
                     <oge-list-view
@@ -1382,6 +1395,10 @@ export class ComponentsIndexPage {
     { key: 'signals', label: 'Signals' },
     { key: 'a11y', label: 'Accessibility' },
   ];
+  protected readonly galleryTableColumns = [
+    { field: 'name', caption: 'Product' },
+    { field: 'price', caption: 'Price', align: 'end' as const },
+  ];
   protected readonly galleryProducts = [
     { id: 1, name: 'Desk', price: 420 },
     { id: 2, name: 'Chair', price: 260 },
@@ -1518,6 +1535,14 @@ export class ComponentsIndexPage {
       path: '/components/data-view',
       description:
         'Templated items in responsive columns or rows that follow their container, with a layout switch, search, locale-aware sorting, paging and selectable items.',
+    },
+    {
+      key: 'simple-table',
+      name: 'Simple Table',
+      icon: 'table',
+      path: '/components/simple-table',
+      description:
+        'A native table for small lists: write each row yourself, keep header cells aligned with typed row templates, add totals in a footer and page with previous / next.',
     },
     {
       key: 'list-view',

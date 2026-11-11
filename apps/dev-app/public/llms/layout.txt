@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CAROUSEL_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DATA_VIEW_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LIST_VIEW_CONFIG`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TILE_LAYOUT_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeCarousel`, `OgeCarouselSlide`, `OgeCarouselSlideTemplate`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeDataView`, `OgeDataViewEmptyTemplate`, `OgeDataViewItemTemplate`, `OgeDataViewListItemTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeListView`, `OgeListViewEmptyTemplate`, `OgeListViewFooterTemplate`, `OgeListViewGroupTemplate`, `OgeListViewItemTemplate`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTileLayout`, `OgeTileLayoutContentTemplate`, `OgeTileLayoutHeaderTemplate`, `OgeTileLayoutItem`, `OgeTileLayoutItemHeader`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeCarouselConfig`, `provideOgeChipConfig`, `provideOgeDataViewConfig`, `provideOgeListViewConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTileLayoutConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`, `sanitizeOgeTileLayoutState`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSlideTemplateContext`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewEmptyTemplateContext`, `OgeDataViewItemClickEvent`, `OgeDataViewItemTemplateContext`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewEmptyTemplateContext`, `OgeListViewExpr`, `OgeListViewFooterTemplateContext`, `OgeListViewGroupTemplateContext`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemTemplateContext`, `OgeListViewKey`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewPageLoadMode`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutMessages`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTemplateContext`, `OgeTileLayoutTileState`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CAROUSEL_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DATA_VIEW_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SIMPLE_TABLE_CONFIG`, `OGE_DEFAULT_SIMPLE_TABLE_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LIST_VIEW_CONFIG`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SIMPLE_TABLE_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TILE_LAYOUT_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeCarousel`, `OgeCarouselSlide`, `OgeCarouselSlideTemplate`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeDataView`, `OgeDataViewEmptyTemplate`, `OgeDataViewItemTemplate`, `OgeDataViewListItemTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeListView`, `OgeListViewEmptyTemplate`, `OgeListViewFooterTemplate`, `OgeListViewGroupTemplate`, `OgeListViewItemTemplate`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSimpleTable`, `OgeSimpleTableEmpty`, `OgeSimpleTableFooter`, `OgeSimpleTableHeader`, `OgeSimpleTableRow`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTileLayout`, `OgeTileLayoutContentTemplate`, `OgeTileLayoutHeaderTemplate`, `OgeTileLayoutItem`, `OgeTileLayoutItemHeader`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeCarouselConfig`, `provideOgeChipConfig`, `provideOgeDataViewConfig`, `provideOgeListViewConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSimpleTableConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTileLayoutConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`, `sanitizeOgeTileLayoutState`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSlideTemplateContext`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewEmptyTemplateContext`, `OgeDataViewItemClickEvent`, `OgeDataViewItemTemplateContext`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewEmptyTemplateContext`, `OgeListViewExpr`, `OgeListViewFooterTemplateContext`, `OgeListViewGroupTemplateContext`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemTemplateContext`, `OgeListViewKey`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewPageLoadMode`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSimpleTableAlign`, `OgeSimpleTableColumn`, `OgeSimpleTableConfig`, `OgeSimpleTableConfigInput`, `OgeSimpleTableMessages`, `OgeSimpleTableResolvedColumn`, `OgeSimpleTableRowContext`, `OgeSimpleTableSectionContext`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutMessages`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTemplateContext`, `OgeTileLayoutTileState`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 `@oge-ui/layout/*`
 
@@ -1503,6 +1503,87 @@ _Vocabulary_
 | `OGE_DEFAULT_DATA_VIEW_CONFIG` | `OgeDataViewConfig` | The resolved defaults. |
 | `OgeDataViewMessages` | `interface` | Every user-facing string, aria labels included: `dataView`, `layoutSwitch`, `gridLayout`, `listLayout`, `sortBy`, `sortNone`, `ascending`, `descending`, `search`, `searchPlaceholder`, `pager`, `previousPage`, `nextPage`, `page` (`{page}`), `pageInfo` (`{from}` `{to}` `{itemCount}`), `pageAnnouncement`, `noData`, `noResults`, `results` (ICU plural over `{count}`) and `loading`. Translated in every `@oge-ui/locales` pack (`layout.dataView`). |
 | `OGE_DEFAULT_DATA_VIEW_MESSAGES` | `OgeDataViewMessages` | The English catalog. |
+
+### OgeSimpleTable — `<oge-simple-table>`
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `readonly T[]` | `[]` | The rows. |
+| `columns` | `readonly OgeSimpleTableColumn[] \| undefined` | `—` | Header cells and default cells. Unset: one column per own key of the first row. |
+
+_Paging_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `paging` | `boolean` | `false` | Shows `pageSize` rows at a time with a previous / next pager and a `{from}–{to} of {count}` text (announced politely). |
+| `pageSize` | `number \| undefined` | `config ?? 10` | Rows per page with `paging`. |
+| `pageIndex` | `number` | `0` | 0-based page shown (two-way `[(pageIndex)]`), clamped into range. |
+
+_Presentation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `compact` | `boolean \| undefined` | `config ?? false` | Denser rows (4px 8px cell padding instead of the token). |
+| `caption` | `string \| undefined` | `—` | A visible `<caption>` — the table’s accessible name. |
+| `ariaLabel` | `string \| undefined` | `—` | The accessible name when there is no visible caption. |
+| `scrollable` | `boolean` | `true` | Wraps the table in a focusable, labelled scroll region, so a wide table scrolls inside itself on a narrow screen instead of widening the page. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale of the pager’s numbers; falls back to the config, then the application locale. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `goToPage(index)` | `(index: number) => void` | Shows a page, clamped into range. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pageIndexChange` | `number` | The banana half of `[(pageIndex)]`. |
+
+#### Types
+
+_Slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSimpleTableRow` | `[ogeSimpleTableRow]` | The markup of each row — a whole `<tr>` with free `<td>`s. Bind `[ogeSimpleTableRowOf]` to the same array as `value` and `let-row` is typed under `strictTemplates` (`ngTemplateContextGuard`). |
+| `OgeSimpleTableHeader` | `[ogeSimpleTableHeader]` | Replaces the header row(s) inside `<thead>` — grouped headers, `colspan`. Give each `<th>` a `scope`. |
+| `OgeSimpleTableFooter` | `[ogeSimpleTableFooter]` | Rows of a `<tfoot>` — totals, notes; `let-all="rows"` is every row of `value`. |
+| `OgeSimpleTableEmpty` | `[ogeSimpleTableEmpty]` | Content of the full-width cell shown when `value` is empty (default: the `noData` message). |
+| `OgeSimpleTableRowContext` | `{ $implicit: T; columns: readonly OgeSimpleTableResolvedColumn[]; rowIndex: number }` | Context of the row template; `rowIndex` counts in `value`, not in the page. |
+| `OgeSimpleTableSectionContext` | `{ $implicit: readonly OgeSimpleTableResolvedColumn[]; rows: readonly T[] }` | Context of the header and footer templates. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSimpleTableColumn` | `{ field?: string; caption?: string; align?: OgeSimpleTableAlign; width?: string; cssClass?: string }` | One column: its header cell, and the default cell when no row template is given. `field` takes dot paths; `caption` defaults to the field, humanized; `width` goes on the column’s `<col>`. |
+| `OgeSimpleTableAlign` | `'start' \| 'center' \| 'end'` | Alignment of a column’s header and cells (logical: `end` is the left edge in a right-to-left page). |
+| `OgeSimpleTableResolvedColumn` | `OgeSimpleTableColumn & { caption: string; align: OgeSimpleTableAlign; cellClass: string }` | A column as templates receive it. `cellClass` carries the alignment and `cssClass`: put it on a `<td>` of your own row to line it up with its header. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeSimpleTableConfig(config)` | `(config: OgeSimpleTableConfigInput \| (() => OgeSimpleTableConfigInput)) => Provider` | Application- or component-scoped defaults for `pageSize`, `compact`, `locale` and the `messages`; a function makes them live (switching the UI language without a reload). |
+| `OGE_SIMPLE_TABLE_CONFIG` | `InjectionToken<OgeSimpleTableConfig>` | The token behind the provider. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSimpleTableConfig` | `interface` | The resolved config (`messages`, `pageSize?`, `compact?`, `locale?`). |
+| `OgeSimpleTableConfigInput` | `interface` | The partial input both providers accept (messages merged one level deep). |
+| `OGE_DEFAULT_SIMPLE_TABLE_CONFIG` | `OgeSimpleTableConfig` | The resolved defaults. |
+| `OgeSimpleTableMessages` | `interface` | Every user-facing string: `pager` (the pager group’s name), `previousPage`, `nextPage`, `pageInfo` (`{from}` `{to}` `{count}`) and `noData`. Translated in every `@oge-ui/locales` pack (`layout.simpleTable`). |
+| `OGE_DEFAULT_SIMPLE_TABLE_MESSAGES` | `OgeSimpleTableMessages` | The English catalog. |
 
 ### OgeTileLayout — `<oge-tile-layout>`
 
@@ -4406,6 +4487,162 @@ import { OgeSkeleton } from '@oge-ui/layout';
 })
 export class Demo {
   protected readonly loading = signal(true);
+}
+```
+
+### Basics
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSimpleTable } from '@oge-ui/layout';
+import type { OgeSimpleTableColumn } from '@oge-ui/layout';
+
+interface OrderLine {
+  sku: string;
+  product: { name: string };
+  qty: number;
+  price: number;
+  status: 'shipped' | 'pending' | 'backordered';
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSimpleTable],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A native <table>: caption, <th scope="col"> headers, one alignment
+         class shared by a column's header and cells. -->
+    <oge-simple-table [value]="lines" [columns]="columns" caption="Order lines" />
+  `,
+})
+export class Demo {
+  protected readonly lines: OrderLine[] = [
+    { sku: 'DSK-01', product: { name: 'Oak desk' }, qty: 2, price: 420, status: 'shipped' },
+    { sku: 'CHR-07', product: { name: 'Mesh office chair' }, qty: 4, price: 260, status: 'pending' },
+    { sku: 'LMP-12', product: { name: 'Desk lamp' }, qty: 6, price: 45, status: 'backordered' },
+    { sku: 'SHF-03', product: { name: 'Wall shelf' }, qty: 3, price: 89, status: 'shipped' },
+  ];
+
+  protected readonly columns: OgeSimpleTableColumn[] = [
+    { field: 'sku', caption: 'SKU', width: '7rem' },
+    { field: 'product.name', caption: 'Product' },
+    { field: 'qty', caption: 'Qty', align: 'end', width: '5rem' },
+    { field: 'price', caption: 'Unit price', align: 'end' },
+  ];
+}
+```
+
+### Paging
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSimpleTable, OgeSimpleTableFooter, OgeSimpleTableEmpty } from '@oge-ui/layout';
+import type { OgeSimpleTableColumn } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSimpleTable, OgeSimpleTableFooter, OgeSimpleTableEmpty],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- paging: previous / next and a polite "1–5 of 12" text. The footer
+         receives every row (not just the page) for totals. -->
+    <oge-simple-table
+      [value]="events"
+      [columns]="columns"
+      [paging]="true"
+      [pageSize]="5"
+      [(pageIndex)]="page"
+      [compact]="true"
+      caption="Audit log"
+    >
+      <ng-template ogeSimpleTableFooter let-all="rows">
+        <tr>
+          <td colspan="3">{{ all.length }} events</td>
+        </tr>
+      </ng-template>
+      <ng-template ogeSimpleTableEmpty>No events yet</ng-template>
+    </oge-simple-table>
+    <p>Page {{ page() + 1 }}</p>
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+
+  protected readonly events = Array.from({ length: 12 }, (_, i) => ({
+    at: `09:${String(i * 4).padStart(2, '0')}`,
+    user: ['ayse', 'mehmet', 'ali'][i % 3],
+    action: ['signed in', 'exported a report', 'changed a role'][i % 3],
+  }));
+
+  protected readonly columns: OgeSimpleTableColumn[] = [
+    { field: 'at', caption: 'Time', width: '6rem' },
+    { field: 'user', caption: 'User' },
+    { field: 'action', caption: 'Action' },
+  ];
+}
+```
+
+### Row
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSimpleTable, OgeSimpleTableRow } from '@oge-ui/layout';
+import { CurrencyPipe } from '@angular/common';
+import type { OgeSimpleTableColumn } from '@oge-ui/layout';
+
+interface OrderLine {
+  sku: string;
+  product: { name: string };
+  qty: number;
+  price: number;
+  status: 'shipped' | 'pending' | 'backordered';
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSimpleTable, OgeSimpleTableRow, CurrencyPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [ogeSimpleTableRowOf] types let-line as OrderLine under strictTemplates.
+         columns[i].cellClass lines a cell up with its header. -->
+    <oge-simple-table [value]="lines" [columns]="columns" ariaLabel="Order lines with status">
+      <ng-template
+        ogeSimpleTableRow
+        [ogeSimpleTableRowOf]="lines"
+        let-line
+        let-columns="columns"
+      >
+        <tr>
+          <td><code>{{ line.sku }}</code></td>
+          <td>
+            {{ line.product.name }}
+            @if (line.status !== 'shipped') {
+              <span class="status">{{ line.status }}</span>
+            }
+          </td>
+          <td [class]="columns[2].cellClass">{{ line.qty }}</td>
+          <td [class]="columns[3].cellClass">
+            {{ line.price * line.qty | currency: 'USD' }}
+          </td>
+        </tr>
+      </ng-template>
+    </oge-simple-table>
+  `,
+})
+export class Demo {
+  protected readonly lines: OrderLine[] = [
+    { sku: 'DSK-01', product: { name: 'Oak desk' }, qty: 2, price: 420, status: 'shipped' },
+    { sku: 'CHR-07', product: { name: 'Mesh office chair' }, qty: 4, price: 260, status: 'pending' },
+    { sku: 'LMP-12', product: { name: 'Desk lamp' }, qty: 6, price: 45, status: 'backordered' },
+    { sku: 'SHF-03', product: { name: 'Wall shelf' }, qty: 3, price: 89, status: 'shipped' },
+  ];
+
+  protected readonly columns: OgeSimpleTableColumn[] = [
+    { field: 'sku', caption: 'SKU', width: '7rem' },
+    { field: 'product.name', caption: 'Product' },
+    { field: 'qty', caption: 'Qty', align: 'end', width: '5rem' },
+    { field: 'price', caption: 'Unit price', align: 'end' },
+  ];
 }
 ```
 

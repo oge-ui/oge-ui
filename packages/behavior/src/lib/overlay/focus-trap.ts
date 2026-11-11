@@ -4,7 +4,7 @@
  * open never leaves the trap stale.
  */
 
-const TABBABLE_SELECTOR = [
+const TABBABLE_SELECTOR = /* @__PURE__ */ [
   'a[href]',
   'button',
   'input',

@@ -67,6 +67,7 @@ const COMPONENT_PREFIXES = [
   'menu',
   'button',
   'input',
+  'simple-table',
 ];
 
 /** The category of one token, from its name. */

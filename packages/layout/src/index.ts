@@ -397,6 +397,25 @@ export type {
   OgeDataViewSortDirection,
   OgeDataViewSortOption,
 } from '@oge-ui/layout/data-view';
+export {
+  OGE_DEFAULT_SIMPLE_TABLE_CONFIG,
+  OGE_DEFAULT_SIMPLE_TABLE_MESSAGES,
+  OGE_SIMPLE_TABLE_CONFIG,
+  OgeSimpleTable,
+  OgeSimpleTableEmpty,
+  OgeSimpleTableFooter,
+  OgeSimpleTableHeader,
+  OgeSimpleTableRow,
+  provideOgeSimpleTableConfig,
+  type OgeSimpleTableAlign,
+  type OgeSimpleTableColumn,
+  type OgeSimpleTableConfig,
+  type OgeSimpleTableConfigInput,
+  type OgeSimpleTableMessages,
+  type OgeSimpleTableResolvedColumn,
+  type OgeSimpleTableRowContext,
+  type OgeSimpleTableSectionContext,
+} from '@oge-ui/layout/simple-table';
 export { OgeListView } from '@oge-ui/layout/list-view';
 export {
   OgeListViewEmptyTemplate,

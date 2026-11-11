@@ -4,6 +4,7 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { ogeDualTypes } from '../../../tools/react-package/dual-types.mjs';
+import { ogePureAnnotations } from '../../../tools/react-package/pure-annotations.mjs';
 import { workspaceAliases } from '../../../tools/vite/workspace-aliases.mjs';
 
 /**
@@ -31,6 +32,7 @@ export default defineConfig(() => ({
   cacheDir: '../../../node_modules/.vite/packages/react/oge',
   plugins: [
     react(),
+    ogePureAnnotations(),
     publishAssets('../../../dist/packages/react/oge'),
     dts({
       entryRoot: 'src',

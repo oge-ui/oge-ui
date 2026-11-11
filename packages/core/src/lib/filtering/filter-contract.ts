@@ -39,6 +39,33 @@ export interface OgeFilterOperatorInfo {
   readonly sql: string;
 }
 
+/**
+ * The operand shape of every operator — the only part of the contract the
+ * runtime needs, kept apart from the prose below so a bundle that checks an
+ * arity does not carry the documentation strings.
+ */
+export const OGE_FILTER_OPERATOR_ARITY: Readonly<
+  Record<FilterOperator, OgeFilterOperatorArity>
+> = {
+  eq: 'one',
+  ne: 'one',
+  gt: 'one',
+  ge: 'one',
+  lt: 'one',
+  le: 'one',
+  contains: 'one',
+  notcontains: 'one',
+  startswith: 'one',
+  endswith: 'one',
+  in: 'list',
+  notin: 'list',
+  between: 'pair',
+  isnull: 'none',
+  isnotnull: 'none',
+  isblank: 'none',
+  isnotblank: 'none',
+};
+
 /** Every filter operator with its meaning, null rule and reference SQL. */
 export const OGE_FILTER_OPERATORS = {
   eq: {
@@ -153,7 +180,7 @@ export const OGE_FILTER_OPERATORS = {
 export function ogeFilterOperatorArity(
   op: FilterOperator,
 ): OgeFilterOperatorArity {
-  return OGE_FILTER_OPERATORS[op]?.arity ?? 'one';
+  return OGE_FILTER_OPERATOR_ARITY[op] ?? 'one';
 }
 
 /** Whether an operator takes a value (`isnull`, `isblank` and their negations do not). */

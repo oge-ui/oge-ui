@@ -3323,6 +3323,12 @@ export class HomePage {
       path: '/components/data-view',
     },
     {
+      icon: 'table',
+      name: 'Simple Table',
+      desc: 'A native table with free row templates, aligned headers, a totals footer and paging.',
+      path: '/components/simple-table',
+    },
+    {
       icon: 'dashboard',
       name: 'Tile Layout',
       desc: 'Dashboard tiles with spans, drag to reorder, resize handles and keyboard twins.',

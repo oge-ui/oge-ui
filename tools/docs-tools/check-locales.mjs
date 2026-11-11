@@ -57,6 +57,7 @@ const SLICES = {
   'layout.alert': 'OGE_DEFAULT_ALERT_MESSAGES',
   'layout.carousel': 'OGE_DEFAULT_CAROUSEL_MESSAGES',
   'layout.dataView': 'OGE_DEFAULT_DATA_VIEW_MESSAGES',
+  'layout.simpleTable': 'OGE_DEFAULT_SIMPLE_TABLE_MESSAGES',
   'layout.tileLayout': 'OGE_DEFAULT_TILE_LAYOUT_MESSAGES',
   'layout.listView': 'OGE_DEFAULT_LIST_VIEW_MESSAGES',
   fab: 'OGE_DEFAULT_FAB_MESSAGES',

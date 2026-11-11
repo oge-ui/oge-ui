@@ -125,7 +125,7 @@ export interface OgeEditorSelection {
 /** The deepest a list may nest. */
 export const OGE_EDITOR_MAX_INDENT = 8;
 
-const NO_MARKS: OgeEditorMarks = Object.freeze({});
+const NO_MARKS: OgeEditorMarks = /* @__PURE__ */ Object.freeze({});
 
 /** The shared empty mark set. */
 export function ogeEditorNoMarks(): OgeEditorMarks {

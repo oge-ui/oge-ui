@@ -8,7 +8,12 @@ import { en, type OgeLocalePack } from '@oge-ui/locales';
 import { de } from '@oge-ui/locales/de';
 import { tr } from '@oge-ui/locales/tr';
 import { OGE_PAGINATION_CONFIG } from '@oge-ui/navigation';
-import { provideOgeLocale } from './locale';
+import { OGE_SIMPLE_TABLE_CONFIG } from '@oge-ui/layout/simple-table';
+import {
+  provideOgeGridLocale,
+  provideOgeLayoutLocale,
+  provideOgeLocale,
+} from './locale';
 
 describe('provideOgeLocale', () => {
   it('sets every MIT family catalog and the data locale from one pack', () => {
@@ -51,5 +56,19 @@ describe('provideOgeLocale', () => {
     pack.set(de);
     expect(grid.messages.noData).toBe(de.grid?.noData);
     expect(grid.locale).toBe('de');
+  });
+
+  it('applies one family slice without touching the others', () => {
+    TestBed.configureTestingModule({
+      providers: [provideOgeGridLocale(tr), provideOgeLayoutLocale(() => tr)],
+    });
+    expect(TestBed.inject(OGE_GRID_CONFIG).messages.noData).toBe(
+      tr.grid?.noData,
+    );
+    expect(TestBed.inject(OGE_SIMPLE_TABLE_CONFIG).messages.noData).toBe(
+      tr.layout?.simpleTable?.noData,
+    );
+    // inputs were not asked for: their token keeps its English default
+    expect(TestBed.inject(OGE_INPUTS_CONFIG).locale).toBeUndefined();
   });
 });

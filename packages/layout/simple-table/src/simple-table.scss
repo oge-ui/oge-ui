@@ -1,0 +1,200 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A native table for small template-driven lists: header cells and body cells
+// share one alignment class per column, rows separate with hairlines, and the
+// pager sits under the table. Everything reads suite tokens, so the dark and
+// high-contrast themes need no extra rules.
+.oge-simple-table {
+  @include tokens.core-tokens;
+
+  display: block;
+  min-inline-size: 0;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.oge-simple-table-scroll {
+  overflow-x: auto;
+  border: 1px solid
+    var(--oge-simple-table-border-color, var(--oge-border-color));
+  border-radius: var(--oge-simple-table-radius, var(--oge-radius-lg));
+  background: var(--oge-simple-table-bg, var(--oge-bg));
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-simple-table-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: var(--oge-simple-table-cell-padding, 8px 12px);
+    border-block-end: 1px solid
+      var(--oge-simple-table-border-color, var(--oge-border-color));
+    text-align: start;
+    vertical-align: middle;
+  }
+
+  thead th {
+    background: var(--oge-simple-table-header-bg, var(--oge-header-bg));
+    color: var(--oge-muted-color);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child > td {
+    border-block-end: 0;
+  }
+
+  tbody tr:hover > td {
+    background: var(--oge-row-hover-bg);
+  }
+
+  tfoot td,
+  tfoot th {
+    border-block-start: 1px solid
+      var(--oge-simple-table-border-color, var(--oge-border-color));
+    border-block-end: 0;
+    background: var(--oge-simple-table-header-bg, var(--oge-header-bg));
+    font-weight: 600;
+  }
+
+  // the same class goes on a column's header and on its cells
+  .oge-simple-table-align-center {
+    text-align: center;
+  }
+
+  .oge-simple-table-align-end {
+    text-align: end;
+  }
+}
+
+// `compact` is a density choice of its own: it wins over the padding token
+.oge-simple-table-compact .oge-simple-table-table {
+  th,
+  td {
+    padding: 4px 8px;
+  }
+}
+
+.oge-simple-table-caption {
+  padding: 8px 12px;
+  color: var(--oge-text-color);
+  font-weight: 600;
+  text-align: start;
+  caption-side: top;
+}
+
+.oge-simple-table-empty-row:hover > td {
+  background: transparent;
+}
+
+.oge-simple-table-empty {
+  padding: 24px 12px;
+  color: var(--oge-input-muted);
+  text-align: center;
+}
+
+// --- pager -------------------------------------------------------------------
+
+.oge-simple-table-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-block-start: 8px;
+}
+
+.oge-simple-table-info {
+  padding-inline: 8px;
+  color: var(--oge-input-muted);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-simple-table-page-btn {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 32px;
+  block-size: 32px;
+  padding-inline: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-text-color);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  @media (pointer: coarse) {
+    min-inline-size: 44px;
+    block-size: 44px;
+  }
+}
+
+[dir='rtl'] .oge-simple-table-page-btn svg,
+.oge-simple-table-page-btn:dir(rtl) svg {
+  transform: scaleX(-1);
+}
+
+@include tokens.reduced-motion {
+  .oge-simple-table-page-btn {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-simple-table-scroll,
+  .oge-simple-table-table th,
+  .oge-simple-table-table td {
+    border-color: CanvasText;
+  }
+
+  .oge-simple-table-page-btn {
+    color: ButtonText;
+  }
+
+  .oge-simple-table-page-btn:disabled {
+    color: GrayText;
+  }
+}

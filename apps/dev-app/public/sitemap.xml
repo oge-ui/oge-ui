@@ -6,7 +6,7 @@
   <url><loc>https://www.ogeui.com/getting-started/styling</loc><lastmod>2026-11-09</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/tokens</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/theme-builder</loc><lastmod>2026-10-08</lastmod></url>
-  <url><loc>https://www.ogeui.com/guides</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/guides</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/angular-ssr</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/nextjs</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/build-tools</loc><lastmod>2026-10-23</lastmod></url>
@@ -18,7 +18,7 @@
   <url><loc>https://www.ogeui.com/guides/accessibility/conformance</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/versioning</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/dev-warnings</loc><lastmod>2026-11-10</lastmod></url>
-  <url><loc>https://www.ogeui.com/guides/filter-contract</loc></url>
+  <url><loc>https://www.ogeui.com/guides/filter-contract</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/ai</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-10-21</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/localization/api</loc><lastmod>2026-10-15</lastmod></url>
@@ -31,7 +31,7 @@
   <url><loc>https://www.ogeui.com/components/data-grid/remote-data</loc><lastmod>2026-10-01</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/live-updates</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/columns</loc><lastmod>2026-10-03</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/data-grid/filtering</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-grid/filtering</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/selection</loc><lastmod>2026-09-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/editing</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/grouping</loc><lastmod>2026-10-15</lastmod></url>
@@ -43,7 +43,7 @@
   <url><loc>https://www.ogeui.com/components/data-grid/conditional-formatting</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/pinned-rows</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/export</loc><lastmod>2026-10-04</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/data-grid/api</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-grid/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list/lazy-loading</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list/filtering</loc><lastmod>2026-10-05</lastmod></url>
@@ -85,6 +85,8 @@
   <url><loc>https://www.ogeui.com/components/tile-layout/api</loc><lastmod>2026-10-18</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-view</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-view/api</loc><lastmod>2026-10-18</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/simple-table</loc></url>
+  <url><loc>https://www.ogeui.com/components/simple-table/api</loc><lastmod>2026-10-18</lastmod></url>
   <url><loc>https://www.ogeui.com/components/list-view</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/list-view/api</loc><lastmod>2026-10-18</lastmod></url>
   <url><loc>https://www.ogeui.com/components/app-bar</loc><lastmod>2026-10-06</lastmod></url>

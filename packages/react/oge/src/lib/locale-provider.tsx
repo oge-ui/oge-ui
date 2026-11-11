@@ -11,6 +11,7 @@ import {
   OGE_DEFAULT_BUTTONS_MESSAGES,
   OGE_DEFAULT_CHIP_MESSAGES,
   OGE_DEFAULT_DATA_VIEW_MESSAGES,
+  OGE_DEFAULT_SIMPLE_TABLE_MESSAGES,
   OGE_DEFAULT_DRAWER_MESSAGES,
   OGE_DEFAULT_EDITOR_MESSAGES,
   OGE_DEFAULT_FAB_MESSAGES,
@@ -48,6 +49,7 @@ import {
   OgeBadgeConfigProvider,
   OgeChipConfigProvider,
   OgeDataViewConfigProvider,
+  OgeSimpleTableConfigProvider,
   OgeLoadIndicatorConfigProvider,
   OgeProgressBarConfigProvider,
   OgeSplitterConfigProvider,
@@ -68,7 +70,7 @@ import { OgeOverlayConfigProvider } from '@oge-ui/react-overlay';
 import { OgeTabsConfigProvider } from '@oge-ui/react-tabs';
 import { OgeUploadConfigProvider } from '@oge-ui/react-upload';
 
-/** Props of {@link OgeLocaleProvider}. */
+/** Props of {@link OgeLocaleProvider} and of every family slice of it. */
 export interface OgeLocaleProviderProps {
   /** The `@oge-ui/locales` pack to apply — swap it to switch language. */
   readonly pack: OgeLocalePack;
@@ -76,56 +78,210 @@ export interface OgeLocaleProviderProps {
 }
 
 /**
- * The React twin of Angular's `provideOgeLocale()`: wraps the subtree in every
- * MIT family's config provider, each with the pack's slice merged over the
- * English catalog (nested blocks key by key — a key the pack lacks stays
- * English) and, for the grid / tree list and the editors, the pack's
- * `locale`. Pass a different `pack` to switch language at runtime; context
- * re-renders every component beneath.
- *
- * ```tsx
- * import { tr } from '@oge-ui/locales/tr';
- * <OgeLocaleProvider pack={tr}>
- *   <App />
- * </OgeLocaleProvider>
- * ```
- *
- * Family providers nested inside it still apply on top (the grid and the
- * uploader merge over it). The page's `dir` is the app's job (set it from
- * `pack.dir`); commercial families take their slice through their own
- * providers — this MIT umbrella does not depend on them.
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-grid` only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
  */
-export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
+export function OgeGridLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
   const c = useMemo(() => {
-    const { layout, navigation } = pack;
     return {
       grid: {
         locale: pack.locale,
         messages: ogeMergeMessages(OGE_DEFAULT_GRID_MESSAGES, pack.grid),
       },
+    };
+  }, [pack]);
+  return (
+    <OgeGridConfigProvider config={c.grid}>{children}</OgeGridConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-inputs` only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeInputsLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    return {
       inputs: {
         locale: pack.locale,
         messages: ogeMergeMessages(OGE_DEFAULT_INPUTS_MESSAGES, pack.inputs),
       },
+    };
+  }, [pack]);
+  return (
+    <OgeInputsConfigProvider config={c.inputs}>
+      {children}
+    </OgeInputsConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-buttons` (buttons and the floating action button) only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeButtonsLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    return {
       buttons: {
         messages: ogeMergeMessages(OGE_DEFAULT_BUTTONS_MESSAGES, pack.buttons),
       },
+      fab: {
+        messages: ogeMergeMessages(OGE_DEFAULT_FAB_MESSAGES, pack.fab),
+      },
+    };
+  }, [pack]);
+  return (
+    <OgeButtonsConfigProvider config={c.buttons}>
+      <OgeFabConfigProvider config={c.fab}>{children}</OgeFabConfigProvider>
+    </OgeButtonsConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-overlay` only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeOverlayLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    return {
       overlay: {
         messages: ogeMergeMessages(OGE_DEFAULT_OVERLAY_MESSAGES, pack.overlay),
       },
+    };
+  }, [pack]);
+  return (
+    <OgeOverlayConfigProvider config={c.overlay}>
+      {children}
+    </OgeOverlayConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-tabs` only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeTabsLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    return {
       tabs: {
         messages: ogeMergeMessages(OGE_DEFAULT_TABS_MESSAGES, pack.tabs),
       },
+    };
+  }, [pack]);
+  return (
+    <OgeTabsConfigProvider config={c.tabs}>{children}</OgeTabsConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-forms` only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeFormsLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    return {
       forms: {
         messages: ogeMergeMessages(OGE_DEFAULT_FORMS_MESSAGES, pack.forms),
       },
+    };
+  }, [pack]);
+  return (
+    <OgeFormsConfigProvider config={c.forms}>{children}</OgeFormsConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-upload` only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeUploadLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    return {
       upload: {
         messages: ogeMergeMessages(OGE_DEFAULT_UPLOAD_MESSAGES, pack.upload),
       },
+    };
+  }, [pack]);
+  return (
+    <OgeUploadConfigProvider config={c.upload}>
+      {children}
+    </OgeUploadConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-editor` only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeEditorLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    return {
       editor: {
         locale: pack.locale,
         messages: ogeMergeMessages(OGE_DEFAULT_EDITOR_MESSAGES, pack.editor),
       },
+    };
+  }, [pack]);
+  return (
+    <OgeEditorConfigProvider config={c.editor}>
+      {children}
+    </OgeEditorConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-layout` (every layout component) only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeLayoutLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    const { layout } = pack;
+    return {
       accordion: {
         messages: ogeMergeMessages(
           OGE_DEFAULT_ACCORDION_MESSAGES,
@@ -170,7 +326,6 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
       alert: {
         messages: ogeMergeMessages(OGE_DEFAULT_ALERT_MESSAGES, layout?.alert),
       },
-      // no catalog — the timeline only needs the pack's locale for its dates
       timeline: { locale: pack.locale },
       carousel: {
         locale: pack.locale,
@@ -184,6 +339,13 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
         messages: ogeMergeMessages(
           OGE_DEFAULT_DATA_VIEW_MESSAGES,
           layout?.dataView,
+        ),
+      },
+      simpleTable: {
+        locale: pack.locale,
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_SIMPLE_TABLE_MESSAGES,
+          layout?.simpleTable,
         ),
       },
       tileLayout: {
@@ -200,9 +362,60 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
           layout?.listView,
         ),
       },
-      fab: {
-        messages: ogeMergeMessages(OGE_DEFAULT_FAB_MESSAGES, pack.fab),
-      },
+    };
+  }, [pack]);
+  return (
+    <OgeAccordionConfigProvider config={c.accordion}>
+      <OgeProgressBarConfigProvider config={c.progressBar}>
+        <OgeLoadIndicatorConfigProvider config={c.loadIndicator}>
+          <OgeSplitterConfigProvider config={c.splitter}>
+            <OgeToolbarConfigProvider config={c.toolbar}>
+              <OgeAvatarConfigProvider config={c.avatar}>
+                <OgeBadgeConfigProvider config={c.badge}>
+                  <OgeChipConfigProvider config={c.chip}>
+                    <OgeAlertConfigProvider config={c.alert}>
+                      <OgeTimelineConfigProvider config={c.timeline}>
+                        <OgeCarouselConfigProvider config={c.carousel}>
+                          <OgeDataViewConfigProvider config={c.dataView}>
+                            <OgeSimpleTableConfigProvider
+                              config={c.simpleTable}
+                            >
+                              <OgeTileLayoutConfigProvider
+                                config={c.tileLayout}
+                              >
+                                <OgeListViewConfigProvider config={c.listView}>
+                                  {children}
+                                </OgeListViewConfigProvider>
+                              </OgeTileLayoutConfigProvider>
+                            </OgeSimpleTableConfigProvider>
+                          </OgeDataViewConfigProvider>
+                        </OgeCarouselConfigProvider>
+                      </OgeTimelineConfigProvider>
+                    </OgeAlertConfigProvider>
+                  </OgeChipConfigProvider>
+                </OgeBadgeConfigProvider>
+              </OgeAvatarConfigProvider>
+            </OgeToolbarConfigProvider>
+          </OgeSplitterConfigProvider>
+        </OgeLoadIndicatorConfigProvider>
+      </OgeProgressBarConfigProvider>
+    </OgeAccordionConfigProvider>
+  );
+}
+
+/**
+ * Applies a `@oge-ui/locales` pack to `@oge-ui/react-navigation` (every navigation component) only — the slice of
+ * {@link OgeLocaleProvider} for an app that ships this family alone, so the
+ * other families' catalogs stay out of its bundle. Same merge rule as
+ * `OgeLocaleProvider`.
+ */
+export function OgeNavigationLocaleProvider({
+  pack,
+  children,
+}: OgeLocaleProviderProps) {
+  const c = useMemo(() => {
+    const { navigation } = pack;
+    return {
       breadcrumb: {
         messages: ogeMergeMessages(
           OGE_DEFAULT_BREADCRUMB_MESSAGES,
@@ -241,107 +454,61 @@ export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
       },
     };
   }, [pack]);
-
   return (
-    <OgeGridConfigProvider config={c.grid}>
-      <OgeInputsConfigProvider config={c.inputs}>
-        <OgeButtonsConfigProvider config={c.buttons}>
-          <OgeOverlayConfigProvider config={c.overlay}>
-            <OgeTabsConfigProvider config={c.tabs}>
-              <OgeFormsConfigProvider config={c.forms}>
-                <OgeUploadConfigProvider config={c.upload}>
-                  <OgeAccordionConfigProvider config={c.accordion}>
-                    <OgeProgressBarConfigProvider config={c.progressBar}>
-                      <OgeLoadIndicatorConfigProvider config={c.loadIndicator}>
-                        <OgeSplitterConfigProvider config={c.splitter}>
-                          <OgeToolbarConfigProvider config={c.toolbar}>
-                            <OgeBreadcrumbConfigProvider config={c.breadcrumb}>
-                              <OgeDrawerConfigProvider config={c.drawer}>
-                                <OgeMenubarConfigProvider config={c.menubar}>
-                                  <OgePaginationConfigProvider
-                                    config={c.pagination}
-                                  >
-                                    <OgeStepperConfigProvider
-                                      config={c.stepper}
-                                    >
-                                      <OgeTreeViewConfigProvider
-                                        config={c.treeView}
-                                      >
-                                        <W8aProviders c={c}>
-                                          {children}
-                                        </W8aProviders>
-                                      </OgeTreeViewConfigProvider>
-                                    </OgeStepperConfigProvider>
-                                  </OgePaginationConfigProvider>
-                                </OgeMenubarConfigProvider>
-                              </OgeDrawerConfigProvider>
-                            </OgeBreadcrumbConfigProvider>
-                          </OgeToolbarConfigProvider>
-                        </OgeSplitterConfigProvider>
-                      </OgeLoadIndicatorConfigProvider>
-                    </OgeProgressBarConfigProvider>
-                  </OgeAccordionConfigProvider>
-                </OgeUploadConfigProvider>
-              </OgeFormsConfigProvider>
-            </OgeTabsConfigProvider>
-          </OgeOverlayConfigProvider>
-        </OgeButtonsConfigProvider>
-      </OgeInputsConfigProvider>
-    </OgeGridConfigProvider>
+    <OgeBreadcrumbConfigProvider config={c.breadcrumb}>
+      <OgeDrawerConfigProvider config={c.drawer}>
+        <OgeMenubarConfigProvider config={c.menubar}>
+          <OgePaginationConfigProvider config={c.pagination}>
+            <OgeStepperConfigProvider config={c.stepper}>
+              <OgeTreeViewConfigProvider config={c.treeView}>
+                {children}
+              </OgeTreeViewConfigProvider>
+            </OgeStepperConfigProvider>
+          </OgePaginationConfigProvider>
+        </OgeMenubarConfigProvider>
+      </OgeDrawerConfigProvider>
+    </OgeBreadcrumbConfigProvider>
   );
 }
 
-type ConfigOf<P extends (props: never) => unknown> = NonNullable<
-  Parameters<P>[0] extends { config?: infer C } ? C : never
->;
-
 /**
- * The layout and feedback families added in W8a (avatar, badge, chip, alert,
- * timeline, FAB) and the W8e rich-text editor — split out so the provider
- * nesting above stays readable.
+ * The React twin of Angular's `provideOgeLocale()`: wraps the subtree in every
+ * MIT family's config provider, each with the pack's slice merged over the
+ * English catalog (nested blocks key by key — a key the pack lacks stays
+ * English) and, for the grid / tree list and the editors, the pack's
+ * `locale`. Pass a different `pack` to switch language at runtime; context
+ * re-renders every component beneath.
+ *
+ * ```tsx
+ * import { tr } from '@oge-ui/locales/tr';
+ * <OgeLocaleProvider pack={tr}>
+ *   <App />
+ * </OgeLocaleProvider>
+ * ```
+ *
+ * An app that ships only some families can nest their slices instead
+ * (`<OgeGridLocaleProvider pack={tr}>`, `<OgeInputsLocaleProvider>`…): each
+ * pulls in only its own catalogs, where this one bundles every family's.
+ * Family providers nested inside it still apply on top (the grid and the
+ * uploader merge over it). The page's `dir` is the app's job (set it from
+ * `pack.dir`); commercial families take their slice through their own
+ * providers — this MIT umbrella does not depend on them.
  */
-function W8aProviders({
-  c,
-  children,
-}: {
-  c: {
-    avatar: ConfigOf<typeof OgeAvatarConfigProvider>;
-    badge: ConfigOf<typeof OgeBadgeConfigProvider>;
-    chip: ConfigOf<typeof OgeChipConfigProvider>;
-    alert: ConfigOf<typeof OgeAlertConfigProvider>;
-    timeline: ConfigOf<typeof OgeTimelineConfigProvider>;
-    fab: ConfigOf<typeof OgeFabConfigProvider>;
-    tileLayout: ConfigOf<typeof OgeTileLayoutConfigProvider>;
-    dataView: ConfigOf<typeof OgeDataViewConfigProvider>;
-    listView: ConfigOf<typeof OgeListViewConfigProvider>;
-    carousel: ConfigOf<typeof OgeCarouselConfigProvider>;
-    editor: ConfigOf<typeof OgeEditorConfigProvider>;
-  };
-  children?: ReactNode;
-}) {
-  return (
-    <OgeAvatarConfigProvider config={c.avatar}>
-      <OgeBadgeConfigProvider config={c.badge}>
-        <OgeChipConfigProvider config={c.chip}>
-          <OgeAlertConfigProvider config={c.alert}>
-            <OgeTimelineConfigProvider config={c.timeline}>
-              <OgeFabConfigProvider config={c.fab}>
-                <OgeTileLayoutConfigProvider config={c.tileLayout}>
-                  <OgeDataViewConfigProvider config={c.dataView}>
-                    <OgeListViewConfigProvider config={c.listView}>
-                      <OgeCarouselConfigProvider config={c.carousel}>
-                        <OgeEditorConfigProvider config={c.editor}>
-                          {children}
-                        </OgeEditorConfigProvider>
-                      </OgeCarouselConfigProvider>
-                    </OgeListViewConfigProvider>
-                  </OgeDataViewConfigProvider>
-                </OgeTileLayoutConfigProvider>
-              </OgeFabConfigProvider>
-            </OgeTimelineConfigProvider>
-          </OgeAlertConfigProvider>
-        </OgeChipConfigProvider>
-      </OgeBadgeConfigProvider>
-    </OgeAvatarConfigProvider>
-  );
+export function OgeLocaleProvider({ pack, children }: OgeLocaleProviderProps) {
+  let tree: ReactNode = children;
+  for (const Slice of [
+    OgeNavigationLocaleProvider,
+    OgeLayoutLocaleProvider,
+    OgeEditorLocaleProvider,
+    OgeUploadLocaleProvider,
+    OgeFormsLocaleProvider,
+    OgeTabsLocaleProvider,
+    OgeOverlayLocaleProvider,
+    OgeButtonsLocaleProvider,
+    OgeInputsLocaleProvider,
+    OgeGridLocaleProvider,
+  ]) {
+    tree = <Slice pack={pack}>{tree}</Slice>;
+  }
+  return <>{tree}</>;
 }

@@ -137,7 +137,17 @@ export type {
 // every family above, plus the pack vocabulary. The packs themselves are
 // imported from their own entry points (`@oge-ui/locales/tr`).
 export {
+  OgeButtonsLocaleProvider,
+  OgeEditorLocaleProvider,
+  OgeFormsLocaleProvider,
+  OgeGridLocaleProvider,
+  OgeInputsLocaleProvider,
+  OgeLayoutLocaleProvider,
   OgeLocaleProvider,
+  OgeNavigationLocaleProvider,
+  OgeOverlayLocaleProvider,
+  OgeTabsLocaleProvider,
+  OgeUploadLocaleProvider,
   type OgeLocaleProviderProps,
 } from './lib/locale-provider';
 export {

@@ -721,6 +721,13 @@ export const ru: OgeLocalePack = {
         '{count, plural, =0 {Нет результатов} one {# результат} few {# результата} many {# результатов} other {# результата}}',
       loading: 'Загрузка…',
     },
+    simpleTable: {
+      pager: 'Страницы таблицы',
+      previousPage: 'Предыдущая страница',
+      nextPage: 'Следующая страница',
+      pageInfo: '{from}–{to} из {count}',
+      noData: 'Нет строк для отображения',
+    },
     listView: {
       listLabel: 'Список',
       searchLabel: 'Поиск',

@@ -44,6 +44,9 @@ export interface OgeGridColumnRange {
   readonly spacerRight: number;
 }
 
+/** Columns rendered past each edge of the viewport, in px (horizontal virtualization). */
+const COL_OVERSCAN_PX = 200;
+
 /**
  * Horizontal layout of a grid-like component: the CSS grid track list,
  * sticky pinned-column offsets and the optional column-virtualization
@@ -56,7 +59,6 @@ export class OgeGridColumnLayoutCore<
   C extends OgeGridLayoutColumn = OgeGridLayoutColumn,
 > {
   /** Extra horizontal pixels rendered on each side of the viewport. */
-  private static readonly COL_OVERSCAN_PX = 200;
 
   /** Effective numeric width per column (fallback: min width) for prefix sums. */
   readonly colWidths: () => readonly number[];
@@ -97,7 +99,7 @@ export class OgeGridColumnLayoutCore<
     this.colRange = rx.derived<OgeGridColumnRange | null>(() => {
       if (!this.deps.colVirtualized()) return null;
       const widths = this.colWidths();
-      const overscan = OgeGridColumnLayoutCore.COL_OVERSCAN_PX;
+      const overscan = COL_OVERSCAN_PX;
       const viewLeft = this.deps.scrollLeft() - overscan;
       const viewRight =
         this.deps.scrollLeft() + (this.deps.hostWidth() || 1200) + overscan;

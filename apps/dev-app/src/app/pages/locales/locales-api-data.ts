@@ -45,6 +45,66 @@ export const OGE_LOCALE_PROVIDER_API: ApiSections = {
           description:
             'The pack to apply — a static pack, or a function reading a signal for runtime switching (<code>provideOgeLocale(() =&gt; pack())</code>).',
         },
+        {
+          name: 'provideOgeGridLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The grid slice of <code>provideOgeLocale</code> — the grid and tree list catalogs and data locale — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeInputsLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The inputs slice of <code>provideOgeLocale</code> — every editor of the inputs family, with its data locale — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeButtonsLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The buttons slice of <code>provideOgeLocale</code> — buttons and the floating action button — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeOverlayLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The overlay slice of <code>provideOgeLocale</code> — modal, popover, tooltip, context menu, toast, window and action sheet — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeTabsLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The tabs slice of <code>provideOgeLocale</code> — the tabs family — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeFormsLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The forms slice of <code>provideOgeLocale</code> — the form layout and its validation texts — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeUploadLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The upload slice of <code>provideOgeLocale</code> — the file uploader — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeEditorLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The editor slice of <code>provideOgeLocale</code> — the rich-text editor, with its data locale — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeLayoutLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The layout slice of <code>provideOgeLocale</code> — every layout component (accordion, splitter, toolbar, data view, simple table, list view, tile layout, carousel…) — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
+        {
+          name: 'provideOgeNavigationLocale(pack)',
+          type: '(pack: OgeLocalePack | (() => OgeLocalePack)) => Provider[]',
+          description:
+            'The navigation slice of <code>provideOgeLocale</code> — breadcrumb, drawer, menubar, pagination, stepper and tree view — for an app that ships only some families: each slice bundles only its own catalogs (the full call bundles all). Same merge rule and live form.',
+        },
       ],
     },
   ],
@@ -71,6 +131,66 @@ export const OGE_REACT_LOCALE_PROVIDER_API: ApiSections = {
           name: 'children',
           type: 'ReactNode',
           description: 'The localized subtree.',
+        },
+        {
+          name: 'OgeGridLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The grid slice of <code>OgeLocaleProvider</code> — the grid and tree list catalogs and data locale — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeInputsLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The inputs slice of <code>OgeLocaleProvider</code> — every editor of the inputs family, with its data locale — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeButtonsLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The buttons slice of <code>OgeLocaleProvider</code> — buttons and the floating action button — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeOverlayLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The overlay slice of <code>OgeLocaleProvider</code> — modal, popover, tooltip, context menu, toast, window and action sheet — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeTabsLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The tabs slice of <code>OgeLocaleProvider</code> — the tabs family — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeFormsLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The forms slice of <code>OgeLocaleProvider</code> — the form layout and its validation texts — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeUploadLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The upload slice of <code>OgeLocaleProvider</code> — the file uploader — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeEditorLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The editor slice of <code>OgeLocaleProvider</code> — the rich-text editor, with its data locale — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeLayoutLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The layout slice of <code>OgeLocaleProvider</code> — every layout component (accordion, splitter, toolbar, data view, simple table, list view, tile layout, carousel…) — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
+        },
+        {
+          name: 'OgeNavigationLocaleProvider',
+          type: '(props: OgeLocaleProviderProps) => JSX.Element',
+          description:
+            'The navigation slice of <code>OgeLocaleProvider</code> — breadcrumb, drawer, menubar, pagination, stepper and tree view — for an app that ships only some families: each slice bundles only its own catalogs (the full provider bundles all). Nest the slices you need.',
         },
       ],
     },

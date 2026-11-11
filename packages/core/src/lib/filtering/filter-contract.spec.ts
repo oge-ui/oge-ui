@@ -4,6 +4,7 @@ import type { FilterExpr, FilterOperator } from '../data/load-options';
 import { buildODataQuery } from '../data/odata';
 import {
   isOgeBlank,
+  OGE_FILTER_OPERATOR_ARITY,
   OGE_FILTER_OPERATORS,
   ogeFilterOperatorArity,
   ogeFilterOperatorTakesValue,
@@ -72,6 +73,15 @@ describe('filter contract vectors (@oge-ui/core/filter-vectors.json)', () => {
 });
 
 describe('operator metadata', () => {
+  it('keeps the runtime arity table in step with the documented contract', () => {
+    for (const [op, info] of Object.entries(OGE_FILTER_OPERATORS)) {
+      expect(OGE_FILTER_OPERATOR_ARITY[op as FilterOperator]).toBe(info.arity);
+    }
+    expect(Object.keys(OGE_FILTER_OPERATOR_ARITY).sort()).toEqual(
+      Object.keys(OGE_FILTER_OPERATORS).sort(),
+    );
+  });
+
   it('reads the operand shape of each operator', () => {
     expect(ogeFilterOperatorArity('in')).toBe('list');
     expect(ogeFilterOperatorArity('between')).toBe('pair');

@@ -53,6 +53,7 @@ const COVERAGE: Readonly<
     'app-bar': ['', 'api'],
     'list-view': ['', 'api'],
     'data-view': ['', 'api'],
+    'simple-table': ['', 'api'],
     'tile-layout': ['', 'api'],
     carousel: ['', 'api'],
     // the API page is mirrored; only `routed` is Angular-router-driven, so

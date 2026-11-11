@@ -715,6 +715,13 @@ export const ptBR: OgeLocalePack = {
         '{count, plural, =0 {Nenhum resultado} one {# resultado} other {# resultados}}',
       loading: 'Carregando…',
     },
+    simpleTable: {
+      pager: 'Páginas da tabela',
+      previousPage: 'Página anterior',
+      nextPage: 'Próxima página',
+      pageInfo: '{from}–{to} de {count}',
+      noData: 'Nenhuma linha para exibir',
+    },
     listView: {
       listLabel: 'Lista',
       searchLabel: 'Pesquisar',

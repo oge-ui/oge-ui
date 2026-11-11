@@ -1117,6 +1117,12 @@ export const OGE_DEFAULT_PROGRESS_BAR_CONFIG: OgeProgressBarConfig;
 export const OGE_DEFAULT_PROGRESS_BAR_MESSAGES: OgeProgressBarMessages;
 
 // @public (undocumented)
+export const OGE_DEFAULT_SIMPLE_TABLE_CONFIG: OgeSimpleTableConfig;
+
+// @public (undocumented)
+export const OGE_DEFAULT_SIMPLE_TABLE_MESSAGES: OgeSimpleTableMessages;
+
+// @public (undocumented)
 export const OGE_DEFAULT_SKELETON_CONFIG: OgeSkeletonConfig;
 
 // @public (undocumented)
@@ -1425,6 +1431,9 @@ export const OGE_SHEET_FOCUS_ATTR = "data-oge-sheet-focus";
 
 // @public
 export const OGE_SHEET_SWIPE_DISMISS = 72;
+
+// @public
+export const OGE_SIMPLE_TABLE_DEFAULT_PAGE_SIZE = 10;
 
 // @public
 export const OGE_SLIDER_MAX_TICKS = 200;
@@ -11337,6 +11346,71 @@ export type OgeSignatureStrokeGeometry = {
 export function ogeSignatureWidths(points: readonly OgeSignaturePoint[], size: OgeSignatureSize, pen: OgeSignaturePen): number[];
 
 // @public
+export type OgeSimpleTableAlign = 'start' | 'center' | 'end';
+
+// @public
+export function ogeSimpleTableCellText(row: unknown, column: OgeSimpleTableColumn): string;
+
+// @public
+export interface OgeSimpleTableColumn {
+    readonly align?: OgeSimpleTableAlign;
+    readonly caption?: string;
+    readonly cssClass?: string;
+    readonly field?: string;
+    readonly width?: string;
+}
+
+// @public
+export interface OgeSimpleTableConfig {
+    compact?: boolean;
+    locale?: string;
+    // (undocumented)
+    messages: OgeSimpleTableMessages;
+    pageSize?: number;
+}
+
+// @public (undocumented)
+export type OgeSimpleTableConfigInput = Partial<Omit<OgeSimpleTableConfig, 'messages'>> & {
+    messages?: Partial<OgeSimpleTableMessages>;
+};
+
+// @public
+export interface OgeSimpleTableMessages {
+    // (undocumented)
+    nextPage: string;
+    noData: string;
+    pageInfo: string;
+    pager: string;
+    // (undocumented)
+    previousPage: string;
+}
+
+// @public
+export interface OgeSimpleTablePage {
+    // (undocumented)
+    readonly end: number;
+    // (undocumented)
+    readonly pageCount: number;
+    readonly pageIndex: number;
+    readonly start: number;
+}
+
+// @public
+export function ogeSimpleTablePage(count: number, paging: boolean, pageSize: number, pageIndex: number): OgeSimpleTablePage;
+
+// @public
+export function ogeSimpleTablePageInfo(page: OgeSimpleTablePage, count: number, messages: OgeSimpleTableMessages, locale?: string): string;
+
+// @public
+export interface OgeSimpleTableResolvedColumn extends OgeSimpleTableColumn {
+    // (undocumented)
+    readonly align: OgeSimpleTableAlign;
+    // (undocumented)
+    readonly caption: string;
+    readonly cellClass: string;
+}
+
+// @public
 export type OgeSkeletonAnimation = 'shimmer' | 'pulse' | 'none';
 
 // @public
@@ -15702,6 +15776,12 @@ export function resolveOgeProgressBarConfig(input: OgeProgressBarConfigInput | u
 
 // @public
 export function resolveOgeRowDropIndex(hit: Element | null, host: Element | null): number | null;
+
+// @public
+export function resolveOgeSimpleTableColumns(columns: readonly OgeSimpleTableColumn[] | undefined, rows: readonly unknown[]): OgeSimpleTableResolvedColumn[];
+
+// @public (undocumented)
+export function resolveOgeSimpleTableConfig(input: OgeSimpleTableConfigInput | undefined): OgeSimpleTableConfig;
 
 // @public (undocumented)
 export function resolveOgeSkeletonConfig(input: OgeSkeletonConfigInput | undefined): OgeSkeletonConfig;

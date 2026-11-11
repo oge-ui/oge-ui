@@ -7,6 +7,48 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Simple table — `@oge-ui/layout`, `@oge-ui/react-layout`
+
+- New `oge-simple-table` / `<OgeSimpleTable>`: a native `<table>` for small lists
+  whose rows you write yourself (`ng-template ogeSimpleTableRow` /
+  `renderRow`), with header cells that keep their alignment with your cells
+  (`columns[i].cellClass`), optional `[ogeSimpleTableHeader]` /
+  `[ogeSimpleTableFooter]` / `[ogeSimpleTableEmpty]` slots, previous / next
+  paging and `compact` rows. `[ogeSimpleTableRowOf]` types the row context under
+  `strictTemplates` (`ngTemplateContextGuard`). No dependency on the grid; no
+  sorting, filtering or selection by design. Secondary entry
+  `@oge-ui/layout/simple-table`, `provideOgeSimpleTableConfig()` /
+  `OgeSimpleTableConfigProvider`, messages in every locale pack
+  (`layout.simpleTable`) and component tokens `--oge-simple-table-*`.
+
+### Locale slices per family — `oge-ui`, `@oge-ui/react`
+
+- `provideOgeGridLocale`, `provideOgeInputsLocale`, `provideOgeButtonsLocale`,
+  `provideOgeOverlayLocale`, `provideOgeTabsLocale`, `provideOgeFormsLocale`,
+  `provideOgeUploadLocale`, `provideOgeEditorLocale`, `provideOgeLayoutLocale`
+  and `provideOgeNavigationLocale` apply a pack to one family; React has the
+  matching `<Oge…LocaleProvider>` components. `provideOgeLocale` /
+  `<OgeLocaleProvider>` are now these slices combined. An app that ships the grid
+  alone pays about 6 kB gzip for its translations instead of 16 kB for every
+  family's catalog.
+
+### Tree-shaking — every package
+
+- **Fix:** importing one React component bundled its whole family — top-level
+  `forwardRef` / `memo` / `createContext` calls were not marked pure. Every React
+  package build now annotates them: `<OgeSimpleTable>` alone went from 110 kB to
+  22 kB gzip, `<OgeModal>` and `<OgeButton>` likewise shed their siblings.
+- **Fix:** `@oge-ui/behavior` kept about 8 kB gzip of unrelated defaults in every
+  bundle (module-level property reads, `Object.freeze`, a static class field,
+  ES2017 spread helpers); one helper now costs about 1 kB. The engine packages
+  build for ES2022, the baseline of the supported Angular and React versions.
+- New CI and release gate `tree-shake-check`: esbuild (through Angular's own
+  optimizer for Angular packages) and Rolldown bundle one-line imports from the
+  built packages and fail when a sibling component survives or a bundle passes
+  its ceiling. It also settles two open questions: the single-entry overlay and
+  navigation families already tree-shake per component, and the license API
+  alone pulls about 3 kB of `@oge-ui/core`.
+
 ### Filter contract — `@oge-ui/core`, both grid render layers
 
 - A published contract for every `FilterExpr` operator — meaning, blank cells and

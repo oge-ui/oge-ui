@@ -380,6 +380,12 @@
   /* buttons */
   --oge-button-radius: var(--oge-radius);
   --oge-button-font-weight: 500;
+  /* simple table */
+  --oge-simple-table-bg: var(--oge-bg);
+  --oge-simple-table-border-color: var(--oge-border-color);
+  --oge-simple-table-radius: var(--oge-radius-lg);
+  --oge-simple-table-header-bg: var(--oge-header-bg);
+  --oge-simple-table-cell-padding: 8px 12px;
 }
 
 /// Included by every component at its host rule (`.oge-x { @include

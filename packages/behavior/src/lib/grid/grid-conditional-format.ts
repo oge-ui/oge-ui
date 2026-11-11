@@ -120,7 +120,7 @@ export interface OgeConditionalRange {
   max: number;
 }
 
-const EMPTY_FORMAT: OgeConditionalCellFormat = Object.freeze({
+const EMPTY_FORMAT: OgeConditionalCellFormat = /* @__PURE__ */ Object.freeze({
   classes: [],
   vars: {},
   icon: null,

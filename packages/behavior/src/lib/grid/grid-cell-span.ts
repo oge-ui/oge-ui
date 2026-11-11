@@ -54,7 +54,7 @@ export interface OgeGridSpanInput<T, C extends OgeGridSpanColumn<T>> {
 }
 
 /** The empty layout — what virtualized grids and span-free grids use. */
-export const OGE_NO_SPANS: OgeGridSpanLayout = Object.freeze({
+export const OGE_NO_SPANS: OgeGridSpanLayout = /* @__PURE__ */ Object.freeze({
   extentOf: () => null,
   ownerOf: () => null,
   empty: true,

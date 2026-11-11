@@ -716,6 +716,13 @@ export const it: OgeLocalePack = {
         '{count, plural, =0 {Nessun risultato} one {# risultato} other {# risultati}}',
       loading: 'Caricamento…',
     },
+    simpleTable: {
+      pager: 'Pagine della tabella',
+      previousPage: 'Pagina precedente',
+      nextPage: 'Pagina successiva',
+      pageInfo: '{from}–{to} di {count}',
+      noData: 'Nessuna riga da visualizzare',
+    },
     listView: {
       listLabel: 'Elenco',
       searchLabel: 'Cerca',
