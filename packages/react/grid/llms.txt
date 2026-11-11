@@ -103,11 +103,14 @@ _Sorting, filtering & search_
 | `sortable` | `boolean \| 'single' \| 'multi'` | `'multi'` | `false` disables sorting entirely; `'single'` restricts to one column (no shift+click chains). |
 | `sorting` | `OgeSortingOptions` | `undefined` | Sorting options (`mode`, `allowUnsorting`); overrides the `sortable` shorthand. |
 | `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header — text, number, date, boolean and lookup editors with a per-column operator menu. |
-| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style filter button in the headers. The value list comes from `source.distinct()` under every other active filter and the search text, never the column's own; a server source is asked once per opening and again 250 ms after typing in the list's search box (value lists). Without `distinct` there is no list; date columns list their values grouped by year. |
+| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style filter button in the headers. The value list comes from `source.distinct()` under every other active filter and the search text, never the column's own; a server source is asked once per opening and again 250 ms after typing in the list's search box (value lists). `{ auto: true }` shows the list only on columns whose values repeat (a column's `headerFilter` overrides it). Without `distinct` there is no list; date columns list their values grouped by year. |
 | `filterPanel` | `boolean` | `false` | Filter summary bar above the grid; clicking it opens the visual filter builder (arbitrary and/or condition trees). |
 | `filterValue / defaultFilterValue` | `FilterExpr \| null` | `null` | The filter-builder expression — controlled with `onFilterValueChange`. Combines with the filter row, the header filters and the search panel. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
 | `filterChips` | `boolean` | `false` | A bar of removable chips above the grid, one per filter that narrows the rows — filter-row cells, header condition menus, value-list selections (`in`), the filter builder and the search text — reading _Column · operator · value_, plus a clear-all button. Removing a chip also empties its filter-row editor. |
+| `dateFilterPresets` | `boolean \| readonly OgeDatePreset[]` | `false` | Quick date ranges on top of a date column's header menu — `today`, `yesterday`, `thisWeek` (from the locale's first day), `thisMonth`, `last30Days`, `thisYear`. `true` offers all, a list picks and orders them. A preset filters with a whole-day range written to the column's condition slot. |
+| `filterApplyMode` | `'auto' \| 'manual'` | `'auto'` | `manual` holds filter and search edits until _Apply filters_ (or `applyFilters()`) — for heavy server queries; a status note says when edits are pending, and no load runs before. |
+| `savedViews` | `boolean` | `false` | A _Views_ toolbar button: save the current state under a name, open a saved view, delete one. Stored through the state storage under `oge-grid-views:<stateKey>`; without a `stateKey` the views last for the session. |
 | `summaryMenu` | `boolean` | `false` | Adds a _Summary_ submenu to the header context menu: Count for every column, Sum / Avg / Min / Max for numbers, None, or the column default. The pick replaces the column's `totalSummary`, persists with `stateKey` / `state()` (`summaries`) and travels as `LoadOptions.totalSummary`, so a server computes it over the whole filtered set. |
 | `filterDebounce` | `number` | `config.filterDebounce (300)` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
 | `announcements` | `boolean` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, group expansion, select-all and blocked-save validation changes through the shared `useOgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
@@ -259,6 +262,8 @@ _Loading, state & export_
 | `beginCustomLoading(message?) / endCustomLoading()` | `handle` | Shows the load panel with an optional custom message, independent of data-source activity. |
 | `state(): GridStateSnapshot / applyState(snapshot)` | `handle` | Reads or applies the persistable UI state: sort, filters, column layout, page size. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `describeColumns()` | `OgeGridColumnDescription[]` | Plain descriptions of every column with a data field — `{ field, caption, dataType, visible, sortable, filterable, groupable, values? }`, lookup items as `values`. What a saved-view editor or the AI grid assistant reads; no templates, no accessors. |
+| `applyFilters(): void` | `handle` | Loads the data with the filters as they are now (`filterApplyMode: 'manual'`). |
+| `saveCurrentView(name) / openView(name) / deleteView(name) / savedViewList()` | `handle` | The saved views (`savedViews`) by name: save the current state (replacing a view of that name), apply one (`false` when missing), delete one, list them oldest first. |
 | `clearFilters() / clearSorting()` | `handle` | Clears every filter (row filters and search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows, column metadata (width, alignment, pin side, band) and the structured lines — group rows, group footers, the total row (`items`) — of the current view (filter + search + sort applied). `scope: 'all' \| 'page' \| 'selection'` (or `selectedRowsOnly`), `visibleColumnsOnly: false` adds hidden columns, `groups` / `summaries: false` export flat. |
 | `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
@@ -379,6 +384,9 @@ _Sort, filter & group_
 | `sortOrder / sortIndex` | `'asc' \| 'desc' / number` | `undefined` | Initial sort direction applied on first render, ordered by `sortIndex` for multi-sort chains. |
 | `calculateSortValue` | `(row: T) => unknown` | `undefined` | Custom sort key for this column (client-side array data only). |
 | `filterable` | `boolean` | `true` | Whether the filter row offers an editor for this column. |
+| `headerFilter` | `boolean \| undefined` | `—` | This column's value list: `false` hides its funnel, `true` shows it even when `headerFilter.auto` would not; unset follows the grid. |
+| `filterRange` | `OgeFilterRange \| undefined` | `—` | A two-handle range slider as the filter-row cell of a number column (`{ min, max, step? }`); the pair filters with `between`, the full range filters nothing. |
+| `renderFilterCell` | `(context: OgeGridFilterCellRenderContext) => ReactNode` | `—` | A custom filter-row editor: `{ value, setValue(value, operator?), operator, column }`. An empty value removes the filter, a two-item array is `between`, a longer one `in`. |
 | `filterOperator` | `FilterOperator` | `by dataType` | Filter-row operator override (default: `contains` for text, `eq` for number/date). |
 | `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `undefined` | Custom filter expression for filter-row input on this column. |
 | `groupIndex` | `number` | `undefined` | Initial group level of this column (0 = first). |
@@ -1349,6 +1357,63 @@ export function FilterChipsGrid() {
         { field: 'firstName', caption: 'First Name' },
         { field: 'city', caption: 'City' },
         { field: 'salary', caption: 'Salary', dataType: 'number', totalSummary: 'sum' },
+      ]}
+    />
+  );
+}
+```
+
+### Filter tools
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+export function FilterToolsGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      stateKey="filter-tools"
+      filterRow
+      headerFilter={{ auto: true }}   // lists only where values repeat
+      dateFilterPresets                // quick dates in a date column’s menu
+      filterApplyMode="manual"         // edits wait for "Apply filters"
+      savedViews                       // save / open / delete named views
+      columns={[
+        { field: 'firstName', caption: 'First Name' },
+        {
+          field: 'department',
+          caption: 'Department',
+          renderFilterCell: ({ value, setValue }) => (
+            <select
+              aria-label="Filter Department"
+              value={(value as string) ?? ''}
+              onChange={(event) => setValue(event.target.value)}
+            >
+              <option value="">Any</option>
+              <option>Engineering</option>
+              <option>Sales</option>
+            </select>
+          ),
+        },
+        { field: 'city', caption: 'City' },
+        { field: 'salary', caption: 'Salary', dataType: 'number',
+          filterRange: { min: 30000, max: 150000, step: 5000 } },
+        // a column may ask for its list: the date presets live in its menu
+        { field: 'hireDate', caption: 'Hired', dataType: 'date', headerFilter: true },
       ]}
     />
   );

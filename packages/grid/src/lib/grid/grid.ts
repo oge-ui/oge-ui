@@ -31,6 +31,7 @@ import {
   buildSearchHighlightSegments,
   type SearchHighlightSegment,
   groupNodeKey,
+  resolveFirstDayOfWeek,
   resolveKeySelector,
   type CsvOptions,
   type GridStateSnapshot,
@@ -136,6 +137,16 @@ import {
   ogeGroupValueText,
   ogeHeaderConditionKey,
   OgeHeaderValuesLoader,
+  OgeSavedViewsCore,
+  ogeAutoListFields,
+  ogeDatePresetExpr,
+  ogeFilterCellExpr,
+  ogeFilterRangeExpr,
+  ogeResolveDatePresets,
+  type OgeDatePreset,
+  type OgeFilterCellColumn,
+  type OgeFilterRange,
+  type OgeSavedView,
   ogeGridFilterChips,
   ogeSummaryMenuItem,
   ogeWireFilterOperator,
@@ -253,6 +264,7 @@ import {
 import { OgeCheckBox } from '@oge-ui/inputs/check-box';
 import { OgeDateBox, OgeDateRangeBox } from '@oge-ui/inputs/date-box';
 import { OgeNumberBox } from '@oge-ui/inputs/number-box';
+import { OgeRangeSlider } from '@oge-ui/inputs/slider';
 import { OgeSelectBox } from '@oge-ui/inputs/select-box';
 import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
@@ -481,6 +493,7 @@ const NO_FORMAT: OgeConditionalCellFormat = Object.freeze({
     OgeSelectBox,
     OgeTextBox,
     OgeNumberBox,
+    OgeRangeSlider,
     OgePopup,
     OgeMenuList,
     OgeModal,
@@ -623,6 +636,29 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * computed over the whole filtered set (by the server in remote mode).
    */
   readonly summaryMenu = input(false);
+
+  /**
+   * Quick date ranges on top of a date column's header menu — today,
+   * yesterday, this week (from the locale’s first day), this month, the last
+   * 30 days, this year. `true` offers all; a list picks and orders them. A
+   * preset filters with a whole-day range.
+   */
+  readonly dateFilterPresets = input<boolean | readonly OgeDatePreset[]>(false);
+
+  /**
+   * `'manual'` holds filter and search edits until the user presses
+   * <em>Apply filters</em> (or `applyFilters()` runs) — for heavy server
+   * queries; a note says when edits are pending. Default `'auto'`.
+   */
+  readonly filterApplyMode = input<'auto' | 'manual'>('auto');
+
+  /**
+   * A <em>Views</em> button in the toolbar: save the current state under a
+   * name, open a saved view, delete one. Stored through `OGE_STATE_STORAGE`
+   * under `oge-grid-views:<stateKey>`; without a `stateKey` the views last
+   * for the session.
+   */
+  readonly savedViews = input(false);
 
   /** Per-grid overrides of the UI strings (see `provideOgeGridConfig` for app-wide). */
   readonly messages = input<Partial<OgeGridMessages> | undefined>(undefined);
@@ -948,6 +984,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly toolbarItems = contentChildren(OgeGridToolbarItem);
 
   constructor() {
+    effect(() => this.store.filter.setApplyMode(this.filterApplyMode()));
+    effect(() => {
+      if (this.savedViews()) {
+        this.stateKey();
+        untracked(() => this.viewsCore.load());
+      }
+    });
     // the value list's "(Blank)" item: `isnull` for typed columns (an operator
     // every server knows), `isblank` for text
     this.store.filter.blankOperatorOf = (field) =>
@@ -1520,6 +1563,258 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * after their filters were removed elsewhere — they are uncontrolled, so
    * they are recreated rather than written to.
    */
+  // --- automatic value lists (headerFilter.auto) ----------------------------
+
+  /** Fields whose values repeat enough for a list; `null` when auto is off. */
+  private readonly autoListFields = computed<ReadonlySet<string> | null>(() => {
+    const option = this.headerFilter();
+    if (typeof option !== 'object' || !option.auto) return null;
+    this.adapter.result(); // re-judge after data changes
+    const source = this.adapter.source();
+    if (!source?.loadSync) return new Set<string>();
+    const rows = untracked(() => source.loadSync?.({}).data ?? []) as T[];
+    const columns = this.resolvedColumns().filter((c) => c.field);
+    return ogeAutoListFields(
+      rows,
+      columns.map((c) => c.field as string),
+      (row, field) => this.columnByField(field)?.accessor(row),
+    );
+  });
+
+  /** The declarative `<oge-column>` behind a column (not a `columns` string). */
+  private declared(column: ResolvedColumn<T>): OgeColumn<T> | undefined {
+    return column.source instanceof OgeColumn ? column.source : undefined;
+  }
+
+  protected filterCellTemplateOf(column: ResolvedColumn<T>) {
+    return this.declared(column)?.filterCellTemplate();
+  }
+
+  protected filterRangeOf(
+    column: ResolvedColumn<T>,
+  ): OgeFilterRange | undefined {
+    return this.declared(column)?.filterRange();
+  }
+
+  /** Whether a column's header shows the value-list funnel. */
+  protected showHeaderFilter(column: ResolvedColumn<T>): boolean {
+    if (!this.headerFilterAvailable() || !column.filterable) return false;
+    const own = this.declared(column)?.headerFilter();
+    if (own !== undefined) return own;
+    const auto = this.autoListFields();
+    return auto === null || (!!column.field && auto.has(column.field));
+  }
+
+  // --- date presets (dateFilterPresets) --------------------------------------
+
+  private presetLabel(preset: OgeDatePreset): string {
+    const m = this.msg();
+    switch (preset) {
+      case 'today':
+        return m.datePresetToday;
+      case 'yesterday':
+        return m.datePresetYesterday;
+      case 'thisWeek':
+        return m.datePresetThisWeek;
+      case 'thisMonth':
+        return m.datePresetThisMonth;
+      case 'last30Days':
+        return m.datePresetLast30Days;
+      case 'thisYear':
+        return m.datePresetThisYear;
+    }
+  }
+
+  private presetExpr(field: string, preset: OgeDatePreset): FilterExpr {
+    return ogeDatePresetExpr(
+      field,
+      preset,
+      new Date(),
+      resolveFirstDayOfWeek(undefined, this.effLocale()),
+    );
+  }
+
+  /** The preset buttons of the open date column's header menu. */
+  protected readonly datePresetChoices = computed(() => {
+    const column = this.headerFilterColumn();
+    const field = column?.field;
+    if (!field || !isOgeDateType(column.dataType)) return [];
+    const current = JSON.stringify(
+      this.store.filter.rowFilterOf(ogeHeaderConditionKey(field)),
+    );
+    return ogeResolveDatePresets(this.dateFilterPresets()).map((id) => ({
+      id,
+      label: this.presetLabel(id),
+      active: current === JSON.stringify(this.presetExpr(field, id)),
+    }));
+  });
+
+  /** Filters the open date column by a preset and closes its menu. */
+  protected applyDatePreset(preset: OgeDatePreset): void {
+    const field = this.headerFilterField();
+    if (!field) return;
+    this.store.filter.setHeaderFilter(field, null);
+    this.store.filter.setRowFilter(
+      ogeHeaderConditionKey(field),
+      this.presetExpr(field, preset),
+    );
+    this.closeHeaderFilter();
+  }
+
+  // --- manual apply (filterApplyMode) ----------------------------------------
+
+  /** Whether manual mode holds edits that are not applied yet. */
+  protected readonly filterPending = computed(() =>
+    this.store.filter.pending(),
+  );
+
+  /** Loads the data with the filters as they are now (`filterApplyMode: 'manual'`). */
+  applyFilters(): void {
+    this.store.filter.applyPending();
+  }
+
+  // --- custom and range filter cells -----------------------------------------
+
+  /** Values of custom / range filter cells, per field. */
+  private readonly filterCellValues = signal<ReadonlyMap<string, unknown>>(
+    new Map(),
+  );
+
+  private setFilterCellValue(
+    column: ResolvedColumn<T>,
+    value: unknown,
+    expr: FilterExpr | null,
+  ): void {
+    const field = column.field;
+    if (!field) return;
+    const next = new Map(this.filterCellValues());
+    next.set(field, value);
+    this.filterCellValues.set(next);
+    this.store.filter.setRowFilter(field, expr);
+  }
+
+  /** The context of a column's `*ogeFilterCellTemplate`. */
+  protected filterCellContext(column: ResolvedColumn<T>) {
+    const field = column.field ?? '';
+    const operator = this.currentOperator(column);
+    const info: OgeFilterCellColumn = {
+      field,
+      caption: column.caption,
+      dataType: column.dataType,
+    };
+    return {
+      $implicit: this.filterCellValues().get(field) ?? null,
+      operator,
+      column: info,
+      setValue: (value: unknown, op?: FilterOperator) =>
+        this.setFilterCellValue(
+          column,
+          value,
+          ogeFilterCellExpr(
+            field,
+            value,
+            op ?? operator,
+            column.calculateFilterExpression,
+          ),
+        ),
+    };
+  }
+
+  /** A range filter cell's pair: the chosen one, or the whole range. */
+  protected filterRangeValue(
+    column: ResolvedColumn<T>,
+    range: OgeFilterRange,
+  ): [number, number] {
+    const value = column.field
+      ? this.filterCellValues().get(column.field)
+      : undefined;
+    return Array.isArray(value)
+      ? [value[0] as number, value[1] as number]
+      : [range.min, range.max];
+  }
+
+  protected onFilterRange(
+    column: ResolvedColumn<T>,
+    range: OgeFilterRange,
+    pair: readonly [number, number],
+  ): void {
+    if (!column.field) return;
+    this.setFilterCellValue(
+      column,
+      [pair[0], pair[1]],
+      ogeFilterRangeExpr(column.field, range, pair),
+    );
+  }
+
+  // --- saved views (savedViews) ---------------------------------------------
+
+  protected readonly views = signal<readonly OgeSavedView[]>([]);
+  private readonly viewsCore = new OgeSavedViewsCore({
+    storage: () => this.stateStorage,
+    stateKey: () => untracked(this.stateKey),
+    onChange: (views) => this.views.set(views),
+  });
+  protected readonly viewsOpen = signal(false);
+  private readonly viewsAnchor = signal<HTMLElement | null>(null);
+  private readonly viewsPopupRef = viewChild('viewsPopup', {
+    read: ElementRef,
+  });
+  /** The saved-views popup, end-aligned below its toolbar button. */
+  readonly viewsPanel = new OgeAnchoredPanel({
+    anchor: () => this.viewsAnchor() ?? this.hostRef.nativeElement,
+    panel: () => this.viewsPopupRef()?.nativeElement ?? null,
+    placement: () => 'bottom-end',
+    onClosed: () => this.viewsOpen.set(false),
+  });
+
+  protected toggleViews(event: Event): void {
+    event.stopPropagation();
+    if (this.viewsOpen()) {
+      this.viewsPanel.close();
+      return;
+    }
+    this.viewsAnchor.set(event.currentTarget as HTMLElement);
+    this.viewsOpen.set(true);
+    this.viewsPanel.open();
+    this.viewsPanel.updatePosition();
+  }
+
+  protected deleteViewLabel(name: string): string {
+    return formatPattern(this.msg().deleteView, { name });
+  }
+
+  /** Saves the current state as a named view (the popup's form). */
+  protected saveView(event: Event, name: string): void {
+    event.preventDefault();
+    this.saveCurrentView(name);
+  }
+
+  /** Saves the current state under `name` (replacing a view of that name). */
+  saveCurrentView(name: string): void {
+    this.viewsCore.save(name, this.state());
+  }
+
+  /** Applies a saved view by name; `false` when there is none. */
+  openView(name: string): boolean {
+    const view = this.viewsCore.find(name);
+    if (!view) return false;
+    this.applyState(view.state);
+    this.store.filter.applyPending();
+    this.resetFilterInputs();
+    this.viewsPanel.close();
+    return true;
+  }
+
+  /** Deletes a saved view by name. */
+  deleteView(name: string): void {
+    this.viewsCore.remove(name);
+  }
+
+  /** The saved views, oldest first. */
+  savedViewList(): readonly OgeSavedView[] {
+    return this.viewsCore.list();
+  }
+
   private resetFilterInputs(slot?: string): void {
     if (slot?.startsWith('hf:')) return; // a header menu condition: no editor
     const fields =
@@ -1529,6 +1824,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
             .map((column) => column.field)
             .filter((field): field is string => !!field);
     const next = new Map(this.filterCellEpochs());
+    const values = new Map(this.filterCellValues());
+    for (const field of fields) values.delete(field);
+    this.filterCellValues.set(values);
     for (const field of fields) {
       this.rowFilterRaw.delete(field);
       const timer = this.filterTimers.get(`f:${field}`);

@@ -167,6 +167,34 @@ export interface OgeGridMessages {
   builderChip: string;
   /** Note under a value list cut at `valueLimit`; placeholder: {count}. */
   headerFilterTruncated: string;
+  /** Group name of the date presets in a date column’s header menu. */
+  datePresetsLabel: string;
+  /** Date preset. */
+  datePresetToday: string;
+  /** Date preset. */
+  datePresetYesterday: string;
+  /** Date preset (from the locale’s first day of the week). */
+  datePresetThisWeek: string;
+  /** Date preset. */
+  datePresetThisMonth: string;
+  /** Date preset (ending today). */
+  datePresetLast30Days: string;
+  /** Date preset. */
+  datePresetThisYear: string;
+  /** Button of `filterApplyMode: 'manual'`. */
+  applyFilters: string;
+  /** Note shown while manual mode holds edits. */
+  pendingFilters: string;
+  /** Toolbar button opening the saved views (`savedViews`). */
+  savedViews: string;
+  /** Button saving the current state as a view. */
+  saveView: string;
+  /** Label of the view name box. */
+  viewName: string;
+  /** Accessible name of a view’s delete button; placeholder: {name}. */
+  deleteView: string;
+  /** Shown when there are no saved views. */
+  noSavedViews: string;
   /** Live announcement after an ascending sort; placeholder: {column}. */
   sortAscendingAnnouncement: string;
   /** Live announcement after a descending sort; placeholder: {column}. */
@@ -357,6 +385,20 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   builderChip: 'Custom filter',
   headerFilterTruncated:
     'Showing the first {count} values — type to narrow the list.',
+  datePresetsLabel: 'Quick dates',
+  datePresetToday: 'Today',
+  datePresetYesterday: 'Yesterday',
+  datePresetThisWeek: 'This week',
+  datePresetThisMonth: 'This month',
+  datePresetLast30Days: 'Last 30 days',
+  datePresetThisYear: 'This year',
+  applyFilters: 'Apply filters',
+  pendingFilters: 'Filter changes are not applied yet',
+  savedViews: 'Views',
+  saveView: 'Save view',
+  viewName: 'View name',
+  deleteView: 'Delete view {name}',
+  noSavedViews: 'No saved views yet',
   sortAscendingAnnouncement: 'Sorted by {column}, ascending',
   sortDescendingAnnouncement: 'Sorted by {column}, descending',
   sortClearedAnnouncement: 'Sort cleared',

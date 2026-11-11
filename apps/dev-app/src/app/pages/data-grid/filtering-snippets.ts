@@ -43,6 +43,32 @@ export const CHIPS_SNIPPET = demoSource({
 </oge-grid>`,
 });
 
+export const TOOLS_SNIPPET = demoSource({
+  use: { '@oge-ui/grid': ['OgeColumn', 'OgeFilterCellTemplate', 'OgeGrid'] },
+  dataset: 'employees',
+  template: `<!-- auto value lists, a range slider, a custom filter cell, quick dates,
+     manual apply and saved views (stored under stateKey) -->
+<oge-grid [data]="employees" keyField="id" stateKey="filter-tools"
+          [filterRow]="true" [headerFilter]="{ auto: true }"
+          [dateFilterPresets]="true" filterApplyMode="manual" [savedViews]="true">
+  <oge-column field="firstName" caption="First Name" />
+  <oge-column field="department" caption="Department">
+    <select *ogeFilterCellTemplate="let value; setValue as set"
+            aria-label="Filter Department"
+            [value]="value ?? ''" (change)="set($any($event.target).value)">
+      <option value="">Any</option>
+      <option>Engineering</option>
+      <option>Sales</option>
+    </select>
+  </oge-column>
+  <oge-column field="city" caption="City" />
+  <oge-column field="salary" caption="Salary" dataType="number"
+              [filterRange]="{ min: 30000, max: 150000, step: 5000 }" />
+  <!-- a column may ask for its list: the date presets live in its menu -->
+  <oge-column field="hireDate" caption="Hired" dataType="date" [headerFilter]="true" />
+</oge-grid>`,
+});
+
 export const MENU_SNIPPET = demoSource({
   use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
   dataset: 'employees',

@@ -7,6 +7,30 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Filter tools — `@oge-ui/grid`, `@oge-ui/react-grid`
+
+- `headerFilter: { auto: true }` puts the value list only on columns whose values
+  repeat — at least 8 rows, at most 25 distinct values, each appearing more than
+  twice on average — judged on an in-memory source. A column's own `headerFilter`
+  (`true` / `false`) overrides it.
+- `dateFilterPresets`: quick ranges on top of a date column's header menu (today,
+  yesterday, this week from the locale's first day, this month, the last 30 days,
+  this year), written as whole-day ranges.
+- `filterApplyMode: 'manual'` holds filter and search edits until Apply filters
+  (or `applyFilters()`); a status note says when edits are pending and nothing
+  loads before.
+- `savedViews`: a Views toolbar button to save, open and delete named states,
+  stored under `oge-grid-views:<stateKey>` through the state storage; also
+  `saveCurrentView()`, `openView()`, `deleteView()` and `savedViewList()`.
+- Custom filter-row cells: `*ogeFilterCellTemplate` (Angular) / `renderFilterCell`
+  (React) with `{ value, setValue(value, operator?), operator, column }`.
+- `filterRange: { min, max, step? }` turns a number column's filter cell into a
+  two-handle range slider filtering with `between`.
+- Shared in `@oge-ui/behavior`: `ogeAutoListFields`, `ogeDatePresetRange`,
+  `ogeFilterCellExpr`, `ogeFilterRangeExpr`, `OgeSavedViewsCore`, and the filter
+  state's `setApplyMode` / `applyPending` / `pending`. New grid messages in every
+  locale pack.
+
 ### Column summaries, filter chips and value lists — `@oge-ui/grid`, `@oge-ui/react-grid`
 
 - `summaryMenu`: a "Summary" submenu in the header context menu — Count for every

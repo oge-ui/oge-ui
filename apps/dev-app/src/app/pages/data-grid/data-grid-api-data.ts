@@ -58,7 +58,7 @@ export const OGE_GRID_API: ApiSections = {
           type: 'boolean | OgeHeaderFilterOptions',
           default: 'false',
           description:
-            'Excel-style filter button in headers. The value list comes from <code>source.distinct()</code> under every other active filter and the search text, never the column&#39;s own; a server source is asked once per opening and again 250&nbsp;ms after typing in the list&#39;s search box (<a href="/guides/filter-contract#value-lists">value lists</a>). Without <code>distinct</code> there is no list.',
+            'Excel-style filter button in headers. The value list comes from <code>source.distinct()</code> under every other active filter and the search text, never the column&#39;s own; a server source is asked once per opening and again 250&nbsp;ms after typing in the list&#39;s search box (<a href="/guides/filter-contract#value-lists">value lists</a>). <code>{ auto: true }</code> shows the list only on columns whose values repeat (a column&#39;s <code>headerFilter</code> overrides it). Without <code>distinct</code> there is no list.',
         },
         {
           name: 'searchPanel',
@@ -72,6 +72,27 @@ export const OGE_GRID_API: ApiSections = {
           default: 'false',
           description:
             'A bar of removable chips above the grid, one per filter that narrows the rows — filter-row cells, header condition menus, value-list selections (<code>in</code>), the filter builder and the search text — reading <em>Column · operator · value</em>, plus a clear-all button. Removing a chip also empties its filter-row editor.',
+        },
+        {
+          name: 'dateFilterPresets',
+          type: 'boolean | readonly OgeDatePreset[]',
+          default: 'false',
+          description:
+            'Quick date ranges on top of a date column&#39;s header menu — <code>today</code>, <code>yesterday</code>, <code>thisWeek</code> (from the locale&#39;s first day), <code>thisMonth</code>, <code>last30Days</code>, <code>thisYear</code>. <code>true</code> offers all, a list picks and orders them. A preset filters with a whole-day range written to the column&#39;s condition slot.',
+        },
+        {
+          name: 'filterApplyMode',
+          type: "'auto' | 'manual'",
+          default: "'auto'",
+          description:
+            '<code>manual</code> holds filter and search edits until <em>Apply filters</em> (or <code>applyFilters()</code>) — for heavy server queries; a status note says when edits are pending, and no load runs before.',
+        },
+        {
+          name: 'savedViews',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A <em>Views</em> toolbar button: save the current state under a name, open a saved view, delete one. Stored through the state storage under <code>oge-grid-views:&lt;stateKey&gt;</code>; without a <code>stateKey</code> the views last for the session.',
         },
         {
           name: 'summaryMenu',
@@ -631,6 +652,18 @@ export const OGE_GRID_API: ApiSections = {
             'Plain descriptions of every column with a data field — <code>{ field, caption, dataType, visible, sortable, filterable, groupable, values? }</code>, lookup items as <code>values</code>. What a saved-view editor or the AI grid assistant reads; no templates, no accessors.',
         },
         {
+          name: 'applyFilters(): void',
+          type: 'void',
+          description:
+            'Loads the data with the filters as they are now (<code>filterApplyMode: &#39;manual&#39;</code>).',
+        },
+        {
+          name: 'saveCurrentView(name) / openView(name) / deleteView(name) / savedViewList()',
+          type: 'void',
+          description:
+            'The saved views (<code>savedViews</code>) by name: save the current state (replacing a view of that name), apply one (<code>false</code> when missing), delete one, list them oldest first.',
+        },
+        {
           name: 'clearFilters() / clearSorting()',
           type: 'void',
           description:
@@ -1048,6 +1081,19 @@ export const OGE_COLUMN_API: ApiSections = {
           description: 'Initial operator of the filter-row cell.',
         },
         {
+          name: 'headerFilter',
+          type: 'boolean | undefined',
+          description:
+            'This column&#39;s value list: <code>false</code> hides its funnel, <code>true</code> shows it even when <code>headerFilter.auto</code> would not; unset follows the grid.',
+        },
+        {
+          name: 'filterRange',
+          type: 'OgeFilterRange | undefined',
+          description:
+            'A two-handle range slider as the filter-row cell of a number column (<code>{ min, max, step? }</code>); the pair filters with <code>between</code>, the full range filters nothing.',
+        },
+
+        {
           name: 'calculateCellValue',
           type: '(row: T) =&gt; unknown',
           description: 'Calculated column value.',
@@ -1145,6 +1191,12 @@ export const OGE_COLUMN_API: ApiSections = {
           name: '*ogeEditTemplate',
           type: 'OgeEditTemplateContext&lt;T&gt;',
           description: '<code>{ $implicit: FormControl, row, column }</code>.',
+        },
+        {
+          name: '*ogeFilterCellTemplate',
+          type: 'OgeFilterCellTemplateContext',
+          description:
+            'A custom filter-row editor in an <code>&lt;oge-column&gt;</code>: <code>{ $implicit: value, setValue(value, operator?), operator, column }</code>. An empty value removes the filter, a two-item array is <code>between</code>, a longer one <code>in</code>; <code>calculateFilterExpression</code> still decides when set.',
         },
         {
           name: '*ogeDetailTemplate',
@@ -1260,8 +1312,9 @@ export const OGE_GRID_TYPES_API: ApiSections = {
         },
         {
           name: 'OgeHeaderFilterOptions',
-          type: '{ visible?: boolean; valueLimit?: number }',
-          description: 'Header filter.',
+          type: "{ visible?: boolean; valueLimit?: number; mode?: 'list' | 'conditions' | 'both'; auto?: boolean }",
+          description:
+            'Header filter. <code>auto</code> shows the value list only on columns whose values repeat — at least 8 rows, at most 25 distinct values, each appearing more than twice on average — judged on an in-memory source; a column&#39;s <code>headerFilter</code> overrides it.',
         },
         {
           name: 'OgeSearchPanelOptions',

@@ -17,6 +17,10 @@ import type {
   OgeColumnLookup,
   OgeContextMenuSource,
   OgeDataErrorEvent,
+  OgeDatePreset,
+  OgeFilterCellColumn,
+  OgeFilterRange,
+  OgeSavedView,
   OgeEditingOptions,
   OgeEditingStartEvent,
   OgeDataType,
@@ -67,6 +71,21 @@ import type {
 } from '@oge-ui/behavior';
 
 /** What a cell render prop receives — the React form of `*ogeCellTemplate`'s context. */
+/** Context of a column’s `renderFilterCell`. */
+export interface OgeGridFilterCellRenderContext {
+  /** The cell’s current value; `null` when it is empty. */
+  value: unknown;
+  /**
+   * Sets the value and filters by it: an empty value removes the filter, a
+   * two-item array is `between`, a longer one `in`, anything else uses
+   * `operator` (default: the operator in force).
+   */
+  setValue: (value: unknown, operator?: FilterOperator) => void;
+  /** The operator in force for the column. */
+  operator: FilterOperator;
+  column: OgeFilterCellColumn;
+}
+
 export interface OgeGridCellRenderContext<T = unknown> {
   /** The cell value (`column.field` read from the row, or `calculateCellValue`). */
   value: unknown;
@@ -177,6 +196,18 @@ export interface OgeGridColumnProps<T = unknown> {
   filterable?: boolean;
   /** Filter-row operator override (default: contains for text, eq for number/date). */
   filterOperator?: FilterOperator;
+  /**
+   * The header value list for this column: `false` hides its funnel, `true`
+   * shows it even when `headerFilter.auto` would not; unset follows the grid.
+   */
+  headerFilter?: boolean;
+  /**
+   * Turns the filter-row cell of a number column into a two-handle range
+   * slider over `{ min, max, step? }`; the pair filters with `between`.
+   */
+  filterRange?: OgeFilterRange;
+  /** A custom filter-row editor; `setValue` filters by its value. */
+  renderFilterCell?: (context: OgeGridFilterCellRenderContext) => ReactNode;
   /** Track minimum in px for flexible-width columns. */
   minWidth?: number;
   /** Upper bound in px for user resizing (pointer drag and Alt+Arrow keys). */
@@ -394,6 +425,24 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
    * computed over the whole filtered set (by the server in remote mode).
    */
   summaryMenu?: boolean;
+  /**
+   * Quick date ranges on top of a date column's header menu — today,
+   * yesterday, this week (from the locale’s first day), this month, the last
+   * 30 days, this year. `true` offers all; a list picks and orders them.
+   */
+  dateFilterPresets?: boolean | readonly OgeDatePreset[];
+  /**
+   * `'manual'` holds filter and search edits until the user presses
+   * Apply filters (or `applyFilters()` runs); a note says when edits are
+   * pending. Default `'auto'`.
+   */
+  filterApplyMode?: 'auto' | 'manual';
+  /**
+   * A Views button in the toolbar: save the current state under a name,
+   * open or delete a saved view. Stored through the state storage under
+   * `oge-grid-views:<stateKey>`; without a `stateKey` for the session.
+   */
+  savedViews?: boolean;
   /** Debounce for text filter inputs, in ms. Set to 0 in tests. */
   filterDebounce?: number;
   /**
@@ -643,6 +692,16 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
 export interface OgeGridHandle<T extends object = Record<string, unknown>> {
   /** Re-runs the current load against the DataSource. */
   refresh(): void;
+  /** Loads the data with the filters as they are now (`filterApplyMode: 'manual'`). */
+  applyFilters(): void;
+  /** Saves the current state under `name` (replacing a view of that name). */
+  saveCurrentView(name: string): void;
+  /** Applies a saved view by name; `false` when there is none. */
+  openView(name: string): boolean;
+  /** Deletes a saved view by name. */
+  deleteView(name: string): void;
+  /** The saved views, oldest first. */
+  savedViewList(): readonly OgeSavedView[];
   /**
    * Opens the column chooser below `anchor` — e.g. a button in your own header
    * bar, with `columnChooser` off. Without one it opens below the toolbar's

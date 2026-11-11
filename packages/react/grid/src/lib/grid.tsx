@@ -22,6 +22,7 @@ import {
   createFilterPredicate,
   flattenGroupedData,
   groupNodeKey,
+  resolveFirstDayOfWeek,
   resolveKeySelector,
   type CsvOptions,
   type DataSource,
@@ -161,6 +162,15 @@ import {
   ogeGroupValueText,
   ogeHeaderConditionKey,
   OgeHeaderValuesLoader,
+  OgeSavedViewsCore,
+  ogeAutoListFields,
+  ogeDatePresetExpr,
+  ogeFilterCellExpr,
+  ogeFilterRangeExpr,
+  ogeResolveDatePresets,
+  type OgeDatePreset,
+  type OgeFilterRange,
+  type OgeSavedView,
   ogeGridFilterChips,
   ogeSummaryMenuItem,
   ogeWireFilterOperator,
@@ -218,6 +228,7 @@ import {
   OgeCheckBox,
   OgeDateBox,
   OgeNumberBox,
+  OgeRangeSlider,
   OgeSelectBox,
   OgeTextBox,
 } from '@oge-ui/react-inputs';
@@ -2461,6 +2472,11 @@ function OgeGridInner<T extends object>(
     isRowSelected,
     state: () => model.persistedSnapshot(),
     applyState: (snapshot) => model.applyState(snapshot),
+    applyFilters: () => state.filter.applyPending(),
+    saveCurrentView: (name) => viewsCore.save(name, model.persistedSnapshot()),
+    openView: (name) => openView(name),
+    deleteView: (name) => viewsCore.remove(name),
+    savedViewList: () => viewsCore.list(),
     describeColumns: () =>
       ogeDescribeGridColumns(
         model.exportColumnSources(true),
@@ -3269,6 +3285,11 @@ function OgeGridInner<T extends object>(
         : (model.resolvedColumns() as readonly ResolvedColumn<T>[])
             .map((column) => column.field)
             .filter((field): field is string => !!field);
+    setFilterCellValues((previous) => {
+      const next = new Map(previous);
+      for (const field of fields) next.delete(field);
+      return next;
+    });
     for (const field of fields) {
       rowFilterRaw.current.delete(field);
       const timer = timers.current.get(`f:${field}`);
@@ -3281,6 +3302,19 @@ function OgeGridInner<T extends object>(
       return next;
     });
     if (slot === undefined) setSearchEpoch((n) => n + 1);
+  }
+
+  /** Values of custom / range filter cells, per field. */
+  const [filterCellValues, setFilterCellValues] = useState<
+    ReadonlyMap<string, unknown>
+  >(() => new Map());
+  function setFilterCellValue(
+    field: string,
+    value: unknown,
+    expr: FilterExpr | null,
+  ): void {
+    setFilterCellValues((previous) => new Map(previous).set(field, value));
+    state.filter.setRowFilter(field, expr);
   }
 
   /** Removes the one filter a chip stands for. */
@@ -3363,6 +3397,131 @@ function OgeGridInner<T extends object>(
     const expr = state.filter.builderFilter();
     return expr ? describeExpr(expr, model.builderFields(), msg) : null;
   };
+
+  // --- manual apply, automatic lists, date presets ---
+  useEffect(() => {
+    state.filter.setApplyMode(props.filterApplyMode ?? 'auto');
+  }, [state, props.filterApplyMode]);
+  const filterPending = state.filter.pending();
+
+  const autoOption = props.headerFilter;
+  const autoOn = typeof autoOption === 'object' && autoOption.auto === true;
+  const autoSource = data.source();
+  const autoResult = data.result();
+  const autoColumns = model.resolvedColumns() as readonly ResolvedColumn<T>[];
+  /** Fields whose values repeat enough for a list; `null` when auto is off. */
+  const autoListFields = useMemo<ReadonlySet<string> | null>(() => {
+    if (!autoOn) return null;
+    if (!autoSource?.loadSync) return new Set<string>();
+    void autoResult; // re-judge after data changes
+    const rows = (autoSource.loadSync({}).data ?? []) as T[];
+    const byField = new Map(
+      autoColumns.filter((c) => c.field).map((c) => [c.field as string, c]),
+    );
+    return ogeAutoListFields(rows, [...byField.keys()], (row, field) =>
+      byField.get(field)?.accessor(row),
+    );
+  }, [autoOn, autoSource, autoResult, autoColumns]);
+
+  /** Whether a column's header shows the value-list funnel. */
+  function showHeaderFilter(column: ResolvedColumn<T>): boolean {
+    if (!model.headerFilterAvailable() || !column.filterable) return false;
+    const own = column.source?.headerFilter;
+    if (own !== undefined) return own;
+    return (
+      autoListFields === null ||
+      (!!column.field && autoListFields.has(column.field))
+    );
+  }
+
+  const presetLabels: Record<OgeDatePreset, string> = {
+    today: msg.datePresetToday,
+    yesterday: msg.datePresetYesterday,
+    thisWeek: msg.datePresetThisWeek,
+    thisMonth: msg.datePresetThisMonth,
+    last30Days: msg.datePresetLast30Days,
+    thisYear: msg.datePresetThisYear,
+  };
+  const presetExpr = (field: string, preset: OgeDatePreset) =>
+    ogeDatePresetExpr(
+      field,
+      preset,
+      new Date(),
+      resolveFirstDayOfWeek(undefined, model.effLocale()),
+    );
+  const presetField = model.headerFilterField();
+  const presetColumn = presetField
+    ? model.columnsByField().get(presetField)
+    : undefined;
+  /** The preset buttons of the open date column's header menu. */
+  const datePresetChoices =
+    presetField && presetColumn && isOgeDateType(presetColumn.dataType)
+      ? (() => {
+          const current = JSON.stringify(
+            state.filter.rowFilterOf(ogeHeaderConditionKey(presetField)),
+          );
+          return ogeResolveDatePresets(props.dateFilterPresets).map((id) => ({
+            id,
+            label: presetLabels[id],
+            active: current === JSON.stringify(presetExpr(presetField, id)),
+          }));
+        })()
+      : [];
+
+  function applyDatePreset(preset: OgeDatePreset): void {
+    const field = model.headerFilterField();
+    if (!field) return;
+    state.filter.setHeaderFilter(field, null);
+    state.filter.setRowFilter(
+      ogeHeaderConditionKey(field),
+      presetExpr(field, preset),
+    );
+    headerFilterPanel.close();
+  }
+
+  // --- saved views ---
+  const [views, setViews] = useState<readonly OgeSavedView[]>([]);
+  const viewsCore = useMemo(
+    () =>
+      new OgeSavedViewsCore({
+        storage: () => latest.current.stateStorage ?? contextStorageRef.current,
+        stateKey: () => latest.current.stateKey,
+        onChange: (next) => setViews(next),
+      }),
+    [],
+  );
+  useEffect(() => {
+    if (props.savedViews) viewsCore.load();
+  }, [viewsCore, props.savedViews, props.stateKey]);
+  const viewsPopupRef = useRef<HTMLDivElement>(null);
+  const [viewsOpen, setViewsOpen] = useState(false);
+  const viewsAnchorRef = useRef<HTMLElement | null>(null);
+  const viewsPanel = useAnchoredPanel({
+    anchor: () => viewsAnchorRef.current ?? hostRef.current,
+    panel: () => viewsPopupRef.current,
+    placement: () => 'bottom-end',
+    onClosed: () => setViewsOpen(false),
+  });
+  function toggleViews(event: React.MouseEvent<HTMLElement>): void {
+    event.stopPropagation();
+    if (viewsOpen) {
+      viewsPanel.close();
+      return;
+    }
+    viewsAnchorRef.current = event.currentTarget;
+    setViewsOpen(true);
+    viewsPanel.open();
+    viewsPanel.updatePosition();
+  }
+  function openView(name: string): boolean {
+    const view = viewsCore.find(name);
+    if (!view) return false;
+    model.applyState(view.state);
+    state.filter.applyPending();
+    resetFilterInputs();
+    viewsPanel.close();
+    return true;
+  }
 
   /** One chip per filter that narrows the rows (`filterChips`). */
   const activeFilterChips: readonly OgeGridFilterChip[] = props.filterChips
@@ -4931,6 +5090,53 @@ function OgeGridInner<T extends object>(
   const filterEditor = (column: ResolvedColumn<T>): ReactNode => {
     if (!column.filterable) return null;
     const label = `${msg.filterPrefix} ${column.caption}`;
+    const own = column.source;
+    const field = column.field;
+    if (own?.renderFilterCell && field) {
+      const operator = currentOperator(column);
+      return own.renderFilterCell({
+        value: filterCellValues.get(field) ?? null,
+        operator,
+        column: { field, caption: column.caption, dataType: column.dataType },
+        setValue: (value, op) =>
+          setFilterCellValue(
+            field,
+            value,
+            ogeFilterCellExpr(
+              field,
+              value,
+              op ?? operator,
+              column.calculateFilterExpression,
+            ),
+          ),
+      });
+    }
+    if (own?.filterRange && field) {
+      const range = own.filterRange;
+      const current = filterCellValues.get(field);
+      return (
+        <OgeRangeSlider
+          className="oge-filter-input oge-filter-range"
+          min={range.min}
+          max={range.max}
+          step={range.step ?? 1}
+          defaultValue={
+            Array.isArray(current)
+              ? [current[0] as number, current[1] as number]
+              : [range.min, range.max]
+          }
+          startAriaLabel={label}
+          endAriaLabel={label}
+          onValueCommitted={(event) =>
+            setFilterCellValue(
+              field,
+              event.value,
+              ogeFilterRangeExpr(field, range, event.value),
+            )
+          }
+        />
+      );
+    }
     const common = {
       className: 'oge-filter-input',
       size: 'sm' as const,
@@ -5063,6 +5269,7 @@ function OgeGridInner<T extends object>(
     canAddRow ||
     batchPending ||
     props.columnChooser === true ||
+    props.savedViews === true ||
     props.toolbarBefore != null ||
     props.toolbarCenter != null ||
     props.toolbarAfter != null;
@@ -5963,6 +6170,17 @@ function OgeGridInner<T extends object>(
                   </button>
                 </span>
               ) : null}
+              {props.savedViews ? (
+                <button
+                  type="button"
+                  className="oge-tool-btn oge-views-button"
+                  aria-haspopup="dialog"
+                  aria-expanded={viewsOpen}
+                  onClick={toggleViews}
+                >
+                  {msg.savedViews}
+                </button>
+              ) : null}
               {props.columnChooser ? (
                 <button
                   type="button"
@@ -6120,6 +6338,27 @@ function OgeGridInner<T extends object>(
           </button>
         </div>
       ) : null}
+      {props.filterApplyMode === 'manual' ? (
+        <div
+          className={
+            filterPending
+              ? 'oge-filter-apply oge-filter-apply-pending'
+              : 'oge-filter-apply'
+          }
+        >
+          <span className="oge-filter-apply-note" role="status">
+            {filterPending ? msg.pendingFilters : ''}
+          </span>
+          <button
+            type="button"
+            className="oge-filter-apply-btn"
+            disabled={!filterPending}
+            onClick={() => state.filter.applyPending()}
+          >
+            {msg.applyFilters}
+          </button>
+        </div>
+      ) : null}
       {/* Delegated keyboard handler: focus lives on the grid cells inside (roving tabindex). */}
       <div
         ref={viewportRef}
@@ -6272,7 +6511,7 @@ function OgeGridInner<T extends object>(
                       : column.caption}
                   </span>
                   {sortIndicator(column)}
-                  {headerFilterAvailable && column.filterable ? (
+                  {showHeaderFilter(column) ? (
                     <button
                       type="button"
                       className={
@@ -6562,6 +6801,83 @@ function OgeGridInner<T extends object>(
           />
         </OgePopup>
       ) : null}
+      {viewsOpen ? (
+        <OgePopup ref={viewsPopupRef} panel={viewsPanel}>
+          <div
+            className="oge-views-popup"
+            role="dialog"
+            aria-label={msg.savedViews}
+          >
+            <div className="oge-chooser-title">{msg.savedViews}</div>
+            {views.length ? (
+              <ul className="oge-views-list">
+                {views.map((view) => {
+                  const name = formatPattern(msg.deleteView, {
+                    name: view.name,
+                  });
+                  return (
+                    <li key={view.name} className="oge-views-item">
+                      <button
+                        type="button"
+                        className="oge-views-open"
+                        onClick={() => openView(view.name)}
+                      >
+                        {view.name}
+                      </button>
+                      <button
+                        type="button"
+                        className="oge-views-delete"
+                        aria-label={name}
+                        title={name}
+                        onClick={() => viewsCore.remove(view.name)}
+                      >
+                        <svg
+                          viewBox="0 0 16 16"
+                          width="10"
+                          height="10"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          aria-hidden="true"
+                        >
+                          <path d="m4 4 8 8M12 4l-8 8" />
+                        </svg>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="oge-views-empty">{msg.noSavedViews}</p>
+            )}
+            <form
+              className="oge-views-save"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const input = event.currentTarget.elements.namedItem(
+                  'viewName',
+                ) as HTMLInputElement | null;
+                if (!input) return;
+                viewsCore.save(input.value, model.persistedSnapshot());
+                input.value = '';
+              }}
+            >
+              <input
+                name="viewName"
+                className="oge-views-name"
+                type="text"
+                maxLength={80}
+                aria-label={msg.viewName}
+                placeholder={msg.viewName}
+              />
+              <button type="submit" className="oge-views-save-btn">
+                {msg.saveView}
+              </button>
+            </form>
+          </div>
+        </OgePopup>
+      ) : null}
       {model.chooserOpen() ? (
         <OgePopup ref={chooserPopupRef} panel={chooserPanel}>
           <div className="oge-chooser-popup">
@@ -6617,6 +6933,25 @@ function OgeGridInner<T extends object>(
       ) : null}
       {headerFilterField !== null ? (
         <OgePopup ref={headerFilterPopupRef} panel={headerFilterPanel}>
+          {datePresetChoices.length ? (
+            <div
+              className="oge-hf-presets"
+              role="group"
+              aria-label={msg.datePresetsLabel}
+            >
+              {datePresetChoices.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="oge-hf-preset"
+                  aria-pressed={preset.active}
+                  onClick={() => applyDatePreset(preset.id)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <div
             className={
               headerFilterMode === 'list'

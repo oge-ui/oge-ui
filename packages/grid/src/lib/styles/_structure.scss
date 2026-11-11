@@ -187,6 +187,145 @@ input.oge-filter-input,
   }
 }
 
+// --- manual apply (filterApplyMode: 'manual') -------------------------------
+
+.oge-filter-apply {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  font-size: 12px;
+}
+
+.oge-filter-apply-note {
+  color: var(--oge-muted-color);
+}
+
+.oge-filter-apply-btn {
+  padding: 3px 10px;
+  border: 1px solid var(--oge-accent);
+  border-radius: var(--oge-radius);
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    border-color: var(--oge-border-color);
+    background: none;
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+// --- saved views (savedViews) ------------------------------------------------
+
+.oge-views-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-inline-size: 220px;
+  padding: 8px;
+}
+
+.oge-views-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-views-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.oge-views-open {
+  flex: 1;
+  padding: 4px 6px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+}
+
+.oge-views-delete {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--oge-header-color);
+  }
+}
+
+.oge-views-open,
+.oge-views-delete,
+.oge-views-save-btn,
+.oge-views-name {
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-views-empty {
+  margin: 0;
+  color: var(--oge-muted-color);
+  font-size: 12px;
+}
+
+.oge-views-save {
+  display: flex;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--oge-border-color);
+}
+
+.oge-views-name {
+  flex: 1;
+  min-inline-size: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+}
+
+.oge-views-save-btn {
+  padding: 3px 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-header-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  cursor: pointer;
+}
+
+.oge-filter-range {
+  inline-size: 100%;
+}
+
 // --- active filter chips (filterChips) ---------------------------------------
 
 .oge-filter-chips {
@@ -1497,6 +1636,40 @@ input.oge-filter-input {
 .oge-hf-loading {
   padding: 12px;
   color: var(--oge-muted-color);
+}
+
+// date presets on top of a date column's header menu (dateFilterPresets)
+.oge-hf-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--oge-border-color);
+}
+
+.oge-hf-preset {
+  padding: 2px 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 999px;
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--oge-accent-25);
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
 }
 
 // the value list was cut at valueLimit

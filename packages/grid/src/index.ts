@@ -76,6 +76,10 @@ export {
   type OgeEditTemplateContext,
 } from './lib/templates/edit-template';
 export {
+  OgeFilterCellTemplate,
+  type OgeFilterCellTemplateContext,
+} from './lib/templates/filter-cell-template';
+export {
   OgeEditingSlice,
   type OgeEditFormItem,
   type OgeEditMode,

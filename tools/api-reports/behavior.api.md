@@ -906,6 +906,9 @@ export const OGE_ALERT_ICON_PATHS: Readonly<Record<OgeAlertSeverity, string>>;
 // @public
 export const OGE_AUTO_FIT_SLACK = 2;
 
+// @public (undocumented)
+export const OGE_AUTO_LIST_RULE: OgeAutoListRule;
+
 // @public
 export const OGE_AUTO_SCROLL_EDGE = 48;
 
@@ -959,6 +962,9 @@ export const OGE_DATA_VIEW_DEFAULT_MIN_ITEM_WIDTH = 240;
 
 // @public
 export const OGE_DATA_VIEW_PAGER_BUTTONS = 7;
+
+// @public
+export const OGE_DATE_PRESETS: readonly OgeDatePreset[];
 
 // @public (undocumented)
 export const OGE_DEFAULT_ACCORDION_CONFIG: OgeAccordionConfig;
@@ -1422,6 +1428,12 @@ export const OGE_RATING_MIN_PRECISION = 0.01;
 
 // @public
 export const OGE_ROW_MOTION_LIMIT = 60;
+
+// @public
+export const OGE_SAVED_VIEW_NAME_MAX = 80;
+
+// @public
+export const OGE_SAVED_VIEWS_MAX = 50;
 
 // @public
 export const OGE_SELECT_OPTION_HEIGHT: Record<OgeInputSize, number>;
@@ -2267,6 +2279,15 @@ export function ogeApplyAttributes(element: Element, next: Readonly<Record<strin
 
 // @public
 export type OgeAsyncGuard = () => boolean | Promise<boolean>;
+
+// @public
+export function ogeAutoListFields<T>(rows: readonly T[], fields: readonly string[], valueOf: (row: T, field: string) => unknown, rule?: OgeAutoListRule): ReadonlySet<string>;
+
+// @public
+export interface OgeAutoListRule {
+    readonly maxDistinct: number;
+    readonly minRows: number;
+}
 
 // @public
 export interface OgeAutoRepeatOptions {
@@ -3893,6 +3914,18 @@ export type OgeDateBoxTimeView = 'list' | 'columns';
 
 // @public
 export type OgeDateBoxType = 'date' | 'time' | 'datetime';
+
+// @public
+export type OgeDatePreset = 'today' | 'yesterday' | 'thisWeek' | 'thisMonth' | 'last30Days' | 'thisYear';
+
+// @public
+export function ogeDatePresetExpr(field: string, preset: OgeDatePreset, now: Date, firstDayOfWeek: number): FilterExpr;
+
+// @public
+export function ogeDatePresetRange(preset: OgeDatePreset, now: Date, firstDayOfWeek: number): {
+    readonly from: Date;
+    readonly to: Date;
+};
 
 // @public
 export type OgeDateRangeBoxType = 'date' | 'time' | 'datetime';
@@ -6130,6 +6163,19 @@ export interface OgeFilterBuilderField {
     field: string;
 }
 
+// @public
+export interface OgeFilterCellColumn {
+    // (undocumented)
+    readonly caption: string;
+    // (undocumented)
+    readonly dataType: OgeDataType;
+    // (undocumented)
+    readonly field: string;
+}
+
+// @public
+export function ogeFilterCellExpr(field: string, value: unknown, operator: FilterOperator, calculate?: (value: unknown, operator: FilterOperator) => FilterExpr | null): FilterExpr | null;
+
 // Warning: (ae-forgotten-export) The symbol "ChipMessages" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -6144,6 +6190,18 @@ export interface OgeFilterDescribeMessages {
     // (undocumented)
     operators: Readonly<Record<FilterOperator, string>>;
 }
+
+// @public
+export interface OgeFilterRange {
+    // (undocumented)
+    readonly max: number;
+    // (undocumented)
+    readonly min: number;
+    readonly step?: number;
+}
+
+// @public
+export function ogeFilterRangeExpr(field: string, range: OgeFilterRange, pair: readonly [number, number]): FilterExpr | null;
 
 // @public
 export interface OgeFilterRowColumn {
@@ -7402,6 +7460,10 @@ builderFields?: readonly OgeFilterBuilderField[]): OgeGridFilterChip[];
 // @public
 export class OgeGridFilterState {
     constructor(rx: OgeReactivityAdapter);
+    readonly appliedExpr: () => FilterExpr | null;
+    readonly appliedSearchText: () => string;
+    readonly applyMode: () => 'auto' | 'manual';
+    applyPending(): void;
     // (undocumented)
     applyState(state: {
         row?: readonly (readonly [string, FilterExpr])[];
@@ -7419,9 +7481,11 @@ export class OgeGridFilterState {
     headerExpr(field: string, values: readonly unknown[]): FilterExpr;
     // (undocumented)
     headerFilterOf(field: string): readonly unknown[] | null;
+    readonly pending: () => boolean;
     rowFilterOf(field: string): FilterExpr | null;
     // (undocumented)
     readonly searchText: () => string;
+    setApplyMode(mode: 'auto' | 'manual'): void;
     // (undocumented)
     setBuilderFilter(expr: FilterExpr | null): void;
     setHeaderFilter(field: string, values: readonly unknown[] | null): void;
@@ -7586,6 +7650,7 @@ export interface OgeGridMessages {
     allRows: string;
     // (undocumented)
     apply: string;
+    applyFilters: string;
     autoFitColumn: string;
     // (undocumented)
     blankValue: string;
@@ -7616,8 +7681,16 @@ export interface OgeGridMessages {
     confirmDelete: string;
     // (undocumented)
     createFilter: string;
+    datePresetLast30Days: string;
+    datePresetsLabel: string;
+    datePresetThisMonth: string;
+    datePresetThisWeek: string;
+    datePresetThisYear: string;
+    datePresetToday: string;
+    datePresetYesterday: string;
     // (undocumented)
     deleteRow: string;
+    deleteView: string;
     detailColumnHeader: string;
     // (undocumented)
     discardChanges: string;
@@ -7672,12 +7745,14 @@ export interface OgeGridMessages {
     nextPage: string;
     // (undocumented)
     noData: string;
+    noSavedViews: string;
     operators: Record<FilterOperator, string>;
     pageAnnouncement: string;
     pageOfCount: string;
     pagerInfo: string;
     // (undocumented)
     pageSizeLabel: string;
+    pendingFilters: string;
     // (undocumented)
     pinLeft: string;
     // (undocumented)
@@ -7708,8 +7783,10 @@ export interface OgeGridMessages {
     rowsSuffix?: string;
     // (undocumented)
     saveChanges: string;
+    savedViews: string;
     // (undocumented)
     saveRow: string;
+    saveView: string;
     // (undocumented)
     search: string;
     searchChip: string;
@@ -7751,6 +7828,7 @@ export interface OgeGridMessages {
     unpin: string;
     validationErrorAnnouncement: string;
     validationPending: string;
+    viewName: string;
 }
 
 // @public
@@ -8223,6 +8301,7 @@ export type OgeHeaderFilterMode = 'list' | 'conditions' | 'both';
 
 // @public (undocumented)
 export interface OgeHeaderFilterOptions {
+    auto?: boolean;
     mode?: OgeHeaderFilterMode;
     valueLimit?: number;
     // (undocumented)
@@ -9750,6 +9829,9 @@ export function ogeMoveGroupingTo(grouping: {
 export function ogeMoveListItem<T>(items: readonly T[], from: number, to: number): T[];
 
 // @public
+export function ogeNormalizeViewName(name: string): string;
+
+// @public
 export interface OgeNumberFormatter {
     // (undocumented)
     readonly decimal: string;
@@ -10184,6 +10266,9 @@ export function ogePanelBarVisibleIds<T extends OgePanelBarItemLike>(nodes: read
 export function ogeParsePageInput(text: string, pageCount: number): number | null;
 
 // @public
+export function ogeParseSavedViews(raw: string | null): OgeSavedView[];
+
+// @public
 export interface OgePdfFont {
     bold?: OgePdfFontData;
     // (undocumented)
@@ -10541,6 +10626,9 @@ export function ogePromptResult(outcome: OgeDialogOutcome | undefined, value: st
 export type OgePromptValidator = (value: string) => string | null | Promise<string | null>;
 
 // @public
+export function ogeQualifiesForAutoList(values: readonly unknown[], rule?: OgeAutoListRule): boolean;
+
+// @public
 export function ogeRangeAnnouncementCounts(stats: {
     rowCount: number;
     columnCount: number;
@@ -10691,6 +10779,9 @@ export function ogeResolveAvatarContent(input: OgeAvatarContentInput): OgeAvatar
 
 // @public
 export function ogeResolveContextMenuOpen(request: OgeContextMenuOpenRequest): OgeContextMenuOpenResult;
+
+// @public
+export function ogeResolveDatePresets(option: boolean | readonly OgeDatePreset[] | undefined): readonly OgeDatePreset[];
 
 // @public
 export interface OgeResolvedChunkOptions {
@@ -11054,6 +11145,39 @@ export interface OgeSanitizeUrlOptions {
 export interface OgeSavedChangesEvent<T = unknown> {
     // (undocumented)
     changes: OgeDataChange<T>[];
+}
+
+// @public
+export interface OgeSavedView {
+    // (undocumented)
+    readonly name: string;
+    readonly savedAt: string;
+    // (undocumented)
+    readonly state: GridStateSnapshot;
+}
+
+// @public
+export class OgeSavedViewsCore {
+    constructor(options: OgeSavedViewsOptions);
+    find(name: string): OgeSavedView | undefined;
+    // (undocumented)
+    list(): readonly OgeSavedView[];
+    load(): void;
+    // (undocumented)
+    remove(name: string): void;
+    // (undocumented)
+    save(name: string, state: GridStateSnapshot): void;
+}
+
+// @public
+export function ogeSavedViewsKey(stateKey: string): string;
+
+// @public
+export interface OgeSavedViewsOptions {
+    readonly onChange: (views: readonly OgeSavedView[]) => void;
+    readonly stateKey: () => string | undefined;
+    // (undocumented)
+    readonly storage: () => OgeStateStorage;
 }
 
 // @public
@@ -15452,6 +15576,12 @@ export function ogeWindowZIndex(base: number | undefined, layer: number): string
 
 // @public
 export function ogeWireFilterOperator(op: FilterOperator, dataType: OgeDataType): FilterOperator;
+
+// @public
+export function ogeWithoutSavedView(views: readonly OgeSavedView[], name: string): OgeSavedView[];
+
+// @public
+export function ogeWithSavedView(views: readonly OgeSavedView[], name: string, state: GridStateSnapshot, now?: Date): OgeSavedView[];
 
 // @public
 export function operatorsFor(dataType: OgeDataType): FilterOperator[];

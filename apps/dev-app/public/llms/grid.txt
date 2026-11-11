@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/grid`
 
-- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgePagerInfoTemplate`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
-- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnFormat`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnDescription`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`, `OgeValueFormat`, `OgeValueFormatType`
+- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeFilterCellTemplate`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgePagerInfoTemplate`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
+- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnFormat`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterCellTemplateContext`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnDescription`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`, `OgeValueFormat`, `OgeValueFormatType`
 
 `@oge-ui/grid/testing`
 
@@ -136,9 +136,12 @@ _Sorting, filtering & search_
 | `sortable` | `boolean \| 'single' \| 'multi'` | `'multi'` | `false` disables sorting; `'single'` restricts to one column. |
 | `sorting` | `OgeSortingOptions \| undefined` | `—` | Sorting options; overrides the `sortable` shorthand. |
 | `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header. |
-| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style filter button in headers. The value list comes from `source.distinct()` under every other active filter and the search text, never the column's own; a server source is asked once per opening and again 250 ms after typing in the list's search box (value lists). Without `distinct` there is no list. |
+| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style filter button in headers. The value list comes from `source.distinct()` under every other active filter and the search text, never the column's own; a server source is asked once per opening and again 250 ms after typing in the list's search box (value lists). `{ auto: true }` shows the list only on columns whose values repeat (a column's `headerFilter` overrides it). Without `distinct` there is no list. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
 | `filterChips` | `boolean` | `false` | A bar of removable chips above the grid, one per filter that narrows the rows — filter-row cells, header condition menus, value-list selections (`in`), the filter builder and the search text — reading _Column · operator · value_, plus a clear-all button. Removing a chip also empties its filter-row editor. |
+| `dateFilterPresets` | `boolean \| readonly OgeDatePreset[]` | `false` | Quick date ranges on top of a date column's header menu — `today`, `yesterday`, `thisWeek` (from the locale's first day), `thisMonth`, `last30Days`, `thisYear`. `true` offers all, a list picks and orders them. A preset filters with a whole-day range written to the column's condition slot. |
+| `filterApplyMode` | `'auto' \| 'manual'` | `'auto'` | `manual` holds filter and search edits until _Apply filters_ (or `applyFilters()`) — for heavy server queries; a status note says when edits are pending, and no load runs before. |
+| `savedViews` | `boolean` | `false` | A _Views_ toolbar button: save the current state under a name, open a saved view, delete one. Stored through the state storage under `oge-grid-views:<stateKey>`; without a `stateKey` the views last for the session. |
 | `summaryMenu` | `boolean` | `false` | Adds a _Summary_ submenu to the header context menu: Count for every column, Sum / Avg / Min / Max for numbers, None, or the column default. The pick replaces the column's `totalSummary`, persists with `stateKey` / `state()` (`summaries`) and travels as `LoadOptions.totalSummary`, so a server computes it over the whole filtered set. |
 | `filterPanel` | `boolean` | `false` | Filter panel bar with the filter-builder entry point. |
 | `filterValue` | `model<FilterExpr \| null>` | `null` | Two-way binding of the builder/programmatic filter expression. |
@@ -295,6 +298,8 @@ _Loading, state & export_
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Shows/hides the load panel with an optional message — independent of data activity. |
 | `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `describeColumns()` | `OgeGridColumnDescription[]` | Plain descriptions of every column with a data field — `{ field, caption, dataType, visible, sortable, filterable, groupable, values? }`, lookup items as `values`. What a saved-view editor or the AI grid assistant reads; no templates, no accessors. |
+| `applyFilters(): void` | `void` | Loads the data with the filters as they are now (`filterApplyMode: 'manual'`). |
+| `saveCurrentView(name) / openView(name) / deleteView(name) / savedViewList()` | `void` | The saved views (`savedViews`) by name: save the current state (replacing a view of that name), apply one (`false` when missing), delete one, list them oldest first. |
 | `clearFilters() / clearSorting()` | `void` | Clears every filter (row, header, builder, search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows, column metadata (width, alignment, pin side, band) and the structured lines — group rows, group footers, the total row (`items`) — of the current view. `scope: 'all' \| 'page' \| 'selection'` (or `selectedRowsOnly`), `visibleColumnsOnly: false` adds hidden columns, `groups` / `summaries: false` export flat. |
 | `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character `=`, `+`, `-`, `@` or a full-width `＝ ＋ － ＠`, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
@@ -409,6 +414,8 @@ _Sort, filter & group_
 | `groupIndex` | `number \| undefined` | `—` | Initial grouping position. |
 | `groupInterval` | `'hour' \| 'day' \| 'week' \| 'month' \| 'quarter' \| 'year' \| number \| undefined` | `—` | Bucket when grouping by this column — calendar units for dates (`'day'` by default for `date` / `datetime`; `'week'` starts on the locale’s first day of week) or a positive width for numbers (`100` → 0–99, 100–199…). Captions read `Week of …`, `Q2 2026`, `100 – 200`. Sent as `LoadOptions.group[].interval`. |
 | `filterOperator` | `FilterOperator \| undefined` | `—` | Initial operator of the filter-row cell. |
+| `headerFilter` | `boolean \| undefined` | `—` | This column's value list: `false` hides its funnel, `true` shows it even when `headerFilter.auto` would not; unset follows the grid. |
+| `filterRange` | `OgeFilterRange \| undefined` | `—` | A two-handle range slider as the filter-row cell of a number column (`{ min, max, step? }`); the pair filters with `between`, the full range filters nothing. |
 | `calculateCellValue` | `(row: T) => unknown` | `—` | Calculated column value. |
 | `calculateSortValue` | `(row: T) => unknown` | `—` | Custom sort key. |
 | `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `—` | Custom filter expression builder. |
@@ -439,6 +446,7 @@ _Formatting, merging & async validation_
 | `*ogeCellTemplate` | `OgeCellTemplateContext<T>` | `{ $implicit: value, row, rowIndex, column }`. |
 | `*ogeHeaderTemplate` | `OgeHeaderTemplateContext<T>` | `{ $implicit: column }`. |
 | `*ogeEditTemplate` | `OgeEditTemplateContext<T>` | `{ $implicit: FormControl, row, column }`. |
+| `*ogeFilterCellTemplate` | `OgeFilterCellTemplateContext` | A custom filter-row editor in an `<oge-column>`: `{ $implicit: value, setValue(value, operator?), operator, column }`. An empty value removes the filter, a two-item array is `between`, a longer one `in`; `calculateFilterExpression` still decides when set. |
 | `*ogeDetailTemplate` | `OgeDetailTemplateContext<T>` | Master-detail content; `{ $implicit: row }`. |
 | `*ogeRowTemplate` | `OgeRowTemplateContext<T>` | Full-row replacement; `{ $implicit: row, index, key }`. |
 | `*ogeNoDataTemplate` | `TemplateRef` | Custom empty state. |
@@ -474,7 +482,7 @@ _Option objects (boolean shorthands stay valid)_
 | `OgePagingOptions` | `{ pageSize: number; pageSizes?: readonly (number \| 'all')[]; showInfo?; displayMode?: 'full' \| 'compact' \| 'adaptive' }` | Pager configuration. |
 | `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean }` | Sorting behavior. |
 | `OgeFilterRowOptions` | `{ visible?: boolean; debounce?: number }` | Filter row. |
-| `OgeHeaderFilterOptions` | `{ visible?: boolean; valueLimit?: number }` | Header filter. |
+| `OgeHeaderFilterOptions` | `{ visible?: boolean; valueLimit?: number; mode?: 'list' \| 'conditions' \| 'both'; auto?: boolean }` | Header filter. `auto` shows the value list only on columns whose values repeat — at least 8 rows, at most 25 distinct values, each appearing more than twice on average — judged on an in-memory source; a column's `headerFilter` overrides it. |
 | `OgeSearchPanelOptions` | `{ visible?: boolean; placeholder?: string; width?: number }` | Search panel. |
 | `OgeScrollingOptions` | `{ mode?: 'standard' \| 'virtual' \| 'infinite'; remote?: boolean; columnRenderingMode?: 'standard' \| 'virtual' }` | Scrolling engine. |
 | `OgeGroupingOptions` | `{ autoExpandAll?: boolean; contextMenuEnabled?: boolean }` | `autoExpandAll: false` starts collapsed and defers child loading; `contextMenuEnabled` puts group/ungroup in the header menu without the group panel. |
@@ -1288,6 +1296,51 @@ export class Demo {
       { type: 'binary', field: 'salary', op: 'ge', value: 60000 },
     ],
   });
+}
+```
+
+### Tools
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeFilterCellTemplate, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeFilterCellTemplate, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- auto value lists, a range slider, a custom filter cell, quick dates,
+         manual apply and saved views (stored under stateKey) -->
+    <oge-grid [data]="employees" keyField="id" stateKey="filter-tools"
+              [filterRow]="true" [headerFilter]="{ auto: true }"
+              [dateFilterPresets]="true" filterApplyMode="manual" [savedViews]="true">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="department" caption="Department">
+        <select *ogeFilterCellTemplate="let value; setValue as set"
+                aria-label="Filter Department"
+                [value]="value ?? ''" (change)="set($any($event.target).value)">
+          <option value="">Any</option>
+          <option>Engineering</option>
+          <option>Sales</option>
+        </select>
+      </oge-column>
+      <oge-column field="city" caption="City" />
+      <oge-column field="salary" caption="Salary" dataType="number"
+                  [filterRange]="{ min: 30000, max: 150000, step: 5000 }" />
+      <!-- a column may ask for its list: the date presets live in its menu -->
+      <oge-column field="hireDate" caption="Hired" dataType="date" [headerFilter]="true" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
 }
 ```
 

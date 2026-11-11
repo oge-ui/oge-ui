@@ -1079,6 +1079,8 @@ const FAMILIES = [
           'React form of the `*ogeCellTemplate` structural directive, documented in the Angular page’s companion-directives block rather than as a column input (ROADMAP exception: TemplateRef ↔ render prop).',
         renderheader:
           'React form of `*ogeHeaderTemplate` — same companion-directive split as `renderCell`.',
+        renderfiltercell:
+          'React form of `*ogeFilterCellTemplate` — same companion-directive split as `renderCell`.',
         rendereditor:
           'React form of `*ogeEditTemplate` — same companion-directive split as `renderCell`.',
         renderrow:

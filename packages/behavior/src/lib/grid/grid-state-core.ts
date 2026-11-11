@@ -79,8 +79,9 @@ export class OgeGridStateCore {
 
     this.loadOptions = rx.derived<LoadOptions>(() => {
       const window = this.paging.window();
-      const filter = this.filter.combinedExpr();
-      const searchText = this.filter.searchText().trim();
+      // the applied filter: manual mode holds edits until they are applied
+      const filter = this.filter.appliedExpr();
+      const searchText = this.filter.appliedSearchText().trim();
       const groups = this.grouping.loadDescriptors();
       const groupSummary = this.grouping.groupSummary();
       const totalSummary = this.grouping.totalSummary();
@@ -105,8 +106,8 @@ export class OgeGridStateCore {
    */
   reconcile(): boolean {
     const filterJson = JSON.stringify([
-      this.filter.combinedExpr(),
-      this.filter.searchText(),
+      this.filter.appliedExpr(),
+      this.filter.appliedSearchText(),
     ]);
     const groupJson = JSON.stringify(this.grouping.descriptors());
     let changed = false;

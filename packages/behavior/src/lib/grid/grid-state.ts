@@ -141,6 +141,23 @@ export class OgeGridFilterState {
   readonly builderFilter: () => FilterExpr | null;
   /** AND of all active filters; null when nothing is filtered. */
   readonly combinedExpr: () => FilterExpr | null;
+  /**
+   * The filter the data is loaded with: the live one in `'auto'` mode, the
+   * last applied one in `'manual'` mode (`filterApplyMode`).
+   */
+  readonly appliedExpr: () => FilterExpr | null;
+  /** The search text the data is loaded with (see {@link appliedExpr}). */
+  readonly appliedSearchText: () => string;
+  /** `'manual'` while edits wait for {@link applyPending}. */
+  readonly applyMode: () => 'auto' | 'manual';
+  /** Whether manual mode holds edits that are not applied yet. */
+  readonly pending: () => boolean;
+
+  private readonly _applyMode: OgeReactiveCell<'auto' | 'manual'>;
+  private readonly _applied: OgeReactiveCell<{
+    readonly expr: FilterExpr | null;
+    readonly searchText: string;
+  }>;
 
   private readonly _rowFilters: OgeReactiveCell<
     ReadonlyMap<string, FilterExpr>
@@ -171,6 +188,54 @@ export class OgeGridFilterState {
       if (!operands.length) return null;
       return operands.length === 1 ? operands[0] : { type: 'and', operands };
     });
+    this._applyMode = rx.cell<'auto' | 'manual'>('auto');
+    this._applied = rx.cell({
+      expr: null as FilterExpr | null,
+      searchText: '',
+    });
+    this.applyMode = () => this._applyMode();
+    this.appliedExpr = rx.derived(() =>
+      this._applyMode() === 'manual'
+        ? this._applied().expr
+        : this.combinedExpr(),
+    );
+    this.appliedSearchText = rx.derived(() =>
+      this._applyMode() === 'manual'
+        ? this._applied().searchText
+        : this._searchText(),
+    );
+    this.pending = rx.derived(
+      () =>
+        this._applyMode() === 'manual' &&
+        (JSON.stringify(this._applied().expr) !==
+          JSON.stringify(this.combinedExpr()) ||
+          this._applied().searchText !== this._searchText()),
+    );
+  }
+
+  /**
+   * `'manual'` holds every filter and search edit until {@link
+   * applyPending} — for heavy server queries. Entering manual mode applies
+   * the current filter; leaving it applies whatever is pending.
+   */
+  setApplyMode(mode: 'auto' | 'manual'): void {
+    if (this._applyMode() === mode) return;
+    this.applyPending();
+    this._applyMode.set(mode);
+  }
+
+  /** Loads the data with the filters as they are now (manual mode). */
+  applyPending(): void {
+    const expr = this.combinedExpr();
+    const searchText = this._searchText();
+    const applied = this._applied();
+    if (
+      applied.searchText === searchText &&
+      JSON.stringify(applied.expr) === JSON.stringify(expr)
+    ) {
+      return;
+    }
+    this._applied.set({ expr, searchText });
   }
 
   /**

@@ -46,6 +46,10 @@ const COLUMNS: OgeGridColumnProps<Employee>[] = [
  */
 type DatedEmployee = Omit<Employee, 'hireDate'> & { hireDate: Date | null };
 
+const departments = [
+  ...new Set(makeEmployees(80, 13).map((row) => row.department)),
+].sort();
+
 const datedEmployees: DatedEmployee[] = makeEmployees(80, 13).map((row) => ({
   ...row,
   hireDate: toLocalDate(row.hireDate),
@@ -88,6 +92,22 @@ const datedEmployees: DatedEmployee[] = makeEmployees(80, 13).map((row) => ({
       <app-react-host class="demo-filter-chips" [render]="chips" />
     </app-demo-card>
 
+    <h3>Filter tools</h3>
+    <app-demo-card
+      [chips]="[
+        'headerFilter.auto',
+        'filterRange',
+        'dateFilterPresets',
+        'filterApplyMode',
+        'savedViews',
+      ]"
+      description="<code>headerFilter.auto</code> puts the value list only on columns whose values repeat (Department, City). Salary filters with a range slider (<code>filterRange</code>), Department with a custom cell (<code>ogeFilterCellTemplate</code> / <code>renderFilterCell</code>). Open the Hired funnel for the quick dates (<code>dateFilterPresets</code>). <code>filterApplyMode: 'manual'</code> holds every edit until <em>Apply filters</em>, and <em>Views</em> (<code>savedViews</code>) saves and reopens named states."
+      [code]="demos[2].source"
+      language="tsx"
+    >
+      <app-react-host class="demo-filter-tools" [render]="tools" />
+    </app-demo-card>
+
     <h3>Excel-style filter menu</h3>
     <p>
       <code>headerFilter.mode</code>: <code>'list'</code> (default),
@@ -97,7 +117,7 @@ const datedEmployees: DatedEmployee[] = makeEmployees(80, 13).map((row) => ({
     </p>
     <app-demo-card
       [chips]="['headerFilter.mode', 'date tree']"
-      [code]="demos[2].source"
+      [code]="demos[3].source"
       language="tsx"
     >
       <app-react-host class="demo-filter-menu" [render]="menu" />
@@ -157,6 +177,55 @@ export class ReactGridFilteringDemos {
           caption: 'Salary',
           dataType: 'number',
           totalSummary: 'sum',
+        },
+      ],
+    });
+
+  protected readonly tools = (): ReactNode =>
+    createElement(OgeGrid<DatedEmployee>, {
+      data: datedEmployees,
+      keyField: 'id',
+      stateKey: 'demo-filter-tools-react',
+      filterRow: true,
+      filterDebounce: 0,
+      headerFilter: { auto: true },
+      dateFilterPresets: true,
+      filterApplyMode: 'manual',
+      savedViews: true,
+      paging: { pageSize: 8 },
+      columns: [
+        { field: 'firstName', caption: 'First Name' },
+        {
+          field: 'department',
+          caption: 'Department',
+          renderFilterCell: ({ value, setValue }) =>
+            createElement(
+              'select',
+              {
+                className: 'demo-department-filter',
+                'aria-label': 'Filter Department',
+                value: (value as string) ?? '',
+                onChange: (event: { target: { value: string } }) =>
+                  setValue(event.target.value),
+              },
+              createElement('option', { value: '' }, 'Any'),
+              ...departments.map((d) =>
+                createElement('option', { key: d, value: d }, d),
+              ),
+            ),
+        },
+        { field: 'city', caption: 'City' },
+        {
+          field: 'salary',
+          caption: 'Salary',
+          dataType: 'number',
+          filterRange: { min: 30000, max: 150000, step: 5000 },
+        },
+        {
+          field: 'hireDate',
+          caption: 'Hired',
+          dataType: 'date',
+          headerFilter: true,
         },
       ],
     });

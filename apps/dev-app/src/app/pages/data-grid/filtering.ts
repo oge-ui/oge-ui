@@ -6,13 +6,18 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { FilterExpr } from '@oge-ui/core';
-import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeColumn, OgeFilterCellTemplate, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { ReactGridFilteringDemos } from '../react-grid/filtering';
 import { makeEmployees } from '../../shared/demo-data';
-import { CHIPS_SNIPPET, MENU_SNIPPET, SNIPPET } from './filtering-snippets';
+import {
+  CHIPS_SNIPPET,
+  MENU_SNIPPET,
+  SNIPPET,
+  TOOLS_SNIPPET,
+} from './filtering-snippets';
 import { toLocalDate } from '@oge-ui/core';
 
 @Component({
@@ -20,6 +25,7 @@ import { toLocalDate } from '@oge-ui/core';
   imports: [
     OgeGrid,
     OgeColumn,
+    OgeFilterCellTemplate,
     DemoCard,
     DocHeader,
     ReactGridFilteringDemos,
@@ -151,6 +157,63 @@ import { toLocalDate } from '@oge-ui/core';
         </oge-grid>
       </app-demo-card>
 
+      <h3>Filter tools</h3>
+      <app-demo-card
+        [chips]="[
+          'headerFilter.auto',
+          'filterRange',
+          'dateFilterPresets',
+          'filterApplyMode',
+          'savedViews',
+        ]"
+        description="<code>headerFilter.auto</code> puts the value list only on columns whose values repeat (Department, City). Salary filters with a range slider (<code>filterRange</code>), Department with a custom cell (<code>ogeFilterCellTemplate</code> / <code>renderFilterCell</code>). Open the Hired funnel for the quick dates (<code>dateFilterPresets</code>). <code>filterApplyMode: 'manual'</code> holds every edit until <em>Apply filters</em>, and <em>Views</em> (<code>savedViews</code>) saves and reopens named states."
+        [code]="toolsSnippet"
+        language="ts"
+      >
+        <oge-grid
+          class="demo-filter-tools"
+          [data]="datedEmployees"
+          keyField="id"
+          stateKey="demo-filter-tools"
+          [filterRow]="true"
+          [filterDebounce]="0"
+          [headerFilter]="{ auto: true }"
+          [dateFilterPresets]="true"
+          filterApplyMode="manual"
+          [savedViews]="true"
+          [paging]="{ pageSize: 8 }"
+        >
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="department" caption="Department">
+            <select
+              *ogeFilterCellTemplate="let value; setValue as set"
+              class="demo-department-filter"
+              aria-label="Filter Department"
+              [value]="value ?? ''"
+              (change)="set($any($event.target).value)"
+            >
+              <option value="">Any</option>
+              @for (d of departments; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </oge-column>
+          <oge-column field="city" caption="City" />
+          <oge-column
+            field="salary"
+            caption="Salary"
+            dataType="number"
+            [filterRange]="{ min: 30000, max: 150000, step: 5000 }"
+          />
+          <oge-column
+            field="hireDate"
+            caption="Hired"
+            dataType="date"
+            [headerFilter]="true"
+          />
+        </oge-grid>
+      </app-demo-card>
+
       <h3>Notes</h3>
       <ul>
         <li>
@@ -203,6 +266,10 @@ export class FilteringPage {
   protected readonly snippet = SNIPPET;
   protected readonly menuSnippet = MENU_SNIPPET;
   protected readonly chipsSnippet = CHIPS_SNIPPET;
+  protected readonly toolsSnippet = TOOLS_SNIPPET;
+  protected readonly departments = [
+    ...new Set(this.employees.map((e) => e.department)),
+  ].sort();
   protected readonly datedEmployees = makeEmployees(80, 13).map((row) => ({
     ...row,
     hireDate: toLocalDate(row.hireDate),

@@ -35,8 +35,9 @@ export class GridStateStore {
     // current page; changed grouping also invalidates group expansion state.
     let firstFilter = true;
     effect(() => {
-      this.filter.combinedExpr();
-      this.filter.searchText();
+      // the applied filter: typing in manual mode keeps the page
+      this.filter.appliedExpr();
+      this.filter.appliedSearchText();
       if (firstFilter) {
         firstFilter = false;
         return;
@@ -111,8 +112,9 @@ export class GridStateStore {
   readonly loadOptions: Signal<LoadOptions> = computed(
     () => {
       const window = this.paging.window();
-      const filter = this.filter.combinedExpr();
-      const searchText = this.filter.searchText().trim();
+      // the applied filter: manual mode holds edits until they are applied
+      const filter = this.filter.appliedExpr();
+      const searchText = this.filter.appliedSearchText().trim();
       const groups = this.grouping.loadDescriptors();
       const groupSummary = this.grouping.groupSummary();
       const totalSummary = this.grouping.totalSummary();

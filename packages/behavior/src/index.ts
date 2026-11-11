@@ -365,6 +365,33 @@ export {
   type OgeGridFilterChipKind,
 } from './lib/grid/grid-filter-chips';
 export {
+  OGE_AUTO_LIST_RULE,
+  OGE_DATE_PRESETS,
+  ogeAutoListFields,
+  ogeDatePresetExpr,
+  ogeDatePresetRange,
+  ogeFilterCellExpr,
+  ogeFilterRangeExpr,
+  ogeQualifiesForAutoList,
+  ogeResolveDatePresets,
+  type OgeAutoListRule,
+  type OgeDatePreset,
+  type OgeFilterCellColumn,
+  type OgeFilterRange,
+} from './lib/grid/grid-filter-extras';
+export {
+  OGE_SAVED_VIEWS_MAX,
+  OGE_SAVED_VIEW_NAME_MAX,
+  OgeSavedViewsCore,
+  ogeNormalizeViewName,
+  ogeParseSavedViews,
+  ogeSavedViewsKey,
+  ogeWithSavedView,
+  ogeWithoutSavedView,
+  type OgeSavedView,
+  type OgeSavedViewsOptions,
+} from './lib/grid/grid-saved-views';
+export {
   buildOgeExportItems,
   mergeOgeExportStyles,
   ogeExportCellStyle,

@@ -83,6 +83,56 @@ declare const employees: Employee[];`,
     }),
   },
   {
+    title: 'Filter tools',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-grid': ['OgeGrid'] },
+      name: 'FilterToolsGrid',
+      before: `interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];`,
+      jsx: `<OgeGrid
+  data={employees}
+  keyField="id"
+  stateKey="filter-tools"
+  filterRow
+  headerFilter={{ auto: true }}   // lists only where values repeat
+  dateFilterPresets                // quick dates in a date column’s menu
+  filterApplyMode="manual"         // edits wait for "Apply filters"
+  savedViews                       // save / open / delete named views
+  columns={[
+    { field: 'firstName', caption: 'First Name' },
+    {
+      field: 'department',
+      caption: 'Department',
+      renderFilterCell: ({ value, setValue }) => (
+        <select
+          aria-label="Filter Department"
+          value={(value as string) ?? ''}
+          onChange={(event) => setValue(event.target.value)}
+        >
+          <option value="">Any</option>
+          <option>Engineering</option>
+          <option>Sales</option>
+        </select>
+      ),
+    },
+    { field: 'city', caption: 'City' },
+    { field: 'salary', caption: 'Salary', dataType: 'number',
+      filterRange: { min: 30000, max: 150000, step: 5000 } },
+    // a column may ask for its list: the date presets live in its menu
+    { field: 'hireDate', caption: 'Hired', dataType: 'date', headerFilter: true },
+  ]}
+/>`,
+    }),
+  },
+  {
     title: 'Excel-style filter menu',
     source: reactDemoSource({
       use: { '@oge-ui/react-grid': ['OgeGrid'] },

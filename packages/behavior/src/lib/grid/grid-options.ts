@@ -26,6 +26,14 @@ export interface OgeHeaderFilterOptions {
    * `'both'` the Excel-style menu with conditions above the list.
    */
   mode?: OgeHeaderFilterMode;
+  /**
+   * Shows the value list only on columns whose values repeat — at least 8
+   * rows, at most 25 distinct values, each appearing more than twice on
+   * average — judged on an in-memory source's rows. A column's own
+   * `headerFilter` (`true` / `false`) overrides it. Server sources show no
+   * automatic lists.
+   */
+  auto?: boolean;
 }
 
 export interface OgeSearchPanelOptions {

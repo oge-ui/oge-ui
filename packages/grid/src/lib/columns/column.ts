@@ -11,9 +11,14 @@ import type {
   OgeColumnLookup,
   OgeDataType,
 } from '@oge-ui/grid/foundation';
-import type { OgeColumnFormat, OgeConditionalFormat } from '@oge-ui/behavior';
+import type {
+  OgeColumnFormat,
+  OgeConditionalFormat,
+  OgeFilterRange,
+} from '@oge-ui/behavior';
 import { OgeCellTemplate } from '../templates/cell-template';
 import { OgeEditTemplate } from '../templates/edit-template';
+import { OgeFilterCellTemplate } from '../templates/filter-cell-template';
 import { OgeHeaderTemplate } from '../templates/header-template';
 
 export type {
@@ -63,6 +68,17 @@ export class OgeColumn<T = unknown> {
   readonly filterable = input(true);
   /** Filter-row operator override (default: contains for text, eq for number/date). */
   readonly filterOperator = input<FilterOperator>();
+  /**
+   * The header value list for this column: `false` hides its funnel, `true`
+   * shows it even when `headerFilter.auto` would not; unset follows the grid.
+   */
+  readonly headerFilter = input<boolean | undefined>(undefined);
+  /**
+   * Turns the filter-row cell of a number column into a two-handle range
+   * slider over `{ min, max, step? }`; the pair filters with `between`, and
+   * the full range filters nothing.
+   */
+  readonly filterRange = input<OgeFilterRange | undefined>(undefined);
   /** Track minimum in px for flexible-width columns. */
   readonly minWidth = input<number>();
   /** Upper bound in px for user resizing (pointer drag and Alt+Arrow keys). */
@@ -135,4 +151,6 @@ export class OgeColumn<T = unknown> {
   readonly cellTemplate = contentChild(OgeCellTemplate<T>);
   readonly headerTemplate = contentChild(OgeHeaderTemplate<T>);
   readonly editTemplate = contentChild(OgeEditTemplate<T>);
+  /** A custom filter-row editor (`*ogeFilterCellTemplate`). */
+  readonly filterCellTemplate = contentChild(OgeFilterCellTemplate);
 }
