@@ -234,9 +234,157 @@ _Template directives (render props)_
 | `renderToolbar` | `(context: OgeUploadToolbarRenderContext) => ReactNode` | Replaces the Upload/Clear action row — `*ogeUploadToolbarTemplate`. Context: `files` and `uploading`. |
 | `renderIcon` | `(slot: OgeUploadIconSlot) => ReactNode` | Replaces one glyph — `*ogeUploadIconTemplate`. The slot is one of 14 values covering PrimeNG’s four icon slots and Ant’s three, in one render prop instead of seven. |
 
+### <OgeFileManager>
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `provider` | `OgeFileProvider` | `—` | Where the files live. Required. A new provider lists everything again from the root. |
+| `view` | `OgeFileView` | `'list'` | List or grid; with `onViewChange` it is controlled. |
+| `messages` | `Partial<OgeFileManagerMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `refresh()` | `() => Promise<void>` | Lists the open folder again. |
+| `open(folderId)` | `(folderId: string \| null) => Promise<void>` | Opens a folder (`null`: the root). |
+| `upload(files)` | `(files: readonly File[]) => Promise<void>` | Uploads files into the open folder. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onViewChange` | `(view: OgeFileView) => void` | When the toolbar switches the view. |
+| `onFileOpen` | `OgeFileItem` | A file was opened (double click, Enter); folders open in place. |
+| `onFolderChange` | `string \| null` | The open folder changed (`null`: the root). |
+| `onSelectionChange` | `readonly OgeFileItem[]` | The selection changed. |
+| `onDeleting` | `OgeFileDeletingEvent` | Cancelable, before a delete — a confirmation dialog hooks in here. |
+| `onProviderError` | `unknown` | A provider call failed (the folder shows the load error itself). |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFileProvider` | `interface` | Where the files live: `list(folderId)` (required; the items directly inside a folder, `null` for the root) and the optional `createFolder`, `rename`, `delete`, `move(items, targetId)` and `upload(parentId, files)`. A missing operation hides its command. |
+| `OgeFileItem` | `interface` | `{ id, name, parentId, isFolder, size?, modified? }` — `parentId` is `null` at the root; `modified` is a `Date` or ISO text. |
+| `ogeMemoryFileProvider(items, options?)` | `(items: OgeFileItem[], { newId?, now? }) => OgeFileProvider` | A provider over an in-memory list: demos, tests, and a starting point for your own (its `items()` returns the current list). |
+| `OgeFileView` | `'list' \| 'grid'` | Rows with name, size and modified columns, or tiles. |
+| `OgeFileSortField` | `'name' \| 'size' \| 'modified'` | The sortable columns; folders always come first, names sort naturally (`a9` before `a10`). |
+| `OgeFileDeletingEvent` | `interface` | `{ items, cancel, wait(promise) }` — set `cancel` to keep the items; `wait()` holds the delete until a confirmation dialog answers. |
+| `OgeFileCommand` | `'open' \| 'rename' \| 'delete' \| 'new-folder' \| 'upload' \| 'refresh'` | The commands of the toolbar and the context menu. |
+| `OgeFileManagerMessages` | `interface` | The file manager's text, under `messages.fileManager` of the upload config (`<OgeUploadConfigProvider>`) and the `upload.fileManager` slice of the locale packs. Defaults in `OGE_DEFAULT_FILE_MANAGER_MESSAGES`. |
+| `OGE_FILE_ITEMS_MIME` | `'application/x-oge-file-items'` | The drag data an item drag carries (a JSON array of ids), for drop targets of your own. |
+| `OgeFileManagerHandle` | `interface` | What a `ref` reaches: `refresh()`, `open(folderId)`, `upload(files)`. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeFileManager, ogeMemoryFileProvider } from '@oge-ui/react-upload/file-manager';
+
+// a provider talks to your storage: list a folder, plus the operations you
+// allow (createFolder, rename, delete, move, upload) — here, an in-memory one
+const files = ogeMemoryFileProvider([
+  { id: 'projects', name: 'Projects', parentId: null, isFolder: true },
+  { id: 'readme', name: 'Read me.txt', parentId: null, isFolder: false, size: 1284 },
+  { id: 'spec', name: 'Specification.docx', parentId: 'projects', isFolder: false, size: 84210 },
+]);
+
+export function Drive() {
+  const [opened, setOpened] = useState('');
+  return (
+    <>
+      {/* Double-click or Enter opens; F2 renames; Delete deletes; drag items
+          onto a folder to move them, drop files from the desktop to upload;
+          right-click for the context menu. */}
+      <OgeFileManager
+        provider={files}
+        onFileOpen={(item) => setOpened(item.name)}
+        style={{ height: 460 }}
+      />
+      <p>Opened: {opened || '—'}</p>
+    </>
+  );
+}
+```
+
+### Read-only grid
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeFileManager } from '@oge-ui/react-upload/file-manager';
+import type { OgeFileProvider, OgeFileView } from '@oge-ui/react-upload/file-manager';
+
+// only list(): no new folder, rename, delete, move or upload commands
+const archive: OgeFileProvider = {
+  list: async (folderId) =>
+    (await fetch(`/api/archive?folder=${folderId ?? ''}`)).json(),
+};
+
+export function Archive() {
+  const [view, setView] = useState<OgeFileView>('grid');
+  return (
+    <>
+      {/* a read-only browser in grid view, the view in your own state */}
+      <OgeFileManager
+        provider={archive}
+        view={view}
+        onViewChange={setView}
+        style={{ height: 400 }}
+      />
+    </>
+  );
+}
+```
+
+### Confirm before deleting
+
+```ts
+'use client';
+
+import { OgeFileManager, ogeMemoryFileProvider } from '@oge-ui/react-upload/file-manager';
+import type { OgeFileDeletingEvent } from '@oge-ui/react-upload/file-manager';
+
+const reports = ogeMemoryFileProvider([
+  { id: 'q3', name: 'Q3 report.pdf', parentId: null, isFolder: false, size: 92004 },
+  { id: 'q4', name: 'Q4 report.pdf', parentId: null, isFolder: false, size: 88512 },
+]);
+
+// onDeleting may return a promise (or use event.wait): cancel on "No"
+async function confirmDelete(event: OgeFileDeletingEvent) {
+  event.cancel = !window.confirm(`Delete ${event.items.length} item(s)?`);
+}
+
+export function Reports() {
+  return (
+    <>
+      <OgeFileManager
+        provider={reports}
+        onDeleting={confirmDelete}
+        style={{ height: 300 }}
+      />
+    </>
+  );
+}
+```
 
 ### Getting started
 

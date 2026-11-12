@@ -572,6 +572,11 @@ export class App {
       items: [
         { path: '/components/upload', label: 'Overview', icon: 'upload' },
         {
+          path: '/components/upload/file-manager',
+          label: 'File manager',
+          icon: 'upload',
+        },
+        {
           path: '/components/upload/api',
           label: 'API Reference',
           icon: 'code',

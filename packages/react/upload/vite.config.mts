@@ -51,7 +51,12 @@ export default defineConfig(() => ({
       // consumer that renders on the server (or bundles without a CSS loader)
       // is not forced to resolve it. `styles.css` is imported once by the app,
       // which is what the docs tell people to do.
-      entry: { index: 'src/index.ts', styles: 'src/styles.ts' },
+      entry: {
+        index: 'src/index.ts',
+        styles: 'src/styles.ts',
+        // never loaded by apps that only upload
+        'file-manager': 'src/file-manager.ts',
+      },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
       formats: ['es', 'cjs'],

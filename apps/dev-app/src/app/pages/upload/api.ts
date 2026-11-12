@@ -5,12 +5,12 @@ import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
 import { ReactUploadApiSections } from '../react-upload/api';
-import { OGE_FILE_UPLOADER_API } from './upload-api-data';
+import { OGE_FILE_MANAGER_API, OGE_FILE_UPLOADER_API } from './upload-api-data';
 
-const SECTIONS = ['OgeFileUploader'] as const;
+const SECTIONS = ['OgeFileUploader', 'OgeFileManager'] as const;
 
 /** TOC of the React view — must mirror `ReactUploadApiSections`' titles. */
-const SECTIONS_REACT = ['<OgeFileUploader>'] as const;
+const SECTIONS_REACT = ['<OgeFileUploader>', '<OgeFileManager>'] as const;
 
 @Component({
   selector: 'app-upload-api',
@@ -53,6 +53,11 @@ const SECTIONS_REACT = ['<OgeFileUploader>'] as const;
         selector="oge-file-uploader"
         [sections]="uploaderApi"
       />
+      <app-api-reference
+        title="OgeFileManager"
+        selector="oge-file-manager"
+        [sections]="fileManagerApi"
+      />
     }
   `,
 })
@@ -61,4 +66,5 @@ export class UploadApiPage {
   protected readonly sections = SECTIONS;
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly uploaderApi = OGE_FILE_UPLOADER_API;
+  protected readonly fileManagerApi = OGE_FILE_MANAGER_API;
 }

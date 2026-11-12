@@ -7,6 +7,28 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### File manager — `@oge-ui/upload/file-manager`, `@oge-ui/react-upload/file-manager`, `@oge-ui/behavior`
+
+- `<oge-file-manager>` / `<OgeFileManager>`: a file manager over any storage.
+  - Navigation: a folder tree loaded folder by folder (APG tree keyboard), a
+    path, and back / forward / up.
+  - Viewing: the open folder as a list (name, size and modified columns,
+    sortable, folders first, natural order) or as a grid, plus search in the
+    folder.
+  - Selection follows the listbox pattern with Ctrl and Shift.
+  - Editing: inline rename (F2) with name checks, new folders, and delete
+    after a cancelable `deleting` event whose `wait()` holds it for a dialog.
+  - Drag items onto a folder in the list, the tree or the path to move them;
+    drop files from the desktop to upload them.
+  - A context menu per target, and live-region announcements.
+- Everything goes through an `OgeFileProvider`: `list` plus the optional
+  `createFolder`, `rename`, `delete`, `move` and `upload`. A missing
+  operation hides its command. `ogeMemoryFileProvider` keeps files in memory.
+- Each layer ships it as its own entry point, so apps that only upload do not
+  load it. Its text lives under `messages.fileManager` of the upload config and
+  in the `upload.fileManager` slice of all 11 locale packs.
+- New page `/components/upload/file-manager`.
+
 ### Server adapters — new `@oge-ui/server` (npm) and `Oge.Data` (NuGet)
 
 - `@oge-ui/server` (MIT, Node): answers grid requests on your server.

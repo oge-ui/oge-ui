@@ -1,0 +1,131 @@
+import type { OgeFileItem } from '@oge-ui/upload/file-manager';
+
+// Demo files shared by the Angular and React views of the file manager page.
+
+const day = (iso: string) => new Date(`${iso}T09:30:00Z`);
+
+/** A small company drive. */
+export const DEMO_FILES: readonly OgeFileItem[] = [
+  {
+    id: 'projects',
+    name: 'Projects',
+    parentId: null,
+    isFolder: true,
+    modified: day('2026-10-02'),
+  },
+  {
+    id: 'finance',
+    name: 'Finance',
+    parentId: null,
+    isFolder: true,
+    modified: day('2026-09-14'),
+  },
+  {
+    id: 'photos',
+    name: 'Photos',
+    parentId: null,
+    isFolder: true,
+    modified: day('2026-08-30'),
+  },
+  {
+    id: 'readme',
+    name: 'Read me.txt',
+    parentId: null,
+    isFolder: false,
+    size: 1_284,
+    modified: day('2026-07-01'),
+  },
+  {
+    id: 'handbook',
+    name: 'Employee handbook.pdf',
+    parentId: null,
+    isFolder: false,
+    size: 2_480_123,
+    modified: day('2026-03-18'),
+  },
+  {
+    id: 'apollo',
+    name: 'Apollo',
+    parentId: 'projects',
+    isFolder: true,
+    modified: day('2026-10-02'),
+  },
+  {
+    id: 'hermes',
+    name: 'Hermes',
+    parentId: 'projects',
+    isFolder: true,
+    modified: day('2026-09-21'),
+  },
+  {
+    id: 'apollo-spec',
+    name: 'Specification.docx',
+    parentId: 'apollo',
+    isFolder: false,
+    size: 84_210,
+    modified: day('2026-10-01'),
+  },
+  {
+    id: 'apollo-plan',
+    name: 'Plan.xlsx',
+    parentId: 'apollo',
+    isFolder: false,
+    size: 38_902,
+    modified: day('2026-10-02'),
+  },
+  {
+    id: 'hermes-notes',
+    name: 'Kick-off notes.md',
+    parentId: 'hermes',
+    isFolder: false,
+    size: 4_096,
+    modified: day('2026-09-21'),
+  },
+  {
+    id: 'budget',
+    name: 'Budget 2027.xlsx',
+    parentId: 'finance',
+    isFolder: false,
+    size: 121_330,
+    modified: day('2026-09-14'),
+  },
+  {
+    id: 'invoices',
+    name: 'Invoices',
+    parentId: 'finance',
+    isFolder: true,
+    modified: day('2026-09-10'),
+  },
+  {
+    id: 'inv-1',
+    name: 'INV-2026-0912.pdf',
+    parentId: 'invoices',
+    isFolder: false,
+    size: 92_004,
+    modified: day('2026-09-12'),
+  },
+  {
+    id: 'inv-2',
+    name: 'INV-2026-0918.pdf',
+    parentId: 'invoices',
+    isFolder: false,
+    size: 88_512,
+    modified: day('2026-09-18'),
+  },
+  {
+    id: 'offsite',
+    name: 'Offsite.jpg',
+    parentId: 'photos',
+    isFolder: false,
+    size: 3_402_118,
+    modified: day('2026-08-30'),
+  },
+  {
+    id: 'team',
+    name: 'Team.png',
+    parentId: 'photos',
+    isFolder: false,
+    size: 1_902_220,
+    modified: day('2026-08-29'),
+  },
+];

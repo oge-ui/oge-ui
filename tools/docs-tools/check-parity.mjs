@@ -809,6 +809,8 @@ const FAMILIES = [
           'React host styling idiom; Angular hosts take class/style natively.',
         valuechange:
           'The controlled half of `[(value)]`, documented as a prop in the React table; Angular documents it inside the events row “thumbnailFailed / valueChange / touch”, where it is matched.',
+        viewchange:
+          'The controlled half of the file manager’s `view`; Angular’s [(view)] model is both halves at once.',
       },
     },
   },

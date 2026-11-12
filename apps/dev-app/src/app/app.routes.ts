@@ -1397,6 +1397,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Upload',
       },
       {
+        path: 'file-manager',
+        loadComponent: () =>
+          import('./pages/upload/file-manager').then((m) => m.FileManagerPage),
+        title: 'OGE — File manager',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/upload/api').then((m) => m.UploadApiPage),

@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ApiReference } from '../../shared/api-reference';
-import { OGE_REACT_FILE_UPLOADER_API } from './react-upload-api-data';
+import {
+  OGE_REACT_FILE_MANAGER_API,
+  OGE_REACT_FILE_UPLOADER_API,
+} from './react-upload-api-data';
 
 /**
  * The React half of the upload API reference.
@@ -25,8 +28,13 @@ import { OGE_REACT_FILE_UPLOADER_API } from './react-upload-api-data';
       title="&lt;OgeFileUploader&gt;"
       [sections]="uploaderApi"
     />
+    <app-api-reference
+      title="&lt;OgeFileManager&gt;"
+      [sections]="fileManagerApi"
+    />
   `,
 })
 export class ReactUploadApiSections {
   protected readonly uploaderApi = OGE_REACT_FILE_UPLOADER_API;
+  protected readonly fileManagerApi = OGE_REACT_FILE_MANAGER_API;
 }

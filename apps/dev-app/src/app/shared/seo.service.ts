@@ -728,6 +728,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular and React file upload: drag and drop with directories and paste, restrictions with reasons, image previews, and chunked, resumable transfer with retry.',
   ],
   [
+    '/components/upload/file-manager',
+    'File manager for Angular and React: folder tree, list and grid views, drag to move, drop to upload, inline rename and a context menu over any storage.',
+  ],
+  [
     '/components/upload/api',
     'OGE Upload API reference: every input, output, method and type of oge-file-uploader, the upload adapter and transport contract and the config provider.',
   ],

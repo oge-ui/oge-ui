@@ -573,3 +573,147 @@ export const OGE_FILE_UPLOADER_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_FILE_MANAGER_API: ApiSections = {
+  properties: [
+    {
+      title: 'Content',
+      entries: [
+        {
+          name: 'provider',
+          type: 'OgeFileProvider',
+          description:
+            'Where the files live. Required. A new provider lists everything again from the root.',
+        },
+        {
+          name: 'view',
+          type: 'OgeFileView',
+          default: "'list'",
+          description: 'List or grid; two-way with <code>[(view)]</code>.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgeFileManagerMessages&gt;',
+          default: '{}',
+          description: 'Overrides of the message catalog.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      title: 'Events',
+      entries: [
+        {
+          name: 'fileOpen',
+          type: 'OgeFileItem',
+          description:
+            'A file was opened (double click, Enter); folders open in place.',
+        },
+        {
+          name: 'folderChange',
+          type: 'string | null',
+          description: 'The open folder changed (<code>null</code>: the root).',
+        },
+        {
+          name: 'selectionChange',
+          type: 'readonly OgeFileItem[]',
+          description: 'The selection changed.',
+        },
+        {
+          name: 'deleting',
+          type: 'OgeFileDeletingEvent',
+          description:
+            'Cancelable, before a delete — a confirmation dialog hooks in here.',
+        },
+        {
+          name: 'providerError',
+          type: 'unknown',
+          description:
+            'A provider call failed (the folder shows the load error itself).',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      title: 'Methods',
+      entries: [
+        {
+          name: 'refresh()',
+          type: 'Promise&lt;void&gt;',
+          description: 'Lists the open folder again.',
+        },
+        {
+          name: 'open(folderId)',
+          type: 'Promise&lt;void&gt;',
+          description: 'Opens a folder (<code>null</code>: the root).',
+        },
+        {
+          name: 'upload(files)',
+          type: 'Promise&lt;void&gt;',
+          description: 'Uploads files into the open folder.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Types',
+      entries: [
+        {
+          name: 'OgeFileProvider',
+          type: 'interface',
+          description:
+            'Where the files live: <code>list(folderId)</code> (required; the items directly inside a folder, <code>null</code> for the root) and the optional <code>createFolder</code>, <code>rename</code>, <code>delete</code>, <code>move(items, targetId)</code> and <code>upload(parentId, files)</code>. A missing operation hides its command.',
+        },
+        {
+          name: 'OgeFileItem',
+          type: 'interface',
+          description:
+            '<code>{ id, name, parentId, isFolder, size?, modified? }</code> — <code>parentId</code> is <code>null</code> at the root; <code>modified</code> is a <code>Date</code> or ISO text.',
+        },
+        {
+          name: 'ogeMemoryFileProvider(items, options?)',
+          type: '(items: OgeFileItem[], { newId?, now? }) =&gt; OgeFileProvider',
+          description:
+            'A provider over an in-memory list: demos, tests, and a starting point for your own (its <code>items()</code> returns the current list).',
+        },
+        {
+          name: 'OgeFileView',
+          type: "'list' | 'grid'",
+          description: 'Rows with name, size and modified columns, or tiles.',
+        },
+        {
+          name: 'OgeFileSortField',
+          type: "'name' | 'size' | 'modified'",
+          description:
+            'The sortable columns; folders always come first, names sort naturally (<code>a9</code> before <code>a10</code>).',
+        },
+        {
+          name: 'OgeFileDeletingEvent',
+          type: 'interface',
+          description:
+            '<code>{ items, cancel, wait(promise) }</code> — set <code>cancel</code> to keep the items; <code>wait()</code> holds the delete until a confirmation dialog answers.',
+        },
+        {
+          name: 'OgeFileCommand',
+          type: "'open' | 'rename' | 'delete' | 'new-folder' | 'upload' | 'refresh'",
+          description: 'The commands of the toolbar and the context menu.',
+        },
+        {
+          name: 'OgeFileManagerMessages',
+          type: 'interface',
+          description:
+            'The file manager&#39;s text, under <code>messages.fileManager</code> of the upload config (<code>provideOgeUploadConfig</code>) and the <code>upload.fileManager</code> slice of the locale packs. Defaults in <code>OGE_DEFAULT_FILE_MANAGER_MESSAGES</code>.',
+        },
+        {
+          name: 'OGE_FILE_ITEMS_MIME',
+          type: "'application/x-oge-file-items'",
+          description:
+            'The drag data an item drag carries (a JSON array of ids), for drop targets of your own.',
+        },
+      ],
+    },
+  ],
+};

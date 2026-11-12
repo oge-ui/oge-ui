@@ -5,6 +5,10 @@
  * translation written for one layer is the translation for the other.
  */
 import { ogeFormatMessage } from '@oge-ui/core';
+import {
+  OGE_DEFAULT_FILE_MANAGER_MESSAGES,
+  type OgeFileManagerMessages,
+} from './file-manager-core';
 
 /**
  * Button and action labels.
@@ -115,6 +119,8 @@ export interface OgeUploadMessages {
   readonly status: OgeUploadStatusMessages;
   readonly validation: OgeUploadValidationMessages;
   readonly announcements: OgeUploadAnnouncementMessages;
+  /** The file manager's text (`<oge-file-manager>`). */
+  readonly fileManager: OgeFileManagerMessages;
 }
 
 /** The English defaults. */
@@ -185,6 +191,7 @@ export const OGE_DEFAULT_UPLOAD_MESSAGES: OgeUploadMessages = {
       '{succeeded} of {total, plural, one {# file uploaded} other {# files uploaded}}',
     dropZoneEntered: 'Drop files to add them',
   },
+  fileManager: OGE_DEFAULT_FILE_MANAGER_MESSAGES,
 };
 
 /** Package-wide defaults for every uploader under a provider. */
@@ -226,7 +233,12 @@ export type OgeUploadConfigInput = Partial<
 export type OgeUploadMessagesInput = Partial<
   Omit<
     OgeUploadMessages,
-    'buttons' | 'dropZone' | 'status' | 'validation' | 'announcements'
+    | 'buttons'
+    | 'dropZone'
+    | 'status'
+    | 'validation'
+    | 'announcements'
+    | 'fileManager'
   >
 > & {
   buttons?: Partial<OgeUploadButtonMessages>;
@@ -234,6 +246,7 @@ export type OgeUploadMessagesInput = Partial<
   status?: Partial<OgeUploadStatusMessages>;
   validation?: Partial<OgeUploadValidationMessages>;
   announcements?: Partial<OgeUploadAnnouncementMessages>;
+  fileManager?: Partial<OgeFileManagerMessages>;
 };
 
 /** Merges a deep-partial message override over a base catalog. */
@@ -250,6 +263,7 @@ export function mergeUploadMessages(
     status: { ...base.status, ...input.status },
     validation: { ...base.validation, ...input.validation },
     announcements: { ...base.announcements, ...input.announcements },
+    fileManager: { ...base.fileManager, ...input.fileManager },
   };
 }
 

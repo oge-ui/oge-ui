@@ -100,6 +100,11 @@ Predictable wrong guesses, and what to write instead.
 - values: `OGE_DEFAULT_UPLOAD_CONFIG`, `OGE_DEFAULT_UPLOAD_MESSAGES`, `OGE_UPLOAD_CONFIG`, `OGE_UPLOAD_TRANSPORT`, `OgeFileUploader`, `OgeUploadDropZone`, `OgeUploadDropZoneTemplate`, `OgeUploadEmptyTemplate`, `OgeUploadFileTemplate`, `OgeUploadHeaderTemplate`, `OgeUploadIconTemplate`, `OgeUploadToolbarTemplate`, `OgeUploadTrigger`, `createHttpClientUploadAdapter`, `createXhrUploadAdapter`, `formatFileSize`, `provideOgeUploadConfig`
 - types: `OgeFormatFileSizeOptions`, `OgeUploadAbortReason`, `OgeUploadAbortedEvent`, `OgeUploadActionsLayout`, `OgeUploadAdapter`, `OgeUploadAllUploadedEvent`, `OgeUploadAnnouncementMessages`, `OgeUploadButtonMessages`, `OgeUploadCallbacks`, `OgeUploadCancelableEvent`, `OgeUploadCandidate`, `OgeUploadChunkFailedEvent`, `OgeUploadChunkMetadata`, `OgeUploadChunkOptions`, `OgeUploadChunkUploadedEvent`, `OgeUploadChunkUploadingEvent`, `OgeUploadClearedEvent`, `OgeUploadClearingEvent`, `OgeUploadConfig`, `OgeUploadConfigInput`, `OgeUploadDisplayMode`, `OgeUploadDropEffect`, `OgeUploadDropZoneEvent`, `OgeUploadDropZoneMessages`, `OgeUploadDropZoneTemplateContext`, `OgeUploadErrorKind`, `OgeUploadFailedEvent`, `OgeUploadFieldError`, `OgeUploadFile`, `OgeUploadFileDownloadingEvent`, `OgeUploadFileError`, `OgeUploadFileListOptions`, `OgeUploadFileRejectedEvent`, `OgeUploadFileRemovedEvent`, `OgeUploadFileRemovingEvent`, `OgeUploadFileStatus`, `OgeUploadFileTemplateContext`, `OgeUploadFilesDroppedEvent`, `OgeUploadFilesSelectedEvent`, `OgeUploadFilesSelectingEvent`, `OgeUploadHandle`, `OgeUploadHeaderTemplateContext`, `OgeUploadIconSlot`, `OgeUploadIconTemplateContext`, `OgeUploadListType`, `OgeUploadMessages`, `OgeUploadMode`, `OgeUploadPart`, `OgeUploadPausedEvent`, `OgeUploadPausingEvent`, `OgeUploadPreloadedFile`, `OgeUploadPreviewHiddenEvent`, `OgeUploadPreviewShowingEvent`, `OgeUploadProgressEvent`, `OgeUploadRequest`, `OgeUploadRestrictions`, `OgeUploadResumedEvent`, `OgeUploadResumingEvent`, `OgeUploadRetryOptions`, `OgeUploadSelectionSource`, `OgeUploadStartedEvent`, `OgeUploadStatusMessages`, `OgeUploadThumbnailFailedEvent`, `OgeUploadToolbarTemplateContext`, `OgeUploadUploadedEvent`, `OgeUploadUploadingEvent`, `OgeUploadValidationMessages`
 
+`@oge-ui/upload/file-manager`
+
+- values: `OGE_DEFAULT_FILE_MANAGER_MESSAGES`, `OGE_FILE_ITEMS_MIME`, `OgeFileManager`, `ogeMemoryFileProvider`
+- types: `OgeFileCommand`, `OgeFileDeletingEvent`, `OgeFileItem`, `OgeFileManagerMessages`, `OgeFileProvider`, `OgeFileSortField`, `OgeFileView`
+
 ## API reference
 
 ### OgeFileUploader — `<oge-file-uploader>`
@@ -247,9 +252,167 @@ _Template directives_
 | `OgeUploadToolbarTemplate` | `directive — <code>*ogeUploadToolbarTemplate</code>` | Replaces the Upload/Clear action row. Context: the files and `uploading`. |
 | `OgeUploadIconTemplate` | `directive — <code>*ogeUploadIconTemplate</code>` | Replaces one glyph. `$implicit` is an `OgeUploadIconSlot` — 14 values covering PrimeNG’s four icon slots and Ant’s three, in one directive instead of seven inputs. |
 
+### OgeFileManager — `<oge-file-manager>`
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `provider` | `OgeFileProvider` | `—` | Where the files live. Required. A new provider lists everything again from the root. |
+| `view` | `OgeFileView` | `'list'` | List or grid; two-way with `[(view)]`. |
+| `messages` | `Partial<OgeFileManagerMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Methods
+
+_Methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `refresh()` | `Promise<void>` | Lists the open folder again. |
+| `open(folderId)` | `Promise<void>` | Opens a folder (`null`: the root). |
+| `upload(files)` | `Promise<void>` | Uploads files into the open folder. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `fileOpen` | `OgeFileItem` | A file was opened (double click, Enter); folders open in place. |
+| `folderChange` | `string \| null` | The open folder changed (`null`: the root). |
+| `selectionChange` | `readonly OgeFileItem[]` | The selection changed. |
+| `deleting` | `OgeFileDeletingEvent` | Cancelable, before a delete — a confirmation dialog hooks in here. |
+| `providerError` | `unknown` | A provider call failed (the folder shows the load error itself). |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFileProvider` | `interface` | Where the files live: `list(folderId)` (required; the items directly inside a folder, `null` for the root) and the optional `createFolder`, `rename`, `delete`, `move(items, targetId)` and `upload(parentId, files)`. A missing operation hides its command. |
+| `OgeFileItem` | `interface` | `{ id, name, parentId, isFolder, size?, modified? }` — `parentId` is `null` at the root; `modified` is a `Date` or ISO text. |
+| `ogeMemoryFileProvider(items, options?)` | `(items: OgeFileItem[], { newId?, now? }) => OgeFileProvider` | A provider over an in-memory list: demos, tests, and a starting point for your own (its `items()` returns the current list). |
+| `OgeFileView` | `'list' \| 'grid'` | Rows with name, size and modified columns, or tiles. |
+| `OgeFileSortField` | `'name' \| 'size' \| 'modified'` | The sortable columns; folders always come first, names sort naturally (`a9` before `a10`). |
+| `OgeFileDeletingEvent` | `interface` | `{ items, cancel, wait(promise) }` — set `cancel` to keep the items; `wait()` holds the delete until a confirmation dialog answers. |
+| `OgeFileCommand` | `'open' \| 'rename' \| 'delete' \| 'new-folder' \| 'upload' \| 'refresh'` | The commands of the toolbar and the context menu. |
+| `OgeFileManagerMessages` | `interface` | The file manager's text, under `messages.fileManager` of the upload config (`provideOgeUploadConfig`) and the `upload.fileManager` slice of the locale packs. Defaults in `OGE_DEFAULT_FILE_MANAGER_MESSAGES`. |
+| `OGE_FILE_ITEMS_MIME` | `'application/x-oge-file-items'` | The drag data an item drag carries (a JSON array of ids), for drop targets of your own. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### File manager confirm
+
+```ts
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { OgeFileManager, ogeMemoryFileProvider } from '@oge-ui/upload/file-manager';
+import { OgeModalService } from '@oge-ui/overlay';
+import type { OgeFileDeletingEvent } from '@oge-ui/upload/file-manager';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeFileManager],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- (deleting) is cancelable; event.wait() holds it for a dialog -->
+    <oge-file-manager
+      [provider]="files"
+      (deleting)="confirmDelete($event)"
+      style="height: 300px"
+    />
+  `,
+})
+export class Demo {
+  private readonly dialog = inject(OgeModalService);
+  readonly files = ogeMemoryFileProvider([
+    { id: 'q3', name: 'Q3 report.pdf', parentId: null, isFolder: false, size: 92004 },
+    { id: 'q4', name: 'Q4 report.pdf', parentId: null, isFolder: false, size: 88512 },
+  ]);
+
+  confirmDelete(event: OgeFileDeletingEvent): void {
+    // wait() holds the delete until the answer: cancel on "No"
+    event.wait(
+      this.dialog
+        .confirm({
+          title: 'Delete files?',
+          message: `${event.items.length} item(s) will be deleted.`,
+        })
+        .then((ok) => (event.cancel = !ok)),
+    );
+  }
+}
+```
+
+### File manager getting started
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeFileManager, ogeMemoryFileProvider } from '@oge-ui/upload/file-manager';
+import type { OgeFileItem, OgeFileProvider } from '@oge-ui/upload/file-manager';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeFileManager],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Double-click or Enter opens; F2 renames; Delete deletes; drag items
+         onto a folder to move them, drop files from the desktop to upload;
+         right-click for the context menu. -->
+    <oge-file-manager
+      [provider]="files"
+      (fileOpen)="open($event)"
+      style="height: 460px"
+    />
+    <p>Opened: {{ opened() || '—' }}</p>
+  `,
+})
+export class Demo {
+  // a provider talks to your storage: list a folder, plus the operations you
+  // allow (createFolder, rename, delete, move, upload) — here, an in-memory one
+  readonly files: OgeFileProvider = ogeMemoryFileProvider([
+    { id: 'projects', name: 'Projects', parentId: null, isFolder: true },
+    { id: 'readme', name: 'Read me.txt', parentId: null, isFolder: false, size: 1284 },
+    { id: 'spec', name: 'Specification.docx', parentId: 'projects', isFolder: false, size: 84210 },
+  ]);
+  readonly opened = signal('');
+
+  open(item: OgeFileItem): void {
+    this.opened.set(item.name);
+  }
+}
+```
+
+### File manager read only
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeFileManager } from '@oge-ui/upload/file-manager';
+import type { OgeFileProvider, OgeFileView } from '@oge-ui/upload/file-manager';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeFileManager],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- a read-only browser in grid view; [(view)] keeps the view in your
+         own state -->
+    <oge-file-manager [provider]="archive" [(view)]="view" style="height: 400px" />
+  `,
+})
+export class Demo {
+  // only list(): no new folder, rename, delete, move or upload commands
+  readonly archive: OgeFileProvider = {
+    list: async (folderId) =>
+      (await fetch(`/api/archive?folder=${folderId ?? ''}`)).json(),
+  };
+  readonly view = signal<OgeFileView>('grid');
+}
+```
 
 ### Chunk
 

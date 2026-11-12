@@ -1067,6 +1067,9 @@ export const OGE_DEFAULT_FAB_CONFIG: OgeFabConfig;
 export const OGE_DEFAULT_FAB_MESSAGES: OgeFabMessages;
 
 // @public (undocumented)
+export const OGE_DEFAULT_FILE_MANAGER_MESSAGES: OgeFileManagerMessages;
+
+// @public (undocumented)
 export const OGE_DEFAULT_FORMS_CONFIG: OgeFormsConfig;
 
 // @public (undocumented)
@@ -5895,6 +5898,262 @@ export interface OgeFieldError {
     readonly message?: string;
 }
 
+// @public
+export type OgeFileCommand = 'open' | 'rename' | 'delete' | 'new-folder' | 'upload' | 'refresh';
+
+// @public
+export interface OgeFileDeletingEvent {
+    // (undocumented)
+    cancel: boolean;
+    // (undocumented)
+    readonly items: readonly OgeFileItem[];
+    wait(promise: Promise<unknown>): void;
+}
+
+// @public
+export interface OgeFileItem {
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly isFolder: boolean;
+    readonly modified?: Date | string;
+    // (undocumented)
+    readonly name: string;
+    readonly parentId: string | null;
+    readonly size?: number;
+}
+
+// @public
+export class OgeFileManagerCore {
+    constructor(options: OgeFileManagerCoreOptions);
+    // (undocumented)
+    back(): Promise<void>;
+    // (undocumented)
+    beginRename(id: string): void;
+    readonly can: (command: OgeFileCommand) => boolean;
+    // (undocumented)
+    cancelRename(): void;
+    // (undocumented)
+    readonly canGoBack: () => boolean;
+    // (undocumented)
+    readonly canGoForward: () => boolean;
+    // (undocumented)
+    readonly canGoUp: () => boolean;
+    canMove(ids: readonly string[], targetId: string | null): boolean;
+    // (undocumented)
+    clearSelection(): void;
+    commitRename(): Promise<boolean>;
+    deleteSelected(): Promise<void>;
+    readonly dropTarget: () => string | null | undefined;
+    // (undocumented)
+    readonly errorText: () => string;
+    readonly focusedId: () => string | null;
+    // (undocumented)
+    focusTree(folderId: string | null): void;
+    // (undocumented)
+    readonly folderId: () => string | null;
+    // (undocumented)
+    forward(): Promise<void>;
+    init(): Promise<void>;
+    item(id: string): OgeFileItem | undefined;
+    readonly items: () => readonly OgeFileItem[];
+    keydown(event: {
+        readonly key: string;
+        readonly ctrlKey?: boolean;
+        readonly metaKey?: boolean;
+        readonly shiftKey?: boolean;
+        readonly altKey?: boolean;
+        preventDefault(): void;
+    }, columns?: number): void;
+    kindOf(item: OgeFileItem): string;
+    load(folderId: string | null, force?: boolean): Promise<void>;
+    readonly loading: () => boolean;
+    menuFor(item: OgeFileItem | null): OgeMenuItem<OgeFileCommand>[];
+    // (undocumented)
+    readonly messages: () => OgeFileManagerMessages;
+    modifiedOf(item: OgeFileItem): string;
+    move(ids: readonly string[], targetId: string | null): Promise<void>;
+    newFolder(): Promise<void>;
+    open(folderId: string | null): Promise<void>;
+    openItem(item: OgeFileItem): Promise<void>;
+    readonly path: () => readonly {
+        readonly id: string | null;
+        readonly name: string;
+    }[];
+    // (undocumented)
+    refresh(): Promise<void>;
+    // (undocumented)
+    readonly renaming: () => {
+        readonly id: string;
+        readonly draft: string;
+        readonly error: string;
+    } | null;
+    run(command: OgeFileCommand): Promise<void>;
+    // (undocumented)
+    readonly searchText: () => string;
+    select(id: string, modifiers?: {
+        readonly ctrl?: boolean;
+        readonly shift?: boolean;
+    }): void;
+    // (undocumented)
+    selectAll(): void;
+    // (undocumented)
+    readonly selectedIds: () => ReadonlySet<string>;
+    // (undocumented)
+    readonly selectedItems: () => readonly OgeFileItem[];
+    setDropTarget(folderId: string | null | undefined): void;
+    // (undocumented)
+    setMessages(messages: OgeFileManagerMessages): void;
+    setProvider(provider: OgeFileProvider): Promise<void>;
+    // (undocumented)
+    setRenameDraft(draft: string): void;
+    // (undocumented)
+    setSearch(text: string): void;
+    // (undocumented)
+    setView(view: OgeFileView): void;
+    sizeOf(item: OgeFileItem): string;
+    // (undocumented)
+    readonly sort: () => {
+        readonly field: OgeFileSortField;
+        readonly dir: 'asc' | 'desc';
+    };
+    sortBy(field: OgeFileSortField): void;
+    // (undocumented)
+    readonly statusText: () => string;
+    toggle(folderId: string | null, open?: boolean): Promise<void>;
+    // (undocumented)
+    readonly treeFocusedId: () => string | null;
+    treeKeydown(event: {
+        readonly key: string;
+        preventDefault(): void;
+    }): void;
+    readonly treeRows: () => readonly OgeFileTreeRow[];
+    // (undocumented)
+    up(): Promise<void>;
+    upload(files: readonly File[], folderId?: string | null): Promise<void>;
+    // (undocumented)
+    readonly view: () => OgeFileView;
+}
+
+// @public (undocumented)
+export interface OgeFileManagerCoreOptions {
+    readonly announce?: (text: string) => void;
+    readonly formatDate?: (date: Date) => string;
+    // (undocumented)
+    readonly messages: OgeFileManagerMessages;
+    readonly onDeleting?: (event: OgeFileDeletingEvent) => void | Promise<void>;
+    readonly onError?: (error: unknown) => void;
+    readonly onFolderChange?: (folderId: string | null) => void;
+    readonly onOpenFile?: (item: OgeFileItem) => void;
+    readonly onSelectionChange?: (items: readonly OgeFileItem[]) => void;
+    readonly pickFiles?: () => void;
+    // (undocumented)
+    readonly provider: OgeFileProvider;
+    // (undocumented)
+    readonly reactivity: OgeReactivityAdapter;
+}
+
+// @public
+export interface OgeFileManagerMessages {
+    // (undocumented)
+    readonly back: string;
+    // (undocumented)
+    readonly delete: string;
+    // (undocumented)
+    readonly deleted: string;
+    // (undocumented)
+    readonly dropHint: string;
+    // (undocumented)
+    readonly empty: string;
+    // (undocumented)
+    readonly folderKind: string;
+    // (undocumented)
+    readonly folders: string;
+    // (undocumented)
+    readonly forward: string;
+    // (undocumented)
+    readonly gridView: string;
+    // (undocumented)
+    readonly items: string;
+    // (undocumented)
+    readonly label: string;
+    // (undocumented)
+    readonly listView: string;
+    // (undocumented)
+    readonly loadError: string;
+    // (undocumented)
+    readonly loading: string;
+    // (undocumented)
+    readonly modifiedColumn: string;
+    readonly moved: string;
+    // (undocumented)
+    readonly nameColumn: string;
+    // (undocumented)
+    readonly nameInvalid: string;
+    // (undocumented)
+    readonly nameTaken: string;
+    // (undocumented)
+    readonly newFolder: string;
+    // (undocumented)
+    readonly newFolderName: string;
+    // (undocumented)
+    readonly noMatches: string;
+    // (undocumented)
+    readonly open: string;
+    // (undocumented)
+    readonly refresh: string;
+    // (undocumented)
+    readonly rename: string;
+    // (undocumented)
+    readonly renameLabel: string;
+    // (undocumented)
+    readonly root: string;
+    // (undocumented)
+    readonly search: string;
+    // (undocumented)
+    readonly sizeColumn: string;
+    readonly status: string;
+    // (undocumented)
+    readonly up: string;
+    // (undocumented)
+    readonly upload: string;
+    // (undocumented)
+    readonly uploaded: string;
+}
+
+// @public
+export interface OgeFileProvider {
+    // (undocumented)
+    createFolder?(parentId: string | null, name: string): Promise<OgeFileItem>;
+    // (undocumented)
+    delete?(items: readonly OgeFileItem[]): Promise<void>;
+    list(folderId: string | null): Promise<readonly OgeFileItem[]>;
+    move?(items: readonly OgeFileItem[], targetId: string | null): Promise<void>;
+    // (undocumented)
+    rename?(item: OgeFileItem, name: string): Promise<OgeFileItem>;
+    upload?(parentId: string | null, files: readonly File[]): Promise<readonly OgeFileItem[]>;
+}
+
+// @public
+export type OgeFileSortField = 'name' | 'size' | 'modified';
+
+// @public
+export interface OgeFileTreeRow {
+    // (undocumented)
+    readonly current: boolean;
+    // (undocumented)
+    readonly depth: number;
+    readonly expandable: boolean;
+    // (undocumented)
+    readonly expanded: boolean;
+    // (undocumented)
+    readonly id: string | null;
+    // (undocumented)
+    readonly loading: boolean;
+    // (undocumented)
+    readonly name: string;
+}
+
 // @public (undocumented)
 export class OgeFileUploaderCore {
     constructor(options: OgeFileUploaderCoreOptions);
@@ -6181,6 +6440,9 @@ export interface OgeFileUploaderProps {
     // (undocumented)
     readonly withCredentials: boolean;
 }
+
+// @public
+export type OgeFileView = 'list' | 'grid';
 
 // @public
 export type OgeFillDirection = 'down' | 'up' | 'right' | 'left';
@@ -9449,6 +9711,14 @@ export type OgeMaskSlot = {
 
 // @public
 export function ogeMeasureAutoWidth(header: Element | null, cells: Iterable<Element>, caption?: Element | null): number | null;
+
+// @public
+export function ogeMemoryFileProvider(items: readonly OgeFileItem[], options?: {
+    readonly newId?: () => string;
+    readonly now?: () => Date;
+}): OgeFileProvider & {
+    readonly items: () => readonly OgeFileItem[];
+};
 
 // @public
 export class OgeMentionCore<T> {
@@ -15163,6 +15433,7 @@ export interface OgeUploadMessages {
     // (undocumented)
     readonly dropZone: OgeUploadDropZoneMessages;
     readonly empty: string;
+    readonly fileManager: OgeFileManagerMessages;
     readonly hint: string;
     readonly listLabel: string;
     // (undocumented)
@@ -15173,12 +15444,13 @@ export interface OgeUploadMessages {
 }
 
 // @public
-export type OgeUploadMessagesInput = Partial<Omit<OgeUploadMessages, 'buttons' | 'dropZone' | 'status' | 'validation' | 'announcements'>> & {
+export type OgeUploadMessagesInput = Partial<Omit<OgeUploadMessages, 'buttons' | 'dropZone' | 'status' | 'validation' | 'announcements' | 'fileManager'>> & {
     buttons?: Partial<OgeUploadButtonMessages>;
     dropZone?: Partial<OgeUploadDropZoneMessages>;
     status?: Partial<OgeUploadStatusMessages>;
     validation?: Partial<OgeUploadValidationMessages>;
     announcements?: Partial<OgeUploadAnnouncementMessages>;
+    fileManager?: Partial<OgeFileManagerMessages>;
 };
 
 // @public

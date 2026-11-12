@@ -1606,6 +1606,20 @@ export {
   type OgeUploadConfigInput,
 } from './lib/upload/upload-messages';
 export {
+  OGE_DEFAULT_FILE_MANAGER_MESSAGES,
+  OgeFileManagerCore,
+  ogeMemoryFileProvider,
+  type OgeFileCommand,
+  type OgeFileDeletingEvent,
+  type OgeFileItem,
+  type OgeFileManagerCoreOptions,
+  type OgeFileManagerMessages,
+  type OgeFileProvider,
+  type OgeFileSortField,
+  type OgeFileTreeRow,
+  type OgeFileView,
+} from './lib/upload/file-manager-core';
+export {
   OGE_DEFAULT_TOAST_DEFAULTS,
   OGE_TOAST_EXIT_MS,
   OGE_TOAST_ANNOUNCE_DELAY_MS,

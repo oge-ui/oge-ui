@@ -205,6 +205,9 @@
       "@oge-ui/react-tree-list/export-pdf": [
         "./packages/react/tree-list/src/export-pdf.ts"
       ],
+      "@oge-ui/react-upload/file-manager": [
+        "./packages/react/upload/src/file-manager.ts"
+      ],
       "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
       "@oge-ui/react-ai": ["./packages/react/ai/src/index.ts"],
       "@oge-ui/react-editor": ["./packages/react/editor/src/index.ts"],
@@ -261,6 +264,9 @@
       ],
       "@oge-ui/tree-list/export-pdf": [
         "./packages/tree-list/export-pdf/src/index.ts"
+      ],
+      "@oge-ui/upload/file-manager": [
+        "./packages/upload/file-manager/src/index.ts"
       ],
       "@oge-ui/upload": ["./packages/upload/src/index.ts"],
       "@oge-ui/ai": ["./packages/ai/src/index.ts"],

@@ -201,7 +201,8 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
-        "@oge-ui/spreadsheet"
+        "@oge-ui/spreadsheet",
+        "@oge-ui/upload"
       ]
     },
     {
@@ -363,7 +364,8 @@
         "@oge-ui/scheduler",
         "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
-        "@oge-ui/tree-list"
+        "@oge-ui/tree-list",
+        "@oge-ui/upload"
       ]
     },
     {
@@ -409,7 +411,8 @@
       "u": [
         "@oge-ui/buttons",
         "@oge-ui/inputs",
-        "@oge-ui/spreadsheet"
+        "@oge-ui/spreadsheet",
+        "@oge-ui/upload"
       ]
     },
     {
@@ -2843,7 +2846,8 @@
         "@oge-ui/kanban",
         "@oge-ui/layout",
         "@oge-ui/navigation",
-        "@oge-ui/spreadsheet"
+        "@oge-ui/spreadsheet",
+        "@oge-ui/upload"
       ]
     },
     {

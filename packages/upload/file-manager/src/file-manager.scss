@@ -1,0 +1,436 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The file manager of both render layers.
+oge-file-manager {
+  display: block;
+}
+
+.oge-fm {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 320px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  overflow: hidden;
+}
+
+// --- toolbar -----------------------------------------------------------------
+.oge-fm-toolbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+.oge-fm-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.oge-fm-spacer {
+  flex: 1 1 auto;
+}
+
+.oge-fm-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: var(--oge-control-height-sm);
+  height: var(--oge-control-height-sm);
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--oge-accent-25);
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  svg {
+    display: block;
+    flex: none;
+  }
+}
+
+.oge-fm-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+  margin: 0 4px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  li + li::before {
+    padding: 0 2px;
+    color: var(--oge-muted-color);
+    content: '/';
+  }
+
+  .oge-fm-button[aria-current='location'] {
+    font-weight: 600;
+  }
+}
+
+.oge-fm-search {
+  width: 12em;
+  height: var(--oge-control-height-sm);
+  padding: 0 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+
+  &:focus-visible {
+    border-color: var(--oge-accent);
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+// --- body --------------------------------------------------------------------
+.oge-fm-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.oge-fm-tree {
+  flex: none;
+  width: 220px;
+  margin: 0;
+  padding: 6px 0;
+  overflow: auto;
+  border-inline-end: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  list-style: none;
+
+  @include tokens.scrollbar;
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: -2px;
+  }
+}
+
+.oge-fm-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--oge-control-height-sm);
+  padding-inline-end: 8px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &.oge-fm-current {
+    // text colour, not the accent: accent on accent-soft misses 4.5:1
+    background: var(--oge-accent-soft);
+    box-shadow: inset 3px 0 0 var(--oge-accent);
+    font-weight: 600;
+  }
+
+  &.oge-fm-focused {
+    box-shadow: inset 0 0 0 2px var(--oge-accent);
+  }
+}
+
+.oge-fm-twisty {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--oge-muted-color);
+
+  svg {
+    transition: transform var(--oge-motion-duration-fast, 120ms) ease;
+  }
+
+  &.oge-fm-open svg {
+    transform: rotate(90deg);
+  }
+
+  [dir='rtl'] & svg {
+    transform: scaleX(-1);
+  }
+
+  [dir='rtl'] &.oge-fm-open svg {
+    transform: rotate(90deg);
+  }
+}
+
+.oge-fm-main {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.oge-fm-columns {
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) 7em 12em;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+
+  .oge-fm-button {
+    justify-content: flex-start;
+    width: 100%;
+    height: auto;
+    padding: 6px 10px;
+    border-radius: 0;
+    font-weight: 600;
+  }
+}
+
+.oge-fm-items {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 4px;
+  overflow: auto;
+  list-style: none;
+
+  @include tokens.scrollbar;
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: -2px;
+  }
+
+  &.oge-fm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    align-content: start;
+    gap: 6px;
+  }
+}
+
+.oge-fm-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7em 12em;
+  align-items: center;
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  cursor: default;
+  user-select: none;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-selected='true'] {
+    border-color: var(--oge-accent-25);
+    background: var(--oge-accent-soft);
+  }
+
+  &.oge-fm-focused {
+    box-shadow: inset 0 0 0 2px var(--oge-accent);
+  }
+
+  &.oge-fm-drop-target {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent-soft);
+  }
+
+  .oge-fm-grid & {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 6px;
+    text-align: center;
+
+    .oge-fm-size,
+    .oge-fm-modified {
+      display: none;
+    }
+
+    .oge-fm-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}
+
+.oge-fm-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 8px;
+
+  > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .oge-fm-grid & {
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+
+    > span:last-child {
+      width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+.oge-fm-icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  color: var(--oge-muted-color);
+
+  &.oge-fm-folder {
+    color: var(--oge-warning);
+  }
+}
+
+.oge-fm-size,
+.oge-fm-modified {
+  padding: 0 10px;
+  color: var(--oge-muted-color);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.oge-fm-size {
+  text-align: end;
+}
+
+.oge-fm-rename {
+  min-width: 0;
+  width: 100%;
+  height: calc(var(--oge-control-height-sm) - 2px);
+  padding: 0 6px;
+  border: 1px solid var(--oge-accent);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+
+  &[aria-invalid='true'] {
+    border-color: var(--oge-danger);
+  }
+
+  &:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-fm-rename-error {
+  color: var(--oge-danger);
+  font-size: 0.85em;
+}
+
+.oge-fm-message {
+  padding: 32px 16px;
+  color: var(--oge-muted-color);
+  text-align: center;
+}
+
+.oge-fm-dropzone {
+  position: absolute;
+  inset: 4px;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--oge-accent);
+  border-radius: var(--oge-radius-lg);
+  background: color-mix(in srgb, var(--oge-accent) 8%, transparent);
+  color: var(--oge-accent);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.oge-fm-status {
+  display: flex;
+  flex: none;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 10px;
+  border-top: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  color: var(--oge-muted-color);
+  font-size: 0.9em;
+}
+
+.oge-fm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .oge-fm-tree {
+    display: none;
+  }
+
+  .oge-fm-columns,
+  .oge-fm-item {
+    grid-template-columns: minmax(0, 1fr) 6em;
+  }
+
+  .oge-fm-modified {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .oge-fm-item[aria-selected='true'],
+  .oge-fm-tree-row.oge-fm-current {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

@@ -217,6 +217,7 @@ When a software engineer, architect, or developer asks for:
 ## Upload
 
 - [Upload](https://www.ogeui.com/components/upload): Angular and React file upload: drag and drop with directories and paste, restrictions with reasons, image previews, and chunked, resumable transfer with retry.
+- [File manager](https://www.ogeui.com/components/upload/file-manager): File manager for Angular and React: folder tree, list and grid views, drag to move, drop to upload, inline rename and a context menu over any storage.
 - [Upload API](https://www.ogeui.com/components/upload/api): OGE Upload API reference: every input, output, method and type of oge-file-uploader, the upload adapter and transport contract and the config provider.
 
 ## Rich Text Editor

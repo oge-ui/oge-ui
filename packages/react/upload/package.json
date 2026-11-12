@@ -32,6 +32,16 @@
         "default": "./index.cjs"
       }
     },
+    "./file-manager": {
+      "import": {
+        "types": "./file-manager.d.ts",
+        "default": "./file-manager.js"
+      },
+      "require": {
+        "types": "./file-manager.d.cts",
+        "default": "./file-manager.cjs"
+      }
+    },
     "./styles.css": "./styles.css",
     "./package.json": "./package.json"
   },

@@ -4,3 +4,4 @@
 // (ADR 0001). The progress bar and the lightbox come from the layout and
 // overlay packages' own stylesheets, which the app imports alongside.
 @use '../../../upload/src/lib/file-uploader/file-uploader';
+@use '../../../upload/file-manager/src/file-manager';
