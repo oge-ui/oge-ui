@@ -67,8 +67,15 @@ function collect(array, prefix, out) {
   for (const element of array.elements) {
     if (!ts.isObjectLiteralExpression(element)) continue;
     const route = readRouteProps(element);
-    // redirects and the not-found catch-all are not pages to list
-    if (route.redirectTo !== undefined || route.path === '**') continue;
+    // redirects, the not-found catch-all and noindex pages (the benchmark
+    // runner) are not pages to list
+    if (
+      route.redirectTo !== undefined ||
+      route.path === '**' ||
+      route.noindex
+    ) {
+      continue;
+    }
     const path = joinPath(prefix, route.path ?? '');
     // A route can carry both a component and children (routed tabs) — the page
     // itself comes first so the flat list stays in reading order.
@@ -105,7 +112,7 @@ function landingOf(children, path) {
 
 /**
  * @param {ts.ObjectLiteralExpression} node
- * @returns {{ path?: string, title?: string, redirectTo?: string, source?: string, children?: ts.ArrayLiteralExpression }}
+ * @returns {{ path?: string, title?: string, redirectTo?: string, source?: string, noindex?: boolean, children?: ts.ArrayLiteralExpression }}
  */
 function readRouteProps(node) {
   /** @type {Record<string, unknown>} */
@@ -123,6 +130,13 @@ function readRouteProps(node) {
       // `keepQuery('overview')` — the helper that keeps the query string
       const [target] = ts.isCallExpression(value) ? value.arguments : [];
       props[name] = target && ts.isStringLiteralLike(target) ? target.text : '';
+    } else if (name === 'data' && ts.isObjectLiteralExpression(value)) {
+      props.noindex = value.properties.some(
+        (p) =>
+          ts.isPropertyAssignment(p) &&
+          propertyName(p.name) === 'noindex' &&
+          p.initializer.kind === ts.SyntaxKind.TrueKeyword,
+      );
     } else if (name === 'loadComponent') {
       const specifier = dynamicImportOf(value);
       if (specifier) props.source = specifier;

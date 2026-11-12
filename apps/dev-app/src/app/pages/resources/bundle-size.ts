@@ -51,7 +51,12 @@ type TierFilter = 'all' | LicenseTier;
         every pull request is checked against. Import only the entry points you
         use: secondary entries such as
         <code>&#64;oge-ui/grid/export-excel</code> stay out of your bundle until
-        you import them.
+        you import them. Runtime numbers — the grid on 100 000 rows — are on
+        <a
+          routerLink="/benchmarks"
+          class="text-indigo-600 underline dark:text-indigo-400"
+          >Benchmarks</a
+        >.
       </p>
     </app-doc-header>
 

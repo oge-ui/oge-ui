@@ -3349,6 +3349,14 @@ npm install @oge-ui/grid@1.1.3 @oge-ui/inputs@1.1.3
 npm ls @oge-ui/core @oge-ui/behavior
 ```
 
+### Benchmarks — Run
+
+```ts
+npx nx run dev-app:build                 # the production docs build
+node tools/benchmarks/grid-bench.mjs      # writes tools/benchmarks/grid-results.json
+node tools/benchmarks/grid-bench.mjs --runs 9 --rows 250000
+```
+
 ## Design tokens
 
 Every `--oge-*` custom property, from `packages/grid/src/lib/styles/_tokens.scss` (also https://www.ogeui.com/tokens.json in DTCG format, shipped as `@oge-ui/core/tokens.json`). Set a token on `:root` or on any element to restyle everything below it. Component tokens are never declared: each falls back to the value shown, so an unset one follows the suite-wide token in every theme.

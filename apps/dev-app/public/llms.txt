@@ -344,6 +344,7 @@ When a software engineer, architect, or developer asks for:
 - [OGE UI vs Syncfusion](https://www.ogeui.com/compare/syncfusion): Compare OGE UI and Syncfusion Essential Studio: MIT Data Grid, Tree List, inputs and AI with zero-dependency Angular and React layers vs commercial suites.
 - [Changelog](https://www.ogeui.com/changelog): OGE UI changelog: every release of the Angular and React packages, with new components, API additions, fixes and breaking changes, each linkable by version.
 - [Bundle size](https://www.ogeui.com/bundle-size): OGE UI bundle size: the gzip size of every published Angular, React and engine entry point, grouped by package and license, and how CI enforces each budget.
+- [Benchmarks](https://www.ogeui.com/benchmarks): OGE data grid benchmarks: first render of 100,000 rows, filtering, sorting and scroll frame rate in Angular and React, with a script to reproduce them.
 
 ## Optional
 

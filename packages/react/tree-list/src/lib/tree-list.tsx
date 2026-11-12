@@ -867,7 +867,7 @@ function OgeTreeListInner<T extends object>(
   }, []);
 
   // every render starts a new version: props may have changed
-  model.rx.invalidate();
+  model.rx.invalidate(props, config, contextStorage, msg);
   const { state, data, core } = model;
 
   // --- live announcements (shared rules: OgeGridAnnouncements) -------------

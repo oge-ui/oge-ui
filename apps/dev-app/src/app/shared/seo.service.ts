@@ -184,6 +184,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE UI changelog: every release of the Angular and React packages, with new components, API additions, fixes and breaking changes, each linkable by version.',
   ],
   [
+    '/benchmarks',
+    'OGE data grid benchmarks: first render of 100,000 rows, filtering, sorting and scroll frame rate in Angular and React, with a script to reproduce them.',
+  ],
+  [
     '/bundle-size',
     'OGE UI bundle size: the gzip size of every published Angular, React and engine entry point, grouped by package and license, and how CI enforces each budget.',
   ],

@@ -1664,6 +1664,20 @@ export const appRoutes: Route[] = [
       import('./pages/resources/bundle-size').then((m) => m.BundleSizePage),
     title: 'OGE — Bundle size',
   },
+  {
+    path: 'benchmarks',
+    loadComponent: () =>
+      import('./pages/resources/benchmarks').then((m) => m.BenchmarksPage),
+    title: 'OGE — Benchmarks',
+  },
+  {
+    // the page tools/benchmarks/grid-bench.mjs drives — not listed, not indexed
+    path: 'benchmarks/run',
+    loadComponent: () =>
+      import('./pages/resources/benchmark-run').then((m) => m.BenchmarkRunPage),
+    title: 'OGE — Grid benchmark run',
+    data: { noindex: true },
+  },
   // legacy redirects — the static host answers these with a 301 first
   // (vercel.json "redirects"); these keep client-side navigation working
   { path: 'basic-grid', redirectTo: 'components/data-grid' },

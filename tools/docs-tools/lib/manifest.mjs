@@ -22,7 +22,7 @@ export const PATHS = {
  * Docs folders that belong to no package — guides rather than component demos.
  * Their snippets land in `llms-full.txt` under "Getting started samples".
  */
-export const GUIDE_DIRS = ['getting-started', 'guides', 'ai'];
+export const GUIDE_DIRS = ['getting-started', 'guides', 'ai', 'resources'];
 
 /**
  * Package folders that exist on disk but are deliberately not documented yet,

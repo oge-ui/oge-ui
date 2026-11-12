@@ -7,6 +7,20 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Benchmarks, and a faster React grid — `@oge-ui/react-grid`, `@oge-ui/react-tree-list`
+
+- New page `/benchmarks` shows the data grid's measured performance on 100 000
+  rows in Angular and React: first render, filtering, sorting and scroll frame
+  rate. The numbers are the committed output of `tools/benchmarks/grid-bench.mjs`
+  (Playwright, production build, median of fresh-browser runs), which anyone
+  can rerun.
+- The React grid and tree list now recompute a derived value only when
+  something it read changed. Before, every scroll event invalidated all of
+  them, rebuilding the row offsets of every row on each frame. A render the
+  grid triggers itself, with the same props, no longer invalidates anything.
+  On 100 000 rows, scrolling went from 26 to 60 frames per second with no
+  frames over 50 ms; first render and sorting also got faster.
+
 ### File manager — `@oge-ui/upload/file-manager`, `@oge-ui/react-upload/file-manager`, `@oge-ui/behavior`
 
 - `<oge-file-manager>` / `<OgeFileManager>`: a file manager over any storage.

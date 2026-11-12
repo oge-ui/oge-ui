@@ -130,6 +130,15 @@ consumers:
   decides _when_, with `effect()` or `useEffect`. Where a core reads state that
   Angular would track (a DOM measurement pass), the Angular seam wraps the call
   in `untracked()` rather than the core knowing what tracking is.
+- **React adapters for large data track dependencies.** `react-grid` and
+  `react-tree-list` (`createGridRxAdapter`) and `react-pivot` record what each
+  derived value read and recompute only when that changed. A global "version
+  per write" adapter would recompute every derived value on each write, and a
+  scroll is a write: 100 000 rows dropped to 26 fps. Props reach derived values
+  through closures no cell sees. The host therefore calls
+  `rx.invalidate(props, config, …)` every render, and the adapter invalidates
+  only when one of those objects is new. `tools/benchmarks/grid-bench.mjs`
+  measures the result, and `/benchmarks` publishes it.
 - **The docs app compiles the whole workspace from source, so
   `@oge-ui/behavior` does not tree-shake there.** `tsconfig.base.json` maps
   every package to its source barrel, and a package's `sideEffects: false`

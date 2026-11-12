@@ -12,6 +12,7 @@ const PAGES = [
   '/license',
   '/changelog',
   '/bundle-size',
+  '/benchmarks',
   '/getting-started',
   '/getting-started/setup',
   '/getting-started/tokens',

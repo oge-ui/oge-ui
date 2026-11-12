@@ -295,6 +295,7 @@ export class App {
       items: [
         { path: '/changelog', label: 'Changelog', icon: 'timeline' },
         { path: '/bundle-size', label: 'Bundle size', icon: 'gauge' },
+        { path: '/benchmarks', label: 'Benchmarks', icon: 'gauge' },
         { path: '/pricing', label: 'Pricing', icon: 'tag' },
         { path: '/compare', label: 'Compare', icon: 'columns' },
       ],

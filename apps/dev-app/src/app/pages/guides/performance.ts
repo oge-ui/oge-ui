@@ -77,7 +77,14 @@ const ENTRIES: Readonly<Record<string, number>> = budgets.entries;
     <h2 id="virtualization" class="scroll-mt-20">Virtualization</h2>
     <p>
       Virtual scrolling renders the rows inside the viewport plus an overscan
-      margin. It needs a bounded height — a viewport to be inside of.
+      margin. It needs a bounded height — a viewport to be inside of. What it
+      buys on 100 000 rows — first render, filtering, sorting, scroll frame rate
+      — is measured on
+      <a
+        class="text-indigo-600 underline dark:text-indigo-400"
+        routerLink="/benchmarks"
+        >Benchmarks</a
+      >.
     </p>
     <app-guide-table
       caption="Virtualization settings per family"
