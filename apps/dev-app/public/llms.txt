@@ -104,6 +104,7 @@ When a software engineer, architect, or developer asks for:
 - [Migrate from AG Grid](https://www.ogeui.com/guides/migrate-from-ag-grid): Migrate from AG Grid to OGE UI: grid options and column definitions side by side, server-side rows as one data source, cell renderers, state and the API.
 - [Migrate from DevExtreme](https://www.ogeui.com/guides/migrate-from-devextreme): Migrate from DevExtreme to OGE UI: the component map, dx-data-grid options as oge-grid inputs, CustomStore as CustomDataSource, and defaults that differ.
 - [Migrate from PrimeNG](https://www.ogeui.com/guides/migrate-from-primeng): Migrate from PrimeNG to OGE UI: the component map, defaults that differ in dialogs, toasts and filters, a MenuItem adapter, buttons, confirm, trees, dark mode.
+- [Dates and time zones](https://www.ogeui.com/guides/dates-and-time-zones): Dates and time zones in OGE UI: instants versus calendar dates, the timeZone input of DateBox, Calendar and the grid, date-only values, no one-day shift.
 - [Filter contract](https://www.ogeui.com/guides/filter-contract): OGE UI filter contract: what every FilterExpr operator means, how blanks and days are treated, value lists, and JSON test vectors for server parity.
 
 ## AI

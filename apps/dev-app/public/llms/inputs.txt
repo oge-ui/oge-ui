@@ -1437,6 +1437,7 @@ _OgeCalendar_
 | `showTodayButton` | `boolean` | `false` | Renders the localized today shortcut. |
 | `focusedDate` | `model<Date \| null>` | `—` | The keyboard-focused day — two-way (controlled navigation). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for all texts (Intl). |
+| `timeZone` | `string` | `undefined` | IANA zone the days are read in: `value`, `values` and `range` stay instants, the grid shows their day on that zone's clocks, a picked day is that zone's midnight and "today" is the zone's today. Unset = the runtime's own zone. |
 | `cellTemplate` | `TemplateRef<OgeCalendarCellTemplateContext>` | `—` | Custom cell rendering — also available as the projected `[ogeCalendarCellTemplate]` slot. |
 
 _Common — state & forms (all editors)_
@@ -1509,6 +1510,7 @@ _OgeDateBox_
 | `showSeconds` | `boolean` | `false` | Seconds in the display text (`timeStyle: 'medium'`), a seconds column and a seconds segment of the masked entry; typed `HH:MM:SS` parses. Off, picks zero the seconds. |
 | `showTodayButton` | `boolean` | `false` | Footer "Today" button (`date` / `datetime`): picks today through the calendar path — `datetime` keeps the time of day. Disabled when `min`/`max`/`disabledDates` exclude today. |
 | `showNowButton` | `boolean` | `false` | Footer "Now" button (`time` / `datetime`): commits the current time (seconds kept only with `showSeconds`) and closes; with `useButtons` it drafts instead. |
+| `timeZone` | `string` | `undefined` | IANA zone the value is shown and edited in (`'Europe/Istanbul'`, `'UTC'`). The value stays an instant: the field and the calendar show its wall clock in this zone, Today / Now are the zone's, and a picked day or time is that zone's. A date-only value a server keeps as UTC midnight reads right with `timeZone="UTC"`. Unset = the runtime's own zone. |
 | `useMaskBehavior` | `boolean` | `false` | Segment entry (DevExtreme `useMaskBehavior`): the field shows the locale’s numeric pattern (`dd.mm.yyyy`, `mm/dd/yyyy`… from `Intl`), digits fill the selected segment and auto-advance, ArrowUp/Down step it with wrap-around, ArrowLeft/Right (mirrored in RTL) and Home/End move between segments, Backspace/Delete clear, a typed separator moves on, `a`/`p` set AM/PM, paste reads a whole date and Alt+ArrowDown opens the picker. Commits on blur/Enter like typed text; impossible dates show the invalid state and revert. `displayFormat` is not used while it is on. |
 | `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects picker changes in a draft when `useButtons`. |
 | `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). |
@@ -3893,6 +3895,31 @@ export class Demo {
   protected readonly at = signal<Date | null>(null);
   protected readonly alarm = signal<Date | null>(null);
   protected readonly due = signal<Date | null>(null);
+}
+```
+
+### Zones
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDateBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDateBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- one instant on three clocks: the bound Date never changes zone -->
+    <oge-date-box label="Istanbul" type="datetime" timeZone="Europe/Istanbul" [(value)]="meeting" />
+    <oge-date-box label="New York" type="datetime" timeZone="America/New_York" [(value)]="meeting" />
+
+    <!-- a date-only value stored as UTC midnight: the same day in every browser -->
+    <oge-date-box label="Birthday" timeZone="UTC" [(value)]="birthday" />
+  `,
+})
+export class Demo {
+  protected readonly meeting = signal<Date | null>(new Date(Date.UTC(2026, 2, 5, 14)));
+  protected readonly birthday = signal<Date | null>(new Date(Date.UTC(1990, 4, 17)));
 }
 ```
 

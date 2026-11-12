@@ -61,6 +61,8 @@ export interface ColumnSource<T = unknown> {
   readonly minWidth: () => number | undefined;
   readonly maxWidth?: () => number | undefined;
   readonly lookup: () => OgeColumnLookup | undefined;
+  /** A date column's own zone (optional on hosts without one). */
+  readonly timeZone?: () => string | undefined;
   readonly calculateCellValue: () => ((row: T) => unknown) | undefined;
   readonly calculateFilterExpression: () =>
     | ((value: unknown, operator: FilterOperator) => FilterExpr | null)
@@ -113,6 +115,8 @@ export interface ColumnModelDeps<T, S extends ColumnSource<T>> {
   detailToggleWidth?: () => number;
   /** The host's effective locale; declarative formats compile for it. */
   locale?: () => string | undefined;
+  /** The host's `timeZone`, the default of its date columns. */
+  timeZone?: () => string | undefined;
 }
 
 /**
@@ -154,6 +158,7 @@ export class ColumnModel<
       minWidth: column.minWidth(),
       maxWidth: column.maxWidth?.(),
       lookup: column.lookup(),
+      timeZone: column.timeZone?.(),
       calculateCellValue: column.calculateCellValue(),
       calculateFilterExpression: column.calculateFilterExpression(),
       hidingPriority: column.hidingPriority(),
@@ -205,6 +210,7 @@ export class ColumnModel<
       order: this.deps.order(),
       adaptiveHiddenIds: this.adaptiveHiddenIds(),
       locale: this.deps.locale?.(),
+      timeZone: this.deps.timeZone?.(),
     }),
   );
 
@@ -222,6 +228,7 @@ export class ColumnModel<
       order: this.deps.order(),
       adaptiveHiddenIds: this.adaptiveHiddenIds(),
       locale: this.deps.locale?.(),
+      timeZone: this.deps.timeZone?.(),
     }),
   );
 
@@ -244,6 +251,7 @@ export class ColumnModel<
       order: this.deps.order(),
       adaptiveHiddenIds: new Set<string>(),
       locale: this.deps.locale?.(),
+      timeZone: this.deps.timeZone?.(),
     });
   }
 

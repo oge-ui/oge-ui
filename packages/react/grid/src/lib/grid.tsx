@@ -562,6 +562,7 @@ function OgeGridInner<T extends object>(
         minWidth: column.minWidth,
         maxWidth: column.maxWidth,
         lookup: column.lookup,
+        timeZone: column.timeZone,
         calculateCellValue: column.calculateCellValue,
         calculateFilterExpression: column.calculateFilterExpression,
         hidingPriority: column.hidingPriority,
@@ -838,6 +839,7 @@ function OgeGridInner<T extends object>(
         order: state.columns.order(),
         adaptiveHiddenIds: adaptiveHiddenIds(),
         locale: effLocale(),
+        timeZone: p().timeZone,
       }),
     );
 
@@ -857,6 +859,7 @@ function OgeGridInner<T extends object>(
         order: state.columns.order(),
         adaptiveHiddenIds: new Set<string>(),
         locale: effLocale(),
+        timeZone: p().timeZone,
       });
 
     /** The columns hidden by width, rendered in each row's adaptive detail. */
@@ -3244,6 +3247,7 @@ function OgeGridInner<T extends object>(
         lookupItems={model.editing.lookupItemsFor(node, column)}
         label={column.caption}
         locale={column.locale}
+        timeZone={column.timeZone}
         invalid={showError}
         errorTitle={showError ? entry.error : null}
         pending={entry.pending}
@@ -3478,7 +3482,12 @@ function OgeGridInner<T extends object>(
     if (!field) return;
     state.filter.setRowFilter(
       field,
-      dateRangeFilterExpr(field, range?.[0] ?? null, range?.[1] ?? null),
+      dateRangeFilterExpr(
+        field,
+        range?.[0] ?? null,
+        range?.[1] ?? null,
+        column.timeZone,
+      ),
     );
   }
 
@@ -3488,7 +3497,7 @@ function OgeGridInner<T extends object>(
     state.filter.setRowFilter(
       field,
       value instanceof Date
-        ? dateFilterExpr(field, currentOperator(column), value)
+        ? dateFilterExpr(field, currentOperator(column), value, column.timeZone)
         : null,
     );
   }
@@ -3549,6 +3558,7 @@ function OgeGridInner<T extends object>(
       preset,
       new Date(),
       resolveFirstDayOfWeek(undefined, model.effLocale()),
+      model.columnsByField().get(field)?.timeZone,
     );
   const presetField = model.headerFilterField();
   const presetColumn = presetField
@@ -4022,6 +4032,7 @@ function OgeGridInner<T extends object>(
       parseHeaderConditionExpr(
         state.filter.rowFilterOf(ogeHeaderConditionKey(field)),
         column.dataType,
+        column.timeZone,
       ),
     );
     setHeaderSearchRemote(false);
@@ -4953,7 +4964,12 @@ function OgeGridInner<T extends object>(
     if (!column?.field || !draft) return;
     state.filter.setRowFilter(
       ogeHeaderConditionKey(column.field),
-      headerConditionExpr(column.field, column.dataType, draft),
+      headerConditionExpr(
+        column.field,
+        column.dataType,
+        draft,
+        column.timeZone,
+      ),
     );
   }
 
@@ -5047,6 +5063,7 @@ function OgeGridInner<T extends object>(
                   )
               : undefined,
             headerFilterColumn.locale,
+            headerFilterColumn.timeZone,
           ),
           model.headerFilterSearch().trim()
             ? new Set()

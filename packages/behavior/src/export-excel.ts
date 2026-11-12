@@ -25,6 +25,7 @@ import {
   ogeExportHeaderCells,
   ogeExportItemsOf,
 } from './lib/grid/grid-export';
+import { ogeZonedWall } from './lib/grid/grid-columns';
 import type {
   OgeExportCellStyle,
   OgeExportColumn,
@@ -159,7 +160,9 @@ function typedValue<T>(column: OgeExportColumn<T>, raw: unknown): unknown {
   if (column.dataType === 'number' && typeof raw === 'number') return raw;
   if (column.dataType === 'date' || column.dataType === 'datetime') {
     const date = raw instanceof Date ? raw : new Date(String(raw));
-    if (!Number.isNaN(date.getTime())) return date;
+    // the zone's wall clock — the day and time the grid shows
+    if (!Number.isNaN(date.getTime()))
+      return ogeZonedWall(date, column.timeZone);
   }
   return column.format ? column.format(raw) : raw;
 }

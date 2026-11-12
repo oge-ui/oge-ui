@@ -1506,6 +1506,7 @@ _OgeCalendar_
 | `showTodayButton` | `boolean` | `false` | Renders the localized today shortcut. |
 | `focusedDate / defaultFocusedDate` | `Date \| null` | `—` | The keyboard-focused day — controlled navigation via `onFocusedDateChange`. |
 | `locale` | `string` | `—` | BCP 47 locale for all texts (Intl). |
+| `timeZone` | `string` | `undefined` | IANA zone the days are read in: `value`, `values` and `range` stay instants, the grid shows their day on that zone's clocks, a picked day is that zone's midnight and "today" is the zone's today. Unset = the runtime's own zone. |
 | `renderCell` | `(context: OgeCalendarCellContext) => ReactNode` | `—` | Custom day/month/year cell rendering — badges, prices, availability dots. The React face of the Angular `[ogeCalendarCellTemplate]` slot; the context carries `date`, `view`, `text`, `disabled`, `selected`, `today` and `otherPeriod`. |
 
 _Host styling_
@@ -1589,6 +1590,7 @@ _OgeDateBox_
 | `showSeconds` | `boolean` | `false` | Seconds in the display text (`timeStyle: 'medium'`), a seconds column and a seconds segment of the masked entry; typed `HH:MM:SS` parses. Off, picks zero the seconds. |
 | `showTodayButton` | `boolean` | `false` | Footer "Today" button (`date` / `datetime`): picks today through the calendar path — `datetime` keeps the time of day. Disabled when `min`/`max`/`disabledDates` exclude today. |
 | `showNowButton` | `boolean` | `false` | Footer "Now" button (`time` / `datetime`): commits the current time (seconds kept only with `showSeconds`) and closes; with `useButtons` it drafts instead. |
+| `timeZone` | `string` | `undefined` | IANA zone the value is shown and edited in (`'Europe/Istanbul'`, `'UTC'`). The value stays an instant: the field and the calendar show its wall clock in this zone, Today / Now are the zone's, and a picked day or time is that zone's. A date-only value a server keeps as UTC midnight reads right with `timeZone="UTC"`. Unset = the runtime's own zone. |
 | `useMaskBehavior` | `boolean` | `false` | Segment entry (DevExtreme `useMaskBehavior`) on the shared `OgeDateSegmentCore`: the field shows the locale’s numeric pattern (`dd.mm.yyyy`, `mm/dd/yyyy`… from `Intl`), digits fill the selected segment and auto-advance, ArrowUp/Down step it with wrap-around, ArrowLeft/Right (mirrored in RTL) and Home/End move between segments, Backspace/Delete clear, a typed separator moves on, `a`/`p` set AM/PM, paste reads a whole date and Alt+ArrowDown opens the picker. Commits on blur/Enter like typed text; impossible dates show the invalid state and revert. `displayFormat` is not used while it is on. |
 | `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects picker changes in a draft when `useButtons`. |
 | `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). |
@@ -4071,6 +4073,31 @@ export function PresetsDemo() {
         onValueChange={setHours}
       />
     </div>
+  );
+}
+```
+
+### Time zones
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDateBox } from '@oge-ui/react-inputs';
+
+export function TimeZonesDemo() {
+  // one instant on three clocks: the bound Date never changes zone
+  const [meeting, setMeeting] = useState<Date | null>(new Date(Date.UTC(2026, 2, 5, 14)));
+  // a date-only value stored as UTC midnight: the same day in every browser
+  const [birthday, setBirthday] = useState<Date | null>(new Date(Date.UTC(1990, 4, 17)));
+  return (
+    <>
+      <OgeDateBox label="Istanbul" type="datetime" timeZone="Europe/Istanbul"
+                  value={meeting} onValueChange={setMeeting} />
+      <OgeDateBox label="New York" type="datetime" timeZone="America/New_York"
+                  value={meeting} onValueChange={setMeeting} />
+      <OgeDateBox label="Birthday" timeZone="UTC" value={birthday} onValueChange={setBirthday} />
+    </>
   );
 }
 ```

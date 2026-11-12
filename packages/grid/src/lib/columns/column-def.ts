@@ -43,6 +43,8 @@ export interface OgeColumnDef<T = unknown> {
   filterable?: boolean;
   filterOperator?: FilterOperator;
   lookup?: OgeColumnLookup;
+  /** A date column's own zone (see `OgeColumn.timeZone`). */
+  timeZone?: string;
   calculateCellValue?: (row: T) => unknown;
   calculateSortValue?: (row: T) => unknown;
   /** The value the column filters, lists and searches by on the client. */
@@ -107,6 +109,7 @@ export function ogeColumnFromDef<T>(def: OgeColumnDef<T>): OgeColumn<T> {
     filterable: withDefault('filterable', true),
     filterOperator: value('filterOperator'),
     lookup: value('lookup'),
+    timeZone: value('timeZone'),
     calculateCellValue: value('calculateCellValue'),
     calculateSortValue: value('calculateSortValue'),
     calculateFilterValue: value('calculateFilterValue'),

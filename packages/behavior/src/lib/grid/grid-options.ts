@@ -241,6 +241,11 @@ export interface OgeExportColumn<T = unknown> {
   format?: ((value: unknown) => string) | undefined;
   /** Locale unformatted dates are written in (the column's `locale`). */
   locale?: string | undefined;
+  /**
+   * A date column's zone: typed Excel dates are written as its wall clock,
+   * the day and time the grid shows.
+   */
+  timeZone?: string | undefined;
   /** On-screen width in px, when the column declares or was resized to one. */
   width?: number | undefined;
   /** Resolved cell alignment (numbers default to `'end'`). */

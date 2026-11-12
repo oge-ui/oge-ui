@@ -246,6 +246,11 @@ export class App {
           icon: 'filter',
         },
         {
+          path: '/guides/dates-and-time-zones',
+          label: 'Dates and time zones',
+          icon: 'calendar',
+        },
+        {
           path: '/guides/migrate-from-primeng',
           label: 'Migrate from PrimeNG',
           icon: 'arrow-right',

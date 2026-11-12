@@ -212,6 +212,7 @@ _Appearance & misc_
 | `stateMigrations` | `readonly OgeStateMigration[] \| undefined` | `—` | One upgrade step per change of your stored state’s format: step `n` turns a state of version `n` into `n + 1`. Snapshots record their `version`; a restored state, an `applyState()` argument or a saved view runs the steps it missed. A failing step keeps the column layout and drops the rest. |
 | `messages` | `Partial<OgeGridMessages> \| undefined` | `—` | Per-grid overrides of the UI strings. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale of the grid’s formatted text — default date cells, declarative column `format`s, summaries, group captions, header-filter values, the filter row’s number parsing and editors, clipboard parsing and exported text — and of its plural-aware messages. `undefined` falls back to `provideOgeGridConfig({ locale })`, then Angular’s `LOCALE_ID`. Live: changing it re-renders. |
+| `timeZone` | `string \| undefined` | `undefined` | IANA zone the date columns show, filter and edit their days in; a column's own `timeZone` wins. Values stay instants — cells, value lists, the date tree, the filter row, quick dates, condition filters, editors and typed Excel dates use the zone's wall clock. Group intervals still follow the data source (in memory: the runtime zone). Unset = the runtime's own zone. |
 | `loadPanel` | `boolean` | `false` | Spinner overlay while a load is in flight. |
 | `wordWrap` | `boolean` | `false` | Cells wrap instead of truncating. |
 | `rowAlternation` | `boolean` | `false` | Zebra striping, stable under virtualization. |
@@ -411,6 +412,7 @@ _Basics_
 | `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge. `left` / `right` are the logical start / end edge (mirrored in RTL). While content scrolls under the pinned group, the column bordering it casts a separator shadow (`--oge-shadow-pinned-color`; a solid rule under forced colors). |
 | `hidingPriority` | `number \| undefined` | `—` | Adaptive hiding order when width runs out (higher survives longer); the hidden values stay reachable through the row toggle unless `columnHidingMode` is `'hide'`. |
 | `lookup` | `OgeColumnLookup \| undefined` | `—` | Display + dropdown editor from a value list; cascading via function dataSource. |
+| `timeZone` | `string` | `undefined` | A `date` / `datetime` column's own zone (`'UTC'` for date-only values kept as UTC midnight); overrides the grid's `timeZone`. A `format` function receives the wall clock. |
 
 _Sort, filter & group_
 

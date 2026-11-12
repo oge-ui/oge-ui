@@ -181,6 +181,7 @@ _Appearance & misc_
 | `stateStorage` | `OgeStateStorage` | `context storage` | Per-grid storage backend; overrides `<OgeGridStateStorageProvider>`. |
 | `messages` | `Partial<OgeGridMessages>` | `undefined` | Per-grid overrides of the UI strings (see `<OgeGridConfigProvider>` for app-wide). |
 | `locale` | `string` | `undefined` | BCP 47 locale of the grid’s formatted text — default date cells, declarative column `format`s, summaries, group captions, header-filter values, the filter row’s number parsing and editors, clipboard parsing and exported text — and of its plural-aware messages. `undefined` falls back to `<OgeGridConfigProvider config={{ locale }}>`, then `navigator.language`. |
+| `timeZone` | `string \| undefined` | `undefined` | IANA zone the date columns show, filter and edit their days in; a column's own `timeZone` wins. Values stay instants — cells, value lists, the date tree, the filter row, quick dates, condition filters, editors and typed Excel dates use the zone's wall clock. Group intervals still follow the data source (in memory: the runtime zone). Unset = the runtime's own zone. |
 | `loadPanel` | `boolean` | `false` | Spinner overlay while a load is in flight. |
 | `wordWrap` | `boolean` | `false` | Wraps cell text instead of clipping it. |
 | `rowAlternation` | `boolean` | `false` | Alternating row background (zebra striping), stable under virtualization. |
@@ -376,6 +377,7 @@ _Basics_
 | `minWidth` | `number` | `config.columnMinWidth` | Track minimum in px for flexible-width columns. |
 | `maxWidth` | `number \| undefined` | `undefined` | Upper bound in px for user resizing — pointer drag and the Alt+←/→ / separator keys; also the separator’s `aria-valuemax`. |
 | `lookup` | `OgeColumnLookup` | `undefined` | Maps stored values to display texts (cells, filters, exports): `{ dataSource, valueExpr, displayExpr }`. |
+| `timeZone` | `string` | `undefined` | A `date` / `datetime` column's own zone (`'UTC'` for date-only values kept as UTC midnight); overrides the grid's `timeZone`. A `format` function receives the wall clock. |
 | `calculateCellValue` | `(row: T) => unknown` | `undefined` | Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). |
 | `hidingPriority` | `number` | `undefined` | Responsive hiding: lower priorities hide first when the grid runs out of width; the hidden values stay reachable through the row toggle unless `columnHidingMode` is `'hide'`. |
 | `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge (requires a numeric `width`). `left` / `right` are the logical start / end edge (mirrored in RTL). While content scrolls under the pinned group, the column bordering it casts a separator shadow (`--oge-shadow-pinned-color`; a solid rule under forced colors). |

@@ -63,6 +63,11 @@ const GUIDES = [
     heading: 'operators',
   },
   {
+    path: '/guides/dates-and-time-zones',
+    title: 'Dates and time zones',
+    heading: 'date-only-values',
+  },
+  {
     path: '/guides/migrate-from-primeng',
     title: 'Migrate from PrimeNG',
     heading: 'menus',
@@ -233,6 +238,7 @@ test.describe('guides', () => {
     '/guides/accessibility/conformance',
     '/guides/dev-warnings',
     '/guides/filter-contract',
+    '/guides/dates-and-time-zones',
     '/guides/migrate-from-primeng',
     '/guides/migrate-from-material',
     '/guides/migrate-from-ag-grid',

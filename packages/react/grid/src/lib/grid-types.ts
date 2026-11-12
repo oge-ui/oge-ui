@@ -215,6 +215,12 @@ export interface OgeGridColumnProps<T = unknown> {
   maxWidth?: number;
   /** Maps stored values to display texts (cells and filters). */
   lookup?: OgeColumnLookup;
+  /**
+   * IANA zone a `date` / `datetime` column shows, filters and edits its days
+   * in (`'UTC'` for date-only values kept as UTC midnight). Overrides the
+   * grid's `timeZone`; values stay instants.
+   */
+  timeZone?: string;
   /** Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). */
   calculateCellValue?: (row: T) => unknown;
   /** Custom sort key for this column (client-side array data only). */
@@ -482,6 +488,14 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
    * `<OgeGridConfigProvider>` `locale`, then `navigator.language`.
    */
   locale?: string;
+  /**
+   * IANA zone the date columns show, filter and edit their days in
+   * (`'Europe/Istanbul'`, `'UTC'`); a column's own `timeZone` wins. Values
+   * stay instants — cells, value lists, the filter row, quick dates, editors
+   * and typed Excel dates use the zone's wall clock. `undefined` = the
+   * runtime's own zone.
+   */
+  timeZone?: string;
   /**
    * Persists user state (sort, filters, grouping, column layout, page size)
    * under this key via the state storage (default: localStorage) and restores

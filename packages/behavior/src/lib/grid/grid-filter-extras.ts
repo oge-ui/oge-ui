@@ -2,6 +2,7 @@ import {
   addDays,
   createFieldAccessor,
   isOgeBlank,
+  ogeToWallClock,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -156,9 +157,15 @@ export function ogeDatePresetExpr(
   preset: OgeDatePreset,
   now: Date,
   firstDayOfWeek: number,
+  /** The column's zone: "today" is its today. */
+  timeZone?: string,
 ): FilterExpr {
-  const { from, to } = ogeDatePresetRange(preset, now, firstDayOfWeek);
-  return dateRangeFilterExpr(field, from, to) as FilterExpr;
+  const { from, to } = ogeDatePresetRange(
+    preset,
+    timeZone ? ogeToWallClock(now, timeZone) : now,
+    firstDayOfWeek,
+  );
+  return dateRangeFilterExpr(field, from, to, timeZone) as FilterExpr;
 }
 
 // --- custom and range filter cells ---------------------------------------------

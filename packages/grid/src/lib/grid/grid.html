@@ -897,6 +897,7 @@ canAdd() || editMode() === 'batch' || toolbarItems().length > 0 ) {
           <oge-cell-editor
             surface="cell"
             [locale]="column.locale"
+            [timeZone]="column.timeZone"
             [control]="editControl(node, column)"
             [dataType]="column.dataType"
             [lookupItems]="lookupItemsFor(node, column)"

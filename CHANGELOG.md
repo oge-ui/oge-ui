@@ -7,6 +7,24 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Time zones for date editors and grid date columns — `@oge-ui/inputs`, `@oge-ui/grid`, React twins
+
+- `timeZone` on DateBox and Calendar (both layers): the value stays an instant;
+  the field, the calendar, Today / Now, `min` / `max` and every pick use that
+  zone's wall clock. `timeZone="UTC"` keeps date-only values stored as UTC
+  midnight on their day in every browser.
+- `timeZone` on the grid and on date columns: cell text, value lists and the date
+  tree, the filter row, quick dates, condition filters, cell editors, CSV / PDF
+  text and typed Excel dates follow the zone; day filters become the zone's
+  midnights (23 or 25 hours apart on DST days). Group intervals still follow the
+  data source.
+- `@oge-ui/behavior`: `ogeZonedWall`, zone-aware `dateFilterExpr`,
+  `dateRangeFilterExpr`, `ogeDatePresetExpr`, `headerConditionExpr`,
+  `parseHeaderConditionExpr`, `groupHeaderValuesByDate` and
+  `ogeCompileColumnFormat`; re-exports `ogeToWallClock` / `ogeFromWallClock`.
+- New guide `/guides/dates-and-time-zones` and a "Time zones" demo on the date box
+  pages.
+
 ### Migration codemod and guides — every package
 
 - `ng generate @oge-ui/<package>:migrate-primeng [--path]`: rewrites `p-button`,

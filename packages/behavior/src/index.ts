@@ -174,6 +174,7 @@ export {
   type OgeGridResolvedColumn,
   isOgeDateType,
   ogeCompileColumnFormat,
+  ogeZonedWall,
   type OgeColumnFormat,
 } from './lib/grid/grid-columns';
 export {
@@ -2288,6 +2289,8 @@ export {
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core
 export { ogeLiveConfig } from '@oge-ui/core';
+// wall-clock conversions for the zoned date editors (`timeZone`)
+export { ogeFromWallClock, ogeToWallClock } from '@oge-ui/core';
 export { foldText } from '@oge-ui/core';
 // Coded development warnings: one registry (core), one helper, re-exported so
 // packages that depend only on behavior print them the same way.

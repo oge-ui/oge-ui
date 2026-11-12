@@ -115,6 +115,7 @@ export type OgeCellEditorSurface = 'cell' | 'form' | 'popup';
             subscriptSizing="none"
             [fluid]="true"
             [locale]="locale()"
+            [timeZone]="timeZone()"
             [label]="label()"
             [invalid]="invalid()"
             [formControl]="control()"
@@ -128,6 +129,7 @@ export type OgeCellEditorSurface = 'cell' | 'form' | 'popup';
             subscriptSizing="none"
             [fluid]="true"
             [locale]="locale()"
+            [timeZone]="timeZone()"
             [label]="label()"
             [invalid]="invalid()"
             [formControl]="control()"
@@ -160,6 +162,8 @@ export class OgeCellEditor {
   readonly label = input('');
   /** Locale the number / date editors format and parse in (the grid's). */
   readonly locale = input<string | undefined>(undefined);
+  /** A date column's zone: the editor shows and picks its wall clock. */
+  readonly timeZone = input<string | undefined>(undefined);
   readonly surface = input<OgeCellEditorSurface>('form');
   /** Validation state, evaluated by the host per CD (control state is not reactive). */
   readonly invalid = input(false);

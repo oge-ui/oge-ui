@@ -85,6 +85,12 @@ export class OgeColumn<T = unknown> {
   readonly maxWidth = input<number>();
   /** Maps stored values to display texts (cells, filters, editors). */
   readonly lookup = input<OgeColumnLookup>();
+  /**
+   * IANA zone a `date` / `datetime` column shows, filters and edits its days
+   * in (`'UTC'` for date-only values kept as UTC midnight). Overrides the
+   * grid's `timeZone`; values stay instants.
+   */
+  readonly timeZone = input<string | undefined>(undefined);
   /** Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). */
   readonly calculateCellValue = input<(row: T) => unknown>();
   /** Custom sort key for this column (client-side array data only). */

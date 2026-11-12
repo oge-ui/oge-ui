@@ -28,6 +28,7 @@ import {
   GRID_SNIPPET,
   MASK_SNIPPET,
   PRESETS_SNIPPET,
+  ZONES_SNIPPET,
   RANGE_SNIPPET,
   TIMEVIEW_SNIPPET,
   TYPES_SNIPPET,
@@ -302,6 +303,41 @@ const SECTIONS = [
           >
         </p>
       </app-demo-card>
+
+      <app-demo-card
+        heading="Time zones"
+        description="One instant, three clocks. <code>timeZone</code> shows and edits the value on a zone's wall clock while the bound value stays the same <code>Date</code>: change the time in one box and the others follow on their own clocks. <code>timeZone: 'UTC'</code> keeps a date-only value stored as UTC midnight on its day in every browser."
+        [chips]="['timeZone', 'instants', 'UTC date-only']"
+        [code]="zonesSnippet"
+        language="ts"
+      >
+        <div class="demo-time-zones flex flex-wrap items-start gap-6">
+          <oge-date-box
+            label="Istanbul"
+            type="datetime"
+            timeZone="Europe/Istanbul"
+            [(value)]="zoneMeeting"
+          />
+          <oge-date-box
+            label="New York"
+            type="datetime"
+            timeZone="America/New_York"
+            [(value)]="zoneMeeting"
+          />
+          <oge-date-box
+            label="Tokyo"
+            type="datetime"
+            timeZone="Asia/Tokyo"
+            [(value)]="zoneMeeting"
+          />
+        </div>
+        <p class="mt-3 text-sm">
+          Stored instant:
+          <code data-testid="zone-instant">{{
+            zoneMeeting()?.toISOString() ?? '—'
+          }}</code>
+        </p>
+      </app-demo-card>
     }
 
     <h3 id="grid-integration" class="scroll-mt-20">Grid integration</h3>
@@ -358,6 +394,11 @@ export class InputsDateBoxPage {
   protected readonly clockSnippet = CLOCK_SNIPPET;
   protected readonly maskSnippet = MASK_SNIPPET;
   protected readonly presetsSnippet = PRESETS_SNIPPET;
+  protected readonly zonesSnippet = ZONES_SNIPPET;
+  /** 14:00 UTC on 5 March 2026 — one instant, shown on three clocks. */
+  protected readonly zoneMeeting = signal<Date | null>(
+    new Date(Date.UTC(2026, 2, 5, 14)),
+  );
 
   protected readonly departure = signal<Date | null>(
     new Date(2026, 7, 15, 18, 45, 0),

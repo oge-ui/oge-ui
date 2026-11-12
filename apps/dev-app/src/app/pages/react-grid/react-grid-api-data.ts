@@ -410,6 +410,13 @@ export const OGE_REACT_GRID_API: ApiSections = {
             'BCP 47 locale of the grid’s formatted text — default date cells, declarative column <code>format</code>s, summaries, group captions, header-filter values, the filter row’s number parsing and editors, clipboard parsing and exported text — and of its plural-aware messages. <code>undefined</code> falls back to <code>&lt;OgeGridConfigProvider config={{ locale }}&gt;</code>, then <code>navigator.language</code>.',
         },
         {
+          name: 'timeZone',
+          type: 'string | undefined',
+          default: 'undefined',
+          description:
+            "IANA zone the date columns show, filter and edit their days in; a column's own <code>timeZone</code> wins. Values stay instants — cells, value lists, the date tree, the filter row, quick dates, condition filters, editors and typed Excel dates use the zone's wall clock. Group intervals still follow the data source (in memory: the runtime zone). Unset = the runtime's own zone.",
+        },
+        {
           name: 'loadPanel',
           type: 'boolean',
           default: 'false',
@@ -1141,6 +1148,13 @@ export const OGE_REACT_GRID_COLUMN_API: ApiSections = {
           default: 'undefined',
           description:
             'Maps stored values to display texts (cells, filters, exports): <code>{ dataSource, valueExpr, displayExpr }</code>.',
+        },
+        {
+          name: 'timeZone',
+          type: 'string',
+          default: 'undefined',
+          description:
+            "A <code>date</code> / <code>datetime</code> column's own zone (<code>'UTC'</code> for date-only values kept as UTC midnight); overrides the grid's <code>timeZone</code>. A <code>format</code> function receives the wall clock.",
         },
         {
           name: 'calculateCellValue',

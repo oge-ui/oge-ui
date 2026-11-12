@@ -21,6 +21,8 @@ import {
   isTimePartSelected,
   minuteColumnOptions,
   nowForType,
+  ogeFromWallClock,
+  ogeToWallClock,
   parseDateText,
   startOfDay,
   timeDisplayOptions,
@@ -121,6 +123,14 @@ export interface OgeDateBoxProps
   renderCalendarCell?: (context: OgeCalendarCellContext) => ReactNode;
   /** BCP 47 locale for display and parsing; `undefined` = the runtime default. */
   locale?: string;
+  /**
+   * IANA zone the value is shown and edited in (`'Europe/Istanbul'`, `'UTC'`).
+   * The value stays an instant: the field and the calendar show its wall clock
+   * in this zone, and a picked day or time is that zone's. A date-only value a
+   * server keeps as UTC midnight reads right with `timeZone="UTC"`.
+   * `undefined` = the runtime's own zone.
+   */
+  timeZone?: string;
   /** Picker visibility — controlled when provided. */
   opened?: boolean;
   /** Uncontrolled initial picker visibility. */
@@ -169,8 +179,8 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const {
       type = 'date',
       displayFormat,
-      min,
-      max,
+      min: minProp,
+      max: maxProp,
       disabledDates,
       interval = 30,
       timeView = 'list',
@@ -212,6 +222,13 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const timeListRef = useRef<HTMLDivElement>(null);
 
     const locale = props.locale ?? config.locale;
+    const timeZone = props.timeZone;
+    // the field works on the zone's wall clock; the model keeps instants
+    const toWall = (date: Date | null | undefined): Date | undefined =>
+      date ? ogeToWallClock(date, timeZone) : undefined;
+    const min = toWall(minProp);
+    const max = toWall(maxProp);
+    const wallNow = (): Date => ogeToWallClock(new Date(), timeZone);
 
     const formatter = ((): ((date: Date) => string) => {
       if (typeof displayFormat === 'function') return displayFormat;
@@ -239,7 +256,12 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const readonly = props.readonly ?? false;
     // lenient writes: ISO-like strings and epoch numbers land as LOCAL dates
     // (grid rows often store `yyyy-MM-dd` strings)
-    const value = toLocalDate(field.value);
+    const value = toWall(toLocalDate(field.value)) ?? null;
+    const commitWall = (date: Date | null, event?: Event): void =>
+      field.commit.commitNow(
+        date ? ogeFromWallClock(date, latest.current.props.timeZone) : date,
+        event,
+      );
 
     /** Uncommitted typed text; `null` = show the formatted value. */
     const [text, setText] = useState<string | null>(null);
@@ -485,8 +507,8 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const dayBlocked = (date: Date): boolean =>
       isDayDisabled(
         date,
-        latest.current.props.min,
-        latest.current.props.max,
+        toWall(latest.current.props.min),
+        toWall(latest.current.props.max),
         latest.current.props.disabledDates,
       );
 
@@ -495,7 +517,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
         raw,
         locale,
         latest.current.type,
-        latest.current.value ?? new Date(),
+        latest.current.value ?? wallNow(),
       );
       if (parsed === null) return null;
       if (latest.current.type !== 'time' && dayBlocked(parsed)) return null;
@@ -534,13 +556,13 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       const { state, date } = mask().read(latest.current.value);
       resetTyping();
       if (state === 'empty') {
-        field.commit.commitNow(null, event);
+        commitWall(null, event);
       } else if (
         state === 'complete' &&
         date !== null &&
         (latest.current.type === 'time' || !dayBlocked(date))
       ) {
-        field.commit.commitNow(date, event);
+        commitWall(date, event);
       }
       setMaskRevision((n) => n + 1);
     };
@@ -577,11 +599,11 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       if (raw === null) return;
       resetTyping();
       if (raw.trim() === '') {
-        field.commit.commitNow(null, event);
+        commitWall(null, event);
         return;
       }
       const parsed = parseTyped(raw);
-      if (parsed !== null) field.commit.commitNow(parsed, event);
+      if (parsed !== null) commitWall(parsed, event);
       // parsed === null → revert: inputText falls back to the formatted value
     };
 
@@ -640,7 +662,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     /** Picked time-of-day + the day of the draft/value (today for bare times). */
     const mergeTime = (minutes: number): Date => {
       const base =
-        latest.current.draft ?? latest.current.value ?? startOfDay(new Date());
+        latest.current.draft ?? latest.current.value ?? startOfDay(wallNow());
       return new Date(
         base.getFullYear(),
         base.getMonth(),
@@ -657,7 +679,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
         setDraft(merged);
         return;
       }
-      field.commit.commitNow(merged, event);
+      commitWall(merged, event);
       resetTyping();
       if (latest.current.type === 'date') {
         close();
@@ -674,7 +696,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
         setDraft(merged);
         return;
       }
-      field.commit.commitNow(merged, event);
+      commitWall(merged, event);
       resetTyping();
       close();
       nativeRef.current?.focus();
@@ -684,7 +706,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const applyColumnPick = (next: Date, event: Event): void => {
       setDraft(next);
       if (applyValueMode === 'useButtons') return;
-      field.commit.commitNow(next, event);
+      commitWall(next, event);
       resetTyping();
     };
 
@@ -694,7 +716,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       event: Event,
     ): void => {
       const base =
-        latest.current.draft ?? latest.current.value ?? startOfDay(new Date());
+        latest.current.draft ?? latest.current.value ?? startOfDay(wallNow());
       applyColumnPick(
         withTimePart(base, part, option, columnHour12, showSeconds),
         event,
@@ -704,19 +726,19 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const todayVisible = showTodayButton && type !== 'time';
     const nowVisible = showNowButton && type !== 'date';
     const todayBlocked = isDayDisabled(
-      startOfDay(new Date()),
+      startOfDay(wallNow()),
       min,
       max,
       disabledDates,
     );
 
     const pickNow = (event: Event): void => {
-      const now = nowForType(latest.current.type, showSeconds);
+      const now = nowForType(latest.current.type, showSeconds, wallNow());
       if (applyValueMode === 'useButtons') {
         setDraft(now);
         return;
       }
-      field.commit.commitNow(now, event);
+      commitWall(now, event);
       resetTyping();
       close();
       nativeRef.current?.focus();
@@ -725,7 +747,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const applyDraft = (event: { nativeEvent: Event }): void => {
       const current = latest.current.draft;
       if (current !== null) {
-        field.commit.commitNow(current, event.nativeEvent);
+        commitWall(current, event.nativeEvent);
         resetTyping();
       }
       close();
@@ -1029,10 +1051,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
                       className="oge-date-box-action oge-date-box-shortcut oge-date-box-today"
                       disabled={todayBlocked}
                       onClick={(event) =>
-                        onCalendarPick(
-                          startOfDay(new Date()),
-                          event.nativeEvent,
-                        )
+                        onCalendarPick(startOfDay(wallNow()), event.nativeEvent)
                       }
                     >
                       {field.msg.todayButton}

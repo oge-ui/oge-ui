@@ -2,13 +2,14 @@ import {
   foldText,
   nextDay,
   ogeDateTimeFormat,
+  ogeFromWallClock,
   ogeFilterOperatorTakesValue,
   startOfDay,
   toLocalDate,
   type FilterExpr,
   type FilterOperator,
 } from '@oge-ui/core';
-import { isOgeDateType, type OgeDataType } from './grid-columns';
+import { isOgeDateType, ogeZonedWall, type OgeDataType } from './grid-columns';
 import { parseLocaleNumber } from './grid-clipboard';
 import {
   ogeDisplayFilterOperator,
@@ -96,6 +97,7 @@ function conditionExpr(
   field: string,
   dataType: OgeDataType,
   condition: OgeHeaderCondition,
+  timeZone?: string,
 ): FilterExpr | null {
   const op = condition.operator;
   if (!headerConditionNeedsValue(op)) {
@@ -106,8 +108,11 @@ function conditionExpr(
   if (isOgeDateType(dataType)) {
     const day = raw instanceof Date ? raw : toLocalDate(raw);
     if (!day) return null;
-    const start = startOfDay(day);
-    const end = nextDay(day);
+    // the menu picks wall dates; the bounds are the zone's midnights
+    const zoned = (wall: Date) =>
+      timeZone ? ogeFromWallClock(wall, timeZone) : wall;
+    const start = zoned(startOfDay(day));
+    const end = zoned(nextDay(day));
     switch (op) {
       case 'ne':
         // "not on that day" keeps blank cells (the filter contract)
@@ -161,20 +166,25 @@ export function headerConditionExpr(
   field: string,
   dataType: OgeDataType,
   filter: OgeHeaderConditionFilter,
+  /** A date column's zone: the conditions pick its days. */
+  timeZone?: string,
 ): FilterExpr | null {
   const operands = [filter.first, filter.second]
-    .map((condition) => conditionExpr(field, dataType, condition))
+    .map((condition) => conditionExpr(field, dataType, condition, timeZone))
     .filter((expr): expr is FilterExpr => expr !== null);
   if (!operands.length) return null;
   return operands.length === 1 ? operands[0] : { type: filter.logic, operands };
 }
 
 /** Reads one condition back from the expression {@link conditionExpr} built. */
-function readCondition(expr: FilterExpr): OgeHeaderCondition | null {
+function readCondition(
+  expr: FilterExpr,
+  timeZone?: string,
+): OgeHeaderCondition | null {
   if (expr.type === 'binary') {
     return {
       operator: ogeDisplayFilterOperator(expr.op),
-      value: expr.value ?? null,
+      value: ogeZonedWall(expr.value ?? null, timeZone),
     };
   }
   // a whole-day date range: [start, nextDay) → eq, (< start | >= end |
@@ -189,17 +199,20 @@ function readCondition(expr: FilterExpr): OgeHeaderCondition | null {
         isNullBranch(expr.operands[2])))
   ) {
     const [a, b] = expr.operands;
+    // compared on the zone's clocks: its days are not always 24 h long
+    const from = a.type === 'binary' ? ogeZonedWall(a.value, timeZone) : null;
+    const to = b.type === 'binary' ? ogeZonedWall(b.value, timeZone) : null;
     if (
       a.type === 'binary' &&
       b.type === 'binary' &&
-      a.value instanceof Date &&
-      b.value instanceof Date &&
-      nextDay(a.value).getTime() === b.value.getTime()
+      from instanceof Date &&
+      to instanceof Date &&
+      nextDay(from).getTime() === to.getTime()
     ) {
       if (expr.type === 'and' && a.op === 'ge' && b.op === 'lt')
-        return { operator: 'eq', value: a.value };
+        return { operator: 'eq', value: from };
       if (expr.type === 'or' && a.op === 'lt' && b.op === 'ge')
-        return { operator: 'ne', value: a.value };
+        return { operator: 'ne', value: from };
     }
   }
   return null;
@@ -213,17 +226,19 @@ function readCondition(expr: FilterExpr): OgeHeaderCondition | null {
 export function parseHeaderConditionExpr(
   expr: FilterExpr | null | undefined,
   dataType: OgeDataType,
+  /** A date column's zone: values come back as its wall dates. */
+  timeZone?: string,
 ): OgeHeaderConditionFilter {
   const empty = emptyHeaderConditionFilter(dataType);
   if (!expr) return empty;
-  const single = readCondition(expr);
+  const single = readCondition(expr, timeZone);
   if (single) return { ...empty, first: single };
   if (
     (expr.type === 'and' || expr.type === 'or') &&
     expr.operands.length === 2
   ) {
-    const first = readCondition(expr.operands[0]);
-    const second = readCondition(expr.operands[1]);
+    const first = readCondition(expr.operands[0], timeZone);
+    const second = readCondition(expr.operands[1], timeZone);
     if (first && second) return { first, second, logic: expr.type };
   }
   return empty;
@@ -261,6 +276,8 @@ export function groupHeaderValuesByDate(
     textOf(value),
   /** Locale of the month names (the column's); unset = runtime default. */
   locale?: string,
+  /** A date column's zone: values group under its days. */
+  timeZone?: string,
 ): readonly OgeHeaderDateNode[] {
   const monthFormatter = ogeDateTimeFormat(locale, { month: 'long' });
   interface Draft {
@@ -289,7 +306,7 @@ export function groupHeaderValuesByDate(
       value == null || value === ''
         ? null
         : value instanceof Date
-          ? value
+          ? (ogeZonedWall(value, timeZone) as Date)
           : toLocalDate(value);
     if (!date || Number.isNaN(date.getTime())) {
       const label =

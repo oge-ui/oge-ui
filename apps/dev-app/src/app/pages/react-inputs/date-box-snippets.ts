@@ -292,4 +292,23 @@ const [hours, setHours] = useState<OgeCalendarRange>([
 </div>`,
     }),
   },
+  {
+    title: 'Time zones',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeDateBox'] },
+      name: 'TimeZonesDemo',
+      body: `// one instant on three clocks: the bound Date never changes zone
+const [meeting, setMeeting] = useState<Date | null>(new Date(Date.UTC(2026, 2, 5, 14)));
+// a date-only value stored as UTC midnight: the same day in every browser
+const [birthday, setBirthday] = useState<Date | null>(new Date(Date.UTC(1990, 4, 17)));`,
+      jsx: `<>
+  <OgeDateBox label="Istanbul" type="datetime" timeZone="Europe/Istanbul"
+              value={meeting} onValueChange={setMeeting} />
+  <OgeDateBox label="New York" type="datetime" timeZone="America/New_York"
+              value={meeting} onValueChange={setMeeting} />
+  <OgeDateBox label="Birthday" timeZone="UTC" value={birthday} onValueChange={setBirthday} />
+</>`,
+    }),
+  },
 ];

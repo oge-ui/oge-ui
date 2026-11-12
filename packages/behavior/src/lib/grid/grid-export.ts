@@ -45,6 +45,8 @@ export interface OgeExportColumnSource<T> {
   readonly format?: ((value: unknown) => string) | undefined;
   /** Locale unformatted dates render in (the column's). */
   readonly locale?: string | undefined;
+  /** A date column's zone: dates are written as its wall clock. */
+  readonly timeZone?: string | undefined;
   readonly lookupItems?: readonly LookupItem[] | undefined;
   readonly width?: number | string | undefined;
   readonly alignment?: OgeColumnAlignment | undefined;
@@ -104,6 +106,7 @@ export function ogeExportColumnOf<T>(
     pinned: column.pinned ?? false,
     bandCaption: column.bandCaption,
     ...(column.locale ? { locale: column.locale } : {}),
+    ...(column.timeZone ? { timeZone: column.timeZone } : {}),
   };
 }
 

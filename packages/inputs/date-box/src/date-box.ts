@@ -12,7 +12,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { sameDay, startOfDay, toLocalDate } from '@oge-ui/core';
+import {
+  ogeFromWallClock,
+  ogeToWallClock,
+  sameDay,
+  startOfDay,
+  toLocalDate,
+} from '@oge-ui/core';
 import {
   OgeDateSegmentCore,
   dateSegmentPlaceholders,
@@ -155,8 +161,8 @@ interface TimeColumn {
               <oge-calendar
                 class="oge-date-box-calendar"
                 [value]="draft()"
-                [min]="min()"
-                [max]="max()"
+                [min]="wallMin()"
+                [max]="wallMax()"
                 [disabledDates]="disabledDates()"
                 [firstDayOfWeek]="firstDayOfWeek()"
                 [showWeekNumbers]="showWeekNumbers()"
@@ -332,6 +338,42 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
   >(undefined);
   /** BCP 47 locale for display and parsing; `undefined` = the runtime default. */
   readonly locale = input<string | undefined>(undefined);
+  /**
+   * IANA zone the value is shown and edited in (`'Europe/Istanbul'`,
+   * `'UTC'`). The value stays an instant: the field and the calendar show its
+   * wall clock in this zone, and a picked day or time is that zone's. A
+   * date-only value a server keeps as UTC midnight reads right with
+   * `timeZone="UTC"`. `undefined` = the runtime's own zone.
+   */
+  readonly timeZone = input<string | undefined>(undefined);
+
+  /** `value` as the wall clock of `timeZone` — what the field draws. */
+  protected readonly wallValue = computed(() => {
+    const value = this.value();
+    return value ? ogeToWallClock(value, this.timeZone()) : null;
+  });
+  /** `min` / `max` on the same clock. */
+  protected readonly wallMin = computed(() => {
+    const min = this.min();
+    return min ? ogeToWallClock(min, this.timeZone()) : undefined;
+  });
+  protected readonly wallMax = computed(() => {
+    const max = this.max();
+    return max ? ogeToWallClock(max, this.timeZone()) : undefined;
+  });
+
+  /** "Now" on the zone's clocks (the Today / Now buttons, the default day). */
+  protected wallNow(): Date {
+    return ogeToWallClock(new Date(), this.timeZone());
+  }
+
+  /** Every edit is a wall clock; the model keeps the instant it stands for. */
+  protected override commitNow(value: Date | null, event?: Event): void {
+    super.commitNow(
+      value ? ogeFromWallClock(value, this.timeZone()) : value,
+      event,
+    );
+  }
   /** Instance locale, falling back to the DI config, then the browser. */
   protected readonly effectiveLocale = computed(
     () => this.locale() ?? this.config.locale,
@@ -378,7 +420,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
     blocked: () => this.effectiveDisabled() || this.readonly(),
     restoreFocus: () => this.focus(),
     onOpened: () => {
-      this.draft.set(this.value());
+      this.draft.set(this.wallValue());
       // APG date-picker-dialog: DOM focus moves INTO the picker
       setTimeout(() => {
         const popup = this.popupRef()?.nativeElement as HTMLElement | undefined;
@@ -462,12 +504,12 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
     if (this.useMaskBehavior()) {
       this.maskRevision();
       const core = this.mask();
-      if (!this.maskDirty()) core.setDate(this.value());
+      if (!this.maskDirty()) core.setDate(this.wallValue());
       return core.isEmpty && !this.focusedSig() ? '' : core.text;
     }
     const typed = this.text();
     if (typed !== null) return typed;
-    const value = this.value();
+    const value = this.wallValue();
     return value === null ? '' : this.formatter()(value);
   });
 
@@ -534,7 +576,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
       raw,
       this.effectiveLocale(),
       this.type(),
-      this.value() ?? new Date(),
+      this.wallValue() ?? this.wallNow(),
     );
     if (parsed === null) return null;
     if (this.type() !== 'time' && this.dayBlocked(parsed)) return null;
@@ -542,7 +584,12 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
   }
 
   private dayBlocked(date: Date): boolean {
-    return isDayDisabled(date, this.min(), this.max(), this.disabledDates());
+    return isDayDisabled(
+      date,
+      this.wallMin(),
+      this.wallMax(),
+      this.disabledDates(),
+    );
   }
 
   /** Writes the masked text + active-segment selection into the input. */
@@ -561,7 +608,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
       }
     }
     this.maskRevision.update((n) => n + 1);
-    const { state, date } = core.read(this.value());
+    const { state, date } = core.read(this.wallValue());
     this.parseInvalid.set(
       state === 'invalid' ||
         (state === 'complete' &&
@@ -574,7 +621,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
   /** Commits complete segments; incomplete/invalid ones revert to the value. */
   private commitMask(event?: Event): void {
     if (!this.maskDirty()) return;
-    const { state, date } = this.mask().read(this.value());
+    const { state, date } = this.mask().read(this.wallValue());
     this.resetTyping();
     if (state === 'empty') {
       this.commitNow(null, event);
@@ -598,7 +645,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
       event,
       [el.selectionStart ?? 0, el.selectionEnd ?? 0],
       rtl,
-      this.value(),
+      this.wallValue(),
     );
     if (!handled) return false;
     event.preventDefault();
@@ -725,7 +772,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
 
   /** Picked day + the time-of-day of the current draft/value. */
   private mergeDay(day: Date): Date {
-    const time = this.draft() ?? this.value();
+    const time = this.draft() ?? this.wallValue();
     return new Date(
       day.getFullYear(),
       day.getMonth(),
@@ -740,7 +787,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
 
   /** Picked time-of-day + the day of the current draft/value (today for bare times). */
   private mergeTime(minutes: number): Date {
-    const base = this.draft() ?? this.value() ?? startOfDay(new Date());
+    const base = this.draft() ?? this.wallValue() ?? startOfDay(this.wallNow());
     return new Date(
       base.getFullYear(),
       base.getMonth(),
@@ -751,7 +798,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
   }
 
   protected isTimeSelected(slot: TimeSlot): boolean {
-    const current = this.draft() ?? this.value();
+    const current = this.draft() ?? this.wallValue();
     if (!current) return false;
     return current.getHours() * 60 + current.getMinutes() === slot.minutes;
   }
@@ -795,7 +842,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
 
   protected isPartSelected(part: OgeTimePart, value: number): boolean {
     return isTimePartSelected(
-      this.draft() ?? this.value(),
+      this.draft() ?? this.wallValue(),
       part,
       value,
       this.columnHour12(),
@@ -804,7 +851,7 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
 
   /** Column picks commit live and keep the popup open (close by OK/outside). */
   protected pickPart(part: OgeTimePart, value: number, event: Event): void {
-    const base = this.draft() ?? this.value() ?? startOfDay(new Date());
+    const base = this.draft() ?? this.wallValue() ?? startOfDay(this.wallNow());
     this.applyColumnPick(
       withTimePart(base, part, value, this.columnHour12(), this.showSeconds()),
       event,
@@ -821,17 +868,18 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
   );
 
   protected todayBlocked(): boolean {
-    return this.dayBlocked(startOfDay(new Date()));
+    return this.dayBlocked(startOfDay(this.wallNow()));
   }
 
   /** Today's day (time-of-day kept for `datetime`), through the calendar pick path. */
   protected pickToday(event: Event): void {
-    this.onCalendarPick(startOfDay(new Date()), event);
+    this.onCalendarPick(startOfDay(this.wallNow()), event);
   }
 
   /** The current time (and day), committed or drafted per `applyValueMode`. */
   protected pickNow(event: Event): void {
-    const now = nowForType(this.type(), this.showSeconds());
+    // the clock of timeZone, not of the runtime
+    const now = nowForType(this.type(), this.showSeconds(), this.wallNow());
     if (this.applyValueMode() === 'useButtons') {
       this.draft.set(now);
       return;
@@ -888,8 +936,8 @@ export class OgeDateBox extends OgeInputBase<Date | null> {
   }
 
   protected override parseErrorMessage(): string {
-    const min = this.min();
-    const max = this.max();
+    const min = this.wallMin();
+    const max = this.wallMax();
     if (min || max) {
       const format = this.formatter();
       return this.msg()

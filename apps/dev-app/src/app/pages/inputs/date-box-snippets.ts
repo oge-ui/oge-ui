@@ -163,3 +163,15 @@ protected readonly hours = signal<OgeCalendarRange>([
   new Date(2026, 7, 15, 17, 30),
 ]);`,
 });
+
+export const ZONES_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeDateBox'] },
+  template: `<!-- one instant on three clocks: the bound Date never changes zone -->
+<oge-date-box label="Istanbul" type="datetime" timeZone="Europe/Istanbul" [(value)]="meeting" />
+<oge-date-box label="New York" type="datetime" timeZone="America/New_York" [(value)]="meeting" />
+
+<!-- a date-only value stored as UTC midnight: the same day in every browser -->
+<oge-date-box label="Birthday" timeZone="UTC" [(value)]="birthday" />`,
+  body: `protected readonly meeting = signal<Date | null>(new Date(Date.UTC(2026, 2, 5, 14)));
+protected readonly birthday = signal<Date | null>(new Date(Date.UTC(1990, 4, 17)));`,
+});

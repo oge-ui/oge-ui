@@ -23,6 +23,8 @@ import {
   resolveFirstDayOfWeek,
   sameDay,
   sameMonth,
+  ogeFromWallClock,
+  ogeToWallClock,
   startOfDay,
   viewLabel,
   weekNumber,
@@ -98,6 +100,13 @@ export interface OgeCalendarProps extends OgeControlProps<Date | null> {
   onFocusedDateChange?: (date: Date | null) => void;
   /** BCP 47 locale for all texts; `undefined` = the runtime default. */
   locale?: string;
+  /**
+   * IANA zone the days are read in (`'UTC'`, `'Asia/Tokyo'`): `value`,
+   * `values` and `range` stay instants, the grid shows their day on that
+   * zone's clocks, a picked day is that zone's midnight, and "today" is the
+   * zone's today. `undefined` = the runtime's own zone.
+   */
+  timeZone?: string;
   /** Accessible name of the grid (`aria-label`). */
   label?: string;
   /** Custom cell rendering — the React face of `[ogeCalendarCellTemplate]`. */
@@ -134,8 +143,8 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
       viewsCount = 1,
       minZoomLevel = 'decade',
       maxZoomLevel = 'month',
-      min,
-      max,
+      min: minProp,
+      max: maxProp,
       disabledDates,
       showTodayButton = false,
       showWeekNumbers = false,
@@ -155,9 +164,17 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
       focusNative: () => focusTargetElement()?.focus(),
     });
     const readonly = props.readonly ?? false;
+    const timeZone = props.timeZone;
+    // the grid works on the zone's wall clock; the models keep instants
+    const toWall = (date: Date): Date => ogeToWallClock(date, timeZone);
+    const fromWall = (date: Date): Date =>
+      ogeFromWallClock(date, latest.current.props.timeZone);
+    const wallNow = (): Date => toWall(new Date());
+    const min = minProp ? toWall(minProp) : undefined;
+    const max = maxProp ? toWall(maxProp) : undefined;
     const value =
       field.value instanceof Date && !Number.isNaN(field.value.getTime())
-        ? field.value
+        ? toWall(field.value)
         : null;
 
     const locale = props.locale ?? config.locale;
@@ -167,11 +184,15 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
     const [uncontrolledValues, setUncontrolledValues] = useState<
       readonly Date[]
     >(props.defaultValues ?? []);
-    const values = props.values ?? uncontrolledValues;
+    const values = (props.values ?? uncontrolledValues).map(toWall);
 
     const [uncontrolledRange, setUncontrolledRange] =
       useState<OgeCalendarRange>(props.defaultRange ?? [null, null]);
-    const range = props.range ?? uncontrolledRange;
+    const rawRange = props.range ?? uncontrolledRange;
+    const range: OgeCalendarRange = [
+      rawRange[0] ? toWall(rawRange[0]) : null,
+      rawRange[1] ? toWall(rawRange[1]) : null,
+    ];
 
     // --- zoom / focus / anchor ----------------------------------------------
 
@@ -205,7 +226,7 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
     const selectionAnchor: Date | null = value ?? range[0] ?? values[0] ?? null;
 
     const [viewDate, setViewDate] = useState(() =>
-      startOfDay(selectionAnchor ?? focusedDate ?? new Date()),
+      startOfDay(selectionAnchor ?? focusedDate ?? wallNow()),
     );
 
     const latest = useRef({ props, field, zoom, focusedDate, viewDate, value });
@@ -225,14 +246,19 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
       latest.current.props.onFocusedDateChange?.(next);
     };
 
-    const setValues = (next: readonly Date[]): void => {
+    const setValues = (wall: readonly Date[]): void => {
+      const next = wall.map(fromWall);
       if (latest.current.props.values === undefined) {
         setUncontrolledValues(next);
       }
       latest.current.props.onValuesChange?.(next);
     };
 
-    const setRange = (next: OgeCalendarRange): void => {
+    const setRange = (wall: OgeCalendarRange): void => {
+      const next: OgeCalendarRange = [
+        wall[0] ? fromWall(wall[0]) : null,
+        wall[1] ? fromWall(wall[1]) : null,
+      ];
       if (latest.current.props.range === undefined) setUncontrolledRange(next);
       latest.current.props.onRangeChange?.(next);
     };
@@ -338,7 +364,7 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
 
     /** The single grid cell carrying the reachable tabindex. */
     const focusTarget: Date = (() => {
-      const focused = focusedDate ?? selectionAnchor ?? new Date();
+      const focused = focusedDate ?? selectionAnchor ?? wallNow();
       if (zoom === 'month') {
         const visible = viewOffsets.some((offset) =>
           sameMonth(focused, addMonths(viewDate, offset)),
@@ -399,7 +425,7 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
         : value.getFullYear() === date.getFullYear();
     };
 
-    const isToday = (date: Date): boolean => sameDay(date, new Date());
+    const isToday = (date: Date): boolean => sameDay(date, wallNow());
 
     const isFocusTarget = (date: Date, otherPeriod = false): boolean => {
       if (zoom === 'month') {
@@ -465,7 +491,7 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
         }
         return;
       }
-      field.commit.commitNow(day, event);
+      field.commit.commitNow(fromWall(day), event);
     };
 
     const onCellClick = (cell: CalendarCell, event: Event): void => {
@@ -485,10 +511,10 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
       queueFocusTarget();
     };
 
-    const todayDisabled = isDayDisabled(new Date(), min, max, disabledDates);
+    const todayDisabled = isDayDisabled(wallNow(), min, max, disabledDates);
 
     const selectToday = (event: React.MouseEvent): void => {
-      const today = startOfDay(new Date());
+      const today = startOfDay(wallNow());
       setViewDate(today);
       setZoom(maxZoomLevel);
       selectDay(today, event.nativeEvent);

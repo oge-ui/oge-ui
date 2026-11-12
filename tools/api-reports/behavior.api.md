@@ -331,7 +331,8 @@ export function createXhrUploadAdapter(): OgeUploadAdapter;
 export function dataTransferHasFiles(transfer: DataTransfer | null | undefined): boolean;
 
 // @public (undocumented)
-export function dateFilterExpr(field: string, op: FilterOperator, day: Date): FilterExpr;
+export function dateFilterExpr(field: string, op: FilterOperator, day: Date,
+timeZone?: string): FilterExpr;
 
 // @public
 export type DateParseKind = 'date' | 'time' | 'datetime';
@@ -340,7 +341,8 @@ export type DateParseKind = 'date' | 'time' | 'datetime';
 export function datePartOrder(locale: string | undefined, kind: DateParseKind): string[];
 
 // @public
-export function dateRangeFilterExpr(field: string, from: Date | null, to: Date | null): FilterExpr | null;
+export function dateRangeFilterExpr(field: string, from: Date | null, to: Date | null,
+timeZone?: string): FilterExpr | null;
 
 // @public
 export function dateRangePresetActive(item: OgeDateRangePreset, range: OgeCalendarRange): boolean;
@@ -522,7 +524,8 @@ export function graphemeCount(text: string): number;
 
 // @public
 export function groupHeaderValuesByDate(values: readonly unknown[], search: string, blankValue: string, textOf: (value: unknown) => string, dayLabel?: (date: Date, value: unknown) => string,
-locale?: string): readonly OgeHeaderDateNode[];
+locale?: string,
+timeZone?: string): readonly OgeHeaderDateNode[];
 
 // @public
 export function groupHeaderValuesByYear(values: readonly unknown[], search: string, textOf: (value: unknown) => string, yearOf: (value: unknown) => string): readonly OgeHeaderValueGroup[];
@@ -531,7 +534,8 @@ export function groupHeaderValuesByYear(values: readonly unknown[], search: stri
 export function hasFixedContainingBlockAncestor(element: Element): boolean;
 
 // @public
-export function headerConditionExpr(field: string, dataType: OgeDataType, filter: OgeHeaderConditionFilter): FilterExpr | null;
+export function headerConditionExpr(field: string, dataType: OgeDataType, filter: OgeHeaderConditionFilter,
+timeZone?: string): FilterExpr | null;
 
 // @public
 export function headerConditionNeedsValue(operator: FilterOperator): boolean;
@@ -3485,7 +3489,7 @@ export function ogeComboSearchStrings<TItem>(columns: readonly OgeComboBoxColumn
 export type OgeComparisonType = '===' | '!==' | '==' | '!=' | '<' | '<=' | '>' | '>=';
 
 // @public
-export function ogeCompileColumnFormat(format: OgeColumnFormat | undefined, locale: string | undefined): ((value: unknown) => string) | undefined;
+export function ogeCompileColumnFormat(format: OgeColumnFormat | undefined, locale: string | undefined, timeZone?: string, dataType?: OgeDataType): ((value: unknown) => string) | undefined;
 
 // @public
 export interface OgeConditionalCellFormat {
@@ -3951,7 +3955,8 @@ export type OgeDateBoxType = 'date' | 'time' | 'datetime';
 export type OgeDatePreset = 'today' | 'yesterday' | 'thisWeek' | 'thisMonth' | 'last30Days' | 'thisYear';
 
 // @public
-export function ogeDatePresetExpr(field: string, preset: OgeDatePreset, now: Date, firstDayOfWeek: number): FilterExpr;
+export function ogeDatePresetExpr(field: string, preset: OgeDatePreset, now: Date, firstDayOfWeek: number,
+timeZone?: string): FilterExpr;
 
 // @public
 export function ogeDatePresetRange(preset: OgeDatePreset, now: Date, firstDayOfWeek: number): {
@@ -5668,6 +5673,7 @@ export interface OgeExportColumn<T = unknown> {
     format?: ((value: unknown) => string) | undefined;
     locale?: string | undefined;
     pinned?: false | 'left' | 'right' | undefined;
+    timeZone?: string | undefined;
     width?: number | undefined;
 }
 
@@ -5704,6 +5710,7 @@ export interface OgeExportColumnSource<T> {
     readonly lookupItems?: readonly LookupItem[] | undefined;
     // (undocumented)
     readonly pinned?: false | 'left' | 'right' | undefined;
+    readonly timeZone?: string | undefined;
     // (undocumented)
     readonly width?: number | string | undefined;
 }
@@ -6572,6 +6579,11 @@ export interface OgeFormValidatedEvent {
 // @public
 export function ogeFromPrimeMenuItems(items: readonly OgePrimeMenuItem[]): OgeMenuItem[];
 
+// Warning: (ae-forgotten-export) The symbol "OgeZoneDisambiguation" needs to be exported by the entry point index.d.ts
+//
+// @public
+export function ogeFromWallClock(wall: Date, timeZone?: string, disambiguation?: OgeZoneDisambiguation): Date;
+
 // @public
 export interface OgeGridAdaptiveHidingInput {
     // Warning: (ae-forgotten-export) The symbol "OgeGridAdaptiveColumn" needs to be exported by the entry point index.d.ts
@@ -7058,6 +7070,7 @@ export interface OgeGridColumnResolveInput<T, TSlot, S> {
     // (undocumented)
     pinOverrides: ReadonlyMap<string, false | 'left' | 'right'>;
     specs: readonly OgeGridColumnSpec<T, TSlot, S>[];
+    timeZone?: string | undefined;
     // (undocumented)
     widthOverrides: ReadonlyMap<string, number>;
 }
@@ -7102,6 +7115,7 @@ export interface OgeGridColumnSpec<T = unknown, TSlot = unknown, S = unknown> {
     // (undocumented)
     sortable: boolean;
     source: S | undefined;
+    timeZone?: string | undefined;
     // (undocumented)
     visible: boolean;
     // (undocumented)
@@ -8037,6 +8051,7 @@ export interface OgeGridResolvedColumn<T = unknown, TSlot = unknown, S = unknown
     sortable: boolean;
     // (undocumented)
     source: S | undefined;
+    timeZone?: string | undefined;
     // (undocumented)
     width: number | string | undefined;
 }
@@ -13601,6 +13616,9 @@ export interface OgeTooltipCoreOptions {
 export type OgeTooltipShowMode = 'hover' | 'focus' | 'click' | 'manual';
 
 // @public
+export function ogeToWallClock(instant: Date | number, timeZone?: string): Date;
+
+// @public
 export interface OgeTrackAnimator {
     readonly animating: boolean;
     cancel(): void;
@@ -15762,6 +15780,9 @@ export function ogeWithSavedView(views: readonly OgeSavedView[], name: string, s
 export function ogeWriteRowDragData<I>(transfer: DataTransfer, items: readonly I[], columns: readonly OgeRowDragOutColumn<I>[], rows?: readonly unknown[]): void;
 
 // @public
+export function ogeZonedWall(value: unknown, timeZone?: string): unknown;
+
+// @public
 export function operatorsFor(dataType: OgeDataType): FilterOperator[];
 
 // @public
@@ -15830,7 +15851,8 @@ export function parseColor(text: string): OgeRgba | null;
 export function parseDateText(text: string, locale: string | undefined, kind: DateParseKind, reference?: Date | null): Date | null;
 
 // @public
-export function parseHeaderConditionExpr(expr: FilterExpr | null | undefined, dataType: OgeDataType): OgeHeaderConditionFilter;
+export function parseHeaderConditionExpr(expr: FilterExpr | null | undefined, dataType: OgeDataType,
+timeZone?: string): OgeHeaderConditionFilter;
 
 // @public
 export function parseLocaleNumber(text: string, locale?: string): number | null;

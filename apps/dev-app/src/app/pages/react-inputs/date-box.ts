@@ -283,6 +283,43 @@ const presets: OgeDateRangePreset[] = [
 ];
 
 /** Quick ranges beside the calendar, and a time-range picker. */
+/** One instant on three clocks. */
+function TimeZonesDemo(): ReactNode {
+  const [meeting, setMeeting] = useState<Date | null>(
+    new Date(Date.UTC(2026, 2, 5, 14)),
+  );
+  const box = (label: string, timeZone: string) =>
+    createElement(OgeDateBox, {
+      key: timeZone,
+      label,
+      type: 'datetime',
+      timeZone,
+      value: meeting,
+      onValueChange: setMeeting,
+    });
+  return createElement(
+    'div',
+    null,
+    createElement(
+      'div',
+      { className: 'demo-time-zones flex flex-wrap items-start gap-6' },
+      box('Istanbul', 'Europe/Istanbul'),
+      box('New York', 'America/New_York'),
+      box('Tokyo', 'Asia/Tokyo'),
+    ),
+    createElement(
+      'p',
+      { className: 'mt-3 text-sm' },
+      'Stored instant: ',
+      createElement(
+        'code',
+        { 'data-testid': 'zone-instant' },
+        meeting?.toISOString() ?? '—',
+      ),
+    ),
+  );
+}
+
 function PresetsDemo(): ReactNode {
   const [report, setReport] = useState<OgeCalendarRange>([null, null]);
   const [hours, setHours] = useState<OgeCalendarRange>([
@@ -415,6 +452,16 @@ function PresetsDemo(): ReactNode {
     >
       <app-react-host [render]="presets" />
     </app-demo-card>
+
+    <app-demo-card
+      heading="Time zones"
+      description="One instant, three clocks. <code>timeZone</code> shows and edits the value on a zone's wall clock while the bound value stays the same <code>Date</code>: change the time in one box and the others follow on their own clocks. <code>timeZone: 'UTC'</code> keeps a date-only value stored as UTC midnight on its day in every browser."
+      [chips]="['timeZone', 'instants', 'UTC date-only']"
+      [code]="demos[7].source"
+      language="tsx"
+    >
+      <app-react-host [render]="zones" />
+    </app-demo-card>
   `,
 })
 export class ReactInputsDateBoxDemos {
@@ -427,4 +474,5 @@ export class ReactInputsDateBoxDemos {
   protected readonly clock = () => createElement(ClockDemo);
   protected readonly masked = () => createElement(MaskedDateDemo);
   protected readonly presets = () => createElement(PresetsDemo);
+  protected readonly zones = () => createElement(TimeZonesDemo);
 }

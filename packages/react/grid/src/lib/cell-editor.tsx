@@ -34,6 +34,8 @@ export interface OgeCellEditorProps {
   label?: string;
   /** Locale the number / date editors format and parse in (the grid's). */
   locale?: string;
+  /** A date column's zone: the editor shows and picks its wall clock. */
+  timeZone?: string;
   surface?: OgeCellEditorSurface;
   invalid?: boolean;
   /** Error text mirrored into the host `title` (cell surface). */
@@ -180,6 +182,7 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
           <OgeDateBox
             {...shared}
             locale={props.locale}
+            timeZone={props.timeZone}
             type={dataType === 'datetime' ? 'datetime' : 'date'}
             value={value instanceof Date ? value : null}
             onValueChange={onValueChange}

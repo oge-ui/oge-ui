@@ -192,6 +192,14 @@ export const appRoutes: Route[] = [
     title: 'OGE — Migrate from PrimeNG',
   },
   {
+    path: 'guides/dates-and-time-zones',
+    loadComponent: () =>
+      import('./pages/guides/dates-and-time-zones').then(
+        (m) => m.GuideDatesAndTimeZonesPage,
+      ),
+    title: 'OGE — Dates and time zones',
+  },
+  {
     path: 'guides/filter-contract',
     loadComponent: () =>
       import('./pages/guides/filter-contract').then(

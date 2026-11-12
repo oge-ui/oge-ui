@@ -680,6 +680,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    */
   readonly locale = input<string | undefined>(undefined);
 
+  /**
+   * IANA zone the date columns show, filter and edit their days in
+   * (`'Europe/Istanbul'`, `'UTC'`); a column's own `timeZone` wins. Values
+   * stay instants — cells, value lists, the filter row, quick dates, editors
+   * and typed Excel dates use the zone's wall clock. `undefined` = the
+   * runtime's own zone.
+   */
+  readonly timeZone = input<string | undefined>(undefined);
+
   private readonly localeId = inject(LOCALE_ID);
 
   /** The locale in force: the input, the config, then `LOCALE_ID`. */
@@ -1674,6 +1683,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       preset,
       new Date(),
       resolveFirstDayOfWeek(undefined, this.effLocale()),
+      this.columnByField(field)?.timeZone,
     );
   }
 
@@ -2809,6 +2819,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.adaptiveDetailPossible() ? EXPANDER_WIDTH : 0,
     ),
     locale: this.effLocale,
+    timeZone: this.timeZone,
   });
 
   protected readonly resolvedColumns = this.columnModel.resolvedColumns;
@@ -3003,7 +3014,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.store.filter.setRowFilter(
       field,
       value instanceof Date
-        ? dateFilterExpr(field, this.currentOperator(column), value)
+        ? dateFilterExpr(
+            field,
+            this.currentOperator(column),
+            value,
+            column.timeZone,
+          )
         : null,
     );
   }
@@ -3017,7 +3033,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (!field) return;
     this.store.filter.setRowFilter(
       field,
-      dateRangeFilterExpr(field, range[0], range[1]),
+      dateRangeFilterExpr(field, range[0], range[1], column.timeZone),
     );
   }
 
@@ -5271,6 +5287,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       parseHeaderConditionExpr(
         this.store.filter.rowFilterOf(ogeHeaderConditionKey(field)),
         column.dataType,
+        column.timeZone,
       ),
     );
     this.headerSearchRemote.set(false);
@@ -6632,7 +6649,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (!column?.field || !draft) return;
     this.store.filter.setRowFilter(
       ogeHeaderConditionKey(column.field),
-      headerConditionExpr(column.field, column.dataType, draft),
+      headerConditionExpr(
+        column.field,
+        column.dataType,
+        draft,
+        column.timeZone,
+      ),
     );
   }
 
@@ -6666,6 +6688,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         ? (date) => formatCellValue(date, 'date', undefined, column.locale)
         : undefined,
       column.locale,
+      column.timeZone,
     );
     return flattenHeaderDateTree(
       tree,

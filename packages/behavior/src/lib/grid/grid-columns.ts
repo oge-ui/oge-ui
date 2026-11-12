@@ -1,4 +1,7 @@
 import {
+  ogeDateTimeFormat,
+  ogeFromWallClock,
+  ogeToWallClock,
   createFieldAccessor,
   nextDay,
   ogeParseNumber,
@@ -62,13 +65,55 @@ export type OgeColumnFormat = ((value: unknown) => string) | OgeValueFormat;
 /**
  * Compiles a column format for `locale`: functions pass through, declarative
  * formats become a cached-`Intl` formatter, `undefined` stays `undefined`.
+ *
+ * With a `timeZone` on a `date` / `datetime` column every `Date` reaches the
+ * format as its wall clock in that zone — and a column without a format gets
+ * the default date text on that clock — so every surface that prints the
+ * column (cells, value lists, chips, summaries, CSV / PDF text) shows the
+ * zone's day and time.
  */
 export function ogeCompileColumnFormat(
   format: OgeColumnFormat | undefined,
   locale: string | undefined,
+  timeZone?: string,
+  dataType?: OgeDataType,
 ): ((value: unknown) => string) | undefined {
-  if (!format || typeof format === 'function') return format;
-  return ogeValueFormatter(format, locale);
+  const compiled =
+    !format || typeof format === 'function'
+      ? format
+      : ogeValueFormatter(format, locale);
+  if (!timeZone || (dataType !== 'date' && dataType !== 'datetime')) {
+    return compiled;
+  }
+  const base =
+    compiled ??
+    ((value: unknown): string =>
+      value instanceof Date
+        ? ogeDateTimeFormat(
+            locale,
+            dataType === 'datetime'
+              ? { dateStyle: 'short', timeStyle: 'short' }
+              : undefined,
+          ).format(value)
+        : value == null
+          ? ''
+          : String(value));
+  return (value) => base(ogeZonedWall(value, timeZone));
+}
+
+/**
+ * A `Date` cell value as its wall clock in `timeZone` (other values pass
+ * through) — what a zoned date column shows and edits.
+ */
+export function ogeZonedWall(value: unknown, timeZone?: string): unknown {
+  return timeZone && value instanceof Date
+    ? ogeToWallClock(value, timeZone)
+    : value;
+}
+
+/** The instant a wall-clock day boundary of `timeZone` stands for. */
+function zoned(day: Date, timeZone?: string): Date {
+  return timeZone ? ogeFromWallClock(day, timeZone) : day;
 }
 
 /** Programmatic column definition (alternative to a declarative column). */
@@ -103,6 +148,8 @@ export interface OgeGridColumnSpec<T = unknown, TSlot = unknown, S = unknown> {
   /** Upper bound in px for user resizing (pointer and keyboard). */
   maxWidth?: number | undefined;
   lookup: OgeColumnLookup | undefined;
+  /** IANA zone a date column shows and filters its days in; unset = the grid's. */
+  timeZone?: string | undefined;
   calculateCellValue: ((row: T) => unknown) | undefined;
   calculateFilterExpression:
     | ((value: unknown, operator: FilterOperator) => FilterExpr | null)
@@ -154,6 +201,11 @@ export interface OgeGridResolvedColumn<
    * parse and export of this column uses; `undefined` is the runtime default.
    */
   locale?: string | undefined;
+  /**
+   * IANA zone of a `date` / `datetime` column (its own, else the grid's):
+   * cells, value lists and filters work on that zone's days.
+   */
+  timeZone?: string | undefined;
   editable: boolean;
   lookupItems: readonly LookupItem[] | undefined;
   lookup: OgeColumnLookup | undefined;
@@ -163,6 +215,11 @@ export interface OgeGridResolvedColumn<
   headerTemplate: TSlot | undefined;
   editTemplate: TSlot | undefined;
   source: S | undefined;
+}
+
+/** Whether a data type carries a time zone (`date`, `datetime`). */
+function isOgeZonedType(dataType: OgeDataType): boolean {
+  return dataType === 'date' || dataType === 'datetime';
 }
 
 /** Alignment a column gets when it sets none: numbers end, the rest start. */
@@ -218,12 +275,24 @@ export function dateRangeFilterExpr(
   field: string,
   from: Date | null,
   to: Date | null,
+  /** The column's zone: the days are its days (`from` / `to` are wall dates). */
+  timeZone?: string,
 ): FilterExpr | null {
   const operands: FilterExpr[] = [];
   if (from)
-    operands.push({ type: 'binary', field, op: 'ge', value: startOfDay(from) });
+    operands.push({
+      type: 'binary',
+      field,
+      op: 'ge',
+      value: zoned(startOfDay(from), timeZone),
+    });
   if (to)
-    operands.push({ type: 'binary', field, op: 'lt', value: nextDay(to) });
+    operands.push({
+      type: 'binary',
+      field,
+      op: 'lt',
+      value: zoned(nextDay(to), timeZone),
+    });
   if (!operands.length) return null;
   return operands.length === 1 ? operands[0] : { type: 'and', operands };
 }
@@ -232,9 +301,11 @@ export function dateFilterExpr(
   field: string,
   op: FilterOperator,
   day: Date,
+  /** The column's zone: `day` is a wall date of it. */
+  timeZone?: string,
 ): FilterExpr {
-  const start = startOfDay(day);
-  const end = nextDay(day);
+  const start = zoned(startOfDay(day), timeZone);
+  const end = zoned(nextDay(day), timeZone);
   switch (op) {
     case 'ne':
       // "not on that day" keeps blank cells (the filter contract), spelled
@@ -420,6 +491,8 @@ export interface OgeGridColumnResolveInput<T, TSlot, S> {
   adaptiveHiddenIds: ReadonlySet<string>;
   /** Locale declarative formats compile for; `undefined` = runtime default. */
   locale?: string | undefined;
+  /** The grid's `timeZone`, the default of its date columns. */
+  timeZone?: string | undefined;
 }
 
 /**
@@ -461,8 +534,16 @@ export function resolveOgeGridColumns<T, TSlot, S>(
           accessor:
             calculate ??
             (field ? createFieldAccessor<T>(field) : () => undefined),
-          format: ogeCompileColumnFormat(column.format, input.locale),
+          format: ogeCompileColumnFormat(
+            column.format,
+            input.locale,
+            column.timeZone ?? input.timeZone,
+            column.dataType,
+          ),
           locale: input.locale,
+          timeZone: isOgeZonedType(column.dataType)
+            ? (column.timeZone ?? input.timeZone)
+            : undefined,
           editable: column.editable && field != null && !calculate,
           lookupItems: resolveLookupItems(column.lookup),
           lookup: column.lookup,

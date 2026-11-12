@@ -158,6 +158,13 @@ export class GuidesIndexPage {
             'Every coded OGE#### console warning: what causes it and what to change. Silent in production builds.',
         },
         {
+          path: '/guides/dates-and-time-zones',
+          title: 'Dates and time zones',
+          icon: 'calendar',
+          summary:
+            'Instants versus calendar dates, the timeZone input of the date editors and the grid, and no one-day shift.',
+        },
+        {
           path: '/guides/filter-contract',
           title: 'Filter contract',
           icon: 'filter',

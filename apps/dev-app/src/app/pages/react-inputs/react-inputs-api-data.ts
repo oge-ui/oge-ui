@@ -2479,6 +2479,13 @@ export const OGE_REACT_CALENDAR_API: ApiSections = {
           description: 'BCP 47 locale for all texts (Intl).',
         },
         {
+          name: 'timeZone',
+          type: 'string',
+          default: 'undefined',
+          description:
+            "IANA zone the days are read in: <code>value</code>, <code>values</code> and <code>range</code> stay instants, the grid shows their day on that zone's clocks, a picked day is that zone's midnight and \"today\" is the zone's today. Unset = the runtime's own zone.",
+        },
+        {
           name: 'renderCell',
           type: '(context: OgeCalendarCellContext) =&gt; ReactNode',
           description:
@@ -2636,6 +2643,13 @@ export const OGE_REACT_DATE_BOX_API: ApiSections = {
           default: 'false',
           description:
             'Footer "Now" button (<code>time</code> / <code>datetime</code>): commits the current time (seconds kept only with <code>showSeconds</code>) and closes; with <code>useButtons</code> it drafts instead.',
+        },
+        {
+          name: 'timeZone',
+          type: 'string',
+          default: 'undefined',
+          description:
+            "IANA zone the value is shown and edited in (<code>'Europe/Istanbul'</code>, <code>'UTC'</code>). The value stays an instant: the field and the calendar show its wall clock in this zone, Today / Now are the zone's, and a picked day or time is that zone's. A date-only value a server keeps as UTC midnight reads right with <code>timeZone=\"UTC\"</code>. Unset = the runtime's own zone.",
         },
         {
           name: 'useMaskBehavior',

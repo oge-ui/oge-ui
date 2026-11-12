@@ -19,6 +19,8 @@ import {
   addDays,
   addMonths,
   addYears,
+  ogeFromWallClock,
+  ogeToWallClock,
   sameDay,
   sameMonth,
   startOfDay,
@@ -336,6 +338,62 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
   readonly focusedDate = model<Date | null>(null);
   /** BCP 47 locale for all texts; `undefined` = the runtime default. */
   readonly locale = input<string | undefined>(undefined);
+  /**
+   * IANA zone the days are read in (`'UTC'`, `'Asia/Tokyo'`): `value`,
+   * `values` and `range` stay instants, the grid shows their day on that
+   * zone's clocks, a picked day is that zone's midnight, and "today" is the
+   * zone's today. `undefined` = the runtime's own zone.
+   */
+  readonly timeZone = input<string | undefined>(undefined);
+
+  protected readonly wallValue = computed(() => {
+    const value = this.value();
+    return value ? ogeToWallClock(value, this.timeZone()) : null;
+  });
+  protected readonly wallValues = computed(() =>
+    this.values().map((date) => ogeToWallClock(date, this.timeZone())),
+  );
+  protected readonly wallRange = computed<OgeCalendarRange>(() => {
+    const [start, end] = this.range();
+    const zone = this.timeZone();
+    return [
+      start ? ogeToWallClock(start, zone) : null,
+      end ? ogeToWallClock(end, zone) : null,
+    ];
+  });
+  protected readonly wallMin = computed(() => {
+    const min = this.min();
+    return min ? ogeToWallClock(min, this.timeZone()) : undefined;
+  });
+  protected readonly wallMax = computed(() => {
+    const max = this.max();
+    return max ? ogeToWallClock(max, this.timeZone()) : undefined;
+  });
+
+  /** Now on the zone's clocks. */
+  protected wallNow(): Date {
+    return ogeToWallClock(new Date(), this.timeZone());
+  }
+
+  private fromWallList(days: readonly Date[]): Date[] {
+    return days.map((day) => ogeFromWallClock(day, this.timeZone()));
+  }
+
+  private fromWallRange(range: OgeCalendarRange): OgeCalendarRange {
+    const zone = this.timeZone();
+    return [
+      range[0] ? ogeFromWallClock(range[0], zone) : null,
+      range[1] ? ogeFromWallClock(range[1], zone) : null,
+    ];
+  }
+
+  /** A picked day is a wall clock; the model keeps its instant. */
+  protected override commitNow(value: Date | null, event?: Event): void {
+    super.commitNow(
+      value ? ogeFromWallClock(value, this.timeZone()) : value,
+      event,
+    );
+  }
   /** Instance locale, falling back to the DI config, then the browser. */
   protected readonly effectiveLocale = computed(
     () => this.locale() ?? this.config.locale,
@@ -362,7 +420,8 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
    * cell in a different month from the selection.
    */
   private readonly selectionAnchor = computed<Date | null>(
-    () => this.value() ?? this.range()[0] ?? this.values()[0] ?? null,
+    () =>
+      this.wallValue() ?? this.wallRange()[0] ?? this.wallValues()[0] ?? null,
   );
 
   /**
@@ -380,7 +439,9 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
   private readonly viewDate = linkedSignal<Date | null, Date>({
     source: () => this.selectionAnchor() ?? this.focusedDate(),
     computation: (anchor, previous) =>
-      anchor ? startOfDay(anchor) : (previous?.value ?? startOfDay(new Date())),
+      anchor
+        ? startOfDay(anchor)
+        : (previous?.value ?? startOfDay(this.wallNow())),
   });
 
   protected readonly effFirstDay = computed(() =>
@@ -444,8 +505,8 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
         addMonths(this.viewDate(), offset),
         this.effFirstDay(),
         this.effectiveLocale(),
-        this.min(),
-        this.max(),
+        this.wallMin(),
+        this.wallMax(),
         this.disabledDates(),
       );
       return Array.from({ length: 6 }, (_, week) =>
@@ -472,10 +533,10 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
         ? yearCells(
             this.viewDate(),
             this.effectiveLocale(),
-            this.min(),
-            this.max(),
+            this.wallMin(),
+            this.wallMax(),
           )
-        : decadeCells(this.viewDate(), this.min(), this.max());
+        : decadeCells(this.viewDate(), this.wallMin(), this.wallMax());
     return Array.from({ length: 3 }, (_, row) =>
       cells.slice(row * 4, row * 4 + 4),
     );
@@ -483,7 +544,8 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
 
   /** The single grid cell carrying the reachable tabindex. */
   private readonly focusTarget = computed<Date>(() => {
-    const focused = this.focusedDate() ?? this.selectionAnchor() ?? new Date();
+    const focused =
+      this.focusedDate() ?? this.selectionAnchor() ?? this.wallNow();
     const anchor = this.viewDate();
     if (this.zoom() === 'month') {
       const visible = this.viewOffsets().some((offset) =>
@@ -501,20 +563,20 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
 
   private readonly rangePreviewEnd = computed<Date | null>(() => {
     if (this.selectionMode() !== 'range') return null;
-    const [start, end] = this.range();
+    const [start, end] = this.wallRange();
     if (!start) return null;
     return end ?? this.hoveredDate();
   });
 
   protected isRangeEdge(date: Date): boolean {
     if (this.selectionMode() !== 'range') return false;
-    const [start, end] = this.range();
+    const [start, end] = this.wallRange();
     return sameDay(start, date) || sameDay(end, date);
   }
 
   protected isInRange(date: Date): boolean {
     if (this.selectionMode() !== 'range') return false;
-    const [start] = this.range();
+    const [start] = this.wallRange();
     const end = this.rangePreviewEnd();
     if (!start || !end) return false;
     const time = startOfDay(date).getTime();
@@ -558,14 +620,14 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
 
   protected isSelected(date: Date): boolean {
     if (this.selectionMode() === 'multiple') {
-      return this.values().some((candidate) => sameDay(candidate, date));
+      return this.wallValues().some((candidate) => sameDay(candidate, date));
     }
     if (this.selectionMode() === 'range') return this.isRangeEdge(date);
-    return sameDay(this.value(), date);
+    return sameDay(this.wallValue(), date);
   }
 
   protected isZoomedSelected(date: Date): boolean {
-    const selected = this.value();
+    const selected = this.wallValue();
     if (!selected) return false;
     return this.zoom() === 'year'
       ? sameMonth(selected, date)
@@ -573,7 +635,7 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
   }
 
   protected isToday(date: Date): boolean {
-    return sameDay(date, new Date());
+    return sameDay(date, this.wallNow());
   }
 
   protected isFocusTarget(date: Date, otherPeriod = false): boolean {
@@ -610,15 +672,15 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
 
   protected todayDisabled(): boolean {
     return isDayDisabled(
-      new Date(),
-      this.min(),
-      this.max(),
+      this.wallNow(),
+      this.wallMin(),
+      this.wallMax(),
       this.disabledDates(),
     );
   }
 
   protected selectToday(event: Event): void {
-    const today = startOfDay(new Date());
+    const today = startOfDay(this.wallNow());
     this.viewDate.set(today);
     this.zoomLevel.set(this.maxZoomLevel());
     this.selectDay(today, event);
@@ -650,23 +712,27 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
     );
     if (!visible) this.viewDate.set(day);
     if (this.selectionMode() === 'multiple') {
-      const current = this.values();
+      const current = this.wallValues();
       const exists = current.some((candidate) => sameDay(candidate, day));
       this.values.set(
-        exists
-          ? current.filter((candidate) => !sameDay(candidate, day))
-          : [...current, day],
+        this.fromWallList(
+          exists
+            ? current.filter((candidate) => !sameDay(candidate, day))
+            : [...current, day],
+        ),
       );
       this.selfDirty.set(true);
       return;
     }
     if (this.selectionMode() === 'range') {
-      const [start, end] = this.range();
+      const [start, end] = this.wallRange();
       if (!start || end) {
-        this.range.set([day, null]);
+        this.range.set(this.fromWallRange([day, null]));
       } else {
         this.range.set(
-          day.getTime() < start.getTime() ? [day, start] : [start, day],
+          this.fromWallRange(
+            day.getTime() < start.getTime() ? [day, start] : [start, day],
+          ),
         );
       }
       this.selfDirty.set(true);
@@ -750,7 +816,7 @@ export class OgeCalendar extends OgeControlBase<Date | null> {
   // --- base contract ---------------------------------------------------------
 
   protected override onValueWritten(): void {
-    const value = this.value();
+    const value = this.wallValue();
     if (value) {
       this.viewDate.set(startOfDay(value));
       this.focusedDate.set(startOfDay(value));

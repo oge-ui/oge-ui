@@ -116,6 +116,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Migrate from PrimeNG to OGE UI: the component map, defaults that differ in dialogs, toasts and filters, a MenuItem adapter, buttons, confirm, trees, dark mode.',
   ],
   [
+    '/guides/dates-and-time-zones',
+    'Dates and time zones in OGE UI: instants versus calendar dates, the timeZone input of DateBox, Calendar and the grid, date-only values, no one-day shift.',
+  ],
+  [
     '/guides/filter-contract',
     'OGE UI filter contract: what every FilterExpr operator means, how blanks and days are treated, value lists, and JSON test vectors for server parity.',
   ],
