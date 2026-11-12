@@ -1899,4 +1899,27 @@ export const ptBR: OgeLocalePack = {
     encryptedOrLegacy:
       'Este arquivo está protegido por senha ou no antigo formato .doc, que não pode ser visualizado',
   },
+  pdfViewer: {
+    viewerLabel: 'Documento PDF',
+    pageLabel: 'Página {current} de {total}',
+    previousPage: 'Página anterior',
+    nextPage: 'Próxima página',
+    zoomIn: 'Ampliar',
+    zoomOut: 'Reduzir',
+    fitWidth: 'Ajustar à largura',
+    fitPage: 'Página inteira',
+    zoomLevel: '{zoom}%',
+    thumbnails: 'Miniaturas das páginas',
+    search: 'Localizar no documento',
+    searchNext: 'Próxima ocorrência',
+    searchPrevious: 'Ocorrência anterior',
+    matchCount: '{current} de {total}',
+    noMatches: 'Nenhuma ocorrência',
+    print: 'Imprimir',
+    loading: 'Abrindo o documento…',
+    empty: 'Nenhum documento para mostrar',
+    loadError: 'Não foi possível abrir o documento',
+    passwordProtected:
+      'Este PDF é protegido por senha e não pode ser visualizado',
+  },
 };

@@ -1919,4 +1919,27 @@ export const fr: OgeLocalePack = {
     encryptedOrLegacy:
       'Ce fichier est protégé par mot de passe ou au format .doc ancien, qui ne peut pas être prévisualisé',
   },
+  pdfViewer: {
+    viewerLabel: 'Document PDF',
+    pageLabel: 'Page {current} sur {total}',
+    previousPage: 'Page précédente',
+    nextPage: 'Page suivante',
+    zoomIn: 'Zoom avant',
+    zoomOut: 'Zoom arrière',
+    fitWidth: 'Ajuster à la largeur',
+    fitPage: 'Page entière',
+    zoomLevel: '{zoom} %',
+    thumbnails: 'Miniatures des pages',
+    search: 'Rechercher dans le document',
+    searchNext: 'Résultat suivant',
+    searchPrevious: 'Résultat précédent',
+    matchCount: '{current} sur {total}',
+    noMatches: 'Aucun résultat',
+    print: 'Imprimer',
+    loading: 'Ouverture du document…',
+    empty: 'Aucun document à afficher',
+    loadError: 'Impossible d’ouvrir le document',
+    passwordProtected:
+      'Ce PDF est protégé par un mot de passe et ne peut pas être prévisualisé',
+  },
 };

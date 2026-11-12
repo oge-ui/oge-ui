@@ -275,6 +275,63 @@ _Types_
 | `OgeWordDocumentMessages` | `interface` | The viewer's text: `viewerLabel`, `pageLabel` (with `{current}` and `{total}`), `previousPage`, `nextPage`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
 | `OgeWordDocumentConfig / OgeWordDocumentConfigInput` | `interface` | Defaults for viewers below the config provider: `{ messages }`, merged over the built-in text. |
 
+### <OgePdfViewer>
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgePdfSource \| null` | `null` | The PDF to open: bytes, a `Blob` / `File`, or a URL. |
+| `pageIndex` | `number` | `0` | 0-based page to show; with `onPageIndexChange` it is controlled. |
+| `messages` | `Partial<OgePdfViewerMessages>` | `{}` | Overrides of the message catalog. |
+
+_View_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `zoom` | `OgePdfZoom` | `'fit-width'` | A scale or a fit; with `onZoomChange` it is controlled. Ctrl + / − / 0 zoom from the keyboard. |
+| `showThumbnails` | `boolean` | `false` | The page thumbnail sidebar; with `onShowThumbnailsChange` it is controlled. |
+| `toolbar` | `boolean` | `true` | The toolbar: pages, zoom, the two fits, find in document and print. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `print()` | `() => Promise<void>` | Prints every page at print resolution (the toolbar's Print button). |
+| `search(query)` | `(query: string) => Promise<void>` | Finds `query` (case- and accent-insensitive) on every page and moves to the first match. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onPageIndexChange` | `(index: number) => void` | When the page nearest the viewport's middle changes. |
+| `onZoomChange` | `(zoom: OgePdfZoom) => void` | When the toolbar or the keyboard changes the zoom. |
+| `onShowThumbnailsChange` | `(show: boolean) => void` | When the toolbar toggles the thumbnails. |
+| `onLoaded` | `OgePdfLoadedEvent` | After a document opened. |
+| `onLoadError` | `OgePdfLoadErrorEvent` | When a document did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePdfSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgePdfZoom` | `number \| 'fit-width' \| 'fit-page'` | A scale (`1` = 100 %, from 0.25 to 4) or one of the two fits, which follow the viewer's size. |
+| `OgePdfLoadedEvent` | `interface` | `{ pageCount }` — the number of pages. |
+| `OgePdfLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgePdfErrorCode` | `'fetch-failed' \| 'password' \| 'invalid' \| 'pdfjs-missing'` | `pdfjs-missing`: `pdfjs-dist` is not installed or the `pdfjs` loader failed. |
+| `OgePdfViewerMessages` | `interface` | The viewer's text: `viewerLabel`, `pageLabel` (with `{current}` and `{total}`), `previousPage`, `nextPage`, `zoomIn`, `zoomOut`, `fitWidth`, `fitPage`, `zoomLevel` (`{zoom}`), `thumbnails`, `search`, `searchNext`, `searchPrevious`, `matchCount`, `noMatches`, `print`, `loading`, `empty`, `loadError` and `passwordProtected`. Defaults in `OGE_DEFAULT_PDF_VIEWER_MESSAGES`. |
+| `OgePdfViewerConfig / OgePdfViewerConfigInput` | `interface` | Defaults for viewers below the config provider: `{ messages, pdfjs, workerSrc }`. `workerSrc` is the URL your app serves `pdfjs-dist/build/pdf.worker.min.mjs` from; `pdfjs` replaces the default `() => import('pdfjs-dist')` loader. |
+| `OgePdfViewerHandle` | `interface` | What a `ref` reaches: `print()` and `search(query)`. |
+| `OgePdfViewerConfigProvider / useOgePdfViewerConfig` | `component / hook` | Wrap a subtree in `<OgePdfViewerConfigProvider config={{ workerSrc }}>` to set the worker URL, the loader and the text; nested providers merge over the outer one. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -337,6 +394,99 @@ export function OpenWorkbook() {
         style={{ height: 520 }}
       />
       <p>{issues} things shown differently from Excel</p>
+    </>
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { OgePdfViewer, OgePdfViewerConfigProvider } from '@oge-ui/react-spreadsheet/pdf';
+
+export function PdfPreview() {
+  return (
+    <>
+      {/* npm i pdfjs-dist, and serve
+          node_modules/pdfjs-dist/build/pdf.worker.min.mjs from your app. pdf.js
+          loads on first use. The toolbar pages, zooms, fits, finds and prints;
+          pages are drawn only when they come near the viewport. */}
+      <OgePdfViewerConfigProvider
+        config={{ workerSrc: '/pdfjs/pdf.worker.min.mjs' }}
+      >
+        <OgePdfViewer
+          source="/demo/spreadsheet/report.pdf"
+          style={{ height: 640 }}
+        />
+      </OgePdfViewerConfigProvider>
+    </>
+  );
+}
+```
+
+### Controlled view
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePdfViewer } from '@oge-ui/react-spreadsheet/pdf';
+import type { OgePdfZoom } from '@oge-ui/react-spreadsheet/pdf';
+
+export function ControlledPdf() {
+  const [page, setPage] = useState(0);
+  const [zoom, setZoom] = useState<OgePdfZoom>(1);
+  const [thumbs, setThumbs] = useState(true);
+  return (
+    <>
+      {/* page, zoom and the thumbnail sidebar follow the toolbar and the
+          scrolling, and move the viewer when you set them. */}
+      <p>
+        Page {page + 1} · zoom {String(zoom)}
+      </p>
+      <OgePdfViewer
+        source="/demo/spreadsheet/report.pdf"
+        pageIndex={page}
+        onPageIndexChange={setPage}
+        zoom={zoom}
+        onZoomChange={setZoom}
+        showThumbnails={thumbs}
+        onShowThumbnailsChange={setThumbs}
+        style={{ height: 520 }}
+      />
+    </>
+  );
+}
+```
+
+### Bare preview
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePdfViewer } from '@oge-ui/react-spreadsheet/pdf';
+
+export function BarePdf() {
+  const [file, setFile] = useState<File | null>(null);
+  return (
+    <>
+      {/* toolbar={false} leaves just the pages, for a preview pane; source
+          takes a File the user picked, read in the browser. */}
+      <input
+        type="file"
+        accept="application/pdf"
+        aria-label="Choose a PDF"
+        onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+      />
+      <OgePdfViewer
+        source={file ?? '/demo/spreadsheet/report.pdf'}
+        toolbar={false}
+        zoom="fit-page"
+        style={{ height: 420 }}
+      />
     </>
   );
 }

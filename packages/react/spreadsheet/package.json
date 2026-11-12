@@ -52,6 +52,16 @@
         "default": "./word.cjs"
       }
     },
+    "./pdf": {
+      "import": {
+        "types": "./pdf.d.ts",
+        "default": "./pdf.js"
+      },
+      "require": {
+        "types": "./pdf.d.cts",
+        "default": "./pdf.cjs"
+      }
+    },
     "./styles.css": "./styles.css",
     "./package.json": "./package.json"
   },

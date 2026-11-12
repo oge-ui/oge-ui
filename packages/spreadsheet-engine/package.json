@@ -34,6 +34,11 @@
       "module": "./word.esm.js",
       "default": "./word.cjs.js"
     },
+    "./pdf": {
+      "types": "./pdf.d.ts",
+      "module": "./pdf.esm.js",
+      "default": "./pdf.cjs.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -48,5 +53,13 @@
     "directory": "packages/spreadsheet-engine"
   },
   "bugs": "https://github.com/oge-ui/oge-ui/issues",
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "peerDependencies": {
+    "pdfjs-dist": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "pdfjs-dist": {
+      "optional": true
+    }
+  }
 }

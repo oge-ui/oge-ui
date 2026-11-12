@@ -1,0 +1,240 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The PDF viewer of both render layers. A page is pdf.js's drawing on a white
+// sheet; only the chrome around it follows the theme.
+oge-pdf-viewer {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.oge-pdf {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-pdf-toolbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-bg);
+}
+
+.oge-pdf-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.oge-pdf-spacer {
+  flex: 1 1 auto;
+}
+
+.oge-pdf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--oge-control-height-sm);
+  height: var(--oge-control-height-sm);
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--oge-accent-25);
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.oge-pdf-readout {
+  min-width: 4.5em;
+  color: var(--oge-muted-color);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.oge-pdf-search {
+  width: 12em;
+  height: var(--oge-control-height-sm);
+  padding: 0 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+
+  &:focus-visible {
+    border-color: var(--oge-accent);
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-pdf-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.oge-pdf-thumbnails {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 152px;
+  padding: 12px 0;
+  overflow-y: auto;
+  border-inline-end: 1px solid var(--oge-border-color);
+  background: var(--oge-bg);
+
+  @include tokens.scrollbar;
+}
+
+.oge-pdf-thumbnail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-muted-color);
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+
+  canvas {
+    display: block;
+    background: #fff;
+    box-shadow: var(--oge-shadow-card);
+  }
+
+  &[aria-current='page'] {
+    border-color: var(--oge-accent);
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 1px;
+  }
+}
+
+.oge-pdf-scroller {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+
+  @include tokens.scrollbar;
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: -2px;
+  }
+}
+
+.oge-pdf-page {
+  position: relative;
+  flex: none;
+  background: #fff;
+  box-shadow: var(--oge-shadow-card);
+
+  canvas {
+    display: block;
+  }
+}
+
+// pdf.js's text layer: transparent glyphs over the drawing for selection and
+// screen readers
+.oge-pdf-text {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+  opacity: 1;
+
+  span,
+  br {
+    position: absolute;
+    color: transparent;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0 0;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--oge-accent) 30%, transparent);
+  }
+}
+
+.oge-pdf-highlight {
+  position: absolute;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--oge-warning) 40%, transparent);
+  pointer-events: none;
+
+  &.oge-pdf-highlight-current {
+    background: color-mix(in srgb, var(--oge-accent) 45%, transparent);
+    outline: 2px solid var(--oge-accent);
+  }
+}
+
+.oge-pdf-status {
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+  padding: 24px;
+  color: var(--oge-muted-color);
+  text-align: center;
+}
+
+@media (forced-colors: active) {
+  .oge-pdf-highlight {
+    background: Highlight;
+    opacity: 0.4;
+  }
+}

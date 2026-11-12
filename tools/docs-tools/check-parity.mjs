@@ -902,6 +902,8 @@ const FAMILIES = [
           'The controlled half of `activeSheet`; Angular’s [(activeSheet)] model is both halves at once.',
         zoomchange:
           'The controlled half of `zoom`; Angular’s [(zoom)] model is both halves at once.',
+        showthumbnailschange:
+          'The controlled half of the PDF viewer’s `showThumbnails`; Angular’s [(showThumbnails)] model is both halves at once.',
         classname: STYLING_IDIOM,
         style: STYLING_IDIOM,
       },

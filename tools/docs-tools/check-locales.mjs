@@ -76,6 +76,7 @@ const SLICES = {
   spreadsheet: 'OGE_DEFAULT_SPREADSHEET_MESSAGES',
   presentation: 'OGE_DEFAULT_PRESENTATION_MESSAGES',
   wordDocument: 'OGE_DEFAULT_WORD_DOCUMENT_MESSAGES',
+  pdfViewer: 'OGE_DEFAULT_PDF_VIEWER_MESSAGES',
 };
 const COMMERCIAL = {
   pivot: '@oge-ui/pivot-engine',
@@ -87,6 +88,7 @@ const COMMERCIAL = {
   spreadsheet: '@oge-ui/spreadsheet-engine',
   presentation: '@oge-ui/spreadsheet-engine/powerpoint',
   wordDocument: '@oge-ui/spreadsheet-engine/word',
+  pdfViewer: '@oge-ui/spreadsheet-engine/pdf',
 };
 
 const codes = readdirSync(localesSrc)
@@ -117,6 +119,8 @@ try {
     format: 'esm',
     outfile: bundle,
     tsconfig: path.join(workspaceRoot, 'tsconfig.base.json'),
+    // the PDF viewer loads pdf.js on demand; the catalogs never need it
+    external: ['pdfjs-dist'],
     logLevel: 'error',
   });
   mod = await import(pathToFileURL(bundle).href);

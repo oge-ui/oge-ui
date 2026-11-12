@@ -1478,6 +1478,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Word preview',
       },
       {
+        path: 'pdf',
+        loadComponent: () =>
+          import('./pages/spreadsheet/pdf').then((m) => m.PdfPage),
+        title: 'OGE — PDF viewer',
+      },
+      {
         path: 'powerpoint',
         loadComponent: () =>
           import('./pages/spreadsheet/powerpoint').then(

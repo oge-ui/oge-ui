@@ -2367,6 +2367,32 @@ slide. The rules are Word's own, measured through
     PowerPoint build and measure the deck; `read-pptx.corpus.spec.ts` compares
     the model with those numbers.
 
+### PDF viewer
+
+`@oge-ui/spreadsheet-engine/pdf` drives pdf.js (`pdfjs-dist`). Unlike the
+Word, PowerPoint and Excel readers it does not lay anything out itself.
+
+- **pdf.js is an optional peer.** The engine describes the slice it uses
+  structurally (`lib/pdf/pdfjs-types.ts`) and loads it with
+  `config.pdfjs()` (default `import('pdfjs-dist')`) on the first document.
+  Tests hand in a fake. Consumers serve `pdf.worker.min.mjs` themselves and
+  name it with `workerSrc`; the dev app copies it to `/pdfjs/` through a
+  `project.json` asset.
+- **Still DOM-free.** The core only touches the canvases, text-layer
+  containers and owner element that the layers pass in.
+  `renderPage(index, canvas, text)`, `renderThumbnail` and
+  `print(ownerElement)` read `ownerDocument` / `defaultView` from those
+  objects and never use a global `window` or `document`.
+- **Lazy pages.** The layers report the visible range
+  (`ogeVisiblePdfPages`). Pages within `OVERSCAN` of that range mount a canvas,
+  and a redraw follows only a change of scale. The "current" page is the one
+  under the scroller's middle. When the pages are small enough that all of
+  them fit, it is the first one in view. A container that has not been
+  measured yet keeps the fit modes at 100 %.
+- **No landmarks inside a viewer.** A page can hold several viewers, so the
+  focusable scroller is a labelled `group` rather than a `region`, and the find
+  box is not a `search` landmark. Otherwise axe reports `landmark-unique`.
+
 ### The viewer (P1)
 
 - **Measured, not approximated.** "It must look exactly as in Excel" is the

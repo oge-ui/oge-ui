@@ -36,6 +36,11 @@
             "glob": "*.css",
             "input": "packages/grid/src/lib/styles/themes",
             "output": "themes"
+          },
+          {
+            "glob": "pdf.worker.min.mjs",
+            "input": "node_modules/pdfjs-dist/build",
+            "output": "pdfjs"
           }
         ],
         "styles": [

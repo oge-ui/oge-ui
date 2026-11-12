@@ -1878,4 +1878,27 @@ export const he: OgeLocalePack = {
     encryptedOrLegacy:
       'הקובץ מוגן בסיסמה או בתבנית ‎.doc הישנה, שלא ניתן להציג',
   },
+  pdfViewer: {
+    viewerLabel: 'מסמך PDF',
+    pageLabel: 'עמוד {current} מתוך {total}',
+    previousPage: 'העמוד הקודם',
+    nextPage: 'העמוד הבא',
+    zoomIn: 'הגדלה',
+    zoomOut: 'הקטנה',
+    fitWidth: 'התאמה לרוחב',
+    fitPage: 'התאמה לעמוד',
+    zoomLevel: '{zoom}%',
+    thumbnails: 'תמונות ממוזערות של עמודים',
+    search: 'חיפוש במסמך',
+    searchNext: 'ההתאמה הבאה',
+    searchPrevious: 'ההתאמה הקודמת',
+    matchCount: '{current} מתוך {total}',
+    noMatches: 'אין התאמות',
+    print: 'הדפסה',
+    loading: 'המסמך נפתח…',
+    empty: 'אין מסמך להצגה',
+    loadError: 'לא ניתן לפתוח את המסמך',
+    passwordProtected:
+      'קובץ PDF זה מוגן בסיסמה ולא ניתן להציג אותו בתצוגה מקדימה',
+  },
 };

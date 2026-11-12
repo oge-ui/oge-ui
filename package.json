@@ -77,6 +77,7 @@
     "jspdf-autotable": "^5.0.8",
     "ng-packagr": "~22.2.6",
     "nx": "24.0.4",
+    "pdfjs-dist": "6.4.299",
     "postcss": "^8.5.25",
     "prettier": "^3.8.1",
     "react": "^19.3.1",

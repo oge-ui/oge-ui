@@ -768,6 +768,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Word preview for Angular and React: shows .docx documents as Word does, page by page, read in the browser with no server and no dependencies.',
   ],
   [
+    '/components/spreadsheet/pdf',
+    'PDF viewer for Angular and React over pdf.js: lazy page drawing, thumbnails, find in document with highlights, zoom to width or page, and printing.',
+  ],
+  [
     '/components/spreadsheet/powerpoint',
     'PowerPoint preview for Angular and React: shows .pptx decks as PowerPoint does, with charts and SmartArt, read in the browser with no dependency.',
   ],

@@ -1868,4 +1868,27 @@ export const ja: OgeLocalePack = {
     encryptedOrLegacy:
       'このファイルはパスワードで保護されているか、プレビューできない古い .doc 形式です',
   },
+  pdfViewer: {
+    viewerLabel: 'PDF ドキュメント',
+    pageLabel: '{current} / {total} ページ',
+    previousPage: '前のページ',
+    nextPage: '次のページ',
+    zoomIn: '拡大',
+    zoomOut: '縮小',
+    fitWidth: '幅に合わせる',
+    fitPage: 'ページ全体',
+    zoomLevel: '{zoom}%',
+    thumbnails: 'ページのサムネイル',
+    search: 'ドキュメント内を検索',
+    searchNext: '次の一致',
+    searchPrevious: '前の一致',
+    matchCount: '{current} / {total}',
+    noMatches: '一致なし',
+    print: '印刷',
+    loading: 'ドキュメントを開いています…',
+    empty: '表示するドキュメントがありません',
+    loadError: 'ドキュメントを開けませんでした',
+    passwordProtected:
+      'この PDF はパスワードで保護されているためプレビューできません',
+  },
 };

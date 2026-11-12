@@ -634,6 +634,11 @@ export class App {
           icon: 'table',
         },
         {
+          path: '/components/spreadsheet/pdf',
+          label: 'PDF viewer',
+          icon: 'table',
+        },
+        {
           path: '/components/spreadsheet/powerpoint',
           label: 'PowerPoint preview',
           icon: 'table',

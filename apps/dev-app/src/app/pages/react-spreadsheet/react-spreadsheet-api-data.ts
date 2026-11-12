@@ -476,3 +476,171 @@ export const OGE_REACT_WORD_DOCUMENT_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_REACT_PDF_VIEWER_API: ApiSections = {
+  properties: [
+    {
+      title: 'Content',
+      entries: [
+        {
+          name: 'source',
+          type: 'OgePdfSource | null',
+          default: 'null',
+          description:
+            'The PDF to open: bytes, a <code>Blob</code> / <code>File</code>, or a URL.',
+        },
+        {
+          name: 'pageIndex',
+          type: 'number',
+          default: '0',
+          description:
+            '0-based page to show; with <code>onPageIndexChange</code> it is controlled.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgePdfViewerMessages&gt;',
+          default: '{}',
+          description: 'Overrides of the message catalog.',
+        },
+      ],
+    },
+    {
+      title: 'View',
+      entries: [
+        {
+          name: 'zoom',
+          type: 'OgePdfZoom',
+          default: "'fit-width'",
+          description:
+            'A scale or a fit; with <code>onZoomChange</code> it is controlled. Ctrl + / − / 0 zoom from the keyboard.',
+        },
+        {
+          name: 'showThumbnails',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'The page thumbnail sidebar; with <code>onShowThumbnailsChange</code> it is controlled.',
+        },
+        {
+          name: 'toolbar',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'The toolbar: pages, zoom, the two fits, find in document and print.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      title: 'Events',
+      entries: [
+        {
+          name: 'onPageIndexChange',
+          type: '(index: number) =&gt; void',
+          description:
+            'When the page nearest the viewport&#39;s middle changes.',
+        },
+        {
+          name: 'onZoomChange',
+          type: '(zoom: OgePdfZoom) =&gt; void',
+          description: 'When the toolbar or the keyboard changes the zoom.',
+        },
+        {
+          name: 'onShowThumbnailsChange',
+          type: '(show: boolean) =&gt; void',
+          description: 'When the toolbar toggles the thumbnails.',
+        },
+        {
+          name: 'onLoaded',
+          type: 'OgePdfLoadedEvent',
+          description: 'After a document opened.',
+        },
+        {
+          name: 'onLoadError',
+          type: 'OgePdfLoadErrorEvent',
+          description: 'When a document did not open.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      title: 'Handle (ref)',
+      entries: [
+        {
+          name: 'print()',
+          type: '() =&gt; Promise&lt;void&gt;',
+          description:
+            'Prints every page at print resolution (the toolbar&#39;s Print button).',
+        },
+        {
+          name: 'search(query)',
+          type: '(query: string) =&gt; Promise&lt;void&gt;',
+          description:
+            'Finds <code>query</code> (case- and accent-insensitive) on every page and moves to the first match.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Types',
+      entries: [
+        {
+          name: 'OgePdfSource',
+          type: 'ArrayBuffer | Uint8Array | Blob | string',
+          description:
+            'What the viewer opens: the file&#39;s bytes, a <code>Blob</code> / <code>File</code>, or a URL fetched with same-origin credentials.',
+        },
+        {
+          name: 'OgePdfZoom',
+          type: "number | 'fit-width' | 'fit-page'",
+          description:
+            'A scale (<code>1</code> = 100 %, from 0.25 to 4) or one of the two fits, which follow the viewer&#39;s size.',
+        },
+        {
+          name: 'OgePdfLoadedEvent',
+          type: 'interface',
+          description: '<code>{ pageCount }</code> — the number of pages.',
+        },
+        {
+          name: 'OgePdfLoadErrorEvent',
+          type: 'interface',
+          description:
+            '<code>{ code, message }</code> — why the file did not open.',
+        },
+        {
+          name: 'OgePdfErrorCode',
+          type: "'fetch-failed' | 'password' | 'invalid' | 'pdfjs-missing'",
+          description:
+            '<code>pdfjs-missing</code>: <code>pdfjs-dist</code> is not installed or the <code>pdfjs</code> loader failed.',
+        },
+        {
+          name: 'OgePdfViewerMessages',
+          type: 'interface',
+          description:
+            'The viewer&#39;s text: <code>viewerLabel</code>, <code>pageLabel</code> (with <code>{current}</code> and <code>{total}</code>), <code>previousPage</code>, <code>nextPage</code>, <code>zoomIn</code>, <code>zoomOut</code>, <code>fitWidth</code>, <code>fitPage</code>, <code>zoomLevel</code> (<code>{zoom}</code>), <code>thumbnails</code>, <code>search</code>, <code>searchNext</code>, <code>searchPrevious</code>, <code>matchCount</code>, <code>noMatches</code>, <code>print</code>, <code>loading</code>, <code>empty</code>, <code>loadError</code> and <code>passwordProtected</code>. Defaults in <code>OGE_DEFAULT_PDF_VIEWER_MESSAGES</code>.',
+        },
+        {
+          name: 'OgePdfViewerConfig / OgePdfViewerConfigInput',
+          type: 'interface',
+          description:
+            'Defaults for viewers below the config provider: <code>{ messages, pdfjs, workerSrc }</code>. <code>workerSrc</code> is the URL your app serves <code>pdfjs-dist/build/pdf.worker.min.mjs</code> from; <code>pdfjs</code> replaces the default <code>() =&gt; import(&#39;pdfjs-dist&#39;)</code> loader.',
+        },
+        {
+          name: 'OgePdfViewerHandle',
+          type: 'interface',
+          description:
+            'What a <code>ref</code> reaches: <code>print()</code> and <code>search(query)</code>.',
+        },
+        {
+          name: 'OgePdfViewerConfigProvider / useOgePdfViewerConfig',
+          type: 'component / hook',
+          description:
+            'Wrap a subtree in <code>&lt;OgePdfViewerConfigProvider config={{ workerSrc }}&gt;</code> to set the worker URL, the loader and the text; nested providers merge over the outer one.',
+        },
+      ],
+    },
+  ],
+};

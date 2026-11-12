@@ -22,7 +22,7 @@
   <url><loc>https://www.ogeui.com/guides/migrate-from-ag-grid</loc><lastmod>2026-11-12</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/migrate-from-devextreme</loc><lastmod>2026-11-12</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/migrate-from-primeng</loc><lastmod>2026-11-12</lastmod></url>
-  <url><loc>https://www.ogeui.com/guides/dates-and-time-zones</loc></url>
+  <url><loc>https://www.ogeui.com/guides/dates-and-time-zones</loc><lastmod>2026-11-12</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/filter-contract</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/ai</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-11-11</lastmod></url>
@@ -48,7 +48,7 @@
   <url><loc>https://www.ogeui.com/components/data-grid/conditional-formatting</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/pinned-rows</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/data-grid/export</loc><lastmod>2026-10-04</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/data-grid/api</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/data-grid/api</loc><lastmod>2026-11-12</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list/lazy-loading</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list/filtering</loc><lastmod>2026-10-05</lastmod></url>
@@ -121,7 +121,7 @@
   <url><loc>https://www.ogeui.com/components/inputs/toggle-controls</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/check-box-group</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/slider</loc><lastmod>2026-08-14</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/inputs/date-box</loc><lastmod>2026-10-05</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/date-box</loc><lastmod>2026-11-12</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/color-box</loc><lastmod>2026-08-14</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/color-gradient</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/color-palette</loc><lastmod>2026-10-04</lastmod></url>
@@ -132,7 +132,7 @@
   <url><loc>https://www.ogeui.com/components/inputs/transfer-list</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/mention</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/showcase</loc><lastmod>2026-10-05</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/inputs/api</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/inputs/api</loc><lastmod>2026-11-12</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay</loc><lastmod>2026-08-23</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay/tooltip-context-menu</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay/popover</loc><lastmod>2026-11-10</lastmod></url>
@@ -174,6 +174,7 @@
   <url><loc>https://www.ogeui.com/components/kanban/api</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/spreadsheet</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/components/spreadsheet/word</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/spreadsheet/pdf</loc></url>
   <url><loc>https://www.ogeui.com/components/spreadsheet/powerpoint</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://www.ogeui.com/components/spreadsheet/api</loc><lastmod>2026-11-09</lastmod></url>
   <url><loc>https://www.ogeui.com/components/scheduler</loc><lastmod>2026-10-10</lastmod></url>

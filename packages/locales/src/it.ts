@@ -1903,4 +1903,27 @@ export const it: OgeLocalePack = {
     encryptedOrLegacy:
       'Questo file è protetto da password o nel vecchio formato .doc, che non può essere visualizzato',
   },
+  pdfViewer: {
+    viewerLabel: 'Documento PDF',
+    pageLabel: 'Pagina {current} di {total}',
+    previousPage: 'Pagina precedente',
+    nextPage: 'Pagina successiva',
+    zoomIn: 'Ingrandisci',
+    zoomOut: 'Riduci',
+    fitWidth: 'Adatta alla larghezza',
+    fitPage: 'Pagina intera',
+    zoomLevel: '{zoom}%',
+    thumbnails: 'Miniature delle pagine',
+    search: 'Trova nel documento',
+    searchNext: 'Risultato successivo',
+    searchPrevious: 'Risultato precedente',
+    matchCount: '{current} di {total}',
+    noMatches: 'Nessun risultato',
+    print: 'Stampa',
+    loading: 'Apertura del documento…',
+    empty: 'Nessun documento da mostrare',
+    loadError: 'Impossibile aprire il documento',
+    passwordProtected:
+      'Questo PDF è protetto da password e non può essere visualizzato in anteprima',
+  },
 };

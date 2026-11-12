@@ -1900,4 +1900,27 @@ export const de: OgeLocalePack = {
     encryptedOrLegacy:
       'Diese Datei ist kennwortgeschützt oder im alten .doc-Format, das nicht angezeigt werden kann',
   },
+  pdfViewer: {
+    viewerLabel: 'PDF-Dokument',
+    pageLabel: 'Seite {current} von {total}',
+    previousPage: 'Vorherige Seite',
+    nextPage: 'Nächste Seite',
+    zoomIn: 'Vergrößern',
+    zoomOut: 'Verkleinern',
+    fitWidth: 'An Breite anpassen',
+    fitPage: 'Ganze Seite',
+    zoomLevel: '{zoom} %',
+    thumbnails: 'Seitenminiaturen',
+    search: 'Im Dokument suchen',
+    searchNext: 'Nächster Treffer',
+    searchPrevious: 'Vorheriger Treffer',
+    matchCount: '{current} von {total}',
+    noMatches: 'Keine Treffer',
+    print: 'Drucken',
+    loading: 'Dokument wird geöffnet…',
+    empty: 'Kein Dokument zum Anzeigen',
+    loadError: 'Das Dokument konnte nicht geöffnet werden',
+    passwordProtected:
+      'Dieses PDF ist kennwortgeschützt und kann nicht angezeigt werden',
+  },
 };

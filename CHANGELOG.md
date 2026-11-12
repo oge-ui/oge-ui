@@ -7,6 +7,23 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### PDF viewer — `@oge-ui/spreadsheet/pdf`, `@oge-ui/react-spreadsheet/pdf`, `@oge-ui/spreadsheet-engine/pdf`
+
+- `<oge-pdf-viewer>` / `<OgePdfViewer>` over pdf.js: pages are drawn as they
+  come near the viewport, sharp on high-DPI screens, and carry pdf.js's text
+  layer for selection and screen readers. There are page thumbnails, find in
+  document (case- and accent-insensitive) with highlights and Enter /
+  Shift+Enter, zoom by steps (Ctrl + / − / 0) or to the width or the page, and
+  printing at print resolution.
+- Two-way `pageIndex`, `zoom` and `showThumbnails`, plus `toolbar`, `messages`,
+  `loaded` and `loadError` (React: callbacks and a `ref` handle with `print()` /
+  `search()`).
+- `pdfjs-dist` is an optional peer dependency, loaded on first use. Set the
+  worker URL with `provideOgePdfViewerConfig({ workerSrc })` (React:
+  `<OgePdfViewerConfigProvider>`). Fonts are never evaluated as code.
+- `@oge-ui/locales`: a `pdfViewer` slice in all 11 packs.
+- New page `/components/spreadsheet/pdf`.
+
 ### Time zones for date editors and grid date columns — `@oge-ui/inputs`, `@oge-ui/grid`, React twins
 
 - `timeZone` on DateBox and Calendar (both layers): the value stays an instant;

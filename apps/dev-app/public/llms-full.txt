@@ -3527,7 +3527,7 @@ Gzip size of each package's main entry point, as baselined by the CI size gate (
 | Entry point | Gzip |
 | --- | --- |
 | `@oge-ui/ai` | 16.1 kB |
-| `@oge-ui/behavior` | 350.4 kB |
+| `@oge-ui/behavior` | 351.2 kB |
 | `@oge-ui/bpmn` | 46.0 kB |
 | `@oge-ui/bpmn-engine` | 96.9 kB |
 | `@oge-ui/buttons` | 17.0 kB |
@@ -3538,7 +3538,7 @@ Gzip size of each package's main entry point, as baselined by the CI size gate (
 | `@oge-ui/forms` | 26.6 kB |
 | `@oge-ui/gantt` | 34.0 kB |
 | `@oge-ui/gantt-engine` | 48.4 kB |
-| `@oge-ui/grid` | 91.6 kB |
+| `@oge-ui/grid` | 91.8 kB |
 | `@oge-ui/inputs` | 0.7 kB |
 | `@oge-ui/kanban` | 41.0 kB |
 | `@oge-ui/kanban-engine` | 34.0 kB |
@@ -3558,7 +3558,7 @@ Gzip size of each package's main entry point, as baselined by the CI size gate (
 | `@oge-ui/react-forms` | 8.1 kB |
 | `@oge-ui/react-gantt` | 9.5 kB |
 | `@oge-ui/react-grid` | 40.3 kB |
-| `@oge-ui/react-inputs` | 59.8 kB |
+| `@oge-ui/react-inputs` | 60.0 kB |
 | `@oge-ui/react-kanban` | 17.8 kB |
 | `@oge-ui/react-layout` | 39.1 kB |
 | `@oge-ui/react-navigation` | 20.4 kB |
@@ -35029,6 +35029,11 @@ Docs: https://www.ogeui.com/components/spreadsheet
 - values: `OGE_DEFAULT_SPREADSHEET_CONFIG`, `OGE_DEFAULT_SPREADSHEET_MESSAGES`, `OGE_SPREADSHEET_CONFIG`, `OgeSpreadsheet`, `provideOgeSpreadsheetConfig`
 - types: `OgeFindOptions`, `OgeImportIssue`, `OgeImportIssueCode`, `OgeSpreadsheetCellClickEvent`, `OgeSpreadsheetConfig`, `OgeSpreadsheetConfigInput`, `OgeSpreadsheetHyperlinkClickEvent`, `OgeSpreadsheetLoadErrorEvent`, `OgeSpreadsheetLoadedEvent`, `OgeSpreadsheetMessages`, `OgeSpreadsheetSelectionChangeEvent`, `OgeSpreadsheetSource`, `OgeWorkbook`, `OgeXlsxError`
 
+`@oge-ui/spreadsheet/pdf`
+
+- values: `OGE_DEFAULT_PDF_VIEWER_MESSAGES`, `OGE_PDF_VIEWER_CONFIG`, `OgePdfViewer`, `provideOgePdfViewerConfig`
+- types: `OgePdfErrorCode`, `OgePdfLoadErrorEvent`, `OgePdfLoadedEvent`, `OgePdfSource`, `OgePdfViewerConfig`, `OgePdfViewerConfigInput`, `OgePdfViewerMessages`, `OgePdfZoom`
+
 `@oge-ui/spreadsheet/word`
 
 - values: `OGE_DEFAULT_WORD_DOCUMENT_MESSAGES`, `OGE_WORD_DOCUMENT_CONFIG`, `OgeWordDocument`, `provideOgeWordDocumentConfig`
@@ -35220,6 +35225,59 @@ _Types_
 | `OgeWordDocumentMessages` | `interface` | The viewer's text: `viewerLabel`, `pageLabel` (with `{current}` and `{total}`), `previousPage`, `nextPage`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
 | `OgeWordDocumentConfig / OgeWordDocumentConfigInput` | `interface` | Defaults for viewers below the config provider: `{ messages }`, merged over the built-in text. |
 
+### OgePdfViewer — `<oge-pdf-viewer>`
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgePdfSource \| null` | `null` | The PDF to open: bytes, a `Blob` / `File`, or a URL. |
+| `pageIndex` | `number` | `0` | 0-based page nearest the viewport's middle; two-way with `[(pageIndex)]`. |
+| `messages` | `Partial<OgePdfViewerMessages>` | `{}` | Overrides of the message catalog. |
+
+_View_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `zoom` | `OgePdfZoom` | `'fit-width'` | A scale or a fit; two-way with `[(zoom)]`. Ctrl + / − / 0 zoom from the keyboard. |
+| `showThumbnails` | `boolean` | `false` | The page thumbnail sidebar; two-way with `[(showThumbnails)]`. |
+| `toolbar` | `boolean` | `true` | The toolbar: pages, zoom, the two fits, find in document and print. |
+
+#### Methods
+
+_Methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `print()` | `Promise<void>` | Prints every page at print resolution (the toolbar's Print button). |
+| `search(query)` | `Promise<void>` | Finds `query` (case- and accent-insensitive) on every page and moves to the first match. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `loaded` | `OgePdfLoadedEvent` | After a document opened. |
+| `loadError` | `OgePdfLoadErrorEvent` | When a document did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePdfSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgePdfZoom` | `number \| 'fit-width' \| 'fit-page'` | A scale (`1` = 100 %, from 0.25 to 4) or one of the two fits, which follow the viewer's size. |
+| `OgePdfLoadedEvent` | `interface` | `{ pageCount }` — the number of pages. |
+| `OgePdfLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgePdfErrorCode` | `'fetch-failed' \| 'password' \| 'invalid' \| 'pdfjs-missing'` | `pdfjs-missing`: `pdfjs-dist` is not installed or the `pdfjs` loader failed. |
+| `OgePdfViewerMessages` | `interface` | The viewer's text: `viewerLabel`, `pageLabel` (with `{current}` and `{total}`), `previousPage`, `nextPage`, `zoomIn`, `zoomOut`, `fitWidth`, `fitPage`, `zoomLevel` (`{zoom}`), `thumbnails`, `search`, `searchNext`, `searchPrevious`, `matchCount`, `noMatches`, `print`, `loading`, `empty`, `loadError` and `passwordProtected`. Defaults in `OGE_DEFAULT_PDF_VIEWER_MESSAGES`. |
+| `OgePdfViewerConfig / OgePdfViewerConfigInput` | `interface` | Defaults for viewers below the config provider: `{ messages, pdfjs, workerSrc }`. `workerSrc` is the URL your app serves `pdfjs-dist/build/pdf.worker.min.mjs` from; `pdfjs` replaces the default `() => import('pdfjs-dist')` loader. |
+| `provideOgePdfViewerConfig / OGE_PDF_VIEWER_CONFIG` | `Provider / InjectionToken` | `provideOgePdfViewerConfig({ workerSrc })` sets the worker URL, the loader and the text for every viewer below it; a function makes it live. |
+
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -35286,6 +35344,98 @@ export class Demo {
     dropZone: { labelSingle: 'Drop a workbook here or {browse}' },
   };
 }
+```
+
+#### Pdf bare
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePdfViewer } from '@oge-ui/spreadsheet/pdf';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePdfViewer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [toolbar]="false" leaves just the pages, for a preview pane; source
+         takes a File the user picked, read in the browser. -->
+    <input
+      type="file"
+      accept="application/pdf"
+      aria-label="Choose a PDF"
+      (change)="pick($event)"
+    />
+    <oge-pdf-viewer
+      [source]="file() ?? '/demo/spreadsheet/report.pdf'"
+      [toolbar]="false"
+      zoom="fit-page"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  readonly file = signal<File | null>(null);
+
+  pick(event: Event): void {
+    this.file.set((event.target as HTMLInputElement).files?.[0] ?? null);
+  }
+}
+```
+
+#### Pdf controlled
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePdfViewer } from '@oge-ui/spreadsheet/pdf';
+import type { OgePdfZoom } from '@oge-ui/spreadsheet/pdf';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePdfViewer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- page, zoom and the thumbnail sidebar are two-way: they follow the
+         toolbar and the scrolling, and move the viewer when you set them. -->
+    <p>Page {{ page() + 1 }} · zoom {{ zoom() }}</p>
+    <oge-pdf-viewer
+      source="/demo/spreadsheet/report.pdf"
+      [(pageIndex)]="page"
+      [(zoom)]="zoom"
+      [(showThumbnails)]="thumbs"
+      style="height: 520px"
+    />
+  `,
+})
+export class Demo {
+  readonly page = signal(0);
+  readonly zoom = signal<OgePdfZoom>(1);
+  readonly thumbs = signal(true);
+}
+```
+
+#### Pdf getting started
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgePdfViewer, provideOgePdfViewerConfig } from '@oge-ui/spreadsheet/pdf';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePdfViewer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- pdf.js loads on first use. The toolbar pages, zooms, fits, finds
+         and prints; pages are drawn only when they come near the viewport. -->
+    <oge-pdf-viewer source="/demo/spreadsheet/report.pdf" style="height: 640px" />
+  `,
+})
+export class Demo {}
+
+// npm i pdfjs-dist, and serve node_modules/pdfjs-dist/build/pdf.worker.min.mjs
+// (angular.json assets: { glob: "pdf.worker.min.mjs", input: "node_modules/pdfjs-dist/build", output: "pdfjs" })
+export const appConfig = {
+  providers: [provideOgePdfViewerConfig({ workerSrc: '/pdfjs/pdf.worker.min.mjs' })],
+};
 ```
 
 #### Presentation controlled
@@ -35399,6 +35549,11 @@ Framework-free, DOM-free engine both spreadsheet render layers run (it also runs
 
 - values: `OGE_BUILTIN_TABLE_STYLE_NAMES`, `OGE_CELL_ERROR_CODES`, `OGE_DEFAULT_BASE_COLUMN_WIDTH`, `OGE_DEFAULT_CELL_STYLE`, `OGE_DEFAULT_FONT`, `OGE_DEFAULT_MAX_DIGIT_WIDTH`, `OGE_DEFAULT_ROW_HEIGHT_POINTS`, `OGE_DEFAULT_SHEET_FORMAT`, `OGE_DEFAULT_SHEET_VIEW`, `OGE_DEFAULT_SPREADSHEET_CONFIG`, `OGE_DEFAULT_SPREADSHEET_MESSAGES`, `OGE_DEFINED_NAME_MAX_LENGTH`, `OGE_EN_US_FORMAT_LOCALE`, `OGE_ESTIMATING_MEASURER`, `OGE_GENERAL_MAX_CHARS`, `OGE_ICON_SETS`, `OGE_INDEXED_COLORS`, `OGE_MAX_DATE_SERIAL`, `OGE_OFFICE_THEME_COLORS`, `OGE_OUTLINE_LEVEL_SIZE`, `OGE_SHEET_MAX_COLUMNS`, `OGE_SHEET_MAX_ROWS`, `OGE_SHEET_NAME_MAX_LENGTH`, `OGE_TABLE_STYLE_ELEMENT_TYPES`, `OGE_THEME_COLOR_SLOTS`, `OgeAxis`, `OgeConditionalFormatter`, `OgeObjectUrls`, `OgeSheetLayout`, `OgeSparklineFormatter`, `OgeSpreadsheetCore`, `OgeStyleRegistry`, `OgeStyleResolver`, `OgeTableFormatter`, `OgeWorkbook`, `OgeWorksheet`, `OgeXlsxError`, `compileOgeNumberFormat`, `createOgeWorkbook`, `createPlainSpreadsheetReactivity`, `formatOgeCellAddress`, `formatOgeCellValue`, `formatOgeGeneral`, `formatOgeR1C1Address`, `formatOgeRangeAddress`, `isOgeCellEmpty`, `isOgeCellError`, `isOgeCellInSheet`, `isOgeDateFormat`, `isOgeRichText`, `ogeAnchorBox`, `ogeApplyOutlineEdit`, `ogeApplyTint`, `ogeAutofitColumnWidth`, `ogeAutofitRowHeight`, `ogeAxisOutline`, `ogeBorderRank`, `ogeBorderStrokes`, `ogeBuiltinNumberFormat`, `ogeBuiltinTableStyle`, `ogeCellAt`, `ogeCellBox`, `ogeCellDisplay`, `ogeCellError`, `ogeCellKey`, `ogeCellRange`, `ogeCellSelection`, `ogeCellText`, `ogeCellValueType`, `ogeChartLabel`, `ogeChartPalette`, `ogeChartScale`, `ogeChartView`, `ogeCheckSpreadsheetLicense`, `ogeCivilFromDays`, `ogeColumnCharactersToWidth`, `ogeColumnIndex`, `ogeColumnName`, `ogeColumnPadding`, `ogeColumnWidthToCharacters`, `ogeColumnWidthToPixels`, `ogeConditionalConstant`, `ogeConditionalRuleSupported`, `ogeCopyRange`, `ogeCreateCanvasMeasurer`, `ogeCurrentRegion`, `ogeDataEdge`, `ogeDatePartsToSerial`, `ogeDateToSerial`, `ogeDaysFromCivil`, `ogeDefaultColumnWidthPixels`, `ogeDisplayFormula`, `ogeDrawSparkline`, `ogeExpandToMerges`, `ogeFetchWorkbook`, `ogeFindAll`, `ogeFindPattern`, `ogeFontCss`, `ogeFontDescent`, `ogeFontFamily`, `ogeFontLine`, `ogeFontMetrics`, `ogeFontPixelSize`, `ogeFormatLocale`, `ogeGridHeaderAt`, `ogeGridPoint`, `ogeGridView`, `ogeGridlinePath`, `ogeHasFontMetrics`, `ogeHashFill`, `ogeHeaderCells`, `ogeHeaderMarks`, `ogeHeaderStrips`, `ogeIconParts`, `ogeIndentPixels`, `ogeLastCell`, `ogeLcidToLocaleTag`, `ogeLineTop`, `ogeMoveCell`, `ogeNoteBoxes`, `ogeOffsetCellAddress`, `ogeOpenLink`, `ogeOutlineGutter`, `ogeOutlineLevel`, `ogeOutlineLevelButtons`, `ogeOutlineMarks`, `ogeOutlineStrips`, `ogeOutlineToggle`, `ogeOwnerCell`, `ogePaintWindow`, `ogePaneCharts`, `ogePanePictures`, `ogePaneStyle`, `ogePatternTile`, `ogePixelsToColumnCharacters`, `ogePixelsToColumnWidth`, `ogePixelsToPoints`, `ogePlaceCharts`, `ogePlacePictures`, `ogePointerCell`, `ogePointerSheetPoint`, `ogePointsToPixels`, `ogePrintSheetTable`, `ogePrintTable`, `ogeQuoteSheetName`, `ogeRangeBoundingBox`, `ogeRangeBox`, `ogeRangeContains`, `ogeRangeContainsRange`, `ogeRangeFromCorners`, `ogeRangeIntersection`, `ogeRangeSize`, `ogeRangesIntersect`, `ogeRenderPane`, `ogeResizeLine`, `ogeRevealScroll`, `ogeRichText`, `ogeRichTextToString`, `ogeScrollEdges`, `ogeScrollToCell`, `ogeSelectionContains`, `ogeSelectionShapes`, `ogeSelectionSummary`, `ogeSerialToDate`, `ogeSerialToDateParts`, `ogeSerialWeekday`, `ogeSheetHeaders`, `ogeSheetNameNeedsQuotes`, `ogeShiftFormula`, `ogeSliderToZoom`, `ogeSpanRange`, `ogeSparklineAxis`, `ogeTabKeyTarget`, `ogeTableStyleFormats`, `ogeTextMargin`, `ogeViewportPanes`, `ogeWrapText`, `ogeWriteClipboard`, `ogeZoomFont`, `ogeZoomOffset`, `ogeZoomPaint`, `ogeZoomPictures`, `ogeZoomToSlider`, `parseOgeCellAddress`, `parseOgeCellErrorCode`, `parseOgeR1C1Address`, `parseOgeRangeAddress`, `readOgeXlsx`, `readOgeXlsxSync`, `resolveOgeColor`, `resolveOgeSpreadsheetConfig`, `resolveOgeSpreadsheetMessages`, `validateOgeDefinedName`, `validateOgeSheetName`
 - types: `OgeAlignment`, `OgeAutoFilter`, `OgeAutofitOptions`, `OgeAxisOutline`, `OgeBorder`, `OgeBorderEdge`, `OgeBorderStyle`, `OgeBox`, `OgeCalculationSettings`, `OgeCell`, `OgeCellAddress`, `OgeCellDisplay`, `OgeCellDisplayOptions`, `OgeCellError`, `OgeCellErrorCode`, `OgeCellRef`, `OgeCellStyle`, `OgeCellValue`, `OgeCellValueType`, `OgeChartAxis`, `OgeChartCategories`, `OgeChartDataLabels`, `OgeChartFont`, `OgeChartGroup`, `OgeChartKind`, `OgeChartLegend`, `OgeChartMarker`, `OgeChartModel`, `OgeChartNumbers`, `OgeChartPathMark`, `OgeChartScale`, `OgeChartSeries`, `OgeChartShape`, `OgeChartText`, `OgeChartTextMark`, `OgeChartTitle`, `OgeChartViewInput`, `OgeClipboardContent`, `OgeColor`, `OgeColorContext`, `OgeColorScale`, `OgeColumnInfo`, `OgeColumnSpan`, `OgeConditionalFormat`, `OgeConditionalFormatterOptions`, `OgeConditionalPaint`, `OgeConditionalPainter`, `OgeConditionalRule`, `OgeConditionalRuleType`, `OgeConditionalValue`, `OgeCss`, `OgeDataBar`, `OgeDataValidation`, `OgeDateInput`, `OgeDateParts`, `OgeDateSystem`, `OgeDateZone`, `OgeDefinedName`, `OgeDefinedNameProblem`, `OgeDisplayKind`, `OgeDrawPane`, `OgeFill`, `OgeFindMatch`, `OgeFindOptions`, `OgeFindState`, `OgeFont`, `OgeFontMetrics`, `OgeFormatCondition`, `OgeFormatLocale`, `OgeFormattableValue`, `OgeFormattedValue`, `OgeFormulaBarContent`, `OgeGradientFill`, `OgeGradientStop`, `OgeGridClick`, `OgeGridHeaderTarget`, `OgeGridPane`, `OgeGridPointerInput`, `OgeGridPointerPoint`, `OgeGridView`, `OgeGridViewInput`, `OgeHeaderCell`, `OgeHeaderMark`, `OgeHeaderStrip`, `OgeHorizontalAlignment`, `OgeHyperlink`, `OgeHyperlinkAction`, `OgeIconPart`, `OgeIconSet`, `OgeImportIssue`, `OgeImportIssueCode`, `OgeImportIssueSeverity`, `OgeIndexSpan`, `OgeNote`, `OgeNoteBox`, `OgeNoteRun`, `OgeNumberFormat`, `OgeNumberFormatOptions`, `OgeOpaquePart`, `OgeOutlineChange`, `OgeOutlineEdit`, `OgeOutlineGroup`, `OgeOutlineGutters`, `OgeOutlineLevelButton`, `OgeOutlineMark`, `OgeOutlineStrip`, `OgeOutlineSummaryChange`, `OgePageSetup`, `OgePaintAlignment`, `OgePaintBox`, `OgePaintCell`, `OgePaintChart`, `OgePaintEdge`, `OgePaintFill`, `OgePaintFont`, `OgePaintPicture`, `OgePaintWindowOptions`, `OgePaneChart`, `OgePaneKey`, `OgePanePicture`, `OgePatternFill`, `OgePatternType`, `OgePicture`, `OgePictureAnchor`, `OgePictureCorner`, `OgePrintCell`, `OgePrintTable`, `OgeProtection`, `OgeRangeAddress`, `OgeReferenceKind`, `OgeRenderFill`, `OgeRenderMark`, `OgeRenderPane`, `OgeRenderPaneInput`, `OgeRenderSpan`, `OgeRenderText`, `OgeResizeGuide`, `OgeResizeTarget`, `OgeResolvedStyle`, `OgeRevealRequest`, `OgeRichText`, `OgeRowInfo`, `OgeScrollEdges`, `OgeScrollPosition`, `OgeSelectionShapes`, `OgeSelectionSummary`, `OgeSheetChart`, `OgeSheetFormat`, `OgeSheetHeaders`, `OgeSheetLayoutOptions`, `OgeSheetNameProblem`, `OgeSheetOutline`, `OgeSheetPassthrough`, `OgeSheetProtection`, `OgeSheetRange`, `OgeSheetSelection`, `OgeSheetState`, `OgeSheetView`, `OgeSizeDialog`, `OgeSparkline`, `OgeSparklineAxisScale`, `OgeSparklineColors`, `OgeSparklineDrawing`, `OgeSparklineEmptyCells`, `OgeSparklineGroup`, `OgeSparklineMarker`, `OgeSparklinePaintColors`, `OgeSparklinePainter`, `OgeSparklineRect`, `OgeSparklineSpec`, `OgeSparklineType`, `OgeSparklineValue`, `OgeSpreadsheetCellClickEvent`, `OgeSpreadsheetChartView`, `OgeSpreadsheetConfig`, `OgeSpreadsheetConfigInput`, `OgeSpreadsheetCoreOptions`, `OgeSpreadsheetHyperlinkClickEvent`, `OgeSpreadsheetKeyAction`, `OgeSpreadsheetKeyInput`, `OgeSpreadsheetLoadErrorEvent`, `OgeSpreadsheetLoadedEvent`, `OgeSpreadsheetMenuItem`, `OgeSpreadsheetMenuKeyAction`, `OgeSpreadsheetMenuKind`, `OgeSpreadsheetMenuState`, `OgeSpreadsheetMessages`, `OgeSpreadsheetPage`, `OgeSpreadsheetReactiveCell`, `OgeSpreadsheetReactivity`, `OgeSpreadsheetSelectionChangeEvent`, `OgeSpreadsheetSource`, `OgeSpreadsheetStatus`, `OgeSpreadsheetTab`, `OgeStatusItem`, `OgeStroke`, `OgeStyleResolverOptions`, `OgeTable`, `OgeTableCellStyle`, `OgeTableColumn`, `OgeTablePainter`, `OgeTableStyle`, `OgeTableStyleElement`, `OgeTableStyleElementType`, `OgeTableStyleFormat`, `OgeTableStyleFormats`, `OgeTableStyleInfo`, `OgeTextMeasurer`, `OgeTextRun`, `OgeThemeColorSlot`, `OgeThemeColors`, `OgeUnderline`, `OgeVerticalAlignment`, `OgeViewportInput`, `OgeViewportPanes`, `OgeWorkbookOptions`, `OgeWorkbookProperties`, `OgeXlsxErrorCode`, `OgeXlsxReadOptions`, `OgeXlsxReadResult`, `OgeXlsxSource`, `OgeZoomedAxes`
+
+`@oge-ui/spreadsheet-engine/pdf`
+
+- values: `OGE_DEFAULT_PDF_VIEWER_CONFIG`, `OGE_DEFAULT_PDF_VIEWER_MESSAGES`, `OGE_PDF_ZOOM_STEPS`, `OgePdfViewerCore`, `ogeCheckSpreadsheetLicense`, `ogePdfFindMatches`, `ogePdfScale`, `ogeVisiblePdfPages`, `resolveOgePdfViewerConfig`
+- types: `OgePdfErrorCode`, `OgePdfJs`, `OgePdfJsDocument`, `OgePdfJsLoadingTask`, `OgePdfJsPage`, `OgePdfJsRenderTask`, `OgePdfJsTextContent`, `OgePdfJsTextItem`, `OgePdfJsViewport`, `OgePdfLoadErrorEvent`, `OgePdfLoadedEvent`, `OgePdfMatch`, `OgePdfPageSize`, `OgePdfPageText`, `OgePdfRect`, `OgePdfSource`, `OgePdfViewerConfig`, `OgePdfViewerConfigInput`, `OgePdfViewerCoreOptions`, `OgePdfViewerMessages`, `OgePdfZoom`
 
 `@oge-ui/spreadsheet-engine/word`
 
@@ -58430,6 +58585,63 @@ _Types_
 | `OgeWordDocumentMessages` | `interface` | The viewer's text: `viewerLabel`, `pageLabel` (with `{current}` and `{total}`), `previousPage`, `nextPage`, `loading`, `empty`, `loadError` and `encryptedOrLegacy`. |
 | `OgeWordDocumentConfig / OgeWordDocumentConfigInput` | `interface` | Defaults for viewers below the config provider: `{ messages }`, merged over the built-in text. |
 
+### <OgePdfViewer>
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `source` | `OgePdfSource \| null` | `null` | The PDF to open: bytes, a `Blob` / `File`, or a URL. |
+| `pageIndex` | `number` | `0` | 0-based page to show; with `onPageIndexChange` it is controlled. |
+| `messages` | `Partial<OgePdfViewerMessages>` | `{}` | Overrides of the message catalog. |
+
+_View_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `zoom` | `OgePdfZoom` | `'fit-width'` | A scale or a fit; with `onZoomChange` it is controlled. Ctrl + / − / 0 zoom from the keyboard. |
+| `showThumbnails` | `boolean` | `false` | The page thumbnail sidebar; with `onShowThumbnailsChange` it is controlled. |
+| `toolbar` | `boolean` | `true` | The toolbar: pages, zoom, the two fits, find in document and print. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `print()` | `() => Promise<void>` | Prints every page at print resolution (the toolbar's Print button). |
+| `search(query)` | `(query: string) => Promise<void>` | Finds `query` (case- and accent-insensitive) on every page and moves to the first match. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onPageIndexChange` | `(index: number) => void` | When the page nearest the viewport's middle changes. |
+| `onZoomChange` | `(zoom: OgePdfZoom) => void` | When the toolbar or the keyboard changes the zoom. |
+| `onShowThumbnailsChange` | `(show: boolean) => void` | When the toolbar toggles the thumbnails. |
+| `onLoaded` | `OgePdfLoadedEvent` | After a document opened. |
+| `onLoadError` | `OgePdfLoadErrorEvent` | When a document did not open. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePdfSource` | `ArrayBuffer \| Uint8Array \| Blob \| string` | What the viewer opens: the file's bytes, a `Blob` / `File`, or a URL fetched with same-origin credentials. |
+| `OgePdfZoom` | `number \| 'fit-width' \| 'fit-page'` | A scale (`1` = 100 %, from 0.25 to 4) or one of the two fits, which follow the viewer's size. |
+| `OgePdfLoadedEvent` | `interface` | `{ pageCount }` — the number of pages. |
+| `OgePdfLoadErrorEvent` | `interface` | `{ code, message }` — why the file did not open. |
+| `OgePdfErrorCode` | `'fetch-failed' \| 'password' \| 'invalid' \| 'pdfjs-missing'` | `pdfjs-missing`: `pdfjs-dist` is not installed or the `pdfjs` loader failed. |
+| `OgePdfViewerMessages` | `interface` | The viewer's text: `viewerLabel`, `pageLabel` (with `{current}` and `{total}`), `previousPage`, `nextPage`, `zoomIn`, `zoomOut`, `fitWidth`, `fitPage`, `zoomLevel` (`{zoom}`), `thumbnails`, `search`, `searchNext`, `searchPrevious`, `matchCount`, `noMatches`, `print`, `loading`, `empty`, `loadError` and `passwordProtected`. Defaults in `OGE_DEFAULT_PDF_VIEWER_MESSAGES`. |
+| `OgePdfViewerConfig / OgePdfViewerConfigInput` | `interface` | Defaults for viewers below the config provider: `{ messages, pdfjs, workerSrc }`. `workerSrc` is the URL your app serves `pdfjs-dist/build/pdf.worker.min.mjs` from; `pdfjs` replaces the default `() => import('pdfjs-dist')` loader. |
+| `OgePdfViewerHandle` | `interface` | What a `ref` reaches: `print()` and `search(query)`. |
+| `OgePdfViewerConfigProvider / useOgePdfViewerConfig` | `component / hook` | Wrap a subtree in `<OgePdfViewerConfigProvider config={{ workerSrc }}>` to set the worker URL, the loader and the text; nested providers merge over the outer one. |
+
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -58492,6 +58704,99 @@ export function OpenWorkbook() {
         style={{ height: 520 }}
       />
       <p>{issues} things shown differently from Excel</p>
+    </>
+  );
+}
+```
+
+#### Getting started
+
+```ts
+'use client';
+
+import { OgePdfViewer, OgePdfViewerConfigProvider } from '@oge-ui/react-spreadsheet/pdf';
+
+export function PdfPreview() {
+  return (
+    <>
+      {/* npm i pdfjs-dist, and serve
+          node_modules/pdfjs-dist/build/pdf.worker.min.mjs from your app. pdf.js
+          loads on first use. The toolbar pages, zooms, fits, finds and prints;
+          pages are drawn only when they come near the viewport. */}
+      <OgePdfViewerConfigProvider
+        config={{ workerSrc: '/pdfjs/pdf.worker.min.mjs' }}
+      >
+        <OgePdfViewer
+          source="/demo/spreadsheet/report.pdf"
+          style={{ height: 640 }}
+        />
+      </OgePdfViewerConfigProvider>
+    </>
+  );
+}
+```
+
+#### Controlled view
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePdfViewer } from '@oge-ui/react-spreadsheet/pdf';
+import type { OgePdfZoom } from '@oge-ui/react-spreadsheet/pdf';
+
+export function ControlledPdf() {
+  const [page, setPage] = useState(0);
+  const [zoom, setZoom] = useState<OgePdfZoom>(1);
+  const [thumbs, setThumbs] = useState(true);
+  return (
+    <>
+      {/* page, zoom and the thumbnail sidebar follow the toolbar and the
+          scrolling, and move the viewer when you set them. */}
+      <p>
+        Page {page + 1} · zoom {String(zoom)}
+      </p>
+      <OgePdfViewer
+        source="/demo/spreadsheet/report.pdf"
+        pageIndex={page}
+        onPageIndexChange={setPage}
+        zoom={zoom}
+        onZoomChange={setZoom}
+        showThumbnails={thumbs}
+        onShowThumbnailsChange={setThumbs}
+        style={{ height: 520 }}
+      />
+    </>
+  );
+}
+```
+
+#### Bare preview
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePdfViewer } from '@oge-ui/react-spreadsheet/pdf';
+
+export function BarePdf() {
+  const [file, setFile] = useState<File | null>(null);
+  return (
+    <>
+      {/* toolbar={false} leaves just the pages, for a preview pane; source
+          takes a File the user picked, read in the browser. */}
+      <input
+        type="file"
+        accept="application/pdf"
+        aria-label="Choose a PDF"
+        onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+      />
+      <OgePdfViewer
+        source={file ?? '/demo/spreadsheet/report.pdf'}
+        toolbar={false}
+        zoom="fit-page"
+        style={{ height: 420 }}
+      />
     </>
   );
 }

@@ -87,6 +87,7 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/upload"
       ]
     },
@@ -758,6 +759,7 @@
         "@oge-ui/layout",
         "@oge-ui/overlay",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
         "@oge-ui/upload"
       ]
@@ -2779,6 +2781,7 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
         "@oge-ui/tree-list",
         "@oge-ui/upload"
@@ -2805,6 +2808,7 @@
         "@oge-ui/navigation",
         "@oge-ui/overlay",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tabs",
         "@oge-ui/upload"
       ]
@@ -2832,7 +2836,8 @@
         "@oge-ui/inputs",
         "@oge-ui/kanban",
         "@oge-ui/layout",
-        "@oge-ui/navigation"
+        "@oge-ui/navigation",
+        "@oge-ui/spreadsheet"
       ]
     },
     {
