@@ -7,6 +7,25 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Import wizard — `@oge-ui/spreadsheet/import`, `@oge-ui/react-spreadsheet/import`, `@oge-ui/spreadsheet-engine/import`
+
+- `<oge-import-wizard>` / `<OgeImportWizard>` takes a file through four steps:
+  choose a CSV, TSV or Excel file, match its columns to your `fields`, review
+  every row with its problems, and import. `(imported)` / `onImported`
+  receives the valid records, every row with its problems and the skipped
+  count. Files are read in the browser and nothing is uploaded.
+- Columns match automatically by field key, label or alias, ignoring case,
+  accents and punctuation. Each field converts its cells as `text`, `number`,
+  `date` or `boolean`, and can be `required` or add its own `validate`.
+  `parse` sets the decimal separator, the date order and extra yes / no words.
+- CSV parsing follows RFC 4180 and detects the delimiter. Encoding is UTF-8,
+  with a fallback to Windows-1252. Excel cells keep their types, so a
+  date-formatted number arrives as a `Date`.
+- Headless helpers for server jobs: `ogeReadImportFile`, `ogeParseCsv`,
+  `ogeAutoMapColumns`, `ogeConvertImportValue`, `ogeValidateImportRows`.
+- `@oge-ui/locales`: an `importWizard` slice in all 11 packs.
+- New page `/components/spreadsheet/import`.
+
 ### PDF viewer — `@oge-ui/spreadsheet/pdf`, `@oge-ui/react-spreadsheet/pdf`, `@oge-ui/spreadsheet-engine/pdf`
 
 - `<oge-pdf-viewer>` / `<OgePdfViewer>` over pdf.js: pages are drawn as they

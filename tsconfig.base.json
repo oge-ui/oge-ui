@@ -181,6 +181,9 @@
       "@oge-ui/react-scheduler/export-pdf": [
         "./packages/react/scheduler/src/export-pdf.ts"
       ],
+      "@oge-ui/react-spreadsheet/import": [
+        "./packages/react/spreadsheet/src/import.ts"
+      ],
       "@oge-ui/react-spreadsheet/pdf": [
         "./packages/react/spreadsheet/src/pdf.ts"
       ],
@@ -210,12 +213,18 @@
       "@oge-ui/scheduler-engine/export-excel": [
         "./packages/scheduler-engine/src/export-excel.ts"
       ],
+      "@oge-ui/spreadsheet/import": [
+        "./packages/spreadsheet/import/src/index.ts"
+      ],
       "@oge-ui/spreadsheet/pdf": ["./packages/spreadsheet/pdf/src/index.ts"],
       "@oge-ui/spreadsheet/word": ["./packages/spreadsheet/word/src/index.ts"],
       "@oge-ui/spreadsheet/powerpoint": [
         "./packages/spreadsheet/powerpoint/src/index.ts"
       ],
       "@oge-ui/spreadsheet": ["./packages/spreadsheet/src/index.ts"],
+      "@oge-ui/spreadsheet-engine/import": [
+        "./packages/spreadsheet-engine/src/import.ts"
+      ],
       "@oge-ui/spreadsheet-engine/pdf": [
         "./packages/spreadsheet-engine/src/pdf.ts"
       ],

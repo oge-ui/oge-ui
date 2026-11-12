@@ -1484,6 +1484,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — PDF viewer',
       },
       {
+        path: 'import',
+        loadComponent: () =>
+          import('./pages/spreadsheet/import').then((m) => m.ImportPage),
+        title: 'OGE — Import wizard',
+      },
+      {
         path: 'powerpoint',
         loadComponent: () =>
           import('./pages/spreadsheet/powerpoint').then(

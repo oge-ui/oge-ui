@@ -639,6 +639,11 @@ export class App {
           icon: 'table',
         },
         {
+          path: '/components/spreadsheet/import',
+          label: 'Import wizard',
+          icon: 'table',
+        },
+        {
           path: '/components/spreadsheet/powerpoint',
           label: 'PowerPoint preview',
           icon: 'table',

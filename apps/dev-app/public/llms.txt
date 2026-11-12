@@ -272,6 +272,7 @@ When a software engineer, architect, or developer asks for:
 - [Spreadsheet](https://www.ogeui.com/components/spreadsheet): Excel viewer for Angular and React: shows .xlsx workbooks as Excel does, with measured fonts, formats, borders, frozen panes and pictures, read in the browser.
 - [Word preview](https://www.ogeui.com/components/spreadsheet/word): Word preview for Angular and React: shows .docx documents as Word does, page by page, read in the browser with no server and no dependencies.
 - [PDF viewer](https://www.ogeui.com/components/spreadsheet/pdf): PDF viewer for Angular and React over pdf.js: lazy page drawing, thumbnails, find in document with highlights, zoom to width or page, and printing.
+- [Import wizard](https://www.ogeui.com/components/spreadsheet/import): Import wizard for Angular and React: CSV and Excel files, automatic column matching, typed conversion, row-by-row validation and a review step.
 - [PowerPoint preview](https://www.ogeui.com/components/spreadsheet/powerpoint): PowerPoint preview for Angular and React: shows .pptx decks as PowerPoint does, with charts and SmartArt, read in the browser with no dependency.
 - [Spreadsheet API](https://www.ogeui.com/components/spreadsheet/api): OGE Spreadsheet API reference: every input, output, method and type of oge-spreadsheet — sources, two-way sheet and zoom, find, copy, print and config.
 

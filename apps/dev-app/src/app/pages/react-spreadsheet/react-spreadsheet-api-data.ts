@@ -644,3 +644,163 @@ export const OGE_REACT_PDF_VIEWER_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_REACT_IMPORT_WIZARD_API: ApiSections = {
+  properties: [
+    {
+      title: 'Content',
+      entries: [
+        {
+          name: 'fields',
+          type: 'readonly OgeImportField&lt;T&gt;[]',
+          description: 'The fields of the records to produce. Required.',
+        },
+        {
+          name: 'accept',
+          type: 'string',
+          default: "'.csv,.tsv,.txt,.xlsx,text/csv'",
+          description: 'The file types the picker offers.',
+        },
+        {
+          name: 'parse',
+          type: 'OgeImportParseOptions',
+          default: '{}',
+          description:
+            'How text cells are parsed: decimal separator, date order, boolean words.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgeImportWizardMessages&gt;',
+          default: '{}',
+          description: 'Overrides of the message catalog.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      title: 'Events',
+      entries: [
+        {
+          name: 'onImported',
+          type: 'OgeImportEvent&lt;T&gt;',
+          description:
+            'When the user imports: the valid records, every row with its problems, the skipped count.',
+        },
+        {
+          name: 'onStepChange',
+          type: 'OgeImportStep',
+          description: 'After each step change.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      title: 'Handle (ref)',
+      entries: [
+        {
+          name: 'load(file, name?)',
+          type: '(file: Blob, name?: string) =&gt; Promise&lt;void&gt;',
+          description:
+            'Reads a file as if the user had dropped it (a sample, a file from your own picker).',
+        },
+        {
+          name: 'reset()',
+          type: '() =&gt; void',
+          description: 'Back to the first step, forgetting the file.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      title: 'Types',
+      entries: [
+        {
+          name: 'OgeImportField',
+          type: 'interface',
+          description:
+            '<code>{ field, label, required?, type?, aliases?, validate? }</code> — <code>type</code> is <code>text</code> (default), <code>number</code>, <code>date</code> or <code>boolean</code>; <code>aliases</code> are other header texts that match automatically; <code>validate(value, record)</code> returns a message to reject a value.',
+        },
+        {
+          name: 'OgeImportFieldType',
+          type: "'text' | 'number' | 'date' | 'boolean'",
+          description:
+            'How a field converts its cells. Excel cells arrive typed (dates with a date format become <code>Date</code>); CSV text is parsed under <code>parse</code>.',
+        },
+        {
+          name: 'OgeImportParseOptions',
+          type: 'interface',
+          description:
+            '<code>{ decimalSeparator?, dateOrder?, booleanWords? }</code> — <code>.</code> or <code>,</code> (detected per cell when omitted); <code>dmy</code> (default), <code>mdy</code> or <code>ymd</code> for <code>1/2/2026</code>-style dates (ISO dates always read); extra words for <code>true</code> / <code>false</code> beside <code>yes</code>, <code>no</code>, <code>1</code>, <code>0</code>….',
+        },
+        {
+          name: 'OgeImportEvent',
+          type: 'interface',
+          description:
+            '<code>{ records, rows, skipped, fileName }</code> — the valid records in file order, every converted row with its problems, and how many rows were left out.',
+        },
+        {
+          name: 'OgeImportRowResult / OgeImportCellError',
+          type: 'interface',
+          description:
+            '<code>{ index, record, errors }</code> per data row; each error is <code>{ field, column, message }</code> (<code>column</code> <code>-1</code> for a required field with no column).',
+        },
+        {
+          name: 'OgeImportStep',
+          type: "'file' | 'map' | 'review' | 'done'",
+          description: 'The four steps, in order.',
+        },
+        {
+          name: 'OgeImportWizardMessages',
+          type: 'interface',
+          description:
+            'The wizard&#39;s text, including the validation messages (<code>required</code>, <code>invalidNumber</code>, <code>invalidDate</code>, <code>invalidBoolean</code>, with <code>{field}</code>) and ICU-plural summaries (<code>rowsSummary</code>, <code>problemsSummary</code>, <code>importRows</code>, <code>doneSummary</code>). Defaults in <code>OGE_DEFAULT_IMPORT_WIZARD_MESSAGES</code>.',
+        },
+        {
+          name: 'OgeImportWizardConfig / OgeImportWizardConfigInput',
+          type: 'interface',
+          description:
+            'Defaults for wizards below the config provider: <code>{ messages, parse }</code>.',
+        },
+        {
+          name: 'OgeImportWizardConfigProvider / useOgeImportWizardConfig',
+          type: 'component / hook',
+          description:
+            'Wrap a subtree in <code>&lt;OgeImportWizardConfigProvider config={{ messages, parse }}&gt;</code>; nested providers merge over the outer one.',
+        },
+        {
+          name: 'OgeImportWizardHandle',
+          type: 'interface',
+          description:
+            'What a <code>ref</code> reaches: <code>load(file, name?)</code> and <code>reset()</code>.',
+        },
+        {
+          name: 'ogeReadImportFile(source, options?)',
+          type: '(source: Blob | ArrayBuffer | Uint8Array, options?) =&gt; Promise&lt;OgeImportBook&gt;',
+          description:
+            'The wizard&#39;s reader on its own: CSV / TSV (UTF-8 or Windows-1252, delimiter detected) or xlsx into <code>{ format, sheets: [{ name, rows }] }</code>.',
+        },
+        {
+          name: 'ogeParseCsv(text, options?)',
+          type: '(text: string, { delimiter?, maxRows? }) =&gt; string[][]',
+          description:
+            'RFC 4180 CSV: quoted fields, doubled quotes, line breaks inside quotes, any line end, a byte-order mark dropped.',
+        },
+        {
+          name: 'ogeAutoMapColumns(headers, fields)',
+          type: '(headers: string[], fields) =&gt; (string | null)[]',
+          description:
+            'The automatic column matching: key, label or alias, ignoring case, accents, spaces, <code>_</code>, <code>-</code> and <code>.</code>; each field once.',
+        },
+        {
+          name: 'ogeConvertImportValue / ogeValidateImportRows',
+          type: 'function',
+          description:
+            'The conversion of one cell and the check of whole rows, for imports without the UI (a server job, a test).',
+        },
+      ],
+    },
+  ],
+};

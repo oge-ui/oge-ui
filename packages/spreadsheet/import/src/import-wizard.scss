@@ -1,0 +1,358 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The import wizard of both render layers.
+oge-import-wizard {
+  display: block;
+}
+
+.oge-import {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+// --- steps -------------------------------------------------------------------
+.oge-import-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 0;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  list-style: none;
+  counter-reset: oge-import-step;
+}
+
+.oge-import-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--oge-muted-color);
+  counter-increment: oge-import-step;
+
+  &::before {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--oge-border-color);
+    border-radius: 50%;
+    background: var(--oge-bg);
+    content: counter(oge-import-step);
+    font-size: 0.85em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &[aria-current='step'] {
+    color: var(--oge-text-color);
+    font-weight: 600;
+
+    &::before {
+      border-color: var(--oge-accent);
+      background: var(--oge-accent);
+      color: var(--oge-severity-contrast);
+    }
+  }
+
+  &.oge-import-step-done::before {
+    border-color: var(--oge-accent-25);
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+    content: '✓';
+  }
+}
+
+// --- body --------------------------------------------------------------------
+.oge-import-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+
+  @include tokens.scrollbar;
+}
+
+.oge-import-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 180px;
+  padding: 24px;
+  border: 2px dashed var(--oge-drop-placeholder-border, var(--oge-border-color));
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-header-bg);
+  text-align: center;
+
+  &.oge-import-drop-active {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent-soft);
+  }
+
+  svg {
+    color: var(--oge-muted-color);
+  }
+}
+
+.oge-import-browse {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--oge-accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 2px;
+  }
+}
+
+.oge-import-hint {
+  color: var(--oge-muted-color);
+  font-size: 0.9em;
+}
+
+.oge-import-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.oge-import-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.oge-import-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--oge-accent);
+  }
+}
+
+.oge-import-select {
+  height: var(--oge-control-height-sm);
+  min-width: 10em;
+  padding: 0 6px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+
+  &:focus-visible {
+    border-color: var(--oge-accent);
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+// --- tables ------------------------------------------------------------------
+.oge-import-table-wrap {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+
+  @include tokens.scrollbar;
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 2px;
+  }
+}
+
+.oge-import-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--oge-border-color);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--oge-header-bg);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--oge-row-alt-bg);
+  }
+}
+
+.oge-import-sample {
+  max-width: 22em;
+  overflow: hidden;
+  color: var(--oge-muted-color);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-import-row-number {
+  color: var(--oge-muted-color);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.oge-import-table td.oge-import-cell-error {
+  background: var(--oge-danger-soft);
+  box-shadow: inset 2px 0 0 var(--oge-danger);
+}
+
+.oge-import-problems {
+  margin: 0;
+  padding: 0;
+  color: var(--oge-danger);
+  font-size: 0.9em;
+  list-style: none;
+}
+
+// --- notes and footer --------------------------------------------------------
+.oge-import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.oge-import-count {
+  font-weight: 600;
+}
+
+.oge-import-count-problems {
+  color: var(--oge-danger);
+}
+
+.oge-import-alert {
+  padding: 8px 12px;
+  border: 1px solid var(--oge-warning);
+  border-radius: var(--oge-radius);
+  background: var(--oge-warning-soft);
+}
+
+.oge-import-alert-error {
+  border-color: var(--oge-danger);
+  background: var(--oge-danger-soft);
+}
+
+.oge-import-note {
+  color: var(--oge-muted-color);
+  font-size: 0.9em;
+}
+
+.oge-import-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+
+  svg {
+    color: var(--oge-success);
+  }
+}
+
+.oge-import-footer {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+.oge-import-button {
+  min-width: 6em;
+  height: var(--oge-control-height-md);
+  padding: 0 14px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-button-radius, var(--oge-radius));
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+  font-weight: var(--oge-button-font-weight, 500);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+.oge-import-button-primary {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+
+  &:hover:not(:disabled) {
+    background: color-mix(
+      in srgb,
+      var(--oge-accent) 88%,
+      var(--oge-text-color)
+    );
+  }
+}
+
+@media (forced-colors: active) {
+  .oge-import-table td.oge-import-cell-error {
+    outline: 2px solid Mark;
+    outline-offset: -2px;
+  }
+
+  .oge-import-step[aria-current='step']::before {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

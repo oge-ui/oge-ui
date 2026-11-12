@@ -48,6 +48,11 @@ directly.
 - values: `OGE_DEFAULT_WORD_DOCUMENT_CONFIG`, `OGE_DEFAULT_WORD_DOCUMENT_MESSAGES`, `OgeDocxError`, `OgeWordDocumentCore`, `ogeCheckSpreadsheetLicense`, `ogeLayoutWordDocument`, `ogeVisibleWordPages`, `readOgeDocx`, `readOgeDocxSync`, `resolveOgeWordDocumentConfig`
 - types: `OgeDocxErrorCode`, `OgeDocxReadOptions`, `OgeDocxReadResult`, `OgeDocxSource`, `OgeWordBlock`, `OgeWordBorder`, `OgeWordCell`, `OgeWordDocument`, `OgeWordDocumentConfig`, `OgeWordDocumentConfigInput`, `OgeWordDocumentCoreOptions`, `OgeWordDocumentErrorCode`, `OgeWordDocumentLoadErrorEvent`, `OgeWordDocumentLoadedEvent`, `OgeWordDocumentMessages`, `OgeWordDocumentSource`, `OgeWordEdge`, `OgeWordFloat`, `OgeWordFloatPosition`, `OgeWordHeaderSet`, `OgeWordInline`, `OgeWordLaidLine`, `OgeWordLaidPage`, `OgeWordLayoutOptions`, `OgeWordLineSpacing`, `OgeWordPageSetup`, `OgeWordParagraph`, `OgeWordPicture`, `OgeWordRow`, `OgeWordRunStyle`, `OgeWordSection`, `OgeWordTab`, `OgeWordTable`, `OgeWordWrap`
 
+`@oge-ui/spreadsheet-engine/import`
+
+- values: `OGE_DEFAULT_IMPORT_VALIDATION_MESSAGES`, `OGE_DEFAULT_IMPORT_WIZARD_CONFIG`, `OGE_DEFAULT_IMPORT_WIZARD_MESSAGES`, `OGE_IMPORT_PREVIEW_LIMIT`, `OgeImportWizardCore`, `ogeAutoMapColumns`, `ogeCheckSpreadsheetLicense`, `ogeConvertImportValue`, `ogeDetectCsvDelimiter`, `ogeImportSheetRows`, `ogeParseCsv`, `ogeReadImportFile`, `ogeValidateImportRows`, `resolveOgeImportWizardConfig`
+- types: `OgeImportBook`, `OgeImportCellError`, `OgeImportCellValue`, `OgeImportEvent`, `OgeImportField`, `OgeImportFieldType`, `OgeImportParseOptions`, `OgeImportRowResult`, `OgeImportSheet`, `OgeImportStep`, `OgeImportValidationMessages`, `OgeImportWizardConfig`, `OgeImportWizardConfigInput`, `OgeImportWizardCoreOptions`, `OgeImportWizardMessages`, `OgeReadImportOptions`
+
 `@oge-ui/spreadsheet-engine/powerpoint`
 
 - values: `OGE_DEFAULT_PRESENTATION_CONFIG`, `OGE_DEFAULT_PRESENTATION_MESSAGES`, `OGE_EMU_PER_POINT`, `OgePptxError`, `OgePresentationCore`, `ogeCheckSpreadsheetLicense`, `ogeCreateSlideCanvasMeasurer`, `ogeLayoutSlideText`, `ogeRenderSlide`, `ogeSlideFontFamily`, `readOgePptx`, `readOgePptxSync`, `resolveOgePresentationConfig`

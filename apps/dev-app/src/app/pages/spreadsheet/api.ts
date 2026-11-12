@@ -6,6 +6,7 @@ import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
 import { ReactSpreadsheetApiSections } from '../react-spreadsheet/api';
 import {
+  OGE_IMPORT_WIZARD_API,
   OGE_PDF_VIEWER_API,
   OGE_PRESENTATION_API,
   OGE_SPREADSHEET_API,
@@ -17,6 +18,7 @@ const SECTIONS = [
   'OgePresentation',
   'OgeWordDocument',
   'OgePdfViewer',
+  'OgeImportWizard',
 ] as const;
 
 /** TOC of the React view — must mirror `ReactSpreadsheetApiSections`' titles. */
@@ -25,6 +27,7 @@ const SECTIONS_REACT = [
   '<OgePresentation>',
   '<OgeWordDocument>',
   '<OgePdfViewer>',
+  '<OgeImportWizard>',
 ] as const;
 
 @Component({
@@ -101,6 +104,11 @@ const SECTIONS_REACT = [
         selector="oge-pdf-viewer"
         [sections]="pdfApi"
       />
+      <app-api-reference
+        title="OgeImportWizard"
+        selector="oge-import-wizard"
+        [sections]="importApi"
+      />
     }
 
     <h3>Notes</h3>
@@ -147,4 +155,5 @@ export class SpreadsheetApiPage {
   protected readonly presentationApi = OGE_PRESENTATION_API;
   protected readonly wordApi = OGE_WORD_DOCUMENT_API;
   protected readonly pdfApi = OGE_PDF_VIEWER_API;
+  protected readonly importApi = OGE_IMPORT_WIZARD_API;
 }

@@ -62,6 +62,16 @@
         "default": "./pdf.cjs"
       }
     },
+    "./import": {
+      "import": {
+        "types": "./import.d.ts",
+        "default": "./import.js"
+      },
+      "require": {
+        "types": "./import.d.cts",
+        "default": "./import.cjs"
+      }
+    },
     "./styles.css": "./styles.css",
     "./package.json": "./package.json"
   },

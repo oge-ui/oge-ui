@@ -77,6 +77,7 @@ const SLICES = {
   presentation: 'OGE_DEFAULT_PRESENTATION_MESSAGES',
   wordDocument: 'OGE_DEFAULT_WORD_DOCUMENT_MESSAGES',
   pdfViewer: 'OGE_DEFAULT_PDF_VIEWER_MESSAGES',
+  importWizard: 'OGE_DEFAULT_IMPORT_WIZARD_MESSAGES',
 };
 const COMMERCIAL = {
   pivot: '@oge-ui/pivot-engine',
@@ -89,6 +90,7 @@ const COMMERCIAL = {
   presentation: '@oge-ui/spreadsheet-engine/powerpoint',
   wordDocument: '@oge-ui/spreadsheet-engine/word',
   pdfViewer: '@oge-ui/spreadsheet-engine/pdf',
+  importWizard: '@oge-ui/spreadsheet-engine/import',
 };
 
 const codes = readdirSync(localesSrc)

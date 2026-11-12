@@ -48,6 +48,7 @@ import type { OgeSpreadsheetMessages } from '@oge-ui/spreadsheet-engine';
 import type { OgePresentationMessages } from '@oge-ui/spreadsheet-engine/powerpoint';
 import type { OgeWordDocumentMessages } from '@oge-ui/spreadsheet-engine/word';
 import type { OgePdfViewerMessages } from '@oge-ui/spreadsheet-engine/pdf';
+import type { OgeImportWizardMessages } from '@oge-ui/spreadsheet-engine/import';
 
 /**
  * A catalog with every key optional, nested blocks included. Packs are deep
@@ -155,4 +156,6 @@ export interface OgeLocalePack {
   readonly wordDocument?: OgeDeepPartial<OgeWordDocumentMessages>;
   /** Commercial: PDF viewer (`provideOgePdfViewerConfig`). */
   readonly pdfViewer?: OgeDeepPartial<OgePdfViewerMessages>;
+  /** Commercial: import wizard (`provideOgeImportWizardConfig`). */
+  readonly importWizard?: OgeDeepPartial<OgeImportWizardMessages>;
 }

@@ -310,7 +310,8 @@
         "hc": "#f5f5f5"
       },
       "u": [
-        "@oge-ui/grid"
+        "@oge-ui/grid",
+        "@oge-ui/spreadsheet"
       ]
     },
     {
@@ -419,7 +420,8 @@
       },
       "u": [
         "@oge-ui/buttons",
-        "@oge-ui/inputs"
+        "@oge-ui/inputs",
+        "@oge-ui/spreadsheet"
       ]
     },
     {
@@ -523,6 +525,7 @@
         "@oge-ui/overlay",
         "@oge-ui/pivot",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/tree-list",
         "@oge-ui/upload"
       ]
@@ -701,6 +704,7 @@
         "@oge-ui/kanban",
         "@oge-ui/layout",
         "@oge-ui/overlay",
+        "@oge-ui/spreadsheet",
         "@oge-ui/upload"
       ]
     },
@@ -857,6 +861,7 @@
         "@oge-ui/navigation",
         "@oge-ui/overlay",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/upload"
       ]
     },
@@ -883,6 +888,7 @@
         "@oge-ui/navigation",
         "@oge-ui/overlay",
         "@oge-ui/scheduler",
+        "@oge-ui/spreadsheet",
         "@oge-ui/upload"
       ]
     },
@@ -3089,7 +3095,8 @@
         "hc": "#0037b3"
       },
       "u": [
-        "@oge-ui/layout"
+        "@oge-ui/layout",
+        "@oge-ui/spreadsheet"
       ]
     },
     {
@@ -3578,7 +3585,8 @@
         "light": "var(--oge-radius)"
       },
       "u": [
-        "@oge-ui/buttons"
+        "@oge-ui/buttons",
+        "@oge-ui/spreadsheet"
       ]
     },
     {
@@ -3590,7 +3598,8 @@
         "light": "500"
       },
       "u": [
-        "@oge-ui/buttons"
+        "@oge-ui/buttons",
+        "@oge-ui/spreadsheet"
       ]
     },
     {

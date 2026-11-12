@@ -58,6 +58,7 @@ export default defineConfig(() => ({
         powerpoint: 'src/powerpoint.ts',
         word: 'src/word.ts',
         pdf: 'src/pdf.ts',
+        import: 'src/import.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
@@ -74,6 +75,7 @@ export default defineConfig(() => ({
         '@oge-ui/spreadsheet-engine/powerpoint',
         '@oge-ui/spreadsheet-engine/word',
         '@oge-ui/spreadsheet-engine/pdf',
+        '@oge-ui/spreadsheet-engine/import',
         'pdfjs-dist',
       ],
       output: {

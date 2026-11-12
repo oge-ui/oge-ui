@@ -39,6 +39,11 @@
       "module": "./pdf.esm.js",
       "default": "./pdf.cjs.js"
     },
+    "./import": {
+      "types": "./import.d.ts",
+      "module": "./import.esm.js",
+      "default": "./import.cjs.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

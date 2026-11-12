@@ -332,9 +332,143 @@ _Types_
 | `OgePdfViewerHandle` | `interface` | What a `ref` reaches: `print()` and `search(query)`. |
 | `OgePdfViewerConfigProvider / useOgePdfViewerConfig` | `component / hook` | Wrap a subtree in `<OgePdfViewerConfigProvider config={{ workerSrc }}>` to set the worker URL, the loader and the text; nested providers merge over the outer one. |
 
+### <OgeImportWizard>
+
+#### Properties
+
+_Content_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fields` | `readonly OgeImportField<T>[]` | `—` | The fields of the records to produce. Required. |
+| `accept` | `string` | `'.csv,.tsv,.txt,.xlsx,text/csv'` | The file types the picker offers. |
+| `parse` | `OgeImportParseOptions` | `{}` | How text cells are parsed: decimal separator, date order, boolean words. |
+| `messages` | `Partial<OgeImportWizardMessages>` | `{}` | Overrides of the message catalog. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `load(file, name?)` | `(file: Blob, name?: string) => Promise<void>` | Reads a file as if the user had dropped it (a sample, a file from your own picker). |
+| `reset()` | `() => void` | Back to the first step, forgetting the file. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onImported` | `OgeImportEvent<T>` | When the user imports: the valid records, every row with its problems, the skipped count. |
+| `onStepChange` | `OgeImportStep` | After each step change. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeImportField` | `interface` | `{ field, label, required?, type?, aliases?, validate? }` — `type` is `text` (default), `number`, `date` or `boolean`; `aliases` are other header texts that match automatically; `validate(value, record)` returns a message to reject a value. |
+| `OgeImportFieldType` | `'text' \| 'number' \| 'date' \| 'boolean'` | How a field converts its cells. Excel cells arrive typed (dates with a date format become `Date`); CSV text is parsed under `parse`. |
+| `OgeImportParseOptions` | `interface` | `{ decimalSeparator?, dateOrder?, booleanWords? }` — `.` or `,` (detected per cell when omitted); `dmy` (default), `mdy` or `ymd` for `1/2/2026`-style dates (ISO dates always read); extra words for `true` / `false` beside `yes`, `no`, `1`, `0`…. |
+| `OgeImportEvent` | `interface` | `{ records, rows, skipped, fileName }` — the valid records in file order, every converted row with its problems, and how many rows were left out. |
+| `OgeImportRowResult / OgeImportCellError` | `interface` | `{ index, record, errors }` per data row; each error is `{ field, column, message }` (`column` `-1` for a required field with no column). |
+| `OgeImportStep` | `'file' \| 'map' \| 'review' \| 'done'` | The four steps, in order. |
+| `OgeImportWizardMessages` | `interface` | The wizard's text, including the validation messages (`required`, `invalidNumber`, `invalidDate`, `invalidBoolean`, with `{field}`) and ICU-plural summaries (`rowsSummary`, `problemsSummary`, `importRows`, `doneSummary`). Defaults in `OGE_DEFAULT_IMPORT_WIZARD_MESSAGES`. |
+| `OgeImportWizardConfig / OgeImportWizardConfigInput` | `interface` | Defaults for wizards below the config provider: `{ messages, parse }`. |
+| `OgeImportWizardConfigProvider / useOgeImportWizardConfig` | `component / hook` | Wrap a subtree in `<OgeImportWizardConfigProvider config={{ messages, parse }}>`; nested providers merge over the outer one. |
+| `OgeImportWizardHandle` | `interface` | What a `ref` reaches: `load(file, name?)` and `reset()`. |
+| `ogeReadImportFile(source, options?)` | `(source: Blob \| ArrayBuffer \| Uint8Array, options?) => Promise<OgeImportBook>` | The wizard's reader on its own: CSV / TSV (UTF-8 or Windows-1252, delimiter detected) or xlsx into `{ format, sheets: [{ name, rows }] }`. |
+| `ogeParseCsv(text, options?)` | `(text: string, { delimiter?, maxRows? }) => string[][]` | RFC 4180 CSV: quoted fields, doubled quotes, line breaks inside quotes, any line end, a byte-order mark dropped. |
+| `ogeAutoMapColumns(headers, fields)` | `(headers: string[], fields) => (string \| null)[]` | The automatic column matching: key, label or alias, ignoring case, accents, spaces, `_`, `-` and `.`; each field once. |
+| `ogeConvertImportValue / ogeValidateImportRows` | `function` | The conversion of one cell and the check of whole rows, for imports without the UI (a server job, a test). |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeImportWizard } from '@oge-ui/react-spreadsheet/import';
+import type { OgeImportEvent, OgeImportField } from '@oge-ui/react-spreadsheet/import';
+
+interface Employee {
+  name: string;
+  email: string;
+  department: string;
+  startDate: Date;
+  salary: number;
+  active: boolean;
+}
+
+const FIELDS: OgeImportField<Employee>[] = [
+  { field: 'name', label: 'Full name', required: true },
+  {
+    field: 'email',
+    label: 'Email',
+    required: true,
+    validate: (value) =>
+      String(value).includes('@') ? null : 'Not an email address',
+  },
+  { field: 'department', label: 'Department', aliases: ['Team'] },
+  { field: 'startDate', label: 'Start date', type: 'date' },
+  { field: 'salary', label: 'Salary', type: 'number' },
+  { field: 'active', label: 'Active', type: 'boolean' },
+];
+
+export function EmployeeImport() {
+  const [saved, setSaved] = useState<readonly Employee[]>([]);
+  // event.records are typed and checked; send them to your API here
+  const save = (event: OgeImportEvent<Employee>) => setSaved(event.records);
+  return (
+    <>
+      {/* Drop /demo/import/contacts.csv or contacts.xlsx: columns match by
+          header text (keys, labels, aliases), every row is converted and
+          checked, and only the valid records reach onImported. */}
+      <OgeImportWizard fields={FIELDS} onImported={save} />
+      <p>{saved.length} records saved</p>
+    </>
+  );
+}
+```
+
+### Parsing options
+
+```ts
+'use client';
+
+import { OgeImportWizard } from '@oge-ui/react-spreadsheet/import';
+import type { OgeImportField } from '@oge-ui/react-spreadsheet/import';
+
+const FIELDS: OgeImportField[] = [
+  { field: 'sku', label: 'SKU', required: true, aliases: ['Stok kodu'] },
+  { field: 'price', label: 'Price', type: 'number', aliases: ['Fiyat'] },
+  { field: 'since', label: 'Listed on', type: 'date', aliases: ['Tarih'] },
+  { field: 'onSale', label: 'On sale', type: 'boolean', aliases: ['İndirimde'] },
+];
+
+export function ProductImport() {
+  return (
+    <>
+      {/* parse sets how text cells read: "1.234,50" with a decimal comma,
+          "04.03.2026" day first, and extra words for yes and no. */}
+      <OgeImportWizard
+        fields={FIELDS}
+        parse={{
+          decimalSeparator: ',',
+          dateOrder: 'dmy',
+          booleanWords: { true: ['aktif'], false: ['pasif'] },
+        }}
+      />
+    </>
+  );
+}
+```
 
 ### Getting started
 

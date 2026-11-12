@@ -9,6 +9,7 @@ module.exports = withNx(
       'packages/spreadsheet-engine/src/powerpoint.ts',
       'packages/spreadsheet-engine/src/word.ts',
       'packages/spreadsheet-engine/src/pdf.ts',
+      'packages/spreadsheet-engine/src/import.ts',
     ],
     outputPath: '../../dist/packages/spreadsheet-engine',
     tsConfig: './tsconfig.lib.json',
