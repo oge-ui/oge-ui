@@ -172,6 +172,13 @@ export class GuidesIndexPage {
             'What every filter operator means, blanks included, and test vectors that prove a server returns the same rows.',
         },
         {
+          path: '/guides/server-adapters',
+          title: 'Server adapters',
+          icon: 'code',
+          summary:
+            'Answer grid requests on your server: parameterized SQL from Node, or any .NET IQueryable with Entity Framework Core.',
+        },
+        {
           path: '/guides/migrate-from-primeng',
           title: 'Migrate from PrimeNG',
           icon: 'arrow-right',

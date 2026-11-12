@@ -201,6 +201,7 @@
     "@oge-ui/scheduler/export-excel": 444,
     "@oge-ui/scheduler/export-ical": 496,
     "@oge-ui/scheduler/export-pdf": 274,
+    "@oge-ui/server": 11474,
     "@oge-ui/spreadsheet": 30678,
     "@oge-ui/spreadsheet-engine": 181716,
     "@oge-ui/spreadsheet-engine/import": 92598,

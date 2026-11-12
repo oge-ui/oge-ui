@@ -1,0 +1,104 @@
+# @oge-ui/server
+
+> Server side of the data grid for Node: checks a grid request (LoadOptions) against a field allowlist with ogeParseLoadOptions and answers it with parameterized SQL for PostgreSQL, MySQL / MariaDB, SQLite and SQL Server through ogeSqlLoad — filter contract, search, sort, paging, first-level groups, summaries and header-filter values (ogeSqlDistinct). Driver-agnostic. The .NET twin is the Oge.Data NuGet package (IQueryable, Entity Framework Core).
+
+Part of OGE UI v1.1.7.
+Docs and live demos: https://www.ogeui.com/guides/server-adapters
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/server
+```
+
+## Using this package
+
+This is a **framework-free engine package**: plain TypeScript with no Angular
+or React import, shared by a family's render layers. You almost never import it
+directly.
+
+1. **Install the render package instead.** The Angular package (`@oge-ui/<family>`)
+   and the React package (`@oge-ui/react-<family>`) depend on this engine and
+   re-export its public types under the same names — import types from the
+   render package you use, not from here.
+2. **Reach for it directly only to build outside a component**: the export
+   builders on its `/export-*` entry points (optional peers, e.g. `exceljs` /
+   `jspdf`), the pure kernel functions in a Node script or a test, or a third
+   render layer.
+3. **Its controller takes an `OgeReactivityAdapter`** (`cell` / `derived`,
+   from `@oge-ui/behavior`). The render packages supply one — signals in
+   Angular, a versioned store in React; a new layer supplies its own.
+4. **Licensing follows the family.** A commercial family's engine carries the
+   same commercial license as its render packages.
+
+## Entry points
+
+`@oge-ui/server`
+
+- values: `OgeServerError`, `ogeBuildDistinctQuery`, `ogeBuildSqlQueries`, `ogeEscapeLike`, `ogeFoldText`, `ogeMssqlDialect`, `ogeMysqlDialect`, `ogeParseLoadOptions`, `ogePostgresDialect`, `ogeSchemaField`, `ogeSqlDistinct`, `ogeSqlLoad`, `ogeSqliteDialect`
+- types: `OgeParseLimits`, `OgeServerField`, `OgeServerFieldType`, `OgeServerSchema`, `OgeSqlDialect`, `OgeSqlLoadOptions`, `OgeSqlOptions`, `OgeSqlQueries`, `OgeSqlRunner`, `OgeSqlStatement`
+
+## API reference
+
+### @oge-ui/server API
+
+#### Methods
+
+_Functions_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeParseLoadOptions(input, schema, limits?)` | `(input: unknown, schema: OgeServerSchema, limits?: OgeParseLimits) => LoadOptions` | Checks an untrusted request body (the object or its JSON): only schema fields, only the contract's operators, bounded page size, filter depth and list length. Throws `OgeServerError` (status 400) otherwise. A missing `take` becomes `maxTake`. |
+| `ogeSqlLoad(options, config)` | `(options: LoadOptions, config: OgeSqlLoadOptions) => Promise<LoadResult>` | Answers a grid request with your driver: the page of rows (or of first-level groups with counts and group summaries), the total count when asked for, the total summaries. `config.run` executes one `{ sql, params }` statement. |
+| `ogeSqlDistinct(field, options, config)` | `(field: string, options: DistinctOptions, config) => Promise<unknown[]>` | The distinct values of a field for a header filter list, under the other columns' filter, the search box and the list's own search text. |
+| `ogeBuildSqlQueries(options, config)` | `(options: LoadOptions, config: OgeSqlOptions) => OgeSqlQueries` | The statements alone — `data`, `count`, `summary`, `groupCount` — for running them yourself (a transaction, a read replica, logging). |
+| `ogeBuildDistinctQuery(field, options, config)` | `(field, options, config: OgeSqlOptions) => OgeSqlStatement` | The header filter statement alone. |
+| `ogePostgresDialect(options?)` | `(options?: { unaccent?: boolean }) => OgeSqlDialect` | PostgreSQL: `$1` placeholders, `LIMIT / OFFSET`, text folded with `lower()` — or `lower(unaccent())` with `{ unaccent: true }` when the extension is installed — and `date_trunc` buckets. |
+| `ogeMysqlDialect()` | `() => OgeSqlDialect` | MySQL / MariaDB: `?` placeholders, backtick quoting, `lower()` folding (the default `_ai_ci` collations already ignore accents). |
+| `ogeSqliteDialect(options?)` | `(options?: { foldFunction?: string \| null }) => OgeSqlDialect` | SQLite: text folds through `oge_fold`, registered with `ogeFoldText` (`foldFunction: null` falls back to ASCII-only `lower()`); date buckets expect ISO text. |
+| `ogeMssqlDialect(options?)` | `(options?: { collation?: string }) => OgeSqlDialect` | SQL Server: `@p1` named parameters, bracket quoting, `OFFSET … FETCH` (with `ORDER BY (SELECT NULL)` when unsorted) and folding through a case- and accent-insensitive collation (default `Latin1_General_100_CI_AI`). |
+| `ogeFoldText(text)` | `(text: string) => string` | The suite's text folding, to register as SQLite's `oge_fold` function so text compares exactly as in the browser. |
+| `ogeEscapeLike(text)` | `(text: string) => string` | Escapes `%`, `_` and `!` for a `LIKE … ESCAPE '!'` pattern. |
+| `ogeSchemaField(schema, name, use?)` | `(schema, name: string, use?: 'filter' \| 'sort' \| 'select') => OgeServerField` | A schema field, or the `OgeServerError` a request naming it would get. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeServerSchema` | `interface` | `{ fields, key? }` — the allowlist. `key` is appended to every sort so pages are stable. |
+| `OgeServerField` | `interface` | `{ column?, type?, searchable?, filterable?, sortable?, expression? }` — `type` is `string` (default, compared folded), `number`, `date` or `boolean`; `expression: true` takes `column` as raw SQL written by you. |
+| `OgeServerFieldType` | `'string' \| 'number' \| 'date' \| 'boolean'` | How a field's values compare. |
+| `OgeParseLimits` | `interface` | `{ maxTake = 1000, maxFilterDepth = 16, maxFilterNodes = 200, maxListLength = 1000, maxTextLength = 500 }`. |
+| `OgeSqlOptions / OgeSqlLoadOptions` | `interface` | `{ schema, from, dialect, where?, toDbValue? }` plus `run` and `mapRow` for loading. `where` is your own condition (`?` per parameter) ANDed to every query; `toDbValue` converts request values (dates arrive as ISO text). |
+| `OgeSqlRunner` | `(statement: OgeSqlStatement) => Promise<Record<string, unknown>[]>` | Executes one statement with your driver and returns its rows. |
+| `OgeSqlStatement / OgeSqlQueries` | `interface` | `{ sql, params }`, and the set `{ data, count, summary, groupCount }`. |
+| `OgeSqlDialect` | `interface` | `{ name, quote, placeholder, fold, trim, paging, dateBucket }` — implement it for another database. |
+| `OgeServerError` | `class` | A request the schema or the limits refuse; `status` is 400. Answer it as a bad request. |
+
+### Oge.Data API
+
+#### Methods
+
+_Extension methods (IQueryable&lt;T&gt;)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLoadAsync(options, schema, runner, settings?, ct?)` | `Task<OgeLoadResult>` | Answers a request on any `IQueryable`: filter, search, sort (with the schema key as tie-breaker), paging, total count, total summaries, and first-level groups with counts and group summaries. `OgeLoad` is the synchronous form. |
+| `ApplyOgeFilter(options, schema, settings?) / ApplyOgeSort(sort, schema)` | `IQueryable<T>` | The filter and search, or the sort, alone — to compose with your own query. |
+| `OgeDistinctAsync(field, schema, filter?, searchText?, search?, take?, runner?, settings?, ct?)` | `Task<IReadOnlyList<object?>>` | The distinct values of a field for a header filter list. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSchema<T>` | `class` | The allowlist: `FromProperties()` (every scalar property, camelCase), `Field(name, x => x.Member, searchable?, filterable?, sortable?)`, `Without(names)`, `WithKey(name)`. |
+| `OgeLoadOptions / OgeLoadResult / OgeGroup` | `class` | The request and the response, shaped as the grid sends and reads them (System.Text.Json, camelCase). `OgeLoadOptions.Parse(json)` reads a body. |
+| `OgeQueryOptions` | `class` | `{ Fold, MaxTake = 1000, MaxFilterDepth = 16, MaxFilterNodes = 200, MaxListLength = 1000 }`. |
+| `OgeTextFold` | `enum` | `ToLower` (default; translates on every provider), `Contract` (`OgeText.Fold`: case, accents, İ / ı — map it with `HasDbFunction` for Entity Framework) or `None`. |
+| `OgeQueryRunner` | `class` | Runs the queries; override `ToListAsync` / `CountAsync` with Entity Framework's. `OgeQueryRunner.Sync` runs them synchronously. |
+| `OgeServerException` | `class` | A request the schema or the limits refuse — answer with 400. |
+
+

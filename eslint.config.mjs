@@ -103,6 +103,12 @@ export default [
               onlyDependOnLibsWithTags: ['scope:core'],
             },
             {
+              // the grid's server side: request checks and SQL over core's
+              // load-options contract; never a UI package
+              sourceTag: 'scope:server',
+              onlyDependOnLibsWithTags: ['scope:server', 'scope:core'],
+            },
+            {
               // the interaction/a11y sibling of core: positioning, focus
               // trapping, the overlay Escape stack, scroll locking. It may
               // take core's arithmetic but nothing above it — a behaviour

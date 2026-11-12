@@ -451,6 +451,13 @@ export const STACKBLITZ_PACKAGES: Readonly<
     "commercial": true,
     "styles": false
   },
+  "@oge-ui/server": {
+    "deps": [
+      "@oge-ui/core"
+    ],
+    "commercial": false,
+    "styles": false
+  },
   "@oge-ui/spreadsheet": {
     "deps": [
       "@oge-ui/core",

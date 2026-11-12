@@ -153,9 +153,10 @@ const SECTION_ORDER = [
       @for (section of visibleSections(); track section.key) {
         <h3 class="scroll-mt-20" [id]="anchorBase() + '-' + section.key">
           {{ section.label }}
-          <span class="ml-1 text-[13px] font-normal text-gray-400">{{
-            section.count
-          }}</span>
+          <span
+            class="ml-1 text-[13px] font-normal text-gray-500 dark:text-gray-400"
+            >{{ section.count }}</span
+          >
         </h3>
         @for (group of section.groups; track $index; let groupIndex = $index) {
           @if (group.title) {

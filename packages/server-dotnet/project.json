@@ -1,0 +1,44 @@
+{
+  "name": "server-dotnet",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/server-dotnet/Oge.Data",
+  "projectType": "library",
+  "tags": ["scope:server-dotnet", "platform:agnostic"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Oge.Data/**/*.cs",
+        "{projectRoot}/Oge.Data/*.csproj",
+        "{projectRoot}/README.md"
+      ],
+      "options": {
+        "command": "dotnet build packages/server-dotnet/Oge.Data/Oge.Data.csproj -c Release -nologo",
+        "cwd": "{workspaceRoot}",
+        "forwardAllArgs": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/**/*.cs",
+        "{projectRoot}/**/*.csproj",
+        "{workspaceRoot}/packages/core/filter-vectors.json"
+      ],
+      "options": {
+        "command": "dotnet run --project packages/server-dotnet/Oge.Data.Tests/Oge.Data.Tests.csproj -c Release -nologo",
+        "cwd": "{workspaceRoot}",
+        "forwardAllArgs": false
+      }
+    },
+    "pack": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "dotnet pack packages/server-dotnet/Oge.Data/Oge.Data.csproj -c Release -nologo -o dist/packages/server-dotnet",
+        "cwd": "{workspaceRoot}",
+        "forwardAllArgs": false
+      }
+    }
+  }
+}

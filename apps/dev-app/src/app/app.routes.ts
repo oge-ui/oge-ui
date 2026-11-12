@@ -208,6 +208,14 @@ export const appRoutes: Route[] = [
     title: 'OGE — Filter contract',
   },
   {
+    path: 'guides/server-adapters',
+    loadComponent: () =>
+      import('./pages/guides/server-adapters').then(
+        (m) => m.GuideServerAdaptersPage,
+      ),
+    title: 'OGE — Server adapters',
+  },
+  {
     path: 'ai',
     loadComponent: () =>
       import('./pages/ai/overview').then((m) => m.AiOverviewPage),

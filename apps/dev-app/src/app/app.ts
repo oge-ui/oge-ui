@@ -246,6 +246,11 @@ export class App {
           icon: 'filter',
         },
         {
+          path: '/guides/server-adapters',
+          label: 'Server adapters',
+          icon: 'code',
+        },
+        {
           path: '/guides/dates-and-time-zones',
           label: 'Dates and time zones',
           icon: 'calendar',

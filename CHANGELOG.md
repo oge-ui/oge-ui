@@ -7,6 +7,24 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Server adapters — new `@oge-ui/server` (npm) and `Oge.Data` (NuGet)
+
+- `@oge-ui/server` (MIT, Node): answers grid requests on your server.
+  - `ogeParseLoadOptions` checks an untrusted request against a field
+    allowlist with bounded sizes; anything else is a 400 `OgeServerError`.
+  - `ogeSqlLoad` / `ogeSqlDistinct` build parameterized SQL for PostgreSQL,
+    MySQL / MariaDB, SQLite and SQL Server and shape the `LoadResult`. They
+    cover filter, search, sort with a stable key, paging, first-level groups
+    (calendar and number buckets), summaries and header-filter values.
+  - No database driver is bundled: you pass a function that runs one statement.
+- `Oge.Data` (MIT, .NET 8): the same contract over any `IQueryable`.
+  `OgeLoadAsync`, `ApplyOgeFilter`, `ApplyOgeSort` and `OgeDistinctAsync`
+  build expression trees, so Entity Framework Core translates the whole
+  request to SQL.
+- Both run the published filter contract vectors in their tests: `@oge-ui/server`
+  against SQLite, `Oge.Data` against LINQ to Objects and EF Core on SQLite.
+- New guide `/guides/server-adapters`.
+
 ### Import wizard — `@oge-ui/spreadsheet/import`, `@oge-ui/react-spreadsheet/import`, `@oge-ui/spreadsheet-engine/import`
 
 - `<oge-import-wizard>` / `<OgeImportWizard>` takes a file through four steps:

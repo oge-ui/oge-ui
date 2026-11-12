@@ -696,6 +696,23 @@ smallest complete example):
   "valueless" operators by name — use `ogeFilterOperatorTakesValue`. Expressions a UI builds avoid
   `not` over nullable fields (spell the `isnull` branch out) so SQL / OData servers return the same
   rows; menus offer `isblank` and send `isnull` for typed columns (`ogeWireFilterOperator`).
+  A new operator also needs a case in the two server adapters:
+  - `packages/server/src/lib/sql.ts` (`Builder.leaf`);
+  - `packages/server-dotnet/Oge.Data/OgeQueryable.cs` (`Builder.Leaf`).
+
+  Their tests run the vectors against SQLite, LINQ to Objects and EF Core, so a missing case fails.
+
+- **Server adapters keep every leaf two-valued.** Each condition spells out its null branch
+  (`f IS NOT NULL AND …` / `f IS NULL OR …`), so `NOT` stays a true complement in SQL.
+- **Count `?` parameters once per use.** In `?`-placeholder dialects a value used twice
+  (search patterns, bucket widths) is pushed twice, and each part of a statement is built in the
+  order it appears in the text.
+- **.NET calendar buckets group by date parts.** They group by `OgeDateKey` (a `record`, so LINQ to
+  Objects compares by value) and rebuild the date in the final projection: SQLite's EF provider
+  cannot translate `new DateTime(…)` inside `GroupBy`.
+- **`Oge.Data` builds and tests with `dotnet`.** The Nx project `server-dotnet` runs
+  `nx:run-commands` with `forwardAllArgs: false`, so CI's `--coverage` flags never reach `dotnet`.
+  The NuGet package is packed with `nx run server-dotnet:pack` and is not part of `nx release`.
 
 ### Public API language
 

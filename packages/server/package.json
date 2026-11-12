@@ -1,0 +1,45 @@
+{
+  "name": "@oge-ui/server",
+  "version": "1.1.7",
+  "description": "Server side of the OGE UI data grid: checks grid requests against a field allowlist and answers them with parameterized SQL for PostgreSQL, MySQL / MariaDB, SQLite and SQL Server — filtering by the published filter contract, search, sorting, paging, grouping, summaries and header-filter values. Driver-agnostic; works with pg, mysql2, node:sqlite, better-sqlite3 and mssql.",
+  "keywords": [
+    "datagrid",
+    "server",
+    "sql",
+    "postgres",
+    "mysql",
+    "sqlite",
+    "mssql",
+    "filtering",
+    "paging",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "module": "./index.esm.js",
+      "default": "./index.cjs.js"
+    },
+    "./llms.txt": "./llms.txt",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@oge-ui/core": "1.1.7"
+  },
+  "homepage": "https://www.ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/server"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

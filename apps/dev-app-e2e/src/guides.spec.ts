@@ -63,6 +63,11 @@ const GUIDES = [
     heading: 'operators',
   },
   {
+    path: '/guides/server-adapters',
+    title: 'Server adapters',
+    heading: 'net-and-iqueryable',
+  },
+  {
     path: '/guides/dates-and-time-zones',
     title: 'Dates and time zones',
     heading: 'date-only-values',
@@ -238,6 +243,7 @@ test.describe('guides', () => {
     '/guides/accessibility/conformance',
     '/guides/dev-warnings',
     '/guides/filter-contract',
+    '/guides/server-adapters',
     '/guides/dates-and-time-zones',
     '/guides/migrate-from-primeng',
     '/guides/migrate-from-material',

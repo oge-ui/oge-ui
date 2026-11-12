@@ -351,6 +351,18 @@ export const PACKAGES = [
     tier: 'mit',
   },
   {
+    dir: 'server',
+    npm: '@oge-ui/server',
+    label: 'Server adapters',
+    summary:
+      'Server side of the data grid for Node: checks a grid request (LoadOptions) against a field allowlist with ogeParseLoadOptions and answers it with parameterized SQL for PostgreSQL, MySQL / MariaDB, SQLite and SQL Server through ogeSqlLoad — filter contract, search, sort, paging, first-level groups, summaries and header-filter values (ogeSqlDistinct). Driver-agnostic. The .NET twin is the Oge.Data NuGet package (IQueryable, Entity Framework Core).',
+    docsRoot: '/guides/server-adapters',
+    pageDirs: [],
+    apiPage: 'apps/dev-app/src/app/pages/guides/server-adapters.ts',
+    tier: 'mit',
+    platform: 'agnostic',
+  },
+  {
     dir: 'mcp',
     npm: '@oge-ui/mcp',
     label: 'MCP server',

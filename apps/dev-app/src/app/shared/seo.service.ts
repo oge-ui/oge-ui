@@ -120,6 +120,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Dates and time zones in OGE UI: instants versus calendar dates, the timeZone input of DateBox, Calendar and the grid, date-only values, no one-day shift.',
   ],
   [
+    '/guides/server-adapters',
+    'OGE server adapters: answer data grid requests with parameterized SQL for PostgreSQL, MySQL, SQLite and SQL Server, or with any .NET IQueryable.',
+  ],
+  [
     '/guides/filter-contract',
     'OGE UI filter contract: what every FilterExpr operator means, how blanks and days are treated, value lists, and JSON test vectors for server parity.',
   ],
