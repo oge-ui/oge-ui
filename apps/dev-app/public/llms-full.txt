@@ -3572,7 +3572,7 @@ Gzip size of each package's main entry point, as baselined by the CI size gate (
 | `@oge-ui/scheduler` | 54.4 kB |
 | `@oge-ui/scheduler-engine` | 67.2 kB |
 | `@oge-ui/spreadsheet` | 30.0 kB |
-| `@oge-ui/spreadsheet-engine` | 176.5 kB |
+| `@oge-ui/spreadsheet-engine` | 177.5 kB |
 | `@oge-ui/tabs` | 16.5 kB |
 | `@oge-ui/tree-list` | 52.2 kB |
 | `@oge-ui/upload` | 23.1 kB |
