@@ -148,6 +148,7 @@ const source = new CustomDataSource<Order>({
 @import '@oge-ui/core/themes/tailwind.css'; /* Tailwind v4  */
 @import '@oge-ui/core/themes/bootstrap.css'; /* Bootstrap 5  */
 @import '@oge-ui/core/themes/dark.css'; /* + <html class="oge-theme-dark"> */
+@import '@oge-ui/core/themes/dark-class.css'; /* dark under your own .dark / [data-theme=dark] */
 /* (the pre-1.1 @oge-ui/grid/themes/… paths keep working) */
 ```
 

@@ -1,0 +1,181 @@
+/**
+ * Dark theme under your app's own dark switch — GENERATED from dark.css by
+ * tools/themes/gen-dark-variants.mjs; edit dark.css, then regenerate.
+ *
+ * The same palette as dark.css, under the selectors theme toggles already
+ * set, so OGE goes dark with the rest of the page:
+ *
+ *   <html class="dark">            Tailwind v4 class strategy
+ *                                  (@custom-variant dark (&:where(.dark, .dark *));)
+ *   <html data-theme="dark">       the attribute strategy
+ *
+ * Import it instead of (or next to) dark.css:
+ *
+ *   @import '@oge-ui/core/themes/dark-class.css';
+ *
+ * Another selector? Use the Sass mixin in dark.scss, or put
+ * class="oge-theme-dark" on the same element.
+ */
+.dark,
+[data-theme='dark'] {
+  /* native form controls (checkboxes, selects, date pickers) follow suit */
+  color-scheme: dark;
+  --oge-bg: #111827;
+  --oge-text-color: #d1d5db;
+  --oge-border-color: #374151;
+  --oge-header-bg: #1f2937;
+  --oge-header-color: #e5e7eb;
+  --oge-row-hover-bg: #1e293b;
+  --oge-selected-bg: #1e3a5f;
+  --oge-muted-color: #9ca3af;
+  --oge-group-bg: #182031;
+  --oge-detail-bg: #0f1623;
+  --oge-popup-bg: #1f2937;
+  --oge-accent: #60a5fa;
+  --oge-accent-soft: rgba(96, 165, 250, 0.12);
+  --oge-accent-25: rgba(96, 165, 250, 0.3);
+  --oge-focus-ring: rgba(96, 165, 250, 0.45);
+  --oge-shadow-popup:
+    0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 4px 12px -6px rgba(0, 0, 0, 0.4);
+  --oge-row-alt-bg: rgba(148, 163, 184, 0.06);
+  --oge-update-flash-bg: rgba(96, 165, 250, 0.28);
+  --oge-skeleton-color: rgba(148, 163, 184, 0.18);
+  --oge-success: #22c55e;
+  --oge-success-soft: rgba(34, 197, 94, 0.16);
+  --oge-warning: #f59e0b;
+  --oge-warning-soft: rgba(245, 158, 11, 0.16);
+  --oge-danger: #ef4444;
+  --oge-danger-soft: rgba(239, 68, 68, 0.16);
+  /* dark text on the brighter dark-mode severity fills */
+  --oge-severity-contrast: #0b1220;
+  --oge-badge-bg: #ef4444;
+  --oge-badge-color: #0b1220;
+  --oge-shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --oge-shadow-btn-hover: 0 2px 6px rgba(0, 0, 0, 0.5);
+  --oge-shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 12px -4px rgba(0, 0, 0, 0.3);
+  --oge-shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 24px -8px rgba(0, 0, 0, 0.45);
+  --oge-shadow-drag:
+    0 18px 40px -10px rgba(0, 0, 0, 0.6), 0 6px 14px -6px rgba(0, 0, 0, 0.45);
+  --oge-shadow-pinned-color: rgba(0, 0, 0, 0.5);
+  --oge-input-filled-bg: rgba(148, 163, 184, 0.08);
+  --oge-tooltip-bg: #334155;
+  --oge-tooltip-color: #f1f5f9;
+  --oge-modal-backdrop-bg: rgb(0 0 0 / 0.55);
+  --oge-scheduler-chip-fg: #0b1220;
+  --oge-scheduler-now-color: #ef4444;
+  --oge-gantt-bar-fg: #0b1220;
+  --oge-gantt-summary-bg: #94a3b8;
+  --oge-gantt-offday-bg: rgba(148, 163, 184, 0.07);
+  --oge-gantt-today-color: #ef4444;
+  --oge-gantt-arrow-color: #64748b;
+  --oge-kanban-column-bg: rgba(148, 163, 184, 0.08);
+  --oge-kanban-card-ring: rgba(255, 255, 255, 0.08);
+  --oge-kanban-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --oge-kanban-card-shadow-hover: 0 3px 10px rgba(0, 0, 0, 0.5);
+  --oge-kanban-card-shadow-drag:
+    0 12px 28px -6px rgba(0, 0, 0, 0.6), 0 4px 10px -4px rgba(0, 0, 0, 0.45);
+  --oge-kanban-tag-bg: rgba(148, 163, 184, 0.18);
+  --oge-kanban-avatar-bg: #94a3b8;
+  --oge-kanban-avatar-fg: #0b1220;
+  --oge-chart-grid-line: rgba(148, 163, 184, 0.14);
+  --oge-chart-crosshair: rgba(148, 163, 184, 0.5);
+  --oge-chart-strip-bg: rgba(148, 163, 184, 0.1);
+  --oge-chart-zoom-bg: rgba(129, 140, 248, 0.18);
+  --oge-chart-heat-low: #1e1b4b;
+  --oge-chart-heat-high: #a5b4fc;
+  --oge-scrollbar-thumb: rgba(148, 163, 184, 0.4);
+  --oge-scrollbar-thumb-hover: rgba(148, 163, 184, 0.62);
+  /* spreadsheet chrome: Excel's dark ("Black") Office theme, measured, in
+     the current Excel's shapes; the sheet stays white with Excel's
+     gridlines, as Excel keeps it */
+  --oge-spreadsheet-chrome-bg: #090909;
+  --oge-spreadsheet-chrome-fg: #ffffff;
+  --oge-spreadsheet-status-bg: #141414;
+  --oge-spreadsheet-status-border: #262626;
+  --oge-spreadsheet-muted-fg: #b0b0b0;
+  --oge-spreadsheet-disabled-fg: #5c5c5c;
+  --oge-spreadsheet-field-bg: #292929;
+  --oge-spreadsheet-field-border: #666666;
+  --oge-spreadsheet-field-fg: #ffffff;
+  --oge-spreadsheet-header-bg: #0a0a0a;
+  --oge-spreadsheet-header-fg: #dadada;
+  --oge-spreadsheet-header-line: #999999;
+  --oge-spreadsheet-header-separator: #333333;
+  --oge-spreadsheet-header-hover-bg: #262626;
+  --oge-spreadsheet-header-selected-bg: #646464;
+  --oge-spreadsheet-header-selected-fg: #ffffff;
+  --oge-spreadsheet-header-selected-separator: #b6b6b6;
+  --oge-spreadsheet-corner-mark: #646464;
+  --oge-spreadsheet-outline-line: #b0b0b0;
+  --oge-spreadsheet-outline-level-bg: #292929;
+  --oge-spreadsheet-outline-level-border: #666666;
+  --oge-spreadsheet-hidden-line: #8a8a8a;
+  --oge-spreadsheet-hidden-gap: #0a0a0a;
+  --oge-spreadsheet-tab-strip-bg: #090909;
+  --oge-spreadsheet-tab-fg: #ffffff;
+  --oge-spreadsheet-tab-hover-bg: #262626;
+  --oge-spreadsheet-menu-bg: #292929;
+  --oge-spreadsheet-menu-fg: #ffffff;
+  --oge-spreadsheet-menu-hover-bg: #3d3d3d;
+  --oge-spreadsheet-tip-bg: #292929;
+  --oge-spreadsheet-tip-fg: #ffffff;
+  --oge-spreadsheet-tip-border: #666666;
+  /* derived tokens, re-resolved inside this scope so a dark subtree gets
+     dark tints (keep in sync with derived-tokens in _tokens.scss) */
+  --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-input-muted: var(--oge-header-color);
+  --oge-scheduler-chip-bg: var(--oge-accent);
+  --oge-scheduler-grid-line: var(--oge-border-color);
+  --oge-scheduler-allday-bg: var(--oge-header-bg);
+  --oge-scheduler-hour-fg: var(--oge-muted-color);
+  --oge-scheduler-off-hours-bg: var(--oge-detail-bg);
+  --oge-gantt-bar-bg: var(--oge-accent);
+  --oge-gantt-grid-line: var(--oge-border-color);
+  --oge-kanban-card-bg: var(--oge-bg);
+  --oge-kanban-card-fg: var(--oge-text-color);
+  --oge-kanban-placeholder-border: var(--oge-accent-25);
+  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-drop-placeholder-border: var(--oge-accent-25);
+  --oge-drop-placeholder-bg: var(--oge-accent-soft);
+  --oge-kanban-lane-border: var(--oge-border-color);
+  --oge-chart-axis-line: var(--oge-border-color);
+  --oge-chart-axis-fg: var(--oge-muted-color);
+  --oge-avatar-bg: color-mix(in srgb, var(--oge-accent) 14%, var(--oge-bg));
+  --oge-avatar-fg: color-mix(
+    in srgb,
+    var(--oge-accent) 80%,
+    var(--oge-text-color)
+  );
+  --oge-rating-color: var(--oge-warning);
+  --oge-rating-empty-color: var(--oge-muted-color);
+  --oge-signature-ink: var(--oge-text-color);
+  --oge-signature-bg: var(--oge-bg);
+  --oge-chart-track: color-mix(
+    in srgb,
+    var(--oge-muted-color) 22%,
+    transparent
+  );
+  --oge-chart-needle: var(--oge-text-color);
+  --oge-chart-empty: color-mix(
+    in srgb,
+    var(--oge-muted-color) 14%,
+    var(--oge-bg)
+  );
+  --oge-chart-link: var(--oge-muted-color);
+  /* rich-text editor (W8e) */
+  --oge-editor-bg: var(--oge-bg);
+  --oge-editor-toolbar-bg: var(--oge-header-bg);
+  --oge-editor-link: var(--oge-accent);
+  --oge-editor-code-bg: color-mix(
+    in srgb,
+    var(--oge-muted-color) 16%,
+    transparent
+  );
+  --oge-editor-quote-border: color-mix(
+    in srgb,
+    var(--oge-accent) 45%,
+    var(--oge-border-color)
+  );
+}

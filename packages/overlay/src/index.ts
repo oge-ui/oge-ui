@@ -54,7 +54,12 @@ export {
 } from './lib/menu/menu-types';
 // The checkbox/radio state helper is framework-free; re-exported so a menu's
 // owner updates its items from the package it already imports.
-export { applyMenuItemCheck } from '@oge-ui/behavior';
+export {
+  applyMenuItemCheck,
+  ogeFromPrimeMenuItems,
+  ogePrimeRouterLinkUrl,
+  type OgePrimeMenuItem,
+} from '@oge-ui/behavior';
 export { OgeMenuList } from './lib/menu/menu-list';
 export {
   OgeTooltip,

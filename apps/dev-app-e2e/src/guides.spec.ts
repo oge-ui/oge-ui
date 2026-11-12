@@ -62,6 +62,11 @@ const GUIDES = [
     title: 'Filter contract',
     heading: 'operators',
   },
+  {
+    path: '/guides/migrate-from-primeng',
+    title: 'Migrate from PrimeNG',
+    heading: 'menus',
+  },
 ] as const;
 
 /** Every "On this page" link points at a heading the page renders. */
@@ -87,6 +92,20 @@ test.describe('guides', () => {
       if (guide.path !== '/guides') await expectTocResolves(page);
     });
   }
+
+  test('the PrimeNG guide lists the defaults that differ', async ({ page }) => {
+    await page.goto('/guides/migrate-from-primeng');
+    const defaults = page.getByRole('region', { name: 'Defaults that differ' });
+    await expect(defaults.getByRole('row')).toHaveCount(12); // header + 11
+    await expect(
+      defaults.getByRole('row', { name: /Backdrop click closes/ }),
+    ).toContainText('closeOnBackdropClick');
+    await expect(
+      page.getByRole('region', {
+        name: 'PrimeNG components and their OGE counterparts',
+      }),
+    ).toContainText('oge-grid');
+  });
 
   test('the filter contract lists every operator', async ({ page }) => {
     await page.goto('/guides/filter-contract');
@@ -199,6 +218,7 @@ test.describe('guides', () => {
     '/guides/accessibility/conformance',
     '/guides/dev-warnings',
     '/guides/filter-contract',
+    '/guides/migrate-from-primeng',
   ]) {
     test(`${path} has no axe violations`, async ({ page }) => {
       test.slow();

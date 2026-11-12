@@ -31,6 +31,12 @@ module.exports = withNx(
         output: 'themes',
         glob: '*.css',
       },
+      // dark.scss: the dark theme under any selector (a Sass mixin)
+      {
+        input: 'packages/grid/src/lib/styles/themes',
+        output: 'themes',
+        glob: '*.scss',
+      },
     ],
   },
   {

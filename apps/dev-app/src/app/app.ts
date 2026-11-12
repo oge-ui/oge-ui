@@ -245,6 +245,11 @@ export class App {
           label: 'Filter contract',
           icon: 'filter',
         },
+        {
+          path: '/guides/migrate-from-primeng',
+          label: 'Migrate from PrimeNG',
+          icon: 'arrow-right',
+        },
       ],
     },
     {

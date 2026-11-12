@@ -18,6 +18,7 @@
   <url><loc>https://www.ogeui.com/guides/accessibility/conformance</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/versioning</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://www.ogeui.com/guides/dev-warnings</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/guides/migrate-from-primeng</loc></url>
   <url><loc>https://www.ogeui.com/guides/filter-contract</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/ai</loc><lastmod>2026-10-23</lastmod></url>
   <url><loc>https://www.ogeui.com/getting-started/localization</loc><lastmod>2026-11-11</lastmod></url>
@@ -53,12 +54,12 @@
   <url><loc>https://www.ogeui.com/components/tree-list/summaries</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list/editing</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tree-list/api</loc><lastmod>2026-11-10</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/buttons</loc><lastmod>2026-11-09</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/buttons</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/buttons/interactions</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/buttons/button-group</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/buttons/drop-down-button</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/buttons/fab</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/buttons/api</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/buttons/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tabs</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tabs/routed/overview</loc><lastmod>2026-08-09</lastmod></url>
   <url><loc>https://www.ogeui.com/components/tabs/api</loc><lastmod>2026-10-10</lastmod></url>
@@ -104,8 +105,8 @@
   <url><loc>https://www.ogeui.com/components/pagination</loc><lastmod>2026-08-14</lastmod></url>
   <url><loc>https://www.ogeui.com/components/menubar</loc><lastmod>2026-10-06</lastmod></url>
   <url><loc>https://www.ogeui.com/components/menubar/routed/overview</loc><lastmod>2026-08-10</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/tree-view</loc><lastmod>2026-11-10</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/tree-view/api</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/tree-view</loc><lastmod>2026-11-11</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/tree-view/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs</loc><lastmod>2026-11-09</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/validation</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://www.ogeui.com/components/inputs/masked-text-box</loc><lastmod>2026-10-04</lastmod></url>
@@ -132,10 +133,10 @@
   <url><loc>https://www.ogeui.com/components/overlay/tooltip-context-menu</loc><lastmod>2026-10-08</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay/popover</loc><lastmod>2026-11-10</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay/action-sheet</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/overlay/modal</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/overlay/modal</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/overlay/toast</loc></url>
   <url><loc>https://www.ogeui.com/components/overlay/window</loc><lastmod>2026-10-06</lastmod></url>
-  <url><loc>https://www.ogeui.com/components/overlay/api</loc><lastmod>2026-11-10</lastmod></url>
+  <url><loc>https://www.ogeui.com/components/overlay/api</loc><lastmod>2026-11-11</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid</loc><lastmod>2026-11-03</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid/analytics</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://www.ogeui.com/components/pivot-grid/chart-integration</loc><lastmod>2026-10-04</lastmod></url>

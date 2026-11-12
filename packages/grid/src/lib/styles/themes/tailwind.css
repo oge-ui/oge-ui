@@ -10,6 +10,12 @@
  *
  * Applied at the document root, so every OGE component — buttons, inputs,
  * popups portalled to <body> included — follows it.
+ *
+ * Dark mode: with Tailwind's class strategy
+ * (@custom-variant dark (&:where(.dark, .dark *));) import dark-class.css
+ * AFTER this file — :root and .dark weigh the same, so the later rule wins:
+ *   @import '@oge-ui/core/themes/dark-class.css';
+ * Another dark selector: the theme() mixin of dark.scss.
  */
 :root {
   --oge-border-color: var(--color-slate-200, #e2e8f0);

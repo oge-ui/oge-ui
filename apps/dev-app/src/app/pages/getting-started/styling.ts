@@ -7,6 +7,8 @@ import {
   COLORS,
   DARK,
   DARK_HTML,
+  DARK_SASS,
+  DARK_TAILWIND,
   HIGH_CONTRAST,
   HIGH_CONTRAST_HTML,
   SCOPED,
@@ -109,6 +111,19 @@ const SECTIONS = [
     </p>
     <app-code-block [code]="dark" language="css" />
     <app-code-block [code]="darkHtml" language="html" />
+    <h3 id="your-dark-switch" class="scroll-mt-20">Your own dark switch</h3>
+    <p>
+      An app that already has a dark switch should not need a second one.
+      <code>dark-class.css</code> puts the same palette under
+      <code>.dark</code> — Tailwind v4's class strategy — and
+      <code>[data-theme="dark"]</code>; any other selector takes one line of
+      Sass with the <code>theme()</code> mixin of <code>dark.scss</code>. Both
+      are generated from <code>dark.css</code>, so the three never drift. With
+      the Tailwind bridge, import the dark file after it: <code>:root</code> and
+      <code>.dark</code> weigh the same, so the later rule wins.
+    </p>
+    <app-code-block [code]="darkTailwind" language="css" />
+    <app-code-block [code]="darkSass" language="scss" />
 
     <h2 id="high-contrast-motion" class="scroll-mt-20">
       High contrast &amp; motion
@@ -152,6 +167,8 @@ export class GettingStartedStylingPage {
   protected readonly bridge = BRIDGE;
   protected readonly dark = DARK;
   protected readonly darkHtml = DARK_HTML;
+  protected readonly darkTailwind = DARK_TAILWIND;
+  protected readonly darkSass = DARK_SASS;
   protected readonly highContrast = HIGH_CONTRAST;
   protected readonly highContrastHtml = HIGH_CONTRAST_HTML;
   protected readonly colors = COLORS;

@@ -15,6 +15,11 @@
       "input": "src/lib/styles/themes",
       "glob": "*.css",
       "output": "themes"
+    },
+    {
+      "input": "src/lib/styles/themes",
+      "glob": "*.scss",
+      "output": "themes"
     }
   ],
   "lib": {

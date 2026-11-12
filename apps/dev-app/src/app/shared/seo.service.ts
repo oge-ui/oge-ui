@@ -100,6 +100,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE UI development warnings: every coded OGE#### console message with its cause and fix, silent in production, in Angular and React render layers.',
   ],
   [
+    '/guides/migrate-from-primeng',
+    'Migrate from PrimeNG to OGE UI: the component map, defaults that differ in dialogs, toasts and filters, a MenuItem adapter, buttons, confirm, trees, dark mode.',
+  ],
+  [
     '/guides/filter-contract',
     'OGE UI filter contract: what every FilterExpr operator means, how blanks and days are treated, value lists, and JSON test vectors for server parity.',
   ],

@@ -2833,3 +2833,9 @@ export {
   type OgeChatSendingEvent,
   type OgeChatSentEvent,
 } from './lib/ai/chat-core';
+
+export {
+  ogeFromPrimeMenuItems,
+  ogePrimeRouterLinkUrl,
+  type OgePrimeMenuItem,
+} from './lib/menu/prime-menu-item';

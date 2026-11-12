@@ -63,7 +63,9 @@ The theme stylesheets are shared with the Angular packages and ship in
 `@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
 `data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
 `prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
-bridges.
+bridges. Under the app's own dark switch: `dark-class.css` (`.dark` and
+`[data-theme='dark']`, imported after the Tailwind bridge) or the
+`theme(<selector>)` mixin of `@oge-ui/core/themes/dark.scss`.
 
 ## Common mistakes
 
@@ -610,6 +612,8 @@ _Handle (ref)_
 | `OgeMenuItem.visible / cssClass` | `boolean / string` | `visible: false` leaves a row out (no array filtering) — separators it strands are dropped, and event indexes count the rows shown. `cssClass` adds classes to one row. `hint` is the native tooltip, e.g. why a row is disabled; `severity: 'danger'` marks a destructive one. |
 | `OgeMenuItemType` | `'normal' \| 'checkbox' \| 'radio' \| 'header'` | Row kind of an `OgeMenuItem`: a command, a `menuitemcheckbox`, a `menuitemradio` (grouped by `group`) or a non-focusable section caption. |
 | `applyMenuItemCheck` | `(items: readonly I[], target: OgeMenuItem) => readonly I[]` | Returns `items` with the activation of `target` applied — immutably and at any depth: a checkbox toggles, a radio becomes checked and every other radio of its `group` on the same level is unchecked. Untouched rows keep their references; pass the item the click event carried. Framework-free (`@oge-ui/behavior`), re-exported here. |
+| `ogeFromPrimeMenuItems` | `(items: readonly OgePrimeMenuItem[]) => OgeMenuItem[]` | Moving from PrimeNG: converts `MenuItem` arrays, submenus included — `label` → `text`, `command` → `action`, an icon class → `iconClass`, `routerLink` (+ `queryParams`, `fragment`) → `url` (`ogePrimeRouterLinkUrl`), `styleClass` → `cssClass`, `title` / `tooltip` → `hint`, `id` → `value`; `separator`, `disabled`, `visible`, `badge`, `shortcut` stay. `OgePrimeMenuItem` is structural — no PrimeNG dependency. See the migration guide. |
+| `ogePrimeRouterLinkUrl` | `(item: { routerLink?; queryParams?; fragment? }) => string \| undefined` | A PrimeNG `routerLink` with its `queryParams` and `fragment` as one URL — `['/users', 42]` → `/users/42`. The menus render a real link from it; hand navigation to your router from the item-click event. |
 | `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
 | `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; checked?: boolean; event: MouseEvent \| KeyboardEvent }` | `checked` is the state the activation moves a checkbox/radio row to (`undefined` for plain rows). Index within the `items` prop (separators included). |
 | `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select' \| 'back'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. `'back'` is a nested submenu returning to its parent item — absorbed by the parent menu, it never reaches the root owner. |

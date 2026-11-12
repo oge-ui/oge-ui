@@ -101,7 +101,12 @@ pnpm): \`@oge-ui/core/themes/dark.css\` (then \`class="oge-theme-dark"\` or
 \`data-oge-theme="dark"\` on \`<html>\` or any subtree; \`"auto"\` follows
 \`prefers-color-scheme\`, \`oge-theme-light\` marks a light island),
 \`@oge-ui/core/themes/tailwind.css\` and \`@oge-ui/core/themes/bootstrap.css\`
-(bridge \`--oge-*\` onto an existing design system).`;
+(bridge \`--oge-*\` onto an existing design system). An app with its own dark
+switch imports \`@oge-ui/core/themes/dark-class.css\` (the dark palette under
+\`.dark\` — Tailwind v4's class strategy — and \`[data-theme='dark']\`; import it
+after the Tailwind bridge) or, for any other selector, \`@use
+'@oge-ui/core/themes/dark.scss' as oge-dark;\` and \`@include
+oge-dark.theme('<selector>');\`.`;
 
 export const MISTAKES = `## Common mistakes
 
@@ -259,7 +264,9 @@ The theme stylesheets are shared with the Angular packages and ship in
 \`@oge-ui/core/themes/dark.css\` (then \`class="oge-theme-dark"\` or
 \`data-oge-theme="dark"\` on \`<html>\` or any subtree; \`"auto"\` follows
 \`prefers-color-scheme\`), plus the \`tailwind.css\` and \`bootstrap.css\`
-bridges.`;
+bridges. Under the app's own dark switch: \`dark-class.css\` (\`.dark\` and
+\`[data-theme='dark']\`, imported after the Tailwind bridge) or the
+\`theme(<selector>)\` mixin of \`@oge-ui/core/themes/dark.scss\`.`;
 
 export const MISTAKES_REACT = `## Common mistakes
 

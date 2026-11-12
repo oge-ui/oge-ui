@@ -44,6 +44,26 @@ export const DARK_HTML = `<!-- whole application: a class or the attribute form 
   <aside class="oge-theme-light">…</aside>
 </section>`;
 
+export const DARK_TAILWIND = `/* Tailwind v4 with a class-based dark mode:
+   OGE goes dark whenever <html class="dark"> is set. */
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import '@oge-ui/core/themes/tailwind.css';    /* the light bridge */
+@import '@oge-ui/core/themes/dark-class.css';  /* after it: .dark and [data-theme="dark"] */`;
+
+export const DARK_SASS = `// Any other selector: the dark palette as a Sass mixin
+@use '@oge-ui/core/themes/dark.scss' as oge-dark;
+
+@include oge-dark.theme('[data-mode="night"]');
+
+// or the bare tokens inside a rule of your own
+@media (prefers-color-scheme: dark) {
+  .app-shell {
+    @include oge-dark.tokens;
+  }
+}`;
+
 export const HIGH_CONTRAST = `/* An author-side high-contrast palette: text >= 7:1, borders and focus
    rings >= 3:1, a solid focus ring. Import once, then pick a scope. */
 @import '@oge-ui/core/themes/high-contrast.css';`;

@@ -1429,6 +1429,18 @@ export const OGE_REACT_MENU_LIST_API: ApiSections = {
             'Returns <code>items</code> with the activation of <code>target</code> applied — immutably and at any depth: a checkbox toggles, a radio becomes checked and every other radio of its <code>group</code> on the same level is unchecked. Untouched rows keep their references; pass the item the click event carried. Framework-free (<code>&#64;oge-ui/behavior</code>), re-exported here.',
         },
         {
+          name: 'ogeFromPrimeMenuItems',
+          type: '(items: readonly OgePrimeMenuItem[]) =&gt; OgeMenuItem[]',
+          description:
+            'Moving from PrimeNG: converts <code>MenuItem</code> arrays, submenus included — <code>label</code> → <code>text</code>, <code>command</code> → <code>action</code>, an icon class → <code>iconClass</code>, <code>routerLink</code> (+ <code>queryParams</code>, <code>fragment</code>) → <code>url</code> (<code>ogePrimeRouterLinkUrl</code>), <code>styleClass</code> → <code>cssClass</code>, <code>title</code> / <code>tooltip</code> → <code>hint</code>, <code>id</code> → <code>value</code>; <code>separator</code>, <code>disabled</code>, <code>visible</code>, <code>badge</code>, <code>shortcut</code> stay. <code>OgePrimeMenuItem</code> is structural — no PrimeNG dependency. See the migration guide.',
+        },
+        {
+          name: 'ogePrimeRouterLinkUrl',
+          type: '(item: { routerLink?; queryParams?; fragment? }) =&gt; string | undefined',
+          description:
+            "A PrimeNG <code>routerLink</code> with its <code>queryParams</code> and <code>fragment</code> as one URL — <code>['/users', 42]</code> → <code>/users/42</code>. The menus render a real link from it; hand navigation to your router from the item-click event.",
+        },
+        {
           name: 'OgeMenuItemSeverity',
           type: "'normal' | 'danger'",
           description: 'Destructive items render with the danger token.',

@@ -65,7 +65,9 @@ The theme stylesheets are shared with the Angular packages and ship in
 `@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
 `data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
 `prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
-bridges.
+bridges. Under the app's own dark switch: `dark-class.css` (`.dark` and
+`[data-theme='dark']`, imported after the Tailwind bridge) or the
+`theme(<selector>)` mixin of `@oge-ui/core/themes/dark.scss`.
 
 ## Common mistakes
 

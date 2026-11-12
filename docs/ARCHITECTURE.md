@@ -802,7 +802,10 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   and the bordering cells carry `oge-pin-edge-start` / `-end` (`pinnedEdgeOf`) — the separator
   shadow (`--oge-shadow-pinned-color`) is drawn on those cells only, mirrored under `.oge-rtl`.
 - All styles are global `.oge-*` classes (ViewEncapsulation.None), BEM-ish dashes.
-- Themes: source in `packages/grid/src/lib/styles/themes/{dark,high-contrast,bootstrap,tailwind}.css`, shipped as
+- Themes: source in `packages/grid/src/lib/styles/themes/{dark,high-contrast,bootstrap,tailwind}.css`
+  (`dark-class.css` — the dark palette under `.dark` / `[data-theme='dark']` — and the `dark.scss`
+  `theme($selector)` mixin are GENERATED from `dark.css` by `tools/themes/gen-dark-variants.mjs`;
+  edit `dark.css`, regenerate, and `themes.spec.ts` fails on a stale copy), shipped as
   **`@oge-ui/core/themes/*`** (core's rollup assets — every package installs core, React ones included)
   and, for pre-1.1 imports, `@oge-ui/grid/themes/*`. They target **scopes, not component hosts**:
   dark is `.oge-theme-dark, [data-oge-theme='dark']` plus the same block under

@@ -21,6 +21,7 @@ const PAGES = [
   '/guides/accessibility/conformance',
   '/guides/dev-warnings',
   '/guides/filter-contract',
+  '/guides/migrate-from-primeng',
   '/components/data-grid',
   '/components/data-grid/filtering',
   '/components/data-grid/editing',

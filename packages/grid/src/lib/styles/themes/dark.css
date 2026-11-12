@@ -14,6 +14,11 @@
  *   <html data-oge-theme="auto">
  *   <section class="oge-theme-light">      a light island inside a dark page
  *
+ * Your app already has a dark switch? dark-class.css carries this palette
+ * under .dark (Tailwind v4's class strategy) and [data-theme='dark'], and
+ * dark.scss under any selector — both generated from this file
+ * (tools/themes/gen-dark-variants.mjs), so edit here and regenerate.
+ *
  * The rules target the scope element itself, not a list of component hosts:
  * tokens inherit, so every component — including popups portalled to <body>
  * under a themed <html> — picks them up, and a new component needs no entry

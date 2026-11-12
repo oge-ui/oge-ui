@@ -164,6 +164,13 @@ export class GuidesIndexPage {
           summary:
             'What every filter operator means, blanks included, and test vectors that prove a server returns the same rows.',
         },
+        {
+          path: '/guides/migrate-from-primeng',
+          title: 'Migrate from PrimeNG',
+          icon: 'arrow-right',
+          summary:
+            'The component map, the defaults that point the other way, and a MenuItem adapter that keeps your models.',
+        },
       ],
     },
   ];

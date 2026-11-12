@@ -160,6 +160,14 @@ export const appRoutes: Route[] = [
     title: 'OGE — Development warnings',
   },
   {
+    path: 'guides/migrate-from-primeng',
+    loadComponent: () =>
+      import('./pages/guides/migrate-from-primeng').then(
+        (m) => m.GuideMigrateFromPrimengPage,
+      ),
+    title: 'OGE — Migrate from PrimeNG',
+  },
+  {
     path: 'guides/filter-contract',
     loadComponent: () =>
       import('./pages/guides/filter-contract').then(

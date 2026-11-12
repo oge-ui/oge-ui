@@ -7,6 +7,24 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Dark mode under your own switch, PrimeNG migration — `@oge-ui/core`, `@oge-ui/behavior`, `@oge-ui/overlay`, `@oge-ui/react-overlay`
+
+- `@oge-ui/core/themes/dark-class.css`: the dark palette under `.dark` (Tailwind
+  v4's class strategy) and `[data-theme='dark']`; import it after the Tailwind
+  bridge. `@oge-ui/core/themes/dark.scss`: `theme($selector)` emits it under any
+  selector, `tokens` gives the bare declarations. Both are generated from
+  `dark.css` (`tools/themes/gen-dark-variants.mjs`) and a test fails on a stale
+  copy. The Tailwind bridge, the styling guide and the AI docs describe the setup.
+- `ogeFromPrimeMenuItems()` converts PrimeNG `MenuItem` arrays to `OgeMenuItem`
+  (label, command, icon class, routerLink with query and fragment, styleClass,
+  title / tooltip, submenus); `ogePrimeRouterLinkUrl()` builds the link. Exported
+  from `@oge-ui/behavior`, `@oge-ui/overlay` and `@oge-ui/react-overlay`; no
+  PrimeNG dependency.
+- New guide `/guides/migrate-from-primeng`: the component map, the defaults that
+  differ (modal, backdrop click, drag and resize, scroll lock, toast lifetime and
+  position, tooltip side and delay, text filter operator), buttons, confirm and
+  toasts, trees and dark mode.
+
 ### Component hardening — buttons, menus, modal, confirm, tree view (both layers)
 
 - Button: `stylingMode: 'link'`, `shape: 'pill'`, `fluid`, `loadingText` (the label

@@ -6570,6 +6570,9 @@ export interface OgeFormValidatedEvent {
 }
 
 // @public
+export function ogeFromPrimeMenuItems(items: readonly OgePrimeMenuItem[]): OgeMenuItem[];
+
+// @public
 export interface OgeGridAdaptiveHidingInput {
     // Warning: (ae-forgotten-export) The symbol "OgeGridAdaptiveColumn" needs to be exported by the entry point index.d.ts
     //
@@ -10611,6 +10614,50 @@ export class OgePreparedTracker {
     isNew(element: Element, row: unknown): boolean;
     reset(): void;
 }
+
+// @public
+export interface OgePrimeMenuItem {
+    [key: string]: unknown;
+    // (undocumented)
+    badge?: string;
+    // (undocumented)
+    command?: (event: {
+        originalEvent?: Event;
+        item?: OgePrimeMenuItem;
+    }) => void;
+    // (undocumented)
+    disabled?: boolean;
+    // (undocumented)
+    fragment?: string;
+    icon?: string;
+    // (undocumented)
+    id?: string;
+    // (undocumented)
+    items?: OgePrimeMenuItem[];
+    // (undocumented)
+    label?: string;
+    // (undocumented)
+    queryParams?: Record<string, unknown>;
+    // (undocumented)
+    routerLink?: unknown;
+    // (undocumented)
+    separator?: boolean;
+    // (undocumented)
+    shortcut?: string;
+    // (undocumented)
+    styleClass?: string;
+    // (undocumented)
+    title?: string;
+    // (undocumented)
+    tooltip?: string;
+    // (undocumented)
+    url?: string;
+    // (undocumented)
+    visible?: boolean;
+}
+
+// @public
+export function ogePrimeRouterLinkUrl(item: Pick<OgePrimeMenuItem, 'routerLink' | 'queryParams' | 'fragment'>): string | undefined;
 
 // @public
 export function ogeProgressAriaNow(value: number | null | undefined, min: number, max: number): number | null;

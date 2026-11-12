@@ -21,7 +21,8 @@
           "json": "{workspaceRoot}/tsconfig.json",
           "fields": ["extends", "files", "include"]
         },
-        "{workspaceRoot}/packages/grid/src/lib/styles/themes/*.css"
+        "{workspaceRoot}/packages/grid/src/lib/styles/themes/*.css",
+        "{workspaceRoot}/packages/grid/src/lib/styles/themes/*.scss"
       ]
     },
     "nx-release-publish": {

@@ -1,4 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { compileString } from 'sass';
 
@@ -109,9 +110,10 @@ describe('design tokens', () => {
 describe('theme files', () => {
   const files = readdirSync(themesDir).filter((f) => f.endsWith('.css'));
 
-  it('ships the four themes', () => {
+  it('ships the themes', () => {
     expect(files.sort()).toEqual([
       'bootstrap.css',
+      'dark-class.css',
       'dark.css',
       'high-contrast.css',
       'tailwind.css',
@@ -166,6 +168,45 @@ function contrast(a: string, b: string): number {
   const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 }
+
+describe('dark theme under a configurable selector', () => {
+  const dark = readFileSync(join(themesDir, 'dark.css'), 'utf8');
+  const explicit = declarations(ruleBodies(dark)[0].body);
+
+  it('dark-class.css is dark.css under .dark and [data-theme=dark]', () => {
+    const rules = ruleBodies(
+      readFileSync(join(themesDir, 'dark-class.css'), 'utf8'),
+    );
+    expect(rules.map((r) => r.selector.replace(/\s+/g, ' '))).toEqual([
+      ".dark, [data-theme='dark']",
+    ]);
+    expect([...declarations(rules[0].body)]).toEqual([...explicit]);
+  });
+
+  it('dark.scss emits the same palette under any selector', () => {
+    const css = compileString(
+      `@use 'dark';\n@include dark.theme('[data-mode="night"]');`,
+      { loadPaths: [themesDir] },
+    ).css;
+    const rules = ruleBodies(css);
+    expect(rules.map((r) => r.selector)).toEqual(['[data-mode=night]']);
+    expect(rules[0].body).toMatch(/color-scheme:\s*dark/);
+    expect([...declarations(rules[0].body)]).toEqual([...explicit]);
+  });
+
+  it('the generated files are fresh', () => {
+    // the generator's own --check: dark-class.css and dark.scss match dark.css
+    const script = join(
+      stylesDir,
+      '../../../../../tools/themes/gen-dark-variants.mjs',
+    );
+    const run = spawnSync(process.execPath, [script, '--check'], {
+      encoding: 'utf8',
+    });
+    expect(run.stderr).toBe('');
+    expect(run.status).toBe(0);
+  });
+});
 
 describe('high-contrast.css', () => {
   const rules = ruleBodies(
