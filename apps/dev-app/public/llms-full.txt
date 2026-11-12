@@ -1599,6 +1599,23 @@ tokens.light['input-muted'].$value; // '{light.header-color}' — an alias
 tokens.light.accent.$extensions['com.ogeui'].cssVariable; // '--oge-accent'
 ```
 
+### Tokens — Figma theme
+
+```ts
+/* oge-theme.css — what "Export CSS" writes for the values a designer changed */
+:root {
+  --oge-accent: #0f766e;
+  --oge-radius: 8px;
+}
+
+.dark, [data-theme='dark'] {
+  --oge-accent: #2dd4bf;
+}
+
+/* load it after the suite's styles, e.g. in angular.json "styles" or
+   import './oge-theme.css' in React */
+```
+
 ### Tokens — Override
 
 ```ts

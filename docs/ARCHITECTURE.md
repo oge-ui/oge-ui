@@ -130,6 +130,11 @@ consumers:
   decides _when_, with `effect()` or `useEffect`. Where a core reads state that
   Angular would track (a DOM measurement pass), the Angular seam wraps the call
   in `untracked()` rather than the core knowing what tracking is.
+- **The Figma plugin is generated from the tokens.** `tools/figma-tokens/build.mjs` bundles
+  `src/plugin.ts` with the converted collection inlined and writes a deterministic zip, with fixed
+  timestamps and no version line, to `apps/dev-app/public/figma/`. `docs-tools:llms` runs it after
+  regenerating `tokens.json`, and `llms-check` fails on a stale zip. Figma's sandbox needs ES2017
+  and has no network access.
 - **React adapters for large data track dependencies.** `react-grid` and
   `react-tree-list` (`createGridRxAdapter`) and `react-pivot` record what each
   derived value read and recompute only when that changed. A global "version

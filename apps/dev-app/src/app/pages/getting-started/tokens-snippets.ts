@@ -25,3 +25,16 @@ export const OVERRIDE = `/* A token is a CSS custom property: set it on :root (t
 .billing-panel {
   --oge-accent: #0f766e;
 }`;
+
+export const FIGMA_THEME = `/* oge-theme.css — what "Export CSS" writes for the values a designer changed */
+:root {
+  --oge-accent: #0f766e;
+  --oge-radius: 8px;
+}
+
+.dark, [data-theme='dark'] {
+  --oge-accent: #2dd4bf;
+}
+
+/* load it after the suite's styles, e.g. in angular.json "styles" or
+   import './oge-theme.css' in React */`;

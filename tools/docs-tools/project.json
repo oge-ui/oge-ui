@@ -8,14 +8,14 @@
     "llms": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node tools/docs-tools/generate-llms.mjs",
+        "command": "node tools/docs-tools/generate-llms.mjs && node tools/figma-tokens/build.mjs",
         "cwd": "{workspaceRoot}"
       }
     },
     "llms-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node tools/docs-tools/generate-llms.mjs --check",
+        "command": "node tools/docs-tools/generate-llms.mjs --check && node tools/figma-tokens/build.mjs --check",
         "cwd": "{workspaceRoot}"
       }
     },

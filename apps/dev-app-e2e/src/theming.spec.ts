@@ -75,6 +75,23 @@ test.describe('token reference', () => {
     await expect(accent.locator('.app-token-chip')).toHaveCount(5);
   });
 
+  test('links a downloadable Figma plugin', async ({ page, request }) => {
+    await page.goto('/getting-started/tokens#figma');
+    const link = page.getByRole('link', { name: 'Download the plugin' });
+    await expect(link).toHaveAttribute(
+      'href',
+      '/figma/oge-ui-figma-plugin.zip',
+    );
+    const response = await request.get('/figma/oge-ui-figma-plugin.zip');
+    expect(response.ok()).toBe(true);
+    const bytes = await response.body();
+    // a ZIP: local file header signature
+    expect(bytes.subarray(0, 4).toString('hex')).toBe('504b0304');
+    expect(bytes.toString('latin1')).toContain(
+      'oge-ui-figma-plugin/manifest.json',
+    );
+  });
+
   test('the search palette finds a token', async ({ page }) => {
     await page.goto('/getting-started');
     await page.keyboard.press('Control+k');

@@ -26,7 +26,7 @@ import {
   type TokenFile,
   type TokenRow,
 } from './tokens-data';
-import { DTCG_IMPORT, OVERRIDE } from './tokens-snippets';
+import { DTCG_IMPORT, FIGMA_THEME, OVERRIDE } from './tokens-snippets';
 
 const DATA = tokenFile as unknown as TokenFile;
 
@@ -310,6 +310,44 @@ const INLINE_PACKAGES = 3;
       >.
     </p>
     <app-code-block [code]="dtcgImport" language="typescript" />
+
+    <h2 id="figma" class="scroll-mt-20">Figma</h2>
+    <p>
+      The OGE UI Figma plugin turns <code>tokens.json</code> into Figma
+      variables and back, so designers and developers use the same tokens. It
+      works on every Figma plan and needs no network access.
+    </p>
+    <ol>
+      <li>
+        <a
+          href="/figma/oge-ui-figma-plugin.zip"
+          download
+          class="text-indigo-600 underline dark:text-indigo-400"
+          >Download the plugin</a
+        >
+        and unzip it.
+      </li>
+      <li>
+        In the Figma desktop app:
+        <strong>Plugins → Development → Import plugin from manifest…</strong>,
+        and choose its <code>manifest.json</code>.
+      </li>
+      <li>
+        Run it and choose <strong>Import the shipped tokens</strong> (or
+        <strong>Import a tokens.json…</strong> for a file of your own). It
+        creates or updates the <em>OGE UI</em> collection: {{ total }} variables
+        in three modes — Light, Dark and High contrast — with colours as
+        colours, sizes and durations as numbers, aliases kept, picker scopes
+        set, and the Web code syntax <code>var(--oge-…)</code> that Dev Mode
+        shows.
+      </li>
+      <li>
+        When the design changes, <strong>Export CSS</strong> writes the edited
+        values back as a theme — with <em>Only changed values</em>, just the
+        variables that differ from the shipped tokens.
+      </li>
+    </ol>
+    <app-code-block [code]="figmaTheme" language="css" title="oge-theme.css" />
   `,
   styles: `
     .app-token-search {
@@ -448,12 +486,14 @@ export class GettingStartedTokensPage {
     'All tokens',
     'Reading the table',
     'DTCG tokens.json',
+    'Figma',
   ];
   protected readonly themes = DATA.themes;
   protected readonly total = DATA.tokens.length;
   protected readonly inlinePackages = INLINE_PACKAGES;
   protected readonly override = OVERRIDE;
   protected readonly dtcgImport = DTCG_IMPORT;
+  protected readonly figmaTheme = FIGMA_THEME;
   protected readonly categoryOptions: readonly {
     id: CategoryFilter;
     label: string;

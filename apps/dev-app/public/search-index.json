@@ -227,6 +227,7 @@
 {"p":4,"a":"all-tokens","t":"All tokens"},
 {"p":4,"a":"reading-the-table","t":"Reading the table"},
 {"p":4,"a":"dtcg-tokens-json","t":"DTCG tokens.json"},
+{"p":4,"a":"figma","t":"Figma"},
 {"p":5,"a":"tokens","t":"Tokens"},
 {"p":5,"a":"preview","t":"Preview"},
 {"p":5,"a":"contrast","t":"Contrast"},

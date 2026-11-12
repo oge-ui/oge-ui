@@ -1,0 +1,32 @@
+{
+  "name": "figma-tokens",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tools/figma-tokens/src",
+  "tags": ["scope:tools", "platform:agnostic"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tools/figma-tokens/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/build.mjs",
+        "{workspaceRoot}/packages/core/tokens.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/figma-plugin",
+        "{workspaceRoot}/apps/dev-app/public/figma"
+      ],
+      "options": {
+        "command": "node tools/figma-tokens/build.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

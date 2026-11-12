@@ -7,6 +7,21 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Figma plugin and token sync
+
+- The OGE UI Figma plugin (download it from `/getting-started/tokens#figma`)
+  imports `tokens.json` as the "OGE UI" variable collection: Light, Dark and
+  High contrast modes, with colours as colours, sizes and durations as
+  numbers, and aliases kept. Picker scopes are set, and the Web code syntax is
+  `var(--oge-…)`, which Dev Mode shows.
+- **Export CSS** writes the edited collection back as a theme of `--oge-*`
+  overrides, optionally only the values a designer changed. It works on every
+  Figma plan and needs no network access.
+- `tools/figma-tokens` holds the converter (`ogeTokensToFigma`,
+  `ogeFigmaToCss`), the plugin source and a deterministic build.
+  `docs-tools:llms` rebuilds the plugin with the tokens, and `llms-check`
+  fails when it is stale.
+
 ### Benchmarks, and a faster React grid — `@oge-ui/react-grid`, `@oge-ui/react-tree-list`
 
 - New page `/benchmarks` shows the data grid's measured performance on 100 000
