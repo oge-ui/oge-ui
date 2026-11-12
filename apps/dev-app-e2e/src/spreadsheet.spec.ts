@@ -209,21 +209,17 @@ for (const layer of LAYERS) {
       const cell = await host.locator('.oge-spreadsheet-grid').boundingBox();
       expect(box && cell && box.x > cell.x).toBe(true);
       if (process.env['OGE_SHAPES_SHOT'])
-        await page
-          .locator(BASIC)
-          .screenshot({
-            path: `${process.env['OGE_SHAPES_SHOT']}-flow-${layer.name}.png`,
-          });
+        await page.locator(BASIC).screenshot({
+          path: `${process.env['OGE_SHAPES_SHOT']}-flow-${layer.name}.png`,
+        });
       await host
         .locator('.oge-spreadsheet-tab', { hasText: 'Gallery' })
         .click();
       await expect(shapes).toHaveCount(31);
       if (process.env['OGE_SHAPES_SHOT'])
-        await page
-          .locator(BASIC)
-          .screenshot({
-            path: `${process.env['OGE_SHAPES_SHOT']}-${layer.name}.png`,
-          });
+        await page.locator(BASIC).screenshot({
+          path: `${process.env['OGE_SHAPES_SHOT']}-${layer.name}.png`,
+        });
       const results = await new AxeBuilder({ page })
         .include('.oge-spreadsheet')
         .disableRules(['color-contrast'])
