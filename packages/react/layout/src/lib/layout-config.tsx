@@ -10,6 +10,10 @@ import {
   resolveOgeCarouselConfig,
   type OgeCarouselConfig,
   type OgeCarouselConfigInput,
+  OGE_DEFAULT_IMAGE_VIEWER_CONFIG,
+  resolveOgeImageViewerConfig,
+  type OgeImageViewerConfig,
+  type OgeImageViewerConfigInput,
   OGE_DEFAULT_TILE_LAYOUT_CONFIG,
   resolveOgeTileLayoutConfig,
   type OgeTileLayoutConfig,
@@ -433,6 +437,29 @@ export function OgeCarouselConfigProvider({
 
 export const useOgeCarouselConfig = (): OgeCarouselConfig =>
   useContext(CarouselContext);
+
+const ImageViewerContext = createContext<OgeImageViewerConfig>(
+  OGE_DEFAULT_IMAGE_VIEWER_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeImageViewerConfig()`. */
+export function OgeImageViewerConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeImageViewerConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeImageViewerConfig(config), [config]);
+  return (
+    <ImageViewerContext.Provider value={value}>
+      {children}
+    </ImageViewerContext.Provider>
+  );
+}
+
+export const useOgeImageViewerConfig = (): OgeImageViewerConfig =>
+  useContext(ImageViewerContext);
 
 const ListViewContext = createContext<OgeListViewConfig>(
   OGE_DEFAULT_LIST_VIEW_CONFIG,

@@ -26,6 +26,7 @@ import {
   OGE_DEFAULT_TABS_MESSAGES,
   OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
   OGE_DEFAULT_LIST_VIEW_MESSAGES,
+  OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
   OGE_DEFAULT_TOOLBAR_MESSAGES,
   OGE_DEFAULT_TREE_VIEW_MESSAGES,
   OGE_DEFAULT_UPLOAD_MESSAGES,
@@ -50,6 +51,7 @@ import { provideOgeSplitterConfig } from '@oge-ui/layout/splitter';
 import { provideOgeTimelineConfig } from '@oge-ui/layout/timeline';
 import { provideOgeTileLayoutConfig } from '@oge-ui/layout/tile-layout';
 import { provideOgeListViewConfig } from '@oge-ui/layout/list-view';
+import { provideOgeImageViewerConfig } from '@oge-ui/layout/image-viewer';
 import { provideOgeToolbarConfig } from '@oge-ui/layout/toolbar';
 import { ogeMergeMessages, type OgeLocalePack } from '@oge-ui/locales';
 import {
@@ -303,6 +305,14 @@ export function provideOgeLayoutLocale(pack: PackSource): Provider[] {
         messages: ogeMergeMessages(
           OGE_DEFAULT_CAROUSEL_MESSAGES,
           p.layout?.carousel,
+        ),
+      })),
+    ),
+    provideOgeImageViewerConfig(
+      config((p) => ({
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
+          p.layout?.imageViewer,
         ),
       })),
     ),

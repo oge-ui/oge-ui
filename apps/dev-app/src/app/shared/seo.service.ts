@@ -472,6 +472,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE Carousel API reference: every input, method, output and type of oge-carousel, its declarative slides, the slide template and the config provider.',
   ],
   [
+    '/components/image-viewer',
+    'Image viewer for Angular and React: a gallery with zoom, pan, pinch, rotation, thumbnails, full screen and a full keyboard map, announced to screen readers.',
+  ],
+  [
+    '/components/image-viewer/api',
+    'OGE Image Viewer API reference: every input, method and output of oge-image-viewer and OgeImageViewer, the keyboard and pointer model and the config provider.',
+  ],
+  [
     '/components/splitter',
     'Angular and React Splitter: resizable, collapsible, nestable panes on the WAI-ARIA window splitter pattern with ratio or pixel sizes, keyboard, RTL and touch.',
   ],

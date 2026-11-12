@@ -13,6 +13,7 @@ import type {
   OgeSimpleTableMessages,
   OgeTileLayoutMessages,
   OgeListViewMessages,
+  OgeImageViewerMessages,
   OgeAlertMessages,
   OgeCarouselMessages,
   OgeAvatarMessages,
@@ -80,6 +81,7 @@ export interface OgeLocaleLayoutMessages {
   readonly simpleTable?: OgeDeepPartial<OgeSimpleTableMessages>;
   readonly tileLayout?: OgeDeepPartial<OgeTileLayoutMessages>;
   readonly listView?: OgeDeepPartial<OgeListViewMessages>;
+  readonly imageViewer?: OgeDeepPartial<OgeImageViewerMessages>;
 }
 
 /** The navigation family's catalogs, one per component. */

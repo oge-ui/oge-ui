@@ -1082,6 +1082,12 @@ export const OGE_DEFAULT_GRID_CONFIG: OgeGridConfig;
 export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages;
 
 // @public (undocumented)
+export const OGE_DEFAULT_IMAGE_VIEWER_CONFIG: OgeImageViewerConfig;
+
+// @public (undocumented)
+export const OGE_DEFAULT_IMAGE_VIEWER_MESSAGES: OgeImageViewerMessages;
+
+// @public (undocumented)
 export const OGE_DEFAULT_INPUTS_CONFIG: OgeInputsConfig;
 
 // @public (undocumented)
@@ -1338,6 +1344,9 @@ export const OGE_GRID_ROWS_MIME = "application/x-oge-grid-rows+json";
 
 // @public
 export const OGE_GRID_WINDOW_BLOCK_SIZE = 100;
+
+// @public
+export const OGE_IMAGE_ZOOM_STEPS: readonly number[];
 
 // @public
 export const OGE_INDICATOR_GLIDE_ATTR = "data-oge-indicator-glide";
@@ -8718,6 +8727,166 @@ export interface OgeIconSetFormat {
     thresholds?: readonly [number, number];
     // (undocumented)
     type: 'iconSet';
+}
+
+// @public (undocumented)
+export interface OgeImageViewerConfig {
+    loop?: boolean;
+    maxZoom?: number;
+    // (undocumented)
+    messages: OgeImageViewerMessages;
+}
+
+// @public (undocumented)
+export type OgeImageViewerConfigInput = Partial<Omit<OgeImageViewerConfig, 'messages'>> & {
+    messages?: Partial<OgeImageViewerMessages>;
+};
+
+// @public
+export class OgeImageViewerCore {
+    constructor(options: OgeImageViewerCoreOptions);
+    readonly announcement: () => string;
+    // (undocumented)
+    readonly canGoBack: () => boolean;
+    // (undocumented)
+    readonly canGoForward: () => boolean;
+    // (undocumented)
+    readonly canZoomIn: () => boolean;
+    // (undocumented)
+    readonly canZoomOut: () => boolean;
+    // (undocumented)
+    readonly counterText: () => string;
+    // (undocumented)
+    readonly current: () => OgeImageViewerItem | undefined;
+    // (undocumented)
+    readonly fullscreen: () => boolean;
+    go(index: number): void;
+    // (undocumented)
+    readonly index: () => number;
+    // (undocumented)
+    readonly items: () => readonly OgeImageViewerItem[];
+    keydown(event: {
+        readonly key: string;
+        readonly ctrlKey?: boolean;
+        readonly metaKey?: boolean;
+        preventDefault(): void;
+    }): void;
+    // (undocumented)
+    readonly messages: () => OgeImageViewerMessages;
+    // (undocumented)
+    next(): void;
+    // (undocumented)
+    readonly pan: () => {
+        readonly x: number;
+        readonly y: number;
+    };
+    pinch(scale: number, at: {
+        x: number;
+        y: number;
+    }): void;
+    pointerDown(x: number, y: number): boolean;
+    // (undocumented)
+    pointerMove(x: number, y: number): void;
+    // (undocumented)
+    pointerUp(): void;
+    // (undocumented)
+    previous(): void;
+    resetView(): void;
+    // (undocumented)
+    rotate(quarterTurns: number): void;
+    // (undocumented)
+    readonly rotation: () => number;
+    // (undocumented)
+    setConfig(config: OgeImageViewerConfig): void;
+    // (undocumented)
+    setFullscreen(on: boolean): void;
+    // (undocumented)
+    setItems(items: readonly OgeImageViewerItem[]): void;
+    setStage(width: number, height: number): void;
+    setZoom(zoom: number, at?: {
+        readonly x: number;
+        readonly y: number;
+    }): void;
+    // (undocumented)
+    toggleFullscreen(): void;
+    toggleZoom(at: {
+        x: number;
+        y: number;
+    }): void;
+    readonly transform: () => string;
+    wheel(deltaY: number, at: {
+        x: number;
+        y: number;
+    }): void;
+    // (undocumented)
+    readonly zoom: () => number;
+    // (undocumented)
+    readonly zoomed: () => boolean;
+    // (undocumented)
+    zoomIn(at?: {
+        x: number;
+        y: number;
+    }): void;
+    // (undocumented)
+    zoomOut(at?: {
+        x: number;
+        y: number;
+    }): void;
+    // (undocumented)
+    readonly zoomText: () => string;
+}
+
+// @public (undocumented)
+export interface OgeImageViewerCoreOptions {
+    // (undocumented)
+    readonly messages: OgeImageViewerMessages;
+    // (undocumented)
+    readonly onIndexChange?: (index: number) => void;
+    // (undocumented)
+    readonly onZoomChange?: (zoom: number) => void;
+    // (undocumented)
+    readonly reactivity: OgeReactivityAdapter;
+    readonly requestFullscreen?: (on: boolean) => void;
+}
+
+// @public
+export interface OgeImageViewerItem {
+    readonly alt: string;
+    readonly caption?: string;
+    // (undocumented)
+    readonly src: string;
+    readonly thumbnail?: string;
+}
+
+// @public (undocumented)
+export interface OgeImageViewerMessages {
+    readonly announce: string;
+    readonly counter: string;
+    // (undocumented)
+    readonly empty: string;
+    // (undocumented)
+    readonly exitFullscreen: string;
+    // (undocumented)
+    readonly fullscreen: string;
+    // (undocumented)
+    readonly label: string;
+    // (undocumented)
+    readonly next: string;
+    // (undocumented)
+    readonly previous: string;
+    // (undocumented)
+    readonly resetZoom: string;
+    // (undocumented)
+    readonly rotateLeft: string;
+    // (undocumented)
+    readonly rotateRight: string;
+    // (undocumented)
+    readonly thumbnails: string;
+    // (undocumented)
+    readonly zoomIn: string;
+    readonly zoomLevel: string;
+    // (undocumented)
+    readonly zoomOut: string;
 }
 
 // @public
@@ -16467,6 +16636,9 @@ export function resolveOgeHeaderDropTarget(hit: Element | null, host: Element | 
     readonly reorder: boolean;
     readonly group: boolean;
 }): OgeGridHeaderDropTarget | null;
+
+// @public (undocumented)
+export function resolveOgeImageViewerConfig(input: OgeImageViewerConfigInput | undefined, base?: OgeImageViewerConfig): OgeImageViewerConfig;
 
 // @public
 export function resolveOgeInputsConfig(config?: OgeInputsConfigInput): OgeInputsConfig;

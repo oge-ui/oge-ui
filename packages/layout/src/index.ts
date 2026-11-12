@@ -332,6 +332,17 @@ export type {
   OgeCarouselPickerMode,
   OgeCarouselSlideChangedEvent,
 } from '@oge-ui/layout/carousel';
+export { OgeImageViewer } from '@oge-ui/layout/image-viewer';
+export {
+  OGE_IMAGE_VIEWER_CONFIG,
+  OGE_DEFAULT_IMAGE_VIEWER_CONFIG,
+  OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
+  provideOgeImageViewerConfig,
+  type OgeImageViewerConfig,
+  type OgeImageViewerConfigInput,
+  type OgeImageViewerItem,
+  type OgeImageViewerMessages,
+} from '@oge-ui/layout/image-viewer';
 export { OgeTileLayout, OgeTileLayoutItem } from '@oge-ui/layout/tile-layout';
 export {
   OgeTileLayoutContentTemplate,

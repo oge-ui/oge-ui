@@ -797,6 +797,22 @@ export class App {
       ],
     },
     {
+      title: 'Image Viewer',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/image-viewer',
+          label: 'Overview',
+          icon: 'image',
+        },
+        {
+          path: '/components/image-viewer/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Tile Layout',
       group: COMPONENTS_GROUP,
       items: [

@@ -2663,6 +2663,18 @@ export {
   type OgeCarouselSwipeOptions,
 } from './lib/layout/carousel-core';
 export {
+  OGE_DEFAULT_IMAGE_VIEWER_CONFIG,
+  OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
+  OGE_IMAGE_ZOOM_STEPS,
+  OgeImageViewerCore,
+  resolveOgeImageViewerConfig,
+  type OgeImageViewerConfig,
+  type OgeImageViewerConfigInput,
+  type OgeImageViewerCoreOptions,
+  type OgeImageViewerItem,
+  type OgeImageViewerMessages,
+} from './lib/layout/image-viewer-core';
+export {
   OGE_DEFAULT_LIST_VIEW_CONFIG,
   OGE_DEFAULT_LIST_VIEW_MESSAGES,
   OGE_LIST_VIEW_FALLBACK_HEIGHT,

@@ -715,6 +715,27 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/image-viewer',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/image-viewer').then(
+            (m) => m.LayoutImageViewerPage,
+          ),
+        title: 'OGE — Image Viewer',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/image-viewer-api').then(
+            (m) => m.LayoutImageViewerApiPage,
+          ),
+        title: 'OGE — Image Viewer API',
+      },
+    ],
+  },
+  {
     path: 'components/tile-layout',
     children: [
       {

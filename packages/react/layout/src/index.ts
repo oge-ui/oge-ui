@@ -337,6 +337,23 @@ export {
   OgeCarouselConfigProvider,
   useOgeCarouselConfig,
 } from './lib/layout-config';
+export {
+  OgeImageViewer,
+  type OgeImageViewerHandle,
+  type OgeImageViewerProps,
+} from './lib/image-viewer';
+export {
+  OgeImageViewerConfigProvider,
+  useOgeImageViewerConfig,
+} from './lib/layout-config';
+export {
+  OGE_DEFAULT_IMAGE_VIEWER_CONFIG,
+  OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
+  type OgeImageViewerConfig,
+  type OgeImageViewerConfigInput,
+  type OgeImageViewerItem,
+  type OgeImageViewerMessages,
+} from '@oge-ui/behavior';
 export type {
   OgeCarouselAutoplayChangedEvent,
   OgeCarouselChangeSource,

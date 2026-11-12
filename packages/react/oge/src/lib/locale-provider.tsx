@@ -28,6 +28,7 @@ import {
   OGE_DEFAULT_TABS_MESSAGES,
   OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
   OGE_DEFAULT_LIST_VIEW_MESSAGES,
+  OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
   OGE_DEFAULT_TOOLBAR_MESSAGES,
   OGE_DEFAULT_TREE_VIEW_MESSAGES,
   OGE_DEFAULT_UPLOAD_MESSAGES,
@@ -55,6 +56,7 @@ import {
   OgeSplitterConfigProvider,
   OgeTileLayoutConfigProvider,
   OgeListViewConfigProvider,
+  OgeImageViewerConfigProvider,
   OgeTimelineConfigProvider,
   OgeToolbarConfigProvider,
 } from '@oge-ui/react-layout';
@@ -362,6 +364,12 @@ export function OgeLayoutLocaleProvider({
           layout?.listView,
         ),
       },
+      imageViewer: {
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
+          layout?.imageViewer,
+        ),
+      },
     };
   }, [pack]);
   return (
@@ -384,7 +392,11 @@ export function OgeLayoutLocaleProvider({
                                 config={c.tileLayout}
                               >
                                 <OgeListViewConfigProvider config={c.listView}>
-                                  {children}
+                                  <OgeImageViewerConfigProvider
+                                    config={c.imageViewer}
+                                  >
+                                    {children}
+                                  </OgeImageViewerConfigProvider>
                                 </OgeListViewConfigProvider>
                               </OgeTileLayoutConfigProvider>
                             </OgeSimpleTableConfigProvider>

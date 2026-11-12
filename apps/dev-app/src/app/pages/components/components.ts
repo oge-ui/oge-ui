@@ -1244,6 +1244,11 @@ export class ComponentsIndexPage {
     },
     { family: 'Layout', label: 'Carousel', path: '/components/carousel' },
     {
+      family: 'Layout',
+      label: 'Image viewer',
+      path: '/components/image-viewer',
+    },
+    {
       family: 'Overlay',
       label: 'Action sheet',
       path: '/components/overlay/action-sheet',

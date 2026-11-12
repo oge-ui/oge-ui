@@ -1,6 +1,6 @@
 # @oge-ui/react-layout
 
-> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view and tile layout — running the same config defaults, decision functions and stylesheet as the Angular layout package.
+> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view, tile layout and image viewer — running the same config defaults, decision functions and stylesheet as the Angular layout package.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -1884,6 +1884,77 @@ _OgeCarouselConfigProvider_
 | `OgeCarouselConfigInput` | `Partial<OgeCarouselConfig> with partial messages` | What the provider accepts. |
 | `OgeCarouselMessages` | `{ carousel; slide; label; previous; next; play; pause; picker; slideLabel; slideTitleLabel; goToSlide }` | The carousel catalog. |
 
+### <OgeImageViewer>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `images` | `readonly OgeImageViewerItem[] (required)` | `—` | The gallery. Fields: `src`, `alt` (read out, and shown when the file fails), `caption?` (under the image), `thumbnail?` (a smaller file for the strip, default `src`). A new array keeps the index when it still fits. |
+| `index` | `number \| undefined` | `—` | The shown image — controlled together with `onIndexChange`; left out, the viewer keeps its own. Changing image resets zoom, pan and rotation. |
+| `loop` | `boolean \| undefined` | `config ?? false` | Pages from the last image to the first and back (buttons, keys, thumbnails stay direct). |
+| `maxZoom` | `number \| undefined` | `config ?? 8` | Largest zoom factor (8 = 800 %). Zoom steps through 1, 1.5, 2, 3, 4, 6, 8; the wheel and pinch zoom smoothly, always around the pointer. |
+| `thumbnails` | `boolean` | `true` | The thumbnail strip under the image — shown for two images or more; the current one carries `aria-current`. |
+| `toolbar` | `boolean` | `true` | The toolbar: previous / counter / next, zoom out / level / zoom in / fit, rotate left / right and full screen. Without it the keyboard, the wheel, a double click and pinch still work. |
+| `messages` | `Partial<OgeImageViewerMessages>` | `—` | Per-instance overrides of the config catalog. |
+| `className / style` | `string / CSSProperties` | `—` | Added to the root `.oge-image-viewer`. |
+
+#### Methods
+
+_Ref handle (OgeImageViewerHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `next()` | `() => void` | Shows the next image (wraps only with `loop`). |
+| `previous()` | `() => void` | Shows the previous image (wraps only with `loop`). |
+| `resetView()` | `() => void` | Back to fit: zoom 1, no pan, no rotation. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onIndexChange` | `(index: number) => void` | The shown image changed — the controlled half of `index`. |
+| `onZoomChange` | `(zoom: number) => void` | The zoom factor changed (1 = fit) — from the toolbar, the keys, the wheel, a double click (fit ↔ 2×) or a two-finger pinch. |
+
+#### Types
+
+_Interaction_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `role="group", tabIndex={0}` | With focus on the viewer: Arrow Left / Right page (they pan while zoomed, as do Up / Down), Home / End and Page Up / Down jump, + / - zoom, 0 fits, R / Shift+R rotate and F toggles full screen. A polite live region announces each image. |
+| `Pointer` | `drag · wheel · double click · pinch` | While zoomed, dragging pans (clamped so the image never leaves the stage); the wheel zooms, a double click toggles fit and 2×, two fingers pinch. Full screen uses the Fullscreen API and follows `fullscreenchange`, so Esc keeps the state in sync. |
+| `OgeImageViewerProps` | `interface` | The props above. |
+| `OgeImageViewerHandle` | `{ next(); previous(); resetView() }` | What a `ref` reaches. |
+| `OgeImageViewerItem` | `interface` | One image: `src`, `alt` (read out, and shown when the file fails), `caption?` (under the image), `thumbnail?` (a smaller file for the strip, default `src`). |
+| `OgeImageViewerCore` | `class (@oge-ui/behavior)` | The framework-free state machine both render layers drive: index, zoom, pan, rotation, full screen and the key map. |
+| `OgeImageViewerCoreOptions` | `{ reactivity; messages; onIndexChange?; onZoomChange?; requestFullscreen? }` | What the core takes: a reactivity adapter, the catalog, and the callbacks a render layer wires to its outputs and to the Fullscreen API. |
+| `OGE_IMAGE_ZOOM_STEPS` | `readonly number[]` | The zoom stops of the buttons and keys. |
+
+### Configuration
+
+#### Properties
+
+_OgeImageViewerConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeImageViewerMessages` | Every user-facing string: `label`, `previous`, `next`, `zoomIn`, `zoomOut`, `resetZoom`, `rotateLeft`, `rotateRight`, `fullscreen`, `exitFullscreen`, `thumbnails`, `empty`, and the templates `counter` (`{index} of {count}`), `zoomLevel` (`{zoom}%`) and `announce` (`{alt}, image {index} of {count}`, the live-region text). Translated in every `@oge-ui/locales` pack (`layout.imageViewer`). |
+| `loop / maxZoom` | `—` | Defaults for the matching props. `useOgeImageViewerConfig()` reads the resolved value. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeImageViewerConfigProvider` | `({ config?, children }) => JSX.Element` | Subtree-scoped defaults. |
+| `useOgeImageViewerConfig` | `() => OgeImageViewerConfig` | Reads the resolved config. |
+| `OGE_DEFAULT_IMAGE_VIEWER_CONFIG` | `OgeImageViewerConfig` | The defaults. |
+| `OGE_DEFAULT_IMAGE_VIEWER_MESSAGES` | `OgeImageViewerMessages` | The English catalog. |
+| `resolveOgeImageViewerConfig` | `(input?, base?) => OgeImageViewerConfig` | Merges a partial config over a base (the defaults). |
+| `OgeImageViewerConfig` | `{ messages: OgeImageViewerMessages; loop?: boolean; maxZoom?: number }` | Resolved config shape. |
+| `OgeImageViewerConfigInput` | `Partial<OgeImageViewerConfig> with partial messages` | What the provider accepts. |
+| `OgeImageViewerMessages` | `{ label; previous; next; zoomIn; zoomOut; resetZoom; rotateLeft; rotateRight; fullscreen; exitFullscreen; thumbnails; counter; zoomLevel; announce; empty }` | The image viewer catalog. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -3512,6 +3583,105 @@ export function DataViewRemoteDemo() {
       onOptionsChanged={load}
       renderItem={({ item }) => <Tile item={item} />}
     />
+  );
+}
+```
+
+### Gallery
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeImageViewer } from '@oge-ui/react-layout';
+import type { OgeImageViewerItem } from '@oge-ui/react-layout';
+
+const photos: OgeImageViewerItem[] = [
+  {
+    src: '/demo/carousel/coast.svg',
+    alt: 'A palm tree on a sandy beach by a calm blue sea',
+    caption: 'Turquoise Coast',
+  },
+  {
+    src: '/demo/carousel/mountains.svg',
+    alt: 'Snow-capped violet peaks under a pink evening sky',
+    caption: 'Kaçkar Mountains',
+  },
+  {
+    src: '/demo/carousel/city.svg',
+    alt: 'A city skyline with lit windows at sunset',
+    caption: 'Istanbul by night',
+  },
+];
+
+export function ImageViewerGalleryDemo() {
+  const [index, setIndex] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  return (
+    <>
+      {/* Focus the viewer: arrows page (and pan while zoomed), + / - zoom,
+          0 fits, R rotates, F goes full screen. */}
+      <div style={{ height: 420 }}>
+        <OgeImageViewer
+          images={photos}
+          index={index}
+          onIndexChange={setIndex}
+          onZoomChange={setZoom}
+        />
+      </div>
+      <p>
+        Image {index + 1} at {zoom * 100}%
+      </p>
+    </>
+  );
+}
+```
+
+### Loop, zoom limit & handle
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeImageViewer } from '@oge-ui/react-layout';
+import type { OgeImageViewerHandle, OgeImageViewerItem } from '@oge-ui/react-layout';
+
+const photos: OgeImageViewerItem[] = [
+  {
+    src: '/demo/carousel/coast.svg',
+    alt: 'A palm tree on a sandy beach by a calm blue sea',
+    caption: 'Turquoise Coast',
+  },
+  {
+    src: '/demo/carousel/mountains.svg',
+    alt: 'Snow-capped violet peaks under a pink evening sky',
+    caption: 'Kaçkar Mountains',
+  },
+  {
+    src: '/demo/carousel/city.svg',
+    alt: 'A city skyline with lit windows at sunset',
+    caption: 'Istanbul by night',
+  },
+];
+
+export function ImageViewerOptionsDemo() {
+  const viewer = useRef<OgeImageViewerHandle>(null);
+  return (
+    <>
+      <div style={{ height: 360 }}>
+        <OgeImageViewer
+          ref={viewer}
+          images={photos}
+          loop
+          maxZoom={4}
+          thumbnails={false}
+          messages={{ resetZoom: 'Show whole image' }}
+        />
+      </div>
+      <button type="button" onClick={() => viewer.current?.resetView()}>
+        resetView()
+      </button>
+    </>
   );
 }
 ```

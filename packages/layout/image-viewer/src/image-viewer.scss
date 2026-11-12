@@ -1,0 +1,213 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The image viewer of both render layers.
+// the host fills a sized parent; the viewer keeps a min-height without one
+oge-image-viewer {
+  display: block;
+  height: 100%;
+}
+
+.oge-image-viewer {
+  @include tokens.core-tokens;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 240px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  overflow: hidden;
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 2px;
+  }
+
+  &.oge-image-viewer-fullscreen {
+    border-radius: 0;
+  }
+}
+
+.oge-image-viewer-toolbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+.oge-image-viewer-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.oge-image-viewer-spacer {
+  flex: 1 1 auto;
+}
+
+.oge-image-viewer-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--oge-control-height-sm);
+  height: var(--oge-control-height-sm);
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--oge-accent-25);
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.oge-image-viewer-readout {
+  min-width: 4.5em;
+  color: var(--oge-muted-color);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.oge-image-viewer-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--oge-header-bg);
+  touch-action: none;
+  user-select: none;
+
+  &.oge-image-viewer-zoomed {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+}
+
+// absolutely placed, so the image never sizes the stage — the stage takes the
+// space the viewer leaves it and the image fits inside
+.oge-image-viewer-image {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+  transition: transform var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
+
+  .oge-image-viewer-zoomed:active & {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.oge-image-viewer-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.oge-image-viewer-empty,
+.oge-image-viewer-caption {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--oge-muted-color);
+  text-align: center;
+}
+
+.oge-image-viewer-caption {
+  flex: none;
+  border-top: 1px solid var(--oge-border-color);
+}
+
+.oge-image-viewer-thumbnails {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  padding: 8px;
+  overflow-x: auto;
+  border-top: 1px solid var(--oge-border-color);
+
+  @include tokens.scrollbar;
+}
+
+.oge-image-viewer-thumbnail {
+  flex: none;
+  width: 64px;
+  height: 48px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--oge-radius);
+  background: var(--oge-header-bg);
+  cursor: pointer;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &[aria-current='true'] {
+    border-color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 1px;
+  }
+}
+
+.oge-image-viewer-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .oge-image-viewer-thumbnail[aria-current='true'] {
+    border-color: Highlight;
+  }
+}

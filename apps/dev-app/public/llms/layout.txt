@@ -1,6 +1,6 @@
 # @oge-ui/layout
 
-> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks — plus the collection and dashboard set: an APG carousel (tab-list or button picker, scroll-snap swipes, loop, autoplay that stops on keyboard focus with a rotation control), a list view (virtualized listbox or list with sticky group headers, search, infinite scroll and swipe actions), a data view (templated items in container-query columns with sorting, search, paging and selection) and a tile layout (dashboard tiles with spans, drag to reorder, resize handles, Ctrl+Arrow keyboard twins and a validated serializable state).
+> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks — plus the collection and dashboard set: an APG carousel (tab-list or button picker, scroll-snap swipes, loop, autoplay that stops on keyboard focus with a rotation control), a list view (virtualized listbox or list with sticky group headers, search, infinite scroll and swipe actions), a data view (templated items in container-query columns with sorting, search, paging and selection) and a tile layout (dashboard tiles with spans, drag to reorder, resize handles, Ctrl+Arrow keyboard twins and a validated serializable state) — and an image viewer (zoom by buttons, wheel, double click or pinch, drag to pan, quarter-turn rotation, thumbnails, full screen and a full keyboard map).
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -97,8 +97,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CAROUSEL_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DATA_VIEW_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SIMPLE_TABLE_CONFIG`, `OGE_DEFAULT_SIMPLE_TABLE_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LIST_VIEW_CONFIG`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SIMPLE_TABLE_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TILE_LAYOUT_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeCarousel`, `OgeCarouselSlide`, `OgeCarouselSlideTemplate`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeDataView`, `OgeDataViewEmptyTemplate`, `OgeDataViewItemTemplate`, `OgeDataViewListItemTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeListView`, `OgeListViewEmptyTemplate`, `OgeListViewFooterTemplate`, `OgeListViewGroupTemplate`, `OgeListViewItemTemplate`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSimpleTable`, `OgeSimpleTableEmpty`, `OgeSimpleTableFooter`, `OgeSimpleTableHeader`, `OgeSimpleTableRow`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTileLayout`, `OgeTileLayoutContentTemplate`, `OgeTileLayoutHeaderTemplate`, `OgeTileLayoutItem`, `OgeTileLayoutItemHeader`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeCarouselConfig`, `provideOgeChipConfig`, `provideOgeDataViewConfig`, `provideOgeListViewConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSimpleTableConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTileLayoutConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`, `sanitizeOgeTileLayoutState`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSlideTemplateContext`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewEmptyTemplateContext`, `OgeDataViewItemClickEvent`, `OgeDataViewItemTemplateContext`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewEmptyTemplateContext`, `OgeListViewExpr`, `OgeListViewFooterTemplateContext`, `OgeListViewGroupTemplateContext`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemTemplateContext`, `OgeListViewKey`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewPageLoadMode`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSimpleTableAlign`, `OgeSimpleTableColumn`, `OgeSimpleTableConfig`, `OgeSimpleTableConfigInput`, `OgeSimpleTableMessages`, `OgeSimpleTableResolvedColumn`, `OgeSimpleTableRowContext`, `OgeSimpleTableSectionContext`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutMessages`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTemplateContext`, `OgeTileLayoutTileState`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CAROUSEL_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DATA_VIEW_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_IMAGE_VIEWER_CONFIG`, `OGE_DEFAULT_IMAGE_VIEWER_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SIMPLE_TABLE_CONFIG`, `OGE_DEFAULT_SIMPLE_TABLE_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_IMAGE_VIEWER_CONFIG`, `OGE_LIST_VIEW_CONFIG`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SIMPLE_TABLE_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TILE_LAYOUT_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeCarousel`, `OgeCarouselSlide`, `OgeCarouselSlideTemplate`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeDataView`, `OgeDataViewEmptyTemplate`, `OgeDataViewItemTemplate`, `OgeDataViewListItemTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeImageViewer`, `OgeListView`, `OgeListViewEmptyTemplate`, `OgeListViewFooterTemplate`, `OgeListViewGroupTemplate`, `OgeListViewItemTemplate`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSimpleTable`, `OgeSimpleTableEmpty`, `OgeSimpleTableFooter`, `OgeSimpleTableHeader`, `OgeSimpleTableRow`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTileLayout`, `OgeTileLayoutContentTemplate`, `OgeTileLayoutHeaderTemplate`, `OgeTileLayoutItem`, `OgeTileLayoutItemHeader`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeCarouselConfig`, `provideOgeChipConfig`, `provideOgeDataViewConfig`, `provideOgeImageViewerConfig`, `provideOgeListViewConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSimpleTableConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTileLayoutConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`, `sanitizeOgeTileLayoutState`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSlideTemplateContext`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewEmptyTemplateContext`, `OgeDataViewItemClickEvent`, `OgeDataViewItemTemplateContext`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeImageViewerConfig`, `OgeImageViewerConfigInput`, `OgeImageViewerItem`, `OgeImageViewerMessages`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewEmptyTemplateContext`, `OgeListViewExpr`, `OgeListViewFooterTemplateContext`, `OgeListViewGroupTemplateContext`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemTemplateContext`, `OgeListViewKey`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewPageLoadMode`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSimpleTableAlign`, `OgeSimpleTableColumn`, `OgeSimpleTableConfig`, `OgeSimpleTableConfigInput`, `OgeSimpleTableMessages`, `OgeSimpleTableResolvedColumn`, `OgeSimpleTableRowContext`, `OgeSimpleTableSectionContext`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutMessages`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTemplateContext`, `OgeTileLayoutTileState`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 `@oge-ui/layout/*`
 
@@ -1797,6 +1797,72 @@ _provideOgeCarouselConfig()_
 | `OgeCarouselConfigInput` | `Partial<OgeCarouselConfig> with partial messages` | What the provider accepts. |
 | `OgeCarouselMessages` | `{ carousel; slide; label; previous; next; play; pause; picker; slideLabel; slideTitleLabel; goToSlide }` | The carousel catalog. |
 
+### OgeImageViewer — `<oge-image-viewer>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `images` | `readonly OgeImageViewerItem[] (required)` | `—` | The gallery. Fields: `src`, `alt` (read out, and shown when the file fails), `caption?` (under the image), `thumbnail?` (a smaller file for the strip, default `src`). A new array keeps the index when it still fits. |
+| `index` | `number (model)` | `0` | The shown image — two-way. Changing image resets zoom, pan and rotation. |
+| `loop` | `boolean \| undefined` | `config ?? false` | Pages from the last image to the first and back (buttons, keys, thumbnails stay direct). |
+| `maxZoom` | `number \| undefined` | `config ?? 8` | Largest zoom factor (8 = 800 %). Zoom steps through 1, 1.5, 2, 3, 4, 6, 8; the wheel and pinch zoom smoothly, always around the pointer. |
+| `thumbnails` | `boolean` | `true` | The thumbnail strip under the image — shown for two images or more; the current one carries `aria-current`. |
+| `toolbar` | `boolean` | `true` | The toolbar: previous / counter / next, zoom out / level / zoom in / fit, rotate left / right and full screen. Without it the keyboard, the wheel, a double click and pinch still work. |
+| `messages` | `Partial<OgeImageViewerMessages>` | `{}` | Per-instance overrides of the config catalog. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `next()` | `() => void` | Shows the next image (wraps only with `loop`). |
+| `previous()` | `() => void` | Shows the previous image (wraps only with `loop`). |
+| `resetView()` | `() => void` | Back to fit: zoom 1, no pan, no rotation. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `indexChange` | `number` | The banana half of `[(index)]`. |
+| `zoomChange` | `number` | The zoom factor changed (1 = fit) — from the toolbar, the keys, the wheel, a double click (fit ↔ 2×) or a two-finger pinch. |
+
+#### Types
+
+_Interaction_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard` | `role="group", tabindex="0"` | With focus on the viewer: Arrow Left / Right page (they pan while zoomed, as do Up / Down), Home / End and Page Up / Down jump, + / - zoom, 0 fits, R / Shift+R rotate and F toggles full screen. A polite live region announces each image. |
+| `Pointer` | `drag · wheel · double click · pinch` | While zoomed, dragging pans (clamped so the image never leaves the stage); the wheel zooms, a double click toggles fit and 2×, two fingers pinch. Full screen uses the Fullscreen API and follows `fullscreenchange`, so Esc keeps the state in sync. |
+| `OgeImageViewerItem` | `interface` | One image: `src`, `alt` (read out, and shown when the file fails), `caption?` (under the image), `thumbnail?` (a smaller file for the strip, default `src`). |
+| `OgeImageViewerCore` | `class (@oge-ui/behavior)` | The framework-free state machine both render layers drive: index, zoom, pan, rotation, full screen and the key map. |
+| `OgeImageViewerCoreOptions` | `{ reactivity; messages; onIndexChange?; onZoomChange?; requestFullscreen? }` | What the core takes: a reactivity adapter, the catalog, and the callbacks a render layer wires to its outputs and to the Fullscreen API. |
+| `OGE_IMAGE_ZOOM_STEPS` | `readonly number[]` | The zoom stops of the buttons and keys. |
+
+### Configuration
+
+#### Properties
+
+_provideOgeImageViewerConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeImageViewerMessages` | Every user-facing string: `label`, `previous`, `next`, `zoomIn`, `zoomOut`, `resetZoom`, `rotateLeft`, `rotateRight`, `fullscreen`, `exitFullscreen`, `thumbnails`, `empty`, and the templates `counter` (`{index} of {count}`), `zoomLevel` (`{zoom}%`) and `announce` (`{alt}, image {index} of {count}`, the live-region text). Translated in every `@oge-ui/locales` pack (`layout.imageViewer`). |
+| `loop / maxZoom` | `—` | Defaults for the matching inputs. Pass a function for a live config. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeImageViewerConfig` | `(config: OgeImageViewerConfigInput \| (() => OgeImageViewerConfigInput)) => Provider` | Application- or component-scoped defaults; a function makes the config live. |
+| `OGE_IMAGE_VIEWER_CONFIG` | `InjectionToken<OgeImageViewerConfig>` | The resolved config the viewer injects. |
+| `OGE_DEFAULT_IMAGE_VIEWER_CONFIG` | `OgeImageViewerConfig` | The defaults (from `@oge-ui/behavior`). |
+| `OGE_DEFAULT_IMAGE_VIEWER_MESSAGES` | `OgeImageViewerMessages` | The English catalog. |
+| `resolveOgeImageViewerConfig` | `(input?, base?) => OgeImageViewerConfig` | Merges a partial config over a base (the defaults). |
+| `OgeImageViewerConfig` | `{ messages: OgeImageViewerMessages; loop?: boolean; maxZoom?: number }` | Resolved config shape. |
+| `OgeImageViewerConfigInput` | `Partial<OgeImageViewerConfig> with partial messages` | What the provider accepts. |
+| `OgeImageViewerMessages` | `{ label; previous; next; zoomIn; zoomOut; resetZoom; rotateLeft; rotateRight; fullscreen; exitFullscreen; thumbnails; counter; zoomLevel; announce; empty }` | The image viewer catalog. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -3428,6 +3494,102 @@ export class Demo {
     { id: 4, name: 'Wall shelf', category: 'Storage', price: 89, rating: 3.9, inStock: true },
     { id: 5, name: 'Wool rug', category: 'Textiles', price: 150, rating: 4.8, inStock: true },
     { id: 6, name: 'Floor lamp', category: 'Lighting', price: 120, rating: 4.2, inStock: true },
+  ];
+}
+```
+
+### Image viewer basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeImageViewer } from '@oge-ui/layout';
+import type { OgeImageViewerItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeImageViewer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Focus the viewer: arrows page (and pan while zoomed), + / - zoom,
+         0 fits, R rotates, F goes full screen. Drag to pan, wheel or pinch to
+         zoom, double click toggles fit and 2x. -->
+    <div style="height: 420px">
+      <oge-image-viewer
+        [images]="photos"
+        [(index)]="index"
+        (zoomChange)="zoom.set($event)"
+      />
+    </div>
+    <p>Image {{ index() + 1 }} at {{ zoom() * 100 }}%</p>
+  `,
+})
+export class Demo {
+  protected readonly index = signal(0);
+  protected readonly zoom = signal(1);
+  protected readonly photos: OgeImageViewerItem[] = [
+    {
+      src: '/demo/carousel/coast.svg',
+      alt: 'A palm tree on a sandy beach by a calm blue sea',
+      caption: 'Turquoise Coast',
+    },
+    {
+      src: '/demo/carousel/mountains.svg',
+      alt: 'Snow-capped violet peaks under a pink evening sky',
+      caption: 'Kaçkar Mountains',
+    },
+    {
+      src: '/demo/carousel/city.svg',
+      alt: 'A city skyline with lit windows at sunset',
+      caption: 'Istanbul by night',
+    },
+  ];
+}
+```
+
+### Image viewer options
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeImageViewer } from '@oge-ui/layout';
+import type { OgeImageViewerItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeImageViewer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- loop wraps from the last image to the first; maxZoom caps the zoom
+         at 400 %; no thumbnail strip. resetView() is public. -->
+    <div style="height: 360px">
+      <oge-image-viewer
+        #viewer
+        [images]="photos"
+        [loop]="true"
+        [maxZoom]="4"
+        [thumbnails]="false"
+        [messages]="{ resetZoom: 'Show whole image' }"
+      />
+    </div>
+    <button type="button" (click)="viewer.resetView()">resetView()</button>
+  `,
+})
+export class Demo {
+  protected readonly photos: OgeImageViewerItem[] = [
+    {
+      src: '/demo/carousel/coast.svg',
+      alt: 'A palm tree on a sandy beach by a calm blue sea',
+      caption: 'Turquoise Coast',
+    },
+    {
+      src: '/demo/carousel/mountains.svg',
+      alt: 'Snow-capped violet peaks under a pink evening sky',
+      caption: 'Kaçkar Mountains',
+    },
+    {
+      src: '/demo/carousel/city.svg',
+      alt: 'A city skyline with lit windows at sunset',
+      caption: 'Istanbul by night',
+    },
   ];
 }
 ```

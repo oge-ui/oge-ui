@@ -7,6 +7,19 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Image viewer — `@oge-ui/layout/image-viewer`, `@oge-ui/react-layout`
+
+- New `oge-image-viewer` / `<OgeImageViewer>`: a gallery with a toolbar,
+  thumbnails and captions.
+  - Zoom with the buttons, the wheel, a double click (fit ↔ 2×) or a
+    two-finger pinch, always around the pointer; `maxZoom` caps it.
+  - Drag to pan while zoomed, clamped to the stage; quarter-turn rotation;
+    full screen through the Fullscreen API, kept in sync on Esc.
+  - A full keyboard map (arrows, Home / End, `+` / `-`, `0`, `R`, `F`) and a
+    polite live region that announces each image by its `alt` text.
+- The state machine is `OgeImageViewerCore` in `@oge-ui/behavior`; messages are
+  translated in every `@oge-ui/locales` pack (`layout.imageViewer`).
+
 ### Exports on the server — `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/server`
 
 - The grid's `exportOnServer(format, handler, fileName?, { scope })` and
