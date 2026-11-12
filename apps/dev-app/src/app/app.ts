@@ -250,6 +250,21 @@ export class App {
           label: 'Migrate from PrimeNG',
           icon: 'arrow-right',
         },
+        {
+          path: '/guides/migrate-from-material',
+          label: 'Migrate from Angular Material',
+          icon: 'arrow-right',
+        },
+        {
+          path: '/guides/migrate-from-ag-grid',
+          label: 'Migrate from AG Grid',
+          icon: 'arrow-right',
+        },
+        {
+          path: '/guides/migrate-from-devextreme',
+          label: 'Migrate from DevExtreme',
+          icon: 'arrow-right',
+        },
       ],
     },
     {

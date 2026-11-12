@@ -1,5 +1,6 @@
 import type { Rule } from '@angular-devkit/schematics';
 import { ogeNgAdd } from './ng-add';
+export { migratePrimeng } from './migrate-primeng';
 import type { NgAddOptions } from './options';
 
 /**

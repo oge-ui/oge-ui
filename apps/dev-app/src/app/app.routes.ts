@@ -160,6 +160,30 @@ export const appRoutes: Route[] = [
     title: 'OGE — Development warnings',
   },
   {
+    path: 'guides/migrate-from-material',
+    loadComponent: () =>
+      import('./pages/guides/migrate-from-material').then(
+        (m) => m.GuideMigrateFromMaterialPage,
+      ),
+    title: 'OGE — Migrate from Angular Material',
+  },
+  {
+    path: 'guides/migrate-from-ag-grid',
+    loadComponent: () =>
+      import('./pages/guides/migrate-from-ag-grid').then(
+        (m) => m.GuideMigrateFromAgGridPage,
+      ),
+    title: 'OGE — Migrate from AG Grid',
+  },
+  {
+    path: 'guides/migrate-from-devextreme',
+    loadComponent: () =>
+      import('./pages/guides/migrate-from-devextreme').then(
+        (m) => m.GuideMigrateFromDevextremePage,
+      ),
+    title: 'OGE — Migrate from DevExtreme',
+  },
+  {
     path: 'guides/migrate-from-primeng',
     loadComponent: () =>
       import('./pages/guides/migrate-from-primeng').then(

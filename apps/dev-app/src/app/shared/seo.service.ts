@@ -100,6 +100,18 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE UI development warnings: every coded OGE#### console message with its cause and fix, silent in production, in Angular and React render layers.',
   ],
   [
+    '/guides/migrate-from-material',
+    'Migrate from Angular Material to OGE UI: the component map, defaults that differ, mat-table to the grid, MatDialog and snack bars, form fields, theming.',
+  ],
+  [
+    '/guides/migrate-from-ag-grid',
+    'Migrate from AG Grid to OGE UI: grid options and column definitions side by side, server-side rows as one data source, cell renderers, state and the API.',
+  ],
+  [
+    '/guides/migrate-from-devextreme',
+    'Migrate from DevExtreme to OGE UI: the component map, dx-data-grid options as oge-grid inputs, CustomStore as CustomDataSource, and defaults that differ.',
+  ],
+  [
     '/guides/migrate-from-primeng',
     'Migrate from PrimeNG to OGE UI: the component map, defaults that differ in dialogs, toasts and filters, a MenuItem adapter, buttons, confirm, trees, dark mode.',
   ],

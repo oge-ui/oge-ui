@@ -6,6 +6,7 @@ import { PageToc } from '../../shared/page-toc';
 import { GuideTable } from './guide-table';
 import {
   BUTTON,
+  CODEMOD,
   CONFIRM,
   DARK,
   DIALOG,
@@ -16,6 +17,7 @@ import {
 } from './migrate-from-primeng-snippets';
 
 const SECTIONS = [
+  'Codemod',
   'Component map',
   'Defaults that differ',
   'Menus',
@@ -205,6 +207,20 @@ const BUTTON_ROWS: string[][] = [
     </app-doc-header>
     <app-page-toc [sections]="sections" />
 
+    <h2 id="codemod" class="scroll-mt-20">Codemod</h2>
+    <p>
+      Every OGE package ships a <code>migrate-primeng</code> schematic. It
+      rewrites <code>p-button</code>, <code>p-dialog</code>,
+      <code>p-tree</code> and <code>pTooltip</code> in templates (files and
+      inline <code>template:</code> strings), swaps the PrimeNG modules for the
+      OGE standalone imports, and turns <code>MenuItem</code> into
+      <code>OgePrimeMenuItem</code>. What it cannot translate one-to-one — a
+      table's columns, a defaults difference, a bound style flag — it keeps and
+      marks with <code>TODO(oge-migrate)</code>, and the run ends with a list of
+      those spots. Commit first and review the diff.
+    </p>
+    <app-code-block [code]="codemod" language="bash" />
+
     <h2 id="component-map" class="scroll-mt-20">Component map</h2>
     <p>
       Every Angular element has a React twin with the same options, so a mixed
@@ -327,6 +343,7 @@ export class GuideMigrateFromPrimengPage {
   protected readonly defaultRows = DEFAULT_ROWS;
   protected readonly buttonRows = BUTTON_ROWS;
   protected readonly menuAdapter = MENU_ADAPTER;
+  protected readonly codemod = CODEMOD;
   protected readonly menuAdapterReact = MENU_ADAPTER_REACT;
   protected readonly button = BUTTON;
   protected readonly dialog = DIALOG;

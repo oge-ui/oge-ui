@@ -169,7 +169,28 @@ export class GuidesIndexPage {
           title: 'Migrate from PrimeNG',
           icon: 'arrow-right',
           summary:
-            'The component map, the defaults that point the other way, and a MenuItem adapter that keeps your models.',
+            'The component map, the defaults that point the other way, a MenuItem adapter and a codemod for templates.',
+        },
+        {
+          path: '/guides/migrate-from-material',
+          title: 'Migrate from Angular Material',
+          icon: 'arrow-right',
+          summary:
+            'mat-table to the grid, MatDialog and snack bars, form fields — the component map and the defaults that differ.',
+        },
+        {
+          path: '/guides/migrate-from-ag-grid',
+          title: 'Migrate from AG Grid',
+          icon: 'arrow-right',
+          summary:
+            'Grid options and column definitions side by side, server-side rows as one data source, renderers and state.',
+        },
+        {
+          path: '/guides/migrate-from-devextreme',
+          title: 'Migrate from DevExtreme',
+          icon: 'arrow-right',
+          summary:
+            'Much of the vocabulary is shared: dx-data-grid options as oge-grid inputs, CustomStore as CustomDataSource.',
         },
       ],
     },

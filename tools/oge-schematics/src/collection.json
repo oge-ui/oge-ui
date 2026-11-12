@@ -4,6 +4,11 @@
       "description": "Set up OGE UI in an Angular workspace: optional theme stylesheet, plus a usage block in AGENTS.md so AI coding assistants default to OGE.",
       "factory": "./ng-add/index.cjs#ngAdd",
       "schema": "./ng-add/schema.json"
+    },
+    "migrate-primeng": {
+      "description": "Move PrimeNG buttons, dialogs, tooltips, trees and MenuItem types to OGE in templates and TypeScript; leaves TODO(oge-migrate) notes where a person must decide.",
+      "factory": "./ng-add/index.cjs#migratePrimeng",
+      "schema": "./migrate-primeng/schema.json"
     }
   }
 }

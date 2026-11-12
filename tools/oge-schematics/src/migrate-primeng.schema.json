@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "OgeUiMigratePrimeng",
+  "title": "OGE UI migrate-primeng",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "default": "/src",
+      "description": "Directory to migrate (templates and TypeScript files below it)."
+    }
+  },
+  "additionalProperties": false
+}

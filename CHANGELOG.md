@@ -7,6 +7,17 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Migration codemod and guides — every package
+
+- `ng generate @oge-ui/<package>:migrate-primeng [--path]`: rewrites `p-button`,
+  `p-dialog`, `p-tree` and `pTooltip` in templates (files and inline `template:`
+  strings), swaps the PrimeNG modules for OGE standalone imports and `MenuItem`
+  for `OgePrimeMenuItem`; leaves `TODO(oge-migrate)` notes — and a summary — where
+  a person must decide (table columns, defaults that differ, bound style flags).
+- New guides: `/guides/migrate-from-material`, `/guides/migrate-from-ag-grid`,
+  `/guides/migrate-from-devextreme`, next to the PrimeNG one (which now documents
+  the codemod).
+
 ### Dark mode under your own switch, PrimeNG migration — `@oge-ui/core`, `@oge-ui/behavior`, `@oge-ui/overlay`, `@oge-ui/react-overlay`
 
 - `@oge-ui/core/themes/dark-class.css`: the dark palette under `.dark` (Tailwind

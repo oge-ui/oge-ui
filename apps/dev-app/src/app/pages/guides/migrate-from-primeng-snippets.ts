@@ -98,3 +98,15 @@ const nodes: TreeNode[] = [{ key: '1', label: 'Documents', children: [/* … */]
 // OGE: your own objects — say which fields to read
 <oge-tree-view [items]="nodes" keyExpr="key" displayExpr="label" itemsExpr="children"
                [allowDragging]="true" (itemReordered)="move($event)" />`;
+
+export const CODEMOD = `# from the workspace root, on a clean working tree
+ng generate @oge-ui/buttons:migrate-primeng            # src/ by default
+ng generate @oge-ui/overlay:migrate-primeng --path=src/app/admin
+
+# before → after
+<p-button label="Save" icon="pi pi-save" [outlined]="true" (onClick)="save()" />
+<oge-button text="Save" iconClass="pi pi-save" (clicked)="save()" stylingMode="outlined" />
+
+<p-dialog header="Edit" [(visible)]="open" [modal]="true">…</p-dialog>
+<!-- TODO(oge-migrate): p-dialog relied on PrimeNG defaults (draggable, resizable, dismissableMask); … -->
+<oge-modal title="Edit" [(opened)]="open">…</oge-modal>`;

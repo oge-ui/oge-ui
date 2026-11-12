@@ -93,6 +93,12 @@ for (const pkg of PACKAGES) {
     path.join(sourceDir, 'schema.json'),
     path.join(ngAddDir, 'schema.json'),
   );
+  const migrateDir = path.join(schematicsDir, 'migrate-primeng');
+  mkdirSync(migrateDir, { recursive: true });
+  copyFileSync(
+    path.join(sourceDir, 'migrate-primeng.schema.json'),
+    path.join(migrateDir, 'schema.json'),
+  );
   built.push(pkg.npm);
 }
 

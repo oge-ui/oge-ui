@@ -67,6 +67,21 @@ const GUIDES = [
     title: 'Migrate from PrimeNG',
     heading: 'menus',
   },
+  {
+    path: '/guides/migrate-from-material',
+    title: 'Migrate from Angular Material',
+    heading: 'tables',
+  },
+  {
+    path: '/guides/migrate-from-ag-grid',
+    title: 'Migrate from AG Grid',
+    heading: 'column-definitions',
+  },
+  {
+    path: '/guides/migrate-from-devextreme',
+    title: 'Migrate from DevExtreme',
+    heading: 'data-grid',
+  },
 ] as const;
 
 /** Every "On this page" link points at a heading the page renders. */
@@ -219,6 +234,9 @@ test.describe('guides', () => {
     '/guides/dev-warnings',
     '/guides/filter-contract',
     '/guides/migrate-from-primeng',
+    '/guides/migrate-from-material',
+    '/guides/migrate-from-ag-grid',
+    '/guides/migrate-from-devextreme',
   ]) {
     test(`${path} has no axe violations`, async ({ page }) => {
       test.slow();

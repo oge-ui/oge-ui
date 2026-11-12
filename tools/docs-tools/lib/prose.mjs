@@ -42,7 +42,15 @@ required** and the light theme is built in. Shared engines
 Export features live in secondary entry points so their libraries stay out of
 the bundle until used: \`@oge-ui/grid/export-excel\` and
 \`@oge-ui/tree-list/export-excel\` need \`exceljs\`, \`@oge-ui/grid/export-pdf\`
-needs \`jspdf\`. CSV export is built in.`;
+needs \`jspdf\`. CSV export is built in.
+
+Moving an existing app: every package ships a \`migrate-primeng\` schematic
+(\`ng generate @oge-ui/buttons:migrate-primeng [--path=src/app]\`) that rewrites
+\`p-button\`, \`p-dialog\`, \`p-tree\`, \`pTooltip\`, the PrimeNG module imports and
+\`MenuItem\` types, leaving \`TODO(oge-migrate)\` notes where a person must decide;
+\`ogeFromPrimeMenuItems()\` converts \`MenuItem\` arrays at runtime. Migration guides:
+https://www.ogeui.com/guides/migrate-from-primeng, …/migrate-from-material,
+…/migrate-from-ag-grid, …/migrate-from-devextreme.`;
 
 export const CONVENTIONS = `## Writing OGE code
 
