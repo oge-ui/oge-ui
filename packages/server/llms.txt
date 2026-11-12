@@ -34,8 +34,8 @@ directly.
 
 `@oge-ui/server`
 
-- values: `OgeServerError`, `ogeBuildDistinctQuery`, `ogeBuildSqlQueries`, `ogeEscapeLike`, `ogeFoldText`, `ogeMssqlDialect`, `ogeMysqlDialect`, `ogeParseLoadOptions`, `ogePostgresDialect`, `ogeSchemaField`, `ogeSqlDistinct`, `ogeSqlLoad`, `ogeSqliteDialect`
-- types: `OgeParseLimits`, `OgeServerField`, `OgeServerFieldType`, `OgeServerSchema`, `OgeSqlDialect`, `OgeSqlLoadOptions`, `OgeSqlOptions`, `OgeSqlQueries`, `OgeSqlRunner`, `OgeSqlStatement`
+- values: `OgeServerError`, `ogeBuildDistinctQuery`, `ogeBuildSqlQueries`, `ogeCsvChunks`, `ogeEscapeLike`, `ogeExportResponse`, `ogeFoldText`, `ogeMssqlDialect`, `ogeMysqlDialect`, `ogeParseExportRequest`, `ogeParseLoadOptions`, `ogePostgresDialect`, `ogeSchemaField`, `ogeSqlDistinct`, `ogeSqlLoad`, `ogeSqlRows`, `ogeSqliteDialect`, `ogeXlsxStream`
+- types: `OgeExportFileColumn`, `OgeExportRequest`, `OgeParseLimits`, `OgeServerField`, `OgeServerFieldType`, `OgeServerSchema`, `OgeSqlDialect`, `OgeSqlLoadOptions`, `OgeSqlOptions`, `OgeSqlQueries`, `OgeSqlRunner`, `OgeSqlStatement`
 
 ## API reference
 
@@ -56,6 +56,11 @@ _Functions_
 | `ogeMysqlDialect()` | `() => OgeSqlDialect` | MySQL / MariaDB: `?` placeholders, backtick quoting, `lower()` folding (the default `_ai_ci` collations already ignore accents). |
 | `ogeSqliteDialect(options?)` | `(options?: { foldFunction?: string \| null }) => OgeSqlDialect` | SQLite: text folds through `oge_fold`, registered with `ogeFoldText` (`foldFunction: null` falls back to ASCII-only `lower()`); date buckets expect ISO text. |
 | `ogeMssqlDialect(options?)` | `(options?: { collation?: string }) => OgeSqlDialect` | SQL Server: `@p1` named parameters, bracket quoting, `OFFSET … FETCH` (with `ORDER BY (SELECT NULL)` when unsorted) and folding through a case- and accent-insensitive collation (default `Latin1_General_100_CI_AI`). |
+| `ogeParseExportRequest(input, schema, limits?)` | `(input: unknown, schema, limits?) => OgeExportRequest` | Checks a grid's `exportOnServer` request: the query as `ogeParseLoadOptions` does, every column a schema field, a safe file name (no paths or control characters) and bounded selected keys. |
+| `ogeSqlRows(request, config, options?)` | `AsyncGenerator<Record<string, unknown>>` | The request's rows from SQL in batches (`batchSize`, default 5 000) with the schema key as tie-breaker — no gaps or repeats — up to `maxRows` (default 1 000 000); `selectedKeys` become an `in` filter. |
+| `ogeXlsxStream(rows, columns, options?)` | `ReadableStream<Uint8Array>` | A streamed `.xlsx`: one sheet with a bold, frozen header row and an autofilter; numbers, booleans and dates (the column's time-zone wall clock) typed. Built on `CompressionStream`, no dependency; ZIP32, up to 4 GB. |
+| `ogeCsvChunks(rows, columns, options?)` | `AsyncGenerator<string>` | The file as CSV text chunks: a byte-order mark (unless `bom: false`), a header, the suite's formula guard, dates as ISO wall clock. |
+| `ogeExportResponse(request, rows)` | `Response` | The finished response: the streamed file, its content type and a `Content-Disposition` with the UTF-8 file name. In Node, pipe `Readable.fromWeb(response.body)`. |
 | `ogeFoldText(text)` | `(text: string) => string` | The suite's text folding, to register as SQLite's `oge_fold` function so text compares exactly as in the browser. |
 | `ogeEscapeLike(text)` | `(text: string) => string` | Escapes `%`, `_` and `!` for a `LIKE … ESCAPE '!'` pattern. |
 | `ogeSchemaField(schema, name, use?)` | `(schema, name: string, use?: 'filter' \| 'sort' \| 'select') => OgeServerField` | A schema field, or the `OgeServerError` a request naming it would get. |
@@ -74,6 +79,7 @@ _Types_
 | `OgeSqlRunner` | `(statement: OgeSqlStatement) => Promise<Record<string, unknown>[]>` | Executes one statement with your driver and returns its rows. |
 | `OgeSqlStatement / OgeSqlQueries` | `interface` | `{ sql, params }`, and the set `{ data, count, summary, groupCount }`. |
 | `OgeSqlDialect` | `interface` | `{ name, quote, placeholder, fold, trim, paging, dateBucket }` — implement it for another database. |
+| `OgeExportRequest / OgeExportFileColumn` | `interface` | A checked export request `{ format, fileName, loadOptions, columns, selectedKeys? }` and one file column `{ field, caption, dataType, width?, timeZone? }`. |
 | `OgeServerError` | `class` | A request the schema or the limits refuse; `status` is 400. Answer it as a bad request. |
 
 ### Oge.Data API

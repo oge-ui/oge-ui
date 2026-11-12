@@ -427,6 +427,15 @@ export {
   type OgeExportStructureOptions,
 } from './lib/grid/grid-export';
 export {
+  ogeExportFileName,
+  ogeSaveExport,
+  ogeServerExportRequest,
+  type OgeServerExportColumn,
+  type OgeServerExportFormat,
+  type OgeServerExportHandler,
+  type OgeServerExportRequest,
+} from './lib/grid/grid-server-export';
+export {
   builderToExpr,
   describeExpr,
   effectiveFilterOperator,

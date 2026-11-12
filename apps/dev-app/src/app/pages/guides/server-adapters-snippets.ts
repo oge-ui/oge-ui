@@ -137,3 +137,33 @@ protected override void OnModelCreating(ModelBuilder model) =>
 
 var result = await db.Orders.OgeLoadAsync(
     options, Schema, EfRunner.Instance, new OgeQueryOptions { Fold = OgeTextFold.Contract });`;
+
+export const EXPORT_CLIENT = `// Angular — the same call on React's grid ref (gridRef.current.exportOnServer)
+await this.grid().exportOnServer('xlsx', async (request) => {
+  // the server streams the file: a URL lets the browser download it natively
+  const { url } = await (
+    await fetch('/api/orders/export', { method: 'POST', body: JSON.stringify(request) })
+  ).json();
+  return url;
+}, 'orders');
+
+// or return the streamed Response: written straight to disk where the File
+// System Access API exists (Chromium), through a Blob elsewhere
+await this.grid().exportOnServer('csv', (request) =>
+  fetch('/api/orders/export', { method: 'POST', body: JSON.stringify(request) }),
+);`;
+
+export const EXPORT_SERVER = `import { Readable } from 'node:stream';
+import { ogeExportResponse, ogeParseExportRequest, ogeSqlRows } from '@oge-ui/server';
+
+app.post('/api/orders/export', async (req, res) => {
+  // the query, the columns (schema fields only) and a safe file name
+  const request = ogeParseExportRequest(req.body, orders, { maxListLength: 10_000 });
+  // rows in batches of 5 000, keyed, never all in memory
+  const rows = ogeSqlRows(request, sql(req.user.tenantId), { maxRows: 1_000_000 });
+  // a streamed .xlsx (or CSV) with its headers — no dependency
+  const response = ogeExportResponse(request, rows);
+  res.status(200);
+  response.headers.forEach((value, name) => res.setHeader(name, value));
+  Readable.fromWeb(response.body).pipe(res);
+});`;

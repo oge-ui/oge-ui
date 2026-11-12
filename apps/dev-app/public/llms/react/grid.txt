@@ -273,6 +273,8 @@ _Loading, state & export_
 | `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows, column metadata (width, alignment, pin side, band) and the structured lines — group rows, group footers, the total row (`items`) — of the current view (filter + search + sort applied). `scope: 'all' \| 'page' \| 'selection'` (or `selectedRowsOnly`), `visibleColumnsOnly: false` adds hidden columns, `groups` / `summaries: false` export flat. |
 | `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 | `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `handle` | Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
+| `getExportRequest(format, options?): OgeServerExportRequest` | `handle` | The serializable request a server-side export needs: the view's filter, search and sort (the whole view, never a page) and its visible field columns; `scope: 'selection'` adds the selected keys. `format` is `xlsx` or `csv`. |
+| `exportOnServer(format, handler, fileName = 'grid', options?): Promise<void>` | `handle` | Hands the export to your server, for views too large to build in the browser: fires `onExporting`, sends the request to `handler` and saves what it returns — a URL (the browser downloads the server's stream), a streamed `Response` (written to disk where the File System Access API exists) or a `Blob`. `@oge-ui/server` answers it (`ogeParseExportRequest`, `ogeSqlRows`, `ogeExportResponse`). |
 
 _Editing_
 
@@ -453,6 +455,9 @@ _Export_
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `OgeServerExportRequest / OgeServerExportColumn` | `interface` | What `exportOnServer` sends: `{ format, fileName, loadOptions: { filter, searchText, sort }, columns: [{ field, caption, dataType, width?, timeZone? }], selectedKeys? }` — serializable, no accessors. |
+| `OgeServerExportFormat / OgeServerExportHandler` | `'xlsx' \| 'csv' / (request) => Promise<string \| Response \| Blob>` | The file format, and the function that calls your endpoint and returns a URL, a streamed `Response` or a `Blob`. |
+| `ogeSaveExport(result, fileName, document)` | `Promise<boolean>` | Saves an export handler's result the way `exportOnServer` does — for exports you start yourself. `false` when the person cancelled the save dialog. |
 | `OgeExportOptions<T>` | `{ scope?; selectedRowsOnly?; visibleColumnsOnly?; groups?; summaries?; customizeCell?: (cell: OgeExportCellArgs<T>) => unknown; cellStyle?(args) }` | Narrows, rewrites and styles what the exporters emit. `customizeCell` rewrites a data cell (return a value) and restyles it (mutate `style`); `cellStyle` styles every cell — header, group and summary lines included — so conditional formatting exports the way it renders. |
 | `OgeExportData<T> / OgeExportColumn<T> / OgeExportCellArgs<T>` | `{ rows, columns, items? } / { caption, field, dataType, accessor, format?, width?, alignment?, pinned?, bandCaption? }` | What `getExportData()` resolves to; `items` carries the group / footer / total lines when the view is grouped or summarized. |
 | `OgeExportItem<T> / OgeExportSummaryCell / OgeExportRowKind` | `{ kind: 'data' \| 'group' \| 'groupFooter' \| 'total'; … }` | One exported line: a data row at its group depth, a group header (text, value, count, header summaries), a group footer or the total row with typed summary values. |

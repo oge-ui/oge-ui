@@ -107,6 +107,11 @@ import {
   lookupTextOf,
   ogeExportColumnsOf,
   ogeExportScope,
+  ogeSaveExport,
+  ogeServerExportRequest,
+  type OgeServerExportFormat,
+  type OgeServerExportHandler,
+  type OgeServerExportRequest,
   ogeGridExportItems,
   ogeGridExportLoadOptions,
   type OgeExportColumnSource,
@@ -2322,6 +2327,38 @@ function OgeGridInner<T extends object>(
     URL.revokeObjectURL(url);
   }
 
+  function getExportRequest(
+    format: OgeServerExportFormat,
+    options: { fileName?: string; scope?: 'all' | 'selection' } = {},
+  ): OgeServerExportRequest {
+    return ogeServerExportRequest({
+      format,
+      fileName: options.fileName ?? 'grid',
+      loadOptions: state.loadOptions(),
+      columns: exportColumns(),
+      ...(options.scope === 'selection'
+        ? { selectedKeys: [...state.selection.selected()] }
+        : {}),
+    });
+  }
+
+  async function exportOnServer(
+    format: OgeServerExportFormat,
+    handler: OgeServerExportHandler,
+    fileName = 'grid',
+    options: { scope?: 'all' | 'selection' } = {},
+  ): Promise<void> {
+    const request = getExportRequest(format, { fileName, ...options });
+    const event: OgeExportingEvent = {
+      fileName: request.fileName,
+      cancel: false,
+    };
+    latest.current.onExporting?.(event);
+    if (event.cancel || typeof document === 'undefined') return;
+    const result = await handler({ ...request, fileName: event.fileName });
+    await ogeSaveExport(result, event.fileName, document);
+  }
+
   function clipboardText(): string {
     const range = rangeClipboardText();
     if (range !== null) return range;
@@ -2534,6 +2571,8 @@ function OgeGridInner<T extends object>(
     getExportData,
     getCsv,
     exportCsv,
+    getExportRequest,
+    exportOnServer,
     copyToClipboard,
     addRow: () => {
       if (model.editing.canAdd()) createNewRow();

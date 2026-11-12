@@ -1,4 +1,12 @@
 export { OgeGrid } from './lib/grid';
+// server-side exports (exportOnServer / getExportRequest)
+export {
+  ogeSaveExport,
+  type OgeServerExportColumn,
+  type OgeServerExportFormat,
+  type OgeServerExportHandler,
+  type OgeServerExportRequest,
+} from '@oge-ui/behavior';
 export type {
   OgeCellClickEvent,
   OgeColumnDef,

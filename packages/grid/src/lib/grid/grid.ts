@@ -90,6 +90,11 @@ import {
 import {
   ogeExportColumnsOf,
   ogeExportScope,
+  ogeSaveExport,
+  ogeServerExportRequest,
+  type OgeServerExportFormat,
+  type OgeServerExportHandler,
+  type OgeServerExportRequest,
   ogeGridExportItems,
   ogeGridExportLoadOptions,
   type OgeExportColumnSource,
@@ -2338,6 +2343,50 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     anchor.download = event.fileName;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  /**
+   * The serializable request a server-side export needs: the view's filter,
+   * search and sort (never a page — the whole view) and its visible field
+   * columns. `scope: 'selection'` adds the selected keys.
+   */
+  getExportRequest(
+    format: OgeServerExportFormat,
+    options: { fileName?: string; scope?: 'all' | 'selection' } = {},
+  ): OgeServerExportRequest {
+    return ogeServerExportRequest({
+      format,
+      fileName: options.fileName ?? 'grid',
+      loadOptions: untracked(this.store.loadOptions),
+      columns: this.exportColumns(),
+      ...(options.scope === 'selection'
+        ? { selectedKeys: [...untracked(this.store.selection.selected)] }
+        : {}),
+    });
+  }
+
+  /**
+   * Hands the export to your server — for views too large to build in the
+   * browser. Fires the cancelable `exporting` event, sends
+   * {@link getExportRequest}'s request to `handler`, and saves what it
+   * returns: a URL (the browser downloads it), a streamed `Response`
+   * (written to disk where the File System Access API exists) or a `Blob`.
+   */
+  async exportOnServer(
+    format: OgeServerExportFormat,
+    handler: OgeServerExportHandler,
+    fileName = 'grid',
+    options: { scope?: 'all' | 'selection' } = {},
+  ): Promise<void> {
+    const request = this.getExportRequest(format, { fileName, ...options });
+    const event: OgeExportingEvent = {
+      fileName: request.fileName,
+      cancel: false,
+    };
+    this.exporting.emit(event);
+    if (event.cancel || typeof document === 'undefined') return;
+    const result = await handler({ ...request, fileName: event.fileName });
+    await ogeSaveExport(result, event.fileName, document);
   }
 
   // --- data & rows ---------------------------------------------------------

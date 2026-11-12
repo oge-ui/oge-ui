@@ -10,6 +10,8 @@ import {
   DOTNET_CONTROLLER,
   DOTNET_FOLD,
   DOTNET_INSTALL,
+  EXPORT_CLIENT,
+  EXPORT_SERVER,
   NODE_DRIVERS,
   NODE_EXPRESS,
   NODE_INSTALL,
@@ -20,6 +22,7 @@ const SECTIONS = [
   'Node and SQL',
   'Other databases',
   '.NET and IQueryable',
+  'Exports on the server',
   'Security',
   'Limits',
   'API reference',
@@ -124,6 +127,27 @@ const SECTIONS = [
     <app-code-block [code]="dotnetController" language="csharp" />
     <app-code-block [code]="dotnetFold" language="csharp" />
 
+    <h2 id="exports-on-the-server" class="scroll-mt-20">
+      Exports on the server
+    </h2>
+    <p>
+      Building a 100 000-row Excel file in the browser locks the tab. The grid's
+      <code>exportOnServer</code> sends its query and its visible columns
+      instead, and saves what your endpoint returns. On the server,
+      <code>ogeSqlRows</code> reads the rows in keyed batches and
+      <code>ogeExportResponse</code> streams a real <code>.xlsx</code> (bold
+      frozen header, typed numbers, booleans and dates in the column's time
+      zone) or a formula-guarded CSV — built on <code>CompressionStream</code>,
+      so it runs on Node, Deno, Bun and edge runtimes with no dependency, and
+      never holds the file in memory.
+    </p>
+    <app-code-block [code]="exportClient" language="ts" />
+    <app-code-block
+      [code]="exportServer"
+      language="ts"
+      title="export endpoint"
+    />
+
     <h2 id="security" class="scroll-mt-20">Security</h2>
     <ul>
       <li>
@@ -170,6 +194,8 @@ export class GuideServerAdaptersPage {
   protected readonly dotnetInstall = DOTNET_INSTALL;
   protected readonly dotnetController = DOTNET_CONTROLLER;
   protected readonly dotnetFold = DOTNET_FOLD;
+  protected readonly exportClient = EXPORT_CLIENT;
+  protected readonly exportServer = EXPORT_SERVER;
   protected readonly serverApi = OGE_SERVER_API;
   protected readonly dotnetApi = OGE_DOTNET_API;
 }

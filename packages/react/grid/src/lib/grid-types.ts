@@ -11,6 +11,9 @@ import type {
   SummaryType,
 } from '@oge-ui/core';
 import type {
+  OgeServerExportFormat,
+  OgeServerExportHandler,
+  OgeServerExportRequest,
   OgeColumnFormat,
   OgeGridColumnDescription,
   OgeGridColumnHidingMode,
@@ -824,6 +827,26 @@ export interface OgeGridHandle<T extends object = Record<string, unknown>> {
   exportCsv(
     filename?: string,
     options?: CsvOptions & OgeExportOptions<T>,
+  ): Promise<void>;
+  /**
+   * The serializable request a server-side export needs: the view's filter,
+   * search and sort (the whole view, never a page) and its visible field
+   * columns; `scope: 'selection'` adds the selected keys.
+   */
+  getExportRequest(
+    format: OgeServerExportFormat,
+    options?: { fileName?: string; scope?: 'all' | 'selection' },
+  ): OgeServerExportRequest;
+  /**
+   * Hands the export to your server: fires `onExporting`, sends the request
+   * to `handler` and saves what it returns — a URL, a streamed `Response`
+   * (to disk where the File System Access API exists) or a `Blob`.
+   */
+  exportOnServer(
+    format: OgeServerExportFormat,
+    handler: OgeServerExportHandler,
+    fileName?: string,
+    options?: { scope?: 'all' | 'selection' },
   ): Promise<void>;
   /** Copies the selected rows (with a header) — or the focused cell's text — as TSV. */
   copyToClipboard(): Promise<void>;

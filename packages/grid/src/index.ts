@@ -1,6 +1,14 @@
 // the canonical menu item now lives in @oge-ui/overlay — re-exported here so
 // grid consumers keep their import path
 export { type OgeMenuItem } from '@oge-ui/overlay';
+// server-side exports (exportOnServer / getExportRequest)
+export {
+  ogeSaveExport,
+  type OgeServerExportColumn,
+  type OgeServerExportFormat,
+  type OgeServerExportHandler,
+  type OgeServerExportRequest,
+} from '@oge-ui/behavior';
 export {
   OgeGrid,
   type OgeColumnDef,

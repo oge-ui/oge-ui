@@ -755,6 +755,18 @@ export const OGE_REACT_GRID_API: ApiSections = {
           description:
             'Downloads the current view as a CSV file. Fires the cancelable <code>onExporting</code> first. <code>options</code> are <code>getCsv()</code>’s (<code>scope</code>, <code>customizeCell</code>, <code>separator</code>…); formula-leading cells are always neutralized.',
         },
+        {
+          name: 'getExportRequest(format, options?): OgeServerExportRequest',
+          type: 'handle',
+          description:
+            "The serializable request a server-side export needs: the view&#39;s filter, search and sort (the whole view, never a page) and its visible field columns; <code>scope: 'selection'</code> adds the selected keys. <code>format</code> is <code>xlsx</code> or <code>csv</code>.",
+        },
+        {
+          name: "exportOnServer(format, handler, fileName = 'grid', options?): Promise&lt;void&gt;",
+          type: 'handle',
+          description:
+            'Hands the export to your server, for views too large to build in the browser: fires <code>onExporting</code>, sends the request to <code>handler</code> and saves what it returns — a URL (the browser downloads the server&#39;s stream), a streamed <code>Response</code> (written to disk where the File System Access API exists) or a <code>Blob</code>. <code>@oge-ui/server</code> answers it (<code>ogeParseExportRequest</code>, <code>ogeSqlRows</code>, <code>ogeExportResponse</code>).',
+        },
       ],
     },
     {
@@ -1430,6 +1442,24 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
     {
       title: 'Export',
       entries: [
+        {
+          name: 'OgeServerExportRequest / OgeServerExportColumn',
+          type: 'interface',
+          description:
+            'What <code>exportOnServer</code> sends: <code>{ format, fileName, loadOptions: { filter, searchText, sort }, columns: [{ field, caption, dataType, width?, timeZone? }], selectedKeys? }</code> — serializable, no accessors.',
+        },
+        {
+          name: 'OgeServerExportFormat / OgeServerExportHandler',
+          type: "'xlsx' | 'csv' / (request) =&gt; Promise&lt;string | Response | Blob&gt;",
+          description:
+            'The file format, and the function that calls your endpoint and returns a URL, a streamed <code>Response</code> or a <code>Blob</code>.',
+        },
+        {
+          name: 'ogeSaveExport(result, fileName, document)',
+          type: 'Promise&lt;boolean&gt;',
+          description:
+            'Saves an export handler&#39;s result the way <code>exportOnServer</code> does — for exports you start yourself. <code>false</code> when the person cancelled the save dialog.',
+        },
         {
           name: 'OgeExportOptions&lt;T&gt;',
           type: '{ scope?; selectedRowsOnly?; visibleColumnsOnly?; groups?; summaries?; customizeCell?: (cell: OgeExportCellArgs&lt;T&gt;) =&gt; unknown; cellStyle?(args) }',

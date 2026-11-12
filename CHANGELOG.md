@@ -7,6 +7,27 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Exports on the server — `@oge-ui/grid`, `@oge-ui/react-grid`, `@oge-ui/server`
+
+- The grid's `exportOnServer(format, handler, fileName?, { scope })` and
+  `getExportRequest()` (both layers) hand large exports to the server.
+  - The request is the view's filter, search and sort plus its visible field
+    columns (and the selected keys if needed), with no accessors and no page.
+  - The handler returns a URL (the browser downloads the server's stream), a
+    `Response` or a `Blob`.
+  - A `Response` is piped straight to disk where the File System Access API
+    exists (`ogeSaveExport`).
+- `@oge-ui/server` answers it:
+  - `ogeParseExportRequest` checks the request against the schema.
+  - `ogeSqlRows` reads the rows in keyed batches.
+  - `ogeExportResponse` streams the file. `ogeXlsxStream` writes a real
+    `.xlsx` (bold frozen header, autofilter, typed numbers, booleans and
+    time-zone dates) and `ogeCsvChunks` writes a formula-guarded CSV, both
+    without dependencies (`CompressionStream`). The file is never held in
+    memory.
+- Fix: the import wizard and file manager stylesheets no longer give shared
+  tokens a fallback value.
+
 ### Figma plugin and token sync
 
 - The OGE UI Figma plugin (download it from `/getting-started/tokens#figma`)

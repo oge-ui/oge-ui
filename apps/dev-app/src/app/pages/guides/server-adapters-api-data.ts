@@ -60,6 +60,36 @@ export const OGE_SERVER_API: ApiSections = {
             'SQL Server: <code>@p1</code> named parameters, bracket quoting, <code>OFFSET … FETCH</code> (with <code>ORDER BY (SELECT NULL)</code> when unsorted) and folding through a case- and accent-insensitive collation (default <code>Latin1_General_100_CI_AI</code>).',
         },
         {
+          name: 'ogeParseExportRequest(input, schema, limits?)',
+          type: '(input: unknown, schema, limits?) =&gt; OgeExportRequest',
+          description:
+            'Checks a grid&#39;s <code>exportOnServer</code> request: the query as <code>ogeParseLoadOptions</code> does, every column a schema field, a safe file name (no paths or control characters) and bounded selected keys.',
+        },
+        {
+          name: 'ogeSqlRows(request, config, options?)',
+          type: 'AsyncGenerator&lt;Record&lt;string, unknown&gt;&gt;',
+          description:
+            'The request&#39;s rows from SQL in batches (<code>batchSize</code>, default 5 000) with the schema key as tie-breaker — no gaps or repeats — up to <code>maxRows</code> (default 1 000 000); <code>selectedKeys</code> become an <code>in</code> filter.',
+        },
+        {
+          name: 'ogeXlsxStream(rows, columns, options?)',
+          type: 'ReadableStream&lt;Uint8Array&gt;',
+          description:
+            'A streamed <code>.xlsx</code>: one sheet with a bold, frozen header row and an autofilter; numbers, booleans and dates (the column&#39;s time-zone wall clock) typed. Built on <code>CompressionStream</code>, no dependency; ZIP32, up to 4 GB.',
+        },
+        {
+          name: 'ogeCsvChunks(rows, columns, options?)',
+          type: 'AsyncGenerator&lt;string&gt;',
+          description:
+            'The file as CSV text chunks: a byte-order mark (unless <code>bom: false</code>), a header, the suite&#39;s formula guard, dates as ISO wall clock.',
+        },
+        {
+          name: 'ogeExportResponse(request, rows)',
+          type: 'Response',
+          description:
+            'The finished response: the streamed file, its content type and a <code>Content-Disposition</code> with the UTF-8 file name. In Node, pipe <code>Readable.fromWeb(response.body)</code>.',
+        },
+        {
           name: 'ogeFoldText(text)',
           type: '(text: string) =&gt; string',
           description:
@@ -130,6 +160,12 @@ export const OGE_SERVER_API: ApiSections = {
           type: 'interface',
           description:
             '<code>{ name, quote, placeholder, fold, trim, paging, dateBucket }</code> — implement it for another database.',
+        },
+        {
+          name: 'OgeExportRequest / OgeExportFileColumn',
+          type: 'interface',
+          description:
+            'A checked export request <code>{ format, fileName, loadOptions, columns, selectedKeys? }</code> and one file column <code>{ field, caption, dataType, width?, timeZone? }</code>.',
         },
         {
           name: 'OgeServerError',

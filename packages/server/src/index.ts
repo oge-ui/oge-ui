@@ -35,5 +35,15 @@ export {
   type OgeSqlRunner,
 } from './lib/load';
 
+export {
+  ogeCsvChunks,
+  ogeExportResponse,
+  ogeParseExportRequest,
+  ogeSqlRows,
+  ogeXlsxStream,
+  type OgeExportFileColumn,
+  type OgeExportRequest,
+} from './lib/export';
+
 /** The suite's text folding, to register as SQLite's `oge_fold` function. */
 export { foldText as ogeFoldText } from '@oge-ui/core';

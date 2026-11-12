@@ -5727,6 +5727,9 @@ export interface OgeExportData<T = unknown> {
 }
 
 // @public
+export function ogeExportFileName(name: string, format: OgeServerExportFormat): string;
+
+// @public
 export interface OgeExportGroupInfo {
     // (undocumented)
     readonly count: number;
@@ -11599,6 +11602,9 @@ export interface OgeSavedViewsOptions {
 }
 
 // @public
+export function ogeSaveExport(result: string | Response | Blob, fileName: string, doc: Document): Promise<boolean>;
+
+// @public
 export interface OgeSavingChangesEvent<T = unknown> {
     // (undocumented)
     cancel: boolean;
@@ -11776,6 +11782,44 @@ export type OgeSelectValueExpr<TItem> = string | ((item: TItem) => unknown);
 
 // @public
 export function ogeSeparatorTargetWidth(command: OgeColumnSeparatorKeyCommand, current: number, bounds: OgeColumnWidthBounds): number | null;
+
+// @public
+export interface OgeServerExportColumn {
+    // (undocumented)
+    readonly caption: string;
+    // (undocumented)
+    readonly dataType: string;
+    // (undocumented)
+    readonly field: string;
+    readonly timeZone?: string;
+    readonly width?: number;
+}
+
+// @public
+export type OgeServerExportFormat = 'xlsx' | 'csv';
+
+// @public
+export type OgeServerExportHandler = (request: OgeServerExportRequest) => Promise<string | Response | Blob>;
+
+// @public
+export interface OgeServerExportRequest {
+    readonly columns: readonly OgeServerExportColumn[];
+    // (undocumented)
+    readonly fileName: string;
+    // (undocumented)
+    readonly format: OgeServerExportFormat;
+    readonly loadOptions: Pick<LoadOptions, 'filter' | 'searchText' | 'sort'>;
+    readonly selectedKeys?: readonly RowKey[];
+}
+
+// @public
+export function ogeServerExportRequest<T>(input: {
+    readonly format: OgeServerExportFormat;
+    readonly fileName: string;
+    readonly loadOptions: LoadOptions;
+    readonly columns: readonly OgeExportColumn<T>[];
+    readonly selectedKeys?: readonly RowKey[];
+}): OgeServerExportRequest;
 
 // @public
 export function ogeSettleGhost(ghost: HTMLElement, to: OgeRect, timing?: Partial<OgeMotionTiming>): Promise<void>;
