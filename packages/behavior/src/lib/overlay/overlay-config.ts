@@ -66,6 +66,18 @@ export interface OgeOverlayMessages {
   commandPaletteRecent?: string;
   /** Announced as the list changes; ICU plural over `{count}`. */
   commandPaletteResults?: string;
+  /** Accessible role description of a tour card. */
+  tourLabel?: string;
+  /** The step counter of a tour card; `{index}` / `{count}`. */
+  tourStep?: string;
+  /** Label of the tour's Next button. */
+  tourNext?: string;
+  /** Label of the tour's Back button. */
+  tourPrevious?: string;
+  /** Label of the tour's Skip button. */
+  tourSkip?: string;
+  /** Label of the last step's finishing button. */
+  tourDone?: string;
 }
 
 export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
@@ -94,6 +106,12 @@ export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
   commandPaletteRecent: 'Recent',
   commandPaletteResults:
     '{count, plural, =0 {No results} one {# result} other {# results}}',
+  tourLabel: 'Tour',
+  tourStep: 'Step {index} of {count}',
+  tourNext: 'Next',
+  tourPrevious: 'Back',
+  tourSkip: 'Skip tour',
+  tourDone: 'Done',
 };
 
 /**

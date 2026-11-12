@@ -31,6 +31,12 @@ export {
   type OgePopoverHandle,
   type OgePopoverSlotContext,
 } from './lib/popover';
+export { OgeTour, type OgeTourHandle, type OgeTourProps } from './lib/tour';
+export type {
+  OgeTourCloseReason,
+  OgeTourClosedEvent,
+  OgeTourStep,
+} from '@oge-ui/behavior';
 export {
   OgeCommandPalette,
   type OgeCommandExecuteEvent,

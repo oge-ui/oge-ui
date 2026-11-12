@@ -412,6 +412,7 @@
         "@oge-ui/buttons",
         "@oge-ui/inputs",
         "@oge-ui/layout",
+        "@oge-ui/overlay",
         "@oge-ui/spreadsheet",
         "@oge-ui/upload"
       ]

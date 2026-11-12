@@ -87,6 +87,12 @@ export {
   OgePopoverContent,
   type OgePopoverSlotContext,
 } from './lib/popover/popover-templates';
+export { OgeTour } from './lib/tour/tour';
+export type {
+  OgeTourCloseReason,
+  OgeTourClosedEvent,
+  OgeTourStep,
+} from '@oge-ui/behavior';
 export {
   OgeCommandPalette,
   type OgeCommandExecuteEvent,

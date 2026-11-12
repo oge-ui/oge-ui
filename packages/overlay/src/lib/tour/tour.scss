@@ -1,0 +1,159 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The `<oge-tour>` element is only the declaration point; the layer is moved
+// to `document.body` while open.
+.oge-tour-host {
+  display: contents;
+}
+
+// --- layer: catches presses on the page; the spotlight does the dimming -----
+.oge-tour-layer {
+  @include tokens.core-tokens;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--oge-z-modal);
+
+  // without a target the whole page dims
+  &.oge-tour-no-target {
+    background: var(--oge-modal-backdrop-bg);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+// a cut-out: the shadow dims everything around the target's box
+.oge-tour-spotlight {
+  position: absolute;
+  border-radius: var(--oge-radius);
+  box-shadow: 0 0 0 200vmax var(--oge-modal-backdrop-bg);
+  outline: 2px solid var(--oge-accent);
+  outline-offset: 0;
+  pointer-events: none;
+
+  .oge-tour-ready & {
+    transition:
+      top var(--oge-motion-duration-base) var(--oge-motion-easing-standard),
+      left var(--oge-motion-duration-base) var(--oge-motion-easing-standard),
+      width var(--oge-motion-duration-base) var(--oge-motion-easing-standard),
+      height var(--oge-motion-duration-base) var(--oge-motion-easing-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .oge-tour-ready & {
+      transition: none;
+    }
+  }
+}
+
+.oge-tour-card {
+  position: absolute;
+  display: grid;
+  gap: 6px;
+  inline-size: min(340px, calc(100vw - 24px));
+  padding: 16px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  box-shadow: var(--oge-shadow-popup);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  line-height: 1.45;
+  opacity: 0;
+  transition: opacity var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
+
+  .oge-tour-ready & {
+    opacity: 1;
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+}
+
+.oge-tour-progress {
+  margin: 0;
+  color: var(--oge-muted-color);
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.oge-tour-title {
+  margin: 0;
+  font-size: 1.07em;
+  font-weight: 600;
+}
+
+.oge-tour-content {
+  margin: 0;
+  color: var(--oge-input-muted);
+}
+
+.oge-tour-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-start: 8px;
+}
+
+.oge-tour-spacer {
+  flex: 1 1 auto;
+}
+
+.oge-tour-button {
+  min-block-size: var(--oge-control-height-sm);
+  padding: 0 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 2px;
+  }
+}
+
+.oge-tour-skip {
+  padding-inline: 4px;
+  border-color: transparent;
+  color: var(--oge-muted-color);
+}
+
+.oge-tour-next {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+
+  &:hover {
+    background: var(--oge-accent);
+    filter: brightness(0.92);
+  }
+}
+
+.oge-tour-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .oge-tour-spotlight {
+    outline-color: Highlight;
+  }
+}

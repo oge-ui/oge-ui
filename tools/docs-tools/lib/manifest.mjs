@@ -115,7 +115,7 @@ export const PACKAGES = [
     npm: '@oge-ui/overlay',
     label: 'Overlay',
     summary:
-      'Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), the `oge-command-palette` (Ctrl+K fuzzy search over grouped commands with highlights, recent commands and an APG combobox), and `OgeToastService` notifications.',
+      'Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), the `oge-command-palette` (Ctrl+K fuzzy search over grouped commands with highlights, recent commands and an APG combobox), the `oge-tour` guided tour (spotlight, flipping cards, ← / → keys, reduced motion), and `OgeToastService` notifications.',
     docsRoot: '/components/overlay',
     pageDirs: ['overlay'],
     apiPage: 'apps/dev-app/src/app/pages/overlay/api.ts',
@@ -627,7 +627,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-overlay',
     label: 'Overlay (React)',
     summary:
-      'React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, a Ctrl+K command palette with fuzzy search, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.',
+      'React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, a Ctrl+K command palette with fuzzy search, a guided tour with a spotlight, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.',
     // The React content renders inside the single Overlay routes (ADR 0002).
     docsRoot: '/components/overlay',
     pageDirs: ['react-overlay'],

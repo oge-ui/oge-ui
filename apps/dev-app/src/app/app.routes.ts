@@ -1231,6 +1231,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Command Palette',
       },
       {
+        path: 'tour',
+        loadComponent: () =>
+          import('./pages/overlay/tour').then((m) => m.OverlayTourPage),
+        title: 'OGE — Tour',
+      },
+      {
         path: 'modal',
         loadComponent: () =>
           import('./pages/overlay/modal').then((m) => m.OverlayModalPage),

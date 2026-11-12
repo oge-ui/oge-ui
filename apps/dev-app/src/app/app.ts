@@ -1226,6 +1226,11 @@ export class App {
           icon: 'search',
         },
         {
+          path: '/components/overlay/tour',
+          label: 'Tour',
+          icon: 'lightbulb',
+        },
+        {
           path: '/components/overlay/modal',
           label: 'Modal',
           icon: 'layout',

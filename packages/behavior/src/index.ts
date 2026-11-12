@@ -1196,6 +1196,19 @@ export {
   type OgeShortcut,
 } from './lib/overlay/command-palette-core';
 export {
+  ogeTourCardPosition,
+  ogeTourClampStep,
+  ogeTourIsInView,
+  ogeTourKeyIntent,
+  ogeTourResolveTarget,
+  ogeTourReveal,
+  ogeTourSpotlight,
+  type OgeTourCardPosition,
+  type OgeTourCloseReason,
+  type OgeTourClosedEvent,
+  type OgeTourStep,
+} from './lib/overlay/tour-core';
+export {
   ogeContextMenuApiTarget,
   ogeContextMenuPoint,
   ogeContextMenuTarget,

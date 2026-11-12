@@ -7,6 +7,22 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Tour — `@oge-ui/overlay`, `@oge-ui/react-overlay`
+
+- New `oge-tour` / `<OgeTour>`: a guided tour, one card per step.
+  - Each step dims the page, cuts a spotlight around its target (a selector,
+    an element or a function), scrolls it into view and places the card
+    beside it, flipping to fit; a step without a target centers the card.
+  - The card is a modal dialog named by the step's title, with a step
+    counter, Back, Next / Done and Skip. → / ← move between steps (mirrored
+    in RTL), Escape skips, focus returns where it was; `closed` reports
+    `done`, `skip`, `escape`, `backdrop` or `api`.
+  - Under `prefers-reduced-motion` the spotlight jumps instead of gliding and
+    scrolling is instant.
+- Geometry helpers in `@oge-ui/behavior` (`ogeTourSpotlight`,
+  `ogeTourCardPosition`, `ogeTourResolveTarget`, …); six new overlay messages
+  are translated in every `@oge-ui/locales` pack.
+
 ### Command palette — `@oge-ui/overlay`, `@oge-ui/react-overlay`
 
 - New `oge-command-palette` / `<OgeCommandPalette>`: a modal search box over

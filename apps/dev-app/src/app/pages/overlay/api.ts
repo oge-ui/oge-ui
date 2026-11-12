@@ -23,6 +23,7 @@ import {
 } from './overlay-api-data';
 import { OGE_ACTION_SHEET_API } from './action-sheet-api-data';
 import { OGE_COMMAND_PALETTE_API } from './command-palette-api-data';
+import { OGE_TOUR_API } from './tour-api-data';
 import { OGE_MODAL_HARNESS_API } from './modal-testing-api-data';
 
 const SECTIONS = [
@@ -34,6 +35,7 @@ const SECTIONS = [
   'OgePopover',
   'OgeActionSheet',
   'OgeCommandPalette',
+  'OgeTour',
   'OgeTooltip',
   'OgeContextMenu',
   'OgeMenuList',
@@ -55,6 +57,7 @@ const SECTIONS_REACT = [
   '<OgePopover>',
   '<OgeActionSheet>',
   '<OgeCommandPalette>',
+  '<OgeTour>',
   '<OgeTooltip>',
   '<OgeContextMenu>',
   '<OgeMenuList>',
@@ -150,6 +153,11 @@ const SECTIONS_REACT = [
         [sections]="commandPaletteApi"
       />
       <app-api-reference
+        title="OgeTour"
+        selector="oge-tour"
+        [sections]="tourApi"
+      />
+      <app-api-reference
         title="OgeTooltip"
         selector="[ogeTooltip]"
         [sections]="tooltipApi"
@@ -212,6 +220,7 @@ export class OverlayApiPage {
   protected readonly popoverApi = OGE_POPOVER_API;
   protected readonly actionSheetApi = OGE_ACTION_SHEET_API;
   protected readonly commandPaletteApi = OGE_COMMAND_PALETTE_API;
+  protected readonly tourApi = OGE_TOUR_API;
   protected readonly tooltipApi = OGE_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_MENU_LIST_API;

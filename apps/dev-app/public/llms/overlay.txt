@@ -1,6 +1,6 @@
 # @oge-ui/overlay
 
-> Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), the `oge-command-palette` (Ctrl+K fuzzy search over grouped commands with highlights, recent commands and an APG combobox), and `OgeToastService` notifications.
+> Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), the `oge-command-palette` (Ctrl+K fuzzy search over grouped commands with highlights, recent commands and an APG combobox), the `oge-tour` guided tour (spotlight, flipping cards, ← / → keys, reduced motion), and `OgeToastService` notifications.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/overlay
@@ -97,8 +97,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/overlay`
 
-- values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeCommandPalette`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverContent`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeWindow`, `applyMenuItemCheck`, `claimOverlayEscape`, `getTabbableElements`, `isOverlayEscapeClaimed`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `ogeFormatShortcut`, `ogeFromPrimeMenuItems`, `ogeFuzzyMatch`, `ogeMatchesShortcut`, `ogePrimeRouterLinkUrl`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
-- types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeCommand`, `OgeCommandExecuteEvent`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseBlockedEvent`, `OgeModalCloseBlocker`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePrimeMenuItem`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
+- values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeCommandPalette`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverContent`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeTour`, `OgeWindow`, `applyMenuItemCheck`, `claimOverlayEscape`, `getTabbableElements`, `isOverlayEscapeClaimed`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `ogeFormatShortcut`, `ogeFromPrimeMenuItems`, `ogeFuzzyMatch`, `ogeMatchesShortcut`, `ogePrimeRouterLinkUrl`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
+- types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeCommand`, `OgeCommandExecuteEvent`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseBlockedEvent`, `OgeModalCloseBlocker`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePrimeMenuItem`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeTourCloseReason`, `OgeTourClosedEvent`, `OgeTourStep`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
 
 `@oge-ui/overlay/testing`
 
@@ -554,6 +554,60 @@ _Behavior building blocks (@oge-ui/behavior)_
 | `ogeFuzzyHighlight / ogeParseShortcut / ogeIsApplePlatform` | `helpers` | Ranges → `SearchHighlightSegment[]`; `Mod+Shift+P` → `OgeShortcut`; whether `Mod` means ⌘. |
 | `OgeFuzzyMatch / OgeCommandPaletteSection / OgeCommandPaletteOption / OgeCommandPaletteFilterOptions / OgeCommandPaletteKeyIntent / OgeShortcut` | `types` | The shapes of the building blocks above. |
 
+### OgeTour — `<oge-tour>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `steps` | `readonly OgeTourStep[] (required)` | `—` | The steps, in order. Fields: `target?` (a CSS selector, an element or a function returning one — missing, hidden or absent centers the card), `title` (the dialog’s name), `content?` (its description), `placement?` (an `OgePopupPlacement`, default `'bottom'`, flipped to fit), `padding?` (spotlight padding in px, default 6). |
+| `opened` | `boolean (model)` | `false` | Two-way open state. |
+| `step` | `number (model)` | `0` | Two-way index of the shown step, clamped to the steps. |
+| `closeOnEscape` | `boolean` | `true` | Escape skips the tour. |
+| `closeOnBackdropClick` | `boolean` | `false` | A press on the dimmed page skips the tour. Off by default: a stray click should not lose the user’s place. |
+| `showSkip` | `boolean` | `true` | Renders the Skip button (never on the last step). |
+| `messages` | `Partial<OgeOverlayMessages>` | `—` | Per-instance overrides of `tourLabel`, `tourStep`, `tourNext`, `tourPrevious`, `tourSkip` and `tourDone`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `start(step?)` | `(step?: number) => void` | Opens the tour at `step` (default the first). |
+| `next()` | `() => void` | The next step; on the last one, finishes the tour (`'done'`). |
+| `previous()` | `() => void` | The previous step (no-op on the first). |
+| `close()` | `() => void` | Closes the tour (reason `'api'`). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `stepChange` | `number` | The banana half of `[(step)]`. |
+| `closed` | `OgeTourClosedEvent` | The tour closed: `{ reason, step }` with `'done'` (Done on the last step), `'skip'`, `'escape'`, `'backdrop'` or `'api'` — store it to show a tour once. |
+
+#### Types
+
+_Behavior_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Spotlight, card & keys` | `role="dialog"` | Each step dims the page with a spotlight cut around its target, scrolls the target into view (centered; instantly under `prefers-reduced-motion`, which also stops the spotlight from gliding) and places the card beside it, re-measuring on scroll and resize. The card is a modal `role="dialog"` (`aria-roledescription` from `tourLabel`) with a step counter, Skip, Back and Next — Done on the last step. Focus starts on Next; → / ← move between steps (mirrored in RTL) but never finish the tour; Escape skips; focus returns where it was. A polite status announces “Step 2 of 4: title”. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTourStep` | `interface` | One step: `target?` (a CSS selector, an element or a function returning one — missing, hidden or absent centers the card), `title` (the dialog’s name), `content?` (its description), `placement?` (an `OgePopupPlacement`, default `'bottom'`, flipped to fit), `padding?` (spotlight padding in px, default 6). |
+| `OgeTourClosedEvent` | `{ reason: OgeTourCloseReason; step: number }` | Payload of `closed`. |
+| `OgeTourCloseReason` | `'done' \| 'skip' \| 'escape' \| 'backdrop' \| 'api'` | Why the tour closed. |
+
+_Behavior building blocks (@oge-ui/behavior)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeTourResolveTarget / ogeTourReveal` | `(target, doc) => Element \| null / (element) => void` | The rendered element a step points at; scrolling it into view (reduced-motion aware). |
+| `ogeTourSpotlight / ogeTourCardPosition / OgeTourCardPosition` | `geometry` | The padded, viewport-clipped spotlight rect and the card position beside it (via `resolvePopupPosition`), or centered. |
+| `ogeTourKeyIntent / ogeTourClampStep / ogeTourIsInView` | `helpers` | → / ← to `'next'` / `'previous'` (RTL-mirrored); the clamped step index; whether a rect is fully visible. |
+
 ### OgeTooltip — `<[ogeTooltip]>`
 
 #### Properties
@@ -807,7 +861,7 @@ _OgeOverlayConfig_
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn: 'hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
 | `toastStacked` | `boolean` | `false` | Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason `'swipe'`). The moves glide on transforms; reduced motion switches at once. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`) (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`), and the tour’s `tourLabel`, `tourStep` (`Step {index} of {count}`), `tourNext`, `tourPrevious`, `tourSkip` and `tourDone` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
 ### Overlay primitives
@@ -2225,6 +2279,93 @@ import { OgeTooltip } from '@oge-ui/overlay';
 })
 export class Demo {
   protected readonly ada = { name: 'Ada Lovelace', role: 'Engineer', seen: '5 min ago' };
+}
+```
+
+### Tour basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTour } from '@oge-ui/overlay';
+import type { OgeTourClosedEvent, OgeTourStep } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTour],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="toolbar">
+      <input id="tour-search" type="search" aria-label="Search" />
+      <button id="tour-filters" type="button">Filters</button>
+      <button id="tour-export" type="button">Export</button>
+    </div>
+    <button type="button" (click)="tour.start()">Take the tour</button>
+    <oge-tour #tour [steps]="steps" (closed)="onClosed($event)" />
+    <p>{{ last() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly last = signal('Not taken yet');
+  protected readonly steps: OgeTourStep[] = [
+    {
+      target: '#tour-search',
+      title: 'Search everything',
+      content: 'Type a customer, an invoice number or an amount.',
+    },
+    {
+      target: '#tour-filters',
+      title: 'Narrow it down',
+      content: 'Filters keep their state when you come back.',
+      placement: 'bottom-start',
+    },
+    {
+      target: '#tour-export',
+      title: 'Take the data with you',
+      content: 'Export the current view to Excel or PDF.',
+      placement: 'left',
+    },
+    // no target: the card is centered
+    { title: 'You are all set', content: 'Reopen this tour any time from the Help menu.' },
+  ];
+
+  protected onClosed(event: OgeTourClosedEvent): void {
+    // store it to show the tour only once
+    this.last.set(`Closed by ${event.reason} on step ${event.step + 1}`);
+  }
+}
+```
+
+### Tour controlled
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTour } from '@oge-ui/overlay';
+import type { OgeTourStep } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTour],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- [(step)] and [(opened)] are two-way: resume where the user left off. -->
+    <button type="button" (click)="opened.set(true)">Resume the tour</button>
+    <oge-tour
+      [steps]="steps"
+      [(step)]="step"
+      [(opened)]="opened"
+      [closeOnBackdropClick]="true"
+    />
+    <p>Step {{ step() + 1 }} of {{ steps.length }}</p>
+  `,
+})
+export class Demo {
+  protected readonly step = signal(0);
+  protected readonly opened = signal(false);
+  protected readonly steps: OgeTourStep[] = [
+    { title: 'Welcome to OGE', content: 'A two-minute look at what is new.' },
+    { title: 'Faster grids', content: 'Scrolling 100,000 rows now runs at 60 fps.' },
+    { title: 'New components', content: 'Image viewer, command palette and this tour.' },
+  ];
 }
 ```
 

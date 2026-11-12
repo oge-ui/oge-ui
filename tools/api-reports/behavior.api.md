@@ -10547,6 +10547,12 @@ export interface OgeOverlayMessages {
     toastClose: string;
     toastCountBadge: string;
     toastRegionLabel: string;
+    tourDone?: string;
+    tourLabel?: string;
+    tourNext?: string;
+    tourPrevious?: string;
+    tourSkip?: string;
+    tourStep?: string;
     windowMinimize?: string;
     windowMoved?: string;
     windowResized?: string;
@@ -14215,6 +14221,67 @@ export interface OgeTooltipCoreOptions {
 
 // @public
 export type OgeTooltipShowMode = 'hover' | 'focus' | 'click' | 'manual';
+
+// @public
+export interface OgeTourCardPosition {
+    // (undocumented)
+    readonly left: number;
+    readonly placement: OgePopupPlacement | null;
+    // (undocumented)
+    readonly top: number;
+}
+
+// @public
+export function ogeTourCardPosition(spotlight: OgeRect | null, card: {
+    width: number;
+    height: number;
+}, viewport: {
+    width: number;
+    height: number;
+}, placement?: OgePopupPlacement, rtl?: boolean): OgeTourCardPosition;
+
+// @public
+export function ogeTourClampStep(step: number, count: number): number;
+
+// @public
+export interface OgeTourClosedEvent {
+    // (undocumented)
+    readonly reason: OgeTourCloseReason;
+    readonly step: number;
+}
+
+// @public
+export type OgeTourCloseReason = 'done' | 'skip' | 'escape' | 'backdrop' | 'api';
+
+// @public
+export function ogeTourIsInView(rect: OgeRect, viewport: {
+    width: number;
+    height: number;
+}): boolean;
+
+// @public
+export function ogeTourKeyIntent(event: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey'>, rtl?: boolean): 'next' | 'previous' | null;
+
+// @public
+export function ogeTourResolveTarget(target: OgeTourStep['target'], doc: Document | null | undefined): Element | null;
+
+// @public
+export function ogeTourReveal(element: Element | null): void;
+
+// @public
+export function ogeTourSpotlight(rect: OgeRect | null, padding: number, viewport: {
+    width: number;
+    height: number;
+}): OgeRect | null;
+
+// @public
+export interface OgeTourStep {
+    readonly content?: string;
+    readonly padding?: number;
+    readonly placement?: OgePopupPlacement;
+    readonly target?: string | Element | (() => Element | null);
+    readonly title: string;
+}
 
 // @public
 export function ogeToWallClock(instant: Date | number, timeZone?: string): Date;

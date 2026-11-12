@@ -1,6 +1,6 @@
 # @oge-ui/react-overlay
 
-> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, a Ctrl+K command palette with fuzzy search, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
+> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, a Ctrl+K command palette with fuzzy search, a guided tour with a spotlight, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/overlay
@@ -558,6 +558,57 @@ _Vocabulary_
 | `ogeMatchesShortcut` | `(event, shortcut, apple?) => boolean` | Whether a keydown is a shortcut such as `Mod+K` — for wiring the commands’ own shortcuts. |
 | `ogeFormatShortcut` | `(shortcut, apple?) => string` | A shortcut for display: `⇧⌘P` on Apple platforms, `Ctrl+Shift+P` elsewhere. |
 
+### <OgeTour>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `steps` | `readonly OgeTourStep[] (required)` | `—` | The steps, in order. Fields: `target?` (a CSS selector, an element or a function returning one — missing, hidden or absent centers the card), `title` (the dialog’s name), `content?` (its description), `placement?` (an `OgePopupPlacement`, default `'bottom'`, flipped to fit), `padding?` (spotlight padding in px, default 6). |
+| `opened` | `boolean \| undefined` | `false` | Open state (controlled; `defaultOpened` when uncontrolled). |
+| `step` | `number \| undefined` | `0` | Index of the shown step, clamped to the steps (controlled; `defaultStep` when uncontrolled). |
+| `closeOnEscape` | `boolean` | `true` | Escape skips the tour. |
+| `closeOnBackdropClick` | `boolean` | `false` | A press on the dimmed page skips the tour. Off by default: a stray click should not lose the user’s place. |
+| `showSkip` | `boolean` | `true` | Renders the Skip button (never on the last step). |
+| `messages` | `Partial<OgeOverlayMessages>` | `—` | Per-instance overrides of `tourLabel`, `tourStep`, `tourNext`, `tourPrevious`, `tourSkip` and `tourDone`. |
+
+#### Methods
+
+_Ref handle (OgeTourHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `start(step?)` | `(step?: number) => void` | Opens the tour at `step` (default the first). |
+| `next()` | `() => void` | The next step; on the last one, finishes the tour (`'done'`). |
+| `previous()` | `() => void` | The previous step (no-op on the first). |
+| `close()` | `() => void` | Closes the tour (reason `'api'`). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onOpenedChange` | `(opened: boolean) => void` | A button, a key, a dismissal or a method changed the open state. |
+| `onStepChange` | `(step: number) => void` | A button, a key or a method moved to another step. |
+| `onClosed` | `(event: OgeTourClosedEvent) => void` | The tour closed: `{ reason, step }` with `'done'` (Done on the last step), `'skip'`, `'escape'`, `'backdrop'` or `'api'` — store it to show a tour once. |
+
+#### Types
+
+_Behavior_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Spotlight, card & keys` | `role="dialog"` | Each step dims the page with a spotlight cut around its target, scrolls the target into view (centered; instantly under `prefers-reduced-motion`, which also stops the spotlight from gliding) and places the card beside it, re-measuring on scroll and resize. The card is a modal `role="dialog"` (`aria-roledescription` from `tourLabel`) with a step counter, Skip, Back and Next — Done on the last step. Focus starts on Next; → / ← move between steps (mirrored in RTL) but never finish the tour; Escape skips; focus returns where it was. A polite status announces “Step 2 of 4: title”. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTourStep` | `interface` | One step: `target?` (a CSS selector, an element or a function returning one — missing, hidden or absent centers the card), `title` (the dialog’s name), `content?` (its description), `placement?` (an `OgePopupPlacement`, default `'bottom'`, flipped to fit), `padding?` (spotlight padding in px, default 6). |
+| `OgeTourClosedEvent` | `{ reason: OgeTourCloseReason; step: number }` | Payload of `onClosed`. |
+| `OgeTourCloseReason` | `'done' \| 'skip' \| 'escape' \| 'backdrop' \| 'api'` | Why the tour closed. |
+| `OgeTourProps` | `interface` | The props above. |
+| `OgeTourHandle` | `{ start(step?); next(); previous(); close() }` | What a `ref` reaches. |
+
 ### <OgeTooltip>
 
 #### Properties
@@ -824,7 +875,7 @@ _OgeOverlayConfig_
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn='hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
 | `toastStacked` | `boolean` | `false` | Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason `'swipe'`). The moves glide on transforms; reduced motion switches at once. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`) (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`), and the tour’s `tourLabel`, `tourStep` (`Step {index} of {count}`), `tourNext`, `tourPrevious`, `tourSkip` and `tourDone` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
 ### Overlay primitives
@@ -2197,6 +2248,100 @@ export function ContextMenuDelegationDemo() {
       <button type="button" onClick={() => menu.current?.open(240, 160)}>
         Open at (240, 160)
       </button>
+    </>
+  );
+}
+```
+
+### Guided tour
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeTour } from '@oge-ui/react-overlay';
+import type { OgeTourHandle, OgeTourStep } from '@oge-ui/react-overlay';
+
+const steps: OgeTourStep[] = [
+  {
+    target: '#tour-search',
+    title: 'Search everything',
+    content: 'Type a customer, an invoice number or an amount.',
+  },
+  {
+    target: '#tour-filters',
+    title: 'Narrow it down',
+    content: 'Filters keep their state when you come back.',
+    placement: 'bottom-start',
+  },
+  {
+    target: '#tour-export',
+    title: 'Take the data with you',
+    content: 'Export the current view to Excel or PDF.',
+    placement: 'left',
+  },
+  // no target: the card is centered
+  { title: 'You are all set', content: 'Reopen this tour any time from the Help menu.' },
+];
+
+export function TourBasicsDemo() {
+  const tour = useRef<OgeTourHandle>(null);
+  const [last, setLast] = useState('Not taken yet');
+  return (
+    <>
+      <div className="toolbar">
+        <input id="tour-search" type="search" aria-label="Search" />
+        <button id="tour-filters" type="button">Filters</button>
+        <button id="tour-export" type="button">Export</button>
+      </div>
+      <button type="button" onClick={() => tour.current?.start()}>
+        Take the tour
+      </button>
+      <OgeTour
+        ref={tour}
+        steps={steps}
+        onClosed={(e) => setLast(`Closed by ${e.reason} on step ${e.step + 1}`)}
+      />
+      <p>{last}</p>
+    </>
+  );
+}
+```
+
+### Resuming & centered steps
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTour } from '@oge-ui/react-overlay';
+import type { OgeTourStep } from '@oge-ui/react-overlay';
+
+const steps: OgeTourStep[] = [
+  { title: 'Welcome to OGE', content: 'A two-minute look at what is new.' },
+  { title: 'Faster grids', content: 'Scrolling 100,000 rows now runs at 60 fps.' },
+  { title: 'New components', content: 'Image viewer, command palette and this tour.' },
+];
+
+export function TourControlledDemo() {
+  const [step, setStep] = useState(0);
+  const [opened, setOpened] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpened(true)}>
+        Resume the tour
+      </button>
+      <OgeTour
+        steps={steps}
+        step={step}
+        onStepChange={setStep}
+        opened={opened}
+        onOpenedChange={setOpened}
+        closeOnBackdropClick
+      />
+      <p>
+        Step {step + 1} of {steps.length}
+      </p>
     </>
   );
 }
