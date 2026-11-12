@@ -59,6 +59,7 @@ export type IconName =
   | 'dashboard'
   | 'carousel'
   | 'image'
+  | 'barcode'
   | 'plus'
   | 'type'
   | 'sparkles'
@@ -310,6 +311,14 @@ export type IconName =
           <path d="M9 21h.01" />
           <path d="M12 21h.01" />
           <path d="M15 21h.01" />
+        }
+        @case ('barcode') {
+          <path d="M3 5v14" />
+          <path d="M7 5v14" />
+          <path d="M10 5v14" />
+          <path d="M14 5v14" />
+          <path d="M17 5v14" />
+          <path d="M21 5v14" />
         }
         @case ('image') {
           <rect x="3" y="3" width="18" height="18" rx="2" />

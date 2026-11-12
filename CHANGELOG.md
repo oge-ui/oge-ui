@@ -7,6 +7,27 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Barcodes — `@oge-ui/layout/barcode`, `@oge-ui/react-layout`
+
+- New `oge-barcode` / `<OgeBarcode>`: QR codes, Code 128 and EAN-13 as crisp
+  SVG, from the suite's own encoders (no dependency, no canvas).
+  - QR: numeric, alphanumeric and UTF-8 byte modes, levels L / M / Q / H,
+    versions 1–40 (the smallest that fits), the lowest-penalty mask. Checked
+    against an independent reader across modes, levels, masks and sizes.
+  - Code 128 switches to set C for runs of digits; EAN-13 adds or verifies
+    its check digit. A value a symbology cannot hold shows a message.
+  - Each symbol is an `img` named by its value; `toSvg()` and `download()`
+    hand it out as a standalone SVG file.
+- New `oge-barcode-scanner` / `<OgeBarcodeScanner>`: reads barcodes from the
+  camera (a frame every `interval` ms, repeats counted once) or from an image
+  file. It uses the browser's `BarcodeDetector`, or a `decoder` you pass where
+  there is none. A polite status line reports reads, a missing reader, a
+  refused camera.
+- The encoders and the scanner core are in `@oge-ui/behavior`
+  (`ogeEncodeBarcode`, `ogeEncodeQr`, `ogeBarcodeSvg`,
+  `OgeBarcodeScannerCore`, …); messages are translated in every
+  `@oge-ui/locales` pack (`layout.barcode`).
+
 ### Spreadsheet shapes — `@oge-ui/spreadsheet`, `@oge-ui/react-spreadsheet`, `@oge-ui/spreadsheet-engine`
 
 - Shapes, connectors, groups and text boxes now draw over the cells — a

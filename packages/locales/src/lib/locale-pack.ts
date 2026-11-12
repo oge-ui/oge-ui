@@ -14,6 +14,7 @@ import type {
   OgeTileLayoutMessages,
   OgeListViewMessages,
   OgeImageViewerMessages,
+  OgeBarcodeMessages,
   OgeAlertMessages,
   OgeCarouselMessages,
   OgeAvatarMessages,
@@ -82,6 +83,7 @@ export interface OgeLocaleLayoutMessages {
   readonly tileLayout?: OgeDeepPartial<OgeTileLayoutMessages>;
   readonly listView?: OgeDeepPartial<OgeListViewMessages>;
   readonly imageViewer?: OgeDeepPartial<OgeImageViewerMessages>;
+  readonly barcode?: OgeDeepPartial<OgeBarcodeMessages>;
 }
 
 /** The navigation family's catalogs, one per component. */

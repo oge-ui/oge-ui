@@ -29,6 +29,7 @@ import {
   OGE_DEFAULT_TILE_LAYOUT_MESSAGES,
   OGE_DEFAULT_LIST_VIEW_MESSAGES,
   OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
+  OGE_DEFAULT_BARCODE_MESSAGES,
   OGE_DEFAULT_TOOLBAR_MESSAGES,
   OGE_DEFAULT_TREE_VIEW_MESSAGES,
   OGE_DEFAULT_UPLOAD_MESSAGES,
@@ -57,6 +58,7 @@ import {
   OgeTileLayoutConfigProvider,
   OgeListViewConfigProvider,
   OgeImageViewerConfigProvider,
+  OgeBarcodeConfigProvider,
   OgeTimelineConfigProvider,
   OgeToolbarConfigProvider,
 } from '@oge-ui/react-layout';
@@ -364,6 +366,12 @@ export function OgeLayoutLocaleProvider({
           layout?.listView,
         ),
       },
+      barcode: {
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_BARCODE_MESSAGES,
+          layout?.barcode,
+        ),
+      },
       imageViewer: {
         messages: ogeMergeMessages(
           OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
@@ -392,11 +400,13 @@ export function OgeLayoutLocaleProvider({
                                 config={c.tileLayout}
                               >
                                 <OgeListViewConfigProvider config={c.listView}>
-                                  <OgeImageViewerConfigProvider
-                                    config={c.imageViewer}
-                                  >
-                                    {children}
-                                  </OgeImageViewerConfigProvider>
+                                  <OgeBarcodeConfigProvider config={c.barcode}>
+                                    <OgeImageViewerConfigProvider
+                                      config={c.imageViewer}
+                                    >
+                                      {children}
+                                    </OgeImageViewerConfigProvider>
+                                  </OgeBarcodeConfigProvider>
                                 </OgeListViewConfigProvider>
                               </OgeTileLayoutConfigProvider>
                             </OgeSimpleTableConfigProvider>

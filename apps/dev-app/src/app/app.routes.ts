@@ -715,6 +715,25 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/barcode',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/barcode').then((m) => m.LayoutBarcodePage),
+        title: 'OGE — Barcode',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/barcode-api').then(
+            (m) => m.LayoutBarcodeApiPage,
+          ),
+        title: 'OGE — Barcode API',
+      },
+    ],
+  },
+  {
     path: 'components/image-viewer',
     children: [
       {

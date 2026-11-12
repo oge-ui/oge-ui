@@ -2711,6 +2711,42 @@ export {
   type OgeImageViewerMessages,
 } from './lib/layout/image-viewer-core';
 export {
+  OGE_BARCODE_FORMATS,
+  OGE_BARCODE_TEXT_HEIGHT,
+  OGE_DEFAULT_BARCODE_CONFIG,
+  OGE_DEFAULT_BARCODE_MESSAGES,
+  OgeBarcodeScannerCore,
+  ogeBarcodeDrawing,
+  ogeBarcodeSvg,
+  ogeEncodeBarcode,
+  ogeNativeBarcodeDecoder,
+  resolveOgeBarcodeConfig,
+  type OgeBarcodeConfig,
+  type OgeBarcodeConfigInput,
+  type OgeBarcodeDecoder,
+  type OgeBarcodeDrawing,
+  type OgeBarcodeDrawingOptions,
+  type OgeBarcodeEncodeOptions,
+  type OgeBarcodeMessages,
+  type OgeBarcodeResult,
+  type OgeBarcodeScannerCoreOptions,
+  type OgeBarcodeScannerStatus,
+  type OgeBarcodeSymbol,
+  type OgeBarcodeType,
+} from './lib/barcode/barcode-core';
+export {
+  ogeEncodeQr,
+  type OgeQrCode,
+  type OgeQrErrorCorrection,
+  type OgeQrOptions,
+} from './lib/barcode/qr';
+export {
+  ogeEan13CheckDigit,
+  ogeEncodeCode128,
+  ogeEncodeEan13,
+  type OgeLinearBarcode,
+} from './lib/barcode/linear';
+export {
   OGE_DEFAULT_LIST_VIEW_CONFIG,
   OGE_DEFAULT_LIST_VIEW_MESSAGES,
   OGE_LIST_VIEW_FALLBACK_HEIGHT,

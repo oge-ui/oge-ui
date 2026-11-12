@@ -1,6 +1,6 @@
 # @oge-ui/react-layout
 
-> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view, tile layout and image viewer — running the same config defaults, decision functions and stylesheet as the Angular layout package.
+> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view, tile layout, image viewer and barcode generator and scanner — running the same config defaults, decision functions and stylesheet as the Angular layout package.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -1955,6 +1955,100 @@ _OgeImageViewerConfigProvider_
 | `OgeImageViewerConfigInput` | `Partial<OgeImageViewerConfig> with partial messages` | What the provider accepts. |
 | `OgeImageViewerMessages` | `{ label; previous; next; zoomIn; zoomOut; resetZoom; rotateLeft; rotateRight; fullscreen; exitFullscreen; thumbnails; counter; zoomLevel; announce; empty }` | The image viewer catalog. |
 
+### <OgeBarcode> & <OgeBarcodeScanner>
+
+#### Properties
+
+_<OgeBarcode>_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string (required)` | `—` | What the symbol encodes. |
+| `type` | `'qr' \| 'code128' \| 'ean13'` | `'qr'` | `'qr'` (numeric, alphanumeric or UTF-8 byte mode, versions 1–40, the smallest that fits, the lowest-penalty mask), `'code128'` (printable ASCII; set C packs runs of digits two to a symbol) or `'ean13'` (12 digits — the check digit is added — or 13, verified). A value the symbology cannot hold shows the `invalid` message instead of a symbol. |
+| `errorCorrection` | `'L' \| 'M' \| 'Q' \| 'H' \| undefined` | `config ?? 'M'` | QR only: recovers about 7, 15, 25 or 30 % of a damaged symbol; higher levels need a larger symbol. |
+| `scale` | `number` | `4` | Pixels per module. The SVG also shrinks to fit its container. |
+| `barHeight` | `number` | `50` | Bar height of a linear symbol, in modules. |
+| `quietZone` | `boolean` | `true` | The light margin scanners need: 4 modules round a QR code, 10 beside bars. |
+| `showText` | `boolean` | `true` | The human-readable line under a linear symbol. |
+| `color / background` | `string` | `'#000000' / '#ffffff'` | Bar and background colours. Keep them dark on light: scanners need the contrast. |
+| `ariaLabel` | `string \| undefined` | `qrLabel / barcodeLabel message` | Accessible name of the symbol (an `img`). |
+| `messages` | `Partial<OgeBarcodeMessages>` | `—` | Per-instance overrides of the config catalog. |
+| `className / style` | `string / CSSProperties` | `—` | Added to the root of either component. |
+
+_<OgeBarcodeScanner>_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `active` | `boolean \| undefined` | `false` | The camera is open and reading (controlled; `defaultActive` when uncontrolled). A camera that cannot open reports `false`. |
+| `decoder` | `OgeBarcodeDecoder \| undefined` | `the browser’s BarcodeDetector` | Reading uses the browser’s own `BarcodeDetector` (the Shape Detection API: Chrome and Edge on Android, macOS and ChromeOS, Safari 17+). Elsewhere — Firefox, desktop Chrome on Windows and Linux — pass a `decoder` (a ZXing build, a server call); without one the scanner says it cannot read. A value read again within 1.5 s counts once. |
+| `types` | `readonly OgeBarcodeType[]` | `['qr', 'code128', 'ean13']` | Symbologies the browser’s reader looks for. |
+| `interval` | `number` | `250` | Milliseconds between camera frames read. |
+| `facingMode` | `'environment' \| 'user'` | `'environment'` | The back camera, or the one facing the user. |
+
+#### Methods
+
+_Ref handles (OgeBarcodeHandle, OgeBarcodeScannerHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `toSvg()` | `() => string \| null` | <OgeBarcode>: the symbol as a standalone SVG document (for an `<img>`, a print, an e-mail). |
+| `download(fileName?)` | `(fileName?: string) => void` | <OgeBarcode>: saves the symbol as an SVG file (default `'barcode.svg'`). |
+| `start() / stop()` | `() => void` | <OgeBarcodeScanner>: opens or closes the camera. |
+| `scanImage(image)` | `(image: Blob) => Promise<readonly OgeBarcodeResult[]>` | <OgeBarcodeScanner>: reads a picked or pasted image; every barcode found is also reported. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onActiveChange` | `(active: boolean) => void` | The camera opened or closed — the toggle, a method or a failure. |
+| `onDetected` | `(result: OgeBarcodeResult) => void` | `{ value, format }` — `format` as the Shape Detection API names it (`qr_code`, `code_128`, `ean_13`, …). |
+| `onStatusChange` | `(status: OgeBarcodeScannerStatus) => void` | `'idle'`, `'starting'`, `'scanning'`, `'unsupported'`, `'permission'` (access refused), `'no-camera'` or `'failed'`; a polite status line says the same. |
+
+#### Types
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBarcodeProps / OgeBarcodeScannerProps` | `interface` | The props above. |
+| `OgeBarcodeHandle / OgeBarcodeScannerHandle` | `{ toSvg(); download() } / { start(); stop(); scanImage() }` | What a `ref` reaches. |
+| `OgeBarcodeType` | `'qr' \| 'code128' \| 'ean13'` | The symbologies drawn. |
+| `OgeQrErrorCorrection` | `'L' \| 'M' \| 'Q' \| 'H'` | QR error-correction level. |
+| `OgeBarcodeResult` | `{ value: string; format: string }` | One barcode read. |
+| `OgeBarcodeDecoder` | `(source: ImageBitmapSource) => Promise<readonly OgeBarcodeResult[]>` | What the scanner reads frames and images with. |
+| `OgeBarcodeScannerStatus` | `'idle' \| 'starting' \| 'scanning' \| 'unsupported' \| 'permission' \| 'no-camera' \| 'failed'` | Where the scanner stands. |
+
+_Functions (@oge-ui/behavior, re-exported)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeEncodeBarcode` | `(value, type, { errorCorrection? }) => OgeBarcodeSymbol` | Encodes without drawing: a module matrix or a row of bars. Throws `RangeError` for a value that does not fit. |
+| `ogeBarcodeSvg` | `(drawing, { scale?, color?, background?, label? }) => string` | A standalone SVG of a drawing — for servers and workers. |
+| `ogeNativeBarcodeDecoder` | `(formats?) => OgeBarcodeDecoder \| null` | The browser’s `BarcodeDetector` as a decoder, or `null` where there is none. |
+
+### Configuration
+
+#### Properties
+
+_OgeBarcodeConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeBarcodeMessages` | Every user-facing string: `qrLabel` / `barcodeLabel` (`{value}`, the symbol’s accessible name), `invalid` (`{type}`), `scannerLabel`, `start`, `stop`, `scanImage`, `scanning`, `unsupported`, `permission`, `noCamera`, `failed`, `detected` (`{value}`) and `nothingFound`. Translated in every `@oge-ui/locales` pack (`layout.barcode`). |
+| `errorCorrection` | `'L' \| 'M' \| 'Q' \| 'H' \| undefined` | Default QR error correction. `useOgeBarcodeConfig()` reads the resolved value. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBarcodeConfigProvider` | `({ config?, children }) => JSX.Element` | Subtree-scoped defaults. |
+| `useOgeBarcodeConfig` | `() => OgeBarcodeConfig` | Reads the resolved config. |
+| `OGE_DEFAULT_BARCODE_CONFIG` | `OgeBarcodeConfig` | The defaults. |
+| `OGE_DEFAULT_BARCODE_MESSAGES` | `OgeBarcodeMessages` | The English catalog. |
+| `OgeBarcodeConfig` | `{ messages: OgeBarcodeMessages; errorCorrection? }` | Resolved config shape. |
+| `OgeBarcodeConfigInput` | `Partial<OgeBarcodeConfig> with partial messages` | What the provider accepts. |
+| `OgeBarcodeMessages` | `{ qrLabel; barcodeLabel; invalid; scannerLabel; start; stop; scanImage; scanning; unsupported; permission; noCamera; failed; detected; nothingFound }` | The barcode catalog. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -2435,6 +2529,75 @@ export function AvatarConfigDemo() {
         <OgeBadge value={12} />
       </OgeBadgeConfigProvider>
     </OgeAvatarConfigProvider>
+  );
+}
+```
+
+### Generate
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeBarcode } from '@oge-ui/react-layout';
+import type { OgeBarcodeHandle, OgeBarcodeType } from '@oge-ui/react-layout';
+
+const types: OgeBarcodeType[] = ['qr', 'code128', 'ean13'];
+
+export function BarcodeGenerateDemo() {
+  const code = useRef<OgeBarcodeHandle>(null);
+  const [value, setValue] = useState('https://ogeui.com');
+  const [type, setType] = useState<OgeBarcodeType>('qr');
+  return (
+    <>
+      <input aria-label="Value" value={value} onChange={(e) => setValue(e.target.value)} />
+      {types.map((t) => (
+        <button key={t} type="button" aria-pressed={type === t} onClick={() => setType(t)}>
+          {t}
+        </button>
+      ))}
+      <OgeBarcode ref={code} value={value} type={type} scale={3} />
+      <button type="button" onClick={() => code.current?.download('barcode.svg')}>
+        Download SVG
+      </button>
+    </>
+  );
+}
+```
+
+### Labels
+
+```ts
+'use client';
+
+import { OgeBarcode } from '@oge-ui/react-layout';
+
+export function BarcodeLabelsDemo() {
+  return (
+    <>
+      <OgeBarcode type="ean13" value="400638133393" scale={2} />
+      <OgeBarcode value="SKU-2041 · Lot 7" errorCorrection="H" scale={3} />
+      <OgeBarcode type="code128" value="SHIP-000123" barHeight={30} color="#1e3a8a" />
+    </>
+  );
+}
+```
+
+### Scan
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeBarcodeScanner } from '@oge-ui/react-layout';
+
+export function BarcodeScanDemo() {
+  const [last, setLast] = useState('Nothing read yet');
+  return (
+    <>
+      <OgeBarcodeScanner onDetected={(r) => setLast(`${r.format}: ${r.value}`)} />
+      <p>{last}</p>
+    </>
   );
 }
 ```

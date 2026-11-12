@@ -926,6 +926,12 @@ export const OGE_AVATAR_ICON_PATH = "M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z
 export const OGE_BADGE_DEFAULT_MAX = 99;
 
 // @public
+export const OGE_BARCODE_FORMATS: Readonly<Record<OgeBarcodeType, string>>;
+
+// @public
+export const OGE_BARCODE_TEXT_HEIGHT = 12;
+
+// @public
 export const OGE_BREADCRUMB_ELLIPSIS_FALLBACK = 44;
 
 // @public
@@ -1008,6 +1014,12 @@ export const OGE_DEFAULT_BADGE_CONFIG: OgeBadgeConfig;
 
 // @public (undocumented)
 export const OGE_DEFAULT_BADGE_MESSAGES: OgeBadgeMessages;
+
+// @public (undocumented)
+export const OGE_DEFAULT_BARCODE_CONFIG: OgeBarcodeConfig;
+
+// @public (undocumented)
+export const OGE_DEFAULT_BARCODE_MESSAGES: OgeBarcodeMessages;
 
 // @public (undocumented)
 export const OGE_DEFAULT_BREADCRUMB_CONFIG: OgeBreadcrumbConfig;
@@ -2513,6 +2525,131 @@ export interface OgeBadgeVisibilityInput {
 
 // @public
 export function ogeBadgeVisible(input: OgeBadgeVisibilityInput): boolean;
+
+// @public (undocumented)
+export interface OgeBarcodeConfig {
+    errorCorrection?: OgeQrErrorCorrection;
+    // (undocumented)
+    messages: OgeBarcodeMessages;
+}
+
+// @public (undocumented)
+export type OgeBarcodeConfigInput = Partial<Omit<OgeBarcodeConfig, 'messages'>> & {
+    messages?: Partial<OgeBarcodeMessages>;
+};
+
+// @public
+export type OgeBarcodeDecoder = (source: ImageBitmapSource) => Promise<readonly OgeBarcodeResult[]>;
+
+// @public
+export interface OgeBarcodeDrawing {
+    readonly d: string;
+    // (undocumented)
+    readonly height: number;
+    readonly text?: {
+        readonly x: number;
+        readonly y: number;
+        readonly value: string;
+    };
+    // (undocumented)
+    readonly width: number;
+}
+
+// @public
+export function ogeBarcodeDrawing(symbol: OgeBarcodeSymbol, options?: OgeBarcodeDrawingOptions): OgeBarcodeDrawing;
+
+// @public (undocumented)
+export interface OgeBarcodeDrawingOptions {
+    readonly barHeight?: number;
+    readonly quietZone?: boolean;
+    readonly showText?: boolean;
+}
+
+// @public (undocumented)
+export interface OgeBarcodeEncodeOptions {
+    readonly errorCorrection?: OgeQrErrorCorrection;
+}
+
+// @public (undocumented)
+export interface OgeBarcodeMessages {
+    readonly barcodeLabel: string;
+    readonly detected: string;
+    // (undocumented)
+    readonly failed: string;
+    readonly invalid: string;
+    // (undocumented)
+    readonly noCamera: string;
+    // (undocumented)
+    readonly nothingFound: string;
+    // (undocumented)
+    readonly permission: string;
+    readonly qrLabel: string;
+    // (undocumented)
+    readonly scanImage: string;
+    readonly scannerLabel: string;
+    // (undocumented)
+    readonly scanning: string;
+    // (undocumented)
+    readonly start: string;
+    // (undocumented)
+    readonly stop: string;
+    // (undocumented)
+    readonly unsupported: string;
+}
+
+// @public
+export interface OgeBarcodeResult {
+    readonly format: string;
+    // (undocumented)
+    readonly value: string;
+}
+
+// @public
+export class OgeBarcodeScannerCore {
+    constructor(options: OgeBarcodeScannerCoreOptions);
+    destroy(): void;
+    scanImage(image: Blob): Promise<readonly OgeBarcodeResult[]>;
+    start(video: HTMLVideoElement): Promise<void>;
+    stop(): void;
+    supported(): boolean;
+}
+
+// @public (undocumented)
+export interface OgeBarcodeScannerCoreOptions {
+    readonly decoder?: () => OgeBarcodeDecoder | null | undefined;
+    readonly facingMode?: () => 'environment' | 'user';
+    readonly getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+    readonly interval?: () => number;
+    // (undocumented)
+    readonly onDetect: (result: OgeBarcodeResult) => void;
+    // (undocumented)
+    readonly onStatus: (status: OgeBarcodeScannerStatus) => void;
+}
+
+// @public
+export type OgeBarcodeScannerStatus = 'idle' | 'starting' | 'scanning' | 'unsupported' | 'permission' | 'no-camera' | 'failed';
+
+// @public
+export function ogeBarcodeSvg(drawing: OgeBarcodeDrawing, options?: {
+    readonly scale?: number;
+    readonly color?: string;
+    readonly background?: string;
+    readonly label?: string;
+}): string;
+
+// @public
+export type OgeBarcodeSymbol = ({
+    readonly kind: 'matrix';
+    readonly type: 'qr';
+} & OgeQrCode) | {
+    readonly kind: 'linear';
+    readonly type: 'code128' | 'ean13';
+    readonly modules: readonly boolean[];
+    readonly text: string;
+};
+
+// @public
+export type OgeBarcodeType = 'qr' | 'code128' | 'ean13';
 
 // @public
 export interface OgeBooleanCellMessages {
@@ -4518,6 +4655,9 @@ export interface OgeDropDownOpeningEvent {
 export function ogeDropExitGhosts(group: string): void;
 
 // @public
+export function ogeEan13CheckDigit(digits: string): number;
+
+// @public
 export function ogeEdgeScrollVelocity(pos: number, min: number, max: number, edge?: number, maxSpeed?: number): number;
 
 // @public
@@ -5627,6 +5767,18 @@ export function ogeEditorWriteSelection(root: HTMLElement, selection: OgeEditorS
 
 // @public
 export function ogeElementAtPoint(clientX: number, clientY: number, fallback?: EventTarget | null): Element | null;
+
+// @public
+export function ogeEncodeBarcode(value: string, type: OgeBarcodeType, options?: OgeBarcodeEncodeOptions): OgeBarcodeSymbol;
+
+// @public
+export function ogeEncodeCode128(text: string): OgeLinearBarcode;
+
+// @public
+export function ogeEncodeEan13(value: string): OgeLinearBarcode;
+
+// @public
+export function ogeEncodeQr(text: string, options?: OgeQrOptions): OgeQrCode;
 
 // @public
 export function ogeExitGhost(element: Element, options?: OgeExitGhostOptions): void;
@@ -9283,6 +9435,13 @@ export interface OgeLayoutPlayOptions<K> {
 export function ogeLayoutToastStack(region: HTMLElement): void;
 
 // @public
+export interface OgeLinearBarcode {
+    // (undocumented)
+    readonly modules: readonly boolean[];
+    readonly text: string;
+}
+
+// @public
 export interface OgeListBoxClickInput {
     // (undocumented)
     readonly ctrlKey?: boolean;
@@ -10447,6 +10606,11 @@ export function ogeMoveGroupingTo(grouping: {
 export function ogeMoveListItem<T>(items: readonly T[], from: number, to: number): T[];
 
 // @public
+export function ogeNativeBarcodeDecoder(formats?: readonly string[], global?: {
+    BarcodeDetector?: unknown;
+}): OgeBarcodeDecoder | null;
+
+// @public
 export function ogeNormalizeViewName(name: string): string;
 
 // @public
@@ -11303,6 +11467,32 @@ export function ogePromptResult(outcome: OgeDialogOutcome | undefined, value: st
 
 // @public
 export type OgePromptValidator = (value: string) => string | null | Promise<string | null>;
+
+// @public
+export interface OgeQrCode {
+    // (undocumented)
+    readonly errorCorrection: OgeQrErrorCorrection;
+    // (undocumented)
+    readonly mask: number;
+    // (undocumented)
+    readonly mode: 'numeric' | 'alphanumeric' | 'byte';
+    // (undocumented)
+    readonly modules: readonly (readonly boolean[])[];
+    // (undocumented)
+    readonly size: number;
+    // (undocumented)
+    readonly version: number;
+}
+
+// @public
+export type OgeQrErrorCorrection = 'L' | 'M' | 'Q' | 'H';
+
+// @public (undocumented)
+export interface OgeQrOptions {
+    readonly errorCorrection?: OgeQrErrorCorrection;
+    readonly mask?: number;
+    readonly minVersion?: number;
+}
 
 // @public
 export function ogeQualifiesForAutoList(values: readonly unknown[], rule?: OgeAutoListRule): boolean;
@@ -16770,6 +16960,9 @@ export function resolveOgeAvatarConfig(input: OgeAvatarConfigInput | undefined):
 
 // @public (undocumented)
 export function resolveOgeBadgeConfig(input: OgeBadgeConfigInput | undefined): OgeBadgeConfig;
+
+// @public (undocumented)
+export function resolveOgeBarcodeConfig(input: OgeBarcodeConfigInput | undefined, base?: OgeBarcodeConfig): OgeBarcodeConfig;
 
 // @public
 export function resolveOgeBreadcrumbConfig(input: OgeBreadcrumbConfigInput | undefined): OgeBreadcrumbConfig;

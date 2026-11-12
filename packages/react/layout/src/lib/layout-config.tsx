@@ -14,6 +14,10 @@ import {
   resolveOgeImageViewerConfig,
   type OgeImageViewerConfig,
   type OgeImageViewerConfigInput,
+  OGE_DEFAULT_BARCODE_CONFIG,
+  resolveOgeBarcodeConfig,
+  type OgeBarcodeConfig,
+  type OgeBarcodeConfigInput,
   OGE_DEFAULT_TILE_LAYOUT_CONFIG,
   resolveOgeTileLayoutConfig,
   type OgeTileLayoutConfig,
@@ -460,6 +464,27 @@ export function OgeImageViewerConfigProvider({
 
 export const useOgeImageViewerConfig = (): OgeImageViewerConfig =>
   useContext(ImageViewerContext);
+
+const BarcodeContext = createContext<OgeBarcodeConfig>(
+  OGE_DEFAULT_BARCODE_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeBarcodeConfig()`. */
+export function OgeBarcodeConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeBarcodeConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeBarcodeConfig(config), [config]);
+  return (
+    <BarcodeContext.Provider value={value}>{children}</BarcodeContext.Provider>
+  );
+}
+
+export const useOgeBarcodeConfig = (): OgeBarcodeConfig =>
+  useContext(BarcodeContext);
 
 const ListViewContext = createContext<OgeListViewConfig>(
   OGE_DEFAULT_LIST_VIEW_CONFIG,

@@ -472,6 +472,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE Carousel API reference: every input, method, output and type of oge-carousel, its declarative slides, the slide template and the config provider.',
   ],
   [
+    '/components/barcode',
+    'QR code and barcode for Angular and React: QR, Code 128 and EAN-13 as crisp SVG with no dependency, and a camera or image scanner with BarcodeDetector.',
+  ],
+  [
+    '/components/barcode/api',
+    'OGE Barcode API reference: oge-barcode and oge-barcode-scanner inputs, outputs and methods, the QR, Code 128 and EAN-13 encoders and the config provider.',
+  ],
+  [
     '/components/image-viewer',
     'Image viewer for Angular and React: a gallery with zoom, pan, pinch, rotation, thumbnails, full screen and a full keyboard map, announced to screen readers.',
   ],

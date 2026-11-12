@@ -354,6 +354,33 @@ export {
   type OgeImageViewerItem,
   type OgeImageViewerMessages,
 } from '@oge-ui/behavior';
+export {
+  OgeBarcode,
+  OgeBarcodeScanner,
+  type OgeBarcodeHandle,
+  type OgeBarcodeProps,
+  type OgeBarcodeScannerHandle,
+  type OgeBarcodeScannerProps,
+} from './lib/barcode';
+export {
+  OgeBarcodeConfigProvider,
+  useOgeBarcodeConfig,
+} from './lib/layout-config';
+export {
+  OGE_DEFAULT_BARCODE_CONFIG,
+  OGE_DEFAULT_BARCODE_MESSAGES,
+  ogeBarcodeSvg,
+  ogeEncodeBarcode,
+  ogeNativeBarcodeDecoder,
+  type OgeBarcodeConfig,
+  type OgeBarcodeConfigInput,
+  type OgeBarcodeDecoder,
+  type OgeBarcodeMessages,
+  type OgeBarcodeResult,
+  type OgeBarcodeScannerStatus,
+  type OgeBarcodeType,
+  type OgeQrErrorCorrection,
+} from '@oge-ui/behavior';
 export type {
   OgeCarouselAutoplayChangedEvent,
   OgeCarouselChangeSource,

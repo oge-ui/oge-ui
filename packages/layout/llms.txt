@@ -1,6 +1,6 @@
 # @oge-ui/layout
 
-> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks — plus the collection and dashboard set: an APG carousel (tab-list or button picker, scroll-snap swipes, loop, autoplay that stops on keyboard focus with a rotation control), a list view (virtualized listbox or list with sticky group headers, search, infinite scroll and swipe actions), a data view (templated items in container-query columns with sorting, search, paging and selection) and a tile layout (dashboard tiles with spans, drag to reorder, resize handles, Ctrl+Arrow keyboard twins and a validated serializable state) — and an image viewer (zoom by buttons, wheel, double click or pinch, drag to pan, quarter-turn rotation, thumbnails, full screen and a full keyboard map).
+> Layout containers and loading visuals — accordion panels with single or multiple expansion, a nested panel bar and a stand-alone expansion panel, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), circular progress ring, load-indicator spinner, shimmer skeleton and a load panel that shades a busy container (`aria-busy`), with the aria progressbar contract done right — plus the display and feedback set: avatars (image → initials → icon fallback, presence dots) and avatar groups with "+N" overflow, count/dot badges whose description reaches the anchored control, selectable and removable chips with an APG listbox / grid chip list, inline alerts with a severity-derived `alert`/`status` role, ordered-list timelines (vertical, horizontal, alternating) and app bars with start/center/end sections, sticky/fixed placement and opt-in landmarks — plus the collection and dashboard set: an APG carousel (tab-list or button picker, scroll-snap swipes, loop, autoplay that stops on keyboard focus with a rotation control), a list view (virtualized listbox or list with sticky group headers, search, infinite scroll and swipe actions), a data view (templated items in container-query columns with sorting, search, paging and selection) and a tile layout (dashboard tiles with spans, drag to reorder, resize handles, Ctrl+Arrow keyboard twins and a validated serializable state) — and an image viewer (zoom by buttons, wheel, double click or pinch, drag to pan, quarter-turn rotation, thumbnails, full screen and a full keyboard map), and barcodes — QR, Code 128 and EAN-13 drawn as SVG by the suite’s own encoders, read from the camera or an image with `BarcodeDetector` or a decoder you pass.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -97,8 +97,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CAROUSEL_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DATA_VIEW_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_IMAGE_VIEWER_CONFIG`, `OGE_DEFAULT_IMAGE_VIEWER_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SIMPLE_TABLE_CONFIG`, `OGE_DEFAULT_SIMPLE_TABLE_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_IMAGE_VIEWER_CONFIG`, `OGE_LIST_VIEW_CONFIG`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SIMPLE_TABLE_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TILE_LAYOUT_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeCarousel`, `OgeCarouselSlide`, `OgeCarouselSlideTemplate`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeDataView`, `OgeDataViewEmptyTemplate`, `OgeDataViewItemTemplate`, `OgeDataViewListItemTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeImageViewer`, `OgeListView`, `OgeListViewEmptyTemplate`, `OgeListViewFooterTemplate`, `OgeListViewGroupTemplate`, `OgeListViewItemTemplate`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSimpleTable`, `OgeSimpleTableEmpty`, `OgeSimpleTableFooter`, `OgeSimpleTableHeader`, `OgeSimpleTableRow`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTileLayout`, `OgeTileLayoutContentTemplate`, `OgeTileLayoutHeaderTemplate`, `OgeTileLayoutItem`, `OgeTileLayoutItemHeader`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeCardConfig`, `provideOgeCarouselConfig`, `provideOgeChipConfig`, `provideOgeDataViewConfig`, `provideOgeImageViewerConfig`, `provideOgeListViewConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSimpleTableConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTileLayoutConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`, `sanitizeOgeTileLayoutState`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSlideTemplateContext`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewEmptyTemplateContext`, `OgeDataViewItemClickEvent`, `OgeDataViewItemTemplateContext`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeImageViewerConfig`, `OgeImageViewerConfigInput`, `OgeImageViewerItem`, `OgeImageViewerMessages`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewEmptyTemplateContext`, `OgeListViewExpr`, `OgeListViewFooterTemplateContext`, `OgeListViewGroupTemplateContext`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemTemplateContext`, `OgeListViewKey`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewPageLoadMode`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeSimpleTableAlign`, `OgeSimpleTableColumn`, `OgeSimpleTableConfig`, `OgeSimpleTableConfigInput`, `OgeSimpleTableMessages`, `OgeSimpleTableResolvedColumn`, `OgeSimpleTableRowContext`, `OgeSimpleTableSectionContext`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutMessages`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTemplateContext`, `OgeTileLayoutTileState`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_ALERT_CONFIG`, `OGE_APP_BAR_CONFIG`, `OGE_AVATAR_CONFIG`, `OGE_BADGE_CONFIG`, `OGE_BARCODE_CONFIG`, `OGE_CARD_CONFIG`, `OGE_CAROUSEL_CONFIG`, `OGE_CHIP_CONFIG`, `OGE_DATA_VIEW_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ALERT_CONFIG`, `OGE_DEFAULT_ALERT_MESSAGES`, `OGE_DEFAULT_APP_BAR_CONFIG`, `OGE_DEFAULT_AVATAR_CONFIG`, `OGE_DEFAULT_AVATAR_MESSAGES`, `OGE_DEFAULT_BADGE_CONFIG`, `OGE_DEFAULT_BADGE_MESSAGES`, `OGE_DEFAULT_BARCODE_CONFIG`, `OGE_DEFAULT_BARCODE_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_CAROUSEL_CONFIG`, `OGE_DEFAULT_CAROUSEL_MESSAGES`, `OGE_DEFAULT_CHIP_CONFIG`, `OGE_DEFAULT_CHIP_MESSAGES`, `OGE_DEFAULT_DATA_VIEW_CONFIG`, `OGE_DEFAULT_DATA_VIEW_MESSAGES`, `OGE_DEFAULT_IMAGE_VIEWER_CONFIG`, `OGE_DEFAULT_IMAGE_VIEWER_MESSAGES`, `OGE_DEFAULT_LIST_VIEW_CONFIG`, `OGE_DEFAULT_LIST_VIEW_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SIMPLE_TABLE_CONFIG`, `OGE_DEFAULT_SIMPLE_TABLE_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TILE_LAYOUT_CONFIG`, `OGE_DEFAULT_TILE_LAYOUT_MESSAGES`, `OGE_DEFAULT_TIMELINE_CONFIG`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_IMAGE_VIEWER_CONFIG`, `OGE_LIST_VIEW_CONFIG`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SIMPLE_TABLE_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TILE_LAYOUT_CONFIG`, `OGE_TIMELINE_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeAlert`, `OgeAlertActions`, `OgeAlertIcon`, `OgeAppBar`, `OgeAppBarCenter`, `OgeAppBarEnd`, `OgeAppBarStart`, `OgeAvatar`, `OgeAvatarGroup`, `OgeBadge`, `OgeBarcode`, `OgeBarcodeScanner`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeCarousel`, `OgeCarouselSlide`, `OgeCarouselSlideTemplate`, `OgeChip`, `OgeChipList`, `OgeChipTemplate`, `OgeDataView`, `OgeDataViewEmptyTemplate`, `OgeDataViewItemTemplate`, `OgeDataViewListItemTemplate`, `OgeExpansionPanel`, `OgeExpansionPanelContent`, `OgeImageViewer`, `OgeListView`, `OgeListViewEmptyTemplate`, `OgeListViewFooterTemplate`, `OgeListViewGroupTemplate`, `OgeListViewItemTemplate`, `OgeLoadIndicator`, `OgeLoadPanel`, `OgePanelBar`, `OgePanelBarContentTemplate`, `OgePanelBarHeaderTemplate`, `OgeProgressBar`, `OgeSimpleTable`, `OgeSimpleTableEmpty`, `OgeSimpleTableFooter`, `OgeSimpleTableHeader`, `OgeSimpleTableRow`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeTileLayout`, `OgeTileLayoutContentTemplate`, `OgeTileLayoutHeaderTemplate`, `OgeTileLayoutItem`, `OgeTileLayoutItemHeader`, `OgeTimeline`, `OgeTimelineContentTemplate`, `OgeTimelineMarkerTemplate`, `OgeTimelineOppositeTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `ogeBarcodeSvg`, `ogeEncodeBarcode`, `ogeNativeBarcodeDecoder`, `provideOgeAccordionConfig`, `provideOgeAlertConfig`, `provideOgeAppBarConfig`, `provideOgeAvatarConfig`, `provideOgeBadgeConfig`, `provideOgeBarcodeConfig`, `provideOgeCardConfig`, `provideOgeCarouselConfig`, `provideOgeChipConfig`, `provideOgeDataViewConfig`, `provideOgeImageViewerConfig`, `provideOgeListViewConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSimpleTableConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeTileLayoutConfig`, `provideOgeTimelineConfig`, `provideOgeToolbarConfig`, `sanitizeOgeTileLayoutState`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeAlertClosedEvent`, `OgeAlertClosingEvent`, `OgeAlertConfig`, `OgeAlertConfigInput`, `OgeAlertLive`, `OgeAlertMessages`, `OgeAlertSeverity`, `OgeAlertStylingMode`, `OgeAppBarCenterAlign`, `OgeAppBarColor`, `OgeAppBarConfig`, `OgeAppBarConfigInput`, `OgeAppBarLandmark`, `OgeAppBarPosition`, `OgeAppBarPositionMode`, `OgeAppBarSize`, `OgeAvatarConfig`, `OgeAvatarConfigInput`, `OgeAvatarImageFailedEvent`, `OgeAvatarImageLoadedEvent`, `OgeAvatarItem`, `OgeAvatarMessages`, `OgeAvatarShape`, `OgeAvatarSize`, `OgeAvatarStatus`, `OgeBadgeConfig`, `OgeBadgeConfigInput`, `OgeBadgeMessages`, `OgeBadgeOverlap`, `OgeBadgePosition`, `OgeBadgeSeverity`, `OgeBadgeSize`, `OgeBadgeValue`, `OgeBarcodeConfig`, `OgeBarcodeConfigInput`, `OgeBarcodeDecoder`, `OgeBarcodeMessages`, `OgeBarcodeResult`, `OgeBarcodeScannerStatus`, `OgeBarcodeType`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCarouselAutoplayChangedEvent`, `OgeCarouselChangeSource`, `OgeCarouselConfig`, `OgeCarouselConfigInput`, `OgeCarouselIndicators`, `OgeCarouselItem`, `OgeCarouselMessages`, `OgeCarouselPickerMode`, `OgeCarouselSlideChangedEvent`, `OgeCarouselSlideTemplateContext`, `OgeChipAvatar`, `OgeChipConfig`, `OgeChipConfigInput`, `OgeChipItem`, `OgeChipItemClickEvent`, `OgeChipItemRemovedEvent`, `OgeChipItemRemovingEvent`, `OgeChipKey`, `OgeChipMessages`, `OgeChipRemovedEvent`, `OgeChipSelectionChangedEvent`, `OgeChipSelectionMode`, `OgeChipSeverity`, `OgeChipSize`, `OgeChipStylingMode`, `OgeChipTemplateContext`, `OgeDataViewConfig`, `OgeDataViewConfigInput`, `OgeDataViewDisplayExpr`, `OgeDataViewEmptyTemplateContext`, `OgeDataViewItemClickEvent`, `OgeDataViewItemTemplateContext`, `OgeDataViewKey`, `OgeDataViewKeyExpr`, `OgeDataViewLayout`, `OgeDataViewLayoutChangedEvent`, `OgeDataViewMessages`, `OgeDataViewOptionsChangedEvent`, `OgeDataViewPageChangedEvent`, `OgeDataViewSearchExpr`, `OgeDataViewSelectionChangedEvent`, `OgeDataViewSelectionMode`, `OgeDataViewSort`, `OgeDataViewSortChangedEvent`, `OgeDataViewSortDirection`, `OgeDataViewSortOption`, `OgeExpansionPanelCollapsingEvent`, `OgeExpansionPanelExpandingEvent`, `OgeExpansionPanelToggleEvent`, `OgeImageViewerConfig`, `OgeImageViewerConfigInput`, `OgeImageViewerItem`, `OgeImageViewerMessages`, `OgeListViewActionSeverity`, `OgeListViewActiveItemChangedEvent`, `OgeListViewConfig`, `OgeListViewConfigInput`, `OgeListViewEmptyTemplateContext`, `OgeListViewExpr`, `OgeListViewFooterTemplateContext`, `OgeListViewGroupTemplateContext`, `OgeListViewItemAction`, `OgeListViewItemActionClickEvent`, `OgeListViewItemClickEvent`, `OgeListViewItemTemplateContext`, `OgeListViewKey`, `OgeListViewLoadMoreEvent`, `OgeListViewMessages`, `OgeListViewPageLoadMode`, `OgeListViewSearchExpr`, `OgeListViewSearchMode`, `OgeListViewSelectionChangedEvent`, `OgeListViewSelectionMode`, `OgeListViewVirtualScrollOptions`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeLoadPanelPosition`, `OgePanelBarContentTemplateContext`, `OgePanelBarExpandMode`, `OgePanelBarHeaderTemplateContext`, `OgePanelBarItem`, `OgePanelBarItemClickEvent`, `OgePanelBarItemCollapsingEvent`, `OgePanelBarItemExpandingEvent`, `OgePanelBarItemToggleEvent`, `OgePanelBarSelectionChangedEvent`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeProgressBarType`, `OgeQrErrorCorrection`, `OgeSimpleTableAlign`, `OgeSimpleTableColumn`, `OgeSimpleTableConfig`, `OgeSimpleTableConfigInput`, `OgeSimpleTableMessages`, `OgeSimpleTableResolvedColumn`, `OgeSimpleTableRowContext`, `OgeSimpleTableSectionContext`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeTileLayoutChangeSource`, `OgeTileLayoutChangedEvent`, `OgeTileLayoutConfig`, `OgeTileLayoutConfigInput`, `OgeTileLayoutItemData`, `OgeTileLayoutKey`, `OgeTileLayoutMessages`, `OgeTileLayoutReorderedEvent`, `OgeTileLayoutReorderingEvent`, `OgeTileLayoutResizable`, `OgeTileLayoutResizedEvent`, `OgeTileLayoutResizingEvent`, `OgeTileLayoutSpan`, `OgeTileLayoutState`, `OgeTileLayoutTemplateContext`, `OgeTileLayoutTileState`, `OgeTimelineAlign`, `OgeTimelineConfig`, `OgeTimelineConfigInput`, `OgeTimelineItem`, `OgeTimelineItemTemplateContext`, `OgeTimelineMarkerVariant`, `OgeTimelineOrientation`, `OgeTimelineSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 `@oge-ui/layout/*`
 
@@ -1863,6 +1863,106 @@ _provideOgeImageViewerConfig()_
 | `OgeImageViewerConfigInput` | `Partial<OgeImageViewerConfig> with partial messages` | What the provider accepts. |
 | `OgeImageViewerMessages` | `{ label; previous; next; zoomIn; zoomOut; resetZoom; rotateLeft; rotateRight; fullscreen; exitFullscreen; thumbnails; counter; zoomLevel; announce; empty }` | The image viewer catalog. |
 
+### OgeBarcode & OgeBarcodeScanner — `<oge-barcode, oge-barcode-scanner>`
+
+#### Properties
+
+_oge-barcode_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string (required)` | `—` | What the symbol encodes. |
+| `type` | `'qr' \| 'code128' \| 'ean13'` | `'qr'` | `'qr'` (numeric, alphanumeric or UTF-8 byte mode, versions 1–40, the smallest that fits, the lowest-penalty mask), `'code128'` (printable ASCII; set C packs runs of digits two to a symbol) or `'ean13'` (12 digits — the check digit is added — or 13, verified). A value the symbology cannot hold shows the `invalid` message instead of a symbol. |
+| `errorCorrection` | `'L' \| 'M' \| 'Q' \| 'H' \| undefined` | `config ?? 'M'` | QR only: recovers about 7, 15, 25 or 30 % of a damaged symbol; higher levels need a larger symbol. |
+| `scale` | `number` | `4` | Pixels per module. The SVG also shrinks to fit its container. |
+| `barHeight` | `number` | `50` | Bar height of a linear symbol, in modules. |
+| `quietZone` | `boolean` | `true` | The light margin scanners need: 4 modules round a QR code, 10 beside bars. |
+| `showText` | `boolean` | `true` | The human-readable line under a linear symbol. |
+| `color / background` | `string` | `'#000000' / '#ffffff'` | Bar and background colours. Keep them dark on light: scanners need the contrast. |
+| `ariaLabel` | `string \| undefined` | `qrLabel / barcodeLabel message` | Accessible name of the symbol (an `img`). |
+| `messages` | `Partial<OgeBarcodeMessages>` | `—` | Per-instance overrides of the config catalog. |
+
+_oge-barcode-scanner_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `active` | `boolean (model)` | `false` | Two-way: the camera is open and reading. A camera that cannot open sets it back to `false`. |
+| `decoder` | `OgeBarcodeDecoder \| undefined` | `the browser’s BarcodeDetector` | Reading uses the browser’s own `BarcodeDetector` (the Shape Detection API: Chrome and Edge on Android, macOS and ChromeOS, Safari 17+). Elsewhere — Firefox, desktop Chrome on Windows and Linux — pass a `decoder` (a ZXing build, a server call); without one the scanner says it cannot read. A value read again within 1.5 s counts once. |
+| `types` | `readonly OgeBarcodeType[]` | `['qr', 'code128', 'ean13']` | Symbologies the browser’s reader looks for. |
+| `interval` | `number` | `250` | Milliseconds between camera frames read. |
+| `facingMode` | `'environment' \| 'user'` | `'environment'` | The back camera, or the one facing the user. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `toSvg()` | `() => string \| null` | oge-barcode: the symbol as a standalone SVG document (for an `<img>`, a print, an e-mail). |
+| `download(fileName?)` | `(fileName?: string) => void` | oge-barcode: saves the symbol as an SVG file (default `'barcode.svg'`). |
+| `start() / stop()` | `() => void` | oge-barcode-scanner: opens or closes the camera. |
+| `scanImage(image)` | `(image: Blob) => Promise<readonly OgeBarcodeResult[]>` | oge-barcode-scanner: reads a picked or pasted image; every barcode found is also emitted. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `activeChange` | `boolean` | The banana half of `[(active)]`. |
+| `detected` | `OgeBarcodeResult` | `{ value, format }` — `format` as the Shape Detection API names it (`qr_code`, `code_128`, `ean_13`, …). |
+| `statusChange` | `OgeBarcodeScannerStatus` | `'idle'`, `'starting'`, `'scanning'`, `'unsupported'`, `'permission'` (access refused), `'no-camera'` or `'failed'`; a polite status line says the same. |
+
+#### Types
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBarcodeType` | `'qr' \| 'code128' \| 'ean13'` | The symbologies drawn. |
+| `OgeQrErrorCorrection` | `'L' \| 'M' \| 'Q' \| 'H'` | QR error-correction level. |
+| `OgeBarcodeResult` | `{ value: string; format: string }` | One barcode read. |
+| `OgeBarcodeDecoder` | `(source: ImageBitmapSource) => Promise<readonly OgeBarcodeResult[]>` | What the scanner reads frames and images with. |
+| `OgeBarcodeScannerStatus` | `'idle' \| 'starting' \| 'scanning' \| 'unsupported' \| 'permission' \| 'no-camera' \| 'failed'` | Where the scanner stands. |
+
+_Functions (@oge-ui/behavior, re-exported)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeEncodeBarcode` | `(value, type, { errorCorrection? }) => OgeBarcodeSymbol` | Encodes without drawing: a module matrix or a row of bars. Throws `RangeError` for a value that does not fit. |
+| `ogeBarcodeSvg` | `(drawing, { scale?, color?, background?, label? }) => string` | A standalone SVG of a drawing (`ogeBarcodeDrawing` lays a symbol out) — for servers and workers. |
+| `ogeNativeBarcodeDecoder` | `(formats?) => OgeBarcodeDecoder \| null` | The browser’s `BarcodeDetector` as a decoder, or `null` where there is none. |
+
+_Behavior building blocks (@oge-ui/behavior)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeEncodeQr / OgeQrCode / OgeQrOptions` | `(text, { errorCorrection?, minVersion?, mask? }) => OgeQrCode` | The QR encoder: `{ version, size, errorCorrection, mask, mode, modules }`; `minVersion` keeps a series of codes one size. |
+| `ogeEncodeCode128 / ogeEncodeEan13 / ogeEan13CheckDigit / OgeLinearBarcode` | `(text) => { modules, text }` | The linear encoders and the EAN-13 check digit. |
+| `ogeBarcodeDrawing / OgeBarcodeDrawing / OgeBarcodeDrawingOptions / OGE_BARCODE_TEXT_HEIGHT` | `(symbol, { quietZone?, barHeight?, showText? }) => OgeBarcodeDrawing` | A symbol laid out in module units: one path of merged dark runs, and the text line. |
+| `OgeBarcodeScannerCore / OgeBarcodeScannerCoreOptions / OGE_BARCODE_FORMATS` | `class` | The scanner’s framework-free half: camera stream, frame loop, decoder and repeat filter; the Shape Detection API names of the three symbologies. |
+| `OgeBarcodeSymbol / OgeBarcodeEncodeOptions` | `types` | What `ogeEncodeBarcode` takes and returns. |
+
+### Configuration
+
+#### Properties
+
+_provideOgeBarcodeConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeBarcodeMessages` | Every user-facing string: `qrLabel` / `barcodeLabel` (`{value}`, the symbol’s accessible name), `invalid` (`{type}`), `scannerLabel`, `start`, `stop`, `scanImage`, `scanning`, `unsupported`, `permission`, `noCamera`, `failed`, `detected` (`{value}`) and `nothingFound`. Translated in every `@oge-ui/locales` pack (`layout.barcode`). |
+| `errorCorrection` | `'L' \| 'M' \| 'Q' \| 'H' \| undefined` | Default QR error correction. Pass a function for a live config. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeBarcodeConfig` | `(config: OgeBarcodeConfigInput \| (() => OgeBarcodeConfigInput)) => Provider` | Application- or component-scoped defaults; a function makes the config live. |
+| `OGE_BARCODE_CONFIG` | `InjectionToken<OgeBarcodeConfig>` | The resolved config the barcode and the scanner inject. |
+| `OGE_DEFAULT_BARCODE_CONFIG` | `OgeBarcodeConfig` | The defaults (from `@oge-ui/behavior`). |
+| `OGE_DEFAULT_BARCODE_MESSAGES` | `OgeBarcodeMessages` | The English catalog. |
+| `resolveOgeBarcodeConfig` | `(input?, base?) => OgeBarcodeConfig` | Merges a partial config over a base (the defaults). |
+| `OgeBarcodeConfig` | `{ messages: OgeBarcodeMessages; errorCorrection? }` | Resolved config shape. |
+| `OgeBarcodeConfigInput` | `Partial<OgeBarcodeConfig> with partial messages` | What the provider accepts. |
+| `OgeBarcodeMessages` | `{ qrLabel; barcodeLabel; invalid; scannerLabel; start; stop; scanImage; scanning; unsupported; permission; noCamera; failed; detected; nothingFound }` | The barcode catalog. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
@@ -2374,6 +2474,83 @@ import { OgeAvatar } from '@oge-ui/layout';
   `,
 })
 export class Demo {}
+```
+
+### Barcode generate
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeBarcode } from '@oge-ui/layout';
+import type { OgeBarcodeType } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBarcode],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A crisp SVG named by its value; a value the symbology cannot hold
+         shows a message instead. download() saves the symbol as an SVG file. -->
+    <input [value]="value()" (input)="value.set($any($event.target).value)" aria-label="Value" />
+    @for (t of types; track t) {
+      <button type="button" [attr.aria-pressed]="type() === t" (click)="type.set(t)">{{ t }}</button>
+    }
+    <oge-barcode #code [value]="value()" [type]="type()" [scale]="3" />
+    <button type="button" (click)="code.download('barcode.svg')">Download SVG</button>
+  `,
+})
+export class Demo {
+  protected readonly value = signal('https://ogeui.com');
+  protected readonly type = signal<OgeBarcodeType>('qr');
+  protected readonly types: OgeBarcodeType[] = ['qr', 'code128', 'ean13'];
+}
+```
+
+### Barcode print
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBarcode } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBarcode],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A product label: EAN-13 adds its own check digit; the QR code uses
+         the highest error correction, so a scuffed label still reads. -->
+    <oge-barcode type="ean13" value="400638133393" [scale]="2" />
+    <oge-barcode value="SKU-2041 · Lot 7" errorCorrection="H" [scale]="3" />
+    <oge-barcode type="code128" value="SHIP-000123" [barHeight]="30" color="#1e3a8a" />
+  `,
+})
+export class Demo {}
+```
+
+### Barcode scan
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeBarcodeScanner } from '@oge-ui/layout';
+import type { OgeBarcodeResult } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBarcodeScanner],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Start opens the camera; "Scan an image" reads a file. Reading uses the
+         browser's BarcodeDetector — pass [decoder] where there is none. -->
+    <oge-barcode-scanner (detected)="onRead($event)" />
+    <p>{{ last() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly last = signal('Nothing read yet');
+
+  protected onRead(result: OgeBarcodeResult): void {
+    this.last.set(`${result.format}: ${result.value}`);
+  }
+}
 ```
 
 ### Actions

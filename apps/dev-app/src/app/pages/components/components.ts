@@ -1245,6 +1245,11 @@ export class ComponentsIndexPage {
     { family: 'Layout', label: 'Carousel', path: '/components/carousel' },
     {
       family: 'Layout',
+      label: 'Barcode and QR code',
+      path: '/components/barcode',
+    },
+    {
+      family: 'Layout',
       label: 'Image viewer',
       path: '/components/image-viewer',
     },

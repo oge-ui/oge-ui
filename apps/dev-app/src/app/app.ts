@@ -797,6 +797,18 @@ export class App {
       ],
     },
     {
+      title: 'Barcode',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/barcode', label: 'Overview', icon: 'barcode' },
+        {
+          path: '/components/barcode/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Image Viewer',
       group: COMPONENTS_GROUP,
       items: [

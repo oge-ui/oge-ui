@@ -61,6 +61,7 @@ const SLICES = {
   'layout.tileLayout': 'OGE_DEFAULT_TILE_LAYOUT_MESSAGES',
   'layout.listView': 'OGE_DEFAULT_LIST_VIEW_MESSAGES',
   'layout.imageViewer': 'OGE_DEFAULT_IMAGE_VIEWER_MESSAGES',
+  'layout.barcode': 'OGE_DEFAULT_BARCODE_MESSAGES',
   fab: 'OGE_DEFAULT_FAB_MESSAGES',
   'navigation.breadcrumb': 'OGE_DEFAULT_BREADCRUMB_MESSAGES',
   'navigation.drawer': 'OGE_DEFAULT_DRAWER_MESSAGES',
