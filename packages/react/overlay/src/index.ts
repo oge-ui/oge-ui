@@ -32,6 +32,18 @@ export {
   type OgePopoverSlotContext,
 } from './lib/popover';
 export {
+  OgeCommandPalette,
+  type OgeCommandExecuteEvent,
+  type OgeCommandPaletteHandle,
+  type OgeCommandPaletteProps,
+} from './lib/command-palette';
+export {
+  ogeFormatShortcut,
+  ogeFuzzyMatch,
+  ogeMatchesShortcut,
+  type OgeCommand,
+} from '@oge-ui/behavior';
+export {
   OgeActionSheet,
   type OgeActionSheetProps,
   type OgeActionSheetHandle,

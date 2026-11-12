@@ -340,6 +340,12 @@ export const he: OgeLocalePack = {
     popoverClose: 'סגירה',
     actionSheetCancel: 'ביטול',
     actionSheetLabel: 'פעולות',
+    commandPaletteLabel: 'לוח פקודות',
+    commandPalettePlaceholder: 'הקלידו פקודה או חפשו…',
+    commandPaletteEmpty: 'אין פקודות תואמות',
+    commandPaletteRecent: 'אחרונות',
+    commandPaletteResults:
+      '{count, plural, =0 {אין תוצאות} one {תוצאה אחת} two {שתי תוצאות} other {# תוצאות}}',
   },
   tabs: {
     closeTab: 'סגירת הכרטיסייה',

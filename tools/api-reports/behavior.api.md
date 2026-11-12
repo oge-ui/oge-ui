@@ -3498,6 +3498,71 @@ export function ogeComboGridTemplate<TItem>(columns: readonly OgeComboBoxColumnB
 export function ogeComboSearchStrings<TItem>(columns: readonly OgeComboBoxColumnBase<TItem>[], item: TItem, locale?: string): string[];
 
 // @public
+export interface OgeCommand {
+    readonly description?: string;
+    readonly disabled?: boolean;
+    readonly group?: string;
+    readonly icon?: string;
+    readonly id: string;
+    readonly keywords?: readonly string[];
+    readonly label: string;
+    readonly run?: () => void;
+    readonly shortcut?: string;
+}
+
+// @public (undocumented)
+export interface OgeCommandPaletteFilterOptions {
+    readonly limit?: number;
+    readonly recent?: readonly string[];
+}
+
+// @public
+export function ogeCommandPaletteFirstActive(options: readonly OgeCommandPaletteOption[]): number;
+
+// @public (undocumented)
+export type OgeCommandPaletteKeyIntent = {
+    kind: 'move';
+    index: number;
+} | {
+    kind: 'run';
+    index: number;
+};
+
+// @public
+export function ogeCommandPaletteKeyIntent(event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey'>, active: number, options: readonly OgeCommandPaletteOption[], page?: number): OgeCommandPaletteKeyIntent | null;
+
+// @public
+export interface OgeCommandPaletteOption {
+    // (undocumented)
+    readonly command: OgeCommand;
+    // (undocumented)
+    readonly index: number;
+    // (undocumented)
+    readonly score: number;
+    readonly segments: readonly SearchHighlightSegment[];
+}
+
+// @public
+export function ogeCommandPaletteOptions(sections: readonly OgeCommandPaletteSection[]): OgeCommandPaletteOption[];
+
+// @public
+export function ogeCommandPaletteRecent(recent: readonly string[], id: string, limit: number): string[];
+
+// @public
+export interface OgeCommandPaletteSection {
+    // (undocumented)
+    readonly group: string | undefined;
+    // (undocumented)
+    readonly key: string;
+    // (undocumented)
+    readonly options: readonly OgeCommandPaletteOption[];
+    readonly recent: boolean;
+}
+
+// @public
+export function ogeCommandPaletteSections(commands: readonly OgeCommand[], query: string, options?: OgeCommandPaletteFilterOptions): OgeCommandPaletteSection[];
+
+// @public
 export type OgeComparisonType = '===' | '!==' | '==' | '!=' | '<' | '<=' | '>' | '>=';
 
 // @public
@@ -6603,6 +6668,15 @@ export interface OgeFormatFileSizeOptions {
     readonly precision?: number;
 }
 
+// Warning: (ae-forgotten-export) The symbol "OgeMessageValues" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "OgeLocaleInput" needs to be exported by the entry point index.d.ts
+//
+// @public
+export function ogeFormatMessage(template: string, values?: OgeMessageValues, locale?: OgeLocaleInput): string;
+
+// @public
+export function ogeFormatShortcut(shortcut: string, apple?: boolean): string;
+
 // @public
 export function ogeFormatsNeedRange<T>(formats: readonly OgeConditionalFormat<T>[] | undefined): boolean;
 
@@ -6857,6 +6931,20 @@ export function ogeFromPrimeMenuItems(items: readonly OgePrimeMenuItem[]): OgeMe
 //
 // @public
 export function ogeFromWallClock(wall: Date, timeZone?: string, disambiguation?: OgeZoneDisambiguation): Date;
+
+// @public
+export function ogeFuzzyHighlight(text: string, ranges: readonly (readonly [number, number])[]): SearchHighlightSegment[];
+
+// @public
+export interface OgeFuzzyMatch {
+    // (undocumented)
+    readonly ranges: readonly (readonly [number, number])[];
+    // (undocumented)
+    readonly score: number;
+}
+
+// @public
+export function ogeFuzzyMatch(query: string, text: string): OgeFuzzyMatch | null;
 
 // @public
 export interface OgeGridAdaptiveHidingInput {
@@ -9128,6 +9216,9 @@ export type OgeInputSubscriptSizing = 'fixed' | 'dynamic' | 'none';
 export function ogeInsertMention(text: string, query: OgeMentionQuery, caret: number, display: string, insertSpace?: boolean): OgeMentionInsertion;
 
 // @public
+export function ogeIsApplePlatform(): boolean;
+
+// @public
 export function ogeIsDevMode(): boolean;
 
 // @public
@@ -9882,6 +9973,9 @@ export type OgeMaskSlot = {
 };
 
 // @public
+export function ogeMatchesShortcut(event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'shiftKey' | 'altKey'>, shortcut: string, apple?: boolean): boolean;
+
+// @public
 export function ogeMeasureAutoWidth(header: Element | null, cells: Iterable<Element>, caption?: Element | null): number | null;
 
 // @public
@@ -10434,6 +10528,11 @@ export function ogeOverlayMessage(messages: Partial<OgeOverlayMessages> | undefi
 export interface OgeOverlayMessages {
     actionSheetCancel?: string;
     actionSheetLabel?: string;
+    commandPaletteEmpty?: string;
+    commandPaletteLabel?: string;
+    commandPalettePlaceholder?: string;
+    commandPaletteRecent?: string;
+    commandPaletteResults?: string;
     dialogAlertTitle?: string;
     dialogCancel?: string;
     dialogConfirmTitle?: string;
@@ -10794,6 +10893,9 @@ export function ogeParsePageInput(text: string, pageCount: number): number | nul
 //
 // @public
 export function ogeParseSavedViews(raw: string | null, migrations?: readonly OgeStateMigration[]): OgeSavedView[];
+
+// @public
+export function ogeParseShortcut(shortcut: string): OgeShortcut;
 
 // @public
 export interface OgePdfFont {
@@ -11995,6 +12097,22 @@ export function ogeSettleGhost(ghost: HTMLElement, to: OgeRect, timing?: Partial
 
 // @public
 export function ogeShiftMentions<T>(tokens: readonly OgeMentionToken<T>[], previous: string, next: string): OgeMentionToken<T>[];
+
+// @public
+export interface OgeShortcut {
+    // (undocumented)
+    readonly alt: boolean;
+    // (undocumented)
+    readonly ctrl: boolean;
+    // (undocumented)
+    readonly key: string;
+    // (undocumented)
+    readonly meta: boolean;
+    // (undocumented)
+    readonly mod: boolean;
+    // (undocumented)
+    readonly shift: boolean;
+}
 
 // @public
 export function ogeShownMenuItems<I extends OgeMenuItem>(items: readonly I[]): readonly I[];

@@ -636,6 +636,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Action Sheet for Angular and React: a mobile bottom sheet of actions with icons, destructive and disabled rows, swipe-down dismissal, a focus trap and Cancel.',
   ],
   [
+    '/components/overlay/command-palette',
+    'Command palette for Angular and React: Ctrl+K search over every action, fuzzy matching with highlights, groups, recent commands, shortcuts and an APG combobox.',
+  ],
+  [
     '/components/overlay/modal',
     'OGE Modal dialog: confirm, alert and prompt helpers, nine placements, full screen, drag and resize, a modal service, async close guards and typed results.',
   ],

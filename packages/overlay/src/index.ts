@@ -87,6 +87,16 @@ export {
   OgePopoverContent,
   type OgePopoverSlotContext,
 } from './lib/popover/popover-templates';
+export {
+  OgeCommandPalette,
+  type OgeCommandExecuteEvent,
+} from './lib/command-palette/command-palette';
+export {
+  ogeFormatShortcut,
+  ogeFuzzyMatch,
+  ogeMatchesShortcut,
+  type OgeCommand,
+} from '@oge-ui/behavior';
 export { OgeActionSheet } from './lib/action-sheet/action-sheet';
 export {
   OgeActionSheetItemTemplate,

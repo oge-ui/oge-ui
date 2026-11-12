@@ -340,6 +340,11 @@ export const ja: OgeLocalePack = {
     popoverClose: '閉じる',
     actionSheetCancel: 'キャンセル',
     actionSheetLabel: '操作',
+    commandPaletteLabel: 'コマンドパレット',
+    commandPalettePlaceholder: 'コマンドを入力または検索…',
+    commandPaletteEmpty: '一致するコマンドはありません',
+    commandPaletteRecent: '最近使用した項目',
+    commandPaletteResults: '{count, plural, =0 {結果なし} other {# 件の結果}}',
   },
   tabs: {
     closeTab: 'タブを閉じる',

@@ -341,6 +341,12 @@ export const de: OgeLocalePack = {
     popoverClose: 'Schließen',
     actionSheetCancel: 'Abbrechen',
     actionSheetLabel: 'Aktionen',
+    commandPaletteLabel: 'Befehlspalette',
+    commandPalettePlaceholder: 'Befehl eingeben oder suchen…',
+    commandPaletteEmpty: 'Keine passenden Befehle',
+    commandPaletteRecent: 'Zuletzt verwendet',
+    commandPaletteResults:
+      '{count, plural, =0 {Keine Ergebnisse} one {# Ergebnis} other {# Ergebnisse}}',
   },
   tabs: {
     closeTab: 'Registerkarte schließen',

@@ -1,6 +1,6 @@
 # @oge-ui/react-overlay
 
-> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
+> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, a Ctrl+K command palette with fuzzy search, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/overlay
@@ -503,6 +503,61 @@ _Vocabulary_
 | `OgeActionSheetItemClickEvent` | `{ item; index: number; event: Event; keepOpen: boolean }` | Payload of `onItemClick`. |
 | `OgeActionSheetResult` | `OgeActionSheetItem \| null` | What `open()` resolves with. |
 
+### <OgeCommandPalette>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `commands` | `readonly OgeCommand[] (required)` | `—` | The commands, in order. Fields: `id`, `label`, `group?` (the heading it is listed under), `keywords?` (extra words that find it), `description?`, `shortcut?` (shown as a `kbd`, e.g. `Mod+Shift+P`), `icon?` (SVG path data), `disabled?`, `run?` (called on run). |
+| `opened` | `boolean \| undefined` | `false` | Open state (controlled; `defaultOpened` when uncontrolled). Opening clears the query and focuses the search box. |
+| `recent` | `readonly string[] \| undefined` | `[]` | Ids of the recently run commands, newest first, listed in a "Recent" section above an empty query (controlled; `defaultRecent` when uncontrolled) — persist it from `onRecentChange`. |
+| `hotkey` | `string \| null` | `'Mod+K'` | Global shortcut that toggles the palette — `Mod` is ⌘ on Apple platforms and Ctrl elsewhere. `null` turns it off. A keydown another handler already prevented is ignored. |
+| `placeholder` | `string \| undefined` | `commandPalettePlaceholder message` | Placeholder of the search box. |
+| `recentLimit` | `number` | `5` | How many recent commands to keep and list; `0` turns the recent section off. |
+| `maxResults` | `number` | `50` | Upper bound of listed matches for a query (the empty query lists every command). |
+| `messages` | `Partial<OgeOverlayMessages>` | `—` | Per-instance overrides of `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults`. |
+
+#### Methods
+
+_Ref handle (OgeCommandPaletteHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open()` | `() => void` | Opens the palette with an empty query. |
+| `close()` | `() => void` | Closes the palette; focus returns to where it was. |
+| `toggle()` | `() => void` | Opens a closed palette, closes an open one. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onOpenedChange` | `(opened: boolean) => void` | The hotkey, a run, a dismissal or a method changed the open state. |
+| `onRecentChange` | `(recent: readonly string[]) => void` | The recent list after a run. |
+| `onCommandExecute` | `(event: OgeCommandExecuteEvent) => void` | A command was chosen — by Enter or a click — after its own `run`. The palette closes unless the handler sets `keepOpen`. |
+| `onQueryChange` | `(query: string) => void` | The query changed (also when opening or closing clears it). |
+
+#### Types
+
+_Matching & keyboard_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Matching` | `ogeFuzzyMatch` | Accent- and case-insensitive fuzzy matching: the query’s characters in order ("gtst" finds "Go to settings"), a prefix first, then a word start (camelCase counts), then a contiguous hit, then a scattered one; keywords score at 80 % and the description at 60 %. Matches keep their groups, each ordered by its best hit, and the matched characters are wrapped in `<mark>`. |
+| `Keyboard` | `role="combobox" → role="listbox"` | The search box is an APG combobox over a listbox (`aria-activedescendant`): ↑ / ↓ move and wrap, skipping disabled commands; Page Up / Page Down move by eight; Ctrl+Home / Ctrl+End jump (plain Home / End stay with the text); Enter runs; Escape or a backdrop press closes and focus returns to where it was. A polite status announces the result count. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCommand` | `interface` | One command: `id`, `label`, `group?` (the heading it is listed under), `keywords?` (extra words that find it), `description?`, `shortcut?` (shown as a `kbd`, e.g. `Mod+Shift+P`), `icon?` (SVG path data), `disabled?`, `run?` (called on run). |
+| `OgeCommandExecuteEvent` | `{ command: OgeCommand; keepOpen: boolean }` | Payload of `onCommandExecute`. |
+| `OgeCommandPaletteProps` | `interface` | The props above. |
+| `OgeCommandPaletteHandle` | `{ open(); close(); toggle() }` | What a `ref` reaches. |
+| `ogeFuzzyMatch` | `(query, text) => OgeFuzzyMatch \| null` | The matcher on its own: `{ score, ranges }` with `[start, end)` ranges in the source text, or `null`. |
+| `ogeMatchesShortcut` | `(event, shortcut, apple?) => boolean` | Whether a keydown is a shortcut such as `Mod+K` — for wiring the commands’ own shortcuts. |
+| `ogeFormatShortcut` | `(shortcut, apple?) => string` | A shortcut for display: `⇧⌘P` on Apple platforms, `Ctrl+Shift+P` elsewhere. |
+
 ### <OgeTooltip>
 
 #### Properties
@@ -769,7 +824,7 @@ _OgeOverlayConfig_
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn='hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
 | `toastStacked` | `boolean` | `false` | Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason `'swipe'`). The moves glide on transforms; reduced motion switches at once. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover and the action sheet: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose` and the action sheet’s `actionSheetCancel` / `actionSheetLabel` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`) (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
 ### Overlay primitives
@@ -965,6 +1020,103 @@ export function ActionSheetPromiseDemo() {
         onClosing={(e) => (e.cancel = lock && e.reason === 'backdrop')}
       />
       <p>{result}</p>
+    </>
+  );
+}
+```
+
+### Basics
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeCommandPalette } from '@oge-ui/react-overlay';
+import type { OgeCommand, OgeCommandPaletteHandle } from '@oge-ui/react-overlay';
+
+const commands: OgeCommand[] = [
+  { id: 'new-invoice', label: 'New invoice', group: 'Create', shortcut: 'Mod+Alt+N' },
+  { id: 'new-customer', label: 'New customer', group: 'Create', keywords: ['client'] },
+  { id: 'go-dashboard', label: 'Go to dashboard', group: 'Navigate', keywords: ['home'] },
+  {
+    id: 'go-reports',
+    label: 'Go to reports',
+    group: 'Navigate',
+    description: 'Sales, stock and cash flow',
+  },
+  {
+    id: 'go-settings',
+    label: 'Go to settings',
+    group: 'Navigate',
+    keywords: ['preferences'],
+    shortcut: 'Mod+,',
+  },
+  { id: 'toggle-theme', label: 'Toggle dark theme', group: 'Preferences' },
+  { id: 'export-pdf', label: 'Export as PDF', group: 'Preferences', disabled: true },
+];
+
+export function CommandPaletteBasicsDemo() {
+  const palette = useRef<OgeCommandPaletteHandle>(null);
+  const [last, setLast] = useState('Nothing run yet');
+  return (
+    <>
+      <button type="button" onClick={() => palette.current?.open()}>
+        Open the palette
+      </button>
+      <OgeCommandPalette
+        ref={palette}
+        commands={commands}
+        hotkey="Mod+/"
+        onCommandExecute={(e) => setLast(`Ran "${e.command.label}"`)}
+      />
+      <p>{last}</p>
+    </>
+  );
+}
+```
+
+### Recent commands & keepOpen
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeCommandPalette } from '@oge-ui/react-overlay';
+import type { OgeCommand, OgeCommandExecuteEvent, OgeCommandPaletteHandle } from '@oge-ui/react-overlay';
+
+const counterCommands: OgeCommand[] = [
+  { id: 'increment', label: 'Increment', description: 'Keeps the palette open' },
+  { id: 'decrement', label: 'Decrement', description: 'Keeps the palette open' },
+  { id: 'reset', label: 'Reset the counter' },
+];
+
+export function CommandPaletteRecentDemo() {
+  const palette = useRef<OgeCommandPaletteHandle>(null);
+  const [count, setCount] = useState(0);
+  const [recent, setRecent] = useState<readonly string[]>([]);
+  const run = (event: OgeCommandExecuteEvent) => {
+    const id = event.command.id;
+    setCount((n) => (id === 'reset' ? 0 : n + (id === 'increment' ? 1 : -1)));
+    event.keepOpen = id !== 'reset';
+  };
+  return (
+    <>
+      <button type="button" onClick={() => palette.current?.open()}>
+        Open with recent commands
+      </button>
+      <OgeCommandPalette
+        ref={palette}
+        commands={counterCommands}
+        recent={recent}
+        onRecentChange={setRecent}
+        recentLimit={3}
+        hotkey={null}
+        placeholder="Search counter commands…"
+        onCommandExecute={run}
+      />
+      <p>
+        Count: {count} · recent: {recent.join(', ') || 'none'}
+      </p>
     </>
   );
 }

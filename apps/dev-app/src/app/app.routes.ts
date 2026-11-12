@@ -1223,6 +1223,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Action Sheet',
       },
       {
+        path: 'command-palette',
+        loadComponent: () =>
+          import('./pages/overlay/command-palette').then(
+            (m) => m.OverlayCommandPalettePage,
+          ),
+        title: 'OGE — Command Palette',
+      },
+      {
         path: 'modal',
         loadComponent: () =>
           import('./pages/overlay/modal').then((m) => m.OverlayModalPage),

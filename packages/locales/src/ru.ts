@@ -345,6 +345,12 @@ export const ru: OgeLocalePack = {
     popoverClose: 'Закрыть',
     actionSheetCancel: 'Отмена',
     actionSheetLabel: 'Действия',
+    commandPaletteLabel: 'Палитра команд',
+    commandPalettePlaceholder: 'Введите команду или найдите…',
+    commandPaletteEmpty: 'Нет подходящих команд',
+    commandPaletteRecent: 'Недавние',
+    commandPaletteResults:
+      '{count, plural, =0 {Нет результатов} one {# результат} few {# результата} many {# результатов} other {# результата}}',
   },
   tabs: {
     closeTab: 'Закрыть вкладку',

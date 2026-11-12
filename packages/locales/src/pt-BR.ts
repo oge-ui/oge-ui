@@ -343,6 +343,12 @@ export const ptBR: OgeLocalePack = {
     popoverClose: 'Fechar',
     actionSheetCancel: 'Cancelar',
     actionSheetLabel: 'Ações',
+    commandPaletteLabel: 'Paleta de comandos',
+    commandPalettePlaceholder: 'Digite um comando ou pesquise…',
+    commandPaletteEmpty: 'Nenhum comando correspondente',
+    commandPaletteRecent: 'Recentes',
+    commandPaletteResults:
+      '{count, plural, =0 {Nenhum resultado} one {# resultado} other {# resultados}}',
   },
   tabs: {
     closeTab: 'Fechar guia',

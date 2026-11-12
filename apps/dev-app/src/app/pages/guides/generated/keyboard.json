@@ -28,6 +28,23 @@
       ]
     },
     {
+      "family": "OgeCommandPalette",
+      "npm": "@oge-ui/overlay",
+      "title": "Matching & keyboard",
+      "rows": [
+        [
+          "Matching",
+          "ogeFuzzyMatch",
+          "Accent- and case-insensitive fuzzy matching: the query’s characters in order (\"gtst\" finds \"Go to settings\"), a prefix first, then a word start (camelCase counts), then a contiguous hit, then a scattered one; keywords score at 80 % and the description at 60 %. Matches keep their groups, each ordered by its best hit, and the matched characters are wrapped in `<mark>`."
+        ],
+        [
+          "Keyboard",
+          "role=\"combobox\" → role=\"listbox\"",
+          "The search box is an APG combobox over a listbox (`aria-activedescendant`): ↑ / ↓ move and wrap, skipping disabled commands; Page Up / Page Down move by eight; Ctrl+Home / Ctrl+End jump (plain Home / End stay with the text); Enter runs; Escape or a backdrop press closes and focus returns to where it was. A polite status announces the result count."
+        ]
+      ]
+    },
+    {
       "family": "OgePanelBar",
       "npm": "@oge-ui/layout",
       "title": "Keyboard & accessibility",

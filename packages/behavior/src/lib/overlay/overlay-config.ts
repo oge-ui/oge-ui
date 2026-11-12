@@ -56,6 +56,16 @@ export interface OgeOverlayMessages {
   actionSheetCancel?: string;
   /** Accessible name of an action sheet opened without a `title`. */
   actionSheetLabel?: string;
+  /** Accessible name of the command palette dialog and its list. */
+  commandPaletteLabel?: string;
+  /** Placeholder of the command palette's search box. */
+  commandPalettePlaceholder?: string;
+  /** Shown when no command matches the query. */
+  commandPaletteEmpty?: string;
+  /** Heading of the recently run commands above an empty query. */
+  commandPaletteRecent?: string;
+  /** Announced as the list changes; ICU plural over `{count}`. */
+  commandPaletteResults?: string;
 }
 
 export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
@@ -78,6 +88,12 @@ export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
   popoverClose: 'Close',
   actionSheetCancel: 'Cancel',
   actionSheetLabel: 'Actions',
+  commandPaletteLabel: 'Command palette',
+  commandPalettePlaceholder: 'Type a command or search…',
+  commandPaletteEmpty: 'No matching commands',
+  commandPaletteRecent: 'Recent',
+  commandPaletteResults:
+    '{count, plural, =0 {No results} one {# result} other {# results}}',
 };
 
 /**

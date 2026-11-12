@@ -1221,6 +1221,11 @@ export class App {
           icon: 'list',
         },
         {
+          path: '/components/overlay/command-palette',
+          label: 'Command Palette',
+          icon: 'search',
+        },
+        {
           path: '/components/overlay/modal',
           label: 'Modal',
           icon: 'layout',

@@ -332,6 +332,11 @@ export const zhCN: OgeLocalePack = {
     popoverClose: '关闭',
     actionSheetCancel: '取消',
     actionSheetLabel: '操作',
+    commandPaletteLabel: '命令面板',
+    commandPalettePlaceholder: '输入命令或搜索…',
+    commandPaletteEmpty: '没有匹配的命令',
+    commandPaletteRecent: '最近使用',
+    commandPaletteResults: '{count, plural, =0 {无结果} other {# 个结果}}',
   },
   tabs: {
     closeTab: '关闭选项卡',

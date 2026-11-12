@@ -334,6 +334,12 @@ export const tr: OgeLocalePack = {
     popoverClose: 'Kapat',
     actionSheetCancel: 'İptal',
     actionSheetLabel: 'Eylemler',
+    commandPaletteLabel: 'Komut paleti',
+    commandPalettePlaceholder: 'Bir komut yazın veya arayın…',
+    commandPaletteEmpty: 'Eşleşen komut yok',
+    commandPaletteRecent: 'Son kullanılanlar',
+    commandPaletteResults:
+      '{count, plural, =0 {Sonuç yok} one {# sonuç} other {# sonuç}}',
   },
   tabs: {
     closeTab: 'Sekmeyi kapat',

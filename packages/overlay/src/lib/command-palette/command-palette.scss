@@ -1,0 +1,219 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The `<oge-command-palette>` element is only the declaration point; the layer
+// is moved to `document.body` while open.
+.oge-command-palette-host {
+  display: contents;
+}
+
+// --- layer: the backdrop, the panel in the upper third -----------------------
+.oge-command-palette-layer {
+  @include tokens.core-tokens;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--oge-z-modal);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12vh 16px 16px;
+  background: transparent;
+  transition: background-color var(--oge-motion-duration-fast)
+    var(--oge-motion-easing-standard);
+
+  &.oge-command-palette-ready {
+    background: var(--oge-modal-backdrop-bg);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.oge-command-palette {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  max-inline-size: 640px;
+  max-block-size: min(480px, 76vh);
+  overflow: hidden;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  box-shadow: var(--oge-shadow-popup);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  line-height: 1.45;
+  opacity: 0;
+  scale: 0.98;
+  transition:
+    opacity var(--oge-motion-duration-fast) var(--oge-motion-easing-standard),
+    scale var(--oge-motion-duration-fast) var(--oge-motion-easing-emphasized);
+
+  .oge-command-palette-ready & {
+    opacity: 1;
+    scale: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    scale: 1;
+  }
+}
+
+.oge-command-palette-search {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-command-palette-search-icon,
+.oge-command-palette-icon {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oge-command-palette-search-icon {
+  color: var(--oge-muted-color);
+}
+
+.oge-command-palette-input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  block-size: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1.07em;
+  outline: none;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+  }
+}
+
+.oge-command-palette-list {
+  flex: 1 1 auto;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  @include tokens.scrollbar;
+}
+
+.oge-command-palette-group + .oge-command-palette-group {
+  margin-block-start: 6px;
+}
+
+.oge-command-palette-group-label {
+  padding: 6px 10px 4px;
+  color: var(--oge-muted-color);
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.oge-command-palette-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 40px;
+  padding: 6px 10px;
+  border-radius: var(--oge-radius);
+  cursor: pointer;
+  user-select: none;
+
+  &.oge-command-palette-option-active {
+    background: var(--oge-row-hover-bg);
+    box-shadow: inset 2px 0 0 var(--oge-accent);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+.oge-command-palette-icon {
+  color: var(--oge-muted-color);
+
+  .oge-command-palette-option-active & {
+    color: var(--oge-accent);
+  }
+}
+
+.oge-command-palette-text {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+.oge-command-palette-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-command-palette-match {
+  padding: 0;
+  background: transparent;
+  color: var(--oge-accent);
+  font-weight: 600;
+}
+
+.oge-command-palette-description {
+  overflow: hidden;
+  color: var(--oge-muted-color);
+  font-size: 0.9em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-command-palette-shortcut {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-header-bg);
+  color: var(--oge-muted-color);
+  font-family: inherit;
+  font-size: 0.8em;
+}
+
+.oge-command-palette-empty {
+  padding: 24px 12px;
+  color: var(--oge-muted-color);
+  text-align: center;
+}
+
+.oge-command-palette-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .oge-command-palette-option.oge-command-palette-option-active {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .oge-command-palette-match {
+    color: Highlight;
+  }
+}

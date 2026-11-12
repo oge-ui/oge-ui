@@ -1176,6 +1176,26 @@ export {
   type OgeActionSheetSwipeOptions,
 } from './lib/overlay/action-sheet-core';
 export {
+  ogeCommandPaletteFirstActive,
+  ogeCommandPaletteKeyIntent,
+  ogeCommandPaletteOptions,
+  ogeCommandPaletteRecent,
+  ogeCommandPaletteSections,
+  ogeFormatShortcut,
+  ogeFuzzyHighlight,
+  ogeFuzzyMatch,
+  ogeIsApplePlatform,
+  ogeMatchesShortcut,
+  ogeParseShortcut,
+  type OgeCommand,
+  type OgeCommandPaletteFilterOptions,
+  type OgeCommandPaletteKeyIntent,
+  type OgeCommandPaletteOption,
+  type OgeCommandPaletteSection,
+  type OgeFuzzyMatch,
+  type OgeShortcut,
+} from './lib/overlay/command-palette-core';
+export {
   ogeContextMenuApiTarget,
   ogeContextMenuPoint,
   ogeContextMenuTarget,
@@ -2312,6 +2332,9 @@ export {
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core
 export { ogeLiveConfig } from '@oge-ui/core';
+// the ICU message formatter — re-exported so the render layers format their
+// catalogs without a direct @oge-ui/core dependency
+export { ogeFormatMessage } from '@oge-ui/core';
 // wall-clock conversions for the zoned date editors (`timeZone`)
 export { ogeFromWallClock, ogeToWallClock } from '@oge-ui/core';
 export { foldText } from '@oge-ui/core';

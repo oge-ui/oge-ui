@@ -341,6 +341,12 @@ export const ar: OgeLocalePack = {
     popoverClose: 'إغلاق',
     actionSheetCancel: 'إلغاء',
     actionSheetLabel: 'الإجراءات',
+    commandPaletteLabel: 'لوحة الأوامر',
+    commandPalettePlaceholder: 'اكتب أمرًا أو ابحث…',
+    commandPaletteEmpty: 'لا توجد أوامر مطابقة',
+    commandPaletteRecent: 'الأخيرة',
+    commandPaletteResults:
+      '{count, plural, zero {لا نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}',
   },
   tabs: {
     closeTab: 'إغلاق علامة التبويب',

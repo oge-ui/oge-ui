@@ -1254,6 +1254,11 @@ export class ComponentsIndexPage {
       path: '/components/overlay/action-sheet',
     },
     {
+      family: 'Overlay',
+      label: 'Command palette',
+      path: '/components/overlay/command-palette',
+    },
+    {
       family: 'Buttons',
       label: 'FAB & speed dial',
       path: '/components/buttons/fab',

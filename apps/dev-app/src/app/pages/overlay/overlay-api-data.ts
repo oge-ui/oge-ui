@@ -585,7 +585,7 @@ export const OGE_OVERLAY_CONFIG_API: ApiSections = {
           name: 'messages',
           type: 'OgeOverlayMessages',
           description:
-            'User-facing strings of the modal header buttons, the toast chrome, the popover and the action sheet: <code>modalClose</code>, <code>modalMaximize</code>, <code>modalRestore</code>, <code>toastClose</code>, <code>toastRegionLabel</code>, <code>toastCountBadge</code>, <code>popoverClose</code> and the action sheet’s <code>actionSheetCancel</code> / <code>actionSheetLabel</code> (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them).',
+            'User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: <code>modalClose</code>, <code>modalMaximize</code>, <code>modalRestore</code>, <code>toastClose</code>, <code>toastRegionLabel</code>, <code>toastCountBadge</code>, <code>popoverClose</code>, the action sheet’s <code>actionSheetCancel</code> / <code>actionSheetLabel</code> and the palette’s <code>commandPaletteLabel</code>, <code>commandPalettePlaceholder</code>, <code>commandPaletteEmpty</code>, <code>commandPaletteRecent</code> and <code>commandPaletteResults</code> (an ICU plural over <code>{count}</code>) (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them).',
         },
         {
           name: 'messages — dialog helpers & window',

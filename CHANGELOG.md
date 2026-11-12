@@ -7,6 +7,24 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Command palette — `@oge-ui/overlay`, `@oge-ui/react-overlay`
+
+- New `oge-command-palette` / `<OgeCommandPalette>`: a modal search box over
+  every action of an app, toggled by a global hotkey (`Mod+K` by default —
+  ⌘K on Apple platforms, Ctrl+K elsewhere) or from code.
+  - Fuzzy matching, accent- and case-insensitive: prefixes and word starts
+    first, then contiguous and scattered hits; keywords and descriptions find
+    commands too. Matches keep their groups and are highlighted.
+  - Recent commands above an empty query (`recent` is two-way, so it can be
+    persisted), shortcuts shown as `kbd`, icons, disabled commands, and
+    `keepOpen` for repeatable commands.
+  - An APG combobox over a listbox inside the shared modal shell (focus trap,
+    scroll lock, Escape, backdrop, focus restore), with a polite result
+    count.
+- The matcher and helpers are in `@oge-ui/behavior` (`ogeFuzzyMatch`,
+  `ogeCommandPaletteSections`, `ogeMatchesShortcut`, `ogeFormatShortcut`, …);
+  five new overlay messages are translated in every `@oge-ui/locales` pack.
+
 ### Image viewer — `@oge-ui/layout/image-viewer`, `@oge-ui/react-layout`
 
 - New `oge-image-viewer` / `<OgeImageViewer>`: a gallery with a toolbar,

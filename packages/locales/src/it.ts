@@ -343,6 +343,12 @@ export const it: OgeLocalePack = {
     popoverClose: 'Chiudi',
     actionSheetCancel: 'Annulla',
     actionSheetLabel: 'Azioni',
+    commandPaletteLabel: 'Tavolozza dei comandi',
+    commandPalettePlaceholder: 'Digita un comando o cerca…',
+    commandPaletteEmpty: 'Nessun comando corrispondente',
+    commandPaletteRecent: 'Recenti',
+    commandPaletteResults:
+      '{count, plural, =0 {Nessun risultato} one {# risultato} other {# risultati}}',
   },
   tabs: {
     closeTab: 'Chiudi scheda',
