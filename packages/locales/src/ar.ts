@@ -1909,6 +1909,7 @@ export const ar: OgeLocalePack = {
     sheetAnnouncement: 'الورقة {name}، {index} من {total}',
     notePopupLabel: 'ملاحظة',
     chartListLabel: 'المخططات في هذه الورقة',
+    shapeListLabel: 'الأشكال في هذه الورقة',
     macrosNotice:
       'يحتوي هذا المصنف على وحدات ماكرو. يُحتفظ بها ولا تُشغَّل أبدًا.',
     statusBarLabel: 'شريط المعلومات',

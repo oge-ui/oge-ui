@@ -365,6 +365,42 @@ describe('OgeSpreadsheetCore — frame, media and browser work', () => {
     expect(c.chartView(c.charts()[0] ?? first)).not.toBe(view);
   });
 
+  it("draws the active sheet's shapes in the frame — once each, scaled to their boxes — and names them for assistive tech", async () => {
+    const { c, panes } = setup(null);
+    await c.open(
+      new Uint8Array(
+        readFileSync(resolve(__dirname, '../../../testing/corpus/shapes.xlsx')),
+      ),
+    );
+    const placed = c.shapes();
+    expect(placed).toHaveLength(15);
+    const start = placed.find((p) => p.shape.name === 'Start');
+    if (!start) throw new Error('no shape');
+    const view = c.shapeView(start.shape);
+    expect(c.shapeView(start.shape)).toBe(view);
+    expect(view.nodes.some((n) => n.kind === 'text')).toBe(true);
+    const shown = c.gridView(panes())?.render.flatMap((p) => p.shapes) ?? [];
+    expect(shown.length).toBe(15);
+    const first = shown.find((s) => s.key.endsWith(':Start'));
+    // drawn in points, scaled onto the box's pixels; stacked in drawing order
+    expect(first?.scale).toBe('scale(1.3333 1.3333)');
+    expect(first?.frame['zIndex']).toBe('0');
+    expect(first?.label).toBe('Order received');
+    // a vertical connector has no width: its point scale comes from the zoom
+    const line = shown.find((s) => s.key.endsWith(':StartToLogin'));
+    expect(line?.frame['width']).toBe('1px');
+    expect(line?.scale).toMatch(/^scale\(1\.3333 /);
+    expect(c.shapeLabels()).toContain('In stock?');
+    expect(c.shapeLabels()).not.toContain('');
+    c.setZoom(200);
+    const zoomed = c.gridView(panes())?.render.flatMap((p) => p.shapes) ?? [];
+    expect(zoomed.find((s) => s.key.endsWith(':Start'))?.scale).toBe(
+      'scale(2.6667 2.6667)',
+    );
+    // the same drawing, rescaled: nothing is drawn again
+    expect(c.shapeView(start.shape)).toBe(view);
+  });
+
   it('leaves hidden and empty charts out, and draws in the theme’s body font', () => {
     const workbook = createOgeWorkbook();
     workbook.themeFonts = { minor: 'Aptos' };

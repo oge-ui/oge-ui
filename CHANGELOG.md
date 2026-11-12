@@ -7,6 +7,27 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Spreadsheet shapes — `@oge-ui/spreadsheet`, `@oge-ui/react-spreadsheet`, `@oge-ui/spreadsheet-engine`
+
+- Shapes, connectors, groups and text boxes now draw over the cells — a
+  sheet built as a flowchart or a diagram previews as Excel shows it. Before,
+  they were kept for saving and reported as `drawing-not-shown`.
+  - The workbook's drawings are read with the presentation reader's DrawingML
+    support (theme fills and lines, gradients, patterns, shadows, text with
+    its wrapping and alignment, rotation and flips), the workbook theme standing
+    in for a slide master.
+  - Pictures, charts and shapes keep the drawing's stacking order.
+  - A hidden list reads each shape's alt text, or its text, to assistive tech
+    (`shapeListLabel`, translated in every `@oge-ui/locales` pack).
+- Arrowheads (`headEnd` / `tailEnd`: triangle, stealth, diamond, oval, open),
+  for slides too.
+- Eighteen more flowchart presets (document, multidocument, manual input,
+  punched card and tape, summing junction, or, collate, sort, extract, merge,
+  stored data, delay, sequential, direct-access and magnetic-disk storage,
+  internal storage, display) and the `bentConnector4/5` and `curvedConnector2`
+  connectors, checked against Excel's own picture of them.
+- Fix: a quarter-turned connector's box is the turned one its anchor spans.
+
 ### Tour — `@oge-ui/overlay`, `@oge-ui/react-overlay`
 
 - New `oge-tour` / `<OgeTour>`: a guided tour, one card per step.

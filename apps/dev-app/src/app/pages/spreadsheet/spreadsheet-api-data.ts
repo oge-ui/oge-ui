@@ -62,7 +62,7 @@ export const SPREADSHEET_TYPE_BLOCKS: NonNullable<ApiSections['types']> = [
         name: 'OgeImportIssueCode',
         type: 'string union',
         description:
-          "What the reader reports, e.g. <code>'macros-kept'</code> (a <code>vbaProject.bin</code> is kept and never run — the viewer shows a message bar), <code>'drawing-not-shown'</code> (shapes and chart sheets, kept for saving), <code>'chart-type-not-shown'</code> (radar, stock, surface, pie-of-pie and Excel 2016 charts, kept for saving), <code>'table-style-not-shown'</code> (a table style neither the workbook nor Excel defines), <code>'uncalculated-formulas'</code>, <code>'external-link'</code> (kept, never fetched), <code>'truncated'</code>, <code>'strict-conformance'</code>.",
+          "What the reader reports, e.g. <code>'macros-kept'</code> (a <code>vbaProject.bin</code> is kept and never run — the viewer shows a message bar), <code>'drawing-not-shown'</code> (chart sheets, form controls, linked pictures and the rare preset geometry or fill the shape renderer does not draw, kept for saving), <code>'chart-type-not-shown'</code> (radar, stock, surface, pie-of-pie and Excel 2016 charts, kept for saving), <code>'table-style-not-shown'</code> (a table style neither the workbook nor Excel defines), <code>'uncalculated-formulas'</code>, <code>'external-link'</code> (kept, never fetched), <code>'truncated'</code>, <code>'strict-conformance'</code>.",
       },
       {
         name: 'OgeSheetChart',

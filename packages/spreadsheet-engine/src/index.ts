@@ -163,6 +163,7 @@ export type {
   OgePageSetup,
   OgePicture,
   OgePictureAnchor,
+  OgeSheetShape,
   OgePictureCorner,
   OgeSheetPassthrough,
   OgeSheetProtection,
@@ -336,12 +337,28 @@ export {
   ogeAnchorBox,
   ogePlaceCharts,
   ogePlacePictures,
+  ogePlaceShapes,
+  ogeShapeLabel,
   type OgePaintBox,
   type OgePaintChart,
   type OgePaintPicture,
+  type OgePaintShape,
 } from './lib/paint/pictures';
 
 export { ogeCreateCanvasMeasurer } from './lib/paint/canvas-measurer';
+
+// a sheet's shapes are drawn with the slide renderer: the render layers bind its nodes
+export type {
+  OgeSlidePaint,
+  OgeSlideRender,
+  OgeSlideRenderGradient,
+  OgeSlideRenderImage,
+  OgeSlideRenderNode,
+  OgeSlideRenderPath,
+  OgeSlideRenderPattern,
+  OgeSlideRenderText,
+} from './lib/powerpoint/render';
+export type { OgeSlideElement, OgeSlideLineEnd } from './lib/powerpoint/model';
 
 export {
   ogeZoomFont,
@@ -485,6 +502,7 @@ export {
   ogeNoteBoxes,
   ogePaneCharts,
   ogePanePictures,
+  ogePaneShapes,
   ogePaneStyle,
   ogePointerCell,
   ogePointerSheetPoint,
@@ -506,6 +524,7 @@ export {
   type OgeNoteRun,
   type OgePaneChart,
   type OgePanePicture,
+  type OgePaneShape,
   type OgeScrollPosition,
 } from './lib/view/grid-view';
 

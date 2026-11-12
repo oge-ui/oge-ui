@@ -1,6 +1,7 @@
 // @oge-ui/spreadsheet-engine/powerpoint — the pptx reader and presentation
 // model (ADR 0006). A separate entry so spreadsheet-only applications never
-// load it. Explicit named exports only (house rule).
+// load the presentation reader itself (a sheet's shapes share its DrawingML
+// shape reading and drawing). Explicit named exports only (house rule).
 
 export {
   OGE_EMU_PER_POINT,
@@ -33,6 +34,7 @@ export {
 } from './lib/powerpoint/viewer-core';
 
 export {
+  ogeRenderDrawing,
   ogeRenderSlide,
   ogeSlideFontFamily,
   type OgeSlidePaint,
@@ -42,6 +44,7 @@ export {
   type OgeSlideRenderNode,
   type OgeSlideRenderOptions,
   type OgeSlideRenderPath,
+  type OgeSlideRenderPattern,
   type OgeSlideRenderText,
 } from './lib/powerpoint/render';
 
@@ -63,6 +66,7 @@ export type {
   OgeSlideFrame,
   OgeSlideGradientStop,
   OgeSlideLine,
+  OgeSlideLineEnd,
   OgeSlideParagraph,
   OgeSlidePicture,
   OgeSlidePictureRef,

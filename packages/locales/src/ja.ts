@@ -1891,6 +1891,7 @@ export const ja: OgeLocalePack = {
     sheetAnnouncement: 'シート {name}、{total} 枚中 {index} 枚目',
     notePopupLabel: 'メモ',
     chartListLabel: 'このシートのグラフ',
+    shapeListLabel: 'このシートの図形',
     macrosNotice:
       'このブックにはマクロが含まれています。マクロは保持されますが、実行されることはありません。',
     statusBarLabel: 'ステータス バー',

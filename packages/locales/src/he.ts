@@ -1901,6 +1901,7 @@ export const he: OgeLocalePack = {
     sheetAnnouncement: 'גיליון {name}, {index} מתוך {total}',
     notePopupLabel: 'הערה',
     chartListLabel: 'תרשימים בגיליון זה',
+    shapeListLabel: 'צורות בגיליון זה',
     macrosNotice:
       'חוברת עבודה זו מכילה פקודות מאקרו. הן נשמרות ולעולם אינן מופעלות.',
     statusBarLabel: 'שורת המצב',

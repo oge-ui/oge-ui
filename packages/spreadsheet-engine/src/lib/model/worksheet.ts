@@ -37,6 +37,7 @@ import type {
   OgeNote,
   OgePageSetup,
   OgePicture,
+  OgeSheetShape,
   OgeSheetPassthrough,
   OgeSheetProtection,
 } from './sheet-features';
@@ -247,6 +248,8 @@ export class OgeWorksheet {
   passthrough: OgeSheetPassthrough[] = [];
   /** Pictures over the sheet, in drawing order (read from its drawing part). */
   pictures: OgePicture[] = [];
+  /** Shapes, connectors, groups and text boxes over the sheet, in drawing order (the drawing part stays opaque). */
+  shapes: OgeSheetShape[] = [];
   /** Charts over the sheet (the drawing part stays opaque). */
   charts: OgeSheetChart[] = [];
   /** Excel tables on the sheet (their parts stay opaque). */

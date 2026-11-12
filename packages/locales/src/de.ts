@@ -1926,6 +1926,7 @@ export const de: OgeLocalePack = {
     sheetAnnouncement: 'Blatt {name}, {index} von {total}',
     notePopupLabel: 'Notiz',
     chartListLabel: 'Diagramme auf diesem Blatt',
+    shapeListLabel: 'Formen auf diesem Blatt',
     macrosNotice:
       'Diese Arbeitsmappe enthält Makros. Sie bleiben erhalten und werden nie ausgeführt.',
     statusBarLabel: 'Statusleiste',

@@ -1213,8 +1213,138 @@ describe('readOgeXlsx — pictures', () => {
       to: { col: 3, row: 4, colOffset: 0, rowOffset: 0 },
     });
     expect(issues.map((i) => [i.code, i.detail])).toEqual([
-      ['drawing-not-shown', '3 shapes or linked pictures'],
+      ['drawing-not-shown', '3 controls, linked pictures or unreadable shapes'],
       ['picture-format-not-shown', '1 EMF/WMF pictures'],
+    ]);
+  });
+});
+
+describe('readOgeXlsx — shapes', () => {
+  const theme =
+    '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:themeElements><a:clrScheme name="x">' +
+    '<a:dk1><a:srgbClr val="000000"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:accent1><a:srgbClr val="4472C4"/></a:accent1>' +
+    '</a:clrScheme><a:fontScheme name="f"><a:majorFont><a:latin typeface="Aptos Display"/></a:majorFont><a:minorFont><a:latin typeface="Aptos"/></a:minorFont></a:fontScheme>' +
+    '<a:fmtScheme name="s"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst>' +
+    '<a:lnStyleLst><a:ln w="6350"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="12700"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst>' +
+    '</a:fmtScheme></a:themeElements></a:theme>';
+  const two = (c1: number, r1: number, c2: number, r2: number, body: string) =>
+    `<xdr:twoCellAnchor><xdr:from><xdr:col>${c1}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>` +
+    `<xdr:to><xdr:col>${c2}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r2}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>${body}<xdr:clientData/></xdr:twoCellAnchor>`;
+  const sp = (name: string, prst: string, x: number, y: number, extra = '') =>
+    `<xdr:sp><xdr:nvSpPr><xdr:cNvPr id="2" name="${name}" descr="${name} alt"/><xdr:cNvSpPr/></xdr:nvSpPr>` +
+    `<xdr:spPr><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="609600" cy="190500"/></a:xfrm><a:prstGeom prst="${prst}"><a:avLst/></a:prstGeom></xdr:spPr>` +
+    `<xdr:style><a:lnRef idx="2"><a:schemeClr val="accent1"/></a:lnRef><a:fillRef idx="1"><a:schemeClr val="accent1"/></a:fillRef><a:effectRef idx="0"><a:schemeClr val="accent1"/></a:effectRef><a:fontRef idx="minor"><a:schemeClr val="lt1"/></a:fontRef></xdr:style>` +
+    `${extra}</xdr:sp>`;
+  const text =
+    '<xdr:txBody><a:bodyPr anchor="ctr"/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="en-US" sz="700"/><a:t>Save the record</a:t></a:r></a:p></xdr:txBody>';
+  const connector =
+    '<xdr:cxnSp macro=""><xdr:nvCxnSpPr><xdr:cNvPr id="9" name="Arrow"/><xdr:cNvCxnSpPr/></xdr:nvCxnSpPr>' +
+    '<xdr:spPr><a:xfrm rot="5400000"><a:off x="0" y="1000000"/><a:ext cx="400000" cy="0"/></a:xfrm><a:prstGeom prst="straightConnector1"><a:avLst/></a:prstGeom>' +
+    '<a:ln w="12700"><a:solidFill><a:srgbClr val="0070C0"/></a:solidFill><a:prstDash val="dash"/><a:headEnd type="diamond"/><a:tailEnd type="triangle" w="lg"/></a:ln></xdr:spPr></xdr:cxnSp>';
+  const group =
+    '<xdr:grpSp><xdr:nvGrpSpPr><xdr:cNvPr id="20" name="Tags"/><xdr:cNvGrpSpPr/></xdr:nvGrpSpPr>' +
+    '<xdr:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1219200" cy="190500"/><a:chOff x="0" y="0"/><a:chExt cx="1219200" cy="190500"/></a:xfrm></xdr:grpSpPr>' +
+    sp('A', 'rect', 0, 0) +
+    sp('B', 'rect', 609600, 0) +
+    '</xdr:grpSp>';
+  const drawing =
+    '<xdr:wsDr xmlns:xdr="d" xmlns:a="a" xmlns:r="r" xmlns:mc="m">' +
+    two(1, 1, 3, 2, sp('Doc', 'flowChartDocument', 0, 0, text)) +
+    two(0, 4, 0, 6, connector) +
+    two(4, 1, 8, 2, group) +
+    two(
+      1,
+      8,
+      3,
+      9,
+      `<mc:AlternateContent><mc:Choice Requires="x">${sp('New', 'rect', 0, 0)}</mc:Choice><mc:Fallback>${sp('Old', 'ellipse', 0, 0)}</mc:Fallback></mc:AlternateContent>`,
+    ) +
+    two(
+      1,
+      10,
+      3,
+      11,
+      '<xdr:sp><xdr:nvSpPr><xdr:cNvPr id="30" name="NoBox"/></xdr:nvSpPr><xdr:spPr/></xdr:sp>',
+    ) +
+    two(1, 12, 3, 13, sp('Odd', 'notAPreset', 0, 0)) +
+    '</xdr:wsDr>';
+  const fixture = (withTheme: boolean): XlsxFixture => ({
+    sheets: [
+      {
+        name: 'S',
+        xml: '<sheetData/><drawing r:id="rId1"/>',
+        rels: [
+          { id: 'rId1', type: 'drawing', target: '../drawings/drawing1.xml' },
+        ],
+      },
+    ],
+    ...(withTheme ? { theme } : {}),
+    extraParts: [
+      {
+        path: 'xl/drawings/drawing1.xml',
+        data: drawing,
+        contentType:
+          'application/vnd.openxmlformats-officedocument.drawing+xml',
+      },
+    ],
+  });
+
+  it('reads shapes, connectors, groups and text boxes with the workbook theme', () => {
+    const { workbook, issues } = read(fixture(true));
+    const shapes = workbook.sheets[0].shapes;
+    expect(shapes.map((s) => [s.name, s.order])).toEqual([
+      ['Doc', 0],
+      ['Arrow', 1],
+      ['Tags', 2],
+      ['Old', 3],
+      ['Odd', 5],
+    ]);
+    const doc = shapes[0];
+    expect(doc.description).toBe('Doc alt');
+    expect(doc.anchor).toMatchObject({
+      kind: 'twoCell',
+      from: { col: 1, row: 1 },
+    });
+    expect([doc.width, doc.height]).toEqual([609600, 190500]);
+    const element = doc.elements[0];
+    expect(element).toMatchObject({
+      kind: 'shape',
+      geometry: 'flowChartDocument',
+      frame: { x: 0, y: 0, width: 609600, height: 190500 },
+      fill: { kind: 'solid', color: { rgb: '4472C4' } },
+      line: { width: 12700, fill: { kind: 'solid', color: { rgb: '4472C4' } } },
+    });
+    expect(
+      element.kind === 'shape' && element.text?.paragraphs[0].runs[0].text,
+    ).toBe('Save the record');
+    // a quarter-turned line is anchored tall: its box is turned with it
+    const arrow = shapes[1];
+    expect([arrow.width, arrow.height]).toEqual([0, 400000]);
+    expect(arrow.elements[0]).toMatchObject({
+      geometry: 'straightConnector1',
+      frame: { x: -200000, y: 200000, width: 400000, height: 0, rotation: 90 },
+      line: {
+        dash: 'dash',
+        head: { type: 'diamond', width: 'med', length: 'med' },
+        tail: { type: 'triangle', width: 'lg', length: 'med' },
+      },
+    });
+    expect(shapes[2].elements.map((e) => [e.name, e.frame.x])).toEqual([
+      ['A', 0],
+      ['B', 609600],
+    ]);
+    // a shape with no box is the only object not shown; an unknown preset is reported
+    expect(issues.map((i) => [i.code, i.detail])).toEqual([
+      ['drawing-not-shown', '1 controls, linked pictures or unreadable shapes'],
+      ['drawing-not-shown', 'preset geometry notAPreset'],
+    ]);
+  });
+
+  it('counts shapes as not shown without a theme to read them with', () => {
+    const { workbook, issues } = read(fixture(false));
+    expect(workbook.sheets[0].shapes).toEqual([]);
+    expect(issues.map((i) => [i.code, i.detail])).toEqual([
+      ['drawing-not-shown', '6 controls, linked pictures or unreadable shapes'],
     ]);
   });
 });
@@ -1405,7 +1535,7 @@ describe('readOgeXlsx — charts', () => {
     expect(charts[1]?.anchor).toMatchObject({ width: 100, height: 50 });
     expect(charts[1]?.description).toBeUndefined();
     expect(anchors.issues.map((i) => [i.code, i.detail])).toEqual([
-      ['drawing-not-shown', '5 shapes or linked pictures'],
+      ['drawing-not-shown', '5 controls, linked pictures or unreadable shapes'],
       ['chart-type-not-shown', 'empty'],
     ]);
   });

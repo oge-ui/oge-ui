@@ -1,9 +1,15 @@
 import { ogeRichText } from '../model/cell';
 import type { OgeChartModel } from '../model/chart';
-import type { OgePicture } from '../model/sheet-features';
+import type { OgePicture, OgeSheetShape } from '../model/sheet-features';
 import { createOgeWorkbook } from '../model/workbook';
 import type { OgeWorksheet } from '../model/worksheet';
-import type { OgePaintChart, OgePaintPicture } from '../paint/pictures';
+import {
+  ogePlaceShapes,
+  ogeShapeLabel,
+  type OgePaintChart,
+  type OgePaintPicture,
+  type OgePaintShape,
+} from '../paint/pictures';
 import { OgeStyleResolver } from '../paint/resolve-style';
 import { OgeSheetLayout } from '../paint/sheet-layout';
 import {
@@ -14,6 +20,7 @@ import {
   ogeOutlineStrips,
   ogePaneCharts,
   ogePanePictures,
+  ogePaneShapes,
   ogePaneStyle,
   ogePointerCell,
   ogeSliderToZoom,
@@ -346,6 +353,121 @@ describe('ogePanePictures', () => {
     expect(
       ogePanePictures([picture(0, 0)], p, { rtl: false, url: () => null }).size,
     ).toBe(0);
+  });
+});
+
+describe('ogePlaceShapes and ogePaneShapes', () => {
+  const view = (width: number, height: number) => ({
+    width,
+    height,
+    gradients: [],
+    patterns: [],
+    nodes: [],
+  });
+  const shape = (
+    extra: Partial<OgeSheetShape> & { from?: { row: number; col: number } },
+    width = 40,
+    height = 30,
+  ): OgeSheetShape => ({
+    anchor: {
+      kind: 'oneCell',
+      from: { row: 0, col: 0, rowOffset: 0, colOffset: 0, ...extra.from },
+      width,
+      height,
+    },
+    width: width * 9525,
+    height: height * 9525,
+    elements: [],
+    ...extra,
+  });
+
+  it('places visible shapes, keeping lines with no width and leaving out empty or hidden ones', () => {
+    const { sheet, layout } = setup((s) => {
+      s.shapes.push(
+        shape({ name: 'Box', order: 2 }),
+        shape({ name: 'Line' }, 0, 30),
+        shape({ name: 'Dot' }, 0, 0),
+        shape({ name: 'Hidden', hidden: true }),
+        shape({ name: 'Back' }, -5, 10),
+      );
+    });
+    expect(ogePlaceShapes(sheet, layout).map((p) => p.shape.name)).toEqual([
+      'Box',
+      'Line',
+    ]);
+    expect(
+      ogeShapeLabel(
+        shape({
+          elements: [
+            {
+              kind: 'picture',
+              name: 'p',
+              frame: {
+                x: 0,
+                y: 0,
+                width: 1,
+                height: 1,
+                rotation: 0,
+                flipH: false,
+                flipV: false,
+              },
+              picture: {
+                media: 'm',
+                crop: { left: 0, top: 0, right: 0, bottom: 0 },
+              },
+              line: null,
+            },
+          ],
+        }),
+      ),
+    ).toBe('');
+    expect(ogeShapeLabel(shape({ description: 'Alt' }))).toBe('Alt');
+  });
+
+  it('puts shapes in the pane of their top-left corner, mirrored in right-to-left panes, scaled in points', () => {
+    const { panes } = setup(frozen);
+    const p = panes();
+    const placed: OgePaintShape[] = [
+      {
+        shape: shape({ name: 'Corner', order: 1 }),
+        x: 10,
+        y: 10,
+        width: 40,
+        height: 30,
+      },
+      { shape: shape({ name: 'Top' }), x: 100, y: 10, width: 40, height: 30 },
+      { shape: shape({ name: 'Left' }), x: 10, y: 100, width: 0, height: 30 },
+      { shape: shape({ name: 'Main' }), x: 100, y: 100, width: 80, height: 0 },
+      {
+        shape: shape({ name: 'Far' }),
+        x: 5000,
+        y: 5000,
+        width: 10,
+        height: 10,
+      },
+    ];
+    const byPane = ogePaneShapes(placed, p, {
+      rtl: true,
+      zoom: 150,
+      view: (s) => view(s.width === 0 ? 0 : 30, s.height === 0 ? 0 : 22.5),
+    });
+    expect([...byPane.keys()]).toEqual(['corner', 'top', 'left', 'main']);
+    expect(byPane.get('corner')?.[0]).toMatchObject({
+      key: '0:Corner',
+      frame: {
+        left: '10px',
+        top: '10px',
+        transform: 'scaleX(-1)',
+        zIndex: '1',
+      },
+      scale: 'scale(1.3333 1.3333)',
+    });
+    // no width: one pixel wide, a point taking 2 px at 150 %
+    expect(byPane.get('left')?.[0]).toMatchObject({
+      frame: { width: '1px' },
+      scale: 'scale(2 1.3333)',
+    });
+    expect(byPane.get('main')?.[0].scale).toBe('scale(2.6667 2)');
   });
 });
 

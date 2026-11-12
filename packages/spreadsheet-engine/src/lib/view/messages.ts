@@ -107,6 +107,8 @@ export interface OgeSpreadsheetMessages {
   readonly notePopupLabel: string;
   /** Accessible name of the list that names the sheet's charts for assistive tech. */
   readonly chartListLabel: string;
+  /** Accessible name of the list that reads out the sheet's shapes and text boxes. */
+  readonly shapeListLabel: string;
   readonly macrosNotice: string;
   /** Accessible name of the status bar. */
   readonly statusBarLabel: string;
@@ -241,6 +243,7 @@ export const OGE_DEFAULT_SPREADSHEET_MESSAGES: OgeSpreadsheetMessages = {
   sheetAnnouncement: 'Sheet {name}, {index} of {total}',
   notePopupLabel: 'Note',
   chartListLabel: 'Charts on this sheet',
+  shapeListLabel: 'Shapes on this sheet',
   macrosNotice: 'This workbook has macros. They are kept and never run.',
   statusBarLabel: 'Status bar',
   statusAverage: 'Average: {value}',

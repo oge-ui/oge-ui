@@ -65,9 +65,16 @@ import { ogePaintWindow, type OgePaintCell } from '../paint/paint-window';
 import {
   ogePlaceCharts,
   ogePlacePictures,
+  ogePlaceShapes,
+  ogeShapeLabel,
   type OgePaintChart,
   type OgePaintPicture,
+  type OgePaintShape,
 } from '../paint/pictures';
+import { ogeCreateSlideCanvasMeasurer } from '../powerpoint/canvas-measurer';
+import { ogeRenderDrawing, type OgeSlideRender } from '../powerpoint/render';
+import type { OgeSlideTextMeasurer } from '../powerpoint/text-layout';
+import type { OgeSheetShape } from '../model/sheet-features';
 import { OgeStyleResolver } from '../paint/resolve-style';
 import {
   OgeSheetLayout,
@@ -99,6 +106,7 @@ import {
   ogeNoteBoxes,
   ogePaneCharts,
   ogePanePictures,
+  ogePaneShapes,
   ogePointerCell,
   ogePointerSheetPoint,
   ogeResizeLine,
@@ -328,6 +336,15 @@ const ZOOM_STEPS = [
 ];
 
 /** The spreadsheet viewer controller. */
+/** Without a canvas: plausible proportions, so a shape's text still lays out. */
+const ESTIMATING_SHAPE_MEASURER: OgeSlideTextMeasurer = {
+  width: (text, font) => text.length * font.size * 0.5,
+  extent: (font) => ({ ascent: font.size * 0.95, descent: font.size * 0.25 }),
+};
+
+/** Gradient and pattern ids stay unique across every spreadsheet on the page. */
+const SHAPE_IDS = { next: 0 };
+
 export class OgeSpreadsheetCore {
   readonly workbook: OgeSpreadsheetReactiveCell<OgeWorkbook | null>;
   readonly issues: OgeSpreadsheetReactiveCell<readonly OgeImportIssue[]>;
@@ -379,6 +396,8 @@ export class OgeSpreadsheetCore {
     OgeSheetChart,
     { readonly key: string; readonly view: OgeSpreadsheetChartView }
   >();
+  private readonly shapeViews = new Map<OgeSheetShape, OgeSlideRender>();
+  private shapeMeasurer: OgeSlideTextMeasurer | null = null;
   private readonly outlines = new Map<
     OgeWorksheet,
     { readonly rows: OgeAxisOutline; readonly columns: OgeAxisOutline }
@@ -512,6 +531,7 @@ export class OgeSpreadsheetCore {
     this.measurer = measurer;
     this.layouts.clear();
     this.chartViews.clear();
+    this.shapeViews.clear();
     this.bump();
   }
 
@@ -637,6 +657,7 @@ export class OgeSpreadsheetCore {
     this.arrays.clear();
     this.outlines.clear();
     this.chartViews.clear();
+    this.shapeViews.clear();
     this.bump();
   }
 
@@ -969,6 +990,43 @@ export class OgeSpreadsheetCore {
       : [];
   }
 
+  /** The active sheet's shapes, connectors, groups and text boxes, placed at the zoom. */
+  shapes(zoom: number = this.zoom()): readonly OgePaintShape[] {
+    const sheet = this.sheet();
+    const layout = this.layout(sheet);
+    return sheet && layout
+      ? ogeZoomPictures(ogePlaceShapes(sheet, layout), layout, zoom)
+      : [];
+  }
+
+  /**
+   * A shape drawn with the slide renderer, in points — made once per shape:
+   * the box and the zoom only scale it.
+   */
+  shapeView(shape: OgeSheetShape): OgeSlideRender {
+    const known = this.shapeViews.get(shape);
+    if (known) return known;
+    this.shapeMeasurer ??=
+      ogeCreateSlideCanvasMeasurer() ?? ESTIMATING_SHAPE_MEASURER;
+    const view = ogeRenderDrawing(
+      shape.elements,
+      shape.width,
+      shape.height,
+      this.shapeMeasurer,
+      { idPrefix: `oge-shape-${SHAPE_IDS.next++}` },
+    );
+    this.shapeViews.set(shape, view);
+    return view;
+  }
+
+  /** What assistive tech hears for each of the active sheet's shapes with text or alt text. */
+  shapeLabels(): readonly string[] {
+    return (this.sheet()?.shapes ?? [])
+      .filter((shape) => !shape.hidden)
+      .map(ogeShapeLabel)
+      .filter((label) => label !== '');
+  }
+
   /** What assistive tech hears for each of the active sheet's charts (`ogeChartLabel`). */
   chartLabels(): readonly string[] {
     return (this.sheet()?.charts ?? [])
@@ -1040,6 +1098,11 @@ export class OgeSpreadsheetCore {
       charts: ogePaneCharts(this.charts(panes.zoom), panes, {
         rtl: sheet.view.rightToLeft,
         view: (placed) => this.chartView(placed, panes.zoom),
+      }),
+      shapes: ogePaneShapes(this.shapes(panes.zoom), panes, {
+        rtl: sheet.view.rightToLeft,
+        zoom: panes.zoom,
+        view: (placed) => this.shapeView(placed.shape),
       }),
       fontFamily: layout.normalFont.family,
     });

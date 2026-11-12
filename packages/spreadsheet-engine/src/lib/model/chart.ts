@@ -238,4 +238,6 @@ export interface OgeSheetChart {
   /** Alternative text (`descr`). */
   readonly description?: string;
   readonly hidden?: boolean;
+  /** Place in the drawing's stacking order (0 = drawn first), across pictures, charts and shapes. */
+  readonly order?: number;
 }

@@ -12,6 +12,7 @@ import {
   ogeSlideGeometryPath,
   ogeSlideGeometryTextInsets,
 } from './geometry';
+import { ogeSlideLineEnds } from './line-ends';
 import { ogeSlideGeometryFaces } from './geometry-more';
 import type {
   OgePresentation,
@@ -463,19 +464,44 @@ export class OgeSlideDrawing {
     if (element.customPaths?.length) {
       this.customShape(element, width, height, fill);
     } else if (fill || element.line) {
+      const outline = ogeSlideGeometryPath(
+        element.geometry,
+        width,
+        height,
+        element.adjust,
+      );
+      // an open outline (a line, a connector) can end in arrowheads
+      const ended =
+        open && element.line
+          ? ogeSlideLineEnds(
+              outline,
+              pt(element.line.width),
+              element.line.head,
+              element.line.tail,
+            )
+          : { d: outline, heads: [] };
+      const stroke = this.strokeOf(element.line);
       this.nodes.push({
         kind: 'path',
-        d: ogeSlideGeometryPath(
-          element.geometry,
-          width,
-          height,
-          element.adjust,
-        ),
+        d: ended.d,
         transform: this.shapeTransform(element.frame),
         fill,
-        ...this.strokeOf(element.line),
+        ...stroke,
         filter: this.filterOf(element.shadow),
       });
+      for (const arrowhead of ended.heads) {
+        this.nodes.push({
+          kind: 'path',
+          d: arrowhead.d,
+          transform: this.shapeTransform(element.frame),
+          fill: arrowhead.filled ? stroke.stroke : null,
+          stroke: arrowhead.filled ? null : stroke.stroke,
+          strokeWidth: arrowhead.filled ? 0 : stroke.strokeWidth,
+          dash: null,
+          cap: stroke.cap,
+          filter: null,
+        });
+      }
       if (fill) {
         for (const face of ogeSlideGeometryFaces(
           element.geometry,
@@ -803,6 +829,28 @@ export function ogeRenderSlide(
   return {
     width,
     height,
+    gradients: renderer.gradients,
+    patterns: renderer.patterns,
+    nodes: renderer.nodes,
+  };
+}
+
+/**
+ * Draws the elements of one spreadsheet drawing object (a shape, a connector,
+ * a group, a text box) — no background — in its `width` × `height` EMU box.
+ */
+export function ogeRenderDrawing(
+  elements: readonly OgeSlideElement[],
+  width: number,
+  height: number,
+  measurer: OgeSlideTextMeasurer,
+  options: OgeSlideRenderOptions,
+): OgeSlideRender {
+  const renderer = new OgeSlideDrawing(measurer, options.idPrefix);
+  for (const element of elements) renderer.element(element);
+  return {
+    width: pt(width),
+    height: pt(height),
     gradients: renderer.gradients,
     patterns: renderer.patterns,
     nodes: renderer.nodes,

@@ -201,6 +201,141 @@ export const OGE_MORE_SLIDE_PRESETS: Readonly<Record<string, Preset>> = {
     ]) +
     ` M${n(w / 8)} 0 L${n(w / 8)} ${n(h)} M${n((w * 7) / 8)} 0 L${n((w * 7) / 8)} ${n(h)}`,
 
+  // the rest of the flowchart set, from the DrawingML preset definitions and
+  // checked against Excel's own picture of them (testing/corpus/shapes.Gallery.png)
+  flowChartInternalStorage: (w, h) =>
+    poly([
+      [0, 0],
+      [w, 0],
+      [w, h],
+      [0, h],
+    ]) +
+    ` M${n(w / 8)} 0 L${n(w / 8)} ${n(h)} M0 ${n(h / 8)} L${n(w)} ${n(h / 8)}`,
+  flowChartDocument: (w, h) => {
+    const x = (v: number) => n((w * v) / 21600);
+    const y = (v: number) => n((h * v) / 21600);
+    return `M0 0 L${n(w)} 0 L${n(w)} ${y(17322)} C${x(10800)} ${y(17322)} ${x(10800)} ${y(23922)} 0 ${y(20172)} Z`;
+  },
+  flowChartMultidocument: (w, h) => {
+    const x = (v: number) => n((w * v) / 21600);
+    const y = (v: number) => n((h * v) / 21600);
+    return (
+      `M${x(2972)} ${y(1815)} L${x(2972)} 0 L${n(w)} 0 L${n(w)} ${y(14392)} ` +
+      `C${x(20800)} ${y(14392)} ${x(20000)} ${y(14467)} ${x(20000)} ${y(14467)} L${x(20000)} ${y(1815)} Z ` +
+      `M${x(1532)} ${y(3675)} L${x(1532)} ${y(1815)} L${x(20000)} ${y(1815)} L${x(20000)} ${y(16252)} ` +
+      `C${x(19298)} ${y(16252)} ${x(18595)} ${y(16352)} ${x(18595)} ${y(16352)} L${x(18595)} ${y(3675)} Z ` +
+      `M0 ${y(3675)} L${x(18595)} ${y(3675)} L${x(18595)} ${y(18022)} ` +
+      `C${x(9298)} ${y(18022)} ${x(9298)} ${y(23542)} 0 ${y(20782)} Z`
+    );
+  },
+  flowChartManualInput: (w, h) =>
+    poly([
+      [0, h / 5],
+      [w, 0],
+      [w, h],
+      [0, h],
+    ]),
+  flowChartPunchedCard: (w, h) =>
+    poly([
+      [0, h / 5],
+      [w / 5, 0],
+      [w, 0],
+      [w, h],
+      [0, h],
+    ]),
+  flowChartPunchedTape: (w, h) => {
+    const rx = n(w / 4);
+    const ry = n(h / 10);
+    return (
+      `M0 ${n(h / 10)} A${rx} ${ry} 0 0 0 ${n(w / 2)} ${n(h / 10)} ` +
+      `A${rx} ${ry} 0 0 1 ${n(w)} ${n(h / 10)} L${n(w)} ${n((h * 9) / 10)} ` +
+      `A${rx} ${ry} 0 0 0 ${n(w / 2)} ${n((h * 9) / 10)} ` +
+      `A${rx} ${ry} 0 0 1 0 ${n((h * 9) / 10)} Z`
+    );
+  },
+  flowChartSummingJunction: (w, h) => {
+    const dx = (w / 2) * Math.SQRT1_2;
+    const dy = (h / 2) * Math.SQRT1_2;
+    return (
+      ellipse(w / 2, h / 2, w / 2, h / 2) +
+      ` M${n(w / 2 - dx)} ${n(h / 2 - dy)} L${n(w / 2 + dx)} ${n(h / 2 + dy)}` +
+      ` M${n(w / 2 + dx)} ${n(h / 2 - dy)} L${n(w / 2 - dx)} ${n(h / 2 + dy)}`
+    );
+  },
+  flowChartOr: (w, h) =>
+    ellipse(w / 2, h / 2, w / 2, h / 2) +
+    ` M${n(w / 2)} 0 L${n(w / 2)} ${n(h)} M0 ${n(h / 2)} L${n(w)} ${n(h / 2)}`,
+  flowChartCollate: (w, h) =>
+    poly([
+      [0, 0],
+      [w, 0],
+      [w / 2, h / 2],
+      [w, h],
+      [0, h],
+      [w / 2, h / 2],
+    ]),
+  flowChartSort: (w, h) =>
+    poly([
+      [0, h / 2],
+      [w / 2, 0],
+      [w, h / 2],
+      [w / 2, h],
+    ]) + ` M0 ${n(h / 2)} L${n(w)} ${n(h / 2)}`,
+  flowChartExtract: (w, h) =>
+    poly([
+      [0, h],
+      [w / 2, 0],
+      [w, h],
+    ]),
+  flowChartMerge: (w, h) =>
+    poly([
+      [0, 0],
+      [w, 0],
+      [w / 2, h],
+    ]),
+  flowChartOnlineStorage: (w, h) => {
+    const rx = n(w / 6);
+    const ry = n(h / 2);
+    return (
+      `M${rx} 0 L${n(w)} 0 A${rx} ${ry} 0 0 0 ${n(w)} ${n(h)} ` +
+      `L${rx} ${n(h)} A${rx} ${ry} 0 0 1 ${rx} 0 Z`
+    );
+  },
+  flowChartDelay: (w, h) =>
+    `M0 0 L${n(w / 2)} 0 A${n(w / 2)} ${n(h / 2)} 0 0 1 ${n(w / 2)} ${n(h)} L0 ${n(h)} Z`,
+  flowChartMagneticTape: (w, h) => {
+    const rx = w / 2;
+    const ry = h / 2;
+    const angle = Math.atan2(h, w);
+    const ex = rx + rx * Math.cos(angle);
+    const ey = ry + ry * Math.sin(angle);
+    return (
+      `M${n(rx)} ${n(h)} A${n(rx)} ${n(ry)} 0 0 1 ${n(rx)} 0 ` +
+      `A${n(rx)} ${n(ry)} 0 0 1 ${n(w)} ${n(ry)} ` +
+      `A${n(rx)} ${n(ry)} 0 0 1 ${n(ex)} ${n(ey)} L${n(w)} ${n(ey)} L${n(w)} ${n(h)} Z`
+    );
+  },
+  // the lid's front edge runs the outline's way round, so the fill stays whole
+  flowChartMagneticDisk: (w, h) => {
+    const ry = n(h / 6);
+    const rx = n(w / 2);
+    return (
+      `M0 ${ry} A${rx} ${ry} 0 0 1 ${n(w)} ${ry} L${n(w)} ${n(h - h / 6)} ` +
+      `A${rx} ${ry} 0 0 1 0 ${n(h - h / 6)} Z M${n(w)} ${ry} A${rx} ${ry} 0 0 1 0 ${ry}`
+    );
+  },
+  flowChartMagneticDrum: (w, h) => {
+    const rx = n(w / 6);
+    const ry = n(h / 2);
+    return (
+      `M${rx} 0 L${n(w - w / 6)} 0 A${rx} ${ry} 0 0 1 ${n(w - w / 6)} ${n(h)} ` +
+      `L${rx} ${n(h)} A${rx} ${ry} 0 0 1 ${rx} 0 Z M${n(w - w / 6)} ${n(h)} A${rx} ${ry} 0 0 1 ${n(w - w / 6)} 0`
+    );
+  },
+  flowChartDisplay: (w, h) =>
+    `M0 ${n(h / 2)} L${n(w / 6)} 0 L${n((w * 5) / 6)} 0 ` +
+    `A${n(w / 6)} ${n(h / 2)} 0 0 1 ${n((w * 5) / 6)} ${n(h)} L${n(w / 6)} ${n(h)} Z`,
+
   round1Rect: (w, h, a) => {
     const r = (Math.min(w, h) * pin(0, adj(a, 'adj', 16667), 50000)) / 100000;
     return corners(w, h, 0, r, 0, 0);
@@ -410,6 +545,32 @@ export const OGE_MORE_SLIDE_PRESETS: Readonly<Record<string, Preset>> = {
       [w, h],
     ]);
   },
+  bentConnector4: (w, h, a) => {
+    const x = (w * adj(a, 'adj1', 50000)) / 100000;
+    const y = (h * adj(a, 'adj2', 50000)) / 100000;
+    return open([
+      [0, 0],
+      [x, 0],
+      [x, y],
+      [w, y],
+      [w, h],
+    ]);
+  },
+  bentConnector5: (w, h, a) => {
+    const x1 = (w * adj(a, 'adj1', 50000)) / 100000;
+    const y = (h * adj(a, 'adj2', 50000)) / 100000;
+    const x3 = (w * adj(a, 'adj3', 50000)) / 100000;
+    return open([
+      [0, 0],
+      [x1, 0],
+      [x1, y],
+      [x3, y],
+      [x3, h],
+      [w, h],
+    ]);
+  },
+  curvedConnector2: (w, h) =>
+    `M0 0 C${n(w / 2)} 0 ${n(w)} ${n(h / 2)} ${n(w)} ${n(h)}`,
   curvedConnector3: (w, h, a) => {
     const x = (w * adj(a, 'adj1', 50000)) / 100000;
     return (
@@ -423,6 +584,9 @@ export const OGE_MORE_SLIDE_PRESETS: Readonly<Record<string, Preset>> = {
 export const OGE_OPEN_SLIDE_PRESETS: ReadonlySet<string> = new Set([
   'bentConnector2',
   'bentConnector3',
+  'bentConnector4',
+  'bentConnector5',
+  'curvedConnector2',
   'curvedConnector3',
 ]);
 

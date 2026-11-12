@@ -1887,6 +1887,7 @@ export const tr: OgeLocalePack = {
     sheetAnnouncement: '{name} sayfası, {index} / {total}',
     notePopupLabel: 'Not',
     chartListLabel: 'Bu sayfadaki grafikler',
+    shapeListLabel: 'Bu sayfadaki şekiller',
     macrosNotice:
       'Bu çalışma kitabında makrolar var. Korunuyorlar, hiçbir zaman çalıştırılmıyorlar.',
     statusBarLabel: 'Durum çubuğu',

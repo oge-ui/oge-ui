@@ -423,6 +423,23 @@
     user-select: none;
   }
 
+  // pictures, charts and shapes: one stacking layer under the selection,
+  // the drawing's order inside it
+  .oge-spreadsheet-drawings {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  // a line may be 0 wide: its stroke and arrowheads draw past the box
+  .oge-spreadsheet-shape {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+    user-select: none;
+  }
+
   // ── headers ──
   .oge-spreadsheet-column-headers,
   .oge-spreadsheet-row-headers {

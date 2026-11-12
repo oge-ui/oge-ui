@@ -7,7 +7,13 @@
  */
 import type { OgeCellRef, OgeSheetRange } from '../address/address';
 import type { OgeWorksheet } from '../model/worksheet';
-import type { OgePaintChart, OgePaintPicture } from '../paint/pictures';
+import type {
+  OgePaintChart,
+  OgePaintPicture,
+  OgePaintShape,
+} from '../paint/pictures';
+import { ogeShapeLabel } from '../paint/pictures';
+import type { OgeSlideRender } from '../powerpoint/render';
 import type { OgeSpreadsheetChartView } from './chart-view';
 import type { OgeSheetSelection } from './navigation';
 import {
@@ -102,6 +108,18 @@ export interface OgePaneChart {
   readonly view: OgeSpreadsheetChartView;
 }
 
+/** A shape placed in a pane: its box, its drawing and the scale between them. */
+export interface OgePaneShape {
+  readonly key: string;
+  /** The box, at least a pixel each way so a line's SVG lays out; drawing overflows it. */
+  readonly frame: OgeCss;
+  readonly view: OgeSlideRender;
+  /** `scale(sx sy)` from the drawing's points onto the box's pixels. */
+  readonly scale: string;
+  /** What assistive tech would hear (the shape's alt text or name). */
+  readonly label: string;
+}
+
 /** A pane with what is drawn over its cells. */
 export interface OgeGridPane {
   readonly pane: OgeRenderPane;
@@ -109,6 +127,7 @@ export interface OgeGridPane {
   readonly selection: OgeSelectionShapes;
   readonly pictures: readonly OgePanePicture[];
   readonly charts: readonly OgePaneChart[];
+  readonly shapes: readonly OgePaneShape[];
 }
 
 /** The grid's layout for one frame: the panes with their render models, the headers and the corner. */
@@ -149,6 +168,8 @@ export interface OgeGridViewInput {
   readonly pictures: ReadonlyMap<OgePaneKey, readonly OgePanePicture[]>;
   /** The charts of each pane (`ogePaneCharts`). */
   readonly charts?: ReadonlyMap<OgePaneKey, readonly OgePaneChart[]>;
+  /** The shapes of each pane (`ogePaneShapes`). */
+  readonly shapes?: ReadonlyMap<OgePaneKey, readonly OgePaneShape[]>;
   /** The Normal style's CSS font family. */
   readonly fontFamily: string;
   /** Draws the selection's fill handle (an editor); a viewer has none. */
@@ -722,6 +743,7 @@ export function ogeGridView(input: OgeGridViewInput): OgeGridView {
       }),
       pictures: input.pictures.get(pane.key) ?? [],
       charts: input.charts?.get(pane.key) ?? [],
+      shapes: input.shapes?.get(pane.key) ?? [],
     })),
     sizer: {
       width: px(startX + panes.frozenWidth + panes.scrollWidth),
@@ -770,6 +792,14 @@ export function ogeGridView(input: OgeGridViewInput): OgeGridView {
       lineHeight: px(columnHeaderHeight),
     },
   };
+}
+
+/**
+ * A drawing object's place among the others: the render layers keep pictures,
+ * charts and shapes in one stacking layer, ordered as the drawing part lists them.
+ */
+function stacking(order: number | undefined): OgeCss {
+  return order === undefined ? {} : { zIndex: String(order) };
 }
 
 /**
@@ -822,6 +852,7 @@ export function ogePanePictures(
         width: px(placed.width),
         height: px(placed.height),
         ...(transforms.length ? { transform: transforms.join(' ') } : {}),
+        ...stacking(placed.picture.order),
       },
       image: {
         width: px(imageWidth),
@@ -882,8 +913,71 @@ export function ogePaneCharts(
         width: px(placed.width),
         height: px(placed.height),
         ...(options.rtl ? { transform: 'scaleX(-1)' } : {}),
+        ...stacking(placed.chart.order),
       },
       view,
+    });
+    byPane.set(key, list);
+  });
+  return byPane;
+}
+
+/**
+ * Places shapes in the pane holding their top-left corner, as charts are;
+ * only those reaching into the rendered window are kept. The drawing is in
+ * points; `zoom` gives the pixels a point takes when the box has no extent on
+ * an axis (a straight line).
+ */
+export function ogePaneShapes(
+  shapes: readonly OgePaintShape[],
+  panes: OgeViewportPanes,
+  options: {
+    readonly rtl: boolean;
+    readonly zoom: number;
+    readonly view: (placed: OgePaintShape) => OgeSlideRender;
+  },
+): ReadonlyMap<OgePaneKey, readonly OgePaneShape[]> {
+  const byPane = new Map<OgePaneKey, OgePaneShape[]>();
+  const { rows, cols } = panes.axes;
+  const left = cols.offset(panes.cols.first);
+  const right = cols.offset(panes.cols.last + 1);
+  const top = rows.offset(panes.rows.first);
+  const bottom = rows.offset(panes.rows.last + 1);
+  const pixelsPerPoint = (96 / 72) * (options.zoom / 100);
+  shapes.forEach((placed, index) => {
+    const inTop = placed.y < panes.originY;
+    const inLeft = placed.x < panes.originX;
+    const shownX =
+      inLeft || (placed.x <= right && placed.x + placed.width >= left);
+    const shownY =
+      inTop || (placed.y <= bottom && placed.y + placed.height >= top);
+    if (!shownX || !shownY) return;
+    const key: OgePaneKey = inTop
+      ? inLeft
+        ? 'corner'
+        : 'top'
+      : inLeft
+        ? 'left'
+        : 'main';
+    const originX = key === 'main' || key === 'top' ? panes.originX : 0;
+    const originY = key === 'main' || key === 'left' ? panes.originY : 0;
+    const view = options.view(placed);
+    const sx = view.width > 0 ? placed.width / view.width : pixelsPerPoint;
+    const sy = view.height > 0 ? placed.height / view.height : pixelsPerPoint;
+    const list = byPane.get(key) ?? [];
+    list.push({
+      key: `${index}:${placed.shape.name ?? ''}`,
+      frame: {
+        left: px(placed.x - originX),
+        top: px(placed.y - originY),
+        width: px(Math.max(1, placed.width)),
+        height: px(Math.max(1, placed.height)),
+        ...(options.rtl ? { transform: 'scaleX(-1)' } : {}),
+        ...stacking(placed.shape.order),
+      },
+      view,
+      scale: `scale(${Math.round(sx * 10000) / 10000} ${Math.round(sy * 10000) / 10000})`,
+      label: ogeShapeLabel(placed.shape),
     });
     byPane.set(key, list);
   });

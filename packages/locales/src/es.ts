@@ -1929,6 +1929,7 @@ export const es: OgeLocalePack = {
     sheetAnnouncement: 'Hoja {name}, {index} de {total}',
     notePopupLabel: 'Nota',
     chartListLabel: 'Gráficos de esta hoja',
+    shapeListLabel: 'Formas de esta hoja',
     macrosNotice:
       'Este libro contiene macros. Se conservan, pero nunca se ejecutan.',
     statusBarLabel: 'Barra de estado',

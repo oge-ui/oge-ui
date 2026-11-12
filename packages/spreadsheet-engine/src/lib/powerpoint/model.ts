@@ -90,6 +90,15 @@ export interface OgeSlidePictureRef {
   };
 }
 
+/** An arrowhead (`headEnd` / `tailEnd`). */
+export interface OgeSlideLineEnd {
+  /** `triangle`, `stealth`, `diamond`, `oval` or `arrow` (open). */
+  readonly type: string;
+  /** `sm`, `med` or `lg` — a multiple of the line width. */
+  readonly width: string;
+  readonly length: string;
+}
+
 /** An outline. */
 export interface OgeSlideLine {
   readonly fill: OgeSlideFill;
@@ -98,6 +107,10 @@ export interface OgeSlideLine {
   /** The preset name as written: `solid`, `dash`, `sysDot`, … */
   readonly dash: string;
   readonly cap: string;
+  /** The arrowhead at the path's start. */
+  readonly head?: OgeSlideLineEnd;
+  /** The arrowhead at the path's end. */
+  readonly tail?: OgeSlideLineEnd;
 }
 
 /** A character run. */

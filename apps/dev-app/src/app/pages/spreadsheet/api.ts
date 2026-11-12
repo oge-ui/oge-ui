@@ -130,7 +130,9 @@ const SECTIONS_REACT = [
       </li>
       <li>
         Macros are kept and never run; the viewer says so in a message bar.
-        Charts and shapes are kept for saving but not drawn yet — the
+        Pictures, charts, shapes, connectors (with their arrowheads), groups and
+        text boxes are drawn over the cells in the drawing's own stacking order;
+        what cannot be drawn is kept for saving — the
         @if (fw.isReact()) {
           <code>onLoaded</code>
         } @else {

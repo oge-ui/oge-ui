@@ -32,6 +32,7 @@ const SAMPLES = [
   { file: 'formulas.xlsx', label: 'Formulas and dynamic arrays' },
   { file: 'pictures.xlsx', label: 'Pictures' },
   { file: 'charts.xlsx', label: 'Charts' },
+  { file: 'shapes.xlsx', label: 'Shapes and connectors' },
   { file: 'tables.xlsx', label: 'Tables' },
   { file: 'sparklines.xlsx', label: 'Sparklines' },
 ] as const;

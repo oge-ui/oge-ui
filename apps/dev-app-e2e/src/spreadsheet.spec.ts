@@ -174,6 +174,63 @@ for (const layer of LAYERS) {
       expect(results.violations.map((v) => v.id)).toEqual([]);
     });
 
+    test('draws shapes, connectors with arrowheads, groups and text boxes over the cells', async ({
+      page,
+    }) => {
+      const host = await open(page);
+      await page
+        .locator(BASIC)
+        .getByRole('button', { name: 'Shapes and connectors' })
+        .click();
+      await expect(host.locator('.oge-spreadsheet-tab')).toHaveText(
+        ['Flow', 'Gallery'],
+        { timeout: 30_000 },
+      );
+      const shapes = host.locator('svg.oge-spreadsheet-shape');
+      await expect(shapes).toHaveCount(15);
+      // the flowchart's text is drawn and read out
+      await expect(
+        host.locator('svg.oge-spreadsheet-shape text'),
+      ).toContainText(['Order received']);
+      await expect(
+        host.getByRole('list', { name: 'Shapes on this sheet' }),
+      ).toContainText('Order received');
+      // every connector ends in its arrowhead: the outline plus a filled head
+      const connectorHeads = host.locator(
+        'svg.oge-spreadsheet-shape path[stroke="none"][fill="#000000"]',
+      );
+      expect(await connectorHeads.count()).toBeGreaterThanOrEqual(5);
+      // the dashed return path keeps its dash
+      await expect(
+        host.locator('svg.oge-spreadsheet-shape path[stroke-dasharray]'),
+      ).not.toHaveCount(0);
+      // a terminator box sits where Excel put it: column C, row 3
+      const box = await shapes.first().boundingBox();
+      const cell = await host.locator('.oge-spreadsheet-grid').boundingBox();
+      expect(box && cell && box.x > cell.x).toBe(true);
+      if (process.env['OGE_SHAPES_SHOT'])
+        await page
+          .locator(BASIC)
+          .screenshot({
+            path: `${process.env['OGE_SHAPES_SHOT']}-flow-${layer.name}.png`,
+          });
+      await host
+        .locator('.oge-spreadsheet-tab', { hasText: 'Gallery' })
+        .click();
+      await expect(shapes).toHaveCount(31);
+      if (process.env['OGE_SHAPES_SHOT'])
+        await page
+          .locator(BASIC)
+          .screenshot({
+            path: `${process.env['OGE_SHAPES_SHOT']}-${layer.name}.png`,
+          });
+      const results = await new AxeBuilder({ page })
+        .include('.oge-spreadsheet')
+        .disableRules(['color-contrast'])
+        .analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+    });
+
     test('draws sparklines in their cells: lines with their marked points, columns, win/loss', async ({
       page,
     }) => {

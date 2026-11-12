@@ -458,53 +458,162 @@ let nextId = 0;
                       ></div>
                     }
                   }
-                  @for (picture of item.pictures; track picture.key) {
-                    <div
-                      class="oge-spreadsheet-picture"
-                      [style]="picture.frame"
-                    >
-                      <img
-                        [src]="picture.url"
-                        [attr.alt]="picture.alt"
-                        [style]="picture.image"
-                        draggable="false"
-                      />
-                    </div>
-                  }
-                  @for (chart of item.charts; track chart.key) {
-                    <svg
-                      class="oge-spreadsheet-chart"
-                      [style]="chart.frame"
-                      [attr.width]="chart.view.width"
-                      [attr.height]="chart.view.height"
-                    >
-                      @for (mark of chart.view.paths; track $index) {
-                        <path
-                          [attr.d]="mark.d"
-                          [attr.fill]="mark.fill ?? 'none'"
-                          [attr.fill-opacity]="mark.fillOpacity ?? null"
-                          [attr.stroke]="mark.stroke ?? null"
-                          [attr.stroke-width]="mark.strokeWidth ?? null"
-                          [attr.stroke-dasharray]="mark.dash ?? null"
-                          [attr.stroke-linejoin]="mark.round ? 'round' : null"
-                          [attr.stroke-linecap]="mark.round ? 'round' : null"
-                          [attr.shape-rendering]="
-                            mark.crisp ? 'crispEdges' : null
-                          "
+                  <!-- pictures, charts and shapes share one stacking layer,
+                       ordered among themselves as the drawing lists them -->
+                  <div class="oge-spreadsheet-drawings">
+                    @for (picture of item.pictures; track picture.key) {
+                      <div
+                        class="oge-spreadsheet-picture"
+                        [style]="picture.frame"
+                      >
+                        <img
+                          [src]="picture.url"
+                          [attr.alt]="picture.alt"
+                          [style]="picture.image"
+                          draggable="false"
                         />
-                      }
-                      @for (mark of chart.view.texts; track $index) {
-                        <text
-                          [attr.x]="mark.x"
-                          [attr.y]="mark.y"
-                          [attr.text-anchor]="mark.anchor"
-                          [attr.transform]="mark.transform ?? null"
-                          [style]="mark.style"
-                          [textContent]="mark.text"
-                        ></text>
-                      }
-                    </svg>
-                  }
+                      </div>
+                    }
+                    @for (chart of item.charts; track chart.key) {
+                      <svg
+                        class="oge-spreadsheet-chart"
+                        [style]="chart.frame"
+                        [attr.width]="chart.view.width"
+                        [attr.height]="chart.view.height"
+                      >
+                        @for (mark of chart.view.paths; track $index) {
+                          <path
+                            [attr.d]="mark.d"
+                            [attr.fill]="mark.fill ?? 'none'"
+                            [attr.fill-opacity]="mark.fillOpacity ?? null"
+                            [attr.stroke]="mark.stroke ?? null"
+                            [attr.stroke-width]="mark.strokeWidth ?? null"
+                            [attr.stroke-dasharray]="mark.dash ?? null"
+                            [attr.stroke-linejoin]="mark.round ? 'round' : null"
+                            [attr.stroke-linecap]="mark.round ? 'round' : null"
+                            [attr.shape-rendering]="
+                              mark.crisp ? 'crispEdges' : null
+                            "
+                          />
+                        }
+                        @for (mark of chart.view.texts; track $index) {
+                          <text
+                            [attr.x]="mark.x"
+                            [attr.y]="mark.y"
+                            [attr.text-anchor]="mark.anchor"
+                            [attr.transform]="mark.transform ?? null"
+                            [style]="mark.style"
+                            [textContent]="mark.text"
+                          ></text>
+                        }
+                      </svg>
+                    }
+                    @for (shape of item.shapes; track shape.key) {
+                      <svg
+                        class="oge-spreadsheet-shape"
+                        aria-hidden="true"
+                        [style]="shape.frame"
+                      >
+                        <defs>
+                          @for (
+                            gradient of shape.view.gradients;
+                            track gradient.id
+                          ) {
+                            <linearGradient
+                              color-interpolation="linearRGB"
+                              [attr.id]="gradient.id"
+                              [attr.gradientTransform]="gradient.transform"
+                            >
+                              @for (stop of gradient.stops; track $index) {
+                                <stop
+                                  [attr.offset]="stop.offset"
+                                  [attr.stop-color]="stop.color"
+                                  [attr.stop-opacity]="stop.opacity"
+                                />
+                              }
+                            </linearGradient>
+                          }
+                          @for (
+                            pattern of shape.view.patterns;
+                            track pattern.id
+                          ) {
+                            <pattern
+                              patternUnits="userSpaceOnUse"
+                              [attr.id]="pattern.id"
+                              [attr.width]="pattern.size"
+                              [attr.height]="pattern.size"
+                            >
+                              <rect
+                                [attr.width]="pattern.size"
+                                [attr.height]="pattern.size"
+                                [attr.fill]="pattern.background"
+                                [attr.fill-opacity]="pattern.backgroundOpacity"
+                              />
+                              <path
+                                [attr.d]="pattern.d"
+                                [attr.fill]="pattern.foreground"
+                                [attr.fill-opacity]="pattern.foregroundOpacity"
+                              />
+                            </pattern>
+                          }
+                        </defs>
+                        <g [attr.transform]="shape.scale">
+                          @for (node of shape.view.nodes; track $index) {
+                            @if (node.kind === 'path') {
+                              <path
+                                [attr.d]="node.d"
+                                [attr.transform]="node.transform || null"
+                                [attr.fill]="node.fill?.paint ?? 'none'"
+                                [attr.fill-opacity]="node.fill?.opacity ?? null"
+                                [attr.stroke]="node.stroke?.paint ?? 'none'"
+                                [attr.stroke-opacity]="
+                                  node.stroke?.opacity ?? null
+                                "
+                                [attr.stroke-width]="node.strokeWidth"
+                                [attr.stroke-dasharray]="node.dash"
+                                [attr.stroke-linecap]="node.cap"
+                                [style.filter]="node.filter"
+                              />
+                            } @else if (node.kind === 'image') {
+                              @if (core.pictureUrl(node.media); as href) {
+                                <svg
+                                  preserveAspectRatio="none"
+                                  [attr.x]="node.x"
+                                  [attr.y]="node.y"
+                                  [attr.width]="node.width"
+                                  [attr.height]="node.height"
+                                  [attr.viewBox]="node.viewBox"
+                                  [attr.transform]="node.transform || null"
+                                >
+                                  <image
+                                    width="1"
+                                    height="1"
+                                    preserveAspectRatio="none"
+                                    [attr.href]="href"
+                                  />
+                                </svg>
+                              }
+                            } @else {
+                              <text
+                                [attr.text-anchor]="node.anchor"
+                                [attr.x]="node.x"
+                                [attr.y]="node.y"
+                                [attr.transform]="node.transform || null"
+                                [attr.font-family]="node.fontFamily"
+                                [attr.font-size]="node.fontSize"
+                                [attr.font-weight]="node.fontWeight"
+                                [attr.font-style]="node.fontStyle"
+                                [attr.fill]="node.fill.paint"
+                                [attr.fill-opacity]="node.fill.opacity"
+                                [attr.text-decoration]="node.decoration"
+                                [textContent]="node.text"
+                              ></text>
+                            }
+                          }
+                        </g>
+                      </svg>
+                    }
+                  </div>
                 </div>
               </div>
             }
@@ -954,6 +1063,16 @@ let nextId = 0;
           }
         </ul>
       }
+      @if (shapeLabels().length) {
+        <ul
+          class="oge-spreadsheet-chart-list"
+          [attr.aria-label]="text().shapeListLabel"
+        >
+          @for (label of shapeLabels(); track $index) {
+            <li>{{ label }}</li>
+          }
+        </ul>
+      }
     </div>
     @if (showTabs()) {
       <div class="oge-spreadsheet-tab-strip">
@@ -1331,6 +1450,13 @@ export class OgeSpreadsheet {
     this.core.activeSheet();
     this.core.version();
     return this.core.workbook() ? this.core.chartLabels() : [];
+  });
+
+  /** The active sheet's shapes as assistive tech hears them: alt text, else their text. */
+  protected readonly shapeLabels = computed(() => {
+    this.core.activeSheet();
+    this.core.version();
+    return this.core.workbook() ? this.core.shapeLabels() : [];
   });
 
   /** Notes shown: those pinned open in the file, and the one under the pointer (or opened with Shift+F2). */

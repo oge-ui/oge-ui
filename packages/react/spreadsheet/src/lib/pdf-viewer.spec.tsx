@@ -250,7 +250,13 @@ describe('<OgePdfViewer>', () => {
         if (tag === 'iframe') {
           // jsdom has no print dialog
           Object.defineProperty(el, 'contentWindow', {
-            value: { addEventListener: vi.fn(), focus: vi.fn(), print },
+            value: {
+              addEventListener: vi.fn(),
+              focus: vi.fn(),
+              print,
+              // jsdom closes every frame it still holds when the test ends
+              close: vi.fn(),
+            },
           });
         }
         if (tag === 'canvas') {

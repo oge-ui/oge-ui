@@ -1946,6 +1946,7 @@ export const fr: OgeLocalePack = {
     sheetAnnouncement: 'Feuille {name}, {index} sur {total}',
     notePopupLabel: 'Note',
     chartListLabel: 'Graphiques de cette feuille',
+    shapeListLabel: 'Formes de cette feuille',
     macrosNotice:
       'Ce classeur contient des macros. Elles sont conservées mais jamais exécutées.',
     statusBarLabel: 'Barre d’état',

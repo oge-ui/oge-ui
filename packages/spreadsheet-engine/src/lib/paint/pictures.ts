@@ -9,6 +9,7 @@ import type {
   OgePicture,
   OgePictureAnchor,
   OgePictureCorner,
+  OgeSheetShape,
 } from '../model/sheet-features';
 import type { OgeWorksheet } from '../model/worksheet';
 import type { OgeSheetLayout } from './sheet-layout';
@@ -101,4 +102,45 @@ export function ogePlaceCharts(
     out.push({ chart, ...box });
   }
   return out;
+}
+
+/** A shape (connector, group, text box) with its box. */
+export interface OgePaintShape extends OgePaintBox {
+  readonly shape: OgeSheetShape;
+}
+
+/**
+ * The boxes of a sheet's visible shapes — anchored as pictures are. A line
+ * may be 0 wide or 0 tall (a straight connector), so only a box with no
+ * extent at all is left out.
+ */
+export function ogePlaceShapes(
+  sheet: OgeWorksheet,
+  layout: OgeSheetLayout,
+): OgePaintShape[] {
+  const out: OgePaintShape[] = [];
+  for (const shape of sheet.shapes) {
+    if (shape.hidden) continue;
+    const box = ogeAnchorBox(layout, shape.anchor);
+    if (box.width < 0 || box.height < 0) continue;
+    if (box.width === 0 && box.height === 0) continue;
+    out.push({ shape, ...box });
+  }
+  return out;
+}
+
+/** A shape as assistive tech hears it: its alt text, else the text it shows. */
+export function ogeShapeLabel(shape: OgeSheetShape): string {
+  if (shape.description) return shape.description;
+  return shape.elements
+    .flatMap((element) =>
+      element.kind === 'shape' && element.text
+        ? element.text.paragraphs.map((p) =>
+            p.runs.map((run) => run.text).join(''),
+          )
+        : [],
+    )
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(' ');
 }

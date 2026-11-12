@@ -7,7 +7,7 @@
 import { OgeImportIssueLog, type OgeImportIssue } from '../codec/import-issues';
 import { OgePackageParts } from '../codec/package';
 import { readOgeChart } from '../codec/read-chart';
-import { OGE_DRAWN_CHART_KINDS } from '../codec/read-drawing';
+import { OGE_DRAWN_CHART_KINDS } from '../codec/drawn-chart-kinds';
 import { readOgeTheme, type OgeTheme } from '../codec/read-theme';
 import {
   ogeXmlAttribute,

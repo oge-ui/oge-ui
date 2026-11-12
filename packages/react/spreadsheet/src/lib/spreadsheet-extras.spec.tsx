@@ -146,6 +146,127 @@ function richBook(): OgeWorkbook {
       style: 2,
     },
   });
+  const frame = {
+    x: 0,
+    y: 0,
+    width: 952500,
+    height: 476250,
+    rotation: 0,
+    flipH: false,
+    flipV: false,
+  };
+  const black = { rgb: '000000', alpha: 1 };
+  sheet.shapes.push(
+    {
+      name: 'Step',
+      order: 3,
+      anchor: { kind: 'absolute', x: 60, y: 260, width: 100, height: 50 },
+      width: 952500,
+      height: 476250,
+      elements: [
+        {
+          kind: 'shape',
+          name: 'Step',
+          frame,
+          geometry: 'flowChartProcess',
+          adjust: {},
+          fill: {
+            kind: 'gradient',
+            angle: 90,
+            stops: [
+              { position: 0, color: { rgb: 'FFFFFF', alpha: 1 } },
+              { position: 1, color: { rgb: '4472C4', alpha: 1 } },
+            ],
+          },
+          line: {
+            fill: { kind: 'solid', color: black },
+            width: 9525,
+            dash: 'dash',
+            cap: 'flat',
+          },
+          text: {
+            insets: { left: 91440, top: 45720, right: 91440, bottom: 45720 },
+            anchor: 'ctr',
+            wrap: true,
+            vertical: 'horz',
+            fontScale: 1,
+            lineSpacingReduction: 0,
+            paragraphs: [
+              {
+                level: 0,
+                align: 'ctr',
+                rtl: false,
+                marginLeft: 0,
+                indent: 0,
+                lineSpacing: { kind: 'percent', value: 100 },
+                spaceBefore: { kind: 'points', value: 0 },
+                spaceAfter: { kind: 'points', value: 0 },
+                bullet: { kind: 'none' },
+                runs: [
+                  {
+                    text: 'Ship it',
+                    font: 'Calibri',
+                    size: 11,
+                    bold: false,
+                    italic: false,
+                    underline: true,
+                    strike: false,
+                    color: black,
+                    baseline: 0,
+                  },
+                ],
+                endSize: 11,
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      name: 'Patterned',
+      anchor: { kind: 'absolute', x: 200, y: 260, width: 100, height: 50 },
+      width: 952500,
+      height: 476250,
+      elements: [
+        {
+          kind: 'shape',
+          name: 'Patterned',
+          frame,
+          geometry: 'rect',
+          adjust: {},
+          fill: {
+            kind: 'pattern',
+            preset: 'pct50',
+            foreground: black,
+            background: { rgb: 'FFFFFF', alpha: 1 },
+          },
+          line: null,
+          text: null,
+          shadow: { color: black, blur: 38100, distance: 19050, direction: 45 },
+        },
+        {
+          kind: 'picture',
+          name: 'Logo inside',
+          frame,
+          picture: {
+            media: 'xl/media/image1.png',
+            crop: { left: 0, top: 0, right: 0, bottom: 0 },
+          },
+          line: null,
+        },
+        {
+          kind: 'picture',
+          name: 'Missing',
+          frame,
+          picture: {
+            media: 'xl/media/none.png',
+            crop: { left: 0, top: 0, right: 0, bottom: 0 },
+          },
+          line: null,
+        },
+      ],
+    },
+  );
   workbook.opaqueParts.push({
     path: 'xl/media/image1.png',
     data: PNG,
@@ -344,6 +465,37 @@ describe('OgeSpreadsheet (React) — drawing and chrome', () => {
     ) as HTMLElement;
     expect(list.getAttribute('aria-label')).toBe('Charts on this sheet');
     expect(list.textContent).toBe('Sales chart');
+  });
+
+  it('draws shapes with the slide renderer — gradients, patterns, text, pictures — and names them', () => {
+    mount();
+    const all = [
+      ...host().querySelectorAll('svg.oge-spreadsheet-shape'),
+    ] as SVGElement[];
+    expect(all).toHaveLength(2);
+    // the frozen column puts the step in the left pane, the other in the main one
+    const step = all.find((s) => s.querySelector('text')) as SVGElement;
+    const shapes = [step, all.find((s) => s !== step) as SVGElement];
+    expect(shapes[0].style.zIndex).toBe('3');
+    expect(shapes[0].querySelector('linearGradient stop')).not.toBeNull();
+    expect(shapes[0].querySelector('path[stroke-dasharray]')).not.toBeNull();
+    expect(shapes[0].querySelector('text')?.textContent).toBe('Ship it');
+    expect(shapes[0].querySelector('g')?.getAttribute('transform')).toMatch(
+      /^scale\(/,
+    );
+    expect(shapes[1].querySelector('pattern rect')).not.toBeNull();
+    // the workbook's picture is drawn, a missing one left out
+    expect(shapes[1].querySelectorAll('image')).toHaveLength(1);
+    expect(
+      (shapes[1].querySelector('g path') as SVGPathElement).style.filter,
+    ).toMatch(/drop-shadow/);
+    const lists = [
+      ...host().querySelectorAll('.oge-spreadsheet-chart-list'),
+    ] as HTMLElement[];
+    const shapeList = lists.find(
+      (l) => l.getAttribute('aria-label') === 'Shapes on this sheet',
+    );
+    expect(shapeList?.textContent).toBe('Ship it');
   });
 
   it('can hide gridlines, follows a link (opening it), and hovers a note open', () => {

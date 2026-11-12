@@ -1924,6 +1924,7 @@ export const ptBR: OgeLocalePack = {
     sheetAnnouncement: 'Planilha {name}, {index} de {total}',
     notePopupLabel: 'Anotação',
     chartListLabel: 'Gráficos desta planilha',
+    shapeListLabel: 'Formas desta planilha',
     macrosNotice:
       'Esta pasta de trabalho contém macros. Elas são mantidas, mas nunca executadas.',
     statusBarLabel: 'Barra de status',

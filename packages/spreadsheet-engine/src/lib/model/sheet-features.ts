@@ -8,6 +8,7 @@
  */
 import type { OgeSheetRange } from '../address/address';
 import type { OgeColor } from '../color/color';
+import type { OgeSlideElement } from '../powerpoint/model';
 import type { OgeRichText } from './cell';
 
 /** A hyperlink over a range. */
@@ -255,6 +256,26 @@ export type OgePictureAnchor =
       readonly height: number;
     };
 
+/**
+ * A drawing object over the sheet that is not a picture or a chart — a shape,
+ * a connector, a group or a text box — read with the slide reader's DrawingML
+ * support. The elements are in EMU, relative to the object's own box as the
+ * file wrote it (`width` × `height`); the anchor says where that box goes.
+ */
+export interface OgeSheetShape {
+  readonly anchor: OgePictureAnchor;
+  /** EMU: the box the file drew the elements in (it may be 0 wide for a line). */
+  readonly width: number;
+  readonly height: number;
+  readonly elements: readonly OgeSlideElement[];
+  readonly name?: string;
+  /** Alternative text (`descr`). */
+  readonly description?: string;
+  readonly hidden?: boolean;
+  /** Place in the drawing's stacking order (0 = drawn first), across pictures, charts and shapes. */
+  readonly order?: number;
+}
+
 /** A picture floating over the sheet. */
 export interface OgePicture {
   readonly anchor: OgePictureAnchor;
@@ -275,4 +296,6 @@ export interface OgePicture {
   readonly rotation?: number;
   readonly flipH?: boolean;
   readonly flipV?: boolean;
+  /** Place in the drawing's stacking order (0 = drawn first), across pictures, charts and shapes. */
+  readonly order?: number;
 }

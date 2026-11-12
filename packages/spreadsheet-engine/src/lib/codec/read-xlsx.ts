@@ -33,6 +33,10 @@ import { readOgeStyleSheet } from './read-styles';
 import { readOgeTheme } from './read-theme';
 import { readOgeWorksheet } from './read-worksheet';
 import { readOgeDrawing } from './read-drawing';
+import {
+  ogeCreateDrawingShapeReader,
+  type OgeDrawingShapeReader,
+} from '../powerpoint/read-pptx';
 import { readOgeTable } from './read-table';
 import { ogeTableStyleFormats } from '../model/table-styles';
 import type { OgeChartReadContext } from './read-chart';
@@ -263,6 +267,12 @@ function readParts(
   const themeRel = workbookRels.find((rel) => rel.type === 'theme');
   const theme = themeRel ? treeOf(pkg, themeRel.target, issues) : undefined;
   const themeData = theme ? readOgeTheme(theme) : undefined;
+  // shapes are DrawingML read as a slide's, the workbook theme standing in for a master
+  const shapeReader = ogeCreateDrawingShapeReader(
+    pkg,
+    theme,
+    themeRel?.target ?? '',
+  );
 
   const stylesRel = workbookRels.find((rel) => rel.type === 'styles');
   const stylesRoot = stylesRel
@@ -392,6 +402,7 @@ function readParts(
       issues,
       budget,
       consume,
+      shapes: shapeReader,
       charts: {
         theme: themeData?.colors ?? OGE_OFFICE_THEME_COLORS,
         ...(themeData?.majorFont ? { majorFont: themeData.majorFont } : {}),
@@ -399,6 +410,13 @@ function readParts(
       },
     });
   });
+  // what the shapes could not draw (a preset geometry, a group fill, …)
+  for (const issue of shapeReader?.issues() ?? []) {
+    issues.add(issue.code, {
+      ...(issue.part !== undefined ? { part: issue.part } : {}),
+      ...(issue.detail !== undefined ? { detail: issue.detail } : {}),
+    });
+  }
   if (workbook.sheets.length === 0) {
     issues.add('missing-part', { detail: 'the workbook has no worksheet' });
     workbook.addSheet();
@@ -491,6 +509,8 @@ interface SheetPartContext {
   readonly consume: (path: string) => void;
   /** The theme's colours and fonts, for the charts' parts. */
   readonly charts: OgeChartReadContext;
+  /** Reads the drawings' shapes; `null` without a theme. */
+  readonly shapes: OgeDrawingShapeReader | null;
 }
 
 /** Relationship types of a sheet the reader turns into model content. */
@@ -540,14 +560,21 @@ function readSheetPart(
   )) {
     const root = treeOf(pkg, drawing.target, issues);
     if (!root) continue;
-    const content = readOgeDrawing(root, drawing.target, pkg, context.charts);
+    const content = readOgeDrawing(
+      root,
+      drawing.target,
+      pkg,
+      context.charts,
+      context.shapes,
+    );
     sheet.pictures.push(...content.pictures);
+    sheet.shapes.push(...content.shapes);
     sheet.charts.push(...content.charts);
     if (content.others > 0)
       issues.add('drawing-not-shown', {
         sheet: sheet.name,
         part: drawing.target,
-        detail: `${content.others} shapes or linked pictures`,
+        detail: `${content.others} controls, linked pictures or unreadable shapes`,
       });
     if (content.undrawnCharts.length > 0)
       issues.add('chart-type-not-shown', {

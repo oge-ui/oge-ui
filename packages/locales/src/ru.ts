@@ -1930,6 +1930,7 @@ export const ru: OgeLocalePack = {
     sheetAnnouncement: 'Лист «{name}», {index} из {total}',
     notePopupLabel: 'Заметка',
     chartListLabel: 'Диаграммы на этом листе',
+    shapeListLabel: 'Фигуры на этом листе',
     macrosNotice:
       'В этой книге есть макросы. Они сохраняются, но никогда не запускаются.',
     statusBarLabel: 'Строка состояния',

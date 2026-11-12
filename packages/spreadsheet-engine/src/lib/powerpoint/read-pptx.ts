@@ -8,7 +8,7 @@
 import { OgeImportIssueLog, type OgeImportIssue } from '../codec/import-issues';
 import { OgePackageParts } from '../codec/package';
 import { readOgeChart } from '../codec/read-chart';
-import { OGE_DRAWN_CHART_KINDS } from '../codec/read-drawing';
+import { OGE_DRAWN_CHART_KINDS } from '../codec/drawn-chart-kinds';
 import { readOgeTheme, type OgeTheme } from '../codec/read-theme';
 import {
   ogeXmlAttribute,
@@ -40,6 +40,7 @@ import type {
   OgeSlideFrame,
   OgeSlideCustomPath,
   OgeSlideLine,
+  OgeSlideLineEnd,
   OgeSlidePathCommand,
   OgeSlideParagraph,
   OgeSlideShadow,
@@ -333,6 +334,39 @@ class PptxReader {
       presentation: { width, height, slides, media: this.media },
       issues: this.issues.list(),
     };
+  }
+
+  /**
+   * The elements of one object of a spreadsheet drawing (`sp`, `cxnSp`,
+   * `grpSp`, `pic` …) — DrawingML read as a slide's, with the workbook's
+   * theme standing in for a master and no placeholders — placed relative to
+   * `origin` (EMU).
+   */
+  readDrawingObject(
+    node: OgeXmlNode,
+    part: string,
+    master: MasterInfo,
+    origin: { readonly x: number; readonly y: number },
+  ): OgeSlideElement[] {
+    const out: OgeSlideElement[] = [];
+    this.readNode(
+      node,
+      {
+        part,
+        context: { theme: master.theme.colors, map: master.map },
+        master,
+        ancestors: [],
+        placeholders: false,
+      },
+      { ...IDENTITY, offsetX: -origin.x, offsetY: -origin.y },
+      out,
+    );
+    return out;
+  }
+
+  /** What reading reported so far. */
+  readIssues(): OgeImportIssue[] {
+    return this.issues.list();
   }
 
   private tree(path: string): OgeXmlNode | undefined {
@@ -906,11 +940,26 @@ class PptxReader {
     let dash: string | undefined;
     let cap: string | undefined;
     let fill: OgeSlideFill | undefined;
+    let head: OgeSlideLineEnd | null | undefined;
+    let tail: OgeSlideLineEnd | null | undefined;
+    const end = (node: OgeXmlNode | undefined, known: typeof head) => {
+      if (!node) return known;
+      const type = node.attributes['type'] ?? 'none';
+      return type === 'none'
+        ? null
+        : {
+            type,
+            width: node.attributes['w'] ?? 'med',
+            length: node.attributes['len'] ?? 'med',
+          };
+    };
     const apply = (ln: OgeXmlNode, context: OgeSlideColorContext): void => {
       width = ogeXmlNumber(ln.attributes['w']) ?? width;
       cap = ln.attributes['cap'] ?? cap;
       dash = ogeXmlChild(ln, 'prstDash')?.attributes['val'] ?? dash;
       fill = this.fillOf(ln, context, scope.part) ?? fill;
+      head = end(ogeXmlChild(ln, 'headEnd'), head);
+      tail = end(ogeXmlChild(ln, 'tailEnd'), tail);
     };
     const ref = ogeXmlChild(style, 'lnRef');
     const idx = ogeXmlNumber(ref?.attributes['idx']) ?? 0;
@@ -935,6 +984,8 @@ class PptxReader {
       width: width ?? 9525,
       dash: dash ?? 'solid',
       cap: cap ?? 'flat',
+      ...(head ? { head } : {}),
+      ...(tail ? { tail } : {}),
     };
   }
 
@@ -1744,3 +1795,57 @@ class PptxReader {
 
 /** Emu per point, for callers converting the model's lengths. */
 export const OGE_EMU_PER_POINT = EMU_PER_POINT;
+
+/** A spreadsheet drawing's colour map: the standard one a sheet always uses. */
+const SPREADSHEET_COLOR_MAP: Readonly<Record<string, string>> = {
+  bg1: 'lt1',
+  tx1: 'dk1',
+  bg2: 'lt2',
+  tx2: 'dk2',
+  accent1: 'accent1',
+  accent2: 'accent2',
+  accent3: 'accent3',
+  accent4: 'accent4',
+  accent5: 'accent5',
+  accent6: 'accent6',
+  hlink: 'hlink',
+  folHlink: 'folHlink',
+};
+
+/** Reads the shapes of a spreadsheet's drawing parts with the slide reader. */
+export interface OgeDrawingShapeReader {
+  /** The elements of one drawing object, relative to `origin` (EMU). */
+  read(
+    node: OgeXmlNode,
+    part: string,
+    origin: { readonly x: number; readonly y: number },
+  ): OgeSlideElement[];
+  /** What could not be shown (preset geometries, group fills, …). */
+  issues(): OgeImportIssue[];
+}
+
+/**
+ * A reader for the shapes, connectors, groups and text boxes of a workbook's
+ * drawings, sharing the slide reader's DrawingML support: the theme part of
+ * the workbook stands in for a slide master. `null` without a theme.
+ */
+export function ogeCreateDrawingShapeReader(
+  pkg: OgePackageParts,
+  themeTree: OgeXmlNode | undefined,
+  themePath: string,
+): OgeDrawingShapeReader | null {
+  if (!themeTree) return null;
+  const master: MasterInfo = {
+    path: themePath,
+    tree: themeTree,
+    theme: readOgeTheme(themeTree),
+    formats: ogeXmlChild(ogeXmlChild(themeTree, 'themeElements'), 'fmtScheme'),
+    map: SPREADSHEET_COLOR_MAP,
+  };
+  const reader = new PptxReader(pkg);
+  return {
+    read: (node, part, origin) =>
+      reader.readDrawingObject(node, part, master, origin),
+    issues: () => reader.readIssues(),
+  };
+}

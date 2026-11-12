@@ -1845,6 +1845,7 @@ export const zhCN: OgeLocalePack = {
     sheetAnnouncement: '工作表 {name}，第 {index} 张，共 {total} 张',
     notePopupLabel: '注释',
     chartListLabel: '此工作表中的图表',
+    shapeListLabel: '此工作表中的形状',
     macrosNotice: '此工作簿包含宏。这些宏会保留，但绝不会运行。',
     statusBarLabel: '状态栏',
     statusAverage: '平均值：{value}',

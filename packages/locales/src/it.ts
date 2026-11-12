@@ -1929,6 +1929,7 @@ export const it: OgeLocalePack = {
     sheetAnnouncement: 'Foglio {name}, {index} di {total}',
     notePopupLabel: 'Nota',
     chartListLabel: 'Grafici in questo foglio',
+    shapeListLabel: 'Forme in questo foglio',
     macrosNotice:
       'Questa cartella di lavoro contiene macro. Vengono mantenute, ma non vengono mai eseguite.',
     statusBarLabel: 'Barra di stato',

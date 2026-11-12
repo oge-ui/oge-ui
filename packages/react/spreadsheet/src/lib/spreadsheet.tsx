@@ -38,6 +38,7 @@ import {
   type OgeGridPane,
   type OgeHeaderMark,
   type OgePaneChart,
+  type OgePaneShape,
   type OgeRenderMark,
   type OgeRenderText,
   type OgeScrollEdges,
@@ -225,8 +226,137 @@ function PaneChart({ chart }: { chart: OgePaneChart }) {
   );
 }
 
-/** A pane: gridlines, fills, data bars and sparklines, text, borders, marks, the selection, pictures and charts. */
-function Pane({ item }: { item: OgeGridPane }) {
+/**
+ * A shape, connector, group or text box, as the slide renderer draws it — in
+ * points, scaled onto the box; a line's stroke and arrowheads draw past it.
+ */
+function PaneShape({
+  shape,
+  mediaUrl,
+}: {
+  shape: OgePaneShape;
+  mediaUrl: (path: string) => string | null;
+}) {
+  const { view } = shape;
+  return (
+    <svg
+      className="oge-spreadsheet-shape"
+      aria-hidden="true"
+      style={css(shape.frame)}
+    >
+      <defs>
+        {view.gradients.map((gradient) => (
+          <linearGradient
+            key={gradient.id}
+            id={gradient.id}
+            colorInterpolation="linearRGB"
+            gradientTransform={gradient.transform}
+          >
+            {gradient.stops.map((stop, i) => (
+              <stop
+                key={i}
+                offset={stop.offset}
+                stopColor={stop.color}
+                stopOpacity={stop.opacity}
+              />
+            ))}
+          </linearGradient>
+        ))}
+        {view.patterns.map((pattern) => (
+          <pattern
+            key={pattern.id}
+            id={pattern.id}
+            patternUnits="userSpaceOnUse"
+            width={pattern.size}
+            height={pattern.size}
+          >
+            <rect
+              width={pattern.size}
+              height={pattern.size}
+              fill={pattern.background}
+              fillOpacity={pattern.backgroundOpacity}
+            />
+            <path
+              d={pattern.d}
+              fill={pattern.foreground}
+              fillOpacity={pattern.foregroundOpacity}
+            />
+          </pattern>
+        ))}
+      </defs>
+      <g transform={shape.scale}>
+        {view.nodes.map((node, i) => {
+          if (node.kind === 'path') {
+            return (
+              <path
+                key={i}
+                d={node.d}
+                transform={node.transform || undefined}
+                fill={node.fill?.paint ?? 'none'}
+                fillOpacity={node.fill?.opacity}
+                stroke={node.stroke?.paint ?? 'none'}
+                strokeOpacity={node.stroke?.opacity}
+                strokeWidth={node.strokeWidth}
+                strokeDasharray={node.dash ?? undefined}
+                strokeLinecap={node.cap}
+                style={node.filter ? { filter: node.filter } : undefined}
+              />
+            );
+          }
+          if (node.kind === 'image') {
+            const href = mediaUrl(node.media);
+            return href ? (
+              <svg
+                key={i}
+                preserveAspectRatio="none"
+                x={node.x}
+                y={node.y}
+                width={node.width}
+                height={node.height}
+                viewBox={node.viewBox}
+                transform={node.transform || undefined}
+              >
+                <image
+                  width="1"
+                  height="1"
+                  preserveAspectRatio="none"
+                  href={href}
+                />
+              </svg>
+            ) : null;
+          }
+          return (
+            <text
+              key={i}
+              textAnchor={node.anchor}
+              x={node.x}
+              y={node.y}
+              transform={node.transform || undefined}
+              fontFamily={node.fontFamily}
+              fontSize={node.fontSize}
+              fontWeight={node.fontWeight}
+              fontStyle={node.fontStyle}
+              fill={node.fill.paint}
+              fillOpacity={node.fill.opacity}
+              textDecoration={node.decoration ?? undefined}
+            >
+              {node.text}
+            </text>
+          );
+        })}
+      </g>
+    </svg>
+  );
+}
+
+/** A pane: gridlines, fills, data bars and sparklines, text, borders, marks, the selection, pictures, charts and shapes. */
+function Pane({
+  item,
+  mediaUrl,
+}: {
+  item: OgeGridPane;
+  mediaUrl: (path: string) => string | null;
+}) {
   const { pane, selection: s } = item;
   return (
     <div
@@ -342,23 +472,29 @@ function Pane({ item }: { item: OgeGridPane }) {
             style={css(s.handle)}
           />
         ) : null}
-        {item.pictures.map((picture) => (
-          <div
-            key={picture.key}
-            className="oge-spreadsheet-picture"
-            style={css(picture.frame)}
-          >
-            <img
-              src={picture.url}
-              alt={picture.alt}
-              style={css(picture.image)}
-              draggable={false}
-            />
-          </div>
-        ))}
-        {item.charts.map((chart) => (
-          <PaneChart key={chart.key} chart={chart} />
-        ))}
+        {/* pictures, charts and shapes share one stacking layer, ordered as the drawing lists them */}
+        <div className="oge-spreadsheet-drawings">
+          {item.pictures.map((picture) => (
+            <div
+              key={picture.key}
+              className="oge-spreadsheet-picture"
+              style={css(picture.frame)}
+            >
+              <img
+                src={picture.url}
+                alt={picture.alt}
+                style={css(picture.image)}
+                draggable={false}
+              />
+            </div>
+          ))}
+          {item.charts.map((chart) => (
+            <PaneChart key={chart.key} chart={chart} />
+          ))}
+          {item.shapes.map((shape) => (
+            <PaneShape key={shape.key} shape={shape} mediaUrl={mediaUrl} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -508,6 +644,7 @@ export const OgeSpreadsheet = forwardRef<
     core.resizing()?.axis ?? core.resizeHover()?.axis ?? null;
   // the panes the charts draw in are hidden from assistive tech: it hears this list
   const chartLabels = workbook ? core.chartLabels() : [];
+  const shapeLabels = workbook ? core.shapeLabels() : [];
   const tabs = workbook ? core.tabs() : [];
   const showTabs =
     !!workbook && (props.showSheetTabs ?? workbook.showSheetTabs) !== false;
@@ -1217,7 +1354,11 @@ export const OgeSpreadsheet = forwardRef<
               style={css(view.sizer)}
             >
               {view.render.map((item) => (
-                <Pane key={item.pane.key} item={item} />
+                <Pane
+                  key={item.pane.key}
+                  item={item}
+                  mediaUrl={(path) => core.pictureUrl(path)}
+                />
               ))}
               {view.columnHeaders.map((strip) => (
                 <div
@@ -1660,6 +1801,16 @@ export const OgeSpreadsheet = forwardRef<
             aria-label={text.chartListLabel}
           >
             {chartLabels.map((label, i) => (
+              <li key={i}>{label}</li>
+            ))}
+          </ul>
+        ) : null}
+        {shapeLabels.length ? (
+          <ul
+            className="oge-spreadsheet-chart-list"
+            aria-label={text.shapeListLabel}
+          >
+            {shapeLabels.map((label, i) => (
               <li key={i}>{label}</li>
             ))}
           </ul>
