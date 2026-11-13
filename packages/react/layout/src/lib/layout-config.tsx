@@ -15,6 +15,10 @@ import {
   type OgeImageViewerConfig,
   type OgeImageViewerConfigInput,
   OGE_DEFAULT_BARCODE_CONFIG,
+  OGE_DEFAULT_DIFF_VIEWER_CONFIG,
+  resolveOgeDiffViewerConfig,
+  type OgeDiffViewerConfig,
+  type OgeDiffViewerConfigInput,
   resolveOgeBarcodeConfig,
   type OgeBarcodeConfig,
   type OgeBarcodeConfigInput,
@@ -485,6 +489,29 @@ export function OgeBarcodeConfigProvider({
 
 export const useOgeBarcodeConfig = (): OgeBarcodeConfig =>
   useContext(BarcodeContext);
+
+const DiffViewerContext = createContext<OgeDiffViewerConfig>(
+  OGE_DEFAULT_DIFF_VIEWER_CONFIG,
+);
+
+/** Subtree-scoped defaults — the React counterpart of `provideOgeDiffViewerConfig()`. */
+export function OgeDiffViewerConfigProvider({
+  config,
+  children,
+}: {
+  config?: OgeDiffViewerConfigInput;
+  children?: ReactNode;
+}) {
+  const value = useMemo(() => resolveOgeDiffViewerConfig(config), [config]);
+  return (
+    <DiffViewerContext.Provider value={value}>
+      {children}
+    </DiffViewerContext.Provider>
+  );
+}
+
+export const useOgeDiffViewerConfig = (): OgeDiffViewerConfig =>
+  useContext(DiffViewerContext);
 
 const ListViewContext = createContext<OgeListViewConfig>(
   OGE_DEFAULT_LIST_VIEW_CONFIG,

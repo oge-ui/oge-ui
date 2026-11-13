@@ -809,6 +809,18 @@ export class App {
       ],
     },
     {
+      title: 'Diff Viewer',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/diff-viewer', label: 'Overview', icon: 'code' },
+        {
+          path: '/components/diff-viewer/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Image Viewer',
       group: COMPONENTS_GROUP,
       items: [

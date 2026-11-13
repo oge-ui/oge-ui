@@ -1,0 +1,255 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The diff viewer of both render layers.
+.oge-diff-viewer-host {
+  display: block;
+}
+
+.oge-diff-viewer {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  max-block-size: 100%;
+  overflow: hidden;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  // the diff's own tints: a soft line background, a stronger word highlight
+  --oge-diff-insert-bg: color-mix(in srgb, var(--oge-success) 12%, transparent);
+  --oge-diff-delete-bg: color-mix(in srgb, var(--oge-danger) 12%, transparent);
+  --oge-diff-insert-word: color-mix(
+    in srgb,
+    var(--oge-success) 32%,
+    transparent
+  );
+  --oge-diff-delete-word: color-mix(
+    in srgb,
+    var(--oge-danger) 32%,
+    transparent
+  );
+}
+
+.oge-diff-viewer-toolbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+.oge-diff-viewer-stats {
+  display: inline-flex;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.oge-diff-viewer-added-count {
+  color: var(--oge-success);
+}
+
+.oge-diff-viewer-removed-count {
+  color: var(--oge-danger);
+}
+
+.oge-diff-viewer-group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.oge-diff-viewer-button,
+.oge-diff-viewer-expand {
+  min-block-size: var(--oge-control-height-sm);
+  padding: 0 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent-soft);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: 1px;
+  }
+}
+
+.oge-diff-viewer-position {
+  color: var(--oge-muted-color);
+}
+
+.oge-diff-viewer-message {
+  margin: 0;
+  padding: 12px;
+  color: var(--oge-muted-color);
+}
+
+.oge-diff-viewer-error {
+  color: var(--oge-danger);
+}
+
+.oge-diff-viewer-scroll {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: auto;
+
+  @include tokens.scrollbar;
+
+  &:focus-visible {
+    outline: 2px solid var(--oge-accent);
+    outline-offset: -2px;
+  }
+}
+
+.oge-diff-viewer-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.93em;
+  line-height: 1.5;
+  table-layout: fixed;
+
+  th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--oge-border-color);
+    background: var(--oge-header-bg);
+    font-family: inherit;
+    font-weight: 600;
+    text-align: start;
+  }
+
+  td {
+    padding: 0 8px;
+    vertical-align: top;
+  }
+}
+
+.oge-diff-viewer-number {
+  inline-size: 3.5em;
+  color: var(--oge-muted-color);
+  text-align: end;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-diff-viewer-table:not(.oge-diff-viewer-table-inline) th {
+  &:nth-child(2) {
+    border-inline-start: 1px solid var(--oge-border-color);
+  }
+}
+
+.oge-diff-viewer-code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  // the split view's new side starts at a line
+  .oge-diff-viewer-table:not(.oge-diff-viewer-table-inline)
+    &
+    + .oge-diff-viewer-number {
+    border-inline-start: 1px solid var(--oge-border-color);
+  }
+}
+
+td.oge-diff-viewer-insert {
+  background: var(--oge-diff-insert-bg);
+}
+
+td.oge-diff-viewer-delete {
+  background: var(--oge-diff-delete-bg);
+}
+
+td.oge-diff-viewer-empty {
+  background: var(--oge-header-bg);
+}
+
+.oge-diff-viewer-marker {
+  display: inline-block;
+  inline-size: 1.2em;
+  margin-inline-start: -0.4em;
+  font-weight: 600;
+
+  .oge-diff-viewer-insert & {
+    color: var(--oge-success);
+  }
+
+  .oge-diff-viewer-delete & {
+    color: var(--oge-danger);
+  }
+}
+
+.oge-diff-viewer-word {
+  border-radius: 2px;
+  color: inherit;
+
+  .oge-diff-viewer-insert & {
+    background: var(--oge-diff-insert-word);
+  }
+
+  .oge-diff-viewer-delete & {
+    background: var(--oge-diff-delete-word);
+  }
+}
+
+.oge-diff-viewer-current td {
+  box-shadow:
+    inset 0 1px 0 var(--oge-accent),
+    inset 0 -1px 0 var(--oge-accent);
+}
+
+.oge-diff-viewer-fold td {
+  padding: 2px 8px;
+  background: var(--oge-header-bg);
+  text-align: center;
+}
+
+.oge-diff-viewer-expand {
+  min-block-size: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--oge-accent);
+}
+
+.oge-diff-viewer-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .oge-diff-viewer-word {
+    outline: 1px solid CanvasText;
+  }
+
+  td.oge-diff-viewer-insert,
+  td.oge-diff-viewer-delete {
+    border-inline-start: 3px solid CanvasText;
+  }
+}

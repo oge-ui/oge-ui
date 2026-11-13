@@ -7,6 +7,22 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Diff viewer — `@oge-ui/layout/diff-viewer`, `@oge-ui/react-layout`
+
+- New `oge-diff-viewer` / `<OgeDiffViewer>`: compares two texts or two JSON
+  documents, side by side or inline.
+  - A Myers line diff, with the changed words highlighted inside changed
+    lines; unchanged runs fold to `context` lines and open on a click;
+    whitespace or case can be ignored.
+  - JSON is compared as canonical, key-sorted text (key order is never a
+    change), and `diff().changes` lists the changed paths.
+  - The toolbar counts the added and removed lines, switches the layout and
+    steps through the changes, announced politely; every changed line says
+    "Added" or "Removed" to a screen reader.
+- The diff engine is in `@oge-ui/behavior` (`ogeDiffModel`, `ogeDiffLines`,
+  `ogeDiffWords`, `ogeJsonChanges`, …); messages are translated in every
+  `@oge-ui/locales` pack (`layout.diffViewer`).
+
 ### Barcodes — `@oge-ui/layout/barcode`, `@oge-ui/react-layout`
 
 - New `oge-barcode` / `<OgeBarcode>`: QR codes, Code 128 and EAN-13 as crisp

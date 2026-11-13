@@ -851,6 +851,23 @@ export const es: OgeLocalePack = {
       detected: 'Leído: {value}',
       nothingFound: 'No se encontró ningún código en la imagen',
     },
+    diffViewer: {
+      label: 'Comparación',
+      oldLabel: 'Antes',
+      newLabel: 'Después',
+      split: 'En paralelo',
+      inline: 'En línea',
+      previousChange: 'Cambio anterior',
+      nextChange: 'Cambio siguiente',
+      expand:
+        '{count, plural, one {Mostrar # línea sin cambios} other {Mostrar # líneas sin cambios}}',
+      stats: '+{added} −{removed}',
+      changePosition: 'Cambio {index} de {count}',
+      noChanges: 'Sin diferencias',
+      invalidJson: '{side} no es JSON válido: {error}',
+      added: 'Añadido',
+      removed: 'Eliminado',
+    },
   },
   fab: {
     speedDial: 'Acciones',

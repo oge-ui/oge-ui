@@ -734,6 +734,27 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/diff-viewer',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/diff-viewer').then(
+            (m) => m.LayoutDiffViewerPage,
+          ),
+        title: 'OGE — Diff Viewer',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/diff-viewer-api').then(
+            (m) => m.LayoutDiffViewerApiPage,
+          ),
+        title: 'OGE — Diff Viewer API',
+      },
+    ],
+  },
+  {
     path: 'components/image-viewer',
     children: [
       {

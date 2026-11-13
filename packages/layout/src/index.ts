@@ -343,6 +343,22 @@ export {
   type OgeImageViewerItem,
   type OgeImageViewerMessages,
 } from '@oge-ui/layout/image-viewer';
+export { OgeDiffViewer } from '@oge-ui/layout/diff-viewer';
+export {
+  OGE_DIFF_VIEWER_CONFIG,
+  OGE_DEFAULT_DIFF_VIEWER_CONFIG,
+  OGE_DEFAULT_DIFF_VIEWER_MESSAGES,
+  provideOgeDiffViewerConfig,
+  ogeDiffModel,
+  ogeJsonChanges,
+  type OgeDiffLanguage,
+  type OgeDiffModel,
+  type OgeDiffRow,
+  type OgeDiffViewerConfig,
+  type OgeDiffViewerConfigInput,
+  type OgeDiffViewerMessages,
+  type OgeJsonChange,
+} from '@oge-ui/layout/diff-viewer';
 export { OgeBarcode, OgeBarcodeScanner } from '@oge-ui/layout/barcode';
 export {
   OGE_BARCODE_CONFIG,

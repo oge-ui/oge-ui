@@ -854,6 +854,23 @@ export const ru: OgeLocalePack = {
       detected: 'Прочитано: {value}',
       nothingFound: 'На изображении не найден штрихкод',
     },
+    diffViewer: {
+      label: 'Сравнение',
+      oldLabel: 'До',
+      newLabel: 'После',
+      split: 'Рядом',
+      inline: 'Построчно',
+      previousChange: 'Предыдущее изменение',
+      nextChange: 'Следующее изменение',
+      expand:
+        '{count, plural, one {Показать # неизменённую строку} few {Показать # неизменённые строки} many {Показать # неизменённых строк} other {Показать # неизменённой строки}}',
+      stats: '+{added} −{removed}',
+      changePosition: 'Изменение {index} из {count}',
+      noChanges: 'Различий нет',
+      invalidJson: '{side}: недопустимый JSON: {error}',
+      added: 'Добавлено',
+      removed: 'Удалено',
+    },
   },
   fab: {
     speedDial: 'Действия',

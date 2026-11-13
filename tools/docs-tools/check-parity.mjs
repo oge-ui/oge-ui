@@ -538,6 +538,17 @@ const FAMILIES = [
     },
   },
   {
+    family: 'layout-diff-viewer',
+    angularApiPage: 'apps/dev-app/src/app/pages/layout/diff-viewer-api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-layout/diff-viewer-api.ts',
+    exceptions: {
+      reactOnly: {
+        classname: STYLING_IDIOM,
+        style: STYLING_IDIOM,
+      },
+    },
+  },
+  {
     family: 'layout-image-viewer',
     angularApiPage: 'apps/dev-app/src/app/pages/layout/image-viewer-api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-layout/image-viewer-api.ts',

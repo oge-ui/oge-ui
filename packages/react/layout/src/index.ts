@@ -355,6 +355,28 @@ export {
   type OgeImageViewerMessages,
 } from '@oge-ui/behavior';
 export {
+  OgeDiffViewer,
+  type OgeDiffViewerHandle,
+  type OgeDiffViewerProps,
+} from './lib/diff-viewer';
+export {
+  OgeDiffViewerConfigProvider,
+  useOgeDiffViewerConfig,
+} from './lib/layout-config';
+export {
+  OGE_DEFAULT_DIFF_VIEWER_CONFIG,
+  OGE_DEFAULT_DIFF_VIEWER_MESSAGES,
+  ogeDiffModel,
+  ogeJsonChanges,
+  type OgeDiffLanguage,
+  type OgeDiffModel,
+  type OgeDiffRow,
+  type OgeDiffViewerConfig,
+  type OgeDiffViewerConfigInput,
+  type OgeDiffViewerMessages,
+  type OgeJsonChange,
+} from '@oge-ui/behavior';
+export {
   OgeBarcode,
   OgeBarcodeScanner,
   type OgeBarcodeHandle,

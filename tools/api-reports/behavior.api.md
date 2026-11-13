@@ -1058,6 +1058,12 @@ export const OGE_DEFAULT_DATA_VIEW_CONFIG: OgeDataViewConfig;
 export const OGE_DEFAULT_DATA_VIEW_MESSAGES: OgeDataViewMessages;
 
 // @public (undocumented)
+export const OGE_DEFAULT_DIFF_VIEWER_CONFIG: OgeDiffViewerConfig;
+
+// @public (undocumented)
+export const OGE_DEFAULT_DIFF_VIEWER_MESSAGES: OgeDiffViewerMessages;
+
+// @public (undocumented)
 export const OGE_DEFAULT_DRAWER_CONFIG: OgeDrawerConfig;
 
 // @public (undocumented)
@@ -4411,6 +4417,148 @@ export type OgeDialogOutcome = 'ok' | 'cancel';
 
 // @public
 export type OgeDialogSeverity = 'info' | 'success' | 'warning' | 'danger';
+
+// @public
+export interface OgeDiffCell {
+    // (undocumented)
+    readonly kind: 'equal' | 'delete' | 'insert';
+    readonly line: number;
+    readonly segments?: readonly OgeDiffSegment[];
+    // (undocumented)
+    readonly text: string;
+}
+
+// @public
+export type OgeDiffLanguage = 'text' | 'json';
+
+// @public
+export function ogeDiffLines(oldLines: readonly string[], newLines: readonly string[], options?: OgeDiffOptions): OgeDiffOp[];
+
+// @public
+export interface OgeDiffModel {
+    readonly changes: readonly OgeJsonChange[];
+    readonly error: {
+        readonly side: 'old' | 'new';
+        readonly message: string;
+    } | null;
+    // (undocumented)
+    readonly rows: readonly OgeDiffRow[];
+    // (undocumented)
+    readonly stats: {
+        readonly added: number;
+        readonly removed: number;
+        readonly changes: number;
+    };
+}
+
+// @public
+export function ogeDiffModel(oldValue: string | unknown, newValue: string | unknown, options?: OgeDiffOptions & OgeDiffRowOptions & {
+    readonly language?: OgeDiffLanguage;
+    readonly sortKeys?: boolean;
+}): OgeDiffModel;
+
+// @public
+export interface OgeDiffOp {
+    // (undocumented)
+    readonly count: number;
+    // (undocumented)
+    readonly kind: 'equal' | 'delete' | 'insert';
+    // (undocumented)
+    readonly newStart: number;
+    readonly oldStart: number;
+}
+
+// @public (undocumented)
+export interface OgeDiffOptions {
+    readonly ignoreCase?: boolean;
+    readonly ignoreWhitespace?: boolean;
+}
+
+// @public
+export type OgeDiffRow = {
+    readonly kind: 'line';
+    readonly key: string;
+    readonly old: OgeDiffCell | null;
+    readonly new: OgeDiffCell | null;
+    readonly change: number;
+} | {
+    readonly kind: 'fold';
+    readonly key: string;
+    readonly count: number;
+    readonly oldLine: number;
+    readonly newLine: number;
+};
+
+// @public (undocumented)
+export interface OgeDiffRowOptions {
+    readonly context?: number;
+    readonly expanded?: ReadonlySet<string>;
+    readonly mode?: 'split' | 'inline';
+    readonly words?: boolean;
+}
+
+// @public
+export function ogeDiffRows(ops: readonly OgeDiffOp[], oldLines: readonly string[], newLines: readonly string[], options?: OgeDiffRowOptions): OgeDiffRow[];
+
+// @public
+export interface OgeDiffSegment {
+    // (undocumented)
+    readonly changed: boolean;
+    // (undocumented)
+    readonly text: string;
+}
+
+// @public
+export function ogeDiffSplitLines(text: string): string[];
+
+// @public
+export function ogeDiffStats(ops: readonly OgeDiffOp[]): {
+    readonly added: number;
+    readonly removed: number;
+    readonly changes: number;
+};
+
+// @public (undocumented)
+export interface OgeDiffViewerConfig {
+    context?: number;
+    // (undocumented)
+    messages: OgeDiffViewerMessages;
+}
+
+// @public (undocumented)
+export type OgeDiffViewerConfigInput = Partial<Omit<OgeDiffViewerConfig, 'messages'>> & {
+    messages?: Partial<OgeDiffViewerMessages>;
+};
+
+// @public (undocumented)
+export interface OgeDiffViewerMessages {
+    readonly added: string;
+    readonly changePosition: string;
+    readonly expand: string;
+    // (undocumented)
+    readonly inline: string;
+    readonly invalidJson: string;
+    readonly label: string;
+    readonly newLabel: string;
+    // (undocumented)
+    readonly nextChange: string;
+    // (undocumented)
+    readonly noChanges: string;
+    readonly oldLabel: string;
+    // (undocumented)
+    readonly previousChange: string;
+    // (undocumented)
+    readonly removed: string;
+    // (undocumented)
+    readonly split: string;
+    readonly stats: string;
+}
+
+// @public
+export function ogeDiffWords(oldLine: string, newLine: string): {
+    readonly old: OgeDiffSegment[];
+    readonly new: OgeDiffSegment[];
+};
 
 // @public
 export type OgeDirection = 'ltr' | 'rtl';
@@ -9380,6 +9528,23 @@ export function ogeIsRtl(element: Element | null | undefined, explicit?: OgeDire
 export function ogeIsTextTruncated(element: Element | null): boolean;
 
 // @public
+export interface OgeJsonChange {
+    // (undocumented)
+    readonly after?: unknown;
+    // (undocumented)
+    readonly before?: unknown;
+    // (undocumented)
+    readonly kind: 'added' | 'removed' | 'changed';
+    readonly path: string;
+}
+
+// @public
+export function ogeJsonChanges(before: unknown, after: unknown, path?: string): OgeJsonChange[];
+
+// @public
+export function ogeJsonDiffText(value: unknown, sortKeys?: boolean): string;
+
+// @public
 export function ogeKeyboardFillPlan(bounds: OgeGridRangeBounds, axis: 'down' | 'right', previousDataRow: (row: number) => number): {
     source: OgeGridRangeBounds;
     target: OgeGridRangeBounds;
@@ -11055,6 +11220,15 @@ export interface OgePanelBarSelectionChangedEvent<T = OgePanelBarItem> {
 
 // @public
 export function ogePanelBarVisibleIds<T extends OgePanelBarItemLike>(nodes: readonly OgePanelBarNode<T>[], expanded: ReadonlySet<string>): string[];
+
+// @public
+export function ogeParseJson(text: string): {
+    readonly ok: true;
+    readonly value: unknown;
+} | {
+    readonly ok: false;
+    readonly error: string;
+};
 
 // @public
 export function ogeParsePageInput(text: string, pageCount: number): number | null;
@@ -16987,6 +17161,9 @@ export function resolveOgeDataViewConfig(input: OgeDataViewConfigInput | undefin
 
 // @public
 export function resolveOgeDialog<TIcon>(kind: OgeDialogKind, input: string | OgePromptBaseOptions<TIcon> | undefined, messages?: Partial<OgeOverlayMessages>): OgeResolvedDialog;
+
+// @public (undocumented)
+export function resolveOgeDiffViewerConfig(input: OgeDiffViewerConfigInput | undefined, base?: OgeDiffViewerConfig): OgeDiffViewerConfig;
 
 // @public
 export function resolveOgeDrawerConfig(input: OgeDrawerConfigInput | undefined): OgeDrawerConfig;

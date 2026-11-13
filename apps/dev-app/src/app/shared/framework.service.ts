@@ -58,6 +58,7 @@ const COVERAGE: Readonly<
     carousel: ['', 'api'],
     'image-viewer': ['', 'api'],
     barcode: ['', 'api'],
+    'diff-viewer': ['', 'api'],
     // the API page is mirrored; only `routed` is Angular-router-driven, so
     // React readers get the shell notice there (see docs/REACT-PARITY.md)
     tabs: ['', 'api'],

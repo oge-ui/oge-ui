@@ -480,6 +480,14 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'OGE Barcode API reference: oge-barcode and oge-barcode-scanner inputs, outputs and methods, the QR, Code 128 and EAN-13 encoders and the config provider.',
   ],
   [
+    '/components/diff-viewer',
+    'Diff viewer for Angular and React: side-by-side or inline text and JSON comparison with word-level highlights, folded unchanged lines and change navigation.',
+  ],
+  [
+    '/components/diff-viewer/api',
+    'OGE Diff Viewer API reference: every input, output and method of oge-diff-viewer and OgeDiffViewer, the diff model, the JSON comparison and the config provider.',
+  ],
+  [
     '/components/image-viewer',
     'Image viewer for Angular and React: a gallery with zoom, pan, pinch, rotation, thumbnails, full screen and a full keyboard map, announced to screen readers.',
   ],

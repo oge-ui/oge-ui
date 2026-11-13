@@ -852,6 +852,23 @@ export const de: OgeLocalePack = {
       detected: 'Gelesen: {value}',
       nothingFound: 'Kein Barcode im Bild gefunden',
     },
+    diffViewer: {
+      label: 'Vergleich',
+      oldLabel: 'Vorher',
+      newLabel: 'Nachher',
+      split: 'Nebeneinander',
+      inline: 'Untereinander',
+      previousChange: 'Vorherige Änderung',
+      nextChange: 'Nächste Änderung',
+      expand:
+        '{count, plural, one {# unveränderte Zeile anzeigen} other {# unveränderte Zeilen anzeigen}}',
+      stats: '+{added} −{removed}',
+      changePosition: 'Änderung {index} von {count}',
+      noChanges: 'Keine Unterschiede',
+      invalidJson: '{side} ist kein gültiges JSON: {error}',
+      added: 'Hinzugefügt',
+      removed: 'Entfernt',
+    },
   },
   fab: {
     speedDial: 'Aktionen',

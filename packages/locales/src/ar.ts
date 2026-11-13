@@ -849,6 +849,23 @@ export const ar: OgeLocalePack = {
       detected: 'تمت القراءة: {value}',
       nothingFound: 'لم يتم العثور على رمز شريطي في الصورة',
     },
+    diffViewer: {
+      label: 'مقارنة',
+      oldLabel: 'قبل',
+      newLabel: 'بعد',
+      split: 'جنبًا إلى جنب',
+      inline: 'ضمن السطر',
+      previousChange: 'التغيير السابق',
+      nextChange: 'التغيير التالي',
+      expand:
+        '{count, plural, zero {إظهار # سطر دون تغيير} one {إظهار سطر واحد دون تغيير} two {إظهار سطرين دون تغيير} few {إظهار # أسطر دون تغيير} many {إظهار # سطرًا دون تغيير} other {إظهار # سطر دون تغيير}}',
+      stats: '+{added} −{removed}',
+      changePosition: 'التغيير {index} من {count}',
+      noChanges: 'لا توجد اختلافات',
+      invalidJson: '{side} ليس JSON صالحًا: {error}',
+      added: 'مُضاف',
+      removed: 'محذوف',
+    },
   },
   fab: {
     speedDial: 'الإجراءات',

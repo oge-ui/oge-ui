@@ -835,6 +835,23 @@ export const tr: OgeLocalePack = {
       detected: 'Okundu: {value}',
       nothingFound: 'Resimde barkod bulunamadı',
     },
+    diffViewer: {
+      label: 'Karşılaştırma',
+      oldLabel: 'Önce',
+      newLabel: 'Sonra',
+      split: 'Yan yana',
+      inline: 'Satır içi',
+      previousChange: 'Önceki değişiklik',
+      nextChange: 'Sonraki değişiklik',
+      expand:
+        '{count, plural, one {Değişmeyen # satırı göster} other {Değişmeyen # satırı göster}}',
+      stats: '+{added} −{removed}',
+      changePosition: 'Değişiklik {index} / {count}',
+      noChanges: 'Fark yok',
+      invalidJson: '{side} geçerli JSON değil: {error}',
+      added: 'Eklendi',
+      removed: 'Kaldırıldı',
+    },
   },
   fab: {
     speedDial: 'Eylemler',

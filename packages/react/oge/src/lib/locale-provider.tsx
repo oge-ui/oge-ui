@@ -30,6 +30,7 @@ import {
   OGE_DEFAULT_LIST_VIEW_MESSAGES,
   OGE_DEFAULT_IMAGE_VIEWER_MESSAGES,
   OGE_DEFAULT_BARCODE_MESSAGES,
+  OGE_DEFAULT_DIFF_VIEWER_MESSAGES,
   OGE_DEFAULT_TOOLBAR_MESSAGES,
   OGE_DEFAULT_TREE_VIEW_MESSAGES,
   OGE_DEFAULT_UPLOAD_MESSAGES,
@@ -59,6 +60,7 @@ import {
   OgeListViewConfigProvider,
   OgeImageViewerConfigProvider,
   OgeBarcodeConfigProvider,
+  OgeDiffViewerConfigProvider,
   OgeTimelineConfigProvider,
   OgeToolbarConfigProvider,
 } from '@oge-ui/react-layout';
@@ -366,6 +368,12 @@ export function OgeLayoutLocaleProvider({
           layout?.listView,
         ),
       },
+      diffViewer: {
+        messages: ogeMergeMessages(
+          OGE_DEFAULT_DIFF_VIEWER_MESSAGES,
+          layout?.diffViewer,
+        ),
+      },
       barcode: {
         messages: ogeMergeMessages(
           OGE_DEFAULT_BARCODE_MESSAGES,
@@ -400,13 +408,19 @@ export function OgeLayoutLocaleProvider({
                                 config={c.tileLayout}
                               >
                                 <OgeListViewConfigProvider config={c.listView}>
-                                  <OgeBarcodeConfigProvider config={c.barcode}>
-                                    <OgeImageViewerConfigProvider
-                                      config={c.imageViewer}
+                                  <OgeDiffViewerConfigProvider
+                                    config={c.diffViewer}
+                                  >
+                                    <OgeBarcodeConfigProvider
+                                      config={c.barcode}
                                     >
-                                      {children}
-                                    </OgeImageViewerConfigProvider>
-                                  </OgeBarcodeConfigProvider>
+                                      <OgeImageViewerConfigProvider
+                                        config={c.imageViewer}
+                                      >
+                                        {children}
+                                      </OgeImageViewerConfigProvider>
+                                    </OgeBarcodeConfigProvider>
+                                  </OgeDiffViewerConfigProvider>
                                 </OgeListViewConfigProvider>
                               </OgeTileLayoutConfigProvider>
                             </OgeSimpleTableConfigProvider>

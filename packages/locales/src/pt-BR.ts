@@ -847,6 +847,23 @@ export const ptBR: OgeLocalePack = {
       detected: 'Lido: {value}',
       nothingFound: 'Nenhum código de barras encontrado na imagem',
     },
+    diffViewer: {
+      label: 'Comparação',
+      oldLabel: 'Antes',
+      newLabel: 'Depois',
+      split: 'Lado a lado',
+      inline: 'Em linha',
+      previousChange: 'Alteração anterior',
+      nextChange: 'Próxima alteração',
+      expand:
+        '{count, plural, one {Mostrar # linha sem alterações} other {Mostrar # linhas sem alterações}}',
+      stats: '+{added} −{removed}',
+      changePosition: 'Alteração {index} de {count}',
+      noChanges: 'Nenhuma diferença',
+      invalidJson: '{side} não é um JSON válido: {error}',
+      added: 'Adicionado',
+      removed: 'Removido',
+    },
   },
   fab: {
     speedDial: 'Ações',

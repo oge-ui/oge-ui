@@ -841,6 +841,23 @@ export const he: OgeLocalePack = {
       detected: 'נקרא: {value}',
       nothingFound: 'לא נמצא ברקוד בתמונה',
     },
+    diffViewer: {
+      label: 'השוואה',
+      oldLabel: 'לפני',
+      newLabel: 'אחרי',
+      split: 'זה לצד זה',
+      inline: 'בשורה אחת',
+      previousChange: 'השינוי הקודם',
+      nextChange: 'השינוי הבא',
+      expand:
+        '{count, plural, one {הצגת שורה # שלא השתנתה} two {הצגת # שורות שלא השתנו} other {הצגת # שורות שלא השתנו}}',
+      stats: '+{added} −{removed}',
+      changePosition: 'שינוי {index} מתוך {count}',
+      noChanges: 'אין הבדלים',
+      invalidJson: '{side} אינו JSON תקין: {error}',
+      added: 'נוסף',
+      removed: 'הוסר',
+    },
   },
   fab: {
     speedDial: 'פעולות',

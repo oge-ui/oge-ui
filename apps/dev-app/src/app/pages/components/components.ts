@@ -1250,6 +1250,11 @@ export class ComponentsIndexPage {
     },
     {
       family: 'Layout',
+      label: 'Diff viewer',
+      path: '/components/diff-viewer',
+    },
+    {
+      family: 'Layout',
       label: 'Image viewer',
       path: '/components/image-viewer',
     },

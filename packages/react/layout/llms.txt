@@ -1,6 +1,6 @@
 # @oge-ui/react-layout
 
-> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view, tile layout, image viewer and barcode generator and scanner — running the same config defaults, decision functions and stylesheet as the Angular layout package.
+> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, a nested panel bar and a stand-alone expansion panel, plus the linear and circular progress bar, load indicator, shimmer skeleton and load panel, and the display and feedback set — avatar and avatar group, badge, chip and chip list, inline alert, timeline and app bar, the carousel, list view, data view, tile layout, image viewer, barcode generator and scanner and diff viewer — running the same config defaults, decision functions and stylesheet as the Angular layout package.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/accordion
@@ -1955,6 +1955,82 @@ _OgeImageViewerConfigProvider_
 | `OgeImageViewerConfigInput` | `Partial<OgeImageViewerConfig> with partial messages` | What the provider accepts. |
 | `OgeImageViewerMessages` | `{ label; previous; next; zoomIn; zoomOut; resetZoom; rotateLeft; rotateRight; fullscreen; exitFullscreen; thumbnails; counter; zoomLevel; announce; empty }` | The image viewer catalog. |
 
+### <OgeDiffViewer>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `oldValue / newValue` | `unknown` | `''` | The two sides: texts, or with `language="json"` JSON text or values. |
+| `language` | `'text' \| 'json'` | `'text'` | `language="json"` parses JSON text (or takes values) and compares canonical, two-space text with keys sorted (`sortKeys`), so key order is never a change; `diff().changes` lists the changed paths (`$.items[2].price`). A side that is not JSON shows the `invalidJson` message. |
+| `mode` | `'split' \| 'inline' \| undefined` | `'split'` | Side by side, or one column with removed lines above the added ones (controlled; `defaultMode` when uncontrolled). |
+| `context` | `number \| undefined` | `config ?? 3` | Unchanged lines kept around each change; `Infinity` folds nothing. |
+| `ignoreWhitespace / ignoreCase` | `boolean` | `false` | Lines differing only in whitespace, or only in letter case, count as equal. |
+| `wordDiff` | `boolean` | `true` | Highlight the changed words inside changed lines. |
+| `sortKeys` | `boolean` | `true` | JSON: sort object keys before comparing. |
+| `toolbar` | `boolean` | `true` | The added / removed counts, the layout switch and previous / next change (announced politely). |
+| `messages` | `Partial<OgeDiffViewerMessages>` | `—` | Per-instance overrides of the config catalog. |
+| `className / style` | `string / CSSProperties` | `—` | Added to the root `.oge-diff-viewer`. |
+
+#### Methods
+
+_Ref handle (OgeDiffViewerHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `nextChange() / previousChange()` | `() => void` | Scrolls to the next or previous change (wrapping) and announces “Change 2 of 5”. |
+| `diff()` | `() => OgeDiffModel` | What the viewer shows: `{ rows, stats: { added, removed, changes }, changes, error }`. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onModeChange` | `(mode: 'split' \| 'inline') => void` | The layout switch was used. |
+
+#### Types
+
+_How it compares_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Lines and words` | `Myers O(ND)` | A Myers line diff (the shortest edit script); within a changed pair of lines the changed words are highlighted. Unchanged runs fold to `context` lines around each change and open on a click. Every changed line carries a visually hidden “Added” / “Removed” for screen readers — the colour is never the only signal — and the scroll area takes focus for keyboard scrolling. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDiffViewerProps` | `interface` | The props above. |
+| `OgeDiffViewerHandle` | `{ nextChange(); previousChange(); diff() }` | What a `ref` reaches. |
+| `OgeDiffModel` | `{ rows; stats; changes; error }` | What `diff()` returns. |
+| `OgeDiffRow` | `{ kind: 'line'; old; new; change } \| { kind: 'fold'; count; oldLine; newLine }` | A drawn row: a line (a cell per side, with its word segments), or folded unchanged lines. |
+| `OgeJsonChange` | `{ path; kind: 'added' \| 'removed' \| 'changed'; before?; after? }` | One changed path of two JSON values. |
+| `OgeDiffLanguage` | `'text' \| 'json'` | What the viewer compares. |
+| `ogeDiffModel / ogeJsonChanges` | `functions (@oge-ui/behavior, re-exported)` | The model without a view (servers, tests, a change log), and the changed paths of two JSON values. |
+
+### Configuration
+
+#### Properties
+
+_OgeDiffViewerConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeDiffViewerMessages` | Every user-facing string: `label`, `oldLabel` / `newLabel` (the column headings), `split`, `inline`, `previousChange`, `nextChange`, `expand` (an ICU plural over `{count}`), `stats`, `changePosition` (`{index}` / `{count}`), `noChanges`, `invalidJson` (`{side}`, `{error}`), `added` and `removed`. Translated in every `@oge-ui/locales` pack (`layout.diffViewer`). |
+| `context` | `number \| undefined` | Default unchanged lines around a change. `useOgeDiffViewerConfig()` reads the resolved value. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDiffViewerConfigProvider` | `({ config?, children }) => JSX.Element` | Subtree-scoped defaults. |
+| `useOgeDiffViewerConfig` | `() => OgeDiffViewerConfig` | Reads the resolved config. |
+| `OGE_DEFAULT_DIFF_VIEWER_CONFIG` | `OgeDiffViewerConfig` | The defaults (from `@oge-ui/behavior`). |
+| `OGE_DEFAULT_DIFF_VIEWER_MESSAGES` | `OgeDiffViewerMessages` | The English catalog. |
+| `resolveOgeDiffViewerConfig` | `(input?, base?) => OgeDiffViewerConfig` | Merges a partial config over a base (the defaults). |
+| `OgeDiffViewerConfig` | `{ messages: OgeDiffViewerMessages; context? }` | Resolved config shape. |
+| `OgeDiffViewerConfigInput` | `Partial<OgeDiffViewerConfig> with partial messages` | What the provider accepts. |
+| `OgeDiffViewerMessages` | `{ label; oldLabel; newLabel; split; inline; previousChange; nextChange; expand; stats; changePosition; noChanges; invalidJson; added; removed }` | The diff viewer catalog. |
+
 ### <OgeBarcode> & <OgeBarcodeScanner>
 
 #### Properties
@@ -3746,6 +3822,62 @@ export function DataViewRemoteDemo() {
       onOptionsChanged={load}
       renderItem={({ item }) => <Tile item={item} />}
     />
+  );
+}
+```
+
+### Text
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDiffViewer } from '@oge-ui/react-layout';
+
+const before = 'server:\n  port: 8080\n  workers: 4\nlogging:\n  level: info';
+const after = 'server:\n  port: 8443\n  workers: 8\n  tls: true\nlogging:\n  level: warn';
+
+export function DiffTextDemo() {
+  const [mode, setMode] = useState<'split' | 'inline'>('split');
+  return (
+    <OgeDiffViewer
+      oldValue={before}
+      newValue={after}
+      context={1}
+      mode={mode}
+      onModeChange={setMode}
+    />
+  );
+}
+```
+
+### JSON
+
+```ts
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { OgeDiffViewer } from '@oge-ui/react-layout';
+import type { OgeDiffViewerHandle, OgeJsonChange } from '@oge-ui/react-layout';
+
+const before = '{"sku": "SKU-2041", "price": 39.9, "tags": ["lighting"]}';
+const after = { price: 34.9, sku: 'SKU-2041', tags: ['lighting', 'sale'] };
+
+export function DiffJsonDemo() {
+  const viewer = useRef<OgeDiffViewerHandle>(null);
+  const [changes, setChanges] = useState<readonly OgeJsonChange[]>([]);
+  useEffect(() => setChanges(viewer.current?.diff().changes ?? []), []);
+  return (
+    <>
+      <OgeDiffViewer ref={viewer} language="json" oldValue={before} newValue={after} defaultMode="inline" />
+      <ul>
+        {changes.map((c) => (
+          <li key={c.path}>
+            {c.kind} {c.path}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 ```
