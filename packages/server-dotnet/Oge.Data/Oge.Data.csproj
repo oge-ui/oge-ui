@@ -10,7 +10,7 @@
     <RootNamespace>Oge.Data</RootNamespace>
 
     <PackageId>Oge.Data</PackageId>
-    <Version>1.1.7</Version>
+    <Version>1.1.8</Version>
     <Authors>kaya2m</Authors>
     <Description>Server side of the OGE UI data grid for .NET: applies grid requests (filter, search, sort, paging, grouping, summaries, header-filter values) to any IQueryable — Entity Framework Core, LINQ to Objects — under a field allowlist, following the published OGE filter contract.</Description>
     <PackageTags>datagrid;iqueryable;linq;efcore;filtering;paging;oge-ui</PackageTags>
