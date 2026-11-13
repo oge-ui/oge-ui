@@ -1271,6 +1271,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Command Palette',
       },
       {
+        path: 'notification-center',
+        loadComponent: () =>
+          import('./pages/overlay/notification-center').then(
+            (m) => m.OverlayNotificationCenterPage,
+          ),
+        title: 'OGE — Notification Center',
+      },
+      {
         path: 'tour',
         loadComponent: () =>
           import('./pages/overlay/tour').then((m) => m.OverlayTourPage),

@@ -656,6 +656,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Command palette for Angular and React: Ctrl+K search over every action, fuzzy matching with highlights, groups, recent commands, shortcuts and an APG combobox.',
   ],
   [
+    '/components/overlay/notification-center',
+    'Notification center for Angular and React: a bell with the unread count, read and unread, grouping by day, infinite scroll and an accessible WAI-ARIA feed.',
+  ],
+  [
     '/components/overlay/tour',
     'Product tour for Angular and React: step-by-step onboarding with a spotlight, flipping cards, keyboard navigation, RTL, focus restore and reduced motion.',
   ],

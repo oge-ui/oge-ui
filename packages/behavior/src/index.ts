@@ -1209,6 +1209,20 @@ export {
   type OgeTourStep,
 } from './lib/overlay/tour-core';
 export {
+  ogeFeedKeyIntent,
+  ogeMarkNotifications,
+  ogeNotificationSections,
+  ogeNotificationTime,
+  ogeRelativeTime,
+  ogeShouldLoadMore,
+  ogeUnreadCount,
+  type OgeNotification,
+  type OgeNotificationFilter,
+  type OgeNotificationGrouping,
+  type OgeNotificationSection,
+  type OgeNotificationSectionOptions,
+} from './lib/overlay/notification-center-core';
+export {
   ogeContextMenuApiTarget,
   ogeContextMenuPoint,
   ogeContextMenuTarget,

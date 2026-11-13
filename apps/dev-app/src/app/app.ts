@@ -1250,6 +1250,11 @@ export class App {
           icon: 'search',
         },
         {
+          path: '/components/overlay/notification-center',
+          label: 'Notification Center',
+          icon: 'zap',
+        },
+        {
           path: '/components/overlay/tour',
           label: 'Tour',
           icon: 'lightbulb',

@@ -1,6 +1,6 @@
 # @oge-ui/react-overlay
 
-> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, a Ctrl+K command palette with fuzzy search, a guided tour with a spotlight, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
+> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, a popover, accessible tooltips with rich content, a right-click context menu with selector delegation, a modal dialog with async close guards, drag/resize, an imperative provider and confirm/alert/prompt helpers, a non-modal window, a mobile action sheet, a Ctrl+K command palette with fuzzy search, a guided tour with a spotlight, a notification center, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/overlay
@@ -609,6 +609,58 @@ _Vocabulary_
 | `OgeTourProps` | `interface` | The props above. |
 | `OgeTourHandle` | `{ start(step?); next(); previous(); close() }` | What a `ref` reaches. |
 
+### <OgeNotificationCenter>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeNotification[] \| undefined` | `[]` | The notifications (controlled with `onItemsChange`; `defaultItems` when uncontrolled), newest first whatever the order given. Fields: `id`, `title`, `body?`, `time` (a `Date`, an ISO string or epoch ms — shown as a relative time, “5 minutes ago”), `read?`, `group?` (the section with `grouping="group"`), `severity?` (`info`, `success`, `warning`, `danger`: the mark’s colour). |
+| `opened` | `boolean \| undefined` | `false` | The panel is open (controlled; `defaultOpened` when uncontrolled). |
+| `grouping` | `'day' \| 'group' \| 'none'` | `'day'` | Sections: Today / Yesterday / Earlier, the items’ `group`, or one list. |
+| `filter` | `'all' \| 'unread' \| undefined` | `'all'` | The All / Unread switch (controlled; `defaultFilter` when uncontrolled). |
+| `hasMore` | `boolean` | `false` | Older notifications exist: scrolling within 80 px of the end, the Load more button or Page Down onto the last article calls `onLoadMore`. |
+| `loading` | `boolean` | `false` | More are loading: the feed is `aria-busy` and no further `onLoadMore` fires. |
+| `width` | `number \| string` | `360` | Panel width. |
+| `locale` | `string \| undefined` | `—` | Locale of the relative times (default the browser’s). |
+| `messages` | `Partial<OgeOverlayMessages>` | `—` | Per-instance overrides of the `notifications*` messages (see Overlay configuration). |
+| `className / style` | `string / CSSProperties` | `—` | Added to the root `.oge-notification-center`. |
+
+#### Methods
+
+_Ref handle (OgeNotificationCenterHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `markAllRead()` | `() => void` | Marks every notification read. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemsChange / onOpenedChange / onFilterChange` | `callbacks` | The controlled halves of `items`, `opened` and `filter`. |
+| `onLoadMore` | `() => void` | Add older notifications to `items` (and clear `hasMore` at the end). |
+| `onReadChange` | `(event: { item: OgeNotification; read: boolean }) => void` | One notification was marked read or unread — tell the server. |
+| `onDismissed` | `(item: OgeNotification) => void` | One notification was dismissed. |
+
+#### Types
+
+_Feed and announcements_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard and screen readers` | `role="feed"` | The list is a WAI-ARIA **feed**: each notification an `article` named by its title and described by its body, with `aria-posinset` / `aria-setsize` (−1 while `hasMore`); Page Down / Page Up move between articles, Ctrl+End / Ctrl+Home leave the feed; `aria-busy` while loading. Unread titles start with a visually hidden “Unread”, the bell says how many are unread, and new unread notifications are announced politely. The panel is the suite’s popover: Escape and an outside click close it and focus returns to the bell. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeNotificationCenterProps` | `interface` | The props above. |
+| `OgeNotificationCenterHandle` | `{ markAllRead() }` | What a `ref` reaches. |
+| `OgeNotification` | `interface` | One notification: `id`, `title`, `body?`, `time` (a `Date`, an ISO string or epoch ms — shown as a relative time, “5 minutes ago”), `read?`, `group?` (the section with `grouping="group"`), `severity?` (`info`, `success`, `warning`, `danger`: the mark’s colour). |
+| `OgeNotificationGrouping` | `'day' \| 'group' \| 'none'` | How the list is sectioned. |
+| `OgeNotificationFilter` | `'all' \| 'unread'` | Which items the list shows. |
+
 ### <OgeTooltip>
 
 #### Properties
@@ -875,7 +927,7 @@ _OgeOverlayConfig_
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn='hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
 | `toastStacked` | `boolean` | `false` | Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason `'swipe'`). The moves glide on transforms; reduced motion switches at once. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`), and the tour’s `tourLabel`, `tourStep` (`Step {index} of {count}`), `tourNext`, `tourPrevious`, `tourSkip` and `tourDone` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`), and the tour’s `tourLabel`, `tourStep` (`Step {index} of {count}`), `tourNext`, `tourPrevious`, `tourSkip` and `tourDone`, and the notification center’s `notificationsLabel`, `notificationsBell` (an ICU plural over the unread `{count}`), `notificationsAll`, `notificationsUnread`, `notificationsMarkAllRead`, `notificationsMarkRead`, `notificationsMarkUnread`, `notificationsDismiss`, `notificationsToday`, `notificationsYesterday`, `notificationsEarlier`, `notificationsEmpty`, `notificationsLoading`, `notificationsLoadMore` and `notificationsNew` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
 ### Overlay primitives
@@ -1567,6 +1619,60 @@ export function BrandedModal() {
         <p>Classes join the modal's own; attributes are filtered, so an onclick key is never written to the DOM.</p>
       </OgeModal>
     </div>
+  );
+}
+```
+
+### Notification center
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeNotificationCenter } from '@oge-ui/react-overlay';
+import type { OgeNotification } from '@oge-ui/react-overlay';
+
+export function NotificationCenterDemo() {
+  const [items, setItems] = useState<readonly OgeNotification[]>([
+    { id: 'n1', title: 'Build passed', time: Date.now() - 120_000, severity: 'success' },
+    { id: 'n2', title: 'Invoice #1042 paid', time: Date.now() - 90_000_000, read: true },
+  ]);
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const loadOlder = () => {
+    setLoading(true);
+    // fetch the next page from your API, then append it
+    setTimeout(() => {
+      const older = Array.from({ length: 5 }, (_, i) => ({
+        id: `old-${page}-${i}`,
+        title: 'Weekly report is ready',
+        time: Date.now() - (3 + page * 5 + i) * 86_400_000,
+        read: true,
+      }));
+      setItems((current) => [...current, ...older]);
+      setPage(page + 1);
+      setLoading(false);
+    }, 400);
+  };
+  const arrive = () =>
+    setItems((current) => [
+      { id: crypto.randomUUID(), title: 'New order received', time: Date.now() },
+      ...current,
+    ]);
+  return (
+    <>
+      <OgeNotificationCenter
+        items={items}
+        onItemsChange={setItems}
+        hasMore={page < 3}
+        loading={loading}
+        onLoadMore={loadOlder}
+        onReadChange={(e) => console.log(e.item.id, e.read)}
+      />
+      <button type="button" onClick={arrive}>
+        Simulate a new notification
+      </button>
+    </>
   );
 }
 ```

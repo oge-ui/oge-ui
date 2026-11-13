@@ -1,6 +1,6 @@
 # @oge-ui/overlay
 
-> Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), the `oge-command-palette` (Ctrl+K fuzzy search over grouped commands with highlights, recent commands and an APG combobox), the `oge-tour` guided tour (spotlight, flipping cards, ← / → keys, reduced motion), and `OgeToastService` notifications.
+> Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), the `oge-command-palette` (Ctrl+K fuzzy search over grouped commands with highlights, recent commands and an APG combobox), the `oge-tour` guided tour (spotlight, flipping cards, ← / → keys, reduced motion), the `oge-notification-center` (a bell with the unread count over a WAI-ARIA feed of notifications: read / unread, grouping by day, infinite scroll), and `OgeToastService` notifications.
 
 Part of OGE UI v1.1.7.
 Docs and live demos: https://www.ogeui.com/components/overlay
@@ -97,8 +97,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/overlay`
 
-- values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeCommandPalette`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopover`, `OgePopoverContent`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeTour`, `OgeWindow`, `applyMenuItemCheck`, `claimOverlayEscape`, `getTabbableElements`, `isOverlayEscapeClaimed`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `ogeFormatShortcut`, `ogeFromPrimeMenuItems`, `ogeFuzzyMatch`, `ogeMatchesShortcut`, `ogePrimeRouterLinkUrl`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
-- types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeCommand`, `OgeCommandExecuteEvent`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseBlockedEvent`, `OgeModalCloseBlocker`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePrimeMenuItem`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeTourCloseReason`, `OgeTourClosedEvent`, `OgeTourStep`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
+- values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OGE_POPUP_ARROW_SIZE`, `OgeActionSheet`, `OgeActionSheetItemTemplate`, `OgeAnchoredPanel`, `OgeCommandPalette`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgeNotificationCenter`, `OgePopover`, `OgePopoverContent`, `OgePopoverFooter`, `OgePopoverTitle`, `OgePopoverTrigger`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `OgeTour`, `OgeWindow`, `applyMenuItemCheck`, `claimOverlayEscape`, `getTabbableElements`, `isOverlayEscapeClaimed`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `ogeFormatShortcut`, `ogeFromPrimeMenuItems`, `ogeFuzzyMatch`, `ogeMatchesShortcut`, `ogePrimeRouterLinkUrl`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupArrow`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
+- types: `OgeActionSheetCloseReason`, `OgeActionSheetClosedEvent`, `OgeActionSheetClosingEvent`, `OgeActionSheetItem`, `OgeActionSheetItemClickEvent`, `OgeActionSheetItemTemplateContext`, `OgeActionSheetOpeningEvent`, `OgeActionSheetResult`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAlertOptions`, `OgeAnchoredPanelOptions`, `OgeCommand`, `OgeCommandExecuteEvent`, `OgeConfirmOptions`, `OgeContextMenuOpeningEvent`, `OgeDialogSeverity`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuItemType`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseBlockedEvent`, `OgeModalCloseBlocker`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalRole`, `OgeModalSlotContext`, `OgeNotification`, `OgeNotificationFilter`, `OgeNotificationGrouping`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopoverCloseReason`, `OgePopoverClosedEvent`, `OgePopoverClosingEvent`, `OgePopoverInitialFocus`, `OgePopoverOpenReason`, `OgePopoverOpenedEvent`, `OgePopoverOpeningEvent`, `OgePopoverShowOn`, `OgePopoverSlotContext`, `OgePopupAlign`, `OgePopupArrow`, `OgePopupArrowRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgePrimeMenuItem`, `OgePromptInputType`, `OgePromptOptions`, `OgePromptValidator`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`, `OgeTooltipShowMode`, `OgeTooltipTemplateContext`, `OgeTourCloseReason`, `OgeTourClosedEvent`, `OgeTourStep`, `OgeWindowAutoFocus`, `OgeWindowChangeSource`, `OgeWindowCloseReason`, `OgeWindowClosedEvent`, `OgeWindowClosingEvent`, `OgeWindowMovedEvent`, `OgeWindowOpeningEvent`, `OgeWindowPlacement`, `OgeWindowPosition`, `OgeWindowResizeEdge`, `OgeWindowResizedEvent`, `OgeWindowState`, `OgeWindowStateChangedEvent`, `OgeWindowStateChangingEvent`
 
 `@oge-ui/overlay/testing`
 
@@ -608,6 +608,61 @@ _Behavior building blocks (@oge-ui/behavior)_
 | `ogeTourSpotlight / ogeTourCardPosition / OgeTourCardPosition` | `geometry` | The padded, viewport-clipped spotlight rect and the card position beside it (via `resolvePopupPosition`), or centered. |
 | `ogeTourKeyIntent / ogeTourClampStep / ogeTourIsInView` | `helpers` | → / ← to `'next'` / `'previous'` (RTL-mirrored); the clamped step index; whether a rect is fully visible. |
 
+### OgeNotificationCenter — `<oge-notification-center>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeNotification[] (model)` | `[]` | Two-way: the notifications, newest first whatever the order given. Marking read or dismissing writes a new array. Fields: `id`, `title`, `body?`, `time` (a `Date`, an ISO string or epoch ms — shown as a relative time, “5 minutes ago”), `read?`, `group?` (the section with `grouping="group"`), `severity?` (`info`, `success`, `warning`, `danger`: the mark’s colour). |
+| `opened` | `boolean (model)` | `false` | Two-way: the panel is open. |
+| `grouping` | `'day' \| 'group' \| 'none'` | `'day'` | Sections: Today / Yesterday / Earlier, the items’ `group`, or one list. |
+| `filter` | `'all' \| 'unread' (model)` | `'all'` | Two-way: the panel’s All / Unread switch. |
+| `hasMore` | `boolean` | `false` | Older notifications exist: scrolling within 80 px of the end, the Load more button or Page Down onto the last article emits `loadMore`. |
+| `loading` | `boolean` | `false` | More are loading: the feed is `aria-busy` and no further `loadMore` fires. |
+| `width` | `number \| string` | `360` | Panel width. |
+| `locale` | `string \| undefined` | `—` | Locale of the relative times (default the browser’s). |
+| `messages` | `Partial<OgeOverlayMessages>` | `—` | Per-instance overrides of the `notifications*` messages (see Overlay configuration). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `markAllRead()` | `() => void` | Marks every notification read. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemsChange / openedChange / filterChange` | `model halves` | The banana halves of `[(items)]`, `[(opened)]` and `[(filter)]`. |
+| `loadMore` | `void` | Append older notifications to `items` (and clear `hasMore` at the end). |
+| `readChange` | `{ item: OgeNotification; read: boolean }` | One notification was marked read or unread — tell the server. |
+| `dismissed` | `OgeNotification` | One notification was dismissed (it is already out of `items`). |
+
+#### Types
+
+_Feed and announcements_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Keyboard and screen readers` | `role="feed"` | The list is a WAI-ARIA **feed**: each notification an `article` named by its title and described by its body, with `aria-posinset` / `aria-setsize` (−1 while `hasMore`); Page Down / Page Up move between articles, Ctrl+End / Ctrl+Home leave the feed; `aria-busy` while loading. Unread titles start with a visually hidden “Unread”, the bell says how many are unread, and new unread notifications are announced politely. The panel is the suite’s popover: Escape and an outside click close it and focus returns to the bell. |
+
+_Vocabulary_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeNotification` | `interface` | One notification: `id`, `title`, `body?`, `time` (a `Date`, an ISO string or epoch ms — shown as a relative time, “5 minutes ago”), `read?`, `group?` (the section with `grouping="group"`), `severity?` (`info`, `success`, `warning`, `danger`: the mark’s colour). |
+| `OgeNotificationGrouping` | `'day' \| 'group' \| 'none'` | How the list is sectioned. |
+| `OgeNotificationFilter` | `'all' \| 'unread'` | Which items the list shows. |
+
+_Behavior building blocks (@oge-ui/behavior)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeNotificationSections / OgeNotificationSection / OgeNotificationSectionOptions` | `(items, { grouping?, filter?, now?, labels? }) => OgeNotificationSection[]` | The sections, newest first. |
+| `ogeUnreadCount / ogeMarkNotifications / ogeNotificationTime` | `helpers` | Count unread; mark all or some read / unread (a new array); a notification’s time as epoch ms. |
+| `ogeRelativeTime / ogeShouldLoadMore / ogeFeedKeyIntent` | `helpers` | “5 minutes ago” in the locale (`Intl.RelativeTimeFormat`); whether a scrolled list is near its end; the feed keys. |
+
 ### OgeTooltip — `<[ogeTooltip]>`
 
 #### Properties
@@ -861,7 +916,7 @@ _OgeOverlayConfig_
 | `popoverShowDelayMs / popoverHideDelayMs` | `number` | `150 / 300` | Hover dwell before a `showOn: 'hover'` popover opens, and the grace period after the pointer left trigger and panel — long enough to travel across the gap into the panel. |
 | `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
 | `toastStacked` | `boolean` | `false` | Toast stack mode: each region collapses into a deck — the newest toast in front, two more peeking behind it — that expands into a list while the pointer or focus is in it (pausing every timer in it); toasts swipe away sideways (reason `'swipe'`). The moves glide on transforms; reduced motion switches at once. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`), and the tour’s `tourLabel`, `tourStep` (`Step {index} of {count}`), `tourNext`, `tourPrevious`, `tourSkip` and `tourDone` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons, the toast chrome, the popover, the action sheet and the command palette: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`, `popoverClose`, the action sheet’s `actionSheetCancel` / `actionSheetLabel` and the palette’s `commandPaletteLabel`, `commandPalettePlaceholder`, `commandPaletteEmpty`, `commandPaletteRecent` and `commandPaletteResults` (an ICU plural over `{count}`), and the tour’s `tourLabel`, `tourStep` (`Step {index} of {count}`), `tourNext`, `tourPrevious`, `tourSkip` and `tourDone`, and the notification center’s `notificationsLabel`, `notificationsBell` (an ICU plural over the unread `{count}`), `notificationsAll`, `notificationsUnread`, `notificationsMarkAllRead`, `notificationsMarkRead`, `notificationsMarkUnread`, `notificationsDismiss`, `notificationsToday`, `notificationsYesterday`, `notificationsEarlier`, `notificationsEmpty`, `notificationsLoading`, `notificationsLoadMore` and `notificationsNew` (optional; English “Close”, “Cancel” and “Actions” when a catalog predates them). |
 | `messages — dialog helpers & window` | `OgeOverlayMessages (optional keys)` | `—` | `dialogOk` ('OK'), `dialogCancel` ('Cancel'), `dialogConfirmTitle` ('Confirm'), `dialogAlertTitle` ('Notice'), `dialogPromptTitle` ('Enter a value'), `dialogRequired` ('This field is required.'), `windowMinimize` ('Minimize'), `windowMoved` ('Window moved to {x}, {y}'), `windowResized` ('Window resized to {width} by {height}'). Optional so existing catalogs keep type-checking; English fills the gaps. |
 
 ### Overlay primitives
@@ -1581,6 +1636,68 @@ export class Demo {
 export class RenameDialog {
   readonly data = inject<{ name: string }>(OGE_MODAL_DATA);
   readonly ref = inject<OgeModalRef<string>>(OgeModalRef);
+}
+```
+
+### Notification center
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeNotificationCenter } from '@oge-ui/overlay';
+import type { OgeNotification } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeNotificationCenter],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The bell shows the unread count; the panel is a feed (Page Down /
+         Page Up between items). Scrolling to the end asks for older ones. -->
+    <oge-notification-center
+      [(items)]="items"
+      [hasMore]="page() < 3"
+      [loading]="loading()"
+      (loadMore)="loadOlder()"
+      (readChange)="saveRead($event.item.id, $event.read)"
+    />
+    <button type="button" (click)="arrive()">Simulate a new notification</button>
+  `,
+})
+export class Demo {
+  protected readonly items = signal<readonly OgeNotification[]>([
+    { id: 'n1', title: 'Build passed', time: Date.now() - 120_000, severity: 'success' },
+    { id: 'n2', title: 'Invoice #1042 paid', time: Date.now() - 90_000_000, read: true },
+  ]);
+  protected readonly page = signal(0);
+  protected readonly loading = signal(false);
+
+  protected loadOlder(): void {
+    this.loading.set(true);
+    // fetch the next page from your API, then append it
+    setTimeout(() => {
+      const page = this.page();
+      const older = Array.from({ length: 5 }, (_, i) => ({
+        id: `old-${page}-${i}`,
+        title: 'Weekly report is ready',
+        time: Date.now() - (3 + page * 5 + i) * 86_400_000,
+        read: true,
+      }));
+      this.items.update((items) => [...items, ...older]);
+      this.page.set(page + 1);
+      this.loading.set(false);
+    }, 400);
+  }
+
+  protected arrive(): void {
+    this.items.update((items) => [
+      { id: crypto.randomUUID(), title: 'New order received', time: Date.now() },
+      ...items,
+    ]);
+  }
+
+  protected saveRead(id: string, read: boolean): void {
+    // persist the read state on your server
+  }
 }
 ```
 

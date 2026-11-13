@@ -31,6 +31,16 @@ export {
   type OgePopoverHandle,
   type OgePopoverSlotContext,
 } from './lib/popover';
+export {
+  OgeNotificationCenter,
+  type OgeNotificationCenterHandle,
+  type OgeNotificationCenterProps,
+} from './lib/notification-center';
+export type {
+  OgeNotification,
+  OgeNotificationFilter,
+  OgeNotificationGrouping,
+} from '@oge-ui/behavior';
 export { OgeTour, type OgeTourHandle, type OgeTourProps } from './lib/tour';
 export type {
   OgeTourCloseReason,

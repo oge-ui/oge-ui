@@ -19,6 +19,7 @@ import {
 import { OGE_REACT_ACTION_SHEET_API } from './action-sheet-api-data';
 import { OGE_REACT_COMMAND_PALETTE_API } from './command-palette-api-data';
 import { OGE_REACT_TOUR_API } from './tour-api-data';
+import { OGE_REACT_NOTIFICATION_CENTER_API } from './notification-center-api-data';
 import { OGE_REACT_MODAL_TESTING_API } from './react-modal-testing-api-data';
 
 /**
@@ -64,6 +65,10 @@ import { OGE_REACT_MODAL_TESTING_API } from './react-modal-testing-api-data';
       [sections]="commandPaletteApi"
     />
     <app-api-reference title="&lt;OgeTour&gt;" [sections]="tourApi" />
+    <app-api-reference
+      title="&lt;OgeNotificationCenter&gt;"
+      [sections]="notificationApi"
+    />
     <app-api-reference title="&lt;OgeTooltip&gt;" [sections]="tooltipApi" />
     <app-api-reference
       title="&lt;OgeContextMenu&gt;"
@@ -91,6 +96,7 @@ export class ReactOverlayApiSections {
   protected readonly actionSheetApi = OGE_REACT_ACTION_SHEET_API;
   protected readonly commandPaletteApi = OGE_REACT_COMMAND_PALETTE_API;
   protected readonly tourApi = OGE_REACT_TOUR_API;
+  protected readonly notificationApi = OGE_REACT_NOTIFICATION_CENTER_API;
   protected readonly tooltipApi = OGE_REACT_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_REACT_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_REACT_MENU_LIST_API;

@@ -7,6 +7,23 @@ are versioned independently, which is the case here.
 
 ## Unreleased
 
+### Notification center — `@oge-ui/overlay`, `@oge-ui/react-overlay`
+
+- New `oge-notification-center` / `<OgeNotificationCenter>`: a bell with the
+  unread count that opens a panel of notifications.
+  - Newest first, sectioned by day (Today / Yesterday / Earlier), by the
+    items' `group` or in one list, with an All / Unread switch.
+  - Read / unread and dismiss per item and mark all as read write a new
+    `items` array (`readChange` and `dismissed` tell the server).
+  - The list is a WAI-ARIA feed: Page Down / Page Up move between the
+    articles, `aria-busy` while more load, and scrolling to the end (or the
+    Load more button) emits `loadMore` while `hasMore` is set.
+  - Relative times (`Intl.RelativeTimeFormat`); new unread notifications are
+    announced politely and the bell's name says how many are unread.
+- The model is in `@oge-ui/behavior` (`ogeNotificationSections`,
+  `ogeUnreadCount`, `ogeRelativeTime`, …); the `notifications*` overlay
+  messages are translated in every `@oge-ui/locales` pack.
+
 ### Diff viewer — `@oge-ui/layout/diff-viewer`, `@oge-ui/react-layout`
 
 - New `oge-diff-viewer` / `<OgeDiffViewer>`: compares two texts or two JSON

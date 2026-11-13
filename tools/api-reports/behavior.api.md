@@ -6268,6 +6268,15 @@ export type OgeFabSeverity = OgeButtonSeverity;
 export type OgeFabSize = 'sm' | 'md' | 'lg';
 
 // @public
+export function ogeFeedKeyIntent(event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey'>, index: number, count: number): {
+    kind: 'focus';
+    index: number;
+} | {
+    kind: 'exit';
+    where: 'after' | 'before';
+} | null;
+
+// @public
 export interface OgeFieldError {
     // (undocumented)
     readonly kind: string;
@@ -10221,6 +10230,9 @@ export interface OgeLoadPanelTimings {
 }
 
 // @public
+export function ogeMarkNotifications(items: readonly OgeNotification[], read: boolean, ids?: readonly string[]): OgeNotification[];
+
+// @public
 export function ogeMaskComplete(mask: string, value: string, options?: {
     rules?: OgeMaskRules;
     includeLiterals?: boolean;
@@ -10779,6 +10791,57 @@ export function ogeNativeBarcodeDecoder(formats?: readonly string[], global?: {
 export function ogeNormalizeViewName(name: string): string;
 
 // @public
+export interface OgeNotification {
+    // (undocumented)
+    readonly body?: string;
+    readonly group?: string;
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly read?: boolean;
+    readonly severity?: 'info' | 'success' | 'warning' | 'danger';
+    readonly time: Date | string | number;
+    // (undocumented)
+    readonly title: string;
+}
+
+// @public
+export type OgeNotificationFilter = 'all' | 'unread';
+
+// @public
+export type OgeNotificationGrouping = 'day' | 'group' | 'none';
+
+// @public
+export interface OgeNotificationSection {
+    // (undocumented)
+    readonly items: readonly OgeNotification[];
+    // (undocumented)
+    readonly key: string;
+    // (undocumented)
+    readonly title: string;
+}
+
+// @public (undocumented)
+export interface OgeNotificationSectionOptions {
+    // (undocumented)
+    readonly filter?: OgeNotificationFilter;
+    // (undocumented)
+    readonly grouping?: OgeNotificationGrouping;
+    readonly labels?: {
+        readonly today: string;
+        readonly yesterday: string;
+        readonly earlier: string;
+    };
+    readonly now?: Date;
+}
+
+// @public
+export function ogeNotificationSections(items: readonly OgeNotification[], options?: OgeNotificationSectionOptions): OgeNotificationSection[];
+
+// @public
+export function ogeNotificationTime(item: Pick<OgeNotification, 'time'>): number;
+
+// @public
 export interface OgeNumberFormatter {
     // (undocumented)
     readonly decimal: string;
@@ -10872,6 +10935,21 @@ export interface OgeOverlayMessages {
     modalClose: string;
     modalMaximize: string;
     modalRestore: string;
+    notificationsAll?: string;
+    notificationsBell?: string;
+    notificationsDismiss?: string;
+    notificationsEarlier?: string;
+    notificationsEmpty?: string;
+    notificationsLabel?: string;
+    notificationsLoading?: string;
+    notificationsLoadMore?: string;
+    notificationsMarkAllRead?: string;
+    notificationsMarkRead?: string;
+    notificationsMarkUnread?: string;
+    notificationsNew?: string;
+    notificationsToday?: string;
+    notificationsUnread?: string;
+    notificationsYesterday?: string;
     popoverClose?: string;
     toastClose: string;
     toastCountBadge: string;
@@ -11777,6 +11855,9 @@ export interface OgeRect {
 export function ogeRectOf(element: Element): OgeRect;
 
 // @public
+export function ogeRelativeTime(time: number, now: number, locale?: string): string;
+
+// @public
 export class OgeRemoteListCore<TItem> {
     constructor(deps: OgeRemoteListCoreDeps<TItem>, rx: OgeReactivityAdapter);
     get active(): boolean;
@@ -12483,6 +12564,13 @@ export interface OgeShortcut {
     // (undocumented)
     readonly shift: boolean;
 }
+
+// @public
+export function ogeShouldLoadMore(scroll: {
+    readonly scrollTop: number;
+    readonly clientHeight: number;
+    readonly scrollHeight: number;
+}, threshold?: number): boolean;
 
 // @public
 export function ogeShownMenuItems<I extends OgeMenuItem>(items: readonly I[]): readonly I[];
@@ -15792,6 +15880,9 @@ export interface OgeTypeAheadBuffer {
     push(char: string, now?: number): string;
     value(): string;
 }
+
+// @public
+export function ogeUnreadCount(items: readonly OgeNotification[]): number;
 
 // @public
 export interface OgeUploadAbortedEvent {

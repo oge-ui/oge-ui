@@ -78,6 +78,36 @@ export interface OgeOverlayMessages {
   tourSkip?: string;
   /** Label of the last step's finishing button. */
   tourDone?: string;
+  /** Accessible name of the notification panel and its feed. */
+  notificationsLabel?: string;
+  /** Accessible name of the bell; ICU plural over `{count}` unread. */
+  notificationsBell?: string;
+  /** The filter that shows every notification. */
+  notificationsAll?: string;
+  /** The filter that shows unread notifications; also read out before an unread title. */
+  notificationsUnread?: string;
+  /** Marks every notification read. */
+  notificationsMarkAllRead?: string;
+  /** Marks one notification read. */
+  notificationsMarkRead?: string;
+  /** Marks one notification unread. */
+  notificationsMarkUnread?: string;
+  /** Removes one notification (followed by its title). */
+  notificationsDismiss?: string;
+  /** Day section heading. */
+  notificationsToday?: string;
+  /** Day section heading. */
+  notificationsYesterday?: string;
+  /** Day section heading. */
+  notificationsEarlier?: string;
+  /** Shown when the list is empty. */
+  notificationsEmpty?: string;
+  /** Shown while older notifications load. */
+  notificationsLoading?: string;
+  /** Loads older notifications. */
+  notificationsLoadMore?: string;
+  /** Announced when unread notifications arrive; ICU plural over `{count}`. */
+  notificationsNew?: string;
 }
 
 export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
@@ -112,6 +142,23 @@ export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
   tourPrevious: 'Back',
   tourSkip: 'Skip tour',
   tourDone: 'Done',
+  notificationsLabel: 'Notifications',
+  notificationsBell:
+    '{count, plural, =0 {Notifications} one {Notifications, # unread} other {Notifications, # unread}}',
+  notificationsAll: 'All',
+  notificationsUnread: 'Unread',
+  notificationsMarkAllRead: 'Mark all as read',
+  notificationsMarkRead: 'Mark as read',
+  notificationsMarkUnread: 'Mark as unread',
+  notificationsDismiss: 'Dismiss',
+  notificationsToday: 'Today',
+  notificationsYesterday: 'Yesterday',
+  notificationsEarlier: 'Earlier',
+  notificationsEmpty: 'You are all caught up',
+  notificationsLoading: 'Loading…',
+  notificationsLoadMore: 'Load more',
+  notificationsNew:
+    '{count, plural, one {# new notification} other {# new notifications}}',
 };
 
 /**

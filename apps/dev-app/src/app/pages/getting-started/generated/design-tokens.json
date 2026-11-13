@@ -426,6 +426,7 @@
       "u": [
         "@oge-ui/buttons",
         "@oge-ui/inputs",
+        "@oge-ui/overlay",
         "@oge-ui/spreadsheet"
       ]
     },

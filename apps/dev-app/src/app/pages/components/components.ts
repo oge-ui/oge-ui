@@ -1274,6 +1274,11 @@ export class ComponentsIndexPage {
       path: '/components/overlay/tour',
     },
     {
+      family: 'Overlay',
+      label: 'Notification center',
+      path: '/components/overlay/notification-center',
+    },
+    {
       family: 'Buttons',
       label: 'FAB & speed dial',
       path: '/components/buttons/fab',

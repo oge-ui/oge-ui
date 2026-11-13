@@ -87,6 +87,12 @@ export {
   OgePopoverContent,
   type OgePopoverSlotContext,
 } from './lib/popover/popover-templates';
+export { OgeNotificationCenter } from './lib/notification-center/notification-center';
+export type {
+  OgeNotification,
+  OgeNotificationFilter,
+  OgeNotificationGrouping,
+} from '@oge-ui/behavior';
 export { OgeTour } from './lib/tour/tour';
 export type {
   OgeTourCloseReason,
