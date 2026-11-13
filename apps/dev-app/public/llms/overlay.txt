@@ -2,7 +2,7 @@
 
 > Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus with checkbox/radio/header rows, `oge-popover` with modal and non-modal modes, tooltips with rich templates and an arrow, context menus with selector delegation and an imperative `open(x, y)`, the `oge-modal` dialog with `OgeModalService` and its promise-based `confirm()` / `alert()` / `prompt()` helpers, the non-modal `oge-window`, the `oge-action-sheet` bottom sheet (a modal dialog holding an APG menu, swipe-down dismissal, a promise of the chosen action), the `oge-command-palette` (Ctrl+K fuzzy search over grouped commands with highlights, recent commands and an APG combobox), the `oge-tour` guided tour (spotlight, flipping cards, ← / → keys, reduced motion), the `oge-notification-center` (a bell with the unread count over a WAI-ARIA feed of notifications: read / unread, grouping by day, infinite scroll), and `OgeToastService` notifications.
 
-Part of OGE UI v1.1.7.
+Part of OGE UI v1.1.8.
 Docs and live demos: https://www.ogeui.com/components/overlay
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 

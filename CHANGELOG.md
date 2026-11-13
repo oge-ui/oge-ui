@@ -5,7 +5,7 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
-## Unreleased
+## 1.1.8 — 2026-11-13
 
 ### Notification center — `@oge-ui/overlay`, `@oge-ui/react-overlay`
 

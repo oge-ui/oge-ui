@@ -890,10 +890,10 @@ export const OGE_LICENSE_WATERMARK_CLASS = "oge-license-watermark";
 export const OGE_PAGE_ELLIPSIS: "ellipsis";
 
 // @public (undocumented)
-export const OGE_RELEASE_DATE = "2026-11-09";
+export const OGE_RELEASE_DATE = "2026-11-13";
 
 // @public
-export const OGE_RELEASE_VERSION = "1.1.7";
+export const OGE_RELEASE_VERSION = "1.1.8";
 
 // @public
 export type OgeAsyncGuard = () => boolean | Promise<boolean>;
