@@ -831,8 +831,10 @@ export default [
     // class names or test fixtures. The dev-app opts out: its demos show
     // consumer code, where a literal label is exactly right.
     files: ['**/*.html'],
-    // inline templates of spec hosts arrive as `<file>.spec.ts/<n>.html`
-    ignores: ['**/*.spec.ts/**'],
+    // inline templates of spec hosts arrive as `<file>.spec.ts/<n>.html`;
+    // the Figma plugin's UI is a plain HTML page, not an Angular template —
+    // no template parser is set up for that project, so it is not linted
+    ignores: ['**/*.spec.ts/**', 'tools/figma-tokens/**'],
     rules: {
       'no-restricted-syntax': [
         'error',

@@ -168,7 +168,7 @@ const SECTIONS = [
           <oge-card header="Mountains" subheader="Alps, 2026">
             <img
               ogeCardMedia
-              src="https://picsum.photos/seed/oge-alps/640/360"
+              src="/demo/carousel/mountains.svg"
               alt=""
               style="aspect-ratio: 16 / 9"
             />
@@ -191,11 +191,7 @@ const SECTIONS = [
             orientation="horizontal"
             style="--oge-card-media-size: 160px"
           >
-            <img
-              ogeCardMedia
-              src="https://picsum.photos/seed/oge-lake/320/320"
-              alt=""
-            />
+            <img ogeCardMedia src="/demo/carousel/coast.svg" alt="" />
             <p>
               The media column follows the writing mode, so it mirrors in RTL
               with no flag to set.
@@ -213,7 +209,7 @@ const SECTIONS = [
       >
         <div class="max-w-sm">
           <oge-card header="R. Aydın" subheader="3 hours ago">
-            <img ogeCardAvatar src="https://i.pravatar.cc/80?img=12" alt="" />
+            <img ogeCardAvatar src="/avatars/1.png" alt="" />
             <div ogeCardHeaderActions>
               <button
                 type="button"

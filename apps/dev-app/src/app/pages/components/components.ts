@@ -922,7 +922,7 @@ interface OrgNode {
                     >
                       <img
                         ogeCardMedia
-                        src="https://picsum.photos/seed/oge-alps/480/200"
+                        src="/demo/carousel/mountains.svg"
                         alt=""
                         class="h-14"
                       />

@@ -122,7 +122,7 @@ function HeaderSlotsDemo(): ReactNode {
         subheader: '3 hours ago',
         avatar: createElement('img', {
           className: 'oge-card-avatar',
-          src: 'https://i.pravatar.cc/80?img=12',
+          src: '/avatars/1.png',
           alt: '',
         }),
         headerActions: createElement(
@@ -432,7 +432,7 @@ export class ReactLayoutCardDemos {
           subheader: 'Alps, 2026',
           media: createElement('img', {
             className: 'oge-card-media',
-            src: 'https://picsum.photos/seed/oge-alps/640/360',
+            src: '/demo/carousel/mountains.svg',
             alt: '',
             style: { aspectRatio: '16 / 9' },
           }),
@@ -458,7 +458,7 @@ export class ReactLayoutCardDemos {
           style: { '--oge-card-media-size': '160px' } as CSSProperties,
           media: createElement('img', {
             className: 'oge-card-media',
-            src: 'https://picsum.photos/seed/oge-lake/320/320',
+            src: '/demo/carousel/coast.svg',
             alt: '',
           }),
         },

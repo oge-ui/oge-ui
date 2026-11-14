@@ -92,7 +92,7 @@ const SECTIONS = [
       <app-demo-card
         [chips]="['value', 'columns', 'caption', 'align']"
         heading="Basics"
-        description='Pass <code>value</code> and, optionally, <code>columns</code> — without them each own key of the first row becomes a column. The table is a native <code>&lt;table&gt;</code> with a <code>&lt;caption&gt;</code> and <code>&lt;th scope="col"&gt;</code> headers; a column&apos;s <code>align</code> applies to its header and its cells alike.'
+        description='Pass <code>value</code> and, optionally, <code>columns</code> — without them each own key of the first row becomes a column. The table is a native <code>&amp;lt;table&amp;gt;</code> with a <code>&amp;lt;caption&amp;gt;</code> and <code>&amp;lt;th scope="col"&amp;gt;</code> headers; a column&apos;s <code>align</code> applies to its header and its cells alike.'
         [code]="basicsSnippet"
         language="ts"
       >
@@ -106,7 +106,7 @@ const SECTIONS = [
       <app-demo-card
         [chips]="['ogeSimpleTableRow', 'ogeSimpleTableRowOf', 'cellClass']"
         heading="Row templates"
-        description="An <code>ogeSimpleTableRow</code> template writes the whole <code>&lt;tr&gt;</code> of a row with free <code>&lt;td&gt;</code> markup — badges, links, pipes. Bind <code>[ogeSimpleTableRowOf]</code> to the rows and <code>let-line</code> is typed under <code>strictTemplates</code>; <code>columns[i].cellClass</code> puts a cell on the same alignment as its header."
+        description="An <code>ogeSimpleTableRow</code> template writes the whole <code>&amp;lt;tr&amp;gt;</code> of a row with free <code>&amp;lt;td&amp;gt;</code> markup — badges, links, pipes. Bind <code>[ogeSimpleTableRowOf]</code> to the rows and <code>let-line</code> is typed under <code>strictTemplates</code>; <code>columns[i].cellClass</code> puts a cell on the same alignment as its header."
         [code]="rowSnippet"
         language="ts"
       >

@@ -73,7 +73,9 @@ test.describe('docs sidebar (desktop)', () => {
     ).toHaveAttribute('aria-expanded', 'false');
     const filter = nav.getByRole('searchbox', { name: 'Filter pages' });
     await filter.fill('time zones');
-    await expect(nav.getByRole('link', { name: 'Time zones' })).toBeVisible();
+    await expect(
+      nav.getByRole('link', { name: 'Time zones', exact: true }),
+    ).toBeVisible();
     await filter.fill('zzzz-no-such-page');
     await expect(nav.getByRole('status')).toContainText('No page titles match');
     // Escape clears the filter
