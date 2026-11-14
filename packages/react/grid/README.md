@@ -1,6 +1,17 @@
 # @oge-ui/react-grid
 
-React data grid from the OGE UI suite — running the **same** framework-free
+**MIT data grid for React with row grouping, Excel and PDF export, cell range
+selection, master-detail and server-side data** — the features that usually sit
+behind a paid tier, free for personal and commercial use. Real React components
+with props, callbacks and controlled state, for React 18 and 19. Part of the
+[OGE UI](https://www.ogeui.com) suite; the same grid for Angular is
+[`@oge-ui/grid`](https://www.npmjs.com/package/@oge-ui/grid).
+
+[Live demos](https://www.ogeui.com/components/data-grid) (each opens in
+StackBlitz) · [Benchmarks on 100,000 rows](https://www.ogeui.com/benchmarks) ·
+[Migration guides](https://www.ogeui.com/guides)
+
+It runs the **same** framework-free
 grid engine as the Angular `@oge-ui/grid` package: the state slices (sort,
 paging, filter, selection, column layout), the data core with switchMap loads
 and windowed block fetching, the column resolver, the row and column

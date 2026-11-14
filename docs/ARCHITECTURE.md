@@ -2267,6 +2267,17 @@ application configures. Rules every AI feature follows:
   references. `server.mjs` is transport-free (`handle(message)` per JSON-RPC
   message, unit-tested), `cli.mjs` wires it to stdio. A new tool returns text
   content and validates its arguments; unknown tools are a `-32602`.
+- **AI directories are fed from generated or root files, never a second
+  version.** The official MCP registry verifies `mcpName` in the published
+  `packages/mcp/package.json` against the `name` in `server.json`; the build
+  writes `dist/packages/mcp/server.json` from the manifest (name, version,
+  npm identifier), so a release needs no extra bump — after the npm publish,
+  run `mcp-publisher publish` from `dist/packages/mcp`. The registry caps the
+  description at 100 characters (the build throws past it) and `server.json`
+  is not in `files`, so it never ships in the tarball. Context7 reads the
+  root `context7.json`: it indexes `packages/**` READMEs only (contributor
+  docs under `docs/` would drown the consumer docs) and carries the agent
+  rules — keep those rules true of the code, like every guide claim.
 - **Docs run offline.** `apps/dev-app/src/app/pages/ai/ai-demo.ts` is a
   rule-based demo model that reads the column catalog back out of the real
   system prompt; the pages and the e2e suite use it, and readers can switch

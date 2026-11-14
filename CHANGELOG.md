@@ -5,6 +5,29 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## 1.1.9 — 2026-11-14
+
+### Discoverability — package metadata and docs
+
+- `@oge-ui/grid`, `@oge-ui/react-grid` and `oge-ui`: the npm description and
+  the README now open with what the MIT grid includes — row grouping, Excel
+  and PDF export, cell range selection, master-detail and server-side data —
+  and link the live demos, the benchmarks and the migration guides. The
+  description of the React grid names its Excel and PDF export; the README of
+  the Angular grid states the supported Angular floor (21.2).
+- `@oge-ui/mcp`: the manifest carries `mcpName` (`io.github.oge-ui/mcp`) and
+  the build writes the `server.json` the official MCP registry reads, from
+  the manifest — the file is not part of the npm tarball.
+- A root `context7.json` scopes Context7 to the package READMEs and gives
+  coding agents the usage rules of the suite.
+- Docs site: the Data Grid page title and description, the home page copy and
+  the default description lead with the same statement; the default
+  description no longer lists the commercial pivot grid as free.
+- Root README: a license table of what the MIT grid includes and a "Try it
+  before you install" section (StackBlitz, benchmarks, migration guides,
+  example apps) replace the price comparison table; the compatibility table
+  shows Angular 21.2 – 23.
+
 ## 1.1.8 — 2026-11-13
 
 ### Notification center — `@oge-ui/overlay`, `@oge-ui/react-overlay`

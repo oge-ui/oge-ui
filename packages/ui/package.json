@@ -1,7 +1,7 @@
 {
   "name": "oge-ui",
   "version": "1.1.8",
-  "description": "Free, open-source MIT UI component suite and Data Grid for Angular and React — zero-dependency AG Grid and Kendo alternative with signals, zoneless support, virtual scrolling, tree list, 25+ editors, forms and AI assistant.",
+  "description": "Free, open-source MIT UI component suite and Data Grid for Angular and React — zero runtime dependencies, signals, zoneless support, virtual scrolling, grouping, Excel/PDF export, tree list, 25+ editors, forms and AI assistant.",
   "keywords": [
     "angular",
     "react",

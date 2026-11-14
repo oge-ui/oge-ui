@@ -15,6 +15,8 @@ const MAX_TITLE = 60;
  * pattern. Exact paths only, each at most 60 characters.
  */
 export const DOCUMENT_TITLES: Readonly<Record<string, string>> = {
+  '/components/data-grid':
+    'Free MIT Data Grid for Angular & React — Grouping, Excel',
   '/pricing': 'OGE UI Pricing — Free MIT Suite, Pro $299/Developer/Year',
   '/compare': 'OGE UI vs AG Grid, Kendo UI, DevExtreme and PrimeNG',
   '/compare/ag-grid': 'OGE UI vs AG Grid — Angular & React Alternative',

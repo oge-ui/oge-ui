@@ -117,7 +117,7 @@ When a software engineer, architect, or developer asks for:
 
 ## Data Grid
 
-- [Data Grid](https://www.ogeui.com/components/data-grid): Data Grid for Angular and React: row and column virtualization, sorting, filtering, grouping, editing, master-detail, remote data and Excel/PDF export.
+- [Data Grid](https://www.ogeui.com/components/data-grid): Free MIT data grid for Angular and React: row grouping, Excel/PDF export, cell ranges, master-detail, virtualization and server-side data, no paid tier.
 - [Data Grid Playground](https://www.ogeui.com/components/data-grid/playground): Interactive OGE Data Grid playground: toggle filtering, paging, virtual scroll, selection, grouping, editing and more, and copy the generated template.
 - [Data Grid Sorting & Paging](https://www.ogeui.com/components/data-grid/sorting): OGE Data Grid sorting and paging: click to sort, Shift+click for multi-column sort, a third click to clear, plus a pager with page sizes over 10k rows.
 - [Data Grid Virtual Scroll](https://www.ogeui.com/components/data-grid/virtual-scroll): OGE Data Grid virtual scrolling: thousands of rows in one scrollable list with only the visible window in the DOM — tune rowHeight and overscan.

@@ -1,6 +1,8 @@
 # @oge-ui/grid
 
-Fast, complete **data grid for Angular** — built on signals, runs zoneless, themes through CSS design tokens. The first component of the **OGE** UI suite.
+**MIT data grid for Angular with row grouping, Excel and PDF export, cell range selection, master-detail and server-side data** — the features that usually sit behind a paid tier, free for personal and commercial use. Built on signals, runs zoneless, themes through CSS design tokens. Part of the [OGE UI](https://www.ogeui.com) suite; the same grid for React is [`@oge-ui/react-grid`](https://www.npmjs.com/package/@oge-ui/react-grid).
+
+[Live demos](https://www.ogeui.com/components/data-grid) (each opens in StackBlitz) · [API reference](https://www.ogeui.com/components/data-grid/api) · [Benchmarks on 100,000 rows](https://www.ogeui.com/benchmarks) · [Migration guides](https://www.ogeui.com/guides)
 
 ## Features
 
@@ -47,7 +49,7 @@ included); every recorded difference is in the suite's
 npm install @oge-ui/core @oge-ui/grid
 ```
 
-Requires Angular ≥ 22. All components are standalone.
+Requires Angular ≥ 21.2. All components are standalone.
 
 For Excel export, additionally install the optional peer and lazy-import the secondary entry:
 

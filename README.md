@@ -5,9 +5,9 @@
 <h1 align="center">OGE UI</h1>
 
 <p align="center">
-  <b>Signal-native UI components for Angular and React, built for data-heavy apps.</b><br />
-  A virtualized Data Grid, Tree List, Pivot Grid, Charts, Scheduler, Gantt, Kanban, BPMN,<br />
-  a rich-text editor and 25+ form editors — one framework-free engine, two native render layers.
+  <b>The data grid features that usually sit behind a paid tier — MIT, for Angular and React.</b><br />
+  Grouping, Excel/PDF export, cell ranges, master-detail and server-side data in a virtualized grid,<br />
+  with a tree list, 25+ editors, forms and Pro charts, scheduler, gantt and kanban on the same engine.
 </p>
 
 <p align="center">
@@ -16,6 +16,8 @@
   <a href="https://www.ogeui.com/getting-started">Docs</a> ·
   <a href="https://www.ogeui.com/components">All components</a> ·
   <a href="https://www.ogeui.com/pricing">Pricing</a> ·
+  <a href="https://www.ogeui.com/benchmarks">Benchmarks</a> ·
+  <a href="https://www.ogeui.com/guides">Guides</a> ·
   <a href="https://www.ogeui.com/compare">Compare</a> ·
   <a href="https://www.ogeui.com/changelog">Changelog</a> ·
   <a href="https://github.com/oge-ui/oge-ui/discussions">Discussions</a>
@@ -143,25 +145,38 @@ Commercial families are free for evaluation and development — see [Licensing](
   OGE's own framework-free core. Export libraries (`exceljs`, `jspdf`) are
   optional peers: never installed, bundled or executed unless you opt in.
 
-## Free Open-Source Alternative to Commercial Suites
+## What the MIT grid includes
 
-When teams evaluate high-performance data grids and enterprise components, OGE UI offers the most generous unconditional MIT core:
+Everything in this table ships in `@oge-ui/grid` and `@oge-ui/react-grid` under the MIT license —
+no seat fee, no revenue cap, no build-agent fee:
 
-| Feature / Capability                |     OGE UI      | AG Grid Enterprise |  Kendo UI   | DevExtreme | MUI X Premium |
-| ----------------------------------- | :-------------: | :----------------: | :---------: | :--------: | :-----------: |
-| **Data Grid Core**                  |  **MIT ($0)**   |        MIT         |    Paid     |    Paid    |      MIT      |
-| **Row Grouping & Aggregation**      |  **MIT ($0)**   |      $999/dev      |    Paid     |    Paid    |   $588/dev    |
-| **Excel (.xlsx) & PDF Export**      |  **MIT ($0)**   |      $999/dev      |    Paid     |    Paid    |   $588/dev    |
-| **Cell Range Selection & Fill**     |  **MIT ($0)**   |      $999/dev      |    Paid     |    Paid    |   $588/dev    |
-| **Master-Detail Rows**              |  **MIT ($0)**   |      $999/dev      |    Paid     |    Paid    |   $180/dev    |
-| **Server-Side Data Operations**     |  **MIT ($0)**   |      $999/dev      |    Paid     |    Paid    |     Paid      |
-| **AI Grid Assistant & Smart Paste** |  **MIT ($0)**   |    Paid Toolkit    |    Paid     |    Paid    |     Paid      |
-| **Angular Signals (Native)**        |   **✅ Full**   |     ❌ Wrapper     | ⚠️ Partial  | ❌ Wrapper |    ❌ None    |
-| **React 19 Native Layer**           |   **✅ Full**   |     ❌ Wrapper     | ⚠️ Separate | ❌ Wrapper |   ✅ Native   |
-| **CI / Build Agent Fees**           |  **$0 (Free)**  |        Paid        |    Paid     |    Paid    |     Paid      |
-| **Commercial Pro Suite Price**      | **$299/dev/yr** |     $999+/dev      | $799–$1,299 | ~$900/dev  |   $588/dev    |
+| Capability                                                  | License |
+| ----------------------------------------------------------- | :-----: |
+| Row and column virtualization                               |   MIT   |
+| Row grouping, summaries and aggregation                     |   MIT   |
+| Styled Excel (.xlsx) and PDF export                         |   MIT   |
+| Cell range selection, clipboard paste, fill handle and undo |   MIT   |
+| Master-detail rows                                          |   MIT   |
+| Server-side sort, filter, paging and grouping               |   MIT   |
+| Cell, row, batch, popup and form editing                    |   MIT   |
+| AI grid assistant and smart paste (`@oge-ui/ai`)            |   MIT   |
 
-Detailed head-to-head comparisons: [AG Grid](https://www.ogeui.com/compare/ag-grid) · [Kendo UI](https://www.ogeui.com/compare/kendo-ui) · [DevExtreme](https://www.ogeui.com/compare/devextreme) · [PrimeNG](https://www.ogeui.com/compare/primeng) · [MUI X](https://www.ogeui.com/compare/mui-x) · [Syncfusion](https://www.ogeui.com/compare/syncfusion)
+The commercial tier is the seven specialised families (pivot, charts, scheduler, gantt, kanban,
+BPMN and spreadsheet) at $299 per developer per year — see [Pricing](https://www.ogeui.com/pricing).
+How OGE lines up against other libraries, feature by feature: [Compare](https://www.ogeui.com/compare).
+
+## Try it before you install
+
+- **Run any demo in the browser** — every complete example on [ogeui.com](https://www.ogeui.com/components/data-grid)
+  has an **Open in StackBlitz** button that builds a runnable Angular or React project from it.
+- **Check the numbers** — [Benchmarks](https://www.ogeui.com/benchmarks) publishes first render, filter,
+  sort and scroll frame times on 100,000 rows for both render layers, with the machine, the commit
+  and the script to reproduce them (`npx nx run dev-app:build`, then
+  `node tools/benchmarks/grid-bench.mjs`).
+- **Coming from another grid?** The [migration guides](https://www.ogeui.com/guides) map column
+  definitions, events and features to their OGE equivalents.
+- **Browse four full apps** — an ERP, two CRMs and a knowledge base under [`examples/`](examples),
+  each deployed and open source.
 
 ## AI Coding Assistants & MCP Integration
 
@@ -354,10 +369,10 @@ without guessing:
 
 ## Compatibility
 
-| OGE | Angular | React   | Node (tooling) | Notes                                                   |
-| --- | ------- | ------- | -------------- | ------------------------------------------------------- |
-| 1.x | 22 – 23 | 18 – 19 | ≥ 22.22        | standalone, signals, zoneless; React client components  |
-| 0.x | 22      | —       | ≥ 22.22        | end of life 2027-04-01 (security fixes only until then) |
+| OGE | Angular   | React   | Node (tooling) | Notes                                                   |
+| --- | --------- | ------- | -------------- | ------------------------------------------------------- |
+| 1.x | 21.2 – 23 | 18 – 19 | ≥ 22.22        | standalone, signals, zoneless; React client components  |
+| 0.x | 22        | —       | ≥ 22.22        | end of life 2027-04-01 (security fixes only until then) |
 
 Browsers: the last two versions of Chrome, Edge, Firefox and Safari, plus iOS Safari and
 Chrome for Android (the list lives in `.browserslistrc`). No Internet Explorer, no legacy Edge.

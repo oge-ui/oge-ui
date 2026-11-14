@@ -327,11 +327,11 @@ const ORG: OrgNode[] = [
           <p
             class="home-in home-d3 mt-5 max-w-lg text-[15.5px] leading-relaxed text-[color:var(--og-mut)]"
           >
-            A virtualized data grid, tree list and pivot table, charts,
-            scheduler, gantt, kanban and spreadsheet, AI assistant, forms and
-            25+ editors. Signal APIs end to end, zoneless by default, themed
-            with CSS tokens — over a framework-free engine both render layers
-            share.
+            The data grid features that usually sit behind a paid tier —
+            grouping, Excel and PDF export, cell ranges, master-detail,
+            server-side data — are MIT here. Around the grid: a tree list, 25+
+            editors, forms and an AI assistant, plus Pro charts, scheduler,
+            gantt, kanban, pivot and spreadsheet on the same engine.
           </p>
 
           <div class="home-in home-d4 mt-7 flex flex-wrap items-center gap-4">
@@ -1191,7 +1191,7 @@ const ORG: OrgNode[] = [
               Pricing &amp; Pro
             </a>
             <a routerLink="/compare" class="og-btn-stone">
-              Compare vs AG Grid &amp; Kendo
+              Compare libraries
             </a>
             <a
               href="https://github.com/oge-ui/oge-ui"

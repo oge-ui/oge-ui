@@ -13,7 +13,7 @@ const ORIGIN = 'https://www.ogeui.com';
 
 /** The home page's description, and the fallback for a route with no entry. */
 const DEFAULT_DESCRIPTION =
-  'OGE UI: free, signal-based components for Angular and React — virtualized Data Grid, Tree List, Pivot Grid, inputs and forms. Zoneless, themeable, accessible.';
+  'OGE UI: an MIT data grid for Angular and React with grouping, Excel/PDF export, cell ranges and server-side data built in, plus 25+ editors and forms.';
 
 /**
  * One meta description per indexable route — 140–160 characters that name
@@ -193,7 +193,7 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/data-grid',
-    'Data Grid for Angular and React: row and column virtualization, sorting, filtering, grouping, editing, master-detail, remote data and Excel/PDF export.',
+    'Free MIT data grid for Angular and React: row grouping, Excel/PDF export, cell ranges, master-detail, virtualization and server-side data, no paid tier.',
   ],
   [
     '/components/data-grid/playground',

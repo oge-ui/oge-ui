@@ -1,0 +1,16 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "OGE UI",
+  "description": "UI component suite for Angular and React on one framework-free engine: data grid, tree list, editors, forms, overlays, navigation, rich-text editor and upload under MIT; pivot grid, charts, scheduler, gantt, kanban, BPMN editor and spreadsheet viewer under a commercial license.",
+  "folders": ["packages"],
+  "excludeFolders": ["**/node_modules", "**/src"],
+  "excludeFiles": ["CHANGELOG.md", "LICENSE.md", "CODE_OF_CONDUCT.md"],
+  "rules": [
+    "Angular components are standalone and use signal inputs, outputs and models; import the component classes directly, there are no NgModules.",
+    "Angular packages need Angular 21.2 or newer and work without Zone.js.",
+    "In React, import the components from @oge-ui/react (or one @oge-ui/react-<family> package) and import its styles.css once.",
+    "Excel and PDF export live in lazy entry points (for example @oge-ui/grid/export-excel and @oge-ui/grid/export-pdf) and need the optional peers exceljs or jspdf with jspdf-autotable.",
+    "Pivot, charts, scheduler, gantt, kanban, BPMN and spreadsheet packages are commercial: free for evaluation and development, a license is required in production. Every other package is MIT.",
+    "In Angular, user-facing strings are overridden with each package's provideOge<Family>Config() or the per-instance messages input, not by editing markup."
+  ]
+}

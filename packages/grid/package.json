@@ -1,7 +1,7 @@
 {
   "name": "@oge-ui/grid",
   "version": "1.1.8",
-  "description": "Signal-based Angular data grid: virtualized rendering for 100k+ rows, filtering, grouping, editing, selection, column virtualization, state persistence and Excel/PDF export. Free, open-source MIT alternative to AG Grid Enterprise.",
+  "description": "MIT Angular data grid with row grouping, Excel/PDF export, cell range selection, master-detail and server-side data — no paid tier for any of them. Signal-based and zoneless: virtualized rendering for 100k+ rows, filtering, editing, column virtualization and state persistence.",
   "keywords": [
     "angular",
     "data-grid",
@@ -16,7 +16,11 @@
     "virtual-scroll",
     "excel-export",
     "pdf-export",
-    "standalone-components"
+    "standalone-components",
+    "row-grouping",
+    "master-detail",
+    "server-side",
+    "mit"
   ],
   "author": "kaya2m",
   "publishConfig": {
