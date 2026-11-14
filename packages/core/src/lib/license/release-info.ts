@@ -6,5 +6,5 @@
  * `npx nx run docs-tools:llms`, and checked by `docs-tools:llms-check`.
  * A license key covers every release dated on or before its `expires` day.
  */
-export const OGE_RELEASE_VERSION = '1.1.8';
-export const OGE_RELEASE_DATE = '2026-11-13';
+export const OGE_RELEASE_VERSION = '1.1.9';
+export const OGE_RELEASE_DATE = '2026-11-14';

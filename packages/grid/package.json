@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/grid",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "MIT Angular data grid with row grouping, Excel/PDF export, cell range selection, master-detail and server-side data — no paid tier for any of them. Signal-based and zoneless: virtualized rendering for 100k+ rows, filtering, editing, column virtualization and state persistence.",
   "keywords": [
     "angular",
@@ -38,12 +38,12 @@
     }
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.8",
-    "@oge-ui/core": "1.1.8",
-    "@oge-ui/inputs": "1.1.8",
-    "@oge-ui/forms": "1.1.8",
-    "@oge-ui/layout": "1.1.8",
-    "@oge-ui/overlay": "1.1.8"
+    "@oge-ui/behavior": "1.1.9",
+    "@oge-ui/core": "1.1.9",
+    "@oge-ui/inputs": "1.1.9",
+    "@oge-ui/forms": "1.1.9",
+    "@oge-ui/layout": "1.1.9",
+    "@oge-ui/overlay": "1.1.9"
   },
   "exports": {
     "./themes/*": "./themes/*"

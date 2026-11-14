@@ -2,7 +2,7 @@
 
 > Server side of the data grid for Node: checks a grid request (LoadOptions) against a field allowlist with ogeParseLoadOptions and answers it with parameterized SQL for PostgreSQL, MySQL / MariaDB, SQLite and SQL Server through ogeSqlLoad — filter contract, search, sort, paging, first-level groups, summaries and header-filter values (ogeSqlDistinct). Driver-agnostic. The .NET twin is the Oge.Data NuGet package (IQueryable, Entity Framework Core).
 
-Part of OGE UI v1.1.8.
+Part of OGE UI v1.1.9.
 Docs and live demos: https://www.ogeui.com/guides/server-adapters
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
