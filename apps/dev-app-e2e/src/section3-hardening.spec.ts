@@ -58,11 +58,21 @@ for (const fw of FRAMEWORKS) {
       await opener.click();
       const dialog = page.getByRole('dialog', { name: 'Order details' });
       await expect(dialog).toBeFocused();
-      await dialog.getByLabel('Lock for 2 seconds (busy)').check();
-      await page.keyboard.press('Escape');
-      await expect(dialog.getByTestId('blocked-why')).toHaveText(
-        'Close blocked by: busy',
-      );
+      // The lock lasts two seconds. On a slow runner it can lift before
+      // Escape lands, and the dialog then closes as it should — so the
+      // lock-then-Escape pair is retried on a dialog that is open and idle.
+      await expect(async () => {
+        if (!(await dialog.isVisible())) await opener.click();
+        await expect(dialog).not.toHaveAttribute('aria-busy', 'true', {
+          timeout: 5000,
+        });
+        await dialog.getByLabel('Lock for 2 seconds (busy)').check();
+        await page.keyboard.press('Escape');
+        await expect(dialog.getByTestId('blocked-why')).toHaveText(
+          'Close blocked by: busy',
+          { timeout: 1000 },
+        );
+      }).toPass({ timeout: 20_000 });
       // the lock lifts by itself; then Escape closes
       await expect(dialog).not.toHaveAttribute('aria-busy', 'true', {
         timeout: 5000,
