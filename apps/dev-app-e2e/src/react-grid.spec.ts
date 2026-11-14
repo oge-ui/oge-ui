@@ -9,6 +9,12 @@ import { test, expect } from '@playwright/test';
  * are axe-clean.
  */
 const REACT = '?framework=react';
+/**
+ * The coverage notice. Located by its class, not by `role="status"`: the
+ * grid renders live regions of its own (the filter bar keeps an empty one
+ * ready), and Firefox counts an empty inline status as visible.
+ */
+const NOTICE = '.app-fw-fallback';
 
 test.describe('React data-grid docs', () => {
   test('the overview mounts the React grid without the coverage notice', async ({
@@ -19,7 +25,7 @@ test.describe('React data-grid docs', () => {
       'data-framework',
       'react',
     );
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const grid = page.locator('app-react-host .oge-grid').first();
     await expect(grid).toBeVisible();
     await expect(grid.locator('.oge-row')).toHaveCount(10);
@@ -48,7 +54,7 @@ test.describe('React data-grid docs', () => {
 
   test('the api page renders the React tables', async ({ page }) => {
     await page.goto(`/components/data-grid/api${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     await expect(
       page.getByRole('heading', { name: '<OgeGrid>' }),
     ).toBeVisible();
@@ -61,7 +67,7 @@ test.describe('React data-grid docs', () => {
     page,
   }) => {
     await page.goto(`/components/data-grid/grouping${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const grid = page.locator('app-react-host .oge-grid').first();
     await expect(grid.getByRole('treegrid')).toBeVisible();
     await expect(grid.locator('.oge-group-row').first()).toContainText(
@@ -113,7 +119,7 @@ test.describe('React data-grid docs', () => {
       '/components/data-grid/context-menu',
     ]) {
       await page.goto(`${path}${REACT}`);
-      await expect(page.getByRole('status'), path).toHaveCount(0);
+      await expect(page.locator(NOTICE), path).toHaveCount(0);
       await expect(
         page.locator('app-react-host .oge-grid').first(),
         path,
@@ -147,7 +153,7 @@ test.describe('React data-grid docs', () => {
 
   test('playground: the switches drive the React grid', async ({ page }) => {
     await page.goto(`/components/data-grid/playground${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const grid = page.locator('app-react-host .oge-grid').first();
     const code = page.locator('app-code-block').first();
     await expect(grid.locator('.oge-row')).toHaveCount(15);
@@ -167,7 +173,7 @@ test.describe('React data-grid docs', () => {
 
   test('sorting page: multi-sort pages through 10k rows', async ({ page }) => {
     await page.goto(`/components/data-grid/sorting${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const grid = page.locator('app-react-host .oge-grid').first();
     await expect(grid.locator('.oge-row')).toHaveCount(15);
     const header = grid.getByRole('columnheader', { name: 'Id' });
@@ -185,7 +191,7 @@ test.describe('React data-grid docs', () => {
     page,
   }) => {
     await page.goto(`/components/data-grid/virtual-scroll${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const rows = page.locator('app-react-host .oge-grid').first();
     await expect(rows.locator('.oge-row').first()).toBeVisible();
     expect(await rows.locator('.oge-row').count()).toBeLessThan(40);
@@ -219,7 +225,7 @@ test.describe('React data-grid docs', () => {
 
   test('infinite-scroll page: sparse blocks over 1M rows', async ({ page }) => {
     await page.goto(`/components/data-grid/infinite-scroll${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const grid = page.locator('app-react-host .oge-grid').first();
     await expect(grid.locator('.oge-cell').first()).toHaveText('1');
     await grid.locator('.oge-viewport').evaluate((el) => {
@@ -242,7 +248,7 @@ test.describe('React data-grid docs', () => {
     page,
   }) => {
     await page.goto(`/components/data-grid/remote-data${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const log = page.locator('.request-log li');
     const grid = page.locator('app-react-host .oge-grid').first();
     await expect(grid.locator('.oge-row').first()).toBeVisible();
@@ -268,7 +274,7 @@ test.describe('React data-grid docs', () => {
 
   test('live-updates page: pushed patches flash in place', async ({ page }) => {
     await page.goto(`/components/data-grid/live-updates${REACT}`);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(page.locator(NOTICE)).toHaveCount(0);
     const grid = page.locator('app-react-host .oge-grid').first();
     await expect(grid.locator('.oge-row')).toHaveCount(12);
     const prices = grid.locator('.oge-row .oge-cell:nth-child(3)');
@@ -303,7 +309,7 @@ test.describe('React data-grid docs', () => {
       test.slow();
       await page.goto(`${path}${REACT}`);
       await expect(page.locator('h1').first()).toBeVisible();
-      await expect(page.getByRole('status')).toHaveCount(0);
+      await expect(page.locator(NOTICE)).toHaveCount(0);
       await expect(
         page.locator('app-react-host .oge-grid .oge-row').first(),
       ).toBeVisible();
@@ -336,7 +342,7 @@ test.describe('React data-grid docs', () => {
       test.slow();
       await page.goto(`${path}${REACT}`);
       await expect(page.locator('h1').first()).toBeVisible();
-      await expect(page.getByRole('status')).toHaveCount(0);
+      await expect(page.locator(NOTICE)).toHaveCount(0);
       // React grids fill their rows in an effect: give every demo grid a
       // moment to leave its transient "No data" body (an empty rowgroup
       // fails aria-required-children) — a page that is empty on purpose

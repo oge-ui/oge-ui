@@ -104,9 +104,11 @@ test.describe('surfaces under a capturing ancestor', () => {
     await tagBox.locator('.oge-input-native').click();
     const popup = page.locator('.oge-popup').first();
     await expect(popup).toBeVisible();
-    expect(await popup.evaluate((el) => el.matches(':popover-open'))).toBe(
-      true,
-    );
+    // polled: the popup paints first and moves into the top layer a tick
+    // later, which a single read in WebKit sometimes lands between
+    await expect
+      .poll(() => popup.evaluate((el) => el.matches(':popover-open')))
+      .toBe(true);
     await expectAligned(anchor, popup);
     const hit = await popup.evaluate((el) => {
       const box = el.getBoundingClientRect();

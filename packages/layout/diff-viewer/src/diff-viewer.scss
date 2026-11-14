@@ -183,6 +183,12 @@ td.oge-diff-viewer-delete {
   background: var(--oge-diff-delete-bg);
 }
 
+// the muted number colour drops under 4.5:1 on the tinted lines
+.oge-diff-viewer-insert.oge-diff-viewer-number,
+.oge-diff-viewer-delete.oge-diff-viewer-number {
+  color: var(--oge-text-color);
+}
+
 td.oge-diff-viewer-empty {
   background: var(--oge-header-bg);
 }
