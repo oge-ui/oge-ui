@@ -67,6 +67,12 @@ for (const fw of FRAMEWORKS) {
           timeout: 5000,
         });
         await dialog.getByLabel('Lock for 2 seconds (busy)').check();
+        // the checkbox is checked as soon as it is clicked, the modal is
+        // busy only after the next change detection — Escape before that
+        // closes it
+        await expect(dialog).toHaveAttribute('aria-busy', 'true', {
+          timeout: 1500,
+        });
         await page.keyboard.press('Escape');
         await expect(dialog.getByTestId('blocked-why')).toHaveText(
           'Close blocked by: busy',
