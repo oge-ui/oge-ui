@@ -15,6 +15,7 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -54,8 +55,11 @@ for (const pkg of PACKAGES) {
 if (packages.length === 0)
   throw new Error('No llms.txt found — run docs-tools:llms first.');
 
-rmSync(out, { recursive: true, force: true });
+// Empty the folder instead of removing it: a terminal standing in it (where
+// `mcp-publisher publish` runs) locks the folder itself on Windows.
 mkdirSync(out, { recursive: true });
+for (const entry of readdirSync(out))
+  rmSync(join(out, entry), { recursive: true, force: true });
 for (const file of ['src/server.mjs', 'src/cli.mjs', 'src/index.d.ts']) {
   copyFileSync(join(here, file), join(out, file.replace(/^src\//, '')));
 }
